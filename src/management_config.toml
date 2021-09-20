@@ -1,0 +1,5 @@
+hsm_pin = "somepin"
+hsm_key_id = "some_id"
+hsm_slot = "some_slot"
+neuron_id = "neuron_index"
+proposal_url = "URL you want for proposals"
