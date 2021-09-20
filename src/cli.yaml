@@ -1,0 +1,29 @@
+name: MercuryManagementCli
+version: "1.0"
+about: CLI Tool for Automated Subnet Management and Decisions
+author: Connor Matza <connor.matza@dfinity.org>
+
+# AppSettings can be defined as a list and are **not** ascii case sensitive
+settings:
+    - ArgRequiredElseHelp
+
+args:
+    - flag:
+        about: Disables dry run mode.
+        long: iwanttodothisforrealipromiseiknowwhatimdoing
+subcommands:
+    - add-nodes:
+        about: adds nodes in a decentralization-maximizing way
+        args:
+            - subnet:
+                short: s
+                takes_value: true
+                about: The subnet identifier for the target subnet.
+    - remove-dead-nodes:
+        about: removes dead nodes from subnet
+        args:
+            - subnet:
+                short: s
+                takes_value: true
+                about: the subnet identifier for the target subnet.
+
