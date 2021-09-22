@@ -5,6 +5,7 @@ use reqwest::{Client, Response};
 use serde_json::{json, Value};
 use anyhow::{anyhow, Error};
 use std::fmt::Display;
+use futures::executor::block_on;
 mod types;
 #[derive(Deserialize, Serialize, Clone, Debug, Default)]
 pub struct OperatorConfig {
@@ -27,7 +28,7 @@ fn main() {
     let subcommand = match args.subcommand() {
         ( "add-nodes", Some(v)) => { 
             match v.value_of("subnet") {
-                Some(s) => { return add_nodes_to_subnet(s.to_string())},
+                Some(s) => { return block_on(add_nodes_to_subnet(s.to_string(), 1, &client, &cfg.backend_url, types::DryRun::True))},
                 None => { println!("Need subnet to perform add-nodes")}
             }
          },
@@ -37,10 +38,23 @@ fn main() {
     };
 }
 
-pub fn add_nodes_to_subnet(subnet: String) {
-    println!("{}", subnet);
-    println!("Not implemented yet (add_nodes)");
-}
+async fn add_nodes_to_subnet(subnet: String, node_count: i32, client: &Client, url: &str, dryrun: types::DryRun) {
+    let body = types::DecentralizedNodeQuery{
+        removals: None,
+        subnet,
+        node_count
+    };
+    let best_nodes = get_decentralized_nodes(url, client, body).await.expect("Unable to get nodes from backend").nodes.clone();
+    println!("The current best nodes to add are {:?}", best_nodes);
+    match dryrun {
+        types::DryRun::True => {
+            add_and_remove_nodes(None, Some(best_nodes))
+            },
+        types::DryRun::False => {
+            println!("Not running this command, feel free to double check, if you want to run for real set flag --iwanttodothisforrealipromiseiknowwhatimdoing")
+        }
+        }
+    }
 
 async fn remove_dead_nodes_from_subnet(subnet: &str, url: &str, client: &Client, dryrun: types::DryRun) -> Result<(), Error> {
     println!("Not implemented yet (remove_nodes)");
@@ -52,11 +66,11 @@ async fn remove_dead_nodes_from_subnet(subnet: &str, url: &str, client: &Client,
         removals: Some(assumed_removed.clone()),
         node_count
     };
-    let best_added_nodes = client.post(url).json(&body).send().await?.json::<types::BestNodesResponse>().await?.nodes.clone();
+    let best_added_nodes = get_decentralized_nodes(url, client, body).await?.nodes.clone();
     println!("The current dead nodes are {:?}, and the nodes that we would like to add are {:?}", assumed_removed, best_added_nodes);
     match dryrun {
         types::DryRun::True => {
-            add_and_remove_nodes(assumed_removed, best_added_nodes);
+            add_and_remove_nodes(Some(assumed_removed), Some(best_added_nodes));
         },
         types::DryRun::False => {
             println!("Not running this command, feel free to double check, if you want to run for real set flag --iwanttodothisforrealipromiseiknowwhatimdoing")
@@ -65,8 +79,8 @@ async fn remove_dead_nodes_from_subnet(subnet: &str, url: &str, client: &Client,
     Ok(())
 }
 
-async fn get_decentralized_nodes(url: &str, client: Client, params: types::DecentralizedNodeQuery) -> Result<serde_json::Value, anyhow::Error> {
-    let resp = client.post(url).json(&params).send().await?.json::<Value>().await?;
+async fn get_decentralized_nodes(url: &str, client: &Client, params: types::DecentralizedNodeQuery) -> Result<types::BestNodesResponse, anyhow::Error> {
+    let resp = client.post(url).json(&params).send().await?.json::<types::BestNodesResponse>().await?;
     Ok(resp)
 }
 
@@ -75,6 +89,6 @@ async fn get_dead_nodes(subnet: &str, url: &str, client: &Client) -> Result<type
     Ok(resp)
 }
 
-pub fn add_and_remove_nodes(removed: Vec<String>, added: Vec<String>) {
+pub fn add_and_remove_nodes(removed: Option<Vec<String>>, added: Option<Vec<String>>) {
 
 }
