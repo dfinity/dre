@@ -9,21 +9,21 @@ settings:
 
 args:
     - flag:
-        about: Disables dry run mode.
+        global: true
         long: iwanttodothisforrealipromiseiknowwhatimdoing
+        takes_value: false
 subcommands:
     - add-nodes:
         about: adds nodes in a decentralization-maximizing way
         args:
             - subnet:
                 short: s
+                long: subnet
                 takes_value: true
-                about: The subnet identifier for the target subnet.
     - remove-dead-nodes:
         about: removes dead nodes from subnet
         args:
             - subnet:
                 short: s
+                long: subnet
                 takes_value: true
-                about: the subnet identifier for the target subnet.
-
