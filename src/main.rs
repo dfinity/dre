@@ -48,7 +48,7 @@ struct Opts {
     dryrun: bool,
     #[clap(subcommand)]
     subcommand: SubCommand,
-    #[clap(short, long)]
+    #[clap(long)]
     nns_url: Option<String>
 }
 
@@ -262,7 +262,7 @@ fn add_and_remove_single_node(nodes: SingleNode, opts: &Opts, cfg: OperatorConfi
     println!("{} {}", "Subnet(s) affected:".blue(), nodes.subnet);
     println!("{} {}", "Nodes to be removed:".red(), nodes.removed);
     println!("{} {}", "Nodes to be added:".green(), nodes.added);
-    println!("{} {}", "NNS Proposal URL:", opts.proposal_url.as_ref().unwrap().clone());
+    println!("{} {}", "NNS Proposal URL:", cfg.proposal_url.as_ref().unwrap().clone());
     println!("{}", "Are you sure you want to continue? Feel free to double check [Y/N]");
     let mut buffer = String::new();
     let mut stdin = io::stdin();
