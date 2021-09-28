@@ -32,7 +32,7 @@ impl FromStr for SingleNode {
     }
 }
 
-#[derive(Clap)]
+#[derive(Clap, Clone)]
 pub struct MultipleNodes {
     subnet: String,
     removed: Vec<String>,
@@ -85,7 +85,7 @@ pub struct OperatorConfig {
     pub(crate) backend_url: Option<String>
 }
 
-#[derive(Clap)]
+#[derive(Clap, Clone)]
 #[clap(version = "1.0", author = "Connor Matza <coic_admin_cmdnnor.matza@dfinity.org>")]
 #[clap(setting = AppSettings::ColoredHelp)]
 pub struct Opts {
@@ -111,7 +111,7 @@ pub struct Opts {
     pub(crate) nns_url: Option<String>
 }
 
-#[derive(Clap)]
+#[derive(Clap, Clone)]
 pub(crate) enum SubCommand {
     #[clap(version = "1.0",  author = "Someone")]
     ReplaceSingleArbitrary(SingleNode),
@@ -125,23 +125,23 @@ pub(crate) enum SubCommand {
     ReplaceBatchArbitrary(MultipleNodes)
 }
 
-#[derive(Clap)]
+#[derive(Clap, Clone)]
 struct ReplaceRecommended {
     subnet: Subnet
 }
 
-#[derive(Clap)]
+#[derive(Clap, Clone)]
 struct AddNodesRecommended {
     subnet: Subnet,
 }
 
-#[derive(Clap)]
+#[derive(Clap, Clone)]
 struct AddNodesArbitrary {
     subnet: Subnet, 
     nodes: Nodes
 }
 
-#[derive(Clap)]
+#[derive(Clap, Clone)]
 struct ReplaceBatchArbitrary {
     replacements: MultipleNodes
 }
@@ -151,7 +151,7 @@ pub struct Subnet {
     pub(crate) id: String,
 }
 
-#[derive(Clap, Debug)]
+#[derive(Clap, Clone)]
 pub struct Node {
     pub id: String,
 }
@@ -170,7 +170,7 @@ impl FromStr for Node {
     }
 }
 
-#[derive(Clap)]
+#[derive(Clap, Clone)]
 pub struct Nodes {
     subnet: String,
     list: Vec<Node>

@@ -5,10 +5,11 @@ use std::ops::Deref;
 use super::cli_types::{Node, Subnet};
 use super::ops::remove_single_node;
 use std::sync::Arc;
+use std::sync::Mutex;
 use super::cli_types::OperatorConfig;
 pub struct ReplacementStateWorker<'a> {
     db: Arc<r2d2::Pool<r2d2_sqlite::SqliteConnectionManager>>,
-    not_added: Vec<(String, String, String)>,
+    not_added: Mutex<Vec<(String, String, String)>>,
     cfg: &'a OperatorConfig
 }
 struct ReplacementState{
@@ -24,18 +25,24 @@ impl ReplacementStateWorker<'_> {
         .expect("Unable to create needed database table");
         return ReplacementStateWorker{
             db,
-            not_added: Vec::new(),
+            not_added: Mutex::new(Vec::new()),
             cfg
         }
     }
-    pub fn add_waited_replacement(&mut self, proposal: String, to_remove: String, subnet: String) {
-        self.not_added.push((proposal, to_remove, subnet));
+    pub fn add_waited_replacement(&self, proposal: String, to_remove: String, subnet: String) {
+        let mut node_vec = self.not_added.lock().unwrap();
+        node_vec.push((proposal, to_remove, subnet));
     }
-
-    pub fn update_proposals(self) -> Result<(), anyhow::Error> {
+    pub fn update_loop(&self) -> () {
+        loop {
+            self.update_proposals();
+        }
+    }
+    pub fn update_proposals(&self) -> Result<(), anyhow::Error> {
         let conn = self.db.get().expect("Unable to get pool connection");
         let mut insert_stmt = conn.prepare("INSERT INTO replacement_queue VALUES (?, ?. ?").expect("Incorrect SQL statement for updating table");
-        for (proposal, to_remove, subnet) in self.not_added.iter() {
+        let mut insertion_vec = self.not_added.lock().unwrap();
+        for (proposal, to_remove, subnet) in insertion_vec.drain(..) {
             insert_stmt.execute(params![proposal, to_remove, subnet]).expect(&format!("Unable to insert proposal {}", proposal));
         }
         let mut query_stmt = conn.prepare("SELECT * FROM replacement_queue").expect("Querying database file failed");

@@ -11,7 +11,7 @@ use std::sync::Arc;
 use super::state_worker::ReplacementStateWorker;
 use std::str;
 
-pub fn add_and_remove_single_node(nodes: SingleNode, opts: &Opts, cfg: OperatorConfig, worker: &ReplacementStateWorker) {
+pub fn add_and_remove_single_node(nodes: SingleNode, cfg: &OperatorConfig, worker: &ReplacementStateWorker) {
     loop {
     println!("{}", "Proposing to take the following actions:");
     println!("{} {}", "Network to be affected:".blue(), "Mainnet");
@@ -27,20 +27,8 @@ pub fn add_and_remove_single_node(nodes: SingleNode, opts: &Opts, cfg: OperatorC
     let buffer = buffer.trim();
     match &buffer as &str { 
         "Y" => { println!("Ic admin functionality not yet implemented");
-                let add_output = Command::new(cfg.ic_admin_cmd.as_ref().unwrap())
-                    .args(["--use-hsm", "--slot", &cfg.hsm_slot.as_ref().unwrap(), "--key-id", &cfg.hsm_key_id.as_ref().unwrap(), "--pin", &cfg.hsm_pin.as_ref().unwrap(), "--nns-url", &cfg.nns_url.as_ref().unwrap(), 
-                            "propose-to-add-nodes-to-subnet",  "--subnet", &nodes.subnet, "--proposer", &cfg.neuron_index.as_ref().unwrap(), "--proposal-url", &cfg.proposal_url.as_ref().unwrap(), "--summary", &format!("Adding {} to subnet {} to replace {}", nodes.added, nodes.subnet, nodes.removed), &nodes.added])
-                    .output()
-                    .expect("Failed to add node, panicing");
-                let subtract_output = Command::new(cfg.ic_admin_cmd.as_ref().unwrap())
-                    .args(["--use-hsm", "--slot", &cfg.hsm_slot.as_ref().unwrap(), "--key-id", &cfg.hsm_key_id.as_ref().unwrap(), "--pin", &cfg.hsm_pin.as_ref().unwrap(), "--nns-url", &cfg.nns_url.as_ref().unwrap(), 
-                            "propose-to-remove-nodes-from-subnet",  "--subnet", &nodes.subnet, "--proposer", &cfg.neuron_index.as_ref().unwrap(), "--proposal-url", &cfg.proposal_url.as_ref().unwrap(), "--summary", &format!("Removing {} from subnet {} replced by {}", nodes.added, nodes.subnet, nodes.removed), &nodes.removed])
-                    .output()
-                    .expect("Failed to remove node, panicing");
-                println!("Operation successful");
-
-
-    
+                let add_output = add_single_node(Subnet{id: nodes.subnet.clone()}, Node{id: nodes.added}, &cfg);
+                worker.add_waited_replacement(add_output, nodes.removed, nodes.subnet);    
                 break;
             },
         "N" => { println!("Cancelling operation");
