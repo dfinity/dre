@@ -153,7 +153,7 @@ pub struct Subnet {
 
 #[derive(Clap, Debug)]
 pub struct Node {
-    id: String,
+    pub id: String,
 }
 
 impl FromStr for Subnet {

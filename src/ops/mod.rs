@@ -5,9 +5,13 @@ use super::cli_types::*;
 use std::io::stdin;
 use reqwest::{Client};
 use anyhow::{anyhow, Error};
+use r2d2_sqlite;
+use r2d2;
+use std::sync::Arc;
+use super::state_worker::ReplacementStateWorker;
 use std::str;
 
-pub fn add_and_remove_single_node(nodes: SingleNode, opts: &Opts, cfg: OperatorConfig, db: &mut sqlite::Connection) {
+pub fn add_and_remove_single_node(nodes: SingleNode, opts: &Opts, cfg: OperatorConfig, worker: &ReplacementStateWorker) {
     loop {
     println!("{}", "Proposing to take the following actions:");
     println!("{} {}", "Network to be affected:".blue(), "Mainnet");
@@ -104,7 +108,7 @@ pub fn add_and_remove_nodes(subnet: Subnet, removed: Option<Vec<String>>, added:
 
 }
 
-pub fn remove_single_node(subnet: Subnet, removed: Node, cfg: OperatorConfig) -> String {
+pub fn remove_single_node(subnet: Subnet, removed: Node, cfg: &OperatorConfig) -> String {
     let subtract_output = Command::new(cfg.ic_admin_cmd.as_ref().unwrap())
     .args(["--use-hsm", "--slot", &cfg.hsm_slot.as_ref().unwrap(), "--key-id", &cfg.hsm_key_id.as_ref().unwrap(), "--pin", &cfg.hsm_pin.as_ref().unwrap(), "--nns-url", &cfg.nns_url.as_ref().unwrap(), 
             "propose-to-remove-nodes-from-subnet",  "--subnet", &subnet.id, "--proposer", &cfg.neuron_index.as_ref().unwrap(), "--proposal-url", &cfg.proposal_url.as_ref().unwrap(), "--summary", &format!("Removing {} from subnet.", removed.id)])
@@ -113,7 +117,7 @@ pub fn remove_single_node(subnet: Subnet, removed: Node, cfg: OperatorConfig) ->
     str::from_utf8(&subtract_output.stdout).expect("stdout unable to be parsed as text - this should never happen.").to_string()
 }
 
-pub fn add_single_node(subnet: Subnet, added: Node, cfg: OperatorConfig) -> String {
+pub fn add_single_node(subnet: Subnet, added: Node, cfg: &OperatorConfig) -> String {
     let add_output = Command::new(cfg.ic_admin_cmd.as_ref().unwrap())
     .args(["--use-hsm", "--slot", &cfg.hsm_slot.as_ref().unwrap(), "--key-id", &cfg.hsm_key_id.as_ref().unwrap(), "--pin", &cfg.hsm_pin.as_ref().unwrap(), "--nns-url", &cfg.nns_url.as_ref().unwrap(), 
             "propose-to-remove-nodes-from-subnet",  "--subnet", &subnet.id, "--proposer", &cfg.neuron_index.as_ref().unwrap(), "--proposal-url", &cfg.proposal_url.as_ref().unwrap(), "--summary", &format!("Removing {} from subnet.", added.id)])
