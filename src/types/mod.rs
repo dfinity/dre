@@ -1,4 +1,7 @@
 use serde::{Serialize, Deserialize};
+use clap::{Clap, AppSettings};
+use std::str::FromStr;
+use anyhow::{anyhow, Error};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct DecentralizedNodeQuery {
@@ -18,7 +21,4 @@ pub struct BestNodesResponse {
     pub nodes: Vec<String>
 }
 
-pub enum DryRun {
-    False,
-    True
-}
+
