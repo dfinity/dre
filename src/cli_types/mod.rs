@@ -2,6 +2,8 @@ use clap::{Clap, AppSettings};
 use std::str::FromStr;
 use anyhow::{anyhow, Error};
 use serde::{Serialize, Deserialize};
+
+#[allow(dead_code)]
 pub enum DryRun {
     False,
     True
@@ -20,8 +22,8 @@ pub struct SingleNode {
 impl FromStr for SingleNode {
     type Err = Error;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let items: Vec<&str> = s.split(" ").collect();
-        if items.len() != 3 as usize {
+        let items: Vec<&str> = s.split(' ').collect();
+        if items.len() != 3 {
             return Err(anyhow!("Three arguments needed, in order <subnet_id> <node_removed_id> <node_added_id>"))
         }
         Ok(Self{
@@ -42,16 +44,15 @@ pub struct MultipleNodes {
 impl FromStr for MultipleNodes {
     type Err = Error;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let items: Vec<&str> = s.split(" ").collect();
-        if items.len() < 5 as usize {
+        let items: Vec<&str> = s.split(' ').collect();
+        if items.len() < 5 {
             return Err(anyhow!("Pattern for lists of arbitrary nodes is <subnet_id> <added/removed> <node1> <node2> <added/removed> <node1> <node2>"));
         }
         let subnet = items[0].to_string();
         let mut removed: Vec<String> = Vec::new();
         let mut added: Vec<String> = Vec::new();
         let mut flag = true;
-        for val in 1..items.len() {
-            let node = items[val];
+        for node in items {
             if node == "removed" {
                 flag = false;
             } else if node == "added" {

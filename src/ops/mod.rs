@@ -4,28 +4,26 @@ use super::types::*;
 use super::cli_types::*;
 use std::io::stdin;
 use reqwest::{Client};
-use anyhow::{anyhow, Error};
-use r2d2_sqlite;
-use r2d2;
-use std::sync::Arc;
+use anyhow::{Error};
+
 use super::state_worker::ReplacementStateWorker;
 use std::str;
 
 pub fn add_and_remove_single_node(nodes: SingleNode, cfg: &OperatorConfig, worker: &ReplacementStateWorker) {
     loop {
-    println!("{}", "Proposing to take the following actions:");
-    println!("{} {}", "Network to be affected:".blue(), "Mainnet");
+    println!("Proposing to take the following actions:");
+    println!("{} {}", "Network to be affected:".blue(), "Mainnet".green());
     println!("{} {}", "Subnet(s) affected:".blue(), nodes.subnet);
     println!("{} {}", "Nodes to be removed:".red(), nodes.removed);
     println!("{} {}", "Nodes to be added:".green(), nodes.added);
-    println!("{} {}", "NNS Proposal URL:", cfg.proposal_url.as_ref().unwrap().clone());
-    println!("{}", "Are you sure you want to continue? Feel free to double check [Y/N]");
+    println!("{} {}", "NNS Proposal URL:".blue(), cfg.proposal_url.as_ref().unwrap().clone().green());
+    println!("Are you sure you want to continue? Feel free to double check [Y/N]");
     let mut buffer = String::new();
-    let mut stdin = stdin();
+    let stdin = stdin();
     stdin.read_line(&mut buffer).unwrap();
     println!("{}", buffer);
     let buffer = buffer.trim();
-    match &buffer as &str { 
+    match buffer as &str { 
         "Y" => { println!("Ic admin functionality not yet implemented");
                 let add_output = add_single_node(Subnet{id: nodes.subnet.clone()}, Node{id: nodes.added}, &cfg);
                 worker.add_waited_replacement(add_output, nodes.removed, nodes.subnet);    
@@ -41,6 +39,7 @@ pub fn add_and_remove_single_node(nodes: SingleNode, cfg: &OperatorConfig, worke
 
 }
 
+#[allow(dead_code)]
 async fn add_nodes_to_subnet(subnet: Subnet, node_count: i32, client: &Client, url: &str, dryrun: DryRun) {
     let body = DecentralizedNodeQuery{
         removals: None,
@@ -59,6 +58,7 @@ async fn add_nodes_to_subnet(subnet: Subnet, node_count: i32, client: &Client, u
         }
     }
 
+#[allow(dead_code)]
 pub async fn remove_dead_nodes_from_subnet(subnet: Subnet, url: &str, client: &Client, dryrun: DryRun) -> Result<(), Error> {
     println!("Not implemented yet (remove_nodes)");
     let nodes_to_remove = get_dead_nodes(subnet.clone(), url, client).await?;
@@ -98,8 +98,8 @@ pub fn add_and_remove_nodes(subnet: Subnet, removed: Option<Vec<String>>, added:
 
 pub fn remove_single_node(subnet: Subnet, removed: Node, cfg: &OperatorConfig) -> String {
     let subtract_output = Command::new(cfg.ic_admin_cmd.as_ref().unwrap())
-    .args(["--use-hsm", "--slot", &cfg.hsm_slot.as_ref().unwrap(), "--key-id", &cfg.hsm_key_id.as_ref().unwrap(), "--pin", &cfg.hsm_pin.as_ref().unwrap(), "--nns-url", &cfg.nns_url.as_ref().unwrap(), 
-            "propose-to-remove-nodes-from-subnet",  "--subnet", &subnet.id, "--proposer", &cfg.neuron_index.as_ref().unwrap(), "--proposal-url", &cfg.proposal_url.as_ref().unwrap(), "--summary", &format!("Removing {} from subnet.", removed.id)])
+    .args(["--use-hsm", "--slot", cfg.hsm_slot.as_ref().unwrap(), "--key-id", cfg.hsm_key_id.as_ref().unwrap(), "--pin", cfg.hsm_pin.as_ref().unwrap(), "--nns-url", cfg.nns_url.as_ref().unwrap(), 
+            "propose-to-remove-nodes-from-subnet",  "--subnet", &subnet.id, "--proposer", cfg.neuron_index.as_ref().unwrap(), "--proposal-url", cfg.proposal_url.as_ref().unwrap(), "--summary", &format!("Removing {} from subnet.", removed.id)])
     .output()
     .expect("Failed to remove node, panicing");
     str::from_utf8(&subtract_output.stdout).expect("stdout unable to be parsed as text - this should never happen.").to_string()
@@ -107,8 +107,8 @@ pub fn remove_single_node(subnet: Subnet, removed: Node, cfg: &OperatorConfig) -
 
 pub fn add_single_node(subnet: Subnet, added: Node, cfg: &OperatorConfig) -> String {
     let add_output = Command::new(cfg.ic_admin_cmd.as_ref().unwrap())
-    .args(["--use-hsm", "--slot", &cfg.hsm_slot.as_ref().unwrap(), "--key-id", &cfg.hsm_key_id.as_ref().unwrap(), "--pin", &cfg.hsm_pin.as_ref().unwrap(), "--nns-url", &cfg.nns_url.as_ref().unwrap(), 
-            "propose-to-remove-nodes-from-subnet",  "--subnet", &subnet.id, "--proposer", &cfg.neuron_index.as_ref().unwrap(), "--proposal-url", &cfg.proposal_url.as_ref().unwrap(), "--summary", &format!("Removing {} from subnet.", added.id)])
+    .args(["--use-hsm", "--slot", cfg.hsm_slot.as_ref().unwrap(), "--key-id", cfg.hsm_key_id.as_ref().unwrap(), "--pin", cfg.hsm_pin.as_ref().unwrap(), "--nns-url", cfg.nns_url.as_ref().unwrap(), 
+            "propose-to-remove-nodes-from-subnet",  "--subnet", &subnet.id, "--proposer", cfg.neuron_index.as_ref().unwrap(), "--proposal-url", cfg.proposal_url.as_ref().unwrap(), "--summary", &format!("Removing {} from subnet.", added.id)])
     .output()
     .expect("Failed to remove node, panicing");
     str::from_utf8(&add_output.stdout).expect("stdout unable to be parsed as text - this should never happen.").to_string()

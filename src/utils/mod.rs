@@ -1,5 +1,4 @@
 use super::cli_types::*;
-use super::types::*;
 
 
 pub fn merge_opts_into_cfg(opts: &Opts, cfg: &OperatorConfig) -> OperatorConfig {

@@ -1,7 +1,6 @@
-use r2d2::{PooledConnection, Pool};
+use r2d2::{Pool};
 use r2d2_sqlite::{SqliteConnectionManager};
 use rusqlite::{params};
-use std::ops::Deref;
 use super::cli_types::{Node, Subnet};
 use super::ops::remove_single_node;
 use std::sync::Arc;
@@ -23,7 +22,7 @@ impl ReplacementStateWorker<'_> {
             "CREATE TABLE IF NOT EXISTS replacement_queue (waiting TEXT removed TEXT, subnet TEXT)", params![]
         )
         .expect("Unable to create needed database table");
-        return ReplacementStateWorker{
+        ReplacementStateWorker{
             db,
             not_added: Mutex::new(Vec::new()),
             cfg
@@ -33,9 +32,9 @@ impl ReplacementStateWorker<'_> {
         let mut node_vec = self.not_added.lock().unwrap();
         node_vec.push((proposal, to_remove, subnet));
     }
-    pub fn update_loop(&self) -> () {
+    pub fn update_loop(&self) {
         loop {
-            self.update_proposals();
+            self.update_proposals().unwrap();
         }
     }
     pub fn update_proposals(&self) -> Result<(), anyhow::Error> {
@@ -43,10 +42,11 @@ impl ReplacementStateWorker<'_> {
         let mut insert_stmt = conn.prepare("INSERT INTO replacement_queue VALUES (?, ?. ?").expect("Incorrect SQL statement for updating table");
         let mut insertion_vec = self.not_added.lock().unwrap();
         for (proposal, to_remove, subnet) in insertion_vec.drain(..) {
-            insert_stmt.execute(params![proposal, to_remove, subnet]).expect(&format!("Unable to insert proposal {}", proposal));
+            let err_string = format!("Unable to insert proposal {}", proposal);
+            insert_stmt.execute(params![proposal, to_remove, subnet]).expect(&err_string);
         }
         let mut query_stmt = conn.prepare("SELECT * FROM replacement_queue").expect("Querying database file failed");
-        let mut waiting = query_stmt.query_map(
+        let waiting = query_stmt.query_map(
             params![], |row| {
                 Ok(ReplacementState{
                 waiting: row.get(0)?,
@@ -66,9 +66,7 @@ impl ReplacementStateWorker<'_> {
         Ok(())
     }
 
-    async fn get_proposal_status(&self, proposal_id: String) -> bool {
-        /// Didn't quite get there in implementation
-        /// The purpose of this function is to query the NNS to see if the proposal has been completed or not
-        return true
+    async fn get_proposal_status(&self, __proposal_id: String) -> bool {
+        true
     }
 } 
