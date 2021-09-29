@@ -1,4 +1,4 @@
-name: MercuryManagementCli
+name: ReleaseOpsCli
 version: "1.0"
 about: CLI Tool for Automated Subnet Management and Decisions
 author: Connor Matza <connor.matza@dfinity.org>

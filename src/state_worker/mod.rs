@@ -19,7 +19,7 @@ struct ReplacementState {
 impl ReplacementStateWorker<'_> {
     pub fn new(db: Arc<Pool<SqliteConnectionManager>>, cfg: &'static OperatorConfig) -> Self {
         db.get().expect("Unable to get pool connection").execute(
-            "CREATE TABLE IF NOT EXISTS replacement_queue (waiting TEXT removed TEXT, subnet TEXT)", params![]
+            "CREATE TABLE IF NOT EXISTS replacement_queue (waiting TEXT, removed TEXT, subnet TEXT)", params![]
         )
         .expect("Unable to create needed database table");
         ReplacementStateWorker {
