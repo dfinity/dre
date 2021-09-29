@@ -148,9 +148,9 @@ pub async fn get_dead_nodes(
 }
 
 pub fn add_and_remove_nodes(
-    subnet: Subnet,
-    removed: Option<Vec<String>>,
-    added: Option<Vec<String>>,
+    _subnet: Subnet,
+    _removed: Option<Vec<String>>,
+    _added: Option<Vec<String>>,
 ) {
 }
 
