@@ -1,15 +1,15 @@
+use clap::Clap;
 use confy::load_path;
-use clap::{Clap};
-mod types;
-mod ops;
-mod utils;
 mod cli_types;
+mod ops;
 mod state_worker;
+mod types;
+mod utils;
 use cli_types::{Opts, SubCommand};
-use std::sync::Arc;
-use state_worker::ReplacementStateWorker;
-use threadpool::ThreadPool;
 use lazy_static::lazy_static;
+use state_worker::ReplacementStateWorker;
+use std::sync::Arc;
+use threadpool::ThreadPool;
 
 lazy_static! {
     static ref CLI_OPTS: Opts = Opts::parse();
@@ -17,7 +17,6 @@ lazy_static! {
         let init_file = load_path("management_config.toml").unwrap();
         utils::merge_opts_into_cfg(&CLI_OPTS, &init_file)
     };
-
 }
 
 fn main() {
@@ -30,20 +29,20 @@ fn main() {
         .expect("Failed to create r2d2 SQLite connection pool");
     let pool_arc = Arc::new(sqlite_pool);
     let pool = pool_arc.clone();
-    
 
     //State worker initialization
-    let worker = Arc::new(ReplacementStateWorker::new(
-        pool,
-        &MERGED_OPTS
-    ));
+    let worker = Arc::new(ReplacementStateWorker::new(pool, &MERGED_OPTS));
     let thread_clone = worker.clone();
     let worker_pool = ThreadPool::new(1);
     worker_pool.execute(move || thread_clone.update_loop());
 
     //Start of actually doing stuff with commands.
     match &CLI_OPTS.subcommand {
-        SubCommand::ReplaceSingleArbitrary(v) => { ops::add_and_remove_single_node(v.clone(), &MERGED_OPTS, &worker) },
-        _ => { println!("Not implemented yet")}
+        SubCommand::ReplaceNodeManual(v) => {
+            ops::add_and_remove_single_node(v.clone(), &MERGED_OPTS, &worker)
+        }
+        _ => {
+            println!("Not implemented yet")
+        }
     }
 }
