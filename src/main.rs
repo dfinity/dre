@@ -28,7 +28,7 @@ fn main() {
     let sqlite_pool = r2d2::Pool::new(sqlite_connection_manager)
         .expect("Failed to create r2d2 SQLite connection pool");
     let pool_arc = Arc::new(sqlite_pool);
-    let pool = pool_arc.clone();
+    let pool = pool_arc;
 
     //State worker initialization
     let worker = Arc::new(ReplacementStateWorker::new(pool, &MERGED_OPTS));

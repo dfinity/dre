@@ -39,7 +39,7 @@ pub fn add_and_remove_single_node(
                         id: nodes.subnet.clone(),
                     },
                     Node { id: nodes.added },
-                    &cfg,
+                    cfg,
                 );
                 worker.add_waited_replacement(add_output, nodes.removed, nodes.subnet);
                 break;
@@ -71,8 +71,7 @@ async fn add_nodes_to_subnet(
     let best_nodes = get_decentralized_nodes(url, client, body)
         .await
         .expect("Unable to get nodes from backend")
-        .nodes
-        .clone();
+        .nodes;
     println!("The current best nodes to add are {:?}", best_nodes);
     match dryrun {
         DryRun::True => add_and_remove_nodes(subnet, None, Some(best_nodes)),
@@ -98,10 +97,7 @@ pub async fn remove_dead_nodes_from_subnet(
         removals: Some(assumed_removed.clone()),
         node_count,
     };
-    let best_added_nodes = get_decentralized_nodes(url, client, body)
-        .await?
-        .nodes
-        .clone();
+    let best_added_nodes = get_decentralized_nodes(url, client, body).await?.nodes;
     println!(
         "The current dead nodes are {:?}, and the nodes that we would like to add are {:?}",
         assumed_removed, best_added_nodes

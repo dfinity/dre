@@ -59,12 +59,10 @@ impl FromStr for SubnetReplaceMultipleNodes {
                 flag = false;
             } else if node == "added" {
                 flag = true
+            } else if flag {
+                added.push(node.to_string());
             } else {
-                if flag == true {
-                    added.push(node.to_string());
-                } else {
-                    removed.push(node.to_string());
-                }
+                removed.push(node.to_string());
             }
         }
         Ok(Self {
