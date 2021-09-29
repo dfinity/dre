@@ -22,7 +22,7 @@ lazy_static! {
 fn main() {
     let client = reqwest::Client::new();
 
-    // SQLite cconnection pool initialization
+    // Initialize SQLite connection pool
     let sqlite_file = "statemachine.sqlite";
     let sqlite_connection_manager = r2d2_sqlite::SqliteConnectionManager::file(sqlite_file);
     let sqlite_pool = r2d2::Pool::new(sqlite_connection_manager)
