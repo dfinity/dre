@@ -6,13 +6,13 @@ use reqwest::Client;
 use std::io::stdin;
 use std::process::Command;
 
-use super::state_worker::ReplacementStateWorker;
+use super::states::NodeReplacementStateDb;
 use std::str;
 
 pub fn add_and_remove_single_node(
     nodes: SubnetReplaceNode,
     cfg: &OperatorConfig,
-    worker: &ReplacementStateWorker,
+    worker: &NodeReplacementStateDb,
 ) {
     loop {
         println!("Proposing to take the following actions:");
