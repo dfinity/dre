@@ -19,6 +19,22 @@ lazy_static! {
     };
 }
 
+fn main() {
+    let _client = reqwest::Client::new();
+
+    let worker = sqlite_init_worker();
+
+    // Start of actually doing stuff with commands.
+    match &CLI_OPTS.subcommand {
+        SubCommand::ReplaceNodeManual(v) => {
+            ops::add_and_remove_single_node(v.clone(), &*MERGED_OPTS, &worker)
+        }
+        _ => {
+            println!("Not implemented yet")
+        }
+    }
+}
+
 fn sqlite_init_worker() -> Arc<NodeReplacementStateDb> {
     // Initialize SQLite connection pool
     let sqlite_file_name = "state.sqlite";
@@ -34,20 +50,4 @@ fn sqlite_init_worker() -> Arc<NodeReplacementStateDb> {
     let worker_pool = ThreadPool::new(1);
     worker_pool.execute(move || thread_clone.update_loop());
     worker
-}
-
-fn main() {
-    let _client = reqwest::Client::new();
-
-    let worker = sqlite_init_worker();
-
-    // Start of actually doing stuff with commands.
-    match &CLI_OPTS.subcommand {
-        SubCommand::ReplaceNodeManual(v) => {
-            ops::add_and_remove_single_node(v.clone(), &*MERGED_OPTS, &worker)
-        }
-        _ => {
-            println!("Not implemented yet")
-        }
-    }
 }
