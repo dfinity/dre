@@ -1,4 +1,4 @@
-/target
-/src/management_config.toml
-management_config.toml
-statemachine.sqlite
+/target/
+
+.env
+state.sqlite3

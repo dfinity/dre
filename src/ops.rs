@@ -1,67 +1,82 @@
-use super::cli_types::*;
-use super::types::*;
-use anyhow::Error;
+use crate::cli_types::{NodesVec, SubcmdSubnetUpdateNodes, Subnet};
+use crate::types::*;
+use anyhow::{anyhow, Error};
 use colored::Colorize;
+use diesel::prelude::SqliteConnection;
+use log::{debug, info, warn};
+use python_input::input;
+use regex::Regex;
 use reqwest::Client;
-use std::io::stdin;
 use std::process::Command;
 
-use super::states::NodeReplacementStateDb;
+use crate::models;
+use crate::utils::env_cfg;
 use std::str;
+use std::str::FromStr;
 
-pub fn add_and_remove_single_node(
-    nodes: SubnetReplaceNode,
-    cfg: &OperatorConfig,
-    worker: &NodeReplacementStateDb,
-) {
-    loop {
-        println!("Proposing to take the following actions:");
-        println!("{} {}", "Network to be affected:".blue(), "Mainnet".green());
-        println!("{} {}", "Subnet(s) affected:".blue(), nodes.subnet);
-        println!("{} {}", "Nodes to be removed:".red(), nodes.removed);
-        println!("{} {}", "Nodes to be added:".green(), nodes.added);
-        println!(
-            "{} {}",
-            "NNS Proposal URL:".blue(),
-            cfg.proposal_url.as_ref().unwrap().clone().green()
-        );
-        println!("Are you sure you want to continue? Feel free to double check [Y/N]");
-        let mut buffer = String::new();
-        let stdin = stdin();
-        stdin.read_line(&mut buffer).unwrap();
-        println!("{}", buffer);
-        let buffer = buffer.trim();
-        match buffer as &str {
-            "Y" => {
-                println!("Ic admin functionality not yet implemented");
-                let add_output = add_single_node(
-                    Subnet {
-                        id: nodes.subnet.clone(),
-                    },
-                    Node { id: nodes.added },
-                    cfg,
-                );
-                worker.add_waited_replacement(add_output, nodes.removed, nodes.subnet);
-                break;
+fn check_and_submit_proposals_subnet_add_nodes(
+    db_connection: &SqliteConnection,
+    subnet_id: &String,
+) -> Result<(), anyhow::Error> {
+    let db_subnet_nodes_to_add = models::subnet_nodes_to_add_get(db_connection, subnet_id);
+
+    for row in &db_subnet_nodes_to_add {
+        match &row.nodes_to_add {
+            Some(nodes_to_add) => {
+                if row.proposal_id_for_add.is_none() {
+                    propose_add_nodes_to_subnet(db_connection, subnet_id, nodes_to_add, true)?;
+                }
             }
-            "N" => {
-                println!("Cancelling operation");
-                break;
-            }
-            _ => {
-                println!("Thou shalt make a choice");
-            }
+            None => {}
         }
     }
+    Ok(())
+}
+
+pub fn subnet_update_nodes(
+    db_connection: &SqliteConnection,
+    nodes: &SubcmdSubnetUpdateNodes,
+) -> Result<String, anyhow::Error> {
+    debug!(
+        "subnet_update_nodes {} nodes: add {:?} remove {:?}",
+        nodes.subnet, nodes.nodes_to_add, nodes.nodes_to_remove
+    );
+
+    check_and_submit_proposals_subnet_add_nodes(&db_connection, &nodes.subnet)?;
+    println!(
+        "Proposing to update nodes on subnet: {}",
+        nodes.subnet.blue()
+    );
+
+    match &nodes.nodes_to_add {
+        Some(nodes_to_add) => {
+            println!("{} {}", "Nodes to add to the subnet:".green(), nodes_to_add);
+            propose_add_nodes_to_subnet(db_connection, &nodes.subnet, nodes_to_add, false)?;
+        }
+        None => {}
+    };
+
+    match &nodes.nodes_to_remove {
+        Some(nodes_to_remove) => {
+            println!(
+                "{} {}",
+                "Nodes to remove from the subnet:".green(),
+                nodes_to_remove
+            );
+            propose_remove_nodes_from_subnet(&db_connection, &nodes.subnet, nodes_to_remove)?;
+        }
+        None => {}
+    };
+
+    Ok("All done".to_string())
 }
 
 #[allow(dead_code)]
-async fn add_nodes_to_subnet(
+async fn add_recommended_nodes_to_subnet(
     subnet: Subnet,
     node_count: i32,
     client: &Client,
     url: &str,
-    dryrun: DryRun,
 ) {
     let body = DecentralizedNodeQuery {
         removals: None,
@@ -73,12 +88,6 @@ async fn add_nodes_to_subnet(
         .expect("Unable to get nodes from backend")
         .nodes;
     println!("The current best nodes to add are {:?}", best_nodes);
-    match dryrun {
-        DryRun::True => add_and_remove_nodes(subnet, None, Some(best_nodes)),
-        DryRun::False => {
-            println!("Not running this command, feel free to double check, if you want to run for real set flag --iwanttodothisforrealipromiseiknowwhatimdoing")
-        }
-    }
 }
 
 #[allow(dead_code)]
@@ -86,7 +95,7 @@ pub async fn remove_dead_nodes_from_subnet(
     subnet: Subnet,
     url: &str,
     client: &Client,
-    dryrun: DryRun,
+    // dryrun: DryRun,
 ) -> Result<(), Error> {
     println!("Not implemented yet (remove_nodes)");
     let nodes_to_remove = get_dead_nodes(subnet.clone(), url, client).await?;
@@ -102,14 +111,6 @@ pub async fn remove_dead_nodes_from_subnet(
         "The current dead nodes are {:?}, and the nodes that we would like to add are {:?}",
         assumed_removed, best_added_nodes
     );
-    match dryrun {
-        DryRun::True => {
-            add_and_remove_nodes(subnet, Some(assumed_removed), Some(best_added_nodes));
-        }
-        DryRun::False => {
-            println!("Not running this command, feel free to double check, if you want to run for real set flag --iwanttodothisforrealipromiseiknowwhatimdoing")
-        }
-    }
     Ok(())
 }
 
@@ -143,67 +144,134 @@ pub async fn get_dead_nodes(
     Ok(resp)
 }
 
-pub fn add_and_remove_nodes(
-    _subnet: Subnet,
-    _removed: Option<Vec<String>>,
-    _added: Option<Vec<String>>,
-) {
+fn ic_admin_run(args: &Vec<String>, confirmed: bool) -> Result<String, Error> {
+    let args_basic = vec![
+        "--use-hsm".to_string(),
+        "--slot".to_string(),
+        env_cfg("hsm_slot"),
+        "--key-id".to_string(),
+        env_cfg("hsm_key_id"),
+        "--pin".to_string(),
+        env_cfg("hsm_pin"),
+        "--nns-url".to_string(),
+        env_cfg("nns_url"),
+    ];
+
+    let ic_admin_args = [args_basic, args.clone()].concat();
+
+    if confirmed {
+        info!("Real run of the ic-admin command");
+        let output = Command::new(env_cfg("ic_admin_bin_path"))
+            .args(ic_admin_args)
+            .output()?;
+        let stdout = String::from_utf8_lossy(output.stdout.as_ref()).to_string();
+        info!("STDOUT:\n{}", stdout);
+        if !output.stderr.is_empty() {
+            let stderr = String::from_utf8_lossy(output.stderr.as_ref()).to_string();
+            warn!("STDERR:\n{}", stderr);
+        }
+        Ok(stdout)
+    } else {
+        info!("Dry-run of the ic-admin command execution");
+        // Show the user the line that would be executed and let them decide if they want to proceed.
+        println!(
+            "{}",
+            "WARNING: Will execute the following command, please confirm.".red(),
+        );
+
+        println!(
+            "$ {} {}",
+            env_cfg("ic_admin_bin_path").green(),
+            shlex::join(
+                ic_admin_args
+                    .iter()
+                    .map(|s| s.as_str())
+                    .collect::<Vec<&str>>()
+            )
+            .green()
+        );
+
+        let buffer = input("Are you sure you want to continue? [y/N] ");
+        match buffer.to_uppercase().as_str() {
+            "Y" | "YES" => Ok("User confirmed".to_string()),
+            _ => Err(anyhow!(
+                "Cancelling operation, user entered '{}'",
+                buffer.as_str(),
+            )),
+        }
+    }
 }
 
-pub fn remove_single_node(subnet: Subnet, removed: Node, cfg: &OperatorConfig) -> String {
-    let subtract_output = Command::new(cfg.ic_admin_cmd.as_ref().unwrap())
-        .args([
-            "--use-hsm",
-            "--slot",
-            cfg.hsm_slot.as_ref().unwrap(),
-            "--key-id",
-            cfg.hsm_key_id.as_ref().unwrap(),
-            "--pin",
-            cfg.hsm_pin.as_ref().unwrap(),
-            "--nns-url",
-            cfg.nns_url.as_ref().unwrap(),
-            "propose-to-remove-nodes-from-subnet",
-            "--subnet",
-            &subnet.id,
-            "--proposer",
-            cfg.neuron_index.as_ref().unwrap(),
-            "--proposal-url",
-            cfg.proposal_url.as_ref().unwrap(),
-            "--summary",
-            &format!("Removing {} from subnet.", removed.id),
-        ])
-        .output()
-        .expect("Failed to remove node, panicing");
-    str::from_utf8(&subtract_output.stdout)
-        .expect("stdout unable to be parsed as text - this should never happen.")
-        .to_string()
+pub fn propose_add_nodes_to_subnet(
+    db_connection: &SqliteConnection,
+    subnet_id: &String,
+    nodes_to_add: &String,
+    confirmed: bool,
+) -> Result<String, anyhow::Error> {
+    let subnet = Subnet {
+        id: subnet_id.clone(),
+    };
+    let nodes_vec = NodesVec::from_str(nodes_to_add.as_str()).expect("parsing nodes_vec failed");
+
+    let ic_admin_args = vec![
+        "propose-to-add-nodes-to-subnet".to_string(),
+        "--subnet".to_string(),
+        subnet.id,
+        "--proposer".to_string(),
+        env_cfg("neuron_id"),
+        "--proposal-url".to_string(),
+        env_cfg("proposal_url"),
+        "--summary".to_string(),
+        format!("Add nodes to subnet: {}", nodes_vec),
+    ];
+
+    if !confirmed {
+        // Do a dry-run and see if the user confirms the operation
+        ic_admin_run(&ic_admin_args, false)?;
+
+        // Dry-run was a success, user confirmed
+        models::subnet_nodes_to_add_set(db_connection, subnet_id, &nodes_to_add)?;
+    }
+
+    let stdout = ic_admin_run(&ic_admin_args, true)?;
+
+    let re = Regex::new(r"(?m)^proposal (\d+)$").unwrap();
+    for cap in re.captures_iter(stdout.as_str()) {
+        let proposal_id = cap[1].parse::<i32>().unwrap();
+        println!("{}", proposal_id);
+        models::subnet_nodes_to_add_update_proposal_id(
+            db_connection,
+            subnet_id,
+            nodes_to_add,
+            proposal_id,
+        )?;
+        return Ok(stdout);
+    }
+    Err(anyhow!(
+        "The proposal number could not be extracted from the output string:\n{}",
+        stdout.as_str(),
+    ))
 }
 
-pub fn add_single_node(subnet: Subnet, added: Node, cfg: &OperatorConfig) -> String {
-    let add_output = Command::new(cfg.ic_admin_cmd.as_ref().unwrap())
-        .args([
-            "--use-hsm",
-            "--slot",
-            cfg.hsm_slot.as_ref().unwrap(),
-            "--key-id",
-            cfg.hsm_key_id.as_ref().unwrap(),
-            "--pin",
-            cfg.hsm_pin.as_ref().unwrap(),
-            "--nns-url",
-            cfg.nns_url.as_ref().unwrap(),
-            "propose-to-remove-nodes-from-subnet",
-            "--subnet",
-            &subnet.id,
-            "--proposer",
-            cfg.neuron_index.as_ref().unwrap(),
-            "--proposal-url",
-            cfg.proposal_url.as_ref().unwrap(),
-            "--summary",
-            &format!("Removing {} from subnet.", added.id),
-        ])
-        .output()
-        .expect("Failed to remove node, panicing");
-    str::from_utf8(&add_output.stdout)
-        .expect("stdout unable to be parsed as text - this should never happen.")
-        .to_string()
+pub fn propose_remove_nodes_from_subnet(
+    db_connection: &SqliteConnection,
+    subnet_id: &String,
+    nodes_to_remove: &String,
+) -> Result<String, anyhow::Error> {
+    let subnet = Subnet {
+        id: subnet_id.clone(),
+    };
+    let nodes_vec = NodesVec::from_str(nodes_to_remove.as_str()).expect("parsing nodes_vec failed");
+    let ic_admin_args = vec![
+        "propose-to-remove-nodes-from-subnet".to_string(),
+        "--subnet".to_string(),
+        subnet.id,
+        "--proposer".to_string(),
+        env_cfg("neuron_id"),
+        "--proposal-url".to_string(),
+        env_cfg("proposal_url"),
+        "--summary".to_string(),
+        format!("Remove nodes to subnet: {}", nodes_vec),
+    ];
+    ic_admin_run(&ic_admin_args, false)
 }

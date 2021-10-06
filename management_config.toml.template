@@ -1,7 +1,0 @@
-hsm_pin = "somepin"
-hsm_key_id = "some_id"
-hsm_slot = "some_slot"
-neuron_id = "neuron_id"
-proposal_url = "URL you want for proposals"
-ic_admin_cmd = "ic_admin"
-backend_url = "some_url"
