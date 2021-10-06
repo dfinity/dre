@@ -3,30 +3,30 @@
   "canisters": {
     "registry": {
       "type": "custom",
-      "candid": "canisters/registry.did",
+      "candid": "registry.did",
       "wasm": "../target/wasm32-unknown-unknown/release/registry-canister.wasm",
       "build": "cargo build --target wasm32-unknown-unknown --release -p registry-canister"
     },
     "tokens": {
       "type": "custom",
-      "candid": "canisters/gtc.did",
+      "candid": "gtc.did",
       "wasm": "../target/wasm32-unknown-unknown/release/genesis-token-canister.wasm",
       "build": "cargo build --target wasm32-unknown-unknown --release -p ic-nns-gtc"
     },
     "governance": {
       "type": "custom",
-      "candid": "canisters/governance.did",
+      "candid": "governance.did",
       "wasm": "../target/wasm32-unknown-unknown/release/governance-canister.wasm",
       "build": "cargo build --target wasm32-unknown-unknown --release -p ic-nns-governance"
     },
     "root": {
       "type": "custom",
-      "candid": "canisters/root.did",
+      "candid": "root.did",
       "wasm": "../target/wasm32-unknown-unknown/release/root-canister.wasm",
       "build": "cargo build --target wasm32-unknown-unknown --release -p ic-nns-handler-root"
     },
     "lifeline": {
-      "candid": "canisters/lifeline.did"
+      "candid": "lifeline.did"
     }
   },
   "networks": {
