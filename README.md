@@ -16,6 +16,11 @@ Install the SQLite3 dev libraries.
 sudo apt install libsqlite3-dev
 ```
 
+Install the SQLite3 ORM
+```
+cargo install diesel_cli --no-default-features --features sqlite
+```
+
 # Checking
 
 ```

@@ -1,53 +1,55 @@
+#[macro_use]
+extern crate diesel;
 use clap::Clap;
-use confy::load_path;
+use diesel::prelude::*;
+use dotenv::dotenv;
+use log::debug;
+
 mod cli_types;
+mod models;
 mod ops;
-mod states;
+mod schema;
 mod types;
 mod utils;
 use cli_types::{Opts, SubCommand};
-use lazy_static::lazy_static;
-use states::NodeReplacementStateDb;
-use std::sync::Arc;
-use threadpool::ThreadPool;
+use utils::env_cfg;
 
-lazy_static! {
-    static ref CLI_OPTS: Opts = Opts::parse();
-    static ref MERGED_OPTS: cli_types::OperatorConfig = {
-        let init_file = load_path("management_config.toml").unwrap();
-        utils::merge_opts_into_cfg(&CLI_OPTS, &init_file)
-    };
-}
+fn main() -> Result<(), anyhow::Error> {
+    init_env();
 
-fn main() {
-    let _client = reqwest::Client::new();
-
-    let worker = sqlite_init_worker();
+    let subnet_update_nodes_state = init_sqlite_connect();
+    let cli_opts = Opts::parse();
+    cli_types::load_command_line_config_override(&cli_opts);
 
     // Start of actually doing stuff with commands.
-    match &CLI_OPTS.subcommand {
-        SubCommand::ReplaceNodeManual(v) => {
-            ops::add_and_remove_single_node(v.clone(), &*MERGED_OPTS, &worker)
+    match &cli_opts.subcommand {
+        SubCommand::SubnetUpdateNodes(nodes) => {
+            match ops::subnet_update_nodes(&subnet_update_nodes_state, nodes) {
+                Ok(stdout) => {
+                    println!("{}", stdout);
+                    Ok(())
+                }
+                Err(err) => Err(err),
+            }
         }
-        _ => {
-            println!("Not implemented yet")
-        }
+        _ => Err(anyhow::anyhow!("Not implemented yet")),
     }
 }
 
-fn sqlite_init_worker() -> Arc<NodeReplacementStateDb> {
-    // Initialize SQLite connection pool
-    let sqlite_file_name = "state.sqlite";
-    let sqlite_connection_manager = r2d2_sqlite::SqliteConnectionManager::file(sqlite_file_name);
-    let sqlite_pool = r2d2::Pool::new(sqlite_connection_manager)
-        .expect("Failed to create r2d2 SQLite connection pool");
-    let pool_arc = Arc::new(sqlite_pool);
-    let pool = pool_arc;
+fn init_sqlite_connect() -> SqliteConnection {
+    debug!("Initializing the SQLite connection.");
+    let database_url = env_cfg("DATABASE_URL");
+    SqliteConnection::establish(&database_url)
+        .unwrap_or_else(|_| panic!("Error connecting to {}", database_url))
+}
 
-    // State worker initialization
-    let worker = Arc::new(NodeReplacementStateDb::new(pool, MERGED_OPTS.clone()));
-    let thread_clone = worker.clone();
-    let worker_pool = ThreadPool::new(1);
-    worker_pool.execute(move || thread_clone.update_loop());
-    worker
+fn init_env() {
+    if std::env::var("RUST_LOG").is_err() {
+        // Set the default log level to info
+        std::env::set_var("LOG_LEVEL", "info");
+    }
+    pretty_env_logger::init_custom_env("LOG_LEVEL");
+
+    dotenv()
+        .expect(".env file not found. Please copy env.template to .env and adjust configuration.");
 }

@@ -1,93 +1,41 @@
 use anyhow::{anyhow, Error};
 use clap::{AppSettings, Clap};
-use serde::{Deserialize, Serialize};
+use log::debug;
+use std::env;
 use std::str::FromStr;
 
-#[allow(dead_code)]
-pub enum DryRun {
-    False,
-    True,
-}
-
 #[derive(Clap, Clone)]
-pub struct SubnetReplaceNode {
+pub struct SubcmdSubnetUpdateNodes {
     #[clap(short, long)]
     pub(crate) subnet: String,
-    #[clap(short, long)]
-    pub(crate) removed: String,
-    #[clap(short, long)]
-    pub(crate) added: String,
+    #[clap(short = 'a', long = "add")]
+    pub(crate) nodes_to_add: Option<String>,
+    #[clap(short = 'r', long = "remove")]
+    pub(crate) nodes_to_remove: Option<String>,
 }
 
-impl FromStr for SubnetReplaceNode {
+impl FromStr for SubcmdSubnetUpdateNodes {
     type Err = Error;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let items: Vec<&str> = s.split(' ').collect();
+        let items: Vec<String> = match shlex::split(s) {
+            Some(items) => items,
+            None => return Err(anyhow!("Invalid input string provided: {}", s)),
+        };
         if items.len() != 3 {
             return Err(anyhow!(
-                "Three arguments needed, in order <subnet_id> <node_removed_id> <node_added_id>"
+                "Three arguments needed: '<subnet_id> <nodes_to_add> <nodes_to_remove>'. Multiple nodes can be provided at once."
             ));
         }
         Ok(Self {
-            subnet: items[0].to_string(),
-            removed: items[1].to_string(),
-            added: items[2].to_string(),
+            subnet: items[0].clone(),
+            nodes_to_add: Some(items[1].replace(",", " ")),
+            nodes_to_remove: Some(items[2].replace(",", " ")),
         })
     }
 }
 
 #[derive(Clap, Clone)]
-pub struct SubnetReplaceMultipleNodes {
-    subnet: String,
-    removed: Vec<String>,
-    added: Vec<String>,
-}
-
-impl FromStr for SubnetReplaceMultipleNodes {
-    type Err = Error;
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let items: Vec<&str> = s.split(' ').collect();
-        if items.len() < 5 {
-            return Err(anyhow!("Pattern for lists of arbitrary nodes is <subnet_id> <added/removed> <node1> <node2> <added/removed> <node1> <node2>"));
-        }
-        let subnet = items[0].to_string();
-        let mut removed: Vec<String> = Vec::new();
-        let mut added: Vec<String> = Vec::new();
-        let mut flag = true;
-        for node in items {
-            if node == "removed" {
-                flag = false;
-            } else if node == "added" {
-                flag = true
-            } else if flag {
-                added.push(node.to_string());
-            } else {
-                removed.push(node.to_string());
-            }
-        }
-        Ok(Self {
-            subnet,
-            removed,
-            added,
-        })
-    }
-}
-
-#[derive(Deserialize, Serialize, Clone, Debug, Default)]
-pub struct OperatorConfig {
-    pub(crate) hsm_pin: Option<String>,
-    pub(crate) hsm_slot: Option<String>,
-    pub(crate) hsm_key_id: Option<String>,
-    pub(crate) neuron_index: Option<String>,
-    pub(crate) proposal_url: Option<String>,
-    pub(crate) ic_admin_cmd: Option<String>,
-    pub(crate) nns_url: Option<String>,
-    pub(crate) dryrun: Option<bool>,
-    pub(crate) backend_url: Option<String>,
-}
-
-#[derive(Clap, Clone)]
-#[clap(version = "1.0", author = "Connor Matza <connor.matza@dfinity.org>")]
+#[clap(version = "0.1")]
 #[clap(setting = AppSettings::ColoredHelp)]
 pub struct Opts {
     #[clap(short = 'p', long)]
@@ -97,64 +45,72 @@ pub struct Opts {
     #[clap(short, long)]
     pub(crate) hsm_key_id: Option<String>,
     #[clap(short, long)]
-    pub(crate) neuron_index: Option<String>,
+    pub(crate) neuron_id: Option<String>,
     #[clap(short, long)]
-    pub(crate) ic_admin_cmd: Option<String>,
+    pub(crate) ic_admin_bin_path: Option<String>,
     #[clap(short = 'u', long)]
     pub(crate) proposal_url: Option<String>,
     #[clap(short, long)]
     pub(crate) backend_url: Option<String>,
+    #[clap(long)]
+    pub(crate) nns_url: Option<String>,
     #[clap(short, long)]
     pub(crate) dryrun: bool,
     #[clap(subcommand)]
     pub(crate) subcommand: SubCommand,
-    #[clap(long)]
-    pub(crate) nns_url: Option<String>,
+}
+
+pub fn load_command_line_config_override(opts: &Opts) {
+    if let Some(v) = &opts.hsm_pin {
+        env::set_var("hsm_pin", v);
+        debug!("override hsm_pin setting with {}", v);
+    }
+    if let Some(v) = &opts.hsm_slot {
+        env::set_var("hsm_slot", v);
+        debug!("override hsm_slot setting with {}", v);
+    }
+    if let Some(v) = &opts.hsm_key_id {
+        env::set_var("hsm_key_id", v);
+        debug!("override hsm_key_id setting with {}", v);
+    }
+    if let Some(v) = &opts.neuron_id {
+        env::set_var("neuron_id", v);
+        debug!("override neuron_id setting with {}", v);
+    }
+    if let Some(v) = &opts.ic_admin_bin_path {
+        env::set_var("ic_admin_bin_path", v);
+        debug!("override ic_admin_bin_path setting with {}", v);
+    }
+    if let Some(v) = &opts.proposal_url {
+        env::set_var("proposal_url", v);
+        debug!("override proposal_url setting with {}", v);
+    }
+    if let Some(v) = &opts.backend_url {
+        env::set_var("backend_url", v);
+        debug!("override backend_url setting with {}", v);
+    }
+    if let Some(v) = &opts.nns_url {
+        env::set_var("nns_url", v);
+        debug!("override nns_url setting with {}", v);
+    }
 }
 
 #[derive(Clap, Clone)]
 pub(crate) enum SubCommand {
-    #[clap(version = "1.0", author = "Someone")]
-    ReplaceNodeManual(SubnetReplaceNode),
-    #[clap(version = "1.0", author = "Someone")]
-    ReplaceNodeRecommended(Subnet),
-    #[clap(version = "1.0", author = "Someone")]
-    AddNodesManual(Nodes),
-    #[clap(version = "1.0", author = "Someone")]
-    AddNodesRecommended(Subnet),
-    #[clap(version = "1.0", author = "Someone")]
-    ReplaceBatchManual(SubnetReplaceMultipleNodes),
+    #[clap(version = "1.0")]
+    SubnetUpdateNodes(SubcmdSubnetUpdateNodes),
+    #[clap(version = "1.0")]
+    SubnetUpdateNodesRecommended(Subnet),
 }
 
 #[derive(Clap, Clone)]
-struct ReplaceNodeRecommended {
+struct UpdateNodesRecommended {
     subnet: Subnet,
-}
-
-#[derive(Clap, Clone)]
-struct AddNodesRecommended {
-    subnet: Subnet,
-}
-
-#[derive(Clap, Clone)]
-struct AddNodesArbitrary {
-    subnet: Subnet,
-    nodes: Nodes,
-}
-
-#[derive(Clap, Clone)]
-struct ReplaceBatchArbitrary {
-    replacements: SubnetReplaceMultipleNodes,
 }
 
 #[derive(Clap, Clone)]
 pub struct Subnet {
     pub(crate) id: String,
-}
-
-#[derive(Clap, Clone)]
-pub struct Node {
-    pub id: String,
 }
 
 impl FromStr for Subnet {
@@ -164,6 +120,17 @@ impl FromStr for Subnet {
     }
 }
 
+impl std::fmt::Display for Subnet {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.id)
+    }
+}
+
+#[derive(Clap, Clone, Debug)]
+pub struct Node {
+    pub id: String,
+}
+
 impl FromStr for Node {
     type Err = Error;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -171,27 +138,41 @@ impl FromStr for Node {
     }
 }
 
-#[derive(Clap, Clone)]
-pub struct Nodes {
-    subnet: String,
-    list: Vec<Node>,
-}
-
-impl FromStr for Nodes {
-    type Err = Error;
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(Nodes {
-            list: s
-                .split(' ')
-                .skip(1)
-                .map(|x| Node { id: x.to_string() })
-                .collect(),
-            subnet: s.split(' ').next().unwrap().to_string(),
-        })
+impl std::fmt::Display for Node {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.id)
     }
 }
 
-// pub enum ReplaceStateMachine {
-//     Add,
-//     Remove,
-// }
+#[derive(Clone)]
+pub struct NodesVec(Vec<Node>);
+
+impl std::fmt::Display for NodesVec {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            self.0
+                .clone()
+                .into_iter()
+                .map(|e| e.to_string())
+                .collect::<Vec<String>>()
+                .join(" ")
+        )
+    }
+}
+
+impl FromStr for NodesVec {
+    type Err = Error;
+    fn from_str(nodes_str: &str) -> Result<Self, Self::Err> {
+        Ok(NodesVec {
+            0: nodes_str
+                .replace(",", " ")
+                .split(" ")
+                .map(|node_id| Node {
+                    id: String::from(node_id),
+                })
+                .collect(),
+        })
+    }
+}
