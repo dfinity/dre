@@ -47,7 +47,7 @@ pub struct Opts {
     #[clap(short, long)]
     pub(crate) neuron_id: Option<String>,
     #[clap(short, long)]
-    pub(crate) ic_admin_bin_path: Option<String>,
+    pub(crate) ic_admin: Option<String>,
     #[clap(short = 'u', long)]
     pub(crate) proposal_url: Option<String>,
     #[clap(short, long)]
@@ -77,9 +77,9 @@ pub fn load_command_line_config_override(opts: &Opts) {
         env::set_var("neuron_id", v);
         debug!("override neuron_id setting with {}", v);
     }
-    if let Some(v) = &opts.ic_admin_bin_path {
-        env::set_var("ic_admin_bin_path", v);
-        debug!("override ic_admin_bin_path setting with {}", v);
+    if let Some(v) = &opts.ic_admin {
+        env::set_var("IC_ADMIN", v);
+        debug!("override IC_ADMIN setting with {}", v);
     }
     if let Some(v) = &opts.proposal_url {
         env::set_var("proposal_url", v);
@@ -111,12 +111,21 @@ struct UpdateNodesRecommended {
 #[derive(Clap, Clone)]
 pub struct Subnet {
     pub(crate) id: String,
+    pub id_short: String,
 }
 
 impl FromStr for Subnet {
     type Err = Error;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(Self { id: s.to_string() })
+        Ok(Self {
+            id: s.to_string(),
+            id_short: s
+                .to_string()
+                .split_once("-")
+                .expect("Could not parse the subnet id.")
+                .0
+                .to_string(),
+        })
     }
 }
 
@@ -129,12 +138,21 @@ impl std::fmt::Display for Subnet {
 #[derive(Clap, Clone, Debug)]
 pub struct Node {
     pub id: String,
+    pub id_short: String,
 }
 
 impl FromStr for Node {
     type Err = Error;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(Self { id: s.to_string() })
+        Ok(Self {
+            id: s.to_string(),
+            id_short: s
+                .to_string()
+                .split_once("-")
+                .expect("Could not parse the node id.")
+                .0
+                .to_string(),
+        })
     }
 }
 
@@ -168,11 +186,27 @@ impl FromStr for NodesVec {
         Ok(NodesVec {
             0: nodes_str
                 .replace(",", " ")
-                .split(" ")
-                .map(|node_id| Node {
-                    id: String::from(node_id),
-                })
+                .split(' ')
+                .map(|node_id| Node::from_str(node_id).unwrap())
                 .collect(),
         })
+    }
+}
+
+impl NodesVec {
+    pub fn len(&self) -> usize {
+        self.0.len()
+    }
+
+    pub fn as_string_short(&self) -> String {
+        format!(
+            "[{}]",
+            self.0
+                .clone()
+                .into_iter()
+                .map(|e| e.id_short)
+                .collect::<Vec<String>>()
+                .join(", ")
+        )
     }
 }
