@@ -11,7 +11,7 @@ use std::str::FromStr;
 
 fn check_and_submit_proposals_subnet_add_nodes(
     db_connection: &SqliteConnection,
-    subnet_id: &String,
+    subnet_id: &str,
 ) -> Result<(), anyhow::Error> {
     let db_subnet_nodes_to_add = models::subnet_nodes_to_add_get(db_connection, subnet_id);
 
@@ -19,14 +19,8 @@ fn check_and_submit_proposals_subnet_add_nodes(
         match (&row.nodes_to_add, &row.nodes_to_remove) {
             (Some(nodes_to_add), Some(nodes_to_remove)) => match row.proposal_add_id {
                 None => {
-                    let summary_long =
-                        proposal_summary_generate(subnet_id, nodes_to_add, nodes_to_remove, 0);
-                    let summary_short = proposal_summary_generate_one_line(
-                        subnet_id,
-                        nodes_to_add,
-                        nodes_to_remove,
-                        0,
-                    );
+                    let summary_long = proposal_summary_generate(subnet_id, nodes_to_add, nodes_to_remove, 0);
+                    let summary_short = proposal_summary_generate_one_line(subnet_id, nodes_to_add, nodes_to_remove, 0);
                     propose_add_nodes_to_subnet(
                         db_connection,
                         subnet_id,
@@ -38,18 +32,10 @@ fn check_and_submit_proposals_subnet_add_nodes(
                 }
                 Some(add_proposal_id) => {
                     utils::get_proposal_status(add_proposal_id)?;
-                    let summary_long = proposal_summary_generate(
-                        subnet_id,
-                        nodes_to_add,
-                        nodes_to_remove,
-                        add_proposal_id,
-                    );
-                    let summary_short = proposal_summary_generate_one_line(
-                        subnet_id,
-                        nodes_to_add,
-                        nodes_to_remove,
-                        add_proposal_id,
-                    );
+                    let summary_long =
+                        proposal_summary_generate(subnet_id, nodes_to_add, nodes_to_remove, add_proposal_id);
+                    let summary_short =
+                        proposal_summary_generate_one_line(subnet_id, nodes_to_add, nodes_to_remove, add_proposal_id);
                     propose_remove_nodes_from_subnet(
                         db_connection,
                         subnet_id,
@@ -76,20 +62,15 @@ pub fn subnet_nodes_replace(
     );
 
     check_and_submit_proposals_subnet_add_nodes(db_connection, &nodes.subnet)?;
-    println!(
-        "Proposing to update nodes on subnet: {}",
-        nodes.subnet.blue()
-    );
+    println!("Proposing to update nodes on subnet: {}", nodes.subnet.blue());
 
     match (&nodes.nodes_to_add, &nodes.nodes_to_remove) {
         (Some(nodes_to_add), Some(nodes_to_remove)) => {
             println!("{} {}", "Nodes to add:".green(), nodes_to_add.green());
             println!("{} {}", "Nodes to remove:".red(), nodes_to_remove.red());
 
-            let summary_long =
-                proposal_summary_generate(&nodes.subnet, nodes_to_add, nodes_to_remove, 0);
-            let summary_short =
-                proposal_summary_generate_one_line(&nodes.subnet, nodes_to_add, nodes_to_remove, 0);
+            let summary_long = proposal_summary_generate(&nodes.subnet, nodes_to_add, nodes_to_remove, 0);
+            let summary_short = proposal_summary_generate_one_line(&nodes.subnet, nodes_to_add, nodes_to_remove, 0);
             propose_add_nodes_to_subnet(
                 db_connection,
                 &nodes.subnet,
@@ -99,10 +80,8 @@ pub fn subnet_nodes_replace(
                 &summary_short,
             )?;
 
-            let summary_long =
-                proposal_summary_generate(&nodes.subnet, nodes_to_add, nodes_to_remove, 1);
-            let summary_short =
-                proposal_summary_generate_one_line(&nodes.subnet, nodes_to_add, nodes_to_remove, 1);
+            let summary_long = proposal_summary_generate(&nodes.subnet, nodes_to_add, nodes_to_remove, 1);
+            let summary_short = proposal_summary_generate_one_line(&nodes.subnet, nodes_to_add, nodes_to_remove, 1);
             propose_remove_nodes_from_subnet(
                 db_connection,
                 &nodes.subnet,
@@ -113,12 +92,7 @@ pub fn subnet_nodes_replace(
             )?;
 
             // Success, user confirmed both operations
-            models::subnet_nodes_to_replace_set(
-                db_connection,
-                &nodes.subnet,
-                nodes_to_add,
-                nodes_to_remove,
-            )?;
+            models::subnet_nodes_to_replace_set(db_connection, &nodes.subnet, nodes_to_add, nodes_to_remove)?;
 
             Ok("All done".to_string())
         }

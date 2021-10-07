@@ -32,8 +32,9 @@ pub(crate) struct ProposalStatus {
 
 /// Get status of an NNS proposal
 pub fn get_proposal_status(proposal_id: i32) -> Result<String, anyhow::Error> {
-    let mut dfx_args = shlex::split(
-        "--identity default canister --no-wallet --network=mercury call governance get_proposal_info").expect("shlex split failed");
+    let mut dfx_args =
+        shlex::split("--identity default canister --no-wallet --network=mercury call governance get_proposal_info")
+            .expect("shlex split failed");
     debug!("get_proposal_status {}", proposal_id);
     dfx_args.push(format!("{}", proposal_id));
     let output = Command::new(env_cfg("DFX"))
@@ -60,22 +61,13 @@ fn proposal_text_parse(text: &str) -> Result<ProposalStatus, anyhow::Error> {
         timestamp_seconds: regex_find(r"(?m)^\s*proposal_timestamp_seconds = ([\d_]+);$", text)?
             .replace("_", "")
             .parse::<u64>()?,
-        executed_timestamp_seconds: regex_find(
-            r"(?m)^\s*executed_timestamp_seconds = ([\d_]+);$",
-            text,
-        )?
-        .replace("_", "")
-        .parse::<u64>()?,
-        failed_timestamp_seconds: regex_find(
-            r"(?m)^\s*failed_timestamp_seconds = ([\d_]+);$",
-            text,
-        )?
-        .replace("_", "")
-        .parse::<u64>()?,
-        failure_reason: regex_find(
-            r#"(?ms)^\s*failure_reason = (null|opt record \{.+?\});$"#,
-            text,
-        )?,
+        executed_timestamp_seconds: regex_find(r"(?m)^\s*executed_timestamp_seconds = ([\d_]+);$", text)?
+            .replace("_", "")
+            .parse::<u64>()?,
+        failed_timestamp_seconds: regex_find(r"(?m)^\s*failed_timestamp_seconds = ([\d_]+);$", text)?
+            .replace("_", "")
+            .parse::<u64>()?,
+        failure_reason: regex_find(r#"(?ms)^\s*failure_reason = (null|opt record \{.+?\});$"#, text)?,
     })
 }
 
@@ -110,13 +102,7 @@ pub(crate) fn ic_admin_run(args: &[String], confirmed: bool) -> Result<String, a
         println!(
             "$ {} {}",
             env_cfg("IC_ADMIN").yellow(),
-            shlex::join(
-                ic_admin_args
-                    .iter()
-                    .map(|s| s.as_str())
-                    .collect::<Vec<&str>>()
-            )
-            .yellow()
+            shlex::join(ic_admin_args.iter().map(|s| s.as_str()).collect::<Vec<&str>>()).yellow()
         );
     }
 
@@ -124,9 +110,7 @@ pub(crate) fn ic_admin_run(args: &[String], confirmed: bool) -> Result<String, a
         info!("Running the ic-admin command");
         print_ic_admin_command_line(&ic_admin_args);
 
-        let output = Command::new(env_cfg("IC_ADMIN"))
-            .args(ic_admin_args)
-            .output()?;
+        let output = Command::new(env_cfg("IC_ADMIN")).args(ic_admin_args).output()?;
         let stdout = String::from_utf8_lossy(output.stdout.as_ref()).to_string();
         info!("STDOUT:\n{}", stdout);
         if !output.stderr.is_empty() {
@@ -136,16 +120,14 @@ pub(crate) fn ic_admin_run(args: &[String], confirmed: bool) -> Result<String, a
         Ok(stdout)
     } else {
         println!("Please confirm enqueueing the following ic-admin command");
-        // Show the user the line that would be executed and let them decide if they want to proceed.
+        // Show the user the line that would be executed and let them decide if they
+        // want to proceed.
         print_ic_admin_command_line(&ic_admin_args);
 
         let buffer = input("Would you like to proceed [y/N]? ");
         match buffer.to_uppercase().as_str() {
             "Y" | "YES" => Ok("User confirmed".to_string()),
-            _ => Err(anyhow!(
-                "Cancelling operation, user entered '{}'",
-                buffer.as_str(),
-            )),
+            _ => Err(anyhow!("Cancelling operation, user entered '{}'", buffer.as_str(),)),
         }
     }
 }
