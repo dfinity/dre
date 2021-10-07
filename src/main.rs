@@ -39,8 +39,7 @@ fn main() -> Result<(), anyhow::Error> {
 fn init_sqlite_connect() -> SqliteConnection {
     debug!("Initializing the SQLite connection.");
     let database_url = env_cfg("DATABASE_URL");
-    SqliteConnection::establish(&database_url)
-        .unwrap_or_else(|_| panic!("Error connecting to {}", database_url))
+    SqliteConnection::establish(&database_url).unwrap_or_else(|_| panic!("Error connecting to {}", database_url))
 }
 
 fn init_env() {
@@ -50,6 +49,5 @@ fn init_env() {
     }
     pretty_env_logger::init_custom_env("LOG_LEVEL");
 
-    dotenv()
-        .expect(".env file not found. Please copy env.template to .env and adjust configuration.");
+    dotenv().expect(".env file not found. Please copy env.template to .env and adjust configuration.");
 }
