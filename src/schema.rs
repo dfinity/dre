@@ -4,9 +4,11 @@ table! {
         subnet -> Text,
         nodes_to_add -> Nullable<Text>,
         nodes_to_remove -> Nullable<Text>,
-        proposal_id_for_add -> Nullable<Integer>,
-        proposal_executed_add -> Bool,
-        proposal_id_for_remove -> Nullable<Integer>,
-        proposal_executed_remove -> Bool,
+        proposal_add_id -> Nullable<Integer>,
+        proposal_add_executed -> Bool,
+        proposal_add_failed -> Nullable<Text>,
+        proposal_remove_id -> Nullable<Integer>,
+        proposal_remove_executed -> Bool,
+        proposal_remove_failed -> Nullable<Text>,
     }
 }

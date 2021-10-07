@@ -12,10 +12,12 @@ pub struct StateSubnetUpdateNodes {
     pub subnet: String,
     pub nodes_to_add: Option<String>,
     pub nodes_to_remove: Option<String>,
-    pub proposal_id_for_add: Option<i32>,
-    pub proposal_executed_add: bool,
-    pub proposal_id_for_remove: Option<i32>,
-    pub proposal_executed_remove: bool,
+    pub proposal_add_id: Option<i32>,
+    pub proposal_add_executed: bool,
+    pub proposal_add_failed: Option<String>,
+    pub proposal_remove_id: Option<i32>,
+    pub proposal_remove_executed: bool,
+    pub proposal_remove_failed: Option<String>,
 }
 
 #[derive(Insertable, Debug)]
@@ -25,12 +27,25 @@ pub struct StateSubnetNodesToAdd {
     pub nodes_to_add: String,
 }
 
+#[derive(Insertable, Debug)]
+#[table_name = "subnet_update_nodes"]
+pub struct StateSubnetNodesToRemove {
+    pub subnet: String,
+    pub nodes_to_remove: String,
+}
+
 pub fn subnet_nodes_to_add_get(
     connection: &SqliteConnection,
     subnet_id: &String,
 ) -> Vec<StateSubnetUpdateNodes> {
     match subnet_update_nodes
-        .filter(subnet.eq(subnet_id).and(proposal_executed_add.ne(true)))
+        .filter(
+            subnet.eq(subnet_id).and(
+                proposal_add_executed
+                    .ne(true)
+                    .or(proposal_add_failed.is_not_null()),
+            ),
+        )
         .load::<StateSubnetUpdateNodes>(connection.clone())
     {
         Ok(result) => result,
@@ -46,7 +61,13 @@ pub fn subnet_nodes_to_remove_get(
     subnet_id: &String,
 ) -> Vec<StateSubnetUpdateNodes> {
     match subnet_update_nodes
-        .filter(subnet.eq(subnet_id).and(proposal_executed_remove.ne(true)))
+        .filter(
+            subnet.eq(subnet_id).and(
+                proposal_remove_executed
+                    .ne(true)
+                    .or(proposal_remove_failed.is_not_null()),
+            ),
+        )
         .load::<StateSubnetUpdateNodes>(connection.clone())
     {
         Ok(result) => result,
@@ -76,7 +97,7 @@ pub fn subnet_nodes_to_add_set(
     }
 
     // Update the existing entry
-    if existing_entries_nodes_to_add.len() > 0 {
+    if !existing_entries_nodes_to_add.is_empty() {
         let row_id = existing_entries_nodes_to_add[0].id;
         info!(
             "DB: updating existing row {} with nodes_to_add {}",
@@ -91,7 +112,50 @@ pub fn subnet_nodes_to_add_set(
             subnet: subnet_id.clone(),
             nodes_to_add: nodes_ids_to_add.clone(),
         };
-        info!("DB: Adding new row with nodes_to_add {:?}", new_row);
+        info!("DB: inserting new row with nodes_to_add {:?}", new_row);
+        diesel::insert_into(subnet_update_nodes)
+            .values(&new_row)
+            .execute(connection)
+            .expect("insert_into failed");
+    }
+    Ok(())
+}
+
+pub fn subnet_nodes_to_remove_set(
+    connection: &SqliteConnection,
+    subnet_id: &String,
+    nodes_ids_to_remove: &String,
+) -> Result<(), anyhow::Error> {
+    let existing_entries_nodes_to_remove = subnet_nodes_to_remove_get(connection, subnet_id);
+    for row in &existing_entries_nodes_to_remove {
+        if let Some(row_nodes) = &row.nodes_to_remove {
+            if row_nodes != nodes_ids_to_remove {
+                return Err(anyhow!(
+                    "Subnet {} already has different nodes proposed to remove: {}",
+                    subnet_id,
+                    row_nodes,
+                ));
+            }
+        }
+    }
+
+    // Update the existing entry
+    if !existing_entries_nodes_to_remove.is_empty() {
+        let row_id = existing_entries_nodes_to_remove[0].id;
+        info!(
+            "DB: updating existing row {} with nodes_to_remove {}",
+            row_id, nodes_ids_to_remove
+        );
+        diesel::update(subnet_update_nodes.filter(id.eq(row_id)))
+            .set(nodes_to_remove.eq(nodes_ids_to_remove))
+            .execute(connection)
+            .expect("update failed");
+    } else {
+        let new_row = StateSubnetNodesToRemove {
+            subnet: subnet_id.clone(),
+            nodes_to_remove: nodes_ids_to_remove.clone(),
+        };
+        info!("DB: inserting new row with nodes_to_remove {:?}", new_row);
         diesel::insert_into(subnet_update_nodes)
             .values(&new_row)
             .execute(connection)
@@ -111,7 +175,7 @@ pub fn subnet_nodes_to_add_update_proposal_id(
         if let Some(row_nodes) = &row.nodes_to_add {
             if row_nodes == nodes_ids {
                 diesel::update(row)
-                    .set(proposal_id_for_add.eq(proposal_id))
+                    .set(proposal_add_id.eq(proposal_id))
                     .execute(connection)?;
                 return Ok(());
             }
@@ -135,7 +199,7 @@ pub fn subnet_nodes_to_remove_update_proposal_id(
         if let Some(row_nodes) = &row.nodes_to_remove {
             if row_nodes == nodes_ids {
                 diesel::update(row)
-                    .set(proposal_id_for_remove.eq(proposal_id))
+                    .set(proposal_remove_id.eq(proposal_id))
                     .execute(connection)?;
                 return Ok(());
             }
@@ -146,4 +210,14 @@ pub fn subnet_nodes_to_remove_update_proposal_id(
         subnet_id,
         nodes_ids,
     ))
+}
+
+pub fn subnet_nodes_to_replace_set(
+    connection: &SqliteConnection,
+    subnet_id: &String,
+    nodes_ids_to_add: &String,
+    nodes_ids_to_remove: &String,
+) -> Result<(), anyhow::Error> {
+    subnet_nodes_to_add_set(connection, subnet_id, nodes_ids_to_add)?;
+    subnet_nodes_to_remove_set(connection, subnet_id, nodes_ids_to_remove)
 }

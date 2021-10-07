@@ -5,11 +5,11 @@ use diesel::prelude::*;
 use dotenv::dotenv;
 use log::debug;
 
+mod autoops_types;
 mod cli_types;
 mod models;
-mod ops;
+mod ops_subnet_node_replace;
 mod schema;
-mod types;
 mod utils;
 use cli_types::{Opts, SubCommand};
 use utils::env_cfg;
@@ -24,7 +24,7 @@ fn main() -> Result<(), anyhow::Error> {
     // Start of actually doing stuff with commands.
     match &cli_opts.subcommand {
         SubCommand::SubnetUpdateNodes(nodes) => {
-            match ops::subnet_update_nodes(&subnet_update_nodes_state, nodes) {
+            match ops_subnet_node_replace::subnet_nodes_replace(&subnet_update_nodes_state, nodes) {
                 Ok(stdout) => {
                     println!("{}", stdout);
                     Ok(())
