@@ -209,4 +209,8 @@ impl NodesVec {
                 .join(", ")
         )
     }
+
+    pub fn as_vec_string(&self) -> Vec<String> {
+        self.0.clone().into_iter().map(|e| e.id).collect::<Vec<String>>()
+    }
 }

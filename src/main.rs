@@ -1,36 +1,48 @@
 #[macro_use]
 extern crate diesel;
 use clap::Clap;
+use cli_types::{Opts, SubCommand};
 use diesel::prelude::*;
 use dotenv::dotenv;
-use log::debug;
-
+use log::{debug, info};
+use utils::env_cfg;
 mod autoops_types;
 mod cli_types;
 mod models;
 mod ops_subnet_node_replace;
 mod schema;
 mod utils;
-use cli_types::{Opts, SubCommand};
-use utils::env_cfg;
 
 fn main() -> Result<(), anyhow::Error> {
     init_env();
 
-    let subnet_update_nodes_state = init_sqlite_connect();
+    let db_connection = init_sqlite_connect();
     let cli_opts = Opts::parse();
     cli_types::load_command_line_config_override(&cli_opts);
 
     // Start of actually doing stuff with commands.
     match &cli_opts.subcommand {
         SubCommand::SubnetUpdateNodes(nodes) => {
-            match ops_subnet_node_replace::subnet_nodes_replace(&subnet_update_nodes_state, nodes) {
+            match ops_subnet_node_replace::subnet_nodes_replace(&db_connection, nodes) {
                 Ok(stdout) => {
                     println!("{}", stdout);
                     Ok(())
                 }
                 Err(err) => Err(err),
+            }?;
+            loop {
+                let pending = ops_subnet_node_replace::check_and_submit_proposals_subnet_add_nodes(
+                    &db_connection,
+                    &nodes.subnet,
+                )?;
+                if pending {
+                    info!("There are pending proposals. Waiting 10 seconds");
+                    std::thread::sleep(std::time::Duration::from_secs(10));
+                } else {
+                    break;
+                }
             }
+            Ok(())
         }
         _ => Err(anyhow::anyhow!("Not implemented yet")),
     }
