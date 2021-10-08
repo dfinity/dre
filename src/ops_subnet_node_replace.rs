@@ -181,13 +181,8 @@ fn proposal_delete_create(
     let proposal_summary_external_url =
         utils::nns_proposals_repo_create_new_subnet_management(&summary_long, &summary_short)?;
 
-    let ic_admin_stdout = propose_remove_nodes_from_subnet(
-        subnet_id,
-        nodes_to_remove,
-        true,
-        &proposal_summary_external_url,
-        &summary_short,
-    )?;
+    let ic_admin_stdout =
+        propose_remove_nodes_from_subnet(nodes_to_remove, true, &proposal_summary_external_url, &summary_short)?;
     let proposal_id = parse_proposal_id_from_ic_admin_stdout(ic_admin_stdout.as_str())?;
     models::subnet_nodes_to_remove_update_proposal_id(
         db_connection,
@@ -249,7 +244,7 @@ pub fn subnet_nodes_replace(
             propose_add_nodes_to_subnet(&nodes.subnet, nodes_to_add, false, "<tbd>", &summary_short)?;
 
             let summary_short = proposal_summary_generate_one_line(&nodes.subnet, nodes_to_add, nodes_to_remove, 1);
-            propose_remove_nodes_from_subnet(&nodes.subnet, nodes_to_remove, false, "<tbd>", &summary_short)?;
+            propose_remove_nodes_from_subnet(nodes_to_remove, false, "<tbd>", &summary_short)?;
 
             // Success, user confirmed both operations
             models::subnet_nodes_to_replace_set(db_connection, &nodes.subnet, nodes_to_add, nodes_to_remove)?;
@@ -304,20 +299,16 @@ pub fn propose_add_nodes_to_subnet(
 }
 
 pub fn propose_remove_nodes_from_subnet(
-    subnet_id: &str,
     nodes_to_remove: &str,
     real_run: bool,
     proposal_url: &str,
     summary_short: &str,
 ) -> Result<String, anyhow::Error> {
-    let subnet: Subnet = Subnet::from_str(subnet_id)?;
     let nodes_vec = NodesVec::from_str(nodes_to_remove).expect("parsing nodes_vec failed");
 
     let ic_admin_args = [
         vec![
             "propose-to-remove-nodes-from-subnet".to_string(),
-            "--subnet".to_string(),
-            subnet.id,
             "--proposer".to_string(),
             env_cfg("neuron_id"),
             "--proposal-url".to_string(),
