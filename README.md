@@ -7,6 +7,7 @@ pre-commit install
 
 Install the nightly cargo. Needed for the new version of clap.
 ```
+which rustup || curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 rustup toolchain install nightly
 rustup override set nightly
 ```
