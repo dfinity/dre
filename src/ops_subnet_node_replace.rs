@@ -91,10 +91,12 @@ pub fn check_and_submit_proposals_subnet_add_nodes(
     for row in &db_subnet_nodes_to_add {
         match (&row.nodes_to_add, &row.nodes_to_remove) {
             (Some(nodes_to_add), Some(nodes_to_remove)) => {
-                if (row.proposal_add_executed_timestamp > 0 || row.proposal_add_failed_timestamp > 0)
-                    && (row.proposal_remove_executed_timestamp > 0 || row.proposal_remove_failed_timestamp > 0)
-                {
-                    continue;
+                if row.proposal_add_executed_timestamp > 0 || row.proposal_add_failed_timestamp > 0 {
+                    if row.proposal_remove_executed_timestamp > 0 || row.proposal_remove_failed_timestamp > 0 {
+                        continue;
+                    } else {
+                        proposal_remove_update_completed(db_connection, &row)?;
+                    }
                 }
                 match row.proposal_add_id {
                     None => {
