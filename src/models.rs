@@ -16,9 +16,11 @@ pub struct StateSubnetUpdateNodes {
     pub nodes_to_remove: Option<String>,
     pub proposal_add_id: Option<i32>,
     pub proposal_add_executed_timestamp: i64,
+    pub proposal_add_failed_timestamp: i64,
     pub proposal_add_failed: Option<String>,
     pub proposal_remove_id: Option<i32>,
     pub proposal_remove_executed_timestamp: i64,
+    pub proposal_remove_failed_timestamp: i64,
     pub proposal_remove_failed: Option<String>,
 }
 
@@ -52,7 +54,7 @@ pub fn subnet_nodes_to_add_get(connection: &SqliteConnection, subnet_id: &str) -
             subnet.eq(subnet_id).and(
                 proposal_add_executed_timestamp
                     .eq(0)
-                    .or(proposal_add_failed.is_not_null()),
+                    .or(proposal_add_failed_timestamp.eq(0)),
             ),
         )
         .load::<StateSubnetUpdateNodes>(connection.to_owned())
@@ -68,7 +70,7 @@ pub fn subnet_nodes_to_remove_get(connection: &SqliteConnection, subnet_id: &str
             subnet.eq(subnet_id).and(
                 proposal_remove_executed_timestamp
                     .eq(0)
-                    .or(proposal_remove_failed.is_not_null()),
+                    .or(proposal_remove_failed_timestamp.eq(0)),
             ),
         )
         .load::<StateSubnetUpdateNodes>(connection.to_owned())
@@ -92,10 +94,14 @@ pub fn subnet_nodes_add_set_proposal_executed(
 pub fn subnet_nodes_add_set_proposal_failure(
     connection: &SqliteConnection,
     row_id: i32,
+    failure_timestamp: i64,
     failure_reason: &str,
 ) -> Result<(), anyhow::Error> {
     diesel::update(subnet_update_nodes.find(row_id))
-        .set(proposal_add_failed.eq(failure_reason))
+        .set((
+            proposal_add_failed_timestamp.eq(failure_timestamp),
+            proposal_add_failed.eq(failure_reason),
+        ))
         .execute(connection)?;
     Ok(())
 }
@@ -108,6 +114,21 @@ pub fn subnet_nodes_remove_set_proposal_executed(
 ) -> Result<(), anyhow::Error> {
     diesel::update(subnet_update_nodes.find(row_id))
         .set(proposal_remove_executed_timestamp.eq(timestamp))
+        .execute(connection)?;
+    Ok(())
+}
+
+pub fn subnet_nodes_remove_set_proposal_failure(
+    connection: &SqliteConnection,
+    row_id: i32,
+    failure_timestamp: i64,
+    failure_reason: &str,
+) -> Result<(), anyhow::Error> {
+    diesel::update(subnet_update_nodes.find(row_id))
+        .set((
+            proposal_remove_failed_timestamp.eq(failure_timestamp),
+            proposal_remove_failed.eq(failure_reason),
+        ))
         .execute(connection)?;
     Ok(())
 }
