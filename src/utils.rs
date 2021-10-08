@@ -21,17 +21,17 @@ pub fn env_cfg(key: &str) -> String {
 }
 
 #[derive(Debug, PartialEq)]
-pub(crate) struct ProposalStatus {
-    pub(crate) id: u32,
-    pub(crate) summary: String,
-    pub(crate) timestamp_seconds: u64,
-    pub(crate) executed_timestamp_seconds: u64,
-    pub(crate) failed_timestamp_seconds: u64,
-    pub(crate) failure_reason: String,
+pub struct ProposalStatus {
+    pub id: u32,
+    pub summary: String,
+    pub timestamp_seconds: i64,
+    pub executed_timestamp_seconds: i64,
+    pub failed_timestamp_seconds: i64,
+    pub failure_reason: String,
 }
 
 /// Get status of an NNS proposal
-pub fn get_proposal_status(proposal_id: i32) -> Result<String, anyhow::Error> {
+pub fn get_proposal_status(proposal_id: i32) -> Result<ProposalStatus, anyhow::Error> {
     let mut dfx_args =
         shlex::split("--identity default canister --no-wallet --network=mercury call governance get_proposal_info")
             .expect("shlex split failed");
@@ -43,13 +43,14 @@ pub fn get_proposal_status(proposal_id: i32) -> Result<String, anyhow::Error> {
         .output()?;
 
     let stdout = String::from_utf8_lossy(output.stdout.as_ref()).to_string();
-    println!("Proposal parsed: {:?}", proposal_text_parse(&stdout));
-    info!("STDOUT:\n{}", stdout);
+    let result = proposal_text_parse(&stdout)?;
+    debug!("STDOUT:\n{}", stdout);
+    info!("Parsed proposal status: {:?}", result);
     if !output.stderr.is_empty() {
         let stderr = String::from_utf8_lossy(output.stderr.as_ref()).to_string();
         warn!("STDERR:\n{}", stderr);
     }
-    Ok(stdout)
+    Ok(result)
 }
 
 fn proposal_text_parse(text: &str) -> Result<ProposalStatus, anyhow::Error> {
@@ -60,13 +61,13 @@ fn proposal_text_parse(text: &str) -> Result<ProposalStatus, anyhow::Error> {
         summary: regex_find(r#"(?m)^\s*      summary = "(.*)";$"#, text)?,
         timestamp_seconds: regex_find(r"(?m)^\s*proposal_timestamp_seconds = ([\d_]+);$", text)?
             .replace("_", "")
-            .parse::<u64>()?,
+            .parse::<i64>()?,
         executed_timestamp_seconds: regex_find(r"(?m)^\s*executed_timestamp_seconds = ([\d_]+);$", text)?
             .replace("_", "")
-            .parse::<u64>()?,
+            .parse::<i64>()?,
         failed_timestamp_seconds: regex_find(r"(?m)^\s*failed_timestamp_seconds = ([\d_]+);$", text)?
             .replace("_", "")
-            .parse::<u64>()?,
+            .parse::<i64>()?,
         failure_reason: regex_find(r#"(?ms)^\s*failure_reason = (null|opt record \{.+?\});$"#, text)?,
     })
 }
@@ -112,7 +113,7 @@ pub(crate) fn ic_admin_run(args: &[String], confirmed: bool) -> Result<String, a
 
         let output = Command::new(env_cfg("IC_ADMIN")).args(ic_admin_args).output()?;
         let stdout = String::from_utf8_lossy(output.stdout.as_ref()).to_string();
-        info!("STDOUT:\n{}", stdout);
+        debug!("STDOUT:\n{}", stdout);
         if !output.stderr.is_empty() {
             let stderr = String::from_utf8_lossy(output.stderr.as_ref()).to_string();
             warn!("STDERR:\n{}", stderr);
@@ -132,7 +133,7 @@ pub(crate) fn ic_admin_run(args: &[String], confirmed: bool) -> Result<String, a
     }
 }
 
-pub fn nns_proposals_repo_new_subnet_management(
+pub fn nns_proposals_repo_create_new_subnet_management(
     summary_long: &str,
     summary_short: &str,
 ) -> Result<String, anyhow::Error> {
@@ -156,16 +157,26 @@ pub fn nns_proposals_repo_new_subnet_management(
         panic!("Command execution failed. Bailing out.")
     }
 
-    let date_time = Utc::today().format("%Y-%m-%dT%H_%M_%SZ.md");
+    let date_time = Utc::now().format("%Y-%m-%dT%H_%M_%SZ.md");
     let file_subdir = format!("proposals/subnet_management/{}", date_time);
 
-    info!("Creating a new file: {}", file_subdir);
-    let mut file = File::create(repo_path.join(&file_subdir))?;
+    let file_name = repo_path.join(&file_subdir);
+    info!("Creating a new file: {}", file_name.display());
+    let mut file = File::create(file_name)?;
     file.write_all(summary_long.as_bytes())?;
 
     let status = Command::new("git")
         .current_dir(&repo_path)
-        .args(["commit", "--message", summary_short, &file_subdir])
+        .args(["add", &file_subdir])
+        .status()
+        .expect("failed to execute process");
+    if !status.success() {
+        panic!("Command execution failed. Bailing out.")
+    }
+
+    let status = Command::new("git")
+        .current_dir(&repo_path)
+        .args(["commit", "--message", summary_short])
         .status()
         .expect("failed to execute process");
     if !status.success() {

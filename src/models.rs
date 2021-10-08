@@ -15,10 +15,10 @@ pub struct StateSubnetUpdateNodes {
     pub nodes_to_add: Option<String>,
     pub nodes_to_remove: Option<String>,
     pub proposal_add_id: Option<i32>,
-    pub proposal_add_executed: bool,
+    pub proposal_add_executed_timestamp: i64,
     pub proposal_add_failed: Option<String>,
     pub proposal_remove_id: Option<i32>,
-    pub proposal_remove_executed: bool,
+    pub proposal_remove_executed_timestamp: i64,
     pub proposal_remove_failed: Option<String>,
 }
 
@@ -36,12 +36,24 @@ pub struct StateSubnetNodesToRemove {
     pub nodes_to_remove: String,
 }
 
+pub fn subnet_records_get(connection: &SqliteConnection, subnet_id: &str) -> Vec<StateSubnetUpdateNodes> {
+    match subnet_update_nodes
+        .filter(subnet.eq(subnet_id))
+        .load::<StateSubnetUpdateNodes>(connection.to_owned())
+    {
+        Ok(result) => result,
+        Err(e) => panic!("Error executing filter query for subnet_id: {}. {}", subnet_id, e),
+    }
+}
+
 pub fn subnet_nodes_to_add_get(connection: &SqliteConnection, subnet_id: &str) -> Vec<StateSubnetUpdateNodes> {
     match subnet_update_nodes
         .filter(
-            subnet
-                .eq(subnet_id)
-                .and(proposal_add_executed.ne(true).or(proposal_add_failed.is_not_null())),
+            subnet.eq(subnet_id).and(
+                proposal_add_executed_timestamp
+                    .eq(0)
+                    .or(proposal_add_failed.is_not_null()),
+            ),
         )
         .load::<StateSubnetUpdateNodes>(connection.to_owned())
     {
@@ -54,8 +66,8 @@ pub fn subnet_nodes_to_remove_get(connection: &SqliteConnection, subnet_id: &str
     match subnet_update_nodes
         .filter(
             subnet.eq(subnet_id).and(
-                proposal_remove_executed
-                    .ne(true)
+                proposal_remove_executed_timestamp
+                    .eq(0)
                     .or(proposal_remove_failed.is_not_null()),
             ),
         )
@@ -64,6 +76,40 @@ pub fn subnet_nodes_to_remove_get(connection: &SqliteConnection, subnet_id: &str
         Ok(result) => result,
         Err(e) => panic!("Error executing filter query for subnet_id: {}. {}", subnet_id, e),
     }
+}
+
+pub fn subnet_nodes_add_set_proposal_executed(
+    connection: &SqliteConnection,
+    row_id: i32,
+    timestamp: i64,
+) -> Result<(), anyhow::Error> {
+    diesel::update(subnet_update_nodes.find(row_id))
+        .set(proposal_add_executed_timestamp.eq(timestamp))
+        .execute(connection)?;
+    Ok(())
+}
+
+pub fn subnet_nodes_add_set_proposal_failure(
+    connection: &SqliteConnection,
+    row_id: i32,
+    failure_reason: &str,
+) -> Result<(), anyhow::Error> {
+    diesel::update(subnet_update_nodes.find(row_id))
+        .set(proposal_add_failed.eq(failure_reason))
+        .execute(connection)?;
+    Ok(())
+}
+
+#[allow(dead_code)]
+pub fn subnet_nodes_remove_set_proposal_executed(
+    connection: &SqliteConnection,
+    row_id: i32,
+    timestamp: i64,
+) -> Result<(), anyhow::Error> {
+    diesel::update(subnet_update_nodes.find(row_id))
+        .set(proposal_remove_executed_timestamp.eq(timestamp))
+        .execute(connection)?;
+    Ok(())
 }
 
 pub fn subnet_nodes_to_add_set(
