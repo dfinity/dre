@@ -2,12 +2,7 @@ use crate::types::*;
 use reqwest::Client;
 
 #[allow(dead_code)]
-async fn add_recommended_nodes_to_subnet(
-    subnet: Subnet,
-    node_count: i32,
-    client: &Client,
-    url: &str,
-) {
+async fn add_recommended_nodes_to_subnet(subnet: Subnet, node_count: i32, client: &Client, url: &str) {
     let body = DecentralizedNodeQuery {
         removals: None,
         subnet: subnet.id.clone(),
