@@ -81,7 +81,7 @@ repos:
   rev: '3.8.4'
   hooks:
   - id: flake8
-    args: ["--config=gitlab-ci/src/setup.cfg"]
+    args: ["--config=flake8.cfg"]
 
 - repo: https://github.com/pycqa/pydocstyle
   rev: 5.1.1
@@ -98,8 +98,8 @@ repos:
   rev: v4.2.0
   hooks:
     - id: ansible-lint
-      files: (^|/)prod/.+\.(yaml|yml)$
+      files: (^|/)testnet/.+\.(yaml|yml)$
       exclude: |
           (?x)^(
-              prod/tests/.*|.*/docker-compose.yml|prod/env/shared-config\.yml
+              testnet/tests/.*|.*/docker-compose.yml|testnet/env/shared-config\.yml
           )$
