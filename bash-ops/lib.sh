@@ -548,12 +548,8 @@ _EOF
 maybe_query() {
     if [ $# -lt 1 ]; then
         echo >&2 "USAGE: $0 $OP_NAME <selector> [params]"
-        echo >&2 "    where <selector> is one of the following, (and params depend on <selector>):"
-        echo >&2 "      get-blessed-replica-versions"
-        echo >&2 "      get-topology"
-        echo >&2 "      get-subnet-list"
-        echo >&2 "      get-subnet <subnet_number>"
-        echo >&2 "      get-node <node-id>"
+        echo >&2 "  where <selector> is one of the following, (and params depend on <selector>):"
+        ic-admin --help | grep get- >&2
         exit 1
     fi
 
