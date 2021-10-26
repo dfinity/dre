@@ -381,7 +381,7 @@ maybe_propose_to_bless_replica_version() {
     print_green Downloading artefacts for commit $version_commit to directory $download_dir/
     mkdir -p "$download_dir"
     git_root="$(git rev-parse --show-toplevel)"
-    "$git_root"/gitlab-ci/src/artifacts/rclone_download.py --git-rev "$version_commit" --remote-path guest-os/update-img --out "$download_dir/guest-os/update-img" --blessed-only
+    "$git_root"/ic/gitlab-ci/src/artifacts/rclone_download.py --git-rev "$version_commit" --remote-path guest-os/update-img --out "$download_dir/guest-os/update-img" --blessed-only
 
     SHA256="$(sha256sum "${download_dir}/guest-os/update-img/update-img.tar.gz" | cut -f 1 -d ' ')"
     UPDATE_URL="https://download.dfinity.systems/blessed/ic/${version_commit}/guest-os/update-img/update-img.tar.gz"
