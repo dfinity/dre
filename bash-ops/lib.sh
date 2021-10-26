@@ -35,11 +35,6 @@ print_blue() {
     echo -e "\033[0;34m$*\033[0m"
 }
 
-print_proposal_url_instructions() {
-    print_green "NOTE: Before continuing, ensure a proposal description is committed under PROPOSAL_URL from above."
-    print_green "      (no need to cancel now, just check/commit the description in another window, and then continue here)"
-}
-
 do_you_want_to_continue() {
     echo ""
     read -r -p "Do you want to continue? [y/N] " response
@@ -96,8 +91,12 @@ print_env_common_for_proposal() {
     print_param NETWORK "$NETWORK"
     print_param NNS_URL "$NNS_URL"
     print_param PROPOSER_NEURON_INDEX "$PROPOSER_NEURON_INDEX"
-    print_param PROPOSAL_URL "$PROPOSAL_URL"
-    print_param PROPOSAL_SUMMARY "$PROPOSAL_SUMMARY"
+    print_param PROPOSAL_TITLE "$PROPOSAL_TITLE"
+    if [[ -n "${PROPOSAL_SUMMARY_FILE:-}" ]]; then
+        echo "=== PROPOSAL_SUMMARY_FILE $PROPOSAL_SUMMARY_FILE contents START ====="
+        cat $PROPOSAL_SUMMARY_FILE
+        echo "=== PROPOSAL_SUMMARY_FILE $PROPOSAL_SUMMARY_FILE contents END   ====="
+    fi
 }
 
 check_env_mainnet() {
@@ -186,28 +185,34 @@ maybe_propose_to_remove_nodes_from_subnet() {
         exit 1
     fi
     nodes_to_remove=$@
-    PROPOSAL_URL=${PROPOSAL_URL:-"https://github.com/ic-association/nns-proposals/blob/main/proposals/subnet_management/$(date -u +%Y%m%dT%H%MZ).md"}
-    PROPOSAL_SUMMARY=${PROPOSAL_SUMMARY:-"Remove node(s) from subnet(s)"}
-    print_green "Proposing on [$NETWORK] to remove nodes from subnet(s) with the following params:"
+    PROPOSAL_TITLE=${PROPOSAL_TITLE:-"Remove node(s) from subnet(s)"}
+    echo
+    echo "Please provide the MOTIVATION for this proposal and ctrl-d when done"
+    MOTIVATION="$(cat)"
+    PROPOSAL_SUMMARY_FILE=$(mktemp)
+    cat >$PROPOSAL_SUMMARY_FILE <<_EOF
+Remove node(s) $nodes_to_remove from their subnet(s), which makes them unassigned.
+
+Motivation: $MOTIVATION
+_EOF
     print_env_common_for_proposal
-    print_param "nodes to be removed from subnet(s)" "$nodes_to_remove"
 
     cmd=($IC_ADMIN $AUTH_PARAMS --nns-url="$NNS_URL"
         propose-to-remove-nodes-from-subnet
         --proposer $PROPOSER_NEURON_INDEX
-        --proposal-url="$PROPOSAL_URL"
-        --summary "$PROPOSAL_SUMMARY"
+        --proposal-title="$PROPOSAL_TITLE"
+        --summary-file "$PROPOSAL_SUMMARY_FILE"
         $nodes_to_remove)
 
     # print the command before executing it
     printf '%q ' "${cmd[@]}"
     echo
 
-    print_proposal_url_instructions
     do_you_want_to_continue
 
     set -x
     "${cmd[@]}"
+    rm "$PROPOSAL_SUMMARY_FILE"
 }
 
 maybe_propose_to_remove_nodes() {
@@ -217,28 +222,34 @@ maybe_propose_to_remove_nodes() {
         exit 1
     fi
     nodes_to_remove=$@
-    PROPOSAL_URL=${PROPOSAL_URL:-"https://github.com/ic-association/nns-proposals/blob/main/proposals/node_admin/$(date -u +%Y%m%dT%H%MZ).md"}
-    PROPOSAL_SUMMARY=${PROPOSAL_SUMMARY:-"Remove node(s) from registry."}
-    print_green "Proposing on [$NETWORK] to remove nodes with the following params:"
+    PROPOSAL_TITLE=${PROPOSAL_TITLE:-"Remove node(s) from the Registry."}
+    echo
+    echo "Please provide the MOTIVATION for this proposal and ctrl-d when done"
+    MOTIVATION="$(cat)"
+    PROPOSAL_SUMMARY_FILE=$(mktemp)
+    cat >$PROPOSAL_SUMMARY_FILE <<_EOF
+Remove node(s) $nodes_to_remove from the Registry.
+
+Motivation: $MOTIVATION
+_EOF
     print_env_common_for_proposal
-    print_param "nodes to be removed from registry" "$nodes_to_remove"
 
     cmd=($IC_ADMIN $AUTH_PARAMS --nns-url="$NNS_URL"
         propose-to-remove-nodes
         --proposer $PROPOSER_NEURON_INDEX
-        --proposal-url="$PROPOSAL_URL"
-        --summary "$PROPOSAL_SUMMARY"
+        --proposal-title="$PROPOSAL_TITLE"
+        --summary-file "$PROPOSAL_SUMMARY_FILE"
         $nodes_to_remove)
 
     # print the command before executing it
     printf '%q ' "${cmd[@]}"
     echo
 
-    print_proposal_url_instructions
     do_you_want_to_continue
 
     set -x
     "${cmd[@]}"
+    rm "$PROPOSAL_SUMMARY_FILE"
 }
 
 maybe_propose_to_add_nodes_to_subnet() {
@@ -250,8 +261,16 @@ maybe_propose_to_add_nodes_to_subnet() {
     subnet_id=$1
     shift
     nodes_to_add=$@
-    PROPOSAL_URL=${PROPOSAL_URL:-"https://github.com/ic-association/nns-proposals/blob/main/proposals/subnet_management/$(date -u +%Y%m%dT%H%MZ).md"}
-    PROPOSAL_SUMMARY=${PROPOSAL_SUMMARY:-"Add node(s) to subnet $subnet_id"}
+    PROPOSAL_TITLE=${PROPOSAL_TITLE:-"Add node(s) to subnet $subnet_id"}
+    echo
+    echo "Please provide the MOTIVATION for this proposal and ctrl-d when done"
+    MOTIVATION="$(cat)"
+    PROPOSAL_SUMMARY_FILE=$(mktemp)
+    cat >$PROPOSAL_SUMMARY_FILE <<_EOF
+Add node(s) $nodes_to_add to subnet $subnet_id
+
+Motivation: $MOTIVATION
+_EOF
     print_green "Proposing on [$NETWORK] to add nodes to subnet [$subnet_id] with the following params:"
     print_env_common_for_proposal
     print_param "nodes to be add to the subnet" "$nodes_to_add"
@@ -260,19 +279,19 @@ maybe_propose_to_add_nodes_to_subnet() {
         propose-to-add-nodes-to-subnet
         --subnet "$subnet_id"
         --proposer $PROPOSER_NEURON_INDEX
-        --proposal-url "$PROPOSAL_URL"
-        --summary "$PROPOSAL_SUMMARY"
+        --proposal-title "$PROPOSAL_TITLE"
+        --summary-file "$PROPOSAL_SUMMARY_FILE"
         $nodes_to_add)
 
     # print the command before executing it
     printf '%q ' "${cmd[@]}"
     echo
 
-    print_proposal_url_instructions
     do_you_want_to_continue
 
     set -x
     "${cmd[@]}"
+    rm "$PROPOSAL_SUMMARY_FILE"
 }
 
 maybe_propose_to_create_subnet() {
@@ -303,9 +322,16 @@ maybe_propose_to_create_subnet() {
     set +euo pipefail
     check_version_commit_is_blessed "$version_commit"
 
-    PROPOSAL_URL=${PROPOSAL_URL:-"https://github.com/ic-association/nns-proposals/blob/main/proposals/subnet_management/$(date -u +%Y%m%dT%H%MZ).md"}
-    PROPOSAL_SUMMARY=${PROPOSAL_SUMMARY:-"Add ${subnet_type} subnet number ${subnet_number} (commit ${version_commit})"}
-    print_green "Proposing on [$NETWORK] to create app subnet #${subnet_number} with the following params:"
+    PROPOSAL_TITLE=${PROPOSAL_TITLE:-"Create new ${subnet_type} subnet"}
+    echo
+    echo "Please provide the MOTIVATION for this proposal and ctrl-d when done"
+    MOTIVATION="$(cat)"
+    PROPOSAL_SUMMARY_FILE=$(mktemp)
+    cat >$PROPOSAL_SUMMARY_FILE <<_EOF
+Create new ${subnet_type} subnet from commit ${version_commit}
+
+Motivation: $MOTIVATION
+_EOF
     print_env_common_for_proposal
     print_param "app subnet number" "$subnet_number"
     print_param "version commit" "$version_commit"
@@ -319,19 +345,19 @@ maybe_propose_to_create_subnet() {
         $new_subnet_params
         --subnet-type "${subnet_type}"
         --replica-version-id "${version_commit}"
-        --proposal-url "$PROPOSAL_URL"
-        --summary "$PROPOSAL_SUMMARY"
+        --proposal-title "$PROPOSAL_TITLE"
+        --summary-file "$PROPOSAL_SUMMARY_FILE"
         $node_ids)
 
     # print the command before executing it
     printf '%q ' "${cmd[@]}"
     echo
 
-    print_proposal_url_instructions
     do_you_want_to_continue
 
     set -x
     "${cmd[@]}"
+    rm "$PROPOSAL_SUMMARY_FILE"
 }
 
 maybe_propose_to_bless_replica_version() {
@@ -389,9 +415,17 @@ maybe_propose_to_bless_replica_version() {
     fi
     print_green "Version in the image matches $version_commit"
 
-    PROPOSAL_URL=${PROPOSAL_URL:-"https://github.com/ic-association/nns-proposals/blob/main/proposals/node_admin/$(date -u +%Y%m%dT%H%MZ).md"}
-    PROPOSAL_SUMMARY=${PROPOSAL_SUMMARY:-"Bless replica binary version (commit $version_commit)"}
-    print_green "Proposing on [$NETWORK] to bless replica version $version_commit with the following params"
+    PROPOSAL_TITLE=${PROPOSAL_TITLE:-"Elect/Bless new replica binary revision (commit $version_commit)"}
+    echo
+    echo "Please provide the Changelog (as bullets, without the title) for this release and ctrl-d when done"
+    CHANGELOG="$(cat)"
+    PROPOSAL_SUMMARY_FILE=$(mktemp)
+    cat >$PROPOSAL_SUMMARY_FILE <<_EOF
+Elect/Bless new replica binary revision (commit $version_commit)
+
+Changelog:
+$CHANGELOG
+_EOF
     print_env_common_for_proposal
     print_param "replica version" "$version_commit"
     print_param "release package URL" "$UPDATE_URL"
@@ -399,23 +433,23 @@ maybe_propose_to_bless_replica_version() {
 
     cmd=($IC_ADMIN $AUTH_PARAMS --nns-url="$NNS_URL"
         propose-to-bless-replica-version-flexible
-        --proposal-url "$PROPOSAL_URL"
-        --summary "$PROPOSAL_SUMMARY"
+        --proposal-title "$PROPOSAL_TITLE"
+        --summary-file $PROPOSAL_SUMMARY_FILE
         "$version_commit"
         ignored_replica_url ignored_replica_sha256
         ignored_node_manager_url ignored_node_manager_sha256
         "$UPDATE_URL" "$SHA256"
-        $PROPOSER_NEURON_INDEX)
+        --proposer $PROPOSER_NEURON_INDEX)
 
     # print the command before executing it
     printf '%q ' "${cmd[@]}"
     echo
 
-    print_proposal_url_instructions
     do_you_want_to_continue
 
     set -x
     "${cmd[@]}"
+    rm "$PROPOSAL_SUMMARY_FILE"
 }
 
 maybe_propose_to_update_subnet_replica_version() {
@@ -434,28 +468,34 @@ maybe_propose_to_update_subnet_replica_version() {
     subnet_id=$(get_subnet_id_from_index "$subnet_index")
 
     set -euo pipefail
-    PROPOSAL_URL=${PROPOSAL_URL:-"https://github.com/ic-association/nns-proposals/blob/main/proposals/subnet_management/$(date -u +%Y%m%dT%H%MZ).md"}
-    PROPOSAL_SUMMARY=${PROPOSAL_SUMMARY:-"Update subnet $subnet_id to version $version_commit"}
-    print_green "Proposing on [$NETWORK] to upgrade subnet #$subnet_index [$subnet_id] with the following params"
+    PROPOSAL_TITLE=${PROPOSAL_TITLE:-"Update subnet $subnet_id to replica version $version_commit"}
+    echo
+    echo "Please provide the MOTIVATION for this proposal and ctrl-d when done"
+    MOTIVATION="$(cat)"
+    PROPOSAL_SUMMARY_FILE=$(mktemp)
+    cat >$PROPOSAL_SUMMARY_FILE <<_EOF
+Update subnet $subnet_id to replica version $version_commit
+
+Motivation: $MOTIVATION
+_EOF
     print_env_common_for_proposal
-    print_param "target replica version" "$version_commit"
 
     cmd=($IC_ADMIN $AUTH_PARAMS --nns-url="$NNS_URL"
         propose-to-update-subnet-replica-version
-        --proposal-url "$PROPOSAL_URL"
-        --summary "$PROPOSAL_SUMMARY"
+        --proposal-title "$PROPOSAL_TITLE"
+        --summary-file "$PROPOSAL_SUMMARY_FILE"
         $subnet_index $version_commit
-        $PROPOSER_NEURON_INDEX)
+        --proposer $PROPOSER_NEURON_INDEX)
 
     # print the command before executing it
     printf '%q ' "${cmd[@]}"
     echo
 
-    print_proposal_url_instructions
     do_you_want_to_continue
 
     set -x
     "${cmd[@]}"
+    rm "$PROPOSAL_SUMMARY_FILE"
 }
 
 maybe_propose_to_update_subnet() {
@@ -474,29 +514,35 @@ maybe_propose_to_update_subnet() {
     subnet_id=$(get_subnet_id_from_index "$subnet_index")
 
     set -euo pipefail
-    PROPOSAL_URL=${PROPOSAL_URL:-"https://github.com/ic-association/nns-proposals/blob/main/proposals/subnet_management/$(date -u +%Y%m%dT%H%MZ).md"}
-    PROPOSAL_SUMMARY=${PROPOSAL_SUMMARY:-"Update parameters of subnet $subnet_id"}
-    print_green "Proposing on [$NETWORK] to update parameters of subnet #$subnet_index [$subnet_id] with the following arguments"
+    PROPOSAL_TITLE=${PROPOSAL_TITLE:-"Update parameters of subnet $subnet_id"}
+    echo
+    echo "Please provide the MOTIVATION for this proposal and ctrl-d when done"
+    MOTIVATION="$(cat)"
+    PROPOSAL_SUMMARY_FILE=$(mktemp)
+    cat >$PROPOSAL_SUMMARY_FILE <<_EOF
+Update parameters of subnet $subnet_id: $params
+
+Motivation: $MOTIVATION
+_EOF
     print_env_common_for_proposal
-    print_param "parameters" "$params"
 
     cmd=($IC_ADMIN $AUTH_PARAMS --nns-url="$NNS_URL"
         propose-to-update-subnet
-        --proposal-url "$PROPOSAL_URL"
-        --summary "$PROPOSAL_SUMMARY"
+        --proposal-title "$PROPOSAL_TITLE"
+        --summary-file "$PROPOSAL_SUMMARY_FILE"
         $params
         --subnet "$subnet_id"
-        $PROPOSER_NEURON_INDEX)
+        --proposer $PROPOSER_NEURON_INDEX)
 
     # print the command before executing it
     printf '%q ' "${cmd[@]}"
     echo
 
-    print_proposal_url_instructions
     do_you_want_to_continue
 
     set -x
     "${cmd[@]}"
+    rm "$PROPOSAL_SUMMARY_FILE"
 }
 
 maybe_query() {
