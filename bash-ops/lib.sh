@@ -328,7 +328,7 @@ maybe_propose_to_create_subnet() {
     MOTIVATION="$(cat)"
     PROPOSAL_SUMMARY_FILE=$(mktemp)
     cat >$PROPOSAL_SUMMARY_FILE <<_EOF
-Create new ${subnet_type} subnet from commit ${version_commit}
+Create new ${subnet_type} subnet with replica revision ${version_commit}
 
 Motivation: $MOTIVATION
 _EOF
