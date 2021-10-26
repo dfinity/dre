@@ -53,7 +53,7 @@ class IcSshRemoteRun:
             env["NODES_FILTER_INCLUDE"] = self._node_filter
         output = subprocess.check_output(
             [
-                repo_root / "testnet/ansible/inventory/inventory.py",
+                repo_root / "ic/testnet/ansible/inventory/inventory.py",
                 "--deployment",
                 self._deployment_name,
                 "--list",
@@ -82,7 +82,7 @@ class IcSshRemoteRun:
 
         output = subprocess.check_output(
             [
-                repo_root / "testnet/ansible/inventory/inventory.py",
+                repo_root / "ic/testnet/ansible/inventory/inventory.py",
                 "--deployment",
                 self._deployment_name,
                 "--nodes",
