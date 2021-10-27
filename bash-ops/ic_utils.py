@@ -53,7 +53,7 @@ class IcSshRemoteRun:
             env["NODES_FILTER_INCLUDE"] = self._node_filter
         output = subprocess.check_output(
             [
-                repo_root / "ic/testnet/ansible/inventory/inventory.py",
+                repo_root / "deployments/ansible/inventory/inventory.py",
                 "--deployment",
                 self._deployment_name,
                 "--list",
@@ -82,7 +82,7 @@ class IcSshRemoteRun:
 
         output = subprocess.check_output(
             [
-                repo_root / "ic/testnet/ansible/inventory/inventory.py",
+                repo_root / "deployments/ansible/inventory/inventory.py",
                 "--deployment",
                 self._deployment_name,
                 "--nodes",
@@ -204,7 +204,7 @@ class IcAnsible:
         """Create an object for the specified deployment and node filter."""
         self._deployment_name = deployment_name
         self._node_filter = node_filter or ""
-        self._hosts_file = repo_root / "testnet/env" / self._deployment_name / "hosts"
+        self._hosts_file = repo_root / "deployments/env" / self._deployment_name / "hosts"
 
     def ansible_run_shell_checked(self, command: str):
         """Run the specified command on the deployment nodes and check that the execution succeeds."""
