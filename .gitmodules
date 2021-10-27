@@ -1,3 +1,0 @@
-[submodule "ic"]
-	path = ic
-	url = git@gitlab.com:dfinity-lab/core/ic.git
