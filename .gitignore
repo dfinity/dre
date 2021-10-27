@@ -2,3 +2,4 @@
 
 .env
 state.sqlite3
+__pycache__
