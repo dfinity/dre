@@ -261,10 +261,12 @@ maybe_propose_to_add_nodes_to_subnet() {
         echo >&2 "USAGE: $0 $OP_NAME <subnet-number> <node-id> [<node-id> ...]"
         exit 1
     fi
-    subnet_id=$1
+    subnet_index=$1
+    subnet_id=$(get_subnet_id_from_index "$subnet_index")
+    subnet_id_short=$(echo $subnet_id | cut -d- -f1)
     shift
     nodes_to_add=$@
-    PROPOSAL_TITLE=${PROPOSAL_TITLE:-"Add node(s) to subnet $subnet_id"}
+    PROPOSAL_TITLE=${PROPOSAL_TITLE:-"Add node(s) to subnet $subnet_id_short"}
     echo
     echo "Please provide the MOTIVATION for this proposal and ctrl-d when done"
     MOTIVATION="$(cat)"
@@ -274,7 +276,7 @@ Add node(s) $nodes_to_add to subnet $subnet_id
 
 Motivation: $MOTIVATION
 _EOF
-    print_green "Proposing on [$NETWORK] to add nodes to subnet [$subnet_id] with the following params:"
+    print_green "Proposing on [$NETWORK] to add nodes to subnet [$subnet_id_short] with the following params:"
     print_env_common_for_proposal
     print_param "nodes to be add to the subnet" "$nodes_to_add"
 
