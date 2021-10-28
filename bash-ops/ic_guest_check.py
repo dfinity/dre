@@ -19,7 +19,6 @@ GUEST_USER_ADMIN = "admin"
 GUEST_USER_READONLY = "readonly"
 TABLE_FMT = "simple"  # https://pypi.org/project/tabulate/
 git_repo = git.Repo(os.path.dirname(__file__), search_parent_directories=True)
-repo_root = pathlib.Path(git_repo.git.rev_parse("--show-toplevel"))
 deployment_name: str = None
 node_filter: str = None
 nodes_external: typing.List[str] = None
@@ -34,7 +33,8 @@ out_dir = None
 @functools.lru_cache(maxsize=32)
 def git_commit_get_date(commit):
     """Return the date of the provided git commit."""
-    return time.gmtime(git_repo.commit(commit).committed_date)
+    ic_submodule = git_repo.submodule("ic").module()
+    return time.gmtime(ic_submodule.commit(commit).committed_date)
 
 
 def step_1_ssh_readonly_user():
