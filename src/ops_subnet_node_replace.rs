@@ -386,24 +386,24 @@ fn proposal_summary_generate_one_line(
     };
 
     let step_1_status = if nodes_to_add_proposal_id > 0 {
-        "(done)"
+        "(already done)"
     } else {
-        "(this proposal)"
+        "(in this proposal)"
     };
     let step_2_status = if nodes_to_add_proposal_id > 0 {
-        "(this proposal)"
+        "(in this proposal)"
     } else {
-        "(upcoming proposal)"
+        "(in an upcoming proposal)"
     };
 
     format!(
-        "Replace {} in subnet {}: {} add nodes {}; {} remove nodes {}",
+        "Replace {} in subnet {}: add nodes {} {}; remove nodes {} {}",
         plural,
         subnet.id_short,
-        step_1_status,
         nodes_add_vec.as_string_short(),
-        step_2_status,
+        step_1_status,
         nodes_remove_vec.as_string_short(),
+        step_2_status,
     )
 }
 
