@@ -71,7 +71,7 @@ fn proposal_summary_generate_one_line_1_node() {
 
     assert_eq!(
         summary,
-        "Replace a node in subnet tdb26: (this proposal) add nodes [afx6y]; (later) remove nodes [z3tum]"
+        "Replace a node in subnet tdb26: add nodes [afx6y] (in this proposal); remove nodes [z3tum] (in an upcoming proposal)"
     );
 
     let summary =
@@ -79,7 +79,7 @@ fn proposal_summary_generate_one_line_1_node() {
 
     assert_eq!(
         summary,
-        "Replace a node in subnet tdb26: (done) add nodes [afx6y]; (this proposal) remove nodes [z3tum]"
+        "Replace a node in subnet tdb26: add nodes [afx6y] (already done); remove nodes [z3tum] (in this proposal)"
     );
 }
 
@@ -96,7 +96,7 @@ fn proposal_summary_generate_one_line_2_nodes() {
 
     assert_eq!(
         summary,
-        "Replace nodes in subnet tdb26: (this proposal) add nodes [afx6y, dsthq]; (later) remove nodes [z3tum, ktrkp]"
+        "Replace nodes in subnet tdb26: add nodes [afx6y, dsthq] (in this proposal); remove nodes [z3tum, ktrkp] (in an upcoming proposal)"
     );
 
     let summary =
@@ -104,6 +104,6 @@ fn proposal_summary_generate_one_line_2_nodes() {
 
     assert_eq!(
         summary,
-        "Replace nodes in subnet tdb26: (done) add nodes [afx6y, dsthq]; (this proposal) remove nodes [z3tum, ktrkp]"
+        "Replace nodes in subnet tdb26: add nodes [afx6y, dsthq] (already done); remove nodes [z3tum, ktrkp] (in this proposal)"
     );
 }
