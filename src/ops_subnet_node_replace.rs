@@ -12,9 +12,9 @@ use std::str::FromStr;
 
 fn proposal_check_if_completed(
     db_connection: &SqliteConnection,
-    row: &model_subnet_update_nodes::StateSubnetUpdateNodes,
+    proposal_id: Option<i32>,
 ) -> Result<Option<utils::ProposalStatus>, anyhow::Error> {
-    match row.proposal_add_id {
+    match proposal_id {
         Some(proposal_id) => {
             let proposal = utils::get_proposal_status(proposal_id)?;
             if proposal.executed_timestamp_seconds > 0 {
@@ -48,12 +48,16 @@ pub fn check_and_submit_proposals_subnet_add_nodes(
     for row in &rows {
         match (&row.nodes_to_add, &row.nodes_to_remove) {
             (Some(nodes_to_add), Some(nodes_to_remove)) => {
+                if !model_proposals::is_proposal_executed(db_connection, row.proposal_add_id) {
+                    proposal_check_if_completed(db_connection, row.proposal_add_id)?;
+                }
+                if !model_proposals::is_proposal_executed(db_connection, row.proposal_remove_id) {
+                    proposal_check_if_completed(db_connection, row.proposal_remove_id)?;
+                }
                 if model_proposals::is_proposal_executed(db_connection, row.proposal_add_id) {
                     if model_proposals::is_proposal_executed(db_connection, row.proposal_remove_id) {
                         model_subnet_update_nodes::subnet_row_mark_completed(db_connection, row);
                         continue;
-                    } else {
-                        proposal_check_if_completed(db_connection, row)?;
                     }
                 }
                 match row.proposal_add_id {
@@ -107,7 +111,7 @@ pub fn check_and_submit_proposals_subnet_add_nodes(
                                 }
                             }
                         } else {
-                            let proposal = proposal_check_if_completed(db_connection, row)?;
+                            let proposal = proposal_check_if_completed(db_connection, row.proposal_add_id)?;
                             if let Some(proposal) = proposal {
                                 if proposal.executed_timestamp_seconds > 0 {
                                     proposal_delete_create(
@@ -182,8 +186,8 @@ pub fn subnet_nodes_replace(
         (Some(nodes_to_add), Some(nodes_to_remove)) => {
             for row in model_subnet_update_nodes::subnet_rows_get(db_connection, &nodes.subnet) {
                 if row.nodes_to_add == nodes.nodes_to_add && row.nodes_to_remove == nodes.nodes_to_remove {
-                    let proposal_add = proposal_check_if_completed(db_connection, &row)?;
-                    let proposal_remove = proposal_check_if_completed(db_connection, &row)?;
+                    let proposal_add = proposal_check_if_completed(db_connection, row.proposal_add_id)?;
+                    let proposal_remove = proposal_check_if_completed(db_connection, row.proposal_remove_id)?;
                     if let (Some(proposal_add), Some(proposal_remove)) = (&proposal_add, &proposal_remove) {
                         let add_finished =
                             proposal_add.executed_timestamp_seconds > 0 || proposal_add.failed_timestamp_seconds > 0;
