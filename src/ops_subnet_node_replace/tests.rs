@@ -1,12 +1,12 @@
 use crate::ops_subnet_node_replace;
 
 #[test]
-fn proposal_summary_generate_1_node() {
+fn proposal_generate_summary_1_node() {
     let subnet_id = "tdb26-jop6k-aogll-7ltgs-eruif-6kk7m-qpktf-gdiqx-mxtrf-vb5e6-eqe".to_string();
     let nodes_to_add = "afx6y-22h67-ct72t-etddn-t2jaz-gfsrz-u3yxw-oocjp-gj3za-de3ot-2ae".to_string();
     let nodes_to_remove = "z3tum-w7bue-lt6ca-qgynf-us6oq-nc3qc-7miiq-34rbp-ekuoa-g6cqr-wqe".to_string();
 
-    let summary = ops_subnet_node_replace::proposal_summary_generate(&subnet_id, &nodes_to_add, &nodes_to_remove, 0);
+    let summary = ops_subnet_node_replace::proposal_generate_summary(&subnet_id, &nodes_to_add, &nodes_to_remove, 0);
 
     assert_eq!(
         summary,
@@ -17,7 +17,7 @@ fn proposal_summary_generate_1_node() {
 "#
     );
 
-    let summary = ops_subnet_node_replace::proposal_summary_generate(&subnet_id, &nodes_to_add, &nodes_to_remove, 123);
+    let summary = ops_subnet_node_replace::proposal_generate_summary(&subnet_id, &nodes_to_add, &nodes_to_remove, 123);
 
     assert_eq!(
         summary,
@@ -30,14 +30,14 @@ fn proposal_summary_generate_1_node() {
 }
 
 #[test]
-fn proposal_summary_generate_2_nodes() {
+fn proposal_generate_summary_2_nodes() {
     let subnet_id = "tdb26-jop6k-aogll-7ltgs-eruif-6kk7m-qpktf-gdiqx-mxtrf-vb5e6-eqe".to_string();
     let nodes_to_add =
         "afx6y-22h67-ct72t-etddn-t2jaz-gfsrz-u3yxw-oocjp-gj3za-de3ot-2ae,dsthq-itfw5-zkibk-chtl5-u7afl-xvxva-7swke-tvqif-vq3t2-wvp7x-mae".to_string();
     let nodes_to_remove =
         "z3tum-w7bue-lt6ca-qgynf-us6oq-nc3qc-7miiq-34rbp-ekuoa-g6cqr-wqe,ktrkp-ccur6-nvpyb-sokhh-exg7x-pfuds-4jxmw-n2r5m-vj5yt-aqzc4-vae".to_string();
 
-    let summary = ops_subnet_node_replace::proposal_summary_generate(&subnet_id, &nodes_to_add, &nodes_to_remove, 0);
+    let summary = ops_subnet_node_replace::proposal_generate_summary(&subnet_id, &nodes_to_add, &nodes_to_remove, 0);
 
     assert_eq!(
         summary,
@@ -48,7 +48,7 @@ fn proposal_summary_generate_2_nodes() {
 "#
     );
 
-    let summary = ops_subnet_node_replace::proposal_summary_generate(&subnet_id, &nodes_to_add, &nodes_to_remove, 123);
+    let summary = ops_subnet_node_replace::proposal_generate_summary(&subnet_id, &nodes_to_add, &nodes_to_remove, 123);
 
     assert_eq!(
         summary,
@@ -61,21 +61,19 @@ fn proposal_summary_generate_2_nodes() {
 }
 
 #[test]
-fn proposal_summary_generate_one_line_1_node() {
+fn proposal_generate_title_1_node() {
     let subnet_id = "tdb26-jop6k-aogll-7ltgs-eruif-6kk7m-qpktf-gdiqx-mxtrf-vb5e6-eqe".to_string();
     let nodes_to_add = "afx6y-22h67-ct72t-etddn-t2jaz-gfsrz-u3yxw-oocjp-gj3za-de3ot-2ae".to_string();
     let nodes_to_remove = "z3tum-w7bue-lt6ca-qgynf-us6oq-nc3qc-7miiq-34rbp-ekuoa-g6cqr-wqe".to_string();
 
-    let summary =
-        ops_subnet_node_replace::proposal_summary_generate_one_line(&subnet_id, &nodes_to_add, &nodes_to_remove, 0);
+    let summary = ops_subnet_node_replace::proposal_generate_title(&subnet_id, &nodes_to_add, &nodes_to_remove, 0);
 
     assert_eq!(
         summary,
         "Replace a node in subnet tdb26: add nodes [afx6y] (in this proposal); remove nodes [z3tum] (in an upcoming proposal)"
     );
 
-    let summary =
-        ops_subnet_node_replace::proposal_summary_generate_one_line(&subnet_id, &nodes_to_add, &nodes_to_remove, 123);
+    let summary = ops_subnet_node_replace::proposal_generate_title(&subnet_id, &nodes_to_add, &nodes_to_remove, 123);
 
     assert_eq!(
         summary,
@@ -84,23 +82,21 @@ fn proposal_summary_generate_one_line_1_node() {
 }
 
 #[test]
-fn proposal_summary_generate_one_line_2_nodes() {
+fn proposal_generate_title_2_nodes() {
     let subnet_id = "tdb26-jop6k-aogll-7ltgs-eruif-6kk7m-qpktf-gdiqx-mxtrf-vb5e6-eqe".to_string();
     let nodes_to_add =
         "afx6y-22h67-ct72t-etddn-t2jaz-gfsrz-u3yxw-oocjp-gj3za-de3ot-2ae,dsthq-itfw5-zkibk-chtl5-u7afl-xvxva-7swke-tvqif-vq3t2-wvp7x-mae".to_string();
     let nodes_to_remove =
         "z3tum-w7bue-lt6ca-qgynf-us6oq-nc3qc-7miiq-34rbp-ekuoa-g6cqr-wqe,ktrkp-ccur6-nvpyb-sokhh-exg7x-pfuds-4jxmw-n2r5m-vj5yt-aqzc4-vae".to_string();
 
-    let summary =
-        ops_subnet_node_replace::proposal_summary_generate_one_line(&subnet_id, &nodes_to_add, &nodes_to_remove, 0);
+    let summary = ops_subnet_node_replace::proposal_generate_title(&subnet_id, &nodes_to_add, &nodes_to_remove, 0);
 
     assert_eq!(
         summary,
         "Replace nodes in subnet tdb26: add nodes [afx6y, dsthq] (in this proposal); remove nodes [z3tum, ktrkp] (in an upcoming proposal)"
     );
 
-    let summary =
-        ops_subnet_node_replace::proposal_summary_generate_one_line(&subnet_id, &nodes_to_add, &nodes_to_remove, 123);
+    let summary = ops_subnet_node_replace::proposal_generate_title(&subnet_id, &nodes_to_add, &nodes_to_remove, 123);
 
     assert_eq!(
         summary,
