@@ -2,75 +2,32 @@ use crate::cli_types::{NodesVec, SubcmdSubnetUpdateNodes, Subnet};
 use anyhow::anyhow;
 use colored::Colorize;
 use diesel::prelude::SqliteConnection;
-use log::{debug, info, warn};
+use log::{debug, info};
 use regex::Regex;
 
-use crate::models;
+use crate::model_proposals;
+use crate::model_subnet_update_nodes;
 use crate::utils::{self, env_cfg};
 use std::str::FromStr;
 
-fn proposal_add_update_completed(
+fn proposal_check_if_completed(
     db_connection: &SqliteConnection,
-    row: &models::StateSubnetUpdateNodes,
+    row: &model_subnet_update_nodes::StateSubnetUpdateNodes,
 ) -> Result<Option<utils::ProposalStatus>, anyhow::Error> {
     match row.proposal_add_id {
         Some(proposal_id) => {
             let proposal = utils::get_proposal_status(proposal_id)?;
             if proposal.executed_timestamp_seconds > 0 {
-                info!(
-                    "Proposal {} for adding nodes has a completed status on the NNS.",
-                    proposal_id
-                );
-                models::subnet_nodes_add_set_proposal_executed(
+                model_proposals::proposal_set_executed(
                     db_connection,
-                    row.id,
+                    proposal_id,
                     proposal.executed_timestamp_seconds,
                 )?;
             }
             if proposal.failed_timestamp_seconds > 0 {
-                warn!(
-                    "Proposal {} for adding nodes failed execution. Reason: {}",
-                    proposal_id, proposal.failure_reason
-                );
-                models::subnet_nodes_add_set_proposal_failure(
+                model_proposals::proposal_set_failed(
                     db_connection,
-                    row.id,
-                    proposal.failed_timestamp_seconds,
-                    &proposal.failure_reason,
-                )?;
-            }
-            Ok(Some(proposal))
-        }
-        None => Ok(None),
-    }
-}
-
-fn proposal_remove_update_completed(
-    db_connection: &SqliteConnection,
-    row: &models::StateSubnetUpdateNodes,
-) -> Result<Option<utils::ProposalStatus>, anyhow::Error> {
-    match row.proposal_remove_id {
-        Some(proposal_id) => {
-            let proposal = utils::get_proposal_status(proposal_id)?;
-            if proposal.executed_timestamp_seconds > 0 {
-                info!(
-                    "Proposal {} for removing nodes has a completed status on the NNS.",
-                    proposal_id
-                );
-                models::subnet_nodes_remove_set_proposal_executed(
-                    db_connection,
-                    row.id,
-                    proposal.executed_timestamp_seconds,
-                )?;
-            }
-            if proposal.failed_timestamp_seconds > 0 {
-                warn!(
-                    "Proposal {} for removing nodes failed execution. Reason: {}",
-                    proposal_id, proposal.failure_reason
-                );
-                models::subnet_nodes_remove_set_proposal_failure(
-                    db_connection,
-                    row.id,
+                    proposal_id,
                     proposal.failed_timestamp_seconds,
                     &proposal.failure_reason,
                 )?;
@@ -85,38 +42,46 @@ pub fn check_and_submit_proposals_subnet_add_nodes(
     db_connection: &SqliteConnection,
     subnet_id: &str,
 ) -> Result<bool, anyhow::Error> {
-    let db_subnet_nodes_to_add = models::subnet_nodes_to_add_get(db_connection, subnet_id);
+    let rows = model_subnet_update_nodes::subnet_rows_in_progress_get(db_connection, subnet_id);
 
     let mut pending = false;
-    for row in &db_subnet_nodes_to_add {
+    for row in &rows {
         match (&row.nodes_to_add, &row.nodes_to_remove) {
             (Some(nodes_to_add), Some(nodes_to_remove)) => {
-                if row.proposal_add_executed_timestamp > 0 || row.proposal_add_failed_timestamp > 0 {
-                    if row.proposal_remove_executed_timestamp > 0 || row.proposal_remove_failed_timestamp > 0 {
+                if model_proposals::is_proposal_executed(db_connection, row.proposal_add_id) {
+                    if model_proposals::is_proposal_executed(db_connection, row.proposal_remove_id) {
+                        model_subnet_update_nodes::subnet_row_mark_completed(db_connection, row);
                         continue;
                     } else {
-                        proposal_remove_update_completed(db_connection, &row)?;
+                        proposal_check_if_completed(db_connection, row)?;
                     }
                 }
                 match row.proposal_add_id {
                     None => {
                         info!("No proposal yet for adding nodes {}", nodes_to_add);
                         // No proposal submitted yet, let's do that now
-                        let summary_long = proposal_summary_generate(subnet_id, nodes_to_add, nodes_to_remove, 0);
-                        let summary_short =
-                            proposal_summary_generate_one_line(subnet_id, nodes_to_add, nodes_to_remove, 0);
+                        let proposal_summary = proposal_generate_summary(subnet_id, nodes_to_add, nodes_to_remove, 0);
+                        let proposal_title = proposal_generate_title(subnet_id, nodes_to_add, nodes_to_remove, 0);
                         let proposal_summary_external_url =
-                            utils::nns_proposals_repo_create_new_subnet_management(&summary_long, &summary_short)?;
+                            utils::nns_proposals_repo_create_new_subnet_management(&proposal_summary, &proposal_title)?;
 
                         let ic_admin_stdout = propose_add_nodes_to_subnet(
                             subnet_id,
                             nodes_to_add,
                             true,
                             &proposal_summary_external_url,
-                            &summary_short,
+                            &proposal_title,
                         )?;
+                        info!("Proposal submitted successfully: {}", ic_admin_stdout);
                         let proposal_id = parse_proposal_id_from_ic_admin_stdout(ic_admin_stdout.as_str())?;
-                        models::subnet_nodes_to_add_update_proposal_id(
+                        model_proposals::proposal_add(
+                            db_connection,
+                            proposal_id,
+                            &proposal_title,
+                            &proposal_summary,
+                            &ic_admin_stdout,
+                        );
+                        model_subnet_update_nodes::subnet_nodes_to_add_update_proposal_id(
                             db_connection,
                             &subnet_id.to_string(),
                             &nodes_to_add.to_string(),
@@ -125,7 +90,7 @@ pub fn check_and_submit_proposals_subnet_add_nodes(
                     }
                     Some(add_proposal_id) => {
                         // Proposal already submitted
-                        if row.proposal_add_executed_timestamp > 0 || row.proposal_add_failed_timestamp > 0 {
+                        if model_proposals::is_proposal_executed(db_connection, row.proposal_add_id) {
                             // Add proposal already marked finished execution
                             if row.proposal_remove_id.is_none() {
                                 // remove proposal was not created yet
@@ -142,7 +107,7 @@ pub fn check_and_submit_proposals_subnet_add_nodes(
                                 }
                             }
                         } else {
-                            let proposal = proposal_add_update_completed(db_connection, row)?;
+                            let proposal = proposal_check_if_completed(db_connection, row)?;
                             if let Some(proposal) = proposal {
                                 if proposal.executed_timestamp_seconds > 0 {
                                     proposal_delete_create(
@@ -176,15 +141,23 @@ fn proposal_delete_create(
         "Proposal {} for adding nodes was successfully executed, now remove the nodes",
         add_proposal_id
     );
-    let summary_long = proposal_summary_generate(subnet_id, nodes_to_add, nodes_to_remove, add_proposal_id);
-    let summary_short = proposal_summary_generate_one_line(subnet_id, nodes_to_add, nodes_to_remove, add_proposal_id);
+    let proposal_summary = proposal_generate_summary(subnet_id, nodes_to_add, nodes_to_remove, add_proposal_id);
+    let proposal_title = proposal_generate_title(subnet_id, nodes_to_add, nodes_to_remove, add_proposal_id);
     let proposal_summary_external_url =
-        utils::nns_proposals_repo_create_new_subnet_management(&summary_long, &summary_short)?;
+        utils::nns_proposals_repo_create_new_subnet_management(&proposal_summary, &proposal_title)?;
 
     let ic_admin_stdout =
-        propose_remove_nodes_from_subnet(nodes_to_remove, true, &proposal_summary_external_url, &summary_short)?;
+        propose_remove_nodes_from_subnet(nodes_to_remove, true, &proposal_summary_external_url, &proposal_title)?;
+    info!("Proposal submitted successfully: {}", ic_admin_stdout);
     let proposal_id = parse_proposal_id_from_ic_admin_stdout(ic_admin_stdout.as_str())?;
-    models::subnet_nodes_to_remove_update_proposal_id(
+    model_proposals::proposal_add(
+        db_connection,
+        proposal_id,
+        &proposal_title,
+        &proposal_summary,
+        &ic_admin_stdout,
+    );
+    model_subnet_update_nodes::subnet_nodes_to_remove_update_proposal_id(
         db_connection,
         &subnet_id.to_string(),
         &nodes_to_remove.to_string(),
@@ -207,10 +180,10 @@ pub fn subnet_nodes_replace(
 
     match (&nodes.nodes_to_add, &nodes.nodes_to_remove) {
         (Some(nodes_to_add), Some(nodes_to_remove)) => {
-            for row in models::subnet_records_get(db_connection, &nodes.subnet) {
+            for row in model_subnet_update_nodes::subnet_rows_get(db_connection, &nodes.subnet) {
                 if row.nodes_to_add == nodes.nodes_to_add && row.nodes_to_remove == nodes.nodes_to_remove {
-                    let proposal_add = proposal_add_update_completed(db_connection, &row)?;
-                    let proposal_remove = proposal_remove_update_completed(db_connection, &row)?;
+                    let proposal_add = proposal_check_if_completed(db_connection, &row)?;
+                    let proposal_remove = proposal_check_if_completed(db_connection, &row)?;
                     if let (Some(proposal_add), Some(proposal_remove)) = (&proposal_add, &proposal_remove) {
                         let add_finished =
                             proposal_add.executed_timestamp_seconds > 0 || proposal_add.failed_timestamp_seconds > 0;
@@ -240,14 +213,19 @@ pub fn subnet_nodes_replace(
             );
             println!("{} {}", "Nodes to remove:".red(), nodes_rm_vec.as_string_short().red());
 
-            let summary_short = proposal_summary_generate_one_line(&nodes.subnet, nodes_to_add, nodes_to_remove, 0);
-            propose_add_nodes_to_subnet(&nodes.subnet, nodes_to_add, false, "<tbd>", &summary_short)?;
+            let proposal_title = proposal_generate_title(&nodes.subnet, nodes_to_add, nodes_to_remove, 0);
+            propose_add_nodes_to_subnet(&nodes.subnet, nodes_to_add, false, "<tbd>", &proposal_title)?;
 
-            let summary_short = proposal_summary_generate_one_line(&nodes.subnet, nodes_to_add, nodes_to_remove, 1);
-            propose_remove_nodes_from_subnet(nodes_to_remove, false, "<tbd>", &summary_short)?;
+            let proposal_title = proposal_generate_title(&nodes.subnet, nodes_to_add, nodes_to_remove, 1);
+            propose_remove_nodes_from_subnet(nodes_to_remove, false, "<tbd>", &proposal_title)?;
 
             // Success, user confirmed both operations
-            models::subnet_nodes_to_replace_set(db_connection, &nodes.subnet, nodes_to_add, nodes_to_remove)?;
+            model_subnet_update_nodes::subnet_nodes_to_replace_set(
+                db_connection,
+                &nodes.subnet,
+                nodes_to_add,
+                nodes_to_remove,
+            )?;
 
             Ok("All done".to_string())
         }
@@ -274,7 +252,7 @@ pub fn propose_add_nodes_to_subnet(
     nodes_to_add: &str,
     real_run: bool,
     proposal_url: &str,
-    summary_short: &str,
+    proposal_title: &str,
 ) -> Result<String, anyhow::Error> {
     let subnet: Subnet = Subnet::from_str(subnet_id)?;
     let nodes_vec = NodesVec::from_str(nodes_to_add).expect("parsing nodes_vec failed");
@@ -289,7 +267,7 @@ pub fn propose_add_nodes_to_subnet(
             "--proposal-url".to_string(),
             proposal_url.to_string(),
             "--summary".to_string(),
-            summary_short.to_string(),
+            proposal_title.to_string(),
         ],
         nodes_vec.as_vec_string(),
     ]
@@ -302,7 +280,7 @@ pub fn propose_remove_nodes_from_subnet(
     nodes_to_remove: &str,
     real_run: bool,
     proposal_url: &str,
-    summary_short: &str,
+    proposal_title: &str,
 ) -> Result<String, anyhow::Error> {
     let nodes_vec = NodesVec::from_str(nodes_to_remove).expect("parsing nodes_vec failed");
 
@@ -314,7 +292,7 @@ pub fn propose_remove_nodes_from_subnet(
             "--proposal-url".to_string(),
             proposal_url.to_string(),
             "--summary".to_string(),
-            summary_short.to_string(),
+            proposal_title.to_string(),
         ],
         nodes_vec.as_vec_string(),
     ]
@@ -323,7 +301,7 @@ pub fn propose_remove_nodes_from_subnet(
     utils::ic_admin_run(&ic_admin_args, real_run)
 }
 
-fn proposal_summary_generate(
+fn proposal_generate_summary(
     subnet_id: &str,
     nodes_to_add: &str,
     nodes_to_remove: &str,
@@ -369,7 +347,7 @@ fn proposal_summary_generate(
     )
 }
 
-fn proposal_summary_generate_one_line(
+fn proposal_generate_title(
     subnet_id: &str,
     nodes_to_add: &str,
     nodes_to_remove: &str,
