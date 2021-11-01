@@ -5,8 +5,9 @@ Install and enable pre-commit. Follow https://pre-commit.com/#installation then
 pre-commit install
 ```
 
-Install the nightly cargo. Needed for the new version of clap.
+Install the nightly cargo and enable it in the project folder. Needed for the new version of clap.
 ```
+cd <project_dir>
 which rustup || curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 rustup toolchain install nightly
 rustup override set nightly
@@ -24,9 +25,8 @@ cargo install diesel_cli --no-default-features --features sqlite
 
 Add the `ic` git submodule
 ```
-git submodule foreach -q git remote add github git@github.com:dfinity-lab/dfinity.git
 git submodule update --init --recursive --remote
-git submodule sync
+git submodule foreach -q git remote add github git@github.com:dfinity-lab/dfinity.git
 ```
 
 ## Updating the ic git submodule
