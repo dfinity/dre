@@ -32,28 +32,40 @@ pub struct ProposalStatus {
 
 /// Get status of an NNS proposal
 pub fn get_proposal_status(proposal_id: i32) -> Result<ProposalStatus, anyhow::Error> {
+    debug!("get_proposal_status: {}", proposal_id);
     let mut dfx_args =
         shlex::split("--identity default canister --no-wallet --network=mercury call governance get_proposal_info")
             .expect("shlex split failed");
-    debug!("get_proposal_status {}", proposal_id);
     dfx_args.push(format!("{}", proposal_id));
+
+    fn log_dfx_command_line(dfx_args: &[String]) {
+        debug!(
+            "$ {} {}",
+            env_cfg("DFX").yellow(),
+            shlex::join(dfx_args.iter().map(|s| s.as_str()).collect::<Vec<&str>>()).yellow()
+        );
+    }
+
+    log_dfx_command_line(&dfx_args);
+
     let output = Command::new(env_cfg("DFX"))
         .args(dfx_args)
         .current_dir("canisters")
         .output()?;
 
     let stdout = String::from_utf8_lossy(output.stdout.as_ref()).to_string();
-    let result = proposal_text_parse(&stdout)?;
-    debug!("STDOUT:\n{}", stdout);
-    info!("Parsed proposal status: {:?}", result);
+    debug!("dfx STDOUT:\n{}", stdout);
     if !output.stderr.is_empty() {
         let stderr = String::from_utf8_lossy(output.stderr.as_ref()).to_string();
-        warn!("STDERR:\n{}", stderr);
+        warn!("dfx STDERR:\n{}", stderr);
     }
+    let result = proposal_text_parse(&stdout)?;
+    info!("Parsed proposal status: {:?}", result);
     Ok(result)
 }
 
 fn proposal_text_parse(text: &str) -> Result<ProposalStatus, anyhow::Error> {
+    debug!("Parsing proposal text: {:?}", text);
     Ok(ProposalStatus {
         id: regex_find(r"(?m)^\s*id = opt record \{ id = ([\d_]+) \};$", text)?
             .replace("_", "")

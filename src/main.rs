@@ -8,7 +8,8 @@ use log::{debug, info};
 use utils::env_cfg;
 mod autoops_types;
 mod cli_types;
-mod models;
+mod model_proposals;
+mod model_subnet_update_nodes;
 mod ops_subnet_node_replace;
 mod schema;
 mod utils;
@@ -19,6 +20,7 @@ fn main() -> Result<(), anyhow::Error> {
     let db_connection = init_sqlite_connect();
     let cli_opts = Opts::parse();
     cli_types::load_command_line_config_override(&cli_opts);
+    init_logger();
 
     // Start of actually doing stuff with commands.
     match &cli_opts.subcommand {
@@ -42,6 +44,7 @@ fn main() -> Result<(), anyhow::Error> {
                     break;
                 }
             }
+            info!("There are no more pending proposals. Exiting...");
             Ok(())
         }
         _ => Err(anyhow::anyhow!("Not implemented yet")),
@@ -55,11 +58,19 @@ fn init_sqlite_connect() -> SqliteConnection {
 }
 
 fn init_env() {
-    if std::env::var("RUST_LOG").is_err() {
-        // Set the default log level to info
-        std::env::set_var("LOG_LEVEL", "info");
+    dotenv().expect(".env file not found. Please copy env.template to .env and adjust configuration.");
+}
+
+fn init_logger() {
+    match std::env::var("RUST_LOG") {
+        Ok(val) => std::env::set_var("LOG_LEVEL", val),
+        Err(_) => {
+            if std::env::var("LOG_LEVEL").is_err() {
+                // Set a default logging level: info, if nothing else specified in environment
+                // variables RUST_LOG or LOG_LEVEL
+                std::env::set_var("LOG_LEVEL", "info")
+            }
+        }
     }
     pretty_env_logger::init_custom_env("LOG_LEVEL");
-
-    dotenv().expect(".env file not found. Please copy env.template to .env and adjust configuration.");
 }
