@@ -1,38 +1,7 @@
-use anyhow::{anyhow, Error};
 use clap::{AppSettings, Clap};
 use log::debug;
 use std::env;
 use std::str::FromStr;
-
-#[derive(Clap, Clone)]
-pub struct SubcmdSubnetUpdateNodes {
-    #[clap(short, long)]
-    pub(crate) subnet: String,
-    #[clap(short = 'a', long = "add")]
-    pub(crate) nodes_to_add: Option<String>,
-    #[clap(short = 'r', long = "remove")]
-    pub(crate) nodes_to_remove: Option<String>,
-}
-
-impl FromStr for SubcmdSubnetUpdateNodes {
-    type Err = Error;
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let items: Vec<String> = match shlex::split(s) {
-            Some(items) => items,
-            None => return Err(anyhow!("Invalid input string provided: {}", s)),
-        };
-        if items.len() != 3 {
-            return Err(anyhow!(
-                "Three arguments needed: '<subnet_id> <nodes_to_add> <nodes_to_remove>'. Multiple nodes can be provided at once."
-            ));
-        }
-        Ok(Self {
-            subnet: items[0].clone(),
-            nodes_to_add: Some(items[1].replace(",", " ")),
-            nodes_to_remove: Some(items[2].replace(",", " ")),
-        })
-    }
-}
 
 #[derive(Clap, Clone)]
 #[clap(version = "0.1")]
@@ -56,6 +25,8 @@ pub struct Opts {
     pub(crate) nns_url: Option<String>,
     #[clap(short, long)]
     pub(crate) dryrun: bool,
+    #[clap(long)]
+    pub(crate) verbose: bool,
     #[clap(subcommand)]
     pub(crate) subcommand: SubCommand,
 }
@@ -93,6 +64,9 @@ pub fn load_command_line_config_override(opts: &Opts) {
         env::set_var("nns_url", v);
         debug!("override nns_url setting with {}", v);
     }
+    if opts.verbose {
+        std::env::set_var("LOG_LEVEL", "debug");
+    }
 }
 
 #[derive(Clap, Clone)]
@@ -101,6 +75,16 @@ pub(crate) enum SubCommand {
     SubnetUpdateNodes(SubcmdSubnetUpdateNodes),
     #[clap(version = "1.0")]
     SubnetUpdateNodesRecommended(Subnet),
+}
+
+#[derive(Clap, Clone)]
+pub struct SubcmdSubnetUpdateNodes {
+    #[clap(short, long)]
+    pub(crate) subnet: String,
+    #[clap(short = 'a', long = "add")]
+    pub(crate) nodes_to_add: Option<String>,
+    #[clap(short = 'r', long = "remove")]
+    pub(crate) nodes_to_remove: Option<String>,
 }
 
 #[derive(Clap, Clone)]
@@ -115,7 +99,7 @@ pub struct Subnet {
 }
 
 impl FromStr for Subnet {
-    type Err = Error;
+    type Err = anyhow::Error;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         Ok(Self {
             id: s.to_string(),
@@ -142,7 +126,7 @@ pub struct Node {
 }
 
 impl FromStr for Node {
-    type Err = Error;
+    type Err = anyhow::Error;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         Ok(Self {
             id: s.to_string(),
@@ -181,7 +165,7 @@ impl std::fmt::Display for NodesVec {
 }
 
 impl FromStr for NodesVec {
-    type Err = Error;
+    type Err = anyhow::Error;
     fn from_str(nodes_str: &str) -> Result<Self, Self::Err> {
         Ok(NodesVec {
             0: nodes_str
