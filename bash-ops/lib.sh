@@ -51,10 +51,9 @@ REPO_ROOT=$(
     git rev-parse --show-toplevel
 )
 cd "$REPO_ROOT"
-
-if ! echo "$PATH" | grep -q "$HOME/bin"; then
-    export PATH="$HOME/bin:$PATH"
-fi
+REPO_BIN="$REPO_ROOT/bash-ops/bin"
+mkdir -p "$REPO_BIN"
+export PATH="$REPO_BIN:$PATH"
 
 refresh_ic_submodule() {
     if ! [ -r "$REPO_ROOT"/ic/gitlab-ci/src/artifacts/newest_sha_with_disk_image.sh ]; then
@@ -66,15 +65,14 @@ refresh_ic_submodule() {
 
 install_ic_admin() {
     GIT_REVISION=$(cd "$REPO_ROOT"/ic; gitlab-ci/src/artifacts/newest_sha_with_disk_image.sh "origin/post-merge-tests-passed")
-    mkdir -p ~/bin
     if [ -n "$GIT_REVISION" ]; then
         if [ "$(uname)" == "Darwin" ]; then
-            curl https://download.dfinity.systems/blessed/ic/$GIT_REVISION/nix-release/x86_64-darwin/ic-admin.gz -o - | gunzip -c >|~/bin/ic-admin.$GIT_REVISION
+            curl https://download.dfinity.systems/blessed/ic/$GIT_REVISION/nix-release/x86_64-darwin/ic-admin.gz -o - | gunzip -c >| "$REPO_BIN"/ic-admin.$GIT_REVISION
         else
-            curl https://download.dfinity.systems/blessed/ic/$GIT_REVISION/release/ic-admin.gz -o - | gunzip -c >|~/bin/ic-admin.$GIT_REVISION
+            curl https://download.dfinity.systems/blessed/ic/$GIT_REVISION/release/ic-admin.gz -o - | gunzip -c >| "$REPO_BIN"/ic-admin.$GIT_REVISION
         fi
-        chmod +x ~/bin/ic-admin.$GIT_REVISION
-        ln -sf ~/bin/ic-admin.$GIT_REVISION ~/bin/ic-admin
+        chmod +x "$REPO_BIN"/ic-admin.$GIT_REVISION
+        ln -sf "$REPO_BIN"/ic-admin.$GIT_REVISION "$REPO_BIN"/ic-admin
     fi
 }
 
@@ -90,13 +88,12 @@ check_ic_admin() {
 }
 
 install_jq() {
-    mkdir -p ~/bin
     if [ "$(uname)" == "Darwin" ]; then
-        curl -L https://github.com/stedolan/jq/releases/download/jq-1.6/jq-osx-amd64 -o ~/bin/jq
+        curl -L https://github.com/stedolan/jq/releases/download/jq-1.6/jq-osx-amd64 -o "$REPO_BIN"/jq
     else
-        curl -L https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64 -o ~/bin/jq
+        curl -L https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64 -o "$REPO_BIN"/jq
     fi
-    chmod +x ~/bin/jq
+    chmod +x "$REPO_BIN"/jq
 }
 
 check_jq() {
