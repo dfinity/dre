@@ -58,12 +58,13 @@ install_ic_admin() {
     GIT_REVISION=$("$REPO_ROOT"/gitlab-ci/src/artifacts/newest_sha_with_disk_image.sh "origin/post-merge-tests-passed")
     mkdir -p ~/bin
     if [ -n "$GIT_REVISION" ]; then
-        if [ "$(uname)" = "Darwin" ]; then
-            curl https://download.dfinity.systems/blessed/ic/$GIT_REVISION/nix-release/x86_64-darwin/ic-admin.gz -o - | gunzip -c >|~/bin/ic-admin
+        if [ "$(uname)" == "Darwin" ]; then
+            curl https://download.dfinity.systems/blessed/ic/$GIT_REVISION/nix-release/x86_64-darwin/ic-admin.gz -o - | gunzip -c >|~/bin/ic-admin.$GIT_REVISION
         else
-            curl https://download.dfinity.systems/blessed/ic/$GIT_REVISION/release/ic-admin.gz -o - | gunzip -c >|~/bin/ic-admin
+            curl https://download.dfinity.systems/blessed/ic/$GIT_REVISION/release/ic-admin.gz -o - | gunzip -c >|~/bin/ic-admin.$GIT_REVISION
         fi
-        chmod +x ~/bin/ic-admin
+        chmod +x ~/bin/ic-admin.$GIT_REVISION
+        ln -sf ~/bin/ic-admin.$GIT_REVISION ~/bin/ic-admin
     fi
 }
 
@@ -74,6 +75,25 @@ check_ic_admin() {
     fi
     if ! command -v $IC_ADMIN &>/dev/null; then
         error "ic-admin still not found, exiting"
+    fi
+}
+
+install_jq() {
+    mkdir -p ~/bin
+    if [ "$(uname)" == "Darwin" ]; then
+        curl -L https://github.com/stedolan/jq/releases/download/jq-1.6/jq-osx-amd64 -o ~/bin/jq
+    else
+        curl -L https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64 -o ~/bin/jq
+    fi
+}
+
+check_jq() {
+    if ! command -v jq &>/dev/null; then
+        echo "jq not found"
+        install_jq
+    fi
+    if ! command -v jq &>/dev/null; then
+        error "jq still not found, exiting"
     fi
 }
 

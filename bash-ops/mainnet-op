@@ -14,6 +14,7 @@ OP_ARGS=$@
 
 IC_ADMIN="${IC_ADMIN:-ic-admin}"
 check_ic_admin
+check_jq
 
 NNS_URL=${NNS_URL:-'http://[2001:470:1:c76:5000:2cff:fe0c:f490]:8080'}
 HSM_PIN_FILE="$HOME/.hsm-pin"

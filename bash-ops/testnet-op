@@ -23,6 +23,7 @@ OP_ARGS=$@
 
 IC_ADMIN="${IC_ADMIN:-ic-admin}"
 check_ic_admin
+check_jq
 
 if [ "${PROPOSER_NAME:-}" == "" ]; then
     TESTNET_IDENTITY_PEM_FILE="$HOME/.config/dfx/identity/bootstrap-super-leader/identity.pem"
