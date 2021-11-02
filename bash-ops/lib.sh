@@ -96,6 +96,7 @@ install_jq() {
     else
         curl -L https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64 -o ~/bin/jq
     fi
+    chmod +x ~/bin/jq
 }
 
 check_jq() {
