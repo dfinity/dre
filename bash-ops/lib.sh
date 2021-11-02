@@ -65,7 +65,7 @@ refresh_ic_submodule() {
 }
 
 install_ic_admin() {
-    GIT_REVISION=$("$REPO_ROOT"/ic/gitlab-ci/src/artifacts/newest_sha_with_disk_image.sh "origin/post-merge-tests-passed")
+    GIT_REVISION=$(cd "$REPO_ROOT"/ic; gitlab-ci/src/artifacts/newest_sha_with_disk_image.sh "origin/post-merge-tests-passed")
     mkdir -p ~/bin
     if [ -n "$GIT_REVISION" ]; then
         if [ "$(uname)" == "Darwin" ]; then
