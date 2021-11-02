@@ -46,15 +46,25 @@ do_you_want_to_continue() {
     fi
 }
 
+REPO_ROOT=$(
+    cd "$(dirname "$0")"
+    git rev-parse --show-toplevel
+)
+cd "$REPO_ROOT"
+
 if ! echo "$PATH" | grep -q "$HOME/bin"; then
     export PATH="$HOME/bin:$PATH"
 fi
 
+refresh_ic_submodule() {
+    if ! [ -r "$REPO_ROOT"/ic/gitlab-ci/src/artifacts/newest_sha_with_disk_image.sh ]; then
+        git submodule update --init --recursive --remote
+        git submodule foreach -q git remote add github git@github.com:dfinity-lab/dfinity.git
+        git submodule foreach -q git fetch --all
+    fi
+}
+
 install_ic_admin() {
-    REPO_ROOT=$(
-        cd "$(dirname "$0")"
-        git rev-parse --show-toplevel
-    )
     GIT_REVISION=$("$REPO_ROOT"/ic/gitlab-ci/src/artifacts/newest_sha_with_disk_image.sh "origin/post-merge-tests-passed")
     mkdir -p ~/bin
     if [ -n "$GIT_REVISION" ]; then
@@ -69,6 +79,7 @@ install_ic_admin() {
 }
 
 check_ic_admin() {
+    refresh_ic_submodule
     if ! command -v $IC_ADMIN &>/dev/null; then
         echo "ic-admin not found"
         install_ic_admin
