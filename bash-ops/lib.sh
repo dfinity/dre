@@ -55,7 +55,7 @@ install_ic_admin() {
         cd "$(dirname "$0")"
         git rev-parse --show-toplevel
     )
-    GIT_REVISION=$("$REPO_ROOT"/gitlab-ci/src/artifacts/newest_sha_with_disk_image.sh "origin/post-merge-tests-passed")
+    GIT_REVISION=$("$REPO_ROOT"/ic/gitlab-ci/src/artifacts/newest_sha_with_disk_image.sh "origin/post-merge-tests-passed")
     mkdir -p ~/bin
     if [ -n "$GIT_REVISION" ]; then
         if [ "$(uname)" == "Darwin" ]; then
