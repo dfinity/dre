@@ -1,0 +1,378 @@
+{
+  "SYGNUMZH5_public_key": {
+    "node_allowance": 28,
+    "node_provider": "provider_keys/SYGNUM_master_public_key.der"
+  },
+  "SYGNUMZH6_public_key": {
+    "node_allowance": 28,
+    "node_provider": "provider_keys/SYGNUM_master_public_key.der"
+  },
+  "SYGNUMZH7_public_key": {
+    "node_allowance": 14,
+    "node_provider": "provider_keys/SYGNUM_master_public_key.der"
+  },
+  "dc-hsm10_dc_public_key": {
+    "node_allowance": 2,
+    "node_provider": "provider_keys/001a.der"
+  },
+  "dc-hsm11_dc_public_key": {
+    "node_allowance": 2,
+    "node_provider": "provider_keys/001a.der"
+  },
+  "dc-hsm12_dc_public_key": {
+    "node_allowance": 2,
+    "node_provider": "provider_keys/001a.der"
+  },
+  "dc-hsm13_dc_public_key": {
+    "node_allowance": 2,
+    "node_provider": "provider_keys/001a.der"
+  },
+  "dc-hsm14_dc_public_key": {
+    "node_allowance": 2,
+    "node_provider": "provider_keys/001a.der"
+  },
+  "dc-hsm15_dc_public_key": {
+    "node_allowance": 2,
+    "node_provider": "provider_keys/001a.der"
+  },
+  "dc-hsm16_dc_public_key": {
+    "node_allowance": 2,
+    "node_provider": "provider_keys/001a.der"
+  },
+  "dc_public_BiggerCapital_aw1_key": {
+    "node_allowance": 28,
+    "node_provider": "provider_keys/master_key_BiggerCapital.der"
+  },
+  "dc_public_key_01_EnsoFinance": {
+    "node_allowance": 28,
+    "node_provider": "provider_keys/master_key_EnsoFinance.der"
+  },
+  "dc_public_key_02_EnsoFinance": {
+    "node_allowance": 28,
+    "node_provider": "provider_keys/master_key_EnsoFinance.der"
+  },
+  "dc_public_key_162tech_sg1": {
+    "node_allowance": 28,
+    "node_provider": "provider_keys/master_public_key_162tech.der"
+  },
+  "dc_public_key_162tech_sg2": {
+    "node_allowance": 14,
+    "node_provider": "provider_keys/master_public_key_162tech.der"
+  },
+  "dc_public_key_162tech_sg3": {
+    "node_allowance": 28,
+    "node_provider": "provider_keys/master_public_key_162tech.der"
+  },
+  "dc_public_key_87M_DL1": {
+    "node_allowance": 28,
+    "node_provider": "provider_keys/master_public_key_87M.der"
+  },
+  "dc_public_key_87M_LV1": {
+    "node_allowance": 28,
+    "node_provider": "provider_keys/master_public_key_87M.der"
+  },
+  "dc_public_key_87M_PL1": {
+    "node_allowance": 14,
+    "node_provider": "provider_keys/master_public_key_87M.der"
+  },
+  "dc_public_key_AdamBrener": {
+    "node_allowance": 2,
+    "node_provider": "provider_keys/master_public_key_AdamBrener.der"
+  },
+  "dc_public_key_AllusionBV_AN1": {
+    "node_allowance": 28,
+    "node_provider": "provider_keys/master_public_key_AllusionBV.der"
+  },
+  "dc_public_key_AllusionBV_BR1": {
+    "node_allowance": 14,
+    "node_provider": "provider_keys/master_public_key_AllusionBV.der"
+  },
+  "dc_public_key_AllusionBV_BR2": {
+    "node_allowance": 28,
+    "node_provider": "provider_keys/master_public_key_AllusionBV.der"
+  },
+  "dc_public_key_Archery_GE1": {
+    "node_allowance": 28,
+    "node_provider": "provider_keys/master_public_key_Archery.der"
+  },
+  "dc_public_key_Archery_GE2": {
+    "node_allowance": 28,
+    "node_provider": "provider_keys/master_public_key_Archery.der"
+  },
+  "dc_public_key_AuburnMercer": {
+    "node_allowance": 1,
+    "node_provider": "provider_keys/master_public_key_AuburnMercer.der"
+  },
+  "dc_public_key_AurelIancu_BU1": {
+    "node_allowance": 28,
+    "node_provider": "provider_keys/master_public_key_AurelIancu_BU1.der"
+  },
+  "dc_public_key_BlockchainDevLabs_BC1": {
+    "node_allowance": 14,
+    "node_provider": "provider_keys/master_public_key_BlockchainDevLabs.der"
+  },
+  "dc_public_key_BlockchainDevLabs_TO1": {
+    "node_allowance": 28,
+    "node_provider": "provider_keys/master_public_key_BlockchainDevLabs.der"
+  },
+  "dc_public_key_BlockchainDevLabs_TO2": {
+    "node_allowance": 28,
+    "node_provider": "provider_keys/master_public_key_BlockchainDevLabs.der"
+  },
+  "dc_public_key_BooleanBit": {
+    "node_allowance": 7,
+    "node_provider": "provider_keys/master_public_key_BooleanBit.der"
+  },
+  "dc_public_key_BrianPorter": {
+    "node_allowance": 7,
+    "node_provider": "provider_keys/master_public_key_BrianPorter.der"
+  },
+  "dc_public_key_CyanMercer": {
+    "node_allowance": 1,
+    "node_provider": "provider_keys/master_public_key_CyanMercer.der"
+  },
+  "dc_public_key_DaveSchnettler": {
+    "node_allowance": 7,
+    "node_provider": "provider_keys/master_public_key_DaveSchnettler.der"
+  },
+  "dc_public_key_DavidBohnhoff_FR2": {
+    "node_allowance": 28,
+    "node_provider": "provider_keys/master_public_key_DavidBohnhoff.der"
+  },
+  "dc_public_key_DustinMercer": {
+    "node_allowance": 1,
+    "node_provider": "provider_keys/master_public_key_DustinMercer.der"
+  },
+  "dc_public_key_FrancisKnott": {
+    "node_allowance": 2,
+    "node_provider": "provider_keys/master_public_key_FrancisKnott.der"
+  },
+  "dc_public_key_FritzHuie": {
+    "node_allowance": 2,
+    "node_provider": "provider_keys/master_public_key_FritzHuie.der"
+  },
+  "dc_public_key_GiantLeaf_AT2": {
+    "node_allowance": 14,
+    "node_provider": "provider_keys/master_public_key_GiantLeaf.der"
+  },
+  "dc_public_key_GiantLeaf_MM1": {
+    "node_allowance": 14,
+    "node_provider": "provider_keys/master_public_key_GiantLeaf.der"
+  },
+  "dc_public_key_GiantLeaf_OR1": {
+    "node_allowance": 28,
+    "node_provider": "provider_keys/master_public_key_GiantLeaf.der"
+  },
+  "dc_public_key_GiantLeaf_TP1": {
+    "node_allowance": 7,
+    "node_provider": "provider_keys/master_public_key_GiantLeaf.der"
+  },
+  "dc_public_key_JasonWong": {
+    "node_allowance": 7,
+    "node_provider": "provider_keys/master_public_key_JasonWong.der"
+  },
+  "dc_public_key_JeffreySchnettler": {
+    "node_allowance": 2,
+    "node_provider": "provider_keys/master_public_key_JeffreySchnettler.der"
+  },
+  "dc_public_key_JimmyQuach": {
+    "node_allowance": 7,
+    "node_provider": "provider_keys/master_public_key_JimmyQuach.der"
+  },
+  "dc_public_key_JoeDymecki": {
+    "node_allowance": 2,
+    "node_provider": "provider_keys/master_public_key_JoeDymecki.der"
+  },
+  "dc_public_key_JohnHarris_hu1": {
+    "node_allowance": 14,
+    "node_provider": "provider_keys/master_public_key_johnharris.der"
+  },
+  "dc_public_key_JonZiskind": {
+    "node_allowance": 1,
+    "node_provider": "provider_keys/master_public_key_JonZiskind.der"
+  },
+  "dc_public_key_LaurenDymecki": {
+    "node_allowance": 1,
+    "node_provider": "provider_keys/master_public_key_LaurenDymecki.der"
+  },
+  "dc_public_key_MaryRen": {
+    "node_allowance": 5,
+    "node_provider": "provider_keys/master_public_key_MaryRen.der"
+  },
+  "dc_public_key_MichaelLiang": {
+    "node_allowance": 1,
+    "node_provider": "provider_keys/master_public_key_MichaelLiang.der"
+  },
+  "dc_public_key_MikeKolarevic": {
+    "node_allowance": 5,
+    "node_provider": "provider_keys/master_public_key_MikeKolarevic.der"
+  },
+  "dc_public_key_MitchelGuerra": {
+    "node_allowance": 1,
+    "node_provider": "provider_keys/master_public_key_MitchelGuerra.der"
+  },
+  "dc_public_key_NathalieMcGrath": {
+    "node_allowance": 1,
+    "node_provider": "provider_keys/master_public_key_NathalieMcGrath.der"
+  },
+  "dc_public_key_PaulLegato": {
+    "node_allowance": 1,
+    "node_provider": "provider_keys/master_public_key_PaulLegato.der"
+  },
+  "dc_public_key_PeggyShafaghi": {
+    "node_allowance": 1,
+    "node_provider": "provider_keys/master_public_key_PeggyShafaghi.der"
+  },
+  "dc_public_key_PrayitJain": {
+    "node_allowance": 2,
+    "node_provider": "provider_keys/master_public_key_PrayitJain.der"
+  },
+  "dc_public_key_RachelDymecki": {
+    "node_allowance": 1,
+    "node_provider": "provider_keys/master_public_key_RachelDymecki.der"
+  },
+  "dc_public_key_RamiKarjian_CH3": {
+    "node_allowance": 28,
+    "node_provider": "provider_keys/master_public_key_RamiKarjian.der"
+  },
+  "dc_public_key_RamiKarjian_PH1": {
+    "node_allowance": 28,
+    "node_provider": "provider_keys/master_public_key_RamiKarjian.der"
+  },
+  "dc_public_key_RamiKarjian_ST1": {
+    "node_allowance": 14,
+    "node_provider": "provider_keys/master_public_key_RamiKarjian.der"
+  },
+  "dc_public_key_RebeccaHaynes": {
+    "node_allowance": 1,
+    "node_provider": "provider_keys/master_public_key_RebeccaHaynes.der"
+  },
+  "dc_public_key_RichardMa": {
+    "node_allowance": 7,
+    "node_provider": "provider_keys/master_public_key_RichardMa.der"
+  },
+  "dc_public_key_RichardSuarez": {
+    "node_allowance": 1,
+    "node_provider": "provider_keys/master_public_key_RichardSuarez.der"
+  },
+  "dc_public_key_RickySidhu": {
+    "node_allowance": 2,
+    "node_provider": "provider_keys/master_public_key_RickySidhu.der"
+  },
+  "dc_public_key_RishiSachdev": {
+    "node_allowance": 7,
+    "node_provider": "provider_keys/master_public_key_RishiSachev.der"
+  },
+  "dc_public_key_RitaLee_replaced_04052021": {
+    "node_allowance": 1,
+    "node_provider": "provider_keys/master_public_key_RitaLee.der"
+  },
+  "dc_public_key_RobHenning": {
+    "node_allowance": 1,
+    "node_provider": "provider_keys/master_public_key_RobHenning.der"
+  },
+  "dc_public_key_RodneyZorrilla": {
+    "node_allowance": 1,
+    "node_provider": "provider_keys/master_public_key_RodneyZorrilla.der"
+  },
+  "dc_public_key_RonnieP_updated20210128": {
+    "node_allowance": 2,
+    "node_provider": "provider_keys/master_public_key_RonniePellizzari.der"
+  },
+  "dc_public_key_RussellFord": {
+    "node_allowance": 1,
+    "node_provider": "provider_keys/master_public_key_RussellFord.der"
+  },
+  "dc_public_key_SeanMikha": {
+    "node_allowance": 2,
+    "node_provider": "provider_keys/master_public_key_SeanMikha.der"
+  },
+  "dc_public_key_ShawnTabrizi": {
+    "node_allowance": 2,
+    "node_provider": "provider_keys/master_public_key_ShawnTabrizi.der"
+  },
+  "dc_public_key_ShelburneVentures": {
+    "node_allowance": 7,
+    "node_provider": "provider_keys/master_public_key_ShelburneVentures.der"
+  },
+  "dc_public_key_StakingFacilities": {
+    "node_allowance": 28,
+    "node_provider": "provider_keys/master_public_key_StakingFacilities.der"
+  },
+  "dc_public_key_Starbase_ty1": {
+    "node_allowance": 28,
+    "node_provider": "provider_keys/master_key_Starbase.der"
+  },
+  "dc_public_key_Starbase_ty2": {
+    "node_allowance": 28,
+    "node_provider": "provider_keys/master_key_Starbase.der"
+  },
+  "dc_public_key_WilliamZelver": {
+    "node_allowance": 1,
+    "node_provider": "provider_keys/master_public_key_WilliamZelver.der"
+  },
+  "dc_public_key__Starbase_ty3": {
+    "node_allowance": 14,
+    "node_provider": "provider_keys/master_key_Starbase.der"
+  },
+  "dc_public_key_blocktech_sj2": {
+    "node_allowance": 28,
+    "node_provider": "provider_keys/master_public_key_blocktech.der"
+  },
+  "dc_public_key_created032521_JamesFahey": {
+    "node_allowance": 1,
+    "node_provider": "provider_keys/master_public_key_JamesFahey.der"
+  },
+  "dc_public_key_dcs-hsm6": {
+    "node_allowance": 2,
+    "node_provider": "provider_keys/001a.der"
+  },
+  "dc_public_key_dcs-hsm7": {
+    "node_allowance": 2,
+    "node_provider": "provider_keys/001a.der"
+  },
+  "dc_public_key_dcs-hsm8": {
+    "node_allowance": 2,
+    "node_provider": "provider_keys/001a.der"
+  },
+  "dc_public_key_dcs-hsm9": {
+    "node_allowance": 2,
+    "node_provider": "provider_keys/001a.der"
+  },
+  "dc_public_key_linux_dc-hsm4": {
+    "node_allowance": 2,
+    "node_provider": "provider_keys/001a.der"
+  },
+  "dc_public_key_mac_dc-hsm2": {
+    "node_allowance": 2,
+    "node_provider": "provider_keys/001a.der"
+  },
+  "dc_public_key_mac_dc-hsm3": {
+    "node_allowance": 2,
+    "node_provider": "provider_keys/001a.der"
+  },
+  "dc_public_key_rivonia_ch2": {
+    "node_allowance": 14,
+    "node_provider": "provider_keys/master_public_key_rivonia.der"
+  },
+  "dc_public_key_rivonia_jv1": {
+    "node_allowance": 28,
+    "node_provider": "provider_keys/master_public_key_rivonia.der"
+  },
+  "dc_public_key_rivonia_ny1": {
+    "node_allowance": 28,
+    "node_provider": "provider_keys/master_public_key_rivonia.der"
+  },
+  "dc_public_key_tenderloin_zh3": {
+    "node_allowance": 14,
+    "node_provider": "provider_keys/master_key_tenderloin.der"
+  },
+  "dc_public_key_tenderloin_zh4": {
+    "node_allowance": 28,
+    "node_provider": "provider_keys/master_key_tenderloin.der"
+  },
+  "dc_public_key_windows_dc-hsm5": {
+    "node_allowance": 2,
+    "node_provider": "provider_keys/001a.der"
+  }
+}

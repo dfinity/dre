@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+
+TMPDIR="$HOME/tmp"
+mkdir -p "$TMPDIR"
+export TMPDIR
+
+## head of master Apr 22 midnight UTC
+#export RELEASE_COMMIT=91ab1a90f25e25e48855e5419bddf0549054eddf
+#export PR=10541
+
+## head of master, evening Apr 22
+#export RELEASE_COMMIT=4094e53e6e285696d3389f1eac79432b46bc8efa
+#export PR=10551
+
+# RC3v1, morning Apr 23
+export RELEASE_COMMIT=0eeb02c81426ded26314e28da7935eb887d60e6e
+export PR=10650
+
+export HSM_PIN_FILE="$HOME/.hsm-pin"
+export HSM_KEY_ID=01
+export HSM_DFX_IDENTITY=my-nitro-key
+export JUMP_NODE=max@zh1-spm22.zh1.dfinity.network
+
+NETWORK=bootstrap
+
+bash ../bootstrap.sh -n "${NETWORK}" "${@}"

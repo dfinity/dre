@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# For each node registered with an NNS, get the IP address and the subnet it is assigned to (or "unassigned").
+#
+# The output is a table with three columns:  node_principal, node_ipv6, subnet_principal
+
+set -eu
+nns_url="$1"
+ic-admin --nns-url "$nns_url" get-topology \
+    | jq -r '["\(.topology.unassigned_nodes|map(.node_id)|.[])    unassigned",(.topology.subnets | . as $subnets | keys[] | . as $key | $subnets[.].records | map(.value.membership | map("\(.)    \($key)"))|.[]|.[])]|.[]' \
+    | while read -r tuple; do
+        set $tuple
+        principal="$1"
+        subnet="$2"
+        ipv6="$(ic-admin --nns-url "$nns_url" get-node "$principal" | sed -nr 's/.*ip_addr: *"([^"]+)".*/\1/g;ta;b;:a;p;q')"
+        echo "$principal    $ipv6    $subnet"
+    done

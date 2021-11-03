@@ -1,0 +1,17 @@
+{
+  "binary_versions": {
+    "all": "dfinity-ci-build.dfinity.pr-10619"
+  },
+  "binary_revisions": {
+    "all": "15ecef83bd66eb9ce5154da84aa988bdf894f042"
+  },
+  "config_versions": {
+    "all": "common/unstable"
+  },
+  "replica_sha256_hex": {
+    "all": "deadbeef"
+  },
+  "dfx_version": {
+    "all": "0.6.20"
+  }
+}

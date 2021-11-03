@@ -1,0 +1,122 @@
+Node Provider	Type	Company Name	Program	Node in DC	DC Key File Name	Master Key File Name	DC Location	Verification	Controls/Check (Zendesk Ticket)
+Adam Brener	Entity	Brener, Inc	Gen-1c	2	dc_public_key_AdamBrener.der	master_public_key_AdamBrener.der	sj1	Verified	Ticket #196
+Auburn Mercer	Individual		Gen-1b	1	dc_public_key_AuburnMercer.der	master_public_key_AuburnMercer.der	at1	Verified	Ticket #267
+Aurel Iancu	Individual		Gen-1a	28	dc_public_key_AurelIancu_BU1.der	master_public_key_AurelIancu_BU1.der	bu1	Verified	Ticket #233
+Aurel Iancu	Individual		Gen-1f	28		master_public_key_AurelIancu_BU1.der			N/A
+Avia Kraft	Entity	BooleanBit LLC	Gen-1c	7	dc_public_key_BooleanBit.der	master_public_key_BooleanBit.der	fm1	Verified	Ticket #182
+Bogdan Alexandrescu	Entity	Blocktech Ventures LLC	Gen-1a	28	dc_public_key_blocktech_sj2.der	master_public_key_blocktech.der	sj2	Verified	Ticket #750
+Bogdan Alexandrescu	Entity	Blocktech Ventures LLC	Gen-1f	28		master_public_key_blocktech.der	sj2	Verified	
+Brian Porter	Individual		Gen-1c	7	dc_public_key_BrianPorter.der	master_public_key_BrianPorter.der	at1	Verified	Ticket #209
+Brian Porter	Individual		Gen-1a	14		master_public_key_BrianPorter.der	at2		Ticket #209
+Cédric Waldburger	Entity	Tenderloin Ventures AG	Gen-1a	14	dc_public_key_tenderloin_zh3.der	master_key_tenderloin.der	zh3	Verified	Ticket #760
+Cédric Waldburger	Entity	Tenderloin Ventures AG	Gen-1a	28	dc_public_key_tenderloin_zh4.der	master_key_tenderloin.der	zh4	Verified	Ticket #760
+Cédric Waldburger	Entity	Tenderloin Ventures AG	Gen-1f	42		master_key_tenderloin.der			
+Connor Howe	Entity	Enso Finance	Gen-1a	28	dc_public_key_01_EnsoFinance.der	master_key_EnsoFinance.der	TBD	Verified	Ticket #785
+Connor Howe	Entity	Enso Finance	Gen-1a	28	dc_public_key_02_EnsoFinance.der	master_key_EnsoFinance.der	TBD	Verified	Ticket #786
+Connor Howe	Entity	Enso Finance	Gen-1f	56		master_key_EnsoFinance.der			
+Cyan Mercer	Individual		Gen-1b	1	dc_public_key_CyanMercer.der	master_public_key_CyanMercer.der	sj1	Verified	Ticket #256 (datacenter) Ticket: #219 (Master)
+Dallas Wu	Entity	Bigger Capital	Gen-1a	28	dc_public_BiggerCapital_aw1_key.der	master_key_BiggerCapital.der	aw1	Verified	Ticket #780
+Dallas Wu	Entity	Bigger Capital	Gen-1f	28		master_key_BiggerCapital.der			
+Dave Schnettler	Entity	Goat LLC	Gen-1c	7	dc_public_key_DaveSchnettler.der	master_public_key_DaveSchnettler.der	at1	Verified	Ticket #207
+David Bohnhoff	Entity	Virtual Hive	Gen-1a	28	dc_public_key_DavidBohnhoff_FR2.der	master_public_key_DavidBohnhoff.der	fr2	Verified	Ticket #736
+David Bohnhoff	Entity	Virtual Hive	Gen-1f	28					
+David Fisher	Entity	Rivonia Holdings LLC	Gen-1a	14	dc_public_key_rivonia_ch2.der	master_public_key_rivonia.der	ch2	Verified	Ticket #619
+David Fisher	Entity	Rivonia Holdings LLC	Gen-1a	28	dc_public_key_rivonia_ny1.der	master_public_key_rivonia.der	ny1	Verified	Ticket #617
+David Fisher	Entity	Rivonia Holdings LLC	Gen-1a	28	dc_public_key_rivonia_jv1.der	master_public_key_rivonia.der	jv1	Verified	Ticket #618
+David Fisher	Entity	Rivonia Holdings LLC	Gen-1f	70					
+David Grossblatt	Entity	Giant Leaf LLC	Gen-1c	7	dc_public_key_GiantLeaf_TP1.der	master_public_key_GiantLeaf.der	tp1	Verified	Ticket #188
+David Grossblatt	Entity	Giant Leaf LLC	Gen-1a	14	dc_public_key_GiantLeaf_MM1.der	master_public_key_GiantLeaf.der	mm1	Verified	Ticket #689
+David Grossblatt	Entity	Giant Leaf LLC	Gen-1a	14	dc_public_key_GiantLeaf_AT2.der	master_public_key_GiantLeaf.der	at2	Verified	Ticket #689
+David Grossblatt	Entity	Giant Leaf LLC	Gen-1a	28	dc_public_key_GiantLeaf_OR1.der	master_public_key_GiantLeaf.der	or1	Verified	Ticket #689
+David Grossblatt	Entity	Giant Leaf LLC	Gen-1f	63					
+David Mark	Entity	87M Neuron	Gen-1a	14	dc_public_key_87M_PL1.der	master_public_key_87M.der	pl1	Verified	Ticket #302
+David Mark	Entity	87M Neuron	Gen-1a	28	dc_public_key_87M_LV1.der	master_public_key_87M.der	lv1	Verified	Ticket #303
+David Mark	Entity	87M Neuron	Gen-1a	28	dc_public_key_87M_DL1.der	master_public_key_87M.der	dl1	Verified	Ticket #304
+David Mark	Entity	87M Neuron	Gen-1f	70					
+Dustin Mercer	Entity		Gen-1b	1	dc_public_key_DustinMercer.der	master_public_key_DustinMercer.der	sj1	Verified	Ticket #223
+Francis Knott	Individual		Gen-1c	2	dc_public_key_FrancisKnott.der	master_public_key_FrancisKnott.der	at1	Verified	Ticket #228
+Francis Knott	Individual		Gen-1f	1					
+Fritz Huie	Individual		Gen-1c	2	dc_public_key_FritzHuie.der	master_public_key_FritzHuie.der	sj1	Verified	Ticket: #273
+Hank Colburn	Individual		Gen-1f	10					
+James Fahey	Entity		Gen-1b	1	dc_public_key_created032521_JamesFahey.der	master_public_key_JamesFahey.der	fm1	Verified	Updated dc stick: Mar, 25 2021
+Janice Park	Entity	165 Technologies	Gen-1a	14	dc_public_key_162tech_sg2.der	master_public_key_162tech.der	sg2	Verified	Ticket #443
+Janice Park	Entity	164 Technologies	Gen-1a	28	dc_public_key_162tech_sg3.der	master_public_key_162tech.der	sg3	Verified	Ticket #442
+Janice Park	Entity	166 Technologies	Gen-1a	28	dc_public_key_162tech_sg1.der	master_public_key_162tech.der	sg1	Verified	Ticket #444
+Janice Park	Entity	166 Technologies	Gen-1f	70					
+Jason Wong	Individual		Gen-1c	7	dc_public_key_JasonWong.der	master_public_key_JasonWong.der	fm1	Verified	Ticket #189
+Jason Wong	Individual		Gen-1e	15		master_public_key_JasonWong.der			
+Jeffrey Schnettler	Individual		Gen-1c	2	dc_public_key_JeffreySchnettler.der	master_public_key_JeffreySchnettler.der	tp1	Verified	Ticket: #237
+Jimmy Quach	Entity		Gen-1c	7	dc_public_key_JimmyQuach.der	master_public_key_JimmyQuach.der	at1	Verified	Ticket: #258
+Joe Dymecki	Individual		Gen-1c	2	dc_public_key_JoeDymecki.der	master_public_key_JoeDymecki.der	fm1	Verified	Ticket #251 (Ticket #192 deprecated)
+Joe Edmonds	Entity	Blockchange II	Gen-1f	84			zh2		
+Joe Edmonds	Entity	Blockchange III	Gen-1f	84					
+John Harris	Entity		Gen-1a	14	dc_public_key_JohnHarris_hu1.der	master_public_key_johnharris.der	hu1	Verified	Ticket #680
+Jon Ziskind	Individual		Gen-1b	1	dc_public_key_JonZiskind.der	master_public_key_JonZiskind.der	sj1	Verified	Ticket #191
+Lauren Dymecki Chickvara	Individual		Gen-1b	1	dc_public_key_LaurenDymecki.der	master_public_key_LaurenDymecki.der	tp1	Verified	Ticket #202
+Luis Mompo Handen	Entity	DFINITY Stiftung		2	dc_public_key_dcs-hsm6.der	001a.der	zh2		
+Luis Mompo Handen	Entity	DFINITY Stiftung		2	dc_public_key_dcs-hsm7.der	001a.der	zh2		
+Luis Mompo Handen	Entity	DFINITY Stiftung		2	dc_public_key_dcs-hsm8.der	001a.der	zh2		
+Luis Mompo Handen	Entity	DFINITY Stiftung		2	dc_public_key_dcs-hsm9.der	001a.der	zh2		
+Luis Mompo Handen	Entity	DFINITY Stiftung		2	dc_public_key_linux_dc-hsm4.der	001a.der	zh2		
+Luis Mompo Handen	Entity	DFINITY Stiftung		2	dc_public_key_mac_dc-hsm2.der	001a.der	zh2		
+Luis Mompo Handen	Entity	DFINITY Stiftung		2	dc_public_key_mac_dc-hsm3.der	001a.der	zh2		
+Luis Mompo Handen	Entity	DFINITY Stiftung		2	dc_public_key_windows_dc-hsm5.der	001a.der	zh2		
+Luis Mompo Handen	Entity	DFINITY Stiftung		2	dc-hsm10_dc_public_key.der	001a.der	zh2		
+Luis Mompo Handen	Entity	DFINITY Stiftung		2	dc-hsm11_dc_public_key.der	001a.der	zh2		
+Luis Mompo Handen	Entity	DFINITY Stiftung		2	dc-hsm12_dc_public_key.der	001a.der	zh2		
+Luis Mompo Handen	Entity	DFINITY Stiftung		2	dc-hsm13_dc_public_key.der	001a.der	zh2		
+Luis Mompo Handen	Entity	DFINITY Stiftung		2	dc-hsm14_dc_public_key.der	001a.der	zh2		
+Luis Mompo Handen	Entity	DFINITY Stiftung		2	dc-hsm15_dc_public_key.der	001a.der	zh2		
+Luis Mompo Handen	Entity	DFINITY Stiftung		2	dc-hsm16_dc_public_key.der	001a.der	zh2		
+Mary Ren	Entity		Gen-1c	5	dc_public_key_MaryRen.der	master_public_key_MaryRen.der	sj1	Verified	Ticket #357
+Michael Liang	Individual		Gen-1b	1	dc_public_key_MichaelLiang.der	master_public_key_MichaelLiang.der	sj1	Verified	Ticket #193
+Mike Kolarevic	Entity		Gen-1c	5	dc_public_key_MikeKolarevic.der	master_public_key_MikeKolarevic.der	fm1	Verified	Ticket #218
+Mitchel Guerra	Individual		Gen-1b	1	dc_public_key_MitchelGuerra.der	master_public_key_MitchelGuerra.der	tp1	Verified	Ticket #211
+Nathalie McGrath	Individual		Gen-1b	1	dc_public_key_NathalieMcGrath.der	master_public_key_NathalieMcGrath.der	fm1	Verified	Ticket #203
+Paul De Canniere	Entity	Allusion BV	Gen-1a	14	dc_public_key_AllusionBV_BR1.der	master_public_key_AllusionBV.der	br1	Verified	Ticket: 689
+Paul De Canniere	Entity	Allusion BV	Gen-1a	28	dc_public_key_AllusionBV_BR2.der	master_public_key_AllusionBV.der	br2	Verified	Ticket: 688
+Paul De Canniere	Entity	Allusion BV	Gen-1a	28	dc_public_key_AllusionBV_AN1.der	master_public_key_AllusionBV.der	an1	Verified	Ticket: 690
+Paul De Canniere	Entity	Allusion BV	Gen-1f	70		master_public_key_AllusionBV.der			
+Paul Legato	Individual		Gen-1b	1	dc_public_key_PaulLegato.der	master_public_key_PaulLegato.der	fm1	Verified	Ticket #180
+Peggy Shafaghi	Individual		Gen-1b	1	dc_public_key_PeggyShafaghi.der	master_public_key_PeggyShafaghi.der	fm1	Verified	Ticket #181
+Prayit Jain	Entity		Gen-1c	2	dc_public_key_PrayitJain.der	master_public_key_PrayitJain.der	sj1	Verified	Ticket #254
+Rachel Dymecki	Entity		Gen-1b	1	dc_public_key_RachelDymecki.der	master_public_key_RachelDymecki.der	at1	Verified	Ticket #301
+Rami Karjian	Individual		Gen-1a	14	dc_public_key_RamiKarjian_ST1.der	master_public_key_RamiKarjian.der	st1	Verified	Ticket #642
+Rami Karjian	Individual		Gen-1a	28	dc_public_key_RamiKarjian_PH1.der	master_public_key_RamiKarjian.der	ph1	Verified	Ticket #643
+Rami Karjian	Individual		Gen-1a	28	dc_public_key_RamiKarjian_CH3.der	master_public_key_RamiKarjian.der	ch3	Verified	Ticket #644
+Rami Karjian	Individual		Gen-1f	70		master_public_key_RamiKarjian.der			
+Raye Rose	Entity	Shelburne Ventures	Gen-1c	7	dc_public_key_ShelburneVentures.der	master_public_key_ShelburneVentures.der	sj1	Verified	Ticket #249
+Rebecca Haynes	Individual		Gen-1b	1	dc_public_key_RebeccaHaynes.der	master_public_key_RebeccaHaynes.der	fm1	Verified	Ticket: #221
+Richard Ma	Individual		Gen-1c	7	dc_public_key_RichardMa.der	master_public_key_RichardMa.der	tp1	Verified	Ticket #245
+Richard Ma	Entity	Blockchain Development Labs	Gen-1a	14	dc_public_key_BlockchainDevLabs_BC1.der	master_public_key_BlockchainDevLabs.der	bc1	Verified	Ticket #763
+Richard Ma	Entity	Blockchain Development Labs	Gen-1a	28	dc_public_key_BlockchainDevLabs_TO1.der	master_public_key_BlockchainDevLabs.der	to1	Verified	Ticket #742
+Richard Ma	Entity	Blockchain Development Labs	Gen-1a	28	dc_public_key_BlockchainDevLabs_TO2.der	master_public_key_BlockchainDevLabs.der	to2	Verified	Ticket #742
+Richard Ma	Entity	Blockchain Development Labs	Gen-1f	224		master_public_key_BlockchainDevLabs.der			
+Richard Suarez	Individual		Gen-1b	1	dc_public_key_RichardSuarez.der	master_public_key_RichardSuarez.der	fm1	Verified	Ticket #195
+Ricky Sidhu	Entity		Gen-1c	2	dc_public_key_RickySidhu.der	master_public_key_RickySidhu.der	sj1	Verified	Ticket #224
+Ricky Sidhu	Individual		Gen-1f	14		master_public_key_RickySidhu.der	TBD		
+Rishi Sachdev	Individual		Gen-1c	7	dc_public_key_RishiSachdev.der	master_public_key_RishiSachev.der	tp1	Verified	Ticket #194
+Rita Lee (Fung)	Entity		Gen-1b	1	dc_public_key_RitaLee_replaced_04052021.der	master_public_key_RitaLee.der	sj1	Verified	Ticket: #715
+Rob Henning	Individual		Gen-1b	1	dc_public_key_RobHenning.der	master_public_key_RobHenning.der	tp1	Verified	Ticket #201
+Rodney Zorrilla	Individual		Gen-1b	1	dc_public_key_RodneyZorrilla.der	master_public_key_RodneyZorrilla.der	fm1	Verified	Ticket #220
+Ronnie Pellizzari	Individual		Gen-1c	2	dc_public_key_RonnieP_updated20210128.der	master_public_key_RonniePellizzari.der	at1	Verified	Ticket #333
+Russell Ford	Individual		Gen-1b	1	dc_public_key_RussellFord.der	master_public_key_RussellFord.der	at1	Verified	Ticket #210
+Sadry Bouhejba	Entity	Archery Blockchain Fund	Gen-1a	28	dc_public_key_Archery_GE1.der	master_public_key_Archery.der	ge1		Ticket #790
+Sadry Bouhejba	Entity	Archery Blockchain Fund	Gen-1a	28	dc_public_key_Archery_GE2.der	master_public_key_Archery.der	ge2		Ticket #790
+Sean Mikha	Entity	Mikha Properties	Gen-1c	2	dc_public_key_SeanMikha.der	master_public_key_SeanMikha.der	tp1	Verified	Ticket #190
+Shawn Tabrizi	Individual		Gen-1c	2	dc_public_key_ShawnTabrizi.der	master_public_key_ShawnTabrizi.der	sj1	Verified	Ticket #234
+Stefan Mueller	Entity	Sygnum	Gen-1a	14	SYGNUMZH7_public_key.der	SYGNUM_master_public_key.der	TBD	Verified	Ticket #782
+Stefan Mueller	Entity	Sygnum	Gen-1a	28	SYGNUMZH5_public_key.der	SYGNUM_master_public_key.der	TBD	Verified	Ticket #782
+Stefan Mueller	Entity	Sygnum	Gen-1a	28	SYGNUMZH6_public_key.der	SYGNUM_master_public_key.der	TBD	Verified	Ticket #782
+Stefan Mueller	Entity	Sygnum	Gen-1f	70					
+Tomoaki Sato	Entity	Starbase	Gen-1a	14	dc_public_key__Starbase_ty3.der	master_key_Starbase.der	ty3		Ticket #769
+Tomoaki Sato	Entity	Starbase	Gen-1a	28	dc_public_key_Starbase_ty1.der	master_key_Starbase.der	ty1		Ticket #769
+Tomoaki Sato	Entity	Starbase	Gen-1a	28	dc_public_key_Starbase_ty2.der	master_key_Starbase.der	ty2		Ticket #769
+Tomoaki Sato	Entity	Starbase	Gen-1f	70					
+William Zelver	Individual		Gen-1b	1	dc_public_key_WilliamZelver.der	master_public_key_WilliamZelver.der	sj1	Verified	TIcket #222 (Ticket #184 deprecated)
+Wolfgang Albrecht	Entity	Staking Facilities	Gen-1a	28	dc_public_key_StakingFacilities.der	master_public_key_StakingFacilities.der	mu1	Verified	Ticket #186
+Wolfgang Albrecht	Entity	Staking Facilities	Gen-1f	28					
+Mark Metcalf	Entity	Teton Telecom	Gen-1f	10					
+	Entity								
+	Entity								
+	Entity								

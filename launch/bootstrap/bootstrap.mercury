@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+
+TMPDIR="$HOME/tmp"
+mkdir -p "$TMPDIR"
+export TMPDIR
+
+FLAGS=""
+while (($# > 0)); do
+    next="$1"
+    shift 1
+    case "$next" in
+        --help)
+            cat "$0"
+            exit 0
+            ;;
+        --dry*)
+            export DRY_RUN=1
+            FLAGS=""
+            ;;
+        --verbose | -v) export VERBOSE=1 ;;
+        *) export STEPS="$next" ;;
+    esac
+done
+
+## head of master Apr 22 midnight UTC
+#export RELEASE_COMMIT=91ab1a90f25e25e48855e5419bddf0549054eddf
+#export PR=10541
+
+### head of master, evening Apr 22
+#export RELEASE_COMMIT=4094e53e6e285696d3389f1eac79432b46bc8efa
+#export PR=10551
+
+# One commit before the release commit.
+#export RELEASE_COMMIT=f7f4256e7094e927284e5fd84acf08277a22a81a
+#export PR=10588
+
+#export RELEASE_COMMIT=15ecef83bd66eb9ce5154da84aa988bdf894f042
+#export PR=10619
+
+# With Ryan's PR
+export RELEASE_COMMIT=f6ee9afd4ddf14f08f9e2d320e9faee6c0e4cc88
+export PR=10704
+
+export HSM_PIN_FILE="$HOME/.hsm-pin"
+export HSM_KEY_ID=01
+export HSM_DFX_IDENTITY=my-nitro-key
+export JUMP_NODE=max@zh1-spm22.zh1.dfinity.network
+
+NETWORK=mercury
+
+bash ${FLAGS:-} ../bootstrap.sh "${NETWORK}" "$TMPDIR/bootstrap"

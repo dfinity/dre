@@ -1,0 +1,14 @@
+
+# Print the environment variables
+TMPDIR="$HOME/tmp"
+export TMPDIR
+
+if [[ "${1:-}" == "--edit" ]] ; then
+    "${EDITOR:-nano}" "$TMPDIR/bootstrap/env_vars"
+fi
+
+cat "$TMPDIR/bootstrap/env_vars"
+
+. "$TMPDIR/bootstrap/env_vars"
+printf "\n\n\nTo update your path:\n    export PATH=\"$results_dir/bin:\$PATH\"\n\n"
+printf "\n\n\nTo source the variables:\n    . '$TMPDIR/bootstrap/env_vars'\n\n"

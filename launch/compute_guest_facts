@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+
+function yaml2json() {
+    if [[ -n "${1:-}" ]]; then
+        cat "$1" | python3 -c 'import sys, yaml, json; json.dump(yaml.safe_load(sys.stdin), sys.stdout, indent=4)'
+    else
+        python3 -c 'import sys, yaml, json; json.dump(yaml.safe_load(sys.stdin), sys.stdout, indent=4)'
+    fi
+}
+
+set -euo pipefail
+node_index=0
+while read line; do
+    eval entry=$line
+    dc="$(echo "$entry" | awk -F- '{print $1}')"
+    prefix="$(yaml2json $GIT_ROOT/testnet/env/shared-config.yml | dc="$dc" jq -r '.data_centers["\(env.dc)"].vars.ipv6_prefix')"
+    mac="$($GIT_ROOT/launch/compute_mac "$system_serial_num" "$NETWORK")"
+    ipv6="$("$GIT_ROOT"/testnet/tools/ipv6-calc.py --prefix "${prefix}" --mac-address "${mac}" | grep .)"
+    guest_hostname="$NETWORK.${hostname}.guest"
+    principal=""
+    if test -e "$results_dir/parent-node-principal-ips"; then
+        principal="$(cat "$results_dir/parent-node-principal-ips" 2>/dev/null | awk -vipv6="$ipv6" '($2==ipv6){print $1 ; exit 0}')"
+    fi
+    if test -e "$results_dir/child-node-principal-ips"; then
+        principal="$(cat "$results_dir/child-node-principal-ips" 2>/dev/null | awk -vipv6="$ipv6" '($2==ipv6){print $1 ; exit 0}')"
+    fi
+    echo "${guest_hostname} node_index="$((++node_index))" stage=all groups=${groups} ansible_host=${guest_hostname} ipv6=${ipv6} mac=\"$mac\" principal=${principal:-}"
+done
