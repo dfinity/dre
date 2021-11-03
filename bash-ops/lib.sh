@@ -64,12 +64,15 @@ refresh_ic_submodule() {
 }
 
 install_ic_admin() {
-    GIT_REVISION=$(cd "$REPO_ROOT"/ic; gitlab-ci/src/artifacts/newest_sha_with_disk_image.sh "origin/post-merge-tests-passed")
+    GIT_REVISION=$(
+        cd "$REPO_ROOT"/ic
+        gitlab-ci/src/artifacts/newest_sha_with_disk_image.sh "origin/post-merge-tests-passed"
+    )
     if [ -n "$GIT_REVISION" ]; then
         if [ "$(uname)" == "Darwin" ]; then
-            curl https://download.dfinity.systems/blessed/ic/$GIT_REVISION/nix-release/x86_64-darwin/ic-admin.gz -o - | gunzip -c >| "$REPO_BIN"/ic-admin.$GIT_REVISION
+            curl https://download.dfinity.systems/blessed/ic/$GIT_REVISION/nix-release/x86_64-darwin/ic-admin.gz -o - | gunzip -c >|"$REPO_BIN"/ic-admin.$GIT_REVISION
         else
-            curl https://download.dfinity.systems/blessed/ic/$GIT_REVISION/release/ic-admin.gz -o - | gunzip -c >| "$REPO_BIN"/ic-admin.$GIT_REVISION
+            curl https://download.dfinity.systems/blessed/ic/$GIT_REVISION/release/ic-admin.gz -o - | gunzip -c >|"$REPO_BIN"/ic-admin.$GIT_REVISION
         fi
         chmod +x "$REPO_BIN"/ic-admin.$GIT_REVISION
         ln -sf "$REPO_BIN"/ic-admin.$GIT_REVISION "$REPO_BIN"/ic-admin
@@ -122,7 +125,7 @@ print_env_common_for_proposal() {
     print_param PROPOSER_NEURON_INDEX "$PROPOSER_NEURON_INDEX"
     print_param PROPOSAL_TITLE "$PROPOSAL_TITLE"
     if [[ -n "${PROPOSAL_URL:-}" ]]; then
-        print_param PROPOSAL_TITLE "$PROPOSAL_URL"
+        print_param PROPOSAL_URL "$PROPOSAL_URL"
     fi
     if [[ -n "${PROPOSAL_SUMMARY_FILE:-}" ]]; then
         echo "=== PROPOSAL_SUMMARY_FILE $PROPOSAL_SUMMARY_FILE contents START ====="
@@ -449,7 +452,6 @@ maybe_propose_to_bless_replica_version() {
     fi
     print_green "Version in the image matches $version_commit"
 
-    PROPOSAL_URL=${PROPOSAL_URL:-"https://github.com/ic-association/nns-proposals/blob/main/proposals/node_admin/$(date -u +%Y%m%dT%H%MZ).md"}
     PROPOSAL_TITLE=${PROPOSAL_TITLE:-"Elect/Bless new replica binary revision (commit $version_commit)"}
     echo
     echo "Please provide the Changelog (as bullets, without the title) for this release and ctrl-d when done"
@@ -468,7 +470,6 @@ _EOF
 
     cmd=($IC_ADMIN $AUTH_PARAMS --nns-url="$NNS_URL"
         propose-to-bless-replica-version-flexible
-        --proposal-url "$PROPOSAL_URL"
         --proposal-title "$PROPOSAL_TITLE"
         --summary-file $PROPOSAL_SUMMARY_FILE
         "$version_commit"
