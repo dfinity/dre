@@ -23,6 +23,7 @@ git_repo = git.Repo(os.path.dirname(__file__), search_parent_directories=True)
 repo_root = pathlib.Path(git_repo.git.rev_parse("--show-toplevel"))
 deployment_name: str = None
 node_filter: str = None
+physical_hosts_limit = None
 git_revision = None
 out_dir = None
 
@@ -37,7 +38,7 @@ def step_1_sanity_check_nodes():
         """
     commands_dfinity_nodes = commands_external_nodes + "lsusb | grep -E 'Clay|Nitro'"  # DFINITY nodes need an HSM
 
-    ssh_run = ic_utils.IcSshRemoteRun(deployment_name, out_dir, node_filter)
+    ssh_run = ic_utils.IcSshRemoteRun(deployment_name, out_dir, node_filter, physical_hosts_limit)
 
     ssh_run.check_run_on_physical_nodes(commands_external_nodes, commands_dfinity_nodes)
 
@@ -53,14 +54,14 @@ def step_1_sanity_check_lockout():
     ! systemctl is-active dfinity-lockdown
     """
 
-    ssh_run = ic_utils.IcSshRemoteRun(deployment_name, out_dir, node_filter)
+    ssh_run = ic_utils.IcSshRemoteRun(deployment_name, out_dir, node_filter, physical_hosts_limit)
 
     ssh_run.check_run_on_physical_nodes(commands_external_nodes, commands_dfinity_nodes)
 
 
 def step_1_sanity_check_ssh_keys():
     """Ensure the ssh keys are valid."""
-    depl_env_root = repo_root / "testnet/env" / deployment_name
+    depl_env_root = repo_root / "deployments/env" / deployment_name
     for dir in [depl_env_root / DIRNAME_SSH_KEYS_DFINITY_NODES, depl_env_root / DIRNAME_SSH_KEYS_EXTERNAL_NODES]:
         for file in ["admin", "backup", "readonly"]:
             path = dir / file
@@ -78,7 +79,7 @@ def step_1_sanity_check_ssh_keys():
 
 def step_2_destroy_nodes():
     """Ensure that there is no existing deployment on the target machines."""
-    ic_ansible = ic_utils.IcAnsible(deployment_name, node_filter)
+    ic_ansible = ic_utils.IcAnsible(deployment_name, node_filter, physical_hosts_limit)
     ic_ansible.ansible_ic_guest_playbook_run(ic_state="destroy")
 
 
@@ -94,7 +95,7 @@ def generate_media_file(
     out_filename: pathlib.Path, path_ssh_keys: pathlib.Path, nns_public_key_filename: pathlib.Path, hostname: str
 ):
     cmd = [
-        repo_root / "ic-os/guestos/scripts/build-bootstrap-config-image.sh",
+        repo_root / "ic/ic-os/guestos/scripts/build-bootstrap-config-image.sh",
         out_filename,
         "--accounts_ssh_authorized_keys",
         path_ssh_keys,
@@ -111,10 +112,10 @@ def generate_media_file(
 
 def step_4_generate_media_image():
     """Generate the media image for the new deployment."""
-    ssh_run = ic_utils.IcSshRemoteRun(deployment_name, out_dir, node_filter)
+    ssh_run = ic_utils.IcSshRemoteRun(deployment_name, out_dir, node_filter, physical_hosts_limit)
     json_list = ssh_run.get_deployment_list()
 
-    depl_env_root = repo_root / "testnet/env" / deployment_name
+    depl_env_root = repo_root / "deployments/env" / deployment_name
     nns_public_key_filename = out_dir / "nns_public_key.pem"
     media_path = out_dir / "media"
     media_path.mkdir(exist_ok=True, parents=True)
@@ -140,7 +141,7 @@ def step_4_generate_media_image():
 
 def step_5_create_guest_domains():
     """Create the guest domains for the deployment."""
-    ic_ansible = ic_utils.IcAnsible(deployment_name, node_filter)
+    ic_ansible = ic_utils.IcAnsible(deployment_name, node_filter, physical_hosts_limit)
     media_path = out_dir / "media"
     if not git_revision:
         logging.error("This step requires the --git-revision argument.")
@@ -155,11 +156,14 @@ def step_5_create_guest_domains():
 
 def step_6_start_dfinity_guest_domains():
     """Start the DFINITY-owned guest domains for the deployment."""
-    node_filter_dfinity = node_filter + ",dfinity"
-    ssh_run = ic_utils.IcSshRemoteRun(deployment_name, out_dir, node_filter_dfinity)
+    if node_filter:
+        node_filter_dfinity = node_filter + ",dfinity"
+    else:
+        node_filter_dfinity = "node_type=dfinity"
+    ssh_run = ic_utils.IcSshRemoteRun(deployment_name, out_dir, node_filter_dfinity, physical_hosts_limit)
     _phy_external, phy_dfinity = ssh_run.get_physical_hosts()
     if phy_dfinity:
-        ic_ansible = ic_utils.IcAnsible(deployment_name, node_filter_dfinity)
+        ic_ansible = ic_utils.IcAnsible(deployment_name, node_filter_dfinity, physical_hosts_limit)
         ic_ansible.ansible_ic_guest_playbook_run(ic_state="start")
     else:
         logging.info("Skipping since there are no DFINITY-owned nodes in the selection.")
@@ -168,6 +172,7 @@ def step_6_start_dfinity_guest_domains():
 def main():
     global deployment_name
     global node_filter
+    global physical_hosts_limit
     global git_revision
     global out_dir
 
@@ -189,8 +194,14 @@ def main():
     parser.add_argument(
         "--node-filter",
         action="store",
-        default="node_type=batch_1",
         help="Filter for the deployment nodes, example: 'node_type=batch_1'",
+    )
+
+    parser.add_argument(
+        "--physical-hosts-limit",
+        action="store",
+        nargs="+",
+        help="Limit execution to the provided physical hosts.",
     )
 
     parser.add_argument(
@@ -237,6 +248,8 @@ def main():
 
     deployment_name = args.deployment_name
     node_filter = args.node_filter
+    if args.physical_hosts_limit:
+        physical_hosts_limit = set([x.split(".")[0] for x in args.physical_hosts_limit])
     git_revision = args.git_revision
 
     out_dir = args.out_dir

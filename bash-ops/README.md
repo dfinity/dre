@@ -94,7 +94,7 @@ At the moment it's necessary to edit `testnet/env/mercury/hosts.ini` and set the
 Usage:
 ```bash
 ./ic_guest_prepare.py --help
-usage: ic_guest_prepare.py [-h] [--deployment-name DEPLOYMENT_NAME] [--node-filter NODE_FILTER] [--git-revision GIT_REVISION] [--list-steps] [--step-filter STEP_FILTER [STEP_FILTER ...]] [--out-dir OUT_DIR] [--verbose]
+usage: ic_guest_prepare.py [-h] [--deployment-name DEPLOYMENT_NAME] [--node-filter NODE_FILTER] [--physical-hosts-limit PHYSICAL_HOSTS_LIMIT [PHYSICAL_HOSTS_LIMIT ...]] [--git-revision GIT_REVISION] [--list-steps] [--step-filter STEP_FILTER [STEP_FILTER ...]] [--out-dir OUT_DIR] [--verbose]
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -102,6 +102,8 @@ optional arguments:
                         Deployment name (default: mercury)
   --node-filter NODE_FILTER
                         Filter for the deployment nodes, example: 'node_type=batch_1'
+  --physical-hosts-limit PHYSICAL_HOSTS_LIMIT [PHYSICAL_HOSTS_LIMIT ...]
+                        Limit execution to the provided physical hosts.
   --git-revision GIT_REVISION
                         Git revision to deploy.
   --list-steps, --ls, --dry-run
@@ -110,11 +112,12 @@ optional arguments:
                         A regular expression filter for the steps to run.
   --out-dir OUT_DIR     The directory where the debug information should be written.
   --verbose, -v         Verbose mode
+
 ```
 
 Example usage:
 ```bash
-./ic_guest_prepare.py --deployment-name mercury --node-filter node_type=onboarding --git-revision 27e1eadbcbe90abfe56d9c8dfd39e1a78e52c62
+./ic_guest_prepare.py --deployment-name mercury --git-revision e86ac9553a8eddbeffaa29267a216c9554d3a0c6 --physical-hosts-limit an1-dll15 ge2-dll22 at1-dll09
 ```
 
 ## Miscellaneous How-Tos

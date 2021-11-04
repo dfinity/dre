@@ -1,3 +1,4 @@
+import functools
 import json
 import logging
 import os
@@ -37,15 +38,19 @@ class IcAdmin:
 class IcSshRemoteRun:
     """Run commands remotely over ssh on the deployment nodes."""
 
-    def __init__(self, deployment_name: str, out_dir: pathlib.Path, node_filter: str = None):
+    def __init__(self, deployment_name: str, out_dir: pathlib.Path, node_filter: str = None, physical_limit=None):
         """Create an object for the specified deployment and node filter, storing results in out_dir."""
         self._deployment_name = deployment_name
         self._node_filter = node_filter
+        # List of short physical hostnames to which the execution should be limited to
+        # e.g. {'zh2-spm01'}
+        self._phy_short_limit = physical_limit
         self._out_dir = out_dir
 
         out_dir.mkdir(exist_ok=True, parents=True)
         paramiko.util.log_to_file(out_dir / "paramiko.log", level="WARN")
 
+    @functools.lru_cache(maxsize=32)
     def get_deployment_list(self):
         """Get the JSON representation of the Ansible deployment (same as 'hosts --list')."""
         env = {"PATH": os.environ.get("PATH", "/usr/local/bin:/usr/bin:/bin")}
@@ -68,12 +73,16 @@ class IcSshRemoteRun:
 
         nodes_external, nodes_dfinity = [], []
         for phy_fqdn in json_list["physical_hosts"]["hosts"]:
+            phy_short = phy_fqdn.split(".")[0]
+            if self._phy_short_limit and phy_short not in self._phy_short_limit:
+                continue
             if json_list["_meta"]["hostvars"][phy_fqdn].get("external"):
                 nodes_external.append(phy_fqdn)
             else:
                 nodes_dfinity.append(phy_fqdn)
         return nodes_external, nodes_dfinity
 
+    @functools.lru_cache(maxsize=32)
     def _deployment_nodes_dict(self):
         # First prepare a list of all nodes in the deployment
         env = {"PATH": os.environ.get("PATH", "/usr/local/bin:/usr/bin")}
@@ -89,7 +98,20 @@ class IcSshRemoteRun:
             ],
             env=env,
         )
-        return yaml.load(output, Loader=yaml.FullLoader)
+        nodes_dict = yaml.load(output, Loader=yaml.FullLoader)
+
+        if self._phy_short_limit:
+            # Get a complete deployment inventory and filter by the short
+            # physical hostnames provided in self._phy_short_limit
+            json_list = self.get_deployment_list()
+            result = {}
+            for node in nodes_dict.keys():
+                node_host_short = json_list["_meta"]["hostvars"][node].get("ic_host", "")
+                if node_host_short in self._phy_short_limit:
+                    result[node] = nodes_dict[node]
+            return result
+
+        return nodes_dict
 
     def get_deployment_nodes(self):
         """Get a list of nodes for a deployment, split into external and dfinity-owned."""
@@ -128,22 +150,29 @@ class IcSshRemoteRun:
 
         logging.info("ssh %s@%s %s", username, node, command)
 
-        try:
-            client.connect(
-                node, port=22, username=username, timeout=10, auth_timeout=30, allow_agent=True, look_for_keys=True
-            )
-        except paramiko.ssh_exception.AuthenticationException as e:
-            logging.error("Auth failed for %s@%s %s", username, node, e)
-            if do_not_raise:
-                return -12, b"", b"Auth failed: " + str(e).encode("utf-8")
-            else:
-                raise
-        except Exception as e:  # noqa
-            logging.error("Error connecting to %s@%s %s", username, node, e)
-            if do_not_raise:
-                return -10, b"", b"Error connecting: " + str(e).encode("utf-8")
-            else:
-                raise
+        max_retry = 5
+        for retry in range(max_retry):
+            try:
+                client.connect(
+                    node, port=22, username=username, timeout=10, auth_timeout=30, allow_agent=True, look_for_keys=True
+                )
+                break
+            except paramiko.ssh_exception.AuthenticationException as e:
+                if retry < max_retry - 1:
+                    continue
+                logging.error("Auth failed for %s@%s %s", username, node, e)
+                if do_not_raise:
+                    return -12, b"", b"Auth failed: " + str(e).encode("utf-8")
+                else:
+                    raise
+            except Exception as e:  # noqa
+                if retry < max_retry - 1:
+                    continue
+                logging.error("Error connecting to %s@%s %s", username, node, e)
+                if do_not_raise:
+                    return -10, b"", b"Error connecting: " + str(e).encode("utf-8")
+                else:
+                    raise
 
         (_stdin, stdout, stderr) = client.exec_command(f"timeout 10 bash -c {shlex.quote(command)}")
         stdout.channel.settimeout(10)
@@ -152,7 +181,7 @@ class IcSshRemoteRun:
 
     def _parallel_ssh_run(self, nodes: typing.List[str], command: str, username: str):
         """Parallel ssh into the `nodes`, run `command`."""
-        with Pool(16) as pool:
+        with Pool(8) as pool:
             return pool.starmap(
                 self._ssh_run_command,
                 map(lambda n: (n, command, username), nodes),
@@ -160,7 +189,7 @@ class IcSshRemoteRun:
 
     def _parallel_ssh_run_without_raise(self, nodes: typing.List[str], command: str, username: str):
         """Parallel ssh into the `nodes`, run `command` and return results, without raising an exception."""
-        with Pool(16) as pool:
+        with Pool(8) as pool:
             return pool.starmap(
                 self._ssh_run_command,
                 map(lambda n: (n, command, username, True), nodes),
@@ -200,15 +229,24 @@ class IcSshRemoteRun:
 class IcAnsible:
     """Run ansible playbooks or plain commands on the deployment nodes."""
 
-    def __init__(self, deployment_name: str, node_filter: str = None):
+    def __init__(self, deployment_name: str, node_filter: str = None, physical_limit=None):
         """Create an object for the specified deployment and node filter."""
         self._deployment_name = deployment_name
         self._node_filter = node_filter or ""
+        self._phy_short_limit = physical_limit
+        if physical_limit:
+            self._physical_hosts_limit = [f"{x}.{x.split('-')[0]}.dfinity.network" for x in self._phy_short_limit]
+        else:
+            self._physical_hosts_limit = None
         self._hosts_file = repo_root / "deployments/env" / self._deployment_name / "hosts"
 
     def ansible_run_shell_checked(self, command: str):
         """Run the specified command on the deployment nodes and check that the execution succeeds."""
-        env = {"NODES_FILTER_INCLUDE": self._node_filter, "PATH": os.environ.get("PATH", "/usr/local/bin:/usr/bin")}
+        env = {
+            "NODES_FILTER_INCLUDE": self._node_filter,
+            "PATH": os.environ.get("PATH", "/usr/local/bin:/usr/bin"),
+            "ANSIBLE_FORCE_COLOR": "true",
+        }
         if os.environ.get("SSH_AUTH_SOCK"):
             env["SSH_AUTH_SOCK"] = os.environ.get("SSH_AUTH_SOCK")
         cmd = [
@@ -223,12 +261,19 @@ class IcAnsible:
             "--extra-vars",
             "ansible_user={}".format(PHY_HOST_USER),
         ]
+        if self._physical_hosts_limit:
+            cmd.append("--limit")
+            cmd.append(",".join(self._physical_hosts_limit))
         logging.info("$ %s", cmd)
-        subprocess.check_call(cmd, env=env, cwd=repo_root / "testnet")
+        subprocess.check_call(cmd, env=env, cwd=repo_root / "ic/testnet")
 
     def ansible_ic_guest_playbook_run(self, ic_state: str, extra_vars: typing.List[str] = []):
         """Run the ic_guest_prod playbook with the specified ic_state and check that the execution succeeds."""
-        env = {"NODES_FILTER_INCLUDE": self._node_filter, "PATH": os.environ.get("PATH", "/usr/local/bin:/usr/bin")}
+        env = {
+            "NODES_FILTER_INCLUDE": self._node_filter,
+            "PATH": os.environ.get("PATH", "/usr/local/bin:/usr/bin"),
+            "ANSIBLE_FORCE_COLOR": "true",
+        }
         if os.environ.get("SSH_AUTH_SOCK"):
             env["SSH_AUTH_SOCK"] = os.environ.get("SSH_AUTH_SOCK")
         cmd = [
@@ -243,10 +288,13 @@ class IcAnsible:
             "--extra-vars",
             "ansible_user={}".format(PHY_HOST_USER),
         ]
+        if self._physical_hosts_limit:
+            cmd.append("--limit")
+            cmd.append(",".join(self._physical_hosts_limit))
         if extra_vars:
             for entry in extra_vars:
                 cmd.append("--extra-vars")
                 cmd.append(entry)
         logging.info("$ NODES_FILTER_INCLUDE=%s %s", self._node_filter, " ".join([shlex.quote(_) for _ in cmd]))
-        subprocess.check_call(cmd, env=env, cwd=repo_root / "testnet")
+        subprocess.check_call(cmd, env=env, cwd=repo_root / "ic/testnet")
         logging.info("Ansible playbook finished successfully")
