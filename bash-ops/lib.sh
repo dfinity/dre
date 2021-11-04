@@ -82,7 +82,7 @@ install_ic_admin() {
 }
 
 check_ic_admin() {
-    if [[ -z "$(find "$REPO_BIN" -mtime -24h -name "ic-admin.*")" ]]; then
+    if [[ -z "$(find "$REPO_BIN" -mtime -24 -name "ic-admin.*")" ]]; then
         echo "ic-admin executable is missing or older than 24h, trying to update"
         install_ic_admin
     fi
