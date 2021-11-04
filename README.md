@@ -36,3 +36,14 @@ git submodule foreach -q git reset --hard origin/master
 ```
 cargo check
 ```
+
+# Setup
+
+Make sure to initialize the database before you run the
+```
+diesel setup
+```
+
+```
+diesel migration run
+```
