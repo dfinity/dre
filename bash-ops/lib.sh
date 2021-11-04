@@ -64,6 +64,7 @@ refresh_ic_submodule() {
 }
 
 install_ic_admin() {
+    refresh_ic_submodule
     GIT_REVISION=$(
         cd "$REPO_ROOT"/ic
         gitlab-ci/src/artifacts/newest_sha_with_disk_image.sh "origin/post-merge-tests-passed"
@@ -77,16 +78,16 @@ install_ic_admin() {
         chmod +x "$REPO_BIN"/ic-admin.$GIT_REVISION
         ln -sf "$REPO_BIN"/ic-admin.$GIT_REVISION "$REPO_BIN"/ic-admin
     fi
+    touch "$REPO_BIN/ic-admin.updated"
 }
 
 check_ic_admin() {
-    refresh_ic_submodule
-    if ! command -v $IC_ADMIN &>/dev/null; then
-        echo "ic-admin not found"
+    if [[ -z "$(find "$REPO_BIN" -mtime -24h -name "ic-admin.*")" ]]; then
+        echo "ic-admin executable is missing or older than 24h, trying to update"
         install_ic_admin
     fi
-    if ! command -v $IC_ADMIN &>/dev/null; then
-        error "ic-admin still not found, exiting"
+    if [[ ! -x $REPO_BIN/ic-admin ]]; then
+        error "ic-admin executable still not found, exiting"
     fi
 }
 
@@ -100,12 +101,12 @@ install_jq() {
 }
 
 check_jq() {
-    if ! command -v jq &>/dev/null; then
-        echo "jq not found"
+    if [[ ! -x $REPO_BIN/jq ]]; then
+        echo "jq executable not found, trying to install"
         install_jq
     fi
-    if ! command -v jq &>/dev/null; then
-        error "jq still not found, exiting"
+    if [[ ! -x $REPO_BIN/jq ]]; then
+        error "jq executable still not found, exiting"
     fi
 }
 
