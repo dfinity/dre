@@ -5,14 +5,6 @@ Install and enable pre-commit. Follow https://pre-commit.com/#installation then
 pre-commit install
 ```
 
-Install the nightly cargo and enable it in the project folder. Needed for the new version of clap.
-```
-cd <project_dir>
-which rustup || curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-rustup toolchain install nightly
-rustup override set nightly
-```
-
 Install the SQLite3 dev libraries.
 ```
 sudo apt install libsqlite3-dev
