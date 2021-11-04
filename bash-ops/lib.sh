@@ -223,7 +223,7 @@ maybe_propose_to_remove_nodes_from_subnet() {
     PROPOSAL_TITLE=${PROPOSAL_TITLE:-"Remove node(s) from subnet(s)"}
     echo
     echo "Please provide the MOTIVATION for this proposal and ctrl-d when done"
-    MOTIVATION="$(cat)"
+    MOTIVATION="${MOTIVATION:-$(cat)}"
     PROPOSAL_SUMMARY_FILE=$(mktemp)
     cat >$PROPOSAL_SUMMARY_FILE <<_EOF
 Remove node(s) $nodes_to_remove from their subnet(s), which makes them unassigned.
@@ -260,7 +260,7 @@ maybe_propose_to_remove_nodes() {
     PROPOSAL_TITLE=${PROPOSAL_TITLE:-"Remove node(s) from the Registry."}
     echo
     echo "Please provide the MOTIVATION for this proposal and ctrl-d when done"
-    MOTIVATION="$(cat)"
+    MOTIVATION="${MOTIVATION:-$(cat)}"
     PROPOSAL_SUMMARY_FILE=$(mktemp)
     cat >$PROPOSAL_SUMMARY_FILE <<_EOF
 Remove node(s) $nodes_to_remove from the Registry.
@@ -301,7 +301,7 @@ maybe_propose_to_add_nodes_to_subnet() {
     PROPOSAL_TITLE=${PROPOSAL_TITLE:-"Add node(s) to subnet $subnet_id_short"}
     echo
     echo "Please provide the MOTIVATION for this proposal and ctrl-d when done"
-    MOTIVATION="$(cat)"
+    MOTIVATION="${MOTIVATION:-$(cat)}"
     PROPOSAL_SUMMARY_FILE=$(mktemp)
     cat >$PROPOSAL_SUMMARY_FILE <<_EOF
 Add node(s) $nodes_to_add to subnet $subnet_id
@@ -362,7 +362,7 @@ maybe_propose_to_create_subnet() {
     PROPOSAL_TITLE=${PROPOSAL_TITLE:-"Create new ${subnet_type} subnet"}
     echo
     echo "Please provide the MOTIVATION for this proposal and ctrl-d when done"
-    MOTIVATION="$(cat)"
+    MOTIVATION="${MOTIVATION:-$(cat)}"
     PROPOSAL_SUMMARY_FILE=$(mktemp)
     cat >$PROPOSAL_SUMMARY_FILE <<_EOF
 Create new ${subnet_type} subnet with replica revision ${version_commit}
@@ -508,7 +508,7 @@ maybe_propose_to_update_subnet_replica_version() {
     PROPOSAL_TITLE=${PROPOSAL_TITLE:-"Update subnet $subnet_id to replica version $version_commit"}
     echo
     echo "Please provide the MOTIVATION for this proposal and ctrl-d when done"
-    MOTIVATION="$(cat)"
+    MOTIVATION="${MOTIVATION:-$(cat)}"
     PROPOSAL_SUMMARY_FILE=$(mktemp)
     cat >$PROPOSAL_SUMMARY_FILE <<_EOF
 Update subnet $subnet_id to replica version $version_commit
@@ -554,7 +554,7 @@ maybe_propose_to_update_subnet() {
     PROPOSAL_TITLE=${PROPOSAL_TITLE:-"Update parameters of subnet $subnet_id"}
     echo
     echo "Please provide the MOTIVATION for this proposal and ctrl-d when done"
-    MOTIVATION="$(cat)"
+    MOTIVATION="${MOTIVATION:-$(cat)}"
     PROPOSAL_SUMMARY_FILE=$(mktemp)
     cat >$PROPOSAL_SUMMARY_FILE <<_EOF
 Update parameters of subnet $subnet_id: $params
