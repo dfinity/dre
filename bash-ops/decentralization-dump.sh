@@ -2,16 +2,17 @@
 
 set -eEuo pipefail
 
-if [  "$#" -lt 2 ]; then
-  echo "Usage: $0 SUBNET|\"none\" HOSTS..."
-  exit 1
+SUBNET_VERSION=${SUBNET_VERSION:-e86ac9553a8eddbeffaa29267a216c9554d3a0c6}
+
+if [ "$#" -lt 2 ]; then
+    echo "Usage: $0 SUBNET|\"none\" HOSTS..."
+    exit 1
 fi
 
 subnet=$1
 
 nodes="["
-for node in "${@:2}"
-do
+for node in "${@:2}"; do
     nodes="$nodes\"$node\","
 done
 nodes="${nodes%,}]"
@@ -45,7 +46,7 @@ curl --fail --silent https://dashboard.mercury.dfinity.systems/api/proxy/registr
 if [ "$subnet" == "none" ]; then
     echo "proposal command:"
     echo "-------"
-    echo -n ./mainnet-op  propose-to-create-subnet $(($(curl --fail --silent https://dashboard.mercury.dfinity.systems/api/proxy/registry/subnets | jq -r --arg subnet "$subnet" '.[] | .metadata.name | sub("^App "; "")' | sort -n -r | head -n 1) + 1)) application 32d4e9c61c8b284d1bebed290df8d9b2efad2fc6
+    echo -n ./mainnet-op propose-to-create-subnet $(($(curl --fail --silent https://dashboard.mercury.dfinity.systems/api/proxy/registry/subnets | jq -r --arg subnet "$subnet" '.[] | .metadata.name | sub("^App "; "")' | sort -n -r | head -n 1) + 1)) application ${SUBNET_VERSION}
     echo -n " "
     curl --fail --silent https://dashboard.mercury.dfinity.systems/api/proxy/registry/nodes | jq --arg subnet "$subnet" --argjson nodes "$nodes" '.[] | select(.hostname | IN($nodes[])) | .principal' | xargs
 else
