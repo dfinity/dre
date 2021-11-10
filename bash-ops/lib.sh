@@ -159,7 +159,7 @@ print_env() {
 
 get_testnet_nns_url() {
     git_root="$(git rev-parse --show-toplevel)"
-    $git_root/testnet/env/$NETWORK/hosts --nodes | head -n1 | cut -d' ' -f2
+    $git_root/ic/testnet/env/$NETWORK/hosts --nodes | head -n1 | cut -d' ' -f2
 }
 
 check_env_testnet() {
