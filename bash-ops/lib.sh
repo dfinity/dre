@@ -456,7 +456,7 @@ maybe_propose_to_bless_replica_version() {
     PROPOSAL_TITLE=${PROPOSAL_TITLE:-"Elect/Bless new replica binary revision (commit $version_commit)"}
     echo
     echo "Please provide the Changelog (as bullets, without the title) for this release and ctrl-d when done"
-    CHANGELOG="$(cat)"
+    CHANGELOG="${CHANGELOG:-$(cat)}"
     PROPOSAL_SUMMARY_FILE=$(mktemp)
     cat >$PROPOSAL_SUMMARY_FILE <<_EOF
 Elect/Bless new replica binary revision (commit $version_commit)
