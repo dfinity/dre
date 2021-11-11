@@ -1,5 +1,0 @@
-GitPython
-pyyaml
-paramiko
-ansible==2.10.7
-tabulate
