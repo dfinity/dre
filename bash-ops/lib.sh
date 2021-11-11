@@ -425,14 +425,16 @@ maybe_propose_to_bless_replica_version() {
     UPDATE_URL="https://download.dfinity.systems/blessed/ic/${version_commit}/guest-os/update-img/update-img.tar.gz"
 
     verification_dir="$ALL_ARTEFACTS_DIR/update-verification"
-    rm -fr "$verification_dir"
     mkdir -p "$verification_dir"
     verification_img="$verification_dir/update-img.tar.gz"
 
     print_green Downloading the update image from $UPDATE_URL to $verification_img
-    curl --fail "$UPDATE_URL" >"${verification_img}"
+    CURL_HTTP_CODE=$(curl -C - --silent --write-out "%{http_code}" "$UPDATE_URL" --output "${verification_img}")
+    if [[ "$CURL_HTTP_CODE" != "416" && ("$CURL_HTTP_CODE" -lt 200 || "$CURL_HTTP_CODE" -gt 299) ]]; then
+        error "curl failed with http_code $CURL_HTTP_CODE for $UPDATE_URL" >&2
+    fi
     download_sha="$(sha256sum "${verification_img}" | cut -f 1 -d ' ')"
-    if [ ! "$download_sha" == "$SHA256" ]; then
+    if [[ ! "$download_sha" == "$SHA256" ]]; then
         error "Download sha did not match! ($SHA256 vs. $download_sha)" >&2
     fi
     print_green "SHA256-hashes of update-img.tar.gz do match ($SHA256)"
