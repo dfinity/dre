@@ -1,12 +1,9 @@
 use anyhow::anyhow;
-use chrono::Utc;
 use colored::Colorize;
 use log::{debug, info, warn};
 use python_input::input;
 use regex::Regex;
 use std::env;
-use std::fs::File;
-use std::io::prelude::*;
 use std::process::Command;
 
 /// Return the configuration value from the environment.
@@ -143,62 +140,6 @@ pub(crate) fn ic_admin_run(args: &[String], confirmed: bool) -> Result<String, a
             _ => Err(anyhow!("Cancelling operation, user entered '{}'", buffer.as_str(),)),
         }
     }
-}
-
-pub fn nns_proposals_repo_create_new_subnet_management(
-    summary_long: &str,
-    summary_short: &str,
-) -> Result<String, anyhow::Error> {
-    let repo_path = std::path::PathBuf::from(env_cfg("NNS_PROPOSALS_REPO_PATH"));
-
-    let status = Command::new("git")
-        .current_dir(&repo_path)
-        .args(["checkout", "main"])
-        .status()
-        .expect("failed to execute process");
-    if !status.success() {
-        panic!("Command execution failed. Bailing out.")
-    }
-
-    let status = Command::new("git")
-        .current_dir(&repo_path)
-        .args(["pull", "--rebase"])
-        .status()
-        .expect("failed to execute process");
-    if !status.success() {
-        panic!("Command execution failed. Bailing out.")
-    }
-
-    let date_time = Utc::now().format("%Y-%m-%dT%H_%M_%SZ.md");
-    let file_subdir = format!("proposals/subnet_management/{}", date_time);
-
-    let file_name = repo_path.join(&file_subdir);
-    info!("Creating a new file: {}", file_name.display());
-    let mut file = File::create(file_name)?;
-    file.write_all(summary_long.as_bytes())?;
-
-    let status = Command::new("git")
-        .current_dir(&repo_path)
-        .args(["add", &file_subdir])
-        .status()
-        .expect("failed to execute process");
-    if !status.success() {
-        panic!("Command execution failed. Bailing out.")
-    }
-
-    let status = Command::new("git")
-        .current_dir(&repo_path)
-        .args(["commit", "--message", summary_short])
-        .status()
-        .expect("failed to execute process");
-    if !status.success() {
-        panic!("Command execution failed. Bailing out.")
-    }
-
-    Ok(format!(
-        "https://github.com/ic-association/nns-proposals/blob/main/{}",
-        &file_subdir
-    ))
 }
 
 #[cfg(test)]

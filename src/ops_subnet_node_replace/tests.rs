@@ -66,17 +66,17 @@ fn proposal_generate_title_1_node() {
     let nodes_to_add = "afx6y-22h67-ct72t-etddn-t2jaz-gfsrz-u3yxw-oocjp-gj3za-de3ot-2ae".to_string();
     let nodes_to_remove = "z3tum-w7bue-lt6ca-qgynf-us6oq-nc3qc-7miiq-34rbp-ekuoa-g6cqr-wqe".to_string();
 
-    let summary = ops_subnet_node_replace::proposal_generate_title(&subnet_id, &nodes_to_add, &nodes_to_remove, 0);
+    let title = ops_subnet_node_replace::proposal_generate_title(&subnet_id, &nodes_to_add, &nodes_to_remove, 0);
 
     assert_eq!(
-        summary,
+        title,
         "Replace a node in subnet tdb26: add nodes [afx6y] (in this proposal); remove nodes [z3tum] (in an upcoming proposal)"
     );
 
-    let summary = ops_subnet_node_replace::proposal_generate_title(&subnet_id, &nodes_to_add, &nodes_to_remove, 123);
+    let title = ops_subnet_node_replace::proposal_generate_title(&subnet_id, &nodes_to_add, &nodes_to_remove, 123);
 
     assert_eq!(
-        summary,
+        title,
         "Replace a node in subnet tdb26: add nodes [afx6y] (already done); remove nodes [z3tum] (in this proposal)"
     );
 }
@@ -89,17 +89,17 @@ fn proposal_generate_title_2_nodes() {
     let nodes_to_remove =
         "z3tum-w7bue-lt6ca-qgynf-us6oq-nc3qc-7miiq-34rbp-ekuoa-g6cqr-wqe,ktrkp-ccur6-nvpyb-sokhh-exg7x-pfuds-4jxmw-n2r5m-vj5yt-aqzc4-vae".to_string();
 
-    let summary = ops_subnet_node_replace::proposal_generate_title(&subnet_id, &nodes_to_add, &nodes_to_remove, 0);
+    let title = ops_subnet_node_replace::proposal_generate_title(&subnet_id, &nodes_to_add, &nodes_to_remove, 0);
 
     assert_eq!(
-        summary,
+        title,
         "Replace nodes in subnet tdb26: add nodes [afx6y, dsthq] (in this proposal); remove nodes [z3tum, ktrkp] (in an upcoming proposal)"
     );
 
-    let summary = ops_subnet_node_replace::proposal_generate_title(&subnet_id, &nodes_to_add, &nodes_to_remove, 123);
+    let title = ops_subnet_node_replace::proposal_generate_title(&subnet_id, &nodes_to_add, &nodes_to_remove, 123);
 
     assert_eq!(
-        summary,
+        title,
         "Replace nodes in subnet tdb26: add nodes [afx6y, dsthq] (already done); remove nodes [z3tum, ktrkp] (in this proposal)"
     );
 }
