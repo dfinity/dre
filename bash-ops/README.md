@@ -9,7 +9,6 @@ pip3 install -r requirements.txt
 
 * for proposals (see [info on proposal parameters](https://github.com/dfinity/nns-proposals/tree/main/proposals)):
     * export envvar `PROPOSER_NEURON_INDEX`
-    * set envvar `PROPOSAL_URL` (optional, if not set a generated default will be used)
     * set envvar `PROPOSAL_SUMMARY` (optional, if not set a generated default will be used)
 
 * for **testnet** operations only:
@@ -125,7 +124,3 @@ Example usage:
 ### How to find right values for `HSM_SLOT` and/or `KEY_ID`?
 
 For `HSM_SLOT` run `pkcs11-tool --list-slots`, for `KEY_ID` run `pkcs11-tool --slot $HSM_SLOT --list-objects`.
-
-### How to construct values for `PROPOSAL_URL`?
-
-See [info on proposal parameters](https://github.com/ic-association/nns-proposals/tree/main/proposals).
