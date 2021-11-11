@@ -66,15 +66,13 @@ pub fn check_and_submit_proposals_subnet_add_nodes(
                         // No proposal submitted yet, let's do that now
                         let proposal_summary = proposal_generate_summary(subnet_id, nodes_to_add, nodes_to_remove, 0);
                         let proposal_title = proposal_generate_title(subnet_id, nodes_to_add, nodes_to_remove, 0);
-                        let proposal_summary_external_url =
-                            utils::nns_proposals_repo_create_new_subnet_management(&proposal_summary, &proposal_title)?;
 
                         let ic_admin_stdout = propose_add_nodes_to_subnet(
                             subnet_id,
                             nodes_to_add,
                             true,
-                            &proposal_summary_external_url,
                             &proposal_title,
+                            &proposal_summary,
                         )?;
                         info!("Proposal submitted successfully: {}", ic_admin_stdout);
                         let proposal_id = parse_proposal_id_from_ic_admin_stdout(ic_admin_stdout.as_str())?;
@@ -145,13 +143,10 @@ fn proposal_delete_create(
         "Proposal {} for adding nodes was successfully executed, now remove the nodes",
         add_proposal_id
     );
-    let proposal_summary = proposal_generate_summary(subnet_id, nodes_to_add, nodes_to_remove, add_proposal_id);
     let proposal_title = proposal_generate_title(subnet_id, nodes_to_add, nodes_to_remove, add_proposal_id);
-    let proposal_summary_external_url =
-        utils::nns_proposals_repo_create_new_subnet_management(&proposal_summary, &proposal_title)?;
+    let proposal_summary = proposal_generate_summary(subnet_id, nodes_to_add, nodes_to_remove, add_proposal_id);
 
-    let ic_admin_stdout =
-        propose_remove_nodes_from_subnet(nodes_to_remove, true, &proposal_summary_external_url, &proposal_title)?;
+    let ic_admin_stdout = propose_remove_nodes_from_subnet(nodes_to_remove, true, &proposal_title, &proposal_summary)?;
     info!("Proposal submitted successfully: {}", ic_admin_stdout);
     let proposal_id = parse_proposal_id_from_ic_admin_stdout(ic_admin_stdout.as_str())?;
     model_proposals::proposal_add(
@@ -218,10 +213,12 @@ pub fn subnet_nodes_replace(
             println!("{} {}", "Nodes to remove:".red(), nodes_rm_vec.as_string_short().red());
 
             let proposal_title = proposal_generate_title(&nodes.subnet, nodes_to_add, nodes_to_remove, 0);
-            propose_add_nodes_to_subnet(&nodes.subnet, nodes_to_add, false, "<tbd>", &proposal_title)?;
+            let proposal_summary = proposal_generate_summary(&nodes.subnet, nodes_to_add, nodes_to_remove, 0);
+            propose_add_nodes_to_subnet(&nodes.subnet, nodes_to_add, false, &proposal_title, &proposal_summary)?;
 
             let proposal_title = proposal_generate_title(&nodes.subnet, nodes_to_add, nodes_to_remove, 1);
-            propose_remove_nodes_from_subnet(nodes_to_remove, false, "<tbd>", &proposal_title)?;
+            let proposal_summary = proposal_generate_summary(&nodes.subnet, nodes_to_add, nodes_to_remove, 1);
+            propose_remove_nodes_from_subnet(nodes_to_remove, false, &proposal_title, &proposal_summary)?;
 
             // Success, user confirmed both operations
             model_subnet_update_nodes::subnet_nodes_to_replace_set(
@@ -255,8 +252,8 @@ pub fn propose_add_nodes_to_subnet(
     subnet_id: &str,
     nodes_to_add: &str,
     real_run: bool,
-    proposal_url: &str,
     proposal_title: &str,
+    proposal_summary: &str,
 ) -> Result<String, anyhow::Error> {
     let subnet: Subnet = Subnet::from_str(subnet_id)?;
     let nodes_vec = NodesVec::from_str(nodes_to_add).expect("parsing nodes_vec failed");
@@ -268,10 +265,10 @@ pub fn propose_add_nodes_to_subnet(
             subnet.id,
             "--proposer".to_string(),
             env_cfg("neuron_id"),
-            "--proposal-url".to_string(),
-            proposal_url.to_string(),
-            "--summary".to_string(),
+            "--proposal-title".to_string(),
             proposal_title.to_string(),
+            "--summary".to_string(),
+            proposal_summary.to_string(),
         ],
         nodes_vec.as_vec_string(),
     ]
@@ -283,8 +280,8 @@ pub fn propose_add_nodes_to_subnet(
 pub fn propose_remove_nodes_from_subnet(
     nodes_to_remove: &str,
     real_run: bool,
-    proposal_url: &str,
     proposal_title: &str,
+    proposal_summary: &str,
 ) -> Result<String, anyhow::Error> {
     let nodes_vec = NodesVec::from_str(nodes_to_remove).expect("parsing nodes_vec failed");
 
@@ -293,10 +290,10 @@ pub fn propose_remove_nodes_from_subnet(
             "propose-to-remove-nodes-from-subnet".to_string(),
             "--proposer".to_string(),
             env_cfg("neuron_id"),
-            "--proposal-url".to_string(),
-            proposal_url.to_string(),
-            "--summary".to_string(),
+            "--proposal-title".to_string(),
             proposal_title.to_string(),
+            "--summary".to_string(),
+            proposal_summary.to_string(),
         ],
         nodes_vec.as_vec_string(),
     ]

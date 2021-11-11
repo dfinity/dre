@@ -17,8 +17,6 @@ pub struct Opts {
     pub(crate) neuron_id: Option<String>,
     #[clap(short, long)]
     pub(crate) ic_admin: Option<String>,
-    #[clap(short = 'u', long)]
-    pub(crate) proposal_url: Option<String>,
     #[clap(short, long)]
     pub(crate) backend_url: Option<String>,
     #[clap(long)]
@@ -51,10 +49,6 @@ pub fn load_command_line_config_override(opts: &Opts) {
     if let Some(v) = &opts.ic_admin {
         env::set_var("IC_ADMIN", v);
         debug!("override IC_ADMIN setting with {}", v);
-    }
-    if let Some(v) = &opts.proposal_url {
-        env::set_var("proposal_url", v);
-        debug!("override proposal_url setting with {}", v);
     }
     if let Some(v) = &opts.backend_url {
         env::set_var("backend_url", v);
