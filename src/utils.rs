@@ -67,7 +67,7 @@ fn proposal_text_parse(text: &str) -> Result<ProposalStatus, anyhow::Error> {
         id: regex_find(r"(?m)^\s*id = opt record \{ id = ([\d_]+) \};$", text)?
             .replace("_", "")
             .parse::<u32>()?,
-        summary: regex_find(r#"(?m)^\s*      summary = "(.*)";$"#, text)?,
+        summary: regex_find(r#"(?ms)^\s*      summary = "(.*)";$"#, text)?,
         timestamp_seconds: regex_find(r"(?m)^\s*proposal_timestamp_seconds = ([\d_]+);$", text)?
             .replace("_", "")
             .parse::<i64>()?,
