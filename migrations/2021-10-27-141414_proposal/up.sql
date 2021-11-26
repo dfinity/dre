@@ -1,5 +1,5 @@
 CREATE TABLE proposals (
-  id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+  id BIGINT PRIMARY KEY NOT NULL,
   title TEXT,
   summary TEXT,
   submit_output TEXT,

@@ -22,3 +22,12 @@ dotenv = "0.15.0"
 log = "0.4.14"
 pretty_env_logger = "0.4.0"
 regex = "1.5.4"
+# For getting proposal info
+ic-nns-governance = { path = "ic/rs/nns/governance" }
+ic-nns-common = { path = "ic/rs/nns/common" }
+ic-nns-constants = { path = "ic/rs/nns/constants" }
+registry-canister = { path = "ic/rs/registry/canister" }
+ic-agent = "0.10.0"
+ic-types = "0.2.2"
+candid = "0.7.7"
+tokio = {version = "1.14.0", features = ["full"] }

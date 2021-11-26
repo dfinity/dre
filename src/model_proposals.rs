@@ -7,7 +7,7 @@ use log::{info, warn};
 #[primary_key(id)]
 #[table_name = "proposals"]
 pub struct Proposal {
-    pub id: i32,
+    pub id: i64,
     pub title: Option<String>,
     pub summary: Option<String>,
     pub submit_output: Option<String>,
@@ -19,13 +19,13 @@ pub struct Proposal {
 #[derive(Insertable, Debug)]
 #[table_name = "proposals"]
 pub struct ProposalAdd {
-    pub id: i32,
+    pub id: i64,
     pub title: String,
     pub summary: String,
     pub submit_output: String,
 }
 
-pub fn proposal_get(connection: &SqliteConnection, proposal_id: i32) -> Proposal {
+pub fn proposal_get(connection: &SqliteConnection, proposal_id: i64) -> Proposal {
     match proposals::table.find(proposal_id).get_result::<Proposal>(connection) {
         Ok(result) => result,
         Err(e) => panic!("Error finding proposal_id: {}. {}", proposal_id, e),
@@ -34,13 +34,13 @@ pub fn proposal_get(connection: &SqliteConnection, proposal_id: i32) -> Proposal
 
 pub fn proposal_add(
     connection: &SqliteConnection,
-    proposal_id: i32,
+    proposal_id: u64,
     proposal_title: &String,
     proposal_summary: &String,
     proposal_submit_output: &String,
 ) {
     let new_row = ProposalAdd {
-        id: proposal_id,
+        id: proposal_id as i64,
         title: proposal_title.clone(),
         summary: proposal_summary.clone(),
         submit_output: proposal_submit_output.clone(),
@@ -52,7 +52,7 @@ pub fn proposal_add(
         .expect("insert_into failed");
 }
 
-pub fn is_proposal_executed(connection: &SqliteConnection, proposal_id: Option<i32>) -> bool {
+pub fn is_proposal_executed(connection: &SqliteConnection, proposal_id: Option<i64>) -> bool {
     match proposal_id {
         Some(proposal_id) => {
             let proposal = proposal_get(connection, proposal_id);
@@ -64,28 +64,28 @@ pub fn is_proposal_executed(connection: &SqliteConnection, proposal_id: Option<i
 
 pub fn proposal_set_executed(
     connection: &SqliteConnection,
-    proposal_id: i32,
-    timestamp: i64,
+    proposal_id: u64,
+    timestamp: u64,
 ) -> Result<(), anyhow::Error> {
     info!("Proposal {}: marking as executed at {}", proposal_id, timestamp);
-    diesel::update(proposals::table.find(proposal_id))
-        .set(executed_timestamp.eq(timestamp))
+    diesel::update(proposals::table.find(proposal_id as i64))
+        .set(executed_timestamp.eq(timestamp as i64))
         .execute(connection)?;
     Ok(())
 }
 
 pub fn proposal_set_failed(
     connection: &SqliteConnection,
-    proposal_id: i32,
-    failure_timestamp: i64,
+    proposal_id: u64,
+    failure_timestamp: u64,
     failure_reason: &str,
 ) -> Result<(), anyhow::Error> {
     warn!(
         "Proposal {}: marking as failed at {}. Reason: {}",
         proposal_id, failure_timestamp, failure_reason
     );
-    diesel::update(proposals::table.find(proposal_id))
-        .set((failed_timestamp.eq(failure_timestamp), failed.eq(failure_reason)))
+    diesel::update(proposals::table.find(proposal_id as i64))
+        .set((failed_timestamp.eq(failure_timestamp as i64), failed.eq(failure_reason)))
         .execute(connection)?;
     Ok(())
 }

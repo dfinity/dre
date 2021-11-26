@@ -12,22 +12,22 @@ use std::str::FromStr;
 
 fn proposal_check_if_completed(
     db_connection: &SqliteConnection,
-    proposal_id: Option<i32>,
+    proposal_id: Option<i64>,
 ) -> Result<Option<utils::ProposalStatus>, anyhow::Error> {
     match proposal_id {
         Some(proposal_id) => {
-            let proposal = utils::get_proposal_status(proposal_id)?;
+            let proposal = utils::get_proposal_status(proposal_id as u64)?;
             if proposal.executed_timestamp_seconds > 0 {
                 model_proposals::proposal_set_executed(
                     db_connection,
-                    proposal_id,
+                    proposal_id as u64,
                     proposal.executed_timestamp_seconds,
                 )?;
             }
             if proposal.failed_timestamp_seconds > 0 {
                 model_proposals::proposal_set_failed(
                     db_connection,
-                    proposal_id,
+                    proposal_id as u64,
                     proposal.failed_timestamp_seconds,
                     &proposal.failure_reason,
                 )?;
@@ -91,13 +91,14 @@ pub fn check_and_submit_proposals_subnet_add_nodes(
                         )?;
                     }
                     Some(add_proposal_id) => {
+                        let add_proposal_id = add_proposal_id as u64;
                         // Proposal already submitted
                         if model_proposals::is_proposal_executed(db_connection, row.proposal_add_id) {
                             // Add proposal already marked finished execution
                             if row.proposal_remove_id.is_none() {
                                 // remove proposal was not created yet
                                 info!("Proposal for adding nodes {} was already marked finished, proceeding with removal of {}", nodes_to_add, nodes_to_remove);
-                                let proposal = utils::get_proposal_status(add_proposal_id)?;
+                                let proposal = utils::get_proposal_status(add_proposal_id as u64)?;
                                 if proposal.executed_timestamp_seconds > 0 {
                                     proposal_delete_create(
                                         db_connection,
@@ -134,7 +135,7 @@ pub fn check_and_submit_proposals_subnet_add_nodes(
 
 fn proposal_delete_create(
     db_connection: &SqliteConnection,
-    add_proposal_id: i32,
+    add_proposal_id: u64,
     subnet_id: &str,
     nodes_to_add: &str,
     nodes_to_remove: &str,
@@ -234,11 +235,11 @@ pub fn subnet_nodes_replace(
     }
 }
 
-fn parse_proposal_id_from_ic_admin_stdout(text: &str) -> Result<i32, anyhow::Error> {
+fn parse_proposal_id_from_ic_admin_stdout(text: &str) -> Result<u64, anyhow::Error> {
     let re = Regex::new(r"(?m)^proposal (\d+)$").unwrap();
     let mut captures = re.captures_iter(text);
     if let Some(cap) = captures.next() {
-        let proposal_id = cap[1].parse::<i32>().unwrap();
+        let proposal_id = cap[1].parse::<u64>().unwrap();
         Ok(proposal_id)
     } else {
         Err(anyhow!(
@@ -306,7 +307,7 @@ fn proposal_generate_summary(
     subnet_id: &str,
     nodes_to_add: &str,
     nodes_to_remove: &str,
-    nodes_to_add_proposal_id: i32,
+    nodes_to_add_proposal_id: u64,
 ) -> String {
     let subnet: Subnet = Subnet::from_str(subnet_id).expect("Parsing subnet id failed");
     let nodes_add_vec = NodesVec::from_str(nodes_to_add).expect("parsing nodes_vec failed");
@@ -352,7 +353,7 @@ fn proposal_generate_title(
     subnet_id: &str,
     nodes_to_add: &str,
     nodes_to_remove: &str,
-    nodes_to_add_proposal_id: i32,
+    nodes_to_add_proposal_id: u64,
 ) -> String {
     let subnet: Subnet = Subnet::from_str(subnet_id).expect("Parsing subnet id failed");
     let nodes_add_vec = NodesVec::from_str(nodes_to_add).expect("parsing nodes_vec failed");

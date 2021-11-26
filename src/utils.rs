@@ -1,8 +1,12 @@
 use anyhow::anyhow;
+use candid::Decode;
 use colored::Colorize;
+use futures::executor::block_on;
+use ic_agent::Agent;
+use ic_nns_governance::pb::v1::ProposalInfo;
 use log::{debug, info, warn};
 use python_input::input;
-use regex::Regex;
+
 use std::env;
 use std::process::Command;
 
@@ -19,78 +23,73 @@ pub fn env_cfg(key: &str) -> String {
 
 #[derive(Debug, PartialEq)]
 pub struct ProposalStatus {
-    pub id: u32,
+    pub id: u64,
     pub summary: String,
-    pub timestamp_seconds: i64,
-    pub executed_timestamp_seconds: i64,
-    pub failed_timestamp_seconds: i64,
+    pub timestamp_seconds: u64,
+    pub executed_timestamp_seconds: u64,
+    pub failed_timestamp_seconds: u64,
     pub failure_reason: String,
 }
 
+struct ProposalPoller {
+    agent: Agent,
+}
+
+impl ProposalPoller {
+    fn new() -> Self {
+        let agent = Agent::builder()
+            .with_transport(
+                ic_agent::agent::http_transport::ReqwestHttpReplicaV2Transport::create("https://nns.ic0.app")
+                    .expect("failed to create transport"),
+            )
+            .build()
+            .expect("failed to build the agent");
+        Self { agent }
+    }
+
+    pub fn get_proposal_info(&self, proposal_id: u64) -> Option<ProposalInfo> {
+        let response = block_on(
+            self.agent
+                .query(
+                    &ic_types::Principal::from_slice(ic_nns_constants::GOVERNANCE_CANISTER_ID.get().as_slice()),
+                    "get_proposal_info",
+                )
+                .with_arg(
+                    candid::IDLArgs::new(&[candid::parser::value::IDLValue::Nat64(proposal_id)])
+                        .to_bytes()
+                        .unwrap()
+                        .as_slice(),
+                )
+                .call(),
+        )
+        .expect("unable to query get_proposal_info");
+
+        Decode!(response.as_slice(), Option<ProposalInfo>).expect("unable to decode")
+    }
+}
+
 /// Get status of an NNS proposal
-pub fn get_proposal_status(proposal_id: i32) -> Result<ProposalStatus, anyhow::Error> {
+pub fn get_proposal_status(proposal_id: u64) -> Result<ProposalStatus, anyhow::Error> {
     debug!("get_proposal_status: {}", proposal_id);
-    let mut dfx_args =
-        shlex::split("--identity default canister --no-wallet --network=mercury call governance get_proposal_info")
-            .expect("shlex split failed");
-    dfx_args.push(format!("{}", proposal_id));
 
-    fn log_dfx_command_line(dfx_args: &[String]) {
-        debug!(
-            "$ {} {}",
-            env_cfg("DFX").yellow(),
-            shlex::join(dfx_args.iter().map(|s| s.as_str()).collect::<Vec<&str>>()).yellow()
-        );
-    }
+    let proposal_poller = ProposalPoller::new();
 
-    log_dfx_command_line(&dfx_args);
+    let proposal_info: ProposalInfo = proposal_poller.get_proposal_info(proposal_id).unwrap();
 
-    let output = Command::new(env_cfg("DFX"))
-        .args(dfx_args)
-        .current_dir("canisters")
-        .output()?;
-
-    let stdout = String::from_utf8_lossy(output.stdout.as_ref()).to_string();
-    debug!("dfx STDOUT:\n{}", stdout);
-    if !output.stderr.is_empty() {
-        let stderr = String::from_utf8_lossy(output.stderr.as_ref()).to_string();
-        warn!("dfx STDERR:\n{}", stderr);
-    }
-    let result = proposal_text_parse(&stdout)?;
-    info!("Parsed proposal status: {:?}", result);
-    Ok(result)
-}
-
-fn proposal_text_parse(text: &str) -> Result<ProposalStatus, anyhow::Error> {
-    debug!("Parsing proposal text: {:?}", text);
     Ok(ProposalStatus {
-        id: regex_find(r"(?m)^\s*id = opt record \{ id = ([\d_]+) : nat64 \};$", text)?
-            .replace("_", "")
-            .parse::<u32>()?,
-        summary: regex_find(r#"(?ms)^\s*      summary = "(.*)";$"#, text)?,
-        timestamp_seconds: regex_find(r"(?m)^\s*proposal_timestamp_seconds = ([\d_]+) : nat64;$", text)?
-            .replace("_", "")
-            .parse::<i64>()?,
-        executed_timestamp_seconds: regex_find(r"(?m)^\s*executed_timestamp_seconds = ([\d_]+) : nat64;$", text)?
-            .replace("_", "")
-            .parse::<i64>()?,
-        failed_timestamp_seconds: regex_find(r"(?m)^\s*failed_timestamp_seconds = ([\d_]+) : nat64;$", text)?
-            .replace("_", "")
-            .parse::<i64>()?,
-        failure_reason: regex_find(r#"(?ms)^\s*failure_reason = (null|opt record \{.+?\});$"#, text)?,
+        id: proposal_info.id.unwrap().id,
+        summary: match proposal_info.proposal {
+            None => "".to_string(),
+            Some(proposal) => proposal.summary,
+        },
+        timestamp_seconds: proposal_info.proposal_timestamp_seconds,
+        executed_timestamp_seconds: proposal_info.executed_timestamp_seconds,
+        failed_timestamp_seconds: proposal_info.failed_timestamp_seconds,
+        failure_reason: match proposal_info.failure_reason {
+            None => "".to_string(),
+            Some(failure_reason) => format!("{:?}", failure_reason),
+        },
     })
-}
-
-fn regex_find(needle: &str, haystack: &str) -> Result<String, anyhow::Error> {
-    let re = Regex::new(needle).unwrap();
-    if let Some(cap) = re.captures_iter(haystack).next() {
-        return Ok(cap[1].parse::<String>().unwrap());
-    }
-    Err(anyhow!(
-        "Search string '{}' could not be found in the output string:\n{}",
-        needle,
-        haystack,
-    ))
 }
 
 pub(crate) fn ic_admin_run(args: &[String], confirmed: bool) -> Result<String, anyhow::Error> {
