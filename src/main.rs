@@ -14,13 +14,16 @@ mod ops_subnet_node_replace;
 mod schema;
 mod utils;
 
-fn main() -> Result<(), anyhow::Error> {
+#[tokio::main]
+async fn main() -> Result<(), anyhow::Error> {
     init_env();
 
     let db_connection = init_sqlite_connect();
     let cli_opts = Opts::parse();
     cli_types::load_command_line_config_override(&cli_opts);
     init_logger();
+
+    println!("{:?}", utils::get_proposal_status(31463));
 
     // Start of actually doing stuff with commands.
     match &cli_opts.subcommand {

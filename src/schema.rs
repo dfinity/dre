@@ -1,6 +1,6 @@
 table! {
     proposals (id) {
-        id -> Integer,
+        id -> BigInt,
         title -> Nullable<Text>,
         summary -> Nullable<Text>,
         submit_output -> Nullable<Text>,
@@ -17,8 +17,8 @@ table! {
         in_progress -> Bool,
         nodes_to_add -> Nullable<Text>,
         nodes_to_remove -> Nullable<Text>,
-        proposal_add_id -> Nullable<Integer>,
-        proposal_remove_id -> Nullable<Integer>,
+        proposal_add_id -> Nullable<BigInt>,
+        proposal_remove_id -> Nullable<BigInt>,
     }
 }
 

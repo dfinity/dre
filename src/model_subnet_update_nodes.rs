@@ -16,8 +16,8 @@ pub struct StateSubnetUpdateNodes {
     pub in_progress: bool,
     pub nodes_to_add: Option<String>,
     pub nodes_to_remove: Option<String>,
-    pub proposal_add_id: Option<i32>,
-    pub proposal_remove_id: Option<i32>,
+    pub proposal_add_id: Option<i64>,
+    pub proposal_remove_id: Option<i64>,
 }
 
 #[derive(Insertable, Debug)]
@@ -163,7 +163,7 @@ pub fn subnet_nodes_to_add_update_proposal_id(
     connection: &SqliteConnection,
     subnet_id: &str,
     nodes_ids: &str,
-    proposal_id: i32,
+    proposal_id: u64,
 ) -> Result<(), anyhow::Error> {
     let rows_in_progress = subnet_rows_in_progress_get(connection, subnet_id);
     debug!(
@@ -174,7 +174,7 @@ pub fn subnet_nodes_to_add_update_proposal_id(
         if let Some(row_nodes) = &row.nodes_to_add {
             if row_nodes == nodes_ids {
                 diesel::update(row)
-                    .set(proposal_add_id.eq(proposal_id))
+                    .set(proposal_add_id.eq(proposal_id as i64))
                     .execute(connection)?;
                 return Ok(());
             }
@@ -191,7 +191,7 @@ pub fn subnet_nodes_to_remove_update_proposal_id(
     connection: &SqliteConnection,
     subnet_id: &str,
     nodes_ids: &str,
-    proposal_id: i32,
+    proposal_id: u64,
 ) -> Result<(), anyhow::Error> {
     let rows_in_progress = subnet_rows_in_progress_get(connection, subnet_id);
     debug!(
@@ -202,7 +202,7 @@ pub fn subnet_nodes_to_remove_update_proposal_id(
         if let Some(row_nodes) = &row.nodes_to_remove {
             if row_nodes == nodes_ids {
                 diesel::update(row)
-                    .set(proposal_remove_id.eq(proposal_id))
+                    .set(proposal_remove_id.eq(proposal_id as i64))
                     .execute(connection)?;
                 return Ok(());
             }
