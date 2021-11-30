@@ -9,7 +9,6 @@ import shlex
 import shutil
 import subprocess
 import sys
-import time
 
 import git
 from colorama import Fore
@@ -33,16 +32,13 @@ def ci_config_declared_image_digest():
 
 
 def local_image_sha256_unchecked():
-    for i in range(100):
-        digests = subprocess.check_output(["docker", "images", "--digests", "--format", "{{.Digest}}", IMAGE])
-        digests = digests.decode("utf8").splitlines()
-        if len(digests) > 0:
-            if not digests[0] or digests[0] == "<none>":
-                _print_magenta("Docker still didn't calculate the digest, waiting %s/100" % i)
-                time.sleep(1)
-                continue
-            return digests[0]
-        return ""
+    """Return a tuple of the latest image digest and a set of all image digests."""
+    digests = subprocess.check_output(["docker", "images", "--digests", "--format", "{{.Digest}}", IMAGE])
+    digests = digests.decode("utf8").splitlines()
+    digests = [d for d in digests if d.startswith("sha256:")]
+    if len(digests) > 0:
+        return (digests[0], set(digests))
+    return ("", set())
 
 
 def local_image_sha256():
@@ -208,13 +204,13 @@ def _print_red(*kwargs):
 
 
 def main():
-    local_sha256 = local_image_sha256_unchecked()
+    local_sha256, local_sha256_set = local_image_sha256_unchecked()
     ci_target_sha256 = ci_config_declared_image_digest()
-    if not ci_target_sha256.startswith("sha256:") or local_sha256 != ci_target_sha256:
-        _print_magenta("local_sha256 '%s' != ci_target_sha256 '%s'" % (local_sha256, ci_target_sha256))
+    if not ci_target_sha256.startswith("sha256:") or ci_target_sha256 not in local_sha256_set:
+        _print_magenta("ci_target_sha256 '%s' not in local_sha256 '%s'" % (ci_target_sha256, local_sha256_set))
         docker_build_image(cache_image=f"{IMAGE}@{ci_target_sha256}")
         docker_push()
-        local_sha256 = local_image_sha256_unchecked()
+        local_sha256, _ = local_image_sha256_unchecked()
         patch_ci_config_image_sha256(local_sha256)
         repo_changes_push()
         sys.exit(0)
@@ -239,7 +235,7 @@ def main():
     # Something changed in the docker config, recreate the image and push it
     docker_build_image(cache_image=f"{IMAGE}@{ci_target_sha256}")
     docker_push()
-    local_sha256 = local_image_sha256_unchecked()
+    local_sha256, _ = local_image_sha256_unchecked()
     patch_ci_config_image_sha256(local_sha256)
     repo_changes_push()
 
