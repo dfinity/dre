@@ -215,7 +215,7 @@ def main():
         repo_changes_push()
         sys.exit(0)
 
-    _print_green("local_sha256 '%s' == ci_target_sha256 '%s'" % (local_sha256, ci_target_sha256))
+    _print_green("ci_target_sha256 '%s' in local_sha256 '%s'" % (ci_target_sha256, local_sha256_set))
     _print_green("Checking if the 'docker' subdir in the repo changed from the one in the image")
 
     docker_pull(ci_target_sha256)

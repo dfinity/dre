@@ -1,5 +1,5 @@
 default:
-  image: registry.gitlab.com/dfinity-lab/core/release-cli/ci-build@sha256:533dcc6c1daa7f1762da674bf5ae43debced814baff04ff926da86faf6292c4c
+  image: registry.gitlab.com/dfinity-lab/core/release-cli/ci-build@sha256:3fbc8e612639b45be5df94be280cb223940bf6f11cfebb9b71cc7324309578bb
   tags:
     # Use the Dfinity CI runners (they have following tags)
     - dfinity
@@ -19,13 +19,13 @@ variables:
     # MacOS note: the gitlab runner will ignore this var on MacOS since config does not have
     # pre_clone_script set in the runner config
 
-    echo -e "\e[0Ksection_start:$(date +%s):pre_clone_script[collapsed=true]\r\e[0KClick here to see the pre_clone_script"
     set -eExuo pipefail
+    echo -e "\e[0Ksection_start:@(date +%s):pre_clone_script[collapsed=true]\r\e[0KClick here to see the pre_clone_script section"
 
     # Fail the git clone/pull if too slow
     export GIT_HTTP_LOW_SPEED_LIMIT=10000 GIT_HTTP_LOW_SPEED_TIME=10 GIT_SSH_COMMAND='timeout 300 ssh -T'
 
-    # WARNING: We use @ instead of $ because GitLab has some issues with variable expansion and sometimes eats $VAR
+    # WARNING: We use @ instead of $ because GitLab sometimes silently converts $VAR into VAR
     # WARNING: The @ signs will be replaced with $ before executing the script
     rm -rf "@{CI_PROJECT_DIR}"
     mkdir -p "@{CI_PROJECT_DIR}"
@@ -34,7 +34,7 @@ variables:
       trap 'rm -rf "/cache/git/@{CI_PROJECT_PATH}/@CI_CONCURRENT_ID"' ERR
       # Concurrent jobs are separated into different git repo cache folders
       echo "Copying the git repo from /cache/git/@{CI_PROJECT_PATH}/@{CI_CONCURRENT_ID} to @{CI_PROJECT_DIR}"
-      /usr/bin/time cp -a "/cache/git/@{CI_PROJECT_PATH}/@CI_CONCURRENT_ID" "@{CI_PROJECT_DIR}"/.git
+      /usr/bin/time cp -a --no-target-directory "/cache/git/@{CI_PROJECT_PATH}/@CI_CONCURRENT_ID/" "@{CI_PROJECT_DIR}/"
 
       if [[ -n "@{GIT_CLONE_PATH:-}" && "@{GIT_CLONE_PATH:-}" != "@{CI_PROJECT_DIR}" ]]; then
         # @GIT_CLONE_PATH is set to a value different from @{CI_PROJECT_DIR}
@@ -42,14 +42,16 @@ variables:
         rm -rf "@GIT_CLONE_PATH"
         mkdir -p "@GIT_CLONE_PATH"
         chown 1000:1000 -R "@GIT_CLONE_PATH"
-        /usr/bin/time cp -a "/cache/git/@{CI_PROJECT_PATH}/@CI_CONCURRENT_ID" "@GIT_CLONE_PATH"/.git
+        /usr/bin/time cp -a --no-target-directory "/cache/git/@{CI_PROJECT_PATH}/@CI_CONCURRENT_ID/" "@GIT_CLONE_PATH/"
       fi
+
 
       # Ensure the git repo is clean and up to date with the upstream
       cd "@{CI_PROJECT_DIR}"
       # Disable all background git operations
       git config gc.auto 0
       git config gc.autodetach false
+
       # Ensure that there are not background git operations running and remove all lock files if they exist
       if ! {
         set -e
@@ -72,12 +74,12 @@ variables:
         rm -rf .git
       fi
     fi
+    echo -e "\e[0Ksection_end:$(date +%s):pre_clone_script\r\e[0K"
 
 
 before_script:
   - |
     # Execute the before_script section
-    echo -e "\e[0Ksection_end:$(date +%s):pre_clone_script\r\e[0K"  # first close pre_clone_script section, if open
 
     # Start the (collapsed) before_script section
     set -eExuo pipefail
@@ -90,11 +92,21 @@ before_script:
     # forget original timestamp/timestamp when compressing ~ important for reproducibility
     export GZIP=-n
 
+    # Set the IC repo URL to https instead of ssh, and check out the submodule
+    git submodule set-url ic "https://github.com/dfinity/ic.git"
+    if ! git submodule update --init --recursive --remote; then
+      cat .git/config
+      cat .gitmodules
+      cat .git/modules/ic/config
+      rm -rf /cache/git/${CI_PROJECT_PATH}
+      exit 1
+    fi
+
     sudo chown ubuntu:ubuntu -R "${CI_PROJECT_DIR}"
     sudo find "${CI_PROJECT_DIR}" -type d -exec chmod 0755 '{}' \;
     # Update the git repo cache at /cache/git/${CI_PROJECT_PATH}/$CI_CONCURRENT_ID
     mkdir -p "/cache/git/${CI_PROJECT_PATH}/$CI_CONCURRENT_ID/"
-    /usr/bin/time rsync -a --force --delete "$CI_PROJECT_DIR"/.git/ "/cache/git/${CI_PROJECT_PATH}/$CI_CONCURRENT_ID/"
+    /usr/bin/time rsync -a --force --delete "$CI_PROJECT_DIR"/ "/cache/git/${CI_PROJECT_PATH}/$CI_CONCURRENT_ID/"
 
     cd "${CI_PROJECT_DIR}"
     # Ensure file permissions in the repo are what git expects them to be
@@ -106,7 +118,6 @@ before_script:
 .rules-default:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    - if: '$CI_PIPELINE_SOURCE == "schedule"'
     - if: '$CI_PIPELINE_SOURCE == "web"'
       when: manual
       allow_failure: true  # the pipeline continues running even if the manual job is not run
@@ -117,7 +128,6 @@ before_script:
 .rules-autorun-on-trigger:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    - if: '$CI_PIPELINE_SOURCE == "schedule"'
     - if: '$CI_PIPELINE_SOURCE == "web"'
       when: manual
       allow_failure: true  # the pipeline continues running even if the manual job is not run
@@ -128,12 +138,38 @@ docker-image-update:
   extends:
     - .rules-default
   interruptible: true
+  parallel: 50
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes:
+        - docker/**/*
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+      when: manual
+      allow_failure: true  # the pipeline continues running even if the manual job is not run
+    - if: '$CI_PIPELINE_SOURCE == "trigger"'
+      when: manual
+      allow_failure: true  # the pipeline continues running even if the manual job is not run
   script:
     - python3 docker/docker-update-image.py
 
-update-facts-db:
+cargo-clippy:
   extends:
     - .rules-default
+  interruptible: true
+  stage: test
+  allow_failure: true  # The IC repo fails "cargo clippy" with the latest nightly
+  script:
+    - cargo clippy
+
+cargo-test:
+  extends:
+    - .rules-default
+  interruptible: true
+  stage: test
+  script:
+    - cargo test
+
+update-facts-db:
   interruptible: true
   rules:
     - if: '$CI_PIPELINE_SOURCE == "schedule"'

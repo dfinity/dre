@@ -2,6 +2,7 @@ FROM ubuntu:20.04
 
 ARG rust_version=nightly
 ARG ic_git_revision=37201f2d611394581a30de9ea78cc742b3672ea4
+ARG protobuf_version=3.18.1
 
 # The image expects the following volumes mounted from the host:
 # /cache - holding the sccache artifacts
@@ -19,10 +20,13 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone &
     apt -yq update && \
     apt -yqq install --no-install-recommends \
         build-essential pkg-config libssl-dev cmake libbz2-dev gcc-multilib rsync \
-        lldb liblz4-dev librocksdb-dev libsnappy-dev libzstd-dev liblmdb0 vim nano jq \
+        lldb liblz4-dev librocksdb-dev libsnappy-dev libzstd-dev vim nano jq \
         zip unzip python3 python3-requests python3-pip python3-cbor shellcheck \
+        liblmdb0 libsqlite3-dev sqlite3 \
         docker-ce-cli sudo gosu && \
     chmod +s /usr/sbin/gosu
+
+RUN cd `mktemp -d`; curl --fail -LO https://github.com/protocolbuffers/protobuf/releases/download/v${protobuf_version}/protoc-${protobuf_version}-linux-x86_64.zip; unzip * -d /opt/protoc; chmod -R 755 /opt/protoc/bin; chmod -R u+rwX,go+rX,go-w /opt/protoc/include
 
 # Add the `ubuntu` user, and the required folders
 RUN useradd -ms /bin/bash -u 1000 ubuntu && \
