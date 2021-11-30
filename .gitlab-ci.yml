@@ -1,0 +1,169 @@
+default:
+  image: registry.gitlab.com/dfinity-lab/core/release-cli/ci-build@sha256:150d98a58e0f6bb7529935ff27284621bb4a4062e157b31e4af69a4e08f8400b
+  tags:
+    # Use the Dfinity CI runners (they have following tags)
+    - dfinity
+    - docker
+    - ubuntu
+
+variables:
+  GET_SOURCES_ATTEMPTS: 5
+  GIT_DEPTH: 0  # Pull the complete repo initially
+  GIT_STRATEGY: "fetch"  # And then pull only new commits
+  CI_PRE_CLONE_SCRIPT: |
+    # This script prepares the docker container for running the job
+    # The most important thing done here is pre-seeding the repo in the $CI_PROJECT_DIR so that
+    # the docker gitlab runner doesn't have to re-clone the repo for every job
+    # Example of the (official gitlab) CI_PRE_CLONE_SCRIPT:
+    # https://docs.gitlab.com/ee/development/pipelines.html#pre-clone-step
+    # MacOS note: the gitlab runner will ignore this var on MacOS since config does not have
+    # pre_clone_script set in the runner config
+
+    echo -e "\e[0Ksection_start:$(date +%s):pre_clone_script[collapsed=true]\r\e[0KClick here to see the pre_clone_script"
+    set -eExuo pipefail
+
+    # Fail the git clone/pull if too slow
+    export GIT_HTTP_LOW_SPEED_LIMIT=10000 GIT_HTTP_LOW_SPEED_TIME=10 GIT_SSH_COMMAND='timeout 300 ssh -T'
+
+    # WARNING: We use @ instead of $ because GitLab has some issues with variable expansion and sometimes eats $VAR
+    # WARNING: The @ signs will be replaced with $ before executing the script
+    rm -rf "@{CI_PROJECT_DIR}"
+    mkdir -p "@{CI_PROJECT_DIR}"
+    chown 1000:1000 -R "@{CI_PROJECT_DIR}"
+    if [[ -d "/cache/git/@{CI_PROJECT_PATH}/@CI_CONCURRENT_ID" ]]; then
+      trap 'rm -rf "/cache/git/@{CI_PROJECT_PATH}/@CI_CONCURRENT_ID"' ERR
+      # Concurrent jobs are separated into different git repo cache folders
+      echo "Copying the git repo from /cache/git/@{CI_PROJECT_PATH}/@{CI_CONCURRENT_ID} to @{CI_PROJECT_DIR}"
+      /usr/bin/time cp -a "/cache/git/@{CI_PROJECT_PATH}/@CI_CONCURRENT_ID" "@{CI_PROJECT_DIR}"/.git
+
+      if [[ -n "@{GIT_CLONE_PATH:-}" && "@{GIT_CLONE_PATH:-}" != "@{CI_PROJECT_DIR}" ]]; then
+        # @GIT_CLONE_PATH is set to a value different from @{CI_PROJECT_DIR}
+        # In general the two should be the same so this code path should never be exercised
+        rm -rf "@GIT_CLONE_PATH"
+        mkdir -p "@GIT_CLONE_PATH"
+        chown 1000:1000 -R "@GIT_CLONE_PATH"
+        /usr/bin/time cp -a "/cache/git/@{CI_PROJECT_PATH}/@CI_CONCURRENT_ID" "@GIT_CLONE_PATH"/.git
+      fi
+
+      # Ensure the git repo is clean and up to date with the upstream
+      cd "@{CI_PROJECT_DIR}"
+      # Disable all background git operations
+      git config gc.auto 0
+      git config gc.autodetach false
+      # Ensure that there are not background git operations running and remove all lock files if they exist
+      if ! {
+        set -e
+        pkill git || true
+        find .git -name '*.lock' -delete
+        # Delete all branches for which a reference (sha) does not exist
+        set +x
+        git for-each-ref --format="%(refname)" | while read ref; do
+          git show-ref --quiet --verify @ref 2>/dev/null || git update-ref -d @ref
+        done
+        set -x
+        if ! git remote add origin "@{CI_REPOSITORY_URL}"; then
+          git remote set-url origin "@{CI_REPOSITORY_URL}"
+        fi
+        git fetch --prune --prune-tags
+        # Run a GC on the repo
+        git gc --prune=now --force
+        git reflog expire --expire=0 --all
+      }; then
+        rm -rf .git
+      fi
+    fi
+
+
+before_script:
+  - |
+    # Execute the before_script section
+    echo -e "\e[0Ksection_end:$(date +%s):pre_clone_script\r\e[0K"  # first close pre_clone_script section, if open
+
+    # Start the (collapsed) before_script section
+    set -eExuo pipefail
+    echo -e "\e[0Ksection_start:$(date +%s):before_script[collapsed=true]\r\e[0KClick here to see the before_script section"
+
+    echo -e "Host *\nUser gitlab-runner\n" > ~/.ssh/config
+    ulimit -n 8192
+    date
+
+    # forget original timestamp/timestamp when compressing ~ important for reproducibility
+    export GZIP=-n
+
+    sudo chown ubuntu:ubuntu -R "${CI_PROJECT_DIR}"
+    sudo find "${CI_PROJECT_DIR}" -type d -exec chmod 0755 '{}' \;
+    # Update the git repo cache at /cache/git/${CI_PROJECT_PATH}/$CI_CONCURRENT_ID
+    mkdir -p "/cache/git/${CI_PROJECT_PATH}/$CI_CONCURRENT_ID/"
+    /usr/bin/time rsync -a --force --delete "$CI_PROJECT_DIR"/.git/ "/cache/git/${CI_PROJECT_PATH}/$CI_CONCURRENT_ID/"
+
+    cd "${CI_PROJECT_DIR}"
+    # Ensure file permissions in the repo are what git expects them to be
+    git config core.fileMode true
+    git reset --hard HEAD
+
+  - echo -e "\e[0Ksection_end:$(date +%s):before_script\r\e[0K"
+
+.rules-default:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+      when: manual
+      allow_failure: true  # the pipeline continues running even if the manual job is not run
+    - if: '$CI_PIPELINE_SOURCE == "trigger"'
+      when: manual
+      allow_failure: true  # the pipeline continues running even if the manual job is not run
+
+.rules-autorun-on-trigger:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+      when: manual
+      allow_failure: true  # the pipeline continues running even if the manual job is not run
+    - if: '$CI_PIPELINE_SOURCE == "trigger"'
+
+docker-image-update:
+  stage: .pre
+  extends:
+    - .rules-default
+  interruptible: true
+  script:
+    - python3 docker/docker-update-image.py
+
+update-facts-db:
+  extends:
+    - .rules-default
+  interruptible: true
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+      when: manual
+      allow_failure: true  # the pipeline continues running even if the manual job is not run
+    - if: '$CI_PIPELINE_SOURCE == "trigger"'
+      when: manual
+      allow_failure: true  # the pipeline continues running even if the manual job is not run
+  script:
+    - |
+      set -eExou pipefail  # Don't tolerate any errors
+      # Work on main branch
+      git config pull.rebase true
+      git config --global user.name "Release Team"
+      git config --global user.email "eng-release-bots-aaaafbmaump5gpag4pbjfuarry@dfinity.slack.com"
+      time git pull --depth 5 --force origin "${CI_DEFAULT_BRANCH}"
+      git checkout --force "${CI_DEFAULT_BRANCH}"
+
+      set +x
+      time python3 ./factsdb/main.py --refresh
+      if [[ -n "$(git status --short factsdb/data)" ]]; then
+        echo "Changed files found";
+        git add factsdb/data
+        git stash
+        git pull --rebase
+        git stash pop
+        git add factsdb/data
+        git status
+        git commit -m"Updated FactsDB"
+        git remote set-url origin "https://token:${GITLAB_PUSH_TOKEN}@${CI_REPOSITORY_URL#*@}"
+        git push origin "${CI_DEFAULT_BRANCH}"
+      fi
