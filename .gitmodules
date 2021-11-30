@@ -1,4 +1,4 @@
 [submodule "ic"]
 	path = ic
-	url = git@gitlab.com:dfinity-lab/core/ic.git
+	url = git@gitlab.com:dfinity-lab/public/ic.git
 	branch = master
