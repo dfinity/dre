@@ -1,5 +1,5 @@
 default:
-  image: registry.gitlab.com/dfinity-lab/core/release-cli/ci-build@sha256:1a2fac4ed26e9cd46be5d0cc365f5d314b002d10095baa04a96d5f96bd661e9d
+  image: registry.gitlab.com/dfinity-lab/core/release-cli/ci-build@sha256:0971a55314907fd4e532f4700a1cf273f7641c843d41a0594e14648f6be71b52
   tags:
     # Use the Dfinity CI runners (they have following tags)
     - dfinity
