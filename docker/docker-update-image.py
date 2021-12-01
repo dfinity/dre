@@ -18,8 +18,8 @@ git_repo = git.Repo(os.path.dirname(__file__), search_parent_directories=True)
 repo_root = pathlib.Path(git_repo.git.rev_parse("--show-toplevel"))
 IMAGE = "registry.gitlab.com/dfinity-lab/core/release-cli/ci-build"
 os.chdir(repo_root)
-# Init colorama
-init(autoreset=True)
+# Init colorama, strip=False forces colors even on non-interactive terminals, such as the CI logs
+init(autoreset=True, strip=False)
 
 
 def ci_config_declared_image_digest():
@@ -35,9 +35,8 @@ def local_image_sha256_unchecked():
     """Return a tuple of the latest image digest and a set of all image digests."""
     digests = subprocess.check_output(["docker", "images", "--digests", "--format", "{{.Digest}}", IMAGE])
     digests = digests.decode("utf8").splitlines()
-    digests = [d for d in digests if d.startswith("sha256:")]
     if len(digests) > 0:
-        return (digests[0], set(digests))
+        return (digests[0], set([d for d in digests if d.startswith("sha256:")]))
     return ("", set())
 
 
@@ -58,6 +57,9 @@ def find_ci_files():
 
 
 def patch_ci_config_image_sha256(target_sha256):
+    if not isinstance(target_sha256, str) or not target_sha256.startswith("sha256:"):
+        _print_red("Refusing to patch the CI config to use invalid image digest %s" % target_sha256)
+        sys.exit(1)
     _print_green("Patching CI config to use image sha256 %s" % target_sha256)
     for f in find_ci_files():
         print("Patching CI config file %s" % f)
@@ -204,6 +206,7 @@ def _print_red(*kwargs):
 
 
 def main():
+    os.environ["TERM"] = "xterm"  # to have colors in the child (pty spawned) processes
     local_sha256, local_sha256_set = local_image_sha256_unchecked()
     ci_target_sha256 = ci_config_declared_image_digest()
     if not ci_target_sha256.startswith("sha256:") or ci_target_sha256 not in local_sha256_set:
