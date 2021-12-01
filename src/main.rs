@@ -56,7 +56,12 @@ async fn main() -> Result<(), anyhow::Error> {
 
 fn init_sqlite_connect() -> SqliteConnection {
     debug!("Initializing the SQLite connection.");
-    let database_url = env_cfg("DATABASE_URL");
+    let home_path = std::env::var("HOME").expect("Getting HOME environment variable failed.");
+    let database_url = env_cfg("DATABASE_URL").replace("~/", format!("{}/", home_path).as_str());
+    let database_url_dirname = std::path::Path::new(&database_url)
+        .parent()
+        .expect("Getting the dirname for the database_url failed.");
+    std::fs::create_dir_all(database_url_dirname).expect("Creating the directory for the database file failed.");
     SqliteConnection::establish(&database_url).unwrap_or_else(|_| panic!("Error connecting to {}", database_url))
 }
 
