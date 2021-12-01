@@ -2,7 +2,7 @@ use crate::schema::subnet_update_nodes;
 use crate::schema::subnet_update_nodes::dsl::*;
 use anyhow::anyhow;
 use diesel::prelude::*;
-use diesel::sqlite::Sqlite;
+// use diesel::sqlite::Sqlite;
 use log::{debug, info};
 
 // FIXME: proposal_add and proposal_remove should be factored out into a
@@ -50,8 +50,8 @@ pub fn subnet_rows_in_progress_get(connection: &SqliteConnection, subnet_id: &st
     let query = subnet_update_nodes.filter(subnet.eq(subnet_id).and(in_progress.eq(true)));
     match query.load::<StateSubnetUpdateNodes>(connection.to_owned()) {
         Ok(result) => {
-            info!("result for subnet_id {}: {:?}", subnet_id, result);
-            println!("{}", diesel::debug_query::<Sqlite, _>(&query));
+            // info!("result for subnet_id {}: {:?}", subnet_id, result);
+            // println!("{}", diesel::debug_query::<Sqlite, _>(&query));
             result
         }
         Err(e) => panic!("Error executing filter query for subnet_id: {}. {}", subnet_id, e),

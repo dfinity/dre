@@ -23,8 +23,6 @@ async fn main() -> Result<(), anyhow::Error> {
     cli_types::load_command_line_config_override(&cli_opts);
     init_logger();
 
-    println!("{:?}", utils::get_proposal_status(31463));
-
     // Start of actually doing stuff with commands.
     match &cli_opts.subcommand {
         SubCommand::SubnetUpdateNodes(nodes) => {
