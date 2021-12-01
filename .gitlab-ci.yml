@@ -138,7 +138,6 @@ docker-image-update:
   extends:
     - .rules-default
   interruptible: true
-  parallel: 50
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       changes:
