@@ -607,25 +607,6 @@ step 0.A.2 "Populate dfx.json" || time (
     git commit --allow-empty -m "Update dfx file at: $dfx_file" "$dfx_file"
 )
 
-step 0.A.3 "Populate versions.json" || time (
-    set_verbosity
-
-    # In the file `dfinity/testnet/env/${NETWORK}/versions.json` contains set the following:
-    # The “binary_revisions” to the hash of the release commit
-    # The “binary_versions” to the PR number of the release commit or the PR corresponding to the deployment branch. E.g.
-    #
-    # 	"binary_versions": {
-    #     "all": "dfinity-ci-build.dfinity.pr-8654"
-    # },
-    # This instructs to fetch binaries from blobules. Using the release commit PR should be preferable, however binaries are periodically GC’ed. In this case the deployment branch PR could be used instead. Note that:
-    # The deployment branch should be based on the release candidate to avoid discrepancy between the binaries of the two branches.
-    # Blobules may take some time to produce the binaries.
-    versions_file="$GIT_ROOT/testnet/env/$NETWORK/versions.json"
-    contents="$(jq --indent 2 '.binary_versions["all"]="dfinity-ci-build.dfinity.pr-\(env.PR)" | .binary_revisions["all"]="\(env.RELEASE_COMMIT)" ' "$versions_file")"
-    echo "$contents" >"$versions_file"
-    git commit --allow-empty -m "Update versions file at: $versions_file" "$versions_file"
-)
-
 step 0.A.4 "Populate canister IDs" || time {
     set_verbosity
     original="$GIT_ROOT/rs/nns/canister_ids.json"
