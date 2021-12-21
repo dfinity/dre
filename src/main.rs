@@ -48,6 +48,11 @@ async fn main() -> Result<(), anyhow::Error> {
             info!("There are no more pending proposals. Exiting...");
             Ok(())
         }
+        SubCommand::DerToPrincipal(dtp) => {
+            let principal = ic_base_types::PrincipalId::new_self_authenticating(&std::fs::read(&dtp.path)?);
+            println!("{}", principal);
+            Ok(())
+        }
         _ => Err(anyhow::anyhow!("Not implemented yet")),
     }
 }
