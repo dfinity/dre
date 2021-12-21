@@ -69,6 +69,13 @@ pub(crate) enum SubCommand {
     SubnetUpdateNodes(SubcmdSubnetUpdateNodes),
     #[clap(version = "1.0")]
     SubnetUpdateNodesRecommended(Subnet),
+    #[clap(version = "1.0")]
+    DerToPrincipal(DerToPrincipal),
+}
+
+#[derive(Clap, Clone)]
+pub struct DerToPrincipal {
+    pub path: String,
 }
 
 #[derive(Clap, Clone)]
