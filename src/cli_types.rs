@@ -183,6 +183,18 @@ impl NodesVec {
         self.0.len()
     }
 
+    pub fn as_string(&self) -> String {
+        format!(
+            "[{}]",
+            self.0
+                .clone()
+                .into_iter()
+                .map(|e| e.id)
+                .collect::<Vec<String>>()
+                .join(", ")
+        )
+    }
+
     pub fn as_string_short(&self) -> String {
         format!(
             "[{}]",
