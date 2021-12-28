@@ -343,9 +343,9 @@ fn proposal_generate_summary(
         plural,
         subnet.id_short,
         step_1_status,
-        nodes_add_vec.as_string_short(),
+        nodes_add_vec.as_string(),
         step_2_status,
-        nodes_remove_vec.as_string_short(),
+        nodes_remove_vec.as_string(),
     )
 }
 

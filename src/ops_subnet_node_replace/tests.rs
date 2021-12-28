@@ -12,8 +12,8 @@ fn proposal_generate_summary_1_node() {
         summary,
         r#"# Replace a node in subnet tdb26.
 
-- Step 1 (this proposal): Add nodes [afx6y]
-- Step 2 (upcoming proposal): Remove nodes [z3tum]
+- Step 1 (this proposal): Add nodes [afx6y-22h67-ct72t-etddn-t2jaz-gfsrz-u3yxw-oocjp-gj3za-de3ot-2ae]
+- Step 2 (upcoming proposal): Remove nodes [z3tum-w7bue-lt6ca-qgynf-us6oq-nc3qc-7miiq-34rbp-ekuoa-g6cqr-wqe]
 "#
     );
 
@@ -23,8 +23,8 @@ fn proposal_generate_summary_1_node() {
         summary,
         r#"# Replace a node in subnet tdb26.
 
-- Step 1 (proposal [123](https://dashboard.internetcomputer.org/proposal/123)): Add nodes [afx6y]
-- Step 2 (this proposal): Remove nodes [z3tum]
+- Step 1 (proposal [123](https://dashboard.internetcomputer.org/proposal/123)): Add nodes [afx6y-22h67-ct72t-etddn-t2jaz-gfsrz-u3yxw-oocjp-gj3za-de3ot-2ae]
+- Step 2 (this proposal): Remove nodes [z3tum-w7bue-lt6ca-qgynf-us6oq-nc3qc-7miiq-34rbp-ekuoa-g6cqr-wqe]
 "#
     );
 }
@@ -43,8 +43,8 @@ fn proposal_generate_summary_2_nodes() {
         summary,
         r#"# Replace nodes in subnet tdb26.
 
-- Step 1 (this proposal): Add nodes [afx6y, dsthq]
-- Step 2 (upcoming proposal): Remove nodes [z3tum, ktrkp]
+- Step 1 (this proposal): Add nodes [afx6y-22h67-ct72t-etddn-t2jaz-gfsrz-u3yxw-oocjp-gj3za-de3ot-2ae, dsthq-itfw5-zkibk-chtl5-u7afl-xvxva-7swke-tvqif-vq3t2-wvp7x-mae]
+- Step 2 (upcoming proposal): Remove nodes [z3tum-w7bue-lt6ca-qgynf-us6oq-nc3qc-7miiq-34rbp-ekuoa-g6cqr-wqe, ktrkp-ccur6-nvpyb-sokhh-exg7x-pfuds-4jxmw-n2r5m-vj5yt-aqzc4-vae]
 "#
     );
 
@@ -54,8 +54,8 @@ fn proposal_generate_summary_2_nodes() {
         summary,
         r#"# Replace nodes in subnet tdb26.
 
-- Step 1 (proposal [123](https://dashboard.internetcomputer.org/proposal/123)): Add nodes [afx6y, dsthq]
-- Step 2 (this proposal): Remove nodes [z3tum, ktrkp]
+- Step 1 (proposal [123](https://dashboard.internetcomputer.org/proposal/123)): Add nodes [afx6y-22h67-ct72t-etddn-t2jaz-gfsrz-u3yxw-oocjp-gj3za-de3ot-2ae, dsthq-itfw5-zkibk-chtl5-u7afl-xvxva-7swke-tvqif-vq3t2-wvp7x-mae]
+- Step 2 (this proposal): Remove nodes [z3tum-w7bue-lt6ca-qgynf-us6oq-nc3qc-7miiq-34rbp-ekuoa-g6cqr-wqe, ktrkp-ccur6-nvpyb-sokhh-exg7x-pfuds-4jxmw-n2r5m-vj5yt-aqzc4-vae]
 "#
     );
 }
