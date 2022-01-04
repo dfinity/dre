@@ -1,13 +1,12 @@
 #[macro_use]
 extern crate diesel;
-use clap::Clap;
-use cli_types::{Opts, SubCommand};
+use clap::Parser;
 use diesel::prelude::*;
 use dotenv::dotenv;
 use log::{debug, info};
 use utils::env_cfg;
 mod autoops_types;
-mod cli_types;
+mod cli;
 mod model_proposals;
 mod model_subnet_update_nodes;
 mod ops_subnet_node_replace;
@@ -19,14 +18,14 @@ async fn main() -> Result<(), anyhow::Error> {
     init_env();
 
     let db_connection = init_sqlite_connect();
-    let cli_opts = Opts::parse();
-    cli_types::load_command_line_config_override(&cli_opts);
+    let cli_opts = cli::Opts::parse();
+    cli::load_command_line_config_override(&cli_opts);
     init_logger();
 
     // Start of actually doing stuff with commands.
     match &cli_opts.subcommand {
-        SubCommand::SubnetUpdateNodes(nodes) => {
-            match ops_subnet_node_replace::subnet_nodes_replace(&db_connection, nodes) {
+        cli::Commands::SubnetReplaceNodes { subnet, add, remove } => {
+            match ops_subnet_node_replace::subnet_nodes_replace(&db_connection, subnet, add.clone(), remove.clone()) {
                 Ok(stdout) => {
                     println!("{}", stdout);
                     Ok(())
@@ -36,7 +35,7 @@ async fn main() -> Result<(), anyhow::Error> {
             loop {
                 let pending = ops_subnet_node_replace::check_and_submit_proposals_subnet_add_nodes(
                     &db_connection,
-                    &nodes.subnet,
+                    &subnet.to_string(),
                 )?;
                 if pending {
                     info!("There are pending proposals. Waiting 10 seconds");
@@ -48,12 +47,12 @@ async fn main() -> Result<(), anyhow::Error> {
             info!("There are no more pending proposals. Exiting...");
             Ok(())
         }
-        SubCommand::DerToPrincipal(dtp) => {
-            let principal = ic_base_types::PrincipalId::new_self_authenticating(&std::fs::read(&dtp.path)?);
+
+        cli::Commands::DerToPrincipal { path } => {
+            let principal = ic_base_types::PrincipalId::new_self_authenticating(&std::fs::read(path)?);
             println!("{}", principal);
             Ok(())
         }
-        _ => Err(anyhow::anyhow!("Not implemented yet")),
     }
 }
 

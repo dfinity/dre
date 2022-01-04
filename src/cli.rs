@@ -1,11 +1,10 @@
-use clap::{AppSettings, Clap};
+use clap::{Parser, Subcommand};
 use log::debug;
 use std::env;
 use std::str::FromStr;
 
-#[derive(Clap, Clone)]
-#[clap(version = "0.1")]
-#[clap(setting = AppSettings::ColoredHelp)]
+#[derive(Parser, Clone)]
+#[clap(about, version, author)]
 pub struct Opts {
     #[clap(short = 'p', long)]
     pub(crate) hsm_pin: Option<String>,
@@ -25,8 +24,9 @@ pub struct Opts {
     pub(crate) dryrun: bool,
     #[clap(long)]
     pub(crate) verbose: bool,
+
     #[clap(subcommand)]
-    pub(crate) subcommand: SubCommand,
+    pub(crate) subcommand: Commands,
 }
 
 pub fn load_command_line_config_override(opts: &Opts) {
@@ -63,37 +63,23 @@ pub fn load_command_line_config_override(opts: &Opts) {
     }
 }
 
-#[derive(Clap, Clone)]
-pub(crate) enum SubCommand {
-    #[clap(version = "1.0")]
-    SubnetUpdateNodes(SubcmdSubnetUpdateNodes),
-    #[clap(version = "1.0")]
-    SubnetUpdateNodesRecommended(Subnet),
-    #[clap(version = "1.0")]
-    DerToPrincipal(DerToPrincipal),
+#[derive(Subcommand, Clone)]
+pub(crate) enum Commands {
+    SubnetReplaceNodes {
+        #[clap(short, long)]
+        subnet: String,
+        #[clap(short = 'a', long = "add")]
+        add: Option<String>,
+        #[clap(short = 'r', long = "remove")]
+        remove: Option<String>,
+    },
+    DerToPrincipal {
+        /// Path to the DER file
+        path: String,
+    },
 }
 
-#[derive(Clap, Clone)]
-pub struct DerToPrincipal {
-    pub path: String,
-}
-
-#[derive(Clap, Clone)]
-pub struct SubcmdSubnetUpdateNodes {
-    #[clap(short, long)]
-    pub(crate) subnet: String,
-    #[clap(short = 'a', long = "add")]
-    pub(crate) nodes_to_add: Option<String>,
-    #[clap(short = 'r', long = "remove")]
-    pub(crate) nodes_to_remove: Option<String>,
-}
-
-#[derive(Clap, Clone)]
-struct UpdateNodesRecommended {
-    subnet: Subnet,
-}
-
-#[derive(Clap, Clone)]
+#[derive(Clone)]
 pub struct Subnet {
     pub(crate) id: String,
     pub id_short: String,
@@ -120,7 +106,7 @@ impl std::fmt::Display for Subnet {
     }
 }
 
-#[derive(Clap, Clone, Debug)]
+#[derive(Clone, Debug)]
 pub struct Node {
     pub id: String,
     pub id_short: String,
