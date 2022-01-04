@@ -1,4 +1,4 @@
-use crate::cli_types::{NodesVec, SubcmdSubnetUpdateNodes, Subnet};
+use crate::cli::{NodesVec, Subnet};
 use anyhow::anyhow;
 use colored::Colorize;
 use diesel::prelude::SqliteConnection;
@@ -168,20 +168,22 @@ fn proposal_delete_create(
 
 pub fn subnet_nodes_replace(
     db_connection: &SqliteConnection,
-    nodes: &SubcmdSubnetUpdateNodes,
+    subnet: &String,
+    nodes_to_add: Option<String>,
+    nodes_to_remove: Option<String>,
 ) -> Result<String, anyhow::Error> {
     debug!(
         "subnet_update_nodes {} nodes: add {:?} remove {:?}",
-        nodes.subnet, nodes.nodes_to_add, nodes.nodes_to_remove
+        subnet, nodes_to_add, nodes_to_remove
     );
 
-    check_and_submit_proposals_subnet_add_nodes(db_connection, &nodes.subnet)?;
-    println!("Proposing to update nodes on subnet: {}", nodes.subnet.blue());
+    check_and_submit_proposals_subnet_add_nodes(db_connection, &subnet)?;
+    println!("Proposing to update nodes on subnet: {}", subnet.blue());
 
-    match (&nodes.nodes_to_add, &nodes.nodes_to_remove) {
+    match (nodes_to_add, nodes_to_remove) {
         (Some(nodes_to_add), Some(nodes_to_remove)) => {
-            for row in model_subnet_update_nodes::subnet_rows_get(db_connection, &nodes.subnet) {
-                if row.nodes_to_add == nodes.nodes_to_add && row.nodes_to_remove == nodes.nodes_to_remove {
+            for row in model_subnet_update_nodes::subnet_rows_get(db_connection, &subnet) {
+                if row.nodes_to_add == nodes_to_add.into() && row.nodes_to_remove == nodes_to_remove.into() {
                     let proposal_add = proposal_check_if_completed(db_connection, row.proposal_add_id)?;
                     let proposal_remove = proposal_check_if_completed(db_connection, row.proposal_remove_id)?;
                     if let (Some(proposal_add), Some(proposal_remove)) = (&proposal_add, &proposal_remove) {
@@ -190,7 +192,7 @@ pub fn subnet_nodes_replace(
                         let remove_finished = proposal_remove.executed_timestamp_seconds > 0
                             || proposal_remove.failed_timestamp_seconds > 0;
                         if add_finished && remove_finished {
-                            info!("Both add and remove finished on subnet {}", nodes.subnet);
+                            info!("Both add and remove finished on subnet {}", subnet);
                             return Ok("Nothing to do.".to_owned());
                         }
                     }
@@ -204,8 +206,8 @@ pub fn subnet_nodes_replace(
                 }
             }
 
-            let nodes_add_vec = NodesVec::from_str(nodes_to_add).expect("parsing nodes_vec failed");
-            let nodes_rm_vec = NodesVec::from_str(nodes_to_remove).expect("parsing nodes_vec failed");
+            let nodes_add_vec = NodesVec::from_str(&nodes_to_add).expect("parsing nodes_vec failed");
+            let nodes_rm_vec = NodesVec::from_str(&nodes_to_remove).expect("parsing nodes_vec failed");
             println!(
                 "{} {}",
                 "Nodes to add:".green(),
@@ -213,20 +215,20 @@ pub fn subnet_nodes_replace(
             );
             println!("{} {}", "Nodes to remove:".red(), nodes_rm_vec.as_string_short().red());
 
-            let proposal_title = proposal_generate_title(&nodes.subnet, nodes_to_add, nodes_to_remove, 0);
-            let proposal_summary = proposal_generate_summary(&nodes.subnet, nodes_to_add, nodes_to_remove, 0);
-            propose_add_nodes_to_subnet(&nodes.subnet, nodes_to_add, false, &proposal_title, &proposal_summary)?;
+            let proposal_title = proposal_generate_title(&subnet, &nodes_to_add, &nodes_to_remove, 0);
+            let proposal_summary = proposal_generate_summary(&subnet, &nodes_to_add, &nodes_to_remove, 0);
+            propose_add_nodes_to_subnet(&subnet, &nodes_to_add, false, &proposal_title, &proposal_summary)?;
 
-            let proposal_title = proposal_generate_title(&nodes.subnet, nodes_to_add, nodes_to_remove, 1);
-            let proposal_summary = proposal_generate_summary(&nodes.subnet, nodes_to_add, nodes_to_remove, 1);
-            propose_remove_nodes_from_subnet(nodes_to_remove, false, &proposal_title, &proposal_summary)?;
+            let proposal_title = proposal_generate_title(&subnet, &nodes_to_add, &nodes_to_remove, 1);
+            let proposal_summary = proposal_generate_summary(&subnet, &nodes_to_add, &nodes_to_remove, 1);
+            propose_remove_nodes_from_subnet(&nodes_to_remove, false, &proposal_title, &proposal_summary)?;
 
             // Success, user confirmed both operations
             model_subnet_update_nodes::subnet_nodes_to_replace_set(
                 db_connection,
-                &nodes.subnet,
-                nodes_to_add,
-                nodes_to_remove,
+                &subnet,
+                &nodes_to_add,
+                &nodes_to_remove,
             )?;
 
             Ok("All done".to_string())
