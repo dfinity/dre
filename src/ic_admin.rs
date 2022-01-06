@@ -52,19 +52,21 @@ impl Cli {
         let ic_admin_args = [root_options.as_slice(), &[command.to_string()], args].concat();
 
         let ic_admin_path = self.ic_admin.as_ref().unwrap();
-        fn print_ic_admin_command_line(ic_admin_path: &String, ic_admin_args: &[String]) {
+        fn print_ic_admin_command_line(cmd: &Command) {
             println!(
                 "$ {} {}",
-                ic_admin_path.yellow(),
-                shlex::join(ic_admin_args.iter().map(|s| s.as_str()).collect::<Vec<&str>>()).yellow()
+                cmd.get_program().to_str().unwrap().yellow(),
+                shlex::join(cmd.get_args().map(|s| s.to_str().unwrap()).collect::<Vec<_>>()).yellow()
             );
         }
 
+        let mut cmd = Command::new(ic_admin_path);
+        let cmd = cmd.args(ic_admin_args);
         if !self.dry_run {
             info!("Running the ic-admin command");
-            print_ic_admin_command_line(ic_admin_path, &ic_admin_args);
+            print_ic_admin_command_line(&cmd);
 
-            let output = Command::new(ic_admin_path).args(ic_admin_args).output()?;
+            let output = cmd.output()?;
             let stdout = String::from_utf8_lossy(output.stdout.as_ref()).to_string();
             debug!("STDOUT:\n{}", stdout);
             if !output.stderr.is_empty() {
@@ -76,7 +78,7 @@ impl Cli {
             println!("Please confirm enqueueing the following ic-admin command");
             // Show the user the line that would be executed and let them decide if they
             // want to proceed.
-            print_ic_admin_command_line(ic_admin_path, &ic_admin_args);
+            print_ic_admin_command_line(&cmd);
 
             let buffer = input("Would you like to proceed [y/N]? ");
             if let "Y" | "YES" = buffer.to_uppercase().as_str() {
