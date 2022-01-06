@@ -1,66 +1,30 @@
 use clap::{Parser, Subcommand};
-use log::debug;
-use std::env;
 use std::str::FromStr;
 
 #[derive(Parser, Clone)]
 #[clap(about, version, author)]
 pub struct Opts {
-    #[clap(short = 'p', long)]
+    #[clap(short = 'p', long, env)]
     pub(crate) hsm_pin: Option<String>,
-    #[clap(short = 's', long)]
+    #[clap(short = 's', long, env)]
     pub(crate) hsm_slot: Option<String>,
-    #[clap(short, long)]
+    #[clap(short, long, env)]
     pub(crate) hsm_key_id: Option<String>,
-    #[clap(short, long)]
+    #[clap(short, long, env)]
     pub(crate) neuron_id: Option<String>,
-    #[clap(short, long)]
+    #[clap(short, long, env)]
     pub(crate) ic_admin: Option<String>,
-    #[clap(short, long)]
+    #[clap(short, long, env)]
     pub(crate) backend_url: Option<String>,
-    #[clap(long)]
+    #[clap(long, env)]
     pub(crate) nns_url: Option<String>,
-    #[clap(short, long)]
-    pub(crate) dryrun: bool,
-    #[clap(long)]
+    #[clap(short, long, env)]
+    pub(crate) dry_run: bool,
+    #[clap(long, env)]
     pub(crate) verbose: bool,
 
     #[clap(subcommand)]
     pub(crate) subcommand: Commands,
-}
-
-pub fn load_command_line_config_override(opts: &Opts) {
-    if let Some(v) = &opts.hsm_pin {
-        env::set_var("hsm_pin", v);
-        debug!("override hsm_pin setting with {}", v);
-    }
-    if let Some(v) = &opts.hsm_slot {
-        env::set_var("hsm_slot", v);
-        debug!("override hsm_slot setting with {}", v);
-    }
-    if let Some(v) = &opts.hsm_key_id {
-        env::set_var("hsm_key_id", v);
-        debug!("override hsm_key_id setting with {}", v);
-    }
-    if let Some(v) = &opts.neuron_id {
-        env::set_var("neuron_id", v);
-        debug!("override neuron_id setting with {}", v);
-    }
-    if let Some(v) = &opts.ic_admin {
-        env::set_var("IC_ADMIN", v);
-        debug!("override IC_ADMIN setting with {}", v);
-    }
-    if let Some(v) = &opts.backend_url {
-        env::set_var("backend_url", v);
-        debug!("override backend_url setting with {}", v);
-    }
-    if let Some(v) = &opts.nns_url {
-        env::set_var("nns_url", v);
-        debug!("override nns_url setting with {}", v);
-    }
-    if opts.verbose {
-        std::env::set_var("LOG_LEVEL", "debug");
-    }
 }
 
 #[derive(Subcommand, Clone)]
@@ -191,9 +155,5 @@ impl NodesVec {
                 .collect::<Vec<String>>()
                 .join(", ")
         )
-    }
-
-    pub fn as_vec_string(&self) -> Vec<String> {
-        self.0.clone().into_iter().map(|e| e.id).collect::<Vec<String>>()
     }
 }

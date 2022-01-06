@@ -22,4 +22,7 @@ table! {
     }
 }
 
-allow_tables_to_appear_in_same_query!(proposals, subnet_update_nodes,);
+allow_tables_to_appear_in_same_query!(
+    proposals,
+    subnet_update_nodes,
+);

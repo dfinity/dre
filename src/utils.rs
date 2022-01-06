@@ -1,14 +1,10 @@
-use anyhow::anyhow;
 use candid::Decode;
-use colored::Colorize;
 use futures::executor::block_on;
 use ic_agent::Agent;
 use ic_nns_governance::pb::v1::ProposalInfo;
-use log::{debug, info, warn};
-use python_input::input;
+use log::debug;
 
 use std::env;
-use std::process::Command;
 
 /// Return the configuration value from the environment.
 pub fn env_cfg(key: &str) -> String {
@@ -90,55 +86,6 @@ pub fn get_proposal_status(proposal_id: u64) -> Result<ProposalStatus, anyhow::E
             Some(failure_reason) => format!("{:?}", failure_reason),
         },
     })
-}
-
-pub(crate) fn ic_admin_run(args: &[String], confirmed: bool) -> Result<String, anyhow::Error> {
-    let args_basic = vec![
-        "--use-hsm".to_string(),
-        "--slot".to_string(),
-        env_cfg("hsm_slot"),
-        "--key-id".to_string(),
-        env_cfg("hsm_key_id"),
-        "--pin".to_string(),
-        env_cfg("hsm_pin"),
-        "--nns-url".to_string(),
-        env_cfg("nns_url"),
-    ];
-
-    let ic_admin_args = [args_basic, args.to_owned()].concat();
-
-    fn print_ic_admin_command_line(ic_admin_args: &[String]) {
-        println!(
-            "$ {} {}",
-            env_cfg("IC_ADMIN").yellow(),
-            shlex::join(ic_admin_args.iter().map(|s| s.as_str()).collect::<Vec<&str>>()).yellow()
-        );
-    }
-
-    if confirmed {
-        info!("Running the ic-admin command");
-        print_ic_admin_command_line(&ic_admin_args);
-
-        let output = Command::new(env_cfg("IC_ADMIN")).args(ic_admin_args).output()?;
-        let stdout = String::from_utf8_lossy(output.stdout.as_ref()).to_string();
-        debug!("STDOUT:\n{}", stdout);
-        if !output.stderr.is_empty() {
-            let stderr = String::from_utf8_lossy(output.stderr.as_ref()).to_string();
-            warn!("STDERR:\n{}", stderr);
-        }
-        Ok(stdout)
-    } else {
-        println!("Please confirm enqueueing the following ic-admin command");
-        // Show the user the line that would be executed and let them decide if they
-        // want to proceed.
-        print_ic_admin_command_line(&ic_admin_args);
-
-        let buffer = input("Would you like to proceed [y/N]? ");
-        match buffer.to_uppercase().as_str() {
-            "Y" | "YES" => Ok("User confirmed".to_string()),
-            _ => Err(anyhow!("Cancelling operation, user entered '{}'", buffer.as_str(),)),
-        }
-    }
 }
 
 #[cfg(test)]

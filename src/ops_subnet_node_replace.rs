@@ -1,13 +1,15 @@
 use crate::cli::{NodesVec, Subnet};
+use crate::ic_admin;
 use anyhow::anyhow;
 use colored::Colorize;
 use diesel::prelude::SqliteConnection;
+use ic_base_types::PrincipalId;
 use log::{debug, info};
 use regex::Regex;
 
 use crate::model_proposals;
 use crate::model_subnet_update_nodes;
-use crate::utils::{self, env_cfg};
+use crate::utils;
 use std::str::FromStr;
 
 fn proposal_check_if_completed(
@@ -39,6 +41,7 @@ fn proposal_check_if_completed(
 }
 
 pub fn check_and_submit_proposals_subnet_add_nodes(
+    ica: &ic_admin::Cli,
     db_connection: &SqliteConnection,
     subnet_id: &str,
 ) -> Result<bool, anyhow::Error> {
@@ -67,12 +70,18 @@ pub fn check_and_submit_proposals_subnet_add_nodes(
                         let proposal_summary = proposal_generate_summary(subnet_id, nodes_to_add, nodes_to_remove, 0);
                         let proposal_title = proposal_generate_title(subnet_id, nodes_to_add, nodes_to_remove, 0);
 
-                        let ic_admin_stdout = propose_add_nodes_to_subnet(
-                            subnet_id,
-                            nodes_to_add,
-                            true,
-                            &proposal_title,
-                            &proposal_summary,
+                        let ic_admin_stdout = ica.propose_run(
+                            ic_admin::ProposeCommand::AddNodesToSubnet {
+                                subnet_id: PrincipalId::from_str(subnet_id).unwrap(),
+                                nodes: nodes_to_add
+                                    .split(",")
+                                    .map(|n| PrincipalId::from_str(n).unwrap())
+                                    .collect::<Vec<_>>(),
+                            },
+                            ic_admin::ProposeOptions {
+                                summary: proposal_summary.clone().into(),
+                                title: proposal_title.clone().into(),
+                            },
                         )?;
                         info!("Proposal submitted successfully: {}", ic_admin_stdout);
                         let proposal_id = parse_proposal_id_from_ic_admin_stdout(ic_admin_stdout.as_str())?;
@@ -101,6 +110,7 @@ pub fn check_and_submit_proposals_subnet_add_nodes(
                                 let proposal = utils::get_proposal_status(add_proposal_id as u64)?;
                                 if proposal.executed_timestamp_seconds > 0 {
                                     proposal_delete_create(
+                                        ica,
                                         db_connection,
                                         add_proposal_id,
                                         subnet_id,
@@ -114,6 +124,7 @@ pub fn check_and_submit_proposals_subnet_add_nodes(
                             if let Some(proposal) = proposal {
                                 if proposal.executed_timestamp_seconds > 0 {
                                     proposal_delete_create(
+                                        ica,
                                         db_connection,
                                         add_proposal_id,
                                         subnet_id,
@@ -134,6 +145,7 @@ pub fn check_and_submit_proposals_subnet_add_nodes(
 }
 
 fn proposal_delete_create(
+    ica: &ic_admin::Cli,
     db_connection: &SqliteConnection,
     add_proposal_id: u64,
     subnet_id: &str,
@@ -147,7 +159,18 @@ fn proposal_delete_create(
     let proposal_title = proposal_generate_title(subnet_id, nodes_to_add, nodes_to_remove, add_proposal_id);
     let proposal_summary = proposal_generate_summary(subnet_id, nodes_to_add, nodes_to_remove, add_proposal_id);
 
-    let ic_admin_stdout = propose_remove_nodes_from_subnet(nodes_to_remove, true, &proposal_title, &proposal_summary)?;
+    let ic_admin_stdout = ica.propose_run(
+        ic_admin::ProposeCommand::RemoveNodesFromSubnet {
+            nodes: nodes_to_remove
+                .split(",")
+                .map(|n| PrincipalId::from_str(n).unwrap())
+                .collect::<Vec<_>>(),
+        },
+        ic_admin::ProposeOptions {
+            summary: proposal_summary.clone().into(),
+            title: proposal_title.clone().into(),
+        },
+    )?;
     info!("Proposal submitted successfully: {}", ic_admin_stdout);
     let proposal_id = parse_proposal_id_from_ic_admin_stdout(ic_admin_stdout.as_str())?;
     model_proposals::proposal_add(
@@ -167,6 +190,7 @@ fn proposal_delete_create(
 }
 
 pub fn subnet_nodes_replace(
+    ica: &ic_admin::Cli,
     db_connection: &SqliteConnection,
     subnet: &String,
     nodes_to_add: Option<String>,
@@ -177,7 +201,7 @@ pub fn subnet_nodes_replace(
         subnet, nodes_to_add, nodes_to_remove
     );
 
-    check_and_submit_proposals_subnet_add_nodes(db_connection, &subnet)?;
+    check_and_submit_proposals_subnet_add_nodes(ica, db_connection, &subnet)?;
     println!("Proposing to update nodes on subnet: {}", subnet.blue());
 
     match (nodes_to_add, nodes_to_remove) {
@@ -217,11 +241,34 @@ pub fn subnet_nodes_replace(
 
             let proposal_title = proposal_generate_title(&subnet, &nodes_to_add, &nodes_to_remove, 0);
             let proposal_summary = proposal_generate_summary(&subnet, &nodes_to_add, &nodes_to_remove, 0);
-            propose_add_nodes_to_subnet(&subnet, &nodes_to_add, false, &proposal_title, &proposal_summary)?;
+            ica.dry_run().propose_run(
+                ic_admin::ProposeCommand::AddNodesToSubnet {
+                    subnet_id: PrincipalId::from_str(subnet).unwrap(),
+                    nodes: nodes_to_add
+                        .split(",")
+                        .map(|n| PrincipalId::from_str(n).unwrap())
+                        .collect::<Vec<_>>(),
+                },
+                ic_admin::ProposeOptions {
+                    summary: proposal_summary.into(),
+                    title: proposal_title.into(),
+                },
+            )?;
 
             let proposal_title = proposal_generate_title(&subnet, &nodes_to_add, &nodes_to_remove, 1);
             let proposal_summary = proposal_generate_summary(&subnet, &nodes_to_add, &nodes_to_remove, 1);
-            propose_remove_nodes_from_subnet(&nodes_to_remove, false, &proposal_title, &proposal_summary)?;
+            ica.dry_run().propose_run(
+                ic_admin::ProposeCommand::RemoveNodesFromSubnet {
+                    nodes: nodes_to_remove
+                        .split(",")
+                        .map(|n| PrincipalId::from_str(n).unwrap())
+                        .collect::<Vec<_>>(),
+                },
+                ic_admin::ProposeOptions {
+                    summary: proposal_summary.into(),
+                    title: proposal_title.into(),
+                },
+            )?;
 
             // Success, user confirmed both operations
             model_subnet_update_nodes::subnet_nodes_to_replace_set(
@@ -249,60 +296,6 @@ fn parse_proposal_id_from_ic_admin_stdout(text: &str) -> Result<u64, anyhow::Err
             text,
         ))
     }
-}
-
-pub fn propose_add_nodes_to_subnet(
-    subnet_id: &str,
-    nodes_to_add: &str,
-    real_run: bool,
-    proposal_title: &str,
-    proposal_summary: &str,
-) -> Result<String, anyhow::Error> {
-    let subnet: Subnet = Subnet::from_str(subnet_id)?;
-    let nodes_vec = NodesVec::from_str(nodes_to_add).expect("parsing nodes_vec failed");
-
-    let ic_admin_args = [
-        vec![
-            "propose-to-add-nodes-to-subnet".to_string(),
-            "--subnet".to_string(),
-            subnet.id,
-            "--proposer".to_string(),
-            env_cfg("neuron_id"),
-            "--proposal-title".to_string(),
-            proposal_title.to_string(),
-            "--summary".to_string(),
-            proposal_summary.to_string(),
-        ],
-        nodes_vec.as_vec_string(),
-    ]
-    .concat();
-
-    utils::ic_admin_run(&ic_admin_args, real_run)
-}
-
-pub fn propose_remove_nodes_from_subnet(
-    nodes_to_remove: &str,
-    real_run: bool,
-    proposal_title: &str,
-    proposal_summary: &str,
-) -> Result<String, anyhow::Error> {
-    let nodes_vec = NodesVec::from_str(nodes_to_remove).expect("parsing nodes_vec failed");
-
-    let ic_admin_args = [
-        vec![
-            "propose-to-remove-nodes-from-subnet".to_string(),
-            "--proposer".to_string(),
-            env_cfg("neuron_id"),
-            "--proposal-title".to_string(),
-            proposal_title.to_string(),
-            "--summary".to_string(),
-            proposal_summary.to_string(),
-        ],
-        nodes_vec.as_vec_string(),
-    ]
-    .concat();
-
-    utils::ic_admin_run(&ic_admin_args, real_run)
 }
 
 fn proposal_generate_summary(
