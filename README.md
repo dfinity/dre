@@ -41,15 +41,15 @@ cargo check
 
 Make sure to initialize the database before you run the
 ```
-( cd "$(git rev-parse --show-toplevel)"; diesel --database-url $(. .env; echo $DATABASE_URL) setup )
+( cd "$(git rev-parse --show-toplevel)"; diesel --database-url $(source .env; echo $DATABASE_URL) setup )
 ```
 
 ```
-( cd "$(git rev-parse --show-toplevel)"; diesel --database-url $(. .env; echo $DATABASE_URL) migration run )
+( cd "$(git rev-parse --show-toplevel)"; diesel --database-url $(source .env; echo $DATABASE_URL) migration run )
 ```
 
 # Flush and recreate the database
 
 ```
-( cd "$(git rev-parse --show-toplevel)"; diesel --database-url $(. .env; echo $DATABASE_URL) database reset )
+( cd "$(git rev-parse --show-toplevel)"; diesel --database-url $(source .env; echo $DATABASE_URL) database reset )
 ```
