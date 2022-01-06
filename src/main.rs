@@ -7,6 +7,7 @@ use log::{debug, info};
 use utils::env_cfg;
 mod autoops_types;
 mod cli;
+mod ic_admin;
 mod model_proposals;
 mod model_subnet_update_nodes;
 mod ops_subnet_node_replace;
@@ -19,13 +20,19 @@ async fn main() -> Result<(), anyhow::Error> {
 
     let db_connection = init_sqlite_connect();
     let cli_opts = cli::Opts::parse();
-    cli::load_command_line_config_override(&cli_opts);
     init_logger();
 
     // Start of actually doing stuff with commands.
     match &cli_opts.subcommand {
         cli::Commands::SubnetReplaceNodes { subnet, add, remove } => {
-            match ops_subnet_node_replace::subnet_nodes_replace(&db_connection, subnet, add.clone(), remove.clone()) {
+            let ica = ic_admin::Cli::from(&cli_opts);
+            match ops_subnet_node_replace::subnet_nodes_replace(
+                &ica,
+                &db_connection,
+                subnet,
+                add.clone(),
+                remove.clone(),
+            ) {
                 Ok(stdout) => {
                     println!("{}", stdout);
                     Ok(())
@@ -34,6 +41,7 @@ async fn main() -> Result<(), anyhow::Error> {
             }?;
             loop {
                 let pending = ops_subnet_node_replace::check_and_submit_proposals_subnet_add_nodes(
+                    &ica,
                     &db_connection,
                     &subnet.to_string(),
                 )?;
