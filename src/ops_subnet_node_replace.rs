@@ -41,7 +41,7 @@ fn proposal_check_if_completed(
 }
 
 pub fn check_and_submit_proposals_subnet_add_nodes(
-    ica: &ic_admin::Cli,
+    ica: &ic_admin::CliDeprecated,
     db_connection: &SqliteConnection,
     subnet_id: &str,
 ) -> Result<bool, anyhow::Error> {
@@ -145,7 +145,7 @@ pub fn check_and_submit_proposals_subnet_add_nodes(
 }
 
 fn proposal_delete_create(
-    ica: &ic_admin::Cli,
+    ica: &ic_admin::CliDeprecated,
     db_connection: &SqliteConnection,
     add_proposal_id: u64,
     subnet_id: &str,
@@ -190,7 +190,7 @@ fn proposal_delete_create(
 }
 
 pub fn subnet_nodes_replace(
-    ica: &ic_admin::Cli,
+    ica: &ic_admin::CliDeprecated,
     db_connection: &SqliteConnection,
     subnet: &String,
     nodes_to_add: Option<String>,

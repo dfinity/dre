@@ -9,7 +9,7 @@ use strum::Display;
 use crate::cli::Opts;
 
 #[derive(Clone)]
-pub struct Cli {
+pub struct CliDeprecated {
     ic_admin: Option<String>,
     nns_url: Option<String>,
     dry_run: bool,
@@ -20,7 +20,7 @@ pub struct Cli {
     neuron_id: Option<String>,
 }
 
-impl Cli {
+impl CliDeprecated {
     pub fn dry_run(&self) -> Self {
         Self {
             dry_run: true,
@@ -144,9 +144,9 @@ pub struct ProposeOptions {
     pub summary: Option<String>,
 }
 
-impl From<&Opts> for Cli {
+impl From<&Opts> for CliDeprecated {
     fn from(opts: &Opts) -> Self {
-        Cli {
+        CliDeprecated {
             hsm_pin: opts.hsm_pin.clone(),
             hsm_slot: opts.hsm_slot.clone(),
             hsm_key_id: opts.hsm_key_id.clone(),
