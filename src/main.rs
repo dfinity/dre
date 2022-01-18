@@ -25,7 +25,7 @@ async fn main() -> Result<(), anyhow::Error> {
     // Start of actually doing stuff with commands.
     match &cli_opts.subcommand {
         cli::Commands::SubnetReplaceNodes { subnet, add, remove } => {
-            let ica = ic_admin::Cli::from(&cli_opts);
+            let ica = ic_admin::CliDeprecated::from(&cli_opts);
             match ops_subnet_node_replace::subnet_nodes_replace(
                 &ica,
                 &db_connection,
