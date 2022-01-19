@@ -3,6 +3,7 @@ extern crate diesel;
 use clap::Parser;
 use diesel::prelude::*;
 use dotenv::dotenv;
+use ic_base_types::PrincipalId;
 use log::{debug, info};
 use utils::env_cfg;
 mod autoops_types;
@@ -22,45 +23,79 @@ async fn main() -> Result<(), anyhow::Error> {
     let cli_opts = cli::Opts::parse();
     init_logger();
 
-    // Start of actually doing stuff with commands.
-    match &cli_opts.subcommand {
-        cli::Commands::SubnetReplaceNodes { subnet, add, remove } => {
-            let ica = ic_admin::CliDeprecated::from(&cli_opts);
-            match ops_subnet_node_replace::subnet_nodes_replace(
-                &ica,
-                &db_connection,
-                subnet,
-                add.clone(),
-                remove.clone(),
-            ) {
-                Ok(stdout) => {
-                    println!("{}", stdout);
-                    Ok(())
-                }
-                Err(err) => Err(err),
-            }?;
-            loop {
-                let pending = ops_subnet_node_replace::check_and_submit_proposals_subnet_add_nodes(
+    ic_admin::with_ic_admin(Default::default(), || {
+        let runner = Runner {
+            ic_admin: ic_admin::Cli::from(&cli_opts),
+        };
+
+        // Start of actually doing stuff with commands.
+        match &cli_opts.subcommand {
+            cli::Commands::SubnetReplaceNodes { subnet, add, remove } => {
+                let ica = ic_admin::CliDeprecated::from(&cli_opts);
+                match ops_subnet_node_replace::subnet_nodes_replace(
                     &ica,
                     &db_connection,
-                    &subnet.to_string(),
-                )?;
-                if pending {
-                    info!("There are pending proposals. Waiting 10 seconds");
-                    std::thread::sleep(std::time::Duration::from_secs(10));
-                } else {
-                    break;
+                    subnet,
+                    add.clone(),
+                    remove.clone(),
+                ) {
+                    Ok(stdout) => {
+                        println!("{}", stdout);
+                        Ok(())
+                    }
+                    Err(err) => Err(err),
+                }?;
+                loop {
+                    let pending = ops_subnet_node_replace::check_and_submit_proposals_subnet_add_nodes(
+                        &ica,
+                        &db_connection,
+                        &subnet.to_string(),
+                    )?;
+                    if pending {
+                        info!("There are pending proposals. Waiting 10 seconds");
+                        std::thread::sleep(std::time::Duration::from_secs(10));
+                    } else {
+                        break;
+                    }
                 }
+                info!("There are no more pending proposals. Exiting...");
+                Ok(())
             }
-            info!("There are no more pending proposals. Exiting...");
-            Ok(())
-        }
 
-        cli::Commands::DerToPrincipal { path } => {
-            let principal = ic_base_types::PrincipalId::new_self_authenticating(&std::fs::read(path)?);
-            println!("{}", principal);
-            Ok(())
+            cli::Commands::DerToPrincipal { path } => {
+                let principal = ic_base_types::PrincipalId::new_self_authenticating(&std::fs::read(path)?);
+                println!("{}", principal);
+                Ok(())
+            }
+            cli::Commands::Subnet(subnet) => match &subnet.subcommand {
+                cli::subnet::Commands::Deploy { version } => runner.deploy(&subnet.id, version),
+            },
         }
+    })
+}
+
+pub struct Runner {
+    ic_admin: ic_admin::Cli,
+}
+
+impl Runner {
+    fn deploy(&self, subnet: &PrincipalId, version: &String) -> anyhow::Result<()> {
+        let stdout = self
+            .ic_admin
+            .propose_run(
+                ic_admin::ProposeCommand::UpdateSubnetReplicaVersion {
+                    subnet: subnet.clone(),
+                    version: version.clone(),
+                },
+                ic_admin::ProposeOptions {
+                    title: format!("Update subnet {subnet} to replica version {version}").into(),
+                    summary: format!("Update subnet {subnet} to replica version {version}").into(),
+                },
+            )
+            .map_err(|e| anyhow::anyhow!(e))?;
+        info!("{}", stdout);
+
+        Ok(())
     }
 }
 

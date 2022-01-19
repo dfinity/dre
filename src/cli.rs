@@ -41,6 +41,8 @@ pub(crate) enum Commands {
         /// Path to the DER file
         path: String,
     },
+    /// Manage an existing subnet
+    Subnet(subnet::Cmd),
 }
 
 #[derive(Clone)]
@@ -155,5 +157,24 @@ impl NodesVec {
                 .collect::<Vec<String>>()
                 .join(", ")
         )
+    }
+}
+
+pub(crate) mod subnet {
+    use super::*;
+    use ic_base_types::PrincipalId;
+
+    #[derive(Parser, Clone)]
+    pub struct Cmd {
+        #[clap(long, short)]
+        pub id: PrincipalId,
+        #[clap(subcommand)]
+        pub subcommand: Commands,
+    }
+
+    #[derive(Subcommand, Clone)]
+    pub enum Commands {
+        /// Create a new proposal to rollout a new version to the subnet
+        Deploy { version: String },
     }
 }

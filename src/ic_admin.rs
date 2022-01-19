@@ -2,7 +2,7 @@ use anyhow::{anyhow, Result};
 use colored::Colorize;
 use flate2::read::GzDecoder;
 use ic_base_types::PrincipalId;
-use log::{debug, error, info, warn};
+use log::{debug, info, warn};
 use python_input::input;
 use std::os::unix::fs::PermissionsExt;
 use std::{path::Path, process::Command};
@@ -138,7 +138,7 @@ pub enum Auth {
 impl Cli {
     fn print_ic_admin_command_line(cmd: &Command) {
         info!(
-            "Running ic-admin: \n$ {} {}",
+            "running ic-admin: \n$ {} {}",
             cmd.get_program().to_str().unwrap().yellow(),
             shlex::join(cmd.get_args().map(|s| s.to_str().unwrap()).collect::<Vec<_>>()).yellow()
         );
@@ -164,7 +164,7 @@ impl Cli {
                 self.neuron
                     .as_ref()
                     .map(|n| vec!["--proposer".to_string(), n.id.to_string()])
-                    .ok_or("Cannot submit a proposal without a neuron ID".to_string())?,
+                    .ok_or("cannot submit a proposal without a neuron ID".to_string())?,
                 cmd.args(),
             ]
             .concat()
@@ -222,17 +222,24 @@ pub(crate) enum ProposeCommand {
     RemoveNodesFromSubnet {
         nodes: Vec<PrincipalId>,
     },
+    UpdateSubnetReplicaVersion {
+        subnet: PrincipalId,
+        version: String,
+    },
 }
 
 impl ProposeCommand {
     fn args(&self) -> Vec<String> {
         match &self {
-            ProposeCommand::AddNodesToSubnet { subnet_id, nodes } => vec![
+            Self::AddNodesToSubnet { subnet_id, nodes } => vec![
                 nodes.iter().map(|n| n.to_string()).collect::<Vec<_>>(),
                 vec!["--subnet-id".to_string(), subnet_id.to_string()],
             ]
             .concat(),
-            ProposeCommand::RemoveNodesFromSubnet { nodes } => nodes.iter().map(|n| n.to_string()).collect::<Vec<_>>(),
+            Self::RemoveNodesFromSubnet { nodes } => nodes.iter().map(|n| n.to_string()).collect::<Vec<_>>(),
+            Self::UpdateSubnetReplicaVersion { subnet, version } => {
+                vec![subnet.to_string(), version.clone()]
+            }
         }
     }
 }
@@ -306,7 +313,7 @@ fn download_ic_admin(version: Option<String>) -> Result<String> {
     Ok(path.to_string_lossy().to_string())
 }
 
-fn with_ic_admin<T, U>(version: Option<String>, closure: T) -> Result<U>
+pub fn with_ic_admin<T, U>(version: Option<String>, closure: T) -> Result<U>
 where
     T: Fn() -> Result<U>,
 {
