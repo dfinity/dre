@@ -315,7 +315,7 @@ fn download_ic_admin(version: Option<String>) -> Result<String> {
 
 pub fn with_ic_admin<T, U>(version: Option<String>, closure: T) -> Result<U>
 where
-    T: Fn() -> Result<U>,
+    T: FnOnce() -> Result<U>,
 {
     let ic_admin_path = download_ic_admin(version)?;
     let bin_dir = Path::new(&ic_admin_path).parent().unwrap();
@@ -344,45 +344,61 @@ oSMDIQBa2NLmSmaqjDXej4rrJEuEhKIz7/pGXpxztViWhB+X9Q==
 -----END PRIVATE KEY-----"#
         )?;
 
-        let cli = Cli {
-            nns_url: "http://localhost:8080".to_string().into(),
-            dry_run: true,
-            neuron: Neuron {
-                id: 3,
-                auth: Auth::Keyfile {
-                    path: file
-                        .path()
-                        .to_str()
-                        .ok_or(anyhow::format_err!("Could not convert temp file path to string"))?
-                        .to_string(),
+        let test_cases = vec![
+            (
+                ProposeCommand::AddNodesToSubnet {
+                    subnet_id: Default::default(),
+                    nodes: vec![Default::default()],
                 },
-            }
-            .into(),
-            ..Default::default()
-        };
-
-        let out = with_ic_admin(Default::default(), || {
-            cli.propose_run(
+                include_str!("../assets/ic-admin-outputs/propose-to-add-nodes-to-subnet.out"),
+            ),
+            (
                 ProposeCommand::RemoveNodesFromSubnet {
                     nodes: vec![Default::default()],
                 },
-                Default::default(),
-            )
-            .map_err(|e| anyhow::anyhow!(e))
-        });
-        assert!(
-            out.is_ok(),
-            r#"failed running the ic-admin command: {}"#,
-            out.err().map(|e| e.to_string()).unwrap_or_default()
-        );
+                include_str!("../assets/ic-admin-outputs/propose-to-remove-nodes-from-subnet.out"),
+            ),
+            (
+                ProposeCommand::UpdateSubnetReplicaVersion {
+                    subnet: Default::default(),
+                    version: "0000000000000000000000000000000000000000".to_string(),
+                },
+                include_str!("../assets/ic-admin-outputs/propose-to-update-subnet-replica-version.out"),
+            ),
+        ];
 
-        let out = out.unwrap();
-        assert_eq!(
-            out,
-            r#"submit_proposal payload: 
-{"node_ids":["aaaaa-aa"]}
-"#
-        );
+        for (cmd, expect_out) in test_cases {
+            let cli = Cli {
+                nns_url: "http://localhost:8080".to_string().into(),
+                dry_run: true,
+                neuron: Neuron {
+                    id: 3,
+                    auth: Auth::Keyfile {
+                        path: file
+                            .path()
+                            .to_str()
+                            .ok_or(anyhow::format_err!("Could not convert temp file path to string"))?
+                            .to_string(),
+                    },
+                }
+                .into(),
+                ..Default::default()
+            };
+
+            let cmd_name = cmd.to_string();
+            let out = with_ic_admin(Default::default(), || {
+                cli.propose_run(cmd, Default::default()).map_err(|e| anyhow::anyhow!(e))
+            });
+            assert!(
+                out.is_ok(),
+                r#"failed running the ic-admin command for {cmd_name} subcommand: {}"#,
+                out.err().map(|e| e.to_string()).unwrap_or_default()
+            );
+
+            let out = out.unwrap();
+            assert_eq!(out, expect_out, "test case for {cmd_name} subcommand",);
+        }
+
         Ok(())
     }
 }
