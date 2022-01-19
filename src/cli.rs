@@ -11,7 +11,7 @@ pub struct Opts {
     #[clap(short, long, env)]
     pub(crate) hsm_key_id: Option<String>,
     #[clap(short, long, env)]
-    pub(crate) neuron_id: Option<String>,
+    pub(crate) neuron_id: Option<u64>,
     #[clap(short, long, env)]
     pub(crate) ic_admin: Option<String>,
     #[clap(short, long, env)]
