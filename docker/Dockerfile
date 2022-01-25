@@ -23,7 +23,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone &
         lldb liblz4-dev librocksdb-dev libsnappy-dev libzstd-dev vim nano jq \
         zip unzip python3 python3-requests python3-pip python3-cbor shellcheck \
         liblmdb0 libsqlite3-dev sqlite3 \
-        docker-ce-cli sudo gosu && \
+        docker-ce-cli iputils-ping sudo gosu && \
     chmod +s /usr/sbin/gosu
 
 RUN cd `mktemp -d`; curl --fail -LO https://github.com/protocolbuffers/protobuf/releases/download/v${protobuf_version}/protoc-${protobuf_version}-linux-x86_64.zip; unzip * -d /opt/protoc; chmod -R 755 /opt/protoc/bin; chmod -R u+rwX,go+rX,go-w /opt/protoc/include
@@ -66,6 +66,7 @@ RUN gpg --batch --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 595E85A6B1
 COPY factsdb/requirements.txt /py-requirements1.txt
 COPY scripts/requirements.txt /py-requirements2.txt
 COPY docker/requirements.txt  /py-requirements3.txt
+COPY scripts/jira-integration/requirements.txt /py-requirements4.txt
 RUN ls py-requirements*.txt | xargs -n1 pip3 install --no-cache-dir -r
 
 # Used to detect the Dockerfile changes and automatically rebuild the image
