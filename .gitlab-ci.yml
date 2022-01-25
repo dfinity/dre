@@ -1,10 +1,20 @@
 default:
-  image: registry.gitlab.com/dfinity-lab/core/release-cli/ci-build@sha256:12c3a9f8417eca313127c7c2db2a867507458fbf368cbe5e2163009ab6068eb9
+  image: registry.gitlab.com/dfinity-lab/core/release-cli/ci-build@sha256:0b5cadb903dd83c20f8298c203b73de1434182098eec3ff9b92ca2a2d1bec8fc
   tags:
     # Use the Dfinity CI runners (they have following tags)
     - dfinity
     - docker
     - ubuntu
+  # Retry config copied from:
+  # https://gitlab.com/gitlab-org/gitlab/blob/master/.gitlab/ci/global.gitlab-ci.yml#L1-9
+  # Complete description available at:
+  # https://docs.gitlab.com/ee/ci/yaml/#retry
+  retry:
+    max: 2  # This is confusing but this means "3 runs at max".
+    when:
+      - unknown_failure
+      - api_failure
+      - runner_system_failure
 
 variables:
   GET_SOURCES_ATTEMPTS: 5
@@ -171,7 +181,7 @@ cargo-test:
 update-facts-db:
   interruptible: true
   rules:
-    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+    - if: '$CI_PIPELINE_SOURCE == "schedule" && $SCHEDULE_NAME == "update-factsdb"'
     - if: '$CI_PIPELINE_SOURCE == "web"'
       when: manual
       allow_failure: true  # the pipeline continues running even if the manual job is not run
@@ -202,3 +212,20 @@ update-facts-db:
         git remote set-url origin "https://token:${GITLAB_PUSH_TOKEN}@${CI_REPOSITORY_URL#*@}"
         git push origin "${CI_DEFAULT_BRANCH}"
       fi
+
+jira-update:
+  interruptible: true
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule" && $SCHEDULE_NAME == "update-jira-tickets"'
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+      when: manual
+      allow_failure: true  # the pipeline continues running even if the manual job is not run
+    - if: '$CI_PIPELINE_SOURCE == "trigger"'
+      when: manual
+      allow_failure: true  # the pipeline continues running even if the manual job is not run
+  script:
+    - |
+      set -eExou pipefail  # Don't tolerate any errors
+
+      cd ./scripts/jira-integration
+      time python3 ./jira_update.py
