@@ -1,1 +1,0 @@
-../../testnet/shell.nix

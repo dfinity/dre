@@ -1,4 +1,0 @@
-#!/usr/bin/env bash
-
-set -eu
-ansible -i "${GIT_ROOT}/testnet/env/$NETWORK/metal_hosts" all -m shell -a 'printf "{{ansible_host}} groups={{group_names|join(",")}} hostname=%s system_serial_num="%s"\n" "$(hostname -f)" "$(sudo dmidecode -s system-serial-number)"' | grep -v CHANGED
