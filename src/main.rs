@@ -72,6 +72,7 @@ async fn main() -> Result<(), anyhow::Error> {
             },
         }
     })
+    .await
 }
 
 pub struct Runner {
