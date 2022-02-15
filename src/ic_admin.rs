@@ -286,7 +286,7 @@ impl From<&Opts> for Cli {
 const DEFAULT_IC_ADMIN_VERSION: &str = "936bf9ccaabd566c68232e5cb3f3ce7d5ae89328";
 
 /// Returns a path to downloaded ic-admin binary
-fn download_ic_admin(version: Option<String>) -> Result<String> {
+async fn download_ic_admin(version: Option<String>) -> Result<String> {
     let version = version.unwrap_or_else(|| DEFAULT_IC_ADMIN_VERSION.to_string());
 
     let home_dir = dirs::home_dir()
@@ -301,8 +301,8 @@ fn download_ic_admin(version: Option<String>) -> Result<String> {
         } else {
             format!("https://download.dfinity.systems/blessed/ic/{version}/release/ic-admin.gz")
         };
-        let resp = reqwest::blocking::get(url)?;
-        let mut decoded = GzDecoder::new(resp);
+        let body = reqwest::get(url).await?.bytes().await?;
+        let mut decoded = GzDecoder::new(body.as_ref());
 
         std::fs::create_dir_all(path.parent().unwrap())?;
         let mut out = std::fs::File::create(path)?;
@@ -313,11 +313,11 @@ fn download_ic_admin(version: Option<String>) -> Result<String> {
     Ok(path.to_string_lossy().to_string())
 }
 
-pub fn with_ic_admin<T, U>(version: Option<String>, closure: T) -> Result<U>
+pub async fn with_ic_admin<T, U>(version: Option<String>, closure: T) -> Result<U>
 where
     T: FnOnce() -> Result<U>,
 {
-    let ic_admin_path = download_ic_admin(version)?;
+    let ic_admin_path = download_ic_admin(version).await?;
     let bin_dir = Path::new(&ic_admin_path).parent().unwrap();
     std::env::set_var(
         "PATH",
@@ -333,8 +333,8 @@ mod tests {
     use std::io::Write;
     use tempfile::NamedTempFile;
 
-    #[test]
-    fn test_propose_dry_run() -> Result<()> {
+    #[tokio::test]
+    async fn test_propose_dry_run() -> Result<()> {
         let mut file = NamedTempFile::new()?;
         writeln!(
             file,
@@ -388,7 +388,8 @@ oSMDIQBa2NLmSmaqjDXej4rrJEuEhKIz7/pGXpxztViWhB+X9Q==
             let cmd_name = cmd.to_string();
             let out = with_ic_admin(Default::default(), || {
                 cli.propose_run(cmd, Default::default()).map_err(|e| anyhow::anyhow!(e))
-            });
+            })
+            .await;
             assert!(
                 out.is_ok(),
                 r#"failed running the ic-admin command for {cmd_name} subcommand: {}"#,
