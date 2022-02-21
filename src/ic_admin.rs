@@ -1,6 +1,7 @@
 use anyhow::{anyhow, Result};
 use colored::Colorize;
 use flate2::read::GzDecoder;
+use futures::Future;
 use ic_base_types::PrincipalId;
 use log::{debug, info, warn};
 use python_input::input;
@@ -313,9 +314,9 @@ async fn download_ic_admin(version: Option<String>) -> Result<String> {
     Ok(path.to_string_lossy().to_string())
 }
 
-pub async fn with_ic_admin<T, U>(version: Option<String>, closure: T) -> Result<U>
+pub async fn with_ic_admin<F, U>(version: Option<String>, closure: F) -> Result<U>
 where
-    T: FnOnce() -> Result<U>,
+    F: Future<Output = Result<U>>,
 {
     let ic_admin_path = download_ic_admin(version).await?;
     let bin_dir = Path::new(&ic_admin_path).parent().unwrap();
@@ -324,7 +325,7 @@ where
         format!("{}:{}", bin_dir.display(), std::env::var("PATH").unwrap()),
     );
 
-    closure()
+    closure.await
 }
 
 #[cfg(test)]
@@ -386,7 +387,7 @@ oSMDIQBa2NLmSmaqjDXej4rrJEuEhKIz7/pGXpxztViWhB+X9Q==
             };
 
             let cmd_name = cmd.to_string();
-            let out = with_ic_admin(Default::default(), || {
+            let out = with_ic_admin(Default::default(), async {
                 cli.propose_run(cmd, Default::default()).map_err(|e| anyhow::anyhow!(e))
             })
             .await;

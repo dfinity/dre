@@ -23,7 +23,7 @@ async fn main() -> Result<(), anyhow::Error> {
     let cli_opts = cli::Opts::parse();
     init_logger();
 
-    ic_admin::with_ic_admin(Default::default(), || {
+    ic_admin::with_ic_admin(Default::default(), async {
         let runner = Runner {
             ic_admin: ic_admin::Cli::from(&cli_opts),
         };
