@@ -1,5 +1,5 @@
 default:
-  image: registry.gitlab.com/dfinity-lab/core/release-cli/ci-build@sha256:913aa891141d969ca5fcaf9058319c508e59011933045494a0651f84438a5b8c
+  image: registry.gitlab.com/dfinity-lab/core/release-cli/ci-build@sha256:1a35b8aa20a250ef5d4ca26c86186e25d884867c9b40932e0c4db0667c45512f
   tags:
     # Use the Dfinity CI runners (they have following tags)
     - dfinity
@@ -152,6 +152,8 @@ docker-image-update:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       changes:
         - docker/**/*
+        - Pipfile
+        - Pipfile.lock
     - if: '$CI_PIPELINE_SOURCE == "web"'
       when: manual
       allow_failure: true  # the pipeline continues running even if the manual job is not run
@@ -247,3 +249,4 @@ qualification-tracking-update:
       cd ./scripts/qualification-tracking
       time python3 ./qualification-track.py add-nns
       time python3 ./qualification-track.py add-ci --since=now-3d
+
