@@ -63,11 +63,9 @@ ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini.asc /
 RUN gpg --batch --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 595E85A6B1B4779EA4DAAEC70B588DFF0527A9B7 && \
     gpg --batch --verify /tini.asc /tini && chmod +x /tini
 
-COPY factsdb/requirements.txt /py-requirements1.txt
-COPY scripts/requirements.txt /py-requirements2.txt
-COPY docker/requirements.txt  /py-requirements3.txt
-COPY scripts/jira-integration/requirements.txt /py-requirements4.txt
-RUN ls py-requirements*.txt | xargs -n1 pip3 install --no-cache-dir -r
+RUN pip install pipenv
+COPY Pipfile Pipfile.lock /
+RUN PIPENV_VENV_IN_PROJECT=1 pipenv install --deploy --system --ignore-pipfile
 
 # Used to detect the Dockerfile changes and automatically rebuild the image
 COPY docker /docker
