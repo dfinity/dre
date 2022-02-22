@@ -1,3 +1,6 @@
+default_language_version:
+  # force all unspecified python hooks to run with python3.8
+  python: python3.8
 repos:
 - repo: https://github.com/pre-commit/pre-commit-hooks
   rev: v2.3.0
