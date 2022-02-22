@@ -20,6 +20,8 @@ peewee = "*"
 atlassian-python-api = "*"
 python-dotenv = "*"
 cachetools = "*"
+pre-commit = "*"
+pylint = "*"
 
 [dev-packages]
 

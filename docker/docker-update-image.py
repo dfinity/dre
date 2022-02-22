@@ -176,12 +176,21 @@ def _are_dirs_identical(dir1, dir2):
     compared = filecmp.dircmp(dir1, dir2)
     if compared.left_only or compared.right_only or compared.diff_files or compared.funny_files:
         _print_red(
-            "dir diff found %s %s %s"
+            "dir diff found: %s %s %s"
             % (dir1, dir2, (compared.left_only or compared.right_only or compared.diff_files or compared.funny_files))
         )
         return False
     for subdir in compared.common_dirs:
         if not _are_dirs_identical(os.path.join(dir1, subdir), os.path.join(dir2, subdir)):
+            return False
+    return True
+
+
+def _are_files_identical(file_list, local_cp_of_dir_image):
+    """Return false if all files from the file_list are unmodified compared to the local_cp_of_dir_image."""
+    for f in file_list:
+        if not filecmp.cmp(f, local_cp_of_dir_image / f):
+            _print_red("file diff found: %s" % (f))
             return False
     return True
 
@@ -209,6 +218,8 @@ def main():
     os.environ["TERM"] = "xterm"  # to have colors in the child (pty spawned) processes
     local_sha256, local_sha256_set = local_image_sha256_unchecked()
     ci_target_sha256 = ci_config_declared_image_digest()
+    if ci_target_sha256.startswith("sha256:"):
+        docker_pull(ci_target_sha256)
     if not ci_target_sha256.startswith("sha256:") or ci_target_sha256 not in local_sha256_set:
         _print_magenta("ci_target_sha256 '%s' not in local_sha256 '%s'" % (ci_target_sha256, local_sha256_set))
         docker_build_image(cache_image=f"{IMAGE}@{ci_target_sha256}")
@@ -221,19 +232,24 @@ def main():
     _print_green("ci_target_sha256 '%s' in local_sha256 '%s'" % (ci_target_sha256, local_sha256_set))
     _print_green("Checking if the 'docker' subdir in the repo changed from the one in the image")
 
-    docker_pull(ci_target_sha256)
     container_id = subprocess.check_output(["docker", "create", f"{IMAGE}@{ci_target_sha256}"]).decode("utf8").strip()
-    DOCKER_SUBDIR_FROM_IMAGE = pathlib.Path("target/docker_contents_from_image")
-    DOCKER_SUBDIR_FROM_IMAGE.mkdir(parents=True, exist_ok=True)
-    shutil.rmtree(DOCKER_SUBDIR_FROM_IMAGE, ignore_errors=True)
-    subprocess.check_call(["docker", "cp", f"{container_id}:docker", DOCKER_SUBDIR_FROM_IMAGE])
+    LOCAL_COPY_OF_IMAGE_SUBDIRS = pathlib.Path("target/check_docker_image_change")
+    shutil.rmtree(LOCAL_COPY_OF_IMAGE_SUBDIRS, ignore_errors=True)
+    LOCAL_COPY_OF_IMAGE_SUBDIR_DOCKER = LOCAL_COPY_OF_IMAGE_SUBDIRS / "docker"
+    LOCAL_COPY_OF_IMAGE_SUBDIR_DOCKER.mkdir(parents=True, exist_ok=True)
+    file_deps = ["Pipfile", "Pipfile.lock"]
+    for f in file_deps:
+        subprocess.check_call(["docker", "cp", f"{container_id}:{f}", LOCAL_COPY_OF_IMAGE_SUBDIRS])
+    subprocess.check_call(["docker", "cp", f"{container_id}:docker", LOCAL_COPY_OF_IMAGE_SUBDIRS])
     subprocess.check_call(["docker", "rm", container_id])
 
-    if _are_dirs_identical("docker", DOCKER_SUBDIR_FROM_IMAGE):
-        _print_green("Subdir 'docker' unchanged in the image. Ending here.")
+    if _are_dirs_identical("docker", LOCAL_COPY_OF_IMAGE_SUBDIR_DOCKER) and _are_files_identical(
+        file_deps, LOCAL_COPY_OF_IMAGE_SUBDIRS
+    ):
+        _print_green("Docker image dependencies unchanged in the image. Ending here.")
         sys.exit(0)
 
-    _print_magenta("Subdir 'docker' has changes, updating the docker image.")
+    _print_magenta("Docker image dependencies changed, updating the docker image.")
 
     # Something changed in the docker config, recreate the image and push it
     docker_build_image(cache_image=f"{IMAGE}@{ci_target_sha256}")
