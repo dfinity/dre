@@ -1,0 +1,27 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+ansible = "==2.10.7"
+colorama = "*"
+elasticsearch = "<8.0,>=7.16"
+elasticsearch-dsl = "*"
+elasticsearch-follow = "*"
+GitPython = "*"
+numpy = "*"
+pandas = "*"
+paramiko = "*"
+PyYAML = "*"
+requests = "*"
+tabulate = "*"
+peewee = "*"
+atlassian-python-api = "*"
+python-dotenv = "*"
+cachetools = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.8"

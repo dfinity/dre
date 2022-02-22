@@ -1,5 +1,5 @@
 default:
-  image: registry.gitlab.com/dfinity-lab/core/release-cli/ci-build@sha256:0b5cadb903dd83c20f8298c203b73de1434182098eec3ff9b92ca2a2d1bec8fc
+  image: registry.gitlab.com/dfinity-lab/core/release-cli/ci-build@sha256:913aa891141d969ca5fcaf9058319c508e59011933045494a0651f84438a5b8c
   tags:
     # Use the Dfinity CI runners (they have following tags)
     - dfinity
@@ -229,3 +229,21 @@ jira-update:
 
       cd ./scripts/jira-integration
       time python3 ./jira_update.py
+
+qualification-tracking-update:
+  interruptible: true
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule" && $SCHEDULE_NAME == "update-qualification-tracking"'
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+      when: manual
+      allow_failure: true  # the pipeline continues running even if the manual job is not run
+    - if: '$CI_PIPELINE_SOURCE == "trigger"'
+      when: manual
+      allow_failure: true  # the pipeline continues running even if the manual job is not run
+  script:
+    - |
+      set -eExou pipefail  # Don't tolerate any errors
+
+      cd ./scripts/qualification-tracking
+      time python3 ./qualification-track.py add-nns
+      time python3 ./qualification-track.py add-ci --since=now-3d
