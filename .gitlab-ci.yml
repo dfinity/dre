@@ -124,6 +124,12 @@ before_script:
     git reset --hard HEAD
 
   - echo -e "\e[0Ksection_end:$(date +%s):before_script\r\e[0K"
+  # Setup SSH keys
+  - 'command -v ssh-agent >/dev/null || ( apt-get update -y && apt-get install openssh-client -y )'
+  - eval $(ssh-agent -s)
+  - cat "$MERCURY_MANAGEMENT_DASHBOARD_DEPLOY_KEY" | tr -d '\r' | ssh-add -
+  - mkdir -p ~/.ssh
+  - chmod 700 ~/.ssh
 
 .rules-default:
   rules:
