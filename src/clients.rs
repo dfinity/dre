@@ -2,6 +2,7 @@ use decentralization::SubnetChangeResponse;
 use ic_base_types::PrincipalId;
 use mercury_management_types::TopologyProposal;
 
+#[derive(Clone)]
 pub struct DashboardBackendClient {
     pub url: reqwest::Url,
 }
@@ -23,6 +24,7 @@ impl DashboardBackendClient {
     }
 }
 
+#[derive(Clone)]
 pub struct DecenetralizationClient {
     pub url: reqwest::Url,
 }

@@ -137,6 +137,13 @@ pub enum Auth {
 }
 
 impl Cli {
+    pub fn dry_run(&self) -> Self {
+        Self {
+            dry_run: true,
+            ..self.clone()
+        }
+    }
+
     fn print_ic_admin_command_line(cmd: &Command) {
         info!(
             "running ic-admin: \n$ {} {}",
