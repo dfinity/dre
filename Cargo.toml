@@ -41,3 +41,9 @@ mercury_management_types = { git = "ssh://git@gitlab.com/dfinity-lab/core/mercur
 
 [dev-dependencies]
 tempfile = "3.3.0"
+
+[profile.release]
+lto = "thin"
+
+[profile.dev]
+lto = "thin"
