@@ -4,10 +4,13 @@ use clap::Parser;
 use diesel::prelude::*;
 use dotenv::dotenv;
 use ic_base_types::PrincipalId;
-use log::{debug, info};
+use log::{debug, info, warn};
+use mercury_management_types::TopologyProposalStatus;
+use tokio::time::{sleep, Duration};
 use utils::env_cfg;
 mod autoops_types;
 mod cli;
+mod clients;
 mod ic_admin;
 mod model_proposals;
 mod model_subnet_update_nodes;
@@ -26,6 +29,12 @@ async fn main() -> Result<(), anyhow::Error> {
     ic_admin::with_ic_admin(Default::default(), async {
         let runner = Runner {
             ic_admin: ic_admin::Cli::from(&cli_opts),
+            dashboard_backend_client: clients::DashboardBackendClient {
+                url: cli_opts.backend_url.clone(),
+            },
+            decentralization_client: clients::DecenetralizationClient {
+                url: cli_opts.decentralization_url.clone(),
+            },
         };
 
         // Start of actually doing stuff with commands.
@@ -70,6 +79,9 @@ async fn main() -> Result<(), anyhow::Error> {
             cli::Commands::Subnet(subnet) => match &subnet.subcommand {
                 cli::subnet::Commands::Deploy { version } => runner.deploy(&subnet.id, version),
             },
+            cli::Commands::Node(node) => match &node.subcommand {
+                cli::node::Commands::Replace { nodes } => runner.replace(nodes).await,
+            },
         }
     })
     .await
@@ -77,6 +89,8 @@ async fn main() -> Result<(), anyhow::Error> {
 
 pub struct Runner {
     ic_admin: ic_admin::Cli,
+    dashboard_backend_client: clients::DashboardBackendClient,
+    decentralization_client: clients::DecenetralizationClient,
 }
 
 impl Runner {
@@ -95,6 +109,60 @@ impl Runner {
             )
             .map_err(|e| anyhow::anyhow!(e))?;
         info!("{}", stdout);
+
+        Ok(())
+    }
+
+    async fn replace(&self, nodes: &[PrincipalId]) -> anyhow::Result<()> {
+        let change = self.decentralization_client.replace(nodes).await?;
+        let subnet_id = change
+            .subnet_id
+            .ok_or_else(|| anyhow::anyhow!("subnet_id is required"))?;
+
+        let pending_action = self.dashboard_backend_client.subnet_pending_action(subnet_id).await?;
+        if let Some(proposal) = pending_action {
+            return Err(anyhow::anyhow!(vec![
+                format!(
+                    "There is a pending proposal for this subnet: https://dashboard.internetcomputer.org/proposal/{}",
+                    proposal.id
+                ),
+                "Please complete it first by running `release_cli subnet --subnet-id {subnet_id} tidy`".to_string(),
+            ]
+            .join("\n")));
+        }
+
+        self.ic_admin
+            .propose_run(
+                ic_admin::ProposeCommand::AddNodesToSubnet {
+                    subnet_id,
+                    nodes: change.added.clone(),
+                },
+                ops_subnet_node_replace::replace_proposal_options(&change, None)?,
+            )
+            .map_err(|e| anyhow::anyhow!(e))?;
+
+        let add_proposal_id = if !self.ic_admin.dry_run {
+            loop {
+                if let Some(proposal) = self.dashboard_backend_client.subnet_pending_action(subnet_id).await? {
+                    if matches!(proposal.status, TopologyProposalStatus::Executed) {
+                        break proposal.id;
+                    }
+                }
+                sleep(Duration::from_secs(10)).await;
+            }
+        } else {
+            const DUMMY_ID: u64 = 1234567890;
+            warn!("Set the first proposal ID to a dummy value: {}", DUMMY_ID);
+            DUMMY_ID
+        }
+        .into();
+
+        self.ic_admin
+            .propose_run(
+                ic_admin::ProposeCommand::RemoveNodesFromSubnet { nodes: nodes.to_vec() },
+                ops_subnet_node_replace::replace_proposal_options(&change, add_proposal_id)?,
+            )
+            .map_err(|e| anyhow::anyhow!(e))?;
 
         Ok(())
     }

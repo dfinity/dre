@@ -1,12 +1,26 @@
+use std::str::FromStr;
+
+use decentralization::SubnetChangeResponse;
+use ic_base_types::PrincipalId;
+
 use crate::ops_subnet_node_replace;
 
 #[test]
-fn proposal_generate_summary_1_node() {
-    let subnet_id = "tdb26-jop6k-aogll-7ltgs-eruif-6kk7m-qpktf-gdiqx-mxtrf-vb5e6-eqe".to_string();
-    let nodes_to_add = "afx6y-22h67-ct72t-etddn-t2jaz-gfsrz-u3yxw-oocjp-gj3za-de3ot-2ae".to_string();
-    let nodes_to_remove = "z3tum-w7bue-lt6ca-qgynf-us6oq-nc3qc-7miiq-34rbp-ekuoa-g6cqr-wqe".to_string();
+fn replace_proposal_options_1_node() {
+    let change = SubnetChangeResponse {
+        subnet_id: PrincipalId::from_str("tdb26-jop6k-aogll-7ltgs-eruif-6kk7m-qpktf-gdiqx-mxtrf-vb5e6-eqe")
+            .unwrap()
+            .into(),
+        added: vec![PrincipalId::from_str("afx6y-22h67-ct72t-etddn-t2jaz-gfsrz-u3yxw-oocjp-gj3za-de3ot-2ae").unwrap()],
+        removed: vec![
+            PrincipalId::from_str("z3tum-w7bue-lt6ca-qgynf-us6oq-nc3qc-7miiq-34rbp-ekuoa-g6cqr-wqe").unwrap(),
+        ],
+    };
 
-    let summary = ops_subnet_node_replace::proposal_generate_summary(&subnet_id, &nodes_to_add, &nodes_to_remove, 0);
+    let summary = ops_subnet_node_replace::replace_proposal_options(&change, None)
+        .unwrap()
+        .summary
+        .unwrap();
 
     assert_eq!(
         summary,
@@ -17,7 +31,10 @@ fn proposal_generate_summary_1_node() {
 "#
     );
 
-    let summary = ops_subnet_node_replace::proposal_generate_summary(&subnet_id, &nodes_to_add, &nodes_to_remove, 123);
+    let summary = ops_subnet_node_replace::replace_proposal_options(&change, 123.into())
+        .unwrap()
+        .summary
+        .unwrap();
 
     assert_eq!(
         summary,
@@ -30,14 +47,25 @@ fn proposal_generate_summary_1_node() {
 }
 
 #[test]
-fn proposal_generate_summary_2_nodes() {
-    let subnet_id = "tdb26-jop6k-aogll-7ltgs-eruif-6kk7m-qpktf-gdiqx-mxtrf-vb5e6-eqe".to_string();
-    let nodes_to_add =
-        "afx6y-22h67-ct72t-etddn-t2jaz-gfsrz-u3yxw-oocjp-gj3za-de3ot-2ae,dsthq-itfw5-zkibk-chtl5-u7afl-xvxva-7swke-tvqif-vq3t2-wvp7x-mae".to_string();
-    let nodes_to_remove =
-        "z3tum-w7bue-lt6ca-qgynf-us6oq-nc3qc-7miiq-34rbp-ekuoa-g6cqr-wqe,ktrkp-ccur6-nvpyb-sokhh-exg7x-pfuds-4jxmw-n2r5m-vj5yt-aqzc4-vae".to_string();
+fn replace_proposal_options_2_nodes() {
+    let change = SubnetChangeResponse {
+        subnet_id: PrincipalId::from_str("tdb26-jop6k-aogll-7ltgs-eruif-6kk7m-qpktf-gdiqx-mxtrf-vb5e6-eqe")
+            .unwrap()
+            .into(),
+        added: vec![
+            PrincipalId::from_str("afx6y-22h67-ct72t-etddn-t2jaz-gfsrz-u3yxw-oocjp-gj3za-de3ot-2ae").unwrap(),
+            PrincipalId::from_str("dsthq-itfw5-zkibk-chtl5-u7afl-xvxva-7swke-tvqif-vq3t2-wvp7x-mae").unwrap(),
+        ],
+        removed: vec![
+            PrincipalId::from_str("z3tum-w7bue-lt6ca-qgynf-us6oq-nc3qc-7miiq-34rbp-ekuoa-g6cqr-wqe").unwrap(),
+            PrincipalId::from_str("ktrkp-ccur6-nvpyb-sokhh-exg7x-pfuds-4jxmw-n2r5m-vj5yt-aqzc4-vae").unwrap(),
+        ],
+    };
 
-    let summary = ops_subnet_node_replace::proposal_generate_summary(&subnet_id, &nodes_to_add, &nodes_to_remove, 0);
+    let summary = ops_subnet_node_replace::replace_proposal_options(&change, None)
+        .unwrap()
+        .summary
+        .unwrap();
 
     assert_eq!(
         summary,
@@ -48,7 +76,10 @@ fn proposal_generate_summary_2_nodes() {
 "#
     );
 
-    let summary = ops_subnet_node_replace::proposal_generate_summary(&subnet_id, &nodes_to_add, &nodes_to_remove, 123);
+    let summary = ops_subnet_node_replace::replace_proposal_options(&change, 123.into())
+        .unwrap()
+        .summary
+        .unwrap();
 
     assert_eq!(
         summary,
@@ -57,49 +88,5 @@ fn proposal_generate_summary_2_nodes() {
 - Step 1 (proposal [123](https://dashboard.internetcomputer.org/proposal/123)): Add nodes [afx6y-22h67-ct72t-etddn-t2jaz-gfsrz-u3yxw-oocjp-gj3za-de3ot-2ae, dsthq-itfw5-zkibk-chtl5-u7afl-xvxva-7swke-tvqif-vq3t2-wvp7x-mae]
 - Step 2 (this proposal): Remove nodes [z3tum-w7bue-lt6ca-qgynf-us6oq-nc3qc-7miiq-34rbp-ekuoa-g6cqr-wqe, ktrkp-ccur6-nvpyb-sokhh-exg7x-pfuds-4jxmw-n2r5m-vj5yt-aqzc4-vae]
 "#
-    );
-}
-
-#[test]
-fn proposal_generate_title_1_node() {
-    let subnet_id = "tdb26-jop6k-aogll-7ltgs-eruif-6kk7m-qpktf-gdiqx-mxtrf-vb5e6-eqe".to_string();
-    let nodes_to_add = "afx6y-22h67-ct72t-etddn-t2jaz-gfsrz-u3yxw-oocjp-gj3za-de3ot-2ae".to_string();
-    let nodes_to_remove = "z3tum-w7bue-lt6ca-qgynf-us6oq-nc3qc-7miiq-34rbp-ekuoa-g6cqr-wqe".to_string();
-
-    let title = ops_subnet_node_replace::proposal_generate_title(&subnet_id, &nodes_to_add, &nodes_to_remove, 0);
-
-    assert_eq!(
-        title,
-        "Replace a node in subnet tdb26: add nodes [afx6y] (in this proposal); remove nodes [z3tum] (in an upcoming proposal)"
-    );
-
-    let title = ops_subnet_node_replace::proposal_generate_title(&subnet_id, &nodes_to_add, &nodes_to_remove, 123);
-
-    assert_eq!(
-        title,
-        "Replace a node in subnet tdb26: add nodes [afx6y] (already done); remove nodes [z3tum] (in this proposal)"
-    );
-}
-
-#[test]
-fn proposal_generate_title_2_nodes() {
-    let subnet_id = "tdb26-jop6k-aogll-7ltgs-eruif-6kk7m-qpktf-gdiqx-mxtrf-vb5e6-eqe".to_string();
-    let nodes_to_add =
-        "afx6y-22h67-ct72t-etddn-t2jaz-gfsrz-u3yxw-oocjp-gj3za-de3ot-2ae,dsthq-itfw5-zkibk-chtl5-u7afl-xvxva-7swke-tvqif-vq3t2-wvp7x-mae".to_string();
-    let nodes_to_remove =
-        "z3tum-w7bue-lt6ca-qgynf-us6oq-nc3qc-7miiq-34rbp-ekuoa-g6cqr-wqe,ktrkp-ccur6-nvpyb-sokhh-exg7x-pfuds-4jxmw-n2r5m-vj5yt-aqzc4-vae".to_string();
-
-    let title = ops_subnet_node_replace::proposal_generate_title(&subnet_id, &nodes_to_add, &nodes_to_remove, 0);
-
-    assert_eq!(
-        title,
-        "Replace nodes in subnet tdb26: add nodes [afx6y, dsthq] (in this proposal); remove nodes [z3tum, ktrkp] (in an upcoming proposal)"
-    );
-
-    let title = ops_subnet_node_replace::proposal_generate_title(&subnet_id, &nodes_to_add, &nodes_to_remove, 123);
-
-    assert_eq!(
-        title,
-        "Replace nodes in subnet tdb26: add nodes [afx6y, dsthq] (already done); remove nodes [z3tum, ktrkp] (in this proposal)"
     );
 }

@@ -120,7 +120,7 @@ impl CliDeprecated {
 pub struct Cli {
     ic_admin: Option<String>,
     nns_url: Option<String>,
-    dry_run: bool,
+    pub dry_run: bool,
     neuron: Option<Neuron>,
 }
 

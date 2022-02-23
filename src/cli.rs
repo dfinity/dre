@@ -14,8 +14,14 @@ pub struct Opts {
     pub(crate) neuron_id: Option<u64>,
     #[clap(short, long, env)]
     pub(crate) ic_admin: Option<String>,
-    #[clap(short, long, env)]
-    pub(crate) backend_url: Option<String>,
+    #[clap(
+        long,
+        env,
+        default_value = "https://dashboard.mercury.dfinity.systems/api/proxy/registry/"
+    )]
+    pub(crate) backend_url: reqwest::Url,
+    #[clap(long, env)]
+    pub(crate) decentralization_url: reqwest::Url,
     #[clap(long, env)]
     pub(crate) nns_url: Option<String>,
     #[clap(short, long, env)]
@@ -43,6 +49,7 @@ pub(crate) enum Commands {
     },
     /// Manage an existing subnet
     Subnet(subnet::Cmd),
+    Node(node::Cmd),
 }
 
 #[derive(Clone)]
@@ -176,5 +183,22 @@ pub(crate) mod subnet {
     pub enum Commands {
         /// Create a new proposal to rollout a new version to the subnet
         Deploy { version: String },
+    }
+}
+
+pub(crate) mod node {
+    use super::*;
+    use ic_base_types::PrincipalId;
+
+    #[derive(Parser, Clone)]
+    pub struct Cmd {
+        #[clap(subcommand)]
+        pub subcommand: Commands,
+    }
+
+    #[derive(Subcommand, Clone)]
+    pub enum Commands {
+        /// Create proposals to replace nodes in the subnet
+        Replace { nodes: Vec<PrincipalId> },
     }
 }
