@@ -1,6 +1,7 @@
 #[macro_use]
 extern crate diesel;
 use clap::Parser;
+use decentralization::{OptimizeQuery, SubnetChangeResponse};
 use diesel::prelude::*;
 use dotenv::dotenv;
 use ic_base_types::PrincipalId;
@@ -78,6 +79,9 @@ async fn main() -> Result<(), anyhow::Error> {
             }
             cli::Commands::Subnet(subnet) => match &subnet.subcommand {
                 cli::subnet::Commands::Deploy { version } => runner.deploy(&subnet.id, version),
+                cli::subnet::Commands::Optimize { max_replacements } => {
+                    runner.optimize(subnet.id, *max_replacements).await
+                }
             },
             cli::Commands::Node(node) => match &node.subcommand {
                 cli::node::Commands::Replace { nodes } => runner.replace(nodes).await,
@@ -113,12 +117,23 @@ impl Runner {
         Ok(())
     }
 
+    async fn optimize(&self, subnet: PrincipalId, max_replacements: Option<usize>) -> anyhow::Result<()> {
+        let change = self
+            .decentralization_client
+            .optimize(subnet, OptimizeQuery { max_replacements })
+            .await?;
+        self.swap_nodes(change).await
+    }
+
     async fn replace(&self, nodes: &[PrincipalId]) -> anyhow::Result<()> {
         let change = self.decentralization_client.replace(nodes).await?;
+        self.swap_nodes(change).await
+    }
+
+    async fn swap_nodes(&self, change: SubnetChangeResponse) -> anyhow::Result<()> {
         let subnet_id = change
             .subnet_id
             .ok_or_else(|| anyhow::anyhow!("subnet_id is required"))?;
-
         let pending_action = self.dashboard_backend_client.subnet_pending_action(subnet_id).await?;
         if let Some(proposal) = pending_action {
             return Err(anyhow::anyhow!(vec![
@@ -159,7 +174,9 @@ impl Runner {
 
         self.ic_admin
             .propose_run(
-                ic_admin::ProposeCommand::RemoveNodesFromSubnet { nodes: nodes.to_vec() },
+                ic_admin::ProposeCommand::RemoveNodesFromSubnet {
+                    nodes: change.removed.clone(),
+                },
                 ops_subnet_node_replace::replace_proposal_options(&change, add_proposal_id)?,
             )
             .map_err(|e| anyhow::anyhow!(e))?;

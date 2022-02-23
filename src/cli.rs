@@ -20,7 +20,11 @@ pub struct Opts {
         default_value = "https://dashboard.mercury.dfinity.systems/api/proxy/registry/"
     )]
     pub(crate) backend_url: reqwest::Url,
-    #[clap(long, env)]
+    #[clap(
+        long,
+        env,
+        default_value = "https://dashboard.mercury.dfinity.systems/api/proxy/decentralization/"
+    )]
     pub(crate) decentralization_url: reqwest::Url,
     #[clap(long, env)]
     pub(crate) nns_url: Option<String>,
@@ -183,6 +187,11 @@ pub(crate) mod subnet {
     pub enum Commands {
         /// Create a new proposal to rollout a new version to the subnet
         Deploy { version: String },
+        /// Optimize subnet's topology
+        Optimize {
+            #[clap(long)]
+            max_replacements: Option<usize>,
+        },
     }
 }
 
