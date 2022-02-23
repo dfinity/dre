@@ -2,10 +2,11 @@
 extern crate diesel;
 use clap::Parser;
 use decentralization::{OptimizeQuery, SubnetChangeResponse};
+use dialoguer::Confirm;
 use diesel::prelude::*;
 use dotenv::dotenv;
 use ic_base_types::PrincipalId;
-use log::{debug, info, warn};
+use log::{debug, error, info, warn};
 use mercury_management_types::TopologyProposalStatus;
 use tokio::time::{sleep, Duration};
 use utils::env_cfg;
@@ -131,6 +132,21 @@ impl Runner {
     }
 
     async fn swap_nodes(&self, change: SubnetChangeResponse) -> anyhow::Result<()> {
+        if !self.ic_admin.dry_run {
+            self.dry().run_swap_nodes(change.clone()).await?;
+            if !Confirm::new()
+                .with_prompt("Do you want to continue?")
+                .default(false)
+                .interact()?
+            {
+                return Err(anyhow::anyhow!("Action aborted"));
+            }
+        }
+
+        self.run_swap_nodes(change).await
+    }
+
+    async fn run_swap_nodes(&self, change: SubnetChangeResponse) -> anyhow::Result<()> {
         let subnet_id = change
             .subnet_id
             .ok_or_else(|| anyhow::anyhow!("subnet_id is required"))?;
@@ -182,6 +198,14 @@ impl Runner {
             .map_err(|e| anyhow::anyhow!(e))?;
 
         Ok(())
+    }
+
+    fn dry(&self) -> Self {
+        Self {
+            ic_admin: self.ic_admin.dry_run(),
+            dashboard_backend_client: self.dashboard_backend_client.clone(),
+            decentralization_client: self.decentralization_client.clone(),
+        }
     }
 }
 
