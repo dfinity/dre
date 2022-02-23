@@ -39,4 +39,24 @@ impl DecenetralizationClient {
             .await
             .map_err(|e| anyhow::anyhow!(e))
     }
+
+    pub async fn optimize(
+        &self,
+        subnet: PrincipalId,
+        query: decentralization::OptimizeQuery,
+    ) -> anyhow::Result<SubnetChangeResponse> {
+        reqwest::Client::new()
+            .post(
+                self.url
+                    .join(&format!("{subnet}/optimize"))
+                    .map_err(|e| anyhow::anyhow!(e))?,
+            )
+            .json(&query)
+            .send()
+            .await
+            .map_err(|e| anyhow::anyhow!(e))?
+            .json::<decentralization::SubnetChangeResponse>()
+            .await
+            .map_err(|e| anyhow::anyhow!(e))
+    }
 }
