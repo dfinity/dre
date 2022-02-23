@@ -7,44 +7,11 @@ repos:
   hooks:
   - id: no-commit-to-branch
     stages: [commit]
-- repo: local
-  hooks:
-  # Do not use pygrep, but use a grep shell script.
-  # Otherwise, on OSX the command line argument limit will be exceeded
-  # whenever a user runs `pre-commit run -a`
-  - id: do-not-merge
-    name: Check for "DO NOT MERGE".
-    stages: [manual]  # Only run this on CI --- it's called DO NOT MERGE, not DO NOT COMMIT.
-    entry: gitlab-ci/src/checks/do-not-merge.sh
-    language: system
-    exclude: |
-        (?x)^(
-            .pre-commit-config.yaml|
-            checks.nix
-        )$
-
-  - id: DFINITY-capitalization
-    exclude: |
-        (?x)^(
-            checks\.nix|
-            .github/CODEOWNERS|
-            .pre-commit-config.yaml|
-            .*/user_map.csv
-        )$
-    name: Check for improper capitalization of "DFINITY".
-    stages: [manual]  # Only run this on CI, as it makes no sense to run on commit.
-    entry: gitlab-ci/src/checks/dfinity-capitalization.sh
-    language: system
-
 # The following repo is maintained by us at
 # https://gitlab.com/dfinity-lab/open/pre-commit-tools.
 - repo: https://gitlab.com/dfinity-lab/open/pre-commit-tools.git
   rev: 65e8990328b0651ab00d5653d26535d4080ca5f3
   hooks:
-  - id: buf-checks
-    args: ["--config=buf.yaml"]
-  - id: buf-lint
-    args: ["--config=buf.yaml"]
   - id: shfmt
     args: ["-w", "-i", "4", "-bn", "-ci"]
   - id: nixpkgs-fmt
@@ -56,13 +23,8 @@ repos:
   - id: rustfmt
     exclude: |
         (?x)(
-            rs/protobuf/gen|
-            experimental/|
-            rust_canisters/|
-            nix/overlays/|
-            gitlab-ci/|
-            crypto/internal/crypto_lib/fs_ni_dkg/miracl_core
-        ) # exclude these directories.
+            ic
+        ) # exclude these directories; more can be added by |ing them.
   - id: ormolu
 
 - repo: https://github.com/ambv/black
@@ -100,9 +62,25 @@ repos:
 - repo: https://github.com/willthames/ansible-lint.git
   rev: v4.2.0
   hooks:
-    - id: ansible-lint
-      files: (^|/)testnet/.+\.(yaml|yml)$
-      exclude: |
-          (?x)^(
-              testnet/tests/.*|.*/docker-compose.yml|testnet/env/shared-config\.yml
-          )$
+  - id: ansible-lint
+    files: (^|/)testnet/.+\.(yaml|yml)$
+    exclude: |
+        (?x)^(
+            testnet/tests/.*|.*/docker-compose.yml|testnet/env/shared-config\.yml
+        )$
+
+- repo: https://github.com/PyCQA/pylint
+  rev: v2.12.2
+  hooks:
+    - id: pylint
+      name: pylint
+      entry: pylint
+      language: system
+      types: [python]
+      args:
+        [
+          "-rn", # Only display messages
+          "-sn", # Don't display the score
+          "--disable=R,C,W0621",  # Disable: Refactor, Convention, some warnings
+        ]
+

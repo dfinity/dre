@@ -24,7 +24,7 @@ init(autoreset=True, strip=False)
 
 def ci_config_declared_image_digest():
     """Return the image digest that the CI config wants to use."""
-    with open(repo_root / ".gitlab-ci.yml") as f:
+    with open(repo_root / ".gitlab-ci.yml", encoding="utf8") as f:
         s = re.search(r"image:.+release-cli/ci-build@(.+)", f.read())
         if s:
             return s.group(1).strip()
@@ -41,7 +41,9 @@ def local_image_sha256_unchecked():
 
 
 def local_image_sha256():
-    r = subprocess.run(["docker", "inspect", "--format='{{index .RepoDigests 0}}", IMAGE], stdout=subprocess.PIPE)
+    r = subprocess.run(
+        ["docker", "inspect", "--format='{{index .RepoDigests 0}}", IMAGE], stdout=subprocess.PIPE, check=False
+    )
     if r.returncode == 0:
         return r.stdout
     return ""

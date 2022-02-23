@@ -1,5 +1,5 @@
 default:
-  image: registry.gitlab.com/dfinity-lab/core/release-cli/ci-build@sha256:1a35b8aa20a250ef5d4ca26c86186e25d884867c9b40932e0c4db0667c45512f
+  image: registry.gitlab.com/dfinity-lab/core/release-cli/ci-build@sha256:18b4fa8d3a7205b28f2ad233fe0c57aa6a372e60144bd327e24fe34b389c4a4f
   tags:
     # Use the Dfinity CI runners (they have following tags)
     - dfinity
@@ -162,6 +162,17 @@ docker-image-update:
       allow_failure: true  # the pipeline continues running even if the manual job is not run
   script:
     - python3 docker/docker-update-image.py
+
+pre-commit:
+  extends:
+    - .rules-default
+  interruptible: true
+  stage: test
+  variables:
+    PRE_COMMIT_HOME: "$CI_PROJECT_DIR/.git/pre-commit-home"
+  script:
+    - pre-commit install
+    - pre-commit run -a --hook-stage=manual
 
 cargo-clippy:
   extends:
