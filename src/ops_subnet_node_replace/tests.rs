@@ -15,6 +15,7 @@ fn replace_proposal_options_1_node() {
         removed: vec![
             PrincipalId::from_str("z3tum-w7bue-lt6ca-qgynf-us6oq-nc3qc-7miiq-34rbp-ekuoa-g6cqr-wqe").unwrap(),
         ],
+        ..Default::default()
     };
 
     let summary = ops_subnet_node_replace::replace_proposal_options(&change, None)
@@ -60,6 +61,7 @@ fn replace_proposal_options_2_nodes() {
             PrincipalId::from_str("z3tum-w7bue-lt6ca-qgynf-us6oq-nc3qc-7miiq-34rbp-ekuoa-g6cqr-wqe").unwrap(),
             PrincipalId::from_str("ktrkp-ccur6-nvpyb-sokhh-exg7x-pfuds-4jxmw-n2r5m-vj5yt-aqzc4-vae").unwrap(),
         ],
+        ..Default::default()
     };
 
     let summary = ops_subnet_node_replace::replace_proposal_options(&change, None)
