@@ -1,6 +1,7 @@
 #[macro_use]
 extern crate diesel;
 use clap::Parser;
+use colored::Colorize;
 use decentralization::{OptimizeQuery, SubnetChangeResponse};
 use dialoguer::Confirm;
 use diesel::prelude::*;
@@ -131,7 +132,58 @@ impl Runner {
         self.swap_nodes(change).await
     }
 
+    fn print_before_after_scores(change: &SubnetChangeResponse) {
+        println!("Decentralization score changes:");
+        let before_individual = change.score_before.individual();
+        let after_individual = change.score_after.individual();
+        change
+            .score_before
+            .individual()
+            .keys()
+            .map(|k| {
+                let before = before_individual.get(k).unwrap();
+                let after = after_individual.get(k).unwrap();
+                let output = format!(
+                    "{}: {:.2} -> {:.2}  {:>7}",
+                    k,
+                    before,
+                    after,
+                    format!("({:+.0}%)", ((after - before) / before) * 100.)
+                );
+                if before > after {
+                    output.bright_red()
+                } else if after > before {
+                    output.bright_green()
+                } else {
+                    output.dimmed()
+                }
+            })
+            .for_each(|s| println!("{: >40}", s));
+
+        let total_before = change.score_before.total();
+        let total_after = change.score_after.total();
+        let output = format!(
+            "\tTotal: {:.2} -> {:.2}  ({:+.0}%)",
+            total_before,
+            total_after,
+            ((total_after - total_before) / total_before) * 100.
+        )
+        .bold();
+        println!(
+            "\n{}\n",
+            if total_before > total_after {
+                output.red()
+            } else if total_after > total_before {
+                output.green()
+            } else {
+                output.dimmed()
+            }
+        );
+    }
+
     async fn swap_nodes(&self, change: SubnetChangeResponse) -> anyhow::Result<()> {
+        Self::print_before_after_scores(&change);
+
         if !self.ic_admin.dry_run {
             self.dry().run_swap_nodes(change.clone()).await?;
             if !Confirm::new()
