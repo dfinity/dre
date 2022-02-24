@@ -6,7 +6,7 @@ use dialoguer::Confirm;
 use diesel::prelude::*;
 use dotenv::dotenv;
 use ic_base_types::PrincipalId;
-use log::{debug, error, info, warn};
+use log::{debug, info, warn};
 use mercury_management_types::TopologyProposalStatus;
 use tokio::time::{sleep, Duration};
 use utils::env_cfg;
@@ -99,13 +99,13 @@ pub struct Runner {
 }
 
 impl Runner {
-    fn deploy(&self, subnet: &PrincipalId, version: &String) -> anyhow::Result<()> {
+    fn deploy(&self, subnet: &PrincipalId, version: &str) -> anyhow::Result<()> {
         let stdout = self
             .ic_admin
             .propose_run(
                 ic_admin::ProposeCommand::UpdateSubnetReplicaVersion {
-                    subnet: subnet.clone(),
-                    version: version.clone(),
+                    subnet: *subnet,
+                    version: version.to_string(),
                 },
                 ic_admin::ProposeOptions {
                     title: format!("Update subnet {subnet} to replica version {version}").into(),
