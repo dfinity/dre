@@ -67,7 +67,7 @@ impl CliDeprecated {
         let cmd = cmd.args(ic_admin_args);
         if !self.dry_run {
             info!("Running the ic-admin command");
-            print_ic_admin_command_line(&cmd);
+            print_ic_admin_command_line(cmd);
 
             let output = cmd.output()?;
             let stdout = String::from_utf8_lossy(output.stdout.as_ref()).to_string();
@@ -81,7 +81,7 @@ impl CliDeprecated {
             println!("Please confirm enqueueing the following ic-admin command");
             // Show the user the line that would be executed and let them decide if they
             // want to proceed.
-            print_ic_admin_command_line(&cmd);
+            print_ic_admin_command_line(cmd);
 
             let buffer = input("Would you like to proceed [y/N]? ");
             if let "Y" | "YES" = buffer.to_uppercase().as_str() {
@@ -98,14 +98,13 @@ impl CliDeprecated {
         ProposeOptions { title, summary }: ProposeOptions,
     ) -> Result<String> {
         self.run(
-            &format!("propose-to-{}", cmd.to_string()),
+            &format!("propose-to-{}", cmd),
             [
                 title
                     .map(|t| vec!["--proposal-title".to_string(), t])
                     .unwrap_or_default(),
                 summary.map(|s| vec!["--summary".to_string(), s]).unwrap_or_default(),
                 self.neuron_id
-                    .clone()
                     .map(|n| vec!["--proposer".to_string(), n.to_string()])
                     .unwrap_or_default(),
                 cmd.args(),
@@ -132,8 +131,15 @@ pub struct Neuron {
 
 #[derive(Clone)]
 pub enum Auth {
-    HSM { pin: String, slot: String, key_id: String },
-    Keyfile { path: String },
+    Hsm {
+        pin: String,
+        slot: String,
+        key_id: String,
+    },
+    #[allow(dead_code)]
+    Keyfile {
+        path: String,
+    },
 }
 
 impl Cli {
@@ -158,7 +164,7 @@ impl Cli {
         ProposeOptions { title, summary }: ProposeOptions,
     ) -> Result<String, String> {
         self.run(
-            &format!("propose-to-{}", cmd.to_string()),
+            &format!("propose-to-{}", cmd),
             [
                 if self.dry_run {
                     vec!["--dry-run".to_string()]
@@ -172,7 +178,7 @@ impl Cli {
                 self.neuron
                     .as_ref()
                     .map(|n| vec!["--proposer".to_string(), n.id.to_string()])
-                    .ok_or("cannot submit a proposal without a neuron ID".to_string())?,
+                    .ok_or_else(|| "cannot submit a proposal without a neuron ID".to_string())?,
                 cmd.args(),
             ]
             .concat()
@@ -185,7 +191,7 @@ impl Cli {
             self.neuron
                 .as_ref()
                 .map(|n| match n.auth.clone() {
-                    Auth::HSM { pin, slot, key_id } => vec![
+                    Auth::Hsm { pin, slot, key_id } => vec![
                         "--use-hsm".to_string(),
                         "--pin".to_string(),
                         pin,
@@ -205,11 +211,11 @@ impl Cli {
         .concat();
 
         let ic_admin_args = [root_options.as_slice(), &[command.to_string()], args].concat();
-        let ic_admin_path = self.ic_admin.clone().unwrap_or("ic-admin".to_string());
+        let ic_admin_path = self.ic_admin.clone().unwrap_or_else(|| "ic-admin".to_string());
         let mut cmd = Command::new(ic_admin_path);
         let cmd = cmd.args(ic_admin_args);
 
-        Self::print_ic_admin_command_line(&cmd);
+        Self::print_ic_admin_command_line(cmd);
 
         let output = cmd.output().map_err(|e| e.to_string())?;
         if !output.status.success() {
@@ -264,7 +270,7 @@ impl From<&Opts> for CliDeprecated {
             hsm_pin: opts.hsm_pin.clone(),
             hsm_slot: opts.hsm_slot.clone(),
             hsm_key_id: opts.hsm_key_id.clone(),
-            neuron_id: opts.neuron_id.clone(),
+            neuron_id: opts.neuron_id,
             ic_admin: opts.ic_admin.clone(),
             nns_url: opts.nns_url.clone(),
             dry_run: opts.dry_run,
@@ -276,8 +282,8 @@ impl From<&Opts> for Cli {
     fn from(opts: &Opts) -> Self {
         Cli {
             neuron: Neuron {
-                id: opts.neuron_id.clone().unwrap(),
-                auth: Auth::HSM {
+                id: opts.neuron_id.unwrap(),
+                auth: Auth::Hsm {
                     pin: opts.hsm_pin.clone().unwrap(),
                     slot: opts.hsm_slot.clone().unwrap(),
                     key_id: opts.hsm_key_id.clone().unwrap(),
@@ -385,7 +391,7 @@ oSMDIQBa2NLmSmaqjDXej4rrJEuEhKIz7/pGXpxztViWhB+X9Q==
                         path: file
                             .path()
                             .to_str()
-                            .ok_or(anyhow::format_err!("Could not convert temp file path to string"))?
+                            .ok_or_else(|| anyhow::format_err!("Could not convert temp file path to string"))?
                             .to_string(),
                     },
                 }

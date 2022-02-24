@@ -185,9 +185,8 @@ cargo-clippy:
     - .rules-default
   interruptible: true
   stage: test
-  allow_failure: true  # The IC repo fails "cargo clippy" with the latest nightly
   script:
-    - cargo clippy
+    - ./cargo-clippy
 
 cargo-test:
   extends:

@@ -35,15 +35,15 @@ pub fn proposal_get(connection: &SqliteConnection, proposal_id: i64) -> Proposal
 pub fn proposal_add(
     connection: &SqliteConnection,
     proposal_id: u64,
-    proposal_title: &String,
-    proposal_summary: &String,
-    proposal_submit_output: &String,
+    proposal_title: &str,
+    proposal_summary: &str,
+    proposal_submit_output: &str,
 ) {
     let new_row = ProposalAdd {
         id: proposal_id as i64,
-        title: proposal_title.clone(),
-        summary: proposal_summary.clone(),
-        submit_output: proposal_submit_output.clone(),
+        title: proposal_title.to_string(),
+        summary: proposal_summary.to_string(),
+        submit_output: proposal_submit_output.to_string(),
     };
     info!("DB: inserting new Proposal row {:?}", new_row);
     diesel::insert_into(proposals)
