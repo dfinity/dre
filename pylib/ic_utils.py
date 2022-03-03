@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
 """Run ssh commands on a list of nodes, and return the execution status and stdout/stderr."""
 import functools
+import gzip
 import json
 import logging
 import os
 import pathlib
+import platform
 import shlex
+import stat
 import subprocess
 import typing
 from multiprocessing import cpu_count
@@ -13,6 +16,7 @@ from multiprocessing import Pool
 
 import git
 import paramiko
+import requests
 import yaml
 from tenacity import retry
 from tenacity import retry_if_not_exception_type
@@ -315,3 +319,68 @@ def parallel_ssh_run_without_raise(nodes: typing.List[str], username: str, comma
             ssh_run_command,
             map(lambda n: (n, username, command, True, binary_stdout), nodes),
         )
+
+
+@retry(
+    reraise=True,
+    stop=stop_after_attempt(5),
+    wait=wait_exponential(multiplier=1, min=2, max=10),
+)
+def download_ic_binary(remote_path: str, blessed: bool = True):
+    """Download an IC binary from from the DFINITY CDN and return the binary bytes."""
+    if blessed:
+        url = f"https://download.dfinity.systems/blessed/ic/{remote_path}"
+    else:
+        url = f"https://download.dfinity.systems/ic/{remote_path}"
+    logging.info("Downloading: %s", url)
+    resp = requests.get(url, timeout=30)
+    resp.raise_for_status()
+    return resp.content
+
+
+def compute_ic_executable_path(executable_name: str, git_revision: str):
+    """Return the local canister path for the given canister name and git revision."""
+    return pathlib.Path.home() / "bin" / f"{executable_name}.{git_revision}"
+
+
+def download_ic_executable(git_revision: str, executable_name: str, blessed: bool = True):
+    """Download a platform-specific executable for the given git revision and return the local path."""
+    local_path = compute_ic_executable_path(executable_name=executable_name, git_revision=git_revision)
+    if local_path.exists() and local_path.stat().st_size > 0 and os.access(local_path, os.X_OK):
+        logging.debug("Target file already exists: %s", local_path)
+        return local_path
+
+    remote_path = f"{git_revision}/release/{executable_name}.gz"
+    if platform.system() == "Darwin":
+        remote_path = f"{git_revision}/nix-release/x86_64-darwin/{executable_name}.gz"
+    contents = download_ic_binary(remote_path=remote_path, blessed=blessed)
+
+    local_path.parent.mkdir(exist_ok=True, parents=True)  # Ensure the parent directory exists
+    with open(local_path, "wb") as f:
+        f.write(gzip.decompress(contents))
+
+    # Ensure that the file is marked as executable
+    st = os.stat(local_path)
+    os.chmod(local_path, st.st_mode | stat.S_IEXEC)
+    return local_path
+
+
+def compute_local_canister_path(canister_name: str, git_revision: str):
+    """Return the local canister path for the given canister name and git revision."""
+    return pathlib.Path.home() / "tmp" / "canisters" / f"{canister_name}.{git_revision}.wasm"
+
+
+def download_ic_canister(git_revision: str, canister_name: str, blessed: bool = True):
+    """Download a platform-specific executable for the given git revision and return the local path."""
+    local_path = compute_local_canister_path(canister_name=canister_name, git_revision=git_revision)
+    if local_path.exists() and local_path.stat().st_size > 0:
+        logging.debug("Target file already exists: %s", local_path)
+        return local_path
+
+    remote_path = f"{git_revision}/canisters/{canister_name}.wasm.gz"
+    contents = download_ic_binary(remote_path=remote_path, blessed=blessed)
+
+    local_path.parent.mkdir(exist_ok=True, parents=True)  # Ensure the parent directory exists
+    with open(local_path, "wb") as f:
+        f.write(gzip.decompress(contents))
+    return local_path
