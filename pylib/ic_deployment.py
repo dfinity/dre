@@ -2,19 +2,22 @@
 """Interface with the deployment Ansible configuration, e.g. get nodes, ipv6 addresses, etc."""
 import json
 import os
-import pathlib
 import subprocess
 
 import yaml
+
+from .ic_utils import repo_root
 
 
 class IcDeployment:
     """Interface with the deployment Ansible configuration, e.g. get nodes, ipv6 addresses, etc."""
 
-    def __init__(self, repo_root: pathlib.Path, deployment_name: str):
+    def __init__(self, deployment_name: str, nodes_filter_include: str = ""):
         """Create an object for the given git repo root and deployment name."""
-        self.repo_root = repo_root
         self._name = deployment_name
+        if deployment_name == "staging" and not nodes_filter_include:
+            nodes_filter_include = "node_type=(child_nns|app_[0-9]+)"
+        self.nodes_filter_include = nodes_filter_include
 
     @property
     def name(self):
@@ -30,21 +33,21 @@ class IcDeployment:
             [
                 "ansible-inventory",
                 "-i",
-                self.repo_root / f"deployments/env/{self.name}/hosts",
+                repo_root / f"deployments/env/{self.name}/hosts",
                 "--list",
             ],
             env=env,
         )
         return json.loads(output)
 
-    def get_deployment_nodes_ipv6(self, nodes_filter_include=None):
+    def get_deployment_nodes_ipv6(self):
         """Get a list of nodes for a deployment, as a dictionary of {node_name: ipv6}."""
         env = os.environ.copy()
-        if nodes_filter_include:
-            env["NODES_FILTER_INCLUDE"] = nodes_filter_include
+        if self.nodes_filter_include:
+            env["NODES_FILTER_INCLUDE"] = self.nodes_filter_include
         output = subprocess.check_output(
             [
-                self.repo_root / "deployments/ansible/inventory/inventory.py",
+                repo_root / "deployments/ansible/inventory/inventory.py",
                 "--deployment",
                 self.name,
                 "--nodes",
@@ -55,13 +58,17 @@ class IcDeployment:
 
     def get_deployment_subnet_nodes(self, subnet_name):
         """Get a list of nodes for a deployment, as a dictionary of {node_name: ipv6}."""
+        env = os.environ.copy()
+        if self.nodes_filter_include:
+            env["NODES_FILTER_INCLUDE"] = self.nodes_filter_include
         output = subprocess.check_output(
             [
-                self.repo_root / "deployments/ansible/inventory/inventory.py",
+                repo_root / "deployments/ansible/inventory/inventory.py",
                 "--deployment",
                 self.name,
                 "--list",
-            ]
+            ],
+            env=env,
         )
         return json.loads(output)[subnet_name]["hosts"]
 
@@ -76,6 +83,8 @@ class IcDeployment:
 
     def get_nns_url(self):
         """Get the NNS nodes for a deployment."""
+        if self.name in ["mercury", "mainnet"]:
+            return "https://nns.ic0.app/"
         nns_nodes = self.get_deployment_subnet_nodes("nns")
         all_nodes_ipv6 = self.get_deployment_nodes_ipv6()
         nns_node_addr = all_nodes_ipv6[nns_nodes[0]]
@@ -89,14 +98,14 @@ class IcDeployment:
     @property
     def serial_numbers(self):
         """Return the serial numbers for the machines in the Mercury DCs."""
-        serial_numbers_filename = self.repo_root / "deployments/env/serial-numbers.yml"
+        serial_numbers_filename = repo_root / "deployments/env/serial-numbers.yml"
         all_serials = yaml.load(open(serial_numbers_filename, encoding="utf8"), Loader=yaml.FullLoader)
         return {k: v for k, v in all_serials.items() if k.split("-")[0] in self.mercury_dcs}
 
     @property
     def mercury_dcs(self):
         """Return a list of Mercury DCs."""
-        active_dcs = self.repo_root / "factsdb/mercury-dcs.yml"
+        active_dcs = repo_root / "factsdb/mercury-dcs.yml"
         return set(yaml.load(open(active_dcs, encoding="utf8"), Loader=yaml.FullLoader))
 
     def validate_mercury_hosts_ini(self):
@@ -108,11 +117,6 @@ class IcDeployment:
 
 
 if __name__ == "__main__":
-    import git
-
-    git_repo = git.Repo(pathlib.Path(__file__).parent, search_parent_directories=True)
-    repo_root = pathlib.Path(git_repo.git.rev_parse("--show-toplevel"))
-
-    depl = IcDeployment(repo_root, "mercury")
-    depl.validate_mercury_hosts_ini()
+    deployment = IcDeployment("mercury")
+    deployment.validate_mercury_hosts_ini()
     # print(json.dumps(depl.get_deployment_nodes_hostvars(), indent=2))
