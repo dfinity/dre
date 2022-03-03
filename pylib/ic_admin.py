@@ -10,18 +10,37 @@ import os
 import pathlib
 import re
 import subprocess
+import typing
+from multiprocessing import cpu_count
+from multiprocessing import Pool
 
-NNS_URL = os.environ.get("NNS_URL") or "http://[2a00:fb01:400:100:5000:5bff:fe6b:75c6]:8080"
+from tenacity import retry
+from tenacity import stop_after_attempt
+from tenacity import wait_exponential
+
+from pylib.ic_deployment import IcDeployment
+from pylib.ic_utils import download_ic_executable
 
 
 class IcAdmin:
     """Interface with the ic-admin utility."""
 
-    def __init__(self, ic_admin_path: pathlib.Path = pathlib.Path("ic-admin"), nns_url: str = NNS_URL):
+    def __init__(self, deployment: typing.Optional[IcDeployment] = None, git_revision: str = ""):
         """Create an object with the specified ic-admin path and NNS URL."""
-        self.ic_admin_path = ic_admin_path
-        self.nns_url = nns_url
+        if git_revision:
+            self.ic_admin_path = download_ic_executable(git_revision=git_revision, executable_name="ic-admin")
+        else:
+            self.ic_admin_path = pathlib.Path("ic-admin")
+        if not deployment:
+            deployment = IcDeployment("mercury")
+        self.deployment = deployment
+        self.nns_url = deployment.get_nns_url()
 
+    @retry(
+        reraise=True,
+        stop=stop_after_attempt(5),
+        wait=wait_exponential(multiplier=1, min=2, max=10),
+    )
     def _ic_admin_run(self, *cmd):
         return subprocess.check_output([self.ic_admin_path, "--nns-url", self.nns_url, *cmd])
 
@@ -45,6 +64,16 @@ class IcAdmin:
                     node_ids[member] = subnet_id
         return node_ids
 
+    def get_subnet(self, subnet_num):
+        """Query the subnet data."""
+        logging.debug("NNS %s: get-subnet %s", self.nns_url, subnet_num)
+        return json.loads(self._ic_admin_run("get-subnet", str(subnet_num)))
+
+    @functools.lru_cache(maxsize=32)
+    def _get_subnet_list(self):
+        logging.debug("NNS %s: get-subnet-list", self.nns_url)
+        return json.loads(self._ic_admin_run("get-subnet-list"))
+
     def get_subnets(self):
         """Query the network topology and extract subnets."""
         logging.debug("NNS %s: getting the subnets", self.nns_url)
@@ -53,11 +82,18 @@ class IcAdmin:
     def get_subnet_replica_versions(self):
         """Query the network topology and extract subnets and their replica versions."""
         logging.debug("NNS %s: getting the subnet versions", self.nns_url)
-        result = {}
-        for subnet_id, subnet in self.get_subnets().items():
-            for record in subnet["records"]:
-                result[subnet_id] = record["value"]["replica_version_id"]
-        return result
+        subnet_list = self._get_subnet_list()
+        with Pool(cpu_count()) as pool:
+            # for each subnet number get the subnet version
+            subnets_versions = pool.map(self.get_subnet_replica_version, range(len(subnet_list)))
+            # subnets_versions is now an array of versions: each subnet sequentially
+            # construct and return a dict of {subnet_id: version}
+            return {k: v for k, v in zip(subnet_list, subnets_versions)}
+
+    def get_subnet_replica_version(self, subnet_num):
+        """Query the NNS and extract the replica version for the provide subnet_num."""
+        result = self.get_subnet(subnet_num)
+        return result["records"][0]["value"]["replica_version_id"]
 
     def _get_node(self, node_id):
         logging.debug("NNS %s: getting node info: %s", self.nns_url, node_id)
@@ -77,5 +113,6 @@ class IcAdmin:
 
 
 if __name__ == "__main__":
+    # One can run some simple one-off tests here, e.g.:
     ic_admin = IcAdmin()
-    print(ic_admin.node_get_ipv6("7ev5g-lergp-e7ilj-bgucl-qpgwi-6bpjo-itonj-k3aqp-7zios-mkuft-vqe"))
+    print(ic_admin.get_subnet_replica_versions())
