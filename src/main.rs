@@ -35,7 +35,7 @@ async fn main() -> Result<(), anyhow::Error> {
             dashboard_backend_client: clients::DashboardBackendClient {
                 url: cli_opts.backend_url.clone(),
             },
-            decentralization_client: clients::DecenetralizationClient {
+            decentralization_client: clients::DecentralizationClient {
                 url: cli_opts.decentralization_url.clone(),
             },
         };
@@ -96,7 +96,7 @@ async fn main() -> Result<(), anyhow::Error> {
 pub struct Runner {
     ic_admin: ic_admin::Cli,
     dashboard_backend_client: clients::DashboardBackendClient,
-    decentralization_client: clients::DecenetralizationClient,
+    decentralization_client: clients::DecentralizationClient,
 }
 
 impl Runner {
