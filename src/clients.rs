@@ -25,11 +25,11 @@ impl DashboardBackendClient {
 }
 
 #[derive(Clone)]
-pub struct DecenetralizationClient {
+pub struct DecentralizationClient {
     pub url: reqwest::Url,
 }
 
-impl DecenetralizationClient {
+impl DecentralizationClient {
     pub async fn replace(&self, nodes: &[PrincipalId]) -> anyhow::Result<SubnetChangeResponse> {
         reqwest::Client::new()
             .post(self.url.join("replace").map_err(|e| anyhow::anyhow!(e))?)
