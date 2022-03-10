@@ -1,7 +1,5 @@
 FROM ubuntu:20.04
 
-ARG rust_version=nightly
-ARG ic_git_revision=37201f2d611394581a30de9ea78cc742b3672ea4
 ARG protobuf_version=3.18.1
 
 # The image expects the following volumes mounted from the host:
@@ -20,11 +18,15 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone &
     apt -yq update && \
     apt -yqq install --no-install-recommends \
         build-essential pkg-config libssl-dev cmake libbz2-dev gcc-multilib rsync \
-        lldb liblz4-dev librocksdb-dev libsnappy-dev libzstd-dev vim nano jq \
+        clang lld lldb liblz4-dev librocksdb-dev libsnappy-dev libzstd-dev vim nano jq \
         zip unzip python3 python3-requests python3-pip python3-cbor shellcheck \
         liblmdb0 libsqlite3-dev sqlite3 \
         docker-ce-cli iputils-ping sudo gosu && \
     chmod +s /usr/sbin/gosu
+
+# Install the "mold" linker for fast linking of Rust executables
+ARG mold_version=1.1.1
+RUN curl -fsSL https://github.com/rui314/mold/releases/download/v${mold_version}/mold-${mold_version}-x86_64-linux.tar.gz | tar -xz -C /usr/local --strip-components 1
 
 RUN cd `mktemp -d`; curl --fail -LO https://github.com/protocolbuffers/protobuf/releases/download/v${protobuf_version}/protoc-${protobuf_version}-linux-x86_64.zip; unzip * -d /opt/protoc; chmod -R 755 /opt/protoc/bin; chmod -R u+rwX,go+rX,go-w /opt/protoc/include
 
@@ -47,6 +49,7 @@ ENV RUSTUP_HOME=/opt/rustup \
     PROTOC_INCLUDE=/opt/protoc/include \
     PATH=/opt/cargo/bin:$PATH
 
+ARG rust_version=1.58.1
 RUN curl --fail https://sh.rustup.rs -sSf \
         | sh -s -- -y --default-toolchain ${rust_version}-x86_64-unknown-linux-gnu --no-modify-path && \
     rustup default ${rust_version}-x86_64-unknown-linux-gnu && \
@@ -71,6 +74,7 @@ RUN PIPENV_VENV_IN_PROJECT=1 pipenv install --deploy --system --ignore-pipfile
 COPY docker /docker
 
 # Download ic-admin
+ARG ic_git_revision=344a20409415f65a494cb4dc2f9241b687c34868
 RUN  curl --fail https://download.dfinity.systems/ic/${ic_git_revision}/release/ic-admin.gz -o - | gunzip -c >| /usr/bin/ic-admin && \
     chmod +x /usr/bin/ic-admin
 
