@@ -45,6 +45,3 @@ tempfile = "3.3.0"
 
 [profile.release]
 lto = "thin"
-
-[profile.dev]
-lto = "thin"
