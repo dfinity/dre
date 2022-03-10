@@ -53,6 +53,7 @@ ARG rust_version=1.58.1
 RUN curl --fail https://sh.rustup.rs -sSf \
         | sh -s -- -y --default-toolchain ${rust_version}-x86_64-unknown-linux-gnu --no-modify-path && \
     rustup default ${rust_version}-x86_64-unknown-linux-gnu && \
+    rustup component add rls && \
     chown -R ubuntu.ubuntu ${RUSTUP_HOME} ${CARGO_HOME}
 
 # Cargo maintains a local cache of the registry index and of git checkouts of crates at CARGO_HOME
