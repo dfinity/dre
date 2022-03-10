@@ -161,21 +161,18 @@ class IcSshRemoteRun:
 
         run_results = []
         if nodes_external:
-            run_results += parallel_ssh_run(nodes_external, command_external, PHY_HOST_USER)
+            run_results += parallel_ssh_run(nodes_external, username=PHY_HOST_USER, command=command_external)
         if nodes_dfinity:
-            run_results += parallel_ssh_run(nodes_dfinity, command_dfinity, PHY_HOST_USER)
+            run_results += parallel_ssh_run(nodes_dfinity, username=PHY_HOST_USER, command=command_dfinity)
         for node, run_result in zip(nodes_external + nodes_dfinity, run_results):
             rc, stdout, stderr = run_result
             if rc:
                 logging.error("ERROR (%s) at node %s", rc, node)
-                logging.error("STDOUT: %s", stdout.decode("utf8"))
-                logging.error("STDERR: %s", stderr.decode("utf8"))
-                raise RuntimeError(
-                    "Node %s Step failed (rc=%s)\nSTDOUT: %s\nSTDERR: %s"
-                    % (node, rc, stdout.decode("utf"), stderr.decode("utf8"))
-                )
+                logging.error("STDOUT: %s", stdout)
+                logging.error("STDERR: %s", stderr)
+                raise RuntimeError("Node %s Step failed (rc=%s)\nSTDOUT: %s\nSTDERR: %s" % (node, rc, stdout, stderr))
             else:
-                logging.debug("Node %s OK STDOUT: %s", node, stdout.decode("utf8"))
+                logging.debug("Node %s OK STDOUT: %s", node, stdout)
 
     def run_on_guests(self, nodes: typing.List, username: str, command: str):
         """Run the command on the nodes list and return the result."""
@@ -183,7 +180,7 @@ class IcSshRemoteRun:
 
     def check_run_on_guests(self, nodes: typing.List, username: str, command: str):
         """Run the command on the nodes list and return the result, ensuring command success."""
-        return parallel_ssh_run(list(nodes), command, username)
+        return parallel_ssh_run(list(nodes), username=username, command=command)
 
 
 class IcAnsible:
