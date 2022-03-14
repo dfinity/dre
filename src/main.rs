@@ -264,7 +264,8 @@ impl Runner {
 fn init_sqlite_connect() -> SqliteConnection {
     debug!("Initializing the SQLite connection.");
     let home_path = std::env::var("HOME").expect("Getting HOME environment variable failed.");
-    let database_url = env_cfg("DATABASE_URL").replace("~/", format!("{}/", home_path).as_str());
+    let database_url =
+        env_cfg("DATABASE_URL", "~/release-cli-state.sqlite3").replace("~/", format!("{}/", home_path).as_str());
     let database_url_dirname = std::path::Path::new(&database_url)
         .parent()
         .expect("Getting the dirname for the database_url failed.");
@@ -273,7 +274,9 @@ fn init_sqlite_connect() -> SqliteConnection {
 }
 
 fn init_env() {
-    dotenv().expect(".env file not found. Please copy env.template to .env and adjust configuration.");
+    if dotenv().is_err() {
+        info!(".env file not found. You can copy env.template to .env to adjust configuration.");
+    };
 }
 
 fn init_logger() {
