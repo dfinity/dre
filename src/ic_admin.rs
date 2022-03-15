@@ -3,13 +3,15 @@ use colored::Colorize;
 use flate2::read::GzDecoder;
 use futures::Future;
 use ic_base_types::PrincipalId;
-use log::{debug, info, warn};
+use log::{debug, error, info, warn};
 use python_input::input;
+use regex::Regex;
 use std::os::unix::fs::PermissionsExt;
 use std::{path::Path, process::Command};
 use strum::Display;
 
 use crate::cli::Opts;
+use crate::defaults;
 
 #[derive(Clone)]
 pub struct CliDeprecated {
@@ -186,6 +188,30 @@ impl Cli {
         )
     }
 
+    fn _run_ic_admin_with_args(&self, ic_admin_args: &[String]) -> anyhow::Result<String> {
+        let ic_admin_path = self.ic_admin.clone().unwrap_or_else(|| "ic-admin".to_string());
+        let mut cmd = Command::new(ic_admin_path);
+        let cmd = cmd.args(ic_admin_args);
+
+        Self::print_ic_admin_command_line(cmd);
+
+        let output = cmd.output()?;
+
+        if output.status.success() {
+            let mut result = String::from_utf8_lossy(output.stdout.as_ref());
+            if !output.stderr.is_empty() {
+                result += String::from_utf8_lossy(output.stderr.as_ref());
+            }
+            Ok(result.to_string())
+        } else {
+            Err(anyhow::format_err!(
+                "{}\n{}",
+                String::from_utf8_lossy(output.stderr.as_ref()).to_string(),
+                String::from_utf8_lossy(output.stderr.as_ref())
+            ))
+        }
+    }
+
     pub(crate) fn run(&self, command: &str, args: &[String]) -> Result<String, String> {
         let root_options = [
             self.neuron
@@ -211,18 +237,81 @@ impl Cli {
         .concat();
 
         let ic_admin_args = [root_options.as_slice(), &[command.to_string()], args].concat();
+
+        self._run_ic_admin_with_args(&ic_admin_args).map_err(|e| e.to_string())
+    }
+
+    /// Run ic-admin and parse sub-commands that it lists with "--help",
+    /// extract the ones matching `needle_regex` and return them as a
+    /// `Vec<String>`
+    fn grep_subcommands(&self, needle_regex: &str) -> Vec<String> {
         let ic_admin_path = self.ic_admin.clone().unwrap_or_else(|| "ic-admin".to_string());
-        let mut cmd = Command::new(ic_admin_path);
-        let cmd = cmd.args(ic_admin_args);
-
-        Self::print_ic_admin_command_line(cmd);
-
-        let output = cmd.output().map_err(|e| e.to_string())?;
-        if !output.status.success() {
-            Err(String::from_utf8_lossy(output.stderr.as_ref()).to_string())
-        } else {
-            Ok(String::from_utf8_lossy(output.stdout.as_ref()).to_string())
+        let cmd_result = Command::new(ic_admin_path).args(["--help"]).output();
+        match cmd_result.map_err(|e| e.to_string()) {
+            Ok(output) => {
+                if output.status.success() {
+                    let cmd_stdout = String::from_utf8_lossy(output.stdout.as_ref());
+                    let re = Regex::new(needle_regex).unwrap();
+                    re.captures_iter(cmd_stdout.as_ref())
+                        .map(|capt| String::from(capt.get(1).expect("group 1 not found").as_str().trim()))
+                        .collect()
+                } else {
+                    error!(
+                        "Execution of ic-admin failed: {}",
+                        String::from_utf8_lossy(output.stderr.as_ref())
+                    );
+                    vec![]
+                }
+            }
+            Err(err) => {
+                error!("Error starting ic-admin process: {}", err);
+                vec![]
+            }
         }
+    }
+
+    /// Run an `ic-admin get-*` command directly, and without an HSM
+    pub(crate) fn run_passthrough_get(&self, args: &[String]) -> anyhow::Result<()> {
+        if args.is_empty() {
+            println!("List of available ic-admin 'get' sub-commands:\n");
+            for subcmd in self.grep_subcommands(r"\s+get-(.+?)\s") {
+                println!("\t{}", subcmd)
+            }
+            std::process::exit(1);
+        }
+
+        // The `get` subcommand of the cli expects that "get-" prefix is not provided as
+        // the ic-admin command
+        let args = if args[0].starts_with("get-") {
+            // The user did provide the "get-" prefix, so let's just keep it and use it.
+            // This provides a convenient backward compatibility with ic-admin commands
+            // i.e., `release_cli get get-subnet 0` still works, although `release_cli get
+            // subnet 0` is preferred
+            args.to_vec()
+        } else {
+            // But since ic-admin expects these commands to include the "get-" prefix, we
+            // need to add it back Example:
+            // `release_cli get subnet 0` becomes
+            // `ic-admin --nns-url "http://[2600:3004:1200:1200:5000:7dff:fe29:a2f5]:8080" get-subnet 0`
+            let mut args_with_get_prefix = vec![String::from("get-") + args[0].as_str()];
+            args_with_get_prefix.extend_from_slice(args.split_at(1).1);
+            args_with_get_prefix
+        };
+
+        let root_options = match &self.nns_url {
+            Some(nns_url) => {
+                vec!["--nns-url".to_string(), nns_url.clone()]
+            }
+            None => {
+                warn!("NNS URL is not specified. Please specify it with --nns-url or env variable or an entry in .env file. Falling back to the staging NNS.");
+                vec!["--nns-url".to_string(), defaults::DEFAULT_NNS_URL.to_string()]
+            }
+        };
+
+        let ic_admin_args = [root_options.as_slice(), args.as_slice()].concat();
+
+        println!("{}", self._run_ic_admin_with_args(&ic_admin_args)?);
+        Ok(())
     }
 }
 
@@ -282,11 +371,11 @@ impl From<&Opts> for Cli {
     fn from(opts: &Opts) -> Self {
         Cli {
             neuron: Neuron {
-                id: opts.neuron_id.unwrap(),
+                id: opts.neuron_id.unwrap_or_default(),
                 auth: Auth::Hsm {
-                    pin: opts.hsm_pin.clone().unwrap(),
-                    slot: opts.hsm_slot.clone().unwrap(),
-                    key_id: opts.hsm_key_id.clone().unwrap(),
+                    pin: opts.hsm_pin.clone().unwrap_or_default(),
+                    slot: opts.hsm_slot.clone().unwrap_or_default(),
+                    key_id: opts.hsm_key_id.clone().unwrap_or_default(),
                 },
             }
             .into(),
@@ -297,16 +386,14 @@ impl From<&Opts> for Cli {
     }
 }
 
-const DEFAULT_IC_ADMIN_VERSION: &str = "936bf9ccaabd566c68232e5cb3f3ce7d5ae89328";
-
 /// Returns a path to downloaded ic-admin binary
 async fn download_ic_admin(version: Option<String>) -> Result<String> {
-    let version = version.unwrap_or_else(|| DEFAULT_IC_ADMIN_VERSION.to_string());
+    let version = version.unwrap_or_else(|| defaults::DEFAULT_IC_ADMIN_VERSION.to_string());
 
     let home_dir = dirs::home_dir()
         .and_then(|d| d.to_str().map(|s| s.to_string()))
         .ok_or_else(|| anyhow::format_err!("Cannot find home directory"))?;
-    let path = format!("{home_dir}/bin/ic-admin/{version}/ic-admin");
+    let path = format!("{home_dir}/bin/ic-admin.revisions/{version}/ic-admin");
     let path = Path::new(&path);
 
     if !path.exists() {
@@ -318,7 +405,9 @@ async fn download_ic_admin(version: Option<String>) -> Result<String> {
         let body = reqwest::get(url).await?.bytes().await?;
         let mut decoded = GzDecoder::new(body.as_ref());
 
-        std::fs::create_dir_all(path.parent().unwrap())?;
+        let path_parent = path.parent().expect("path parent unwrap failed!");
+        std::fs::create_dir_all(path_parent)
+            .unwrap_or_else(|_| panic!("create_dir_all failed for {}", path_parent.display()));
         let mut out = std::fs::File::create(path)?;
         std::io::copy(&mut decoded, &mut out)?;
         std::fs::set_permissions(path, std::fs::Permissions::from_mode(0o755))?;

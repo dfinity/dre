@@ -14,6 +14,7 @@ use utils::env_cfg;
 mod autoops_types;
 mod cli;
 mod clients;
+pub(crate) mod defaults;
 mod ic_admin;
 mod model_proposals;
 mod model_subnet_update_nodes;
@@ -79,15 +80,19 @@ async fn main() -> Result<(), anyhow::Error> {
                 println!("{}", principal);
                 Ok(())
             }
+
             cli::Commands::Subnet(subnet) => match &subnet.subcommand {
                 cli::subnet::Commands::Deploy { version } => runner.deploy(&subnet.id, version),
                 cli::subnet::Commands::Optimize { max_replacements } => {
                     runner.optimize(subnet.id, *max_replacements).await
                 }
             },
+
             cli::Commands::Node(node) => match &node.subcommand {
                 cli::node::Commands::Replace { nodes } => runner.replace(nodes).await,
             },
+
+            cli::Commands::Get { args } => runner.ic_admin_generic_get(args),
         }
     })
     .await
@@ -250,6 +255,10 @@ impl Runner {
             .map_err(|e| anyhow::anyhow!(e))?;
 
         Ok(())
+    }
+
+    fn ic_admin_generic_get(&self, args: &[String]) -> anyhow::Result<()> {
+        self.ic_admin.run_passthrough_get(args)
     }
 
     fn dry(&self) -> Self {
