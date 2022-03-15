@@ -54,6 +54,11 @@ pub(crate) enum Commands {
     /// Manage an existing subnet
     Subnet(subnet::Cmd),
     Node(node::Cmd),
+    Get {
+        /// Arbitrary ic-admin args
+        #[clap(allow_hyphen_values = true)]
+        args: Vec<String>,
+    },
 }
 
 #[derive(Clone)]
