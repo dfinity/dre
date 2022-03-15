@@ -200,6 +200,7 @@ impl Cli {
         if output.status.success() {
             let mut result = String::from_utf8_lossy(output.stdout.as_ref());
             if !output.stderr.is_empty() {
+                result += "\n";
                 result += String::from_utf8_lossy(output.stderr.as_ref());
             }
             Ok(result.to_string())
