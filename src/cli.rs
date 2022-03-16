@@ -4,12 +4,14 @@ use std::str::FromStr;
 #[derive(Parser, Clone)]
 #[clap(about, version, author)]
 pub struct Opts {
-    #[clap(short = 'p', long, env)]
+    #[clap(long, env)]
     pub(crate) hsm_pin: Option<String>,
-    #[clap(short = 's', long, env)]
+    #[clap(long, env)]
     pub(crate) hsm_slot: Option<String>,
     #[clap(short, long, env)]
     pub(crate) hsm_key_id: Option<String>,
+    #[clap(long, env)]
+    pub(crate) private_key_pem: Option<String>,
     #[clap(short, long, env)]
     pub(crate) neuron_id: Option<u64>,
     #[clap(short, long, env)]
@@ -55,6 +57,11 @@ pub(crate) enum Commands {
     Subnet(subnet::Cmd),
     Node(node::Cmd),
     Get {
+        /// Arbitrary ic-admin args
+        #[clap(allow_hyphen_values = true)]
+        args: Vec<String>,
+    },
+    Propose {
         /// Arbitrary ic-admin args
         #[clap(allow_hyphen_values = true)]
         args: Vec<String>,
