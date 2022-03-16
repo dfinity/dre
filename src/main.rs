@@ -93,6 +93,8 @@ async fn main() -> Result<(), anyhow::Error> {
             },
 
             cli::Commands::Get { args } => runner.ic_admin_generic_get(args),
+
+            cli::Commands::Propose { args } => runner.ic_admin_generic_propose(args),
         }
     })
     .await
@@ -106,8 +108,7 @@ pub struct Runner {
 
 impl Runner {
     fn deploy(&self, subnet: &PrincipalId, version: &str) -> anyhow::Result<()> {
-        let stdout = self
-            .ic_admin
+        self.ic_admin
             .propose_run(
                 ic_admin::ProposeCommand::UpdateSubnetReplicaVersion {
                     subnet: *subnet,
@@ -119,7 +120,6 @@ impl Runner {
                 },
             )
             .map_err(|e| anyhow::anyhow!(e))?;
-        info!("{}", stdout);
 
         Ok(())
     }
@@ -259,6 +259,10 @@ impl Runner {
 
     fn ic_admin_generic_get(&self, args: &[String]) -> anyhow::Result<()> {
         self.ic_admin.run_passthrough_get(args)
+    }
+
+    fn ic_admin_generic_propose(&self, args: &[String]) -> anyhow::Result<()> {
+        self.ic_admin.run_passthrough_propose(args)
     }
 
     fn dry(&self) -> Self {
