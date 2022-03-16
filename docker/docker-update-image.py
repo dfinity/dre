@@ -16,7 +16,7 @@ from colorama import init
 
 git_repo = git.Repo(os.path.dirname(__file__), search_parent_directories=True)
 repo_root = pathlib.Path(git_repo.git.rev_parse("--show-toplevel"))
-IMAGE = "registry.gitlab.com/dfinity-lab/core/release-cli/ci-build"
+IMAGE = "registry.gitlab.com/dfinity-lab/core/release/ci-build"
 os.chdir(repo_root)
 # Init colorama, strip=False forces colors even on non-interactive terminals, such as the CI logs
 init(autoreset=True, strip=False)
@@ -25,7 +25,7 @@ init(autoreset=True, strip=False)
 def ci_config_declared_image_digest():
     """Return the image digest that the CI config wants to use."""
     with open(repo_root / ".gitlab-ci.yml", encoding="utf8") as f:
-        s = re.search(r"image:.+release-cli/ci-build@(.+)", f.read())
+        s = re.search(r"image:.+release/ci-build@(.+)", f.read())
         if s:
             return s.group(1).strip()
     return ""
@@ -66,7 +66,7 @@ def patch_ci_config_image_sha256(target_sha256):
     for f in find_ci_files():
         print("Patching CI config file %s" % f)
         subprocess.check_call(
-            ["sed", "--in-place", "-e", f"s!/release-cli/ci-build.*$!/release-cli/ci-build@{target_sha256}!", f]
+            ["sed", "--in-place", "-e", f"s!/release/ci-build.*$!/release/ci-build@{target_sha256}!", f]
         )
 
 
@@ -81,7 +81,7 @@ def docker_build_image(cache_image):
         "--cache-from",
         cache_image,
         "--tag",
-        "release-cli:latest",
+        "release:latest",
         "--tag",
         IMAGE,
         "-f",
