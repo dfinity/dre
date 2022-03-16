@@ -131,17 +131,33 @@ pub struct Neuron {
     auth: Auth,
 }
 
+impl Neuron {
+    pub fn as_arg_vec(&self) -> Vec<String> {
+        vec!["--proposer".to_string(), self.id.to_string()]
+    }
+}
+
 #[derive(Clone)]
 pub enum Auth {
-    Hsm {
-        pin: String,
-        slot: String,
-        key_id: String,
-    },
-    #[allow(dead_code)]
-    Keyfile {
-        path: String,
-    },
+    Hsm { pin: String, slot: String, key_id: String },
+    Keyfile { path: String },
+}
+
+impl Auth {
+    pub fn as_arg_vec(&self) -> Vec<String> {
+        match self {
+            Auth::Hsm { pin, slot, key_id } => vec![
+                "--use-hsm".to_string(),
+                "--pin".to_string(),
+                pin.clone(),
+                "--slot".to_string(),
+                slot.clone(),
+                "--key-id".to_string(),
+                key_id.clone(),
+            ],
+            Auth::Keyfile { path } => vec!["--secret-key-pem".to_string(), path.clone()],
+        }
+    }
 }
 
 impl Cli {
@@ -164,72 +180,46 @@ impl Cli {
         &self,
         cmd: ProposeCommand,
         ProposeOptions { title, summary }: ProposeOptions,
-    ) -> Result<String, String> {
-        self.run(
-            &format!("propose-to-{}", cmd),
-            [
-                if self.dry_run {
-                    vec!["--dry-run".to_string()]
-                } else {
-                    Default::default()
-                },
-                title
-                    .map(|t| vec!["--proposal-title".to_string(), t])
-                    .unwrap_or_default(),
-                summary.map(|s| vec!["--summary".to_string(), s]).unwrap_or_default(),
-                self.neuron
-                    .as_ref()
-                    .map(|n| vec!["--proposer".to_string(), n.id.to_string()])
-                    .ok_or_else(|| "cannot submit a proposal without a neuron ID".to_string())?,
-                cmd.args(),
-            ]
-            .concat()
-            .as_slice(),
-        )
+    ) -> anyhow::Result<()> {
+        let ic_admin_args = [
+            if self.dry_run {
+                vec!["--dry-run".to_string()]
+            } else {
+                Default::default()
+            },
+            title
+                .map(|t| vec!["--proposal-title".to_string(), t])
+                .unwrap_or_default(),
+            summary.map(|s| vec!["--summary".to_string(), s]).unwrap_or_default(),
+            self.neuron
+                .as_ref()
+                .map(|n| n.as_arg_vec())
+                .ok_or_else(|| anyhow::format_err!("cannot submit a proposal without a neuron ID"))?,
+            cmd.args(),
+        ]
+        .concat();
+        self.run(&format!("propose-to-{}", cmd), &ic_admin_args)
     }
 
-    fn _run_ic_admin_with_args(&self, ic_admin_args: &[String]) -> anyhow::Result<String> {
+    fn _run_ic_admin_with_args(&self, ic_admin_args: &[String]) -> anyhow::Result<()> {
         let ic_admin_path = self.ic_admin.clone().unwrap_or_else(|| "ic-admin".to_string());
         let mut cmd = Command::new(ic_admin_path);
         let cmd = cmd.args(ic_admin_args);
 
         Self::print_ic_admin_command_line(cmd);
 
-        let output = cmd.output()?;
-
-        if output.status.success() {
-            let mut result = String::from_utf8_lossy(output.stdout.as_ref());
-            if !output.stderr.is_empty() {
-                result += "\n";
-                result += String::from_utf8_lossy(output.stderr.as_ref());
-            }
-            Ok(result.to_string())
-        } else {
-            Err(anyhow::format_err!(
-                "{}\n{}",
-                String::from_utf8_lossy(output.stderr.as_ref()).to_string(),
-                String::from_utf8_lossy(output.stderr.as_ref())
-            ))
+        match cmd.spawn() {
+            Ok(mut child) => match child.wait() {
+                Ok(_) => Ok(()),
+                Err(err) => Err(anyhow::format_err!("ic-admin wasn't running: {}", err.to_string())),
+            },
+            Err(e) => Err(anyhow::format_err!("failed to run ic-admin: {}", e.to_string())),
         }
     }
 
-    pub(crate) fn run(&self, command: &str, args: &[String]) -> Result<String, String> {
+    pub(crate) fn run(&self, command: &str, args: &[String]) -> anyhow::Result<()> {
         let root_options = [
-            self.neuron
-                .as_ref()
-                .map(|n| match n.auth.clone() {
-                    Auth::Hsm { pin, slot, key_id } => vec![
-                        "--use-hsm".to_string(),
-                        "--pin".to_string(),
-                        pin,
-                        "--slot".to_string(),
-                        slot,
-                        "--key-id".to_string(),
-                        key_id,
-                    ],
-                    Auth::Keyfile { path } => vec!["-s".to_string(), path],
-                })
-                .unwrap_or_default(),
+            self.neuron.as_ref().map(|n| n.auth.as_arg_vec()).unwrap_or_default(),
             self.nns_url
                 .clone()
                 .map(|n| vec!["--nns-url".to_string(), n])
@@ -239,7 +229,7 @@ impl Cli {
 
         let ic_admin_args = [root_options.as_slice(), &[command.to_string()], args].concat();
 
-        self._run_ic_admin_with_args(&ic_admin_args).map_err(|e| e.to_string())
+        self._run_ic_admin_with_args(&ic_admin_args)
     }
 
     /// Run ic-admin and parse sub-commands that it lists with "--help",
@@ -311,8 +301,49 @@ impl Cli {
 
         let ic_admin_args = [root_options.as_slice(), args.as_slice()].concat();
 
-        println!("{}", self._run_ic_admin_with_args(&ic_admin_args)?);
-        Ok(())
+        self._run_ic_admin_with_args(&ic_admin_args)
+    }
+
+    /// Run an `ic-admin propose-to-*` command directly
+    pub(crate) fn run_passthrough_propose(&self, args: &[String]) -> anyhow::Result<()> {
+        if args.is_empty() {
+            println!("List of available ic-admin 'propose' sub-commands:\n");
+            for subcmd in self.grep_subcommands(r"\s+propose-to-(.+?)\s") {
+                println!("\t{}", subcmd)
+            }
+            std::process::exit(1);
+        }
+
+        // The `propose` subcommand of the cli expects that "propose-to-" prefix is not
+        // provided as the ic-admin command
+        let args = if args[0].starts_with("propose-to-") {
+            // The user did provide the "propose-to-" prefix, so let's just keep it and use
+            // it.
+            args.to_vec()
+        } else {
+            // But since ic-admin expects these commands to include the "propose-to-"
+            // prefix, we need to add it back.
+            let mut args_with_fixed_prefix = vec![String::from("propose-to-") + args[0].as_str()];
+            args_with_fixed_prefix.extend_from_slice(args.split_at(1).1);
+            args_with_fixed_prefix
+        };
+
+        let nns_args = match &self.nns_url {
+            Some(nns_url) => vec!["--nns-url".to_string(), nns_url.clone()],
+            None => {
+                warn!("NNS URL is not specified. Please specify it with --nns-url or env variable or an entry in .env file. Falling back to the staging NNS.");
+                vec!["--nns-url".to_string(), defaults::DEFAULT_NNS_URL.to_string()]
+            }
+        };
+        let root_options = [
+            nns_args,
+            self.neuron.as_ref().map(|n| n.auth.as_arg_vec()).unwrap_or_default(),
+        ]
+        .concat();
+
+        let ic_admin_args = [root_options.as_slice(), args.as_slice()].concat();
+
+        self._run_ic_admin_with_args(&ic_admin_args)
     }
 }
 
@@ -373,10 +404,15 @@ impl From<&Opts> for Cli {
         Cli {
             neuron: Neuron {
                 id: opts.neuron_id.unwrap_or_default(),
-                auth: Auth::Hsm {
-                    pin: opts.hsm_pin.clone().unwrap_or_default(),
-                    slot: opts.hsm_slot.clone().unwrap_or_default(),
-                    key_id: opts.hsm_key_id.clone().unwrap_or_default(),
+                auth: match &opts.private_key_pem {
+                    Some(private_key_pem) => Auth::Keyfile {
+                        path: private_key_pem.clone(),
+                    },
+                    None => Auth::Hsm {
+                        pin: opts.hsm_pin.clone().unwrap_or_default(),
+                        slot: opts.hsm_slot.clone().unwrap_or_default(),
+                        key_id: opts.hsm_key_id.clone().unwrap_or_default(),
+                    },
                 },
             }
             .into(),
@@ -449,29 +485,20 @@ oSMDIQBa2NLmSmaqjDXej4rrJEuEhKIz7/pGXpxztViWhB+X9Q==
         )?;
 
         let test_cases = vec![
-            (
-                ProposeCommand::AddNodesToSubnet {
-                    subnet_id: Default::default(),
-                    nodes: vec![Default::default()],
-                },
-                include_str!("../assets/ic-admin-outputs/propose-to-add-nodes-to-subnet.out"),
-            ),
-            (
-                ProposeCommand::RemoveNodesFromSubnet {
-                    nodes: vec![Default::default()],
-                },
-                include_str!("../assets/ic-admin-outputs/propose-to-remove-nodes-from-subnet.out"),
-            ),
-            (
-                ProposeCommand::UpdateSubnetReplicaVersion {
-                    subnet: Default::default(),
-                    version: "0000000000000000000000000000000000000000".to_string(),
-                },
-                include_str!("../assets/ic-admin-outputs/propose-to-update-subnet-replica-version.out"),
-            ),
+            ProposeCommand::AddNodesToSubnet {
+                subnet_id: Default::default(),
+                nodes: vec![Default::default()],
+            },
+            ProposeCommand::RemoveNodesFromSubnet {
+                nodes: vec![Default::default()],
+            },
+            ProposeCommand::UpdateSubnetReplicaVersion {
+                subnet: Default::default(),
+                version: "0000000000000000000000000000000000000000".to_string(),
+            },
         ];
 
-        for (cmd, expect_out) in test_cases {
+        for cmd in test_cases {
             let cli = Cli {
                 nns_url: "http://localhost:8080".to_string().into(),
                 dry_run: true,
@@ -499,9 +526,6 @@ oSMDIQBa2NLmSmaqjDXej4rrJEuEhKIz7/pGXpxztViWhB+X9Q==
                 r#"failed running the ic-admin command for {cmd_name} subcommand: {}"#,
                 out.err().map(|e| e.to_string()).unwrap_or_default()
             );
-
-            let out = out.unwrap();
-            assert_eq!(out, expect_out, "test case for {cmd_name} subcommand",);
         }
 
         Ok(())
