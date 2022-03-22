@@ -6,9 +6,10 @@ use decentralization::{OptimizeQuery, SubnetChangeResponse};
 use dialoguer::Confirm;
 use diesel::prelude::*;
 use dotenv::dotenv;
+use futures::Future;
 use ic_base_types::PrincipalId;
 use log::{debug, info, warn};
-use mercury_management_types::TopologyProposalStatus;
+use mercury_management_types::{TopologyProposal, TopologyProposalKind, TopologyProposalStatus};
 use tokio::time::{sleep, Duration};
 use utils::env_cfg;
 mod autoops_types;
@@ -83,31 +84,39 @@ async fn main() -> Result<(), anyhow::Error> {
 
             cli::Commands::Subnet(subnet) => {
                 let mut cmd = cli::Opts::command();
-                if let cli::subnet::Commands::Replace {
-                    nodes,
-                    no_heal: _,
-                    optimize: _,
-                    motivation: _,
-                } = &subnet.subcommand
-                {
-                    if !nodes.is_empty() && subnet.id.is_some() {
-                        cmd.error(
-                            ErrorKind::ArgumentConflict,
-                            "Specify either a subnet id or a list of nodes to replace",
-                        )
-                        .exit();
-                    } else if nodes.is_empty() && subnet.id.is_none() {
-                        cmd.error(
-                            ErrorKind::MissingRequiredArgument,
-                            "Specify either a subnet id or a list of nodes to replace",
-                        )
-                        .exit();
+                match &subnet.subcommand {
+                    cli::subnet::Commands::Deploy { .. } | cli::subnet::Commands::Optimize { .. } => {
+                        if subnet.id.is_none() {
+                            cmd.error(ErrorKind::MissingRequiredArgument, "Required argument `id` not found")
+                                .exit();
+                        }
                     }
-                } else if subnet.id.is_none() {
-                    cmd.error(ErrorKind::MissingRequiredArgument, "Required argument `id` not found")
-                        .exit();
-                } else {
-                    unreachable!()
+                    cli::subnet::Commands::Replace { nodes, finalize, .. } => {
+                        if *finalize {
+                            if subnet.id.is_none() {
+                                cmd.error(ErrorKind::MissingRequiredArgument, "Required argument `id` not found")
+                                    .exit();
+                            } else if !nodes.is_empty() {
+                                cmd.error(
+                                    ErrorKind::ArgumentConflict,
+                                    "Cannot pass `nodes` when finalizing a replacement",
+                                )
+                                .exit();
+                            }
+                        } else if !nodes.is_empty() && subnet.id.is_some() {
+                            cmd.error(
+                                ErrorKind::ArgumentConflict,
+                                "Specify either a subnet id or a list of nodes to replace",
+                            )
+                            .exit();
+                        } else if nodes.is_empty() && subnet.id.is_none() {
+                            cmd.error(
+                                ErrorKind::MissingRequiredArgument,
+                                "Specify either a subnet id or a list of nodes to replace",
+                            )
+                            .exit();
+                        }
+                    }
                 }
 
                 match &subnet.subcommand {
@@ -120,30 +129,37 @@ async fn main() -> Result<(), anyhow::Error> {
                         no_heal,
                         optimize,
                         motivation,
+                        finalize,
                     } => {
-                        runner
-                            .membership_replace(mercury_management_types::requests::MembershipReplaceRequest {
-                                target: match &subnet.id {
-                                    Some(subnet) => mercury_management_types::requests::ReplaceTarget::Subnet(*subnet),
-                                    None => {
-                                        if let Some(motivation) = motivation.clone() {
-                                            mercury_management_types::requests::ReplaceTarget::Nodes {
-                                                nodes: nodes.clone(),
-                                                motivation,
-                                            }
-                                        } else {
-                                            cmd.error(
-                                                ErrorKind::MissingRequiredArgument,
-                                                "Required argument `motivation` not found",
-                                            )
-                                            .exit();
+                        if *finalize {
+                            runner.recover_finalize_swap(subnet.id.unwrap()).await
+                        } else {
+                            runner
+                                .membership_replace(mercury_management_types::requests::MembershipReplaceRequest {
+                                    target: match &subnet.id {
+                                        Some(subnet) => {
+                                            mercury_management_types::requests::ReplaceTarget::Subnet(*subnet)
                                         }
-                                    }
-                                },
-                                heal: !no_heal,
-                                optimize: *optimize,
-                            })
-                            .await
+                                        None => {
+                                            if let Some(motivation) = motivation.clone() {
+                                                mercury_management_types::requests::ReplaceTarget::Nodes {
+                                                    nodes: nodes.clone(),
+                                                    motivation,
+                                                }
+                                            } else {
+                                                cmd.error(
+                                                    ErrorKind::MissingRequiredArgument,
+                                                    "Required argument `motivation` not found",
+                                                )
+                                                .exit();
+                                            }
+                                        }
+                                    },
+                                    heal: !no_heal,
+                                    optimize: *optimize,
+                                })
+                                .await
+                        }
                     }
                 }
             }
@@ -160,6 +176,7 @@ async fn main() -> Result<(), anyhow::Error> {
     .await
 }
 
+#[derive(Clone)]
 pub struct Runner {
     ic_admin: ic_admin::Cli,
     dashboard_backend_client: clients::DashboardBackendClient,
@@ -258,18 +275,11 @@ impl Runner {
     async fn swap_nodes(&self, change: SubnetChangeResponse) -> anyhow::Result<()> {
         Self::print_before_after_scores(&change);
 
-        if !self.ic_admin.dry_run {
-            self.dry().run_swap_nodes(change.clone()).await?;
-            if !Confirm::new()
-                .with_prompt("Do you want to continue?")
-                .default(false)
-                .interact()?
-            {
-                return Err(anyhow::anyhow!("Action aborted"));
-            }
-        }
-
-        self.run_swap_nodes(change).await
+        self.with_confirmation(|r| {
+            let change = change.clone();
+            async move { r.run_swap_nodes(change).await }
+        })
+        .await
     }
 
     async fn run_swap_nodes(&self, change: SubnetChangeResponse) -> anyhow::Result<()> {
@@ -283,7 +293,8 @@ impl Runner {
                     "There is a pending proposal for this subnet: https://dashboard.internetcomputer.org/proposal/{}",
                     proposal.id
                 ),
-                "Please complete it first by running `release_cli subnet --subnet-id {subnet_id} tidy`".to_string(),
+                "Please complete it first by running `release-cli subnet --subnet-id {subnet_id} replace --finalize`"
+                    .to_string(),
             ]
             .join("\n")));
         }
@@ -298,9 +309,17 @@ impl Runner {
             )
             .map_err(|e| anyhow::anyhow!(e))?;
 
+        self.run_finalize_swap(change).await
+    }
+
+    async fn run_finalize_swap(&self, change: SubnetChangeResponse) -> anyhow::Result<()> {
+        let subnet_id = change
+            .subnet_id
+            .ok_or_else(|| anyhow::anyhow!("subnet_id is required"))?;
+
         let add_proposal_id = if !self.ic_admin.dry_run {
             loop {
-                if let Some(proposal) = self.dashboard_backend_client.subnet_pending_action(subnet_id).await? {
+                if let Ok(Some(proposal)) = self.dashboard_backend_client.subnet_pending_action(subnet_id).await {
                     if matches!(proposal.status, TopologyProposalStatus::Executed) {
                         break proposal.id;
                     }
@@ -324,6 +343,53 @@ impl Runner {
             .map_err(|e| anyhow::anyhow!(e))?;
 
         Ok(())
+    }
+
+    async fn recover_finalize_swap(&self, subnet_id: PrincipalId) -> anyhow::Result<()> {
+        let change = loop {
+            if let Ok(proposal) = self.dashboard_backend_client.subnet_pending_action(subnet_id).await {
+                if let TopologyProposal {
+                    status: TopologyProposalStatus::Executed,
+                    kind: TopologyProposalKind::ReplaceNode(replace),
+                    id,
+                } = proposal.ok_or_else(|| anyhow::anyhow!("No pending proposal found for this subnet"))?
+                {
+                    break SubnetChangeResponse {
+                        added: replace.new_nodes,
+                        removed: replace.old_nodes,
+                        subnet_id: subnet_id.into(),
+                        motivation: format!("Finalize the replacements started with proposal {}", id).into(),
+                        ..Default::default()
+                    };
+                };
+            }
+            sleep(Duration::from_secs(10)).await
+        };
+
+        self.with_confirmation(|r| {
+            let change = change.clone();
+            async move { r.run_finalize_swap(change).await }
+        })
+        .await
+    }
+
+    async fn with_confirmation<E, F>(&self, exec: E) -> anyhow::Result<()>
+    where
+        E: Fn(Self) -> F,
+        F: Future<Output = anyhow::Result<()>>,
+    {
+        if !self.ic_admin.dry_run {
+            exec(self.dry()).await?;
+            if !Confirm::new()
+                .with_prompt("Do you want to continue?")
+                .default(false)
+                .interact()?
+            {
+                return Err(anyhow::anyhow!("Action aborted"));
+            }
+        }
+
+        exec(self.clone()).await
     }
 
     fn ic_admin_generic_get(&self, args: &[String]) -> anyhow::Result<()> {
