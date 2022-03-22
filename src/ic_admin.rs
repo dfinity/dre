@@ -97,7 +97,11 @@ impl CliDeprecated {
     pub(crate) fn propose_run(
         &self,
         cmd: ProposeCommand,
-        ProposeOptions { title, summary }: ProposeOptions,
+        ProposeOptions {
+            title,
+            summary,
+            motivation: _,
+        }: ProposeOptions,
     ) -> Result<String> {
         self.run(
             &format!("propose-to-{}", cmd),
@@ -133,7 +137,7 @@ pub struct Neuron {
 
 impl Neuron {
     pub fn as_arg_vec(&self) -> Vec<String> {
-        vec!["--proposer".to_string(), self.id.to_string()]
+        vec![format!("--proposer={}", self.id)]
     }
 }
 
@@ -179,26 +183,44 @@ impl Cli {
     pub(crate) fn propose_run(
         &self,
         cmd: ProposeCommand,
-        ProposeOptions { title, summary }: ProposeOptions,
+        ProposeOptions {
+            title,
+            summary,
+            motivation,
+        }: ProposeOptions,
     ) -> anyhow::Result<()> {
-        let ic_admin_args = [
-            if self.dry_run {
-                vec!["--dry-run".to_string()]
-            } else {
-                Default::default()
-            },
-            title
-                .map(|t| vec!["--proposal-title".to_string(), t])
-                .unwrap_or_default(),
-            summary.map(|s| vec!["--summary".to_string(), s]).unwrap_or_default(),
-            self.neuron
-                .as_ref()
-                .map(|n| n.as_arg_vec())
-                .ok_or_else(|| anyhow::format_err!("cannot submit a proposal without a neuron ID"))?,
-            cmd.args(),
-        ]
-        .concat();
-        self.run(&format!("propose-to-{}", cmd), &ic_admin_args)
+        self.run(
+            &format!("propose-to-{}", cmd),
+            [
+                if self.dry_run {
+                    vec!["--dry-run".to_string()]
+                } else {
+                    Default::default()
+                },
+                title
+                    .map(|t| vec!["--proposal-title".to_string(), t])
+                    .unwrap_or_default(),
+                summary
+                    .map(|s| {
+                        vec![
+                            "--summary".to_string(),
+                            format!(
+                                "{}{}",
+                                s,
+                                motivation.map(|m| format!("\n\nMotivation: {m}")).unwrap_or_default(),
+                            ),
+                        ]
+                    })
+                    .unwrap_or_default(),
+                self.neuron
+                    .as_ref()
+                    .map(|n| n.as_arg_vec())
+                    .ok_or_else(|| anyhow::anyhow!("cannot submit a proposal without a neuron ID"))?,
+                cmd.args(),
+            ]
+            .concat()
+            .as_slice(),
+        )
     }
 
     fn _run_ic_admin_with_args(&self, ic_admin_args: &[String]) -> anyhow::Result<()> {
@@ -383,6 +405,7 @@ impl ProposeCommand {
 pub struct ProposeOptions {
     pub title: Option<String>,
     pub summary: Option<String>,
+    pub motivation: Option<String>,
 }
 
 impl From<&Opts> for CliDeprecated {

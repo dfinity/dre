@@ -81,6 +81,7 @@ pub fn check_and_submit_proposals_subnet_add_nodes(
                         ic_admin::ProposeOptions {
                             summary: proposal_summary.clone().into(),
                             title: proposal_title.clone().into(),
+                            motivation: None,
                         },
                     )?;
                     info!("Proposal submitted successfully: {}", ic_admin_stdout);
@@ -167,6 +168,7 @@ fn proposal_delete_create(
         ic_admin::ProposeOptions {
             summary: proposal_summary.clone().into(),
             title: proposal_title.clone().into(),
+            motivation: None,
         },
     )?;
     info!("Proposal submitted successfully: {}", ic_admin_stdout);
@@ -253,6 +255,7 @@ pub fn subnet_nodes_replace(
                 ic_admin::ProposeOptions {
                     summary: proposal_summary.into(),
                     title: proposal_title.into(),
+                    motivation: None,
                 },
             )?;
 
@@ -268,6 +271,7 @@ pub fn subnet_nodes_replace(
                 ic_admin::ProposeOptions {
                     summary: proposal_summary.into(),
                     title: proposal_title.into(),
+                    motivation: None,
                 },
             )?;
 
@@ -425,5 +429,6 @@ pub fn replace_proposal_options(
             remove_nodes = concat_principals(&change.removed),
         )
         .into(),
+        motivation: change.motivation.clone(),
     })
 }
