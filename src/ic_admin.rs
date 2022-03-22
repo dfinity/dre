@@ -172,7 +172,7 @@ impl Cli {
         }
     }
 
-    fn print_ic_admin_command_line(cmd: &Command) {
+    fn print_ic_admin_command_line(&self, cmd: &Command) {
         info!(
             "running ic-admin: \n$ {}{}",
             cmd.get_program().to_str().unwrap().yellow(),
@@ -180,7 +180,21 @@ impl Cli {
                 .map(|s| s.to_str().unwrap().to_string())
                 .fold("".to_string(), |acc, s| {
                     let s = if s.contains('\n') { format!(r#""{}""#, s) } else { s };
-                    if s.starts_with("--") {
+                    if self
+                        .neuron
+                        .as_ref()
+                        .and_then(|n| {
+                            if let Auth::Hsm { pin, .. } = &n.auth {
+                                Some(pin.clone())
+                            } else {
+                                None
+                            }
+                        })
+                        .unwrap_or_default()
+                        == s
+                    {
+                        format!("{acc} <redacted>")
+                    } else if s.starts_with("--") {
                         format!("{acc} \\\n    {s}")
                     } else if !acc.split(' ').last().unwrap_or_default().starts_with("--") {
                         format!("{acc} \\\n  {s}")
@@ -240,7 +254,7 @@ impl Cli {
         let mut cmd = Command::new(ic_admin_path);
         let cmd = cmd.args(ic_admin_args);
 
-        Self::print_ic_admin_command_line(cmd);
+        self.print_ic_admin_command_line(cmd);
 
         match cmd.spawn() {
             Ok(mut child) => match child.wait() {
