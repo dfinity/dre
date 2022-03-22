@@ -94,8 +94,8 @@ pub fn check_and_submit_proposals_subnet_add_nodes(
                     );
                     model_subnet_update_nodes::subnet_nodes_to_add_update_proposal_id(
                         db_connection,
-                        &subnet_id.to_string(),
-                        &nodes_to_add.to_string(),
+                        subnet_id,
+                        nodes_to_add,
                         proposal_id,
                     )?;
                 }
@@ -180,8 +180,8 @@ fn proposal_delete_create(
     );
     model_subnet_update_nodes::subnet_nodes_to_remove_update_proposal_id(
         db_connection,
-        &subnet_id.to_string(),
-        &nodes_to_remove.to_string(),
+        subnet_id,
+        nodes_to_remove,
         proposal_id,
     )?;
     Ok(())
