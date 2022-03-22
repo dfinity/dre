@@ -212,6 +212,9 @@ pub(crate) mod subnet {
 
             #[clap(short, long)]
             optimize: Option<usize>,
+
+            #[clap(short, long)]
+            motivation: Option<String>,
         },
     }
 }
