@@ -87,6 +87,7 @@ async fn main() -> Result<(), anyhow::Error> {
                     nodes,
                     no_heal: _,
                     optimize: _,
+                    motivation: _,
                 } = &subnet.subcommand
                 {
                     if !nodes.is_empty() && subnet.id.is_some() {
@@ -118,12 +119,26 @@ async fn main() -> Result<(), anyhow::Error> {
                         nodes,
                         no_heal,
                         optimize,
+                        motivation,
                     } => {
                         runner
                             .membership_replace(mercury_management_types::requests::MembershipReplaceRequest {
                                 target: match &subnet.id {
                                     Some(subnet) => mercury_management_types::requests::ReplaceTarget::Subnet(*subnet),
-                                    None => mercury_management_types::requests::ReplaceTarget::Nodes(nodes.clone()),
+                                    None => {
+                                        if let Some(motivation) = motivation.clone() {
+                                            mercury_management_types::requests::ReplaceTarget::Nodes {
+                                                nodes: nodes.clone(),
+                                                motivation,
+                                            }
+                                        } else {
+                                            cmd.error(
+                                                ErrorKind::MissingRequiredArgument,
+                                                "Required argument `motivation` not found",
+                                            )
+                                            .exit();
+                                        }
+                                    }
                                 },
                                 heal: !no_heal,
                                 optimize: *optimize,
@@ -162,6 +177,7 @@ impl Runner {
                 ic_admin::ProposeOptions {
                     title: format!("Update subnet {subnet} to replica version {version}").into(),
                     summary: format!("Update subnet {subnet} to replica version {version}").into(),
+                    motivation: None,
                 },
             )
             .map_err(|e| anyhow::anyhow!(e))?;
