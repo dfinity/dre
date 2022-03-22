@@ -1,6 +1,6 @@
 #[macro_use]
 extern crate diesel;
-use clap::Parser;
+use clap::{CommandFactory, ErrorKind, Parser};
 use colored::Colorize;
 use decentralization::{OptimizeQuery, SubnetChangeResponse};
 use dialoguer::Confirm;
@@ -62,7 +62,7 @@ async fn main() -> Result<(), anyhow::Error> {
                     let pending = ops_subnet_node_replace::check_and_submit_proposals_subnet_add_nodes(
                         &ica,
                         &db_connection,
-                        &subnet.to_string(),
+                        subnet,
                     )?;
                     if pending {
                         info!("There are pending proposals. Waiting 10 seconds");
@@ -81,12 +81,57 @@ async fn main() -> Result<(), anyhow::Error> {
                 Ok(())
             }
 
-            cli::Commands::Subnet(subnet) => match &subnet.subcommand {
-                cli::subnet::Commands::Deploy { version } => runner.deploy(&subnet.id, version),
-                cli::subnet::Commands::Optimize { max_replacements } => {
-                    runner.optimize(subnet.id, *max_replacements).await
+            cli::Commands::Subnet(subnet) => {
+                let mut cmd = cli::Opts::command();
+                if let cli::subnet::Commands::Replace {
+                    nodes,
+                    no_heal: _,
+                    optimize: _,
+                } = &subnet.subcommand
+                {
+                    if !nodes.is_empty() && subnet.id.is_some() {
+                        cmd.error(
+                            ErrorKind::ArgumentConflict,
+                            "Specify either a subnet id or a list of nodes to replace",
+                        )
+                        .exit();
+                    } else if nodes.is_empty() && subnet.id.is_none() {
+                        cmd.error(
+                            ErrorKind::MissingRequiredArgument,
+                            "Specify either a subnet id or a list of nodes to replace",
+                        )
+                        .exit();
+                    }
+                } else if subnet.id.is_none() {
+                    cmd.error(ErrorKind::MissingRequiredArgument, "Required argument `id` not found")
+                        .exit();
+                } else {
+                    unreachable!()
                 }
-            },
+
+                match &subnet.subcommand {
+                    cli::subnet::Commands::Deploy { version } => runner.deploy(&subnet.id.unwrap(), version),
+                    cli::subnet::Commands::Optimize { max_replacements } => {
+                        runner.optimize(subnet.id.unwrap(), *max_replacements).await
+                    }
+                    cli::subnet::Commands::Replace {
+                        nodes,
+                        no_heal,
+                        optimize,
+                    } => {
+                        runner
+                            .membership_replace(mercury_management_types::requests::MembershipReplaceRequest {
+                                target: match &subnet.id {
+                                    Some(subnet) => mercury_management_types::requests::ReplaceTarget::Subnet(*subnet),
+                                    None => mercury_management_types::requests::ReplaceTarget::Nodes(nodes.clone()),
+                                },
+                                heal: !no_heal,
+                                optimize: *optimize,
+                            })
+                            .await
+                    }
+                }
+            }
 
             cli::Commands::Node(node) => match &node.subcommand {
                 cli::node::Commands::Replace { nodes } => runner.replace(nodes).await,
@@ -134,6 +179,14 @@ impl Runner {
 
     async fn replace(&self, nodes: &[PrincipalId]) -> anyhow::Result<()> {
         let change = self.decentralization_client.replace(nodes).await?;
+        self.swap_nodes(change).await
+    }
+
+    async fn membership_replace(
+        &self,
+        request: mercury_management_types::requests::MembershipReplaceRequest,
+    ) -> anyhow::Result<()> {
+        let change = self.dashboard_backend_client.membership_replace(request).await?;
         self.swap_nodes(change).await
     }
 

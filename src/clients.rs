@@ -1,6 +1,6 @@
 use decentralization::SubnetChangeResponse;
 use ic_base_types::PrincipalId;
-use mercury_management_types::TopologyProposal;
+use mercury_management_types::{requests::MembershipReplaceRequest, TopologyProposal};
 
 #[derive(Clone)]
 pub struct DashboardBackendClient {
@@ -19,6 +19,22 @@ impl DashboardBackendClient {
             .await
             .map_err(|e| anyhow::anyhow!(e))?
             .json::<Option<TopologyProposal>>()
+            .await
+            .map_err(|e| anyhow::anyhow!(e))
+    }
+
+    pub async fn membership_replace(&self, request: MembershipReplaceRequest) -> anyhow::Result<SubnetChangeResponse> {
+        reqwest::Client::new()
+            .post(
+                self.url
+                    .join("subnet/membership/replace")
+                    .map_err(|e| anyhow::anyhow!(e))?,
+            )
+            .json(&request)
+            .send()
+            .await
+            .map_err(|e| anyhow::anyhow!(e))?
+            .json::<decentralization::SubnetChangeResponse>()
             .await
             .map_err(|e| anyhow::anyhow!(e))
     }
