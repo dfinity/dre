@@ -244,7 +244,16 @@ impl Cli {
 
         match cmd.spawn() {
             Ok(mut child) => match child.wait() {
-                Ok(_) => Ok(()),
+                Ok(s) => {
+                    if s.success() {
+                        Ok(())
+                    } else {
+                        Err(anyhow::anyhow!(
+                            "ic-admin failed with non-zero exit code {}",
+                            s.code().map(|c| c.to_string()).unwrap_or_else(|| "<none>".to_string())
+                        ))
+                    }
+                }
                 Err(err) => Err(anyhow::format_err!("ic-admin wasn't running: {}", err.to_string())),
             },
             Err(e) => Err(anyhow::format_err!("failed to run ic-admin: {}", e.to_string())),
