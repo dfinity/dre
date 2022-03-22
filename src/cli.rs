@@ -215,6 +215,9 @@ pub(crate) mod subnet {
 
             #[clap(short, long)]
             motivation: Option<String>,
+
+            #[clap(long)]
+            finalize: bool,
         },
     }
 }
