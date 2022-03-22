@@ -81,7 +81,7 @@ impl FromStr for Subnet {
             id: s.to_string(),
             id_short: s
                 .to_string()
-                .split_once("-")
+                .split_once('-')
                 .expect("Could not parse the subnet id.")
                 .0
                 .to_string(),
@@ -108,7 +108,7 @@ impl FromStr for Node {
             id: s.to_string(),
             id_short: s
                 .to_string()
-                .split_once("-")
+                .split_once('-')
                 .expect("Could not parse the node id.")
                 .0
                 .to_string(),
@@ -143,13 +143,13 @@ impl std::fmt::Display for NodesVec {
 impl FromStr for NodesVec {
     type Err = anyhow::Error;
     fn from_str(nodes_str: &str) -> Result<Self, Self::Err> {
-        Ok(NodesVec {
-            0: nodes_str
-                .replace(",", " ")
+        Ok(NodesVec(
+            nodes_str
+                .replace(',', " ")
                 .split(' ')
                 .map(|node_id| Node::from_str(node_id).unwrap())
                 .collect(),
-        })
+        ))
     }
 }
 
@@ -190,7 +190,7 @@ pub(crate) mod subnet {
     #[derive(Parser, Clone)]
     pub struct Cmd {
         #[clap(long, short)]
-        pub id: PrincipalId,
+        pub id: Option<PrincipalId>,
         #[clap(subcommand)]
         pub subcommand: Commands,
     }
@@ -203,6 +203,15 @@ pub(crate) mod subnet {
         Optimize {
             #[clap(long)]
             max_replacements: Option<usize>,
+        },
+        Replace {
+            nodes: Vec<PrincipalId>,
+
+            #[clap(long)]
+            no_heal: bool,
+
+            #[clap(short, long)]
+            optimize: Option<usize>,
         },
     }
 }

@@ -7,12 +7,12 @@ edition = "2018"
 
 [dependencies]
 serde = { version = "1.0.130", features = ["derive"] }
-clap = { version = "3.0.0-rc.9", features = ["derive", "env"] }
+clap = { version = "3.1.6", features = ["derive", "env"] }
 reqwest = { version = "0.11", features = ["json"] }
 diesel = { version = "1.4.8", features = ["sqlite"] }
 serde_json = "1.0.68"
 anyhow = "1.0.44"
-futures = "0.3.17"
+futures = "0.3.21"
 colored = "2.0.0"
 lazy_static = "1.4.0"
 threadpool = "1.8.1"
@@ -23,11 +23,11 @@ log = "0.4.14"
 pretty_env_logger = "0.4.0"
 regex = "1.5.4"
 # For getting proposal info
-ic-base-types = { git = "https://github.com/dfinity/ic.git", rev = "b1fa6ab6775411c2733f044c0f67d89aae78a9b0" }
-ic-nns-governance = { git = "https://github.com/dfinity/ic.git", rev = "b1fa6ab6775411c2733f044c0f67d89aae78a9b0" }
-ic-nns-common = { git = "https://github.com/dfinity/ic.git", rev = "b1fa6ab6775411c2733f044c0f67d89aae78a9b0" }
-ic-nns-constants = { git = "https://github.com/dfinity/ic.git", rev = "b1fa6ab6775411c2733f044c0f67d89aae78a9b0" }
-registry-canister = { git = "https://github.com/dfinity/ic.git", rev = "b1fa6ab6775411c2733f044c0f67d89aae78a9b0" }
+ic-base-types = { git = "https://github.com/dfinity/ic.git", rev = "947d20037c36737645fda52677f5fec57dda6367" }
+ic-nns-governance = { git = "https://github.com/dfinity/ic.git", rev = "947d20037c36737645fda52677f5fec57dda6367" }
+ic-nns-common = { git = "https://github.com/dfinity/ic.git", rev = "947d20037c36737645fda52677f5fec57dda6367" }
+ic-nns-constants = { git = "https://github.com/dfinity/ic.git", rev = "947d20037c36737645fda52677f5fec57dda6367" }
+registry-canister = { git = "https://github.com/dfinity/ic.git", rev = "947d20037c36737645fda52677f5fec57dda6367" }
 ic-agent = "0.10.0"
 ic-types = "0.2.2"
 candid = "0.7.7"
@@ -36,8 +36,8 @@ strum = { version = "0.23", features = ["derive"] }
 strum_macros = "0.23"
 flate2 = "1.0.22"
 dirs = "4.0"
-decentralization = { git = "ssh://git@gitlab.com/dfinity-lab/core/mercury-management-dashboard.git", rev = "aa42799e5c6eaf77dc3e6941607ffbab4d602543" }
-mercury_management_types = { git = "ssh://git@gitlab.com/dfinity-lab/core/mercury-management-dashboard.git", rev = "aa42799e5c6eaf77dc3e6941607ffbab4d602543" }
+decentralization = { git = "ssh://git@gitlab.com/dfinity-lab/core/mercury-management-dashboard.git", rev = "a12d6a983059558f8f56842b42fd080cba050687" }
+mercury_management_types = { git = "ssh://git@gitlab.com/dfinity-lab/core/mercury-management-dashboard.git", rev = "a12d6a983059558f8f56842b42fd080cba050687" }
 dialoguer = "0.10.0"
 
 [dev-dependencies]
