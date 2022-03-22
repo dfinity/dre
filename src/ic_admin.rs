@@ -137,7 +137,7 @@ pub struct Neuron {
 
 impl Neuron {
     pub fn as_arg_vec(&self) -> Vec<String> {
-        vec![format!("--proposer={}", self.id)]
+        vec!["--proposer".to_string(), self.id.to_string()]
     }
 }
 
@@ -174,9 +174,21 @@ impl Cli {
 
     fn print_ic_admin_command_line(cmd: &Command) {
         info!(
-            "running ic-admin: \n$ {} {}",
+            "running ic-admin: \n$ {}{}",
             cmd.get_program().to_str().unwrap().yellow(),
-            shlex::join(cmd.get_args().map(|s| s.to_str().unwrap()).collect::<Vec<_>>()).yellow()
+            cmd.get_args()
+                .map(|s| s.to_str().unwrap().to_string())
+                .fold("".to_string(), |acc, s| {
+                    let s = if s.contains('\n') { format!(r#""{}""#, s) } else { s };
+                    if s.starts_with("--") {
+                        format!("{acc} \\\n    {s}")
+                    } else if !acc.split(' ').last().unwrap_or_default().starts_with("--") {
+                        format!("{acc} \\\n  {s}")
+                    } else {
+                        format!("{acc} {s}")
+                    }
+                })
+                .yellow(),
         );
     }
 
