@@ -1,33 +1,23 @@
-#[macro_use]
-extern crate diesel;
 use clap::{CommandFactory, ErrorKind, Parser};
 use colored::Colorize;
-use decentralization::{OptimizeQuery, SubnetChangeResponse};
+use decentralization::SubnetChangeResponse;
 use dialoguer::Confirm;
-use diesel::prelude::*;
 use dotenv::dotenv;
 use futures::Future;
 use ic_base_types::PrincipalId;
-use log::{debug, info, warn};
+use log::{info, warn};
 use mercury_management_types::{TopologyProposal, TopologyProposalKind, TopologyProposalStatus};
 use tokio::time::{sleep, Duration};
-use utils::env_cfg;
-mod autoops_types;
 mod cli;
 mod clients;
 pub(crate) mod defaults;
 mod ic_admin;
-mod model_proposals;
-mod model_subnet_update_nodes;
 mod ops_subnet_node_replace;
-mod schema;
-mod utils;
 
 #[tokio::main]
 async fn main() -> Result<(), anyhow::Error> {
     init_env();
 
-    let db_connection = init_sqlite_connect();
     let cli_opts = cli::Opts::parse();
     init_logger();
 
@@ -37,45 +27,10 @@ async fn main() -> Result<(), anyhow::Error> {
             dashboard_backend_client: clients::DashboardBackendClient {
                 url: cli_opts.backend_url.clone(),
             },
-            decentralization_client: clients::DecentralizationClient {
-                url: cli_opts.decentralization_url.clone(),
-            },
         };
 
         // Start of actually doing stuff with commands.
         match &cli_opts.subcommand {
-            cli::Commands::SubnetReplaceNodes { subnet, add, remove } => {
-                let ica = ic_admin::CliDeprecated::from(&cli_opts);
-                match ops_subnet_node_replace::subnet_nodes_replace(
-                    &ica,
-                    &db_connection,
-                    subnet,
-                    add.clone(),
-                    remove.clone(),
-                ) {
-                    Ok(stdout) => {
-                        println!("{}", stdout);
-                        Ok(())
-                    }
-                    Err(err) => Err(err),
-                }?;
-                loop {
-                    let pending = ops_subnet_node_replace::check_and_submit_proposals_subnet_add_nodes(
-                        &ica,
-                        &db_connection,
-                        subnet,
-                    )?;
-                    if pending {
-                        info!("There are pending proposals. Waiting 10 seconds");
-                        std::thread::sleep(std::time::Duration::from_secs(10));
-                    } else {
-                        break;
-                    }
-                }
-                info!("There are no more pending proposals. Exiting...");
-                Ok(())
-            }
-
             cli::Commands::DerToPrincipal { path } => {
                 let principal = ic_base_types::PrincipalId::new_self_authenticating(&std::fs::read(path)?);
                 println!("{}", principal);
@@ -85,7 +40,7 @@ async fn main() -> Result<(), anyhow::Error> {
             cli::Commands::Subnet(subnet) => {
                 let mut cmd = cli::Opts::command();
                 match &subnet.subcommand {
-                    cli::subnet::Commands::Deploy { .. } | cli::subnet::Commands::Optimize { .. } => {
+                    cli::subnet::Commands::Deploy { .. } => {
                         if subnet.id.is_none() {
                             cmd.error(ErrorKind::MissingRequiredArgument, "Required argument `id` not found")
                                 .exit();
@@ -121,9 +76,6 @@ async fn main() -> Result<(), anyhow::Error> {
 
                 match &subnet.subcommand {
                     cli::subnet::Commands::Deploy { version } => runner.deploy(&subnet.id.unwrap(), version),
-                    cli::subnet::Commands::Optimize { max_replacements } => {
-                        runner.optimize(subnet.id.unwrap(), *max_replacements).await
-                    }
                     cli::subnet::Commands::Replace {
                         nodes,
                         no_heal,
@@ -164,10 +116,6 @@ async fn main() -> Result<(), anyhow::Error> {
                 }
             }
 
-            cli::Commands::Node(node) => match &node.subcommand {
-                cli::node::Commands::Replace { nodes } => runner.replace(nodes).await,
-            },
-
             cli::Commands::Get { args } => runner.ic_admin_generic_get(args),
 
             cli::Commands::Propose { args } => runner.ic_admin_generic_propose(args),
@@ -180,7 +128,6 @@ async fn main() -> Result<(), anyhow::Error> {
 pub struct Runner {
     ic_admin: ic_admin::Cli,
     dashboard_backend_client: clients::DashboardBackendClient,
-    decentralization_client: clients::DecentralizationClient,
 }
 
 impl Runner {
@@ -200,19 +147,6 @@ impl Runner {
             .map_err(|e| anyhow::anyhow!(e))?;
 
         Ok(())
-    }
-
-    async fn optimize(&self, subnet: PrincipalId, max_replacements: Option<usize>) -> anyhow::Result<()> {
-        let change = self
-            .decentralization_client
-            .optimize(subnet, OptimizeQuery { max_replacements })
-            .await?;
-        self.swap_nodes(change).await
-    }
-
-    async fn replace(&self, nodes: &[PrincipalId]) -> anyhow::Result<()> {
-        let change = self.decentralization_client.replace(nodes).await?;
-        self.swap_nodes(change).await
     }
 
     async fn membership_replace(
@@ -404,21 +338,8 @@ impl Runner {
         Self {
             ic_admin: self.ic_admin.dry_run(),
             dashboard_backend_client: self.dashboard_backend_client.clone(),
-            decentralization_client: self.decentralization_client.clone(),
         }
     }
-}
-
-fn init_sqlite_connect() -> SqliteConnection {
-    debug!("Initializing the SQLite connection.");
-    let home_path = std::env::var("HOME").expect("Getting HOME environment variable failed.");
-    let database_url =
-        env_cfg("DATABASE_URL", "~/release-cli-state.sqlite3").replace("~/", format!("{}/", home_path).as_str());
-    let database_url_dirname = std::path::Path::new(&database_url)
-        .parent()
-        .expect("Getting the dirname for the database_url failed.");
-    std::fs::create_dir_all(database_url_dirname).expect("Creating the directory for the database file failed.");
-    SqliteConnection::establish(&database_url).unwrap_or_else(|_| panic!("Error connecting to {}", database_url))
 }
 
 fn init_env() {
