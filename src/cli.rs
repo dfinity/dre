@@ -34,17 +34,20 @@ pub struct Opts {
 
 #[derive(Subcommand, Clone)]
 pub(crate) enum Commands {
+    // Convert a DER file to a Principal
     DerToPrincipal {
         /// Path to the DER file
         path: String,
     },
     /// Manage an existing subnet
     Subnet(subnet::Cmd),
+    /// Get a value using ic-admin CLI
     Get {
         /// Arbitrary ic-admin args
         #[clap(allow_hyphen_values = true)]
         args: Vec<String>,
     },
+    /// Place a proposal using the ic-admin CLI
     Propose {
         /// Arbitrary ic-admin args
         #[clap(allow_hyphen_values = true)]
