@@ -74,19 +74,29 @@ pub(crate) mod subnet {
 
         /// Replace the nodes in a subnet
         Replace {
+            /// Set of custom nodes to be replaced
             nodes: Vec<PrincipalId>,
 
+            /// Do not replace unhealthy nodes
             #[clap(long)]
             no_heal: bool,
 
+            /// Amount of nodes to be replaced by decentralization optimization
+            /// algorithm
             #[clap(short, long)]
             optimize: Option<usize>,
 
+            /// Motivation for replacing custom nodes
             #[clap(short, long)]
             motivation: Option<String>,
 
+            /// Finalize subnet replacements
             #[clap(long)]
             finalize: bool,
+
+            /// Nodes to exclude from available nodes pool
+            #[clap(long)]
+            exclude: Vec<PrincipalId>,
         },
     }
 }
