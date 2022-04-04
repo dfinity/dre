@@ -5,6 +5,7 @@ use dialoguer::Confirm;
 use dotenv::dotenv;
 use futures::Future;
 use ic_base_types::PrincipalId;
+use itertools::Itertools;
 use log::{info, warn};
 use mercury_management_types::{TopologyProposal, TopologyProposalKind, TopologyProposalStatus};
 use tokio::time::{sleep, Duration};
@@ -208,8 +209,56 @@ impl Runner {
         );
     }
 
+    fn print_subnet_change_diff(change: &SubnetChangeResponse) {
+        let rows = change.feature_diff.values().map(|diff| diff.len()).max().unwrap_or(0);
+        let mut table = tabular::Table::new(
+            &change
+                .feature_diff
+                .keys()
+                .map(|_| "    {:<}  {:>}")
+                .collect::<Vec<_>>()
+                .join(""),
+        );
+        table.add_row(
+            change
+                .feature_diff
+                .keys()
+                .fold(tabular::Row::new(), |acc, k| acc.with_cell(k.to_string()).with_cell("")),
+        );
+        table.add_row(change.feature_diff.keys().fold(tabular::Row::new(), |acc, k| {
+            acc.with_cell("-".repeat(k.to_string().len())).with_cell("")
+        }));
+        for i in 0..rows {
+            table.add_row(change.feature_diff.values().fold(tabular::Row::new(), |acc, v| {
+                let (value, change) = v
+                    .iter()
+                    .sorted()
+                    .nth(i)
+                    .map(|(k, (before, after))| {
+                        (
+                            k.to_string(),
+                            match before.cmp(after) {
+                                std::cmp::Ordering::Equal => format!("{}", before),
+                                std::cmp::Ordering::Greater => format!("{} -> {}", before, after),
+                                std::cmp::Ordering::Less => format!("{} -> {}", before, after),
+                            },
+                        )
+                    })
+                    .unwrap_or_default();
+                acc.with_cell(value).with_cell(change)
+            }));
+        }
+
+        println!("{}", table);
+        change.added.iter().zip(change.removed.iter()).for_each(|(a, r)| {
+            println!("{}{}", format!("  - {}", r).red(), format!("    + {}", a).green());
+        });
+        println!();
+    }
+
     async fn swap_nodes(&self, change: SubnetChangeResponse) -> anyhow::Result<()> {
         Self::print_before_after_scores(&change);
+        Self::print_subnet_change_diff(&change);
 
         self.with_confirmation(|r| {
             let change = change.clone();
@@ -229,8 +278,7 @@ impl Runner {
                     "There is a pending proposal for this subnet: https://dashboard.internetcomputer.org/proposal/{}",
                     proposal.id
                 ),
-                "Please complete it first by running `release-cli subnet --subnet-id {subnet_id} replace --finalize`"
-                    .to_string(),
+                format!("Please complete it first by running `release-cli subnet --subnet-id {subnet_id} replace --finalize`")
             ]
             .join("\n")));
         }
