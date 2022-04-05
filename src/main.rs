@@ -278,7 +278,10 @@ impl Runner {
                     "There is a pending proposal for this subnet: https://dashboard.internetcomputer.org/proposal/{}",
                     proposal.id
                 ),
-                format!("Please complete it first by running `release-cli subnet --subnet-id {subnet_id} replace --finalize`")
+                format!(
+                    "Please finalize the last replacement first\n\n\t{} subnet --id {subnet_id} replace --finalize\n",
+                    std::env::args().next().unwrap_or_else(|| "release-cli".to_string())
+                )
             ]
             .join("\n")));
         }
