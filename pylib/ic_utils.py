@@ -32,13 +32,15 @@ NNS_URL = os.environ.get("NNS_URL") or "http://[2a00:fb01:400:100:5000:5bff:fe6b
 class IcSshRemoteRun:
     """Run commands remotely over ssh on the deployment nodes."""
 
-    def __init__(self, deployment_name: str, out_dir: pathlib.Path, node_filter: str = None, physical_limit=None):
+    def __init__(self, deployment_name: str, out_dir: pathlib.Path, node_filter: str = "", physical_limit=None):
         """Create an object for the specified deployment and node filter, storing results in out_dir."""
         self._deployment_name = deployment_name
+        deployment_env_root = find_deployment_env_root(deployment_name)
+        self._inventory_script = deployment_env_root.parent.parent / "ansible/inventory/inventory.py"
         self._node_filter = node_filter
         # List of short physical hostnames to which the execution should be limited to
         # e.g. {'zh2-spm01'}
-        self._phy_short_limit = physical_limit
+        self._phy_short_limit = set() if physical_limit is None else physical_limit
         self._out_dir = out_dir
 
         out_dir.mkdir(exist_ok=True, parents=True)
@@ -52,7 +54,7 @@ class IcSshRemoteRun:
             env["NODES_FILTER_INCLUDE"] = self._node_filter
         output = subprocess.check_output(
             [
-                repo_root / "deployments/ansible/inventory/inventory.py",
+                self._inventory_script,
                 "--deployment",
                 self._deployment_name,
                 "--list",
@@ -85,7 +87,7 @@ class IcSshRemoteRun:
 
         output = subprocess.check_output(
             [
-                repo_root / "deployments/ansible/inventory/inventory.py",
+                self._inventory_script,
                 "--deployment",
                 self._deployment_name,
                 "--nodes",
@@ -144,7 +146,7 @@ class IcSshRemoteRun:
             env["NODES_FILTER_INCLUDE"] = self._node_filter
         output = subprocess.check_output(
             [
-                repo_root / "deployments/ansible/inventory/inventory.py",
+                self._inventory_script,
                 "--deployment",
                 self._deployment_name,
                 "--nns-nodes",
@@ -194,7 +196,7 @@ class IcAnsible:
         if physical_limit:
             self._physical_hosts_limit = [f"{x}.{x.split('-')[0]}.dfinity.network" for x in self._phy_short_limit]
         else:
-            self._physical_hosts_limit = None
+            self._physical_hosts_limit = []
         self._hosts_file = repo_root / "deployments/env" / self._deployment_name / "hosts"
 
     def ansible_run_shell_checked(self, command: str):
@@ -245,6 +247,7 @@ class IcAnsible:
             "ic_state=%s" % ic_state,
             "--extra-vars",
             "ansible_user={}".format(PHY_HOST_USER),
+            "--skip-tags=boundary_node_vm",
         ]
         if self._physical_hosts_limit:
             cmd.append("--limit")
@@ -257,6 +260,19 @@ class IcAnsible:
         logging.info("$ NODES_FILTER_INCLUDE=%s %s", self._node_filter, " ".join([shlex.quote(_) for _ in cmd]))
         subprocess.check_call(cmd, env=env, cwd=repo_root / "ic/testnet")
         logging.info("Ansible playbook finished successfully")
+
+
+def find_deployment_env_root(deployment_name: str):
+    """Search for the deployment in the "deployments" subdirectory and fall back to "ic/testnet"."""
+    deployment_env_root = repo_root / "deployments/env" / deployment_name
+    if deployment_env_root.exists():
+        return deployment_env_root
+    testnet_env_root = repo_root / "ic/testnet/env" / deployment_name
+    if testnet_env_root.exists():
+        return testnet_env_root
+    raise ValueError(
+        "Deployment %s not found. Looked at %s and %s" % (deployment_name, deployment_env_root, testnet_env_root)
+    )
 
 
 def ssh_run_command(node: str, username: str, command: str, do_not_raise: bool = False, binary_stdout: bool = False):

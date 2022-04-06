@@ -6,7 +6,6 @@ import functools
 import ipaddress
 import json
 import logging
-import os
 import pathlib
 import re
 import subprocess
@@ -42,7 +41,10 @@ class IcAdmin:
         wait=wait_exponential(multiplier=1, min=2, max=10),
     )
     def _ic_admin_run(self, *cmd):
-        return subprocess.check_output([self.ic_admin_path, "--nns-url", self.nns_url, *cmd])
+        cmd = [self.ic_admin_path, "--nns-url", self.nns_url, *cmd]
+        cmd = [str(a) for a in cmd]
+        logging.info("$ %s", cmd)
+        return subprocess.check_output(cmd)
 
     @functools.lru_cache(maxsize=32)
     def get_topology(self):
@@ -108,8 +110,7 @@ class IcAdmin:
 
     def get_nns_public_key(self, out_filename):
         """Save the NNS public key in the specified out_filename."""
-        if not os.path.exists(out_filename):
-            self._ic_admin_run("get-subnet-public-key", "0", out_filename)
+        self._ic_admin_run("get-subnet-public-key", "0", out_filename)
 
 
 if __name__ == "__main__":
