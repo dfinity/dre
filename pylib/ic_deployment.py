@@ -6,6 +6,7 @@ import subprocess
 
 import yaml
 
+from .ic_utils import find_deployment_env_root
 from .ic_utils import repo_root
 
 
@@ -17,6 +18,8 @@ class IcDeployment:
         self._name = deployment_name
         if deployment_name == "staging" and not nodes_filter_include:
             nodes_filter_include = "node_type=(child_nns|app_[0-9]+)"
+        self._deployment_env_root = find_deployment_env_root(deployment_name)
+        self._inventory_script = self._deployment_env_root.parent.parent / "ansible/inventory/inventory.py"
         self.nodes_filter_include = nodes_filter_include
 
     @property
@@ -33,7 +36,7 @@ class IcDeployment:
             [
                 "ansible-inventory",
                 "-i",
-                repo_root / f"deployments/env/{self.name}/hosts",
+                self._deployment_env_root / "hosts",
                 "--list",
             ],
             env=env,
@@ -47,7 +50,7 @@ class IcDeployment:
             env["NODES_FILTER_INCLUDE"] = self.nodes_filter_include
         output = subprocess.check_output(
             [
-                repo_root / "deployments/ansible/inventory/inventory.py",
+                self._inventory_script,
                 "--deployment",
                 self.name,
                 "--nodes",
@@ -63,7 +66,7 @@ class IcDeployment:
             env["NODES_FILTER_INCLUDE"] = self.nodes_filter_include
         output = subprocess.check_output(
             [
-                repo_root / "deployments/ansible/inventory/inventory.py",
+                self._inventory_script,
                 "--deployment",
                 self.name,
                 "--list",
@@ -98,7 +101,7 @@ class IcDeployment:
     @property
     def serial_numbers(self):
         """Return the serial numbers for the machines in the Mercury DCs."""
-        serial_numbers_filename = repo_root / "deployments/env/serial-numbers.yml"
+        serial_numbers_filename = self._deployment_env_root.parent / "serial-numbers.yml"
         all_serials = yaml.load(open(serial_numbers_filename, encoding="utf8"), Loader=yaml.FullLoader)
         return {k: v for k, v in all_serials.items() if k.split("-")[0] in self.mercury_dcs}
 
