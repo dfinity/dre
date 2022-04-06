@@ -97,6 +97,11 @@ pub(crate) mod subnet {
             /// Nodes to exclude from available nodes pool
             #[clap(long)]
             exclude: Vec<PrincipalId>,
+
+            /// Nodes to explicitly use for replacement regardless of
+            /// decentralization score
+            #[clap(long)]
+            include: Vec<PrincipalId>,
         },
     }
 }

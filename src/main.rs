@@ -84,6 +84,7 @@ async fn main() -> Result<(), anyhow::Error> {
                         motivation,
                         finalize,
                         exclude,
+                        include,
                     } => {
                         if *finalize {
                             runner.recover_finalize_swap(subnet.id.unwrap()).await
@@ -112,6 +113,7 @@ async fn main() -> Result<(), anyhow::Error> {
                                     heal: !no_heal,
                                     optimize: *optimize,
                                     exclude: exclude.clone().into(),
+                                    include: include.clone().into(),
                                 })
                                 .await
                         }
