@@ -334,6 +334,15 @@ pub struct ProposeOptions {
     pub motivation: Option<String>,
 }
 
+impl ProposeOptions {
+    pub fn with_motivation(self, motivation: String) -> Self {
+        Self {
+            motivation: Some(motivation),
+            ..self
+        }
+    }
+}
+
 impl From<&Opts> for Cli {
     fn from(opts: &Opts) -> Self {
         Cli {
