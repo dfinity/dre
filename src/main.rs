@@ -47,15 +47,27 @@ async fn main() -> Result<(), anyhow::Error> {
                                 .exit();
                         }
                     }
-                    cli::subnet::Commands::Replace { nodes, finalize, .. } => {
-                        if *finalize {
+                    cli::subnet::Commands::Replace {
+                        nodes,
+                        finalize,
+                        cancel,
+                        ..
+                    } => {
+                        if *finalize && *cancel {
+                            cmd.error(
+                                ErrorKind::ArgumentConflict,
+                                "Finalize and cancel are mutually exclusive",
+                            )
+                            .exit();
+                        }
+                        if *finalize || *cancel {
                             if subnet.id.is_none() {
                                 cmd.error(ErrorKind::MissingRequiredArgument, "Required argument `id` not found")
                                     .exit();
                             } else if !nodes.is_empty() {
                                 cmd.error(
                                     ErrorKind::ArgumentConflict,
-                                    "Cannot pass `nodes` when finalizing a replacement",
+                                    "Cannot pass `nodes` when finalizing or cancelling the replacement",
                                 )
                                 .exit();
                             }
@@ -85,9 +97,20 @@ async fn main() -> Result<(), anyhow::Error> {
                         finalize,
                         exclude,
                         include,
+                        cancel,
                     } => {
                         if *finalize {
                             runner.recover_finalize_swap(subnet.id.unwrap()).await
+                        } else if *cancel {
+                            if let Some(motivation) = motivation.clone() {
+                                runner.cancel_swap(subnet.id.unwrap(), motivation).await
+                            } else {
+                                cmd.error(
+                                    ErrorKind::MissingRequiredArgument,
+                                    "Required argument `motivation` not found",
+                                )
+                                .exit();
+                            }
                         } else {
                             runner
                                 .membership_replace(mercury_management_types::requests::MembershipReplaceRequest {
@@ -298,66 +321,93 @@ impl Runner {
             )
             .map_err(|e| anyhow::anyhow!(e))?;
 
-        self.run_finalize_swap(change).await
-    }
-
-    async fn run_finalize_swap(&self, change: SubnetChangeResponse) -> anyhow::Result<()> {
-        let subnet_id = change
-            .subnet_id
-            .ok_or_else(|| anyhow::anyhow!("subnet_id is required"))?;
-
         let add_proposal_id = if !self.ic_admin.dry_run {
-            loop {
-                if let Ok(Some(proposal)) = self.dashboard_backend_client.subnet_pending_action(subnet_id).await {
-                    if matches!(proposal.status, TopologyProposalStatus::Executed) {
-                        break proposal.id;
-                    }
-                }
-                sleep(Duration::from_secs(10)).await;
-            }
+            self.wait_for_replacement_nodes(subnet_id).await?.0.id
         } else {
             const DUMMY_ID: u64 = 1234567890;
             warn!("Set the first proposal ID to a dummy value: {}", DUMMY_ID);
             DUMMY_ID
-        }
-        .into();
+        };
+        self.run_finalize_swap(change, add_proposal_id).await
+    }
 
+    async fn run_finalize_swap(&self, change: SubnetChangeResponse, add_proposal_id: u64) -> anyhow::Result<()> {
         self.ic_admin
             .propose_run(
                 ic_admin::ProposeCommand::RemoveNodesFromSubnet {
                     nodes: change.removed.clone(),
                 },
-                ops_subnet_node_replace::replace_proposal_options(&change, add_proposal_id)?,
+                ops_subnet_node_replace::replace_proposal_options(&change, add_proposal_id.into())?.with_motivation(format!("Finalize the replacements started with proposal [{add_proposal_id}](https://dashboard.internetcomputer.org/proposal/{add_proposal_id})")),
             )
             .map_err(|e| anyhow::anyhow!(e))?;
 
         Ok(())
     }
 
-    async fn recover_finalize_swap(&self, subnet_id: PrincipalId) -> anyhow::Result<()> {
-        let change = loop {
-            if let Ok(proposal) = self.dashboard_backend_client.subnet_pending_action(subnet_id).await {
+    async fn run_cancel_swap(
+        &self,
+        change: SubnetChangeResponse,
+        add_proposal_id: u64,
+        motivation: String,
+    ) -> anyhow::Result<()> {
+        self.ic_admin
+            .propose_run(
+                ic_admin::ProposeCommand::RemoveNodesFromSubnet {
+                    nodes: change.added.clone(),
+                },
+                ops_subnet_node_replace::cancel_replace_proposal_options(&change, add_proposal_id)?
+                    .with_motivation(motivation),
+            )
+            .map_err(|e| anyhow::anyhow!(e))?;
+        Ok(())
+    }
+
+    async fn wait_for_replacement_nodes(
+        &self,
+        subnet_id: PrincipalId,
+    ) -> anyhow::Result<(TopologyProposal, SubnetChangeResponse)> {
+        Ok(loop {
+            if let Ok(Some(proposal)) = self.dashboard_backend_client.subnet_pending_action(subnet_id).await {
                 if let TopologyProposal {
                     status: TopologyProposalStatus::Executed,
                     kind: TopologyProposalKind::ReplaceNode(replace),
-                    id,
-                } = proposal.ok_or_else(|| anyhow::anyhow!("No pending proposal found for this subnet"))?
+                    ..
+                } = &proposal
                 {
-                    break SubnetChangeResponse {
-                        added: replace.new_nodes,
-                        removed: replace.old_nodes,
-                        subnet_id: subnet_id.into(),
-                        motivation: format!("Finalize the replacements started with proposal {}", id).into(),
-                        ..Default::default()
-                    };
-                };
+                    break (
+                        proposal.clone(),
+                        SubnetChangeResponse {
+                            added: replace.new_nodes.clone(),
+                            removed: replace.old_nodes.clone(),
+                            subnet_id: subnet_id.into(),
+                            ..Default::default()
+                        },
+                    );
+                }
             }
-            sleep(Duration::from_secs(10)).await
-        };
+            sleep(Duration::from_secs(10)).await;
+        })
+    }
+
+    async fn recover_finalize_swap(&self, subnet_id: PrincipalId) -> anyhow::Result<()> {
+        let (topology_proposal, change) = self.wait_for_replacement_nodes(subnet_id).await?;
 
         self.with_confirmation(|r| {
             let change = change.clone();
-            async move { r.run_finalize_swap(change).await }
+            let add_proposal_id = topology_proposal.id;
+            async move { r.run_finalize_swap(change, add_proposal_id).await }
+        })
+        .await
+    }
+
+    async fn cancel_swap(&self, subnet_id: PrincipalId, motivation: String) -> anyhow::Result<()> {
+        let (topology_proposal, change) = self.wait_for_replacement_nodes(subnet_id).await?;
+
+        self.with_confirmation(|r| {
+            let change = change.clone();
+            let add_proposal_id = topology_proposal.id;
+            let motivation = motivation.clone();
+            async move { r.run_cancel_swap(change, add_proposal_id, motivation).await }
         })
         .await
     }
