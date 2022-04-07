@@ -94,6 +94,10 @@ pub(crate) mod subnet {
             #[clap(long)]
             finalize: bool,
 
+            /// Cancel subnet replacements
+            #[clap(long)]
+            cancel: bool,
+
             /// Nodes to exclude from available nodes pool
             #[clap(long)]
             exclude: Vec<PrincipalId>,

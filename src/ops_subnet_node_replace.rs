@@ -47,3 +47,24 @@ pub fn replace_proposal_options(
         motivation: change.motivation.clone(),
     })
 }
+
+pub fn cancel_replace_proposal_options(
+    change: &SubnetChangeResponse,
+    first_proposal_id: u64,
+) -> anyhow::Result<ic_admin::ProposeOptions> {
+    let subnet_id = change
+        .subnet_id
+        .ok_or_else(|| anyhow::anyhow!("subnet_id is required"))?
+        .to_string();
+
+    let subnet_id_short = subnet_id.split('-').next().unwrap();
+
+    Ok(ic_admin::ProposeOptions {
+        title: format!("Cancel replacement(s) in subnet {subnet_id_short}",).into(),
+        summary: format!(
+            r#"# Cancel replacement(s) in subnet {subnet_id_short} from proposal [{first_proposal_id}](https://dashboard.internetcomputer.org/proposal/{first_proposal_id})"#,
+        )
+        .into(),
+        motivation: change.motivation.clone(),
+    })
+}
