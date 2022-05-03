@@ -1,1 +1,0 @@
-DROP TABLE IF EXISTS subnet_update_nodes;
