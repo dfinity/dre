@@ -40,11 +40,11 @@ variables:
     rm -rf "@{CI_PROJECT_DIR}"
     mkdir -p "@{CI_PROJECT_DIR}"
     chown 1000:1000 -R "@{CI_PROJECT_DIR}"
-    if [[ -d "/cache/git/@{CI_PROJECT_PATH}/@CI_CONCURRENT_ID" ]]; then
-      trap 'rm -rf "/cache/git/@{CI_PROJECT_PATH}/@CI_CONCURRENT_ID"' ERR
+    if [[ -d "/cache/git-v3/@{CI_PROJECT_PATH}/@CI_CONCURRENT_ID" ]]; then
+      trap 'rm -rf "/cache/git-v3/@{CI_PROJECT_PATH}/@CI_CONCURRENT_ID"' ERR
       # Concurrent jobs are separated into different git repo cache folders
-      echo "Copying the git repo from /cache/git/@{CI_PROJECT_PATH}/@{CI_CONCURRENT_ID} to @{CI_PROJECT_DIR}"
-      /usr/bin/time cp -a --no-target-directory "/cache/git/@{CI_PROJECT_PATH}/@CI_CONCURRENT_ID/" "@{CI_PROJECT_DIR}/"
+      echo "Copying the git repo from /cache/git-v3/@{CI_PROJECT_PATH}/@{CI_CONCURRENT_ID} to @{CI_PROJECT_DIR}"
+      /usr/bin/time cp -a --no-target-directory "/cache/git-v3/@{CI_PROJECT_PATH}/@CI_CONCURRENT_ID/" "@{CI_PROJECT_DIR}/"
 
       if [[ -n "@{GIT_CLONE_PATH:-}" && "@{GIT_CLONE_PATH:-}" != "@{CI_PROJECT_DIR}" ]]; then
         # @GIT_CLONE_PATH is set to a value different from @{CI_PROJECT_DIR}
@@ -52,7 +52,7 @@ variables:
         rm -rf "@GIT_CLONE_PATH"
         mkdir -p "@GIT_CLONE_PATH"
         chown 1000:1000 -R "@GIT_CLONE_PATH"
-        /usr/bin/time cp -a --no-target-directory "/cache/git/@{CI_PROJECT_PATH}/@CI_CONCURRENT_ID/" "@GIT_CLONE_PATH/"
+        /usr/bin/time cp -a --no-target-directory "/cache/git-v3/@{CI_PROJECT_PATH}/@CI_CONCURRENT_ID/" "@GIT_CLONE_PATH/"
       fi
 
 
@@ -108,15 +108,15 @@ before_script:
       cat .git/config
       cat .gitmodules
       cat .git/modules/ic/config
-      rm -rf /cache/git/${CI_PROJECT_PATH}
+      rm -rf /cache/git-v3/${CI_PROJECT_PATH}
       exit 1
     fi
 
     sudo chown ubuntu:ubuntu -R "${CI_PROJECT_DIR}"
     sudo find "${CI_PROJECT_DIR}" -type d -exec chmod 0755 '{}' \;
-    # Update the git repo cache at /cache/git/${CI_PROJECT_PATH}/$CI_CONCURRENT_ID
-    mkdir -p "/cache/git/${CI_PROJECT_PATH}/$CI_CONCURRENT_ID/"
-    /usr/bin/time rsync -a --force --delete "$CI_PROJECT_DIR"/ "/cache/git/${CI_PROJECT_PATH}/$CI_CONCURRENT_ID/"
+    # Update the git repo cache at /cache/git-v3/${CI_PROJECT_PATH}/$CI_CONCURRENT_ID
+    mkdir -p "/cache/git-v3/${CI_PROJECT_PATH}/$CI_CONCURRENT_ID/"
+    /usr/bin/time rsync -a --force --delete "$CI_PROJECT_DIR"/ "/cache/git-v3/${CI_PROJECT_PATH}/$CI_CONCURRENT_ID/"
 
     cd "${CI_PROJECT_DIR}"
     # Ensure file permissions in the repo are what git expects them to be
