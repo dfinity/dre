@@ -49,7 +49,8 @@ ENV RUSTUP_HOME=/opt/rustup \
     PROTOC_INCLUDE=/opt/protoc/include \
     PATH=/opt/cargo/bin:$PATH
 
-ARG rust_version=1.58.1
+# Make sure /rust-toolchain.toml has the same version
+ARG rust_version=1.60.0
 RUN curl --fail https://sh.rustup.rs -sSf \
         | sh -s -- -y --default-toolchain ${rust_version}-x86_64-unknown-linux-gnu --no-modify-path && \
     rustup default ${rust_version}-x86_64-unknown-linux-gnu && \
