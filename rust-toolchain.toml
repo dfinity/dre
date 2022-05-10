@@ -1,4 +1,5 @@
 [toolchain]
-channel = "1.59.0"
+# Make sure docker/Dockerfile has the same Rust toolchain version
+channel = "1.60.0"
 profile = "default"
 components = ["rls"]
