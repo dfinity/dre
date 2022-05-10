@@ -201,7 +201,7 @@ impl Runner {
                     k,
                     before,
                     after,
-                    format!("({:+.0}%)", ((after - before) / before) * 100.)
+                    format_args!("({:+.0}%)", ((after - before) / before) * 100.)
                 );
                 if before > after {
                     output.bright_red()
