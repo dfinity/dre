@@ -28,6 +28,7 @@ mercury_management_types = { git = "ssh://git@gitlab.com/dfinity-lab/core/mercur
 dialoguer = "0.10.0"
 tabular = "0.2"
 itertools = "0.10"
+async-trait = "0.1.53"
 
 [dev-dependencies]
 tempfile = "3.3.0"
