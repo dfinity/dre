@@ -3,29 +3,29 @@ use clap::{Parser, Subcommand};
 #[derive(Parser, Clone)]
 #[clap(about, version, author)]
 pub struct Opts {
-    #[clap(long, env)]
+    #[clap(long, env = "HSM_PIN")]
     pub(crate) hsm_pin: Option<String>,
-    #[clap(long, env)]
+    #[clap(long, env = "HSM_SLOT")]
     pub(crate) hsm_slot: Option<String>,
-    #[clap(short, long, env)]
+    #[clap(short, long, env = "HSM_KEY_ID")]
     pub(crate) hsm_key_id: Option<String>,
-    #[clap(long, env)]
+    #[clap(long, env = "PRIVATE_KEY_PEM")]
     pub(crate) private_key_pem: Option<String>,
-    #[clap(short, long, env)]
+    #[clap(short, long, env = "NEURON_ID")]
     pub(crate) neuron_id: Option<u64>,
-    #[clap(short, long, env)]
+    #[clap(short, long, env = "IC_ADMIN")]
     pub(crate) ic_admin: Option<String>,
     #[clap(
         long,
-        env,
+        env = "BACKEND_URL",
         default_value = "https://dashboard.mercury.dfinity.systems/api/proxy/registry/"
     )]
     pub(crate) backend_url: reqwest::Url,
-    #[clap(long, env)]
+    #[clap(long, env = "NNS_URL")]
     pub(crate) nns_url: Option<String>,
-    #[clap(short, long, env)]
+    #[clap(short, long, env = "DRY_RUN")]
     pub(crate) dry_run: bool,
-    #[clap(long, env)]
+    #[clap(long, env = "VERBOSE")]
     pub(crate) verbose: bool,
 
     #[clap(subcommand)]
