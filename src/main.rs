@@ -6,7 +6,7 @@ use dotenv::dotenv;
 use futures::Future;
 use ic_base_types::PrincipalId;
 use itertools::Itertools;
-use log::{info, warn};
+use log::{error, info, warn};
 use mercury_management_types::{TopologyProposal, TopologyProposalKind, TopologyProposalStatus};
 use tokio::time::{sleep, Duration};
 mod cli;
@@ -74,7 +74,7 @@ async fn main() -> Result<(), anyhow::Error> {
                         } else if !nodes.is_empty() && subnet.id.is_some() {
                             cmd.error(
                                 ErrorKind::ArgumentConflict,
-                                "Specify either a subnet id or a list of nodes to replace",
+                                "Both subnet id and a list of nodes to replace are provided. Only one of the two is allowed.",
                             )
                             .exit();
                         } else if nodes.is_empty() && subnet.id.is_none() {
@@ -448,9 +448,20 @@ impl Runner {
 }
 
 fn init_env() {
-    if dotenv().is_err() {
-        info!(".env file not found. You can copy env.template to .env to adjust configuration.");
-    };
+    match std::env::var("ENV") {
+        Ok(env_file) => {
+            if dotenv::from_filename(&env_file).is_err() {
+                error!("Supplied environment file {} not found", &env_file);
+                panic!("Failed to load the environment file")
+            }
+            info!("Initialized environment from {}", &env_file)
+        }
+        Err(_) => {
+            if dotenv().is_err() {
+                info!(".env file not found. You can copy env.template to .env to adjust configuration.");
+            }
+        }
+    }
 }
 
 fn init_logger() {
