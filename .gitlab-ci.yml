@@ -175,7 +175,7 @@ pre-commit:
   interruptible: true
   stage: test
   variables:
-    PRE_COMMIT_HOME: "$CI_PROJECT_DIR/.git/pre-commit-home"
+    PRE_COMMIT_HOME: "/cache/pre-commit/${CI_PROJECT_PATH}/$CI_CONCURRENT_ID"
   script:
     - pre-commit install
     - pre-commit run -a --hook-stage=manual
