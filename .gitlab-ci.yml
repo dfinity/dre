@@ -307,5 +307,5 @@ dashboard-release:
     - if git fetch origin $RELEASE_BRANCH; then \
         git checkout $RELEASE_BRANCH && git reset --hard ${CI_COMMIT_SHA} && git push --force origin $RELEASE_BRANCH; \
       else \
-        git checkout -b $RELEASE_BRANCH && git push --force origin $RELEASE_BRANCH \
+        git checkout -b $RELEASE_BRANCH && git push --force origin $RELEASE_BRANCH; \
       fi
