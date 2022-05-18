@@ -1,0 +1,18 @@
+[
+    {
+        "city": "bar",
+        "country": "bar",
+        "continent": "bar",
+        "datacenter_owner": "bar",
+        "node_provider": "bar",
+        "datacenter": "bar"
+    },
+    {
+        "city": "bar",
+        "country": "bar",
+        "continent": "bar",
+        "datacenter_owner": "bar",
+        "node_provider": "bar",
+        "datacenter": "foo"
+    }
+]

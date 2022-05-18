@@ -1,0 +1,16 @@
+app:
+  # Should be the same as backend.baseUrl when using the `app-backend` plugin
+  baseUrl: http://localhost:7000
+
+backend:
+  baseUrl: http://localhost:7000
+  listen:
+    port: 7000
+
+proxy:
+  '/registry':
+    target: 'http://backend:8080'
+    changeOrigin: true
+  '/decentralization':
+    target: 'http://decentralization:8081'
+    changeOrigin: true

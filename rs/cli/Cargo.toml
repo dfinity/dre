@@ -23,8 +23,8 @@ strum = { version = "0.23", features = ["derive"] }
 strum_macros = "0.23"
 flate2 = "1.0.22"
 dirs = "4.0"
-decentralization = { git = "ssh://git@gitlab.com/dfinity-lab/core/mercury-management-dashboard.git", rev = "e0e215097cbe8655f0c11f49ca19797121b21531" }
-mercury_management_types = { git = "ssh://git@gitlab.com/dfinity-lab/core/mercury-management-dashboard.git", rev = "e0e215097cbe8655f0c11f49ca19797121b21531" }
+decentralization = { path = "../decentralization" }
+mercury_management_types = { path = "../mercury_management_types" }
 dialoguer = "0.10.0"
 tabular = "0.2"
 itertools = "0.10"
@@ -32,6 +32,3 @@ async-trait = "0.1.53"
 
 [dev-dependencies]
 tempfile = "3.3.0"
-
-[profile.release]
-lto = "thin"
