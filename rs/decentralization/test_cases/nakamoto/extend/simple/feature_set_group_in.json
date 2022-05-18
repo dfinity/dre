@@ -1,0 +1,10 @@
+[
+    {
+        "city": "foo",
+        "country": "foo",
+        "continent": "foo",
+        "datacenter_owner": "foo",
+        "node_provider": "foo",
+        "datacenter": "foo"
+    }
+]

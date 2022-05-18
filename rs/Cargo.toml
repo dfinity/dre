@@ -1,0 +1,15 @@
+[workspace]
+
+members = [
+    "cli",
+    "decentralization",
+    "mercury-management-backend",
+    "mercury_management_types",
+    "slack-notifications",
+]
+
+[profile.release]
+# Add debug information to the release build (does NOT reduce the level of optimization!)
+# Makes flamegraphs and backtraces more readable.
+# https://doc.rust-lang.org/cargo/reference/manifest.html#the-profile-sections
+debug = true

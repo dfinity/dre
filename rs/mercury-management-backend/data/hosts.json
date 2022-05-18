@@ -1,0 +1,4988 @@
+[
+  {
+    "datacenter": "an1",
+    "ipv6": "2001:920:401a:1708:5000:4fff:fe92:48f1",
+    "name": "an1-dll01",
+    "system_serial": "50098B3"
+  },
+  {
+    "datacenter": "an1",
+    "ipv6": "2001:920:401a:1708:5000:5fff:fec1:9ddb",
+    "name": "an1-dll02",
+    "system_serial": "500D8B3"
+  },
+  {
+    "datacenter": "an1",
+    "ipv6": "2001:920:401a:1708:5000:cbff:fe25:b4e",
+    "name": "an1-dll03",
+    "system_serial": "4ZYF8B3"
+  },
+  {
+    "datacenter": "an1",
+    "ipv6": "2001:920:401a:1708:5000:3aff:fe7e:36d2",
+    "name": "an1-dll04",
+    "system_serial": "4ZZ58B3"
+  },
+  {
+    "datacenter": "an1",
+    "ipv6": "2001:920:401a:1708:5000:b2ff:feec:505",
+    "name": "an1-dll05",
+    "system_serial": "4ZZ48B3"
+  },
+  {
+    "datacenter": "an1",
+    "ipv6": "2001:920:401a:1708:5000:6aff:fe04:4058",
+    "name": "an1-dll06",
+    "system_serial": "4ZYD8B3"
+  },
+  {
+    "datacenter": "an1",
+    "ipv6": "2001:920:401a:1708:5000:8bff:fe77:d696",
+    "name": "an1-dll07",
+    "system_serial": "50058B3"
+  },
+  {
+    "datacenter": "an1",
+    "ipv6": "2001:920:401a:1708:5000:e8ff:fef8:aaad",
+    "name": "an1-dll08",
+    "system_serial": "50078B3"
+  },
+  {
+    "datacenter": "an1",
+    "ipv6": "2001:920:401a:1708:5000:96ff:fe88:803e",
+    "name": "an1-dll09",
+    "system_serial": "50068B3"
+  },
+  {
+    "datacenter": "an1",
+    "ipv6": "2001:920:401a:1708:5000:9fff:fefa:a1a7",
+    "name": "an1-dll10",
+    "system_serial": "50088B3"
+  },
+  {
+    "datacenter": "an1",
+    "ipv6": "2001:920:401a:1708:5000:e3ff:fe26:66bc",
+    "name": "an1-dll11",
+    "system_serial": "500C8B3"
+  },
+  {
+    "datacenter": "an1",
+    "ipv6": "2001:920:401a:1708:5000:f5ff:fe4a:d1e4",
+    "name": "an1-dll12",
+    "system_serial": "500B8B3"
+  },
+  {
+    "datacenter": "an1",
+    "ipv6": "2001:920:401a:1708:5000:5fff:fe32:4d2d",
+    "name": "an1-dll13",
+    "system_serial": "4ZZD8B3"
+  },
+  {
+    "datacenter": "an1",
+    "ipv6": "2001:920:401a:1708:5000:87ff:fe4a:7a39",
+    "name": "an1-dll14",
+    "system_serial": "4ZZF8B3"
+  },
+  {
+    "datacenter": "an1",
+    "ipv6": "2001:920:401a:1708:5000:e4ff:fea9:b773",
+    "name": "an1-dll15",
+    "system_serial": "4ZZC8B3"
+  },
+  {
+    "datacenter": "an1",
+    "ipv6": "2001:920:401a:1708:5000:d6ff:fe83:aa05",
+    "name": "an1-dll16",
+    "system_serial": "4ZZB8B3"
+  },
+  {
+    "datacenter": "an1",
+    "ipv6": "2001:920:401a:1708:5000:bfff:fece:95a6",
+    "name": "an1-dll17",
+    "system_serial": "4ZZ88B3"
+  },
+  {
+    "datacenter": "an1",
+    "ipv6": "2001:920:401a:1708:5000:ecff:fed5:a927",
+    "name": "an1-dll18",
+    "system_serial": "4ZZ98B3"
+  },
+  {
+    "datacenter": "an1",
+    "ipv6": "2001:920:401a:1708:5000:24ff:fe74:280",
+    "name": "an1-dll19",
+    "system_serial": "4ZZ68B3"
+  },
+  {
+    "datacenter": "an1",
+    "ipv6": "2001:920:401a:1708:5000:14ff:fe51:c1ca",
+    "name": "an1-dll20",
+    "system_serial": "4ZZ78B3"
+  },
+  {
+    "datacenter": "an1",
+    "ipv6": "2001:920:401a:1708:5000:aeff:fe0e:7d93",
+    "name": "an1-dll21",
+    "system_serial": "C2ZCK93"
+  },
+  {
+    "datacenter": "an1",
+    "ipv6": "2001:920:401a:1708:5000:88ff:fe60:79b4",
+    "name": "an1-dll22",
+    "system_serial": "C319K93"
+  },
+  {
+    "datacenter": "an1",
+    "ipv6": "2001:920:401a:1708:5000:f5ff:fed6:24ac",
+    "name": "an1-dll23",
+    "system_serial": "C2ZBK93"
+  },
+  {
+    "datacenter": "an1",
+    "ipv6": "2001:920:401a:1708:5000:a6ff:fe5b:74aa",
+    "name": "an1-dll24",
+    "system_serial": "C2ZDK93"
+  },
+  {
+    "datacenter": "an1",
+    "ipv6": "2001:920:401a:1708:5000:9cff:fe8f:cab4",
+    "name": "an1-dll25",
+    "system_serial": "C30TK93"
+  },
+  {
+    "datacenter": "at1",
+    "ipv6": "2607:f758:1220:0:5000:a0ff:fe5c:28ab",
+    "name": "at1-dll08",
+    "system_serial": "JP29N83"
+  },
+  {
+    "datacenter": "at1",
+    "ipv6": "2607:f758:1220:0:5000:55ff:feb0:dda5",
+    "name": "at1-dll09",
+    "system_serial": "JP2CN83"
+  },
+  {
+    "datacenter": "at1",
+    "ipv6": "2607:f758:1220:0:5000:58ff:fe70:358c",
+    "name": "at1-dll10",
+    "system_serial": "JP34N83"
+  },
+  {
+    "datacenter": "at1",
+    "ipv6": "2607:f758:1220:0:5000:96ff:fe0c:cdbc",
+    "name": "at1-dll11",
+    "system_serial": "JP32N83"
+  },
+  {
+    "datacenter": "at1",
+    "ipv6": "2607:f758:1220:0:5000:e9ff:fe94:34e3",
+    "name": "at1-dll12",
+    "system_serial": "JNZWJ93"
+  },
+  {
+    "datacenter": "at1",
+    "ipv6": "2607:f758:1220:0:5000:55ff:fe4e:8af2",
+    "name": "at1-dll13",
+    "system_serial": "JNZYJ93"
+  },
+  {
+    "datacenter": "at1",
+    "ipv6": "2607:f758:1220:0:5000:acff:fec2:83b7",
+    "name": "at1-dll14",
+    "system_serial": "JNZXJ93"
+  },
+  {
+    "datacenter": "at1",
+    "ipv6": "2607:f758:1220:0:5000:87ff:fe6b:2586",
+    "name": "at1-dll15",
+    "system_serial": "JNZVJ93"
+  },
+  {
+    "datacenter": "at1",
+    "ipv6": "2607:f758:1220:0:5000:5aff:fe9a:5d88",
+    "name": "at1-dll16",
+    "system_serial": "JP33N83"
+  },
+  {
+    "datacenter": "at1",
+    "ipv6": "2607:f758:1220:0:5000:81ff:fedb:1a4",
+    "name": "at1-dll17",
+    "system_serial": "JP2ZJ93"
+  },
+  {
+    "datacenter": "at1",
+    "ipv6": "2607:f758:1220:0:5000:33ff:fe5d:6c02",
+    "name": "at1-dll18",
+    "system_serial": "JP2BN83"
+  },
+  {
+    "datacenter": "at1",
+    "ipv6": "2607:f758:1220:0:5000:42ff:fe5f:2c9d",
+    "name": "at1-dll19",
+    "system_serial": "JP28N83"
+  },
+  {
+    "datacenter": "at1",
+    "ipv6": "2607:f758:1220:0:5000:aaff:fef7:755",
+    "name": "at1-dll20",
+    "system_serial": "JP3ZJ93"
+  },
+  {
+    "datacenter": "at1",
+    "ipv6": "2607:f758:1220:0:5000:bfff:feb9:6794",
+    "name": "at1-dll21",
+    "system_serial": "JP07N83"
+  },
+  {
+    "datacenter": "at1",
+    "ipv6": "2607:f758:1220:0:5000:aaff:feed:a0bb",
+    "name": "at1-dll22",
+    "system_serial": "JP06N83"
+  },
+  {
+    "datacenter": "at1",
+    "ipv6": "2607:f758:1220:0:5000:15ff:fe8f:bf21",
+    "name": "at1-dll23",
+    "system_serial": "JP09N83"
+  },
+  {
+    "datacenter": "at1",
+    "ipv6": "2607:f758:1220:0:5000:8bff:fea9:1de2",
+    "name": "at1-dll24",
+    "system_serial": "JP1WJ93"
+  },
+  {
+    "datacenter": "at1",
+    "ipv6": "2607:f758:1220:0:5000:7fff:fec1:ca21",
+    "name": "at1-dll25",
+    "system_serial": "JP1VJ93"
+  },
+  {
+    "datacenter": "at1",
+    "ipv6": "2607:f758:1220:0:5000:26ff:fec6:34ca",
+    "name": "at1-dll26",
+    "system_serial": "JP1TJ93"
+  },
+  {
+    "datacenter": "at1",
+    "ipv6": "2607:f758:1220:0:5000:a3ff:fec0:7ebb",
+    "name": "at1-dll27",
+    "system_serial": "JP1XJ93"
+  },
+  {
+    "datacenter": "at1",
+    "ipv6": "2607:f758:1220:0:5000:c6ff:fe8d:4109",
+    "name": "at1-dll28",
+    "system_serial": "JP08N83"
+  },
+  {
+    "datacenter": "at1",
+    "ipv6": "2607:f758:1220:0:5000:93ff:fe3e:3fa9",
+    "name": "at1-spm01",
+    "system_serial": "S427611X0913827"
+  },
+  {
+    "datacenter": "at1",
+    "ipv6": "2607:f758:1220:0:5000:66ff:feff:1423",
+    "name": "at1-spm02",
+    "system_serial": "S427611X0913838"
+  },
+  {
+    "datacenter": "at1",
+    "ipv6": "2607:f758:1220:0:5000:7eff:fe90:bac1",
+    "name": "at1-spm03",
+    "system_serial": "S427611X0913817"
+  },
+  {
+    "datacenter": "at1",
+    "ipv6": "2607:f758:1220:0:5000:86ff:fe42:917b",
+    "name": "at1-spm04",
+    "system_serial": "S427611X0913831"
+  },
+  {
+    "datacenter": "at1",
+    "ipv6": "2607:f758:1220:0:5000:3aff:fe16:7aec",
+    "name": "at1-spm05",
+    "system_serial": "S427611X0913842"
+  },
+  {
+    "datacenter": "at1",
+    "ipv6": "2607:f758:1220:0:5000:12ff:fe0c:8a57",
+    "name": "at1-spm06",
+    "system_serial": "S427611X0913824"
+  },
+  {
+    "datacenter": "at1",
+    "ipv6": "2607:f758:1220:0:5000:a9ff:fe08:30bd",
+    "name": "at1-spm07",
+    "system_serial": "S427611X0913840"
+  },
+  {
+    "datacenter": "at2",
+    "ipv6": "2604:3fc0:2001:0:5000:feff:febe:1565",
+    "name": "at2-dll01",
+    "system_serial": "7S868B3"
+  },
+  {
+    "datacenter": "at2",
+    "ipv6": "2604:3fc0:2001:0:5000:33ff:fe7e:421c",
+    "name": "at2-dll02",
+    "system_serial": "7S858B3"
+  },
+  {
+    "datacenter": "at2",
+    "ipv6": "2604:3fc0:2001:0:5000:ccff:feec:c795",
+    "name": "at2-dll03",
+    "system_serial": "7S7G8B3"
+  },
+  {
+    "datacenter": "at2",
+    "ipv6": "2604:3fc0:2001:0:5000:edff:fe2a:6e61",
+    "name": "at2-dll04",
+    "system_serial": "7S878B3"
+  },
+  {
+    "datacenter": "at2",
+    "ipv6": "2604:3fc0:2001:0:5000:60ff:feb6:db86",
+    "name": "at2-dll05",
+    "system_serial": "7S8D8B3"
+  },
+  {
+    "datacenter": "at2",
+    "ipv6": "2604:3fc0:2001:0:5000:6cff:fef9:d78e",
+    "name": "at2-dll06",
+    "system_serial": "7S8G8B3"
+  },
+  {
+    "datacenter": "at2",
+    "ipv6": "2604:3fc0:2001:0:5000:86ff:fe54:a2eb",
+    "name": "at2-dll07",
+    "system_serial": "7S8F8B3"
+  },
+  {
+    "datacenter": "at2",
+    "ipv6": "2604:3fc0:2001:0:5000:e2ff:fe44:1f6f",
+    "name": "at2-dll08",
+    "system_serial": "7S958B3"
+  },
+  {
+    "datacenter": "at2",
+    "ipv6": "2604:3fc0:2001:0:5000:b5ff:fe55:e5bd",
+    "name": "at2-dll09",
+    "system_serial": "7S898B3"
+  },
+  {
+    "datacenter": "at2",
+    "ipv6": "2604:3fc0:2001:0:5000:1fff:fe57:50fe",
+    "name": "at2-dll10",
+    "system_serial": "7S8C8B3"
+  },
+  {
+    "datacenter": "at2",
+    "ipv6": "2604:3fc0:2001:0:5000:6cff:fe4c:465a",
+    "name": "at2-dll11",
+    "system_serial": "7S888B3"
+  },
+  {
+    "datacenter": "at2",
+    "ipv6": "2604:3fc0:2001:0:5000:b0ff:fe7b:ff55",
+    "name": "at2-dll12",
+    "system_serial": "7S8B8B3"
+  },
+  {
+    "datacenter": "at2",
+    "ipv6": "2604:3fc0:2001:0:5000:26ff:fe16:e6d3",
+    "name": "at2-dll13",
+    "system_serial": "7S7F8B3"
+  },
+  {
+    "datacenter": "at2",
+    "ipv6": "2604:3fc0:2001:0:5000:25ff:fee3:dd76",
+    "name": "at2-dll14",
+    "system_serial": "7S7D8B3"
+  },
+  {
+    "datacenter": "at2",
+    "ipv6": "2604:3fc0:2001:0:5000:79ff:febf:525f",
+    "name": "at2-dll15",
+    "system_serial": "B5600C3"
+  },
+  {
+    "datacenter": "at2",
+    "ipv6": "2604:3fc0:2001:0:5000:8fff:fedb:c881",
+    "name": "at2-dll16",
+    "system_serial": "B5610C3"
+  },
+  {
+    "datacenter": "at2",
+    "ipv6": "2604:3fc0:2001:0:5000:ccff:fefd:5bc4",
+    "name": "at2-dll17",
+    "system_serial": "95N20C3"
+  },
+  {
+    "datacenter": "at2",
+    "ipv6": "2604:3fc0:2001:0:5000:35ff:feb6:1121",
+    "name": "at2-dll18",
+    "system_serial": "95N00C3"
+  },
+  {
+    "datacenter": "at2",
+    "ipv6": "2604:3fc0:2001:0:5000:afff:fe1f:42df",
+    "name": "at2-dll19",
+    "system_serial": "95N30C3"
+  },
+  {
+    "datacenter": "at2",
+    "ipv6": "2604:3fc0:2001:0:5000:d3ff:fe86:dd33",
+    "name": "at2-dll20",
+    "system_serial": "95N10C3"
+  },
+  {
+    "datacenter": "at2",
+    "ipv6": "2604:3fc0:2001:0:5000:f9ff:fea9:a88f",
+    "name": "at2-dll21",
+    "system_serial": "B56VZB3"
+  },
+  {
+    "datacenter": "at2",
+    "ipv6": "2604:3fc0:2001:0:5000:5aff:fee5:7927",
+    "name": "at2-dll22",
+    "system_serial": "B5620C3"
+  },
+  {
+    "datacenter": "at2",
+    "ipv6": "2604:3fc0:2001:0:5000:89ff:fe42:fedd",
+    "name": "at2-dll23",
+    "system_serial": "B5640C3"
+  },
+  {
+    "datacenter": "at2",
+    "ipv6": "2604:3fc0:2001:0:5000:c8ff:fee2:431e",
+    "name": "at2-dll24",
+    "system_serial": "B5630C3"
+  },
+  {
+    "datacenter": "at2",
+    "ipv6": "2604:3fc0:2001:0:5000:5dff:fed9:dd4e",
+    "name": "at2-dll25",
+    "system_serial": "95MYZB3"
+  },
+  {
+    "datacenter": "at2",
+    "ipv6": "2604:3fc0:2001:0:5000:5aff:fe0a:3d57",
+    "name": "at2-dll26",
+    "system_serial": "95MZZB3"
+  },
+  {
+    "datacenter": "at2",
+    "ipv6": "2604:3fc0:2001:0:5000:8dff:fed0:a87b",
+    "name": "at2-dll27",
+    "system_serial": "95MXZB3"
+  },
+  {
+    "datacenter": "at2",
+    "ipv6": "2604:3fc0:2001:0:5000:acff:fe78:f0d4",
+    "name": "at2-dll28",
+    "system_serial": "95MWZB3"
+  },
+  {
+    "datacenter": "aw1",
+    "ipv6": "2604:7e00:30:3:5000:b8ff:fedb:d21a",
+    "name": "aw1-dll01",
+    "system_serial": "B59YZB3"
+  },
+  {
+    "datacenter": "aw1",
+    "ipv6": "2604:7e00:30:3:5000:edff:fe14:d3f",
+    "name": "aw1-dll02",
+    "system_serial": "B5B10C3"
+  },
+  {
+    "datacenter": "aw1",
+    "ipv6": "2604:7e00:30:3:5000:43ff:fe13:91c0",
+    "name": "aw1-dll03",
+    "system_serial": "B57ZZB3"
+  },
+  {
+    "datacenter": "aw1",
+    "ipv6": "2604:7e00:30:3:5000:3fff:fe17:22a8",
+    "name": "aw1-dll04",
+    "system_serial": "B5840C3"
+  },
+  {
+    "datacenter": "aw1",
+    "ipv6": "2604:7e00:30:3:5000:43ff:fe4c:498c",
+    "name": "aw1-dll05",
+    "system_serial": "B5920C3"
+  },
+  {
+    "datacenter": "aw1",
+    "ipv6": "2604:7e00:30:3:5000:5dff:fed1:c2bb",
+    "name": "aw1-dll06",
+    "system_serial": "B5930C3"
+  },
+  {
+    "datacenter": "aw1",
+    "ipv6": "2604:7e00:30:3:5000:3aff:fe20:a21f",
+    "name": "aw1-dll07",
+    "system_serial": "B5910C3"
+  },
+  {
+    "datacenter": "aw1",
+    "ipv6": "2604:7e00:30:3:5000:26ff:fea8:b35c",
+    "name": "aw1-dll08",
+    "system_serial": "B58YZB3"
+  },
+  {
+    "datacenter": "aw1",
+    "ipv6": "2604:7e00:30:3:5000:4cff:fee6:8d82",
+    "name": "aw1-dll09",
+    "system_serial": "B58WZB3"
+  },
+  {
+    "datacenter": "aw1",
+    "ipv6": "2604:7e00:30:3:5000:dbff:fe94:7045",
+    "name": "aw1-dll10",
+    "system_serial": "B58XZB3"
+  },
+  {
+    "datacenter": "aw1",
+    "ipv6": "2604:7e00:30:3:5000:60ff:fece:edba",
+    "name": "aw1-dll11",
+    "system_serial": "B58VZB3"
+  },
+  {
+    "datacenter": "aw1",
+    "ipv6": "2604:7e00:30:3:5000:e6ff:fe7c:bcbe",
+    "name": "aw1-dll12",
+    "system_serial": "B58ZZB3"
+  },
+  {
+    "datacenter": "aw1",
+    "ipv6": "2604:7e00:30:3:5000:32ff:fe7a:fda",
+    "name": "aw1-dll13",
+    "system_serial": "B5830C3"
+  },
+  {
+    "datacenter": "aw1",
+    "ipv6": "2604:7e00:30:3:5000:aaff:fedf:c751",
+    "name": "aw1-dll14",
+    "system_serial": "B5CVZB3"
+  },
+  {
+    "datacenter": "aw1",
+    "ipv6": "2604:7e00:30:3:5000:79ff:fefc:d729",
+    "name": "aw1-dll15",
+    "system_serial": "B5730C3"
+  },
+  {
+    "datacenter": "aw1",
+    "ipv6": "2604:7e00:30:3:5000:3bff:fe7e:b011",
+    "name": "aw1-dll16",
+    "system_serial": "B5710C3"
+  },
+  {
+    "datacenter": "aw1",
+    "ipv6": "2604:7e00:30:3:5000:abff:fea6:b9fe",
+    "name": "aw1-dll17",
+    "system_serial": "B5700C3"
+  },
+  {
+    "datacenter": "aw1",
+    "ipv6": "2604:7e00:30:3:5000:97ff:feff:c83f",
+    "name": "aw1-dll18",
+    "system_serial": "B5720C3"
+  },
+  {
+    "datacenter": "aw1",
+    "ipv6": "2604:7e00:30:3:5000:c8ff:fec2:cbac",
+    "name": "aw1-dll19",
+    "system_serial": "B57XZB3"
+  },
+  {
+    "datacenter": "aw1",
+    "ipv6": "2604:7e00:30:3:5000:f6ff:fe2f:42d4",
+    "name": "aw1-dll20",
+    "system_serial": "B57WZB3"
+  },
+  {
+    "datacenter": "aw1",
+    "ipv6": "2604:7e00:30:3:5000:85ff:fe63:4d4",
+    "name": "aw1-dll21",
+    "system_serial": "B5740C3"
+  },
+  {
+    "datacenter": "aw1",
+    "ipv6": "2604:7e00:30:3:5000:37ff:fe46:ed4c",
+    "name": "aw1-dll22",
+    "system_serial": "B57VZB3"
+  },
+  {
+    "datacenter": "aw1",
+    "ipv6": "2604:7e00:30:3:5000:ddff:fe67:29ad",
+    "name": "aw1-dll23",
+    "system_serial": "B5820C3"
+  },
+  {
+    "datacenter": "aw1",
+    "ipv6": "2604:7e00:30:3:5000:4eff:feeb:20ed",
+    "name": "aw1-dll24",
+    "system_serial": "B5800C3"
+  },
+  {
+    "datacenter": "aw1",
+    "ipv6": "2604:7e00:30:3:5000:69ff:febc:793e",
+    "name": "aw1-dll25",
+    "system_serial": "B57YZB3"
+  },
+  {
+    "datacenter": "aw1",
+    "ipv6": "2604:7e00:30:3:5000:d1ff:fe75:8dff",
+    "name": "aw1-dll26",
+    "system_serial": "B5810C3"
+  },
+  {
+    "datacenter": "aw1",
+    "ipv6": "2604:7e00:30:3:5000:36ff:fe73:549",
+    "name": "aw1-dll27",
+    "system_serial": "B5B00C3"
+  },
+  {
+    "datacenter": "aw1",
+    "ipv6": "2604:7e00:30:3:5000:56ff:feb0:fdf4",
+    "name": "aw1-dll28",
+    "system_serial": "B59ZZB3"
+  },
+  {
+    "datacenter": "br1",
+    "ipv6": "2001:920:401a:1710:5000:96ff:fe7c:9fa8",
+    "name": "br1-dll01",
+    "system_serial": "C2ZMK93"
+  },
+  {
+    "datacenter": "br1",
+    "ipv6": "2001:920:401a:1710:5000:d7ff:fe6f:fde7",
+    "name": "br1-dll02",
+    "system_serial": "C2ZLK93"
+  },
+  {
+    "datacenter": "br1",
+    "ipv6": "2001:920:401a:1710:5000:62ff:fe5a:9e7d",
+    "name": "br1-dll03",
+    "system_serial": "C2ZNK93"
+  },
+  {
+    "datacenter": "br1",
+    "ipv6": "2001:920:401a:1710:5000:91ff:fecf:d158",
+    "name": "br1-dll04",
+    "system_serial": "C2ZPK93"
+  },
+  {
+    "datacenter": "br1",
+    "ipv6": "2001:920:401a:1710:5000:bdff:fe15:8b80",
+    "name": "br1-dll05",
+    "system_serial": "C309K93"
+  },
+  {
+    "datacenter": "br1",
+    "ipv6": "2001:920:401a:1710:5000:c9ff:fe4c:1e3d",
+    "name": "br1-dll06",
+    "system_serial": "C30BK93"
+  },
+  {
+    "datacenter": "br1",
+    "ipv6": "2001:920:401a:1710:5000:c9ff:fe54:8906",
+    "name": "br1-dll07",
+    "system_serial": "C308K93"
+  },
+  {
+    "datacenter": "br1",
+    "ipv6": "2001:920:401a:1710:5000:d9ff:fe9e:1e5a",
+    "name": "br1-dll08",
+    "system_serial": "C30CK93"
+  },
+  {
+    "datacenter": "br1",
+    "ipv6": "2001:920:401a:1710:5000:d1ff:fead:5a51",
+    "name": "br1-dll09",
+    "system_serial": "C31CK93"
+  },
+  {
+    "datacenter": "br1",
+    "ipv6": "2001:920:401a:1710:5000:baff:fe01:e181",
+    "name": "br1-dll10",
+    "system_serial": "C31DK93"
+  },
+  {
+    "datacenter": "br1",
+    "ipv6": "2001:920:401a:1710:5000:fdff:fe2d:a094",
+    "name": "br1-dll11",
+    "system_serial": "C2Z8K93"
+  },
+  {
+    "datacenter": "br1",
+    "ipv6": "2001:920:401a:1710:5000:81ff:fe77:1833",
+    "name": "br1-dll12",
+    "system_serial": "C2Z7K93"
+  },
+  {
+    "datacenter": "br1",
+    "ipv6": "2001:920:401a:1710:5000:d3ff:fe7e:546b",
+    "name": "br1-dll13",
+    "system_serial": "C2ZSK93"
+  },
+  {
+    "datacenter": "br1",
+    "ipv6": "2001:920:401a:1710:5000:adff:fec0:9cd7",
+    "name": "br1-dll14",
+    "system_serial": "C307K93"
+  },
+  {
+    "datacenter": "br1",
+    "ipv6": "2001:920:401a:1710:5000:28ff:fe36:512b",
+    "name": "br1-dll15",
+    "system_serial": "C2ZQK93"
+  },
+  {
+    "datacenter": "br1",
+    "ipv6": "2001:920:401a:1710:5000:6aff:fee4:19cd",
+    "name": "br1-dll16",
+    "system_serial": "C2ZRK93"
+  },
+  {
+    "datacenter": "br1",
+    "ipv6": "2001:920:401a:1710:5000:a4ff:fe71:b859",
+    "name": "br1-dll17",
+    "system_serial": "C30MK93"
+  },
+  {
+    "datacenter": "br1",
+    "ipv6": "2001:920:401a:1710:5000:cdff:fef0:3606",
+    "name": "br1-dll18",
+    "system_serial": "C30LK93"
+  },
+  {
+    "datacenter": "br1",
+    "ipv6": "2001:920:401a:1710:5000:c8ff:fee9:2365",
+    "name": "br1-dll19",
+    "system_serial": "C30KK93"
+  },
+  {
+    "datacenter": "br1",
+    "ipv6": "2001:920:401a:1710:5000:64ff:fe32:dbf2",
+    "name": "br1-dll20",
+    "system_serial": "C30JK93"
+  },
+  {
+    "datacenter": "br1",
+    "ipv6": "2001:920:401a:1710:5000:d0ff:fe2e:6805",
+    "name": "br1-dll21",
+    "system_serial": "C2ZFK93"
+  },
+  {
+    "datacenter": "br1",
+    "ipv6": "2001:920:401a:1710:5000:35ff:fe37:6d5d",
+    "name": "br1-dll22",
+    "system_serial": "C31BK93"
+  },
+  {
+    "datacenter": "br1",
+    "ipv6": "2001:920:401a:1710:5000:4fff:fecd:dfb7",
+    "name": "br1-dll23",
+    "system_serial": "C2Z6K93"
+  },
+  {
+    "datacenter": "br1",
+    "ipv6": "2001:920:401a:1710:5000:39ff:fe94:d7ad",
+    "name": "br1-dll24",
+    "system_serial": "C2Z9K93"
+  },
+  {
+    "datacenter": "br1",
+    "ipv6": "2001:920:401a:1710:5000:33ff:fedd:360",
+    "name": "br1-dll25",
+    "system_serial": "C31GK93"
+  },
+  {
+    "datacenter": "br2",
+    "ipv6": "2001:920:401a:1706:5000:c6ff:feaa:bddd",
+    "name": "br2-dll01",
+    "system_serial": "C2ZJK93"
+  },
+  {
+    "datacenter": "br2",
+    "ipv6": "2001:920:401a:1706:5000:87ff:fe11:a9a0",
+    "name": "br2-dll02",
+    "system_serial": "C2ZKK93"
+  },
+  {
+    "datacenter": "br2",
+    "ipv6": "2001:920:401a:1706:5000:15ff:fea6:df6",
+    "name": "br2-dll03",
+    "system_serial": "C2ZHK93"
+  },
+  {
+    "datacenter": "br2",
+    "ipv6": "2001:920:401a:1706:5000:55ff:fe8a:b307",
+    "name": "br2-dll04",
+    "system_serial": "C2ZGK93"
+  },
+  {
+    "datacenter": "br2",
+    "ipv6": "2001:920:401a:1706:5000:1bff:fe47:864d",
+    "name": "br2-dll05",
+    "system_serial": "C30HK93"
+  },
+  {
+    "datacenter": "br2",
+    "ipv6": "2001:920:401a:1706:5000:77ff:fee2:c013",
+    "name": "br2-dll06",
+    "system_serial": "C30DK93"
+  },
+  {
+    "datacenter": "br2",
+    "ipv6": "2001:920:401a:1706:5000:bcff:fe3f:3065",
+    "name": "br2-dll07",
+    "system_serial": "C30GK93"
+  },
+  {
+    "datacenter": "br2",
+    "ipv6": "2001:920:401a:1706:5000:9eff:febd:33c9",
+    "name": "br2-dll08",
+    "system_serial": "C30FK93"
+  },
+  {
+    "datacenter": "br2",
+    "ipv6": "2001:920:401a:1706:5000:57ff:fe61:9282",
+    "name": "br2-dll09",
+    "system_serial": "C2YSK93"
+  },
+  {
+    "datacenter": "br2",
+    "ipv6": "2001:920:401a:1706:5000:c3ff:fe1f:40ab",
+    "name": "br2-dll10",
+    "system_serial": "C2YRK93"
+  },
+  {
+    "datacenter": "br2",
+    "ipv6": "2001:920:401a:1706:5000:4cff:fe79:4dbf",
+    "name": "br2-dll11",
+    "system_serial": "C30PK93"
+  },
+  {
+    "datacenter": "bu1",
+    "ipv6": "2a04:9dc0:0:108:5000:ccff:feb7:c03b",
+    "name": "bu1-dll01",
+    "system_serial": "2MRHH63"
+  },
+  {
+    "datacenter": "bu1",
+    "ipv6": "2a04:9dc0:0:108:5000:abff:fe4f:543b",
+    "name": "bu1-dll02",
+    "system_serial": "2MRGH63"
+  },
+  {
+    "datacenter": "bu1",
+    "ipv6": "2a04:9dc0:0:108:5000:6bff:fe08:5f57",
+    "name": "bu1-dll03",
+    "system_serial": "2MRJH63"
+  },
+  {
+    "datacenter": "bu1",
+    "ipv6": "2a04:9dc0:0:108:5000:96ff:fe4a:be10",
+    "name": "bu1-dll04",
+    "system_serial": "2MRKH63"
+  },
+  {
+    "datacenter": "bu1",
+    "ipv6": "2a04:9dc0:0:108:5000:56ff:fed9:f285",
+    "name": "bu1-dll05",
+    "system_serial": "2MSHH63"
+  },
+  {
+    "datacenter": "bu1",
+    "ipv6": "2a04:9dc0:0:108:5000:6eff:fe7f:a312",
+    "name": "bu1-dll06",
+    "system_serial": "2MSDH63"
+  },
+  {
+    "datacenter": "bu1",
+    "ipv6": "2a04:9dc0:0:108:5000:57ff:fe96:6dc9",
+    "name": "bu1-dll07",
+    "system_serial": "2MSGH63"
+  },
+  {
+    "datacenter": "bu1",
+    "ipv6": "2a04:9dc0:0:108:5000:46ff:fe5b:8b40",
+    "name": "bu1-dll08",
+    "system_serial": "2MSFH63"
+  },
+  {
+    "datacenter": "bu1",
+    "ipv6": "2a04:9dc0:0:108:5000:4fff:fe93:a096",
+    "name": "bu1-dll09",
+    "system_serial": "2MSLH63"
+  },
+  {
+    "datacenter": "bu1",
+    "ipv6": "2a04:9dc0:0:108:5000:17ff:fe69:881f",
+    "name": "bu1-dll10",
+    "system_serial": "2MSKH63"
+  },
+  {
+    "datacenter": "bu1",
+    "ipv6": "2a04:9dc0:0:108:5000:baff:fef8:ab71",
+    "name": "bu1-dll11",
+    "system_serial": "2MSJH63"
+  },
+  {
+    "datacenter": "bu1",
+    "ipv6": "2a04:9dc0:0:108:5000:25ff:fe2e:5af6",
+    "name": "bu1-dll12",
+    "system_serial": "2MSMH63"
+  },
+  {
+    "datacenter": "bu1",
+    "ipv6": "2a04:9dc0:0:108:5000:63ff:feef:5059",
+    "name": "bu1-dll13",
+    "system_serial": "2MTCH63"
+  },
+  {
+    "datacenter": "bu1",
+    "ipv6": "2a04:9dc0:0:108:5000:8cff:fe29:b31d",
+    "name": "bu1-dll14",
+    "system_serial": "2MTDH63"
+  },
+  {
+    "datacenter": "bu1",
+    "ipv6": "2a04:9dc0:0:108:5000:24ff:fe4c:59de",
+    "name": "bu1-dll15",
+    "system_serial": "2MTBH63"
+  },
+  {
+    "datacenter": "bu1",
+    "ipv6": "2a04:9dc0:0:108:5000:4bff:fe47:f39d",
+    "name": "bu1-dll16",
+    "system_serial": "2MTFH63"
+  },
+  {
+    "datacenter": "bu1",
+    "ipv6": "2a04:9dc0:0:108:5000:f3ff:fedf:ff57",
+    "name": "bu1-dll17",
+    "system_serial": "2MTLH63"
+  },
+  {
+    "datacenter": "bu1",
+    "ipv6": "2a04:9dc0:0:108:5000:beff:fe1a:c6a6",
+    "name": "bu1-dll18",
+    "system_serial": "2MVBH63"
+  },
+  {
+    "datacenter": "bu1",
+    "ipv6": "2a04:9dc0:0:108:5000:b3ff:fe4f:4549",
+    "name": "bu1-dll19",
+    "system_serial": "2MVCH63"
+  },
+  {
+    "datacenter": "bu1",
+    "ipv6": "2a04:9dc0:0:108:5000:a8ff:fe45:cc91",
+    "name": "bu1-dll20",
+    "system_serial": "2MTMH63"
+  },
+  {
+    "datacenter": "bu1",
+    "ipv6": "2a04:9dc0:0:108:5000:3eff:fe2a:15d9",
+    "name": "bu1-dll21",
+    "system_serial": "2MTHH63"
+  },
+  {
+    "datacenter": "bu1",
+    "ipv6": "2a04:9dc0:0:108:5000:63ff:fe42:d716",
+    "name": "bu1-dll22",
+    "system_serial": "2MRMH63"
+  },
+  {
+    "datacenter": "bu1",
+    "ipv6": "2a04:9dc0:0:108:5000:e0ff:feeb:cfe0",
+    "name": "bu1-dll23",
+    "system_serial": "2MSBH63"
+  },
+  {
+    "datacenter": "bu1",
+    "ipv6": "2a04:9dc0:0:108:5000:f8ff:fe73:7830",
+    "name": "bu1-dll24",
+    "system_serial": "2MRLH63"
+  },
+  {
+    "datacenter": "bu1",
+    "ipv6": "2a04:9dc0:0:108:5000:7cff:fece:97d",
+    "name": "bu1-dll25",
+    "system_serial": "2MSCH63"
+  },
+  {
+    "datacenter": "bu1",
+    "ipv6": "2a04:9dc0:0:108:5000:5dff:febd:e5f4",
+    "name": "bu1-dll26",
+    "system_serial": "2MTGH63"
+  },
+  {
+    "datacenter": "bu1",
+    "ipv6": "2a04:9dc0:0:108:5000:33ff:fe44:67c",
+    "name": "bu1-dll27",
+    "system_serial": "2MTJH63"
+  },
+  {
+    "datacenter": "bu1",
+    "ipv6": "2a04:9dc0:0:108:5000:deff:feae:a585",
+    "name": "bu1-dll28",
+    "system_serial": "2MTKH63"
+  },
+  {
+    "datacenter": "ch2",
+    "ipv6": "2604:7e00:50:0:5000:73ff:fe60:d085",
+    "name": "ch2-dll01",
+    "system_serial": "9LHNM83"
+  },
+  {
+    "datacenter": "ch2",
+    "ipv6": "2604:7e00:50:0:5000:32ff:fe2e:b20d",
+    "name": "ch2-dll02",
+    "system_serial": "9LCNM83"
+  },
+  {
+    "datacenter": "ch2",
+    "ipv6": "2604:7e00:50:0:5000:afff:fe53:e415",
+    "name": "ch2-dll03",
+    "system_serial": "99BMM83"
+  },
+  {
+    "datacenter": "ch2",
+    "ipv6": "2604:7e00:50:0:5000:d5ff:fef2:c064",
+    "name": "ch2-dll04",
+    "system_serial": "99JFM83"
+  },
+  {
+    "datacenter": "ch2",
+    "ipv6": "2604:7e00:50:0:5000:95ff:fe35:6bbe",
+    "name": "ch2-dll05",
+    "system_serial": "9LCMM83"
+  },
+  {
+    "datacenter": "ch2",
+    "ipv6": "2604:7e00:50:0:5000:69ff:fe89:f040",
+    "name": "ch2-dll06",
+    "system_serial": "9LGPM83"
+  },
+  {
+    "datacenter": "ch2",
+    "ipv6": "2604:7e00:50:0:5000:c0ff:fe07:bf34",
+    "name": "ch2-dll07",
+    "system_serial": "9LGTM83"
+  },
+  {
+    "datacenter": "ch2",
+    "ipv6": "2604:7e00:50:0:5000:39ff:fe53:a805",
+    "name": "ch2-dll08",
+    "system_serial": "99BGM83"
+  },
+  {
+    "datacenter": "ch2",
+    "ipv6": "2604:7e00:50:0:5000:dbff:fe3e:98b1",
+    "name": "ch2-dll09",
+    "system_serial": "9LGSM83"
+  },
+  {
+    "datacenter": "ch2",
+    "ipv6": "2604:7e00:50:0:5000:64ff:fea3:ccaa",
+    "name": "ch2-dll10",
+    "system_serial": "9LHMM83"
+  },
+  {
+    "datacenter": "ch2",
+    "ipv6": "2604:7e00:50:0:5000:d2ff:fe5d:e3bc",
+    "name": "ch2-dll11",
+    "system_serial": "99BJM83"
+  },
+  {
+    "datacenter": "ch2",
+    "ipv6": "2604:7e00:50:0:5000:f3ff:fe0f:d229",
+    "name": "ch2-dll12",
+    "system_serial": "99CFM83"
+  },
+  {
+    "datacenter": "ch2",
+    "ipv6": "2604:7e00:50:0:5000:d3ff:fedf:f6c1",
+    "name": "ch2-dll13",
+    "system_serial": "9LHPM83"
+  },
+  {
+    "datacenter": "ch2",
+    "ipv6": "2604:7e00:50:0:5000:a7ff:fea7:3356",
+    "name": "ch2-dll14",
+    "system_serial": "99JGM83"
+  },
+  {
+    "datacenter": "ch2",
+    "ipv6": "2604:7e00:50:0:5000:20ff:fea7:efee",
+    "name": "ch2-dll15",
+    "system_serial": "2SXSK93"
+  },
+  {
+    "datacenter": "ch2",
+    "ipv6": "2604:7e00:50:0:5000:7eff:fefd:61b1",
+    "name": "ch2-dll16",
+    "system_serial": "9LDNM83"
+  },
+  {
+    "datacenter": "ch2",
+    "ipv6": "2604:7e00:50:0:5000:6dff:fe49:8ab",
+    "name": "ch2-dll17",
+    "system_serial": "GSSFN83"
+  },
+  {
+    "datacenter": "ch2",
+    "ipv6": "2604:7e00:50:0:5000:f6ff:feb4:9c92",
+    "name": "ch2-dll18",
+    "system_serial": "99HGM83"
+  },
+  {
+    "datacenter": "ch2",
+    "ipv6": "2604:7e00:50:0:5000:55ff:fede:8372",
+    "name": "ch2-dll19",
+    "system_serial": "59H5R53"
+  },
+  {
+    "datacenter": "ch2",
+    "ipv6": "2604:7e00:50:0:5000:c3ff:fea4:d8db",
+    "name": "ch2-dll20",
+    "system_serial": "59GBR53"
+  },
+  {
+    "datacenter": "ch2",
+    "ipv6": "2604:7e00:50:0:5000:36ff:fec5:a80a",
+    "name": "ch2-dll21",
+    "system_serial": "59H6R53"
+  },
+  {
+    "datacenter": "ch2",
+    "ipv6": "2604:7e00:50:0:5000:a4ff:feae:f515",
+    "name": "ch2-dll22",
+    "system_serial": "59H8R53"
+  },
+  {
+    "datacenter": "ch2",
+    "ipv6": "2604:7e00:50:0:5000:49ff:fea7:b219",
+    "name": "ch2-dll23",
+    "system_serial": "59JBR53"
+  },
+  {
+    "datacenter": "ch2",
+    "ipv6": "2604:7e00:50:0:5000:51ff:fe35:65b0",
+    "name": "ch2-dll24",
+    "system_serial": "59JCR53"
+  },
+  {
+    "datacenter": "ch2",
+    "ipv6": "2604:7e00:50:0:5000:d3ff:fe53:1da",
+    "name": "ch2-dll25",
+    "system_serial": "59H9R53"
+  },
+  {
+    "datacenter": "dl1",
+    "ipv6": "2600:3000:6100:200:5000:c4ff:fe43:3d8a",
+    "name": "dl1-dll01",
+    "system_serial": "99XFM83"
+  },
+  {
+    "datacenter": "dl1",
+    "ipv6": "2600:3000:6100:200:5000:cbff:fe4b:b207",
+    "name": "dl1-dll02",
+    "system_serial": "99WFM83"
+  },
+  {
+    "datacenter": "dl1",
+    "ipv6": "2600:3000:6100:200:5000:67ff:fea7:5a0",
+    "name": "dl1-dll03",
+    "system_serial": "99PLM83"
+  },
+  {
+    "datacenter": "dl1",
+    "ipv6": "2600:3000:6100:200:5000:94ff:fed8:42d4",
+    "name": "dl1-dll04",
+    "system_serial": "99LFM83"
+  },
+  {
+    "datacenter": "dl1",
+    "ipv6": "2600:3000:6100:200:5000:d9ff:fec4:e5f",
+    "name": "dl1-dll05",
+    "system_serial": "99JKM83"
+  },
+  {
+    "datacenter": "dl1",
+    "ipv6": "2600:3000:6100:200:5000:e0ff:fe47:6e3d",
+    "name": "dl1-dll06",
+    "system_serial": "99SHM83"
+  },
+  {
+    "datacenter": "dl1",
+    "ipv6": "2600:3000:6100:200:5000:b1ff:feed:d014",
+    "name": "dl1-dll07",
+    "system_serial": "9B3KM83"
+  },
+  {
+    "datacenter": "dl1",
+    "ipv6": "2600:3000:6100:200:5000:ecff:fe72:72cd",
+    "name": "dl1-dll08",
+    "system_serial": "9B5GM83"
+  },
+  {
+    "datacenter": "dl1",
+    "ipv6": "2600:3000:6100:200:5000:b7ff:fef6:2da8",
+    "name": "dl1-dll09",
+    "system_serial": "99SJM83"
+  },
+  {
+    "datacenter": "dl1",
+    "ipv6": "2600:3000:6100:200:5000:27ff:fe22:2385",
+    "name": "dl1-dll10",
+    "system_serial": "99LJM83"
+  },
+  {
+    "datacenter": "dl1",
+    "ipv6": "2600:3000:6100:200:5000:72ff:fe19:d979",
+    "name": "dl1-dll11",
+    "system_serial": "99RLM83"
+  },
+  {
+    "datacenter": "dl1",
+    "ipv6": "2600:3000:6100:200:5000:6aff:feb5:16aa",
+    "name": "dl1-dll12",
+    "system_serial": "99VFM83"
+  },
+  {
+    "datacenter": "dl1",
+    "ipv6": "2600:3000:6100:200:5000:36ff:fe30:93d",
+    "name": "dl1-dll13",
+    "system_serial": "99JJM83"
+  },
+  {
+    "datacenter": "dl1",
+    "ipv6": "2600:3000:6100:200:5000:dbff:fee6:7708",
+    "name": "dl1-dll14",
+    "system_serial": "13MZF73"
+  },
+  {
+    "datacenter": "dl1",
+    "ipv6": "2600:3000:6100:200:5000:e4ff:fe05:4803",
+    "name": "dl1-dll15",
+    "system_serial": "9B8JM83"
+  },
+  {
+    "datacenter": "dl1",
+    "ipv6": "2600:3000:6100:200:5000:18ff:fedd:3cc9",
+    "name": "dl1-dll16",
+    "system_serial": "99DGM83"
+  },
+  {
+    "datacenter": "dl1",
+    "ipv6": "2600:3000:6100:200:5000:fdff:fef9:88a5",
+    "name": "dl1-dll17",
+    "system_serial": "99YJM83"
+  },
+  {
+    "datacenter": "dl1",
+    "ipv6": "2600:3000:6100:200:5000:a6ff:fe59:6242",
+    "name": "dl1-dll18",
+    "system_serial": "99NGM83"
+  },
+  {
+    "datacenter": "dl1",
+    "ipv6": "2600:3000:6100:200:5000:92ff:fe4e:c30a",
+    "name": "dl1-dll19",
+    "system_serial": "99VJM83"
+  },
+  {
+    "datacenter": "dl1",
+    "ipv6": "2600:3000:6100:200:5000:9aff:fe4a:2a97",
+    "name": "dl1-dll20",
+    "system_serial": "99NKM83"
+  },
+  {
+    "datacenter": "dl1",
+    "ipv6": "2600:3000:6100:200:5000:6cff:fef3:1e5",
+    "name": "dl1-dll21",
+    "system_serial": "99XLM83"
+  },
+  {
+    "datacenter": "dl1",
+    "ipv6": "2600:3000:6100:200:5000:4cff:feaf:629c",
+    "name": "dl1-dll22",
+    "system_serial": "G9FRTD3"
+  },
+  {
+    "datacenter": "dl1",
+    "ipv6": "2600:3000:6100:200:5000:37ff:febf:5a0a",
+    "name": "dl1-dll23",
+    "system_serial": "99CHM83"
+  },
+  {
+    "datacenter": "dl1",
+    "ipv6": "2600:3000:6100:200:5000:48ff:fe6c:8ced",
+    "name": "dl1-dll24",
+    "system_serial": "9B1FM83"
+  },
+  {
+    "datacenter": "dl1",
+    "ipv6": "2600:3000:6100:200:5000:b5ff:fe33:d34a",
+    "name": "dl1-dll25",
+    "system_serial": "9B6FM83"
+  },
+  {
+    "datacenter": "fm1",
+    "ipv6": "2001:470:1:c76:5000:24ff:fe1f:bb30",
+    "name": "fm1-dll08",
+    "system_serial": "JP3CN83"
+  },
+  {
+    "datacenter": "fm1",
+    "ipv6": "2001:470:1:c76:5000:50ff:fef8:634",
+    "name": "fm1-dll09",
+    "system_serial": "JP3DN83"
+  },
+  {
+    "datacenter": "fm1",
+    "ipv6": "2001:470:1:c76:5000:bdff:fe8b:3d7c",
+    "name": "fm1-dll10",
+    "system_serial": "JP02N83"
+  },
+  {
+    "datacenter": "fm1",
+    "ipv6": "2001:470:1:c76:5000:3eff:fee8:22dc",
+    "name": "fm1-dll11",
+    "system_serial": "JP25N83"
+  },
+  {
+    "datacenter": "fm1",
+    "ipv6": "2001:470:1:c76:5000:2cff:fe0c:f490",
+    "name": "fm1-dll12",
+    "system_serial": "JP26N83"
+  },
+  {
+    "datacenter": "fm1",
+    "ipv6": "2001:470:1:c76:5000:50ff:fed8:d7d2",
+    "name": "fm1-dll13",
+    "system_serial": "JP24N83"
+  },
+  {
+    "datacenter": "fm1",
+    "ipv6": "2001:470:1:c76:5000:59ff:fee5:73df",
+    "name": "fm1-dll14",
+    "system_serial": "JP04N83"
+  },
+  {
+    "datacenter": "fm1",
+    "ipv6": "2001:470:1:c76:5000:a7ff:fe53:3da8",
+    "name": "fm1-dll15",
+    "system_serial": "JP3BN83"
+  },
+  {
+    "datacenter": "fm1",
+    "ipv6": "2001:470:1:c76:5000:4aff:feec:b501",
+    "name": "fm1-dll16",
+    "system_serial": "JP39N83"
+  },
+  {
+    "datacenter": "fm1",
+    "ipv6": "2001:470:1:c76:5000:8eff:fe5c:3e9c",
+    "name": "fm1-dll17",
+    "system_serial": "JP1GN83"
+  },
+  {
+    "datacenter": "fm1",
+    "ipv6": "2001:470:1:c76:5000:cdff:fe42:828c",
+    "name": "fm1-dll18",
+    "system_serial": "JP0GN83"
+  },
+  {
+    "datacenter": "fm1",
+    "ipv6": "2001:470:1:c76:5000:77ff:febd:580b",
+    "name": "fm1-dll19",
+    "system_serial": "JP0WJ93"
+  },
+  {
+    "datacenter": "fm1",
+    "ipv6": "2001:470:1:c76:5000:29ff:fea1:67c7",
+    "name": "fm1-dll20",
+    "system_serial": "JP1CN83"
+  },
+  {
+    "datacenter": "fm1",
+    "ipv6": "2001:470:1:c76:5000:c1ff:feb4:2abc",
+    "name": "fm1-dll21",
+    "system_serial": "JP1DN83"
+  },
+  {
+    "datacenter": "fm1",
+    "ipv6": "2001:470:1:c76:5000:5aff:fe67:1ea2",
+    "name": "fm1-dll22",
+    "system_serial": "JP0DN83"
+  },
+  {
+    "datacenter": "fm1",
+    "ipv6": "2001:470:1:c76:5000:a7ff:fef3:d28c",
+    "name": "fm1-dll23",
+    "system_serial": "JP0BN83"
+  },
+  {
+    "datacenter": "fm1",
+    "ipv6": "2001:470:1:c76:5000:e7ff:fecc:d72b",
+    "name": "fm1-dll24",
+    "system_serial": "JP0FN83"
+  },
+  {
+    "datacenter": "fm1",
+    "ipv6": "2001:470:1:c76:5000:5eff:fe8a:b9ba",
+    "name": "fm1-dll25",
+    "system_serial": "JP0CN83"
+  },
+  {
+    "datacenter": "fm1",
+    "ipv6": "2001:470:1:c76:5000:84ff:fe36:c452",
+    "name": "fm1-dll26",
+    "system_serial": "JP1FN83"
+  },
+  {
+    "datacenter": "fm1",
+    "ipv6": "2001:470:1:c76:5000:55ff:fe9d:9edc",
+    "name": "fm1-dll27",
+    "system_serial": "JP0TJ93"
+  },
+  {
+    "datacenter": "fm1",
+    "ipv6": "2001:470:1:c76:5000:66ff:feb3:2a49",
+    "name": "fm1-dll28",
+    "system_serial": "JP0VJ93"
+  },
+  {
+    "datacenter": "fm1",
+    "ipv6": "2001:470:1:c76:5000:3eff:fefa:872",
+    "name": "fm1-spm01",
+    "system_serial": "S427611X0913832"
+  },
+  {
+    "datacenter": "fm1",
+    "ipv6": "2001:470:1:c76:5000:b9ff:fedc:9236",
+    "name": "fm1-spm02",
+    "system_serial": "S427611X0913826"
+  },
+  {
+    "datacenter": "fm1",
+    "ipv6": "2001:470:1:c76:5000:4aff:fe11:60c7",
+    "name": "fm1-spm03",
+    "system_serial": "S427611X0913829"
+  },
+  {
+    "datacenter": "fm1",
+    "ipv6": "2001:470:1:c76:5000:5dff:fe84:53a0",
+    "name": "fm1-spm04",
+    "system_serial": "S427611X0913833"
+  },
+  {
+    "datacenter": "fm1",
+    "ipv6": "2001:470:1:c76:5000:adff:fe9e:a40e",
+    "name": "fm1-spm05",
+    "system_serial": "S427611X0913807"
+  },
+  {
+    "datacenter": "fm1",
+    "ipv6": "2001:470:1:c76:5000:dfff:fe1b:1c10",
+    "name": "fm1-spm06",
+    "system_serial": "S427611X0913808"
+  },
+  {
+    "datacenter": "fm1",
+    "ipv6": "2001:470:1:c76:5000:39ff:fedf:81d7",
+    "name": "fm1-spm07",
+    "system_serial": "S427611X0913821"
+  },
+  {
+    "datacenter": "fr2",
+    "ipv6": "2001:4d78:400:10a:5000:68ff:fed8:8c3d",
+    "name": "fr2-dll01",
+    "system_serial": "B5C00C3"
+  },
+  {
+    "datacenter": "fr2",
+    "ipv6": "2001:4d78:400:10a:5000:eaff:fe62:4385",
+    "name": "fr2-dll02",
+    "system_serial": "B5BXZB3"
+  },
+  {
+    "datacenter": "fr2",
+    "ipv6": "2001:4d78:400:10a:5000:63ff:fee4:cf9f",
+    "name": "fr2-dll03",
+    "system_serial": "B5BYZB3"
+  },
+  {
+    "datacenter": "fr2",
+    "ipv6": "2001:4d78:400:10a:5000:aeff:fe8a:6f65",
+    "name": "fr2-dll04",
+    "system_serial": "B5BZZB3"
+  },
+  {
+    "datacenter": "fr2",
+    "ipv6": "2001:4d78:400:10a:5000:4dff:fecf:a83e",
+    "name": "fr2-dll05",
+    "system_serial": "B5B30C3"
+  },
+  {
+    "datacenter": "fr2",
+    "ipv6": "2001:4d78:400:10a:5000:44ff:fe0e:df49",
+    "name": "fr2-dll06",
+    "system_serial": "B5BWZB3"
+  },
+  {
+    "datacenter": "fr2",
+    "ipv6": "2001:4d78:400:10a:5000:b0ff:fe49:e427",
+    "name": "fr2-dll07",
+    "system_serial": "B5BVZB3"
+  },
+  {
+    "datacenter": "fr2",
+    "ipv6": "2001:4d78:400:10a:5000:10ff:febe:605",
+    "name": "fr2-dll08",
+    "system_serial": "B5B20C3"
+  },
+  {
+    "datacenter": "fr2",
+    "ipv6": "2001:4d78:400:10a:5000:8aff:fef9:6aa2",
+    "name": "fr2-dll09",
+    "system_serial": "B5D20C3"
+  },
+  {
+    "datacenter": "fr2",
+    "ipv6": "2001:4d78:400:10a:5000:79ff:fe3b:f806",
+    "name": "fr2-dll10",
+    "system_serial": "B5D30C3"
+  },
+  {
+    "datacenter": "fr2",
+    "ipv6": "2001:4d78:400:10a:5000:89ff:fefc:cbea",
+    "name": "fr2-dll11",
+    "system_serial": "B5D10C3"
+  },
+  {
+    "datacenter": "fr2",
+    "ipv6": "2001:4d78:400:10a:5000:feff:fef1:e0d6",
+    "name": "fr2-dll12",
+    "system_serial": "B5D00C3"
+  },
+  {
+    "datacenter": "fr2",
+    "ipv6": "2001:4d78:400:10a:5000:91ff:fe3d:61dc",
+    "name": "fr2-dll13",
+    "system_serial": "B5DXZB3"
+  },
+  {
+    "datacenter": "fr2",
+    "ipv6": "2001:4d78:400:10a:5000:aaff:fedf:c751",
+    "name": "fr2-dll14",
+    "system_serial": "B5CVZB3"
+  },
+  {
+    "datacenter": "fr2",
+    "ipv6": "2001:4d78:400:10a:5000:b0ff:fece:7bea",
+    "name": "fr2-dll15",
+    "system_serial": "B5C30C3"
+  },
+  {
+    "datacenter": "fr2",
+    "ipv6": "2001:4d78:400:10a:5000:dbff:fed2:10e3",
+    "name": "fr2-dll16",
+    "system_serial": "B5DYZB3"
+  },
+  {
+    "datacenter": "fr2",
+    "ipv6": "2001:4d78:400:10a:5000:32ff:fe53:dcc3",
+    "name": "fr2-dll17",
+    "system_serial": "B5C20C3"
+  },
+  {
+    "datacenter": "fr2",
+    "ipv6": "2001:4d78:400:10a:5000:e6ff:fe37:6f6d",
+    "name": "fr2-dll18",
+    "system_serial": "B5C10C3"
+  },
+  {
+    "datacenter": "fr2",
+    "ipv6": "2001:4d78:400:10a:5000:27ff:feec:f7de",
+    "name": "fr2-dll19",
+    "system_serial": "B5DWZB3"
+  },
+  {
+    "datacenter": "fr2",
+    "ipv6": "2001:4d78:400:10a:5000:83ff:feed:1015",
+    "name": "fr2-dll20",
+    "system_serial": "B5DVZB3"
+  },
+  {
+    "datacenter": "fr2",
+    "ipv6": "2001:4d78:400:10a:5000:71ff:feb3:c16",
+    "name": "fr2-dll21",
+    "system_serial": "B5F20C3"
+  },
+  {
+    "datacenter": "fr2",
+    "ipv6": "2001:4d78:400:10a:5000:b8ff:fe15:4883",
+    "name": "fr2-dll22",
+    "system_serial": "B5F10C3"
+  },
+  {
+    "datacenter": "fr2",
+    "ipv6": "2001:4d78:400:10a:5000:fbff:fe44:3793",
+    "name": "fr2-dll23",
+    "system_serial": "B5DZZB3"
+  },
+  {
+    "datacenter": "fr2",
+    "ipv6": "2001:4d78:400:10a:5000:adff:fea7:fd9a",
+    "name": "fr2-dll24",
+    "system_serial": "B5F00C3"
+  },
+  {
+    "datacenter": "fr2",
+    "ipv6": "2001:4d78:400:10a:5000:8dff:feb3:9ca7",
+    "name": "fr2-dll25",
+    "system_serial": "B5CXZB3"
+  },
+  {
+    "datacenter": "fr2",
+    "ipv6": "2001:4d78:400:10a:5000:7aff:fe1c:f9e6",
+    "name": "fr2-dll26",
+    "system_serial": "B5CYZB3"
+  },
+  {
+    "datacenter": "fr2",
+    "ipv6": "2001:4d78:400:10a:5000:c2ff:fe1c:fe4b",
+    "name": "fr2-dll27",
+    "system_serial": "B5CWZB3"
+  },
+  {
+    "datacenter": "fr2",
+    "ipv6": "2001:4d78:400:10a:5000:8eff:febe:25b0",
+    "name": "fr2-dll28",
+    "system_serial": "B5CZZB3"
+  },
+  {
+    "datacenter": "ge1",
+    "ipv6": "2a0f:cd00:2:1:5000:87ff:fe58:ceba",
+    "name": "ge1-dll01",
+    "system_serial": "9B9LM83"
+  },
+  {
+    "datacenter": "ge1",
+    "ipv6": "2a0f:cd00:2:1:5000:3fff:fe36:cab8",
+    "name": "ge1-dll02",
+    "system_serial": "99WLM83"
+  },
+  {
+    "datacenter": "ge1",
+    "ipv6": "2a0f:cd00:2:1:5000:98ff:fe8b:7e57",
+    "name": "ge1-dll03",
+    "system_serial": "99ZDM83"
+  },
+  {
+    "datacenter": "ge1",
+    "ipv6": "2a0f:cd00:2:1:5000:aeff:fedb:b3ec",
+    "name": "ge1-dll04",
+    "system_serial": "9B7MM83"
+  },
+  {
+    "datacenter": "ge1",
+    "ipv6": "2a0f:cd00:2:1:5000:d6ff:fe7d:be21",
+    "name": "ge1-dll05",
+    "system_serial": "99WHM83"
+  },
+  {
+    "datacenter": "ge1",
+    "ipv6": "2a0f:cd00:2:1:5000:b7ff:fe5d:49e7",
+    "name": "ge1-dll06",
+    "system_serial": "9B0KM83"
+  },
+  {
+    "datacenter": "ge1",
+    "ipv6": "2a0f:cd00:2:1:5000:91ff:fe66:c677",
+    "name": "ge1-dll07",
+    "system_serial": "99VKM83"
+  },
+  {
+    "datacenter": "ge1",
+    "ipv6": "2a0f:cd00:2:1:5000:a2ff:fe3c:9acb",
+    "name": "ge1-dll08",
+    "system_serial": "99YKM83"
+  },
+  {
+    "datacenter": "ge1",
+    "ipv6": "2a0f:cd00:2:1:5000:57ff:fec3:b9dc",
+    "name": "ge1-dll09",
+    "system_serial": "99SKM83"
+  },
+  {
+    "datacenter": "ge1",
+    "ipv6": "2a0f:cd00:2:1:5000:2aff:fe25:4de8",
+    "name": "ge1-dll10",
+    "system_serial": "9B4KM83"
+  },
+  {
+    "datacenter": "ge1",
+    "ipv6": "2a0f:cd00:2:1:5000:78ff:fe96:222c",
+    "name": "ge1-dll11",
+    "system_serial": "99LGM83"
+  },
+  {
+    "datacenter": "ge1",
+    "ipv6": "2a0f:cd00:2:1:5000:b9ff:fe98:61ac",
+    "name": "ge1-dll12",
+    "system_serial": "13M8G73"
+  },
+  {
+    "datacenter": "ge1",
+    "ipv6": "2a0f:cd00:2:1:5000:9dff:fe8f:7374",
+    "name": "ge1-dll13",
+    "system_serial": "9B8HM83"
+  },
+  {
+    "datacenter": "ge1",
+    "ipv6": "2a0f:cd00:2:1:5000:fbff:fe19:369a",
+    "name": "ge1-dll14",
+    "system_serial": "9B5MM83"
+  },
+  {
+    "datacenter": "ge1",
+    "ipv6": "2a0f:cd00:2:1:5000:8eff:fe44:adc6",
+    "name": "ge1-dll15",
+    "system_serial": "99PGM83"
+  },
+  {
+    "datacenter": "ge1",
+    "ipv6": "2a0f:cd00:2:1:5000:abff:fe88:ae6e",
+    "name": "ge1-dll16",
+    "system_serial": "9B9KM83"
+  },
+  {
+    "datacenter": "ge1",
+    "ipv6": "2a0f:cd00:2:1:5000:6eff:fe7e:4a9b",
+    "name": "ge1-dll17",
+    "system_serial": "9B2JM83"
+  },
+  {
+    "datacenter": "ge1",
+    "ipv6": "2a0f:cd00:2:1:5000:72ff:fe8f:3f92",
+    "name": "ge1-dll18",
+    "system_serial": "99MJM83"
+  },
+  {
+    "datacenter": "ge1",
+    "ipv6": "2a0f:cd00:2:1:5000:b8ff:feaa:594e",
+    "name": "ge1-dll19",
+    "system_serial": "99CLM83"
+  },
+  {
+    "datacenter": "ge1",
+    "ipv6": "2a0f:cd00:2:1:5000:64ff:fea8:dd9e",
+    "name": "ge1-dll20",
+    "system_serial": "9B3GM83"
+  },
+  {
+    "datacenter": "ge1",
+    "ipv6": "2a0f:cd00:2:1:5000:c1ff:fe25:6e38",
+    "name": "ge1-dll21",
+    "system_serial": "99FLM83"
+  },
+  {
+    "datacenter": "ge1",
+    "ipv6": "2a0f:cd00:2:1:5000:64ff:fe8b:d69",
+    "name": "ge1-dll22",
+    "system_serial": "99GHM83"
+  },
+  {
+    "datacenter": "ge1",
+    "ipv6": "2a0f:cd00:2:1:5000:4dff:fe0a:b518",
+    "name": "ge1-dll23",
+    "system_serial": "99GFM83"
+  },
+  {
+    "datacenter": "ge1",
+    "ipv6": "2a0f:cd00:2:1:5000:69ff:fe61:f423",
+    "name": "ge1-dll24",
+    "system_serial": "99HFM83"
+  },
+  {
+    "datacenter": "ge1",
+    "ipv6": "2a0f:cd00:2:1:5000:d3ff:fe98:2d1f",
+    "name": "ge1-dll25",
+    "system_serial": "99GLM83"
+  },
+  {
+    "datacenter": "ge2",
+    "ipv6": "2a00:fa0:3:0:5000:2dff:fee9:b0e",
+    "name": "ge2-dll01",
+    "system_serial": "9B2MM83"
+  },
+  {
+    "datacenter": "ge2",
+    "ipv6": "2a00:fa0:3:0:5000:4fff:fe2e:78b4",
+    "name": "ge2-dll02",
+    "system_serial": "9B2GM83"
+  },
+  {
+    "datacenter": "ge2",
+    "ipv6": "2a00:fa0:3:0:5000:56ff:fe1a:e57f",
+    "name": "ge2-dll03",
+    "system_serial": "9LHSM83"
+  },
+  {
+    "datacenter": "ge2",
+    "ipv6": "2a00:fa0:3:0:5000:27ff:fe2e:6870",
+    "name": "ge2-dll04",
+    "system_serial": "9LJRM83"
+  },
+  {
+    "datacenter": "ge2",
+    "ipv6": "2a00:fa0:3:0:5000:72ff:fee0:3a1c",
+    "name": "ge2-dll05",
+    "system_serial": "9LDTM83"
+  },
+  {
+    "datacenter": "ge2",
+    "ipv6": "2a00:fa0:3:0:5000:edff:fe17:147f",
+    "name": "ge2-dll06",
+    "system_serial": "9LDMM83"
+  },
+  {
+    "datacenter": "ge2",
+    "ipv6": "2a00:fa0:3:0:5000:68ff:fece:922e",
+    "name": "ge2-dll07",
+    "system_serial": "99RGM83"
+  },
+  {
+    "datacenter": "ge2",
+    "ipv6": "2a00:fa0:3:0:5000:9dff:fe35:fbc3",
+    "name": "ge2-dll08",
+    "system_serial": "9LJQM83"
+  },
+  {
+    "datacenter": "ge2",
+    "ipv6": "2a00:fa0:3:0:5000:37ff:fe5e:b6b9",
+    "name": "ge2-dll09",
+    "system_serial": "9B7FM83"
+  },
+  {
+    "datacenter": "ge2",
+    "ipv6": "2a00:fa0:3:0:5000:dfff:fed0:5592",
+    "name": "ge2-dll10",
+    "system_serial": "9LKQM83"
+  },
+  {
+    "datacenter": "ge2",
+    "ipv6": "2a00:fa0:3:0:5000:f6ff:fe1f:53f9",
+    "name": "ge2-dll11",
+    "system_serial": "9LKMM83"
+  },
+  {
+    "datacenter": "ge2",
+    "ipv6": "2a00:fa0:3:0:5000:7dff:fe0a:4ec2",
+    "name": "ge2-dll12",
+    "system_serial": "9LGRM83"
+  },
+  {
+    "datacenter": "ge2",
+    "ipv6": "2a00:fa0:3:0:5000:5aff:fe89:b5fc",
+    "name": "ge2-dll13",
+    "system_serial": "9LHTM83"
+  },
+  {
+    "datacenter": "ge2",
+    "ipv6": "2a00:fa0:3:0:5000:18ff:fe55:ffb8",
+    "name": "ge2-dll14",
+    "system_serial": "9LDSM83"
+  },
+  {
+    "datacenter": "ge2",
+    "ipv6": "2a00:fa0:3:0:5000:51ff:fe40:3fa1",
+    "name": "ge2-dll15",
+    "system_serial": "9LJPM83"
+  },
+  {
+    "datacenter": "ge2",
+    "ipv6": "2a00:fa0:3:0:5000:17ff:fe7a:668f",
+    "name": "ge2-dll16",
+    "system_serial": "9LHQM83"
+  },
+  {
+    "datacenter": "ge2",
+    "ipv6": "2a00:fa0:3:0:5000:c2ff:fe86:68e1",
+    "name": "ge2-dll17",
+    "system_serial": "9LFMM83"
+  },
+  {
+    "datacenter": "ge2",
+    "ipv6": "2a00:fa0:3:0:5000:d3ff:fefc:b8bb",
+    "name": "ge2-dll18",
+    "system_serial": "99HKM83"
+  },
+  {
+    "datacenter": "ge2",
+    "ipv6": "2a00:fa0:3:0:5000:63ff:fe30:272e",
+    "name": "ge2-dll19",
+    "system_serial": "9LJMM83"
+  },
+  {
+    "datacenter": "ge2",
+    "ipv6": "2a00:fa0:3:0:5000:91ff:febd:8985",
+    "name": "ge2-dll20",
+    "system_serial": "9LDQM83"
+  },
+  {
+    "datacenter": "ge2",
+    "ipv6": "2a00:fa0:3:0:5000:7fff:feab:55b0",
+    "name": "ge2-dll21",
+    "system_serial": "99BFM83"
+  },
+  {
+    "datacenter": "ge2",
+    "ipv6": "2a00:fa0:3:0:5000:ffff:fe44:cb18",
+    "name": "ge2-dll22",
+    "system_serial": "9LGQM83"
+  },
+  {
+    "datacenter": "ge2",
+    "ipv6": "2a00:fa0:3:0:5000:11ff:fe8b:a888",
+    "name": "ge2-dll23",
+    "system_serial": "9LJSM83"
+  },
+  {
+    "datacenter": "ge2",
+    "ipv6": "2a00:fa0:3:0:5000:53ff:fe11:d8fd",
+    "name": "ge2-dll24",
+    "system_serial": "99HHM83"
+  },
+  {
+    "datacenter": "ge2",
+    "ipv6": "2a00:fa0:3:0:5000:30ff:fe38:afc",
+    "name": "ge2-dll25",
+    "system_serial": "9LKRM83"
+  },
+  {
+    "datacenter": "jv1",
+    "ipv6": "2600:2c01:21:0:5000:27ff:fe23:4839",
+    "name": "jv1-dll01",
+    "system_serial": "99QHM83"
+  },
+  {
+    "datacenter": "jv1",
+    "ipv6": "2600:2c01:21:0:5000:37ff:fe75:fdc1",
+    "name": "jv1-dll02",
+    "system_serial": "9LLRM83"
+  },
+  {
+    "datacenter": "jv1",
+    "ipv6": "2600:2c01:21:0:5000:64ff:fe8f:5d25",
+    "name": "jv1-dll03",
+    "system_serial": "99FHM83"
+  },
+  {
+    "datacenter": "jv1",
+    "ipv6": "2600:2c01:21:0:5000:65ff:fe26:ade5",
+    "name": "jv1-dll04",
+    "system_serial": "9LCTM83"
+  },
+  {
+    "datacenter": "jv1",
+    "ipv6": "2600:2c01:21:0:5000:ecff:fe1d:a5a9",
+    "name": "jv1-dll05",
+    "system_serial": "99DKM83"
+  },
+  {
+    "datacenter": "jv1",
+    "ipv6": "2600:2c01:21:0:5000:11ff:fea9:5f8f",
+    "name": "jv1-dll06",
+    "system_serial": "99QKM83"
+  },
+  {
+    "datacenter": "jv1",
+    "ipv6": "2600:2c01:21:0:5000:adff:fe9c:32d0",
+    "name": "jv1-dll07",
+    "system_serial": "99RFM83"
+  },
+  {
+    "datacenter": "jv1",
+    "ipv6": "2600:2c01:21:0:5000:8eff:fea8:4b21",
+    "name": "jv1-dll08",
+    "system_serial": "9LCRM83"
+  },
+  {
+    "datacenter": "jv1",
+    "ipv6": "2600:2c01:21:0:5000:84ff:fe22:24e4",
+    "name": "jv1-dll09",
+    "system_serial": "9LCPM83"
+  },
+  {
+    "datacenter": "jv1",
+    "ipv6": "2600:2c01:21:0:5000:12ff:fe59:2f85",
+    "name": "jv1-dll10",
+    "system_serial": "9LFTM83"
+  },
+  {
+    "datacenter": "jv1",
+    "ipv6": "2600:2c01:21:0:5000:6bff:fe16:e5a5",
+    "name": "jv1-dll11",
+    "system_serial": "99QJM83"
+  },
+  {
+    "datacenter": "jv1",
+    "ipv6": "2600:2c01:21:0:5000:13ff:fe53:f48e",
+    "name": "jv1-dll12",
+    "system_serial": "99RHM83"
+  },
+  {
+    "datacenter": "jv1",
+    "ipv6": "2600:2c01:21:0:5000:a9ff:fee6:fe74",
+    "name": "jv1-dll13",
+    "system_serial": "9LHRM83"
+  },
+  {
+    "datacenter": "jv1",
+    "ipv6": "2600:2c01:21:0:5000:cfff:fe7c:553",
+    "name": "jv1-dll14",
+    "system_serial": "9LKNM83"
+  },
+  {
+    "datacenter": "jv1",
+    "ipv6": "2600:2c01:21:0:5000:e0ff:fed7:387a",
+    "name": "jv1-dll15",
+    "system_serial": "9LFRM83"
+  },
+  {
+    "datacenter": "jv1",
+    "ipv6": "2600:2c01:21:0:5000:c2ff:fe83:f5b7",
+    "name": "jv1-dll16",
+    "system_serial": "9LCSM83"
+  },
+  {
+    "datacenter": "jv1",
+    "ipv6": "2600:2c01:21:0:5000:61ff:febb:ca19",
+    "name": "jv1-dll17",
+    "system_serial": "9LFSM83"
+  },
+  {
+    "datacenter": "jv1",
+    "ipv6": "2600:2c01:21:0:5000:91ff:fede:a44f",
+    "name": "jv1-dll18",
+    "system_serial": "9LJNM83"
+  },
+  {
+    "datacenter": "jv1",
+    "ipv6": "2600:2c01:21:0:5000:49ff:feff:4a07",
+    "name": "jv1-dll19",
+    "system_serial": "9LFPM83"
+  },
+  {
+    "datacenter": "jv1",
+    "ipv6": "2600:2c01:21:0:5000:36ff:fe80:40fb",
+    "name": "jv1-dll20",
+    "system_serial": "9LFNM83"
+  },
+  {
+    "datacenter": "jv1",
+    "ipv6": "2600:2c01:21:0:5000:b9ff:fee1:191c",
+    "name": "jv1-dll21",
+    "system_serial": "9LFQM83"
+  },
+  {
+    "datacenter": "jv1",
+    "ipv6": "2600:2c01:21:0:5000:77ff:feef:454",
+    "name": "jv1-dll22",
+    "system_serial": "99HLM83"
+  },
+  {
+    "datacenter": "jv1",
+    "ipv6": "2600:2c01:21:0:5000:75ff:fed5:be24",
+    "name": "jv1-dll23",
+    "system_serial": "99BKM83"
+  },
+  {
+    "datacenter": "jv1",
+    "ipv6": "2600:2c01:21:0:5000:40ff:fea5:2861",
+    "name": "jv1-dll24",
+    "system_serial": "99BLM83"
+  },
+  {
+    "datacenter": "jv1",
+    "ipv6": "2600:2c01:21:0:5000:8aff:fe88:ad12",
+    "name": "jv1-dll25",
+    "system_serial": "9LGMM83"
+  },
+  {
+    "datacenter": "lj1",
+    "ipv6": "2a02:800:2:2003:5000:f7ff:fe79:3d58",
+    "name": "lj1-dll01",
+    "system_serial": "FPXJVD3"
+  },
+  {
+    "datacenter": "lj1",
+    "ipv6": "2a02:800:2:2003:5000:f6ff:fec4:4c86",
+    "name": "lj1-dll02",
+    "system_serial": "FPXKVD3"
+  },
+  {
+    "datacenter": "lj1",
+    "ipv6": "2a02:800:2:2003:5000:1cff:fe8a:8ad3",
+    "name": "lj1-dll03",
+    "system_serial": "FPXRDF3"
+  },
+  {
+    "datacenter": "lj1",
+    "ipv6": "2a02:800:2:2003:5000:5fff:feb1:9072",
+    "name": "lj1-dll04",
+    "system_serial": "FPYCVD3"
+  },
+  {
+    "datacenter": "lj1",
+    "ipv6": "2a02:800:2:2003:5000:e8ff:fe59:d766",
+    "name": "lj1-dll05",
+    "system_serial": "FPYDVD3"
+  },
+  {
+    "datacenter": "lj1",
+    "ipv6": "2a02:800:2:2003:5000:3cff:fe7a:e351",
+    "name": "lj1-dll06",
+    "system_serial": "FPXSDF3"
+  },
+  {
+    "datacenter": "lj1",
+    "ipv6": "2a02:800:2:2003:5000:74ff:fe11:f3f8",
+    "name": "lj1-dll07",
+    "system_serial": "FPXMVD3"
+  },
+  {
+    "datacenter": "lj1",
+    "ipv6": "2a02:800:2:2003:5000:96ff:fe8a:56e2",
+    "name": "lj1-dll08",
+    "system_serial": "FPXLVD3"
+  },
+  {
+    "datacenter": "lj1",
+    "ipv6": "2a02:800:2:2003:5000:3dff:fe4e:de46",
+    "name": "lj1-dll09",
+    "system_serial": "FPXMDF3"
+  },
+  {
+    "datacenter": "lj1",
+    "ipv6": "2a02:800:2:2003:5000:1cff:fe85:9305",
+    "name": "lj1-dll10",
+    "system_serial": "FPXLDF3"
+  },
+  {
+    "datacenter": "lj1",
+    "ipv6": "2a02:800:2:2003:5000:39ff:fe71:17e0",
+    "name": "lj1-dll11",
+    "system_serial": "FPXCVD3"
+  },
+  {
+    "datacenter": "lj1",
+    "ipv6": "2a02:800:2:2003:5000:f7ff:fe8f:2023",
+    "name": "lj1-dll12",
+    "system_serial": "FPXDVD3"
+  },
+  {
+    "datacenter": "lj1",
+    "ipv6": "2a02:800:2:2003:5000:f8ff:fed8:386c",
+    "name": "lj1-dll13",
+    "system_serial": "26ZHVD3"
+  },
+  {
+    "datacenter": "lj1",
+    "ipv6": "2a02:800:2:2003:5000:2aff:fec6:598d",
+    "name": "lj1-dll14",
+    "system_serial": "26ZKVD3"
+  },
+  {
+    "datacenter": "lj1",
+    "ipv6": "2a02:800:2:2003:5000:9dff:fe64:485b",
+    "name": "lj1-dll15",
+    "system_serial": "26ZGVD3"
+  },
+  {
+    "datacenter": "lj1",
+    "ipv6": "2a02:800:2:2003:5000:36ff:febf:cfb7",
+    "name": "lj1-dll16",
+    "system_serial": "26ZJVD3"
+  },
+  {
+    "datacenter": "lj1",
+    "ipv6": "2a02:800:2:2003:5000:e2ff:fe1f:4b50",
+    "name": "lj1-dll17",
+    "system_serial": "26YLVD3"
+  },
+  {
+    "datacenter": "lj1",
+    "ipv6": "2a02:800:2:2003:5000:27ff:fe4b:8344",
+    "name": "lj1-dll18",
+    "system_serial": "26YMVD3"
+  },
+  {
+    "datacenter": "lj1",
+    "ipv6": "2a02:800:2:2003:5000:5aff:feea:618d",
+    "name": "lj1-dll19",
+    "system_serial": "26YKVD3"
+  },
+  {
+    "datacenter": "lj1",
+    "ipv6": "2a02:800:2:2003:5000:28ff:feff:3f8d",
+    "name": "lj1-dll20",
+    "system_serial": "26YJVD3"
+  },
+  {
+    "datacenter": "lj1",
+    "ipv6": "2a02:800:2:2003:5000:60ff:fe55:d878",
+    "name": "lj1-dll21",
+    "system_serial": "FPXKDF3"
+  },
+  {
+    "datacenter": "lj1",
+    "ipv6": "2a02:800:2:2003:5000:3aff:fe07:314f",
+    "name": "lj1-dll22",
+    "system_serial": "FPXPDF3"
+  },
+  {
+    "datacenter": "lj1",
+    "ipv6": "2a02:800:2:2003:5000:cdff:fef4:e8b7",
+    "name": "lj1-dll23",
+    "system_serial": "FPWPDF3"
+  },
+  {
+    "datacenter": "lj1",
+    "ipv6": "2a02:800:2:2003:5000:5bff:fe04:7904",
+    "name": "lj1-dll24",
+    "system_serial": "FPWSDF3"
+  },
+  {
+    "datacenter": "lj1",
+    "ipv6": "2a02:800:2:2003:5000:cbff:fe63:d0c9",
+    "name": "lj1-dll25",
+    "system_serial": "FPXJDF3"
+  },
+  {
+    "datacenter": "lj1",
+    "ipv6": "2a02:800:2:2003:5000:aeff:fe72:cf3a",
+    "name": "lj1-dll26",
+    "system_serial": "FPWRDF3"
+  },
+  {
+    "datacenter": "lj1",
+    "ipv6": "2a02:800:2:2003:5000:76ff:feea:48bd",
+    "name": "lj1-dll27",
+    "system_serial": "FPWNVD3"
+  },
+  {
+    "datacenter": "lj1",
+    "ipv6": "2a02:800:2:2003:5000:deff:fef5:8c5",
+    "name": "lj1-dll28",
+    "system_serial": "FPXNDF3"
+  },
+  {
+    "datacenter": "lv1",
+    "ipv6": "2600:3006:1400:1500:5000:95ff:fe94:c948",
+    "name": "lv1-dll01",
+    "system_serial": "9B2HM83"
+  },
+  {
+    "datacenter": "lv1",
+    "ipv6": "2600:3006:1400:1500:5000:f5ff:feff:b7c1",
+    "name": "lv1-dll02",
+    "system_serial": "9B3FM83"
+  },
+  {
+    "datacenter": "lv1",
+    "ipv6": "2600:3006:1400:1500:5000:66ff:fe46:befd",
+    "name": "lv1-dll03",
+    "system_serial": "99ZHM83"
+  },
+  {
+    "datacenter": "lv1",
+    "ipv6": "2600:3006:1400:1500:5000:30ff:feed:eea1",
+    "name": "lv1-dll04",
+    "system_serial": "99CJM83"
+  },
+  {
+    "datacenter": "lv1",
+    "ipv6": "2600:3006:1400:1500:5000:b6ff:fe7a:6b60",
+    "name": "lv1-dll05",
+    "system_serial": "99MGM83"
+  },
+  {
+    "datacenter": "lv1",
+    "ipv6": "2600:3006:1400:1500:5000:a7ff:fed9:19d9",
+    "name": "lv1-dll06",
+    "system_serial": "9B1KM83"
+  },
+  {
+    "datacenter": "lv1",
+    "ipv6": "2600:3006:1400:1500:5000:18ff:fe50:78bd",
+    "name": "lv1-dll07",
+    "system_serial": "99VLM83"
+  },
+  {
+    "datacenter": "lv1",
+    "ipv6": "2600:3006:1400:1500:5000:86ff:fea8:4758",
+    "name": "lv1-dll08",
+    "system_serial": "99ZLM83"
+  },
+  {
+    "datacenter": "lv1",
+    "ipv6": "2600:3006:1400:1500:5000:28ff:fe5e:f8d3",
+    "name": "lv1-dll09",
+    "system_serial": "9B4MM83"
+  },
+  {
+    "datacenter": "lv1",
+    "ipv6": "2600:3006:1400:1500:5000:a5ff:fee8:faa6",
+    "name": "lv1-dll10",
+    "system_serial": "99XJM83"
+  },
+  {
+    "datacenter": "lv1",
+    "ipv6": "2600:3006:1400:1500:5000:20ff:fe3f:3c98",
+    "name": "lv1-dll11",
+    "system_serial": "99ZGM83"
+  },
+  {
+    "datacenter": "lv1",
+    "ipv6": "2600:3006:1400:1500:5000:19ff:fe38:c418",
+    "name": "lv1-dll12",
+    "system_serial": "99TGM83"
+  },
+  {
+    "datacenter": "lv1",
+    "ipv6": "2600:3006:1400:1500:5000:caff:fea4:643e",
+    "name": "lv1-dll13",
+    "system_serial": "9B0FM83"
+  },
+  {
+    "datacenter": "lv1",
+    "ipv6": "2600:3006:1400:1500:5000:c2ff:fece:4c12",
+    "name": "lv1-dll14",
+    "system_serial": "9B8KM83"
+  },
+  {
+    "datacenter": "mb1",
+    "ipv6": "2a00:fc0:5000:300:5000:4fff:fe3b:b9ea",
+    "name": "mb1-dll01",
+    "system_serial": "26XLVD3"
+  },
+  {
+    "datacenter": "mb1",
+    "ipv6": "2a00:fc0:5000:300:5000:abff:fe65:4576",
+    "name": "mb1-dll02",
+    "system_serial": "26YCVD3"
+  },
+  {
+    "datacenter": "mb1",
+    "ipv6": "2a00:fc0:5000:300:5000:41ff:fe17:a972",
+    "name": "mb1-dll03",
+    "system_serial": "FPXQDF3"
+  },
+  {
+    "datacenter": "mb1",
+    "ipv6": "2a00:fc0:5000:300:5000:b2ff:fe5c:aa69",
+    "name": "mb1-dll04",
+    "system_serial": "FPXHVD3"
+  },
+  {
+    "datacenter": "mb1",
+    "ipv6": "2a00:fc0:5000:300:5000:d9ff:fe9e:2ae3",
+    "name": "mb1-dll05",
+    "system_serial": "FPXNVD3"
+  },
+  {
+    "datacenter": "mb1",
+    "ipv6": "2a00:fc0:5000:300:5000:dcff:fef3:770",
+    "name": "mb1-dll06",
+    "system_serial": "FPXGVD3"
+  },
+  {
+    "datacenter": "mb1",
+    "ipv6": "2a00:fc0:5000:300:5000:e1ff:fee3:f5bb",
+    "name": "mb1-dll07",
+    "system_serial": "FPWNDF3"
+  },
+  {
+    "datacenter": "mb1",
+    "ipv6": "2a00:fc0:5000:300:5000:bbff:fe6b:3747",
+    "name": "mb1-dll08",
+    "system_serial": "FPWQDF3"
+  },
+  {
+    "datacenter": "mb1",
+    "ipv6": "2a00:fc0:5000:300:5000:baff:fe40:a860",
+    "name": "mb1-dll09",
+    "system_serial": "FPXHDF3"
+  },
+  {
+    "datacenter": "mb1",
+    "ipv6": "2a00:fc0:5000:300:5000:9eff:fe42:efbc",
+    "name": "mb1-dll10",
+    "system_serial": "FPXFVD3"
+  },
+  {
+    "datacenter": "mb1",
+    "ipv6": "2a00:fc0:5000:300:5000:22ff:fef9:a338",
+    "name": "mb1-dll11",
+    "system_serial": "FPWKDF3"
+  },
+  {
+    "datacenter": "mb1",
+    "ipv6": "2a00:fc0:5000:300:5000:75ff:fe1c:27b9",
+    "name": "mb1-dll12",
+    "system_serial": "FPWJVD3"
+  },
+  {
+    "datacenter": "mb1",
+    "ipv6": "2a00:fc0:5000:300:5000:50ff:fe58:1f51",
+    "name": "mb1-dll13",
+    "system_serial": "FPWKVD3"
+  },
+  {
+    "datacenter": "mb1",
+    "ipv6": "2a00:fc0:5000:300:5000:31ff:fea1:1dc8",
+    "name": "mb1-dll14",
+    "system_serial": "FPWJDF3"
+  },
+  {
+    "datacenter": "mb1",
+    "ipv6": "2a00:fc0:5000:300:5000:cbff:fe91:478b",
+    "name": "mb1-dll15",
+    "system_serial": "FPWMVD3"
+  },
+  {
+    "datacenter": "mb1",
+    "ipv6": "2a00:fc0:5000:300:5000:3aff:fe87:ac15",
+    "name": "mb1-dll16",
+    "system_serial": "FPWMDF3"
+  },
+  {
+    "datacenter": "mb1",
+    "ipv6": "2a00:fc0:5000:300:5000:c2ff:fee9:ada3",
+    "name": "mb1-dll17",
+    "system_serial": "FPWLDF3"
+  },
+  {
+    "datacenter": "mb1",
+    "ipv6": "2a00:fc0:5000:300:5000:caff:fe31:1bf8",
+    "name": "mb1-dll18",
+    "system_serial": "FPWLVD3"
+  },
+  {
+    "datacenter": "mb1",
+    "ipv6": "2a00:fc0:5000:300:5000:80ff:feb7:899",
+    "name": "mb1-dll19",
+    "system_serial": "26XNVD3"
+  },
+  {
+    "datacenter": "mb1",
+    "ipv6": "2a00:fc0:5000:300:5000:a9ff:fe37:6119",
+    "name": "mb1-dll20",
+    "system_serial": "26XMVD3"
+  },
+  {
+    "datacenter": "mb1",
+    "ipv6": "2a00:fc0:5000:300:5000:2cff:feae:79aa",
+    "name": "mb1-dll21",
+    "system_serial": "26YGVD3"
+  },
+  {
+    "datacenter": "mb1",
+    "ipv6": "2a00:fc0:5000:300:5000:b3ff:fed6:7e24",
+    "name": "mb1-dll22",
+    "system_serial": "26YDVD3"
+  },
+  {
+    "datacenter": "mb1",
+    "ipv6": "2a00:fc0:5000:300:5000:94ff:fec9:c4e6",
+    "name": "mb1-dll23",
+    "system_serial": "26YFVD3"
+  },
+  {
+    "datacenter": "mb1",
+    "ipv6": "2a00:fc0:5000:300:5000:faff:fe35:28a",
+    "name": "mb1-dll24",
+    "system_serial": "26YHVD3"
+  },
+  {
+    "datacenter": "mb1",
+    "ipv6": "2a00:fc0:5000:300:5000:fdff:feff:4a32",
+    "name": "mb1-dll25",
+    "system_serial": "26YNVD3"
+  },
+  {
+    "datacenter": "mb1",
+    "ipv6": "2a00:fc0:5000:300:5000:b7ff:fefe:8714",
+    "name": "mb1-dll26",
+    "system_serial": "26ZDVD3"
+  },
+  {
+    "datacenter": "mb1",
+    "ipv6": "2a00:fc0:5000:300:5000:98ff:fed7:6f2f",
+    "name": "mb1-dll27",
+    "system_serial": "26ZCVD3"
+  },
+  {
+    "datacenter": "mb1",
+    "ipv6": "2a00:fc0:5000:300:5000:57ff:fef7:3583",
+    "name": "mb1-dll28",
+    "system_serial": "26ZFVD3"
+  },
+  {
+    "datacenter": "mr1",
+    "ipv6": "2a0b:21c0:b002:2:5000:a1ff:fe9f:21fa",
+    "name": "mr1-dll01",
+    "system_serial": "8MVMKD3"
+  },
+  {
+    "datacenter": "mr1",
+    "ipv6": "2a0b:21c0:b002:2:5000:16ff:fe9b:a4d7",
+    "name": "mr1-dll02",
+    "system_serial": "8MTSKD3"
+  },
+  {
+    "datacenter": "mr1",
+    "ipv6": "2a0b:21c0:b002:2:5000:b3ff:fec0:5533",
+    "name": "mr1-dll03",
+    "system_serial": "8MTRKD3"
+  },
+  {
+    "datacenter": "mr1",
+    "ipv6": "2a0b:21c0:b002:2:5000:a2ff:fe46:f234",
+    "name": "mr1-dll04",
+    "system_serial": "8NFSKD3"
+  },
+  {
+    "datacenter": "mr1",
+    "ipv6": "2a0b:21c0:b002:2:5000:82ff:fe3f:e2d1",
+    "name": "mr1-dll05",
+    "system_serial": "8NFRKD3"
+  },
+  {
+    "datacenter": "mr1",
+    "ipv6": "2a0b:21c0:b002:2:5000:f0ff:fe3e:4e1d",
+    "name": "mr1-dll06",
+    "system_serial": "8NFTKD3"
+  },
+  {
+    "datacenter": "mr1",
+    "ipv6": "2a0b:21c0:b002:2:5000:91ff:fe0d:bee",
+    "name": "mr1-dll07",
+    "system_serial": "8NGMKD3"
+  },
+  {
+    "datacenter": "mr1",
+    "ipv6": "2a0b:21c0:b002:2:5000:49ff:fe35:e204",
+    "name": "mr1-dll08",
+    "system_serial": "8MRPTD3"
+  },
+  {
+    "datacenter": "mr1",
+    "ipv6": "2a0b:21c0:b002:2:5000:86ff:fed5:840",
+    "name": "mr1-dll09",
+    "system_serial": "8MWMKD3"
+  },
+  {
+    "datacenter": "mr1",
+    "ipv6": "2a0b:21c0:b002:2:5000:7eff:fef7:d9bd",
+    "name": "mr1-dll10",
+    "system_serial": "8MWNKD3"
+  },
+  {
+    "datacenter": "mr1",
+    "ipv6": "2a0b:21c0:b002:2:5000:bdff:fe81:f11",
+    "name": "mr1-dll11",
+    "system_serial": "9WRQKD3"
+  },
+  {
+    "datacenter": "mr1",
+    "ipv6": "2a0b:21c0:b002:2:5000:34ff:fe84:97c6",
+    "name": "mr1-dll12",
+    "system_serial": "9WVNTD3"
+  },
+  {
+    "datacenter": "mr1",
+    "ipv6": "2a0b:21c0:b002:2:5000:77ff:fe5e:d749",
+    "name": "mr1-dll13",
+    "system_serial": "9WVNKD3"
+  },
+  {
+    "datacenter": "mr1",
+    "ipv6": "2a0b:21c0:b002:2:5000:8dff:fe93:699c",
+    "name": "mr1-dll14",
+    "system_serial": "9WVMTD3"
+  },
+  {
+    "datacenter": "mr1",
+    "ipv6": "2a0b:21c0:b002:2:5000:e9ff:fe78:129c",
+    "name": "mr1-dll15",
+    "system_serial": "8MTQKD3"
+  },
+  {
+    "datacenter": "mr1",
+    "ipv6": "2a0b:21c0:b002:2:5000:53ff:fe47:c474",
+    "name": "mr1-dll16",
+    "system_serial": "8MTPKD3"
+  },
+  {
+    "datacenter": "mr1",
+    "ipv6": "2a0b:21c0:b002:2:5000:b8ff:fe51:8a6",
+    "name": "mr1-dll17",
+    "system_serial": "8MTPTD3"
+  },
+  {
+    "datacenter": "mr1",
+    "ipv6": "2a0b:21c0:b002:2:5000:afff:feb7:689d",
+    "name": "mr1-dll18",
+    "system_serial": "8MTNTD3"
+  },
+  {
+    "datacenter": "mr1",
+    "ipv6": "2a0b:21c0:b002:2:5000:11ff:fe0e:314c",
+    "name": "mr1-dll19",
+    "system_serial": "8MRNTD3"
+  },
+  {
+    "datacenter": "mr1",
+    "ipv6": "2a0b:21c0:b002:2:5000:23ff:fe12:fc36",
+    "name": "mr1-dll20",
+    "system_serial": "8P6SKD3"
+  },
+  {
+    "datacenter": "mr1",
+    "ipv6": "2a0b:21c0:b002:2:5000:a9ff:feff:acbe",
+    "name": "mr1-dll21",
+    "system_serial": "8P7MKD3"
+  },
+  {
+    "datacenter": "mr1",
+    "ipv6": "2a0b:21c0:b002:2:5000:d8ff:fef1:c34d",
+    "name": "mr1-dll22",
+    "system_serial": "8NVQTD3"
+  },
+  {
+    "datacenter": "mr1",
+    "ipv6": "2a0b:21c0:b002:2:5000:8bff:fe61:70f",
+    "name": "mr1-dll23",
+    "system_serial": "8NVRKD3"
+  },
+  {
+    "datacenter": "mr1",
+    "ipv6": "2a0b:21c0:b002:2:5000:a9ff:fec5:f7e",
+    "name": "mr1-dll24",
+    "system_serial": "8NVSKD3"
+  },
+  {
+    "datacenter": "mr1",
+    "ipv6": "2a0b:21c0:b002:2:5000:b3ff:fee6:4b91",
+    "name": "mr1-dll25",
+    "system_serial": "8NWMKD3"
+  },
+  {
+    "datacenter": "mr1",
+    "ipv6": "2a0b:21c0:b002:2:5000:59ff:fec5:6d16",
+    "name": "mr1-dll26",
+    "system_serial": "8P6TKD3"
+  },
+  {
+    "datacenter": "mr1",
+    "ipv6": "2a0b:21c0:b002:2:5000:43ff:fe57:91f1",
+    "name": "mr1-dll27",
+    "system_serial": "8P7NKD3"
+  },
+  {
+    "datacenter": "mr1",
+    "ipv6": "2a0b:21c0:b002:2:5000:a1ff:fe1a:ac0",
+    "name": "mr1-dll28",
+    "system_serial": "8MRPKD3"
+  },
+  {
+    "datacenter": "mu1",
+    "ipv6": "2a01:138:900a:0:5000:dbff:fed4:5b27",
+    "name": "mu1-dll01",
+    "system_serial": "JNRBH63"
+  },
+  {
+    "datacenter": "mu1",
+    "ipv6": "2a01:138:900a:0:5000:5aff:fece:cf05",
+    "name": "mu1-dll02",
+    "system_serial": "JNRCH63"
+  },
+  {
+    "datacenter": "mu1",
+    "ipv6": "2a01:138:900a:0:5000:9aff:fe9d:60fd",
+    "name": "mu1-dll03",
+    "system_serial": "BBJTH63"
+  },
+  {
+    "datacenter": "mu1",
+    "ipv6": "2a01:138:900a:0:5000:2cff:fee0:8bd3",
+    "name": "mu1-dll04",
+    "system_serial": "BBJSH63"
+  },
+  {
+    "datacenter": "mu1",
+    "ipv6": "2a01:138:900a:0:5000:28ff:fe7f:a7e",
+    "name": "mu1-dll05",
+    "system_serial": "BBJRH63"
+  },
+  {
+    "datacenter": "mu1",
+    "ipv6": "2a01:138:900a:0:5000:2aff:fef4:c47e",
+    "name": "mu1-dll06",
+    "system_serial": "BBKNH63"
+  },
+  {
+    "datacenter": "mu1",
+    "ipv6": "2a01:138:900a:0:5000:7eff:feba:7a67",
+    "name": "mu1-dll07",
+    "system_serial": "BBJQH63"
+  },
+  {
+    "datacenter": "mu1",
+    "ipv6": "2a01:138:900a:0:5000:21ff:fe21:67d0",
+    "name": "mu1-dll08",
+    "system_serial": "BBKPH63"
+  },
+  {
+    "datacenter": "mu1",
+    "ipv6": "2a01:138:900a:0:5000:e6ff:febc:4b8f",
+    "name": "mu1-dll09",
+    "system_serial": "BBJNH63"
+  },
+  {
+    "datacenter": "mu1",
+    "ipv6": "2a01:138:900a:0:5000:bdff:fe67:1ca7",
+    "name": "mu1-dll10",
+    "system_serial": "BBJPH63"
+  },
+  {
+    "datacenter": "mu1",
+    "ipv6": "2a01:138:900a:0:5000:4dff:fecc:49fb",
+    "name": "mu1-dll11",
+    "system_serial": "JNQTH63"
+  },
+  {
+    "datacenter": "mu1",
+    "ipv6": "2a01:138:900a:0:5000:8bff:fe26:5fe0",
+    "name": "mu1-dll12",
+    "system_serial": "JNRDH63"
+  },
+  {
+    "datacenter": "mu1",
+    "ipv6": "2a01:138:900a:0:5000:a0ff:fe5e:4263",
+    "name": "mu1-dll13",
+    "system_serial": "JNRKH63"
+  },
+  {
+    "datacenter": "mu1",
+    "ipv6": "2a01:138:900a:0:5000:e7ff:fe39:c3d8",
+    "name": "mu1-dll14",
+    "system_serial": "JNRNH63"
+  },
+  {
+    "datacenter": "mu1",
+    "ipv6": "2a01:138:900a:0:5000:18ff:fef2:d94f",
+    "name": "mu1-dll15",
+    "system_serial": "JNRLH63"
+  },
+  {
+    "datacenter": "mu1",
+    "ipv6": "2a01:138:900a:0:5000:a8ff:fe45:46f0",
+    "name": "mu1-dll16",
+    "system_serial": "JNRFH63"
+  },
+  {
+    "datacenter": "mu1",
+    "ipv6": "2a01:138:900a:0:5000:95ff:fee5:9513",
+    "name": "mu1-dll17",
+    "system_serial": "JNRJH63"
+  },
+  {
+    "datacenter": "mu1",
+    "ipv6": "2a01:138:900a:0:5000:3eff:fe40:ff53",
+    "name": "mu1-dll18",
+    "system_serial": "JNRMH63"
+  },
+  {
+    "datacenter": "mu1",
+    "ipv6": "2a01:138:900a:0:5000:90ff:fe22:44cb",
+    "name": "mu1-dll19",
+    "system_serial": "JNRGH63"
+  },
+  {
+    "datacenter": "mu1",
+    "ipv6": "2a01:138:900a:0:5000:47ff:fe27:1278",
+    "name": "mu1-dll20",
+    "system_serial": "JNRHH63"
+  },
+  {
+    "datacenter": "mu1",
+    "ipv6": "2a01:138:900a:0:5000:ecff:fea3:39fb",
+    "name": "mu1-dll21",
+    "system_serial": "JNQKH63"
+  },
+  {
+    "datacenter": "mu1",
+    "ipv6": "2a01:138:900a:0:5000:60ff:fe0d:9de9",
+    "name": "mu1-dll22",
+    "system_serial": "JNQLH63"
+  },
+  {
+    "datacenter": "mu1",
+    "ipv6": "2a01:138:900a:0:5000:2aff:fe13:d9e5",
+    "name": "mu1-dll23",
+    "system_serial": "JNQPH63"
+  },
+  {
+    "datacenter": "mu1",
+    "ipv6": "2a01:138:900a:0:5000:65ff:fe0a:a5a3",
+    "name": "mu1-dll24",
+    "system_serial": "JNQQH63"
+  },
+  {
+    "datacenter": "mu1",
+    "ipv6": "2a01:138:900a:0:5000:17ff:fe1b:95a8",
+    "name": "mu1-dll25",
+    "system_serial": "JNQSH63"
+  },
+  {
+    "datacenter": "mu1",
+    "ipv6": "2a01:138:900a:0:5000:81ff:fe88:272e",
+    "name": "mu1-dll26",
+    "system_serial": "JNQRH63"
+  },
+  {
+    "datacenter": "mu1",
+    "ipv6": "2a01:138:900a:0:5000:20ff:febc:8874",
+    "name": "mu1-dll27",
+    "system_serial": "JNQNH63"
+  },
+  {
+    "datacenter": "mu1",
+    "ipv6": "2a01:138:900a:0:5000:24ff:fe4e:42ad",
+    "name": "mu1-dll28",
+    "system_serial": "JNQMH63"
+  },
+  {
+    "datacenter": "ny1",
+    "ipv6": "2607:f1d0:10:1:5000:a7ff:fe91:44e",
+    "name": "ny1-dll01",
+    "system_serial": "59HBR53"
+  },
+  {
+    "datacenter": "ny1",
+    "ipv6": "2607:f1d0:10:1:5000:c3ff:fec0:a17d",
+    "name": "ny1-dll02",
+    "system_serial": "59H7R53"
+  },
+  {
+    "datacenter": "ny1",
+    "ipv6": "2607:f1d0:10:1:5000:2cff:fe4e:174b",
+    "name": "ny1-dll03",
+    "system_serial": "59J5R53"
+  },
+  {
+    "datacenter": "ny1",
+    "ipv6": "2607:f1d0:10:1:5000:42ff:fe70:f889",
+    "name": "ny1-dll04",
+    "system_serial": "59J6R53"
+  },
+  {
+    "datacenter": "ny1",
+    "ipv6": "2607:f1d0:10:1:5000:82ff:fead:3aff",
+    "name": "ny1-dll05",
+    "system_serial": "59HCR53"
+  },
+  {
+    "datacenter": "ny1",
+    "ipv6": "2607:f1d0:10:1:5000:f5ff:fe8c:6d20",
+    "name": "ny1-dll06",
+    "system_serial": "59J7R53"
+  },
+  {
+    "datacenter": "ny1",
+    "ipv6": "2607:f1d0:10:1:5000:ccff:fe89:50e5",
+    "name": "ny1-dll07",
+    "system_serial": "3CS2R53"
+  },
+  {
+    "datacenter": "ny1",
+    "ipv6": "2607:f1d0:10:1:5000:90ff:fe31:908c",
+    "name": "ny1-dll08",
+    "system_serial": "13H2R53"
+  },
+  {
+    "datacenter": "ny1",
+    "ipv6": "2607:f1d0:10:1:5000:bfff:fef6:210d",
+    "name": "ny1-dll09",
+    "system_serial": "13H4R53"
+  },
+  {
+    "datacenter": "ny1",
+    "ipv6": "2607:f1d0:10:1:5000:d4ff:fe3d:6b47",
+    "name": "ny1-dll10",
+    "system_serial": "3CS0R53"
+  },
+  {
+    "datacenter": "ny1",
+    "ipv6": "2607:f1d0:10:1:5000:99ff:fe82:a83f",
+    "name": "ny1-dll11",
+    "system_serial": "13G4R53"
+  },
+  {
+    "datacenter": "ny1",
+    "ipv6": "2607:f1d0:10:1:5000:e4ff:fe9f:2c86",
+    "name": "ny1-dll12",
+    "system_serial": "13H3R53"
+  },
+  {
+    "datacenter": "ny1",
+    "ipv6": "2607:f1d0:10:1:5000:5cff:fe99:4ec5",
+    "name": "ny1-dll13",
+    "system_serial": "3CS1R53"
+  },
+  {
+    "datacenter": "ny1",
+    "ipv6": "2607:f1d0:10:1:5000:4dff:fe60:b1ad",
+    "name": "ny1-dll14",
+    "system_serial": "3CRZQ53"
+  },
+  {
+    "datacenter": "or1",
+    "ipv6": "2604:3fc0:3002:0:5000:48ff:feb8:260d",
+    "name": "or1-dll01",
+    "system_serial": "7S4D8B3"
+  },
+  {
+    "datacenter": "or1",
+    "ipv6": "2604:3fc0:3002:0:5000:55ff:fe21:8051",
+    "name": "or1-dll02",
+    "system_serial": "7S4F8B3"
+  },
+  {
+    "datacenter": "or1",
+    "ipv6": "2604:3fc0:3002:0:5000:9cff:fece:2cc8",
+    "name": "or1-dll03",
+    "system_serial": "7S4G8B3"
+  },
+  {
+    "datacenter": "or1",
+    "ipv6": "2604:3fc0:3002:0:5000:2dff:fefa:1e87",
+    "name": "or1-dll04",
+    "system_serial": "7S558B3"
+  },
+  {
+    "datacenter": "or1",
+    "ipv6": "2604:3fc0:3002:0:5000:caff:fe5e:6b7",
+    "name": "or1-dll05",
+    "system_serial": "7S668B3"
+  },
+  {
+    "datacenter": "or1",
+    "ipv6": "2604:3fc0:3002:0:5000:ecff:fe63:66f5",
+    "name": "or1-dll06",
+    "system_serial": "7S678B3"
+  },
+  {
+    "datacenter": "or1",
+    "ipv6": "2604:3fc0:3002:0:5000:6fff:fe90:79e5",
+    "name": "or1-dll07",
+    "system_serial": "7S5G8B3"
+  },
+  {
+    "datacenter": "or1",
+    "ipv6": "2604:3fc0:3002:0:5000:27ff:fe80:3df0",
+    "name": "or1-dll08",
+    "system_serial": "7S658B3"
+  },
+  {
+    "datacenter": "or1",
+    "ipv6": "2604:3fc0:3002:0:5000:b8ff:febf:e5ce",
+    "name": "or1-dll09",
+    "system_serial": "7S478B3"
+  },
+  {
+    "datacenter": "or1",
+    "ipv6": "2604:3fc0:3002:0:5000:45ff:fec7:a8ec",
+    "name": "or1-dll10",
+    "system_serial": "7S458B3"
+  },
+  {
+    "datacenter": "or1",
+    "ipv6": "2604:3fc0:3002:0:5000:90ff:fe28:d608",
+    "name": "or1-dll11",
+    "system_serial": "7S3G8B3"
+  },
+  {
+    "datacenter": "or1",
+    "ipv6": "2604:3fc0:3002:0:5000:acff:fe31:12e8",
+    "name": "or1-dll12",
+    "system_serial": "7S468B3"
+  },
+  {
+    "datacenter": "or1",
+    "ipv6": "2604:3fc0:3002:0:5000:4eff:fec2:4806",
+    "name": "or1-dll13",
+    "system_serial": "7S598B3"
+  },
+  {
+    "datacenter": "or1",
+    "ipv6": "2604:3fc0:3002:0:5000:6bff:feb9:6baf",
+    "name": "or1-dll14",
+    "system_serial": "7S578B3"
+  },
+  {
+    "datacenter": "or1",
+    "ipv6": "2604:3fc0:3002:0:5000:8bff:fe66:2a12",
+    "name": "or1-dll15",
+    "system_serial": "7S568B3"
+  },
+  {
+    "datacenter": "or1",
+    "ipv6": "2604:3fc0:3002:0:5000:91ff:fee8:71e0",
+    "name": "or1-dll16",
+    "system_serial": "7S588B3"
+  },
+  {
+    "datacenter": "or1",
+    "ipv6": "2604:3fc0:3002:0:5000:bdff:fe08:e291",
+    "name": "or1-dll17",
+    "system_serial": "7S3B8B3"
+  },
+  {
+    "datacenter": "or1",
+    "ipv6": "2604:3fc0:3002:0:5000:c4ff:fe35:22a7",
+    "name": "or1-dll18",
+    "system_serial": "7S3D8B3"
+  },
+  {
+    "datacenter": "or1",
+    "ipv6": "2604:3fc0:3002:0:5000:cfff:fee8:dff8",
+    "name": "or1-dll19",
+    "system_serial": "7S3F8B3"
+  },
+  {
+    "datacenter": "or1",
+    "ipv6": "2604:3fc0:3002:0:5000:18ff:feb5:96e0",
+    "name": "or1-dll20",
+    "system_serial": "7S3C8B3"
+  },
+  {
+    "datacenter": "or1",
+    "ipv6": "2604:3fc0:3002:0:5000:ccff:fe32:11d2",
+    "name": "or1-dll21",
+    "system_serial": "7S5B8B3"
+  },
+  {
+    "datacenter": "or1",
+    "ipv6": "2604:3fc0:3002:0:5000:7cff:fef6:4fb9",
+    "name": "or1-dll22",
+    "system_serial": "7S5C8B3"
+  },
+  {
+    "datacenter": "or1",
+    "ipv6": "2604:3fc0:3002:0:5000:85ff:fe92:440e",
+    "name": "or1-dll23",
+    "system_serial": "7S5F8B3"
+  },
+  {
+    "datacenter": "or1",
+    "ipv6": "2604:3fc0:3002:0:5000:59ff:febf:311e",
+    "name": "or1-dll24",
+    "system_serial": "7S5D8B3"
+  },
+  {
+    "datacenter": "or1",
+    "ipv6": "2604:3fc0:3002:0:5000:30ff:fe7b:8d08",
+    "name": "or1-dll25",
+    "system_serial": "7S488B3"
+  },
+  {
+    "datacenter": "pl1",
+    "ipv6": "2600:3004:1200:1200:5000:59ff:fe54:4c4b",
+    "name": "pl1-dll01",
+    "system_serial": "99SGM83"
+  },
+  {
+    "datacenter": "pl1",
+    "ipv6": "2600:3004:1200:1200:5000:6aff:fefb:22a0",
+    "name": "pl1-dll02",
+    "system_serial": "99DFM83"
+  },
+  {
+    "datacenter": "pl1",
+    "ipv6": "2600:3004:1200:1200:5000:19ff:fe11:8e4a",
+    "name": "pl1-dll03",
+    "system_serial": "99ZJM83"
+  },
+  {
+    "datacenter": "pl1",
+    "ipv6": "2600:3004:1200:1200:5000:1bff:fed8:a30",
+    "name": "pl1-dll04",
+    "system_serial": "9B4JM83"
+  },
+  {
+    "datacenter": "pl1",
+    "ipv6": "2600:3004:1200:1200:5000:81ff:fe5c:dc6f",
+    "name": "pl1-dll05",
+    "system_serial": "9B8MM83"
+  },
+  {
+    "datacenter": "pl1",
+    "ipv6": "2600:3004:1200:1200:5000:3eff:fec5:8d7d",
+    "name": "pl1-dll06",
+    "system_serial": "9B0GM83"
+  },
+  {
+    "datacenter": "pl1",
+    "ipv6": "2600:3004:1200:1200:5000:b7ff:fe0b:48db",
+    "name": "pl1-dll07",
+    "system_serial": "9B8GM83"
+  },
+  {
+    "datacenter": "pl1",
+    "ipv6": "2600:3004:1200:1200:5000:daff:fe26:f564",
+    "name": "pl1-dll08",
+    "system_serial": "9B3HM83"
+  },
+  {
+    "datacenter": "pl1",
+    "ipv6": "2600:3004:1200:1200:5000:2aff:fe3d:cd11",
+    "name": "pl1-dll09",
+    "system_serial": "9B9JM83"
+  },
+  {
+    "datacenter": "pl1",
+    "ipv6": "2600:3004:1200:1200:5000:6aff:fe8c:e779",
+    "name": "pl1-dll10",
+    "system_serial": "99XKM83"
+  },
+  {
+    "datacenter": "pl1",
+    "ipv6": "2600:3004:1200:1200:5000:deff:fe3b:98ea",
+    "name": "pl1-dll11",
+    "system_serial": "9B1HM83"
+  },
+  {
+    "datacenter": "pl1",
+    "ipv6": "2600:3004:1200:1200:5000:38ff:fea8:8aaf",
+    "name": "pl1-dll12",
+    "system_serial": "13N5G73"
+  },
+  {
+    "datacenter": "pl1",
+    "ipv6": "2600:3004:1200:1200:5000:3bff:fe3c:d0d8",
+    "name": "pl1-dll13",
+    "system_serial": "9B6GM83"
+  },
+  {
+    "datacenter": "pl1",
+    "ipv6": "2600:3004:1200:1200:5000:2eff:fe6b:d09",
+    "name": "pl1-dll14",
+    "system_serial": "9B6HM83"
+  },
+  {
+    "datacenter": "pl1",
+    "ipv6": "2600:3004:1200:1200:5000:c4ff:fe7c:baa4",
+    "name": "pl1-dll15",
+    "system_serial": "9B5JM83"
+  },
+  {
+    "datacenter": "pl1",
+    "ipv6": "2600:3004:1200:1200:5000:79ff:fea6:d9f7",
+    "name": "pl1-dll16",
+    "system_serial": "9B0JM83"
+  },
+  {
+    "datacenter": "pl1",
+    "ipv6": "2600:3004:1200:1200:5000:bbff:feb7:553f",
+    "name": "pl1-dll17",
+    "system_serial": "99VHM83"
+  },
+  {
+    "datacenter": "pl1",
+    "ipv6": "2600:3004:1200:1200:5000:42ff:fe3d:48",
+    "name": "pl1-dll18",
+    "system_serial": "9B0HM83"
+  },
+  {
+    "datacenter": "pl1",
+    "ipv6": "2600:3004:1200:1200:5000:77ff:feb0:f6ab",
+    "name": "pl1-dll19",
+    "system_serial": "99PFM83"
+  },
+  {
+    "datacenter": "pl1",
+    "ipv6": "2600:3004:1200:1200:5000:f0ff:feab:5a71",
+    "name": "pl1-dll20",
+    "system_serial": "9B1MM83"
+  },
+  {
+    "datacenter": "pl1",
+    "ipv6": "2600:3004:1200:1200:5000:c5ff:fe19:c3c2",
+    "name": "pl1-dll21",
+    "system_serial": "99NJM83"
+  },
+  {
+    "datacenter": "pl1",
+    "ipv6": "2600:3004:1200:1200:5000:37ff:fe9c:4da3",
+    "name": "pl1-dll22",
+    "system_serial": "99MHM83"
+  },
+  {
+    "datacenter": "pl1",
+    "ipv6": "2600:3004:1200:1200:5000:eeff:fe9e:7a80",
+    "name": "pl1-dll23",
+    "system_serial": "99KLM83"
+  },
+  {
+    "datacenter": "pl1",
+    "ipv6": "2600:3004:1200:1200:5000:b4ff:fef4:8d27",
+    "name": "pl1-dll24",
+    "system_serial": "99KFM83"
+  },
+  {
+    "datacenter": "pl1",
+    "ipv6": "2600:3004:1200:1200:5000:73ff:fe00:fd0b",
+    "name": "pl1-dll25",
+    "system_serial": "9B0LM83"
+  },
+  {
+    "datacenter": "sg1",
+    "ipv6": "2401:3f00:1000:24:5000:41ff:fe12:4d49",
+    "name": "sg1-dll01",
+    "system_serial": "99SLM83"
+  },
+  {
+    "datacenter": "sg1",
+    "ipv6": "2401:3f00:1000:24:5000:76ff:fe3e:1cc9",
+    "name": "sg1-dll02",
+    "system_serial": "99QGM83"
+  },
+  {
+    "datacenter": "sg1",
+    "ipv6": "2401:3f00:1000:24:5000:efff:fee6:b0c5",
+    "name": "sg1-dll03",
+    "system_serial": "99PKM83"
+  },
+  {
+    "datacenter": "sg1",
+    "ipv6": "2401:3f00:1000:24:5000:e9ff:fe35:3260",
+    "name": "sg1-dll04",
+    "system_serial": "99QFM83"
+  },
+  {
+    "datacenter": "sg1",
+    "ipv6": "2401:3f00:1000:24:5000:83ff:fe3d:c326",
+    "name": "sg1-dll05",
+    "system_serial": "99PJM83"
+  },
+  {
+    "datacenter": "sg1",
+    "ipv6": "2401:3f00:1000:24:5000:bbff:fea4:6e42",
+    "name": "sg1-dll06",
+    "system_serial": "99ZFM83"
+  },
+  {
+    "datacenter": "sg1",
+    "ipv6": "2401:3f00:1000:24:5000:deff:fed6:1d7",
+    "name": "sg1-dll07",
+    "system_serial": "9B1JM83"
+  },
+  {
+    "datacenter": "sg1",
+    "ipv6": "2401:3f00:1000:24:5000:86ff:fea6:9bb5",
+    "name": "sg1-dll08",
+    "system_serial": "9B2KM83"
+  },
+  {
+    "datacenter": "sg1",
+    "ipv6": "2401:3f00:1000:24:5000:beff:fe2d:dc2",
+    "name": "sg1-dll09",
+    "system_serial": "99VGM83"
+  },
+  {
+    "datacenter": "sg1",
+    "ipv6": "2401:3f00:1000:24:5000:f1ff:fe23:a467",
+    "name": "sg1-dll10",
+    "system_serial": "99THM83"
+  },
+  {
+    "datacenter": "sg1",
+    "ipv6": "2401:3f00:1000:24:5000:49ff:fe74:2d7a",
+    "name": "sg1-dll11",
+    "system_serial": "99YLM83"
+  },
+  {
+    "datacenter": "sg1",
+    "ipv6": "2401:3f00:1000:24:5000:f7ff:fe54:5026",
+    "name": "sg1-dll12",
+    "system_serial": "99WDM83"
+  },
+  {
+    "datacenter": "sg1",
+    "ipv6": "2401:3f00:1000:24:5000:acff:fecd:c267",
+    "name": "sg1-dll13",
+    "system_serial": "99CKM83"
+  },
+  {
+    "datacenter": "sg1",
+    "ipv6": "2401:3f00:1000:24:5000:30ff:fe1a:6a11",
+    "name": "sg1-dll14",
+    "system_serial": "9BBFM83"
+  },
+  {
+    "datacenter": "sg1",
+    "ipv6": "2401:3f00:1000:24:5000:d5ff:fecf:383c",
+    "name": "sg1-dll15",
+    "system_serial": "9B5LM83"
+  },
+  {
+    "datacenter": "sg1",
+    "ipv6": "2401:3f00:1000:24:5000:69ff:fe36:f566",
+    "name": "sg1-dll16",
+    "system_serial": "99MFM83"
+  },
+  {
+    "datacenter": "sg1",
+    "ipv6": "2401:3f00:1000:24:5000:3dff:fe3f:80fa",
+    "name": "sg1-dll17",
+    "system_serial": "9B3JM83"
+  },
+  {
+    "datacenter": "sg1",
+    "ipv6": "2401:3f00:1000:24:5000:5bff:fe7b:9978",
+    "name": "sg1-dll18",
+    "system_serial": "99LLM83"
+  },
+  {
+    "datacenter": "sg1",
+    "ipv6": "2401:3f00:1000:24:5000:fcff:feb7:a308",
+    "name": "sg1-dll19",
+    "system_serial": "9B5KM83"
+  },
+  {
+    "datacenter": "sg1",
+    "ipv6": "2401:3f00:1000:24:5000:d5ff:fec9:fdc0",
+    "name": "sg1-dll20",
+    "system_serial": "99LHM83"
+  },
+  {
+    "datacenter": "sg1",
+    "ipv6": "2401:3f00:1000:24:5000:1bff:fe44:17a9",
+    "name": "sg1-dll21",
+    "system_serial": "9B4HM83"
+  },
+  {
+    "datacenter": "sg1",
+    "ipv6": "2401:3f00:1000:24:5000:70ff:fe50:7bce",
+    "name": "sg1-dll22",
+    "system_serial": "99JLM83"
+  },
+  {
+    "datacenter": "sg1",
+    "ipv6": "2401:3f00:1000:24:5000:4dff:fedb:c5a7",
+    "name": "sg1-dll23",
+    "system_serial": "99DHM83"
+  },
+  {
+    "datacenter": "sg1",
+    "ipv6": "2401:3f00:1000:24:5000:92ff:fe52:985b",
+    "name": "sg1-dll24",
+    "system_serial": "9B0MM83"
+  },
+  {
+    "datacenter": "sg1",
+    "ipv6": "2401:3f00:1000:24:5000:18ff:fe7f:fca4",
+    "name": "sg1-dll25",
+    "system_serial": "9B9GM83"
+  },
+  {
+    "datacenter": "sg2",
+    "ipv6": "2401:3f00:1000:22:5000:71ff:fed7:b04",
+    "name": "sg2-dll01",
+    "system_serial": "9B1GM83"
+  },
+  {
+    "datacenter": "sg2",
+    "ipv6": "2401:3f00:1000:22:5000:a0ff:fecd:13d5",
+    "name": "sg2-dll02",
+    "system_serial": "99SFM83"
+  },
+  {
+    "datacenter": "sg2",
+    "ipv6": "2401:3f00:1000:22:5000:5aff:fef2:7ccb",
+    "name": "sg2-dll03",
+    "system_serial": "13N1G73"
+  },
+  {
+    "datacenter": "sg2",
+    "ipv6": "2401:3f00:1000:22:5000:42ff:feb7:5112",
+    "name": "sg2-dll04",
+    "system_serial": "99RJM83"
+  },
+  {
+    "datacenter": "sg2",
+    "ipv6": "2401:3f00:1000:22:5000:5cff:fe8b:759b",
+    "name": "sg2-dll05",
+    "system_serial": "99YFM83"
+  },
+  {
+    "datacenter": "sg2",
+    "ipv6": "2401:3f00:1000:22:5000:7eff:fe15:ccbb",
+    "name": "sg2-dll06",
+    "system_serial": "9B4GM83"
+  },
+  {
+    "datacenter": "sg2",
+    "ipv6": "2401:3f00:1000:22:5000:c3ff:fe44:36f4",
+    "name": "sg2-dll07",
+    "system_serial": "99CGM83"
+  },
+  {
+    "datacenter": "sg2",
+    "ipv6": "2401:3f00:1000:22:5000:85ff:fea3:1de",
+    "name": "sg2-dll08",
+    "system_serial": "99NLM83"
+  },
+  {
+    "datacenter": "sg2",
+    "ipv6": "2401:3f00:1000:22:5000:25ff:fe63:8c97",
+    "name": "sg2-dll09",
+    "system_serial": "99MKM83"
+  },
+  {
+    "datacenter": "sg2",
+    "ipv6": "2401:3f00:1000:22:5000:22ff:fe31:add7",
+    "name": "sg2-dll10",
+    "system_serial": "99XHM83"
+  },
+  {
+    "datacenter": "sg2",
+    "ipv6": "2401:3f00:1000:22:5000:1cff:fe46:9a12",
+    "name": "sg2-dll11",
+    "system_serial": "99YGM83"
+  },
+  {
+    "datacenter": "sg3",
+    "ipv6": "2401:3f00:1000:23:5000:80ff:fe84:91ad",
+    "name": "sg3-dll01",
+    "system_serial": "99MLM83"
+  },
+  {
+    "datacenter": "sg3",
+    "ipv6": "2401:3f00:1000:23:5000:f1ff:fe59:bd3d",
+    "name": "sg3-dll02",
+    "system_serial": "9B9HM83"
+  },
+  {
+    "datacenter": "sg3",
+    "ipv6": "2401:3f00:1000:23:5000:7bff:fec5:bcca",
+    "name": "sg3-dll03",
+    "system_serial": "99XGM83"
+  },
+  {
+    "datacenter": "sg3",
+    "ipv6": "2401:3f00:1000:23:5000:ecff:feca:219e",
+    "name": "sg3-dll04",
+    "system_serial": "99KKM83"
+  },
+  {
+    "datacenter": "sg3",
+    "ipv6": "2401:3f00:1000:23:5000:68ff:fea0:b0c2",
+    "name": "sg3-dll05",
+    "system_serial": "9B8LM83"
+  },
+  {
+    "datacenter": "sg3",
+    "ipv6": "2401:3f00:1000:23:5000:28ff:febe:4bba",
+    "name": "sg3-dll06",
+    "system_serial": "9B1LM83"
+  },
+  {
+    "datacenter": "sg3",
+    "ipv6": "2401:3f00:1000:23:5000:7bff:fe3d:b81d",
+    "name": "sg3-dll07",
+    "system_serial": "99YDM83"
+  },
+  {
+    "datacenter": "sg3",
+    "ipv6": "2401:3f00:1000:23:5000:eaff:fee0:5575",
+    "name": "sg3-dll08",
+    "system_serial": "99NFM83"
+  },
+  {
+    "datacenter": "sg3",
+    "ipv6": "2401:3f00:1000:23:5000:22ff:fe44:5d49",
+    "name": "sg3-dll09",
+    "system_serial": "9B6KM83"
+  },
+  {
+    "datacenter": "sg3",
+    "ipv6": "2401:3f00:1000:23:5000:37ff:fe1f:f028",
+    "name": "sg3-dll10",
+    "system_serial": "99YHM83"
+  },
+  {
+    "datacenter": "sg3",
+    "ipv6": "2401:3f00:1000:23:5000:d4ff:fed0:d722",
+    "name": "sg3-dll11",
+    "system_serial": "99KHM83"
+  },
+  {
+    "datacenter": "sg3",
+    "ipv6": "2401:3f00:1000:23:5000:adff:feab:3c0b",
+    "name": "sg3-dll12",
+    "system_serial": "9B8FM83"
+  },
+  {
+    "datacenter": "sg3",
+    "ipv6": "2401:3f00:1000:23:5000:30ff:fec7:e72d",
+    "name": "sg3-dll13",
+    "system_serial": "9B4LM83"
+  },
+  {
+    "datacenter": "sg3",
+    "ipv6": "2401:3f00:1000:23:5000:56ff:fe1d:ca8a",
+    "name": "sg3-dll14",
+    "system_serial": "9B2LM83"
+  },
+  {
+    "datacenter": "sg3",
+    "ipv6": "2401:3f00:1000:23:5000:ebff:feca:c398",
+    "name": "sg3-dll15",
+    "system_serial": "9B6JM83"
+  },
+  {
+    "datacenter": "sg3",
+    "ipv6": "2401:3f00:1000:23:5000:a0ff:fee8:fcd7",
+    "name": "sg3-dll16",
+    "system_serial": "9B4FM83"
+  },
+  {
+    "datacenter": "sg3",
+    "ipv6": "2401:3f00:1000:23:5000:30ff:feb5:aba3",
+    "name": "sg3-dll17",
+    "system_serial": "99TFM83"
+  },
+  {
+    "datacenter": "sg3",
+    "ipv6": "2401:3f00:1000:23:5000:43ff:fe0f:ae68",
+    "name": "sg3-dll18",
+    "system_serial": "99RKM83"
+  },
+  {
+    "datacenter": "sg3",
+    "ipv6": "2401:3f00:1000:23:5000:caff:fec0:69a",
+    "name": "sg3-dll19",
+    "system_serial": "9B3LM83"
+  },
+  {
+    "datacenter": "sg3",
+    "ipv6": "2401:3f00:1000:23:5000:a4ff:fe2a:b1b2",
+    "name": "sg3-dll20",
+    "system_serial": "99KJM83"
+  },
+  {
+    "datacenter": "sg3",
+    "ipv6": "2401:3f00:1000:23:5000:b5ff:fe05:9bbf",
+    "name": "sg3-dll21",
+    "system_serial": "99KGM83"
+  },
+  {
+    "datacenter": "sg3",
+    "ipv6": "2401:3f00:1000:23:5000:f2ff:fe93:bd0c",
+    "name": "sg3-dll22",
+    "system_serial": "99LKM83"
+  },
+  {
+    "datacenter": "sg3",
+    "ipv6": "2401:3f00:1000:23:5000:68ff:fe7b:e386",
+    "name": "sg3-dll23",
+    "system_serial": "9B3MM83"
+  },
+  {
+    "datacenter": "sg3",
+    "ipv6": "2401:3f00:1000:23:5000:4cff:fe01:3495",
+    "name": "sg3-dll24",
+    "system_serial": "99PHM83"
+  },
+  {
+    "datacenter": "sg3",
+    "ipv6": "2401:3f00:1000:23:5000:f2ff:fe31:b8ed",
+    "name": "sg3-dll25",
+    "system_serial": "13N0G73"
+  },
+  {
+    "datacenter": "sj1",
+    "ipv6": "2600:c02:b002:15:5000:22ff:fe65:e916",
+    "name": "sj1-dll08",
+    "system_serial": "JP36N83"
+  },
+  {
+    "datacenter": "sj1",
+    "ipv6": "2600:c02:b002:15:5000:a7ff:fe97:c7cf",
+    "name": "sj1-dll09",
+    "system_serial": "JP1ZJ93"
+  },
+  {
+    "datacenter": "sj1",
+    "ipv6": "2600:c02:b002:15:5000:2cff:fe95:e4d1",
+    "name": "sj1-dll10",
+    "system_serial": "JP23N83"
+  },
+  {
+    "datacenter": "sj1",
+    "ipv6": "2600:c02:b002:15:5000:1aff:fe30:8d68",
+    "name": "sj1-dll11",
+    "system_serial": "JP19N83"
+  },
+  {
+    "datacenter": "sj1",
+    "ipv6": "2600:c02:b002:15:5000:26ff:fe99:5a68",
+    "name": "sj1-dll12",
+    "system_serial": "JP18N83"
+  },
+  {
+    "datacenter": "sj1",
+    "ipv6": "2600:c02:b002:15:5000:deff:fed2:af64",
+    "name": "sj1-dll13",
+    "system_serial": "JP17N83"
+  },
+  {
+    "datacenter": "sj1",
+    "ipv6": "2600:c02:b002:15:5000:89ff:fea5:5429",
+    "name": "sj1-dll14",
+    "system_serial": "JP1BN83"
+  },
+  {
+    "datacenter": "sj1",
+    "ipv6": "2600:c02:b002:15:5000:e0ff:fe7b:c0c",
+    "name": "sj1-dll15",
+    "system_serial": "JP22N83"
+  },
+  {
+    "datacenter": "sj1",
+    "ipv6": "2600:c02:b002:15:5000:78ff:fe4c:bf55",
+    "name": "sj1-dll16",
+    "system_serial": "JP1YJ93"
+  },
+  {
+    "datacenter": "sj1",
+    "ipv6": "2600:c02:b002:15:5000:9eff:feb5:9e48",
+    "name": "sj1-dll17",
+    "system_serial": "JP38N83"
+  },
+  {
+    "datacenter": "sj1",
+    "ipv6": "2600:c02:b002:15:5000:19ff:fec3:41f5",
+    "name": "sj1-dll18",
+    "system_serial": "JP27N83"
+  },
+  {
+    "datacenter": "sj1",
+    "ipv6": "2600:c02:b002:15:5000:a5ff:fe4d:9832",
+    "name": "sj1-dll19",
+    "system_serial": "JNZFN83"
+  },
+  {
+    "datacenter": "sj1",
+    "ipv6": "2600:c02:b002:15:5000:27ff:fe18:3a30",
+    "name": "sj1-dll20",
+    "system_serial": "JNZTJ93"
+  },
+  {
+    "datacenter": "sj1",
+    "ipv6": "2600:c02:b002:15:5000:b4ff:fe03:28c6",
+    "name": "sj1-dll21",
+    "system_serial": "JP3VJ93"
+  },
+  {
+    "datacenter": "sj1",
+    "ipv6": "2600:c02:b002:15:5000:5bff:fefd:3efd",
+    "name": "sj1-dll22",
+    "system_serial": "JP3TJ93"
+  },
+  {
+    "datacenter": "sj1",
+    "ipv6": "2600:c02:b002:15:5000:9dff:fec6:b3e9",
+    "name": "sj1-dll23",
+    "system_serial": "JP35N83"
+  },
+  {
+    "datacenter": "sj1",
+    "ipv6": "2600:c02:b002:15:5000:eeff:fea9:186",
+    "name": "sj1-dll24",
+    "system_serial": "JP37N83"
+  },
+  {
+    "datacenter": "sj1",
+    "ipv6": "2600:c02:b002:15:5000:caff:fe51:4e56",
+    "name": "sj1-dll25",
+    "system_serial": "JP3GN83"
+  },
+  {
+    "datacenter": "sj1",
+    "ipv6": "2600:c02:b002:15:5000:28ff:fe4e:2ead",
+    "name": "sj1-dll26",
+    "system_serial": "JP3FN83"
+  },
+  {
+    "datacenter": "sj1",
+    "ipv6": "2600:c02:b002:15:5000:abff:fef5:9cd4",
+    "name": "sj1-dll27",
+    "system_serial": "JNZSJ93"
+  },
+  {
+    "datacenter": "sj1",
+    "ipv6": "2600:c02:b002:15:5000:f7ff:fe14:a3b4",
+    "name": "sj1-dll28",
+    "system_serial": "JNZDN83"
+  },
+  {
+    "datacenter": "sj1",
+    "ipv6": "2600:c02:b002:15:5000:3bff:fe62:e1e4",
+    "name": "sj1-spm01",
+    "system_serial": "S427611X0913841"
+  },
+  {
+    "datacenter": "sj1",
+    "ipv6": "2600:c02:b002:15:5000:14ff:fe9e:28d2",
+    "name": "sj1-spm02",
+    "system_serial": "S427611X0913844"
+  },
+  {
+    "datacenter": "sj1",
+    "ipv6": "2600:c02:b002:15:5000:e2ff:fe4a:dcad",
+    "name": "sj1-spm03",
+    "system_serial": "S427611X0913812"
+  },
+  {
+    "datacenter": "sj1",
+    "ipv6": "2600:c02:b002:15:5000:bbff:fe8c:c8bd",
+    "name": "sj1-spm04",
+    "system_serial": "S427611X0900790"
+  },
+  {
+    "datacenter": "sj1",
+    "ipv6": "2600:c02:b002:15:5000:53ff:fef7:d3c0",
+    "name": "sj1-spm05",
+    "system_serial": "S427611X0913830"
+  },
+  {
+    "datacenter": "sj1",
+    "ipv6": "2600:c02:b002:15:5000:ceff:fecc:d5cd",
+    "name": "sj1-spm06",
+    "system_serial": "S427611X0913825"
+  },
+  {
+    "datacenter": "sj1",
+    "ipv6": "2600:c02:b002:15:5000:faff:fe2d:d30e",
+    "name": "sj1-spm07",
+    "system_serial": "S427611X0900796"
+  },
+  {
+    "datacenter": "tp1",
+    "ipv6": "2607:f758:c300:0:5000:c7ff:fe59:2b3b",
+    "name": "tp1-dll08",
+    "system_serial": "JP16N83"
+  },
+  {
+    "datacenter": "tp1",
+    "ipv6": "2607:f758:c300:0:5000:5dff:fed5:3e45",
+    "name": "tp1-dll09",
+    "system_serial": "JP15N83"
+  },
+  {
+    "datacenter": "tp1",
+    "ipv6": "2607:f758:c300:0:5000:f6ff:fee5:cf71",
+    "name": "tp1-dll10",
+    "system_serial": "JP03N83"
+  },
+  {
+    "datacenter": "tp1",
+    "ipv6": "2607:f758:c300:0:5000:b5ff:fe9e:402c",
+    "name": "tp1-dll11",
+    "system_serial": "JP2TJ93"
+  },
+  {
+    "datacenter": "tp1",
+    "ipv6": "2607:f758:c300:0:5000:f4ff:feb9:98b6",
+    "name": "tp1-dll12",
+    "system_serial": "JP2DN83"
+  },
+  {
+    "datacenter": "tp1",
+    "ipv6": "2607:f758:c300:0:5000:96ff:fea2:59d3",
+    "name": "tp1-dll13",
+    "system_serial": "JP2GN83"
+  },
+  {
+    "datacenter": "tp1",
+    "ipv6": "2607:f758:c300:0:5000:edff:fecb:b47",
+    "name": "tp1-dll14",
+    "system_serial": "JP2FN83"
+  },
+  {
+    "datacenter": "tp1",
+    "ipv6": "2607:f758:c300:0:5000:3aff:fe34:29f",
+    "name": "tp1-dll15",
+    "system_serial": "JP05N83"
+  },
+  {
+    "datacenter": "tp1",
+    "ipv6": "2607:f758:c300:0:5000:16ff:fe62:30e5",
+    "name": "tp1-dll16",
+    "system_serial": "JP13N83"
+  },
+  {
+    "datacenter": "tp1",
+    "ipv6": "2607:f758:c300:0:5000:cdff:fe10:c68e",
+    "name": "tp1-dll17",
+    "system_serial": "JP14N83"
+  },
+  {
+    "datacenter": "tp1",
+    "ipv6": "2607:f758:c300:0:5000:93ff:fea9:609a",
+    "name": "tp1-dll18",
+    "system_serial": "JP2VJ93"
+  },
+  {
+    "datacenter": "tp1",
+    "ipv6": "2607:f758:c300:0:5000:5eff:fe33:b8f4",
+    "name": "tp1-dll19",
+    "system_serial": "JP3WJ93"
+  },
+  {
+    "datacenter": "tp1",
+    "ipv6": "2607:f758:c300:0:5000:fcff:fef1:9ecb",
+    "name": "tp1-dll20",
+    "system_serial": "JP12N83"
+  },
+  {
+    "datacenter": "tp1",
+    "ipv6": "2607:f758:c300:0:5000:6bff:fe46:e399",
+    "name": "tp1-dll21",
+    "system_serial": "JP0XJ93"
+  },
+  {
+    "datacenter": "tp1",
+    "ipv6": "2607:f758:c300:0:5000:ddff:fe0e:55a9",
+    "name": "tp1-dll22",
+    "system_serial": "JP2XJ93"
+  },
+  {
+    "datacenter": "tp1",
+    "ipv6": "2607:f758:c300:0:5000:25ff:fe4d:545",
+    "name": "tp1-dll23",
+    "system_serial": "JP2YJ93"
+  },
+  {
+    "datacenter": "tp1",
+    "ipv6": "2607:f758:c300:0:5000:f1ff:fe3c:1071",
+    "name": "tp1-dll24",
+    "system_serial": "JP2WJ93"
+  },
+  {
+    "datacenter": "tp1",
+    "ipv6": "2607:f758:c300:0:5000:b0ff:fe4e:a56f",
+    "name": "tp1-dll25",
+    "system_serial": "JP0ZJ93"
+  },
+  {
+    "datacenter": "tp1",
+    "ipv6": "2607:f758:c300:0:5000:48ff:fe30:f3cd",
+    "name": "tp1-dll26",
+    "system_serial": "JP0YJ93"
+  },
+  {
+    "datacenter": "tp1",
+    "ipv6": "2607:f758:c300:0:5000:32ff:fea9:18f7",
+    "name": "tp1-dll27",
+    "system_serial": "JP3XJ93"
+  },
+  {
+    "datacenter": "tp1",
+    "ipv6": "2607:f758:c300:0:5000:74ff:fe46:d8f9",
+    "name": "tp1-dll28",
+    "system_serial": "JP3YJ93"
+  },
+  {
+    "datacenter": "tp1",
+    "ipv6": "2607:f758:c300:0:5000:16ff:fe94:d606",
+    "name": "tp1-spm01",
+    "system_serial": "S427611X0913809"
+  },
+  {
+    "datacenter": "tp1",
+    "ipv6": "2607:f758:c300:0:5000:5cff:feaf:434f",
+    "name": "tp1-spm02",
+    "system_serial": "S427611X0913836"
+  },
+  {
+    "datacenter": "tp1",
+    "ipv6": "2607:f758:c300:0:5000:9bff:fe4f:62c9",
+    "name": "tp1-spm03",
+    "system_serial": "S427611X0913806"
+  },
+  {
+    "datacenter": "tp1",
+    "ipv6": "2607:f758:c300:0:5000:72ff:fe35:3797",
+    "name": "tp1-spm04",
+    "system_serial": "S427611X0913835"
+  },
+  {
+    "datacenter": "tp1",
+    "ipv6": "2607:f758:c300:0:5000:8eff:fe8b:d68",
+    "name": "tp1-spm05",
+    "system_serial": "S427611X0913819"
+  },
+  {
+    "datacenter": "tp1",
+    "ipv6": "2607:f758:c300:0:5000:3eff:fe6d:af08",
+    "name": "tp1-spm06",
+    "system_serial": "S427611X0913814"
+  },
+  {
+    "datacenter": "tp1",
+    "ipv6": "2607:f758:c300:0:5000:43ff:fee4:aff0",
+    "name": "tp1-spm07",
+    "system_serial": "S427611X0913837"
+  },
+  {
+    "datacenter": "tp1",
+    "ipv6": "2607:f758:c300:0:5000:b0ff:fe19:c14b",
+    "name": "tp1-spm29",
+    "system_serial": "S46FNY0N201076"
+  },
+  {
+    "datacenter": "tp1",
+    "ipv6": "2607:f758:c300:0:5000:4bff:feac:6443",
+    "name": "tp1-spm30",
+    "system_serial": "S46FNY0N201079"
+  },
+  {
+    "datacenter": "ty1",
+    "ipv6": "2602:ffe4:801:16:5000:99ff:feaf:a713",
+    "name": "ty1-dll01",
+    "system_serial": "J3VBZC3"
+  },
+  {
+    "datacenter": "ty1",
+    "ipv6": "2602:ffe4:801:16:5000:16ff:fe63:b136",
+    "name": "ty1-dll02",
+    "system_serial": "J3RCZC3"
+  },
+  {
+    "datacenter": "ty1",
+    "ipv6": "2602:ffe4:801:16:5000:edff:fe94:905b",
+    "name": "ty1-dll03",
+    "system_serial": "J3TDZC3"
+  },
+  {
+    "datacenter": "ty1",
+    "ipv6": "2602:ffe4:801:16:5000:ebff:fe15:55df",
+    "name": "ty1-dll04",
+    "system_serial": "J3QDZC3"
+  },
+  {
+    "datacenter": "ty1",
+    "ipv6": "2602:ffe4:801:16:5000:e9ff:fe7c:6f9b",
+    "name": "ty1-dll05",
+    "system_serial": "8RZBZC3"
+  },
+  {
+    "datacenter": "ty1",
+    "ipv6": "2602:ffe4:801:16:5000:d9ff:fe4b:1359",
+    "name": "ty1-dll06",
+    "system_serial": "8R6FZC3"
+  },
+  {
+    "datacenter": "ty1",
+    "ipv6": "2602:ffe4:801:16:5000:7dff:fead:f4ca",
+    "name": "ty1-dll07",
+    "system_serial": "8RZCZC3"
+  },
+  {
+    "datacenter": "ty1",
+    "ipv6": "2602:ffe4:801:16:5000:b2ff:fe67:a226",
+    "name": "ty1-dll08",
+    "system_serial": "8R7CZC3"
+  },
+  {
+    "datacenter": "ty1",
+    "ipv6": "2602:ffe4:801:16:5000:97ff:fe48:23bc",
+    "name": "ty1-dll09",
+    "system_serial": "8RFBZC3"
+  },
+  {
+    "datacenter": "ty1",
+    "ipv6": "2602:ffe4:801:16:5000:c0ff:fe6b:a0ce",
+    "name": "ty1-dll10",
+    "system_serial": "8RFCZC3"
+  },
+  {
+    "datacenter": "ty1",
+    "ipv6": "2602:ffe4:801:16:5000:cbff:fea1:9c6",
+    "name": "ty1-dll11",
+    "system_serial": "8RDDZC3"
+  },
+  {
+    "datacenter": "ty1",
+    "ipv6": "2602:ffe4:801:16:5000:95ff:fefb:6a87",
+    "name": "ty1-dll12",
+    "system_serial": "8R6DZC3"
+  },
+  {
+    "datacenter": "ty1",
+    "ipv6": "2602:ffe4:801:16:5000:c9ff:fe63:52f1",
+    "name": "ty1-dll13",
+    "system_serial": "8RZDZC3"
+  },
+  {
+    "datacenter": "ty1",
+    "ipv6": "2602:ffe4:801:16:5000:32ff:fe97:f59c",
+    "name": "ty1-dll14",
+    "system_serial": "8RDFZC3"
+  },
+  {
+    "datacenter": "ty1",
+    "ipv6": "2602:ffe4:801:16:5000:14ff:fea2:6379",
+    "name": "ty1-dll15",
+    "system_serial": "8RYDZC3"
+  },
+  {
+    "datacenter": "ty1",
+    "ipv6": "2602:ffe4:801:16:5000:52ff:fe54:6b72",
+    "name": "ty1-dll16",
+    "system_serial": "8R7DZC3"
+  },
+  {
+    "datacenter": "ty1",
+    "ipv6": "2602:ffe4:801:16:5000:d3ff:fe49:e184",
+    "name": "ty1-dll17",
+    "system_serial": "8RTBZC3"
+  },
+  {
+    "datacenter": "ty1",
+    "ipv6": "2602:ffe4:801:16:5000:f1ff:fe49:e05c",
+    "name": "ty1-dll18",
+    "system_serial": "8R5CZC3"
+  },
+  {
+    "datacenter": "ty1",
+    "ipv6": "2602:ffe4:801:16:5000:a7ff:fe31:6aa",
+    "name": "ty1-dll19",
+    "system_serial": "8RTCZC3"
+  },
+  {
+    "datacenter": "ty1",
+    "ipv6": "2602:ffe4:801:16:5000:e9ff:fec1:4469",
+    "name": "ty1-dll20",
+    "system_serial": "8RFFZC3"
+  },
+  {
+    "datacenter": "ty1",
+    "ipv6": "2602:ffe4:801:16:5000:40ff:fe51:90f",
+    "name": "ty1-dll21",
+    "system_serial": "8R5FZC3"
+  },
+  {
+    "datacenter": "ty1",
+    "ipv6": "2602:ffe4:801:16:5000:23ff:feac:968f",
+    "name": "ty1-dll22",
+    "system_serial": "8R5DZC3"
+  },
+  {
+    "datacenter": "ty1",
+    "ipv6": "2602:ffe4:801:16:5000:61ff:fe9c:4287",
+    "name": "ty1-dll23",
+    "system_serial": "8R6CZC3"
+  },
+  {
+    "datacenter": "ty1",
+    "ipv6": "2602:ffe4:801:16:5000:7cff:fedb:96bd",
+    "name": "ty1-dll24",
+    "system_serial": "8RGBZC3"
+  },
+  {
+    "datacenter": "ty1",
+    "ipv6": "2602:ffe4:801:16:5000:8eff:fe4f:91f9",
+    "name": "ty1-dll25",
+    "system_serial": "8RGCZC3"
+  },
+  {
+    "datacenter": "ty1",
+    "ipv6": "2602:ffe4:801:16:5000:40ff:fe7e:ecc2",
+    "name": "ty1-dll26",
+    "system_serial": "8RSCZC3"
+  },
+  {
+    "datacenter": "ty1",
+    "ipv6": "2602:ffe4:801:16:5000:39ff:fe35:71cd",
+    "name": "ty1-dll27",
+    "system_serial": "8RSDZC3"
+  },
+  {
+    "datacenter": "ty1",
+    "ipv6": "2602:ffe4:801:16:5000:e6ff:feab:457f",
+    "name": "ty1-dll28",
+    "system_serial": "8RFDZC3"
+  },
+  {
+    "datacenter": "ty2",
+    "ipv6": "2602:ffe4:801:17:5000:a3ff:fe38:7455",
+    "name": "ty2-dll01",
+    "system_serial": "8QHBZC3"
+  },
+  {
+    "datacenter": "ty2",
+    "ipv6": "2602:ffe4:801:17:5000:fbff:fe38:5ca2",
+    "name": "ty2-dll02",
+    "system_serial": "8R3CZC3"
+  },
+  {
+    "datacenter": "ty2",
+    "ipv6": "2602:ffe4:801:17:5000:fcff:fe52:73d0",
+    "name": "ty2-dll03",
+    "system_serial": "8QHFZC3"
+  },
+  {
+    "datacenter": "ty2",
+    "ipv6": "2602:ffe4:801:17:5000:eeff:fee5:d3b4",
+    "name": "ty2-dll04",
+    "system_serial": "8R2FZC3"
+  },
+  {
+    "datacenter": "ty2",
+    "ipv6": "2602:ffe4:801:17:5000:45ff:fe71:fb73",
+    "name": "ty2-dll05",
+    "system_serial": "8QHCZC3"
+  },
+  {
+    "datacenter": "ty2",
+    "ipv6": "2602:ffe4:801:17:5000:1cff:fe52:121c",
+    "name": "ty2-dll06",
+    "system_serial": "8R2DZC3"
+  },
+  {
+    "datacenter": "ty2",
+    "ipv6": "2602:ffe4:801:17:5000:c4ff:fec1:22f3",
+    "name": "ty2-dll07",
+    "system_serial": "8QGCZC3"
+  },
+  {
+    "datacenter": "ty2",
+    "ipv6": "2602:ffe4:801:17:5000:8cff:fecc:52fd",
+    "name": "ty2-dll08",
+    "system_serial": "8QHDZC3"
+  },
+  {
+    "datacenter": "ty2",
+    "ipv6": "2602:ffe4:801:17:5000:d1ff:fecd:5aa4",
+    "name": "ty2-dll09",
+    "system_serial": "8R3DZC3"
+  },
+  {
+    "datacenter": "ty2",
+    "ipv6": "2602:ffe4:801:17:5000:71ff:fe63:5c15",
+    "name": "ty2-dll10",
+    "system_serial": "8QGDZC3"
+  },
+  {
+    "datacenter": "ty2",
+    "ipv6": "2602:ffe4:801:17:5000:33ff:fe58:41b",
+    "name": "ty2-dll11",
+    "system_serial": "8QGFZC3"
+  },
+  {
+    "datacenter": "ty2",
+    "ipv6": "2602:ffe4:801:17:5000:faff:fe96:6317",
+    "name": "ty2-dll12",
+    "system_serial": "8QGBZC3"
+  },
+  {
+    "datacenter": "ty2",
+    "ipv6": "2602:ffe4:801:17:5000:aeff:fe7d:de58",
+    "name": "ty2-dll13",
+    "system_serial": "8R8DZC3"
+  },
+  {
+    "datacenter": "ty2",
+    "ipv6": "2602:ffe4:801:17:5000:e6ff:fe94:5521",
+    "name": "ty2-dll14",
+    "system_serial": "8R7FZC3"
+  },
+  {
+    "datacenter": "ty2",
+    "ipv6": "2602:ffe4:801:17:5000:95ff:fe39:553c",
+    "name": "ty2-dll15",
+    "system_serial": "8R9CZC3"
+  },
+  {
+    "datacenter": "ty2",
+    "ipv6": "2602:ffe4:801:17:5000:d3ff:fe41:314a",
+    "name": "ty2-dll16",
+    "system_serial": "8R8FZC3"
+  },
+  {
+    "datacenter": "ty2",
+    "ipv6": "2602:ffe4:801:17:5000:f9ff:feae:e524",
+    "name": "ty2-dll17",
+    "system_serial": "8R8CZC3"
+  },
+  {
+    "datacenter": "ty2",
+    "ipv6": "2602:ffe4:801:17:5000:49ff:fed0:15f7",
+    "name": "ty2-dll18",
+    "system_serial": "8RLFZC3"
+  },
+  {
+    "datacenter": "ty2",
+    "ipv6": "2602:ffe4:801:17:5000:c8ff:fe57:b246",
+    "name": "ty2-dll19",
+    "system_serial": "8RMBZC3"
+  },
+  {
+    "datacenter": "ty2",
+    "ipv6": "2602:ffe4:801:17:5000:6dff:feba:aede",
+    "name": "ty2-dll20",
+    "system_serial": "8RMCZC3"
+  },
+  {
+    "datacenter": "ty2",
+    "ipv6": "2602:ffe4:801:17:5000:76ff:fe2c:44f",
+    "name": "ty2-dll21",
+    "system_serial": "8RLDZC3"
+  },
+  {
+    "datacenter": "ty2",
+    "ipv6": "2602:ffe4:801:17:5000:78ff:fefb:7e7b",
+    "name": "ty2-dll22",
+    "system_serial": "8RBCZC3"
+  },
+  {
+    "datacenter": "ty2",
+    "ipv6": "2602:ffe4:801:17:5000:4eff:fe1f:f23d",
+    "name": "ty2-dll23",
+    "system_serial": "8R9FZC3"
+  },
+  {
+    "datacenter": "ty2",
+    "ipv6": "2602:ffe4:801:17:5000:50ff:fe84:a6a4",
+    "name": "ty2-dll24",
+    "system_serial": "8R9DZC3"
+  },
+  {
+    "datacenter": "ty2",
+    "ipv6": "2602:ffe4:801:17:5000:e7ff:feb9:d14b",
+    "name": "ty2-dll25",
+    "system_serial": "J3QCZC3"
+  },
+  {
+    "datacenter": "ty2",
+    "ipv6": "2602:ffe4:801:17:5000:cbff:fe07:4ff6",
+    "name": "ty2-dll26",
+    "system_serial": "J3TCZC3"
+  },
+  {
+    "datacenter": "ty2",
+    "ipv6": "2602:ffe4:801:17:5000:49ff:feb5:3caf",
+    "name": "ty2-dll27",
+    "system_serial": "J3TBZC3"
+  },
+  {
+    "datacenter": "ty2",
+    "ipv6": "2602:ffe4:801:17:5000:4bff:fe59:21a8",
+    "name": "ty2-dll28",
+    "system_serial": "J3RBZC3"
+  },
+  {
+    "datacenter": "ty3",
+    "ipv6": "2602:ffe4:801:18:5000:3fff:fe77:aac6",
+    "name": "ty3-dll01",
+    "system_serial": "8RYCZC3"
+  },
+  {
+    "datacenter": "ty3",
+    "ipv6": "2602:ffe4:801:18:5000:51ff:fe59:50aa",
+    "name": "ty3-dll02",
+    "system_serial": "8R4DZC3"
+  },
+  {
+    "datacenter": "ty3",
+    "ipv6": "2602:ffe4:801:18:5000:deff:feb8:c3a0",
+    "name": "ty3-dll03",
+    "system_serial": "8R4FZC3"
+  },
+  {
+    "datacenter": "ty3",
+    "ipv6": "2602:ffe4:801:18:5000:9fff:fe08:2cd8",
+    "name": "ty3-dll04",
+    "system_serial": "8R3FZC3"
+  },
+  {
+    "datacenter": "ty3",
+    "ipv6": "2602:ffe4:801:18:5000:39ff:fe7a:157f",
+    "name": "ty3-dll05",
+    "system_serial": "8RXCZC3"
+  },
+  {
+    "datacenter": "ty3",
+    "ipv6": "2602:ffe4:801:18:5000:e5ff:fe7e:ed62",
+    "name": "ty3-dll06",
+    "system_serial": "8R4CZC3"
+  },
+  {
+    "datacenter": "ty3",
+    "ipv6": "2602:ffe4:801:18:5000:13ff:fe5c:62e8",
+    "name": "ty3-dll07",
+    "system_serial": "8RYBZC3"
+  },
+  {
+    "datacenter": "ty3",
+    "ipv6": "2602:ffe4:801:18:5000:c2ff:fecb:a3f7",
+    "name": "ty3-dll08",
+    "system_serial": "8RXDZC3"
+  },
+  {
+    "datacenter": "ty3",
+    "ipv6": "2602:ffe4:801:18:5000:9aff:fee6:8eb0",
+    "name": "ty3-dll09",
+    "system_serial": "8QKDZC3"
+  },
+  {
+    "datacenter": "ty3",
+    "ipv6": "2602:ffe4:801:18:5000:9cff:fe89:a4e3",
+    "name": "ty3-dll10",
+    "system_serial": "8QKFZC3"
+  },
+  {
+    "datacenter": "ty3",
+    "ipv6": "2602:ffe4:801:18:5000:6cff:febe:7524",
+    "name": "ty3-dll11",
+    "system_serial": "8QKCZC3"
+  },
+  {
+    "datacenter": "ty3",
+    "ipv6": "2602:ffe4:801:18:5000:25ff:fe3c:ee75",
+    "name": "ty3-dll12",
+    "system_serial": "8QKBZC3"
+  },
+  {
+    "datacenter": "ty3",
+    "ipv6": "2602:ffe4:801:18:5000:9dff:fe45:8cf8",
+    "name": "ty3-dll13",
+    "system_serial": "8RLCZC3"
+  },
+  {
+    "datacenter": "ty3",
+    "ipv6": "2602:ffe4:801:18:5000:f5ff:fe2b:d2d2",
+    "name": "ty3-dll14",
+    "system_serial": "8RCDZC3"
+  },
+  {
+    "datacenter": "zh2",
+    "ipv6": "2a00:fb01:400:100:5000:c0ff:fe87:7b3a",
+    "name": "zh2-spm01",
+    "system_serial": "S427611X0900782"
+  },
+  {
+    "datacenter": "zh2",
+    "ipv6": "2a00:fb01:400:100:5000:c5ff:fef8:80c",
+    "name": "zh2-spm02",
+    "system_serial": "S427611X0900803"
+  },
+  {
+    "datacenter": "zh2",
+    "ipv6": "2a00:fb01:400:100:5000:9bff:fe97:fe9f",
+    "name": "zh2-spm03",
+    "system_serial": "S427611X0900783"
+  },
+  {
+    "datacenter": "zh2",
+    "ipv6": "2a00:fb01:400:100:5000:61ff:fe2c:14ac",
+    "name": "zh2-spm04",
+    "system_serial": "S427611X0900794"
+  },
+  {
+    "datacenter": "zh2",
+    "ipv6": "2a00:fb01:400:100:5000:14ff:fe72:72df",
+    "name": "zh2-spm05",
+    "system_serial": "S427611X0900799"
+  },
+  {
+    "datacenter": "zh2",
+    "ipv6": "2a00:fb01:400:100:5000:5bff:fe6b:75c6",
+    "name": "zh2-spm06",
+    "system_serial": "S427611X0900807"
+  },
+  {
+    "datacenter": "zh2",
+    "ipv6": "2a00:fb01:400:100:5000:11ff:fe92:1a23",
+    "name": "zh2-spm07",
+    "system_serial": "S427611X0900795"
+  },
+  {
+    "datacenter": "zh2",
+    "ipv6": "2a00:fb01:400:100:5000:ceff:fea2:bb0",
+    "name": "zh2-spm08",
+    "system_serial": "S427611X0900806"
+  },
+  {
+    "datacenter": "zh2",
+    "ipv6": "2a00:fb01:400:100:5000:51ff:fe8c:55a5",
+    "name": "zh2-spm09",
+    "system_serial": "S427611X0900801"
+  },
+  {
+    "datacenter": "zh2",
+    "ipv6": "2a00:fb01:400:100:5000:41ff:fe9f:be7e",
+    "name": "zh2-spm10",
+    "system_serial": "S427611X0900809"
+  },
+  {
+    "datacenter": "zh2",
+    "ipv6": "2a00:fb01:400:100:5000:32ff:fe74:f8a5",
+    "name": "zh2-spm11",
+    "system_serial": "S427611X0900788"
+  },
+  {
+    "datacenter": "zh2",
+    "ipv6": "2a00:fb01:400:100:5000:70ff:fe8f:d670",
+    "name": "zh2-spm12",
+    "system_serial": "S427611X0900800"
+  },
+  {
+    "datacenter": "zh2",
+    "ipv6": "2a00:fb01:400:100:5000:3aff:fe48:2f8",
+    "name": "zh2-spm13",
+    "system_serial": "S427611X0900808"
+  },
+  {
+    "datacenter": "zh2",
+    "ipv6": "2a00:fb01:400:100:5000:67ff:fee3:4d51",
+    "name": "zh2-spm14",
+    "system_serial": "S427611X0900785"
+  },
+  {
+    "datacenter": "zh3",
+    "ipv6": "2a02:418:3002:0:5000:8dff:fe79:f4f8",
+    "name": "zh3-dll01",
+    "system_serial": "2CXDZC3"
+  },
+  {
+    "datacenter": "zh3",
+    "ipv6": "2a02:418:3002:0:5000:d3ff:fea9:12b9",
+    "name": "zh3-dll02",
+    "system_serial": "2CXCZC3"
+  },
+  {
+    "datacenter": "zh3",
+    "ipv6": "2a02:418:3002:0:5000:c7ff:fe7e:f426",
+    "name": "zh3-dll03",
+    "system_serial": "2CRCZC3"
+  },
+  {
+    "datacenter": "zh3",
+    "ipv6": "2a02:418:3002:0:5000:e1ff:fe1f:be38",
+    "name": "zh3-dll04",
+    "system_serial": "8RQDZC3"
+  },
+  {
+    "datacenter": "zh3",
+    "ipv6": "2a02:418:3002:0:5000:7bff:fe6d:1cd3",
+    "name": "zh3-dll05",
+    "system_serial": "8RQCZC3"
+  },
+  {
+    "datacenter": "zh3",
+    "ipv6": "2a02:418:3002:0:5000:76ff:fe8a:2d1a",
+    "name": "zh3-dll06",
+    "system_serial": "2CTBZC3"
+  },
+  {
+    "datacenter": "zh3",
+    "ipv6": "2a02:418:3002:0:5000:38ff:fe93:ea22",
+    "name": "zh3-dll07",
+    "system_serial": "2CNDZC3"
+  },
+  {
+    "datacenter": "zh3",
+    "ipv6": "2a02:418:3002:0:5000:17ff:fee8:56f1",
+    "name": "zh3-dll08",
+    "system_serial": "2CPBZC3"
+  },
+  {
+    "datacenter": "zh3",
+    "ipv6": "2a02:418:3002:0:5000:baff:fea5:cbe6",
+    "name": "zh3-dll09",
+    "system_serial": "2CSDZC3"
+  },
+  {
+    "datacenter": "zh3",
+    "ipv6": "2a02:418:3002:0:5000:78ff:fe58:3650",
+    "name": "zh3-dll10",
+    "system_serial": "2CPCZC3"
+  },
+  {
+    "datacenter": "zh3",
+    "ipv6": "2a02:418:3002:0:5000:66ff:fe26:e7f9",
+    "name": "zh3-dll11",
+    "system_serial": "2CSCZC3"
+  },
+  {
+    "datacenter": "zh3",
+    "ipv6": "2a02:418:3002:0:5000:29ff:feeb:2239",
+    "name": "zh3-dll12",
+    "system_serial": "2CNCZC3"
+  },
+  {
+    "datacenter": "zh3",
+    "ipv6": "2a02:418:3002:0:5000:1bff:fe66:60a",
+    "name": "zh3-dll13",
+    "system_serial": "2CTCZC3"
+  },
+  {
+    "datacenter": "zh3",
+    "ipv6": "2a02:418:3002:0:5000:c4ff:fe52:347",
+    "name": "zh3-dll14",
+    "system_serial": "2CRDZC3"
+  },
+  {
+    "datacenter": "zh4",
+    "ipv6": "2a02:41b:300e:0:5000:65ff:fe51:9428",
+    "name": "zh4-dll01",
+    "system_serial": "2CRBZC3"
+  },
+  {
+    "datacenter": "zh4",
+    "ipv6": "2a02:41b:300e:0:5000:a5ff:fe27:5751",
+    "name": "zh4-dll02",
+    "system_serial": "2CSBZC3"
+  },
+  {
+    "datacenter": "zh4",
+    "ipv6": "2a02:41b:300e:0:5000:c9ff:fe53:96a7",
+    "name": "zh4-dll03",
+    "system_serial": "2CZBZC3"
+  },
+  {
+    "datacenter": "zh4",
+    "ipv6": "2a02:41b:300e:0:5000:d2ff:fec1:f655",
+    "name": "zh4-dll04",
+    "system_serial": "2CZDZC3"
+  },
+  {
+    "datacenter": "zh4",
+    "ipv6": "2a02:41b:300e:0:5000:8dff:feb9:f516",
+    "name": "zh4-dll05",
+    "system_serial": "2CYDZC3"
+  },
+  {
+    "datacenter": "zh4",
+    "ipv6": "2a02:41b:300e:0:5000:d3ff:fed1:3bdc",
+    "name": "zh4-dll06",
+    "system_serial": "2CZCZC3"
+  },
+  {
+    "datacenter": "zh4",
+    "ipv6": "2a02:41b:300e:0:5000:36ff:fe85:ba0d",
+    "name": "zh4-dll07",
+    "system_serial": "2CQDZC3"
+  },
+  {
+    "datacenter": "zh4",
+    "ipv6": "2a02:41b:300e:0:5000:b1ff:fe7b:338",
+    "name": "zh4-dll08",
+    "system_serial": "2CPDZC3"
+  },
+  {
+    "datacenter": "zh4",
+    "ipv6": "2a02:41b:300e:0:5000:58ff:fece:af38",
+    "name": "zh4-dll09",
+    "system_serial": "2CQBZC3"
+  },
+  {
+    "datacenter": "zh4",
+    "ipv6": "2a02:41b:300e:0:5000:f0ff:fefc:81c8",
+    "name": "zh4-dll10",
+    "system_serial": "2CQCZC3"
+  },
+  {
+    "datacenter": "zh4",
+    "ipv6": "2a02:41b:300e:0:5000:a8ff:fe55:6f36",
+    "name": "zh4-dll11",
+    "system_serial": "2CYCZC3"
+  },
+  {
+    "datacenter": "zh4",
+    "ipv6": "2a02:41b:300e:0:5000:beff:fef4:f313",
+    "name": "zh4-dll12",
+    "system_serial": "2CMCZC3"
+  },
+  {
+    "datacenter": "zh4",
+    "ipv6": "2a02:41b:300e:0:5000:f8ff:fe93:b083",
+    "name": "zh4-dll13",
+    "system_serial": "2CMDZC3"
+  },
+  {
+    "datacenter": "zh4",
+    "ipv6": "2a02:41b:300e:0:5000:beff:fe0e:7908",
+    "name": "zh4-dll14",
+    "system_serial": "2CTDZC3"
+  },
+  {
+    "datacenter": "zh4",
+    "ipv6": "2a02:41b:300e:0:5000:c9ff:fe61:85f7",
+    "name": "zh4-dll15",
+    "system_serial": "2CVDZC3"
+  },
+  {
+    "datacenter": "zh4",
+    "ipv6": "2a02:41b:300e:0:5000:1eff:fe68:2002",
+    "name": "zh4-dll16",
+    "system_serial": "2CVCZC3"
+  },
+  {
+    "datacenter": "zh4",
+    "ipv6": "2a02:41b:300e:0:5000:81ff:fe44:5d7d",
+    "name": "zh4-dll17",
+    "system_serial": "2CVBZC3"
+  },
+  {
+    "datacenter": "zh4",
+    "ipv6": "2a02:41b:300e:0:5000:24ff:fe81:ef9",
+    "name": "zh4-dll18",
+    "system_serial": "2CNBZC3"
+  },
+  {
+    "datacenter": "zh4",
+    "ipv6": "2a02:41b:300e:0:5000:f8ff:fecd:4290",
+    "name": "zh4-dll19",
+    "system_serial": "2CMBZC3"
+  },
+  {
+    "datacenter": "zh4",
+    "ipv6": "2a02:41b:300e:0:5000:b7ff:fe5c:3223",
+    "name": "zh4-dll20",
+    "system_serial": "2CYBZC3"
+  },
+  {
+    "datacenter": "zh4",
+    "ipv6": "2a02:41b:300e:0:5000:c4ff:fe83:a379",
+    "name": "zh4-dll21",
+    "system_serial": "8RVCZC3"
+  },
+  {
+    "datacenter": "zh4",
+    "ipv6": "2a02:41b:300e:0:5000:ceff:fe7a:e405",
+    "name": "zh4-dll22",
+    "system_serial": "2CWBZC3"
+  },
+  {
+    "datacenter": "zh4",
+    "ipv6": "2a02:41b:300e:0:5000:c6ff:fe60:7879",
+    "name": "zh4-dll23",
+    "system_serial": "8RVDZC3"
+  },
+  {
+    "datacenter": "zh4",
+    "ipv6": "2a02:41b:300e:0:5000:a3ff:fe93:b1f5",
+    "name": "zh4-dll24",
+    "system_serial": "8RTDZC3"
+  },
+  {
+    "datacenter": "zh4",
+    "ipv6": "2a02:41b:300e:0:5000:2bff:fed4:7a07",
+    "name": "zh4-dll25",
+    "system_serial": "2CXBZC3"
+  },
+  {
+    "datacenter": "zh4",
+    "ipv6": "2a02:41b:300e:0:5000:49ff:fe41:84c7",
+    "name": "zh4-dll26",
+    "system_serial": "8RVBZC3"
+  },
+  {
+    "datacenter": "zh4",
+    "ipv6": "2a02:41b:300e:0:5000:98ff:fe2d:387c",
+    "name": "zh4-dll27",
+    "system_serial": "2CWDZC3"
+  },
+  {
+    "datacenter": "zh4",
+    "ipv6": "2a02:41b:300e:0:5000:52ff:fe7c:ee2a",
+    "name": "zh4-dll28",
+    "system_serial": "2CWCZC3"
+  },
+  {
+    "datacenter": "zh5",
+    "ipv6": "2a01:2a8:a13d:1:5000:b5ff:fe97:601d",
+    "name": "zh5-dll01",
+    "system_serial": "8MVNTD3"
+  },
+  {
+    "datacenter": "zh5",
+    "ipv6": "2a01:2a8:a13d:1:5000:deff:fe9e:f02b",
+    "name": "zh5-dll02",
+    "system_serial": "8MVNKD3"
+  },
+  {
+    "datacenter": "zh5",
+    "ipv6": "2a01:2a8:a13d:1:5000:69ff:fed2:6979",
+    "name": "zh5-dll03",
+    "system_serial": "8NYNKD3"
+  },
+  {
+    "datacenter": "zh5",
+    "ipv6": "2a01:2a8:a13d:1:5000:77ff:fe35:1f53",
+    "name": "zh5-dll04",
+    "system_serial": "8NXSKD3"
+  },
+  {
+    "datacenter": "zh5",
+    "ipv6": "2a01:2a8:a13d:1:5000:9cff:fe09:38ee",
+    "name": "zh5-dll05",
+    "system_serial": "8NYMTD3"
+  },
+  {
+    "datacenter": "zh5",
+    "ipv6": "2a01:2a8:a13d:1:5000:2aff:feb6:d8c2",
+    "name": "zh5-dll06",
+    "system_serial": "8NYMKD3"
+  },
+  {
+    "datacenter": "zh5",
+    "ipv6": "2a01:2a8:a13d:1:5000:2aff:fee4:d4bd",
+    "name": "zh5-dll07",
+    "system_serial": "8MSPTD3"
+  },
+  {
+    "datacenter": "zh5",
+    "ipv6": "2a01:2a8:a13d:1:5000:27ff:fe55:2b63",
+    "name": "zh5-dll08",
+    "system_serial": "8MSQTD3"
+  },
+  {
+    "datacenter": "zh5",
+    "ipv6": "2a01:2a8:a13d:1:5000:f9ff:fe60:7453",
+    "name": "zh5-dll09",
+    "system_serial": "8MSQKD3"
+  },
+  {
+    "datacenter": "zh5",
+    "ipv6": "2a01:2a8:a13d:1:5000:39ff:fe1e:d90b",
+    "name": "zh5-dll10",
+    "system_serial": "8MSRKD3"
+  },
+  {
+    "datacenter": "zh5",
+    "ipv6": "2a01:2a8:a13d:1:5000:8cff:fe37:fd3f",
+    "name": "zh5-dll11",
+    "system_serial": "8MTMKD3"
+  },
+  {
+    "datacenter": "zh5",
+    "ipv6": "2a01:2a8:a13d:1:5000:a4ff:fec2:1167",
+    "name": "zh5-dll12",
+    "system_serial": "8MTMTD3"
+  },
+  {
+    "datacenter": "zh5",
+    "ipv6": "2a01:2a8:a13d:1:5000:7fff:fe54:426f",
+    "name": "zh5-dll13",
+    "system_serial": "5Y4ZTD3"
+  },
+  {
+    "datacenter": "zh5",
+    "ipv6": "2a01:2a8:a13d:1:5000:62ff:fe25:345f",
+    "name": "zh5-dll14",
+    "system_serial": "5Y50VD3"
+  },
+  {
+    "datacenter": "zh5",
+    "ipv6": "2a01:2a8:a13d:1:5000:37ff:fe52:6f62",
+    "name": "zh5-dll15",
+    "system_serial": "5Y5RTD3"
+  },
+  {
+    "datacenter": "zh5",
+    "ipv6": "2a01:2a8:a13d:1:5000:1cff:fe69:a760",
+    "name": "zh5-dll16",
+    "system_serial": "5Y51VD3"
+  },
+  {
+    "datacenter": "zh5",
+    "ipv6": "2a01:2a8:a13d:1:5000:e7ff:fe33:75d2",
+    "name": "zh5-dll17",
+    "system_serial": "9WSPKD3"
+  },
+  {
+    "datacenter": "zh5",
+    "ipv6": "2a01:2a8:a13d:1:5000:2fff:fe45:1c27",
+    "name": "zh5-dll18",
+    "system_serial": "9WSQKD3"
+  },
+  {
+    "datacenter": "zh5",
+    "ipv6": "2a01:2a8:a13d:1:5000:80ff:fe55:8bf1",
+    "name": "zh5-dll19",
+    "system_serial": "9WSPTD3"
+  },
+  {
+    "datacenter": "zh5",
+    "ipv6": "2a01:2a8:a13d:1:5000:32ff:fee7:8ae2",
+    "name": "zh5-dll20",
+    "system_serial": "9WSQTD3"
+  },
+  {
+    "datacenter": "zh5",
+    "ipv6": "2a01:2a8:a13d:1:5000:eeff:fe0e:e0c7",
+    "name": "zh5-dll21",
+    "system_serial": "8NBNKD3"
+  },
+  {
+    "datacenter": "zh5",
+    "ipv6": "2a01:2a8:a13d:1:5000:b7ff:fe90:a343",
+    "name": "zh5-dll22",
+    "system_serial": "8NBPKD3"
+  },
+  {
+    "datacenter": "zh5",
+    "ipv6": "2a01:2a8:a13d:1:5000:8aff:fef1:9c5",
+    "name": "zh5-dll23",
+    "system_serial": "5Y5YTD3"
+  },
+  {
+    "datacenter": "zh5",
+    "ipv6": "2a01:2a8:a13d:1:5000:bfff:feb3:91ce",
+    "name": "zh5-dll24",
+    "system_serial": "5Y60VD3"
+  },
+  {
+    "datacenter": "zh5",
+    "ipv6": "2a01:2a8:a13d:1:5000:3eff:fe35:508d",
+    "name": "zh5-dll25",
+    "system_serial": "5Y5XTD3"
+  },
+  {
+    "datacenter": "zh5",
+    "ipv6": "2a01:2a8:a13d:1:5000:83ff:fe1a:b66d",
+    "name": "zh5-dll26",
+    "system_serial": "5Y5ZTD3"
+  },
+  {
+    "datacenter": "zh5",
+    "ipv6": "2a01:2a8:a13d:1:5000:e6ff:fe42:d14c",
+    "name": "zh5-dll27",
+    "system_serial": "5Y5WTD3"
+  },
+  {
+    "datacenter": "zh5",
+    "ipv6": "2a01:2a8:a13d:1:5000:cdff:fe79:bd6b",
+    "name": "zh5-dll28",
+    "system_serial": "5Y5STD3"
+  },
+  {
+    "datacenter": "zh7",
+    "ipv6": "2a01:2a8:a13e:1:5000:a8ff:fe0e:fba",
+    "name": "zh7-dll01",
+    "system_serial": "8MVMTD3"
+  },
+  {
+    "datacenter": "zh7",
+    "ipv6": "2a01:2a8:a13e:1:5000:47ff:feba:929",
+    "name": "zh7-dll02",
+    "system_serial": "8MVPKD3"
+  },
+  {
+    "datacenter": "zh7",
+    "ipv6": "2a01:2a8:a13e:1:5000:92ff:fe12:d9db",
+    "name": "zh7-dll03",
+    "system_serial": "8MRNKD3"
+  },
+  {
+    "datacenter": "zh7",
+    "ipv6": "2a01:2a8:a13e:1:5000:edff:fe1a:cd91",
+    "name": "zh7-dll04",
+    "system_serial": "8MWNTD3"
+  },
+  {
+    "datacenter": "zh7",
+    "ipv6": "2a01:2a8:a13e:1:5000:18ff:fe2e:1c31",
+    "name": "zh7-dll05",
+    "system_serial": "8MQSKD3"
+  },
+  {
+    "datacenter": "zh7",
+    "ipv6": "2a01:2a8:a13e:1:5000:ebff:fe5f:e622",
+    "name": "zh7-dll06",
+    "system_serial": "8MRMKD3"
+  },
+  {
+    "datacenter": "zh7",
+    "ipv6": "2a01:2a8:a13e:1:5000:e1ff:fe0e:f2a4",
+    "name": "zh7-dll07",
+    "system_serial": "8MWQTD3"
+  },
+  {
+    "datacenter": "zh7",
+    "ipv6": "2a01:2a8:a13e:1:5000:26ff:fefa:8922",
+    "name": "zh7-dll08",
+    "system_serial": "8MWSKD3"
+  },
+  {
+    "datacenter": "zh7",
+    "ipv6": "2a01:2a8:a13e:1:5000:5cff:fe5e:3ad2",
+    "name": "zh7-dll09",
+    "system_serial": "8MYMKD3"
+  },
+  {
+    "datacenter": "zh7",
+    "ipv6": "2a01:2a8:a13e:1:5000:94ff:fed1:6843",
+    "name": "zh7-dll10",
+    "system_serial": "8MYMTD3"
+  },
+  {
+    "datacenter": "zh7",
+    "ipv6": "2a01:2a8:a13e:1:5000:52ff:fed5:2059",
+    "name": "zh7-dll11",
+    "system_serial": "8MRMTD3"
+  },
+  {
+    "datacenter": "zh7",
+    "ipv6": "2a01:2a8:a13e:1:5000:e4ff:fed5:1f99",
+    "name": "zh7-dll12",
+    "system_serial": "8MWPTD3"
+  },
+  {
+    "datacenter": "zh7",
+    "ipv6": "2a01:2a8:a13e:1:5000:f0ff:fe6b:f4e8",
+    "name": "zh7-dll13",
+    "system_serial": "8MWPKD3"
+  },
+  {
+    "datacenter": "zh7",
+    "ipv6": "2a01:2a8:a13e:1:5000:b1ff:fe66:e9cd",
+    "name": "zh7-dll14",
+    "system_serial": "8MWQKD3"
+  }
+]

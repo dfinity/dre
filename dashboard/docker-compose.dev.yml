@@ -1,0 +1,22 @@
+version: "3.8"
+services:
+  backstage:
+    build: .
+  backend:
+    build:
+      context: ../rs
+      dockerfile: mercury-management-backend/Dockerfile
+      args:
+        BUILDKIT_INLINE_CACHE: 1
+  slack:
+    build:
+      context: ../rs
+      dockerfile: slack-notifications/Dockerfile
+      args:
+        BUILDKIT_INLINE_CACHE: 1
+  decentralization:
+    build:
+      context: ../rs
+      dockerfile: decentralization/Dockerfile
+      args:
+        BUILDKIT_INLINE_CACHE: 1

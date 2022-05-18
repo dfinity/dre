@@ -1,0 +1,222 @@
+{
+    "an1": {
+        "continent": "Europe",
+        "country": "BE",
+        "city": "Flanders"
+    },
+    "at1": {
+        "continent": "North America",
+        "country": "US",
+        "city": "Georgia"
+    },
+    "at2": {
+        "continent": "North America",
+        "country": "US",
+        "city": "Georgia"
+    },
+    "aw1": {
+        "continent": "North America",
+        "country": "US",
+        "city": "Pennsylvania"
+    },
+    "bc1": {
+        "continent": "North America",
+        "country": "CA",
+        "city": "British Columbia"
+    },
+    "br1": {
+        "continent": "Europe",
+        "country": "BE",
+        "city": "Brussels Capital"
+    },
+    "br2": {
+        "continent": "Europe",
+        "country": "BE",
+        "city": "Brussels Capital"
+    },
+    "bu1": {
+        "continent": "Europe",
+        "country": "RO",
+        "city": "Bucuresti"
+    },
+    "ch2": {
+        "continent": "North America",
+        "country": "US",
+        "city": "Illinois"
+    },
+    "ch3": {
+        "continent": "North America",
+        "country": "US",
+        "city": "Illinois"
+    },
+    "dl1": {
+        "continent": "North America",
+        "country": "US",
+        "city": "Texas"
+    },
+    "fm1": {
+        "continent": "North America",
+        "country": "US",
+        "city": "California"
+    },
+    "fr2": {
+        "continent": "Europe",
+        "country": "DE",
+        "city": "Hesse"
+    },
+    "ge1": {
+        "continent": "Europe",
+        "country": "CH",
+        "city": "Geneva"
+    },
+    "ge2": {
+        "continent": "Europe",
+        "country": "CH",
+        "city": "Geneva"
+    },
+    "hu1": {
+        "continent": "North America",
+        "country": "US",
+        "city": "Texas"
+    },
+    "jv1": {
+        "continent": "North America",
+        "country": "US",
+        "city": "Florida"
+    },
+    "lj1": {
+        "continent": "Europe",
+        "country": "SI",
+        "city": "Ljubljana"
+    },
+    "lv1": {
+        "continent": "North America",
+        "country": "US",
+        "city": "Nevada"
+    },
+    "mb1": {
+        "continent": "Europe",
+        "country": "SI",
+        "city": "Maribor"
+    },
+    "mm1": {
+        "continent": "North America",
+        "country": "US",
+        "city": "Florida"
+    },
+    "mu1": {
+        "continent": "Europe",
+        "country": "DE",
+        "city": "Bavaria"
+    },
+    "ny1": {
+        "continent": "North America",
+        "country": "US",
+        "city": "New York"
+    },
+    "or1": {
+        "continent": "North America",
+        "country": "US",
+        "city": "Florida"
+    },
+    "ph1": {
+        "continent": "North America",
+        "country": "US",
+        "city": "Arizona"
+    },
+    "pl1": {
+        "continent": "North America",
+        "country": "US",
+        "city": "Oregon"
+    },
+    "sg1": {
+        "continent": "Asia",
+        "country": "SG",
+        "city": "Singapore"
+    },
+    "sg2": {
+        "continent": "Asia",
+        "country": "SG",
+        "city": "Singapore"
+    },
+    "sg3": {
+        "continent": "Asia",
+        "country": "SG",
+        "city": "Singapore"
+    },
+    "sj1": {
+        "continent": "North America",
+        "country": "US",
+        "city": "California"
+    },
+    "sj2": {
+        "continent": "North America",
+        "country": "US",
+        "city": "California"
+    },
+    "st1": {
+        "continent": "North America",
+        "country": "US",
+        "city": "Virginia"
+    },
+    "to1": {
+        "continent": "North America",
+        "country": "CA",
+        "city": "Ontario"
+    },
+    "to2": {
+        "continent": "North America",
+        "country": "CA",
+        "city": "Ontario"
+    },
+    "tp1": {
+        "continent": "North America",
+        "country": "US",
+        "city": "Florida"
+    },
+    "ty1": {
+        "continent": "Asia",
+        "country": "JP",
+        "city": "Tokyo"
+    },
+    "ty2": {
+        "continent": "Asia",
+        "country": "JP",
+        "city": "Tokyo"
+    },
+    "ty3": {
+        "continent": "Asia",
+        "country": "JP",
+        "city": "Tokyo"
+    },
+    "zh2": {
+        "continent": "Europe",
+        "country": "CH",
+        "city": "Zurich"
+    },
+    "zh3": {
+        "continent": "Europe",
+        "country": "CH",
+        "city": "Zurich"
+    },
+    "zh4": {
+        "continent": "Europe",
+        "country": "CH",
+        "city": "Zurich"
+    },
+    "zh5": {
+        "continent": "Europe",
+        "country": "CH",
+        "city": "Zurich"
+    },
+    "zh6": {
+        "continent": "Europe",
+        "country": "CH",
+        "city": "Zurich"
+    },
+    "zh7": {
+        "continent": "Europe",
+        "country": "CH",
+        "city": "Zurich"
+    }
+}

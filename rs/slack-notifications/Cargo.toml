@@ -1,0 +1,32 @@
+[package]
+name = "slack-notifications"
+version = "0.1.0"
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+ic-nns-governance = { git = "https://github.com/dfinity/ic.git", rev = "947d20037c36737645fda52677f5fec57dda6367" }
+ic-nns-common = { git = "https://github.com/dfinity/ic.git", rev = "947d20037c36737645fda52677f5fec57dda6367" }
+ic-nns-constants = { git = "https://github.com/dfinity/ic.git", rev = "947d20037c36737645fda52677f5fec57dda6367" }
+registry-canister = { git = "https://github.com/dfinity/ic.git", rev = "947d20037c36737645fda52677f5fec57dda6367" }
+tokio = { version = "1.2.0", features = ["full"] }
+ic-agent = "0.10.1"
+ic-types = "0.2.2"
+candid = "0.7.8"
+anyhow = "1.0.44"
+reqwest = { version = "0.11.4", features = ["json"] }
+serde = "1.0.130"
+serde_yaml = "0.8.21"
+serde_json = "1.0.68"
+# futures = "0.3.17"
+dotenv = "0.15.0"
+prost = "0.8.0"
+strum = "0.22.0"
+strum_macros = "0.22.0"
+retry = "1.3.0"
+itertools = "0.10.1"
+regex = "1.5.4"
+lazy_static = "1.4.0"
+log = "0.4.14"
+env_logger = "0.9.0"

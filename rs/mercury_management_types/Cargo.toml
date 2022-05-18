@@ -1,0 +1,20 @@
+[package]
+name = "mercury_management_types"
+version = "0.1.0"
+edition = "2018"
+
+[dependencies]
+ic-base-types = { git = "https://github.com/dfinity/ic.git", rev = "947d20037c36737645fda52677f5fec57dda6367" }
+serde_json = "1.0.66"
+serde = "1.0.127"
+strum = "0.21"
+strum_macros = "0.21"
+ic-types = { git = "https://github.com/dfinity/ic.git", rev = "947d20037c36737645fda52677f5fec57dda6367" }
+ic-registry-subnet-type = { git = "https://github.com/dfinity/ic.git", rev = "947d20037c36737645fda52677f5fec57dda6367" }
+ic-nns-governance = { git = "https://github.com/dfinity/ic.git", rev = "947d20037c36737645fda52677f5fec57dda6367" }
+serde_with = "1.9.4"
+chrono = { version = "0.4.19", features = ["serde"] }
+float-cmp = "0.9.0"
+[lib]
+crate-type = ["cdylib", "lib"]
+path = "src/lib.rs"
