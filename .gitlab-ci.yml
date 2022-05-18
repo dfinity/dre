@@ -16,6 +16,10 @@ default:
       - api_failure
       - runner_system_failure
 
+stages:
+  - release
+  - test
+
 variables:
   GET_SOURCES_ATTEMPTS: 5
   GIT_DEPTH: 0  # Pull the complete repo initially
@@ -127,12 +131,13 @@ before_script:
   # Setup SSH keys
   - 'command -v ssh-agent >/dev/null || ( apt-get update -y && apt-get install openssh-client -y )'
   - eval $(ssh-agent -s)
-  - cat "$MERCURY_MANAGEMENT_DASHBOARD_DEPLOY_KEY" | tr -d '\r' | ssh-add -
+  - cat "$DASHBOARD_DEPLOY_KEY" | tr -d '\r' | ssh-add -
   - mkdir -p ~/.ssh
   - chmod 700 ~/.ssh
 
 .rules-default:
   rules:
+    - if: '$CI_PIPELINE_SOURCE == "push"'
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     - if: '$CI_PIPELINE_SOURCE == "web"'
       when: manual
@@ -173,6 +178,8 @@ pre-commit:
   extends:
     - .rules-default
   interruptible: true
+  needs: []
+  dependencies: []
   stage: test
   variables:
     PRE_COMMIT_HOME: "/cache/pre-commit/${CI_PROJECT_PATH}/$CI_CONCURRENT_ID"
@@ -184,16 +191,22 @@ cargo-clippy:
   extends:
     - .rules-default
   interruptible: true
+  needs: []
+  dependencies: []
   stage: test
   script:
+    - cd rs
     - ./cargo-clippy
 
 cargo-test:
   extends:
     - .rules-default
   interruptible: true
+  needs: []
+  dependencies: []
   stage: test
   script:
+    - cd rs
     - cargo test
 
 update-facts-db:
@@ -266,3 +279,28 @@ qualification-tracking-update:
       time python3 ./qualification_track.py add-nns
       time python3 ./qualification_track.py add-ci --since=now-3d
 
+dashboard-release:
+  image: docker/compose:alpine-1.29.2
+  needs: []
+  dependencies: []
+  stage: release
+  retry: 2
+  extends:
+    - .rules-default
+  interruptible: true
+  before_script:
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+  variables:
+    IMAGE_REGISTRY_BASE: $CI_REGISTRY_IMAGE
+    RELEASE_BRANCH: release
+    COMPOSE_DOCKER_CLI_BUILD: "1"
+    DOCKER_BUILDKIT: "1"
+  script:
+    - cd dashboard
+    - TAG=latest docker-compose pull || true
+    - TAG=latest docker-compose -f docker-compose.yml -f docker-compose.dev.yml build --parallel
+    - if [ "${CI_COMMIT_BRANCH}" != "${CI_DEFAULT_BRANCH}" ]; then exit 0; fi
+    - TAG=${CI_COMMIT_SHA} docker-compose -f docker-compose.yml -f docker-compose.dev.yml build --parallel
+    - TAG=latest docker-compose -f docker-compose.yml -f docker-compose.dev.yml push
+    - TAG=${CI_COMMIT_SHA} docker-compose -f docker-compose.yml -f docker-compose.dev.yml push
+    - apk add git && git remote set-url origin "https://token:${GITLAB_PUSH_TOKEN}@${CI_REPOSITORY_URL#*@}" && git fetch origin $RELEASE_BRANCH && git checkout $RELEASE_BRANCH && git reset --hard ${CI_COMMIT_SHA} && git push --force origin $RELEASE_BRANCH

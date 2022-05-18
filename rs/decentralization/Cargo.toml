@@ -1,0 +1,30 @@
+[package]
+name = "decentralization"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+ic-base-types = { git = "https://github.com/dfinity/ic.git", rev = "947d20037c36737645fda52677f5fec57dda6367" }
+serde = { version = "1.0", features = ["rc"] }
+serde_json = { version = "1.0" }
+async-trait = "0.1.52"
+actix-web = { version = "4.0.0-rc.1", default-features = false, features = [
+    "compress-gzip",
+    "macros",
+] }
+reqwest = { version = "0.11.9", features = ["json"] }
+counter = "0.5.2"
+itertools = "0.10.3"
+num-traits = "0.2.14"
+chrono = "0.4.19"
+tokio = { version = "1.2.0", features = ["full"] }
+lazy_static = "1.4.0"
+mercury_management_types = { path = "../mercury_management_types" }
+futures-util = "0.3.21"
+strum = "0.21"
+strum_macros = "0.21"
+
+[dev-dependencies]
+include_dir = "0.7.2"

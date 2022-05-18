@@ -1,0 +1,35 @@
+version: "3.8"
+services:
+  backstage:
+    restart: always
+    environment:
+      - APP_CONFIG_app_baseUrl=https://dashboard.mercury.dfinity.systems
+      - APP_CONFIG_backend_baseUrl=https://dashboard.mercury.dfinity.systems
+  backend:
+    restart: always
+    environment:
+      - GITLAB_API_TOKEN
+      - GITLAB_API_TOKEN_IC_PUBLIC
+  slack:
+    restart: always
+    environment:
+      - SLACK_URL
+      - "SLACK_CHANNEL=#eng-release"
+    volumes:
+      - slack_state:/state/
+    working_dir: /state/
+  slack-watchdog:
+    image: docker
+    volumes: [ "/var/run/docker.sock:/var/run/docker.sock" ]
+    command:
+      [
+        "/bin/sh",
+        "-c",
+        "while true; do sleep 60; if [ -z \"$$(docker logs release_slack_1 --since=1m 2>&1)\" ]; then echo -n \"restarting \"; docker restart release_slack_1; else echo \"target service is running\"; fi; done"
+      ]
+    restart: unless-stopped
+  decentralization:
+    restart: always
+
+volumes:
+  slack_state:

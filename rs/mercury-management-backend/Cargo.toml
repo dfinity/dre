@@ -1,0 +1,73 @@
+[package]
+name = "mercury-management-backend"
+version = "0.1.0"
+edition = "2018"
+
+[dependencies]
+tokio = { version = "1.2.0", features = ["full"] }
+serde_json = "1.0.66"
+serde = { version = "1.0.127", features = ["rc"] }
+hyper = { version = "0.14.11", features = ["http2", "stream"] }
+url = "2.2.2"
+float-ord = "0.3.2"
+hyper-tls = "0.5.0"
+chrono = { version = "0.4.19", features = ["serde"] }
+urlencoding = "2.1.0"
+futures-core = "0.3.16"
+futures-util = "0.3.16"
+derive_more = "0.99.16"
+actix-web = { version = "4.0.0-rc.1", default-features = false, features = [
+    "compress-gzip",
+    "macros",
+] }
+ic-base-types = { git = "https://github.com/dfinity/ic.git", rev = "947d20037c36737645fda52677f5fec57dda6367" }
+ic-registry-keys = { git = "https://github.com/dfinity/ic.git", rev = "947d20037c36737645fda52677f5fec57dda6367" }
+anyhow = "1.0.43"
+serde_with = "1.9.4"
+futures = "0.3.16"
+serde_yaml = "0.8.19"
+reqwest = { version = "0.11.4", features = ["json"] }
+async-trait = "0.1.52"
+enum-map = "1.1.1"
+either = "1.6.1"
+ic-interfaces = { git = "https://github.com/dfinity/ic.git", rev = "947d20037c36737645fda52677f5fec57dda6367" }
+ic-protobuf = { git = "https://github.com/dfinity/ic.git", rev = "947d20037c36737645fda52677f5fec57dda6367" }
+ic-registry-common = { git = "https://github.com/dfinity/ic.git", rev = "947d20037c36737645fda52677f5fec57dda6367" }
+ic-registry-subnet-type = { git = "https://github.com/dfinity/ic.git", rev = "947d20037c36737645fda52677f5fec57dda6367" }
+ic-types = { git = "https://github.com/dfinity/ic.git", rev = "947d20037c36737645fda52677f5fec57dda6367" }
+prost = "0.7.0"
+mercury_management_types = { path = "../mercury_management_types" }
+registry-canister = { git = "https://github.com/dfinity/ic.git", rev = "947d20037c36737645fda52677f5fec57dda6367" }
+strum = "0.21"
+strum_macros = "0.21"
+itertools = "0.10.1"
+log = "0.4.14"
+env_logger = "0.9.0"
+reverse_geocoder = "2.0.1"
+csv = "1.1.6"
+candid = "0.7.7"
+ic-nns-governance = { git = "https://github.com/dfinity/ic.git", rev = "947d20037c36737645fda52677f5fec57dda6367" }
+ic-nns-common = { git = "https://github.com/dfinity/ic.git", rev = "947d20037c36737645fda52677f5fec57dda6367" }
+ic-nns-constants = { git = "https://github.com/dfinity/ic.git", rev = "947d20037c36737645fda52677f5fec57dda6367" }
+ic-agent = "0.10.1"
+ic-types-old = { version = "0.2.2", package = "ic-types" }
+gitlab = "0.1403.0"
+dotenv = "0.15.0"
+derive_builder = "~0.9"
+lazy_static = "1.4.0"
+regex = "1.5.4"
+async-timer = "0.7.4"
+counter = "0.5.2"
+rand = "0.8.4"
+phantom_newtype = { git = "https://github.com/dfinity/ic.git", rev = "947d20037c36737645fda52677f5fec57dda6367" }
+decentralization = { path = "../decentralization" }
+prometheus-http-query = "0.4.0"
+
+[dev-dependencies]
+assert_matches = "1.4.0"
+actix-rt = "2.2.0"
+
+
+[[bin]]
+name = "mercury-management-backend"
+path = "src/main.rs"
