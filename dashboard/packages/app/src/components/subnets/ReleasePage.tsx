@@ -9,7 +9,7 @@ import RolloutStepper from './RolloutStepper';
 export const ReleasePage = () => {
   return (
     <Page themeId="other">
-      <Header title="Mercury Release">
+      <Header title="Mainnet Release">
         <HeaderLabel label="Owner" value="Release Team" />
         <HeaderLabel label="Lifecycle" value="Production" />
       </Header>
