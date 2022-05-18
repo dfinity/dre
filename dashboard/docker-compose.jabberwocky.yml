@@ -1,11 +1,11 @@
 version: "3.8"
 services:
-  backstage:
+  dashboard-backstage:
     restart: always
     environment:
       - APP_CONFIG_app_baseUrl=https://dashboard.mercury.dfinity.systems
       - APP_CONFIG_backend_baseUrl=https://dashboard.mercury.dfinity.systems
-  backend:
+  dashboard-backend:
     restart: always
     environment:
       - GITLAB_API_TOKEN

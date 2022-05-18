@@ -1,8 +1,12 @@
 version: "3.8"
 services:
-  backstage:
-    build: .
-  backend:
+  dashboard-backstage:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        BUILDKIT_INLINE_CACHE: 1
+  dashboard-backend:
     build:
       context: ../rs
       dockerfile: mercury-management-backend/Dockerfile
