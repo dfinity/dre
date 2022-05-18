@@ -1,11 +1,11 @@
 app:
   # Should be the same as backend.baseUrl when using the `app-backend` plugin
-  baseUrl: http://localhost:7000
+  baseUrl: http://localhost:17000
 
 backend:
-  baseUrl: http://localhost:7000
+  baseUrl: http://localhost:17000
   listen:
-    port: 7000
+    port: 17000
 
 proxy:
   '/registry':

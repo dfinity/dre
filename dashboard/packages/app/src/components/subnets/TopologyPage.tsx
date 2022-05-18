@@ -72,7 +72,7 @@ export const TopologyPage = () => {
 
   return (
     <Page themeId="other">
-      <Header title="Mercury Topology">
+      <Header title="Mainnet Topology">
         <HeaderLabel label="Owner" value="Release Team" />
         <HeaderLabel label="Lifecycle" value="Production" />
       </Header>
