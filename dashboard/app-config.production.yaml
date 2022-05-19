@@ -9,7 +9,7 @@ backend:
 
 proxy:
   '/registry':
-    target: 'http://backend:8080'
+    target: 'http://dashboard-backend:8080'
     changeOrigin: true
   '/decentralization':
     target: 'http://decentralization:8081'
