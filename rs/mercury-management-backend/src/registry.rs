@@ -1,30 +1,34 @@
 use crate::proposal;
 use async_trait::async_trait;
 use decentralization::network::{AvailableNodesQuerier, NetworkError, SubnetQuerier};
-use ic_base_types::RegistryVersion;
+use ic_base_types::NodeId;
 use ic_interfaces::registry::RegistryValue;
-use ic_interfaces::registry::RegistryVersionedRecord;
-use ic_registry_keys::{NODE_OPERATOR_RECORD_KEY_PREFIX, NODE_RECORD_KEY_PREFIX, SUBNET_RECORD_KEY_PREFIX};
+use ic_registry_client::local_registry::LocalRegistry;
+use ic_registry_keys::{
+    make_blessed_replica_version_key, NODE_OPERATOR_RECORD_KEY_PREFIX, NODE_RECORD_KEY_PREFIX, SUBNET_RECORD_KEY_PREFIX,
+};
 use ic_registry_subnet_type::SubnetType;
 use ic_types::PrincipalId;
 use itertools::Itertools;
-use log::info;
 use mercury_management_types::{
     Datacenter, DatacenterOwner, Host, Location, Node, NodeLabel, NodeLabelName, Operator, Provider, ProviderDetails,
     ReplicaRelease, Subnet, SubnetMetadata, TopologyProposalKind, TopologyProposalStatus,
 };
 use std::convert::TryFrom;
+use std::sync::Arc;
 use std::{
     collections::{HashMap, HashSet},
     net::Ipv6Addr,
 };
 
+use ic_interfaces::registry::RegistryClient;
 use ic_protobuf::registry::{
     dc::v1::DataCenterRecord, node::v1::NodeRecord, node_operator::v1::NodeOperatorRecord, subnet::v1::SubnetRecord,
 };
+use ic_registry_client_helpers::{node::NodeRegistry, subnet::SubnetListRegistry};
 
 use ic_protobuf::registry::replica_version::v1::BlessedReplicaVersions;
-use ic_registry_keys::{make_blessed_replica_version_key, DATA_CENTER_KEY_PREFIX};
+use ic_registry_keys::DATA_CENTER_KEY_PREFIX;
 
 use serde::Deserialize;
 use std::str::FromStr;
@@ -37,30 +41,67 @@ use regex::Regex;
 
 use anyhow::Result;
 
-#[derive(Clone)]
 pub struct RegistryState {
-    subnet_metadata: MetadataRegistry,
+    local_registry: Arc<LocalRegistry>,
+
     version: u64,
-    subnet_records: HashMap<PrincipalId, (RegistryVersion, SubnetRecord)>,
-    node_records: HashMap<PrincipalId, (RegistryVersion, NodeRecord)>,
-    operator_records: HashMap<PrincipalId, NodeOperatorRecord>,
-    data_center_records: HashMap<String, DataCenterRecord>,
     subnets: HashMap<PrincipalId, Subnet>,
     nodes: HashMap<PrincipalId, Node>,
     operators: HashMap<PrincipalId, Operator>,
     hosts: Vec<Host>,
+    known_subnets: HashMap<PrincipalId, String>,
 
-    removed_node_records: HashMap<PrincipalId, (RegistryVersion, NodeRecord)>,
-    removed_nodes: HashMap<PrincipalId, Node>,
-
-    blessed_versions: Vec<String>,
     replica_releases: Vec<ReplicaRelease>,
     gitlab_client_archived: Option<gitlab::AsyncGitlab>,
     gitlab_client_public: Option<gitlab::AsyncGitlab>,
 }
+trait RegistryEntry: RegistryValue {
+    const KEY_PREFIX: &'static str;
+}
+
+impl RegistryEntry for DataCenterRecord {
+    const KEY_PREFIX: &'static str = DATA_CENTER_KEY_PREFIX;
+}
+
+impl RegistryEntry for NodeOperatorRecord {
+    const KEY_PREFIX: &'static str = NODE_OPERATOR_RECORD_KEY_PREFIX;
+}
+
+impl RegistryEntry for NodeRecord {
+    const KEY_PREFIX: &'static str = NODE_RECORD_KEY_PREFIX;
+}
+
+impl RegistryEntry for SubnetRecord {
+    const KEY_PREFIX: &'static str = SUBNET_RECORD_KEY_PREFIX;
+}
+
+trait RegistryFamilyEntries {
+    fn get_family_entries<T: RegistryEntry + Default>(&self) -> Result<HashMap<String, T>>;
+}
+
+impl RegistryFamilyEntries for LocalRegistry {
+    fn get_family_entries<T: RegistryEntry + Default>(&self) -> Result<HashMap<String, T>> {
+        let prefix_length = T::KEY_PREFIX.len();
+        Ok(self
+            .get_key_family(T::KEY_PREFIX, self.get_latest_version())?
+            .iter()
+            .filter_map(|key| {
+                self.get_value(key, self.get_latest_version())
+                    .unwrap_or_else(|_| panic!("failed to get entry {} for type {}", key, std::any::type_name::<T>()))
+                    .map(|v| {
+                        (
+                            key[prefix_length..].to_string(),
+                            T::decode(v.as_slice()).expect("invalid registry value"),
+                        )
+                    })
+            })
+            .collect::<HashMap<_, _>>())
+    }
+}
 
 impl RegistryState {
     pub(crate) fn new(
+        local_registry: Arc<LocalRegistry>,
         gitlab_client_archived: Option<gitlab::AsyncGitlab>,
         gitlab_client_public: Option<gitlab::AsyncGitlab>,
     ) -> Self {
@@ -68,12 +109,8 @@ impl RegistryState {
             serde_yaml::from_str::<Vec<Label>>(include_str!("../data/labels.yaml")).expect("invalid configuration");
 
         Self {
+            local_registry,
             version: 0,
-            subnet_metadata: MetadataRegistry::new(),
-            subnet_records: HashMap::new(),
-            node_records: HashMap::new(),
-            operator_records: HashMap::new(),
-            data_center_records: HashMap::new(),
             subnets: HashMap::<PrincipalId, Subnet>::new(),
             nodes: HashMap::new(),
             operators: HashMap::new(),
@@ -92,23 +129,43 @@ impl RegistryState {
                     ..h
                 })
                 .collect(),
-            removed_nodes: HashMap::new(),
-            removed_node_records: HashMap::new(),
-            blessed_versions: Vec::new(),
             replica_releases: Vec::new(),
             gitlab_client_archived,
             gitlab_client_public,
+            known_subnets: [
+                (
+                    "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
+                    "Internet Identity",
+                ),
+                (
+                    "w4rem-dv5e3-widiz-wbpea-kbttk-mnzfm-tzrc7-svcj3-kbxyb-zamch-hqe",
+                    "People Parties",
+                ),
+                (
+                    "2fq7c-slacv-26cgz-vzbx2-2jrcs-5edph-i5s2j-tck77-c3rlz-iobzx-mqe",
+                    "Bitcoin",
+                ),
+            ]
+            .iter()
+            .map(|(p, name)| {
+                (
+                    PrincipalId::from_str(p).expect("invalid principal id"),
+                    name.to_string(),
+                )
+            })
+            .collect(),
         }
+    }
+
+    pub(crate) fn sycned(&self) -> bool {
+        self.version == self.local_registry.get_latest_version().get()
     }
 
     pub(crate) async fn update(
         &mut self,
-        deltas: Vec<RegistryVersionedRecord<Vec<u8>>>,
         locations: Vec<Location>,
         providers: Vec<ProviderDetails>,
     ) -> anyhow::Result<()> {
-        let mut latest_version = 0;
-
         let locations = locations
             .into_iter()
             .map(|l| (l.key.clone(), l))
@@ -118,82 +175,30 @@ impl RegistryState {
             .map(|p| (p.principal_id, p))
             .collect::<HashMap<_, _>>();
 
-        for versioned_record in deltas.into_iter() {
-            latest_version = versioned_record.version.get();
-            if let Ok(principal_record) = PrincipalRecord::try_from(versioned_record.clone()) {
-                match principal_record.value {
-                    PrincipalRecordValue::Subnet(Some(subnet_record)) => {
-                        self.subnet_metadata.add(
-                            principal_record.principal,
-                            SubnetType::try_from(subnet_record.subnet_type).unwrap(),
-                        );
-                        self.subnet_records
-                            .insert(principal_record.principal, (principal_record.version, subnet_record));
-                    }
-                    PrincipalRecordValue::Subnet(None) => {
-                        self.subnet_metadata.remove(principal_record.principal);
-                        self.subnet_records.remove(&principal_record.principal);
-                    }
-                    PrincipalRecordValue::Node(Some(node_record)) => {
-                        self.node_records
-                            .insert(principal_record.principal, (principal_record.version, node_record));
-                    }
-                    PrincipalRecordValue::Node(None) => {
-                        if let Some((_, nr)) = self.node_records.remove(&principal_record.principal) {
-                            self.removed_node_records
-                                .insert(principal_record.principal, (principal_record.version, nr));
-                        }
-                    }
-                    PrincipalRecordValue::Operator(Some(operator)) => {
-                        self.operator_records.insert(principal_record.principal, operator);
-                    }
-                    PrincipalRecordValue::Operator(None) => {
-                        // self.operator_records.remove(&principal_record.
-                        // principal);
-                    }
-                }
-            } else if let Some(dc) = versioned_record.key.strip_prefix(DATA_CENTER_KEY_PREFIX) {
-                if let Some(data) = versioned_record.value {
-                    self.data_center_records
-                        .insert(dc.to_string(), DataCenterRecord::decode(data.as_slice())?);
-                } else {
-                    self.data_center_records.remove(dc);
-                }
-            } else if versioned_record.key == make_blessed_replica_version_key() {
-                self.blessed_versions = BlessedReplicaVersions::decode(
-                    versioned_record
-                        .value
-                        .expect("blessed versions value missing")
-                        .as_slice(),
-                )
-                .expect("failed to decode blessed replica versions")
-                .blessed_version_ids;
-
-                info!(
-                    "Height {}: Updating blessed versions: {}",
-                    latest_version,
-                    self.blessed_versions.last().unwrap_or(&String::new())
-                );
-            }
-        }
-
         self.update_replica_releases().await?;
-        self.update_operators(locations, providers);
-        self.update_nodes();
-        self.update_removed_nodes();
-        self.update_subnets();
-
-        self.version = latest_version;
+        self.update_operators(locations, providers)?;
+        self.update_nodes()?;
+        self.update_subnets()?;
+        self.version = self.local_registry.get_latest_version().get();
 
         Ok(())
     }
 
     async fn update_replica_releases(&mut self) -> Result<()> {
-        info!("Updating replica releases");
+        const STARTING_VERSION: &str = "0ef2aebde4ff735a1a93efa342dcf966b6df5061";
+        let blessed_versions = BlessedReplicaVersions::decode(
+            self.local_registry
+                .get_value(
+                    &make_blessed_replica_version_key(),
+                    self.local_registry.get_latest_version(),
+                )?
+                .unwrap_or_default()
+                .as_slice(),
+        )
+        .expect("failed to decode blessed replica versions")
+        .blessed_version_ids;
 
-        const STARTING_VERSION: &str = "e86ac9553a8eddbeffaa29267a216c9554d3a0c6";
-        let blessed_versions_diff = self
-            .blessed_versions
+        let blessed_versions_diff = blessed_versions
             .iter()
             .skip_while(|v| *v != STARTING_VERSION)
             .filter(|v| !self.replica_releases.iter().any(|rr| rr.commit_hash == **v))
@@ -307,17 +312,18 @@ impl RegistryState {
         &mut self,
         locations: HashMap<String, Location>,
         providers: HashMap<PrincipalId, ProviderDetails>,
-    ) {
-        info!("Updating operators");
+    ) -> Result<()> {
+        let data_center_records: HashMap<String, DataCenterRecord> = self.local_registry.get_family_entries()?;
+        let operator_records: HashMap<String, NodeOperatorRecord> = self.local_registry.get_family_entries()?;
 
-        self.operators = self
-            .operator_records
+        self.operators = operator_records
             .iter()
             .map(|(p, or)| {
+                let principal = PrincipalId::from_str(p).expect("invalid operator principal id");
                 (
-                    *p,
+                    principal,
                     Operator {
-                        principal: *p,
+                        principal,
                         provider: PrincipalId::try_from(&or.node_provider_principal_id[..])
                             .map(|p| Provider {
                                 name: providers.get(&p).map(|pd| pd.display_name.clone()),
@@ -326,7 +332,7 @@ impl RegistryState {
                             })
                             .expect("provider missing from operator record"),
                         allowance: or.node_allowance,
-                        datacenter: self.data_center_records.get(&or.dc_id).map(|dc| {
+                        datacenter: data_center_records.get(&or.dc_id).map(|dc| {
                             let (continent, country, city): (_, _, _) = dc
                                 .region
                                 .splitn(3, ',')
@@ -353,6 +359,8 @@ impl RegistryState {
                 )
             })
             .collect();
+
+        Ok(())
     }
 
     fn node_record_host(&self, nr: &NodeRecord) -> Option<Host> {
@@ -362,32 +370,26 @@ impl RegistryState {
             .cloned()
     }
 
-    fn with_node_records(
-        &self,
-        records: &HashMap<PrincipalId, (RegistryVersion, NodeRecord)>,
-    ) -> HashMap<PrincipalId, Node> {
-        records
+    fn update_nodes(&mut self) -> Result<()> {
+        self.nodes = self
+            .local_registry
+            .get_family_entries::<NodeRecord>()?
             .iter()
             // Skipping nodes without operator. This should only occur at version 1
-            .filter(|(_, (_, nr))| !nr.node_operator_id.is_empty())
-            .map(|(p, (version, nr))| {
+            .filter(|(_, nr)| !nr.node_operator_id.is_empty())
+            .map(|(p, nr)| {
                 let host = self.node_record_host(nr);
                 let operator = self
                     .operators
                     .iter()
                     .find(|(op, _)| op.to_vec() == nr.node_operator_id)
                     .map(|(_, o)| o.clone())
-                    .unwrap_or_else(|| {
-                        panic!(
-                            "operator should exist in registry: node: {}, version: {}",
-                            p, self.version
-                        )
-                    });
+                    .expect("missing operator referenced by a node");
+                let principal = PrincipalId::from_str(p).expect("invalid node principal id");
                 (
-                    *p,
+                    principal,
                     Node {
-                        principal: *p,
-                        version: *version,
+                        principal,
                         labels: host.as_ref().and_then(|h| h.labels.clone()).unwrap_or_default(),
                         ip_addr: node_ip_addr(nr),
                         hostname: host
@@ -405,72 +407,81 @@ impl RegistryState {
                             })
                             .into(),
                         subnet: self
-                            .subnet_records
-                            .iter()
-                            .find(|(_, (_, sr))| sr.membership.contains(&p.to_vec()))
-                            .map(|(p, _)| *p),
+                            .local_registry
+                            .get_subnet_id_from_node_id(
+                                NodeId::new(principal),
+                                self.local_registry.get_latest_version(),
+                            )
+                            .expect("failed to get subnet id")
+                            .map(|s| s.get()),
                         operator,
                         proposal: None,
                     },
                 )
             })
-            .collect()
+            .collect();
+
+        Ok(())
     }
 
-    fn update_nodes(&mut self) {
-        info!("Updating nodes");
-
-        self.nodes = self.with_node_records(&self.node_records);
-    }
-
-    fn update_removed_nodes(&mut self) {
-        self.removed_nodes = self.with_node_records(
-            &self
-                .removed_node_records
-                .clone()
-                .into_iter()
-                .filter(|(_, (_, rnr))| {
-                    None == self
-                        .node_records
-                        .iter()
-                        .find(|(_, (_, nr))| rnr.http.as_ref().unwrap().ip_addr == nr.http.as_ref().unwrap().ip_addr)
-                })
-                .collect(),
-        );
-    }
-
-    fn update_subnets(&mut self) {
-        info!("Updating subnets");
-
+    fn update_subnets(&mut self) -> Result<()> {
         self.subnets = self
-            .subnet_records
+            .local_registry
+            .get_family_entries::<SubnetRecord>()?
             .iter()
-            .map(|(p, (version, sr))| {
+            .map(|(p, sr)| {
+                let principal = PrincipalId::from_str(p).expect("invalid subnet principal id");
                 let subnet_nodes = self
                     .nodes
                     .iter()
-                    .filter(|(_, n)| n.subnet.map_or(false, |s| s == *p))
+                    .filter(|(_, n)| n.subnet.map_or(false, |s| s == principal))
                     .map(|(_, n)| n.clone())
                     .collect::<Vec<Node>>();
+                let subnet_type = SubnetType::try_from(sr.subnet_type).unwrap();
 
                 (
-                    *p,
+                    principal,
                     Subnet {
                         nodes: subnet_nodes,
-                        principal: *p,
-                        subnet_type: SubnetType::try_from(sr.subnet_type).unwrap(),
+                        principal,
+                        subnet_type,
                         metadata: SubnetMetadata {
-                            name: self.subnet_metadata.get(p).expect("record exists").name.clone(),
+                            name: if let Some(name) = self.known_subnets.get(&principal) {
+                                name.clone()
+                            } else {
+                                self.local_registry
+                                    .get_subnet_ids(self.local_registry.get_latest_version())
+                                    .expect("failed to list subnets")
+                                    .unwrap_or_default()
+                                    .iter()
+                                    .position(|s| s.get() == principal)
+                                    .map(|i| {
+                                        if i == 0 {
+                                            "NNS".to_string()
+                                        } else {
+                                            format!(
+                                                "{} {}",
+                                                match subnet_type {
+                                                    SubnetType::Application | SubnetType::VerifiedApplication => "App",
+                                                    SubnetType::System => "System",
+                                                },
+                                                i
+                                            )
+                                        }
+                                    })
+                                    .unwrap_or_else(|| "??".to_string())
+                            },
                             ..Default::default()
                         },
                         replica_version: sr.replica_version_id.clone(),
-                        version: *version,
                         proposal: None,
                     },
                 )
             })
             .filter(|(_, s)| !s.nodes.is_empty())
             .collect();
+
+        Ok(())
     }
 
     pub fn version(&self) -> u64 {
@@ -580,10 +591,6 @@ impl RegistryState {
         self.hosts.clone()
     }
 
-    pub fn removed_nodes(&self) -> HashMap<PrincipalId, Node> {
-        self.removed_nodes.clone()
-    }
-
     pub fn missing_hosts(&self) -> Vec<Host> {
         self.hosts
             .clone()
@@ -670,103 +677,6 @@ impl AvailableNodesQuerier for RegistryState {
             .sorted_by(|n1, n2| n1.id.cmp(&n2.id))
             .collect())
     }
-}
-
-#[derive(Clone)]
-pub struct MetadataRegistry {
-    counter: u64,
-    system_subnet_counter: u64,
-    metadatas: HashMap<PrincipalId, Metadata>,
-}
-
-impl MetadataRegistry {
-    pub fn new() -> Self {
-        Self {
-            counter: 0,
-            system_subnet_counter: 0,
-            metadatas: HashMap::new(),
-        }
-    }
-
-    pub fn get(&self, principal: &PrincipalId) -> Option<&Metadata> {
-        self.metadatas.get(principal)
-    }
-
-    pub fn add(&mut self, principal: PrincipalId, subnet_type: SubnetType) {
-        if self.metadatas.contains_key(&principal) {
-            return;
-        }
-
-        const ROOT_SUBNETS_COUNT: u64 = 2;
-        if self.system_subnet_counter >= ROOT_SUBNETS_COUNT {
-            self.counter += 1;
-        }
-        self.metadatas.insert(
-            principal,
-            Metadata {
-                name: match subnet_type {
-                    SubnetType::System => {
-                        self.system_subnet_counter += 1;
-                        match self.system_subnet_counter {
-                            1 => "Bootstrap NNS".to_string(),
-                            2 => "NNS".to_string(),
-                            3 => "People Parties".to_string(),
-                            4 => "Internet Identity".to_string(),
-                            _ => format!("System {}", self.system_subnet_counter),
-                        }
-                    }
-                    SubnetType::Application | SubnetType::VerifiedApplication => {
-                        format!("App {}", self.counter)
-                    }
-                },
-            },
-        );
-    }
-
-    pub fn remove(&mut self, principal: PrincipalId) {
-        self.metadatas.remove(&principal);
-    }
-}
-
-#[derive(Clone)]
-pub struct Metadata {
-    name: String,
-}
-
-pub(crate) enum PrincipalRecordValue {
-    Subnet(Option<SubnetRecord>),
-    Node(Option<NodeRecord>),
-    Operator(Option<NodeOperatorRecord>),
-}
-
-pub struct PrincipalRecord {
-    principal: PrincipalId,
-    version: RegistryVersion,
-    value: PrincipalRecordValue,
-}
-
-impl TryFrom<RegistryVersionedRecord<Vec<u8>>> for PrincipalRecord {
-    type Error = &'static str;
-
-    fn try_from(record: RegistryVersionedRecord<Vec<u8>>) -> Result<Self, Self::Error> {
-        let key_prefix_end = record.key.rfind('_').ok_or("not a principal record")? + 1;
-        Ok(PrincipalRecord {
-            version: record.version,
-            principal: PrincipalId::from_str(&record.key[key_prefix_end..]).map_err(|_| "cannot parse principal")?,
-            value: match &record.key[..key_prefix_end] {
-                SUBNET_RECORD_KEY_PREFIX => PrincipalRecordValue::Subnet(record_decode(record)),
-                NODE_RECORD_KEY_PREFIX => PrincipalRecordValue::Node(record_decode(record)),
-                NODE_OPERATOR_RECORD_KEY_PREFIX => PrincipalRecordValue::Operator(record_decode(record)),
-                _ => return Err("unkown principal record"),
-            },
-        })
-    }
-}
-
-fn record_decode<T: RegistryValue + Default>(record: RegistryVersionedRecord<Vec<u8>>) -> Option<T> {
-    record
-        .value
-        .map(|value| RegistryValue::decode(value.as_slice()).expect("Record failed to decode"))
 }
 
 #[derive(Deserialize)]

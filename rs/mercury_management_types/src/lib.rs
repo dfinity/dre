@@ -1,6 +1,5 @@
 pub mod requests;
 
-use ic_base_types::RegistryVersion;
 use ic_nns_governance::pb::v1::ProposalStatus;
 use ic_registry_subnet_type::SubnetType;
 use ic_types::PrincipalId;
@@ -22,7 +21,6 @@ pub struct Subnet {
     pub subnet_type: SubnetType,
     pub metadata: SubnetMetadata,
     pub replica_version: String,
-    pub version: RegistryVersion,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub proposal: Option<TopologyProposal>,
 }
@@ -51,7 +49,6 @@ pub struct Node {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub subnet: Option<PrincipalId>,
     pub labels: Vec<NodeLabel>,
-    pub version: RegistryVersion,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub proposal: Option<TopologyProposal>,
 }

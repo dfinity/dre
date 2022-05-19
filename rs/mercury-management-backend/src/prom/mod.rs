@@ -571,8 +571,8 @@ pub async fn node_health_indicator_queries(subnet_id: &str) -> Result<HealthResp
     let client = reqwest::Client::new();
     let avg_request = client
         .get("http://prometheus.dfinity.systems:9090/api/v1/query")
-        .query(&[("query",
-            &format!(r#"avg(rate(artifact_pool_consensus_height_stat{{ic="mercury", ic_subnet="{}", type="finalization", stat="max", pool_type="validated"}}[5m]))"#,
+        .query(&[("query", 
+            &format!(r#"avg(rate(artifact_pool_consensus_height_stat{{ic="mercury", ic_subnet="{}", type="finalization", stat="max", pool_type="validated"}}[5m]))"#, 
             &subnet_id))])
         .build()
         .expect("Error building request");
@@ -581,8 +581,8 @@ pub async fn node_health_indicator_queries(subnet_id: &str) -> Result<HealthResp
     let finalization_per_node_request = client
         .get("http://prometheus.dfinity.systems:9090/api/v1/query")
         .query(&
-            [("query",
-            &format!(r#"rate(artifact_pool_consensus_height_stat{{ic="mercury", ic_subnet="{}", type="finalization", stat="max", pool_type="validated"}}[1h])"#,
+            [("query", 
+            &format!(r#"rate(artifact_pool_consensus_height_stat{{ic="mercury", ic_subnet="{}", type="finalization", stat="max", pool_type="validated"}}[1h])"#, 
             &subnet_id))])
         .build()
         .expect("Error building request");
