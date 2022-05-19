@@ -66,7 +66,6 @@ export interface Subnet {
   nodes: Node[];
   subnet_type: string;
   metadata: SubnetMetadata;
-  version: string;
 }
 
 export type VerifiedApplication = "Fleek" | "Distrikt";
