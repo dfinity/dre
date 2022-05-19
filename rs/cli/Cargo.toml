@@ -17,7 +17,7 @@ dotenv = "0.15.0"
 log = "0.4.14"
 pretty_env_logger = "0.4.0"
 regex = "1.5.4"
-ic-base-types = { git = "https://github.com/dfinity/ic.git", rev = "947d20037c36737645fda52677f5fec57dda6367" }
+ic-base-types = { git = "https://github.com/dfinity/ic.git", rev = "d5062681bd1f84d64ef2024eea19848032565f9b" }
 tokio = { version = "1.14.0", features = ["full"] }
 strum = { version = "0.23", features = ["derive"] }
 strum_macros = "0.23"

@@ -10,6 +10,10 @@ services:
     environment:
       - GITLAB_API_TOKEN
       - GITLAB_API_TOKEN_IC_PUBLIC
+      - LOCAL_REGISTRY_PATH=/registry_cache
+      - NNS_URL=https://nns.ic0.app
+    volumes:
+      - backend_registry_cache:/registry_cache
   slack:
     restart: always
     environment:
@@ -33,3 +37,4 @@ services:
 
 volumes:
   slack_state:
+  backend_registry_cache:

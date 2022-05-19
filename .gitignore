@@ -45,3 +45,6 @@ rs/*/target/
 
 .env
 __pycache__
+
+# Local cache of the network registry
+.local_registry

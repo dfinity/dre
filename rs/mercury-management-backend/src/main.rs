@@ -7,29 +7,40 @@ mod release;
 use actix_web::dev::Service;
 use actix_web::{error, get, post, web, App, Error, HttpResponse, HttpServer, Responder};
 use dotenv::dotenv;
+use ic_base_types::{RegistryVersion, SubnetId};
+use ic_protobuf::registry::crypto::v1::PublicKey;
+use ic_registry_client::client::ThresholdSigPublicKey;
+use ic_registry_common::local_store::{Changelog, ChangelogEntry, KeyMutation, LocalStoreImpl, LocalStoreWriter};
+use ic_registry_keys::{make_crypto_threshold_signing_pubkey_key, ROOT_SUBNET_ID_KEY};
+use registry_canister::mutations::common::decode_registry_value;
 mod gitlab;
 mod health;
 use crate::prom::{ICProm, PromClient};
 use ::gitlab::{AsyncGitlab, GitlabBuilder};
-use ic_protobuf::registry::crypto::v1::PublicKey;
+use futures::TryFutureExt;
+use ic_interfaces::registry::{RegistryClient, RegistryValue, ZERO_REGISTRY_VERSION};
+use ic_registry_client_fake::FakeRegistryClient;
 use ic_registry_common::registry::RegistryCanister;
-use ic_registry_keys::{make_crypto_threshold_signing_pubkey_key, ROOT_SUBNET_ID_KEY};
-use ic_types::{crypto::threshold_sig::ThresholdSigPublicKey, PrincipalId, SubnetId};
-use log::{info, warn};
+use ic_registry_common_proto::pb::local_store::v1::{
+    ChangelogEntry as PbChangelogEntry, KeyMutation as PbKeyMutation, MutationType,
+};
+use ic_types::PrincipalId;
+use log::{debug, error, info, warn};
 use mercury_management_types::{Location, ProviderDetails};
-use registry_canister::mutations::common::decode_registry_value;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::convert::TryFrom;
-use std::ops::Deref;
+use std::ops::{Add, Deref};
+use std::path::{Path, PathBuf};
 use std::str::FromStr;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use tokio::time::{sleep, Duration};
 use url::Url;
 extern crate env_logger;
-use ic_interfaces::registry::RegistryValue;
+
+use ic_registry_client::local_registry::LocalRegistry;
 
 const GITLAB_TOKEN_ENV: &str = "GITLAB_API_TOKEN";
 const GITLAB_TOKEN_IC_PUBLIC_ENV: &str = "GITLAB_API_TOKEN_IC_PUBLIC";
@@ -40,7 +51,27 @@ async fn main() -> std::io::Result<()> {
     std::env::set_var("RUST_LOG", "info");
     env_logger::init();
 
+    init_local_store().await.expect("failed to init local store");
+
+    let local_registry_path = local_registry_path();
+    let runtime = tokio::runtime::Runtime::new().expect("failed to create runtime");
+    let handle = runtime.handle().clone();
+    let local_registry = Arc::new(
+        web::block(|| {
+            LocalRegistry::new_with_runtime_handle(local_registry_path, Duration::from_millis(500), handle)
+                .expect("Failed to create local registry")
+        })
+        .await
+        .expect("Failed to create local registry"),
+    );
+
+    let update_local_registry = local_registry.clone();
+    std::thread::spawn(move || loop {
+        update_local_registry.sync_with_nns().ok();
+    });
+
     let registry_state = Arc::new(RwLock::new(registry::RegistryState::new(
+        local_registry,
         gitlab_client(GITLAB_TOKEN_ENV).await.into(),
         gitlab_client(GITLAB_TOKEN_IC_PUBLIC_ENV).await.into(),
     )));
@@ -48,7 +79,6 @@ async fn main() -> std::io::Result<()> {
     let prom_client = Arc::new(
         PromClient::new("prometheus.dfinity.systems:9090", None).expect("Couldn't initialize prometheus client"),
     );
-
     tokio::spawn(async { poll(registry_state_poll).await });
 
     HttpServer::new(move || {
@@ -81,7 +111,6 @@ async fn main() -> std::io::Result<()> {
             .service(nodes)
             .service(missing_hosts)
             .service(hosts)
-            .service(removed_nodes)
             .service(operators)
             .service(nodes_healths)
             .service(ic_single_metrics)
@@ -91,6 +120,7 @@ async fn main() -> std::io::Result<()> {
             .service(endpoints::subnet::pending_action)
             .service(endpoints::subnet::replace)
     })
+    .shutdown_timeout(10)
     .bind(("0.0.0.0", 8080))?
     .run()
     .await
@@ -218,16 +248,164 @@ async fn operators(registry: web::Data<Arc<RwLock<registry::RegistryState>>>) ->
     query_registry(registry, |r| r.operators()).await
 }
 
-#[get("/removed_nodes")]
-async fn removed_nodes(registry: web::Data<Arc<RwLock<registry::RegistryState>>>) -> impl Responder {
-    query_registry(registry, |r| r.removed_nodes()).await
-}
-
 async fn query_registry<T: Serialize>(
     registry: web::Data<Arc<RwLock<registry::RegistryState>>>,
     query: fn(&registry::RegistryState) -> T,
 ) -> actix_web::HttpResponse {
     HttpResponse::Ok().json(query(registry.clone().read().await.deref()))
+}
+
+fn nns_nodes_urls() -> Vec<Url> {
+    vec![
+        Url::parse(&std::env::var("NNS_URL").expect("NNS_URL environment variable not provided"))
+            .expect("Cannot parse NNS_URL environment variable a valid url"),
+    ]
+}
+
+// TODO: hack: replace with a static way to import NNS state
+async fn init_local_store() -> anyhow::Result<()> {
+    let local_registry_path = local_registry_path();
+    let local_store = Arc::new(LocalStoreImpl::new(local_registry_path.clone()));
+    let registry_canister = RegistryCanister::new(nns_nodes_urls());
+    let mut latest_version = if !Path::new(&local_registry_path).exists() {
+        ZERO_REGISTRY_VERSION
+    } else {
+        let registry_cache = FakeRegistryClient::new(local_store.clone());
+        registry_cache.update_to_latest_version();
+        registry_cache.get_latest_version()
+    };
+    info!("Syncing local registry from version {}", latest_version);
+    let mut latest_certified_time = 0;
+    let mut updates = vec![];
+    let nns_public_key = nns_public_key(&registry_canister)
+        .await
+        .expect("Failed to get NNS public key");
+
+    loop {
+        if match registry_canister.get_latest_version().await {
+            Ok(v) => {
+                info!("Latest registry version: {}", v);
+                v == latest_version.get()
+            }
+            Err(e) => {
+                error!("Failed to get latest registry version: {}", e);
+                false
+            }
+        } {
+            break;
+        }
+        if let Ok((mut initial_records, _, t)) = registry_canister
+            .get_certified_changes_since(latest_version.get(), &nns_public_key)
+            .await
+        {
+            initial_records.sort_by_key(|tr| tr.version);
+            let changelog = initial_records.iter().fold(Changelog::default(), |mut cl, r| {
+                let rel_version = (r.version - latest_version).get();
+                if cl.len() < rel_version as usize {
+                    cl.push(ChangelogEntry::default());
+                }
+                cl.last_mut().unwrap().push(KeyMutation {
+                    key: r.key.clone(),
+                    value: r.value.clone(),
+                });
+                cl
+            });
+
+            let versions_count = changelog.len();
+
+            changelog.into_iter().enumerate().for_each(|(i, ce)| {
+                let v = RegistryVersion::from(i as u64 + 1 + latest_version.get());
+                let local_registry_path = local_registry_path.clone();
+                updates.push(async move {
+                    let path_str = format!("{:016x}.pb", v.get());
+                    // 00 01 02 03 04 / 05 / 06 / 07.pb
+                    let v_path = &[
+                        &path_str[0..10],
+                        &path_str[10..12],
+                        &path_str[12..14],
+                        &path_str[14..19],
+                    ]
+                    .iter()
+                    .collect::<PathBuf>();
+                    let path = local_registry_path.join(v_path.as_path());
+                    let r = tokio::fs::create_dir_all(path.clone().parent().unwrap())
+                        .and_then(|_| async {
+                            tokio::fs::write(
+                                path,
+                                PbChangelogEntry {
+                                    key_mutations: ce
+                                        .iter()
+                                        .map(|km| {
+                                            let mutation_type = if km.value.is_some() {
+                                                MutationType::Set as i32
+                                            } else {
+                                                MutationType::Unset as i32
+                                            };
+                                            PbKeyMutation {
+                                                key: km.key.clone(),
+                                                value: km.value.clone().unwrap_or_default(),
+                                                mutation_type,
+                                            }
+                                        })
+                                        .collect(),
+                                }
+                                .encode_to_vec(),
+                            )
+                            .await
+                        })
+                        .await;
+                    if let Err(e) = &r {
+                        debug!("Storage err for {v}: {}", e);
+                    } else {
+                        debug!("Stored version {}", v);
+                    }
+                    r
+                });
+            });
+
+            latest_version = latest_version.add(RegistryVersion::new(versions_count as u64));
+
+            latest_certified_time = t.as_nanos_since_unix_epoch();
+            info!("Initial sync reached version {latest_version}");
+        }
+    }
+
+    web::block(|| {
+        let runtime = tokio::runtime::Runtime::new().unwrap();
+
+        runtime.block_on(futures::future::try_join_all(
+            updates.into_iter().map(|f| runtime.spawn(f)).collect::<Vec<_>>(),
+        ))
+    })
+    .await??;
+    local_store.update_certified_time(latest_certified_time)?;
+    Ok(())
+}
+
+async fn poll(registry_state: Arc<RwLock<registry::RegistryState>>) {
+    loop {
+        info!("Updating registry");
+        let locations_result = query_ic_dashboard_list::<Vec<Location>>("v2/locations").await;
+        let providers_result = query_ic_dashboard_list::<Vec<ProviderDetails>>("node-providers/list").await;
+
+        match locations_result.and_then(|locations| providers_result.map(|providers| (locations, providers))) {
+            Ok((locations, providers)) => {
+                if registry_state.read().await.sycned() {
+                    continue;
+                }
+                let mut registry_state = registry_state.write().await;
+                let update = registry_state.update(locations, providers).await;
+                if let Err(e) = update {
+                    warn!("failed state update: {}", e);
+                }
+                info!("Updated registry state to version {}", registry_state.version());
+            }
+            Err(e) => {
+                warn!("Failed querying IC dashboard {}", e);
+            }
+        }
+        sleep(Duration::from_secs(1)).await;
+    }
 }
 
 async fn nns_public_key(registry_canister: &RegistryCanister) -> anyhow::Result<ThresholdSigPublicKey> {
@@ -251,62 +429,6 @@ async fn nns_public_key(registry_canister: &RegistryCanister) -> anyhow::Result<
         ThresholdSigPublicKey::try_from(PublicKey::decode(nns_pub_key_vec.as_slice()).expect("invalid public key"))
             .expect("failed to create thresholdsig public key"),
     )
-}
-
-fn nns_nodes_urls() -> Vec<Url> {
-    vec![Url::parse("https://nns.ic0.app").unwrap()]
-}
-
-async fn poll(registry_state: Arc<RwLock<registry::RegistryState>>) {
-    let registry_canister = RegistryCanister::new(nns_nodes_urls());
-    let mut nns_pub_key = nns_public_key(&registry_canister).await;
-    let mut backoff_seconds = 1;
-    while let Err(e) = nns_pub_key {
-        warn!("failed to fetch NNS public key: {}", e);
-        nns_pub_key = nns_public_key(&registry_canister).await;
-        sleep(Duration::from_secs(backoff_seconds)).await;
-        backoff_seconds = std::cmp::min(backoff_seconds * 2, 60);
-    }
-    let nns_pub_key = nns_pub_key.unwrap();
-
-    loop {
-        // Value extracted here to avoid deadlock
-        let registry_state_version = registry_state.read().await.version();
-        match registry_canister
-            .get_certified_changes_since(registry_state_version, &nns_pub_key)
-            .await
-        {
-            Ok((deltas, ..)) => {
-                if !deltas.is_empty() {
-                    let locations_result = query_ic_dashboard_list::<Vec<Location>>("v2/locations").await;
-                    let providers_result = query_ic_dashboard_list::<Vec<ProviderDetails>>("node-providers/list").await;
-
-                    match locations_result
-                        .and_then(|locations| providers_result.map(|providers| (locations, providers)))
-                    {
-                        Ok((locations, providers)) => {
-                            let mut registry_state = registry_state.write().await;
-                            match registry_state.update(deltas, locations, providers).await {
-                                Ok(_) => info!(
-                                    "Finished the update loop, reached registry version {}",
-                                    registry_state.version()
-                                ),
-                                Err(e) => warn!("failed state update: {}", e),
-                            }
-                        }
-                        Err(e) => {
-                            warn!("Failed querying IC dashboard {}", e);
-                        }
-                    }
-                }
-                sleep(Duration::from_secs(1)).await;
-                continue;
-            }
-            Err(e) => {
-                warn!("Poll failed: {}", e);
-            }
-        }
-    }
 }
 
 async fn query_ic_dashboard_list<T: DeserializeOwned>(path: &str) -> anyhow::Result<T> {
@@ -370,4 +492,8 @@ async fn gitlab_client(env: &str) -> AsyncGitlab {
     .build_async()
     .await
     .expect("unable to initialize gitlab token")
+}
+
+fn local_registry_path() -> PathBuf {
+    PathBuf::from(std::env::var("LOCAL_REGISTRY_PATH").unwrap_or_else(|_| ".".to_string())).join(".local_registry")
 }
