@@ -42,7 +42,6 @@ extern crate env_logger;
 
 use ic_registry_client::local_registry::LocalRegistry;
 
-const GITLAB_TOKEN_ENV: &str = "GITLAB_API_TOKEN";
 const GITLAB_TOKEN_IC_PUBLIC_ENV: &str = "GITLAB_API_TOKEN_IC_PUBLIC";
 
 #[actix_web::main]
@@ -72,7 +71,6 @@ async fn main() -> std::io::Result<()> {
 
     let registry_state = Arc::new(RwLock::new(registry::RegistryState::new(
         local_registry,
-        gitlab_client(GITLAB_TOKEN_ENV).await.into(),
         gitlab_client(GITLAB_TOKEN_IC_PUBLIC_ENV).await.into(),
     )));
     let registry_state_poll = registry_state.clone();
