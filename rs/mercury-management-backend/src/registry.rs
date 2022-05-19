@@ -160,8 +160,6 @@ impl RegistryState {
                     self.data_center_records.remove(dc);
                 }
             } else if versioned_record.key == make_blessed_replica_version_key() {
-                info!("Updating blessed versions");
-
                 self.blessed_versions = BlessedReplicaVersions::decode(
                     versioned_record
                         .value
@@ -170,6 +168,12 @@ impl RegistryState {
                 )
                 .expect("failed to decode blessed replica versions")
                 .blessed_version_ids;
+
+                info!(
+                    "Height {}: Updating blessed versions: {}",
+                    latest_version,
+                    self.blessed_versions.last().unwrap_or(&String::new())
+                );
             }
         }
 
@@ -185,6 +189,8 @@ impl RegistryState {
     }
 
     async fn update_replica_releases(&mut self) -> Result<()> {
+        info!("Updating replica releases");
+
         const STARTING_VERSION: &str = "e86ac9553a8eddbeffaa29267a216c9554d3a0c6";
         let blessed_versions_diff = self
             .blessed_versions
@@ -302,6 +308,8 @@ impl RegistryState {
         locations: HashMap<String, Location>,
         providers: HashMap<PrincipalId, ProviderDetails>,
     ) {
+        info!("Updating operators");
+
         self.operators = self
             .operator_records
             .iter()
@@ -410,6 +418,8 @@ impl RegistryState {
     }
 
     fn update_nodes(&mut self) {
+        info!("Updating nodes");
+
         self.nodes = self.with_node_records(&self.node_records);
     }
 
@@ -430,6 +440,8 @@ impl RegistryState {
     }
 
     fn update_subnets(&mut self) {
+        info!("Updating subnets");
+
         self.subnets = self
             .subnet_records
             .iter()

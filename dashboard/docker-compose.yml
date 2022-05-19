@@ -3,7 +3,7 @@ services:
   dashboard-backstage:
     image: registry.gitlab.com/dfinity-lab/core/release/dashboard-backstage:${TAG:-latest}
     ports:
-      - "7000:7000"
+      - "17000:17000"
     links:
       - dashboard-backend
   dashboard-backend:

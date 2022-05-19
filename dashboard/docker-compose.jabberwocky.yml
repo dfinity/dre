@@ -3,8 +3,8 @@ services:
   dashboard-backstage:
     restart: always
     environment:
-      - APP_CONFIG_app_baseUrl=https://dashboard.mercury.dfinity.systems
-      - APP_CONFIG_backend_baseUrl=https://dashboard.mercury.dfinity.systems
+      - APP_CONFIG_app_baseUrl=https://dashboard.mainnet.dfinity.systems
+      - APP_CONFIG_backend_baseUrl=https://dashboard.mainnet.dfinity.systems
   dashboard-backend:
     restart: always
     environment:

@@ -1,14 +1,14 @@
 app:
-  title: Mercury Management Dashboard
+  title: Mainnet Dashboard
   baseUrl: http://localhost:3000
 
 organization:
   name: DFINITY
 
 backend:
-  baseUrl: http://localhost:7000
+  baseUrl: http://localhost:17000
   listen:
-    port: 7000
+    port: 17000
   csp:
     connect-src: ["'self'", 'http:', 'https:']
     script-src: ["'self'", 'www.gstatic.com', "'unsafe-eval'"]

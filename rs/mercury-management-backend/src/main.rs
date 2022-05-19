@@ -15,7 +15,7 @@ use ic_protobuf::registry::crypto::v1::PublicKey;
 use ic_registry_common::registry::RegistryCanister;
 use ic_registry_keys::{make_crypto_threshold_signing_pubkey_key, ROOT_SUBNET_ID_KEY};
 use ic_types::{crypto::threshold_sig::ThresholdSigPublicKey, PrincipalId, SubnetId};
-use log::warn;
+use log::{info, warn};
 use mercury_management_types::{Location, ProviderDetails};
 use registry_canister::mutations::common::decode_registry_value;
 use serde::de::DeserializeOwned;
@@ -286,9 +286,12 @@ async fn poll(registry_state: Arc<RwLock<registry::RegistryState>>) {
                     {
                         Ok((locations, providers)) => {
                             let mut registry_state = registry_state.write().await;
-                            let update = registry_state.update(deltas, locations, providers).await;
-                            if let Err(e) = update {
-                                warn!("failed state update: {}", e);
+                            match registry_state.update(deltas, locations, providers).await {
+                                Ok(_) => info!(
+                                    "Finished the update loop, reached registry version {}",
+                                    registry_state.version()
+                                ),
+                                Err(e) => warn!("failed state update: {}", e),
                             }
                         }
                         Err(e) => {

@@ -208,7 +208,7 @@ function TabPanel({
             <Grid container justifyContent="flex-start" alignItems="center">
               <Grid item>
                 <Typography variant='h5'>Missing hosts</Typography>
-                <Typography variant='subtitle1'>Hosts not participating in the Mercury network</Typography>
+                <Typography variant='subtitle1'>Hosts not participating in the Mainnet network</Typography>
                 <Typography variant="subtitle2">Total allowed: {operators.reduce((r, c) => r + c.allowance, 0)}</Typography>
               </Grid>
               <Grid item>
