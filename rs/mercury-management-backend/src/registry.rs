@@ -52,7 +52,6 @@ pub struct RegistryState {
     known_subnets: HashMap<PrincipalId, String>,
 
     replica_releases: Vec<ReplicaRelease>,
-    gitlab_client_archived: Option<gitlab::AsyncGitlab>,
     gitlab_client_public: Option<gitlab::AsyncGitlab>,
 }
 trait RegistryEntry: RegistryValue {
@@ -100,11 +99,7 @@ impl RegistryFamilyEntries for LocalRegistry {
 }
 
 impl RegistryState {
-    pub(crate) fn new(
-        local_registry: Arc<LocalRegistry>,
-        gitlab_client_archived: Option<gitlab::AsyncGitlab>,
-        gitlab_client_public: Option<gitlab::AsyncGitlab>,
-    ) -> Self {
+    pub(crate) fn new(local_registry: Arc<LocalRegistry>, gitlab_client_public: Option<gitlab::AsyncGitlab>) -> Self {
         let labels =
             serde_yaml::from_str::<Vec<Label>>(include_str!("../data/labels.yaml")).expect("invalid configuration");
 
@@ -130,7 +125,6 @@ impl RegistryState {
                 })
                 .collect(),
             replica_releases: Vec::new(),
-            gitlab_client_archived,
             gitlab_client_public,
             known_subnets: [
                 (
@@ -198,38 +192,25 @@ impl RegistryState {
         .expect("failed to decode blessed replica versions")
         .blessed_version_ids;
 
-        let blessed_versions_diff = blessed_versions
+        if let Some(gitlab_client_public) = &self.gitlab_client_public {
+            let new_blessed_versions = futures::future::join_all(
+                blessed_versions
             .iter()
             .skip_while(|v| *v != STARTING_VERSION)
-            .filter(|v| !self.replica_releases.iter().any(|rr| rr.commit_hash == **v))
-            .collect::<Vec<_>>();
+            .filter(|v| !self.replica_releases.iter().any(|rr| rr.commit_hash == **v)).map(|version| {
+                    let endpoint_public = CommitRefs::builder()
+                        .project("dfinity-lab/public/ic")
+                        .commit(version)
+                        .build()
+                        .expect("unable to build refs query");
 
-        if let (Some(gitlab_client_archived), Some(gitlab_client_public)) =
-            (&self.gitlab_client_archived, &self.gitlab_client_public)
-        {
-            for version in blessed_versions_diff {
-                let endpoint_archived = CommitRefs::builder()
-                    .project("dfinity-lab/core/ic")
-                    .commit(version)
-                    .build()
-                    .expect("unable to build refs query");
-                let endpoint_public = CommitRefs::builder()
-                    .project("dfinity-lab/public/ic")
-                    .commit(version)
-                    .build()
-                    .expect("unable to build refs query");
-
-                let results: Vec<Result<Vec<CommitRef>, _>> = futures::future::join_all(vec![
-                    gitlab::api::paged(endpoint_archived, gitlab::api::Pagination::All)
-                        .query_async(gitlab_client_archived),
-                    gitlab::api::paged(endpoint_public, gitlab::api::Pagination::All).query_async(gitlab_client_public),
-                ])
-                .await;
-
-                let refs_result = results.iter().find(|r| r.is_ok()).map(|r| r.as_ref().unwrap());
-
+                    async move {
+                        let refs: Result<Vec<CommitRef>, _> = gitlab::api::paged(endpoint_public, gitlab::api::Pagination::All).query_async(gitlab_client_public).await;
+                        (version, refs)
+                    }
+            }).collect::<Vec<_>>()).await.into_iter().map(|(version, refs_result)| {
                 match refs_result {
-                    Some(refs) => {
+                    Ok(refs) => {
                         lazy_static! {
                             static ref RELEASE_BRANCH_GROUP: &'static str = "release_branch";
                             static ref RELEASE_NAME_GROUP: &'static str = "release_name";
@@ -257,11 +238,7 @@ impl RegistryState {
                                 name: release_name.to_string(),
                                 branch: release_branch.to_string(),
                                 commit_hash: version.clone(),
-                                previous_patch_release: self
-                                    .replica_releases
-                                    .iter()
-                                    .rfind(|rr| rr.name == release_name)
-                                    .map(|rr| rr.clone().into()),
+                                previous_patch_release: None,
                                 time: chrono::NaiveDateTime::parse_from_str(
                                     captures
                                         .name(&DATETIME_NAME_GROUP)
@@ -271,33 +248,29 @@ impl RegistryState {
                                 )
                                 .expect("invalid datetime format"),
                             };
-                            self.replica_releases.push(rr);
-                        }
-                    }
-                    None => {
-                        if results.iter().all(|r| {
-                            if let gitlab::api::ApiError::Gitlab { msg } =
-                                r.as_ref().expect_err("all results should be errors")
-                            {
-                                msg.contains(reqwest::StatusCode::NOT_FOUND.as_str())
-                            } else {
-                                false
-                            }
-                        }) {
-                            return Err(anyhow::format_err!("no releases found for version {}", version));
+                            Ok(rr)
                         } else {
-                            return Err(anyhow::format_err!(
-                                "gitlab ref queries failed: {}",
-                                results
-                                    .iter()
-                                    .map(|r| r.as_ref().unwrap_err().to_string())
-                                    .collect::<Vec<_>>()
-                                    .join(", "),
-                            ));
+                            Err(anyhow::anyhow!("unable to parse release name"))
                         }
                     }
+                    Err(gitlab::api::ApiError::Gitlab { msg }) if msg.contains(reqwest::StatusCode::NOT_FOUND.as_str()) => Err(anyhow::format_err!("no releases found for version {}", version)),
+                    Err(e) => Err(anyhow::format_err!("query failed: {}", e)),
                 }
+            }).collect::<Vec<_>>();
+            if let Some(Err(e)) = new_blessed_versions.iter().find(|r| r.is_err()) {
+                return Err(anyhow::anyhow!("failed to query gitlab for blessed versions: {}", e));
             }
+
+            let new_blessed_versions = new_blessed_versions.into_iter().map(|r| r.unwrap()).collect::<Vec<_>>();
+            new_blessed_versions.clone().into_iter().for_each(|mut nrr| {
+                nrr.previous_patch_release = self
+                    .replica_releases
+                    .iter()
+                    .chain(new_blessed_versions.clone().iter())
+                    .rfind(|rr| rr.name == nrr.name)
+                    .map(|rr| rr.clone().into());
+                self.replica_releases.push(nrr);
+            });
         }
 
         self.replica_releases.sort_by(|rr1, rr2| match rr1.time.cmp(&rr2.time) {
