@@ -204,9 +204,14 @@ pub struct Location {
     pub node_operator: String,
 }
 
-// https://ic-api.internetcomputer.org/api/node-providers/list
+// https://ic-api.internetcomputer.org/api/v3/node-providers
 #[derive(Clone, Serialize, Deserialize)]
-pub struct ProviderDetails {
+pub struct NodeProvidersResponse {
+    pub node_providers: Vec<NodeProviderDetails>,
+}
+
+#[derive(Clone, Serialize, Deserialize)]
+pub struct NodeProviderDetails {
     pub display_name: String,
     pub principal_id: PrincipalId,
     pub website: Option<String>,
