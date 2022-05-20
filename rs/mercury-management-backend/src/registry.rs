@@ -11,7 +11,7 @@ use ic_registry_subnet_type::SubnetType;
 use ic_types::PrincipalId;
 use itertools::Itertools;
 use mercury_management_types::{
-    Datacenter, DatacenterOwner, Host, Location, Node, NodeLabel, NodeLabelName, Operator, Provider, ProviderDetails,
+    Datacenter, DatacenterOwner, Host, Node, NodeLabel, NodeLabelName, NodeProviderDetails, Operator, Provider,
     ReplicaRelease, Subnet, SubnetMetadata, TopologyProposalKind, TopologyProposalStatus,
 };
 use std::convert::TryFrom;
@@ -155,22 +155,9 @@ impl RegistryState {
         self.version == self.local_registry.get_latest_version().get()
     }
 
-    pub(crate) async fn update(
-        &mut self,
-        locations: Vec<Location>,
-        providers: Vec<ProviderDetails>,
-    ) -> anyhow::Result<()> {
-        let locations = locations
-            .into_iter()
-            .map(|l| (l.key.clone(), l))
-            .collect::<HashMap<_, _>>();
-        let providers = providers
-            .into_iter()
-            .map(|p| (p.principal_id, p))
-            .collect::<HashMap<_, _>>();
-
+    pub(crate) async fn update(&mut self, providers: Vec<NodeProviderDetails>) -> anyhow::Result<()> {
         self.update_replica_releases().await?;
-        self.update_operators(locations, providers)?;
+        self.update_operators(providers)?;
         self.update_nodes()?;
         self.update_subnets()?;
         self.version = self.local_registry.get_latest_version().get();
@@ -281,11 +268,11 @@ impl RegistryState {
         Ok(())
     }
 
-    fn update_operators(
-        &mut self,
-        locations: HashMap<String, Location>,
-        providers: HashMap<PrincipalId, ProviderDetails>,
-    ) -> Result<()> {
+    fn update_operators(&mut self, providers: Vec<NodeProviderDetails>) -> Result<()> {
+        let providers = providers
+            .into_iter()
+            .map(|p| (p.principal_id, p))
+            .collect::<HashMap<_, _>>();
         let data_center_records: HashMap<String, DataCenterRecord> = self.local_registry.get_family_entries()?;
         let operator_records: HashMap<String, NodeOperatorRecord> = self.local_registry.get_family_entries()?;
 
@@ -318,12 +305,7 @@ impl RegistryState {
                                 city,
                                 country,
                                 continent,
-                                owner: DatacenterOwner {
-                                    name: locations
-                                        .get(&dc.id)
-                                        .map(|l| l.node_operator.clone())
-                                        .unwrap_or_else(|| "Unknown".to_string()),
-                                },
+                                owner: DatacenterOwner { name: dc.owner.clone() },
                                 latitude: dc.gps.clone().map(|l| l.latitude as f64),
                                 longitude: dc.gps.clone().map(|l| l.longitude as f64),
                             }
