@@ -26,7 +26,7 @@ use ic_registry_common_proto::pb::local_store::v1::{
 };
 use ic_types::PrincipalId;
 use log::{debug, error, info, warn};
-use mercury_management_types::{Location, ProviderDetails};
+use mercury_management_types::NodeProvidersResponse;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -383,16 +383,15 @@ async fn init_local_store() -> anyhow::Result<()> {
 async fn poll(registry_state: Arc<RwLock<registry::RegistryState>>) {
     loop {
         info!("Updating registry");
-        let locations_result = query_ic_dashboard_list::<Vec<Location>>("v2/locations").await;
-        let providers_result = query_ic_dashboard_list::<Vec<ProviderDetails>>("node-providers/list").await;
+        let node_providers_result = query_ic_dashboard_list::<NodeProvidersResponse>("v3/node-providers").await;
 
-        match locations_result.and_then(|locations| providers_result.map(|providers| (locations, providers))) {
-            Ok((locations, providers)) => {
+        match node_providers_result {
+            Ok(node_providers_response) => {
                 if registry_state.read().await.sycned() {
                     continue;
                 }
                 let mut registry_state = registry_state.write().await;
-                let update = registry_state.update(locations, providers).await;
+                let update = registry_state.update(node_providers_response.node_providers).await;
                 if let Err(e) = update {
                     warn!("failed state update: {}", e);
                 }
