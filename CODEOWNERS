@@ -1,5 +1,10 @@
-# Default approver
+#
+# Detailed instructions: https://docs.gitlab.com/ee/user/project/code_owners.html
+#
+
+# Specify a default Code Owner by using a wildcard
 *                             @dfinity-lab/teams/release-team
 
 # Boundary nodes code
+# Path ends with a `/` to specify that all files and subdirs in this dir are included in the rule.
 /deployments/boundary-nodes/  @dfinity-lab/teams/boundarynode-team
