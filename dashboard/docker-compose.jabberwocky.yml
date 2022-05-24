@@ -5,15 +5,30 @@ services:
     environment:
       - APP_CONFIG_app_baseUrl=https://dashboard.mainnet.dfinity.systems
       - APP_CONFIG_backend_baseUrl=https://dashboard.mainnet.dfinity.systems
-  dashboard-backend:
+    links:
+      - dashboard-backend-mainnet
+      - dashboard-backend-staging
+  dashboard-backend-mainnet:
     restart: always
     environment:
-      - GITLAB_API_TOKEN
+      - GITLAB_API_TOKEN_RELEASE
       - GITLAB_API_TOKEN_IC_PUBLIC
       - LOCAL_REGISTRY_PATH=/registry_cache
       - NNS_URL=https://nns.ic0.app
+      - NETWORK=mainnet
     volumes:
-      - backend_registry_cache:/registry_cache
+      - backend_registry_cache_mainnet:/registry_cache
+  dashboard-backend-staging:
+    image: registry.gitlab.com/dfinity-lab/core/release/dashboard-backend:${TAG:-latest}
+    restart: always
+    environment:
+      - GITLAB_API_TOKEN_RELEASE
+      - GITLAB_API_TOKEN_IC_PUBLIC
+      - LOCAL_REGISTRY_PATH=/registry_cache
+      - NNS_URL=https://nns.ic0.app
+      - NETWORK=staging
+    volumes:
+      - backend_registry_cache_staging:/registry_cache
   slack:
     restart: always
     environment:
@@ -37,4 +52,5 @@ services:
 
 volumes:
   slack_state:
-  backend_registry_cache:
+  backend_registry_cache_mainnet:
+  backend_registry_cache_staging:

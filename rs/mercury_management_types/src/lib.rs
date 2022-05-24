@@ -10,7 +10,7 @@ use std::convert::TryFrom;
 use std::net::Ipv6Addr;
 use std::ops::Deref;
 use std::sync::Arc;
-use strum_macros::{Display, EnumString};
+use strum_macros::EnumString;
 
 #[serde_as]
 #[derive(Clone, Serialize, Deserialize)]
@@ -48,7 +48,7 @@ pub struct Node {
     pub hostname: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub subnet: Option<PrincipalId>,
-    pub labels: Vec<NodeLabel>,
+    pub dfinity_owned: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub proposal: Option<TopologyProposal>,
 }
@@ -97,54 +97,6 @@ pub struct CreateSubnetProposalInfo {
     pub nodes: Vec<PrincipalId>,
 }
 
-#[derive(Clone, Debug, Deserialize, PartialEq, Eq, Hash)]
-pub struct NodeLabel {
-    pub name: NodeLabelName,
-}
-
-impl Serialize for NodeLabel {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        Ok(serde_json::json!({
-            "name": self.name.to_string(),
-            "value": self.name.description(),
-        })
-        .serialize(serializer)
-        .unwrap())
-    }
-}
-
-#[derive(Display, EnumString, Clone, Debug, PartialEq, Eq, Deserialize, Hash)]
-pub enum NodeLabelName {
-    #[strum(to_string = "DFINITY")]
-    #[serde(alias = "DFINITY", rename(serialize = "DFINITY"))]
-    DFINITYOwned,
-    #[strum(to_string = "NNS ready")]
-    #[serde(alias = "NNS ready", rename(serialize = "NNS ready"))]
-    NNSReady,
-    #[strum(to_string = "Old CUP")]
-    #[serde(alias = "Old CUP", rename(serialize = "Old CUP"))]
-    OldCUP,
-}
-
-impl NodeLabelName {
-    pub fn name(&self) -> String {
-        self.to_string()
-    }
-    pub fn description(&self) -> String {
-        match self {
-            NodeLabelName::DFINITYOwned => "Owned by DFINITY",
-            NodeLabelName::NNSReady => "Provisioned for participating exclusively in the NNS subnet",
-            NodeLabelName::OldCUP => {
-                "CUP creation in this version of nodemanager running is incompatible with new versions"
-            }
-        }
-        .into()
-    }
-}
-
 #[serde_as]
 #[derive(Clone, Serialize, Default, Debug, Deserialize)]
 pub struct Operator {
@@ -186,12 +138,42 @@ pub struct DatacenterOwner {
 }
 
 #[derive(Clone, Serialize, Deserialize, PartialEq, Hash, Eq)]
-pub struct Host {
+pub struct Guest {
     pub datacenter: String,
     pub ipv6: Ipv6Addr,
     pub name: String,
-    pub system_serial: String,
-    pub labels: Option<Vec<NodeLabel>>,
+    pub dfinity_owned: bool,
+}
+
+#[derive(Clone, Serialize, Deserialize, PartialEq, Hash, Eq)]
+pub struct FactsDBGuest {
+    pub name: String,
+    pub node_type: String,
+    pub ipv6: Ipv6Addr,
+    pub principal: String,
+    pub subnet: String,
+    pub physical_system: String,
+}
+
+impl From<FactsDBGuest> for Guest {
+    fn from(g: FactsDBGuest) -> Self {
+        Guest {
+            datacenter: g
+                .physical_system
+                .split('.')
+                .nth(1)
+                .expect("invalid physical system name")
+                .to_string(),
+            ipv6: g.ipv6,
+            name: g
+                .physical_system
+                .split('.')
+                .next()
+                .expect("invalid physical system name")
+                .to_string(),
+            dfinity_owned: g.node_type == "dfinity",
+        }
+    }
 }
 
 // https://ic-api.internetcomputer.org/api/v2/locations

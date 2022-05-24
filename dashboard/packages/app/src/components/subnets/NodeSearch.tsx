@@ -1,7 +1,7 @@
 import React, { forwardRef } from 'react';
-import { Chip, Link, makeStyles, Tooltip } from '@material-ui/core';
+import { Link, makeStyles } from '@material-ui/core';
 import { Table, TableColumn } from '@backstage/core-components';
-import { fetchMissingHosts, fetchNodes, fetchNodesHealths, fetchSubnets } from './fetch';
+import { fetchMissingGuests, fetchNodes, fetchNodesHealths, fetchSubnets } from './fetch';
 import { NodeHealth, Node, Subnet, Operator } from './types';
 import SearchIcon from '@material-ui/icons/Search';
 
@@ -47,7 +47,7 @@ const useStyles = makeStyles(theme => ({
 export default function NodeSearch({ onSearchChange, expand }: { onSearchChange: (_: string) => void, expand: boolean }) {
 
     const classes = useStyles();
-    const columns: TableColumn<Node & { health?: NodeHealth, subnetDetailed?: Subnet, searchableLabels: string }>[] = [
+    const columns: TableColumn<Node & { health?: NodeHealth, subnetDetailed?: Subnet, dfinity_owned: boolean }>[] = [
         {
             title: 'Principal',
             emptyValue: "",
@@ -124,23 +124,10 @@ export default function NodeSearch({ onSearchChange, expand }: { onSearchChange:
             field: 'operator.datacenter.continent',
         },
         {
-            title: 'Labels',
-            emptyValue: "",
-            field: 'labels',
-            render: (rowData) => rowData.labels.map(l =>
-                <Tooltip title={l.description}>
-                    <Chip
-                        variant="outlined"
-                        size="small"
-                        label={l.name}
-                    />
-                </Tooltip>
-            ),
-        },
-        {
-            field: 'searchableLabels',
-            type: 'string',
-            hidden: true,
+            title: 'Admin',
+            field: 'dfinity_owned',
+            type: 'boolean',
+            hidden: false,
             searchable: true,
         },
     ];
@@ -148,16 +135,15 @@ export default function NodeSearch({ onSearchChange, expand }: { onSearchChange:
 
     const healths = fetchNodesHealths();
     const subnets = Object.values(fetchSubnets());
-    const nodes = [...Object.values(fetchNodes()), ...fetchMissingHosts().map(h => ({
+    const nodes = [...Object.values(fetchNodes()), ...fetchMissingGuests().map(g => ({
         principal: "",
-        ip_addr: h.ipv6,
+        ip_addr: g.ipv6,
         operator: {} as Operator,
-        hostname: h.name,
-        labels: h.labels,
+        hostname: g.name,
+        dfinity_owned: g.dfinity_owned,
     } as Node))].map(n => ({
         subnetDetailed: subnets.find(s => s.nodes.find(sn => sn.principal == n.principal)),
         health: healths[n.principal] ?? "",
-        searchableLabels: n.labels.map(l => l.name).join(" "),
         ...n
     }));
 

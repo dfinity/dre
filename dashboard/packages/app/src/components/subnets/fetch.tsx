@@ -1,44 +1,59 @@
-import { Operator, Subnet, Host, NodeHealth, Rollout, Node } from './types';
+import { Operator, Subnet, Guest, NodeHealth, Rollout, Node } from './types';
 import { useQuery } from 'react-query';
 import { useApi, configApiRef } from '@backstage/core-plugin-api';
 
+export function get_network() {
+    const networkRegex = '/network/([^/]+)'
+    return window.location.pathname.match(networkRegex)?.[1] ?? "mercury"
+}
 
+export async function fetchVersion() {
+    const network = get_network();
+    const config = useApi(configApiRef);
+    return fetch(
+        `${config.getString('backend.baseUrl')}/api/proxy/registry/${network}/version`
+    )
+}
 
 export function fetchOperators(): { [principal: string]: Operator } {
+    const network = get_network();
     const config = useApi(configApiRef);
-    const { data } = useQuery<{ [principal: string]: Operator }, Error>("operators", () =>
+    const { data } = useQuery<{ [principal: string]: Operator }, Error>(`${network}_operators`, () =>
         fetch(
-            `${config.getString('backend.baseUrl')}/api/proxy/registry/operators`
+            `${config.getString('backend.baseUrl')}/api/proxy/registry/${network}/operators`
         ).then((res) => res.json())
     );
     return data ?? {};
 }
 
 export function fetchNodes(): { [principal: string]: Node } {
+    const network = get_network();
     const config = useApi(configApiRef);
-    const { data } = useQuery<{ [principal: string]: Node }, Error>("nodes", () =>
+    const { data } = useQuery<{ [principal: string]: Node }, Error>(`${network}_nodes`, () =>
         fetch(
-            `${config.getString('backend.baseUrl')}/api/proxy/registry/nodes`
+            `${config.getString('backend.baseUrl')}/api/proxy/registry/${network}/nodes`
         ).then((res) => res.json())
     );
     return data ?? {};
 }
 
-export function fetchMissingHosts(): Host[] {
+export function fetchMissingGuests(): Guest[] {
+    const network = get_network();
     const config = useApi(configApiRef);
-    const { data } = useQuery<Host[], Error>("missing_hosts", () =>
+    const { data } = useQuery<Guest[], Error>("missing_guests", () =>
         fetch(
-            `${config.getString('backend.baseUrl')}/api/proxy/registry/missing_hosts`
+            `${config.getString('backend.baseUrl')}/api/proxy/registry/${network}/missing_guests`
         ).then((res) => res.json())
     );
     return data ?? [];
 }
 
 export function fetchNodesHealths(): { [principal: string]: NodeHealth } {
+    const network = get_network();
     const config = useApi(configApiRef);
-    const { data } = useQuery<{ [principal: string]: NodeHealth }, Error>("nodes_health", () =>
+    const { data } = useQuery<{ [principal: string]: NodeHealth }, Error>(`${network}_nodes_health`, () =>
         fetch(
-            `${config.getString('backend.baseUrl')}/api/proxy/registry/nodes/healths`
+            `${config.getString('backend.baseUrl')}/api/proxy/registry/${network}/nodes/healths`
         ).then((res) => res.json())
     );
     return data ?? {};
@@ -46,20 +61,22 @@ export function fetchNodesHealths(): { [principal: string]: NodeHealth } {
 
 
 export function fetchSubnets(): { [principal: string]: Subnet } {
+    const network = get_network();
     const config = useApi(configApiRef);
-    const { data: subnets } = useQuery<{ [principal: string]: Subnet }, Error>("subnets", () =>
+    const { data: subnets } = useQuery<{ [principal: string]: Subnet }, Error>(`${network}_subnets`, () =>
         fetch(
-            `${config.getString('backend.baseUrl')}/api/proxy/registry/subnets`
+            `${config.getString('backend.baseUrl')}/api/proxy/registry/${network}/subnets`
         ).then((res) => res.json())
     );
     return subnets ?? {};
 }
 
 export function fetchRollout(): Rollout {
+    const network = get_network();
     const config = useApi(configApiRef);
-    const { data: rollout } = useQuery<Rollout, Error>("rollout", () =>
+    const { data: rollout } = useQuery<Rollout, Error>(`${network}_rollout`, () =>
         fetch(
-            `${config.getString('backend.baseUrl')}/api/proxy/registry/rollout`
+            `${config.getString('backend.baseUrl')}/api/proxy/registry/${network}/rollout`
         ).then((res) => res.json())
     );
     return rollout ?? {
@@ -73,12 +90,13 @@ export function fetchRollout(): Rollout {
     };
 }
 
-export function fetchHosts(): Host[] {
+export function fetchGuests(): Guest[] {
+    const network = get_network();
     const config = useApi(configApiRef);
-    const { data: hosts } = useQuery<Host[], Error>("hosts", () =>
+    const { data: guests } = useQuery<Guest[], Error>(`${network}_guests`, () =>
         fetch(
-            `${config.getString('backend.baseUrl')}/api/proxy/registry/hosts`
+            `${config.getString('backend.baseUrl')}/api/proxy/registry/${network}/guests`
         ).then((res) => res.json())
     );
-    return hosts ?? [];
+    return guests ?? [];
 }

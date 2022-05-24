@@ -6,7 +6,7 @@ services:
       dockerfile: Dockerfile
       args:
         BUILDKIT_INLINE_CACHE: 1
-  dashboard-backend:
+  dashboard-backend-mainnet:
     build:
       context: ../rs
       dockerfile: mercury-management-backend/Dockerfile
