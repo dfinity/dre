@@ -42,6 +42,8 @@ site
 *-credentials.yaml
 rs/target/
 rs/*/target/
+*.pem
+certs
 
 .env
 __pycache__
