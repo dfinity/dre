@@ -4,15 +4,15 @@ import { green, blue, deepOrange } from '@material-ui/core/colors';
 import CheckCircleOutlineIcon from '@material-ui/icons/CheckCircleOutline';
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import PublishIcon from '@material-ui/icons/Publish';
-import { Host } from './data';
+import { Guest } from './types';
 
 import AppBar from '@material-ui/core/AppBar';
 import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
 
-type HostState = "healthy" | "unknown" | "ready";
+type GuestState = "healthy" | "unknown" | "ready";
 
-const stateIcon = (state: HostState) => {
+const stateIcon = (state: GuestState) => {
   switch (state) {
     case "healthy":
       return <CheckCircleOutlineIcon style={{ color: green[500] }} />
@@ -69,7 +69,7 @@ const useStyles = makeStyles((theme: Theme) => ({
   },
 }));
 
-export const NodeList = ({ hosts, state, move }: { hosts: Host[], state: HostState, move?: (h: Host) => void }) => {
+export const NodeList = ({ guests, state, move }: { guests: Guest[], state: GuestState, move?: (g: Guest) => void }) => {
   const classes = useStyles();
   const [value, setValue] = React.useState(0);
 
@@ -77,11 +77,11 @@ export const NodeList = ({ hosts, state, move }: { hosts: Host[], state: HostSta
     setValue(newValue);
   };
 
-  let hostsGrouped = hosts.reduce((r: { dc: string, hosts: Host[] }[], h) => {
-    r.find(e => e.dc == h.datacenter)?.hosts?.push(h) || r.push({ dc: h.datacenter, hosts: [h] });
+  let guestsGrouped = guests.reduce((r: { dc: string, guests: Guest[] }[], g) => {
+    r.find(e => e.dc == g.datacenter)?.guests?.push(g) || r.push({ dc: g.datacenter, guests: [g] });
     return r
   }, []).sort((a, b) => a.dc.localeCompare(b.dc));
-  hostsGrouped = [{ dc: "all", hosts: hosts }, ...hostsGrouped]
+  guestsGrouped = [{ dc: "all", guests: guests }, ...guestsGrouped]
 
   return (
     <div className={classes.root}>
@@ -95,19 +95,19 @@ export const NodeList = ({ hosts, state, move }: { hosts: Host[], state: HostSta
           scrollButtons="auto"
           aria-label="scrollable auto tabs example"
         >
-          {hostsGrouped.map(({ dc }, index) => <Tab label={dc} {...a11yProps(index)} />)}
+          {guestsGrouped.map(({ dc }, index) => <Tab label={dc} {...a11yProps(index)} />)}
         </Tabs>
       </AppBar>
-      {hostsGrouped.map(({ hosts }, index) =>
+      {guestsGrouped.map(({ guests }, index) =>
         <TabPanel value={value} index={index}>
-          {hosts.sort((a, b) => a.name.localeCompare(b.name)).map((host: Host) =>
+          {guests.sort((a, b) => a.name.localeCompare(b.name)).map((guest: Guest) =>
             <Chip
               icon={stateIcon(state)}
-              label={host?.name}
+              label={guest?.name}
               variant="outlined"
               size="small"
               {...(move ? {
-                onDelete: () => move(host),
+                onDelete: () => move(guest),
                 deleteIcon: <PublishIcon />,
               } : {})}
               className={classes.nodeChip}

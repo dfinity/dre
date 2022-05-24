@@ -21,7 +21,7 @@ export interface Operator {
   principal: string;
   provider: Provider;
   allowance: number;
-  datacenter: Datacenter;
+  datacenter?: Datacenter;
 }
 
 export interface Node {
@@ -30,7 +30,7 @@ export interface Node {
   operator: Operator;
   hostname: string;
   subnet?: string;
-  labels: NodeLabel[];
+  dfinity_owned: boolean;
   proposal?: TopologyProposal;
 }
 
@@ -47,12 +47,11 @@ export interface NodeLabel {
   description: string;
 }
 
-export interface Host {
+export interface Guest {
   datacenter: string;
   ipv6: string;
   name: string;
-  system_serial: string;
-  labels?: NodeLabel[];
+  dfinity_owned: boolean;
 }
 
 export interface SubnetMetadata {

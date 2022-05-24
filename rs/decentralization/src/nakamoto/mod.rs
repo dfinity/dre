@@ -79,11 +79,8 @@ impl Decentralize for Node {
         IterType: IntoIterator<Item = Self>,
     {
         let candidate_vec = candidate.into_iter().collect::<Vec<Self>>();
-        if candidate_vec.iter().filter(|x| x.dfinity_owned).count() != 1 {
-            false
-        } else {
-            FeatureSet::check_business_rules(candidate_vec.into_iter().map(|x| x.features))
-        }
+        candidate_vec.iter().filter(|x| x.dfinity_owned).count() >= 1
+            && FeatureSet::check_business_rules(candidate_vec.into_iter().map(|x| x.features))
     }
 }
 

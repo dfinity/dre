@@ -4,7 +4,7 @@ import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
 import Typography from '@material-ui/core/Typography';
 import { Button, Chip, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, Grid } from '@material-ui/core';
-import { Node, Operator, Host, NodeHealth } from './types';
+import { Node, Operator, Guest, NodeHealth } from './types';
 import CheckCircleOutlineIcon from '@material-ui/icons/CheckCircleOutline';
 import { green, blue, red, grey, lightBlue } from '@material-ui/core/colors';
 import AddSubnetDialog from './AddSubnetDialog';
@@ -12,7 +12,7 @@ import ErrorOutlineSharpIcon from '@material-ui/icons/ErrorOutlineSharp';
 import HelpOutlineOutlinedIcon from '@material-ui/icons/HelpOutlineOutlined';
 import UpdateIcon from '@material-ui/icons/Update';
 import HourglassEmptyIcon from '@material-ui/icons/HourglassEmpty';
-import { fetchNodes, fetchOperators, fetchMissingHosts, fetchNodesHealths } from './fetch';
+import { fetchNodes, fetchOperators, fetchMissingGuests, fetchNodesHealths } from './fetch';
 import { CodeSnippet } from '@backstage/core-components';
 import _ from "lodash";
 
@@ -102,9 +102,9 @@ function nodeAvailability(node: Node, health: NodeHealth): nodeAvailability {
 }
 
 
-type hostAvailability = "Free";
+type guestAvailability = "Free";
 
-function hostAvailability(_: Host): hostAvailability {
+function guestAvailability(_: Guest): guestAvailability {
   return "Free"
 }
 
@@ -121,7 +121,7 @@ const NodeAvailabilityIcon = ({ availability }: { availability: nodeAvailability
   }
 }
 
-const HostAvailabilityIcon = ({ availability }: { availability: hostAvailability }) => {
+const GuestAvailabilityIcon = ({ availability }: { availability: guestAvailability }) => {
   switch (availability) {
     case "Free":
       return <HourglassEmptyIcon style={{ color: lightBlue[500] }} />
@@ -133,11 +133,11 @@ function TabPanel({
   value,
   index,
   unassignedNodes,
-  missingHosts,
+  missingGuests,
   operators,
   dc,
   ...other
-}: TabPanelProps & { dc: string, unassignedNodes: Node[], missingHosts: Host[], operators: Operator[] }) {
+}: TabPanelProps & { dc: string, unassignedNodes: Node[], missingGuests: Guest[], operators: Operator[] }) {
   const classes = useStyles();
 
   const healths = fetchNodesHealths()
@@ -172,7 +172,7 @@ function TabPanel({
             </Grid>
             {
               _(
-                (dc === "all" ? unassignedNodes : unassignedNodes.filter(n => n.operator.datacenter.name === dc))
+                (dc === "all" ? unassignedNodes : unassignedNodes.filter(n => n.operator?.datacenter?.name === dc))
                   .sort((a, b) => a.hostname.localeCompare(b.hostname))
                   .map(n => ({ node: n, status: healths[n.principal] ?? "Unknown" }))
                   .map(({ node, status }) => ({ node: node, status: status!! })),
@@ -207,8 +207,8 @@ function TabPanel({
           <Grid item xs>
             <Grid container justifyContent="flex-start" alignItems="center">
               <Grid item>
-                <Typography variant='h5'>Missing hosts</Typography>
-                <Typography variant='subtitle1'>Hosts not participating in the Mainnet network</Typography>
+                <Typography variant='h5'>Missing guests</Typography>
+                <Typography variant='subtitle1'>Guests which need to be added to the network</Typography>
                 <Typography variant="subtitle2">Total allowed: {operators.reduce((r, c) => r + c.allowance, 0)}</Typography>
               </Grid>
               <Grid item>
@@ -216,26 +216,26 @@ function TabPanel({
             </Grid>
             {
               _(
-                (dc === "all" ? missingHosts : missingHosts.filter(n => n.datacenter === dc))
+                (dc === "all" ? missingGuests : missingGuests.filter(n => n.datacenter === dc))
                   .sort((a, b) => a.name.localeCompare(b.name))
               ).groupBy(
-                (h) => hostAvailability(h),
-              ).map((hosts, availability) =>
+                (h) => guestAvailability(h),
+              ).map((guests, availability) =>
                 <Grid className={classes.nodeChipsGroup}>
                   <Grid container>
                     <Grid>
-                      <HostAvailabilityIcon availability={availability as hostAvailability} />
+                      <GuestAvailabilityIcon availability={availability as guestAvailability} />
                     </Grid>
                     <Grid>
                       <Typography className={classes.nodeAvailabilityHeader}>
-                        {availability} ({hosts.length})
+                        {availability} ({guests.length})
                       </Typography>
                     </Grid>
                   </Grid>
                   <Divider className={classes.nodeChipsDivider} />
-                  {hosts.map(host =>
+                  {guests.map(guest =>
                     <Chip
-                      label={host.name}
+                      label={guest.name}
                       variant="outlined"
                       size="small"
                       className={classes.nodeChip}
@@ -265,13 +265,13 @@ export const AvailableNodes = () => {
   const handleChange = (_: React.ChangeEvent<{}>, newValue: number) => {
     setValue(newValue);
   };
-  const missingHosts = fetchMissingHosts();
+  const missingGuests = fetchMissingGuests();
 
   const nodes = fetchNodes();
   const operators = fetchOperators();
 
   const unassignedNodes = Object.values(nodes).filter(n => n.subnet === undefined);
-  const missingHostsDatacenters = ["all", ...Array.from(new Set([...unassignedNodes.map(n => n.operator.datacenter.name), ...missingHosts.map(h => h.datacenter)])).sort()];
+  const missingGuestsDatacenters = ["all", ...Array.from(new Set([...unassignedNodes.map(n => n.operator?.datacenter?.name ?? "??"), ...missingGuests.map(g => g.datacenter)])).sort()];
 
   return (
     <div className={classes.root}>
@@ -286,20 +286,20 @@ export const AvailableNodes = () => {
               aria-label="Vertical tabs example"
               className={classes.tabs}
             >
-              {missingHostsDatacenters.map((dc, index) => (
+              {missingGuestsDatacenters.map((dc, index) => (
                 <Tab label={dc} {...a11yProps(index)} />
               ))}
             </Tabs>
           </div>
         </Grid>
         <Grid item xs>
-          {missingHostsDatacenters.map((dc, index) => (
+          {missingGuestsDatacenters.map((dc, index) => (
             <TabPanel
               value={value}
               index={index}
               dc={dc}
               unassignedNodes={unassignedNodes}
-              missingHosts={missingHosts}
+              missingGuests={missingGuests}
               operators={Object.values(operators)}
             />
           ))}

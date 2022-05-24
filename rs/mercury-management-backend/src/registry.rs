@@ -11,8 +11,8 @@ use ic_registry_subnet_type::SubnetType;
 use ic_types::PrincipalId;
 use itertools::Itertools;
 use mercury_management_types::{
-    Datacenter, DatacenterOwner, Host, Node, NodeLabel, NodeLabelName, NodeProviderDetails, Operator, Provider,
-    ReplicaRelease, Subnet, SubnetMetadata, TopologyProposalKind, TopologyProposalStatus,
+    Datacenter, DatacenterOwner, Guest, Node, NodeProviderDetails, Operator, Provider, ReplicaRelease, Subnet,
+    SubnetMetadata, TopologyProposalKind, TopologyProposalStatus,
 };
 use std::convert::TryFrom;
 use std::sync::Arc;
@@ -30,7 +30,6 @@ use ic_registry_client_helpers::{node::NodeRegistry, subnet::SubnetListRegistry}
 use ic_protobuf::registry::replica_version::v1::BlessedReplicaVersions;
 use ic_registry_keys::DATA_CENTER_KEY_PREFIX;
 
-use serde::Deserialize;
 use std::str::FromStr;
 
 use crate::gitlab::{CommitRef, CommitRefs};
@@ -42,13 +41,14 @@ use regex::Regex;
 use anyhow::Result;
 
 pub struct RegistryState {
+    network: String,
     local_registry: Arc<LocalRegistry>,
 
     version: u64,
     subnets: HashMap<PrincipalId, Subnet>,
     nodes: HashMap<PrincipalId, Node>,
     operators: HashMap<PrincipalId, Operator>,
-    hosts: Vec<Host>,
+    guests: Vec<Guest>,
     known_subnets: HashMap<PrincipalId, String>,
 
     replica_releases: Vec<ReplicaRelease>,
@@ -99,31 +99,19 @@ impl RegistryFamilyEntries for LocalRegistry {
 }
 
 impl RegistryState {
-    pub(crate) fn new(local_registry: Arc<LocalRegistry>, gitlab_client_public: Option<gitlab::AsyncGitlab>) -> Self {
-        let labels =
-            serde_yaml::from_str::<Vec<Label>>(include_str!("../data/labels.yaml")).expect("invalid configuration");
-
+    pub(crate) fn new(
+        network: String,
+        local_registry: Arc<LocalRegistry>,
+        gitlab_client_public: Option<gitlab::AsyncGitlab>,
+    ) -> Self {
         Self {
+            network,
             local_registry,
             version: 0,
             subnets: HashMap::<PrincipalId, Subnet>::new(),
             nodes: HashMap::new(),
             operators: HashMap::new(),
-            hosts: serde_json::from_str::<Vec<Host>>(include_str!("../data/hosts.json"))
-                .unwrap()
-                .into_iter()
-                .map(|h| Host {
-                    labels: labels
-                        .iter()
-                        .filter(|l| l.hosts.contains(&h.name))
-                        .map(|l| NodeLabel {
-                            name: NodeLabelName::from_str(l.name.as_str()).unwrap(),
-                        })
-                        .collect::<Vec<_>>()
-                        .into(),
-                    ..h
-                })
-                .collect(),
+            guests: Vec::new(),
             replica_releases: Vec::new(),
             gitlab_client_public,
             known_subnets: [
@@ -155,7 +143,17 @@ impl RegistryState {
         self.version == self.local_registry.get_latest_version().get()
     }
 
-    pub(crate) async fn update(&mut self, providers: Vec<NodeProviderDetails>) -> anyhow::Result<()> {
+    pub(crate) async fn update(
+        &mut self,
+        providers: Vec<NodeProviderDetails>,
+        guests: Vec<Guest>,
+    ) -> anyhow::Result<()> {
+        self.guests = guests;
+        if self.network == "staging" {
+            for g in &mut self.guests {
+                g.dfinity_owned = true;
+            }
+        }
         self.update_replica_releases().await?;
         self.update_operators(providers)?;
         self.update_nodes()?;
@@ -318,10 +316,10 @@ impl RegistryState {
         Ok(())
     }
 
-    fn node_record_host(&self, nr: &NodeRecord) -> Option<Host> {
-        self.hosts
+    fn node_record_guest(&self, nr: &NodeRecord) -> Option<Guest> {
+        self.guests
             .iter()
-            .find(|h| h.ipv6 == Ipv6Addr::from_str(&nr.http.clone().unwrap().ip_addr).unwrap())
+            .find(|g| g.ipv6 == Ipv6Addr::from_str(&nr.http.clone().unwrap().ip_addr).unwrap())
             .cloned()
     }
 
@@ -333,7 +331,7 @@ impl RegistryState {
             // Skipping nodes without operator. This should only occur at version 1
             .filter(|(_, nr)| !nr.node_operator_id.is_empty())
             .map(|(p, nr)| {
-                let host = self.node_record_host(nr);
+                let guest = self.node_record_guest(nr);
                 let operator = self
                     .operators
                     .iter()
@@ -345,10 +343,10 @@ impl RegistryState {
                     principal,
                     Node {
                         principal,
-                        labels: host.as_ref().and_then(|h| h.labels.clone()).unwrap_or_default(),
+                        dfinity_owned: guest.as_ref().map(|g| g.dfinity_owned).unwrap_or_default(),
                         ip_addr: node_ip_addr(nr),
-                        hostname: host
-                            .map(|h| h.name)
+                        hostname: guest
+                            .map(|g| g.name)
                             .unwrap_or_else(|| {
                                 format!(
                                     "{}-{}",
@@ -437,6 +435,10 @@ impl RegistryState {
             .collect();
 
         Ok(())
+    }
+
+    pub fn network(&self) -> String {
+        self.network.clone()
     }
 
     pub fn version(&self) -> u64 {
@@ -542,19 +544,19 @@ impl RegistryState {
         self.operators.clone()
     }
 
-    pub fn hosts(&self) -> Vec<Host> {
-        self.hosts.clone()
+    pub fn guests(&self) -> Vec<Guest> {
+        self.guests.clone()
     }
 
-    pub fn missing_hosts(&self) -> Vec<Host> {
-        self.hosts
+    pub fn missing_guests(&self) -> Vec<Guest> {
+        self.guests
             .clone()
             .into_iter()
-            .filter(|h| {
+            .filter(|g| {
                 !self
                     .nodes
                     .iter()
-                    .any(|(_, n)| n.hostname.clone().unwrap_or_default() == h.name)
+                    .any(|(_, n)| n.hostname.clone().unwrap_or_default() == g.name)
             })
             .collect()
     }
@@ -617,7 +619,10 @@ impl AvailableNodesQuerier for RegistryState {
             .into_values()
             .filter(|n| n.subnet.is_none() && n.proposal.is_none())
             .collect::<Vec<_>>();
-        let healths = crate::health::nodes()
+
+        let health_client = crate::health::HealthClient::new(self.network());
+        let healths = health_client
+            .nodes()
             .await
             .map_err(|_| NetworkError::DataRequestError)?;
         Ok(nodes
@@ -632,12 +637,6 @@ impl AvailableNodesQuerier for RegistryState {
             .sorted_by(|n1, n2| n1.id.cmp(&n2.id))
             .collect())
     }
-}
-
-#[derive(Deserialize)]
-struct Label {
-    name: String,
-    hosts: Vec<String>,
 }
 
 fn node_ip_addr(nr: &NodeRecord) -> Ipv6Addr {

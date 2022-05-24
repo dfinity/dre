@@ -34,6 +34,8 @@ import {
   SidebarDivider,
   SidebarSpace,
   SidebarScrollWrapper,
+  SidebarSubmenu,
+  SidebarSubmenuItem,
 } from '@backstage/core-components';
 
 const useSidebarLogoStyles = makeStyles({
@@ -88,7 +90,12 @@ export const Root = ({ children }: PropsWithChildren<{}>) => {
           <SidebarDivider />
           {/* Global nav, not org-specific */}
           <SidebarItem icon={HomeIcon} to="/" text="Home" />
-          <SidebarItem icon={SettingsEthernetSharpIcon} to="/network" text="Network" />
+          <SidebarItem icon={SettingsEthernetSharpIcon} text="Network">
+            <SidebarSubmenu title="Network">
+              <SidebarSubmenuItem to="/network/mercury/topology" title="Mainnet" />
+              <SidebarSubmenuItem to="/network/staging/topology" title="Staging" />
+            </SidebarSubmenu>
+          </SidebarItem>
           <SidebarItem icon={LocalShippingIcon} to="/release" text="Release" />
           <SidebarItem icon={AssignmentTurnedInIcon} to="/qualification" text="Qualification" />
 

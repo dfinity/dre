@@ -4,6 +4,7 @@ mod prom;
 mod proposal;
 mod registry;
 mod release;
+use ::gitlab::api::AsyncQuery;
 use actix_web::dev::Service;
 use actix_web::{error, get, post, web, App, Error, HttpResponse, HttpServer, Responder};
 use dotenv::dotenv;
@@ -26,7 +27,7 @@ use ic_registry_common_proto::pb::local_store::v1::{
 };
 use ic_types::PrincipalId;
 use log::{debug, error, info, warn};
-use mercury_management_types::NodeProvidersResponse;
+use mercury_management_types::{FactsDBGuest, Guest, NodeProvidersResponse};
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -43,6 +44,7 @@ extern crate env_logger;
 use ic_registry_client::local_registry::LocalRegistry;
 
 const GITLAB_TOKEN_IC_PUBLIC_ENV: &str = "GITLAB_API_TOKEN_IC_PUBLIC";
+const GITLAB_TOKEN_RELEASE_ENV: &str = "GITLAB_API_TOKEN_RELEASE";
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -70,6 +72,7 @@ async fn main() -> std::io::Result<()> {
     });
 
     let registry_state = Arc::new(RwLock::new(registry::RegistryState::new(
+        network(),
         local_registry,
         gitlab_client(GITLAB_TOKEN_IC_PUBLIC_ENV).await.into(),
     )));
@@ -107,8 +110,8 @@ async fn main() -> std::io::Result<()> {
             .service(version)
             .service(subnets)
             .service(nodes)
-            .service(missing_hosts)
-            .service(hosts)
+            .service(missing_guests)
+            .service(guests)
             .service(operators)
             .service(nodes_healths)
             .service(ic_single_metrics)
@@ -119,7 +122,15 @@ async fn main() -> std::io::Result<()> {
             .service(endpoints::subnet::replace)
     })
     .shutdown_timeout(10)
-    .bind(("0.0.0.0", 8080))?
+    .bind((
+        "0.0.0.0",
+        std::env::var("BACKEND_PORT")
+            .map(|p| {
+                p.parse()
+                    .expect("Unable to parse BACKEND_PORT environment variable as a valid port")
+            })
+            .unwrap_or(8080),
+    ))?
     .run()
     .await
 }
@@ -217,7 +228,8 @@ async fn nodes(registry: web::Data<Arc<RwLock<registry::RegistryState>>>) -> Res
 #[get("/nodes/healths")]
 async fn nodes_healths(registry: web::Data<Arc<RwLock<registry::RegistryState>>>) -> Result<HttpResponse, Error> {
     let registry = registry.read().await;
-    response_from_result(health::nodes().await.map(|mut healths| {
+    let health_client = health::HealthClient::new(registry.network());
+    response_from_result(health_client.nodes().await.map(|mut healths| {
         registry
             .nodes()
             .values()
@@ -231,14 +243,14 @@ async fn nodes_healths(registry: web::Data<Arc<RwLock<registry::RegistryState>>>
     }))
 }
 
-#[get("/missing_hosts")]
-async fn missing_hosts(registry: web::Data<Arc<RwLock<registry::RegistryState>>>) -> impl Responder {
-    query_registry(registry, |r| r.missing_hosts()).await
+#[get("/missing_guests")]
+async fn missing_guests(registry: web::Data<Arc<RwLock<registry::RegistryState>>>) -> impl Responder {
+    query_registry(registry, |r| r.missing_guests()).await
 }
 
-#[get("/hosts")]
-async fn hosts(registry: web::Data<Arc<RwLock<registry::RegistryState>>>) -> impl Responder {
-    query_registry(registry, |r| r.hosts()).await
+#[get("/guests")]
+async fn guests(registry: web::Data<Arc<RwLock<registry::RegistryState>>>) -> impl Responder {
+    query_registry(registry, |r| r.guests()).await
 }
 
 #[get("/operators")]
@@ -383,25 +395,49 @@ async fn init_local_store() -> anyhow::Result<()> {
 async fn poll(registry_state: Arc<RwLock<registry::RegistryState>>) {
     loop {
         info!("Updating registry");
-        let node_providers_result = query_ic_dashboard_list::<NodeProvidersResponse>("v3/node-providers").await;
 
-        match node_providers_result {
-            Ok(node_providers_response) => {
-                if registry_state.read().await.sycned() {
-                    continue;
+        let gitlab_client = gitlab_client(GITLAB_TOKEN_RELEASE_ENV).await;
+        if !registry_state.read().await.sycned() {
+            let node_providers_result = query_ic_dashboard_list::<NodeProvidersResponse>("v3/node-providers").await;
+            let guests_result = ::gitlab::api::raw(
+                ::gitlab::api::projects::repository::files::FileRaw::builder()
+                    .ref_("refs/heads/main")
+                    .project("dfinity-lab/core/release")
+                    .file_path(format!("factsdb/data/{}_guests.csv", network()))
+                    .build()
+                    .expect("failed to build API endpoint"),
+            )
+            .query_async(&gitlab_client)
+            .await
+            .map(|r| {
+                csv::Reader::from_reader(r.as_slice())
+                    .deserialize()
+                    .map(|r| {
+                        let fdbg: FactsDBGuest = r.expect("record failed to parse");
+                        Guest::from(fdbg)
+                    })
+                    .collect::<Vec<_>>()
+            });
+            match (node_providers_result, guests_result) {
+                (Ok(node_providers_response), Ok(guests_list)) => {
+                    let mut registry_state = registry_state.write().await;
+                    let update = registry_state
+                        .update(node_providers_response.node_providers, guests_list)
+                        .await;
+                    if let Err(e) = update {
+                        warn!("failed state update: {}", e);
+                    }
+                    info!("Updated registry state to version {}", registry_state.version());
                 }
-                let mut registry_state = registry_state.write().await;
-                let update = registry_state.update(node_providers_response.node_providers).await;
-                if let Err(e) = update {
-                    warn!("failed state update: {}", e);
+                (Err(e), _) => {
+                    warn!("Failed querying IC dashboard {}", e);
                 }
-                info!("Updated registry state to version {}", registry_state.version());
+                (_, Err(e)) => {
+                    warn!("Failed querying guests file: {}", e);
+                }
             }
-            Err(e) => {
-                warn!("Failed querying IC dashboard {}", e);
-            }
+            sleep(Duration::from_secs(1)).await;
         }
-        sleep(Duration::from_secs(1)).await;
     }
 }
 
@@ -491,6 +527,12 @@ async fn gitlab_client(env: &str) -> AsyncGitlab {
     .expect("unable to initialize gitlab token")
 }
 
+fn network() -> String {
+    std::env::var("NETWORK").expect("Missing NETWORK environment variable")
+}
+
 fn local_registry_path() -> PathBuf {
-    PathBuf::from(std::env::var("LOCAL_REGISTRY_PATH").unwrap_or_else(|_| ".".to_string())).join(".local_registry")
+    PathBuf::from(std::env::var("LOCAL_REGISTRY_PATH").unwrap_or_else(|_| ".".to_string()))
+        .join(".local_registry")
+        .join(nns_nodes_urls()[0].to_string())
 }

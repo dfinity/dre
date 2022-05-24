@@ -39,8 +39,6 @@ pub struct Node {
     pub id: PrincipalId,
     pub features: nakamoto::FeatureSet,
     pub dfinity_owned: bool,
-    #[serde(default)]
-    pub nns_reserved: bool,
 }
 
 impl PartialEq for Node {
@@ -258,14 +256,7 @@ impl From<&mercury_management_types::Node> for Node {
             .cloned()
             .filter_map(|(f, v)| v.map(|v| (f, v)))
             .collect(),
-            dfinity_owned: n
-                .labels
-                .iter()
-                .any(|l| l.name == mercury_management_types::NodeLabelName::DFINITYOwned),
-            nns_reserved: n
-                .labels
-                .iter()
-                .any(|l| l.name == mercury_management_types::NodeLabelName::NNSReady),
+            dfinity_owned: n.dfinity_owned,
         }
     }
 }
@@ -331,13 +322,7 @@ impl AvailableNodesQuerier for InternalDashboardAgent {
             .await?
             .values()
             .sorted_by(|a, b| a.principal.cmp(&b.principal))
-            .filter(|n| {
-                n.subnet == None
-                    && n.labels
-                        .iter()
-                        .all(|l| l.name != mercury_management_types::NodeLabelName::NNSReady)
-                    && n.proposal.is_none()
-            })
+            .filter(|n| n.subnet == None && n.proposal.is_none())
             .map(Node::from)
             .collect::<Vec<_>>())
     }
@@ -486,7 +471,7 @@ impl SubnetChangeRequest {
             .available_nodes
             .clone()
             .into_iter()
-            .filter(|n| !included_nodes.contains(n) || n.nns_reserved)
+            .filter(|n| !included_nodes.contains(n))
             .collect::<Vec<_>>();
 
         let extension = self
@@ -660,9 +645,6 @@ impl From<PubApiNode> for Node {
             // HACK: not possible to determine from the public dashboard API. The value is not relevant for this
             // implementation.
             dfinity_owned: false,
-            // HACK: not possible to determine from the public dashboard API. The value is not relevant for this
-            // implementation.
-            nns_reserved: false,
         }
     }
 }
