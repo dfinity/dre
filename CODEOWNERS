@@ -1,2 +1,5 @@
-*       @dfinity-lab/teams/release-team
-/deployments/boundary-nodes  @dfinity-lab/teams/boundarynode-team
+# Default approver
+*                             @dfinity-lab/teams/release-team
+
+# Boundary nodes code
+/deployments/boundary-nodes/  @dfinity-lab/teams/boundarynode-team
