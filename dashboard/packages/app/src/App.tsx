@@ -14,12 +14,13 @@ import { apis } from './apis';
 import { Root } from './components/Root';
 
 import { AlertDisplay, OAuthRequestDialog } from '@backstage/core-components';
-import { createApp, FlatRoutes } from '@backstage/core-app-api';
+import { createApp } from '@backstage/app-defaults';
+import { FlatRoutes } from '@backstage/core-app-api';
 import { TopologyPage } from './components/subnets/TopologyPage';
 import { ReleasePage } from './components/subnets/ReleasePage';
 import { QueryClient, QueryClientProvider, useQuery } from 'react-query';
-import { useApi, configApiRef } from '@backstage/core-plugin-api';
 
+import { CssBaseline, ThemeProvider } from '@material-ui/core';
 import { BackstageTheme, darkTheme } from '@backstage/theme';
 /**
  * The `@backstage/core-components` package exposes this type that
@@ -28,6 +29,8 @@ import { BackstageTheme, darkTheme } from '@backstage/theme';
  */
 import { BackstageOverrides } from '@backstage/core-components';
 import { QualificationPage } from './components/subnets/QualificationPage';
+
+import { fetchVersion, get_network } from './components/subnets/fetch';
 
 export const createCustomThemeOverrides = (
   theme: BackstageTheme,
@@ -56,7 +59,7 @@ const app = createApp({
       createComponent: scaffolderPlugin.routes.root,
     });
     bind(apiDocsPlugin.externalRoutes, {
-      createComponent: scaffolderPlugin.routes.root,
+      registerApi: catalogImportPlugin.routes.importPage,
     });
     bind(scaffolderPlugin.externalRoutes, {
       registerComponent: catalogImportPlugin.routes.importPage,
@@ -66,15 +69,11 @@ const app = createApp({
     id: 'dfinity-theme',
     title: 'DFINITY Theme',
     variant: 'dark',
-    theme: {
-      ...darkTheme,
-      overrides: {
-        // These are the overrides that Backstage applies to `material-ui` components
-        ...darkTheme.overrides,
-        // These are your custom overrides, either to `material-ui` or Backstage components.
-        ...createCustomThemeOverrides(darkTheme),
-      },
-    },
+    Provider: ({ children }) => (
+      <ThemeProvider theme={darkTheme}>
+        <CssBaseline>{children}</CssBaseline>
+      </ThemeProvider>
+    ),
   }]
 });
 
@@ -83,7 +82,7 @@ const AppRouter = app.getRouter();
 
 const routes = (
   <FlatRoutes>
-    <Navigate key="/" to="/network" />
+    <Navigate key="/" to="/network/mercury/topology" />
     {/* <Route path="/catalog" element={<CatalogIndexPage />} />
     <Route
       path="/catalog/:namespace/:kind/:name"
@@ -102,24 +101,23 @@ const routes = (
     <Route path="/search" element={<SearchPage />} />
     <Route path="/settings" element={<UserSettingsPage />} />
 
-    <Route path="/network" element={<TopologyPage />} />
+    <Route path="/network/mercury/topology" element={<TopologyPage />} />
+    <Route path="/network/staging/topology" element={<TopologyPage />} />
     <Route path="/release" element={<ReleasePage />} />
     <Route path="/qualification" element={<QualificationPage />} />
   </FlatRoutes>
 );
 
 const StateRefresh = ({ children }: { children: React.ReactNode }) => {
-  const config = useApi(configApiRef);
   let { data: version } = useQuery<number, Error>("version", async () =>
-    await fetch(
-      `${config.getString('backend.baseUrl')}/api/proxy/registry/version`
-    ).then((res) => res.json())
+    await fetchVersion().then((res) => res.json())
     , {
       onSuccess: (data) => {
         if (data !== version) {
-          queryClient.invalidateQueries("subnets");
-          queryClient.invalidateQueries("nodes");
-          queryClient.invalidateQueries("operators");
+          queryClient.invalidateQueries(`${get_network()}_subnets`);
+          queryClient.invalidateQueries(`${get_network()}_nodes`);
+          queryClient.invalidateQueries(`${get_network()}_operators`);
+          queryClient.invalidateQueries(`${get_network()}_guests`);
         }
       },
       refetchInterval: 1000,

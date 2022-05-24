@@ -24,9 +24,9 @@ const SubnetRow = ({ subnet, dcs }: { subnet: Subnet, dcs: string[] }) => {
         {subnet.metadata.name} ({subnet.principal.split("-")[0]})
       </TableCell>
       {dcs.map(dc => {
-        const nodes = subnet.nodes.filter(n => n.operator.datacenter.name === dc);
+        const nodes = subnet.nodes.filter(n => n.operator?.datacenter?.name === dc);
         return (
-          <TableCell style={{ ...{ padding: 2 }, ...(nodes.some(n => n.labels.find(l => l.name == "DFINITY")) ? { background: colors.red[200] } : {}) }}>
+          <TableCell style={{ ...{ padding: 2 }, ...(nodes.some(n => n.dfinity_owned) ? { background: colors.red[200] } : {}) }}>
             {
               nodes.map(n =>
                 <>
@@ -55,7 +55,7 @@ export default function SubnetsMatrix() {
     }
     return parseInt(s1.metadata.name.split(" ")[1]) - parseInt(s2.metadata.name.split(" ")[1])
   });
-  const dcs = Array.from(subnets.reduce((r, s) => new Set([...r, ...s.nodes.map(n => n.operator.datacenter.name)]), new Set<string>())).sort((d1, d2) => d1.localeCompare(d2));
+  const dcs = Array.from(subnets.reduce((r, s) => new Set([...r, ...s.nodes.map(n => n.operator?.datacenter?.name ?? "??")]), new Set<string>())).sort((d1, d2) => d1.localeCompare(d2));
 
   return (
     <TableContainer component={Paper}>

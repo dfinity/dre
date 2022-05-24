@@ -8,9 +8,9 @@ backend:
     port: 17000
 
 proxy:
-  '/registry':
-    target: 'http://dashboard-backend:8080'
+  '/registry/mercury':
+    target: 'http://dashboard-backend-mainnet:8080'
     changeOrigin: true
-  '/decentralization':
-    target: 'http://decentralization:8081'
+  '/registry/staging':
+    target: 'http://dashboard-backend-staging:8080'
     changeOrigin: true

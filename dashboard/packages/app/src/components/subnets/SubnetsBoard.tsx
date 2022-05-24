@@ -110,7 +110,7 @@ function generateSubnetActions(subnet: Subnet, healths: { [principal: string]: N
     actions.push({
       type: "expand",
       urgency: "warning",
-      description: `Hosts will be added to the subnet: TODO`,
+      description: `Guests will be added to the subnet: TODO`,
       message: <>Subnet should be extended with <b>{recommendedSubnetSize - subnet.nodes.length}</b> more node{recommendedSubnetSize - subnet.nodes.length > 1 && "s"}.</>,
     })
   }
@@ -119,7 +119,7 @@ function generateSubnetActions(subnet: Subnet, healths: { [principal: string]: N
     actions.push({
       type: "heal",
       urgency: deadNodes.length / subnet.nodes.length > 0.1 ? "critical" : "warning",
-      description: `Hosts ${deadNodes.map(dn => dn.hostname)}`,
+      description: `Guests ${deadNodes.map(dn => dn.hostname)}`,
       message: <>There {deadNodes.length === 1 ? "is" : "are"} <b>{deadNodes.length}</b> dead node{deadNodes.length > 1 && "s"} that need{deadNodes.length === 1 && "s"} to be replaced.</>,
     })
   }

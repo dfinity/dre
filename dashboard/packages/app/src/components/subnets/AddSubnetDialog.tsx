@@ -6,7 +6,6 @@ import DialogContent from '@material-ui/core/DialogContent';
 import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import { CodeSnippet } from '@backstage/core-components';
-// import { nodes, Node, hosts, Host, hostOwners, datacenterLocations } from './data';
 import { Chip, Divider, Grid, List, ListItem, ListItemText, Typography } from '@material-ui/core';
 import { Node } from './types';
 import { useQuery } from 'react-query';
@@ -89,10 +88,10 @@ export default function AddSubnetDialog() {
             <Grid item xs>
               <Typography variant="subtitle2">Operator count: {new Set(subnetNodes.map(n => n.operator.principal)).size}</Typography>
               <List>
-                {subnetNodes.map(n => n.operator.datacenter.owner.name).reduce((r: { name: string, count: number }[], c) => {
+                {subnetNodes.map(n => n.operator.datacenter?.owner?.name).reduce((r: { name: string, count: number }[], c) => {
                   let entry = r.find(p => p.name == c);
                   if (entry === undefined) {
-                    r.push({ name: c, count: 0 })
+                    r.push({ name: c || "Unknown", count: 0 })
                   }
                   r.find(p => p.name == c)!.count++;
                   return r

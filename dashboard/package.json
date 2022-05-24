@@ -6,10 +6,15 @@
     "node": "14"
   },
   "scripts": {
-    "dev": "concurrently \"yarn start\" \"yarn start-backend\" \"cd ../rs && cargo watch -C mercury-management-backend -x run\"",
+    "dev-staging": "concurrently \"yarn start\" \"yarn start-backend\" \"yarn start-rust-backend-staging\"",
+    "start-rust-backend-staging": "cd ../rs && BACKEND_PORT=8081 NETWORK=staging NNS_URL=http://[2600:3004:1200:1200:5000:7dff:fe29:a2f5]:8080 cargo watch -C mercury-management-backend -x run",
+    "dev-mainnet": "concurrently \"yarn start\" \"yarn start-backend\" \"yarn start-rust-backend-mainnet\"",
+    "start-rust-backend-mainnet": "cd ../rs && NETWORK=mercury NNS_URL=https://nns.ic0.app cargo watch -C mercury-management-backend -x run",
+    "dev": "concurrently \"yarn start\" \"yarn start-backend\" \"yarn start-rust-backend-staging\" \"yarn start-rust-backend-mainnet\"",
     "start": "yarn workspace app start",
     "start-backend": "yarn workspace backend start",
-    "build": "lerna run build",
+    "start-backstage": "concurrently \"yarn start\" \"yarn start-backend\"",
+    "build": "backstage-cli repo build --all",
     "build-image": "yarn workspace backend build-image",
     "tsc": "tsc",
     "tsc:full": "tsc --skipLibCheck false --incremental false",
@@ -33,7 +38,7 @@
     ]
   },
   "devDependencies": {
-    "@backstage/cli": "^0.7.6",
+    "@backstage/cli": "^0.17.1",
     "@spotify/prettier-config": "^7.0.0",
     "concurrently": "^6.0.0",
     "lerna": "^4.0.0",
@@ -53,5 +58,6 @@
     "transformModules": [
       "@asyncapi/react-component"
     ]
-  }
+  },
+  "dependencies": {}
 }
