@@ -5,53 +5,35 @@ import { Table, Page, Header, Content, HeaderLabel, Gauge, InfoCard } from '@bac
 import { AvailableNodes } from './AvailableNodes';
 import SubnetsBoard from './SubnetsBoard';
 import Decentralization from './Decentralization';
-import { useQuery } from 'react-query';
-import { Host, Node } from './types';
-import { useApi, configApiRef } from '@backstage/core-plugin-api';
+import { Guest, Node } from './types';
 import SubnetsMatrix from './SubnetsMatrix';
 import NodeSearch from './NodeSearch';
+import { fetchGuests, fetchNodes } from './fetch';
 
 export default {
   title: 'Data Display/Table',
   component: Table,
 };
 
-const datacenterProgrees = (hosts: Host[], nodes: Node[], dc: string) => {
-  let datacenterHosts = hosts.filter(h => h.datacenter == dc)
+const datacenterProgress = (guests: Guest[], nodes: Node[], dc: string) => {
+  let datacenterGuests = guests.filter(h => h.datacenter == dc)
   return {
-    onboarded: nodes.filter(n => datacenterHosts.find(h => h.name == n.hostname)).length,
-    total: datacenterHosts.length
+    onboarded: nodes.filter(n => datacenterGuests.find(g => g.name == n.hostname)).length,
+    total: datacenterGuests.length
   }
 }
 
-const datacenters = (hosts: Host[], nodes: Node[]) => Array.from(hosts.reduce((r, c) => r.add(c.datacenter), new Set<string>())).map(dc => ({
+const datacenters = (guests: Guest[], nodes: Node[]) => Array.from(guests.reduce((r, c) => r.add(c.datacenter), new Set<string>())).map(dc => ({
   name: dc,
   operator: nodes.find(
     n => n.operator?.datacenter?.name == dc
   )?.operator?.datacenter?.owner?.name ?? "Unknown"
 }));
 
-// const datacenters = (hosts: Host[], nodes: Node[]) => Array.from(hosts.map(h => ({
-//   name: h.datacenter,
-//   operator: nodes.find(
-//     n => n.hostname == h.name
-//   )?.operator?.datacenter?.owner?.name ?? "Unknown"
-// })).reduce((r, c) => r.add(c), new Set<{ name: string, operator: string }>()));
-
 export const TopologyPage = () => {
-  const config = useApi(configApiRef);
+  const guests = fetchGuests();
 
-  const { data: hosts } = useQuery<Host[], Error>("hosts", () =>
-    fetch(
-      `${config.getString('backend.baseUrl')}/api/proxy/registry/hosts`
-    ).then((res) => res.json())
-  );
-
-  const { data: nodes } = useQuery<{ [principal: string]: Node }, Error>("nodes", () =>
-    fetch(
-      `${config.getString('backend.baseUrl')}/api/proxy/registry/nodes`
-    ).then((res) => res.json())
-  );
+  const nodes = fetchNodes();
 
   const [showMatrix, setShowMatrix] = React.useState(false);
 
@@ -100,7 +82,7 @@ export const TopologyPage = () => {
           </Grid>
           <Grid item xs={12}>
             <Grid container alignItems="stretch">
-              {datacenters(hosts ?? [], Object.values(nodes ?? {})).map(dc => ({ ...dc, progress: datacenterProgrees(hosts ?? [], Object.values(nodes ?? {}), dc.name) || 0 })).sort((dc1, dc2) => dc1.progress.onboarded / dc1.progress.total > dc2.progress.onboarded / dc2.progress.total ? -1 : 1).map(dc => {
+              {datacenters(guests ?? [], Object.values(nodes ?? {})).map(dc => ({ ...dc, progress: datacenterProgress(guests ?? [], Object.values(nodes ?? {}), dc.name) || 0 })).sort((dc1, dc2) => dc1.progress.onboarded / dc1.progress.total > dc2.progress.onboarded / dc2.progress.total ? -1 : 1).map(dc => {
                 return (
                   <Grid item>
                     <InfoCard title={dc.name} subheader={<>Operator: {dc.operator}<br />Onboarded: {dc.progress.onboarded} / {dc.progress.total}</>}>

@@ -70,7 +70,9 @@ async fn replace(
     };
     if request.heal {
         let subnet = change_request.subnet();
-        let healths = health::subnet(subnet.id)
+        let health_client = health::HealthClient::new(registry.network());
+        let healths = health_client
+            .subnet(subnet.id)
             .await
             .map_err(|_| error::ErrorInternalServerError("failed to fetch subnet health".to_string()))?;
         let unhealthy = &subnet

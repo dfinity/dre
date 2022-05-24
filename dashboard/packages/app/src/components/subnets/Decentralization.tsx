@@ -154,16 +154,16 @@ export default function Decentralization() {
   return (
     <Grid container alignItems="stretch">
       <Grid item xs={2}>
-        <DistributionChart title="Top datacenter owners" values={nodes} selector={n => n.operator.datacenter.owner.name} />
+        <DistributionChart title="Top datacenter owners" values={nodes} selector={n => n.operator?.datacenter?.owner?.name ?? "Unknown"} />
       </Grid>
       <Grid item xs={2}>
         <DistributionChart title="Top node providers" values={nodes} selector={n => n.operator.provider.name ?? n.operator.provider.principal} />
       </Grid>
       <Grid item xs={2}>
-        <DistributionChart title="Top continents" values={nodes} selector={n => n.operator.datacenter.continent} tresholdWarning={1 / 3.} tresholdCritical={1 / 2.} />
+        <DistributionChart title="Top continents" values={nodes} selector={n => n.operator?.datacenter?.continent ?? "Unknown"} tresholdWarning={1 / 3.} tresholdCritical={1 / 2.} />
       </Grid>
       <Grid item xs={2}>
-        <DistributionChart title="Top countries" values={nodes} selector={n => n.operator.datacenter.country} />
+        <DistributionChart title="Top countries" values={nodes} selector={n => n.operator?.datacenter?.country ?? "Unknown"} />
       </Grid>
       {/* <Divider orientation="vertical" flexItem /> */}
       {/* <Grid item xs={2}>
