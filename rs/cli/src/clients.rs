@@ -1,15 +1,33 @@
 use async_trait::async_trait;
 use decentralization::SubnetChangeResponse;
 use ic_base_types::PrincipalId;
-use mercury_management_types::{requests::MembershipReplaceRequest, TopologyProposal};
+use mercury_management_types::{requests::MembershipReplaceRequest, Network, TopologyProposal};
 use serde::de::DeserializeOwned;
 
 #[derive(Clone)]
 pub struct DashboardBackendClient {
-    pub url: reqwest::Url,
+    pub(crate) url: reqwest::Url,
 }
 
 impl DashboardBackendClient {
+    pub fn new(network: Network, dev: bool) -> DashboardBackendClient {
+        Self {
+            url: reqwest::Url::parse(if !dev {
+                "https://dashboard.mainnet.dfinity.systems/"
+            } else {
+                "http://localhost:17000/"
+            })
+            .expect("invalid base url")
+            .join("api/proxy/registry/")
+            .expect("failed to join url")
+            .join(match network {
+                Network::Mainnet => "mercury/",
+                Network::Staging => "staging/",
+            })
+            .expect("failed to join url"),
+        }
+    }
+
     pub async fn subnet_pending_action(&self, subnet: PrincipalId) -> anyhow::Result<Option<TopologyProposal>> {
         reqwest::Client::new()
             .get(
@@ -65,5 +83,30 @@ impl RESTRequestBuilder for reqwest::RequestBuilder {
                     })
                 })
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn dashboard_backend_client_url() {
+        assert_eq!(
+            DashboardBackendClient::new(Network::Mainnet, false).url.to_string(),
+            "https://dashboard.mainnet.dfinity.systems/api/proxy/registry/mercury/"
+        );
+        assert_eq!(
+            DashboardBackendClient::new(Network::Staging, false).url.to_string(),
+            "https://dashboard.mainnet.dfinity.systems/api/proxy/registry/staging/"
+        );
+        assert_eq!(
+            DashboardBackendClient::new(Network::Mainnet, true).url.to_string(),
+            "http://localhost:17000/api/proxy/registry/mercury/"
+        );
+        assert_eq!(
+            DashboardBackendClient::new(Network::Staging, true).url.to_string(),
+            "http://localhost:17000/api/proxy/registry/staging/"
+        );
     }
 }
