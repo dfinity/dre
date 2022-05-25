@@ -30,7 +30,7 @@ const datacenters = (guests: Guest[], nodes: Node[]) => Array.from(guests.reduce
   )?.operator?.datacenter?.owner?.name ?? "Unknown"
 }));
 
-export const TopologyPage = () => {
+export const TopologyPage = ({network}: {network: string}) => {
   const guests = fetchGuests();
 
   const nodes = fetchNodes();
@@ -54,9 +54,9 @@ export const TopologyPage = () => {
 
   return (
     <Page themeId="other">
-      <Header title="Mainnet Topology">
+      <Header title="Network Topology">
         <HeaderLabel label="Owner" value="Release Team" />
-        <HeaderLabel label="Lifecycle" value="Production" />
+        <HeaderLabel label="Lifecycle" value={network} />
       </Header>
       <Content>
         <Grid container alignItems="center">
