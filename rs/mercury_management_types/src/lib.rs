@@ -266,3 +266,10 @@ impl ReplicaRelease {
         }
     }
 }
+
+#[derive(EnumString, Clone)]
+#[strum(serialize_all = "snake_case")]
+pub enum Network {
+    Staging,
+    Mainnet,
+}

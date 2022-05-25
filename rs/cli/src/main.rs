@@ -25,9 +25,7 @@ async fn main() -> Result<(), anyhow::Error> {
     ic_admin::with_ic_admin(Default::default(), async {
         let runner = Runner {
             ic_admin: ic_admin::Cli::from(&cli_opts),
-            dashboard_backend_client: clients::DashboardBackendClient {
-                url: cli_opts.backend_url.clone(),
-            },
+            dashboard_backend_client: clients::DashboardBackendClient::new(cli_opts.network, cli_opts.dev),
         };
 
         // Start of actually doing stuff with commands.

@@ -7,6 +7,7 @@ mod release;
 use ::gitlab::api::AsyncQuery;
 use actix_web::dev::Service;
 use actix_web::{error, get, post, web, App, Error, HttpResponse, HttpServer, Responder};
+use decentralization::network::AvailableNodesQuerier;
 use dotenv::dotenv;
 use ic_base_types::{RegistryVersion, SubnetId};
 use ic_protobuf::registry::crypto::v1::PublicKey;
@@ -110,6 +111,7 @@ async fn main() -> std::io::Result<()> {
             .service(version)
             .service(subnets)
             .service(nodes)
+            .service(available_nodes)
             .service(missing_guests)
             .service(guests)
             .service(operators)
@@ -223,6 +225,12 @@ async fn subnets(registry: web::Data<Arc<RwLock<registry::RegistryState>>>) -> i
 async fn nodes(registry: web::Data<Arc<RwLock<registry::RegistryState>>>) -> Result<HttpResponse, Error> {
     let registry = registry.read().await;
     response_from_result(registry.nodes_with_proposals().await)
+}
+
+#[get("/nodes/available")]
+async fn available_nodes(registry: web::Data<Arc<RwLock<registry::RegistryState>>>) -> Result<HttpResponse, Error> {
+    let registry = registry.read().await;
+    response_from_result(registry.available_nodes().await)
 }
 
 #[get("/nodes/healths")]

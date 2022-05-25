@@ -1,4 +1,5 @@
 use clap::{Parser, Subcommand};
+use mercury_management_types::Network;
 
 #[derive(Parser, Clone)]
 #[clap(about, version, author)]
@@ -15,18 +16,16 @@ pub struct Opts {
     pub(crate) neuron_id: Option<u64>,
     #[clap(short, long, env = "IC_ADMIN")]
     pub(crate) ic_admin: Option<String>,
-    #[clap(
-        long,
-        env = "BACKEND_URL",
-        default_value = "https://dashboard.mercury.dfinity.systems/api/proxy/registry/"
-    )]
-    pub(crate) backend_url: reqwest::Url,
+    #[clap(long, env = "DEV")]
+    pub(crate) dev: bool,
     #[clap(long, env = "NNS_URL")]
     pub(crate) nns_url: Option<String>,
     #[clap(short, long, env = "DRY_RUN")]
     pub(crate) dry_run: bool,
     #[clap(long, env = "VERBOSE")]
     pub(crate) verbose: bool,
+    #[clap(long, env = "NETWORK", default_value = "mainnet")]
+    pub(crate) network: Network,
 
     #[clap(subcommand)]
     pub(crate) subcommand: Commands,
