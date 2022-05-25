@@ -109,7 +109,7 @@ const routes = (
 );
 
 const StateRefresh = ({ children }: { children: React.ReactNode }) => {
-  let { data: version } = useQuery<number, Error>("version", async () =>
+  let { data: version } = useQuery<number, Error>(`${get_network()}_version`, async () =>
     await fetchVersion().then((res) => res.json())
     , {
       onSuccess: (data) => {
