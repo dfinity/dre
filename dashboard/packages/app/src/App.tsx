@@ -101,8 +101,8 @@ const routes = (
     <Route path="/search" element={<SearchPage />} />
     <Route path="/settings" element={<UserSettingsPage />} />
 
-    <Route path="/network/mercury/topology" element={<TopologyPage />} />
-    <Route path="/network/staging/topology" element={<TopologyPage />} />
+    <Route path="/network/mercury/topology" element={<TopologyPage network='Mainnet' />} />
+    <Route path="/network/staging/topology" element={<TopologyPage network='Staging' />} />
     <Route path="/release" element={<ReleasePage />} />
     <Route path="/qualification" element={<QualificationPage />} />
   </FlatRoutes>
