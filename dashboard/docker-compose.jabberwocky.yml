@@ -16,6 +16,7 @@ services:
       - LOCAL_REGISTRY_PATH=/registry_cache
       - NNS_URL=https://nns.ic0.app
       - NETWORK=mercury
+      - RUST_BACKTRACE=1
     volumes:
       - backend_registry_cache_mainnet:/registry_cache
   dashboard-backend-staging:
@@ -27,6 +28,7 @@ services:
       - LOCAL_REGISTRY_PATH=/registry_cache
       - NNS_URL=http://[2600:3004:1200:1200:5000:7dff:fe29:a2f5]:8080
       - NETWORK=staging
+      - RUST_BACKTRACE=1
     volumes:
       - backend_registry_cache_staging_2:/registry_cache
   slack:

@@ -81,7 +81,9 @@ async fn main() -> std::io::Result<()> {
     let prom_client = Arc::new(
         PromClient::new("prometheus.dfinity.systems:9090", None).expect("Couldn't initialize prometheus client"),
     );
-    tokio::spawn(async { poll(registry_state_poll).await });
+
+    let release_repo_gitlab_client = gitlab_client(GITLAB_TOKEN_RELEASE_ENV).await;
+    tokio::spawn(async { poll(release_repo_gitlab_client, registry_state_poll).await });
 
     HttpServer::new(move || {
         let middleware_registry_state = registry_state.clone();
@@ -400,11 +402,9 @@ async fn init_local_store() -> anyhow::Result<()> {
     Ok(())
 }
 
-async fn poll(registry_state: Arc<RwLock<registry::RegistryState>>) {
+async fn poll(gitlab_client: AsyncGitlab, registry_state: Arc<RwLock<registry::RegistryState>>) {
     loop {
         info!("Updating registry");
-
-        let gitlab_client = gitlab_client(GITLAB_TOKEN_RELEASE_ENV).await;
         if !registry_state.read().await.sycned() {
             let node_providers_result = query_ic_dashboard_list::<NodeProvidersResponse>("v3/node-providers").await;
             let guests_result = ::gitlab::api::raw(
