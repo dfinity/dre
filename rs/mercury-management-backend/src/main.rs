@@ -69,7 +69,9 @@ async fn main() -> std::io::Result<()> {
 
     let update_local_registry = local_registry.clone();
     std::thread::spawn(move || loop {
+        info!("Updating local registry");
         update_local_registry.sync_with_nns().ok();
+        std::thread::sleep(std::time::Duration::from_secs(1));
     });
 
     let registry_state = Arc::new(RwLock::new(registry::RegistryState::new(
@@ -444,6 +446,11 @@ async fn poll(gitlab_client: AsyncGitlab, registry_state: Arc<RwLock<registry::R
                     warn!("Failed querying guests file: {}", e);
                 }
             }
+        } else {
+            info!(
+                "Skipping update. Registry already on latest version: {}",
+                registry_state.read().await.version()
+            )
         }
         sleep(Duration::from_secs(1)).await;
     }
