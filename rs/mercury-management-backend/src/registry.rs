@@ -139,7 +139,7 @@ impl RegistryState {
         }
     }
 
-    pub(crate) fn sycned(&self) -> bool {
+    pub(crate) fn synced(&self) -> bool {
         self.version == self.local_registry.get_latest_version().get()
     }
 
