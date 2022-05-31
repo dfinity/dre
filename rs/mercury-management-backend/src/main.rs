@@ -404,8 +404,7 @@ async fn init_local_store() -> anyhow::Result<()> {
 
 async fn poll(gitlab_client: AsyncGitlab, registry_state: Arc<RwLock<registry::RegistryState>>) {
     loop {
-        info!("Updating registry");
-        if !registry_state.read().await.sycned() {
+        if !registry_state.read().await.synced() {
             let node_providers_result = query_ic_dashboard_list::<NodeProvidersResponse>("v3/node-providers").await;
             let guests_result = ::gitlab::api::raw(
                 ::gitlab::api::projects::repository::files::FileRaw::builder()
@@ -444,8 +443,8 @@ async fn poll(gitlab_client: AsyncGitlab, registry_state: Arc<RwLock<registry::R
                     warn!("Failed querying guests file: {}", e);
                 }
             }
-            sleep(Duration::from_secs(1)).await;
         }
+        sleep(Duration::from_secs(1)).await;
     }
 }
 
