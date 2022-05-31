@@ -404,6 +404,7 @@ async fn init_local_store() -> anyhow::Result<()> {
 
 async fn poll(gitlab_client: AsyncGitlab, registry_state: Arc<RwLock<registry::RegistryState>>) {
     loop {
+        info!("Updating registry");
         if !registry_state.read().await.synced() {
             let node_providers_result = query_ic_dashboard_list::<NodeProvidersResponse>("v3/node-providers").await;
             let guests_result = ::gitlab::api::raw(
