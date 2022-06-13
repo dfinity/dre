@@ -3,7 +3,7 @@ import { Grid } from '@material-ui/core';
 
 import { Page, Header, Content, HeaderLabel } from '@backstage/core-components';
 // import { ReleaseList } from './ReleaseList';
-import RolloutStepper from './RolloutStepper';
+import RolloutsStepper from './RolloutStepper';
 // import HotfixReleases from './HotfixReleases';
 
 export const ReleasePage = () => {
@@ -19,7 +19,7 @@ export const ReleasePage = () => {
             <ReleaseList />
           </Grid> */}
           <Grid item xs={12}>
-            <RolloutStepper />
+            <RolloutsStepper />
           </Grid>
           {/* <Grid item>
             <HotfixReleases />

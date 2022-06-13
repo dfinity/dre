@@ -1,209 +1,333 @@
 use anyhow::Result;
-use ic_nns_governance::pb::v1::{ProposalInfo, ProposalStatus};
-use ic_registry_subnet_type::SubnetType;
+use chrono::{Date, Datelike, NaiveTime, TimeZone, Utc, Weekday};
 use ic_types::PrincipalId;
-use itertools::Itertools;
 use mercury_management_types::{ReplicaRelease, Subnet};
-use registry_canister::mutations::do_update_subnet_replica::UpdateSubnetReplicaVersionPayload;
 use serde::Serialize;
 use std::collections::HashMap;
-use std::str::FromStr;
 
-use crate::prom::SubnetUpgrade;
+use crate::proposal::{ProposalAgent, SubnetUpdateProposal};
+use crate::registry::NNS_SUBNET_NAME;
 
-#[derive(Clone, Serialize)]
-pub struct Rollout {
-    pub stages: Vec<RolloutStage>,
-    pub release: ReplicaRelease,
+#[derive(Serialize, Clone)]
+#[serde(rename_all = "snake_case")]
+pub enum SubnetUpdateState {
+    Scheduled,
+    Submitted,
+    // Executed,
+    // Baking,
+    Complete,
 }
 
-#[derive(Clone, Serialize)]
+#[derive(Serialize, Clone)]
+pub struct SubnetUpdate {
+    pub state: SubnetUpdateState,
+    pub subnet_id: PrincipalId,
+    pub subnet_name: String,
+    pub proposal: Option<SubnetUpdateProposal>,
+    pub patches_available: Vec<ReplicaRelease>,
+    pub replica_release: ReplicaRelease,
+}
+
+#[derive(Default, Serialize, Clone)]
 pub struct RolloutStage {
-    name: String,
-    subnets: Vec<SubnetRolloutStatus>,
+    pub start_timestamp_seconds: u64,
+    pub updates: Vec<SubnetUpdate>,
+    pub active: bool,
 }
 
-#[derive(Clone, Serialize)]
-pub struct SubnetRolloutStatus {
-    principal: PrincipalId,
-    latest_release: bool,
-    upgrading: bool,
-    upgrading_release: bool,
-    replica_release: ReplicaRelease,
-    patches_available: Vec<ReplicaRelease>,
-    name: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    proposal: Option<ReplicaVersionUpdateProposal>,
+impl RolloutStage {
+    pub fn start_date(&self) -> Date<Utc> {
+        Utc.timestamp(self.start_timestamp_seconds as i64, 0).date()
+    }
+
+    pub fn new_scheduled(updates: Vec<SubnetUpdate>, day: chrono::Date<Utc>, time: NaiveTime) -> Self {
+        Self {
+            start_timestamp_seconds: day.and_time(time).expect("failed to compute time").timestamp() as u64,
+            updates,
+            active: false,
+        }
+    }
 }
 
-#[derive(Clone, Serialize)]
-pub struct ReplicaVersionUpdateProposal {
-    pub id: u64,
-    pub pending: bool,
+#[derive(Serialize)]
+pub struct RolloutState {
+    pub latest_release: ReplicaRelease,
+    pub stages: Vec<RolloutStage>,
 }
 
-impl Rollout {
-    pub fn new(
-        subnets: HashMap<PrincipalId, Subnet>,
-        proposals: Vec<(ProposalInfo, UpdateSubnetReplicaVersionPayload)>,
-        mut subnets_upgrades: HashMap<PrincipalId, SubnetUpgrade>,
-        releases: Vec<ReplicaRelease>,
-    ) -> Result<Self> {
-        let mut unused_subnets: Vec<Subnet> = vec![];
-        let mut verified_subnets: Vec<Subnet> = vec![];
-        let mut canary_subnets: Vec<Subnet> = vec![];
-        let mut ga_subnets: Vec<Subnet> = vec![];
-        let mut system_subnets: Vec<Subnet> = vec![];
+pub struct RolloutConfig {}
 
-        let unused_subnets_principals = vec![
-            PrincipalId::from_str("w4asl-4nmyj-qnr7c-6cqq4-tkwmt-o26di-iupkq-vx4kt-asbrx-jzuxh-4ae")
-                .expect("invalid principal"),
-            PrincipalId::from_str("io67a-2jmkw-zup3h-snbwi-g6a5n-rm5dn-b6png-lvdpl-nqnto-yih6l-gqe")
-                .expect("invalid principal"),
-            PrincipalId::from_str("qxesv-zoxpm-vc64m-zxguk-5sj74-35vrb-tbgwg-pcird-5gr26-62oxl-cae")
-                .expect("invalid principal"),
-            PrincipalId::from_str("snjp4-xlbw4-mnbog-ddwy6-6ckfd-2w5a2-eipqo-7l436-pxqkh-l6fuv-vae")
-                .expect("invalid principal"),
-        ];
-        let canary_subnets_principals = vec![
-            PrincipalId::from_str("shefu-t3kr5-t5q3w-mqmdq-jabyv-vyvtf-cyyey-3kmo4-toyln-emubw-4qe")
-                .expect("invalid principal"),
-            PrincipalId::from_str("pjljw-kztyl-46ud4-ofrj6-nzkhm-3n4nt-wi3jt-ypmav-ijqkt-gjf66-uae")
-                .expect("invalid principal"),
-            PrincipalId::from_str("gmq5v-hbozq-uui6y-o55wc-ihop3-562wb-3qspg-nnijg-npqp5-he3cj-3ae")
-                .expect("invalid principal"),
-        ];
+pub struct RolloutBuilder {
+    pub config: RolloutConfig,
+    pub proposal_agent: ProposalAgent,
+    pub prometheus_client: prometheus_http_query::Client,
+    pub subnets: HashMap<PrincipalId, Subnet>,
+    pub releases: Vec<ReplicaRelease>,
+}
 
-        let rollout_release_name = releases
-            .last()
-            .ok_or_else(|| anyhow::format_err!("no releases"))?
-            .name
-            .clone();
-        let rollout_releases: Vec<_> = releases.iter().skip_while(|r| r.name != rollout_release_name).collect();
+impl RolloutBuilder {
+    pub async fn build(self) -> Result<Vec<RolloutState>> {
+        const MAX_ROLLOUTS: usize = 2;
 
-        let mut subnets_sorted = subnets.into_values().collect::<Vec<_>>();
-        subnets_sorted.sort_by(|a, b| {
-            let subnet_a_rollout_index = rollout_releases
-                .iter()
-                .position(|r| a.replica_version == r.commit_hash)
-                .map(|p| p as i32)
-                .unwrap_or(-1);
-            let subnet_b_rollout_index = rollout_releases
-                .iter()
-                .position(|r| b.replica_version == r.commit_hash)
-                .map(|p| p as i32)
-                .unwrap_or(-1);
-            subnet_b_rollout_index
-                .cmp(&subnet_a_rollout_index)
-                .then(a.principal.cmp(&b.principal))
-        });
+        let subnet_update_proposals = self.proposal_agent.list_update_subnet_version_proposals().await?;
 
-        for s in subnets_sorted {
-            if s.subnet_type == SubnetType::System {
-                system_subnets.push(s);
-            } else if unused_subnets_principals.contains(&s.principal) {
-                unused_subnets.push(s);
-            } else if canary_subnets_principals.contains(&s.principal) {
-                canary_subnets.push(s);
-            } else if s.subnet_type == SubnetType::VerifiedApplication {
-                verified_subnets.push(s);
-            } else if s.subnet_type == SubnetType::Application {
-                ga_subnets.push(s);
-            } else {
-                return Err(anyhow::format_err!(
-                    "failed to assign the subnet {} to a group",
-                    s.principal
+        Ok(self
+            .releases
+            .clone()
+            .into_iter()
+            .rev()
+            .fold(vec![], |mut acc, r| {
+                if acc.len() < MAX_ROLLOUTS && acc.last().map(|l: &ReplicaRelease| l.name != r.name).unwrap_or(true) {
+                    acc.push(r);
+                }
+                acc
+            })
+            .into_iter()
+            .rev()
+            .map(|r| {
+                self.new_rollout_state(
+                    r.clone(),
+                    subnet_update_proposals
+                        .iter()
+                        .filter(|p| r.contains_patch(&p.payload.replica_version_id))
+                        .cloned()
+                        .collect::<Vec<_>>(),
+                )
+            })
+            .collect::<Vec<_>>())
+    }
+
+    fn get_day_stages_times(&self) -> Vec<NaiveTime> {
+        vec![
+            NaiveTime::from_hms_nano(7, 0, 0, 0),
+            NaiveTime::from_hms_nano(9, 0, 0, 0),
+            NaiveTime::from_hms_nano(11, 0, 0, 0),
+            NaiveTime::from_hms_nano(13, 0, 0, 0),
+        ]
+    }
+
+    fn new_rollout_state(
+        &self,
+        release: ReplicaRelease,
+        subnet_update_proposals: Vec<SubnetUpdateProposal>,
+    ) -> RolloutState {
+        let submitted_stages = self.stages_from_proposals(&release, subnet_update_proposals);
+        let today = Utc::now().date();
+        let rollout_days = self.rollout_days(submitted_stages.first().map(|s| s.start_date()).unwrap_or(today));
+        let leftover_days = rollout_days.iter().filter(|d| **d >= today).collect::<Vec<_>>();
+
+        let mut remaining_stages = vec![];
+
+        let mut leftover_subnets = self
+            .subnets
+            .values()
+            .filter(|s| {
+                submitted_stages
+                    .iter()
+                    .all(|stage| stage.updates.iter().all(|u| u.subnet_id != s.principal))
+                    && s.metadata.name != NNS_SUBNET_NAME
+            })
+            .collect::<Vec<_>>();
+
+        // Canary
+        const CANARY_STAGE_TIME_ENTRY_INDEX: usize = 2;
+        let last_stage_time = if submitted_stages.is_empty() {
+            let time = self.get_day_stages_times()[CANARY_STAGE_TIME_ENTRY_INDEX];
+            remaining_stages.push(RolloutStage::new_scheduled(
+                // TODO: get canary ID from config (io67a-2jmkw-zup3h-snbwi-g6a5n-rm5dn-b6png-lvdpl-nqnto-yih6l-gqe)
+                leftover_subnets
+                    .drain(0..1)
+                    .map(|s| self.create_subnet_update(s, &release))
+                    .collect(),
+                today,
+                time,
+            ));
+            Some(time)
+        } else {
+            submitted_stages
+                .last()
+                .map(|s| chrono::NaiveDateTime::from_timestamp(s.start_timestamp_seconds as i64, 0).time())
+        };
+
+        // Leftover rollouts of the day
+        const MIN_STAGE_SIZE: usize = 2;
+        let stage_size_today = std::cmp::max(
+            submitted_stages.last().map(|s| s.updates.len()).unwrap_or_default(),
+            MIN_STAGE_SIZE,
+        );
+        for time in self
+            .get_day_stages_times()
+            .into_iter()
+            .filter(|t| last_stage_time.map(|l| *t > l).unwrap_or(true))
+        {
+            remaining_stages.push(RolloutStage::new_scheduled(
+                leftover_subnets
+                    .drain(0..std::cmp::min(stage_size_today, leftover_subnets.len()))
+                    .map(|s| self.create_subnet_update(s, &release))
+                    .collect(),
+                today,
+                time,
+            ));
+        }
+
+        // Leftover rollouts of the week
+        for (i, day) in leftover_days
+            .iter()
+            .skip(1)
+            .enumerate()
+            .take(leftover_days.len().saturating_sub(2))
+        {
+            for (j, time) in self.get_day_stages_times().into_iter().enumerate() {
+                // Don't increase the size of the first stage compared to previous day
+                let stage_size = stage_size_today + i + std::cmp::min(j, 1);
+                remaining_stages.push(RolloutStage::new_scheduled(
+                    leftover_subnets
+                        .drain(0..std::cmp::min(stage_size, leftover_subnets.len()))
+                        .map(|s| self.create_subnet_update(s, &release))
+                        .collect(),
+                    **day,
+                    time,
                 ));
             }
         }
-        canary_subnets.sort_by(|a, b| {
-            let a_index = canary_subnets_principals
+
+        // Fill in the remaining rollouts starting from the last stage
+        for (i, s) in leftover_subnets.into_iter().enumerate() {
+            let remaining_stages_count = remaining_stages.len();
+            remaining_stages[remaining_stages_count - 1 - (i % remaining_stages_count)]
+                .updates
+                .push(self.create_subnet_update(s, &release));
+        }
+
+        // NNS Rollout
+        if let Some(last_day) = leftover_days.last() {
+            let nns_subnet = self
+                .subnets
+                .values()
+                .find(|s| s.metadata.name == NNS_SUBNET_NAME)
+                .expect("No NNS subnet");
+            if !submitted_stages
                 .iter()
-                .position(|p| *p == a.principal)
-                .expect("unable to find subnet index");
-            let b_index = canary_subnets_principals
+                .any(|s| s.updates.iter().any(|u| u.subnet_id == nns_subnet.principal))
+            {
+                remaining_stages.push(RolloutStage::new_scheduled(
+                    vec![self.create_subnet_update(nns_subnet, &release)],
+                    **last_day,
+                    self.get_day_stages_times()[0],
+                ))
+            }
+        }
+
+        RolloutState {
+            latest_release: release,
+            stages: submitted_stages
+                .into_iter()
+                .chain(remaining_stages.into_iter())
+                .filter(|s| !s.updates.is_empty())
+                .collect(),
+        }
+    }
+
+    fn create_subnet_update(&self, s: &Subnet, release: &ReplicaRelease) -> SubnetUpdate {
+        SubnetUpdate {
+            state: SubnetUpdateState::Scheduled,
+            subnet_id: s.principal,
+            subnet_name: s.metadata.name.clone(),
+            proposal: None,
+            patches_available: release.patches_for(&s.replica_version).unwrap_or_default(),
+            replica_release: self
+                .releases
                 .iter()
-                .position(|p| *p == b.principal)
-                .expect("unable to find subnet index");
-            a_index.cmp(&b_index)
+                .find(|r| r.commit_hash == s.replica_version)
+                .expect("version not found")
+                .clone(),
+        }
+    }
+
+    fn stages_from_proposals(
+        &self,
+        release: &ReplicaRelease,
+        subnet_update_proposals: Vec<SubnetUpdateProposal>,
+    ) -> Vec<RolloutStage> {
+        const ROLLOUT_BATCH_PROPOSAL_LAG_TOLERANCE_SECONDS: u64 = 60;
+
+        let mut proposals = subnet_update_proposals;
+        proposals.sort_by(|a, b| {
+            a.info
+                .proposal_timestamp_seconds
+                .cmp(&b.info.proposal_timestamp_seconds)
         });
-
-        let update_version_proposals = proposals
-            .into_iter()
-            .filter(|(_, p)| rollout_releases.iter().any(|r| p.replica_version_id == r.commit_hash))
-            .collect::<Vec<_>>();
-
-        Ok(Self {
-            release: (*rollout_releases.last().expect("no releases")).clone(),
-            stages: [
-                vec![("Unused", vec![unused_subnets[0].clone()])],
-                unused_subnets[1..]
-                    .iter()
-                    .cloned()
-                    .zip(canary_subnets.into_iter())
-                    .map(|s| ("Canary & Unused", [s.0, s.1].to_vec()))
-                    .collect(),
-                verified_subnets
-                    .into_iter()
-                    .chain(ga_subnets.into_iter())
-                    .enumerate()
-                    .group_by(|(i, _)| i / 2)
-                    .into_iter()
-                    .map(|(_, g)| ("GA & Verified", g.into_iter().map(|(_, s)| s).collect::<Vec<_>>()))
-                    .collect(),
-                vec![("System", system_subnets)],
-            ]
-            .concat()
-            .into_iter()
-            .map(|(name, subnets)| RolloutStage {
-                name: name.to_string(),
-                subnets: subnets
-                    .into_iter()
-                    .map(|s| {
-                        let proposal = update_version_proposals.iter().find(|(proposal, p)| {
-                            p.subnet_id == s.principal
-                                && ProposalStatus::from_i32(proposal.status).expect("unknown proposal status")
-                                    != ProposalStatus::Rejected
-                        });
-                        let replica_release = releases
-                            .iter()
-                            .find(|r| r.commit_hash == s.replica_version)
-                            .expect("release not found")
-                            .clone();
-
-                        let subnet_upgrade = subnets_upgrades.remove(&s.principal).unwrap_or(SubnetUpgrade {
-                            subnet_principal: s.principal,
-                            old_version: s.replica_version.clone(),
-                            new_version: s.replica_version.clone(),
-                            upgraded: false,
-                        });
-
-                        SubnetRolloutStatus {
-                            principal: s.principal,
-                            latest_release: rollout_releases.iter().any(|r| r.commit_hash == s.replica_version),
-                            upgrading: !subnet_upgrade.upgraded,
-                            upgrading_release: !subnet_upgrade.upgraded
-                                && rollout_releases
-                                    .iter()
-                                    .all(|r| r.commit_hash != subnet_upgrade.old_version),
-                            patches_available: releases
-                                .iter()
-                                .filter(|r| r.name == replica_release.name && r.patches(&replica_release))
-                                .cloned()
-                                .collect(),
-                            replica_release,
-                            name: s.metadata.name.clone(),
-                            proposal: proposal.and_then(|(p, _)| p.id.map(|id| (id.id, p))).map(|(id, p)| {
-                                ReplicaVersionUpdateProposal {
-                                    id,
-                                    pending: ProposalStatus::from_i32(p.status).unwrap() == ProposalStatus::Open,
-                                }
-                            }),
+        proposals.into_iter().fold(vec![], |mut acc, proposal| {
+            let update = SubnetUpdate {
+                proposal: proposal.clone().into(),
+                state: SubnetUpdateState::Submitted,
+                subnet_id: proposal.payload.subnet_id,
+                subnet_name: self
+                    .subnets
+                    .get(&proposal.payload.subnet_id)
+                    .expect("missing subnet")
+                    .metadata
+                    .name
+                    .clone(),
+                patches_available: release
+                    .patches_for(&proposal.payload.replica_version_id)
+                    .expect("missing version"),
+                replica_release: release
+                    .get(&proposal.payload.replica_version_id)
+                    .expect("missing version"),
+            };
+            match acc.last_mut() {
+                Some(stage)
+                    if stage
+                        .updates
+                        .last()
+                        .map(|last| match &last.proposal {
+                            Some(last_update_proposal) => {
+                                proposal.info.proposal_timestamp_seconds
+                                    - last_update_proposal.info.proposal_timestamp_seconds
+                                    < ROLLOUT_BATCH_PROPOSAL_LAG_TOLERANCE_SECONDS
+                            }
+                            _ => unreachable!(),
+                        })
+                        .unwrap_or(true) =>
+                {
+                    stage.updates.push(update)
+                }
+                _ => {
+                    if let Some(last_stage) = acc.last_mut() {
+                        last_stage.active = false;
+                        for u in &mut last_stage.updates {
+                            u.state = SubnetUpdateState::Complete;
                         }
+                    }
+                    acc.push(RolloutStage {
+                        start_timestamp_seconds: proposal.info.proposal_timestamp_seconds,
+                        updates: vec![update],
+                        active: true,
                     })
-                    .collect(),
-            })
-            .collect(),
+                }
+            }
+            acc
         })
+    }
+
+    fn rollout_days(&self, start: Date<Utc>) -> Vec<Date<Utc>> {
+        let candidates = (0..14)
+            .into_iter()
+            .map(|i| {
+                let mut d = start;
+                for _ in 0..i {
+                    d = d.succ();
+                }
+                d
+            })
+            .filter(|d| d.weekday().number_from_monday() < Weekday::Sat.number_from_monday())
+            .collect::<Vec<_>>();
+        candidates
+            .split_inclusive(|p| p.iso_week().week() > start.iso_week().week() && *p >= Utc::now().date())
+            .next()
+            .unwrap()
+            .to_vec()
+        // TODO: exclude days based on config
     }
 }

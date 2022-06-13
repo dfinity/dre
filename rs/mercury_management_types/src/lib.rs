@@ -265,6 +265,38 @@ impl ReplicaRelease {
             None => false,
         }
     }
+
+    pub fn contains_patch(&self, commit_hash: &str) -> bool {
+        self.commit_hash == commit_hash
+            || self
+                .previous_patch_release
+                .as_ref()
+                .map(|r| r.contains_patch(commit_hash))
+                .unwrap_or_default()
+    }
+
+    pub fn patches_for(&self, commit_hash: &str) -> Result<Vec<ReplicaRelease>, String> {
+        if self.commit_hash == *commit_hash {
+            Ok(vec![])
+        } else if let Some(previous) = &self.previous_patch_release {
+            previous.patches_for(commit_hash).map(|mut patches| {
+                patches.push(self.clone());
+                patches
+            })
+        } else {
+            Err("doesn't patch this release".to_string())
+        }
+    }
+
+    pub fn get(&self, commit_hash: &str) -> Result<ReplicaRelease, String> {
+        if self.commit_hash == *commit_hash {
+            Ok(self.clone())
+        } else if let Some(previous) = &self.previous_patch_release {
+            previous.get(commit_hash)
+        } else {
+            Err("doesn't patch this release".to_string())
+        }
+    }
 }
 
 #[derive(EnumString, Clone)]

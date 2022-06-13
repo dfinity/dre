@@ -40,7 +40,10 @@ use regex::Regex;
 
 use anyhow::Result;
 
+pub const NNS_SUBNET_NAME: &str = "NNS";
+
 pub struct RegistryState {
+    nns_url: String,
     network: String,
     local_registry: Arc<LocalRegistry>,
 
@@ -100,11 +103,13 @@ impl RegistryFamilyEntries for LocalRegistry {
 
 impl RegistryState {
     pub(crate) fn new(
+        nns_url: String,
         network: String,
         local_registry: Arc<LocalRegistry>,
         gitlab_client_public: Option<gitlab::AsyncGitlab>,
     ) -> Self {
         Self {
+            nns_url,
             network,
             local_registry,
             version: 0,
@@ -255,7 +260,7 @@ impl RegistryState {
                     .replica_releases
                     .iter()
                     .chain(new_blessed_versions.clone().iter())
-                    .rfind(|rr| rr.name == nrr.name)
+                    .rfind(|rr| rr.name == nrr.name && rr.commit_hash != nrr.commit_hash)
                     .map(|rr| rr.clone().into());
                 self.replica_releases.push(nrr);
             });
@@ -413,7 +418,7 @@ impl RegistryState {
                                     .position(|s| s.get() == principal)
                                     .map(|i| {
                                         if i == 0 {
-                                            "NNS".to_string()
+                                            NNS_SUBNET_NAME.to_string()
                                         } else {
                                             format!(
                                                 "{} {}",
@@ -458,7 +463,7 @@ impl RegistryState {
 
     pub async fn nodes_with_proposals(&self) -> Result<HashMap<PrincipalId, Node>> {
         let nodes = self.nodes.clone();
-        let proposal_agent = proposal::ProposalAgent::new();
+        let proposal_agent = proposal::ProposalAgent::new(self.nns_url.clone());
 
         let mut topology_proposals = proposal_agent.list_valid_topology_proposals().await?;
         topology_proposals.reverse();
@@ -491,7 +496,7 @@ impl RegistryState {
 
     pub async fn subnets_with_proposals(&self) -> Result<HashMap<PrincipalId, Subnet>> {
         let subnets = self.subnets.clone();
-        let proposal_agent = proposal::ProposalAgent::new();
+        let proposal_agent = proposal::ProposalAgent::new(self.nns_url.clone());
 
         let topology_proposals = proposal_agent.list_valid_topology_proposals().await?;
         let topology_proposals = topology_proposals;
@@ -566,6 +571,10 @@ impl RegistryState {
 
     pub fn replica_releases(&self) -> Vec<ReplicaRelease> {
         self.replica_releases.clone()
+    }
+
+    pub fn nns_url(&self) -> String {
+        self.nns_url.clone()
     }
 }
 

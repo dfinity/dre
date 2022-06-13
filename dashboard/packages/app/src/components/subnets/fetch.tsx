@@ -71,23 +71,15 @@ export function fetchSubnets(): { [principal: string]: Subnet } {
     return subnets ?? {};
 }
 
-export function fetchRollout(): Rollout {
+export function fetchRollouts(): Rollout[] {
     const network = get_network();
     const config = useApi(configApiRef);
-    const { data: rollout } = useQuery<Rollout, Error>(`${network}_rollout`, () =>
+    const { data: rollout } = useQuery<Rollout[], Error>(`${network}_rollout`, () =>
         fetch(
             `${config.getString('backend.baseUrl')}/api/proxy/registry/${network}/rollout`
         ).then((res) => res.json())
     );
-    return rollout ?? {
-        stages: [],
-        release: {
-            name: "",
-            branch: "",
-            time: "",
-            commit_hash: "",
-        },
-    };
+    return rollout ?? [];
 }
 
 export function fetchGuests(): Guest[] {
