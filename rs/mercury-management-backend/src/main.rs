@@ -18,6 +18,7 @@ use registry_canister::mutations::common::decode_registry_value;
 mod gitlab;
 mod health;
 use crate::prom::{ICProm, PromClient};
+use crate::release::{RolloutBuilder, RolloutConfig};
 use ::gitlab::{AsyncGitlab, GitlabBuilder};
 use futures::TryFutureExt;
 use ic_interfaces::registry::{RegistryClient, RegistryValue, ZERO_REGISTRY_VERSION};
@@ -75,6 +76,7 @@ async fn main() -> std::io::Result<()> {
     });
 
     let registry_state = Arc::new(RwLock::new(registry::RegistryState::new(
+        nns_url(),
         network(),
         local_registry,
         gitlab_client(GITLAB_TOKEN_IC_PUBLIC_ENV).await.into(),
@@ -199,20 +201,17 @@ async fn get_subnet(
 
 #[get("/rollout")]
 async fn rollout(registry: web::Data<Arc<RwLock<registry::RegistryState>>>) -> Result<HttpResponse, Error> {
-    let update_version_proposals = proposal::ProposalAgent::new()
-        .list_update_subnet_version_proposals()
-        .await
-        .map_err(error::ErrorInternalServerError)?;
     let registry = registry.read().await;
-    let nodes_versions = prom::subnets_upgraded(registry.subnets(), update_version_proposals.clone())
-        .await
-        .map_err(error::ErrorInternalServerError)?;
-    response_from_result(release::Rollout::new(
-        registry.subnets(),
-        update_version_proposals,
-        nodes_versions,
-        registry.replica_releases(),
-    ))
+    let proposal_agent = proposal::ProposalAgent::new(registry.nns_url());
+    let prometheus_client = prometheus_http_query::Client::try_from("http://prometheus.dfinity.systems:9090").unwrap();
+    let service = RolloutBuilder {
+        config: RolloutConfig {},
+        proposal_agent,
+        prometheus_client,
+        subnets: registry.subnets(),
+        releases: registry.replica_releases(),
+    };
+    response_from_result(service.build().await)
 }
 
 #[get("/version")]
@@ -277,11 +276,12 @@ async fn query_registry<T: Serialize>(
     HttpResponse::Ok().json(query(registry.clone().read().await.deref()))
 }
 
+fn nns_url() -> String {
+    std::env::var("NNS_URL").expect("NNS_URL environment variable not provided")
+}
+
 fn nns_nodes_urls() -> Vec<Url> {
-    vec![
-        Url::parse(&std::env::var("NNS_URL").expect("NNS_URL environment variable not provided"))
-            .expect("Cannot parse NNS_URL environment variable a valid url"),
-    ]
+    vec![Url::parse(&nns_url()).expect("Cannot parse NNS_URL environment variable as a valid url")]
 }
 
 // TODO: hack: replace with a static way to import NNS state

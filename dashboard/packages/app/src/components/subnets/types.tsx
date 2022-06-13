@@ -70,24 +70,46 @@ export interface Subnet {
 export type VerifiedApplication = "Fleek" | "Distrikt";
 
 export interface Rollout {
-  release: ReplicaRelease;
+  latest_release: ReplicaRelease;
   stages: RolloutStage[];
 }
 
 export interface RolloutStage {
-  name: string;
-  subnets: SubnetRolloutStatus[];
+  start_timestamp_seconds: number;
+  updates: SubnetUpdate[];
+  active: boolean;
 }
 
-export interface SubnetRolloutStatus {
-  principal: string;
-  latest_release: boolean;
-  upgrading: boolean;
-  upgrading_release: boolean;
-  replica_release: ReplicaRelease;
+export interface SubnetUpdate {
+  subnet_id: string;
+  subnet_name: string;
+  state: SubnetUpdateState;
+  proposal?: SubnetUpdateProposal;
   patches_available: ReplicaRelease[];
-  name: string;
-  proposal?: ReplicaVersionUpdateProposal;
+  replica_release: ReplicaRelease;
+  // latest_release: boolean;
+  // upgrading: boolean;
+  // upgrading_release: boolean;
+  // name: string;
+  // proposal?: ReplicaVersionUpdateProposal;
+}
+
+export type SubnetUpdateState = "scheduled" | "submitted" | "executed" | "baking" | "complete";
+
+export interface SubnetUpdateProposal {
+  info: SubnetUpdateProposalInfo
+  payload: SubnetUpdateProposalPayload;
+}
+
+export interface SubnetUpdateProposalInfo {
+  id: number,
+  proposal_timestamp_seconds: number;
+  executed: boolean,
+}
+
+export interface SubnetUpdateProposalPayload {
+  subnet_id: string;
+  replica_version_id: string;
 }
 
 export interface ReplicaVersionUpdateProposal {

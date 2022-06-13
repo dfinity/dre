@@ -16,6 +16,7 @@ use registry_canister::mutations::do_add_nodes_to_subnet::AddNodesToSubnetPayloa
 use registry_canister::mutations::do_create_subnet::CreateSubnetPayload;
 use registry_canister::mutations::do_remove_nodes_from_subnet::RemoveNodesFromSubnetPayload;
 use registry_canister::mutations::do_update_subnet_replica::UpdateSubnetReplicaVersionPayload;
+use serde::Serialize;
 
 pub struct ProposalAgent {
     agent: Agent,
@@ -64,11 +65,53 @@ impl MoveNodesProposalPayload for RemoveNodesFromSubnetPayload {
     }
 }
 
+// Copied so it can be serialized
+#[derive(Clone, Serialize, Debug)]
+pub struct ProposalInfoInternal {
+    pub id: u64,
+    pub proposal_timestamp_seconds: u64,
+    pub executed: bool,
+}
+
+impl From<ProposalInfo> for ProposalInfoInternal {
+    fn from(p: ProposalInfo) -> Self {
+        let ProposalInfo {
+            id,
+            proposer: _,
+            reject_cost_e8s: _,
+            proposal: _,
+            proposal_timestamp_seconds,
+            ballots: _,
+            latest_tally: _,
+            decided_timestamp_seconds: _,
+            executed_timestamp_seconds: _,
+            failed_timestamp_seconds: _,
+            failure_reason: _,
+            reward_event_round: _,
+            topic: _,
+            status,
+            reward_status: _,
+            deadline_timestamp_seconds: _,
+        } = p;
+        ProposalInfoInternal {
+            id: id.expect("missing proposal id").id,
+            proposal_timestamp_seconds,
+            executed: ProposalStatus::from_i32(status).expect("unknown status") == ProposalStatus::Executed,
+        }
+    }
+}
+
+#[derive(Clone, Serialize)]
+pub struct SubnetUpdateProposal {
+    pub info: ProposalInfoInternal,
+    pub payload: UpdateSubnetReplicaVersionPayload,
+}
+
 impl ProposalAgent {
-    pub fn new() -> Self {
+    pub fn new(url: String) -> Self {
         let agent = Agent::builder()
             .with_transport(
-                ic_agent::agent::http_transport::ReqwestHttpReplicaV2Transport::create("https://nns.ic0.app")
+                ic_agent::agent::http_transport::ReqwestHttpReplicaV2Transport::create(url)
                     .expect("failed to create transport"),
             )
             .build()
@@ -206,10 +249,14 @@ impl ProposalAgent {
             .collect())
     }
 
-    pub async fn list_update_subnet_version_proposals(
-        &self,
-    ) -> Result<Vec<(ProposalInfo, UpdateSubnetReplicaVersionPayload)>> {
-        Ok(filter_map_nns_function_proposals(&self.list_proposals().await?))
+    pub async fn list_update_subnet_version_proposals(&self) -> Result<Vec<SubnetUpdateProposal>> {
+        Ok(filter_map_nns_function_proposals(&self.list_proposals().await?)
+            .into_iter()
+            .map(|(info, payload)| SubnetUpdateProposal {
+                info: info.into(),
+                payload,
+            })
+            .collect::<Vec<_>>())
     }
 
     async fn list_proposals(&self) -> Result<Vec<ProposalInfo>> {
