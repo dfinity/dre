@@ -11,18 +11,14 @@ use futures_util::StreamExt;
 #[allow(unused_imports)]
 use hyper::client::HttpConnector;
 use ic_base_types::PrincipalId;
-use ic_nns_governance::pb::v1::ProposalInfo;
 use itertools::{izip, Itertools};
 use mercury_management_types::{Health, Subnet};
-use registry_canister::mutations::do_update_subnet_replica::UpdateSubnetReplicaVersionPayload;
 use reqwest::Client;
 use serde_json::Value;
 use std::clone::Clone;
 use std::cmp;
 use std::collections::HashMap;
 use std::str::FromStr;
-use std::time::SystemTime;
-use std::time::UNIX_EPOCH;
 use std::vec::Vec;
 use url::ParseError;
 use url::Url;
@@ -353,120 +349,6 @@ impl ICProm for PromClient {
             return Ok(resps);
         }
     }
-}
-
-pub struct SubnetUpgrade {
-    pub subnet_principal: PrincipalId,
-    pub old_version: String,
-    pub new_version: String,
-    pub upgraded: bool,
-}
-
-pub async fn subnets_upgraded(
-    subnets: HashMap<PrincipalId, mercury_management_types::Subnet>,
-    proposals: Vec<(ProposalInfo, UpdateSubnetReplicaVersionPayload)>,
-) -> anyhow::Result<HashMap<PrincipalId, SubnetUpgrade>> {
-    let client = reqwest::Client::new();
-    let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
-    let query = subnets
-        .values()
-        .map(|subnet| {
-            proposals
-                .iter()
-                .find(|(_, payload)| {
-                    payload.subnet_id == subnet.principal
-                        && payload.replica_version_id == subnet.replica_version
-                })
-                .map(|(proposal, _)| proposal.executed_timestamp_seconds)
-                .map(|update_time| {
-                    let after_upgrade_window = Duration::hours(12).num_seconds() as u64;
-                    let before_upgrade_window = Duration::minutes(10).num_seconds() as u64;
-                    format!(
-                        r#"
-                            sum without (ic_active_version) (
-                                label_replace(
-                                    (
-                                        (
-                                            (sum by (ic_subnet, ic_active_version) (max_over_time(ic_replica_info{{ ic = "mercury", ic_subnet = "{}", ic_active_version = "{}" }}[{}s] offset {}s)))
-                                                or
-                                            label_replace(label_replace(vector(0), "ic_subnet", "{}", "",""), "ic_active_version", "{}", "", "")
-                                        )
-                                        / ignoring(ic_active_version) group_left
-                                        sum by (ic_subnet, ic_active_version) (max_over_time(ic_replica_info{{ ic = "mercury", ic_subnet = "{}", ic_active_version != "{}" }}[{}s] offset {}s))
-                                    )
-                                    , "ic_old_version", "$1", "ic_active_version", "(.+)"
-                                )
-                            )
-                        "#,
-                        subnet.principal,
-                        subnet.replica_version,
-                        after_upgrade_window,
-                        now.saturating_sub(update_time).saturating_sub(after_upgrade_window) + 1, // offset has to be at least 1
-                        subnet.principal,
-                        subnet.replica_version,
-                        subnet.principal,
-                        subnet.replica_version,
-                        before_upgrade_window,
-                        now.saturating_sub(update_time) + 1, // offset has to be at least 1
-                    )
-                }).unwrap_or(format!(r#"clamp_max(absent(dummy{{ic_old_version="-", ic_subnet="{subnet}"}}),1)"#, subnet=subnet.principal))
-        })
-        .collect::<Vec<_>>()
-        .join(" or ");
-
-    let request = client
-        .get("http://prometheus.dfinity.systems:9090/api/v1/query")
-        .query(&[("query", query)])
-        .build()
-        .expect("malformed request");
-
-    let response = client
-        .execute(request)
-        .await?
-        .json::<Value>()
-        .await
-        .expect("expected JSON response");
-
-    let statuses = response["data"]["result"]
-        .as_array()
-        .expect("result present")
-        .iter()
-        .map(|m| {
-            let subnet_principal = PrincipalId::from_str(
-                m.clone()["metric"]["ic_subnet"]
-                    .as_str()
-                    .expect("expected principal string"),
-            )
-            .expect("unable to parse node principal");
-
-            let old_version = m.clone()["metric"]["ic_old_version"]
-                .as_str()
-                .expect("expected instance string")
-                .to_string();
-            let upgraded = m.clone()["value"].as_array().expect("expected an array of values")[1]
-                .as_str()
-                .expect("expected stringified float")
-                .parse::<f64>()
-                .expect("expected float")
-                >= 1.0;
-
-            let new_version = subnets
-                .get(&subnet_principal)
-                .expect("subnet lost")
-                .replica_version
-                .clone();
-            (
-                subnet_principal,
-                SubnetUpgrade {
-                    subnet_principal,
-                    old_version,
-                    new_version,
-                    upgraded,
-                },
-            )
-        })
-        .collect();
-    Ok(statuses)
 }
 
 pub async fn node_healths_per_subnet(subnet: Subnet) -> anyhow::Result<Vec<(PrincipalId, Health)>> {
