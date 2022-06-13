@@ -4,7 +4,7 @@ import Stepper from '@material-ui/core/Stepper';
 import Step from '@material-ui/core/Step';
 import StepLabel from '@material-ui/core/StepLabel';
 import StepConnector from '@material-ui/core/StepConnector';
-import { ReplicaRelease, SubnetRolloutStatus } from './types';
+import { ReplicaRelease, SubnetUpdate } from './types';
 import { amber } from '@material-ui/core/colors';
 import { Chip, Grid, Link, StepContent } from '@material-ui/core';
 import RadioButtonCheckedIcon from '@material-ui/icons/RadioButtonChecked'
@@ -62,7 +62,7 @@ const useStyles = makeStyles((theme: Theme) =>
   }),
 );
 
-export default function RolloutProgressStepper({ subnets, versions }: { subnets: SubnetRolloutStatus[], versions: ReplicaRelease[] }) {
+export default function RolloutProgressStepper({ updates, versions }: { updates: SubnetUpdate[], versions: ReplicaRelease[] }) {
   const classes = useStyles();
 
   return (
@@ -87,14 +87,14 @@ export default function RolloutProgressStepper({ subnets, versions }: { subnets:
                 alignItems="center"
               >
                 {
-                  subnets
+                  updates
                     .filter(s => s.replica_release.commit_hash === p.commit_hash)
                     .map(s =>
                       <Grid>
                         <Chip
                           size="small"
                           variant='outlined'
-                          label={`${s.name} (${s.principal.split("-")[0]})`}
+                          label={`${s.subnet_name} (${s.subnet_id.split("-")[0]})`}
                         />
                       </Grid>
                     )
