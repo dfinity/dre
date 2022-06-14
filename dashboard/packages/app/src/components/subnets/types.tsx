@@ -94,7 +94,7 @@ export interface SubnetUpdate {
   // proposal?: ReplicaVersionUpdateProposal;
 }
 
-export type SubnetUpdateState = "scheduled" | "submitted" | "executed" | "baking" | "complete";
+export type SubnetUpdateState = "scheduled" | "submitted" | "preparing" | "updating" | "baking" | "complete" | "unknown";
 
 export interface SubnetUpdateProposal {
   info: SubnetUpdateProposalInfo
