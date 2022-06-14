@@ -8,7 +8,9 @@ import HourglassEmptyIcon from '@material-ui/icons/HourglassEmpty';
 import AvTimerIcon from '@material-ui/icons/AvTimer';
 import HowToVoteIcon from '@material-ui/icons/HowToVote';
 import OpenInNewIcon from '@material-ui/icons/OpenInNew';
-import { green, lightBlue, grey, purple, amber, orange } from '@material-ui/core/colors';
+import HelpIcon from '@material-ui/icons/Help';
+import RestorePageIcon from '@material-ui/icons/RestorePage';
+import { green, lightBlue, grey, purple, amber, orange, lightGreen } from '@material-ui/core/colors';
 import { Rollout, RolloutStage, SubnetUpdateState } from './types';
 import { fetchRollouts } from './fetch';
 import RolloutProgressStepper from './RolloutProgressStepper';
@@ -39,11 +41,17 @@ const useStyles = makeStyles((theme: Theme) =>
     proposalPendingIcon: {
       color: purple[500],
     },
-    progressIcon: {
+    preparing: {
+      color: lightGreen[500],
+    },
+    updatingIcon: {
       color: lightBlue[500],
       animation: "$spin 4s linear infinite",
     },
     pauseIcon: {
+      color: grey[500],
+    },
+    unknownIcon: {
       color: grey[500],
     },
     versionChip: {
@@ -87,16 +95,20 @@ const SubnetUpdateStateIcon = ({ state }: { state: SubnetUpdateState }) => {
   switch (state) {
     case "scheduled":
       return <HourglassEmptyIcon className={classes.pauseIcon} />
-    case "executed":
-      return <SyncIcon className={classes.progressIcon} />
     case "submitted":
       return <HowToVoteIcon className={classes.proposalPendingIcon} />
-    case "complete":
-      return <DoneIcon className={classes.successIcon} />
+    case "preparing":
+      return <RestorePageIcon className={classes.preparing} />
+    case "updating":
+      return <SyncIcon className={classes.updatingIcon} />
     case "baking":
       return <AvTimerIcon className={classes.bakeIcon} />
     case "scheduled":
       return <HourglassEmptyIcon className={classes.pauseIcon} />
+    case "complete":
+      return <DoneIcon className={classes.successIcon} />
+    case "unknown":
+      return <HelpIcon className={classes.unknownIcon} />
   }
 }
 
