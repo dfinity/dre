@@ -8,8 +8,6 @@ services:
     links:
       - dashboard-backend-mainnet
       - dashboard-backend-staging
-    networks:
-    - backend
   dashboard-backend-mainnet:
     restart: always
     environment:
@@ -21,8 +19,6 @@ services:
       - RUST_BACKTRACE=1
     volumes:
       - backend_registry_cache_mainnet:/registry_cache
-    networks:
-    - backend
   dashboard-backend-staging:
     image: registry.gitlab.com/dfinity-lab/core/release/dashboard-backend:${TAG:-latest}
     restart: always
@@ -35,8 +31,6 @@ services:
       - RUST_BACKTRACE=1
     volumes:
       - backend_registry_cache_staging_2:/registry_cache
-    networks:
-    - backend
   slack:
     restart: always
     environment:
@@ -62,7 +56,3 @@ volumes:
   slack_state:
   backend_registry_cache_mainnet:
   backend_registry_cache_staging_2:
-
-networks:
-  backend:
-    enable_ipv6: true
