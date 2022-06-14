@@ -132,6 +132,7 @@ impl RegistryState {
                     "2fq7c-slacv-26cgz-vzbx2-2jrcs-5edph-i5s2j-tck77-c3rlz-iobzx-mqe",
                     "Bitcoin",
                 ),
+                ("x33ed-h457x-bsgyx-oqxqf-6pzwv-wkhzr-rm2j3-npodi-purzm-n66cg-gae", "SNS"),
             ]
             .iter()
             .map(|(p, name)| {
