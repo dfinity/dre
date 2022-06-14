@@ -9,8 +9,8 @@ import AvTimerIcon from '@material-ui/icons/AvTimer';
 import HowToVoteIcon from '@material-ui/icons/HowToVote';
 import OpenInNewIcon from '@material-ui/icons/OpenInNew';
 import HelpIcon from '@material-ui/icons/Help';
-import RestorePageIcon from '@material-ui/icons/RestorePage';
-import { green, lightBlue, grey, purple, amber, orange, lightGreen } from '@material-ui/core/colors';
+import UpdateIcon from '@material-ui/icons/Update';
+import { green, lightBlue, grey, purple, amber, orange, blue } from '@material-ui/core/colors';
 import { Rollout, RolloutStage, SubnetUpdateState } from './types';
 import { fetchRollouts } from './fetch';
 import RolloutProgressStepper from './RolloutProgressStepper';
@@ -42,10 +42,10 @@ const useStyles = makeStyles((theme: Theme) =>
       color: purple[500],
     },
     preparing: {
-      color: lightGreen[500],
+      color: lightBlue[500],
     },
     updatingIcon: {
-      color: lightBlue[500],
+      color: blue[500],
       animation: "$spin 4s linear infinite",
     },
     pauseIcon: {
@@ -98,7 +98,7 @@ const SubnetUpdateStateIcon = ({ state }: { state: SubnetUpdateState }) => {
     case "submitted":
       return <HowToVoteIcon className={classes.proposalPendingIcon} />
     case "preparing":
-      return <RestorePageIcon className={classes.preparing} />
+      return <UpdateIcon className={classes.preparing} />
     case "updating":
       return <SyncIcon className={classes.updatingIcon} />
     case "baking":
