@@ -159,9 +159,6 @@ impl RegistryState {
                 g.dfinity_owned = true;
             }
         }
-        self.local_registry
-            .sync_with_local_store()
-            .map_err(|e| anyhow::anyhow!(e))?;
         self.update_replica_releases().await?;
         self.update_operators(providers)?;
         self.update_nodes()?;
