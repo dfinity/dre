@@ -70,6 +70,7 @@ impl MoveNodesProposalPayload for RemoveNodesFromSubnetPayload {
 pub struct ProposalInfoInternal {
     pub id: u64,
     pub proposal_timestamp_seconds: u64,
+    pub executed_timestamp_seconds: u64,
     pub executed: bool,
 }
 
@@ -84,7 +85,7 @@ impl From<ProposalInfo> for ProposalInfoInternal {
             ballots: _,
             latest_tally: _,
             decided_timestamp_seconds: _,
-            executed_timestamp_seconds: _,
+            executed_timestamp_seconds,
             failed_timestamp_seconds: _,
             failure_reason: _,
             reward_event_round: _,
@@ -96,6 +97,7 @@ impl From<ProposalInfo> for ProposalInfoInternal {
         ProposalInfoInternal {
             id: id.expect("missing proposal id").id,
             proposal_timestamp_seconds,
+            executed_timestamp_seconds,
             executed: ProposalStatus::from_i32(status).expect("unknown status") == ProposalStatus::Executed,
         }
     }
