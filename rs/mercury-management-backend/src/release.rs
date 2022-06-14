@@ -4,18 +4,23 @@ use ic_types::PrincipalId;
 use mercury_management_types::{ReplicaRelease, Subnet};
 use serde::Serialize;
 use std::collections::HashMap;
+use std::str::FromStr;
+use strum_macros::{Display, EnumString};
 
 use crate::proposal::{ProposalAgent, SubnetUpdateProposal};
 use crate::registry::NNS_SUBNET_NAME;
 
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Clone, Display, EnumString)]
 #[serde(rename_all = "snake_case")]
+#[strum(serialize_all = "snake_case")]
 pub enum SubnetUpdateState {
     Scheduled,
     Submitted,
-    // Executed,
-    // Baking,
+    Preparing,
+    Updating,
+    Baking,
     Complete,
+    Unknown,
 }
 
 #[derive(Serialize, Clone)]
@@ -54,7 +59,6 @@ pub struct RolloutState {
     pub latest_release: ReplicaRelease,
     pub stages: Vec<RolloutStage>,
 }
-
 pub struct RolloutConfig {}
 
 pub struct RolloutBuilder {
@@ -63,6 +67,7 @@ pub struct RolloutBuilder {
     pub prometheus_client: prometheus_http_query::Client,
     pub subnets: HashMap<PrincipalId, Subnet>,
     pub releases: Vec<ReplicaRelease>,
+    pub network: String,
 }
 
 impl RolloutBuilder {
@@ -71,7 +76,8 @@ impl RolloutBuilder {
 
         let subnet_update_proposals = self.proposal_agent.list_update_subnet_version_proposals().await?;
 
-        Ok(self
+        let mut rollout_states = Vec::new();
+        for r in self
             .releases
             .clone()
             .into_iter()
@@ -84,8 +90,9 @@ impl RolloutBuilder {
             })
             .into_iter()
             .rev()
-            .map(|r| {
-                self.new_rollout_state(
+        {
+            let state = self
+                .new_rollout_state(
                     r.clone(),
                     subnet_update_proposals
                         .iter()
@@ -93,8 +100,10 @@ impl RolloutBuilder {
                         .cloned()
                         .collect::<Vec<_>>(),
                 )
-            })
-            .collect::<Vec<_>>())
+                .await?;
+            rollout_states.push(state);
+        }
+        Ok(rollout_states)
     }
 
     fn get_day_stages_times(&self) -> Vec<NaiveTime> {
@@ -106,12 +115,12 @@ impl RolloutBuilder {
         ]
     }
 
-    fn new_rollout_state(
+    async fn new_rollout_state(
         &self,
         release: ReplicaRelease,
         subnet_update_proposals: Vec<SubnetUpdateProposal>,
-    ) -> RolloutState {
-        let submitted_stages = self.stages_from_proposals(&release, subnet_update_proposals);
+    ) -> Result<RolloutState> {
+        let submitted_stages = self.stages_from_proposals(&release, subnet_update_proposals).await?;
         let today = Utc::now().date();
         let rollout_days = self.rollout_days(submitted_stages.first().map(|s| s.start_date()).unwrap_or(today));
         let leftover_days = rollout_days.iter().filter(|d| **d >= today).collect::<Vec<_>>();
@@ -218,14 +227,14 @@ impl RolloutBuilder {
             }
         }
 
-        RolloutState {
+        Ok(RolloutState {
             latest_release: release,
             stages: submitted_stages
                 .into_iter()
                 .chain(remaining_stages.into_iter())
                 .filter(|s| !s.updates.is_empty())
                 .collect(),
-        }
+        })
     }
 
     fn create_subnet_update(&self, s: &Subnet, release: &ReplicaRelease) -> SubnetUpdate {
@@ -244,11 +253,88 @@ impl RolloutBuilder {
         }
     }
 
-    fn stages_from_proposals(
+    async fn get_update_states(
+        &self,
+        release: &ReplicaRelease,
+        since: chrono::DateTime<Utc>,
+    ) -> Result<HashMap<PrincipalId, SubnetUpdateState>> {
+        const STATE_FIELD: &str = "state";
+        let query = format!(
+            r#"
+            label_replace(
+                sum by (ic_subnet) (ic_replica_info{{ic="{network}", ic_active_version!="{version}"}})
+                    /
+                max by (ic_subnet) (consensus_dkg_current_committee_size{{ic="{network}"}})
+            , 
+                "{state_field}", "{preparing_state}", "", ""
+            )
+                or
+            label_replace(
+                sum by (ic_subnet) (ic_replica_info{{ic="{network}", ic_active_version="{version}"}})
+                    <
+                max by (ic_subnet) (consensus_dkg_current_committee_size{{ic="{network}"}})
+            ,
+                "{state_field}", "{updating_state}", "", ""
+            )
+                or
+            label_replace(
+                max_over_time((
+                    -sum_over_time(
+                            (sum by (ic_subnet) (ALERTS{{ic="{network}", severity="page", alertstate="firing"}}))[30m:1m]
+                    )
+                        or
+                    (
+                        avg_over_time((sum by (ic_subnet) (ic_replica_info{{ic="{network}", ic_active_version="{version}"}}))[30m:1m])
+                                /
+                        max_over_time((max by (ic_subnet) (consensus_dkg_current_committee_size{{ic="{network}"}}))[30m:5m])
+                    )
+                )[{period}s:1m])
+            ,
+                "{state_field}", "{baking_state}", "", ""
+            )
+        "#,
+            network = self.network,
+            version = release.commit_hash,
+            preparing_state = SubnetUpdateState::Preparing,
+            updating_state = SubnetUpdateState::Updating,
+            baking_state = SubnetUpdateState::Baking,
+            state_field = STATE_FIELD,
+            period = Utc::now().timestamp() - since.timestamp(),
+        );
+        let response = self.prometheus_client.query(query, None, None).await?;
+        let results = response.as_instant().expect("Expected instant vector");
+        Ok(results
+            .iter()
+            .filter_map(|r| {
+                let subnet = r
+                    .metric()
+                    .get("ic_subnet")
+                    .map(|s| PrincipalId::from_str(s).expect("ic_subnet label should always be a valid principal id"));
+                let state = SubnetUpdateState::from_str(
+                    r.metric()
+                        .get(STATE_FIELD)
+                        .expect("query should always yield a vector with a valid state"),
+                )
+                .expect("state label should always be a valid state");
+                subnet.map(|s| {
+                    (
+                        s,
+                        if matches!(state, SubnetUpdateState::Baking) && r.sample().value() == 1.0 {
+                            SubnetUpdateState::Complete
+                        } else {
+                            state
+                        },
+                    )
+                })
+            })
+            .collect())
+    }
+
+    async fn stages_from_proposals(
         &self,
         release: &ReplicaRelease,
         subnet_update_proposals: Vec<SubnetUpdateProposal>,
-    ) -> Vec<RolloutStage> {
+    ) -> Result<Vec<RolloutStage>> {
         const ROLLOUT_BATCH_PROPOSAL_LAG_TOLERANCE_SECONDS: u64 = 60;
 
         let mut proposals = subnet_update_proposals;
@@ -257,10 +343,14 @@ impl RolloutBuilder {
                 .proposal_timestamp_seconds
                 .cmp(&b.info.proposal_timestamp_seconds)
         });
-        proposals.into_iter().fold(vec![], |mut acc, proposal| {
+        let mut stages: Vec<RolloutStage> = proposals.into_iter().fold(vec![], |mut acc, proposal| {
             let update = SubnetUpdate {
                 proposal: proposal.clone().into(),
-                state: SubnetUpdateState::Submitted,
+                state: if proposal.info.executed {
+                    SubnetUpdateState::Unknown
+                } else {
+                    SubnetUpdateState::Submitted
+                },
                 subnet_id: proposal.payload.subnet_id,
                 subnet_name: self
                     .subnets
@@ -308,7 +398,28 @@ impl RolloutBuilder {
                 }
             }
             acc
-        })
+        });
+
+        if let Some(last_stage) = stages.last_mut() {
+            let update_states = self
+                .get_update_states(
+                    release,
+                    chrono::DateTime::<Utc>::from_utc(
+                        chrono::NaiveDateTime::from_timestamp(last_stage.start_timestamp_seconds as i64, 0),
+                        Utc,
+                    ),
+                )
+                .await?;
+            last_stage.active = false;
+            for u in &mut last_stage.updates {
+                if matches!(u.state, SubnetUpdateState::Unknown) {
+                    if let Some(state) = update_states.get(&u.subnet_id) {
+                        u.state = state.clone();
+                    }
+                }
+            }
+        }
+        Ok(stages)
     }
 
     fn rollout_days(&self, start: Date<Utc>) -> Vec<Date<Utc>> {
