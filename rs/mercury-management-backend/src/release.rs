@@ -268,7 +268,7 @@ impl RolloutBuilder {
             , 
                 "{state_field}", "{preparing_state}", "", ""
             )
-                or
+                or ignoring({state_field})
             label_replace(
                 sum by (ic_subnet) (ic_replica_info{{ic="{network}", ic_active_version="{version}"}})
                     <
@@ -276,7 +276,7 @@ impl RolloutBuilder {
             ,
                 "{state_field}", "{updating_state}", "", ""
             )
-                or
+                or ignoring({state_field})
             label_replace(
                 max_over_time((
                     -sum_over_time(
