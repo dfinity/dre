@@ -71,7 +71,9 @@ async fn main() -> std::io::Result<()> {
     let update_local_registry = local_registry.clone();
     std::thread::spawn(move || loop {
         info!("Updating local registry");
-        update_local_registry.sync_with_nns().ok();
+        if let Err(e) = update_local_registry.sync_with_nns() {
+            error!("Failed to update local registry: {}", e);
+        }
         std::thread::sleep(std::time::Duration::from_secs(1));
     });
 
