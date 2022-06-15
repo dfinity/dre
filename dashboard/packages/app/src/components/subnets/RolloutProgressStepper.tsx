@@ -4,10 +4,11 @@ import Stepper from '@material-ui/core/Stepper';
 import Step from '@material-ui/core/Step';
 import StepLabel from '@material-ui/core/StepLabel';
 import StepConnector from '@material-ui/core/StepConnector';
-import { ReplicaRelease, SubnetUpdate } from './types';
+import { ReplicaRelease } from './types';
 import { amber } from '@material-ui/core/colors';
 import { Chip, Grid, Link, StepContent } from '@material-ui/core';
 import RadioButtonCheckedIcon from '@material-ui/icons/RadioButtonChecked'
+import { fetchSubnets } from './fetch';
 
 const QontoConnector = withStyles({
   alternativeLabel: {
@@ -58,18 +59,22 @@ const useStyles = makeStyles((theme: Theme) =>
     },
     patchStepIcon: {
       color: amber[500],
-    }
+    },
+    chip: {
+      fontFamily: 'Roboto Mono',
+    },
   }),
 );
 
-export default function RolloutProgressStepper({ updates, versions }: { updates: SubnetUpdate[], versions: ReplicaRelease[] }) {
+export default function RolloutProgressStepper({ versions }: { versions: ReplicaRelease[] }) {
   const classes = useStyles();
+  const subnets = fetchSubnets();
 
   return (
     <div className={classes.root}>
       <Stepper alternativeLabel activeStep={versions.length} connector={<QontoConnector />}>
-        {versions.map((p, i) => (
-          <Step key={p.commit_hash.substring(0, 7)} expanded={i !== versions.length - 1}>
+        {versions.map((p) => (
+          <Step key={p.commit_hash.substring(0, 7)} expanded>
             <StepLabel icon={<RadioButtonCheckedIcon className={classes.patchStepIcon} />}>
               <Link
                 target="_blank"
@@ -85,16 +90,19 @@ export default function RolloutProgressStepper({ updates, versions }: { updates:
                 direction="row"
                 justifyContent="center"
                 alignItems="center"
+                alignContent="center"
+                spacing={0}
               >
                 {
-                  updates
-                    .filter(s => s.replica_release.commit_hash === p.commit_hash)
+                  Object.values(subnets).sort((a, b) => a.principal.localeCompare(b.principal))
+                    .filter(s => s.replica_version === p.commit_hash)
                     .map(s =>
-                      <Grid>
+                      <Grid item spacing={0}>
                         <Chip
                           size="small"
                           variant='outlined'
-                          label={`${s.subnet_name} (${s.subnet_id.split("-")[0]})`}
+                          className={classes.chip}
+                          label={`${s.principal.split("-")[0]}`}
                         />
                       </Grid>
                     )

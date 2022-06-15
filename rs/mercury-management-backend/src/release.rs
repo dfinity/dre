@@ -335,7 +335,7 @@ impl RolloutBuilder {
         release: &ReplicaRelease,
         subnet_update_proposals: Vec<SubnetUpdateProposal>,
     ) -> Result<Vec<RolloutStage>> {
-        const ROLLOUT_BATCH_PROPOSAL_LAG_TOLERANCE_SECONDS: u64 = 60;
+        const ROLLOUT_BATCH_PROPOSAL_LAG_TOLERANCE_SECONDS: u64 = 60 * 30;
 
         let mut proposals = subnet_update_proposals;
         proposals.sort_by(|a, b| {
@@ -410,7 +410,6 @@ impl RolloutBuilder {
                     ),
                 )
                 .await?;
-            last_stage.active = false;
             for u in &mut last_stage.updates {
                 if matches!(u.state, SubnetUpdateState::Unknown) {
                     if let Some(state) = update_states.get(&u.subnet_id) {
@@ -418,6 +417,10 @@ impl RolloutBuilder {
                     }
                 }
             }
+            last_stage.active = last_stage
+                .updates
+                .iter()
+                .any(|u| !matches!(u.state, SubnetUpdateState::Complete));
         }
         Ok(stages)
     }
