@@ -15,7 +15,7 @@
  */
 
 import React, { useContext, PropsWithChildren } from 'react';
-import { colors, Link, makeStyles } from '@material-ui/core';
+import { Link, makeStyles } from '@material-ui/core';
 import HomeIcon from '@material-ui/icons/Home';
 import LogoFull from './LogoFull';
 import LogoIcon from './LogoIcon';
@@ -111,10 +111,9 @@ export const Root = ({ children }: PropsWithChildren<{}>) => {
           <SidebarDivider />
           <SidebarSettings />
         </Sidebar>
-        <div style={{ position: "sticky", width: "100%", textAlign: "center", background: colors.deepOrange[500], top: 0, zIndex: 101, padding: 10 }} >
-          Dashboard is currently in beta. The data displayed may be inaccurate. Use with caution!
-        </div>
+
         {children}
+
       </div>
     </SidebarPage>
   );
