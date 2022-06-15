@@ -261,6 +261,7 @@ impl RolloutBuilder {
         const STATE_FIELD: &str = "state";
         let query = format!(
             r#"
+            # Get all subnets that are not yet updated to the given release. These are preparing a CUP for the update.
             label_replace(
                 sum by (ic_subnet) (ic_replica_info{{ic="{network}", ic_active_version!="{version}"}})
                     /
@@ -269,6 +270,7 @@ impl RolloutBuilder {
                 "{state_field}", "{preparing_state}", "", ""
             )
                 or ignoring({state_field})
+            # Get all subnets that are running on the given release but some nodes are not up yet. These are probably restarting to do an update.
             label_replace(
                 sum by (ic_subnet) (ic_replica_info{{ic="{network}", ic_active_version="{version}"}})
                     <
@@ -277,10 +279,12 @@ impl RolloutBuilder {
                 "{state_field}", "{updating_state}", "", ""
             )
                 or ignoring({state_field})
+            # Get all subnets that have been running on the given release for at least half an hour without any restarts or pages since the specified time.
+            # If the result is 1, the subnet completed the bake process successfully.
             label_replace(
                 max_over_time((
                     -sum_over_time(
-                            (sum by (ic_subnet) (ALERTS{{ic="{network}", severity="page", alertstate="firing"}}))[30m:1m]
+                        (sum by (ic_subnet) (ALERTS{{ic="{network}", severity="page", alertstate="firing"}}))[30m:1m]
                     )
                         or
                     (

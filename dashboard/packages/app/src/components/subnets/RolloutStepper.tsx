@@ -122,9 +122,9 @@ const RolloutStageContent = ({ stage }: { stage: RolloutStage }) => {
           size="small"
           label={`${update.subnet_id.split('-')[0]} (${update.subnet_name})`}
           onClick={() => window.open(`https://github.com/dfinity/ic/commits/${update.replica_release.commit_hash}`)}
-          onDelete={() => window.open(`https://dashboard.internetcomputer.org/proposal/${update.proposal?.info?.id}`)}
+          onDelete={update.state == "submitted" ? (() => window.open(`https://dashboard.internetcomputer.org/proposal/${update.proposal?.info?.id}`)) : undefined}
           icon={<SubnetUpdateStateIcon state={update.state} />}
-          deleteIcon={<OpenInNewIcon />}
+          deleteIcon={update.state == "submitted" ? <OpenInNewIcon /> : undefined}
           disabled={update.state == "complete"}
           variant={update.state == "scheduled" && "outlined" || "default"}
           className={classes.updateChip}
@@ -164,11 +164,11 @@ const PatchProgress = ({ rollout }: { rollout: Rollout }) => {
   )
 }
 
-function StageIcon({ active, submitted }: { active: boolean, submitted: boolean }) {
+function StageIcon({ active, updated }: { active: boolean, updated: boolean }) {
   const classes = useStyles();
   if (active) {
     return <RadioButtonUncheckedIcon />
-  } else if (submitted) {
+  } else if (updated) {
     return <RadioButtonCheckedIcon className={classes.inactiveStep} />
   } else {
     return <RadioButtonUncheckedIcon className={classes.inactiveStep} />
@@ -225,7 +225,7 @@ export default function RolloutsStepper() {
                             let stage_label = start.toLocaleTimeString("en-US", { hour: 'numeric', minute: '2-digit' });
                             return (
                               <Step key={stage_label} expanded={!rolloutComplete} style={{ flex: 1 }}>
-                                <StepLabel icon={<StageIcon active={stage.active} submitted={i <= activeStep} />}>{stage_label}</StepLabel>
+                                <StepLabel icon={<StageIcon active={stage.active} updated={i <= activeStep || date.getDate() < (new Date()).getDate()} />}>{stage_label}</StepLabel>
                                 <StepContent>
                                   <RolloutStageContent stage={stage} />
                                 </StepContent>
