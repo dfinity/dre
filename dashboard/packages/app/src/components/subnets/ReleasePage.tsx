@@ -15,15 +15,9 @@ export const ReleasePage = () => {
       </Header>
       <Content>
         <Grid container>
-          {/* <Grid item xs={12}>
-            <ReleaseList />
-          </Grid> */}
           <Grid item xs={12}>
             <RolloutsStepper />
           </Grid>
-          {/* <Grid item>
-            <HotfixReleases />
-          </Grid> */}
         </Grid>
       </Content>
     </Page>

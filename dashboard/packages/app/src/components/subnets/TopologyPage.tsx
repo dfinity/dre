@@ -30,7 +30,7 @@ const datacenters = (guests: Guest[], nodes: Node[]) => Array.from(guests.reduce
   )?.operator?.datacenter?.owner?.name ?? "Unknown"
 }));
 
-export const TopologyPage = ({network}: {network: string}) => {
+export const TopologyPage = ({ network }: { network: string }) => {
   const guests = fetchGuests();
 
   const nodes = fetchNodes();
