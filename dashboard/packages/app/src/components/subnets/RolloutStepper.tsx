@@ -1,6 +1,6 @@
 import React from 'react';
 import { makeStyles, Theme, createStyles } from '@material-ui/core/styles';
-import { Stepper, Step, StepLabel, StepContent, Typography, Chip, Link, Grid, Divider, Paper } from '@material-ui/core';
+import { Stepper, Step, StepLabel, StepContent, Typography, Chip, Link, Grid, Divider, Paper, Tooltip } from '@material-ui/core';
 import DoneIcon from '@material-ui/icons/Done';
 import SyncIcon from '@material-ui/icons/Sync';
 import HourglassEmptyIcon from '@material-ui/icons/HourglassEmpty';
@@ -92,7 +92,6 @@ const useStyles = makeStyles((theme: Theme) =>
 
 const SubnetUpdateStateIcon = ({ state }: { state: SubnetUpdateState }) => {
   const classes = useStyles();
-
   switch (state) {
     case "scheduled":
       return <HourglassEmptyIcon className={classes.pauseIcon} />
@@ -118,17 +117,19 @@ const RolloutStageContent = ({ stage }: { stage: RolloutStage }) => {
   return (
     <Grid container direction='column' spacing={0}>
       {stage.updates.map(update => <Grid item>
-        <Chip
-          size="small"
-          label={`${update.subnet_id.split('-')[0]} (${update.subnet_name})`}
-          onClick={() => window.open(`https://github.com/dfinity/ic/commits/${update.replica_release.commit_hash}`)}
-          onDelete={update.state == "submitted" ? (() => window.open(`https://dashboard.internetcomputer.org/proposal/${update.proposal?.info?.id}`)) : undefined}
-          icon={<SubnetUpdateStateIcon state={update.state} />}
-          deleteIcon={update.state == "submitted" ? <OpenInNewIcon /> : undefined}
-          disabled={update.state == "complete"}
-          variant={update.state == "scheduled" && "outlined" || "default"}
-          className={classes.updateChip}
-        />
+        <Tooltip title={`${update.state[0].toUpperCase()}${update.state.substring(1)}`} placement="left">
+          <Chip
+            size="small"
+            label={`${update.subnet_id.split('-')[0]} (${update.subnet_name})`}
+            onClick={() => window.open(`https://github.com/dfinity/ic/commits/${update.replica_release.commit_hash}`)}
+            onDelete={update.state == "submitted" ? (() => window.open(`https://dashboard.internetcomputer.org/proposal/${update.proposal?.info?.id}`)) : undefined}
+            icon={<SubnetUpdateStateIcon state={update.state} />}
+            deleteIcon={update.state == "submitted" ? <OpenInNewIcon /> : undefined}
+            disabled={!stage.active}
+            variant={update.state == "scheduled" && "outlined" || "default"}
+            className={classes.updateChip}
+          />
+        </Tooltip>
       </Grid>)}
     </Grid>
   )
