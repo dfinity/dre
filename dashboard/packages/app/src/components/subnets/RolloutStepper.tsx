@@ -103,8 +103,6 @@ const SubnetUpdateStateIcon = ({ state }: { state: SubnetUpdateState }) => {
       return <SyncIcon className={classes.updatingIcon} />
     case "baking":
       return <AvTimerIcon className={classes.bakeIcon} />
-    case "scheduled":
-      return <HourglassEmptyIcon className={classes.pauseIcon} />
     case "complete":
       return <DoneIcon className={classes.successIcon} />
     case "unknown":
@@ -112,12 +110,39 @@ const SubnetUpdateStateIcon = ({ state }: { state: SubnetUpdateState }) => {
   }
 }
 
+const stateDescription = (state: SubnetUpdateState) => {
+  switch (state) {
+    case "scheduled":
+      return "Subnet is scheduled to be updated at a later time."
+    case "submitted":
+      return "Proposal for the subnet update has been submitted."
+    case "preparing":
+      return "Proposal for the subnet update has been adopted and executed. The subnet is preparing a CUP so that it can be updated."
+    case "updating":
+      return "Subnet nodes are restarting to run the new version of the replica."
+    case "baking":
+      return "Functionality of the subnet is being verified by checking that no alerts are triggered in the next 30 minutes."
+    case "complete":
+      return "Subnet update is complete."
+    case "unknown":
+      return "Subnet update is in an unknown state."
+  }
+}
+
+
 const RolloutStageContent = ({ stage }: { stage: RolloutStage }) => {
   const classes = useStyles();
   return (
     <Grid container direction='column' spacing={0}>
-      {stage.updates.map(update => <Grid item>
-        <Tooltip title={`${update.state[0].toUpperCase()}${update.state.substring(1)}`} placement="left">
+      {stage.updates.map(update => <Grid item justifyContent='center'>
+        <Tooltip interactive title={
+          <div style={{ maxWidth: 150 }}>
+            <Typography display="block" variant="caption">{`${update.state[0].toUpperCase()}${update.state.substring(1)}`}</Typography>
+            <Typography display="block" variant="caption" style={{ fontStyle: "italic", fontSize: "0.6rem" }} >
+              {stateDescription(update.state)}
+            </Typography>
+          </div>
+        } placement="left">
           <Chip
             size="small"
             label={`${update.subnet_id.split('-')[0]} (${update.subnet_name})`}
@@ -130,8 +155,9 @@ const RolloutStageContent = ({ stage }: { stage: RolloutStage }) => {
             className={classes.updateChip}
           />
         </Tooltip>
-      </Grid>)}
-    </Grid>
+      </Grid>)
+      }
+    </Grid >
   )
 }
 
