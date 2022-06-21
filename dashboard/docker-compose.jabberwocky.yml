@@ -8,6 +8,7 @@ services:
     links:
       - dashboard-backend-mainnet
       - dashboard-backend-staging
+    network_mode: "bridge"
   dashboard-backend-mainnet:
     restart: always
     environment:
@@ -19,6 +20,7 @@ services:
       - RUST_BACKTRACE=1
     volumes:
       - backend_registry_cache_mainnet:/registry_cache
+    network_mode: "bridge"
   dashboard-backend-staging:
     image: registry.gitlab.com/dfinity-lab/core/release/dashboard-backend:${TAG:-latest}
     restart: always
@@ -31,6 +33,7 @@ services:
       - RUST_BACKTRACE=1
     volumes:
       - backend_registry_cache_staging_2:/registry_cache
+    network_mode: "bridge"
   slack:
     restart: always
     environment:
@@ -39,6 +42,7 @@ services:
     volumes:
       - slack_state:/state/
     working_dir: /state/
+    network_mode: "bridge"
   slack-watchdog:
     image: docker
     volumes: [ "/var/run/docker.sock:/var/run/docker.sock" ]
@@ -49,8 +53,10 @@ services:
         "while true; do sleep 60; if [ -z \"$$(docker logs release_slack_1 --since=1m 2>&1)\" ]; then echo -n \"restarting \"; docker restart release_slack_1; else echo \"target service is running\"; fi; done"
       ]
     restart: unless-stopped
+    network_mode: "bridge"
   decentralization:
     restart: always
+    network_mode: "bridge"
 
 volumes:
   slack_state:
