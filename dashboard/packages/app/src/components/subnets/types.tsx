@@ -34,7 +34,7 @@ export interface Node {
   proposal?: TopologyProposal;
 }
 
-export type NodeHealth = "Healthy" | "Unhealthy" | "Unknown";
+export type NodeHealth = "Healthy" | "Degraded" | "Dead" | "Unknown";
 
 export interface TopologyProposal {
   id: number;
