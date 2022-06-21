@@ -114,13 +114,22 @@ function generateSubnetActions(subnet: Subnet, healths: { [principal: string]: N
       message: <>Subnet should be extended with <b>{recommendedSubnetSize - subnet.nodes.length}</b> more node{recommendedSubnetSize - subnet.nodes.length > 1 && "s"}.</>,
     })
   }
-  let deadNodes = subnet.nodes.filter(n => healths[n.principal] !== "Healthy");
+  let deadNodes = subnet.nodes.filter(n => healths[n.principal] === "Dead");
   if (deadNodes.length > 0) {
     actions.push({
       type: "heal",
       urgency: deadNodes.length / subnet.nodes.length > 0.1 ? "critical" : "warning",
       description: `Guests ${deadNodes.map(dn => dn.hostname)}`,
       message: <>There {deadNodes.length === 1 ? "is" : "are"} <b>{deadNodes.length}</b> dead node{deadNodes.length > 1 && "s"} that need{deadNodes.length === 1 && "s"} to be replaced.</>,
+    })
+  }
+  let degraded = subnet.nodes.filter(n => healths[n.principal] === "Degraded");
+  if (degraded.length > 0) {
+    actions.push({
+      type: "heal",
+      urgency: degraded.length / subnet.nodes.length > 0.2 ? "critical" : "warning",
+      description: `Guests ${degraded.map(dn => dn.hostname)}`,
+      message: <>There {degraded.length === 1 ? "is" : "are"} <b>{degraded.length}</b> degraded node{degraded.length > 1 && "s"} that might need to be replaced.</>,
     })
   }
 

@@ -6,9 +6,10 @@ import Typography from '@material-ui/core/Typography';
 import { Button, Chip, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, Grid } from '@material-ui/core';
 import { Node, Operator, Guest, NodeHealth } from './types';
 import CheckCircleOutlineIcon from '@material-ui/icons/CheckCircleOutline';
-import { green, blue, red, grey, lightBlue } from '@material-ui/core/colors';
+import { green, blue, red, grey, lightBlue, orange } from '@material-ui/core/colors';
 import AddSubnetDialog from './AddSubnetDialog';
 import ErrorOutlineSharpIcon from '@material-ui/icons/ErrorOutlineSharp';
+import ReportProblemOutlinedIcon from '@material-ui/icons/ReportProblemOutlined';
 import HelpOutlineOutlinedIcon from '@material-ui/icons/HelpOutlineOutlined';
 import UpdateIcon from '@material-ui/icons/Update';
 import HourglassEmptyIcon from '@material-ui/icons/HourglassEmpty';
@@ -114,8 +115,10 @@ const NodeAvailabilityIcon = ({ availability }: { availability: nodeAvailability
       return <UpdateIcon style={{ color: blue[500] }} />
     case "Healthy":
       return <CheckCircleOutlineIcon style={{ color: green[500] }} />
-    case "Unhealthy":
+    case "Dead":
       return <ErrorOutlineSharpIcon style={{ color: red[500] }} />
+    case "Degraded":
+      return <ReportProblemOutlinedIcon style={{ color: orange[500] }} />
     case "Unknown":
       return <HelpOutlineOutlinedIcon style={{ color: grey[500] }} />
   }
