@@ -242,7 +242,7 @@ pub struct NodeVersion {
     pub replica_version: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub struct ReplicaRelease {
     pub commit_hash: String,
     pub branch: String,
