@@ -185,11 +185,11 @@ impl Runner {
 
     fn print_before_after_scores(change: &SubnetChangeResponse) {
         println!("Decentralization score changes:");
-        let before_individual = change.score_before.individual();
-        let after_individual = change.score_after.individual();
+        let before_individual = change.score_before.scores_individual();
+        let after_individual = change.score_after.scores_individual();
         change
             .score_before
-            .individual()
+            .scores_individual()
             .keys()
             .map(|k| {
                 let before = before_individual.get(k).unwrap();

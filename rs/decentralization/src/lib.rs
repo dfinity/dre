@@ -12,8 +12,8 @@ pub struct SubnetChangeResponse {
     pub removed: Vec<PrincipalId>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub subnet_id: Option<PrincipalId>,
-    pub score_before: nakamoto::Score,
-    pub score_after: nakamoto::Score,
+    pub score_before: nakamoto::NakamotoScore,
+    pub score_after: nakamoto::NakamotoScore,
     pub motivation: Option<String>,
     pub feature_diff: HashMap<nakamoto::Feature, FeatureDiff>,
 }
@@ -39,8 +39,8 @@ impl From<network::SubnetChange> for SubnetChangeResponse {
             } else {
                 Some(change.id)
             },
-            score_before: nakamoto::Score::from(change.old_nodes.clone()),
-            score_after: nakamoto::Score::from(change.new_nodes.clone()),
+            score_before: nakamoto::NakamotoScore::from_vec_nodes(change.old_nodes.clone()),
+            score_after: nakamoto::NakamotoScore::from_vec_nodes(change.new_nodes.clone()),
             motivation: None,
             feature_diff: change.new_nodes.iter().fold(
                 change.old_nodes.iter().fold(
