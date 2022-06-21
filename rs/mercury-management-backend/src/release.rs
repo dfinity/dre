@@ -1,9 +1,10 @@
 use anyhow::Result;
-use chrono::{Date, Datelike, NaiveTime, TimeZone, Utc, Weekday};
+use chrono::{Date, DateTime, Datelike, NaiveTime, TimeZone, Utc, Weekday};
 use ic_types::PrincipalId;
+use log::info;
 use mercury_management_types::{ReplicaRelease, Subnet};
 use serde::Serialize;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::str::FromStr;
 use strum_macros::{Display, EnumString};
 
@@ -41,8 +42,8 @@ pub struct RolloutStage {
 }
 
 impl RolloutStage {
-    pub fn start_date(&self) -> Date<Utc> {
-        Utc.timestamp(self.start_timestamp_seconds as i64, 0).date()
+    pub fn start_date_time(&self) -> DateTime<Utc> {
+        Utc.timestamp(self.start_timestamp_seconds as i64, 0)
     }
 
     pub fn new_scheduled(updates: Vec<SubnetUpdate>, day: chrono::Date<Utc>, time: NaiveTime) -> Self {
@@ -122,7 +123,12 @@ impl RolloutBuilder {
     ) -> Result<RolloutState> {
         let submitted_stages = self.stages_from_proposals(&release, subnet_update_proposals).await?;
         let today = Utc::now().date();
-        let rollout_days = self.rollout_days(submitted_stages.first().map(|s| s.start_date()).unwrap_or(today));
+        let rollout_days = self.rollout_days(
+            submitted_stages
+                .first()
+                .map(|s| s.start_date_time().date())
+                .unwrap_or(today),
+        );
         let leftover_days = rollout_days.iter().filter(|d| **d >= today).collect::<Vec<_>>();
 
         let mut remaining_stages = vec![];
@@ -151,44 +157,34 @@ impl RolloutBuilder {
                 today,
                 time,
             ));
-            Some(time)
+            remaining_stages.last().map(|s| s.start_date_time())
         } else {
-            submitted_stages
-                .last()
-                .map(|s| chrono::NaiveDateTime::from_timestamp(s.start_timestamp_seconds as i64, 0).time())
+            submitted_stages.last().map(|s| s.start_date_time())
         };
 
-        // Leftover rollouts of the day
-        const MIN_STAGE_SIZE: usize = 2;
-        let stage_size_today = std::cmp::max(
-            submitted_stages.last().map(|s| s.updates.len()).unwrap_or_default(),
-            MIN_STAGE_SIZE,
-        );
-        for time in self
-            .get_day_stages_times()
-            .into_iter()
-            .filter(|t| last_stage_time.map(|l| *t > l).unwrap_or(true))
-        {
-            remaining_stages.push(RolloutStage::new_scheduled(
-                leftover_subnets
-                    .drain(0..std::cmp::min(stage_size_today, leftover_subnets.len()))
-                    .map(|s| self.create_subnet_update(s, &release))
-                    .collect(),
-                today,
-                time,
-            ));
-        }
+        let first_stage_size_today = submitted_stages
+            .iter()
+            .find(|s| s.start_date_time().date() == today)
+            .or_else(|| submitted_stages.last())
+            .or_else(|| remaining_stages.last())
+            .map(|s| s.updates.len())
+            .expect("should have a canary stage or submitted stages");
 
         // Leftover rollouts of the week
         for (i, day) in leftover_days
             .iter()
-            .skip(1)
             .enumerate()
-            .take(leftover_days.len().saturating_sub(2))
+            .take(leftover_days.len().saturating_sub(1))
         {
             for (j, time) in self.get_day_stages_times().into_iter().enumerate() {
-                // Don't increase the size of the first stage compared to previous day
-                let stage_size = stage_size_today + i + std::cmp::min(j, 1);
+                if last_stage_time
+                    .map(|l| day.and_time(time).expect("should result in a datetime") <= l)
+                    .unwrap_or_default()
+                {
+                    continue;
+                }
+                // Increase the size of the stage after the first stage of the day
+                let stage_size = first_stage_size_today + i + std::cmp::min(j, 1);
                 remaining_stages.push(RolloutStage::new_scheduled(
                     leftover_subnets
                         .drain(0..std::cmp::min(stage_size, leftover_subnets.len()))
@@ -203,6 +199,8 @@ impl RolloutBuilder {
         // Fill in the remaining rollouts starting from the last stage
         for (i, s) in leftover_subnets.into_iter().enumerate() {
             let remaining_stages_count = remaining_stages.len();
+            // FIXME: Remaining stages could be empty at this point if the last window of
+            // opportunity was missed to update all the subnets
             remaining_stages[remaining_stages_count - 1 - (i % remaining_stages_count)]
                 .updates
                 .push(self.create_subnet_update(s, &release));
@@ -305,6 +303,7 @@ impl RolloutBuilder {
             state_field = STATE_FIELD,
             period = Utc::now().timestamp() - since.timestamp(),
         );
+        info!("release ({}) query: {}", release.commit_hash, query);
         let response = self.prometheus_client.query(query, None, None).await?;
         let results = response.as_instant().expect("Expected instant vector");
         Ok(results
@@ -405,18 +404,23 @@ impl RolloutBuilder {
         });
 
         if let Some(last_stage) = stages.last_mut() {
-            let update_states = self
-                .get_update_states(
-                    release,
-                    chrono::DateTime::<Utc>::from_utc(
-                        chrono::NaiveDateTime::from_timestamp(last_stage.start_timestamp_seconds as i64, 0),
-                        Utc,
-                    ),
-                )
-                .await?;
+            let releases = last_stage
+                .updates
+                .iter()
+                .map(|u| u.replica_release.clone())
+                .collect::<HashSet<_>>();
+            let mut update_states = HashMap::new();
+            for release in releases {
+                let release_update_states = self.get_update_states(&release, last_stage.start_date_time()).await?;
+                update_states.insert(release, release_update_states);
+            }
             for u in &mut last_stage.updates {
                 if matches!(u.state, SubnetUpdateState::Unknown) {
-                    if let Some(state) = update_states.get(&u.subnet_id) {
+                    if let Some(state) = update_states
+                        .get(&u.replica_release)
+                        .expect("should contain update states for the release")
+                        .get(&u.subnet_id)
+                    {
                         u.state = state.clone();
                     }
                 }
