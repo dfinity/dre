@@ -37,8 +37,18 @@ pub struct DataCenterInfo {
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Node {
     pub id: PrincipalId,
-    pub features: nakamoto::FeatureSet,
+    pub features: nakamoto::NodeFeatures,
     pub dfinity_owned: bool,
+}
+
+impl Node {
+    pub fn new_test_node(node_number: u64, features: nakamoto::NodeFeatures, dfinity_owned: bool) -> Self {
+        Node {
+            id: PrincipalId::new_node_test_id(node_number),
+            features,
+            dfinity_owned,
+        }
+    }
 }
 
 impl PartialEq for Node {
@@ -81,9 +91,9 @@ impl Subnet {
     }
 }
 
-impl From<Subnet> for nakamoto::Score {
+impl From<Subnet> for nakamoto::NakamotoScore {
     fn from(subnet: Subnet) -> Self {
-        subnet.nodes.into()
+        Self::from_vec_nodes(subnet.nodes)
     }
 }
 
@@ -169,7 +179,7 @@ impl AvailableNodesQuerier for DashboardAgent {
 
 #[async_trait]
 pub trait DecentralizationQuerier {
-    async fn decentralization(&self, id: PrincipalId) -> Result<nakamoto::Score, NetworkError>;
+    async fn decentralization(&self, id: PrincipalId) -> Result<nakamoto::NakamotoScore, NetworkError>;
 }
 
 #[async_trait]
@@ -177,9 +187,9 @@ impl<T> DecentralizationQuerier for T
 where
     T: SubnetQuerier + Sync,
 {
-    async fn decentralization(&self, id: PrincipalId) -> Result<nakamoto::Score, NetworkError> {
+    async fn decentralization(&self, id: PrincipalId) -> Result<nakamoto::NakamotoScore, NetworkError> {
         let subnet = self.subnet(&id).await?;
-        let out = nakamoto::Score::from(subnet.nodes);
+        let out = nakamoto::NakamotoScore::from_vec_nodes(subnet.nodes);
         Ok(out)
     }
 }
@@ -232,30 +242,52 @@ impl From<&mercury_management_types::Node> for Node {
     fn from(n: &mercury_management_types::Node) -> Self {
         Self {
             id: n.principal,
-            features: [
-                (Feature::City, n.operator.datacenter.as_ref().map(|d| d.city.clone())),
-                (
-                    Feature::Country,
-                    n.operator.datacenter.as_ref().map(|d| d.country.clone()),
-                ),
-                (
-                    Feature::Continent,
-                    n.operator.datacenter.as_ref().map(|d| d.continent.clone()),
-                ),
-                (
-                    Feature::DatacenterOwner,
-                    n.operator.datacenter.as_ref().map(|d| d.owner.name.clone()),
-                ),
-                (
-                    Feature::Datacenter,
-                    n.operator.datacenter.as_ref().map(|d| d.name.clone()),
-                ),
-                (Feature::NodeProvider, n.operator.provider.principal.to_string().into()),
-            ]
-            .iter()
-            .cloned()
-            .filter_map(|(f, v)| v.map(|v| (f, v)))
-            .collect(),
+            features: nakamoto::NodeFeatures::from_iter(
+                [
+                    (
+                        Feature::City,
+                        n.operator
+                            .datacenter
+                            .as_ref()
+                            .map(|d| d.city.clone())
+                            .unwrap_or_else(|| "unknown".to_string()),
+                    ),
+                    (
+                        Feature::Country,
+                        n.operator
+                            .datacenter
+                            .as_ref()
+                            .map(|d| d.country.clone())
+                            .unwrap_or_else(|| "unknown".to_string()),
+                    ),
+                    (
+                        Feature::Continent,
+                        n.operator
+                            .datacenter
+                            .as_ref()
+                            .map(|d| d.continent.clone())
+                            .unwrap_or_else(|| "unknown".to_string()),
+                    ),
+                    (
+                        Feature::DatacenterOwner,
+                        n.operator
+                            .datacenter
+                            .as_ref()
+                            .map(|d| d.owner.name.clone())
+                            .unwrap_or_else(|| "unknown".to_string()),
+                    ),
+                    (
+                        Feature::Datacenter,
+                        n.operator
+                            .datacenter
+                            .as_ref()
+                            .map(|d| d.name.clone())
+                            .unwrap_or_else(|| "unknown".to_string()),
+                    ),
+                    (Feature::NodeProvider, n.operator.provider.principal.to_string()),
+                ]
+                .into_iter(),
+            ),
             dfinity_owned: n.dfinity_owned,
         }
     }
@@ -481,10 +513,10 @@ impl SubnetChangeRequest {
             .into_iter()
             .chain(included_nodes.clone())
             .collect::<Vec<Node>>()
-            .best_extension(extension_size, available_nodes)
+            .best_extension(extension_size, &available_nodes)
             .ok_or(NetworkError::InsufficentAvailableNodes)?;
 
-        if nakamoto::Score::from(extension.clone()).total() < MINIMUM_ALLOWED_NAKAMOTO_SCORE {
+        if nakamoto::NakamotoScore::from_vec_nodes(extension.clone()).total() < MINIMUM_ALLOWED_NAKAMOTO_SCORE {
             return Err(NetworkError::InsufficentAvailableNodes);
         }
 
@@ -527,9 +559,9 @@ impl SubnetChangeRequest {
             })
             .filter_map(|r| r.ok())
             .max_by(|sc1, sc2| {
-                nakamoto::Score::from(sc1.new_nodes.iter().cloned())
+                nakamoto::NakamotoScore::from_vec_nodes(sc1.new_nodes.clone())
                     .total()
-                    .partial_cmp(&nakamoto::Score::from(sc2.new_nodes.iter().cloned()).total())
+                    .partial_cmp(&nakamoto::NakamotoScore::from_vec_nodes(sc2.new_nodes.clone()).total())
                     .unwrap()
             })
             .ok_or(NetworkError::InsufficentAvailableNodes)
