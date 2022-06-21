@@ -1105,7 +1105,6 @@ dependencies = [
  "itertools 0.10.3",
  "lazy_static",
  "mercury_management_types",
- "num-traits",
  "reqwest",
  "serde",
  "serde_json",

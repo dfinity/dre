@@ -171,7 +171,7 @@ impl From<FactsDBGuest> for Guest {
                 .next()
                 .expect("invalid physical system name")
                 .to_string(),
-            dfinity_owned: g.node_type == "dfinity",
+            dfinity_owned: g.node_type.contains("dfinity"),
         }
     }
 }
