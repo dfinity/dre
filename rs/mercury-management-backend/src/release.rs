@@ -56,10 +56,19 @@ impl RolloutStage {
 }
 
 #[derive(Serialize)]
-pub struct RolloutState {
+pub struct Rollout {
+    pub state: RolloutState,
     pub latest_release: ReplicaRelease,
     pub stages: Vec<RolloutStage>,
 }
+
+#[derive(Serialize, Clone, Display, EnumString, PartialEq, Eq, Ord, PartialOrd)]
+pub enum RolloutState {
+    Active,
+    Scheduled,
+    Complete,
+}
+
 pub struct RolloutConfig {}
 
 pub struct RolloutBuilder {
@@ -72,12 +81,12 @@ pub struct RolloutBuilder {
 }
 
 impl RolloutBuilder {
-    pub async fn build(self) -> Result<Vec<RolloutState>> {
+    pub async fn build(self) -> Result<Vec<Rollout>> {
         const MAX_ROLLOUTS: usize = 2;
 
         let subnet_update_proposals = self.proposal_agent.list_update_subnet_version_proposals().await?;
 
-        let mut rollout_states = Vec::new();
+        let mut rollouts = Vec::new();
         for r in self
             .releases
             .clone()
@@ -102,9 +111,10 @@ impl RolloutBuilder {
                         .collect::<Vec<_>>(),
                 )
                 .await?;
-            rollout_states.push(state);
+            rollouts.push(state);
         }
-        Ok(rollout_states)
+        rollouts.sort_by_key(|a| a.state.clone());
+        Ok(rollouts)
     }
 
     fn get_day_stages_times(&self) -> Vec<NaiveTime> {
@@ -120,7 +130,7 @@ impl RolloutBuilder {
         &self,
         release: ReplicaRelease,
         subnet_update_proposals: Vec<SubnetUpdateProposal>,
-    ) -> Result<RolloutState> {
+    ) -> Result<Rollout> {
         let submitted_stages = self.stages_from_proposals(&release, subnet_update_proposals).await?;
         let today = Utc::now().date();
         let rollout_days = self.rollout_days(
@@ -225,13 +235,28 @@ impl RolloutBuilder {
             }
         }
 
-        Ok(RolloutState {
+        let stages = submitted_stages
+            .into_iter()
+            .chain(remaining_stages.into_iter())
+            .filter(|s| !s.updates.is_empty())
+            .collect::<Vec<_>>();
+        Ok(Rollout {
             latest_release: release,
-            stages: submitted_stages
-                .into_iter()
-                .chain(remaining_stages.into_iter())
-                .filter(|s| !s.updates.is_empty())
-                .collect(),
+            state: if stages.iter().all(|s| {
+                s.updates
+                    .iter()
+                    .all(|u| matches!(u.state, SubnetUpdateState::Scheduled))
+            }) {
+                RolloutState::Scheduled
+            } else if stages
+                .iter()
+                .all(|s| s.updates.iter().all(|u| matches!(u.state, SubnetUpdateState::Complete)))
+            {
+                RolloutState::Complete
+            } else {
+                RolloutState::Active
+            },
+            stages,
         })
     }
 
