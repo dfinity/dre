@@ -6,7 +6,6 @@ import SyncIcon from '@material-ui/icons/Sync';
 import HourglassEmptyIcon from '@material-ui/icons/HourglassEmpty';
 import AvTimerIcon from '@material-ui/icons/AvTimer';
 import HowToVoteIcon from '@material-ui/icons/HowToVote';
-import OpenInNewIcon from '@material-ui/icons/OpenInNew';
 import HelpIcon from '@material-ui/icons/Help';
 import RadioButtonCheckedIcon from '@material-ui/icons/RadioButtonChecked';
 import RadioButtonUncheckedIcon from '@material-ui/icons/RadioButtonUnchecked';
@@ -146,10 +145,8 @@ const RolloutStageContent = ({ stage }: { stage: RolloutStage }) => {
           <Chip
             size="small"
             label={`${update.subnet_id.split('-')[0]} (${update.subnet_name})`}
-            onClick={() => window.open(`https://github.com/dfinity/ic/commits/${update.replica_release.commit_hash}`)}
-            onDelete={update.state == "submitted" ? (() => window.open(`https://dashboard.internetcomputer.org/proposal/${update.proposal?.info?.id}`)) : undefined}
+            onClick={() => window.open(`https://dashboard.internetcomputer.org/proposal/${update.proposal?.info?.id}`)}
             icon={<SubnetUpdateStateIcon state={update.state} />}
-            deleteIcon={update.state == "submitted" ? <OpenInNewIcon /> : undefined}
             disabled={!stage.active}
             variant={update.state == "scheduled" && "outlined" || "default"}
             className={classes.updateChip}
@@ -209,7 +206,6 @@ export default function RolloutsStepper() {
   return (
     <Grid container>
       {rollouts.map(rollout => {
-        let rolloutComplete = rollout.stages.every(stage => stage.updates.every(update => update.state == "complete"));
         return (
           <Grid item xs={12}>
             <Paper>
@@ -227,10 +223,10 @@ export default function RolloutsStepper() {
                   </Typography>
                 </Grid>
                 <Grid item>
-                  <Chip label={rolloutComplete ? "Complete" : "In Progress"} size="small" disabled={rolloutComplete} />
+                  <Chip label={rollout.state} size="small" disabled={rollout.state == "Complete"} style={{ margin: 0 }} />
                 </Grid>
               </Grid>
-              <Stepper orientation="horizontal" connector={<></>} className={classes.stepper} style={rolloutComplete ? { display: "none" } : {}}>
+              <Stepper orientation="horizontal" connector={<></>} className={classes.stepper}>
                 {_(
                   rollout.stages
                 ).groupBy(
@@ -243,7 +239,7 @@ export default function RolloutsStepper() {
                   let active = date.getDate() == (new Date()).getDate();
                   let activeStep = dayStages.findIndex(s => s.active);
                   return (
-                    <Step active={active} key={dateString} expanded={!rolloutComplete} style={{ flex: 1 }}>
+                    <Step active={active} key={dateString} expanded style={{ flex: 1 }}>
                       <StepLabel icon={undefined}>{dateString}</StepLabel>
                       <Stepper activeStep={activeStep} orientation="vertical" connector={<></>} className={classes.stepper}>
                         {
@@ -251,7 +247,7 @@ export default function RolloutsStepper() {
                             let start = new Date(stage.start_timestamp_seconds * 1000);
                             let stage_label = start.toLocaleTimeString("en-US", { hour: 'numeric', minute: '2-digit' });
                             return (
-                              <Step key={stage_label} expanded={!rolloutComplete} style={{ flex: 1 }}>
+                              <Step key={stage_label} expanded style={{ flex: 1 }}>
                                 <StepLabel icon={<StageIcon active={stage.active} updated={i <= activeStep || date.getDate() < (new Date()).getDate()} />}>{stage_label}</StepLabel>
                                 <StepContent>
                                   <RolloutStageContent stage={stage} />
