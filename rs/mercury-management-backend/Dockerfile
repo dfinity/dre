@@ -19,7 +19,7 @@ RUN cargo build --release --bin mercury-management-backend
 # We do not need the Rust toolchain to run the binary!
 FROM debian:bullseye AS runtime
 RUN apt-get -y update && \
-    apt-get install -y openssl ca-certificates && \
+    apt-get install -y openssl ca-certificates curl && \
     apt-get clean autoclean && \
     apt-get autoremove --yes && \
     rm -rf /var/lib/{apt,dpkg,cache,log}/

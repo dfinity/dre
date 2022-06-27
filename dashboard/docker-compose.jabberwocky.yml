@@ -21,6 +21,12 @@ services:
     volumes:
       - backend_registry_cache_mainnet:/registry_cache
     network_mode: "bridge"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/version"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
   dashboard-backend-staging:
     image: registry.gitlab.com/dfinity-lab/core/release/dashboard-backend:${TAG:-latest}
     restart: always
