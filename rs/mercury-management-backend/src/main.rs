@@ -69,12 +69,17 @@ async fn main() -> std::io::Result<()> {
     );
 
     let update_local_registry = local_registry.clone();
+    let mut print_counter = 0;
     std::thread::spawn(move || loop {
-        info!("Updating local registry");
+        let print_enabled = print_counter % 10 == 0;
+        if print_enabled {
+            info!("Updating local registry");
+        }
         if let Err(e) = update_local_registry.sync_with_nns() {
             error!("Failed to update local registry: {}", e);
         }
         std::thread::sleep(std::time::Duration::from_secs(1));
+        print_counter += 1;
     });
 
     let registry_state = Arc::new(RwLock::new(registry::RegistryState::new(
@@ -408,8 +413,12 @@ async fn init_local_store() -> anyhow::Result<()> {
 }
 
 async fn poll(gitlab_client: AsyncGitlab, registry_state: Arc<RwLock<registry::RegistryState>>) {
+    let mut print_counter = 0;
     loop {
-        info!("Updating registry");
+        let print_enabled = print_counter % 10 == 0;
+        if print_enabled {
+            info!("Updating registry");
+        }
         if !registry_state.read().await.synced() {
             let node_providers_result = query_ic_dashboard_list::<NodeProvidersResponse>("v3/node-providers").await;
             let guests_result = ::gitlab::api::raw(
@@ -440,7 +449,9 @@ async fn poll(gitlab_client: AsyncGitlab, registry_state: Arc<RwLock<registry::R
                     if let Err(e) = update {
                         warn!("failed state update: {}", e);
                     }
-                    info!("Updated registry state to version {}", registry_state.version());
+                    if print_enabled {
+                        info!("Updated registry state to version {}", registry_state.version());
+                    }
                 }
                 (Err(e), _) => {
                     warn!("Failed querying IC dashboard {}", e);
@@ -449,13 +460,14 @@ async fn poll(gitlab_client: AsyncGitlab, registry_state: Arc<RwLock<registry::R
                     warn!("Failed querying guests file: {}", e);
                 }
             }
-        } else {
+        } else if print_enabled {
             info!(
                 "Skipping update. Registry already on latest version: {}",
                 registry_state.read().await.version()
             )
         }
         sleep(Duration::from_secs(1)).await;
+        print_counter += 1;
     }
 }
 
