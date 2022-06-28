@@ -63,6 +63,14 @@ services:
   decentralization:
     restart: always
     network_mode: "bridge"
+  autoheal-unhealthy-containers:
+    image: willfarrell/autoheal:latest
+    restart: always
+    volumes: [ "/var/run/docker.sock:/var/run/docker.sock" ]
+    environment:
+      - AUTOHEAL_CONTAINER_LABEL=all
+      - AUTOHEAL_START_PERIOD=20
+    network_mode: "bridge"
 
 volumes:
   slack_state:
