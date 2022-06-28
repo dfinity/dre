@@ -6,6 +6,7 @@ use ic_types::PrincipalId;
 use serde::{Deserialize, Serialize};
 use serde_with::{serde_as, DisplayFromStr};
 use std::cmp::{Eq, Ord, PartialEq, PartialOrd};
+use std::collections::BTreeMap;
 use std::convert::TryFrom;
 use std::net::Ipv6Addr;
 use std::ops::Deref;
@@ -48,9 +49,10 @@ pub struct Node {
     pub hostname: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub subnet: Option<PrincipalId>,
-    pub dfinity_owned: bool,
+    pub dfinity_owned: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub proposal: Option<TopologyProposal>,
+    pub labels: Option<Vec<BTreeMap<String, String>>>,
 }
 
 #[derive(Clone, Serialize, Debug, Deserialize)]
