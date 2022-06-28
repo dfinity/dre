@@ -352,7 +352,7 @@ impl RegistryState {
                     principal,
                     Node {
                         principal,
-                        dfinity_owned: guest.as_ref().map(|g| g.dfinity_owned).unwrap_or_default(),
+                        dfinity_owned: Some(guest.as_ref().map(|g| g.dfinity_owned).unwrap_or_default()),
                         ip_addr: node_ip_addr(nr),
                         hostname: guest
                             .map(|g| g.name)
@@ -378,6 +378,7 @@ impl RegistryState {
                             .map(|s| s.get()),
                         operator,
                         proposal: None,
+                        labels: None,
                     },
                 )
             })

@@ -1,0 +1,796 @@
+{
+  "principal": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
+  "nodes": [
+    {
+      "principal": "e4ysi-xp4fs-5ckcv-7e76q-edydw-ak6le-2acyt-k7udb-lj2vo-fqhhx-vqe",
+      "ip_addr": "2600:3006:1400:1500:5000:19ff:fe38:c418",
+      "operator": {
+        "principal": "it7v7-gb556-xhrhm-aaprs-ou5tu-evlk7-u5u2e-cvl5h-7lw6s-httyn-zqe",
+        "provider": {
+          "principal": "eipr5-izbom-neyqh-s3ec2-52eww-cyfpg-qfomg-3dpwj-4pffh-34xcu-7qe",
+          "website": null
+        },
+        "allowance": 1,
+        "datacenter": {
+          "name": "lv1",
+          "owner": {
+            "name": "Flexential"
+          },
+          "city": "Nevada",
+          "country": "US",
+          "continent": "North America",
+          "latitude": 36.08000183105469,
+          "longitude": -115.16999816894531
+        }
+      },
+      "hostname": "lv1-dll12",
+      "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
+      "labels": [],
+      "version": 18677
+    },
+    {
+      "principal": "aefqq-d7ldg-ljk5s-cmnxk-qqu7c-tw52l-74g3m-xxl5d-ag4ia-dxubz-wae",
+      "ip_addr": "2a0b:21c0:b002:2:5000:49ff:fe35:e204",
+      "operator": {
+        "principal": "fhpzr-q3cev-mfu3f-icrmt-n6hj4-v2anh-b4qhx-cccpl-3ybjo-wxe55-tae",
+        "provider": {
+          "principal": "bvcsg-3od6r-jnydw-eysln-aql7w-td5zn-ay5m6-sibd2-jzojt-anwag-mqe",
+          "website": null
+        },
+        "allowance": 0,
+        "datacenter": {
+          "name": "mr1",
+          "owner": {
+            "name": "Interxion"
+          },
+          "city": "Provence-Alpes-Cote d'Azur",
+          "country": "FR",
+          "continent": "Europe",
+          "latitude": 43.29650115966797,
+          "longitude": 5.369800090789795
+        }
+      },
+      "hostname": "mr1-dll08",
+      "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
+      "labels": [
+        {
+          "name": "DFINITY",
+          "value": "Owned by DFINITY"
+        }
+      ],
+      "version": 29106
+    },
+    {
+      "principal": "gp7wd-ahcms-jadi7-vwodk-3w4my-tuebm-v5qx4-vqbr6-tu56x-ybrj7-5qe",
+      "ip_addr": "2602:ffe4:801:18:5000:f5ff:fe2b:d2d2",
+      "operator": {
+        "principal": "a5glg-n6ul6-rkuc7-idthk-fb2fe-d5m75-4g4l7-22yko-h27pr-q3a7k-lae",
+        "provider": {
+          "principal": "sixix-2nyqd-t2k2v-vlsyz-dssko-ls4hl-hyij4-y7mdp-ja6cj-nsmpf-yae",
+          "name": "Starbase",
+          "website": "starbase.co"
+        },
+        "allowance": 1,
+        "datacenter": {
+          "name": "ty3",
+          "owner": {
+            "name": "Unknown"
+          },
+          "city": "Tokyo",
+          "country": "JP",
+          "continent": "Asia",
+          "latitude": 35.67620086669922,
+          "longitude": 139.65029907226562
+        }
+      },
+      "hostname": "ty3-dll14",
+      "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
+      "labels": [],
+      "version": 29056
+    },
+    {
+      "principal": "ydslj-rlf32-vj4lb-lrcgz-cws3q-l7h74-alxv4-rh7et-64ms3-xaour-uqe",
+      "ip_addr": "2001:4d78:400:10a:5000:7aff:fe1c:f9e6",
+      "operator": {
+        "principal": "3nu7r-l6i5c-jlmhi-fmmhm-4wcw4-ndlwb-yovrx-o3wxh-suzew-hvbbo-7qe",
+        "provider": {
+          "principal": "wdnqm-clqti-im5yf-iapio-avjom-kyppl-xuiza-oaz6z-smmts-52wyg-5ae",
+          "name": "Virtual Hive GmbH",
+          "website": "https://virtualhive.io"
+        },
+        "allowance": 1,
+        "datacenter": {
+          "name": "fr2",
+          "owner": {
+            "name": "Equinix"
+          },
+          "city": "Hesse",
+          "country": "DE",
+          "continent": "Europe",
+          "latitude": 50.12229919433594,
+          "longitude": 8.663660049438477
+        }
+      },
+      "hostname": "fr2-dll26",
+      "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
+      "labels": [],
+      "version": 28913
+    },
+    {
+      "principal": "qzklk-w24ay-zgidz-3fc2z-4xfru-ximbt-ullbw-eyr3u-ehuhr-up4ia-mae",
+      "ip_addr": "2401:3f00:1000:24:5000:30ff:fe1a:6a11",
+      "operator": {
+        "principal": "d4bin-5o2wg-ycbdq-yljr7-45pjv-ptf6d-v243j-vg6x5-dlo7t-yqu62-5qe",
+        "provider": {
+          "principal": "6nbcy-kprg6-ax3db-kh3cz-7jllk-oceyh-jznhs-riguq-fvk6z-6tsds-rqe",
+          "name": "OneSixtyTwo Digital Capital",
+          "website": "https://162digitalcapital.com"
+        },
+        "allowance": 4,
+        "datacenter": {
+          "name": "sg1",
+          "owner": {
+            "name": "Telin"
+          },
+          "city": "Singapore",
+          "country": "SG",
+          "continent": "Asia",
+          "latitude": 1.3521000146865845,
+          "longitude": 103.82890319824219
+        }
+      },
+      "hostname": "sg1-dll14",
+      "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
+      "labels": [],
+      "version": 28160
+    },
+    {
+      "principal": "eb5nj-rh7pb-xvyuk-ohcse-otjy2-6tnuv-6hobf-c4heb-cx3mc-4pmwz-fae",
+      "ip_addr": "2a01:2a8:a13d:1:5000:e6ff:fe42:d14c",
+      "operator": {
+        "principal": "4ohfd-bdyeu-5djlz-rf3lc-bqca2-h22rg-t5ipt-cjhl2-r5dbf-tk3fv-hae",
+        "provider": {
+          "principal": "6r5lw-l7db7-uwixn-iw5en-yy55y-ilbtq-e6gcv-g22r2-j3g6q-y37jk-jqe",
+          "name": "Sygnum Bank",
+          "website": "sygnum.com"
+        },
+        "allowance": 0,
+        "datacenter": {
+          "name": "zh5",
+          "owner": {
+            "name": "Green.Ch"
+          },
+          "city": "Zurich",
+          "country": "CH",
+          "continent": "Europe",
+          "latitude": 47.385799407958984,
+          "longitude": 8.527299880981445
+        }
+      },
+      "hostname": "zh5-dll27",
+      "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
+      "labels": [],
+      "version": 28242
+    },
+    {
+      "principal": "cgxrc-mp34v-t6lbz-mavnv-no62m-aukem-x3zqu-omgbc-k37hq-r7lnl-zae",
+      "ip_addr": "2a02:418:3002:0:5000:7bff:fe6d:1cd3",
+      "operator": {
+        "principal": "anodw-youcx-pycyh-tkyat-znvdz-rtmop-t7tpo-pyrcn-nuzzw-qp35i-2ae",
+        "provider": {
+          "principal": "ucjqj-jmbj3-rs4aq-ekzpw-ltjs3-zrcma-t6r3t-m5wxc-j5yrj-unwoj-mae",
+          "name": "Tomahawk.vc",
+          "website": "https://www.tomahawk.vc/"
+        },
+        "allowance": 0,
+        "datacenter": {
+          "name": "zh3",
+          "owner": {
+            "name": "Nine.Ch"
+          },
+          "city": "Zurich",
+          "country": "CH",
+          "continent": "Europe",
+          "latitude": 47.36800003051758,
+          "longitude": 8.51930046081543
+        }
+      },
+      "hostname": "zh3-dll05",
+      "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
+      "labels": [],
+      "version": 28186
+    },
+    {
+      "principal": "dxbmw-dpnje-dqjsy-tg6mb-4gyf3-lznvu-sarsi-yrtnq-dvjyh-mxgjv-xqe",
+      "ip_addr": "2a00:fc0:5000:300:5000:bbff:fe6b:3747",
+      "operator": {
+        "principal": "3xiew-2wo3x-tnbn2-o7kok-wwsnw-7koo2-gna5r-rlrt3-zotsh-dwpg6-kae",
+        "provider": {
+          "principal": "wdjjk-blh44-lxm74-ojj43-rvgf4-j5rie-nm6xs-xvnuv-j3ptn-25t4v-6ae",
+          "name": "Fractal Labs AG",
+          "website": null
+        },
+        "allowance": 0,
+        "datacenter": {
+          "name": "mb1",
+          "owner": {
+            "name": "Posita"
+          },
+          "city": "Maribor",
+          "country": "SI",
+          "continent": "Europe",
+          "latitude": 46.55764389038086,
+          "longitude": 15.645585060119629
+        }
+      },
+      "hostname": "mb1-dll08",
+      "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
+      "labels": [],
+      "version": 28981
+    },
+    {
+      "principal": "luot4-ahrkr-4z4vw-wwubq-wxhqn-a642n-txlyu-mk6j5-4mps4-zwbdw-uae",
+      "ip_addr": "2604:7e00:30:3:5000:abff:fea6:b9fe",
+      "operator": {
+        "principal": "codio-e5e6p-ol6sn-o3mgw-r7v5p-4jmch-a7exl-7pifz-cw4gn-ah47y-6ae",
+        "provider": {
+          "principal": "7a4u2-gevsy-5c5fs-hsgri-n2kdz-dxxwf-btcfp-jykro-l4y7c-7xky2-aqe",
+          "name": "Bigger Capital",
+          "website": "https://bigger.capital"
+        },
+        "allowance": 0,
+        "datacenter": {
+          "name": "aw1",
+          "owner": {
+            "name": "Tierpoint"
+          },
+          "city": "Pennsylvania",
+          "country": "US",
+          "continent": "North America",
+          "latitude": 40.60219955444336,
+          "longitude": -75.47119903564453
+        }
+      },
+      "hostname": "aw1-dll17",
+      "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
+      "labels": [],
+      "version": 29114
+    },
+    {
+      "principal": "yiebh-opvdk-kbzjq-s5wu3-hkmww-vtsf2-otbmc-igkdc-lsbag-eqjdd-yqe",
+      "ip_addr": "2a01:2a8:a13d:1:5000:eeff:fe0e:e0c7",
+      "operator": {
+        "principal": "4ohfd-bdyeu-5djlz-rf3lc-bqca2-h22rg-t5ipt-cjhl2-r5dbf-tk3fv-hae",
+        "provider": {
+          "principal": "6r5lw-l7db7-uwixn-iw5en-yy55y-ilbtq-e6gcv-g22r2-j3g6q-y37jk-jqe",
+          "name": "Sygnum Bank",
+          "website": "sygnum.com"
+        },
+        "allowance": 0,
+        "datacenter": {
+          "name": "zh5",
+          "owner": {
+            "name": "Green.Ch"
+          },
+          "city": "Zurich",
+          "country": "CH",
+          "continent": "Europe",
+          "latitude": 47.385799407958984,
+          "longitude": 8.527299880981445
+        }
+      },
+      "hostname": "zh5-dll21",
+      "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
+      "labels": [],
+      "version": 28236
+    },
+    {
+      "principal": "llshj-sxluv-xmt62-s2jsz-q42hh-tewjl-3sd5b-pw5vu-2nnzl-57pfs-zae",
+      "ip_addr": "2602:ffe4:801:18:5000:9dff:fe45:8cf8",
+      "operator": {
+        "principal": "a5glg-n6ul6-rkuc7-idthk-fb2fe-d5m75-4g4l7-22yko-h27pr-q3a7k-lae",
+        "provider": {
+          "principal": "sixix-2nyqd-t2k2v-vlsyz-dssko-ls4hl-hyij4-y7mdp-ja6cj-nsmpf-yae",
+          "name": "Starbase",
+          "website": "starbase.co"
+        },
+        "allowance": 1,
+        "datacenter": {
+          "name": "ty3",
+          "owner": {
+            "name": "Unknown"
+          },
+          "city": "Tokyo",
+          "country": "JP",
+          "continent": "Asia",
+          "latitude": 35.67620086669922,
+          "longitude": 139.65029907226562
+        }
+      },
+      "hostname": "ty3-dll13",
+      "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
+      "labels": [],
+      "version": 29057
+    },
+    {
+      "principal": "pl37i-wxjd2-kozu6-o46lf-hbi62-lyi3x-s4r22-4si5f-7wcuu-3wfp6-gqe",
+      "ip_addr": "2001:470:1:c76:5000:2cff:fe0c:f490",
+      "operator": {
+        "principal": "jamvj-vlnyv-hg77l-nruxk-esp5u-yics2-hg4jg-4xkdd-z7yk2-wctgm-bqe",
+        "provider": {
+          "principal": "72idx-a7c3y-nrcwc-lboj4-mmsas-sfdpm-gq23i-h2yuy-lykcj-vrxn2-jqe",
+          "name": "Peggy Shafaghi",
+          "website": null
+        },
+        "allowance": 1,
+        "datacenter": {
+          "name": "fm1",
+          "owner": {
+            "name": "Hurricane Electric"
+          },
+          "city": "California",
+          "country": "US",
+          "continent": "North America",
+          "latitude": 37.548500061035156,
+          "longitude": -121.98860168457031
+        }
+      },
+      "hostname": "fm1-dll12",
+      "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
+      "labels": [],
+      "version": 28575
+    },
+    {
+      "principal": "3l2cg-gewhq-ytksl-kqrj5-65263-zvrer-o5akm-zx5o3-zcgzv-mykzq-bqe",
+      "ip_addr": "2001:4d78:400:10a:5000:8eff:febe:25b0",
+      "operator": {
+        "principal": "3nu7r-l6i5c-jlmhi-fmmhm-4wcw4-ndlwb-yovrx-o3wxh-suzew-hvbbo-7qe",
+        "provider": {
+          "principal": "wdnqm-clqti-im5yf-iapio-avjom-kyppl-xuiza-oaz6z-smmts-52wyg-5ae",
+          "name": "Virtual Hive GmbH",
+          "website": "https://virtualhive.io"
+        },
+        "allowance": 1,
+        "datacenter": {
+          "name": "fr2",
+          "owner": {
+            "name": "Equinix"
+          },
+          "city": "Hesse",
+          "country": "DE",
+          "continent": "Europe",
+          "latitude": 50.12229919433594,
+          "longitude": 8.663660049438477
+        }
+      },
+      "hostname": "fr2-dll28",
+      "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
+      "labels": [],
+      "version": 28915
+    },
+    {
+      "principal": "xgzc4-6xtsp-yux4h-ejpqs-pchty-6o4fj-x3gfq-j2xs4-vq4dc-biyso-hae",
+      "ip_addr": "2600:3004:1200:1200:5000:19ff:fe11:8e4a",
+      "operator": {
+        "principal": "lz4fy-gca6y-aodk3-ncdrw-ouoqb-kgvjj-h4nul-eybyu-puwev-hkogp-fqe",
+        "provider": {
+          "principal": "eipr5-izbom-neyqh-s3ec2-52eww-cyfpg-qfomg-3dpwj-4pffh-34xcu-7qe",
+          "website": null
+        },
+        "allowance": 4,
+        "datacenter": {
+          "name": "pl1",
+          "owner": {
+            "name": "Flexential"
+          },
+          "city": "Oregon",
+          "country": "US",
+          "continent": "North America",
+          "latitude": 45.50510025024414,
+          "longitude": -122.67500305175781
+        }
+      },
+      "hostname": "pl1-dll03",
+      "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
+      "labels": [],
+      "version": 26977
+    },
+    {
+      "principal": "qw6qq-rc4gp-h2dcz-dtuix-74hta-xsolr-up4kw-wopxf-v26mr-chvl2-7ae",
+      "ip_addr": "2604:3fc0:2001:0:5000:5aff:fe0a:3d57",
+      "operator": {
+        "principal": "5syyj-syqbw-ubz3m-f4lkg-u7v2j-madhv-3s4vx-yl67f-bets5-xmrbf-zae",
+        "provider": {
+          "principal": "sma3p-ivkif-hz7nu-ngmvq-ibnjg-nubke-zf6gh-wbnfc-2dlng-l3die-zqe",
+          "name": "BLP22, LLC",
+          "website": null
+        },
+        "allowance": 5,
+        "datacenter": {
+          "name": "at2",
+          "owner": {
+            "name": "DataSite"
+          },
+          "city": "Georgia",
+          "country": "US",
+          "continent": "North America",
+          "latitude": 33.81800079345703,
+          "longitude": -84.3905029296875
+        }
+      },
+      "hostname": "at2-dll26",
+      "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
+      "labels": [],
+      "version": 28133
+    },
+    {
+      "principal": "qhz4y-4dgn5-nlqtq-5b7mj-aaurb-z5763-xjdqz-nunrd-yo74e-fm723-kae",
+      "ip_addr": "2401:3f00:1000:24:5000:70ff:fe50:7bce",
+      "operator": {
+        "principal": "d4bin-5o2wg-ycbdq-yljr7-45pjv-ptf6d-v243j-vg6x5-dlo7t-yqu62-5qe",
+        "provider": {
+          "principal": "6nbcy-kprg6-ax3db-kh3cz-7jllk-oceyh-jznhs-riguq-fvk6z-6tsds-rqe",
+          "name": "OneSixtyTwo Digital Capital",
+          "website": "https://162digitalcapital.com"
+        },
+        "allowance": 4,
+        "datacenter": {
+          "name": "sg1",
+          "owner": {
+            "name": "Telin"
+          },
+          "city": "Singapore",
+          "country": "SG",
+          "continent": "Asia",
+          "latitude": 1.3521000146865845,
+          "longitude": 103.82890319824219
+        }
+      },
+      "hostname": "sg1-dll22",
+      "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
+      "labels": [],
+      "version": 26088
+    },
+    {
+      "principal": "nlvel-yx7m2-cwrjs-6lkug-nso3r-lloy7-cyzdb-sgqcx-4n7ll-hj7y6-xqe",
+      "ip_addr": "2607:f758:1220:0:5000:15ff:fe8f:bf21",
+      "operator": {
+        "principal": "c4c3a-gbuee-vjynb-6af74-mdrm5-2c2d7-acv7g-3r2hi-uamra-fzbxa-2qe",
+        "provider": {
+          "principal": "dzxyh-fo4sw-pxckk-kwqvc-xjten-3yqon-fm62b-2hz4s-raa4g-jzczg-iqe",
+          "name": "Jimmy Quach",
+          "website": null
+        },
+        "allowance": 0,
+        "datacenter": {
+          "name": "at1",
+          "owner": {
+            "name": "Flexential"
+          },
+          "city": "Georgia",
+          "country": "US",
+          "continent": "North America",
+          "latitude": 33.68439865112305,
+          "longitude": -84.38200378417969
+        }
+      },
+      "hostname": "at1-dll23",
+      "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
+      "labels": [],
+      "version": 4509
+    },
+    {
+      "principal": "sq6zd-3h76t-gef67-5bp2d-rhhgt-mqn47-3pt2b-ueaa5-kcf2f-rigqy-vae",
+      "ip_addr": "2001:920:401a:1708:5000:f5ff:fe4a:d1e4",
+      "operator": {
+        "principal": "pgunx-7pdft-jwvuo-j65kd-2mdxl-bi3r7-znv4c-vw2q3-2gno4-2uoeg-wqe",
+        "provider": {
+          "principal": "rbn2y-6vfsb-gv35j-4cyvy-pzbdu-e5aum-jzjg6-5b4n5-vuguf-ycubq-zae",
+          "name": "Allusion",
+          "website": "https://www.allusion.be"
+        },
+        "allowance": 4,
+        "datacenter": {
+          "name": "an1",
+          "owner": {
+            "name": "Antwerp Datacenter"
+          },
+          "city": "Flanders",
+          "country": "BE",
+          "continent": "Europe",
+          "latitude": 51.219398498535156,
+          "longitude": 4.402500152587891
+        }
+      },
+      "hostname": "an1-dll12",
+      "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
+      "labels": [],
+      "version": 19835
+    },
+    {
+      "principal": "iylgr-zpxwq-kqgmf-4srtx-o4eey-d6bln-smmq6-we7px-ibdea-nondy-eae",
+      "ip_addr": "2a02:800:2:2003:5000:f6ff:fec4:4c86",
+      "operator": {
+        "principal": "gl27f-y5srq-yy5ot-v4x5z-y2a2s-sgoor-l4gjg-qv4x4-v2olb-dz4dc-wae",
+        "provider": {
+          "principal": "wdjjk-blh44-lxm74-ojj43-rvgf4-j5rie-nm6xs-xvnuv-j3ptn-25t4v-6ae",
+          "name": "Fractal Labs AG",
+          "website": null
+        },
+        "allowance": 0,
+        "datacenter": {
+          "name": "lj1",
+          "owner": {
+            "name": "Posita"
+          },
+          "city": "Ljubljana",
+          "country": "SI",
+          "continent": "Europe",
+          "latitude": 46.04998016357422,
+          "longitude": 14.50685977935791
+        }
+      },
+      "hostname": "lj1-dll02",
+      "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
+      "labels": [],
+      "version": 29005
+    },
+    {
+      "principal": "rvwon-5yfm2-lnvh5-54own-a5dmy-os5mf-4r5uz-ztv2a-ibz5p-hfdzk-hae",
+      "ip_addr": "2a0f:cd00:2:1:5000:3fff:fe36:cab8",
+      "operator": {
+        "principal": "yngfj-akg4s-nectt-whzgk-5zqbw-z3e5u-zuycn-zqygi-xz4vt-244v6-zae",
+        "provider": {
+          "principal": "7ryes-jnj73-bsyu4-lo6h7-lbxk5-x4ien-lylws-5qwzl-hxd5f-xjh3w-mqe",
+          "name": "Archery Blockchain SCSp",
+          "website": "https://bochlsersolutions.com"
+        },
+        "allowance": 4,
+        "datacenter": {
+          "name": "ge1",
+          "owner": {
+            "name": "High DC"
+          },
+          "city": "Geneva",
+          "country": "CH",
+          "continent": "Europe",
+          "latitude": 46.20439910888672,
+          "longitude": 6.143199920654297
+        }
+      },
+      "hostname": "ge1-dll02",
+      "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
+      "labels": [],
+      "version": 6043
+    },
+    {
+      "principal": "os3lb-ig2wl-pohqy-ujkgp-2jgkz-kl5qu-6ie4y-ajylb-drbld-2ep3s-lae",
+      "ip_addr": "2a04:9dc0:0:108:5000:7cff:fece:97d",
+      "operator": {
+        "principal": "c5ssg-eh22p-pmsn6-fpjzj-k5nql-mx5mc-7gb4a-4klco-c4f37-ydnfp-bae",
+        "provider": {
+          "principal": "i7dto-bgkj2-xo5dx-cyrb7-zkk5y-q46eh-gz6iq-qkgyc-w4qte-scgtb-6ae",
+          "website": null
+        },
+        "allowance": 0,
+        "datacenter": {
+          "name": "bu1",
+          "owner": {
+            "name": "M247"
+          },
+          "city": "Bucuresti",
+          "country": "RO",
+          "continent": "Europe",
+          "latitude": 44.42679977416992,
+          "longitude": 26.102500915527344
+        }
+      },
+      "hostname": "bu1-dll25",
+      "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
+      "labels": [],
+      "version": 1060
+    },
+    {
+      "principal": "rdzbq-g7zf4-kbj5b-7bb3d-ixyfq-thwci-evni7-o4omc-tzll7-mmc2c-mqe",
+      "ip_addr": "2604:7e00:30:3:5000:4cff:fee6:8d82",
+      "operator": {
+        "principal": "codio-e5e6p-ol6sn-o3mgw-r7v5p-4jmch-a7exl-7pifz-cw4gn-ah47y-6ae",
+        "provider": {
+          "principal": "7a4u2-gevsy-5c5fs-hsgri-n2kdz-dxxwf-btcfp-jykro-l4y7c-7xky2-aqe",
+          "name": "Bigger Capital",
+          "website": "https://bigger.capital"
+        },
+        "allowance": 0,
+        "datacenter": {
+          "name": "aw1",
+          "owner": {
+            "name": "Tierpoint"
+          },
+          "city": "Pennsylvania",
+          "country": "US",
+          "continent": "North America",
+          "latitude": 40.60219955444336,
+          "longitude": -75.47119903564453
+        }
+      },
+      "hostname": "aw1-dll09",
+      "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
+      "labels": [],
+      "version": 29083
+    },
+    {
+      "principal": "2fbvp-54upn-oaayl-ixqfb-ytsm5-jxevu-76ono-243lr-jutky-sbzt2-mae",
+      "ip_addr": "2401:3f00:1000:23:5000:a4ff:fe2a:b1b2",
+      "operator": {
+        "principal": "5mhxl-exk6r-cvm3q-ose77-qojd2-dybc4-hvrdj-5dnr6-ylvg7-wtn23-2qe",
+        "provider": {
+          "principal": "6nbcy-kprg6-ax3db-kh3cz-7jllk-oceyh-jznhs-riguq-fvk6z-6tsds-rqe",
+          "name": "OneSixtyTwo Digital Capital",
+          "website": "https://162digitalcapital.com"
+        },
+        "allowance": 4,
+        "datacenter": {
+          "name": "sg3",
+          "owner": {
+            "name": "Rack Central"
+          },
+          "city": "Singapore",
+          "country": "SG",
+          "continent": "Asia",
+          "latitude": 1.3321000337600708,
+          "longitude": 103.95269775390625
+        }
+      },
+      "hostname": "sg3-dll20",
+      "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
+      "labels": [],
+      "version": 28827
+    },
+    {
+      "principal": "qwco4-yxxjx-7dpgv-4fr4f-obdwj-nrtfw-ses5t-phwz5-ned26-qij5l-pqe",
+      "ip_addr": "2a02:800:2:2003:5000:27ff:fe4b:8344",
+      "operator": {
+        "principal": "gl27f-y5srq-yy5ot-v4x5z-y2a2s-sgoor-l4gjg-qv4x4-v2olb-dz4dc-wae",
+        "provider": {
+          "principal": "wdjjk-blh44-lxm74-ojj43-rvgf4-j5rie-nm6xs-xvnuv-j3ptn-25t4v-6ae",
+          "name": "Fractal Labs AG",
+          "website": null
+        },
+        "allowance": 0,
+        "datacenter": {
+          "name": "lj1",
+          "owner": {
+            "name": "Posita"
+          },
+          "city": "Ljubljana",
+          "country": "SI",
+          "continent": "Europe",
+          "latitude": 46.04998016357422,
+          "longitude": 14.50685977935791
+        }
+      },
+      "hostname": "lj1-dll18",
+      "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
+      "labels": [],
+      "version": 28991
+    },
+    {
+      "principal": "xhagc-jwrkv-4idps-wl76z-dx7g4-5cpzv-p5rg2-6uoee-2gl74-ifwh3-sae",
+      "ip_addr": "2604:3fc0:3002:0:5000:30ff:fe7b:8d08",
+      "operator": {
+        "principal": "redpf-rrb5x-sa2it-zhbh7-q2fsp-bqlwz-4mf4y-tgxmj-g5y7p-ezjtj-5qe",
+        "provider": {
+          "principal": "wwdbq-xuqhf-eydzu-oyl7p-ga565-zm7s7-yrive-ozgsy-zzgh3-qwb3j-cae",
+          "name": "Giant Leaf, LLC",
+          "website": "giantleafllc.com"
+        },
+        "allowance": 4,
+        "datacenter": {
+          "name": "or1",
+          "owner": {
+            "name": "DataSite"
+          },
+          "city": "Florida",
+          "country": "US",
+          "continent": "North America",
+          "latitude": 28.588300704956055,
+          "longitude": -81.37920379638672
+        }
+      },
+      "hostname": "or1-dll25",
+      "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
+      "labels": [],
+      "version": 26120
+    },
+    {
+      "principal": "tdzrz-kktgi-77woo-awir4-k5xg7-zpout-aqtgf-ywvkz-gqkml-544rc-mae",
+      "ip_addr": "2a00:fa0:3:0:5000:18ff:fe55:ffb8",
+      "operator": {
+        "principal": "5atxd-q4jom-dtpxr-awd3p-e562x-hpavj-godtj-g6vmz-of2c6-ildhh-fae",
+        "provider": {
+          "principal": "7ryes-jnj73-bsyu4-lo6h7-lbxk5-x4ien-lylws-5qwzl-hxd5f-xjh3w-mqe",
+          "name": "Archery Blockchain SCSp",
+          "website": "https://bochlsersolutions.com"
+        },
+        "allowance": 4,
+        "datacenter": {
+          "name": "ge2",
+          "owner": {
+            "name": "Safe Host SA"
+          },
+          "city": "Geneva",
+          "country": "CH",
+          "continent": "Europe",
+          "latitude": 46.20220184326172,
+          "longitude": 6.136280059814453
+        }
+      },
+      "hostname": "ge2-dll14",
+      "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
+      "labels": [],
+      "version": 21857
+    },
+    {
+      "principal": "4utyh-gpgts-a7kzj-77tog-pzziz-7khu4-m45hz-clqgl-u74lr-np6vw-nae",
+      "ip_addr": "2604:7e00:30:3:5000:43ff:fe13:91c0",
+      "operator": {
+        "principal": "codio-e5e6p-ol6sn-o3mgw-r7v5p-4jmch-a7exl-7pifz-cw4gn-ah47y-6ae",
+        "provider": {
+          "principal": "7a4u2-gevsy-5c5fs-hsgri-n2kdz-dxxwf-btcfp-jykro-l4y7c-7xky2-aqe",
+          "name": "Bigger Capital",
+          "website": "https://bigger.capital"
+        },
+        "allowance": 0,
+        "datacenter": {
+          "name": "aw1",
+          "owner": {
+            "name": "Tierpoint"
+          },
+          "city": "Pennsylvania",
+          "country": "US",
+          "continent": "North America",
+          "latitude": 40.60219955444336,
+          "longitude": -75.47119903564453
+        }
+      },
+      "hostname": "aw1-dll03",
+      "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
+      "labels": [],
+      "version": 29076
+    },
+    {
+      "principal": "woutk-44a2i-zxvk2-es7tn-ihx6n-vm7ne-xs6n7-x42wx-twj4g-njwd6-oqe",
+      "ip_addr": "2a0f:cd00:2:1:5000:b9ff:fe98:61ac",
+      "operator": {
+        "principal": "yngfj-akg4s-nectt-whzgk-5zqbw-z3e5u-zuycn-zqygi-xz4vt-244v6-zae",
+        "provider": {
+          "principal": "7ryes-jnj73-bsyu4-lo6h7-lbxk5-x4ien-lylws-5qwzl-hxd5f-xjh3w-mqe",
+          "name": "Archery Blockchain SCSp",
+          "website": "https://bochlsersolutions.com"
+        },
+        "allowance": 4,
+        "datacenter": {
+          "name": "ge1",
+          "owner": {
+            "name": "High DC"
+          },
+          "city": "Geneva",
+          "country": "CH",
+          "continent": "Europe",
+          "latitude": 46.20439910888672,
+          "longitude": 6.143199920654297
+        }
+      },
+      "hostname": "ge1-dll12",
+      "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
+      "labels": [],
+      "version": 21821
+    }
+  ],
+  "subnet_type": "system",
+  "metadata": {
+    "name": "Internet Identity"
+  },
+  "replica_version": "ebb7d6d10d3140f12b9f9b343c061f8aab6e271a",
+  "version": 30240
+}

@@ -84,7 +84,7 @@ async fn replace_nodes(info: web::Json<ReplaceRequest>) -> Result<HttpResponse, 
         .await?
         .replace(&info.nodes)?;
 
-    Ok(HttpResponse::Ok().json(SubnetChangeResponse::from(replaced)))
+    Ok(HttpResponse::Ok().json(SubnetChangeResponse::from(&replaced)))
 }
 
 #[post("/{subnet}/optimize")]
@@ -98,7 +98,7 @@ async fn optimize_subnet(
         .await?
         .optimize(query.max_replacements.unwrap_or(DEFAULT_MAX_REPLACEMENTS))?;
 
-    Ok(HttpResponse::Ok().json(SubnetChangeResponse::from(optimized)))
+    Ok(HttpResponse::Ok().json(SubnetChangeResponse::from(&optimized)))
 }
 
 fn dashboard_backend_url() -> String {
