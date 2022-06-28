@@ -1096,20 +1096,25 @@ name = "decentralization"
 version = "0.1.0"
 dependencies = [
  "actix-web",
+ "anyhow",
  "async-trait",
  "chrono",
+ "colored",
  "counter",
  "futures-util",
  "ic-base-types",
  "include_dir",
  "itertools 0.10.3",
  "lazy_static",
+ "log",
  "mercury_management_types",
+ "regex",
  "reqwest",
  "serde",
  "serde_json",
  "strum 0.21.0",
  "strum_macros 0.21.1",
+ "tabular",
  "tokio",
 ]
 
@@ -4485,7 +4490,6 @@ dependencies = [
  "serde_json",
  "strum 0.23.0",
  "strum_macros 0.23.1",
- "tabular",
  "tempfile",
  "tokio",
 ]

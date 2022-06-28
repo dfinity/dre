@@ -26,7 +26,6 @@ dirs = "4.0"
 decentralization = { path = "../decentralization" }
 mercury_management_types = { path = "../mercury_management_types" }
 dialoguer = "0.10.0"
-tabular = "0.2"
 itertools = "0.10"
 async-trait = "0.1.53"
 

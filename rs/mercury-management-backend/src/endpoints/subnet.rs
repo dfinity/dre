@@ -108,5 +108,5 @@ async fn replace(
     }
 
     Ok(HttpResponse::Ok()
-        .json(decentralization::SubnetChangeResponse::from(change).with_motivation(motivations.join(", "))))
+        .json(decentralization::SubnetChangeResponse::from(&change).with_motivation(motivations.join(", "))))
 }

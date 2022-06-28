@@ -1,11 +1,9 @@
 use clap::{CommandFactory, ErrorKind, Parser};
-use colored::Colorize;
 use decentralization::SubnetChangeResponse;
 use dialoguer::Confirm;
 use dotenv::dotenv;
 use futures::Future;
 use ic_base_types::PrincipalId;
-use itertools::Itertools;
 use log::{error, info, warn};
 use mercury_management_types::{TopologyProposal, TopologyProposalKind, TopologyProposalStatus};
 use tokio::time::{sleep, Duration};
@@ -183,105 +181,8 @@ impl Runner {
         self.swap_nodes(change).await
     }
 
-    fn print_before_after_scores(change: &SubnetChangeResponse) {
-        println!("Decentralization score changes:");
-        let before_individual = change.score_before.scores_individual();
-        let after_individual = change.score_after.scores_individual();
-        change
-            .score_before
-            .scores_individual()
-            .keys()
-            .map(|k| {
-                let before = before_individual.get(k).unwrap();
-                let after = after_individual.get(k).unwrap();
-                let output = format!(
-                    "{}: {:.2} -> {:.2}  {:>7}",
-                    k,
-                    before,
-                    after,
-                    format_args!("({:+.0}%)", ((after - before) / before) * 100.)
-                );
-                if before > after {
-                    output.bright_red()
-                } else if after > before {
-                    output.bright_green()
-                } else {
-                    output.dimmed()
-                }
-            })
-            .for_each(|s| println!("{: >40}", s));
-
-        let total_before = change.score_before.total();
-        let total_after = change.score_after.total();
-        let output = format!(
-            "\tTotal: {:.2} -> {:.2}  ({:+.0}%)",
-            total_before,
-            total_after,
-            ((total_after - total_before) / total_before) * 100.
-        )
-        .bold();
-        println!(
-            "\n{}\n",
-            if total_before > total_after {
-                output.red()
-            } else if total_after > total_before {
-                output.green()
-            } else {
-                output.dimmed()
-            }
-        );
-    }
-
-    fn print_subnet_change_diff(change: &SubnetChangeResponse) {
-        let rows = change.feature_diff.values().map(|diff| diff.len()).max().unwrap_or(0);
-        let mut table = tabular::Table::new(
-            &change
-                .feature_diff
-                .keys()
-                .map(|_| "    {:<}  {:>}")
-                .collect::<Vec<_>>()
-                .join(""),
-        );
-        table.add_row(
-            change
-                .feature_diff
-                .keys()
-                .fold(tabular::Row::new(), |acc, k| acc.with_cell(k.to_string()).with_cell("")),
-        );
-        table.add_row(change.feature_diff.keys().fold(tabular::Row::new(), |acc, k| {
-            acc.with_cell("-".repeat(k.to_string().len())).with_cell("")
-        }));
-        for i in 0..rows {
-            table.add_row(change.feature_diff.values().fold(tabular::Row::new(), |acc, v| {
-                let (value, change) = v
-                    .iter()
-                    .sorted()
-                    .nth(i)
-                    .map(|(k, (before, after))| {
-                        (
-                            k.to_string(),
-                            match before.cmp(after) {
-                                std::cmp::Ordering::Equal => format!("{}", before),
-                                std::cmp::Ordering::Greater => format!("{} -> {}", before, after),
-                                std::cmp::Ordering::Less => format!("{} -> {}", before, after),
-                            },
-                        )
-                    })
-                    .unwrap_or_default();
-                acc.with_cell(value).with_cell(change)
-            }));
-        }
-
-        println!("{}", table);
-        change.added.iter().zip(change.removed.iter()).for_each(|(a, r)| {
-            println!("{}{}", format!("  - {}", r).red(), format!("    + {}", a).green());
-        });
-        println!();
-    }
-
     async fn swap_nodes(&self, change: SubnetChangeResponse) -> anyhow::Result<()> {
-        Self::print_before_after_scores(&change);
-        Self::print_subnet_change_diff(&change);
+        println!("{}", change);
 
         self.with_confirmation(|r| {
             let change = change.clone();
