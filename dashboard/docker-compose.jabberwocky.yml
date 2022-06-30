@@ -44,7 +44,8 @@ services:
     restart: always
     environment:
       - SLACK_URL
-      - "SLACK_CHANNEL=#eng-release"
+      - "SLACK_CHANNEL_PROPOSALS_INTERNAL=#nns-proposals"
+      - "SLACK_CHANNEL_PROPOSALS_EXTERNAL=#nns-proposals-external"
     volumes:
       - slack_state:/state/
     working_dir: /state/

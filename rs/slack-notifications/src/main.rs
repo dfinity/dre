@@ -17,11 +17,11 @@ extern crate lazy_static;
 #[derive(Deserialize)]
 struct Config {}
 
-// Time to wait for a new proposal after the last one was created before sending out the Slack notification.
+// Time to wait for a new proposal after the last one was created before sending
+// out the Slack notification.
 const COOLING_PERIOD_SECS: u64 = 60;
 
 const SLACK_URL_ENV: &str = "SLACK_URL";
-const SLACK_CHANNEL_ENV: &str = "SLACK_CHANNEL";
 
 #[tokio::main]
 async fn main() {
@@ -31,15 +31,13 @@ async fn main() {
 
     let proposal_poller = ProposalPoller::new();
 
-    let mut slack_hook = slack::SlackHook::new(std::env::var(SLACK_URL_ENV).expect("SLACK_URL must be set"));
-    if let Ok(channel) = std::env::var(SLACK_CHANNEL_ENV) {
-        slack_hook = slack_hook.channel(channel);
-    }
-
     let mut last_notified_proposal =
         LastNotifiedProposal::new().expect("failed to initialize last notified proposal tracking");
 
     loop {
+        info!("sleeping");
+        sleep(Duration::from_secs(10)).await;
+
         info!("checking for new proposals");
 
         let mut proposals = proposal_poller.poll_once().await.unwrap_or_default();
@@ -75,16 +73,29 @@ async fn main() {
                 continue;
             }
 
-            if let Ok(payload) = slack::SlackPayload::try_from(new_proposals.clone()) {
-                match slack_hook.send(&payload).await {
-                    Ok(_) => {
-                        if let Err(e) = last_notified_proposal.save(last_proposal.id.expect("proposal has no id").id) {
-                            warn!("failed to save last notified proposal: {}", e);
+            if let Ok(message_groups) = slack::MessageGroups::try_from(new_proposals.clone()) {
+                let slack_hook = slack::SlackHook::new(
+                    std::env::var(SLACK_URL_ENV).expect("SLACK_URL environment variable must be set"),
+                );
+
+                for slack_message in message_groups.message_groups.iter() {
+                    match slack_hook.send(slack_message).await {
+                        Ok(response) => {
+                            println!(
+                                "Got a response: {}",
+                                response.text_with_charset("utf8").await.unwrap_or_else(|_| {
+                                    "ERROR: failed to decode the response from the slack servers".to_string()
+                                })
+                            );
+                        }
+                        Err(e) => {
+                            warn!("failed to send Slack notification: {}", e);
+                            continue;
                         }
                     }
-                    Err(e) => {
-                        warn!("failed to send Slack notification: {}", e);
-                    }
+                }
+                if let Err(e) = last_notified_proposal.save(last_proposal.id.expect("proposal has no id").id) {
+                    warn!("failed to save last notified proposal: {}", e);
                 }
             }
         }
@@ -105,7 +116,10 @@ impl LastNotifiedProposal {
         if std::path::Path::new(&default_file_path).exists() {
             Ok(Self {
                 file_path: default_file_path.clone(),
-                last_notified_proposal_id: std::fs::read_to_string(default_file_path)?.parse::<u64>()?.into(),
+                last_notified_proposal_id: std::fs::read_to_string(default_file_path)?
+                    .trim()
+                    .parse::<u64>()?
+                    .into(),
             })
         } else {
             Ok(Self {
