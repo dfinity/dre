@@ -205,8 +205,8 @@ impl NakamotoScore {
     }
 
     /// Get the Nakamoto score for a single feature
-    pub fn score_feature(&self, feature: Feature) -> Option<f64> {
-        self.coefficients.get(&feature).copied()
+    pub fn score_feature(&self, feature: &Feature) -> Option<f64> {
+        self.coefficients.get(feature).copied()
     }
 
     /// Get an upper bound on the number of nodes that are under control of the
@@ -239,6 +239,11 @@ impl NakamotoScore {
             }
             None => None,
         }
+    }
+
+    /// Return the number of nodes that the top actors control
+    pub fn controlled_nodes(&self, feature: &Feature) -> Option<usize> {
+        self.controlled_nodes.get(feature).copied()
     }
 }
 
@@ -538,6 +543,58 @@ mod tests {
         let reader = std::io::BufReader::new(file);
 
         serde_json::from_reader(reader).expect("Input JSON was not well-formatted")
+    }
+
+    #[test]
+    fn subnet_usa_dominance() {
+        let subnet_initial = new_test_subnet_with_overrides(
+            0,
+            0,
+            13,
+            1,
+            (
+                &Feature::Country,
+                &[
+                    "US", "US", "US", "US", "US", "US", "US", "US", "US", "CH", "BE", "SG", "SI",
+                ],
+            ),
+        );
+        assert_eq!(
+            subnet_initial.check_business_rules().unwrap_err().to_string(),
+            "Feature 'country' controls 9 of nodes, which is >= 8 (2/3 of all) nodes".to_string()
+        );
+        let nodes_available =
+            new_test_nodes_with_overrides("spare", 13, 3, 0, (&Feature::Country, &["US", "RO", "JP"]));
+
+        println!(
+            "initial {} Countries {:?}",
+            subnet_initial,
+            subnet_initial
+                .nodes
+                .iter()
+                .map(|n| n.get_feature(&Feature::Country))
+                .collect::<Vec<_>>()
+        );
+
+        let subnet_change_req = SubnetChangeRequest::new(subnet_initial, nodes_available, Vec::new(), Vec::new(), 0);
+        let subnet_change = subnet_change_req.optimize(2).unwrap();
+        let optimized_subnet = subnet_change.after();
+
+        let countries_after = optimized_subnet
+            .nodes
+            .iter()
+            .map(|n| n.get_feature(&Feature::Country))
+            .sorted()
+            .collect::<Vec<_>>();
+
+        println!("optimized {} Countries {:?}", optimized_subnet, countries_after);
+        assert_eq!(optimized_subnet.nakamoto_score().score_min(), 1.);
+
+        // Two US nodes were removed
+        assert_eq!(
+            countries_after,
+            vec!["BE", "CH", "JP", "RO", "SG", "SI", "US", "US", "US", "US", "US", "US", "US"]
+        );
     }
 
     #[test]

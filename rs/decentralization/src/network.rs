@@ -8,7 +8,7 @@ use futures_util::future::{err, ok, Ready};
 use ic_base_types::PrincipalId;
 use itertools::Itertools;
 use lazy_static::lazy_static;
-use log::info;
+use log::{debug, info};
 use reqwest::get;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -195,7 +195,8 @@ impl Subnet {
             return Err(anyhow::anyhow!("DFINITY-owned node missing"));
         }
 
-        match Self::_calc_nakamoto_score(nodes).score_feature(Feature::NodeProvider) {
+        let nakamoto_scores = Self::_calc_nakamoto_score(nodes);
+        match nakamoto_scores.score_feature(&Feature::NodeProvider) {
             Some(score) => {
                 if score > 1.0 {
                     checks.push("A single Node Provider cannot halt a subnet".to_string());
@@ -205,6 +206,33 @@ impl Subnet {
             }
             None => return Err(anyhow::anyhow!("Missing the Nakamoto score for the Node Provider")),
         }
+
+        for feature in &Feature::variants() {
+            match (
+                nakamoto_scores.score_feature(feature),
+                nakamoto_scores.controlled_nodes(feature),
+            ) {
+                (Some(score), Some(controlled_nodes)) => {
+                    if score == 1.0 && controlled_nodes >= nodes.len() * 2 / 3 {
+                        return Err(anyhow::anyhow!(
+                            "Feature '{}' controls {} of nodes, which is >= {} (2/3 of all) nodes",
+                            feature.to_string(),
+                            controlled_nodes,
+                            nodes.len() * 2 / 3
+                        ));
+                    }
+                }
+                (score, controlled_nodes) => {
+                    debug!(
+                        "Feature {} does not have valid score {:?} controlled_nodes {:?}",
+                        feature.to_string(),
+                        &score,
+                        &controlled_nodes
+                    );
+                }
+            }
+        }
+        checks.push("No single feature controls over 2/3 of all nodes".to_string());
 
         info!(
             "Business rules checks succeeded for subnet {}: {:?}",
