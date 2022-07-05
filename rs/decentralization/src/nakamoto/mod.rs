@@ -1,7 +1,6 @@
 use crate::network::Node;
 use core::hash::Hash;
 use counter::Counter;
-use log::info;
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 use std::collections::{BTreeMap, HashMap};
@@ -256,29 +255,24 @@ impl Ord for NakamotoScore {
 impl PartialOrd for NakamotoScore {
     /// By default, the higher value will take the precedence
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        // Prefer improving the overall most-critical Feature
-        info!("cmp self  {}", self);
-        info!("cmp other {}", other);
-
-        // Prefer higher "minimum" score across all features
+        // Prefer higher score across all features
         let mut cmp = self.score_min().partial_cmp(&other.score_min());
 
         if cmp != Some(Ordering::Equal) {
             return cmp;
         }
 
+        // Then try to increase the log2 avg
+        cmp = self.score_avg_log2().partial_cmp(&other.score_avg_log2());
+
+        if cmp != Some(Ordering::Equal) {
+            return cmp;
+        }
+
         // Compare the count of below-average coefficients
-        // an prefer candidates that decrease the number of low-value coefficients
-        let c1 = self
-            .coefficients
-            .values()
-            .filter(|c| **c < self.score_avg_linear())
-            .count();
-        let c2 = other
-            .coefficients
-            .values()
-            .filter(|c| **c < self.score_avg_linear())
-            .count();
+        // and prefer candidates that decrease the number of low-value coefficients
+        let c1 = self.coefficients.values().filter(|c| **c < 3.0).count();
+        let c2 = other.coefficients.values().filter(|c| **c < 3.0).count();
         cmp = c2.partial_cmp(&c1);
 
         if cmp != Some(Ordering::Equal) {
@@ -286,11 +280,11 @@ impl PartialOrd for NakamotoScore {
         }
 
         // If the worst feature is the same for both candidates
-        // and prefer candidates that maximizes all features
+        // => prefer candidates that maximizes all features
         for feature in Feature::variants() {
             let c1 = self.coefficients.get(&feature).unwrap_or(&1.0);
             let c2 = other.coefficients.get(&feature).unwrap_or(&1.0);
-            if *c1 < self.score_avg_linear() || *c2 < self.score_avg_linear() {
+            if *c1 < 3.0 || *c2 < 3.0 {
                 // Ensure that the new candidate does not decrease the critical features (that
                 // are below the average)
                 cmp = c2.partial_cmp(c1);
@@ -306,13 +300,6 @@ impl PartialOrd for NakamotoScore {
         cmp = other
             .control_power_critical_features()
             .partial_cmp(&self.control_power_critical_features());
-
-        if cmp != Some(Ordering::Equal) {
-            return cmp;
-        }
-
-        // Then try to increase the log2 avg
-        cmp = self.score_avg_log2().partial_cmp(&other.score_avg_log2());
 
         if cmp != Some(Ordering::Equal) {
             return cmp;
@@ -335,14 +322,11 @@ impl Display for NakamotoScore {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "NakamotoScore: min {:0.2} crit feat {} crit nodes {} avg log2 {:0.2} avg linear {:0.2} all coeff {:?}",
+            "NakamotoScore: min {:0.2} avg log2 {:0.2} crit feat {} crit nodes {} avg linear {:0.2} all coeff {:?}",
             self.min,
-            self.coefficients
-                .values()
-                .filter(|c| **c < self.score_avg_linear())
-                .count(),
-            self.control_power_critical_features().unwrap_or(0),
             self.avg_log2,
+            self.coefficients.values().filter(|c| **c < 3.0).count(),
+            self.control_power_critical_features().unwrap_or(0),
             self.avg_linear,
             self.coefficients.values().enumerate().collect::<Vec<_>>(),
         )
