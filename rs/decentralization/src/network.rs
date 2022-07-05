@@ -234,7 +234,7 @@ impl Subnet {
         }
         checks.push("No single feature controls over 2/3 of all nodes".to_string());
 
-        info!(
+        debug!(
             "Business rules checks succeeded for subnet {}: {:?}",
             subnet_id.to_string(),
             checks
@@ -287,7 +287,7 @@ impl Subnet {
                                 "Picked one extension node {} and got Nakamoto score {} and penalty {}",
                                 node.id, new_score, penalty
                             );
-                            info!("{}", &line);
+                            debug!("{}", &line);
                             run_log.push(line);
 
                             Some(SortResult {
@@ -302,7 +302,7 @@ impl Subnet {
                                 "Extension candidate node {} not suitable due to failed business rule {}",
                                 node.id, err
                             );
-                            info!("{}", &line);
+                            debug!("{}", &line);
                             run_log.push(line);
                             None
                         }
@@ -315,13 +315,13 @@ impl Subnet {
 
                     if cmp == Ordering::Equal {
                         // Then fallback to comparing the NakamotoScore (custom comparison)
-                        println!("Comparing node {:?} and {:?}", a.node, b.node);
+                        debug!("Comparing node {:?} and {:?}", a.node, b.node);
                         cmp = a.score.cmp(&b.score);
                     }
                     if cmp == Ordering::Less {
-                        println!("Better node is {}", a.node.id);
+                        debug!("Better node is {}", a.node.id);
                     } else {
-                        println!("Better node is {}", b.node.id);
+                        debug!("Better node is {}", b.node.id);
                     }
                     cmp
                 })
