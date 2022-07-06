@@ -7,7 +7,7 @@ pub struct Opts {
     #[clap(long, env = "HSM_PIN")]
     pub(crate) hsm_pin: Option<String>,
     #[clap(long, env = "HSM_SLOT")]
-    pub(crate) hsm_slot: Option<String>,
+    pub(crate) hsm_slot: Option<u64>,
     #[clap(short, long, env = "HSM_KEY_ID")]
     pub(crate) hsm_key_id: Option<String>,
     #[clap(long, env = "PRIVATE_KEY_PEM")]
@@ -18,12 +18,13 @@ pub struct Opts {
     pub(crate) ic_admin: Option<String>,
     #[clap(long, env = "DEV")]
     pub(crate) dev: bool,
-    #[clap(long, env = "NNS_URL")]
-    pub(crate) nns_url: Option<String>,
     #[clap(short, long, env = "DRY_RUN")]
     pub(crate) dry_run: bool,
     #[clap(long, env = "VERBOSE")]
     pub(crate) verbose: bool,
+
+    // Specify the target network. Should be either "mainnet" (default) or "staging".
+    // If you want to use the cli, use the --nns-url
     #[clap(long, env = "NETWORK", default_value = "mainnet")]
     pub(crate) network: Network,
 

@@ -10,8 +10,10 @@ use std::collections::BTreeMap;
 use std::convert::TryFrom;
 use std::net::Ipv6Addr;
 use std::ops::Deref;
+use std::str::FromStr;
 use std::sync::Arc;
 use strum_macros::EnumString;
+use url::Url;
 
 #[serde_as]
 #[derive(Clone, Serialize, Deserialize)]
@@ -301,9 +303,31 @@ impl ReplicaRelease {
     }
 }
 
-#[derive(EnumString, Clone)]
-#[strum(serialize_all = "snake_case")]
+#[derive(Clone)]
 pub enum Network {
     Staging,
     Mainnet,
+    Url(url::Url),
+}
+
+impl FromStr for Network {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(match s {
+            "mainnet" => Self::Mainnet,
+            "staging" => Self::Staging,
+            _ => Self::Url(url::Url::from_str(s).map_err(|e| format!("{}", e))?),
+        })
+    }
+}
+
+impl Network {
+    pub fn get_url(&self) -> Url {
+        match self {
+            Network::Mainnet => Url::from_str("https://nns.ic0.app").unwrap(),
+            Network::Staging => Url::from_str("http://[2600:3004:1200:1200:5000:7dff:fe29:a2f5]:8080").unwrap(),
+            Self::Url(url) => url.clone(),
+        }
+    }
 }
