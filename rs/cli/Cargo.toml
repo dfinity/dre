@@ -13,11 +13,14 @@ serde_json = "1.0.68"
 anyhow = "1.0.44"
 futures = "0.3.21"
 colored = "2.0.0"
-dotenv = "0.15.0"
 log = "0.4.14"
 pretty_env_logger = "0.4.0"
 regex = "1.5.4"
 ic-base-types = { git = "https://github.com/dfinity/ic.git", rev = "d5062681bd1f84d64ef2024eea19848032565f9b" }
+ic-nns-constants = { git = "https://github.com/dfinity/ic.git", rev = "d5062681bd1f84d64ef2024eea19848032565f9b" }
+ic-nns-governance = { git = "https://github.com/dfinity/ic.git", rev = "d5062681bd1f84d64ef2024eea19848032565f9b" }
+ic-canister-client = { git = "https://github.com/dfinity/ic.git", rev = "d5062681bd1f84d64ef2024eea19848032565f9b" }
+ic-sys = { git = "https://github.com/dfinity/ic.git", rev = "d5062681bd1f84d64ef2024eea19848032565f9b" }
 tokio = { version = "1.14.0", features = ["full"] }
 strum = { version = "0.23", features = ["derive"] }
 strum_macros = "0.23"
@@ -28,6 +31,10 @@ mercury_management_types = { path = "../mercury_management_types" }
 dialoguer = "0.10.0"
 itertools = "0.10"
 async-trait = "0.1.53"
+keyring = "1.1.2"
+cryptoki = "0.3.0"
+candid = "0.7.14"
+url = "2.2.2"
 
 [dev-dependencies]
 tempfile = "3.3.0"

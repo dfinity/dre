@@ -23,6 +23,9 @@ impl DashboardBackendClient {
             .join(match network {
                 Network::Mainnet => "mercury/",
                 Network::Staging => "staging/",
+                Network::Url(_) => {
+                    unimplemented!("not supported to run dashboard backed operations on arbitrary networks")
+                }
             })
             .expect("failed to join url"),
         }
