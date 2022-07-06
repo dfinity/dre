@@ -1,21 +1,34 @@
 use anyhow::Result;
+use candid::{Decode, Encode};
 use colored::Colorize;
+use cryptoki::context::{CInitializeArgs, Pkcs11};
+use cryptoki::session::{SessionFlags, UserType};
+use dialoguer::console::Term;
+use dialoguer::theme::ColorfulTheme;
+use dialoguer::{Confirm, Password, Select};
 use flate2::read::GzDecoder;
 use futures::Future;
 use ic_base_types::PrincipalId;
+use ic_canister_client::{Agent, Sender};
+use ic_nns_constants::GOVERNANCE_CANISTER_ID;
+use ic_nns_governance::pb::v1::{ListNeurons, ListNeuronsResponse};
+use ic_sys::utility_command::UtilityCommand;
+use keyring::{Entry, Error};
 use log::{error, info, warn};
 use regex::Regex;
 use std::os::unix::fs::PermissionsExt;
+use std::path::PathBuf;
+use std::str::FromStr;
 use std::{path::Path, process::Command};
 use strum::Display;
 
 use crate::cli::Opts;
 use crate::defaults;
 
-#[derive(Clone, Default)]
+#[derive(Clone)]
 pub struct Cli {
     ic_admin: Option<String>,
-    nns_url: Option<String>,
+    nns_url: url::Url,
     pub dry_run: bool,
     neuron: Option<Neuron>,
 }
@@ -34,8 +47,26 @@ impl Neuron {
 
 #[derive(Clone)]
 pub enum Auth {
-    Hsm { pin: String, slot: String, key_id: String },
+    Hsm { pin: String, slot: u64, key_id: String },
     Keyfile { path: String },
+}
+
+fn pkcs11_lib_path() -> anyhow::Result<PathBuf> {
+    let lib_macos_path = PathBuf::from_str("/Library/OpenSC/lib/opensc-pkcs11.so")?;
+    let lib_linux_path = PathBuf::from_str("/usr/lib/x86_64-linux-gnu/opensc-pkcs11.so")?;
+    if lib_macos_path.exists() {
+        Ok(lib_macos_path)
+    } else if lib_linux_path.exists() {
+        Ok(lib_linux_path)
+    } else {
+        Err(anyhow::anyhow!("no pkcs11 library found"))
+    }
+}
+
+fn get_pkcs11_ctx() -> anyhow::Result<Pkcs11> {
+    let pkcs11 = Pkcs11::new(pkcs11_lib_path()?)?;
+    pkcs11.initialize(CInitializeArgs::OsThreads)?;
+    Ok(pkcs11)
 }
 
 impl Auth {
@@ -46,7 +77,7 @@ impl Auth {
                 "--pin".to_string(),
                 pin.clone(),
                 "--slot".to_string(),
-                slot.clone(),
+                slot.to_string(),
                 "--key-id".to_string(),
                 key_id.clone(),
             ],
@@ -107,9 +138,9 @@ impl Cli {
         }: ProposeOptions,
     ) -> anyhow::Result<()> {
         self.run(
-            &format!("propose-to-{}", cmd),
+            &cmd.get_command_name(),
             [
-                if self.dry_run {
+                if self.dry_run || self.neuron.is_none() {
                     vec!["--dry-run".to_string()]
                 } else {
                     Default::default()
@@ -129,10 +160,7 @@ impl Cli {
                         ]
                     })
                     .unwrap_or_default(),
-                self.neuron
-                    .as_ref()
-                    .map(|n| n.as_arg_vec())
-                    .ok_or_else(|| anyhow::anyhow!("cannot submit a proposal without a neuron ID"))?,
+                self.neuron.as_ref().map(|n| n.as_arg_vec()).unwrap_or_default(),
                 cmd.args(),
             ]
             .concat()
@@ -143,7 +171,12 @@ impl Cli {
     fn _run_ic_admin_with_args(&self, ic_admin_args: &[String]) -> anyhow::Result<()> {
         let ic_admin_path = self.ic_admin.clone().unwrap_or_else(|| "ic-admin".to_string());
         let mut cmd = Command::new(ic_admin_path);
-        let cmd = cmd.args(ic_admin_args);
+        let root_options = [
+            self.neuron.as_ref().map(|n| n.auth.as_arg_vec()).unwrap_or_default(),
+            vec!["--nns-url".to_string(), self.nns_url.to_string()],
+        ]
+        .concat();
+        let cmd = cmd.args([&root_options, ic_admin_args].concat());
 
         self.print_ic_admin_command_line(cmd);
 
@@ -166,17 +199,7 @@ impl Cli {
     }
 
     pub(crate) fn run(&self, command: &str, args: &[String]) -> anyhow::Result<()> {
-        let root_options = [
-            self.neuron.as_ref().map(|n| n.auth.as_arg_vec()).unwrap_or_default(),
-            self.nns_url
-                .clone()
-                .map(|n| vec!["--nns-url".to_string(), n])
-                .unwrap_or_default(),
-        ]
-        .concat();
-
-        let ic_admin_args = [root_options.as_slice(), &[command.to_string()], args].concat();
-
+        let ic_admin_args = [&[command.to_string()], args].concat();
         self._run_ic_admin_with_args(&ic_admin_args)
     }
 
@@ -237,19 +260,7 @@ impl Cli {
             args_with_get_prefix
         };
 
-        let root_options = match &self.nns_url {
-            Some(nns_url) => {
-                vec!["--nns-url".to_string(), nns_url.clone()]
-            }
-            None => {
-                warn!("NNS URL is not specified. Please specify it with --nns-url or env variable or an entry in .env file. Falling back to the staging NNS.");
-                vec!["--nns-url".to_string(), defaults::DEFAULT_NNS_URL.to_string()]
-            }
-        };
-
-        let ic_admin_args = [root_options.as_slice(), args.as_slice()].concat();
-
-        self._run_ic_admin_with_args(&ic_admin_args)
+        self.run(&args[0], &args.iter().skip(1).cloned().collect::<Vec<_>>())
     }
 
     /// Run an `ic-admin propose-to-*` command directly
@@ -276,22 +287,26 @@ impl Cli {
             args_with_fixed_prefix
         };
 
-        let nns_args = match &self.nns_url {
-            Some(nns_url) => vec!["--nns-url".to_string(), nns_url.clone()],
-            None => {
-                warn!("NNS URL is not specified. Please specify it with --nns-url or env variable or an entry in .env file. Falling back to the staging NNS.");
-                vec!["--nns-url".to_string(), defaults::DEFAULT_NNS_URL.to_string()]
-            }
+        let exec = |cli: &Cli| {
+            cli.propose_run(
+                ProposeCommand::Raw {
+                    command: args[0].clone(),
+                    args: args.iter().skip(1).cloned().collect::<Vec<_>>(),
+                },
+                ProposeOptions::default(),
+            )
         };
-        let root_options = [
-            nns_args,
-            self.neuron.as_ref().map(|n| n.auth.as_arg_vec()).unwrap_or_default(),
-        ]
-        .concat();
-
-        let ic_admin_args = [root_options.as_slice(), args.as_slice()].concat();
-
-        self._run_ic_admin_with_args(&ic_admin_args)
+        if !self.dry_run {
+            exec(&self.dry_run())?;
+            if !Confirm::new()
+                .with_prompt("Do you want to continue?")
+                .default(false)
+                .interact()?
+            {
+                return Err(anyhow::anyhow!("Action aborted"));
+            }
+        }
+        exec(self)
     }
 }
 
@@ -309,6 +324,23 @@ pub(crate) enum ProposeCommand {
         subnet: PrincipalId,
         version: String,
     },
+    Raw {
+        command: String,
+        args: Vec<String>,
+    },
+}
+
+impl ProposeCommand {
+    fn get_command_name(&self) -> String {
+        const PROPOSE_CMD_PREFIX: &str = "propose-to-";
+        format!(
+            "{PROPOSE_CMD_PREFIX}{}",
+            match self {
+                Self::Raw { command, args: _ } => command.trim_start_matches(PROPOSE_CMD_PREFIX).to_string(),
+                _ => self.to_string(),
+            }
+        )
+    }
 }
 
 impl ProposeCommand {
@@ -323,6 +355,7 @@ impl ProposeCommand {
             Self::UpdateSubnetReplicaVersion { subnet, version } => {
                 vec![subnet.to_string(), version.clone()]
             }
+            Self::Raw { command: _, args } => args.clone(),
         }
     }
 }
@@ -343,27 +376,117 @@ impl ProposeOptions {
     }
 }
 
-impl From<&Opts> for Cli {
-    fn from(opts: &Opts) -> Self {
-        Cli {
-            neuron: Neuron {
-                id: opts.neuron_id.unwrap_or_default(),
-                auth: match &opts.private_key_pem {
-                    Some(private_key_pem) => Auth::Keyfile {
-                        path: private_key_pem.clone(),
-                    },
-                    None => Auth::Hsm {
-                        pin: opts.hsm_pin.clone().unwrap_or_default(),
-                        slot: opts.hsm_slot.clone().unwrap_or_default(),
-                        key_id: opts.hsm_key_id.clone().unwrap_or_default(),
-                    },
-                },
-            }
-            .into(),
-            ic_admin: opts.ic_admin.clone(),
-            nns_url: opts.nns_url.clone(),
-            dry_run: opts.dry_run,
+fn detect_hsm_auth() -> Result<Option<Auth>> {
+    info!("Detecting HSM devices");
+    let ctx = get_pkcs11_ctx()?;
+    for slot in ctx.get_slots_with_token()? {
+        let info = ctx.get_slot_info(slot)?;
+        if info.slot_description() == "Nitrokey Nitrokey HSM" {
+            let key_id = format!("hsm-{}-{}", info.slot_description(), info.manufacturer_id());
+            let pin_entry = Entry::new("release-cli", &key_id);
+            let pin = match pin_entry.get_password() {
+                Err(Error::NoEntry) => Password::new().with_prompt("Please enter the HSM PIN: ").interact()?,
+                Ok(pin) => pin,
+                Err(e) => return Err(anyhow::anyhow!("Failed to get pin from keyring: {}", e)),
+            };
+
+            let mut flags = SessionFlags::new();
+            flags.set_serial_session(true);
+            let session = ctx.open_session_no_callback(slot, flags).unwrap();
+            session.login(UserType::User, Some(&pin))?;
+            info!("HSM login successful!");
+            pin_entry.set_password(&pin)?;
+            return Ok(Some(Auth::Hsm {
+                pin,
+                slot: slot.id(),
+                key_id: "01".to_string(),
+            }));
         }
+    }
+    Ok(None)
+}
+
+async fn detect_neuron(url: url::Url) -> anyhow::Result<Option<Neuron>> {
+    if let Some(Auth::Hsm { pin, slot, key_id }) = detect_hsm_auth()? {
+        let auth = Auth::Hsm {
+            pin: pin.clone(),
+            slot,
+            key_id: key_id.clone(),
+        };
+        let sender = Sender::from_external_hsm(
+            UtilityCommand::read_public_key(Some(&slot.to_string()), Some(&key_id)).execute()?,
+            std::sync::Arc::new(move |input| {
+                Ok(
+                    UtilityCommand::sign_message(input.to_vec(), Some(&slot.to_string()), Some(&pin), Some(&key_id))
+                        .execute()?,
+                )
+            }),
+        );
+        let agent = Agent::new(url, sender);
+        let neuron_id = if let Some(response) = agent
+            .execute_query(
+                &GOVERNANCE_CANISTER_ID,
+                "list_neurons",
+                Encode!(&ListNeurons {
+                    include_neurons_readable_by_caller: true,
+                    neuron_ids: vec![],
+                })?,
+            )
+            .await
+            .map_err(|e| anyhow::anyhow!(e))?
+        {
+            let response = Decode!(&response, ListNeuronsResponse)?;
+            let neuron_ids = response.neuron_infos.keys().copied().collect::<Vec<_>>();
+            match neuron_ids.len() {
+                0 => return Err(anyhow::anyhow!("HSM doesn't control any neurons")),
+                1 => neuron_ids[0],
+                _ => Select::with_theme(&ColorfulTheme::default())
+                    .items(&neuron_ids)
+                    .default(0)
+                    .interact_on_opt(&Term::stderr())?
+                    .map(|i| neuron_ids[i])
+                    .ok_or_else(|| anyhow::anyhow!("No neuron selected"))?,
+            }
+        } else {
+            return Err(anyhow::anyhow!("Empty response when listing controlled neurons"));
+        };
+
+        Ok(Some(Neuron { id: neuron_id, auth }))
+    } else {
+        Ok(None)
+    }
+}
+
+impl Cli {
+    pub async fn from_opts(opts: &Opts) -> anyhow::Result<Self> {
+        let nns_url = opts.network.get_url();
+        let neuron = if let Some(id) = opts.neuron_id {
+            Some(Neuron {
+                id,
+                auth: if let Some(path) = opts.private_key_pem.clone() {
+                    Auth::Keyfile { path }
+                } else if let (Some(slot), Some(pin), Some(key_id)) =
+                    (opts.hsm_slot, opts.hsm_pin.clone(), opts.hsm_key_id.clone())
+                {
+                    Auth::Hsm { pin, slot, key_id }
+                } else {
+                    detect_hsm_auth()?
+                        .ok_or_else(|| anyhow::anyhow!("No valid authentication method found for neuron: {id}"))?
+                },
+            })
+        } else {
+            detect_neuron(nns_url.clone()).await.unwrap_or_else(|e| {
+                warn!("Failed to detect neuron: {}", e);
+                warn!("No authentication set");
+                None
+            })
+        };
+        Ok(Cli {
+            dry_run: opts.dry_run || neuron.is_none(),
+            neuron,
+            ic_admin: opts.ic_admin.clone(),
+            nns_url,
+        })
     }
 }
 
@@ -414,7 +537,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::io::Write;
+    use std::{io::Write, str::FromStr};
     use tempfile::NamedTempFile;
 
     #[tokio::test]
@@ -444,7 +567,7 @@ oSMDIQBa2NLmSmaqjDXej4rrJEuEhKIz7/pGXpxztViWhB+X9Q==
 
         for cmd in test_cases {
             let cli = Cli {
-                nns_url: "http://localhost:8080".to_string().into(),
+                nns_url: url::Url::from_str("http://localhost:8080").unwrap(),
                 dry_run: true,
                 neuron: Neuron {
                     id: 3,
@@ -457,7 +580,7 @@ oSMDIQBa2NLmSmaqjDXej4rrJEuEhKIz7/pGXpxztViWhB+X9Q==
                     },
                 }
                 .into(),
-                ..Default::default()
+                ic_admin: None,
             };
 
             let cmd_name = cmd.to_string();
