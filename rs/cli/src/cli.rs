@@ -1,4 +1,5 @@
 use clap::{Parser, Subcommand};
+use clap_num::maybe_hex;
 use mercury_management_types::Network;
 
 #[derive(Parser, Clone)]
@@ -6,7 +7,7 @@ use mercury_management_types::Network;
 pub struct Opts {
     #[clap(long, env = "HSM_PIN")]
     pub(crate) hsm_pin: Option<String>,
-    #[clap(long, env = "HSM_SLOT")]
+    #[clap(long, parse(try_from_str=maybe_hex), env = "HSM_SLOT")]
     pub(crate) hsm_slot: Option<u64>,
     #[clap(short, long, env = "HSM_KEY_ID")]
     pub(crate) hsm_key_id: Option<String>,
