@@ -135,6 +135,7 @@ async fn main() -> std::io::Result<()> {
             .service(get_subnet)
             .service(endpoints::subnet::pending_action)
             .service(endpoints::subnet::replace)
+            .service(endpoints::subnet::create_subnet)
     })
     .shutdown_timeout(10)
     .bind((
