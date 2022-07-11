@@ -35,6 +35,7 @@ keyring = "1.1.2"
 cryptoki = "0.3.0"
 candid = "0.7.14"
 url = "2.2.2"
+clap-num = "0.2.0"
 
 [dev-dependencies]
 tempfile = "3.3.0"

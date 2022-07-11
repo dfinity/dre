@@ -822,6 +822,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "clap-num"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "56708e5a311f1bb103426f94fdf0ab1df6f2d12acfc57b8c63ff866518fddd0d"
+dependencies = [
+ "num-traits",
+]
+
+[[package]]
 name = "clap_derive"
 version = "3.1.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4782,6 +4791,7 @@ dependencies = [
  "async-trait",
  "candid",
  "clap",
+ "clap-num",
  "colored",
  "cryptoki",
  "decentralization",
