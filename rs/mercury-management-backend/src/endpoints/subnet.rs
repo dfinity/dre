@@ -2,7 +2,7 @@ use super::*;
 use crate::health;
 use decentralization::network::TopologyManager;
 use ic_base_types::PrincipalId;
-use mercury_management_types::requests::{MembershipReplaceRequest, ReplaceTarget};
+use mercury_management_types::requests::{MembershipReplaceRequest, ReplaceTarget, SubnetCreateRequest};
 use serde::Deserialize;
 
 #[derive(Deserialize)]
@@ -109,4 +109,16 @@ async fn replace(
 
     Ok(HttpResponse::Ok()
         .json(decentralization::SubnetChangeResponse::from(&change).with_motivation(motivations.join(", "))))
+}
+
+/// Simulates creation of a new subnet
+#[post("/subnet/create")]
+async fn create_subnet(
+    registry: web::Data<Arc<RwLock<RegistryState>>>,
+    request: web::Json<SubnetCreateRequest>,
+) -> Result<HttpResponse, Error> {
+    let registry = registry.read().await;
+    Ok(HttpResponse::Ok().json(decentralization::SubnetChangeResponse::from(
+        &registry.create_subnet(request.size).await?,
+    )))
 }

@@ -21,3 +21,8 @@ pub enum ReplaceTarget {
         motivation: String,
     },
 }
+
+#[derive(Serialize, Deserialize)]
+pub struct SubnetCreateRequest {
+    pub size: usize,
+}

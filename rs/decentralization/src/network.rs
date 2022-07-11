@@ -1,35 +1,15 @@
 use crate::nakamoto::{self, Feature, NakamotoScore};
 use crate::SubnetChangeResponse;
 use actix_web::http::StatusCode;
-use actix_web::{FromRequest, HttpRequest, HttpResponse, ResponseError};
+use actix_web::{HttpResponse, ResponseError};
 use anyhow::anyhow;
 use async_trait::async_trait;
-use futures_util::future::{err, ok, Ready};
 use ic_base_types::PrincipalId;
 use itertools::Itertools;
-use lazy_static::lazy_static;
 use log::{debug, info};
-use reqwest::get;
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 use std::cmp::Ordering;
-use std::collections::HashMap;
-use std::env;
 use std::fmt::{Debug, Display, Formatter};
-use std::marker::Sync;
-use std::str::FromStr;
-use std::time::{Duration, Instant};
-use tokio::sync::RwLock;
-
-lazy_static! {
-    static ref REGION_DATA: HashMap<String, DataCenterInfo> =
-        serde_json::from_str(include_str!("static_region_data.json")).expect("Bad regions json");
-}
-
-#[derive(Clone, Serialize, Deserialize, Default)]
-pub struct ICApiSubnetNodesResponse {
-    pub nodes: Vec<PubApiNode>,
-}
 
 #[derive(Clone, Serialize, Deserialize, Default)]
 pub struct DataCenterInfo {
@@ -177,6 +157,9 @@ impl Subnet {
 
     fn _check_business_rules_for_nodes(subnet_id: &PrincipalId, nodes: &[Node]) -> anyhow::Result<Vec<String>> {
         let mut checks = Vec::new();
+        if nodes.len() <= 1 {
+            return Ok(checks);
+        }
 
         let dfinity_owned_nodes_count: usize = nodes.iter().map(|n| n.dfinity_owned as usize).sum();
 
@@ -200,6 +183,11 @@ impl Subnet {
             Some(score) => {
                 if score > 1.0 {
                     checks.push("A single Node Provider cannot halt a subnet".to_string());
+                } else if nodes.len() <= 3 {
+                    checks.push(
+                        "Subnet too small to satisfy business rule: 'A single Node Provider cannot halt a subnet'"
+                            .to_string(),
+                    );
                 } else {
                     return Err(anyhow::anyhow!("A single Node Provider can halt a subnet"));
                 }
@@ -213,7 +201,7 @@ impl Subnet {
                 nakamoto_scores.controlled_nodes(feature),
             ) {
                 (Some(score), Some(controlled_nodes)) => {
-                    if score == 1.0 && controlled_nodes >= nodes.len() * 2 / 3 {
+                    if score == 1.0 && controlled_nodes > nodes.len() * 2 / 3 {
                         return Err(anyhow::anyhow!(
                             "Feature '{}' controls {} of nodes, which is >= {} (2/3 of all) nodes",
                             feature.to_string(),
@@ -450,196 +438,6 @@ pub trait SubnetQuerier {
     async fn subnet_of_nodes(&self, nodes: &[PrincipalId]) -> Result<Subnet, NetworkError>;
 }
 
-pub struct DashboardAgent {
-    url: String,
-    subnets: RwLock<HashMap<PrincipalId, (Vec<Node>, Instant)>>,
-}
-
-impl DashboardAgent {
-    pub fn new(url: String) -> Self {
-        Self {
-            url,
-            subnets: RwLock::new(HashMap::new()),
-        }
-    }
-}
-
-#[async_trait]
-impl AvailableNodesQuerier for DashboardAgent {
-    async fn available_nodes(&self) -> Result<Vec<Node>, NetworkError> {
-        // TODO: REL-xxxx
-        todo!()
-    }
-}
-
-#[async_trait]
-pub trait DecentralizationQuerier {
-    async fn decentralization(&self, id: PrincipalId) -> Result<NakamotoScore, NetworkError>;
-}
-
-#[async_trait]
-impl<T> DecentralizationQuerier for T
-where
-    T: SubnetQuerier + Sync,
-{
-    async fn decentralization(&self, id: PrincipalId) -> Result<NakamotoScore, NetworkError> {
-        let subnet = self.subnet(&id).await?;
-        let out = NakamotoScore::new_from_nodes(&subnet.nodes);
-        Ok(out)
-    }
-}
-
-#[async_trait]
-impl SubnetQuerier for DashboardAgent {
-    async fn subnet(&self, id: &PrincipalId) -> Result<Subnet, NetworkError> {
-        // TODO: REL-xxxx
-        let principalstr = id.to_string();
-        let mut writer = self.subnets.write().await;
-        let curr_time = Instant::now();
-        if let Some((nodes, time)) = writer.get(id) {
-            let elapsed = curr_time
-                .checked_duration_since(*time)
-                .expect("Failure in elapsed time measure");
-            if elapsed <= Duration::from_secs(86400) {
-                return Ok(Subnet {
-                    id: *id,
-                    nodes: nodes.clone(),
-                });
-            }
-        };
-        let ic_api_query_string = format!("{}?subnet={}", self.url.clone(), principalstr);
-        let ic_api_dashboard_response = get(ic_api_query_string).await?;
-        let ic_api_dashboard_nodes: serde_json::Value = ic_api_dashboard_response.json().await?;
-        let ic_api_dashboard_nodes_parsed: ICApiSubnetNodesResponse = serde_json::from_value(ic_api_dashboard_nodes)?;
-        writer.insert(
-            *id,
-            (
-                ic_api_dashboard_nodes_parsed
-                    .nodes
-                    .iter()
-                    .map(|x| x.clone().into())
-                    .collect::<Vec<Node>>(),
-                Instant::now(),
-            ),
-        );
-        return Ok(Subnet {
-            id: *id,
-            nodes: writer.get(id).unwrap().clone().0,
-        });
-    }
-
-    async fn subnet_of_nodes(&self, _: &[PrincipalId]) -> Result<Subnet, NetworkError> {
-        unimplemented!()
-    }
-}
-
-pub struct InternalDashboardAgent {
-    url: String,
-}
-
-impl InternalDashboardAgent {
-    pub fn new(url: String) -> Self {
-        Self { url }
-    }
-
-    async fn subnets(&self) -> Result<HashMap<PrincipalId, mercury_management_types::Subnet>, NetworkError> {
-        reqwest::get(format!("{}/subnets", self.url.clone()))
-            .await?
-            .json::<HashMap<PrincipalId, mercury_management_types::Subnet>>()
-            .await
-            .map_err(NetworkError::from)
-    }
-}
-
-#[async_trait]
-impl SubnetQuerier for InternalDashboardAgent {
-    async fn subnet(&self, id: &PrincipalId) -> Result<Subnet, NetworkError> {
-        self.subnets()
-            .await?
-            .get(id)
-            .map(Subnet::from)
-            .ok_or(NetworkError::SubnetNotFound(*id))
-    }
-
-    async fn subnet_of_nodes(&self, nodes: &[PrincipalId]) -> Result<Subnet, NetworkError> {
-        self.subnets()
-            .await?
-            .values()
-            .find_map(|s| {
-                if nodes.iter().all(|n| s.nodes.iter().any(|sn| sn.principal == *n)) {
-                    Some(Subnet {
-                        id: s.principal,
-                        nodes: s.nodes.iter().map(Node::from).collect(),
-                    })
-                } else {
-                    None
-                }
-            })
-            .ok_or_else(|| {
-                NetworkError::IllegalRequest("No single subnet has all the nodes requested to be replaced".to_string())
-            })
-    }
-}
-
-#[async_trait]
-impl AvailableNodesQuerier for InternalDashboardAgent {
-    async fn available_nodes(&self) -> Result<Vec<Node>, NetworkError> {
-        Ok(reqwest::get(format!("{}/nodes", self.url.clone()))
-            .await?
-            .json::<HashMap<PrincipalId, mercury_management_types::Node>>()
-            .await?
-            .values()
-            .sorted_by(|a, b| a.principal.cmp(&b.principal))
-            .filter(|n| n.subnet == None && n.proposal.is_none())
-            .map(Node::from)
-            .collect::<Vec<_>>())
-    }
-}
-
-const DEFAULT_SUBNET_SIZE: usize = 13;
-
-pub struct SubnetsManager<T: AvailableNodesQuerier + SubnetQuerier> {
-    pub network: T,
-}
-
-impl<T: AvailableNodesQuerier + SubnetQuerier> SubnetsManager<T> {
-    pub fn new(network: T) -> Self {
-        Self { network }
-    }
-
-    pub async fn subnet(&self, subnet_id: PrincipalId) -> Result<SubnetChangeRequest, NetworkError> {
-        Ok(SubnetChangeRequest {
-            available_nodes: self.network.available_nodes().await?,
-            subnet: self.network.subnet(&subnet_id).await?,
-            ..Default::default()
-        })
-    }
-
-    pub async fn create(&self, size: usize) -> Result<Vec<Node>, NetworkError> {
-        SubnetChangeRequest {
-            available_nodes: self.network.available_nodes().await?,
-            ..Default::default()
-        }
-        .extend(size)
-        .map(|s| s.new_nodes)
-    }
-}
-
-impl FromRequest for InternalDashboardAgent {
-    type Error = DecentralizationError;
-    type Future = Ready<Result<InternalDashboardAgent, Self::Error>>;
-    fn from_request(
-        _: &HttpRequest,
-        _: &mut actix_web::dev::Payload,
-    ) -> Ready<Result<InternalDashboardAgent, DecentralizationError>> {
-        let data = env::var("REGISTRY_API_URL");
-        match data {
-            Ok(v) => ok(InternalDashboardAgent::new(v)),
-            Err(_) => err(DecentralizationError::FeatureNotAvailable),
-        }
-    }
-}
-
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub enum DecentralizationError {
     FeatureNotAvailable,
@@ -685,13 +483,12 @@ pub trait TopologyManager: SubnetQuerier + AvailableNodesQuerier {
         .remove(nodes)
     }
 
-    async fn create_subnet(&self) -> Result<Vec<Node>, NetworkError> {
+    async fn create_subnet(&self, size: usize) -> Result<SubnetChange, NetworkError> {
         SubnetChangeRequest {
             available_nodes: self.available_nodes().await?,
             ..Default::default()
         }
-        .extend_default()
-        .map(|s| s.new_nodes)
+        .extend(size)
     }
 }
 
@@ -743,7 +540,7 @@ impl SubnetChangeRequest {
         }
     }
 
-    fn extend(&self, extension_size: usize) -> Result<SubnetChange, NetworkError> {
+    pub fn extend(&self, extension_size: usize) -> Result<SubnetChange, NetworkError> {
         let included_nodes = self
             .available_nodes
             .iter()
@@ -786,10 +583,6 @@ impl SubnetChangeRequest {
             sc.old_nodes.append(&mut removed_nodes);
             sc
         })
-    }
-
-    pub fn extend_default(&self) -> Result<SubnetChange, NetworkError> {
-        self.extend(DEFAULT_SUBNET_SIZE.saturating_sub(self.subnet.nodes.len()))
     }
 
     pub fn optimize(self, max_replacements: usize) -> Result<SubnetChange, NetworkError> {
@@ -890,45 +683,5 @@ impl SubnetChange {
 impl Display for SubnetChange {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", SubnetChangeResponse::from(self))
-    }
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct PubApiNode {
-    dc: String,
-    location_name: Option<String>,
-    node_id: String,
-    node_operator_id: Option<String>,
-    node_operator_name: Option<String>,
-    node_provider_id: Option<String>,
-    status: Value,
-}
-
-impl From<PubApiNode> for Node {
-    fn from(src: PubApiNode) -> Node {
-        let dc = src.dc.clone();
-        let dc_info: DataCenterInfo = REGION_DATA.get(&dc).unwrap_or(&DataCenterInfo::default()).clone();
-        let (city, country, continent) = (dc_info.city, dc_info.country, dc_info.continent);
-
-        let feats = [
-            (Feature::City, city.into()),
-            (Feature::Country, country.into()),
-            (Feature::Continent, continent.into()),
-            (Feature::DataCenter, dc.into()),
-            (Feature::DataCenterOwner, src.node_operator_name),
-            (Feature::NodeProvider, src.node_provider_id),
-        ]
-        .iter()
-        .cloned()
-        .filter_map(|(f, v)| v.map(|v| (f, v)))
-        .collect();
-
-        Node {
-            id: PrincipalId::from_str(&src.node_id).unwrap_or_default(),
-            features: feats,
-            // HACK: not possible to determine from the public dashboard API. The value is not relevant for this
-            // implementation.
-            dfinity_owned: false,
-        }
     }
 }

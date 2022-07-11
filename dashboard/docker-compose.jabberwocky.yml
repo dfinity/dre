@@ -61,9 +61,6 @@ services:
       ]
     restart: unless-stopped
     network_mode: "bridge"
-  decentralization:
-    restart: always
-    network_mode: "bridge"
   autoheal-unhealthy-containers:
     image: willfarrell/autoheal:latest
     restart: always
