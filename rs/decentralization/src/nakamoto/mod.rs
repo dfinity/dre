@@ -492,10 +492,6 @@ mod tests {
         // If there are no DFINITY-owned node in a small subnet ==> fail with an
         // expected error message
         assert_eq!(
-            new_test_subnet(0, 0, 0).check_business_rules().unwrap_err().to_string(),
-            "DFINITY-owned node missing".to_string()
-        );
-        assert_eq!(
             new_test_subnet(0, 2, 0).check_business_rules().unwrap_err().to_string(),
             "DFINITY-owned node missing".to_string()
         );
@@ -723,5 +719,20 @@ mod tests {
         assert!(nakamoto_score_after.control_power_critical_features().unwrap() <= 24);
         assert!(nakamoto_score_after.score_avg_linear() >= 3.0);
         assert!(nakamoto_score_after.score_avg_log2() >= 1.32);
+    }
+
+    #[test]
+    fn test_extend_empty_subnet() {
+        let available_nodes = (0..20)
+            .map(|i| Node::new_test_node(i, NodeFeatures::new_test_feature_set(&format!("foo{i}")), i % 10 == 0))
+            .collect::<Vec<_>>();
+        let empty_subnet = Subnet::default();
+
+        let want_subnet_size = 13;
+        let new_subnet_result = empty_subnet.new_extended_subnet(want_subnet_size, &available_nodes);
+        assert!(new_subnet_result.is_ok(), "error: {:?}", new_subnet_result.err());
+
+        let new_subnet = new_subnet_result.unwrap();
+        assert_eq!(new_subnet.nodes.len(), want_subnet_size)
     }
 }
