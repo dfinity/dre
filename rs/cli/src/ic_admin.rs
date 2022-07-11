@@ -381,7 +381,7 @@ fn detect_hsm_auth() -> Result<Option<Auth>> {
     let ctx = get_pkcs11_ctx()?;
     for slot in ctx.get_slots_with_token()? {
         let info = ctx.get_slot_info(slot)?;
-        if info.slot_description() == "Nitrokey Nitrokey HSM" {
+        if info.slot_description().starts_with("Nitrokey Nitrokey HSM") {
             let key_id = format!("hsm-{}-{}", info.slot_description(), info.manufacturer_id());
             let pin_entry = Entry::new("release-cli", &key_id);
             let pin = match pin_entry.get_password() {
