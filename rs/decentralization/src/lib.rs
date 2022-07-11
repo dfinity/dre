@@ -164,18 +164,3 @@ impl Display for SubnetChangeResponse {
         writeln!(f)
     }
 }
-
-#[derive(Serialize, Deserialize)]
-pub struct ReplaceRequest {
-    pub nodes: Vec<PrincipalId>,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct OptimizeQuery {
-    pub max_replacements: Option<usize>,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct SubnetCreateRequest {
-    pub size: usize,
-}

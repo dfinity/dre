@@ -18,9 +18,3 @@ services:
       dockerfile: slack-notifications/Dockerfile
       args:
         BUILDKIT_INLINE_CACHE: 1
-  decentralization:
-    build:
-      context: ../rs
-      dockerfile: decentralization/Dockerfile
-      args:
-        BUILDKIT_INLINE_CACHE: 1

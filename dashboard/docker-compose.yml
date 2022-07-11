@@ -10,5 +10,3 @@ services:
     image: registry.gitlab.com/dfinity-lab/core/release/dashboard-backend:${TAG:-latest}
   slack:
     image: registry.gitlab.com/dfinity-lab/core/release/slack:${TAG:-latest}
-  decentralization:
-    image: registry.gitlab.com/dfinity-lab/core/release/decentralization:${TAG:-latest}
