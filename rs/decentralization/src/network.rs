@@ -203,7 +203,7 @@ impl Subnet {
                 (Some(score), Some(controlled_nodes)) => {
                     if score == 1.0 && controlled_nodes > nodes.len() * 2 / 3 {
                         return Err(anyhow::anyhow!(
-                            "Feature '{}' controls {} of nodes, which is >= {} (2/3 of all) nodes",
+                            "Feature '{}' controls {} of nodes, which is > {} (2/3 of all) nodes",
                             feature.to_string(),
                             controlled_nodes,
                             nodes.len() * 2 / 3
