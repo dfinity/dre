@@ -1,12 +1,10 @@
-mod backend_type;
 mod endpoints;
-mod prom;
 mod proposal;
 mod registry;
 mod release;
 use ::gitlab::api::AsyncQuery;
 use actix_web::dev::Service;
-use actix_web::{error, get, post, web, App, Error, HttpResponse, HttpServer, Responder};
+use actix_web::{error, get, web, App, Error, HttpResponse, HttpServer, Responder};
 use decentralization::network::AvailableNodesQuerier;
 use dotenv::dotenv;
 use ic_base_types::{RegistryVersion, SubnetId};
@@ -17,7 +15,6 @@ use ic_registry_keys::{make_crypto_threshold_signing_pubkey_key, ROOT_SUBNET_ID_
 use registry_canister::mutations::common::decode_registry_value;
 mod gitlab;
 mod health;
-use crate::prom::{ICProm, PromClient};
 use crate::release::{RolloutBuilder, RolloutConfig};
 use ::gitlab::{AsyncGitlab, GitlabBuilder};
 use futures::TryFutureExt;
@@ -89,9 +86,6 @@ async fn main() -> std::io::Result<()> {
         gitlab_client(GITLAB_TOKEN_IC_PUBLIC_ENV).await.into(),
     )));
     let registry_state_poll = registry_state.clone();
-    let prom_client = Arc::new(
-        PromClient::new("prometheus.dfinity.systems:9090", None).expect("Couldn't initialize prometheus client"),
-    );
 
     let release_repo_gitlab_client = gitlab_client(GITLAB_TOKEN_RELEASE_ENV).await;
     tokio::spawn(async { poll(release_repo_gitlab_client, registry_state_poll).await });
@@ -100,7 +94,6 @@ async fn main() -> std::io::Result<()> {
         let middleware_registry_state = registry_state.clone();
         App::new()
             .app_data(web::Data::new(registry_state.clone()))
-            .app_data(web::Data::new(prom_client.clone()))
             .wrap_fn(move |req, srv| {
                 let fut = srv.call(req);
                 let registry = middleware_registry_state.clone();
@@ -129,9 +122,6 @@ async fn main() -> std::io::Result<()> {
             .service(guests)
             .service(operators)
             .service(nodes_healths)
-            .service(ic_single_metrics)
-            .service(ic_agg_metrics)
-            .service(subnet_healths)
             .service(get_subnet)
             .service(endpoints::subnet::pending_action)
             .service(endpoints::subnet::replace)
@@ -159,29 +149,6 @@ pub struct SubnetRequest {
 pub struct NewSubnet {
     size: i32,
     exclusions: Option<Vec<PrincipalId>>,
-}
-
-#[get("/subnet_healths")]
-async fn subnet_healths(
-    actix_web::web::Query(subnet): actix_web::web::Query<SubnetRequest>,
-    registry_state: web::Data<Arc<RwLock<registry::RegistryState>>>,
-) -> impl Responder {
-    let principal = match PrincipalId::from_str(&subnet.id) {
-        Ok(v) => v,
-        Err(e) => return HttpResponse::InternalServerError().json(e.to_string()),
-    };
-    let full_subnet = registry_state
-        .read()
-        .await
-        .subnets()
-        .get(&principal)
-        .expect("No subnet with that ID")
-        .clone();
-    let out = match prom::node_healths_per_subnet(full_subnet).await {
-        Ok(v) => HttpResponse::Ok().json(v),
-        Err(e) => HttpResponse::InternalServerError().json(e.to_string()),
-    };
-    out
 }
 
 #[get("/subnet")]
@@ -507,34 +474,6 @@ async fn query_ic_dashboard_list<T: DeserializeOwned>(path: &str) -> anyhow::Res
             Err(e) => Err(anyhow::format_err!("failed to parse response: {}", e)),
         },
         Err(e) => Err(anyhow::format_err!("failed to fetch response: {}", e)),
-    }
-}
-
-#[post("/metrics")]
-async fn ic_single_metrics(
-    prom: web::Data<Arc<PromClient>>,
-    params: web::Json<backend_type::ICNetworkQuerySingle>,
-) -> Result<HttpResponse, Error> {
-    let resp: Result<serde_json::Value, anyhow::Error> = prom.matching_single_query_call(params.into_inner()).await;
-    match resp {
-        Ok(v) => Ok(HttpResponse::Ok().json(v)),
-        Err(_e) => Err(Error::from(prom::TextError {
-            name: "Prometheus client error, check params",
-        })),
-    }
-}
-
-#[post("/aggregated_matrics")]
-async fn ic_agg_metrics(
-    prom: web::Data<Arc<PromClient>>,
-    params: web::Json<backend_type::ICNetworkQueryAggregate>,
-) -> Result<HttpResponse, Error> {
-    let resp = prom.matching_aggregate_query_call(params.into_inner()).await;
-    match resp {
-        Ok(v) => Ok(HttpResponse::Ok().json(v)),
-        Err(_e) => Err(Error::from(prom::TextError {
-            name: "Prometheus client error, check params",
-        })),
     }
 }
 
