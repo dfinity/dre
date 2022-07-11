@@ -541,7 +541,7 @@ mod tests {
         );
         assert_eq!(
             subnet_initial.check_business_rules().unwrap_err().to_string(),
-            "Feature 'country' controls 9 of nodes, which is >= 8 (2/3 of all) nodes".to_string()
+            "Feature 'country' controls 9 of nodes, which is > 8 (2/3 of all) nodes".to_string()
         );
         let nodes_available =
             new_test_nodes_with_overrides("spare", 13, 3, 0, (&Feature::Country, &["US", "RO", "JP"]));
