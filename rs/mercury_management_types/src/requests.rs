@@ -6,7 +6,7 @@ pub struct MembershipReplaceRequest {
     pub target: ReplaceTarget,
     pub heal: bool,
     pub optimize: Option<usize>,
-    pub exclude: Option<Vec<PrincipalId>>,
+    pub exclude: Option<Vec<String>>,
     pub include: Option<Vec<PrincipalId>>,
 }
 

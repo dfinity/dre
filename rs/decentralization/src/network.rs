@@ -529,12 +529,32 @@ impl SubnetChangeRequest {
         }
     }
 
-    pub fn exclude_nodes(self, nodes: Vec<PrincipalId>) -> Self {
+    pub fn exclude_nodes(self, exclude_nodes_or_features: Vec<String>) -> Self {
         Self {
             available_nodes: self
                 .available_nodes
                 .into_iter()
-                .filter(|n| !nodes.contains(&n.id))
+                .filter(|n| {
+                    let mut should_include_node = true;
+                    for exclude_string in &exclude_nodes_or_features {
+                        // Exclude the node if
+                        if n.id.to_string() == *exclude_string {
+                            // The node id matches an entry from the exclude list
+                            should_include_node = false;
+                            info!("Excluding node {} due to an excluded node id", n.id);
+                        } else {
+                            // Or if any of the node features matches *exactly* an entry from the exclude
+                            // list
+                            for (_, feat_val) in n.get_features().feature_map {
+                                if feat_val == *exclude_string {
+                                    should_include_node = false;
+                                    info!("Excluding node {} due to excluded feature {}", n.id, feat_val);
+                                }
+                            }
+                        }
+                    }
+                    should_include_node
+                })
                 .collect(),
             ..self
         }
