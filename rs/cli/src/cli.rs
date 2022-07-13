@@ -99,12 +99,12 @@ pub(crate) mod subnet {
             #[clap(long)]
             cancel: bool,
 
-            /// Nodes to exclude from available nodes pool
+            /// Features or Node IDs to exclude from the available nodes pool
             #[clap(long, takes_value = true, multiple_values = true)]
-            exclude: Vec<PrincipalId>,
+            exclude: Vec<String>,
 
-            /// Nodes to explicitly use for replacement regardless of
-            /// decentralization score
+            /// Force the inclusion of the provided nodes for replacement,
+            /// regardless of the decentralization score
             #[clap(long, takes_value = true, multiple_values = true)]
             include: Vec<PrincipalId>,
         },
