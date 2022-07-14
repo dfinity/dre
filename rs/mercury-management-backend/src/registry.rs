@@ -3,10 +3,10 @@ use async_trait::async_trait;
 use decentralization::network::{AvailableNodesQuerier, NetworkError, SubnetQuerier};
 use ic_base_types::NodeId;
 use ic_interfaces::registry::RegistryValue;
-use ic_registry_client::local_registry::LocalRegistry;
 use ic_registry_keys::{
     make_blessed_replica_version_key, NODE_OPERATOR_RECORD_KEY_PREFIX, NODE_RECORD_KEY_PREFIX, SUBNET_RECORD_KEY_PREFIX,
 };
+use ic_registry_local_registry::LocalRegistry;
 use ic_registry_subnet_type::SubnetType;
 use ic_types::PrincipalId;
 use itertools::Itertools;
