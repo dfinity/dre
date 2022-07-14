@@ -10,8 +10,8 @@ use dotenv::dotenv;
 use ic_base_types::{RegistryVersion, SubnetId};
 use ic_protobuf::registry::crypto::v1::PublicKey;
 use ic_registry_client::client::ThresholdSigPublicKey;
-use ic_registry_common::local_store::{Changelog, ChangelogEntry, KeyMutation, LocalStoreImpl, LocalStoreWriter};
 use ic_registry_keys::{make_crypto_threshold_signing_pubkey_key, ROOT_SUBNET_ID_KEY};
+use ic_registry_local_store::{Changelog, ChangelogEntry, KeyMutation, LocalStoreImpl, LocalStoreWriter};
 use registry_canister::mutations::common::decode_registry_value;
 mod gitlab;
 mod health;
@@ -20,10 +20,10 @@ use ::gitlab::{AsyncGitlab, GitlabBuilder};
 use futures::TryFutureExt;
 use ic_interfaces::registry::{RegistryClient, RegistryValue, ZERO_REGISTRY_VERSION};
 use ic_registry_client_fake::FakeRegistryClient;
-use ic_registry_common::registry::RegistryCanister;
 use ic_registry_common_proto::pb::local_store::v1::{
     ChangelogEntry as PbChangelogEntry, KeyMutation as PbKeyMutation, MutationType,
 };
+use ic_registry_nns_data_provider::registry::RegistryCanister;
 use ic_types::PrincipalId;
 use log::{debug, error, info, warn};
 use mercury_management_types::{FactsDBGuest, Guest, NodeProvidersResponse};
@@ -40,7 +40,7 @@ use tokio::time::{sleep, Duration};
 use url::Url;
 extern crate env_logger;
 
-use ic_registry_client::local_registry::LocalRegistry;
+use ic_registry_local_registry::LocalRegistry;
 
 const GITLAB_TOKEN_IC_PUBLIC_ENV: &str = "GITLAB_API_TOKEN_IC_PUBLIC";
 const GITLAB_TOKEN_RELEASE_ENV: &str = "GITLAB_API_TOKEN_RELEASE";
