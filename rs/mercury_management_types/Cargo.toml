@@ -4,14 +4,14 @@ version = "0.1.0"
 edition = "2018"
 
 [dependencies]
-ic-base-types = { git = "https://github.com/dfinity/ic.git", rev = "d5062681bd1f84d64ef2024eea19848032565f9b" }
+ic-base-types = { git = "https://github.com/dfinity/ic.git", rev = "0b2ce07fd7b4f482ec80572586ef8990ec9cd16f" }
 serde_json = "1.0.66"
 serde = "1.0.127"
 strum = "0.21"
 strum_macros = "0.21"
-ic-types = { git = "https://github.com/dfinity/ic.git", rev = "d5062681bd1f84d64ef2024eea19848032565f9b" }
-ic-registry-subnet-type = { git = "https://github.com/dfinity/ic.git", rev = "d5062681bd1f84d64ef2024eea19848032565f9b" }
-ic-nns-governance = { git = "https://github.com/dfinity/ic.git", rev = "d5062681bd1f84d64ef2024eea19848032565f9b" }
+ic-types = { git = "https://github.com/dfinity/ic.git", rev = "0b2ce07fd7b4f482ec80572586ef8990ec9cd16f" }
+ic-registry-subnet-type = { git = "https://github.com/dfinity/ic.git", rev = "0b2ce07fd7b4f482ec80572586ef8990ec9cd16f" }
+ic-nns-governance = { git = "https://github.com/dfinity/ic.git", rev = "0b2ce07fd7b4f482ec80572586ef8990ec9cd16f" }
 serde_with = "1.9.4"
 chrono = { version = "0.4.19", features = ["serde"] }
 float-cmp = "0.9.0"

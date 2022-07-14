@@ -20,8 +20,8 @@ actix-web = { version = "4.0.0-rc.1", default-features = false, features = [
     "compress-gzip",
     "macros",
 ] }
-ic-base-types = { git = "https://github.com/dfinity/ic.git", rev = "d5062681bd1f84d64ef2024eea19848032565f9b" }
-ic-registry-keys = { git = "https://github.com/dfinity/ic.git", rev = "d5062681bd1f84d64ef2024eea19848032565f9b" }
+ic-base-types = { git = "https://github.com/dfinity/ic.git", rev = "0b2ce07fd7b4f482ec80572586ef8990ec9cd16f" }
+ic-registry-keys = { git = "https://github.com/dfinity/ic.git", rev = "0b2ce07fd7b4f482ec80572586ef8990ec9cd16f" }
 anyhow = "1.0.43"
 serde_with = "1.9.4"
 futures = "0.3.16"
@@ -30,15 +30,15 @@ reqwest = { version = "0.11.4", features = ["json"] }
 async-trait = "0.1.52"
 enum-map = "1.1.1"
 either = "1.6.1"
-ic-interfaces = { git = "https://github.com/dfinity/ic.git", rev = "d5062681bd1f84d64ef2024eea19848032565f9b" }
-ic-protobuf = { git = "https://github.com/dfinity/ic.git", rev = "d5062681bd1f84d64ef2024eea19848032565f9b" }
-ic-registry-common = { git = "https://github.com/dfinity/ic.git", rev = "d5062681bd1f84d64ef2024eea19848032565f9b" }
-ic-registry-common-proto = { git = "https://github.com/dfinity/ic.git", rev = "d5062681bd1f84d64ef2024eea19848032565f9b" }
-ic-registry-subnet-type = { git = "https://github.com/dfinity/ic.git", rev = "d5062681bd1f84d64ef2024eea19848032565f9b" }
-ic-types = { git = "https://github.com/dfinity/ic.git", rev = "d5062681bd1f84d64ef2024eea19848032565f9b" }
+ic-interfaces = { git = "https://github.com/dfinity/ic.git", rev = "0b2ce07fd7b4f482ec80572586ef8990ec9cd16f" }
+ic-protobuf = { git = "https://github.com/dfinity/ic.git", rev = "0b2ce07fd7b4f482ec80572586ef8990ec9cd16f" }
+ic-registry-nns-data-provider = { git = "https://github.com/dfinity/ic.git", rev = "0b2ce07fd7b4f482ec80572586ef8990ec9cd16f" }
+ic-registry-common-proto = { git = "https://github.com/dfinity/ic.git", rev = "0b2ce07fd7b4f482ec80572586ef8990ec9cd16f" }
+ic-registry-subnet-type = { git = "https://github.com/dfinity/ic.git", rev = "0b2ce07fd7b4f482ec80572586ef8990ec9cd16f" }
+ic-types = { git = "https://github.com/dfinity/ic.git", rev = "0b2ce07fd7b4f482ec80572586ef8990ec9cd16f" }
 prost = "0.7.0"
 mercury_management_types = { path = "../mercury_management_types" }
-registry-canister = { git = "https://github.com/dfinity/ic.git", rev = "d5062681bd1f84d64ef2024eea19848032565f9b" }
+registry-canister = { git = "https://github.com/dfinity/ic.git", rev = "0b2ce07fd7b4f482ec80572586ef8990ec9cd16f" }
 strum = "0.21"
 strum_macros = "0.21"
 itertools = "0.10.1"
@@ -47,9 +47,9 @@ env_logger = "0.9.0"
 reverse_geocoder = "2.0.1"
 csv = "1.1.6"
 candid = "0.7.7"
-ic-nns-governance = { git = "https://github.com/dfinity/ic.git", rev = "d5062681bd1f84d64ef2024eea19848032565f9b" }
-ic-nns-common = { git = "https://github.com/dfinity/ic.git", rev = "d5062681bd1f84d64ef2024eea19848032565f9b" }
-ic-nns-constants = { git = "https://github.com/dfinity/ic.git", rev = "d5062681bd1f84d64ef2024eea19848032565f9b" }
+ic-nns-governance = { git = "https://github.com/dfinity/ic.git", rev = "0b2ce07fd7b4f482ec80572586ef8990ec9cd16f" }
+ic-nns-common = { git = "https://github.com/dfinity/ic.git", rev = "0b2ce07fd7b4f482ec80572586ef8990ec9cd16f" }
+ic-nns-constants = { git = "https://github.com/dfinity/ic.git", rev = "0b2ce07fd7b4f482ec80572586ef8990ec9cd16f" }
 ic-agent = "0.10.1"
 ic-types-old = { version = "0.2.2", package = "ic-types" }
 gitlab = "0.1403.0"
@@ -60,12 +60,14 @@ regex = "1.5.4"
 async-timer = "0.7.4"
 counter = "0.5.2"
 rand = "0.8.4"
-phantom_newtype = { git = "https://github.com/dfinity/ic.git", rev = "d5062681bd1f84d64ef2024eea19848032565f9b" }
+phantom_newtype = { git = "https://github.com/dfinity/ic.git", rev = "0b2ce07fd7b4f482ec80572586ef8990ec9cd16f" }
 decentralization = { path = "../decentralization" }
 prometheus-http-query = "0.4.0"
-ic-registry-client = { git = "https://github.com/dfinity/ic.git", rev = "d5062681bd1f84d64ef2024eea19848032565f9b" }
-ic-registry-client-fake = { git = "https://github.com/dfinity/ic.git", rev = "d5062681bd1f84d64ef2024eea19848032565f9b" }
-ic-registry-client-helpers = { git = "https://github.com/dfinity/ic.git", rev = "d5062681bd1f84d64ef2024eea19848032565f9b" }
+ic-registry-client = { git = "https://github.com/dfinity/ic.git", rev = "0b2ce07fd7b4f482ec80572586ef8990ec9cd16f" }
+ic-registry-client-fake = { git = "https://github.com/dfinity/ic.git", rev = "0b2ce07fd7b4f482ec80572586ef8990ec9cd16f" }
+ic-registry-client-helpers = { git = "https://github.com/dfinity/ic.git", rev = "0b2ce07fd7b4f482ec80572586ef8990ec9cd16f" }
+ic-registry-local-registry = { git = "https://github.com/dfinity/ic.git", rev = "0b2ce07fd7b4f482ec80572586ef8990ec9cd16f" }
+ic-registry-local-store = { git = "https://github.com/dfinity/ic.git", rev = "0b2ce07fd7b4f482ec80572586ef8990ec9cd16f" }
 
 [dev-dependencies]
 assert_matches = "1.4.0"
