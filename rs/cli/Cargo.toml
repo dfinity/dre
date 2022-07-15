@@ -33,7 +33,7 @@ itertools = "0.10"
 async-trait = "0.1.53"
 keyring = "1.1.2"
 cryptoki = "0.3.0"
-candid = "0.7.14"
+candid = "=0.7.14"
 url = "2.2.2"
 clap-num = "0.2.0"
 
