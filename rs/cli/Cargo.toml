@@ -16,11 +16,11 @@ colored = "2.0.0"
 log = "0.4.14"
 pretty_env_logger = "0.4.0"
 regex = "1.5.4"
-ic-base-types = { git = "https://github.com/dfinity/ic.git", rev = "0b2ce07fd7b4f482ec80572586ef8990ec9cd16f" }
-ic-nns-constants = { git = "https://github.com/dfinity/ic.git", rev = "0b2ce07fd7b4f482ec80572586ef8990ec9cd16f" }
-ic-nns-governance = { git = "https://github.com/dfinity/ic.git", rev = "0b2ce07fd7b4f482ec80572586ef8990ec9cd16f" }
-ic-canister-client = { git = "https://github.com/dfinity/ic.git", rev = "0b2ce07fd7b4f482ec80572586ef8990ec9cd16f" }
-ic-sys = { git = "https://github.com/dfinity/ic.git", rev = "0b2ce07fd7b4f482ec80572586ef8990ec9cd16f" }
+ic-base-types = { git = "https://github.com/dfinity/ic.git", rev = "cfdbbf5fb5fdbc8f483dfd3a5f7f627b752d3156" }
+ic-nns-constants = { git = "https://github.com/dfinity/ic.git", rev = "cfdbbf5fb5fdbc8f483dfd3a5f7f627b752d3156" }
+ic-nns-governance = { git = "https://github.com/dfinity/ic.git", rev = "cfdbbf5fb5fdbc8f483dfd3a5f7f627b752d3156" }
+ic-canister-client = { git = "https://github.com/dfinity/ic.git", rev = "cfdbbf5fb5fdbc8f483dfd3a5f7f627b752d3156" }
+ic-sys = { git = "https://github.com/dfinity/ic.git", rev = "cfdbbf5fb5fdbc8f483dfd3a5f7f627b752d3156" }
 tokio = { version = "1.14.0", features = ["full"] }
 strum = { version = "0.23", features = ["derive"] }
 strum_macros = "0.23"
@@ -33,7 +33,7 @@ itertools = "0.10"
 async-trait = "0.1.53"
 keyring = "1.1.2"
 cryptoki = "0.3.0"
-candid = "=0.7.14"
+candid = "0.7.15"
 url = "2.2.2"
 clap-num = "0.2.0"
 
