@@ -209,6 +209,9 @@ impl RolloutBuilder {
         // Fill in the remaining rollouts starting from the last stage
         for (i, s) in leftover_subnets.into_iter().enumerate() {
             let remaining_stages_count = remaining_stages.len();
+            if remaining_stages_count == 0 {
+                break;
+            }
             // FIXME: Remaining stages could be empty at this point if the last window of
             // opportunity was missed to update all the subnets
             remaining_stages[remaining_stages_count - 1 - (i % remaining_stages_count)]
