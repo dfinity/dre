@@ -145,10 +145,6 @@ impl RegistryState {
         }
     }
 
-    pub(crate) fn synced(&self) -> bool {
-        self.version == self.local_registry.get_latest_version().get()
-    }
-
     pub(crate) async fn update(
         &mut self,
         providers: Vec<NodeProviderDetails>,
