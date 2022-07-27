@@ -51,7 +51,7 @@ async fn main() -> std::io::Result<()> {
     std::env::set_var("RUST_LOG", "info");
     env_logger::init();
 
-    init_local_store().await.expect("failed to init local store");
+    sync_local_store().await.expect("failed to init local store");
 
     let local_registry_path = local_registry_path();
     let runtime = tokio::runtime::Runtime::new().expect("failed to create runtime");
@@ -65,18 +65,19 @@ async fn main() -> std::io::Result<()> {
         .expect("Failed to create local registry"),
     );
 
-    let update_local_registry = local_registry.clone();
-    let mut print_counter = 0;
-    std::thread::spawn(move || loop {
-        let print_enabled = print_counter % 10 == 0;
-        if print_enabled {
-            info!("Updating local registry");
+    tokio::spawn(async move {
+        let mut print_counter = 0;
+        loop {
+            let print_enabled = print_counter % 10 == 0;
+            if print_enabled {
+                info!("Updating local registry");
+            }
+            if let Err(e) = sync_local_store().await {
+                error!("Failed to update local registry: {}", e);
+            }
+            std::thread::sleep(std::time::Duration::from_secs(1));
+            print_counter += 1;
         }
-        if let Err(e) = update_local_registry.sync_with_nns() {
-            error!("Failed to update local registry: {}", e);
-        }
-        std::thread::sleep(std::time::Duration::from_secs(1));
-        print_counter += 1;
     });
 
     let registry_state = Arc::new(RwLock::new(registry::RegistryState::new(
@@ -260,8 +261,7 @@ fn nns_nodes_urls() -> Vec<Url> {
     vec![Url::parse(&nns_url()).expect("Cannot parse NNS_URL environment variable as a valid url")]
 }
 
-// TODO: hack: replace with a static way to import NNS state
-async fn init_local_store() -> anyhow::Result<()> {
+async fn sync_local_store() -> anyhow::Result<()> {
     let local_registry_path = local_registry_path();
     let local_store = Arc::new(LocalStoreImpl::new(local_registry_path.clone()));
     let registry_canister = RegistryCanister::new(nns_nodes_urls());
@@ -275,9 +275,7 @@ async fn init_local_store() -> anyhow::Result<()> {
     info!("Syncing local registry from version {}", latest_version);
     let mut latest_certified_time = 0;
     let mut updates = vec![];
-    let nns_public_key = nns_public_key(&registry_canister)
-        .await
-        .expect("Failed to get NNS public key");
+    let nns_public_key = nns_public_key(&registry_canister).await?;
 
     loop {
         if match registry_canister.get_latest_version().await {
@@ -382,12 +380,19 @@ async fn init_local_store() -> anyhow::Result<()> {
 
 async fn poll(gitlab_client: AsyncGitlab, registry_state: Arc<RwLock<registry::RegistryState>>) {
     let mut print_counter = 0;
+    let registry_canister = RegistryCanister::new(nns_nodes_urls());
     loop {
+        sleep(Duration::from_secs(1)).await;
         let print_enabled = print_counter % 10 == 0;
         if print_enabled {
             info!("Updating registry");
         }
-        if !registry_state.read().await.synced() {
+        let latest_version = if let Ok(v) = registry_canister.get_latest_version().await {
+            v
+        } else {
+            continue;
+        };
+        if latest_version != registry_state.read().await.version() {
             let node_providers_result = query_ic_dashboard_list::<NodeProvidersResponse>("v3/node-providers").await;
             let guests_result = ::gitlab::api::raw(
                 ::gitlab::api::projects::repository::files::FileRaw::builder()
@@ -434,7 +439,6 @@ async fn poll(gitlab_client: AsyncGitlab, registry_state: Arc<RwLock<registry::R
                 registry_state.read().await.version()
             )
         }
-        sleep(Duration::from_secs(1)).await;
         print_counter += 1;
     }
 }
