@@ -62,6 +62,12 @@ variables:
 
       # Ensure the git repo is clean and up to date with the upstream
       cd "@{CI_PROJECT_DIR}"
+      git reflog expire --expire=now --all
+      git gc --prune=now
+      git fsck --full
+      git submodule foreach git reflog expire --expire=now --all
+      git submodule foreach git gc --prune=now
+      git submodule foreach git fsck --full
       # Disable all background git operations
       git config gc.auto 0
       git config gc.autodetach false
