@@ -1,1 +1,1 @@
-pub(crate) const DEFAULT_IC_ADMIN_VERSION: &str = "a37500211e5a4578ac452490e16379cbb0c9282a";
+pub(crate) const DEFAULT_IC_ADMIN_VERSION: &str = "4e51609f17da095aff7ceae413d5e69aeaa869b2";
