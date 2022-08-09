@@ -13,7 +13,7 @@ from .ic_utils import repo_root
 class IcDeployment:
     """Interface with the deployment Ansible configuration, e.g. get nodes, ipv6 addresses, etc."""
 
-    def __init__(self, deployment_name: str, nodes_filter_include: str = ""):
+    def __init__(self, deployment_name: str, nodes_filter_include: str = "", decentralized_deployment=False):
         """Create an object for the given git repo root and deployment name."""
         self._name = deployment_name
         if deployment_name == "staging" and not nodes_filter_include:
@@ -21,6 +21,7 @@ class IcDeployment:
         self._deployment_env_root = find_deployment_env_root(deployment_name)
         self._inventory_script = self._deployment_env_root.parent.parent / "ansible/inventory/inventory.py"
         self.nodes_filter_include = nodes_filter_include
+        self.decentralized_deployment = decentralized_deployment
 
     @property
     def name(self):
@@ -30,8 +31,11 @@ class IcDeployment:
     def get_ansible_inventory(self, all_physical_hosts=False):
         """Get an Ansible inventory list for a deployment."""
         env = os.environ.copy()
+        env["DEPLOYMENT"] = self._name
         if all_physical_hosts:
             env["INCLUDE_ALL_PHYSICAL_HOSTS"] = "1"
+        if self.decentralized_deployment:
+            env["DECENTRALIZED_DEPLOYMENT"] = "true"
         output = subprocess.check_output(
             [
                 "ansible-inventory",
@@ -54,7 +58,10 @@ class IcDeployment:
                 "--deployment",
                 self.name,
                 "--nodes",
-            ],
+            ]
+            + ["--decentralized-deployment"]
+            if self.decentralized_deployment
+            else [],
             env=env,
         )
         return yaml.load(output, Loader=yaml.FullLoader)
@@ -70,7 +77,10 @@ class IcDeployment:
                 "--deployment",
                 self.name,
                 "--list",
-            ],
+            ]
+            + ["--decentralized-deployment"]
+            if self.decentralized_deployment
+            else [],
             env=env,
         )
         return json.loads(output)[subnet_name]["hosts"]
