@@ -55,7 +55,7 @@ export default function NodeSearch({ onSearchChange, expand }: { onSearchChange:
             type: 'string',
         },
         {
-            title: 'Hostname',
+            title: 'Label',
             emptyValue: "",
             field: 'hostname',
             type: 'string',
