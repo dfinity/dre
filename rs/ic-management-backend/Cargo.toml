@@ -1,5 +1,5 @@
 [package]
-name = "mercury-management-backend"
+name = "ic-management-backend"
 version = "0.1.0"
 edition = "2018"
 
@@ -39,7 +39,7 @@ ic-registry-common-proto = { git = "https://github.com/dfinity/ic.git", rev = "c
 ic-registry-subnet-type = { git = "https://github.com/dfinity/ic.git", rev = "cfdbbf5fb5fdbc8f483dfd3a5f7f627b752d3156" }
 ic-types = { git = "https://github.com/dfinity/ic.git", rev = "cfdbbf5fb5fdbc8f483dfd3a5f7f627b752d3156" }
 prost = "0.7.0"
-mercury_management_types = { path = "../mercury_management_types" }
+ic-management-types = { path = "../ic-management-types" }
 registry-canister = { git = "https://github.com/dfinity/ic.git", rev = "cfdbbf5fb5fdbc8f483dfd3a5f7f627b752d3156" }
 strum = "0.21"
 strum_macros = "0.21"
@@ -75,5 +75,5 @@ actix-rt = "2.2.0"
 
 
 [[bin]]
-name = "mercury-management-backend"
+name = "ic-management-backend"
 path = "src/main.rs"

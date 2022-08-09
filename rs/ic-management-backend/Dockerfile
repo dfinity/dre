@@ -20,7 +20,7 @@ COPY --from=planner /app/recipe.json recipe.json
 RUN cargo chef cook --release --recipe-path recipe.json
 # Build application
 COPY . .
-RUN cargo build --release --bin mercury-management-backend
+RUN cargo build --release --bin ic-management-backend
 
 # We do not need the Rust toolchain to run the binary!
 FROM debian:bullseye AS runtime
@@ -30,6 +30,6 @@ RUN apt-get -y update && \
     apt-get autoremove --yes && \
     rm -rf /var/lib/{apt,dpkg,cache,log}/
 WORKDIR app
-COPY --from=builder /app/target/release/mercury-management-backend /usr/local/bin
+COPY --from=builder /app/target/release/ic-management-backend /usr/local/bin
 
-ENTRYPOINT ["/usr/local/bin/mercury-management-backend"]
+ENTRYPOINT ["/usr/local/bin/ic-management-backend"]

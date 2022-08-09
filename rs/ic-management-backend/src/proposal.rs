@@ -5,12 +5,12 @@ use anyhow::Result;
 use candid::{CandidType, Decode, Encode};
 use ic_agent::Agent;
 use ic_base_types::PrincipalId;
+use ic_management_types::{
+    CreateSubnetProposalInfo, ReplaceNodeProposalInfo, TopologyProposal, TopologyProposalKind, TopologyProposalStatus,
+};
 use ic_nns_governance::pb::v1::{proposal::Action, ListProposalInfo, ListProposalInfoResponse, NnsFunction};
 use ic_nns_governance::pb::v1::{ProposalInfo, ProposalStatus};
 use lazy_static::lazy_static;
-use mercury_management_types::{
-    CreateSubnetProposalInfo, ReplaceNodeProposalInfo, TopologyProposal, TopologyProposalKind, TopologyProposalStatus,
-};
 use regex::Regex;
 use registry_canister::mutations::do_add_nodes_to_subnet::AddNodesToSubnetPayload;
 use registry_canister::mutations::do_create_subnet::CreateSubnetPayload;

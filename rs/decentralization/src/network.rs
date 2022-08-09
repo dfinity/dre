@@ -49,8 +49,8 @@ impl PartialEq for Node {
     }
 }
 
-impl From<&mercury_management_types::Node> for Node {
-    fn from(n: &mercury_management_types::Node) -> Self {
+impl From<&ic_management_types::Node> for Node {
+    fn from(n: &ic_management_types::Node) -> Self {
         Self {
             id: n.principal,
             features: nakamoto::NodeFeatures::from_iter(
@@ -365,8 +365,8 @@ impl From<Subnet> for NakamotoScore {
     }
 }
 
-impl From<&mercury_management_types::Subnet> for Subnet {
-    fn from(s: &mercury_management_types::Subnet) -> Self {
+impl From<&ic_management_types::Subnet> for Subnet {
+    fn from(s: &ic_management_types::Subnet) -> Self {
         Self {
             id: s.principal,
             nodes: s.nodes.iter().map(Node::from).collect(),
@@ -374,8 +374,8 @@ impl From<&mercury_management_types::Subnet> for Subnet {
     }
 }
 
-impl From<mercury_management_types::Subnet> for Subnet {
-    fn from(s: mercury_management_types::Subnet) -> Self {
+impl From<ic_management_types::Subnet> for Subnet {
+    fn from(s: ic_management_types::Subnet) -> Self {
         Self::from(&s)
     }
 }

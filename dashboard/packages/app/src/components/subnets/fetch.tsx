@@ -4,7 +4,7 @@ import { useApi, configApiRef } from '@backstage/core-plugin-api';
 
 export function get_network() {
     const networkRegex = '/network/([^/]+)'
-    return window.location.pathname.match(networkRegex)?.[1] ?? "mercury"
+    return window.location.pathname.match(networkRegex)?.[1] ?? "mainnet"
 }
 
 export async function fetchVersion() {

@@ -1,5 +1,5 @@
 [package]
-name = "mercury_management_types"
+name = "ic-management-types"
 version = "0.1.0"
 edition = "2018"
 

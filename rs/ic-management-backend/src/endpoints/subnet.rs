@@ -2,7 +2,7 @@ use super::*;
 use crate::health;
 use decentralization::network::TopologyManager;
 use ic_base_types::PrincipalId;
-use mercury_management_types::requests::{MembershipReplaceRequest, ReplaceTarget, SubnetCreateRequest};
+use ic_management_types::requests::{MembershipReplaceRequest, ReplaceTarget, SubnetCreateRequest};
 use serde::Deserialize;
 
 #[derive(Deserialize)]

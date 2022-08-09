@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use decentralization::SubnetChangeResponse;
 use ic_base_types::PrincipalId;
-use mercury_management_types::{requests::MembershipReplaceRequest, Network, TopologyProposal};
+use ic_management_types::{requests::MembershipReplaceRequest, Network, TopologyProposal};
 use serde::de::DeserializeOwned;
 
 #[derive(Clone)]
@@ -21,7 +21,7 @@ impl DashboardBackendClient {
             .join("api/proxy/registry/")
             .expect("failed to join url")
             .join(match network {
-                Network::Mainnet => "mercury/",
+                Network::Mainnet => "mainnet/",
                 Network::Staging => "staging/",
                 Network::Url(_) => {
                     unimplemented!("not supported to run dashboard backed operations on arbitrary networks")
@@ -97,7 +97,7 @@ mod tests {
     fn dashboard_backend_client_url() {
         assert_eq!(
             DashboardBackendClient::new(Network::Mainnet, false).url.to_string(),
-            "https://dashboard.mainnet.dfinity.systems/api/proxy/registry/mercury/"
+            "https://dashboard.mainnet.dfinity.systems/api/proxy/registry/mainnet/"
         );
         assert_eq!(
             DashboardBackendClient::new(Network::Staging, false).url.to_string(),
@@ -105,7 +105,7 @@ mod tests {
         );
         assert_eq!(
             DashboardBackendClient::new(Network::Mainnet, true).url.to_string(),
-            "http://localhost:17000/api/proxy/registry/mercury/"
+            "http://localhost:17000/api/proxy/registry/mainnet/"
         );
         assert_eq!(
             DashboardBackendClient::new(Network::Staging, true).url.to_string(),

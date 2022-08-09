@@ -16,7 +16,7 @@ services:
       - GITLAB_API_TOKEN_IC_PUBLIC
       - LOCAL_REGISTRY_PATH=/registry_cache
       - NNS_URL=https://nns.ic0.app
-      - NETWORK=mercury
+      - NETWORK=mainnet
       - RUST_BACKTRACE=1
     volumes:
       - backend_registry_cache_mainnet:/registry_cache
