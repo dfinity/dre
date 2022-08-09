@@ -25,7 +25,12 @@ pub struct HealthClient {
 impl HealthClient {
     pub fn new(network: String) -> Self {
         Self {
-            network,
+            // TODO: Use unmodified network string once the mainnet metrics are labeled with "mainnet" instead of "mercury"
+            network: if network == "mainnet" {
+                "mercury".to_string()
+            } else {
+                network
+            },
             client: Client::try_from("http://prometheus.dfinity.systems:9090").unwrap(),
         }
     }

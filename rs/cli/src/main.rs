@@ -96,14 +96,14 @@ async fn main() -> Result<(), anyhow::Error> {
                             }
                         } else {
                             runner
-                                .membership_replace(mercury_management_types::requests::MembershipReplaceRequest {
+                                .membership_replace(ic_management_types::requests::MembershipReplaceRequest {
                                     target: match &subnet.id {
                                         Some(subnet) => {
-                                            mercury_management_types::requests::ReplaceTarget::Subnet(*subnet)
+                                            ic_management_types::requests::ReplaceTarget::Subnet(*subnet)
                                         }
                                         None => {
                                             if let Some(motivation) = motivation.clone() {
-                                                mercury_management_types::requests::ReplaceTarget::Nodes {
+                                                ic_management_types::requests::ReplaceTarget::Nodes {
                                                     nodes: nodes.clone(),
                                                     motivation,
                                                 }

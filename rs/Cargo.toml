@@ -3,8 +3,8 @@
 members = [
     "cli",
     "decentralization",
-    "mercury-management-backend",
-    "mercury_management_types",
+    "ic-management-backend",
+    "ic-management-types",
     "slack-notifications",
 ]
 

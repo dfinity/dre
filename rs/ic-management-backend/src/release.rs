@@ -1,8 +1,8 @@
 use anyhow::Result;
 use chrono::{Date, DateTime, Datelike, NaiveTime, TimeZone, Utc, Weekday};
+use ic_management_types::{ReplicaRelease, Subnet};
 use ic_types::PrincipalId;
 use log::info;
-use mercury_management_types::{ReplicaRelease, Subnet};
 use serde::Serialize;
 use std::collections::{HashMap, HashSet};
 use std::str::FromStr;

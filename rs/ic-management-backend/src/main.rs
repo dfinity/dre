@@ -19,6 +19,7 @@ use crate::release::{RolloutBuilder, RolloutConfig};
 use ::gitlab::{AsyncGitlab, GitlabBuilder};
 use futures::TryFutureExt;
 use ic_interfaces::registry::{RegistryClient, RegistryValue, ZERO_REGISTRY_VERSION};
+use ic_management_types::{FactsDBGuest, Guest, NodeProvidersResponse};
 use ic_registry_client_fake::FakeRegistryClient;
 use ic_registry_common_proto::pb::local_store::v1::{
     ChangelogEntry as PbChangelogEntry, KeyMutation as PbKeyMutation, MutationType,
@@ -26,7 +27,6 @@ use ic_registry_common_proto::pb::local_store::v1::{
 use ic_registry_nns_data_provider::registry::RegistryCanister;
 use ic_types::PrincipalId;
 use log::{debug, error, info, warn};
-use mercury_management_types::{FactsDBGuest, Guest, NodeProvidersResponse};
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -378,10 +378,7 @@ async fn sync_local_store() -> anyhow::Result<()> {
     Ok(())
 }
 
-async fn query_facts_db_guests(gitlab_client: AsyncGitlab, mut network: String) -> anyhow::Result<Vec<Guest>> {
-    if network == "mercury" {
-        network = "mainnet".to_string();
-    }
+async fn query_facts_db_guests(gitlab_client: AsyncGitlab, network: String) -> anyhow::Result<Vec<Guest>> {
     ::gitlab::api::raw(
         ::gitlab::api::projects::repository::files::FileRaw::builder()
             .ref_("refs/heads/main")
