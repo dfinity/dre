@@ -59,9 +59,7 @@ class IcDeployment:
                 self.name,
                 "--nodes",
             ]
-            + ["--decentralized-deployment"]
-            if self.decentralized_deployment
-            else [],
+            + (["--decentralized-deployment"] if self.decentralized_deployment else []),
             env=env,
         )
         return yaml.load(output, Loader=yaml.FullLoader)
@@ -78,9 +76,7 @@ class IcDeployment:
                 self.name,
                 "--list",
             ]
-            + ["--decentralized-deployment"]
-            if self.decentralized_deployment
-            else [],
+            + (["--decentralized-deployment"] if self.decentralized_deployment else []),
             env=env,
         )
         return json.loads(output)[subnet_name]["hosts"]
