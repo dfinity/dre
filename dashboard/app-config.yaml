@@ -40,7 +40,7 @@ proxy:
   '/test':
     target: 'https://example.com'
     changeOrigin: true
-  '/registry/mercury':
+  '/registry/mainnet':
     target: 'http://localhost:8080'
     changeOrigin: true
   '/registry/staging':

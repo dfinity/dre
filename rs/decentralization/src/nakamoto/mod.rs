@@ -676,7 +676,7 @@ mod tests {
         d.push("test_data");
 
         // Read the subnet snapshot from a file
-        let subnet_all = json_file_read_checked::<mercury_management_types::Subnet>(&d.join("subnet-uzr34.json"));
+        let subnet_all = json_file_read_checked::<ic_management_types::Subnet>(&d.join("subnet-uzr34.json"));
         // Convert the subnet snapshot to the "Subnet" struct
         let subnet_all: Subnet = Subnet::from(subnet_all);
         let re_unhealthy_nodes = Regex::new(r"^(gp7wd|e4ysi|qhz4y|2fbvp)-.+$").unwrap();
@@ -690,8 +690,7 @@ mod tests {
                 .collect(),
         };
 
-        let available_nodes =
-            json_file_read_checked::<Vec<mercury_management_types::Node>>(&d.join("available-nodes.json"));
+        let available_nodes = json_file_read_checked::<Vec<ic_management_types::Node>>(&d.join("available-nodes.json"));
 
         let available_nodes = available_nodes
             .iter()

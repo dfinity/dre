@@ -6,8 +6,8 @@ use decentralization::SubnetChangeResponse;
 use dialoguer::Confirm;
 use futures::Future;
 use ic_base_types::PrincipalId;
+use ic_management_types::{TopologyProposal, TopologyProposalKind, TopologyProposalStatus};
 use log::warn;
-use mercury_management_types::{TopologyProposal, TopologyProposalKind, TopologyProposalStatus};
 use tokio::time::{sleep, Duration};
 
 #[derive(Clone)]
@@ -37,7 +37,7 @@ impl Runner {
 
     pub async fn membership_replace(
         &self,
-        request: mercury_management_types::requests::MembershipReplaceRequest,
+        request: ic_management_types::requests::MembershipReplaceRequest,
     ) -> anyhow::Result<()> {
         let change = self.dashboard_backend_client.membership_replace(request).await?;
         self.swap_nodes(change).await

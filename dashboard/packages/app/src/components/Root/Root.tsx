@@ -92,7 +92,7 @@ export const Root = ({ children }: PropsWithChildren<{}>) => {
           <SidebarItem icon={HomeIcon} to="/" text="Home" />
           <SidebarItem icon={SettingsEthernetSharpIcon} text="Network">
             <SidebarSubmenu title="Network">
-              <SidebarSubmenuItem to="/network/mercury/topology" title="Mainnet" />
+              <SidebarSubmenuItem to="/network/mainnet/topology" title="Mainnet" />
               <SidebarSubmenuItem to="/network/staging/topology" title="Staging" />
             </SidebarSubmenu>
           </SidebarItem>

@@ -82,7 +82,7 @@ const AppRouter = app.getRouter();
 
 const routes = (
   <FlatRoutes>
-    <Navigate key="/" to="/network/mercury/topology" />
+    <Navigate key="/" to="/network/mainnet/topology" />
     {/* <Route path="/catalog" element={<CatalogIndexPage />} />
     <Route
       path="/catalog/:namespace/:kind/:name"
@@ -101,7 +101,7 @@ const routes = (
     <Route path="/search" element={<SearchPage />} />
     <Route path="/settings" element={<UserSettingsPage />} />
 
-    <Route path="/network/mercury/topology" element={<TopologyPage network='Mainnet' />} />
+    <Route path="/network/mainnet/topology" element={<TopologyPage network='Mainnet' />} />
     <Route path="/network/staging/topology" element={<TopologyPage network='Staging' />} />
     <Route path="/release" element={<ReleasePage />} />
     <Route path="/qualification" element={<QualificationPage />} />

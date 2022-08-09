@@ -1,6 +1,6 @@
 use clap::{Parser, Subcommand};
 use clap_num::maybe_hex;
-use mercury_management_types::Network;
+use ic_management_types::Network;
 
 #[derive(Parser, Clone)]
 #[clap(about, version, author)]

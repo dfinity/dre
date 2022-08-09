@@ -8,7 +8,7 @@ backend:
     port: 17000
 
 proxy:
-  '/registry/mercury':
+  '/registry/mainnet':
     target: 'http://dashboard-backend-mainnet:8080'
     changeOrigin: true
   '/registry/staging':
