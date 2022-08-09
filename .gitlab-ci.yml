@@ -237,6 +237,7 @@ update-facts-db:
 
       set +x
       time python3 ./factsdb/main.py --refresh
+      time python3 ./factsdb/main.py --deployment-name mainnet --decentralized-deployment --refresh
       if [[ -n "$(git status --short factsdb/data)" ]]; then
         echo "Changed files found";
         git add factsdb/data
