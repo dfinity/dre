@@ -82,7 +82,7 @@ pub struct RolloutBuilder {
 
 impl RolloutBuilder {
     pub async fn build(self) -> Result<Vec<Rollout>> {
-        const MAX_ROLLOUTS: usize = 2;
+        const MAX_ROLLOUTS: usize = 1;
 
         let subnet_update_proposals = self.proposal_agent.list_update_subnet_version_proposals().await?;
 
