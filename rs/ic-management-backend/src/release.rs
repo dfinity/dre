@@ -196,18 +196,11 @@ impl RolloutBuilder {
 
         let first_stage_size_today = submitted_stages
             .iter()
-            // first stage today
-            .find(|s| s.start_date_time.date() == today)
-            .map(|s| s.updates.len())
-            // find number of days already passed
-            .unwrap_or(
-                submitted_stages
-                    .iter()
-                    .map(|s| s.start_date_time.date())
-                    .unique()
-                    .count()
-                    + 1,
-            );
+            .map(|s| s.start_date_time.date())
+            .filter(|d| *d != today)
+            .unique()
+            .count()
+            + 1;
 
         const MAX_ROLLOUT_STAGE_SIZE: usize = 4;
         while !leftover_subnets.is_empty() {
