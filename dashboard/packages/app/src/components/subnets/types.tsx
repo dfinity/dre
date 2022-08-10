@@ -67,6 +67,7 @@ export interface Subnet {
   subnet_type: string;
   metadata: SubnetMetadata;
   replica_version: string;
+  replica_release: ReplicaRelease;
 }
 
 export type VerifiedApplication = "Fleek" | "Distrikt";
