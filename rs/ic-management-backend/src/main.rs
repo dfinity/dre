@@ -180,13 +180,18 @@ async fn rollout(registry: web::Data<Arc<RwLock<registry::RegistryState>>>) -> R
     let registry = registry.read().await;
     let proposal_agent = proposal::ProposalAgent::new(registry.nns_url());
     let prometheus_client = prometheus_http_query::Client::try_from("http://prometheus.dfinity.systems:9090").unwrap();
+    let network = registry.network();
     let service = RolloutBuilder {
         config: RolloutConfig {},
         proposal_agent,
         prometheus_client,
         subnets: registry.subnets(),
         releases: registry.replica_releases(),
-        network: registry.network(),
+        network: if network == "mainnnet" {
+            "mercury".to_string()
+        } else {
+            network
+        },
     };
     response_from_result(service.build().await)
 }
