@@ -55,9 +55,9 @@ export default function NodeSearch({ onSearchChange, expand }: { onSearchChange:
             type: 'string',
         },
         {
-            title: 'Hostname',
+            title: 'Label',
             emptyValue: "",
-            field: 'hostname',
+            field: 'label',
             type: 'string',
         },
         {
@@ -129,6 +129,12 @@ export default function NodeSearch({ onSearchChange, expand }: { onSearchChange:
             type: 'boolean',
             hidden: false,
             searchable: true,
+        },
+        {
+            title: 'Decentralized',
+            field: 'decentralized',
+            type: 'boolean',
+            hidden: false,
         },
     ];
 
