@@ -1,7 +1,9 @@
 use anyhow::Result;
-use chrono::{Date, DateTime, Datelike, NaiveTime, TimeZone, Utc, Weekday};
+use chrono::serde::ts_seconds;
+use chrono::{Date, Datelike, NaiveTime, TimeZone, Utc, Weekday};
 use ic_management_types::{ReplicaRelease, Subnet};
 use ic_types::PrincipalId;
+use itertools::Itertools;
 use log::info;
 use serde::Serialize;
 use std::collections::{HashMap, HashSet};
@@ -34,21 +36,32 @@ pub struct SubnetUpdate {
     pub replica_release: ReplicaRelease,
 }
 
-#[derive(Default, Serialize, Clone)]
+#[derive(Serialize, Clone)]
 pub struct RolloutStage {
-    pub start_timestamp_seconds: u64,
+    #[serde(with = "ts_seconds")]
+    pub start_date_time: chrono::DateTime<Utc>,
+    pub start_time: Option<chrono::NaiveTime>,
     pub updates: Vec<SubnetUpdate>,
     pub active: bool,
 }
 
 impl RolloutStage {
-    pub fn start_date_time(&self) -> DateTime<Utc> {
-        Utc.timestamp(self.start_timestamp_seconds as i64, 0)
+    pub fn new_submitted(updates: Vec<SubnetUpdate>, submitted_timestamp_seconds: u64) -> Self {
+        let datetime = Utc.timestamp(submitted_timestamp_seconds as i64, 0);
+        Self {
+            start_date_time: datetime,
+            start_time: datetime.time().into(),
+            updates,
+            active: true,
+        }
     }
 
-    pub fn new_scheduled(updates: Vec<SubnetUpdate>, day: chrono::Date<Utc>, time: NaiveTime) -> Self {
+    pub fn new_scheduled(updates: Vec<SubnetUpdate>, day: chrono::Date<Utc>) -> Self {
         Self {
-            start_timestamp_seconds: day.and_time(time).expect("failed to compute time").timestamp() as u64,
+            start_date_time: day
+                .and_time(NaiveTime::from_hms(0, 0, 0))
+                .expect("failed to compute time"),
+            start_time: None,
             updates,
             active: false,
         }
@@ -117,15 +130,6 @@ impl RolloutBuilder {
         Ok(rollouts)
     }
 
-    fn get_day_stages_times(&self) -> Vec<NaiveTime> {
-        vec![
-            NaiveTime::from_hms_nano(7, 0, 0, 0),
-            NaiveTime::from_hms_nano(9, 0, 0, 0),
-            NaiveTime::from_hms_nano(11, 0, 0, 0),
-            NaiveTime::from_hms_nano(13, 0, 0, 0),
-        ]
-    }
-
     async fn new_rollout_state(
         &self,
         release: ReplicaRelease,
@@ -136,12 +140,9 @@ impl RolloutBuilder {
         let rollout_days = self.rollout_days(
             submitted_stages
                 .first()
-                .map(|s| s.start_date_time().date())
+                .map(|s| s.start_date_time.date())
                 .unwrap_or(today),
         );
-        let leftover_days = rollout_days.iter().filter(|d| **d >= today).collect::<Vec<_>>();
-
-        let mut remaining_stages = vec![];
 
         let mut leftover_subnets = self
             .subnets
@@ -154,69 +155,92 @@ impl RolloutBuilder {
             })
             .collect::<Vec<_>>();
 
-        // Canary
-        const CANARY_STAGE_TIME_ENTRY_INDEX: usize = 2;
-        let last_stage_time = if submitted_stages.is_empty() {
-            let time = self.get_day_stages_times()[CANARY_STAGE_TIME_ENTRY_INDEX];
-            remaining_stages.push(RolloutStage::new_scheduled(
+        let mut leftover_days = rollout_days.into_iter().filter(|d| *d >= today).collect::<Vec<_>>();
+        // If only the day of NNS subnet rollout is left, take just the first remaining rollout day
+        if leftover_subnets.len() == 1
+            && submitted_stages
+                .iter()
+                .all(|s| s.start_date_time.date() != leftover_days[0])
+        {
+            leftover_days = vec![leftover_days[0]];
+        }
+
+        let mut remaining_stages_groups = leftover_days.iter().map(|_| vec![]).collect::<Vec<Vec<RolloutStage>>>();
+        let mut stage_groups_overheads = leftover_days.iter().map(|_| 0).collect::<Vec<_>>();
+        // Last stage will have 2 stages less than every other to finish rollout earlier in the day.
+        stage_groups_overheads[leftover_days.len().saturating_sub(2)] = 2;
+
+        // If we're on the first day of the rollout
+        if submitted_stages.iter().all(|s| s.start_date_time.date() == today) {
+            // Set overhead of day group to 1
+            stage_groups_overheads[0] = 1;
+        }
+
+        // Adjust the overhead for today
+        stage_groups_overheads[0] += submitted_stages
+            .iter()
+            .filter(|s| s.start_date_time.date() == today)
+            .count();
+
+        // Add canary rollout stage if rollout didn't start yet
+        if submitted_stages.is_empty() {
+            remaining_stages_groups[0].push(RolloutStage::new_scheduled(
                 // TODO: get canary ID from config (io67a-2jmkw-zup3h-snbwi-g6a5n-rm5dn-b6png-lvdpl-nqnto-yih6l-gqe)
                 leftover_subnets
                     .drain(0..1)
                     .map(|s| self.create_subnet_update(s, &release))
                     .collect(),
                 today,
-                time,
             ));
-            remaining_stages.last().map(|s| s.start_date_time())
-        } else {
-            submitted_stages.last().map(|s| s.start_date_time())
-        };
+        }
 
         let first_stage_size_today = submitted_stages
             .iter()
-            .find(|s| s.start_date_time().date() == today)
-            .or_else(|| submitted_stages.last())
-            .or_else(|| remaining_stages.last())
+            // first stage today
+            .find(|s| s.start_date_time.date() == today)
             .map(|s| s.updates.len())
-            .expect("should have a canary stage or submitted stages");
+            // find number of days already passed
+            .unwrap_or(
+                submitted_stages
+                    .iter()
+                    .map(|s| s.start_date_time.date())
+                    .unique()
+                    .count()
+                    + 1,
+            );
 
-        // Leftover rollouts of the week
-        for (i, day) in leftover_days
-            .iter()
-            .enumerate()
-            .take(leftover_days.len().saturating_sub(1))
-        {
-            for (j, time) in self.get_day_stages_times().into_iter().enumerate() {
-                if last_stage_time
-                    .map(|l| day.and_time(time).expect("should result in a datetime") <= l)
-                    .unwrap_or_default()
-                {
+        const MAX_ROLLOUT_STAGE_SIZE: usize = 4;
+        while !leftover_subnets.is_empty() {
+            let min_day_stages_count = remaining_stages_groups
+                .iter()
+                .take(remaining_stages_groups.len().saturating_sub(1))
+                .enumerate()
+                .map(|(i, g)| g.len() + stage_groups_overheads[i])
+                .min()
+                .unwrap_or_default();
+            for (i, day) in leftover_days
+                .iter()
+                .enumerate()
+                .take(leftover_days.len().saturating_sub(1))
+                .rev()
+            {
+                // If rollout day has more stages than others (including overhead), skip
+                if stage_groups_overheads[i] + remaining_stages_groups[i].len() > min_day_stages_count {
                     continue;
                 }
-                // Increase the size of the stage after the first stage of the day
-                let stage_size = first_stage_size_today + i + std::cmp::min(j, 1);
-                remaining_stages.push(RolloutStage::new_scheduled(
+
+                let stage_size = std::cmp::min(
+                    MAX_ROLLOUT_STAGE_SIZE,
+                    first_stage_size_today + i + std::cmp::min(remaining_stages_groups[i].len(), 1),
+                );
+                remaining_stages_groups[i].push(RolloutStage::new_scheduled(
                     leftover_subnets
                         .drain(0..std::cmp::min(stage_size, leftover_subnets.len()))
                         .map(|s| self.create_subnet_update(s, &release))
                         .collect(),
-                    **day,
-                    time,
+                    *day,
                 ));
             }
-        }
-
-        // Fill in the remaining rollouts starting from the last stage
-        for (i, s) in leftover_subnets.into_iter().enumerate() {
-            let remaining_stages_count = remaining_stages.len();
-            if remaining_stages_count == 0 {
-                break;
-            }
-            // FIXME: Remaining stages could be empty at this point if the last window of
-            // opportunity was missed to update all the subnets
-            remaining_stages[remaining_stages_count - 1 - (i % remaining_stages_count)]
-                .updates
-                .push(self.create_subnet_update(s, &release));
         }
 
         // NNS Rollout
@@ -230,17 +254,16 @@ impl RolloutBuilder {
                 .iter()
                 .any(|s| s.updates.iter().any(|u| u.subnet_id == nns_subnet.principal))
             {
-                remaining_stages.push(RolloutStage::new_scheduled(
+                remaining_stages_groups.push(vec![RolloutStage::new_scheduled(
                     vec![self.create_subnet_update(nns_subnet, &release)],
-                    **last_day,
-                    self.get_day_stages_times()[0],
-                ))
+                    *last_day,
+                )])
             }
         }
 
         let stages = submitted_stages
             .into_iter()
-            .chain(remaining_stages.into_iter())
+            .chain(remaining_stages_groups.into_iter().flatten())
             .filter(|s| !s.updates.is_empty())
             .collect::<Vec<_>>();
         Ok(Rollout {
@@ -421,11 +444,10 @@ impl RolloutBuilder {
                             u.state = SubnetUpdateState::Complete;
                         }
                     }
-                    acc.push(RolloutStage {
-                        start_timestamp_seconds: proposal.info.proposal_timestamp_seconds,
-                        updates: vec![update],
-                        active: true,
-                    })
+                    acc.push(RolloutStage::new_submitted(
+                        vec![update],
+                        proposal.info.proposal_timestamp_seconds,
+                    ))
                 }
             }
             acc
@@ -439,7 +461,7 @@ impl RolloutBuilder {
                 .collect::<HashSet<_>>();
             let mut update_states = HashMap::new();
             for release in releases {
-                let release_update_states = self.get_update_states(&release, last_stage.start_date_time()).await?;
+                let release_update_states = self.get_update_states(&release, last_stage.start_date_time).await?;
                 update_states.insert(release, release_update_states);
             }
             for u in &mut last_stage.updates {
@@ -474,7 +496,7 @@ impl RolloutBuilder {
             .filter(|d| d.weekday().number_from_monday() < Weekday::Sat.number_from_monday())
             .collect::<Vec<_>>();
         candidates
-            .split_inclusive(|p| p.iso_week().week() > start.iso_week().week() && *p >= Utc::now().date())
+            .split_inclusive(|p| p.iso_week().week() > start.iso_week().week() && *p > Utc::now().date())
             .next()
             .unwrap()
             .to_vec()
