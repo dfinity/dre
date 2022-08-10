@@ -29,6 +29,7 @@ export interface Node {
   ip_addr: string;
   operator: Operator;
   hostname: string;
+  label?: string;
   subnet?: string;
   dfinity_owned: boolean;
   proposal?: TopologyProposal;

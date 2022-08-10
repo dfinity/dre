@@ -378,6 +378,29 @@ async fn sync_local_store() -> anyhow::Result<()> {
     Ok(())
 }
 
+async fn query_facts_db_guests(gitlab_client: AsyncGitlab, network: String) -> anyhow::Result<Vec<Guest>> {
+    ::gitlab::api::raw(
+        ::gitlab::api::projects::repository::files::FileRaw::builder()
+            .ref_("refs/heads/main")
+            .project("dfinity-lab/core/release")
+            .file_path(format!("factsdb/data/{}_guests.csv", network))
+            .build()
+            .expect("failed to build API endpoint"),
+    )
+    .query_async(&gitlab_client)
+    .await
+    .map(|r| {
+        csv::Reader::from_reader(r.as_slice())
+            .deserialize()
+            .map(|r| {
+                let fdbg: FactsDBGuest = r.expect("record failed to parse");
+                Guest::from(fdbg)
+            })
+            .collect::<Vec<_>>()
+    })
+    .map_err(|e| anyhow::anyhow!(e))
+}
+
 async fn poll(gitlab_client: AsyncGitlab, registry_state: Arc<RwLock<registry::RegistryState>>) {
     let mut print_counter = 0;
     let registry_canister = RegistryCanister::new(nns_nodes_urls());
@@ -394,25 +417,21 @@ async fn poll(gitlab_client: AsyncGitlab, registry_state: Arc<RwLock<registry::R
         };
         if latest_version != registry_state.read().await.version() {
             let node_providers_result = query_ic_dashboard_list::<NodeProvidersResponse>("v3/node-providers").await;
-            let guests_result = ::gitlab::api::raw(
-                ::gitlab::api::projects::repository::files::FileRaw::builder()
-                    .ref_("refs/heads/main")
-                    .project("dfinity-lab/core/release")
-                    .file_path(format!("factsdb/data/{}_guests.csv", network()))
-                    .build()
-                    .expect("failed to build API endpoint"),
-            )
-            .query_async(&gitlab_client)
-            .await
-            .map(|r| {
-                csv::Reader::from_reader(r.as_slice())
-                    .deserialize()
-                    .map(|r| {
-                        let fdbg: FactsDBGuest = r.expect("record failed to parse");
-                        Guest::from(fdbg)
+            let network = network();
+            let guests_result = query_facts_db_guests(gitlab_client.clone(), network.clone()).await;
+            let guests_result = if network == "mainnet" {
+                let guests_result_old = query_facts_db_guests(gitlab_client.clone(), "mercury".to_string()).await;
+                guests_result.and_then(|guests_decentralized| {
+                    guests_result_old.map(|guests_old| {
+                        guests_decentralized
+                            .into_iter()
+                            .chain(guests_old.into_iter())
+                            .collect::<Vec<_>>()
                     })
-                    .collect::<Vec<_>>()
-            });
+                })
+            } else {
+                guests_result
+            };
             match (node_providers_result, guests_result) {
                 (Ok(node_providers_response), Ok(guests_list)) => {
                     let mut registry_state = registry_state.write().await;
