@@ -80,7 +80,8 @@ export interface Rollout {
 }
 
 export interface RolloutStage {
-  start_timestamp_seconds: number;
+  start_time?: string;
+  start_date_time: number;
   updates: SubnetUpdate[];
   active: boolean;
 }
