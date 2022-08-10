@@ -231,7 +231,7 @@ export default function RolloutsStepper() {
                   rollout.stages
                 ).groupBy(
                   (s) => {
-                    let date = new Date(s.start_timestamp_seconds * 1000);
+                    let date = new Date(s.start_date_time * 1000);
                     return date.toLocaleDateString("en-US", { weekday: 'long', day: 'numeric', month: 'short', year: undefined });
                   },
                 ).map((dayStages, dateString) => {
@@ -244,8 +244,8 @@ export default function RolloutsStepper() {
                       <Stepper activeStep={activeStep} orientation="vertical" connector={<></>} className={classes.stepper}>
                         {
                           dayStages.map((stage, i) => {
-                            let start = new Date(stage.start_timestamp_seconds * 1000);
-                            let stage_label = start.toLocaleTimeString("en-US", { hour: 'numeric', minute: '2-digit' });
+                            // let start = new Date(stage.start_date_time * 1000);
+                            let stage_label = stage.start_time;
                             return (
                               <Step key={stage_label} expanded style={{ flex: 1 }}>
                                 <StepLabel icon={<StageIcon active={stage.active} updated={i <= activeStep || date.getDate() < (new Date()).getDate()} />}>{stage_label}</StepLabel>
