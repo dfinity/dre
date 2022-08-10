@@ -99,17 +99,7 @@ impl From<&ic_management_types::Node> for Node {
                 ]
                 .into_iter(),
             ),
-            dfinity_owned: n.dfinity_owned.unwrap_or_else(|| match &n.labels {
-                // Node is DFINITY-owned if it has a label "Owned by DFINITY"
-                Some(labels) => {
-                    labels
-                        .iter()
-                        .filter(|l| l.get("value").unwrap_or(&"".to_string()) == "Owned by DFINITY")
-                        .count()
-                        > 0
-                }
-                None => false,
-            }),
+            dfinity_owned: n.dfinity_owned.unwrap_or_default(),
         }
     }
 }

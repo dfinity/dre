@@ -6,7 +6,6 @@ use ic_types::PrincipalId;
 use serde::{Deserialize, Serialize};
 use serde_with::{serde_as, DisplayFromStr};
 use std::cmp::{Eq, Ord, PartialEq, PartialOrd};
-use std::collections::BTreeMap;
 use std::convert::TryFrom;
 use std::net::Ipv6Addr;
 use std::ops::Deref;
@@ -54,7 +53,9 @@ pub struct Node {
     pub dfinity_owned: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub proposal: Option<TopologyProposal>,
-    pub labels: Option<Vec<BTreeMap<String, String>>>,
+    pub label: Option<String>,
+    #[serde(default)]
+    pub decentralized: bool,
 }
 
 #[derive(Clone, Serialize, Debug, Deserialize)]
@@ -147,6 +148,7 @@ pub struct Guest {
     pub ipv6: Ipv6Addr,
     pub name: String,
     pub dfinity_owned: bool,
+    pub decentralized: bool,
 }
 
 #[derive(Clone, Serialize, Deserialize, PartialEq, Hash, Eq)]
@@ -176,6 +178,7 @@ impl From<FactsDBGuest> for Guest {
                 .expect("invalid physical system name")
                 .to_string(),
             dfinity_owned: g.node_type.contains("dfinity"),
+            decentralized: g.ipv6.segments()[4] == 0x6801,
         }
     }
 }

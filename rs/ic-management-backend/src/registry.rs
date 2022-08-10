@@ -350,8 +350,8 @@ impl RegistryState {
                         principal,
                         dfinity_owned: Some(guest.as_ref().map(|g| g.dfinity_owned).unwrap_or_default()),
                         ip_addr: node_ip_addr(nr),
-                        hostname: guest
-                            .map(|g| g.name)
+                        hostname: guest.as_ref()
+                            .map(|g| g.name.clone())
                             .unwrap_or_else(|| {
                                 format!(
                                     "{}-{}",
@@ -374,7 +374,8 @@ impl RegistryState {
                             .map(|s| s.get()),
                         operator,
                         proposal: None,
-                        labels: None,
+                        label: guest.clone().map(|g| g.name),
+                        decentralized: guest.map(|g| g.decentralized).unwrap_or_default(),
                     },
                 )
             })
