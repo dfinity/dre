@@ -187,7 +187,7 @@ async fn rollout(registry: web::Data<Arc<RwLock<registry::RegistryState>>>) -> R
         prometheus_client,
         subnets: registry.subnets(),
         releases: registry.replica_releases(),
-        network: if network == "mainnnet" {
+        network: if network == "mainnet" {
             "mercury".to_string()
         } else {
             network
