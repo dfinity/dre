@@ -25,6 +25,7 @@ pub struct Subnet {
     pub replica_version: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub proposal: Option<TopologyProposal>,
+    pub replica_release: Option<ReplicaRelease>,
 }
 
 type Application = String;

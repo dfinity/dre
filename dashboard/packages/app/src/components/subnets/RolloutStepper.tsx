@@ -11,9 +11,8 @@ import RadioButtonCheckedIcon from '@material-ui/icons/RadioButtonChecked';
 import RadioButtonUncheckedIcon from '@material-ui/icons/RadioButtonUnchecked';
 import UpdateIcon from '@material-ui/icons/Update';
 import { green, lightBlue, grey, purple, amber, orange, blue, red } from '@material-ui/core/colors';
-import { Rollout, RolloutStage, SubnetUpdateState } from './types';
-import { fetchRollouts } from './fetch';
-import RolloutProgressStepper from './RolloutProgressStepper';
+import { RolloutStage, Subnet, SubnetUpdateState } from './types';
+import { fetchRollouts, fetchSubnets } from './fetch';
 import _ from 'lodash';
 
 const useStyles = makeStyles((theme: Theme) =>
@@ -54,13 +53,7 @@ const useStyles = makeStyles((theme: Theme) =>
     unknownIcon: {
       color: red[500],
     },
-    versionChip: {
-      '& > span': {
-        lineHeight: "24px",
-      },
-      overflow: 'hidden',
-    },
-    rolloutHeader: {
+    sectionHeader: {
       margin: theme.spacing(2),
     },
     releaseName: {
@@ -85,6 +78,12 @@ const useStyles = makeStyles((theme: Theme) =>
     updateChip: {
       fontFamily: 'Roboto Mono',
       fontSize: '0.8em',
+    },
+    versionDistribution: {
+      width: "100%",
+    },
+    versionChip: {
+      fontFamily: 'Roboto Mono',
     }
   }),
 );
@@ -159,31 +158,99 @@ const RolloutStageContent = ({ stage }: { stage: RolloutStage }) => {
 }
 
 
-const PatchProgress = ({ rollout }: { rollout: Rollout }) => {
+// const PatchProgress = ({ rollout }: { rollout: Rollout }) => {
+//   const classes = useStyles();
+//   let versions = rollout.stages.flatMap(stage => stage.updates).filter(u => u.replica_release.name == rollout.latest_release.name).map(u => [u.replica_release, ...u.patches_available]);
+
+//   return (
+//     <>
+//       {
+//         versions.length > 0 && <>
+//           <Typography variant="h6" className={classes.sectionHeader}>Patch version distribution</Typography>
+//           {
+//             _(
+//               versions
+//             ).groupBy(
+//               (v) => v[0].name,
+//             ).map((versionsGroup, _) => {
+//               let versions = versionsGroup.sort((a, b) => b.length - a.length)[0];
+//               return (
+//                 <RolloutProgressStepper versions={versions} />
+//               )
+//             }).value()
+//           }
+//         </> || <>
+//           <Typography variant="h6" className={classes.sectionHeader}>No patches available</Typography>
+//         </>
+//       }
+//     </>
+//   )
+// }
+
+const VersionDistribution = ({ subnets }: { subnets: Subnet[] }) => {
   const classes = useStyles();
-  let versions = rollout.stages.flatMap(stage => stage.updates).filter(u => u.replica_release.name == rollout.latest_release.name).map(u => [u.replica_release, ...u.patches_available]);
+  let releases = Array.from(new Set(subnets.map(s => s.replica_release.name))).map(r => subnets.find(s => s.replica_release.name == r)!.replica_release);
+  releases.sort((a, b) => b.time.localeCompare(a.time));
+  console.log("releases", releases);
 
   return (
     <>
-      {
-        versions.length > 0 && <>
-          <Typography variant="h6" className={classes.rolloutHeader}>Patch version distribution</Typography>
-          {
-            _(
-              versions
-            ).groupBy(
-              (v) => v[0].name,
-            ).map((versionsGroup, _) => {
-              let versions = versionsGroup.sort((a, b) => b.length - a.length)[0];
-              return (
-                <RolloutProgressStepper versions={versions} />
-              )
-            }).value()
-          }
-        </> || <>
-          <Typography variant="h6" className={classes.rolloutHeader}>No patches available</Typography>
-        </>
-      }
+      <Typography variant="h5" className={classes.sectionHeader}>Version Distribution</Typography>
+      <Typography variant="subtitle2" className={classes.sectionHeader}>You can find all the subnets and their active versions here</Typography>
+      {releases.map((release, i) => {
+        let versions = Array.from(new Set(subnets.filter(s => s.replica_release.name == release.name).map(s => s.replica_release.commit_hash)));
+        // console.log(versions);
+        return <div className={classes.versionDistribution}>
+          <Typography variant="h6" className={classes.sectionHeader}>
+            Release <Link className={classes.releaseName} target="_blank" href={`https://github.com/dfinity/ic/commits/${release.branch}`}>
+              {release.name}
+            </Link>
+            <span style={{ fontWeight: 200, paddingLeft: 8 }}>
+              {i == 0 && "(latest)"}
+            </span>
+          </Typography>
+          <Stepper alternativeLabel activeStep={versions.length} connector={<></>}>
+            {versions.map((v) => (
+              <Step key={v.substring(0, 7)} expanded>
+                <StepLabel>
+                  <Link
+                    target="_blank"
+                    color="textPrimary"
+                    href={`https://github.com/dfinity/ic/commits/${v}`}
+                  >
+                    {v.substring(0, 7)}
+                  </Link>
+                </StepLabel>
+                <StepContent style={{ border: "none" }}>
+                  <Grid
+                    container
+                    direction="row"
+                    justifyContent="center"
+                    alignItems="center"
+                    alignContent="center"
+                    spacing={0}
+                  >
+                    {
+                      Object.values(subnets).sort((a, b) => a.principal.localeCompare(b.principal))
+                        .filter(s => s.replica_version === v)
+                        .map(s =>
+                          <Grid item spacing={0}>
+                            <Chip
+                              size="small"
+                              variant='outlined'
+                              className={classes.versionChip}
+                              label={`${s.principal.split("-")[0]}`}
+                            />
+                          </Grid>
+                        )
+                    }
+                  </Grid>
+                </StepContent>
+              </Step>
+            ))}
+          </Stepper>
+        </div>
+      })}
     </>
   )
 }
@@ -202,6 +269,7 @@ function StageIcon({ active, updated }: { active: boolean, updated: boolean }) {
 export default function RolloutsStepper() {
   const classes = useStyles();
   const rollouts = fetchRollouts();
+  const subnets = Object.values(fetchSubnets());
 
   return (
     <Grid container>
@@ -216,7 +284,7 @@ export default function RolloutsStepper() {
                 alignContent='center'
               >
                 <Grid item>
-                  <Typography variant="h6" className={classes.rolloutHeader}>
+                  <Typography variant="h6" className={classes.sectionHeader}>
                     Rollout for version <Link className={classes.releaseName} target="_blank" href={`https://github.com/dfinity/ic/commits/${rollout.latest_release.branch}`}>
                       {rollout.latest_release.name}
                     </Link>
@@ -262,7 +330,7 @@ export default function RolloutsStepper() {
                 }).value()}
               </Stepper>
               <Divider />
-              <PatchProgress rollout={rollout} />
+              <VersionDistribution subnets={subnets} />
             </Paper>
           </Grid>
         );

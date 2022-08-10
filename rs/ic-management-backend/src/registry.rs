@@ -350,7 +350,8 @@ impl RegistryState {
                         principal,
                         dfinity_owned: Some(guest.as_ref().map(|g| g.dfinity_owned).unwrap_or_default()),
                         ip_addr: node_ip_addr(nr),
-                        hostname: guest.as_ref()
+                        hostname: guest
+                            .as_ref()
                             .map(|g| g.name.clone())
                             .unwrap_or_else(|| {
                                 format!(
@@ -434,6 +435,11 @@ impl RegistryState {
                             ..Default::default()
                         },
                         replica_version: sr.replica_version_id.clone(),
+                        replica_release: self
+                            .replica_releases
+                            .iter()
+                            .find(|r| r.commit_hash == sr.replica_version_id)
+                            .cloned(),
                         proposal: None,
                     },
                 )
