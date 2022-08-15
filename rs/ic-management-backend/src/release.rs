@@ -56,7 +56,7 @@ impl RolloutStage {
         }
     }
 
-    pub fn new_scheduled(updates: Vec<SubnetUpdate>, day: chrono::Date<Utc>) -> Self {
+    pub fn new_scheduled(updates: Vec<SubnetUpdate>, day: Date<Utc>) -> Self {
         Self {
             start_date_time: day
                 .and_time(NaiveTime::from_hms(0, 0, 0))
@@ -70,13 +70,13 @@ impl RolloutStage {
 
 #[derive(Serialize)]
 pub struct Rollout {
-    pub state: RolloutState,
+    pub status: RolloutStatus,
     pub latest_release: ReplicaRelease,
     pub stages: Vec<RolloutStage>,
 }
 
 #[derive(Serialize, Clone, Display, EnumString, PartialEq, Eq, Ord, PartialOrd)]
-pub enum RolloutState {
+pub enum RolloutStatus {
     Active,
     Scheduled,
     Complete,
@@ -115,7 +115,7 @@ impl RolloutBuilder {
             .rev()
         {
             let state = self
-                .new_rollout_state(
+                .new_for_release(
                     r.clone(),
                     subnet_update_proposals
                         .iter()
@@ -126,11 +126,11 @@ impl RolloutBuilder {
                 .await?;
             rollouts.push(state);
         }
-        rollouts.sort_by_key(|a| a.state.clone());
+        rollouts.sort_by_key(|a| a.status.clone());
         Ok(rollouts)
     }
 
-    async fn new_rollout_state(
+    async fn new_for_release(
         &self,
         release: ReplicaRelease,
         subnet_update_proposals: Vec<SubnetUpdateProposal>,
@@ -144,136 +144,68 @@ impl RolloutBuilder {
                 .unwrap_or(today),
         );
 
-        let mut leftover_subnets = self
-            .subnets
-            .values()
-            .filter(|s| {
-                submitted_stages
-                    .iter()
-                    .all(|stage| stage.updates.iter().all(|u| u.subnet_id != s.principal))
-                    && s.metadata.name != NNS_SUBNET_NAME
-            })
-            .collect::<Vec<_>>();
-
-        let mut leftover_days = rollout_days.into_iter().filter(|d| *d >= today).collect::<Vec<_>>();
-        // If only the day of NNS subnet rollout is left, take just the first remaining rollout day
-        if leftover_subnets.len() == 1
-            && submitted_stages
-                .iter()
-                .all(|s| s.start_date_time.date() != leftover_days[0])
-        {
-            leftover_days = vec![leftover_days[0]];
-        }
-
-        let mut remaining_stages_groups = leftover_days.iter().map(|_| vec![]).collect::<Vec<Vec<RolloutStage>>>();
-        let mut stage_groups_overheads = leftover_days.iter().map(|_| 0).collect::<Vec<_>>();
-        // Last stage will have 2 stages less than every other to finish rollout earlier in the day.
-        stage_groups_overheads[leftover_days.len().saturating_sub(2)] = 2;
-
-        // If we're on the first day of the rollout
-        if submitted_stages.iter().all(|s| s.start_date_time.date() == today) {
-            // Set overhead of day group to 1
-            stage_groups_overheads[0] = 1;
-        }
-
-        // Adjust the overhead for today
-        stage_groups_overheads[0] += submitted_stages
-            .iter()
-            .filter(|s| s.start_date_time.date() == today)
-            .count();
-
-        // Add canary rollout stage if rollout didn't start yet
-        if submitted_stages.is_empty() {
-            remaining_stages_groups[0].push(RolloutStage::new_scheduled(
-                // TODO: get canary ID from config (io67a-2jmkw-zup3h-snbwi-g6a5n-rm5dn-b6png-lvdpl-nqnto-yih6l-gqe)
-                leftover_subnets
-                    .drain(0..1)
-                    .map(|s| self.create_subnet_update(s, &release))
-                    .collect(),
-                today,
-            ));
-        }
-
-        let first_stage_size_today = submitted_stages
-            .iter()
-            .map(|s| s.start_date_time.date())
-            .filter(|d| *d != today)
-            .unique()
-            .count()
-            + 1;
-
-        const MAX_ROLLOUT_STAGE_SIZE: usize = 4;
-        while !leftover_subnets.is_empty() {
-            let min_day_stages_count = remaining_stages_groups
-                .iter()
-                .take(remaining_stages_groups.len().saturating_sub(1))
-                .enumerate()
-                .map(|(i, g)| g.len() + stage_groups_overheads[i])
-                .min()
-                .unwrap_or_default();
-            for (i, day) in leftover_days
-                .iter()
-                .enumerate()
-                .take(leftover_days.len().saturating_sub(1))
-                .rev()
-            {
-                // If rollout day has more stages than others (including overhead), skip
-                if stage_groups_overheads[i] + remaining_stages_groups[i].len() > min_day_stages_count {
-                    continue;
-                }
-
-                let stage_size = std::cmp::min(
-                    MAX_ROLLOUT_STAGE_SIZE,
-                    first_stage_size_today + i + std::cmp::min(remaining_stages_groups[i].len(), 1),
-                );
-                remaining_stages_groups[i].push(RolloutStage::new_scheduled(
-                    leftover_subnets
-                        .drain(0..std::cmp::min(stage_size, leftover_subnets.len()))
-                        .map(|s| self.create_subnet_update(s, &release))
-                        .collect(),
-                    *day,
-                ));
-            }
-        }
-
-        // NNS Rollout
-        if let Some(last_day) = leftover_days.last() {
-            let nns_subnet = self
+        let schedule = RolloutState {
+            nns_subnet: self
                 .subnets
                 .values()
                 .find(|s| s.metadata.name == NNS_SUBNET_NAME)
-                .expect("No NNS subnet");
-            if !submitted_stages
+                .expect("NNS subnet should exist")
+                .principal,
+            subnets: self.subnets.values().map(|s| s.principal).collect(),
+            rollout_days: rollout_days
                 .iter()
-                .any(|s| s.updates.iter().any(|u| u.subnet_id == nns_subnet.principal))
-            {
-                remaining_stages_groups.push(vec![RolloutStage::new_scheduled(
-                    vec![self.create_subnet_update(nns_subnet, &release)],
-                    *last_day,
-                )])
-            }
+                .map(|d| RolloutDay {
+                    date: *d,
+                    rollout_stages_subnets: submitted_stages
+                        .iter()
+                        .filter(|rs| rs.start_date_time.date() == *d)
+                        .map(|rs| rs.updates.iter().map(|u| u.subnet_id).collect())
+                        .collect(),
+                })
+                .collect(),
+            date: today,
         }
+        .schedule();
 
         let stages = submitted_stages
             .into_iter()
-            .chain(remaining_stages_groups.into_iter().flatten())
+            .chain(schedule.into_iter().flat_map(|rd| {
+                rd.rollout_stages_subnets
+                    .iter()
+                    .map(|subnets| {
+                        RolloutStage::new_scheduled(
+                            subnets
+                                .iter()
+                                .map(|s| {
+                                    self.create_subnet_update(
+                                        self.subnets.get(s).expect("subnet should exist"),
+                                        &release,
+                                    )
+                                })
+                                .collect(),
+                            rd.date,
+                        )
+                    })
+                    .collect::<Vec<_>>()
+            }))
             .filter(|s| !s.updates.is_empty())
             .collect::<Vec<_>>();
+
         Ok(Rollout {
             latest_release: release,
-            state: if stages.iter().all(|s| {
+            status: if stages.iter().all(|s| {
                 s.updates
                     .iter()
                     .all(|u| matches!(u.state, SubnetUpdateState::Scheduled))
             }) {
-                RolloutState::Scheduled
+                RolloutStatus::Scheduled
             } else if stages
                 .iter()
                 .all(|s| s.updates.iter().all(|u| matches!(u.state, SubnetUpdateState::Complete)))
             {
-                RolloutState::Complete
+                RolloutStatus::Complete
             } else {
-                RolloutState::Active
+                RolloutStatus::Active
             },
             stages,
         })
@@ -476,6 +408,7 @@ impl RolloutBuilder {
         Ok(stages)
     }
 
+    // Returns available rollout days. Always return at least 2 available days
     fn rollout_days(&self, start: Date<Utc>) -> Vec<Date<Utc>> {
         let candidates = (0..14)
             .into_iter()
@@ -494,5 +427,907 @@ impl RolloutBuilder {
             .unwrap()
             .to_vec()
         // TODO: exclude days based on config
+    }
+}
+
+pub struct RolloutState {
+    pub nns_subnet: PrincipalId,
+    pub subnets: Vec<PrincipalId>,
+    pub rollout_days: Vec<RolloutDay>,
+    pub date: Date<Utc>,
+}
+
+#[derive(Clone, Eq, PartialEq, Debug)]
+pub struct RolloutDay {
+    pub date: Date<Utc>,
+    pub rollout_stages_subnets: Vec<Vec<PrincipalId>>,
+}
+
+impl RolloutState {
+    pub fn schedule(&self) -> Vec<RolloutDay> {
+        let mut remaining_rollout_days = self
+            .rollout_days
+            .clone()
+            .into_iter()
+            .filter(|rd| rd.date >= self.date)
+            .collect::<Vec<_>>()
+            // Exclude NNS rollout day
+            .split_last()
+            .expect("should contain at least two days")
+            .1
+            .to_vec();
+
+        let mut leftover_subnets = self
+            .subnets
+            .iter()
+            .filter(|s| {
+                **s != self.nns_subnet
+                    && !self
+                        .rollout_days
+                        .iter()
+                        .flat_map(|rd| rd.rollout_stages_subnets.iter().flatten())
+                        .contains(*s)
+            })
+            .cloned()
+            .collect::<Vec<_>>();
+
+        let mut remaining_rollout_days_overheads = remaining_rollout_days.iter().map(|_| 0_usize).collect::<Vec<_>>();
+        if leftover_subnets.is_empty() {
+            // No app subnet rollouts are left
+            remaining_rollout_days = vec![];
+            remaining_rollout_days_overheads = vec![];
+        } else {
+            // Increase overhead for last day of app subnet rollout
+            *remaining_rollout_days_overheads
+                .last_mut()
+                .expect("should contain at least one day") += 2;
+
+            // Clear submitted subnets and set overhead instead by the number of already submitted stages
+            remaining_rollout_days_overheads[0] += remaining_rollout_days[0].rollout_stages_subnets.len();
+            remaining_rollout_days[0].rollout_stages_subnets = vec![];
+        }
+
+        // Set overhead to 1 for the first day of the rollout since previous rollout usually finishes on the same day
+        if self
+            .rollout_days
+            .iter()
+            // Find the the first rollout day
+            .find(|rd| !rd.rollout_stages_subnets.is_empty())
+            // Check if it's the same day as the first day in the schedule
+            .map(|rd| {
+                remaining_rollout_days
+                    .first()
+                    .map(|first| rd.date == first.date)
+                    // If remaining rollout days are empty, then the app subnets rollout is finished
+                    .unwrap_or(false)
+            })
+            // If no day is found, then the rollout didn't start yet
+            .unwrap_or(true)
+        {
+            remaining_rollout_days_overheads[0] += 1;
+        }
+
+        // Number of the subnets rolled out for the first stage of the current date of the rollout
+        let current_day_first_stage_size = self
+            .rollout_days
+            .iter()
+            .filter(|rd| !rd.rollout_stages_subnets.is_empty())
+            .map(|s| s.date)
+            .filter(|d| *d != self.date)
+            .unique()
+            .count()
+            + 1;
+
+        const MAX_ROLLOUT_STAGE_SIZE: usize = 4;
+        let mut rollout_stages_sizes: Vec<Vec<usize>> =
+            remaining_rollout_days.iter().map(|_| vec![]).collect::<Vec<_>>();
+        let mut leftover_subnets_count = leftover_subnets.len();
+        while leftover_subnets_count != 0 {
+            let min_day_stages_count = rollout_stages_sizes
+                .iter()
+                .enumerate()
+                .map(|(i, day)| day.len() + remaining_rollout_days_overheads[i])
+                .min()
+                .unwrap_or_default();
+            for (i, day) in remaining_rollout_days.iter().enumerate().rev() {
+                // If rollout day has more stages than others (including overhead), skip
+                if remaining_rollout_days_overheads[i] + rollout_stages_sizes[i].len() > min_day_stages_count {
+                    continue;
+                }
+
+                if leftover_subnets_count == 0 {
+                    break;
+                }
+
+                let stage_size = std::cmp::min(
+                    std::cmp::min(
+                        // Limit the stage size to the number of
+                        MAX_ROLLOUT_STAGE_SIZE,
+                        current_day_first_stage_size + i
+                        // Add 1 if not first stage of the day 
+                        + std::cmp::min(self.rollout_days.iter().find(|rd| rd.date == day.date).expect("rollout day should exist").rollout_stages_subnets.len() + rollout_stages_sizes[i].len(), 1),
+                    ),
+                    // Limit the stage size to the number of available subnets
+                    leftover_subnets_count,
+                );
+                leftover_subnets_count -= stage_size;
+                rollout_stages_sizes[i].push(stage_size)
+            }
+        }
+
+        for (i, sizes) in rollout_stages_sizes.iter().enumerate() {
+            let mut rollout_date = remaining_rollout_days[0].date;
+            for _ in 0..i {
+                rollout_date = rollout_date.succ();
+            }
+            remaining_rollout_days.push(RolloutDay {
+                date: rollout_date,
+                rollout_stages_subnets: sizes
+                    .iter()
+                    .map(|size| leftover_subnets.drain(0..*size).collect())
+                    .collect(),
+            });
+        }
+
+        // NNS Rollout
+        if !self
+            .rollout_days
+            .iter()
+            .flat_map(|rd| rd.rollout_stages_subnets.iter().flatten())
+            .contains(&self.nns_subnet)
+        {
+            // If there's already a rollout submitted or sheduled on the current date of the rollout
+            // submit the NNS proposal on the very last day of available dates
+            let last_day = if self
+                .rollout_days
+                .iter()
+                .chain(remaining_rollout_days.iter())
+                .rev()
+                .find(|rd| !rd.rollout_stages_subnets.is_empty())
+                .map(|rd| rd.date >= self.date)
+                .unwrap_or(true)
+            {
+                self.rollout_days.last().expect("should have at least one day").date
+            // Otherwise, rollout should have 2 complete empty days available left, and then use the first
+            // one and drop the last one
+            } else {
+                self.rollout_days
+                    .iter()
+                    .rev()
+                    .nth(1)
+                    .expect("should have at least 2 days available")
+                    .date
+            };
+            remaining_rollout_days.push(RolloutDay {
+                rollout_stages_subnets: vec![vec![self.nns_subnet]],
+                date: last_day,
+            })
+        }
+
+        remaining_rollout_days
+            .into_iter()
+            .filter(|rd| !rd.rollout_stages_subnets.is_empty())
+            .collect()
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use chrono::NaiveDate;
+
+    use super::*;
+
+    #[test]
+    fn test_schedule() {
+        let nns_subnet: PrincipalId =
+            PrincipalId::from_str("tdb26-jop6k-aogll-7ltgs-eruif-6kk7m-qpktf-gdiqx-mxtrf-vb5e6-eqe").unwrap();
+        let canary_subnet: PrincipalId =
+            PrincipalId::from_str("io67a-2jmkw-zup3h-snbwi-g6a5n-rm5dn-b6png-lvdpl-nqnto-yih6l-gqe").unwrap();
+        let other_subnets: &[PrincipalId] = &[
+            PrincipalId::from_str("2fq7c-slacv-26cgz-vzbx2-2jrcs-5edph-i5s2j-tck77-c3rlz-iobzx-mqe").unwrap(),
+            PrincipalId::from_str("3hhby-wmtmw-umt4t-7ieyg-bbiig-xiylg-sblrt-voxgt-bqckd-a75bf-rqe").unwrap(),
+            PrincipalId::from_str("4ecnw-byqwz-dtgss-ua2mh-pfvs7-c3lct-gtf4e-hnu75-j7eek-iifqm-sqe").unwrap(),
+            PrincipalId::from_str("4zbus-z2bmt-ilreg-xakz4-6tyre-hsqj4-slb4g-zjwqo-snjcc-iqphi-3qe").unwrap(),
+            PrincipalId::from_str("5kdm2-62fc6-fwnja-hutkz-ycsnm-4z33i-woh43-4cenu-ev7mi-gii6t-4ae").unwrap(),
+            PrincipalId::from_str("6pbhf-qzpdk-kuqbr-pklfa-5ehhf-jfjps-zsj6q-57nrl-kzhpd-mu7hc-vae").unwrap(),
+            PrincipalId::from_str("brlsh-zidhj-3yy3e-6vqbz-7xnih-xeq2l-as5oc-g32c4-i5pdn-2wwof-oae").unwrap(),
+            PrincipalId::from_str("csyj4-zmann-ys6ge-3kzi6-onexi-obayx-2fvak-zersm-euci4-6pslt-lae").unwrap(),
+            PrincipalId::from_str("cv73p-6v7zi-u67oy-7jc3h-qspsz-g5lrj-4fn7k-xrax3-thek2-sl46v-jae").unwrap(),
+            PrincipalId::from_str("e66qm-3cydn-nkf4i-ml4rb-4ro6o-srm5s-x5hwq-hnprz-3meqp-s7vks-5qe").unwrap(),
+            PrincipalId::from_str("ejbmu-grnam-gk6ol-6irwa-htwoj-7ihfl-goimw-hlnvh-abms4-47v2e-zqe").unwrap(),
+            PrincipalId::from_str("eq6en-6jqla-fbu5s-daskr-h6hx2-376n5-iqabl-qgrng-gfqmv-n3yjr-mqe").unwrap(),
+            PrincipalId::from_str("fuqsr-in2lc-zbcjj-ydmcw-pzq7h-4xm2z-pto4i-dcyee-5z4rz-x63ji-nae").unwrap(),
+            PrincipalId::from_str("gmq5v-hbozq-uui6y-o55wc-ihop3-562wb-3qspg-nnijg-npqp5-he3cj-3ae").unwrap(),
+            PrincipalId::from_str("jtdsg-3h6gi-hs7o5-z2soi-43w3z-soyl3-ajnp3-ekni5-sw553-5kw67-nqe").unwrap(),
+            PrincipalId::from_str("k44fs-gm4pv-afozh-rs7zw-cg32n-u7xov-xqyx3-2pw5q-eucnu-cosd4-uqe").unwrap(),
+            PrincipalId::from_str("lhg73-sax6z-2zank-6oer2-575lz-zgbxx-ptudx-5korm-fy7we-kh4hl-pqe").unwrap(),
+            PrincipalId::from_str("lspz2-jx4pu-k3e7p-znm7j-q4yum-ork6e-6w4q6-pijwq-znehu-4jabe-kqe").unwrap(),
+            PrincipalId::from_str("mpubz-g52jc-grhjo-5oze5-qcj74-sex34-omprz-ivnsm-qvvhr-rfzpv-vae").unwrap(),
+            PrincipalId::from_str("nl6hn-ja4yw-wvmpy-3z2jx-ymc34-pisx3-3cp5z-3oj4a-qzzny-jbsv3-4qe").unwrap(),
+            PrincipalId::from_str("o3ow2-2ipam-6fcjo-3j5vt-fzbge-2g7my-5fz2m-p4o2t-dwlc4-gt2q7-5ae").unwrap(),
+            PrincipalId::from_str("opn46-zyspe-hhmyp-4zu6u-7sbrh-dok77-m7dch-im62f-vyimr-a3n2c-4ae").unwrap(),
+            PrincipalId::from_str("pae4o-o6dxf-xki7q-ezclx-znyd6-fnk6w-vkv5z-5lfwh-xym2i-otrrw-fqe").unwrap(),
+            PrincipalId::from_str("pjljw-kztyl-46ud4-ofrj6-nzkhm-3n4nt-wi3jt-ypmav-ijqkt-gjf66-uae").unwrap(),
+            PrincipalId::from_str("qdvhd-os4o2-zzrdw-xrcv4-gljou-eztdp-bj326-e6jgr-tkhuc-ql6v2-yqe").unwrap(),
+            PrincipalId::from_str("qxesv-zoxpm-vc64m-zxguk-5sj74-35vrb-tbgwg-pcird-5gr26-62oxl-cae").unwrap(),
+            PrincipalId::from_str("shefu-t3kr5-t5q3w-mqmdq-jabyv-vyvtf-cyyey-3kmo4-toyln-emubw-4qe").unwrap(),
+            PrincipalId::from_str("snjp4-xlbw4-mnbog-ddwy6-6ckfd-2w5a2-eipqo-7l436-pxqkh-l6fuv-vae").unwrap(),
+            PrincipalId::from_str("uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe").unwrap(),
+            PrincipalId::from_str("w4asl-4nmyj-qnr7c-6cqq4-tkwmt-o26di-iupkq-vx4kt-asbrx-jzuxh-4ae").unwrap(),
+            PrincipalId::from_str("w4rem-dv5e3-widiz-wbpea-kbttk-mnzfm-tzrc7-svcj3-kbxyb-zamch-hqe").unwrap(),
+            PrincipalId::from_str("x33ed-h457x-bsgyx-oqxqf-6pzwv-wkhzr-rm2j3-npodi-purzm-n66cg-gae").unwrap(),
+            PrincipalId::from_str("yinp6-35cfo-wgcd2-oc4ty-2kqpf-t4dul-rfk33-fsq3r-mfmua-m2ngh-jqe").unwrap(),
+        ];
+        let subnets = [&[canary_subnet], other_subnets, &[nns_subnet]].concat();
+
+        // Monday
+        let week_1_monday = Date::<Utc>::from_utc(NaiveDate::from_ymd(2022, 8, 8), Utc);
+        let week_1_tuesday = week_1_monday.succ();
+        let week_1_wednesday = week_1_tuesday.succ();
+        let week_1_thursday = week_1_wednesday.succ();
+        let week_1_friday = week_1_thursday.succ();
+        let week_1_saturday = week_1_friday.succ();
+        let week_1_sunday = week_1_saturday.succ();
+        let week_2_monday = week_1_sunday.succ();
+        let week_2_tuesday = week_2_monday.succ();
+        let week_2_wednesday = week_2_tuesday.succ();
+
+        // Rollout not yet started
+        let state = RolloutState {
+            nns_subnet,
+            subnets: subnets.clone(),
+            rollout_days: vec![
+                RolloutDay {
+                    date: week_1_monday,
+                    rollout_stages_subnets: vec![],
+                },
+                RolloutDay {
+                    date: week_1_tuesday,
+                    rollout_stages_subnets: vec![],
+                },
+                RolloutDay {
+                    date: week_1_wednesday,
+                    rollout_stages_subnets: vec![],
+                },
+                RolloutDay {
+                    date: week_1_thursday,
+                    rollout_stages_subnets: vec![],
+                },
+                RolloutDay {
+                    date: week_1_friday,
+                    rollout_stages_subnets: vec![],
+                },
+                RolloutDay {
+                    date: week_2_monday,
+                    rollout_stages_subnets: vec![],
+                },
+            ],
+            date: week_1_monday,
+        };
+
+        let want = vec![
+            RolloutDay {
+                date: week_1_monday,
+                rollout_stages_subnets: vec![[canary_subnet].to_vec()],
+            },
+            RolloutDay {
+                date: week_1_tuesday,
+                rollout_stages_subnets: vec![subnets[1..3].to_vec(), subnets[3..6].to_vec(), subnets[6..7].to_vec()],
+            },
+            RolloutDay {
+                date: week_1_wednesday,
+                rollout_stages_subnets: vec![
+                    subnets[7..10].to_vec(),
+                    subnets[10..14].to_vec(),
+                    subnets[14..18].to_vec(),
+                ],
+            },
+            RolloutDay {
+                date: week_1_thursday,
+                rollout_stages_subnets: vec![
+                    subnets[18..22].to_vec(),
+                    subnets[22..26].to_vec(),
+                    subnets[26..30].to_vec(),
+                ],
+            },
+            RolloutDay {
+                date: week_1_friday,
+                rollout_stages_subnets: vec![subnets[30..34].to_vec()],
+            },
+            RolloutDay {
+                date: week_2_monday,
+                rollout_stages_subnets: vec![vec![nns_subnet]],
+            },
+        ];
+
+        assert_eq!(want, state.schedule(), "rollout started");
+
+        // Canary submitted
+        let state = RolloutState {
+            nns_subnet,
+            subnets: subnets.clone(),
+            rollout_days: vec![
+                RolloutDay {
+                    date: week_1_monday,
+                    rollout_stages_subnets: vec![vec![canary_subnet]],
+                },
+                RolloutDay {
+                    date: week_1_tuesday,
+                    rollout_stages_subnets: vec![],
+                },
+                RolloutDay {
+                    date: week_1_wednesday,
+                    rollout_stages_subnets: vec![],
+                },
+                RolloutDay {
+                    date: week_1_thursday,
+                    rollout_stages_subnets: vec![],
+                },
+                RolloutDay {
+                    date: week_1_friday,
+                    rollout_stages_subnets: vec![],
+                },
+                RolloutDay {
+                    date: week_2_monday,
+                    rollout_stages_subnets: vec![],
+                },
+            ],
+            date: week_1_monday,
+        };
+
+        let want = vec![
+            RolloutDay {
+                date: week_1_tuesday,
+                rollout_stages_subnets: vec![subnets[1..3].to_vec(), subnets[3..6].to_vec(), subnets[6..7].to_vec()],
+            },
+            RolloutDay {
+                date: week_1_wednesday,
+                rollout_stages_subnets: vec![
+                    subnets[7..10].to_vec(),
+                    subnets[10..14].to_vec(),
+                    subnets[14..18].to_vec(),
+                ],
+            },
+            RolloutDay {
+                date: week_1_thursday,
+                rollout_stages_subnets: vec![
+                    subnets[18..22].to_vec(),
+                    subnets[22..26].to_vec(),
+                    subnets[26..30].to_vec(),
+                ],
+            },
+            RolloutDay {
+                date: week_1_friday,
+                rollout_stages_subnets: vec![subnets[30..34].to_vec()],
+            },
+            RolloutDay {
+                date: week_2_monday,
+                rollout_stages_subnets: vec![vec![nns_subnet]],
+            },
+        ];
+
+        assert_eq!(want, state.schedule(), "canary submitted");
+
+        // First stage of the day submitted
+        let state = RolloutState {
+            nns_subnet,
+            subnets: subnets.clone(),
+            rollout_days: vec![
+                RolloutDay {
+                    date: week_1_monday,
+                    rollout_stages_subnets: vec![vec![canary_subnet]],
+                },
+                RolloutDay {
+                    date: week_1_tuesday,
+                    rollout_stages_subnets: vec![subnets[1..3].to_vec()],
+                },
+                RolloutDay {
+                    date: week_1_wednesday,
+                    rollout_stages_subnets: vec![],
+                },
+                RolloutDay {
+                    date: week_1_thursday,
+                    rollout_stages_subnets: vec![],
+                },
+                RolloutDay {
+                    date: week_1_friday,
+                    rollout_stages_subnets: vec![],
+                },
+                RolloutDay {
+                    date: week_2_monday,
+                    rollout_stages_subnets: vec![],
+                },
+            ],
+            date: week_1_tuesday,
+        };
+
+        let want = vec![
+            RolloutDay {
+                date: week_1_tuesday,
+                rollout_stages_subnets: vec![subnets[3..6].to_vec(), subnets[6..7].to_vec()],
+            },
+            RolloutDay {
+                date: week_1_wednesday,
+                rollout_stages_subnets: vec![
+                    subnets[7..10].to_vec(),
+                    subnets[10..14].to_vec(),
+                    subnets[14..18].to_vec(),
+                ],
+            },
+            RolloutDay {
+                date: week_1_thursday,
+                rollout_stages_subnets: vec![
+                    subnets[18..22].to_vec(),
+                    subnets[22..26].to_vec(),
+                    subnets[26..30].to_vec(),
+                ],
+            },
+            RolloutDay {
+                date: week_1_friday,
+                rollout_stages_subnets: vec![subnets[30..34].to_vec()],
+            },
+            RolloutDay {
+                date: week_2_monday,
+                rollout_stages_subnets: vec![vec![nns_subnet]],
+            },
+        ];
+
+        assert_eq!(want, state.schedule(), "tuesday rollout under way");
+
+        // Rollout lagging behind #1
+        let state = RolloutState {
+            nns_subnet,
+            subnets: subnets.clone(),
+            rollout_days: vec![
+                RolloutDay {
+                    date: week_1_monday,
+                    rollout_stages_subnets: vec![vec![canary_subnet]],
+                },
+                RolloutDay {
+                    date: week_1_tuesday,
+                    rollout_stages_subnets: vec![
+                        subnets[1..3].to_vec(),
+                        subnets[3..6].to_vec(),
+                        subnets[6..7].to_vec(),
+                    ],
+                },
+                RolloutDay {
+                    date: week_1_wednesday,
+                    rollout_stages_subnets: vec![subnets[7..10].to_vec()],
+                },
+                RolloutDay {
+                    date: week_1_thursday,
+                    rollout_stages_subnets: vec![],
+                },
+                RolloutDay {
+                    date: week_1_friday,
+                    rollout_stages_subnets: vec![],
+                },
+                RolloutDay {
+                    date: week_2_monday,
+                    rollout_stages_subnets: vec![],
+                },
+            ],
+            date: week_1_thursday,
+        };
+
+        let want = vec![
+            RolloutDay {
+                date: week_1_thursday,
+                rollout_stages_subnets: vec![
+                    subnets[10..14].to_vec(),
+                    subnets[14..18].to_vec(),
+                    subnets[18..22].to_vec(),
+                    subnets[22..26].to_vec(),
+                ],
+            },
+            RolloutDay {
+                date: week_1_friday,
+                rollout_stages_subnets: vec![subnets[26..30].to_vec(), subnets[30..34].to_vec()],
+            },
+            RolloutDay {
+                date: week_2_monday,
+                rollout_stages_subnets: vec![vec![nns_subnet]],
+            },
+        ];
+
+        assert_eq!(want, state.schedule(), "rollout lagging behind");
+
+        // 4 days in the week to complete the rollout
+        let state = RolloutState {
+            nns_subnet,
+            subnets: subnets.clone(),
+            rollout_days: vec![
+                RolloutDay {
+                    date: week_1_tuesday,
+                    rollout_stages_subnets: vec![],
+                },
+                RolloutDay {
+                    date: week_1_wednesday,
+                    rollout_stages_subnets: vec![],
+                },
+                RolloutDay {
+                    date: week_1_thursday,
+                    rollout_stages_subnets: vec![],
+                },
+                RolloutDay {
+                    date: week_1_friday,
+                    rollout_stages_subnets: vec![],
+                },
+                RolloutDay {
+                    date: week_2_monday,
+                    rollout_stages_subnets: vec![],
+                },
+            ],
+            date: week_1_tuesday,
+        };
+
+        let want = vec![
+            RolloutDay {
+                date: week_1_tuesday,
+                rollout_stages_subnets: vec![subnets[0..1].to_vec(), subnets[1..3].to_vec()],
+            },
+            RolloutDay {
+                date: week_1_wednesday,
+                rollout_stages_subnets: vec![subnets[3..5].to_vec(), subnets[5..8].to_vec(), subnets[8..11].to_vec()],
+            },
+            RolloutDay {
+                date: week_1_thursday,
+                rollout_stages_subnets: vec![
+                    subnets[11..14].to_vec(),
+                    subnets[14..18].to_vec(),
+                    subnets[18..22].to_vec(),
+                    subnets[22..26].to_vec(),
+                ],
+            },
+            RolloutDay {
+                date: week_1_friday,
+                rollout_stages_subnets: vec![subnets[26..30].to_vec(), subnets[30..34].to_vec()],
+            },
+            RolloutDay {
+                date: week_2_monday,
+                rollout_stages_subnets: vec![vec![nns_subnet]],
+            },
+        ];
+
+        assert_eq!(want, state.schedule(), "4-day rollout");
+
+        // 3 days in the week to complete the rollout, Friday skipped
+        let state = RolloutState {
+            nns_subnet,
+            subnets: subnets.clone(),
+            rollout_days: vec![
+                RolloutDay {
+                    date: week_1_tuesday,
+                    rollout_stages_subnets: vec![],
+                },
+                RolloutDay {
+                    date: week_1_wednesday,
+                    rollout_stages_subnets: vec![],
+                },
+                RolloutDay {
+                    date: week_1_thursday,
+                    rollout_stages_subnets: vec![],
+                },
+                RolloutDay {
+                    date: week_2_monday,
+                    rollout_stages_subnets: vec![],
+                },
+            ],
+            date: week_1_tuesday,
+        };
+
+        let want = vec![
+            RolloutDay {
+                date: week_1_tuesday,
+                rollout_stages_subnets: vec![
+                    subnets[0..1].to_vec(),
+                    subnets[1..3].to_vec(),
+                    subnets[3..5].to_vec(),
+                    subnets[5..7].to_vec(),
+                ],
+            },
+            RolloutDay {
+                date: week_1_wednesday,
+                rollout_stages_subnets: vec![
+                    subnets[7..9].to_vec(),
+                    subnets[9..12].to_vec(),
+                    subnets[12..15].to_vec(),
+                    subnets[15..18].to_vec(),
+                    subnets[18..21].to_vec(),
+                ],
+            },
+            RolloutDay {
+                date: week_1_thursday,
+                rollout_stages_subnets: vec![
+                    subnets[21..24].to_vec(),
+                    subnets[24..28].to_vec(),
+                    subnets[28..32].to_vec(),
+                    subnets[32..34].to_vec(),
+                ],
+            },
+            RolloutDay {
+                date: week_2_monday,
+                rollout_stages_subnets: vec![vec![nns_subnet]],
+            },
+        ];
+
+        assert_eq!(want, state.schedule(), "3-day rollout");
+
+        // Saturday after the rollout is started, but app rollout not yet complete
+        let state = RolloutState {
+            nns_subnet,
+            subnets: subnets.clone(),
+            rollout_days: vec![
+                RolloutDay {
+                    date: week_1_monday,
+                    rollout_stages_subnets: vec![vec![canary_subnet]],
+                },
+                RolloutDay {
+                    date: week_1_tuesday,
+                    rollout_stages_subnets: vec![subnets[1..3].to_vec()],
+                },
+                RolloutDay {
+                    date: week_1_wednesday,
+                    rollout_stages_subnets: vec![],
+                },
+                RolloutDay {
+                    date: week_1_thursday,
+                    rollout_stages_subnets: vec![],
+                },
+                RolloutDay {
+                    date: week_1_friday,
+                    rollout_stages_subnets: vec![],
+                },
+                RolloutDay {
+                    date: week_2_monday,
+                    rollout_stages_subnets: vec![],
+                },
+                RolloutDay {
+                    date: week_2_tuesday,
+                    rollout_stages_subnets: vec![],
+                },
+            ],
+            date: week_1_saturday,
+        };
+
+        let want = vec![
+            RolloutDay {
+                date: week_2_monday,
+                rollout_stages_subnets: vec![
+                    subnets[3..6].to_vec(),
+                    subnets[6..10].to_vec(),
+                    subnets[10..14].to_vec(),
+                    subnets[14..18].to_vec(),
+                    subnets[18..22].to_vec(),
+                    subnets[22..26].to_vec(),
+                    subnets[26..30].to_vec(),
+                    subnets[30..34].to_vec(),
+                ],
+            },
+            RolloutDay {
+                date: week_2_tuesday,
+                rollout_stages_subnets: vec![vec![nns_subnet]],
+            },
+        ];
+
+        assert_eq!(want, state.schedule(), "rollout lagging behind on saturday");
+
+        // Sunday after the rollout is started, and app rollout is complete
+        let state = RolloutState {
+            nns_subnet,
+            subnets: subnets.clone(),
+            rollout_days: vec![
+                RolloutDay {
+                    date: week_1_monday,
+                    rollout_stages_subnets: vec![vec![canary_subnet]],
+                },
+                RolloutDay {
+                    date: week_1_tuesday,
+                    rollout_stages_subnets: vec![subnets[1..3].to_vec()],
+                },
+                RolloutDay {
+                    date: week_1_wednesday,
+                    rollout_stages_subnets: vec![
+                        subnets[3..6].to_vec(),
+                        subnets[6..10].to_vec(),
+                        subnets[10..14].to_vec(),
+                        subnets[14..18].to_vec(),
+                        subnets[18..22].to_vec(),
+                        subnets[22..26].to_vec(),
+                        subnets[26..30].to_vec(),
+                        subnets[30..34].to_vec(),
+                    ],
+                },
+                RolloutDay {
+                    date: week_1_thursday,
+                    rollout_stages_subnets: vec![],
+                },
+                RolloutDay {
+                    date: week_1_friday,
+                    rollout_stages_subnets: vec![],
+                },
+                RolloutDay {
+                    date: week_2_monday,
+                    rollout_stages_subnets: vec![],
+                },
+                RolloutDay {
+                    date: week_2_tuesday,
+                    rollout_stages_subnets: vec![],
+                },
+            ],
+            date: week_1_sunday,
+        };
+
+        let want = vec![RolloutDay {
+            date: week_2_monday,
+            rollout_stages_subnets: vec![vec![nns_subnet]],
+        }];
+
+        assert_eq!(
+            want,
+            state.schedule(),
+            "sunday, rollout should complete next day (monday)"
+        );
+
+        // Only NNS is left to deploy today
+        let state = RolloutState {
+            nns_subnet,
+            subnets: subnets.clone(),
+            rollout_days: vec![
+                RolloutDay {
+                    date: week_1_monday,
+                    rollout_stages_subnets: vec![vec![canary_subnet]],
+                },
+                RolloutDay {
+                    date: week_1_tuesday,
+                    rollout_stages_subnets: vec![subnets[1..3].to_vec()],
+                },
+                RolloutDay {
+                    date: week_1_wednesday,
+                    rollout_stages_subnets: vec![
+                        subnets[3..6].to_vec(),
+                        subnets[6..10].to_vec(),
+                        subnets[10..14].to_vec(),
+                        subnets[14..18].to_vec(),
+                        subnets[18..22].to_vec(),
+                        subnets[22..26].to_vec(),
+                        subnets[26..30].to_vec(),
+                        subnets[30..34].to_vec(),
+                    ],
+                },
+                RolloutDay {
+                    date: week_1_thursday,
+                    rollout_stages_subnets: vec![],
+                },
+                RolloutDay {
+                    date: week_1_friday,
+                    rollout_stages_subnets: vec![],
+                },
+                RolloutDay {
+                    date: week_2_monday,
+                    rollout_stages_subnets: vec![],
+                },
+                RolloutDay {
+                    date: week_2_tuesday,
+                    rollout_stages_subnets: vec![],
+                },
+            ],
+            date: week_2_monday,
+        };
+
+        let want = vec![RolloutDay {
+            date: week_2_monday,
+            rollout_stages_subnets: vec![vec![nns_subnet]],
+        }];
+
+        assert_eq!(want, state.schedule(), "monday, rollout should complete today");
+
+        // NNS subnet update is submitted, so the rollout schedule is empty
+        let state = RolloutState {
+            nns_subnet,
+            subnets: subnets.clone(),
+            rollout_days: vec![
+                RolloutDay {
+                    date: week_1_monday,
+                    rollout_stages_subnets: vec![vec![canary_subnet]],
+                },
+                RolloutDay {
+                    date: week_1_tuesday,
+                    rollout_stages_subnets: vec![subnets[1..3].to_vec()],
+                },
+                RolloutDay {
+                    date: week_1_wednesday,
+                    rollout_stages_subnets: vec![
+                        subnets[3..6].to_vec(),
+                        subnets[6..10].to_vec(),
+                        subnets[10..14].to_vec(),
+                        subnets[14..18].to_vec(),
+                        subnets[18..22].to_vec(),
+                        subnets[22..26].to_vec(),
+                        subnets[26..30].to_vec(),
+                        subnets[30..34].to_vec(),
+                    ],
+                },
+                RolloutDay {
+                    date: week_1_thursday,
+                    rollout_stages_subnets: vec![],
+                },
+                RolloutDay {
+                    date: week_1_friday,
+                    rollout_stages_subnets: vec![],
+                },
+                RolloutDay {
+                    date: week_2_monday,
+                    rollout_stages_subnets: vec![vec![nns_subnet]],
+                },
+                RolloutDay {
+                    date: week_2_tuesday,
+                    rollout_stages_subnets: vec![],
+                },
+            ],
+            date: week_2_monday,
+        };
+
+        let want: Vec<RolloutDay> = vec![];
+
+        assert_eq!(want, state.schedule(), "rollout complete");
+
+        // Second week Monday is skipped
+        let state = RolloutState {
+            nns_subnet,
+            subnets: subnets.clone(),
+            rollout_days: vec![
+                RolloutDay {
+                    date: week_1_monday,
+                    rollout_stages_subnets: vec![vec![canary_subnet]],
+                },
+                RolloutDay {
+                    date: week_1_tuesday,
+                    rollout_stages_subnets: vec![subnets[1..3].to_vec()],
+                },
+                RolloutDay {
+                    date: week_1_wednesday,
+                    rollout_stages_subnets: vec![
+                        subnets[3..6].to_vec(),
+                        subnets[6..10].to_vec(),
+                        subnets[10..14].to_vec(),
+                        subnets[14..18].to_vec(),
+                        subnets[18..22].to_vec(),
+                        subnets[22..26].to_vec(),
+                        subnets[26..30].to_vec(),
+                        subnets[30..34].to_vec(),
+                    ],
+                },
+                RolloutDay {
+                    date: week_1_thursday,
+                    rollout_stages_subnets: vec![],
+                },
+                RolloutDay {
+                    date: week_1_friday,
+                    rollout_stages_subnets: vec![],
+                },
+                RolloutDay {
+                    date: week_2_tuesday,
+                    rollout_stages_subnets: vec![],
+                },
+                RolloutDay {
+                    date: week_2_wednesday,
+                    rollout_stages_subnets: vec![],
+                },
+            ],
+            date: week_1_sunday,
+        };
+
+        let want = vec![RolloutDay {
+            date: week_2_tuesday,
+            rollout_stages_subnets: vec![vec![nns_subnet]],
+        }];
+
+        assert_eq!(
+            want,
+            state.schedule(),
+            "monday is skipped, nns rolls out day after tomorrow"
+        );
     }
 }
