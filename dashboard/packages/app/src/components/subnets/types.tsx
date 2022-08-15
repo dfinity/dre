@@ -72,10 +72,10 @@ export interface Subnet {
 
 export type VerifiedApplication = "Fleek" | "Distrikt";
 
-export type RolloutState = "Active" | "Scheduled" | "Complete";
+export type RolloutStatus = "Active" | "Scheduled" | "Complete";
 
 export interface Rollout {
-  state: RolloutState;
+  status: RolloutStatus;
   latest_release: ReplicaRelease;
   stages: RolloutStage[];
 }

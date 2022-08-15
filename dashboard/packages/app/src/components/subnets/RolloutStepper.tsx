@@ -291,7 +291,7 @@ export default function RolloutsStepper() {
                   </Typography>
                 </Grid>
                 <Grid item>
-                  <Chip label={rollout.state} size="small" disabled={rollout.state == "Complete"} style={{ margin: 0 }} />
+                  <Chip label={rollout.status} size="small" disabled={rollout.status == "Complete"} style={{ margin: 0 }} />
                 </Grid>
               </Grid>
               <Stepper orientation="horizontal" connector={<></>} className={classes.stepper}>
