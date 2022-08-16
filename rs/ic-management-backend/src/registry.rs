@@ -562,16 +562,20 @@ impl RegistryState {
     }
 
     pub fn missing_guests(&self) -> Vec<Guest> {
-        self.guests
+        let mut missing_guests = self
+            .guests
             .clone()
             .into_iter()
             .filter(|g| {
                 !self
                     .nodes
                     .iter()
-                    .any(|(_, n)| n.hostname.clone().unwrap_or_default() == g.name)
+                    .any(|(_, n)| n.label.clone().unwrap_or_default() == g.name)
             })
-            .collect()
+            .collect::<Vec<_>>();
+        missing_guests.sort_by_key(|g| g.name.clone());
+        missing_guests.dedup_by_key(|g| g.name.clone());
+        missing_guests
     }
 
     pub fn replica_releases(&self) -> Vec<ReplicaRelease> {
