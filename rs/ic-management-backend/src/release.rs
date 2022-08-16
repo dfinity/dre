@@ -5,7 +5,7 @@ use ic_management_types::{ReplicaRelease, Subnet};
 use ic_types::PrincipalId;
 use itertools::Itertools;
 use log::info;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::str::FromStr;
 use strum_macros::{Display, EnumString};
@@ -82,10 +82,58 @@ pub enum RolloutStatus {
     Complete,
 }
 
-pub struct RolloutConfig {}
+#[derive(Deserialize)]
+pub struct RolloutConfig {
+    #[serde(with = "iso_8601_date_format")]
+    pub exclude_days: Vec<Date<Utc>>,
+}
+
+mod iso_8601_date_format {
+    use chrono::{Date, TimeZone, Utc};
+    use itertools::Itertools;
+    use serde::{self, Deserialize, Deserializer};
+
+    const FORMAT: &str = "%Y-%m-%d %H:%M:%S";
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<Vec<Date<Utc>>, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        Vec::deserialize(deserializer)?
+            .into_iter()
+            .map(|s: String| {
+                Utc.datetime_from_str(&format!("{} 00:00:00", s), FORMAT)
+                    .map_err(serde::de::Error::custom)
+                    .map(|dt| dt.date())
+            })
+            .try_collect()
+    }
+}
+
+impl RolloutConfig {
+    // Returns available rollout days. Always return at least 2 available days
+    fn rollout_days(&self, start: Date<Utc>) -> Vec<Date<Utc>> {
+        let candidates = (0..14)
+            .into_iter()
+            .map(|i| {
+                let mut d = start;
+                for _ in 0..i {
+                    d = d.succ();
+                }
+                d
+            })
+            .filter(|d| d.weekday().number_from_monday() < Weekday::Sat.number_from_monday())
+            .filter(|d| !self.exclude_days.contains(d))
+            .collect::<Vec<_>>();
+        candidates
+            .split_inclusive(|p| p.iso_week().week() > start.iso_week().week() && *p > Utc::now().date())
+            .next()
+            .unwrap()
+            .to_vec()
+    }
+}
 
 pub struct RolloutBuilder {
-    pub config: RolloutConfig,
     pub proposal_agent: ProposalAgent,
     pub prometheus_client: prometheus_http_query::Client,
     pub subnets: HashMap<PrincipalId, Subnet>,
@@ -135,9 +183,11 @@ impl RolloutBuilder {
         release: ReplicaRelease,
         subnet_update_proposals: Vec<SubnetUpdateProposal>,
     ) -> Result<Rollout> {
+        let config: RolloutConfig =
+            serde_yaml::from_slice(include_bytes!("../config/releases/default.yaml")).expect("invalid config");
         let submitted_stages = self.stages_from_proposals(&release, subnet_update_proposals).await?;
         let today = Utc::now().date();
-        let rollout_days = self.rollout_days(
+        let rollout_days = config.rollout_days(
             submitted_stages
                 .first()
                 .map(|s| s.start_date_time.date())
@@ -406,27 +456,6 @@ impl RolloutBuilder {
                 .any(|u| !matches!(u.state, SubnetUpdateState::Complete));
         }
         Ok(stages)
-    }
-
-    // Returns available rollout days. Always return at least 2 available days
-    fn rollout_days(&self, start: Date<Utc>) -> Vec<Date<Utc>> {
-        let candidates = (0..14)
-            .into_iter()
-            .map(|i| {
-                let mut d = start;
-                for _ in 0..i {
-                    d = d.succ();
-                }
-                d
-            })
-            .filter(|d| d.weekday().number_from_monday() < Weekday::Sat.number_from_monday())
-            .collect::<Vec<_>>();
-        candidates
-            .split_inclusive(|p| p.iso_week().week() > start.iso_week().week() && *p > Utc::now().date())
-            .next()
-            .unwrap()
-            .to_vec()
-        // TODO: exclude days based on config
     }
 }
 
