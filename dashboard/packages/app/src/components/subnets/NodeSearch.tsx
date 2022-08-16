@@ -145,7 +145,7 @@ export default function NodeSearch({ onSearchChange, expand }: { onSearchChange:
         principal: "",
         ip_addr: g.ipv6,
         operator: {} as Operator,
-        hostname: g.name,
+        label: g.name,
         dfinity_owned: g.dfinity_owned,
     } as Node))].map(n => ({
         subnetDetailed: subnets.find(s => s.nodes.find(sn => sn.principal == n.principal)),
