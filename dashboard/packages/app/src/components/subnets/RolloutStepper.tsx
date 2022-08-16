@@ -216,7 +216,7 @@ const VersionDistribution = ({ subnets }: { subnets: Subnet[] }) => {
                   <Link
                     target="_blank"
                     color="textPrimary"
-                    href={`https://github.com/dfinity/ic/commits/${v}`}
+                    href={`https://dashboard.internetcomputer.org/release/${v}`}
                   >
                     {v.substring(0, 7)}
                   </Link>
