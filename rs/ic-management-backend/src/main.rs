@@ -15,7 +15,7 @@ use ic_registry_local_store::{Changelog, ChangelogEntry, KeyMutation, LocalStore
 use registry_canister::mutations::common::decode_registry_value;
 mod gitlab;
 mod health;
-use crate::release::{RolloutBuilder, RolloutConfig};
+use crate::release::{RolloutBuilder};
 use ::gitlab::{AsyncGitlab, GitlabBuilder};
 use futures::TryFutureExt;
 use ic_interfaces::registry::{RegistryClient, RegistryValue, ZERO_REGISTRY_VERSION};
@@ -182,7 +182,6 @@ async fn rollout(registry: web::Data<Arc<RwLock<registry::RegistryState>>>) -> R
     let prometheus_client = prometheus_http_query::Client::try_from("http://prometheus.dfinity.systems:9090").unwrap();
     let network = registry.network();
     let service = RolloutBuilder {
-        config: RolloutConfig {},
         proposal_agent,
         prometheus_client,
         subnets: registry.subnets(),
