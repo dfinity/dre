@@ -56,9 +56,22 @@ git submodule foreach -q git pull --prune --force
 git submodule foreach -q git reset --hard origin/master
 ```
 
+## Installing cargo
+
+You need an installation of `rustup` and `cargo`. You can follow the instructions from https://www.rust-lang.org/tools/install
+This is typically as simple as running
+```sh
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+```
+
+Make sure you add `$HOME/.cargo/bin` to your PATH, as written in the page above.
+> In the Rust development environment, all tools are installed to the ~/.cargo/bin directory, and this is where you will find the Rust toolchain, including rustc, cargo, and rustup.
+
 # Checking
 
+To check if your Rust tooling is set up correctly, you can go to the repo root and then
 ```
+cd rs
 cargo check
 ```
 
