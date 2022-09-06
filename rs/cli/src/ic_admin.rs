@@ -458,7 +458,7 @@ async fn detect_neuron(url: url::Url) -> anyhow::Result<Option<Neuron>> {
 }
 
 impl Cli {
-    pub async fn from_opts(opts: &Opts) -> anyhow::Result<Self> {
+    pub async fn from_opts(opts: &Opts, require_neuron: bool) -> anyhow::Result<Self> {
         let nns_url = opts.network.get_url();
         let neuron = if let Some(id) = opts.neuron_id {
             Some(Neuron {
@@ -474,12 +474,14 @@ impl Cli {
                         .ok_or_else(|| anyhow::anyhow!("No valid authentication method found for neuron: {id}"))?
                 },
             })
-        } else {
+        } else if require_neuron {
             detect_neuron(nns_url.clone()).await.unwrap_or_else(|e| {
                 warn!("Failed to detect neuron: {}", e);
                 warn!("No authentication set");
                 None
             })
+        } else {
+            None
         };
         Ok(Cli {
             dry_run: opts.dry_run || neuron.is_none(),

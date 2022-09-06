@@ -201,7 +201,7 @@ impl Runner {
 
     pub async fn from_opts(cli_opts: &Opts) -> anyhow::Result<Self> {
         Ok(Self {
-            ic_admin: ic_admin::Cli::from_opts(cli_opts).await?,
+            ic_admin: ic_admin::Cli::from_opts(cli_opts, true).await?,
             dashboard_backend_client: clients::DashboardBackendClient::new(cli_opts.network.clone(), cli_opts.dev),
         })
     }
