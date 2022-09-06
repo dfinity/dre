@@ -128,12 +128,12 @@ async fn main() -> Result<(), anyhow::Error> {
             }
 
             cli::Commands::Get { args } => {
-                let ic_admin = ic_admin::Cli::from_opts(&cli_opts).await?;
+                let ic_admin = ic_admin::Cli::from_opts(&cli_opts, false).await?;
                 ic_admin.run_passthrough_get(args)
             },
 
             cli::Commands::Propose { args } => {
-                let ic_admin = ic_admin::Cli::from_opts(&cli_opts).await?;
+                let ic_admin = ic_admin::Cli::from_opts(&cli_opts, true).await?;
                 ic_admin.run_passthrough_propose(args)
             },
         }
