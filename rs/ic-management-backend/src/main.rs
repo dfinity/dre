@@ -7,6 +7,7 @@ use actix_web::dev::Service;
 use actix_web::{error, get, web, App, Error, HttpResponse, HttpServer, Responder};
 use decentralization::network::AvailableNodesQuerier;
 use dotenv::dotenv;
+use hyper::StatusCode;
 use ic_base_types::{RegistryVersion, SubnetId};
 use ic_protobuf::registry::crypto::v1::PublicKey;
 use ic_registry_client::client::ThresholdSigPublicKey;
@@ -15,7 +16,7 @@ use ic_registry_local_store::{Changelog, ChangelogEntry, KeyMutation, LocalStore
 use registry_canister::mutations::common::decode_registry_value;
 mod gitlab;
 mod health;
-use crate::release::{RolloutBuilder};
+use crate::release::RolloutBuilder;
 use ::gitlab::{AsyncGitlab, GitlabBuilder};
 use futures::TryFutureExt;
 use ic_interfaces::registry::{RegistryClient, RegistryValue, ZERO_REGISTRY_VERSION};
@@ -402,7 +403,13 @@ async fn query_facts_db_guests(gitlab_client: AsyncGitlab, network: String) -> a
             })
             .collect::<Vec<_>>()
     })
-    .map_err(|e| anyhow::anyhow!(e))
+    .or_else(|e| match e {
+        ::gitlab::api::ApiError::Gitlab { msg } if msg.starts_with(&StatusCode::NOT_FOUND.as_u16().to_string()) => {
+            warn!("No factsdb guests file found for network {network}: {msg}");
+            Ok(vec![])
+        }
+        _ => Err(anyhow::anyhow!(e)),
+    })
 }
 
 async fn poll(gitlab_client: AsyncGitlab, registry_state: Arc<RwLock<registry::RegistryState>>) {
