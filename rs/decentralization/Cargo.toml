@@ -23,8 +23,8 @@ tokio = { version = "1.2.0", features = ["full"] }
 lazy_static = "1.4.0"
 ic-management-types = { path = "../ic-management-types" }
 futures-util = "0.3.21"
-strum = "0.21"
-strum_macros = "0.21"
+strum = "0.24.1"
+strum_macros = "0.24.3"
 anyhow = "1.0.44"
 log = "0.4.14"
 tabular = "0.2"

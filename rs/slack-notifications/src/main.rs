@@ -167,7 +167,7 @@ impl ProposalPoller {
         let response = self
             .agent
             .query(
-                &ic_types::Principal::from_slice(ic_nns_constants::GOVERNANCE_CANISTER_ID.get().as_slice()),
+                &candid::Principal::from_slice(ic_nns_constants::GOVERNANCE_CANISTER_ID.get().as_slice()),
                 "get_pending_proposals",
             )
             .with_arg(candid::IDLArgs::new(&[]).to_bytes().unwrap().as_slice())

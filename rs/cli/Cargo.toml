@@ -22,8 +22,8 @@ ic-nns-governance = { git = "https://github.com/dfinity/ic.git", rev = "cfdbbf5f
 ic-canister-client = { git = "https://github.com/dfinity/ic.git", rev = "cfdbbf5fb5fdbc8f483dfd3a5f7f627b752d3156" }
 ic-sys = { git = "https://github.com/dfinity/ic.git", rev = "cfdbbf5fb5fdbc8f483dfd3a5f7f627b752d3156" }
 tokio = { version = "1.14.0", features = ["full"] }
-strum = { version = "0.23", features = ["derive"] }
-strum_macros = "0.23"
+strum = { version = "0.24.1", features = ["derive"] }
+strum_macros = "0.24.3"
 flate2 = "1.0.22"
 dirs = "4.0"
 decentralization = { path = "../decentralization" }
@@ -35,7 +35,7 @@ keyring = "1.1.2"
 cryptoki = "0.3.0"
 candid = "0.7.15"
 url = "2.2.2"
-clap-num = "0.2.0"
+clap-num = "1.0.0"
 
 [dev-dependencies]
 tempfile = "3.3.0"
