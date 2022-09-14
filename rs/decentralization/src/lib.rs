@@ -82,7 +82,7 @@ impl Display for SubnetChangeResponse {
                 let after = after_individual.get(k).unwrap();
                 let output = format!(
                     "{}: {:.2} -> {:.2}  {:>7}",
-                    k.to_string(),
+                    k,
                     before,
                     after,
                     format_args!("({:+.0}%)", ((after - before) / before) * 100.)

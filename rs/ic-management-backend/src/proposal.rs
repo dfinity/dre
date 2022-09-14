@@ -265,7 +265,7 @@ impl ProposalAgent {
         Decode!(
             self.agent
                 .query(
-                    &ic_types_old::Principal::from_slice(ic_nns_constants::GOVERNANCE_CANISTER_ID.get().as_slice(),),
+                    &candid::Principal::from_slice(ic_nns_constants::GOVERNANCE_CANISTER_ID.get().as_slice(),),
                     "list_proposals",
                 )
                 .with_arg(

@@ -8,10 +8,10 @@ use std::fmt::{Debug, Display, Formatter};
 use std::iter::{FromIterator, IntoIterator};
 use std::str::FromStr;
 use strum::VariantNames;
-use strum_macros::{EnumString, EnumVariantNames, ToString};
+use strum_macros::{Display, EnumString, EnumVariantNames};
 
 #[derive(
-    ToString, EnumString, EnumVariantNames, Hash, Eq, PartialEq, Ord, PartialOrd, Clone, Serialize, Deserialize, Debug,
+    Display, EnumString, EnumVariantNames, Hash, Eq, PartialEq, Ord, PartialOrd, Clone, Serialize, Deserialize, Debug,
 )]
 #[strum(serialize_all = "snake_case")]
 #[serde(rename_all = "snake_case")]
