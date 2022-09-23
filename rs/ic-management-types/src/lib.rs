@@ -329,7 +329,7 @@ impl FromStr for Network {
 impl Network {
     pub fn get_url(&self) -> Url {
         match self {
-            Network::Mainnet => Url::from_str("https://nns.ic0.app").unwrap(),
+            Network::Mainnet => Url::from_str("https://ic0.app").unwrap(),
             Network::Staging => Url::from_str("https://staging.release.dfinity.network").unwrap(),
             Self::Url(url) => url.clone(),
         }

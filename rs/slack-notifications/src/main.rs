@@ -155,7 +155,7 @@ impl ProposalPoller {
     fn new() -> Self {
         let agent = Agent::builder()
             .with_transport(
-                ic_agent::agent::http_transport::ReqwestHttpReplicaV2Transport::create("https://nns.ic0.app")
+                ic_agent::agent::http_transport::ReqwestHttpReplicaV2Transport::create("https://ic0.app")
                     .expect("failed to create transport"),
             )
             .build()
