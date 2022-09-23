@@ -330,7 +330,7 @@ impl Network {
     pub fn get_url(&self) -> Url {
         match self {
             Network::Mainnet => Url::from_str("https://nns.ic0.app").unwrap(),
-            Network::Staging => Url::from_str("http://[2600:3004:1200:1200:5000:7dff:fe29:a2f5]:8080").unwrap(),
+            Network::Staging => Url::from_str("https://staging.release.dfinity.network").unwrap(),
             Self::Url(url) => url.clone(),
         }
     }
