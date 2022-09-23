@@ -93,7 +93,7 @@ class IcDeployment:
     def get_nns_url(self):
         """Get the NNS nodes for a deployment."""
         if self.name in ["mercury", "mainnet"]:
-            return "https://nns.ic0.app/"
+            return "https://ic0.app/"
         nns_nodes = self.get_deployment_subnet_nodes("nns")
         all_nodes_ipv6 = self.get_deployment_nodes_ipv6()
         nns_node_addr = all_nodes_ipv6[nns_nodes[0]]
