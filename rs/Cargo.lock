@@ -3145,12 +3145,15 @@ dependencies = [
 name = "ic-management-types"
 version = "0.1.0"
 dependencies = [
+ "actix-web",
  "chrono",
  "float-cmp",
  "ic-base-types",
  "ic-nns-governance",
  "ic-registry-subnet-type",
  "ic-types 0.8.0",
+ "itertools",
+ "reqwest",
  "serde",
  "serde_json",
  "serde_with 2.0.1",
