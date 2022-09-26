@@ -1,4 +1,6 @@
 pub mod requests;
+pub mod errors;
+pub use crate::errors::*;
 
 use ic_nns_governance::pb::v1::ProposalStatus;
 use ic_registry_subnet_type::SubnetType;
