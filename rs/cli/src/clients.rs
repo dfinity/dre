@@ -1,7 +1,8 @@
 use async_trait::async_trait;
 use decentralization::SubnetChangeResponse;
 use ic_base_types::PrincipalId;
-use ic_management_types::{requests::MembershipReplaceRequest, Network, TopologyProposal};
+use ic_management_types::{requests::MembershipReplaceRequest, Network, NetworkError, TopologyProposal};
+use log::error;
 use serde::de::DeserializeOwned;
 
 #[derive(Clone)]
@@ -65,11 +66,14 @@ impl RESTRequestBuilder for reqwest::RequestBuilder {
     async fn rest_send<T: DeserializeOwned>(self) -> anyhow::Result<T> {
         let response_result = self.send().await?;
         if let Err(e) = response_result.error_for_status_ref() {
-            Err(anyhow::anyhow!(
-                "failed request (error: {}, response: {})",
-                e,
-                response_result.text().await?
-            ))
+            let response = response_result.text().await?;
+            match serde_json::from_str(&response) {
+                Ok(NetworkError::ExtensionFailed(s)) => {
+                    error!("{}", s);
+                    Err(anyhow::anyhow!("failed request (error: {})", e))
+                }
+                _ => Err(anyhow::anyhow!("failed request (error: {}, response: {})", e, response)),
+            }
         } else {
             response_result
                 .text()
