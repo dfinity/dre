@@ -1,11 +1,11 @@
 use crate::proposal;
 use async_trait::async_trait;
-use decentralization::network::{AvailableNodesQuerier, NetworkError, SubnetQuerier};
+use decentralization::network::{AvailableNodesQuerier, SubnetQuerier};
 use ic_base_types::NodeId;
 use ic_interfaces::registry::RegistryValue;
 use ic_management_types::{
     Datacenter, DatacenterOwner, Guest, Node, NodeProviderDetails, Operator, Provider, ReplicaRelease, Subnet,
-    SubnetMetadata, TopologyProposalKind, TopologyProposalStatus,
+    SubnetMetadata, TopologyProposalKind, TopologyProposalStatus, NetworkError
 };
 use ic_registry_keys::{
     make_blessed_replica_version_key, NODE_OPERATOR_RECORD_KEY_PREFIX, NODE_RECORD_KEY_PREFIX, SUBNET_RECORD_KEY_PREFIX,
