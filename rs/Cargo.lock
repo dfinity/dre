@@ -3090,6 +3090,7 @@ dependencies = [
  "decentralization",
  "derive_builder",
  "derive_more 0.99.17",
+ "dirs",
  "dotenv",
  "either",
  "enum-map",
