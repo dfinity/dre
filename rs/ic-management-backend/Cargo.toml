@@ -67,6 +67,7 @@ prometheus-http-query = "0.4.0"
 ic-registry-client = { git = "https://github.com/dfinity/ic.git", rev = "1918df78147acf4f43d53e37205616c86cee5c60" }
 ic-registry-client-fake = { git = "https://github.com/dfinity/ic.git", rev = "1918df78147acf4f43d53e37205616c86cee5c60" }
 ic-registry-client-helpers = { git = "https://github.com/dfinity/ic.git", rev = "1918df78147acf4f43d53e37205616c86cee5c60" }
+dirs = "4.0.0"
 
 [dev-dependencies]
 assert_matches = "1.4.0"
