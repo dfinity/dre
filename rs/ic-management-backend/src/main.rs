@@ -528,7 +528,14 @@ fn network() -> String {
 }
 
 fn local_registry_path() -> PathBuf {
-    PathBuf::from(std::env::var("LOCAL_REGISTRY_PATH").unwrap_or_else(|_| ".".to_string()))
-        .join(".local_registry")
-        .join(nns_nodes_urls()[0].to_string())
+    match std::env::var("LOCAL_REGISTRY_PATH") {
+        Ok(path) => PathBuf::from(path),
+        Err(_) => match dirs::cache_dir() {
+            Some(cache_dir) => cache_dir,
+            None => PathBuf::from("/tmp"),
+        },
+    }
+    .join("ic-registry-cache")
+    .join(network())
+    .join("local_registry")
 }
