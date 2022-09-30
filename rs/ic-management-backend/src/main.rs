@@ -55,8 +55,7 @@ async fn main() -> std::io::Result<()> {
     sync_local_store().await.expect("failed to init local store");
 
     let local_registry_path = local_registry_path();
-    let runtime = tokio::runtime::Runtime::new().expect("failed to create runtime");
-    let handle = runtime.handle().clone();
+    let handle = tokio::runtime::Handle::try_current().expect("failed to get the runtime handle");
     let local_registry = Arc::new(
         web::block(|| {
             LocalRegistry::new_with_runtime_handle(local_registry_path, Duration::from_millis(500), handle)
@@ -371,14 +370,7 @@ async fn sync_local_store() -> anyhow::Result<()> {
         }
     }
 
-    web::block(|| {
-        let runtime = tokio::runtime::Runtime::new().unwrap();
-
-        runtime.block_on(futures::future::try_join_all(
-            updates.into_iter().map(|f| runtime.spawn(f)).collect::<Vec<_>>(),
-        ))
-    })
-    .await??;
+    futures::future::join_all(updates).await;
     local_store.update_certified_time(latest_certified_time)?;
     Ok(())
 }
