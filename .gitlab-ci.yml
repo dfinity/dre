@@ -333,6 +333,47 @@ qualification-tracking-update:
       time python3 ./qualification_track.py add-nns
       time python3 ./qualification_track.py add-ci --since=now-3d
 
+update-ic-versions-file:
+  interruptible: true
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule" && $SCHEDULE_NAME == "update-ic-versions"'
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+      when: manual
+      allow_failure: true  # the pipeline continues running even if the manual job is not run
+    - if: '$CI_PIPELINE_SOURCE == "trigger"'
+      when: manual
+      allow_failure: true  # the pipeline continues running even if the manual job is not run
+  script:
+    - |
+      set -eExou pipefail  # Don't tolerate any errors
+
+      time python3 ./scripts/ic_versions/main.py
+
+      if [[ -z "$(cd ic; git log -1 | grep 'Update Mainnet IC revisions file')" ]]; then
+          # No commit was made by the automation, we can stop here 
+          exit 0
+      fi
+
+      # Assign a reviewer to the MR and send a notification to the T&V slack channel
+      SLACK_CHANNEL="#eng-testing"
+      MR_NUM=$(curl --fail --request GET --header "PRIVATE-TOKEN: $IC_CREATE_VERSIONS_MR_TOKEN" "https://gitlab.com/api/v4/projects/31166135/merge_requests/?state=opened&source_branch=ic-mainnet-revisions" | jq '.[].iid')
+      if [[ -n "$MR_NUM" ]]; then
+          # Assign the reviewer to DSD https://gitlab.com/danielstefan.dietiker
+          curl --fail --request PUT --header "PRIVATE-TOKEN: $IC_CREATE_VERSIONS_MR_TOKEN" "https://gitlab.com/api/v4/projects/31166135/merge_requests/$MR_NUM?reviewer_ids[]=7781103"
+          # If the MR does not have the label "notified-slack" set, send a slack message to the T&V channel
+          if [[ -z "$(curl --fail --request GET --header "PRIVATE-TOKEN: $IC_CREATE_VERSIONS_MR_TOKEN" "https://gitlab.com/api/v4/projects/31166135/merge_requests/$MR_NUM" | jq '.labels' | grep "notified-slack")" ]]; then
+              curl --fail --request POST -H 'Content-type: application/json' --data "{\"text\": \"Hi! Can you please approve and merge the following MR https://gitlab.com/dfinity-lab/public/ic/-/merge_requests/$MR_NUM\", \"channel\": \"$SLACK_CHANNEL\", \"username\": \"Release team bot\"}" "$SLACK_WEBHOOK_URL"
+              # And then set the label "notified-slack" to avoid sending multiple messages
+              curl --fail --request PUT --header "PRIVATE-TOKEN: $IC_CREATE_VERSIONS_MR_TOKEN" "https://gitlab.com/api/v4/projects/31166135/merge_requests/$MR_NUM?add_labels[]=notified-slack"
+          fi
+      fi
+      sleep 10 # Wait to let GitLab update the MR metadata
+      if [[ "$(curl --fail --request GET --header "PRIVATE-TOKEN: $IC_CREATE_VERSIONS_MR_TOKEN" "https://gitlab.com/api/v4/projects/31166135/merge_requests/$MR_NUM/approval_state" | jq '[.rules[].approved] | all')" == "true" ]]; then
+          # The MR has all necessary approvals
+          # ==> merge as soon as possible
+          curl --fail --request PUT --header "PRIVATE-TOKEN: $IC_CREATE_VERSIONS_MR_TOKEN" "https://gitlab.com/api/v4/projects/31166135/merge_requests/$MR_NUM/merge?merge_when_pipeline_succeeds=true&squash=true"
+      fi
+
 dashboard-release:
   image: docker/compose:alpine-1.29.2
   needs: []
