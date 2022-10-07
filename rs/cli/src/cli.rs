@@ -91,14 +91,6 @@ pub(crate) mod subnet {
             #[clap(short, long)]
             motivation: Option<String>,
 
-            /// Finalize subnet replacements
-            #[clap(long)]
-            finalize: bool,
-
-            /// Cancel subnet replacements
-            #[clap(long)]
-            cancel: bool,
-
             /// Features or Node IDs to exclude from the available nodes pool
             #[clap(long, takes_value = true, multiple_values = true)]
             exclude: Vec<String>,
