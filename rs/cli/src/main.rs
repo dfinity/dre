@@ -32,29 +32,9 @@ async fn main() -> Result<(), anyhow::Error> {
                     }
                     cli::subnet::Commands::Replace {
                         nodes,
-                        finalize,
-                        cancel,
                         ..
                     } => {
-                        if *finalize && *cancel {
-                            cmd.error(
-                                ErrorKind::ArgumentConflict,
-                                "Finalize and cancel are mutually exclusive",
-                            )
-                            .exit();
-                        }
-                        if *finalize || *cancel {
-                            if subnet.id.is_none() {
-                                cmd.error(ErrorKind::MissingRequiredArgument, "Required argument `id` not found")
-                                    .exit();
-                            } else if !nodes.is_empty() {
-                                cmd.error(
-                                    ErrorKind::ArgumentConflict,
-                                    "Cannot pass `nodes` when finalizing or cancelling the replacement",
-                                )
-                                .exit();
-                            }
-                        } else if !nodes.is_empty() && subnet.id.is_some() {
+                        if !nodes.is_empty() && subnet.id.is_some() {
                             cmd.error(
                                 ErrorKind::ArgumentConflict,
                                 "Both subnet id and a list of nodes to replace are provided. Only one of the two is allowed.",
@@ -77,24 +57,9 @@ async fn main() -> Result<(), anyhow::Error> {
                         no_heal,
                         optimize,
                         motivation,
-                        finalize,
                         exclude,
                         include,
-                        cancel,
                     } => {
-                        if *finalize {
-                            runner.recover_finalize_swap(subnet.id.unwrap()).await
-                        } else if *cancel {
-                            if let Some(motivation) = motivation.clone() {
-                                runner.cancel_swap(subnet.id.unwrap(), motivation).await
-                            } else {
-                                cmd.error(
-                                    ErrorKind::MissingRequiredArgument,
-                                    "Required argument `motivation` not found",
-                                )
-                                .exit();
-                            }
-                        } else {
                             runner
                                 .membership_replace(ic_management_types::requests::MembershipReplaceRequest {
                                     target: match &subnet.id {
@@ -122,7 +87,6 @@ async fn main() -> Result<(), anyhow::Error> {
                                     include: include.clone().into(),
                                 })
                                 .await
-                        }
                     }
                 }
             }

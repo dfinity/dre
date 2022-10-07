@@ -2,10 +2,10 @@ use crate::proposal;
 use async_trait::async_trait;
 use decentralization::network::{AvailableNodesQuerier, SubnetQuerier};
 use ic_base_types::NodeId;
-use ic_interfaces::registry::RegistryValue;
+use ic_interfaces_registry::RegistryValue;
 use ic_management_types::{
     Datacenter, DatacenterOwner, Guest, Node, NodeProviderDetails, Operator, Provider, ReplicaRelease, Subnet,
-    SubnetMetadata, TopologyProposalKind, TopologyProposalStatus, NetworkError
+    SubnetMetadata, NetworkError
 };
 use ic_registry_keys::{
     make_blessed_replica_version_key, NODE_OPERATOR_RECORD_KEY_PREFIX, NODE_RECORD_KEY_PREFIX, SUBNET_RECORD_KEY_PREFIX,
@@ -21,7 +21,7 @@ use std::{
     net::Ipv6Addr,
 };
 
-use ic_interfaces::registry::RegistryClient;
+use ic_interfaces_registry::RegistryClient;
 use ic_protobuf::registry::{
     dc::v1::DataCenterRecord, node::v1::NodeRecord, node_operator::v1::NodeOperatorRecord, subnet::v1::SubnetRecord,
 };
@@ -470,29 +470,15 @@ impl RegistryState {
         let nodes = self.nodes.clone();
         let proposal_agent = proposal::ProposalAgent::new(self.nns_url.clone());
 
-        let mut topology_proposals = proposal_agent.list_valid_topology_proposals().await?;
-        topology_proposals.reverse();
-        let topology_proposals = topology_proposals;
+        let topology_proposals = proposal_agent.list_open_topology_proposals().await?;
 
         Ok(nodes
             .into_iter()
             .map(|(p, n)| {
-                let last_associated_proposal = topology_proposals
+                let proposal = topology_proposals
                     .iter()
-                    .find(|t| match &t.kind {
-                        TopologyProposalKind::CreateSubnet(info) => info.nodes.contains(&n.principal),
-                        TopologyProposalKind::ReplaceNode(info) => info.new_nodes.contains(&n.principal),
-                    })
+                    .find(|p| p.nodes.contains(&n.principal))
                     .cloned();
-
-                // Return only the proposals that are still actionable
-                let proposal = last_associated_proposal.and_then(|tp| {
-                    if matches!(tp.status, TopologyProposalStatus::Open) {
-                        Some(tp)
-                    } else {
-                        None
-                    }
-                });
 
                 (p, Node { proposal, ..n })
             })
@@ -503,50 +489,15 @@ impl RegistryState {
         let subnets = self.subnets.clone();
         let proposal_agent = proposal::ProposalAgent::new(self.nns_url.clone());
 
-        let topology_proposals = proposal_agent.list_valid_topology_proposals().await?;
-        let topology_proposals = topology_proposals;
+        let topology_proposals = proposal_agent.list_open_topology_proposals().await?;
 
         Ok(subnets
             .into_iter()
             .map(|(p, subnet)| {
-                let last_associated_proposal = topology_proposals
+                let proposal = topology_proposals
                     .iter()
-                    .find(|t| match &t.kind {
-                        TopologyProposalKind::ReplaceNode(info) => {
-                            (!info.first
-                                && info
-                                    .new_nodes
-                                    .iter()
-                                    .any(|n| subnet.nodes.iter().any(|sn| sn.principal == *n)))
-                                || (info.first
-                                    && info
-                                        .old_nodes
-                                        .iter()
-                                        .any(|n| subnet.nodes.iter().any(|sn| sn.principal == *n)))
-                        }
-                        _ => false,
-                    })
+                    .find(|t| t.subnet_id.unwrap_or_default() == p || subnet.nodes.iter().any(|n| t.nodes.contains(&n.principal)))
                     .cloned();
-
-                // Return only the proposals that are still actionable
-                let proposal = last_associated_proposal.and_then(|tp| {
-                    if matches!(tp.status, TopologyProposalStatus::Open) {
-                        Some(tp)
-                    } else {
-                        match &tp.kind {
-                            TopologyProposalKind::ReplaceNode(info)
-                                if info.first
-                                    // If the new nodes are not present in the subnet after the proposal has been executed, it means that replacement has been cancelled
-                                    && info.new_nodes.iter().any(|n| {
-                                        subnet.nodes.iter().any(|sn| sn.principal == *n)
-                                    }) =>
-                            {
-                                Some(tp)
-                            }
-                            _ => None,
-                        }
-                    }
-                });
 
                 (p, Subnet { proposal, ..subnet })
             })
@@ -652,7 +603,7 @@ impl AvailableNodesQuerier for RegistryState {
                 healths
                     .get(&n.principal)
                     .map(|s| matches!(*s, crate::health::Status::Healthy))
-                    .unwrap_or(false)
+                    .unwrap_or(true)
             })
             .map(decentralization::network::Node::from)
             .sorted_by(|n1, n2| n1.id.cmp(&n2.id))

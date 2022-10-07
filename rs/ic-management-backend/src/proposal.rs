@@ -1,18 +1,11 @@
-use std::convert::TryFrom;
-use std::str::FromStr;
-
 use anyhow::Result;
-use candid::{CandidType, Decode, Encode};
+use candid::{Decode, Encode};
 use ic_agent::Agent;
-use ic_base_types::PrincipalId;
-use ic_management_types::{
-    CreateSubnetProposalInfo, ReplaceNodeProposalInfo, TopologyProposal, TopologyProposalKind, TopologyProposalStatus,
-};
+use ic_management_types::{NnsFunctionProposal, TopologyProposal, TopologyProposalPayload};
 use ic_nns_governance::pb::v1::{proposal::Action, ListProposalInfo, ListProposalInfoResponse, NnsFunction};
 use ic_nns_governance::pb::v1::{ProposalInfo, ProposalStatus};
-use lazy_static::lazy_static;
-use regex::Regex;
 use registry_canister::mutations::do_add_nodes_to_subnet::AddNodesToSubnetPayload;
+use registry_canister::mutations::do_change_subnet_membership::ChangeSubnetMembershipPayload;
 use registry_canister::mutations::do_create_subnet::CreateSubnetPayload;
 use registry_canister::mutations::do_remove_nodes_from_subnet::RemoveNodesFromSubnetPayload;
 use registry_canister::mutations::do_update_subnet_replica::UpdateSubnetReplicaVersionPayload;
@@ -20,49 +13,6 @@ use serde::Serialize;
 
 pub struct ProposalAgent {
     agent: Agent,
-}
-
-pub trait NnsFunctionProposal: CandidType + serde::de::DeserializeOwned {
-    const TYPE: NnsFunction;
-    fn decode(function_type: NnsFunction, function_payload: &[u8]) -> Result<Self> {
-        if function_type == Self::TYPE {
-            Decode!(function_payload, Self).map_err(|e| anyhow::format_err!("failed decoding candid: {}", e))
-        } else {
-            Err(anyhow::format_err!("unsupported NNS function"))
-        }
-    }
-}
-
-impl NnsFunctionProposal for AddNodesToSubnetPayload {
-    const TYPE: NnsFunction = NnsFunction::AddNodeToSubnet;
-}
-
-impl NnsFunctionProposal for RemoveNodesFromSubnetPayload {
-    const TYPE: NnsFunction = NnsFunction::RemoveNodesFromSubnet;
-}
-
-impl NnsFunctionProposal for CreateSubnetPayload {
-    const TYPE: NnsFunction = NnsFunction::CreateSubnet;
-}
-
-impl NnsFunctionProposal for UpdateSubnetReplicaVersionPayload {
-    const TYPE: NnsFunction = NnsFunction::UpdateSubnetReplicaVersion;
-}
-
-trait MoveNodesProposalPayload: NnsFunctionProposal {
-    fn get_nodes(&self) -> Vec<PrincipalId>;
-}
-
-impl MoveNodesProposalPayload for AddNodesToSubnetPayload {
-    fn get_nodes(&self) -> Vec<PrincipalId> {
-        self.node_ids.iter().map(|node_id| node_id.get()).collect()
-    }
-}
-
-impl MoveNodesProposalPayload for RemoveNodesFromSubnetPayload {
-    fn get_nodes(&self) -> Vec<PrincipalId> {
-        self.node_ids.iter().map(|node_id| node_id.get()).collect()
-    }
 }
 
 // Copied so it can be serialized
@@ -121,138 +71,41 @@ impl ProposalAgent {
         Self { agent }
     }
 
-    fn filter_map_node_move_proposals<T: MoveNodesProposalPayload>(
-        proposals: Vec<(ProposalInfo, T)>,
-    ) -> Vec<(ProposalInfo, TopologyProposalKind)> {
-        proposals
-            .into_iter()
-            .filter_map(|(proposal, payload)| {
-                let summary = proposal.proposal.as_ref().expect("proposal is empty").summary.clone();
-
-                if summary.contains("# Replace") {
-                    lazy_static! {
-                        static ref NODE_ID_GROUP: &'static str = "node_id";
-                        static ref STEP_DETAILS_GROUP: &'static str = "step_detail";
-                        static ref RE_ADD_NODE: Regex = Regex::new(&format!(
-                            r#"\((?P<{}>.+)\): Add nodes \[(?P<{}>[^\]]+)\]"#,
-                            *STEP_DETAILS_GROUP, *NODE_ID_GROUP,
-                        ))
-                        .unwrap();
-                        static ref RE_REMOVE_NODE: Regex =
-                            Regex::new(&format!(r#"Remove nodes \[(?P<{}>[^\]]+)\]"#, *NODE_ID_GROUP,)).unwrap();
-                    }
-
-                    let add_nodes_capture = RE_ADD_NODE.captures(&summary);
-
-                    let first = add_nodes_capture
-                        .as_ref()
-                        .and_then(|c| c.name(&STEP_DETAILS_GROUP))
-                        .map(|m| m.as_str() == "this proposal");
-                    let new_nodes = add_nodes_capture.and_then(|c| c.name(&NODE_ID_GROUP)).and_then(|m| {
-                        let nodes = m
-                            .as_str()
-                            .split(", ")
-                            .map(|s| PrincipalId::from_str(s).ok())
-                            .collect::<Vec<_>>();
-                        if nodes.iter().any(|n| n.is_none()) {
-                            None
-                        } else {
-                            Some(nodes.into_iter().map(|n| n.unwrap()).collect::<Vec<_>>())
-                        }
-                    });
-
-                    let old_nodes = RE_REMOVE_NODE
-                        .captures(&summary)
-                        .and_then(|c| c.name(&NODE_ID_GROUP))
-                        .and_then(|m| {
-                            let nodes = m
-                                .as_str()
-                                .split(", ")
-                                .map(|s| PrincipalId::from_str(s).ok())
-                                .collect::<Vec<_>>();
-                            if nodes.iter().any(|n| n.is_none()) {
-                                None
-                            } else {
-                                Some(nodes.into_iter().map(|n| n.unwrap()).collect::<Vec<_>>())
-                            }
-                        });
-
-                    new_nodes
-                        .and_then(|new_nodes| old_nodes.map(|old_nodes| (new_nodes, old_nodes)))
-                        .and_then(|(new_nodes, old_nodes)| first.map(|first| (new_nodes, old_nodes, first)))
-                        .map(|(new_nodes, old_nodes, first)| {
-                            (
-                                proposal,
-                                TopologyProposalKind::ReplaceNode(ReplaceNodeProposalInfo {
-                                    new_nodes,
-                                    old_nodes,
-                                    first,
-                                }),
-                            )
-                        })
-                } else if summary.contains("# Cancel replacement") && T::TYPE == NnsFunction::RemoveNodesFromSubnet {
-                    (
-                        proposal,
-                        TopologyProposalKind::ReplaceNode(ReplaceNodeProposalInfo {
-                            new_nodes: payload.get_nodes(),
-                            old_nodes: vec![],
-                            first: false,
-                        }),
-                    )
-                        .into()
-                } else {
-                    // TODO: extend subnet
-                    None
-                }
-            })
-            .collect()
+    fn nodes_proposals<T: TopologyProposalPayload>(proposals: Vec<(ProposalInfo, T)>) -> Vec<TopologyProposal> {
+        proposals.into_iter().map(TopologyProposal::from).collect()
     }
 
-    pub async fn list_valid_topology_proposals(&self) -> Result<Vec<TopologyProposal>> {
-        let proposals = &self.list_proposals().await?;
-        let create_subnet_proposals = filter_map_nns_function_proposals::<CreateSubnetPayload>(proposals)
-            .into_iter()
-            .map(|(proposal, payload)| {
-                (
-                    proposal,
-                    TopologyProposalKind::CreateSubnet(CreateSubnetProposalInfo {
-                        nodes: payload.node_ids.into_iter().map(|node_id| node_id.get()).collect(),
-                    }),
-                )
-            });
+    pub async fn list_open_topology_proposals(&self) -> Result<Vec<TopologyProposal>> {
+        let proposals = &self.list_proposals(vec![ProposalStatus::Open]).await?;
+        let create_subnet_proposals =
+            Self::nodes_proposals(filter_map_nns_function_proposals::<CreateSubnetPayload>(proposals)).into_iter();
 
-        let add_nodes_proposals = Self::filter_map_node_move_proposals(filter_map_nns_function_proposals::<
-            AddNodesToSubnetPayload,
-        >(proposals));
+        let add_nodes_proposals =
+            Self::nodes_proposals(filter_map_nns_function_proposals::<AddNodesToSubnetPayload>(proposals)).into_iter();
 
-        let remove_nodes_proposals = Self::filter_map_node_move_proposals(filter_map_nns_function_proposals::<
+        let remove_nodes_proposals = Self::nodes_proposals(filter_map_nns_function_proposals::<
             RemoveNodesFromSubnetPayload,
-        >(proposals));
+        >(proposals))
+        .into_iter();
+
+        let membership_change_proposals = Self::nodes_proposals(filter_map_nns_function_proposals::<
+            ChangeSubnetMembershipPayload,
+        >(proposals))
+        .into_iter();
 
         let mut result = create_subnet_proposals
             .chain(add_nodes_proposals)
             .chain(remove_nodes_proposals)
+            .chain(membership_change_proposals)
             .collect::<Vec<_>>();
-        result.sort_by_key(|(proposal, _)| proposal.id.expect("proposal id is missing").id);
+        result.sort_by_key(|p| p.id);
         result.reverse();
-        let result = result;
 
-        Ok(result
-            .into_iter()
-            .filter_map(|(p, kind)| {
-                ProposalStatus::from_i32(p.status)
-                    .and_then(|status| TopologyProposalStatus::try_from(status).ok())
-                    .map(|status| TopologyProposal {
-                        id: p.id.expect("proposal id is missing").id,
-                        status,
-                        kind,
-                    })
-            })
-            .collect())
+        Ok(result)
     }
 
     pub async fn list_update_subnet_version_proposals(&self) -> Result<Vec<SubnetUpdateProposal>> {
-        Ok(filter_map_nns_function_proposals(&self.list_proposals().await?)
+        Ok(filter_map_nns_function_proposals(&self.list_proposals(vec![]).await?)
             .into_iter()
             .map(|(info, payload)| SubnetUpdateProposal {
                 info: info.into(),
@@ -261,17 +114,18 @@ impl ProposalAgent {
             .collect::<Vec<_>>())
     }
 
-    async fn list_proposals(&self) -> Result<Vec<ProposalInfo>> {
+    async fn list_proposals(&self, include_status: Vec<ProposalStatus>) -> Result<Vec<ProposalInfo>> {
         Decode!(
             self.agent
                 .query(
-                    &candid::Principal::from_slice(ic_nns_constants::GOVERNANCE_CANISTER_ID.get().as_slice(),),
+                    &ic_agent::export::Principal::from_slice(ic_nns_constants::GOVERNANCE_CANISTER_ID.get().as_slice(),),
                     "list_proposals",
                 )
                 .with_arg(
                     Encode!(&ListProposalInfo {
                         limit: 1000,
                         exclude_topic: vec![0, 1, 2, 3, 4, 5, 6, 8, 9, 10],
+                        include_status: include_status.into_iter().map(|s| s.into()).collect(),
                         ..Default::default()
                     })
                     .expect("encode failed")
