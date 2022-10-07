@@ -18,7 +18,7 @@ fn replace_proposal_options_1_node() {
         ..Default::default()
     };
 
-    let summary = ops_subnet_node_replace::replace_proposal_options(&change, None)
+    let summary = ops_subnet_node_replace::replace_proposal_options(&change)
         .unwrap()
         .summary
         .unwrap();
@@ -27,22 +27,11 @@ fn replace_proposal_options_1_node() {
         summary,
         r#"# Replace a node in subnet tdb26.
 
-- Step 1 (this proposal): Add nodes [afx6y-22h67-ct72t-etddn-t2jaz-gfsrz-u3yxw-oocjp-gj3za-de3ot-2ae]
-- Step 2 (upcoming proposal): Remove nodes [z3tum-w7bue-lt6ca-qgynf-us6oq-nc3qc-7miiq-34rbp-ekuoa-g6cqr-wqe]
-"#
-    );
+Add nodes:
+- `afx6y-22h67-ct72t-etddn-t2jaz-gfsrz-u3yxw-oocjp-gj3za-de3ot-2ae`
 
-    let summary = ops_subnet_node_replace::replace_proposal_options(&change, 123.into())
-        .unwrap()
-        .summary
-        .unwrap();
-
-    assert_eq!(
-        summary,
-        r#"# Replace a node in subnet tdb26.
-
-- Step 1 (proposal [123](https://dashboard.internetcomputer.org/proposal/123)): Add nodes [afx6y-22h67-ct72t-etddn-t2jaz-gfsrz-u3yxw-oocjp-gj3za-de3ot-2ae]
-- Step 2 (this proposal): Remove nodes [z3tum-w7bue-lt6ca-qgynf-us6oq-nc3qc-7miiq-34rbp-ekuoa-g6cqr-wqe]
+Remove nodes:
+- `z3tum-w7bue-lt6ca-qgynf-us6oq-nc3qc-7miiq-34rbp-ekuoa-g6cqr-wqe`
 "#
     );
 }
@@ -64,7 +53,7 @@ fn replace_proposal_options_2_nodes() {
         ..Default::default()
     };
 
-    let summary = ops_subnet_node_replace::replace_proposal_options(&change, None)
+    let summary = ops_subnet_node_replace::replace_proposal_options(&change)
         .unwrap()
         .summary
         .unwrap();
@@ -73,22 +62,13 @@ fn replace_proposal_options_2_nodes() {
         summary,
         r#"# Replace nodes in subnet tdb26.
 
-- Step 1 (this proposal): Add nodes [afx6y-22h67-ct72t-etddn-t2jaz-gfsrz-u3yxw-oocjp-gj3za-de3ot-2ae, dsthq-itfw5-zkibk-chtl5-u7afl-xvxva-7swke-tvqif-vq3t2-wvp7x-mae]
-- Step 2 (upcoming proposal): Remove nodes [z3tum-w7bue-lt6ca-qgynf-us6oq-nc3qc-7miiq-34rbp-ekuoa-g6cqr-wqe, ktrkp-ccur6-nvpyb-sokhh-exg7x-pfuds-4jxmw-n2r5m-vj5yt-aqzc4-vae]
-"#
-    );
+Add nodes:
+- `afx6y-22h67-ct72t-etddn-t2jaz-gfsrz-u3yxw-oocjp-gj3za-de3ot-2ae`
+- `dsthq-itfw5-zkibk-chtl5-u7afl-xvxva-7swke-tvqif-vq3t2-wvp7x-mae`
 
-    let summary = ops_subnet_node_replace::replace_proposal_options(&change, 123.into())
-        .unwrap()
-        .summary
-        .unwrap();
-
-    assert_eq!(
-        summary,
-        r#"# Replace nodes in subnet tdb26.
-
-- Step 1 (proposal [123](https://dashboard.internetcomputer.org/proposal/123)): Add nodes [afx6y-22h67-ct72t-etddn-t2jaz-gfsrz-u3yxw-oocjp-gj3za-de3ot-2ae, dsthq-itfw5-zkibk-chtl5-u7afl-xvxva-7swke-tvqif-vq3t2-wvp7x-mae]
-- Step 2 (this proposal): Remove nodes [z3tum-w7bue-lt6ca-qgynf-us6oq-nc3qc-7miiq-34rbp-ekuoa-g6cqr-wqe, ktrkp-ccur6-nvpyb-sokhh-exg7x-pfuds-4jxmw-n2r5m-vj5yt-aqzc4-vae]
+Remove nodes:
+- `z3tum-w7bue-lt6ca-qgynf-us6oq-nc3qc-7miiq-34rbp-ekuoa-g6cqr-wqe`
+- `ktrkp-ccur6-nvpyb-sokhh-exg7x-pfuds-4jxmw-n2r5m-vj5yt-aqzc4-vae`
 "#
     );
 }

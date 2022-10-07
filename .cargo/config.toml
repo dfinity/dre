@@ -1,7 +1,10 @@
 [target.x86_64-unknown-linux-gnu]
-rustflags = ["-C", "link-arg=-fuse-ld=mold"]  # Enable faster linker https://github.com/rui314/mold#how-to-use
+rustflags = [
+    "-C",
+    "link-arg=-fuse-ld=mold",
+] # Enable faster linker https://github.com/rui314/mold#how-to-use
 linker = "clang"
 
 [term]
 # https://doc.rust-lang.org/cargo/reference/config.html#termquiet
-quiet = true          # quiet cargo output, available from Rust 1.59+
+quiet = true # quiet cargo output, available from Rust 1.59+

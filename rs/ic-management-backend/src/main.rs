@@ -19,7 +19,7 @@ mod health;
 use crate::release::RolloutBuilder;
 use ::gitlab::{AsyncGitlab, GitlabBuilder};
 use futures::TryFutureExt;
-use ic_interfaces::registry::{RegistryClient, RegistryValue, ZERO_REGISTRY_VERSION};
+use ic_interfaces_registry::{RegistryClient, RegistryValue, ZERO_REGISTRY_VERSION};
 use ic_management_types::{FactsDBGuest, Guest, NodeProvidersResponse};
 use ic_registry_client_fake::FakeRegistryClient;
 use ic_registry_common_proto::pb::local_store::v1::{

@@ -2,19 +2,122 @@ pub mod requests;
 pub mod errors;
 pub use crate::errors::*;
 
-use ic_nns_governance::pb::v1::ProposalStatus;
+use candid::{CandidType, Decode};
+use ic_nns_governance::pb::v1::NnsFunction;
+use ic_nns_governance::pb::v1::ProposalInfo;
 use ic_registry_subnet_type::SubnetType;
 use ic_types::PrincipalId;
+use registry_canister::mutations::do_add_nodes_to_subnet::AddNodesToSubnetPayload;
+use registry_canister::mutations::do_change_subnet_membership::ChangeSubnetMembershipPayload;
+use registry_canister::mutations::do_create_subnet::CreateSubnetPayload;
+use registry_canister::mutations::do_remove_nodes_from_subnet::RemoveNodesFromSubnetPayload;
+use registry_canister::mutations::do_update_subnet_replica::UpdateSubnetReplicaVersionPayload;
 use serde::{Deserialize, Serialize};
 use serde_with::{serde_as, DisplayFromStr};
 use std::cmp::{Eq, Ord, PartialEq, PartialOrd};
-use std::convert::TryFrom;
 use std::net::Ipv6Addr;
 use std::ops::Deref;
 use std::str::FromStr;
 use std::sync::Arc;
 use strum_macros::EnumString;
 use url::Url;
+
+pub trait NnsFunctionProposal: CandidType + serde::de::DeserializeOwned {
+    const TYPE: NnsFunction;
+    fn decode(function_type: NnsFunction, function_payload: &[u8]) -> anyhow::Result<Self> {
+        if function_type == Self::TYPE {
+            Decode!(function_payload, Self).map_err(|e| anyhow::format_err!("failed decoding candid: {}", e))
+        } else {
+            Err(anyhow::format_err!("unsupported NNS function"))
+        }
+    }
+}
+
+impl NnsFunctionProposal for AddNodesToSubnetPayload {
+    const TYPE: NnsFunction = NnsFunction::AddNodeToSubnet;
+}
+
+impl NnsFunctionProposal for RemoveNodesFromSubnetPayload {
+    const TYPE: NnsFunction = NnsFunction::RemoveNodesFromSubnet;
+}
+
+impl NnsFunctionProposal for CreateSubnetPayload {
+    const TYPE: NnsFunction = NnsFunction::CreateSubnet;
+}
+
+impl NnsFunctionProposal for UpdateSubnetReplicaVersionPayload {
+    const TYPE: NnsFunction = NnsFunction::UpdateSubnetReplicaVersion;
+}
+
+impl NnsFunctionProposal for ChangeSubnetMembershipPayload {
+    const TYPE: NnsFunction = NnsFunction::ChangeSubnetMembership;
+}
+
+pub trait TopologyProposalPayload: NnsFunctionProposal {
+    fn get_nodes(&self) -> Vec<PrincipalId>;
+    fn get_subnet(&self) -> Option<PrincipalId>;
+}
+
+impl TopologyProposalPayload for CreateSubnetPayload {
+    fn get_nodes(&self) -> Vec<PrincipalId> {
+        self.node_ids.iter().map(|node_id| node_id.get()).collect()
+    }
+
+    fn get_subnet(&self) -> Option<PrincipalId> {
+        None
+    }
+}
+
+impl TopologyProposalPayload for AddNodesToSubnetPayload {
+    fn get_nodes(&self) -> Vec<PrincipalId> {
+        self.node_ids.iter().map(|node_id| node_id.get()).collect()
+    }
+
+    fn get_subnet(&self) -> Option<PrincipalId> {
+        Some(self.subnet_id)
+    }
+}
+
+impl TopologyProposalPayload for RemoveNodesFromSubnetPayload {
+    fn get_nodes(&self) -> Vec<PrincipalId> {
+        self.node_ids.iter().map(|node_id| node_id.get()).collect()
+    }
+
+    fn get_subnet(&self) -> Option<PrincipalId> {
+        None
+    }
+}
+
+impl TopologyProposalPayload for ChangeSubnetMembershipPayload {
+    fn get_nodes(&self) -> Vec<PrincipalId> {
+        self.node_ids_add
+            .iter()
+            .map(|node_id| node_id.get())
+            .chain(self.node_ids_remove.iter().map(|node_id| node_id.get()))
+            .collect()
+    }
+
+    fn get_subnet(&self) -> Option<PrincipalId> {
+        Some(self.subnet_id)
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct TopologyProposal {
+    pub nodes: Vec<PrincipalId>,
+    pub subnet_id: Option<PrincipalId>,
+    pub id: u64,
+}
+
+impl<T: TopologyProposalPayload> From<(ProposalInfo, T)> for TopologyProposal {
+    fn from((info, payload): (ProposalInfo, T)) -> Self {
+        Self {
+            subnet_id: payload.get_subnet(),
+            nodes: payload.get_nodes(),
+            id: info.id.unwrap().id,
+        }
+    }
+}
 
 #[serde_as]
 #[derive(Clone, Serialize, Deserialize)]
@@ -59,50 +162,6 @@ pub struct Node {
     pub label: Option<String>,
     #[serde(default)]
     pub decentralized: bool,
-}
-
-#[derive(Clone, Serialize, Debug, Deserialize)]
-pub struct TopologyProposal {
-    pub id: u64,
-    pub kind: TopologyProposalKind,
-    pub status: TopologyProposalStatus,
-}
-
-#[derive(EnumString, Clone, Deserialize, Debug, Serialize)]
-pub enum TopologyProposalStatus {
-    Open,
-    Executed,
-}
-
-impl TryFrom<ProposalStatus> for TopologyProposalStatus {
-    type Error = String;
-
-    fn try_from(value: ProposalStatus) -> Result<Self, Self::Error> {
-        match value {
-            ProposalStatus::Open => Ok(Self::Open),
-            ProposalStatus::Executed => Ok(Self::Executed),
-            _ => Err("cannot convert to topology proposal".to_string()),
-        }
-    }
-}
-
-#[derive(Clone, Serialize, Debug, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub enum TopologyProposalKind {
-    ReplaceNode(ReplaceNodeProposalInfo),
-    CreateSubnet(CreateSubnetProposalInfo),
-}
-
-#[derive(Clone, Serialize, Debug, Deserialize)]
-pub struct ReplaceNodeProposalInfo {
-    pub old_nodes: Vec<PrincipalId>,
-    pub new_nodes: Vec<PrincipalId>,
-    pub first: bool,
-}
-
-#[derive(Clone, Serialize, Debug, Deserialize)]
-pub struct CreateSubnetProposalInfo {
-    pub nodes: Vec<PrincipalId>,
 }
 
 #[serde_as]
