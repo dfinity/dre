@@ -6,14 +6,14 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-ic-nns-governance = { git = "https://github.com/dfinity/ic.git", rev = "1918df78147acf4f43d53e37205616c86cee5c60" }
-ic-nns-common = { git = "https://github.com/dfinity/ic.git", rev = "1918df78147acf4f43d53e37205616c86cee5c60" }
-ic-nns-constants = { git = "https://github.com/dfinity/ic.git", rev = "1918df78147acf4f43d53e37205616c86cee5c60" }
-registry-canister = { git = "https://github.com/dfinity/ic.git", rev = "1918df78147acf4f43d53e37205616c86cee5c60" }
+ic-nns-governance = { git = "https://github.com/dfinity/ic.git", rev = "2b1c7606b70a2ec85fea741c2341df43a76a1994" }
+ic-nns-common = { git = "https://github.com/dfinity/ic.git", rev = "2b1c7606b70a2ec85fea741c2341df43a76a1994" }
+ic-nns-constants = { git = "https://github.com/dfinity/ic.git", rev = "2b1c7606b70a2ec85fea741c2341df43a76a1994" }
+registry-canister = { git = "https://github.com/dfinity/ic.git", rev = "2b1c7606b70a2ec85fea741c2341df43a76a1994" }
 tokio = { version = "1.2.0", features = ["full"] }
 ic-agent = "0.20.0"
 ic-types = "0.4.2"
-candid = "0.7.15"
+candid = "0.7.18"
 anyhow = "1.0.44"
 reqwest = { version = "0.11.4", features = ["json"] }
 serde = "1.0.130"

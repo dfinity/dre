@@ -313,12 +313,10 @@ impl Cli {
 #[derive(Display)]
 #[strum(serialize_all = "kebab-case")]
 pub(crate) enum ProposeCommand {
-    AddNodesToSubnet {
+    ChangeSubnetMembership {
         subnet_id: PrincipalId,
-        nodes: Vec<PrincipalId>,
-    },
-    RemoveNodesFromSubnet {
-        nodes: Vec<PrincipalId>,
+        node_ids_add: Vec<PrincipalId>,
+        node_ids_remove: Vec<PrincipalId>,
     },
     UpdateSubnetReplicaVersion {
         subnet: PrincipalId,
@@ -346,12 +344,18 @@ impl ProposeCommand {
 impl ProposeCommand {
     fn args(&self) -> Vec<String> {
         match &self {
-            Self::AddNodesToSubnet { subnet_id, nodes } => vec![
-                nodes.iter().map(|n| n.to_string()).collect::<Vec<_>>(),
+            Self::ChangeSubnetMembership {
+                subnet_id,
+                node_ids_add: nodes_ids_add,
+                node_ids_remove: nodes_ids_remove,
+            } => vec![
                 vec!["--subnet-id".to_string(), subnet_id.to_string()],
+                vec!["--node-ids-add".to_string()],
+                nodes_ids_add.iter().map(|n| n.to_string()).collect::<Vec<_>>(),
+                vec!["--node-ids-remove".to_string()],
+                nodes_ids_remove.iter().map(|n| n.to_string()).collect::<Vec<_>>(),
             ]
             .concat(),
-            Self::RemoveNodesFromSubnet { nodes } => nodes.iter().map(|n| n.to_string()).collect::<Vec<_>>(),
             Self::UpdateSubnetReplicaVersion { subnet, version } => {
                 vec![subnet.to_string(), version.clone()]
             }
@@ -365,15 +369,6 @@ pub struct ProposeOptions {
     pub title: Option<String>,
     pub summary: Option<String>,
     pub motivation: Option<String>,
-}
-
-impl ProposeOptions {
-    pub fn with_motivation(self, motivation: String) -> Self {
-        Self {
-            motivation: Some(motivation),
-            ..self
-        }
-    }
 }
 
 fn detect_hsm_auth() -> Result<Option<Auth>> {
@@ -554,12 +549,10 @@ oSMDIQBa2NLmSmaqjDXej4rrJEuEhKIz7/pGXpxztViWhB+X9Q==
         )?;
 
         let test_cases = vec![
-            ProposeCommand::AddNodesToSubnet {
+            ProposeCommand::ChangeSubnetMembership {
                 subnet_id: Default::default(),
-                nodes: vec![Default::default()],
-            },
-            ProposeCommand::RemoveNodesFromSubnet {
-                nodes: vec![Default::default()],
+                node_ids_add: vec![Default::default()],
+                node_ids_remove: vec![Default::default()],
             },
             ProposeCommand::UpdateSubnetReplicaVersion {
                 subnet: Default::default(),
