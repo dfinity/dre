@@ -91,7 +91,8 @@ async fn replace(
         if heal_count > 0 {
             change_request = change_request.remove(unhealthy)?;
             non_optimize_replaced_nodes += unhealthy.len();
-            motivations.push(format!("replace {heal_count} unhealthy node(s)"));
+            let replace_target = if heal_count == 1 { "node" } else { "nodes" };
+            motivations.push(format!("replacing {heal_count} unhealthy {replace_target}"));
         }
     }
 
@@ -102,13 +103,14 @@ async fn replace(
     let change = change_request.evaluate()?;
     let optimize_replacements = change.removed().len() - non_optimize_replaced_nodes;
     if optimize_replacements > 0 {
+        let replace_target = if optimize_replacements == 1 { "node" } else { "nodes" };
         motivations.push(format!(
-            "replace {optimize_replacements} node(s) to improve decentralization",
+            "replacing {optimize_replacements} {replace_target} to improve subnet decentralization",
         ));
     }
 
     Ok(HttpResponse::Ok()
-        .json(decentralization::SubnetChangeResponse::from(&change).with_motivation(motivations.join(", "))))
+        .json(decentralization::SubnetChangeResponse::from(&change).with_motivation(motivations.join("; "))))
 }
 
 /// Simulates creation of a new subnet
