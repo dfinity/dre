@@ -15,25 +15,14 @@ fn replace_proposal_options_1_node() {
         removed: vec![
             PrincipalId::from_str("z3tum-w7bue-lt6ca-qgynf-us6oq-nc3qc-7miiq-34rbp-ekuoa-g6cqr-wqe").unwrap(),
         ],
+        motivation: Some("For testing purposes".to_string()),
         ..Default::default()
     };
 
-    let summary = ops_subnet_node_replace::replace_proposal_options(&change)
-        .unwrap()
-        .summary
-        .unwrap();
+    let result = ops_subnet_node_replace::replace_proposal_options(&change).unwrap();
 
-    assert_eq!(
-        summary,
-        r#"# Replace a node in subnet tdb26.
-
-Add nodes:
-- `afx6y-22h67-ct72t-etddn-t2jaz-gfsrz-u3yxw-oocjp-gj3za-de3ot-2ae`
-
-Remove nodes:
-- `z3tum-w7bue-lt6ca-qgynf-us6oq-nc3qc-7miiq-34rbp-ekuoa-g6cqr-wqe`
-"#
-    );
+    assert_eq!(result.summary.unwrap(), "# Replace a node in subnet tdb26");
+    assert_eq!(result.motivation.unwrap(), "For testing purposes");
 }
 
 #[test]
@@ -50,25 +39,12 @@ fn replace_proposal_options_2_nodes() {
             PrincipalId::from_str("z3tum-w7bue-lt6ca-qgynf-us6oq-nc3qc-7miiq-34rbp-ekuoa-g6cqr-wqe").unwrap(),
             PrincipalId::from_str("ktrkp-ccur6-nvpyb-sokhh-exg7x-pfuds-4jxmw-n2r5m-vj5yt-aqzc4-vae").unwrap(),
         ],
+        motivation: Some("For testing purposes".to_string()),
         ..Default::default()
     };
 
-    let summary = ops_subnet_node_replace::replace_proposal_options(&change)
-        .unwrap()
-        .summary
-        .unwrap();
+    let result = ops_subnet_node_replace::replace_proposal_options(&change).unwrap();
 
-    assert_eq!(
-        summary,
-        r#"# Replace nodes in subnet tdb26.
-
-Add nodes:
-- `afx6y-22h67-ct72t-etddn-t2jaz-gfsrz-u3yxw-oocjp-gj3za-de3ot-2ae`
-- `dsthq-itfw5-zkibk-chtl5-u7afl-xvxva-7swke-tvqif-vq3t2-wvp7x-mae`
-
-Remove nodes:
-- `z3tum-w7bue-lt6ca-qgynf-us6oq-nc3qc-7miiq-34rbp-ekuoa-g6cqr-wqe`
-- `ktrkp-ccur6-nvpyb-sokhh-exg7x-pfuds-4jxmw-n2r5m-vj5yt-aqzc4-vae`
-"#
-    );
+    assert_eq!(result.summary.unwrap(), "# Replace nodes in subnet tdb26");
+    assert_eq!(result.motivation.unwrap(), "For testing purposes");
 }
