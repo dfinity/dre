@@ -603,7 +603,7 @@ impl AvailableNodesQuerier for RegistryState {
                 healths
                     .get(&n.principal)
                     .map(|s| matches!(*s, crate::health::Status::Healthy))
-                    .unwrap_or(true)
+                    .unwrap_or(false)
             })
             .map(decentralization::network::Node::from)
             .sorted_by(|n1, n2| n1.id.cmp(&n2.id))
