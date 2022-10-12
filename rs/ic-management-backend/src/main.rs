@@ -28,6 +28,7 @@ use ic_registry_common_proto::pb::local_store::v1::{
 use ic_registry_nns_data_provider::registry::RegistryCanister;
 use ic_types::PrincipalId;
 use log::{debug, error, info, warn};
+use prometheus_http_query::Client;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -179,7 +180,12 @@ async fn get_subnet(
 async fn rollout(registry: web::Data<Arc<RwLock<registry::RegistryState>>>) -> Result<HttpResponse, Error> {
     let registry = registry.read().await;
     let proposal_agent = proposal::ProposalAgent::new(registry.nns_url());
-    let prometheus_client = prometheus_http_query::Client::try_from("http://prometheus.dfinity.systems:9090").unwrap();
+    let network = registry.network();
+    let prometheus_client = match network.as_str() {
+                "mainnet" | "mercury" => Client::try_from("https://prometheus.mainnet.dfinity.network").unwrap(),
+                "staging" => Client::try_from("http://prometheus.dfinity.systems").unwrap(),
+                _ => Client::try_from("https://prometheus.testnet.dfinity.network").unwrap(),
+            };
     let network = registry.network();
     let service = RolloutBuilder {
         proposal_agent,

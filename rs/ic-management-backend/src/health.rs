@@ -29,9 +29,13 @@ impl HealthClient {
             network: if network == "mainnet" {
                 "mercury".to_string()
             } else {
-                network
+                network.clone()
             },
-            client: Client::try_from("http://prometheus.dfinity.systems:9090").unwrap(),
+            client: match network.as_str() {
+                "mainnet" | "mercury" => Client::try_from("https://prometheus.mainnet.dfinity.network").unwrap(),
+                "staging" => Client::try_from("http://prometheus.dfinity.systems").unwrap(),
+                _ => Client::try_from("https://prometheus.testnet.dfinity.network").unwrap(),
+            },
         }
     }
 
@@ -69,7 +73,7 @@ impl HealthClient {
                         sum by(ic_node) (
                             up{{job="replica", ic="{network}"}}
                         )
-                            or          
+                            or
                         sum by(ic_node) (
                             up{{job="orchestrator", ic="{network}"}}
                         )
@@ -90,7 +94,7 @@ impl HealthClient {
                         sum by(ic_node) (
                             up{{job="replica", ic="{network}"}}
                         )
-                            or          
+                            or
                         sum by(ic_node) (
                             up{{job="orchestrator", ic="{network}"}}
                         )
