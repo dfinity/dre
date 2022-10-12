@@ -2,6 +2,36 @@
 
 ### Linux
 
+Installing SQLite with dev dependencies (tested on ubuntu 22.04).
+
+``` bash
+sudo apt install sqlite3 libsqlite3-dev
+```
+
+Note: This SQLite dependency must be installed before you install a python
+version using pyenv, or the extension will not be compiled in your python. If 
+you get an error like 
+
+``` bash
+ModuleNotFoundError: No module named '_sqlite3'
+```
+
+You need to remove your pyenv python version 
+
+``` bash
+pyenv uninstall <version>
+```
+
+and reinstall it again.
+
+Installing pyenv to make it easier to manage python versions  (Tested on ubuntu
+22.04 where the default python version is 3.10). You can use the [pyenv
+installer](https://github.com/pyenv/pyenv-installer) to do it easily
+
+``` bash
+curl https://pyenv.run | bash
+```
+
 Installing Pipenv for Python by following https://pipenv.pypa.io/en/latest/#install-pipenv-today.
 On Linux this may be as easy as running the following command in the repo root:
 ```bash
