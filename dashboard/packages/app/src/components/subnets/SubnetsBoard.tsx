@@ -45,8 +45,6 @@ export const verifiedApplicationLogo = (va: VerifiedApplication) => {
   }
 }
 
-const recommendedSubnetSize = 13;
-
 type ActionUrgency = "critical" | "warning";
 
 function ActionIcon({ action }: { action: Action }) {
@@ -106,12 +104,13 @@ interface Action {
 // TODO: move to Rust backend
 function generateSubnetActions(subnet: Subnet, healths: { [principal: string]: NodeHealth }): Action[] {
   let actions = new Array<Action>();
-  if (subnet.nodes.length != recommendedSubnetSize && subnet.subnet_type != "system") {
+  const minimumSubnetSize = 13;
+  if (subnet.nodes.length < minimumSubnetSize) {
     actions.push({
       type: "expand",
       urgency: "warning",
       description: `Guests will be added to the subnet: TODO`,
-      message: <>Subnet should be extended with <b>{recommendedSubnetSize - subnet.nodes.length}</b> more node{recommendedSubnetSize - subnet.nodes.length > 1 && "s"}.</>,
+      message: <>Subnet should be extended with <b>{minimumSubnetSize - subnet.nodes.length}</b> more node{minimumSubnetSize - subnet.nodes.length > 1 && "s"}.</>,
     })
   }
   let deadNodes = subnet.nodes.filter(n => healths[n.principal] === "Dead");
