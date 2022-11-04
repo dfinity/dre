@@ -10,7 +10,7 @@ default:
   # Complete description available at:
   # https://docs.gitlab.com/ee/ci/yaml/#retry
   retry:
-    max: 2  # This is confusing but this means "3 runs at max".
+    max: 2 # This is confusing but this means "3 runs at max".
     when:
       - unknown_failure
       - api_failure
@@ -21,9 +21,11 @@ stages:
   - test
 
 variables:
+  QUALIFY_GIT_REVISION:
+    description: "Please provide the git revision that should be qualified"
   GET_SOURCES_ATTEMPTS: 5
-  GIT_DEPTH: 0  # Pull the complete repo initially
-  GIT_STRATEGY: "fetch"  # And then pull only new commits
+  GIT_DEPTH: 0 # Pull the complete repo initially
+  GIT_STRATEGY: "fetch" # And then pull only new commits
   CI_PRE_CLONE_SCRIPT: |
     # This script prepares the docker container for running the job
     # The most important thing done here is pre-seeding the repo in the $CI_PROJECT_DIR so that
@@ -96,7 +98,6 @@ variables:
     fi
     echo -e "\e[0Ksection_end:$(date +%s):pre_clone_script\r\e[0K"
 
-
 before_script:
   - |
     # Execute the before_script section
@@ -135,7 +136,7 @@ before_script:
 
   - echo -e "\e[0Ksection_end:$(date +%s):before_script\r\e[0K"
   # Setup SSH keys
-  - 'command -v ssh-agent >/dev/null || ( apt-get update -y && apt-get install openssh-client -y )'
+  - "command -v ssh-agent >/dev/null || ( apt-get update -y && apt-get install openssh-client -y )"
   - eval $(ssh-agent -s)
   - cat "$DASHBOARD_DEPLOY_KEY" | tr -d '\r' | ssh-add -
   - mkdir -p ~/.ssh
@@ -147,17 +148,17 @@ before_script:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     - if: '$CI_PIPELINE_SOURCE == "web"'
       when: manual
-      allow_failure: true  # the pipeline continues running even if the manual job is not run
+      allow_failure: true # the pipeline continues running even if the manual job is not run
     - if: '$CI_PIPELINE_SOURCE == "trigger"'
       when: manual
-      allow_failure: true  # the pipeline continues running even if the manual job is not run
+      allow_failure: true # the pipeline continues running even if the manual job is not run
 
 .rules-autorun-on-trigger:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     - if: '$CI_PIPELINE_SOURCE == "web"'
       when: manual
-      allow_failure: true  # the pipeline continues running even if the manual job is not run
+      allow_failure: true # the pipeline continues running even if the manual job is not run
     - if: '$CI_PIPELINE_SOURCE == "trigger"'
 
 docker-image-update:
@@ -173,10 +174,10 @@ docker-image-update:
         - Pipfile.lock
     - if: '$CI_PIPELINE_SOURCE == "web"'
       when: manual
-      allow_failure: true  # the pipeline continues running even if the manual job is not run
+      allow_failure: true # the pipeline continues running even if the manual job is not run
     - if: '$CI_PIPELINE_SOURCE == "trigger"'
       when: manual
-      allow_failure: true  # the pipeline continues running even if the manual job is not run
+      allow_failure: true # the pipeline continues running even if the manual job is not run
   script:
     - python3 docker/docker-update-image.py
 
@@ -268,10 +269,10 @@ update-facts-db:
     - if: '$CI_PIPELINE_SOURCE == "schedule" && $SCHEDULE_NAME == "update-factsdb"'
     - if: '$CI_PIPELINE_SOURCE == "web"'
       when: manual
-      allow_failure: true  # the pipeline continues running even if the manual job is not run
+      allow_failure: true # the pipeline continues running even if the manual job is not run
     - if: '$CI_PIPELINE_SOURCE == "trigger"'
       when: manual
-      allow_failure: true  # the pipeline continues running even if the manual job is not run
+      allow_failure: true # the pipeline continues running even if the manual job is not run
   script:
     - |
       set -eExou pipefail  # Don't tolerate any errors
@@ -304,10 +305,10 @@ jira-update:
     - if: '$CI_PIPELINE_SOURCE == "schedule" && $SCHEDULE_NAME == "update-jira-tickets"'
     - if: '$CI_PIPELINE_SOURCE == "web"'
       when: manual
-      allow_failure: true  # the pipeline continues running even if the manual job is not run
+      allow_failure: true # the pipeline continues running even if the manual job is not run
     - if: '$CI_PIPELINE_SOURCE == "trigger"'
       when: manual
-      allow_failure: true  # the pipeline continues running even if the manual job is not run
+      allow_failure: true # the pipeline continues running even if the manual job is not run
   script:
     - |
       set -eExou pipefail  # Don't tolerate any errors
@@ -321,10 +322,10 @@ qualification-tracking-update:
     - if: '$CI_PIPELINE_SOURCE == "schedule" && $SCHEDULE_NAME == "update-qualification-tracking"'
     - if: '$CI_PIPELINE_SOURCE == "web"'
       when: manual
-      allow_failure: true  # the pipeline continues running even if the manual job is not run
+      allow_failure: true # the pipeline continues running even if the manual job is not run
     - if: '$CI_PIPELINE_SOURCE == "trigger"'
       when: manual
-      allow_failure: true  # the pipeline continues running even if the manual job is not run
+      allow_failure: true # the pipeline continues running even if the manual job is not run
   script:
     - |
       set -eExou pipefail  # Don't tolerate any errors
@@ -339,10 +340,10 @@ update-ic-versions-file:
     - if: '$CI_PIPELINE_SOURCE == "schedule" && $SCHEDULE_NAME == "update-ic-versions"'
     - if: '$CI_PIPELINE_SOURCE == "web"'
       when: manual
-      allow_failure: true  # the pipeline continues running even if the manual job is not run
+      allow_failure: true # the pipeline continues running even if the manual job is not run
     - if: '$CI_PIPELINE_SOURCE == "trigger"'
       when: manual
-      allow_failure: true  # the pipeline continues running even if the manual job is not run
+      allow_failure: true # the pipeline continues running even if the manual job is not run
   script:
     - |
       set -eExou pipefail  # Don't tolerate any errors
@@ -350,7 +351,7 @@ update-ic-versions-file:
       time python3 ./scripts/ic_versions/main.py
 
       if [[ -z "$(cd ic; git log -1 | grep 'Update Mainnet IC revisions file')" ]]; then
-          # No commit was made by the automation, we can stop here 
+          # No commit was made by the automation, we can stop here
           exit 0
       fi
 
@@ -400,3 +401,20 @@ dashboard-release:
     - TAG=${CI_COMMIT_SHA} docker-compose -f docker-compose.yml -f docker-compose.dev.yml push
     - apk add git && git remote set-url origin "https://token:${GITLAB_PUSH_TOKEN}@${CI_REPOSITORY_URL#*@}"
     - if git fetch origin $RELEASE_BRANCH; then git checkout $RELEASE_BRANCH && git reset --hard ${CI_COMMIT_SHA} && git push --force origin $RELEASE_BRANCH; else git checkout -b $RELEASE_BRANCH && git push --force origin $RELEASE_BRANCH; fi
+
+qualify-release:
+  script:
+    - |
+      mkdir -p /home/ubuntu/.config/dfx/identity/bootstrap-super-leader
+      cat "$BOOTSTRAP_SUPER_LEADER_PEM" > /home/ubuntu/.config/dfx/identity/bootstrap-super-leader/identity.pem
+      mkdir -p /home/ubuntu/.config/dfx/identity/xnet-testing
+      cat "$XNET_TESTING_PEM" > /home/ubuntu/.config/dfx/identity/xnet-testing/identity.pem
+    - ./qualification/qualify-new-release.py --git-revision ${QUALIFY_GIT_REVISION}
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule" && $SCHEDULE_NAME == "qualify-release"'
+      # Run the job automatically if the QUALIFY_GIT_REVISION env var is provided in the web UI when the pipeline was created
+    - if: '$CI_PIPELINE_SOURCE == "web" && $QUALIFY_GIT_REVISION != ""'
+    - if: '$CI_PIPELINE_SOURCE == "trigger"'
+      when: manual
+      allow_failure: true # the pipeline continues running even if the manual job is not run
+
