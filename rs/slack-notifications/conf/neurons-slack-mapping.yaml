@@ -1,81 +1,91 @@
 # Based on https://www.notion.so/3a1856c603704d51a6fcd2a57c98f92f
-- id: U01GQD1A8JZ
+- id: U01GQD1A8JZ  # Thomas Locher
   neuron: 21
-- id: U02AFLX8MAA
+- id: U02AFLX8MAA  # Jean-Armand Figeac
   neuron: 32
-- id: UKJUP3G3X
+- id: UKJUP3G3X    # Juliana Che
   neuron: 33
-- id: UD5JPLYAH
+- id: UD5JPLYAH    # Andrea Cerulli
   neuron: 34
-- id: USYLCFLCS
+- id: USYLCFLCS    # Bartosz Przydatek
   neuron: 35
-- id: UGN5F0F7B
+- id: UGN5F0F7B    # Max Murphy
   neuron: 36
-- id: UF8571XE0
+- id: UF8571XE0    # Yvonne-Anne Pignolet
   neuron: 37
-- id: UMZST9NBY
+- id: UMZST9NBY    # Björn Tackmann
   neuron: 38
-- id: U0245CNF536
+- id: U0245CNF536  # Luka Skugor
   neuron: 39
-- id: URT5Z7VDZ
+- id: URT5Z7VDZ    # Sasa Tomic
   neuron: 40
-- id: U014KGJDY56
+- id: U014KGJDY56  # Samuel Burri
   neuron: 41
-- id: U01JUPMMR1P
+- id: U01JUPMMR1P  # Raghav Sundaravaradan
   neuron: 42
-- id: ULF0AUPNC
+- id: ULF0AUPNC    # Ryan Stout
   neuron: 43
-- id: U01L52P04HW
+- id: U01L52P04HW  # Paul Meeusen
   neuron: 44
-- id: UJU6XENEQ
+- id: UJU6XENEQ    # Mamiko Inoue
   neuron: 45
-- id: UQYF52W14
+- id: U03STJVBT2M  # Marin Gilles
   neuron: 46
-- id: UM6JMDD1Q
+- id: UM6JMDD1Q    # Luis Mompo Handen
   neuron: 47
-- id: UCJCD32MQ
+- id: UCJCD32MQ    # Manu Drijvers
   neuron: 48
-- id: UKLPH8QDV
+- id: UKLPH8QDV    # Dimitris Sarlis
   neuron: 49
-- id: USJPEC5F0
+- id: USJPEC5F0    # Islam El-Ashi
   neuron: 50
-- id: U013BMRAQN5
+- id: U02RFGQHP47  # Daniel Wong
+  neuron: 51
+- id: U013BMRAQN5  # Ege Bagcioglu
   neuron: 52
-- id: U01BDLCHSUD
+- id: U01BDLCHSUD  # John Plevyak
   neuron: 53
-- id: U02UZQSG468
+- id: U02RZR7PDK4  # Björn Assmann
+  neuron: 54
+- id: U02UZQSG468  # Maximilian Summe
   neuron: 55
-- id: UJHLZDMD4
+- id: UJHLZDMD4    # Khushboo
   neuron: 56
-- id: U010G9RRJ4A
+- id: U010G9RRJ4A  # Shuo Wang
   neuron: 57
-- id: UQGSUNAAY
+- id: U047B65SPB3  # Nikola Milosavljevic
   neuron: 58
-- id: UC7KT0B51
-  neuron: 60
-- id: U01RUDX9XUZ
+- id: U02TEQHKV35  # Llorenç Muntaner Perello
+  neuron: 58
+# - id: UC7KT0B51    # John Wiegley
+#   neuron: 60
+- id: U01RUDX9XUZ  # QJ
   neuron: 61
-- id: U8ET9T067
+- id: U8ET9T067    # Paul Liu
   neuron: 62
-- id: U01JUPLSPAM
-  neuron: 63
-- id: U01806HR6MP
+# - id: U01JUPLSPAM  # George Paul
+#   neuron: 63
+- id: U01806HR6MP  # Ian Blenke
   neuron: 64
-- id: UGNMPG3LL
+- id: UGNMPG3LL    # Christian Müller
   neuron: 65
-- id: U01EQQYUWRG
+- id: U01EQQYUWRG  # Sam Howard
   neuron: 66
-- id: UQSNEM4QH
+- id: UQSNEM4QH    # Alin Sinpalean
   neuron: 67
-- id: UK6PJFR9A
+- id: U02L4JU6E6T  # David Dal Busco
+  neuron: 68
+- id: UK6PJFR9A    # Nicolas Mattia
   neuron: 69
-- id: UL6RB18A0
+- id: UL6RB18A0    # Roman Kashitsyn
   neuron: 70
-- id: U01Q0ED6SDB
+- id: U01Q0ED6SDB  # Leon Tran
   neuron: 71
-- id: U02LQR955Q9
+- id: U02MNAPVA8L  # Daniel Thurau
+  neuron: 72
+- id: U02LQR955Q9  # Frederik Rothenberger
   neuron: 73
-- id: U02CTQHS4SX
-  neuron: 74
-- id: UN84WR6PQ
+# - id: U02CTQHS4SX  # Alejandro Alvarez
+#   neuron: 74
+- id: UN84WR6PQ    # Rahul Korivi Subramaniyam
   neuron: 75
