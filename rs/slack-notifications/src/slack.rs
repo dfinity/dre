@@ -12,6 +12,8 @@ use std::collections::HashSet;
 use std::convert::TryFrom;
 
 const TRUSTED_NEURONS_TAG: &str = "<!subteam^S0200F4EYLF>";
+const RELEASE_TEAM_TAG: &str = "<!subteam^S02CF4KKZ7U>";
+const RELEASE_AUTOMATION_NEURON_ID: u64 = 80;
 const MAX_SUMMARY_LENGTH: usize = 2048;
 const SLACK_CHANNEL_ENV_INTERNAL: &str = "SLACK_CHANNEL_PROPOSALS_INTERNAL";
 const SLACK_CHANNEL_ENV_EXTERNAL: &str = "SLACK_CHANNEL_PROPOSALS_EXTERNAL";
@@ -92,7 +94,7 @@ fn proposal_link_markdown(id: ProposalId) -> String {
     )
 }
 
-fn slack_mention(proposer: NeuronId) -> Option<String> {
+fn proposer_mention(proposer: NeuronId) -> Option<String> {
     let neurons = serde_yaml::from_str::<Vec<NeuronSlackMapping>>(include_str!("../conf/neurons-slack-mapping.yaml"))
         .expect("failed parsing neurons config");
     let neurons_blacklist = serde_yaml::from_str::<HashSet<u64>>(include_str!("../conf/proposer-blacklist.yaml"))
@@ -108,10 +110,19 @@ fn slack_mention(proposer: NeuronId) -> Option<String> {
     }
 }
 
+fn alert_mention(proposer: &NeuronId) -> String {
+    if proposer.id == RELEASE_AUTOMATION_NEURON_ID {
+        RELEASE_TEAM_TAG.to_string()
+    } else {
+        TRUSTED_NEURONS_TAG.to_string()
+    }
+}
+
 #[derive(Clone)]
 pub struct SlackMessage {
     pub slack_channel: Option<String>,
-    pub slack_mention: String,
+    pub alert_mention: String,
+    pub proposer_mention: String,
     pub motivation: String,
     pub proposals: Vec<ProposalInfo>,
 }
@@ -127,7 +138,7 @@ impl Serialize for SlackMessage {
 
 impl SlackMessage {
     pub fn render_payload(&self) -> Value {
-        let message = format!("{} please review the following proposal(s)", TRUSTED_NEURONS_TAG);
+        let message = format!("{} please review the following proposal(s)", self.alert_mention);
 
         // https://app.slack.com/block-kit-builder/T43F9UHS5#%7B%22blocks%22:%5B%5D%7D
         json!({
@@ -161,7 +172,7 @@ impl SlackMessage {
                             "elements": [
                                 {
                                     "type": "mrkdwn",
-                                    "text": format!("Proposed by {}", self.slack_mention),
+                                    "text": format!("Proposed by {}", self.proposer_mention),
                                 }
                             ]
                         }),
@@ -196,22 +207,26 @@ impl TryFrom<Vec<ProposalInfo>> for MessageGroups {
             .group_by(|p| {
                 (
                     slack_channel_for_proposal(p),
-                    slack_mention(p.proposer.clone().expect("proposer not set")),
+                    alert_mention(p.proposer.as_ref().expect("No NeuronId in the proposal")),
+                    proposer_mention(p.proposer.clone().expect("proposer not set")),
                     proposal_motivation(p),
                 )
             })
             .into_iter()
-            .filter_map(|((slack_channel, slack_mention, motivation), group)| {
-                slack_mention.map(|slack_mention| {
-                    let proposals = group.collect::<Vec<_>>();
-                    SlackMessage {
-                        slack_channel,
-                        slack_mention,
-                        motivation,
-                        proposals,
-                    }
-                })
-            })
+            .filter_map(
+                |((slack_channel, alert_mention, proposer_mention, motivation), group)| {
+                    proposer_mention.map(|proposer_mention| {
+                        let proposals = group.collect::<Vec<_>>();
+                        SlackMessage {
+                            slack_channel,
+                            alert_mention,
+                            proposer_mention,
+                            motivation,
+                            proposals,
+                        }
+                    })
+                },
+            )
             .collect::<Vec<_>>();
 
         if message_groups.is_empty() {
@@ -266,7 +281,7 @@ mod tests {
         assert_eq!(message_groups.len(), 1);
         let msg1 = &message_groups[0];
         assert_eq!(msg1.slack_channel.as_ref().unwrap(), "#nns-proposals-test-internal");
-        assert_eq!(msg1.slack_mention, "<@URT5Z7VDZ>");
+        assert_eq!(msg1.proposer_mention, "<@URT5Z7VDZ>");
         assert_eq!(msg1.motivation, "summary".to_string());
     }
 
@@ -284,13 +299,13 @@ mod tests {
             message_groups[0].slack_channel.as_ref().unwrap(),
             "#nns-proposals-test-internal"
         );
-        assert_eq!(message_groups[0].slack_mention, "<@URT5Z7VDZ>");
+        assert_eq!(message_groups[0].proposer_mention, "<@URT5Z7VDZ>");
         assert_eq!(message_groups[0].motivation, "summary 1".to_string());
         assert_eq!(
             message_groups[1].slack_channel.as_ref().unwrap(),
             "#nns-proposals-test-internal"
         );
-        assert_eq!(message_groups[1].slack_mention, "<@URT5Z7VDZ>");
+        assert_eq!(message_groups[1].proposer_mention, "<@URT5Z7VDZ>");
         assert_eq!(message_groups[1].motivation, "summary 2".to_string());
     }
 
@@ -309,13 +324,40 @@ mod tests {
             message_groups[0].slack_channel.as_ref().unwrap(),
             "#nns-proposals-test-internal"
         );
-        assert_eq!(message_groups[0].slack_mention, "<@URT5Z7VDZ>");
+        assert_eq!(message_groups[0].proposer_mention, "<@URT5Z7VDZ>");
         assert_eq!(message_groups[0].motivation, "summary 1".to_string());
         assert_eq!(
             message_groups[1].slack_channel.as_ref().unwrap(),
             "#nns-proposals-test-external"
         );
-        assert_eq!(message_groups[1].slack_mention, "<@URT5Z7VDZ>");
+        assert_eq!(message_groups[1].proposer_mention, "<@URT5Z7VDZ>");
+        assert_eq!(message_groups[1].motivation, "summary 1".to_string());
+    }
+
+    #[test]
+    fn mention_trusted_neurons() {
+        let proposals = vec![
+            gen_test_proposal(1000, 40, "summary 1", 5),
+            gen_test_proposal(1001, 80, "summary 1", 7),
+        ];
+        std::env::set_var("SLACK_URL", "http://localhost");
+        std::env::set_var("SLACK_CHANNEL_PROPOSALS_INTERNAL", "#nns-proposals-test-internal");
+        std::env::set_var("SLACK_CHANNEL_PROPOSALS_EXTERNAL", "#nns-proposals-test-external");
+        let message_groups = MessageGroups::try_from(proposals).unwrap().message_groups;
+        assert_eq!(message_groups.len(), 2);
+        assert_eq!(
+            message_groups[0].slack_channel.as_ref().unwrap(),
+            "#nns-proposals-test-internal"
+        );
+        assert_eq!(message_groups[0].alert_mention, TRUSTED_NEURONS_TAG);
+        assert_eq!(message_groups[0].proposer_mention, "<@URT5Z7VDZ>");
+        assert_eq!(message_groups[0].motivation, "summary 1".to_string());
+        assert_eq!(
+            message_groups[1].slack_channel.as_ref().unwrap(),
+            "#nns-proposals-test-internal"
+        );
+        assert_eq!(message_groups[1].alert_mention, RELEASE_TEAM_TAG);
+        assert_eq!(message_groups[1].proposer_mention, "Neuron 80");
         assert_eq!(message_groups[1].motivation, "summary 1".to_string());
     }
 }
