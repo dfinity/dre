@@ -4,8 +4,8 @@ use decentralization::network::{AvailableNodesQuerier, SubnetQuerier};
 use ic_base_types::NodeId;
 use ic_interfaces_registry::RegistryValue;
 use ic_management_types::{
-    Datacenter, DatacenterOwner, Guest, Node, NodeProviderDetails, Operator, Provider, ReplicaRelease, Subnet,
-    SubnetMetadata, NetworkError
+    Datacenter, DatacenterOwner, Guest, NetworkError, Node, NodeProviderDetails, Operator, Provider, ReplicaRelease,
+    Subnet, SubnetMetadata,
 };
 use ic_registry_keys::{
     make_blessed_replica_version_key, NODE_OPERATOR_RECORD_KEY_PREFIX, NODE_RECORD_KEY_PREFIX, SUBNET_RECORD_KEY_PREFIX,
@@ -169,7 +169,6 @@ impl RegistryState {
     }
 
     async fn update_replica_releases(&mut self) -> Result<()> {
-        const STARTING_VERSION: &str = "0ef2aebde4ff735a1a93efa342dcf966b6df5061";
         let blessed_versions = BlessedReplicaVersions::decode(
             self.local_registry
                 .get_value(
@@ -186,7 +185,6 @@ impl RegistryState {
             let new_blessed_versions = futures::future::join_all(
                 blessed_versions
             .iter()
-            .skip_while(|v| *v != STARTING_VERSION)
             .filter(|v| !self.replica_releases.iter().any(|rr| rr.commit_hash == **v)).map(|version| {
                     let endpoint_public = CommitRefs::builder()
                         .project("dfinity-lab/public/ic")
@@ -496,7 +494,10 @@ impl RegistryState {
             .map(|(p, subnet)| {
                 let proposal = topology_proposals
                     .iter()
-                    .find(|t| t.subnet_id.unwrap_or_default() == p || subnet.nodes.iter().any(|n| t.nodes.contains(&n.principal)))
+                    .find(|t| {
+                        t.subnet_id.unwrap_or_default() == p
+                            || subnet.nodes.iter().any(|n| t.nodes.contains(&n.principal))
+                    })
                     .cloned();
 
                 (p, Subnet { proposal, ..subnet })
