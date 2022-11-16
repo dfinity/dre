@@ -1,6 +1,7 @@
 use crate::cli::Opts;
 use crate::clients;
 use crate::ic_admin;
+use crate::ic_admin::ProposeOptions;
 use crate::ops_subnet_node_replace;
 use decentralization::SubnetChangeResponse;
 use dialoguer::Confirm;
@@ -32,6 +33,33 @@ impl Runner {
         Ok(())
     }
 
+    pub async fn subnet_extend(
+        &self,
+        request: ic_management_types::requests::SubnetExtendRequest,
+        motivation: String,
+    ) -> anyhow::Result<()> {
+        let subnet = request.subnet;
+        let change = self.dashboard_backend_client.subnet_extend(request).await?;
+        println!("{}", change);
+
+        self.with_confirmation(|r| {
+            let change = change.clone();
+            let motivation = motivation.clone();
+            async move {
+                r.run_membership_change(
+                    change,
+                    ProposeOptions {
+                        title: format!("Extend subnet {subnet}").into(),
+                        summary: format!("Extend subnet {subnet}").into(),
+                        motivation: motivation.clone().into(),
+                    },
+                )
+                .await
+            }
+        })
+        .await
+    }
+
     pub async fn membership_replace(
         &self,
         request: ic_management_types::requests::MembershipReplaceRequest,
@@ -41,12 +69,18 @@ impl Runner {
 
         self.with_confirmation(|r| {
             let change = change.clone();
-            async move { r.run_swap_nodes(change).await }
+            async move {
+                r.run_membership_change(
+                    change.clone(),
+                    ops_subnet_node_replace::replace_proposal_options(&change)?,
+                )
+                .await
+            }
         })
         .await
     }
 
-    async fn run_swap_nodes(&self, change: SubnetChangeResponse) -> anyhow::Result<()> {
+    async fn run_membership_change(&self, change: SubnetChangeResponse, options: ProposeOptions) -> anyhow::Result<()> {
         let subnet_id = change
             .subnet_id
             .ok_or_else(|| anyhow::anyhow!("subnet_id is required"))?;
@@ -65,7 +99,7 @@ impl Runner {
                     node_ids_add: change.added.clone(),
                     node_ids_remove: change.removed.clone(),
                 },
-                ops_subnet_node_replace::replace_proposal_options(&change)?,
+                options,
             )
             .map_err(|e| anyhow::anyhow!(e))
     }

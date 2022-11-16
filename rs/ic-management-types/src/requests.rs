@@ -26,3 +26,11 @@ pub enum ReplaceTarget {
 pub struct SubnetCreateRequest {
     pub size: usize,
 }
+
+#[derive(Serialize, Deserialize)]
+pub struct SubnetExtendRequest {
+    pub subnet: PrincipalId,
+    pub size: usize,
+    pub exclude: Option<Vec<String>>,
+    pub include: Option<Vec<PrincipalId>>,
+}

@@ -100,5 +100,24 @@ pub(crate) mod subnet {
             #[clap(long, takes_value = true, multiple_values = true)]
             include: Vec<PrincipalId>,
         },
+
+        /// Extends the size of the subnet
+        Extend {
+            // Number of nodes to be added
+            size: usize,
+
+            /// Features or Node IDs to exclude from the available nodes pool
+            #[clap(long, takes_value = true, multiple_values = true)]
+            exclude: Vec<String>,
+
+            /// Force the inclusion of the provided nodes for replacement,
+            /// regardless of the decentralization score
+            #[clap(long, takes_value = true, multiple_values = true)]
+            include: Vec<PrincipalId>,
+
+            /// Motivation for extending the subnet
+            #[clap(short, long)]
+            motivation: Option<String>,
+        },
     }
 }
