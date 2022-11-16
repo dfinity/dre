@@ -128,6 +128,7 @@ async fn main() -> std::io::Result<()> {
             .service(endpoints::subnet::pending_action)
             .service(endpoints::subnet::replace)
             .service(endpoints::subnet::create_subnet)
+            .service(endpoints::subnet::extend)
     })
     .shutdown_timeout(10)
     .bind((
@@ -182,10 +183,10 @@ async fn rollout(registry: web::Data<Arc<RwLock<registry::RegistryState>>>) -> R
     let proposal_agent = proposal::ProposalAgent::new(registry.nns_url());
     let network = registry.network();
     let prometheus_client = match network.as_str() {
-                "mainnet" | "mercury" => Client::try_from("https://prometheus.mainnet.dfinity.network").unwrap(),
-                "staging" => Client::try_from("http://prometheus.dfinity.systems").unwrap(),
-                _ => Client::try_from("https://prometheus.testnet.dfinity.network").unwrap(),
-            };
+        "mainnet" | "mercury" => Client::try_from("https://prometheus.mainnet.dfinity.network").unwrap(),
+        "staging" => Client::try_from("http://prometheus.dfinity.systems").unwrap(),
+        _ => Client::try_from("https://prometheus.testnet.dfinity.network").unwrap(),
+    };
     let network = registry.network();
     let service = RolloutBuilder {
         proposal_agent,
