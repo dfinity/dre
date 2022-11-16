@@ -1,7 +1,10 @@
 use async_trait::async_trait;
 use decentralization::SubnetChangeResponse;
 use ic_base_types::PrincipalId;
-use ic_management_types::{requests::MembershipReplaceRequest, Network, NetworkError, TopologyProposal};
+use ic_management_types::{
+    requests::{MembershipReplaceRequest, SubnetExtendRequest},
+    Network, NetworkError, TopologyProposal,
+};
 use log::error;
 use serde::de::DeserializeOwned;
 
@@ -48,6 +51,18 @@ impl DashboardBackendClient {
             .post(
                 self.url
                     .join("subnet/membership/replace")
+                    .map_err(|e| anyhow::anyhow!(e))?,
+            )
+            .json(&request)
+            .rest_send()
+            .await
+    }
+
+    pub async fn subnet_extend(&self, request: SubnetExtendRequest) -> anyhow::Result<SubnetChangeResponse> {
+        reqwest::Client::new()
+            .post(
+                self.url
+                    .join("subnet/membership/extend")
                     .map_err(|e| anyhow::anyhow!(e))?,
             )
             .json(&request)

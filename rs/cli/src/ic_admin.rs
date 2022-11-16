@@ -350,10 +350,24 @@ impl ProposeCommand {
                 node_ids_remove: nodes_ids_remove,
             } => vec![
                 vec!["--subnet-id".to_string(), subnet_id.to_string()],
-                vec!["--node-ids-add".to_string()],
-                nodes_ids_add.iter().map(|n| n.to_string()).collect::<Vec<_>>(),
-                vec!["--node-ids-remove".to_string()],
-                nodes_ids_remove.iter().map(|n| n.to_string()).collect::<Vec<_>>(),
+                if !nodes_ids_add.is_empty() {
+                    [
+                        vec!["--node-ids-add".to_string()],
+                        nodes_ids_add.iter().map(|n| n.to_string()).collect::<Vec<_>>(),
+                    ]
+                    .concat()
+                } else {
+                    vec![]
+                },
+                if !nodes_ids_remove.is_empty() {
+                    [
+                        vec!["--node-ids-remove".to_string()],
+                        nodes_ids_remove.iter().map(|n| n.to_string()).collect::<Vec<_>>(),
+                    ]
+                    .concat()
+                } else {
+                    vec![]
+                },
             ]
             .concat(),
             Self::UpdateSubnetReplicaVersion { subnet, version } => {
