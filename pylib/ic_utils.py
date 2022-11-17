@@ -356,7 +356,7 @@ def compute_ic_executable_path(executable_name: str, git_revision: str):
     return pathlib.Path.home() / "bin" / f"{executable_name}.{git_revision}"
 
 
-def download_ic_executable(git_revision: str, executable_name: str, blessed: bool = True):
+def download_ic_executable(git_revision: str, executable_name: str, blessed: bool = False):
     """Download a platform-specific executable for the given git revision and return the local path."""
     local_path = compute_ic_executable_path(executable_name=executable_name, git_revision=git_revision)
     if local_path.exists() and local_path.stat().st_size > 0 and os.access(local_path, os.X_OK):
@@ -383,7 +383,7 @@ def compute_local_canister_path(canister_name: str, git_revision: str):
     return pathlib.Path.home() / "tmp" / "canisters" / f"{canister_name}.{git_revision}.wasm"
 
 
-def download_ic_canister(git_revision: str, canister_name: str, blessed: bool = True):
+def download_ic_canister(git_revision: str, canister_name: str, blessed: bool = False):
     """Download a platform-specific executable for the given git revision and return the local path."""
     local_path = compute_local_canister_path(canister_name=canister_name, git_revision=git_revision)
     if local_path.exists() and local_path.stat().st_size > 0:
