@@ -249,16 +249,17 @@ impl RegistryState {
                 return Err(anyhow::anyhow!("failed to query gitlab for blessed versions: {}", e));
             }
 
-            let new_blessed_versions = new_blessed_versions.into_iter().map(|r| r.unwrap()).collect::<Vec<_>>();
-            new_blessed_versions.clone().into_iter().for_each(|mut nrr| {
-                nrr.previous_patch_release = self
-                    .replica_releases
-                    .iter()
-                    .chain(new_blessed_versions.clone().iter())
-                    .rfind(|rr| rr.name == nrr.name && rr.commit_hash != nrr.commit_hash)
-                    .map(|rr| rr.clone().into());
-                self.replica_releases.push(nrr);
-            });
+            new_blessed_versions
+                .into_iter()
+                .map(|r| r.unwrap())
+                .for_each(|mut nrr| {
+                    nrr.previous_patch_release = self
+                        .replica_releases
+                        .iter()
+                        .rfind(|rr| rr.name == nrr.name && rr.commit_hash != nrr.commit_hash)
+                        .map(|rr| rr.clone().into());
+                    self.replica_releases.push(nrr);
+                });
         }
 
         self.replica_releases.sort_by(|rr1, rr2| match rr1.time.cmp(&rr2.time) {
