@@ -6,7 +6,6 @@ RUN go mod download
 
 COPY ./*.go ./
 RUN go build -o /up-proxy-proto .
-RUN ls -la /
 
 ## Deploy
 FROM gcr.io/distroless/base
