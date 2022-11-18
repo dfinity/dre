@@ -85,6 +85,12 @@ func (p *proxy) ServeHTTP(wr http.ResponseWriter, req *http.Request) {
 		appendHostToXForwardHeader(req.Header, clientIP)
 	}
 
+	// Necessary or we get EOFs after a while
+	// https://stackoverflow.com/questions/17714494/golang-http-request-results-in-eof-errors-when-making-multiple-requests-successi
+	// See documentation about this option here https://pkg.go.dev/net/http#Request
+	// I think that there was the issue because we were reusing connections to the
+	// same host which might have been closed after a while
+	req.Close = true
 	resp, err := client.Do(req)
 	if err != nil {
 		log.Println("Could not query remote host: ", err)
