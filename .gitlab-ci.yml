@@ -403,13 +403,6 @@ dashboard-release:
     - if git fetch origin $RELEASE_BRANCH; then git checkout $RELEASE_BRANCH && git reset --hard ${CI_COMMIT_SHA} && git push --force origin $RELEASE_BRANCH; else git checkout -b $RELEASE_BRANCH && git push --force origin $RELEASE_BRANCH; fi
 
 qualify-release:
-  script:
-    - |
-      mkdir -p /home/ubuntu/.config/dfx/identity/bootstrap-super-leader
-      cat "$BOOTSTRAP_SUPER_LEADER_PEM" > /home/ubuntu/.config/dfx/identity/bootstrap-super-leader/identity.pem
-      mkdir -p /home/ubuntu/.config/dfx/identity/xnet-testing
-      cat "$XNET_TESTING_PEM" > /home/ubuntu/.config/dfx/identity/xnet-testing/identity.pem
-    - ./qualification/qualify-new-release.py --git-revision ${QUALIFY_GIT_REVISION}
   rules:
     - if: '$CI_PIPELINE_SOURCE == "schedule" && $SCHEDULE_NAME == "qualify-release"'
       # Run the job automatically if the QUALIFY_GIT_REVISION env var is provided in the web UI when the pipeline was created
@@ -417,4 +410,13 @@ qualify-release:
     - if: '$CI_PIPELINE_SOURCE == "trigger"'
       when: manual
       allow_failure: true # the pipeline continues running even if the manual job is not run
+  script:
+    - |
+      set -eExou pipefail  # Don't tolerate any errors
+
+      mkdir -p /home/ubuntu/.config/dfx/identity/bootstrap-super-leader
+      cat "$BOOTSTRAP_SUPER_LEADER_PEM" > /home/ubuntu/.config/dfx/identity/bootstrap-super-leader/identity.pem
+      mkdir -p /home/ubuntu/.config/dfx/identity/xnet-testing
+      cat "$XNET_TESTING_PEM" > /home/ubuntu/.config/dfx/identity/xnet-testing/identity.pem
+    - ./qualification/qualify-new-release.py --git-revision ${QUALIFY_GIT_REVISION}
 
