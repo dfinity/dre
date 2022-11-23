@@ -544,17 +544,19 @@ impl decentralization::network::TopologyManager for RegistryState {}
 
 #[async_trait]
 impl SubnetQuerier for RegistryState {
-    async fn subnet(&self, id: &PrincipalId) -> Result<decentralization::network::Subnet, NetworkError> {
+    async fn subnet(&self, id: &PrincipalId) -> Result<decentralization::network::DecentralizedSubnet, NetworkError> {
         self.subnets
             .get(id)
-            .map(|s| decentralization::network::Subnet {
+            .map(|s| decentralization::network::DecentralizedSubnet {
                 id: s.principal,
                 nodes: s.nodes.iter().map(decentralization::network::Node::from).collect(),
+                min_nakamoto_coefficients: None,
+                comment: None,
             })
             .ok_or(NetworkError::SubnetNotFound(*id))
     }
 
-    async fn subnet_of_nodes(&self, nodes: &[PrincipalId]) -> Result<decentralization::network::Subnet, NetworkError> {
+    async fn subnet_of_nodes(&self, nodes: &[PrincipalId]) -> Result<decentralization::network::DecentralizedSubnet, NetworkError> {
         let subnets = nodes
             .to_vec()
             .iter()
@@ -566,7 +568,7 @@ impl SubnetQuerier for RegistryState {
             ));
         }
         if let Some(Some(subnet)) = subnets.into_iter().next() {
-            Ok(decentralization::network::Subnet {
+            Ok(decentralization::network::DecentralizedSubnet {
                 id: subnet,
                 nodes: self
                     .subnets
@@ -576,6 +578,8 @@ impl SubnetQuerier for RegistryState {
                     .iter()
                     .map(decentralization::network::Node::from)
                     .collect(),
+                min_nakamoto_coefficients: None,
+                comment: None,
             })
         } else {
             Err(NetworkError::IllegalRequest("no subnet found".to_string()))

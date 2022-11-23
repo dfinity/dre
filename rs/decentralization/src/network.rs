@@ -1,13 +1,13 @@
-use crate::nakamoto::{self, Feature, NakamotoScore};
+use crate::nakamoto::{self, NakamotoScore};
 use crate::SubnetChangeResponse;
 use actix_web::http::StatusCode;
 use actix_web::{HttpResponse, ResponseError};
 use anyhow::anyhow;
 use async_trait::async_trait;
 use ic_base_types::PrincipalId;
-use ic_management_types::NetworkError;
+use ic_management_types::{MinNakamotoCoefficients, NetworkError, NodeFeature};
 use itertools::Itertools;
-use log::{debug, info};
+use log::{debug, info, warn};
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 use std::fmt::{Debug, Display, Formatter};
@@ -39,7 +39,7 @@ impl Node {
         self.features.clone()
     }
 
-    pub fn get_feature(&self, feature: &Feature) -> String {
+    pub fn get_feature(&self, feature: &NodeFeature) -> String {
         self.features.get(feature).unwrap_or_default()
     }
 }
@@ -57,7 +57,7 @@ impl From<&ic_management_types::Node> for Node {
             features: nakamoto::NodeFeatures::from_iter(
                 [
                     (
-                        Feature::City,
+                        NodeFeature::City,
                         n.operator
                             .datacenter
                             .as_ref()
@@ -65,7 +65,7 @@ impl From<&ic_management_types::Node> for Node {
                             .unwrap_or_else(|| "unknown".to_string()),
                     ),
                     (
-                        Feature::Country,
+                        NodeFeature::Country,
                         n.operator
                             .datacenter
                             .as_ref()
@@ -73,7 +73,7 @@ impl From<&ic_management_types::Node> for Node {
                             .unwrap_or_else(|| "unknown".to_string()),
                     ),
                     (
-                        Feature::Continent,
+                        NodeFeature::Continent,
                         n.operator
                             .datacenter
                             .as_ref()
@@ -81,7 +81,7 @@ impl From<&ic_management_types::Node> for Node {
                             .unwrap_or_else(|| "unknown".to_string()),
                     ),
                     (
-                        Feature::DataCenterOwner,
+                        NodeFeature::DataCenterOwner,
                         n.operator
                             .datacenter
                             .as_ref()
@@ -89,14 +89,14 @@ impl From<&ic_management_types::Node> for Node {
                             .unwrap_or_else(|| "unknown".to_string()),
                     ),
                     (
-                        Feature::DataCenter,
+                        NodeFeature::DataCenter,
                         n.operator
                             .datacenter
                             .as_ref()
                             .map(|d| d.name.clone())
                             .unwrap_or_else(|| "unknown".to_string()),
                     ),
-                    (Feature::NodeProvider, n.operator.provider.principal.to_string()),
+                    (NodeFeature::NodeProvider, n.operator.provider.principal.to_string()),
                 ]
                 .into_iter(),
             ),
@@ -106,12 +106,14 @@ impl From<&ic_management_types::Node> for Node {
 }
 
 #[derive(Clone, Default, Debug, Serialize, Deserialize)]
-pub struct Subnet {
+pub struct DecentralizedSubnet {
     pub id: PrincipalId,
     pub nodes: Vec<Node>,
+    pub min_nakamoto_coefficients: Option<MinNakamotoCoefficients>,
+    pub comment: Option<String>,
 }
 
-impl Subnet {
+impl DecentralizedSubnet {
     fn remove_nodes(&self, nodes: &[PrincipalId]) -> Result<(Self, Vec<Node>), NetworkError> {
         let mut new_subnet_nodes = self.nodes.clone();
         let mut removed = Vec::new();
@@ -126,6 +128,8 @@ impl Subnet {
             Self {
                 id: self.id,
                 nodes: new_subnet_nodes,
+                min_nakamoto_coefficients: self.min_nakamoto_coefficients.clone(),
+                comment: self.comment.clone(),
             },
             removed,
         ))
@@ -135,6 +139,15 @@ impl Subnet {
         Self {
             id: self.id,
             nodes: self.nodes.clone().into_iter().chain(nodes).collect(),
+            min_nakamoto_coefficients: self.min_nakamoto_coefficients.clone(),
+            comment: self.comment.clone(),
+        }
+    }
+
+    fn with_min_nakamoto_coefficients(self, min_nakamoto_coefficients: &Option<MinNakamotoCoefficients>) -> Self {
+        Self {
+            min_nakamoto_coefficients: min_nakamoto_coefficients.clone(),
+            ..self
         }
     }
 
@@ -142,68 +155,119 @@ impl Subnet {
     /// For instance, there needs to be at least one DFINITY-owned node in each
     /// subnet. For the mainnet NNS there needs to be at least 3
     /// DFINITY-owned nodes.
-    pub fn check_business_rules(&self) -> anyhow::Result<Vec<String>> {
-        Self::_check_business_rules_for_nodes(&self.id, &self.nodes)
+    pub fn check_business_rules(&self) -> anyhow::Result<(usize, Vec<String>)> {
+        Self::_check_business_rules_for_nodes(&self.id, &self.nodes, &self.min_nakamoto_coefficients)
     }
 
-    fn _check_business_rules_for_nodes(subnet_id: &PrincipalId, nodes: &[Node]) -> anyhow::Result<Vec<String>> {
+    fn _check_business_rules_for_nodes(
+        subnet_id: &PrincipalId,
+        nodes: &[Node],
+        min_nakamoto_coefficients: &Option<MinNakamotoCoefficients>,
+    ) -> anyhow::Result<(usize, Vec<String>)> {
         let mut checks = Vec::new();
+        let mut penalties = 0;
         if nodes.len() <= 1 {
-            return Ok(checks);
+            return Ok((1, checks));
         }
 
         let dfinity_owned_nodes_count: usize = nodes.iter().map(|n| n.dfinity_owned as usize).sum();
 
-        if subnet_id.to_string() == *"tdb26-jop6k-aogll-7ltgs-eruif-6kk7m-qpktf-gdiqx-mxtrf-vb5e6-eqe" {
-            if dfinity_owned_nodes_count >= 3 {
-                checks.push("At least 3 DFINITY-owned nodes in the Mainnet NNS subnet.".to_string());
-            } else {
-                return Err(anyhow::anyhow!(
-                    "The Mainnet NNS subnet should have at least 3 DFINITY-owned nodes, got {}",
-                    dfinity_owned_nodes_count
-                ));
+        let nakamoto_scores = Self::_calc_nakamoto_score(nodes);
+        let subnet_id_str = subnet_id.to_string();
+        if subnet_id_str == *"tdb26-jop6k-aogll-7ltgs-eruif-6kk7m-qpktf-gdiqx-mxtrf-vb5e6-eqe"
+            && dfinity_owned_nodes_count < 3
+        {
+            checks.push(format!(
+                "Mainnet NNS subnet should have at least 3 DFINITY-owned nodes, got {}",
+                dfinity_owned_nodes_count
+            ));
+            penalties += (3 - dfinity_owned_nodes_count) * 1000;
+        }
+        if subnet_id_str == *"uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe"
+            || subnet_id_str == *"tdb26-jop6k-aogll-7ltgs-eruif-6kk7m-qpktf-gdiqx-mxtrf-vb5e6-eqe"
+            || subnet_id_str == *"x33ed-h457x-bsgyx-oqxqf-6pzwv-wkhzr-rm2j3-npodi-purzm-n66cg-gae"
+        {
+            // We keep the backup of the ECDSA key on uzr34, and we don’t want a single
+            // country to be able to extract that key.
+            // We should use the same NC requirements for uzr34 and the upcoming ECDSA
+            // subnet, since they'll both hold the same valuable key
+            // Slack discussion: https://dfinity.slack.com/archives/C01DB8MQ5M1/p1668702249558389
+            // For different reasons, there is the same requirement for the NNS and the SNS
+            // subnet
+            let feature = NodeFeature::Country;
+            match nakamoto_scores.feature_value_counts_max(&feature) {
+                Some((country_dominant, country_nodes_count)) => {
+                    let controlled_nodes_max = nodes.len() / 3 - 1;
+                    if country_nodes_count > controlled_nodes_max {
+                        checks.push(format!(
+                            "Country '{}' controls {} of nodes, which is > {} (1/3 - 1) of subnet nodes",
+                            country_dominant, country_nodes_count, controlled_nodes_max
+                        ));
+                        penalties += (country_nodes_count - controlled_nodes_max) * 1000;
+                    }
+                }
+                _ => return Err(anyhow::anyhow!("Incomplete data for {}", feature)),
             }
-        } else if dfinity_owned_nodes_count >= 1 {
-            checks.push("At least one DFINITY-owned node".to_string());
-        } else {
-            return Err(anyhow::anyhow!("DFINITY-owned node missing"));
+        }
+        if dfinity_owned_nodes_count < 1 {
+            checks.push("DFINITY-owned node missing".to_string());
+            penalties += 1000;
         }
 
-        let nakamoto_scores = Self::_calc_nakamoto_score(nodes);
-        match nakamoto_scores.score_feature(&Feature::NodeProvider) {
+        match nakamoto_scores.score_feature(&NodeFeature::NodeProvider) {
             Some(score) => {
-                if score > 1.0 {
-                    checks.push("A single Node Provider cannot halt a subnet".to_string());
-                } else if nodes.len() <= 3 {
-                    checks.push(
-                        "Subnet too small to satisfy business rule: 'A single Node Provider cannot halt a subnet'"
-                            .to_string(),
-                    );
-                } else {
+                if score <= 1.0 && nodes.len() > 3 {
+                    // We restrict to subnets with >3 nodes to be able to build subnet from scratch
                     return Err(anyhow::anyhow!("A single Node Provider can halt a subnet"));
                 }
             }
             None => return Err(anyhow::anyhow!("Missing the Nakamoto score for the Node Provider")),
         }
 
-        for feature in &Feature::variants() {
+        if let Some(min_nakamoto_coefficients) = min_nakamoto_coefficients {
+            for (feature, min_coeff) in min_nakamoto_coefficients.coefficients.iter() {
+                match nakamoto_scores.score_feature(feature) {
+                    Some(score) => {
+                        if score < *min_coeff {
+                            checks.push(format!(
+                                "Lower than expected Nakamoto Coefficient {} < {} for feature {}",
+                                score, min_coeff, feature
+                            ));
+                            penalties += ((*min_coeff - score) * 100.) as usize;
+                        }
+                    }
+                    None => return Err(anyhow::anyhow!("NodeFeature '{}' not found", feature.to_string())),
+                }
+            }
+            if nakamoto_scores.score_avg_linear() < min_nakamoto_coefficients.average {
+                checks.push(format!(
+                    "Lower than expected average Nakamoto Coefficient {} < {}",
+                    nakamoto_scores.score_avg_linear(),
+                    min_nakamoto_coefficients.average
+                ));
+                penalties += ((min_nakamoto_coefficients.average - nakamoto_scores.score_avg_linear()) * 100.) as usize;
+            }
+        }
+
+        for feature in &NodeFeature::variants() {
             match (
                 nakamoto_scores.score_feature(feature),
                 nakamoto_scores.controlled_nodes(feature),
             ) {
                 (Some(score), Some(controlled_nodes)) => {
                     if score == 1.0 && controlled_nodes > nodes.len() * 2 / 3 {
-                        return Err(anyhow::anyhow!(
-                            "Feature '{}' controls {} of nodes, which is > {} (2/3 of all) nodes",
-                            feature.to_string(),
+                        checks.push(format!(
+                            "NodeFeature '{}' controls {} of nodes, which is > {} (2/3 of all) nodes",
+                            feature,
                             controlled_nodes,
                             nodes.len() * 2 / 3
                         ));
+                        penalties += (controlled_nodes - nodes.len() * 2 / 3) * 1000;
                     }
                 }
                 (score, controlled_nodes) => {
                     debug!(
-                        "Feature {} does not have valid score {:?} controlled_nodes {:?}",
+                        "NodeFeature {} does not have valid score {:?} controlled_nodes {:?}",
                         feature.to_string(),
                         &score,
                         &controlled_nodes
@@ -211,14 +275,13 @@ impl Subnet {
                 }
             }
         }
-        checks.push("No single feature controls over 2/3 of all nodes".to_string());
 
         debug!(
             "Business rules checks succeeded for subnet {}: {:?}",
             subnet_id.to_string(),
             checks
         );
-        Ok(checks)
+        Ok((penalties, checks))
     }
 
     fn _calc_nakamoto_score(nodes: &[Node]) -> NakamotoScore {
@@ -230,13 +293,18 @@ impl Subnet {
         Self::_calc_nakamoto_score(&self.nodes)
     }
 
-    pub fn new_extended_subnet(&self, num_nodes_to_add: usize, available_nodes: &[Node]) -> anyhow::Result<Subnet> {
+    pub fn new_extended_subnet(
+        &self,
+        num_nodes_to_add: usize,
+        available_nodes: &[Node],
+    ) -> anyhow::Result<DecentralizedSubnet> {
         let mut run_log = Vec::new();
 
         let mut nodes_initial = self.nodes.clone();
         let mut nodes_available = available_nodes.to_vec();
         let orig_available_nodes_len = nodes_available.len();
         let mut nodes_after_extension = self.nodes.clone();
+        let mut comment = None;
 
         let line = format!("Nakamoto score before extension {}", self.nakamoto_score());
         info!("{}", &line);
@@ -247,6 +315,7 @@ impl Subnet {
             node: Node,
             score: NakamotoScore,
             penalty: usize,
+            business_rules_log: Vec<String>,
         }
 
         for _ in 0..num_nodes_to_add {
@@ -255,10 +324,14 @@ impl Subnet {
                 .enumerate()
                 .filter_map(|(index, node)| {
                     let candidate_subnet_nodes: Vec<Node> = nodes_initial.iter().chain([node]).cloned().collect();
-                    match Self::_check_business_rules_for_nodes(&self.id, &candidate_subnet_nodes) {
-                        Ok(_) => {
+                    match Self::_check_business_rules_for_nodes(
+                        &self.id,
+                        &candidate_subnet_nodes,
+                        &self.min_nakamoto_coefficients,
+                    ) {
+                        Ok((business_rules_penalty, business_rules_log)) => {
                             let new_score = Self::_calc_nakamoto_score(&candidate_subnet_nodes);
-                            let mut penalty = 0;
+                            let mut penalty = business_rules_penalty;
                             if node.dfinity_owned {
                                 penalty += 100
                             };
@@ -274,6 +347,7 @@ impl Subnet {
                                 node: node.clone(),
                                 score: new_score,
                                 penalty,
+                                business_rules_log,
                             })
                         }
                         Err(err) => {
@@ -313,12 +387,21 @@ impl Subnet {
             }
             // TODO: if more than one candidate returns the same nakamoto score, pick the
             // one that improves the feature diversity
-            let best_node = sorted_good_nodes.pop();
-            match best_node {
-                Some(sort_result) => {
-                    nodes_available.swap_remove(sort_result.index);
-                    nodes_after_extension.push(sort_result.node.clone());
-                    nodes_initial.push(sort_result.node.clone());
+            let best_result = sorted_good_nodes.pop();
+            match best_result {
+                Some(best_result) => {
+                    nodes_available.swap_remove(best_result.index);
+                    nodes_after_extension.push(best_result.node.clone());
+                    nodes_initial.push(best_result.node.clone());
+                    if best_result.penalty != 0 {
+                        comment = Some(format!(
+                            "Best result has penalty {}. Details of the business rules checks:\n{}",
+                            best_result.penalty,
+                            best_result.business_rules_log.join("\n")
+                        ));
+                    } else {
+                        comment = None;
+                    }
                 }
                 None => {
                     return Err(anyhow!(
@@ -334,11 +417,13 @@ impl Subnet {
         Ok(Self {
             id: self.id,
             nodes: nodes_after_extension,
+            min_nakamoto_coefficients: self.min_nakamoto_coefficients.clone(),
+            comment,
         })
     }
 }
 
-impl Display for Subnet {
+impl Display for DecentralizedSubnet {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
@@ -350,22 +435,24 @@ impl Display for Subnet {
     }
 }
 
-impl From<Subnet> for NakamotoScore {
-    fn from(subnet: Subnet) -> Self {
+impl From<DecentralizedSubnet> for NakamotoScore {
+    fn from(subnet: DecentralizedSubnet) -> Self {
         Self::new_from_nodes(&subnet.nodes)
     }
 }
 
-impl From<&ic_management_types::Subnet> for Subnet {
+impl From<&ic_management_types::Subnet> for DecentralizedSubnet {
     fn from(s: &ic_management_types::Subnet) -> Self {
         Self {
             id: s.principal,
             nodes: s.nodes.iter().map(Node::from).collect(),
+            min_nakamoto_coefficients: None,
+            comment: None,
         }
     }
 }
 
-impl From<ic_management_types::Subnet> for Subnet {
+impl From<ic_management_types::Subnet> for DecentralizedSubnet {
     fn from(s: ic_management_types::Subnet) -> Self {
         Self::from(&s)
     }
@@ -378,8 +465,8 @@ pub trait AvailableNodesQuerier {
 
 #[async_trait]
 pub trait SubnetQuerier {
-    async fn subnet(&self, id: &PrincipalId) -> Result<Subnet, NetworkError>;
-    async fn subnet_of_nodes(&self, nodes: &[PrincipalId]) -> Result<Subnet, NetworkError>;
+    async fn subnet(&self, id: &PrincipalId) -> Result<DecentralizedSubnet, NetworkError>;
+    async fn subnet_of_nodes(&self, nodes: &[PrincipalId]) -> Result<DecentralizedSubnet, NetworkError>;
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
@@ -396,7 +483,7 @@ impl Display for DecentralizationError {
 impl ResponseError for DecentralizationError {
     fn error_response(&self) -> HttpResponse {
         let out: serde_json::Value =
-            serde_json::from_str("{\"message\": \"Feature not available. For access contact the administrator\"}")
+            serde_json::from_str("{\"message\": \"NodeFeature not available. For access contact the administrator\"}")
                 .unwrap();
         HttpResponse::BadRequest().json(out)
     }
@@ -438,20 +525,22 @@ pub trait TopologyManager: SubnetQuerier + AvailableNodesQuerier {
 
 #[derive(Default, Clone)]
 pub struct SubnetChangeRequest {
-    subnet: Subnet,
+    subnet: DecentralizedSubnet,
     available_nodes: Vec<Node>,
     include_nodes: Vec<PrincipalId>,
     removed_nodes: Vec<Node>,
     improve_count: usize,
+    min_nakamoto_coefficients: Option<MinNakamotoCoefficients>,
 }
 
 impl SubnetChangeRequest {
     pub fn new(
-        subnet: Subnet,
+        subnet: DecentralizedSubnet,
         available_nodes: Vec<Node>,
         include_nodes: Vec<PrincipalId>,
         removed_nodes: Vec<Node>,
         improve_count: usize,
+        min_nakamoto_coefficients: Option<MinNakamotoCoefficients>,
     ) -> Self {
         SubnetChangeRequest {
             subnet,
@@ -459,10 +548,11 @@ impl SubnetChangeRequest {
             include_nodes,
             removed_nodes,
             improve_count,
+            min_nakamoto_coefficients,
         }
     }
 
-    pub fn subnet(&self) -> Subnet {
+    pub fn subnet(&self) -> DecentralizedSubnet {
         self.subnet.clone()
     }
 
@@ -504,6 +594,13 @@ impl SubnetChangeRequest {
         }
     }
 
+    pub fn with_min_nakamoto_coefficients(self, min_nakamoto_coefficients: Option<MinNakamotoCoefficients>) -> Self {
+        Self {
+            min_nakamoto_coefficients,
+            ..self
+        }
+    }
+
     pub fn extend(&self, extension_size: usize) -> Result<SubnetChange, NetworkError> {
         let included_nodes = self
             .available_nodes
@@ -522,6 +619,7 @@ impl SubnetChangeRequest {
         let extended_subnet = self
             .subnet
             .add_nodes(included_nodes)
+            .with_min_nakamoto_coefficients(&self.min_nakamoto_coefficients)
             .new_extended_subnet(extension_size, &available_nodes)
             .map_err(|e| NetworkError::ExtensionFailed(e.to_string()))?;
 
@@ -535,6 +633,8 @@ impl SubnetChangeRequest {
                 .chain(self.removed_nodes.clone())
                 .collect(),
             new_nodes: extended_subnet.nodes,
+            min_nakamoto_coefficients: self.min_nakamoto_coefficients.clone(),
+            comment: extended_subnet.comment,
         };
         info!("Subnet {} extend {}", self.subnet.id, subnet_change);
         Ok(subnet_change)
@@ -550,24 +650,34 @@ impl SubnetChangeRequest {
     }
 
     pub fn optimize(self, max_replacements: usize) -> Result<SubnetChange, NetworkError> {
-        self.subnet
-            .nodes
-            .iter()
-            .combinations(max_replacements)
-            .map(|nodes| {
-                let mut change = self.clone();
-                change
-                    .available_nodes
-                    .append(&mut nodes.iter().map(|n| (*n).clone()).collect::<Vec<_>>());
-                change.replace(nodes.iter().map(|n| n.id).collect::<Vec<_>>().as_slice())
-            })
-            .filter_map(|r| r.ok())
-            .max_by(|sc1, sc2| {
-                let score1 = NakamotoScore::new_from_nodes(&sc1.new_nodes);
-                let score2 = NakamotoScore::new_from_nodes(&sc2.new_nodes);
-                score1.cmp(&score2)
-            })
-            .ok_or_else(|| NetworkError::ExtensionFailed("optimize failed (FIXME: add an explanation)".to_string()))
+        let max_replacements = if max_replacements > 3 {
+            warn!("Limiting the max replacements to 3 to prevent DOS");
+            3
+        } else {
+            max_replacements
+        };
+
+        let results = self.subnet.nodes.iter().combinations(max_replacements).map(|nodes| {
+            let mut change = self.clone();
+            change
+                .available_nodes
+                .append(&mut nodes.iter().map(|n| (*n).clone()).collect::<Vec<_>>());
+            change.replace(nodes.iter().map(|n| n.id).collect::<Vec<_>>().as_slice())
+        });
+
+        let errs = results.clone().map(|r| format!("{:?}", r)).collect::<Vec<_>>();
+
+        match &results.clone().filter_map(|r| r.ok()).max_by(|sc1, sc2| {
+            let score1 = NakamotoScore::new_from_nodes(&sc1.new_nodes);
+            let score2 = NakamotoScore::new_from_nodes(&sc2.new_nodes);
+            score1.cmp(&score2)
+        }) {
+            Some(best_result) => Ok(best_result.clone()),
+            None => Err(NetworkError::ExtensionFailed(format!(
+                "Optimize failed, could not find any suitable solution for the request\n{}",
+                errs.join("\n")
+            ))),
+        }
     }
 
     pub fn remove(self, nodes: &[PrincipalId]) -> Result<SubnetChangeRequest, NetworkError> {
@@ -606,10 +716,13 @@ impl SubnetChangeRequest {
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct SubnetChange {
     pub id: PrincipalId,
     pub old_nodes: Vec<Node>,
     pub new_nodes: Vec<Node>,
+    pub min_nakamoto_coefficients: Option<MinNakamotoCoefficients>,
+    pub comment: Option<String>,
 }
 
 impl SubnetChange {
@@ -629,17 +742,21 @@ impl SubnetChange {
             .collect()
     }
 
-    pub fn before(&self) -> Subnet {
-        Subnet {
+    pub fn before(&self) -> DecentralizedSubnet {
+        DecentralizedSubnet {
             id: self.id,
             nodes: self.old_nodes.clone(),
+            min_nakamoto_coefficients: self.min_nakamoto_coefficients.clone(),
+            comment: self.comment.clone(),
         }
     }
 
-    pub fn after(&self) -> Subnet {
-        Subnet {
+    pub fn after(&self) -> DecentralizedSubnet {
+        DecentralizedSubnet {
             id: self.id,
             nodes: self.new_nodes.clone(),
+            min_nakamoto_coefficients: self.min_nakamoto_coefficients.clone(),
+            comment: self.comment.clone(),
         }
     }
 }

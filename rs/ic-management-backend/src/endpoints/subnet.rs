@@ -63,7 +63,8 @@ async fn replace(
         }
     }
     .exclude_nodes(request.exclude.clone().unwrap_or_default())
-    .include_nodes(request.include.clone().unwrap_or_default());
+    .include_nodes(request.include.clone().unwrap_or_default())
+    .with_min_nakamoto_coefficients(request.min_nakamoto_coefficients.clone());
 
     let mut non_optimize_replaced_nodes = if let ReplaceTarget::Nodes { nodes, motivation: _ } = &request.target {
         nodes.len()
@@ -122,6 +123,7 @@ async fn create_subnet(
     request: web::Json<SubnetCreateRequest>,
 ) -> Result<HttpResponse, Error> {
     let registry = registry.read().await;
+    println!("Received a request to create a subnet {:?}", request.size);
     Ok(HttpResponse::Ok().json(decentralization::SubnetChangeResponse::from(
         &registry.create_subnet(request.size).await?,
     )))
