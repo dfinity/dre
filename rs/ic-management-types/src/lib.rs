@@ -3,6 +3,8 @@ pub mod errors;
 pub use crate::errors::*;
 
 use candid::{CandidType, Decode};
+use core::hash::Hash;
+use ic_nns_governance::pb::v1::ProposalStatus;
 use ic_nns_governance::pb::v1::NnsFunction;
 use ic_nns_governance::pb::v1::ProposalInfo;
 use ic_registry_subnet_type::SubnetType;
@@ -15,11 +17,14 @@ use registry_canister::mutations::do_update_subnet_replica::UpdateSubnetReplicaV
 use serde::{Deserialize, Serialize};
 use serde_with::{serde_as, DisplayFromStr};
 use std::cmp::{Eq, Ord, PartialEq, PartialOrd};
+use std::collections::BTreeMap;
+use std::convert::TryFrom;
 use std::net::Ipv6Addr;
 use std::ops::Deref;
 use std::str::FromStr;
 use std::sync::Arc;
-use strum_macros::EnumString;
+use strum::VariantNames;
+use strum_macros::{Display, EnumString, EnumVariantNames};
 use url::Url;
 
 pub trait NnsFunctionProposal: CandidType + serde::de::DeserializeOwned {
@@ -53,12 +58,12 @@ impl NnsFunctionProposal for ChangeSubnetMembershipPayload {
     const TYPE: NnsFunction = NnsFunction::ChangeSubnetMembership;
 }
 
-pub trait TopologyProposalPayload: NnsFunctionProposal {
+pub trait SubnetMembershipChangePayload: NnsFunctionProposal {
     fn get_nodes(&self) -> Vec<PrincipalId>;
     fn get_subnet(&self) -> Option<PrincipalId>;
 }
 
-impl TopologyProposalPayload for CreateSubnetPayload {
+impl SubnetMembershipChangePayload for CreateSubnetPayload {
     fn get_nodes(&self) -> Vec<PrincipalId> {
         self.node_ids.iter().map(|node_id| node_id.get()).collect()
     }
@@ -68,7 +73,7 @@ impl TopologyProposalPayload for CreateSubnetPayload {
     }
 }
 
-impl TopologyProposalPayload for AddNodesToSubnetPayload {
+impl SubnetMembershipChangePayload for AddNodesToSubnetPayload {
     fn get_nodes(&self) -> Vec<PrincipalId> {
         self.node_ids.iter().map(|node_id| node_id.get()).collect()
     }
@@ -78,7 +83,7 @@ impl TopologyProposalPayload for AddNodesToSubnetPayload {
     }
 }
 
-impl TopologyProposalPayload for RemoveNodesFromSubnetPayload {
+impl SubnetMembershipChangePayload for RemoveNodesFromSubnetPayload {
     fn get_nodes(&self) -> Vec<PrincipalId> {
         self.node_ids.iter().map(|node_id| node_id.get()).collect()
     }
@@ -88,7 +93,7 @@ impl TopologyProposalPayload for RemoveNodesFromSubnetPayload {
     }
 }
 
-impl TopologyProposalPayload for ChangeSubnetMembershipPayload {
+impl SubnetMembershipChangePayload for ChangeSubnetMembershipPayload {
     fn get_nodes(&self) -> Vec<PrincipalId> {
         self.node_ids_add
             .iter()
@@ -103,13 +108,13 @@ impl TopologyProposalPayload for ChangeSubnetMembershipPayload {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct TopologyProposal {
+pub struct SubnetMembershipChangeProposal {
     pub nodes: Vec<PrincipalId>,
     pub subnet_id: Option<PrincipalId>,
     pub id: u64,
 }
 
-impl<T: TopologyProposalPayload> From<(ProposalInfo, T)> for TopologyProposal {
+impl<T: SubnetMembershipChangePayload> From<(ProposalInfo, T)> for SubnetMembershipChangeProposal {
     fn from((info, payload): (ProposalInfo, T)) -> Self {
         Self {
             subnet_id: payload.get_subnet(),
@@ -129,7 +134,7 @@ pub struct Subnet {
     pub metadata: SubnetMetadata,
     pub replica_version: String,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub proposal: Option<TopologyProposal>,
+    pub proposal: Option<SubnetMembershipChangeProposal>,
     pub replica_release: Option<ReplicaRelease>,
 }
 
@@ -158,10 +163,83 @@ pub struct Node {
     pub subnet: Option<PrincipalId>,
     pub dfinity_owned: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub proposal: Option<TopologyProposal>,
+    pub proposal: Option<SubnetMembershipChangeProposal>,
     pub label: Option<String>,
     #[serde(default)]
     pub decentralized: bool,
+}
+
+#[derive(
+    Display, EnumString, EnumVariantNames, Hash, Eq, PartialEq, Ord, PartialOrd, Clone, Serialize, Deserialize, Debug,
+)]
+#[strum(serialize_all = "snake_case")]
+#[serde(rename_all = "snake_case")]
+pub enum NodeFeature {
+    NodeProvider,
+    DataCenter,
+    DataCenterOwner,
+    City,
+    Country,
+    Continent,
+}
+
+impl NodeFeature {
+    pub fn variants() -> Vec<Self> {
+        NodeFeature::VARIANTS
+            .iter()
+            .map(|f| NodeFeature::from_str(f).unwrap())
+            .collect()
+    }
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, Default)]
+pub struct MinNakamotoCoefficients {
+    pub coefficients: BTreeMap<NodeFeature, f64>,
+    pub average: f64,
+}
+
+#[derive(Clone, Serialize, Debug, Deserialize)]
+pub struct TopologyProposal {
+    pub id: u64,
+    pub kind: TopologyProposalKind,
+    pub status: TopologyProposalStatus,
+}
+
+#[derive(EnumString, Clone, Deserialize, Debug, Serialize)]
+pub enum TopologyProposalStatus {
+    Open,
+    Executed,
+}
+
+impl TryFrom<ProposalStatus> for TopologyProposalStatus {
+    type Error = String;
+
+    fn try_from(value: ProposalStatus) -> Result<Self, Self::Error> {
+        match value {
+            ProposalStatus::Open => Ok(Self::Open),
+            ProposalStatus::Executed => Ok(Self::Executed),
+            _ => Err("cannot convert to topology proposal".to_string()),
+        }
+    }
+}
+
+#[derive(Clone, Serialize, Debug, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum TopologyProposalKind {
+    ReplaceNode(ReplaceNodeProposalInfo),
+    CreateSubnet(CreateSubnetProposalInfo),
+}
+
+#[derive(Clone, Serialize, Debug, Deserialize)]
+pub struct ReplaceNodeProposalInfo {
+    pub old_nodes: Vec<PrincipalId>,
+    pub new_nodes: Vec<PrincipalId>,
+    pub first: bool,
+}
+
+#[derive(Clone, Serialize, Debug, Deserialize)]
+pub struct CreateSubnetProposalInfo {
+    pub nodes: Vec<PrincipalId>,
 }
 
 #[serde_as]

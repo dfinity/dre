@@ -91,6 +91,10 @@ pub(crate) mod subnet {
             #[clap(short, long)]
             motivation: Option<String>,
 
+            /// Minimum Nakamoto coefficients after the replacement
+            #[clap(long, takes_value = true, multiple_values = true)]
+            min_nakamoto_coefficients: Vec<String>,
+
             /// Features or Node IDs to exclude from the available nodes pool
             #[clap(long, takes_value = true, multiple_values = true)]
             exclude: Vec<String>,

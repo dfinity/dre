@@ -1,4 +1,7 @@
 use clap::{CommandFactory, ErrorKind, Parser};
+use ic_management_types::{MinNakamotoCoefficients, NodeFeature};
+use std::collections::BTreeMap;
+use std::str::FromStr;
 mod cli;
 mod clients;
 pub(crate) mod defaults;
@@ -59,7 +62,10 @@ async fn main() -> Result<(), anyhow::Error> {
                         motivation,
                         exclude,
                         include,
+                        min_nakamoto_coefficients
                     } => {
+                        let min_nakamoto_coefficients = parse_min_nakamoto_coefficients(&mut cmd, min_nakamoto_coefficients);
+
                             runner
                                 .membership_replace(ic_management_types::requests::MembershipReplaceRequest {
                                     target: match &subnet.id {
@@ -85,6 +91,7 @@ async fn main() -> Result<(), anyhow::Error> {
                                     optimize: *optimize,
                                     exclude: exclude.clone().into(),
                                     include: include.clone().into(),
+                                    min_nakamoto_coefficients,
                                 })
                                 .await
                     }
@@ -119,6 +126,83 @@ async fn main() -> Result<(), anyhow::Error> {
         }
     })
     .await
+}
+
+// Construct MinNakamotoCoefficients from an array (slice) of ["key=value"], and
+// prefill default values
+//
+// Examples:
+// [] => use defaults
+//           -> "node_provider" Nakamoto Coefficient (NC) needs to be >= 5.0
+//           -> average NC >= 3.0
+//
+// ["node_provider=4"] => override the "node_provider" NC
+//           -> "node_provider" NC >= 4.0
+//           -> average NC >= 3.0 (default)
+//
+// ["node_provider=4", "average=2"] => override "node_provider" and average NC
+//           -> "node_provider" NC >= 4.0
+//           -> average NC >= 2.0
+//
+// ["data_centers=4"] => override the "data_centers" NC
+//           -> "data_centers" NC >= 4.0
+//           -> "node_provider" NC >= 5.0 (default)
+//           -> average NC >= 3.0 (default)
+fn parse_min_nakamoto_coefficients(
+    cmd: &mut clap::Command,
+    min_nakamoto_coefficients: &[String],
+) -> Option<MinNakamotoCoefficients> {
+    let min_nakamoto_coefficients: Vec<String> = if min_nakamoto_coefficients.is_empty() {
+        ["node_provider=5", "average=3"]
+            .iter()
+            .map(|s| String::from(*s))
+            .collect()
+    } else {
+        min_nakamoto_coefficients.to_vec()
+    };
+
+    let mut average = 3.0;
+    let min_nakamoto_coefficients = min_nakamoto_coefficients
+        .iter()
+        .filter_map(|s| {
+            let (key, val) = match s.split_once('=') {
+                Some(s) => s,
+                None => cmd
+                    .error(ErrorKind::ValueValidation, "Value requires exactly one '=' symbol")
+                    .exit(),
+            };
+            if key.to_lowercase() == "average" {
+                average = val
+                    .parse::<f64>()
+                    .map_err(|_| {
+                        cmd.error(ErrorKind::ValueValidation, "Failed to parse feature from string")
+                            .exit()
+                    })
+                    .unwrap();
+                None
+            } else {
+                let feature = match NodeFeature::from_str(key) {
+                    Ok(v) => v,
+                    Err(_) => cmd
+                        .error(ErrorKind::ValueValidation, "Failed to parse feature from string")
+                        .exit(),
+                };
+                let val: f64 = val
+                    .parse::<f64>()
+                    .map_err(|_| {
+                        cmd.error(ErrorKind::ValueValidation, "Failed to parse feature from string")
+                            .exit()
+                    })
+                    .unwrap();
+                Some((feature, val))
+            }
+        })
+        .collect::<BTreeMap<NodeFeature, f64>>();
+
+    Some(MinNakamotoCoefficients {
+        coefficients: min_nakamoto_coefficients,
+        average,
+    })
 }
 
 fn init_logger() {

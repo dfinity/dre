@@ -6,6 +6,7 @@ use std::collections::{BTreeMap, HashMap};
 use std::fmt::{Display, Formatter};
 
 use ic_base_types::PrincipalId;
+use ic_management_types::NodeFeature;
 use serde::{self, Deserialize, Serialize};
 
 #[derive(Clone, Deserialize, Serialize, Default)]
@@ -17,7 +18,8 @@ pub struct SubnetChangeResponse {
     pub score_before: nakamoto::NakamotoScore,
     pub score_after: nakamoto::NakamotoScore,
     pub motivation: Option<String>,
-    pub feature_diff: HashMap<nakamoto::Feature, FeatureDiff>,
+    pub comment: Option<String>,
+    pub feature_diff: HashMap<NodeFeature, FeatureDiff>,
 }
 
 pub type FeatureDiff = HashMap<String, (usize, usize)>;
@@ -44,21 +46,22 @@ impl From<&network::SubnetChange> for SubnetChangeResponse {
             score_before: nakamoto::NakamotoScore::new_from_nodes(&change.old_nodes),
             score_after: nakamoto::NakamotoScore::new_from_nodes(&change.new_nodes),
             motivation: None,
+            comment: change.comment.clone(),
             feature_diff: change.new_nodes.iter().fold(
                 change.old_nodes.iter().fold(
-                    nakamoto::Feature::variants()
+                    NodeFeature::variants()
                         .into_iter()
                         .map(|f| (f, FeatureDiff::new()))
-                        .collect::<HashMap<nakamoto::Feature, FeatureDiff>>(),
+                        .collect::<HashMap<NodeFeature, FeatureDiff>>(),
                     |mut acc, n| {
-                        for f in nakamoto::Feature::variants() {
+                        for f in NodeFeature::variants() {
                             acc.get_mut(&f).unwrap().entry(n.get_feature(&f)).or_insert((0, 0)).0 += 1;
                         }
                         acc
                     },
                 ),
                 |mut acc, n| {
-                    for f in nakamoto::Feature::variants() {
+                    for f in NodeFeature::variants() {
                         acc.get_mut(&f).unwrap().entry(n.get_feature(&f)).or_insert((0, 0)).1 += 1;
                     }
                     acc
@@ -161,6 +164,12 @@ impl Display for SubnetChangeResponse {
         self.added.iter().zip(self.removed.iter()).for_each(|(a, r)| {
             writeln!(f, "{}{}", format!("  - {}", r).red(), format!("    + {}", a).green()).expect("write failed");
         });
-        writeln!(f)
+        writeln!(f)?;
+
+        if let Some(comment) = &self.comment {
+            writeln!(f, "{}", format!("*** Note ***\n{}", comment).red())?;
+        }
+
+        Ok(())
     }
 }
