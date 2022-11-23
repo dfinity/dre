@@ -1,75 +1,51 @@
 use crate::network::Node;
-use core::hash::Hash;
 use counter::Counter;
+use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 use std::collections::{BTreeMap, HashMap};
 use std::fmt::{Debug, Display, Formatter};
 use std::iter::{FromIterator, IntoIterator};
-use std::str::FromStr;
-use strum::VariantNames;
-use strum_macros::{Display, EnumString, EnumVariantNames};
 
-#[derive(
-    Display, EnumString, EnumVariantNames, Hash, Eq, PartialEq, Ord, PartialOrd, Clone, Serialize, Deserialize, Debug,
-)]
-#[strum(serialize_all = "snake_case")]
-#[serde(rename_all = "snake_case")]
-pub enum Feature {
-    NodeProvider,
-    DataCenter,
-    DataCenterOwner,
-    City,
-    Country,
-    Continent,
-}
-
-impl Feature {
-    pub fn variants() -> Vec<Self> {
-        Feature::VARIANTS
-            .iter()
-            .map(|f| Feature::from_str(f).unwrap())
-            .collect()
-    }
-}
+use ic_management_types::NodeFeature;
 
 #[derive(Eq, PartialEq, Clone, Serialize, Deserialize, Debug)]
 pub struct NodeFeatures {
-    pub feature_map: HashMap<Feature, String>,
+    pub feature_map: HashMap<NodeFeature, String>,
 }
 
 impl NodeFeatures {
-    pub fn get(&self, feature: &Feature) -> Option<String> {
+    pub fn get(&self, feature: &NodeFeature) -> Option<String> {
         self.feature_map.get(feature).cloned()
     }
 
     #[cfg(test)]
     fn new_test_feature_set(value: &str) -> Self {
         let mut result = HashMap::new();
-        for feature in Feature::variants() {
+        for feature in NodeFeature::variants() {
             result.insert(feature, value.to_string());
         }
         NodeFeatures { feature_map: result }
     }
 
     #[cfg(test)]
-    fn with_feature_value(&self, feature: &Feature, value: &str) -> Self {
+    fn with_feature_value(&self, feature: &NodeFeature, value: &str) -> Self {
         let mut feature_map = self.feature_map.clone();
         feature_map.insert(feature.clone(), value.to_string());
         NodeFeatures { feature_map }
     }
 }
 
-impl FromIterator<(Feature, &'static str)> for NodeFeatures {
-    fn from_iter<I: IntoIterator<Item = (Feature, &'static str)>>(iter: I) -> Self {
+impl FromIterator<(NodeFeature, &'static str)> for NodeFeatures {
+    fn from_iter<I: IntoIterator<Item = (NodeFeature, &'static str)>>(iter: I) -> Self {
         Self {
             feature_map: HashMap::from_iter(iter.into_iter().map(|x| (x.0, String::from(x.1)))),
         }
     }
 }
 
-impl FromIterator<(Feature, std::string::String)> for NodeFeatures {
-    fn from_iter<I: IntoIterator<Item = (Feature, std::string::String)>>(iter: I) -> Self {
+impl FromIterator<(NodeFeature, std::string::String)> for NodeFeatures {
+    fn from_iter<I: IntoIterator<Item = (NodeFeature, std::string::String)>>(iter: I) -> Self {
         Self {
             feature_map: HashMap::from_iter(iter),
         }
@@ -79,11 +55,12 @@ impl FromIterator<(Feature, std::string::String)> for NodeFeatures {
 #[derive(Clone, Debug, Serialize, Deserialize, Default)]
 /// This struct keeps the Nakamoto coefficients for each feature that we track
 /// for the IC nodes https://crosstower.com/resources/education/nakamoto-coefficient/
-/// For instance: [Feature::NodeProvider], [Feature::DataCenter], etc...
-/// For a complete reference check [Feature]
+/// For instance: [NodeFeature::NodeProvider], [NodeFeature::DataCenter], etc...
+/// For a complete reference check [NodeFeature]
 pub struct NakamotoScore {
-    coefficients: BTreeMap<Feature, f64>,
-    controlled_nodes: BTreeMap<Feature, usize>,
+    coefficients: BTreeMap<NodeFeature, f64>,
+    value_counts: BTreeMap<NodeFeature, Vec<(String, usize)>>,
+    controlled_nodes: BTreeMap<NodeFeature, usize>,
     avg_linear: f64,
     avg_log2: f64,
     min: f64,
@@ -94,38 +71,54 @@ impl NakamotoScore {
     pub fn new_from_slice_node_features(slice_node_features: &[NodeFeatures]) -> Self {
         let mut features_to_nodes_map = BTreeMap::new();
 
-        for feature in Feature::variants() {
+        for feature in NodeFeature::variants() {
             features_to_nodes_map.insert(feature, Vec::new());
         }
 
-        // Convert a Vec<HashMap<Feature, Value>> into a Vec<HashMap<Feature,
+        // Convert a Vec<HashMap<NodeFeature, Value>> into a Vec<HashMap<NodeFeature,
         // Vec<Values>>
         for node_features in slice_node_features.iter() {
-            for feature in Feature::variants() {
+            for feature in NodeFeature::variants() {
                 let curr = features_to_nodes_map.get_mut(&feature).unwrap();
                 curr.push(node_features.get(&feature));
             }
         }
 
         let nakamoto_calc = features_to_nodes_map.iter().map(|value| {
-            // Turns a Vec<Features> into a Vec<(Feature, Number)>
+            // Turns a Vec<Features> into a Vec<(NodeFeature, Number)>
             // where "Number" is the count of objects with the feature
-            let counter: Vec<usize> = value.1.iter().collect::<Counter<_>>().iter().map(|x| *x.1).collect();
+            let only_counter: Vec<usize> = value.1.iter().collect::<Counter<_>>().iter().map(|x| *x.1).collect();
+            // For deeper understanding we also keep track of all values and their counts
+            let value_counts: Vec<(String, usize)> = value
+                .1
+                .iter()
+                .collect::<Counter<_>>()
+                .iter()
+                .map(|x| {
+                    let s = x.0.as_ref();
+                    (s.unwrap().clone(), *x.1)
+                })
+                .sorted_by_key(|x| -(x.1 as isize))
+                .collect();
 
-            (value.0.clone(), Self::nakamoto(&counter))
+            (value.0.clone(), Self::nakamoto(&only_counter), value_counts)
         });
 
         let scores = nakamoto_calc
             .clone()
-            .map(|(f, n)| (f, n.0 as f64))
-            .collect::<BTreeMap<Feature, f64>>();
+            .map(|(f, n, _)| (f, n.0 as f64))
+            .collect::<BTreeMap<NodeFeature, f64>>();
 
         let controlled_nodes = nakamoto_calc
-            .map(|(f, n)| (f, n.1))
-            .collect::<BTreeMap<Feature, usize>>();
+            .clone()
+            .map(|(f, n, _)| (f, n.1))
+            .collect::<BTreeMap<NodeFeature, usize>>();
+
+        let value_counts = nakamoto_calc.map(|(f, _, value_counts)| (f, value_counts)).collect();
 
         NakamotoScore {
             coefficients: scores.clone(),
+            value_counts,
             controlled_nodes,
             avg_linear: scores.values().sum::<f64>() / scores.len() as f64,
             avg_log2: scores.values().map(|x| x.log2()).sum::<f64>() / scores.len() as f64,
@@ -199,13 +192,28 @@ impl NakamotoScore {
     }
 
     /// Get a Map with all the features and the corresponding Nakamoto score
-    pub fn scores_individual(&self) -> BTreeMap<Feature, f64> {
+    pub fn scores_individual(&self) -> BTreeMap<NodeFeature, f64> {
         self.coefficients.clone()
     }
 
     /// Get the Nakamoto score for a single feature
-    pub fn score_feature(&self, feature: &Feature) -> Option<f64> {
+    pub fn score_feature(&self, feature: &NodeFeature) -> Option<f64> {
         self.coefficients.get(feature).copied()
+    }
+
+    /// Get the max count for the given feature - this is the number of
+    /// repetitions of the most common value
+    pub fn feature_value_counts_max(&self, feature: &NodeFeature) -> Option<(String, usize)> {
+        let counts = self.feature_value_counts(feature);
+        counts.first().cloned()
+    }
+
+    /// Get the value count for the given feature
+    pub fn feature_value_counts(&self, feature: &NodeFeature) -> Vec<(String, usize)> {
+        match self.value_counts.get(feature) {
+            Some(value_counts) => value_counts.to_vec(),
+            None => vec![],
+        }
     }
 
     /// Get an upper bound on the number of nodes that are under control of the
@@ -241,7 +249,7 @@ impl NakamotoScore {
     }
 
     /// Return the number of nodes that the top actors control
-    pub fn controlled_nodes(&self, feature: &Feature) -> Option<usize> {
+    pub fn controlled_nodes(&self, feature: &NodeFeature) -> Option<usize> {
         self.controlled_nodes.get(feature).copied()
     }
 }
@@ -281,7 +289,7 @@ impl PartialOrd for NakamotoScore {
 
         // If the worst feature is the same for both candidates
         // => prefer candidates that maximizes all features
-        for feature in Feature::variants() {
+        for feature in NodeFeature::variants() {
             let c1 = self.coefficients.get(&feature).unwrap_or(&1.0);
             let c2 = other.coefficients.get(&feature).unwrap_or(&1.0);
             if *c1 < 3.0 || *c2 < 3.0 {
@@ -328,14 +336,14 @@ impl Display for NakamotoScore {
             self.coefficients.values().filter(|c| **c < 3.0).count(),
             self.control_power_critical_features().unwrap_or(0),
             self.avg_linear,
-            self.coefficients.values().enumerate().collect::<Vec<_>>(),
+            self.value_counts,
         )
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::network::{Subnet, SubnetChangeRequest};
+    use crate::network::{DecentralizedSubnet, SubnetChangeRequest};
     use ic_base_types::PrincipalId;
     use itertools::Itertools;
     use regex::Regex;
@@ -377,20 +385,21 @@ mod tests {
 
         let score_expected = NakamotoScore {
             coefficients: BTreeMap::from([
-                (Feature::City, 1.),
-                (Feature::Country, 1.),
-                (Feature::Continent, 1.),
-                (Feature::DataCenterOwner, 1.),
-                (Feature::NodeProvider, 1.),
-                (Feature::DataCenter, 1.),
+                (NodeFeature::City, 1.),
+                (NodeFeature::Country, 1.),
+                (NodeFeature::Continent, 1.),
+                (NodeFeature::DataCenterOwner, 1.),
+                (NodeFeature::NodeProvider, 1.),
+                (NodeFeature::DataCenter, 1.),
             ]),
+            value_counts: BTreeMap::new(),
             controlled_nodes: BTreeMap::from([
-                (Feature::City, 1),
-                (Feature::Country, 1),
-                (Feature::Continent, 1),
-                (Feature::DataCenterOwner, 1),
-                (Feature::NodeProvider, 1),
-                (Feature::DataCenter, 1),
+                (NodeFeature::City, 1),
+                (NodeFeature::Country, 1),
+                (NodeFeature::Continent, 1),
+                (NodeFeature::DataCenterOwner, 1),
+                (NodeFeature::NodeProvider, 1),
+                (NodeFeature::DataCenter, 1),
             ]),
             avg_linear: 1.,
             avg_log2: 0.,
@@ -418,7 +427,7 @@ mod tests {
         node_number_start: usize,
         num_nodes: usize,
         num_dfinity_nodes: usize,
-        feature_to_override: (&Feature, &[&str]),
+        feature_to_override: (&NodeFeature, &[&str]),
     ) -> Vec<Node> {
         let mut subnet_nodes = Vec::new();
         for i in 0..num_nodes {
@@ -437,10 +446,12 @@ mod tests {
 
     /// Generate a new test subnet with num_nodes, out of which
     /// num_dfinity_nodes are DFINITY-owned
-    fn new_test_subnet(subnet_num: u64, num_nodes: usize, num_dfinity_nodes: usize) -> Subnet {
-        Subnet {
+    fn new_test_subnet(subnet_num: u64, num_nodes: usize, num_dfinity_nodes: usize) -> DecentralizedSubnet {
+        DecentralizedSubnet {
             id: PrincipalId::new_subnet_test_id(subnet_num),
             nodes: new_test_nodes("feat", num_nodes, num_dfinity_nodes),
+            min_nakamoto_coefficients: None,
+            comment: None,
         }
     }
 
@@ -450,9 +461,9 @@ mod tests {
         node_number_start: usize,
         num_nodes: usize,
         num_dfinity_nodes: usize,
-        feature_to_override: (&Feature, &[&str]),
-    ) -> Subnet {
-        Subnet {
+        feature_to_override: (&NodeFeature, &[&str]),
+    ) -> DecentralizedSubnet {
+        DecentralizedSubnet {
             id: PrincipalId::new_subnet_test_id(subnet_num),
             nodes: new_test_nodes_with_overrides(
                 "feat",
@@ -461,6 +472,8 @@ mod tests {
                 num_dfinity_nodes,
                 feature_to_override,
             ),
+            min_nakamoto_coefficients: None,
+            comment: None,
         }
     }
 
@@ -492,8 +505,8 @@ mod tests {
         // If there are no DFINITY-owned node in a small subnet ==> fail with an
         // expected error message
         assert_eq!(
-            new_test_subnet(0, 2, 0).check_business_rules().unwrap_err().to_string(),
-            "DFINITY-owned node missing".to_string()
+            new_test_subnet(0, 2, 0).check_business_rules().unwrap(),
+            (1000, vec!["DFINITY-owned node missing".to_string()])
         );
     }
 
@@ -533,18 +546,21 @@ mod tests {
             13,
             1,
             (
-                &Feature::Country,
+                &NodeFeature::Country,
                 &[
                     "US", "US", "US", "US", "US", "US", "US", "US", "US", "CH", "BE", "SG", "SI",
                 ],
             ),
         );
         assert_eq!(
-            subnet_initial.check_business_rules().unwrap_err().to_string(),
-            "Feature 'country' controls 9 of nodes, which is > 8 (2/3 of all) nodes".to_string()
+            subnet_initial.check_business_rules().unwrap(),
+            (
+                1000,
+                vec!["NodeFeature 'country' controls 9 of nodes, which is > 8 (2/3 of all) nodes".to_string()]
+            )
         );
         let nodes_available =
-            new_test_nodes_with_overrides("spare", 13, 3, 0, (&Feature::Country, &["US", "RO", "JP"]));
+            new_test_nodes_with_overrides("spare", 13, 3, 0, (&NodeFeature::Country, &["US", "RO", "JP"]));
 
         println!(
             "initial {} Countries {:?}",
@@ -552,18 +568,19 @@ mod tests {
             subnet_initial
                 .nodes
                 .iter()
-                .map(|n| n.get_feature(&Feature::Country))
+                .map(|n| n.get_feature(&NodeFeature::Country))
                 .collect::<Vec<_>>()
         );
 
-        let subnet_change_req = SubnetChangeRequest::new(subnet_initial, nodes_available, Vec::new(), Vec::new(), 0);
+        let subnet_change_req =
+            SubnetChangeRequest::new(subnet_initial, nodes_available, Vec::new(), Vec::new(), 0, None);
         let subnet_change = subnet_change_req.optimize(2).unwrap();
         let optimized_subnet = subnet_change.after();
 
         let countries_after = optimized_subnet
             .nodes
             .iter()
-            .map(|n| n.get_feature(&Feature::Country))
+            .map(|n| n.get_feature(&NodeFeature::Country))
             .sorted()
             .collect::<Vec<_>>();
 
@@ -585,7 +602,7 @@ mod tests {
             7,
             1,
             (
-                &Feature::NodeProvider,
+                &NodeFeature::NodeProvider,
                 &["NP1", "NP2", "NP2", "NP2", "NP3", "NP4", "NP5"],
             ),
         );
@@ -594,7 +611,7 @@ mod tests {
             "A single Node Provider can halt a subnet".to_string()
         );
         let nodes_available =
-            new_test_nodes_with_overrides("spare", 7, 2, 0, (&Feature::NodeProvider, &["NP6", "NP7"]));
+            new_test_nodes_with_overrides("spare", 7, 2, 0, (&NodeFeature::NodeProvider, &["NP6", "NP7"]));
 
         println!(
             "initial {} NPs {:?}",
@@ -602,18 +619,19 @@ mod tests {
             subnet_initial
                 .nodes
                 .iter()
-                .map(|n| n.get_feature(&Feature::NodeProvider))
+                .map(|n| n.get_feature(&NodeFeature::NodeProvider))
                 .collect::<Vec<_>>()
         );
 
-        let subnet_change_req = SubnetChangeRequest::new(subnet_initial, nodes_available, Vec::new(), Vec::new(), 0);
+        let subnet_change_req =
+            SubnetChangeRequest::new(subnet_initial, nodes_available, Vec::new(), Vec::new(), 0, None);
         let subnet_change = subnet_change_req.optimize(2).unwrap();
         let optimized_subnet = subnet_change.after();
 
         let nps_after = optimized_subnet
             .nodes
             .iter()
-            .map(|n| n.get_feature(&Feature::NodeProvider))
+            .map(|n| n.get_feature(&NodeFeature::NodeProvider))
             .sorted()
             .collect::<Vec<_>>();
 
@@ -633,7 +651,7 @@ mod tests {
             7,
             1,
             (
-                &Feature::NodeProvider,
+                &NodeFeature::NodeProvider,
                 &["NP1", "NP2", "NP2", "NP3", "NP4", "NP4", "NP5"],
             ),
         );
@@ -641,7 +659,7 @@ mod tests {
 
         // There are 2 spare nodes, but both are DFINITY
         let nodes_available =
-            new_test_nodes_with_overrides("spare", 7, 2, 2, (&Feature::NodeProvider, &["NP6", "NP7"]));
+            new_test_nodes_with_overrides("spare", 7, 2, 2, (&NodeFeature::NodeProvider, &["NP6", "NP7"]));
 
         println!(
             "initial {} NPs {:?}",
@@ -649,18 +667,19 @@ mod tests {
             subnet_initial
                 .nodes
                 .iter()
-                .map(|n| n.get_feature(&Feature::NodeProvider))
+                .map(|n| n.get_feature(&NodeFeature::NodeProvider))
                 .collect::<Vec<_>>()
         );
 
-        let subnet_change_req = SubnetChangeRequest::new(subnet_initial, nodes_available, Vec::new(), Vec::new(), 0);
+        let subnet_change_req =
+            SubnetChangeRequest::new(subnet_initial, nodes_available, Vec::new(), Vec::new(), 0, None);
         let subnet_change = subnet_change_req.optimize(2).unwrap();
         let optimized_subnet = subnet_change.after();
 
         let nps_after = optimized_subnet
             .nodes
             .iter()
-            .map(|n| n.get_feature(&Feature::NodeProvider))
+            .map(|n| n.get_feature(&NodeFeature::NodeProvider))
             .sorted()
             .collect::<Vec<_>>();
 
@@ -678,9 +697,9 @@ mod tests {
         // Read the subnet snapshot from a file
         let subnet_all = json_file_read_checked::<ic_management_types::Subnet>(&d.join("subnet-uzr34.json"));
         // Convert the subnet snapshot to the "Subnet" struct
-        let subnet_all: Subnet = Subnet::from(subnet_all);
+        let subnet_all: DecentralizedSubnet = DecentralizedSubnet::from(subnet_all);
         let re_unhealthy_nodes = Regex::new(r"^(gp7wd|e4ysi|qhz4y|2fbvp)-.+$").unwrap();
-        let subnet_healthy: Subnet = Subnet {
+        let subnet_healthy: DecentralizedSubnet = DecentralizedSubnet {
             id: subnet_all.id,
             nodes: subnet_all
                 .nodes
@@ -688,6 +707,8 @@ mod tests {
                 .cloned()
                 .filter(|n| !re_unhealthy_nodes.is_match(&n.id.to_string()))
                 .collect(),
+            min_nakamoto_coefficients: None,
+            comment: None,
         };
 
         let available_nodes = json_file_read_checked::<Vec<ic_management_types::Node>>(&d.join("available-nodes.json"));
@@ -725,7 +746,7 @@ mod tests {
         let available_nodes = (0..20)
             .map(|i| Node::new_test_node(i, NodeFeatures::new_test_feature_set(&format!("foo{i}")), i % 10 == 0))
             .collect::<Vec<_>>();
-        let empty_subnet = Subnet::default();
+        let empty_subnet = DecentralizedSubnet::default();
 
         let want_subnet_size = 13;
         let new_subnet_result = empty_subnet.new_extended_subnet(want_subnet_size, &available_nodes);
