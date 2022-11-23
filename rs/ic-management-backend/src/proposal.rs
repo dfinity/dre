@@ -1,7 +1,7 @@
 use anyhow::Result;
 use candid::{Decode, Encode};
 use ic_agent::Agent;
-use ic_management_types::{NnsFunctionProposal, TopologyProposal, TopologyProposalPayload};
+use ic_management_types::{NnsFunctionProposal, SubnetMembershipChangeProposal, SubnetMembershipChangePayload};
 use ic_nns_governance::pb::v1::{proposal::Action, ListProposalInfo, ListProposalInfoResponse, NnsFunction};
 use ic_nns_governance::pb::v1::{ProposalInfo, ProposalStatus};
 use registry_canister::mutations::do_add_nodes_to_subnet::AddNodesToSubnetPayload;
@@ -71,11 +71,11 @@ impl ProposalAgent {
         Self { agent }
     }
 
-    fn nodes_proposals<T: TopologyProposalPayload>(proposals: Vec<(ProposalInfo, T)>) -> Vec<TopologyProposal> {
-        proposals.into_iter().map(TopologyProposal::from).collect()
+    fn nodes_proposals<T: SubnetMembershipChangePayload>(proposals: Vec<(ProposalInfo, T)>) -> Vec<SubnetMembershipChangeProposal> {
+        proposals.into_iter().map(SubnetMembershipChangeProposal::from).collect()
     }
 
-    pub async fn list_open_topology_proposals(&self) -> Result<Vec<TopologyProposal>> {
+    pub async fn list_open_topology_proposals(&self) -> Result<Vec<SubnetMembershipChangeProposal>> {
         let proposals = &self.list_proposals(vec![ProposalStatus::Open]).await?;
         let create_subnet_proposals =
             Self::nodes_proposals(filter_map_nns_function_proposals::<CreateSubnetPayload>(proposals)).into_iter();

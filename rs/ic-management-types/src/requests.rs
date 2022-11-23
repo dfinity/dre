@@ -1,3 +1,4 @@
+use crate::MinNakamotoCoefficients;
 use ic_base_types::PrincipalId;
 use serde::{Deserialize, Serialize};
 
@@ -8,6 +9,7 @@ pub struct MembershipReplaceRequest {
     pub optimize: Option<usize>,
     pub exclude: Option<Vec<String>>,
     pub include: Option<Vec<PrincipalId>>,
+    pub min_nakamoto_coefficients: Option<MinNakamotoCoefficients>,
 }
 
 #[derive(Serialize, Deserialize)]
