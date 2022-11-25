@@ -13,7 +13,13 @@ from .ic_utils import repo_root
 class IcDeployment:
     """Interface with the deployment Ansible configuration, e.g. get nodes, ipv6 addresses, etc."""
 
-    def __init__(self, deployment_name: str, nodes_filter_include: str = "", decentralized_deployment=False):
+    def __init__(
+        self,
+        deployment_name: str,
+        nodes_filter_include: str = "",
+        nns_url_override: str = "",
+        decentralized_deployment=False,
+    ):
         """Create an object for the given git repo root and deployment name."""
         self._name = deployment_name
         if deployment_name == "staging" and not nodes_filter_include:
@@ -21,6 +27,7 @@ class IcDeployment:
         self._deployment_env_root = find_deployment_env_root(deployment_name)
         self._inventory_script = self._deployment_env_root.parent.parent / "ansible/inventory/inventory.py"
         self.nodes_filter_include = nodes_filter_include
+        self.nns_url_override = nns_url_override
         self.decentralized_deployment = decentralized_deployment
 
     @property
@@ -92,6 +99,8 @@ class IcDeployment:
 
     def get_nns_url(self):
         """Get the NNS nodes for a deployment."""
+        if self.nns_url_override:
+            return self.nns_url_override
         if self.name in ["mercury", "mainnet"]:
             return "https://ic0.app/"
         nns_nodes = self.get_deployment_subnet_nodes("nns")
