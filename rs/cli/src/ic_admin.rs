@@ -513,9 +513,9 @@ async fn download_ic_admin(version: Option<String>) -> Result<String> {
 
     if !path.exists() {
         let url = if std::env::consts::OS == "macos" {
-            format!("https://download.dfinity.systems/blessed/ic/{version}/nix-release/x86_64-darwin/ic-admin.gz")
+            format!("https://download.dfinity.systems/ic/{version}/nix-release/x86_64-darwin/ic-admin.gz")
         } else {
-            format!("https://download.dfinity.systems/blessed/ic/{version}/release/ic-admin.gz")
+            format!("https://download.dfinity.systems/ic/{version}/release/ic-admin.gz")
         };
         let body = reqwest::get(url).await?.bytes().await?;
         let mut decoded = GzDecoder::new(body.as_ref());
