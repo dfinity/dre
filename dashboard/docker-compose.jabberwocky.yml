@@ -34,7 +34,7 @@ services:
       - GITLAB_API_TOKEN_RELEASE
       - GITLAB_API_TOKEN_IC_PUBLIC
       - LOCAL_REGISTRY_PATH=/registry_cache
-      - NNS_URL=http://[2600:3004:1200:1200:5000:7dff:fe29:a2f5]:8080
+      - NNS_URL=http://[2600:3004:1200:1200:5000:11ff:fe37:c55d]:8080
       - NETWORK=staging
       - RUST_BACKTRACE=1
     volumes:
