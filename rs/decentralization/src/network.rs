@@ -515,9 +515,14 @@ pub trait TopologyManager: SubnetQuerier + AvailableNodesQuerier {
         .remove(nodes)
     }
 
-    async fn create_subnet(&self, size: usize) -> Result<SubnetChange, NetworkError> {
+    async fn create_subnet(
+        &self,
+        size: usize,
+        min_nakamoto_coefficients: Option<MinNakamotoCoefficients>,
+    ) -> Result<SubnetChange, NetworkError> {
         SubnetChangeRequest {
             available_nodes: self.available_nodes().await?,
+            min_nakamoto_coefficients,
             ..Default::default()
         }
         .extend(size)
