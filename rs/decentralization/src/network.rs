@@ -189,15 +189,16 @@ impl DecentralizedSubnet {
         {
             // We keep the backup of the ECDSA key on uzr34, and we don’t want a single
             // country to be able to extract that key.
+            // The tECDSA key can be extracted with 1/3 of the nodes.
             // We should use the same NC requirements for uzr34 and the upcoming ECDSA
-            // subnet, since they'll both hold the same valuable key
+            // subnet, since they'll both hold the same valuable key.
             // Slack discussion: https://dfinity.slack.com/archives/C01DB8MQ5M1/p1668702249558389
             // For different reasons, there is the same requirement for the NNS and the SNS
-            // subnet
+            // subnet.
             let feature = NodeFeature::Country;
             match nakamoto_scores.feature_value_counts_max(&feature) {
                 Some((country_dominant, country_nodes_count)) => {
-                    let controlled_nodes_max = nodes.len() / 3 - 1;
+                    let controlled_nodes_max = nodes.len() / 3;
                     if country_nodes_count > controlled_nodes_max {
                         checks.push(format!(
                             "Country '{}' controls {} of nodes, which is > {} (1/3 - 1) of subnet nodes",
