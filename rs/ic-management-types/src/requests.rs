@@ -27,6 +27,7 @@ pub enum ReplaceTarget {
 #[derive(Serialize, Deserialize)]
 pub struct SubnetCreateRequest {
     pub size: usize,
+    pub min_nakamoto_coefficients: Option<MinNakamotoCoefficients>,
 }
 
 #[derive(Serialize, Deserialize)]
