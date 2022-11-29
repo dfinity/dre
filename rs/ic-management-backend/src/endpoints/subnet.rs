@@ -123,9 +123,9 @@ async fn create_subnet(
     request: web::Json<SubnetCreateRequest>,
 ) -> Result<HttpResponse, Error> {
     let registry = registry.read().await;
-    println!("Received a request to create a subnet {:?}", request.size);
+    println!("Received a request to create a subnet of size {:?} and MinNakamotoCoefficients {}", request.size, serde_json::to_string(&request.min_nakamoto_coefficients).unwrap());
     Ok(HttpResponse::Ok().json(decentralization::SubnetChangeResponse::from(
-        &registry.create_subnet(request.size).await?,
+        &registry.create_subnet(request.size, request.min_nakamoto_coefficients.clone()).await?,
     )))
 }
 
