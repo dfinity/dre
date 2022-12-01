@@ -111,6 +111,7 @@ pub struct DecentralizedSubnet {
     pub nodes: Vec<Node>,
     pub min_nakamoto_coefficients: Option<MinNakamotoCoefficients>,
     pub comment: Option<String>,
+    pub run_log: Vec<String>,
 }
 
 impl DecentralizedSubnet {
@@ -130,6 +131,11 @@ impl DecentralizedSubnet {
                 nodes: new_subnet_nodes,
                 min_nakamoto_coefficients: self.min_nakamoto_coefficients.clone(),
                 comment: self.comment.clone(),
+                run_log: {
+                    let mut run_log = self.run_log.clone();
+                    run_log.push(format!("Remove nodes {:?}", removed.iter().map(|n| n.id)));
+                    run_log
+                },
             },
             removed,
         ))
@@ -138,9 +144,14 @@ impl DecentralizedSubnet {
     pub fn add_nodes(&self, nodes: Vec<Node>) -> Self {
         Self {
             id: self.id,
-            nodes: self.nodes.clone().into_iter().chain(nodes).collect(),
+            nodes: self.nodes.clone().into_iter().chain(nodes.clone()).collect(),
             min_nakamoto_coefficients: self.min_nakamoto_coefficients.clone(),
             comment: self.comment.clone(),
+            run_log: {
+                let mut run_log = self.run_log.clone();
+                run_log.push(format!("Remove nodes {:?}", nodes.iter().map(|n| n.id)));
+                run_log
+            },
         }
     }
 
@@ -319,7 +330,11 @@ impl DecentralizedSubnet {
             business_rules_log: Vec<String>,
         }
 
-        for _ in 0..num_nodes_to_add {
+        for i in 0..num_nodes_to_add {
+            run_log.push("***********************************************************".to_string());
+            run_log.push(format!("***  Adding node {}/{}", i + 1, num_nodes_to_add));
+            run_log.push("***********************************************************".to_string());
+
             let mut sorted_good_nodes: Vec<SortResult> = nodes_available
                 .iter()
                 .enumerate()
@@ -381,10 +396,13 @@ impl DecentralizedSubnet {
                 })
                 .collect();
 
-            println!("Sorted candidate nodes, with the best candidate at the end:");
-            println!("     <node-id>                                                      <penalty>  <Nakamoto score>");
+            run_log.push("Sorted candidate nodes, with the best candidate at the end:".to_string());
+            run_log.push(
+                "     <node-id>                                                      <penalty>  <Nakamoto score>"
+                    .to_string(),
+            );
             for s in &sorted_good_nodes {
-                println!(" -=> {} {} {}", s.node.id, s.penalty, s.score);
+                run_log.push(format!(" -=> {} {} {}", s.node.id, s.penalty, s.score));
             }
             // TODO: if more than one candidate returns the same nakamoto score, pick the
             // one that improves the feature diversity
@@ -420,6 +438,7 @@ impl DecentralizedSubnet {
             nodes: nodes_after_extension,
             min_nakamoto_coefficients: self.min_nakamoto_coefficients.clone(),
             comment,
+            run_log,
         })
     }
 }
@@ -449,6 +468,7 @@ impl From<&ic_management_types::Subnet> for DecentralizedSubnet {
             nodes: s.nodes.iter().map(Node::from).collect(),
             min_nakamoto_coefficients: None,
             comment: None,
+            run_log: Vec::new(),
         }
     }
 }
@@ -641,6 +661,7 @@ impl SubnetChangeRequest {
             new_nodes: extended_subnet.nodes,
             min_nakamoto_coefficients: self.min_nakamoto_coefficients.clone(),
             comment: extended_subnet.comment,
+            run_log: extended_subnet.run_log,
         };
         info!("Subnet {} extend {}", self.subnet.id, subnet_change);
         Ok(subnet_change)
@@ -729,6 +750,7 @@ pub struct SubnetChange {
     pub new_nodes: Vec<Node>,
     pub min_nakamoto_coefficients: Option<MinNakamotoCoefficients>,
     pub comment: Option<String>,
+    pub run_log: Vec<String>,
 }
 
 impl SubnetChange {
@@ -754,6 +776,7 @@ impl SubnetChange {
             nodes: self.old_nodes.clone(),
             min_nakamoto_coefficients: self.min_nakamoto_coefficients.clone(),
             comment: self.comment.clone(),
+            run_log: Vec::new(),
         }
     }
 
@@ -763,6 +786,7 @@ impl SubnetChange {
             nodes: self.new_nodes.clone(),
             min_nakamoto_coefficients: self.min_nakamoto_coefficients.clone(),
             comment: self.comment.clone(),
+            run_log: self.run_log.clone(),
         }
     }
 }

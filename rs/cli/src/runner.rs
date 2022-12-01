@@ -37,9 +37,15 @@ impl Runner {
         &self,
         request: ic_management_types::requests::SubnetExtendRequest,
         motivation: String,
+        verbose: bool,
     ) -> anyhow::Result<()> {
         let subnet = request.subnet;
         let change = self.dashboard_backend_client.subnet_extend(request).await?;
+        if verbose {
+            if let Some(run_log) = &change.run_log {
+                println!("{}\n", run_log.join("\n"));
+            }
+        }
         println!("{}", change);
 
         self.with_confirmation(|r| {
@@ -63,8 +69,14 @@ impl Runner {
     pub async fn membership_replace(
         &self,
         request: ic_management_types::requests::MembershipReplaceRequest,
+        verbose: bool,
     ) -> anyhow::Result<()> {
         let change = self.dashboard_backend_client.membership_replace(request).await?;
+        if verbose {
+            if let Some(run_log) = &change.run_log {
+                println!("{}\n", run_log.join("\n"));
+            }
+        }
         println!("{}", change);
 
         self.with_confirmation(|r| {
