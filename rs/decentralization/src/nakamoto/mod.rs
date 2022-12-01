@@ -330,12 +330,13 @@ impl Display for NakamotoScore {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "NakamotoScore: min {:0.2} avg log2 {:0.2} crit feat {} crit nodes {} avg linear {:0.2} all coeff {:?}",
+            "NakamotoScore: min {:0.2} avg log2 {:0.2} crit feat {} crit nodes {} avg linear {:0.2} all coeff {:?} details {:?}",
             self.min,
             self.avg_log2,
             self.coefficients.values().filter(|c| **c < 3.0).count(),
             self.control_power_critical_features().unwrap_or(0),
             self.avg_linear,
+            self.coefficients.iter(),
             self.value_counts,
         )
     }
@@ -452,6 +453,7 @@ mod tests {
             nodes: new_test_nodes("feat", num_nodes, num_dfinity_nodes),
             min_nakamoto_coefficients: None,
             comment: None,
+            run_log: Vec::new(),
         }
     }
 
@@ -474,6 +476,7 @@ mod tests {
             ),
             min_nakamoto_coefficients: None,
             comment: None,
+            run_log: Vec::new(),
         }
     }
 
@@ -709,6 +712,7 @@ mod tests {
                 .collect(),
             min_nakamoto_coefficients: None,
             comment: None,
+            run_log: Vec::new(),
         };
 
         let available_nodes = json_file_read_checked::<Vec<ic_management_types::Node>>(&d.join("available-nodes.json"));
