@@ -129,6 +129,8 @@ async fn main() -> std::io::Result<()> {
             .service(endpoints::subnet::replace)
             .service(endpoints::subnet::create_subnet)
             .service(endpoints::subnet::extend)
+            .service(endpoints::query_decentralization::decentralization_subnet_query)
+            .service(endpoints::query_decentralization::decentralization_whatif_query)
     })
     .shutdown_timeout(10)
     .bind((
