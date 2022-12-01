@@ -62,7 +62,8 @@ async fn main() -> Result<(), anyhow::Error> {
                         motivation,
                         exclude,
                         include,
-                        min_nakamoto_coefficients
+                        min_nakamoto_coefficients,
+                        verbose,
                     } => {
                         let min_nakamoto_coefficients = parse_min_nakamoto_coefficients(&mut cmd, min_nakamoto_coefficients);
 
@@ -92,17 +93,17 @@ async fn main() -> Result<(), anyhow::Error> {
                                     exclude: exclude.clone().into(),
                                     include: include.clone().into(),
                                     min_nakamoto_coefficients,
-                                })
+                                }, *verbose)
                                 .await
                     }
-                    cli::subnet::Commands::Extend { size, include, exclude, motivation } => {
+                    cli::subnet::Commands::Extend { size, include, exclude, motivation, verbose, } => {
                         if let Some(motivation) = motivation.clone() {
                             runner.subnet_extend(ic_management_types::requests::SubnetExtendRequest {
                                 subnet: subnet.id.unwrap(),
                                 size: *size,
                                 exclude: exclude.clone().into(),
                                         include: include.clone().into(),
-                            }, motivation).await
+                            }, motivation, *verbose).await
                         } else {
                             cmd.error(
                                 ErrorKind::MissingRequiredArgument,

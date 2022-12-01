@@ -19,6 +19,7 @@ pub struct SubnetChangeResponse {
     pub score_after: nakamoto::NakamotoScore,
     pub motivation: Option<String>,
     pub comment: Option<String>,
+    pub run_log: Option<Vec<String>>,
     pub feature_diff: HashMap<NodeFeature, FeatureDiff>,
 }
 
@@ -47,6 +48,7 @@ impl From<&network::SubnetChange> for SubnetChangeResponse {
             score_after: nakamoto::NakamotoScore::new_from_nodes(&change.new_nodes),
             motivation: None,
             comment: change.comment.clone(),
+            run_log: Some(change.run_log.clone()),
             feature_diff: change.new_nodes.iter().fold(
                 change.old_nodes.iter().fold(
                     NodeFeature::variants()

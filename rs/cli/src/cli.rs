@@ -103,6 +103,11 @@ pub(crate) mod subnet {
             /// regardless of the decentralization score
             #[clap(long, takes_value = true, multiple_values = true)]
             include: Vec<PrincipalId>,
+
+            /// More verbose execution. For instance, print logs from the
+            /// backend.
+            #[clap(long)]
+            verbose: bool,
         },
 
         /// Extends the size of the subnet
@@ -122,6 +127,11 @@ pub(crate) mod subnet {
             /// Motivation for extending the subnet
             #[clap(short, long)]
             motivation: Option<String>,
+
+            /// More verbose execution. For instance, print logs from the
+            /// backend.
+            #[clap(long)]
+            verbose: bool,
         },
     }
 }
