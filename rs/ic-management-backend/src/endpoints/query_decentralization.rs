@@ -15,6 +15,7 @@ struct SubnetRequest {
 struct DecentralizedSubnetResponse {
     id: PrincipalId,
     message: String,
+    run_log: String,
     nakamoto: decentralization::nakamoto::NakamotoScore
 }
 
@@ -51,7 +52,7 @@ async fn get_decentralization_analysis(
     nodes_to_remove: Option<Vec<PrincipalId>>,
     min_nakamoto_coefficients: Option<MinNakamotoCoefficients>
 ) -> Result<HttpResponse, Error> {
-        let subnets = registry.read().await.subnets();
+    let subnets = registry.read().await.subnets();
     let nodes = registry.read().await.nodes();
 
     let original_subnet = subnet.map(|subnet_id| {
@@ -62,6 +63,7 @@ async fn get_decentralization_analysis(
                     nodes: subnet.nodes.iter().map(decentralization::network::Node::from).collect(),
                     min_nakamoto_coefficients: min_nakamoto_coefficients.clone(),
                     comment: None,
+                    run_log: Vec::new(),
                 }
             },
             None => DecentralizedSubnet {
@@ -69,6 +71,7 @@ async fn get_decentralization_analysis(
                 nodes: Vec::new(),
                 min_nakamoto_coefficients: min_nakamoto_coefficients.clone(),
                 comment: None,
+                run_log: Vec::new(),
             }
         }
     }).unwrap_or_else(|| DecentralizedSubnet {
@@ -76,6 +79,7 @@ async fn get_decentralization_analysis(
                 nodes: Vec::new(),
                 min_nakamoto_coefficients: min_nakamoto_coefficients.clone(),
                 comment: None,
+                run_log: Vec::new(),
             });
 
     let updated_subnet = match &nodes_to_remove {
@@ -99,13 +103,15 @@ async fn get_decentralization_analysis(
         old_nodes: original_subnet.nodes,
         new_nodes: updated_subnet.nodes.clone(),
         min_nakamoto_coefficients: updated_subnet.min_nakamoto_coefficients.clone(),
-        comment: updated_subnet.comment.clone()
+        comment: updated_subnet.comment.clone(),
+        run_log: updated_subnet.run_log.clone(),
     };
 
     let response = DecentralizedSubnetResponse {
         id: subnet.unwrap_or_else(|| PrincipalId::new_subnet_test_id(0)),
         message: format!("{}",  SubnetChangeResponse::from(&subnet_change)),
-        nakamoto: updated_subnet.nakamoto_score()
+        nakamoto: updated_subnet.nakamoto_score(),
+        run_log: subnet_change.run_log.join("\n"),
     };
     Ok(HttpResponse::Ok().json(&response))
 }

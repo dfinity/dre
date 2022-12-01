@@ -552,6 +552,7 @@ impl SubnetQuerier for RegistryState {
                 nodes: s.nodes.iter().map(decentralization::network::Node::from).collect(),
                 min_nakamoto_coefficients: None,
                 comment: None,
+                run_log: Vec::new(),
             })
             .ok_or(NetworkError::SubnetNotFound(*id))
     }
@@ -580,6 +581,7 @@ impl SubnetQuerier for RegistryState {
                     .collect(),
                 min_nakamoto_coefficients: None,
                 comment: None,
+                run_log: Vec::new(),
             })
         } else {
             Err(NetworkError::IllegalRequest("no subnet found".to_string()))
