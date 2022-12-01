@@ -1,4 +1,5 @@
 pub mod subnet;
+pub mod query_decentralization;
 
 use crate::registry::RegistryState;
 use actix_web::{error, get, post, web, Error, HttpResponse, Result};

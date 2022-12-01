@@ -114,7 +114,7 @@ pub struct DecentralizedSubnet {
 }
 
 impl DecentralizedSubnet {
-    fn remove_nodes(&self, nodes: &[PrincipalId]) -> Result<(Self, Vec<Node>), NetworkError> {
+    pub fn remove_nodes(&self, nodes: &[PrincipalId]) -> Result<(Self, Vec<Node>), NetworkError> {
         let mut new_subnet_nodes = self.nodes.clone();
         let mut removed = Vec::new();
         for node in nodes {
@@ -135,7 +135,7 @@ impl DecentralizedSubnet {
         ))
     }
 
-    fn add_nodes(&self, nodes: Vec<Node>) -> Self {
+    pub fn add_nodes(&self, nodes: Vec<Node>) -> Self {
         Self {
             id: self.id,
             nodes: self.nodes.clone().into_iter().chain(nodes).collect(),
@@ -144,7 +144,7 @@ impl DecentralizedSubnet {
         }
     }
 
-    fn with_min_nakamoto_coefficients(self, min_nakamoto_coefficients: &Option<MinNakamotoCoefficients>) -> Self {
+    pub fn with_min_nakamoto_coefficients(self, min_nakamoto_coefficients: &Option<MinNakamotoCoefficients>) -> Self {
         Self {
             min_nakamoto_coefficients: min_nakamoto_coefficients.clone(),
             ..self
