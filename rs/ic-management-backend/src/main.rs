@@ -76,7 +76,7 @@ async fn main() -> std::io::Result<()> {
             if let Err(e) = sync_local_store().await {
                 error!("Failed to update local registry: {}", e);
             }
-            std::thread::sleep(std::time::Duration::from_secs(1));
+            tokio::time::sleep(std::time::Duration::from_secs(5)).await;
             print_counter += 1;
         }
     });
@@ -289,6 +289,7 @@ async fn sync_local_store() -> anyhow::Result<()> {
     let nns_public_key = nns_public_key(&registry_canister).await?;
 
     loop {
+        tokio::time::sleep(std::time::Duration::from_secs(2)).await;
         if match registry_canister.get_latest_version().await {
             Ok(v) => {
                 info!("Latest registry version: {}", v);
@@ -373,7 +374,7 @@ async fn sync_local_store() -> anyhow::Result<()> {
             latest_version = latest_version.add(RegistryVersion::new(versions_count as u64));
 
             latest_certified_time = t.as_nanos_since_unix_epoch();
-            info!("Initial sync reached version {latest_version}");
+            debug!("Sync reached version {latest_version}");
         }
     }
 
