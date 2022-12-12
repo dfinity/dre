@@ -7,11 +7,11 @@ edition = "2018"
 actix-web = { version = "4.0.0-rc.1", default-features = false, features = [ "compress-gzip", "macros", ] }
 chrono = { version = "0.4.19", features = ["serde"] }
 float-cmp = "0.9.0"
-ic-base-types = { git = "https://github.com/dfinity/ic.git", rev = "2b1c7606b70a2ec85fea741c2341df43a76a1994" }
-ic-nns-governance = { git = "https://github.com/dfinity/ic.git", rev = "2b1c7606b70a2ec85fea741c2341df43a76a1994" }
-ic-registry-subnet-type = { git = "https://github.com/dfinity/ic.git", rev = "2b1c7606b70a2ec85fea741c2341df43a76a1994" }
-ic-types = { git = "https://github.com/dfinity/ic.git", rev = "2b1c7606b70a2ec85fea741c2341df43a76a1994" }
-registry-canister = { git = "https://github.com/dfinity/ic.git", rev = "2b1c7606b70a2ec85fea741c2341df43a76a1994" }
+ic-base-types = { git = "https://github.com/dfinity/ic.git", rev = "36f4a1c2903aed012b95b3b073e052c4036aef09" }
+ic-nns-governance = { git = "https://github.com/dfinity/ic.git", rev = "36f4a1c2903aed012b95b3b073e052c4036aef09" }
+ic-registry-subnet-type = { git = "https://github.com/dfinity/ic.git", rev = "36f4a1c2903aed012b95b3b073e052c4036aef09" }
+ic-types = { git = "https://github.com/dfinity/ic.git", rev = "36f4a1c2903aed012b95b3b073e052c4036aef09" }
+registry-canister = { git = "https://github.com/dfinity/ic.git", rev = "36f4a1c2903aed012b95b3b073e052c4036aef09" }
 itertools = "0.10.3"
 reqwest = { version = "0.11.9", features = ["json"] }
 serde = "1.0.127"
@@ -21,7 +21,7 @@ strum = "0.24.1"
 strum_macros = "0.24.3"
 url = "2.2.2"
 anyhow = "1.0.43"
-candid = "0.7.18"
+candid = "0.8.4"
 
 [lib]
 crate-type = ["cdylib", "lib"]
