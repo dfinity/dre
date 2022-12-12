@@ -56,15 +56,10 @@ async fn main() -> std::io::Result<()> {
     sync_local_store().await.expect("failed to init local store");
 
     let local_registry_path = local_registry_path();
-    let handle = tokio::runtime::Handle::try_current().expect("failed to get the runtime handle");
-    let local_registry = Arc::new(
-        web::block(|| {
-            LocalRegistry::new_with_runtime_handle(local_registry_path, Duration::from_millis(500), handle)
-                .expect("Failed to create local registry")
-        })
-        .await
-        .expect("Failed to create local registry"),
-    );
+    let local_registry: Arc<LocalRegistry> = Arc::new(LocalRegistry::new(
+        local_registry_path,
+        Duration::from_millis(1000),
+    ).expect("Failed to create local registry"));
 
     tokio::spawn(async move {
         let mut print_counter = 0;

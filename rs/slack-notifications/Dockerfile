@@ -4,6 +4,8 @@
 FROM lukemathwalker/cargo-chef:latest-rust-1.60.0-bullseye AS chef
 WORKDIR app
 
+ARG protobuf_version=3.18.1
+
 FROM chef AS planner
 COPY . .
 RUN cargo chef prepare --recipe-path recipe.json
@@ -14,7 +16,12 @@ RUN apt-get -y update && \
     apt-get clean autoclean && \
     apt-get autoremove --yes && \
     rm -rf /var/lib/{apt,dpkg,cache,log}/
-    
+
+RUN cd `mktemp -d`; curl --fail -LO https://github.com/protocolbuffers/protobuf/releases/download/v${protobuf_version}/protoc-${protobuf_version}-linux-x86_64.zip; unzip * -d /opt/protoc; chmod -R 755 /opt/protoc/bin; chmod -R u+rwX,go+rX,go-w /opt/protoc/include
+
+ENV PROTOC=/opt/protoc/bin/protoc \
+    PROTOC_INCLUDE=/opt/protoc/include
+
 COPY --from=planner /app/recipe.json recipe.json
 # Build dependencies - this is the caching Docker layer!
 RUN cargo chef cook --release --recipe-path recipe.json
