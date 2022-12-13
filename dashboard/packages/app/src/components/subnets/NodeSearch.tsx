@@ -104,6 +104,13 @@ export default function NodeSearch({ onSearchChange, expand }: { onSearchChange:
             searchable: true,
         },
         {
+            title: 'DC',
+            emptyValue: "",
+            field: 'operator.datacenter.name',
+            hidden: true,
+            searchable: true,
+        },
+        {
             title: 'DC owner',
             emptyValue: "",
             field: 'operator.datacenter.owner.name',
