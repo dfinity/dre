@@ -1,3 +1,4 @@
+use crate::cli::version::Commands::Bless;
 use clap::{CommandFactory, ErrorKind, Parser};
 use ic_management_types::{MinNakamotoCoefficients, NodeFeature};
 use std::collections::BTreeMap;
@@ -123,6 +124,16 @@ async fn main() -> Result<(), anyhow::Error> {
             cli::Commands::Propose { args } => {
                 let ic_admin = ic_admin::Cli::from_opts(&cli_opts, true).await?;
                 ic_admin.run_passthrough_propose(args)
+            },
+
+            cli::Commands::Version(cmd) => {
+                match &cmd.subcommand {
+                    Bless { version } => {
+                        let ic_admin = ic_admin::Cli::from_opts(&cli_opts, true).await?;
+                        let args = ic_admin::Cli::prepare_args_to_propose_to_bless_new_replica_version(version).await?;
+                        ic_admin.run_passthrough_propose(&args)
+                    }
+                }
             },
         }
     })
