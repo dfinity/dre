@@ -54,6 +54,8 @@ pub(crate) enum Commands {
         #[clap(allow_hyphen_values = true)]
         args: Vec<String>,
     },
+    /// Bless or replace a replica version
+    Version(version::Cmd),
 }
 
 pub(crate) mod subnet {
@@ -133,5 +135,21 @@ pub(crate) mod subnet {
             #[clap(long)]
             verbose: bool,
         },
+    }
+}
+
+pub(crate) mod version {
+    use super::*;
+
+    #[derive(Parser, Clone)]
+    pub struct Cmd {
+        #[clap(subcommand)]
+        pub subcommand: Commands,
+    }
+
+    #[derive(Subcommand, Clone)]
+    pub enum Commands {
+        /// Bless replica version with release notes using the ic-admin CLI
+        Bless { version: String },
     }
 }

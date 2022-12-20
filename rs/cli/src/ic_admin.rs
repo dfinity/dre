@@ -16,6 +16,10 @@ use ic_sys::utility_command::UtilityCommand;
 use keyring::{Entry, Error};
 use log::{error, info, warn};
 use regex::Regex;
+use reqwest::StatusCode;
+use sha2::{Digest, Sha256};
+use std::fs::File;
+use std::io::Write;
 use std::os::unix::fs::PermissionsExt;
 use std::path::PathBuf;
 use std::str::FromStr;
@@ -307,6 +311,68 @@ impl Cli {
             }
         }
         exec(self)
+    }
+
+    pub(crate) async fn prepare_args_to_propose_to_bless_new_replica_version(
+        version: &String,
+    ) -> anyhow::Result<Vec<String>> {
+        let image_path = format!("ic/{}/guest-os/update-img", version);
+        let download_dir = format!("{}/tmp/{}", std::env::var("HOME").unwrap(), image_path);
+        let download_dir = Path::new(&download_dir);
+
+        std::fs::create_dir_all(download_dir)
+            .unwrap_or_else(|_| panic!("create_dir_all failed for {}", download_dir.display()));
+
+        let update_url = format!("https://download.dfinity.systems/{}/update-img.tar.gz", image_path);
+        let download_image = format!("{}/update-img.tar.gz", download_dir.to_str().unwrap());
+        let download_image = Path::new(&download_image);
+
+        let response = reqwest::get(update_url.clone()).await?;
+
+        if response.status() != StatusCode::RANGE_NOT_SATISFIABLE && !response.status().is_success() {
+            return Err(anyhow::anyhow!(
+                "Download failed with http_code {} for {}",
+                response.status(),
+                update_url
+            ));
+        }
+        info!("Download {} succeeded {}", update_url, response.status());
+
+        let mut file = match File::create(&download_image) {
+            Ok(file) => file,
+            Err(err) => return Err(anyhow::anyhow!("Couldn't create a file: {}", err)),
+        };
+
+        let content = response.bytes().await?;
+        file.write_all(&content)?;
+
+        info!("File created on location: {}", download_image.display());
+        let mut hasher = Sha256::new();
+        hasher.update(&content);
+        let hash = hasher.finalize();
+        let stringified_hash = hash[..]
+            .iter()
+            .map(|byte| format!("{:01$x?}", byte, 2))
+            .collect::<Vec<String>>()
+            .join("");
+        info!("SHA256 of update-img.tar.gz: {}", stringified_hash);
+        let template = format!(
+            r#"Elect new replica binary revision [{version}](https://github.com/dfinity/ic/tree/{version})
+        
+# Release Notes:"#
+        );
+        let edited = edit::edit(template)?.trim().replace("\r(\n)?", "\n");
+        let title = format!("Elect new replica binary revision (commit {version})");
+        Ok(vec![
+            "propose-to-bless-replica-version-flexible".to_string(),
+            "--proposal-title".to_string(),
+            title,
+            "--summary".to_string(),
+            edited,
+            version.to_string(),
+            update_url,
+            stringified_hash,
+        ])
     }
 }
 
