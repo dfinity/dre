@@ -151,5 +151,16 @@ pub(crate) mod version {
     pub enum Commands {
         /// Bless replica version with release notes using the ic-admin CLI
         Bless { version: String },
+
+        /// Retire replica versions
+        Retire {
+            /// Specify if the summary should be edited during the process
+            ///
+            /// Default value of summary is:
+            /// Removing the obsolete IC replica versions from the registry, to
+            /// prevent unintended version in the future
+            #[clap(long)]
+            edit_summary: bool,
+        },
     }
 }
