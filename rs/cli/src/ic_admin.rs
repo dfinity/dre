@@ -13,6 +13,7 @@ use ic_canister_client::{Agent, Sender};
 use ic_nns_constants::GOVERNANCE_CANISTER_ID;
 use ic_nns_governance::pb::v1::{ListNeurons, ListNeuronsResponse};
 use ic_sys::utility_command::UtilityCommand;
+use itertools::Itertools;
 use keyring::{Entry, Error};
 use log::{error, info, warn};
 use regex::Regex;
@@ -27,6 +28,7 @@ use std::{path::Path, process::Command};
 use strum::Display;
 
 use crate::cli::Opts;
+use crate::clients::DashboardBackendClient;
 use crate::defaults;
 
 #[derive(Clone)]
@@ -313,9 +315,9 @@ impl Cli {
         exec(self)
     }
 
-    pub(crate) async fn prepare_args_to_propose_to_bless_new_replica_version(
+    pub(crate) async fn prepare_to_propose_to_bless_new_replica_version(
         version: &String,
-    ) -> anyhow::Result<Vec<String>> {
+    ) -> anyhow::Result<(String, ProposeCommand)> {
         let image_path = format!("ic/{}/guest-os/update-img", version);
         let download_dir = format!("{}/tmp/{}", std::env::var("HOME").unwrap(), image_path);
         let download_dir = Path::new(&download_dir);
@@ -362,17 +364,66 @@ impl Cli {
 # Release Notes:"#
         );
         let edited = edit::edit(template)?.trim().replace("\r(\n)?", "\n");
-        let title = format!("Elect new replica binary revision (commit {version})");
-        Ok(vec![
-            "propose-to-bless-replica-version-flexible".to_string(),
-            "--proposal-title".to_string(),
-            title,
-            "--summary".to_string(),
+        Ok((
             edited,
-            version.to_string(),
-            update_url,
-            stringified_hash,
-        ])
+            ProposeCommand::BlessReplicaVersionFlexible {
+                version: version.to_string(),
+                update_url,
+                stringified_hash,
+            },
+        ))
+    }
+
+    pub(crate) async fn get_replica_versions_to_retire(
+        &self,
+        edit_summary: bool,
+        client: DashboardBackendClient,
+    ) -> anyhow::Result<(String, ProposeCommand)> {
+        let nns_versions = client.get_retireable_versions().await?;
+
+        info!("Provide the versions you would like to retire in the oppened window");
+        let template = "# In the below lines, uncomment the versions that you would like to retire".to_string();
+        let versions = edit::edit(format!(
+            "{}\n{}",
+            template,
+            nns_versions
+                .all
+                .iter()
+                .map(|f| if !nns_versions.obsolete.contains(f) {
+                    format!("# {}", f)
+                } else {
+                    f.to_string()
+                })
+                .join("\n")
+        ))?
+        .trim()
+        .replace("\r(\n)?", "\n")
+        .split('\n')
+        .map(|s| s.trim().to_string())
+        .filter(|f| !f.is_empty() && !f.starts_with('#'))
+        .collect::<Vec<String>>();
+        for version in &versions {
+            if !nns_versions.all.contains(version) {
+                return Err(anyhow::anyhow!(
+                    "Version \"{}\" is not present inside blessed replica versions",
+                    version
+                ));
+            }
+        }
+
+        if versions.is_empty() {
+            return Err(anyhow::anyhow!("Provided empty list of versions, aborting..."));
+        }
+
+        let mut template =
+            "Removing the obsolete IC replica versions from the registry, to prevent unintended version downgrades in the future"
+                .to_string();
+        if edit_summary {
+            info!("Edit summary");
+            template = edit::edit(template)?.trim().replace("\r(\n)?", "\n");
+        }
+
+        Ok((template, ProposeCommand::RetireReplicaVersion { versions }))
     }
 }
 
@@ -391,6 +442,14 @@ pub(crate) enum ProposeCommand {
     Raw {
         command: String,
         args: Vec<String>,
+    },
+    RetireReplicaVersion {
+        versions: Vec<String>,
+    },
+    BlessReplicaVersionFlexible {
+        version: String,
+        update_url: String,
+        stringified_hash: String,
     },
 }
 
@@ -440,6 +499,16 @@ impl ProposeCommand {
                 vec![subnet.to_string(), version.clone()]
             }
             Self::Raw { command: _, args } => args.clone(),
+            Self::RetireReplicaVersion { versions } => versions.to_vec(),
+            Self::BlessReplicaVersionFlexible {
+                version,
+                update_url,
+                stringified_hash,
+            } => vec![
+                version.to_string(),
+                update_url.to_string(),
+                stringified_hash.to_string(),
+            ],
         }
     }
 }
