@@ -1,12 +1,12 @@
-pub mod requests;
 pub mod errors;
+pub mod requests;
 pub use crate::errors::*;
 
 use candid::{CandidType, Decode};
 use core::hash::Hash;
-use ic_nns_governance::pb::v1::ProposalStatus;
 use ic_nns_governance::pb::v1::NnsFunction;
 use ic_nns_governance::pb::v1::ProposalInfo;
+use ic_nns_governance::pb::v1::ProposalStatus;
 use ic_registry_subnet_type::SubnetType;
 use ic_types::PrincipalId;
 use registry_canister::mutations::do_add_nodes_to_subnet::AddNodesToSubnetPayload;
@@ -473,4 +473,10 @@ impl Network {
             Self::Url(url) => url.clone(),
         }
     }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BlessedVersions {
+    pub all: Vec<String>,
+    pub obsolete: Vec<String>,
 }
