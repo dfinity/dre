@@ -1,5 +1,7 @@
 # Pre-requisites
 
+## 1. Install dependencies
+
 ### Linux
 
 Installing SQLite with dev dependencies (tested on ubuntu 22.04).
@@ -52,27 +54,72 @@ sudo rm -rf /Library/Developer/CommandLineTools
 sudo xcode-select --install
 ```
 
-### Installing the Python packages (dependencies)
+## 2. Install the Python packages
 
 Run the following from the repo root
 ```bash
 pipenv install
 ```
 
-### Pre-commit
+## 3. Install pre-commit
 Install and enable pre-commit. Follow https://pre-commit.com/#installation then
 ```
 pre-commit install
 ```
 
-## Adding the ic git submodule
+## 4. Install cargo
 
-Add the `ic` git submodule
+You need an installation of `rustup` and `cargo`. You can follow the instructions from https://www.rust-lang.org/tools/install
+This is typically as simple as running
+```sh
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```
-git submodule update --init --recursive --remote
-git submodule foreach -q git remote add github git@github.com:dfinity-lab/dfinity.git
-git submodule foreach -q git remote add core-ic git@gitlab.com:dfinity-lab/core/ic.git
+
+Make sure you add `$HOME/.cargo/bin` to your PATH, as written in the page above.
+> In the Rust development environment, all tools are installed to the ~/.cargo/bin directory, and this is where you will find the Rust toolchain, including rustc, cargo, and rustup.
+
+### Check the installation
+
+To check if your Rust tooling is set up correctly, you can go to the repo root and then
+```sh
+cd rs
+cargo check
 ```
+
+# IC Network Internal Dashboard
+
+## Pre-requisites 
+
+### 1. Install cargo-watch
+
+```sh
+cargo install cargo-watch
+```
+
+### 2. Install yarn dependencies
+
+```
+cd dashboard
+yarn install
+```
+
+## Running
+
+To start the release dashboard locally, run the following from dashboard folder
+
+```sh
+yarn dev
+```
+
+To use release_cli with the local dashboard instance run it with `--dev` flag.
+
+E.g.
+
+```sh
+release_cli --dev subnet --id <id> replace -o1
+```
+
+# Utils
 
 ## Updating the ic git submodule
 
@@ -84,34 +131,4 @@ git submodule foreach -q git fetch core-ic
 git submodule foreach -q git checkout master
 git submodule foreach -q git pull --prune --force
 git submodule foreach -q git reset --hard origin/master
-```
-
-## Installing cargo
-
-You need an installation of `rustup` and `cargo`. You can follow the instructions from https://www.rust-lang.org/tools/install
-This is typically as simple as running
-```sh
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-```
-
-Make sure you add `$HOME/.cargo/bin` to your PATH, as written in the page above.
-> In the Rust development environment, all tools are installed to the ~/.cargo/bin directory, and this is where you will find the Rust toolchain, including rustc, cargo, and rustup.
-
-# Checking
-
-To check if your Rust tooling is set up correctly, you can go to the repo root and then
-```
-cd rs
-cargo check
-```
-
-# [Backstage](https://backstage.io)
-
-To start the release dashboard locally, run:
-
-```sh
-cargo install cargo-watch
-cd dashboard
-yarn install
-yarn dev
 ```
