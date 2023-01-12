@@ -86,6 +86,22 @@ cd rs
 cargo check
 ```
 
+## 5. Install nvm, node, yarn
+
+### 1. Install nvm
+
+https://github.com/nvm-sh/nvm#installing-and-updating
+
+### 2. Install node
+
+```sh
+nvm use 14
+```
+
+### 3. Install yarn
+
+npm install --global yarn
+
 # IC Network Internal Dashboard
 
 ## Pre-requisites 
