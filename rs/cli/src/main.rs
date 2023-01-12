@@ -1,8 +1,10 @@
-use crate::cli::version::Commands::Bless;
+use crate::cli::version::Commands::{Bless, Retire};
 use clap::{CommandFactory, ErrorKind, Parser};
+use clients::DashboardBackendClient;
 use ic_management_types::{MinNakamotoCoefficients, NodeFeature};
 use std::collections::BTreeMap;
 use std::str::FromStr;
+
 mod cli;
 mod clients;
 pub(crate) mod defaults;
@@ -130,9 +132,16 @@ async fn main() -> Result<(), anyhow::Error> {
                 match &cmd.subcommand {
                     Bless { version } => {
                         let ic_admin = ic_admin::Cli::from_opts(&cli_opts, true).await?;
-                        let args = ic_admin::Cli::prepare_args_to_propose_to_bless_new_replica_version(version).await?;
-                        ic_admin.run_passthrough_propose(&args)
-                    }
+                        let (summary, cmd) = ic_admin::Cli::prepare_to_propose_to_bless_new_replica_version(version).await?;
+                        ic_admin.propose_run(cmd, ic_admin::ProposeOptions { title: Some(format!("Elect new replica binary revision (commit {version})")), summary: Some(summary), motivation: None })
+                    },
+                    Retire { edit_summary } => {
+                        let ic_admin = ic_admin::Cli::from_opts(&cli_opts, true).await?;
+                        let dashboard_client = DashboardBackendClient::new(cli_opts.network, cli_opts.dev);
+                        let (summary, cmd ) = ic_admin.get_replica_versions_to_retire(*edit_summary, dashboard_client).await?;
+
+                        ic_admin.propose_run(cmd, ic_admin::ProposeOptions { title: Some("Retire IC replica version".to_string()), summary: Some(summary), motivation: None })
+                    },
                 }
             },
         }
