@@ -100,7 +100,9 @@ nvm use 14
 
 ### 3. Install yarn
 
+```sh
 npm install --global yarn
+```
 
 # IC Network Internal Dashboard
 
