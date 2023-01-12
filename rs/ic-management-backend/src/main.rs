@@ -56,10 +56,9 @@ async fn main() -> std::io::Result<()> {
     sync_local_store().await.expect("failed to init local store");
 
     let local_registry_path = local_registry_path();
-    let local_registry: Arc<LocalRegistry> = Arc::new(LocalRegistry::new(
-        local_registry_path,
-        Duration::from_millis(1000),
-    ).expect("Failed to create local registry"));
+    let local_registry: Arc<LocalRegistry> = Arc::new(
+        LocalRegistry::new(local_registry_path, Duration::from_millis(1000)).expect("Failed to create local registry"),
+    );
 
     tokio::spawn(async move {
         let mut print_counter = 0;
@@ -126,6 +125,7 @@ async fn main() -> std::io::Result<()> {
             .service(endpoints::subnet::extend)
             .service(endpoints::query_decentralization::decentralization_subnet_query)
             .service(endpoints::query_decentralization::decentralization_whatif_query)
+            .service(get_nns_blessed_versions)
     })
     .shutdown_timeout(10)
     .bind((
@@ -172,6 +172,13 @@ async fn get_subnet(
         }
     };
     HttpResponse::Ok().json(record)
+}
+
+#[get("/nns/blessed-versions")]
+async fn get_nns_blessed_versions(registry: web::Data<Arc<RwLock<registry::RegistryState>>>) -> impl Responder {
+    let nns_subnet_records = registry.read().await.nns_blessed_versions().await.unwrap();
+
+    HttpResponse::Ok().json(nns_subnet_records)
 }
 
 #[get("/rollout")]
