@@ -10,6 +10,7 @@ use flate2::read::GzDecoder;
 use futures::Future;
 use ic_base_types::PrincipalId;
 use ic_canister_client::{Agent, Sender};
+use ic_management_types::BlessedVersions;
 use ic_nns_constants::GOVERNANCE_CANISTER_ID;
 use ic_nns_governance::pb::v1::{ListNeurons, ListNeuronsResponse};
 use ic_sys::utility_command::UtilityCommand;
@@ -379,9 +380,9 @@ impl Cli {
         edit_summary: bool,
         client: DashboardBackendClient,
     ) -> anyhow::Result<(String, ProposeCommand)> {
-        let nns_versions = client.get_retireable_versions().await?;
+        let nns_versions: BlessedVersions = client.get_nss_blessed_versions().await?;
 
-        info!("Provide the versions you would like to retire in the oppened window");
+        info!("Waiting for you to pick the versions to retire in your editor");
         let template = "# In the below lines, uncomment the versions that you would like to retire".to_string();
         let versions = edit::edit(format!(
             "{}\n{}",
