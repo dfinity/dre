@@ -355,18 +355,11 @@ update-ic-versions-file:
           exit 0
       fi
 
-      # Assign a reviewer to the MR and send a notification to the T&V slack channel
-      SLACK_CHANNEL="#eng-testing"
+      # Assign the MR reviewer and merge the MR once approved
       MR_NUM=$(curl --fail --request GET --header "PRIVATE-TOKEN: $IC_CREATE_VERSIONS_MR_TOKEN" "https://gitlab.com/api/v4/projects/31166135/merge_requests/?state=opened&source_branch=ic-mainnet-revisions" | jq '.[].iid')
       if [[ -n "$MR_NUM" ]]; then
           # Assign the reviewer to DSD https://gitlab.com/danielstefan.dietiker
           curl --fail --request PUT --header "PRIVATE-TOKEN: $IC_CREATE_VERSIONS_MR_TOKEN" "https://gitlab.com/api/v4/projects/31166135/merge_requests/$MR_NUM?reviewer_ids[]=7781103"
-          # If the MR does not have the label "notified-slack" set, send a slack message to the T&V channel
-          if [[ -z "$(curl --fail --request GET --header "PRIVATE-TOKEN: $IC_CREATE_VERSIONS_MR_TOKEN" "https://gitlab.com/api/v4/projects/31166135/merge_requests/$MR_NUM" | jq '.labels' | grep "notified-slack")" ]]; then
-              curl --fail --request POST -H 'Content-type: application/json' --data "{\"text\": \"Hi! Can you please approve and merge the following MR https://gitlab.com/dfinity-lab/public/ic/-/merge_requests/$MR_NUM\", \"channel\": \"$SLACK_CHANNEL\", \"username\": \"Release team bot\"}" "$SLACK_WEBHOOK_URL"
-              # And then set the label "notified-slack" to avoid sending multiple messages
-              curl --fail --request PUT --header "PRIVATE-TOKEN: $IC_CREATE_VERSIONS_MR_TOKEN" "https://gitlab.com/api/v4/projects/31166135/merge_requests/$MR_NUM?add_labels[]=notified-slack"
-          fi
       fi
       sleep 10 # Wait to let GitLab update the MR metadata
       if [[ "$(curl --fail --request GET --header "PRIVATE-TOKEN: $IC_CREATE_VERSIONS_MR_TOKEN" "https://gitlab.com/api/v4/projects/31166135/merge_requests/$MR_NUM/approval_state" | jq '[.rules[].approved] | all')" == "true" ]]; then
