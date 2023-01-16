@@ -73,7 +73,7 @@ impl DashboardBackendClient {
             .await
     }
 
-    pub async fn get_retireable_versions(&self) -> anyhow::Result<BlessedVersions> {
+    pub async fn get_nss_blessed_versions(&self) -> anyhow::Result<BlessedVersions> {
         reqwest::Client::new()
             .get(self.url.join("nns/blessed-versions").map_err(|e| anyhow::anyhow!(e))?)
             .rest_send()
