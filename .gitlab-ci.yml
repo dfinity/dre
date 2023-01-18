@@ -397,7 +397,7 @@ dashboard-release:
 
 qualify-release:
   timeout: 2h
-  resource_group: staging  # Eliminate concurrent test runs
+  resource_group: staging # Eliminate concurrent test runs
   rules:
     - if: '$CI_PIPELINE_SOURCE == "schedule" && $SCHEDULE_NAME == "qualify-release"'
       # Run the job automatically if the QUALIFY_GIT_REVISION env var is provided in the web UI when the pipeline was created
@@ -432,3 +432,22 @@ metrics-proxy-release:
     - docker build -t "$IMAGE_REGISTRY_BASE/$IMAGE_TAG" .
     - if [ "${CI_COMMIT_BRANCH}" != "${CI_DEFAULT_BRANCH}" ]; then exit 0; fi
     - docker push $IMAGE_REGISTRY_BASE/$IMAGE_TAG
+
+linear-jira-release:
+  stage: release
+  extends:
+    - .rules-default
+  interruptible: true
+  before_script:
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+  variables:
+    IMAGE_REGISTRY_BASE: $CI_REGISTRY_IMAGE
+    DOCKER_BUILDKIT: "1"
+    IMAGE_NAME: "$IMAGE_REGISTRY_BASE/linear-jira"
+  script:
+    - cd linear-jira
+    - docker build -t "$IMAGE_NAME:latest" .
+    - if [ "${CI_COMMIT_BRANCH}" != "${CI_DEFAULT_BRANCH}" ]; then exit 0; fi
+    - docker tag "$IMAGE_NAME:latest" "$IMAGE_NAME:$CI_COMMIT_SHA"
+    - docker push "$IMAGE_NAME:$CI_COMMIT_SHA"
+    - docker push "$IMAGE_NAME:latest"
