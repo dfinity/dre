@@ -364,7 +364,24 @@ impl Cli {
         
 # Release Notes:"#
         );
-        let edited = edit::edit(template)?.trim().replace("\r(\n)?", "\n");
+        let edited = edit::edit(template)?
+            .trim()
+            .replace("\r(\n)?", "\n")
+            .split('\n')
+            .into_iter()
+            .map(|f| {
+                if !f.starts_with('*') {
+                    return f.to_string();
+                }
+                let (left, message) = f.split_once(']').unwrap();
+                let commit_hash = left.split_once('[').unwrap().1.to_string();
+
+                return format!(
+                    "* [{}](https://github.com/dfinity/ic/commit/{}) {}",
+                    commit_hash, commit_hash, message
+                );
+            })
+            .join("\n");
         Ok((
             edited,
             ProposeCommand::BlessReplicaVersionFlexible {
