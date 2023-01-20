@@ -469,7 +469,8 @@ impl Network {
     pub fn get_url(&self) -> Url {
         match self {
             Network::Mainnet => Url::from_str("https://ic0.app").unwrap(),
-            Network::Staging => Url::from_str("https://staging.release.dfinity.network").unwrap(),
+            // Workaround for staging boundary node not working properly (503 Service unavailable)
+            Network::Staging => Url::from_str("https://[2600:3004:1200:1200:5000:11ff:fe37:c55d]:8080").unwrap(),
             Self::Url(url) => url.clone(),
         }
     }
