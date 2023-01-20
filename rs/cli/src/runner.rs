@@ -4,8 +4,6 @@ use crate::ic_admin;
 use crate::ic_admin::ProposeOptions;
 use crate::ops_subnet_node_replace;
 use decentralization::SubnetChangeResponse;
-use dialoguer::Confirm;
-use futures::Future;
 use ic_base_types::PrincipalId;
 
 #[derive(Clone)]
@@ -48,21 +46,14 @@ impl Runner {
         }
         println!("{}", change);
 
-        self.with_confirmation(|r| {
-            let change = change.clone();
-            let motivation = motivation.clone();
-            async move {
-                r.run_membership_change(
-                    change,
-                    ProposeOptions {
-                        title: format!("Extend subnet {subnet}").into(),
-                        summary: format!("Extend subnet {subnet}").into(),
-                        motivation: motivation.clone().into(),
-                    },
-                )
-                .await
-            }
-        })
+        self.run_membership_change(
+            change,
+            ProposeOptions {
+                title: format!("Extend subnet {subnet}").into(),
+                summary: format!("Extend subnet {subnet}").into(),
+                motivation: motivation.clone().into(),
+            },
+        )
         .await
     }
 
@@ -79,16 +70,10 @@ impl Runner {
         }
         println!("{}", change);
 
-        self.with_confirmation(|r| {
-            let change = change.clone();
-            async move {
-                r.run_membership_change(
-                    change.clone(),
-                    ops_subnet_node_replace::replace_proposal_options(&change)?,
-                )
-                .await
-            }
-        })
+        self.run_membership_change(
+            change.clone(),
+            ops_subnet_node_replace::replace_proposal_options(&change)?,
+        )
         .await
     }
 
@@ -114,32 +99,6 @@ impl Runner {
                 options,
             )
             .map_err(|e| anyhow::anyhow!(e))
-    }
-
-    async fn with_confirmation<E, F>(&self, exec: E) -> anyhow::Result<()>
-    where
-        E: Fn(Self) -> F,
-        F: Future<Output = anyhow::Result<()>>,
-    {
-        if !self.ic_admin.dry_run {
-            exec(self.dry()).await?;
-            if !Confirm::new()
-                .with_prompt("Do you want to continue?")
-                .default(false)
-                .interact()?
-            {
-                return Err(anyhow::anyhow!("Action aborted"));
-            }
-        }
-
-        exec(self.clone()).await
-    }
-
-    fn dry(&self) -> Self {
-        Self {
-            ic_admin: self.ic_admin.dry_run(),
-            dashboard_backend_client: self.dashboard_backend_client.clone(),
-        }
     }
 
     pub async fn from_opts(cli_opts: &Opts) -> anyhow::Result<Self> {
