@@ -130,9 +130,9 @@ async fn main() -> Result<(), anyhow::Error> {
 
             cli::Commands::Version(cmd) => {
                 match &cmd.subcommand {
-                    Bless { version } => {
+                    Bless { version, rc_branch_name } => {
                         let ic_admin = ic_admin::Cli::from_opts(&cli_opts, true).await?;
-                        let (summary, cmd) = ic_admin::Cli::prepare_to_propose_to_bless_new_replica_version(version).await?;
+                        let (summary, cmd) = ic_admin::Cli::prepare_to_propose_to_bless_new_replica_version(version, rc_branch_name).await?;
                         ic_admin.propose_run(cmd, ic_admin::ProposeOptions { title: Some(format!("Elect new replica binary revision (commit {version})")), summary: Some(summary), motivation: None })
                     },
                     Retire { edit_summary } => {

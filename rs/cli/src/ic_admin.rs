@@ -313,6 +313,7 @@ impl Cli {
 
     pub(crate) async fn prepare_to_propose_to_bless_new_replica_version(
         version: &String,
+        rc_branch_name: &String,
     ) -> anyhow::Result<(String, ProposeCommand)> {
         let image_path = format!("ic/{}/guest-os/update-img", version);
         let download_dir = format!("{}/tmp/{}", std::env::var("HOME").unwrap(), image_path);
@@ -355,7 +356,7 @@ impl Cli {
             .join("");
         info!("SHA256 of update-img.tar.gz: {}", stringified_hash);
         let template = format!(
-            r#"Elect new replica binary revision [{version}](https://github.com/dfinity/ic/tree/{version})
+            r#"Elect new replica binary revision [{version}](https://github.com/dfinity/ic/tree/{rc_branch_name})
         
 # Release Notes:"#
         );
