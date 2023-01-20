@@ -369,13 +369,17 @@ impl Cli {
                 if !f.starts_with('*') {
                     return f.to_string();
                 }
-                let (left, message) = f.split_once(']').unwrap();
-                let commit_hash = left.split_once('[').unwrap().1.to_string();
+                match f.split_once(']') {
+                    Some((left, message)) => {
+                        let commit_hash = left.split_once('[').unwrap().1.to_string();
 
-                return format!(
-                    "* [{}](https://github.com/dfinity/ic/commit/{}) {}",
-                    commit_hash, commit_hash, message
-                );
+                        return format!(
+                            "* [[{}](https://github.com/dfinity/ic/commit/{})] {}",
+                            commit_hash, commit_hash, message
+                        );
+                    }
+                    None => f.to_string(),
+                }
             })
             .join("\n");
         Ok((
