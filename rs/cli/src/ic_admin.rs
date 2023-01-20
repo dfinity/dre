@@ -36,7 +36,7 @@ use crate::defaults;
 pub struct Cli {
     ic_admin: Option<String>,
     nns_url: url::Url,
-    pub dry_run: bool,
+    pub yes: bool,
     neuron: Option<Neuron>,
 }
 
@@ -96,7 +96,7 @@ impl Auth {
 impl Cli {
     pub fn dry_run(&self) -> Self {
         Self {
-            dry_run: true,
+            yes: false,
             ..self.clone()
         }
     }
@@ -135,44 +135,52 @@ impl Cli {
         );
     }
 
-    pub(crate) fn propose_run(
-        &self,
-        cmd: ProposeCommand,
-        ProposeOptions {
-            title,
-            summary,
-            motivation,
-        }: ProposeOptions,
-    ) -> anyhow::Result<()> {
-        self.run(
-            &cmd.get_command_name(),
-            [
-                if self.dry_run || self.neuron.is_none() {
-                    vec!["--dry-run".to_string()]
-                } else {
-                    Default::default()
-                },
-                title
-                    .map(|t| vec!["--proposal-title".to_string(), t])
-                    .unwrap_or_default(),
-                summary
-                    .map(|s| {
-                        vec![
-                            "--summary".to_string(),
-                            format!(
-                                "{}{}",
-                                s,
-                                motivation.map(|m| format!("\n\nMotivation: {m}")).unwrap_or_default(),
-                            ),
-                        ]
-                    })
-                    .unwrap_or_default(),
-                self.neuron.as_ref().map(|n| n.as_arg_vec()).unwrap_or_default(),
-                cmd.args(),
-            ]
-            .concat()
-            .as_slice(),
-        )
+    pub(crate) fn propose_run(&self, cmd: ProposeCommand, opts: ProposeOptions) -> anyhow::Result<()> {
+        let exec = |cli: &Cli, cmd: ProposeCommand, opts: ProposeOptions, dry_run: bool| {
+            cli.run(
+                &cmd.get_command_name(),
+                [
+                    if dry_run {
+                        vec!["--dry-run".to_string()]
+                    } else {
+                        Default::default()
+                    },
+                    opts.title
+                        .map(|t| vec!["--proposal-title".to_string(), t])
+                        .unwrap_or_default(),
+                    opts.summary
+                        .map(|s| {
+                            vec![
+                                "--summary".to_string(),
+                                format!(
+                                    "{}{}",
+                                    s,
+                                    opts.motivation
+                                        .map(|m| format!("\n\nMotivation: {m}"))
+                                        .unwrap_or_default(),
+                                ),
+                            ]
+                        })
+                        .unwrap_or_default(),
+                    cli.neuron.as_ref().map(|n| n.as_arg_vec()).unwrap_or_default(),
+                    cmd.args(),
+                ]
+                .concat()
+                .as_slice(),
+            )
+        };
+
+        if !self.yes {
+            exec(&self.dry_run(), cmd.clone(), opts.clone(), true)?;
+            if !Confirm::new()
+                .with_prompt("Do you want to continue?")
+                .default(false)
+                .interact()?
+            {
+                return Err(anyhow::anyhow!("Action aborted"));
+            }
+        }
+        exec(self, cmd, opts, false)
     }
 
     fn _run_ic_admin_with_args(&self, ic_admin_args: &[String]) -> anyhow::Result<()> {
@@ -294,26 +302,13 @@ impl Cli {
             args_with_fixed_prefix
         };
 
-        let exec = |cli: &Cli| {
-            cli.propose_run(
-                ProposeCommand::Raw {
-                    command: args[0].clone(),
-                    args: args.iter().skip(1).cloned().collect::<Vec<_>>(),
-                },
-                ProposeOptions::default(),
-            )
-        };
-        if !self.dry_run {
-            exec(&self.dry_run())?;
-            if !Confirm::new()
-                .with_prompt("Do you want to continue?")
-                .default(false)
-                .interact()?
-            {
-                return Err(anyhow::anyhow!("Action aborted"));
-            }
-        }
-        exec(self)
+        self.propose_run(
+            ProposeCommand::Raw {
+                command: args[0].clone(),
+                args: args.iter().skip(1).cloned().collect::<Vec<_>>(),
+            },
+            ProposeOptions::default(),
+        )
     }
 
     pub(crate) async fn prepare_to_propose_to_bless_new_replica_version(
@@ -428,7 +423,7 @@ impl Cli {
     }
 }
 
-#[derive(Display)]
+#[derive(Display, Clone)]
 #[strum(serialize_all = "kebab-case")]
 pub(crate) enum ProposeCommand {
     ChangeSubnetMembership {
@@ -514,7 +509,7 @@ impl ProposeCommand {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct ProposeOptions {
     pub title: Option<String>,
     pub summary: Option<String>,
@@ -629,7 +624,7 @@ impl Cli {
             None
         };
         Ok(Cli {
-            dry_run: opts.dry_run || neuron.is_none(),
+            yes: opts.yes,
             neuron,
             ic_admin: opts.ic_admin.clone(),
             nns_url,
@@ -713,7 +708,7 @@ oSMDIQBa2NLmSmaqjDXej4rrJEuEhKIz7/pGXpxztViWhB+X9Q==
         for cmd in test_cases {
             let cli = Cli {
                 nns_url: url::Url::from_str("http://localhost:8080").unwrap(),
-                dry_run: true,
+                yes: false,
                 neuron: Neuron {
                     id: 3,
                     auth: Auth::Keyfile {
@@ -729,8 +724,43 @@ oSMDIQBa2NLmSmaqjDXej4rrJEuEhKIz7/pGXpxztViWhB+X9Q==
             };
 
             let cmd_name = cmd.to_string();
+            let opts = ProposeOptions {
+                title: Some("test-proposal".to_string()),
+                summary: Some("test-summray".to_string()),
+                ..Default::default()
+            };
+
+            let vector = vec![
+                if !cli.yes {
+                    vec!["--dry-run".to_string()]
+                } else {
+                    Default::default()
+                },
+                opts.title
+                    .map(|t| vec!["--proposal-title".to_string(), t])
+                    .unwrap_or_default(),
+                opts.summary
+                    .map(|s| {
+                        vec![
+                            "--summary".to_string(),
+                            format!(
+                                "{}{}",
+                                s,
+                                opts.motivation
+                                    .map(|m| format!("\n\nMotivation: {m}"))
+                                    .unwrap_or_default(),
+                            ),
+                        ]
+                    })
+                    .unwrap_or_default(),
+                cli.neuron.as_ref().map(|n| n.as_arg_vec()).unwrap_or_default(),
+                cmd.args(),
+            ]
+            .concat()
+            .to_vec();
             let out = with_ic_admin(Default::default(), async {
-                cli.propose_run(cmd, Default::default()).map_err(|e| anyhow::anyhow!(e))
+                cli.run(&cmd.get_command_name(), &vector)
+                    .map_err(|e| anyhow::anyhow!(e))
             })
             .await;
             assert!(
