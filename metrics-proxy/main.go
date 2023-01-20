@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // Hop-by-hop headers. These are removed when sent to the backend.
@@ -50,6 +51,7 @@ func appendHostToXForwardHeader(header http.Header, host string) {
 }
 
 type proxy struct {
+	Timeout time.Duration
 }
 
 func (p *proxy) ServeHTTP(wr http.ResponseWriter, req *http.Request) {
@@ -59,7 +61,10 @@ func (p *proxy) ServeHTTP(wr http.ResponseWriter, req *http.Request) {
 		TLSClientConfig: &tls.Config{
 			InsecureSkipVerify: true,
 		}}
-	client := &http.Client{Transport: tr}
+	client := &http.Client{
+		Transport: tr,
+		Timeout:   p.Timeout,
+	}
 
 	// http: Request.RequestURI can't be set in client requests.
 	// http://golang.org/src/pkg/net/http/client.go
@@ -134,9 +139,10 @@ func (p *proxy) ServeHTTP(wr http.ResponseWriter, req *http.Request) {
 
 func main() {
 	var addr = flag.String("addr", "127.0.0.1:8080", "The addr of the application.")
+	var timeout = flag.Duration("timeout", time.Duration(5*time.Second), "Requests timeout on the proxy")
 	flag.Parse()
 
-	handler := &proxy{}
+	handler := &proxy{Timeout: *timeout}
 
 	log.Println("Starting proxy server on", *addr)
 	if err := http.ListenAndServe(*addr, handler); err != nil {
