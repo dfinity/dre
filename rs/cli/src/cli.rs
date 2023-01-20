@@ -19,8 +19,8 @@ pub struct Opts {
     pub(crate) ic_admin: Option<String>,
     #[clap(long, env = "DEV")]
     pub(crate) dev: bool,
-    #[clap(short, long, env = "DRY_RUN")]
-    pub(crate) dry_run: bool,
+    #[clap(short, long, env = "YES")]
+    pub(crate) yes: bool,
     #[clap(long, env = "VERBOSE")]
     pub(crate) verbose: bool,
 
