@@ -150,7 +150,14 @@ pub(crate) mod version {
     #[derive(Subcommand, Clone)]
     pub enum Commands {
         /// Bless replica version with release notes using the ic-admin CLI
-        Bless { version: String },
+        Bless {
+            /// Specify the commit hash of the version that is being deployed.
+            version: String,
+
+            /// Sepcify the name of the rc branch that contains the release
+            /// commits.
+            rc_branch_name: String,
+        },
 
         /// Retire replica versions
         Retire {
