@@ -16,7 +16,7 @@ urlencoding = "2.1.0"
 futures-core = "0.3.16"
 futures-util = "0.3.16"
 derive_more = "0.99.16"
-actix-web = { version = "4.1.0", default-features = false, features = [
+actix-web = { version = "4.2.1", default-features = false, features = [
     "compress-gzip",
     "macros",
 ] }
