@@ -80,9 +80,7 @@ func (p *proxy) ServeHTTP(wr http.ResponseWriter, req *http.Request) {
 	// Even worse, the incoming request in this function does not see the scheme defined
 	// (this is a bug in the golang net library, which might never be fixed.)
 	// So we set it explicitely in order to get the correct remote scheme
-	if req.URL.Port() == "9100" {
-		req.URL.Scheme = "https"
-	}
+	req.URL.Scheme = "https"
 
 	delHopHeaders(req.Header)
 
