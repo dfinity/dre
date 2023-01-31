@@ -31,22 +31,13 @@ def ci_config_declared_image_digest():
     return ""
 
 
-def local_image_sha256_unchecked():
+def local_image_sha256_unchecked(creator="docker"):
     """Return a tuple of the latest image digest and a set of all image digests."""
-    digests = subprocess.check_output(["docker", "images", "--digests", "--format", "{{.Digest}}", IMAGE])
+    digests = subprocess.check_output([creator, "images", "--digests", "--format", "{{.Digest}}", IMAGE])
     digests = digests.decode("utf8").splitlines()
     if len(digests) > 0:
         return (digests[0], set([d for d in digests if d.startswith("sha256:")]))
     return ("", set())
-
-
-def local_image_sha256():
-    r = subprocess.run(
-        ["docker", "inspect", "--format='{{index .RepoDigests 0}}", IMAGE], stdout=subprocess.PIPE, check=False
-    )
-    if r.returncode == 0:
-        return r.stdout
-    return ""
 
 
 def find_ci_files():
@@ -70,24 +61,29 @@ def patch_ci_config_image_sha256(target_sha256):
         )
 
 
-def docker_build_image(cache_image):
+def docker_build_image(cache_image, builder="docker"):
     """Build the container image."""
     _print_green("Building the docker image...")
     os.environ["DOCKER_BUILDKIT"] = "1"
-    cmd = [
-        "docker",
-        "build",
-        "--progress=plain",
-        "--cache-from",
-        cache_image,
-        "--tag",
-        "release:latest",
-        "--tag",
-        IMAGE,
-        "-f",
-        "docker/Dockerfile",
-        ".",
-    ]
+    progress = ["--progress=plain"] if builder == "docker" else []
+    cmd = (
+        [
+            builder,
+            "build",
+        ]
+        + progress
+        + [
+            "--cache-from",
+            cache_image,
+            "--tag",
+            "release:latest",
+            "--tag",
+            IMAGE,
+            "-f",
+            "docker/Dockerfile",
+            ".",
+        ]
+    )
     _print_green("$", shlex.join(cmd))
     exit_code = pty.spawn(cmd)
     if exit_code != 0:
@@ -95,15 +91,15 @@ def docker_build_image(cache_image):
         sys.exit(exit_code)
 
 
-def docker_pull(ci_target_sha256):
+def docker_pull(ci_target_sha256, creator="docker"):
     _print_magenta("docker pull '%s'" % IMAGE)
-    exit_code = pty.spawn(["docker", "pull", f"{IMAGE}@{ci_target_sha256}"])
+    exit_code = pty.spawn([creator, "pull", f"{IMAGE}@{ci_target_sha256}"])
     if exit_code != 0:
         _print_red("Command failed with exit code %d" % exit_code)
         sys.exit(exit_code)
 
 
-def docker_push():
+def docker_push(creator="docker"):
     _print_magenta("docker push '%s'" % IMAGE)
     # Variable set automatically by GitLab
     registry_user = os.environ.get("CI_REGISTRY_USER")
@@ -112,7 +108,7 @@ def docker_push():
     if registry_user and registry_pass and registry:
         print("Logging in to the docker registry...")
         out = subprocess.check_output(
-            ["docker", "login", "--username", registry_user, "--password-stdin", registry],
+            [creator, "login", "--username", registry_user, "--password-stdin", registry],
             input=registry_pass.encode("utf8"),
         )
         print(out)
@@ -125,7 +121,7 @@ def docker_push():
         if not registry:
             _print_magenta("CI_REGISTRY environment variable is not set.")
 
-    exit_code = pty.spawn(["docker", "push", IMAGE])
+    exit_code = pty.spawn([creator, "push", IMAGE])
     if exit_code != 0:
         _print_red("Command failed with exit code %d" % exit_code)
         sys.exit(exit_code)
@@ -191,8 +187,17 @@ def _are_dirs_identical(dir1, dir2):
 def _are_files_identical(file_list, local_cp_of_dir_image):
     """Return false if all files from the file_list are unmodified compared to the local_cp_of_dir_image."""
     for f in file_list:
-        if not filecmp.cmp(f, local_cp_of_dir_image / f):
-            _print_red("file diff found: %s" % (f))
+        remote, local = f, local_cp_of_dir_image / f
+        if not os.path.exists(remote) and not os.path.exists(local):
+            # Files do not exist either in the container or in the local copy
+            # so this is the same, and we continue merrily
+            continue
+        try:
+            if not filecmp.cmp(remote, local):
+                _print_red("file diff found: %s" % (f))
+                return False
+        except FileNotFoundError:
+            _print_red("file diff found (missing in one side): %s" % (f))
             return False
     return True
 
@@ -217,16 +222,21 @@ def _print_red(*kwargs):
 
 
 def main():
+    # Override these environment variables to buildah and podman
+    # in order to establish the right tools to use here.
+    builder = os.environ.get("BUILDER", "docker")
+    creator = os.environ.get("CREATOR", "docker")
+
     os.environ["TERM"] = "xterm"  # to have colors in the child (pty spawned) processes
-    local_sha256, local_sha256_set = local_image_sha256_unchecked()
+    local_sha256, local_sha256_set = local_image_sha256_unchecked(creator=creator)
     ci_target_sha256 = ci_config_declared_image_digest()
     if ci_target_sha256.startswith("sha256:"):
-        docker_pull(ci_target_sha256)
+        docker_pull(ci_target_sha256, creator=creator)
     if not ci_target_sha256.startswith("sha256:") or ci_target_sha256 not in local_sha256_set:
         _print_magenta("ci_target_sha256 '%s' not in local_sha256 '%s'" % (ci_target_sha256, local_sha256_set))
-        docker_build_image(cache_image=f"{IMAGE}@{ci_target_sha256}")
+        docker_build_image(cache_image=f"{IMAGE}@{ci_target_sha256}", builder=builder)
         docker_push()
-        local_sha256, _ = local_image_sha256_unchecked()
+        local_sha256, _ = local_image_sha256_unchecked(creator=creator)
         patch_ci_config_image_sha256(local_sha256)
         repo_changes_push()
         sys.exit(0)
@@ -234,16 +244,18 @@ def main():
     _print_green("ci_target_sha256 '%s' in local_sha256 '%s'" % (ci_target_sha256, local_sha256_set))
     _print_green("Checking if the 'docker' subdir in the repo changed from the one in the image")
 
-    container_id = subprocess.check_output(["docker", "create", f"{IMAGE}@{ci_target_sha256}"]).decode("utf8").strip()
+    container_id = subprocess.check_output([creator, "create", f"{IMAGE}@{ci_target_sha256}"]).decode("utf8").strip()
     LOCAL_COPY_OF_IMAGE_SUBDIRS = pathlib.Path("target/check_docker_image_change")
     shutil.rmtree(LOCAL_COPY_OF_IMAGE_SUBDIRS, ignore_errors=True)
     LOCAL_COPY_OF_IMAGE_SUBDIR_DOCKER = LOCAL_COPY_OF_IMAGE_SUBDIRS / "docker"
     LOCAL_COPY_OF_IMAGE_SUBDIR_DOCKER.mkdir(parents=True, exist_ok=True)
-    file_deps = ["Pipfile", "Pipfile.lock"]
+    file_deps = ["Pipfile", "Pipfile.lock", "/opt/pyenv/pyproject.toml", "/opt/pyenv/poetry.lock"]
     for f in file_deps:
-        subprocess.check_call(["docker", "cp", f"{container_id}:{f}", LOCAL_COPY_OF_IMAGE_SUBDIRS])
-    subprocess.check_call(["docker", "cp", f"{container_id}:docker", LOCAL_COPY_OF_IMAGE_SUBDIRS])
-    subprocess.check_call(["docker", "rm", container_id])
+        p = subprocess.run([creator, "cp", f"{container_id}:{f}", LOCAL_COPY_OF_IMAGE_SUBDIRS], check=False)
+        if p.returncode not in [0, 125, 1]:  # 125 = ENOENT in Buildah, 1 = ENOENT in Docker.
+            p.check_returncode()
+    subprocess.check_call([creator, "cp", f"{container_id}:docker", LOCAL_COPY_OF_IMAGE_SUBDIRS])
+    subprocess.check_call([creator, "rm", container_id])
 
     if _are_dirs_identical("docker", LOCAL_COPY_OF_IMAGE_SUBDIR_DOCKER) and _are_files_identical(
         file_deps, LOCAL_COPY_OF_IMAGE_SUBDIRS
@@ -254,8 +266,8 @@ def main():
     _print_magenta("Docker image dependencies changed, updating the docker image.")
 
     # Something changed in the docker config, recreate the image and push it
-    docker_build_image(cache_image=f"{IMAGE}@{ci_target_sha256}")
-    docker_push()
+    docker_build_image(cache_image=f"{IMAGE}@{ci_target_sha256}", builder=builder)
+    docker_push(creator=creator)
     local_sha256, _ = local_image_sha256_unchecked()
     patch_ci_config_image_sha256(local_sha256)
     repo_changes_push()
