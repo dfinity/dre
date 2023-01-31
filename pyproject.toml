@@ -1,9 +1,12 @@
-[[source]]
-url = "https://pypi.org/simple"
-verify_ssl = true
-name = "pypi"
+[tool.poetry]
+name = "release"
+version = "0.1.0"
+description = ""
+authors = ["Release Team <eng-release@dfinity.org>"]
+readme = "README.md"
 
-[packages]
+[tool.poetry.dependencies]
+python = "3.8.16"
 ansible = "==2.10.7"
 colorama = "*"
 elasticsearch = "<8.0,>=7.16"
@@ -24,8 +27,10 @@ pre-commit = "*"
 pylint = "*"
 tenacity = "*"
 
-[dev-packages]
+
+[tool.poetry.group.dev.dependencies]
 black = "*"
 
-[requires]
-python_version = "3.8"
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

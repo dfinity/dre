@@ -1,3 +1,45 @@
+# Start the Python build.
+FROM ubuntu:20.04 as pythonbuilder
+
+ENV TZ=UTC
+
+# The Python build dependencies section in this install command
+# should be updated both here and in the README.md file.
+# The Python runtime dependencies are installed below.
+# (see "Python runtime dependencies").
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone && \
+    apt -yq update && \
+    apt -yqq install --no-install-recommends \
+        git openssh-client curl xz-utils time apt-transport-https ca-certificates lsb-release gnupg2 && \
+    apt -yq update && \
+    echo Installing Python build dependencies >&2 && \
+    apt -yq install --no-install-recommends \
+        build-essential libncurses-dev libbz2-dev libreadline-dev \
+        libssl-dev make build-essential libssl-dev zlib1g-dev \
+        libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm \
+        libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev \
+        libffi-dev liblzma-dev
+
+# Set Python up in /opt/pyenv.
+RUN mkdir -p /opt/pyenv
+COPY pyproject.toml poetry.lock /opt/pyenv/
+RUN echo Installing the correct Python and requisite modules >&2 && \
+    set -ex && \
+    cd /opt/pyenv && \
+    export PYENV_ROOT=$PWD/install && \
+    curl https://pyenv.run > pyenv.sh && \
+    bash pyenv.sh && \
+    export PYTHON_VERSION=$(sed -nr 's/^python = "(.*)"/\1/p' < pyproject.toml) && \
+    $PYENV_ROOT/bin/pyenv install $PYTHON_VERSION || { ret=$? ; cat /tmp/python-build.*.log ; exit $ret ; } && rm -rf /tmp/python-build* && \
+    export PYTHON_ROOT=$PYENV_ROOT/versions/$PYTHON_VERSION && \
+    export PATH=$PYTHON_ROOT/bin:$PATH && \
+    pip install poetry && \
+    echo Installing Python dependencies into $PYTHON_ROOT >&2 && poetry config virtualenvs.create false && \
+    poetry install && \
+    ln -sf $PYTHON_ROOT $PWD/active
+
+
+# Start the final container build.
 FROM ubuntu:20.04
 
 ARG protobuf_version=3.18.1
@@ -9,6 +51,13 @@ ARG protobuf_version=3.18.1
 
 ENV TZ=UTC
 
+# The Python build dependencies section in this install command
+# should be updated both here and in the README.md file.  When
+# a build dependency is added (above / README.md file), the
+# runtime dependencies should be updated to contain the runtime
+# (not the -dev) package corresponding to it.  Don't worry,
+# if dependencies are missing in the runtime section, the build
+# will alert you.
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone && \
     apt -yq update && \
     apt -yqq install --no-install-recommends \
@@ -18,11 +67,26 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone &
     apt -yq update && \
     apt -yqq install --no-install-recommends \
         build-essential pkg-config libssl-dev cmake libbz2-dev gcc-multilib rsync \
-        clang lld lldb liblz4-dev librocksdb-dev libsnappy-dev libzstd-dev vim nano jq \
-        zip unzip python3 python3-requests python3-pip python3-cbor shellcheck \
-        liblmdb0 libsqlite3-dev sqlite3 \
+        clang lld lldb liblz4-dev librocksdb-dev libsnappy-dev libzstd-dev \
+        liblmdb0 libsqlite3-dev sqlite3 vim nano jq zip unzip shellcheck \
         docker-ce-cli iputils-ping sudo gosu && \
-    chmod +s /usr/sbin/gosu
+    chmod +s /usr/sbin/gosu && \
+    echo Installing Python runtime dependencies for the Python built before >&2 && \
+    apt -yqq install --no-install-recommends \
+        libtk8.6 && \
+    echo Cleaning out APT cache for smaller images as per 'http://docs.projectatomic.io/container-best-practices/#_clearing_packaging_caches_and_temporary_package_downloads' >&2 && \
+    apt-get clean
+
+# Copy the Python built in the pythonbuilder container to the final container.
+COPY --from=pythonbuilder /opt/pyenv /opt/pyenv/
+# Verify all shared libraries are available.  If this step fails, you must add
+# the package for that shared library above in the Python runtime dependencies.
+# Note: the libopenblas exception listed below exists because that library
+# links to a libgfortran library within the same directory (not part of the
+# system library path) and therefore is not an error if `ldd` can't "find" it.
+RUN echo Verifying all shared libraries are available for Python >&2 && \
+    if find /opt/pyenv/active/ -name "*.so" -a ! -name "libopenblas*" | xargs -n1 ldd | grep ' not found' >&2 ; then echo The libraries listed above are missing >&2 ; exit 4 ; fi
+ENV PATH=/opt/pyenv/active/bin:$PATH
 
 # Install the "mold" linker for fast linking of Rust executables
 ARG mold_version=1.1.1
@@ -67,10 +131,6 @@ ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini.asc /tini.asc
 RUN gpg --batch --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 595E85A6B1B4779EA4DAAEC70B588DFF0527A9B7 && \
     gpg --batch --verify /tini.asc /tini && chmod +x /tini
-
-RUN pip install pipenv
-COPY Pipfile Pipfile.lock /
-RUN PIPENV_VENV_IN_PROJECT=1 pipenv install --deploy --system --ignore-pipfile
 
 # Used to detect the Dockerfile changes and automatically rebuild the image
 COPY docker /docker
