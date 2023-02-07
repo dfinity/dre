@@ -358,7 +358,33 @@ impl Cli {
         let template = format!(
             r#"Elect new replica binary revision [{version}](https://github.com/dfinity/ic/tree/{rc_branch_name})
         
-# Release Notes:"#
+# Release Notes:
+
+[comment]: <> Remove this block of text from the proposal.
+[comment]: <> Then, add the replica binary release notes as bullet points here.
+[comment]: <> Any [commit ID] within square brackets will auto-link to the specific changeset.
+
+# IC-OS Verification
+
+To build and verify the IC-OS disk image, run:
+
+```
+# From https://github.com/dfinity/ic#verifying-releases
+# This process requires Mac/Linux/WSL2, Git and Podman on your machine.
+git clone https://github.com/dfinity/ic
+cd ic
+git fetch origin
+git checkout {version}
+if ! ./gitlab-ci/container/build-ic.sh -i ; then
+    echo "IC-OS build failed.  Verification unsuccessful." >&2
+else
+    wget -c https://download.dfinity.systems/ic/{version}/guest-os/update-img/update-img.tar.gz
+    sha256sum artifact/icos/update-img.tar.gz update-img.tar.gz
+fi
+# The process should not say "IC-OS build failed." and
+# the two SHA256 sums output by the last command must match.
+```
+"#
         );
         let edited = edit::edit(template)?
             .trim()
@@ -382,14 +408,20 @@ impl Cli {
                 }
             })
             .join("\n");
-        Ok((
-            edited,
-            ProposeCommand::BlessReplicaVersionFlexible {
-                version: version.to_string(),
-                update_url,
-                stringified_hash,
-            },
-        ))
+        if edited.contains(&String::from("Remove this block of text from the proposal.")) {
+            Err(anyhow::anyhow!(
+                "The edited proposal text has not been edited to add release notes."
+            ))
+        } else {
+            Ok((
+                edited,
+                ProposeCommand::BlessReplicaVersionFlexible {
+                    version: version.to_string(),
+                    update_url,
+                    stringified_hash,
+                },
+            ))
+        }
     }
 
     pub(crate) async fn get_replica_versions_to_retire(

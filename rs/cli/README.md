@@ -15,6 +15,9 @@ Features include:
 cargo install --git ssh://git@gitlab.com/dfinity-lab/core/release release_cli
 ```
 
+Make sure you have `libssl.so.1.1` on your system (Ubuntu 22.04 and later
+will not carry it).  See below under *Troubleshooting* to get that going.
+
 ## Usage
 
 ```shell
@@ -39,6 +42,11 @@ Once downloaded and extracted, you can install it by running
 make
 make test
 sudo make install
+# The following adds the libraries to your system
+# path, where Cargo will look for them.
 sudo ln -s /usr/local/lib/libssl.so.1.1  /usr/lib/libssl.so.1.1
 sudo ln -s /usr/local/lib/libcrypto.so.1.1 /usr/lib/libcrypto.so.1.1
+# If you would rather not modify anything under /usr,
+# you can instead set the LD_LIBRARY_PATH= variable
+# to /usr/local in your ~/.bashrc.
 ```
