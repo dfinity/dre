@@ -369,20 +369,20 @@ impl Cli {
 To build and verify the IC-OS disk image, run:
 
 ```
-# From https://github.com/dfinity/ic#verifying-releases
+# From https://github.com/dfinity/ic#building-the-code
 # This process requires Mac/Linux/WSL2, Git and Podman on your machine.
 git clone https://github.com/dfinity/ic
 cd ic
 git fetch origin
 git checkout {version}
-if ! ./gitlab-ci/container/build-ic.sh -i ; then
-    echo "IC-OS build failed.  Verification unsuccessful." >&2
-else
+if ./gitlab-ci/container/build-ic.sh -i ; then
     wget -c https://download.dfinity.systems/ic/{version}/guest-os/update-img/update-img.tar.gz
-    sha256sum artifact/icos/update-img.tar.gz update-img.tar.gz
+    shasum -a 256 artifacts/icos/update-img.tar.gz update-img.tar.gz
+else
+    echo "IC-OS build failed. Verification unsuccessful." >&2
 fi
-# The process should not say "IC-OS build failed." and
-# the two SHA256 sums output by the last command must match.
+# The two SHA256 sums above from a) the downloaded CDN image and b) the locally built image,
+# must be identical, and must match the SHA256 from the payload of the NNS proposal.
 ```
 "#
         );
