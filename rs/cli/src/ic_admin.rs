@@ -137,10 +137,27 @@ impl Cli {
 
     pub(crate) fn propose_run(&self, cmd: ProposeCommand, opts: ProposeOptions) -> anyhow::Result<()> {
         let exec = |cli: &Cli, cmd: ProposeCommand, opts: ProposeOptions, dry_run: bool| {
+            // Users of the release CLI have the option of running some commands
+            // which are basically wrapped passthroughs to ic-admin, which
+            // supports --dry-run.  An example would be the propose subcommand.
+            //
+            // Under some circumstances, some of these subcommands will run this
+            // function to read/obtain some key information prior to running
+            // ic-admin "forrealz", for which they pass `dry_run` set to true.
+            // When that happens, this routine adds --dry-run.  If the user
+            // of release-cli is using one of these passthrough subcommands
+            // and the user specifies --dry-run in the command line, the net result
+            // used to be that this routine ends up adding a second --dry-run to the
+            // ic-admin command line.  That, of course, bombs out with a command
+            // line parsing error.
+            //
+            // The following variable and its use prevent this double-addition
+            // in that corner case.
+            let dry_run_in_args = &cmd.args().contains(&String::from("--dry-run"));
             cli.run(
                 &cmd.get_command_name(),
                 [
-                    if dry_run {
+                    if dry_run && !dry_run_in_args {
                         vec!["--dry-run".to_string()]
                     } else {
                         Default::default()
