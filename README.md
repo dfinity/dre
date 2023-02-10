@@ -143,12 +143,19 @@ More detailed instructions at https://pre-commit.com/#installation .
 
 You need an installation of `rustup` and `cargo`. You can follow the instructions from https://www.rust-lang.org/tools/install
 This is typically as simple as running
+
 ```sh
-# Mac OS users need to install clang, mold and protoc differently
-command -v apt && sudo apt install -y clang mold protobuf-compiler || true
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```
-
+#### On Linux
+```sh
+command -v apt && sudo apt install -y clang mold protobuf-compiler || true
+```
+#### On Mac OS
+No need to install Clang for Mac OS user since it comes with Xcode.
+```sh
+brew install mold protobuff
+```
 Make sure you add `$HOME/.cargo/bin` to your PATH, as written in the page above.
 > In the Rust development environment, all tools are installed to the ~/.cargo/bin directory, and this is where you will find the Rust toolchain, including rustc, cargo, and rustup.
 
