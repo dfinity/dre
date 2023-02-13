@@ -63,8 +63,8 @@
   neuron: 61
 - id: U8ET9T067    # Paul Liu
   neuron: 62
-# - id: U01JUPLSPAM  # George Paul
-#   neuron: 63
+- id: U03T4M2EQ6L  # Nikolas Haimerl
+  neuron: 63
 - id: U01806HR6MP  # Ian Blenke
   neuron: 64
 - id: UGNMPG3LL    # Christian Müller
@@ -85,9 +85,11 @@
   neuron: 72
 - id: U02LQR955Q9  # Frederik Rothenberger
   neuron: 73
-# - id: U02CTQHS4SX  # Alejandro Alvarez
-#   neuron: 74
-- id: UN84WR6PQ    # Rahul Korivi Subramaniyam
+- id: U03M9TVSQ6Q  # Léo Kazmierczak
+  neuron: 74
+- id: U02D55X2D50  # Mario Pastorelli
   neuron: 75
+- id: U03NX058Y9L  # Stephanus Jacobus Fischer
+  neuron: 76
 - id: UD5P5BP5K    # Maria Dubovitskaya https://dfinity.slack.com/archives/C02NJPNSLM6/p1674935817983889?thread_ts=1674934727.112299&cid=C02NJPNSLM6
   neuron: 9014191754770650971
