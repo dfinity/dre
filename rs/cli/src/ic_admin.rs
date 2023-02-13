@@ -398,9 +398,10 @@ if ./gitlab-ci/container/build-ic.sh -i ; then
 else
     echo "IC-OS build failed. Verification unsuccessful." >&2
 fi
-# The two SHA256 sums above from a) the downloaded CDN image and b) the locally built image,
-# must be identical, and must match the SHA256 from the payload of the NNS proposal.
 ```
+
+The two SHA256 sums printed above from a) the downloaded CDN image and b) the locally built image,
+must be identical, and must match the SHA256 from the payload of the NNS proposal.
 "#
         );
         let edited = edit::edit(template)?
