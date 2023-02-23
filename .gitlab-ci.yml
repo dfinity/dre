@@ -370,32 +370,93 @@ update-ic-versions-file:
           curl --fail --request PUT --header "PRIVATE-TOKEN: $IC_CREATE_VERSIONS_MR_TOKEN" "https://gitlab.com/api/v4/projects/31166135/merge_requests/$MR_NUM/merge?merge_when_pipeline_succeeds=true&squash=true"
       fi
 
-dashboard-release:
+dashboard-release-build:
+  image: docker/compose:alpine-1.29.2
+  needs: []
+  dependencies: []
+  stage: release
+  interruptible: true
+  only:
+      changes:
+        - dashboard/**/*
+        - rs/**/*
+        - .gitlab-ci.yml
+  script:
+    - | 
+      set -exou pipefail
+
+      cd dashboard
+      TAG=latest
+
+      # pull latest layer to help with build times
+      docker-compose pull || true
+      docker-compose -f docker-compose.yml -f docker-compose.dev.yml build --parallel
+
+dashboard-release-publish:
   image: docker/compose:alpine-1.29.2
   needs: []
   dependencies: []
   stage: release
   retry: 2
-  extends:
-    - .rules-default
   interruptible: true
   before_script:
     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
   variables:
-    IMAGE_REGISTRY_BASE: $CI_REGISTRY_IMAGE
     RELEASE_BRANCH: release
     COMPOSE_DOCKER_CLI_BUILD: "1"
     DOCKER_BUILDKIT: "1"
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      changes:
+        - dashboard/**/*
+        - rs/**/*
+        - .gitlab-ci.yml
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+      when: manual
+      allow_failure: true
   script:
-    - cd dashboard
-    - TAG=latest docker-compose pull || true
-    - TAG=latest docker-compose -f docker-compose.yml -f docker-compose.dev.yml build --parallel
-    - if [ "${CI_COMMIT_BRANCH}" != "${CI_DEFAULT_BRANCH}" ]; then exit 0; fi
-    - TAG=${CI_COMMIT_SHA} docker-compose -f docker-compose.yml -f docker-compose.dev.yml build --parallel
-    - TAG=latest docker-compose -f docker-compose.yml -f docker-compose.dev.yml push
-    - TAG=${CI_COMMIT_SHA} docker-compose -f docker-compose.yml -f docker-compose.dev.yml push
-    - apk add git && git remote set-url origin "https://token:${GITLAB_PUSH_TOKEN}@${CI_REPOSITORY_URL#*@}"
-    - if git fetch origin $RELEASE_BRANCH; then git checkout $RELEASE_BRANCH && git reset --hard ${CI_COMMIT_SHA} && git push --force origin $RELEASE_BRANCH; else git checkout -b $RELEASE_BRANCH && git push --force origin $RELEASE_BRANCH; fi
+    - | 
+      set -exou pipefail
+
+      cd dashboard
+      TAG=latest
+
+      # pull latest layer to help with build times
+      docker-compose pull || true
+      docker-compose -f docker-compose.yml -f docker-compose.dev.yml build --parallel
+      docker-compose -f docker-compose.yml -f docker-compose.dev.yml push
+
+      TAG=${CI_COMMIT_SHA}
+      docker-compose -f docker-compose.yml -f docker-compose.dev.yml build --parallel
+      docker-compose -f docker-compose.yml -f docker-compose.dev.yml push
+      
+      # checkout branch
+      apk add git 
+      git clone "https://gitlab-ci-token:${GITLAB_API_TOKEN}@gitlab.com/dfinity-lab/private/k8s/k8s.git"
+
+      cd k8s
+      git config user.email "idx@dfinity.org"
+      git config user.name "IDX GitLab Automation"
+      git checkout -b "update-image-tag-${CI_COMMIT_SHA}"
+
+      # sed the changes
+      # this regex matches the first group (ie the image name) and uses \1
+      # called a back-reference to insert the first group matched, the second
+      # part is to match the 40 characters hash that we replace with the $CI_COMMIT_SHA
+      sed -i "s~\(\([[:alpha:]]\|-\)\+\):[[:alnum:]]\{40\}~\1:${CI_COMMIT_SHA}~g" bases/apps/mainnet-dashboard/statefulset-slack.yaml bases/apps/mainnet-dashboard/backend/base/deployment.yaml bases/apps/mainnet-dashboard/frontend/deployment.yaml
+
+      # commit, push & create new merge request
+      git add .
+      if git diff --cached --quiet; then
+          echo "No changes to commit."
+          exit 0
+      fi
+
+      git commit -m "Updating container base image refs"
+      git push \
+          -o merge_request.create \
+          -o merge_request.title="Updating container image refs mainnet-dashboard [$CI_COMMIT_SHA]" \
+          origin "update-image-tag-${DT}"
 
 qualify-release:
   timeout: 2h
