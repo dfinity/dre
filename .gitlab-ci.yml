@@ -35,7 +35,7 @@ variables:
     # MacOS note: the gitlab runner will ignore this var on MacOS since config does not have
     # pre_clone_script set in the runner config
 
-    set -eExuo pipefail
+    set -exuo pipefail
     echo -e "\e[0Ksection_start:@(date +%s):pre_clone_script[collapsed=true]\r\e[0KClick here to see the pre_clone_script section"
 
     # Fail the git clone/pull if too slow
@@ -103,7 +103,7 @@ before_script:
     # Execute the before_script section
 
     # Start the (collapsed) before_script section
-    set -eExuo pipefail
+    set -exuo pipefail
     echo -e "\e[0Ksection_start:$(date +%s):before_script[collapsed=true]\r\e[0KClick here to see the before_script section"
 
     echo -e "Host *\nUser gitlab-runner\n" > ~/.ssh/config
@@ -227,7 +227,7 @@ valid-inventory:
   stage: test
   script:
     - |
-      set -eEou pipefail  # Don't tolerate any errors
+      set -exou pipefail  # Don't tolerate any errors
       set +x
 
       for depl in mainnet mercury staging; do
@@ -277,7 +277,7 @@ update-facts-db:
       allow_failure: true # the pipeline continues running even if the manual job is not run
   script:
     - |
-      set -eExou pipefail  # Don't tolerate any errors
+      set -exou pipefail  # Don't tolerate any errors
       # Work on main branch
       git config pull.rebase true
       git config --global user.name "Release Team"
@@ -313,7 +313,7 @@ jira-update:
       allow_failure: true # the pipeline continues running even if the manual job is not run
   script:
     - |
-      set -eExou pipefail  # Don't tolerate any errors
+      set -exou pipefail  # Don't tolerate any errors
 
       cd ./scripts/jira-integration
       time python3 ./jira_update.py
@@ -330,7 +330,7 @@ qualification-tracking-update:
       allow_failure: true # the pipeline continues running even if the manual job is not run
   script:
     - |
-      set -eExou pipefail  # Don't tolerate any errors
+      set -exou pipefail  # Don't tolerate any errors
 
       cd ./qualification
       time python3 ./qualification_track.py add-nns
@@ -348,7 +348,7 @@ update-ic-versions-file:
       allow_failure: true # the pipeline continues running even if the manual job is not run
   script:
     - |
-      set -eExou pipefail  # Don't tolerate any errors
+      set -exou pipefail  # Don't tolerate any errors
 
       time python3 ./scripts/ic_versions/main.py
 
@@ -456,7 +456,7 @@ dashboard-release-publish:
       git push \
           -o merge_request.create \
           -o merge_request.title="Updating container image refs mainnet-dashboard [$CI_COMMIT_SHA]" \
-          origin "update-image-tag-${DT}"
+          origin "update-image-tag-${CI_COMMIT_SHA}"
 
 qualify-release:
   timeout: 2h
@@ -470,7 +470,7 @@ qualify-release:
       allow_failure: true # the pipeline continues running even if the manual job is not run
   script:
     - |
-      set -eExou pipefail  # Don't tolerate any errors
+      set -exou pipefail  # Don't tolerate any errors
 
       mkdir -p /home/ubuntu/.config/dfx/identity/bootstrap-super-leader
       cat "$BOOTSTRAP_SUPER_LEADER_PEM" > /home/ubuntu/.config/dfx/identity/bootstrap-super-leader/identity.pem
