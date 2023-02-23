@@ -106,6 +106,7 @@ before_script:
     set -exuo pipefail
     echo -e "\e[0Ksection_start:$(date +%s):before_script[collapsed=true]\r\e[0KClick here to see the before_script section"
 
+    mkdir -p ~/.ssh
     echo -e "Host *\nUser gitlab-runner\n" > ~/.ssh/config
     ulimit -n 8192
     date
@@ -419,16 +420,13 @@ dashboard-release-publish:
       set -exou pipefail
 
       cd dashboard
-      TAG=latest
 
       # pull latest layer to help with build times
       docker-compose pull || true
-      docker-compose -f docker-compose.yml -f docker-compose.dev.yml build --parallel
-      docker-compose -f docker-compose.yml -f docker-compose.dev.yml push
-
-      TAG=${CI_COMMIT_SHA}
-      docker-compose -f docker-compose.yml -f docker-compose.dev.yml build --parallel
-      docker-compose -f docker-compose.yml -f docker-compose.dev.yml push
+      TAG=latest docker-compose -f docker-compose.yml -f docker-compose.dev.yml build --parallel
+      TAG=latest docker-compose -f docker-compose.yml -f docker-compose.dev.yml push
+      TAG=${CI_COMMIT_SHA} docker-compose -f docker-compose.yml -f docker-compose.dev.yml build --parallel
+      TAG=${CI_COMMIT_SHA} docker-compose -f docker-compose.yml -f docker-compose.dev.yml push
       
       # checkout branch
       apk add git 
