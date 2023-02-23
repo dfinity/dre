@@ -119,7 +119,15 @@ before_script:
       apk add rsync sudo git
     fi
 
+    if ! id -u ubuntu > /dev/null 2>&1; then
+      mkdir -p "/home/ubuntu"
+      echo "ubuntu:x:99:99:ubuntu:/home/ubunu:/bin/sh" >> /etc/passwd
+      echo "ubuntu:x:99:" >> /etc/group
+      chown ubuntu:ubuntu -R "/home/ubuntu"
+    fi
+
     # Set the IC repo URL to https instead of ssh, and check out the submodule
+    sudo chown ubuntu:ubuntu -R .  
     git submodule set-url ic "https://github.com/dfinity/ic.git"
     if ! git submodule update --init --recursive --remote; then
       cat .git/config
@@ -129,17 +137,11 @@ before_script:
       exit 1
     fi
 
-    if ! id -u ubuntu > /dev/null 2>&1; then
-      mkdir -p "/home/ubuntu"
-      echo "ubuntu:x:99:99:ubuntu:/home/ubunu:/bin/sh" >> /etc/passwd
-      echo "ubuntu:x:99:" >> /etc/group
-      chown ubuntu:ubuntu -R "/home/ubuntu"
-    fi
-
     sudo chown ubuntu:ubuntu -R "${CI_PROJECT_DIR}"
     sudo find "${CI_PROJECT_DIR}" -type d -exec chmod 0755 '{}' \;
     # Update the git repo cache at /cache/git-v3/${CI_PROJECT_PATH}/$CI_CONCURRENT_ID
-    mkdir -p "/cache/git-v3/${CI_PROJECT_PATH}/$CI_CONCURRENT_ID/"
+    sudo mkdir -p "/cache/git-v3/${CI_PROJECT_PATH}/$CI_CONCURRENT_ID/"
+    sudo chown ubuntu:ubuntu -R "/cache/git-v3/${CI_PROJECT_PATH}/$CI_CONCURRENT_ID/"
     /usr/bin/time rsync -a --force --delete "$CI_PROJECT_DIR"/ "/cache/git-v3/${CI_PROJECT_PATH}/$CI_CONCURRENT_ID/"
 
     cd "${CI_PROJECT_DIR}"
@@ -393,12 +395,24 @@ update-ic-versions-file:
           curl --fail --request PUT --header "PRIVATE-TOKEN: $IC_CREATE_VERSIONS_MR_TOKEN" "https://gitlab.com/api/v4/projects/31166135/merge_requests/$MR_NUM/merge?merge_when_pipeline_succeeds=true&squash=true"
       fi
 
-dashboard-release-build:
+.docker-base:
   image: docker/compose:alpine-1.29.2
   needs: []
   dependencies: []
   stage: release
+  retry: 2
   interruptible: true
+  before_script:
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+  variables:
+    RELEASE_BRANCH: release
+    COMPOSE_DOCKER_CLI_BUILD: "1"
+    DOCKER_BUILDKIT: "1"
+
+
+dashboard-release-build:
+  extends:
+    - .docker-base
   only:
       changes:
         - dashboard/**/*
@@ -416,18 +430,8 @@ dashboard-release-build:
       TAG=lastest docker-compose -f docker-compose.yml -f docker-compose.dev.yml build --parallel
 
 dashboard-release-publish:
-  image: docker/compose:alpine-1.29.2
-  needs: []
-  dependencies: []
-  stage: release
-  retry: 2
-  interruptible: true
-  before_script:
-    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
-  variables:
-    RELEASE_BRANCH: release
-    COMPOSE_DOCKER_CLI_BUILD: "1"
-    DOCKER_BUILDKIT: "1"
+  extends:
+    - .docker-base
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       changes:
