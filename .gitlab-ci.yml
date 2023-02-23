@@ -413,7 +413,7 @@ dashboard-release-build:
 
       # pull latest layer to help with build times
       docker-compose pull || true
-      docker-compose -f docker-compose.yml -f docker-compose.dev.yml build --parallel
+      TAG=lastest docker-compose -f docker-compose.yml -f docker-compose.dev.yml build --parallel
 
 dashboard-release-publish:
   image: docker/compose:alpine-1.29.2
