@@ -129,6 +129,13 @@ before_script:
       exit 1
     fi
 
+    if ! id -u ubuntu > /dev/null 2>&1; then
+      mkdir -p "/home/ubuntu"
+      echo "ubuntu:x:99:99:ubuntu:/home/ubunu:/bin/sh" >> /etc/passwd
+      echo "ubuntu:x:99:" >> /etc/group
+      chown ubuntu:ubuntu -R "/home/ubuntu"
+    fi
+
     sudo chown ubuntu:ubuntu -R "${CI_PROJECT_DIR}"
     sudo find "${CI_PROJECT_DIR}" -type d -exec chmod 0755 '{}' \;
     # Update the git repo cache at /cache/git-v3/${CI_PROJECT_PATH}/$CI_CONCURRENT_ID
