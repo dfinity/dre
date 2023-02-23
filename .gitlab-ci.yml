@@ -115,8 +115,8 @@ before_script:
     export GZIP=-n
 
     # alpine image don't have  git nor rsync
-    if [ -x "/sbin/apk" ] ; then
-      apk add git rsync
+    if [[ -n "$(which apk)" ]]; then
+      apk add rsync sudo git
     fi
 
     # Set the IC repo URL to https instead of ssh, and check out the submodule
@@ -140,11 +140,23 @@ before_script:
     git config core.fileMode true
     git reset --hard HEAD
 
-  - echo -e "\e[0Ksection_end:$(date +%s):before_script\r\e[0K"
-  # Setup SSH keys
-  - "command -v ssh-agent >/dev/null || ( apt-get update -y && apt-get install openssh-client -y )"
-  - eval $(ssh-agent -s)
-  - cat "$DASHBOARD_DEPLOY_KEY" | tr -d '\r' | ssh-add -
+    echo -e "\e[0Ksection_end:$(date +%s):before_script\r\e[0K"
+
+    # Setup SSH keys
+    if [[ -z "$(which ssh-agent)" ]]; then 
+      if [[ -n "$(which apk)" ]]; then
+        apk add openssh-client
+      elif [[ -n "$(which apt-get)" ]]; then 
+        apt-get update -y && apt-get install openssh-client -y
+      else  
+        echo "- ERROR system has neither apk nor apt-get"
+        echo "  Could not install ssh-agent"
+        exit 1
+      fi
+    fi
+
+    eval $(ssh-agent -s)
+    cat "$DASHBOARD_DEPLOY_KEY" | tr -d '\r' | ssh-add -
 
 .rules-default:
   rules:
