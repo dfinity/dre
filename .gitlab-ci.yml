@@ -106,13 +106,18 @@ before_script:
     set -exuo pipefail
     echo -e "\e[0Ksection_start:$(date +%s):before_script[collapsed=true]\r\e[0KClick here to see the before_script section"
 
-    mkdir -p ~/.ssh
+    mkdir -m 0700 -p ~/.ssh
     echo -e "Host *\nUser gitlab-runner\n" > ~/.ssh/config
     ulimit -n 8192
     date
 
     # forget original timestamp/timestamp when compressing ~ important for reproducibility
     export GZIP=-n
+
+    # alpine image don't have  git nor rsync
+    if [ -x "/sbin/apk" ] ; then
+      apk add git rsync
+    fi
 
     # Set the IC repo URL to https instead of ssh, and check out the submodule
     git submodule set-url ic "https://github.com/dfinity/ic.git"
@@ -140,8 +145,6 @@ before_script:
   - "command -v ssh-agent >/dev/null || ( apt-get update -y && apt-get install openssh-client -y )"
   - eval $(ssh-agent -s)
   - cat "$DASHBOARD_DEPLOY_KEY" | tr -d '\r' | ssh-add -
-  - mkdir -p ~/.ssh
-  - chmod 700 ~/.ssh
 
 .rules-default:
   rules:
