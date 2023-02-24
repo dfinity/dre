@@ -479,7 +479,7 @@ dashboard-release-publish:
       git commit -m "Updating container base image refs"
       git push \
           -o merge_request.create \
-          -o merge_request.title="Updating container image refs mainnet-dashboard [$CI_COMMIT_SHA]" \
+          -o merge_request.title="[nomrbot] - Updating container image refs mainnet-dashboard [$CI_COMMIT_SHA]" \
           origin "update-image-tag-${CI_COMMIT_SHA}"
 
 qualify-release:
