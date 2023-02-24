@@ -17,7 +17,7 @@ impl DashboardBackendClient {
     pub fn new(network: Network, dev: bool) -> DashboardBackendClient {
         Self {
             url: reqwest::Url::parse(if !dev {
-                "https://dashboard.mainnet.dfinity.systems/"
+                "https://dashboard.internal.dfinity.network/"
             } else {
                 "http://localhost:17000/"
             })
@@ -126,11 +126,11 @@ mod tests {
     fn dashboard_backend_client_url() {
         assert_eq!(
             DashboardBackendClient::new(Network::Mainnet, false).url.to_string(),
-            "https://dashboard.mainnet.dfinity.systems/api/proxy/registry/mainnet/"
+            "https://dashboard.internal.dfinity.network/api/proxy/registry/mainnet/"
         );
         assert_eq!(
             DashboardBackendClient::new(Network::Staging, false).url.to_string(),
-            "https://dashboard.mainnet.dfinity.systems/api/proxy/registry/staging/"
+            "https://dashboard.internal.dfinity.network/api/proxy/registry/staging/"
         );
         assert_eq!(
             DashboardBackendClient::new(Network::Mainnet, true).url.to_string(),
