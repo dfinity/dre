@@ -413,11 +413,18 @@ update-ic-versions-file:
 dashboard-release-build:
   extends:
     - .docker-base
-  only:
-      changes:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "push"'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+      when: manual
+      allow_failure: true # the pipeline continues running even if the manual job is not run
+    - if: '$CI_PIPELINE_SOURCE == "trigger"'
+      when: manual
+      allow_failure: true # the pipeline continues running even if the manual job is not run
+    - changes:
         - dashboard/**/*
         - rs/**/*
-        - .gitlab-ci.yml
   script:
     - | 
       set -exou pipefail
@@ -433,14 +440,18 @@ dashboard-release-publish:
   extends:
     - .docker-base
   rules:
+    - if: '$CI_PIPELINE_SOURCE == "push"'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+      when: manual
+      allow_failure: true # the pipeline continues running even if the manual job is not run
+    - if: '$CI_PIPELINE_SOURCE == "trigger"'
+      when: manual
+      allow_failure: true # the pipeline continues running even if the manual job is not run
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       changes:
         - dashboard/**/*
         - rs/**/*
-        - .gitlab-ci.yml
-    - if: '$CI_PIPELINE_SOURCE == "web"'
-      when: manual
-      allow_failure: true
   script:
     - | 
       set -exou pipefail
