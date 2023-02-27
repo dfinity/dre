@@ -519,6 +519,9 @@ pub(crate) enum ProposeCommand {
         update_url: String,
         stringified_hash: String,
     },
+    RemoveNodes {
+        nodes: Vec<PrincipalId>,
+    },
 }
 
 impl ProposeCommand {
@@ -577,6 +580,7 @@ impl ProposeCommand {
                 update_url.to_string(),
                 stringified_hash.to_string(),
             ],
+            Self::RemoveNodes { nodes } => nodes.iter().map(|n| n.to_string()).collect(),
         }
     }
 }

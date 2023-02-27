@@ -5,6 +5,8 @@ use crate::ic_admin::ProposeOptions;
 use crate::ops_subnet_node_replace;
 use decentralization::SubnetChangeResponse;
 use ic_base_types::PrincipalId;
+use ic_management_types::requests::NodesRemoveRequest;
+use ic_management_types::NodeFeature;
 
 #[derive(Clone)]
 pub struct Runner {
@@ -106,5 +108,48 @@ impl Runner {
             ic_admin: ic_admin::Cli::from_opts(cli_opts, true).await?,
             dashboard_backend_client: clients::DashboardBackendClient::new(cli_opts.network.clone(), cli_opts.dev),
         })
+    }
+
+    pub async fn remove_nodes(&self, request: NodesRemoveRequest) -> anyhow::Result<()> {
+        let node_remove_response = self.dashboard_backend_client.remove_nodes(request).await?;
+        let mut node_removals = node_remove_response.removals;
+        node_removals.sort_by_key(|nr| nr.reason.message());
+
+        let headers = vec!["Principal".to_string()]
+            .into_iter()
+            .chain(NodeFeature::variants().iter().map(|nf| nf.to_string()))
+            .chain(vec!["Reason".to_string()].into_iter())
+            .collect::<Vec<_>>();
+        let mut table = tabular::Table::new(&headers.iter().map(|_| "    {:<}").collect::<Vec<_>>().join(""));
+        // Headers
+        let mut header_row = tabular::Row::new();
+        for h in headers {
+            header_row.add_cell(h);
+        }
+        table.add_row(header_row);
+
+        // Values
+        for nr in &node_removals {
+            let mut row = tabular::Row::new();
+            let decentralization_node = decentralization::network::Node::from(&nr.node);
+            row.add_cell(nr.node.principal);
+            for nf in NodeFeature::variants() {
+                row.add_cell(decentralization_node.get_feature(&nf));
+            }
+            row.add_cell(nr.reason.message());
+            table.add_row(row);
+        }
+        println!("{}", table);
+
+        self.ic_admin.propose_run(
+            ic_admin::ProposeCommand::RemoveNodes {
+                nodes: node_removals.iter().map(|n| n.node.principal).collect(),
+            },
+            ProposeOptions {
+                title: "Remove nodes from the network".to_string().into(),
+                summary: "Remove nodes from the network".to_string().into(),
+                motivation: node_remove_response.motivation.into(),
+            },
+        )
     }
 }
