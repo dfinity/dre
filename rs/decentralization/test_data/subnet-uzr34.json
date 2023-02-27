@@ -787,5 +787,6 @@
     "name": "Internet Identity"
   },
   "replica_version": "ebb7d6d10d3140f12b9f9b343c061f8aab6e271a",
-  "version": 30240
+  "version": 30240,
+  "duplicate": false
 }

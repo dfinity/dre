@@ -5225,6 +5225,7 @@ dependencies = [
  "sha2 0.10.6",
  "strum 0.24.1",
  "strum_macros 0.24.3",
+ "tabular",
  "tempfile",
  "tokio",
  "url",

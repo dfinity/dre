@@ -5,17 +5,8 @@ use std::{
 };
 
 use ic_base_types::PrincipalId;
+use ic_management_types::Status;
 use prometheus_http_query::{Client, InstantVector, Selector};
-use serde::Serialize;
-use strum_macros::EnumString;
-
-#[derive(EnumString, Serialize)]
-pub enum Status {
-    Healthy,
-    Degraded,
-    Dead,
-    Unknown,
-}
 
 pub struct HealthClient {
     client: Client,
