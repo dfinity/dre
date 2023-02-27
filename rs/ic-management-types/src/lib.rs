@@ -167,6 +167,7 @@ pub struct Node {
     pub label: Option<String>,
     #[serde(default)]
     pub decentralized: bool,
+    pub duplicates: Option<PrincipalId>,
 }
 
 #[derive(
@@ -357,6 +358,14 @@ pub enum Health {
     Offline,
     Degraded,
     Healthy,
+    Unknown,
+}
+
+#[derive(EnumString, Serialize, Display, Deserialize)]
+pub enum Status {
+    Healthy,
+    Degraded,
+    Dead,
     Unknown,
 }
 

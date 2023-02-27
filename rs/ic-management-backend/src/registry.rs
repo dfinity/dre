@@ -80,6 +80,7 @@ impl RegistryEntry for SubnetRecord {
 
 trait RegistryFamilyEntries {
     fn get_family_entries<T: RegistryEntry + Default>(&self) -> Result<HashMap<String, T>>;
+    fn get_family_entries_versioned<T: RegistryEntry + Default>(&self) -> Result<HashMap<String, (u64, T)>>;
 }
 
 impl RegistryFamilyEntries for LocalRegistry {
@@ -97,6 +98,29 @@ impl RegistryFamilyEntries for LocalRegistry {
                             T::decode(v.as_slice()).expect("invalid registry value"),
                         )
                     })
+            })
+            .collect::<HashMap<_, _>>())
+    }
+
+    fn get_family_entries_versioned<T: RegistryEntry + Default>(&self) -> Result<HashMap<String, (u64, T)>> {
+        let prefix_length = T::KEY_PREFIX.len();
+        Ok(self
+            .get_key_family(T::KEY_PREFIX, self.get_latest_version())?
+            .iter()
+            .filter_map(|key| {
+                self.get_versioned_value(key, self.get_latest_version())
+                    .map(|r| {
+                        r.value.as_ref().map(|v| {
+                            (
+                                key[prefix_length..].to_string(),
+                                (
+                                    r.version.get(),
+                                    T::decode(v.as_slice()).expect("invalid registry value"),
+                                ),
+                            )
+                        })
+                    })
+                    .unwrap_or_else(|_| panic!("failed to get entry {} for type {}", key, std::any::type_name::<T>()))
             })
             .collect::<HashMap<_, _>>())
     }
@@ -329,13 +353,12 @@ impl RegistryState {
     }
 
     fn update_nodes(&mut self) -> Result<()> {
-        self.nodes = self
-            .local_registry
-            .get_family_entries::<NodeRecord>()?
+        let node_entries = self.local_registry.get_family_entries_versioned::<NodeRecord>()?;
+        self.nodes = node_entries
             .iter()
             // Skipping nodes without operator. This should only occur at version 1
-            .filter(|(_, nr)| !nr.node_operator_id.is_empty())
-            .map(|(p, nr)| {
+            .filter(|(_, (_, nr))| !nr.node_operator_id.is_empty())
+            .map(|(p, (_, nr))| {
                 let guest = self.node_record_guest(nr);
                 let operator = self
                     .operators
@@ -377,6 +400,17 @@ impl RegistryState {
                         proposal: None,
                         label: guest.clone().map(|g| g.name),
                         decentralized: guest.map(|g| g.decentralized).unwrap_or_default(),
+                        duplicates: node_entries
+                            .iter()
+                            .filter(|(_, (_, nr2))| node_ip_addr(nr2) == node_ip_addr(nr))
+                            .max_by_key(|(_, (version, _))| version)
+                            .and_then(|(p2, _)| {
+                                if p2 == p {
+                                    None
+                                } else {
+                                    Some(PrincipalId::from_str(p2).expect("invalid node principal id"))
+                                }
+                            }),
                     },
                 )
             })
@@ -659,7 +693,7 @@ impl AvailableNodesQuerier for RegistryState {
             .await
             .map_err(|_| NetworkError::DataRequestError)?
             .into_values()
-            .filter(|n| n.subnet.is_none() && n.proposal.is_none())
+            .filter(|n| n.subnet.is_none() && n.proposal.is_none() && n.duplicates.is_none())
             .collect::<Vec<_>>();
 
         let health_client = crate::health::HealthClient::new(self.network());
@@ -672,7 +706,7 @@ impl AvailableNodesQuerier for RegistryState {
             .filter(|n| {
                 healths
                     .get(&n.principal)
-                    .map(|s| matches!(*s, crate::health::Status::Healthy))
+                    .map(|s| matches!(*s, ic_management_types::Status::Healthy))
                     .unwrap_or(false)
             })
             .map(decentralization::network::Node::from)

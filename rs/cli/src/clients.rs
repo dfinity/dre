@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use decentralization::SubnetChangeResponse;
 use ic_base_types::PrincipalId;
 use ic_management_types::{
-    requests::{MembershipReplaceRequest, SubnetExtendRequest},
+    requests::{MembershipReplaceRequest, NodesRemoveRequest, NodesRemoveResponse, SubnetExtendRequest},
     BlessedVersions, Network, NetworkError, SubnetMembershipChangeProposal,
 };
 use log::error;
@@ -76,6 +76,14 @@ impl DashboardBackendClient {
     pub async fn get_nss_blessed_versions(&self) -> anyhow::Result<BlessedVersions> {
         reqwest::Client::new()
             .get(self.url.join("nns/blessed-versions").map_err(|e| anyhow::anyhow!(e))?)
+            .rest_send()
+            .await
+    }
+
+    pub async fn remove_nodes(&self, request: NodesRemoveRequest) -> anyhow::Result<NodesRemoveResponse> {
+        reqwest::Client::new()
+            .post(self.url.join("nodes/remove").map_err(|e| anyhow::anyhow!(e))?)
+            .json(&request)
             .rest_send()
             .await
     }

@@ -1,6 +1,7 @@
 use crate::cli::version::Commands::{Bless, Retire};
 use clap::{CommandFactory, ErrorKind, Parser};
 use clients::DashboardBackendClient;
+use ic_management_types::requests::NodesRemoveRequest;
 use ic_management_types::{MinNakamotoCoefficients, NodeFeature};
 use std::collections::BTreeMap;
 use std::str::FromStr;
@@ -141,6 +142,26 @@ async fn main() -> Result<(), anyhow::Error> {
                         let (summary, cmd ) = ic_admin.get_replica_versions_to_retire(*edit_summary, dashboard_client).await?;
 
                         ic_admin.propose_run(cmd, ic_admin::ProposeOptions { title: Some("Retire IC replica version".to_string()), summary: Some(summary), motivation: None })
+                    },
+                }
+            },
+
+            cli::Commands::Nodes(nodes) => {
+                match &nodes.subcommand {
+                    cli::nodes::Commands::Remove { extra_nodes_filter, no_auto, motivation } => {
+                        if motivation.is_none() && !extra_nodes_filter.is_empty() {
+                            cmd.error(
+                                ErrorKind::MissingRequiredArgument,
+                                "Required argument `motivation` not found",
+                            )
+                            .exit();
+                        }
+                        let runner = runner::Runner::from_opts(&cli_opts).await?;
+                        runner.remove_nodes(NodesRemoveRequest {
+                            extra_nodes_filter: extra_nodes_filter.clone(),
+                            no_auto: *no_auto,
+                            motivation: motivation.clone().unwrap_or_default(),
+                        }).await
                     },
                 }
             },

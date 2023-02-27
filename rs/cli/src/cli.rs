@@ -56,6 +56,9 @@ pub(crate) enum Commands {
     },
     /// Bless or replace a replica version
     Version(version::Cmd),
+
+    // Manage nodes
+    Nodes(nodes::Cmd),
 }
 
 pub(crate) mod subnet {
@@ -168,6 +171,33 @@ pub(crate) mod version {
             /// prevent unintended version in the future
             #[clap(long)]
             edit_summary: bool,
+        },
+    }
+}
+
+pub(crate) mod nodes {
+    use super::*;
+
+    #[derive(Parser, Clone)]
+    pub struct Cmd {
+        #[clap(subcommand)]
+        pub subcommand: Commands,
+    }
+
+    #[derive(Subcommand, Clone)]
+    pub enum Commands {
+        /// Remove the nodes from the network
+        Remove {
+            /// Skip removal of duplicate or dead nodes
+            #[clap(long)]
+            no_auto: bool,
+
+            /// Specifies the filter used to remove extra nodes
+            extra_nodes_filter: Vec<String>,
+
+            /// Motivation for removing additional nodes
+            #[clap(long)]
+            motivation: Option<String>,
         },
     }
 }
