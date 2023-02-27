@@ -480,7 +480,7 @@ dashboard-release-publish:
       git push \
           -o merge_request.create \
           -o merge_request.title="[nomrbot] - Updating container image refs mainnet-dashboard [$CI_COMMIT_SHA]" \
-          -o merge_request.description="Changes to the release repository - [here](https://gitlab.com/dfinity-lab/core/release/-/commit/$CI_COMMIT_SHA)"
+          -o merge_request.description="Changes to the release repository - [here](https://gitlab.com/dfinity-lab/core/release/-/commit/$CI_COMMIT_SHA)" \
           --set-upstream origin "update-image-tag-${CI_COMMIT_SHA}"
 
 qualify-release:
