@@ -42,6 +42,10 @@ impl Node {
     pub fn get_feature(&self, feature: &NodeFeature) -> String {
         self.features.get(feature).unwrap_or_default()
     }
+
+    pub fn matches_feature_value(&self, value: &String) -> bool {
+        self.id.to_string() == *value || self.get_features().feature_map.values().any(|v| *v == *value)
+    }
 }
 
 impl PartialEq for Node {
@@ -594,27 +598,7 @@ impl SubnetChangeRequest {
             available_nodes: self
                 .available_nodes
                 .into_iter()
-                .filter(|n| {
-                    let mut should_include_node = true;
-                    for exclude_string in &exclude_nodes_or_features {
-                        // Exclude the node if
-                        if n.id.to_string() == *exclude_string {
-                            // The node id matches an entry from the exclude list
-                            should_include_node = false;
-                            info!("Excluding node {} due to an excluded node id", n.id);
-                        } else {
-                            // Or if any of the node features matches *exactly* an entry from the exclude
-                            // list
-                            for (_, feat_val) in n.get_features().feature_map {
-                                if feat_val == *exclude_string {
-                                    should_include_node = false;
-                                    info!("Excluding node {} due to excluded feature {}", n.id, feat_val);
-                                }
-                            }
-                        }
-                    }
-                    should_include_node
-                })
+                .filter(|n| !exclude_nodes_or_features.iter().any(|v| n.matches_feature_value(v)))
                 .collect(),
             ..self
         }

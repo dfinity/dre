@@ -43,6 +43,7 @@ url = "2.3.1"
 clap-num = "1.0.0"
 sha2 = "0.10.6"
 edit = "0.1.4"
+tabular = "0.2"
 
 [dev-dependencies]
 tempfile = "3.3.0"

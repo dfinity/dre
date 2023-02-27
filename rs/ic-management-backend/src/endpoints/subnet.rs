@@ -85,7 +85,7 @@ async fn replace(
                 healths
                     .get(&n.id)
                     // TODO: Add option to exclude degraded nodes from healing
-                    .map(|s| !matches!(s, health::Status::Healthy))
+                    .map(|s| !matches!(s, ic_management_types::Status::Healthy))
                     .unwrap_or(true)
             })
             .map(|n| n.id)
