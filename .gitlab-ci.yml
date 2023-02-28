@@ -121,7 +121,7 @@ before_script:
 
     if ! id -u ubuntu > /dev/null 2>&1; then
       mkdir -p "/home/ubuntu"
-      echo "ubuntu:x:99:99:ubuntu:/home/ubunu:/bin/sh" >> /etc/passwd
+      echo "ubuntu:x:99:99:ubuntu:/home/ubuntu:/bin/sh" >> /etc/passwd
       echo "ubuntu:x:99:" >> /etc/group
       chown ubuntu:ubuntu -R "/home/ubuntu"
     fi
