@@ -1,7 +1,7 @@
 default:
-  image: registry.gitlab.com/dfinity-lab/core/release/ci-build@sha256:d0d2195ba8637185d22a1fbb7863e6145a2f0404a3c4a70b20e4e7fd6016dcea
+  image: registry.gitlab.com/dfinity-lab/core/release/ci-build@sha256:69753f4aeae90531e1b01c9aaa849e0b04267383ea4e5c36b50d409e207e316c
   tags:
-    # Use the Dfinity CI runners (they have following tags)
+    # Use the DFINITY CI runners (they have following tags)
     - dfinity
     - docker
     - ubuntu
@@ -114,7 +114,7 @@ before_script:
     # forget original timestamp/timestamp when compressing ~ important for reproducibility
     export GZIP=-n
 
-    # alpine image don't have  git nor rsync
+    # alpine images do not have: git, sudo, rsync, ...
     if [[ -n "$(which apk)" ]]; then
       apk add rsync sudo git
     fi
@@ -127,7 +127,8 @@ before_script:
     fi
 
     # Set the IC repo URL to https instead of ssh, and check out the submodule
-    sudo chown ubuntu:ubuntu -R .  
+    sudo chown ubuntu:ubuntu -R .
+    ls -la
     git submodule set-url ic "https://github.com/dfinity/ic.git"
     if ! git submodule update --init --recursive --remote; then
       cat .git/config
@@ -516,8 +517,22 @@ qualify-release:
 
 metrics-proxy-release:
   stage: release
-  extends:
-    - .rules-default
+  needs: []
+  dependencies: []
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes:  # auto run if there are changes in this dir
+        - metrics-proxy
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: manual  # manual runs otherwise on MRs
+      allow_failure: true # the pipeline continues running even if the manual job is not run
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+      when: manual
+      allow_failure: true # the pipeline continues running even if the manual job is not run
+    - if: '$CI_PIPELINE_SOURCE == "trigger"'
+      when: manual
+      allow_failure: true # the pipeline continues running even if the manual job is not run
+    - if: '$CI_PIPELINE_SOURCE == "push"'
   interruptible: true
   before_script:
     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
@@ -534,8 +549,22 @@ metrics-proxy-release:
 
 linear-jira-release:
   stage: release
-  extends:
-    - .rules-default
+  needs: []
+  dependencies: []
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes:  # auto run if there are changes in this dir
+        - linear-jira
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: manual  # manual runs otherwise on MRs
+      allow_failure: true # the pipeline continues running even if the manual job is not run
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+      when: manual
+      allow_failure: true # the pipeline continues running even if the manual job is not run
+    - if: '$CI_PIPELINE_SOURCE == "trigger"'
+      when: manual
+      allow_failure: true # the pipeline continues running even if the manual job is not run
+    - if: '$CI_PIPELINE_SOURCE == "push"'
   interruptible: true
   before_script:
     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY

@@ -494,15 +494,9 @@ pub trait SubnetQuerier {
     async fn subnet_of_nodes(&self, nodes: &[PrincipalId]) -> Result<DecentralizedSubnet, NetworkError>;
 }
 
-#[derive(Clone, Serialize, Deserialize, Debug)]
+#[derive(Clone, Serialize, Deserialize, Debug, strum::Display)]
 pub enum DecentralizationError {
     FeatureNotAvailable,
-}
-
-impl Display for DecentralizationError {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", &self)
-    }
 }
 
 impl ResponseError for DecentralizationError {
