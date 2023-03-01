@@ -409,7 +409,6 @@ update-ic-versions-file:
     COMPOSE_DOCKER_CLI_BUILD: "1"
     DOCKER_BUILDKIT: "1"
 
-
 dashboard-release-build:
   extends:
     - .docker-base
@@ -426,7 +425,7 @@ dashboard-release-build:
         - dashboard/**/*
         - rs/**/*
   script:
-    - | 
+    - |
       set -exou pipefail
 
       cd dashboard
@@ -434,26 +433,31 @@ dashboard-release-build:
 
       # pull latest layer to help with build times
       docker-compose pull || true
-      TAG=lastest docker-compose -f docker-compose.yml -f docker-compose.dev.yml build --parallel
+      TAG=latest docker-compose -f docker-compose.yml -f docker-compose.dev.yml build --parallel
 
 dashboard-release-publish:
   extends:
     - .docker-base
+  interruptible: false
   rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      changes:
+        - dashboard/**/*
+        - rs/**/*
     - if: '$CI_PIPELINE_SOURCE == "push"'
+      when: manual
+      allow_failure: true # the pipeline continues running even if the manual job is not run
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: manual
+      allow_failure: true # the pipeline continues running even if the manual job is not run
     - if: '$CI_PIPELINE_SOURCE == "web"'
       when: manual
       allow_failure: true # the pipeline continues running even if the manual job is not run
     - if: '$CI_PIPELINE_SOURCE == "trigger"'
       when: manual
       allow_failure: true # the pipeline continues running even if the manual job is not run
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-      changes:
-        - dashboard/**/*
-        - rs/**/*
   script:
-    - | 
+    - |
       set -exou pipefail
 
       cd dashboard
@@ -464,7 +468,7 @@ dashboard-release-publish:
       TAG=latest docker-compose -f docker-compose.yml -f docker-compose.dev.yml push
       TAG=${CI_COMMIT_SHA} docker-compose -f docker-compose.yml -f docker-compose.dev.yml build --parallel
       TAG=${CI_COMMIT_SHA} docker-compose -f docker-compose.yml -f docker-compose.dev.yml push
-      
+
       # checkout branch
       apk add git 
       git clone "https://gitlab-ci-token:${GITLAB_API_TOKEN}@gitlab.com/dfinity-lab/private/k8s/k8s.git"
