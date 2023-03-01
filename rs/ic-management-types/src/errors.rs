@@ -1,22 +1,16 @@
-use actix_web::{HttpResponse, ResponseError};
 use actix_web::http::StatusCode;
+use actix_web::{HttpResponse, ResponseError};
 use ic_types::PrincipalId;
 use serde::{Deserialize, Serialize};
-use std::fmt::{Debug, Display, Formatter};
+use std::fmt::Debug;
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, strum::Display)]
 pub enum NetworkError {
     NodeNotFound(PrincipalId),
     SubnetNotFound(PrincipalId),
     ExtensionFailed(String),
     DataRequestError,
     IllegalRequest(String),
-}
-
-impl Display for NetworkError {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", &self)
-    }
 }
 
 impl ResponseError for NetworkError {

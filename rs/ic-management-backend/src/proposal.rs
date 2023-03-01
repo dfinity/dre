@@ -1,7 +1,7 @@
 use anyhow::Result;
 use candid::{Decode, Encode};
 use ic_agent::Agent;
-use ic_management_types::{NnsFunctionProposal, SubnetMembershipChangeProposal, SubnetMembershipChangePayload};
+use ic_management_types::{NnsFunctionProposal, SubnetMembershipChangePayload, SubnetMembershipChangeProposal};
 use ic_nns_governance::pb::v1::{proposal::Action, ListProposalInfo, ListProposalInfoResponse, NnsFunction};
 use ic_nns_governance::pb::v1::{ProposalInfo, ProposalStatus};
 use registry_canister::mutations::do_add_nodes_to_subnet::AddNodesToSubnetPayload;
@@ -43,6 +43,7 @@ impl From<ProposalInfo> for ProposalInfoInternal {
             status,
             reward_status: _,
             deadline_timestamp_seconds: _,
+            derived_proposal_information: _,
         } = p;
         ProposalInfoInternal {
             id: id.expect("missing proposal id").id,
@@ -71,8 +72,13 @@ impl ProposalAgent {
         Self { agent }
     }
 
-    fn nodes_proposals<T: SubnetMembershipChangePayload>(proposals: Vec<(ProposalInfo, T)>) -> Vec<SubnetMembershipChangeProposal> {
-        proposals.into_iter().map(SubnetMembershipChangeProposal::from).collect()
+    fn nodes_proposals<T: SubnetMembershipChangePayload>(
+        proposals: Vec<(ProposalInfo, T)>,
+    ) -> Vec<SubnetMembershipChangeProposal> {
+        proposals
+            .into_iter()
+            .map(SubnetMembershipChangeProposal::from)
+            .collect()
     }
 
     pub async fn list_open_topology_proposals(&self) -> Result<Vec<SubnetMembershipChangeProposal>> {
