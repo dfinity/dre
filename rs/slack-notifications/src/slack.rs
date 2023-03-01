@@ -12,7 +12,7 @@ use std::collections::HashSet;
 use std::convert::TryFrom;
 
 const TRUSTED_NEURONS_TAG: &str = "<!subteam^S0200F4EYLF>";
-const RELEASE_TEAM_TAG: &str = "<!subteam^S02CF4KKZ7U>";
+const RELEASE_TEAM_TAG: &str = ""; // Can be changed to the following to mention @release-engs on each proposal: "<!subteam^S02CF4KKZ7U>";
 const RELEASE_AUTOMATION_NEURON_ID: u64 = 80;
 const MAX_SUMMARY_LENGTH: usize = 2048;
 const SLACK_CHANNEL_ENV_INTERNAL: &str = "SLACK_CHANNEL_PROPOSALS_INTERNAL";
