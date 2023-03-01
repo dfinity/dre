@@ -40,6 +40,7 @@ site
 
 # Sensitive credentials
 *-credentials.yaml
+target/
 rs/target/
 rs/*/target/
 *.pem

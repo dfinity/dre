@@ -114,7 +114,7 @@ ENV RUSTUP_HOME=/opt/rustup \
     PATH=/opt/cargo/bin:$PATH
 
 # Make sure /rust-toolchain.toml has the same version
-ARG rust_version=1.60.0
+ARG rust_version=1.65.0
 RUN curl --fail https://sh.rustup.rs -sSf \
         | sh -s -- -y --default-toolchain ${rust_version}-x86_64-unknown-linux-gnu --no-modify-path && \
     rustup default ${rust_version}-x86_64-unknown-linux-gnu && \
@@ -134,6 +134,7 @@ RUN gpg --batch --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 595E85A6B1
 
 # Used to detect the Dockerfile changes and automatically rebuild the image
 COPY docker /docker
+COPY --from=docker/buildx-bin:latest /buildx /usr/libexec/docker/cli-plugins/docker-buildx
 
 # Download ic-admin
 ARG ic_git_revision=344a20409415f65a494cb4dc2f9241b687c34868

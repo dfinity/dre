@@ -1,17 +1,17 @@
 [package]
 name = "slack-notifications"
 version = "0.1.0"
-edition = "2018"
+edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-ic-nns-governance = { git = "https://github.com/dfinity/ic.git", rev = "36f4a1c2903aed012b95b3b073e052c4036aef09" }
-ic-nns-common = { git = "https://github.com/dfinity/ic.git", rev = "36f4a1c2903aed012b95b3b073e052c4036aef09" }
-ic-nns-constants = { git = "https://github.com/dfinity/ic.git", rev = "36f4a1c2903aed012b95b3b073e052c4036aef09" }
-registry-canister = { git = "https://github.com/dfinity/ic.git", rev = "36f4a1c2903aed012b95b3b073e052c4036aef09" }
+ic-nns-governance = { git = "https://github.com/dfinity/ic.git", rev = "12c2666942f952d23a6baddda76d5ecaf279cb0d" }
+ic-nns-common = { git = "https://github.com/dfinity/ic.git", rev = "12c2666942f952d23a6baddda76d5ecaf279cb0d" }
+ic-nns-constants = { git = "https://github.com/dfinity/ic.git", rev = "12c2666942f952d23a6baddda76d5ecaf279cb0d" }
+registry-canister = { git = "https://github.com/dfinity/ic.git", rev = "12c2666942f952d23a6baddda76d5ecaf279cb0d" }
 tokio = { version = "1.2.0", features = ["full"] }
-ic-agent = "0.20.0"
+ic-agent = "0.22.0"
 ic-types = "0.4.2"
 candid = "0.8.4"
 anyhow = "1.0.44"

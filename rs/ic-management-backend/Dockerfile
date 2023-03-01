@@ -1,7 +1,7 @@
 # Leveraging the pre-built Docker images with
 # cargo-chef and the Rust toolchain
 # https://www.lpalmieri.com/posts/fast-rust-docker-builds/
-FROM lukemathwalker/cargo-chef:latest-rust-1.60.0-bullseye AS chef
+FROM lukemathwalker/cargo-chef:latest-rust-1.65.0-bullseye AS chef
 WORKDIR app
 
 ARG protobuf_version=3.18.1

@@ -143,14 +143,16 @@ def repo_changes_push():
     if not git_branch:
         _print_magenta("Cannot find git branch. Cannot push changes.")
         return
-    print("Active git branch", git_branch)
-    git_repo.git.checkout(git_branch)
     git_repo.config_writer().set_value("pull", "rebase", "true").release()
     git_repo.config_writer().set_value("rebase", "autoStash", "true").release()
     git_repo.config_writer().set_value("user", "name", "Release Team").release()
     git_repo.config_writer().set_value(
         "user", "email", "eng-release-bots-aaaafbmaump5gpag4pbjfuarry@dfinity.slack.com"
     ).release()
+    git_repo.git.stash()
+    print("Active git branch", git_branch)
+    git_repo.git.checkout(git_branch)
+    git_repo.git.stash("pop")
     # Update the remote URL to include the token with the write access
     origin = git_repo.remotes.origin
     remote_url = list(origin.urls)[0]
