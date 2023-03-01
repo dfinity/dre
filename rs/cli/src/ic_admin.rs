@@ -354,7 +354,7 @@ impl Cli {
         }
         info!("Download {} succeeded {}", update_url, response.status());
 
-        let mut file = match File::create(&download_image) {
+        let mut file = match File::create(download_image) {
             Ok(file) => file,
             Err(err) => return Err(anyhow::anyhow!("Couldn't create a file: {}", err)),
         };
@@ -417,10 +417,10 @@ must be identical, and must match the SHA256 from the payload of the NNS proposa
                     Some((left, message)) => {
                         let commit_hash = left.split_once('[').unwrap().1.to_string();
 
-                        return format!(
+                        format!(
                             "* [[{}](https://github.com/dfinity/ic/commit/{})] {}",
                             commit_hash, commit_hash, message
-                        );
+                        )
                     }
                     None => f.to_string(),
                 }

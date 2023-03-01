@@ -183,6 +183,7 @@ impl RegistryState {
         }
         self.local_registry
             .sync_with_local_store()
+            .await
             .map_err(|e| anyhow::anyhow!(e))?;
         self.update_replica_releases().await?;
         self.update_operators(providers)?;
