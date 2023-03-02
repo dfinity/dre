@@ -441,7 +441,7 @@ dashboard-release-publish:
     - .docker-base
   interruptible: false
   rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH' # upon a merge to main
       changes:
         - dashboard/**/*
         - rs/**/*
@@ -500,6 +500,8 @@ dashboard-release-publish:
           --force --set-upstream origin "update-image-tag-${CI_COMMIT_SHA}"
 
 qualify-release:
+  needs: []
+  dependencies: []
   timeout: 2h
   resource_group: staging # Eliminate concurrent test runs
   rules:
