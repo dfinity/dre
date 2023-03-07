@@ -244,11 +244,8 @@ release_cli --dev subnet --id <id> replace -o1
 
 ## Updating the ic git submodule
 
-This includes all git references, including the ones that were removed from the `ic` repo during the move from github to gitlab.
 ```
 git submodule foreach -q git fetch origin
-git submodule foreach -q git fetch github
-git submodule foreach -q git fetch core-ic
 git submodule foreach -q git checkout master
 git submodule foreach -q git pull --prune --force
 git submodule foreach -q git reset --hard origin/master
