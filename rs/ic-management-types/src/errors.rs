@@ -4,7 +4,7 @@ use ic_types::PrincipalId;
 use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
 
-#[derive(Serialize, Deserialize, Clone, Debug, strum::Display)]
+#[derive(Serialize, Deserialize, Clone, Debug, strum_macros::Display)]
 pub enum NetworkError {
     NodeNotFound(PrincipalId),
     SubnetNotFound(PrincipalId),
