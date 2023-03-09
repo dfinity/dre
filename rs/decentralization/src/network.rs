@@ -24,14 +24,21 @@ pub struct Node {
     pub id: PrincipalId,
     pub features: nakamoto::NodeFeatures,
     pub dfinity_owned: bool,
+    pub decentralized: bool,
 }
 
 impl Node {
-    pub fn new_test_node(node_number: u64, features: nakamoto::NodeFeatures, dfinity_owned: bool) -> Self {
+    pub fn new_test_node(
+        node_number: u64,
+        features: nakamoto::NodeFeatures,
+        dfinity_owned: bool,
+        decentralized: bool,
+    ) -> Self {
         Node {
             id: PrincipalId::new_node_test_id(node_number),
             features,
             dfinity_owned,
+            decentralized,
         }
     }
 
@@ -105,6 +112,7 @@ impl From<&ic_management_types::Node> for Node {
                 .into_iter(),
             ),
             dfinity_owned: n.dfinity_owned.unwrap_or_default(),
+            decentralized: n.decentralized,
         }
     }
 }
@@ -185,19 +193,34 @@ impl DecentralizedSubnet {
             return Ok((1, checks));
         }
 
-        let dfinity_owned_nodes_count: usize = nodes.iter().map(|n| n.dfinity_owned as usize).sum();
-
         let nakamoto_scores = Self::_calc_nakamoto_score(nodes);
         let subnet_id_str = subnet_id.to_string();
-        if subnet_id_str == *"tdb26-jop6k-aogll-7ltgs-eruif-6kk7m-qpktf-gdiqx-mxtrf-vb5e6-eqe"
-            && dfinity_owned_nodes_count < 3
-        {
+
+        let dfinity_owned_nodes_count: usize = nodes.iter().map(|n| n.dfinity_owned as usize).sum();
+        let target_dfinity_owned_nodes_count =
+            if subnet_id_str == *"tdb26-jop6k-aogll-7ltgs-eruif-6kk7m-qpktf-gdiqx-mxtrf-vb5e6-eqe" {
+                3
+            } else {
+                1
+            };
+
+        if dfinity_owned_nodes_count != target_dfinity_owned_nodes_count {
             checks.push(format!(
-                "Mainnet NNS subnet should have at least 3 DFINITY-owned nodes, got {}",
-                dfinity_owned_nodes_count
+                "Subnet should have {} DFINITY-owned nodes, got {}",
+                target_dfinity_owned_nodes_count, dfinity_owned_nodes_count
             ));
-            penalties += (3 - dfinity_owned_nodes_count) * 1000;
+            penalties += target_dfinity_owned_nodes_count.abs_diff(dfinity_owned_nodes_count) * 1000;
         }
+
+        let count_non_decentralized_nodes = nodes.iter().filter(|n| !n.decentralized).count();
+        if count_non_decentralized_nodes > 0 {
+            checks.push(format!(
+                "Subnet has {} non-decentralized node(s)",
+                count_non_decentralized_nodes
+            ));
+            penalties += count_non_decentralized_nodes * 100;
+        }
+
         if subnet_id_str == *"uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe"
             || subnet_id_str == *"tdb26-jop6k-aogll-7ltgs-eruif-6kk7m-qpktf-gdiqx-mxtrf-vb5e6-eqe"
             || subnet_id_str == *"x33ed-h457x-bsgyx-oqxqf-6pzwv-wkhzr-rm2j3-npodi-purzm-n66cg-gae"
@@ -224,10 +247,6 @@ impl DecentralizedSubnet {
                 }
                 _ => return Err(anyhow::anyhow!("Incomplete data for {}", feature)),
             }
-        }
-        if dfinity_owned_nodes_count < 1 {
-            checks.push("DFINITY-owned node missing".to_string());
-            penalties += 1000;
         }
 
         match nakamoto_scores.score_feature(&NodeFeature::NodeProvider) {
@@ -321,6 +340,8 @@ impl DecentralizedSubnet {
         let orig_available_nodes_len = nodes_available.len();
         let mut nodes_after_extension = self.nodes.clone();
         let mut comment = None;
+        let mut total_penalty = 0;
+        let mut business_rules_log: Vec<String> = Vec::new();
 
         let line = format!("Nakamoto score before extension {}", self.nakamoto_score());
         info!("{}", &line);
@@ -349,12 +370,9 @@ impl DecentralizedSubnet {
                         &candidate_subnet_nodes,
                         &self.min_nakamoto_coefficients,
                     ) {
-                        Ok((business_rules_penalty, business_rules_log)) => {
+                        Ok((penalty, business_rules_log)) => {
                             let new_score = Self::_calc_nakamoto_score(&candidate_subnet_nodes);
-                            let mut penalty = business_rules_penalty;
-                            if node.dfinity_owned {
-                                penalty += 100
-                            };
+
                             let line = format!(
                                 "Picked one extension node {} and got Nakamoto score {} and penalty {}",
                                 node.id, new_score, penalty
@@ -416,14 +434,28 @@ impl DecentralizedSubnet {
                     nodes_available.swap_remove(best_result.index);
                     nodes_after_extension.push(best_result.node.clone());
                     nodes_initial.push(best_result.node.clone());
-                    if best_result.penalty != 0 {
-                        comment = Some(format!(
-                            "Best result has penalty {}. Details of the business rules checks:\n{}",
-                            best_result.penalty,
-                            best_result.business_rules_log.join("\n")
-                        ));
-                    } else {
-                        comment = None;
+                    total_penalty += best_result.penalty;
+                    business_rules_log.extend(
+                        best_result
+                            .business_rules_log
+                            .iter()
+                            .map(|s| format!("node {}/{} ({}): {}", i + 1, num_nodes_to_add, best_result.node.id, s))
+                            .collect::<Vec<String>>(),
+                    );
+                    if i + 1 == num_nodes_to_add {
+                        if total_penalty != 0 {
+                            comment = Some(format!(
+                                "Subnet extension with {} nodes finished with the total penalty {}. Penalty causes throughout the extension:\n{}\n\n{}",
+                                num_nodes_to_add,
+                                total_penalty,
+                                business_rules_log.join("\n"),
+                                if num_nodes_to_add > 1 {
+                                    "Note that the penalty for nodes before the last node may not be relevant after all extensions are completed. We leave this to humans to assess."
+                                } else { "" }
+                            ));
+                        } else {
+                            comment = None;
+                        }
                     }
                 }
                 None => {
@@ -494,7 +526,7 @@ pub trait SubnetQuerier {
     async fn subnet_of_nodes(&self, nodes: &[PrincipalId]) -> Result<DecentralizedSubnet, NetworkError>;
 }
 
-#[derive(Clone, Serialize, Deserialize, Debug, strum::Display)]
+#[derive(Clone, Serialize, Deserialize, Debug, strum_macros::Display)]
 pub enum DecentralizationError {
     FeatureNotAvailable,
 }
@@ -655,15 +687,58 @@ impl SubnetChangeRequest {
     }
 
     pub fn optimize(self, max_replacements: usize) -> Result<SubnetChange, NetworkError> {
-        let max_replacements = if max_replacements > 3 {
-            warn!("Limiting the max replacements to 3 to prevent DOS");
-            3
+        let mut change_request = self.clone();
+
+        let non_decentralized_nodes: Vec<Node> = self
+            .subnet
+            .nodes
+            .iter()
+            .filter(|n| !(n.decentralized))
+            .cloned()
+            .collect();
+        let max_replacements = if !non_decentralized_nodes.is_empty() {
+            let non_decentralized_node_ids = non_decentralized_nodes.iter().map(|n| n.id).collect::<Vec<_>>();
+            let change = self.clone();
+            let change = change
+                .replace(&non_decentralized_node_ids)
+                .expect("Replacing non-decentralized nodes should always work");
+            if change.removed().len() >= max_replacements {
+                info!(
+                    "Replacing only non-decentralized nodes: {:?}",
+                    &non_decentralized_node_ids
+                );
+                return Ok(change);
+            };
+            change_request = SubnetChangeRequest {
+                subnet: DecentralizedSubnet {
+                    nodes: change.new_nodes.clone(),
+                    ..change_request.subnet
+                },
+                available_nodes: change_request
+                    .available_nodes
+                    .iter()
+                    .filter(|n| !change.removed().contains(n))
+                    .cloned()
+                    .collect(),
+                removed_nodes: change.removed(),
+                ..change_request
+            };
+            max_replacements - change.removed().len()
+        } else {
+            max_replacements
+        };
+
+        info!("Optimizing {} nodes", max_replacements);
+
+        let max_replacements = if max_replacements > 2 {
+            warn!("Limiting the max replacements to 2 to prevent DOS");
+            2
         } else {
             max_replacements
         };
 
         let results = self.subnet.nodes.iter().combinations(max_replacements).map(|nodes| {
-            let mut change = self.clone();
+            let mut change = change_request.clone();
             change
                 .available_nodes
                 .append(&mut nodes.iter().map(|n| (*n).clone()).collect::<Vec<_>>());
@@ -705,19 +780,56 @@ impl SubnetChangeRequest {
     /// change. Command returns all the information about the subnet before
     /// and after the change.
     pub fn evaluate(self) -> Result<SubnetChange, NetworkError> {
-        let change = if self.improve_count > 0 {
-            let change = Self {
+        // If self.improve_count is set, we first try to optimize the subnet
+        let (request_change, result_optimize) = if self.improve_count > 0 {
+            let request_extend = Self {
                 removed_nodes: Default::default(),
                 ..self.clone()
             }
             .optimize(self.improve_count)?;
-            self.remove(change.removed().iter().map(|n| n.id).collect::<Vec<_>>().as_slice())?
-                .include_nodes(change.added().iter().map(|n| n.id).collect())
+
+            let request_change = self
+                .remove(
+                    request_extend
+                        .removed()
+                        .iter()
+                        .map(|n| n.id)
+                        .collect::<Vec<_>>()
+                        .as_slice(),
+                )?
+                .include_nodes(request_extend.added().iter().map(|n| n.id).collect());
+            (request_change, Some(request_extend))
         } else {
-            self
+            (self, None)
         };
 
-        change.extend(change.removed_nodes.len() - change.include_nodes.len())
+        // Then we extend the subnet for the remaining nodes
+        match (request_change, result_optimize) {
+            (request_change, Some(result_optimize)) => {
+                let result_extend =
+                    request_change.extend(request_change.removed_nodes.len() - result_optimize.added().len())?;
+                Ok(SubnetChange {
+                    comment: if result_optimize.comment == result_extend.comment {
+                        result_extend.comment
+                    } else {
+                        Some(format!(
+                            "{}\n{}",
+                            result_optimize.comment.unwrap_or_default(),
+                            result_extend.comment.unwrap_or_default()
+                        ))
+                    },
+                    run_log: result_optimize
+                        .run_log
+                        .into_iter()
+                        .chain(result_extend.run_log)
+                        .collect(),
+                    ..result_extend
+                })
+            }
+            (request_change, _) => {
+                request_change.extend(request_change.removed_nodes.len() - request_change.include_nodes.len())
+            }
+        }
     }
 }
 
