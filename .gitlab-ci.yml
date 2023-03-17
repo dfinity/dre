@@ -414,17 +414,18 @@ dashboard-release-build:
   extends:
     - .docker-base
   rules:
-    - if: '$CI_PIPELINE_SOURCE == "push"'
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes:
+        - dashboard/**/*
+        - rs/**/*
+    - if: '$CI_PIPELINE_SOURCE == "push"'
+      when: manual
     - if: '$CI_PIPELINE_SOURCE == "web"'
       when: manual
       allow_failure: true # the pipeline continues running even if the manual job is not run
     - if: '$CI_PIPELINE_SOURCE == "trigger"'
       when: manual
       allow_failure: true # the pipeline continues running even if the manual job is not run
-    - changes:
-        - dashboard/**/*
-        - rs/**/*
   script:
     - |
       set -exou pipefail
@@ -539,6 +540,8 @@ metrics-proxy-release:
       when: manual
       allow_failure: true # the pipeline continues running even if the manual job is not run
     - if: '$CI_PIPELINE_SOURCE == "push"'
+      when: manual
+      allow_failure: true # the pipeline continues running even if the manual job is not run
   interruptible: true
   before_script:
     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
@@ -571,6 +574,8 @@ linear-jira-release:
       when: manual
       allow_failure: true # the pipeline continues running even if the manual job is not run
     - if: '$CI_PIPELINE_SOURCE == "push"'
+      when: manual
+      allow_failure: true # the pipeline continues running even if the manual job is not run
   interruptible: true
   before_script:
     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
