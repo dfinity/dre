@@ -184,6 +184,7 @@ impl Cli {
                 ]
                 .concat()
                 .as_slice(),
+                true,
             )
         };
 
@@ -205,14 +206,15 @@ impl Cli {
         exec(self, cmd, opts, false)
     }
 
-    fn _run_ic_admin_with_args(&self, ic_admin_args: &[String]) -> anyhow::Result<()> {
+    fn _run_ic_admin_with_args(&self, ic_admin_args: &[String], with_auth: bool) -> anyhow::Result<()> {
         let ic_admin_path = self.ic_admin.clone().unwrap_or_else(|| "ic-admin".to_string());
         let mut cmd = Command::new(ic_admin_path);
-        let root_options = [
-            self.neuron.as_ref().map(|n| n.auth.as_arg_vec()).unwrap_or_default(),
-            vec!["--nns-url".to_string(), self.nns_url.to_string()],
-        ]
-        .concat();
+        let auth_options = if with_auth {
+            self.neuron.as_ref().map(|n| n.auth.as_arg_vec()).unwrap_or_default()
+        } else {
+            vec![]
+        };
+        let root_options = [auth_options, vec!["--nns-url".to_string(), self.nns_url.to_string()]].concat();
         let cmd = cmd.args([&root_options, ic_admin_args].concat());
 
         self.print_ic_admin_command_line(cmd);
@@ -235,9 +237,9 @@ impl Cli {
         }
     }
 
-    pub(crate) fn run(&self, command: &str, args: &[String]) -> anyhow::Result<()> {
+    pub(crate) fn run(&self, command: &str, args: &[String], with_auth: bool) -> anyhow::Result<()> {
         let ic_admin_args = [&[command.to_string()], args].concat();
-        self._run_ic_admin_with_args(&ic_admin_args)
+        self._run_ic_admin_with_args(&ic_admin_args, with_auth)
     }
 
     /// Run ic-admin and parse sub-commands that it lists with "--help",
@@ -297,7 +299,7 @@ impl Cli {
             args_with_get_prefix
         };
 
-        self.run(&args[0], &args.iter().skip(1).cloned().collect::<Vec<_>>())
+        self.run(&args[0], &args.iter().skip(1).cloned().collect::<Vec<_>>(), false)
     }
 
     /// Run an `ic-admin propose-to-*` command directly
@@ -840,7 +842,7 @@ oSMDIQBa2NLmSmaqjDXej4rrJEuEhKIz7/pGXpxztViWhB+X9Q==
             .concat()
             .to_vec();
             let out = with_ic_admin(Default::default(), async {
-                cli.run(&cmd.get_command_name(), &vector)
+                cli.run(&cmd.get_command_name(), &vector, true)
                     .map_err(|e| anyhow::anyhow!(e))
             })
             .await;
