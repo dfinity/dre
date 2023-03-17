@@ -118,6 +118,7 @@ impl Runner {
         let headers = vec!["Principal".to_string()]
             .into_iter()
             .chain(NodeFeature::variants().iter().map(|nf| nf.to_string()))
+            .chain(vec!["Hostname".to_string()].into_iter())
             .chain(vec!["Reason".to_string()].into_iter())
             .collect::<Vec<_>>();
         let mut table = tabular::Table::new(&headers.iter().map(|_| "    {:<}").collect::<Vec<_>>().join(""));
@@ -136,6 +137,7 @@ impl Runner {
             for nf in NodeFeature::variants() {
                 row.add_cell(decentralization_node.get_feature(&nf));
             }
+            row.add_cell(nr.node.hostname.clone().unwrap_or_else(|| "N/A".to_string()));
             row.add_cell(nr.reason.message());
             table.add_row(row);
         }
