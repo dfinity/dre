@@ -187,6 +187,11 @@ impl Cli {
             )
         };
 
+        let help_in_args = cmd.args().contains(&String::from("--help"));
+        if help_in_args {
+            return exec(self, cmd, opts, false);
+        }
+
         if !self.yes {
             exec(&self.dry_run(), cmd.clone(), opts.clone(), true)?;
             if !Confirm::new()
