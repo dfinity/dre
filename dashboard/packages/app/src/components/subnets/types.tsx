@@ -68,6 +68,7 @@ export interface Subnet {
   metadata: SubnetMetadata;
   replica_version: string;
   replica_release: ReplicaRelease;
+  proposal?: { id: number };
 }
 
 export type VerifiedApplication = "Fleek" | "Distrikt";
@@ -94,11 +95,6 @@ export interface SubnetUpdate {
   proposal?: SubnetUpdateProposal;
   patches_available: ReplicaRelease[];
   replica_release: ReplicaRelease;
-  // latest_release: boolean;
-  // upgrading: boolean;
-  // upgrading_release: boolean;
-  // name: string;
-  // proposal?: ReplicaVersionUpdateProposal;
 }
 
 export type SubnetUpdateState = "scheduled" | "submitted" | "preparing" | "updating" | "baking" | "complete" | "unknown";
@@ -130,4 +126,52 @@ export interface ReplicaRelease {
   branch: string;
   time: string;
   previous_patch_release?: ReplicaRelease;
+}
+
+export interface ChangePreview {
+  added: string[]
+  removed: string[]
+  subnet_id: string
+  score_before: NakamotoScore
+  score_after: NakamotoScore
+  feature_diff: { [f: string]: { [n: string]: [number, number] } }
+  proposal_id?: number
+  comment?: string
+  run_log?: string[]
+}
+
+export interface NakamotoScore {
+  coefficients: Coefficients
+  value_counts: ValueCounts
+  controlled_nodes: ControlledNodes
+  avg_linear: number
+  avg_log2: number
+  min: number
+}
+
+export interface Coefficients {
+  node_provider: number
+  data_center: number
+  data_center_owner: number
+  city: number
+  country: number
+  continent: number
+}
+
+export interface ValueCounts {
+  node_provider: [string, number][]
+  data_center: [string, number][]
+  data_center_owner: [string, number][]
+  city: [string, number][]
+  country: [string, number][]
+  continent: [string, number][]
+}
+
+export interface ControlledNodes {
+  node_provider: number
+  data_center: number
+  data_center_owner: number
+  city: number
+  country: number
+  continent: number
 }

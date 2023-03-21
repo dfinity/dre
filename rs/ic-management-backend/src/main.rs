@@ -123,6 +123,7 @@ async fn main() -> std::io::Result<()> {
             .service(endpoints::subnet::replace)
             .service(endpoints::subnet::create_subnet)
             .service(endpoints::subnet::extend)
+            .service(endpoints::subnet::change_preview)
             .service(endpoints::nodes::remove)
             .service(endpoints::query_decentralization::decentralization_subnet_query)
             .service(endpoints::query_decentralization::decentralization_whatif_query)
@@ -214,7 +215,8 @@ async fn version(registry: web::Data<Arc<RwLock<registry::RegistryState>>>) -> i
 
 #[get("/subnets")]
 async fn subnets(registry: web::Data<Arc<RwLock<registry::RegistryState>>>) -> impl Responder {
-    query_registry(registry, |r| r.subnets()).await
+    let registry = registry.read().await;
+    response_from_result(registry.subnets_with_proposals().await)
 }
 
 #[get("/nodes")]
@@ -240,7 +242,9 @@ async fn nodes_healths(registry: web::Data<Arc<RwLock<registry::RegistryState>>>
             .map(|n| {
                 (
                     n.principal,
-                    healths.remove(&n.principal).unwrap_or(ic_management_types::Status::Unknown),
+                    healths
+                        .remove(&n.principal)
+                        .unwrap_or(ic_management_types::Status::Unknown),
                 )
             })
             .collect::<HashMap<_, _>>()
