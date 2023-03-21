@@ -9,10 +9,12 @@ import { Avatar, Chip, Dialog, DialogTitle, DialogActions, DialogContent, Grid, 
 import FileCopyOutlinedIcon from '@material-ui/icons/FileCopyOutlined';
 import ReportSharpIcon from '@material-ui/icons/ReportSharp';
 import ReportProblemSharpIcon from '@material-ui/icons/ReportProblemSharp';
-import { orange, red } from '@material-ui/core/colors';
+import InfoIcon from '@material-ui/icons/Info';
+import { lightBlue, orange, red } from '@material-ui/core/colors';
 import { NodeHealth, Subnet, VerifiedApplication } from './types';
+import { useApi, configApiRef } from '@backstage/core-plugin-api';
 
-import { fetchSubnets, fetchNodesHealths } from './fetch';
+import { fetchSubnets, fetchNodesHealths, get_network } from './fetch';
 
 const useStyles = makeStyles((theme: Theme) => ({
   root: {
@@ -45,7 +47,7 @@ export const verifiedApplicationLogo = (va: VerifiedApplication) => {
   }
 }
 
-type ActionUrgency = "critical" | "warning";
+type ActionUrgency = "critical" | "warning" | "info";
 
 function ActionIcon({ action }: { action: Action }) {
   switch (action.urgency) {
@@ -53,6 +55,19 @@ function ActionIcon({ action }: { action: Action }) {
       return <ReportSharpIcon style={{ color: red[500] }} />
     case "warning":
       return <ReportProblemSharpIcon style={{ color: orange[500] }} />
+    case "info":
+      return <InfoIcon style={{ color: lightBlue[500] }} />
+  }
+}
+
+function actionTypeButtonText(actionType: ActionType) {
+  switch (actionType) {
+    case 'expand':
+      return "Expand"
+    case 'heal':
+      return "Heal"
+    case 'replace':
+      return "View"
   }
 }
 
@@ -60,7 +75,14 @@ function ActionDialog({ subnet, action }: { subnet: Subnet, action: Action }) {
   const [open, setOpen] = React.useState(false);
 
   const handleClickOpen = () => {
-    setOpen(true);
+    if (action.url) {
+      let tab = window.open(action.url, '_blank');
+      if (tab) {
+        tab.focus();
+      }
+    } else {
+      setOpen(true);
+    }
   };
 
   const handleClose = () => {
@@ -69,7 +91,7 @@ function ActionDialog({ subnet, action }: { subnet: Subnet, action: Action }) {
   return (
     <React.Fragment>
       <Button color="primary" onClick={handleClickOpen}>
-        {action.type}
+        {actionTypeButtonText(action.type)}
       </Button>
       <Dialog
         open={open}
@@ -92,13 +114,14 @@ function ActionDialog({ subnet, action }: { subnet: Subnet, action: Action }) {
   );
 }
 
-type ActionType = "expand" | "heal"
+type ActionType = "expand" | "heal" | "replace"
 
 interface Action {
   urgency: ActionUrgency
   message: React.ReactNode
   type: ActionType
-  description: string
+  description?: string
+  url?: string
 }
 
 // TODO: move to Rust backend
@@ -129,6 +152,14 @@ function generateSubnetActions(subnet: Subnet, healths: { [principal: string]: N
       urgency: degraded.length / subnet.nodes.length > 0.2 ? "critical" : "warning",
       description: `Guests ${degraded.map(dn => dn.hostname)}`,
       message: <>There {degraded.length === 1 ? "is" : "are"} <b>{degraded.length}</b> degraded node{degraded.length > 1 && "s"} that might need to be replaced.</>,
+    })
+  }
+  if (subnet.proposal) {
+    actions.push({
+      type: "replace",
+      urgency: "info",
+      message: "Subnet has pending replacement proposal",
+      url: `${useApi(configApiRef).getString('app.baseUrl')}/network/${get_network()}/subnet/${subnet.principal}/change`,
     })
   }
 

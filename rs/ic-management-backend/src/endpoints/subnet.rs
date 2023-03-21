@@ -1,6 +1,6 @@
 use super::*;
 use crate::health;
-use decentralization::network::TopologyManager;
+use decentralization::{network::TopologyManager, SubnetChangeResponse};
 use ic_base_types::PrincipalId;
 use ic_management_types::requests::{
     MembershipReplaceRequest, ReplaceTarget, SubnetCreateRequest, SubnetExtendRequest,
@@ -21,6 +21,57 @@ async fn pending_action(
         Ok(subnets) => {
             if let Some(subnet) = subnets.get(&request.subnet) {
                 Ok(HttpResponse::Ok().json(&subnet.proposal))
+            } else {
+                Err(error::ErrorNotFound(anyhow::format_err!(
+                    "subnet {} not found",
+                    request.subnet
+                )))
+            }
+        }
+        Err(e) => Err(error::ErrorInternalServerError(format!(
+            "failed to fetch subnets: {}",
+            e
+        ))),
+    }
+}
+
+#[get("/subnet/{subnet}/change_preview")]
+async fn change_preview(
+    request: web::Path<SubnetRequest>,
+    registry: web::Data<Arc<RwLock<RegistryState>>>,
+) -> Result<HttpResponse, Error> {
+    let nodes = registry.read().await.nodes();
+    match registry.read().await.subnets_with_proposals().await {
+        Ok(subnets) => {
+            if let Some(subnet) = subnets.get(&request.subnet) {
+                if let Some(proposal) = &subnet.proposal {
+                    let removed_nodes = subnet
+                        .nodes
+                        .iter()
+                        .filter(|n| proposal.nodes.contains(&n.principal))
+                        .map(|n| n.principal)
+                        .collect::<Vec<_>>();
+                    let change_request = registry
+                        .read()
+                        .await
+                        .replace_subnet_nodes(&removed_nodes)
+                        .await?
+                        .with_custom_available_nodes(
+                            nodes
+                                .values()
+                                .filter(|n| n.subnet.is_none() && proposal.nodes.contains(&n.principal))
+                                .map(decentralization::network::Node::from)
+                                .collect(),
+                        );
+                    let mut change = SubnetChangeResponse::from(&change_request.evaluate()?);
+                    change.proposal_id = Some(proposal.id);
+                    Ok(HttpResponse::Ok().json(change))
+                } else {
+                    Err(error::ErrorBadRequest(anyhow::format_err!(
+                        "subnet {} does not have open membership change proposals",
+                        request.subnet
+                    )))
+                }
             } else {
                 Err(error::ErrorNotFound(anyhow::format_err!(
                     "subnet {} not found",
@@ -123,9 +174,15 @@ async fn create_subnet(
     request: web::Json<SubnetCreateRequest>,
 ) -> Result<HttpResponse, Error> {
     let registry = registry.read().await;
-    println!("Received a request to create a subnet of size {:?} and MinNakamotoCoefficients {}", request.size, serde_json::to_string(&request.min_nakamoto_coefficients).unwrap());
+    println!(
+        "Received a request to create a subnet of size {:?} and MinNakamotoCoefficients {}",
+        request.size,
+        serde_json::to_string(&request.min_nakamoto_coefficients).unwrap()
+    );
     Ok(HttpResponse::Ok().json(decentralization::SubnetChangeResponse::from(
-        &registry.create_subnet(request.size, request.min_nakamoto_coefficients.clone()).await?,
+        &registry
+            .create_subnet(request.size, request.min_nakamoto_coefficients.clone())
+            .await?,
     )))
 }
 

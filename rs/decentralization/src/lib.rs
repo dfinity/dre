@@ -21,6 +21,7 @@ pub struct SubnetChangeResponse {
     pub comment: Option<String>,
     pub run_log: Option<Vec<String>>,
     pub feature_diff: HashMap<NodeFeature, FeatureDiff>,
+    pub proposal_id: Option<u64>,
 }
 
 pub type FeatureDiff = HashMap<String, (usize, usize)>;
@@ -69,6 +70,7 @@ impl From<&network::SubnetChange> for SubnetChangeResponse {
                     acc
                 },
             ),
+            proposal_id: None,
         }
     }
 }
