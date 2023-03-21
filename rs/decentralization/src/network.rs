@@ -630,6 +630,13 @@ impl SubnetChangeRequest {
         }
     }
 
+    pub fn with_custom_available_nodes(self, nodes: Vec<Node>) -> Self {
+        Self {
+            available_nodes: nodes,
+            ..self
+        }
+    }
+
     pub fn with_min_nakamoto_coefficients(self, min_nakamoto_coefficients: Option<MinNakamotoCoefficients>) -> Self {
         Self {
             min_nakamoto_coefficients,

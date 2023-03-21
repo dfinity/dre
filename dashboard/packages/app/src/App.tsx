@@ -31,6 +31,8 @@ import { BackstageOverrides } from '@backstage/core-components';
 import { QualificationPage } from './components/subnets/QualificationPage';
 
 import { fetchVersion, get_network } from './components/subnets/fetch';
+import { createRouteRef } from '@backstage/core-plugin-api';
+import { SubnetChangePage } from './components/subnets/SubnetChangePage';
 
 export const createCustomThemeOverrides = (
   theme: BackstageTheme,
@@ -80,6 +82,12 @@ const app = createApp({
 const AppProvider = app.getProvider();
 const AppRouter = app.getRouter();
 
+// Creation of a parameterized route
+export const subnetChangePreviewRouteRef = createRouteRef({
+  id: 'subnet-change-preview',
+  params: ['subnet']
+})
+
 const routes = (
   <FlatRoutes>
     <Navigate key="/" to="/network/mainnet/topology" />
@@ -102,6 +110,7 @@ const routes = (
     <Route path="/settings" element={<UserSettingsPage />} />
 
     <Route path="/network/mainnet/topology" element={<TopologyPage network='Mainnet' />} />
+    <Route path="/network/mainnet/subnet/:subnet/change" element={<SubnetChangePage network='Mainnet' />} />
     <Route path="/network/staging/topology" element={<TopologyPage network='Staging' />} />
     <Route path="/release" element={<ReleasePage />} />
     <Route path="/qualification" element={<QualificationPage />} />
