@@ -1,0 +1,129 @@
+update-facts-db:
+  interruptible: true
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule" && $SCHEDULE_NAME == "update-factsdb"'
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+      when: manual
+      allow_failure: true # the pipeline continues running even if the manual job is not run
+    - if: '$CI_PIPELINE_SOURCE == "trigger"'
+      when: manual
+      allow_failure: true # the pipeline continues running even if the manual job is not run
+  script:
+    - |
+      set -exou pipefail  # Don't tolerate any errors
+      # Work on main branch
+      git config pull.rebase true
+      git config --global user.name "Release Team"
+      git config --global user.email "eng-release-bots-aaaafbmaump5gpag4pbjfuarry@dfinity.slack.com"
+      time git pull --depth 5 --force origin "${CI_DEFAULT_BRANCH}"
+      git checkout --force "${CI_DEFAULT_BRANCH}"
+
+      set +x
+      time python3 ./factsdb/main.py --refresh
+      time python3 ./factsdb/main.py --deployment-name mainnet --decentralized-deployment --refresh
+      if [[ -n "$(git status --short factsdb/data)" ]]; then
+        echo "Changed files found";
+        git add factsdb/data
+        git stash
+        git pull --rebase
+        git stash pop
+        git add factsdb/data
+        git status
+        git commit -m"Updated FactsDB"
+        git remote set-url origin "https://token:${GITLAB_PUSH_TOKEN}@${CI_REPOSITORY_URL#*@}"
+        git push origin "${CI_DEFAULT_BRANCH}"
+      fi
+
+
+
+jira-update:
+  interruptible: true
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule" && $SCHEDULE_NAME == "update-jira-tickets"'
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+      when: manual
+      allow_failure: true # the pipeline continues running even if the manual job is not run
+    - if: '$CI_PIPELINE_SOURCE == "trigger"'
+      when: manual
+      allow_failure: true # the pipeline continues running even if the manual job is not run
+  script:
+    - |
+      set -exou pipefail  # Don't tolerate any errors
+
+      cd ./scripts/jira-integration
+      time python3 ./jira_update.py
+
+qualification-tracking-update:
+  interruptible: true
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule" && $SCHEDULE_NAME == "update-qualification-tracking"'
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+      when: manual
+      allow_failure: true # the pipeline continues running even if the manual job is not run
+    - if: '$CI_PIPELINE_SOURCE == "trigger"'
+      when: manual
+      allow_failure: true # the pipeline continues running even if the manual job is not run
+  script:
+    - |
+      set -exou pipefail  # Don't tolerate any errors
+
+      cd ./qualification
+      time python3 ./qualification_track.py add-nns
+      time python3 ./qualification_track.py add-ci --since=now-3d
+
+update-ic-versions-file:
+  interruptible: true
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule" && $SCHEDULE_NAME == "update-ic-versions"'
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+      when: manual
+      allow_failure: true # the pipeline continues running even if the manual job is not run
+    - if: '$CI_PIPELINE_SOURCE == "trigger"'
+      when: manual
+      allow_failure: true # the pipeline continues running even if the manual job is not run
+  script:
+    - |
+      set -exou pipefail  # Don't tolerate any errors
+
+      time python3 ./scripts/ic_versions/main.py
+
+      if [[ -z "$(cd ic; git log -1 | grep 'Update Mainnet IC revisions file')" ]]; then
+          # No commit was made by the automation, we can stop here
+          exit 0
+      fi
+
+      # Assign the MR reviewer and merge the MR once approved
+      MR_NUM=$(curl --fail --request GET --header "PRIVATE-TOKEN: $IC_CREATE_VERSIONS_MR_TOKEN" "https://gitlab.com/api/v4/projects/31166135/merge_requests/?state=opened&source_branch=ic-mainnet-revisions" | jq '.[].iid')
+      if [[ -n "$MR_NUM" ]]; then
+          # Assign the reviewer to DSD https://gitlab.com/danielstefan.dietiker
+          curl --fail --request PUT --header "PRIVATE-TOKEN: $IC_CREATE_VERSIONS_MR_TOKEN" "https://gitlab.com/api/v4/projects/31166135/merge_requests/$MR_NUM?reviewer_ids[]=7781103"
+      fi
+      sleep 10 # Wait to let GitLab update the MR metadata
+      if [[ "$(curl --fail --request GET --header "PRIVATE-TOKEN: $IC_CREATE_VERSIONS_MR_TOKEN" "https://gitlab.com/api/v4/projects/31166135/merge_requests/$MR_NUM/approval_state" | jq '[.rules[].approved] | all')" == "true" ]]; then
+          # The MR has all necessary approvals
+          # ==> merge as soon as possible
+          curl --fail --request PUT --header "PRIVATE-TOKEN: $IC_CREATE_VERSIONS_MR_TOKEN" "https://gitlab.com/api/v4/projects/31166135/merge_requests/$MR_NUM/merge?merge_when_pipeline_succeeds=true&squash=true"
+      fi
+
+qualify-release:
+  needs: []
+  dependencies: []
+  timeout: 2h
+  resource_group: staging # Eliminate concurrent test runs
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule" && $SCHEDULE_NAME == "qualify-release"'
+      # Run the job automatically if the QUALIFY_GIT_REVISION env var is provided in the web UI when the pipeline was created
+    - if: '$CI_PIPELINE_SOURCE == "web" && $QUALIFY_GIT_REVISION != ""'
+    - if: '$CI_PIPELINE_SOURCE == "trigger"'
+      when: manual
+      allow_failure: true # the pipeline continues running even if the manual job is not run
+  script:
+    - |
+      set -exou pipefail  # Don't tolerate any errors
+
+      mkdir -p /home/ubuntu/.config/dfx/identity/bootstrap-super-leader
+      cat "$BOOTSTRAP_SUPER_LEADER_PEM" > /home/ubuntu/.config/dfx/identity/bootstrap-super-leader/identity.pem
+      mkdir -p /home/ubuntu/.config/dfx/identity/xnet-testing
+      cat "$XNET_TESTING_PEM" > /home/ubuntu/.config/dfx/identity/xnet-testing/identity.pem
+    - ./qualification/qualify-new-release.py --git-revision ${QUALIFY_GIT_REVISION}
+
