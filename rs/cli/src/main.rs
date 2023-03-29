@@ -1,6 +1,5 @@
 use crate::cli::version::Commands::{Bless, Retire};
 use clap::{CommandFactory, ErrorKind, Parser};
-use clients::DashboardBackendClient;
 use ic_management_types::requests::NodesRemoveRequest;
 use ic_management_types::{MinNakamotoCoefficients, NodeFeature};
 use std::collections::BTreeMap;
@@ -137,11 +136,8 @@ async fn main() -> Result<(), anyhow::Error> {
                         ic_admin.propose_run(cmd, ic_admin::ProposeOptions { title: Some(format!("Elect new replica binary revision (commit {version})")), summary: Some(summary), motivation: None })
                     },
                     Retire { edit_summary } => {
-                        let ic_admin = ic_admin::Cli::from_opts(&cli_opts, true).await?;
-                        let dashboard_client = DashboardBackendClient::new(cli_opts.network, cli_opts.dev);
-                        let (summary, cmd ) = ic_admin.get_replica_versions_to_retire(*edit_summary, dashboard_client).await?;
-
-                        ic_admin.propose_run(cmd, ic_admin::ProposeOptions { title: Some("Retire IC replica version".to_string()), summary: Some(summary), motivation: None })
+                        let runner = runner::Runner::from_opts(&cli_opts).await?;
+                        runner.retire_versions(*edit_summary).await
                     },
                 }
             },

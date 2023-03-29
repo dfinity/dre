@@ -10,7 +10,6 @@ use flate2::read::GzDecoder;
 use futures::Future;
 use ic_base_types::PrincipalId;
 use ic_canister_client::{Agent, Sender};
-use ic_management_types::BlessedVersions;
 use ic_nns_constants::GOVERNANCE_CANISTER_ID;
 use ic_nns_governance::pb::v1::{ListNeurons, ListNeuronsResponse};
 use ic_sys::utility_command::UtilityCommand;
@@ -29,7 +28,6 @@ use std::{path::Path, process::Command};
 use strum::Display;
 
 use crate::cli::Opts;
-use crate::clients::DashboardBackendClient;
 use crate::defaults;
 
 #[derive(Clone)]
@@ -447,58 +445,6 @@ must be identical, and must match the SHA256 from the payload of the NNS proposa
                 },
             ))
         }
-    }
-
-    pub(crate) async fn get_replica_versions_to_retire(
-        &self,
-        edit_summary: bool,
-        client: DashboardBackendClient,
-    ) -> anyhow::Result<(String, ProposeCommand)> {
-        let nns_versions: BlessedVersions = client.get_nss_blessed_versions().await?;
-
-        info!("Waiting for you to pick the versions to retire in your editor");
-        let template = "# In the below lines, uncomment the versions that you would like to retire".to_string();
-        let versions = edit::edit(format!(
-            "{}\n{}",
-            template,
-            nns_versions
-                .all
-                .iter()
-                .map(|f| if !nns_versions.obsolete.contains(f) {
-                    format!("# {}", f)
-                } else {
-                    f.to_string()
-                })
-                .join("\n")
-        ))?
-        .trim()
-        .replace("\r(\n)?", "\n")
-        .split('\n')
-        .map(|s| s.trim().to_string())
-        .filter(|f| !f.is_empty() && !f.starts_with('#'))
-        .collect::<Vec<String>>();
-        for version in &versions {
-            if !nns_versions.all.contains(version) {
-                return Err(anyhow::anyhow!(
-                    "Version \"{}\" is not present inside blessed replica versions",
-                    version
-                ));
-            }
-        }
-
-        if versions.is_empty() {
-            return Err(anyhow::anyhow!("Provided empty list of versions, aborting..."));
-        }
-
-        let mut template =
-            "Removing the obsolete IC replica versions from the registry, to prevent unintended version downgrades in the future"
-                .to_string();
-        if edit_summary {
-            info!("Edit summary");
-            template = edit::edit(template)?.trim().replace("\r(\n)?", "\n");
-        }
-
-        Ok((template, ProposeCommand::RetireReplicaVersion { versions }))
     }
 }
 
