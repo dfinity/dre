@@ -7,6 +7,8 @@ use decentralization::SubnetChangeResponse;
 use ic_base_types::PrincipalId;
 use ic_management_types::requests::NodesRemoveRequest;
 use ic_management_types::NodeFeature;
+use itertools::Itertools;
+use log::info;
 
 #[derive(Clone)]
 pub struct Runner {
@@ -108,6 +110,49 @@ impl Runner {
             ic_admin: ic_admin::Cli::from_opts(cli_opts, true).await?,
             dashboard_backend_client: clients::DashboardBackendClient::new(cli_opts.network.clone(), cli_opts.dev),
         })
+    }
+
+    pub(crate) async fn retire_versions(&self, edit_summary: bool) -> anyhow::Result<()> {
+        let retireable_versions = self.dashboard_backend_client.get_retireable_versions().await?;
+
+        info!("Waiting for you to pick the versions to retire in your editor");
+        let template = "# In the below lines, uncomment the versions that you would like to retire".to_string();
+        let versions = edit::edit(format!(
+            "{}\n{}",
+            template,
+            retireable_versions
+                .into_iter()
+                .map(|r| format!("{} # {}", r.commit_hash, r.branch))
+                .join("\n"),
+        ))?
+        .trim()
+        .replace("\r(\n)?", "\n")
+        .split('\n')
+        .map(|s| regex::Regex::new("#.+$").unwrap().replace_all(s, "").to_string())
+        .map(|s| s.trim().to_string())
+        .filter(|s| !s.is_empty())
+        .collect::<Vec<_>>();
+
+        if versions.is_empty() {
+            return Err(anyhow::anyhow!("Provided empty list of versions, aborting..."));
+        }
+
+        let mut template =
+            "Removing the obsolete IC replica versions from the registry, to prevent unintended version downgrades in the future"
+                .to_string();
+        if edit_summary {
+            info!("Edit summary");
+            template = edit::edit(template)?.trim().replace("\r(\n)?", "\n");
+        }
+
+        self.ic_admin.propose_run(
+            ic_admin::ProposeCommand::RetireReplicaVersion { versions },
+            ic_admin::ProposeOptions {
+                title: Some("Retire IC replica version".to_string()),
+                summary: Some(template),
+                motivation: None,
+            },
+        )
     }
 
     pub async fn remove_nodes(&self, request: NodesRemoveRequest) -> anyhow::Result<()> {

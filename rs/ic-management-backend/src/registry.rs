@@ -1,13 +1,12 @@
 use crate::proposal;
 use async_trait::async_trait;
 use decentralization::network::{AvailableNodesQuerier, SubnetQuerier};
-use ic_base_types::{NodeId, SubnetId};
+use ic_base_types::NodeId;
 use ic_interfaces_registry::RegistryValue;
 use ic_management_types::{
-    BlessedVersions, Datacenter, DatacenterOwner, Guest, NetworkError, Node, NodeProviderDetails, Operator, Provider,
-    ReplicaRelease, Subnet, SubnetMetadata,
+    Datacenter, DatacenterOwner, Guest, NetworkError, Node, NodeProviderDetails, Operator, Provider, ReplicaRelease,
+    Subnet, SubnetMetadata,
 };
-use ic_registry_client_helpers::subnet::SubnetRegistry;
 use ic_registry_keys::{
     make_blessed_replica_version_key, NODE_OPERATOR_RECORD_KEY_PREFIX, NODE_RECORD_KEY_PREFIX, SUBNET_RECORD_KEY_PREFIX,
 };
@@ -542,62 +541,23 @@ impl RegistryState {
             .collect())
     }
 
-    pub async fn nns_blessed_versions(&self) -> Result<BlessedVersions> {
-        let nns_principal = self
-            .local_registry
-            .get_root_subnet_id(self.local_registry.get_latest_version())
-            .expect("failed to find nns subnet")
-            .unwrap();
-
-        let current_version: Vec<_> = self
-            .local_registry
-            .get_subnet_record(nns_principal, self.local_registry.get_latest_version())
-            .unwrap()
-            .iter()
-            .map(|f| f.replica_version_id.to_string())
-            .collect();
-
-        let last_updated_version = self
-            .local_registry
-            .get_subnet_record_registry_version(
-                SubnetId::from(nns_principal.get()),
-                self.local_registry.get_latest_version(),
-            )
-            .unwrap()
-            .unwrap()
-            .decrement();
-
-        let previous_version = self
-            .local_registry
-            .get_subnet_record(nns_principal, last_updated_version)
-            .unwrap()
-            .iter()
-            .map(|f| f.replica_version_id.to_string())
-            .collect();
-
-        let present_on_nns = [current_version, previous_version].concat();
-
-        let blessed_versions = BlessedReplicaVersions::decode(
-            self.local_registry
-                .get_value(
-                    &make_blessed_replica_version_key(),
-                    self.local_registry.get_latest_version(),
-                )?
-                .unwrap_or_default()
-                .as_slice(),
-        )
-        .expect("failed to decode blessed replica versions")
-        .blessed_version_ids;
-
-        let position = blessed_versions
-            .iter()
-            .position(|version| present_on_nns.contains(version))
-            .unwrap();
-
-        Ok(BlessedVersions {
-            all: blessed_versions.clone(),
-            obsolete: blessed_versions.iter().map(|f| f.to_string()).take(position).collect(),
-        })
+    pub async fn retireable_versions(&self) -> Result<Vec<ReplicaRelease>> {
+        const ACTIVE_RELEASES: usize = 2;
+        let active_releases = self
+            .replica_releases
+            .clone()
+            .into_iter()
+            .rev()
+            .map(|rr| rr.branch)
+            .unique()
+            .take(ACTIVE_RELEASES)
+            .collect::<Vec<_>>();
+        Ok(self
+            .replica_releases
+            .clone()
+            .into_iter()
+            .filter(|rr| !active_releases.contains(&rr.branch))
+            .collect())
     }
 
     pub fn operators(&self) -> HashMap<PrincipalId, Operator> {

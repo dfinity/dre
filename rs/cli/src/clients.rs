@@ -3,7 +3,7 @@ use decentralization::SubnetChangeResponse;
 use ic_base_types::PrincipalId;
 use ic_management_types::{
     requests::{MembershipReplaceRequest, NodesRemoveRequest, NodesRemoveResponse, SubnetExtendRequest},
-    BlessedVersions, Network, NetworkError, SubnetMembershipChangeProposal,
+    Network, NetworkError, ReplicaRelease, SubnetMembershipChangeProposal,
 };
 use log::error;
 use serde::de::DeserializeOwned;
@@ -73,9 +73,9 @@ impl DashboardBackendClient {
             .await
     }
 
-    pub async fn get_nss_blessed_versions(&self) -> anyhow::Result<BlessedVersions> {
+    pub async fn get_retireable_versions(&self) -> anyhow::Result<Vec<ReplicaRelease>> {
         reqwest::Client::new()
-            .get(self.url.join("nns/blessed-versions").map_err(|e| anyhow::anyhow!(e))?)
+            .get(self.url.join("release/retireable").map_err(|e| anyhow::anyhow!(e))?)
             .rest_send()
             .await
     }

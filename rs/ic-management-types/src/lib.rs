@@ -484,9 +484,3 @@ impl Network {
         }
     }
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct BlessedVersions {
-    pub all: Vec<String>,
-    pub obsolete: Vec<String>,
-}

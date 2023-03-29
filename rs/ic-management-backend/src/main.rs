@@ -127,7 +127,7 @@ async fn main() -> std::io::Result<()> {
             .service(endpoints::nodes::remove)
             .service(endpoints::query_decentralization::decentralization_subnet_query)
             .service(endpoints::query_decentralization::decentralization_whatif_query)
-            .service(get_nns_blessed_versions)
+            .service(endpoints::release::retireable)
     })
     .shutdown_timeout(10)
     .bind((
@@ -174,13 +174,6 @@ async fn get_subnet(
         }
     };
     HttpResponse::Ok().json(record)
-}
-
-#[get("/nns/blessed-versions")]
-async fn get_nns_blessed_versions(registry: web::Data<Arc<RwLock<registry::RegistryState>>>) -> impl Responder {
-    let nns_subnet_records = registry.read().await.nns_blessed_versions().await.unwrap();
-
-    HttpResponse::Ok().json(nns_subnet_records)
 }
 
 #[get("/rollout")]
