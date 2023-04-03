@@ -455,7 +455,7 @@ impl ReplicaRelease {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Eq)]
 pub enum Network {
     Staging,
     Mainnet,
