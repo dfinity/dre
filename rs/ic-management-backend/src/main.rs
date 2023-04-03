@@ -182,8 +182,7 @@ async fn rollout(registry: web::Data<Arc<RwLock<registry::RegistryState>>>) -> R
     let proposal_agent = proposal::ProposalAgent::new(registry.nns_url());
     let network = registry.network();
     let prometheus_client = match network.as_str() {
-        "mainnet" | "mercury" => Client::try_from("https://prometheus.mainnet.dfinity.network").unwrap(),
-        "staging" => Client::try_from("http://prometheus.dfinity.systems").unwrap(),
+        "mainnet" | "mercury" | "staging" => Client::try_from("https://prometheus.mainnet.dfinity.network").unwrap(),
         _ => Client::try_from("https://prometheus.testnet.dfinity.network").unwrap(),
     };
     let network = registry.network();
