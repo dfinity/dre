@@ -1,7 +1,7 @@
 use crate::cli::version::Commands::{Bless, Retire};
 use clap::{CommandFactory, ErrorKind, Parser};
 use ic_management_types::requests::NodesRemoveRequest;
-use ic_management_types::{MinNakamotoCoefficients, NodeFeature};
+use ic_management_types::{MinNakamotoCoefficients, Network, NodeFeature};
 use std::collections::BTreeMap;
 use std::str::FromStr;
 
@@ -15,11 +15,16 @@ mod runner;
 #[tokio::main]
 async fn main() -> Result<(), anyhow::Error> {
     init_logger();
-    let cli_opts = cli::Opts::parse();
+    let mut cli_opts = cli::Opts::parse();
     let mut cmd = cli::Opts::command();
 
     ic_admin::with_ic_admin(Default::default(), async {
         // Start of actually doing stuff with commands.
+        if cli_opts.network == Network::Staging {
+            cli_opts.private_key_pem = Some(std::env::var("HOME").expect("Please set HOME env var") + "/.config/dfx/identity/bootstrap-super-leader/identity.pem");
+            cli_opts.neuron_id = Some(49);
+        }
+
         match &cli_opts.subcommand {
             cli::Commands::DerToPrincipal { path } => {
                 let principal = ic_base_types::PrincipalId::new_self_authenticating(&std::fs::read(path)?);
