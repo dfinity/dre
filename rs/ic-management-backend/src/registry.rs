@@ -4,8 +4,8 @@ use decentralization::network::{AvailableNodesQuerier, SubnetQuerier};
 use ic_base_types::NodeId;
 use ic_interfaces_registry::RegistryValue;
 use ic_management_types::{
-    Datacenter, DatacenterOwner, Guest, NetworkError, Node, NodeProviderDetails, Operator, Provider, ReplicaRelease,
-    Subnet, SubnetMetadata,
+    Datacenter, DatacenterOwner, Guest, Network, NetworkError, Node, NodeProviderDetails, Operator, Provider,
+    ReplicaRelease, Subnet, SubnetMetadata,
 };
 use ic_registry_keys::{
     make_blessed_replica_version_key, NODE_OPERATOR_RECORD_KEY_PREFIX, NODE_RECORD_KEY_PREFIX, SUBNET_RECORD_KEY_PREFIX,
@@ -44,7 +44,7 @@ pub const NNS_SUBNET_NAME: &str = "NNS";
 
 pub struct RegistryState {
     nns_url: String,
-    network: String,
+    network: Network,
     local_registry: Arc<LocalRegistry>,
 
     version: u64,
@@ -128,7 +128,7 @@ impl RegistryFamilyEntries for LocalRegistry {
 impl RegistryState {
     pub(crate) fn new(
         nns_url: String,
-        network: String,
+        network: Network,
         local_registry: Arc<LocalRegistry>,
         gitlab_client_public: Option<gitlab::AsyncGitlab>,
     ) -> Self {
@@ -175,7 +175,7 @@ impl RegistryState {
         guests: Vec<Guest>,
     ) -> anyhow::Result<()> {
         self.guests = guests;
-        if self.network == "staging" {
+        if !matches!(self.network, Network::Mainnet) {
             for g in &mut self.guests {
                 g.dfinity_owned = true;
             }
@@ -484,7 +484,7 @@ impl RegistryState {
         Ok(())
     }
 
-    pub fn network(&self) -> String {
+    pub fn network(&self) -> Network {
         self.network.clone()
     }
 
