@@ -1,4 +1,4 @@
-use crate::cli::version::Commands::{Bless, Retire};
+use crate::cli::version::Commands::{Bless, Retire, Update};
 use clap::{CommandFactory, ErrorKind, Parser};
 use ic_management_types::requests::NodesRemoveRequest;
 use ic_management_types::{MinNakamotoCoefficients, Network, NodeFeature};
@@ -137,13 +137,39 @@ async fn main() -> Result<(), anyhow::Error> {
                 match &cmd.subcommand {
                     Bless { version, rc_branch_name } => {
                         let ic_admin = ic_admin::Cli::from_opts(&cli_opts, true).await?;
-                        let (summary, cmd) = ic_admin::Cli::prepare_to_propose_to_bless_new_replica_version(version, rc_branch_name).await?;
-                        ic_admin.propose_run(cmd, ic_admin::ProposeOptions { title: Some(format!("Elect new replica binary revision (commit {version})")), summary: Some(summary), motivation: None })
+                        let new_replica_info = ic_admin::Cli::prepare_to_propose_to_bless_new_replica_version(version, rc_branch_name).await?;
+                        ic_admin.propose_run(ic_admin::ProposeCommand::BlessReplicaVersionFlexible { version: version.to_string(), update_url: new_replica_info.update_url, stringified_hash: new_replica_info.stringified_hash }, ic_admin::ProposeOptions { title: Some(format!("Elect new replica binary revision (commit {version})")), summary: Some(new_replica_info.summary), motivation: None })
                     },
                     Retire { edit_summary } => {
                         let runner = runner::Runner::from_opts(&cli_opts).await?;
-                        runner.retire_versions(*edit_summary).await
+                        let (template, versions) = runner.prepare_versions_to_retire(*edit_summary).await?;
+                        let ic_admin = ic_admin::Cli::from_opts(&cli_opts, true).await?;
+                        ic_admin.propose_run(
+                            ic_admin::ProposeCommand::RetireReplicaVersion { versions },
+                            ic_admin::ProposeOptions {
+                                title: Some("Retire IC replica version".to_string()),
+                                summary: Some(template),
+                                motivation: None,
+                            },
+                        )
                     },
+                    Update { version, rc_branch_name } => {
+                        let runner = runner::Runner::from_opts(&cli_opts).await?;
+                        let (_, versions) = runner.prepare_versions_to_retire(false).await?;
+                        let ic_admin = ic_admin::Cli::from_opts(&cli_opts, true).await?;
+                        let new_replica_info = ic_admin::Cli::prepare_to_propose_to_bless_new_replica_version(version, rc_branch_name).await?;
+
+                        ic_admin.propose_run(ic_admin::ProposeCommand::UpdateElectedReplicaVersions{
+                            version_to_bless: version.to_string(),
+                            update_url: new_replica_info.update_url,
+                            stringified_hash: new_replica_info.stringified_hash,
+                            versions_to_retire: versions.clone(),
+                        }, ic_admin::ProposeOptions{
+                            title: Some(format!("Elect new replica binary revision (commit {}), and retire old replica versions {}", version, versions.join(","))), 
+                            summary: Some(new_replica_info.summary),
+                            motivation: None,
+                        })
+                    }
                 }
             },
 
