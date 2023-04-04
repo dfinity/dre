@@ -1,39 +1,28 @@
-use std::{
-    collections::HashMap,
-    convert::{TryFrom, TryInto},
-    str::FromStr,
-};
+use std::{collections::HashMap, convert::TryInto, str::FromStr};
 
 use ic_base_types::PrincipalId;
-use ic_management_types::Status;
+use ic_management_types::{Network, Status};
 use prometheus_http_query::{Client, InstantVector, Selector};
+
+use crate::prometheus;
 
 pub struct HealthClient {
     client: Client,
-    network: String,
+    network: Network,
 }
 
 impl HealthClient {
-    pub fn new(network: String) -> Self {
+    pub fn new(network: Network) -> Self {
         Self {
-            // TODO: Use unmodified network string once the mainnet metrics are labeled with "mainnet" instead of "mercury"
-            network: if network == "mainnet" {
-                "mercury".to_string()
-            } else {
-                network.clone()
-            },
-            client: match network.as_str() {
-                "mainnet" | "mercury" => Client::try_from("https://prometheus.mainnet.dfinity.network").unwrap(),
-                "staging" => Client::try_from("http://prometheus.dfinity.systems").unwrap(),
-                _ => Client::try_from("https://prometheus.testnet.dfinity.network").unwrap(),
-            },
+            client: prometheus::client(&network),
+            network,
         }
     }
 
     pub async fn subnet(&self, subnet: PrincipalId) -> anyhow::Result<HashMap<PrincipalId, Status>> {
         let query: InstantVector = Selector::new()
             .metric("up")
-            .with("ic", &self.network)
+            .with("ic", &self.network.legacy_name())
             .with("job", "replica")
             .with("ic_subnet", subnet.to_string().as_str())
             .try_into()?;
@@ -94,7 +83,7 @@ impl HealthClient {
                     "state", "Healthy", "", ""
                 )
             "#,
-            network = self.network,
+            network = self.network.legacy_name(),
         ));
         let response = self.client.query(query, None, None).await?;
         let results = response.as_instant().expect("Expected instant vector");

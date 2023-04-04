@@ -1,4 +1,5 @@
 mod endpoints;
+mod prometheus;
 mod proposal;
 mod registry;
 mod release;
@@ -20,7 +21,7 @@ use crate::release::RolloutBuilder;
 use ::gitlab::{AsyncGitlab, GitlabBuilder};
 use futures::TryFutureExt;
 use ic_interfaces_registry::{RegistryClient, RegistryValue, ZERO_REGISTRY_VERSION};
-use ic_management_types::{FactsDBGuest, Guest, NodeProvidersResponse};
+use ic_management_types::{FactsDBGuest, Guest, Network, NodeProvidersResponse};
 use ic_registry_client_fake::FakeRegistryClient;
 use ic_registry_common_proto::pb::local_store::v1::{
     ChangelogEntry as PbChangelogEntry, KeyMutation as PbKeyMutation, MutationType,
@@ -28,7 +29,6 @@ use ic_registry_common_proto::pb::local_store::v1::{
 use ic_registry_nns_data_provider::registry::RegistryCanister;
 use ic_types::PrincipalId;
 use log::{debug, error, info, warn};
-use prometheus_http_query::Client;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -181,21 +181,13 @@ async fn rollout(registry: web::Data<Arc<RwLock<registry::RegistryState>>>) -> R
     let registry = registry.read().await;
     let proposal_agent = proposal::ProposalAgent::new(registry.nns_url());
     let network = registry.network();
-    let prometheus_client = match network.as_str() {
-        "mainnet" | "mercury" | "staging" => Client::try_from("https://prometheus.mainnet.dfinity.network").unwrap(),
-        _ => Client::try_from("https://prometheus.testnet.dfinity.network").unwrap(),
-    };
-    let network = registry.network();
+    let prometheus_client = prometheus::client(&network);
     let service = RolloutBuilder {
         proposal_agent,
         prometheus_client,
         subnets: registry.subnets(),
         releases: registry.replica_releases(),
-        network: if network == "mainnet" {
-            "mercury".to_string()
-        } else {
-            network
-        },
+        network,
     };
     response_from_result(service.build().await)
 }
@@ -430,9 +422,10 @@ async fn poll(gitlab_client: AsyncGitlab, registry_state: Arc<RwLock<registry::R
         if latest_version != registry_state.read().await.version() {
             let node_providers_result = query_ic_dashboard_list::<NodeProvidersResponse>("v3/node-providers").await;
             let network = network();
-            let guests_result = query_facts_db_guests(gitlab_client.clone(), network.clone()).await;
-            let guests_result = if network == "mainnet" {
-                let guests_result_old = query_facts_db_guests(gitlab_client.clone(), "mercury".to_string()).await;
+            let guests_result = query_facts_db_guests(gitlab_client.clone(), network.to_string()).await;
+            let guests_result = if matches!(network, Network::Mainnet) {
+                let guests_result_old =
+                    query_facts_db_guests(gitlab_client.clone(), network.legacy_name().to_string()).await;
                 guests_result.and_then(|guests_decentralized| {
                     guests_result_old.map(|guests_old| {
                         guests_decentralized
@@ -532,8 +525,9 @@ async fn gitlab_client(env: &str) -> AsyncGitlab {
     .expect("unable to initialize gitlab token")
 }
 
-fn network() -> String {
-    std::env::var("NETWORK").expect("Missing NETWORK environment variable")
+fn network() -> Network {
+    Network::from_str(&std::env::var("NETWORK").expect("Missing NETWORK environment variable"))
+        .expect("Invalid network")
 }
 
 fn local_registry_path() -> PathBuf {
@@ -545,6 +539,6 @@ fn local_registry_path() -> PathBuf {
         },
     }
     .join("ic-registry-cache")
-    .join(network())
+    .join(network().to_string())
     .join("local_registry")
 }

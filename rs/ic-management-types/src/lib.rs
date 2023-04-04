@@ -455,7 +455,7 @@ impl ReplicaRelease {
     }
 }
 
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq, strum_macros::Display)]
 pub enum Network {
     Staging,
     Mainnet,
@@ -481,6 +481,14 @@ impl Network {
             // Workaround for staging boundary node not working properly (503 Service unavailable)
             Network::Staging => Url::from_str("https://[2600:3004:1200:1200:5000:11ff:fe37:c55d]:8080").unwrap(),
             Self::Url(url) => url.clone(),
+        }
+    }
+
+    pub fn legacy_name(&self) -> String {
+        match self {
+            Network::Mainnet => "mercury".to_string(),
+            Network::Staging => "staging".to_string(),
+            Self::Url(url) => format!("testnet-{url}"),
         }
     }
 }
