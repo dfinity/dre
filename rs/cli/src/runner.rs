@@ -112,7 +112,7 @@ impl Runner {
         })
     }
 
-    pub(crate) async fn retire_versions(&self, edit_summary: bool) -> anyhow::Result<()> {
+    pub(crate) async fn prepare_versions_to_retire(&self, edit_summary: bool) -> anyhow::Result<(String, Vec<String>)> {
         let retireable_versions = self.dashboard_backend_client.get_retireable_versions().await?;
 
         info!("Waiting for you to pick the versions to retire in your editor");
@@ -145,14 +145,7 @@ impl Runner {
             template = edit::edit(template)?.trim().replace("\r(\n)?", "\n");
         }
 
-        self.ic_admin.propose_run(
-            ic_admin::ProposeCommand::RetireReplicaVersion { versions },
-            ic_admin::ProposeOptions {
-                title: Some("Retire IC replica version".to_string()),
-                summary: Some(template),
-                motivation: None,
-            },
-        )
+        Ok((template, versions))
     }
 
     pub async fn remove_nodes(&self, request: NodesRemoveRequest) -> anyhow::Result<()> {
