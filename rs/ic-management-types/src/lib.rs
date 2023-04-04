@@ -484,3 +484,10 @@ impl Network {
         }
     }
 }
+
+#[derive(Clone)]
+pub struct UpdateReplicaVersions {
+    pub summary: String,
+    pub update_url: String,
+    pub stringified_hash: String,
+}

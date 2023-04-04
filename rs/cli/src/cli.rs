@@ -57,7 +57,7 @@ pub(crate) enum Commands {
     /// Bless or replace a replica version
     Version(version::Cmd),
 
-    // Manage nodes
+    /// Manage nodes
     Nodes(nodes::Cmd),
 }
 
@@ -171,6 +171,17 @@ pub(crate) mod version {
             /// prevent unintended version in the future
             #[clap(long)]
             edit_summary: bool,
+        },
+
+        /// Bless replica version with release notes using the ic-admin CLI and
+        /// automatically retire obsolete replica versions
+        Update {
+            /// Specify the commit hash of the version that is being deployed.
+            version: String,
+
+            /// Sepcify the name of the rc branch that contains the release
+            /// commits.
+            rc_branch_name: String,
         },
     }
 }

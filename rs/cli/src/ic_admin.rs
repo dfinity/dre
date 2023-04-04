@@ -10,6 +10,7 @@ use flate2::read::GzDecoder;
 use futures::Future;
 use ic_base_types::PrincipalId;
 use ic_canister_client::{Agent, Sender};
+use ic_management_types::UpdateReplicaVersions;
 use ic_nns_constants::GOVERNANCE_CANISTER_ID;
 use ic_nns_governance::pb::v1::{ListNeurons, ListNeuronsResponse};
 use ic_sys::utility_command::UtilityCommand;
@@ -336,7 +337,7 @@ impl Cli {
     pub(crate) async fn prepare_to_propose_to_bless_new_replica_version(
         version: &String,
         rc_branch_name: &String,
-    ) -> anyhow::Result<(String, ProposeCommand)> {
+    ) -> anyhow::Result<UpdateReplicaVersions> {
         let image_path = format!("ic/{}/guest-os/update-img", version);
         let download_dir = format!("{}/tmp/{}", std::env::var("HOME").unwrap(), image_path);
         let download_dir = Path::new(&download_dir);
@@ -436,14 +437,11 @@ must be identical, and must match the SHA256 from the payload of the NNS proposa
                 "The edited proposal text has not been edited to add release notes."
             ))
         } else {
-            Ok((
-                edited,
-                ProposeCommand::BlessReplicaVersionFlexible {
-                    version: version.to_string(),
-                    update_url,
-                    stringified_hash,
-                },
-            ))
+            Ok(UpdateReplicaVersions {
+                stringified_hash,
+                summary: edited,
+                update_url,
+            })
         }
     }
 }
@@ -474,6 +472,12 @@ pub(crate) enum ProposeCommand {
     },
     RemoveNodes {
         nodes: Vec<PrincipalId>,
+    },
+    UpdateElectedReplicaVersions {
+        version_to_bless: String,
+        update_url: String,
+        stringified_hash: String,
+        versions_to_retire: Vec<String>,
     },
 }
 
@@ -534,6 +538,31 @@ impl ProposeCommand {
                 stringified_hash.to_string(),
             ],
             Self::RemoveNodes { nodes } => nodes.iter().map(|n| n.to_string()).collect(),
+            Self::UpdateElectedReplicaVersions {
+                version_to_bless,
+                update_url,
+                stringified_hash,
+                versions_to_retire,
+            } => vec![
+                vec![
+                    "--replica-version-to-elect".to_string(),
+                    version_to_bless.to_string(),
+                    "--release-package-sha256-hex".to_string(),
+                    stringified_hash.to_string(),
+                    "--release-package-urls".to_string(),
+                    update_url.to_string(),
+                ],
+                if !versions_to_retire.is_empty() {
+                    vec![
+                        vec!["--replica-versions-to-unelect".to_string()],
+                        versions_to_retire.clone(),
+                    ]
+                    .concat()
+                } else {
+                    vec![]
+                },
+            ]
+            .concat(),
         }
     }
 }
