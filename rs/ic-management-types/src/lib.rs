@@ -456,6 +456,7 @@ impl ReplicaRelease {
 }
 
 #[derive(Clone, PartialEq, Eq, strum_macros::Display)]
+#[strum(serialize_all = "lowercase")]
 pub enum Network {
     Staging,
     Mainnet,
