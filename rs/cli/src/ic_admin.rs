@@ -400,7 +400,7 @@ git fetch origin
 git checkout {version}
 if ./gitlab-ci/container/build-ic.sh -i ; then
     curl -LO https://download.dfinity.systems/ic/{version}/guest-os/update-img/update-img.tar.gz
-    shasum -a 256 artifacts/icos/update-img.tar.gz update-img.tar.gz
+    shasum -a 256 artifacts/icos/guestos/update-img.tar.gz update-img.tar.gz
 else
     echo "IC-OS build failed. Verification unsuccessful." >&2
 fi
