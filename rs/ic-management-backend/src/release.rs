@@ -1,7 +1,7 @@
 use anyhow::Result;
 use chrono::serde::ts_seconds;
 use chrono::{Date, Datelike, NaiveTime, TimeZone, Utc, Weekday};
-use ic_management_types::{ReplicaRelease, Subnet};
+use ic_management_types::{Network, ReplicaRelease, Subnet};
 use ic_types::PrincipalId;
 use itertools::Itertools;
 use log::info;
@@ -138,7 +138,7 @@ pub struct RolloutBuilder {
     pub prometheus_client: prometheus_http_query::Client,
     pub subnets: HashMap<PrincipalId, Subnet>,
     pub releases: Vec<ReplicaRelease>,
-    pub network: String,
+    pub network: Network,
 }
 
 impl RolloutBuilder {
@@ -321,7 +321,7 @@ impl RolloutBuilder {
                 "{state_field}", "{baking_state}", "", ""
             )
         "#,
-            network = self.network,
+            network = self.network.legacy_name(),
             version = release.commit_hash,
             preparing_state = SubnetUpdateState::Preparing,
             updating_state = SubnetUpdateState::Updating,
