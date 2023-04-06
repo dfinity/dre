@@ -35,7 +35,7 @@ use crate::defaults;
 pub struct Cli {
     ic_admin: Option<String>,
     nns_url: url::Url,
-    pub yes: bool,
+    yes: bool,
     neuron: Option<Neuron>,
 }
 
@@ -93,13 +93,6 @@ impl Auth {
 }
 
 impl Cli {
-    pub fn dry_run(&self) -> Self {
-        Self {
-            yes: false,
-            ..self.clone()
-        }
-    }
-
     fn print_ic_admin_command_line(&self, cmd: &Command) {
         info!(
             "running ic-admin: \n$ {}{}",
@@ -136,27 +129,10 @@ impl Cli {
 
     pub(crate) fn propose_run(&self, cmd: ProposeCommand, opts: ProposeOptions) -> anyhow::Result<()> {
         let exec = |cli: &Cli, cmd: ProposeCommand, opts: ProposeOptions, dry_run: bool| {
-            // Users of the release CLI have the option of running some commands
-            // which are basically wrapped passthroughs to ic-admin, which
-            // supports --dry-run.  An example would be the propose subcommand.
-            //
-            // Under some circumstances, some of these subcommands will run this
-            // function to read/obtain some key information prior to running
-            // ic-admin "forrealz", for which they pass `dry_run` set to true.
-            // When that happens, this routine adds --dry-run.  If the user
-            // of release-cli is using one of these passthrough subcommands
-            // and the user specifies --dry-run in the command line, the net result
-            // used to be that this routine ends up adding a second --dry-run to the
-            // ic-admin command line.  That, of course, bombs out with a command
-            // line parsing error.
-            //
-            // The following variable and its use prevent this double-addition
-            // in that corner case.
-            let dry_run_in_args = &cmd.args().contains(&String::from("--dry-run"));
             cli.run(
                 &cmd.get_command_name(),
                 [
-                    if dry_run && !dry_run_in_args {
+                    if dry_run {
                         vec!["--dry-run".to_string()]
                     } else {
                         Default::default()
@@ -192,17 +168,40 @@ impl Cli {
             return exec(self, cmd, opts, false);
         }
 
-        if !self.yes {
-            exec(&self.dry_run(), cmd.clone(), opts.clone(), true)?;
-            if !Confirm::new()
-                .with_prompt("Do you want to continue?")
-                .default(false)
-                .interact()?
+        // Users of the release CLI have the option of running some commands
+        // which are basically wrapped passthroughs to ic-admin, which
+        // supports --dry-run.  An example would be the propose subcommand.
+        //
+        // Under some circumstances, some of these subcommands will run this
+        // function to read/obtain some key information prior to running
+        // ic-admin "forrealz", for which they pass `dry_run` set to true.
+        // When that happens, this routine adds --dry-run.  If the user
+        // of release-cli is using one of these passthrough subcommands
+        // and the user specifies --dry-run in the command line, the net result
+        // used to be that this routine ends up adding a second --dry-run to the
+        // ic-admin command line.  That, of course, bombs out with a command
+        // line parsing error.
+        //
+        // The following variable and its use prevent this double-addition
+        // in that corner case.
+        let dry_run_in_args = cmd.args().contains(&String::from("--dry-run"));
+
+        if !self.yes || self.neuron.is_none() {
+            exec(self, cmd.clone(), opts.clone(), !dry_run_in_args)?;
+        }
+        if self.neuron.is_some() && !dry_run_in_args {
+            if !self.yes
+                && !Confirm::new()
+                    .with_prompt("Do you want to continue?")
+                    .default(false)
+                    .interact()?
             {
                 return Err(anyhow::anyhow!("Action aborted"));
             }
+            exec(self, cmd, opts, false)
+        } else {
+            Ok(())
         }
-        exec(self, cmd, opts, false)
     }
 
     fn _run_ic_admin_with_args(&self, ic_admin_args: &[String], with_auth: bool) -> anyhow::Result<()> {
@@ -656,7 +655,7 @@ async fn detect_neuron(url: url::Url) -> anyhow::Result<Option<Neuron>> {
 }
 
 impl Cli {
-    pub async fn from_opts(opts: &Opts, require_neuron: bool) -> anyhow::Result<Self> {
+    pub async fn from_opts(opts: &Opts, with_neuron: bool) -> anyhow::Result<Self> {
         let nns_url = opts.network.get_url();
         let neuron = if let Some(id) = opts.neuron_id {
             Some(Neuron {
@@ -672,7 +671,7 @@ impl Cli {
                         .ok_or_else(|| anyhow::anyhow!("No valid authentication method found for neuron: {id}"))?
                 },
             })
-        } else if require_neuron {
+        } else if with_neuron {
             detect_neuron(nns_url.clone()).await.unwrap_or_else(|e| {
                 warn!("Failed to detect neuron: {}", e);
                 warn!("No authentication set");
