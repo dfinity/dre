@@ -160,6 +160,10 @@ pub(crate) mod version {
             /// Sepcify the name of the rc branch that contains the release
             /// commits.
             rc_branch_name: String,
+
+            // Simulate submission of the proposal, but do not actually submit it.
+            #[clap(long)]
+            simulate: bool,
         },
 
         /// Retire replica versions
@@ -171,6 +175,10 @@ pub(crate) mod version {
             /// prevent unintended version in the future
             #[clap(long)]
             edit_summary: bool,
+
+            // Simulate submission of the proposal, but do not actually submit it.
+            #[clap(long)]
+            simulate: bool,
         },
 
         /// Bless replica version with release notes using the ic-admin CLI and
@@ -182,6 +190,10 @@ pub(crate) mod version {
             /// Sepcify the name of the rc branch that contains the release
             /// commits.
             rc_branch_name: String,
+
+            // Simulate submission of the proposal, but do not actually submit it.
+            #[clap(long)]
+            simulate: bool,
         },
     }
 }
