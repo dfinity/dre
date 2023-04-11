@@ -16,7 +16,7 @@ use ic_nns_governance::pb::v1::{ListNeurons, ListNeuronsResponse};
 use ic_sys::utility_command::UtilityCommand;
 use itertools::Itertools;
 use keyring::{Entry, Error};
-use log::{error, info, warn};
+use log::{error, info};
 use regex::Regex;
 use reqwest::StatusCode;
 use sha2::{Digest, Sha256};
@@ -128,11 +128,15 @@ impl Cli {
     }
 
     pub(crate) fn propose_run(&self, cmd: ProposeCommand, opts: ProposeOptions) -> anyhow::Result<()> {
-        let exec = |cli: &Cli, cmd: ProposeCommand, opts: ProposeOptions, dry_run: bool| {
+        let exec = |cli: &Cli, cmd: ProposeCommand, opts: ProposeOptions| {
             cli.run(
                 &cmd.get_command_name(),
                 [
-                    if dry_run {
+                    if opts.simulate && !cmd.args().contains(&String::from("--dry-run")) {
+                        // Passthrough proposals may already contain `--dry-run`, which
+                        // is equivalent to the ProposeOption `simulate`.  ic-admin
+                        // rejects double --dry-run flags, so we only add it when it
+                        // is already not added.
                         vec!["--dry-run".to_string()]
                     } else {
                         Default::default()
@@ -163,45 +167,73 @@ impl Cli {
             )
         };
 
-        let help_in_args = cmd.args().contains(&String::from("--help"));
-        if help_in_args {
-            return exec(self, cmd, opts, false);
+        // Corner case -- a --help snuck into the ic-admin args.
+        // Only possible with passthrough proposals.
+        // Pass it through, and end the story here.
+        if cmd.args().contains(&String::from("--help")) {
+            return exec(self, cmd, opts);
         }
 
-        // Users of the release CLI have the option of running some commands
-        // which are basically wrapped passthroughs to ic-admin, which
-        // supports --dry-run.  An example would be the propose subcommand.
-        //
-        // Under some circumstances, some of these subcommands will run this
-        // function to read/obtain some key information prior to running
-        // ic-admin "forrealz", for which they pass `dry_run` set to true.
-        // When that happens, this routine adds --dry-run.  If the user
-        // of release-cli is using one of these passthrough subcommands
-        // and the user specifies --dry-run in the command line, the net result
-        // used to be that this routine ends up adding a second --dry-run to the
-        // ic-admin command line.  That, of course, bombs out with a command
-        // line parsing error.
-        //
-        // The following variable and its use prevent this double-addition
-        // in that corner case.
-        let dry_run_in_args = cmd.args().contains(&String::from("--dry-run"));
+        if self.yes || opts.simulate {
+            // self.yes case:
+            // Bypass dry-run execution since the user has demanded execution
+            // without confirmation.
+            // The command will be run at the end of this function, possibly
+            // with --dry-run if the user has requested so.
+            //
+            // opts.simulate case:
+            // Bypass dry-run execution since the user has already specified
+            // --dry-run in the ic-admin options slot of the command line.
+            // The command will be --dry-run at the end of this function
+            // anyway, and it is pointless to run it twice (once before
+            // confirmation and once after confirmation).
+        } else {
+            // User has not specified direct execution without confirmation,
+            // and has also not requested a dry-run.  The default behavior
+            // is to first dry-run and then to confirm.
 
-        if !self.yes || self.neuron.is_none() {
-            exec(self, cmd.clone(), opts.clone(), !dry_run_in_args)?;
-        }
-        if self.neuron.is_some() && !dry_run_in_args {
-            if !self.yes
-                && !Confirm::new()
-                    .with_prompt("Do you want to continue?")
-                    .default(false)
-                    .interact()?
+            // Note how we make the dry_run bool passed to exec() false in case
+            // the ic-admin args already contains --dry-run, to avoid including
+            // the flag again since ic-admin takes it very poorly when the same
+            // flag is specified twice.
+            exec(
+                self,
+                cmd.clone(),
+                ProposeOptions {
+                    simulate: true,
+                    ..opts.clone()
+                },
+            )?;
+
+            // Confirmation time!
+            if !Confirm::new()
+                .with_prompt("Do you want to continue?")
+                .default(false)
+                .interact()?
             {
+                // Oh noes.  User chickened out.  Abort unconfirmed submission.
                 return Err(anyhow::anyhow!("Action aborted"));
             }
-            exec(self, cmd, opts, false)
-        } else {
-            Ok(())
         }
+
+        // Last corner case.  User has attempted to make a for-realz submission
+        // but the submission might fail in case there is no neuron detected.
+        // Bail out early with an error instead of attempting to run ic-admin,
+        // providing the user with direct actionable information on how to
+        // correct the issue and retry the proposal.  We do this because ic-admin
+        // is very cryptic regarding informing the user of what failed in this
+        // failure case.
+        if self.neuron.is_none() && !opts.simulate {
+            return Err(anyhow::anyhow!("Submitting this proposal in non-simulation mode requires a neuron, which was not detected -- and will cause ic-admin to fail submitting the proposal.  Please look through your scroll buffer for specific error messages about your HSM and address the issue preventing your neuron from being detected."));
+        }
+
+        // Final execution.  The user has committed to submitting the proposal.
+        // This may also be performed in simulation mode if the user specified
+        // --dry-run in the ic-admin slot for flags in the release_cli command
+        // line (for passthrough proposals) or the --simulate flag (for version
+        // proposals).
+        // https://www.youtube.com/watch?v=9jK-NcRmVcw#t=13
+        exec(self, cmd, opts)
     }
 
     fn _run_ic_admin_with_args(&self, ic_admin_args: &[String], with_auth: bool) -> anyhow::Result<()> {
@@ -324,13 +356,15 @@ impl Cli {
             args_with_fixed_prefix
         };
 
-        self.propose_run(
-            ProposeCommand::Raw {
-                command: args[0].clone(),
-                args: args.iter().skip(1).cloned().collect::<Vec<_>>(),
-            },
-            ProposeOptions::default(),
-        )
+        let cmd = ProposeCommand::Raw {
+            command: args[0].clone(),
+            args: args.iter().skip(1).cloned().collect::<Vec<_>>(),
+        };
+        let opts = ProposeOptions {
+            simulate: cmd.args().contains(&String::from("--dry-run")),
+            ..Default::default()
+        };
+        self.propose_run(cmd, opts)
     }
 
     pub(crate) async fn prepare_to_propose_to_bless_new_replica_version(
@@ -571,6 +605,7 @@ pub struct ProposeOptions {
     pub title: Option<String>,
     pub summary: Option<String>,
     pub motivation: Option<String>,
+    pub simulate: bool,
 }
 
 fn detect_hsm_auth() -> Result<Option<Auth>> {
@@ -655,7 +690,7 @@ async fn detect_neuron(url: url::Url) -> anyhow::Result<Option<Neuron>> {
 }
 
 impl Cli {
-    pub async fn from_opts(opts: &Opts, with_neuron: bool) -> anyhow::Result<Self> {
+    pub async fn from_opts(opts: &Opts, require_authentication: bool) -> anyhow::Result<Self> {
         let nns_url = opts.network.get_url();
         let neuron = if let Some(id) = opts.neuron_id {
             Some(Neuron {
@@ -671,12 +706,16 @@ impl Cli {
                         .ok_or_else(|| anyhow::anyhow!("No valid authentication method found for neuron: {id}"))?
                 },
             })
-        } else if with_neuron {
-            detect_neuron(nns_url.clone()).await.unwrap_or_else(|e| {
-                warn!("Failed to detect neuron: {}", e);
-                warn!("No authentication set");
-                None
-            })
+        } else if require_authentication {
+            // Early warn if there will be a problem because a neuron was not detected.
+            match detect_neuron(nns_url.clone()).await {
+                Ok(Some(n)) => Some(n),
+                Ok(None) => {
+                    error!("No neuron detected.  Your HSM device is not detectable (or override variables HSM_PIN, HSM_SLOT, HSM_KEY_ID are incorrectly set); your variables NEURON_ID, PRIVATE_KEY_PEM might not be defined either.");
+                    None
+                },
+                Err(e) => return Err(anyhow::anyhow!("Failed to detect neuron: {}.  Your HSM device is not detectable (or override variables HSM_PIN, HSM_SLOT, HSM_KEY_ID are incorrectly set); your variables NEURON_ID, PRIVATE_KEY_PEM might not be defined either.", e)),
+            }
         } else {
             None
         };
