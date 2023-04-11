@@ -28,6 +28,7 @@ impl Runner {
                     title: format!("Update subnet {subnet} to replica version {version}").into(),
                     summary: format!("Update subnet {subnet} to replica version {version}").into(),
                     motivation: None,
+                    simulate: false,
                 },
             )
             .map_err(|e| anyhow::anyhow!(e))?;
@@ -56,6 +57,7 @@ impl Runner {
                 title: format!("Extend subnet {subnet}").into(),
                 summary: format!("Extend subnet {subnet}").into(),
                 motivation: motivation.clone().into(),
+                simulate: false,
             },
         )
         .await
@@ -189,6 +191,7 @@ impl Runner {
                 title: "Remove nodes from the network".to_string().into(),
                 summary: "Remove nodes from the network".to_string().into(),
                 motivation: node_remove_response.motivation.into(),
+                simulate: false,
             },
         )
     }
