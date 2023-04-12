@@ -158,7 +158,7 @@ export const SubnetChangePage = ({ network }: { network: string }) => {
           </Grid>
           {change?.comment && <Grid item>
             <Alert variant="filled" severity="warning">
-              {change?.comment}
+              { change?.comment.split("\n").filter(l => l).map((line, index) => { if (index == 0) {return line} else { return <li>{line}</li> } }) }
             </Alert>
           </Grid>
           }
