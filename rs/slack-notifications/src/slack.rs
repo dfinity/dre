@@ -1,10 +1,11 @@
 use candid::Deserialize;
 use ic_nns_common::pb::v1::NeuronId;
 use ic_nns_common::pb::v1::ProposalId;
-use ic_nns_governance::pb::v1::ProposalInfo;
+use ic_nns_governance::pb::v1::{proposal, ProposalInfo, Topic};
 use itertools::Itertools;
 use log::info;
 use regex::Regex;
+use registry_canister::mutations::do_change_subnet_membership::ChangeSubnetMembershipPayload;
 use reqwest::IntoUrl;
 use serde::Serialize;
 use serde_json::{json, Value};
@@ -67,11 +68,28 @@ fn proposal_motivation(proposal_info: &ProposalInfo) -> String {
         .map(|p| p.summary.as_ref())
         .unwrap_or("no proposal summary");
 
-    let result = RE
+    let mut result = RE
         .captures(summary)
         .and_then(|c| c.name(&MOTIVATION_GROUP_NAME).map(|m| m.as_str()))
         .unwrap_or(summary)
         .to_string();
+
+    // For subnet membership changes (node replacements), add a link to the internal dashboard where the decentralization data can be reviewed before voting.
+    if proposal_info.topic == Topic::SubnetManagement as i32 {
+        if let Some(proposal) = proposal_info.proposal.as_ref() {
+            if let Some(proposal::Action::ExecuteNnsFunction(action)) = &proposal.action {
+                if let Ok(change_membership_proposal) =
+                    candid::decode_one::<ChangeSubnetMembershipPayload>(&action.payload)
+                {
+                    let subnet_id = change_membership_proposal.subnet_id;
+                    result.push_str(&format!(
+                            "\nDecentralization changes from this proposal can be reviewed on the <https://dashboard.internal.dfinity.network/network/mainnet/subnet/{}/change|internal release dashboard>",
+                            subnet_id
+                        ));
+                }
+            }
+        }
+    }
 
     let result_len = result.chars().count();
     if result_len > MAX_SUMMARY_LENGTH {
