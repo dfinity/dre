@@ -13,6 +13,9 @@
     DOCKER_BUILDKIT: "1"
 
 dashboard-release-build:
+  tags:
+    - ubuntu
+    - dfinity-shared
   extends:
     - .docker-base
   rules:
@@ -39,13 +42,7 @@ dashboard-release-build:
       docker-compose pull || true
       TAG=latest docker-compose -f docker-compose.yml -f docker-compose.dev.yml build --parallel
 
-
-
-docker-image-update:
-  stage: .pre
-  extends:
-    - .rules-default
-  interruptible: true
+.rules-base-image:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       changes:
@@ -54,84 +51,115 @@ docker-image-update:
         - Pipfile.lock
         - pyproject.toml
         - poetry.lock
-    - if: '$CI_PIPELINE_SOURCE == "web"'
-      when: manual
-      allow_failure: true # the pipeline continues running even if the manual job is not run
-    - if: '$CI_PIPELINE_SOURCE == "trigger"'
-      when: manual
-      allow_failure: true # the pipeline continues running even if the manual job is not run
-  script:
-    - python3 docker/docker-update-image.py
 
+docker-image-update:
+  stage: .pre
+  extends:
+    - .kaniko-build
+  rules:
+    - !reference [.rules-base-image, rules]
+    - !reference [.rules-manual, rules]
+  interruptible: true
+  # Some of those rules are made to make the build reproducible
+  # --reproducible
+  # --snapshotMode
+  script:
+    - /kaniko/executor
+      --context "${CI_PROJECT_DIR}"
+      --dockerfile "docker/Dockerfile"
+      --cache
+      --cache-repo "${CI_REGISTRY_IMAGE}/ci-build/no-docker-cache"
+      --destination "${CI_REGISTRY_IMAGE}/ci-build/no-docker:latest"
+      --snapshotMode=redo
+      --digest-file digest
+      --reproducible
+    - mkdir -p /workspace # Fails without creating this folder due to https://gitlab.com/gitlab-org/gitlab-runner/-/issues/29587/
+  artifacts:
+    paths:
+      - digest
+
+update-base-image:
+  stage: .post
+  extends:
+    - .k8s-workers
+  rules:
+    - if: '$CI_COMMIT_AUTHOR == "Release Team <eng-release-bots-aaaafbmaump5gpag4pbjfuarry@dfinity.slack.com>"'
+      when: never
+    - !reference [.rules-base-image, rules]
+    - !reference [.rules-manual, rules]
+  interruptible: true
+  variables:
+    UPDATE_SUBMODULES: "false"
+  image:
+    name: registry.gitlab.com/dfinity-lab/core/release/ci-build/no-docker@sha256:5a755ae16ae3d3358319460e37c50f5ccf9af73735b4ed1e77706ed2c0637cc8
+  needs:
+    - job: docker-image-update
+      artifacts: true
+  script:
+    - python3 gitlab-ci/update-base-image-sha.py $(cat digest)
 
 metrics-proxy-release:
   stage: release
+  extends:
+    - .kaniko-build
   needs: []
   dependencies: []
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       changes:  # auto run if there are changes in this dir
         - metrics-proxy
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      when: manual  # manual runs otherwise on MRs
-      allow_failure: true # the pipeline continues running even if the manual job is not run
-    - if: '$CI_PIPELINE_SOURCE == "web"'
-      when: manual
-      allow_failure: true # the pipeline continues running even if the manual job is not run
-    - if: '$CI_PIPELINE_SOURCE == "trigger"'
-      when: manual
-      allow_failure: true # the pipeline continues running even if the manual job is not run
-    - if: '$CI_PIPELINE_SOURCE == "push"'
-      when: manual
-      allow_failure: true # the pipeline continues running even if the manual job is not run
+    - !reference [.rules-manual, rules]
   interruptible: true
-  before_script:
-    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
   variables:
-    IMAGE_REGISTRY_BASE: $CI_REGISTRY_IMAGE
-    RELEASE_BRANCH: release
-    DOCKER_BUILDKIT: "1"
-    IMAGE_TAG: "vector-up-proxy:latest"
+    IMAGE_TAG: "vector-up-proxy"
+    IMAGE_VERSION: "latest"
   script:
-    - cd metrics-proxy
-    - docker build -t "$IMAGE_REGISTRY_BASE/$IMAGE_TAG" .
-    - if [ "${CI_COMMIT_BRANCH}" != "${CI_DEFAULT_BRANCH}" ]; then exit 0; fi
-    - docker push $IMAGE_REGISTRY_BASE/$IMAGE_TAG
+    - |
+      if [ "${CI_COMMIT_BRANCH}" != "${CI_DEFAULT_BRANCH}" ]; then
+        export KANIKO_NO_PUSH_FLAG="--no-push"
+      else
+        export KANIKO_NO_PUSH_FLAG=""
+      fi
+    - /kaniko/executor
+      --context "${CI_PROJECT_DIR}/metrics-proxy"
+      --dockerfile "metrics-proxy/Dockerfile"
+      --cache
+      --cache-repo "${CI_REGISTRY_IMAGE}/${IMAGE_TAG}/cache"
+      --destination "${CI_REGISTRY_IMAGE}/${IMAGE_TAG}:${IMAGE_VERSION}"
+      --reproducible
+      $KANIKO_NO_PUSH_FLAG
+    - mkdir -p /workspace # Fails without creating this folder due to https://gitlab.com/gitlab-org/gitlab-runner/-/issues/29587/
 
 linear-jira-release:
   stage: release
+  extends:
+    - .kaniko-build
   needs: []
   dependencies: []
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       changes:  # auto run if there are changes in this dir
         - linear-jira
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      when: manual  # manual runs otherwise on MRs
-      allow_failure: true # the pipeline continues running even if the manual job is not run
-    - if: '$CI_PIPELINE_SOURCE == "web"'
-      when: manual
-      allow_failure: true # the pipeline continues running even if the manual job is not run
-    - if: '$CI_PIPELINE_SOURCE == "trigger"'
-      when: manual
-      allow_failure: true # the pipeline continues running even if the manual job is not run
-    - if: '$CI_PIPELINE_SOURCE == "push"'
-      when: manual
-      allow_failure: true # the pipeline continues running even if the manual job is not run
+    - !reference [.rules-manual, rules]
   interruptible: true
-  before_script:
-    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
   variables:
-    IMAGE_REGISTRY_BASE: $CI_REGISTRY_IMAGE
-    DOCKER_BUILDKIT: "1"
-    IMAGE_NAME: "$IMAGE_REGISTRY_BASE/linear-jira"
+    IMAGE_NAME: "linear-jira"
   script:
-    - cd linear-jira
-    - docker build -t "$IMAGE_NAME:latest" .
-    - if [ "${CI_COMMIT_BRANCH}" != "${CI_DEFAULT_BRANCH}" ]; then exit 0; fi
-    - docker tag "$IMAGE_NAME:latest" "$IMAGE_NAME:$CI_COMMIT_SHA"
-    - docker push "$IMAGE_NAME:$CI_COMMIT_SHA"
-    - docker push "$IMAGE_NAME:latest"
+    - |
+      if [ "${CI_COMMIT_BRANCH}" != "${CI_DEFAULT_BRANCH}" ]; then
+        export KANIKO_NO_PUSH_FLAG="--no-push"
+      else
+        export KANIKO_NO_PUSH_FLAG=""
+      fi
+    - /kaniko/executor
+      --context "${CI_PROJECT_DIR}/${IMAGE_NAME}"
+      --cache
+      --cache-repo "${CI_REGISTRY_IMAGE}/${IMAGE_NAME}/cache"
+      --destination "${CI_REGISTRY_IMAGE}/${IMAGE_NAME}:latest"
+      --destination "${CI_REGISTRY_IMAGE}/${IMAGE_NAME}:${CI_COMMIT_SHA}"
+      --reproducible
+      $KANIKO_NO_PUSH_FLAG
+    - mkdir -p /workspace # Fails without creating this folder due to https://gitlab.com/gitlab-org/gitlab-runner/-/issues/29587/
 
 dashboard-release-publish:
   extends:

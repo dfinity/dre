@@ -62,14 +62,14 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone &
     apt -yq update && \
     apt -yqq install --no-install-recommends \
         git openssh-client curl xz-utils time apt-transport-https ca-certificates lsb-release gnupg2 && \
-        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add - && \
-        echo "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null && \
+    echo "deb http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_20.04/ /" > /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list && \
+    curl -s -L "https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable/xUbuntu_20.04/Release.key" | apt-key add - && \
     apt -yq update && \
     apt -yqq install --no-install-recommends \
         build-essential pkg-config libssl-dev cmake libbz2-dev gcc-multilib rsync \
         clang lld lldb liblz4-dev librocksdb-dev libsnappy-dev libzstd-dev \
         liblmdb0 libsqlite3-dev sqlite3 vim nano jq zip unzip shellcheck \
-        docker-ce-cli iputils-ping sudo gosu && \
+        iputils-ping sudo gosu podman tini && \
     chmod +s /usr/sbin/gosu && \
     echo Installing Python runtime dependencies for the Python built before >&2 && \
     apt -yqq install --no-install-recommends \
@@ -125,23 +125,15 @@ RUN curl --fail https://sh.rustup.rs -sSf \
 # Set this to a host-mounted volume
 ENV CARGO_HOME=/cargo
 
-# Init for reaping zombies and performing signal forwarding (https://github.com/krallin/tini)
-ENV TINI_VERSION v0.19.0
-ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
-ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini.asc /tini.asc
-RUN gpg --batch --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 595E85A6B1B4779EA4DAAEC70B588DFF0527A9B7 && \
-    gpg --batch --verify /tini.asc /tini && chmod +x /tini
-
 # Used to detect the Dockerfile changes and automatically rebuild the image
 COPY docker /docker
-COPY --from=docker/buildx-bin:latest /buildx /usr/libexec/docker/cli-plugins/docker-buildx
 
 # Download ic-admin
 ARG ic_git_revision=344a20409415f65a494cb4dc2f9241b687c34868
 RUN  curl --fail https://download.dfinity.systems/ic/${ic_git_revision}/release/ic-admin.gz -o - | gunzip -c >| /usr/bin/ic-admin && \
     chmod +x /usr/bin/ic-admin
 
-USER 1000
+USER ubuntu
 
 # Adds the GitHub and GitLab signatures to known_hosts so that `git pull` calls don't require user approval
 RUN mkdir --mode=0700 /home/ubuntu/.ssh && \
