@@ -2,8 +2,7 @@ default:
   image: registry.gitlab.com/dfinity-lab/core/release/ci-build@sha256:a74ec89d678e1f1d5473e3a6862f5ffd56f45c2fdc4d1d7f93a13e7afb53ef31
   tags:
     # Use the DFINITY CI runners (they have following tags)
-    - dfinity
-    - docker
+    - dfinity-shared
     - ubuntu
   # Retry config copied from:
   # https://gitlab.com/gitlab-org/gitlab/blob/master/.gitlab/ci/global.gitlab-ci.yml#L1-9
@@ -117,6 +116,35 @@ variables:
       allow_failure: true # the pipeline continues running even if the manual job is not run
     - if: '$CI_PIPELINE_SOURCE == "trigger"'
 
+.rules-manual:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: manual  # manual runs otherwise on MRs
+      allow_failure: true # the pipeline continues running even if the manual job is not run
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+      when: manual
+      allow_failure: true # the pipeline continues running even if the manual job is not run
+    - if: '$CI_PIPELINE_SOURCE == "trigger"'
+      when: manual
+      allow_failure: true # the pipeline continues running even if the manual job is not run
+    - if: '$CI_PIPELINE_SOURCE == "push"'
+      when: manual
+      allow_failure: true # the pipeline continues running even if the manual job is not run
+
+.k8s-workers:
+  tags:
+    - ubuntu
+    - dfinity-shared
+
+.kaniko-build:
+  tags:
+    - ubuntu
+    - dfinity-shared
+  image:
+    name: gcr.io/kaniko-project/executor:debug # debug is required for gitlab as it needs to run a shell inside.
+    entrypoint: [""]
+  before_script: ""
+
 before_script:
   - |
     # Execute the before_script section
@@ -144,20 +172,20 @@ before_script:
       echo "ubuntu:x:99:" >> /etc/group
       chown ubuntu:ubuntu -R "/home/ubuntu"
     fi
+    sudo chown ubuntu:ubuntu -R "${CI_PROJECT_DIR}"
 
-    # Set the IC repo URL to https instead of ssh, and check out the submodule
-    sudo chown ubuntu:ubuntu -R .
-    ls -la
-    git submodule set-url ic "https://github.com/dfinity/ic.git"
-    if ! git submodule update --init --recursive --remote; then
-      cat .git/config
-      cat .gitmodules
-      cat .git/modules/ic/config
-      rm -rf /cache/git-v3/${CI_PROJECT_PATH}
-      exit 1
+    if [[ "${UPDATE_SUBMODULES:-true}" == "true" ]]; then
+      # Set the IC repo URL to https instead of ssh, and check out the submodule
+      git submodule set-url ic "https://github.com/dfinity/ic.git"
+      if ! git submodule update --init --recursive --remote; then
+        cat .git/config
+        cat .gitmodules
+        cat .git/modules/ic/config
+        rm -rf /cache/git-v3/${CI_PROJECT_PATH}
+        exit 1
+      fi
     fi
 
-    sudo chown ubuntu:ubuntu -R "${CI_PROJECT_DIR}"
     sudo find "${CI_PROJECT_DIR}" -type d -exec chmod 0755 '{}' \;
     # Update the git repo cache at /cache/git-v3/${CI_PROJECT_PATH}/$CI_CONCURRENT_ID
     sudo mkdir -p "/cache/git-v3/${CI_PROJECT_PATH}/$CI_CONCURRENT_ID/"
