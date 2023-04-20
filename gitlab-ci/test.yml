@@ -1,4 +1,4 @@
-pre-commit:
+.pre-commit:
   extends:
     - .rules-default
   interruptible: true
