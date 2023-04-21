@@ -1,6 +1,7 @@
 .pre-commit:
   extends:
     - .rules-default
+    - .k8s-workers
   interruptible: true
   needs: []
   dependencies: []
@@ -14,6 +15,7 @@
 cargo-clippy:
   extends:
     - .rules-default
+    - .k8s-workers
   interruptible: true
   needs: []
   dependencies: []
@@ -25,6 +27,7 @@ cargo-clippy:
 cargo-test:
   extends:
     - .rules-default
+    - .k8s-workers
   interruptible: true
   needs: []
   dependencies: []
@@ -36,6 +39,7 @@ cargo-test:
 valid-inventory:
   extends:
     - .rules-default
+    - .k8s-workers
   interruptible: true
   needs: []
   dependencies: []
@@ -79,5 +83,3 @@ valid-inventory:
           echo "************************************************************"
           ./deployments/boundary-nodes/env/$depl/hosts --nodes
       done
-
-

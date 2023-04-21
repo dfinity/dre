@@ -90,8 +90,6 @@ update-base-image:
   interruptible: true
   variables:
     UPDATE_SUBMODULES: "false"
-  image:
-    name: registry.gitlab.com/dfinity-lab/core/release/ci-build/no-docker@sha256:5a755ae16ae3d3358319460e37c50f5ccf9af73735b4ed1e77706ed2c0637cc8
   needs:
     - job: docker-image-update
       artifacts: true
