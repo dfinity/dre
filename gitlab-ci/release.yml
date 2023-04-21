@@ -38,25 +38,6 @@ update-facts-db:
 
 
 
-jira-update:
-  extends:
-    - .k8s-workers
-  interruptible: true
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "schedule" && $SCHEDULE_NAME == "update-jira-tickets"'
-    - if: '$CI_PIPELINE_SOURCE == "web"'
-      when: manual
-      allow_failure: true # the pipeline continues running even if the manual job is not run
-    - if: '$CI_PIPELINE_SOURCE == "trigger"'
-      when: manual
-      allow_failure: true # the pipeline continues running even if the manual job is not run
-  script:
-    - |
-      set -exou pipefail  # Don't tolerate any errors
-
-      cd ./scripts/jira-integration
-      time python3 ./jira_update.py
-
 qualification-tracking-update:
   extends:
     - .k8s-workers
