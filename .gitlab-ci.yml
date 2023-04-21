@@ -135,6 +135,8 @@ variables:
   tags:
     - ubuntu
     - dfinity-shared
+  image:
+    name: registry.gitlab.com/dfinity-lab/core/release/ci-build/no-docker@sha256:e435907305f2b3b8efab9036d40f27d42cd5441c96fd18a5874b902a8f7a1678
 
 .kaniko-build:
   tags:
