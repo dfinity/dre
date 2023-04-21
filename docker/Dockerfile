@@ -129,7 +129,7 @@ ENV CARGO_HOME=/cargo
 COPY docker /docker
 
 # Download ic-admin
-ARG ic_git_revision=344a20409415f65a494cb4dc2f9241b687c34868
+ARG ic_git_revision=28b13ef800046c4c7befc0a936411ba70b8f908e
 RUN  curl --fail https://download.dfinity.systems/ic/${ic_git_revision}/release/ic-admin.gz -o - | gunzip -c >| /usr/bin/ic-admin && \
     chmod +x /usr/bin/ic-admin
 
@@ -142,4 +142,4 @@ RUN mkdir --mode=0700 /home/ubuntu/.ssh && \
 COPY docker/entrypoint.sh /entrypoint.sh
 WORKDIR /
 
-ENTRYPOINT ["/tini", "--", "/entrypoint.sh"]
+ENTRYPOINT ["tini", "--", "/entrypoint.sh"]
