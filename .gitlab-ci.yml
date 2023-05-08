@@ -16,6 +16,7 @@ default:
       - runner_system_failure
 
 stages:
+  - build
   - release
   - test
 
@@ -146,6 +147,20 @@ variables:
     name: gcr.io/kaniko-project/executor:debug # debug is required for gitlab as it needs to run a shell inside.
     entrypoint: [""]
   before_script: ""
+  script:
+    - "[[ -z ${APP} ]] && echo 'APP is not defined' && exit 1"
+    - "[[ -z ${CONTEXT_PATH} ]] && echo 'CONTEXT_PATH is not defined' && exit 1"
+    - "[[ -z ${DOCKERFILE_PATH} ]] && echo 'DOCKERFILE_PATH is not defined' && exit 1"
+    - /kaniko/executor
+      --context "${CI_PROJECT_DIR}/${CONTEXT_PATH}"
+      --dockerfile "${DOCKERFILE_PATH}"
+      --cache
+      --cache-repo "${CI_REGISTRY_IMAGE}/${APP}/cache"
+      --destination "${CI_REGISTRY_IMAGE}/${APP}:latest"
+      --destination "${CI_REGISTRY_IMAGE}/${APP}:${CI_COMMIT_SHA}"
+      --snapshotMode=redo
+      --reproducible
+    - mkdir -p /workspace # Fails without creating this folder due to https://gitlab.com/gitlab-org/gitlab-runner/-/issues/29587/
 
 before_script:
   - |
@@ -221,3 +236,4 @@ include:
   - local: /gitlab-ci/test.yml
   - local: /gitlab-ci/build-publish-images.yml
   - local: /gitlab-ci/release.yml
+  - local: /gitlab-ci/dashboard.yml
