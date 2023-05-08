@@ -89,7 +89,7 @@ RUN echo Verifying all shared libraries are available for Python >&2 && \
 ENV PATH=/opt/pyenv/active/bin:$PATH
 
 # Install the "mold" linker for fast linking of Rust executables
-ARG mold_version=1.1.1
+ARG mold_version=1.11.0
 RUN curl -fsSL https://github.com/rui314/mold/releases/download/v${mold_version}/mold-${mold_version}-x86_64-linux.tar.gz | tar -xz -C /usr/local --strip-components 1
 
 RUN cd `mktemp -d`; curl --fail -LO https://github.com/protocolbuffers/protobuf/releases/download/v${protobuf_version}/protoc-${protobuf_version}-linux-x86_64.zip; unzip * -d /opt/protoc; chmod -R 755 /opt/protoc/bin; chmod -R u+rwX,go+rX,go-w /opt/protoc/include
@@ -114,7 +114,7 @@ ENV RUSTUP_HOME=/opt/rustup \
     PATH=/opt/cargo/bin:$PATH
 
 # Make sure /rust-toolchain.toml has the same version
-ARG rust_version=1.65.0
+ARG rust_version=1.66.1
 RUN curl --fail https://sh.rustup.rs -sSf \
         | sh -s -- -y --default-toolchain ${rust_version}-x86_64-unknown-linux-gnu --no-modify-path && \
     rustup default ${rust_version}-x86_64-unknown-linux-gnu && \
