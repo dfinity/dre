@@ -367,12 +367,13 @@ impl RegistryState {
                     .map(|(_, o)| o.clone())
                     .expect("missing operator referenced by a node");
                 let principal = PrincipalId::from_str(p).expect("invalid node principal id");
+                let ip_addr = node_ip_addr(nr);
                 (
                     principal,
                     Node {
                         principal,
                         dfinity_owned: Some(guest.as_ref().map(|g| g.dfinity_owned).unwrap_or_default()),
-                        ip_addr: node_ip_addr(nr),
+                        ip_addr,
                         hostname: guest
                             .as_ref()
                             .map(|g| g.name.clone())
@@ -398,8 +399,8 @@ impl RegistryState {
                             .map(|s| s.get()),
                         operator,
                         proposal: None,
-                        label: guest.clone().map(|g| g.name),
-                        decentralized: guest.map(|g| g.decentralized).unwrap_or_default(),
+                        label: guest.map(|g| g.name),
+                        decentralized: ip_addr.segments()[4] == 0x6801,
                         duplicates: node_entries
                             .iter()
                             .filter(|(_, (_, nr2))| node_ip_addr(nr2) == node_ip_addr(nr))
