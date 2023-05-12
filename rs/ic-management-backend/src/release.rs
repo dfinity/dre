@@ -1,6 +1,6 @@
 use anyhow::Result;
 use chrono::serde::ts_seconds;
-use chrono::{Date, Datelike, NaiveTime, TimeZone, Utc, Weekday};
+use chrono::{Datelike, NaiveDate, NaiveTime, TimeZone, Utc, Weekday};
 use ic_management_types::{Network, ReplicaRelease, Subnet};
 use ic_types::PrincipalId;
 use itertools::Itertools;
@@ -47,7 +47,7 @@ pub struct RolloutStage {
 
 impl RolloutStage {
     pub fn new_submitted(updates: Vec<SubnetUpdate>, submitted_timestamp_seconds: u64) -> Self {
-        let datetime = Utc.timestamp(submitted_timestamp_seconds as i64, 0);
+        let datetime = Utc.timestamp_opt(submitted_timestamp_seconds as i64, 0).unwrap();
         Self {
             start_date_time: datetime,
             start_time: datetime.time().into(),
@@ -56,11 +56,15 @@ impl RolloutStage {
         }
     }
 
-    pub fn new_scheduled(updates: Vec<SubnetUpdate>, day: Date<Utc>) -> Self {
+    pub fn new_scheduled(updates: Vec<SubnetUpdate>, day: NaiveDate) -> Self {
         Self {
-            start_date_time: day
-                .and_time(NaiveTime::from_hms(0, 0, 0))
-                .expect("failed to compute time"),
+            start_date_time: Utc
+                .timestamp_opt(
+                    day.and_time(NaiveTime::from_hms_opt(0, 0, 0).expect("failed to create naive time"))
+                        .timestamp(),
+                    0,
+                )
+                .unwrap(),
             start_time: None,
             updates,
             active: false,
@@ -85,17 +89,17 @@ pub enum RolloutStatus {
 #[derive(Deserialize)]
 pub struct RolloutConfig {
     #[serde(with = "iso_8601_date_format")]
-    pub exclude_days: Vec<Date<Utc>>,
+    pub exclude_days: Vec<NaiveDate>,
 }
 
 mod iso_8601_date_format {
-    use chrono::{Date, TimeZone, Utc};
+    use chrono::{NaiveDate, TimeZone, Utc};
     use itertools::Itertools;
     use serde::{self, Deserialize, Deserializer};
 
     const FORMAT: &str = "%Y-%m-%d %H:%M:%S";
 
-    pub fn deserialize<'de, D>(deserializer: D) -> Result<Vec<Date<Utc>>, D::Error>
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<Vec<NaiveDate>, D::Error>
     where
         D: Deserializer<'de>,
     {
@@ -104,7 +108,7 @@ mod iso_8601_date_format {
             .map(|s: String| {
                 Utc.datetime_from_str(&format!("{} 00:00:00", s), FORMAT)
                     .map_err(serde::de::Error::custom)
-                    .map(|dt| dt.date())
+                    .map(|dt| dt.date_naive())
             })
             .try_collect()
     }
@@ -112,13 +116,13 @@ mod iso_8601_date_format {
 
 impl RolloutConfig {
     // Returns available rollout days. Always return at least 2 available days
-    fn rollout_days(&self, start: Date<Utc>) -> Vec<Date<Utc>> {
+    fn rollout_days(&self, start: NaiveDate) -> Vec<NaiveDate> {
         let candidates = (0..14)
             .into_iter()
             .map(|i| {
                 let mut d = start;
                 for _ in 0..i {
-                    d = d.succ();
+                    d = d.succ_opt().unwrap();
                 }
                 d
             })
@@ -126,7 +130,7 @@ impl RolloutConfig {
             .filter(|d| !self.exclude_days.contains(d))
             .collect::<Vec<_>>();
         candidates
-            .split_inclusive(|p| p.iso_week().week() > start.iso_week().week() && *p > Utc::now().date())
+            .split_inclusive(|p| p.iso_week().week() > start.iso_week().week() && *p > Utc::now().date_naive())
             .next()
             .unwrap()
             .to_vec()
@@ -186,11 +190,11 @@ impl RolloutBuilder {
         let config: RolloutConfig =
             serde_yaml::from_slice(include_bytes!("../config/releases/default.yaml")).expect("invalid config");
         let submitted_stages = self.stages_from_proposals(&release, subnet_update_proposals).await?;
-        let today = Utc::now().date();
+        let today = Utc::now().date_naive();
         let rollout_days = config.rollout_days(
             submitted_stages
                 .first()
-                .map(|s| s.start_date_time.date())
+                .map(|s| s.start_date_time.date_naive())
                 .unwrap_or(today),
         );
 
@@ -208,7 +212,7 @@ impl RolloutBuilder {
                     date: *d,
                     rollout_stages_subnets: submitted_stages
                         .iter()
-                        .filter(|rs| rs.start_date_time.date() == *d)
+                        .filter(|rs| rs.start_date_time.date_naive() == *d)
                         .map(|rs| rs.updates.iter().map(|u| u.subnet_id).collect())
                         .collect(),
                 })
@@ -463,12 +467,12 @@ pub struct RolloutState {
     pub nns_subnet: PrincipalId,
     pub subnets: Vec<PrincipalId>,
     pub rollout_days: Vec<RolloutDay>,
-    pub date: Date<Utc>,
+    pub date: NaiveDate,
 }
 
 #[derive(Clone, Eq, PartialEq, Debug)]
 pub struct RolloutDay {
-    pub date: Date<Utc>,
+    pub date: NaiveDate,
     pub rollout_stages_subnets: Vec<Vec<PrincipalId>>,
 }
 
@@ -587,7 +591,7 @@ impl RolloutState {
         for (i, sizes) in rollout_stages_sizes.iter().enumerate() {
             let mut rollout_date = remaining_rollout_days[0].date;
             for _ in 0..i {
-                rollout_date = rollout_date.succ();
+                rollout_date = rollout_date.succ_opt().unwrap();
             }
             remaining_rollout_days.push(RolloutDay {
                 date: rollout_date,
@@ -690,16 +694,16 @@ mod test {
         let subnets = [&[canary_subnet], other_subnets, &[nns_subnet]].concat();
 
         // Monday
-        let week_1_monday = Date::<Utc>::from_utc(NaiveDate::from_ymd(2022, 8, 8), Utc);
-        let week_1_tuesday = week_1_monday.succ();
-        let week_1_wednesday = week_1_tuesday.succ();
-        let week_1_thursday = week_1_wednesday.succ();
-        let week_1_friday = week_1_thursday.succ();
-        let week_1_saturday = week_1_friday.succ();
-        let week_1_sunday = week_1_saturday.succ();
-        let week_2_monday = week_1_sunday.succ();
-        let week_2_tuesday = week_2_monday.succ();
-        let week_2_wednesday = week_2_tuesday.succ();
+        let week_1_monday = NaiveDate::from_ymd_opt(2022, 8, 8).unwrap();
+        let week_1_tuesday = week_1_monday.succ_opt().unwrap();
+        let week_1_wednesday = week_1_tuesday.succ_opt().unwrap();
+        let week_1_thursday = week_1_wednesday.succ_opt().unwrap();
+        let week_1_friday = week_1_thursday.succ_opt().unwrap();
+        let week_1_saturday = week_1_friday.succ_opt().unwrap();
+        let week_1_sunday = week_1_saturday.succ_opt().unwrap();
+        let week_2_monday = week_1_sunday.succ_opt().unwrap();
+        let week_2_tuesday = week_2_monday.succ_opt().unwrap();
+        let week_2_wednesday = week_2_tuesday.succ_opt().unwrap();
 
         // Rollout not yet started
         let state = RolloutState {

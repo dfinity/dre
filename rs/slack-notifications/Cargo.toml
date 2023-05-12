@@ -6,13 +6,13 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-ic-nns-governance = { git = "https://github.com/dfinity/ic.git", rev = "12c2666942f952d23a6baddda76d5ecaf279cb0d" }
-ic-nns-common = { git = "https://github.com/dfinity/ic.git", rev = "12c2666942f952d23a6baddda76d5ecaf279cb0d" }
-ic-nns-constants = { git = "https://github.com/dfinity/ic.git", rev = "12c2666942f952d23a6baddda76d5ecaf279cb0d" }
-registry-canister = { git = "https://github.com/dfinity/ic.git", rev = "12c2666942f952d23a6baddda76d5ecaf279cb0d" }
+ic-nns-governance = { git = "https://github.com/dfinity/ic.git", rev = "0a239c213c048563577969276739b090aa31c241" }
+ic-nns-common = { git = "https://github.com/dfinity/ic.git", rev = "0a239c213c048563577969276739b090aa31c241" }
+ic-nns-constants = { git = "https://github.com/dfinity/ic.git", rev = "0a239c213c048563577969276739b090aa31c241" }
+registry-canister = { git = "https://github.com/dfinity/ic.git", rev = "0a239c213c048563577969276739b090aa31c241" }
 tokio = { version = "1.2.0", features = ["full"] }
-ic-agent = "0.22.0"
-ic-types = "0.4.2"
+ic-agent = "0.23.2"
+ic-types = "0.7.0"
 candid = "0.8.4"
 anyhow = "1.0.44"
 reqwest = { version = "0.11.4", features = ["json"] }
@@ -23,15 +23,9 @@ dotenv = "0.15.0"
 prost = "0.11.0"
 strum = "0.24.1"
 strum_macros = "0.24.3"
-retry = "1.3.0"
+retry = "1.3.1"
 itertools = "0.10.1"
 regex = "1.5.4"
 lazy_static = "1.4.0"
 log = "0.4.14"
-env_logger = "0.9.0"
-
-[profile.release]
-# Add debug information to the release build (does NOT reduce the level of optimization!)
-# Makes flamegraphs and backtraces more readable.
-# https://doc.rust-lang.org/cargo/reference/manifest.html#the-profile-sections
-debug = true
+env_logger = "0.10.0"
