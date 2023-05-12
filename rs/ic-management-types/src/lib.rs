@@ -361,7 +361,7 @@ pub enum Health {
     Unknown,
 }
 
-#[derive(EnumString, Serialize, Display, Deserialize)]
+#[derive(EnumString, Serialize, Display, Deserialize, Debug)]
 pub enum Status {
     Healthy,
     Degraded,
