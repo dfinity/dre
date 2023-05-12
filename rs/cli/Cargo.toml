@@ -16,15 +16,15 @@ colored = "2.0.0"
 log = "0.4.14"
 pretty_env_logger = "0.4.0"
 regex = "1.5.4"
-ic-base-types = { git = "https://github.com/dfinity/ic.git", rev = "12c2666942f952d23a6baddda76d5ecaf279cb0d" }
-ic-nns-constants = { git = "https://github.com/dfinity/ic.git", rev = "12c2666942f952d23a6baddda76d5ecaf279cb0d" }
-ic-nns-governance = { git = "https://github.com/dfinity/ic.git", rev = "12c2666942f952d23a6baddda76d5ecaf279cb0d" }
-ic-canister-client = { git = "https://github.com/dfinity/ic.git", rev = "12c2666942f952d23a6baddda76d5ecaf279cb0d" }
-ic-sys = { git = "https://github.com/dfinity/ic.git", rev = "12c2666942f952d23a6baddda76d5ecaf279cb0d" }
-ic-registry-nns-data-provider = { git = "https://github.com/dfinity/ic.git", rev = "12c2666942f952d23a6baddda76d5ecaf279cb0d" }
-ic-registry-keys = { git = "https://github.com/dfinity/ic.git", rev = "12c2666942f952d23a6baddda76d5ecaf279cb0d" }
-ic-registry-transport = { git = "https://github.com/dfinity/ic.git", rev = "12c2666942f952d23a6baddda76d5ecaf279cb0d" }
-ic-protobuf = { git = "https://github.com/dfinity/ic.git", rev = "12c2666942f952d23a6baddda76d5ecaf279cb0d" }
+ic-base-types = { git = "https://github.com/dfinity/ic.git", rev = "0a239c213c048563577969276739b090aa31c241" }
+ic-nns-constants = { git = "https://github.com/dfinity/ic.git", rev = "0a239c213c048563577969276739b090aa31c241" }
+ic-nns-governance = { git = "https://github.com/dfinity/ic.git", rev = "0a239c213c048563577969276739b090aa31c241" }
+ic-canister-client = { git = "https://github.com/dfinity/ic.git", rev = "0a239c213c048563577969276739b090aa31c241" }
+ic-sys = { git = "https://github.com/dfinity/ic.git", rev = "0a239c213c048563577969276739b090aa31c241" }
+ic-registry-nns-data-provider = { git = "https://github.com/dfinity/ic.git", rev = "0a239c213c048563577969276739b090aa31c241" }
+ic-registry-keys = { git = "https://github.com/dfinity/ic.git", rev = "0a239c213c048563577969276739b090aa31c241" }
+ic-registry-transport = { git = "https://github.com/dfinity/ic.git", rev = "0a239c213c048563577969276739b090aa31c241" }
+ic-protobuf = { git = "https://github.com/dfinity/ic.git", rev = "0a239c213c048563577969276739b090aa31c241" }
 prost = "0.11.0"
 tokio = { version = "1.14.0", features = ["full"] }
 strum = { version = "0.24.1", features = ["derive"] }
