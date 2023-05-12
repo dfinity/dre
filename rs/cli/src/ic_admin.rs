@@ -615,7 +615,7 @@ fn detect_hsm_auth() -> Result<Option<Auth>> {
         let info = ctx.get_slot_info(slot)?;
         if info.slot_description().starts_with("Nitrokey Nitrokey HSM") {
             let key_id = format!("hsm-{}-{}", info.slot_description(), info.manufacturer_id());
-            let pin_entry = Entry::new("release-cli", &key_id);
+            let pin_entry = Entry::new("release-cli", &key_id)?;
             let pin = match pin_entry.get_password() {
                 Err(Error::NoEntry) => Password::new().with_prompt("Please enter the HSM PIN: ").interact()?,
                 Ok(pin) => pin,

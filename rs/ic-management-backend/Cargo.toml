@@ -23,7 +23,7 @@ actix-web = { version = "4.2.1", default-features = false, features = [
 ic-base-types = { git = "https://github.com/dfinity/ic.git", rev = "0a239c213c048563577969276739b090aa31c241" }
 ic-registry-keys = { git = "https://github.com/dfinity/ic.git", rev = "0a239c213c048563577969276739b090aa31c241" }
 anyhow = "1.0.43"
-serde_with = "2.0.1"
+serde_with = "3.0.0"
 futures = "0.3.16"
 serde_yaml = "0.9.11"
 reqwest = { version = "0.11.4", features = ["json"] }
@@ -45,7 +45,7 @@ strum = "0.24.1"
 strum_macros = "0.24.3"
 itertools = "0.10.1"
 log = "0.4.14"
-env_logger = "0.9.0"
+env_logger = "0.10.0"
 reverse_geocoder = "3.0.1"
 csv = "1.1.6"
 candid = "0.8.4"

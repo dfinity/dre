@@ -7,15 +7,15 @@ use ic_management_types::Network;
 pub struct Opts {
     #[clap(long, env = "HSM_PIN")]
     pub(crate) hsm_pin: Option<String>,
-    #[clap(long, parse(try_from_str=maybe_hex), env = "HSM_SLOT")]
+    #[clap(long, value_parser=maybe_hex::<u64>, env = "HSM_SLOT")]
     pub(crate) hsm_slot: Option<u64>,
-    #[clap(short, long, env = "HSM_KEY_ID")]
+    #[clap(long, env = "HSM_KEY_ID")]
     pub(crate) hsm_key_id: Option<String>,
     #[clap(long, env = "PRIVATE_KEY_PEM")]
     pub(crate) private_key_pem: Option<String>,
-    #[clap(short, long, env = "NEURON_ID")]
+    #[clap(long, env = "NEURON_ID")]
     pub(crate) neuron_id: Option<u64>,
-    #[clap(short, long, env = "IC_ADMIN")]
+    #[clap(long, env = "IC_ADMIN")]
     pub(crate) ic_admin: Option<String>,
     #[clap(long, env = "DEV")]
     pub(crate) dev: bool,
@@ -97,16 +97,16 @@ pub(crate) mod subnet {
             motivation: Option<String>,
 
             /// Minimum Nakamoto coefficients after the replacement
-            #[clap(long, takes_value = true, multiple_values = true)]
+            #[clap(long, num_args(1..))]
             min_nakamoto_coefficients: Vec<String>,
 
             /// Features or Node IDs to exclude from the available nodes pool
-            #[clap(long, takes_value = true, multiple_values = true)]
+            #[clap(long, num_args(1..))]
             exclude: Vec<String>,
 
             /// Force the inclusion of the provided nodes for replacement,
             /// regardless of the decentralization score
-            #[clap(long, takes_value = true, multiple_values = true)]
+            #[clap(long, num_args(1..))]
             include: Vec<PrincipalId>,
 
             /// More verbose execution. For instance, print logs from the
@@ -121,12 +121,12 @@ pub(crate) mod subnet {
             size: usize,
 
             /// Features or Node IDs to exclude from the available nodes pool
-            #[clap(long, takes_value = true, multiple_values = true)]
+            #[clap(long, num_args(1..))]
             exclude: Vec<String>,
 
             /// Force the inclusion of the provided nodes for replacement,
             /// regardless of the decentralization score
-            #[clap(long, takes_value = true, multiple_values = true)]
+            #[clap(long, num_args(1..))]
             include: Vec<PrincipalId>,
 
             /// Motivation for extending the subnet
