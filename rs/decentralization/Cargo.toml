@@ -6,7 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-ic-base-types = { git = "https://github.com/dfinity/ic.git", rev = "12c2666942f952d23a6baddda76d5ecaf279cb0d" }
+ic-base-types = { git = "https://github.com/dfinity/ic.git", rev = "0a239c213c048563577969276739b090aa31c241" }
 serde = { version = "1.0", features = ["rc"] }
 serde_json = { version = "1.0" }
 async-trait = "0.1.52"

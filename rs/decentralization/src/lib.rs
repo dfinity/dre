@@ -92,7 +92,7 @@ impl Display for SubnetChangeResponse {
                     k,
                     before,
                     after,
-                    format_args!("({:+.0}%)", ((after - before) / before) * 100.)
+                    format_args!("({:+.0}%)", ((after - before) / before) * 100.).to_string()
                 );
                 if before > after {
                     output.bright_red()

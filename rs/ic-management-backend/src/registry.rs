@@ -8,7 +8,7 @@ use ic_management_types::{
     ReplicaRelease, Subnet, SubnetMetadata,
 };
 use ic_registry_keys::{
-    make_blessed_replica_version_key, NODE_OPERATOR_RECORD_KEY_PREFIX, NODE_RECORD_KEY_PREFIX, SUBNET_RECORD_KEY_PREFIX,
+    make_blessed_replica_versions_key, NODE_OPERATOR_RECORD_KEY_PREFIX, NODE_RECORD_KEY_PREFIX, SUBNET_RECORD_KEY_PREFIX,
 };
 use ic_registry_local_registry::LocalRegistry;
 use ic_registry_subnet_type::SubnetType;
@@ -197,7 +197,7 @@ impl RegistryState {
         let blessed_versions = BlessedReplicaVersions::decode(
             self.local_registry
                 .get_value(
-                    &make_blessed_replica_version_key(),
+                    &make_blessed_replica_versions_key(),
                     self.local_registry.get_latest_version(),
                 )?
                 .unwrap_or_default()
