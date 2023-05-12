@@ -1,5 +1,5 @@
 use crate::cli::version::Commands::{Bless, Retire, Update};
-use clap::{CommandFactory, ErrorKind, Parser};
+use clap::{error::ErrorKind, CommandFactory, Parser};
 use ic_management_types::requests::NodesRemoveRequest;
 use ic_management_types::{MinNakamotoCoefficients, Network, NodeFeature};
 use std::collections::BTreeMap;
