@@ -731,7 +731,6 @@ impl Cli {
 /// Returns a path to downloaded ic-admin binary
 async fn download_ic_admin(version: Option<String>) -> Result<String> {
     let version = version.unwrap_or_else(|| defaults::DEFAULT_IC_ADMIN_VERSION.to_string());
-
     let home_dir = dirs::home_dir()
         .and_then(|d| d.to_str().map(|s| s.to_string()))
         .ok_or_else(|| anyhow::format_err!("Cannot find home directory"))?;

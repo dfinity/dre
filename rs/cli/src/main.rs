@@ -1,7 +1,9 @@
 use crate::cli::version::Commands::{Bless, Retire, Update};
 use clap::{error::ErrorKind, CommandFactory, Parser};
+use ic_agent::Agent;
 use ic_management_types::requests::NodesRemoveRequest;
 use ic_management_types::{MinNakamotoCoefficients, Network, NodeFeature};
+use ic_nns_constants::GOVERNANCE_CANISTER_ID;
 use std::collections::BTreeMap;
 use std::str::FromStr;
 
@@ -20,7 +22,24 @@ async fn main() -> Result<(), anyhow::Error> {
     let mut cli_opts = cli::Opts::parse();
     let mut cmd = cli::Opts::command();
 
-    ic_admin::with_ic_admin(Default::default(), async {
+    let canister_agent = Agent::builder()
+        .with_transport(ic_agent::agent::http_transport::ReqwestHttpReplicaV2Transport::create(
+            cli_opts.network.get_url(),
+        )?)
+        .build()?;
+
+    let governance_canister_build = std::str::from_utf8(
+        &canister_agent
+            .read_state_canister_metadata(
+                candid::Principal::from_str(&GOVERNANCE_CANISTER_ID.to_string())
+                    .expect("failed to convert governance canister principal to candid type"),
+                "git_commit_id",
+            )
+            .await?,
+    )?
+    .to_string();
+
+    ic_admin::with_ic_admin(governance_canister_build.into(), async {
         // Start of actually doing stuff with commands.
         if cli_opts.network == Network::Staging {
             cli_opts.private_key_pem = Some(std::env::var("HOME").expect("Please set HOME env var") + "/.config/dfx/identity/bootstrap-super-leader/identity.pem");
