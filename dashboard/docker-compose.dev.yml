@@ -8,13 +8,13 @@ services:
         BUILDKIT_INLINE_CACHE: 1
   dashboard-backend-mainnet:
     build:
-      context: ../rs
+      context: ..
       dockerfile: ic-management-backend/Dockerfile
       args:
         BUILDKIT_INLINE_CACHE: 1
   slack:
     build:
-      context: ../rs
+      context: ..
       dockerfile: slack-notifications/Dockerfile
       args:
         BUILDKIT_INLINE_CACHE: 1
