@@ -147,10 +147,11 @@ variables:
     name: gcr.io/kaniko-project/executor:debug # debug is required for gitlab as it needs to run a shell inside.
     entrypoint: [""]
   before_script: ""
+  # See https://stackoverflow.com/a/13864829 for explanation of the +x in var expansion
   script:
-    - "[[ -z ${APP} ]] && echo 'APP is not defined' && exit 1"
-    - "[[ -z ${CONTEXT_PATH} ]] && echo 'CONTEXT_PATH is not defined' && exit 1"
-    - "[[ -z ${DOCKERFILE_PATH} ]] && echo 'DOCKERFILE_PATH is not defined' && exit 1"
+    - "[[ -z ${APP+x} ]] && echo 'APP is not defined' && exit 1"
+    - "[[ -z ${CONTEXT_PATH+x} ]] && echo 'CONTEXT_PATH is not defined' && exit 1"
+    - "[[ -z ${DOCKERFILE_PATH+x} ]] && echo 'DOCKERFILE_PATH is not defined' && exit 1"
     - /kaniko/executor
       --context "${CI_PROJECT_DIR}/${CONTEXT_PATH}"
       --dockerfile "${DOCKERFILE_PATH}"
