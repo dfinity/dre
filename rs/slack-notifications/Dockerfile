@@ -12,7 +12,7 @@ RUN cargo chef prepare --recipe-path recipe.json
 
 FROM chef AS builder
 RUN apt-get -y update && \
-    apt-get install -y cmake && \
+    apt-get install -y cmake clang && \
     apt-get clean autoclean && \
     apt-get autoremove --yes && \
     rm -rf /var/lib/{apt,dpkg,cache,log}/
