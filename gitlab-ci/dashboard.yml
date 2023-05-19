@@ -25,16 +25,16 @@ dashboard-backend-mainnet:
     - .dashboard-build
   variables:
     APP: "dashboard-backend"
-    CONTEXT_PATH: "rs"
-    DOCKERFILE_PATH: "ic-management-backend/Dockerfile"
+    CONTEXT_PATH: "."
+    DOCKERFILE_PATH: "rs/ic-management-backend/Dockerfile"
 
 slack:
   extends:
     - .dashboard-build
   variables:
     APP: "slack"
-    CONTEXT_PATH: "rs"
-    DOCKERFILE_PATH: "slack-notifications/Dockerfile"
+    CONTEXT_PATH: "."
+    DOCKERFILE_PATH: "rs/slack-notifications/Dockerfile"
 
 .docker-base:
   image: docker/compose:alpine-1.29.2
