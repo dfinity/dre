@@ -54,7 +54,7 @@ pub(crate) enum Commands {
         #[clap(allow_hyphen_values = true)]
         args: Vec<String>,
     },
-    /// Bless or replace a replica version
+    /// Manage replica versions blessing
     Version(version::Cmd),
 
     /// Manage nodes
@@ -152,20 +152,6 @@ pub(crate) mod version {
 
     #[derive(Subcommand, Clone)]
     pub enum Commands {
-        /// Bless replica version with release notes using the ic-admin CLI
-        Bless {
-            /// Specify the commit hash of the version that is being deployed.
-            version: String,
-
-            /// Sepcify the name of the rc branch that contains the release
-            /// commits.
-            rc_branch_name: String,
-
-            // Simulate submission of the proposal, but do not actually submit it.
-            #[clap(long)]
-            simulate: bool,
-        },
-
         /// Retire replica versions
         Retire {
             /// Specify if the summary should be edited during the process

@@ -1,4 +1,4 @@
-use crate::cli::version::Commands::{Bless, Retire, Update};
+use crate::cli::version::Commands::{Retire, Update};
 use clap::{error::ErrorKind, CommandFactory, Parser};
 use ic_agent::Agent;
 use ic_management_types::requests::NodesRemoveRequest;
@@ -156,23 +156,6 @@ async fn main() -> Result<(), anyhow::Error> {
 
             cli::Commands::Version(cmd) => {
                 match &cmd.subcommand {
-                    Bless { version, rc_branch_name , simulate} => {
-                        let ic_admin = ic_admin::Cli::from_opts(&cli_opts, true).await?;
-                        let new_replica_info = ic_admin::Cli::prepare_to_propose_to_bless_new_replica_version(version, rc_branch_name).await?;
-                        ic_admin.propose_run(
-                            ic_admin::ProposeCommand::BlessReplicaVersionFlexible {
-                                version: version.to_string(),
-                                update_url: new_replica_info.update_url,
-                                stringified_hash: new_replica_info.stringified_hash
-                            },
-                            ic_admin::ProposeOptions {
-                                title: Some(format!("Elect new replica binary revision (commit {version})")),
-                                summary: Some(new_replica_info.summary),
-                                motivation: None,
-                                simulate: *simulate,
-                            }
-                        )
-                    },
                     Retire { edit_summary , simulate} => {
                         let runner = runner::Runner::from_opts(&cli_opts).await?;
                         let (template, versions) = runner.prepare_versions_to_retire(*edit_summary).await?;
