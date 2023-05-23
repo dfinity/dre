@@ -498,11 +498,6 @@ pub(crate) enum ProposeCommand {
     RetireReplicaVersion {
         versions: Vec<String>,
     },
-    BlessReplicaVersionFlexible {
-        version: String,
-        update_url: String,
-        stringified_hash: String,
-    },
     RemoveNodes {
         nodes: Vec<PrincipalId>,
     },
@@ -561,15 +556,6 @@ impl ProposeCommand {
             }
             Self::Raw { command: _, args } => args.clone(),
             Self::RetireReplicaVersion { versions } => versions.to_vec(),
-            Self::BlessReplicaVersionFlexible {
-                version,
-                update_url,
-                stringified_hash,
-            } => vec![
-                version.to_string(),
-                update_url.to_string(),
-                stringified_hash.to_string(),
-            ],
             Self::RemoveNodes { nodes } => nodes.iter().map(|n| n.to_string()).collect(),
             Self::UpdateElectedReplicaVersions {
                 version_to_bless,
