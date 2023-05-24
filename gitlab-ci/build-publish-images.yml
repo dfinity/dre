@@ -52,38 +52,6 @@ update-base-image:
   script:
     - python3 gitlab-ci/update-base-image-sha.py $(cat digest)
 
-metrics-proxy-release:
-  stage: release
-  extends:
-    - .kaniko-build
-  needs: []
-  dependencies: []
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      changes:  # auto run if there are changes in this dir
-        - metrics-proxy
-    - !reference [.rules-manual, rules]
-  interruptible: true
-  variables:
-    IMAGE_TAG: "vector-up-proxy"
-    IMAGE_VERSION: "latest"
-  script:
-    - |
-      if [ "${CI_COMMIT_BRANCH}" != "${CI_DEFAULT_BRANCH}" ]; then
-        export KANIKO_NO_PUSH_FLAG="--no-push"
-      else
-        export KANIKO_NO_PUSH_FLAG=""
-      fi
-    - /kaniko/executor
-      --context "${CI_PROJECT_DIR}/metrics-proxy"
-      --dockerfile "metrics-proxy/Dockerfile"
-      --cache
-      --cache-repo "${CI_REGISTRY_IMAGE}/${IMAGE_TAG}/cache"
-      --destination "${CI_REGISTRY_IMAGE}/${IMAGE_TAG}:${IMAGE_VERSION}"
-      --reproducible
-      $KANIKO_NO_PUSH_FLAG
-    - mkdir -p /workspace # Fails without creating this folder due to https://gitlab.com/gitlab-org/gitlab-runner/-/issues/29587/
-
 linear-jira-release:
   stage: release
   extends:
