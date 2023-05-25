@@ -118,7 +118,7 @@ impl Runner {
         let retireable_versions = self.dashboard_backend_client.get_retireable_versions().await?;
 
         info!("Waiting for you to pick the versions to retire in your editor");
-        let template = "# In the below lines, uncomment the versions that you would like to retire".to_string();
+        let template = "# In the below lines, comment out the versions that you DO NOT want to retire".to_string();
         let versions = edit::edit(format!(
             "{}\n{}",
             template,
