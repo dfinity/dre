@@ -8,7 +8,7 @@ use ic_base_types::PrincipalId;
 use ic_management_types::requests::NodesRemoveRequest;
 use ic_management_types::NodeFeature;
 use itertools::Itertools;
-use log::info;
+use log::{info, warn};
 
 #[derive(Clone)]
 pub struct Runner {
@@ -136,7 +136,7 @@ impl Runner {
         .collect::<Vec<_>>();
 
         if versions.is_empty() {
-            return Err(anyhow::anyhow!("Provided empty list of versions, aborting..."));
+            warn!("Provided empty list of versions to retire");
         }
 
         let mut template =

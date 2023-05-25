@@ -426,7 +426,7 @@ To build and verify the IC-OS disk image, run:
 
 ```
 # From https://github.com/dfinity/ic#building-the-code
-# This process requires Mac/Linux/WSL2, Git and Podman on your machine.
+# This process requires an x86-64 based machine, Ubuntu 20.04 or a newer version of the OS, Git, and Podman.
 git clone https://github.com/dfinity/ic
 cd ic
 git fetch origin
