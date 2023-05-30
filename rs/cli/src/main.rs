@@ -175,6 +175,11 @@ async fn main() -> Result<(), anyhow::Error> {
                         let (_, versions) = runner.prepare_versions_to_retire(false).await?;
                         let ic_admin = ic_admin::Cli::from_opts(&cli_opts, true).await?;
                         let new_replica_info = ic_admin::Cli::prepare_to_propose_to_bless_new_replica_version(version, rc_branch_name).await?;
+                        let proposal_title = if !versions.is_empty() {
+                            Some(format!("Elect new replica binary revision (commit {}), and retire old replica versions {}", version, versions.join(",")))
+                        } else {
+                            Some(format!("Elect new replica binary revision (commit {})", version))
+                        };
 
                         ic_admin.propose_run(ic_admin::ProposeCommand::UpdateElectedReplicaVersions{
                             version_to_bless: version.to_string(),
@@ -182,7 +187,7 @@ async fn main() -> Result<(), anyhow::Error> {
                             stringified_hash: new_replica_info.stringified_hash,
                             versions_to_retire: versions.clone(),
                         }, ic_admin::ProposeOptions{
-                            title: Some(format!("Elect new replica binary revision (commit {}), and retire old replica versions {}", version, versions.join(","))), 
+                            title: proposal_title,
                             summary: Some(new_replica_info.summary),
                             motivation: None,
                             simulate: *simulate,
