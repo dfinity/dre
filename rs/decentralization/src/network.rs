@@ -8,6 +8,7 @@ use ic_base_types::PrincipalId;
 use ic_management_types::{MinNakamotoCoefficients, NetworkError, NodeFeature};
 use itertools::Itertools;
 use log::{debug, info, warn};
+use rand::{seq::SliceRandom, SeedableRng};
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 use std::fmt::{Debug, Display, Formatter};
@@ -336,8 +337,8 @@ impl DecentralizedSubnet {
         let mut run_log = Vec::new();
 
         let mut nodes_initial = self.nodes.clone();
-        let mut nodes_available = available_nodes.to_vec();
-        let orig_available_nodes_len = nodes_available.len();
+        let mut available_nodes = available_nodes.to_vec();
+        let orig_available_nodes_len = &available_nodes.len();
         let mut nodes_after_extension = self.nodes.clone();
         let mut comment = None;
         let mut total_penalty = 0;
@@ -360,7 +361,7 @@ impl DecentralizedSubnet {
             run_log.push(format!("***  Adding node {}/{}", i + 1, num_nodes_to_add));
             run_log.push("***********************************************************".to_string());
 
-            let mut sorted_good_nodes: Vec<SortResult> = nodes_available
+            let sorted_good_nodes: Vec<SortResult> = available_nodes
                 .iter()
                 .enumerate()
                 .filter_map(|(index, node)| {
@@ -426,12 +427,87 @@ impl DecentralizedSubnet {
             for s in &sorted_good_nodes {
                 run_log.push(format!(" -=> {} {} {}", s.node.id, s.penalty, s.score));
             }
-            // TODO: if more than one candidate returns the same nakamoto score, pick the
-            // one that improves the feature diversity
-            let best_result = sorted_good_nodes.pop();
+
+            let first_best_result = sorted_good_nodes.iter().last();
+            let mut best_results = vec![];
+            if let Some(result) = first_best_result {
+                for candidate in sorted_good_nodes.iter().rev() {
+                    // To filter the best results, we must take the penalty
+                    // applied to the subnet as well.  If not, even if two
+                    // candidates have the same score, we could end up with a
+                    // higher penalty in the resulting subnet as we choose
+                    // randomly one of the best candidates in those results We
+                    // know from the previous sorting that the last element in
+                    // the array of results will have the lowest penalty and
+                    // nakamoto score, so we can compare against this one.
+                    if candidate.score == result.score && candidate.penalty <= result.penalty {
+                        best_results.push(candidate)
+                    } else {
+                        break;
+                    }
+                }
+            }
+
+            /// Deterministically choose a result in the list based on the list
+            /// of current nodes.  Since the node IDs are unique, we seed a PRNG
+            /// with the sorted joined node IDs. We then choose a result
+            /// randomly but deterministically using this seed.
+            ///
+            /// NOTE: This funnction cannot be moved outside of this context
+            /// because SortResult is defined in this context
+            fn choose_deterministic_random<'a>(
+                best_results: Vec<&'a SortResult>,
+                current_nodes: &[Node],
+            ) -> Option<&'a SortResult> {
+                if best_results.is_empty() {
+                    None
+                } else {
+                    // We sort the current nodes by alphabetical order on their
+                    // PrincipalIDs to ensure consistency of the seed with the
+                    // same machines in the subnet
+                    let mut id_sorted_current_nodes = current_nodes.to_owned();
+                    id_sorted_current_nodes
+                        .sort_by(|n1, n2| std::cmp::Ord::cmp(&n1.id.to_string(), &n2.id.to_string()));
+                    let seed = rand_seeder::Seeder::from(
+                        id_sorted_current_nodes
+                            .iter()
+                            .map(|n| n.id.to_string())
+                            .collect::<Vec<String>>()
+                            .join("_"),
+                    )
+                    .make_seed();
+                    let mut rng = rand::rngs::StdRng::from_seed(seed);
+
+                    // We sort the best results the same way to ensure that for
+                    // the same set of machines with the best score, we always
+                    // get the same one.
+                    let mut id_sorted_best_results = best_results.clone();
+                    id_sorted_best_results
+                        .sort_by(|r1, r2| std::cmp::Ord::cmp(&r1.node.id.to_string(), &r2.node.id.to_string()));
+                    id_sorted_best_results.choose(&mut rng).cloned()
+                }
+            }
+
+            // Given that we have a big pool of unassigned machines, we can
+            // randomly but deterministically choose a result amongst the best
+            // ones obtained by calculating the new Nakamoto scores. With this
+            // big pool of machines, choosing randomly a machine to use or
+            // maximizing the decentralization of the remaining available
+            // machines will not make a big difference to the final
+            // decentralization coefficients.
+            //
+            // An other approach that was imagined was to maximize the score for
+            // the remaining available nodes. However, this approach was too
+            // computationally intensive and took too long to compute. Thus, a
+            // simpler but good enough method was chosen for choosing a result
+            //
+            // This approach also has the advantage of not favoring one NP over
+            // an other, regardless of the Node PrincipalID
+            let best_result = choose_deterministic_random(best_results, &self.nodes);
+
             match best_result {
                 Some(best_result) => {
-                    nodes_available.swap_remove(best_result.index);
+                    available_nodes.swap_remove(best_result.index);
                     nodes_after_extension.push(best_result.node.clone());
                     nodes_initial.push(best_result.node.clone());
                     total_penalty += best_result.penalty;
@@ -467,7 +543,7 @@ impl DecentralizedSubnet {
             }
         }
         assert_eq!(nodes_after_extension.len(), self.nodes.len() + num_nodes_to_add);
-        assert_eq!(orig_available_nodes_len - nodes_available.len(), num_nodes_to_add);
+        assert_eq!(orig_available_nodes_len - available_nodes.len(), num_nodes_to_add);
 
         Ok(Self {
             id: self.id,
