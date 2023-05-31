@@ -31,6 +31,8 @@ tabular = "0.2"
 rayon = "1.5.1"
 easy-parallel = "3.1.0"
 lru = "0.10.0"
+rand = { version = "0.8.5", features = ["std_rng"] }
+rand_seeder = "0.2.3"
 
 [dev-dependencies]
 include_dir = "0.7.2"
