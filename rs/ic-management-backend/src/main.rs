@@ -31,7 +31,7 @@ use ic_types::PrincipalId;
 use log::{debug, error, info, warn};
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::convert::TryFrom;
 use std::ops::{Add, Deref};
 use std::path::{Path, PathBuf};
@@ -231,7 +231,7 @@ async fn nodes_healths(registry: web::Data<Arc<RwLock<registry::RegistryState>>>
                         .unwrap_or(ic_management_types::Status::Unknown),
                 )
             })
-            .collect::<HashMap<_, _>>()
+            .collect::<BTreeMap<_, _>>()
     }))
 }
 

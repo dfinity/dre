@@ -17,7 +17,7 @@ use itertools::Itertools;
 use std::convert::TryFrom;
 use std::sync::Arc;
 use std::{
-    collections::{HashMap, HashSet},
+    collections::{BTreeMap, HashMap, HashSet},
     net::Ipv6Addr,
 };
 
@@ -48,11 +48,11 @@ pub struct RegistryState {
     local_registry: Arc<LocalRegistry>,
 
     version: u64,
-    subnets: HashMap<PrincipalId, Subnet>,
-    nodes: HashMap<PrincipalId, Node>,
-    operators: HashMap<PrincipalId, Operator>,
+    subnets: BTreeMap<PrincipalId, Subnet>,
+    nodes: BTreeMap<PrincipalId, Node>,
+    operators: BTreeMap<PrincipalId, Operator>,
     guests: Vec<Guest>,
-    known_subnets: HashMap<PrincipalId, String>,
+    known_subnets: BTreeMap<PrincipalId, String>,
 
     replica_releases: Vec<ReplicaRelease>,
     gitlab_client_public: Option<gitlab::AsyncGitlab>,
@@ -137,9 +137,9 @@ impl RegistryState {
             network,
             local_registry,
             version: 0,
-            subnets: HashMap::<PrincipalId, Subnet>::new(),
-            nodes: HashMap::new(),
-            operators: HashMap::new(),
+            subnets: BTreeMap::<PrincipalId, Subnet>::new(),
+            nodes: BTreeMap::new(),
+            operators: BTreeMap::new(),
             guests: Vec::new(),
             replica_releases: Vec::new(),
             gitlab_client_public,
@@ -493,11 +493,11 @@ impl RegistryState {
         self.version
     }
 
-    pub fn subnets(&self) -> HashMap<PrincipalId, Subnet> {
+    pub fn subnets(&self) -> BTreeMap<PrincipalId, Subnet> {
         self.subnets.clone()
     }
 
-    pub fn nodes(&self) -> HashMap<PrincipalId, Node> {
+    pub fn nodes(&self) -> BTreeMap<PrincipalId, Node> {
         self.nodes.clone()
     }
 
@@ -561,7 +561,7 @@ impl RegistryState {
             .collect())
     }
 
-    pub fn operators(&self) -> HashMap<PrincipalId, Operator> {
+    pub fn operators(&self) -> BTreeMap<PrincipalId, Operator> {
         self.operators.clone()
     }
 
