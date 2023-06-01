@@ -6,7 +6,7 @@ use ic_types::PrincipalId;
 use itertools::Itertools;
 use log::info;
 use serde::{Deserialize, Serialize};
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet};
 use std::str::FromStr;
 use strum_macros::{Display, EnumString};
 
@@ -140,7 +140,7 @@ impl RolloutConfig {
 pub struct RolloutBuilder {
     pub proposal_agent: ProposalAgent,
     pub prometheus_client: prometheus_http_query::Client,
-    pub subnets: HashMap<PrincipalId, Subnet>,
+    pub subnets: BTreeMap<PrincipalId, Subnet>,
     pub releases: Vec<ReplicaRelease>,
     pub network: Network,
 }
@@ -285,7 +285,7 @@ impl RolloutBuilder {
         &self,
         release: &ReplicaRelease,
         since: chrono::DateTime<Utc>,
-    ) -> Result<HashMap<PrincipalId, SubnetUpdateState>> {
+    ) -> Result<BTreeMap<PrincipalId, SubnetUpdateState>> {
         const STATE_FIELD: &str = "state";
         let query = format!(
             r#"
@@ -437,8 +437,8 @@ impl RolloutBuilder {
                 .updates
                 .iter()
                 .map(|u| u.replica_release.clone())
-                .collect::<HashSet<_>>();
-            let mut update_states = HashMap::new();
+                .collect::<BTreeSet<_>>();
+            let mut update_states = BTreeMap::new();
             for release in releases {
                 let release_update_states = self.get_update_states(&release, last_stage.start_date_time).await?;
                 update_states.insert(release, release_update_states);
