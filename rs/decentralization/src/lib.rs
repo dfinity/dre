@@ -1,7 +1,7 @@
 pub mod nakamoto;
 pub mod network;
 use colored::Colorize;
-use itertools::Itertools;
+use itertools::{EitherOrBoth::*, Itertools};
 use std::collections::{BTreeMap, HashMap};
 use std::fmt::{Display, Formatter};
 
@@ -165,9 +165,25 @@ impl Display for SubnetChangeResponse {
         }
 
         writeln!(f, "{}", table)?;
-        self.added.iter().zip(self.removed.iter()).for_each(|(a, r)| {
-            writeln!(f, "{}{}", format!("  - {}", r).red(), format!("    + {}", a).green()).expect("write failed");
-        });
+        for pair in self.added.iter().zip_longest(self.removed.iter()) {
+            match pair {
+                Both(a, r) => {
+                    writeln!(f, "{}{}", format!("  - {}", r).red(), format!("    + {}", a).green())
+                        .expect("write failed");
+                }
+                Left(a) => {
+                    writeln!(
+                        f,
+                        "                                                                   {}",
+                        format!("    + {}", a).green()
+                    )
+                    .expect("write failed");
+                }
+                Right(r) => {
+                    writeln!(f, "{}", format!("  - {}", r).red()).expect("write failed");
+                }
+            }
+        }
         writeln!(f)?;
 
         if let Some(comment) = &self.comment {
