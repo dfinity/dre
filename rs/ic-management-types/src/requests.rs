@@ -31,9 +31,10 @@ pub struct SubnetCreateRequest {
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct SubnetExtendRequest {
+pub struct SubnetResizeRequest {
     pub subnet: PrincipalId,
-    pub size: usize,
+    pub add: usize,
+    pub remove: usize,
     pub exclude: Option<Vec<String>>,
     pub include: Option<Vec<PrincipalId>>,
 }

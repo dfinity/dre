@@ -430,6 +430,7 @@ mod tests {
         DecentralizedSubnet {
             id: PrincipalId::new_subnet_test_id(subnet_num),
             nodes: new_test_nodes("feat", num_nodes, num_dfinity_nodes),
+            removed_nodes: Vec::new(),
             min_nakamoto_coefficients: None,
             comment: None,
             run_log: Vec::new(),
@@ -453,6 +454,7 @@ mod tests {
                 num_dfinity_nodes,
                 feature_to_override,
             ),
+            removed_nodes: Vec::new(),
             min_nakamoto_coefficients: None,
             comment: None,
             run_log: Vec::new(),
@@ -692,6 +694,7 @@ mod tests {
                 .cloned()
                 .filter(|n| !re_unhealthy_nodes.is_match(&n.id.to_string()))
                 .collect(),
+            removed_nodes: Vec::new(),
             min_nakamoto_coefficients: None,
             comment: None,
             run_log: Vec::new(),

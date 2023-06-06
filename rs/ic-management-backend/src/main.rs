@@ -122,7 +122,7 @@ async fn main() -> std::io::Result<()> {
             .service(endpoints::subnet::pending_action)
             .service(endpoints::subnet::replace)
             .service(endpoints::subnet::create_subnet)
-            .service(endpoints::subnet::extend)
+            .service(endpoints::subnet::resize)
             .service(endpoints::subnet::change_preview)
             .service(endpoints::nodes::remove)
             .service(endpoints::query_decentralization::decentralization_subnet_query)
