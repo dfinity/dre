@@ -115,10 +115,15 @@ pub(crate) mod subnet {
             verbose: bool,
         },
 
-        /// Extends the size of the subnet
-        Extend {
+        /// Resize the subnet
+        Resize {
             // Number of nodes to be added
-            size: usize,
+            #[clap(long)]
+            add: usize,
+
+            // Number of nodes to be removed
+            #[clap(long)]
+            remove: usize,
 
             /// Features or Node IDs to exclude from the available nodes pool
             #[clap(long, num_args(1..))]
@@ -129,7 +134,7 @@ pub(crate) mod subnet {
             #[clap(long, num_args(1..))]
             include: Vec<PrincipalId>,
 
-            /// Motivation for extending the subnet
+            /// Motivation for resing the subnet
             #[clap(short, long)]
             motivation: Option<String>,
 

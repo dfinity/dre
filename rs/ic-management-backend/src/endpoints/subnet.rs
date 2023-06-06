@@ -3,7 +3,7 @@ use crate::health;
 use decentralization::{network::TopologyManager, SubnetChangeResponse};
 use ic_base_types::PrincipalId;
 use ic_management_types::requests::{
-    MembershipReplaceRequest, ReplaceTarget, SubnetCreateRequest, SubnetExtendRequest,
+    MembershipReplaceRequest, ReplaceTarget, SubnetCreateRequest, SubnetResizeRequest,
 };
 use serde::Deserialize;
 
@@ -186,10 +186,10 @@ async fn create_subnet(
     )))
 }
 
-/// Simulates extending subnet size, i.e. adding nodes to a subnet.
-#[post("/subnet/membership/extend")]
-async fn extend(
-    request: web::Json<SubnetExtendRequest>,
+/// Simulates resizing the subnet, i.e. adding or removing nodes to a subnet.
+#[post("/subnet/membership/resize")]
+async fn resize(
+    request: web::Json<SubnetResizeRequest>,
     registry: web::Data<Arc<RwLock<RegistryState>>>,
 ) -> Result<HttpResponse, Error> {
     let registry = registry.read().await;
@@ -199,7 +199,7 @@ async fn extend(
         .await?
         .exclude_nodes(request.exclude.clone().unwrap_or_default())
         .include_nodes(request.include.clone().unwrap_or_default())
-        .extend(request.size)?;
+        .resize(request.add, request.remove)?;
 
     Ok(HttpResponse::Ok().json(decentralization::SubnetChangeResponse::from(&change)))
 }
