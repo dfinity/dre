@@ -6,10 +6,10 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-ic-nns-governance = { git = "https://github.com/dfinity/ic.git", rev = "0a239c213c048563577969276739b090aa31c241" }
-ic-nns-common = { git = "https://github.com/dfinity/ic.git", rev = "0a239c213c048563577969276739b090aa31c241" }
-ic-nns-constants = { git = "https://github.com/dfinity/ic.git", rev = "0a239c213c048563577969276739b090aa31c241" }
-registry-canister = { git = "https://github.com/dfinity/ic.git", rev = "0a239c213c048563577969276739b090aa31c241" }
+ic-nns-governance = { git = "https://github.com/dfinity/ic.git", rev = "794fc5b9341fa8f6a0e8f219201c35f0b5727ab9" }
+ic-nns-common = { git = "https://github.com/dfinity/ic.git", rev = "794fc5b9341fa8f6a0e8f219201c35f0b5727ab9" }
+ic-nns-constants = { git = "https://github.com/dfinity/ic.git", rev = "794fc5b9341fa8f6a0e8f219201c35f0b5727ab9" }
+registry-canister = { git = "https://github.com/dfinity/ic.git", rev = "794fc5b9341fa8f6a0e8f219201c35f0b5727ab9" }
 tokio = { version = "1.2.0", features = ["full"] }
 ic-agent = "0.23.2"
 ic-types = "0.7.0"
