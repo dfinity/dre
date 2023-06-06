@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use decentralization::SubnetChangeResponse;
 use ic_base_types::PrincipalId;
 use ic_management_types::{
-    requests::{MembershipReplaceRequest, NodesRemoveRequest, NodesRemoveResponse, SubnetExtendRequest},
+    requests::{MembershipReplaceRequest, NodesRemoveRequest, NodesRemoveResponse, SubnetResizeRequest},
     Network, NetworkError, ReplicaRelease, SubnetMembershipChangeProposal,
 };
 use log::error;
@@ -61,11 +61,11 @@ impl DashboardBackendClient {
             .await
     }
 
-    pub async fn subnet_extend(&self, request: SubnetExtendRequest) -> anyhow::Result<SubnetChangeResponse> {
+    pub async fn subnet_resize(&self, request: SubnetResizeRequest) -> anyhow::Result<SubnetChangeResponse> {
         reqwest::Client::new()
             .post(
                 self.url
-                    .join("subnet/membership/extend")
+                    .join("subnet/membership/resize")
                     .map_err(|e| anyhow::anyhow!(e))?,
             )
             .json(&request)
@@ -101,7 +101,7 @@ impl RESTRequestBuilder for reqwest::RequestBuilder {
         if let Err(e) = response_result.error_for_status_ref() {
             let response = response_result.text().await?;
             match serde_json::from_str(&response) {
-                Ok(NetworkError::ExtensionFailed(s)) => {
+                Ok(NetworkError::ResizeFailed(s)) => {
                     error!("{}", s);
                     Err(anyhow::anyhow!("failed request (error: {})", e))
                 }

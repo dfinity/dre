@@ -8,7 +8,8 @@ use ic_management_types::{
     ReplicaRelease, Subnet, SubnetMetadata,
 };
 use ic_registry_keys::{
-    make_blessed_replica_versions_key, NODE_OPERATOR_RECORD_KEY_PREFIX, NODE_RECORD_KEY_PREFIX, SUBNET_RECORD_KEY_PREFIX,
+    make_blessed_replica_versions_key, NODE_OPERATOR_RECORD_KEY_PREFIX, NODE_RECORD_KEY_PREFIX,
+    SUBNET_RECORD_KEY_PREFIX,
 };
 use ic_registry_local_registry::LocalRegistry;
 use ic_registry_subnet_type::SubnetType;
@@ -605,6 +606,7 @@ impl SubnetQuerier for RegistryState {
             .map(|s| decentralization::network::DecentralizedSubnet {
                 id: s.principal,
                 nodes: s.nodes.iter().map(decentralization::network::Node::from).collect(),
+                removed_nodes: Vec::new(),
                 min_nakamoto_coefficients: None,
                 comment: None,
                 run_log: Vec::new(),
@@ -637,6 +639,7 @@ impl SubnetQuerier for RegistryState {
                     .iter()
                     .map(decentralization::network::Node::from)
                     .collect(),
+                removed_nodes: Vec::new(),
                 min_nakamoto_coefficients: None,
                 comment: None,
                 run_log: Vec::new(),
