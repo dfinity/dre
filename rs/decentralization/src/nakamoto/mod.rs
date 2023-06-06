@@ -216,36 +216,17 @@ impl NakamotoScore {
         }
     }
 
-    /// Get an upper bound on the number of nodes that are under control of the
-    /// top actors For instance:
-    /// - Most critical features Continent and Country both have Nakamoto score
-    ///   == 1
-    /// - Top continent actor(s) control 5 nodes
-    /// - Top country actor(s) control 7 nodes
+    /// Critical features are Node Provider and Country.
+    /// Count (upper bound of) the number of nodes controlled by the top actors
+    /// in each of these features.
+    /// - Top Node Providers control 5 nodes
+    /// - Top Countries control 7 nodes
     /// In that case we would return 5 + 7 = 12
-    /// However, if Country has Nakamoto score == 2, then we would return only 5
-    pub fn control_power_critical_features(&self) -> Option<usize> {
-        match self
-            .coefficients
+    pub fn critical_features_num_nodes(&self) -> usize {
+        [NodeFeature::NodeProvider, NodeFeature::Country]
             .iter()
-            .min_by(|x, y| x.1.partial_cmp(y.1).expect("partial_cmp failed"))
-        {
-            Some((_, score)) => {
-                let critical_feats = self
-                    .coefficients
-                    .iter()
-                    .filter(|(_, s)| *s <= score)
-                    .map(|(f, _)| f)
-                    .collect::<Vec<_>>();
-                Some(
-                    critical_feats
-                        .iter()
-                        .map(|f| self.controlled_nodes.get(f).unwrap_or(&0))
-                        .sum::<usize>(),
-                )
-            }
-            None => None,
-        }
+            .map(|feat| self.controlled_nodes.get(feat).cloned().unwrap_or_default())
+            .sum()
     }
 
     /// Return the number of nodes that the top actors control
@@ -277,6 +258,16 @@ impl PartialOrd for NakamotoScore {
             return cmp;
         }
 
+        // Try to pick the candidate that *reduces* the number of nodes
+        // controlled by the top actors
+        cmp = other
+            .critical_features_num_nodes()
+            .partial_cmp(&self.critical_features_num_nodes());
+
+        if cmp != Some(Ordering::Equal) {
+            return cmp;
+        }
+
         // Compare the count of below-average coefficients
         // and prefer candidates that decrease the number of low-value coefficients
         let c1 = self.coefficients.values().filter(|c| **c < 3.0).count();
@@ -303,16 +294,6 @@ impl PartialOrd for NakamotoScore {
             }
         }
 
-        // Try to pick the candidate that *reduces* the number of nodes
-        // controlled by the top actors
-        cmp = other
-            .control_power_critical_features()
-            .partial_cmp(&self.control_power_critical_features());
-
-        if cmp != Some(Ordering::Equal) {
-            return cmp;
-        }
-
         // And finally try to increase the linear average
         self.score_avg_linear().partial_cmp(&other.score_avg_linear())
     }
@@ -330,14 +311,12 @@ impl Display for NakamotoScore {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "NakamotoScore: min {:0.2} avg log2 {:0.2} crit feat {} crit nodes {} avg linear {:0.2} all coeff {:?} details {:?}",
+            "NakamotoScore: min {:0.2} avg log2 {:0.2} #crit nodes {} #crit coeff {} avg linear {:0.2}",
             self.min,
             self.avg_log2,
+            self.critical_features_num_nodes(),
             self.coefficients.values().filter(|c| **c < 3.0).count(),
-            self.control_power_critical_features().unwrap_or(0),
             self.avg_linear,
-            self.coefficients.iter(),
-            self.value_counts,
         )
     }
 }
@@ -747,7 +726,7 @@ mod tests {
 
         // Check against the close-to-optimal values obtained by data analysis
         assert!(nakamoto_score_after.score_min() >= 1.0);
-        assert!(nakamoto_score_after.control_power_critical_features().unwrap() <= 24);
+        assert!(nakamoto_score_after.critical_features_num_nodes() <= 25);
         assert!(nakamoto_score_after.score_avg_linear() >= 3.0);
         assert!(nakamoto_score_after.score_avg_log2() >= 1.32);
     }
