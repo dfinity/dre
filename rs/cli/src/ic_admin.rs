@@ -727,8 +727,9 @@ async fn download_ic_admin(version: Option<String>) -> Result<String> {
         let url = if std::env::consts::OS == "macos" {
             format!("https://download.dfinity.systems/ic/{version}/binaries/x86_64-darwin/ic-admin.gz")
         } else {
-            format!("https://download.dfinity.systems/ic/{version}/release/ic-admin.gz")
+            format!("https://download.dfinity.systems/ic/{version}/binaries/x86_64-linux/ic-admin.gz")
         };
+        info!("Downloading ic-admin version: {} from {}", version, url);
         let body = reqwest::get(url).await?.bytes().await?;
         let mut decoded = GzDecoder::new(body.as_ref());
 
@@ -739,6 +740,7 @@ async fn download_ic_admin(version: Option<String>) -> Result<String> {
         std::io::copy(&mut decoded, &mut out)?;
         std::fs::set_permissions(path, std::fs::Permissions::from_mode(0o755))?;
     }
+    info!("Using ic-admin: {}", path.display());
 
     Ok(path.to_string_lossy().to_string())
 }
