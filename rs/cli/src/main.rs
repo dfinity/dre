@@ -56,7 +56,7 @@ async fn main() -> Result<(), anyhow::Error> {
             cli::Commands::Subnet(subnet) => {
                 let runner = runner::Runner::from_opts(&cli_opts).await?;
                 match &subnet.subcommand {
-                    cli::subnet::Commands::Deploy { .. } | cli::subnet::Commands::Extend { .. } => {
+                    cli::subnet::Commands::Deploy { .. } | cli::subnet::Commands::Resize { .. } => {
                         if subnet.id.is_none() {
                             cmd.error(ErrorKind::MissingRequiredArgument, "Required argument `id` not found")
                                 .exit();
@@ -125,11 +125,12 @@ async fn main() -> Result<(), anyhow::Error> {
                                 }, *verbose)
                                 .await
                     }
-                    cli::subnet::Commands::Extend { size, include, exclude, motivation, verbose, } => {
+                    cli::subnet::Commands::Resize { add, remove, include, exclude, motivation, verbose, } => {
                         if let Some(motivation) = motivation.clone() {
-                            runner.subnet_extend(ic_management_types::requests::SubnetExtendRequest {
+                            runner.subnet_resize(ic_management_types::requests::SubnetResizeRequest {
                                 subnet: subnet.id.unwrap(),
-                                size: *size,
+                                add: *add,
+                                remove: *remove,
                                 exclude: exclude.clone().into(),
                                         include: include.clone().into(),
                             }, motivation, *verbose).await

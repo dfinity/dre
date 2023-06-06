@@ -8,7 +8,7 @@ use std::fmt::Debug;
 pub enum NetworkError {
     NodeNotFound(PrincipalId),
     SubnetNotFound(PrincipalId),
-    ExtensionFailed(String),
+    ResizeFailed(String),
     DataRequestError,
     IllegalRequest(String),
 }
@@ -17,7 +17,7 @@ impl ResponseError for NetworkError {
     fn error_response(&self) -> HttpResponse {
         match self {
             NetworkError::IllegalRequest(_input) => HttpResponse::build(StatusCode::BAD_REQUEST).json(self),
-            NetworkError::ExtensionFailed(_) => HttpResponse::InternalServerError().json(self),
+            NetworkError::ResizeFailed(_) => HttpResponse::InternalServerError().json(self),
             NetworkError::DataRequestError => HttpResponse::build(StatusCode::FAILED_DEPENDENCY).json(self),
             NetworkError::SubnetNotFound(_) | NetworkError::NodeNotFound(_) => HttpResponse::NotFound().json(self),
         }
@@ -27,7 +27,7 @@ impl ResponseError for NetworkError {
         match self {
             Self::NodeNotFound(_) | Self::SubnetNotFound(_) => StatusCode::NOT_FOUND,
             Self::IllegalRequest(_) => StatusCode::BAD_REQUEST,
-            Self::ExtensionFailed(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            Self::ResizeFailed(_) => StatusCode::INTERNAL_SERVER_ERROR,
             Self::DataRequestError => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }

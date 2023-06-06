@@ -36,14 +36,14 @@ impl Runner {
         Ok(())
     }
 
-    pub async fn subnet_extend(
+    pub async fn subnet_resize(
         &self,
-        request: ic_management_types::requests::SubnetExtendRequest,
+        request: ic_management_types::requests::SubnetResizeRequest,
         motivation: String,
         verbose: bool,
     ) -> anyhow::Result<()> {
         let subnet = request.subnet;
-        let change = self.dashboard_backend_client.subnet_extend(request).await?;
+        let change = self.dashboard_backend_client.subnet_resize(request).await?;
         if verbose {
             if let Some(run_log) = &change.run_log {
                 println!("{}\n", run_log.join("\n"));
@@ -51,16 +51,32 @@ impl Runner {
         }
         println!("{}", change);
 
-        self.run_membership_change(
-            change,
-            ProposeOptions {
-                title: format!("Extend subnet {subnet}").into(),
-                summary: format!("Extend subnet {subnet}").into(),
-                motivation: motivation.clone().into(),
-                simulate: false,
-            },
-        )
-        .await
+        if change.added.is_empty() && change.removed.is_empty() {
+            return Ok(());
+        }
+        if change.added.len() == change.removed.len() {
+            self.run_membership_change(
+                change.clone(),
+                ops_subnet_node_replace::replace_proposal_options(&change)?,
+            )
+            .await
+        } else {
+            let action = if change.added.len() < change.removed.len() {
+                "Removing nodes from"
+            } else {
+                "Adding nodes to"
+            };
+            self.run_membership_change(
+                change,
+                ProposeOptions {
+                    title: format!("{action} subnet {subnet}").into(),
+                    summary: format!("{action} subnet {subnet}").into(),
+                    motivation: motivation.clone().into(),
+                    simulate: false,
+                },
+            )
+            .await
+        }
     }
 
     pub async fn membership_replace(
@@ -76,6 +92,9 @@ impl Runner {
         }
         println!("{}", change);
 
+        if change.added.is_empty() && change.removed.is_empty() {
+            return Ok(());
+        }
         self.run_membership_change(
             change.clone(),
             ops_subnet_node_replace::replace_proposal_options(&change)?,
