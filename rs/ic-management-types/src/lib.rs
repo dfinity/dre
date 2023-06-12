@@ -14,6 +14,7 @@ use registry_canister::mutations::do_change_subnet_membership::ChangeSubnetMembe
 use registry_canister::mutations::do_create_subnet::CreateSubnetPayload;
 use registry_canister::mutations::do_remove_nodes_from_subnet::RemoveNodesFromSubnetPayload;
 use registry_canister::mutations::do_update_subnet_replica::UpdateSubnetReplicaVersionPayload;
+use registry_canister::mutations::node_management::do_remove_nodes::RemoveNodesPayload;
 use serde::{Deserialize, Serialize};
 use serde_with::{serde_as, DisplayFromStr};
 use std::cmp::{Eq, Ord, PartialEq, PartialOrd};
@@ -58,12 +59,16 @@ impl NnsFunctionProposal for ChangeSubnetMembershipPayload {
     const TYPE: NnsFunction = NnsFunction::ChangeSubnetMembership;
 }
 
-pub trait SubnetMembershipChangePayload: NnsFunctionProposal {
+impl NnsFunctionProposal for RemoveNodesPayload {
+    const TYPE: NnsFunction = NnsFunction::RemoveNodes;
+}
+
+pub trait TopologyChangePayload: NnsFunctionProposal {
     fn get_nodes(&self) -> Vec<PrincipalId>;
     fn get_subnet(&self) -> Option<PrincipalId>;
 }
 
-impl SubnetMembershipChangePayload for CreateSubnetPayload {
+impl TopologyChangePayload for CreateSubnetPayload {
     fn get_nodes(&self) -> Vec<PrincipalId> {
         self.node_ids.iter().map(|node_id| node_id.get()).collect()
     }
@@ -73,7 +78,7 @@ impl SubnetMembershipChangePayload for CreateSubnetPayload {
     }
 }
 
-impl SubnetMembershipChangePayload for AddNodesToSubnetPayload {
+impl TopologyChangePayload for AddNodesToSubnetPayload {
     fn get_nodes(&self) -> Vec<PrincipalId> {
         self.node_ids.iter().map(|node_id| node_id.get()).collect()
     }
@@ -83,7 +88,7 @@ impl SubnetMembershipChangePayload for AddNodesToSubnetPayload {
     }
 }
 
-impl SubnetMembershipChangePayload for RemoveNodesFromSubnetPayload {
+impl TopologyChangePayload for RemoveNodesFromSubnetPayload {
     fn get_nodes(&self) -> Vec<PrincipalId> {
         self.node_ids.iter().map(|node_id| node_id.get()).collect()
     }
@@ -93,7 +98,7 @@ impl SubnetMembershipChangePayload for RemoveNodesFromSubnetPayload {
     }
 }
 
-impl SubnetMembershipChangePayload for ChangeSubnetMembershipPayload {
+impl TopologyChangePayload for ChangeSubnetMembershipPayload {
     fn get_nodes(&self) -> Vec<PrincipalId> {
         self.node_ids_add
             .iter()
@@ -107,14 +112,24 @@ impl SubnetMembershipChangePayload for ChangeSubnetMembershipPayload {
     }
 }
 
+impl TopologyChangePayload for RemoveNodesPayload {
+    fn get_nodes(&self) -> Vec<PrincipalId> {
+        self.node_ids.iter().map(|node_id| node_id.get()).collect()
+    }
+
+    fn get_subnet(&self) -> Option<PrincipalId> {
+        None
+    }
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct SubnetMembershipChangeProposal {
+pub struct TopologyChangeProposal {
     pub nodes: Vec<PrincipalId>,
     pub subnet_id: Option<PrincipalId>,
     pub id: u64,
 }
 
-impl<T: SubnetMembershipChangePayload> From<(ProposalInfo, T)> for SubnetMembershipChangeProposal {
+impl<T: TopologyChangePayload> From<(ProposalInfo, T)> for TopologyChangeProposal {
     fn from((info, payload): (ProposalInfo, T)) -> Self {
         Self {
             subnet_id: payload.get_subnet(),
@@ -134,7 +149,7 @@ pub struct Subnet {
     pub metadata: SubnetMetadata,
     pub replica_version: String,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub proposal: Option<SubnetMembershipChangeProposal>,
+    pub proposal: Option<TopologyChangeProposal>,
     pub replica_release: Option<ReplicaRelease>,
 }
 
@@ -163,7 +178,7 @@ pub struct Node {
     pub subnet: Option<PrincipalId>,
     pub dfinity_owned: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub proposal: Option<SubnetMembershipChangeProposal>,
+    pub proposal: Option<TopologyChangeProposal>,
     pub label: Option<String>,
     #[serde(default)]
     pub decentralized: bool,
