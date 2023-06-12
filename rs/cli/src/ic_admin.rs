@@ -174,20 +174,8 @@ impl Cli {
             return exec(self, cmd, opts);
         }
 
-        if self.yes || opts.simulate {
-            // self.yes case:
-            // Bypass dry-run execution since the user has demanded execution
-            // without confirmation.
-            // The command will be run at the end of this function, possibly
-            // with --dry-run if the user has requested so.
-            //
-            // opts.simulate case:
-            // Bypass dry-run execution since the user has already specified
-            // --dry-run in the ic-admin options slot of the command line.
-            // The command will be --dry-run at the end of this function
-            // anyway, and it is pointless to run it twice (once before
-            // confirmation and once after confirmation).
-        } else {
+        let direct_execution = self.yes || opts.simulate;
+        if !direct_execution {
             // User has not specified direct execution without confirmation,
             // and has also not requested a dry-run.  The default behavior
             // is to first dry-run and then to confirm.
@@ -204,16 +192,6 @@ impl Cli {
                     ..opts.clone()
                 },
             )?;
-
-            // Confirmation time!
-            if !Confirm::new()
-                .with_prompt("Do you want to continue?")
-                .default(false)
-                .interact()?
-            {
-                // Oh noes.  User chickened out.  Abort unconfirmed submission.
-                return Err(anyhow::anyhow!("Action aborted"));
-            }
         }
 
         // Last corner case.  User has attempted to make a for-realz submission
@@ -233,6 +211,15 @@ impl Cli {
         // line (for passthrough proposals) or the --simulate flag (for version
         // proposals).
         // https://www.youtube.com/watch?v=9jK-NcRmVcw#t=13
+        if !direct_execution
+            && !Confirm::new()
+                .with_prompt("Do you want to continue?")
+                .default(false)
+                .interact()?
+        {
+            // Oh noes.  User chickened out.  Abort unconfirmed submission.
+            return Err(anyhow::anyhow!("Action aborted"));
+        }
         exec(self, cmd, opts)
     }
 
