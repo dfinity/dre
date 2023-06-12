@@ -1,3 +1,4 @@
+use futures_util::future::try_join;
 use ic_management_types::requests::{NodeRemoval, NodeRemovalReason, NodesRemoveRequest, NodesRemoveResponse};
 use itertools::Itertools;
 
@@ -13,13 +14,14 @@ async fn remove(
 ) -> Result<HttpResponse, Error> {
     let registry = registry.read().await;
     let health_client = health::HealthClient::new(registry.network());
+    let nodes = registry.nodes_with_proposals();
+    let healths = health_client.nodes();
+
     response_from_result(
-        health_client
-            .nodes()
+        try_join(healths, nodes)
             .await
-            .map(|mut healths| {
-                registry
-                    .nodes()
+            .map(|(mut healths, nodes)| {
+                nodes
                     .values()
                     .cloned()
                     .map(|n| {
@@ -28,6 +30,7 @@ async fn remove(
                             .unwrap_or(ic_management_types::Status::Unknown);
                         (n, status)
                     })
+                    .filter(|(n, _)| n.proposal.is_none())
                     .filter_map(|(n, status)| {
                         if n.subnet.is_some() {
                             return None;
