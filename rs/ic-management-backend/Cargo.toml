@@ -40,6 +40,7 @@ ic-registry-subnet-type = { git = "https://github.com/dfinity/ic.git", rev = "79
 ic-types = { git = "https://github.com/dfinity/ic.git", rev = "794fc5b9341fa8f6a0e8f219201c35f0b5727ab9" }
 prost = "0.11.0"
 ic-management-types = { path = "../ic-management-types" }
+ic-canisters = { path = "../ic-canisters" }
 registry-canister = { git = "https://github.com/dfinity/ic.git", rev = "794fc5b9341fa8f6a0e8f219201c35f0b5727ab9" }
 strum = "0.24.1"
 strum_macros = "0.24.3"
