@@ -2,7 +2,7 @@ pub mod nakamoto;
 pub mod network;
 use colored::Colorize;
 use itertools::{EitherOrBoth::*, Itertools};
-use std::collections::{BTreeMap, HashMap};
+use std::collections::BTreeMap;
 use std::fmt::{Display, Formatter};
 
 use ic_base_types::PrincipalId;
@@ -20,11 +20,11 @@ pub struct SubnetChangeResponse {
     pub motivation: Option<String>,
     pub comment: Option<String>,
     pub run_log: Option<Vec<String>>,
-    pub feature_diff: HashMap<NodeFeature, FeatureDiff>,
+    pub feature_diff: BTreeMap<NodeFeature, FeatureDiff>,
     pub proposal_id: Option<u64>,
 }
 
-pub type FeatureDiff = HashMap<String, (usize, usize)>;
+pub type FeatureDiff = BTreeMap<String, (usize, usize)>;
 
 impl SubnetChangeResponse {
     pub fn with_motivation(self, motivation: String) -> Self {
@@ -55,7 +55,7 @@ impl From<&network::SubnetChange> for SubnetChangeResponse {
                     NodeFeature::variants()
                         .into_iter()
                         .map(|f| (f, FeatureDiff::new()))
-                        .collect::<HashMap<NodeFeature, FeatureDiff>>(),
+                        .collect::<BTreeMap<NodeFeature, FeatureDiff>>(),
                     |mut acc, n| {
                         for f in NodeFeature::variants() {
                             acc.get_mut(&f).unwrap().entry(n.get_feature(&f)).or_insert((0, 0)).0 += 1;
@@ -126,25 +126,25 @@ impl Display for SubnetChangeResponse {
             }
         )?;
 
-        let feature_diff = BTreeMap::from_iter(self.feature_diff.iter());
-        let rows = feature_diff.values().map(|diff| diff.len()).max().unwrap_or(0);
+        let rows = self.feature_diff.values().map(|diff| diff.len()).max().unwrap_or(0);
         let mut table = tabular::Table::new(
-            &feature_diff
+            &self
+                .feature_diff
                 .keys()
                 .map(|_| "    {:<}  {:>}")
                 .collect::<Vec<_>>()
                 .join(""),
         );
         table.add_row(
-            feature_diff
+            self.feature_diff
                 .keys()
                 .fold(tabular::Row::new(), |acc, k| acc.with_cell(k.to_string()).with_cell("")),
         );
-        table.add_row(feature_diff.keys().fold(tabular::Row::new(), |acc, k| {
+        table.add_row(self.feature_diff.keys().fold(tabular::Row::new(), |acc, k| {
             acc.with_cell("-".repeat(k.to_string().len())).with_cell("")
         }));
         for i in 0..rows {
-            table.add_row(feature_diff.values().fold(tabular::Row::new(), |acc, v| {
+            table.add_row(self.feature_diff.values().fold(tabular::Row::new(), |acc, v| {
                 let (value, change) = v
                     .iter()
                     .sorted()

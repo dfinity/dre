@@ -1,4 +1,4 @@
-use std::{collections::HashMap, convert::TryInto, str::FromStr};
+use std::{collections::BTreeMap, convert::TryInto, str::FromStr};
 
 use ic_base_types::PrincipalId;
 use ic_management_types::{Network, Status};
@@ -19,7 +19,7 @@ impl HealthClient {
         }
     }
 
-    pub async fn subnet(&self, subnet: PrincipalId) -> anyhow::Result<HashMap<PrincipalId, Status>> {
+    pub async fn subnet(&self, subnet: PrincipalId) -> anyhow::Result<BTreeMap<PrincipalId, Status>> {
         let query: InstantVector = Selector::new()
             .metric("up")
             .with("ic", &self.network.legacy_name())
@@ -45,7 +45,7 @@ impl HealthClient {
             .collect())
     }
 
-    pub async fn nodes(&self) -> anyhow::Result<HashMap<PrincipalId, Status>> {
+    pub async fn nodes(&self) -> anyhow::Result<BTreeMap<PrincipalId, Status>> {
         let query: InstantVector = InstantVector(format!(
             r#"
                 label_replace(

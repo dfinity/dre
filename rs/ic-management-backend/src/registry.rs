@@ -19,7 +19,7 @@ use itertools::Itertools;
 use std::convert::TryFrom;
 use std::sync::Arc;
 use std::{
-    collections::{BTreeMap, HashMap, HashSet},
+    collections::{BTreeMap, BTreeSet},
     net::Ipv6Addr,
 };
 
@@ -80,12 +80,12 @@ impl RegistryEntry for SubnetRecord {
 }
 
 trait RegistryFamilyEntries {
-    fn get_family_entries<T: RegistryEntry + Default>(&self) -> Result<HashMap<String, T>>;
-    fn get_family_entries_versioned<T: RegistryEntry + Default>(&self) -> Result<HashMap<String, (u64, T)>>;
+    fn get_family_entries<T: RegistryEntry + Default>(&self) -> Result<BTreeMap<String, T>>;
+    fn get_family_entries_versioned<T: RegistryEntry + Default>(&self) -> Result<BTreeMap<String, (u64, T)>>;
 }
 
 impl RegistryFamilyEntries for LocalRegistry {
-    fn get_family_entries<T: RegistryEntry + Default>(&self) -> Result<HashMap<String, T>> {
+    fn get_family_entries<T: RegistryEntry + Default>(&self) -> Result<BTreeMap<String, T>> {
         let prefix_length = T::KEY_PREFIX.len();
         Ok(self
             .get_key_family(T::KEY_PREFIX, self.get_latest_version())?
@@ -100,10 +100,10 @@ impl RegistryFamilyEntries for LocalRegistry {
                         )
                     })
             })
-            .collect::<HashMap<_, _>>())
+            .collect::<BTreeMap<_, _>>())
     }
 
-    fn get_family_entries_versioned<T: RegistryEntry + Default>(&self) -> Result<HashMap<String, (u64, T)>> {
+    fn get_family_entries_versioned<T: RegistryEntry + Default>(&self) -> Result<BTreeMap<String, (u64, T)>> {
         let prefix_length = T::KEY_PREFIX.len();
         Ok(self
             .get_key_family(T::KEY_PREFIX, self.get_latest_version())?
@@ -123,7 +123,7 @@ impl RegistryFamilyEntries for LocalRegistry {
                     })
                     .unwrap_or_else(|_| panic!("failed to get entry {} for type {}", key, std::any::type_name::<T>()))
             })
-            .collect::<HashMap<_, _>>())
+            .collect::<BTreeMap<_, _>>())
     }
 }
 
@@ -301,9 +301,9 @@ impl RegistryState {
         let providers = providers
             .into_iter()
             .map(|p| (p.principal_id, p))
-            .collect::<HashMap<_, _>>();
-        let data_center_records: HashMap<String, DataCenterRecord> = self.local_registry.get_family_entries()?;
-        let operator_records: HashMap<String, NodeOperatorRecord> = self.local_registry.get_family_entries()?;
+            .collect::<BTreeMap<_, _>>();
+        let data_center_records: BTreeMap<String, DataCenterRecord> = self.local_registry.get_family_entries()?;
+        let operator_records: BTreeMap<String, NodeOperatorRecord> = self.local_registry.get_family_entries()?;
 
         self.operators = operator_records
             .iter()
@@ -503,7 +503,7 @@ impl RegistryState {
         self.nodes.clone()
     }
 
-    pub async fn nodes_with_proposals(&self) -> Result<HashMap<PrincipalId, Node>> {
+    pub async fn nodes_with_proposals(&self) -> Result<BTreeMap<PrincipalId, Node>> {
         let nodes = self.nodes.clone();
         let proposal_agent = proposal::ProposalAgent::new(self.nns_url.clone());
 
@@ -522,7 +522,7 @@ impl RegistryState {
             .collect())
     }
 
-    pub async fn subnets_with_proposals(&self) -> Result<HashMap<PrincipalId, Subnet>> {
+    pub async fn subnets_with_proposals(&self) -> Result<BTreeMap<PrincipalId, Subnet>> {
         let subnets = self.subnets.clone();
         let proposal_agent = proposal::ProposalAgent::new(self.nns_url.clone());
 
@@ -555,7 +555,7 @@ impl RegistryState {
             .unique()
             .take(NUM_RELEASE_BRANCHES_TO_KEEP)
             .collect::<Vec<_>>();
-        let subnet_versions: HashSet<String> = self.subnets.values().map(|s| s.replica_version.clone()).collect();
+        let subnet_versions: BTreeSet<String> = self.subnets.values().map(|s| s.replica_version.clone()).collect();
         let version_on_unassigned_nodes = self.get_unassigned_nodes_version().await?;
         Ok(self
             .replica_releases
@@ -645,7 +645,7 @@ impl SubnetQuerier for RegistryState {
             .to_vec()
             .iter()
             .map(|n| self.nodes.get(n).and_then(|n| n.subnet))
-            .collect::<HashSet<_>>();
+            .collect::<BTreeSet<_>>();
         if subnets.len() > 1 {
             return Err(NetworkError::IllegalRequest(
                 "nodes don't belong to the same subnet".to_string(),
