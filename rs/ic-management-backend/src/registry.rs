@@ -7,6 +7,7 @@ use ic_management_types::{
     Datacenter, DatacenterOwner, Guest, Network, NetworkError, Node, NodeProviderDetails, Operator, Provider,
     ReplicaRelease, Subnet, SubnetMetadata,
 };
+use ic_protobuf::registry::unassigned_nodes_config::v1::UnassignedNodesConfigRecord;
 use ic_registry_keys::{
     make_blessed_replica_versions_key, NODE_OPERATOR_RECORD_KEY_PREFIX, NODE_RECORD_KEY_PREFIX,
     SUBNET_RECORD_KEY_PREFIX,
@@ -544,7 +545,7 @@ impl RegistryState {
     }
 
     pub async fn retireable_versions(&self) -> Result<Vec<ReplicaRelease>> {
-        const ACTIVE_RELEASES: usize = 2;
+        const NUM_RELEASE_BRANCHES_TO_KEEP: usize = 2;
         let active_releases = self
             .replica_releases
             .clone()
@@ -552,13 +553,16 @@ impl RegistryState {
             .rev()
             .map(|rr| rr.branch)
             .unique()
-            .take(ACTIVE_RELEASES)
+            .take(NUM_RELEASE_BRANCHES_TO_KEEP)
             .collect::<Vec<_>>();
+        let subnet_versions: HashSet<String> = self.subnets.values().map(|s| s.replica_version.clone()).collect();
+        let version_on_unassigned_nodes = self.get_unassigned_nodes_version().await?;
         Ok(self
             .replica_releases
             .clone()
             .into_iter()
             .filter(|rr| !active_releases.contains(&rr.branch))
+            .filter(|rr| !subnet_versions.contains(&rr.commit_hash) && rr.commit_hash != version_on_unassigned_nodes)
             .collect())
     }
 
@@ -593,6 +597,25 @@ impl RegistryState {
 
     pub fn nns_url(&self) -> String {
         self.nns_url.clone()
+    }
+
+    pub async fn get_unassigned_nodes_version(&self) -> Result<String, anyhow::Error> {
+        let unassigned_config_key = ic_registry_keys::make_unassigned_nodes_config_record_key();
+
+        match self
+            .local_registry
+            .get_value(&unassigned_config_key, self.local_registry.get_latest_version())
+        {
+            Ok(Some(bytes)) => {
+                let cfg = UnassignedNodesConfigRecord::decode(&bytes[..])
+                    .expect("Error decoding UnassignedNodesConfigRecord from the LocalRegistry");
+
+                Ok(cfg.replica_version)
+            }
+            _ => Err(anyhow::anyhow!(
+                "No replica version for unassigned nodes found".to_string(),
+            )),
+        }
     }
 }
 
