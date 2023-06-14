@@ -3,7 +3,7 @@ use counter::Counter;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
-use std::collections::{BTreeMap, HashMap};
+use std::collections::BTreeMap;
 use std::fmt::{Debug, Display, Formatter};
 use std::iter::{FromIterator, IntoIterator};
 
@@ -11,7 +11,7 @@ use ic_management_types::NodeFeature;
 
 #[derive(Eq, PartialEq, Clone, Serialize, Deserialize, Debug)]
 pub struct NodeFeatures {
-    pub feature_map: HashMap<NodeFeature, String>,
+    pub feature_map: BTreeMap<NodeFeature, String>,
 }
 
 impl NodeFeatures {
@@ -21,7 +21,7 @@ impl NodeFeatures {
 
     #[cfg(test)]
     fn new_test_feature_set(value: &str) -> Self {
-        let mut result = HashMap::new();
+        let mut result = BTreeMap::new();
         for feature in NodeFeature::variants() {
             result.insert(feature, value.to_string());
         }
@@ -39,7 +39,7 @@ impl NodeFeatures {
 impl FromIterator<(NodeFeature, &'static str)> for NodeFeatures {
     fn from_iter<I: IntoIterator<Item = (NodeFeature, &'static str)>>(iter: I) -> Self {
         Self {
-            feature_map: HashMap::from_iter(iter.into_iter().map(|x| (x.0, String::from(x.1)))),
+            feature_map: BTreeMap::from_iter(iter.into_iter().map(|x| (x.0, String::from(x.1)))),
         }
     }
 }
@@ -47,7 +47,7 @@ impl FromIterator<(NodeFeature, &'static str)> for NodeFeatures {
 impl FromIterator<(NodeFeature, std::string::String)> for NodeFeatures {
     fn from_iter<I: IntoIterator<Item = (NodeFeature, std::string::String)>>(iter: I) -> Self {
         Self {
-            feature_map: HashMap::from_iter(iter),
+            feature_map: BTreeMap::from_iter(iter),
         }
     }
 }
@@ -75,7 +75,7 @@ impl NakamotoScore {
             features_to_nodes_map.insert(feature, Vec::new());
         }
 
-        // Convert a Vec<HashMap<NodeFeature, Value>> into a Vec<HashMap<NodeFeature,
+        // Convert a Vec<BTreeMap<NodeFeature, Value>> into a Vec<BTreeMap<NodeFeature,
         // Vec<Values>>
         for node_features in slice_node_features.iter() {
             for feature in NodeFeature::variants() {
