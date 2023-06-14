@@ -1,3 +1,4 @@
+pub mod governance_canister;
 pub mod nodes;
 pub mod query_decentralization;
 pub mod release;
