@@ -128,6 +128,7 @@ async fn main() -> std::io::Result<()> {
             .service(endpoints::query_decentralization::decentralization_subnet_query)
             .service(endpoints::query_decentralization::decentralization_whatif_query)
             .service(endpoints::release::retireable)
+            .service(endpoints::governance_canister::governance_canister_version_endpoint)
     })
     .shutdown_timeout(10)
     .bind((
@@ -262,7 +263,7 @@ fn nns_url() -> String {
 }
 
 fn nns_nodes_urls() -> Vec<Url> {
-    vec![Url::parse(&nns_url()).expect("Cannot parse NNS_URL environment variable as a valid url")]
+    vec![Url::parse(&nns_url()).expect("Cannot parse NNS_URL environment variable as a valid URL")]
 }
 
 async fn sync_local_store() -> anyhow::Result<()> {
