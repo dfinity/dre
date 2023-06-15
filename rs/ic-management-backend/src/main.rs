@@ -15,6 +15,7 @@ use ic_registry_client::client::ThresholdSigPublicKey;
 use ic_registry_keys::{make_crypto_threshold_signing_pubkey_key, ROOT_SUBNET_ID_KEY};
 use ic_registry_local_store::{Changelog, ChangelogEntry, KeyMutation, LocalStoreImpl, LocalStoreWriter};
 use registry_canister::mutations::common::decode_registry_value;
+use release::list_subnets_release_statuses;
 mod gitlab;
 mod health;
 use crate::release::RolloutBuilder;
@@ -110,6 +111,7 @@ async fn main() -> std::io::Result<()> {
                 }
             })
             .service(rollout)
+            .service(subnets_release)
             .service(version)
             .service(subnets)
             .service(nodes)
@@ -191,6 +193,24 @@ async fn rollout(registry: web::Data<Arc<RwLock<registry::RegistryState>>>) -> R
         network,
     };
     response_from_result(service.build().await)
+}
+
+#[get("/subnets/versions")]
+async fn subnets_release(registry: web::Data<Arc<RwLock<registry::RegistryState>>>) -> Result<HttpResponse, Error> {
+    let registry = registry.read().await;
+    let proposal_agent = proposal::ProposalAgent::new(registry.nns_url());
+    let network = registry.network();
+    let prometheus_client = prometheus::client(&network);
+    response_from_result(
+        list_subnets_release_statuses(
+            &proposal_agent,
+            &prometheus_client,
+            network,
+            registry.subnets(),
+            registry.replica_releases(),
+        )
+        .await,
+    )
 }
 
 #[get("/version")]
