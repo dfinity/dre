@@ -1,6 +1,9 @@
 use anyhow::Result;
+use backon::ExponentialBuilder;
+use backon::Retryable;
 use chrono::serde::ts_seconds;
 use chrono::{Datelike, NaiveDate, NaiveTime, TimeZone, Utc, Weekday};
+use futures_util::future::try_join_all;
 use ic_management_types::{Network, ReplicaRelease, Subnet};
 use ic_types::PrincipalId;
 use itertools::Itertools;
@@ -281,88 +284,6 @@ impl RolloutBuilder {
         }
     }
 
-    async fn get_update_states(
-        &self,
-        release: &ReplicaRelease,
-        since: chrono::DateTime<Utc>,
-    ) -> Result<BTreeMap<PrincipalId, SubnetUpdateState>> {
-        const STATE_FIELD: &str = "state";
-        let query = format!(
-            r#"
-            # Get all subnets that are not yet updated to the given release. These are preparing a CUP for the update.
-            label_replace(
-                sum by (ic_subnet) (ic_replica_info{{ic="{network}", ic_active_version!="{version}"}})
-                    /
-                max by (ic_subnet) (consensus_dkg_current_committee_size{{ic="{network}"}})
-            , 
-                "{state_field}", "{preparing_state}", "", ""
-            )
-                or ignoring({state_field})
-            # Get all subnets that are running on the given release but some nodes are not up yet. These are probably restarting to do an update.
-            label_replace(
-                sum by (ic_subnet) (ic_replica_info{{ic="{network}", ic_active_version="{version}"}})
-                    <
-                max by (ic_subnet) (consensus_dkg_current_committee_size{{ic="{network}"}})
-            ,
-                "{state_field}", "{updating_state}", "", ""
-            )
-                or ignoring({state_field})
-            # Get all subnets that have been running on the given release for at least half an hour without any restarts or pages since the specified time.
-            # If the result is 1, the subnet completed the bake process successfully.
-            label_replace(
-                max_over_time((
-                    -sum_over_time(
-                        (sum by (ic_subnet) (ALERTS{{ic="{network}", severity="page", alertstate="firing"}}))[30m:1m]
-                    )
-                        or
-                    (
-                        avg_over_time((sum by (ic_subnet) (ic_replica_info{{ic="{network}", ic_active_version="{version}"}}))[30m:1m])
-                                /
-                        max_over_time((max by (ic_subnet) (consensus_dkg_current_committee_size{{ic="{network}"}}))[30m:5m])
-                    )
-                )[{period}s:1m])
-            ,
-                "{state_field}", "{baking_state}", "", ""
-            )
-        "#,
-            network = self.network.legacy_name(),
-            version = release.commit_hash,
-            preparing_state = SubnetUpdateState::Preparing,
-            updating_state = SubnetUpdateState::Updating,
-            baking_state = SubnetUpdateState::Baking,
-            state_field = STATE_FIELD,
-            period = Utc::now().timestamp() - since.timestamp(),
-        );
-        info!("release ({}) query: {}", release.commit_hash, query);
-        let response = self.prometheus_client.query(query, None, None).await?;
-        let results = response.as_instant().expect("Expected instant vector");
-        Ok(results
-            .iter()
-            .filter_map(|r| {
-                let subnet = r
-                    .metric()
-                    .get("ic_subnet")
-                    .map(|s| PrincipalId::from_str(s).expect("ic_subnet label should always be a valid principal id"));
-                let state = SubnetUpdateState::from_str(
-                    r.metric()
-                        .get(STATE_FIELD)
-                        .expect("query should always yield a vector with a valid state"),
-                )
-                .expect("state label should always be a valid state");
-                subnet.map(|s| {
-                    (
-                        s,
-                        if matches!(state, SubnetUpdateState::Baking) && r.sample().value() == 1.0 {
-                            SubnetUpdateState::Complete
-                        } else {
-                            state
-                        },
-                    )
-                })
-            })
-            .collect())
-    }
-
     async fn stages_from_proposals(
         &self,
         release: &ReplicaRelease,
@@ -440,7 +361,13 @@ impl RolloutBuilder {
                 .collect::<BTreeSet<_>>();
             let mut update_states = BTreeMap::new();
             for release in releases {
-                let release_update_states = self.get_update_states(&release, last_stage.start_date_time).await?;
+                let release_update_states = get_update_states(
+                    &self.network,
+                    &self.prometheus_client,
+                    &release,
+                    last_stage.start_date_time,
+                )
+                .await?;
                 update_states.insert(release, release_update_states);
             }
             for u in &mut last_stage.updates {
@@ -642,6 +569,233 @@ impl RolloutState {
             .filter(|rd| !rd.rollout_stages_subnets.is_empty())
             .collect()
     }
+}
+
+async fn get_update_states(
+    network: &Network,
+    prometheus_client: &prometheus_http_query::Client,
+    release: &ReplicaRelease,
+    since: chrono::DateTime<Utc>,
+) -> Result<BTreeMap<PrincipalId, SubnetUpdateState>> {
+    const STATE_FIELD: &str = "state";
+    let query = format!(
+        r#"
+        # Get all subnets that are not yet updated to the given release. These are preparing a CUP for the update.
+        label_replace(
+            count by (ic_subnet) (ic_replica_info{{ic="{network}", ic_active_version!="{version}"}})
+                /
+            max by (ic_subnet) (consensus_dkg_current_committee_size{{ic="{network}"}})
+        , 
+            "{state_field}", "{preparing_state}", "", ""
+        )
+            or ignoring({state_field})
+        # Get all subnets that are running on the given release but some nodes are not up yet. These are probably restarting to do an update.
+        label_replace(
+            max_over_time((count by (ic_subnet) (ic_replica_info{{ic="{network}", ic_active_version="{version}"}}))[{period}s:2m])
+                <
+            # max count of up replicas 10 minutes before the upgrade
+            last_over_time((
+                max_over_time(
+                    (
+                        count by (ic_subnet) (ic_replica_info{{ic_active_version!="{version}"}})
+                    )[10m:1m]
+                )
+            )[{period}s:1m])
+        ,
+            "{state_field}", "{updating_state}", "", ""
+        )
+            or ignoring({state_field})
+        # Get all subnets that have been running on the given release for at least half an hour without any restarts or pages since the specified time.
+        # If the result is 1, the subnet completed the bake process successfully.
+        label_replace(
+            max_over_time((
+                -sum_over_time(
+                    (
+                        sum by (ic_subnet) (ALERTS{{ic="{network}", severity="page", alertstate="firing"}})
+                        -
+                        # discount alerts active 10 minutes before the upgrade
+                        last_over_time((
+                            count by (ic_subnet) (ALERTS{{ic="{network}", severity="page", alertstate="firing"}} offset 10m)
+                                and
+                            count by (ic_subnet) (ic_replica_info{{ic_active_version!="{version}"}}) > 0
+                        )[{period}s:1m])
+                    )[30m:1m]
+                ) < 0
+                    or
+                (
+                    avg_over_time((sum by (ic_subnet) (ic_replica_info{{ic="{network}", ic_active_version="{version}"}}))[30m:1m])
+                            /
+                    max_over_time((max by (ic_subnet) (consensus_dkg_current_committee_size{{ic="{network}"}}))[30m:5m])
+                )
+            )[{period}s:1m])
+        ,
+            "{state_field}", "{baking_state}", "", ""
+        )
+    "#,
+        network = network.legacy_name(),
+        version = release.commit_hash,
+        preparing_state = SubnetUpdateState::Preparing,
+        updating_state = SubnetUpdateState::Updating,
+        baking_state = SubnetUpdateState::Baking,
+        state_field = STATE_FIELD,
+        period = Utc::now().timestamp() - since.timestamp(),
+    );
+    info!("release ({}) query: {}", release.commit_hash, query);
+    let response = prometheus_client.query(query, None, None).await?;
+    let results = response.as_instant().expect("Expected instant vector");
+    Ok(results
+        .iter()
+        .filter_map(|r| {
+            let subnet = r
+                .metric()
+                .get("ic_subnet")
+                .map(|s| PrincipalId::from_str(s).expect("ic_subnet label should always be a valid principal id"));
+            let state = SubnetUpdateState::from_str(
+                r.metric()
+                    .get(STATE_FIELD)
+                    .expect("query should always yield a vector with a valid state"),
+            )
+            .expect("state label should always be a valid state");
+            subnet.map(|s| {
+                (
+                    s,
+                    if matches!(state, SubnetUpdateState::Baking) && r.sample().value() == 1.0 {
+                        SubnetUpdateState::Complete
+                    } else {
+                        state
+                    },
+                )
+            })
+        })
+        .collect())
+}
+
+#[derive(Serialize, Clone)]
+pub struct SubnetReleaseStatus {
+    pub state: SubnetUpdateState,
+    pub subnet_id: PrincipalId,
+    pub subnet_name: String,
+    pub proposal: Option<SubnetUpdateProposal>,
+    pub patches_available: Vec<ReplicaRelease>,
+    pub release: ReplicaRelease,
+}
+
+pub async fn list_subnets_release_statuses(
+    proposal_agent: &ProposalAgent,
+    prometheus_client: &prometheus_http_query::Client,
+    network: Network,
+    subnets: BTreeMap<PrincipalId, Subnet>,
+    releases: Vec<ReplicaRelease>,
+) -> anyhow::Result<Vec<SubnetReleaseStatus>> {
+    let mut subnet_update_proposals = proposal_agent.list_update_subnet_version_proposals().await?;
+    subnet_update_proposals.sort_by_key(|p| p.info.proposal_timestamp_seconds);
+    subnet_update_proposals.reverse();
+    let latest_updates = subnets
+        .keys()
+        .map(|p| {
+            (
+                p,
+                subnet_update_proposals.iter().find(|sup| sup.payload.subnet_id == *p),
+            )
+        })
+        .collect::<BTreeMap<_, _>>();
+
+    let active_releases = latest_updates
+        .values()
+        .filter_map(|u| {
+            u.map(|sup| {
+                releases
+                    .iter()
+                    .find(|r| r.commit_hash == *sup.payload.replica_version_id)
+            })
+            .flatten()
+        })
+        .collect::<Vec<_>>();
+
+    let oldest_release_update = active_releases
+        .iter()
+        .map(|r| {
+            (
+                r.commit_hash.clone(),
+                latest_updates
+                    .values()
+                    .filter_map(|u| *u)
+                    .filter(|u| u.payload.replica_version_id == r.commit_hash && u.info.executed)
+                    .map(|u| u.info.executed_timestamp_seconds)
+                    .min()
+                    .map(|t| Utc.timestamp_opt(t as i64, 0).unwrap())
+                    .unwrap_or_else(Utc::now),
+            )
+        })
+        .collect::<BTreeMap<_, _>>();
+
+    let updates_statuses_for_revision = try_join_all(active_releases.clone().into_iter().cloned().map(|r| async {
+        let retryable = || async {
+            get_update_states(
+                &network,
+                prometheus_client,
+                &r,
+                *oldest_release_update.get(&r.commit_hash).expect("needs to exist"),
+            )
+            .await
+        };
+        retryable
+            .retry(&ExponentialBuilder::default())
+            .await
+            .map(|updates| (r.commit_hash, updates))
+    }))
+    .await?
+    .into_iter()
+    .collect::<BTreeMap<_, _>>();
+
+    let latest_releases = releases
+        .iter()
+        .rev()
+        .unique_by(|r| r.branch.clone())
+        .collect::<Vec<_>>();
+
+    Ok(subnets
+        .values()
+        .map(|s| {
+            let proposal = latest_updates.get(&s.principal).expect("entry exists for each subnet");
+            let release = releases
+                .iter()
+                .find(|r| {
+                    r.commit_hash
+                        == if let Some(p) = proposal {
+                            p.payload.replica_version_id.clone()
+                        } else {
+                            s.replica_version.clone()
+                        }
+                })
+                .expect("some release should have been found for replica");
+            SubnetReleaseStatus {
+                state: proposal
+                    .map(|u| {
+                        if !u.info.executed {
+                            SubnetUpdateState::Submitted
+                        } else {
+                            updates_statuses_for_revision
+                                .get(&u.payload.replica_version_id)
+                                .expect("entry for revision must exist")
+                                .get(&s.principal)
+                                .cloned()
+                                .unwrap_or(SubnetUpdateState::Unknown)
+                        }
+                    })
+                    .unwrap_or(SubnetUpdateState::Unknown),
+                subnet_id: s.principal,
+                subnet_name: s.metadata.name.clone(),
+                proposal: proposal.cloned(),
+                patches_available: latest_releases
+                    .iter()
+                    .find(|r| r.name == release.name)
+                    .map(|r| r.patches_for(&release.commit_hash).expect("patches this release"))
+                    .unwrap_or_default(),
+                release: release.clone(),
+            }
+        })
+        .collect())
 }
 
 #[cfg(test)]
