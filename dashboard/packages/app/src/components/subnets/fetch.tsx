@@ -1,4 +1,4 @@
-import { Operator, Subnet, Guest, NodeHealth, Rollout, Node, ChangePreview } from './types';
+import { Operator, Subnet, Guest, NodeHealth, Rollout, Node, ChangePreview, SubnetUpdate } from './types';
 import { useQuery } from 'react-query';
 import { useApi, configApiRef } from '@backstage/core-plugin-api';
 
@@ -35,6 +35,17 @@ export function fetchNodes(): { [principal: string]: Node } {
     ).then((res) => res.json())
   );
   return data ?? {};
+}
+
+export function fetchSubnetVersions(): SubnetUpdate[] {
+  const network = get_network();
+  const config = useApi(configApiRef);
+  const { data } = useQuery<SubnetUpdate[], Error>(`${network}_subnets_versions`, () =>
+    fetch(
+      `${config.getString('backend.baseUrl')}/api/proxy/registry/${network}/subnets/versions`
+    ).then((res) => res.json())
+  );
+  return data ?? [];
 }
 
 export function fetchMissingGuests(): Guest[] {
