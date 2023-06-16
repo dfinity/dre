@@ -4,6 +4,7 @@ import { Grid } from '@material-ui/core';
 import { Page, Header, Content, HeaderLabel } from '@backstage/core-components';
 // import { ReleaseList } from './ReleaseList';
 import RolloutsStepper from './RolloutStepper';
+import SubnetVersionSearch from './SubnetVersionSearch';
 // import HotfixReleases from './HotfixReleases';
 
 export const ReleasePage = () => {
@@ -16,7 +17,8 @@ export const ReleasePage = () => {
       <Content>
         <Grid container>
           <Grid item xs={12}>
-            <RolloutsStepper />
+            <SubnetVersionSearch />
+            {/* <RolloutsStepper /> */}
           </Grid>
         </Grid>
       </Content>
