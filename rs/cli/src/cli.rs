@@ -104,6 +104,10 @@ pub(crate) mod subnet {
             #[clap(long, num_args(1..))]
             exclude: Vec<String>,
 
+            /// Features or Node IDs to only choose from
+            #[clap(long, num_args(1..), value_delimiter = ',')]
+            only: Vec<String>,
+
             /// Force the inclusion of the provided nodes for replacement,
             /// regardless of the decentralization score
             #[clap(long, num_args(1..))]
@@ -128,6 +132,10 @@ pub(crate) mod subnet {
             /// Features or Node IDs to exclude from the available nodes pool
             #[clap(long, num_args(1..))]
             exclude: Vec<String>,
+
+            /// Features or Node IDs to only choose from
+            #[clap(long, num_args(1..), value_delimiter = ',')]
+            only: Vec<String>,
 
             /// Force the inclusion of the provided nodes for replacement,
             /// regardless of the decentralization score

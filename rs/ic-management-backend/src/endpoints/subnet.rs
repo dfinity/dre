@@ -114,6 +114,7 @@ async fn replace(
         }
     }
     .exclude_nodes(request.exclude.clone().unwrap_or_default())
+    .only_nodes(request.only.clone())
     .include_nodes(request.include.clone().unwrap_or_default())
     .with_min_nakamoto_coefficients(request.min_nakamoto_coefficients.clone());
 
@@ -199,6 +200,7 @@ async fn resize(
         .await?
         .exclude_nodes(request.exclude.clone().unwrap_or_default())
         .include_nodes(request.include.clone().unwrap_or_default())
+        .only_nodes(request.only.clone())
         .resize(request.add, request.remove)?;
 
     Ok(HttpResponse::Ok().json(decentralization::SubnetChangeResponse::from(&change)))
