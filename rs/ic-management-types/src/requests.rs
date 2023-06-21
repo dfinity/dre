@@ -8,6 +8,7 @@ pub struct MembershipReplaceRequest {
     pub heal: bool,
     pub optimize: Option<usize>,
     pub exclude: Option<Vec<String>>,
+    pub only: Vec<String>,
     pub include: Option<Vec<PrincipalId>>,
     pub min_nakamoto_coefficients: Option<MinNakamotoCoefficients>,
 }
@@ -36,6 +37,7 @@ pub struct SubnetResizeRequest {
     pub add: usize,
     pub remove: usize,
     pub exclude: Option<Vec<String>>,
+    pub only: Vec<String>,
     pub include: Option<Vec<PrincipalId>>,
 }
 
