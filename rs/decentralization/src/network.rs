@@ -715,6 +715,21 @@ impl SubnetChangeRequest {
         }
     }
 
+    pub fn only_nodes(self, only_nodes_or_features: Vec<String>) -> Self {
+        let available_nodes = if only_nodes_or_features.is_empty() {
+            self.available_nodes.into_iter().collect()
+        } else {
+            self.available_nodes
+                .into_iter()
+                .filter(|n| only_nodes_or_features.iter().any(|v| n.matches_feature_value(v)))
+                .collect()
+        };
+        Self {
+            available_nodes,
+            ..self
+        }
+    }
+
     pub fn with_custom_available_nodes(self, nodes: Vec<Node>) -> Self {
         Self {
             available_nodes: nodes,
