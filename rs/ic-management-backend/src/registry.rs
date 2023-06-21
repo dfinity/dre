@@ -152,11 +152,15 @@ impl RegistryState {
                 ),
                 (
                     "w4rem-dv5e3-widiz-wbpea-kbttk-mnzfm-tzrc7-svcj3-kbxyb-zamch-hqe",
-                    "People Parties",
+                    "Bitcoin",
+                ),
+                (
+                    "eq6en-6jqla-fbu5s-daskr-h6hx2-376n5-iqabl-qgrng-gfqmv-n3yjr-mqe",
+                    "Open Chat 1",
                 ),
                 (
                     "2fq7c-slacv-26cgz-vzbx2-2jrcs-5edph-i5s2j-tck77-c3rlz-iobzx-mqe",
-                    "Bitcoin",
+                    "Open Chat 2",
                 ),
                 ("x33ed-h457x-bsgyx-oqxqf-6pzwv-wkhzr-rm2j3-npodi-purzm-n66cg-gae", "SNS"),
             ]
