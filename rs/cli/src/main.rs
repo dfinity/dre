@@ -75,6 +75,7 @@ async fn main() -> Result<(), anyhow::Error> {
                         optimize,
                         motivation,
                         exclude,
+                        only,
                         include,
                         min_nakamoto_coefficients,
                         verbose,
@@ -105,19 +106,21 @@ async fn main() -> Result<(), anyhow::Error> {
                                     heal: !no_heal,
                                     optimize: *optimize,
                                     exclude: exclude.clone().into(),
+                                    only: only.clone(),
                                     include: include.clone().into(),
                                     min_nakamoto_coefficients,
                                 }, *verbose)
                                 .await
                     }
-                    cli::subnet::Commands::Resize { add, remove, include, exclude, motivation, verbose, } => {
+                    cli::subnet::Commands::Resize { add, remove, include, only, exclude, motivation, verbose, } => {
                         if let Some(motivation) = motivation.clone() {
                             runner.subnet_resize(ic_management_types::requests::SubnetResizeRequest {
                                 subnet: subnet.id.unwrap(),
                                 add: *add,
                                 remove: *remove,
+                                only: only.clone(),
                                 exclude: exclude.clone().into(),
-                                        include: include.clone().into(),
+                                include: include.clone().into(),
                             }, motivation, *verbose).await
                         } else {
                             cmd.error(
