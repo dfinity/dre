@@ -105,7 +105,7 @@ pub(crate) mod subnet {
             exclude: Vec<String>,
 
             /// Features or Node IDs to only choose from
-            #[clap(long, num_args(1..), value_delimiter = ',')]
+            #[clap(long, num_args(1..))]
             only: Vec<String>,
 
             /// Force the inclusion of the provided nodes for replacement,
@@ -134,7 +134,7 @@ pub(crate) mod subnet {
             exclude: Vec<String>,
 
             /// Features or Node IDs to only choose from
-            #[clap(long, num_args(1..), value_delimiter = ',')]
+            #[clap(long, num_args(1..))]
             only: Vec<String>,
 
             /// Force the inclusion of the provided nodes for replacement,
@@ -150,6 +150,42 @@ pub(crate) mod subnet {
             /// backend.
             #[clap(long)]
             verbose: bool,
+        },
+
+        /// Create a new subnet
+        Create {
+            /// Number of nodes in the subnet
+            #[clap(long, default_value_t = 13)]
+            size: usize,
+
+            /// Minimum nakamoto coefficients desired
+            #[clap(long, num_args(1..))]
+            min_nakamoto_coefficients: Vec<String>,
+
+            /// Features or Node IDs to exclude from the available nodes pool
+            #[clap(long, num_args(1..))]
+            exclude: Vec<String>,
+
+            /// Features or Node IDs to only choose from
+            #[clap(long, num_args(1..))]
+            only: Vec<String>,
+
+            /// Force the inclusion of the provided nodes,
+            /// regardless of the decentralization score
+            #[clap(long, num_args(1..))]
+            include: Vec<PrincipalId>,
+
+            /// Motivation for creating the subnet
+            #[clap(short, long)]
+            motivation: Option<String>,
+
+            /// More verbose execution. For instance, print logs from the
+            /// backend.
+            #[clap(long)]
+            verbose: bool,
+
+            #[clap(long)]
+            replica_version: Option<String>,
         },
     }
 }

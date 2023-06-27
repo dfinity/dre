@@ -79,6 +79,42 @@ impl Runner {
         }
     }
 
+    pub async fn subnet_create(
+        &self,
+        request: ic_management_types::requests::SubnetCreateRequest,
+        motivation: String,
+        verbose: bool,
+        replica_version: Option<String>,
+    ) -> anyhow::Result<()> {
+        let subnet_creation_data = self.dashboard_backend_client.subnet_create(request).await?;
+        if verbose {
+            if let Some(run_log) = &subnet_creation_data.run_log {
+                println!("{}\n", run_log.join("\n"));
+            }
+        }
+        println!("{}", subnet_creation_data);
+
+        let replica_version = replica_version.unwrap_or(
+            self.dashboard_backend_client
+                .get_nns_replica_version()
+                .await
+                .expect("Should get a replica version"),
+        );
+
+        self.ic_admin.propose_run(
+            ic_admin::ProposeCommand::CreateSubnet {
+                node_ids: subnet_creation_data.added,
+                replica_version,
+            },
+            ic_admin::ProposeOptions {
+                title: Some("Creating new subnet".into()),
+                summary: Some("# Creating new subnet with nodes: ".into()),
+                motivation: Some(motivation.clone()),
+                simulate: false,
+            },
+        )
+    }
+
     pub async fn membership_replace(
         &self,
         request: ic_management_types::requests::MembershipReplaceRequest,

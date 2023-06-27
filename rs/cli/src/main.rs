@@ -65,6 +65,7 @@ async fn main() -> Result<(), anyhow::Error> {
                             .exit();
                         }
                     }
+                    cli::subnet::Commands::Create { .. } => {}
                 }
 
                 match &subnet.subcommand {
@@ -118,10 +119,28 @@ async fn main() -> Result<(), anyhow::Error> {
                                 subnet: subnet.id.unwrap(),
                                 add: *add,
                                 remove: *remove,
-                                only: only.clone(),
+                                only: only.clone().into(),
                                 exclude: exclude.clone().into(),
                                 include: include.clone().into(),
                             }, motivation, *verbose).await
+                        } else {
+                            cmd.error(
+                                ErrorKind::MissingRequiredArgument,
+                                "Required argument `motivation` not found",
+                            )
+                            .exit();
+                        }
+                    }
+                    cli::subnet::Commands::Create { size, min_nakamoto_coefficients, exclude, only, include, motivation, verbose, replica_version } => {
+                        let min_nakamoto_coefficients = parse_min_nakamoto_coefficients(&mut cmd, min_nakamoto_coefficients);
+                        if let Some(motivation) = motivation.clone() {
+                            runner.subnet_create(ic_management_types::requests::SubnetCreateRequest {
+                                size: *size,
+                                min_nakamoto_coefficients,
+                                only: only.clone().into(),
+                                exclude: exclude.clone().into(),
+                                include: include.clone().into(),
+                            }, motivation, *verbose, replica_version.clone()).await
                         } else {
                             cmd.error(
                                 ErrorKind::MissingRequiredArgument,

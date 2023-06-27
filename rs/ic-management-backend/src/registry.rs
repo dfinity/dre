@@ -570,6 +570,17 @@ impl RegistryState {
             .collect())
     }
 
+    pub async fn nns_replica_version(&self) -> Option<String> {
+        Some(
+            self.subnets()
+                .get(
+                    &PrincipalId::from_str("tdb26-jop6k-aogll-7ltgs-eruif-6kk7m-qpktf-gdiqx-mxtrf-vb5e6-eqe").unwrap(),
+                )?
+                .replica_version
+                .clone(),
+        )
+    }
+
     pub fn operators(&self) -> BTreeMap<PrincipalId, Operator> {
         self.operators.clone()
     }

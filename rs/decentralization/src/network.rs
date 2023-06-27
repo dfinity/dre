@@ -654,12 +654,18 @@ pub trait TopologyManager: SubnetQuerier + AvailableNodesQuerier {
         &self,
         size: usize,
         min_nakamoto_coefficients: Option<MinNakamotoCoefficients>,
+        include_nodes: Vec<PrincipalId>,
+        exclude_nodes: Vec<String>,
+        only_nodes: Vec<String>,
     ) -> Result<SubnetChange, NetworkError> {
         SubnetChangeRequest {
             available_nodes: self.available_nodes().await?,
             min_nakamoto_coefficients,
             ..Default::default()
         }
+        .include_nodes(include_nodes.clone())
+        .exclude_nodes(exclude_nodes.clone())
+        .only_nodes(only_nodes.clone())
         .resize(size, 0)
     }
 }
