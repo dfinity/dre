@@ -180,9 +180,16 @@ async fn create_subnet(
         request.size,
         serde_json::to_string(&request.min_nakamoto_coefficients).unwrap()
     );
+
     Ok(HttpResponse::Ok().json(decentralization::SubnetChangeResponse::from(
         &registry
-            .create_subnet(request.size, request.min_nakamoto_coefficients.clone())
+            .create_subnet(
+                request.size,
+                request.min_nakamoto_coefficients.clone(),
+                request.include.clone().unwrap_or_default(),
+                request.exclude.clone().unwrap_or_default(),
+                request.only.clone().unwrap_or_default(),
+            )
             .await?,
     )))
 }
@@ -200,7 +207,7 @@ async fn resize(
         .await?
         .exclude_nodes(request.exclude.clone().unwrap_or_default())
         .include_nodes(request.include.clone().unwrap_or_default())
-        .only_nodes(request.only.clone())
+        .only_nodes(request.only.clone().unwrap_or_default())
         .resize(request.add, request.remove)?;
 
     Ok(HttpResponse::Ok().json(decentralization::SubnetChangeResponse::from(&change)))

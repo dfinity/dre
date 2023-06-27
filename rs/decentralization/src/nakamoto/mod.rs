@@ -62,7 +62,19 @@ pub struct NakamotoScore {
     value_counts: BTreeMap<NodeFeature, Vec<(String, usize)>>,
     controlled_nodes: BTreeMap<NodeFeature, usize>,
     avg_linear: f64,
-    avg_log2: f64,
+
+    /// This field needs to be optional in case we get a -inf result because of
+    /// an empty subnet.
+    /// In such a case, serialization would fail because serde does not support
+    /// serialization of this value, and serializes it as a null JSON value. When
+    /// trying to deserialize it as a f64, we would get a deserialization error.
+    ///
+    /// See serde bug for tracking here
+    /// https://github.com/serde-rs/json/issues/202
+    ///
+    /// Also, see return value given to avg_log2 of Self.new_from_slice_node_features
+    /// for implementation detail
+    avg_log2: Option<f64>,
     min: f64,
 }
 
@@ -121,7 +133,15 @@ impl NakamotoScore {
             value_counts,
             controlled_nodes,
             avg_linear: scores.values().sum::<f64>() / scores.len() as f64,
-            avg_log2: scores.values().map(|x| x.log2()).sum::<f64>() / scores.len() as f64,
+            avg_log2: {
+                // See struct definition for this field for the exlpanation of this
+                // condition
+                if scores.values().all(|&v| v != 0 as f64) {
+                    Some(scores.values().map(|x| x.log2()).sum::<f64>() / scores.len() as f64)
+                } else {
+                    None
+                }
+            },
             min: scores
                 .values()
                 .map(|x| if x.is_finite() { *x } else { 0. })
@@ -182,7 +202,7 @@ impl NakamotoScore {
     }
 
     /// An average of the log2 nakamoto scores over all features
-    pub fn score_avg_log2(&self) -> f64 {
+    pub fn score_avg_log2(&self) -> Option<f64> {
         self.avg_log2
     }
 
@@ -309,11 +329,15 @@ impl Eq for NakamotoScore {}
 
 impl Display for NakamotoScore {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let avg_log2_str = match self.avg_log2 {
+            Some(v) => format!("{:0.2}", v),
+            None => "undefined".to_string(),
+        };
         write!(
             f,
-            "NakamotoScore: min {:0.2} avg log2 {:0.2} #crit nodes {} #crit coeff {} avg linear {:0.2}",
+            "NakamotoScore: min {:0.2} avg log2 {} #crit nodes {} #crit coeff {} avg linear {:0.2}",
             self.min,
-            self.avg_log2,
+            avg_log2_str,
             self.critical_features_num_nodes(),
             self.coefficients.values().filter(|c| **c < 3.0).count(),
             self.avg_linear,
@@ -382,7 +406,7 @@ mod tests {
                 (NodeFeature::DataCenter, 1),
             ]),
             avg_linear: 1.,
-            avg_log2: 0.,
+            avg_log2: Some(0.),
             min: 1.,
         };
         assert_eq!(score, score_expected);
@@ -731,7 +755,7 @@ mod tests {
         assert!(nakamoto_score_after.score_min() >= 1.0);
         assert!(nakamoto_score_after.critical_features_num_nodes() <= 25);
         assert!(nakamoto_score_after.score_avg_linear() >= 3.0);
-        assert!(nakamoto_score_after.score_avg_log2() >= 1.32);
+        assert!(nakamoto_score_after.score_avg_log2() >= Some(1.32));
     }
 
     #[test]

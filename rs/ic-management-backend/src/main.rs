@@ -130,6 +130,7 @@ async fn main() -> std::io::Result<()> {
             .service(endpoints::query_decentralization::decentralization_subnet_query)
             .service(endpoints::query_decentralization::decentralization_whatif_query)
             .service(endpoints::release::retireable)
+            .service(endpoints::release::get_nns_replica_version)
             .service(endpoints::governance_canister::governance_canister_version_endpoint)
     })
     .shutdown_timeout(10)

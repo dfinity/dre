@@ -29,6 +29,9 @@ pub enum ReplaceTarget {
 pub struct SubnetCreateRequest {
     pub size: usize,
     pub min_nakamoto_coefficients: Option<MinNakamotoCoefficients>,
+    pub exclude: Option<Vec<String>>,
+    pub only: Option<Vec<String>>,
+    pub include: Option<Vec<PrincipalId>>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -37,7 +40,7 @@ pub struct SubnetResizeRequest {
     pub add: usize,
     pub remove: usize,
     pub exclude: Option<Vec<String>>,
-    pub only: Vec<String>,
+    pub only: Option<Vec<String>>,
     pub include: Option<Vec<PrincipalId>>,
 }
 

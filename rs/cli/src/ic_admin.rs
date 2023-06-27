@@ -494,6 +494,10 @@ pub(crate) enum ProposeCommand {
         stringified_hash: String,
         versions_to_retire: Vec<String>,
     },
+    CreateSubnet {
+        node_ids: Vec<PrincipalId>,
+        replica_version: String,
+    },
 }
 
 impl ProposeCommand {
@@ -569,6 +573,20 @@ impl ProposeCommand {
                 },
             ]
             .concat(),
+            Self::CreateSubnet {
+                node_ids,
+                replica_version,
+            } => {
+                let mut args = vec!["--subnet-type".to_string(), "application".to_string()];
+
+                args.push("--replica-version-id".to_string());
+                args.push(replica_version.to_string());
+
+                for id in node_ids {
+                    args.push(id.to_string())
+                }
+                args
+            }
         }
     }
 }
