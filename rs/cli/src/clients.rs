@@ -2,7 +2,9 @@ use async_trait::async_trait;
 use decentralization::SubnetChangeResponse;
 use ic_base_types::PrincipalId;
 use ic_management_types::{
-    requests::{MembershipReplaceRequest, NodesRemoveRequest, NodesRemoveResponse, SubnetResizeRequest},
+    requests::{
+        MembershipReplaceRequest, NodesRemoveRequest, NodesRemoveResponse, SubnetCreateRequest, SubnetResizeRequest,
+    },
     Network, NetworkError, ReplicaRelease, TopologyProposal,
 };
 use log::error;
@@ -70,9 +72,24 @@ impl DashboardBackendClient {
             .await
     }
 
+    pub async fn subnet_create(&self, request: SubnetCreateRequest) -> anyhow::Result<SubnetChangeResponse> {
+        reqwest::Client::new()
+            .post(self.url.join("subnet/create").map_err(|e| anyhow::anyhow!(e))?)
+            .json(&request)
+            .rest_send()
+            .await
+    }
+
     pub async fn get_retireable_versions(&self) -> anyhow::Result<Vec<ReplicaRelease>> {
         reqwest::Client::new()
             .get(self.url.join("release/retireable").map_err(|e| anyhow::anyhow!(e))?)
+            .rest_send()
+            .await
+    }
+
+    pub async fn get_nns_replica_version(&self) -> anyhow::Result<String> {
+        reqwest::Client::new()
+            .get(self.url.join("release/versions/nns").map_err(|e| anyhow::anyhow!(e))?)
             .rest_send()
             .await
     }
