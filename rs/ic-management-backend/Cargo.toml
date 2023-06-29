@@ -79,3 +79,7 @@ actix-rt = "2.2.0"
 [[bin]]
 name = "ic-management-backend"
 path = "src/main.rs"
+
+[lib]
+name = "ic_management_backend"
+path = "src/lib.rs"

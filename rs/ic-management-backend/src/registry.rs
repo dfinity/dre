@@ -128,7 +128,7 @@ impl RegistryFamilyEntries for LocalRegistry {
 }
 
 impl RegistryState {
-    pub(crate) fn new(
+    pub fn new(
         nns_url: String,
         network: Network,
         local_registry: Arc<LocalRegistry>,
@@ -175,11 +175,7 @@ impl RegistryState {
         }
     }
 
-    pub(crate) async fn update(
-        &mut self,
-        providers: Vec<NodeProviderDetails>,
-        guests: Vec<Guest>,
-    ) -> anyhow::Result<()> {
+    pub async fn update(&mut self, providers: Vec<NodeProviderDetails>, guests: Vec<Guest>) -> anyhow::Result<()> {
         self.guests = guests;
         if !matches!(self.network, Network::Mainnet) {
             for g in &mut self.guests {
