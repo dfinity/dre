@@ -64,7 +64,7 @@ impl HealthClient {
                 )
                     or ignoring(state)
                 label_replace(
-                    clamp_max(count by (ic_node) (ALERTS{{ic="{network}", severity="page", job!="host_node_exporter"}}), 1)
+                    clamp_max(count by (ic_node) (ALERTS{{ic="{network}", job!="host_node_exporter"}}), 1)
                 ,
                     "state", "Degraded", "", ""
                 )
