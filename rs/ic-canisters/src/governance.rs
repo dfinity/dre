@@ -25,6 +25,7 @@ pub async fn governance_canister_version(nns_url: Url) -> Result<GovernanceCanis
             )
             .await?,
     )?
+    .trim()
     .to_string();
 
     Ok(GovernanceCanisterVersion {
