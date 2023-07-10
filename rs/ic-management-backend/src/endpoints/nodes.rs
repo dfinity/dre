@@ -37,6 +37,15 @@ async fn remove(
                         }
 
                         let decentralization_node = DecentralizationNode::from(&n);
+
+                        if let Some(exclude) = request.exclude.as_ref() {
+                            for exclude_feature in exclude {
+                                if decentralization_node.matches_feature_value(exclude_feature) {
+                                    return None;
+                                }
+                            }
+                        }
+
                         if let Some(filter) = request
                             .extra_nodes_filter
                             .iter()

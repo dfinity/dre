@@ -253,6 +253,10 @@ pub(crate) mod nodes {
             /// Specifies the filter used to remove extra nodes
             extra_nodes_filter: Vec<String>,
 
+            /// Features or Node IDs to not remove (exclude from the removal)
+            #[clap(long, num_args(1..))]
+            exclude: Vec<String>,
+
             /// Motivation for removing additional nodes
             #[clap(long)]
             motivation: Option<String>,
