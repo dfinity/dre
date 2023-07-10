@@ -5,23 +5,30 @@ use ic_management_types::Network;
 #[derive(Parser, Clone)]
 #[clap(about, version, author)]
 pub struct Opts {
-    #[clap(long, env = "HSM_PIN")]
+    #[clap(long, env = "HSM_PIN", global = true)]
     pub(crate) hsm_pin: Option<String>,
-    #[clap(long, value_parser=maybe_hex::<u64>, env = "HSM_SLOT")]
+    #[clap(long, value_parser=maybe_hex::<u64>, env = "HSM_SLOT", global = true)]
     pub(crate) hsm_slot: Option<u64>,
-    #[clap(long, env = "HSM_KEY_ID")]
+    #[clap(long, env = "HSM_KEY_ID", global = true)]
     pub(crate) hsm_key_id: Option<String>,
-    #[clap(long, env = "PRIVATE_KEY_PEM")]
+    #[clap(long, env = "PRIVATE_KEY_PEM", global = true)]
     pub(crate) private_key_pem: Option<String>,
-    #[clap(long, env = "NEURON_ID")]
+    #[clap(long, env = "NEURON_ID", global = true)]
     pub(crate) neuron_id: Option<u64>,
-    #[clap(long, env = "IC_ADMIN")]
+    #[clap(long, env = "IC_ADMIN", global = true)]
     pub(crate) ic_admin: Option<String>,
-    #[clap(long, env = "DEV")]
+    #[clap(long, env = "DEV", global = true)]
     pub(crate) dev: bool,
-    #[clap(short, long, env = "YES")]
+
+    // Skip the confirmation prompt
+    #[clap(short, long, env = "YES", global = true, conflicts_with = "simulate")]
     pub(crate) yes: bool,
-    #[clap(long, env = "VERBOSE")]
+
+    // Simulate submission of the proposal, but do not actually submit it.
+    #[clap(long, aliases = ["dry-run", "dryrun", "no"], global = true, conflicts_with = "yes")]
+    pub(crate) simulate: bool,
+
+    #[clap(long, env = "VERBOSE", global = true)]
     pub(crate) verbose: bool,
 
     // Specify the target network. Should be either "mainnet" (default) or "staging".
@@ -210,10 +217,6 @@ pub(crate) mod version {
             /// prevent unintended version in the future
             #[clap(long)]
             edit_summary: bool,
-
-            // Simulate submission of the proposal, but do not actually submit it.
-            #[clap(long)]
-            simulate: bool,
         },
 
         /// Bless replica version with release notes using the ic-admin CLI and
@@ -225,10 +228,6 @@ pub(crate) mod version {
             /// Sepcify the name of the rc branch that contains the release
             /// commits.
             rc_branch_name: String,
-
-            // Simulate submission of the proposal, but do not actually submit it.
-            #[clap(long)]
-            simulate: bool,
         },
     }
 }

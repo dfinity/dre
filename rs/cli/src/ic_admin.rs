@@ -127,16 +127,13 @@ impl Cli {
         );
     }
 
-    pub(crate) fn propose_run(&self, cmd: ProposeCommand, opts: ProposeOptions) -> anyhow::Result<()> {
-        let exec = |cli: &Cli, cmd: ProposeCommand, opts: ProposeOptions| {
+    pub(crate) fn propose_run(&self, cmd: ProposeCommand, opts: ProposeOptions, simulate: bool) -> anyhow::Result<()> {
+        let exec = |cli: &Cli, cmd: ProposeCommand, opts: ProposeOptions, add_dryrun_arg: bool| {
             cli.run(
                 &cmd.get_command_name(),
                 [
-                    if opts.simulate && !cmd.args().contains(&String::from("--dry-run")) {
-                        // Passthrough proposals may already contain `--dry-run`, which
-                        // is equivalent to the ProposeOption `simulate`.  ic-admin
-                        // rejects double --dry-run flags, so we only add it when it
-                        // is already not added.
+                    // Make sure there is no more than one `--dry-run` argument, or else ic-admin will complain.
+                    if add_dryrun_arg && !cmd.args().contains(&String::from("--dry-run")) {
                         vec!["--dry-run".to_string()]
                     } else {
                         Default::default()
@@ -167,60 +164,32 @@ impl Cli {
             )
         };
 
-        // Corner case -- a --help snuck into the ic-admin args.
-        // Only possible with passthrough proposals.
-        // Pass it through, and end the story here.
-        if cmd.args().contains(&String::from("--help")) {
-            return exec(self, cmd, opts);
+        // Simulated, or --help executions run immediately and do not proceed.
+        if simulate || cmd.args().contains(&String::from("--help")) || cmd.args().contains(&String::from("--dry-run")) {
+            return exec(self, cmd, opts, simulate);
         }
 
-        let direct_execution = self.yes || opts.simulate;
-        if !direct_execution {
-            // User has not specified direct execution without confirmation,
-            // and has also not requested a dry-run.  The default behavior
-            // is to first dry-run and then to confirm.
-
-            // Note how we make the dry_run bool passed to exec() false in case
-            // the ic-admin args already contains --dry-run, to avoid including
-            // the flag again since ic-admin takes it very poorly when the same
-            // flag is specified twice.
-            exec(
-                self,
-                cmd.clone(),
-                ProposeOptions {
-                    simulate: true,
-                    ..opts.clone()
-                },
-            )?;
+        // If --yes was not specified, ask the user if they want to proceed
+        if !self.yes {
+            exec(self, cmd.clone(), opts.clone(), true)?;
         }
 
-        // Last corner case.  User has attempted to make a for-realz submission
-        // but the submission might fail in case there is no neuron detected.
-        // Bail out early with an error instead of attempting to run ic-admin,
-        // providing the user with direct actionable information on how to
-        // correct the issue and retry the proposal.  We do this because ic-admin
-        // is very cryptic regarding informing the user of what failed in this
-        // failure case.
-        if self.neuron.is_none() && !opts.simulate {
-            return Err(anyhow::anyhow!("Submitting this proposal in non-simulation mode requires a neuron, which was not detected -- and will cause ic-admin to fail submitting the proposal.  Please look through your scroll buffer for specific error messages about your HSM and address the issue preventing your neuron from being detected."));
+        // User wants to proceed but does not have neuron configuration. Bail out.
+        if self.neuron.is_none() {
+            return Err(anyhow::anyhow!("Submitting this proposal requires a neuron, which was not detected -- and will cause ic-admin to fail during submition. Please look through your scroll buffer for specific error messages about your HSM and address the issue that prevents your neuron from being detected."));
         }
 
-        // Final execution.  The user has committed to submitting the proposal.
-        // This may also be performed in simulation mode if the user specified
-        // --dry-run in the ic-admin slot for flags in the release_cli command
-        // line (for passthrough proposals) or the --simulate flag (for version
-        // proposals).
-        // https://www.youtube.com/watch?v=9jK-NcRmVcw#t=13
-        if !direct_execution
-            && !Confirm::new()
-                .with_prompt("Do you want to continue?")
-                .default(false)
-                .interact()?
+        if Confirm::new()
+            .with_prompt("Do you want to continue?")
+            .default(false)
+            .interact()?
         {
-            // Oh noes.  User chickened out.  Abort unconfirmed submission.
-            return Err(anyhow::anyhow!("Action aborted"));
+            // User confirmed the desire to submit the proposal and no obvious problems were
+            // found. Proceeding!
+            exec(self, cmd, opts, false)
+        } else {
+            Err(anyhow::anyhow!("Action aborted"))
         }
-        exec(self, cmd, opts)
     }
 
     fn _run_ic_admin_with_args(&self, ic_admin_args: &[String], with_auth: bool) -> anyhow::Result<()> {
@@ -320,7 +289,7 @@ impl Cli {
     }
 
     /// Run an `ic-admin propose-to-*` command directly
-    pub(crate) fn run_passthrough_propose(&self, args: &[String]) -> anyhow::Result<()> {
+    pub(crate) fn run_passthrough_propose(&self, args: &[String], simulate: bool) -> anyhow::Result<()> {
         if args.is_empty() {
             println!("List of available ic-admin 'propose' sub-commands:\n");
             for subcmd in self.grep_subcommands(r"\s+propose-to-(.+?)\s") {
@@ -347,11 +316,8 @@ impl Cli {
             command: args[0].clone(),
             args: args.iter().skip(1).cloned().collect::<Vec<_>>(),
         };
-        let opts = ProposeOptions {
-            simulate: cmd.args().contains(&String::from("--dry-run")),
-            ..Default::default()
-        };
-        self.propose_run(cmd, opts)
+        let simulate = simulate || cmd.args().contains(&String::from("--dry-run"));
+        self.propose_run(cmd, Default::default(), simulate)
     }
 
     pub(crate) async fn prepare_to_propose_to_bless_new_replica_version(
@@ -596,7 +562,6 @@ pub struct ProposeOptions {
     pub title: Option<String>,
     pub summary: Option<String>,
     pub motivation: Option<String>,
-    pub simulate: bool,
 }
 
 fn detect_hsm_auth() -> Result<Option<Auth>> {
