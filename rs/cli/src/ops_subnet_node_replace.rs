@@ -21,6 +21,5 @@ pub fn replace_proposal_options(change: &SubnetChangeResponse) -> anyhow::Result
         title: format!("Replace {replace_target} in subnet {subnet_id_short}",).into(),
         summary: format!("# Replace {replace_target} in subnet {subnet_id_short}",).into(),
         motivation: change.motivation.clone(),
-        simulate: false,
     })
 }

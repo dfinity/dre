@@ -17,7 +17,7 @@ pub struct Runner {
 }
 
 impl Runner {
-    pub fn deploy(&self, subnet: &PrincipalId, version: &str) -> anyhow::Result<()> {
+    pub fn deploy(&self, subnet: &PrincipalId, version: &str, simulate: bool) -> anyhow::Result<()> {
         self.ic_admin
             .propose_run(
                 ic_admin::ProposeCommand::UpdateSubnetReplicaVersion {
@@ -28,8 +28,8 @@ impl Runner {
                     title: format!("Update subnet {subnet} to replica version {version}").into(),
                     summary: format!("Update subnet {subnet} to replica version {version}").into(),
                     motivation: None,
-                    simulate: false,
                 },
+                simulate,
             )
             .map_err(|e| anyhow::anyhow!(e))?;
 
@@ -41,6 +41,7 @@ impl Runner {
         request: ic_management_types::requests::SubnetResizeRequest,
         motivation: String,
         verbose: bool,
+        simulate: bool,
     ) -> anyhow::Result<()> {
         let subnet = request.subnet;
         let change = self.dashboard_backend_client.subnet_resize(request).await?;
@@ -58,6 +59,7 @@ impl Runner {
             self.run_membership_change(
                 change.clone(),
                 ops_subnet_node_replace::replace_proposal_options(&change)?,
+                simulate,
             )
             .await
         } else {
@@ -72,8 +74,8 @@ impl Runner {
                     title: format!("{action} subnet {subnet}").into(),
                     summary: format!("{action} subnet {subnet}").into(),
                     motivation: motivation.clone().into(),
-                    simulate: false,
                 },
+                simulate,
             )
             .await
         }
@@ -84,6 +86,7 @@ impl Runner {
         request: ic_management_types::requests::SubnetCreateRequest,
         motivation: String,
         verbose: bool,
+        simulate: bool,
         replica_version: Option<String>,
     ) -> anyhow::Result<()> {
         let subnet_creation_data = self.dashboard_backend_client.subnet_create(request).await?;
@@ -110,8 +113,8 @@ impl Runner {
                 title: Some("Creating new subnet".into()),
                 summary: Some("# Creating new subnet with nodes: ".into()),
                 motivation: Some(motivation.clone()),
-                simulate: false,
             },
+            simulate,
         )
     }
 
@@ -119,6 +122,7 @@ impl Runner {
         &self,
         request: ic_management_types::requests::MembershipReplaceRequest,
         verbose: bool,
+        simulate: bool,
     ) -> anyhow::Result<()> {
         let change = self.dashboard_backend_client.membership_replace(request).await?;
         if verbose {
@@ -134,11 +138,17 @@ impl Runner {
         self.run_membership_change(
             change.clone(),
             ops_subnet_node_replace::replace_proposal_options(&change)?,
+            simulate,
         )
         .await
     }
 
-    async fn run_membership_change(&self, change: SubnetChangeResponse, options: ProposeOptions) -> anyhow::Result<()> {
+    async fn run_membership_change(
+        &self,
+        change: SubnetChangeResponse,
+        options: ProposeOptions,
+        simulate: bool,
+    ) -> anyhow::Result<()> {
         let subnet_id = change
             .subnet_id
             .ok_or_else(|| anyhow::anyhow!("subnet_id is required"))?;
@@ -158,6 +168,7 @@ impl Runner {
                     node_ids_remove: change.removed.clone(),
                 },
                 options,
+                simulate,
             )
             .map_err(|e| anyhow::anyhow!(e))
     }
@@ -205,7 +216,7 @@ impl Runner {
         Ok((template, versions))
     }
 
-    pub async fn remove_nodes(&self, request: NodesRemoveRequest) -> anyhow::Result<()> {
+    pub async fn remove_nodes(&self, request: NodesRemoveRequest, simulate: bool) -> anyhow::Result<()> {
         let node_remove_response = self.dashboard_backend_client.remove_nodes(request).await?;
         let mut node_removals = node_remove_response.removals;
         node_removals.sort_by_key(|nr| nr.reason.message());
@@ -246,8 +257,8 @@ impl Runner {
                 title: "Remove nodes from the network".to_string().into(),
                 summary: "Remove nodes from the network".to_string().into(),
                 motivation: node_remove_response.motivation.into(),
-                simulate: false,
             },
+            simulate,
         )
     }
 }

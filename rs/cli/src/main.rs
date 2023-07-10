@@ -31,6 +31,8 @@ async fn main() -> Result<(), anyhow::Error> {
             cli_opts.neuron_id = Some(STAGING_NEURON_ID);
         }
 
+        let simulate = cli_opts.simulate;
+
         match &cli_opts.subcommand {
             cli::Commands::DerToPrincipal { path } => {
                 let principal = ic_base_types::PrincipalId::new_self_authenticating(&std::fs::read(path)?);
@@ -69,7 +71,7 @@ async fn main() -> Result<(), anyhow::Error> {
                 }
 
                 match &subnet.subcommand {
-                    cli::subnet::Commands::Deploy { version } => runner.deploy(&subnet.id.unwrap(), version),
+                    cli::subnet::Commands::Deploy { version } => runner.deploy(&subnet.id.unwrap(), version, simulate),
                     cli::subnet::Commands::Replace {
                         nodes,
                         no_heal,
@@ -110,7 +112,7 @@ async fn main() -> Result<(), anyhow::Error> {
                                     only: only.clone(),
                                     include: include.clone().into(),
                                     min_nakamoto_coefficients,
-                                }, *verbose)
+                                }, *verbose, simulate)
                                 .await
                     }
                     cli::subnet::Commands::Resize { add, remove, include, only, exclude, motivation, verbose, } => {
@@ -122,7 +124,7 @@ async fn main() -> Result<(), anyhow::Error> {
                                 only: only.clone().into(),
                                 exclude: exclude.clone().into(),
                                 include: include.clone().into(),
-                            }, motivation, *verbose).await
+                            }, motivation, *verbose, simulate).await
                         } else {
                             cmd.error(
                                 ErrorKind::MissingRequiredArgument,
@@ -140,7 +142,7 @@ async fn main() -> Result<(), anyhow::Error> {
                                 only: only.clone().into(),
                                 exclude: exclude.clone().into(),
                                 include: include.clone().into(),
-                            }, motivation, *verbose, replica_version.clone()).await
+                            }, motivation, *verbose, simulate, replica_version.clone()).await
                         } else {
                             cmd.error(
                                 ErrorKind::MissingRequiredArgument,
@@ -159,12 +161,12 @@ async fn main() -> Result<(), anyhow::Error> {
 
             cli::Commands::Propose { args } => {
                 let ic_admin = ic_admin::Cli::from_opts(&cli_opts, true).await?;
-                ic_admin.run_passthrough_propose(args)
+                ic_admin.run_passthrough_propose(args, simulate)
             },
 
             cli::Commands::Version(cmd) => {
                 match &cmd.subcommand {
-                    Retire { edit_summary , simulate} => {
+                    Retire { edit_summary } => {
                         let runner = runner::Runner::from_opts(&cli_opts).await?;
                         let (template, versions) = runner.prepare_versions_to_retire(*edit_summary).await?;
                         let ic_admin = ic_admin::Cli::from_opts(&cli_opts, true).await?;
@@ -174,11 +176,11 @@ async fn main() -> Result<(), anyhow::Error> {
                                 title: Some("Retire IC replica version".to_string()),
                                 summary: Some(template),
                                 motivation: None,
-                                simulate: *simulate,
                             },
+                            simulate,
                         )
                     },
-                    Update { version, rc_branch_name ,simulate} => {
+                    Update { version, rc_branch_name } => {
                         let runner = runner::Runner::from_opts(&cli_opts).await?;
                         let (_, versions) = runner.prepare_versions_to_retire(false).await?;
                         let ic_admin = ic_admin::Cli::from_opts(&cli_opts, true).await?;
@@ -198,8 +200,7 @@ async fn main() -> Result<(), anyhow::Error> {
                             title: proposal_title,
                             summary: Some(new_replica_info.summary),
                             motivation: None,
-                            simulate: *simulate,
-                        })
+                        }, simulate)
                     }
                 }
             },
@@ -219,7 +220,7 @@ async fn main() -> Result<(), anyhow::Error> {
                             extra_nodes_filter: extra_nodes_filter.clone(),
                             no_auto: *no_auto,
                             motivation: motivation.clone().unwrap_or_default(),
-                        }).await
+                        }, simulate).await
                     },
                 }
             },
