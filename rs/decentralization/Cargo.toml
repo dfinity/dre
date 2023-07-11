@@ -16,7 +16,6 @@ actix-web = { version = "4.2.1", default-features = false, features = [
 ] }
 colored = "2.0.0"
 reqwest = { version = "0.11.9", features = ["json"] }
-counter = "0.5.2"
 itertools = "0.10.3"
 chrono = "0.4.19"
 tokio = { version = "1.2.0", features = ["full"] }
@@ -33,6 +32,7 @@ easy-parallel = "3.1.0"
 lru = "0.10.0"
 rand = { version = "0.8.5", features = ["std_rng"] }
 rand_seeder = "0.2.3"
+ahash = "0.8.3"
 
 [dev-dependencies]
 include_dir = "0.7.2"
