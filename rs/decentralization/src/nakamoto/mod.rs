@@ -1,5 +1,5 @@
 use crate::network::Node;
-use counter::Counter;
+use ahash::AHashMap;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
@@ -66,14 +66,15 @@ pub struct NakamotoScore {
     /// This field needs to be optional in case we get a -inf result because of
     /// an empty subnet.
     /// In such a case, serialization would fail because serde does not support
-    /// serialization of this value, and serializes it as a null JSON value. When
-    /// trying to deserialize it as a f64, we would get a deserialization error.
+    /// serialization of this value, and serializes it as a null JSON value.
+    /// When trying to deserialize it as a f64, we would get a
+    /// deserialization error.
     ///
     /// See serde bug for tracking here
     /// https://github.com/serde-rs/json/issues/202
     ///
-    /// Also, see return value given to avg_log2 of Self.new_from_slice_node_features
-    /// for implementation detail
+    /// Also, see return value given to avg_log2 of
+    /// Self.new_from_slice_node_features for implementation detail
     avg_log2: Option<f64>,
     min: f64,
 }
@@ -99,19 +100,32 @@ impl NakamotoScore {
         let nakamoto_calc = features_to_nodes_map.iter().map(|value| {
             // Turns a Vec<Features> into a Vec<(NodeFeature, Number)>
             // where "Number" is the count of objects with the feature
-            let only_counter: Vec<usize> = value.1.iter().collect::<Counter<_>>().iter().map(|x| *x.1).collect();
-            // For deeper understanding we also keep track of all values and their counts
-            let value_counts: Vec<(String, usize)> = value
+            let counters: Vec<(String, usize)> = value
                 .1
                 .iter()
-                .collect::<Counter<_>>()
-                .iter()
-                .map(|x| {
-                    let s = x.0.as_ref();
-                    (s.unwrap().clone(), *x.1)
+                // AHashMap is a very fast HashMap implementation https://github.com/tkaitchuck/aHash
+                // We use it here to count the number of times each value appears in the input vector
+                // Doing this with a fold instead of using https://github.com/coriolinus/counter-rs is faster
+                .fold(AHashMap::new(), |mut acc: AHashMap<String, u32>, s| {
+                    if let Some(s) = s {
+                        acc.entry(s.to_string()).and_modify(|v| *v += 1).or_insert(1);
+                    }
+                    acc
                 })
-                .sorted_by_key(|x| -(x.1 as isize))
-                .collect();
+                .into_iter()
+                .map(|(feat, cnt)| (feat, cnt as usize))
+                .collect::<Vec<_>>();
+
+            // We only care about the counts to calculate the Nakamoto Coefficient, so we
+            // discard the feature names
+            let only_counter = counters.iter().map(|(_feat, cnt)| *cnt).collect::<Vec<_>>();
+            // But for deeper understanding (logging and debugging) we also keep track of
+            // all strings and their counts
+            let value_counts = counters
+                .into_iter()
+                .map(|(feat, cnt)| (feat, cnt))
+                .sorted_by_key(|(_feat, cnt)| -(*cnt as isize))
+                .collect::<Vec<_>>();
 
             (value.0.clone(), Self::nakamoto(&only_counter), value_counts)
         });
