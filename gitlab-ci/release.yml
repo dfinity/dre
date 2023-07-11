@@ -118,5 +118,5 @@ qualify-release:
       cat "$XNET_TESTING_PEM" > /home/ubuntu/.config/dfx/identity/xnet-testing/identity.pem
     - ./qualification/qualify-new-release.py
       --git-revision ${QUALIFY_GIT_REVISION}
-      --ic-admin-revision ${IC_ADMIN_REVISION:-$QUALIFY_GIT_REVIsION}
+      --ic-admin-revision ${IC_ADMIN_REVISION:-$QUALIFY_GIT_REVISION}
 
