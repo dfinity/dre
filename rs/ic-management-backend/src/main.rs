@@ -47,6 +47,7 @@ use ic_registry_local_registry::LocalRegistry;
 
 const GITLAB_TOKEN_IC_PUBLIC_ENV: &str = "GITLAB_API_TOKEN_IC_PUBLIC";
 const GITLAB_TOKEN_RELEASE_ENV: &str = "GITLAB_API_TOKEN_RELEASE";
+const GITLAB_API_TOKEN_FALLBACK: &str = "GITLAB_API_TOKEN";
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -76,6 +77,18 @@ async fn main() -> std::io::Result<()> {
         }
     });
 
+    if std::env::var(GITLAB_TOKEN_RELEASE_ENV).is_err() {
+        std::env::set_var(
+            GITLAB_TOKEN_RELEASE_ENV,
+            std::env::var(GITLAB_API_TOKEN_FALLBACK).unwrap(),
+        );
+    }
+    if std::env::var(GITLAB_TOKEN_IC_PUBLIC_ENV).is_err() {
+        std::env::set_var(
+            GITLAB_TOKEN_IC_PUBLIC_ENV,
+            std::env::var(GITLAB_API_TOKEN_FALLBACK).unwrap(),
+        );
+    }
     let registry_state = Arc::new(RwLock::new(registry::RegistryState::new(
         nns_url(),
         network(),
