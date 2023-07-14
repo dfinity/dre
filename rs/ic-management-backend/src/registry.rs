@@ -265,7 +265,7 @@ impl RegistryState {
                             };
                             Ok(rr)
                         } else {
-                            Err(anyhow::anyhow!("unable to parse release name"))
+                            Err(anyhow::anyhow!("unable to parse release name for version {}, refs {:?}", version, refs))
                         }
                     }
                     Err(gitlab::api::ApiError::Gitlab { msg }) if msg.contains(reqwest::StatusCode::NOT_FOUND.as_str()) => Err(anyhow::format_err!("no releases found for version {}", version)),
