@@ -1,10 +1,12 @@
 use crate::network::Node;
-use ahash::AHashMap;
+use ahash::{AHashMap, AHasher};
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
+use std::cell::RefCell;
 use std::cmp::Ordering;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, VecDeque};
 use std::fmt::{Debug, Display, Formatter};
+use std::hash::Hasher;
 use std::iter::{FromIterator, IntoIterator};
 
 use ic_management_types::NodeFeature;
@@ -50,6 +52,14 @@ impl FromIterator<(NodeFeature, std::string::String)> for NodeFeatures {
             feature_map: BTreeMap::from_iter(iter),
         }
     }
+}
+
+// A thread-local memoization cache of NakamotoScores
+thread_local! {
+    pub static NAKAMOTOSCORE_CACHE: RefCell<AHashMap<u64, NakamotoScore>> = RefCell::new(AHashMap::new());
+    pub static MEMOIZE_REQ: RefCell<u32> = RefCell::new(0);
+    pub static MEMOIZE_HIT: RefCell<u32> = RefCell::new(0);
+    pub static MEMOIZE_HIT_RATES: RefCell<VecDeque<u32>> = RefCell::new(VecDeque::new());
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, Default)]
@@ -165,7 +175,49 @@ impl NakamotoScore {
 
     /// Build a new NakamotoScore object from a slice of [Node]s.
     pub fn new_from_nodes(nodes: &[Node]) -> Self {
-        Self::new_from_slice_node_features(&nodes.iter().map(|n| n.features.clone()).collect::<Vec<_>>())
+        let mut memoize_key = AHasher::default();
+        for node in nodes.iter().sorted_by_cached_key(|n| n.id) {
+            for byte in node.id.0.as_slice() {
+                memoize_key.write_u8(*byte);
+            }
+        }
+        let memoize_key = memoize_key.finish();
+        NAKAMOTOSCORE_CACHE.with(|memoize_cache| {
+            MEMOIZE_REQ.with(|memoize_req| {
+                MEMOIZE_HIT.with(|memoize_hit| {
+                    MEMOIZE_HIT_RATES.with(|memoize_hit_rates| {
+                        *memoize_req.borrow_mut() += 1;
+                        let mut memoize_cache = memoize_cache.borrow_mut();
+                        match memoize_cache.get(&memoize_key) {
+                            Some(score) => {
+                                *memoize_hit.borrow_mut() += 1;
+                                if memoize_req.borrow().checked_rem(10000) == Some(0) {
+                                    let memoize_hit_rate = *memoize_hit.borrow() * 100 / *memoize_req.borrow();
+                                    if memoize_hit_rate > 0 {
+                                        memoize_hit_rates.borrow_mut().push_front(memoize_hit_rate);
+                                        if memoize_hit_rates.borrow().len() > 50 {
+                                            memoize_hit_rates.borrow_mut().pop_back();
+                                        }
+                                    }
+                                    println!("Memoize hit rate: {}%", memoize_hit_rate);
+                                    println!("Memoize recent hit rates: {:?}", memoize_hit_rates.borrow());
+                                    *memoize_req.borrow_mut() = 0;
+                                    *memoize_hit.borrow_mut() = 0;
+                                }
+                                score.clone()
+                            }
+                            None => {
+                                let score = Self::new_from_slice_node_features(
+                                    &nodes.iter().map(|n| n.features.clone()).collect::<Vec<_>>(),
+                                );
+                                memoize_cache.insert(memoize_key, score.clone());
+                                score
+                            }
+                        }
+                    })
+                })
+            })
+        })
     }
 
     /// The Nakamoto Coefficient represents the number of actors that would have
