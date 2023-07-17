@@ -87,16 +87,12 @@ async fn change_preview(
 }
 
 /// Simulates replacement of nodes in a subnet.
-/// There are three different ways to replace nodes:
-///    1. Setting `heal` to `true` in the request to replace unhealthy nodes on
-/// the subnet.    2. Replace `n` amount of nodes to optimize the subnet
-/// decentralization by specifying `optimize`.    3. Explicitly specifying nodes
-/// in a subnet by specifying their Principals in the `nodes` field.
-/// All three methods can be used at the same time.
+/// There are multiple ways to replace nodes. For instance:
+///    1. Setting `heal` to `true` in the request to replace unhealthy nodes
+///    2. Replace `optimize` nodes to optimize subnet decentralization.
+///    3. Explicitly add or remove nodes from the subnet specifying their Principals.
 ///
-/// Target subnet is selected by either specifying subnet id explicitly or by
-/// specifying nodes in the same subnet. Specifying both, neither, or nodes in
-/// different subnets, will result in an error.
+/// All nodes in the request must belong to exactly one subnet.
 #[post("/subnet/membership/replace")]
 async fn replace(
     request: web::Json<MembershipReplaceRequest>,
@@ -106,23 +102,19 @@ async fn replace(
 
     let mut motivations: Vec<String> = vec![];
 
-    let mut change_request = match &request.target {
+    let change_request = match &request.target {
         ReplaceTarget::Subnet(subnet) => registry.modify_subnet_nodes(*subnet).await?,
         ReplaceTarget::Nodes { nodes, motivation } => {
             motivations.push(motivation.clone());
             registry.replace_subnet_nodes(nodes).await?
         }
     }
-    .exclude_nodes(request.exclude.clone().unwrap_or_default())
-    .only_nodes(request.only.clone())
-    .include_nodes(request.include.clone().unwrap_or_default())
+    .with_exclude_nodes(request.exclude.clone().unwrap_or_default())
+    .with_only_nodes(request.only.clone())
+    .with_include_nodes(request.include.clone().unwrap_or_default())
     .with_min_nakamoto_coefficients(request.min_nakamoto_coefficients.clone());
 
-    let mut non_optimize_replaced_nodes = if let ReplaceTarget::Nodes { nodes, motivation: _ } = &request.target {
-        nodes.len()
-    } else {
-        0
-    };
+    let mut replacements_unhealthy: Vec<PrincipalId> = Vec::new();
     if request.heal {
         let subnet = change_request.subnet();
         let health_client = health::HealthClient::new(registry.network());
@@ -142,25 +134,25 @@ async fn replace(
             })
             .map(|n| n.id)
             .collect::<Vec<_>>();
-        let heal_count = unhealthy.len();
-        if heal_count > 0 {
-            change_request = change_request.remove(unhealthy)?;
-            non_optimize_replaced_nodes += unhealthy.len();
-            let replace_target = if heal_count == 1 { "node" } else { "nodes" };
-            motivations.push(format!("replacing {heal_count} unhealthy {replace_target}"));
+        if !unhealthy.is_empty() {
+            replacements_unhealthy.extend(unhealthy);
         }
     }
+    if let ReplaceTarget::Nodes { nodes, motivation: _ } = &request.target {
+        replacements_unhealthy.extend(nodes);
+    };
 
-    if let Some(optimize) = request.optimize {
-        change_request = change_request.improve(optimize);
+    let num_unhealthy = replacements_unhealthy.len();
+    if !replacements_unhealthy.is_empty() {
+        let replace_target = if num_unhealthy == 1 { "node" } else { "nodes" };
+        motivations.push(format!("replacing {num_unhealthy} unhealthy {replace_target}"));
     }
-
-    let change = change_request.evaluate()?;
-    let optimize_replacements = change.removed().len() - non_optimize_replaced_nodes;
-    if optimize_replacements > 0 {
-        let replace_target = if optimize_replacements == 1 { "node" } else { "nodes" };
+    let num_optimized = request.optimize.unwrap_or(0);
+    let change = change_request.optimize(num_optimized, &replacements_unhealthy)?;
+    if num_optimized > 0 {
+        let replace_target = if num_optimized == 1 { "node" } else { "nodes" };
         motivations.push(format!(
-            "replacing {optimize_replacements} {replace_target} to improve subnet decentralization",
+            "replacing {num_optimized} {replace_target} to improve subnet decentralization"
         ));
     }
 
@@ -205,9 +197,9 @@ async fn resize(
     let change = registry
         .modify_subnet_nodes(request.subnet)
         .await?
-        .exclude_nodes(request.exclude.clone().unwrap_or_default())
-        .include_nodes(request.include.clone().unwrap_or_default())
-        .only_nodes(request.only.clone().unwrap_or_default())
+        .with_exclude_nodes(request.exclude.clone().unwrap_or_default())
+        .with_include_nodes(request.include.clone().unwrap_or_default())
+        .with_only_nodes(request.only.clone().unwrap_or_default())
         .resize(request.add, request.remove)?;
 
     Ok(HttpResponse::Ok().json(decentralization::SubnetChangeResponse::from(&change)))

@@ -538,13 +538,13 @@ mod tests {
     #[test]
     fn extend_feature_set_group() {
         let subnet_initial = new_test_subnet(0, 12, 1);
+        let nodes_initial = subnet_initial.nodes.clone();
         let nodes_available = new_test_nodes("spare", 1, 0);
 
-        let extended_subnet = subnet_initial.new_extended_subnet(1, &nodes_available).unwrap();
+        let extended_subnet = subnet_initial.subnet_with_more_nodes(1, &nodes_available).unwrap();
         assert_eq!(
             extended_subnet.nodes,
-            subnet_initial
-                .nodes
+            nodes_initial
                 .iter()
                 .chain(nodes_available.iter())
                 .cloned()
@@ -597,9 +597,11 @@ mod tests {
                 .collect::<Vec<_>>()
         );
 
-        let subnet_change_req =
-            SubnetChangeRequest::new(subnet_initial, nodes_available, Vec::new(), Vec::new(), 0, None);
-        let subnet_change = subnet_change_req.optimize(2).unwrap();
+        let subnet_change_req = SubnetChangeRequest::new(subnet_initial, nodes_available, Vec::new(), Vec::new(), None);
+        let subnet_change = subnet_change_req.optimize(2, &vec![]).unwrap();
+        for log in subnet_change.after().run_log.iter() {
+            println!("{}", log);
+        }
         let optimized_subnet = subnet_change.after();
 
         let countries_after = optimized_subnet
@@ -621,6 +623,7 @@ mod tests {
 
     #[test]
     fn subnet_optimize_node_providers() {
+        // NP2 owns 3 from 7 nodes, so it can halt the subnet
         let subnet_initial = new_test_subnet_with_overrides(
             0,
             0,
@@ -632,8 +635,8 @@ mod tests {
             ),
         );
         assert_eq!(
-            subnet_initial.check_business_rules().unwrap_err().to_string(),
-            "A single Node Provider can halt a subnet".to_string()
+            subnet_initial.check_business_rules().unwrap(),
+            (10000, vec!["A single Node Provider can halt the subnet".to_string()])
         );
         let nodes_available =
             new_test_nodes_with_overrides("spare", 7, 2, 0, (&NodeFeature::NodeProvider, &["NP6", "NP7"]));
@@ -648,9 +651,12 @@ mod tests {
                 .collect::<Vec<_>>()
         );
 
-        let subnet_change_req =
-            SubnetChangeRequest::new(subnet_initial, nodes_available, Vec::new(), Vec::new(), 0, None);
-        let subnet_change = subnet_change_req.optimize(2).unwrap();
+        let subnet_change_req = SubnetChangeRequest::new(subnet_initial, nodes_available, Vec::new(), Vec::new(), None);
+        let subnet_change = subnet_change_req.optimize(2, &vec![]).unwrap();
+        println!("Replacement run log:");
+        for line in subnet_change.after().run_log.iter() {
+            println!("{}", line);
+        }
         let optimized_subnet = subnet_change.after();
 
         let nps_after = optimized_subnet
@@ -696,9 +702,14 @@ mod tests {
                 .collect::<Vec<_>>()
         );
 
-        let subnet_change_req =
-            SubnetChangeRequest::new(subnet_initial, nodes_available, Vec::new(), Vec::new(), 0, None);
-        let subnet_change = subnet_change_req.optimize(2).unwrap();
+        let subnet_change_req = SubnetChangeRequest::new(subnet_initial, nodes_available, Vec::new(), Vec::new(), None);
+        let subnet_change = subnet_change_req.optimize(2, &vec![]).unwrap();
+
+        println!("Replacement run log:");
+        for line in subnet_change.after().run_log.iter() {
+            println!("{}", line);
+        }
+
         let optimized_subnet = subnet_change.after();
 
         let nps_after = optimized_subnet
@@ -710,8 +721,15 @@ mod tests {
 
         println!("optimized {} NPs {:?}", optimized_subnet, nps_after);
         assert_eq!(optimized_subnet.nakamoto_score().score_min(), 2.);
-        // The nodes (NPs) are unchanged
-        assert_eq!(nps_after, vec!["NP1", "NP2", "NP2", "NP3", "NP4", "NP4", "NP5"]);
+        // There is still only one DFINITY-owned node in the subnet
+        assert_eq!(
+            1,
+            optimized_subnet
+                .nodes
+                .iter()
+                .map(|n| n.dfinity_owned as u32)
+                .sum::<u32>()
+        );
     }
 
     #[test]
@@ -760,7 +778,7 @@ mod tests {
         let nakamoto_score_before = subnet_healthy.nakamoto_score();
         println!("NakamotoScore before {}", nakamoto_score_before);
 
-        let extended_subnet = subnet_healthy.new_extended_subnet(4, &available_nodes).unwrap();
+        let extended_subnet = subnet_healthy.subnet_with_more_nodes(4, &available_nodes).unwrap();
         println!("{}", extended_subnet);
         let nakamoto_score_after = extended_subnet.nakamoto_score();
         println!("NakamotoScore after {}", nakamoto_score_after);
@@ -787,7 +805,7 @@ mod tests {
         let empty_subnet = DecentralizedSubnet::default();
 
         let want_subnet_size = 13;
-        let new_subnet_result = empty_subnet.new_extended_subnet(want_subnet_size, &available_nodes);
+        let new_subnet_result = empty_subnet.subnet_with_more_nodes(want_subnet_size, &available_nodes);
         assert!(new_subnet_result.is_ok(), "error: {:?}", new_subnet_result.err());
 
         let new_subnet = new_subnet_result.unwrap();
