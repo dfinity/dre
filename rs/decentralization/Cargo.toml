@@ -19,7 +19,6 @@ reqwest = { version = "0.11.9", features = ["json"] }
 itertools = "0.10.3"
 chrono = "0.4.19"
 tokio = { version = "1.2.0", features = ["full"] }
-lazy_static = "1.4.0"
 ic-management-types = { path = "../ic-management-types" }
 futures-util = "0.3.21"
 strum = "0.24.1"
