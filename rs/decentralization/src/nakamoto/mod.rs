@@ -255,12 +255,21 @@ impl NakamotoScore {
     /// in each of these features.
     /// - Top Node Providers control 5 nodes
     /// - Top Countries control 7 nodes
-    /// In that case we would return 5 + 7 = 12
-    pub fn critical_features_num_nodes(&self) -> usize {
+    /// In that case we would return (5, 7)
+    pub fn critical_features_num_nodes(&self) -> Vec<usize> {
         [NodeFeature::NodeProvider, NodeFeature::Country]
             .iter()
             .map(|feat| self.controlled_nodes.get(feat).cloned().unwrap_or_default())
-            .sum()
+            .collect()
+    }
+
+    /// Number of unique actors for the critical features.
+    /// E.g. if there are 5 unique (different) NPs in a subnet ==> return 5
+    pub fn critical_features_unique_actors(&self) -> Vec<usize> {
+        [NodeFeature::NodeProvider, NodeFeature::Country]
+            .iter()
+            .map(|feat| self.feature_value_counts(feat).len())
+            .collect()
     }
 
     /// Return the number of nodes that the top actors control
@@ -297,6 +306,16 @@ impl PartialOrd for NakamotoScore {
         cmp = other
             .critical_features_num_nodes()
             .partial_cmp(&self.critical_features_num_nodes());
+
+        if cmp != Some(Ordering::Equal) {
+            return cmp;
+        }
+
+        // Compare the number of unique actors for the critical features
+        // E.g. self has 5 NPs and other has 4 NPs ==> prefer self
+        cmp = self
+            .critical_features_unique_actors()
+            .partial_cmp(&other.critical_features_unique_actors());
 
         if cmp != Some(Ordering::Equal) {
             return cmp;
@@ -349,10 +368,11 @@ impl Display for NakamotoScore {
         };
         write!(
             f,
-            "NakamotoScore: min {:0.2} avg log2 {} #crit nodes {} #crit coeff {} avg linear {:0.2}",
+            "NakamotoScore: min {:0.2} avg log2 {} #crit nodes {:?} # crit uniq {:?} #crit coeff {} avg linear {:0.2}",
             self.min,
             avg_log2_str,
             self.critical_features_num_nodes(),
+            self.critical_features_unique_actors(),
             self.coefficients.values().filter(|c| **c < 3.0).count(),
             self.avg_linear,
         )
@@ -767,7 +787,7 @@ mod tests {
 
         // Check against the close-to-optimal values obtained by data analysis
         assert!(nakamoto_score_after.score_min() >= 1.0);
-        assert!(nakamoto_score_after.critical_features_num_nodes() <= 25);
+        assert!(nakamoto_score_after.critical_features_num_nodes()[0] <= 25);
         assert!(nakamoto_score_after.score_avg_linear() >= 3.0);
         assert!(nakamoto_score_after.score_avg_log2() >= Some(1.32));
     }
