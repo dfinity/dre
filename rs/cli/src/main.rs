@@ -3,6 +3,7 @@ use clap::{error::ErrorKind, CommandFactory, Parser};
 use ic_canisters::governance_canister_version;
 use ic_management_types::requests::NodesRemoveRequest;
 use ic_management_types::{MinNakamotoCoefficients, Network, NodeFeature};
+use itertools::Itertools;
 use std::collections::BTreeMap;
 use std::str::FromStr;
 
@@ -185,10 +186,10 @@ async fn main() -> Result<(), anyhow::Error> {
                         let (_, versions) = runner.prepare_versions_to_retire(false).await?;
                         let ic_admin = ic_admin::Cli::from_opts(&cli_opts, true).await?;
                         let new_replica_info = ic_admin::Cli::prepare_to_propose_to_bless_new_replica_version(version, rc_branch_name).await?;
-                        let proposal_title = if !versions.is_empty() {
-                            Some(format!("Elect new replica binary revision (commit {}), and retire old replica versions {}", version, versions.join(",")))
+                        let proposal_title = if versions.is_empty() {
+                            Some(format!("Elect new replica binary revision (commit {})", &version[..8]))
                         } else {
-                            Some(format!("Elect new replica binary revision (commit {})", version))
+                            Some(format!("Elect new replica binary revision (commit {}), and retire old replica versions {}", &version[..8], versions.iter().map(|v| &v[..8]).join(",")))
                         };
 
                         ic_admin.propose_run(ic_admin::ProposeCommand::UpdateElectedReplicaVersions{
