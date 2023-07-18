@@ -148,7 +148,7 @@ impl RegistryState {
             known_subnets: [
                 (
                     "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
-                    "Internet Identity",
+                    "Internet Identity, tECDSA backup",
                 ),
                 (
                     "w4rem-dv5e3-widiz-wbpea-kbttk-mnzfm-tzrc7-svcj3-kbxyb-zamch-hqe",
@@ -161,6 +161,10 @@ impl RegistryState {
                 (
                     "2fq7c-slacv-26cgz-vzbx2-2jrcs-5edph-i5s2j-tck77-c3rlz-iobzx-mqe",
                     "Open Chat 2",
+                ),
+                (
+                    "pzp6e-ekpqk-3c5x7-2h6so-njoeq-mt45d-h3h6c-q3mxf-vpeq5-fk5o7-yae",
+                    "tECDSA signing",
                 ),
                 ("x33ed-h457x-bsgyx-oqxqf-6pzwv-wkhzr-rm2j3-npodi-purzm-n66cg-gae", "SNS"),
             ]
