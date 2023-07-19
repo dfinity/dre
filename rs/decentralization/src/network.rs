@@ -7,11 +7,12 @@ use async_trait::async_trait;
 use ic_base_types::PrincipalId;
 use ic_management_types::{MinNakamotoCoefficients, NetworkError, NodeFeature};
 use itertools::Itertools;
-use log::{debug, info, warn};
+use log::{debug, info};
 use rand::{seq::SliceRandom, SeedableRng};
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 use std::fmt::{Debug, Display, Formatter};
+use std::hash::Hash;
 
 #[derive(Clone, Serialize, Deserialize, Default)]
 pub struct DataCenterInfo {
@@ -20,7 +21,7 @@ pub struct DataCenterInfo {
     continent: String,
 }
 
-#[derive(Clone, Serialize, Deserialize, Debug)]
+#[derive(Clone, Serialize, Deserialize, Debug, Eq)]
 pub struct Node {
     pub id: PrincipalId,
     pub features: nakamoto::NodeFeatures,
@@ -51,8 +52,19 @@ impl Node {
         self.features.get(feature).unwrap_or_default()
     }
 
-    pub fn matches_feature_value(&self, value: &String) -> bool {
-        self.id.to_string() == *value || self.get_features().feature_map.values().any(|v| *v == *value)
+    pub fn matches_feature_value(&self, value: &str) -> bool {
+        self.id.to_string() == *value.to_lowercase()
+            || self
+                .get_features()
+                .feature_map
+                .values()
+                .any(|v| *v.to_lowercase() == *value.to_lowercase())
+    }
+}
+
+impl Hash for Node {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.id.hash(state);
     }
 }
 
@@ -128,6 +140,14 @@ pub struct DecentralizedSubnet {
     pub run_log: Vec<String>,
 }
 
+#[derive(Clone, Debug)]
+struct ReplacementCandidate {
+    node: Node,
+    score: NakamotoScore,
+    penalty: usize,
+    business_rules_log: Vec<String>,
+}
+
 impl DecentralizedSubnet {
     /// Return a new instance of a DecentralizedSubnet that does not contain the
     /// provided nodes.
@@ -141,35 +161,66 @@ impl DecentralizedSubnet {
                 return Err(NetworkError::NodeNotFound(*node));
             }
         }
+        let removed_is_empty = removed.is_empty();
+        let removed_node_ids = removed.iter().map(|n| n.id).collect::<Vec<_>>();
         Ok(Self {
             id: self.id,
             nodes: new_subnet_nodes,
-            removed_nodes: removed.clone(),
+            removed_nodes: removed,
             min_nakamoto_coefficients: self.min_nakamoto_coefficients.clone(),
             comment: self.comment.clone(),
             run_log: {
-                let mut run_log = self.run_log.clone();
-                run_log.push(format!("Without nodes {:?}", removed.iter().map(|n| n.id)));
-                run_log
+                if removed_is_empty {
+                    self.run_log.clone()
+                } else {
+                    let mut run_log = self.run_log.clone();
+                    run_log.push(format!("Removed nodes from subnet {:?}", removed_node_ids));
+                    run_log
+                }
             },
         })
     }
 
     /// Return a new instance of a DecentralizedSubnet that contains the
     /// provided nodes.
-    pub fn with_nodes(&self, nodes: Vec<Node>) -> Self {
+    pub fn with_nodes(self, nodes: Vec<Node>) -> Self {
         Self {
             id: self.id,
             nodes: self.nodes.clone().into_iter().chain(nodes.clone()).collect(),
-            removed_nodes: self.removed_nodes.clone(),
+            removed_nodes: self.removed_nodes,
             min_nakamoto_coefficients: self.min_nakamoto_coefficients.clone(),
-            comment: self.comment.clone(),
+            comment: self.comment,
             run_log: {
-                let mut run_log = self.run_log.clone();
-                run_log.push(format!("With nodes {:?}", nodes.iter().map(|n| n.id)));
-                run_log
+                if nodes.is_empty() {
+                    self.run_log
+                } else {
+                    let mut run_log = self.run_log;
+                    run_log.push(format!(
+                        "Force-including nodes {:?}",
+                        nodes.iter().map(|n| n.id).collect::<Vec<_>>()
+                    ));
+                    run_log
+                }
             },
         }
+    }
+
+    /// Return a list of nodes that are under control of the most dominant
+    /// feature value. For instance with the argument NodeProvider, it will
+    /// return the nodes that are under control of the most dominant
+    /// NodeProvider.
+    pub fn nodes_under_control_of_dominant_actor(&self, node_feature: &NodeFeature) -> Vec<Node> {
+        let dominant_feature = self
+            .nakamoto_score()
+            .feature_value_counts_max(node_feature)
+            .map(|(provider, _)| provider)
+            .unwrap_or_default();
+
+        self.nodes
+            .iter()
+            .filter(|n| n.get_feature(node_feature) == dominant_feature)
+            .cloned()
+            .collect()
     }
 
     pub fn with_min_nakamoto_coefficients(self, min_nakamoto_coefficients: &Option<MinNakamotoCoefficients>) -> Self {
@@ -258,7 +309,8 @@ impl DecentralizedSubnet {
             Some(score) => {
                 if score <= 1.0 && nodes.len() > 3 {
                     // We restrict to subnets with >3 nodes to be able to build subnet from scratch
-                    return Err(anyhow::anyhow!("A single Node Provider can halt a subnet"));
+                    checks.push("A single Node Provider can halt the subnet".to_string());
+                    penalties += 10000;
                 }
             }
             None => return Err(anyhow::anyhow!("Missing the Nakamoto score for the Node Provider")),
@@ -333,9 +385,123 @@ impl DecentralizedSubnet {
         Self::_calc_nakamoto_score(&self.nodes)
     }
 
-    pub fn new_extended_subnet(
+    /// Deterministically choose a result in the list based on the list
+    /// of current nodes.  Since the node IDs are unique, we seed a PRNG
+    /// with the sorted joined node IDs. We then choose a result
+    /// randomly but deterministically using this seed.
+    fn choose_deterministic_random(
+        best_results: &Vec<ReplacementCandidate>,
+        current_nodes: &[Node],
+    ) -> Option<ReplacementCandidate> {
+        if best_results.is_empty() {
+            None
+        } else {
+            // We sort the current nodes by alphabetical order on their
+            // PrincipalIDs to ensure consistency of the seed with the
+            // same machines in the subnet
+            let mut id_sorted_current_nodes = current_nodes.to_owned();
+            id_sorted_current_nodes.sort_by(|n1, n2| std::cmp::Ord::cmp(&n1.id.to_string(), &n2.id.to_string()));
+            let seed = rand_seeder::Seeder::from(
+                id_sorted_current_nodes
+                    .iter()
+                    .map(|n| n.id.to_string())
+                    .collect::<Vec<String>>()
+                    .join("_"),
+            )
+            .make_seed();
+            let mut rng = rand::rngs::StdRng::from_seed(seed);
+
+            // We sort the best results the same way to ensure that for
+            // the same set of machines with the best score, we always
+            // get the same one.
+            let mut id_sorted_best_results = best_results.clone();
+            id_sorted_best_results
+                .sort_by(|r1, r2| std::cmp::Ord::cmp(&r1.node.id.to_string(), &r2.node.id.to_string()));
+            id_sorted_best_results.choose(&mut rng).cloned()
+        }
+    }
+
+    /// Pick the best result amongst the list of "suitable" candidates.
+    fn choose_best_candidate(
         &self,
-        num_nodes_to_add: usize,
+        candidates: Vec<ReplacementCandidate>,
+        run_log: &mut Vec<String>,
+    ) -> Option<ReplacementCandidate> {
+        // First, sort the candidates by their Nakamoto Coefficients
+        let candidates = candidates
+            .into_iter()
+            .sorted_by(|a, b| {
+                // Prefer nodes with lower penalty. This is for example used to prefer
+                // non-DFINITY nodes
+                let mut cmp = b.penalty.cmp(&a.penalty);
+
+                if cmp == Ordering::Equal {
+                    // Then fallback to comparing the NakamotoScore (custom comparison)
+                    debug!("Comparing node {:?} and {:?}", a.node, b.node);
+                    cmp = a.score.cmp(&b.score);
+                }
+                if cmp == Ordering::Less {
+                    debug!("Better node is {}", a.node.id);
+                } else {
+                    debug!("Better node is {}", b.node.id);
+                }
+                cmp
+            })
+            .collect::<Vec<ReplacementCandidate>>();
+
+        run_log.push("Sorted candidate nodes, with the best candidate at the end:".to_string());
+        run_log.push(
+            "     <node-id>                                                      <penalty>  <Nakamoto score>"
+                .to_string(),
+        );
+        for s in &candidates {
+            run_log.push(format!(" -=> {} {} {}", s.node.id, s.penalty, s.score));
+        }
+
+        // Then, pick the candidates with the best (highest) Nakamoto Coefficients.
+        // There can be multiple candidates with the same Nakamoto Coefficient.
+        let first_best_result = candidates.iter().last();
+        let mut best_results = vec![];
+        if let Some(result) = first_best_result {
+            for candidate in candidates.iter().rev() {
+                // To filter the best results, we must take the penalty
+                // applied to the subnet as well.  If not, even if two
+                // candidates have the same score, we could end up with a
+                // higher penalty in the resulting subnet as we choose
+                // randomly one of the best candidates in those results We
+                // know from the previous sorting that the last element in
+                // the array of results will have the lowest penalty and
+                // nakamoto score, so we can compare against this one.
+                if candidate.score == result.score && candidate.penalty <= result.penalty {
+                    best_results.push(candidate.clone())
+                } else {
+                    break;
+                }
+            }
+        }
+
+        // Given that we have a big pool of unassigned machines, we can
+        // randomly but deterministically choose a result amongst the best
+        // ones obtained by calculating the new Nakamoto scores. With this
+        // big pool of machines, choosing randomly a machine to use or
+        // maximizing the decentralization of the remaining available
+        // machines will not make a big difference to the final
+        // decentralization coefficients.
+        //
+        // An other approach that was imagined was to maximize the score for
+        // the remaining available nodes. However, this approach was too
+        // computationally intensive and took too long to compute. Thus, a
+        // simpler but good enough method was chosen for choosing a result
+        //
+        // This approach also has the advantage of not favoring one NP over
+        // an other, regardless of the Node PrincipalID
+        DecentralizedSubnet::choose_deterministic_random(&best_results, &self.nodes)
+    }
+
+    /// Add nodes to a subnet in a way that provides the best decentralization.
+    pub fn subnet_with_more_nodes(
+        self,
+        how_many_nodes: usize,
         available_nodes: &[Node],
     ) -> anyhow::Result<DecentralizedSubnet> {
         let mut run_log = self.run_log.clone();
@@ -348,173 +514,33 @@ impl DecentralizedSubnet {
         let mut total_penalty = 0;
         let mut business_rules_log: Vec<String> = Vec::new();
 
-        let line = format!("Nakamoto score before extension {}", self.nakamoto_score());
-        info!("{}", &line);
-        run_log.push(line);
+        run_log.push(format!("Nakamoto score before extension {}", self.nakamoto_score()));
 
-        struct SortResult {
-            index: usize,
-            node: Node,
-            score: NakamotoScore,
-            penalty: usize,
-            business_rules_log: Vec<String>,
-        }
-
-        for i in 0..num_nodes_to_add {
+        for i in 0..how_many_nodes {
             run_log.push("***********************************************************".to_string());
-            run_log.push(format!("***  Adding node {}/{}", i + 1, num_nodes_to_add));
+            run_log.push(format!("***  Adding node {}/{}", i + 1, how_many_nodes));
             run_log.push("***********************************************************".to_string());
 
-            let sorted_good_nodes: Vec<SortResult> = available_nodes
+            let suitable_candidates: Vec<ReplacementCandidate> = available_nodes
                 .iter()
-                .enumerate()
-                .filter_map(|(index, node)| {
-                    let candidate_subnet_nodes: Vec<Node> = nodes_initial.iter().chain([node]).cloned().collect();
-                    match Self::_check_business_rules_for_nodes(
-                        &self.id,
-                        &candidate_subnet_nodes,
-                        &self.min_nakamoto_coefficients,
-                    ) {
-                        Ok((penalty, business_rules_log)) => {
-                            let new_score = Self::_calc_nakamoto_score(&candidate_subnet_nodes);
-
-                            let line = format!(
-                                "Picked one extension node {} and got Nakamoto score {} and penalty {}",
-                                node.id, new_score, penalty
-                            );
-                            debug!("{}", &line);
-                            run_log.push(line);
-
-                            Some(SortResult {
-                                index,
-                                node: node.clone(),
-                                score: new_score,
-                                penalty,
-                                business_rules_log,
-                            })
-                        }
-                        Err(err) => {
-                            let line = format!(
-                                "Extension candidate node {} not suitable due to failed business rule {}",
-                                node.id, err
-                            );
-                            debug!("{}", &line);
-                            run_log.push(line);
-                            None
-                        }
-                    }
-                })
-                .sorted_by(|a, b| {
-                    // Prefer nodes with lower penalty. This is for example used to prefer
-                    // non-DFINITY nodes
-                    let mut cmp = b.penalty.cmp(&a.penalty);
-
-                    if cmp == Ordering::Equal {
-                        // Then fallback to comparing the NakamotoScore (custom comparison)
-                        debug!("Comparing node {:?} and {:?}", a.node, b.node);
-                        cmp = a.score.cmp(&b.score);
-                    }
-                    if cmp == Ordering::Less {
-                        debug!("Better node is {}", a.node.id);
-                    } else {
-                        debug!("Better node is {}", b.node.id);
-                    }
-                    cmp
+                .filter_map(|node| {
+                    let subnet_nodes: Vec<Node> = nodes_initial.iter().chain([node]).cloned().collect();
+                    self._node_to_replacement_candidate(&subnet_nodes, node, &mut run_log)
                 })
                 .collect();
 
-            run_log.push("Sorted candidate nodes, with the best candidate at the end:".to_string());
-            run_log.push(
-                "     <node-id>                                                      <penalty>  <Nakamoto score>"
-                    .to_string(),
-            );
-            for s in &sorted_good_nodes {
-                run_log.push(format!(" -=> {} {} {}", s.node.id, s.penalty, s.score));
-            }
-
-            let first_best_result = sorted_good_nodes.iter().last();
-            let mut best_results = vec![];
-            if let Some(result) = first_best_result {
-                for candidate in sorted_good_nodes.iter().rev() {
-                    // To filter the best results, we must take the penalty
-                    // applied to the subnet as well.  If not, even if two
-                    // candidates have the same score, we could end up with a
-                    // higher penalty in the resulting subnet as we choose
-                    // randomly one of the best candidates in those results We
-                    // know from the previous sorting that the last element in
-                    // the array of results will have the lowest penalty and
-                    // nakamoto score, so we can compare against this one.
-                    if candidate.score == result.score && candidate.penalty <= result.penalty {
-                        best_results.push(candidate)
-                    } else {
-                        break;
-                    }
-                }
-            }
-
-            /// Deterministically choose a result in the list based on the list
-            /// of current nodes.  Since the node IDs are unique, we seed a PRNG
-            /// with the sorted joined node IDs. We then choose a result
-            /// randomly but deterministically using this seed.
-            ///
-            /// NOTE: This funnction cannot be moved outside of this context
-            /// because SortResult is defined in this context
-            fn choose_deterministic_random<'a>(
-                best_results: Vec<&'a SortResult>,
-                current_nodes: &[Node],
-            ) -> Option<&'a SortResult> {
-                if best_results.is_empty() {
-                    None
-                } else {
-                    // We sort the current nodes by alphabetical order on their
-                    // PrincipalIDs to ensure consistency of the seed with the
-                    // same machines in the subnet
-                    let mut id_sorted_current_nodes = current_nodes.to_owned();
-                    id_sorted_current_nodes
-                        .sort_by(|n1, n2| std::cmp::Ord::cmp(&n1.id.to_string(), &n2.id.to_string()));
-                    let seed = rand_seeder::Seeder::from(
-                        id_sorted_current_nodes
-                            .iter()
-                            .map(|n| n.id.to_string())
-                            .collect::<Vec<String>>()
-                            .join("_"),
-                    )
-                    .make_seed();
-                    let mut rng = rand::rngs::StdRng::from_seed(seed);
-
-                    // We sort the best results the same way to ensure that for
-                    // the same set of machines with the best score, we always
-                    // get the same one.
-                    let mut id_sorted_best_results = best_results.clone();
-                    id_sorted_best_results
-                        .sort_by(|r1, r2| std::cmp::Ord::cmp(&r1.node.id.to_string(), &r2.node.id.to_string()));
-                    id_sorted_best_results.choose(&mut rng).cloned()
-                }
-            }
-
-            // Given that we have a big pool of unassigned machines, we can
-            // randomly but deterministically choose a result amongst the best
-            // ones obtained by calculating the new Nakamoto scores. With this
-            // big pool of machines, choosing randomly a machine to use or
-            // maximizing the decentralization of the remaining available
-            // machines will not make a big difference to the final
-            // decentralization coefficients.
-            //
-            // An other approach that was imagined was to maximize the score for
-            // the remaining available nodes. However, this approach was too
-            // computationally intensive and took too long to compute. Thus, a
-            // simpler but good enough method was chosen for choosing a result
-            //
-            // This approach also has the advantage of not favoring one NP over
-            // an other, regardless of the Node PrincipalID
-            let best_result = choose_deterministic_random(best_results, &self.nodes);
-
-            match best_result {
+            let mut candidate_run_log = Vec::new();
+            match self.choose_best_candidate(suitable_candidates, &mut candidate_run_log) {
                 Some(best_result) => {
-                    let line = format!("Nakamoto score after extension {}", best_result.score);
-                    info!("{}", &line);
-                    run_log.push(line);
-                    available_nodes.swap_remove(best_result.index);
+                    // Append the complete run log
+                    run_log.extend(
+                        candidate_run_log
+                            .iter()
+                            .map(|s| format!("node {}/{}: {}", i + 1, how_many_nodes, s))
+                            .collect::<Vec<String>>(),
+                    );
+                    run_log.push(format!("Nakamoto score after extension {}", best_result.score));
+                    available_nodes.retain(|n| n.id != best_result.node.id);
                     nodes_after_extension.push(best_result.node.clone());
                     nodes_initial.push(best_result.node.clone());
                     total_penalty += best_result.penalty;
@@ -522,18 +548,18 @@ impl DecentralizedSubnet {
                         best_result
                             .business_rules_log
                             .iter()
-                            .map(|s| format!("node {}/{} ({}): {}", i + 1, num_nodes_to_add, best_result.node.id, s))
+                            .map(|s| format!("node {}/{} ({}): {}", i + 1, how_many_nodes, best_result.node.id, s))
                             .collect::<Vec<String>>(),
                     );
-                    if i + 1 == num_nodes_to_add {
+                    if i + 1 == how_many_nodes {
                         if total_penalty != 0 {
                             comment = Some(format!(
                                 "Subnet extension with {} nodes finished with the total penalty {}. Penalty causes throughout the extension:\n{}\n\n{}",
-                                num_nodes_to_add,
+                                how_many_nodes,
                                 total_penalty,
                                 business_rules_log.join("\n"),
-                                if num_nodes_to_add > 1 {
-                                    "Note that the penalty for nodes before the last node may not be relevant after all extensions are completed. We leave this to humans to assess."
+                                if how_many_nodes > 1 {
+                                    "Note that the penalty for nodes before the last node may not be relevant in the end. We leave this to humans to assess."
                                 } else { "" }
                             ));
                         } else {
@@ -549,17 +575,123 @@ impl DecentralizedSubnet {
                 }
             }
         }
-        assert_eq!(nodes_after_extension.len(), self.nodes.len() + num_nodes_to_add);
-        assert_eq!(orig_available_nodes_len - available_nodes.len(), num_nodes_to_add);
+        assert_eq!(nodes_after_extension.len(), self.nodes.len() + how_many_nodes);
+        assert_eq!(orig_available_nodes_len - available_nodes.len(), how_many_nodes);
 
         Ok(Self {
             id: self.id,
             nodes: nodes_after_extension,
-            removed_nodes: self.removed_nodes.clone(),
-            min_nakamoto_coefficients: self.min_nakamoto_coefficients.clone(),
+            removed_nodes: self.removed_nodes,
+            min_nakamoto_coefficients: self.min_nakamoto_coefficients,
             comment,
             run_log,
         })
+    }
+
+    /// Remove nodes from a subnet in a way that provides the best
+    /// decentralization.
+    pub fn subnet_with_fewer_nodes(mut self, how_many_nodes: usize) -> anyhow::Result<DecentralizedSubnet> {
+        let mut run_log = self.run_log.clone();
+        let nodes_initial_len = self.nodes.len();
+        let mut comment = None;
+        let mut total_penalty = 0;
+        let mut business_rules_log: Vec<String> = Vec::new();
+
+        run_log.push(format!("Nakamoto score before removal {}", self.nakamoto_score()));
+
+        for i in 0..how_many_nodes {
+            run_log.push("***********************************************************".to_string());
+            run_log.push(format!("***  Removing node {}/{}", i + 1, how_many_nodes));
+            run_log.push("***********************************************************".to_string());
+
+            let suitable_candidates: Vec<ReplacementCandidate> = self
+                .nodes
+                .iter()
+                .filter_map(|node| {
+                    let candidate_subnet_nodes: Vec<Node> =
+                        self.nodes.iter().filter(|n| n.id != node.id).cloned().collect();
+                    self._node_to_replacement_candidate(&candidate_subnet_nodes, node, &mut run_log)
+                })
+                .collect();
+
+            let mut candidate_run_log = Vec::new();
+            match self.choose_best_candidate(suitable_candidates, &mut candidate_run_log) {
+                Some(best_result) => {
+                    // Append the complete run log
+                    run_log.extend(
+                        candidate_run_log
+                            .iter()
+                            .map(|s| format!("node {}/{}: {}", i + 1, how_many_nodes, s))
+                            .collect::<Vec<String>>(),
+                    );
+                    run_log.push(format!("Nakamoto score after removal {}", best_result.score));
+                    self.removed_nodes.push(best_result.node.clone());
+                    self.nodes.retain(|n| n.id != best_result.node.id);
+                    total_penalty += best_result.penalty;
+                    business_rules_log.extend(
+                        best_result
+                            .business_rules_log
+                            .iter()
+                            .map(|s| format!("node {}/{} ({}): {}", i + 1, how_many_nodes, best_result.node.id, s))
+                            .collect::<Vec<String>>(),
+                    );
+                    if i + 1 == how_many_nodes {
+                        if total_penalty != 0 {
+                            comment = Some(format!(
+                                "Subnet removal of {} nodes finished with the total penalty {}. Penalty causes throughout the removal:\n{}\n\n{}",
+                                how_many_nodes,
+                                total_penalty,
+                                business_rules_log.join("\n"),
+                                if how_many_nodes > 1 {
+                                    "Note that the penalty for nodes before the last node may not be relevant in the end. We leave this to humans to assess."
+                                } else { "" }
+                            ));
+                        } else {
+                            comment = None;
+                        }
+                    }
+                }
+                None => {
+                    return Err(anyhow!(
+                        "Could not complete the extension. Run log:\n{}",
+                        run_log.join("\n")
+                    ))
+                }
+            }
+        }
+        assert_eq!(self.nodes.len(), nodes_initial_len - how_many_nodes);
+
+        Ok(Self {
+            id: self.id,
+            nodes: self.nodes.clone(),
+            removed_nodes: self.removed_nodes,
+            min_nakamoto_coefficients: self.min_nakamoto_coefficients,
+            comment,
+            run_log,
+        })
+    }
+
+    fn _node_to_replacement_candidate(
+        &self,
+        subnet_nodes: &[Node],
+        touched_node: &Node,
+        err_log: &mut Vec<String>,
+    ) -> Option<ReplacementCandidate> {
+        match Self::_check_business_rules_for_nodes(&self.id, subnet_nodes, &self.min_nakamoto_coefficients) {
+            Ok((penalty, business_rules_log)) => {
+                let new_score = Self::_calc_nakamoto_score(subnet_nodes);
+                Some(ReplacementCandidate {
+                    node: touched_node.clone(),
+                    score: new_score,
+                    penalty,
+                    business_rules_log,
+                })
+            }
+            Err(err) => {
+                err_log.push(format!("Node {} failed business rule {}", touched_node.id, err));
+                None
+            }
+        }
     }
 }
 
@@ -642,12 +774,12 @@ pub trait TopologyManager: SubnetQuerier + AvailableNodesQuerier {
     }
 
     async fn replace_subnet_nodes(&self, nodes: &[PrincipalId]) -> Result<SubnetChangeRequest, NetworkError> {
-        SubnetChangeRequest {
+        Ok(SubnetChangeRequest {
             available_nodes: self.available_nodes().await?,
             subnet: self.subnet_of_nodes(nodes).await?,
             ..Default::default()
         }
-        .remove(nodes)
+        .without_nodes(nodes))
     }
 
     async fn create_subnet(
@@ -663,9 +795,9 @@ pub trait TopologyManager: SubnetQuerier + AvailableNodesQuerier {
             min_nakamoto_coefficients,
             ..Default::default()
         }
-        .include_nodes(include_nodes.clone())
-        .exclude_nodes(exclude_nodes.clone())
-        .only_nodes(only_nodes.clone())
+        .with_include_nodes(include_nodes.clone())
+        .with_exclude_nodes(exclude_nodes.clone())
+        .with_only_nodes(only_nodes.clone())
         .resize(size, 0)
     }
 }
@@ -676,7 +808,6 @@ pub struct SubnetChangeRequest {
     available_nodes: Vec<Node>,
     include_nodes: Vec<PrincipalId>,
     removed_nodes: Vec<Node>,
-    improve_count: usize,
     min_nakamoto_coefficients: Option<MinNakamotoCoefficients>,
 }
 
@@ -686,7 +817,6 @@ impl SubnetChangeRequest {
         available_nodes: Vec<Node>,
         include_nodes: Vec<PrincipalId>,
         removed_nodes: Vec<Node>,
-        improve_count: usize,
         min_nakamoto_coefficients: Option<MinNakamotoCoefficients>,
     ) -> Self {
         SubnetChangeRequest {
@@ -694,7 +824,6 @@ impl SubnetChangeRequest {
             available_nodes,
             include_nodes,
             removed_nodes,
-            improve_count,
             min_nakamoto_coefficients,
         }
     }
@@ -703,14 +832,27 @@ impl SubnetChangeRequest {
         self.subnet.clone()
     }
 
-    pub fn include_nodes(self, nodes: Vec<PrincipalId>) -> Self {
+    pub fn with_include_nodes(self, nodes: Vec<PrincipalId>) -> Self {
         Self {
             include_nodes: self.include_nodes.into_iter().chain(nodes).collect(),
             ..self
         }
     }
 
-    pub fn exclude_nodes(self, exclude_nodes_or_features: Vec<String>) -> Self {
+    /// Subnet without the listed nodes. The nodes are note added back into the
+    /// available nodes.
+    pub fn without_nodes(&self, nodes: &[PrincipalId]) -> Self {
+        let mut s = self.clone();
+        for node in nodes {
+            for node in s.subnet.nodes.clone().iter().filter(|n| n.id == *node) {
+                s.removed_nodes.push(node.clone());
+                s.subnet.nodes.retain(|n| n.id != node.id);
+            }
+        }
+        s
+    }
+
+    pub fn with_exclude_nodes(self, exclude_nodes_or_features: Vec<String>) -> Self {
         Self {
             available_nodes: self
                 .available_nodes
@@ -721,7 +863,7 @@ impl SubnetChangeRequest {
         }
     }
 
-    pub fn only_nodes(self, only_nodes_or_features: Vec<String>) -> Self {
+    pub fn with_only_nodes(self, only_nodes_or_features: Vec<String>) -> Self {
         let available_nodes = if only_nodes_or_features.is_empty() {
             self.available_nodes.into_iter().collect()
         } else {
@@ -750,68 +892,40 @@ impl SubnetChangeRequest {
         }
     }
 
-    /// Remove nodes from the subnet such that we keep nodes with the best
-    /// Nakamoto coefficient.
-    pub fn remove_nodes_and_keep_best_nakamoto(
-        &self,
-        how_many_nodes: usize,
-    ) -> Result<DecentralizedSubnet, NetworkError> {
-        let mut subnet = self.subnet.clone();
-
-        subnet.run_log.push(format!(
-            "Nakamoto score before removing nodes {}",
-            NakamotoScore::new_from_nodes(subnet.nodes.as_slice())
-        ));
-        for i in 0..how_many_nodes {
-            // Find the node that gives the best score when removed.
-            let (j, score_max) = subnet
-                .clone()
-                .nodes
-                .iter()
-                .enumerate()
-                .map(|(j, _node)| {
-                    let mut subnet = subnet.clone();
-                    subnet.nodes.swap_remove(j);
-                    (j, NakamotoScore::new_from_nodes(subnet.nodes.as_slice()))
-                })
-                .max_by_key(|(_, score)| score.clone())
-                .ok_or_else(|| {
-                    NetworkError::ResizeFailed(format!(
-                        "Cannot remove {} nodes from subnet with {} nodes",
-                        how_many_nodes,
-                        self.subnet.nodes.len()
-                    ))
-                })?;
-
-            // Remove the node from the subnet.
-            let node_removed = subnet.nodes.swap_remove(j);
-            subnet.run_log.push(format!(
-                "Removed {}/{} node {} with score {}",
-                i + 1,
-                how_many_nodes,
-                node_removed.id,
-                score_max
-            ));
-        }
-        subnet.run_log.push(format!(
-            "Nakamoto score after removing nodes {}",
-            NakamotoScore::new_from_nodes(subnet.nodes.as_slice())
-        ));
-        Ok(subnet)
+    /// Optimize is implemented by removing a certain number of nodes and then
+    /// adding the same number back.
+    pub fn optimize(
+        mut self,
+        optimize_count: usize,
+        replacements_unhealthy: &Vec<PrincipalId>,
+    ) -> Result<SubnetChange, NetworkError> {
+        let old_nodes = self.subnet.nodes.clone();
+        self.subnet = self.subnet.without_nodes(replacements_unhealthy)?;
+        let result = self.resize(optimize_count + replacements_unhealthy.len(), optimize_count)?;
+        Ok(SubnetChange { old_nodes, ..result })
     }
 
-    /// Add or remove nodes to the subnet.
+    /// Add or remove nodes from the subnet.
     pub fn resize(
         &self,
         how_many_nodes_to_add: usize,
         how_many_nodes_to_remove: usize,
     ) -> Result<SubnetChange, NetworkError> {
-        let included_nodes = self
-            .available_nodes
-            .iter()
-            .filter(|n| self.include_nodes.contains(&n.id))
-            .cloned()
-            .collect::<Vec<_>>();
+        println!(
+            "Resizing subnet {} by adding {} nodes and removing {} nodes",
+            self.subnet.id, how_many_nodes_to_add, how_many_nodes_to_remove
+        );
+        let old_nodes = self.subnet.nodes.clone();
+
+        let included_nodes = if self.include_nodes.is_empty() {
+            Vec::new()
+        } else {
+            self.available_nodes
+                .iter()
+                .filter(|n| self.include_nodes.contains(&n.id))
+                .cloned()
+                .collect::<Vec<_>>()
+        };
 
         let available_nodes = self
             .available_nodes
@@ -820,27 +934,25 @@ impl SubnetChangeRequest {
             .filter(|n| !included_nodes.contains(n))
             .collect::<Vec<_>>();
 
-        let resized_subnet = if how_many_nodes_to_remove > 0 {
-            self.remove_nodes_and_keep_best_nakamoto(how_many_nodes_to_remove)
-                .map_err(|e| NetworkError::ResizeFailed(e.to_string()))?
-        } else {
-            self.subnet.clone()
-        };
-        let resized_subnet = resized_subnet
+        let resized_subnet = self
+            .subnet
+            .clone()
             .with_nodes(included_nodes)
             .with_min_nakamoto_coefficients(&self.min_nakamoto_coefficients)
-            .new_extended_subnet(how_many_nodes_to_add, &available_nodes)
+            .subnet_with_more_nodes(how_many_nodes_to_add, &available_nodes)
             .map_err(|e| NetworkError::ResizeFailed(e.to_string()))?;
+
+        let resized_subnet = if how_many_nodes_to_remove > 0 {
+            resized_subnet
+                .subnet_with_fewer_nodes(how_many_nodes_to_remove)
+                .map_err(|e| NetworkError::ResizeFailed(e.to_string()))?
+        } else {
+            resized_subnet
+        };
 
         let subnet_change = SubnetChange {
             id: self.subnet.id,
-            old_nodes: self
-                .subnet
-                .nodes
-                .clone()
-                .into_iter()
-                .chain(self.removed_nodes.clone())
-                .collect(),
+            old_nodes,
             new_nodes: resized_subnet.nodes,
             min_nakamoto_coefficients: self.min_nakamoto_coefficients.clone(),
             comment: resized_subnet.comment,
@@ -853,166 +965,11 @@ impl SubnetChangeRequest {
         Ok(subnet_change)
     }
 
-    pub fn replace(self, nodes: &[PrincipalId]) -> Result<SubnetChange, NetworkError> {
-        let subnet = self.subnet.without_nodes(nodes)?;
-        let num_removed_nodes = subnet.removed_nodes.len();
-
-        Self {
-            subnet: subnet.clone(),
-            ..self
-        }
-        .resize(num_removed_nodes, 0)
-        .map(|mut sc| {
-            sc.old_nodes.append(&mut subnet.removed_nodes.clone());
-            sc
-        })
-    }
-
-    pub fn optimize(self, max_replacements: usize) -> Result<SubnetChange, NetworkError> {
-        let mut change_request = self.clone();
-
-        let non_decentralized_nodes: Vec<Node> = self
-            .subnet
-            .nodes
-            .iter()
-            .filter(|n| !(n.decentralized))
-            .cloned()
-            .collect();
-        let max_replacements = if !non_decentralized_nodes.is_empty() {
-            let non_decentralized_node_ids = non_decentralized_nodes.iter().map(|n| n.id).collect::<Vec<_>>();
-            let change = self.clone();
-            let change = change
-                .replace(&non_decentralized_node_ids)
-                .expect("Replacing non-decentralized nodes should always work");
-            if change.removed().len() >= max_replacements {
-                info!(
-                    "Replacing only non-decentralized nodes: {:?}",
-                    &non_decentralized_node_ids
-                );
-                return Ok(change);
-            };
-            change_request = SubnetChangeRequest {
-                subnet: DecentralizedSubnet {
-                    nodes: change.new_nodes.clone(),
-                    ..change_request.subnet
-                },
-                available_nodes: change_request
-                    .available_nodes
-                    .iter()
-                    .filter(|n| !change.removed().contains(n))
-                    .cloned()
-                    .collect(),
-                removed_nodes: change.removed(),
-                ..change_request
-            };
-            max_replacements - change.removed().len()
-        } else {
-            max_replacements
-        };
-
-        info!("Optimizing {} nodes", max_replacements);
-
-        let max_replacements = if max_replacements > 2 {
-            warn!("Limiting the max replacements to 2 to prevent DOS");
-            2
-        } else {
-            max_replacements
-        };
-
-        let results = self.subnet.nodes.iter().combinations(max_replacements).map(|nodes| {
-            let mut change = change_request.clone();
-            change
-                .available_nodes
-                .append(&mut nodes.iter().map(|n| (*n).clone()).collect::<Vec<_>>());
-            change.replace(nodes.iter().map(|n| n.id).collect::<Vec<_>>().as_slice())
-        });
-
-        let errs = results.clone().map(|r| format!("{:?}", r)).collect::<Vec<_>>();
-
-        match &results.clone().filter_map(|r| r.ok()).max_by(|sc1, sc2| {
-            let score1 = NakamotoScore::new_from_nodes(&sc1.new_nodes);
-            let score2 = NakamotoScore::new_from_nodes(&sc2.new_nodes);
-            score1.cmp(&score2)
-        }) {
-            Some(best_result) => Ok(best_result.clone()),
-            None => Err(NetworkError::ResizeFailed(format!(
-                "Optimize failed, could not find any suitable solution for the request\n{}",
-                errs.join("\n")
-            ))),
-        }
-    }
-
-    pub fn remove(self, nodes: &[PrincipalId]) -> Result<SubnetChangeRequest, NetworkError> {
-        let subnet = self.subnet.without_nodes(nodes)?;
-        Ok(SubnetChangeRequest {
-            subnet: subnet.clone(),
-            removed_nodes: self.removed_nodes.into_iter().chain(subnet.removed_nodes).collect(),
-            ..self
-        })
-    }
-
-    pub fn improve(self, count: usize) -> SubnetChangeRequest {
-        Self {
-            improve_count: count,
-            ..self
-        }
-    }
-
     /// Evaluates the subnet change request to simulate the requested topology
     /// change. Command returns all the information about the subnet before
     /// and after the change.
     pub fn evaluate(self) -> Result<SubnetChange, NetworkError> {
-        // If self.improve_count is set, we first try to optimize the subnet
-        let (request_change, result_optimize) = if self.improve_count > 0 {
-            let request_extend = Self {
-                removed_nodes: Default::default(),
-                ..self.clone()
-            }
-            .optimize(self.improve_count)?;
-
-            let request_change = self
-                .remove(
-                    request_extend
-                        .removed()
-                        .iter()
-                        .map(|n| n.id)
-                        .collect::<Vec<_>>()
-                        .as_slice(),
-                )?
-                .include_nodes(request_extend.added().iter().map(|n| n.id).collect());
-            (request_change, Some(request_extend))
-        } else {
-            (self, None)
-        };
-
-        // Then we extend the subnet for the remaining nodes
-        match (request_change, result_optimize) {
-            (request_change, Some(result_optimize)) => {
-                let result_extend =
-                    request_change.resize(request_change.removed_nodes.len() - result_optimize.added().len(), 0)?;
-                Ok(SubnetChange {
-                    comment: if result_optimize.comment == result_extend.comment {
-                        result_extend.comment
-                    } else {
-                        Some(format!(
-                            "{}\n{}",
-                            result_optimize.comment.unwrap_or_default(),
-                            result_extend.comment.unwrap_or_default()
-                        ))
-                    },
-                    run_log: result_optimize
-                        .run_log
-                        .into_iter()
-                        .chain(result_extend.run_log)
-                        .collect(),
-                    ..result_extend
-                })
-            }
-            (request_change, _) => request_change.resize(
-                request_change.removed_nodes.len() - request_change.include_nodes.len(),
-                0,
-            ),
-        }
+        self.resize(0, 0)
     }
 }
 
