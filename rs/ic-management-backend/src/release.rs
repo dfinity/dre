@@ -670,23 +670,13 @@ async fn get_update_states(
         .collect())
 }
 
-#[derive(Serialize, Clone)]
-pub struct SubnetReleaseStatus {
-    pub state: SubnetUpdateState,
-    pub subnet_id: PrincipalId,
-    pub subnet_name: String,
-    pub proposal: Option<SubnetUpdateProposal>,
-    pub patches_available: Vec<ReplicaRelease>,
-    pub release: ReplicaRelease,
-}
-
 pub async fn list_subnets_release_statuses(
     proposal_agent: &ProposalAgent,
     prometheus_client: &prometheus_http_query::Client,
     network: Network,
     subnets: BTreeMap<PrincipalId, Subnet>,
     releases: Vec<ReplicaRelease>,
-) -> anyhow::Result<Vec<SubnetReleaseStatus>> {
+) -> anyhow::Result<Vec<SubnetUpdate>> {
     let mut subnet_update_proposals = proposal_agent.list_update_subnet_version_proposals().await?;
     subnet_update_proposals.sort_by_key(|p| p.info.proposal_timestamp_seconds);
     subnet_update_proposals.reverse();
@@ -769,7 +759,7 @@ pub async fn list_subnets_release_statuses(
                         }
                 })
                 .expect("some release should have been found for replica");
-            SubnetReleaseStatus {
+            SubnetUpdate {
                 state: proposal
                     .map(|u| {
                         if !u.info.executed {
@@ -792,7 +782,7 @@ pub async fn list_subnets_release_statuses(
                     .find(|r| r.name == release.name)
                     .map(|r| r.patches_for(&release.commit_hash).expect("patches this release"))
                     .unwrap_or_default(),
-                release: release.clone(),
+                replica_release: release.clone(),
             }
         })
         .collect())
