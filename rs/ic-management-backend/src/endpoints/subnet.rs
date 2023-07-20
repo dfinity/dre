@@ -147,8 +147,9 @@ async fn replace(
         let replace_target = if num_unhealthy == 1 { "node" } else { "nodes" };
         motivations.push(format!("replacing {num_unhealthy} unhealthy {replace_target}"));
     }
-    let num_optimized = request.optimize.unwrap_or(0);
-    let change = change_request.optimize(num_optimized, &replacements_unhealthy)?;
+    // Optimize the requested number of nodes, and remove unhealthy nodes if there are any
+    let change = change_request.optimize(request.optimize.unwrap_or(0), &replacements_unhealthy)?;
+    let num_optimized = change.removed().len() - num_unhealthy;
     if num_optimized > 0 {
         let replace_target = if num_optimized == 1 { "node" } else { "nodes" };
         motivations.push(format!(
