@@ -958,9 +958,11 @@ impl SubnetChangeRequest {
             comment: resized_subnet.comment,
             run_log: resized_subnet.run_log,
         };
+        let node_add_count = subnet_change.added().len();
+        let node_remove_count = subnet_change.removed().len();
         info!(
             "Subnet {} resized, {} nodes added, {} nodes removed",
-            self.subnet.id, how_many_nodes_to_add, how_many_nodes_to_remove
+            self.subnet.id, node_add_count, node_remove_count
         );
         Ok(subnet_change)
     }
