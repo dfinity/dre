@@ -1,8 +1,8 @@
 import React, { forwardRef } from 'react';
 import { Link, Tooltip, Typography, makeStyles } from '@material-ui/core';
 import { Table, TableColumn } from '@backstage/core-components';
-import { fetchMissingGuests, fetchNodes, fetchNodesHealths, fetchSubnetVersions, fetchSubnets } from './fetch';
-import { NodeHealth, Node, Subnet, Operator, SubnetUpdate } from './types';
+import { fetchSubnetVersions } from './fetch';
+import { SubnetUpdate } from './types';
 import SearchIcon from '@material-ui/icons/Search';
 
 // table icon imports
