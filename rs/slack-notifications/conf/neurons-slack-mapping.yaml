@@ -23,8 +23,6 @@
   neuron: 41
 - id: U04H2KWTLBZ  # David de Kloet
   neuron: 42
-- id: ULF0AUPNC    # Ryan Stout
-  neuron: 43
 - id: U01L52P04HW  # Paul Meeusen
   neuron: 44
 - id: UJU6XENEQ    # Mamiko Inoue
@@ -56,7 +54,7 @@
 - id: U047B65SPB3  # Nikola Milosavljevic
   neuron: 58
 - id: U02TEQHKV35  # Llorenç Muntaner Perello
-  neuron: 58
+  neuron: 59
 - id: U03JW41V810  # Andre Popovitch
   neuron: 60
 - id: U04JSKAH6L8  # Manuel Amador
@@ -79,7 +77,7 @@
   neuron: 69
 - id: UL6RB18A0    # Roman Kashitsyn
   neuron: 70
-- id: U01Q0ED6SDB  # Leon Tran
+- id: U01Q0ED6SDB  # Leon Tan
   neuron: 71
 - id: U02MNAPVA8L  # Daniel Thurau
   neuron: 72
