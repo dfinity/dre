@@ -3,7 +3,6 @@ import { Grid } from '@material-ui/core';
 
 import { Page, Header, Content, HeaderLabel } from '@backstage/core-components';
 // import { ReleaseList } from './ReleaseList';
-import RolloutsStepper from './RolloutStepper';
 import SubnetVersionSearch from './SubnetVersionSearch';
 // import HotfixReleases from './HotfixReleases';
 
