@@ -23,7 +23,6 @@ actix-web = { version = "4.2.1", default-features = false, features = [
 ic-base-types = { git = "https://github.com/dfinity/ic.git", rev = "794fc5b9341fa8f6a0e8f219201c35f0b5727ab9" }
 ic-registry-keys = { git = "https://github.com/dfinity/ic.git", rev = "794fc5b9341fa8f6a0e8f219201c35f0b5727ab9" }
 anyhow = "1.0.43"
-serde_with = "3.0.0"
 futures = "0.3.16"
 serde_yaml = "0.9.11"
 reqwest = { version = "0.11.4", features = ["json"] }
