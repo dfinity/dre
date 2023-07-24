@@ -7,7 +7,6 @@ import { Button, Chip, Dialog, DialogActions, DialogContent, DialogContentText, 
 import { Node, Operator, Guest, NodeHealth } from './types';
 import CheckCircleOutlineIcon from '@material-ui/icons/CheckCircleOutline';
 import { green, blue, red, grey, lightBlue, orange } from '@material-ui/core/colors';
-import AddSubnetDialog from './AddSubnetDialog';
 import ErrorOutlineSharpIcon from '@material-ui/icons/ErrorOutlineSharp';
 import ReportProblemOutlinedIcon from '@material-ui/icons/ReportProblemOutlined';
 import HelpOutlineOutlinedIcon from '@material-ui/icons/HelpOutlineOutlined';
@@ -169,7 +168,6 @@ function TabPanel({
                 </Typography>
               </Grid>
               <Grid item>
-                <AddSubnetDialog />
                 <RemoveUnhealthyNodesDialog nodes={unassignedNodes.filter(n => healths[n.principal] != "Healthy")} />
               </Grid>
             </Grid>
