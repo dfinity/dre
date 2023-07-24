@@ -16,7 +16,6 @@ use registry_canister::mutations::do_remove_nodes_from_subnet::RemoveNodesFromSu
 use registry_canister::mutations::do_update_subnet_replica::UpdateSubnetReplicaVersionPayload;
 use registry_canister::mutations::node_management::do_remove_nodes::RemoveNodesPayload;
 use serde::{Deserialize, Serialize};
-use serde_with::{serde_as, DisplayFromStr};
 use std::cmp::{Eq, Ord, PartialEq, PartialOrd};
 use std::collections::BTreeMap;
 use std::convert::TryFrom;
@@ -139,10 +138,8 @@ impl<T: TopologyChangePayload> From<(ProposalInfo, T)> for TopologyChangeProposa
     }
 }
 
-#[serde_as]
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Subnet {
-    #[serde_as(as = "DisplayFromStr")]
     pub principal: PrincipalId,
     pub nodes: Vec<Node>,
     pub subnet_type: SubnetType,
@@ -165,10 +162,8 @@ pub struct SubnetMetadata {
     pub applications: Option<Vec<Application>>,
 }
 
-#[serde_as]
 #[derive(Clone, Serialize, Debug, Deserialize)]
 pub struct Node {
-    #[serde_as(as = "DisplayFromStr")]
     pub principal: PrincipalId,
     pub ip_addr: Ipv6Addr,
     pub operator: Operator,
@@ -258,10 +253,8 @@ pub struct CreateSubnetProposalInfo {
     pub nodes: Vec<PrincipalId>,
 }
 
-#[serde_as]
 #[derive(Clone, Serialize, Default, Debug, Deserialize)]
 pub struct Operator {
-    #[serde_as(as = "DisplayFromStr")]
     pub principal: PrincipalId,
     pub provider: Provider,
     pub allowance: u64,
@@ -270,10 +263,8 @@ pub struct Operator {
     pub datacenter: Option<Datacenter>,
 }
 
-#[serde_as]
 #[derive(Clone, Serialize, Default, Debug, Deserialize)]
 pub struct Provider {
-    #[serde_as(as = "DisplayFromStr")]
     pub principal: PrincipalId,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
