@@ -6,6 +6,7 @@ members = [
     "rs/ic-management-backend",
     "rs/ic-management-types",
     "rs/slack-notifications",
+    "rs/np-notifications",
 ]
 
 resolver = "2"
