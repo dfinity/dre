@@ -1,4 +1,4 @@
-use crate::cli::version::Commands::{Retire, Update};
+use crate::cli::version::Commands::Update;
 use clap::{error::ErrorKind, CommandFactory, Parser};
 use ic_canisters::governance_canister_version;
 use ic_management_types::requests::NodesRemoveRequest;
@@ -167,36 +167,27 @@ async fn main() -> Result<(), anyhow::Error> {
 
             cli::Commands::Version(cmd) => {
                 match &cmd.subcommand {
-                    Retire { edit_summary } => {
-                        let runner = runner::Runner::from_opts(&cli_opts).await?;
-                        let (template, versions) = runner.prepare_versions_to_retire(*edit_summary).await?;
-                        let ic_admin = ic_admin::Cli::from_opts(&cli_opts, true).await?;
-                        ic_admin.propose_run(
-                            ic_admin::ProposeCommand::RetireReplicaVersion { versions },
-                            ic_admin::ProposeOptions {
-                                title: Some("Retire IC replica version".to_string()),
-                                summary: Some(template),
-                                motivation: None,
-                            },
-                            simulate,
-                        )
-                    },
                     Update { version, rc_branch_name } => {
                         let runner = runner::Runner::from_opts(&cli_opts).await?;
-                        let (_, versions) = runner.prepare_versions_to_retire(false).await?;
+                        let (_, retire_versions) = runner.prepare_versions_to_retire(false).await?;
                         let ic_admin = ic_admin::Cli::from_opts(&cli_opts, true).await?;
-                        let new_replica_info = ic_admin::Cli::prepare_to_propose_to_bless_new_replica_version(version, rc_branch_name).await?;
-                        let proposal_title = if versions.is_empty() {
-                            Some(format!("Elect new replica binary revision (commit {})", &version[..8]))
+                        let new_replica_info = ic_admin::Cli::prepare_to_propose_to_update_elected_replica_versions(version, rc_branch_name).await?;
+                        let proposal_title = if retire_versions.is_empty() {
+                            Some(format!("Elect new IC/Replica revision (commit {})", &version[..8]))
                         } else {
-                            Some(format!("Elect new replica binary revision (commit {}), and retire old replica versions {}", &version[..8], versions.iter().map(|v| &v[..8]).join(",")))
+                            let pluralize = if retire_versions.len() == 1 {
+                                "version"
+                            } else {
+                                "versions"
+                            };
+                            Some(format!("Elect new IC/Replica revision (commit {}), and retire old replica {} {}", &version[..8], pluralize, retire_versions.iter().map(|v| &v[..8]).join(",")))
                         };
 
                         ic_admin.propose_run(ic_admin::ProposeCommand::UpdateElectedReplicaVersions{
                             version_to_bless: version.to_string(),
                             update_url: new_replica_info.update_url,
                             stringified_hash: new_replica_info.stringified_hash,
-                            versions_to_retire: versions.clone(),
+                            versions_to_retire: retire_versions.clone(),
                         }, ic_admin::ProposeOptions{
                             title: proposal_title,
                             summary: Some(new_replica_info.summary),
