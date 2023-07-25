@@ -320,7 +320,7 @@ impl Cli {
         self.propose_run(cmd, Default::default(), simulate)
     }
 
-    pub(crate) async fn prepare_to_propose_to_bless_new_replica_version(
+    pub(crate) async fn prepare_to_propose_to_update_elected_replica_versions(
         version: &String,
         rc_branch_name: &String,
     ) -> anyhow::Result<UpdateReplicaVersions> {
@@ -448,9 +448,6 @@ pub(crate) enum ProposeCommand {
         command: String,
         args: Vec<String>,
     },
-    RetireReplicaVersion {
-        versions: Vec<String>,
-    },
     RemoveNodes {
         nodes: Vec<PrincipalId>,
     },
@@ -512,7 +509,6 @@ impl ProposeCommand {
                 vec![subnet.to_string(), version.clone()]
             }
             Self::Raw { command: _, args } => args.clone(),
-            Self::RetireReplicaVersion { versions } => versions.to_vec(),
             Self::RemoveNodes { nodes } => nodes.iter().map(|n| n.to_string()).collect(),
             Self::UpdateElectedReplicaVersions {
                 version_to_bless,

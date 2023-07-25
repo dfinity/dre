@@ -208,25 +208,13 @@ pub(crate) mod version {
 
     #[derive(Subcommand, Clone)]
     pub enum Commands {
-        /// Retire replica versions
-        Retire {
-            /// Specify if the summary should be edited during the process
-            ///
-            /// Default value of summary is:
-            /// Removing the obsolete IC replica versions from the registry, to
-            /// prevent unintended version in the future
-            #[clap(long)]
-            edit_summary: bool,
-        },
-
-        /// Bless replica version with release notes using the ic-admin CLI and
-        /// automatically retire obsolete replica versions
+        /// Update the elected/blessed replica versions in the registry
+        /// by adding a new version and potentially removing obsolete versions
         Update {
-            /// Specify the commit hash of the version that is being deployed.
+            /// Specify the commit hash of the version that is being elected.
             version: String,
 
-            /// Sepcify the name of the rc branch that contains the release
-            /// commits.
+            /// RC branch that contains the release commits.
             rc_branch_name: String,
         },
     }
