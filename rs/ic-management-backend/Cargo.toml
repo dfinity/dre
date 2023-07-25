@@ -52,7 +52,7 @@ candid = "0.8.4"
 ic-nns-governance = { git = "https://github.com/dfinity/ic.git", rev = "794fc5b9341fa8f6a0e8f219201c35f0b5727ab9" }
 ic-nns-common = { git = "https://github.com/dfinity/ic.git", rev = "794fc5b9341fa8f6a0e8f219201c35f0b5727ab9" }
 ic-nns-constants = { git = "https://github.com/dfinity/ic.git", rev = "794fc5b9341fa8f6a0e8f219201c35f0b5727ab9" }
-ic-agent = "0.23.2"
+ic-agent = "0.25.0"
 gitlab = "0.1511.0"
 dotenv = "0.15.0"
 derive_builder = "0.12.0"
