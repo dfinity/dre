@@ -226,7 +226,7 @@ impl TryFrom<Vec<ProposalInfo>> for MessageGroups {
                 (
                     slack_channel_for_proposal(p),
                     alert_mention(p.proposer.as_ref().expect("No NeuronId in the proposal")),
-                    proposer_mention(p.proposer.clone().expect("proposer not set")),
+                    proposer_mention(p.proposer.expect("proposer not set")),
                     proposal_motivation(p),
                 )
             })

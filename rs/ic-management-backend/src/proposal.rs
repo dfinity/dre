@@ -221,7 +221,9 @@ impl ProposalAgent {
     }
 }
 
-fn filter_map_nns_function_proposals<T: NnsFunctionProposal>(proposals: &[ProposalInfo]) -> Vec<(ProposalInfo, T)> {
+fn filter_map_nns_function_proposals<T: NnsFunctionProposal + candid::CandidType>(
+    proposals: &[ProposalInfo],
+) -> Vec<(ProposalInfo, T)> {
     proposals
         .iter()
         .filter(|p| ProposalStatus::from_i32(p.status).expect("unknown proposal status") != ProposalStatus::Rejected)

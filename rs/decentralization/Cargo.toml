@@ -6,7 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-ic-base-types = { git = "https://github.com/dfinity/ic.git", rev = "794fc5b9341fa8f6a0e8f219201c35f0b5727ab9" }
+ic-base-types = { git = "https://github.com/dfinity/ic.git", rev = "0062aec2efc16d6e4cadb2cd1052aaabbc9f6e48" }
 serde = { version = "1.0", features = ["rc"] }
 serde_json = { version = "1.0" }
 async-trait = "0.1.52"
@@ -16,19 +16,19 @@ actix-web = { version = "4.2.1", default-features = false, features = [
 ] }
 colored = "2.0.0"
 reqwest = { version = "0.11.9", features = ["json"] }
-itertools = "0.10.3"
+itertools = "0.11.0"
 chrono = "0.4.19"
 tokio = { version = "1.2.0", features = ["full"] }
 ic-management-types = { path = "../ic-management-types" }
 futures-util = "0.3.21"
-strum = "0.24.1"
-strum_macros = "0.24.3"
+strum = "0.25.0"
+strum_macros = "0.25.1"
 anyhow = "1.0.44"
 log = "0.4.14"
 tabular = "0.2"
 rayon = "1.5.1"
 easy-parallel = "3.1.0"
-lru = "0.10.0"
+lru = "0.11.0"
 rand = { version = "0.8.5", features = ["std_rng"] }
 rand_seeder = "0.2.3"
 ahash = "0.8.3"
