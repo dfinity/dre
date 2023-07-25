@@ -10,7 +10,7 @@ actix-web = "4.3.1"
 ic-management-types = { path = "../ic-management-types" }
 ic-management-backend = { path = "../ic-management-backend" }
 slog = "2.7.0"
-ic-types = { git = "https://github.com/dfinity/ic.git", rev = "794fc5b9341fa8f6a0e8f219201c35f0b5727ab9" }
+ic-types = { git = "https://github.com/dfinity/ic.git", rev = "0062aec2efc16d6e4cadb2cd1052aaabbc9f6e48" }
 slog-term = "2.9.0"
 slog-async = "2.7.0"
 tokio = { version = "1.29.1", features = ["full"] }
