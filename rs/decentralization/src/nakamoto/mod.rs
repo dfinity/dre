@@ -833,7 +833,7 @@ mod tests {
         let available_nodes = available_nodes
             .iter()
             .sorted_by(|a, b| a.principal.cmp(&b.principal))
-            .filter(|n| n.subnet.is_none() && n.proposal.is_none())
+            .filter(|n| n.subnet_id.is_none() && n.proposal.is_none())
             .map(Node::from)
             .map(|n| Node {
                 decentralized: true,
