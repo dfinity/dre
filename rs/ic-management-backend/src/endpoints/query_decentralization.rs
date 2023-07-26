@@ -55,11 +55,11 @@ async fn get_decentralization_analysis(
     registry: web::Data<Arc<RwLock<RegistryState>>>,
     subnet: Option<PrincipalId>,
     nodes_to_add: Option<Vec<PrincipalId>>,
-    nodes_to_remove: Option<Vec<PrincipalId>>,
+    node_ids_to_remove: Option<Vec<PrincipalId>>,
     min_nakamoto_coefficients: Option<MinNakamotoCoefficients>,
 ) -> Result<HttpResponse, Error> {
     let subnets = registry.read().await.subnets();
-    let nodes = registry.read().await.nodes();
+    let registry_nodes = registry.read().await.nodes();
 
     let original_subnet = subnet
         .map(|subnet_id| match subnets.get(&subnet_id) {
@@ -89,8 +89,15 @@ async fn get_decentralization_analysis(
             run_log: Vec::new(),
         });
 
+    let nodes_to_remove = node_ids_to_remove.map(|node_ids_to_remove| {
+        node_ids_to_remove
+            .iter()
+            .filter_map(|n| registry_nodes.get(n))
+            .map(|n| decentralization::network::Node::from(n))
+            .collect::<Vec<_>>()
+    });
     let updated_subnet = match &nodes_to_remove {
-        Some(nodes_to_remove) => original_subnet.without_nodes(nodes_to_remove)?,
+        Some(nodes_to_remove) => original_subnet.without_nodes(nodes_to_remove.clone())?,
         None => original_subnet.clone(),
     };
 
@@ -98,7 +105,7 @@ async fn get_decentralization_analysis(
         Some(nodes_to_add) => {
             let nodes_to_add = nodes_to_add
                 .iter()
-                .map(|n| decentralization::network::Node::from(&nodes[n]))
+                .map(|n| decentralization::network::Node::from(&registry_nodes[n]))
                 .collect();
             updated_subnet.with_nodes(nodes_to_add)
         }

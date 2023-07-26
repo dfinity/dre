@@ -22,7 +22,6 @@ use std::convert::TryFrom;
 use std::net::Ipv6Addr;
 use std::ops::Deref;
 use std::str::FromStr;
-use std::sync::Arc;
 use strum::VariantNames;
 use strum_macros::{Display, EnumString, EnumVariantNames};
 use url::Url;
@@ -63,13 +62,18 @@ impl NnsFunctionProposal for RemoveNodesPayload {
 }
 
 pub trait TopologyChangePayload: NnsFunctionProposal {
-    fn get_nodes(&self) -> Vec<PrincipalId>;
+    fn get_added_node_ids(&self) -> Vec<PrincipalId>;
+    fn get_removed_node_ids(&self) -> Vec<PrincipalId>;
     fn get_subnet(&self) -> Option<PrincipalId>;
 }
 
 impl TopologyChangePayload for CreateSubnetPayload {
-    fn get_nodes(&self) -> Vec<PrincipalId> {
+    fn get_added_node_ids(&self) -> Vec<PrincipalId> {
         self.node_ids.iter().map(|node_id| node_id.get()).collect()
+    }
+
+    fn get_removed_node_ids(&self) -> Vec<PrincipalId> {
+        vec![]
     }
 
     fn get_subnet(&self) -> Option<PrincipalId> {
@@ -78,8 +82,12 @@ impl TopologyChangePayload for CreateSubnetPayload {
 }
 
 impl TopologyChangePayload for AddNodesToSubnetPayload {
-    fn get_nodes(&self) -> Vec<PrincipalId> {
+    fn get_added_node_ids(&self) -> Vec<PrincipalId> {
         self.node_ids.iter().map(|node_id| node_id.get()).collect()
+    }
+
+    fn get_removed_node_ids(&self) -> Vec<PrincipalId> {
+        vec![]
     }
 
     fn get_subnet(&self) -> Option<PrincipalId> {
@@ -88,7 +96,11 @@ impl TopologyChangePayload for AddNodesToSubnetPayload {
 }
 
 impl TopologyChangePayload for RemoveNodesFromSubnetPayload {
-    fn get_nodes(&self) -> Vec<PrincipalId> {
+    fn get_added_node_ids(&self) -> Vec<PrincipalId> {
+        vec![]
+    }
+
+    fn get_removed_node_ids(&self) -> Vec<PrincipalId> {
         self.node_ids.iter().map(|node_id| node_id.get()).collect()
     }
 
@@ -98,12 +110,12 @@ impl TopologyChangePayload for RemoveNodesFromSubnetPayload {
 }
 
 impl TopologyChangePayload for ChangeSubnetMembershipPayload {
-    fn get_nodes(&self) -> Vec<PrincipalId> {
-        self.node_ids_add
-            .iter()
-            .map(|node_id| node_id.get())
-            .chain(self.node_ids_remove.iter().map(|node_id| node_id.get()))
-            .collect()
+    fn get_added_node_ids(&self) -> Vec<PrincipalId> {
+        self.node_ids_add.iter().map(|node_id| node_id.get()).collect()
+    }
+
+    fn get_removed_node_ids(&self) -> Vec<PrincipalId> {
+        self.node_ids_remove.iter().map(|node_id| node_id.get()).collect()
     }
 
     fn get_subnet(&self) -> Option<PrincipalId> {
@@ -112,7 +124,11 @@ impl TopologyChangePayload for ChangeSubnetMembershipPayload {
 }
 
 impl TopologyChangePayload for RemoveNodesPayload {
-    fn get_nodes(&self) -> Vec<PrincipalId> {
+    fn get_added_node_ids(&self) -> Vec<PrincipalId> {
+        vec![]
+    }
+
+    fn get_removed_node_ids(&self) -> Vec<PrincipalId> {
         self.node_ids.iter().map(|node_id| node_id.get()).collect()
     }
 
@@ -121,9 +137,10 @@ impl TopologyChangePayload for RemoveNodesPayload {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(CandidType, Serialize, Deserialize, Clone, Debug)]
 pub struct TopologyChangeProposal {
-    pub nodes: Vec<PrincipalId>,
+    pub node_ids_added: Vec<PrincipalId>,
+    pub node_ids_removed: Vec<PrincipalId>,
     pub subnet_id: Option<PrincipalId>,
     pub id: u64,
 }
@@ -132,13 +149,14 @@ impl<T: TopologyChangePayload> From<(ProposalInfo, T)> for TopologyChangeProposa
     fn from((info, payload): (ProposalInfo, T)) -> Self {
         Self {
             subnet_id: payload.get_subnet(),
-            nodes: payload.get_nodes(),
+            node_ids_added: payload.get_added_node_ids(),
+            node_ids_removed: payload.get_removed_node_ids(),
             id: info.id.unwrap().id,
         }
     }
 }
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Default, Serialize, Deserialize)]
 pub struct Subnet {
     pub principal: PrincipalId,
     pub nodes: Vec<Node>,
@@ -170,7 +188,7 @@ pub struct Node {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub hostname: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub subnet: Option<PrincipalId>,
+    pub subnet_id: Option<PrincipalId>,
     pub dfinity_owned: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub proposal: Option<TopologyChangeProposal>,
@@ -410,7 +428,7 @@ pub struct ReplicaRelease {
     pub branch: String,
     pub name: String,
     pub time: chrono::NaiveDateTime,
-    pub previous_patch_release: Option<Arc<ReplicaRelease>>,
+    pub previous_patch_release: Option<Box<ReplicaRelease>>,
 }
 
 impl ReplicaRelease {

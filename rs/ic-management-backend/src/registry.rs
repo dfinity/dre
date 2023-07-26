@@ -395,7 +395,7 @@ impl RegistryState {
                                 )
                             })
                             .into(),
-                        subnet: self
+                        subnet_id: self
                             .local_registry
                             .get_subnet_id_from_node_id(
                                 NodeId::new(principal),
@@ -436,7 +436,7 @@ impl RegistryState {
                 let subnet_nodes = self
                     .nodes
                     .iter()
-                    .filter(|(_, n)| n.subnet.map_or(false, |s| s == principal))
+                    .filter(|(_, n)| n.subnet_id.map_or(false, |s| s == principal))
                     .map(|(_, n)| n.clone())
                     .collect::<Vec<Node>>();
                 let subnet_type = SubnetType::try_from(sr.subnet_type).unwrap();
@@ -518,7 +518,7 @@ impl RegistryState {
             .map(|(p, n)| {
                 let proposal = topology_proposals
                     .iter()
-                    .find(|p| p.nodes.contains(&n.principal))
+                    .find(|p| p.node_ids_added.contains(&n.principal) || p.node_ids_removed.contains(&n.principal))
                     .cloned();
 
                 (p, Node { proposal, ..n })
@@ -534,16 +534,18 @@ impl RegistryState {
 
         Ok(subnets
             .into_iter()
-            .map(|(p, subnet)| {
+            .map(|(subnet_id, subnet)| {
                 let proposal = topology_proposals
                     .iter()
-                    .find(|t| {
-                        t.subnet_id.unwrap_or_default() == p
-                            || subnet.nodes.iter().any(|n| t.nodes.contains(&n.principal))
+                    .find(|p| {
+                        p.subnet_id.unwrap_or_default() == subnet_id
+                            || subnet.nodes.iter().any(|n| {
+                                p.node_ids_added.contains(&n.principal) || p.node_ids_removed.contains(&n.principal)
+                            })
                     })
                     .cloned();
 
-                (p, Subnet { proposal, ..subnet })
+                (subnet_id, Subnet { proposal, ..subnet })
             })
             .collect())
     }
@@ -654,12 +656,12 @@ impl SubnetQuerier for RegistryState {
 
     async fn subnet_of_nodes(
         &self,
-        nodes: &[PrincipalId],
+        nodes: Vec<decentralization::network::Node>,
     ) -> Result<decentralization::network::DecentralizedSubnet, NetworkError> {
         let subnets = nodes
             .to_vec()
             .iter()
-            .map(|n| self.nodes.get(n).and_then(|n| n.subnet))
+            .map(|n| self.nodes.get(&n.id).and_then(|n| n.subnet_id))
             .collect::<BTreeSet<_>>();
         if subnets.len() > 1 {
             return Err(NetworkError::IllegalRequest(
@@ -696,7 +698,7 @@ impl AvailableNodesQuerier for RegistryState {
             .await
             .map_err(|_| NetworkError::DataRequestError)?
             .into_values()
-            .filter(|n| n.subnet.is_none() && n.proposal.is_none() && n.duplicates.is_none())
+            .filter(|n| n.subnet_id.is_none() && n.proposal.is_none() && n.duplicates.is_none())
             .collect::<Vec<_>>();
 
         let health_client = crate::health::HealthClient::new(self.network());

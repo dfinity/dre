@@ -1,11 +1,14 @@
 use super::*;
 use crate::health;
-use decentralization::{network::TopologyManager, SubnetChangeResponse};
+use decentralization::network::TopologyManager;
 use ic_base_types::PrincipalId;
+use ic_management_backend::subnets::get_proposed_subnet_changes;
 use ic_management_types::requests::{
     MembershipReplaceRequest, ReplaceTarget, SubnetCreateRequest, SubnetResizeRequest,
 };
+use ic_management_types::Node;
 use serde::Deserialize;
+use std::collections::BTreeMap;
 
 #[derive(Deserialize)]
 struct SubnetRequest {
@@ -40,44 +43,16 @@ async fn change_preview(
     request: web::Path<SubnetRequest>,
     registry: web::Data<Arc<RwLock<RegistryState>>>,
 ) -> Result<HttpResponse, Error> {
-    let nodes = registry.read().await.nodes();
     match registry.read().await.subnets_with_proposals().await {
         Ok(subnets) => {
-            if let Some(subnet) = subnets.get(&request.subnet) {
-                if let Some(proposal) = &subnet.proposal {
-                    let removed_nodes = subnet
-                        .nodes
-                        .iter()
-                        .filter(|n| proposal.nodes.contains(&n.principal))
-                        .map(|n| n.principal)
-                        .collect::<Vec<_>>();
-                    let change_request = registry
-                        .read()
-                        .await
-                        .replace_subnet_nodes(&removed_nodes)
-                        .await?
-                        .with_custom_available_nodes(
-                            nodes
-                                .values()
-                                .filter(|n| n.subnet.is_none() && proposal.nodes.contains(&n.principal))
-                                .map(decentralization::network::Node::from)
-                                .collect(),
-                        );
-                    let mut change = SubnetChangeResponse::from(&change_request.evaluate()?);
-                    change.proposal_id = Some(proposal.id);
-                    Ok(HttpResponse::Ok().json(change))
-                } else {
-                    Err(error::ErrorBadRequest(anyhow::format_err!(
-                        "subnet {} does not have open membership change proposals",
-                        request.subnet
-                    )))
-                }
-            } else {
-                Err(error::ErrorNotFound(anyhow::format_err!(
-                    "subnet {} not found",
-                    request.subnet
-                )))
-            }
+            let subnet = subnets
+                .get(&request.subnet)
+                .ok_or_else(|| error::ErrorNotFound(anyhow::format_err!("subnet {} not found", request.subnet)))?;
+            let registry_nodes: BTreeMap<PrincipalId, Node> = registry.read().await.nodes();
+
+            get_proposed_subnet_changes(&registry_nodes, subnet)
+                .map_err(|err| error::ErrorBadRequest(err))
+                .map(|r| HttpResponse::Ok().json(r))
         }
         Err(e) => Err(error::ErrorInternalServerError(format!(
             "failed to fetch subnets: {}",
@@ -99,6 +74,7 @@ async fn replace(
     registry: web::Data<Arc<RwLock<RegistryState>>>,
 ) -> Result<HttpResponse, Error> {
     let registry = registry.read().await;
+    let all_nodes = registry.nodes();
 
     let mut motivations: Vec<String> = vec![];
 
@@ -106,15 +82,20 @@ async fn replace(
         ReplaceTarget::Subnet(subnet) => registry.modify_subnet_nodes(*subnet).await?,
         ReplaceTarget::Nodes { nodes, motivation } => {
             motivations.push(motivation.clone());
-            registry.replace_subnet_nodes(nodes).await?
+            let nodes_to_replace = nodes
+                .iter()
+                .filter_map(|n| all_nodes.get(n))
+                .map(|n| decentralization::network::Node::from(n))
+                .collect::<Vec<_>>();
+            registry.without_nodes(nodes_to_replace).await?
         }
     }
     .with_exclude_nodes(request.exclude.clone().unwrap_or_default())
-    .with_only_nodes(request.only.clone())
+    .with_only_nodes_that_have_features(request.only.clone())
     .with_include_nodes(request.include.clone().unwrap_or_default())
     .with_min_nakamoto_coefficients(request.min_nakamoto_coefficients.clone());
 
-    let mut replacements_unhealthy: Vec<PrincipalId> = Vec::new();
+    let mut replacements_unhealthy: Vec<decentralization::network::Node> = Vec::new();
     if request.heal {
         let subnet = change_request.subnet();
         let health_client = health::HealthClient::new(registry.network());
@@ -122,24 +103,35 @@ async fn replace(
             .subnet(subnet.id)
             .await
             .map_err(|_| error::ErrorInternalServerError("failed to fetch subnet health".to_string()))?;
-        let unhealthy = &subnet
+        let unhealthy: Vec<decentralization::network::Node> = subnet
             .nodes
-            .iter()
-            .filter(|n| {
-                healths
-                    .get(&n.id)
-                    // TODO: Add option to exclude degraded nodes from healing
-                    .map(|s| !matches!(s, ic_management_types::Status::Healthy))
-                    .unwrap_or(true)
+            .into_iter()
+            .filter_map(|n| match healths.get(&n.id) {
+                Some(health) => {
+                    if *health == ic_management_types::Status::Healthy {
+                        Some(n)
+                    } else {
+                        None
+                    }
+                }
+                None => Some(n),
             })
-            .map(|n| n.id)
             .collect::<Vec<_>>();
         if !unhealthy.is_empty() {
             replacements_unhealthy.extend(unhealthy);
         }
     }
-    if let ReplaceTarget::Nodes { nodes, motivation: _ } = &request.target {
-        replacements_unhealthy.extend(nodes);
+    if let ReplaceTarget::Nodes {
+        nodes: req_replace_node_ids,
+        motivation: _,
+    } = &request.target
+    {
+        let req_replace_nodes = req_replace_node_ids
+            .iter()
+            .filter_map(|n| all_nodes.get(n))
+            .map(|n| decentralization::network::Node::from(n))
+            .collect::<Vec<_>>();
+        replacements_unhealthy.extend(req_replace_nodes);
     };
 
     let num_unhealthy = replacements_unhealthy.len();
@@ -200,7 +192,7 @@ async fn resize(
         .await?
         .with_exclude_nodes(request.exclude.clone().unwrap_or_default())
         .with_include_nodes(request.include.clone().unwrap_or_default())
-        .with_only_nodes(request.only.clone().unwrap_or_default())
+        .with_only_nodes_that_have_features(request.only.clone().unwrap_or_default())
         .resize(request.add, request.remove)?;
 
     Ok(HttpResponse::Ok().json(decentralization::SubnetChangeResponse::from(&change)))
