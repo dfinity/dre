@@ -151,14 +151,14 @@ struct ReplacementCandidate {
 impl DecentralizedSubnet {
     /// Return a new instance of a DecentralizedSubnet that does not contain the
     /// provided nodes.
-    pub fn without_nodes(&self, nodes: &[PrincipalId]) -> Result<Self, NetworkError> {
+    pub fn without_nodes(&self, nodes: Vec<Node>) -> Result<Self, NetworkError> {
         let mut new_subnet_nodes = self.nodes.clone();
         let mut removed = Vec::new();
-        for node in nodes {
-            if let Some(index) = new_subnet_nodes.iter().position(|n| n.id == *node) {
+        for node in &nodes {
+            if let Some(index) = new_subnet_nodes.iter().position(|n| n.id == node.id) {
                 removed.push(new_subnet_nodes.remove(index));
             } else {
-                return Err(NetworkError::NodeNotFound(*node));
+                return Err(NetworkError::NodeNotFound(node.id));
             }
         }
         let removed_is_empty = removed.is_empty();
@@ -740,7 +740,7 @@ pub trait AvailableNodesQuerier {
 #[async_trait]
 pub trait SubnetQuerier {
     async fn subnet(&self, id: &PrincipalId) -> Result<DecentralizedSubnet, NetworkError>;
-    async fn subnet_of_nodes(&self, nodes: &[PrincipalId]) -> Result<DecentralizedSubnet, NetworkError>;
+    async fn subnet_of_nodes(&self, nodes: Vec<Node>) -> Result<DecentralizedSubnet, NetworkError>;
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug, strum_macros::Display)]
@@ -773,10 +773,10 @@ pub trait TopologyManager: SubnetQuerier + AvailableNodesQuerier {
         })
     }
 
-    async fn replace_subnet_nodes(&self, nodes: &[PrincipalId]) -> Result<SubnetChangeRequest, NetworkError> {
+    async fn without_nodes(&self, nodes: Vec<Node>) -> Result<SubnetChangeRequest, NetworkError> {
         Ok(SubnetChangeRequest {
             available_nodes: self.available_nodes().await?,
-            subnet: self.subnet_of_nodes(nodes).await?,
+            subnet: self.subnet_of_nodes(nodes.clone()).await?,
             ..Default::default()
         }
         .without_nodes(nodes))
@@ -797,7 +797,7 @@ pub trait TopologyManager: SubnetQuerier + AvailableNodesQuerier {
         }
         .with_include_nodes(include_nodes.clone())
         .with_exclude_nodes(exclude_nodes.clone())
-        .with_only_nodes(only_nodes.clone())
+        .with_only_nodes_that_have_features(only_nodes.clone())
         .resize(size, 0)
     }
 }
@@ -839,12 +839,12 @@ impl SubnetChangeRequest {
         }
     }
 
-    /// Subnet without the listed nodes. The nodes are note added back into the
+    /// Subnet without the listed nodes. The nodes are not added back into the
     /// available nodes.
-    pub fn without_nodes(&self, nodes: &[PrincipalId]) -> Self {
+    pub fn without_nodes(&self, nodes: Vec<Node>) -> Self {
         let mut s = self.clone();
         for node in nodes {
-            for node in s.subnet.nodes.clone().iter().filter(|n| n.id == *node) {
+            for node in s.subnet.nodes.clone().iter().filter(|n| n.id == node.id) {
                 s.removed_nodes.push(node.clone());
                 s.subnet.nodes.retain(|n| n.id != node.id);
             }
@@ -863,7 +863,7 @@ impl SubnetChangeRequest {
         }
     }
 
-    pub fn with_only_nodes(self, only_nodes_or_features: Vec<String>) -> Self {
+    pub fn with_only_nodes_that_have_features(self, only_nodes_or_features: Vec<String>) -> Self {
         let available_nodes = if only_nodes_or_features.is_empty() {
             self.available_nodes.into_iter().collect()
         } else {
@@ -897,10 +897,10 @@ impl SubnetChangeRequest {
     pub fn optimize(
         mut self,
         optimize_count: usize,
-        replacements_unhealthy: &Vec<PrincipalId>,
+        replacements_unhealthy: &Vec<Node>,
     ) -> Result<SubnetChange, NetworkError> {
         let old_nodes = self.subnet.nodes.clone();
-        self.subnet = self.subnet.without_nodes(replacements_unhealthy)?;
+        self.subnet = self.subnet.without_nodes(replacements_unhealthy.clone())?;
         let result = self.resize(optimize_count + replacements_unhealthy.len(), optimize_count)?;
         Ok(SubnetChange { old_nodes, ..result })
     }
@@ -986,6 +986,17 @@ pub struct SubnetChange {
 }
 
 impl SubnetChange {
+    pub fn with_nodes(self, nodes: Vec<Node>) -> Self {
+        Self {
+            new_nodes: [self.new_nodes, nodes].concat(),
+            ..self
+        }
+    }
+    pub fn without_nodes(mut self, nodes: Vec<Node>) -> Self {
+        self.new_nodes.retain(|n| !nodes.contains(n));
+        self
+    }
+
     pub fn added(&self) -> Vec<Node> {
         self.new_nodes
             .clone()

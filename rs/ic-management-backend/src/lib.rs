@@ -4,3 +4,4 @@ pub mod prometheus;
 pub mod proposal;
 pub mod registry;
 pub mod release;
+pub mod subnets;

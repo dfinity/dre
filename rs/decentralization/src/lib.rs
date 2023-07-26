@@ -9,7 +9,7 @@ use ic_base_types::PrincipalId;
 use ic_management_types::NodeFeature;
 use serde::{self, Deserialize, Serialize};
 
-#[derive(Clone, Deserialize, Serialize, Default)]
+#[derive(Clone, Debug, Deserialize, Serialize, Default)]
 pub struct SubnetChangeResponse {
     pub added: Vec<PrincipalId>,
     pub removed: Vec<PrincipalId>,

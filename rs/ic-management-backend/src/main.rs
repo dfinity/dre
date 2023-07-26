@@ -126,7 +126,7 @@ async fn main() -> std::io::Result<()> {
             .service(rollout)
             .service(subnets_release)
             .service(version)
-            .service(subnets)
+            .service(list_subnets)
             .service(nodes)
             .service(available_nodes)
             .service(missing_guests)
@@ -233,7 +233,7 @@ async fn version(registry: web::Data<Arc<RwLock<registry::RegistryState>>>) -> i
 }
 
 #[get("/subnets")]
-async fn subnets(registry: web::Data<Arc<RwLock<registry::RegistryState>>>) -> impl Responder {
+async fn list_subnets(registry: web::Data<Arc<RwLock<registry::RegistryState>>>) -> impl Responder {
     let registry = registry.read().await;
     response_from_result(registry.subnets_with_proposals().await)
 }

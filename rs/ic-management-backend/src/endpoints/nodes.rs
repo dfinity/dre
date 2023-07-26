@@ -32,7 +32,7 @@ async fn remove(
                     })
                     .filter(|(n, _)| n.proposal.is_none())
                     .filter_map(|(n, status)| {
-                        if n.subnet.is_some() {
+                        if n.subnet_id.is_some() {
                             return None;
                         }
 
