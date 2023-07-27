@@ -271,7 +271,7 @@ export const AvailableNodes = () => {
   const nodes = fetchNodes();
   const operators = fetchOperators();
 
-  const unassignedNodes = Object.values(nodes).filter(n => n.subnet === undefined);
+  const unassignedNodes = Object.values(nodes).filter(n => n.subnet_id === undefined);
   const missingGuestsDatacenters = ["all", ...Array.from(new Set([...unassignedNodes.map(n => n.operator?.datacenter?.name ?? "??"), ...missingGuests.map(g => g.datacenter)])).sort()];
 
   return (
