@@ -7,7 +7,7 @@ use futures_util::future::try_join_all;
 use ic_management_types::{Network, ReplicaRelease, Subnet};
 use ic_types::PrincipalId;
 use itertools::Itertools;
-use log::info;
+use log::debug;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 use std::str::FromStr;
@@ -640,7 +640,7 @@ async fn get_update_states(
         state_field = STATE_FIELD,
         period = Utc::now().timestamp() - since.timestamp(),
     );
-    info!("release ({}) query: {}", release.commit_hash, query);
+    debug!("release ({}) query: {}", release.commit_hash, query);
     let response = prometheus_client.query(query, None, None).await?;
     let results = response.as_instant().expect("Expected instant vector");
     Ok(results
