@@ -1,41 +1,59 @@
+use crate::config::{nns_nodes_urls, target_network};
+use crate::factsdb;
 use crate::proposal;
+use crate::public_dashboard::query_ic_dashboard_list;
 use async_trait::async_trait;
 use decentralization::network::{AvailableNodesQuerier, SubnetQuerier};
+use futures::TryFutureExt;
+use gitlab::api::AsyncQuery;
+use gitlab::AsyncGitlab;
 use ic_base_types::NodeId;
-use ic_interfaces_registry::RegistryValue;
+use ic_base_types::{RegistryVersion, SubnetId};
+use ic_interfaces_registry::{RegistryClient, RegistryValue, ZERO_REGISTRY_VERSION};
 use ic_management_types::{
-    Datacenter, DatacenterOwner, Guest, Network, NetworkError, Node, NodeProviderDetails, Operator, Provider,
-    ReplicaRelease, Subnet, SubnetMetadata,
+    Datacenter, DatacenterOwner, Guest, Network, NetworkError, Node, NodeProviderDetails, NodeProvidersResponse,
+    Operator, Provider, ReplicaRelease, Subnet, SubnetMetadata,
 };
+use ic_protobuf::registry::crypto::v1::PublicKey;
+use ic_protobuf::registry::replica_version::v1::BlessedReplicaVersions;
 use ic_protobuf::registry::unassigned_nodes_config::v1::UnassignedNodesConfigRecord;
+use ic_protobuf::registry::{
+    dc::v1::DataCenterRecord, node::v1::NodeRecord, node_operator::v1::NodeOperatorRecord, subnet::v1::SubnetRecord,
+};
+use ic_registry_client::client::ThresholdSigPublicKey;
+use ic_registry_client_fake::FakeRegistryClient;
+use ic_registry_client_helpers::{node::NodeRegistry, subnet::SubnetListRegistry};
+use ic_registry_common_proto::pb::local_store::v1::{
+    ChangelogEntry as PbChangelogEntry, KeyMutation as PbKeyMutation, MutationType,
+};
+use ic_registry_keys::DATA_CENTER_KEY_PREFIX;
 use ic_registry_keys::{
     make_blessed_replica_versions_key, NODE_OPERATOR_RECORD_KEY_PREFIX, NODE_RECORD_KEY_PREFIX,
     SUBNET_RECORD_KEY_PREFIX,
 };
+use ic_registry_keys::{make_crypto_threshold_signing_pubkey_key, ROOT_SUBNET_ID_KEY};
 use ic_registry_local_registry::LocalRegistry;
+use ic_registry_local_store::{Changelog, ChangelogEntry, KeyMutation, LocalStoreImpl, LocalStoreWriter};
+use ic_registry_nns_data_provider::registry::RegistryCanister;
 use ic_registry_subnet_type::SubnetType;
 use ic_types::PrincipalId;
 use itertools::Itertools;
+use log::{debug, error, info, warn};
+use registry_canister::mutations::common::decode_registry_value;
 use std::convert::TryFrom;
+use std::ops::Add;
+use std::path::{Path, PathBuf};
+use std::str::FromStr;
 use std::sync::Arc;
 use std::{
     collections::{BTreeMap, BTreeSet},
     net::Ipv6Addr,
 };
-
-use ic_interfaces_registry::RegistryClient;
-use ic_protobuf::registry::{
-    dc::v1::DataCenterRecord, node::v1::NodeRecord, node_operator::v1::NodeOperatorRecord, subnet::v1::SubnetRecord,
-};
-use ic_registry_client_helpers::{node::NodeRegistry, subnet::SubnetListRegistry};
-
-use ic_protobuf::registry::replica_version::v1::BlessedReplicaVersions;
-use ic_registry_keys::DATA_CENTER_KEY_PREFIX;
-
-use std::str::FromStr;
+use tokio::sync::RwLock;
+use tokio::time::{sleep, Duration};
+extern crate env_logger;
 
 use crate::gitlab::{CommitRef, CommitRefs};
-use gitlab::api::AsyncQuery;
 
 use lazy_static::lazy_static;
 use regex::Regex;
@@ -727,4 +745,213 @@ impl AvailableNodesQuerier for RegistryState {
 
 fn node_ip_addr(nr: &NodeRecord) -> Ipv6Addr {
     Ipv6Addr::from_str(&nr.http.clone().expect("missing ipv6 address").ip_addr).expect("invalid ipv6 address")
+}
+
+pub fn local_registry_path(network: Network) -> PathBuf {
+    match std::env::var("LOCAL_REGISTRY_PATH") {
+        Ok(path) => PathBuf::from(path),
+        Err(_) => match dirs::cache_dir() {
+            Some(cache_dir) => cache_dir,
+            None => PathBuf::from("/tmp"),
+        },
+    }
+    .join("ic-registry-cache")
+    .join(Path::new(network.to_string().as_str()))
+    .join("local_registry")
+}
+
+pub async fn nns_public_key(registry_canister: &RegistryCanister) -> anyhow::Result<ThresholdSigPublicKey> {
+    let (nns_subnet_id_vec, _) = registry_canister
+        .get_value(ROOT_SUBNET_ID_KEY.as_bytes().to_vec(), None)
+        .await
+        .map_err(|e| anyhow::format_err!("failed to get root subnet: {}", e))?;
+    let nns_subnet_id = decode_registry_value::<ic_protobuf::types::v1::SubnetId>(nns_subnet_id_vec);
+    let (nns_pub_key_vec, _) = registry_canister
+        .get_value(
+            make_crypto_threshold_signing_pubkey_key(SubnetId::new(
+                PrincipalId::try_from(nns_subnet_id.principal_id.unwrap().raw).unwrap(),
+            ))
+            .as_bytes()
+            .to_vec(),
+            None,
+        )
+        .await
+        .map_err(|e| anyhow::format_err!("failed to get public key: {}", e))?;
+    Ok(
+        ThresholdSigPublicKey::try_from(PublicKey::decode(nns_pub_key_vec.as_slice()).expect("invalid public key"))
+            .expect("failed to create thresholdsig public key"),
+    )
+}
+
+pub async fn sync_local_store(target_network: Network) -> anyhow::Result<()> {
+    let local_registry_path = local_registry_path(target_network);
+    let local_store = Arc::new(LocalStoreImpl::new(local_registry_path.clone()));
+    let registry_canister = RegistryCanister::new(nns_nodes_urls());
+    let mut latest_version = if !Path::new(&local_registry_path).exists() {
+        ZERO_REGISTRY_VERSION
+    } else {
+        let registry_cache = FakeRegistryClient::new(local_store.clone());
+        registry_cache.update_to_latest_version();
+        registry_cache.get_latest_version()
+    };
+    info!("Syncing local registry from version {}", latest_version);
+    let mut latest_certified_time = 0;
+    let mut updates = vec![];
+    let nns_public_key = nns_public_key(&registry_canister).await?;
+
+    loop {
+        tokio::time::sleep(std::time::Duration::from_secs(2)).await;
+        if match registry_canister.get_latest_version().await {
+            Ok(v) => {
+                info!("Latest registry version: {}", v);
+                v == latest_version.get()
+            }
+            Err(e) => {
+                error!("Failed to get latest registry version: {}", e);
+                false
+            }
+        } {
+            break;
+        }
+        if let Ok((mut initial_records, _, t)) = registry_canister
+            .get_certified_changes_since(latest_version.get(), &nns_public_key)
+            .await
+        {
+            initial_records.sort_by_key(|tr| tr.version);
+            let changelog = initial_records.iter().fold(Changelog::default(), |mut cl, r| {
+                let rel_version = (r.version - latest_version).get();
+                if cl.len() < rel_version as usize {
+                    cl.push(ChangelogEntry::default());
+                }
+                cl.last_mut().unwrap().push(KeyMutation {
+                    key: r.key.clone(),
+                    value: r.value.clone(),
+                });
+                cl
+            });
+
+            let versions_count = changelog.len();
+
+            changelog.into_iter().enumerate().for_each(|(i, ce)| {
+                let v = RegistryVersion::from(i as u64 + 1 + latest_version.get());
+                let local_registry_path = local_registry_path.clone();
+                updates.push(async move {
+                    let path_str = format!("{:016x}.pb", v.get());
+                    // 00 01 02 03 04 / 05 / 06 / 07.pb
+                    let v_path = &[
+                        &path_str[0..10],
+                        &path_str[10..12],
+                        &path_str[12..14],
+                        &path_str[14..19],
+                    ]
+                    .iter()
+                    .collect::<PathBuf>();
+                    let path = local_registry_path.join(v_path.as_path());
+                    let r = tokio::fs::create_dir_all(path.clone().parent().unwrap())
+                        .and_then(|_| async {
+                            tokio::fs::write(
+                                path,
+                                PbChangelogEntry {
+                                    key_mutations: ce
+                                        .iter()
+                                        .map(|km| {
+                                            let mutation_type = if km.value.is_some() {
+                                                MutationType::Set as i32
+                                            } else {
+                                                MutationType::Unset as i32
+                                            };
+                                            PbKeyMutation {
+                                                key: km.key.clone(),
+                                                value: km.value.clone().unwrap_or_default(),
+                                                mutation_type,
+                                            }
+                                        })
+                                        .collect(),
+                                }
+                                .encode_to_vec(),
+                            )
+                            .await
+                        })
+                        .await;
+                    if let Err(e) = &r {
+                        debug!("Storage err for {v}: {}", e);
+                    } else {
+                        debug!("Stored version {}", v);
+                    }
+                    r
+                });
+            });
+
+            latest_version = latest_version.add(RegistryVersion::new(versions_count as u64));
+
+            latest_certified_time = t.as_nanos_since_unix_epoch();
+            debug!("Sync reached version {latest_version}");
+        }
+    }
+
+    futures::future::join_all(updates).await;
+    local_store.update_certified_time(latest_certified_time)?;
+    Ok(())
+}
+
+pub async fn poll(gitlab_client: AsyncGitlab, registry_state: Arc<RwLock<RegistryState>>) {
+    let mut print_counter = 0;
+    let registry_canister = RegistryCanister::new(nns_nodes_urls());
+    loop {
+        sleep(Duration::from_secs(1)).await;
+        let print_enabled = print_counter % 10 == 0;
+        if print_enabled {
+            info!("Updating registry");
+        }
+        let latest_version = if let Ok(v) = registry_canister.get_latest_version().await {
+            v
+        } else {
+            continue;
+        };
+        if latest_version != registry_state.read().await.version() {
+            let node_providers_result = query_ic_dashboard_list::<NodeProvidersResponse>("v3/node-providers").await;
+            let network = target_network();
+            let guests_result = factsdb::query_guests(gitlab_client.clone(), network.to_string()).await;
+            let guests_result = if matches!(network, Network::Mainnet) {
+                let guests_result_old =
+                    factsdb::query_guests(gitlab_client.clone(), network.legacy_name().to_string()).await;
+                guests_result.and_then(|guests_decentralized| {
+                    guests_result_old.map(|guests_old| {
+                        guests_decentralized
+                            .into_iter()
+                            .chain(guests_old.into_iter())
+                            .collect::<Vec<_>>()
+                    })
+                })
+            } else {
+                guests_result
+            };
+            match (node_providers_result, guests_result) {
+                (Ok(node_providers_response), Ok(guests_list)) => {
+                    let mut registry_state = registry_state.write().await;
+                    let update = registry_state
+                        .update(node_providers_response.node_providers, guests_list)
+                        .await;
+                    if let Err(e) = update {
+                        warn!("failed state update: {}", e);
+                    }
+                    if print_enabled {
+                        info!("Updated registry state to version {}", registry_state.version());
+                    }
+                }
+                (Err(e), _) => {
+                    warn!("Failed querying IC dashboard {}", e);
+                }
+                (_, Err(e)) => {
+                    warn!("Failed querying guests file: {}", e);
+                }
+            }
+        } else if print_enabled {
+            info!(
+                "Skipping update. Registry already on latest version: {}",
+                registry_state.read().await.version()
+            )
+        }
+        print_counter += 1;
+    }
 }

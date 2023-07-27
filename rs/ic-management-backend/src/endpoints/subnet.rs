@@ -51,7 +51,7 @@ async fn change_preview(
             let registry_nodes: BTreeMap<PrincipalId, Node> = registry.read().await.nodes();
 
             get_proposed_subnet_changes(&registry_nodes, subnet)
-                .map_err(|err| error::ErrorBadRequest(err))
+                .map_err(error::ErrorBadRequest)
                 .map(|r| HttpResponse::Ok().json(r))
         }
         Err(e) => Err(error::ErrorInternalServerError(format!(
@@ -85,7 +85,7 @@ async fn replace(
             let nodes_to_replace = nodes
                 .iter()
                 .filter_map(|n| all_nodes.get(n))
-                .map(|n| decentralization::network::Node::from(n))
+                .map(decentralization::network::Node::from)
                 .collect::<Vec<_>>();
             registry.without_nodes(nodes_to_replace).await?
         }
@@ -129,7 +129,7 @@ async fn replace(
         let req_replace_nodes = req_replace_node_ids
             .iter()
             .filter_map(|n| all_nodes.get(n))
-            .map(|n| decentralization::network::Node::from(n))
+            .map(decentralization::network::Node::from)
             .collect::<Vec<_>>();
         replacements_unhealthy.extend(req_replace_nodes);
     };

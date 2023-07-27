@@ -1,4 +1,4 @@
-use super::super::nns_nodes_urls;
+use super::super::config::nns_nodes_urls;
 use super::*;
 use ic_canisters::governance_canister_version;
 

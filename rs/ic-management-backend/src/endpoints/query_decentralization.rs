@@ -93,7 +93,7 @@ async fn get_decentralization_analysis(
         node_ids_to_remove
             .iter()
             .filter_map(|n| registry_nodes.get(n))
-            .map(|n| decentralization::network::Node::from(n))
+            .map(decentralization::network::Node::from)
             .collect::<Vec<_>>()
     });
     let updated_subnet = match &nodes_to_remove {
