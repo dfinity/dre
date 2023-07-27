@@ -30,7 +30,7 @@ export interface Node {
   operator: Operator;
   hostname: string;
   label?: string;
-  subnet?: string;
+  subnet_id?: string;
   dfinity_owned: boolean;
   proposal?: TopologyProposal;
 }
