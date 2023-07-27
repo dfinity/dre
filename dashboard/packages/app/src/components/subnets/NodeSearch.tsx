@@ -75,10 +75,10 @@ export default function NodeSearch({ onSearchChange, expand }: { onSearchChange:
             emptyValue: "",
             field: 'subnetDetailed.metadata.name',
             type: 'string',
-            render: (rowData) => rowData.subnet && `${rowData.subnetDetailed?.metadata.name} (${rowData.subnet})`
+            render: (rowData) => rowData.subnet_id && `${rowData.subnetDetailed?.metadata.name} (${rowData.subnet_id})`
         },
         {
-            field: 'subnet',
+            field: 'subnet_id',
             type: 'string',
             hidden: true,
             searchable: true,
