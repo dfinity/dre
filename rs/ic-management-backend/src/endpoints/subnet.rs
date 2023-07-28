@@ -109,9 +109,9 @@ async fn replace(
             .filter_map(|n| match healths.get(&n.id) {
                 Some(health) => {
                     if *health == ic_management_types::Status::Healthy {
-                        Some(n)
-                    } else {
                         None
+                    } else {
+                        Some(n)
                     }
                 }
                 None => Some(n),
