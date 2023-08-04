@@ -2,8 +2,9 @@ use clap::{Parser, Subcommand};
 use clap_num::maybe_hex;
 use ic_management_types::Network;
 
+// For more info about the version setup, look at https://docs.rs/clap/latest/clap/struct.Command.html#method.version
 #[derive(Parser, Clone)]
-#[clap(about, version, author)]
+#[clap(about, version = env!("GIT_HASH"), author)]
 pub struct Opts {
     #[clap(long, env = "HSM_PIN", global = true)]
     pub(crate) hsm_pin: Option<String>,
