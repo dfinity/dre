@@ -624,17 +624,6 @@ mod tests {
         );
     }
 
-    fn json_file_read_checked<T>(file_path: &std::path::PathBuf) -> T
-    where
-        T: serde::de::DeserializeOwned,
-    {
-        let file =
-            std::fs::File::open(file_path).unwrap_or_else(|_| panic!("Error opening the file {}", file_path.display()));
-        let reader = std::io::BufReader::new(file);
-
-        serde_json::from_reader(reader).expect("Input JSON was not well-formatted")
-    }
-
     #[test]
     fn subnet_usa_dominance() {
         let subnet_initial = new_test_subnet_with_overrides(
@@ -806,11 +795,10 @@ mod tests {
 
     #[test]
     fn subnet_uzr34_extend() {
-        let mut d = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-        d.push("test_data");
-
         // Read the subnet snapshot from a file
-        let subnet_all = json_file_read_checked::<ic_management_types::Subnet>(&d.join("subnet-uzr34.json"));
+        let subnet_all =
+            serde_json::from_str::<ic_management_types::Subnet>(include_str!("../../test_data/subnet-uzr34.json"))
+                .expect("failed to read test data");
         // Convert the subnet snapshot to the "Subnet" struct
         let subnet_all: DecentralizedSubnet = DecentralizedSubnet::from(subnet_all);
         let re_unhealthy_nodes = Regex::new(r"^(gp7wd|e4ysi|qhz4y|2fbvp)-.+$").unwrap();
@@ -828,7 +816,10 @@ mod tests {
             run_log: Vec::new(),
         };
 
-        let available_nodes = json_file_read_checked::<Vec<ic_management_types::Node>>(&d.join("available-nodes.json"));
+        let available_nodes = serde_json::from_str::<Vec<ic_management_types::Node>>(include_str!(
+            "../../test_data/available-nodes.json"
+        ))
+        .expect("failed to read test data");
 
         let available_nodes = available_nodes
             .iter()
