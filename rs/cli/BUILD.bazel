@@ -1,0 +1,46 @@
+load("@crate_index_release//:defs.bzl", "aliases", "all_crate_deps")
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_test")
+load("@rules_rust//cargo:defs.bzl", "cargo_build_script")
+
+DEPS = [
+    "//rs/ic-canisters",
+    "//rs/decentralization",
+    "//rs/ic-management-types",
+    ":build_script",
+]
+
+rust_binary(
+    name = "release_cli",
+    srcs = glob(["src/**/*.rs"]),
+    aliases = aliases(),
+    proc_macro_deps = all_crate_deps(
+        proc_macro = True,
+    ),
+    stamp = 1,
+    deps = all_crate_deps(
+        normal = True,
+    ) + DEPS,
+)
+
+rust_test(
+    name = "unit_test",
+    aliases = aliases(
+        normal_dev = True,
+        proc_macro_dev = True,
+    ),
+    crate = ":release_cli",
+    proc_macro_deps = all_crate_deps(
+        proc_macro_dev = True,
+    ),
+    deps = all_crate_deps(
+        normal_dev = True,
+    ) + DEPS,
+)
+
+cargo_build_script(
+    name = "build_script",
+    srcs = ["build.rs"],
+    rustc_env_files = [
+        ":build_env",
+    ],
+)
