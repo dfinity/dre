@@ -1,0 +1,82 @@
+workspace(
+    name = "release",
+)
+
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive", "http_file")
+load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
+
+git_repository(
+    name = "ic_repo",
+    commit = "0062aec2efc16d6e4cadb2cd1052aaabbc9f6e48",
+    remote = "https://github.com/dfinity/ic.git",
+)
+
+http_archive(
+    name = "bazel_skylib",
+    sha256 = "f7be3474d42aae265405a592bb7da8e171919d74c16f082a5457840f06054728",
+    urls = [
+        "https://mirror.bazel.build/github.com/bazelbuild/bazel-skylib/releases/download/1.2.1/bazel-skylib-1.2.1.tar.gz",
+        "https://github.com/bazelbuild/bazel-skylib/releases/download/1.2.1/bazel-skylib-1.2.1.tar.gz",
+    ],
+)
+
+load("@bazel_skylib//:workspace.bzl", "bazel_skylib_workspace")
+
+bazel_skylib_workspace()
+
+# To find additional information on this release or newer ones visit:
+# https://github.com/bazelbuild/rules_rust/releases
+http_archive(
+    name = "rules_rust",
+    sha256 = "4a9cb4fda6ccd5b5ec393b2e944822a62e050c7c06f1ea41607f14c4fdec57a2",
+    urls = ["https://github.com/bazelbuild/rules_rust/releases/download/0.25.1/rules_rust-v0.25.1.tar.gz"],
+)
+
+load("@rules_rust//rust:repositories.bzl", "rules_rust_dependencies", "rust_register_toolchains")
+load("@rules_rust//tools/rust_analyzer:deps.bzl", "rust_analyzer_dependencies")
+
+rules_rust_dependencies()
+
+rust_analyzer_dependencies()
+
+rust_register_toolchains(
+    edition = "2021",
+    versions = [
+        "1.66.1",
+    ],
+)
+
+load("@rules_rust//crate_universe:repositories.bzl", "crate_universe_dependencies")
+
+crate_universe_dependencies()
+
+load("//bazel:external_crates.bzl", "external_crates_repository")
+
+external_crates_repository()
+
+load("@crate_index_release//:defs.bzl", "crate_repositories")
+
+crate_repositories()
+
+http_file(
+    name = "ic-icrc1-archive",
+    downloaded_file_path = "ic-icrc1-archive.wasm.gz",
+    sha256 = "8f6128b2ba0225936db04060ae27fab5cc4e4d0aaf3ebd70ac840fda243fd17f",
+    url = "https://download.dfinity.systems/ic/0062aec2efc16d6e4cadb2cd1052aaabbc9f6e48/canisters/ic-icrc1-archive.wasm.gz",
+)
+
+http_archive(
+    name = "com_google_protobuf",
+    sha256 = "bc3dbf1f09dba1b2eb3f2f70352ee97b9049066c9040ce0c9b67fb3294e91e4b",
+    strip_prefix = "protobuf-3.15.5",
+    # this version is imported through io_bazel_rules_go in IC repo
+    urls = [
+        "https://github.com/protocolbuffers/protobuf/archive/v3.15.5.tar.gz",
+        "https://mirror.bazel.build/github.com/protocolbuffers/protobuf/archive/v3.15.5.tar.gz",
+    ],
+)
+
+
+load("@com_google_protobuf//:protobuf_deps.bzl", "protobuf_deps")
+
+protobuf_deps()
