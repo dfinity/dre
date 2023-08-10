@@ -378,18 +378,8 @@ impl Cli {
 To build and verify the IC-OS disk image, run:
 
 ```
-# From https://github.com/dfinity/ic#building-the-code
-# This process requires an x86-64 based machine, Ubuntu 20.04 or a newer version of the OS, Git, and Podman.
-git clone https://github.com/dfinity/ic
-cd ic
-git fetch origin
-git checkout {version}
-if ./gitlab-ci/container/build-ic.sh -i ; then
-    curl -LO https://download.dfinity.systems/ic/{version}/guest-os/update-img/update-img.tar.gz
-    shasum -a 256 artifacts/icos/guestos/update-img.tar.gz update-img.tar.gz
-else
-    echo "IC-OS build failed. Verification unsuccessful." >&2
-fi
+# From https://github.com/dfinity/ic#verifying-releases
+sudo apt-get install -y curl && curl --proto '=https' --tlsv1.2 -sSLO https://raw.githubusercontent.com/dfinity/ic/master/gitlab-ci/tools/repro-check.sh && chmod +x repro-check.sh && ./repro-check.sh -c {version}
 ```
 
 The two SHA256 sums printed above from a) the downloaded CDN image and b) the locally built image,
