@@ -253,7 +253,7 @@ impl RegistryState {
                             static ref RELEASE_NAME_GROUP: &'static str = "release_name";
                             static ref DATETIME_NAME_GROUP: &'static str = "datetime";
                             // example: rc--2021-09-13_18-32
-                            static ref RE: Regex = Regex::new(&format!(r#"^(?P<{}>(?P<{}>rc--(?P<{}>\d{{4}}-\d{{2}}-\d{{2}}_\d{{2}}-\d{{2}}))(?P<discardable_suffix>.*))$"#,
+                            static ref RE: Regex = Regex::new(&format!(r#"(?P<{}>(?P<{}>rc--(?P<{}>\d{{4}}-\d{{2}}-\d{{2}}_\d{{2}}-\d{{2}}))(?P<discardable_suffix>.*))$"#,
                                 *RELEASE_BRANCH_GROUP,
                                 *RELEASE_NAME_GROUP,
                                 *DATETIME_NAME_GROUP,
