@@ -1,86 +1,90 @@
 default_language_version:
   python: python3
 repos:
-- repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v2.3.0
-  hooks:
-  - id: no-commit-to-branch
-    stages: [commit]
-# The following repo is maintained by us at
-# https://gitlab.com/dfinity-lab/open/pre-commit-tools.
-- repo: https://gitlab.com/dfinity-lab/open/pre-commit-tools.git
-  rev: 65e8990328b0651ab00d5653d26535d4080ca5f3
-  hooks:
-  - id: shfmt
-    args: ["-w", "-i", "4", "-bn", "-ci"]
-  - id: nixpkgs-fmt
-    exclude: |
-        (?x)^(
-            .*/Cargo\.nix|
-            experimental/.*
-        )$
-  - id: rustfmt
-    exclude: |
-        (?x)(
-            ic
-        ) # exclude these directories; more can be added by |ing them.
-  - id: ormolu
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v2.3.0
+    hooks:
+      - id: no-commit-to-branch
+        stages: [commit]
+  # The following repo is maintained by us at
+  # https://gitlab.com/dfinity-lab/open/pre-commit-tools.
+  - repo: https://gitlab.com/dfinity-lab/open/pre-commit-tools.git
+    rev: 65e8990328b0651ab00d5653d26535d4080ca5f3
+    hooks:
+      - id: shfmt
+        args: ["-w", "-i", "4", "-bn", "-ci"]
+      - id: nixpkgs-fmt
+        exclude: |
+          (?x)^(
+              .*/Cargo\.nix|
+              experimental/.*
+          )$
+      - id: rustfmt
+        exclude: |
+          (?x)(
+              ic
+          ) # exclude these directories; more can be added by |ing them.
+      - id: ormolu
 
-- repo: https://github.com/ambv/black
-  rev: 20.8b1
-  hooks:
-  - id: black
-    additional_dependencies: ['click==8.0.4']
-    args:
-      - --line-length=120
+  - repo: https://github.com/ambv/black
+    rev: 20.8b1
+    hooks:
+      - id: black
+        additional_dependencies: ["click==8.0.4"]
+        args:
+          - --line-length=120
 
+  - repo: https://github.com/asottile/reorder_python_imports
+    rev: v2.4.0
+    hooks:
+      - id: reorder-python-imports
+        args:
+          - --application-directories=.:gitlab-ci/src/
 
-- repo: https://github.com/asottile/reorder_python_imports
-  rev: v2.4.0
-  hooks:
-  - id: reorder-python-imports
-    args:
-      - --application-directories=.:gitlab-ci/src/
+  - repo: https://github.com/pycqa/flake8
+    rev: "3.8.4"
+    hooks:
+      - id: flake8
+        args: ["--config=flake8.cfg"]
 
-- repo: https://github.com/pycqa/flake8
-  rev: '3.8.4'
-  hooks:
-  - id: flake8
-    args: ["--config=flake8.cfg"]
+  - repo: https://github.com/pycqa/pydocstyle
+    rev: 5.1.1
+    hooks:
+      - id: pydocstyle
+        args:
+          - --ignore=D100,D103,D104,D203,D212
+            # The default for pydocstyle is to match only on files that end in .py,
+            # even if pre-commit specifies other files. This makes it so Python
+            # files will be recognized regardless of extension.
+          - --match=.*
 
-- repo: https://github.com/pycqa/pydocstyle
-  rev: 5.1.1
-  hooks:
-  - id: pydocstyle
-    args:
-      - --ignore=D100,D103,D104,D203,D212
-        # The default for pydocstyle is to match only on files that end in .py,
-        # even if pre-commit specifies other files. This makes it so Python
-        # files will be recognized regardless of extension.
-      - --match=.*
+  - repo: https://github.com/willthames/ansible-lint.git
+    rev: v4.2.0
+    hooks:
+      - id: ansible-lint
+        files: (^|/)testnet/.+\.(yaml|yml)$
+        exclude: |
+          (?x)^(
+              testnet/tests/.*|.*/docker-compose.yml|testnet/env/shared-config\.yml
+          )$
 
-- repo: https://github.com/willthames/ansible-lint.git
-  rev: v4.2.0
-  hooks:
-  - id: ansible-lint
-    files: (^|/)testnet/.+\.(yaml|yml)$
-    exclude: |
-        (?x)^(
-            testnet/tests/.*|.*/docker-compose.yml|testnet/env/shared-config\.yml
-        )$
-
-- repo: https://github.com/PyCQA/pylint
-  rev: v2.12.2
-  hooks:
-    - id: pylint
-      name: pylint
-      entry: pylint
-      language: system
-      types: [python]
-      args:
-        [
-          "-rn", # Only display messages
-          "-sn", # Don't display the score
-          "--disable=R,C,W0621",  # Disable: Refactor, Convention, some warnings
-        ]
-
+  - repo: https://github.com/PyCQA/pylint
+    rev: v2.12.2
+    hooks:
+      - id: pylint
+        name: pylint
+        entry: python3 -m pylint.__main__
+        types: [python]
+        args: [
+            "-rn", # Only display messages
+            "-sn", # Don't display the score
+            "--disable=R,C,W0621", # Disable: Refactor, Convention, some warnings
+          ]
+        additional_dependencies: # All necessary for successful PyLint in all environments
+          [
+            "pandas==1.5.3",
+            "elasticsearch==7.17.8",
+            "elasticsearch_dsl==7.4.0",
+            "requests",
+            "tabulate",
+          ]
