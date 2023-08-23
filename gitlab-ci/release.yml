@@ -38,26 +38,6 @@ update-facts-db:
 
 
 
-qualification-tracking-update:
-  extends:
-    - .k8s-workers
-  interruptible: true
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "schedule" && $SCHEDULE_NAME == "update-qualification-tracking"'
-    - if: '$CI_PIPELINE_SOURCE == "web"'
-      when: manual
-      allow_failure: true # the pipeline continues running even if the manual job is not run
-    - if: '$CI_PIPELINE_SOURCE == "trigger"'
-      when: manual
-      allow_failure: true # the pipeline continues running even if the manual job is not run
-  script:
-    - |
-      set -exou pipefail  # Don't tolerate any errors
-
-      cd ./qualification
-      time python3 ./qualification_track.py add-nns
-      time python3 ./qualification_track.py add-ci --since=now-3d
-
 update-ic-versions-file:
   extends:
     - .k8s-workers
