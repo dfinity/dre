@@ -279,7 +279,7 @@ impl Cli {
             // But since ic-admin expects these commands to include the "get-" prefix, we
             // need to add it back Example:
             // `release_cli get subnet 0` becomes
-            // `ic-admin --nns-url "http://[2600:3004:1200:1200:5000:11ff:fe37:c55d]:8080" get-subnet 0`
+            // `ic-admin --nns-url "http://[2600:3004:1200:1200:5000:62ff:fedc:fe3c]:8080" get-subnet 0`
             let mut args_with_get_prefix = vec![String::from("get-") + args[0].as_str()];
             args_with_get_prefix.extend_from_slice(args.split_at(1).1);
             args_with_get_prefix
