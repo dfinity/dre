@@ -29,7 +29,7 @@ RUN echo Installing the correct Python and requisite modules >&2 && \
     export PYENV_ROOT=$PWD/install && \
     curl https://pyenv.run > pyenv.sh && \
     bash pyenv.sh && \
-    export PYTHON_VERSION=$(sed -nr 's/^python = "(.*)"/\1/p' < pyproject.toml) && \
+    export PYTHON_VERSION=$(sed -nr 's/^python = "[^0-9\.]*([0-9\.]*).*"/\1/p' < pyproject.toml) && \
     $PYENV_ROOT/bin/pyenv install $PYTHON_VERSION || { ret=$? ; cat /tmp/python-build.*.log ; exit $ret ; } && rm -rf /tmp/python-build* && \
     export PYTHON_ROOT=$PYENV_ROOT/versions/$PYTHON_VERSION && \
     export PATH=$PYTHON_ROOT/bin:$PATH && \
