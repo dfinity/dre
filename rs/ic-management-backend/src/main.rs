@@ -22,6 +22,7 @@ use release::list_subnets_release_statuses;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::ops::Deref;
+use std::process;
 use std::str::FromStr;
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -65,16 +66,26 @@ async fn main() -> std::io::Result<()> {
     });
 
     if std::env::var(GITLAB_TOKEN_RELEASE_ENV).is_err() {
-        std::env::set_var(
-            GITLAB_TOKEN_RELEASE_ENV,
-            std::env::var(GITLAB_API_TOKEN_FALLBACK).unwrap(),
-        );
+        let fallback_token = std::env::var(GITLAB_API_TOKEN_FALLBACK);
+        if fallback_token.is_err() {
+            error!(
+                "Could not lead the Gitlab token from variable {} or {}",
+                GITLAB_TOKEN_RELEASE_ENV, GITLAB_API_TOKEN_FALLBACK
+            );
+            process::exit(exitcode::CONFIG);
+        }
+        std::env::set_var(GITLAB_TOKEN_RELEASE_ENV, fallback_token.unwrap());
     }
     if std::env::var(GITLAB_TOKEN_IC_PUBLIC_ENV).is_err() {
-        std::env::set_var(
-            GITLAB_TOKEN_IC_PUBLIC_ENV,
-            std::env::var(GITLAB_API_TOKEN_FALLBACK).unwrap(),
-        );
+        let fallback_token = std::env::var(GITLAB_API_TOKEN_FALLBACK);
+        if fallback_token.is_err() {
+            error!(
+                "Could not lead the Gitlab token from variable {} or {}",
+                GITLAB_TOKEN_IC_PUBLIC_ENV, GITLAB_API_TOKEN_FALLBACK
+            );
+            process::exit(exitcode::CONFIG);
+        }
+        std::env::set_var(GITLAB_TOKEN_IC_PUBLIC_ENV, fallback_token.unwrap());
     }
     let registry_state = Arc::new(RwLock::new(registry::RegistryState::new(
         nns_url(),
