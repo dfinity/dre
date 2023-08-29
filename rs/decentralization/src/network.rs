@@ -737,10 +737,14 @@ pub trait AvailableNodesQuerier {
     async fn available_nodes(&self) -> Result<Vec<Node>, NetworkError>;
 }
 
+pub enum SubnetQueryBy {
+    SubnetId(PrincipalId),
+    NodeList(Vec<Node>),
+}
+
 #[async_trait]
 pub trait SubnetQuerier {
-    async fn subnet(&self, id: &PrincipalId) -> Result<DecentralizedSubnet, NetworkError>;
-    async fn subnet_of_nodes(&self, nodes: Vec<Node>) -> Result<DecentralizedSubnet, NetworkError>;
+    async fn subnet(&self, by: SubnetQueryBy) -> Result<DecentralizedSubnet, NetworkError>;
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug, strum_macros::Display)]
@@ -765,21 +769,12 @@ impl ResponseError for DecentralizationError {
 
 #[async_trait]
 pub trait TopologyManager: SubnetQuerier + AvailableNodesQuerier {
-    async fn modify_subnet_nodes(&self, subnet_id: PrincipalId) -> Result<SubnetChangeRequest, NetworkError> {
+    async fn modify_subnet_nodes(&self, by: SubnetQueryBy) -> Result<SubnetChangeRequest, NetworkError> {
         Ok(SubnetChangeRequest {
             available_nodes: self.available_nodes().await?,
-            subnet: self.subnet(&subnet_id).await?,
+            subnet: self.subnet(by).await?,
             ..Default::default()
         })
-    }
-
-    async fn without_nodes(&self, nodes: Vec<Node>) -> Result<SubnetChangeRequest, NetworkError> {
-        Ok(SubnetChangeRequest {
-            available_nodes: self.available_nodes().await?,
-            subnet: self.subnet_of_nodes(nodes.clone()).await?,
-            ..Default::default()
-        }
-        .without_nodes(nodes))
     }
 
     async fn create_subnet(
