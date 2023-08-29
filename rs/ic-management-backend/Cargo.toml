@@ -69,6 +69,7 @@ ic-registry-client-fake = { git = "https://github.com/dfinity/ic.git", rev = "00
 ic-registry-client-helpers = { git = "https://github.com/dfinity/ic.git", rev = "0062aec2efc16d6e4cadb2cd1052aaabbc9f6e48" }
 dirs = "5.0.1"
 backon = "0.4.1"
+exitcode = "1.1.2"
 
 [dev-dependencies]
 assert_matches = "1.4.0"
