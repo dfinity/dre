@@ -3,7 +3,7 @@ use crate::factsdb;
 use crate::proposal;
 use crate::public_dashboard::query_ic_dashboard_list;
 use async_trait::async_trait;
-use decentralization::network::{AvailableNodesQuerier, SubnetQuerier};
+use decentralization::network::{AvailableNodesQuerier, SubnetQuerier, SubnetQueryBy};
 use futures::TryFutureExt;
 use gitlab::api::AsyncQuery;
 use gitlab::AsyncGitlab;
@@ -658,52 +658,51 @@ impl decentralization::network::TopologyManager for RegistryState {}
 
 #[async_trait]
 impl SubnetQuerier for RegistryState {
-    async fn subnet(&self, id: &PrincipalId) -> Result<decentralization::network::DecentralizedSubnet, NetworkError> {
-        self.subnets
-            .get(id)
-            .map(|s| decentralization::network::DecentralizedSubnet {
-                id: s.principal,
-                nodes: s.nodes.iter().map(decentralization::network::Node::from).collect(),
-                removed_nodes: Vec::new(),
-                min_nakamoto_coefficients: None,
-                comment: None,
-                run_log: Vec::new(),
-            })
-            .ok_or(NetworkError::SubnetNotFound(*id))
-    }
-
-    async fn subnet_of_nodes(
-        &self,
-        nodes: Vec<decentralization::network::Node>,
-    ) -> Result<decentralization::network::DecentralizedSubnet, NetworkError> {
-        let subnets = nodes
-            .to_vec()
-            .iter()
-            .map(|n| self.nodes.get(&n.id).and_then(|n| n.subnet_id))
-            .collect::<BTreeSet<_>>();
-        if subnets.len() > 1 {
-            return Err(NetworkError::IllegalRequest(
-                "nodes don't belong to the same subnet".to_string(),
-            ));
-        }
-        if let Some(Some(subnet)) = subnets.into_iter().next() {
-            Ok(decentralization::network::DecentralizedSubnet {
-                id: subnet,
-                nodes: self
-                    .subnets
-                    .get(&subnet)
-                    .ok_or(NetworkError::SubnetNotFound(subnet))?
-                    .nodes
+    async fn subnet(&self, by: SubnetQueryBy) -> Result<decentralization::network::DecentralizedSubnet, NetworkError> {
+        match by {
+            SubnetQueryBy::SubnetId(id) => self
+                .subnets
+                .get(&id)
+                .map(|s| decentralization::network::DecentralizedSubnet {
+                    id: s.principal,
+                    nodes: s.nodes.iter().map(decentralization::network::Node::from).collect(),
+                    removed_nodes: Vec::new(),
+                    min_nakamoto_coefficients: None,
+                    comment: None,
+                    run_log: Vec::new(),
+                })
+                .ok_or(NetworkError::SubnetNotFound(id)),
+            SubnetQueryBy::NodeList(nodes) => {
+                let subnets = nodes
+                    .to_vec()
                     .iter()
-                    .map(decentralization::network::Node::from)
-                    .collect(),
-                removed_nodes: Vec::new(),
-                min_nakamoto_coefficients: None,
-                comment: None,
-                run_log: Vec::new(),
-            })
-        } else {
-            Err(NetworkError::IllegalRequest("no subnet found".to_string()))
+                    .map(|n| self.nodes.get(&n.id).and_then(|n| n.subnet_id))
+                    .collect::<BTreeSet<_>>();
+                if subnets.len() > 1 {
+                    return Err(NetworkError::IllegalRequest(
+                        "nodes don't belong to the same subnet".to_string(),
+                    ));
+                }
+                if let Some(Some(subnet)) = subnets.into_iter().next() {
+                    Ok(decentralization::network::DecentralizedSubnet {
+                        id: subnet,
+                        nodes: self
+                            .subnets
+                            .get(&subnet)
+                            .ok_or(NetworkError::SubnetNotFound(subnet))?
+                            .nodes
+                            .iter()
+                            .map(decentralization::network::Node::from)
+                            .collect(),
+                        removed_nodes: Vec::new(),
+                        min_nakamoto_coefficients: None,
+                        comment: None,
+                        run_log: Vec::new(),
+                    })
+                } else {
+                    Err(NetworkError::IllegalRequest("no subnet found".to_string()))
+                }
+            }
         }
     }
 }

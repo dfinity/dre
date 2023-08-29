@@ -1,6 +1,6 @@
 use super::*;
 use crate::health;
-use decentralization::network::TopologyManager;
+use decentralization::network::{SubnetQueryBy, TopologyManager};
 use ic_base_types::PrincipalId;
 use ic_management_backend::subnets::get_proposed_subnet_changes;
 use ic_management_types::requests::{
@@ -79,7 +79,7 @@ async fn replace(
     let mut motivations: Vec<String> = vec![];
 
     let change_request = match &request.target {
-        ReplaceTarget::Subnet(subnet) => registry.modify_subnet_nodes(*subnet).await?,
+        ReplaceTarget::Subnet(subnet) => registry.modify_subnet_nodes(SubnetQueryBy::SubnetId(*subnet)).await?,
         ReplaceTarget::Nodes { nodes, motivation } => {
             motivations.push(motivation.clone());
             let nodes_to_replace = nodes
@@ -87,7 +87,9 @@ async fn replace(
                 .filter_map(|n| all_nodes.get(n))
                 .map(decentralization::network::Node::from)
                 .collect::<Vec<_>>();
-            registry.without_nodes(nodes_to_replace).await?
+            registry
+                .modify_subnet_nodes(SubnetQueryBy::NodeList(nodes_to_replace))
+                .await?
         }
     }
     .with_exclude_nodes(request.exclude.clone().unwrap_or_default())
@@ -188,7 +190,7 @@ async fn resize(
     let registry = registry.read().await;
 
     let change = registry
-        .modify_subnet_nodes(request.subnet)
+        .modify_subnet_nodes(SubnetQueryBy::SubnetId(request.subnet))
         .await?
         .with_exclude_nodes(request.exclude.clone().unwrap_or_default())
         .with_include_nodes(request.include.clone().unwrap_or_default())
