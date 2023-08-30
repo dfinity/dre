@@ -21,8 +21,8 @@ const SLACK_CHANNEL_ENV_EXTERNAL: &str = "SLACK_CHANNEL_PROPOSALS_EXTERNAL";
 
 #[derive(Debug, Serialize, Deserialize)]
 struct NeuronSlackMapping {
-    pub id: String,
-    pub neuron: u64,
+    pub neuron_id: u64,
+    pub slack_id: String,
 }
 
 pub struct SlackHook<T: IntoUrl> {
@@ -121,8 +121,8 @@ fn proposer_mention(proposer: NeuronId) -> Option<String> {
     if neurons_blacklist.contains(&proposer.id) {
         None
     } else {
-        match neurons.iter().find(|nm| nm.neuron == proposer.id) {
-            Some(nm) => Some(format!("<@{}>", nm.id)),
+        match neurons.iter().find(|nm| nm.neuron_id == proposer.id) {
+            Some(nm) => Some(format!("<@{}>", nm.slack_id)),
             None => Some(format!("Neuron {}", proposer.id)),
         }
     }
