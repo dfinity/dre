@@ -1,0 +1,35 @@
+"""
+rules for creating oci images from rust binaries
+"""
+
+load("@rules_oci//oci:defs.bzl", "oci_image", "oci_push")
+load("@rules_pkg//:pkg.bzl", "pkg_tar")
+
+def rust_binary_oci_image_rules(name, src):
+    """macro for creating oci image from rust binary
+
+    Args:
+        name: not used
+        src: label of rust binary to be put in the OCI image
+    """
+    binary = native.package_relative_label(src)
+    tar_rule_name = "{}_layer".format(binary.name)
+    pkg_tar(
+        name = tar_rule_name,
+        srcs = [binary],
+    )
+
+    image_rule_name = "{}-image".format(binary.name)
+    oci_image(
+        name = image_rule_name,
+        # Consider using even more minimalistic docker image since we're using static compile
+        base = "@distroless_cc",
+        entrypoint = ["/{}".format(binary.name)],
+        tars = [tar_rule_name],
+    )
+
+    oci_push(
+        name = "push_image",
+        image = image_rule_name,
+        repository = "registry.gitlab.com/dfinity-lab/core/release/{}".format(binary.name),
+    )

@@ -65,7 +65,8 @@ async fn change_preview(
 /// There are multiple ways to replace nodes. For instance:
 ///    1. Setting `heal` to `true` in the request to replace unhealthy nodes
 ///    2. Replace `optimize` nodes to optimize subnet decentralization.
-///    3. Explicitly add or remove nodes from the subnet specifying their Principals.
+///    3. Explicitly add or remove nodes from the subnet specifying their
+/// Principals.
 ///
 /// All nodes in the request must belong to exactly one subnet.
 #[post("/subnet/membership/replace")]
@@ -141,7 +142,8 @@ async fn replace(
         let replace_target = if num_unhealthy == 1 { "node" } else { "nodes" };
         motivations.push(format!("replacing {num_unhealthy} unhealthy {replace_target}"));
     }
-    // Optimize the requested number of nodes, and remove unhealthy nodes if there are any
+    // Optimize the requested number of nodes, and remove unhealthy nodes if there
+    // are any
     let change = change_request.optimize(request.optimize.unwrap_or(0), &replacements_unhealthy)?;
     let num_optimized = change.removed().len() - num_unhealthy;
     if num_optimized > 0 {

@@ -139,7 +139,7 @@ variables:
     - ubuntu
     - dfinity-shared
   image:
-    name: registry.gitlab.com/dfinity-lab/core/release/ci-build/no-docker@sha256:9ff2fc98fb6f402fd895995f47b4f0f590ce08385b5c368490d9814c1e741127
+    name: registry.gitlab.com/dfinity-lab/core/release/ci-build/no-docker@sha256:bb6982d9782a988273ef5e2e367563a2572c560858017b854efcac3661352c92
 
 .kaniko-build:
   tags:
@@ -240,3 +240,4 @@ include:
   - local: /gitlab-ci/build-publish-images.yml
   - local: /gitlab-ci/release.yml
   - local: /gitlab-ci/dashboard.yml
+  - local: /gitlab-ci/bazel.yml
