@@ -4,7 +4,8 @@
 // - Fetch data from prometheus
 // - Refresh state based on this data, maybe with a log of state changes
 // - Send message on status change
-// - Fetch latest known state on startup, to notify in case of a change during a restart
+// - Fetch latest known state on startup, to notify in case of a change during a
+//   restart
 //
 // We should also have an API to get the current status
 // GET /api/v1/state/<node-id>
@@ -13,7 +14,8 @@
 // We should have a webhook API
 // We want a way to register new webhooks
 //
-// We want to have a way to send random events in the service, and see them go through. Can be a webhook, a simple log sink.
+// We want to have a way to send random events in the service, and see them go
+// through. Can be a webhook, a simple log sink.
 //
 // Questions to solve:
 // What happens when the service restarts ?
@@ -98,9 +100,9 @@ async fn main() {
     let srv_handle = srv.handle();
     // We need to spawn the server, or we cannot stop it (obviously). This
     // is however not done by the run method, it needs to be spawned on its own.
-    // We are not pushing the the same vec as the others since it is a different type.
-    // We should not have many tasks, so we can even stop them all manually.
-    // We might want to replace those with actors
+    // We are not pushing the the same vec as the others since it is a different
+    // type. We should not have many tasks, so we can even stop them all
+    // manually. We might want to replace those with actors
     actix_web::rt::spawn(srv);
 
     signal::ctrl_c().await.unwrap();
