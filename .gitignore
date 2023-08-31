@@ -55,5 +55,6 @@ __pycache__
 # bazel
 bazel-bin
 bazel-out
-bazel-release-cli
+bazel-release*
 bazel-testlogs
+bazel-build-log.json

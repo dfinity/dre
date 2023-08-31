@@ -6,7 +6,8 @@ use super::*;
 use crate::health;
 use decentralization::network::Node as DecentralizationNode;
 
-/// Finds all nodes that need to be removed from the network either because they're offline or duplicated
+/// Finds all nodes that need to be removed from the network either because
+/// they're offline or duplicated
 #[post("/nodes/remove")]
 async fn remove(
     request: web::Json<NodesRemoveRequest>,
