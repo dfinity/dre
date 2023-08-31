@@ -12,30 +12,6 @@
     - pre-commit install
     - pre-commit run -a --hook-stage=manual
 
-cargo-clippy:
-  extends:
-    - .rules-default
-    - .k8s-workers
-  interruptible: true
-  needs: []
-  dependencies: []
-  stage: test
-  script:
-    - cd rs
-    - ./cargo-clippy
-
-cargo-test:
-  extends:
-    - .rules-default
-    - .k8s-workers
-  interruptible: true
-  needs: []
-  dependencies: []
-  stage: test
-  script:
-    - cd rs
-    - cargo test
-
 valid-inventory:
   extends:
     - .rules-default

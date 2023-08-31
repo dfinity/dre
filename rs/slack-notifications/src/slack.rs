@@ -13,7 +13,8 @@ use std::collections::HashSet;
 use std::convert::TryFrom;
 
 const TRUSTED_NEURONS_TAG: &str = "<!subteam^S0200F4EYLF>";
-const RELEASE_TEAM_TAG: &str = ""; // Can be changed to the following to mention @release-engs on each proposal: "<!subteam^S02CF4KKZ7U>";
+const RELEASE_TEAM_TAG: &str = ""; // Can be changed to the following to mention @release-engs on each proposal:
+                                   // "<!subteam^S02CF4KKZ7U>";
 const RELEASE_AUTOMATION_NEURON_ID: u64 = 80;
 const MAX_SUMMARY_LENGTH: usize = 2048;
 const SLACK_CHANNEL_ENV_INTERNAL: &str = "SLACK_CHANNEL_PROPOSALS_INTERNAL";
@@ -74,7 +75,8 @@ fn proposal_motivation(proposal_info: &ProposalInfo) -> String {
         .unwrap_or(summary)
         .to_string();
 
-    // For subnet membership changes (node replacements), add a link to the internal dashboard where the decentralization data can be reviewed before voting.
+    // For subnet membership changes (node replacements), add a link to the internal
+    // dashboard where the decentralization data can be reviewed before voting.
     if proposal_info.topic == Topic::SubnetManagement as i32 {
         if let Some(proposal) = proposal_info.proposal.as_ref() {
             if let Some(proposal::Action::ExecuteNnsFunction(action)) = &proposal.action {

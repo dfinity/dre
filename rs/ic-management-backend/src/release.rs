@@ -442,12 +442,14 @@ impl RolloutState {
                 .last_mut()
                 .expect("should contain at least one day") += 2;
 
-            // Clear submitted subnets and set overhead instead by the number of already submitted stages
+            // Clear submitted subnets and set overhead instead by the number of already
+            // submitted stages
             remaining_rollout_days_overheads[0] += remaining_rollout_days[0].rollout_stages_subnets.len();
             remaining_rollout_days[0].rollout_stages_subnets = vec![];
         }
 
-        // Set overhead to 1 for the first day of the rollout since previous rollout usually finishes on the same day
+        // Set overhead to 1 for the first day of the rollout since previous rollout
+        // usually finishes on the same day
         if self
             .rollout_days
             .iter()
@@ -467,7 +469,8 @@ impl RolloutState {
             remaining_rollout_days_overheads[0] += 1;
         }
 
-        // Number of the subnets rolled out for the first stage of the current date of the rollout
+        // Number of the subnets rolled out for the first stage of the current date of
+        // the rollout
         let current_day_first_stage_size = self
             .rollout_days
             .iter()
@@ -536,8 +539,9 @@ impl RolloutState {
             .flat_map(|rd| rd.rollout_stages_subnets.iter().flatten())
             .contains(&self.nns_subnet)
         {
-            // If there's already a rollout submitted or sheduled on the current date of the rollout
-            // submit the NNS proposal on the very last day of available dates
+            // If there's already a rollout submitted or sheduled on the current date of the
+            // rollout submit the NNS proposal on the very last day of available
+            // dates
             let last_day = if self
                 .rollout_days
                 .iter()
@@ -548,8 +552,9 @@ impl RolloutState {
                 .unwrap_or(true)
             {
                 self.rollout_days.last().expect("should have at least one day").date
-            // Otherwise, rollout should have 2 complete empty days available left, and then use the first
-            // one and drop the last one
+            // Otherwise, rollout should have 2 complete empty days available
+            // left, and then use the first one and drop the last
+            // one
             } else {
                 self.rollout_days
                     .iter()
