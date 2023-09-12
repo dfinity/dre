@@ -1,5 +1,6 @@
 use core::time;
 use std::{
+    cell::RefCell,
     fmt::{self, Display},
     sync::mpsc::Receiver,
 };
@@ -58,6 +59,8 @@ pub enum SinkError {
 pub enum Sink {
     Log(LogSink),
     Matrix(MatrixSink),
+    #[allow(unused)]
+    Test(TestSink),
 }
 
 impl Sink {
@@ -65,6 +68,10 @@ impl Sink {
         match self {
             Sink::Log(sink) => sink.send(notification),
             Sink::Matrix(sink) => sink.send(notification).await,
+            Sink::Test(sink) => {
+                sink.send(notification);
+                Ok(())
+            }
         }
     }
 }
@@ -93,5 +100,22 @@ impl MatrixSink {
             .await
             .map_err(|_| SinkError::PublicationError)
             .map(|_| ())
+    }
+}
+
+pub struct TestSink {
+    pub notifications: RefCell<Vec<Notification>>,
+}
+
+impl TestSink {
+    fn send(&self, notification: Notification) {
+        self.notifications.borrow_mut().push(notification)
+    }
+
+    #[allow(unused)]
+    pub fn new() -> Self {
+        Self {
+            notifications: RefCell::new(vec![]),
+        }
     }
 }
