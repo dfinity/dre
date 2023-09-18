@@ -101,10 +101,19 @@ function ActionDialog({ subnet, action }: { subnet: Subnet, action: Action }) {
         <DialogTitle id="max-width-dialog-title">{action.type[0].toUpperCase() + action.type.substring(1)} {subnet.metadata.name} Subnet ({subnet.principal.split("-")[0]})</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            {action.description}
+            $ {action.description}
           </DialogContentText>
         </DialogContent>
         <DialogActions>
+          <IconButton
+            color="default"
+            aria-label="copy"
+            component="span"
+            size="small"
+            onClick={() => { navigator.clipboard.writeText(action.description) }}
+          >
+            <FileCopyOutlinedIcon fontSize="inherit" />
+          </IconButton>
           <Button onClick={handleClose} color="secondary">
             Close
           </Button>
@@ -141,7 +150,7 @@ function generateSubnetActions(subnet: Subnet, healths: { [principal: string]: N
     actions.push({
       type: "heal",
       urgency: deadNodes.length / subnet.nodes.length > 0.1 ? "critical" : "warning",
-      description: `Guests ${deadNodes.map(dn => dn.hostname)}`,
+      description: `release_cli subnet --id ${subnet.principal} replace  # dead nodes: ${deadNodes.map(dn => dn.principal.split('-')[0]+"/"+dn.hostname)}`,
       message: <>There {deadNodes.length === 1 ? "is" : "are"} <b>{deadNodes.length}</b> dead node{deadNodes.length > 1 && "s"} that need{deadNodes.length === 1 && "s"} to be replaced.</>,
     })
   }
@@ -150,7 +159,7 @@ function generateSubnetActions(subnet: Subnet, healths: { [principal: string]: N
     actions.push({
       type: "heal",
       urgency: degraded.length / subnet.nodes.length > 0.2 ? "critical" : "warning",
-      description: `Guests ${degraded.map(dn => dn.hostname)}`,
+      description: `release_cli subnet --id ${subnet.principal} replace  # degraded nodes: ${degraded.map(dn => dn.principal.split('-')[0]+"/"+dn.hostname)}`,
       message: <>There {degraded.length === 1 ? "is" : "are"} <b>{degraded.length}</b> degraded node{degraded.length > 1 && "s"} that might need to be replaced.</>,
     })
   }
