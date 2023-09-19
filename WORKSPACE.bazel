@@ -5,11 +5,11 @@ workspace(
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive", "http_file")
 load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 
-IC_REPO_VERSION="0062aec2efc16d6e4cadb2cd1052aaabbc9f6e48"
+IC_REPO_VERSION="abac636d8a281a1e7600d876aaed10f7ce7e5040"
 http_archive(
     name = "ic_repo",
     strip_prefix = "ic-{}".format(IC_REPO_VERSION),
-    sha256 = "f33b23635a55367d8999b5fc9b7dbb61991685fca22c4d0af1b2c693a4332c1d",
+    sha256 = "1b85209dcf456defc25ecb7f4710327ff64eaed94bff36dc5748f5bb96823400",
     url = "https://github.com/dfinity/ic/archive/{}.tar.gz".format(IC_REPO_VERSION),
 )
 
@@ -44,7 +44,7 @@ rust_analyzer_dependencies()
 rust_register_toolchains(
     edition = "2021",
     versions = [
-        "1.66.1",
+        "1.71.1",
     ],
 )
 
@@ -63,8 +63,8 @@ crate_repositories()
 http_file(
     name = "ic-icrc1-archive",
     downloaded_file_path = "ic-icrc1-archive.wasm.gz",
-    sha256 = "7f6172eae53d892b654b059e0f4127d823b16af8f53bf051a9df1d8087a6ffe4",
-    url = "https://download.dfinity.systems/ic/0062aec2efc16d6e4cadb2cd1052aaabbc9f6e48/canisters/ic-icrc1-archive.wasm.gz",
+    sha256 = "1b85209dcf456defc25ecb7f4710327ff64eaed94bff36dc5748f5bb96823400",
+    url = "https://download.dfinity.systems/ic/abac636d8a281a1e7600d876aaed10f7ce7e5040/canisters/ic-icrc1-archive.wasm.gz",
 )
 
 http_archive(

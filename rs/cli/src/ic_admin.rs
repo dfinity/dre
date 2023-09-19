@@ -390,7 +390,6 @@ must be identical, and must match the SHA256 from the payload of the NNS proposa
             .trim()
             .replace("\r(\n)?", "\n")
             .split('\n')
-            .into_iter()
             .map(|f| {
                 if !f.starts_with('*') {
                     return f.to_string();
