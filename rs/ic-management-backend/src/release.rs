@@ -96,7 +96,7 @@ pub struct RolloutConfig {
 }
 
 mod iso_8601_date_format {
-    use chrono::{NaiveDate, TimeZone, Utc};
+    use chrono::{DateTime, NaiveDate};
     use itertools::Itertools;
     use serde::{self, Deserialize, Deserializer};
 
@@ -109,7 +109,7 @@ mod iso_8601_date_format {
         Vec::deserialize(deserializer)?
             .into_iter()
             .map(|s: String| {
-                Utc.datetime_from_str(&format!("{} 00:00:00", s), FORMAT)
+                DateTime::parse_from_str(&format!("{} 00:00:00", s), FORMAT)
                     .map_err(serde::de::Error::custom)
                     .map(|dt| dt.date_naive())
             })
@@ -121,7 +121,6 @@ impl RolloutConfig {
     // Returns available rollout days. Always return at least 2 available days
     fn rollout_days(&self, start: NaiveDate) -> Vec<NaiveDate> {
         let candidates = (0..14)
-            .into_iter()
             .map(|i| {
                 let mut d = start;
                 for _ in 0..i {
