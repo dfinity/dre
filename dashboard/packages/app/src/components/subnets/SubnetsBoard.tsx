@@ -110,7 +110,7 @@ function ActionDialog({ subnet, action }: { subnet: Subnet, action: Action }) {
             aria-label="copy"
             component="span"
             size="small"
-            onClick={() => { navigator.clipboard.writeText(action.description) }}
+            onClick={() => { navigator.clipboard.writeText(action.description || "") }}
           >
             <FileCopyOutlinedIcon fontSize="inherit" />
           </IconButton>
