@@ -2,40 +2,6 @@
 
 ## 1. Install dependencies
 
-### SQLite
-
-#### On Linux
-
-Installing SQLite with dev dependencies:
-
-``` bash
-sudo apt install -y sqlite3 libsqlite3-dev
-```
-
-#### On Mac OS
-
-``` bash
-brew install sqlite
-```
-
-#### Note on errors caused wrong ordering of setup
-
-Note: This SQLite dependency must be installed before you install a python
-version using pyenv, or the extension will not be compiled in your python. If 
-you get an error like 
-
-``` bash
-ModuleNotFoundError: No module named '_sqlite3'
-```
-
-You need to remove your pyenv python version 
-
-``` bash
-pyenv uninstall <version>
-```
-
-and reinstall it again (see below).
-
 ### pipenv / pyenv
 
 #### On Linux
@@ -232,7 +198,7 @@ To start the release dashboard locally, run the following from dashboard folder
 yarn dev
 ```
 
-To use release_cli with the local dashboard instance run it with `--dev` flag.
+To use `release_cli` with the local dashboard instance run it with `--dev` flag.
 
 E.g.
 
@@ -244,6 +210,12 @@ release_cli --dev subnet --id <id> replace -o1
 
 ## Updating the ic git submodule
 
+There is a script that can configure git to automatically check out the latest committed version of the IC submodule on every git pull. Please make sure you run this script at least once after cloning the repo.
+```
+git-hooks-install
+```
+
+To check out the latest version of the IC repo (submodule), you can run:
 ```
 git submodule foreach -q git fetch origin
 git submodule foreach -q git checkout master
