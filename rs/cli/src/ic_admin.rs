@@ -16,7 +16,7 @@ use ic_nns_governance::pb::v1::{ListNeurons, ListNeuronsResponse};
 use ic_sys::utility_command::UtilityCommand;
 use itertools::Itertools;
 use keyring::{Entry, Error};
-use log::{error, info};
+use log::{error, info, warn};
 use regex::Regex;
 use reqwest::StatusCode;
 use sha2::{Digest, Sha256};
@@ -320,31 +320,52 @@ impl Cli {
         self.propose_run(cmd, Default::default(), simulate)
     }
 
-    pub(crate) async fn prepare_to_propose_to_update_elected_replica_versions(
-        version: &String,
-        rc_branch_name: &String,
-    ) -> anyhow::Result<UpdateReplicaVersions> {
-        let image_path = format!("ic/{}/guest-os/update-img", version);
-        let download_dir = format!("{}/tmp/{}", std::env::var("HOME").unwrap(), image_path);
+    fn get_cdn_image_url(version: &String) -> String {
+        format!(
+            "https://download.dfinity.systems/ic/{}/guest-os/update-img/update-img.tar.gz",
+            version
+        )
+    }
+
+    fn get_github_release_image_url(release_tag: &String) -> String {
+        format!(
+            "https://github.com/dfinity/ic/releases/download/{}/update-os-img.tar.gz",
+            release_tag
+        )
+    }
+
+    async fn download_file_and_get_sha256(download_url: &String) -> anyhow::Result<String> {
+        let url = url::Url::parse(download_url)?;
+        let subdir = format!(
+            "{}{}",
+            url.domain().expect("url.domain() is None"),
+            url.path().to_owned()
+        );
+        // replace special characters in subdir with _
+        let subdir = subdir.replace(|c: char| !c.is_ascii_alphanumeric(), "_");
+        let download_dir = format!(
+            "{}/ic/{}",
+            dirs::download_dir().expect("download_dir is None").as_path().display(),
+            subdir
+        );
         let download_dir = Path::new(&download_dir);
 
         std::fs::create_dir_all(download_dir)
             .unwrap_or_else(|_| panic!("create_dir_all failed for {}", download_dir.display()));
 
-        let update_url = format!("https://download.dfinity.systems/{}/update-img.tar.gz", image_path);
         let download_image = format!("{}/update-img.tar.gz", download_dir.to_str().unwrap());
         let download_image = Path::new(&download_image);
 
-        let response = reqwest::get(update_url.clone()).await?;
+        let response = reqwest::get(download_url.clone()).await?;
 
         if response.status() != StatusCode::RANGE_NOT_SATISFIABLE && !response.status().is_success() {
             return Err(anyhow::anyhow!(
                 "Download failed with http_code {} for {}",
                 response.status(),
-                update_url
+                download_url
             ));
         }
-        info!("Download {} succeeded {}", update_url, response.status());
+        info!("Download {} succeeded {}", download_url, response.status());
 
         let mut file = match File::create(download_image) {
             Ok(file) => file,
@@ -354,7 +375,6 @@ impl Cli {
         let content = response.bytes().await?;
         file.write_all(&content)?;
 
-        info!("File created on location: {}", download_image.display());
         let mut hasher = Sha256::new();
         hasher.update(&content);
         let hash = hasher.finalize();
@@ -363,9 +383,56 @@ impl Cli {
             .map(|byte| format!("{:01$x?}", byte, 2))
             .collect::<Vec<String>>()
             .join("");
-        info!("SHA256 of update-img.tar.gz: {}", stringified_hash);
+        info!(
+            "File saved at {} has sha256 {}",
+            download_image.display(),
+            stringified_hash
+        );
+        Ok(stringified_hash)
+    }
+
+    pub(crate) async fn prepare_to_propose_to_update_elected_replica_versions(
+        version: &String,
+        release_tag: &String,
+    ) -> anyhow::Result<UpdateReplicaVersions> {
+        let mut expected_hash = None;
+
+        let update_urls = vec![
+            Self::get_cdn_image_url(version),
+            Self::get_github_release_image_url(release_tag),
+        ];
+        // Verify that both images have the same SHA256
+        for update_url in &update_urls {
+            let downloaded_hash: String = match Self::download_file_and_get_sha256(update_url).await {
+                Ok(hash) => hash,
+                Err(err) => {
+                    warn!("Error downloading {}: {}", update_url, err);
+                    continue;
+                }
+            };
+            match &expected_hash {
+                Some(stringified_hash) => {
+                    // Compare the hash of the downloaded image with the hash of the first image
+                    if &downloaded_hash != stringified_hash {
+                        return Err(anyhow::anyhow!(
+                            "The SHA256 {} of the image downloaded from {} does not match the SHA256 of the first image {}",
+                            downloaded_hash,
+                            update_url,
+                            &stringified_hash
+                        ));
+                    }
+                }
+                None => {
+                    // This is the first image, so just set the hash
+                    expected_hash = Some(downloaded_hash)
+                }
+            }
+        }
+        let expected_hash = expected_hash.expect("expected_hash is None");
+        info!("SHA256 of update-img.tar.gz: {}", expected_hash);
+
         let template = format!(
-            r#"Elect new replica binary revision [{version}](https://github.com/dfinity/ic/tree/{rc_branch_name})
+            r#"Elect new replica binary revision [{version}](https://github.com/dfinity/ic/tree/{release_tag})
         
 # Release Notes:
 
@@ -413,9 +480,9 @@ must be identical, and must match the SHA256 from the payload of the NNS proposa
             ))
         } else {
             Ok(UpdateReplicaVersions {
-                stringified_hash,
+                stringified_hash: expected_hash,
                 summary: edited,
-                update_url,
+                update_urls,
             })
         }
     }
@@ -442,7 +509,7 @@ pub(crate) enum ProposeCommand {
     },
     UpdateElectedReplicaVersions {
         version_to_bless: String,
-        update_url: String,
+        update_urls: Vec<String>,
         stringified_hash: String,
         versions_to_retire: Vec<String>,
     },
@@ -501,18 +568,21 @@ impl ProposeCommand {
             Self::RemoveNodes { nodes } => nodes.iter().map(|n| n.to_string()).collect(),
             Self::UpdateElectedReplicaVersions {
                 version_to_bless,
-                update_url,
+                update_urls,
                 stringified_hash,
                 versions_to_retire,
             } => vec![
-                vec![
-                    "--replica-version-to-elect".to_string(),
-                    version_to_bless.to_string(),
-                    "--release-package-sha256-hex".to_string(),
-                    stringified_hash.to_string(),
-                    "--release-package-urls".to_string(),
-                    update_url.to_string(),
-                ],
+                [
+                    vec![
+                        "--replica-version-to-elect".to_string(),
+                        version_to_bless.to_string(),
+                        "--release-package-sha256-hex".to_string(),
+                        stringified_hash.to_string(),
+                        "--release-package-urls".to_string(),
+                    ],
+                    update_urls.clone(),
+                ]
+                .concat(),
                 if !versions_to_retire.is_empty() {
                     vec![
                         vec!["--replica-versions-to-unelect".to_string()],
