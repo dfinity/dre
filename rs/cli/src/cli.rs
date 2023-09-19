@@ -215,8 +215,8 @@ pub(crate) mod version {
             /// Specify the commit hash of the version that is being elected.
             version: String,
 
-            /// RC branch that contains the release commits.
-            rc_branch_name: String,
+            /// Git tag for the release.
+            release_tag: String,
         },
     }
 }

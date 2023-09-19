@@ -521,6 +521,6 @@ impl Network {
 #[derive(Clone)]
 pub struct UpdateReplicaVersions {
     pub summary: String,
-    pub update_url: String,
+    pub update_urls: Vec<String>,
     pub stringified_hash: String,
 }

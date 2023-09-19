@@ -167,11 +167,11 @@ async fn main() -> Result<(), anyhow::Error> {
 
             cli::Commands::Version(cmd) => {
                 match &cmd.subcommand {
-                    Update { version, rc_branch_name } => {
+                    Update { version, release_tag} => {
                         let runner = runner::Runner::from_opts(&cli_opts).await?;
                         let (_, retire_versions) = runner.prepare_versions_to_retire(false).await?;
                         let ic_admin = ic_admin::Cli::from_opts(&cli_opts, true).await?;
-                        let new_replica_info = ic_admin::Cli::prepare_to_propose_to_update_elected_replica_versions(version, rc_branch_name).await?;
+                        let new_replica_info = ic_admin::Cli::prepare_to_propose_to_update_elected_replica_versions(version, release_tag).await?;
                         let proposal_title = if retire_versions.is_empty() {
                             Some(format!("Elect new IC/Replica revision (commit {})", &version[..8]))
                         } else {
@@ -185,7 +185,7 @@ async fn main() -> Result<(), anyhow::Error> {
 
                         ic_admin.propose_run(ic_admin::ProposeCommand::UpdateElectedReplicaVersions{
                             version_to_bless: version.to_string(),
-                            update_url: new_replica_info.update_url,
+                            update_urls: new_replica_info.update_urls,
                             stringified_hash: new_replica_info.stringified_hash,
                             versions_to_retire: retire_versions.clone(),
                         }, ic_admin::ProposeOptions{
