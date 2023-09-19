@@ -128,53 +128,50 @@ impl ProposalAgent {
         let mut proposals = vec![];
         loop {
             let fetch_partial_results = || async {
-                Decode!(
-                    self.agent
-                        .query(
-                            &ic_agent::export::Principal::from_slice(
-                                ic_nns_constants::GOVERNANCE_CANISTER_ID.get().as_slice(),
-                            ),
-                            "list_proposals",
-                        )
-                        .with_arg(
-                            Encode!(&ListProposalInfo {
-                                limit: 1000,
-                                // 0, 1, 2, 3, 4, 5, 6, 8, 9, 10
-                                exclude_topic: vec![
-                                    Topic::Unspecified,
-                                    Topic::NeuronManagement,
-                                    Topic::ExchangeRate,
-                                    Topic::NetworkEconomics,
-                                    Topic::Governance,
-                                    // Topic::NodeAdmin,
-                                    Topic::ParticipantManagement,
-                                    // Topic::SubnetManagement,
-                                    Topic::NetworkCanisterManagement,
-                                    Topic::Kyc,
-                                    Topic::NodeProviderRewards,
-                                    Topic::SnsDecentralizationSale,
-                                    // Topic::SubnetReplicaVersionManagement,
-                                    // Topic::ReplicaVersionManagement,
-                                    Topic::SnsAndCommunityFund,
-                                ]
-                                .into_iter()
-                                .map(|t| t.into())
-                                .collect(),
-                                include_status: include_status.clone().into_iter().map(|s| s.into()).collect(),
-                                before_proposal: proposals
-                                    .last()
-                                    .map(|p: &ProposalInfo| p.id.expect("proposal should have an id")),
-                                ..Default::default()
-                            })
-                            .expect("encode failed")
-                        )
-                        .call()
-                        .await?
-                        .as_slice(),
-                    ListProposalInfoResponse
-                )
-                .map(|lp| lp.proposal_info)
-                .map_err(|e| anyhow::format_err!("failed to decode list proposals: {}", e))
+                let f = self
+                    .agent
+                    .query(
+                        &ic_agent::export::Principal::from_slice(
+                            ic_nns_constants::GOVERNANCE_CANISTER_ID.get().as_slice(),
+                        ),
+                        "list_proposals",
+                    )
+                    .with_arg(
+                        Encode!(&ListProposalInfo {
+                            limit: 1000,
+                            // 0, 1, 2, 3, 4, 5, 6, 8, 9, 10
+                            exclude_topic: vec![
+                                Topic::Unspecified,
+                                Topic::NeuronManagement,
+                                Topic::ExchangeRate,
+                                Topic::NetworkEconomics,
+                                Topic::Governance,
+                                // Topic::NodeAdmin,
+                                Topic::ParticipantManagement,
+                                // Topic::SubnetManagement,
+                                Topic::NetworkCanisterManagement,
+                                Topic::Kyc,
+                                Topic::NodeProviderRewards,
+                                Topic::SnsDecentralizationSale,
+                                // Topic::SubnetReplicaVersionManagement,
+                                // Topic::ReplicaVersionManagement,
+                                Topic::SnsAndCommunityFund,
+                            ]
+                            .into_iter()
+                            .map(|t| t.into())
+                            .collect(),
+                            include_status: include_status.clone().into_iter().map(|s| s.into()).collect(),
+                            before_proposal: proposals
+                                .last()
+                                .map(|p: &ProposalInfo| p.id.expect("proposal should have an id")),
+                            ..Default::default()
+                        })
+                        .expect("encode failed"),
+                    )
+                    .call();
+                Decode!(f.await?.as_slice(), ListProposalInfoResponse)
+                    .map(|lp| lp.proposal_info)
+                    .map_err(|e| anyhow::format_err!("failed to decode list proposals: {}", e))
             };
             let partial_result = fetch_partial_results.retry(&ExponentialBuilder::default()).await?;
             if partial_result.is_empty() {
@@ -193,21 +190,18 @@ impl ProposalAgent {
         try_join_all(empty_payload_proposals.iter().map(|p| async {
             let id = p.id.expect("proposal should have id").id;
             let fetch_partial_results = || async {
-                Decode!(
-                    self.agent
-                        .query(
-                            &ic_agent::export::Principal::from_slice(
-                                ic_nns_constants::GOVERNANCE_CANISTER_ID.get().as_slice(),
-                            ),
-                            "get_proposal_info",
-                        )
-                        .with_arg(Encode!(&id).expect("encode failed"))
-                        .call()
-                        .await?
-                        .as_slice(),
-                    Option<ProposalInfo>
-                )
-                .map_err(|e| anyhow::format_err!("failed to decode list proposals: {}", e))
+                let f = self
+                    .agent
+                    .query(
+                        &ic_agent::export::Principal::from_slice(
+                            ic_nns_constants::GOVERNANCE_CANISTER_ID.get().as_slice(),
+                        ),
+                        "get_proposal_info",
+                    )
+                    .with_arg(Encode!(&id).expect("encode failed"))
+                    .call();
+                Decode!(f.await?.as_slice(), Option<ProposalInfo>)
+                    .map_err(|e| anyhow::format_err!("failed to decode list proposals: {}", e))
             };
             fetch_partial_results.retry(&ExponentialBuilder::default()).await
         }))
