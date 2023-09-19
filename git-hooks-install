@@ -1,0 +1,16 @@
+#!/bin/bash
+
+BASEDIR=$(git rev-parse --show-toplevel)
+
+echo -n "Creating the post-merge hook file (also called after git pull)... "
+
+cat >"$BASEDIR/.git/hooks/post-merge" <<_EOF
+#!/bin/sh
+echo "Updating submodules"
+git submodule update --init --recursive
+_EOF
+
+# Make it executable
+chmod +x .git/hooks/post-merge
+
+echo done
