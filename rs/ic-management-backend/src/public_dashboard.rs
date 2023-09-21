@@ -1,6 +1,6 @@
 use serde::de::DeserializeOwned;
 
-pub(crate) async fn query_ic_dashboard_list<T: DeserializeOwned>(path: &str) -> anyhow::Result<T> {
+pub async fn query_ic_dashboard_list<T: DeserializeOwned>(path: &str) -> anyhow::Result<T> {
     let client = reqwest::Client::new();
     let result = client
         .get(format!("https://ic-api.internetcomputer.org/api/{}", &path))
