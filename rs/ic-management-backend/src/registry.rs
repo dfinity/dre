@@ -652,6 +652,17 @@ impl RegistryState {
             )),
         }
     }
+
+    pub async fn node(&self, node_id: PrincipalId) -> Node {
+        self.nodes
+            .iter()
+            .filter(|(&id, _)| id == node_id)
+            .collect::<Vec<_>>()
+            .first()
+            .unwrap()
+            .1
+            .clone()
+    }
 }
 
 impl decentralization::network::TopologyManager for RegistryState {}

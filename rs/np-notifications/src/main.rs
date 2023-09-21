@@ -30,6 +30,8 @@ use std::sync::mpsc;
 use actix_web::rt::signal;
 use actix_web::{get, App, HttpResponse, HttpServer, Responder};
 use health_check::HealthCheckLoopConfig;
+use ic_management_backend::config::target_network;
+
 use notification::NotificationSenderLoopConfig;
 use slog::info;
 
@@ -44,12 +46,14 @@ use tokio_util::sync::CancellationToken;
 use crate::health_check::start_health_check_loop;
 use crate::notification::{start_notification_sender_loop, Sink};
 use crate::notification::{LogSink, MatrixSink};
+use crate::registry::{start_registry_updater_loop, RegistryLoopConfig};
 
 mod config;
 mod health_check;
 mod matrix;
 mod nodes_status;
 mod notification;
+mod registry;
 
 #[get("/state")]
 async fn state() -> impl Responder {
@@ -69,15 +73,22 @@ async fn main() {
     let (notif_sender, notif_receiver) = mpsc::channel();
     let cancellation_token = CancellationToken::new();
 
+    actix_web::rt::spawn(start_registry_updater_loop(RegistryLoopConfig {
+        logger: log.new(o!("module" => "registry_updater_loop")),
+        cancellation_token: cancellation_token.clone(),
+        target_network: target_network(),
+    }));
+
     actix_web::rt::spawn(start_health_check_loop(HealthCheckLoopConfig {
-        logger: log.clone(),
+        logger: log.new(o!("module" => "health_check_loop")),
         notification_sender: notif_sender.clone(),
         cancellation_token: cancellation_token.clone(),
+        registry_state: registry::create_registry_state().await,
     }));
 
     actix_web::rt::spawn(start_notification_sender_loop(
         NotificationSenderLoopConfig {
-            logger: log.clone(),
+            logger: log.new(o!("module" => "notification_sender_loop")),
             notification_receiver: notif_receiver,
             cancellation_token: cancellation_token.clone(),
         },
