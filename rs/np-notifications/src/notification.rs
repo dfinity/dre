@@ -6,7 +6,7 @@ use std::{
 };
 
 use actix_web::rt::time::sleep;
-use ic_management_types::Status;
+use ic_management_types::{Provider, Status};
 use ic_types::PrincipalId;
 use slog::Logger;
 use tokio_util::sync::CancellationToken;
@@ -38,6 +38,7 @@ pub async fn start_notification_sender_loop(config: NotificationSenderLoopConfig
 #[derive(Debug, PartialOrd, Ord, PartialEq, Eq, Clone)]
 pub struct Notification {
     pub node_id: PrincipalId,
+    pub node_provider: Option<Provider>,
     pub status_change: (Status, Status),
 }
 
@@ -45,8 +46,8 @@ impl Display for Notification {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "Node {} changed status from {} to {}",
-            self.node_id, self.status_change.0, self.status_change.1
+            "Provider {:?} \nNode {} changed status \n\t{} -> {}",
+            &self.node_provider, self.node_id, self.status_change.0, self.status_change.1
         )
     }
 }
@@ -83,7 +84,7 @@ pub struct LogSink {
 
 impl LogSink {
     fn send(&self, notification: Notification) -> Result<(), SinkError> {
-        info!(self.logger, ""; "sink" => "log", "node_id" => ?notification.node_id, "status_change" => ?notification.status_change);
+        info!(self.logger, ""; "sink" => "log", "notification" => ?notification);
         Ok(())
     }
 }

@@ -58,6 +58,7 @@ impl NodesStatus {
                         .unwrap_or_else(|| panic!("New statuses map should contain id {}", node_id))
                         .clone(),
                 ),
+                node_provider: None,
             })
         }
 
@@ -75,6 +76,7 @@ impl NodesStatus {
                         .clone(),
                     Status::Unknown,
                 ),
+                node_provider: None,
             })
         }
 
@@ -96,6 +98,7 @@ impl NodesStatus {
                             .unwrap_or_else(|| panic!("New statuses map should contain id {}", node_id))
                             .clone(),
                     ),
+                    node_provider: None,
                 })
             }
         }
@@ -144,14 +147,17 @@ mod tests {
         assert_eq!(notifications.len(), 3);
         assert!(notifications.contains(&Notification {
             node_id: ids[1],
+            node_provider: None,
             status_change: (Status::Healthy, Status::Degraded),
         }));
         assert!(notifications.contains(&Notification {
             node_id: ids[2],
+            node_provider: None,
             status_change: (Status::Healthy, Status::Unknown),
         }));
         assert!(notifications.contains(&Notification {
             node_id: ids[3],
+            node_provider: None,
             status_change: (Status::Unknown, Status::Healthy),
         }));
     }
