@@ -46,8 +46,12 @@ impl Display for Notification {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "Provider {:?} \nNode {} changed status \n\t{} -> {}",
-            &self.node_provider, self.node_id, self.status_change.0, self.status_change.1
+            "Provider {} \nNode {} changed status \n\t{} -> {}",
+            // TODO Manage no Node provider name better
+            self.node_provider.clone().unwrap().name.unwrap(),
+            self.node_id,
+            self.status_change.0,
+            self.status_change.1
         )
     }
 }
