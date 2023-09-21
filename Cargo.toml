@@ -7,6 +7,8 @@ members = [
     "rs/ic-management-types",
     "rs/slack-notifications",
     "rs/np-notifications",
+    # Canisters below
+    "rs/canisters/node_status_canister/src/node_status_canister_backend",
 ]
 
 resolver = "2"
