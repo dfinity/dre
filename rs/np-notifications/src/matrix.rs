@@ -211,6 +211,7 @@ mod tests {
 
         let notification = crate::notification::Notification {
             node_id: PrincipalId::new_node_test_id(0),
+            node_provider: None,
             status_change: (
                 ic_management_types::Status::Healthy,
                 ic_management_types::Status::Degraded,

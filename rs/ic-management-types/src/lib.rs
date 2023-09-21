@@ -281,7 +281,7 @@ pub struct Operator {
     pub datacenter: Option<Datacenter>,
 }
 
-#[derive(Clone, Serialize, Default, Debug, Deserialize)]
+#[derive(Clone, Serialize, Default, Debug, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Provider {
     pub principal: PrincipalId,
     #[serde(skip_serializing_if = "Option::is_none")]

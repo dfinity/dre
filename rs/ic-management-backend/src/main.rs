@@ -1,24 +1,15 @@
-mod config;
-mod endpoints;
-mod factsdb;
-mod gitlab;
-mod health;
-mod prometheus;
-mod proposal;
-mod public_dashboard;
-mod registry;
-mod release;
-use crate::release::RolloutBuilder;
+extern crate ic_management_backend;
 use actix_web::dev::Service;
 use actix_web::{error, get, web, App, Error, HttpResponse, HttpServer, Responder};
-use config::{nns_nodes_urls, nns_url};
 use decentralization::network::AvailableNodesQuerier;
 use dotenv::dotenv;
+use ic_management_backend::config::{self, nns_nodes_urls, nns_url};
+use ic_management_backend::registry::{self, local_registry_path, sync_local_store};
+use ic_management_backend::release::{list_subnets_release_statuses, RolloutBuilder};
+use ic_management_backend::{gitlab, health, prometheus, proposal};
 use ic_registry_nns_data_provider::registry::RegistryCanister;
 use ic_types::PrincipalId;
 use log::{error, info};
-use registry::{local_registry_path, sync_local_store};
-use release::list_subnets_release_statuses;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::ops::Deref;
@@ -29,6 +20,8 @@ use tokio::sync::RwLock;
 use tokio::time::Duration;
 extern crate env_logger;
 use ic_registry_local_registry::LocalRegistry;
+
+mod endpoints;
 
 const GITLAB_TOKEN_IC_PUBLIC_ENV: &str = "GITLAB_API_TOKEN_IC_PUBLIC";
 const GITLAB_TOKEN_RELEASE_ENV: &str = "GITLAB_API_TOKEN_RELEASE";
