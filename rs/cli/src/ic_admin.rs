@@ -7,6 +7,7 @@ use dialoguer::console::Term;
 use dialoguer::theme::ColorfulTheme;
 use dialoguer::{Confirm, Password, Select};
 use flate2::read::GzDecoder;
+use futures::stream::{self, StreamExt};
 use futures::Future;
 use ic_base_types::PrincipalId;
 use ic_canister_client::{Agent, Sender};
@@ -344,8 +345,8 @@ impl Cli {
         // replace special characters in subdir with _
         let subdir = subdir.replace(|c: char| !c.is_ascii_alphanumeric(), "_");
         let download_dir = format!(
-            "{}/ic/{}",
-            dirs::download_dir().expect("download_dir is None").as_path().display(),
+            "{}/tmp/ic/{}",
+            dirs::home_dir().expect("home_dir is not set").as_path().display(),
             subdir
         );
         let download_dir = Path::new(&download_dir);
@@ -395,41 +396,57 @@ impl Cli {
         version: &String,
         release_tag: &String,
     ) -> anyhow::Result<UpdateReplicaVersions> {
-        let mut expected_hash = None;
-
         let update_urls = vec![
             Self::get_cdn_image_url(version),
             Self::get_github_release_image_url(release_tag),
         ];
-        // Verify that both images have the same SHA256
-        for update_url in &update_urls {
-            let downloaded_hash: String = match Self::download_file_and_get_sha256(update_url).await {
-                Ok(hash) => hash,
-                Err(err) => {
-                    warn!("Error downloading {}: {}", update_url, err);
-                    continue;
-                }
-            };
-            match &expected_hash {
-                Some(stringified_hash) => {
-                    // Compare the hash of the downloaded image with the hash of the first image
-                    if &downloaded_hash != stringified_hash {
-                        return Err(anyhow::anyhow!(
-                            "The SHA256 {} of the image downloaded from {} does not match the SHA256 of the first image {}",
-                            downloaded_hash,
-                            update_url,
-                            &stringified_hash
-                        ));
+        // Download images, verify them and compare the SHA256
+        let hash_and_valid_urls: Vec<(String, &String)> = stream::iter(&update_urls)
+            .filter_map(|update_url| async move {
+                match Self::download_file_and_get_sha256(update_url).await {
+                    Ok(hash) => {
+                        info!("SHA256 of {}: {}", update_url, hash);
+                        Some((hash, update_url))
+                    }
+                    Err(err) => {
+                        warn!("Error downloading {}: {}", update_url, err);
+                        None
                     }
                 }
-                None => {
-                    // This is the first image, so just set the hash
-                    expected_hash = Some(downloaded_hash)
-                }
+            })
+            .collect()
+            .await;
+        let hashes_unique = hash_and_valid_urls
+            .iter()
+            .map(|(h, _)| h.clone())
+            .unique()
+            .collect::<Vec<String>>();
+        let expected_hash: String = match hashes_unique.len() {
+            0 => {
+                return Err(anyhow::anyhow!(
+                    "Unable to download the update image from none of the following URLs: {}",
+                    update_urls.join(", ")
+                ))
             }
-        }
-        let expected_hash = expected_hash.expect("expected_hash is None");
-        info!("SHA256 of update-img.tar.gz: {}", expected_hash);
+            1 => {
+                let hash = hashes_unique.into_iter().next().unwrap();
+                info!("SHA256 of all download images is: {}", hash);
+                hash
+            }
+            _ => {
+                return Err(anyhow::anyhow!(
+                    "Update images do not have the same hash: {:?}",
+                    hash_and_valid_urls
+                        .iter()
+                        .map(|(h, u)| format!("{}  {}", h, u))
+                        .join("\n")
+                ))
+            }
+        };
+        let update_urls = hash_and_valid_urls
+            .into_iter()
+            .map(|(_, u)| u.clone())
+            .collect::<Vec<String>>();
 
         let template = format!(
             r#"Elect new replica binary revision [{version}](https://github.com/dfinity/ic/tree/{release_tag})
