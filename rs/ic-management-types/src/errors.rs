@@ -9,7 +9,7 @@ pub enum NetworkError {
     NodeNotFound(PrincipalId),
     SubnetNotFound(PrincipalId),
     ResizeFailed(String),
-    DataRequestError,
+    DataRequestError(String),
     IllegalRequest(String),
 }
 
@@ -18,7 +18,7 @@ impl ResponseError for NetworkError {
         match self {
             NetworkError::IllegalRequest(_input) => HttpResponse::build(StatusCode::BAD_REQUEST).json(self),
             NetworkError::ResizeFailed(_) => HttpResponse::InternalServerError().json(self),
-            NetworkError::DataRequestError => HttpResponse::build(StatusCode::FAILED_DEPENDENCY).json(self),
+            NetworkError::DataRequestError(_) => HttpResponse::build(StatusCode::FAILED_DEPENDENCY).json(self),
             NetworkError::SubnetNotFound(_) | NetworkError::NodeNotFound(_) => HttpResponse::NotFound().json(self),
         }
     }
@@ -28,19 +28,19 @@ impl ResponseError for NetworkError {
             Self::NodeNotFound(_) | Self::SubnetNotFound(_) => StatusCode::NOT_FOUND,
             Self::IllegalRequest(_) => StatusCode::BAD_REQUEST,
             Self::ResizeFailed(_) => StatusCode::INTERNAL_SERVER_ERROR,
-            Self::DataRequestError => StatusCode::INTERNAL_SERVER_ERROR,
+            Self::DataRequestError(_) => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
 }
 
 impl From<reqwest::Error> for NetworkError {
-    fn from(_: reqwest::Error) -> NetworkError {
-        NetworkError::DataRequestError
+    fn from(err: reqwest::Error) -> NetworkError {
+        NetworkError::DataRequestError(err.to_string())
     }
 }
 
 impl From<serde_json::Error> for NetworkError {
-    fn from(_: serde_json::Error) -> NetworkError {
-        NetworkError::DataRequestError
+    fn from(err: serde_json::Error) -> NetworkError {
+        NetworkError::DataRequestError(err.to_string())
     }
 }

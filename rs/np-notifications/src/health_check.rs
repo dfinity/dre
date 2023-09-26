@@ -47,7 +47,7 @@ pub async fn start_health_check_loop(config: HealthCheckLoopConfig) {
                 let (new_nodes_status, notifications) = nodes_status.updated_from_map(new_statuses);
                 // We probably want to have the registry updates separate, so
                 // that we don't update every 5 seconds
-                let _ = rs.update(node_providers.clone(), vec![]).await;
+                let _ = rs.update_node_details(&node_providers).await;
                 for notification in notifications {
                     let node = rs.node(notification.node_id).await;
 

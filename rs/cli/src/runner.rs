@@ -1,8 +1,7 @@
-use crate::cli::Opts;
-use crate::clients;
 use crate::ic_admin;
 use crate::ic_admin::ProposeOptions;
 use crate::ops_subnet_node_replace;
+use crate::{cli::Opts, clients::DashboardBackendClient};
 use decentralization::SubnetChangeResponse;
 use ic_base_types::PrincipalId;
 use ic_management_types::requests::NodesRemoveRequest;
@@ -13,7 +12,7 @@ use log::{info, warn};
 #[derive(Clone)]
 pub struct Runner {
     ic_admin: ic_admin::Cli,
-    dashboard_backend_client: clients::DashboardBackendClient,
+    dashboard_backend_client: DashboardBackendClient,
 }
 
 impl Runner {
@@ -175,8 +174,17 @@ impl Runner {
 
     pub async fn from_opts(cli_opts: &Opts) -> anyhow::Result<Self> {
         Ok(Self {
-            ic_admin: ic_admin::Cli::from_opts(cli_opts, true).await?,
-            dashboard_backend_client: clients::DashboardBackendClient::new(cli_opts.network.clone(), cli_opts.dev),
+            ic_admin: ic_admin::Cli::from_opts(cli_opts, false).await?,
+            dashboard_backend_client: DashboardBackendClient::new(cli_opts.network.clone(), cli_opts.dev),
+        })
+    }
+
+    pub async fn new_with_network_url(ic_admin: ic_admin::Cli, backend_port: u16) -> anyhow::Result<Self> {
+        let dashboard_backend_client =
+            DashboardBackendClient::new_with_network_url(format!("http://localhost:{}/", backend_port));
+        Ok(Self {
+            ic_admin,
+            dashboard_backend_client,
         })
     }
 

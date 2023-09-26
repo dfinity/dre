@@ -1,12 +1,12 @@
-use crate::config::{nns_nodes_urls, target_network};
+use crate::config::{get_nns_url_string_from_target_network, get_nns_url_vec_from_target_network};
 use crate::factsdb;
+use crate::gitlab_dfinity::{self, CommitRef, CommitRefs};
 use crate::proposal;
 use crate::public_dashboard::query_ic_dashboard_list;
 use async_trait::async_trait;
 use decentralization::network::{AvailableNodesQuerier, SubnetQuerier, SubnetQueryBy};
 use futures::TryFutureExt;
-use gitlab::api::AsyncQuery;
-use gitlab::AsyncGitlab;
+use gitlab::{api::AsyncQuery, AsyncGitlab};
 use ic_base_types::NodeId;
 use ic_base_types::{RegistryVersion, SubnetId};
 use ic_interfaces_registry::{RegistryClient, RegistryValue, ZERO_REGISTRY_VERSION};
@@ -38,11 +38,16 @@ use ic_registry_nns_data_provider::registry::RegistryCanister;
 use ic_registry_subnet_type::SubnetType;
 use ic_types::PrincipalId;
 use itertools::Itertools;
+use lazy_static::lazy_static;
 use log::{debug, error, info, warn};
+use regex::Regex;
 use registry_canister::mutations::common::decode_registry_value;
+use std::cmp::Ordering;
+use std::collections::HashSet;
 use std::convert::TryFrom;
 use std::ops::Add;
 use std::path::{Path, PathBuf};
+use std::process;
 use std::str::FromStr;
 use std::sync::Arc;
 use std::{
@@ -53,14 +58,14 @@ use tokio::sync::RwLock;
 use tokio::time::{sleep, Duration};
 extern crate env_logger;
 
-use crate::gitlab::{CommitRef, CommitRefs};
-
-use lazy_static::lazy_static;
-use regex::Regex;
-
 use anyhow::Result;
 
 pub const NNS_SUBNET_NAME: &str = "NNS";
+
+pub const DFINITY_DCS: &str = "zh2 mr1 bo1 st1";
+
+const GITLAB_TOKEN_IC_PUBLIC_ENV: &str = "GITLAB_API_TOKEN_IC_PUBLIC";
+const GITLAB_API_TOKEN_FALLBACK: &str = "GITLAB_API_TOKEN";
 
 pub struct RegistryState {
     nns_url: String,
@@ -71,7 +76,7 @@ pub struct RegistryState {
     subnets: BTreeMap<PrincipalId, Subnet>,
     nodes: BTreeMap<PrincipalId, Node>,
     operators: BTreeMap<PrincipalId, Operator>,
-    guests: Vec<Guest>,
+    factsdb_guests: Vec<Guest>,
     known_subnets: BTreeMap<PrincipalId, String>,
 
     replica_releases: Vec<ReplicaRelease>,
@@ -146,12 +151,59 @@ impl RegistryFamilyEntries for LocalRegistry {
 }
 
 impl RegistryState {
-    pub fn new(
-        nns_url: String,
-        network: Network,
-        local_registry: Arc<LocalRegistry>,
-        gitlab_client_public: Option<gitlab::AsyncGitlab>,
-    ) -> Self {
+    pub async fn new(network: Network, without_update_loop: bool) -> Self {
+        let nns_url = get_nns_url_string_from_target_network(&network);
+
+        sync_local_store(network.clone())
+            .await
+            .expect("failed to init local store");
+
+        if !without_update_loop {
+            let closure_network = network.clone();
+            tokio::spawn(async move {
+                loop {
+                    if let Err(e) = sync_local_store(closure_network.clone()).await {
+                        error!("Failed to update local registry: {}", e);
+                    }
+                    tokio::time::sleep(std::time::Duration::from_secs(5)).await;
+                }
+            });
+        }
+
+        let local_registry_path = local_registry_path(network.clone());
+        info!(
+            "Using local registry path for network {}: {}",
+            network.to_string(),
+            local_registry_path.display()
+        );
+        let local_registry: Arc<LocalRegistry> = Arc::new(
+            LocalRegistry::new(local_registry_path, Duration::from_millis(1000))
+                .expect("Failed to create local registry"),
+        );
+        if std::env::var(GITLAB_TOKEN_IC_PUBLIC_ENV).is_err() {
+            match std::env::var(GITLAB_API_TOKEN_FALLBACK) {
+                Ok(val) => std::env::set_var(GITLAB_TOKEN_IC_PUBLIC_ENV, val),
+                Err(_) => {
+                    if !without_update_loop {
+                        error!(
+                            "Could not lead the Gitlab token from variable {} or {}",
+                            GITLAB_TOKEN_IC_PUBLIC_ENV, GITLAB_API_TOKEN_FALLBACK
+                        );
+                        process::exit(exitcode::CONFIG);
+                    }
+                }
+            }
+        }
+
+        // If env var is set ==> use the gitlab client. The var needs to be set for
+        // non-release-cli runs. If env var is not set ==> set the gitlab client
+        // to None.
+        let gitlab_client_public = match std::env::var(GITLAB_TOKEN_IC_PUBLIC_ENV) {
+            Ok(_) => gitlab_dfinity::authenticated_client(GITLAB_TOKEN_IC_PUBLIC_ENV)
+                .await
+                .into(),
+            Err(_) => None,
+        };
         Self {
             nns_url,
             network,
@@ -160,7 +212,7 @@ impl RegistryState {
             subnets: BTreeMap::<PrincipalId, Subnet>::new(),
             nodes: BTreeMap::new(),
             operators: BTreeMap::new(),
-            guests: Vec::new(),
+            factsdb_guests: Vec::new(),
             replica_releases: Vec::new(),
             gitlab_client_public,
             known_subnets: [
@@ -197,13 +249,16 @@ impl RegistryState {
         }
     }
 
-    pub async fn update(&mut self, providers: Vec<NodeProviderDetails>, guests: Vec<Guest>) -> anyhow::Result<()> {
-        self.guests = guests;
+    pub fn update_factsdb_guests(&mut self, factsdb_guests: Vec<Guest>) {
+        self.factsdb_guests = factsdb_guests;
         if !matches!(self.network, Network::Mainnet) {
-            for g in &mut self.guests {
+            for g in &mut self.factsdb_guests {
                 g.dfinity_owned = true;
             }
         }
+    }
+
+    pub async fn update_node_details(&mut self, providers: &[NodeProviderDetails]) -> anyhow::Result<()> {
         self.local_registry
             .sync_with_local_store()
             .await
@@ -319,9 +374,9 @@ impl RegistryState {
         Ok(())
     }
 
-    fn update_operators(&mut self, providers: Vec<NodeProviderDetails>) -> Result<()> {
+    fn update_operators(&mut self, providers: &[NodeProviderDetails]) -> Result<()> {
         let providers = providers
-            .into_iter()
+            .iter()
             .map(|p| (p.principal_id, p))
             .collect::<BTreeMap<_, _>>();
         let data_center_records: BTreeMap<String, DataCenterRecord> = self.local_registry.get_family_entries()?;
@@ -370,7 +425,7 @@ impl RegistryState {
     }
 
     fn node_record_guest(&self, nr: &NodeRecord) -> Option<Guest> {
-        self.guests
+        self.factsdb_guests
             .iter()
             .find(|g| g.ipv6 == Ipv6Addr::from_str(&nr.http.clone().unwrap().ip_addr).unwrap())
             .cloned()
@@ -378,6 +433,10 @@ impl RegistryState {
 
     fn update_nodes(&mut self) -> Result<()> {
         let node_entries = self.local_registry.get_family_entries_versioned::<NodeRecord>()?;
+        let dfinity_dcs = DFINITY_DCS
+            .split(' ')
+            .map(|dc| dc.to_string().to_lowercase())
+            .collect::<HashSet<_>>();
         self.nodes = node_entries
             .iter()
             // Skipping nodes without operator. This should only occur at version 1
@@ -392,11 +451,18 @@ impl RegistryState {
                     .expect("missing operator referenced by a node");
                 let principal = PrincipalId::from_str(p).expect("invalid node principal id");
                 let ip_addr = node_ip_addr(nr);
+                let dc_name: String = match &operator.datacenter {
+                    Some(dc) => dc.name.to_lowercase(),
+                    None => String::new(),
+                };
                 (
                     principal,
                     Node {
                         principal,
-                        dfinity_owned: Some(guest.as_ref().map(|g| g.dfinity_owned).unwrap_or_default()),
+                        dfinity_owned: Some(
+                            dfinity_dcs.contains(&dc_name)
+                                || guest.as_ref().map(|g| g.dfinity_owned).unwrap_or_default(),
+                        ),
                         ip_addr,
                         hostname: guest
                             .as_ref()
@@ -606,12 +672,12 @@ impl RegistryState {
     }
 
     pub fn guests(&self) -> Vec<Guest> {
-        self.guests.clone()
+        self.factsdb_guests.clone()
     }
 
     pub fn missing_guests(&self) -> Vec<Guest> {
         let mut missing_guests = self
-            .guests
+            .factsdb_guests
             .clone()
             .into_iter()
             .filter(|g| {
@@ -653,6 +719,7 @@ impl RegistryState {
         }
     }
 
+    #[allow(dead_code)]
     pub async fn node(&self, node_id: PrincipalId) -> Node {
         self.nodes
             .iter()
@@ -724,7 +791,7 @@ impl AvailableNodesQuerier for RegistryState {
         let nodes = self
             .nodes_with_proposals()
             .await
-            .map_err(|_| NetworkError::DataRequestError)?
+            .map_err(|err| NetworkError::DataRequestError(err.to_string()))?
             .into_values()
             .filter(|n| n.subnet_id.is_none() && n.proposal.is_none() && n.duplicates.is_none())
             .collect::<Vec<_>>();
@@ -733,7 +800,7 @@ impl AvailableNodesQuerier for RegistryState {
         let healths = health_client
             .nodes()
             .await
-            .map_err(|_| NetworkError::DataRequestError)?;
+            .map_err(|err| NetworkError::DataRequestError(err.to_string()))?;
         Ok(nodes
             .iter()
             .filter(|n| {
@@ -793,43 +860,60 @@ pub async fn nns_public_key(registry_canister: &RegistryCanister) -> anyhow::Res
     )
 }
 
+/// Sync all versions of the registry, up to the latest one.
 pub async fn sync_local_store(target_network: Network) -> anyhow::Result<()> {
-    let local_registry_path = local_registry_path(target_network);
+    let local_registry_path = local_registry_path(target_network.clone());
     let local_store = Arc::new(LocalStoreImpl::new(local_registry_path.clone()));
-    let registry_canister = RegistryCanister::new(nns_nodes_urls());
-    let mut latest_version = if !Path::new(&local_registry_path).exists() {
+    let registry_canister = RegistryCanister::new(get_nns_url_vec_from_target_network(&target_network));
+    let mut local_latest_version = if !Path::new(&local_registry_path).exists() {
         ZERO_REGISTRY_VERSION
     } else {
         let registry_cache = FakeRegistryClient::new(local_store.clone());
         registry_cache.update_to_latest_version();
         registry_cache.get_latest_version()
     };
-    info!("Syncing local registry from version {}", latest_version);
     let mut latest_certified_time = 0;
     let mut updates = vec![];
     let nns_public_key = nns_public_key(&registry_canister).await?;
 
     loop {
-        tokio::time::sleep(std::time::Duration::from_secs(2)).await;
-        if match registry_canister.get_latest_version().await {
-            Ok(v) => {
-                info!("Latest registry version: {}", v);
-                v == latest_version.get()
-            }
+        match registry_canister.get_latest_version().await {
+            Ok(remote_version) => match local_latest_version.get().cmp(&remote_version) {
+                Ordering::Less => {
+                    info!(
+                        "Registry version local {} < remote {}",
+                        local_latest_version.get(),
+                        remote_version
+                    );
+                }
+                Ordering::Equal => {
+                    info!("Local Registry version {} is up to date", local_latest_version.get());
+                    break;
+                }
+                Ordering::Greater => {
+                    warn!(
+                        "Removing faulty local copy of the registry for the IC network {}: {}",
+                        target_network,
+                        local_registry_path.display()
+                    );
+                    std::fs::remove_dir_all(&local_registry_path)?;
+                    panic!(
+                        "Registry version local {} > remote {}, this should never happen",
+                        local_latest_version, remote_version
+                    );
+                }
+            },
             Err(e) => {
                 error!("Failed to get latest registry version: {}", e);
-                false
             }
-        } {
-            break;
         }
         if let Ok((mut initial_records, _, t)) = registry_canister
-            .get_certified_changes_since(latest_version.get(), &nns_public_key)
+            .get_certified_changes_since(local_latest_version.get(), &nns_public_key)
             .await
         {
             initial_records.sort_by_key(|tr| tr.version);
             let changelog = initial_records.iter().fold(Changelog::default(), |mut cl, r| {
-                let rel_version = (r.version - latest_version).get();
+                let rel_version = (r.version - local_latest_version).get();
                 if cl.len() < rel_version as usize {
                     cl.push(ChangelogEntry::default());
                 }
@@ -843,7 +927,7 @@ pub async fn sync_local_store(target_network: Network) -> anyhow::Result<()> {
             let versions_count = changelog.len();
 
             changelog.into_iter().enumerate().for_each(|(i, ce)| {
-                let v = RegistryVersion::from(i as u64 + 1 + latest_version.get());
+                let v = RegistryVersion::from(i as u64 + 1 + local_latest_version.get());
                 let local_registry_path = local_registry_path.clone();
                 updates.push(async move {
                     let path_str = format!("{:016x}.pb", v.get());
@@ -892,10 +976,11 @@ pub async fn sync_local_store(target_network: Network) -> anyhow::Result<()> {
                 });
             });
 
-            latest_version = latest_version.add(RegistryVersion::new(versions_count as u64));
+            local_latest_version = local_latest_version.add(RegistryVersion::new(versions_count as u64));
 
             latest_certified_time = t.as_nanos_since_unix_epoch();
-            debug!("Sync reached version {latest_version}");
+            debug!("Sync reached version {local_latest_version}");
+            tokio::time::sleep(std::time::Duration::from_secs(1)).await;
         }
     }
 
@@ -904,64 +989,81 @@ pub async fn sync_local_store(target_network: Network) -> anyhow::Result<()> {
     Ok(())
 }
 
-pub async fn poll(gitlab_client: AsyncGitlab, registry_state: Arc<RwLock<RegistryState>>) {
-    let mut print_counter = 0;
-    let registry_canister = RegistryCanister::new(nns_nodes_urls());
+pub async fn poll(
+    gitlab_client_release_repo: AsyncGitlab,
+    registry_state: Arc<RwLock<RegistryState>>,
+    target_network: Network,
+) {
+    let registry_canister = RegistryCanister::new(get_nns_url_vec_from_target_network(&target_network));
     loop {
         sleep(Duration::from_secs(1)).await;
-        let print_enabled = print_counter % 10 == 0;
-        if print_enabled {
-            info!("Updating registry");
-        }
         let latest_version = if let Ok(v) = registry_canister.get_latest_version().await {
             v
         } else {
             continue;
         };
         if latest_version != registry_state.read().await.version() {
-            let node_providers_result = query_ic_dashboard_list::<NodeProvidersResponse>("v3/node-providers").await;
-            let network = target_network();
-            let guests_result = factsdb::query_guests(gitlab_client.clone(), network.to_string()).await;
-            let guests_result = if matches!(network, Network::Mainnet) {
-                let guests_result_old =
-                    factsdb::query_guests(gitlab_client.clone(), network.legacy_name().to_string()).await;
-                guests_result.and_then(|guests_decentralized| {
-                    guests_result_old.map(|guests_old| {
-                        guests_decentralized
-                            .into_iter()
-                            .chain(guests_old.into_iter())
-                            .collect::<Vec<_>>()
-                    })
-                })
-            } else {
-                guests_result
-            };
-            match (node_providers_result, guests_result) {
-                (Ok(node_providers_response), Ok(guests_list)) => {
-                    let mut registry_state = registry_state.write().await;
-                    let update = registry_state
-                        .update(node_providers_response.node_providers, guests_list)
-                        .await;
-                    if let Err(e) = update {
-                        warn!("failed state update: {}", e);
-                    }
-                    if print_enabled {
-                        info!("Updated registry state to version {}", registry_state.version());
-                    }
-                }
-                (Err(e), _) => {
-                    warn!("Failed querying IC dashboard {}", e);
-                }
-                (_, Err(e)) => {
-                    warn!("Failed querying guests file: {}", e);
-                }
-            }
-        } else if print_enabled {
+            fetch_and_add_factsdb_guests_to_registry(&gitlab_client_release_repo, &target_network, &registry_state)
+                .await;
+            update_node_details(&registry_state).await;
+        } else {
             info!(
                 "Skipping update. Registry already on latest version: {}",
                 registry_state.read().await.version()
             )
         }
-        print_counter += 1;
+    }
+}
+
+// TODO: try to get rid of factsdb data source
+async fn fetch_and_add_factsdb_guests_to_registry(
+    gitlab_client_release_repo: &AsyncGitlab,
+    target_network: &Network,
+    registry_state: &Arc<RwLock<RegistryState>>,
+) {
+    let guests_result = factsdb::query_guests(gitlab_client_release_repo.clone(), target_network.to_string()).await;
+
+    let guests_result = if matches!(target_network, Network::Mainnet) {
+        let guests_result_old = factsdb::query_guests(
+            gitlab_client_release_repo.clone(),
+            target_network.legacy_name().to_string(),
+        )
+        .await;
+        guests_result.and_then(|guests_decentralized| {
+            guests_result_old.map(|guests_old| {
+                guests_decentralized
+                    .into_iter()
+                    .chain(guests_old.into_iter())
+                    .collect::<Vec<_>>()
+            })
+        })
+    } else {
+        guests_result
+    };
+    match guests_result {
+        Ok(factsdb_guests) => {
+            let mut registry_state = registry_state.write().await;
+            registry_state.update_factsdb_guests(factsdb_guests);
+        }
+        Err(e) => {
+            warn!("Failed querying guests file: {}", e);
+        }
+    }
+}
+
+pub async fn update_node_details(registry_state: &Arc<RwLock<RegistryState>>) {
+    match query_ic_dashboard_list::<NodeProvidersResponse>("v3/node-providers").await {
+        Ok(node_providers_response) => {
+            let mut registry_state = registry_state.write().await;
+            let update = registry_state
+                .update_node_details(&node_providers_response.node_providers)
+                .await;
+            if let Err(e) = update {
+                warn!("failed state update: {}", e);
+            }
+        }
+        Err(e) => {
+            warn!("Failed querying IC dashboard {}", e);
+        }
     }
 }

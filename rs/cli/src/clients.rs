@@ -37,6 +37,12 @@ impl DashboardBackendClient {
         }
     }
 
+    pub fn new_with_network_url(url: String) -> Self {
+        Self {
+            url: reqwest::Url::parse(&url).unwrap(),
+        }
+    }
+
     pub async fn subnet_pending_action(&self, subnet: PrincipalId) -> anyhow::Result<Option<TopologyProposal>> {
         reqwest::Client::new()
             .get(

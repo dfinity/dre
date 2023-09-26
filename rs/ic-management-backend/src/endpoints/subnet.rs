@@ -1,8 +1,7 @@
 use super::*;
-use crate::health;
+use crate::{health, subnets::get_proposed_subnet_changes};
 use decentralization::network::{SubnetQueryBy, TopologyManager};
 use ic_base_types::PrincipalId;
-use ic_management_backend::subnets::get_proposed_subnet_changes;
 use ic_management_types::requests::{
     MembershipReplaceRequest, ReplaceTarget, SubnetCreateRequest, SubnetResizeRequest,
 };
@@ -25,13 +24,13 @@ async fn pending_action(
             if let Some(subnet) = subnets.get(&request.subnet) {
                 Ok(HttpResponse::Ok().json(&subnet.proposal))
             } else {
-                Err(error::ErrorNotFound(anyhow::format_err!(
+                Err(actix_web::error::ErrorNotFound(anyhow::format_err!(
                     "subnet {} not found",
                     request.subnet
                 )))
             }
         }
-        Err(e) => Err(error::ErrorInternalServerError(format!(
+        Err(e) => Err(actix_web::error::ErrorInternalServerError(format!(
             "failed to fetch subnets: {}",
             e
         ))),
@@ -45,16 +44,16 @@ async fn change_preview(
 ) -> Result<HttpResponse, Error> {
     match registry.read().await.subnets_with_proposals().await {
         Ok(subnets) => {
-            let subnet = subnets
-                .get(&request.subnet)
-                .ok_or_else(|| error::ErrorNotFound(anyhow::format_err!("subnet {} not found", request.subnet)))?;
+            let subnet = subnets.get(&request.subnet).ok_or_else(|| {
+                actix_web::error::ErrorNotFound(anyhow::format_err!("subnet {} not found", request.subnet))
+            })?;
             let registry_nodes: BTreeMap<PrincipalId, Node> = registry.read().await.nodes();
 
             get_proposed_subnet_changes(&registry_nodes, subnet)
-                .map_err(error::ErrorBadRequest)
+                .map_err(actix_web::error::ErrorBadRequest)
                 .map(|r| HttpResponse::Ok().json(r))
         }
-        Err(e) => Err(error::ErrorInternalServerError(format!(
+        Err(e) => Err(actix_web::error::ErrorInternalServerError(format!(
             "failed to fetch subnets: {}",
             e
         ))),
@@ -81,9 +80,12 @@ async fn replace(
 
     let change_request = match &request.target {
         ReplaceTarget::Subnet(subnet) => registry.modify_subnet_nodes(SubnetQueryBy::SubnetId(*subnet)).await?,
-        ReplaceTarget::Nodes { nodes, motivation } => {
+        ReplaceTarget::Nodes {
+            nodes: nodes_to_replace,
+            motivation,
+        } => {
             motivations.push(motivation.clone());
-            let nodes_to_replace = nodes
+            let nodes_to_replace = nodes_to_replace
                 .iter()
                 .filter_map(|n| all_nodes.get(n))
                 .map(decentralization::network::Node::from)
@@ -105,7 +107,7 @@ async fn replace(
         let healths = health_client
             .subnet(subnet.id)
             .await
-            .map_err(|_| error::ErrorInternalServerError("failed to fetch subnet health".to_string()))?;
+            .map_err(|_| actix_web::error::ErrorInternalServerError("failed to fetch subnet health".to_string()))?;
         let unhealthy: Vec<decentralization::network::Node> = subnet
             .nodes
             .into_iter()
