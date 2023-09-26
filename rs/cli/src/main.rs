@@ -1,11 +1,16 @@
 use crate::cli::version::Commands::Update;
 use clap::{error::ErrorKind, CommandFactory, Parser};
+use dotenv::dotenv;
 use ic_canisters::governance_canister_version;
+use ic_management_backend::endpoints;
 use ic_management_types::requests::NodesRemoveRequest;
 use ic_management_types::{MinNakamotoCoefficients, Network, NodeFeature};
 use itertools::Itertools;
+use log::info;
 use std::collections::BTreeMap;
 use std::str::FromStr;
+use std::sync::mpsc;
+use std::thread;
 
 mod cli;
 mod clients;
@@ -18,14 +23,32 @@ const STAGING_NEURON_ID: u64 = 49;
 
 #[tokio::main]
 async fn main() -> Result<(), anyhow::Error> {
+    dotenv().ok();
     init_logger();
+    info!("Running version {}", env!("GIT_HASH"));
+
     let mut cli_opts = cli::Opts::parse();
     let mut cmd = cli::Opts::command();
 
     let governance_canister_v = governance_canister_version(cli_opts.network.get_url()).await?;
-    let governance_canister_build = governance_canister_v.stringified_hash;
+    let governance_canister_version = governance_canister_v.stringified_hash;
 
-    ic_admin::with_ic_admin(governance_canister_build.into(), async {
+    let target_network = cli_opts.network.clone();
+    let (tx, rx) = mpsc::channel();
+
+    let backend_port = local_unused_port();
+    thread::spawn(move || {
+        let rt = tokio::runtime::Runtime::new().unwrap();
+        rt.block_on(async move {
+            endpoints::run_backend(target_network, "127.0.0.1", backend_port, true, Some(tx))
+                .await
+                .expect("failed")
+        });
+    });
+    let srv = rx.recv().unwrap();
+
+    ic_admin::with_ic_admin(governance_canister_version.into(), async {
+
         // Start of actually doing stuff with commands.
         if cli_opts.network == Network::Staging {
             cli_opts.private_key_pem = Some(std::env::var("HOME").expect("Please set HOME env var") + "/.config/dfx/identity/bootstrap-super-leader/identity.pem");
@@ -42,7 +65,6 @@ async fn main() -> Result<(), anyhow::Error> {
             }
 
             cli::Commands::Subnet(subnet) => {
-                let runner = runner::Runner::from_opts(&cli_opts).await?;
                 match &subnet.subcommand {
                     cli::subnet::Commands::Deploy { .. } | cli::subnet::Commands::Resize { .. } => {
                         if subnet.id.is_none() {
@@ -72,7 +94,10 @@ async fn main() -> Result<(), anyhow::Error> {
                 }
 
                 match &subnet.subcommand {
-                    cli::subnet::Commands::Deploy { version } => runner.deploy(&subnet.id.unwrap(), version, simulate),
+                    cli::subnet::Commands::Deploy { version } => {
+                        let runner = runner::Runner::new_with_network_url(ic_admin::Cli::from_opts(&cli_opts, false).await?, backend_port).await?;
+                        runner.deploy(&subnet.id.unwrap(), version, simulate)
+                    },
                     cli::subnet::Commands::Replace {
                         nodes,
                         no_heal,
@@ -85,7 +110,7 @@ async fn main() -> Result<(), anyhow::Error> {
                         verbose,
                     } => {
                         let min_nakamoto_coefficients = parse_min_nakamoto_coefficients(&mut cmd, min_nakamoto_coefficients);
-
+                            let runner = runner::Runner::new_with_network_url(ic_admin::Cli::from_opts(&cli_opts, true).await?, backend_port).await?;
                             runner
                                 .membership_replace(ic_management_types::requests::MembershipReplaceRequest {
                                     target: match &subnet.id {
@@ -118,6 +143,7 @@ async fn main() -> Result<(), anyhow::Error> {
                     }
                     cli::subnet::Commands::Resize { add, remove, include, only, exclude, motivation, verbose, } => {
                         if let Some(motivation) = motivation.clone() {
+                            let runner = runner::Runner::new_with_network_url(ic_admin::Cli::from_opts(&cli_opts, true).await?, backend_port).await?;
                             runner.subnet_resize(ic_management_types::requests::SubnetResizeRequest {
                                 subnet: subnet.id.unwrap(),
                                 add: *add,
@@ -137,6 +163,7 @@ async fn main() -> Result<(), anyhow::Error> {
                     cli::subnet::Commands::Create { size, min_nakamoto_coefficients, exclude, only, include, motivation, verbose, replica_version } => {
                         let min_nakamoto_coefficients = parse_min_nakamoto_coefficients(&mut cmd, min_nakamoto_coefficients);
                         if let Some(motivation) = motivation.clone() {
+                            let runner = runner::Runner::new_with_network_url(ic_admin::Cli::from_opts(&cli_opts, true).await?, backend_port).await?;
                             runner.subnet_create(ic_management_types::requests::SubnetCreateRequest {
                                 size: *size,
                                 min_nakamoto_coefficients,
@@ -168,6 +195,7 @@ async fn main() -> Result<(), anyhow::Error> {
             cli::Commands::Version(cmd) => {
                 match &cmd.subcommand {
                     Update { version, release_tag} => {
+                        // FIXME: backend needs gitlab access to figure out RCs and versions to retire
                         let runner = runner::Runner::from_opts(&cli_opts).await?;
                         let (_, retire_versions) = runner.prepare_versions_to_retire(false).await?;
                         let ic_admin = ic_admin::Cli::from_opts(&cli_opts, true).await?;
@@ -207,7 +235,7 @@ async fn main() -> Result<(), anyhow::Error> {
                             )
                             .exit();
                         }
-                        let runner = runner::Runner::from_opts(&cli_opts).await?;
+                        let runner = runner::Runner::new_with_network_url(ic_admin::Cli::from_opts(&cli_opts, true).await?, backend_port).await?;
                         runner.remove_nodes(NodesRemoveRequest {
                             extra_nodes_filter: extra_nodes_filter.clone(),
                             no_auto: *no_auto,
@@ -219,7 +247,11 @@ async fn main() -> Result<(), anyhow::Error> {
             },
         }
     })
-    .await
+    .await?;
+
+    srv.stop(false).await;
+
+    Ok(())
 }
 
 // Construct MinNakamotoCoefficients from an array (slice) of ["key=value"], and
@@ -299,14 +331,30 @@ fn parse_min_nakamoto_coefficients(
     })
 }
 
+/// Get a localhost socket address with random, unused port.
+fn local_unused_port() -> u16 {
+    let addr: std::net::SocketAddr = "127.0.0.1:0".parse().unwrap();
+    let socket = socket2::Socket::new(
+        socket2::Domain::IPV4,
+        socket2::Type::STREAM,
+        Some(socket2::Protocol::TCP),
+    )
+    .unwrap();
+    socket.bind(&addr.into()).unwrap();
+    socket.set_reuse_address(true).unwrap();
+    let tcp = std::net::TcpListener::from(socket);
+    tcp.local_addr().unwrap().port()
+}
+
 fn init_logger() {
     match std::env::var("RUST_LOG") {
         Ok(val) => std::env::set_var("LOG_LEVEL", val),
         Err(_) => {
             if std::env::var("LOG_LEVEL").is_err() {
-                // Set a default logging level: info, if nothing else specified in environment
-                // variables RUST_LOG or LOG_LEVEL
-                std::env::set_var("LOG_LEVEL", "info")
+                // Default logging level is: info generally, warn for mio and actix_server
+                // You can override defaults by setting environment variables
+                // RUST_LOG or LOG_LEVEL
+                std::env::set_var("LOG_LEVEL", "info,mio::=warn,actix_server::=warn")
             }
         }
     }

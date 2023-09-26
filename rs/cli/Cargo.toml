@@ -26,7 +26,7 @@ anyhow = "1.0.44"
 futures = "0.3.21"
 colored = "2.0.0"
 log = "0.4.14"
-pretty_env_logger = "0.4.0"
+pretty_env_logger = "0.5.0"
 regex = "1.5.4"
 ic-base-types = { git = "https://github.com/dfinity/ic.git", rev = "abac636d8a281a1e7600d876aaed10f7ce7e5040" }
 ic-nns-constants = { git = "https://github.com/dfinity/ic.git", rev = "abac636d8a281a1e7600d876aaed10f7ce7e5040" }
@@ -46,6 +46,7 @@ flate2 = "1.0.22"
 dirs = "5.0.1"
 decentralization = { path = "../decentralization" }
 ic-management-types = { path = "../ic-management-types" }
+ic-management-backend = { path = "../ic-management-backend" }
 dialoguer = "0.10.0"
 itertools = "0.11.0"
 async-trait = "0.1.53"
@@ -58,6 +59,12 @@ sha2 = "0.10.6"
 edit = "0.1.4"
 tabular = "0.2"
 ic-agent = "0.27.0"
+actix-web = { version = "4.2.1", default-features = false, features = [
+    "compress-gzip",
+    "macros",
+] }
+dotenv = "0.15.0"
+socket2 = "0.5.4"
 
 [dev-dependencies]
 tempfile = "3.3.0"

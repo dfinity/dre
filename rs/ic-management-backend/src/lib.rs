@@ -1,6 +1,7 @@
 pub mod config;
+pub mod endpoints;
 pub mod factsdb;
-pub mod gitlab;
+pub mod gitlab_dfinity;
 pub mod health;
 pub mod prometheus;
 pub mod proposal;
