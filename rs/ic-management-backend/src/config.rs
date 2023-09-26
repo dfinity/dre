@@ -7,10 +7,23 @@ pub fn target_network() -> Network {
         .expect("Invalid network")
 }
 
-pub fn nns_url() -> String {
-    std::env::var("NNS_URL").expect("NNS_URL environment variable not provided")
+pub fn get_nns_url_string_from_target_network(target_network: &Network) -> String {
+    match std::env::var("NNS_URL") {
+        Ok(nns_url) => nns_url,
+        Err(_) => match target_network {
+            Network::Mainnet => "https://ic0.app".to_string(),
+            Network::Staging => "http://[2600:3004:1200:1200:5000:11ff:fe37:c55d]:8080".to_string(),
+            _ => panic!(
+                "Cannot get NNS URL for target network {}. Please set NNS_URL environment variable",
+                target_network
+            ),
+        },
+    }
 }
 
-pub fn nns_nodes_urls() -> Vec<Url> {
-    vec![Url::parse(&nns_url()).expect("Cannot parse NNS_URL environment variable as a valid URL")]
+pub fn get_nns_url_vec_from_target_network(target_network: &Network) -> Vec<Url> {
+    get_nns_url_string_from_target_network(target_network)
+        .split(',')
+        .map(|s| Url::parse(s).unwrap_or_else(|_| panic!("Cannot parse {} as a valid NNS URL", s)))
+        .collect()
 }

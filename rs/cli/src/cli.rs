@@ -32,8 +32,7 @@ pub struct Opts {
     #[clap(long, env = "VERBOSE", global = true)]
     pub(crate) verbose: bool,
 
-    // Specify the target network. Should be either "mainnet" (default) or "staging".
-    // If you want to use the cli, use the --nns-url
+    // Specify the target network: "mainnet" (default), "staging", or NNS URL
     #[clap(long, env = "NETWORK", default_value = "mainnet")]
     pub(crate) network: Network,
 

@@ -15,14 +15,14 @@ async fn remove(
 ) -> Result<HttpResponse, Error> {
     let registry = registry.read().await;
     let health_client = health::HealthClient::new(registry.network());
-    let nodes = registry.nodes_with_proposals();
+    let nodes_with_proposals = registry.nodes_with_proposals();
     let healths = health_client.nodes();
 
     response_from_result(
-        try_join(healths, nodes)
+        try_join(healths, nodes_with_proposals)
             .await
-            .map(|(mut healths, nodes)| {
-                nodes
+            .map(|(mut healths, nodes_with_proposals)| {
+                nodes_with_proposals
                     .values()
                     .cloned()
                     .map(|n| {
@@ -77,9 +77,9 @@ async fn remove(
                     })
                     .collect::<Vec<_>>()
             })
-            .map(|nodes| NodesRemoveResponse {
+            .map(|nodes_to_rm| NodesRemoveResponse {
                 motivation: "\n".to_string()
-                    + &nodes
+                    + &nodes_to_rm
                         .iter()
                         .map(|nr| match nr.reason {
                             ic_management_types::requests::NodeRemovalReason::Duplicates(_)
@@ -94,7 +94,7 @@ async fn remove(
                         .map(|m| format!(" * {m}"))
                         .collect::<Vec<_>>()
                         .join("\n"),
-                removals: nodes,
+                removals: nodes_to_rm,
             }),
     )
 }
