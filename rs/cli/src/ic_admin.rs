@@ -177,7 +177,7 @@ impl Cli {
 
         // User wants to proceed but does not have neuron configuration. Bail out.
         if self.neuron.is_none() {
-            return Err(anyhow::anyhow!("Submitting this proposal requires a neuron, which was not detected -- and will cause ic-admin to fail during submition. Please look through your scroll buffer for specific error messages about your HSM and address the issue that prevents your neuron from being detected."));
+            return Err(anyhow::anyhow!("Submitting this proposal requires a neuron, which was not detected -- and would cause ic-admin to fail during submition. Please look through your scroll buffer for specific error messages about your HSM and address the issue that prevents your neuron from being detected."));
         }
 
         if Confirm::new()

@@ -6,6 +6,7 @@ DEPS = [
     "//rs/ic-canisters",
     "//rs/decentralization",
     "//rs/ic-management-types",
+    "//rs/ic-management-backend:ic-management-backend-lib",
     ":build_script",
 ]
 
