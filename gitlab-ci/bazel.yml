@@ -1,10 +1,8 @@
-bazel:
+.bazel:
   stage: build
   image: gcr.io/bazel-public/bazel:6.3.0
   rules:
     - !reference [.rules-default, rules]
-  variables:
-    SKIP_BEFORE_SCRIPT: "true"
   before_script:
     - |-
       mkdir -p ~/.docker
@@ -18,7 +16,19 @@ bazel:
         }
       }
       EOT
+
+bazel:
+  extends:
+    - .bazel
   script:
-    - bazel build --config=ci ...
-    - bazel test --config=ci ...
-    - bazel query --noshow_progress 'kind("oci_push", ...)' | xargs -P $(nproc) -I_target bazel run _target -- --tag ${CI_COMMIT_SHA}
+    - &bazel-build-push |
+      bazel build --config=ci ...
+      bazel test --config=ci ...
+      bazel query --noshow_progress 'kind("oci_push", ...)' | xargs -P $(nproc) -I_target bazel run _target -- --tag ${CI_COMMIT_SHA}
+
+bazel-linear-jira:
+  extends:
+    - .bazel
+  script:
+    - cd linear-jira
+    - *bazel-build-push
