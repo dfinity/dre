@@ -44,16 +44,17 @@ use slog::Drain;
 use tokio_util::sync::CancellationToken;
 
 use crate::health_check::start_health_check_loop;
-use crate::notification::{start_notification_sender_loop, Sink};
-use crate::notification::{LogSink, MatrixSink};
+use crate::notification::start_notification_sender_loop;
 use crate::registry::{start_registry_updater_loop, RegistryLoopConfig};
+use crate::router::Router;
+use crate::sink::{LogSink, Sink};
 
-mod config;
 mod health_check;
-mod matrix;
 mod nodes_status;
 mod notification;
 mod registry;
+mod router;
+mod sink;
 
 #[get("/state")]
 async fn state() -> impl Responder {
@@ -68,7 +69,8 @@ async fn main() {
 
     let log = slog::Logger::root(drain, o!());
 
-    let config = config::Config::new().unwrap();
+    // TODO Centralize sending all notifications using the router
+    let router = Router::new_from_config_file().expect("should create a new router");
 
     let (notif_sender, notif_receiver) = mpsc::channel();
     let cancellation_token = CancellationToken::new();
@@ -91,14 +93,9 @@ async fn main() {
             logger: log.new(o!("module" => "notification_sender_loop")),
             notification_receiver: notif_receiver,
             cancellation_token: cancellation_token.clone(),
+            router,
         },
-        vec![
-            Sink::Matrix(MatrixSink {
-                matrix_client: matrix::Client::from_config(config).await.unwrap(),
-                logger: log.clone(),
-            }),
-            Sink::Log(LogSink { logger: log.clone() }),
-        ],
+        vec![Sink::Log(LogSink { logger: log.clone() })],
     ));
 
     info!(log, "Starting server on port 8080");
