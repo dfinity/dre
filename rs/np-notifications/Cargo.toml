@@ -25,3 +25,8 @@ chrono = "0.4.26"
 figment = { version = "0.10.10", features = ["env", "yaml"] }
 ic-interfaces-registry = { git = "https://github.com/dfinity/ic.git", rev = "abac636d8a281a1e7600d876aaed10f7ce7e5040" }
 ic-registry-client-helpers = { git = "https://github.com/dfinity/ic.git", rev = "abac636d8a281a1e7600d876aaed10f7ce7e5040" }
+serde_yaml = "0.9.25"
+rand = "0.8.5"
+
+[dev-dependencies]
+tempfile = "3.8.0"

@@ -1,6 +1,5 @@
 use core::time;
 use std::{
-    cell::RefCell,
     fmt::{self, Display},
     sync::mpsc::Receiver,
 };
@@ -11,12 +10,13 @@ use ic_types::PrincipalId;
 use slog::Logger;
 use tokio_util::sync::CancellationToken;
 
-use crate::matrix;
+use crate::{router::Router, sink::Sink};
 
 pub struct NotificationSenderLoopConfig {
     pub logger: Logger,
     pub notification_receiver: Receiver<Notification>,
     pub cancellation_token: CancellationToken,
+    pub router: Router,
 }
 
 pub async fn start_notification_sender_loop(config: NotificationSenderLoopConfig, sinks: Vec<Sink>) {
@@ -26,10 +26,10 @@ pub async fn start_notification_sender_loop(config: NotificationSenderLoopConfig
             break;
         }
         while let Ok(notification) = config.notification_receiver.try_recv() {
-            let notif = notification.clone();
             for sink in sinks.iter() {
-                let _ = sink.send(notif.clone()).await;
+                let _ = sink.send(notification.clone()).await;
             }
+            let _ = config.router.route(notification).await;
         }
         sleep(time::Duration::from_secs(1)).await;
     }
@@ -53,74 +53,5 @@ impl Display for Notification {
             self.status_change.0,
             self.status_change.1
         )
-    }
-}
-
-#[derive(Debug)]
-pub enum SinkError {
-    PublicationError,
-}
-
-pub enum Sink {
-    Log(LogSink),
-    Matrix(MatrixSink),
-    #[allow(unused)]
-    Test(TestSink),
-}
-
-impl Sink {
-    async fn send(&self, notification: Notification) -> Result<(), SinkError> {
-        match self {
-            Sink::Log(sink) => sink.send(notification),
-            Sink::Matrix(sink) => sink.send(notification).await,
-            Sink::Test(sink) => {
-                sink.send(notification);
-                Ok(())
-            }
-        }
-    }
-}
-
-#[derive(Clone)]
-pub struct LogSink {
-    pub logger: Logger,
-}
-
-impl LogSink {
-    fn send(&self, notification: Notification) -> Result<(), SinkError> {
-        info!(self.logger, ""; "sink" => "log", "notification" => ?notification);
-        Ok(())
-    }
-}
-
-pub struct MatrixSink {
-    pub logger: Logger,
-    pub matrix_client: matrix::Client,
-}
-
-impl MatrixSink {
-    async fn send(&self, notification: Notification) -> Result<(), SinkError> {
-        self.matrix_client
-            .send_message_to_room("!jeoHAONXXskUWAPpKH:matrix.org".to_string(), notification.to_string())
-            .await
-            .map_err(|_| SinkError::PublicationError)
-            .map(|_| ())
-    }
-}
-
-pub struct TestSink {
-    pub notifications: RefCell<Vec<Notification>>,
-}
-
-impl TestSink {
-    fn send(&self, notification: Notification) {
-        self.notifications.borrow_mut().push(notification)
-    }
-
-    #[allow(unused)]
-    pub fn new() -> Self {
-        Self {
-            notifications: RefCell::new(vec![]),
-        }
     }
 }
