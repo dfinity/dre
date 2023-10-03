@@ -33,15 +33,10 @@ use health_check::HealthCheckLoopConfig;
 use ic_management_backend::config::target_network;
 
 use notification::NotificationSenderLoopConfig;
-use slog::info;
 
-#[macro_use]
-extern crate slog;
-extern crate slog_async;
-extern crate slog_term;
-
-use slog::Drain;
 use tokio_util::sync::CancellationToken;
+use tracing::{debug, info, Level};
+use tracing_subscriber::FmtSubscriber;
 
 use crate::health_check::start_health_check_loop;
 use crate::notification::start_notification_sender_loop;
@@ -63,11 +58,8 @@ async fn state() -> impl Responder {
 
 #[actix_web::main]
 async fn main() {
-    let decorator = slog_term::TermDecorator::new().build();
-    let drain = slog_term::FullFormat::new(decorator).build().fuse();
-    let drain = slog_async::Async::new(drain).build().fuse();
-
-    let log = slog::Logger::root(drain, o!());
+    let subscriber = FmtSubscriber::builder().with_max_level(Level::INFO).compact().finish();
+    tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
 
     // TODO Centralize sending all notifications using the router
     let router = Router::new_from_config_file().expect("should create a new router");
@@ -76,13 +68,11 @@ async fn main() {
     let cancellation_token = CancellationToken::new();
 
     actix_web::rt::spawn(start_registry_updater_loop(RegistryLoopConfig {
-        logger: log.new(o!("module" => "registry_updater_loop")),
         cancellation_token: cancellation_token.clone(),
         target_network: target_network(),
     }));
 
     actix_web::rt::spawn(start_health_check_loop(HealthCheckLoopConfig {
-        logger: log.new(o!("module" => "health_check_loop")),
         notification_sender: notif_sender.clone(),
         cancellation_token: cancellation_token.clone(),
         registry_state: registry::create_registry_state().await,
@@ -90,15 +80,14 @@ async fn main() {
 
     actix_web::rt::spawn(start_notification_sender_loop(
         NotificationSenderLoopConfig {
-            logger: log.new(o!("module" => "notification_sender_loop")),
             notification_receiver: notif_receiver,
             cancellation_token: cancellation_token.clone(),
             router,
         },
-        vec![Sink::Log(LogSink { logger: log.clone() })],
+        vec![Sink::Log(LogSink {})],
     ));
 
-    info!(log, "Starting server on port 8080");
+    info!("Starting server on port 8080");
     let srv = HttpServer::new(|| App::new().service(state))
         .shutdown_timeout(5)
         .disable_signals()
@@ -114,8 +103,8 @@ async fn main() {
     actix_web::rt::spawn(srv);
 
     signal::ctrl_c().await.unwrap();
-    debug!(log, "Shutting down threads");
+    debug!("Shutting down threads");
     cancellation_token.cancel();
-    debug!(log, "Stopping server");
+    debug!("Stopping server");
     srv_handle.stop(true).await
 }

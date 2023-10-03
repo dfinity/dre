@@ -1,27 +1,34 @@
 use ic_management_backend::registry::{self, RegistryState};
 use ic_management_types::Network;
 
-use slog::Logger;
 use tokio_util::sync::CancellationToken;
+use tracing::{error, info};
 
 pub struct RegistryLoopConfig {
-    pub logger: Logger,
     pub cancellation_token: CancellationToken,
     pub target_network: Network,
 }
 
+// There is no real information in the Config, so just print its name as debug
+// Necessary for tracing
+impl std::fmt::Debug for RegistryLoopConfig {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
+        write!(f, "RegistryLoopConfig")
+    }
+}
+
+#[tracing::instrument]
 pub async fn start_registry_updater_loop(config: RegistryLoopConfig) {
     // Having a way to know where we are regarding the update
     // of the registry would be good. The service takes a long time to start,
     // and we want to get some information about startup if possible
-    let log = config.logger.clone();
-    info!(log, "Starting Registry Updater loop");
+    info!("Starting Registry Updater loop");
     loop {
         if config.cancellation_token.is_cancelled() {
             break;
         }
         if let Err(e) = registry::sync_local_store(config.target_network.clone()).await {
-            error!(log, "Failed to update local registry: {}", e);
+            error!(message = "Failed to update local registry", error = e.to_string());
         }
         tokio::time::sleep(std::time::Duration::from_secs(5)).await;
     }
