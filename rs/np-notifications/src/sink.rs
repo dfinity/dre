@@ -1,6 +1,6 @@
 use std::{cell::RefCell, sync::Arc};
 
-use slog::Logger;
+use tracing::info;
 
 use crate::notification::Notification;
 
@@ -32,13 +32,11 @@ impl Sink {
 }
 
 #[derive(Clone, Debug)]
-pub struct LogSink {
-    pub logger: Logger,
-}
+pub struct LogSink {}
 
 impl LogSink {
     fn send(&self, notification: Notification) -> Result<(), SinkError> {
-        info!(self.logger, ""; "sink" => "log", "notification" => ?notification);
+        info!(sink = "log", %notification);
         Ok(())
     }
 }

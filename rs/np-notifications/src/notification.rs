@@ -7,20 +7,21 @@ use std::{
 use actix_web::rt::time::sleep;
 use ic_management_types::{Provider, Status};
 use ic_types::PrincipalId;
-use slog::Logger;
 use tokio_util::sync::CancellationToken;
+use tracing::debug;
 
 use crate::{router::Router, sink::Sink};
 
+#[derive(Debug)]
 pub struct NotificationSenderLoopConfig {
-    pub logger: Logger,
     pub notification_receiver: Receiver<Notification>,
     pub cancellation_token: CancellationToken,
     pub router: Router,
 }
 
+#[tracing::instrument]
 pub async fn start_notification_sender_loop(config: NotificationSenderLoopConfig, sinks: Vec<Sink>) {
-    debug!(config.logger, "Starting notification sender loop");
+    debug!("Starting notification sender loop");
     loop {
         if config.cancellation_token.is_cancelled() {
             break;
