@@ -4,21 +4,28 @@ use ic_management_types::NodeProvidersResponse;
 use std::sync::mpsc::Sender;
 
 use ic_management_backend::{health::HealthClient, public_dashboard::query_ic_dashboard_list, registry::RegistryState};
-use slog::Logger;
 use tokio_util::sync::CancellationToken;
+use tracing::{error, info};
 
 use crate::{nodes_status::NodesStatus, notification::Notification};
 
 pub struct HealthCheckLoopConfig {
-    pub logger: Logger,
     pub notification_sender: Sender<Notification>,
     pub cancellation_token: CancellationToken,
     pub registry_state: RegistryState,
 }
 
+// There is no real information in the Config, so just print its name as debug
+// Necessary for tracing
+impl std::fmt::Debug for HealthCheckLoopConfig {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
+        write!(f, "HealthCheckLoopConfig")
+    }
+}
+
+#[tracing::instrument]
 pub async fn start_health_check_loop(config: HealthCheckLoopConfig) {
-    let log = config.logger;
-    debug!(log, "Starting health check loop");
+    info!("Starting health check loop");
     let hc = HealthClient::new(ic_management_types::Network::Mainnet);
     let mut nodes_status = NodesStatus::from(hc.nodes().await.unwrap());
 
@@ -66,7 +73,10 @@ pub async fn start_health_check_loop(config: HealthCheckLoopConfig) {
             }
             Err(e) => {
                 config.cancellation_token.cancel();
-                error!(log, "Issue while getting the nodes statuses"; "error" => e.to_string());
+                error!(
+                    message = "Issue while getting the nodes statuses",
+                    error = e.to_string()
+                );
                 break;
             }
         }

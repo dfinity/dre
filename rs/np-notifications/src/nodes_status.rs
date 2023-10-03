@@ -111,6 +111,7 @@ impl NodesStatus {
 mod tests {
     use ic_management_types::Status;
     use ic_types::PrincipalId;
+    use pretty_assertions::assert_eq;
 
     use super::*;
 

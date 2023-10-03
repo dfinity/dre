@@ -9,7 +9,6 @@ edition = "2021"
 actix-web = "4.3.1"
 ic-management-types = { path = "../ic-management-types" }
 ic-management-backend = { path = "../ic-management-backend" }
-slog = "2.7.0"
 ic-types = { git = "https://github.com/dfinity/ic.git", rev = "abac636d8a281a1e7600d876aaed10f7ce7e5040" }
 ic-registry-local-registry = { git = "https://github.com/dfinity/ic.git", rev = "abac636d8a281a1e7600d876aaed10f7ce7e5040" }
 slog-term = "2.9.0"
@@ -27,6 +26,10 @@ ic-interfaces-registry = { git = "https://github.com/dfinity/ic.git", rev = "aba
 ic-registry-client-helpers = { git = "https://github.com/dfinity/ic.git", rev = "abac636d8a281a1e7600d876aaed10f7ce7e5040" }
 serde_yaml = "0.9.25"
 rand = "0.8.5"
+tracing = { version = "0.1.37", features = ["log"] }
+tracing-subscriber = "0.3.17"
+tracing-futures = { version = "0.2.5", features = ["tokio"] }
 
 [dev-dependencies]
 tempfile = "3.8.0"
+pretty_assertions = "1.4.0"

@@ -162,6 +162,7 @@ mod tests {
 
     use ic_management_types::{Provider, Status};
     use ic_types::PrincipalId;
+    use pretty_assertions::assert_eq;
     use rand::distributions::Alphanumeric;
     use rand::{thread_rng, Rng};
     use std::path::Path;
