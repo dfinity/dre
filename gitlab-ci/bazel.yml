@@ -48,7 +48,7 @@ factsdb:
     - |
       set -exou pipefail  # Don't tolerate any errors
       # Work on main branch
-      ls -la
+      git config --global --add safe.directory $(pwd)
       git config pull.rebase true
       git config --global user.name "Release Team"
       git config --global user.email "eng-release-bots-aaaafbmaump5gpag4pbjfuarry@dfinity.slack.com"
