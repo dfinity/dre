@@ -2,7 +2,7 @@ import subprocess
 import sys
 import os
 
-if os.environ['BAZEL'] != 'true':
+if os.environ.get('BAZEL') != 'true':
     repo_root = (
         subprocess.check_output(["git", "rev-parse", "--show-superproject-working-tree", "--show-toplevel"])
         .decode("utf-8")

@@ -46,7 +46,7 @@ class IcDeployment:
         output = subprocess.check_output(
             ([
                 "ansible-inventory",
-            ] if not os.environ['ANSIBLE_INVENTORY_BIN'] else [
+            ] if 'ANSIBLE_INVENTORY_BIN' not in os.environ else [
                 "python3",
                 os.environ['ANSIBLE_INVENTORY_BIN'],
             ]) +
