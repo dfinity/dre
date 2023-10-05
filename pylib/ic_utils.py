@@ -23,7 +23,7 @@ from tenacity import retry_if_not_exception_type
 from tenacity import stop_after_attempt
 from tenacity import wait_exponential
 
-repo_root = pathlib.Path(os.environ['GIT_ROOT'])
+repo_root = pathlib.Path(os.environ.get('GIT_ROOT'))
 if not repo_root:
     git_repo = git.Repo(os.path.dirname(__file__), search_parent_directories=True)
     repo_root = pathlib.Path(git_repo.git.rev_parse("--show-toplevel"))
