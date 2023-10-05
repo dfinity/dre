@@ -7,6 +7,8 @@ use std::{
 use actix_web::rt::time::sleep;
 use ic_management_types::{Provider, Status};
 use ic_types::PrincipalId;
+use serde::ser::{SerializeStruct, Serializer};
+use serde::Serialize;
 use tokio_util::sync::CancellationToken;
 use tracing::debug;
 
@@ -54,5 +56,20 @@ impl Display for Notification {
             self.status_change.0,
             self.status_change.1
         )
+    }
+}
+
+impl Serialize for Notification {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_struct("Notification", 1)?;
+        state.serialize_field("node_id", &self.node_id.to_string())?;
+        if let Some(provider) = &self.node_provider {
+            state.serialize_field("node_provider_id", &provider.principal.to_string())?;
+        }
+        state.serialize_field("status_change", &self.status_change)?;
+        state.end()
     }
 }

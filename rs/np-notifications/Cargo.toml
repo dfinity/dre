@@ -33,3 +33,10 @@ tracing-futures = { version = "0.2.5", features = ["tokio"] }
 [dev-dependencies]
 tempfile = "3.8.0"
 pretty_assertions = "1.4.0"
+httptest = "0.15.4"
+# Default features disabled because it would require env_logger, and we are not using it
+test-log = { version = "0.2.12", default-features = false, features = ["trace"] }
+# Necessary for test-log
+# https://crates.io/crates/test-log
+tracing = {version = "0.1", default-features = false}
+tracing-subscriber = {version = "0.3", default-features = false, features = ["env-filter", "fmt"]}
