@@ -3,15 +3,6 @@ workspace(
 )
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive", "http_file")
-load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
-
-IC_REPO_VERSION="abac636d8a281a1e7600d876aaed10f7ce7e5040"
-http_archive(
-    name = "ic_repo",
-    strip_prefix = "ic-{}".format(IC_REPO_VERSION),
-    sha256 = "1b85209dcf456defc25ecb7f4710327ff64eaed94bff36dc5748f5bb96823400",
-    url = "https://github.com/dfinity/ic/archive/{}.tar.gz".format(IC_REPO_VERSION),
-)
 
 http_archive(
     name = "bazel_skylib",
@@ -25,6 +16,60 @@ http_archive(
 load("@bazel_skylib//:workspace.bzl", "bazel_skylib_workspace")
 
 bazel_skylib_workspace()
+
+http_archive(
+    name = "rules_python",
+    patch_args = ["-p1"],
+    patches = [
+        # https://github.com/bazelbuild/rules_python/pull/1166#issuecomment-1641878169
+        "//bazel/patches:rules_python_annotation.patch",
+    ],
+    sha256 = "0a8003b044294d7840ac7d9d73eef05d6ceb682d7516781a4ec62eeb34702578",
+    strip_prefix = "rules_python-0.24.0",
+    url = "https://github.com/bazelbuild/rules_python/releases/download/0.24.0/rules_python-0.24.0.tar.gz",
+)
+
+load("@rules_python//python:repositories.bzl", "py_repositories", "python_register_toolchains")
+load("@rules_python//python/pip_install:pip_repository.bzl", "package_annotation")
+
+py_repositories()
+
+python_register_toolchains(
+    name = "python3_8",
+    python_version = "3.8.16",
+)
+
+load("@python3_8//:defs.bzl", "interpreter")
+load("@rules_python//python:pip.bzl", "pip_parse")
+
+pip_parse(
+    name = "python_deps",
+    annotations = {
+        "poetry-plugin-export": package_annotation(
+            excluded_deps = ["poetry"],
+        ),
+        "ansible-base": package_annotation(
+            additive_build_content = '''
+exports_files(["bin/ansible-inventory"])
+            ''',
+        ),
+    },
+    python_interpreter_target = interpreter,
+    requirements_lock = "//:requirements.txt",
+)
+
+load("@python_deps//:requirements.bzl", "install_deps")
+
+install_deps()
+
+IC_REPO_VERSION = "abac636d8a281a1e7600d876aaed10f7ce7e5040"
+
+http_archive(
+    name = "ic_repo",
+    sha256 = "1b85209dcf456defc25ecb7f4710327ff64eaed94bff36dc5748f5bb96823400",
+    strip_prefix = "ic-{}".format(IC_REPO_VERSION),
+    url = "https://github.com/dfinity/ic/archive/{}.tar.gz".format(IC_REPO_VERSION),
+)
 
 # To find additional information on this release or newer ones visit:
 # https://github.com/bazelbuild/rules_rust/releases
@@ -82,11 +127,12 @@ load("@com_google_protobuf//:protobuf_deps.bzl", "protobuf_deps")
 
 protobuf_deps()
 
-RULES_FOREIGN_CC_VERSION="9acbb356916760192d4c16301a69267fe44e6dec"
+RULES_FOREIGN_CC_VERSION = "9acbb356916760192d4c16301a69267fe44e6dec"
+
 http_archive(
     name = "rules_foreign_cc",
-    strip_prefix = "rules_foreign_cc-{}".format(RULES_FOREIGN_CC_VERSION),
     sha256 = "db6fcdb4f5ac217658f2c3aabd61e618d7fadc1cdf7d806ab1b52f2709d3fc66",
+    strip_prefix = "rules_foreign_cc-{}".format(RULES_FOREIGN_CC_VERSION),
     url = "https://github.com/bazelbuild/rules_foreign_cc/archive/{}.tar.gz".format(RULES_FOREIGN_CC_VERSION),
 )
 

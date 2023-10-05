@@ -26,6 +26,7 @@ cachetools = "*"
 pre-commit = "*"
 pylint = "*"
 tenacity = "*"
+poetry = "^1.6.1"
 
 
 [tool.poetry.group.dev.dependencies]
