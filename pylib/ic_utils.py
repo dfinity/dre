@@ -23,8 +23,11 @@ from tenacity import retry_if_not_exception_type
 from tenacity import stop_after_attempt
 from tenacity import wait_exponential
 
-git_repo = git.Repo(os.path.dirname(__file__), search_parent_directories=True)
-repo_root = pathlib.Path(git_repo.git.rev_parse("--show-toplevel"))
+repo_root = pathlib.Path(os.environ['GIT_ROOT'])
+if not repo_root:
+    git_repo = git.Repo(os.path.dirname(__file__), search_parent_directories=True)
+    repo_root = pathlib.Path(git_repo.git.rev_parse("--show-toplevel"))
+
 PHY_HOST_USER = "dfnadmin"
 NNS_URL = os.environ.get("NNS_URL") or "http://[2a00:fb01:400:100:5000:5bff:fe6b:75c6]:8080"
 
@@ -363,9 +366,8 @@ def download_ic_executable(git_revision: str, executable_name: str, blessed: boo
         logging.debug("Target file already exists: %s", local_path)
         return local_path
 
-    remote_path = f"{git_revision}/release/{executable_name}.gz"
-    if platform.system() == "Darwin":
-        remote_path = f"{git_revision}/nix-release/x86_64-darwin/{executable_name}.gz"
+    platform_lower = platform.system().lower()
+    remote_path = f"{git_revision}/openssl-static-binaries/x86_64-{platform_lower}/{executable_name}.gz"
     contents = download_ic_binary(remote_path=remote_path, blessed=blessed)
 
     local_path.parent.mkdir(exist_ok=True, parents=True)  # Ensure the parent directory exists

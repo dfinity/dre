@@ -1,0 +1,14 @@
+load("@python_deps//:requirements.bzl", "requirement")
+load("@rules_python//python:defs.bzl", "py_library")
+
+py_library(
+    name = "pylib",
+    srcs = glob(["*.py"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        requirement("tenacity"),
+        requirement("paramiko"),
+        requirement("requests"),
+        requirement("ansible"),
+    ],
+)

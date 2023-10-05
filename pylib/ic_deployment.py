@@ -44,8 +44,13 @@ class IcDeployment:
         if self.decentralized_deployment:
             env["DECENTRALIZED_DEPLOYMENT"] = "true"
         output = subprocess.check_output(
-            [
+            ([
                 "ansible-inventory",
+            ] if not os.environ['ANSIBLE_INVENTORY_BIN'] else [
+                "python3",
+                os.environ['ANSIBLE_INVENTORY_BIN'],
+            ]) +
+            [
                 "-i",
                 self._deployment_env_root / "hosts",
                 "--list",
