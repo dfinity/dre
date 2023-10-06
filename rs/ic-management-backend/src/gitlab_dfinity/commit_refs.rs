@@ -19,13 +19,6 @@ pub struct CommitRefs<'a> {
     stats: Option<bool>,
 }
 
-impl<'a> CommitRefs<'a> {
-    /// Create a builder for the endpoint.
-    pub fn builder() -> CommitRefsBuilder<'a> {
-        CommitRefsBuilder::default()
-    }
-}
-
 impl<'a> Endpoint for CommitRefs<'a> {
     fn method(&self) -> Method {
         Method::GET

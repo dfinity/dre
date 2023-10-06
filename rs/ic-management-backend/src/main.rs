@@ -1,6 +1,7 @@
 mod config;
 mod endpoints;
 mod factsdb;
+mod git_ic_repo;
 mod gitlab_dfinity;
 mod health;
 mod prometheus;
