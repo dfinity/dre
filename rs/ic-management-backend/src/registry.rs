@@ -1,12 +1,12 @@
 use crate::config::{get_nns_url_string_from_target_network, get_nns_url_vec_from_target_network};
 use crate::factsdb;
-use crate::gitlab_dfinity::{self, CommitRef, CommitRefs};
+use crate::git_ic_repo::IcRepo;
 use crate::proposal;
 use crate::public_dashboard::query_ic_dashboard_list;
 use async_trait::async_trait;
 use decentralization::network::{AvailableNodesQuerier, SubnetQuerier, SubnetQueryBy};
 use futures::TryFutureExt;
-use gitlab::{api::AsyncQuery, AsyncGitlab};
+use gitlab::AsyncGitlab;
 use ic_base_types::NodeId;
 use ic_base_types::{RegistryVersion, SubnetId};
 use ic_interfaces_registry::{RegistryClient, RegistryValue, ZERO_REGISTRY_VERSION};
@@ -43,11 +43,10 @@ use log::{debug, error, info, warn};
 use regex::Regex;
 use registry_canister::mutations::common::decode_registry_value;
 use std::cmp::Ordering;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::convert::TryFrom;
 use std::ops::Add;
 use std::path::{Path, PathBuf};
-use std::process;
 use std::str::FromStr;
 use std::sync::Arc;
 use std::{
@@ -64,9 +63,6 @@ pub const NNS_SUBNET_NAME: &str = "NNS";
 
 pub const DFINITY_DCS: &str = "zh2 mr1 bo1 st1";
 
-const GITLAB_TOKEN_IC_PUBLIC_ENV: &str = "GITLAB_API_TOKEN_IC_PUBLIC";
-const GITLAB_API_TOKEN_FALLBACK: &str = "GITLAB_API_TOKEN";
-
 pub struct RegistryState {
     nns_url: String,
     network: Network,
@@ -80,7 +76,7 @@ pub struct RegistryState {
     known_subnets: BTreeMap<PrincipalId, String>,
 
     replica_releases: Vec<ReplicaRelease>,
-    gitlab_client_public: Option<gitlab::AsyncGitlab>,
+    ic_repo: Option<IcRepo>,
 }
 trait RegistryEntry: RegistryValue {
     const KEY_PREFIX: &'static str;
@@ -180,30 +176,7 @@ impl RegistryState {
             LocalRegistry::new(local_registry_path, Duration::from_millis(1000))
                 .expect("Failed to create local registry"),
         );
-        if std::env::var(GITLAB_TOKEN_IC_PUBLIC_ENV).is_err() {
-            match std::env::var(GITLAB_API_TOKEN_FALLBACK) {
-                Ok(val) => std::env::set_var(GITLAB_TOKEN_IC_PUBLIC_ENV, val),
-                Err(_) => {
-                    if !without_update_loop {
-                        error!(
-                            "Could not lead the Gitlab token from variable {} or {}",
-                            GITLAB_TOKEN_IC_PUBLIC_ENV, GITLAB_API_TOKEN_FALLBACK
-                        );
-                        process::exit(exitcode::CONFIG);
-                    }
-                }
-            }
-        }
 
-        // If env var is set ==> use the gitlab client. The var needs to be set for
-        // non-release-cli runs. If env var is not set ==> set the gitlab client
-        // to None.
-        let gitlab_client_public = match std::env::var(GITLAB_TOKEN_IC_PUBLIC_ENV) {
-            Ok(_) => gitlab_dfinity::authenticated_client(GITLAB_TOKEN_IC_PUBLIC_ENV)
-                .await
-                .into(),
-            Err(_) => None,
-        };
         Self {
             nns_url,
             network,
@@ -214,7 +187,7 @@ impl RegistryState {
             operators: BTreeMap::new(),
             factsdb_guests: Vec::new(),
             replica_releases: Vec::new(),
-            gitlab_client_public,
+            ic_repo: Some(IcRepo::new(Some(1000)).expect("failed to init ic repo")),
             known_subnets: [
                 (
                     "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
@@ -285,91 +258,93 @@ impl RegistryState {
         .expect("failed to decode blessed replica versions")
         .blessed_version_ids;
 
-        if let Some(gitlab_client_public) = &self.gitlab_client_public {
-            let new_blessed_versions = futures::future::join_all(
-                blessed_versions
-            .iter()
-            .filter(|v| !self.replica_releases.iter().any(|rr| rr.commit_hash == **v)).map(|version| {
-                    let endpoint_public = CommitRefs::builder()
-                        .project("dfinity-lab/public/ic")
-                        .commit(version)
-                        .build()
-                        .expect("unable to build refs query");
-
-                    async move {
-                        let refs: Result<Vec<CommitRef>, _> = gitlab::api::paged(endpoint_public, gitlab::api::Pagination::All).query_async(gitlab_client_public).await;
-                        (version, refs)
-                    }
-            }).collect::<Vec<_>>()).await.into_iter().map(|(version, refs_result)| {
-                match refs_result {
-                    Ok(refs) => {
-                        lazy_static! {
-                            static ref RELEASE_BRANCH_GROUP: &'static str = "release_branch";
-                            static ref RELEASE_NAME_GROUP: &'static str = "release_name";
-                            static ref DATETIME_NAME_GROUP: &'static str = "datetime";
-                            // example: rc--2021-09-13_18-32
-                            static ref RE: Regex = Regex::new(&format!(r#"(?P<{}>(?P<{}>rc--(?P<{}>\d{{4}}-\d{{2}}-\d{{2}}_\d{{2}}-\d{{2}}))(?P<discardable_suffix>.*))$"#,
-                                *RELEASE_BRANCH_GROUP,
-                                *RELEASE_NAME_GROUP,
-                                *DATETIME_NAME_GROUP,
-                            )).unwrap();
-                        }
-                        if let Some(captures) = refs.iter().find_map(|r| match r.kind.as_str() {
-                            "branch" => RE.captures(&r.name),
-                            _ => None,
-                        }) {
-                            let release_name = captures
-                                .name(&RELEASE_NAME_GROUP)
-                                .expect("release regex misconfiguration")
-                                .as_str();
-                            let release_branch = captures
-                                .name(&RELEASE_BRANCH_GROUP)
-                                .expect("release regex misconfiguration")
-                                .as_str();
-                            let rr = ReplicaRelease {
-                                name: release_name.to_string(),
-                                branch: release_branch.to_string(),
-                                commit_hash: version.clone(),
-                                previous_patch_release: None,
-                                time: chrono::NaiveDateTime::parse_from_str(
-                                    captures
-                                        .name(&DATETIME_NAME_GROUP)
-                                        .expect("release regex misconfiguration")
-                                        .as_str(),
-                                    "%Y-%m-%d_%H-%M",
-                                )
-                                .expect("invalid datetime format"),
-                            };
-                            Ok(rr)
-                        } else {
-                            Err(anyhow::anyhow!("unable to parse release name for version {}, refs {:?}", version, refs))
-                        }
-                    }
-                    Err(gitlab::api::ApiError::Gitlab { msg }) if msg.contains(reqwest::StatusCode::NOT_FOUND.as_str()) => Err(anyhow::format_err!("no releases found for version {}", version)),
-                    Err(e) => Err(anyhow::format_err!("query failed: {}", e)),
-                }
-            }).collect::<Vec<_>>();
-            if let Some(Err(e)) = new_blessed_versions.iter().find(|r| r.is_err()) {
-                return Err(anyhow::anyhow!("failed to query gitlab for blessed versions: {}", e));
+        if let Some(ic_repo) = &mut self.ic_repo {
+            info!("Updating replica releases");
+            lazy_static! {
+                // TODO: We don't need to distinguish release branch and name, they can be the same
+                static ref RELEASE_BRANCH_GROUP: &'static str = "release_branch";
+                static ref RELEASE_NAME_GROUP: &'static str = "release_name";
+                static ref DATETIME_NAME_GROUP: &'static str = "datetime";
+                // example: rc--2021-09-13_18-32
+                static ref RE: Regex = Regex::new(&format!(r#"(?P<{}>(?P<{}>rc--(?P<{}>\d{{4}}-\d{{2}}-\d{{2}}_\d{{2}}-\d{{2}}))(?P<discardable_suffix>.*))$"#,
+                    *RELEASE_BRANCH_GROUP,
+                    *RELEASE_NAME_GROUP,
+                    *DATETIME_NAME_GROUP,
+                )).unwrap();
             }
 
-            new_blessed_versions
-                .into_iter()
-                .map(|r| r.unwrap())
-                .for_each(|mut nrr| {
+            // A HashMap from the git revision to the latest commit branch in which the
+            // commit is present
+            let mut commit_to_release: HashMap<String, ReplicaRelease> = HashMap::new();
+            for commit_hash in blessed_versions.iter() {
+                match ic_repo.get_branches_with_commit(commit_hash) {
+                    // For each commit get a list of branches that have the commit
+                    Ok(branches) => {
+                        info!("Commit {} ==> branches {:?}", commit_hash, branches);
+                        for branch in branches.into_iter().sorted() {
+                            match RE.captures(&branch) {
+                                Some(capture) => {
+                                    let release_branch = capture
+                                        .name(&RELEASE_BRANCH_GROUP)
+                                        .expect("release regex misconfiguration")
+                                        .as_str();
+                                    let release_name = capture
+                                        .name(&RELEASE_NAME_GROUP)
+                                        .expect("release regex misconfiguration")
+                                        .as_str();
+                                    let release_datetime = chrono::NaiveDateTime::parse_from_str(
+                                        capture
+                                            .name(&DATETIME_NAME_GROUP)
+                                            .expect("release regex misconfiguration")
+                                            .as_str(),
+                                        "%Y-%m-%d_%H-%M",
+                                    )
+                                    .expect("invalid datetime format");
+                                    commit_to_release.insert(
+                                        commit_hash.clone(),
+                                        ReplicaRelease {
+                                            name: release_name.to_string(),
+                                            branch: release_branch.to_string(),
+                                            commit_hash: commit_hash.clone(),
+                                            previous_patch_release: None,
+                                            time: release_datetime,
+                                        },
+                                    );
+                                }
+                                None => {
+                                    warn!(
+                                        "branch {} for git rev {} does not match RC regex",
+                                        &commit_hash, &branch
+                                    );
+                                }
+                            };
+                        }
+                    }
+                    Err(e) => error!("failed to find branches for git rev: {}; {}", &commit_hash, e),
+                }
+            }
+
+            let versions: Vec<ReplicaRelease> = commit_to_release
+                .into_values()
+                .map(|mut nrr| {
                     nrr.previous_patch_release = self
                         .replica_releases
                         .iter()
                         .rfind(|rr| rr.name == nrr.name && rr.commit_hash != nrr.commit_hash)
                         .map(|rr| rr.clone().into());
-                    self.replica_releases.push(nrr);
-                });
-        }
+                    nrr
+                })
+                .collect_vec();
 
-        self.replica_releases.sort_by(|rr1, rr2| match rr1.time.cmp(&rr2.time) {
-            std::cmp::Ordering::Equal => rr1.patch_count().cmp(&rr2.patch_count()),
-            other => other,
-        });
+            self.replica_releases.clear();
+            self.replica_releases.extend(
+                versions
+                    .into_iter()
+                    .sorted_by_key(|rr| rr.time)
+                    .collect::<Vec<ReplicaRelease>>(),
+            );
+            info!("Updated replica releases to {:?}", self.replica_releases);
+        }
 
         Ok(())
     }
@@ -1007,7 +982,7 @@ pub async fn poll(
                 .await;
             update_node_details(&registry_state).await;
         } else {
-            info!(
+            debug!(
                 "Skipping update. Registry already on latest version: {}",
                 registry_state.read().await.version()
             )
