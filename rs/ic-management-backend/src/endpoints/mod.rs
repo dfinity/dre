@@ -110,6 +110,7 @@ pub async fn run_backend(
             .service(self::nodes_ops::remove)
             .service(self::query_decentralization::decentralization_subnet_query)
             .service(self::query_decentralization::decentralization_whatif_query)
+            .service(self::release::releases_list_all)
             .service(self::release::retireable)
             .service(self::release::get_nns_replica_version)
             .service(self::governance_canister::governance_canister_version_endpoint)

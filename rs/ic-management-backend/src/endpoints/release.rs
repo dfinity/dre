@@ -1,5 +1,11 @@
 use super::*;
 
+#[get("/releases/all")]
+async fn releases_list_all(registry: web::Data<Arc<RwLock<RegistryState>>>) -> Result<HttpResponse, Error> {
+    let registry = registry.read().await;
+    Ok(HttpResponse::Ok().json(registry.replica_releases()))
+}
+
 #[get("/release/retireable")]
 async fn retireable(registry: web::Data<Arc<RwLock<RegistryState>>>) -> Result<HttpResponse, Error> {
     let registry = registry.read().await;
