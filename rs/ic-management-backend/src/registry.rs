@@ -259,7 +259,7 @@ impl RegistryState {
         .blessed_version_ids;
 
         if let Some(ic_repo) = &mut self.ic_repo {
-            info!("Updating replica releases");
+            debug!("Updating replica releases");
             lazy_static! {
                 // TODO: We don't need to distinguish release branch and name, they can be the same
                 static ref RELEASE_BRANCH_GROUP: &'static str = "release_branch";
@@ -280,7 +280,7 @@ impl RegistryState {
                 match ic_repo.get_branches_with_commit(commit_hash) {
                     // For each commit get a list of branches that have the commit
                     Ok(branches) => {
-                        info!("Commit {} ==> branches {:?}", commit_hash, branches);
+                        debug!("Commit {} ==> branches {:?}", commit_hash, branches);
                         for branch in branches.into_iter().sorted() {
                             match RE.captures(&branch) {
                                 Some(capture) => {
@@ -343,7 +343,7 @@ impl RegistryState {
                     .sorted_by_key(|rr| rr.time)
                     .collect::<Vec<ReplicaRelease>>(),
             );
-            info!("Updated replica releases to {:?}", self.replica_releases);
+            debug!("Updated replica releases to {:?}", self.replica_releases);
         }
 
         Ok(())
@@ -862,7 +862,7 @@ pub async fn sync_local_store(target_network: Network) -> anyhow::Result<()> {
                     );
                 }
                 Ordering::Equal => {
-                    info!("Local Registry version {} is up to date", local_latest_version.get());
+                    debug!("Local Registry version {} is up to date", local_latest_version.get());
                     break;
                 }
                 Ordering::Greater => {
