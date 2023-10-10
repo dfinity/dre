@@ -36,6 +36,7 @@ use notification::NotificationSenderLoopConfig;
 
 use tokio_util::sync::CancellationToken;
 use tracing::{debug, info, Level};
+use tracing_log::LogTracer;
 use tracing_subscriber::FmtSubscriber;
 
 use crate::health_check::start_health_check_loop;
@@ -59,6 +60,7 @@ async fn state() -> impl Responder {
 #[actix_web::main]
 async fn main() {
     let subscriber = FmtSubscriber::builder().with_max_level(Level::INFO).compact().finish();
+    LogTracer::builder().init().expect("can create a log tracer");
     tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
 
     // TODO Centralize sending all notifications using the router
