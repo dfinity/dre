@@ -1,15 +1,11 @@
 use std::{cell::RefCell, sync::Arc};
 
+use anyhow::anyhow;
+use anyhow::Result;
 use reqwest::StatusCode;
 use tracing::{debug, error, info};
 
 use crate::notification::Notification;
-
-#[derive(Debug)]
-pub enum SinkError {
-    PublicationError,
-    BodyDecoding,
-}
 
 #[derive(Debug)]
 pub enum Sink {
@@ -21,7 +17,7 @@ pub enum Sink {
 }
 
 impl Sink {
-    pub async fn send(&self, notification: Notification) -> Result<(), SinkError> {
+    pub async fn send(&self, notification: Notification) -> Result<()> {
         match self {
             Sink::Log(sink) => sink.send(notification),
             Sink::Webhook(sink) => sink.send(notification).await,
@@ -37,7 +33,7 @@ impl Sink {
 pub struct LogSink {}
 
 impl LogSink {
-    fn send(&self, notification: Notification) -> Result<(), SinkError> {
+    fn send(&self, notification: Notification) -> Result<()> {
         info!(sink = "log", %notification);
         Ok(())
     }
@@ -50,7 +46,7 @@ pub struct WebhookSink {
 }
 
 impl WebhookSink {
-    async fn send(&self, notification: Notification) -> Result<(), SinkError> {
+    async fn send(&self, notification: Notification) -> Result<()> {
         debug!(
             message = "Sending notification",
             url = &self.url.to_string(),
@@ -68,7 +64,7 @@ impl WebhookSink {
                     notification = notification.to_string(),
                     error = e.to_string(),
                 );
-                SinkError::PublicationError
+                e
             })?;
         match response.status() {
             StatusCode::OK => Ok(()),
@@ -77,9 +73,9 @@ impl WebhookSink {
                     message = "Error while sending the notification",
                     notification = notification.to_string(),
                     status = response.status().to_string(),
-                    response = response.text().await.map_err(|_| SinkError::BodyDecoding)?,
+                    response = response.text().await?,
                 );
-                Err(SinkError::PublicationError)
+                Err(anyhow!("Failed to send notification"))
             }
         }
     }
