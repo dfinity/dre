@@ -110,22 +110,11 @@ mod test {
 
     use super::WebhookSink;
     use httptest::{all_of, matchers::request, responders::status_code, Expectation};
-    use ic_management_types::{Provider, Status};
-    use ic_types::PrincipalId;
     use test_log::test;
 
     #[test(actix_web::test)]
     async fn webhook_sends_requests() {
-        let notification = Notification {
-            node_id: PrincipalId::new_node_test_id(0),
-            node_provider: Some(Provider {
-                principal: PrincipalId::new_user_test_id(0),
-                name: Some("Test".into()),
-                website: None,
-            }),
-            status_change: (Status::Healthy, Status::Degraded),
-        };
-
+        let notification = Notification::new_test(0);
         let server = httptest::Server::run();
 
         server.expect(

@@ -73,3 +73,18 @@ impl Serialize for Notification {
         state.end()
     }
 }
+
+#[cfg(test)]
+impl Notification {
+    pub fn new_test(id: u64) -> Self {
+        Self {
+            node_id: PrincipalId::new_node_test_id(id),
+            node_provider: Some(Provider {
+                principal: PrincipalId::new_user_test_id(id),
+                name: Some("test".into()),
+                website: None,
+            }),
+            status_change: (Status::Healthy, Status::Degraded),
+        }
+    }
+}
