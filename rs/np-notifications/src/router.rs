@@ -1,11 +1,12 @@
-use std::{error::Error, fmt, io, path::Path};
+use std::path::Path;
 
+use anyhow::Result;
 use ic_types::PrincipalId;
 use serde::Deserialize;
 
 use crate::{
     notification::Notification,
-    sink::{Sink, SinkError, WebhookSink},
+    sink::{Sink, WebhookSink},
 };
 
 const CONFIG_FILE_PATH_VAR_NAME: &str = "ROUTER_CONFIG_PATH";
@@ -56,14 +57,14 @@ struct NPMatch {
 }
 
 impl RouterConfig {
-    fn load_from_file(file_path: String) -> Result<RouterConfig, RouterConfigError> {
+    fn load_from_file(file_path: String) -> Result<RouterConfig> {
         let path = Path::new(&file_path);
-        let contents = std::fs::read_to_string(path).map_err(RouterConfigError::File)?;
+        let contents = std::fs::read_to_string(path)?;
         Self::load(&contents)
     }
 
-    fn load(contents: &str) -> Result<RouterConfig, RouterConfigError> {
-        serde_yaml::from_str(contents).map_err(RouterConfigError::ConfigParsing)
+    fn load(contents: &str) -> Result<RouterConfig> {
+        serde_yaml::from_str(contents).map_err(anyhow::Error::new)
     }
 
     fn get_routes(&self) -> Vec<Route> {
@@ -84,36 +85,12 @@ impl RouterConfig {
 }
 
 #[derive(Debug)]
-enum RouterConfigError {
-    ConfigParsing(serde_yaml::Error),
-    File(io::Error),
-}
-
-impl fmt::Display for RouterConfigError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::ConfigParsing(_) => write!(f, "error parsing config"),
-            Self::File(_) => write!(f, "error reading file"),
-        }
-    }
-}
-
-impl Error for RouterConfigError {
-    fn source(&self) -> Option<&(dyn Error + 'static)> {
-        match &self {
-            Self::ConfigParsing(e) => Some(e),
-            Self::File(e) => Some(e),
-        }
-    }
-}
-
-#[derive(Debug)]
 pub struct Router {
     routes: Vec<Route>,
 }
 
 impl Router {
-    pub fn new_from_config_file() -> Result<Router, Box<dyn Error + 'static>> {
+    pub fn new_from_config_file() -> Result<Router> {
         match std::env::var(CONFIG_FILE_PATH_VAR_NAME) {
             Ok(p) => {
                 let config = RouterConfig::load_from_file(p)?;
@@ -128,12 +105,12 @@ impl Router {
     }
 
     #[cfg(test)]
-    pub fn new_from_config(contents: &str) -> Result<Router, Box<dyn std::error::Error>> {
+    pub fn new_from_config(contents: &str) -> Result<Router> {
         let config = RouterConfig::load(contents)?;
         Ok(Self::from(config))
     }
 
-    pub async fn route(&self, notification: Notification) -> Result<(), SinkError> {
+    pub async fn route(&self, notification: Notification) -> Result<()> {
         for route in self.routes.iter() {
             if route.matches(&notification) {
                 for sink in &route.sinks {
