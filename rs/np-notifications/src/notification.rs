@@ -88,3 +88,19 @@ impl Notification {
         }
     }
 }
+#[cfg(test)]
+mod tests {
+    use crate::notification::Notification;
+
+    #[test]
+    fn notification_serialization() {
+        // This test is mostly used for seeing what will be the result of the
+        // serialization, useful during development.  It also makes sure that
+        // something will alert us in case the serialized version changes, which
+        // will induce a change in the webhooks being sent.
+        let n = Notification::new_test(0);
+        let expected_serialized_notification = "{\"node_id\":\"gwp4o-eaaaa-aaaaa-aaaap-2ai\",\"node_provider_id\":\"d2zjj-uyaaa-aaaaa-aaaap-4ai\",\"status_change\":[\"Healthy\",\"Degraded\"]}";
+        let serialized_notification = serde_json::to_string(&n).unwrap();
+        assert_eq!(expected_serialized_notification, serialized_notification);
+    }
+}
