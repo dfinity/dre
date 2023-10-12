@@ -34,7 +34,7 @@ pub struct LogSink {}
 
 impl LogSink {
     fn send(&self, notification: Notification) -> Result<()> {
-        info!(sink = "log", %notification);
+        info!(sink = "log", notification = serde_json::to_string(&notification)?);
         Ok(())
     }
 }
@@ -106,13 +106,16 @@ impl TestSink {
 
 #[cfg(test)]
 mod test {
-    use crate::notification::Notification;
+    use crate::{
+        notification::Notification,
+        sink::{LogSink, Sink},
+    };
 
     use super::WebhookSink;
     use httptest::{all_of, matchers::request, responders::status_code, Expectation};
     use test_log::test;
 
-    #[test(actix_web::test)]
+    #[actix_web::test]
     async fn webhook_sends_requests() {
         let notification = Notification::new_test(0);
         let server = httptest::Server::run();
@@ -144,5 +147,14 @@ mod test {
         };
         let result = wh.send(notification).await;
         assert!(result.is_err());
+    }
+
+    #[test(actix_web::test)]
+    async fn log_sink_display() {
+        // test mostly used to see our log lines.
+        // To display the log line, set RUST_LOG=info and make the test fail
+        let n = Notification::new_test(0);
+        let log_sink = Sink::Log(LogSink {});
+        let _ = log_sink.send(n.clone()).await;
     }
 }
