@@ -11,8 +11,6 @@ ic-management-types = { path = "../ic-management-types" }
 ic-management-backend = { path = "../ic-management-backend" }
 ic-types = { git = "https://github.com/dfinity/ic.git", rev = "abac636d8a281a1e7600d876aaed10f7ce7e5040" }
 ic-registry-local-registry = { git = "https://github.com/dfinity/ic.git", rev = "abac636d8a281a1e7600d876aaed10f7ce7e5040" }
-slog-term = "2.9.0"
-slog-async = "2.7.0"
 tokio = { version = "1.29.1", features = ["full"] }
 tokio-util = "0.7.8"
 actix = "0.13.0"
