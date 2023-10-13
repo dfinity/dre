@@ -64,7 +64,11 @@ impl Serialize for Notification {
     where
         S: Serializer,
     {
-        let mut state = serializer.serialize_struct("Notification", 1)?;
+        let n_fields = match &self.node_provider {
+            Some(_) => 3,
+            None => 2,
+        };
+        let mut state = serializer.serialize_struct("Notification", n_fields)?;
         state.serialize_field("node_id", &self.node_id.to_string())?;
         if let Some(provider) = &self.node_provider {
             state.serialize_field("node_provider_id", &provider.principal.to_string())?;
