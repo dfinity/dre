@@ -1,4 +1,4 @@
-use actix_web::rt::time::sleep;
+use actix_web::{rt::time::sleep, web};
 use core::time;
 use ic_management_types::NodeProvidersResponse;
 use std::sync::mpsc::Sender;
@@ -7,12 +7,13 @@ use ic_management_backend::{health::HealthClient, public_dashboard::query_ic_das
 use tokio_util::sync::CancellationToken;
 use tracing::{error, info};
 
-use crate::{nodes_status::NodesStatus, notification::Notification};
+use crate::{nodes_status::NodesStatus, notification::Notification, ServiceHealth};
 
 pub struct HealthCheckLoopConfig {
     pub notification_sender: Sender<Notification>,
     pub cancellation_token: CancellationToken,
     pub registry_state: RegistryState,
+    pub service_health: web::Data<ServiceHealth>,
 }
 
 // There is no real information in the Config, so just print its name as debug
@@ -49,6 +50,7 @@ pub async fn start_health_check_loop(config: HealthCheckLoopConfig) {
         }
         match hc.nodes().await {
             Ok(new_statuses) => {
+                config.service_health.set_health_check_loop_readiness(true);
                 // Probably need to change the way we create the notifications there to
                 // include the fetching from the registry
                 let (new_nodes_status, notifications) = nodes_status.updated_from_map(new_statuses);
@@ -72,7 +74,10 @@ pub async fn start_health_check_loop(config: HealthCheckLoopConfig) {
                 nodes_status = new_nodes_status;
             }
             Err(e) => {
+                // TODO if we cannot get the nodes, this will kill the loop.
+                // Make sure we are resilient there
                 config.cancellation_token.cancel();
+                config.service_health.set_health_check_loop_readiness(true);
                 error!(
                     message = "Issue while getting the nodes statuses",
                     error = e.to_string()

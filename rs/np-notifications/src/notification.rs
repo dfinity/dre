@@ -4,7 +4,7 @@ use std::{
     sync::mpsc::Receiver,
 };
 
-use actix_web::rt::time::sleep;
+use actix_web::{rt::time::sleep, web};
 use ic_management_types::{Provider, Status};
 use ic_types::PrincipalId;
 use serde::ser::{SerializeStruct, Serializer};
@@ -12,13 +12,14 @@ use serde::Serialize;
 use tokio_util::sync::CancellationToken;
 use tracing::debug;
 
-use crate::{router::Router, sink::Sink};
+use crate::{router::Router, sink::Sink, ServiceHealth};
 
 #[derive(Debug)]
 pub struct NotificationSenderLoopConfig {
     pub notification_receiver: Receiver<Notification>,
     pub cancellation_token: CancellationToken,
     pub router: Router,
+    pub service_health: web::Data<ServiceHealth>,
 }
 
 #[tracing::instrument]
@@ -28,6 +29,7 @@ pub async fn start_notification_sender_loop(config: NotificationSenderLoopConfig
         if config.cancellation_token.is_cancelled() {
             break;
         }
+        config.service_health.set_notification_loop_readiness(true);
         while let Ok(notification) = config.notification_receiver.try_recv() {
             for sink in sinks.iter() {
                 let _ = sink.send(notification.clone()).await;
@@ -36,6 +38,7 @@ pub async fn start_notification_sender_loop(config: NotificationSenderLoopConfig
         }
         sleep(time::Duration::from_secs(1)).await;
     }
+    config.service_health.set_notification_loop_readiness(false);
 }
 
 #[derive(Debug, PartialOrd, Ord, PartialEq, Eq, Clone)]

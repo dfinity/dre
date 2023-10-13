@@ -28,7 +28,7 @@
 use std::sync::mpsc;
 
 use actix_web::rt::signal;
-use actix_web::{get, App, HttpResponse, HttpServer, Responder};
+use actix_web::{web, App, HttpServer};
 use health_check::HealthCheckLoopConfig;
 use ic_management_backend::config::target_network;
 
@@ -43,6 +43,7 @@ use crate::health_check::start_health_check_loop;
 use crate::notification::start_notification_sender_loop;
 use crate::registry::{start_registry_updater_loop, RegistryLoopConfig};
 use crate::router::Router;
+use crate::service_health::ServiceHealth;
 use crate::sink::{LogSink, Sink};
 
 mod health_check;
@@ -50,12 +51,8 @@ mod nodes_status;
 mod notification;
 mod registry;
 mod router;
+mod service_health;
 mod sink;
-
-#[get("/state")]
-async fn state() -> impl Responder {
-    HttpResponse::Ok().body("Hello !")
-}
 
 #[actix_web::main]
 async fn main() {
@@ -69,15 +66,19 @@ async fn main() {
     let (notif_sender, notif_receiver) = mpsc::channel();
     let cancellation_token = CancellationToken::new();
 
+    let service_health = web::Data::new(ServiceHealth::new());
+
     actix_web::rt::spawn(start_registry_updater_loop(RegistryLoopConfig {
         cancellation_token: cancellation_token.clone(),
         target_network: target_network(),
+        service_health: service_health.clone(),
     }));
 
     actix_web::rt::spawn(start_health_check_loop(HealthCheckLoopConfig {
         notification_sender: notif_sender.clone(),
         cancellation_token: cancellation_token.clone(),
         registry_state: registry::create_registry_state().await,
+        service_health: service_health.clone(),
     }));
 
     actix_web::rt::spawn(start_notification_sender_loop(
@@ -85,17 +86,23 @@ async fn main() {
             notification_receiver: notif_receiver,
             cancellation_token: cancellation_token.clone(),
             router,
+            service_health: service_health.clone(),
         },
         vec![Sink::Log(LogSink {})],
     ));
 
     info!("Starting server on port 8080");
-    let srv = HttpServer::new(|| App::new().service(state))
-        .shutdown_timeout(5)
-        .disable_signals()
-        .bind(("127.0.0.1", 8080))
-        .unwrap()
-        .run();
+    let srv = HttpServer::new(move || {
+        App::new()
+            .app_data(service_health.clone())
+            .service(service_health::alive)
+            .service(service_health::ready)
+    })
+    .shutdown_timeout(5)
+    .disable_signals()
+    .bind(("127.0.0.1", 8080))
+    .unwrap()
+    .run();
     let srv_handle = srv.handle();
     // We need to spawn the server, or we cannot stop it (obviously). This
     // is however not done by the run method, it needs to be spawned on its own.
