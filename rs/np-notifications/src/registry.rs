@@ -1,12 +1,16 @@
+use actix_web::web;
 use ic_management_backend::registry::{self, RegistryState};
 use ic_management_types::Network;
 
 use tokio_util::sync::CancellationToken;
 use tracing::{error, info};
 
+use crate::ServiceHealth;
+
 pub struct RegistryLoopConfig {
     pub cancellation_token: CancellationToken,
     pub target_network: Network,
+    pub service_health: web::Data<ServiceHealth>,
 }
 
 // There is no real information in the Config, so just print its name as debug
@@ -27,6 +31,7 @@ pub async fn start_registry_updater_loop(config: RegistryLoopConfig) {
         if config.cancellation_token.is_cancelled() {
             break;
         }
+        config.service_health.set_registry_updater_loop_readiness(true);
         if let Err(e) = registry::sync_local_store(config.target_network.clone()).await {
             error!(message = "Failed to update local registry", error = e.to_string());
         }
