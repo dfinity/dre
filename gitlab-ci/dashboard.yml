@@ -20,22 +20,6 @@ dashboard-backstage:
     CONTEXT_PATH: "dashboard"
     DOCKERFILE_PATH: "dashboard/Dockerfile"
 
-dashboard-backend-mainnet:
-  extends:
-    - .dashboard-build
-  variables:
-    APP: "dashboard-backend"
-    CONTEXT_PATH: "."
-    DOCKERFILE_PATH: "rs/ic-management-backend/Dockerfile"
-
-slack:
-  extends:
-    - .dashboard-build
-  variables:
-    APP: "slack"
-    CONTEXT_PATH: "."
-    DOCKERFILE_PATH: "rs/slack-notifications/Dockerfile"
-
 .docker-base:
   image: docker/compose:alpine-1.29.2
   needs: []
@@ -52,8 +36,6 @@ dashboard-deploy:
     - .rules-dashboard
   needs:
     - dashboard-backstage
-    - dashboard-backend-mainnet
-    - slack
   interruptible: false
   script:
     - |
