@@ -1,6 +1,7 @@
 use candid::Deserialize;
 use ic_nns_common::pb::v1::NeuronId;
 use ic_nns_common::pb::v1::ProposalId;
+use ic_nns_governance::pb::v1::ProposalStatus;
 use ic_nns_governance::pb::v1::{proposal, ProposalInfo, Topic};
 use itertools::Itertools;
 use log::info;
@@ -158,7 +159,13 @@ impl Serialize for SlackMessage {
 
 impl SlackMessage {
     pub fn render_payload(&self) -> Value {
-        let message = format!("{} please review the following proposal(s)", self.alert_mention);
+        let message = if self.proposals.iter().all(|p| {
+            ProposalStatus::from_i32(p.status).expect("failed to parse proposal status") == ProposalStatus::Failed
+        }) {
+            format!("{} the following proposal(s) failed", self.alert_mention)
+        } else {
+            format!("{} please review the following proposal(s)", self.alert_mention)
+        };
 
         // https://app.slack.com/block-kit-builder/T43F9UHS5#%7B%22blocks%22:%5B%5D%7D
         json!({
