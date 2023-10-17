@@ -58,3 +58,6 @@ bazel-out
 bazel-release*
 bazel-testlogs
 bazel-build-log.json
+
+# slack-notifications
+checkpoint*
