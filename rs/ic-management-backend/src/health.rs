@@ -47,44 +47,7 @@ impl HealthClient {
 
     pub async fn nodes(&self) -> anyhow::Result<BTreeMap<PrincipalId, Status>> {
         let query: InstantVector = InstantVector(format!(
-            r#"
-                bottomk by(ic_node) (1,
-                label_replace(
-                    ((
-                        sum by(ic_node) (
-                            up{{job="replica", ic="{network}"}}
-                        )
-                            or
-                        sum by(ic_node) (
-                            up{{job="orchestrator", ic="{network}"}}
-                        )
-                    # swap 0 and 1 to get the health{{state="dead"}}=1 when up == 0
-                    ) - 1)^2 == 1
-                ,
-                    "state", "Dead", "", ""
-                )
-                    or
-                (label_replace(
-                    clamp_max(count by (ic_node) (ALERTS{{ic="{network}", alertstate="firing", job!="host_node_exporter"}}), 1)
-                ,
-                    "state", "Degraded", "", ""
-                ) + 1)
-                    or
-                (label_replace(
-                    (
-                        sum by(ic_node) (
-                            up{{job="replica", ic="{network}"}}
-                        )
-                            or
-                        sum by(ic_node) (
-                            up{{job="orchestrator", ic="{network}"}}
-                        )
-                    ) == 1
-                ,
-                    "state", "Healthy", "", ""
-                ) + 2)
-                )
-            "#,
+            r#"ic_replica_orchestrator:health_state:bottomk_1{{ic="{network}"}}"#,
             network = self.network.legacy_name(),
         ));
         let response = self.client.query(query, None, None).await?;
