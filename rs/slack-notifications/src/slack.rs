@@ -14,6 +14,7 @@ use std::collections::HashSet;
 use std::convert::TryFrom;
 
 const TRUSTED_NEURONS_TAG: &str = "<!subteam^S0200F4EYLF>";
+const DEVREL_TAG: &str = "<!subteam^S04AHQT37RQ>";
 const RELEASE_TEAM_TAG: &str = ""; // Can be changed to the following to mention @release-engs on each proposal:
                                    // "<!subteam^S02CF4KKZ7U>";
 const RELEASE_AUTOMATION_NEURON_ID: u64 = 80;
@@ -159,13 +160,14 @@ impl Serialize for SlackMessage {
 
 impl SlackMessage {
     pub fn render_payload(&self) -> Value {
-        let message = if self.proposals.iter().all(|p| {
-            ProposalStatus::from_i32(p.status).expect("failed to parse proposal status") == ProposalStatus::Failed
-        }) {
-            format!("{} the following proposal(s) failed", self.alert_mention)
-        } else {
-            format!("{} please review the following proposal(s)", self.alert_mention)
-        };
+        let message = self.alert_mention.clone()
+            + if self.proposals.iter().all(|p| {
+                ProposalStatus::from_i32(p.status).expect("failed to parse proposal status") == ProposalStatus::Failed
+            }) {
+                "the following proposal(s) failed"
+            } else {
+                "please review the following proposal(s)"
+            };
 
         // https://app.slack.com/block-kit-builder/T43F9UHS5#%7B%22blocks%22:%5B%5D%7D
         json!({
@@ -237,16 +239,22 @@ impl TryFrom<Vec<ProposalInfo>> for MessageGroups {
                     alert_mention(p.proposer.as_ref().expect("No NeuronId in the proposal")),
                     proposer_mention(p.proposer.expect("proposer not set")),
                     proposal_motivation(p),
+                    p.topic(),
                 )
             })
             .into_iter()
             .filter_map(
-                |((slack_channel, alert_mention, proposer_mention, motivation), group)| {
+                |((slack_channel, alert_mention, proposer_mention, motivation, topic), group)| {
                     proposer_mention.map(|proposer_mention| {
                         let proposals = group.collect::<Vec<_>>();
                         SlackMessage {
                             slack_channel,
-                            alert_mention,
+                            alert_mention: alert_mention
+                                + if topic == Topic::SnsAndCommunityFund {
+                                    DEVREL_TAG
+                                } else {
+                                    ""
+                                },
                             proposer_mention,
                             motivation,
                             proposals,
@@ -386,5 +394,30 @@ mod tests {
         assert_eq!(message_groups[1].alert_mention, RELEASE_TEAM_TAG);
         assert_eq!(message_groups[1].proposer_mention, "Neuron 80");
         assert_eq!(message_groups[1].motivation, "summary 1".to_string());
+    }
+
+    #[test]
+    fn mention_devrel() {
+        let proposals = vec![gen_test_proposal(
+            1000,
+            40,
+            "summary 1",
+            Topic::SnsAndCommunityFund.into(),
+        )];
+        std::env::set_var("SLACK_URL", "http://localhost");
+        std::env::set_var("SLACK_CHANNEL_PROPOSALS_INTERNAL", "#nns-proposals-test-internal");
+        std::env::set_var("SLACK_CHANNEL_PROPOSALS_EXTERNAL", "#nns-proposals-test-external");
+        let message_groups = MessageGroups::try_from(proposals).unwrap().message_groups;
+        assert_eq!(message_groups.len(), 1);
+        assert_eq!(
+            message_groups[0].slack_channel.as_ref().unwrap(),
+            "#nns-proposals-test-internal"
+        );
+        assert_eq!(
+            message_groups[0].alert_mention,
+            format!("{}{}", TRUSTED_NEURONS_TAG, DEVREL_TAG)
+        );
+        assert_eq!(message_groups[0].proposer_mention, "<@URT5Z7VDZ>");
+        assert_eq!(message_groups[0].motivation, "summary 1".to_string());
     }
 }
