@@ -328,13 +328,6 @@ impl Cli {
         )
     }
 
-    fn get_github_release_image_url(release_tag: &String) -> String {
-        format!(
-            "https://github.com/dfinity/ic/releases/download/{}/update-os-img.tar.gz",
-            release_tag
-        )
-    }
-
     async fn download_file_and_get_sha256(download_url: &String) -> anyhow::Result<String> {
         let url = url::Url::parse(download_url)?;
         let subdir = format!(
@@ -396,10 +389,7 @@ impl Cli {
         version: &String,
         release_tag: &String,
     ) -> anyhow::Result<UpdateReplicaVersions> {
-        let update_urls = vec![
-            Self::get_cdn_image_url(version),
-            Self::get_github_release_image_url(release_tag),
-        ];
+        let update_urls = vec![Self::get_cdn_image_url(version)];
         // Download images, verify them and compare the SHA256
         let hash_and_valid_urls: Vec<(String, &String)> = stream::iter(&update_urls)
             .filter_map(|update_url| async move {
