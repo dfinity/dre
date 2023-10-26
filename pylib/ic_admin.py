@@ -31,7 +31,7 @@ class IcAdmin:
         else:
             self.ic_admin_path = pathlib.Path("ic-admin")
         if not deployment:
-            deployment = IcDeployment("mercury")
+            deployment = IcDeployment("mainnet")
         self.deployment = deployment
         self.nns_url = deployment.get_nns_url()
 
