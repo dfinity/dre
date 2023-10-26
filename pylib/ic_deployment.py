@@ -18,7 +18,6 @@ class IcDeployment:
         deployment_name: str,
         nodes_filter_include: str = "",
         nns_url_override: str = "",
-        decentralized_deployment=False,
     ):
         """Create an object for the given git repo root and deployment name."""
         self._name = deployment_name
@@ -28,7 +27,7 @@ class IcDeployment:
         self._inventory_script = self._deployment_env_root.parent.parent / "ansible/inventory/inventory.py"
         self.nodes_filter_include = nodes_filter_include
         self.nns_url_override = nns_url_override
-        self.decentralized_deployment = decentralized_deployment
+        self.decentralized_deployment = True if deployment_name == "mainnet" else False
 
     @property
     def name(self):
@@ -131,7 +130,7 @@ class IcDeployment:
         active_dcs = repo_root / "factsdb/mercury-dcs.yml"
         return set(yaml.load(open(active_dcs, encoding="utf8"), Loader=yaml.FullLoader))
 
-    def validate_mercury_hosts_ini(self):
+    def validate_mainnet_hosts_ini(self):
         """Ensure the mercury hosts.ini file is properly formatted."""
         phy_nodes = set(self.get_deployment_physical_hosts())
         for node in self.serial_numbers.keys():
@@ -140,6 +139,6 @@ class IcDeployment:
 
 
 if __name__ == "__main__":
-    deployment = IcDeployment("mercury")
-    deployment.validate_mercury_hosts_ini()
+    deployment = IcDeployment("mainnet")
+    deployment.validate_mainnet_hosts_ini()
     # print(json.dumps(depl.get_deployment_nodes_hostvars(), indent=2))
