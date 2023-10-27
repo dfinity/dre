@@ -1,22 +1,12 @@
 use anyhow::Result;
-use candid::{Decode, Encode};
 use colored::Colorize;
-use cryptoki::context::{CInitializeArgs, Pkcs11};
-use cryptoki::session::{SessionFlags, UserType};
-use dialoguer::console::Term;
-use dialoguer::theme::ColorfulTheme;
-use dialoguer::{Confirm, Password, Select};
+use dialoguer::Confirm;
 use flate2::read::GzDecoder;
 use futures::stream::{self, StreamExt};
 use futures::Future;
 use ic_base_types::PrincipalId;
-use ic_canister_client::{Agent, Sender};
 use ic_management_types::UpdateReplicaVersions;
-use ic_nns_constants::GOVERNANCE_CANISTER_ID;
-use ic_nns_governance::pb::v1::{ListNeurons, ListNeuronsResponse};
-use ic_sys::utility_command::UtilityCommand;
 use itertools::Itertools;
-use keyring::{Entry, Error};
 use log::{error, info, warn};
 use regex::Regex;
 use reqwest::StatusCode;
@@ -24,76 +14,33 @@ use sha2::{Digest, Sha256};
 use std::fs::File;
 use std::io::Write;
 use std::os::unix::fs::PermissionsExt;
-use std::path::PathBuf;
-use std::str::FromStr;
 use std::{path::Path, process::Command};
 use strum::Display;
 
-use crate::cli::Opts;
+use crate::cli::Cli;
 use crate::defaults;
+use crate::detect_neuron::{Auth, Neuron};
 
 #[derive(Clone)]
-pub struct Cli {
+pub struct IcAdminWrapper {
     ic_admin: Option<String>,
     nns_url: url::Url,
     yes: bool,
     neuron: Option<Neuron>,
 }
 
-#[derive(Clone)]
-pub struct Neuron {
-    id: u64,
-    auth: Auth,
-}
-
-impl Neuron {
-    pub fn as_arg_vec(&self) -> Vec<String> {
-        vec!["--proposer".to_string(), self.id.to_string()]
-    }
-}
-
-#[derive(Clone)]
-pub enum Auth {
-    Hsm { pin: String, slot: u64, key_id: String },
-    Keyfile { path: String },
-}
-
-fn pkcs11_lib_path() -> anyhow::Result<PathBuf> {
-    let lib_macos_path = PathBuf::from_str("/Library/OpenSC/lib/opensc-pkcs11.so")?;
-    let lib_linux_path = PathBuf::from_str("/usr/lib/x86_64-linux-gnu/opensc-pkcs11.so")?;
-    if lib_macos_path.exists() {
-        Ok(lib_macos_path)
-    } else if lib_linux_path.exists() {
-        Ok(lib_linux_path)
-    } else {
-        Err(anyhow::anyhow!("no pkcs11 library found"))
-    }
-}
-
-fn get_pkcs11_ctx() -> anyhow::Result<Pkcs11> {
-    let pkcs11 = Pkcs11::new(pkcs11_lib_path()?)?;
-    pkcs11.initialize(CInitializeArgs::OsThreads)?;
-    Ok(pkcs11)
-}
-
-impl Auth {
-    pub fn as_arg_vec(&self) -> Vec<String> {
-        match self {
-            Auth::Hsm { pin, slot, key_id } => vec![
-                "--use-hsm".to_string(),
-                "--pin".to_string(),
-                pin.clone(),
-                "--slot".to_string(),
-                slot.to_string(),
-                "--key-id".to_string(),
-                key_id.clone(),
-            ],
-            Auth::Keyfile { path } => vec!["--secret-key-pem".to_string(), path.clone()],
+impl From<Cli> for IcAdminWrapper {
+    fn from(cli: Cli) -> Self {
+        Self {
+            ic_admin: cli.ic_admin,
+            nns_url: cli.nns_url,
+            yes: cli.yes,
+            neuron: cli.neuron,
         }
     }
 }
 
-impl Cli {
+impl IcAdminWrapper {
     fn print_ic_admin_command_line(&self, cmd: &Command) {
         info!(
             "running ic-admin: \n$ {}{}",
@@ -129,7 +76,7 @@ impl Cli {
     }
 
     pub(crate) fn propose_run(&self, cmd: ProposeCommand, opts: ProposeOptions, simulate: bool) -> anyhow::Result<()> {
-        let exec = |cli: &Cli, cmd: ProposeCommand, opts: ProposeOptions, add_dryrun_arg: bool| {
+        let exec = |cli: &IcAdminWrapper, cmd: ProposeCommand, opts: ProposeOptions, add_dryrun_arg: bool| {
             cli.run(
                 &cmd.get_command_name(),
                 [
@@ -626,126 +573,6 @@ pub struct ProposeOptions {
     pub motivation: Option<String>,
 }
 
-fn detect_hsm_auth() -> Result<Option<Auth>> {
-    info!("Detecting HSM devices");
-    let ctx = get_pkcs11_ctx()?;
-    for slot in ctx.get_slots_with_token()? {
-        let info = ctx.get_slot_info(slot)?;
-        if info.slot_description().starts_with("Nitrokey Nitrokey HSM") {
-            let key_id = format!("hsm-{}-{}", info.slot_description(), info.manufacturer_id());
-            let pin_entry = Entry::new("release-cli", &key_id)?;
-            let pin = match pin_entry.get_password() {
-                Err(Error::NoEntry) => Password::new().with_prompt("Please enter the HSM PIN: ").interact()?,
-                Ok(pin) => pin,
-                Err(e) => return Err(anyhow::anyhow!("Failed to get pin from keyring: {}", e)),
-            };
-
-            let mut flags = SessionFlags::new();
-            flags.set_serial_session(true);
-            let session = ctx.open_session_no_callback(slot, flags).unwrap();
-            session.login(UserType::User, Some(&pin))?;
-            info!("HSM login successful!");
-            pin_entry.set_password(&pin)?;
-            return Ok(Some(Auth::Hsm {
-                pin,
-                slot: slot.id(),
-                key_id: "01".to_string(),
-            }));
-        }
-    }
-    Ok(None)
-}
-
-async fn detect_neuron(url: url::Url) -> anyhow::Result<Option<Neuron>> {
-    if let Some(Auth::Hsm { pin, slot, key_id }) = detect_hsm_auth()? {
-        let auth = Auth::Hsm {
-            pin: pin.clone(),
-            slot,
-            key_id: key_id.clone(),
-        };
-        let sender = Sender::from_external_hsm(
-            UtilityCommand::read_public_key(Some(&slot.to_string()), Some(&key_id)).execute()?,
-            std::sync::Arc::new(move |input| {
-                Ok(
-                    UtilityCommand::sign_message(input.to_vec(), Some(&slot.to_string()), Some(&pin), Some(&key_id))
-                        .execute()?,
-                )
-            }),
-        );
-        let agent = Agent::new(url, sender);
-        let neuron_id = if let Some(response) = agent
-            .execute_query(
-                &GOVERNANCE_CANISTER_ID,
-                "list_neurons",
-                Encode!(&ListNeurons {
-                    include_neurons_readable_by_caller: true,
-                    neuron_ids: vec![],
-                })?,
-            )
-            .await
-            .map_err(|e| anyhow::anyhow!(e))?
-        {
-            let response = Decode!(&response, ListNeuronsResponse)?;
-            let neuron_ids = response.neuron_infos.keys().copied().collect::<Vec<_>>();
-            match neuron_ids.len() {
-                0 => return Err(anyhow::anyhow!("HSM doesn't control any neurons")),
-                1 => neuron_ids[0],
-                _ => Select::with_theme(&ColorfulTheme::default())
-                    .items(&neuron_ids)
-                    .default(0)
-                    .interact_on_opt(&Term::stderr())?
-                    .map(|i| neuron_ids[i])
-                    .ok_or_else(|| anyhow::anyhow!("No neuron selected"))?,
-            }
-        } else {
-            return Err(anyhow::anyhow!("Empty response when listing controlled neurons"));
-        };
-
-        Ok(Some(Neuron { id: neuron_id, auth }))
-    } else {
-        Ok(None)
-    }
-}
-
-impl Cli {
-    pub async fn from_opts(opts: &Opts, require_authentication: bool) -> anyhow::Result<Self> {
-        let nns_url = opts.network.get_url();
-        let neuron = if let Some(id) = opts.neuron_id {
-            Some(Neuron {
-                id,
-                auth: if let Some(path) = opts.private_key_pem.clone() {
-                    Auth::Keyfile { path }
-                } else if let (Some(slot), Some(pin), Some(key_id)) =
-                    (opts.hsm_slot, opts.hsm_pin.clone(), opts.hsm_key_id.clone())
-                {
-                    Auth::Hsm { pin, slot, key_id }
-                } else {
-                    detect_hsm_auth()?
-                        .ok_or_else(|| anyhow::anyhow!("No valid authentication method found for neuron: {id}"))?
-                },
-            })
-        } else if require_authentication {
-            // Early warn if there will be a problem because a neuron was not detected.
-            match detect_neuron(nns_url.clone()).await {
-                Ok(Some(n)) => Some(n),
-                Ok(None) => {
-                    error!("No neuron detected.  Your HSM device is not detectable (or override variables HSM_PIN, HSM_SLOT, HSM_KEY_ID are incorrectly set); your variables NEURON_ID, PRIVATE_KEY_PEM might not be defined either.");
-                    None
-                },
-                Err(e) => return Err(anyhow::anyhow!("Failed to detect neuron: {}.  Your HSM device is not detectable (or override variables HSM_PIN, HSM_SLOT, HSM_KEY_ID are incorrectly set); your variables NEURON_ID, PRIVATE_KEY_PEM might not be defined either.", e)),
-            }
-        } else {
-            None
-        };
-        Ok(Cli {
-            yes: opts.yes,
-            neuron,
-            ic_admin: opts.ic_admin.clone(),
-            nns_url,
-        })
-    }
-}
-
 /// Returns a path to downloaded ic-admin binary
 async fn download_ic_admin(version: Option<String>) -> Result<String> {
     let version = version
@@ -824,7 +651,7 @@ oSMDIQBa2NLmSmaqjDXej4rrJEuEhKIz7/pGXpxztViWhB+X9Q==
         ];
 
         for cmd in test_cases {
-            let cli = Cli {
+            let cli = IcAdminWrapper {
                 nns_url: url::Url::from_str("http://localhost:8080").unwrap(),
                 yes: false,
                 neuron: Neuron {

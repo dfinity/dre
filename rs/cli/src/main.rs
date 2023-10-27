@@ -1,4 +1,6 @@
 use crate::cli::version::Commands::Update;
+use crate::general::vote_on_proposals;
+use crate::ic_admin::IcAdminWrapper;
 use clap::{error::ErrorKind, CommandFactory, Parser};
 use dotenv::dotenv;
 use ic_canisters::governance_canister_version;
@@ -15,6 +17,8 @@ use std::thread;
 mod cli;
 mod clients;
 pub(crate) mod defaults;
+mod detect_neuron;
+mod general;
 mod ic_admin;
 mod ops_subnet_node_replace;
 mod runner;
@@ -95,7 +99,7 @@ async fn main() -> Result<(), anyhow::Error> {
 
                 match &subnet.subcommand {
                     cli::subnet::Commands::Deploy { version } => {
-                        let runner = runner::Runner::new_with_network_url(ic_admin::Cli::from_opts(&cli_opts, false).await?, backend_port).await?;
+                        let runner = runner::Runner::new_with_network_url(cli::Cli::from_opts(&cli_opts, false).await?.into(), backend_port).await?;
                         runner.deploy(&subnet.id.unwrap(), version, simulate)
                     },
                     cli::subnet::Commands::Replace {
@@ -110,7 +114,7 @@ async fn main() -> Result<(), anyhow::Error> {
                         verbose,
                     } => {
                         let min_nakamoto_coefficients = parse_min_nakamoto_coefficients(&mut cmd, min_nakamoto_coefficients);
-                            let runner = runner::Runner::new_with_network_url(ic_admin::Cli::from_opts(&cli_opts, true).await?, backend_port).await?;
+                            let runner = runner::Runner::new_with_network_url(cli::Cli::from_opts(&cli_opts, true).await?.into(), backend_port).await?;
                             runner
                                 .membership_replace(ic_management_types::requests::MembershipReplaceRequest {
                                     target: match &subnet.id {
@@ -143,7 +147,7 @@ async fn main() -> Result<(), anyhow::Error> {
                     }
                     cli::subnet::Commands::Resize { add, remove, include, only, exclude, motivation, verbose, } => {
                         if let Some(motivation) = motivation.clone() {
-                            let runner = runner::Runner::new_with_network_url(ic_admin::Cli::from_opts(&cli_opts, true).await?, backend_port).await?;
+                            let runner = runner::Runner::new_with_network_url(cli::Cli::from_opts(&cli_opts, true).await?.into(), backend_port).await?;
                             runner.subnet_resize(ic_management_types::requests::SubnetResizeRequest {
                                 subnet: subnet.id.unwrap(),
                                 add: *add,
@@ -163,7 +167,7 @@ async fn main() -> Result<(), anyhow::Error> {
                     cli::subnet::Commands::Create { size, min_nakamoto_coefficients, exclude, only, include, motivation, verbose, replica_version } => {
                         let min_nakamoto_coefficients = parse_min_nakamoto_coefficients(&mut cmd, min_nakamoto_coefficients);
                         if let Some(motivation) = motivation.clone() {
-                            let runner = runner::Runner::new_with_network_url(ic_admin::Cli::from_opts(&cli_opts, true).await?, backend_port).await?;
+                            let runner = runner::Runner::new_with_network_url(cli::Cli::from_opts(&cli_opts, true).await?.into(), backend_port).await?;
                             runner.subnet_create(ic_management_types::requests::SubnetCreateRequest {
                                 size: *size,
                                 min_nakamoto_coefficients,
@@ -183,12 +187,12 @@ async fn main() -> Result<(), anyhow::Error> {
             }
 
             cli::Commands::Get { args } => {
-                let ic_admin = ic_admin::Cli::from_opts(&cli_opts, false).await?;
+                let ic_admin: IcAdminWrapper = cli::Cli::from_opts(&cli_opts, false).await?.into();
                 ic_admin.run_passthrough_get(args)
             },
 
             cli::Commands::Propose { args } => {
-                let ic_admin = ic_admin::Cli::from_opts(&cli_opts, true).await?;
+                let ic_admin: IcAdminWrapper = cli::Cli::from_opts(&cli_opts, true).await?.into();
                 ic_admin.run_passthrough_propose(args, simulate)
             },
 
@@ -198,8 +202,8 @@ async fn main() -> Result<(), anyhow::Error> {
                         // FIXME: backend needs gitlab access to figure out RCs and versions to retire
                         let runner = runner::Runner::from_opts(&cli_opts).await?;
                         let (_, retire_versions) = runner.prepare_versions_to_retire(false).await?;
-                        let ic_admin = ic_admin::Cli::from_opts(&cli_opts, true).await?;
-                        let new_replica_info = ic_admin::Cli::prepare_to_propose_to_update_elected_replica_versions(version, release_tag).await?;
+                        let ic_admin: IcAdminWrapper = cli::Cli::from_opts(&cli_opts, true).await?.into();
+                        let new_replica_info = ic_admin::IcAdminWrapper::prepare_to_propose_to_update_elected_replica_versions(version, release_tag).await?;
                         let proposal_title = if retire_versions.is_empty() {
                             Some(format!("Elect new IC/Replica revision (commit {})", &version[..8]))
                         } else {
@@ -235,7 +239,7 @@ async fn main() -> Result<(), anyhow::Error> {
                             )
                             .exit();
                         }
-                        let runner = runner::Runner::new_with_network_url(ic_admin::Cli::from_opts(&cli_opts, true).await?, backend_port).await?;
+                        let runner = runner::Runner::new_with_network_url(cli::Cli::from_opts(&cli_opts, true).await?.into(), backend_port).await?;
                         runner.remove_nodes(NodesRemoveRequest {
                             extra_nodes_filter: extra_nodes_filter.clone(),
                             no_auto: *no_auto,
@@ -244,6 +248,14 @@ async fn main() -> Result<(), anyhow::Error> {
                         }, simulate).await
                     },
                 }
+            },
+
+            cli::Commands::Vote {accepted_neurons, accepted_topics}=> {
+                let cli = cli::Cli::from_opts(&cli_opts, true).await?;
+                vote_on_proposals(match cli.get_neuron() {
+                    Some(neuron) => neuron,
+                    None => return Err(anyhow::anyhow!("Neuron required for this command")),
+                }, cli.get_nns_url(), accepted_neurons, accepted_topics).await
             },
         }
     })

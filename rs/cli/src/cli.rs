@@ -1,6 +1,9 @@
 use clap::{Parser, Subcommand};
 use clap_num::maybe_hex;
 use ic_management_types::Network;
+use log::error;
+
+use crate::detect_neuron::{detect_hsm_auth, detect_neuron, Auth, Neuron};
 
 // For more info about the version setup, look at https://docs.rs/clap/latest/clap/struct.Command.html#method.version
 #[derive(Parser, Clone)]
@@ -66,6 +69,38 @@ pub(crate) enum Commands {
 
     /// Manage nodes
     Nodes(nodes::Cmd),
+
+    /// Vote on our proposals
+    Vote {
+        /// Override default accepted proposers
+        /// These are the proposers which proposals will
+        /// be automatically voted on
+        ///
+        /// By default: DRE + automation neuron 80
+        #[clap(
+            long,
+            use_value_delimiter = true,
+            value_delimiter = ',',
+            value_name = "PROPOSER_ID",
+            default_value = "80,39,40,46,58,61,77"
+        )]
+        accepted_neurons: Vec<u64>,
+
+        /// Override default topics to vote on
+        /// Use with caution! This is subcommand is intended to be used
+        /// only by DRE in processes of rolling out new versions,
+        /// everything else should be double checked manually
+        ///
+        /// By default: SubnetReplicaVersionManagement
+        #[clap(
+            long,
+            use_value_delimiter = true,
+            value_delimiter = ',',
+            value_name = "PROPOSER_ID",
+            default_value = "12"
+        )]
+        accepted_topics: Vec<i32>,
+    },
 }
 
 pub(crate) mod subnet {
@@ -248,5 +283,60 @@ pub(crate) mod nodes {
             #[clap(long)]
             motivation: Option<String>,
         },
+    }
+}
+
+#[derive(Clone)]
+pub struct Cli {
+    pub ic_admin: Option<String>,
+    pub nns_url: url::Url,
+    pub yes: bool,
+    pub neuron: Option<Neuron>,
+}
+
+impl Cli {
+    pub fn get_neuron(&self) -> &Option<Neuron> {
+        &self.neuron
+    }
+
+    pub fn get_nns_url(&self) -> &url::Url {
+        &self.nns_url
+    }
+
+    pub async fn from_opts(opts: &Opts, require_authentication: bool) -> anyhow::Result<Self> {
+        let nns_url = opts.network.get_url();
+        let neuron = if let Some(id) = opts.neuron_id {
+            Some(Neuron {
+                id,
+                auth: if let Some(path) = opts.private_key_pem.clone() {
+                    Auth::Keyfile { path }
+                } else if let (Some(slot), Some(pin), Some(key_id)) =
+                    (opts.hsm_slot, opts.hsm_pin.clone(), opts.hsm_key_id.clone())
+                {
+                    Auth::Hsm { pin, slot, key_id }
+                } else {
+                    detect_hsm_auth()?
+                        .ok_or_else(|| anyhow::anyhow!("No valid authentication method found for neuron: {id}"))?
+                },
+            })
+        } else if require_authentication {
+            // Early warn if there will be a problem because a neuron was not detected.
+            match detect_neuron(nns_url.clone()).await {
+                Ok(Some(n)) => Some(n),
+                Ok(None) => {
+                    error!("No neuron detected.  Your HSM device is not detectable (or override variables HSM_PIN, HSM_SLOT, HSM_KEY_ID are incorrectly set); your variables NEURON_ID, PRIVATE_KEY_PEM might not be defined either.");
+                    None
+                },
+                Err(e) => return Err(anyhow::anyhow!("Failed to detect neuron: {}.  Your HSM device is not detectable (or override variables HSM_PIN, HSM_SLOT, HSM_KEY_ID are incorrectly set); your variables NEURON_ID, PRIVATE_KEY_PEM might not be defined either.", e)),
+            }
+        } else {
+            None
+        };
+        Ok(Cli {
+            yes: opts.yes,
+            neuron,
+            ic_admin: opts.ic_admin.clone(),
+            nns_url,
+        })
     }
 }
