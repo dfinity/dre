@@ -1,0 +1,23 @@
+load("@python_deps//:requirements.bzl", "requirement")
+load("@rules_python//python:defs.bzl", "py_binary")
+
+py_binary(
+    name = "factsdb",
+    srcs = ["main.py"],
+    data = [
+        "@python_deps_ansible_base//:bin/ansible-inventory",
+    ] + glob(["data/*.csv"]),
+    env = {
+        "BAZEL": "true",
+        "ANSIBLE_INVENTORY_BIN": "$(location @python_deps_ansible_base//:bin/ansible-inventory)",
+        "IC_ADMIN_GIT_REVISION": "928caf66c35627efe407006230beee60ad38f090",
+    },
+    main = "main.py",
+    deps = [
+        requirement("GitPython"),
+        requirement("peewee"),
+        requirement("PyYAML"),
+        requirement("tabulate"),
+        "//pylib",
+    ],
+)

@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+TMPDIR="$HOME/tmp"
+mkdir -p "$TMPDIR"
+export TMPDIR
+
+export GIT_REVISION=3bcccef07408921fe849c92dd2437adc157ef9c3
+
+export HSM_PIN_FILE="$HOME/.hsm-pin"
+export HSM_KEY_ID=01
+export HSM_SLOT=0x0
+
+NETWORK=staging
+
+bash ./bootstrap.sh -n "${NETWORK}" "${@}"

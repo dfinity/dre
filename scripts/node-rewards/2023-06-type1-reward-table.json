@@ -1,0 +1,52 @@
+{
+    "North America,US,California": {
+        "type1": {
+            "xdr_permyriad_per_node_per_month": 16000000
+        }
+    },
+    "North America,US": {
+        "type1": {
+            "xdr_permyriad_per_node_per_month": 14990000
+        }
+    },
+    "North America,US,Florida": {
+        "type1": {
+            "xdr_permyriad_per_node_per_month": 14990000
+        }
+    },
+    "North America,US,Georgia": {
+        "type1": {
+            "xdr_permyriad_per_node_per_month": 14990000
+        }
+    },
+    "North America,CA": {
+        "type1": {
+            "xdr_permyriad_per_node_per_month": 16240000
+        }
+    },
+    "Europe,SI": {
+        "type1": {
+            "xdr_permyriad_per_node_per_month": 17200000
+        }
+    },
+    "Europe,CH": {
+        "type1": {
+            "xdr_permyriad_per_node_per_month": 16960000
+        }
+    },
+    "Europe": {
+        "type1": {
+            "xdr_permyriad_per_node_per_month": 15840000
+        }
+    },
+    "Asia,SG": {
+        "type1": {
+            "xdr_permyriad_per_node_per_month": 18240000
+        }
+    },
+    "Asia,JP": {
+        "type1": {
+            "xdr_permyriad_per_node_per_month": 17730000
+        }
+    }
+}

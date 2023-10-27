@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -eEuo pipefail
+
+source "$(dirname "$0")/lib.sh"
+
+GIT_REVISION=${1:-}
+
+if [[ -z "$GIT_REVISION" ]]; then
+    echo "Usage: install-ic-admin <git-revision>"
+fi
+
+install_ic_admin "$GIT_REVISION"

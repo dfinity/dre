@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+set -eEuo pipefail
+source $(dirname "$0")/lib.sh
+
+if [ $# -lt 1 ]; then
+    print_usage
+    exit 1
+fi
+
+NETWORK=mainnet
+OP_NAME=$1
+shift
+OP_ARGS=$@
+
+IC_ADMIN="${IC_ADMIN:-ic-admin}"
+
+# The same version of ic-admin as the registry canister version
+GIT_REVISION="${GIT_REVISION:-36f4a1c2903aed012b95b3b073e052c4036aef09}"
+NNS_URL=${NNS_URL:-'https://ic0.app'}
+
+# Check for prerequisites.
+check_jq
+check_ic_admin
+
+# Define variables by loading from well-known locations.
+KEY_ID=$(load_hsm_key_id) || exit $?
+HSM_SLOT=$(load_hsm_slot) || exit $?
+DFX_HSM_PIN=$(load_hsm_pin) || exit $?
+
+AUTH_PARAMS="--use-hsm --slot=$HSM_SLOT --key-id=$KEY_ID --pin=$DFX_HSM_PIN"
+ROLLOUT_AUTH_PARAMS="-s $HOME/.config/dfx/identity/release-automation/identity.pem"
+ROLLOUT_NEURON_ID=80
+check_env_common_for_proposal
+
+maybe_do_operation

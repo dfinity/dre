@@ -1,0 +1,66 @@
+## Alpha2 config
+
+### Initial neurons
+
+#### Leaders
+
+Neurons 0, 1, 2, 3, 4, and 5 are leaders.
+They are owned by real humans with HSMs.
+
+#### Followers
+
+Neurons 6--48 are followers.
+We don't expect their voters to actively vote on anything.
+
+#### The super-leader
+Neuron 49 is the "super-leader": it has a negligible amount of staked ICPTs, but is followed by neurons 0--5, ensuring that any vote made by Neuron 49 will result, through following, in the proposal being accepted.
+
+Neuron 49's owner, `djno5-aicq7-zk63u-kz72z-rb7ud-5urvg-s2azh-kkuoi-m3u3n-shbp3-vqe`, is controlled through the shared PEM file available in the (misnamed) https://dfinity.1password.com/vaults/tcw2ushi65ccrdhnw52fuhz5ii/allitems/wbdfu7eynrcdfgpgviarr3er4a[Alpha 2 Registry Mutator 1password vault].
+
+### Identities
+
+Here is a list of special identities on Mercury and what they can do.
+
+#### The super-leader
+Principal: `djno5-aicq7-zk63u-kz72z-rb7ud-5urvg-s2azh-kkuoi-m3u3n-shbp3-vqe`
+
+See corresponding subsection in the "Initial Neurons" section.
+It impacts Mercury's configuration through the `initial-neurons.csv`
+This identity has no privilege.
+Used for voting on proposals.
+This means that any proposal can be accepted in 2 ways: either using the super-leader, or that asking real neuron owners to vote using HSMs.
+For testing's sake, it's a good idea to have at least some proposals voted on by real neuron owners through HSMs.
+
+#### The IC SUP identity
+Principal: `zcwir-6stv5-xj4ap-gsl5i-r7dg5-w5prz-fedwa-knbyj-o4tlv-5sbo7-6qe`
+
+Shared through the https://dfinity.1password.com/vaults/fcjoeesfbg2qzvivhcvdlgc6xa/allitems/nyuhiqgjirbgzg3utyf4ub7dgm[IC Support Team vault].
+It impacts Mercury's configuration through the https://gitlab.com/dfinity-lab/core/ic/blob/b4c5411086eca330a1b19e9b10c60718c2456db4/testnet/ansible/roles/ic_nns_canisters_install/tasks/main.yml#L134[Child NNS setup].
+It has 2 privileges on the child NNS:
+
+* It can be used to submit proposals, such as for blessing a version, creating a subnet or adding nodes to an existing subnet.
+* It can be used to upgrade a given subnet to a previously-blessed version.
+
+It has no privilege on the parent NNS.
+
+#### The anonymous user
+Principal: `2vxsx-fae`
+
+It impacts Mercury's configuration through the https://gitlab.com/dfinity-lab/core/ic/blob/b4c5411086eca330a1b19e9b10c60718c2456db4/testnet/ansible/roles/ic_nns_canisters_install/tasks/main.yml#L72-L73[parent NNS setup].
+
+It has some privileges on the _parent_ NNS only: it can mutate the _parent_ registry and submit proposals to the _parent_ NNS.
+It has no privilege on the child NNS.
+It is however allowed, on the child NNS, to _query_ the registry (just like any other identity).
+
+#### The provisional whitelist
+Principals:
+
+* `hepun-yzhma-scz7c-3mpq6-fjyxb-6h3gf-pu3qd-dvil6-x7jik-gdzm6-dqe`
+* `2yjpj-uumzi-wnefi-5tum7-qt6yq-7gtxo-i4jt5-enll5-pma6q-2gild-mqe`
+* `wl2xv-qoqt6-fzcbu-ixpn2-yi5oo-mh45d-uknsp-dmjnn-wjz6z-okwez-cae`
+* `slxvk-igt53-ihchs-tvmod-jqqne-hgaz3-wztq2-fao7m-ojkmh-cmrlb-yqe`
+
+It impacts Mercury's configuration through the `provisional_whitelist.json` file.
+They are the member of the provisional whitelist on _both_ the parent and child NNS in mercury.
+They have the privilege of being able to create canisters with a non-zero cycle balance.
+They are required to run the script `ic_nns_install.yml`, because installing NNS canisters require creating canisters with a non-zero cycle balance.

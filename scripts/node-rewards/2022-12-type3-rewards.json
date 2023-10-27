@@ -1,0 +1,9 @@
+{
+  "Asia":{"type0":12120150,"type2":24240300,"type3":13668541},
+  "Europe":{"type0":10872488,"type2":21744975,"type3":12157083},
+  "North America,CA":{"type0":8911875,"type2":17823750,"type3":11246810},
+  "North America,US":{"type0":8733638,"type2":16041375,"type3":11021875},
+  "North America,US,California":{"type0":10872488,"type3":13403750},
+  "North America,US,Florida":{"type0":10872488,"type3":13403750},
+  "North America,US,Georgia":{"type0":10872488,"type3":13403750}
+}

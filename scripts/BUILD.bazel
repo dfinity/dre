@@ -1,0 +1,22 @@
+load("@python_deps//:requirements.bzl", "requirement")
+load("@rules_python//python:defs.bzl", "py_binary")
+
+py_binary(
+    name = "release-notes",
+    srcs = ["release-notes.py"],
+    data = [
+        "teams.json",
+    ],
+    deps = [
+    ],
+)
+
+py_binary(
+    name = "get-logs",
+    srcs = ["get-logs.py"],
+    deps = [
+        requirement("tabulate"),
+        requirement("elasticsearch"),
+        requirement("elasticsearch_follow"),
+    ],
+)

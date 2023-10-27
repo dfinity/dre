@@ -1,0 +1,50 @@
+diff --git a/gitlab-ci/src/artifacts/rclone_download.py b/gitlab-ci/src/artifacts/rclone_download.py
+index 20b8428d3f..1b31bd74ed 100755
+--- a/gitlab-ci/src/artifacts/rclone_download.py
++++ b/gitlab-ci/src/artifacts/rclone_download.py
+@@ -111,8 +111,12 @@ class RcloneDownload:
+         for prefix in prefixes:
+             cdn_path = f"public-s3:dfinity-download-public/{prefix}/{git_rev}/{self.remote_path}"
+             if not self._rclone_check_if_exists(cdn_path):
+-                logging.debug("CDN directory does not exist: %s", cdn_path)
+-                continue
++                cdn_path_old = f"public-s3:dfinity-download/{prefix}/{git_rev}/{self.remote_path}"
++                if self._rclone_check_if_exists(cdn_path_old):
++                    cdn_path = cdn_path_old
++                else:
++                    logging.debug("CDN directory does not exist: %s", cdn_path)
++                    continue
+             logging.info("CDN directory exists: %s", cdn_path)
+ 
+             local_path = pathlib.Path(self.out or f"{self.repo_root}/artifacts/{git_rev}/{self.remote_path}")
+diff --git a/ic-os/guestos/scripts/build-deployment.sh b/ic-os/guestos/scripts/build-deployment.sh
+index b8e7de1c12..d01eb69b6a 100755
+--- a/ic-os/guestos/scripts/build-deployment.sh
++++ b/ic-os/guestos/scripts/build-deployment.sh
+@@ -125,6 +125,7 @@ function cleanup_rootfs() {
+ 
+ function download_registry_canisters() {
+     "${REPO_ROOT}"/gitlab-ci/src/artifacts/rclone_download.py \
++        --config "${REPO_ROOT}"/.rclone.conf \
+         --git-rev "$GIT_REVISION" --remote-path=canisters --out="${IC_PREP_DIR}/canisters"
+ 
+     for f in "${IC_PREP_DIR}"/canisters/*.gz; do
+@@ -135,6 +136,7 @@ function download_registry_canisters() {
+ 
+ function download_binaries() {
+     "${REPO_ROOT}"/gitlab-ci/src/artifacts/rclone_download.py \
++        --config "${REPO_ROOT}"/.rclone.conf \
+         --git-rev "$GIT_REVISION" --remote-path=release --out="${IC_PREP_DIR}/bin"
+ 
+     for f in "${IC_PREP_DIR}"/bin/*.gz; do
+@@ -211,9 +213,7 @@ function generate_subnet_config() {
+         "--nodes" ${NODES_NNS[*]} ${NODES_APP[*]} \
+         "--provisional-whitelist" "${WHITELIST}" \
+         "--initial-node-operator" "${NODE_OPERATOR_ID}" \
+-        "--initial-node-provider" "${NODE_OPERATOR_ID}" \
+-        "--ssh-readonly-access-file" "${TESTNET_KEYS}" \
+-        "--ssh-backup-access-file" "${TESTNET_KEYS}"
++        "--initial-node-provider" "${NODE_OPERATOR_ID}"
+     set +x
+ }
+ 

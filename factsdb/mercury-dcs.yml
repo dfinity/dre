@@ -1,0 +1,50 @@
+# Uncommented DCs are the ones that are already in prod use.
+# The commented DCs are either not yet onboarded or are used for development and testing purposes.
+# The complete list can be created like this:
+# cat deployments/env/serial-numbers.yml | cut -d- -f1 | sort | uniq
+- an1
+- at1
+- at2
+# - aw1
+- bc1
+- br1
+- br2
+- bu1
+# - ch1  # Dfinity
+- ch2
+# - ch3
+- dl1
+- fm1
+# - fr1  # Dfinity
+# - fr2
+- ge1
+- ge2
+# - hu1
+- jv1
+# - lj1
+- lv1
+# - mb1
+- mu1
+- ny1
+- or1
+# - ph1
+- pl1
+- sg1
+- sg2
+- sg3
+# - sf1  # Dfinity
+- sj1
+# - sj2
+# - st1
+# - to1
+# - to2
+- tp1
+# - ty1
+# - ty2
+# - zh1  # Dfinity
+- zh2
+- zh3
+# - zh4
+- zh5
+# - zh6
+- zh7

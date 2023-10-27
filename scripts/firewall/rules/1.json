@@ -1,0 +1,13 @@
+[
+    {
+        "ipv4_prefixes": [],
+        "ipv6_prefixes": [
+            "2a0b:21c0:4003:2::/64"
+        ],
+        "ports": [
+            8080
+        ],
+        "action": 1,
+        "comment": "LN1 boundary nodes"
+    }
+]

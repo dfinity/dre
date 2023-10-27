@@ -1,0 +1,80 @@
+load("@aspect_rules_js//js:defs.bzl", "js_binary", "js_image_layer", "js_test")
+load("@aspect_rules_ts//ts:defs.bzl", "ts_config", "ts_project")
+load("@npm//:defs.bzl", "npm_link_all_packages")
+load("@rules_oci//oci:defs.bzl", "oci_image", "oci_push")
+
+# Link all packages from the /WORKSPACE npm_translate_lock(name = "npm") and also packages from
+# manual /WORKSPACE npm_import rules to bazel-bin/node_modules as well as the virtual store
+# bazel-bin/node_modules/.aspect_rules_js since /pnpm-lock.yaml is the root of the pnpm workspace
+npm_link_all_packages(
+    name = "node_modules",
+)
+
+ts_config(
+    name = "tsconfig",
+    src = "tsconfig.json",
+)
+
+ts_project(
+    name = "linear-jira-ts",
+    srcs = [
+        "main.ts",
+        "test.ts",
+    ],
+    tsconfig = "@//:tsconfig",
+    deps = [
+        ":node_modules/@atlaskit/adf-schema",
+        ":node_modules/@atlaskit/editor-json-transformer",
+        ":node_modules/@atlaskit/editor-markdown-transformer",
+        ":node_modules/@linear/sdk",
+        ":node_modules/@types/lodash",
+        ":node_modules/adf-to-md",
+        ":node_modules/jira.js",
+        ":node_modules/lodash",
+        ":node_modules/@types/react",
+        # Dev dependencies
+        ":node_modules/@types/node",
+        ":node_modules/ts-node",
+        ":node_modules/typescript",
+    ],
+)
+
+js_binary(
+    name = "linear-jira",
+    node_options = [
+        "--unhandled-rejections=strict",
+    ],
+    data = [
+        ":linear-jira-ts",
+        ":package.json",
+    ],
+    entry_point = "main.js",
+)
+
+# Image
+js_image_layer(
+    name = "layers",
+    binary = ":linear-jira",
+    root = "/app",
+)
+
+oci_image(
+    name = "linear-jira-image",
+    base = "@debian",
+    cmd = ["/app/linear-jira"],
+    entrypoint = ["bash"],
+    tars = [
+        ":layers",
+    ],
+)
+
+oci_push(
+    name = "push_image",
+    image = ":linear-jira-image",
+    repository = "registry.gitlab.com/dfinity-lab/core/release/linear-jira",
+)
+
+js_test(
+    name = "test",
+    entry_point = "test.js",
+)

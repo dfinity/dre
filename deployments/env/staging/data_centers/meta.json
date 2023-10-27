@@ -1,0 +1,126 @@
+{
+  "dc_public_key_ch2-dll26": {
+    "node_allowance": 64,
+    "node_provider": "dc_public_key_ch2-dll26.der"
+  },
+  "dc_public_key_dl1-dll26": {
+    "node_allowance": 64,
+    "node_provider": "dc_public_key_dl1-dll26.der"
+  },
+  "dc_public_key_dl1-dll27": {
+    "node_allowance": 64,
+    "node_provider": "dc_public_key_dl1-dll27.der"
+  },
+  "dc_public_key_pl1-dll26": {
+    "node_allowance": 64,
+    "node_provider": "dc_public_key_pl1-dll26.der"
+  },
+  "dc_public_key_pl1-dll27": {
+    "node_allowance": 64,
+    "node_provider": "dc_public_key_pl1-dll27.der"
+  },
+  "dc_public_key_ge1-dll26": {
+    "node_allowance": 64,
+    "node_provider": "dc_public_key_ge1-dll26.der"
+  },
+  "dc_public_key_ge2-dll26": {
+    "node_allowance": 64,
+    "node_provider": "dc_public_key_ge2-dll26.der"
+  },
+  "dc_public_key_jv1-dll26": {
+    "node_allowance": 64,
+    "node_provider": "dc_public_key_jv1-dll26.der"
+  },
+  "dc_public_key_br1-dll26": {
+    "node_allowance": 64,
+    "node_provider": "dc_public_key_br1-dll26.der"
+  },
+  "dc_public_key_br1-dll27": {
+    "node_allowance": 64,
+    "node_provider": "dc_public_key_br1-dll27.der"
+  },
+  "dc_public_key_br1-dll28": {
+    "node_allowance": 64,
+    "node_provider": "dc_public_key_br1-dll28.der"
+  },
+  "dc_public_key_br2-dll12": {
+    "node_allowance": 64,
+    "node_provider": "dc_public_key_br2-dll12.der"
+  },
+  "dc_public_key_br2-dll13": {
+    "node_allowance": 64,
+    "node_provider": "dc_public_key_br2-dll13.der"
+  },
+  "dc_public_key_br2-dll14": {
+    "node_allowance": 64,
+    "node_provider": "dc_public_key_br2-dll14.der"
+  },
+  "dc_public_key_ch2-dll28": {
+    "node_allowance": 64,
+    "node_provider": "dc_public_key_ch2-dll28.der"
+  },
+  "dc_public_key_dl1-dll28": {
+    "node_allowance": 64,
+    "node_provider": "dc_public_key_dl1-dll28.der"
+  },
+  "dc_public_key_ge1-dll27": {
+    "node_allowance": 64,
+    "node_provider": "dc_public_key_ge1-dll27.der"
+  },
+  "dc_public_key_ge1-dll28": {
+    "node_allowance": 64,
+    "node_provider": "dc_public_key_ge1-dll28.der"
+  },
+  "dc_public_key_ge2-dll27": {
+    "node_allowance": 64,
+    "node_provider": "dc_public_key_ge2-dll27.der"
+  },
+  "dc_public_key_ge2-dll28": {
+    "node_allowance": 64,
+    "node_provider": "dc_public_key_ge2-dll28.der"
+  },
+  "dc_public_key_jv1-dll27": {
+    "node_allowance": 64,
+    "node_provider": "dc_public_key_jv1-dll27.der"
+  },
+  "dc_public_key_jv1-dll28": {
+    "node_allowance": 64,
+    "node_provider": "dc_public_key_jv1-dll28.der"
+  },
+  "dc_public_key_pl1-dll28": {
+    "node_allowance": 64,
+    "node_provider": "dc_public_key_pl1-dll28.der"
+  },
+  "dc_public_key_sg1-dll27": {
+    "node_allowance": 64,
+    "node_provider": "dc_public_key_sg1-dll27.der"
+  },
+  "dc_public_key_sg1-dll28": {
+    "node_allowance": 64,
+    "node_provider": "dc_public_key_sg1-dll28.der"
+  },
+  "dc_public_key_sg2-dll12": {
+    "node_allowance": 64,
+    "node_provider": "dc_public_key_sg2-dll12.der"
+  },
+  "dc_public_key_sg2-dll13": {
+    "node_allowance": 64,
+    "node_provider": "dc_public_key_sg2-dll13.der"
+  },
+  "dc_public_key_sg2-dll14": {
+    "node_allowance": 64,
+    "node_provider": "dc_public_key_sg2-dll14.der"
+  },
+  "dc_public_key_sg3-dll26": {
+    "node_allowance": 64,
+    "node_provider": "dc_public_key_sg3-dll26.der"
+  },
+  "dc_public_key_sg3-dll27": {
+    "node_allowance": 64,
+    "node_provider": "dc_public_key_sg3-dll27.der"
+  },
+  "dc_public_key_sg3-dll28": {
+    "node_allowance": 64,
+    "node_provider": "dc_public_key_sg3-dll28.der"
+  }
+}

@@ -1,0 +1,399 @@
+#+OPTIONS: toc:2
+* Operating Boundary nodes						:TOC:
+  - [[#what-is-a-boundary-node][What is a boundary node?]]
+  - [[#accessing-the-boundary-node-code][Accessing the boundary node code?]]
+  - [[#where-is-the-canonical-list-of-production-boundary-nodes][Where is the canonical list of production boundary nodes?]]
+  - [[#which-boundary-nodes-are-included-in-the-ic0app-load-balancer][Which boundary nodes are included in the ic0.app load balancer?]]
+  - [[#targeting-a-particular-boundary-node][Targeting a particular boundary node?]]
+  - [[#observability-and-metrics][Observability and metrics?]]
+  - [[#where-are-the-logs-][Where are the logs ?]]
+  - [[#what-are-the-sources-for-the-logs][What are the sources for the logs?]]
+  - [[#components-and-what-do-they-do][Components and what do they do?]]
+  - [[#how-do-i-login-into-production-boundary-node][How do I login into production boundary node?]]
+  - [[#what-not-to-do-on-production-boundary-nodes][What not to do on production boundary nodes?]]
+  - [[#the-directory-structure-on-the-boundary-nodes][The directory structure on the boundary nodes?]]
+  - [[#how-to-troubleshoot-common-problems][How to troubleshoot common problems?]]
+  - [[#where-to-find-more-information][where to find more information?]]
+  - [[#how-to-deploy-code-changes-pre-virtualization-][How to deploy code changes (Pre-Virtualization) ?]]
+  - [[#how-to-deploy-boundary-node-vms-][How to deploy boundary node VMs ?]]
+  - [[#how-to-test-a-deployment][How to test a deployment?]]
+
+** What is a boundary node?
+
+Boundary nodes are the gateway to the Internet Computer. Boundary
+nodes use Nginx and other daemons to serve the following functions:
+
+1. Discover-ability: The ic0.app domain name points to a set of
+   boundary nodes, this top-level domain name is used to access the
+   IC.
+
+2. Routing: The IC hosts a group of subnets, each subnets then hosts a
+   range contiguous of canister-ids. Request directed to a canister
+   are routed to the correct subnet and replica within that subnet by
+   the boundary nodes.
+
+3. Bootstrapping/Installing the service worker. The service worker is
+   the first component in the root of trust used to verify
+   certification from the IC. This service worker is served by boundary
+   nodes over TLS.
+
+4. Provide a HTML adapter for IC. The IC is abstracted as a set of
+   canister emulating the actor model. These canisters send receive
+   cbor message. The boundary node translates HTTP requests to CBOR
+   for canister consumption and does the reverse translation for HTTP
+   responses.
+
+5. Rate limiting and kill switch. The boundary nodes rate
+   limit/throttle user request to protect the IC from DDOS attacks.
+
+   The HTTP adapter functionality is duplicated both in the service
+worker and the icx-proxy.
+
+** Accessing the boundary node code?
+
+The boundary NGINX gateway is built using code and binaries that come
+from various code repositories.
+
+
+A. [[https://gitlab.com/dfinity-lab/public/ic/-/tree/master/ic-os/boundary-guestos/rootfs/etc/nginx/conf.d][NGINX configuration and routing logic]]
+
+B. [[https://gitlab.com/dfinity-lab/public/ic/-/tree/master/rs/boundary_node/control_plane][Control Plane Binary]]
+
+C. [[https://gitlab.com/dfinity-lab/public/ic/-/tree/master/typescript/service-worker][Service worker]]
+
+D. [[https://gitlab.com/dfinity-lab/private/ic-stopgap/-/blob/master/boundary_node/Makefile][Deployment (Pre Virtualization)]]
+   Deployment uses ansible scripts and the code is located in the ic-stopgap repo
+
+E. [[https://gitlab.com/dfinity-lab/core/release/-/blob/fs/installationdoc/deployments/Makefile][Deployment of Boundary VM]]
+   makefile assisted deployment of boundary VMs.
+
+F. [[https://github.com/dfinity/nginx-module-cbor-input][CBOR parsing module]]
+
+G. [[https://github.com/dfinity/icx-proxy][icx-proxy]]
+
+H. [[https://github.com/dfinity/agent-rs][agent-rs]]
+
+
+All of the above components are collected/compiled into the ic-stopgap repo before a deployment.
+
+** Where is the canonical list of production boundary nodes?
+
+[[https://gitlab.com/dfinity-lab/private/ic-stopgap/-/blob/master/boundary_node/env/mainnet/hosts][Mainnet hosts]]
+[[https://gitlab.com/dfinity-lab/private/ic-stopgap/-/blob/master/boundary_node/env/rosetta/hosts][Rosetta hosts]]
+
+#+BEGIN_SRC bash
+[boundary_node] # This node is intentionally not in the balancer, and
+#is here to test things on before testing to the rest of the nodes:
+
+am6-bnm01.boundary.dfinity.network
+# These are the 5 live IC boundary nodes servicing ic0.app
+am6-bnm00.boundary.dfinity.network
+da11-bnm00.boundary.dfinity.network
+fr2-bnm00.boundary.dfinity.network
+sg1-bnm00.boundary.dfinity.network
+sv15-bnm00.boundary.dfinity.network
+#+END_SRC
+
+** Which boundary nodes are included in the ic0.app load balancer?
+
+Under normal operating conditions the 5 nodes described above are part
+of the Cloudflare's load balance config. The exact list of nodes being
+load balanced to can only be determined by logging into Cloudflare. To
+get assistance with Cloudflare related stuff contact the pfops team.
+
+** Targeting a particular boundary node?
+
+To target a particular boundary node instead of the geo-dns resolved
+boundary one can add entries the /etc/hosts file of the form
+
+#+BEGIN_SRC bash
+cat /etc/hosts
+ic0.app   am6-bnm00.boundary.dfinity.network
+
+And equivalent curl command would be
+$ curl -i -sL -X POST --resolve h5aet-waaaa-aaaab-qaamq-cai.raw.ic0.app:443:145.40.97.98 https://h5aet-waaaa-aaaab-qaamq-cai.raw.ic0.app/p/ic-puppies
+#+END_SRC bash
+
+** Observability and metrics?
+
+Boundary node HTTP requests per second.
+[[https://grafana.dfinity.systems/d/ZZPmSBrGk/genesis-dashboard-mercury?orgId=1][Grafana Genesis Dashboard]]
+
+Boundary node dashboard
+[[https://grafana.dfinity.systems/d/2u6N13hnz/boundary-nodes?orgId=1&from=now-1h&to=now][Grafana Boundary Nodes Dashboard]]
+
+** Where are the logs ?
+
+[[https://kibana.mercury.dfinity.systems]]
+select source
+       boundary-journal*
+       boundary-nginx*
+
+** What are the sources for the logs?
+
+The logs will contain Nginx logs for IC access, control plane routing
+updates, ICX proxy records, and generic OS messages.
+
+** Components and what do they do?
+
+[[https://lucid.app/publicSegments/view/e1079e9e-9d0f-4d0b-a6ab-05c03e75dd8b/image.png]]
+
+The Nginx service routes the requests to replicas in the destination
+subnets.  Specifically, the ic-router.js is a nginx NJS module that
+parses the incoming requests, extracts the destination canister-id, and
+maps it to specific replica in the subnet that hosts the canister
+
+The ic-control-plane is responsible for periodically fetching the
+network topology and updating the route files. The route files are
+mappings of canister-id ranges to replicas.
+
+The service worker is a java script web asset served to the user
+agents from the boundary nodes.
+
+The icx-proxy is a component that is responsible for intercepting
+"HTTP" request from a user agent. All requests that are NOT directed
+to the api/v2 REST-API endpoint are forwarded to the icx-proxy.  The
+icx-proxy which is yet another proxy server running on the boundary
+node.  The icx-proxy then wraps the HTTP request into CBOR request
+understood and sends it back to the nginx proxy to route as api/v2
+request.  On the way bay the icx-proxy un-marshalls the CBOR response
+into an HTTP response.
+
+** How do I login into production boundary node?
+
+The boundary nodes are security sensitive installations as they host
+the service worker. Access to the boundary node is restricted both by
+the pfops and the prod-security team. If you think you have reasons to
+be allowed access to the boundary nodes please work with #prod-sec
+team then the #pfops team can add you the list of user that can log
+into the boundary nodes.
+
+** What not to do on production boundary nodes?
+
+This is general advice, but once logged into the boundary nodes -
+please don't change binaries without auditing/documenting the
+change. Refrain from installing debian packages on the production
+boundary nodes.
+
+Suggested workflow is:
+A. Extract information from the boundary node to debug the issue.
+B. Replicate and fix the issue on the test boundary nodes.
+#+BEGIN_SRC
+   - am6-bnt00.testnet.dfinity.network   [Testnet]
+   - sv15-bnt00.testnet.dfinity.network  [Testnet]
+#+END_SRC
+C. Test the fix by pointing your curl commands to the test boundary nodes.
+D. Prep up the fix in the ic-stop  gap repo
+E. Do a upgrade using Ansible to deploy the fix.
+
+** The directory structure on the boundary nodes?
+
+Most of the custom Nginx logic for the boundary node resides in the
+/etc/nginx folder. This is sample directory structure with some commentary
+
+#+BEGIN_SRC
+ /etc/nginx
+├── certs
+│   ├── chain.pem                  -> letsencrypt certificates
+│   └── testnet.dfinity.network.pem /etc/nginx
+├── certs
+│   ├── chain.pem
+│   └── testnet.dfinity.network.pem
+├── conf.d
+│   ├── 000-nginx-global.conf
+│   ├── identity.conf -> /etc/nginx/ic_networks/identity/nginx.conf
+├── dhparam.pem
+├── glass-cabinet
+│   ├── identity                     -> Per IC copies of binaries and scripts
+│   │   ├── boundary-node-control-plane
+│   │   ├── ic_router_control_plane.py
+│   │   ├── ic_router_control_plane_watcher.sh
+│   │   ├── ic_router_table.js
+│   │   ├── ic_router_table.js.2022_01_11-16:45:40
+│   │   ├── icx-proxy
+│   │   ├── nginx.conf
+│   │   ├── nginx_table.conf
+│   │   ├── nginx_table.conf.2022_01_11-16:45:40
+│   │   ├── trusted_certs.pem
+│   │   ├── trusted_certs.pem.2022_01_11-15-56-07 -> backups
+│   │   └── trusted_certs.pem.2022_02_07-18:15:33
+├── ic_public_key.pem
+├── ic_router.js
+├── ic_routes
+│   ├── identity                      -> Routes generated from control plane.
+│   │   ├── 00000000000000000001.routes
+│   ├── medium03
+│   │   └── 00000000000000000001.routes
+├── keys
+│   └── testnet.dfinity.network.pem  -> TLS keys for the server
+├── mime.types
+├── modules -> /usr/lib/nginx/modules
+├── modules-enabled
+│   ├── ngx_HTTP_cbor_input_module.conf
+│   └── ngx_HTTP_js_module.conf      -> Simply loads the router module
+└── nginx.conf                       -> Global nginx config 
+#+END_SRC
+
+** How to troubleshoot common problems?
+
+A. Widespread subnet wide outages. Most likely scenarios are
+   - certificate expiry
+   - hosed/stalled subnet.
+   - cloudflare mis-configuration
+
+    Check replica logs and cert expiry.
+
+
+#+BEGIN_SRC bash
+# for x in 145.40.68.46 145.40.77.242 145.40.93.138 145.40.70.218 86.109.1.190;
+ do
+   echo $x ; timeout 2 openssl s_client -servername boundary.dfinity.network -connect $x:443 2>/dev/null | openssl x509 -noout -dates ;
+ done
+#+END_SRC
+
+B. 5XX HTTP errors. Upstream replica related issues like canister
+trapping, replica crashing etc.
+
+C. SSL or backend connection error in logs. Most connection error codes
+are self-explanatory. Example ECONNREFUSED would mean upstream is not
+listeing on the port, ENETUNREACH links are down.
+
+The SSL errors could be due stale upstream certificates. The
+certificates for upstream replicas are stored in trusted_certs.pem.
+These upstream certificates are self signed and can be re-fetched
+from the registry by restarting the control plane service for example
+
+Restarting the services
+
+#+BEGIN_SRC bash
+frz@am6-bnt00:~$ systemctl  | grep identity
+  boundary-node-control-plane-identity.service                                             loaded active running   Boundary Node Control Plane                                                                   
+  ic-router-control-plane-watcher-identity.service                                         loaded active running   Boundary Node Control Plane                                                                   
+  icx-proxy-identity.service                                                               loaded active running   ICX Proxy Service  
+
+# systemctl restart boundary-node-control-plane-identity.service
+#+end_src bash
+
+** where to find more information?
+
+[[https://drive.google.com/drive/u/0/folders/1z0ygn4ppitnieua-4ihpddntzzk_r55i][boundary node documentation folder]]
+
+** How to deploy code changes (Pre-Virtualization) ?
+
+[[https://www.notion.so/releasing-dba76ad8ea09441486f2898d759fc2c2][installation playbook]]
+
+** How to deploy boundary node VMs ?
+
+*** Deployments
+  :PROPERTIES:
+  :CUSTOM_ID: deployments
+  :END:
+
+This folder contains inventories and scripts for deployment of
+environments.
+
+*** Boundary Nodes
+   :PROPERTIES:
+   :CUSTOM_ID: boundary-nodes
+   :END:
+
+There are 2 types of Boundary Nodes:
+
+1. Newer Equinix Metal hosts that act as hypervisors for Virtual
+   Machines that run nginx:
+
+   - Environments:
+
+     - Prod (=bnp=) hosts
+
+       - =ic0.app= - DNS load balanced through CloudFlare as
+         =boundary.dfinity.network=
+       - Orchestrated using this
+         [[https://gitlab.com/dfinity-lab/private/platform/-/tree/main/services/pfops_boundary-node-hosting_hypervisors-prod][platform]] repo
+
+     - Dev (=bnd=) hosts
+
+       - =testic0.app= - DNS load balanced through CloudFlare as
+         =boundary.testic0.app=
+       - Orchestrated using this
+         [[https://gitlab.com/dfinity-lab/private/platform/-/tree/main/services/pfops_boundary-node-hosting_hypervisors-dev][platform]] repo
+
+     - Each testnet has a single testnet VM node as part of that testnet
+
+       - No DNS at all.
+       - Orchestrated using the
+         [[https://gitlab.com/dfinity-lab/public/ic][ic]] repo and
+         =icos_deploy.sh=
+
+     - Boundary-GuestOS Images must be first built upstream by Gitlab
+       CI/CD and available for VM deployment.
+
+These Equinix Metal machines and Cloudflare DNS and DNS Load Balancing
+are all first built using Terraform in the =infra= repo under the
+[[https://github.com/dfinity-lab/infra/tree/master/boundary][boundary]]
+folder.
+
+2. List itemOlder Equinix Metal hosts with nginx deployed directly on
+   them. (OBSOLETE)
+
+   - Environments:
+
+     - Mainnet (=bnm=) shared hosts
+
+       - =ic0.app= - DNS load balanced through CloudFlare as
+         =boundary.dfinity.network=
+
+     - Testnet (=bnt=) shared hosts
+
+       - =testnet.dfinity.network= - DNS load balanced through
+         CloudFlare as =testnet.dfinity.network=
+
+     - QA (=bnq=) shared hosts
+
+       - =testic0.app= - DNS round-robin only (no DNS load balancer)
+
+   - All orchestrated using
+     [[https://gitlab.com/dfinity-lab/private/ic-stopgap/-/tree/master/boundary_node][ic-stopgap/boundary_node]]
+     folder:
+
+     - [[https://gitlab.com/dfinity-lab/private/ic-stopgap/-/tree/master/boundary_node]]
+
+    Please refer to the [[https://github.com/dfinity-lab/infra/tree/master/boundary/README.md][README.md]] there for more information about these layers.
+
+After the machines are available, the appropriate Ansible inventories
+must be updated for further Ansible convergence to run:
+
+*** Makefile
+   :PROPERTIES:
+   :CUSTOM_ID: makefile
+   :END:
+
+The Makefile here is used for deployment.
+
+There are a few targets in the Makefile of note:
+
+*** env/*
+   :PROPERTIES:
+   :CUSTOM_ID: env
+   :END:
+
+The env/ folder contains environment inventories.
+
+There is an env/dev target for deploy of the dev boundary nodes:
+
+#+BEGIN_EXAMPLE
+    make env/dev
+#+END_EXAMPLE
+
+This runs:
+
+#+BEGIN_EXAMPLE
+    make vms-dev
+#+END_EXAMPLE
+
+This deploys the VMs for the dev environment on the appropriate
+hypervisor hosts.
+
+** How to test a deployment?
+
+[[https://docs.google.com/document/d/1iRtPrpLsEdp6nDqMcaT_u9eHs3nULfB-lOGDR7Yhb9k/][Post deployment smoke tests]]

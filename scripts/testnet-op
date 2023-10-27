@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+set -euo pipefail
+source $(dirname "$0")/lib.sh
+
+if [ "${TESTNET:-}" == "" ]; then
+    error "TESTNET environment variable not specified."
+fi
+
+NETWORK=$TESTNET
+
+if [ $NETWORK == "mercury" ] || [ $NETWORK == "mainnet" ]; then
+    error "For operations on the mainnet use 'mainnet-op' command."
+fi
+
+if [ $NETWORK == "staging" ]; then
+    get_testnet_nns_url() {
+        export NODES_FILTER_INCLUDE='node_type=child_nns'
+        "$REPO_ROOT"/deployments/env/$NETWORK/hosts --nodes | head -n1 | cut -d' ' -f2
+    }
+else
+    get_testnet_nns_url() {
+        "$REPO_ROOT"/ic/testnet/env/$NETWORK/hosts --nodes | head -n1 | cut -d' ' -f2
+    }
+fi
+
+if [ $# -lt 1 ]; then
+    print_usage
+    exit 1
+fi
+
+OP_NAME=$1
+shift
+OP_ARGS=$@
+
+IC_ADMIN="${IC_ADMIN:-ic-admin}"
+
+if [ "${PROPOSER_NAME:-}" == "" ]; then
+    TESTNET_IDENTITY_PEM_FILE="$HOME/.config/dfx/identity/bootstrap-super-leader/identity.pem"
+    PROPOSER_NAME=bootstrap-super-leader
+else
+    TESTNET_IDENTITY_PEM_FILE="$HOME/.config/dfx/identity/${NETWORK}-${PROPOSER_NAME:-missing-proposer-name}/identity.pem"
+fi
+
+if [ "${NNS_URL:-}" == "" ]; then
+    NNS_URL="http://[$(get_testnet_nns_url)]:8080"
+fi
+
+# Check for prerequisites.
+check_jq
+check_ic_admin
+
+# The neuron 49 is defined as the super-leader neuron in
+# testnet/env/bootstrap/initial-neurons.csv
+# The testnet deployments and all other voting neurons will automatically vote
+# "yes" for all proposals submitted by neuron 49
+export PROPOSER_NEURON_INDEX=49
+
+check_env_testnet
+
+AUTH_PARAMS="-s ${TESTNET_IDENTITY_PEM_FILE}"
+ROLLOUT_AUTH_PARAMS=$AUTH_PARAMS
+ROLLOUT_NEURON_ID=49
+check_env_common_for_proposal
+
+maybe_do_operation
