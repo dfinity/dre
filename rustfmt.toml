@@ -1,0 +1,4 @@
+indent_style = "Block"
+max_width = 120
+wrap_comments = true
+edition = "2021"

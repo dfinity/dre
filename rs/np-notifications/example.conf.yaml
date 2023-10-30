@@ -1,0 +1,14 @@
+---
+# Creates default routes. We can add the extra routes and sinks later on, but
+# we support them in code
+# Those would be like adding the np1 sink and np1 route
+# node_providers:
+#   - np1:
+#       url: <url>
+#       auth:
+#         username: user
+#         password: password
+
+node_providers:
+  - id: <>
+    url: <>

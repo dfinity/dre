@@ -1,0 +1,63 @@
+{
+  "name": "root",
+  "version": "1.0.0",
+  "private": true,
+  "engines": {
+    "node": "14"
+  },
+  "scripts": {
+    "dev-staging": "concurrently \"yarn start\" \"yarn start-backend\" \"yarn start-rust-backend-staging\"",
+    "start-rust-backend-staging": "cd .. && BACKEND_PORT=8081 RUST_BACKTRACE=1 NETWORK=staging NNS_URL=http://[2600:3004:1200:1200:5000:62ff:fedc:fe3c]:8080 cargo watch -C rs/ic-management-backend -x 'run --release --color=always'",
+    "dev-mainnet": "concurrently \"yarn start\" \"yarn start-backend\" \"yarn start-rust-backend-mainnet\"",
+    "start-rust-backend-mainnet": "cd .. && RUST_BACKTRACE=1 NETWORK=mainnet NNS_URL=https://ic0.app cargo watch -C rs/ic-management-backend -x 'run --release --color=always'",
+    "dev": "concurrently \"yarn start\" \"yarn start-backend\" \"yarn start-rust-backend-staging\" \"yarn start-rust-backend-mainnet\"",
+    "start": "yarn workspace app start",
+    "start-backend": "yarn workspace backend start",
+    "start-backstage": "concurrently \"yarn start\" \"yarn start-backend\"",
+    "build": "backstage-cli repo build --all",
+    "build-image": "yarn workspace backend build-image",
+    "tsc": "tsc",
+    "tsc:full": "tsc --skipLibCheck false --incremental false",
+    "clean": "backstage-cli clean && lerna run clean",
+    "diff": "lerna run diff --",
+    "test": "lerna run test --since origin/master -- --coverage",
+    "test:all": "lerna run test -- --coverage",
+    "lint": "lerna run lint --since origin/master --",
+    "lint:all": "lerna run lint --",
+    "create-plugin": "backstage-cli create-plugin --scope internal --no-private",
+    "remove-plugin": "backstage-cli remove-plugin"
+  },
+  "resolutions": {
+    "graphql-language-service-interface": "2.8.2",
+    "graphql-language-service-parser": "1.9.0"
+  },
+  "workspaces": {
+    "packages": [
+      "packages/*",
+      "plugins/*"
+    ]
+  },
+  "devDependencies": {
+    "@backstage/cli": "^0.17.1",
+    "@spotify/prettier-config": "^7.0.0",
+    "concurrently": "^6.0.0",
+    "lerna": "^4.0.0",
+    "prettier": "^1.19.1"
+  },
+  "prettier": "@spotify/prettier-config",
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md}": [
+      "prettier --write"
+    ]
+  },
+  "jest": {
+    "transformModules": [
+      "@asyncapi/react-component"
+    ]
+  },
+  "dependencies": {}
+}

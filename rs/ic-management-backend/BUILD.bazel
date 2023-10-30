@@ -1,0 +1,62 @@
+load("@//rs:oci_images.bzl", "rust_binary_oci_image_rules")
+load("@crate_index_release//:defs.bzl", "aliases", "all_crate_deps")
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library", "rust_test")
+
+package(default_visibility = ["//visibility:public"])
+
+DEPS = [
+    "//rs/decentralization",
+    "//rs/ic-management-types",
+    "//rs/ic-canisters",
+]
+
+BINARY_DEPS = [
+    ":ic-management-backend-lib",
+]
+
+rust_library(
+    name = "ic-management-backend-lib",
+    srcs = glob(["src/**/*.rs"]),
+    aliases = aliases(),
+    compile_data = glob(["config/**/*"]),
+    crate_name = "ic_management_backend",
+    proc_macro_deps = all_crate_deps(
+        proc_macro = True,
+    ),
+    deps = all_crate_deps(
+        normal = True,
+    ) + DEPS,
+)
+
+rust_binary(
+    name = "ic-management-backend",
+    srcs = glob(["src/**/*.rs"]),
+    aliases = aliases(),
+    compile_data = glob(["config/**/*"]),
+    proc_macro_deps = all_crate_deps(
+        proc_macro = True,
+    ),
+    deps = all_crate_deps(
+        normal = True,
+    ) + DEPS + BINARY_DEPS,
+)
+
+rust_test(
+    name = "unit_test",
+    aliases = aliases(
+        normal_dev = True,
+        proc_macro_dev = True,
+    ),
+    crate = ":ic-management-backend",
+    proc_macro_deps = all_crate_deps(
+        proc_macro_dev = True,
+    ),
+    deps = all_crate_deps(
+        normal_dev = True,
+    ) + DEPS,
+)
+
+rust_binary_oci_image_rules(
+    name = "oci_image",
+    src = ":ic-management-backend",
+)

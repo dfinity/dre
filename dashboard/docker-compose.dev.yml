@@ -1,0 +1,20 @@
+version: "3.8"
+services:
+  dashboard-backstage:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        BUILDKIT_INLINE_CACHE: 1
+  dashboard-backend-mainnet:
+    build:
+      context: ..
+      dockerfile: ic-management-backend/Dockerfile
+      args:
+        BUILDKIT_INLINE_CACHE: 1
+  slack:
+    build:
+      context: ..
+      dockerfile: slack-notifications/Dockerfile
+      args:
+        BUILDKIT_INLINE_CACHE: 1

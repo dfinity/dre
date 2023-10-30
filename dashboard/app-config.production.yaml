@@ -1,0 +1,16 @@
+app:
+  # Should be the same as backend.baseUrl when using the `app-backend` plugin
+  baseUrl: http://localhost:17000
+
+backend:
+  baseUrl: http://localhost:17000
+  listen:
+    port: 17000
+
+proxy:
+  '/registry/mainnet':
+    target: 'http://dashboard-backend-mainnet:8080'
+    changeOrigin: true
+  '/registry/staging':
+    target: 'http://dashboard-backend-staging:8080'
+    changeOrigin: true

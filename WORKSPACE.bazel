@@ -1,0 +1,193 @@
+workspace(
+    name = "release",
+)
+
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive", "http_file")
+
+http_archive(
+    name = "bazel_skylib",
+    sha256 = "f7be3474d42aae265405a592bb7da8e171919d74c16f082a5457840f06054728",
+    urls = [
+        "https://mirror.bazel.build/github.com/bazelbuild/bazel-skylib/releases/download/1.2.1/bazel-skylib-1.2.1.tar.gz",
+        "https://github.com/bazelbuild/bazel-skylib/releases/download/1.2.1/bazel-skylib-1.2.1.tar.gz",
+    ],
+)
+
+load("@bazel_skylib//:workspace.bzl", "bazel_skylib_workspace")
+
+bazel_skylib_workspace()
+
+http_archive(
+    name = "rules_python",
+    patch_args = ["-p1"],
+    patches = [
+        # https://github.com/bazelbuild/rules_python/pull/1166#issuecomment-1641878169
+        "//bazel/patches:rules_python_annotation.patch",
+    ],
+    sha256 = "0a8003b044294d7840ac7d9d73eef05d6ceb682d7516781a4ec62eeb34702578",
+    strip_prefix = "rules_python-0.24.0",
+    url = "https://github.com/bazelbuild/rules_python/releases/download/0.24.0/rules_python-0.24.0.tar.gz",
+)
+
+load("@rules_python//python:repositories.bzl", "py_repositories", "python_register_toolchains")
+load("@rules_python//python/pip_install:pip_repository.bzl", "package_annotation")
+
+py_repositories()
+
+python_register_toolchains(
+    name = "python3_8",
+    python_version = "3.8.16",
+)
+
+load("@python3_8//:defs.bzl", "interpreter")
+load("@rules_python//python:pip.bzl", "pip_parse")
+
+pip_parse(
+    name = "python_deps",
+    annotations = {
+        "poetry-plugin-export": package_annotation(
+            excluded_deps = ["poetry"],
+        ),
+        "ansible-base": package_annotation(
+            additive_build_content = '''
+exports_files(["bin/ansible-inventory"])
+            ''',
+        ),
+    },
+    python_interpreter_target = interpreter,
+    requirements_lock = "//:requirements.txt",
+)
+
+load("@python_deps//:requirements.bzl", "install_deps")
+
+install_deps()
+
+IC_REPO_VERSION = "abac636d8a281a1e7600d876aaed10f7ce7e5040"
+
+http_archive(
+    name = "ic_repo",
+    sha256 = "1b85209dcf456defc25ecb7f4710327ff64eaed94bff36dc5748f5bb96823400",
+    strip_prefix = "ic-{}".format(IC_REPO_VERSION),
+    url = "https://github.com/dfinity/ic/archive/{}.tar.gz".format(IC_REPO_VERSION),
+)
+
+# To find additional information on this release or newer ones visit:
+# https://github.com/bazelbuild/rules_rust/releases
+http_archive(
+    name = "rules_rust",
+    sha256 = "4a9cb4fda6ccd5b5ec393b2e944822a62e050c7c06f1ea41607f14c4fdec57a2",
+    urls = ["https://github.com/bazelbuild/rules_rust/releases/download/0.25.1/rules_rust-v0.25.1.tar.gz"],
+)
+
+load("@rules_rust//rust:repositories.bzl", "rules_rust_dependencies", "rust_register_toolchains")
+load("@rules_rust//tools/rust_analyzer:deps.bzl", "rust_analyzer_dependencies")
+
+rules_rust_dependencies()
+
+rust_analyzer_dependencies()
+
+rust_register_toolchains(
+    edition = "2021",
+    versions = [
+        "1.71.1",
+    ],
+)
+
+load("@rules_rust//crate_universe:repositories.bzl", "crate_universe_dependencies")
+
+crate_universe_dependencies()
+
+load("//bazel:external_crates.bzl", "external_crates_repository")
+
+external_crates_repository()
+
+load("@crate_index_release//:defs.bzl", "crate_repositories")
+
+crate_repositories()
+
+http_file(
+    name = "ic-icrc1-archive",
+    downloaded_file_path = "ic-icrc1-archive.wasm.gz",
+    sha256 = "1b85209dcf456defc25ecb7f4710327ff64eaed94bff36dc5748f5bb96823400",
+    url = "https://download.dfinity.systems/ic/abac636d8a281a1e7600d876aaed10f7ce7e5040/canisters/ic-icrc1-archive.wasm.gz",
+)
+
+http_archive(
+    name = "com_google_protobuf",
+    sha256 = "bc3dbf1f09dba1b2eb3f2f70352ee97b9049066c9040ce0c9b67fb3294e91e4b",
+    strip_prefix = "protobuf-3.15.5",
+    # this version is imported through io_bazel_rules_go in IC repo
+    urls = [
+        "https://github.com/protocolbuffers/protobuf/archive/v3.15.5.tar.gz",
+        "https://mirror.bazel.build/github.com/protocolbuffers/protobuf/archive/v3.15.5.tar.gz",
+    ],
+)
+
+load("@com_google_protobuf//:protobuf_deps.bzl", "protobuf_deps")
+
+protobuf_deps()
+
+RULES_FOREIGN_CC_VERSION = "9acbb356916760192d4c16301a69267fe44e6dec"
+
+http_archive(
+    name = "rules_foreign_cc",
+    sha256 = "db6fcdb4f5ac217658f2c3aabd61e618d7fadc1cdf7d806ab1b52f2709d3fc66",
+    strip_prefix = "rules_foreign_cc-{}".format(RULES_FOREIGN_CC_VERSION),
+    url = "https://github.com/bazelbuild/rules_foreign_cc/archive/{}.tar.gz".format(RULES_FOREIGN_CC_VERSION),
+)
+
+load("@rules_foreign_cc//foreign_cc:repositories.bzl", "rules_foreign_cc_dependencies")
+
+rules_foreign_cc_dependencies()
+
+load("@ic_repo//third_party/openssl:openssl_repositories.bzl", "openssl_repositories")
+
+openssl_repositories()
+
+load("@ic_repo//third_party/openssl:openssl_setup.bzl", "openssl_setup")
+
+openssl_setup()
+
+http_archive(
+    name = "rules_oci",
+    sha256 = "176e601d21d1151efd88b6b027a24e782493c5d623d8c6211c7767f306d655c8",
+    strip_prefix = "rules_oci-1.2.0",
+    url = "https://github.com/bazel-contrib/rules_oci/releases/download/v1.2.0/rules_oci-v1.2.0.tar.gz",
+)
+
+load("@rules_oci//oci:dependencies.bzl", "rules_oci_dependencies")
+
+rules_oci_dependencies()
+
+load("@rules_oci//oci:repositories.bzl", "LATEST_CRANE_VERSION", "LATEST_ZOT_VERSION", "oci_register_toolchains")
+
+oci_register_toolchains(
+    name = "oci",
+    crane_version = LATEST_CRANE_VERSION,
+    zot_version = LATEST_ZOT_VERSION,
+)
+
+load("@rules_oci//oci:pull.bzl", "oci_pull")
+
+oci_pull(
+    name = "distroless_cc",
+    digest = "sha256:8aad707f96620ee89e27febef51b01c6ff244277a3560fcfcfbe68633ef09193",
+    image = "gcr.io/distroless/cc",
+    platforms = [
+        "linux/amd64",
+        "linux/arm64",
+    ],
+)
+
+http_archive(
+    name = "rules_pkg",
+    sha256 = "8f9ee2dc10c1ae514ee599a8b42ed99fa262b757058f65ad3c384289ff70c4b8",
+    urls = [
+        "https://mirror.bazel.build/github.com/bazelbuild/rules_pkg/releases/download/0.9.1/rules_pkg-0.9.1.tar.gz",
+        "https://github.com/bazelbuild/rules_pkg/releases/download/0.9.1/rules_pkg-0.9.1.tar.gz",
+    ],
+)
+
+load("@rules_pkg//:deps.bzl", "rules_pkg_dependencies")
+
+rules_pkg_dependencies()

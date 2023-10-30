@@ -1,0 +1,17 @@
+exports_files([
+    "archive_canister.wasm.gz",
+    "build-info-build.patch",
+    "clippy.toml",
+    "rustfmt.toml",
+    "WORKSPACE.bazel",
+])
+
+alias(
+    name = "rustfmt",
+    actual = "@rules_rust//:rustfmt",
+)
+
+alias(
+    name = "poetry",
+    actual = "@python_deps_poetry//:rules_python_wheel_entry_point_poetry",
+)

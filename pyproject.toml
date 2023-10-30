@@ -1,0 +1,40 @@
+[tool.poetry]
+name = "release"
+version = "0.1.0"
+description = ""
+authors = ["Release Team <eng-release@dfinity.org>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.8.16,<4"
+ansible = "==2.10.7"
+colorama = "*"
+elasticsearch = "<8.0,>=7.16"
+elasticsearch-dsl = "*"
+elasticsearch-follow = "*"
+GitPython = "*"
+numpy = "*"
+pandas = "*"
+paramiko = "*"
+PyYAML = "*"
+requests = "*"
+tabulate = "*"
+peewee = "*"
+atlassian-python-api = "*"
+python-dotenv = "*"
+cachetools = "*"
+pre-commit = "*"
+pylint = "*"
+tenacity = "*"
+poetry = "^1.6.1"
+
+
+[tool.poetry.group.dev.dependencies]
+black = "*"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 120

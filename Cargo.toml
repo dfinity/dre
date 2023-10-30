@@ -1,0 +1,20 @@
+[workspace]
+
+members = [
+    "rs/cli",
+    "rs/decentralization",
+    "rs/ic-management-backend",
+    "rs/ic-management-types",
+    "rs/slack-notifications",
+    "rs/np-notifications",
+    # Canisters below
+    "rs/canisters/node_status_canister/src/node_status_canister_backend",
+]
+
+resolver = "2"
+
+[profile.release]
+# Add debug information to the release build (does NOT reduce the level of optimization!)
+# Makes flamegraphs and backtraces more readable.
+# https://doc.rust-lang.org/cargo/reference/manifest.html#the-profile-sections
+debug = true

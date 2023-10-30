@@ -1,0 +1,12 @@
+pub mod config;
+pub mod endpoints;
+pub mod factsdb;
+pub mod git_ic_repo;
+pub mod gitlab_dfinity;
+pub mod health;
+pub mod prometheus;
+pub mod proposal;
+pub mod public_dashboard;
+pub mod registry;
+pub mod release;
+pub mod subnets;
