@@ -1036,7 +1036,7 @@ dependencies = [
  "anyhow",
  "base64 0.13.1",
  "bincode",
- "build-info-common 0.0.26",
+ "build-info-common 0.0.26 (git+https://github.com/dfinity-lab/build-info?rev=abb2971c5d07a9b40d41a0c84b63a3156f2ff764)",
  "cargo_metadata",
  "chrono",
  "glob",
@@ -1079,7 +1079,7 @@ dependencies = [
  "anyhow",
  "base64 0.13.1",
  "bincode",
- "build-info-common 0.0.26",
+ "build-info-common 0.0.26 (registry+https://github.com/rust-lang/crates.io-index)",
  "chrono",
  "format-buf",
  "num-bigint",
@@ -2114,7 +2114,7 @@ dependencies = [
 [[package]]
 name = "derive_more"
 version = "0.99.8-alpha.0"
-source = "git+https://github.com/dfinity-lab/derive_more#9f1b894e6fde640da4e9ea71a8fc0e4dd98d01da"
+source = "git+https://github.com/dfinity-lab/derive_more?branch=master#9f1b894e6fde640da4e9ea71a8fc0e4dd98d01da"
 dependencies = [
  "proc-macro2",
  "quote",
