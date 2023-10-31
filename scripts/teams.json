@@ -1,0 +1,233 @@
+{
+    "_comment": "Latest team membership info can be found at https://www.notion.so/Teams-864f8176074b4bc7896147f4d1246b54",
+    "Boundary Nodes": [
+        "Faraz Shaikh",
+        "faraz",
+        "Janesh Chhabra",
+        "Martin Stein",
+        "Ruediger Kapitza",
+        "Rüdiger Kapitza",
+        "Or Ricon",
+        "Daniel.Bloom",
+        "Daniel Bloom",
+        "Floris Westermann",
+        "Jakub Sliwinski",
+        "Raymond Khalife",
+        "Igor Novgorodov",
+        "kobi.sliwinski"
+    ],
+    "Consensus": [
+        "Manu Drijvers",
+        "Rahul Subramaniyam",
+        "Leon Tan",
+        "Paul Liu",
+        "Paul H. Liu",
+        "Ivan Malison",
+        "Adrian Alić",
+        "Zoran Cvetkov",
+        "Leo Eichhorn",
+        "Gregory Neven",
+        "Christian Müller",
+        "Adrian Alic",
+        "Kamil Popielarz"
+    ],
+    "Crypto": [
+        "Franz-Stefan Preiss",
+        "Jack Lloyd",
+        "Andrea Cerulli",
+        "Andrea",
+        "przydatek@github.com",
+        "Ben Lynn",
+        "Mathias Björkqvist",
+        "Oleksandr Tkachenko",
+        "Grégory Demay"
+    ],
+    "Execution": [
+        "Alexandra Zapuc",
+        "Islam El-Ashi",
+        "Dimitris Sarlis",
+        "Bogdan Warinschi",
+        "Maksym Arutyunyan",
+        "Dragoljub Duric"
+    ],
+    "Runtime": [
+        "Ulan Degenbaev",
+        "Adam Bratschi-Kaye",
+        "Andriy Berestovskyy",
+        "Maciej Kot",
+        "Alexandru Uta",
+        "Stefan Kaestle",
+        "alexandru-uta"
+    ],
+    "External registries": [
+        "Ryan Croote",
+        "Henry Lai"
+    ],
+    "Financial Integrations": [
+        "Mario Pastorelli",
+        "Johan Granström",
+        "Cheng Shao",
+        "Roman Kashitsyn",
+        "Jean Arnaud",
+        "Léo Kazmierczak",
+        "Nikolas Haimerl",
+        "Maciej Modelski"
+    ],
+    "IDX": [
+        "Jude Taylor",
+        "Marko Kosmerl",
+        "Mykola Dzham",
+        "Martina Kollárová",
+        "Martina Kollarova",
+        "Ali Piccioni",
+        "Hugo Lageneste",
+        "Enzo",
+        "Ben Radford",
+        "Georgi Lyubenov",
+        "Enzo Desiage",
+        "Carly Gundy",
+        "Martin König"
+    ],
+    "InfraSec": [
+        "Ryan Cammer"
+    ],
+    "GIX": [
+        "Daniel Thurau",
+        "Björn Tackmann",
+        "Nicolas Mattia",
+        "David Dal Busco",
+        "Llorenç Muntaner Perello",
+        "Maksims Strasinskis",
+        "Mischa Demarmels",
+        "Frederik Rothenberger",
+        "Maximillian Murphy",
+        "Nathan Mc Grath",
+        "David de Kloet"
+    ],
+    "Languages": [
+        "Gabor Greif"
+    ],
+    "Message Routing": [
+        "Alin Sinpalean",
+        "David Derler",
+        "Roman Kashitsyn",
+        "Shuo Wang",
+        "Stefan Schneider",
+        "Christian Stieger",
+        "Aleksandr Pakhomov"
+    ],
+    "Meta Network": [
+        "Benjamin Loison"
+    ],
+    "NNS": [
+        "Bartosz Przydatek",
+        "Ryan Stout",
+        "Alejandro Alvarez",
+        "David Ribeiro Alves",
+        "John Wiegley",
+        "nico",
+        "Maximilian Summe",
+        "Daniel Wong",
+        "Lara Schmid",
+        "Max Summe",
+        "Max",
+        "Thomas Locher",
+        "Andre Popovitch",
+        "Tzu Yao Chien",
+        "Jason (Yeli) Zhu",
+        "Jason Zhu"
+    ],
+    "Networking": [
+        "QJ",
+        "QJ Yu",
+        "Tim Gretler",
+        "Rostislav Rumenov",
+        "Yotam Harchol",
+        "Mahir Eusufzai",
+        "John Plevyak",
+        "Daniel Sharifi",
+        "Stefan Neamtu"
+    ],
+    "Node": [
+        "Helge Bahmann",
+        "Khushboo Bindlish",
+        "Livio Kopp",
+        "Ruediger Kapitza",
+        "Rüdiger Kapitza",
+        "Eero Kelly",
+        "John Plevyak",
+        "Andrew Battat",
+        "andrew.battat",
+        "Gary McElroy"
+    ],
+    "PfOps": [
+        "Ian Blenke",
+        "Joseph Orthoefer",
+        "Joseph D. Orthoefer",
+        "Tomas Hlavacek",
+        "Samuel Howard"
+    ],
+    "ProdSec": [
+        "Thomas Mueller",
+        "Thomas Müller",
+        "Ognjen Maric",
+        "Eduard Galindo",
+        "Venkkatesh Sekar",
+        "Robin Künzler"
+    ],
+    "PublicDashboard": [
+        "Jeff Anderson"
+    ],
+    "DRE": [
+        "Luka Skugor",
+        "Saša Tomić",
+        "Saša Tomić",
+        "Nikola Milosavljevic",
+        "nikola-milosa",
+        "Gilles Marin",
+        "Manuel Amador Briz",
+        "Pietro Di Marco",
+	"Pietro"
+    ],
+    "Research": [
+        "Anna Galanou",
+        "Rüdiger Birkner",
+        "Ognjen Maric",
+        "Bjoern Tackmann",
+        "Dieter Sommer",
+        "Nikita Abdullin"
+    ],
+    "Robots": [
+        "IDX GitLab Automation",
+        "CI Automation",
+        "DFINITY GitLab-Bot"
+    ],
+    "T&V": [
+        "Arshavir Ter-Gabrielyan",
+        "Bas van Dijk",
+        "Daniel Stefan Dietiker",
+        "Stefan Dietiker",
+        "Daniel S. Dietiker",
+        "Yvonne-Anne Pignolet",
+        "Marcin Dziadus",
+        "Nikolay Komarevskiy",
+        "Martin Raszyk",
+        "Georgi Harizanov",
+        "Michael Weigelt",
+        "Elias Datler"
+    ],
+    "Trust": [
+        "Kepler Vital"
+    ],
+    "Security": [
+        "Lara Schmid"
+    ],
+    "SDK": [
+        "Linwei Shang",
+        "Ognjen Maric",
+        "Severin Siffert",
+        "Kyle Peacock",
+        "Marcin Nowak-Liebiediew",
+        "Moritz Fuller"
+    ]
+}
