@@ -205,20 +205,3 @@ E.g.
 ```sh
 release_cli --dev subnet --id <id> replace -o1
 ```
-
-# Utils
-
-## Updating the ic git submodule
-
-There is a script that can configure git to automatically check out the latest committed version of the IC submodule on every git pull. Please make sure you run this script at least once after cloning the repo.
-```
-./git-hooks-install
-```
-
-To check out the latest version of the IC repo (submodule), you can run:
-```
-git submodule foreach -q git fetch origin
-git submodule foreach -q git checkout master
-git submodule foreach -q git pull --prune --force
-git submodule foreach -q git reset --hard origin/master
-```
