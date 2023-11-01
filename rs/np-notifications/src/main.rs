@@ -111,6 +111,9 @@ async fn main() {
     // manually. We might want to replace those with actors
     actix_web::rt::spawn(srv);
 
+    // TODO If the token is cancelled by any other way, the service will not
+    // completely shut down.  Review all the cases, so that the service is more
+    // resilient
     signal::ctrl_c().await.unwrap();
     debug!("Shutting down threads");
     cancellation_token.cancel();
