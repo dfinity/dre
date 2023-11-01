@@ -27,6 +27,7 @@ pre-commit = "*"
 pylint = "*"
 tenacity = "*"
 poetry = "^1.6.1"
+ic-py = "*"
 
 
 [tool.poetry.group.dev.dependencies]
