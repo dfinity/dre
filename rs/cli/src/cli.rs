@@ -135,7 +135,7 @@ pub(crate) mod subnet {
             optimize: Option<usize>,
 
             /// Motivation for replacing custom nodes
-            #[clap(short, long)]
+            #[clap(short, long, aliases = ["summary"])]
             motivation: Option<String>,
 
             /// Minimum Nakamoto coefficients after the replacement
@@ -154,11 +154,6 @@ pub(crate) mod subnet {
             /// regardless of the decentralization score
             #[clap(long, num_args(1..))]
             include: Vec<PrincipalId>,
-
-            /// More verbose execution. For instance, print logs from the
-            /// backend.
-            #[clap(long)]
-            verbose: bool,
         },
 
         /// Resize the subnet
@@ -185,13 +180,8 @@ pub(crate) mod subnet {
             include: Vec<PrincipalId>,
 
             /// Motivation for resing the subnet
-            #[clap(short, long)]
+            #[clap(short, long, aliases = ["summary"])]
             motivation: Option<String>,
-
-            /// More verbose execution. For instance, print logs from the
-            /// backend.
-            #[clap(long)]
-            verbose: bool,
         },
 
         /// Create a new subnet
@@ -218,13 +208,8 @@ pub(crate) mod subnet {
             include: Vec<PrincipalId>,
 
             /// Motivation for creating the subnet
-            #[clap(short, long)]
+            #[clap(short, long, aliases = ["summary"])]
             motivation: Option<String>,
-
-            /// More verbose execution. For instance, print logs from the
-            /// backend.
-            #[clap(long)]
-            verbose: bool,
 
             #[clap(long)]
             replica_version: Option<String>,
@@ -280,7 +265,7 @@ pub(crate) mod nodes {
             exclude: Vec<String>,
 
             /// Motivation for removing additional nodes
-            #[clap(long)]
+            #[clap(long, aliases = ["summary"])]
             motivation: Option<String>,
         },
     }

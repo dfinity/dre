@@ -260,6 +260,22 @@ impl IcAdminWrapper {
             args_with_fixed_prefix
         };
 
+        // ic-admin expects --summary and not --motivation
+        // make sure the expected argument is provided
+        let args = if !args.contains(&String::from("--summary")) && args.contains(&String::from("--motivation")) {
+            args.iter()
+                .map(|arg| {
+                    if arg == "--motivation" {
+                        "--summary".to_string()
+                    } else {
+                        arg.clone()
+                    }
+                })
+                .collect::<Vec<_>>()
+        } else {
+            args.to_vec()
+        };
+
         let cmd = ProposeCommand::Raw {
             command: args[0].clone(),
             args: args.iter().skip(1).cloned().collect::<Vec<_>>(),

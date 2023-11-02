@@ -111,7 +111,6 @@ async fn main() -> Result<(), anyhow::Error> {
                         only,
                         include,
                         min_nakamoto_coefficients,
-                        verbose,
                     } => {
                         let min_nakamoto_coefficients = parse_min_nakamoto_coefficients(&mut cmd, min_nakamoto_coefficients);
                             let runner = runner::Runner::new_with_network_url(cli::Cli::from_opts(&cli_opts, true).await?.into(), backend_port).await?;
@@ -142,10 +141,10 @@ async fn main() -> Result<(), anyhow::Error> {
                                     only: only.clone(),
                                     include: include.clone().into(),
                                     min_nakamoto_coefficients,
-                                }, *verbose, simulate)
+                                }, cli_opts.verbose, simulate)
                                 .await
                     }
-                    cli::subnet::Commands::Resize { add, remove, include, only, exclude, motivation, verbose, } => {
+                    cli::subnet::Commands::Resize { add, remove, include, only, exclude, motivation, } => {
                         if let Some(motivation) = motivation.clone() {
                             let runner = runner::Runner::new_with_network_url(cli::Cli::from_opts(&cli_opts, true).await?.into(), backend_port).await?;
                             runner.subnet_resize(ic_management_types::requests::SubnetResizeRequest {
@@ -155,7 +154,7 @@ async fn main() -> Result<(), anyhow::Error> {
                                 only: only.clone().into(),
                                 exclude: exclude.clone().into(),
                                 include: include.clone().into(),
-                            }, motivation, *verbose, simulate).await
+                            }, motivation, cli_opts.verbose, simulate).await
                         } else {
                             cmd.error(
                                 ErrorKind::MissingRequiredArgument,
@@ -164,7 +163,7 @@ async fn main() -> Result<(), anyhow::Error> {
                             .exit();
                         }
                     }
-                    cli::subnet::Commands::Create { size, min_nakamoto_coefficients, exclude, only, include, motivation, verbose, replica_version } => {
+                    cli::subnet::Commands::Create { size, min_nakamoto_coefficients, exclude, only, include, motivation, replica_version } => {
                         let min_nakamoto_coefficients = parse_min_nakamoto_coefficients(&mut cmd, min_nakamoto_coefficients);
                         if let Some(motivation) = motivation.clone() {
                             let runner = runner::Runner::new_with_network_url(cli::Cli::from_opts(&cli_opts, true).await?.into(), backend_port).await?;
@@ -174,7 +173,7 @@ async fn main() -> Result<(), anyhow::Error> {
                                 only: only.clone().into(),
                                 exclude: exclude.clone().into(),
                                 include: include.clone().into(),
-                            }, motivation, *verbose, simulate, replica_version.clone()).await
+                            }, motivation, cli_opts.verbose, simulate, replica_version.clone()).await
                         } else {
                             cmd.error(
                                 ErrorKind::MissingRequiredArgument,
