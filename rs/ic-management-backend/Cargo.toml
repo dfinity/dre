@@ -11,7 +11,7 @@ hyper = { version = "0.14.11", features = ["http2", "stream"] }
 url = "2.2.2"
 float-ord = "0.3.2"
 hyper-tls = "0.5.0"
-chrono = { version = "0.4.19", features = ["serde"] }
+chrono = { version = "0.4.31", features = ["serde"] }
 urlencoding = "2.1.0"
 futures-core = "0.3.16"
 futures-util = "0.3.16"

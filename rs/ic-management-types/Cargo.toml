@@ -8,7 +8,7 @@ actix-web = { version = "4.2.1", default-features = false, features = [
     "compress-gzip",
     "macros",
 ] }
-chrono = { version = "0.4.19", features = ["serde"] }
+chrono = { version = "0.4.31", features = ["serde"] }
 float-cmp = "0.9.0"
 ic-base-types = { git = "https://github.com/dfinity/ic.git", rev = "abac636d8a281a1e7600d876aaed10f7ce7e5040" }
 ic-nns-governance = { git = "https://github.com/dfinity/ic.git", rev = "abac636d8a281a1e7600d876aaed10f7ce7e5040" }

@@ -8,6 +8,7 @@ build = "build.rs"
 
 [dependencies]
 serde = { version = "1.0.130", features = ["derive"] }
+chrono = "0.4.31"
 clap = { version = "4.2.7", features = [
     "derive",
     "env",
@@ -59,10 +60,7 @@ sha2 = "0.10.6"
 edit = "0.1.4"
 tabular = "0.2"
 ic-agent = "0.27.0"
-actix-web = { version = "4.2.1", default-features = false, features = [
-    "compress-gzip",
-    "macros",
-] }
+actix-web = { version = "4.2.1", default-features = false, features = ["compress-gzip", "macros"] }
 dotenv = "0.15.0"
 socket2 = "0.5.4"
 
