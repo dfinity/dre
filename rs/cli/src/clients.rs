@@ -16,6 +16,8 @@ pub struct DashboardBackendClient {
 }
 
 impl DashboardBackendClient {
+    // Only used in tests, which should be cleaned up together with this code.
+    #[allow(dead_code)]
     pub fn new(network: Network, dev: bool) -> DashboardBackendClient {
         Self {
             url: reqwest::Url::parse(if !dev {

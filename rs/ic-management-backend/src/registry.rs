@@ -12,7 +12,7 @@ use ic_base_types::{RegistryVersion, SubnetId};
 use ic_interfaces_registry::{RegistryClient, RegistryValue, ZERO_REGISTRY_VERSION};
 use ic_management_types::{
     Datacenter, DatacenterOwner, Guest, Network, NetworkError, Node, NodeProviderDetails, NodeProvidersResponse,
-    Operator, Provider, ReplicaRelease, Subnet, SubnetMetadata,
+    Operator, Provider, ReplicaRelease, Subnet, SubnetMetadata, UpdateElectedReplicaVersionsProposal,
 };
 use ic_protobuf::registry::crypto::v1::PublicKey;
 use ic_protobuf::registry::replica_version::v1::BlessedReplicaVersions;
@@ -277,10 +277,11 @@ impl RegistryState {
             // commit is present
             let mut commit_to_release: HashMap<String, ReplicaRelease> = HashMap::new();
             for commit_hash in blessed_versions.iter() {
+                info!("Looking for branches that contain git rev: {}", commit_hash);
                 match ic_repo.get_branches_with_commit(commit_hash) {
                     // For each commit get a list of branches that have the commit
                     Ok(branches) => {
-                        debug!("Commit {} ==> branches {:?}", commit_hash, branches);
+                        debug!("Commit {} ==> branches: {}", commit_hash, branches.join(", "));
                         for branch in branches.into_iter().sorted() {
                             match RE.captures(&branch) {
                                 Some(capture) => {
@@ -312,10 +313,12 @@ impl RegistryState {
                                     );
                                 }
                                 None => {
-                                    warn!(
-                                        "branch {} for git rev {} does not match RC regex",
-                                        &commit_hash, &branch
-                                    );
+                                    if branch != "master" && branch != "HEAD" {
+                                        warn!(
+                                            "branch {} for git rev {} does not match RC regex",
+                                            &commit_hash, &branch
+                                        );
+                                    }
                                 }
                             };
                         }
@@ -585,6 +588,11 @@ impl RegistryState {
             .collect())
     }
 
+    pub async fn open_elect_replica_proposals(&self) -> Result<Vec<UpdateElectedReplicaVersionsProposal>> {
+        let proposal_agent = proposal::ProposalAgent::new(self.nns_url.clone());
+        proposal_agent.list_open_elect_replica_proposals().await
+    }
+
     pub async fn subnets_with_proposals(&self) -> Result<BTreeMap<PrincipalId, Subnet>> {
         let subnets = self.subnets.clone();
         let proposal_agent = proposal::ProposalAgent::new(self.nns_url.clone());
@@ -610,6 +618,17 @@ impl RegistryState {
     }
 
     pub async fn retireable_versions(&self) -> Result<Vec<ReplicaRelease>> {
+        if self.replica_releases.is_empty() {
+            warn!("No replica releases found");
+        } else {
+            info!(
+                "Replica versions: {}",
+                self.replica_releases
+                    .iter()
+                    .map(|r| format!("{} ({})", r.commit_hash.clone(), r.branch))
+                    .join("\n")
+            );
+        };
         const NUM_RELEASE_BRANCHES_TO_KEEP: usize = 2;
         let active_releases = self
             .replica_releases
@@ -622,12 +641,30 @@ impl RegistryState {
             .collect::<Vec<_>>();
         let subnet_versions: BTreeSet<String> = self.subnets.values().map(|s| s.replica_version.clone()).collect();
         let version_on_unassigned_nodes = self.get_unassigned_nodes_version().await?;
+        let versions_in_proposals: BTreeSet<String> = self
+            .open_elect_replica_proposals()
+            .await?
+            .iter()
+            .flat_map(|p| p.versions_unelect.iter())
+            .cloned()
+            .collect();
+        info!("Active releases: {}", active_releases.iter().join(", "));
+        info!(
+            "Replica versions in use on subnets: {}",
+            subnet_versions.iter().join(", ")
+        );
+        info!("Replica version on unassigned nodes: {}", version_on_unassigned_nodes);
+        info!(
+            "Replica versions in open proposals: {}",
+            versions_in_proposals.iter().join(", ")
+        );
         Ok(self
             .replica_releases
             .clone()
             .into_iter()
             .filter(|rr| !active_releases.contains(&rr.branch))
             .filter(|rr| !subnet_versions.contains(&rr.commit_hash) && rr.commit_hash != version_on_unassigned_nodes)
+            .filter(|rr| !versions_in_proposals.contains(&rr.commit_hash))
             .collect())
     }
 

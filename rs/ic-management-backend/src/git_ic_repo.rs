@@ -8,7 +8,7 @@ use std::process::Command;
 use std::time::{SystemTime, UNIX_EPOCH};
 use std::{collections::HashMap, fs::File};
 
-const DEFAULT_DEPTH: usize = 1000;
+const DEFAULT_DEPTH: usize = 10000;
 
 custom_error! {IoError
     Io {
@@ -50,6 +50,23 @@ impl IcRepo {
             cache: HashMap::new(),
             lock_file_path,
         };
+
+        if repo_path.exists() {
+            // If the directory exists, but git status does not return success, remove the
+            // directory
+            if !match Command::new("git")
+                .args(["-C", repo_path.to_str().unwrap(), "status"])
+                .output()
+            {
+                Ok(output) => output.status.success(),
+                Err(_) => false,
+            } {
+                std::fs::remove_dir_all(&repo_path).map_err(|e| IoError::Io {
+                    source: e,
+                    path: repo_path.to_path_buf(),
+                })?;
+            }
+        }
 
         if repo_path.exists() {
             info!(

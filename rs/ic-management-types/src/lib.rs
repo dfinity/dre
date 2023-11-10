@@ -13,6 +13,7 @@ use registry_canister::mutations::do_add_nodes_to_subnet::AddNodesToSubnetPayloa
 use registry_canister::mutations::do_change_subnet_membership::ChangeSubnetMembershipPayload;
 use registry_canister::mutations::do_create_subnet::CreateSubnetPayload;
 use registry_canister::mutations::do_remove_nodes_from_subnet::RemoveNodesFromSubnetPayload;
+use registry_canister::mutations::do_update_elected_replica_versions::UpdateElectedReplicaVersionsPayload;
 use registry_canister::mutations::do_update_subnet_replica::UpdateSubnetReplicaVersionPayload;
 use registry_canister::mutations::node_management::do_remove_nodes::RemoveNodesPayload;
 use serde::{Deserialize, Serialize};
@@ -59,6 +60,10 @@ impl NnsFunctionProposal for ChangeSubnetMembershipPayload {
 
 impl NnsFunctionProposal for RemoveNodesPayload {
     const TYPE: NnsFunction = NnsFunction::RemoveNodes;
+}
+
+impl NnsFunctionProposal for UpdateElectedReplicaVersionsPayload {
+    const TYPE: NnsFunction = NnsFunction::UpdateElectedReplicaVersions;
 }
 
 pub trait TopologyChangePayload: NnsFunctionProposal {
@@ -143,6 +148,13 @@ pub struct TopologyChangeProposal {
     pub node_ids_removed: Vec<PrincipalId>,
     pub subnet_id: Option<PrincipalId>,
     pub id: u64,
+}
+
+#[derive(CandidType, Serialize, Deserialize, Clone, Debug)]
+pub struct UpdateElectedReplicaVersionsProposal {
+    pub proposal_id: u64,
+    pub version_elect: String,
+    pub versions_unelect: Vec<String>,
 }
 
 impl<T: TopologyChangePayload> From<(ProposalInfo, T)> for TopologyChangeProposal {

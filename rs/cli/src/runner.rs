@@ -1,7 +1,7 @@
+use crate::clients::DashboardBackendClient;
+use crate::ic_admin;
 use crate::ic_admin::ProposeOptions;
 use crate::ops_subnet_node_replace;
-use crate::{cli, ic_admin};
-use crate::{cli::Opts, clients::DashboardBackendClient};
 use decentralization::SubnetChangeResponse;
 use ic_base_types::PrincipalId;
 use ic_management_types::requests::NodesRemoveRequest;
@@ -172,13 +172,6 @@ impl Runner {
             .map_err(|e| anyhow::anyhow!(e))
     }
 
-    pub async fn from_opts(cli_opts: &Opts) -> anyhow::Result<Self> {
-        Ok(Self {
-            ic_admin: cli::Cli::from_opts(cli_opts, false).await?.into(),
-            dashboard_backend_client: DashboardBackendClient::new(cli_opts.network.clone(), cli_opts.dev),
-        })
-    }
-
     pub async fn new_with_network_url(ic_admin: ic_admin::IcAdminWrapper, backend_port: u16) -> anyhow::Result<Self> {
         let dashboard_backend_client =
             DashboardBackendClient::new_with_network_url(format!("http://localhost:{}/", backend_port));
@@ -191,27 +184,32 @@ impl Runner {
     pub(crate) async fn prepare_versions_to_retire(&self, edit_summary: bool) -> anyhow::Result<(String, Vec<String>)> {
         let retireable_versions = self.dashboard_backend_client.get_retireable_versions().await?;
 
-        info!("Waiting for you to pick the versions to retire in your editor");
-        let template = "# In the below lines, comment out the versions that you DO NOT want to retire".to_string();
-        let versions = edit::edit(format!(
-            "{}\n{}",
-            template,
-            retireable_versions
-                .into_iter()
-                .map(|r| format!("{} # {}", r.commit_hash, r.branch))
-                .join("\n"),
-        ))?
-        .trim()
-        .replace("\r(\n)?", "\n")
-        .split('\n')
-        .map(|s| regex::Regex::new("#.+$").unwrap().replace_all(s, "").to_string())
-        .map(|s| s.trim().to_string())
-        .filter(|s| !s.is_empty())
-        .collect::<Vec<_>>();
+        let versions = if retireable_versions.is_empty() {
+            Vec::new()
+        } else {
+            info!("Waiting for you to pick the versions to retire in your editor");
+            let template = "# In the below lines, comment out the versions that you DO NOT want to retire".to_string();
+            let versions = edit::edit(format!(
+                "{}\n{}",
+                template,
+                retireable_versions
+                    .into_iter()
+                    .map(|r| format!("{} # {}", r.commit_hash, r.branch))
+                    .join("\n"),
+            ))?
+            .trim()
+            .replace("\r(\n)?", "\n")
+            .split('\n')
+            .map(|s| regex::Regex::new("#.+$").unwrap().replace_all(s, "").to_string())
+            .map(|s| s.trim().to_string())
+            .filter(|s| !s.is_empty())
+            .collect::<Vec<_>>();
 
-        if versions.is_empty() {
-            warn!("Provided empty list of versions to retire");
-        }
+            if versions.is_empty() {
+                warn!("Empty list of replica versions to unelect");
+            }
+            versions
+        };
 
         let mut template =
             "Removing the obsolete IC replica versions from the registry, to prevent unintended version downgrades in the future"

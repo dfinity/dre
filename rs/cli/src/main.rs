@@ -198,8 +198,7 @@ async fn main() -> Result<(), anyhow::Error> {
             cli::Commands::Version(cmd) => {
                 match &cmd.subcommand {
                     Update { version, release_tag} => {
-                        // FIXME: backend needs gitlab access to figure out RCs and versions to retire
-                        let runner = runner::Runner::from_opts(&cli_opts).await?;
+                        let runner = runner::Runner::new_with_network_url(cli::Cli::from_opts(&cli_opts, true).await?.into(), backend_port).await?;
                         let (_, retire_versions) = runner.prepare_versions_to_retire(false).await?;
                         let ic_admin: IcAdminWrapper = cli::Cli::from_opts(&cli_opts, true).await?.into();
                         let new_replica_info = ic_admin::IcAdminWrapper::prepare_to_propose_to_update_elected_replica_versions(version, release_tag).await?;
