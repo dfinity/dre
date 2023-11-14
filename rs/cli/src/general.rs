@@ -1,5 +1,5 @@
-use chrono::{DateTime, Utc};
-use std::{collections::HashSet, time::Duration};
+use spinners::{Spinner, Spinners};
+use std::{collections::HashSet, io::Write, time::Duration};
 
 use ic_canisters::GovernanceCanisterWrapper;
 use ic_nns_governance::pb::v1::ProposalInfo;
@@ -13,6 +13,7 @@ pub(crate) async fn vote_on_proposals(
     nns_url: &Url,
     accepted_proposers: &[u64],
     accepted_topics: &[i32],
+    simulate: bool,
 ) -> anyhow::Result<()> {
     let client = match &neuron.auth {
         Auth::Hsm { pin, slot, key_id } => {
@@ -36,12 +37,10 @@ pub(crate) async fn vote_on_proposals(
             .iter()
             .filter(|p| !voted_proposals.contains(&p.id.unwrap().id))
             .collect::<Vec<_>>();
-        info!(
-            "Pending proposals {}, will vote on {} of them",
-            proposals.len(),
-            proposals_to_vote.len()
-        );
 
+        // Clear last line in terminal
+        print!("\x1B[1A\x1B[K");
+        std::io::stdout().flush().unwrap();
         for proposal in proposals_to_vote.into_iter() {
             info!(
                 "Voting on proposal {} (topic {:?}, proposer {}) -> {}",
@@ -51,23 +50,30 @@ pub(crate) async fn vote_on_proposals(
                 proposal.proposal.clone().unwrap().title.unwrap()
             );
 
-            let response = client.register_vote(neuron.id, proposal.id.unwrap().id).await?;
-            info!("{}", response);
+            if !simulate {
+                let response = client.register_vote(neuron.id, proposal.id.unwrap().id).await?;
+                info!("{}", response);
+            } else {
+                info!("Simulating vote");
+            }
             voted_proposals.insert(proposal.id.unwrap().id);
         }
 
-        let current_utc: DateTime<Utc> = Utc::now();
-        info!(
-            "{} UTC: sleeping 15s before another check for pending proposals...",
-            current_utc.format("%Y-%m-%d %H:%M:%S")
+        let mut sp = Spinner::with_timer(
+            Spinners::Dots12,
+            "Sleeping 15s before another check for pending proposals...".into(),
         );
         let sleep = tokio::time::sleep(Duration::from_secs(15));
         tokio::select! {
             _ = tokio::signal::ctrl_c() => {
                 info!("Received Ctrl-C, exiting...");
+                sp.stop();
                 break;
             }
-            _ = sleep => continue
+            _ = sleep => {
+                sp.stop_with_message("Done sleeping, checking for pending proposals...".into());
+                continue
+            }
         }
     }
 

@@ -253,7 +253,7 @@ async fn main() -> Result<(), anyhow::Error> {
                 vote_on_proposals(match cli.get_neuron() {
                     Some(neuron) => neuron,
                     None => return Err(anyhow::anyhow!("Neuron required for this command")),
-                }, cli.get_nns_url(), accepted_neurons, accepted_topics).await
+                }, cli.get_nns_url(), accepted_neurons, accepted_topics, simulate).await
             },
         }
     })
