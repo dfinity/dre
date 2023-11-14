@@ -28,6 +28,8 @@ pylint = "*"
 tenacity = "*"
 poetry = "^1.6.1"
 ic-py = "*"
+mkdocs-material = "^9.4.8"
+mkdocs = "^1.5.3"
 
 
 [tool.poetry.group.dev.dependencies]
