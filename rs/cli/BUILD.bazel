@@ -41,7 +41,10 @@ rust_test(
 cargo_build_script(
     name = "build_script",
     srcs = ["build.rs"],
-    rustc_env_files = [
-        ":build_env",
-    ],
 )
+# rustc_env_files... has been disabled
+# the correct way to pass this variable into build.rs
+# is to either let build.rs use git to determine the
+# correct git hash (the default) or set the variable
+# GIT_HASH in the bazel build process, and pass additional
+# argument --action_env=GIT_HASH.
