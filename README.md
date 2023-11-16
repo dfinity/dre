@@ -154,6 +154,14 @@ nvm use 14
 npm install --global yarn
 ```
 
+### "No disk space left" when building with Bazel on Linux?
+
+```
+sudo sysctl -w fs.inotify.max_user_watches=1048576
+```
+
+Bazel eats up a lot of inotify user watches.
+
 # CI container builds
 
 This repository creates a container that is used in CI.

@@ -10,13 +10,3 @@ py_binary(
     deps = [
     ],
 )
-
-py_binary(
-    name = "get-logs",
-    srcs = ["get-logs.py"],
-    deps = [
-        requirement("tabulate"),
-        requirement("elasticsearch"),
-        requirement("elasticsearch_follow"),
-    ],
-)

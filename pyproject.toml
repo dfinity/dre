@@ -7,7 +7,6 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = ">=3.8.16,<4"
-ansible = "==2.10.7"
 colorama = "*"
 elasticsearch = "<8.0,>=7.16"
 elasticsearch-dsl = "*"
