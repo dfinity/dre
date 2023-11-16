@@ -187,7 +187,7 @@ impl RegistryState {
             operators: BTreeMap::new(),
             factsdb_guests: Vec::new(),
             replica_releases: Vec::new(),
-            ic_repo: Some(IcRepo::new(Some(1000)).expect("failed to init ic repo")),
+            ic_repo: Some(IcRepo::new(None).expect("failed to init ic repo")),
             known_subnets: [
                 (
                     "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
@@ -1035,23 +1035,6 @@ async fn fetch_and_add_factsdb_guests_to_registry(
 ) {
     let guests_result = factsdb::query_guests(gitlab_client_release_repo.clone(), target_network.to_string()).await;
 
-    let guests_result = if matches!(target_network, Network::Mainnet) {
-        let guests_result_old = factsdb::query_guests(
-            gitlab_client_release_repo.clone(),
-            target_network.legacy_name().to_string(),
-        )
-        .await;
-        guests_result.and_then(|guests_decentralized| {
-            guests_result_old.map(|guests_old| {
-                guests_decentralized
-                    .into_iter()
-                    .chain(guests_old.into_iter())
-                    .collect::<Vec<_>>()
-            })
-        })
-    } else {
-        guests_result
-    };
     match guests_result {
         Ok(factsdb_guests) => {
             let mut registry_state = registry_state.write().await;

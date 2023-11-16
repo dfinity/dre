@@ -27,11 +27,22 @@ pub struct IcRepo {
 impl IcRepo {
     // Initialize the IcRepo struct with optional depth for shallow clone
     pub fn new(depth: Option<usize>) -> anyhow::Result<Self> {
-        let repo_path = std::env::var("HOME").unwrap_or(".".to_string()) + "/.cache/git/ic";
-        let lock_file_path = format!("{}.lock", &repo_path);
-        info!("IC git repo path: {}, lock file path: {}", &repo_path, &lock_file_path);
+        let repo_path = match std::env::var("REPO_CACHE_PATH") {
+            Ok(path) => PathBuf::from(path),
+            Err(_) => match dirs::cache_dir() {
+                Some(cache_dir) => cache_dir,
+                None => PathBuf::from("/tmp"),
+            },
+        }
+        .join("git")
+        .join("ic");
+        let lock_file_path = format!("{}.lock", &repo_path.display());
+        info!(
+            "IC git repo path: {}, lock file path: {}",
+            &repo_path.display(),
+            &lock_file_path
+        );
 
-        let repo_path = PathBuf::from(repo_path);
         if !repo_path.exists() {
             std::fs::create_dir_all(&repo_path).map_err(|e| IoError::Io {
                 source: e,
