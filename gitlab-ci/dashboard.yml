@@ -1,17 +1,12 @@
 .rules-dashboard:
   rules:
-    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH' # upon a merge to main
-      changes:
-        - dashboard/**/*
-        - rs/**/*
-    - !reference [.rules-manual, rules]
 
 .dashboard-build:
   stage: build
   extends:
     - .kaniko-build
     - .rules-dashboard
-  
+
 dashboard-backstage:
   extends:
     - .dashboard-build
@@ -19,6 +14,10 @@ dashboard-backstage:
     APP: "dashboard-backstage"
     CONTEXT_PATH: "dashboard"
     DOCKERFILE_PATH: "dashboard/Dockerfile"
+  rules:
+    - changes:
+        - dashboard/**/*
+    - !reference [.rules-default, rules]
 
 .docker-base:
   image: docker/compose:alpine-1.29.2
@@ -33,7 +32,11 @@ dashboard-backstage:
 dashboard-deploy:
   extends:
     - .docker-base
-    - .rules-dashboard
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH' # upon a merge to main
+      changes:
+        - dashboard/**/*
+        - rs/**/*
   needs:
     - dashboard-backstage
   interruptible: false
@@ -42,7 +45,7 @@ dashboard-deploy:
       set -exou pipefail
 
       # checkout branch
-      apk add git 
+      apk add git
       git clone "https://gitlab-ci-token:${GITLAB_API_TOKEN}@gitlab.com/dfinity-lab/private/k8s/k8s.git"
 
       cd k8s
@@ -69,4 +72,3 @@ dashboard-deploy:
           -o merge_request.title="[nomrbot] - Updating container image refs mainnet-dashboard [$CI_COMMIT_SHA]" \
           -o merge_request.description="Changes to the release repository - [here](https://gitlab.com/dfinity-lab/core/release/-/commit/$CI_COMMIT_SHA)" \
           --force --set-upstream origin "update-image-tag-${CI_COMMIT_SHA}"
-
