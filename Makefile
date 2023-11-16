@@ -25,6 +25,11 @@ $(POETRY_ENV_PATH)/bin/safety: $(POETRY_ENV_PATH)
 safety: $(POETRY_ENV_PATH)/bin/safety
 	venv/bin/poetry run safety check
 
+# Run this to lock Poetry dependencies after an update on pyproject.toml.
+requirements.txt: pyproject.toml poetry.lock $(POETRY_ENV_PATH)/bin/poetry bin/poetry-export.sh WORKSPACE.bazel
+	venv/bin/poetry run poetry lock --no-update
+	venv/bin/poetry run bin/poetry-export.sh
+
 $(CARGO_PATH)-check:
 	cargo install cargo-check || { echo Cargo is not installed or on your PATH, please install it. ; exit 1 ; }
 	touch $(CARGO_PATH)-check
