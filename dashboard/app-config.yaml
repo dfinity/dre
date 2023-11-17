@@ -10,10 +10,10 @@ backend:
   listen:
     port: 17000
   csp:
-    connect-src: ["'self'", 'http:', 'https:']
-    script-src: ["'self'", 'www.gstatic.com', "'unsafe-eval'"]
-    img-src: ["'self'", 'data:', 'gitlab.com']
-    frame-src: ["'self'", 'grafana.dfinity.systems']
+    connect-src: ["'self'", "http:", "https:"]
+    script-src: ["'self'", "www.gstatic.com", "'unsafe-eval'"]
+    img-src: ["'self'", "data:", "gitlab.com"]
+    frame-src: ["'self'", "grafana.dfinity.systems"]
     # Content-Security-Policy directives follow the Helmet format: https://helmetjs.github.io/#reference
     # Default Helmet Content-Security-Policy values can be removed by setting the key to false
   cors:
@@ -22,7 +22,7 @@ backend:
     credentials: true
   database:
     client: better-sqlite3
-    connection: ':memory:'
+    connection: ":memory:"
   cache:
     store: memory
   # workingDirectory: /tmp # Use this to configure a working directory for the scaffolder, defaults to the OS temp-dir
@@ -37,14 +37,14 @@ integrations:
     #   token: ${GHE_TOKEN}
 
 proxy:
-  '/test':
-    target: 'https://example.com'
+  "/test":
+    target: "http://127.0.0.1:8080"
     changeOrigin: true
-  '/registry/mainnet':
-    target: 'http://localhost:8080'
+  "/registry/mainnet":
+    target: "http://127.0.0.1:8080"
     changeOrigin: true
-  '/registry/staging':
-    target: 'http://localhost:8081'
+  "/registry/staging":
+    target: "http://127.0.0.1:8081"
     changeOrigin: true
 
 # Reference documentation http://backstage.io/docs/features/techdocs/configuration
@@ -52,11 +52,11 @@ proxy:
 # and an external cloud storage when deploying TechDocs for production use-case.
 # https://backstage.io/docs/features/techdocs/how-to-guides#how-to-migrate-from-techdocs-basic-to-recommended-deployment-approach
 techdocs:
-  builder: 'local' # Alternatives - 'external'
+  builder: "local" # Alternatives - 'external'
   generators:
-    techdocs: 'docker' # Alternatives - 'local'
+    techdocs: "docker" # Alternatives - 'local'
   publisher:
-    type: 'local' # Alternatives - 'googleGcs' or 'awsS3'. Read documentation for using alternatives.
+    type: "local" # Alternatives - 'googleGcs' or 'awsS3'. Read documentation for using alternatives.
 
 auth:
   environment: development
