@@ -13,6 +13,7 @@ use registry_canister::mutations::do_add_nodes_to_subnet::AddNodesToSubnetPayloa
 use registry_canister::mutations::do_change_subnet_membership::ChangeSubnetMembershipPayload;
 use registry_canister::mutations::do_create_subnet::CreateSubnetPayload;
 use registry_canister::mutations::do_remove_nodes_from_subnet::RemoveNodesFromSubnetPayload;
+use registry_canister::mutations::do_update_elected_hostos_versions::UpdateElectedHostosVersionsPayload;
 use registry_canister::mutations::do_update_elected_replica_versions::UpdateElectedReplicaVersionsPayload;
 use registry_canister::mutations::do_update_subnet_replica::UpdateSubnetReplicaVersionPayload;
 use registry_canister::mutations::node_management::do_remove_nodes::RemoveNodesPayload;
@@ -52,6 +53,10 @@ impl NnsFunctionProposal for CreateSubnetPayload {
 
 impl NnsFunctionProposal for UpdateSubnetReplicaVersionPayload {
     const TYPE: NnsFunction = NnsFunction::UpdateSubnetReplicaVersion;
+}
+
+impl NnsFunctionProposal for UpdateElectedHostosVersionsPayload {
+    const TYPE: NnsFunction = NnsFunction::UpdateNodesHostosVersion;
 }
 
 impl NnsFunctionProposal for ChangeSubnetMembershipPayload {
@@ -157,6 +162,13 @@ pub struct UpdateElectedReplicaVersionsProposal {
     pub versions_unelect: Vec<String>,
 }
 
+#[derive(CandidType, Serialize, Deserialize, Clone, Debug)]
+pub struct UpdateElectedHostosVersionsProposal {
+    pub proposal_id: u64,
+    pub version_elect: String,
+    pub versions_unelect: Vec<String>,
+}
+
 impl<T: TopologyChangePayload> From<(ProposalInfo, T)> for TopologyChangeProposal {
     fn from((info, payload): (ProposalInfo, T)) -> Self {
         Self {
@@ -177,7 +189,7 @@ pub struct Subnet {
     pub replica_version: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub proposal: Option<TopologyChangeProposal>,
-    pub replica_release: Option<ReplicaRelease>,
+    pub replica_release: Option<Release>,
 }
 
 type Application = String;
@@ -201,6 +213,8 @@ pub struct Node {
     pub hostname: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub subnet_id: Option<PrincipalId>,
+    pub hostos_release: Option<Release>,
+    pub hostos_version: String,
     pub dfinity_owned: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub proposal: Option<TopologyChangeProposal>,
@@ -435,15 +449,15 @@ pub struct NodeVersion {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash, PartialOrd, Ord)]
-pub struct ReplicaRelease {
+pub struct Release {
     pub commit_hash: String,
     pub branch: String,
     pub name: String,
     pub time: chrono::NaiveDateTime,
-    pub previous_patch_release: Option<Box<ReplicaRelease>>,
+    pub previous_patch_release: Option<Box<Release>>,
 }
 
-impl ReplicaRelease {
+impl Release {
     pub fn patch_count(&self) -> u32 {
         match &self.previous_patch_release {
             Some(rv) => rv.patch_count(),
@@ -451,7 +465,7 @@ impl ReplicaRelease {
         }
     }
 
-    pub fn patches(&self, replica_release: &ReplicaRelease) -> bool {
+    pub fn patches(&self, replica_release: &Release) -> bool {
         match &self.previous_patch_release {
             Some(rv) => rv.deref().eq(replica_release) || rv.patches(replica_release),
             None => false,
@@ -467,7 +481,7 @@ impl ReplicaRelease {
                 .unwrap_or_default()
     }
 
-    pub fn patches_for(&self, commit_hash: &str) -> Result<Vec<ReplicaRelease>, String> {
+    pub fn patches_for(&self, commit_hash: &str) -> Result<Vec<Release>, String> {
         if self.commit_hash == *commit_hash {
             Ok(vec![])
         } else if let Some(previous) = &self.previous_patch_release {
@@ -480,13 +494,50 @@ impl ReplicaRelease {
         }
     }
 
-    pub fn get(&self, commit_hash: &str) -> Result<ReplicaRelease, String> {
+    pub fn get(&self, commit_hash: &str) -> Result<Release, String> {
         if self.commit_hash == *commit_hash {
             Ok(self.clone())
         } else if let Some(previous) = &self.previous_patch_release {
             previous.get(commit_hash)
         } else {
             Err("doesn't patch this release".to_string())
+        }
+    }
+}
+
+pub struct ArtifactReleases {
+    pub artifact: Artifact,
+    pub releases: Vec<Release>,
+}
+
+impl ArtifactReleases {
+    pub fn new(artifact: Artifact) -> ArtifactReleases {
+        ArtifactReleases {
+            artifact,
+            releases: Vec::new(),
+        }
+    }
+}
+
+#[derive(Display, Serialize, Deserialize, PartialEq, Eq, Hash, Clone)]
+#[strum(serialize_all = "lowercase")]
+#[serde(rename_all = "lowercase")]
+pub enum Artifact {
+    Replica,
+    HostOs,
+}
+
+impl Artifact {
+    pub fn s3_folder(&self) -> String {
+        match self {
+            Artifact::Replica => String::from("guest-os"),
+            Artifact::HostOs => String::from("host-os"),
+        }
+    }
+    pub fn capitalized(&self) -> String {
+        match self {
+            Artifact::Replica => String::from("Replica"),
+            Artifact::HostOs => String::from("Hostos"),
         }
     }
 }
@@ -528,11 +579,4 @@ impl Network {
             Self::Url(url) => format!("testnet-{url}"),
         }
     }
-}
-
-#[derive(Clone)]
-pub struct UpdateReplicaVersions {
-    pub summary: String,
-    pub update_urls: Vec<String>,
-    pub stringified_hash: String,
 }

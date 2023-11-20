@@ -5,7 +5,7 @@ use crate::ops_subnet_node_replace;
 use decentralization::SubnetChangeResponse;
 use ic_base_types::PrincipalId;
 use ic_management_types::requests::NodesRemoveRequest;
-use ic_management_types::NodeFeature;
+use ic_management_types::{Artifact, NodeFeature};
 use itertools::Itertools;
 use log::{info, warn};
 
@@ -181,8 +181,15 @@ impl Runner {
         })
     }
 
-    pub(crate) async fn prepare_versions_to_retire(&self, edit_summary: bool) -> anyhow::Result<(String, Vec<String>)> {
-        let retireable_versions = self.dashboard_backend_client.get_retireable_versions().await?;
+    pub(crate) async fn prepare_versions_to_retire(
+        &self,
+        release_artifact: &Artifact,
+        edit_summary: bool,
+    ) -> anyhow::Result<(String, Option<Vec<String>>)> {
+        let retireable_versions = self
+            .dashboard_backend_client
+            .get_retireable_versions(release_artifact)
+            .await?;
 
         let versions = if retireable_versions.is_empty() {
             Vec::new()
@@ -219,7 +226,7 @@ impl Runner {
             template = edit::edit(template)?.trim().replace("\r(\n)?", "\n");
         }
 
-        Ok((template, versions))
+        Ok((template, (!versions.is_empty()).then_some(versions)))
     }
 
     pub async fn remove_nodes(&self, request: NodesRemoveRequest, simulate: bool) -> anyhow::Result<()> {

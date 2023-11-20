@@ -11,10 +11,12 @@ use ic_base_types::NodeId;
 use ic_base_types::{RegistryVersion, SubnetId};
 use ic_interfaces_registry::{RegistryClient, RegistryValue, ZERO_REGISTRY_VERSION};
 use ic_management_types::{
-    Datacenter, DatacenterOwner, Guest, Network, NetworkError, Node, NodeProviderDetails, NodeProvidersResponse,
-    Operator, Provider, ReplicaRelease, Subnet, SubnetMetadata, UpdateElectedReplicaVersionsProposal,
+    Artifact, ArtifactReleases, Datacenter, DatacenterOwner, Guest, Network, NetworkError, Node, NodeProviderDetails,
+    NodeProvidersResponse, Operator, Provider, Release, Subnet, SubnetMetadata, UpdateElectedHostosVersionsProposal,
+    UpdateElectedReplicaVersionsProposal,
 };
 use ic_protobuf::registry::crypto::v1::PublicKey;
+use ic_protobuf::registry::hostos_version::v1::HostosVersionRecord;
 use ic_protobuf::registry::replica_version::v1::BlessedReplicaVersions;
 use ic_protobuf::registry::unassigned_nodes_config::v1::UnassignedNodesConfigRecord;
 use ic_protobuf::registry::{
@@ -22,14 +24,14 @@ use ic_protobuf::registry::{
 };
 use ic_registry_client::client::ThresholdSigPublicKey;
 use ic_registry_client_fake::FakeRegistryClient;
-use ic_registry_client_helpers::{node::NodeRegistry, subnet::SubnetListRegistry};
+use ic_registry_client_helpers::node::NodeRegistry;
 use ic_registry_common_proto::pb::local_store::v1::{
     ChangelogEntry as PbChangelogEntry, KeyMutation as PbKeyMutation, MutationType,
 };
 use ic_registry_keys::DATA_CENTER_KEY_PREFIX;
 use ic_registry_keys::{
-    make_blessed_replica_versions_key, NODE_OPERATOR_RECORD_KEY_PREFIX, NODE_RECORD_KEY_PREFIX,
-    SUBNET_RECORD_KEY_PREFIX,
+    make_blessed_replica_versions_key, HOSTOS_VERSION_KEY_PREFIX, NODE_OPERATOR_RECORD_KEY_PREFIX,
+    NODE_RECORD_KEY_PREFIX, SUBNET_RECORD_KEY_PREFIX,
 };
 use ic_registry_keys::{make_crypto_threshold_signing_pubkey_key, ROOT_SUBNET_ID_KEY};
 use ic_registry_local_registry::LocalRegistry;
@@ -58,6 +60,7 @@ use tokio::time::{sleep, Duration};
 extern crate env_logger;
 
 use anyhow::Result;
+use ic_registry_client_helpers::subnet::SubnetListRegistry;
 
 pub const NNS_SUBNET_NAME: &str = "NNS";
 
@@ -75,7 +78,8 @@ pub struct RegistryState {
     factsdb_guests: Vec<Guest>,
     known_subnets: BTreeMap<PrincipalId, String>,
 
-    replica_releases: Vec<ReplicaRelease>,
+    replica_releases: ArtifactReleases,
+    hostos_releases: ArtifactReleases,
     ic_repo: Option<IcRepo>,
 }
 trait RegistryEntry: RegistryValue {
@@ -146,6 +150,35 @@ impl RegistryFamilyEntries for LocalRegistry {
     }
 }
 
+trait ReleasesOps {
+    fn get_active_branches(&self) -> Vec<String>;
+}
+impl ReleasesOps for ArtifactReleases {
+    fn get_active_branches(&self) -> Vec<String> {
+        const NUM_RELEASE_BRANCHES_TO_KEEP: usize = 2;
+        if self.releases.is_empty() {
+            warn!("No {} releases found", self.artifact);
+        } else {
+            info!(
+                "{} versions: {}",
+                self.artifact,
+                self.releases
+                    .iter()
+                    .map(|r| format!("{} ({})", r.commit_hash.clone(), r.branch))
+                    .join("\n")
+            );
+        };
+        self.releases
+            .clone()
+            .into_iter()
+            .rev()
+            .map(|rr| rr.branch)
+            .unique()
+            .take(NUM_RELEASE_BRANCHES_TO_KEEP)
+            .collect::<Vec<_>>()
+    }
+}
+
 impl RegistryState {
     pub async fn new(network: Network, without_update_loop: bool) -> Self {
         let nns_url = get_nns_url_string_from_target_network(&network);
@@ -186,7 +219,8 @@ impl RegistryState {
             nodes: BTreeMap::new(),
             operators: BTreeMap::new(),
             factsdb_guests: Vec::new(),
-            replica_releases: Vec::new(),
+            replica_releases: ArtifactReleases::new(Artifact::Replica),
+            hostos_releases: ArtifactReleases::new(Artifact::HostOs),
             ic_repo: Some(IcRepo::new(None).expect("failed to init ic repo")),
             known_subnets: [
                 (
@@ -236,7 +270,7 @@ impl RegistryState {
             .sync_with_local_store()
             .await
             .map_err(|e| anyhow::anyhow!(e))?;
-        self.update_replica_releases().await?;
+        self.update_releases().await?;
         self.update_operators(providers)?;
         self.update_nodes()?;
         self.update_subnets()?;
@@ -245,21 +279,40 @@ impl RegistryState {
         Ok(())
     }
 
-    async fn update_replica_releases(&mut self) -> Result<()> {
-        let blessed_versions = BlessedReplicaVersions::decode(
-            self.local_registry
-                .get_value(
-                    &make_blessed_replica_versions_key(),
-                    self.local_registry.get_latest_version(),
-                )?
-                .unwrap_or_default()
-                .as_slice(),
-        )
-        .expect("failed to decode blessed replica versions")
-        .blessed_version_ids;
+    pub async fn get_blessed_replica_versions(&self) -> Result<Vec<String>, anyhow::Error> {
+        match self.local_registry.get_value(
+            &make_blessed_replica_versions_key(),
+            self.local_registry.get_latest_version(),
+        ) {
+            Ok(Some(bytes)) => {
+                let cfg = BlessedReplicaVersions::decode(&bytes[..])
+                    .expect("Error decoding BlessedReplicaVersions from the LocalRegistry");
 
-        if let Some(ic_repo) = &mut self.ic_repo {
-            debug!("Updating replica releases");
+                Ok(cfg.blessed_version_ids)
+            }
+            _ => Err(anyhow::anyhow!("No blessed replica version found".to_string(),)),
+        }
+    }
+    pub async fn get_elected_hostos_versions(&self) -> Result<Vec<String>, anyhow::Error> {
+        let registry_version = self.local_registry.get_latest_version();
+        let keys = self
+            .local_registry
+            .get_key_family(HOSTOS_VERSION_KEY_PREFIX, registry_version)?;
+
+        let mut records = Vec::new();
+        for key in keys {
+            let bytes = self.local_registry.get_value(&key, registry_version);
+            let hostos_version_proto =
+                ic_registry_client_helpers::deserialize_registry_value::<HostosVersionRecord>(bytes)?
+                    .unwrap_or_default();
+            records.push(hostos_version_proto.hostos_version_id)
+        }
+
+        Ok(records)
+    }
+
+    async fn update_releases(&mut self) -> Result<()> {
+        if self.ic_repo.is_some() {
             lazy_static! {
                 // TODO: We don't need to distinguish release branch and name, they can be the same
                 static ref RELEASE_BRANCH_GROUP: &'static str = "release_branch";
@@ -272,83 +325,93 @@ impl RegistryState {
                     *DATETIME_NAME_GROUP,
                 )).unwrap();
             }
+            let blessed_replica_versions = self.get_blessed_replica_versions().await?;
+            let elected_hostos_versions = self.get_elected_hostos_versions().await?;
 
-            // A HashMap from the git revision to the latest commit branch in which the
-            // commit is present
-            let mut commit_to_release: HashMap<String, ReplicaRelease> = HashMap::new();
-            for commit_hash in blessed_versions.iter() {
-                info!("Looking for branches that contain git rev: {}", commit_hash);
-                match ic_repo.get_branches_with_commit(commit_hash) {
-                    // For each commit get a list of branches that have the commit
-                    Ok(branches) => {
-                        debug!("Commit {} ==> branches: {}", commit_hash, branches.join(", "));
-                        for branch in branches.into_iter().sorted() {
-                            match RE.captures(&branch) {
-                                Some(capture) => {
-                                    let release_branch = capture
-                                        .name(&RELEASE_BRANCH_GROUP)
-                                        .expect("release regex misconfiguration")
-                                        .as_str();
-                                    let release_name = capture
-                                        .name(&RELEASE_NAME_GROUP)
-                                        .expect("release regex misconfiguration")
-                                        .as_str();
-                                    let release_datetime = chrono::NaiveDateTime::parse_from_str(
-                                        capture
-                                            .name(&DATETIME_NAME_GROUP)
+            let releases_to_update = {
+                vec![
+                    (blessed_replica_versions, &mut self.replica_releases),
+                    (elected_hostos_versions, &mut self.hostos_releases),
+                ]
+            };
+            for (blessed_versions, ArtifactReleases { artifact, releases }) in releases_to_update {
+                debug!("Updating {} releases", artifact);
+                // A HashMap from the git revision to the latest commit branch in which the
+                // commit is present
+                let mut commit_to_release: HashMap<String, Release> = HashMap::new();
+                for commit_hash in blessed_versions.iter() {
+                    info!("Looking for branches that contain git rev: {}", commit_hash);
+                    let ic_repo = self.ic_repo.as_mut().unwrap();
+                    match ic_repo.get_branches_with_commit(commit_hash) {
+                        // For each commit get a list of branches that have the commit
+                        Ok(branches) => {
+                            debug!("Commit {} ==> branches: {}", commit_hash, branches.join(", "));
+                            for branch in branches.into_iter().sorted() {
+                                match RE.captures(&branch) {
+                                    Some(capture) => {
+                                        let release_branch = capture
+                                            .name(&RELEASE_BRANCH_GROUP)
                                             .expect("release regex misconfiguration")
-                                            .as_str(),
-                                        "%Y-%m-%d_%H-%M",
-                                    )
-                                    .expect("invalid datetime format");
-                                    commit_to_release.insert(
-                                        commit_hash.clone(),
-                                        ReplicaRelease {
-                                            name: release_name.to_string(),
-                                            branch: release_branch.to_string(),
-                                            commit_hash: commit_hash.clone(),
-                                            previous_patch_release: None,
-                                            time: release_datetime,
-                                        },
-                                    );
-                                }
-                                None => {
-                                    if branch != "master" && branch != "HEAD" {
-                                        warn!(
-                                            "branch {} for git rev {} does not match RC regex",
-                                            &commit_hash, &branch
+                                            .as_str();
+                                        let release_name = capture
+                                            .name(&RELEASE_NAME_GROUP)
+                                            .expect("release regex misconfiguration")
+                                            .as_str();
+                                        let release_datetime = chrono::NaiveDateTime::parse_from_str(
+                                            capture
+                                                .name(&DATETIME_NAME_GROUP)
+                                                .expect("release regex misconfiguration")
+                                                .as_str(),
+                                            "%Y-%m-%d_%H-%M",
+                                        )
+                                        .expect("invalid datetime format");
+                                        commit_to_release.insert(
+                                            commit_hash.clone(),
+                                            Release {
+                                                name: release_name.to_string(),
+                                                branch: release_branch.to_string(),
+                                                commit_hash: commit_hash.clone(),
+                                                previous_patch_release: None,
+                                                time: release_datetime,
+                                            },
                                         );
                                     }
-                                }
-                            };
+                                    None => {
+                                        if branch != "master" && branch != "HEAD" {
+                                            warn!(
+                                                "branch {} for git rev {} does not match RC regex",
+                                                &commit_hash, &branch
+                                            );
+                                        }
+                                    }
+                                };
+                            }
                         }
+                        Err(e) => error!("failed to find branches for git rev: {}; {}", &commit_hash, e),
                     }
-                    Err(e) => error!("failed to find branches for git rev: {}; {}", &commit_hash, e),
                 }
+
+                let versions: Vec<Release> = commit_to_release
+                    .into_values()
+                    .map(|mut nrr| {
+                        nrr.previous_patch_release = releases
+                            .iter()
+                            .rfind(|rr| rr.name == nrr.name && rr.commit_hash != nrr.commit_hash)
+                            .map(|rr| rr.clone().into());
+                        nrr
+                    })
+                    .collect_vec();
+
+                releases.clear();
+                releases.extend(
+                    versions
+                        .into_iter()
+                        .sorted_by_key(|rr| rr.time)
+                        .collect::<Vec<Release>>(),
+                );
+                debug!("Updated {} releases to {:?}", artifact, releases);
             }
-
-            let versions: Vec<ReplicaRelease> = commit_to_release
-                .into_values()
-                .map(|mut nrr| {
-                    nrr.previous_patch_release = self
-                        .replica_releases
-                        .iter()
-                        .rfind(|rr| rr.name == nrr.name && rr.commit_hash != nrr.commit_hash)
-                        .map(|rr| rr.clone().into());
-                    nrr
-                })
-                .collect_vec();
-
-            self.replica_releases.clear();
-            self.replica_releases.extend(
-                versions
-                    .into_iter()
-                    .sorted_by_key(|rr| rr.time)
-                    .collect::<Vec<ReplicaRelease>>(),
-            );
-            debug!("Updated replica releases to {:?}", self.replica_releases);
-        }
-
+        };
         Ok(())
     }
 
@@ -465,6 +528,13 @@ impl RegistryState {
                             )
                             .expect("failed to get subnet id")
                             .map(|s| s.get()),
+                        hostos_version: nr.hostos_version_id.clone().unwrap_or_default(),
+                        hostos_release: self
+                            .hostos_releases
+                            .releases
+                            .iter()
+                            .find(|r| r.commit_hash == nr.hostos_version_id.clone().unwrap_or_default())
+                            .cloned(),
                         operator,
                         proposal: None,
                         label: guest.map(|g| g.name),
@@ -540,6 +610,7 @@ impl RegistryState {
                         replica_version: sr.replica_version_id.clone(),
                         replica_release: self
                             .replica_releases
+                            .releases
                             .iter()
                             .find(|r| r.commit_hash == sr.replica_version_id)
                             .cloned(),
@@ -593,6 +664,11 @@ impl RegistryState {
         proposal_agent.list_open_elect_replica_proposals().await
     }
 
+    pub async fn open_elect_hostos_proposals(&self) -> Result<Vec<UpdateElectedHostosVersionsProposal>> {
+        let proposal_agent = proposal::ProposalAgent::new(self.nns_url.clone());
+        proposal_agent.list_open_elect_hostos_proposals().await
+    }
+
     pub async fn subnets_with_proposals(&self) -> Result<BTreeMap<PrincipalId, Subnet>> {
         let subnets = self.subnets.clone();
         let proposal_agent = proposal::ProposalAgent::new(self.nns_url.clone());
@@ -617,30 +693,45 @@ impl RegistryState {
             .collect())
     }
 
-    pub async fn retireable_versions(&self) -> Result<Vec<ReplicaRelease>> {
-        if self.replica_releases.is_empty() {
-            warn!("No replica releases found");
-        } else {
-            info!(
-                "Replica versions: {}",
-                self.replica_releases
-                    .iter()
-                    .map(|r| format!("{} ({})", r.commit_hash.clone(), r.branch))
-                    .join("\n")
-            );
-        };
-        const NUM_RELEASE_BRANCHES_TO_KEEP: usize = 2;
-        let active_releases = self
-            .replica_releases
+    pub async fn retireable_versions(&self, artifact: &Artifact) -> Result<Vec<Release>> {
+        match artifact {
+            Artifact::HostOs => self.retireable_hostos_versions().await,
+            Artifact::Replica => self.retireable_replica_versions().await,
+        }
+    }
+
+    async fn retireable_hostos_versions(&self) -> Result<Vec<Release>> {
+        let active_releases = self.hostos_releases.get_active_branches();
+        let hostos_versions: BTreeSet<String> = self.nodes.values().map(|s| s.hostos_version.clone()).collect();
+        let versions_in_proposals: BTreeSet<String> = self
+            .open_elect_hostos_proposals()
+            .await?
+            .iter()
+            .flat_map(|p| p.versions_unelect.iter())
+            .cloned()
+            .collect();
+        info!("Active releases: {}", active_releases.iter().join(", "));
+        info!("HostOS versions in use on nodes: {}", hostos_versions.iter().join(", "));
+        info!(
+            "HostOS versions in open proposals: {}",
+            versions_in_proposals.iter().join(", ")
+        );
+        Ok(self
+            .hostos_releases
+            .releases
             .clone()
             .into_iter()
-            .rev()
-            .map(|rr| rr.branch)
-            .unique()
-            .take(NUM_RELEASE_BRANCHES_TO_KEEP)
-            .collect::<Vec<_>>();
+            .filter(|rr| !active_releases.contains(&rr.branch))
+            // TODO: Missing checking unassigned nodes
+            .filter(|rr| !hostos_versions.contains(&rr.commit_hash))
+            .filter(|rr| !versions_in_proposals.contains(&rr.commit_hash))
+            .collect())
+    }
+
+    async fn retireable_replica_versions(&self) -> Result<Vec<Release>> {
+        let active_releases = self.replica_releases.get_active_branches();
         let subnet_versions: BTreeSet<String> = self.subnets.values().map(|s| s.replica_version.clone()).collect();
-        let version_on_unassigned_nodes = self.get_unassigned_nodes_version().await?;
+        let version_on_unassigned_nodes = self.get_unassigned_nodes_replica_version().await?;
         let versions_in_proposals: BTreeSet<String> = self
             .open_elect_replica_proposals()
             .await?
@@ -660,6 +751,7 @@ impl RegistryState {
         );
         Ok(self
             .replica_releases
+            .releases
             .clone()
             .into_iter()
             .filter(|rr| !active_releases.contains(&rr.branch))
@@ -704,15 +796,15 @@ impl RegistryState {
         missing_guests
     }
 
-    pub fn replica_releases(&self) -> Vec<ReplicaRelease> {
-        self.replica_releases.clone()
+    pub fn replica_releases(&self) -> Vec<Release> {
+        self.replica_releases.releases.clone()
     }
 
     pub fn nns_url(&self) -> String {
         self.nns_url.clone()
     }
 
-    pub async fn get_unassigned_nodes_version(&self) -> Result<String, anyhow::Error> {
+    pub async fn get_unassigned_nodes_replica_version(&self) -> Result<String, anyhow::Error> {
         let unassigned_config_key = ic_registry_keys::make_unassigned_nodes_config_record_key();
 
         match self

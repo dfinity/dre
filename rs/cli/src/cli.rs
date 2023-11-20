@@ -1,6 +1,6 @@
 use clap::{Parser, Subcommand};
 use clap_num::maybe_hex;
-use ic_management_types::Network;
+use ic_management_types::{Artifact, Network};
 use log::error;
 
 use crate::detect_neuron::{detect_hsm_auth, detect_neuron, Auth, Neuron};
@@ -65,6 +65,7 @@ pub(crate) enum Commands {
         args: Vec<String>,
     },
     /// Manage replica versions blessing
+    #[clap(subcommand)]
     Version(version::Cmd),
 
     /// Manage nodes
@@ -220,17 +221,31 @@ pub(crate) mod subnet {
 pub(crate) mod version {
     use super::*;
 
+    #[derive(Subcommand, Clone)]
+    pub enum Cmd {
+        Update(UpdateCmd),
+    }
+
     #[derive(Parser, Clone)]
-    pub struct Cmd {
+    pub struct UpdateCmd {
         #[clap(subcommand)]
-        pub subcommand: Commands,
+        pub subcommand: UpdateCommands,
     }
 
     #[derive(Subcommand, Clone)]
-    pub enum Commands {
+    pub enum UpdateCommands {
         /// Update the elected/blessed replica versions in the registry
         /// by adding a new version and potentially removing obsolete versions
-        Update {
+        Replica {
+            /// Specify the commit hash of the version that is being elected.
+            version: String,
+
+            /// Git tag for the release.
+            release_tag: String,
+        },
+        /// Update the elected/blessed HostOS versions in the registry
+        /// by adding a new version and potentially removing obsolete versions
+        HostOS {
             /// Specify the commit hash of the version that is being elected.
             version: String,
 
@@ -279,6 +294,17 @@ pub struct Cli {
     pub neuron: Option<Neuron>,
 }
 
+#[derive(Clone)]
+pub struct UpdateVersion {
+    pub release_artifact: Artifact,
+    pub version: String,
+    pub title: String,
+    pub summary: String,
+    pub update_urls: Vec<String>,
+    pub stringified_hash: String,
+    pub versions_to_retire: Option<Vec<String>>,
+}
+
 impl Cli {
     pub fn get_neuron(&self) -> &Option<Neuron> {
         &self.neuron
@@ -286,6 +312,31 @@ impl Cli {
 
     pub fn get_nns_url(&self) -> &url::Url {
         &self.nns_url
+    }
+
+    pub fn get_update_cmd_args(update_version: &UpdateVersion) -> Vec<String> {
+        vec![
+            [
+                vec![
+                    format!("--{}-version-to-elect", update_version.release_artifact),
+                    update_version.version.to_string(),
+                    "--release-package-sha256-hex".to_string(),
+                    update_version.stringified_hash.to_string(),
+                    "--release-package-urls".to_string(),
+                ],
+                update_version.update_urls.clone(),
+            ]
+            .concat(),
+            match update_version.versions_to_retire.clone() {
+                Some(versions) => vec![
+                    vec![format!("--{}-versions-to-unelect", update_version.release_artifact)],
+                    versions,
+                ]
+                .concat(),
+                None => vec![],
+            },
+        ]
+        .concat()
     }
 
     pub async fn from_opts(opts: &Opts, require_authentication: bool) -> anyhow::Result<Self> {

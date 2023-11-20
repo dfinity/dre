@@ -1,4 +1,3 @@
-use crate::cli::version::Commands::Update;
 use crate::general::vote_on_proposals;
 use crate::ic_admin::IcAdminWrapper;
 use clap::{error::ErrorKind, CommandFactory, Parser};
@@ -6,8 +5,7 @@ use dotenv::dotenv;
 use ic_canisters::governance_canister_version;
 use ic_management_backend::endpoints;
 use ic_management_types::requests::NodesRemoveRequest;
-use ic_management_types::{MinNakamotoCoefficients, Network, NodeFeature};
-use itertools::Itertools;
+use ic_management_types::{Artifact, MinNakamotoCoefficients, Network, NodeFeature};
 use log::info;
 use std::collections::BTreeMap;
 use std::str::FromStr;
@@ -195,34 +193,40 @@ async fn main() -> Result<(), anyhow::Error> {
                 ic_admin.run_passthrough_propose(args, simulate)
             },
 
-            cli::Commands::Version(cmd) => {
-                match &cmd.subcommand {
-                    Update { version, release_tag} => {
+            cli::Commands::Version(version_command) => {
+                match &version_command {
+                    cli::version::Cmd::Update(update_command) => {
                         let runner = runner::Runner::new_with_network_url(cli::Cli::from_opts(&cli_opts, true).await?.into(), backend_port).await?;
-                        let (_, retire_versions) = runner.prepare_versions_to_retire(false).await?;
                         let ic_admin: IcAdminWrapper = cli::Cli::from_opts(&cli_opts, true).await?.into();
-                        let new_replica_info = ic_admin::IcAdminWrapper::prepare_to_propose_to_update_elected_replica_versions(version, release_tag).await?;
-                        let proposal_title = if retire_versions.is_empty() {
-                            Some(format!("Elect new IC/Replica revision (commit {})", &version[..8]))
-                        } else {
-                            let pluralize = if retire_versions.len() == 1 {
-                                "version"
-                            } else {
-                                "versions"
-                            };
-                            Some(format!("Elect new IC/Replica revision (commit {}), and retire old replica {} {}", &version[..8], pluralize, retire_versions.iter().map(|v| &v[..8]).join(",")))
-                        };
 
-                        ic_admin.propose_run(ic_admin::ProposeCommand::UpdateElectedReplicaVersions{
-                            version_to_bless: version.to_string(),
-                            update_urls: new_replica_info.update_urls,
-                            stringified_hash: new_replica_info.stringified_hash,
-                            versions_to_retire: retire_versions.clone(),
-                        }, ic_admin::ProposeOptions{
-                            title: proposal_title,
-                            summary: Some(new_replica_info.summary),
-                            motivation: None,
-                        }, simulate)
+                        let update_version = match &update_command.subcommand {
+                            cli::version::UpdateCommands::Replica { version, release_tag} => {
+                                ic_admin::IcAdminWrapper::prepare_to_propose_to_update_elected_versions(
+                                    &Artifact::Replica,
+                                    version,
+                                    release_tag,
+                                    runner.prepare_versions_to_retire(&Artifact::Replica, false).await.map(|res| res.1)?,
+                                )
+                            }
+                            cli::version::UpdateCommands::HostOS { version, release_tag} => {
+                                ic_admin::IcAdminWrapper::prepare_to_propose_to_update_elected_versions(
+                                    &Artifact::HostOs,
+                                    version,
+                                    release_tag,
+                                    runner.prepare_versions_to_retire(&Artifact::HostOs, false).await.map(|res| res.1)?,
+                                )
+                            }
+                        }.await?;
+
+                        ic_admin.propose_run(ic_admin::ProposeCommand::UpdateElectedVersions {
+                                                 release_artifact: update_version.release_artifact.clone(),
+                                                 args: cli::Cli::get_update_cmd_args(&update_version)
+                                             },
+                                             ic_admin::ProposeOptions{
+                                                 title: Some(update_version.title),
+                                                 summary: Some(update_version.summary.clone()),
+                                                 motivation: None,
+                                             }, simulate)
                     }
                 }
             },

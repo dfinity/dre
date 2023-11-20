@@ -144,6 +144,7 @@ mod tests {
                     ..Default::default()
                 },
                 subnet_id: Some(subnet_id),
+                hostos_release: None,
                 decentralized: true,
                 ip_addr: Ipv6Addr::new(0, 0, 0, 0, 0, 0, 0, 1),
                 hostname: None,
@@ -151,6 +152,7 @@ mod tests {
                 proposal: None,
                 duplicates: None,
                 label: None,
+                hostos_version: "".to_string(),
             };
             nodes.insert(node.principal, node);
         }

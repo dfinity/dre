@@ -1,11 +1,12 @@
 use anyhow::Result;
+use cli::UpdateVersion;
 use colored::Colorize;
 use dialoguer::Confirm;
 use flate2::read::GzDecoder;
 use futures::stream::{self, StreamExt};
 use futures::Future;
 use ic_base_types::PrincipalId;
-use ic_management_types::UpdateReplicaVersions;
+use ic_management_types::Artifact;
 use itertools::Itertools;
 use log::{error, info, warn};
 use regex::Regex;
@@ -18,8 +19,8 @@ use std::{path::Path, process::Command};
 use strum::Display;
 
 use crate::cli::Cli;
-use crate::defaults;
 use crate::detect_neuron::{Auth, Neuron};
+use crate::{cli, defaults};
 
 #[derive(Clone)]
 pub struct IcAdminWrapper {
@@ -284,13 +285,6 @@ impl IcAdminWrapper {
         self.propose_run(cmd, Default::default(), simulate)
     }
 
-    fn get_cdn_image_url(version: &String) -> String {
-        format!(
-            "https://download.dfinity.systems/ic/{}/guest-os/update-img/update-img.tar.gz",
-            version
-        )
-    }
-
     async fn download_file_and_get_sha256(download_url: &String) -> anyhow::Result<String> {
         let url = url::Url::parse(download_url)?;
         let subdir = format!(
@@ -348,11 +342,16 @@ impl IcAdminWrapper {
         Ok(stringified_hash)
     }
 
-    pub(crate) async fn prepare_to_propose_to_update_elected_replica_versions(
+    async fn download_images_and_validate_sha256(
+        image: &Artifact,
         version: &String,
-        release_tag: &String,
-    ) -> anyhow::Result<UpdateReplicaVersions> {
-        let update_urls = vec![Self::get_cdn_image_url(version)];
+    ) -> anyhow::Result<(Vec<String>, String)> {
+        let update_urls = vec![format!(
+            "https://download.dfinity.systems/ic/{}/{}/update-img/update-img.tar.zst",
+            version,
+            image.s3_folder()
+        )];
+
         // Download images, verify them and compare the SHA256
         let hash_and_valid_urls: Vec<(String, &String)> = stream::iter(&update_urls)
             .filter_map(|update_url| async move {
@@ -401,13 +400,24 @@ impl IcAdminWrapper {
             .map(|(_, u)| u.clone())
             .collect::<Vec<String>>();
 
+        Ok((update_urls, expected_hash))
+    }
+
+    pub(crate) async fn prepare_to_propose_to_update_elected_versions(
+        release_artifact: &Artifact,
+        version: &String,
+        release_tag: &String,
+        retire_versions: Option<Vec<String>>,
+    ) -> anyhow::Result<UpdateVersion> {
+        let (update_urls, expected_hash) = Self::download_images_and_validate_sha256(release_artifact, version).await?;
+
         let template = format!(
-            r#"Elect new replica binary revision [{version}](https://github.com/dfinity/ic/tree/{release_tag})
+            r#"Elect new {release_artifact} binary revision [{version}](https://github.com/dfinity/ic/tree/{release_tag})
 
 # Release Notes:
 
 [comment]: <> Remove this block of text from the proposal.
-[comment]: <> Then, add the replica binary release notes as bullet points here.
+[comment]: <> Then, add the {release_artifact} binary release notes as bullet points here.
 [comment]: <> Any [commit ID] within square brackets will auto-link to the specific changeset.
 
 # IC-OS Verification
@@ -449,10 +459,32 @@ must be identical, and must match the SHA256 from the payload of the NNS proposa
                 "The edited proposal text has not been edited to add release notes."
             ))
         } else {
-            Ok(UpdateReplicaVersions {
+            let proposal_title = match &retire_versions {
+                Some(v) => {
+                    let pluralize = if v.len() == 1 { "version" } else { "versions" };
+                    format!(
+                        "Elect new IC/{} revision (commit {}), and retire old replica {} {}",
+                        release_artifact.capitalized(),
+                        &version[..8],
+                        pluralize,
+                        v.iter().map(|v| &v[..8]).join(",")
+                    )
+                }
+                None => format!(
+                    "Elect new IC/{} revision (commit {})",
+                    release_artifact.capitalized(),
+                    &version[..8]
+                ),
+            };
+
+            Ok(UpdateVersion {
+                release_artifact: release_artifact.clone(),
+                version: version.clone(),
+                title: proposal_title.clone(),
                 stringified_hash: expected_hash,
                 summary: edited,
                 update_urls,
+                versions_to_retire: retire_versions.clone(),
             })
         }
     }
@@ -477,11 +509,9 @@ pub(crate) enum ProposeCommand {
     RemoveNodes {
         nodes: Vec<PrincipalId>,
     },
-    UpdateElectedReplicaVersions {
-        version_to_bless: String,
-        update_urls: Vec<String>,
-        stringified_hash: String,
-        versions_to_retire: Vec<String>,
+    UpdateElectedVersions {
+        release_artifact: Artifact,
+        args: Vec<String>,
     },
     CreateSubnet {
         node_ids: Vec<PrincipalId>,
@@ -496,6 +526,10 @@ impl ProposeCommand {
             "{PROPOSE_CMD_PREFIX}{}",
             match self {
                 Self::Raw { command, args: _ } => command.trim_start_matches(PROPOSE_CMD_PREFIX).to_string(),
+                Self::UpdateElectedVersions {
+                    release_artifact,
+                    args: _,
+                } => format!("update-elected-{}-versions", release_artifact),
                 _ => self.to_string(),
             }
         )
@@ -536,34 +570,10 @@ impl ProposeCommand {
             }
             Self::Raw { command: _, args } => args.clone(),
             Self::RemoveNodes { nodes } => nodes.iter().map(|n| n.to_string()).collect(),
-            Self::UpdateElectedReplicaVersions {
-                version_to_bless,
-                update_urls,
-                stringified_hash,
-                versions_to_retire,
-            } => vec![
-                [
-                    vec![
-                        "--replica-version-to-elect".to_string(),
-                        version_to_bless.to_string(),
-                        "--release-package-sha256-hex".to_string(),
-                        stringified_hash.to_string(),
-                        "--release-package-urls".to_string(),
-                    ],
-                    update_urls.clone(),
-                ]
-                .concat(),
-                if !versions_to_retire.is_empty() {
-                    vec![
-                        vec!["--replica-versions-to-unelect".to_string()],
-                        versions_to_retire.clone(),
-                    ]
-                    .concat()
-                } else {
-                    vec![]
-                },
-            ]
-            .concat(),
+            Self::UpdateElectedVersions {
+                release_artifact: _,
+                args,
+            } => args.clone(),
             Self::CreateSubnet {
                 node_ids,
                 replica_version,

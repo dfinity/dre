@@ -5,7 +5,7 @@ use ic_management_types::{
     requests::{
         MembershipReplaceRequest, NodesRemoveRequest, NodesRemoveResponse, SubnetCreateRequest, SubnetResizeRequest,
     },
-    Network, NetworkError, ReplicaRelease, TopologyProposal,
+    Artifact, Network, NetworkError, Release, TopologyProposal,
 };
 use log::error;
 use serde::de::DeserializeOwned;
@@ -86,9 +86,13 @@ impl DashboardBackendClient {
             .await
     }
 
-    pub async fn get_retireable_versions(&self) -> anyhow::Result<Vec<ReplicaRelease>> {
+    pub async fn get_retireable_versions(&self, release_artifact: &Artifact) -> anyhow::Result<Vec<Release>> {
         reqwest::Client::new()
-            .get(self.url.join("release/retireable").map_err(|e| anyhow::anyhow!(e))?)
+            .get(
+                self.url
+                    .join(&format!("release/retireable/{}", release_artifact))
+                    .map_err(|e| anyhow::anyhow!(e))?,
+            )
             .rest_send()
             .await
     }
