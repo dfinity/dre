@@ -7,7 +7,7 @@
   },
   "scripts": {
     "dev-staging": "concurrently \"yarn start\" \"yarn start-backend\" \"yarn start-rust-backend-staging\"",
-    "start-rust-backend-staging": "cd .. && BACKEND_PORT=8081 RUST_BACKTRACE=1 NETWORK=staging NNS_URL=http://[2600:3004:1200:1200:5000:62ff:fedc:fe3c]:8080 cargo watch -C rs/ic-management-backend -x 'run --release --color=always'",
+    "start-rust-backend-staging": "cd .. && BACKEND_PORT=8081 RUST_BACKTRACE=1 NETWORK=staging NNS_URL=http://[2600:3000:6100:200:5000:b0ff:fe8e:6b7b]:8080 cargo watch -C rs/ic-management-backend -x 'run --release --color=always'",
     "dev-mainnet": "concurrently \"yarn start\" \"yarn start-backend\" \"yarn start-rust-backend-mainnet\"",
     "start-rust-backend-mainnet": "cd .. && RUST_BACKTRACE=1 NETWORK=mainnet NNS_URL=https://ic0.app cargo watch -C rs/ic-management-backend -x 'run --release --color=always'",
     "dev": "concurrently \"yarn start\" \"yarn start-backend\" \"yarn start-rust-backend-staging\" \"yarn start-rust-backend-mainnet\"",
