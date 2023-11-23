@@ -506,6 +506,10 @@ pub(crate) enum ProposeCommand {
         command: String,
         args: Vec<String>,
     },
+    UpdateNodesHostosVersion {
+        nodes: Vec<PrincipalId>,
+        version: String,
+    },
     RemoveNodes {
         nodes: Vec<PrincipalId>,
     },
@@ -569,6 +573,11 @@ impl ProposeCommand {
                 vec![subnet.to_string(), version.clone()]
             }
             Self::Raw { command: _, args } => args.clone(),
+            Self::UpdateNodesHostosVersion { nodes, version } => vec![
+                nodes.iter().map(|n| n.to_string()).collect::<Vec<_>>(),
+                vec!["--hostos-version-id".to_string(), version.to_string()],
+            ]
+            .concat(),
             Self::RemoveNodes { nodes } => nodes.iter().map(|n| n.to_string()).collect(),
             Self::UpdateElectedVersions {
                 release_artifact: _,

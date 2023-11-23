@@ -700,6 +700,13 @@ impl RegistryState {
         }
     }
 
+    pub async fn blessed_versions(&self, artifact: &Artifact) -> Result<Vec<String>> {
+        match artifact {
+            Artifact::HostOs => self.get_elected_hostos_versions().await,
+            Artifact::Replica => self.get_blessed_replica_versions().await,
+        }
+    }
+
     async fn retireable_hostos_versions(&self) -> Result<Vec<Release>> {
         let active_releases = self.hostos_releases.get_active_branches();
         let hostos_versions: BTreeSet<String> = self.nodes.values().map(|s| s.hostos_version.clone()).collect();

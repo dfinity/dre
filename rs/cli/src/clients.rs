@@ -104,6 +104,17 @@ impl DashboardBackendClient {
             .await
     }
 
+    pub async fn get_blessed_versions(&self, release_artifact: &Artifact) -> anyhow::Result<Option<Vec<String>>> {
+        reqwest::Client::new()
+            .get(
+                self.url
+                    .join(&format!("release/versions/blessed/{}", release_artifact))
+                    .map_err(|e| anyhow::anyhow!(e))?,
+            )
+            .rest_send()
+            .await
+    }
+
     pub async fn remove_nodes(&self, request: NodesRemoveRequest) -> anyhow::Result<NodesRemoveResponse> {
         reqwest::Client::new()
             .post(self.url.join("nodes/remove").map_err(|e| anyhow::anyhow!(e))?)

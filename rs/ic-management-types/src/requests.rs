@@ -45,6 +45,12 @@ pub struct SubnetResizeRequest {
 }
 
 #[derive(Serialize, Deserialize)]
+pub struct NodesUpdateRequest {
+    pub nodes: Vec<String>,
+    pub version: String,
+}
+
+#[derive(Serialize, Deserialize)]
 pub struct NodesRemoveRequest {
     pub no_auto: bool,
     pub extra_nodes_filter: Vec<String>,

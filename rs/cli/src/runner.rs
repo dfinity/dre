@@ -229,6 +229,43 @@ impl Runner {
         Ok((template, (!versions.is_empty()).then_some(versions)))
     }
 
+    pub async fn update_nodes(&self, nodes: Vec<PrincipalId>, version: &str, simulate: bool) -> anyhow::Result<()> {
+        let maybe_elected_versions = self
+            .dashboard_backend_client
+            .get_blessed_versions(&Artifact::HostOs)
+            .await?;
+        if let Some(elected_versions) = maybe_elected_versions {
+            if !elected_versions.contains(&version.to_string()) {
+                return Err(anyhow::anyhow!(format!(
+                    "The version {} has not being elected.\nVersions elected are: {:?}",
+                    version, elected_versions,
+                )));
+            }
+        }
+
+        let nodes_propose = nodes
+            .iter()
+            .flat_map(|n| n.to_string().split('-').next().map(String::from))
+            .collect::<Vec<_>>()
+            .join(", ");
+        self.ic_admin
+            .propose_run(
+                ic_admin::ProposeCommand::UpdateNodesHostosVersion {
+                    nodes,
+                    version: version.to_string(),
+                },
+                ic_admin::ProposeOptions {
+                    title: format!("Set HostOS version: {version} on nodes: {nodes_propose}").into(),
+                    summary: format!("Set HostOS version: {version} on nodes: {nodes_propose}").into(),
+                    motivation: None,
+                },
+                simulate,
+            )
+            .map_err(|e| anyhow::anyhow!(e))?;
+
+        Ok(())
+    }
+
     pub async fn remove_nodes(&self, request: NodesRemoveRequest, simulate: bool) -> anyhow::Result<()> {
         let node_remove_response = self.dashboard_backend_client.remove_nodes(request).await?;
         let mut node_removals = node_remove_response.removals;

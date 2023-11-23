@@ -226,6 +226,10 @@ async fn main() -> Result<(), anyhow::Error> {
 
             cli::Commands::Nodes(nodes) => {
                 match &nodes.subcommand {
+                    cli::nodes::Commands::Deploy { version, nodes} => {
+                        let runner = runner::Runner::new_with_network_url(cli::Cli::from_opts(&cli_opts, true).await?.into(), backend_port).await?;
+                        runner.update_nodes(nodes.clone(), version, simulate).await
+                    },
                     cli::nodes::Commands::Remove { extra_nodes_filter, no_auto, exclude, motivation } => {
                         if motivation.is_none() && !extra_nodes_filter.is_empty() {
                             cmd.error(

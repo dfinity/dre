@@ -265,6 +265,7 @@ pub(crate) mod version {
 
 pub(crate) mod nodes {
     use super::*;
+    use ic_base_types::PrincipalId;
 
     #[derive(Parser, Clone)]
     pub struct Cmd {
@@ -274,6 +275,13 @@ pub(crate) mod nodes {
 
     #[derive(Subcommand, Clone)]
     pub enum Commands {
+        /// Create a new proposal to rollout a new HostOS version to the nodes
+        Deploy {
+            version: String,
+            /// Node IDs where to deploy the version
+            #[clap(long, num_args(1..), required(true))]
+            nodes: Vec<PrincipalId>,
+        },
         /// Remove the nodes from the network
         Remove {
             /// Skip removal of duplicate or dead nodes

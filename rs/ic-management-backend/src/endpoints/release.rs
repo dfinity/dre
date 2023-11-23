@@ -22,6 +22,15 @@ async fn retireable(
     response_from_result(registry.retireable_versions(&request.release_artifact).await)
 }
 
+#[get("release/versions/blessed/{release_artifact}")]
+async fn blessed(
+    request: web::Path<ReleaseRequest>,
+    registry: web::Data<Arc<RwLock<RegistryState>>>,
+) -> Result<HttpResponse, Error> {
+    let registry = registry.read().await;
+    response_from_result(registry.blessed_versions(&request.release_artifact).await)
+}
+
 #[get("/release/versions/nns")]
 async fn get_nns_replica_version(registry: web::Data<Arc<RwLock<RegistryState>>>) -> Result<HttpResponse, Error> {
     let registry = registry.read().await;
