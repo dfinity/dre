@@ -328,90 +328,82 @@ impl RegistryState {
             let blessed_replica_versions = self.get_blessed_replica_versions().await?;
             let elected_hostos_versions = self.get_elected_hostos_versions().await?;
 
-            let releases_to_update = {
-                vec![
-                    (blessed_replica_versions, &mut self.replica_releases),
-                    (elected_hostos_versions, &mut self.hostos_releases),
-                ]
-            };
-            for (blessed_versions, ArtifactReleases { artifact, releases }) in releases_to_update {
-                debug!("Updating {} releases", artifact);
-                // A HashMap from the git revision to the latest commit branch in which the
-                // commit is present
-                let mut commit_to_release: HashMap<String, Release> = HashMap::new();
-                for commit_hash in blessed_versions.iter() {
-                    info!("Looking for branches that contain git rev: {}", commit_hash);
-                    let ic_repo = self.ic_repo.as_mut().unwrap();
-                    match ic_repo.get_branches_with_commit(commit_hash) {
-                        // For each commit get a list of branches that have the commit
-                        Ok(branches) => {
-                            debug!("Commit {} ==> branches: {}", commit_hash, branches.join(", "));
-                            for branch in branches.into_iter().sorted() {
-                                match RE.captures(&branch) {
-                                    Some(capture) => {
-                                        let release_branch = capture
-                                            .name(&RELEASE_BRANCH_GROUP)
+            let blessed_versions: HashSet<&String> = blessed_replica_versions
+                .iter()
+                .chain(elected_hostos_versions.iter())
+                .collect();
+
+            // A HashMap from the git revision to the latest commit branch in which the
+            // commit is present
+            let mut commit_to_release: HashMap<String, Release> = HashMap::new();
+            blessed_versions.into_iter().for_each(|commit_hash| {
+                info!("Looking for branches that contain git rev: {}", commit_hash);
+                let ic_repo = self.ic_repo.as_mut().unwrap();
+                match ic_repo.get_branches_with_commit(commit_hash) {
+                    // For each commit get a list of branches that have the commit
+                    Ok(branches) => {
+                        debug!("Commit {} ==> branches: {}", commit_hash, branches.join(", "));
+                        for branch in branches.into_iter().sorted() {
+                            match RE.captures(&branch) {
+                                Some(capture) => {
+                                    let release_branch = capture
+                                        .name(&RELEASE_BRANCH_GROUP)
+                                        .expect("release regex misconfiguration")
+                                        .as_str();
+                                    let release_name = capture
+                                        .name(&RELEASE_NAME_GROUP)
+                                        .expect("release regex misconfiguration")
+                                        .as_str();
+                                    let release_datetime = chrono::NaiveDateTime::parse_from_str(
+                                        capture
+                                            .name(&DATETIME_NAME_GROUP)
                                             .expect("release regex misconfiguration")
-                                            .as_str();
-                                        let release_name = capture
-                                            .name(&RELEASE_NAME_GROUP)
-                                            .expect("release regex misconfiguration")
-                                            .as_str();
-                                        let release_datetime = chrono::NaiveDateTime::parse_from_str(
-                                            capture
-                                                .name(&DATETIME_NAME_GROUP)
-                                                .expect("release regex misconfiguration")
-                                                .as_str(),
-                                            "%Y-%m-%d_%H-%M",
-                                        )
-                                        .expect("invalid datetime format");
-                                        commit_to_release.insert(
-                                            commit_hash.clone(),
-                                            Release {
-                                                name: release_name.to_string(),
-                                                branch: release_branch.to_string(),
-                                                commit_hash: commit_hash.clone(),
-                                                previous_patch_release: None,
-                                                time: release_datetime,
-                                            },
+                                            .as_str(),
+                                        "%Y-%m-%d_%H-%M",
+                                    )
+                                    .expect("invalid datetime format");
+
+                                    commit_to_release.insert(
+                                        commit_hash.clone(),
+                                        Release {
+                                            name: release_name.to_string(),
+                                            branch: release_branch.to_string(),
+                                            commit_hash: commit_hash.clone(),
+                                            previous_patch_release: None,
+                                            time: release_datetime,
+                                        },
+                                    );
+                                }
+                                None => {
+                                    if branch != "master" && branch != "HEAD" {
+                                        warn!(
+                                            "branch {} for git rev {} does not match RC regex",
+                                            &commit_hash, &branch
                                         );
                                     }
-                                    None => {
-                                        if branch != "master" && branch != "HEAD" {
-                                            warn!(
-                                                "branch {} for git rev {} does not match RC regex",
-                                                &commit_hash, &branch
-                                            );
-                                        }
-                                    }
-                                };
-                            }
+                                }
+                            };
                         }
-                        Err(e) => error!("failed to find branches for git rev: {}; {}", &commit_hash, e),
                     }
+                    Err(e) => error!("failed to find branches for git rev: {}; {}", &commit_hash, e),
                 }
+            });
 
-                let versions: Vec<Release> = commit_to_release
-                    .into_values()
-                    .map(|mut nrr| {
-                        nrr.previous_patch_release = releases
-                            .iter()
-                            .rfind(|rr| rr.name == nrr.name && rr.commit_hash != nrr.commit_hash)
-                            .map(|rr| rr.clone().into());
-                        nrr
-                    })
-                    .collect_vec();
-
+            for (blessed_versions, ArtifactReleases { artifact, releases }) in vec![
+                (blessed_replica_versions, &mut self.replica_releases),
+                (elected_hostos_versions, &mut self.hostos_releases),
+            ] {
                 releases.clear();
                 releases.extend(
-                    versions
-                        .into_iter()
+                    blessed_versions
+                        .iter()
+                        .map(|version| commit_to_release.get(version).unwrap().clone())
                         .sorted_by_key(|rr| rr.time)
                         .collect::<Vec<Release>>(),
                 );
                 debug!("Updated {} releases to {:?}", artifact, releases);
             }
-        };
+        }
         Ok(())
     }
 
