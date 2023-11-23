@@ -198,22 +198,15 @@ async fn main() -> Result<(), anyhow::Error> {
                     cli::version::Cmd::Update(update_command) => {
                         let runner = runner::Runner::new_with_network_url(cli::Cli::from_opts(&cli_opts, true).await?.into(), backend_port).await?;
                         let ic_admin: IcAdminWrapper = cli::Cli::from_opts(&cli_opts, true).await?.into();
+                        let release_artifact: &Artifact = &update_command.subcommand.clone().into();
 
                         let update_version = match &update_command.subcommand {
-                            cli::version::UpdateCommands::Replica { version, release_tag} => {
+                            cli::version::UpdateCommands::Replica { version, release_tag} | cli::version::UpdateCommands::HostOS { version, release_tag} => {
                                 ic_admin::IcAdminWrapper::prepare_to_propose_to_update_elected_versions(
-                                    &Artifact::Replica,
+                                    release_artifact,
                                     version,
                                     release_tag,
-                                    runner.prepare_versions_to_retire(&Artifact::Replica, false).await.map(|res| res.1)?,
-                                )
-                            }
-                            cli::version::UpdateCommands::HostOS { version, release_tag} => {
-                                ic_admin::IcAdminWrapper::prepare_to_propose_to_update_elected_versions(
-                                    &Artifact::HostOs,
-                                    version,
-                                    release_tag,
-                                    runner.prepare_versions_to_retire(&Artifact::HostOs, false).await.map(|res| res.1)?,
+                                    runner.prepare_versions_to_retire(release_artifact, false).await.map(|res| res.1)?,
                                 )
                             }
                         }.await?;

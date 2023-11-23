@@ -64,7 +64,7 @@ pub(crate) enum Commands {
         #[clap(allow_hyphen_values = true)]
         args: Vec<String>,
     },
-    /// Manage replica versions blessing
+    /// Manage replica/host-os versions blessing
     #[clap(subcommand)]
     Version(version::Cmd),
 
@@ -252,6 +252,14 @@ pub(crate) mod version {
             /// Git tag for the release.
             release_tag: String,
         },
+    }
+    impl From<UpdateCommands> for Artifact {
+        fn from(value: UpdateCommands) -> Self {
+            match value {
+                UpdateCommands::Replica { .. } => Artifact::Replica,
+                UpdateCommands::HostOS { .. } => Artifact::HostOs,
+            }
+        }
     }
 }
 

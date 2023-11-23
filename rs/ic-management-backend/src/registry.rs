@@ -722,7 +722,6 @@ impl RegistryState {
             .clone()
             .into_iter()
             .filter(|rr| !active_releases.contains(&rr.branch))
-            // TODO: Missing checking unassigned nodes
             .filter(|rr| !hostos_versions.contains(&rr.commit_hash))
             .filter(|rr| !versions_in_proposals.contains(&rr.commit_hash))
             .collect())
