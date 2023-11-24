@@ -285,6 +285,20 @@ impl IcAdminWrapper {
         self.propose_run(cmd, Default::default(), simulate)
     }
 
+    fn get_s3_cdn_image_url(version: &String, s3_subdir: &String) -> String {
+        format!(
+            "https://download.dfinity.systems/ic/{}/{}/update-img/update-img.tar.gz",
+            version, s3_subdir
+        )
+    }
+
+    fn get_r2_cdn_image_url(version: &String, s3_subdir: &String) -> String {
+        format!(
+            "https://download.dfinity.network/ic/{}/{}/update-img/update-img.tar.gz",
+            version, s3_subdir
+        )
+    }
+
     async fn download_file_and_get_sha256(download_url: &String) -> anyhow::Result<String> {
         let url = url::Url::parse(download_url)?;
         let subdir = format!(
@@ -346,11 +360,10 @@ impl IcAdminWrapper {
         image: &Artifact,
         version: &String,
     ) -> anyhow::Result<(Vec<String>, String)> {
-        let update_urls = vec![format!(
-            "https://download.dfinity.systems/ic/{}/{}/update-img/update-img.tar.zst",
-            version,
-            image.s3_folder()
-        )];
+        let update_urls = vec![
+            Self::get_s3_cdn_image_url(version, &image.s3_folder()),
+            Self::get_r2_cdn_image_url(version, &image.s3_folder()),
+        ];
 
         // Download images, verify them and compare the SHA256
         let hash_and_valid_urls: Vec<(String, &String)> = stream::iter(&update_urls)
@@ -400,6 +413,14 @@ impl IcAdminWrapper {
             .map(|(_, u)| u.clone())
             .collect::<Vec<String>>();
 
+        if update_urls.is_empty() {
+            return Err(anyhow::anyhow!(
+                "Unable to download the update image from none of the following URLs: {}",
+                update_urls.join(", ")
+            ));
+        } else if update_urls.len() == 1 {
+            warn!("Only 1 update image is available. At least 2 should be present in the proposal");
+        }
         Ok((update_urls, expected_hash))
     }
 
