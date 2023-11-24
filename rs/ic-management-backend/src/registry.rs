@@ -157,7 +157,10 @@ impl ReleasesOps for ArtifactReleases {
     fn get_active_branches(&self) -> Vec<String> {
         const NUM_RELEASE_BRANCHES_TO_KEEP: usize = 2;
         if self.releases.is_empty() {
-            warn!("No {} releases found", self.artifact);
+            warn!(
+                "No {} releases found in the registry. THIS MAY BE A BUG!",
+                self.artifact
+            );
         } else {
             info!(
                 "{} versions: {}",
@@ -221,7 +224,7 @@ impl RegistryState {
             factsdb_guests: Vec::new(),
             replica_releases: ArtifactReleases::new(Artifact::Replica),
             hostos_releases: ArtifactReleases::new(Artifact::HostOs),
-            ic_repo: Some(IcRepo::new(None).expect("failed to init ic repo")),
+            ic_repo: Some(IcRepo::new().expect("failed to init ic repo")),
             known_subnets: [
                 (
                     "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
@@ -337,11 +340,11 @@ impl RegistryState {
             // commit is present
             let mut commit_to_release: HashMap<String, Release> = HashMap::new();
             blessed_versions.into_iter().for_each(|commit_hash| {
-                info!("Looking for branches that contain git rev: {}", commit_hash);
                 let ic_repo = self.ic_repo.as_mut().unwrap();
                 match ic_repo.get_branches_with_commit(commit_hash) {
                     // For each commit get a list of branches that have the commit
                     Ok(branches) => {
+                        info!("Found {} branches for git rev: {}", branches.len(), commit_hash);
                         debug!("Commit {} ==> branches: {}", commit_hash, branches.join(", "));
                         for branch in branches.into_iter().sorted() {
                             match RE.captures(&branch) {

@@ -1,14 +1,9 @@
 use custom_error::custom_error;
 use fs2::FileExt;
-use log::info;
-use std::fs::{metadata, OpenOptions};
-use std::io::Write;
+use log::{info, warn};
 use std::path::PathBuf;
 use std::process::Command;
-use std::time::{SystemTime, UNIX_EPOCH};
 use std::{collections::HashMap, fs::File};
-
-const DEFAULT_DEPTH: usize = 10000;
 
 custom_error! {IoError
     Io {
@@ -21,12 +16,11 @@ custom_error! {IoError
 pub struct IcRepo {
     repo_path: PathBuf,
     cache: HashMap<String, Vec<String>>,
-    lock_file_path: String,
 }
 
 impl IcRepo {
-    // Initialize the IcRepo struct with optional depth for shallow clone
-    pub fn new(depth: Option<usize>) -> anyhow::Result<Self> {
+    // Initialize the IcRepo struct, to work with a local clone of the IC repo
+    pub fn new() -> anyhow::Result<Self> {
         let repo_path = match std::env::var("REPO_CACHE_PATH") {
             Ok(path) => PathBuf::from(path),
             Err(_) => match dirs::cache_dir() {
@@ -59,7 +53,6 @@ impl IcRepo {
         let repo = Self {
             repo_path: repo_path.clone(),
             cache: HashMap::new(),
-            lock_file_path,
         };
 
         if repo_path.exists() {
@@ -84,17 +77,11 @@ impl IcRepo {
                 "Repo {} already exists, fetching new updates",
                 &repo_path.to_str().unwrap()
             );
-            repo.refetch(depth.unwrap_or(DEFAULT_DEPTH))?;
+            repo.refetch()?;
         } else {
             info!("Repo {} does not exist, cloning", &repo_path.to_str().unwrap());
             Command::new("git")
-                .args([
-                    "clone",
-                    "--depth",
-                    &depth.unwrap_or(DEFAULT_DEPTH).to_string(),
-                    "https://github.com/dfinity/ic",
-                    repo_path.to_str().unwrap(),
-                ])
+                .args(["clone", "https://github.com/dfinity/ic", repo_path.to_str().unwrap()])
                 .status()?;
         }
 
@@ -103,30 +90,10 @@ impl IcRepo {
         Ok(repo)
     }
 
-    fn refetch(&self, depth: usize) -> anyhow::Result<()> {
-        let meta = metadata(&self.lock_file_path)?;
-        let last_modified = meta.modified()?.duration_since(UNIX_EPOCH)?.as_secs();
-        let now = SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs();
-
-        if now - last_modified >= 60 {
-            Command::new("git")
-                .args([
-                    "-C",
-                    self.repo_path.to_str().unwrap(),
-                    "fetch",
-                    "origin",
-                    "master",
-                    "--depth",
-                    &depth.to_string(),
-                ])
-                .output()?;
-
-            // Touch the file to update its last modified time
-            OpenOptions::new()
-                .write(true)
-                .open(&self.lock_file_path)?
-                .write_all(b"")?;
-        }
+    fn refetch(&self) -> anyhow::Result<()> {
+        Command::new("git")
+            .args(["-C", self.repo_path.to_str().unwrap(), "pull", "--force", "origin"])
+            .output()?;
         Ok(())
     }
 
@@ -134,7 +101,7 @@ impl IcRepo {
         let branches = match self.cache.get(commit_sha) {
             Some(branches) => branches.clone(),
             None => {
-                self.refetch(DEFAULT_DEPTH)?;
+                self.refetch()?;
                 let output = Command::new("git")
                     .args([
                         "-C",
@@ -153,7 +120,14 @@ impl IcRepo {
                     .map(|s| s.trim().trim_start_matches("refs/remotes/origin/").to_string())
                     .collect();
 
-                self.cache.insert(commit_sha.to_string(), branches.clone());
+                if branches.is_empty() {
+                    warn!(
+                        "No branches found for commit {} -- do you have a full repo clone?",
+                        commit_sha
+                    )
+                } else {
+                    self.cache.insert(commit_sha.to_string(), branches.clone());
+                }
                 branches
             }
         };
@@ -166,23 +140,10 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_new_repo() {
-        let ic_repo = IcRepo::new(Some(50));
-        assert!(ic_repo.is_ok());
-    }
-
-    #[test]
-    fn test_get_branches_with_commit() {
-        let mut ic_repo = IcRepo::new(Some(50)).unwrap();
-        let branches = ic_repo.get_branches_with_commit("some_commit_sha");
-        assert!(branches.is_ok());
-    }
-
-    #[test]
     fn test_get_branches_with_nonexistent_commit() {
-        let mut ic_repo = IcRepo::new(Some(50)).unwrap();
-        let branches = ic_repo.get_branches_with_commit("nonexistent_commit_sha");
+        let mut ic_repo = IcRepo::new().unwrap();
+        let branches = ic_repo.get_branches_with_commit("80a6745673a28ee53d257b3fe19dcd6b7efa93d1");
         assert!(branches.is_ok());
-        assert!(branches.unwrap().is_empty());
+        assert!(!branches.unwrap().is_empty());
     }
 }
