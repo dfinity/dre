@@ -1,4 +1,8 @@
-use std::{collections::BTreeMap, convert::TryInto, str::FromStr};
+use std::{
+    collections::{BTreeMap, HashSet},
+    convert::TryInto,
+    str::FromStr,
+};
 
 use ic_base_types::PrincipalId;
 use ic_management_types::{Network, Status};
@@ -20,27 +24,48 @@ impl HealthClient {
     }
 
     pub async fn subnet(&self, subnet: PrincipalId) -> anyhow::Result<BTreeMap<PrincipalId, Status>> {
-        let query: InstantVector = Selector::new()
+        let query_up: InstantVector = Selector::new()
             .metric("up")
             .with("ic", &self.network.legacy_name())
             .with("job", "replica")
             .with("ic_subnet", subnet.to_string().as_str())
             .try_into()?;
 
-        let response = self.client.query(query, None, None).await?;
-        let results = response.as_instant().expect("Expected instant vector");
-        Ok(results
+        let response_up = self.client.query(query_up, None, None).await?;
+        let instant_up = response_up.as_instant().expect("Expected instant vector");
+
+        // Alerts are synthetic time series and cannot be queries as regular metrics
+        // https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/#inspecting-alerts-during-runtime
+        let query_alert = format!(
+            "ALERTS{{ic=\"{}\", job=\"replica\", ic_subnet=\"{}\", alertstate=\"firing\"}}",
+            self.network.legacy_name(),
+            subnet
+        );
+        let response_alert = self.client.query(query_alert, None, None).await?;
+        let instant_alert = response_alert.as_instant().expect("Expected instant vector");
+        let node_ids_with_alerts: HashSet<PrincipalId> = instant_alert
+            .iter()
+            .filter_map(|r| r.metric().get("ic_node").and_then(|id| PrincipalId::from_str(id).ok()))
+            .collect();
+
+        Ok(instant_up
             .iter()
             .filter_map(|r| {
-                let status = if r.sample().value() == 1.0 {
-                    Status::Healthy
-                } else {
-                    Status::Dead
-                };
                 r.metric()
                     .get("ic_node")
                     .and_then(|id| PrincipalId::from_str(id).ok())
-                    .map(|id| (id, status))
+                    .map(|id| {
+                        let status = if r.sample().value() == 1.0 {
+                            if node_ids_with_alerts.contains(&id) {
+                                Status::Degraded
+                            } else {
+                                Status::Healthy
+                            }
+                        } else {
+                            Status::Dead
+                        };
+                        (id, status)
+                    })
             })
             .collect())
     }

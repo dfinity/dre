@@ -6,6 +6,7 @@ use ic_management_types::requests::{
     MembershipReplaceRequest, ReplaceTarget, SubnetCreateRequest, SubnetResizeRequest,
 };
 use ic_management_types::Node;
+use log::warn;
 use serde::Deserialize;
 use std::collections::BTreeMap;
 
@@ -78,6 +79,8 @@ async fn replace(
 
     let mut motivations: Vec<String> = vec![];
 
+    info!("Received MembershipReplaceRequest: {}", request);
+
     let change_request = match &request.target {
         ReplaceTarget::Subnet(subnet) => registry.modify_subnet_nodes(SubnetQueryBy::SubnetId(*subnet)).await?,
         ReplaceTarget::Nodes {
@@ -116,12 +119,17 @@ async fn replace(
                     if *health == ic_management_types::Status::Healthy {
                         None
                     } else {
+                        info!("Node {} is {:?}", n.id, health);
                         Some(n)
                     }
                 }
-                None => Some(n),
+                None => {
+                    warn!("Node {} has no known health, assuming unhealthy", n.id);
+                    Some(n)
+                }
             })
             .collect::<Vec<_>>();
+
         if !unhealthy.is_empty() {
             replacements_unhealthy.extend(unhealthy);
         }

@@ -797,7 +797,7 @@ pub trait TopologyManager: SubnetQuerier + AvailableNodesQuerier {
     }
 }
 
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Debug)]
 pub struct SubnetChangeRequest {
     subnet: DecentralizedSubnet,
     available_nodes: Vec<Node>,
