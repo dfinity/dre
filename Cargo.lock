@@ -1023,12 +1023,13 @@ dependencies = [
 [[package]]
 name = "build-info-build"
 version = "0.0.26"
-source = "git+https://github.com/dfinity-lab/build-info?rev=abb2971c5d07a9b40d41a0c84b63a3156f2ff764#abb2971c5d07a9b40d41a0c84b63a3156f2ff764"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1ebfef0dcb94d65cc2cd98ce285de89ed40c9a1d2bb10175f548867d0e26cda0"
 dependencies = [
  "anyhow",
  "base64 0.13.1",
  "bincode",
- "build-info-common 0.0.26 (git+https://github.com/dfinity-lab/build-info?rev=abb2971c5d07a9b40d41a0c84b63a3156f2ff764)",
+ "build-info-common",
  "cargo_metadata",
  "chrono",
  "glob",
@@ -1052,17 +1053,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "build-info-common"
-version = "0.0.26"
-source = "git+https://github.com/dfinity-lab/build-info?rev=abb2971c5d07a9b40d41a0c84b63a3156f2ff764#abb2971c5d07a9b40d41a0c84b63a3156f2ff764"
-dependencies = [
- "chrono",
- "derive_more 0.99.17",
- "semver",
- "serde",
-]
-
-[[package]]
 name = "build-info-proc"
 version = "0.0.26"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1071,7 +1061,7 @@ dependencies = [
  "anyhow",
  "base64 0.13.1",
  "bincode",
- "build-info-common 0.0.26 (registry+https://github.com/rust-lang/crates.io-index)",
+ "build-info-common",
  "chrono",
  "format-buf",
  "num-bigint",
@@ -5753,9 +5743,9 @@ checksum = "624a8340c38c1b80fd549087862da4ba43e08858af025b236e509b6649fc13d5"
 
 [[package]]
 name = "openssl"
-version = "0.10.59"
+version = "0.10.60"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7a257ad03cd8fb16ad4172fedf8094451e1af1c4b70097636ef2eac9a5f0cc33"
+checksum = "79a4c6c3a2b158f7f8f2a2fc5a969fa3a068df6fc9dbb4a43845436e3af7c800"
 dependencies = [
  "bitflags 2.4.1",
  "cfg-if",
@@ -5785,9 +5775,9 @@ checksum = "ff011a302c396a5197692431fc1948019154afc178baf7d8e37367442a4601cf"
 
 [[package]]
 name = "openssl-sys"
-version = "0.9.95"
+version = "0.9.96"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "40a4130519a360279579c2053038317e40eff64d13fd3f004f9e1b72b8a6aaf9"
+checksum = "3812c071ba60da8b5677cc12bcb1d42989a65553772897a7e0355545a819838f"
 dependencies = [
  "cc",
  "libc",
