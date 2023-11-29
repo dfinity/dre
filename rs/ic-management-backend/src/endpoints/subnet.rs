@@ -134,7 +134,7 @@ async fn replace(
             replacements_unhealthy.extend(unhealthy);
         }
     }
-    if let ReplaceTarget::Nodes {
+    let req_replace_nodes = if let ReplaceTarget::Nodes {
         nodes: req_replace_node_ids,
         motivation: _,
     } = &request.target
@@ -144,7 +144,10 @@ async fn replace(
             .filter_map(|n| all_nodes.get(n))
             .map(decentralization::network::Node::from)
             .collect::<Vec<_>>();
-        replacements_unhealthy.extend(req_replace_nodes);
+        replacements_unhealthy.retain(|n| !req_replace_node_ids.contains(&n.id));
+        req_replace_nodes
+    } else {
+        vec![]
     };
 
     let num_unhealthy = replacements_unhealthy.len();
@@ -154,8 +157,9 @@ async fn replace(
     }
     // Optimize the requested number of nodes, and remove unhealthy nodes if there
     // are any
-    let change = change_request.optimize(request.optimize.unwrap_or(0), &replacements_unhealthy)?;
-    let num_optimized = change.removed().len() - num_unhealthy;
+    let replacements = replacements_unhealthy.into_iter().chain(req_replace_nodes).collect();
+    let change = change_request.optimize(request.optimize.unwrap_or(0), &replacements)?;
+    let num_optimized = change.removed().len() - replacements.len();
     if num_optimized > 0 {
         let replace_target = if num_optimized == 1 { "node" } else { "nodes" };
         motivations.push(format!(
