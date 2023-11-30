@@ -35,11 +35,11 @@ load("@rules_python//python/pip_install:pip_repository.bzl", "package_annotation
 py_repositories()
 
 python_register_toolchains(
-    name = "python3_8",
-    python_version = "3.8.16",
+    name = "python3_11",
+    python_version = "3.11.1",
 )
 
-load("@python3_8//:defs.bzl", "interpreter")
+load("@python3_11//:defs.bzl", "interpreter")
 load("@rules_python//python:pip.bzl", "pip_parse")
 
 pip_parse(
