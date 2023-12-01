@@ -376,6 +376,7 @@ impl RegistryState {
                                             time: release_datetime,
                                         },
                                     );
+                                    break;
                                 }
                                 None => {
                                     if branch != "master" && branch != "HEAD" {
