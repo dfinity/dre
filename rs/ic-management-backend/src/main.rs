@@ -4,6 +4,7 @@ mod factsdb;
 mod git_ic_repo;
 mod gitlab_dfinity;
 mod health;
+mod hostos_rollout;
 mod prometheus;
 mod proposal;
 mod public_dashboard;

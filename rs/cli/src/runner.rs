@@ -4,10 +4,13 @@ use crate::ic_admin::ProposeOptions;
 use crate::ops_subnet_node_replace;
 use decentralization::SubnetChangeResponse;
 use ic_base_types::PrincipalId;
-use ic_management_types::requests::NodesRemoveRequest;
-use ic_management_types::{Artifact, NodeFeature};
+use ic_management_types::requests::{HostosRolloutRequest, HostosRolloutResponse, NodesRemoveRequest};
+use ic_management_types::{Artifact, Node, NodeFeature, NodeGroupUpdate};
 use itertools::Itertools;
 use log::{info, warn};
+use std::collections::BTreeMap;
+use tabled::builder::Builder;
+use tabled::settings::Style;
 
 #[derive(Clone)]
 pub struct Runner {
@@ -229,7 +232,30 @@ impl Runner {
         Ok((template, (!versions.is_empty()).then_some(versions)))
     }
 
-    pub async fn update_nodes(&self, nodes: Vec<PrincipalId>, version: &str, simulate: bool) -> anyhow::Result<()> {
+    async fn nodes_by_dc(&self, nodes: Vec<Node>) -> BTreeMap<String, Vec<String>> {
+        nodes
+            .iter()
+            .cloned()
+            .map(|n| {
+                (
+                    n.principal.to_string().split('-').next().unwrap().to_string(),
+                    n.subnet_id,
+                    n.operator.datacenter,
+                )
+            })
+            .fold(BTreeMap::new(), |mut acc, (node_id, _, dc)| {
+                acc.entry(dc.unwrap_or_default().name)
+                    .or_insert_with(Vec::new)
+                    .push(node_id);
+                acc
+            })
+    }
+
+    pub(crate) async fn hostos_rollout_nodes(
+        &self,
+        node_group: NodeGroupUpdate,
+        version: &String,
+    ) -> anyhow::Result<Option<(Vec<PrincipalId>, String)>> {
         let maybe_elected_versions = self
             .dashboard_backend_client
             .get_blessed_versions(&Artifact::HostOs)
@@ -242,12 +268,99 @@ impl Runner {
                 )));
             }
         }
+        let request = HostosRolloutRequest {
+            version: version.to_string(),
+            node_group,
+        };
 
-        let nodes_propose = nodes
-            .iter()
-            .flat_map(|n| n.to_string().split('-').next().map(String::from))
-            .collect::<Vec<_>>()
-            .join(", ");
+        match self.dashboard_backend_client.hostos_rollout_nodes(request).await? {
+            HostosRolloutResponse::Ok(nodes_to_update, maybe_subnets_affected) => {
+                let mut summary = "## List of nodes\n".to_string();
+                let mut builder_dc = Builder::default();
+                let nodes_by_dc = self.nodes_by_dc(nodes_to_update.clone()).await;
+                builder_dc.set_header(["dc", "node_id"]);
+                nodes_by_dc.into_iter().for_each(|(dc, nodes)| {
+                    let _builder = builder_dc.push_record([dc, nodes.iter().map(|p| p.to_string()).join("\n")]);
+                });
+
+                let mut table_dc = builder_dc.build();
+                table_dc.with(Style::markdown());
+                summary.push_str(table_dc.to_string().as_str());
+                summary.push_str("\n\n");
+
+                if let Some(subnets_affected) = maybe_subnets_affected {
+                    summary.push_str("## Updated nodes per subnet\n");
+                    let mut builder_subnets = Builder::default();
+                    builder_subnets.set_header([
+                        "subnet_id",
+                        "updated_nodes",
+                        "count",
+                        "subnet_size",
+                        "percent_subnet",
+                    ]);
+
+                    subnets_affected
+                        .into_iter()
+                        .map(|subnet| {
+                            let nodes_id = nodes_to_update
+                                .iter()
+                                .cloned()
+                                .filter_map(|n| {
+                                    if n.subnet_id.unwrap_or_default() == subnet.subnet_id {
+                                        Some(n.principal)
+                                    } else {
+                                        None
+                                    }
+                                })
+                                .collect::<Vec<PrincipalId>>();
+                            let subnet_id = subnet.subnet_id.to_string().split('-').next().unwrap().to_string();
+                            let updated_nodes = nodes_id
+                                .iter()
+                                .map(|p| p.to_string().split('-').next().unwrap().to_string())
+                                .join("\n");
+                            let updates_nodes_count = nodes_id.len().to_string();
+                            let subnet_size = subnet.subnet_size.to_string();
+                            let percent_of_subnet_size = format!(
+                                "{}%",
+                                (nodes_id.len() as f32 / subnet.subnet_size as f32 * 100.0).round()
+                            );
+
+                            [
+                                subnet_id,
+                                updated_nodes,
+                                updates_nodes_count,
+                                subnet_size.clone(),
+                                percent_of_subnet_size,
+                            ]
+                        })
+                        .sorted_by(|a, b| a[3].cmp(&b[3]))
+                        .for_each(|row| {
+                            let _builder = builder_subnets.push_record(row);
+                        });
+
+                    let mut table_subnets = builder_subnets.build();
+                    table_subnets.with(Style::markdown());
+                    summary.push_str(table_subnets.to_string().as_str());
+                };
+                Ok(Some((
+                    nodes_to_update.into_iter().map(|n| n.principal).collect::<Vec<_>>(),
+                    summary,
+                )))
+            }
+            HostosRolloutResponse::None(reason) => {
+                println!("No nodes to update: {}", reason);
+                Ok(None)
+            }
+        }
+    }
+    pub async fn hostos_rollout(
+        &self,
+        nodes: Vec<PrincipalId>,
+        version: &str,
+        simulate: bool,
+        maybe_summary: Option<String>,
+    ) -> anyhow::Result<()> {
+        let title = format!("Set HostOS version: {version} on {} nodes", nodes.clone().len());
         self.ic_admin
             .propose_run(
                 ic_admin::ProposeCommand::UpdateNodesHostosVersion {
@@ -255,8 +368,8 @@ impl Runner {
                     version: version.to_string(),
                 },
                 ic_admin::ProposeOptions {
-                    title: format!("Set HostOS version: {version} on nodes: {nodes_propose}").into(),
-                    summary: format!("Set HostOS version: {version} on nodes: {nodes_propose}").into(),
+                    title: title.clone().into(),
+                    summary: maybe_summary.unwrap_or(title).into(),
                     motivation: None,
                 },
                 simulate,

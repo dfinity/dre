@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use cli::UpdateVersion;
 use colored::Colorize;
 use dialoguer::Confirm;
@@ -21,6 +21,8 @@ use strum::Display;
 use crate::cli::Cli;
 use crate::detect_neuron::{Auth, Neuron};
 use crate::{cli, defaults};
+
+const MAX_SUMMARY_CHAR_COUNT: usize = 14000;
 
 #[derive(Clone)]
 pub struct IcAdminWrapper {
@@ -78,6 +80,16 @@ impl IcAdminWrapper {
 
     pub(crate) fn propose_run(&self, cmd: ProposeCommand, opts: ProposeOptions, simulate: bool) -> anyhow::Result<()> {
         let exec = |cli: &IcAdminWrapper, cmd: ProposeCommand, opts: ProposeOptions, add_dryrun_arg: bool| {
+            if let Some(summary) = opts.clone().summary {
+                let summary_count = summary.chars().count();
+                if summary_count > MAX_SUMMARY_CHAR_COUNT {
+                    return Err(anyhow!(
+                        "Summary length {} exceeded MAX_SUMMARY_CHAR_COUNT {}",
+                        summary_count,
+                        MAX_SUMMARY_CHAR_COUNT,
+                    ));
+                }
+            }
             cli.run(
                 &cmd.get_command_name(),
                 [

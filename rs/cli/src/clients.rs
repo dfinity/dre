@@ -1,9 +1,11 @@
 use async_trait::async_trait;
 use decentralization::SubnetChangeResponse;
 use ic_base_types::PrincipalId;
+use ic_management_types::requests::HostosRolloutResponse;
 use ic_management_types::{
     requests::{
-        MembershipReplaceRequest, NodesRemoveRequest, NodesRemoveResponse, SubnetCreateRequest, SubnetResizeRequest,
+        HostosRolloutRequest, MembershipReplaceRequest, NodesRemoveRequest, NodesRemoveResponse, SubnetCreateRequest,
+        SubnetResizeRequest,
     },
     Artifact, Network, NetworkError, Release, TopologyProposal,
 };
@@ -111,6 +113,14 @@ impl DashboardBackendClient {
                     .join(&format!("release/versions/blessed/{}", release_artifact))
                     .map_err(|e| anyhow::anyhow!(e))?,
             )
+            .rest_send()
+            .await
+    }
+
+    pub async fn hostos_rollout_nodes(&self, request: HostosRolloutRequest) -> anyhow::Result<HostosRolloutResponse> {
+        reqwest::Client::new()
+            .post(self.url.join("hostos/rollout_nodes").map_err(|e| anyhow::anyhow!(e))?)
+            .json(&request)
             .rest_send()
             .await
     }

@@ -68,6 +68,9 @@ pub(crate) enum Commands {
     #[clap(subcommand)]
     Version(version::Cmd),
 
+    /// Rollout hostos version
+    Hostos(hostos::Cmd),
+
     /// Manage nodes
     Nodes(nodes::Cmd),
 
@@ -263,9 +266,49 @@ pub(crate) mod version {
     }
 }
 
-pub(crate) mod nodes {
+pub(crate) mod hostos {
     use super::*;
     use ic_base_types::PrincipalId;
+    use ic_management_types::{NodeAssignment, NodeOwner};
+
+    #[derive(Parser, Clone)]
+    pub struct Cmd {
+        #[clap(subcommand)]
+        pub subcommand: Commands,
+    }
+    #[derive(Subcommand, Clone)]
+    pub enum Commands {
+        /// Create a new proposal to rollout an elected HostOS version
+        /// to a specified list of nodes
+        Rollout {
+            version: String,
+            /// Node IDs where to rollout the version
+            #[clap(long, num_args(1..))]
+            nodes: Vec<PrincipalId>,
+        },
+        /// Select a list of nodes from the registry using node group and
+        /// rollout an elected HostOS version to them
+        RolloutFromNodeGroup {
+            version: String,
+            /// Specify if the group of nodes considered for the rollout should be assigned on
+            /// a subnet or not
+            #[arg(value_enum)]
+            #[clap(long)]
+            assignment: NodeAssignment,
+            /// Owner of the group of nodes considered for the rollout
+            #[arg(value_enum)]
+            #[clap(long)]
+            owner: NodeOwner,
+            /// How many nodes in the group to update with the version specified
+            /// supported values are absolute numbers (10) or percentage (10%)
+            #[clap(long)]
+            nodes_in_group: String,
+        },
+    }
+}
+
+pub(crate) mod nodes {
+    use super::*;
 
     #[derive(Parser, Clone)]
     pub struct Cmd {
@@ -275,13 +318,6 @@ pub(crate) mod nodes {
 
     #[derive(Subcommand, Clone)]
     pub enum Commands {
-        /// Create a new proposal to rollout a new HostOS version to the nodes
-        Deploy {
-            version: String,
-            /// Node IDs where to deploy the version
-            #[clap(long, num_args(1..), required(true))]
-            nodes: Vec<PrincipalId>,
-        },
         /// Remove the nodes from the network
         Remove {
             /// Skip removal of duplicate or dead nodes

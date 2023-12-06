@@ -6,7 +6,9 @@ use candid::{Decode, Encode};
 use futures_util::future::try_join_all;
 use ic_agent::Agent;
 use ic_management_types::{NnsFunctionProposal, TopologyChangePayload, TopologyChangeProposal};
-use ic_management_types::{UpdateElectedHostosVersionsProposal, UpdateElectedReplicaVersionsProposal};
+use ic_management_types::{
+    UpdateElectedHostosVersionsProposal, UpdateElectedReplicaVersionsProposal, UpdateNodesHostosVersionsProposal,
+};
 use ic_nns_governance::pb::v1::{proposal::Action, ListProposalInfo, ListProposalInfoResponse, NnsFunction};
 use ic_nns_governance::pb::v1::{ProposalInfo, ProposalStatus, Topic};
 use itertools::Itertools;
@@ -16,10 +18,12 @@ use registry_canister::mutations::do_create_subnet::CreateSubnetPayload;
 use registry_canister::mutations::do_remove_nodes_from_subnet::RemoveNodesFromSubnetPayload;
 use registry_canister::mutations::do_update_elected_hostos_versions::UpdateElectedHostosVersionsPayload;
 use registry_canister::mutations::do_update_elected_replica_versions::UpdateElectedReplicaVersionsPayload;
+use registry_canister::mutations::do_update_nodes_hostos_version::UpdateNodesHostosVersionPayload;
 use registry_canister::mutations::do_update_subnet_replica::UpdateSubnetReplicaVersionPayload;
 use registry_canister::mutations::node_management::do_remove_nodes::RemoveNodesPayload;
 use serde::Serialize;
 
+#[derive(Clone)]
 pub struct ProposalAgent {
     agent: Agent,
 }
@@ -159,6 +163,28 @@ impl ProposalAgent {
                     versions_unelect: proposal_payload.hostos_versions_to_unelect,
                 },
             )
+            .sorted_by_key(|p| p.proposal_id)
+            .rev()
+            .collect::<Vec<_>>();
+
+        Ok(result)
+    }
+
+    pub async fn list_open_update_nodes_hostos_versions_proposals(
+        &self,
+    ) -> Result<Vec<UpdateNodesHostosVersionsProposal>> {
+        let proposals = &self.list_proposals(vec![ProposalStatus::Open]).await?;
+        let open_update_nodes_hostos_versions_proposals =
+            filter_map_nns_function_proposals::<UpdateNodesHostosVersionPayload>(proposals);
+
+        let result = open_update_nodes_hostos_versions_proposals
+            .into_iter()
+            .map(|(proposal_info, proposal_payload)| UpdateNodesHostosVersionsProposal {
+                proposal_id: proposal_info.id.expect("proposal should have an id").id,
+                hostos_version_id: proposal_payload.hostos_version_id.expect("version elect should exist"),
+
+                node_ids: proposal_payload.node_ids,
+            })
             .sorted_by_key(|p| p.proposal_id)
             .rev()
             .collect::<Vec<_>>();

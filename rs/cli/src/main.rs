@@ -5,7 +5,7 @@ use dotenv::dotenv;
 use ic_canisters::governance_canister_version;
 use ic_management_backend::endpoints;
 use ic_management_types::requests::NodesRemoveRequest;
-use ic_management_types::{Artifact, MinNakamotoCoefficients, Network, NodeFeature};
+use ic_management_types::{Artifact, MinNakamotoCoefficients, Network, NodeFeature, NodeGroupUpdate, NumberOfNodes};
 use log::info;
 use std::collections::BTreeMap;
 use std::str::FromStr;
@@ -224,12 +224,24 @@ async fn main() -> Result<(), anyhow::Error> {
                 }
             },
 
+            cli::Commands::Hostos(nodes) => {
+                match &nodes.subcommand {
+                    cli::hostos::Commands::Rollout { version,nodes} => {
+                        let runner = runner::Runner::new_with_network_url(cli::Cli::from_opts(&cli_opts, true).await?.into(), backend_port).await?;
+                        runner.hostos_rollout(nodes.clone(), version, simulate, None).await
+                    },
+                    cli::hostos::Commands::RolloutFromNodeGroup {version, assignment, owner, nodes_in_group} => {
+                        let update_group  = NodeGroupUpdate::new(*assignment, *owner, NumberOfNodes::from_str(nodes_in_group)?);
+                        let runner = runner::Runner::new_with_network_url(cli::Cli::from_opts(&cli_opts, true).await?.into(), backend_port).await?;
+                        if let Some((nodes_to_update, summary)) = runner.hostos_rollout_nodes(update_group, version).await? {
+                            return runner.hostos_rollout(nodes_to_update, version, simulate, Some(summary)).await
+                        }
+                        Ok(())
+                    }
+                }
+            },
             cli::Commands::Nodes(nodes) => {
                 match &nodes.subcommand {
-                    cli::nodes::Commands::Deploy { version, nodes} => {
-                        let runner = runner::Runner::new_with_network_url(cli::Cli::from_opts(&cli_opts, true).await?.into(), backend_port).await?;
-                        runner.update_nodes(nodes.clone(), version, simulate).await
-                    },
                     cli::nodes::Commands::Remove { extra_nodes_filter, no_auto, exclude, motivation } => {
                         if motivation.is_none() && !extra_nodes_filter.is_empty() {
                             cmd.error(

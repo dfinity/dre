@@ -4,6 +4,7 @@ pub mod factsdb;
 pub mod git_ic_repo;
 pub mod gitlab_dfinity;
 pub mod health;
+pub mod hostos_rollout;
 pub mod prometheus;
 pub mod proposal;
 pub mod public_dashboard;
