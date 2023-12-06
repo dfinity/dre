@@ -454,11 +454,19 @@ The two SHA256 sums printed above from a) the downloaded CDN image and b) the lo
 must be identical, and must match the SHA256 from the payload of the NNS proposal.
 "#
         );
+
+        // Remove <!--...--> from the commit
+        // Leading or trailing spaces are removed as well and replaced with a single space.
+        // Regex can be analyzed and tested at:
+        // https://rregex.dev/?version=1.7&method=replace&regex=%5Cs*%3C%21--.%2B%3F--%3E%5Cs*&replace=+&text=*+%5Babc%5D+%3C%21--+ignored+1+--%3E+line%0A*+%5Babc%5D+%3C%21--+ignored+2+--%3E+comment+1+%3C%21--+ignored+3+--%3E+comment+2%0A
+        let re_comment = Regex::new(r"\s*<!--.+?-->\s*").unwrap();
         let edited = edit::edit(template)?
             .trim()
             .replace("\r(\n)?", "\n")
             .split('\n')
             .map(|f| {
+                let f = re_comment.replace_all(f.trim(), " ");
+
                 if !f.starts_with('*') {
                     return f.to_string();
                 }
