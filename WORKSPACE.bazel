@@ -177,6 +177,13 @@ oci_pull(
     ],
 )
 
+oci_pull(
+    # tag = 0.34.1-distroless-libc
+    name = "vector",
+    digest = "sha256:4447025bc3a99b3a96ed0352e990c44040784590de5a1ea8e4e5b75b76a16665",
+    image = "index.docker.io/timberio/vector",
+)
+
 http_archive(
     name = "rules_pkg",
     sha256 = "8f9ee2dc10c1ae514ee599a8b42ed99fa262b757058f65ad3c384289ff70c4b8",
