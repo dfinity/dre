@@ -597,16 +597,20 @@ impl Network {
     }
 }
 
-#[derive(ValueEnum, Copy, Clone, Debug, Ord, Eq, PartialEq, PartialOrd, Serialize, Deserialize, Parser)]
+#[derive(ValueEnum, Copy, Clone, Debug, Ord, Eq, PartialEq, PartialOrd, Serialize, Deserialize, Parser, Default)]
 pub enum NodeOwner {
     Dfinity,
     Others,
+    #[default]
+    All,
 }
 
-#[derive(ValueEnum, Copy, Clone, Debug, Ord, Eq, PartialEq, PartialOrd, Serialize, Deserialize)]
+#[derive(ValueEnum, Copy, Clone, Debug, Ord, Eq, PartialEq, PartialOrd, Serialize, Deserialize, Default)]
 pub enum NodeAssignment {
     Unassigned,
     Assigned,
+    #[default]
+    All,
 }
 
 #[derive(Copy, Clone, Debug, Ord, Eq, PartialEq, PartialOrd, Serialize, Deserialize)]
@@ -673,9 +677,9 @@ pub struct NodeGroupUpdate {
     pub maybe_number_nodes: Option<NumberOfNodes>,
 }
 impl NodeGroupUpdate {
-    pub fn new(assignment: NodeAssignment, owner: NodeOwner, nodes_per_subnet: NumberOfNodes) -> Self {
+    pub fn new(assignment: Option<NodeAssignment>, owner: Option<NodeOwner>, nodes_per_subnet: NumberOfNodes) -> Self {
         NodeGroupUpdate {
-            node_group: NodeGroup::new(assignment, owner),
+            node_group: NodeGroup::new(assignment.unwrap_or_default(), owner.unwrap_or_default()),
             maybe_number_nodes: Some(nodes_per_subnet),
         }
     }
@@ -683,6 +687,16 @@ impl NodeGroupUpdate {
         NodeGroupUpdate {
             node_group: NodeGroup::new(assignment, owner),
             maybe_number_nodes: None,
+        }
+    }
+
+    pub fn with_assignment(&self, assignment: NodeAssignment) -> Self {
+        Self {
+            node_group: NodeGroup {
+                assignment,
+                owner: self.node_group.owner,
+            },
+            maybe_number_nodes: self.maybe_number_nodes,
         }
     }
     pub fn nodes_to_take(&self, group_size: usize) -> usize {

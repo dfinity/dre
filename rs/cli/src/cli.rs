@@ -294,11 +294,11 @@ pub(crate) mod hostos {
             /// a subnet or not
             #[arg(value_enum)]
             #[clap(long)]
-            assignment: NodeAssignment,
+            assignment: Option<NodeAssignment>,
             /// Owner of the group of nodes considered for the rollout
             #[arg(value_enum)]
             #[clap(long)]
-            owner: NodeOwner,
+            owner: Option<NodeOwner>,
             /// How many nodes in the group to update with the version specified
             /// supported values are absolute numbers (10) or percentage (10%)
             #[clap(long)]

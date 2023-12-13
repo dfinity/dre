@@ -232,21 +232,26 @@ impl Runner {
         Ok((template, (!versions.is_empty()).then_some(versions)))
     }
 
-    async fn nodes_by_dc(&self, nodes: Vec<Node>) -> BTreeMap<String, Vec<String>> {
+    async fn nodes_by_dc(&self, nodes: Vec<Node>) -> BTreeMap<String, Vec<(String, String)>> {
         nodes
             .iter()
             .cloned()
             .map(|n| {
+                let subnet_name = if n.subnet_id.is_some() {
+                    n.subnet_id.unwrap_or_default().0.to_string()
+                } else {
+                    String::from("<unassigned>")
+                };
                 (
                     n.principal.to_string().split('-').next().unwrap().to_string(),
-                    n.subnet_id,
+                    subnet_name,
                     n.operator.datacenter,
                 )
             })
-            .fold(BTreeMap::new(), |mut acc, (node_id, _, dc)| {
+            .fold(BTreeMap::new(), |mut acc, (node_id, subnet, dc)| {
                 acc.entry(dc.unwrap_or_default().name)
                     .or_insert_with(Vec::new)
-                    .push(node_id);
+                    .push((node_id, subnet));
                 acc
             })
     }
@@ -278,9 +283,16 @@ impl Runner {
                 let mut summary = "## List of nodes\n".to_string();
                 let mut builder_dc = Builder::default();
                 let nodes_by_dc = self.nodes_by_dc(nodes_to_update.clone()).await;
-                builder_dc.set_header(["dc", "node_id"]);
-                nodes_by_dc.into_iter().for_each(|(dc, nodes)| {
-                    let _builder = builder_dc.push_record([dc, nodes.iter().map(|p| p.to_string()).join("\n")]);
+                builder_dc.set_header(["dc", "node_id", "subnet"]);
+                nodes_by_dc.into_iter().for_each(|(dc, nodes_with_sub)| {
+                    let _builder = builder_dc.push_record([
+                        dc,
+                        nodes_with_sub.iter().map(|(p, _)| p.to_string()).join("\n"),
+                        nodes_with_sub
+                            .iter()
+                            .map(|(_, s)| s.to_string().split('-').next().unwrap().to_string())
+                            .join("\n"),
+                    ]);
                 });
 
                 let mut table_dc = builder_dc.build();
@@ -348,7 +360,9 @@ impl Runner {
                 )))
             }
             HostosRolloutResponse::None(reason) => {
-                println!("No nodes to update: {}", reason);
+                reason
+                    .iter()
+                    .for_each(|(group, reason)| println!("No nodes to update in group: {} because: {}", group, reason));
                 Ok(None)
             }
         }

@@ -1,4 +1,4 @@
-use crate::{MinNakamotoCoefficients, Node, NodeGroupUpdate, Status};
+use crate::{MinNakamotoCoefficients, Node, NodeGroup, NodeGroupUpdate, Status};
 use ic_base_types::PrincipalId;
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
@@ -90,7 +90,7 @@ pub struct HostosRolloutRequest {
 #[derive(Serialize, Deserialize)]
 pub enum HostosRolloutResponse {
     Ok(Vec<Node>, Option<Vec<HostosRolloutSubnetAffected>>),
-    None(HostosRolloutReason),
+    None(Vec<(NodeGroup, HostosRolloutReason)>),
 }
 
 impl HostosRolloutResponse {
