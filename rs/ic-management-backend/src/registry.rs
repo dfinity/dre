@@ -247,6 +247,10 @@ impl RegistryState {
                     "tECDSA signing",
                 ),
                 ("x33ed-h457x-bsgyx-oqxqf-6pzwv-wkhzr-rm2j3-npodi-purzm-n66cg-gae", "SNS"),
+                (
+                    "bkfrj-6k62g-dycql-7h53p-atvkj-zg4to-gaogh-netha-ptybj-ntsgw-rqe",
+                    "European",
+                ),
             ]
             .iter()
             .map(|(p, name)| {
