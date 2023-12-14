@@ -313,7 +313,6 @@ impl DecentralizedSubnet {
         if is_european_subnet {
             // European subnet should only take European nodes.
             let continent_counts = nakamoto_scores.feature_value_counts(&NodeFeature::Continent);
-            println!("Continent counts: {:?}", continent_counts);
             let non_european_nodes_count = continent_counts
                 .iter()
                 .filter_map(|(continent, count)| {
