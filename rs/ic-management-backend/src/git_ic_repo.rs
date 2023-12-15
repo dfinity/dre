@@ -15,13 +15,14 @@ custom_error! {IoError
 // Define the IcRepo struct
 pub struct IcRepo {
     repo_path: PathBuf,
+    cache_file_path: PathBuf,
     cache: HashMap<String, Vec<String>>,
 }
 
 impl IcRepo {
     // Initialize the IcRepo struct, to work with a local clone of the IC repo
     pub fn new() -> anyhow::Result<Self> {
-        let repo_path = match std::env::var("REPO_CACHE_PATH") {
+        let repo_path: PathBuf = match std::env::var("REPO_CACHE_PATH") {
             Ok(path) => PathBuf::from(path),
             Err(_) => match dirs::cache_dir() {
                 Some(cache_dir) => cache_dir,
@@ -50,8 +51,9 @@ impl IcRepo {
         })?;
         lock_file.lock_exclusive()?;
 
-        let repo = Self {
+        let mut repo = Self {
             repo_path: repo_path.clone(),
+            cache_file_path: repo_path.join(".git/commit_branch_cache.json"),
             cache: HashMap::new(),
         };
 
@@ -72,13 +74,7 @@ impl IcRepo {
             }
         }
 
-        if repo_path.exists() {
-            info!(
-                "Repo {} already exists, fetching new updates",
-                &repo_path.to_str().unwrap()
-            );
-            repo.refetch()?;
-        } else {
+        if !repo_path.exists() {
             info!("Repo {} does not exist, cloning", &repo_path.to_str().unwrap());
             Command::new("git")
                 .args(["clone", "https://github.com/dfinity/ic", repo_path.to_str().unwrap()])
@@ -87,6 +83,8 @@ impl IcRepo {
 
         lock_file.unlock()?;
 
+        repo.load_commit_branch_cache()?;
+
         Ok(repo)
     }
 
@@ -94,6 +92,29 @@ impl IcRepo {
         Command::new("git")
             .args(["-C", self.repo_path.to_str().unwrap(), "pull", "--force", "origin"])
             .output()?;
+        Ok(())
+    }
+
+    fn load_commit_branch_cache(&mut self) -> anyhow::Result<()> {
+        // Check if there is a cache file with the git rev --> branch mapping
+        if self.cache_file_path.exists() {
+            let cache_file = File::open(&self.cache_file_path).map_err(|e| IoError::Io {
+                source: e,
+                path: self.cache_file_path.to_path_buf(),
+            })?;
+            let cache: HashMap<String, Vec<String>> =
+                serde_json::from_reader(cache_file).map_err(|e| anyhow::format_err!(e))?;
+            self.cache = cache;
+        }
+        Ok(())
+    }
+
+    fn save_commit_branch_cache(&self) -> anyhow::Result<()> {
+        let cache_file = File::create(&self.cache_file_path).map_err(|e| IoError::Io {
+            source: e,
+            path: self.cache_file_path.to_path_buf(),
+        })?;
+        serde_json::to_writer(cache_file, &self.cache).map_err(|e| anyhow::format_err!(e))?;
         Ok(())
     }
 
@@ -127,6 +148,7 @@ impl IcRepo {
                     )
                 } else {
                     self.cache.insert(commit_sha.to_string(), branches.clone());
+                    self.save_commit_branch_cache()?;
                 }
                 branches
             }
