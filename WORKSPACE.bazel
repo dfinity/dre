@@ -162,7 +162,6 @@ load("@rules_oci//oci:repositories.bzl", "LATEST_CRANE_VERSION", "LATEST_ZOT_VER
 oci_register_toolchains(
     name = "oci",
     crane_version = LATEST_CRANE_VERSION,
-    zot_version = LATEST_ZOT_VERSION,
 )
 
 load("@rules_oci//oci:pull.bzl", "oci_pull")
@@ -182,6 +181,13 @@ oci_pull(
     name = "vector",
     digest = "sha256:4447025bc3a99b3a96ed0352e990c44040784590de5a1ea8e4e5b75b76a16665",
     image = "index.docker.io/timberio/vector",
+)
+
+oci_pull(
+    # tag = "2.43.0-debian-11-r1",
+    name = "bitnami_git_docker_img",
+    digest = "sha256:a8e11f1fdcb57ef7b2ab12995bb28b9060e7dbffa17f75136f523e92f6f270e0",
+    image = "index.docker.io/bitnami/git",
 )
 
 http_archive(
