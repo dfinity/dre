@@ -130,6 +130,7 @@ impl Display for HostosRolloutReason {
 #[derive(Serialize, Deserialize)]
 pub struct NodesRemoveRequest {
     pub no_auto: bool,
+    pub remove_degraded: bool,
     pub extra_nodes_filter: Vec<String>,
     pub exclude: Option<Vec<String>>,
     pub motivation: String,

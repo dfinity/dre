@@ -339,6 +339,10 @@ pub(crate) mod nodes {
             #[clap(long)]
             no_auto: bool,
 
+            /// Remove also degraded nodes; by default only dead (offline) nodes are automatically removed
+            #[clap(long)]
+            remove_degraded: bool,
+
             /// Specifies the filter used to remove extra nodes
             extra_nodes_filter: Vec<String>,
 

@@ -243,7 +243,7 @@ async fn main() -> Result<(), anyhow::Error> {
             },
             cli::Commands::Nodes(nodes) => {
                 match &nodes.subcommand {
-                    cli::nodes::Commands::Remove { extra_nodes_filter, no_auto, exclude, motivation } => {
+                    cli::nodes::Commands::Remove { extra_nodes_filter, no_auto, remove_degraded, exclude, motivation } => {
                         if motivation.is_none() && !extra_nodes_filter.is_empty() {
                             cmd.error(
                                 ErrorKind::MissingRequiredArgument,
@@ -255,6 +255,7 @@ async fn main() -> Result<(), anyhow::Error> {
                         runner.remove_nodes(NodesRemoveRequest {
                             extra_nodes_filter: extra_nodes_filter.clone(),
                             no_auto: *no_auto,
+                            remove_degraded: *remove_degraded,
                             exclude: Some(exclude.clone()),
                             motivation: motivation.clone().unwrap_or_default(),
                         }, simulate).await
