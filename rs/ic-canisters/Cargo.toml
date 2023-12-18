@@ -4,20 +4,24 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-ic-nns-constants = { git = "https://github.com/dfinity/ic.git", rev = "abac636d8a281a1e7600d876aaed10f7ce7e5040" }
+ic-nns-constants = { git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca" }
 url = "2.2.2"
-ic-agent = "0.27.0"
+ic-agent = "0.30.2"
 anyhow = "1.0.44"
 candid = "0.9.5"
 serde = { version = "1.0.130", features = ["derive"] }
 serde_json = "1.0.68"
-ic-canister-client = { git = "https://github.com/dfinity/ic.git", rev = "abac636d8a281a1e7600d876aaed10f7ce7e5040" }
-ic-sys = { git = "https://github.com/dfinity/ic.git", rev = "abac636d8a281a1e7600d876aaed10f7ce7e5040" }
-ic-nns-governance = { git = "https://github.com/dfinity/ic.git", rev = "abac636d8a281a1e7600d876aaed10f7ce7e5040" }
-ic-nns-common = { git = "https://github.com/dfinity/ic.git", rev = "abac636d8a281a1e7600d876aaed10f7ce7e5040" }
-ic-canister-client-sender = { git = "https://github.com/dfinity/ic.git", rev = "abac636d8a281a1e7600d876aaed10f7ce7e5040" }
+ic-canister-client = { git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca" }
+ic-sys = { git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca" }
+ic-nns-governance = { git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca" }
+ic-nns-common = { git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca" }
+ic-canister-client-sender = { git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca" }
 reqwest = "0.11.22"
 backoff = { version = "0.4.0", features = ["tokio"] }
-
-[lib]
-path = "src/governance.rs"
+ic-base-types = { git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca" }
+ic-ic00-types = { git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca" }
+ic-utils = "0.30.2"
+ic-identity-hsm = "0.30.2"
+ic-protobuf = { git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca" }
+ic-registry-transport = { git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca" }
+prost = "0.12.3"

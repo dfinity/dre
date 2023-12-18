@@ -1,9 +1,17 @@
+use ic_base_types::{CanisterId, PrincipalId};
 use spinners::{Spinner, Spinners};
-use std::{collections::HashSet, io::Write, time::Duration};
+use std::{
+    collections::{HashMap, HashSet},
+    io::Write,
+    time::Duration,
+};
 
-use ic_canisters::GovernanceCanisterWrapper;
+use ic_canisters::{
+    governance::GovernanceCanisterWrapper, management::WalletCanisterWrapper, registry::RegistryCanisterWrapper,
+    CanisterClient, IcAgentCanisterClient,
+};
 use ic_nns_governance::pb::v1::ProposalInfo;
-use log::info;
+use log::{info, warn};
 use url::Url;
 
 use crate::detect_neuron::{Auth, Neuron};
@@ -15,11 +23,11 @@ pub(crate) async fn vote_on_proposals(
     accepted_topics: &[i32],
     simulate: bool,
 ) -> anyhow::Result<()> {
-    let client = match &neuron.auth {
+    let client: GovernanceCanisterWrapper = match &neuron.auth {
         Auth::Hsm { pin, slot, key_id } => {
-            GovernanceCanisterWrapper::from_hsm(pin.to_string(), *slot, key_id.to_string(), nns_url)?
+            CanisterClient::from_hsm(pin.to_string(), *slot, key_id.to_string(), nns_url)?.into()
         }
-        Auth::Keyfile { path } => GovernanceCanisterWrapper::from_key_file(path.into(), nns_url)?,
+        Auth::Keyfile { path } => CanisterClient::from_key_file(path.into(), nns_url)?.into(),
     };
 
     // In case of incorrectly set voting following, or in case of some other errors,
@@ -76,6 +84,83 @@ pub(crate) async fn vote_on_proposals(
             }
         }
     }
+
+    Ok(())
+}
+
+pub(crate) async fn get_node_metrics_history(
+    wallet: CanisterId,
+    subnets: Vec<PrincipalId>,
+    start_at_nanos: u64,
+    neuron: &Neuron,
+    nns_url: &Url,
+) -> anyhow::Result<()> {
+    let (canister_agent, can_parallelise) = match &neuron.auth {
+        Auth::Hsm { pin, slot, key_id } => (
+            IcAgentCanisterClient::from_hsm(pin.to_string(), *slot, key_id.to_string(), nns_url.clone())?,
+            false,
+        ),
+        Auth::Keyfile { path } => (
+            IcAgentCanisterClient::from_key_file(path.into(), nns_url.clone())?,
+            true,
+        ),
+    };
+    info!("Started action...");
+    let wallet_client = WalletCanisterWrapper::new(canister_agent.agent.clone());
+
+    let subnets = match subnets.is_empty() {
+        false => subnets,
+        true => {
+            let registry_client = RegistryCanisterWrapper::new(canister_agent.agent);
+            registry_client.get_subnets().await?
+        }
+    };
+
+    let mut metrics_by_subnet = HashMap::new();
+    if can_parallelise {
+        info!("Running in parallel mode");
+        let mut handles = vec![];
+        for subnet in subnets {
+            info!("Spawning thread for subnet: {}", subnet);
+            let current_client = wallet_client.clone();
+            handles.push(tokio::spawn(async move {
+                (
+                    subnet,
+                    current_client
+                        .get_node_metrics_history(wallet, start_at_nanos, subnet)
+                        .await,
+                )
+            }))
+        }
+        for handle in handles {
+            let (subnet, resp) = handle.await?;
+            match resp {
+                Ok(metrics) => {
+                    info!("Received response for subnet: {}", subnet);
+                    metrics_by_subnet.insert(subnet, metrics);
+                }
+                Err(e) => {
+                    warn!("Couldn't fetch trustworthy metrics for subnet {}: {:?}", subnet, e)
+                }
+            }
+        }
+    } else {
+        for subnet in subnets {
+            info!("Fetching metrics for subnet: {}", subnet);
+            match wallet_client
+                .get_node_metrics_history(wallet, start_at_nanos, subnet)
+                .await
+            {
+                Ok(resp) => {
+                    info!("Received response for subnet: {}", subnet);
+                    metrics_by_subnet.insert(subnet, resp);
+                }
+                Err(e) => warn!("Couldn't fetch trustworthy metrics for subnet {}: {:?}", subnet, e),
+            }
+        }
+    }
+
+    println!("{}", serde_json::to_string_pretty(&metrics_by_subnet)?);
 
     Ok(())
 }

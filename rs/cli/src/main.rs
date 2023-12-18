@@ -1,8 +1,9 @@
-use crate::general::vote_on_proposals;
+use crate::general::{get_node_metrics_history, vote_on_proposals};
 use crate::ic_admin::IcAdminWrapper;
 use clap::{error::ErrorKind, CommandFactory, Parser};
 use dotenv::dotenv;
-use ic_canisters::governance_canister_version;
+use ic_base_types::CanisterId;
+use ic_canisters::governance::governance_canister_version;
 use ic_management_backend::endpoints;
 use ic_management_types::requests::NodesRemoveRequest;
 use ic_management_types::{Artifact, MinNakamotoCoefficients, Network, NodeFeature, NodeGroupUpdate, NumberOfNodes};
@@ -268,6 +269,14 @@ async fn main() -> Result<(), anyhow::Error> {
                     None => return Err(anyhow::anyhow!("Neuron required for this command")),
                 }, cli.get_nns_url(), accepted_neurons, accepted_topics, simulate).await
             },
+
+            cli::Commands::TrustworthyMetrics { wallet, start_at_timestamp, subnet_ids } => {
+                let cli = cli::Cli::from_opts(&cli_opts, true).await?;
+                get_node_metrics_history(CanisterId::from_str(wallet)?, subnet_ids.clone(), *start_at_timestamp, match cli.get_neuron() {
+                    Some(neuron) => neuron,
+                    None => return Err(anyhow::anyhow!("Neuron required for this command")),
+                }, cli.get_nns_url()).await
+            }
         }
     })
     .await?;

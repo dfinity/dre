@@ -242,7 +242,7 @@ async fn notify_for_failed_proposals() {
             let mut new_failed_proposals = pending_proposals
                 .into_iter()
                 .filter(|proposal| {
-                    ProposalStatus::from_i32(proposal.status).expect("invalid proposal status")
+                    ProposalStatus::try_from(proposal.status).expect("invalid proposal status")
                         == ProposalStatus::Failed
                         && proposal.failed_timestamp_seconds > checkpoint.get().time.unwrap_or_default()
                 })

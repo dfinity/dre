@@ -62,7 +62,7 @@ impl From<ProposalInfo> for ProposalInfoInternal {
             id: id.expect("missing proposal id").id,
             proposal_timestamp_seconds,
             executed_timestamp_seconds,
-            executed: ProposalStatus::from_i32(status).expect("unknown status") == ProposalStatus::Executed,
+            executed: ProposalStatus::try_from(status).expect("unknown status") == ProposalStatus::Executed,
         }
     }
 }
@@ -298,16 +298,17 @@ fn filter_map_nns_function_proposals<T: NnsFunctionProposal + candid::CandidType
 ) -> Vec<(ProposalInfo, T)> {
     proposals
         .iter()
-        .filter(|p| ProposalStatus::from_i32(p.status).expect("unknown proposal status") != ProposalStatus::Rejected)
+        .filter(|p| ProposalStatus::try_from(p.status).expect("unknown proposal status") != ProposalStatus::Rejected)
         .filter_map(|p| {
             p.proposal
                 .as_ref()
                 .and_then(|p| p.action.as_ref())
                 .ok_or_else(|| anyhow::format_err!("no action"))
                 .and_then(|a| match a {
-                    Action::ExecuteNnsFunction(function) => NnsFunction::from_i32(function.nns_function)
-                        .map(|f| (f, function.payload.as_slice()))
-                        .ok_or_else(|| anyhow::format_err!("unknown NNS function")),
+                    Action::ExecuteNnsFunction(function) => {
+                        let func = NnsFunction::try_from(function.nns_function)?;
+                        Ok((func, function.payload.as_slice()))
+                    }
                     _ => Err(anyhow::format_err!("not an NNS function")),
                 })
                 .and_then(|(function_type, function_payload)| {

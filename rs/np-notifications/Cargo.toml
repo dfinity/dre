@@ -9,8 +9,8 @@ edition = "2021"
 actix-web = "4.3.1"
 ic-management-types = { path = "../ic-management-types" }
 ic-management-backend = { path = "../ic-management-backend" }
-ic-types = { git = "https://github.com/dfinity/ic.git", rev = "abac636d8a281a1e7600d876aaed10f7ce7e5040" }
-ic-registry-local-registry = { git = "https://github.com/dfinity/ic.git", rev = "abac636d8a281a1e7600d876aaed10f7ce7e5040" }
+ic-types = { git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca" }
+ic-registry-local-registry = { git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca" }
 tokio = { version = "1.29.1", features = ["full"] }
 tokio-util = "0.7.8"
 actix = "0.13.0"
@@ -20,8 +20,8 @@ serde_json = "1.0.102"
 serde = "1.0.171"
 chrono = "0.4.31"
 figment = { version = "0.10.10", features = ["env", "yaml"] }
-ic-interfaces-registry = { git = "https://github.com/dfinity/ic.git", rev = "abac636d8a281a1e7600d876aaed10f7ce7e5040" }
-ic-registry-client-helpers = { git = "https://github.com/dfinity/ic.git", rev = "abac636d8a281a1e7600d876aaed10f7ce7e5040" }
+ic-interfaces-registry = { git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca" }
+ic-registry-client-helpers = { git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca" }
 serde_yaml = "0.9.25"
 rand = "0.8.5"
 tracing = { version = "0.1.37", features = ["log"] }

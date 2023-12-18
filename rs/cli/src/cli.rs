@@ -1,5 +1,6 @@
 use clap::{Parser, Subcommand};
 use clap_num::maybe_hex;
+use ic_base_types::PrincipalId;
 use ic_management_types::{Artifact, Network};
 use log::error;
 
@@ -104,6 +105,20 @@ pub(crate) enum Commands {
             default_value = "12"
         )]
         accepted_topics: Vec<i32>,
+    },
+
+    /// Trustworthy Metrics
+    TrustworthyMetrics {
+        /// Wallet that should be used to query node metrics history
+        /// in form of canister id
+        wallet: String,
+
+        /// Start at timestamp in nanoseconds
+        start_at_timestamp: u64,
+
+        /// Vector of subnets to query, if empty will dump metrics for
+        /// all subnets
+        subnet_ids: Vec<PrincipalId>,
     },
 }
 
