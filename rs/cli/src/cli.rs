@@ -314,6 +314,9 @@ pub(crate) mod hostos {
             #[arg(value_enum)]
             #[clap(long)]
             owner: Option<NodeOwner>,
+            /// Specifies the filter used to exclude from the update a set of nodes
+            #[clap(long, num_args(1..))]
+            exclude: Option<Vec<PrincipalId>>,
             /// How many nodes in the group to update with the version specified
             /// supported values are absolute numbers (10) or percentage (10%)
             #[clap(long)]

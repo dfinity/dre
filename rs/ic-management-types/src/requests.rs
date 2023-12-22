@@ -83,6 +83,7 @@ pub struct SubnetResizeRequest {
 
 #[derive(Serialize, Deserialize)]
 pub struct HostosRolloutRequest {
+    pub exclude: Option<Vec<PrincipalId>>,
     pub version: String,
     pub node_group: NodeGroupUpdate,
 }

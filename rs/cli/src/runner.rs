@@ -260,6 +260,7 @@ impl Runner {
         &self,
         node_group: NodeGroupUpdate,
         version: &String,
+        exclude: &Option<Vec<PrincipalId>>,
     ) -> anyhow::Result<Option<(Vec<PrincipalId>, String)>> {
         let maybe_elected_versions = self
             .dashboard_backend_client
@@ -274,6 +275,7 @@ impl Runner {
             }
         }
         let request = HostosRolloutRequest {
+            exclude: exclude.clone(),
             version: version.to_string(),
             node_group,
         };
@@ -378,7 +380,7 @@ impl Runner {
         self.ic_admin
             .propose_run(
                 ic_admin::ProposeCommand::UpdateNodesHostosVersion {
-                    nodes,
+                    nodes: nodes.clone(),
                     version: version.to_string(),
                 },
                 ic_admin::ProposeOptions {
@@ -389,6 +391,8 @@ impl Runner {
                 simulate,
             )
             .map_err(|e| anyhow::anyhow!(e))?;
+
+        println!("Submitted proposal to updated the following nodes:\n{:?}", nodes);
 
         Ok(())
     }

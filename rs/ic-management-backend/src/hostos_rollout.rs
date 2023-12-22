@@ -25,6 +25,7 @@ pub struct HostosRollout {
     pub subnets: BTreeMap<PrincipalId, Subnet>,
     pub network: Network,
     pub proposal_agent: ProposalAgent,
+    pub exclude: Option<Vec<PrincipalId>>,
     pub version: String,
 }
 impl HostosRollout {
@@ -34,6 +35,7 @@ impl HostosRollout {
         network: Network,
         proposal_agent: ProposalAgent,
         rollout_version: &str,
+        nodes_filter: &Option<Vec<PrincipalId>>,
     ) -> Self {
         let grouped_nodes: BTreeMap<NodeGroup, Vec<Node>> = nodes
             .values()
@@ -67,6 +69,7 @@ impl HostosRollout {
             subnets,
             network,
             proposal_agent,
+            exclude: nodes_filter.clone(),
             version: rollout_version.to_string(),
         }
     }
@@ -206,6 +209,19 @@ impl HostosRollout {
         }
     }
 
+    async fn nodes_not_excluded(&self, nodes: Vec<Node>, excluded: &[PrincipalId]) -> Option<Vec<Node>> {
+        let nodes_not_excluded = nodes
+            .iter()
+            .filter(|n| !excluded.contains(&n.principal))
+            .cloned()
+            .collect::<Vec<_>>();
+
+        if !nodes_not_excluded.is_empty() {
+            return Some(nodes_not_excluded);
+        }
+        None
+    }
+
     async fn candidates_selection(
         &self,
         nodes_health: BTreeMap<PrincipalId, Status>,
@@ -235,12 +251,25 @@ impl HostosRollout {
         };
 
         info!("Filtering out candidate nodes already updated");
-        let candidate_nodes = match self.nodes_different_version(nodes_without_proposals).await {
+        let nodes_already_updated = match self.nodes_different_version(nodes_without_proposals).await {
             Some(nodes_different_version) => nodes_different_version,
             None => {
                 return Ok(CandidatesSelection::None(HostosRolloutReason::AllAlreadyUpdated));
             }
         };
+
+        info!("Finding not-excluded candidate nodes");
+        let candidate_nodes = if let Some(excluded) = &self.exclude {
+            match self.nodes_not_excluded(nodes_already_updated, excluded).await {
+                Some(nodes_not_filtered) => nodes_not_filtered,
+                None => {
+                    return Ok(CandidatesSelection::None(HostosRolloutReason::AllAlreadyUpdated));
+                }
+            }
+        } else {
+            nodes_already_updated
+        };
+
         Ok(CandidatesSelection::Ok(candidate_nodes))
     }
     #[async_recursion]
@@ -406,6 +435,7 @@ pub mod test {
             Network::Mainnet,
             ProposalAgent::new("https://ic0.app".to_string()),
             version_one.clone().as_str(),
+            &None,
         );
 
         let results = hostos_rollout
@@ -429,12 +459,39 @@ pub mod test {
 
         assert_eq!(results.len(), want, "2 nodes should be updated");
 
+        let nodes_to_exclude = assigned_others_nodes.values().map(|n| n.principal).collect::<Vec<_>>();
+
+        let hostos_rollout = HostosRollout::new(
+            union.clone(),
+            subnet.clone(),
+            Network::Mainnet,
+            ProposalAgent::new("https://ic0.app".to_string()),
+            version_one.clone().as_str(),
+            &Some(nodes_to_exclude),
+        );
+
+        let results = hostos_rollout
+            .clone()
+            .with_nodes_health_and_open_proposals(
+                healthy_nodes.clone(),
+                open_proposals.clone(),
+                NodeGroupUpdate::new_all(Assigned, Others),
+            )
+            .await
+            .unwrap();
+
+        assert!(
+            matches!(results, HostosRolloutResponse::None(_)),
+            "No nodes should be updated because of they have been all excluded"
+        );
+
         let hostos_rollout = HostosRollout::new(
             union.clone(),
             subnet.clone(),
             Network::Mainnet,
             ProposalAgent::new("https://ic0.app".to_string()),
             version_two.clone().as_str(),
+            &None,
         );
 
         let results = hostos_rollout

@@ -18,6 +18,7 @@ async fn rollout_nodes(
         network,
         proposal_agent,
         &request.version,
+        &request.exclude,
     );
 
     response_from_result(hostos_rollout.execute(request.node_group).await)

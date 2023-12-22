@@ -231,10 +231,10 @@ async fn main() -> Result<(), anyhow::Error> {
                         let runner = runner::Runner::new_with_network_url(cli::Cli::from_opts(&cli_opts, true).await?.into(), backend_port).await?;
                         runner.hostos_rollout(nodes.clone(), version, simulate, None).await
                     },
-                    cli::hostos::Commands::RolloutFromNodeGroup {version, assignment, owner, nodes_in_group} => {
+                    cli::hostos::Commands::RolloutFromNodeGroup {version, assignment, owner, nodes_in_group, exclude } => {
                         let update_group  = NodeGroupUpdate::new(*assignment, *owner, NumberOfNodes::from_str(nodes_in_group)?);
                         let runner = runner::Runner::new_with_network_url(cli::Cli::from_opts(&cli_opts, true).await?.into(), backend_port).await?;
-                        if let Some((nodes_to_update, summary)) = runner.hostos_rollout_nodes(update_group, version).await? {
+                        if let Some((nodes_to_update, summary)) = runner.hostos_rollout_nodes(update_group, version, exclude).await? {
                             return runner.hostos_rollout(nodes_to_update, version, simulate, Some(summary)).await
                         }
                         Ok(())
