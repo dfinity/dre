@@ -58,16 +58,6 @@ repos:
             # files will be recognized regardless of extension.
           - --match=.*
 
-  - repo: https://github.com/willthames/ansible-lint.git
-    rev: v4.2.0
-    hooks:
-      - id: ansible-lint
-        files: (^|/)testnet/.+\.(yaml|yml)$
-        exclude: |
-          (?x)^(
-              testnet/tests/.*|.*/docker-compose.yml|testnet/env/shared-config\.yml
-          )$
-
   - repo: https://github.com/PyCQA/pylint
     rev: v2.12.2
     hooks:
