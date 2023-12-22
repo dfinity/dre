@@ -1,0 +1,39 @@
+load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
+
+package(default_visibility = ["//visibility:public"])
+
+DEPENDENCIES = [
+    "//service_discovery",
+    "@crate_index_observability//:ic-types",
+    "@crate_index_observability//:erased-serde",
+    "@crate_index_observability//:regex",
+    "@crate_index_observability//:serde",
+    "@crate_index_observability//:serde_json",
+]
+
+MACRO_DEPENDENCIES = []
+
+DEV_DEPENDENCIES = []
+
+MACRO_DEV_DEPENDENCIES = []
+
+ALIASES = {}
+
+rust_library(
+    name = "multiservice_discovery_shared",
+    srcs = glob(["src/**/*.rs"]),
+    aliases = ALIASES,
+    crate_name = "multiservice_discovery_shared",
+    edition = "2021",
+    proc_macro_deps = MACRO_DEPENDENCIES,
+    deps = DEPENDENCIES,
+)
+
+rust_test(
+    name = "multiservice_discovery_shared_test",
+    aliases = ALIASES,
+    crate = ":multiservice_discovery_shared",
+    edition = "2021",
+    proc_macro_deps = MACRO_DEPENDENCIES + MACRO_DEV_DEPENDENCIES,
+    deps = DEPENDENCIES + DEV_DEPENDENCIES,
+)

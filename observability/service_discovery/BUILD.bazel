@@ -1,0 +1,66 @@
+load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
+
+package(default_visibility = ["//visibility:public"])
+
+DEPENDENCIES = [
+    "@crate_index_observability//:ic-async-utils",
+    "@crate_index_observability//:ic-interfaces-registry",
+    "@crate_index_observability//:ic-metrics",
+    "@crate_index_observability//:ic-protobuf",
+    "@crate_index_observability//:registry-canister",
+    "@crate_index_observability//:ic-registry-client",
+    "@crate_index_observability//:ic-registry-client-fake",
+    "@crate_index_observability//:ic-registry-client-helpers",
+    "@crate_index_observability//:ic-registry-keys",
+    "@crate_index_observability//:ic-registry-local-registry",
+    "@crate_index_observability//:ic-registry-local-store",
+    "@crate_index_observability//:ic-registry-local-store-artifacts",
+    "@crate_index_observability//:ic-registry-nns-data-provider",
+    "@crate_index_observability//:ic-registry-common-proto",
+    "@crate_index_observability//:ic-types",
+    "@crate_index_observability//:ic-utils",
+    "@crate_index_observability//:anyhow",
+    "@crate_index_observability//:crossbeam",
+    "@crate_index_observability//:crossbeam-channel",
+    "@crate_index_observability//:futures",
+    "@crate_index_observability//:hyper",
+    "@crate_index_observability//:prometheus",
+    "@crate_index_observability//:regex",
+    "@crate_index_observability//:serde",
+    "@crate_index_observability//:serde_json",
+    "@crate_index_observability//:slog",
+    "@crate_index_observability//:tempfile",
+    "@crate_index_observability//:thiserror",
+    "@crate_index_observability//:tokio",
+    "@crate_index_observability//:url",
+]
+
+MACRO_DEPENDENCIES = [
+]
+
+DEV_DEPENDENCIES = [
+    "@crate_index_observability//:itertools",
+]
+
+MACRO_DEV_DEPENDENCIES = []
+
+ALIASES = {}
+
+rust_library(
+    name = "service_discovery",
+    srcs = glob(["src/**/*.rs"]),
+    aliases = ALIASES,
+    crate_name = "service_discovery",
+    edition = "2021",
+    proc_macro_deps = MACRO_DEPENDENCIES,
+    deps = DEPENDENCIES,
+)
+
+rust_test(
+    name = "service_discovery_test",
+    aliases = ALIASES,
+    crate = ":service_discovery",
+    edition = "2021",
+    proc_macro_deps = MACRO_DEPENDENCIES + MACRO_DEV_DEPENDENCIES,
+    deps = DEPENDENCIES + DEV_DEPENDENCIES,
+)

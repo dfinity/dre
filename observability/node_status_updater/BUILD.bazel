@@ -1,0 +1,48 @@
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_test")
+
+package(default_visibility = ["//visibility:public"])
+
+DEPENDENCIES = [
+    "@crate_index_observability//:ic-async-utils",
+    "@crate_index_observability//:ic-metrics",
+    "//obs_canister_clients",
+    "//service_discovery",
+    "@crate_index_observability//:anyhow",
+    "@crate_index_observability//:crossbeam",
+    "@crate_index_observability//:crossbeam-channel",
+    "@crate_index_observability//:futures-util",
+    "@crate_index_observability//:humantime",
+    "@crate_index_observability//:ic-agent",
+    "@crate_index_observability//:prometheus-http-query",
+    "@crate_index_observability//:slog",
+    "@crate_index_observability//:slog-async",
+    "@crate_index_observability//:slog-term",
+    "@crate_index_observability//:tokio",
+    "@crate_index_observability//:url",
+]
+
+MACRO_DEPENDENCIES = []
+
+DEV_DEPENDENCIES = []
+
+MACRO_DEV_DEPENDENCIES = []
+
+ALIASES = {}
+
+rust_binary(
+    name = "node_status_updater",
+    srcs = glob(["src/**/*.rs"]),
+    aliases = ALIASES,
+    edition = "2021",
+    proc_macro_deps = MACRO_DEPENDENCIES,
+    deps = DEPENDENCIES,
+)
+
+rust_test(
+    name = "node_status_updater_test",
+    aliases = ALIASES,
+    crate = ":node_status_updater",
+    edition = "2021",
+    proc_macro_deps = MACRO_DEPENDENCIES + MACRO_DEV_DEPENDENCIES,
+    deps = DEPENDENCIES + DEV_DEPENDENCIES,
+)

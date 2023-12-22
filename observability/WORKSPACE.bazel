@@ -1,0 +1,184 @@
+workspace(
+    name = "observability",
+)
+
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive") # , "http_file", "http_jar")
+
+http_archive(
+    name = "bazel_skylib",
+    sha256 = "66ffd9315665bfaafc96b52278f57c7e2dd09f5ede279ea6d39b2be471e7e3aa",
+    urls = [
+        "https://mirror.bazel.build/github.com/bazelbuild/bazel-skylib/releases/download/1.4.2/bazel-skylib-1.4.2.tar.gz",
+        "https://github.com/bazelbuild/bazel-skylib/releases/download/1.4.2/bazel-skylib-1.4.2.tar.gz",
+    ],
+)
+
+load("@bazel_skylib//:workspace.bzl", "bazel_skylib_workspace")
+
+bazel_skylib_workspace()
+
+http_archive(
+    name = "rules_rust",
+    sha256 = "1e7114ea2af800c6987ca38daeee13e3ae6e934875b4f7ca24b798857f95431e",
+    urls = ["https://github.com/bazelbuild/rules_rust/releases/download/0.32.0/rules_rust-v0.32.0.tar.gz"],
+)
+
+load("@rules_rust//rust:repositories.bzl", "rules_rust_dependencies", "rust_register_toolchains")
+
+rules_rust_dependencies()
+
+rust_register_toolchains(
+    edition = "2021",
+    versions = [
+        "1.74.0",
+    ],
+)
+
+http_archive(
+    name = "rules_proto",
+    sha256 = "66bfdf8782796239d3875d37e7de19b1d94301e8972b3cbd2446b332429b4df1",
+    strip_prefix = "rules_proto-4.0.0",
+    urls = [
+        "https://mirror.bazel.build/github.com/bazelbuild/rules_proto/archive/refs/tags/4.0.0.tar.gz",
+        "https://github.com/bazelbuild/rules_proto/archive/refs/tags/4.0.0.tar.gz",
+    ],
+)
+
+load("@rules_proto//proto:repositories.bzl", "rules_proto_dependencies", "rules_proto_toolchains")
+
+rules_proto_dependencies()
+
+rules_proto_toolchains()
+
+load("@rules_rust//crate_universe:repositories.bzl", "crate_universe_dependencies")
+
+crate_universe_dependencies()
+
+load("@rules_rust//crate_universe:defs.bzl", "crates_repository", "splicing_config", "crate")
+
+crates_repository(
+    name = "crate_index_observability",
+    annotations = {
+        "ic-adapter-metrics-service": [crate.annotation(
+            build_script_data = [
+                "@com_google_protobuf//:protoc",
+                "@com_google_protobuf//:well_known_protos",
+            ],
+            build_script_env = {
+                "PROTOC": "$(execpath @com_google_protobuf//:protoc)",
+                "PROTOC_INCLUDE": "external/com_github_protocolbuffers_protobuf/src",
+            },
+        )],
+        "prost-build": [crate.annotation(
+            build_script_data = [
+                "@com_google_protobuf//:protoc",
+                "@com_google_protobuf//:well_known_protos",
+            ],
+            build_script_env = {
+                "PROTOC": "$(execpath @com_google_protobuf//:protoc)",
+                "PROTOC_INCLUDE": "external/com_github_protocolbuffers_protobuf/src",
+            },
+        )],
+    },
+    cargo_lockfile = "//:Cargo.lock",
+    lockfile = "//:Cargo.Bazel.lock",
+    isolated = True,
+    manifests = [
+        "//:Cargo.toml",
+        "//config_writer_common:Cargo.toml",
+        "//log_vector_config_generator:Cargo.toml",
+        "//multiservice_discovery:Cargo.toml",
+        "//multiservice_discovery_downloader:Cargo.toml",
+        "//multiservice_discovery_shared:Cargo.toml",
+        "//node_status_updater:Cargo.toml",
+        "//obs_canister_clients:Cargo.toml",
+        "//prometheus_config_updater:Cargo.toml",
+        "//service_discovery:Cargo.toml",
+        "//vector_config_generator:Cargo.toml",
+    ],
+    # Should match the version represented by the `rust_register_toolchain` above.
+    rust_version = "1.74.0",
+    splicing_config = splicing_config(
+        resolver_version = "2",
+    ),
+)
+
+load("@crate_index_observability//:defs.bzl", "crate_repositories")
+
+crate_repositories()
+
+# Docker container support
+
+# http_archive(
+#     name = "io_bazel_rules_docker",
+#     sha256 = "b1e80761a8a8243d03ebca8845e9cc1ba6c82ce7c5179ce2b295cd36f7e394bf",
+#     urls = ["https://github.com/bazelbuild/rules_docker/releases/download/v0.25.0/rules_docker-v0.25.0.tar.gz"],
+# )
+
+# load(
+#     "@io_bazel_rules_docker//toolchains/docker:toolchain.bzl",
+#     docker_toolchain_configure = "toolchain_configure",
+# )
+
+# docker_toolchain_configure(
+#     name = "docker_config",
+#     gzip_target = "@pigz",
+# )
+
+# load(
+#     "@io_bazel_rules_docker//repositories:repositories.bzl",
+#     container_repositories = "repositories",
+# )
+
+# Bitcoin core
+
+# container_repositories()
+
+# load("@io_bazel_rules_docker//repositories:deps.bzl", container_deps = "deps")
+
+# container_deps(go_repository_default_config = "@//:WORKSPACE.bazel")
+
+# load(
+#     "@io_bazel_rules_docker//container:container.bzl",
+#     "container_pull",
+# )
+
+# container_pull(
+#     name = "ubuntu_base",
+#     digest = "sha256:965fbcae990b0467ed5657caceaec165018ef44a4d2d46c7cdea80a9dff0d1ea",
+#     registry = "docker.io",
+#     repository = "ubuntu",
+# )
+
+# Third party dependencies that require special treatment
+
+# http_archive(
+#     name = "pigz",
+ #    build_file_content = """
+# cc_library(
+#     name = "zopfli",
+#     hdrs = glob(["zopfli/src/zopfli/*.h"]),
+#     srcs = glob(["zopfli/src/zopfli/*.c"]),
+# )
+
+# cc_binary(
+#     name = "pigz",
+#    srcs = [
+#        "pigz.c",
+#        "try.c",
+#        "try.h",
+#        "yarn.c",
+#        "yarn.h",
+#    ],
+#    linkopts = [
+#        "-lm",
+#        "-lpthread",
+#        "-lz",
+#    ],
+#    deps = [":zopfli"],
+#    visibility = ["//visibility:public"],
+#)""",
+#    sha256 = "d4396b58bc2875daf8dc3ae9a657be945c2c2697944894fea8a72634eded93ab",
+#    strip_prefix = "pigz-2.7",
+#    url = "https://github.com/madler/pigz/archive/refs/tags/v2.7.zip",
+#)

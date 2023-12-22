@@ -1,0 +1,47 @@
+load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
+
+package(default_visibility = ["//visibility:public"])
+
+DEPENDENCIES = [
+    "//service_discovery",
+    "@crate_index_observability//:ic-types",
+    "@crate_index_observability//:ic-utils",
+    "@crate_index_observability//:crossbeam",
+    "@crate_index_observability//:crossbeam-channel",
+    "@crate_index_observability//:erased-serde",
+    "@crate_index_observability//:regex",
+    "@crate_index_observability//:serde",
+    "@crate_index_observability//:serde_json",
+    "@crate_index_observability//:slog",
+    "@crate_index_observability//:slog-async",
+    "@crate_index_observability//:slog-term",
+]
+
+MACRO_DEPENDENCIES = [
+    "@crate_index_observability//:serde_derive",
+]
+
+DEV_DEPENDENCIES = []
+
+MACRO_DEV_DEPENDENCIES = []
+
+ALIASES = {}
+
+rust_library(
+    name = "config_writer_common",
+    srcs = glob(["src/**/*.rs"]),
+    aliases = ALIASES,
+    crate_name = "config_writer_common",
+    edition = "2021",
+    proc_macro_deps = MACRO_DEPENDENCIES,
+    deps = DEPENDENCIES,
+)
+
+rust_test(
+    name = "config_writer_common_test",
+    aliases = ALIASES,
+    crate = ":config_writer_common",
+    edition = "2021",
+    proc_macro_deps = MACRO_DEPENDENCIES + MACRO_DEV_DEPENDENCIES,
+    deps = DEPENDENCIES + DEV_DEPENDENCIES,
+)
