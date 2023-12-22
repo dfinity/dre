@@ -48,6 +48,11 @@ pip_parse(
         "poetry-plugin-export": package_annotation(
             excluded_deps = ["poetry"],
         ),
+        "ansible-base": package_annotation(
+            additive_build_content = '''
+exports_files(["bin/ansible-inventory"])
+            ''',
+        ),
     },
     python_interpreter_target = interpreter,
     requirements_lock = "//:requirements.txt",
