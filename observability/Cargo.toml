@@ -1,0 +1,62 @@
+[workspace]
+members = [
+    "multiservice_discovery",
+    "node_status_updater",
+    "service_discovery",
+    "config_writer_common",
+    "multiservice_discovery_downloader",
+    "obs_canister_clients",
+    "vector_config_generator",
+    "log_vector_config_generator",
+    "multiservice_discovery_shared",
+    "prometheus_config_updater",
+]
+resolver = "2"
+
+[workspace.dependencies]
+base64 = { version = "0.13.1" }
+candid = { version = "0.9.10", features = ["parser"] }
+clap = { version = "3.2.25", features = ["derive"] }
+ic-async-utils = { git = "https://github.com/dfinity/ic", rev = "b5d89793a98c23da9d1ee25e6edd3cea5f971de4" } # path = "rs/async_utils" }
+ic-crypto-utils-threshold-sig-der = { git = "https://github.com/dfinity/ic", rev = "b5d89793a98c23da9d1ee25e6edd3cea5f971de4" } # path = "../../crypto/utils/threshold_sig_der" }
+ic-types = { git = "https://github.com/dfinity/ic", rev = "b5d89793a98c23da9d1ee25e6edd3cea5f971de4" } # path = "../../types/types" }
+ic-utils = { git = "https://github.com/dfinity/ic", rev = "b5d89793a98c23da9d1ee25e6edd3cea5f971de4" } # path = "../../utils/" }
+ic-interfaces-registry = { git = "https://github.com/dfinity/ic", rev = "b5d89793a98c23da9d1ee25e6edd3cea5f971de4" } # path = "../../interfaces/registry" }
+ic-protobuf = { git = "https://github.com/dfinity/ic", rev = "b5d89793a98c23da9d1ee25e6edd3cea5f971de4" } # path = "../../protobuf" }
+ic-registry-client = { git = "https://github.com/dfinity/ic", rev = "b5d89793a98c23da9d1ee25e6edd3cea5f971de4" } # path = "../../registry/client" }
+ic-registry-keys = { git = "https://github.com/dfinity/ic", rev = "b5d89793a98c23da9d1ee25e6edd3cea5f971de4" } # path = "../../registry/keys" }
+ic-registry-local-registry = { git = "https://github.com/dfinity/ic", rev = "b5d89793a98c23da9d1ee25e6edd3cea5f971de4" } # path = "../../registry/local_registry" }
+ic-registry-client-helpers = { git = "https://github.com/dfinity/ic", rev = "b5d89793a98c23da9d1ee25e6edd3cea5f971de4" } # path = "../../registry/helpers" }
+ic-registry-nns-data-provider = { git = "https://github.com/dfinity/ic", rev = "b5d89793a98c23da9d1ee25e6edd3cea5f971de4" } # path = "../../registry/nns_data_provider" }
+ic-registry-local-store = { git = "https://github.com/dfinity/ic", rev = "b5d89793a98c23da9d1ee25e6edd3cea5f971de4" } # path = "../../registry/local_store" }
+ic-registry-local-store-artifacts = { git = "https://github.com/dfinity/ic", rev = "b5d89793a98c23da9d1ee25e6edd3cea5f971de4" } # path = "../../registry/local_store/artifacts" }
+ic-metrics = { git = "https://github.com/dfinity/ic", rev = "b5d89793a98c23da9d1ee25e6edd3cea5f971de4" } # path = "../../monitoring/metrics" }
+ic-registry-client-fake = { git = "https://github.com/dfinity/ic", rev = "b5d89793a98c23da9d1ee25e6edd3cea5f971de4" } # path = "../../registry/fake" }
+registry-canister = { git = "https://github.com/dfinity/ic", rev = "b5d89793a98c23da9d1ee25e6edd3cea5f971de4" } # path = "../../registry/canister" }
+ic-registry-common-proto = { git = "https://github.com/dfinity/ic", rev = "b5d89793a98c23da9d1ee25e6edd3cea5f971de4" } # path = "../../registry/proto" }
+ic-http-endpoints-metrics = { git = "https://github.com/dfinity/ic", rev = "b5d89793a98c23da9d1ee25e6edd3cea5f971de4" } # path = "../../http_endpoints/metrics" }
+ic-config = { git = "https://github.com/dfinity/ic", rev = "b5d89793a98c23da9d1ee25e6edd3cea5f971de4" } # path = "../../config" }
+futures = "0.3.28"
+ic-agent = { version = "0.30.2", features = ["hyper"] }
+itertools = "0.12.0"
+prometheus = { version = "0.13.3", features = ["process"] }
+prometheus-http-query = { version = "0.6.6", default_features = false, features = [
+    "rustls-tls-webpki-roots",
+] }
+regex = "1.7.0"
+reqwest = { version = "0.11.22", default-features = false, features = [
+    "blocking",
+    "json",
+    "multipart",
+    "rustls-tls-webpki-roots",
+    "stream",
+] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = { version = "1.0.107", features = ["std"] }
+slog = { version = "2.7.0", features = [
+    "max_level_trace",
+    "nested-values",
+    "release_max_level_debug",
+    "release_max_level_trace",
+] }
+tokio = { version = "1.32.0", features = ["full"] }
