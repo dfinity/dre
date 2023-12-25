@@ -8,15 +8,17 @@ use ic_base_types::CanisterId;
 use ic_canister_client::Agent as CanisterClientAgent;
 use ic_canister_client::Sender;
 use ic_canister_client_sender::SigKeys;
-use ic_identity_hsm::HardwareIdentity;
 use ic_sys::utility_command::UtilityCommand;
+use parallel_hardware_identity::ParallelHardwareIdentity;
 use serde::Deserialize;
 use std::path::PathBuf;
 use std::str::FromStr;
+use std::sync::Mutex;
 use url::Url;
 
 pub mod governance;
 pub mod management;
+pub mod parallel_hardware_identity;
 pub mod registry;
 
 pub struct CanisterClient {
@@ -72,9 +74,9 @@ impl IcAgentCanisterClient {
         })
     }
 
-    pub fn from_hsm(pin: String, slot: u64, key_id: String, url: Url) -> anyhow::Result<Self> {
+    pub fn from_hsm(pin: String, slot: u64, key_id: String, url: Url, lock: Option<Mutex<()>>) -> anyhow::Result<Self> {
         let pin_fn = || Ok(pin);
-        let identity = HardwareIdentity::new(pkcs11_lib_path()?, slot as usize, &key_id, pin_fn)?;
+        let identity = ParallelHardwareIdentity::new(pkcs11_lib_path()?, slot as usize, &key_id, pin_fn, lock)?;
         Ok(Self {
             agent: Agent::builder()
                 .with_identity(identity)

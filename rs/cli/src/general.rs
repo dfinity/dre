@@ -3,6 +3,7 @@ use spinners::{Spinner, Spinners};
 use std::{
     collections::{HashMap, HashSet},
     io::Write,
+    sync::Mutex,
     time::Duration,
 };
 
@@ -95,15 +96,12 @@ pub(crate) async fn get_node_metrics_history(
     neuron: &Neuron,
     nns_url: &Url,
 ) -> anyhow::Result<()> {
-    let (canister_agent, can_parallelise) = match &neuron.auth {
-        Auth::Hsm { pin, slot, key_id } => (
-            IcAgentCanisterClient::from_hsm(pin.to_string(), *slot, key_id.to_string(), nns_url.clone())?,
-            false,
-        ),
-        Auth::Keyfile { path } => (
-            IcAgentCanisterClient::from_key_file(path.into(), nns_url.clone())?,
-            true,
-        ),
+    let lock = Mutex::new(());
+    let canister_agent = match &neuron.auth {
+        Auth::Hsm { pin, slot, key_id } => {
+            IcAgentCanisterClient::from_hsm(pin.to_string(), *slot, key_id.to_string(), nns_url.clone(), Some(lock))?
+        }
+        Auth::Keyfile { path } => IcAgentCanisterClient::from_key_file(path.into(), nns_url.clone())?,
     };
     info!("Started action...");
     let wallet_client = WalletCanisterWrapper::new(canister_agent.agent.clone());
@@ -117,45 +115,29 @@ pub(crate) async fn get_node_metrics_history(
     };
 
     let mut metrics_by_subnet = HashMap::new();
-    if can_parallelise {
-        info!("Running in parallel mode");
-        let mut handles = vec![];
-        for subnet in subnets {
-            info!("Spawning thread for subnet: {}", subnet);
-            let current_client = wallet_client.clone();
-            handles.push(tokio::spawn(async move {
-                (
-                    subnet,
-                    current_client
-                        .get_node_metrics_history(wallet, start_at_nanos, subnet)
-                        .await,
-                )
-            }))
-        }
-        for handle in handles {
-            let (subnet, resp) = handle.await?;
-            match resp {
-                Ok(metrics) => {
-                    info!("Received response for subnet: {}", subnet);
-                    metrics_by_subnet.insert(subnet, metrics);
-                }
-                Err(e) => {
-                    warn!("Couldn't fetch trustworthy metrics for subnet {}: {:?}", subnet, e)
-                }
+    info!("Running in parallel mode");
+    let mut handles = vec![];
+    for subnet in subnets {
+        info!("Spawning thread for subnet: {}", subnet);
+        let current_client = wallet_client.clone();
+        handles.push(tokio::spawn(async move {
+            (
+                subnet,
+                current_client
+                    .get_node_metrics_history(wallet, start_at_nanos, subnet)
+                    .await,
+            )
+        }))
+    }
+    for handle in handles {
+        let (subnet, resp) = handle.await?;
+        match resp {
+            Ok(metrics) => {
+                info!("Received response for subnet: {}", subnet);
+                metrics_by_subnet.insert(subnet, metrics);
             }
-        }
-    } else {
-        for subnet in subnets {
-            info!("Fetching metrics for subnet: {}", subnet);
-            match wallet_client
-                .get_node_metrics_history(wallet, start_at_nanos, subnet)
-                .await
-            {
-                Ok(resp) => {
-                    info!("Received response for subnet: {}", subnet);
-                    metrics_by_subnet.insert(subnet, resp);
-                }
-                Err(e) => warn!("Couldn't fetch trustworthy metrics for subnet {}: {:?}", subnet, e),
+            Err(e) => {
+                warn!("Couldn't fetch trustworthy metrics for subnet {}: {:?}", subnet, e)
             }
         }
     }
