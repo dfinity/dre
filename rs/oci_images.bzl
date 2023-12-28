@@ -31,5 +31,5 @@ def rust_binary_oci_image_rules(name, src):
     oci_push(
         name = "push_image",
         image = image_rule_name,
-        repository = "registry.gitlab.com/dfinity-lab/core/release/{}".format(binary.name),
+        repository = "ghcr.io/dfinity/dre/{}".format(binary.name),
     )
