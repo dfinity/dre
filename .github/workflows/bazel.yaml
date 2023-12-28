@@ -19,4 +19,4 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - run: bazel query --noshow_progress 'kind("oci_push", ...)' | xargs -P $(nproc) -I_target bazel run _target -- --tag ${CI_COMMIT_SHA}
+      - run: bazel query --noshow_progress 'kind("oci_push", ...)' | xargs -I_target bazel run _target -- --tag ${GITHUB_SHA}
