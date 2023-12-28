@@ -1023,12 +1023,13 @@ dependencies = [
 [[package]]
 name = "build-info-build"
 version = "0.0.26"
-source = "git+https://github.com/dfinity-lab/build-info?rev=abb2971c5d07a9b40d41a0c84b63a3156f2ff764#abb2971c5d07a9b40d41a0c84b63a3156f2ff764"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1ebfef0dcb94d65cc2cd98ce285de89ed40c9a1d2bb10175f548867d0e26cda0"
 dependencies = [
  "anyhow",
  "base64 0.13.1",
  "bincode",
- "build-info-common 0.0.26",
+ "build-info-common",
  "cargo_metadata",
  "chrono",
  "glob",
@@ -1052,17 +1053,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "build-info-common"
-version = "0.0.26"
-source = "git+https://github.com/dfinity-lab/build-info?rev=abb2971c5d07a9b40d41a0c84b63a3156f2ff764#abb2971c5d07a9b40d41a0c84b63a3156f2ff764"
-dependencies = [
- "chrono",
- "derive_more 0.99.17",
- "semver",
- "serde",
-]
-
-[[package]]
 name = "build-info-proc"
 version = "0.0.26"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1071,7 +1061,7 @@ dependencies = [
  "anyhow",
  "base64 0.13.1",
  "bincode",
- "build-info-common 0.0.26",
+ "build-info-common",
  "chrono",
  "format-buf",
  "num-bigint",
@@ -2039,7 +2029,7 @@ dependencies = [
 [[package]]
 name = "derive_more"
 version = "0.99.8-alpha.0"
-source = "git+https://github.com/dfinity-lab/derive_more#9f1b894e6fde640da4e9ea71a8fc0e4dd98d01da"
+source = "git+https://github.com/dfinity-lab/derive_more?branch=master#9f1b894e6fde640da4e9ea71a8fc0e4dd98d01da"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -8719,18 +8709,18 @@ dependencies = [
 
 [[package]]
 name = "zerocopy"
-version = "0.7.26"
+version = "0.7.32"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e97e415490559a91254a2979b4829267a57d2fcd741a98eee8b722fb57289aa0"
+checksum = "74d4d3961e53fa4c9a25a8637fc2bfaf2595b3d3ae34875568a5cf64787716be"
 dependencies = [
  "zerocopy-derive",
 ]
 
 [[package]]
 name = "zerocopy-derive"
-version = "0.7.26"
+version = "0.7.32"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dd7e48ccf166952882ca8bd778a43502c64f33bf94c12ebe2a7f08e5a0f6689f"
+checksum = "9ce1b18ccd8e73a9321186f97e46f9f04b778851177567b1975109d26a08d2a6"
 dependencies = [
  "proc-macro2",
  "quote",
