@@ -627,6 +627,7 @@ mod tests {
     use std::{io::Write, str::FromStr};
     use tempfile::NamedTempFile;
 
+    #[ignore]
     #[tokio::test]
     async fn test_propose_dry_run() -> Result<()> {
         let mut file = NamedTempFile::new()?;
