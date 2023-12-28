@@ -1023,12 +1023,13 @@ dependencies = [
 [[package]]
 name = "build-info-build"
 version = "0.0.26"
-source = "git+https://github.com/dfinity-lab/build-info?rev=abb2971c5d07a9b40d41a0c84b63a3156f2ff764#abb2971c5d07a9b40d41a0c84b63a3156f2ff764"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1ebfef0dcb94d65cc2cd98ce285de89ed40c9a1d2bb10175f548867d0e26cda0"
 dependencies = [
  "anyhow",
  "base64 0.13.1",
  "bincode",
- "build-info-common 0.0.26",
+ "build-info-common",
  "cargo_metadata",
  "chrono",
  "glob",
@@ -1052,17 +1053,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "build-info-common"
-version = "0.0.26"
-source = "git+https://github.com/dfinity-lab/build-info?rev=abb2971c5d07a9b40d41a0c84b63a3156f2ff764#abb2971c5d07a9b40d41a0c84b63a3156f2ff764"
-dependencies = [
- "chrono",
- "derive_more 0.99.17",
- "semver",
- "serde",
-]
-
-[[package]]
 name = "build-info-proc"
 version = "0.0.26"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1071,7 +1061,7 @@ dependencies = [
  "anyhow",
  "base64 0.13.1",
  "bincode",
- "build-info-common 0.0.26",
+ "build-info-common",
  "chrono",
  "format-buf",
  "num-bigint",
@@ -2039,7 +2029,7 @@ dependencies = [
 [[package]]
 name = "derive_more"
 version = "0.99.8-alpha.0"
-source = "git+https://github.com/dfinity-lab/derive_more#9f1b894e6fde640da4e9ea71a8fc0e4dd98d01da"
+source = "git+https://github.com/dfinity-lab/derive_more?branch=master#9f1b894e6fde640da4e9ea71a8fc0e4dd98d01da"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -5753,9 +5743,9 @@ checksum = "624a8340c38c1b80fd549087862da4ba43e08858af025b236e509b6649fc13d5"
 
 [[package]]
 name = "openssl"
-version = "0.10.59"
+version = "0.10.62"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7a257ad03cd8fb16ad4172fedf8094451e1af1c4b70097636ef2eac9a5f0cc33"
+checksum = "8cde4d2d9200ad5909f8dac647e29482e07c3a35de8a13fce7c9c7747ad9f671"
 dependencies = [
  "bitflags 2.4.1",
  "cfg-if",
@@ -5785,9 +5775,9 @@ checksum = "ff011a302c396a5197692431fc1948019154afc178baf7d8e37367442a4601cf"
 
 [[package]]
 name = "openssl-sys"
-version = "0.9.95"
+version = "0.9.98"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "40a4130519a360279579c2053038317e40eff64d13fd3f004f9e1b72b8a6aaf9"
+checksum = "c1665caf8ab2dc9aef43d1c0023bd904633a6a05cb30b0ad59bec2ae986e57a7"
 dependencies = [
  "cc",
  "libc",
