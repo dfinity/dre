@@ -1,0 +1,45 @@
+site_name: DRE team docs
+site_description: >-
+  A collection of docs for the DRE team
+
+repo_name: core/release
+repo_url: https://gitlab.com/dfinity-lab/core/release/
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  features:
+    - content.action.edit
+    - content.action.view
+    - content.tooltips
+    - navigation.sections
+    - navigation.instant
+    - search.suggest
+    - search.highlight
+    - search.share
+
+plugins:
+  - search
+  - offline
+
+# Extensions
+markdown_extensions:
+  - admonition
+  - attr_list
+  - footnotes
+  - toc:
+      permalink: true
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.critic
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.keys
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.superfences
+  - tables
