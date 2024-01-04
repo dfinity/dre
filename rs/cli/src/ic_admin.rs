@@ -642,6 +642,7 @@ mod tests {
     use super::*;
     use std::{io::Write, str::FromStr};
     use tempfile::NamedTempFile;
+    use wiremock::MockServer;
 
     #[ignore]
     #[tokio::test]
@@ -667,9 +668,12 @@ oSMDIQBa2NLmSmaqjDXej4rrJEuEhKIz7/pGXpxztViWhB+X9Q==
             },
         ];
 
+        // Start a background HTTP server on a random local port
+        let mock_server = MockServer::start().await;
+
         for cmd in test_cases {
             let cli = IcAdminWrapper {
-                nns_url: url::Url::from_str("http://localhost:8080").unwrap(),
+                nns_url: url::Url::from_str(&mock_server.uri()).unwrap(),
                 yes: false,
                 neuron: Neuron {
                     id: 3,

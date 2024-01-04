@@ -67,3 +67,4 @@ spinners = "4.1.0"
 
 [dev-dependencies]
 tempfile = "3.3.0"
+wiremock = "0.5.21"
