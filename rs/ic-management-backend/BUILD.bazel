@@ -1,5 +1,5 @@
 load("@//rs:oci_images.bzl", "rust_binary_oci_image_rules")
-load("@crate_index_release//:defs.bzl", "aliases", "all_crate_deps")
+load("@crate_index_dre//:defs.bzl", "aliases", "all_crate_deps")
 load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library", "rust_test")
 
 package(default_visibility = ["//visibility:public"])

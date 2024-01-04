@@ -1,5 +1,5 @@
 workspace(
-    name = "release",
+    name = "dre",
 )
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive", "http_file")
@@ -99,7 +99,7 @@ load("//bazel:external_crates.bzl", "external_crates_repository")
 
 external_crates_repository()
 
-load("@crate_index_release//:defs.bzl", "crate_repositories")
+load("@crate_index_dre//:defs.bzl", "crate_repositories")
 
 crate_repositories()
 
