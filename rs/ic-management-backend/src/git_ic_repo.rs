@@ -161,8 +161,10 @@ impl IcRepo {
 mod tests {
     use super::*;
 
+    #[ignore]
     #[test]
     fn test_get_branches_with_nonexistent_commit() {
+        // TODO: mock the git repo so we don't have to clone the whole thing
         let mut ic_repo = IcRepo::new().unwrap();
         let branches = ic_repo.get_branches_with_commit("80a6745673a28ee53d257b3fe19dcd6b7efa93d1");
         assert!(branches.is_ok());
