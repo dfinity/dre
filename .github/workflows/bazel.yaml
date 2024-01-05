@@ -18,7 +18,7 @@ jobs:
           path: "~/.cache/bazel"
           key: bazel
       - name: Clean bazel cache directory older than 7 days
-        run: find ~/.cache/bazel -mindepth 1 -maxdepth 1 -type d -mtime +7 -exec sudo rm -rf '{}' +
+        run: find ~/.cache/bazel -mindepth 1 -maxdepth 1 -type d -mtime +7 -exec sudo rm -rvf '{}' +
       - run: bazel build ...
       - run: bazel test ...
       - name: Login to GitHub Container Registry
