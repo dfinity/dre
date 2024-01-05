@@ -29,10 +29,10 @@
   slack_id: U01L52P04HW  # Paul Meeusen
 - neuron_id: 45
   slack_id: UJU6XENEQ    # Mamiko Inoue
-- neuron_id: 46
-  slack_id: U03STJVBT2M  # Marin Gilles
-- neuron_id: 47
-  slack_id: UM6JMDD1Q    # Luis Mompo Handen
+# - neuron_id: 46
+#   slack_id: 
+# - neuron_id: 47
+#   slack_id: 
 - neuron_id: 48
   slack_id: UCJCD32MQ    # Manu Drijvers
 - neuron_id: 49

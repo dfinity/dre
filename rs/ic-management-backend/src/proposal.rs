@@ -6,16 +6,24 @@ use candid::{Decode, Encode};
 use futures_util::future::try_join_all;
 use ic_agent::Agent;
 use ic_management_types::{NnsFunctionProposal, TopologyChangePayload, TopologyChangeProposal};
+use ic_management_types::{
+    UpdateElectedHostosVersionsProposal, UpdateElectedReplicaVersionsProposal, UpdateNodesHostosVersionsProposal,
+};
 use ic_nns_governance::pb::v1::{proposal::Action, ListProposalInfo, ListProposalInfoResponse, NnsFunction};
 use ic_nns_governance::pb::v1::{ProposalInfo, ProposalStatus, Topic};
+use itertools::Itertools;
 use registry_canister::mutations::do_add_nodes_to_subnet::AddNodesToSubnetPayload;
 use registry_canister::mutations::do_change_subnet_membership::ChangeSubnetMembershipPayload;
 use registry_canister::mutations::do_create_subnet::CreateSubnetPayload;
 use registry_canister::mutations::do_remove_nodes_from_subnet::RemoveNodesFromSubnetPayload;
+use registry_canister::mutations::do_update_elected_hostos_versions::UpdateElectedHostosVersionsPayload;
+use registry_canister::mutations::do_update_elected_replica_versions::UpdateElectedReplicaVersionsPayload;
+use registry_canister::mutations::do_update_nodes_hostos_version::UpdateNodesHostosVersionPayload;
 use registry_canister::mutations::do_update_subnet_replica::UpdateSubnetReplicaVersionPayload;
 use registry_canister::mutations::node_management::do_remove_nodes::RemoveNodesPayload;
 use serde::Serialize;
 
+#[derive(Clone)]
 pub struct ProposalAgent {
     agent: Agent,
 }
@@ -54,7 +62,7 @@ impl From<ProposalInfo> for ProposalInfoInternal {
             id: id.expect("missing proposal id").id,
             proposal_timestamp_seconds,
             executed_timestamp_seconds,
-            executed: ProposalStatus::from_i32(status).expect("unknown status") == ProposalStatus::Executed,
+            executed: ProposalStatus::try_from(status).expect("unknown status") == ProposalStatus::Executed,
         }
     }
 }
@@ -110,6 +118,76 @@ impl ProposalAgent {
             .collect::<Vec<_>>();
         result.sort_by_key(|p| p.id);
         result.reverse();
+
+        Ok(result)
+    }
+
+    pub async fn list_open_elect_replica_proposals(&self) -> Result<Vec<UpdateElectedReplicaVersionsProposal>> {
+        let proposals = &self.list_proposals(vec![ProposalStatus::Open]).await?;
+        let open_elect_guest_proposals =
+            filter_map_nns_function_proposals::<UpdateElectedReplicaVersionsPayload>(proposals);
+
+        let result = open_elect_guest_proposals
+            .into_iter()
+            .map(
+                |(proposal_info, proposal_payload)| UpdateElectedReplicaVersionsProposal {
+                    proposal_id: proposal_info.id.expect("proposal should have an id").id,
+                    version_elect: proposal_payload
+                        .replica_version_to_elect
+                        .expect("version elect should exist"),
+
+                    versions_unelect: proposal_payload.replica_versions_to_unelect,
+                },
+            )
+            .sorted_by_key(|p| p.proposal_id)
+            .rev()
+            .collect::<Vec<_>>();
+
+        Ok(result)
+    }
+
+    pub async fn list_open_elect_hostos_proposals(&self) -> Result<Vec<UpdateElectedHostosVersionsProposal>> {
+        let proposals = &self.list_proposals(vec![ProposalStatus::Open]).await?;
+        let open_elect_guest_proposals =
+            filter_map_nns_function_proposals::<UpdateElectedHostosVersionsPayload>(proposals);
+
+        let result = open_elect_guest_proposals
+            .into_iter()
+            .map(
+                |(proposal_info, proposal_payload)| UpdateElectedHostosVersionsProposal {
+                    proposal_id: proposal_info.id.expect("proposal should have an id").id,
+                    version_elect: proposal_payload
+                        .hostos_version_to_elect
+                        .expect("version elect should exist"),
+
+                    versions_unelect: proposal_payload.hostos_versions_to_unelect,
+                },
+            )
+            .sorted_by_key(|p| p.proposal_id)
+            .rev()
+            .collect::<Vec<_>>();
+
+        Ok(result)
+    }
+
+    pub async fn list_open_update_nodes_hostos_versions_proposals(
+        &self,
+    ) -> Result<Vec<UpdateNodesHostosVersionsProposal>> {
+        let proposals = &self.list_proposals(vec![ProposalStatus::Open]).await?;
+        let open_update_nodes_hostos_versions_proposals =
+            filter_map_nns_function_proposals::<UpdateNodesHostosVersionPayload>(proposals);
+
+        let result = open_update_nodes_hostos_versions_proposals
+            .into_iter()
+            .map(|(proposal_info, proposal_payload)| UpdateNodesHostosVersionsProposal {
+                proposal_id: proposal_info.id.expect("proposal should have an id").id,
+                hostos_version_id: proposal_payload.hostos_version_id.expect("version elect should exist"),
+
+                node_ids: proposal_payload.node_ids,
+            })
+            .sorted_by_key(|p| p.proposal_id)
+            .rev()
+            .collect::<Vec<_>>();
 
         Ok(result)
     }
@@ -220,16 +298,17 @@ fn filter_map_nns_function_proposals<T: NnsFunctionProposal + candid::CandidType
 ) -> Vec<(ProposalInfo, T)> {
     proposals
         .iter()
-        .filter(|p| ProposalStatus::from_i32(p.status).expect("unknown proposal status") != ProposalStatus::Rejected)
+        .filter(|p| ProposalStatus::try_from(p.status).expect("unknown proposal status") != ProposalStatus::Rejected)
         .filter_map(|p| {
             p.proposal
                 .as_ref()
                 .and_then(|p| p.action.as_ref())
                 .ok_or_else(|| anyhow::format_err!("no action"))
                 .and_then(|a| match a {
-                    Action::ExecuteNnsFunction(function) => NnsFunction::from_i32(function.nns_function)
-                        .map(|f| (f, function.payload.as_slice()))
-                        .ok_or_else(|| anyhow::format_err!("unknown NNS function")),
+                    Action::ExecuteNnsFunction(function) => {
+                        let func = NnsFunction::try_from(function.nns_function)?;
+                        Ok((func, function.payload.as_slice()))
+                    }
                     _ => Err(anyhow::format_err!("not an NNS function")),
                 })
                 .and_then(|(function_type, function_payload)| {

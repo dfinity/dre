@@ -1,0 +1,28 @@
+name: Bazel
+on: [push]
+jobs:
+  bazel:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Free Disk Space (Ubuntu)
+        uses: jlumbroso/free-disk-space@v1.3.1
+        with:
+          # this might remove tools that are actually needed,
+          # when set to "true" but frees about 6 GB
+          tool-cache: true
+      - uses: actions/checkout@v4
+      - uses: bazelbuild/setup-bazelisk@v2
+      - name: Mount bazel cache
+        uses: actions/cache@v3
+        with:
+          path: "~/.cache/bazel"
+          key: bazel
+      - run: bazel build ...
+      - run: bazel test ...
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - run: bazel query --noshow_progress 'kind("oci_push", ...)' | xargs -I_target bazel run _target -- --tag ${GITHUB_SHA}

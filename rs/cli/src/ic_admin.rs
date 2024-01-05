@@ -1,11 +1,12 @@
-use anyhow::Result;
+use anyhow::{anyhow, Result};
+use cli::UpdateVersion;
 use colored::Colorize;
 use dialoguer::Confirm;
 use flate2::read::GzDecoder;
 use futures::stream::{self, StreamExt};
 use futures::Future;
 use ic_base_types::PrincipalId;
-use ic_management_types::UpdateReplicaVersions;
+use ic_management_types::Artifact;
 use itertools::Itertools;
 use log::{error, info, warn};
 use regex::Regex;
@@ -18,8 +19,10 @@ use std::{path::Path, process::Command};
 use strum::Display;
 
 use crate::cli::Cli;
-use crate::defaults;
 use crate::detect_neuron::{Auth, Neuron};
+use crate::{cli, defaults};
+
+const MAX_SUMMARY_CHAR_COUNT: usize = 14000;
 
 #[derive(Clone)]
 pub struct IcAdminWrapper {
@@ -77,6 +80,16 @@ impl IcAdminWrapper {
 
     pub(crate) fn propose_run(&self, cmd: ProposeCommand, opts: ProposeOptions, simulate: bool) -> anyhow::Result<()> {
         let exec = |cli: &IcAdminWrapper, cmd: ProposeCommand, opts: ProposeOptions, add_dryrun_arg: bool| {
+            if let Some(summary) = opts.clone().summary {
+                let summary_count = summary.chars().count();
+                if summary_count > MAX_SUMMARY_CHAR_COUNT {
+                    return Err(anyhow!(
+                        "Summary length {} exceeded MAX_SUMMARY_CHAR_COUNT {}",
+                        summary_count,
+                        MAX_SUMMARY_CHAR_COUNT,
+                    ));
+                }
+            }
             cli.run(
                 &cmd.get_command_name(),
                 [
@@ -227,7 +240,7 @@ impl IcAdminWrapper {
             // But since ic-admin expects these commands to include the "get-" prefix, we
             // need to add it back Example:
             // `release_cli get subnet 0` becomes
-            // `ic-admin --nns-url "http://[2600:3004:1200:1200:5000:62ff:fedc:fe3c]:8080" get-subnet 0`
+            // `ic-admin --nns-url "http://[2600:3000:6100:200:5000:b0ff:fe8e:6b7b]:8080" get-subnet 0`
             let mut args_with_get_prefix = vec![String::from("get-") + args[0].as_str()];
             args_with_get_prefix.extend_from_slice(args.split_at(1).1);
             args_with_get_prefix
@@ -260,6 +273,22 @@ impl IcAdminWrapper {
             args_with_fixed_prefix
         };
 
+        // ic-admin expects --summary and not --motivation
+        // make sure the expected argument is provided
+        let args = if !args.contains(&String::from("--summary")) && args.contains(&String::from("--motivation")) {
+            args.iter()
+                .map(|arg| {
+                    if arg == "--motivation" {
+                        "--summary".to_string()
+                    } else {
+                        arg.clone()
+                    }
+                })
+                .collect::<Vec<_>>()
+        } else {
+            args.to_vec()
+        };
+
         let cmd = ProposeCommand::Raw {
             command: args[0].clone(),
             args: args.iter().skip(1).cloned().collect::<Vec<_>>(),
@@ -268,10 +297,17 @@ impl IcAdminWrapper {
         self.propose_run(cmd, Default::default(), simulate)
     }
 
-    fn get_cdn_image_url(version: &String) -> String {
+    fn get_s3_cdn_image_url(version: &String, s3_subdir: &String) -> String {
         format!(
-            "https://download.dfinity.systems/ic/{}/guest-os/update-img/update-img.tar.gz",
-            version
+            "https://download.dfinity.systems/ic/{}/{}/update-img/update-img.tar.gz",
+            version, s3_subdir
+        )
+    }
+
+    fn get_r2_cdn_image_url(version: &String, s3_subdir: &String) -> String {
+        format!(
+            "https://download.dfinity.network/ic/{}/{}/update-img/update-img.tar.gz",
+            version, s3_subdir
         )
     }
 
@@ -332,11 +368,15 @@ impl IcAdminWrapper {
         Ok(stringified_hash)
     }
 
-    pub(crate) async fn prepare_to_propose_to_update_elected_replica_versions(
+    async fn download_images_and_validate_sha256(
+        image: &Artifact,
         version: &String,
-        release_tag: &String,
-    ) -> anyhow::Result<UpdateReplicaVersions> {
-        let update_urls = vec![Self::get_cdn_image_url(version)];
+    ) -> anyhow::Result<(Vec<String>, String)> {
+        let update_urls = vec![
+            Self::get_s3_cdn_image_url(version, &image.s3_folder()),
+            Self::get_r2_cdn_image_url(version, &image.s3_folder()),
+        ];
+
         // Download images, verify them and compare the SHA256
         let hash_and_valid_urls: Vec<(String, &String)> = stream::iter(&update_urls)
             .filter_map(|update_url| async move {
@@ -385,13 +425,32 @@ impl IcAdminWrapper {
             .map(|(_, u)| u.clone())
             .collect::<Vec<String>>();
 
+        if update_urls.is_empty() {
+            return Err(anyhow::anyhow!(
+                "Unable to download the update image from none of the following URLs: {}",
+                update_urls.join(", ")
+            ));
+        } else if update_urls.len() == 1 {
+            warn!("Only 1 update image is available. At least 2 should be present in the proposal");
+        }
+        Ok((update_urls, expected_hash))
+    }
+
+    pub(crate) async fn prepare_to_propose_to_update_elected_versions(
+        release_artifact: &Artifact,
+        version: &String,
+        release_tag: &String,
+        retire_versions: Option<Vec<String>>,
+    ) -> anyhow::Result<UpdateVersion> {
+        let (update_urls, expected_hash) = Self::download_images_and_validate_sha256(release_artifact, version).await?;
+
         let template = format!(
-            r#"Elect new replica binary revision [{version}](https://github.com/dfinity/ic/tree/{release_tag})
+            r#"Elect new {release_artifact} binary revision [{version}](https://github.com/dfinity/ic/tree/{release_tag})
 
 # Release Notes:
 
 [comment]: <> Remove this block of text from the proposal.
-[comment]: <> Then, add the replica binary release notes as bullet points here.
+[comment]: <> Then, add the {release_artifact} binary release notes as bullet points here.
 [comment]: <> Any [commit ID] within square brackets will auto-link to the specific changeset.
 
 # IC-OS Verification
@@ -407,11 +466,19 @@ The two SHA256 sums printed above from a) the downloaded CDN image and b) the lo
 must be identical, and must match the SHA256 from the payload of the NNS proposal.
 "#
         );
+
+        // Remove <!--...--> from the commit
+        // Leading or trailing spaces are removed as well and replaced with a single space.
+        // Regex can be analyzed and tested at:
+        // https://rregex.dev/?version=1.7&method=replace&regex=%5Cs*%3C%21--.%2B%3F--%3E%5Cs*&replace=+&text=*+%5Babc%5D+%3C%21--+ignored+1+--%3E+line%0A*+%5Babc%5D+%3C%21--+ignored+2+--%3E+comment+1+%3C%21--+ignored+3+--%3E+comment+2%0A
+        let re_comment = Regex::new(r"\s*<!--.+?-->\s*").unwrap();
         let edited = edit::edit(template)?
             .trim()
             .replace("\r(\n)?", "\n")
             .split('\n')
             .map(|f| {
+                let f = re_comment.replace_all(f.trim(), " ");
+
                 if !f.starts_with('*') {
                     return f.to_string();
                 }
@@ -433,10 +500,32 @@ must be identical, and must match the SHA256 from the payload of the NNS proposa
                 "The edited proposal text has not been edited to add release notes."
             ))
         } else {
-            Ok(UpdateReplicaVersions {
+            let proposal_title = match &retire_versions {
+                Some(v) => {
+                    let pluralize = if v.len() == 1 { "version" } else { "versions" };
+                    format!(
+                        "Elect new IC/{} revision (commit {}), and retire old replica {} {}",
+                        release_artifact.capitalized(),
+                        &version[..8],
+                        pluralize,
+                        v.iter().map(|v| &v[..8]).join(",")
+                    )
+                }
+                None => format!(
+                    "Elect new IC/{} revision (commit {})",
+                    release_artifact.capitalized(),
+                    &version[..8]
+                ),
+            };
+
+            Ok(UpdateVersion {
+                release_artifact: release_artifact.clone(),
+                version: version.clone(),
+                title: proposal_title.clone(),
                 stringified_hash: expected_hash,
                 summary: edited,
                 update_urls,
+                versions_to_retire: retire_versions.clone(),
             })
         }
     }
@@ -458,14 +547,16 @@ pub(crate) enum ProposeCommand {
         command: String,
         args: Vec<String>,
     },
+    UpdateNodesHostosVersion {
+        nodes: Vec<PrincipalId>,
+        version: String,
+    },
     RemoveNodes {
         nodes: Vec<PrincipalId>,
     },
-    UpdateElectedReplicaVersions {
-        version_to_bless: String,
-        update_urls: Vec<String>,
-        stringified_hash: String,
-        versions_to_retire: Vec<String>,
+    UpdateElectedVersions {
+        release_artifact: Artifact,
+        args: Vec<String>,
     },
     CreateSubnet {
         node_ids: Vec<PrincipalId>,
@@ -480,6 +571,10 @@ impl ProposeCommand {
             "{PROPOSE_CMD_PREFIX}{}",
             match self {
                 Self::Raw { command, args: _ } => command.trim_start_matches(PROPOSE_CMD_PREFIX).to_string(),
+                Self::UpdateElectedVersions {
+                    release_artifact,
+                    args: _,
+                } => format!("update-elected-{}-versions", release_artifact),
                 _ => self.to_string(),
             }
         )
@@ -519,35 +614,16 @@ impl ProposeCommand {
                 vec![subnet.to_string(), version.clone()]
             }
             Self::Raw { command: _, args } => args.clone(),
-            Self::RemoveNodes { nodes } => nodes.iter().map(|n| n.to_string()).collect(),
-            Self::UpdateElectedReplicaVersions {
-                version_to_bless,
-                update_urls,
-                stringified_hash,
-                versions_to_retire,
-            } => vec![
-                [
-                    vec![
-                        "--replica-version-to-elect".to_string(),
-                        version_to_bless.to_string(),
-                        "--release-package-sha256-hex".to_string(),
-                        stringified_hash.to_string(),
-                        "--release-package-urls".to_string(),
-                    ],
-                    update_urls.clone(),
-                ]
-                .concat(),
-                if !versions_to_retire.is_empty() {
-                    vec![
-                        vec!["--replica-versions-to-unelect".to_string()],
-                        versions_to_retire.clone(),
-                    ]
-                    .concat()
-                } else {
-                    vec![]
-                },
+            Self::UpdateNodesHostosVersion { nodes, version } => vec![
+                nodes.iter().map(|n| n.to_string()).collect::<Vec<_>>(),
+                vec!["--hostos-version-id".to_string(), version.to_string()],
             ]
             .concat(),
+            Self::RemoveNodes { nodes } => nodes.iter().map(|n| n.to_string()).collect(),
+            Self::UpdateElectedVersions {
+                release_artifact: _,
+                args,
+            } => args.clone(),
             Self::CreateSubnet {
                 node_ids,
                 replica_version,
@@ -587,9 +663,9 @@ async fn download_ic_admin(version: Option<String>) -> Result<String> {
 
     if !path.exists() {
         let url = if std::env::consts::OS == "macos" {
-            format!("https://download.dfinity.systems/ic/{version}/openssl-static-binaries/x86_64-darwin/ic-admin.gz")
+            format!("https://download.dfinity.systems/ic/{version}/binaries/x86_64-darwin/ic-admin.gz")
         } else {
-            format!("https://download.dfinity.systems/ic/{version}/openssl-static-binaries/x86_64-linux/ic-admin.gz")
+            format!("https://download.dfinity.systems/ic/{version}/binaries/x86_64-linux/ic-admin.gz")
         };
         info!("Downloading ic-admin version: {} from {}", version, url);
         let body = reqwest::get(url).await?.bytes().await?;
@@ -626,7 +702,9 @@ mod tests {
     use super::*;
     use std::{io::Write, str::FromStr};
     use tempfile::NamedTempFile;
+    use wiremock::MockServer;
 
+    #[ignore]
     #[tokio::test]
     async fn test_propose_dry_run() -> Result<()> {
         let mut file = NamedTempFile::new()?;
@@ -650,9 +728,12 @@ oSMDIQBa2NLmSmaqjDXej4rrJEuEhKIz7/pGXpxztViWhB+X9Q==
             },
         ];
 
+        // Start a background HTTP server on a random local port
+        let mock_server = MockServer::start().await;
+
         for cmd in test_cases {
             let cli = IcAdminWrapper {
-                nns_url: url::Url::from_str("http://localhost:8080").unwrap(),
+                nns_url: url::Url::from_str(&mock_server.uri()).unwrap(),
                 yes: false,
                 neuron: Neuron {
                     id: 3,

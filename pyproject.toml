@@ -6,7 +6,8 @@ authors = ["Release Team <eng-release@dfinity.org>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = ">=3.8.16,<4"
+python = ">=3.9.0,<4"
+ansible = ">=7.0.0,<9.0.0"
 colorama = "*"
 elasticsearch = "<8.0,>=7.16"
 elasticsearch-dsl = "*"
@@ -26,6 +27,9 @@ pre-commit = "*"
 pylint = "*"
 tenacity = "*"
 poetry = "^1.6.1"
+ic-py = "*"
+mkdocs-material = "^9.4.8"
+mkdocs = "^1.5.3"
 
 
 [tool.poetry.group.dev.dependencies]

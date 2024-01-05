@@ -4,7 +4,7 @@ use backon::Retryable;
 use chrono::serde::ts_seconds;
 use chrono::{Datelike, NaiveDate, NaiveTime, TimeZone, Utc, Weekday};
 use futures_util::future::try_join_all;
-use ic_management_types::{Network, ReplicaRelease, Subnet};
+use ic_management_types::{Network, Release, Subnet};
 use ic_types::PrincipalId;
 use itertools::Itertools;
 use log::info;
@@ -35,8 +35,8 @@ pub struct SubnetUpdate {
     pub subnet_id: PrincipalId,
     pub subnet_name: String,
     pub proposal: Option<SubnetUpdateProposal>,
-    pub patches_available: Vec<ReplicaRelease>,
-    pub replica_release: ReplicaRelease,
+    pub patches_available: Vec<Release>,
+    pub replica_release: Release,
 }
 
 #[derive(Serialize, Clone)]
@@ -78,7 +78,7 @@ impl RolloutStage {
 #[derive(Serialize)]
 pub struct Rollout {
     pub status: RolloutStatus,
-    pub latest_release: ReplicaRelease,
+    pub latest_release: Release,
     pub stages: Vec<RolloutStage>,
 }
 
@@ -143,7 +143,7 @@ pub struct RolloutBuilder {
     pub proposal_agent: ProposalAgent,
     pub prometheus_client: prometheus_http_query::Client,
     pub subnets: BTreeMap<PrincipalId, Subnet>,
-    pub releases: Vec<ReplicaRelease>,
+    pub releases: Vec<Release>,
     pub network: Network,
 }
 
@@ -160,7 +160,7 @@ impl RolloutBuilder {
             .into_iter()
             .rev()
             .fold(vec![], |mut acc, r| {
-                if acc.len() < MAX_ROLLOUTS && acc.last().map(|l: &ReplicaRelease| l.name != r.name).unwrap_or(true) {
+                if acc.len() < MAX_ROLLOUTS && acc.last().map(|l: &Release| l.name != r.name).unwrap_or(true) {
                     acc.push(r);
                 }
                 acc
@@ -186,7 +186,7 @@ impl RolloutBuilder {
 
     async fn new_for_release(
         &self,
-        release: ReplicaRelease,
+        release: Release,
         subnet_update_proposals: Vec<SubnetUpdateProposal>,
     ) -> Result<Rollout> {
         let config: RolloutConfig =
@@ -267,7 +267,7 @@ impl RolloutBuilder {
         })
     }
 
-    fn create_subnet_update(&self, s: &Subnet, release: &ReplicaRelease) -> SubnetUpdate {
+    fn create_subnet_update(&self, s: &Subnet, release: &Release) -> SubnetUpdate {
         SubnetUpdate {
             state: SubnetUpdateState::Scheduled,
             subnet_id: s.principal,
@@ -285,7 +285,7 @@ impl RolloutBuilder {
 
     async fn stages_from_proposals(
         &self,
-        release: &ReplicaRelease,
+        release: &Release,
         subnet_update_proposals: Vec<SubnetUpdateProposal>,
     ) -> Result<Vec<RolloutStage>> {
         const ROLLOUT_BATCH_PROPOSAL_LAG_TOLERANCE_SECONDS: u64 = 60 * 30;
@@ -578,7 +578,7 @@ impl RolloutState {
 async fn get_update_states(
     network: &Network,
     prometheus_client: &prometheus_http_query::Client,
-    release: &ReplicaRelease,
+    release: &Release,
     since: chrono::DateTime<Utc>,
 ) -> Result<BTreeMap<PrincipalId, SubnetUpdateState>> {
     const STATE_FIELD: &str = "state";
@@ -679,7 +679,7 @@ pub async fn list_subnets_release_statuses(
     prometheus_client: &prometheus_http_query::Client,
     network: Network,
     subnets: BTreeMap<PrincipalId, Subnet>,
-    releases: Vec<ReplicaRelease>,
+    releases: Vec<Release>,
 ) -> anyhow::Result<Vec<SubnetUpdate>> {
     let mut subnet_update_proposals = proposal_agent.list_update_subnet_version_proposals().await?;
     subnet_update_proposals.sort_by_key(|p| p.info.proposal_timestamp_seconds);

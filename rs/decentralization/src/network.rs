@@ -149,6 +149,10 @@ struct ReplacementCandidate {
 }
 
 impl DecentralizedSubnet {
+    pub fn with_subnet_id(self, subnet_id: PrincipalId) -> Self {
+        Self { id: subnet_id, ..self }
+    }
+
     /// Return a new instance of a DecentralizedSubnet that does not contain the
     /// provided nodes.
     pub fn without_nodes(&self, nodes: Vec<Node>) -> Result<Self, NetworkError> {
@@ -251,6 +255,7 @@ impl DecentralizedSubnet {
 
         let nakamoto_scores = Self::_calc_nakamoto_score(nodes);
         let subnet_id_str = subnet_id.to_string();
+        let is_european_subnet = subnet_id_str == *"bkfrj-6k62g-dycql-7h53p-atvkj-zg4to-gaogh-netha-ptybj-ntsgw-rqe";
 
         let dfinity_owned_nodes_count: usize = nodes.iter().map(|n| n.dfinity_owned as usize).sum();
         let target_dfinity_owned_nodes_count =
@@ -305,6 +310,28 @@ impl DecentralizedSubnet {
             }
         }
 
+        if is_european_subnet {
+            // European subnet should only take European nodes.
+            let continent_counts = nakamoto_scores.feature_value_counts(&NodeFeature::Continent);
+            let non_european_nodes_count = continent_counts
+                .iter()
+                .filter_map(|(continent, count)| {
+                    if continent == &"Europe".to_string() {
+                        None
+                    } else {
+                        Some(*count)
+                    }
+                })
+                .sum::<usize>();
+            if non_european_nodes_count > 0 {
+                checks.push(format!(
+                    "European subnet has {} non-European node(s)",
+                    non_european_nodes_count
+                ));
+                penalties += non_european_nodes_count * 1000;
+            }
+        }
+
         match nakamoto_scores.score_feature(&NodeFeature::NodeProvider) {
             Some(score) => {
                 if score <= 1.0 && nodes.len() > 3 {
@@ -347,7 +374,9 @@ impl DecentralizedSubnet {
                 nakamoto_scores.controlled_nodes(feature),
             ) {
                 (Some(score), Some(controlled_nodes)) => {
-                    if score == 1.0 && controlled_nodes > nodes.len() * 2 / 3 {
+                    let european_subnet_continent_penalty = is_european_subnet && feature == &NodeFeature::Continent;
+
+                    if score == 1.0 && controlled_nodes > nodes.len() * 2 / 3 && !european_subnet_continent_penalty {
                         checks.push(format!(
                             "NodeFeature '{}' controls {} of nodes, which is > {} (2/3 of all) nodes",
                             feature,
@@ -797,7 +826,7 @@ pub trait TopologyManager: SubnetQuerier + AvailableNodesQuerier {
     }
 }
 
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Debug)]
 pub struct SubnetChangeRequest {
     subnet: DecentralizedSubnet,
     available_nodes: Vec<Node>,

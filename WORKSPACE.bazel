@@ -1,5 +1,5 @@
 workspace(
-    name = "release",
+    name = "dre",
 )
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive", "http_file")
@@ -35,11 +35,11 @@ load("@rules_python//python/pip_install:pip_repository.bzl", "package_annotation
 py_repositories()
 
 python_register_toolchains(
-    name = "python3_8",
-    python_version = "3.8.16",
+    name = "python3_11",
+    python_version = "3.11.1",
 )
 
-load("@python3_8//:defs.bzl", "interpreter")
+load("@python3_11//:defs.bzl", "interpreter")
 load("@rules_python//python:pip.bzl", "pip_parse")
 
 pip_parse(
@@ -47,6 +47,11 @@ pip_parse(
     annotations = {
         "poetry-plugin-export": package_annotation(
             excluded_deps = ["poetry"],
+        ),
+        "ansible-base": package_annotation(
+            additive_build_content = '''
+exports_files(["bin/ansible-inventory"])
+            ''',
         ),
     },
     python_interpreter_target = interpreter,
@@ -57,11 +62,11 @@ load("@python_deps//:requirements.bzl", "install_deps")
 
 install_deps()
 
-IC_REPO_VERSION = "abac636d8a281a1e7600d876aaed10f7ce7e5040"
+IC_REPO_VERSION = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca"
 
 http_archive(
     name = "ic_repo",
-    sha256 = "1b85209dcf456defc25ecb7f4710327ff64eaed94bff36dc5748f5bb96823400",
+    sha256 = "34426b59612b23357799be48aed82870d298f7dbee96c9792ee3fe744ad2c2e3",
     strip_prefix = "ic-{}".format(IC_REPO_VERSION),
     url = "https://github.com/dfinity/ic/archive/{}.tar.gz".format(IC_REPO_VERSION),
 )
@@ -94,7 +99,7 @@ load("//bazel:external_crates.bzl", "external_crates_repository")
 
 external_crates_repository()
 
-load("@crate_index_release//:defs.bzl", "crate_repositories")
+load("@crate_index_dre//:defs.bzl", "crate_repositories")
 
 crate_repositories()
 
@@ -102,7 +107,7 @@ http_file(
     name = "ic-icrc1-archive",
     downloaded_file_path = "ic-icrc1-archive.wasm.gz",
     sha256 = "1b85209dcf456defc25ecb7f4710327ff64eaed94bff36dc5748f5bb96823400",
-    url = "https://download.dfinity.systems/ic/abac636d8a281a1e7600d876aaed10f7ce7e5040/canisters/ic-icrc1-archive.wasm.gz",
+    url = "https://download.dfinity.systems/ic/4b3b2ce76c4bde0c1c60fb80b0915931003b7eca/canisters/ic-icrc1-archive.wasm.gz",
 )
 
 http_archive(
@@ -157,7 +162,6 @@ load("@rules_oci//oci:repositories.bzl", "LATEST_CRANE_VERSION", "LATEST_ZOT_VER
 oci_register_toolchains(
     name = "oci",
     crane_version = LATEST_CRANE_VERSION,
-    zot_version = LATEST_ZOT_VERSION,
 )
 
 load("@rules_oci//oci:pull.bzl", "oci_pull")
@@ -170,6 +174,20 @@ oci_pull(
         "linux/amd64",
         "linux/arm64",
     ],
+)
+
+oci_pull(
+    # tag = 0.34.1-distroless-libc
+    name = "vector",
+    digest = "sha256:4447025bc3a99b3a96ed0352e990c44040784590de5a1ea8e4e5b75b76a16665",
+    image = "index.docker.io/timberio/vector",
+)
+
+oci_pull(
+    # tag = "2.43.0-debian-11-r1",
+    name = "bitnami_git_docker_img",
+    digest = "sha256:a8e11f1fdcb57ef7b2ab12995bb28b9060e7dbffa17f75136f523e92f6f270e0",
+    image = "index.docker.io/bitnami/git",
 )
 
 http_archive(

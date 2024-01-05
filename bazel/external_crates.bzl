@@ -2,7 +2,7 @@ load("@rules_rust//crate_universe:defs.bzl", "crate", "crates_repository", "spli
 
 def external_crates_repository():
     crates_repository(
-        name = "crate_index_release",
+        name = "crate_index_dre",
         annotations = {
             "ic-icrc1-ledger": [crate.annotation(
                 build_script_data = [
@@ -49,13 +49,14 @@ def external_crates_repository():
         lockfile = "//:Cargo.Bazel.lock",
         manifests = [
             "//:Cargo.toml",
-            "//:rs/cli/Cargo.toml",
-            "//:rs/decentralization/Cargo.toml",
-            "//:rs/ic-management-backend/Cargo.toml",
-            "//:rs/np-notifications/Cargo.toml",
-            "//:rs/slack-notifications/Cargo.toml",
-            "//rs/ic-management-types:Cargo.toml",
-            "//:rs/canisters/node_status_canister/src/node_status_canister_backend/Cargo.toml",
+	    "//rs/cli:Cargo.toml",
+	    "//rs/decentralization:Cargo.toml",
+	    "//rs/ic-management-backend:Cargo.toml",
+	    "//rs/ic-management-types:Cargo.toml",
+	    "//rs/log-fetcher:Cargo.toml",
+	    "//rs/np-notifications:Cargo.toml",
+	    "//rs/slack-notifications:Cargo.toml",
+	    "//rs/canisters/node_status_canister/src/node_status_canister_backend:Cargo.toml",
         ],
         splicing_config = splicing_config(
             resolver_version = "2",
