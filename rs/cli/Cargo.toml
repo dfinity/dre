@@ -1,8 +1,11 @@
 [package]
-name = "release_cli"
-version = "0.1.0"
-edition = "2021"
+name = "dre"
 build = "build.rs"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+description.workspace = true
+documentation.workspace = true
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -60,7 +63,10 @@ sha2 = "0.10.6"
 edit = "0.1.4"
 tabular = "0.2"
 ic-agent = "0.27.0"
-actix-web = { version = "4.2.1", default-features = false, features = ["compress-gzip", "macros"] }
+actix-web = { version = "4.2.1", default-features = false, features = [
+    "compress-gzip",
+    "macros",
+] }
 dotenv = "0.15.0"
 socket2 = "0.5.4"
 spinners = "4.1.0"

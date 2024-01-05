@@ -1,7 +1,10 @@
 [package]
 name = "ic-management-types"
-version = "0.1.0"
-edition = "2021"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+description.workspace = true
+documentation.workspace = true
 
 [dependencies]
 actix-web = { version = "4.2.1", default-features = false, features = [
