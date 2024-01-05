@@ -16,7 +16,11 @@ jobs:
         uses: actions/cache@v3
         with:
           path: "~/.cache/bazel"
-          key: bazel
+          # Update cache on every run
+          # https://github.com/actions/cache/blob/main/tips-and-workarounds.md#update-a-cache
+          key: bazel-${{ runner.os }}-${{ github.run_id }}
+          restore-keys: |
+            bazel-${{ runner.os }}
       - run: bazel build ...
       - run: bazel test ...
       - name: Login to GitHub Container Registry
