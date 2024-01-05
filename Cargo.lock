@@ -3495,19 +3495,6 @@ dependencies = [
 
 [[package]]
 name = "ic-cdk"
-version = "0.7.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9beb0bf1dcd0639c313630e34aa547a2b19450ddf1969c176e13225ef3b29048"
-dependencies = [
- "candid 0.8.4",
- "ic-cdk-macros 0.6.10",
- "ic0",
- "serde",
- "serde_bytes",
-]
-
-[[package]]
-name = "ic-cdk"
 version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "08d4c0b932bf454d5d60e61e13c3c944972fcfd74dc82b9ed5c8b0a75979cf50"
@@ -3554,7 +3541,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "198e55e4d9e069903fbea1dceae6fd28f7e0b38d5a4e1026ed2c772e1d55f5e0"
 dependencies = [
  "futures",
- "ic-cdk 0.10.0",
+ "ic-cdk",
  "ic0",
  "serde",
  "serde_bytes",
@@ -4059,7 +4046,7 @@ dependencies = [
  "ic-base-types",
  "ic-canister-profiler",
  "ic-canisters-http-types",
- "ic-cdk 0.10.0",
+ "ic-cdk",
  "ic-cdk-macros 0.7.1",
  "ic-cdk-timers",
  "ic-icrc1",
@@ -4085,7 +4072,7 @@ dependencies = [
  "ic-base-types",
  "ic-canister-log",
  "ic-canisters-http-types",
- "ic-cdk 0.10.0",
+ "ic-cdk",
  "ic-cdk-macros 0.7.1",
  "ic-crypto-tree-hash",
  "ic-icrc1",
@@ -4471,7 +4458,7 @@ dependencies = [
  "dfn_candid",
  "dfn_core",
  "ic-base-types",
- "ic-cdk 0.10.0",
+ "ic-cdk",
  "ic-crypto-sha2",
  "ic-ic00-types",
  "ic-nervous-system-clients",
@@ -4495,7 +4482,7 @@ dependencies = [
  "dfn_candid",
  "dfn_core",
  "ic-base-types",
- "ic-cdk 0.10.0",
+ "ic-cdk",
 ]
 
 [[package]]
@@ -4947,7 +4934,7 @@ dependencies = [
  "ic-base-types",
  "ic-canister-log",
  "ic-canisters-http-types",
- "ic-cdk 0.10.0",
+ "ic-cdk",
  "ic-cdk-macros 0.7.1",
  "ic-ic00-types",
  "ic-metrics-encoder",
@@ -5010,7 +4997,7 @@ dependencies = [
  "futures",
  "hex",
  "ic-base-types",
- "ic-cdk 0.10.0",
+ "ic-cdk",
  "ic-crypto-sha2",
  "ic-ic00-types",
  "ic-metrics-encoder",
@@ -5929,7 +5916,7 @@ name = "node_status_canister_backend"
 version = "0.1.0"
 dependencies = [
  "candid 0.8.4",
- "ic-cdk 0.7.4",
+ "ic-cdk",
  "ic-cdk-macros 0.6.10",
  "serde",
 ]
@@ -7109,7 +7096,7 @@ dependencies = [
  "dfn_http_metrics",
  "futures",
  "ic-base-types",
- "ic-cdk 0.10.0",
+ "ic-cdk",
  "ic-certified-map",
  "ic-crypto-node-key-validation",
  "ic-crypto-sha2",
