@@ -1,0 +1,7 @@
+[workspace]
+
+members = [
+    "src/node_status_canister_backend",
+]
+
+resolver = "2"
