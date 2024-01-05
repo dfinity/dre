@@ -106,7 +106,7 @@ crate_repositories()
 http_file(
     name = "ic-icrc1-archive",
     downloaded_file_path = "ic-icrc1-archive.wasm.gz",
-    sha256 = "1b85209dcf456defc25ecb7f4710327ff64eaed94bff36dc5748f5bb96823400",
+    sha256 = "46aac8f1db925e166a1d8fc45ff33505a41afb6f9ba0581028b76199e0a07727",
     url = "https://download.dfinity.systems/ic/4b3b2ce76c4bde0c1c60fb80b0915931003b7eca/canisters/ic-icrc1-archive.wasm.gz",
 )
 
