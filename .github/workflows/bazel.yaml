@@ -16,8 +16,9 @@ jobs:
         uses: actions/cache@v3
         with:
           path: "~/.cache/bazel"
-          # Update cache on every run
+          # Configure cache updates
           # https://github.com/actions/cache/blob/main/tips-and-workarounds.md#update-a-cache
+          # https://github.com/actions/cache/blob/main/examples.md#---bazel 
           key: ${{ runner.os }}-bazel-${{ hashFiles('.bazelversion', '.bazelrc', 'WORKSPACE', 'WORKSPACE.bazel', 'MODULE.bazel', 'Cargo.Bazel.lock') }}
           restore-keys: |
             ${{ runner.os }}-bazel-
