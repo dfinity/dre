@@ -17,6 +17,8 @@ jobs:
         with:
           path: "~/.cache/bazel"
           key: bazel
+      - name: Clean bazel cache entries before running it, so that the new run regenerates erroneously deleted entries
+        run: bin/clean-bazel-cache.sh
       - run: bazel build ...
       - run: bazel test ...
       - name: Login to GitHub Container Registry
