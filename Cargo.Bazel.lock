@@ -1,5 +1,5 @@
 {
-  "checksum": "5e781c68cde023989824b2828fcb47e5a2acd46564630a93f7bcd189454d63b4",
+  "checksum": "7712f6499daf083849818d41445ea6f2a01b6c22cfbb5d82a26944589d0ca589",
   "crates": {
     "actix 0.13.1": {
       "name": "actix",
@@ -11333,6 +11333,235 @@
         "version": "0.11.0"
       },
       "license": "MIT"
+    },
+    "dre 0.1.0": {
+      "name": "dre",
+      "version": "0.1.0",
+      "repository": null,
+      "targets": [
+        {
+          "BuildScript": {
+            "crate_name": "build_script_build",
+            "crate_root": "build.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": null,
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "actix-web 4.4.1",
+              "target": "actix_web"
+            },
+            {
+              "id": "anyhow 1.0.79",
+              "target": "anyhow"
+            },
+            {
+              "id": "candid 0.9.11",
+              "target": "candid"
+            },
+            {
+              "id": "chrono 0.4.31",
+              "target": "chrono"
+            },
+            {
+              "id": "clap 4.4.13",
+              "target": "clap"
+            },
+            {
+              "id": "clap-num 1.0.2",
+              "target": "clap_num"
+            },
+            {
+              "id": "colored 2.1.0",
+              "target": "colored"
+            },
+            {
+              "id": "cryptoki 0.3.1",
+              "target": "cryptoki"
+            },
+            {
+              "id": "dialoguer 0.10.4",
+              "target": "dialoguer"
+            },
+            {
+              "id": "dirs 5.0.1",
+              "target": "dirs"
+            },
+            {
+              "id": "dotenv 0.15.0",
+              "target": "dotenv"
+            },
+            {
+              "id": "dre 0.1.0",
+              "target": "build_script_build"
+            },
+            {
+              "id": "edit 0.1.5",
+              "target": "edit"
+            },
+            {
+              "id": "flate2 1.0.28",
+              "target": "flate2"
+            },
+            {
+              "id": "futures 0.3.30",
+              "target": "futures"
+            },
+            {
+              "id": "ic-agent 0.27.0",
+              "target": "ic_agent"
+            },
+            {
+              "id": "ic-base-types 0.9.0",
+              "target": "ic_base_types"
+            },
+            {
+              "id": "ic-canister-client 0.9.0",
+              "target": "ic_canister_client"
+            },
+            {
+              "id": "ic-nns-constants 0.9.0",
+              "target": "ic_nns_constants"
+            },
+            {
+              "id": "ic-nns-governance 0.9.0",
+              "target": "ic_nns_governance"
+            },
+            {
+              "id": "ic-protobuf 0.9.0",
+              "target": "ic_protobuf"
+            },
+            {
+              "id": "ic-registry-keys 0.9.0",
+              "target": "ic_registry_keys"
+            },
+            {
+              "id": "ic-registry-nns-data-provider 0.9.0",
+              "target": "ic_registry_nns_data_provider"
+            },
+            {
+              "id": "ic-registry-transport 0.9.0",
+              "target": "ic_registry_transport"
+            },
+            {
+              "id": "ic-sys 0.9.0",
+              "target": "ic_sys"
+            },
+            {
+              "id": "itertools 0.11.0",
+              "target": "itertools"
+            },
+            {
+              "id": "keyring 2.3.1",
+              "target": "keyring"
+            },
+            {
+              "id": "log 0.4.20",
+              "target": "log"
+            },
+            {
+              "id": "pretty_env_logger 0.5.0",
+              "target": "pretty_env_logger"
+            },
+            {
+              "id": "prost 0.12.3",
+              "target": "prost"
+            },
+            {
+              "id": "regex 1.10.2",
+              "target": "regex"
+            },
+            {
+              "id": "reqwest 0.11.23",
+              "target": "reqwest"
+            },
+            {
+              "id": "serde 1.0.194",
+              "target": "serde"
+            },
+            {
+              "id": "serde_json 1.0.111",
+              "target": "serde_json"
+            },
+            {
+              "id": "sha2 0.10.8",
+              "target": "sha2"
+            },
+            {
+              "id": "socket2 0.5.5",
+              "target": "socket2"
+            },
+            {
+              "id": "spinners 4.1.1",
+              "target": "spinners"
+            },
+            {
+              "id": "strum 0.25.0",
+              "target": "strum"
+            },
+            {
+              "id": "tabled 0.14.0",
+              "target": "tabled"
+            },
+            {
+              "id": "tabular 0.2.0",
+              "target": "tabular"
+            },
+            {
+              "id": "tokio 1.35.1",
+              "target": "tokio"
+            },
+            {
+              "id": "url 2.5.0",
+              "target": "url"
+            }
+          ],
+          "selects": {}
+        },
+        "deps_dev": {
+          "common": [
+            {
+              "id": "tempfile 3.9.0",
+              "target": "tempfile"
+            },
+            {
+              "id": "wiremock 0.5.22",
+              "target": "wiremock"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "proc_macro_deps": {
+          "common": [
+            {
+              "id": "async-trait 0.1.77",
+              "target": "async_trait"
+            },
+            {
+              "id": "strum_macros 0.25.3",
+              "target": "strum_macros"
+            }
+          ],
+          "selects": {}
+        },
+        "version": "0.1.0"
+      },
+      "build_script_attrs": {
+        "data_glob": [
+          "**"
+        ]
+      },
+      "license": null
     },
     "dyn-clone 1.0.16": {
       "name": "dyn-clone",
@@ -36043,235 +36272,6 @@
       },
       "license": null
     },
-    "release_cli 0.1.0": {
-      "name": "release_cli",
-      "version": "0.1.0",
-      "repository": null,
-      "targets": [
-        {
-          "BuildScript": {
-            "crate_name": "build_script_build",
-            "crate_root": "build.rs",
-            "srcs": [
-              "**/*.rs"
-            ]
-          }
-        }
-      ],
-      "library_target_name": null,
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "actix-web 4.4.1",
-              "target": "actix_web"
-            },
-            {
-              "id": "anyhow 1.0.79",
-              "target": "anyhow"
-            },
-            {
-              "id": "candid 0.9.11",
-              "target": "candid"
-            },
-            {
-              "id": "chrono 0.4.31",
-              "target": "chrono"
-            },
-            {
-              "id": "clap 4.4.13",
-              "target": "clap"
-            },
-            {
-              "id": "clap-num 1.0.2",
-              "target": "clap_num"
-            },
-            {
-              "id": "colored 2.1.0",
-              "target": "colored"
-            },
-            {
-              "id": "cryptoki 0.3.1",
-              "target": "cryptoki"
-            },
-            {
-              "id": "dialoguer 0.10.4",
-              "target": "dialoguer"
-            },
-            {
-              "id": "dirs 5.0.1",
-              "target": "dirs"
-            },
-            {
-              "id": "dotenv 0.15.0",
-              "target": "dotenv"
-            },
-            {
-              "id": "edit 0.1.5",
-              "target": "edit"
-            },
-            {
-              "id": "flate2 1.0.28",
-              "target": "flate2"
-            },
-            {
-              "id": "futures 0.3.30",
-              "target": "futures"
-            },
-            {
-              "id": "ic-agent 0.27.0",
-              "target": "ic_agent"
-            },
-            {
-              "id": "ic-base-types 0.9.0",
-              "target": "ic_base_types"
-            },
-            {
-              "id": "ic-canister-client 0.9.0",
-              "target": "ic_canister_client"
-            },
-            {
-              "id": "ic-nns-constants 0.9.0",
-              "target": "ic_nns_constants"
-            },
-            {
-              "id": "ic-nns-governance 0.9.0",
-              "target": "ic_nns_governance"
-            },
-            {
-              "id": "ic-protobuf 0.9.0",
-              "target": "ic_protobuf"
-            },
-            {
-              "id": "ic-registry-keys 0.9.0",
-              "target": "ic_registry_keys"
-            },
-            {
-              "id": "ic-registry-nns-data-provider 0.9.0",
-              "target": "ic_registry_nns_data_provider"
-            },
-            {
-              "id": "ic-registry-transport 0.9.0",
-              "target": "ic_registry_transport"
-            },
-            {
-              "id": "ic-sys 0.9.0",
-              "target": "ic_sys"
-            },
-            {
-              "id": "itertools 0.11.0",
-              "target": "itertools"
-            },
-            {
-              "id": "keyring 2.3.1",
-              "target": "keyring"
-            },
-            {
-              "id": "log 0.4.20",
-              "target": "log"
-            },
-            {
-              "id": "pretty_env_logger 0.5.0",
-              "target": "pretty_env_logger"
-            },
-            {
-              "id": "prost 0.12.3",
-              "target": "prost"
-            },
-            {
-              "id": "regex 1.10.2",
-              "target": "regex"
-            },
-            {
-              "id": "release_cli 0.1.0",
-              "target": "build_script_build"
-            },
-            {
-              "id": "reqwest 0.11.23",
-              "target": "reqwest"
-            },
-            {
-              "id": "serde 1.0.194",
-              "target": "serde"
-            },
-            {
-              "id": "serde_json 1.0.111",
-              "target": "serde_json"
-            },
-            {
-              "id": "sha2 0.10.8",
-              "target": "sha2"
-            },
-            {
-              "id": "socket2 0.5.5",
-              "target": "socket2"
-            },
-            {
-              "id": "spinners 4.1.1",
-              "target": "spinners"
-            },
-            {
-              "id": "strum 0.25.0",
-              "target": "strum"
-            },
-            {
-              "id": "tabled 0.14.0",
-              "target": "tabled"
-            },
-            {
-              "id": "tabular 0.2.0",
-              "target": "tabular"
-            },
-            {
-              "id": "tokio 1.35.1",
-              "target": "tokio"
-            },
-            {
-              "id": "url 2.5.0",
-              "target": "url"
-            }
-          ],
-          "selects": {}
-        },
-        "deps_dev": {
-          "common": [
-            {
-              "id": "tempfile 3.9.0",
-              "target": "tempfile"
-            },
-            {
-              "id": "wiremock 0.5.22",
-              "target": "wiremock"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2021",
-        "proc_macro_deps": {
-          "common": [
-            {
-              "id": "async-trait 0.1.77",
-              "target": "async_trait"
-            },
-            {
-              "id": "strum_macros 0.25.3",
-              "target": "strum_macros"
-            }
-          ],
-          "selects": {}
-        },
-        "version": "0.1.0"
-      },
-      "build_script_attrs": {
-        "data_glob": [
-          "**"
-        ]
-      },
-      "license": null
-    },
     "rend 0.4.1": {
       "name": "rend",
       "version": "0.4.1",
@@ -48794,13 +48794,13 @@
   "binary_crates": [],
   "workspace_members": {
     "decentralization 0.1.0": "rs/decentralization",
+    "dre 0.1.0": "rs/cli",
     "ic-canisters 0.1.0": "rs/ic-canisters",
     "ic-management-backend 0.1.0": "rs/ic-management-backend",
     "ic-management-types 0.1.0": "rs/ic-management-types",
     "log-fetcher 0.1.0": "rs/log-fetcher",
     "node_status_canister_backend 0.1.0": "rs/canisters/node_status_canister/src/node_status_canister_backend",
     "np-notifications 0.1.0": "rs/np-notifications",
-    "release_cli 0.1.0": "rs/cli",
     "slack-notifications 0.1.0": "rs/slack-notifications"
   },
   "conditions": {
