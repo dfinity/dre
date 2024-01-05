@@ -28,7 +28,7 @@ serde_yaml = "0.9.11"
 reqwest = { version = "0.11.4", features = ["json"] }
 async-trait = "0.1.52"
 async-recursion = "1.0.5"
-enum-map = "1.1.1"
+enum-map = "2.7.3"
 either = "1.6.1"
 ic-interfaces-registry = { git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca" }
 ic-protobuf = { git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca" }
