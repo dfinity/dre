@@ -64,7 +64,7 @@ counter = "0.5.2"
 rand = "0.8.4"
 phantom_newtype = { git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca" }
 decentralization = { path = "../decentralization" }
-prometheus-http-query = "0.4.0"
+prometheus-http-query = "0.8.2"
 ic-registry-client = { git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca" }
 ic-registry-client-fake = { git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca" }
 ic-registry-client-helpers = { git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca" }
