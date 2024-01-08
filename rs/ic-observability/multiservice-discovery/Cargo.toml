@@ -1,0 +1,36 @@
+[package]
+name = "multiservice-discovery"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+tokio = { version = "1.35.1", features = ["full"] }
+url = "2.2.2"
+service-discovery = { path = "../service-discovery" }
+slog = { version = "2.7.0", features = [
+  "max_level_trace",
+  "nested-values",
+  "release_max_level_debug",
+  "release_max_level_trace",
+] }
+slog-async = { version = "2.5", features = ["nested-values"] }
+slog-term = "2.6.0"
+ic-registry-client = { git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca" }
+ic-async-utils = { git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca" }
+futures-util = "0.3.5"
+clap = { version = "4.3.0", features = ["derive"] }
+crossbeam = "0.8.0"
+crossbeam-channel = "0.5.5"
+humantime = "2.0"
+warp = "0.3"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = { version = "1.0.107", features = ["std"] }
+ic-utils = { git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca" }
+erased-serde = "0.3.23"
+regex = "1.7.0"
+ic-types ={ git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca" }
+multiservice-discovery-shared = {path = "../multiservice-discovery-shared"}
+ic-crypto-utils-threshold-sig-der = { git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca" }
+base64 = "0.13.1"
