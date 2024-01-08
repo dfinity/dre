@@ -13,7 +13,7 @@ registry-canister = { git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce7
 tokio = { version = "1.2.0", features = ["full"] }
 ic-agent = "0.27.0"
 ic-types = "0.7.0"
-candid = "0.9.5"
+candid = "0.9.11"
 anyhow = "1.0.44"
 reqwest = { version = "0.11.4", features = ["json"] }
 serde = "1.0.130"

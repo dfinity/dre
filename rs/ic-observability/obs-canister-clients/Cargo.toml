@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 ic-agent = { version = "0.30.2", features = ["hyper"] }
-candid = { version = "0.9.10", features = ["parser"] }
+candid = { version = "0.9.11", features = ["parser"] }
 serde = { version = "1.0", features = ["derive"] }
 rand = "0.8"
 url = "2.2.2"
