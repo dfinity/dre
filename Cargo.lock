@@ -1542,6 +1542,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "config-writer-common"
+version = "0.1.0"
+dependencies = [
+ "crossbeam",
+ "crossbeam-channel",
+ "erased-serde",
+ "ic-types 0.9.0",
+ "ic-utils 0.9.0",
+ "regex",
+ "serde",
+ "serde_derive",
+ "serde_json",
+ "service-discovery",
+ "slog",
+ "slog-async",
+ "slog-term",
+ "url",
+]
+
+[[package]]
 name = "console"
 version = "0.15.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1641,6 +1661,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "crossbeam"
+version = "0.8.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6eb9105919ca8e40d437fc9cbb8f1975d916f1bd28afe795a48aae32a2cc8920"
+dependencies = [
+ "cfg-if",
+ "crossbeam-channel",
+ "crossbeam-deque",
+ "crossbeam-epoch",
+ "crossbeam-queue",
+ "crossbeam-utils",
+]
+
+[[package]]
 name = "crossbeam-channel"
 version = "0.5.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1668,6 +1702,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0e3681d554572a651dda4186cd47240627c3d0114d45a95f6ad27f2f22e7548d"
 dependencies = [
  "autocfg",
+ "cfg-if",
+ "crossbeam-utils",
+]
+
+[[package]]
+name = "crossbeam-queue"
+version = "0.3.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "adc6598521bb5a83d491e8c1fe51db7296019d2ca3cb93cc6c2a20369a4d78a2"
+dependencies = [
  "cfg-if",
  "crossbeam-utils",
 ]
@@ -2952,6 +2996,30 @@ dependencies = [
 ]
 
 [[package]]
+name = "headers"
+version = "0.3.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "06683b93020a07e3dbcf5f8c0f6d40080d725bea7936fc01ad345c01b97dc270"
+dependencies = [
+ "base64 0.21.5",
+ "bytes",
+ "headers-core",
+ "http",
+ "httpdate",
+ "mime",
+ "sha1",
+]
+
+[[package]]
+name = "headers-core"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e7f66481bfee273957b1f20485a4ff3362987f85b2c236580d81b4eb7a326429"
+dependencies = [
+ "http",
+]
+
+[[package]]
 name = "heck"
 version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3135,6 +3203,7 @@ dependencies = [
  "rustls-native-certs",
  "tokio",
  "tokio-rustls",
+ "webpki-roots",
 ]
 
 [[package]]
@@ -3261,6 +3330,8 @@ dependencies = [
  "hex",
  "http",
  "http-body",
+ "hyper",
+ "hyper-rustls",
  "ic-certification 1.3.0",
  "ic-transport-types",
  "ic-verify-bls-signature",
@@ -3930,7 +4001,22 @@ dependencies = [
  "ic-protobuf",
  "ic-types 0.9.0",
  "serde",
- "x509-parser",
+ "x509-parser 0.14.0",
+]
+
+[[package]]
+name = "ic-crypto-tls-interfaces"
+version = "0.9.0"
+source = "git+https://github.com/dfinity/ic.git?rev=4b3b2ce76c4bde0c1c60fb80b0915931003b7eca#4b3b2ce76c4bde0c1c60fb80b0915931003b7eca"
+dependencies = [
+ "async-trait",
+ "ic-crypto-sha2",
+ "ic-protobuf",
+ "ic-types 0.9.0",
+ "serde",
+ "tokio",
+ "tokio-rustls",
+ "x509-parser 0.15.1",
 ]
 
 [[package]]
@@ -4005,6 +4091,27 @@ dependencies = [
  "serde",
  "strum 0.25.0",
  "strum_macros 0.25.3",
+]
+
+[[package]]
+name = "ic-http-endpoints-metrics"
+version = "0.9.0"
+source = "git+https://github.com/dfinity/ic.git?rev=4b3b2ce76c4bde0c1c60fb80b0915931003b7eca#4b3b2ce76c4bde0c1c60fb80b0915931003b7eca"
+dependencies = [
+ "hyper",
+ "ic-async-utils",
+ "ic-config",
+ "ic-crypto-tls-interfaces",
+ "ic-interfaces-registry",
+ "ic-metrics",
+ "ic-types 0.9.0",
+ "prometheus",
+ "serde",
+ "slog",
+ "thiserror",
+ "tokio",
+ "tokio-io-timeout",
+ "tower",
 ]
 
 [[package]]
@@ -4290,7 +4397,7 @@ dependencies = [
  "lazy_static",
  "log",
  "phantom_newtype",
- "prometheus-http-query",
+ "prometheus-http-query 0.4.2",
  "prost",
  "rand 0.8.5",
  "regex",
@@ -4734,6 +4841,11 @@ dependencies = [
  "ic-utils 0.9.0",
  "prost",
 ]
+
+[[package]]
+name = "ic-registry-local-store-artifacts"
+version = "0.9.0"
+source = "git+https://github.com/dfinity/ic.git?rev=4b3b2ce76c4bde0c1c60fb80b0915931003b7eca#4b3b2ce76c4bde0c1c60fb80b0915931003b7eca"
 
 [[package]]
 name = "ic-registry-nns-data-provider"
@@ -5817,6 +5929,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6877bb514081ee2a7ff5ef9de3281f14a4dd4bceac4c09388074a6b5df8a139a"
 
 [[package]]
+name = "mime_guess"
+version = "2.0.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4192263c238a5f0d0c6bfd21f336a313a4ce1c450542449ca191bb657b4642ef"
+dependencies = [
+ "mime",
+ "unicase",
+]
+
+[[package]]
 name = "minimal-lexical"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5871,10 +5993,92 @@ dependencies = [
 ]
 
 [[package]]
+name = "multer"
+version = "2.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "01acbdc23469fd8fe07ab135923371d5f5a422fbf9c522158677c8eb15bc51c2"
+dependencies = [
+ "bytes",
+ "encoding_rs",
+ "futures-util",
+ "http",
+ "httparse",
+ "log",
+ "memchr",
+ "mime",
+ "spin 0.9.8",
+ "version_check",
+]
+
+[[package]]
 name = "multimap"
 version = "0.8.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e5ce46fe64a9d73be07dcbe690a38ce1b293be448fd8ce1e6c1b8062c9f72c6a"
+
+[[package]]
+name = "multiservice-discovery"
+version = "0.1.0"
+dependencies = [
+ "base64 0.13.1",
+ "clap 4.4.13",
+ "crossbeam",
+ "crossbeam-channel",
+ "erased-serde",
+ "futures-util",
+ "humantime",
+ "ic-async-utils",
+ "ic-crypto-utils-threshold-sig-der",
+ "ic-registry-client",
+ "ic-types 0.9.0",
+ "ic-utils 0.9.0",
+ "multiservice-discovery-shared",
+ "regex",
+ "serde",
+ "serde_json",
+ "service-discovery",
+ "slog",
+ "slog-async",
+ "slog-term",
+ "tokio",
+ "url",
+ "warp",
+]
+
+[[package]]
+name = "multiservice-discovery-downloader"
+version = "0.1.0"
+dependencies = [
+ "clap 4.4.13",
+ "crossbeam",
+ "crossbeam-channel",
+ "futures-util",
+ "humantime",
+ "ic-async-utils",
+ "ic-types 0.9.0",
+ "multiservice-discovery-shared",
+ "regex",
+ "reqwest",
+ "service-discovery",
+ "slog",
+ "slog-async",
+ "slog-term",
+ "tokio",
+ "url",
+]
+
+[[package]]
+name = "multiservice-discovery-shared"
+version = "0.1.0"
+dependencies = [
+ "erased-serde",
+ "ic-types 0.9.0",
+ "regex",
+ "ring 0.16.20",
+ "serde",
+ "serde_json",
+ "service-discovery",
+]
 
 [[package]]
 name = "native-tls"
@@ -5922,6 +6126,29 @@ dependencies = [
  "cfg-if",
  "libc",
  "memoffset 0.7.1",
+]
+
+[[package]]
+name = "node-status-updater"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "clap 4.4.13",
+ "crossbeam",
+ "crossbeam-channel",
+ "futures-util",
+ "humantime",
+ "ic-agent 0.30.2",
+ "ic-async-utils",
+ "ic-metrics",
+ "obs-canister-clients",
+ "prometheus-http-query 0.6.7",
+ "service-discovery",
+ "slog",
+ "slog-async",
+ "slog-term",
+ "tokio",
+ "url",
 ]
 
 [[package]]
@@ -6165,6 +6392,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a6a622008b6e321afc04970976f62ee297fdbaa6f95318ca343e3eebb9648441"
 dependencies = [
  "memchr",
+]
+
+[[package]]
+name = "obs-canister-clients"
+version = "0.1.0"
+dependencies = [
+ "candid 0.9.11",
+ "ic-agent 0.30.2",
+ "rand 0.8.5",
+ "serde",
+ "slog",
+ "url",
 ]
 
 [[package]]
@@ -6803,11 +7042,54 @@ dependencies = [
 ]
 
 [[package]]
+name = "prometheus-config-updater"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "base64 0.13.1",
+ "clap 3.2.25",
+ "config-writer-common",
+ "crossbeam",
+ "crossbeam-channel",
+ "futures-util",
+ "humantime",
+ "ic-async-utils",
+ "ic-config",
+ "ic-crypto-utils-threshold-sig-der",
+ "ic-http-endpoints-metrics",
+ "ic-metrics",
+ "ic-types 0.9.0",
+ "regex",
+ "serde",
+ "serde_json",
+ "service-discovery",
+ "slog",
+ "slog-async",
+ "slog-term",
+ "tokio",
+ "url",
+]
+
+[[package]]
 name = "prometheus-http-query"
 version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6886b96a7a96d2a7cc0a1d69b20fa083cf5792982afe799dcdd05468bc51f351"
 dependencies = [
+ "reqwest",
+ "serde",
+ "serde_json",
+ "time",
+ "url",
+]
+
+[[package]]
+name = "prometheus-http-query"
+version = "0.6.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6704e3a7a78545b1496524d518658005a6cc308abc90ce5fccf01891ecdc298b"
+dependencies = [
+ "mime",
  "reqwest",
  "serde",
  "serde_json",
@@ -7223,6 +7505,7 @@ dependencies = [
  "js-sys",
  "log",
  "mime",
+ "mime_guess",
  "native-tls",
  "once_cell",
  "percent-encoding",
@@ -7498,6 +7781,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "scoped-tls"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e1cf6437eb19a8f4a6cc0f7dca544973b0b78843adbfeb3683d1a94a0024a294"
+
+[[package]]
 name = "scoped_threadpool"
 version = "0.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7733,6 +8022,42 @@ dependencies = [
 ]
 
 [[package]]
+name = "service-discovery"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "crossbeam",
+ "crossbeam-channel",
+ "futures",
+ "hyper",
+ "ic-interfaces-registry",
+ "ic-metrics",
+ "ic-protobuf",
+ "ic-registry-client",
+ "ic-registry-client-fake",
+ "ic-registry-client-helpers",
+ "ic-registry-common-proto",
+ "ic-registry-keys",
+ "ic-registry-local-registry",
+ "ic-registry-local-store",
+ "ic-registry-local-store-artifacts",
+ "ic-registry-nns-data-provider",
+ "ic-types 0.9.0",
+ "ic-utils 0.9.0",
+ "itertools 0.12.0",
+ "prometheus",
+ "regex",
+ "registry-canister",
+ "serde",
+ "serde_json",
+ "slog",
+ "tempfile",
+ "thiserror",
+ "tokio",
+ "url",
+]
+
+[[package]]
 name = "sha1"
 version = "0.10.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7936,6 +8261,30 @@ name = "smallvec"
 version = "1.11.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4dccd0940a2dcdf68d092b8cbab7dc0ad8fa938bf95787e1b916b0e3d0e8e970"
+
+[[package]]
+name = "sns-downloader"
+version = "0.1.0"
+dependencies = [
+ "clap 4.4.13",
+ "crossbeam",
+ "crossbeam-channel",
+ "futures-util",
+ "humantime",
+ "ic-async-utils",
+ "ic-types 0.9.0",
+ "multiservice-discovery-shared",
+ "regex",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "service-discovery",
+ "slog",
+ "slog-async",
+ "slog-term",
+ "tokio",
+ "url",
+]
 
 [[package]]
 name = "socket2"
@@ -8453,6 +8802,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "tokio-tungstenite"
+version = "0.20.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "212d5dcb2a1ce06d81107c3d0ffa3121fe974b73f068c8282cb1c32328113b6c"
+dependencies = [
+ "futures-util",
+ "log",
+ "tokio",
+ "tungstenite",
+]
+
+[[package]]
 name = "tokio-util"
 version = "0.7.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -8646,6 +9007,25 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e421abadd41a4225275504ea4d6566923418b7f05506fbc9c0fe86ba7396114b"
 
 [[package]]
+name = "tungstenite"
+version = "0.20.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9e3dac10fd62eaf6617d3a904ae222845979aec67c615d1c842b4002c7666fb9"
+dependencies = [
+ "byteorder",
+ "bytes",
+ "data-encoding",
+ "http",
+ "httparse",
+ "log",
+ "rand 0.8.5",
+ "sha1",
+ "thiserror",
+ "url",
+ "utf-8",
+]
+
+[[package]]
 name = "typed-arena"
 version = "2.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -8679,6 +9059,15 @@ name = "uncased"
 version = "0.9.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9b9bc53168a4be7402ab86c3aad243a84dd7381d09be0eddc81280c1da95ca68"
+dependencies = [
+ "version_check",
+]
+
+[[package]]
+name = "unicase"
+version = "2.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f7d2d4dafb69621809a81864c9c1b864479e1235c0dd4e199924b9742439ed89"
 dependencies = [
  "version_check",
 ]
@@ -8768,6 +9157,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "daf8dba3b7eb870caf1ddeed7bc9d2a049f3cfdfae7cb521b087cc33ae4c49da"
 
 [[package]]
+name = "utf-8"
+version = "0.7.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "09cc8ee72d2a9becf2f2febe0205bbed8fc6615b7cb429ad062dc7b7ddd036a9"
+
+[[package]]
 name = "utf8-width"
 version = "0.1.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -8826,6 +9221,37 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bfa7760aed19e106de2c7c0b581b509f2f25d3dacaf737cb82ac61bc6d760b0e"
 dependencies = [
  "try-lock",
+]
+
+[[package]]
+name = "warp"
+version = "0.3.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c1e92e22e03ff1230c03a1a8ee37d2f89cd489e2e541b7550d6afad96faed169"
+dependencies = [
+ "bytes",
+ "futures-channel",
+ "futures-util",
+ "headers",
+ "http",
+ "hyper",
+ "log",
+ "mime",
+ "mime_guess",
+ "multer",
+ "percent-encoding",
+ "pin-project",
+ "rustls-pemfile",
+ "scoped-tls",
+ "serde",
+ "serde_json",
+ "serde_urlencoded",
+ "tokio",
+ "tokio-stream",
+ "tokio-tungstenite",
+ "tokio-util",
+ "tower-service",
+ "tracing",
 ]
 
 [[package]]
@@ -9249,6 +9675,23 @@ checksum = "e0ecbeb7b67ce215e40e3cc7f2ff902f94a223acf44995934763467e7b1febc8"
 dependencies = [
  "asn1-rs",
  "base64 0.13.1",
+ "data-encoding",
+ "der-parser",
+ "lazy_static",
+ "nom",
+ "oid-registry",
+ "rusticata-macros",
+ "thiserror",
+ "time",
+]
+
+[[package]]
+name = "x509-parser"
+version = "0.15.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7069fba5b66b9193bd2c5d3d4ff12b839118f6bcbef5328efafafb5395cf63da"
+dependencies = [
+ "asn1-rs",
  "data-encoding",
  "der-parser",
  "lazy_static",

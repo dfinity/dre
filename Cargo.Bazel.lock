@@ -1,5 +1,5 @@
 {
-  "checksum": "5e781c68cde023989824b2828fcb47e5a2acd46564630a93f7bcd189454d63b4",
+  "checksum": "c7892510fa4208fa45b2764a10f34bc155f64df31ec139aa3b247f145c646a7a",
   "crates": {
     "actix 0.13.1": {
       "name": "actix",
@@ -7689,6 +7689,93 @@
       },
       "license": "Apache-2.0 OR MIT"
     },
+    "config-writer-common 0.1.0": {
+      "name": "config-writer-common",
+      "version": "0.1.0",
+      "repository": null,
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "config_writer_common",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "config_writer_common",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "crossbeam 0.8.3",
+              "target": "crossbeam"
+            },
+            {
+              "id": "crossbeam-channel 0.5.10",
+              "target": "crossbeam_channel"
+            },
+            {
+              "id": "erased-serde 0.3.31",
+              "target": "erased_serde"
+            },
+            {
+              "id": "ic-types 0.9.0",
+              "target": "ic_types"
+            },
+            {
+              "id": "ic-utils 0.9.0",
+              "target": "ic_utils"
+            },
+            {
+              "id": "regex 1.10.2",
+              "target": "regex"
+            },
+            {
+              "id": "serde 1.0.194",
+              "target": "serde"
+            },
+            {
+              "id": "serde_json 1.0.111",
+              "target": "serde_json"
+            },
+            {
+              "id": "slog 2.7.0",
+              "target": "slog"
+            },
+            {
+              "id": "slog-async 2.8.0",
+              "target": "slog_async"
+            },
+            {
+              "id": "slog-term 2.9.0",
+              "target": "slog_term"
+            },
+            {
+              "id": "url 2.5.0",
+              "target": "url"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "proc_macro_deps": {
+          "common": [
+            {
+              "id": "serde_derive 1.0.194",
+              "target": "serde_derive"
+            }
+          ],
+          "selects": {}
+        },
+        "version": "0.1.0"
+      },
+      "license": null
+    },
     "console 0.15.7": {
       "name": "console",
       "version": "0.15.7",
@@ -8227,6 +8314,77 @@
       },
       "license": "MIT OR Apache-2.0"
     },
+    "crossbeam 0.8.3": {
+      "name": "crossbeam",
+      "version": "0.8.3",
+      "repository": {
+        "Http": {
+          "url": "https://crates.io/api/v1/crates/crossbeam/0.8.3/download",
+          "sha256": "6eb9105919ca8e40d437fc9cbb8f1975d916f1bd28afe795a48aae32a2cc8920"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "crossbeam",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "crossbeam",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "crate_features": {
+          "common": [
+            "alloc",
+            "crossbeam-channel",
+            "crossbeam-deque",
+            "crossbeam-epoch",
+            "crossbeam-queue",
+            "default",
+            "std"
+          ],
+          "selects": {}
+        },
+        "deps": {
+          "common": [
+            {
+              "id": "cfg-if 1.0.0",
+              "target": "cfg_if"
+            },
+            {
+              "id": "crossbeam-channel 0.5.10",
+              "target": "crossbeam_channel"
+            },
+            {
+              "id": "crossbeam-deque 0.8.4",
+              "target": "crossbeam_deque"
+            },
+            {
+              "id": "crossbeam-epoch 0.9.17",
+              "target": "crossbeam_epoch"
+            },
+            {
+              "id": "crossbeam-queue 0.3.10",
+              "target": "crossbeam_queue"
+            },
+            {
+              "id": "crossbeam-utils 0.8.18",
+              "target": "crossbeam_utils"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "0.8.3"
+      },
+      "license": "MIT OR Apache-2.0"
+    },
     "crossbeam-channel 0.5.10": {
       "name": "crossbeam-channel",
       "version": "0.5.10",
@@ -8380,6 +8538,56 @@
         },
         "edition": "2021",
         "version": "0.9.17"
+      },
+      "license": "MIT OR Apache-2.0"
+    },
+    "crossbeam-queue 0.3.10": {
+      "name": "crossbeam-queue",
+      "version": "0.3.10",
+      "repository": {
+        "Http": {
+          "url": "https://crates.io/api/v1/crates/crossbeam-queue/0.3.10/download",
+          "sha256": "adc6598521bb5a83d491e8c1fe51db7296019d2ca3cb93cc6c2a20369a4d78a2"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "crossbeam_queue",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "crossbeam_queue",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "crate_features": {
+          "common": [
+            "alloc",
+            "std"
+          ],
+          "selects": {}
+        },
+        "deps": {
+          "common": [
+            {
+              "id": "cfg-if 1.0.0",
+              "target": "cfg_if"
+            },
+            {
+              "id": "crossbeam-utils 0.8.18",
+              "target": "crossbeam_utils"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "0.3.10"
       },
       "license": "MIT OR Apache-2.0"
     },
@@ -14862,6 +15070,108 @@
       },
       "license": "MIT/Apache-2.0"
     },
+    "headers 0.3.9": {
+      "name": "headers",
+      "version": "0.3.9",
+      "repository": {
+        "Http": {
+          "url": "https://crates.io/api/v1/crates/headers/0.3.9/download",
+          "sha256": "06683b93020a07e3dbcf5f8c0f6d40080d725bea7936fc01ad345c01b97dc270"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "headers",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "headers",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "base64 0.21.5",
+              "target": "base64"
+            },
+            {
+              "id": "bytes 1.5.0",
+              "target": "bytes"
+            },
+            {
+              "id": "headers-core 0.2.0",
+              "target": "headers_core"
+            },
+            {
+              "id": "http 0.2.11",
+              "target": "http"
+            },
+            {
+              "id": "httpdate 1.0.3",
+              "target": "httpdate"
+            },
+            {
+              "id": "mime 0.3.17",
+              "target": "mime"
+            },
+            {
+              "id": "sha1 0.10.6",
+              "target": "sha1"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2015",
+        "version": "0.3.9"
+      },
+      "license": "MIT"
+    },
+    "headers-core 0.2.0": {
+      "name": "headers-core",
+      "version": "0.2.0",
+      "repository": {
+        "Http": {
+          "url": "https://crates.io/api/v1/crates/headers-core/0.2.0/download",
+          "sha256": "e7f66481bfee273957b1f20485a4ff3362987f85b2c236580d81b4eb7a326429"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "headers_core",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "headers_core",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "http 0.2.11",
+              "target": "http"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2015",
+        "version": "0.2.0"
+      },
+      "license": "MIT"
+    },
     "heck 0.4.1": {
       "name": "heck",
       "version": "0.4.1",
@@ -15740,7 +16050,95 @@
             "tls12",
             "tokio-runtime"
           ],
-          "selects": {}
+          "selects": {
+            "aarch64-apple-darwin": [
+              "webpki-roots"
+            ],
+            "aarch64-apple-ios": [
+              "webpki-roots"
+            ],
+            "aarch64-apple-ios-sim": [
+              "webpki-roots"
+            ],
+            "aarch64-fuchsia": [
+              "webpki-roots"
+            ],
+            "aarch64-linux-android": [
+              "webpki-roots"
+            ],
+            "aarch64-pc-windows-msvc": [
+              "webpki-roots"
+            ],
+            "aarch64-unknown-linux-gnu": [
+              "webpki-roots"
+            ],
+            "arm-unknown-linux-gnueabi": [
+              "webpki-roots"
+            ],
+            "armv7-linux-androideabi": [
+              "webpki-roots"
+            ],
+            "armv7-unknown-linux-gnueabi": [
+              "webpki-roots"
+            ],
+            "i686-apple-darwin": [
+              "webpki-roots"
+            ],
+            "i686-linux-android": [
+              "webpki-roots"
+            ],
+            "i686-pc-windows-msvc": [
+              "webpki-roots"
+            ],
+            "i686-unknown-freebsd": [
+              "webpki-roots"
+            ],
+            "i686-unknown-linux-gnu": [
+              "webpki-roots"
+            ],
+            "powerpc-unknown-linux-gnu": [
+              "webpki-roots"
+            ],
+            "riscv32imc-unknown-none-elf": [
+              "webpki-roots"
+            ],
+            "riscv64gc-unknown-none-elf": [
+              "webpki-roots"
+            ],
+            "s390x-unknown-linux-gnu": [
+              "webpki-roots"
+            ],
+            "thumbv7em-none-eabi": [
+              "webpki-roots"
+            ],
+            "thumbv8m.main-none-eabi": [
+              "webpki-roots"
+            ],
+            "x86_64-apple-darwin": [
+              "webpki-roots"
+            ],
+            "x86_64-apple-ios": [
+              "webpki-roots"
+            ],
+            "x86_64-fuchsia": [
+              "webpki-roots"
+            ],
+            "x86_64-linux-android": [
+              "webpki-roots"
+            ],
+            "x86_64-pc-windows-msvc": [
+              "webpki-roots"
+            ],
+            "x86_64-unknown-freebsd": [
+              "webpki-roots"
+            ],
+            "x86_64-unknown-linux-gnu": [
+              "webpki-roots"
+            ],
+            "x86_64-unknown-none": [
+              "webpki-roots"
+            ]
+          }
         },
         "deps": {
           "common": [
@@ -15775,6 +16173,10 @@
             {
               "id": "tokio-rustls 0.24.1",
               "target": "tokio_rustls"
+            },
+            {
+              "id": "webpki-roots 0.25.3",
+              "target": "webpki_roots"
             }
           ],
           "selects": {}
@@ -16379,6 +16781,7 @@
         "crate_features": {
           "common": [
             "default",
+            "hyper",
             "pem",
             "reqwest"
           ],
@@ -16417,6 +16820,10 @@
             {
               "id": "http-body 0.4.6",
               "target": "http_body"
+            },
+            {
+              "id": "hyper 0.14.28",
+              "target": "hyper"
             },
             {
               "id": "ic-certification 1.3.0",
@@ -16501,6 +16908,10 @@
           ],
           "selects": {
             "cfg(not(target_family = \"wasm\"))": [
+              {
+                "id": "hyper-rustls 0.24.2",
+                "target": "hyper_rustls"
+              },
               {
                 "id": "rustls-webpki 0.101.7",
                 "target": "webpki"
@@ -19581,6 +19992,81 @@
       },
       "license": null
     },
+    "ic-crypto-tls-interfaces 0.9.0": {
+      "name": "ic-crypto-tls-interfaces",
+      "version": "0.9.0",
+      "repository": {
+        "Git": {
+          "remote": "https://github.com/dfinity/ic.git",
+          "commitish": {
+            "Rev": "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca"
+          },
+          "strip_prefix": "rs/crypto/tls_interfaces"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "ic_crypto_tls_interfaces",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "ic_crypto_tls_interfaces",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "ic-crypto-sha2 0.9.0",
+              "target": "ic_crypto_sha2"
+            },
+            {
+              "id": "ic-protobuf 0.9.0",
+              "target": "ic_protobuf"
+            },
+            {
+              "id": "ic-types 0.9.0",
+              "target": "ic_types"
+            },
+            {
+              "id": "serde 1.0.194",
+              "target": "serde"
+            },
+            {
+              "id": "tokio 1.35.1",
+              "target": "tokio"
+            },
+            {
+              "id": "tokio-rustls 0.24.1",
+              "target": "tokio_rustls"
+            },
+            {
+              "id": "x509-parser 0.15.1",
+              "target": "x509_parser"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "proc_macro_deps": {
+          "common": [
+            {
+              "id": "async-trait 0.1.77",
+              "target": "async_trait"
+            }
+          ],
+          "selects": {}
+        },
+        "version": "0.9.0"
+      },
+      "license": null
+    },
     "ic-crypto-tree-hash 0.9.0": {
       "name": "ic-crypto-tree-hash",
       "version": "0.9.0",
@@ -19938,6 +20424,100 @@
           ],
           "selects": {}
         },
+        "version": "0.9.0"
+      },
+      "license": null
+    },
+    "ic-http-endpoints-metrics 0.9.0": {
+      "name": "ic-http-endpoints-metrics",
+      "version": "0.9.0",
+      "repository": {
+        "Git": {
+          "remote": "https://github.com/dfinity/ic.git",
+          "commitish": {
+            "Rev": "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca"
+          },
+          "strip_prefix": "rs/http_endpoints/metrics"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "ic_http_endpoints_metrics",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "ic_http_endpoints_metrics",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "hyper 0.14.28",
+              "target": "hyper"
+            },
+            {
+              "id": "ic-async-utils 0.9.0",
+              "target": "ic_async_utils"
+            },
+            {
+              "id": "ic-config 0.9.0",
+              "target": "ic_config"
+            },
+            {
+              "id": "ic-crypto-tls-interfaces 0.9.0",
+              "target": "ic_crypto_tls_interfaces"
+            },
+            {
+              "id": "ic-interfaces-registry 0.9.0",
+              "target": "ic_interfaces_registry"
+            },
+            {
+              "id": "ic-metrics 0.9.0",
+              "target": "ic_metrics"
+            },
+            {
+              "id": "ic-types 0.9.0",
+              "target": "ic_types"
+            },
+            {
+              "id": "prometheus 0.13.3",
+              "target": "prometheus"
+            },
+            {
+              "id": "serde 1.0.194",
+              "target": "serde"
+            },
+            {
+              "id": "slog 2.7.0",
+              "target": "slog"
+            },
+            {
+              "id": "thiserror 1.0.56",
+              "target": "thiserror"
+            },
+            {
+              "id": "tokio 1.35.1",
+              "target": "tokio"
+            },
+            {
+              "id": "tokio-io-timeout 1.2.0",
+              "target": "tokio_io_timeout"
+            },
+            {
+              "id": "tower 0.4.13",
+              "target": "tower"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
         "version": "0.9.0"
       },
       "license": null
@@ -23417,6 +23997,39 @@
           ],
           "selects": {}
         },
+        "edition": "2021",
+        "version": "0.9.0"
+      },
+      "license": null
+    },
+    "ic-registry-local-store-artifacts 0.9.0": {
+      "name": "ic-registry-local-store-artifacts",
+      "version": "0.9.0",
+      "repository": {
+        "Git": {
+          "remote": "https://github.com/dfinity/ic.git",
+          "commitish": {
+            "Rev": "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca"
+          },
+          "strip_prefix": "rs/registry/local_store/artifacts"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "ic_registry_local_store_artifacts",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "ic_registry_local_store_artifacts",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
         "edition": "2021",
         "version": "0.9.0"
       },
@@ -28950,6 +29563,83 @@
       },
       "license": "MIT OR Apache-2.0"
     },
+    "mime_guess 2.0.4": {
+      "name": "mime_guess",
+      "version": "2.0.4",
+      "repository": {
+        "Http": {
+          "url": "https://crates.io/api/v1/crates/mime_guess/2.0.4/download",
+          "sha256": "4192263c238a5f0d0c6bfd21f336a313a4ce1c450542449ca191bb657b4642ef"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "mime_guess",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        },
+        {
+          "BuildScript": {
+            "crate_name": "build_script_build",
+            "crate_root": "build.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "mime_guess",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "crate_features": {
+          "common": [
+            "default",
+            "rev-mappings"
+          ],
+          "selects": {}
+        },
+        "deps": {
+          "common": [
+            {
+              "id": "mime 0.3.17",
+              "target": "mime"
+            },
+            {
+              "id": "mime_guess 2.0.4",
+              "target": "build_script_build"
+            },
+            {
+              "id": "unicase 2.7.0",
+              "target": "unicase"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2015",
+        "version": "2.0.4"
+      },
+      "build_script_attrs": {
+        "data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "unicase 2.7.0",
+              "target": "unicase"
+            }
+          ],
+          "selects": {}
+        }
+      },
+      "license": "MIT"
+    },
     "minimal-lexical 0.2.1": {
       "name": "minimal-lexical",
       "version": "0.2.1",
@@ -29222,6 +29912,110 @@
       },
       "license": "MIT/Apache-2.0"
     },
+    "multer 2.1.0": {
+      "name": "multer",
+      "version": "2.1.0",
+      "repository": {
+        "Http": {
+          "url": "https://crates.io/api/v1/crates/multer/2.1.0/download",
+          "sha256": "01acbdc23469fd8fe07ab135923371d5f5a422fbf9c522158677c8eb15bc51c2"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "multer",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        },
+        {
+          "BuildScript": {
+            "crate_name": "build_script_build",
+            "crate_root": "build.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "multer",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "crate_features": {
+          "common": [
+            "default"
+          ],
+          "selects": {}
+        },
+        "deps": {
+          "common": [
+            {
+              "id": "bytes 1.5.0",
+              "target": "bytes"
+            },
+            {
+              "id": "encoding_rs 0.8.33",
+              "target": "encoding_rs"
+            },
+            {
+              "id": "futures-util 0.3.30",
+              "target": "futures_util"
+            },
+            {
+              "id": "http 0.2.11",
+              "target": "http"
+            },
+            {
+              "id": "httparse 1.8.0",
+              "target": "httparse"
+            },
+            {
+              "id": "log 0.4.20",
+              "target": "log"
+            },
+            {
+              "id": "memchr 2.7.1",
+              "target": "memchr"
+            },
+            {
+              "id": "mime 0.3.17",
+              "target": "mime"
+            },
+            {
+              "id": "multer 2.1.0",
+              "target": "build_script_build"
+            },
+            {
+              "id": "spin 0.9.8",
+              "target": "spin"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2018",
+        "version": "2.1.0"
+      },
+      "build_script_attrs": {
+        "data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "version_check 0.9.4",
+              "target": "version_check"
+            }
+          ],
+          "selects": {}
+        }
+      },
+      "license": "MIT"
+    },
     "multimap 0.8.3": {
       "name": "multimap",
       "version": "0.8.3",
@@ -29251,6 +30045,240 @@
         "version": "0.8.3"
       },
       "license": "MIT/Apache-2.0"
+    },
+    "multiservice-discovery 0.1.0": {
+      "name": "multiservice-discovery",
+      "version": "0.1.0",
+      "repository": null,
+      "targets": [],
+      "library_target_name": null,
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "base64 0.13.1",
+              "target": "base64"
+            },
+            {
+              "id": "clap 4.4.13",
+              "target": "clap"
+            },
+            {
+              "id": "crossbeam 0.8.3",
+              "target": "crossbeam"
+            },
+            {
+              "id": "crossbeam-channel 0.5.10",
+              "target": "crossbeam_channel"
+            },
+            {
+              "id": "erased-serde 0.3.31",
+              "target": "erased_serde"
+            },
+            {
+              "id": "futures-util 0.3.30",
+              "target": "futures_util"
+            },
+            {
+              "id": "humantime 2.1.0",
+              "target": "humantime"
+            },
+            {
+              "id": "ic-async-utils 0.9.0",
+              "target": "ic_async_utils"
+            },
+            {
+              "id": "ic-crypto-utils-threshold-sig-der 0.9.0",
+              "target": "ic_crypto_utils_threshold_sig_der"
+            },
+            {
+              "id": "ic-registry-client 0.9.0",
+              "target": "ic_registry_client"
+            },
+            {
+              "id": "ic-types 0.9.0",
+              "target": "ic_types"
+            },
+            {
+              "id": "ic-utils 0.9.0",
+              "target": "ic_utils"
+            },
+            {
+              "id": "regex 1.10.2",
+              "target": "regex"
+            },
+            {
+              "id": "serde 1.0.194",
+              "target": "serde"
+            },
+            {
+              "id": "serde_json 1.0.111",
+              "target": "serde_json"
+            },
+            {
+              "id": "slog 2.7.0",
+              "target": "slog"
+            },
+            {
+              "id": "slog-async 2.8.0",
+              "target": "slog_async"
+            },
+            {
+              "id": "slog-term 2.9.0",
+              "target": "slog_term"
+            },
+            {
+              "id": "tokio 1.35.1",
+              "target": "tokio"
+            },
+            {
+              "id": "url 2.5.0",
+              "target": "url"
+            },
+            {
+              "id": "warp 0.3.6",
+              "target": "warp"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "0.1.0"
+      },
+      "license": null
+    },
+    "multiservice-discovery-downloader 0.1.0": {
+      "name": "multiservice-discovery-downloader",
+      "version": "0.1.0",
+      "repository": null,
+      "targets": [],
+      "library_target_name": null,
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "clap 4.4.13",
+              "target": "clap"
+            },
+            {
+              "id": "crossbeam 0.8.3",
+              "target": "crossbeam"
+            },
+            {
+              "id": "crossbeam-channel 0.5.10",
+              "target": "crossbeam_channel"
+            },
+            {
+              "id": "futures-util 0.3.30",
+              "target": "futures_util"
+            },
+            {
+              "id": "humantime 2.1.0",
+              "target": "humantime"
+            },
+            {
+              "id": "ic-async-utils 0.9.0",
+              "target": "ic_async_utils"
+            },
+            {
+              "id": "ic-types 0.9.0",
+              "target": "ic_types"
+            },
+            {
+              "id": "regex 1.10.2",
+              "target": "regex"
+            },
+            {
+              "id": "reqwest 0.11.23",
+              "target": "reqwest"
+            },
+            {
+              "id": "slog 2.7.0",
+              "target": "slog"
+            },
+            {
+              "id": "slog-async 2.8.0",
+              "target": "slog_async"
+            },
+            {
+              "id": "slog-term 2.9.0",
+              "target": "slog_term"
+            },
+            {
+              "id": "tokio 1.35.1",
+              "target": "tokio"
+            },
+            {
+              "id": "url 2.5.0",
+              "target": "url"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "0.1.0"
+      },
+      "license": null
+    },
+    "multiservice-discovery-shared 0.1.0": {
+      "name": "multiservice-discovery-shared",
+      "version": "0.1.0",
+      "repository": null,
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "multiservice_discovery_shared",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "multiservice_discovery_shared",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "erased-serde 0.3.31",
+              "target": "erased_serde"
+            },
+            {
+              "id": "ic-types 0.9.0",
+              "target": "ic_types"
+            },
+            {
+              "id": "regex 1.10.2",
+              "target": "regex"
+            },
+            {
+              "id": "ring 0.16.20",
+              "target": "ring"
+            },
+            {
+              "id": "serde 1.0.194",
+              "target": "serde"
+            },
+            {
+              "id": "serde_json 1.0.111",
+              "target": "serde_json"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "0.1.0"
+      },
+      "license": null
     },
     "native-tls 0.2.11": {
       "name": "native-tls",
@@ -29549,6 +30577,86 @@
         "version": "0.26.4"
       },
       "license": "MIT"
+    },
+    "node-status-updater 0.1.0": {
+      "name": "node-status-updater",
+      "version": "0.1.0",
+      "repository": null,
+      "targets": [],
+      "library_target_name": null,
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "anyhow 1.0.79",
+              "target": "anyhow"
+            },
+            {
+              "id": "clap 4.4.13",
+              "target": "clap"
+            },
+            {
+              "id": "crossbeam 0.8.3",
+              "target": "crossbeam"
+            },
+            {
+              "id": "crossbeam-channel 0.5.10",
+              "target": "crossbeam_channel"
+            },
+            {
+              "id": "futures-util 0.3.30",
+              "target": "futures_util"
+            },
+            {
+              "id": "humantime 2.1.0",
+              "target": "humantime"
+            },
+            {
+              "id": "ic-agent 0.30.2",
+              "target": "ic_agent"
+            },
+            {
+              "id": "ic-async-utils 0.9.0",
+              "target": "ic_async_utils"
+            },
+            {
+              "id": "ic-metrics 0.9.0",
+              "target": "ic_metrics"
+            },
+            {
+              "id": "prometheus-http-query 0.6.7",
+              "target": "prometheus_http_query"
+            },
+            {
+              "id": "slog 2.7.0",
+              "target": "slog"
+            },
+            {
+              "id": "slog-async 2.8.0",
+              "target": "slog_async"
+            },
+            {
+              "id": "slog-term 2.9.0",
+              "target": "slog_term"
+            },
+            {
+              "id": "tokio 1.35.1",
+              "target": "tokio"
+            },
+            {
+              "id": "url 2.5.0",
+              "target": "url"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "0.1.0"
+      },
+      "license": null
     },
     "node_status_canister_backend 0.1.0": {
       "name": "node_status_canister_backend",
@@ -30880,6 +31988,60 @@
         "version": "0.32.2"
       },
       "license": "Apache-2.0 OR MIT"
+    },
+    "obs-canister-clients 0.1.0": {
+      "name": "obs-canister-clients",
+      "version": "0.1.0",
+      "repository": null,
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "obs_canister_clients",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "obs_canister_clients",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "candid 0.9.11",
+              "target": "candid"
+            },
+            {
+              "id": "ic-agent 0.30.2",
+              "target": "ic_agent"
+            },
+            {
+              "id": "rand 0.8.5",
+              "target": "rand"
+            },
+            {
+              "id": "serde 1.0.194",
+              "target": "serde"
+            },
+            {
+              "id": "slog 2.7.0",
+              "target": "slog"
+            },
+            {
+              "id": "url 2.5.0",
+              "target": "url"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "0.1.0"
+      },
+      "license": null
     },
     "oid-registry 0.6.1": {
       "name": "oid-registry",
@@ -34273,6 +35435,110 @@
       },
       "license": "Apache-2.0"
     },
+    "prometheus-config-updater 0.1.0": {
+      "name": "prometheus-config-updater",
+      "version": "0.1.0",
+      "repository": null,
+      "targets": [],
+      "library_target_name": null,
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "anyhow 1.0.79",
+              "target": "anyhow"
+            },
+            {
+              "id": "base64 0.13.1",
+              "target": "base64"
+            },
+            {
+              "id": "clap 3.2.25",
+              "target": "clap"
+            },
+            {
+              "id": "crossbeam 0.8.3",
+              "target": "crossbeam"
+            },
+            {
+              "id": "crossbeam-channel 0.5.10",
+              "target": "crossbeam_channel"
+            },
+            {
+              "id": "futures-util 0.3.30",
+              "target": "futures_util"
+            },
+            {
+              "id": "humantime 2.1.0",
+              "target": "humantime"
+            },
+            {
+              "id": "ic-async-utils 0.9.0",
+              "target": "ic_async_utils"
+            },
+            {
+              "id": "ic-config 0.9.0",
+              "target": "ic_config"
+            },
+            {
+              "id": "ic-crypto-utils-threshold-sig-der 0.9.0",
+              "target": "ic_crypto_utils_threshold_sig_der"
+            },
+            {
+              "id": "ic-http-endpoints-metrics 0.9.0",
+              "target": "ic_http_endpoints_metrics"
+            },
+            {
+              "id": "ic-metrics 0.9.0",
+              "target": "ic_metrics"
+            },
+            {
+              "id": "ic-types 0.9.0",
+              "target": "ic_types"
+            },
+            {
+              "id": "regex 1.10.2",
+              "target": "regex"
+            },
+            {
+              "id": "serde 1.0.194",
+              "target": "serde"
+            },
+            {
+              "id": "serde_json 1.0.111",
+              "target": "serde_json"
+            },
+            {
+              "id": "slog 2.7.0",
+              "target": "slog"
+            },
+            {
+              "id": "slog-async 2.8.0",
+              "target": "slog_async"
+            },
+            {
+              "id": "slog-term 2.9.0",
+              "target": "slog_term"
+            },
+            {
+              "id": "tokio 1.35.1",
+              "target": "tokio"
+            },
+            {
+              "id": "url 2.5.0",
+              "target": "url"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "0.1.0"
+      },
+      "license": null
+    },
     "prometheus-http-query 0.4.2": {
       "name": "prometheus-http-query",
       "version": "0.4.2",
@@ -34325,6 +35591,71 @@
         },
         "edition": "2018",
         "version": "0.4.2"
+      },
+      "license": "MIT"
+    },
+    "prometheus-http-query 0.6.7": {
+      "name": "prometheus-http-query",
+      "version": "0.6.7",
+      "repository": {
+        "Http": {
+          "url": "https://crates.io/api/v1/crates/prometheus-http-query/0.6.7/download",
+          "sha256": "6704e3a7a78545b1496524d518658005a6cc308abc90ce5fccf01891ecdc298b"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "prometheus_http_query",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "prometheus_http_query",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "crate_features": {
+          "common": [
+            "rustls-tls-webpki-roots"
+          ],
+          "selects": {}
+        },
+        "deps": {
+          "common": [
+            {
+              "id": "mime 0.3.17",
+              "target": "mime"
+            },
+            {
+              "id": "reqwest 0.11.23",
+              "target": "reqwest"
+            },
+            {
+              "id": "serde 1.0.194",
+              "target": "serde"
+            },
+            {
+              "id": "serde_json 1.0.111",
+              "target": "serde_json"
+            },
+            {
+              "id": "time 0.3.31",
+              "target": "time"
+            },
+            {
+              "id": "url 2.5.0",
+              "target": "url"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "0.6.7"
       },
       "license": "MIT"
     },
@@ -36364,6 +37695,8 @@
             "hyper-rustls",
             "hyper-tls",
             "json",
+            "mime_guess",
+            "multipart",
             "native-tls-crate",
             "rustls",
             "rustls-pemfile",
@@ -36400,6 +37733,10 @@
             {
               "id": "http 0.2.11",
               "target": "http"
+            },
+            {
+              "id": "mime_guess 2.0.4",
+              "target": "mime_guess"
             },
             {
               "id": "serde 1.0.194",
@@ -37963,6 +39300,36 @@
       },
       "license": "MIT"
     },
+    "scoped-tls 1.0.1": {
+      "name": "scoped-tls",
+      "version": "1.0.1",
+      "repository": {
+        "Http": {
+          "url": "https://crates.io/api/v1/crates/scoped-tls/1.0.1/download",
+          "sha256": "e1cf6437eb19a8f4a6cc0f7dca544973b0b78843adbfeb3683d1a94a0024a294"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "scoped_tls",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "scoped_tls",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "edition": "2015",
+        "version": "1.0.1"
+      },
+      "license": "MIT/Apache-2.0"
+    },
     "scoped_threadpool 0.1.9": {
       "name": "scoped_threadpool",
       "version": "0.1.9",
@@ -39145,6 +40512,161 @@
       },
       "license": "MIT OR Apache-2.0"
     },
+    "service-discovery 0.1.0": {
+      "name": "service-discovery",
+      "version": "0.1.0",
+      "repository": null,
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "service_discovery",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "service_discovery",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "anyhow 1.0.79",
+              "target": "anyhow"
+            },
+            {
+              "id": "crossbeam 0.8.3",
+              "target": "crossbeam"
+            },
+            {
+              "id": "crossbeam-channel 0.5.10",
+              "target": "crossbeam_channel"
+            },
+            {
+              "id": "futures 0.3.30",
+              "target": "futures"
+            },
+            {
+              "id": "hyper 0.14.28",
+              "target": "hyper"
+            },
+            {
+              "id": "ic-interfaces-registry 0.9.0",
+              "target": "ic_interfaces_registry"
+            },
+            {
+              "id": "ic-metrics 0.9.0",
+              "target": "ic_metrics"
+            },
+            {
+              "id": "ic-protobuf 0.9.0",
+              "target": "ic_protobuf"
+            },
+            {
+              "id": "ic-registry-client 0.9.0",
+              "target": "ic_registry_client"
+            },
+            {
+              "id": "ic-registry-client-fake 0.9.0",
+              "target": "ic_registry_client_fake"
+            },
+            {
+              "id": "ic-registry-client-helpers 0.9.0",
+              "target": "ic_registry_client_helpers"
+            },
+            {
+              "id": "ic-registry-common-proto 0.9.0",
+              "target": "ic_registry_common_proto"
+            },
+            {
+              "id": "ic-registry-keys 0.9.0",
+              "target": "ic_registry_keys"
+            },
+            {
+              "id": "ic-registry-local-registry 0.9.0",
+              "target": "ic_registry_local_registry"
+            },
+            {
+              "id": "ic-registry-local-store 0.9.0",
+              "target": "ic_registry_local_store"
+            },
+            {
+              "id": "ic-registry-local-store-artifacts 0.9.0",
+              "target": "ic_registry_local_store_artifacts"
+            },
+            {
+              "id": "ic-registry-nns-data-provider 0.9.0",
+              "target": "ic_registry_nns_data_provider"
+            },
+            {
+              "id": "ic-types 0.9.0",
+              "target": "ic_types"
+            },
+            {
+              "id": "ic-utils 0.9.0",
+              "target": "ic_utils"
+            },
+            {
+              "id": "prometheus 0.13.3",
+              "target": "prometheus"
+            },
+            {
+              "id": "regex 1.10.2",
+              "target": "regex"
+            },
+            {
+              "id": "registry-canister 0.9.0",
+              "target": "registry_canister"
+            },
+            {
+              "id": "serde 1.0.194",
+              "target": "serde"
+            },
+            {
+              "id": "serde_json 1.0.111",
+              "target": "serde_json"
+            },
+            {
+              "id": "slog 2.7.0",
+              "target": "slog"
+            },
+            {
+              "id": "tempfile 3.9.0",
+              "target": "tempfile"
+            },
+            {
+              "id": "thiserror 1.0.56",
+              "target": "thiserror"
+            },
+            {
+              "id": "tokio 1.35.1",
+              "target": "tokio"
+            },
+            {
+              "id": "url 2.5.0",
+              "target": "url"
+            }
+          ],
+          "selects": {}
+        },
+        "deps_dev": {
+          "common": [
+            {
+              "id": "itertools 0.12.0",
+              "target": "itertools"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "0.1.0"
+      },
+      "license": null
+    },
     "sha1 0.10.6": {
       "name": "sha1",
       "version": "0.10.6",
@@ -40214,6 +41736,90 @@
       },
       "license": "MIT OR Apache-2.0"
     },
+    "sns-downloader 0.1.0": {
+      "name": "sns-downloader",
+      "version": "0.1.0",
+      "repository": null,
+      "targets": [],
+      "library_target_name": null,
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "clap 4.4.13",
+              "target": "clap"
+            },
+            {
+              "id": "crossbeam 0.8.3",
+              "target": "crossbeam"
+            },
+            {
+              "id": "crossbeam-channel 0.5.10",
+              "target": "crossbeam_channel"
+            },
+            {
+              "id": "futures-util 0.3.30",
+              "target": "futures_util"
+            },
+            {
+              "id": "humantime 2.1.0",
+              "target": "humantime"
+            },
+            {
+              "id": "ic-async-utils 0.9.0",
+              "target": "ic_async_utils"
+            },
+            {
+              "id": "ic-types 0.9.0",
+              "target": "ic_types"
+            },
+            {
+              "id": "regex 1.10.2",
+              "target": "regex"
+            },
+            {
+              "id": "reqwest 0.11.23",
+              "target": "reqwest"
+            },
+            {
+              "id": "serde 1.0.194",
+              "target": "serde"
+            },
+            {
+              "id": "serde_json 1.0.111",
+              "target": "serde_json"
+            },
+            {
+              "id": "slog 2.7.0",
+              "target": "slog"
+            },
+            {
+              "id": "slog-async 2.8.0",
+              "target": "slog_async"
+            },
+            {
+              "id": "slog-term 2.9.0",
+              "target": "slog_term"
+            },
+            {
+              "id": "tokio 1.35.1",
+              "target": "tokio"
+            },
+            {
+              "id": "url 2.5.0",
+              "target": "url"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "0.1.0"
+      },
+      "license": null
+    },
     "socket2 0.4.10": {
       "name": "socket2",
       "version": "0.4.10",
@@ -40377,9 +41983,86 @@
         ],
         "crate_features": {
           "common": [
-            "once"
+            "mutex",
+            "spin_mutex"
           ],
-          "selects": {}
+          "selects": {
+            "aarch64-apple-darwin": [
+              "once"
+            ],
+            "aarch64-apple-ios": [
+              "once"
+            ],
+            "aarch64-apple-ios-sim": [
+              "once"
+            ],
+            "aarch64-fuchsia": [
+              "once"
+            ],
+            "aarch64-linux-android": [
+              "once"
+            ],
+            "aarch64-pc-windows-msvc": [
+              "once"
+            ],
+            "aarch64-unknown-linux-gnu": [
+              "once"
+            ],
+            "arm-unknown-linux-gnueabi": [
+              "once"
+            ],
+            "armv7-linux-androideabi": [
+              "once"
+            ],
+            "armv7-unknown-linux-gnueabi": [
+              "once"
+            ],
+            "i686-apple-darwin": [
+              "once"
+            ],
+            "i686-linux-android": [
+              "once"
+            ],
+            "i686-pc-windows-msvc": [
+              "once"
+            ],
+            "i686-unknown-freebsd": [
+              "once"
+            ],
+            "i686-unknown-linux-gnu": [
+              "once"
+            ],
+            "thumbv7em-none-eabi": [
+              "once"
+            ],
+            "thumbv8m.main-none-eabi": [
+              "once"
+            ],
+            "x86_64-apple-darwin": [
+              "once"
+            ],
+            "x86_64-apple-ios": [
+              "once"
+            ],
+            "x86_64-fuchsia": [
+              "once"
+            ],
+            "x86_64-linux-android": [
+              "once"
+            ],
+            "x86_64-pc-windows-msvc": [
+              "once"
+            ],
+            "x86_64-unknown-freebsd": [
+              "once"
+            ],
+            "x86_64-unknown-linux-gnu": [
+              "once"
+            ],
+            "x86_64-unknown-none": [
+              "once"
+            ]
+          }
         },
         "edition": "2015",
         "version": "0.9.8"
@@ -42785,98 +44468,11 @@
         ],
         "crate_features": {
           "common": [
+            "default",
             "logging",
             "tls12"
           ],
-          "selects": {
-            "aarch64-apple-darwin": [
-              "default"
-            ],
-            "aarch64-apple-ios": [
-              "default"
-            ],
-            "aarch64-apple-ios-sim": [
-              "default"
-            ],
-            "aarch64-fuchsia": [
-              "default"
-            ],
-            "aarch64-linux-android": [
-              "default"
-            ],
-            "aarch64-pc-windows-msvc": [
-              "default"
-            ],
-            "aarch64-unknown-linux-gnu": [
-              "default"
-            ],
-            "arm-unknown-linux-gnueabi": [
-              "default"
-            ],
-            "armv7-linux-androideabi": [
-              "default"
-            ],
-            "armv7-unknown-linux-gnueabi": [
-              "default"
-            ],
-            "i686-apple-darwin": [
-              "default"
-            ],
-            "i686-linux-android": [
-              "default"
-            ],
-            "i686-pc-windows-msvc": [
-              "default"
-            ],
-            "i686-unknown-freebsd": [
-              "default"
-            ],
-            "i686-unknown-linux-gnu": [
-              "default"
-            ],
-            "powerpc-unknown-linux-gnu": [
-              "default"
-            ],
-            "riscv32imc-unknown-none-elf": [
-              "default"
-            ],
-            "riscv64gc-unknown-none-elf": [
-              "default"
-            ],
-            "s390x-unknown-linux-gnu": [
-              "default"
-            ],
-            "thumbv7em-none-eabi": [
-              "default"
-            ],
-            "thumbv8m.main-none-eabi": [
-              "default"
-            ],
-            "x86_64-apple-darwin": [
-              "default"
-            ],
-            "x86_64-apple-ios": [
-              "default"
-            ],
-            "x86_64-fuchsia": [
-              "default"
-            ],
-            "x86_64-linux-android": [
-              "default"
-            ],
-            "x86_64-pc-windows-msvc": [
-              "default"
-            ],
-            "x86_64-unknown-freebsd": [
-              "default"
-            ],
-            "x86_64-unknown-linux-gnu": [
-              "default"
-            ],
-            "x86_64-unknown-none": [
-              "default"
-            ]
-          }
+          "selects": {}
         },
         "deps": {
           "common": [
@@ -42947,6 +44543,66 @@
         },
         "edition": "2021",
         "version": "0.1.14"
+      },
+      "license": "MIT"
+    },
+    "tokio-tungstenite 0.20.1": {
+      "name": "tokio-tungstenite",
+      "version": "0.20.1",
+      "repository": {
+        "Http": {
+          "url": "https://crates.io/api/v1/crates/tokio-tungstenite/0.20.1/download",
+          "sha256": "212d5dcb2a1ce06d81107c3d0ffa3121fe974b73f068c8282cb1c32328113b6c"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "tokio_tungstenite",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "tokio_tungstenite",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "crate_features": {
+          "common": [
+            "connect",
+            "default",
+            "handshake",
+            "stream"
+          ],
+          "selects": {}
+        },
+        "deps": {
+          "common": [
+            {
+              "id": "futures-util 0.3.30",
+              "target": "futures_util"
+            },
+            {
+              "id": "log 0.4.20",
+              "target": "log"
+            },
+            {
+              "id": "tokio 1.35.1",
+              "target": "tokio"
+            },
+            {
+              "id": "tungstenite 0.20.1",
+              "target": "tungstenite"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2018",
+        "version": "0.20.1"
       },
       "license": "MIT"
     },
@@ -43919,6 +45575,96 @@
       },
       "license": "MIT"
     },
+    "tungstenite 0.20.1": {
+      "name": "tungstenite",
+      "version": "0.20.1",
+      "repository": {
+        "Http": {
+          "url": "https://crates.io/api/v1/crates/tungstenite/0.20.1/download",
+          "sha256": "9e3dac10fd62eaf6617d3a904ae222845979aec67c615d1c842b4002c7666fb9"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "tungstenite",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "tungstenite",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "crate_features": {
+          "common": [
+            "data-encoding",
+            "handshake",
+            "http",
+            "httparse",
+            "sha1",
+            "url"
+          ],
+          "selects": {}
+        },
+        "deps": {
+          "common": [
+            {
+              "id": "byteorder 1.5.0",
+              "target": "byteorder"
+            },
+            {
+              "id": "bytes 1.5.0",
+              "target": "bytes"
+            },
+            {
+              "id": "data-encoding 2.5.0",
+              "target": "data_encoding"
+            },
+            {
+              "id": "http 0.2.11",
+              "target": "http"
+            },
+            {
+              "id": "httparse 1.8.0",
+              "target": "httparse"
+            },
+            {
+              "id": "log 0.4.20",
+              "target": "log"
+            },
+            {
+              "id": "rand 0.8.5",
+              "target": "rand"
+            },
+            {
+              "id": "sha1 0.10.6",
+              "target": "sha1"
+            },
+            {
+              "id": "thiserror 1.0.56",
+              "target": "thiserror"
+            },
+            {
+              "id": "url 2.5.0",
+              "target": "url"
+            },
+            {
+              "id": "utf-8 0.7.6",
+              "target": "utf8"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2018",
+        "version": "0.20.1"
+      },
+      "license": "MIT OR Apache-2.0"
+    },
     "typed-arena 2.0.2": {
       "name": "typed-arena",
       "version": "2.0.2",
@@ -44163,6 +45909,68 @@
         }
       },
       "license": "MIT OR Apache-2.0"
+    },
+    "unicase 2.7.0": {
+      "name": "unicase",
+      "version": "2.7.0",
+      "repository": {
+        "Http": {
+          "url": "https://crates.io/api/v1/crates/unicase/2.7.0/download",
+          "sha256": "f7d2d4dafb69621809a81864c9c1b864479e1235c0dd4e199924b9742439ed89"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "unicase",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        },
+        {
+          "BuildScript": {
+            "crate_name": "build_script_build",
+            "crate_root": "build.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "unicase",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "unicase 2.7.0",
+              "target": "build_script_build"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2015",
+        "version": "2.7.0"
+      },
+      "build_script_attrs": {
+        "data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "version_check 0.9.4",
+              "target": "version_check"
+            }
+          ],
+          "selects": {}
+        }
+      },
+      "license": "MIT/Apache-2.0"
     },
     "unicode-bidi 0.3.14": {
       "name": "unicode-bidi",
@@ -44595,6 +46403,36 @@
       },
       "license": "MIT"
     },
+    "utf-8 0.7.6": {
+      "name": "utf-8",
+      "version": "0.7.6",
+      "repository": {
+        "Http": {
+          "url": "https://crates.io/api/v1/crates/utf-8/0.7.6/download",
+          "sha256": "09cc8ee72d2a9becf2f2febe0205bbed8fc6615b7cb429ad062dc7b7ddd036a9"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "utf8",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "utf8",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "edition": "2015",
+        "version": "0.7.6"
+      },
+      "license": "MIT OR Apache-2.0"
+    },
     "utf8-width 0.1.7": {
       "name": "utf8-width",
       "version": "0.1.7",
@@ -44924,6 +46762,143 @@
         },
         "edition": "2018",
         "version": "0.3.1"
+      },
+      "license": "MIT"
+    },
+    "warp 0.3.6": {
+      "name": "warp",
+      "version": "0.3.6",
+      "repository": {
+        "Http": {
+          "url": "https://crates.io/api/v1/crates/warp/0.3.6/download",
+          "sha256": "c1e92e22e03ff1230c03a1a8ee37d2f89cd489e2e541b7550d6afad96faed169"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "warp",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "warp",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "crate_features": {
+          "common": [
+            "default",
+            "multer",
+            "multipart",
+            "tokio-tungstenite",
+            "websocket"
+          ],
+          "selects": {}
+        },
+        "deps": {
+          "common": [
+            {
+              "id": "bytes 1.5.0",
+              "target": "bytes"
+            },
+            {
+              "id": "futures-channel 0.3.30",
+              "target": "futures_channel"
+            },
+            {
+              "id": "futures-util 0.3.30",
+              "target": "futures_util"
+            },
+            {
+              "id": "headers 0.3.9",
+              "target": "headers"
+            },
+            {
+              "id": "http 0.2.11",
+              "target": "http"
+            },
+            {
+              "id": "hyper 0.14.28",
+              "target": "hyper"
+            },
+            {
+              "id": "log 0.4.20",
+              "target": "log"
+            },
+            {
+              "id": "mime 0.3.17",
+              "target": "mime"
+            },
+            {
+              "id": "mime_guess 2.0.4",
+              "target": "mime_guess"
+            },
+            {
+              "id": "multer 2.1.0",
+              "target": "multer"
+            },
+            {
+              "id": "percent-encoding 2.3.1",
+              "target": "percent_encoding"
+            },
+            {
+              "id": "pin-project 1.1.3",
+              "target": "pin_project"
+            },
+            {
+              "id": "rustls-pemfile 1.0.4",
+              "target": "rustls_pemfile"
+            },
+            {
+              "id": "scoped-tls 1.0.1",
+              "target": "scoped_tls"
+            },
+            {
+              "id": "serde 1.0.194",
+              "target": "serde"
+            },
+            {
+              "id": "serde_json 1.0.111",
+              "target": "serde_json"
+            },
+            {
+              "id": "serde_urlencoded 0.7.1",
+              "target": "serde_urlencoded"
+            },
+            {
+              "id": "tokio 1.35.1",
+              "target": "tokio"
+            },
+            {
+              "id": "tokio-stream 0.1.14",
+              "target": "tokio_stream"
+            },
+            {
+              "id": "tokio-tungstenite 0.20.1",
+              "target": "tokio_tungstenite"
+            },
+            {
+              "id": "tokio-util 0.7.10",
+              "target": "tokio_util"
+            },
+            {
+              "id": "tower-service 0.3.2",
+              "target": "tower_service"
+            },
+            {
+              "id": "tracing 0.1.40",
+              "target": "tracing"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2018",
+        "version": "0.3.6"
       },
       "license": "MIT"
     },
@@ -47743,6 +49718,83 @@
       },
       "license": "MIT/Apache-2.0"
     },
+    "x509-parser 0.15.1": {
+      "name": "x509-parser",
+      "version": "0.15.1",
+      "repository": {
+        "Http": {
+          "url": "https://crates.io/api/v1/crates/x509-parser/0.15.1/download",
+          "sha256": "7069fba5b66b9193bd2c5d3d4ff12b839118f6bcbef5328efafafb5395cf63da"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "x509_parser",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "x509_parser",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "crate_features": {
+          "common": [
+            "default"
+          ],
+          "selects": {}
+        },
+        "deps": {
+          "common": [
+            {
+              "id": "asn1-rs 0.5.2",
+              "target": "asn1_rs"
+            },
+            {
+              "id": "data-encoding 2.5.0",
+              "target": "data_encoding"
+            },
+            {
+              "id": "der-parser 8.2.0",
+              "target": "der_parser"
+            },
+            {
+              "id": "lazy_static 1.4.0",
+              "target": "lazy_static"
+            },
+            {
+              "id": "nom 7.1.3",
+              "target": "nom"
+            },
+            {
+              "id": "oid-registry 0.6.1",
+              "target": "oid_registry"
+            },
+            {
+              "id": "rusticata-macros 4.1.0",
+              "target": "rusticata_macros"
+            },
+            {
+              "id": "thiserror 1.0.56",
+              "target": "thiserror"
+            },
+            {
+              "id": "time 0.3.31",
+              "target": "time"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2018",
+        "version": "0.15.1"
+      },
+      "license": "MIT OR Apache-2.0"
+    },
     "xdg-home 1.0.0": {
       "name": "xdg-home",
       "version": "1.0.0",
@@ -48793,15 +50845,24 @@
   },
   "binary_crates": [],
   "workspace_members": {
+    "config-writer-common 0.1.0": "rs/ic-observability/config-writer-common",
     "decentralization 0.1.0": "rs/decentralization",
     "ic-canisters 0.1.0": "rs/ic-canisters",
     "ic-management-backend 0.1.0": "rs/ic-management-backend",
     "ic-management-types 0.1.0": "rs/ic-management-types",
     "log-fetcher 0.1.0": "rs/log-fetcher",
+    "multiservice-discovery 0.1.0": "rs/ic-observability/multiservice-discovery",
+    "multiservice-discovery-downloader 0.1.0": "rs/ic-observability/multiservice-discovery-downloader",
+    "multiservice-discovery-shared 0.1.0": "rs/ic-observability/multiservice-discovery-shared",
+    "node-status-updater 0.1.0": "rs/ic-observability/node-status-updater",
     "node_status_canister_backend 0.1.0": "rs/canisters/node_status_canister/src/node_status_canister_backend",
     "np-notifications 0.1.0": "rs/np-notifications",
+    "obs-canister-clients 0.1.0": "rs/ic-observability/obs-canister-clients",
+    "prometheus-config-updater 0.1.0": "rs/ic-observability/prometheus-config-updater",
     "release_cli 0.1.0": "rs/cli",
-    "slack-notifications 0.1.0": "rs/slack-notifications"
+    "service-discovery 0.1.0": "rs/ic-observability/service-discovery",
+    "slack-notifications 0.1.0": "rs/slack-notifications",
+    "sns-downloader 0.1.0": "rs/ic-observability/sns-downloader"
   },
   "conditions": {
     "aarch64-apple-darwin": [
