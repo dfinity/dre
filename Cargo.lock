@@ -1233,6 +1233,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "canister-log-fetcher"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "clap 4.4.13",
+ "humantime",
+ "log",
+ "pretty_env_logger",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "tokio",
+ "url",
+]
+
+[[package]]
 name = "cargo-platform"
 version = "0.1.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
