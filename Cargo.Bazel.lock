@@ -1,5 +1,5 @@
 {
-  "checksum": "c7892510fa4208fa45b2764a10f34bc155f64df31ec139aa3b247f145c646a7a",
+  "checksum": "974e47a6d1e0628c85156b99724d91bfc8cd6e5fe8cc1337f8353b986aecac2b",
   "crates": {
     "actix 0.13.1": {
       "name": "actix",
@@ -25674,36 +25674,6 @@
       },
       "license": "Apache-2.0"
     },
-    "ic-types 0.7.0": {
-      "name": "ic-types",
-      "version": "0.7.0",
-      "repository": {
-        "Http": {
-          "url": "https://crates.io/api/v1/crates/ic-types/0.7.0/download",
-          "sha256": "95af86c6e40ea8a850c64914024762a0b91a2a6d438b412d8f4a7fc010e72519"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "ic_types",
-            "crate_root": "src/lib.rs",
-            "srcs": [
-              "**/*.rs"
-            ]
-          }
-        }
-      ],
-      "library_target_name": "ic_types",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "edition": "2018",
-        "version": "0.7.0"
-      },
-      "license": "Apache-2.0"
-    },
     "ic-types 0.9.0": {
       "name": "ic-types",
       "version": "0.9.0",
@@ -37974,53 +37944,6 @@
       },
       "license": "MIT"
     },
-    "retry 2.0.0": {
-      "name": "retry",
-      "version": "2.0.0",
-      "repository": {
-        "Http": {
-          "url": "https://crates.io/api/v1/crates/retry/2.0.0/download",
-          "sha256": "9166d72162de3575f950507683fac47e30f6f2c3836b71b7fbc61aa517c9c5f4"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "retry",
-            "crate_root": "src/lib.rs",
-            "srcs": [
-              "**/*.rs"
-            ]
-          }
-        }
-      ],
-      "library_target_name": "retry",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "crate_features": {
-          "common": [
-            "default",
-            "rand",
-            "random"
-          ],
-          "selects": {}
-        },
-        "deps": {
-          "common": [
-            {
-              "id": "rand 0.8.5",
-              "target": "rand"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2018",
-        "version": "2.0.0"
-      },
-      "license": "MIT"
-    },
     "reverse_geocoder 3.0.1": {
       "name": "reverse_geocoder",
       "version": "3.0.1",
@@ -41259,127 +41182,6 @@
         }
       },
       "license": "MIT"
-    },
-    "slack-notifications 0.1.0": {
-      "name": "slack-notifications",
-      "version": "0.1.0",
-      "repository": null,
-      "targets": [],
-      "library_target_name": null,
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "anyhow 1.0.79",
-              "target": "anyhow"
-            },
-            {
-              "id": "candid 0.9.11",
-              "target": "candid"
-            },
-            {
-              "id": "dotenv 0.15.0",
-              "target": "dotenv"
-            },
-            {
-              "id": "env_logger 0.10.1",
-              "target": "env_logger"
-            },
-            {
-              "id": "futures 0.3.30",
-              "target": "futures"
-            },
-            {
-              "id": "ic-agent 0.27.0",
-              "target": "ic_agent"
-            },
-            {
-              "id": "ic-nns-common 0.9.0",
-              "target": "ic_nns_common"
-            },
-            {
-              "id": "ic-nns-constants 0.9.0",
-              "target": "ic_nns_constants"
-            },
-            {
-              "id": "ic-nns-governance 0.9.0",
-              "target": "ic_nns_governance"
-            },
-            {
-              "id": "ic-types 0.7.0",
-              "target": "ic_types"
-            },
-            {
-              "id": "itertools 0.11.0",
-              "target": "itertools"
-            },
-            {
-              "id": "lazy_static 1.4.0",
-              "target": "lazy_static"
-            },
-            {
-              "id": "log 0.4.20",
-              "target": "log"
-            },
-            {
-              "id": "prost 0.12.3",
-              "target": "prost"
-            },
-            {
-              "id": "regex 1.10.2",
-              "target": "regex"
-            },
-            {
-              "id": "registry-canister 0.9.0",
-              "target": "registry_canister"
-            },
-            {
-              "id": "reqwest 0.11.23",
-              "target": "reqwest"
-            },
-            {
-              "id": "retry 2.0.0",
-              "target": "retry"
-            },
-            {
-              "id": "serde 1.0.194",
-              "target": "serde"
-            },
-            {
-              "id": "serde_json 1.0.111",
-              "target": "serde_json"
-            },
-            {
-              "id": "serde_yaml 0.9.30",
-              "target": "serde_yaml"
-            },
-            {
-              "id": "strum 0.25.0",
-              "target": "strum"
-            },
-            {
-              "id": "tokio 1.35.1",
-              "target": "tokio"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2021",
-        "proc_macro_deps": {
-          "common": [
-            {
-              "id": "strum_macros 0.25.3",
-              "target": "strum_macros"
-            }
-          ],
-          "selects": {}
-        },
-        "version": "0.1.0"
-      },
-      "license": null
     },
     "slog 2.7.0": {
       "name": "slog",
@@ -50905,11 +50707,8 @@
   },
   "binary_crates": [],
   "workspace_members": {
-<<<<<<< HEAD
-    "config-writer-common 0.1.0": "rs/ic-observability/config-writer-common",
-=======
     "canister-log-fetcher 0.1.0": "rs/canister-log-fetcher",
->>>>>>> main
+    "config-writer-common 0.1.0": "rs/ic-observability/config-writer-common",
     "decentralization 0.1.0": "rs/decentralization",
     "ic-canisters 0.1.0": "rs/ic-canisters",
     "ic-management-backend 0.1.0": "rs/ic-management-backend",
@@ -50925,7 +50724,6 @@
     "prometheus-config-updater 0.1.0": "rs/ic-observability/prometheus-config-updater",
     "release_cli 0.1.0": "rs/cli",
     "service-discovery 0.1.0": "rs/ic-observability/service-discovery",
-    "slack-notifications 0.1.0": "rs/slack-notifications",
     "sns-downloader 0.1.0": "rs/ic-observability/sns-downloader"
   },
   "conditions": {
