@@ -15,8 +15,7 @@ members = [
     "rs/ic-observability/service-discovery",
     "rs/ic-observability/sns-downloader",
     "rs/log-fetcher",
-    "rs/np-notifications",
-    "rs/slack-notifications",
+    "rs/canister-log-fetcher",
     # Canisters below
     "rs/canisters/node_status_canister/src/node_status_canister_backend",
 ]
