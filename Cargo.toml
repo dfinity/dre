@@ -22,6 +22,13 @@ members = [
 
 resolver = "2"
 
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+authors = ["IC Decentralized Reliability Engineering (DRE) Team"]
+description = "Tooling for managing the Internet Computer"
+documentation = "https://github.com/dfinity/dre/"
+
 [profile.release]
 # Add debug information to the release build (does NOT reduce the level of optimization!)
 # Makes flamegraphs and backtraces more readable.
