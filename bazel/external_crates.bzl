@@ -49,6 +49,7 @@ def external_crates_repository():
         lockfile = "//:Cargo.Bazel.lock",
         manifests = [
             "//:Cargo.toml",
+        "//rs/canister-log-fetcher:Cargo.toml",
 	    "//rs/cli:Cargo.toml",
 	    "//rs/decentralization:Cargo.toml",
 	    "//rs/ic-management-backend:Cargo.toml",

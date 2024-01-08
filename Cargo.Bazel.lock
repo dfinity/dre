@@ -1,5 +1,5 @@
 {
-  "checksum": "5e781c68cde023989824b2828fcb47e5a2acd46564630a93f7bcd189454d63b4",
+  "checksum": "aaf12428a8ad62196a7b35f4a44bba4f2b2da84b3a82a9002486a86faa76b90f",
   "crates": {
     "actix 0.13.1": {
       "name": "actix",
@@ -6369,6 +6369,66 @@
         "version": "0.6.4"
       },
       "license": "Apache-2.0"
+    },
+    "canister-log-fetcher 0.1.0": {
+      "name": "canister-log-fetcher",
+      "version": "0.1.0",
+      "repository": null,
+      "targets": [],
+      "library_target_name": null,
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "anyhow 1.0.79",
+              "target": "anyhow"
+            },
+            {
+              "id": "clap 4.4.13",
+              "target": "clap"
+            },
+            {
+              "id": "humantime 2.1.0",
+              "target": "humantime"
+            },
+            {
+              "id": "log 0.4.20",
+              "target": "log"
+            },
+            {
+              "id": "pretty_env_logger 0.5.0",
+              "target": "pretty_env_logger"
+            },
+            {
+              "id": "reqwest 0.11.23",
+              "target": "reqwest"
+            },
+            {
+              "id": "serde 1.0.194",
+              "target": "serde"
+            },
+            {
+              "id": "serde_json 1.0.111",
+              "target": "serde_json"
+            },
+            {
+              "id": "tokio 1.35.1",
+              "target": "tokio"
+            },
+            {
+              "id": "url 2.5.0",
+              "target": "url"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "0.1.0"
+      },
+      "license": null
     },
     "cargo-platform 0.1.6": {
       "name": "cargo-platform",
@@ -48793,6 +48853,7 @@
   },
   "binary_crates": [],
   "workspace_members": {
+    "canister-log-fetcher 0.1.0": "rs/canister-log-fetcher",
     "decentralization 0.1.0": "rs/decentralization",
     "ic-canisters 0.1.0": "rs/ic-canisters",
     "ic-management-backend 0.1.0": "rs/ic-management-backend",
