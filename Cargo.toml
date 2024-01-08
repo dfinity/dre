@@ -17,6 +17,7 @@ members = [
     "rs/log-fetcher",
     "rs/canister-log-fetcher",
     "rs/np-notifications",
+    "rs/slack-notifications",
     # Canisters below
     "rs/canisters/node_status_canister/src/node_status_canister_backend",
 ]

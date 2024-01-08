@@ -1564,7 +1564,7 @@ dependencies = [
  "crossbeam",
  "crossbeam-channel",
  "erased-serde",
- "ic-types",
+ "ic-types 0.9.0",
  "ic-utils 0.9.0",
  "regex",
  "serde",
@@ -1878,7 +1878,7 @@ dependencies = [
  "ic-nns-common",
  "ic-nns-constants",
  "ic-protobuf",
- "ic-types",
+ "ic-types 0.9.0",
  "ic-xrc-types",
  "icp-ledger",
  "icrc-ledger-types",
@@ -3385,7 +3385,7 @@ dependencies = [
  "futures",
  "futures-util",
  "hyper",
- "ic-types",
+ "ic-types 0.9.0",
  "slog",
  "tokio",
  "tonic",
@@ -3454,7 +3454,7 @@ dependencies = [
  "ic-crypto-utils-threshold-sig-der",
  "ic-ic00-types",
  "ic-protobuf",
- "ic-types",
+ "ic-types 0.9.0",
  "itertools 0.12.0",
  "prost",
  "rustls",
@@ -3478,7 +3478,7 @@ dependencies = [
  "ic-crypto-secrets-containers",
  "ic-crypto-sha2",
  "ic-crypto-utils-basic-sig",
- "ic-types",
+ "ic-types 0.9.0",
  "rand 0.8.5",
  "rand_chacha 0.3.1",
  "simple_asn1",
@@ -3557,7 +3557,7 @@ dependencies = [
  "ic-registry-routing-table",
  "ic-registry-subnet-type",
  "ic-replicated-state",
- "ic-types",
+ "ic-types 0.9.0",
  "itertools 0.12.0",
  "leb128",
  "phantom_newtype",
@@ -3657,7 +3657,7 @@ dependencies = [
  "ic-crypto-tree-hash",
  "ic-crypto-utils-threshold-sig",
  "ic-crypto-utils-threshold-sig-der",
- "ic-types",
+ "ic-types 0.9.0",
  "serde",
  "serde_cbor",
  "tree-deserializer",
@@ -3717,7 +3717,7 @@ dependencies = [
  "ic-protobuf",
  "ic-registry-subnet-type",
  "ic-sys",
- "ic-types",
+ "ic-types 0.9.0",
  "json5",
  "serde",
  "slog",
@@ -3765,7 +3765,7 @@ name = "ic-crypto-interfaces-sig-verification"
 version = "0.9.0"
 source = "git+https://github.com/dfinity/ic.git?rev=4b3b2ce76c4bde0c1c60fb80b0915931003b7eca#4b3b2ce76c4bde0c1c60fb80b0915931003b7eca"
 dependencies = [
- "ic-types",
+ "ic-types 0.9.0",
 ]
 
 [[package]]
@@ -3774,7 +3774,7 @@ version = "0.9.0"
 source = "git+https://github.com/dfinity/ic.git?rev=4b3b2ce76c4bde0c1c60fb80b0915931003b7eca#4b3b2ce76c4bde0c1c60fb80b0915931003b7eca"
 dependencies = [
  "hex",
- "ic-types",
+ "ic-types 0.9.0",
  "simple_asn1",
  "zeroize",
 ]
@@ -3793,7 +3793,7 @@ dependencies = [
  "ic-crypto-internal-types",
  "ic-crypto-secrets-containers",
  "ic-protobuf",
- "ic-types",
+ "ic-types 0.9.0",
  "rand 0.8.5",
  "rand_chacha 0.3.1",
  "serde",
@@ -3840,7 +3840,7 @@ dependencies = [
  "ic-crypto-secrets-containers",
  "ic-crypto-sha2",
  "ic-protobuf",
- "ic-types",
+ "ic-types 0.9.0",
  "rand 0.8.5",
  "rand_chacha 0.3.1",
  "serde",
@@ -3854,7 +3854,7 @@ source = "git+https://github.com/dfinity/ic.git?rev=4b3b2ce76c4bde0c1c60fb80b091
 dependencies = [
  "hex",
  "ic-crypto-sha2",
- "ic-types",
+ "ic-types 0.9.0",
  "rand 0.8.5",
  "rand_chacha 0.3.1",
  "serde",
@@ -3883,7 +3883,7 @@ dependencies = [
  "ic-crypto-internal-types",
  "ic-crypto-secrets-containers",
  "ic-crypto-sha2",
- "ic-types",
+ "ic-types 0.9.0",
  "lazy_static",
  "parking_lot",
  "rand 0.8.5",
@@ -3917,7 +3917,7 @@ dependencies = [
  "ic-crypto-internal-types",
  "ic-crypto-secrets-containers",
  "ic-crypto-sha2",
- "ic-types",
+ "ic-types 0.9.0",
  "k256",
  "lazy_static",
  "p256",
@@ -3964,7 +3964,7 @@ dependencies = [
  "ic-crypto-internal-types",
  "ic-crypto-tls-cert-validation",
  "ic-protobuf",
- "ic-types",
+ "ic-types 0.9.0",
  "serde",
 ]
 
@@ -3992,7 +3992,7 @@ source = "git+https://github.com/dfinity/ic.git?rev=4b3b2ce76c4bde0c1c60fb80b091
 dependencies = [
  "hex",
  "ic-protobuf",
- "ic-types",
+ "ic-types 0.9.0",
 ]
 
 [[package]]
@@ -4015,7 +4015,7 @@ dependencies = [
  "ic-crypto-internal-types",
  "ic-crypto-test-utils-reproducible-rng",
  "ic-protobuf",
- "ic-types",
+ "ic-types 0.9.0",
  "serde",
  "x509-parser 0.14.0",
 ]
@@ -4028,7 +4028,7 @@ dependencies = [
  "async-trait",
  "ic-crypto-sha2",
  "ic-protobuf",
- "ic-types",
+ "ic-types 0.9.0",
  "serde",
  "tokio",
  "tokio-rustls",
@@ -4071,7 +4071,7 @@ source = "git+https://github.com/dfinity/ic.git?rev=4b3b2ce76c4bde0c1c60fb80b091
 dependencies = [
  "ic-crypto-internal-types",
  "ic-protobuf",
- "ic-types",
+ "ic-types 0.9.0",
  "serde_cbor",
 ]
 
@@ -4083,7 +4083,7 @@ dependencies = [
  "base64 0.13.1",
  "ic-crypto-internal-threshold-sig-bls12381",
  "ic-crypto-internal-types",
- "ic-types",
+ "ic-types 0.9.0",
 ]
 
 [[package]]
@@ -4095,7 +4095,7 @@ dependencies = [
  "ic-crypto-internal-threshold-sig-bls12381",
  "ic-crypto-internal-threshold-sig-bls12381-der",
  "ic-crypto-internal-types",
- "ic-types",
+ "ic-types 0.9.0",
 ]
 
 [[package]]
@@ -4120,7 +4120,7 @@ dependencies = [
  "ic-crypto-tls-interfaces",
  "ic-interfaces-registry",
  "ic-metrics",
- "ic-types",
+ "ic-types 0.9.0",
  "prometheus",
  "serde",
  "slog",
@@ -4267,7 +4267,7 @@ dependencies = [
  "ic-registry-provisional-whitelist",
  "ic-registry-subnet-type",
  "ic-sys",
- "ic-types",
+ "ic-types 0.9.0",
  "ic-utils 0.9.0",
  "ic-wasm-types",
  "prost",
@@ -4283,7 +4283,7 @@ name = "ic-interfaces-registry"
 version = "0.9.0"
 source = "git+https://github.com/dfinity/ic.git?rev=4b3b2ce76c4bde0c1c60fb80b0915931003b7eca#4b3b2ce76c4bde0c1c60fb80b0915931003b7eca"
 dependencies = [
- "ic-types",
+ "ic-types 0.9.0",
  "prost",
  "serde",
 ]
@@ -4294,7 +4294,7 @@ version = "0.9.0"
 source = "git+https://github.com/dfinity/ic.git?rev=4b3b2ce76c4bde0c1c60fb80b0915931003b7eca#4b3b2ce76c4bde0c1c60fb80b0915931003b7eca"
 dependencies = [
  "ic-crypto-tree-hash",
- "ic-types",
+ "ic-types 0.9.0",
  "phantom_newtype",
  "thiserror",
 ]
@@ -4408,7 +4408,7 @@ dependencies = [
  "ic-registry-local-store",
  "ic-registry-nns-data-provider",
  "ic-registry-subnet-type",
- "ic-types",
+ "ic-types 0.9.0",
  "itertools 0.11.0",
  "lazy_static",
  "log",
@@ -4443,7 +4443,7 @@ dependencies = [
  "ic-base-types",
  "ic-nns-governance",
  "ic-registry-subnet-type",
- "ic-types",
+ "ic-types 0.9.0",
  "itertools 0.11.0",
  "registry-canister",
  "reqwest",
@@ -4546,7 +4546,7 @@ source = "git+https://github.com/dfinity/ic.git?rev=4b3b2ce76c4bde0c1c60fb80b091
 dependencies = [
  "ic-base-types",
  "ic-canister-client-sender",
- "ic-types",
+ "ic-types 0.9.0",
  "lazy_static",
  "rand 0.8.5",
  "rand_chacha 0.3.1",
@@ -4650,7 +4650,7 @@ dependencies = [
  "ic-registry-keys",
  "ic-registry-transport",
  "ic-stable-structures",
- "ic-types",
+ "ic-types 0.9.0",
  "lazy_static",
  "num-traits",
  "on_wire",
@@ -4708,7 +4708,7 @@ dependencies = [
  "ic-sns-swap",
  "ic-sns-wasm",
  "ic-stable-structures",
- "ic-types",
+ "ic-types 0.9.0",
  "icp-ledger",
  "itertools 0.12.0",
  "lazy_static",
@@ -4775,7 +4775,7 @@ dependencies = [
  "ic-registry-client-helpers",
  "ic-registry-common-proto",
  "ic-registry-keys",
- "ic-types",
+ "ic-types 0.9.0",
  "ic-utils 0.9.0",
  "prometheus",
 ]
@@ -4786,7 +4786,7 @@ version = "0.9.0"
 source = "git+https://github.com/dfinity/ic.git?rev=4b3b2ce76c4bde0c1c60fb80b0915931003b7eca#4b3b2ce76c4bde0c1c60fb80b0915931003b7eca"
 dependencies = [
  "ic-interfaces-registry",
- "ic-types",
+ "ic-types 0.9.0",
 ]
 
 [[package]]
@@ -4803,7 +4803,7 @@ dependencies = [
  "ic-registry-provisional-whitelist",
  "ic-registry-routing-table",
  "ic-registry-subnet-features",
- "ic-types",
+ "ic-types 0.9.0",
  "serde_cbor",
  "thiserror",
 ]
@@ -4824,7 +4824,7 @@ dependencies = [
  "candid 0.9.11",
  "ic-base-types",
  "ic-ic00-types",
- "ic-types",
+ "ic-types 0.9.0",
  "serde",
 ]
 
@@ -4840,7 +4840,7 @@ dependencies = [
  "ic-registry-local-store",
  "ic-registry-nns-data-provider",
  "ic-registry-transport",
- "ic-types",
+ "ic-types 0.9.0",
  "thiserror",
  "tokio",
  "url",
@@ -4853,7 +4853,7 @@ source = "git+https://github.com/dfinity/ic.git?rev=4b3b2ce76c4bde0c1c60fb80b091
 dependencies = [
  "ic-interfaces-registry",
  "ic-registry-common-proto",
- "ic-types",
+ "ic-types 0.9.0",
  "ic-utils 0.9.0",
  "prost",
 ]
@@ -4875,7 +4875,7 @@ dependencies = [
  "ic-interfaces-registry",
  "ic-nns-constants",
  "ic-registry-transport",
- "ic-types",
+ "ic-types 0.9.0",
  "prost",
  "rand 0.8.5",
  "serde",
@@ -4965,7 +4965,7 @@ dependencies = [
  "ic-registry-subnet-features",
  "ic-registry-subnet-type",
  "ic-sys",
- "ic-types",
+ "ic-types 0.9.0",
  "ic-utils 0.9.0",
  "ic-wasm-types",
  "itertools 0.12.0",
@@ -5151,7 +5151,7 @@ dependencies = [
  "ic-sns-governance",
  "ic-sns-init",
  "ic-sns-root",
- "ic-types",
+ "ic-types 0.9.0",
  "icrc-ledger-types",
  "maplit",
  "prost",
@@ -5195,6 +5195,12 @@ dependencies = [
  "sha2 0.10.8",
  "thiserror",
 ]
+
+[[package]]
+name = "ic-types"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "95af86c6e40ea8a850c64914024762a0b91a2a6d438b412d8f4a7fc010e72519"
 
 [[package]]
 name = "ic-types"
@@ -5288,7 +5294,7 @@ dependencies = [
  "ic-crypto-sha2",
  "ic-protobuf",
  "ic-sys",
- "ic-types",
+ "ic-types 0.9.0",
  "ic-utils 0.9.0",
  "serde",
 ]
@@ -6040,7 +6046,7 @@ dependencies = [
  "ic-async-utils",
  "ic-crypto-utils-threshold-sig-der",
  "ic-registry-client",
- "ic-types",
+ "ic-types 0.9.0",
  "ic-utils 0.9.0",
  "multiservice-discovery-shared",
  "regex",
@@ -6065,7 +6071,7 @@ dependencies = [
  "futures-util",
  "humantime",
  "ic-async-utils",
- "ic-types",
+ "ic-types 0.9.0",
  "multiservice-discovery-shared",
  "regex",
  "reqwest",
@@ -6082,7 +6088,7 @@ name = "multiservice-discovery-shared"
 version = "0.1.0"
 dependencies = [
  "erased-serde",
- "ic-types",
+ "ic-types 0.9.0",
  "regex",
  "ring 0.16.20",
  "serde",
@@ -6202,7 +6208,7 @@ dependencies = [
  "ic-management-types",
  "ic-registry-client-helpers",
  "ic-registry-local-registry",
- "ic-types",
+ "ic-types 0.9.0",
  "pretty_assertions",
  "rand 0.8.5",
  "reqwest",
@@ -7068,7 +7074,7 @@ dependencies = [
  "ic-crypto-utils-threshold-sig-der",
  "ic-http-endpoints-metrics",
  "ic-metrics",
- "ic-types",
+ "ic-types 0.9.0",
  "regex",
  "serde",
  "serde_json",
@@ -7419,7 +7425,7 @@ dependencies = [
  "ic-registry-subnet-features",
  "ic-registry-subnet-type",
  "ic-registry-transport",
- "ic-types",
+ "ic-types 0.9.0",
  "ipnet",
  "lazy_static",
  "leb128",
@@ -7545,6 +7551,15 @@ name = "retain_mut"
 version = "0.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4389f1d5789befaf6029ebd9f7dac4af7f7e3d61b69d4f30e2ac02b57e7712b0"
+
+[[package]]
+name = "retry"
+version = "2.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9166d72162de3575f950507683fac47e30f6f2c3836b71b7fbc61aa517c9c5f4"
+dependencies = [
+ "rand 0.8.5",
+]
 
 [[package]]
 name = "reverse_geocoder"
@@ -8043,7 +8058,7 @@ dependencies = [
  "ic-registry-local-store",
  "ic-registry-local-store-artifacts",
  "ic-registry-nns-data-provider",
- "ic-types",
+ "ic-types 0.9.0",
  "ic-utils 0.9.0",
  "itertools 0.12.0",
  "prometheus",
@@ -8161,6 +8176,36 @@ dependencies = [
 ]
 
 [[package]]
+name = "slack-notifications"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "candid 0.9.11",
+ "dotenv",
+ "env_logger",
+ "futures",
+ "ic-agent 0.27.0",
+ "ic-nns-common",
+ "ic-nns-constants",
+ "ic-nns-governance",
+ "ic-types 0.7.0",
+ "itertools 0.11.0",
+ "lazy_static",
+ "log",
+ "prost",
+ "regex",
+ "registry-canister",
+ "reqwest",
+ "retry",
+ "serde",
+ "serde_json",
+ "serde_yaml 0.9.30",
+ "strum 0.25.0",
+ "strum_macros 0.25.3",
+ "tokio",
+]
+
+[[package]]
 name = "slog"
 version = "2.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -8243,7 +8288,7 @@ dependencies = [
  "futures-util",
  "humantime",
  "ic-async-utils",
- "ic-types",
+ "ic-types 0.9.0",
  "multiservice-discovery-shared",
  "regex",
  "reqwest",
