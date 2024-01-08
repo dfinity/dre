@@ -27,7 +27,7 @@ crossbeam = "0.8.0"
 crossbeam-channel = "0.5.5"
 ic-agent = { version = "0.30.2", features = ["hyper"] }
 obs-canister-clients = { path = "../obs-canister-clients" }
-prometheus-http-query = { version = "0.6.6", default_features = false, features = [
+prometheus-http-query = { version = "0.6.7", default_features = false, features = [
   "rustls-tls-webpki-roots",
 ] }
 
