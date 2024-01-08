@@ -3,10 +3,12 @@ load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
 
 package(default_visibility = ["//visibility:public"])
 
-DEPS = []
+DEPS = [
+    "//rs/ic-observability/service-discovery"
+]
 
 rust_library(
-    name = "node-status-canister-backend",
+    name = "multiservice-discovery-shared",
     srcs = glob(["src/**/*.rs"]),
     aliases = aliases(),
     proc_macro_deps = all_crate_deps(
@@ -18,12 +20,12 @@ rust_library(
 )
 
 rust_test(
-    name = "node_status_canister_backend",
+    name = "unit_test",
     aliases = aliases(
         normal_dev = True,
         proc_macro_dev = True,
     ),
-    crate = ":node-status-canister-backend",
+    crate = ":multiservice-discovery-shared",
     proc_macro_deps = all_crate_deps(
         proc_macro_dev = True,
     ),
