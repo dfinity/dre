@@ -4,10 +4,9 @@ use std::thread::JoinHandle;
 use std::time::Duration;
 
 use ic_crypto_utils_threshold_sig_der::parse_threshold_sig_key_from_der;
-use service_discovery::registry_sync::ping_nns;
+use service_discovery::registry_sync::nns_reachable;
 use slog::Logger;
 use tokio::sync::Mutex;
-use url::Url;
 use warp::Reply;
 
 use crate::definition::{wrap, Definition};
@@ -51,7 +50,7 @@ pub async fn add_definition(definition: DefinitionDto, binding: AddDefinitionBin
         ));
     }
 
-    if !ping_nns(definition.nns_urls.clone()).await {
+    if !nns_reachable(definition.nns_urls.clone()).await {
         return Ok(warp::reply::with_status(
             "Couldn't ping nns of that definition".to_string(),
             warp::http::StatusCode::BAD_REQUEST,

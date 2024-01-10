@@ -181,7 +181,7 @@ async fn get_nns_public_key(registry_canister: &RegistryCanister) -> anyhow::Res
     )
 }
 
-pub async fn ping_nns(nns_urls: Vec<Url>) -> bool {
+pub async fn nns_reachable(nns_urls: Vec<Url>) -> bool {
     let registry_canister = RegistryCanister::new(nns_urls);
 
     get_nns_public_key(&registry_canister).await.is_ok()
