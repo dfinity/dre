@@ -12,8 +12,7 @@ jobs:
           apt-get install -y libc6 ca-certificates
       - name: Create non-root user and continue with him
         run: |
-          useradd -m -p '' bazel && \
-          su - bazel
+          useradd -m -p '' bazel
       - name: Free Disk Space (Ubuntu)
         uses: jlumbroso/free-disk-space@v1.3.1
         with:
@@ -34,7 +33,7 @@ jobs:
             ${{ runner.os }}-bazel-
       - name: Clean bazel cache directory from time to time
         run: bin/clean-bazel-cache.sh
-      - run: whoami && \ bazel build ...
+      - run: su - bazel && bazel build ...
       - run: bazel test ...
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
