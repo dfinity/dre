@@ -33,7 +33,7 @@ jobs:
             ${{ runner.os }}-bazel-
       - name: Clean bazel cache directory from time to time
         run: bin/clean-bazel-cache.sh
-      - run: su - bazel -c 'whoami && ls /__t/bazelisk/1.19.0/x64 && ./__t/bazelisk/1.19.0/x64 build ...'
+      - run: su - bazel -c 'whoami && ./__t/bazelisk/1.19.0/x64/bazel build ...'
       - run: bazel test ...
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
