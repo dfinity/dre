@@ -3,6 +3,8 @@ on: [push]
 jobs:
   bazel:
     runs-on: ubuntu-22.04
+    container:
+      image: ubuntu:22.04
     steps:
       - name: Free Disk Space (Ubuntu)
         uses: jlumbroso/free-disk-space@v1.3.1
