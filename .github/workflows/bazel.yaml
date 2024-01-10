@@ -10,6 +10,10 @@ jobs:
         run: |
           apt-get update && \
           apt-get install -y libc6 ca-certificates
+      - name: Create non-root user and continue with him
+        run: |
+          useradd -m -p '' bazel && \
+          su - bazel
       - name: Free Disk Space (Ubuntu)
         uses: jlumbroso/free-disk-space@v1.3.1
         with:
