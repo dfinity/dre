@@ -24,6 +24,10 @@ jobs:
             ${{ runner.os }}-bazel-
       - name: Clean bazel cache directory from time to time
         run: bin/clean-bazel-cache.sh
+      - name: Update glibc
+        run: |
+          apt-get update && \
+          apt-get install -y libc6
       - run: bazel build ...
       - run: bazel test ...
       - name: Login to GitHub Container Registry
