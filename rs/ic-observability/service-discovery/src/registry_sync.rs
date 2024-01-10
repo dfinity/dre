@@ -14,9 +14,7 @@ use ic_registry_common_proto::pb::local_store::v1::{
     ChangelogEntry as PbChangelogEntry, KeyMutation as PbKeyMutation, MutationType,
 };
 use ic_registry_keys::{make_crypto_threshold_signing_pubkey_key, ROOT_SUBNET_ID_KEY};
-use ic_registry_local_store::{
-    Changelog, ChangelogEntry, KeyMutation, LocalStoreImpl, LocalStoreWriter,
-};
+use ic_registry_local_store::{Changelog, ChangelogEntry, KeyMutation, LocalStoreImpl, LocalStoreWriter};
 use ic_registry_nns_data_provider::registry::RegistryCanister;
 use ic_types::{PrincipalId, RegistryVersion, SubnetId};
 use registry_canister::mutations::common::decode_registry_value;
@@ -41,10 +39,7 @@ pub async fn sync_local_registry(
         registry_cache.update_to_latest_version();
         registry_cache.get_latest_version()
     };
-    debug!(
-        log,
-        "Syncing registry version from version : {}", latest_version
-    );
+    debug!(log, "Syncing registry version from version : {}", latest_version);
 
     if use_current_version && latest_version != ZERO_REGISTRY_VERSION {
         debug!(log, "Skipping syncing with registry, using local version");
@@ -59,10 +54,19 @@ pub async fn sync_local_registry(
     let mut latest_certified_time = 0;
     let mut updates = vec![];
     let nns_public_key = match public_key {
-        Some(pk) => Ok(pk),
-        _ => get_nns_public_key(&registry_canister)
-            .await
-            .map_err(|e| anyhow::format_err!("Failed to get nns_public_key: {}", e)),
+        Some(pk) => pk,
+        _ => {
+            let maybe_key = get_nns_public_key(&registry_canister)
+                .await
+                .map_err(|e| anyhow::format_err!("Failed to get nns_public_key: {}", e));
+
+            if let Err(e) = maybe_key {
+                let network_name = local_path.file_name().unwrap().to_str().unwrap();
+                debug!(log, "Unable to fetch public key for network {}: {:?}", network_name, e);
+                return;
+            }
+            maybe_key.unwrap()
+        }
     };
 
     loop {
@@ -80,23 +84,21 @@ pub async fn sync_local_registry(
         }
 
         if let Ok((mut initial_records, _, t)) = registry_canister
-            .get_certified_changes_since(latest_version.get(), nns_public_key.as_ref().unwrap())
+            .get_certified_changes_since(latest_version.get(), &nns_public_key)
             .await
         {
             initial_records.sort_by_key(|r| r.version);
-            let changelog = initial_records
-                .iter()
-                .fold(Changelog::default(), |mut cl, r| {
-                    let rel_version = (r.version - latest_version).get();
-                    if cl.len() < rel_version as usize {
-                        cl.push(ChangelogEntry::default());
-                    }
-                    cl.last_mut().unwrap().push(KeyMutation {
-                        key: r.key.clone(),
-                        value: r.value.clone(),
-                    });
-                    cl
+            let changelog = initial_records.iter().fold(Changelog::default(), |mut cl, r| {
+                let rel_version = (r.version - latest_version).get();
+                if cl.len() < rel_version as usize {
+                    cl.push(ChangelogEntry::default());
+                }
+                cl.last_mut().unwrap().push(KeyMutation {
+                    key: r.key.clone(),
+                    value: r.value.clone(),
                 });
+                cl
+            });
 
             let versions_count = changelog.len();
 
@@ -152,25 +154,16 @@ pub async fn sync_local_registry(
     }
 
     futures::future::join_all(updates).await;
-    local_store
-        .update_certified_time(latest_certified_time)
-        .unwrap();
-    info!(
-        log,
-        "Synced all registry versions in : {:?}",
-        start.elapsed()
-    )
+    local_store.update_certified_time(latest_certified_time).unwrap();
+    info!(log, "Synced all registry versions in : {:?}", start.elapsed())
 }
 
-async fn get_nns_public_key(
-    registry_canister: &RegistryCanister,
-) -> anyhow::Result<ThresholdSigPublicKey> {
+async fn get_nns_public_key(registry_canister: &RegistryCanister) -> anyhow::Result<ThresholdSigPublicKey> {
     let (nns_subnet_id_vec, _) = registry_canister
         .get_value(ROOT_SUBNET_ID_KEY.as_bytes().to_vec(), None)
         .await
         .map_err(|e| anyhow::format_err!("failed to get root subnet: {}", e))?;
-    let nns_subnet_id =
-        decode_registry_value::<ic_protobuf::types::v1::SubnetId>(nns_subnet_id_vec);
+    let nns_subnet_id = decode_registry_value::<ic_protobuf::types::v1::SubnetId>(nns_subnet_id_vec);
     let (nns_pub_key_vec, _) = registry_canister
         .get_value(
             make_crypto_threshold_signing_pubkey_key(SubnetId::new(
@@ -182,8 +175,14 @@ async fn get_nns_public_key(
         )
         .await
         .map_err(|e| anyhow::format_err!("failed to get public key: {}", e))?;
-    Ok(ThresholdSigPublicKey::try_from(
-        PublicKey::decode(nns_pub_key_vec.as_slice()).expect("invalid public key"),
+    Ok(
+        ThresholdSigPublicKey::try_from(PublicKey::decode(nns_pub_key_vec.as_slice()).expect("invalid public key"))
+            .expect("failed to create thresholdsig public key"),
     )
-    .expect("failed to create thresholdsig public key"))
+}
+
+pub async fn nns_reachable(nns_urls: Vec<Url>) -> bool {
+    let registry_canister = RegistryCanister::new(nns_urls);
+
+    get_nns_public_key(&registry_canister).await.is_ok()
 }

@@ -23,6 +23,7 @@ rust_binary(
 rust_binary_oci_image_rules(
     name = "oci_image",
     src = ":multiservice-discovery",
+    base_image = "@debian-slim"
 )
 
 rust_test(

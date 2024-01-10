@@ -4,6 +4,7 @@ use std::thread::JoinHandle;
 use std::time::Duration;
 
 use ic_crypto_utils_threshold_sig_der::parse_threshold_sig_key_from_der;
+use service_discovery::registry_sync::nns_reachable;
 use slog::Logger;
 use tokio::sync::Mutex;
 use warp::Reply;
@@ -22,10 +23,7 @@ pub struct AddDefinitionBinding {
     pub handles: Arc<Mutex<Vec<JoinHandle<()>>>>,
 }
 
-pub async fn add_definition(
-    definition: DefinitionDto,
-    binding: AddDefinitionBinding,
-) -> WebResult<impl Reply> {
+pub async fn add_definition(definition: DefinitionDto, binding: AddDefinitionBinding) -> WebResult<impl Reply> {
     let public_key = match definition.public_key {
         Some(pk) => {
             let decoded = base64::decode(pk).unwrap();
@@ -48,6 +46,13 @@ pub async fn add_definition(
     if definitions.iter().any(|d| d.name == definition.name) {
         return Ok(warp::reply::with_status(
             "Definition with this name already exists".to_string(),
+            warp::http::StatusCode::BAD_REQUEST,
+        ));
+    }
+
+    if !nns_reachable(definition.nns_urls.clone()).await {
+        return Ok(warp::reply::with_status(
+            "Couldn't ping nns of that definition".to_string(),
             warp::http::StatusCode::BAD_REQUEST,
         ));
     }
