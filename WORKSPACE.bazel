@@ -193,8 +193,8 @@ oci_pull(
 oci_pull(
     # tag = bookworm-20231218-slim
     name = "debian-slim",
-    digest = "sha256:1b89f64edb0842c5a960ceaf91df801ef5f7a58dfd44114dc66d83c44dc5d78d",
-    image = "index.docker.io/debian",
+    digest = "sha256:45287d89d96414e57c7705aa30cb8f9836ef30ae8897440dd8f06c4cff801eec",
+    image = "index.docker.io/library/debian",
 )
 
 http_archive(
