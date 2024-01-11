@@ -9,7 +9,7 @@ jobs:
       - name: Update glibc
         run: |
           apt-get update && \
-          apt-get install -y libc6 ca-certificates
+          apt-get install -y libc6 ca-certificates build-essential
       - name: Create non-root user and continue with him
         run: |
           useradd -m -p '' bazel
