@@ -29,7 +29,7 @@ rust_test(
         normal_dev = True,
         proc_macro_dev = True,
     ),
-    crate = ":release_cli",
+    crate = ":dre",
     proc_macro_deps = all_crate_deps(
         proc_macro_dev = True,
     ),
