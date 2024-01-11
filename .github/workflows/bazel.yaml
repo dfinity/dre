@@ -50,5 +50,6 @@ jobs:
           files: |
             release/*
       - name: Push images to GitHub Container Registry
-        run: # bazel query --noshow_progress 'kind("oci_push", ...)' | xargs -I_target bazel run _target -- --tag ${GITHUB_SHA}
+        run: echo docker push
+          # bazel query --noshow_progress 'kind("oci_push", ...)' | xargs -I_target bazel run _target -- --tag ${GITHUB_SHA}
         if: startsWith(github.ref, 'refs/tags/v')
