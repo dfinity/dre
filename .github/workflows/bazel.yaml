@@ -4,28 +4,28 @@ jobs:
   bazel:
     runs-on: ubuntu-22.04
     steps:
-      # - name: Free Disk Space (Ubuntu)
-      #   uses: jlumbroso/free-disk-space@v1.3.1
-      #   with:
-      #     # this might remove tools that are actually needed,
-      #     # when set to "true" but frees about 6 GB
-      #     tool-cache: true
+      - name: Free Disk Space (Ubuntu)
+        uses: jlumbroso/free-disk-space@v1.3.1
+        with:
+          # this might remove tools that are actually needed,
+          # when set to "true" but frees about 6 GB
+          tool-cache: true
       - uses: actions/checkout@v4
-      # - uses: bazelbuild/setup-bazelisk@v2
-      # - name: Mount bazel cache
-      #   uses: actions/cache@v3
-      #   with:
-      #     path: "~/.cache/bazel"
-      #     # Configure cache updates
-      #     # https://github.com/actions/cache/blob/main/tips-and-workarounds.md#update-a-cache
-      #     # https://github.com/actions/cache/blob/main/examples.md#---bazel
-      #     key: ${{ runner.os }}-bazel-${{ hashFiles('.bazelversion', '.bazelrc', 'WORKSPACE', 'WORKSPACE.bazel', 'MODULE.bazel', 'Cargo.Bazel.lock') }}
-      #     restore-keys: |
-      #       ${{ runner.os }}-bazel-
-      # - name: Clean bazel cache directory from time to time
-      #   run: bin/clean-bazel-cache.sh
-      # - run: bazel build ...
-      # - run: bazel test ...
+      - uses: bazelbuild/setup-bazelisk@v2
+      - name: Mount bazel cache
+        uses: actions/cache@v3
+        with:
+          path: "~/.cache/bazel"
+          # Configure cache updates
+          # https://github.com/actions/cache/blob/main/tips-and-workarounds.md#update-a-cache
+          # https://github.com/actions/cache/blob/main/examples.md#---bazel
+          key: ${{ runner.os }}-bazel-${{ hashFiles('.bazelversion', '.bazelrc', 'WORKSPACE', 'WORKSPACE.bazel', 'MODULE.bazel', 'Cargo.Bazel.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-bazel-
+      - name: Clean bazel cache directory from time to time
+        run: bin/clean-bazel-cache.sh
+      - run: bazel build ...
+      - run: bazel test ...
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
         with:
@@ -37,8 +37,7 @@ jobs:
         run: |
           # query the location of the bazel "dre" binary and copy it to the "release" directory
           mkdir -p release
-          # cp bazel-out/k8-opt/bin/rs/cli/dre release/dre
-          dd if=/dev/zero of=release/dre bs=1 count=1
+          cp --dereference bazel-out/k8-opt/bin/rs/cli/dre release/dre
           chmod +x release/dre
       - name: Publish Release
         if: startsWith(github.ref, 'refs/tags/v')
@@ -50,6 +49,6 @@ jobs:
           files: |
             release/*
       - name: Push images to GitHub Container Registry
-        run: echo docker push
-          # bazel query --noshow_progress 'kind("oci_push", ...)' | xargs -I_target bazel run _target -- --tag ${GITHUB_SHA}
         if: startsWith(github.ref, 'refs/tags/v')
+        run:
+          bazel query --noshow_progress 'kind("oci_push", ...)' | xargs -I_target bazel run _target -- --tag ${GITHUB_SHA}
