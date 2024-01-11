@@ -11,7 +11,7 @@ DEPS = [
 ]
 
 rust_binary(
-    name = "release_cli",
+    name = "dre",
     srcs = glob(["src/**/*.rs"]),
     aliases = aliases(),
     proc_macro_deps = all_crate_deps(
