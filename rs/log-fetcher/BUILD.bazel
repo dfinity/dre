@@ -20,7 +20,7 @@ rust_binary(
 rust_binary_oci_image_rules(
     name = "oci_image",
     src = ":log-fetcher",
-    base_image = "@vector"
+    base_image = "@vector-debian"
 )
 
 rust_test(
