@@ -10,6 +10,7 @@ jobs:
           # this might remove tools that are actually needed,
           # when set to "true" but frees about 6 GB
           tool-cache: true
+          large-packages: false  # this is slow
       - uses: actions/checkout@v4
       - uses: bazelbuild/setup-bazelisk@v2
       - name: Mount bazel cache
@@ -22,10 +23,10 @@ jobs:
           key: ${{ runner.os }}-bazel-${{ hashFiles('.bazelversion', '.bazelrc', 'WORKSPACE', 'WORKSPACE.bazel', 'MODULE.bazel', 'Cargo.Bazel.lock') }}
           restore-keys: |
             ${{ runner.os }}-bazel-
-      - name: Clean bazel cache directory from time to time
-        run: bin/clean-bazel-cache.sh
       - run: bazel build ...
       - run: bazel test ...
+      - name: Optimize bazel cache directory before uploading
+        run: bin/optimize-bazel-cache.sh
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
         with:
