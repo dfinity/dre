@@ -34,3 +34,7 @@ ic-types ={ git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c1c
 multiservice-discovery-shared = {path = "../multiservice-discovery-shared"}
 ic-crypto-utils-threshold-sig-der = { git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca" }
 base64 = "0.13.1"
+tempdir = "0.3.7"
+reqwest = "0.11.23"
+assert_cmd = "1.0"
+anyhow = "1.0.79"

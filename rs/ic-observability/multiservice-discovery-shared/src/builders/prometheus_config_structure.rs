@@ -1,13 +1,13 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use ic_types::PrincipalId;
-use serde::{Serialize, Serializer};
+use serde::{Deserialize, Serialize, Serializer};
 use service_discovery::job_types::JobType;
 use service_discovery::jobs::Job;
 
 use crate::{builders::ConfigBuilder, contracts::target::TargetDto};
 
-#[derive(Serialize, Debug, Clone, PartialEq, PartialOrd, Ord, Eq)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, PartialOrd, Ord, Eq)]
 pub struct PrometheusStaticConfig {
     pub targets: BTreeSet<String>,
     pub labels: BTreeMap<String, String>,

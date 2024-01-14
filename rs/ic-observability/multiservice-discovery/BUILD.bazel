@@ -1,5 +1,5 @@
 load("@crate_index_dre//:defs.bzl", "aliases", "all_crate_deps")
-load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_test")
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_test", rust_test_suite)
 load("@//rs:oci_images.bzl", "rust_binary_oci_image_rules")
 
 DEPS = [
@@ -39,4 +39,10 @@ rust_test(
     deps = all_crate_deps(
         normal_dev = True,
     ) + DEPS,
+)
+
+rust_test_suite(
+    name = "mainnet_targets_tests",
+    srcs = glob(["tests/**/*.rs"]),
+    deps = [":multiservice-discovery"] + DEPS,
 )
