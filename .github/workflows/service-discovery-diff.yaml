@@ -4,12 +4,12 @@ on:
   push:
     branches:
       - "test-changes-app"
-permissions: read-all
 
 jobs:
   pr-check:
     runs-on: ubuntu-22.04
-
+    permissions:
+      issues: write
     steps:
       - name: Free Disk Space (Ubuntu)
         uses: jlumbroso/free-disk-space@v1.3.1
