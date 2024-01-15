@@ -22,7 +22,9 @@ pub struct ExportDefinitionConfigBinding {
     pub log: Logger,
 }
 
-pub async fn export_prometheus_config(binding: ExportDefinitionConfigBinding) -> WebResult<impl Reply> {
+pub async fn export_prometheus_config(
+    binding: ExportDefinitionConfigBinding,
+) -> WebResult<impl Reply> {
     let definitions = binding.definitions.lock().await;
 
     let all_jobs = [
@@ -37,13 +39,19 @@ pub async fn export_prometheus_config(binding: ExportDefinitionConfigBinding) ->
 
     for def in definitions.iter() {
         for job_type in all_jobs {
-            let targets = match def.ic_discovery.get_target_groups(job_type, binding.log.clone()) {
+            let targets = match def
+                .ic_discovery
+                .get_target_groups(job_type, binding.log.clone())
+            {
                 Ok(targets) => targets,
                 Err(_) => continue,
             };
 
             for target in targets {
-                if let Some(entry) = total_targets.iter_mut().find(|t| t.node_id == target.node_id) {
+                if let Some(entry) = total_targets
+                    .iter_mut()
+                    .find(|t| t.node_id == target.node_id)
+                {
                     entry.jobs.push(job_type);
                 } else {
                     let mut mapped = Into::<TargetDto>::into(&target);
