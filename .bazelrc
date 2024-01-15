@@ -1,5 +1,17 @@
 build --workspace_status_command=$(pwd)/bazel/workspace_status.sh
 
+# Use local disk cache by default
+build --disk_cache=~/.cache/bazel/local_cache
+
+# Repository cache
+build --repository_cache=~/.cache/bazel/repository_cache
+
+# Use hard links in the repository cache, to save disk space
+build --experimental_repository_cache_hardlinks=true
+
+# Retry downloads
+build --experimental_repository_downloader_retries=3
+
 # Use hermetic JDK
 # See https://bazel.build/docs/bazel-and-java#hermetic-testing
 build --java_runtime_version=remotejdk_17
