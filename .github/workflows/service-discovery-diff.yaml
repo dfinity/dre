@@ -11,12 +11,5 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - name: Retrieve commit associated with the latest tag in main
-        id: get-latest-tag-commit
-        run: |
-          set -eExuo pipefail
-          LATEST_TAG_COMMIT=$(git show-ref --tags -d | sort -k2,2 | tail -n 1 | awk '{print $1}')
-          IMAGE_NAME="ghcr.io/${{ github.repository }}/multiservice-discovery:${LATEST_TAG_COMMIT}"
-          TOKEN=$(curl -s -H "Authorization: bearer ${{ secrets.GITHUB_TOKEN }}" "https://ghcr.io/auth/token" | jq -r '.token')
-          DIGEST=$(curl -s -H "Authorization: bearer ${TOKEN}" "https://ghcr.io/v2/${{ github.repository }}/multiservice-discovery/manifests/${LATEST_TAG_COMMIT}" | jq -r '.config.digest')
-          echo "Image digest: $DIGEST"
+      - name: Setup upterm session
+        uses: lhotari/action-upterm@v1
