@@ -1,6 +1,9 @@
 name: PR Checksum Comparison
 
-on: workflow_dispatch
+on:
+  push:
+    branches:
+      - "test-changes-app"
 
 jobs:
   pr-check:
