@@ -10,6 +10,20 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
+      - name: Free Disk Space (Ubuntu)
+        uses: jlumbroso/free-disk-space@v1.3.1
+        with:
+          # this might remove tools that are actually needed,
+          # when set to "true" but frees about 6 GB
+          tool-cache: true
+          large-packages: false  # this is slow
       - uses: actions/checkout@v4
-      - name: Setup upterm session
-        uses: lhotari/action-upterm@v1
+      - name: Retrieve commit associated with the latest tag in main
+        id: get-latest-tag-commit
+        run: |
+          set -eExuo pipefail
+          git pull
+          LATEST_TAG_COMMIT=$(git show-ref --tags -d | sort -k2,2 | tail -n 1 | awk '{print $1}')
+          TOKEN=$(curl -s -H "Authorization: bearer ${{ secrets.GITHUB_TOKEN }}" "https://ghcr.io/auth/token" | jq -r '.token')
+          DIGEST=$(curl -s -H "Authorization: bearer ${TOKEN}" "https://ghcr.io/v2/${{ github.repository }}/multiservice-discovery/manifests/${LATEST_TAG_COMMIT}" | jq -r '.config.digest')
+          echo "Image digest: $DIGEST"
