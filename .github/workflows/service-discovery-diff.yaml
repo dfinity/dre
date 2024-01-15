@@ -19,10 +19,13 @@ jobs:
           tool-cache: true
           large-packages: false  # this is slow
       - uses: actions/checkout@v4
-      - name: Retrieve commit associated with the latest tag in main
-        id: get-latest-tag-commit
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Get Package Digest
         run: |
-          set -eExuo pipefail
-          git pull
-          LATEST_TAG_COMMIT=$(git show-ref --tags -d | sort -k2,2 | tail -n 1 | awk '{print $1}')
-          curl -s -H "Authorization: bearer ${{ secrets.GITHUB_TOKEN }}" "https://ghcr.io/v2/${{ github.repository }}/multiservice-discovery/manifests/${LATEST_TAG_COMMIT}"
+          DIGEST=$(docker inspect --format '{{index .RepoDigests 0}}' ghcr.io/dre/multiservice-discovery:01428695110934b70d9c1e4af5fa52276b99515a)
+          echo "Package Digest: $DIGEST"
