@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - "test-changes-app"
+permissions: read-all
 
 jobs:
   pr-check:
