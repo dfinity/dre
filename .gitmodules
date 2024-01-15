@@ -1,5 +1,0 @@
-[submodule "ic"]
-	path = ic
-	url = https://github.com/dfinity/ic.git
-	branch = master
-  ignore = all
