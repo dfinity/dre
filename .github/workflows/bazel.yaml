@@ -54,6 +54,6 @@ jobs:
           files: |
             release/*
       - name: Push images to GitHub Container Registry
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: ${{ startsWith(github.ref, 'refs/tags/v') || startsWith(github.ref, 'refs/heads/container') }}
         run:
           bazel query --noshow_progress 'kind("oci_push", ...)' | xargs -I_target bazel run _target -- --tag ${GITHUB_SHA}
