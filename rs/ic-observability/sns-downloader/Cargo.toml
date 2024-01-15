@@ -6,27 +6,19 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+clap = { workspace = true }
+crossbeam = { workspace = true }
+crossbeam-channel = { workspace = true }
+futures-util = { workspace = true }
+humantime = { workspace = true }
+ic-async-utils = { workspace = true }
 multiservice-discovery-shared = { path = "../multiservice-discovery-shared" }
-tokio = { version = "1.35.1", features = ["full"] }
-url = "2.2.2"
-slog = { version = "2.5.2", features = ["nested-values"] }
-slog-async = { version = "2.5", features = ["nested-values"] }
-slog-term = "2.6.0"
-clap = { version = "4.3.0", features = ["derive"] }
-humantime = "2.0"
-ic-async-utils = { git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca" }
-futures-util = "0.3.5"
-reqwest = { version = "0.11.22", default-features = false, features = [
-  "blocking",
-  "json",
-  "multipart",
-  "rustls-tls-webpki-roots",
-  "stream",
-] }
-crossbeam = "0.8.0"
-crossbeam-channel = "0.5.5"
-service-discovery = { path = "../service-discovery" }
-regex = "1.7.0"
-ic-types = { git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca" }
-serde = { version = "1.0", features = ["derive"] }
-serde_json = { version = "1.0.107", features = ["std"] }
+regex = { workspace = true }
+reqwest = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+slog = { workspace = true }
+slog-async = { workspace = true }
+slog-term = { workspace = true }
+tokio = { workspace = true }
+url = { workspace = true }

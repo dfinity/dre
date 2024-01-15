@@ -588,7 +588,7 @@ impl ProposeCommand {
                 subnet_id,
                 node_ids_add: nodes_ids_add,
                 node_ids_remove: nodes_ids_remove,
-            } => vec![
+            } => [
                 vec!["--subnet-id".to_string(), subnet_id.to_string()],
                 if !nodes_ids_add.is_empty() {
                     [
@@ -614,7 +614,7 @@ impl ProposeCommand {
                 vec![subnet.to_string(), version.clone()]
             }
             Self::Raw { command: _, args } => args.clone(),
-            Self::UpdateNodesHostosVersion { nodes, version } => vec![
+            Self::UpdateNodesHostosVersion { nodes, version } => [
                 nodes.iter().map(|n| n.to_string()).collect::<Vec<_>>(),
                 vec!["--hostos-version-id".to_string(), version.to_string()],
             ]

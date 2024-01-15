@@ -78,52 +78,49 @@ impl From<&ic_management_types::Node> for Node {
     fn from(n: &ic_management_types::Node) -> Self {
         Self {
             id: n.principal,
-            features: nakamoto::NodeFeatures::from_iter(
-                [
-                    (
-                        NodeFeature::City,
-                        n.operator
-                            .datacenter
-                            .as_ref()
-                            .map(|d| d.city.clone())
-                            .unwrap_or_else(|| "unknown".to_string()),
-                    ),
-                    (
-                        NodeFeature::Country,
-                        n.operator
-                            .datacenter
-                            .as_ref()
-                            .map(|d| d.country.clone())
-                            .unwrap_or_else(|| "unknown".to_string()),
-                    ),
-                    (
-                        NodeFeature::Continent,
-                        n.operator
-                            .datacenter
-                            .as_ref()
-                            .map(|d| d.continent.clone())
-                            .unwrap_or_else(|| "unknown".to_string()),
-                    ),
-                    (
-                        NodeFeature::DataCenterOwner,
-                        n.operator
-                            .datacenter
-                            .as_ref()
-                            .map(|d| d.owner.name.clone())
-                            .unwrap_or_else(|| "unknown".to_string()),
-                    ),
-                    (
-                        NodeFeature::DataCenter,
-                        n.operator
-                            .datacenter
-                            .as_ref()
-                            .map(|d| d.name.clone())
-                            .unwrap_or_else(|| "unknown".to_string()),
-                    ),
-                    (NodeFeature::NodeProvider, n.operator.provider.principal.to_string()),
-                ]
-                .into_iter(),
-            ),
+            features: nakamoto::NodeFeatures::from_iter([
+                (
+                    NodeFeature::City,
+                    n.operator
+                        .datacenter
+                        .as_ref()
+                        .map(|d| d.city.clone())
+                        .unwrap_or_else(|| "unknown".to_string()),
+                ),
+                (
+                    NodeFeature::Country,
+                    n.operator
+                        .datacenter
+                        .as_ref()
+                        .map(|d| d.country.clone())
+                        .unwrap_or_else(|| "unknown".to_string()),
+                ),
+                (
+                    NodeFeature::Continent,
+                    n.operator
+                        .datacenter
+                        .as_ref()
+                        .map(|d| d.continent.clone())
+                        .unwrap_or_else(|| "unknown".to_string()),
+                ),
+                (
+                    NodeFeature::DataCenterOwner,
+                    n.operator
+                        .datacenter
+                        .as_ref()
+                        .map(|d| d.owner.name.clone())
+                        .unwrap_or_else(|| "unknown".to_string()),
+                ),
+                (
+                    NodeFeature::DataCenter,
+                    n.operator
+                        .datacenter
+                        .as_ref()
+                        .map(|d| d.name.clone())
+                        .unwrap_or_else(|| "unknown".to_string()),
+                ),
+                (NodeFeature::NodeProvider, n.operator.provider.principal.to_string()),
+            ]),
             dfinity_owned: n.dfinity_owned.unwrap_or_default(),
             decentralized: n.decentralized,
         }
