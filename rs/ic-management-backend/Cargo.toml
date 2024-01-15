@@ -9,7 +9,7 @@ documentation.workspace = true
 [dependencies]
 tokio = { version = "1.2.0", features = ["full"] }
 serde_json = "1.0.66"
-serde = { version = "1.0.127", features = ["rc"] }
+serde = { version = "1.0.195", features = ["rc"] }
 hyper = { version = "0.14.11", features = ["http2", "stream"] }
 url = "2.2.2"
 float-ord = "0.3.2"
