@@ -17,6 +17,7 @@ pub async fn run_downloader_loop(logger: Logger, cli: CliArgs, stop_signal: Rece
 
     let client = reqwest::Client::builder()
         .timeout(cli.registry_query_timeout)
+        .danger_accept_invalid_certs(true)
         .build()
         .expect("Failed to build reqwest client");
 
