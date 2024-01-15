@@ -24,5 +24,4 @@ jobs:
           set -eExuo pipefail
           git pull
           LATEST_TAG_COMMIT=$(git show-ref --tags -d | sort -k2,2 | tail -n 1 | awk '{print $1}')
-          DIGEST=$(curl -s -H "Authorization: bearer ${{ secrets.GITHUB_TOKEN }}" "https://ghcr.io/v2/${{ github.repository }}/multiservice-discovery/manifests/${LATEST_TAG_COMMIT}" | jq -r '.config.digest')
-          echo "Image digest: $DIGEST"
+          curl -s -H "Authorization: bearer ${{ secrets.GITHUB_TOKEN }}" "https://ghcr.io/v2/${{ github.repository }}/multiservice-discovery/manifests/${LATEST_TAG_COMMIT}"
