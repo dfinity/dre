@@ -44,5 +44,12 @@ rust_test(
 rust_test_suite(
     name = "mainnet_targets_tests",
     srcs = glob(["tests/**/*.rs"]),
-    deps = [":multiservice-discovery"] + DEPS,
+    aliases = aliases(),
+    proc_macro_deps = all_crate_deps(
+        proc_macro = True,
+    ),
+    stamp = 1,
+    deps = all_crate_deps(
+        normal = True,
+    ) + DEPS,
 )
