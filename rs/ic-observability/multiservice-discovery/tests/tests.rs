@@ -13,7 +13,7 @@ fn mainnet_targets_tests() {
 
     let rt = Runtime::new().unwrap();
     let temp_dir = TempDir::new("target").expect("Failed to create temporary directory");
-    let mut cmd = Command::cargo_bin(env!("CARGO_PKG_NAME")).expect("Failed to find binary");
+    let mut cmd = Command::cargo_bin("multiservice-discovery").expect("Failed to find binary");
 
     // Add the necessary arguments
     cmd.arg("--targets-dir").arg(temp_dir.path().to_path_buf().to_str().unwrap());
