@@ -10,6 +10,7 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
+      - uses: actions/checkout@v4
       - name: Retrieve commit associated with the latest tag in main
         id: get-latest-tag-commit
         run: |
