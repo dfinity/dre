@@ -1,3 +1,4 @@
+use base64::{engine::general_purpose as b64, Engine as _};
 use std::collections::{BTreeMap, BTreeSet};
 
 use serde::{Deserialize, Serialize};
@@ -18,7 +19,7 @@ impl From<&Definition> for DefinitionDto {
         Self {
             name: value.name.clone(),
             nns_urls: value.nns_urls.clone(),
-            public_key: value.public_key.map(|pk| base64::encode(pk.into_bytes())),
+            public_key: value.public_key.map(|pk| b64::STANDARD.encode(pk.into_bytes())),
         }
     }
 }

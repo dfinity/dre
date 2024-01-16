@@ -23,6 +23,14 @@ jobs:
           key: ${{ runner.os }}-bazel-${{ hashFiles('.bazelversion', '.bazelrc', 'WORKSPACE', 'WORKSPACE.bazel', 'MODULE.bazel', 'Cargo.Bazel.lock') }}
           restore-keys: |
             ${{ runner.os }}-bazel-
+      - name: Set GIT_HASH variable
+        run: |
+          # Set GIT_HASH variable based on the type of GitHub reference
+          if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then
+            echo "GIT_HASH=$GITHUB_REF_NAME" >> "$GITHUB_ENV"  # Embed tag name as GIT_HASH
+          else
+            echo "GIT_HASH=$GITHUB_SHA" >> "$GITHUB_ENV"  # Embed commit SHA as GIT_HASH
+          fi
       - run: bazel build ...
       - run: bazel test ...
       - name: Optimize bazel cache directory before uploading
@@ -54,6 +62,6 @@ jobs:
           files: |
             release/*
       - name: Push images to GitHub Container Registry
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: ${{ startsWith(github.ref, 'refs/tags/v') || startsWith(github.ref, 'refs/heads/container') }}
         run:
           bazel query --noshow_progress 'kind("oci_push", ...)' | xargs -I_target bazel run _target -- --tag ${GITHUB_SHA}

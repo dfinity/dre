@@ -6,22 +6,17 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-regex = "1.7.0"
+regex = { workspace = true }
 service-discovery = { path = "../service-discovery" }
-ic-types = { git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca" }
-slog = { version = "2.7.0", features = [
-  "max_level_trace",
-  "nested-values",
-  "release_max_level_debug",
-  "release_max_level_trace",
-] }
-slog-async = { version = "2.5", features = ["nested-values"] }
-slog-term = "2.6.0"
-serde = { version = "1.0", features = ["derive"] }
-serde_json = { version = "1.0.107", features = ["std"] }
-ic-utils = { git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca" }
-erased-serde = "0.3.23"
-serde_derive = "1.0.150"
-crossbeam = "0.8.0"
-crossbeam-channel = "0.5.5"
-url = { version = "2.1.1", features = ["serde"] }
+ic-types = { workspace = true }
+slog = { workspace = true }
+slog-async = { workspace = true }
+slog-term = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+ic-utils = { workspace = true }
+erased-serde = { workspace = true }
+serde_derive = { workspace = true }
+crossbeam = { workspace = true }
+crossbeam-channel = { workspace = true }
+url = { workspace = true }

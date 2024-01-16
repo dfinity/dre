@@ -2,6 +2,7 @@ use std::net::SocketAddr;
 use std::{path::PathBuf, sync::Arc, time::Duration};
 
 use anyhow::{bail, Result};
+use base64::{engine::general_purpose as b64, Engine as _};
 use clap::Parser;
 use config_writer_common::config_writer::ConfigWriter;
 use config_writer_common::filters::{NodeIDRegexFilter, TargetGroupFilter, TargetGroupFilterList};
@@ -36,7 +37,7 @@ pub struct JobParameters {
 fn main() -> Result<()> {
     let cli_args = CliArgs::parse().validate()?;
     let public_key = cli_args.public_key.map(|pk: String| {
-        let decoded = base64::decode(pk).unwrap();
+        let decoded = b64::STANDARD.decode(pk).unwrap();
 
         parse_threshold_sig_key_from_der(&decoded)
             .map_err(|e| anyhow::format_err!("Failed to get nns_public_key: {}", e))
@@ -75,20 +76,13 @@ fn main() -> Result<()> {
     )?);
 
     let metrics = Metrics::new(metrics_registry.clone());
-    info!(
-        log,
-        "Metrics are exposed on {}.", cli_args.metrics_listen_addr
-    );
+    info!(log, "Metrics are exposed on {}.", cli_args.metrics_listen_addr);
     let exporter_config = MetricsConfig {
         exporter: Exporter::Http(cli_args.metrics_listen_addr),
         ..Default::default()
     };
-    let _metrics_endpoint = MetricsHttpEndpoint::new_insecure(
-        rt.handle().clone(),
-        exporter_config,
-        metrics_registry,
-        &log,
-    );
+    let _metrics_endpoint =
+        MetricsHttpEndpoint::new_insecure(rt.handle().clone(), exporter_config, metrics_registry, &log);
 
     let (stop_signal_sender, stop_signal_rcv) = crossbeam::channel::bounded::<()>(0);
     let (update_signal_sender, update_signal_rcv) = crossbeam::channel::bounded::<()>(0);
@@ -104,16 +98,11 @@ fn main() -> Result<()> {
     );
     let join_handle = std::thread::spawn(loop_fn);
     handles.push(join_handle);
-    info!(
-        log,
-        "Scraping thread spawned. Interval: {:?}", cli_args.poll_interval
-    );
+    info!(log, "Scraping thread spawned. Interval: {:?}", cli_args.poll_interval);
 
     let mut filters_vec: Vec<Box<dyn TargetGroupFilter>> = vec![];
     if let Some(filter_node_id_regex) = &cli_args.filter_node_id_regex {
-        filters_vec.push(Box::new(NodeIDRegexFilter::new(
-            filter_node_id_regex.clone(),
-        )));
+        filters_vec.push(Box::new(NodeIDRegexFilter::new(filter_node_id_regex.clone())));
     };
 
     // We need to filter old nodes for host node exporters, but not for everything else
@@ -142,9 +131,7 @@ fn main() -> Result<()> {
     // creating the filters vector again because of ownership
     let mut filters_vec: Vec<Box<dyn TargetGroupFilter>> = vec![];
     if let Some(filter_node_id_regex) = &cli_args.filter_node_id_regex {
-        filters_vec.push(Box::new(NodeIDRegexFilter::new(
-            filter_node_id_regex.clone(),
-        )));
+        filters_vec.push(Box::new(NodeIDRegexFilter::new(filter_node_id_regex.clone())));
     };
     // Second loop, with the old machines filter
     let jobs = vec![Job::from(JobType::NodeExporter(NodeOS::Host))];
@@ -205,7 +192,7 @@ initialized with a hardcoded initial registry.
     #[clap(
     long = "poll-interval",
     default_value = "10s",
-    parse(try_from_str = parse_duration),
+    value_parser = parse_duration,
     help = r#"
 The interval at which ICs are polled for updates.
 
@@ -216,7 +203,7 @@ The interval at which ICs are polled for updates.
     #[clap(
     long = "query-request-timeout",
     default_value = "5s",
-    parse(try_from_str = parse_duration),
+    value_parser = parse_duration,
     help = r#"
 The HTTP-request timeout used when querying for registry updates.
 

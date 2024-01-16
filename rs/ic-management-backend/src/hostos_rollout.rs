@@ -60,7 +60,7 @@ impl HostosRollout {
                 (NodeGroup::new(assignment, owner), node)
             })
             .fold(BTreeMap::new(), |mut acc, (node_group, node)| {
-                acc.entry(node_group).or_insert_with(Vec::new).push(node);
+                acc.entry(node_group).or_default().push(node);
                 acc
             });
 
@@ -132,10 +132,13 @@ impl HostosRollout {
                     node,
                 )
             })
-            .fold(BTreeMap::new(), |mut acc, (status, node)| {
-                acc.entry(status).or_insert_with(Vec::new).push(node);
-                acc
-            });
+            .fold(
+                BTreeMap::new(),
+                |mut acc: BTreeMap<Status, Vec<Node>>, (status, node)| {
+                    acc.entry(status).or_default().push(node);
+                    acc
+                },
+            );
 
         nodes_by_status
             .iter()
@@ -152,9 +155,9 @@ impl HostosRollout {
                 let nodes = subnet
                     .nodes
                     .iter()
-                    .cloned()
-                    .filter(|n| candidate_nodes.iter().any(|node| node.principal == n.principal))
+                    .filter(|&n| candidate_nodes.iter().any(|node| node.principal == n.principal))
                     .take(nodes_to_take)
+                    .cloned()
                     .collect::<Vec<_>>();
                 let actual_percent = nodes.len() as f32 / subnet_size as f32 * 100.0;
 

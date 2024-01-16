@@ -250,7 +250,7 @@ impl Runner {
             })
             .fold(BTreeMap::new(), |mut acc, (node_id, subnet, dc)| {
                 acc.entry(dc.unwrap_or_default().name)
-                    .or_insert_with(Vec::new)
+                    .or_default()
                     .push((node_id, subnet));
                 acc
             })
@@ -285,9 +285,9 @@ impl Runner {
                 let mut summary = "## List of nodes\n".to_string();
                 let mut builder_dc = Builder::default();
                 let nodes_by_dc = self.nodes_by_dc(nodes_to_update.clone()).await;
-                builder_dc.set_header(["dc", "node_id", "subnet"]);
+                builder_dc.push_record(["dc", "node_id", "subnet"]);
                 nodes_by_dc.into_iter().for_each(|(dc, nodes_with_sub)| {
-                    let _builder = builder_dc.push_record([
+                    builder_dc.push_record([
                         dc,
                         nodes_with_sub.iter().map(|(p, _)| p.to_string()).join("\n"),
                         nodes_with_sub
@@ -305,7 +305,7 @@ impl Runner {
                 if let Some(subnets_affected) = maybe_subnets_affected {
                     summary.push_str("## Updated nodes per subnet\n");
                     let mut builder_subnets = Builder::default();
-                    builder_subnets.set_header([
+                    builder_subnets.push_record([
                         "subnet_id",
                         "updated_nodes",
                         "count",
@@ -349,7 +349,7 @@ impl Runner {
                         })
                         .sorted_by(|a, b| a[3].cmp(&b[3]))
                         .for_each(|row| {
-                            let _builder = builder_subnets.push_record(row);
+                            builder_subnets.push_record(row);
                         });
 
                     let mut table_subnets = builder_subnets.build();
