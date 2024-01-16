@@ -25,26 +25,12 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Get bazel binaries, so they can be pushed as GitHub artifacts in the next step
-        if: startsWith(github.ref, 'refs/tags/v')
         run: |
           set -eExuo pipefail
           # query the location of the bazel "dre" binary and copy it to the "release" directory
           mkdir -p release
           cp --dereference bazel-out/k8-opt/bin/rs/cli/dre release/dre
           chmod +x release/dre
-      - name: Create a new GitHub Release
-        if: startsWith(github.ref, 'refs/tags/v')
-        # v0.1.15
-        uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          body_path: CHANGELOG.md
-          generate_release_notes: true
-          draft: true
-          prerelease: true
-          files: |
-            release/*
       - name: Push images to GitHub Container Registry
-        if: startsWith(github.ref, 'refs/tags/v')
         run:
           bazel query --noshow_progress 'kind("oci_push", ...)' | xargs -I_target bazel run _target -- --tag ${GITHUB_SHA}
