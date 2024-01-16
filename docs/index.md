@@ -19,3 +19,5 @@ To generate documentation as HTML, you can use convenience script `./bin/mkdocs-
     docs/
         index.md  # The documentation homepage.
         ...       # Other markdown pages, images and other files.
+
+## Hello from dre repo!
