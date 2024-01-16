@@ -1,0 +1,59 @@
+name: Bazel-cache-clean
+on:
+  push:
+    branches:
+      - "test-sha-ci"
+      - "test-sha-diff"
+jobs:
+  bazel:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Free Disk Space (Ubuntu)
+        uses: jlumbroso/free-disk-space@v1.3.1
+        with:
+          # this might remove tools that are actually needed,
+          # when set to "true" but frees about 6 GB
+          tool-cache: true
+          large-packages: false  # this is slow
+      - uses: actions/checkout@v4
+      - uses: bazelbuild/setup-bazelisk@v2
+      - name: Mount bazel cache
+        uses: actions/cache@v3
+        with:
+          path: "~/.cache/bazel"
+          # Configure cache updates
+          # https://github.com/actions/cache/blob/main/tips-and-workarounds.md#update-a-cache
+          # https://github.com/actions/cache/blob/main/examples.md#---bazel
+          key: ${{ runner.os }}-bazel-${{ hashFiles('.bazelversion', '.bazelrc', 'WORKSPACE', 'WORKSPACE.bazel', 'MODULE.bazel', 'Cargo.Bazel.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-bazel-
+      - name: Clean Bazel
+        run: |
+          bazel clean
+      - name: Set GIT_HASH variable
+        run: |
+          # Set GIT_HASH variable based on the type of GitHub reference
+          if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then
+            echo "GIT_HASH=$GITHUB_REF_NAME" >> "$GITHUB_ENV"  # Embed tag name as GIT_HASH
+          else
+            echo "GIT_HASH=$GITHUB_SHA" >> "$GITHUB_ENV"  # Embed commit SHA as GIT_HASH
+          fi
+      - run: bazel build ...
+      - name: Optimize bazel cache directory before uploading
+        run: bin/optimize-bazel-cache.sh
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Get bazel binaries, so they can be pushed as GitHub artifacts in the next step
+        run: |
+          set -eExuo pipefail
+          # query the location of the bazel "dre" binary and copy it to the "release" directory
+          mkdir -p release
+          cp --dereference bazel-out/k8-opt/bin/rs/cli/dre release/dre
+          chmod +x release/dre
+      - name: Push images to GitHub Container Registry
+        run:
+          bazel query --noshow_progress 'kind("oci_push", ...)' | xargs -I_target bazel run _target -- --tag ${GITHUB_SHA}
