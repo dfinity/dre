@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="EMPTY_MODULE" version="4">
+  <component name="NewModuleRootManager">
+    <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$/rs/canister-log-fetcher/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/rs/cli/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/rs/decentralization/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/rs/ic-canisters/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/rs/ic-management-backend/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/rs/ic-management-types/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/rs/ic-observability/config-writer-common/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/rs/ic-observability/multiservice-discovery-downloader/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/rs/ic-observability/multiservice-discovery-shared/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/rs/ic-observability/multiservice-discovery/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/rs/ic-observability/node-status-updater/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/rs/ic-observability/obs-canister-clients/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/rs/ic-observability/prometheus-config-updater/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/rs/ic-observability/service-discovery/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/rs/ic-observability/sns-downloader/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/rs/log-fetcher/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/rs/np-notifications/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/rs/slack-notifications/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/rs/ic-observability/multiservice-discovery/tests" isTestSource="true" />
+      <excludeFolder url="file://$MODULE_DIR$/target" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+  </component>
+</module>
