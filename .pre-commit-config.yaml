@@ -87,4 +87,5 @@ repos:
             "elasticsearch_dsl==7.4.0",
             "requests",
             "tabulate",
+            "GitPython",
           ]
