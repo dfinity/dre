@@ -29,6 +29,8 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-bazel-
       - run: bazel build ...
+      - name: Optimize bazel cache directory before uploading
+        run: bin/optimize-bazel-cache.sh
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
         with:
