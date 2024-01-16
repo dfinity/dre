@@ -29,31 +29,6 @@ jobs:
             ${{ runner.os }}-bazel-
       - name: Clean Bazel
         run: |
-          bazel clean
-      - name: Set GIT_HASH variable
-        run: |
-          # Set GIT_HASH variable based on the type of GitHub reference
-          if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then
-            echo "GIT_HASH=$GITHUB_REF_NAME" >> "$GITHUB_ENV"  # Embed tag name as GIT_HASH
-          else
-            echo "GIT_HASH=$GITHUB_SHA" >> "$GITHUB_ENV"  # Embed commit SHA as GIT_HASH
-          fi
-      - run: bazel build ...
-      - name: Optimize bazel cache directory before uploading
-        run: bin/optimize-bazel-cache.sh
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Get bazel binaries, so they can be pushed as GitHub artifacts in the next step
-        run: |
-          set -eExuo pipefail
-          # query the location of the bazel "dre" binary and copy it to the "release" directory
-          mkdir -p release
-          cp --dereference bazel-out/k8-opt/bin/rs/cli/dre release/dre
-          chmod +x release/dre
-      - name: Push images to GitHub Container Registry
-        run:
-          bazel query --noshow_progress 'kind("oci_push", ...)' | xargs -I_target bazel run _target -- --tag ${GITHUB_SHA}
+          echo ${{ runner.os }}
+      - name: Setup upterm session
+        uses: lhotari/action-upterm@v1
