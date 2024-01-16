@@ -18,6 +18,7 @@ jobs:
           large-packages: false  # this is slow
       - uses: actions/checkout@v4
       - uses: bazelbuild/setup-bazelisk@v2
+
       - name: Mount bazel cache
         uses: actions/cache@v3
         with:
