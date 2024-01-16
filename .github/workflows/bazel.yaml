@@ -4,6 +4,16 @@ jobs:
   bazel:
     runs-on: ubuntu-22.04
     steps:
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.x
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install GitPython requests
+          
       - name: Free Disk Space (Ubuntu)
         uses: jlumbroso/free-disk-space@v1.3.1
         with:
@@ -62,6 +72,5 @@ jobs:
           files: |
             release/*
       - name: Push images to GitHub Container Registry
-        if: ${{ startsWith(github.ref, 'refs/tags/v') || startsWith(github.ref, 'refs/heads/container') }}
-        run:
-          bazel query --noshow_progress 'kind("oci_push", ...)' | xargs -I_target bazel run _target -- --tag ${GITHUB_SHA}
+        run: |
+          python run scripts/ghcr-checker.py
