@@ -19,6 +19,7 @@ mod definition;
 mod server_handlers;
 
 fn main() {
+
     let rt = Runtime::new().unwrap();
     let log = make_logger();
     let shutdown_signal = shutdown_signal(log.clone()).shared();
