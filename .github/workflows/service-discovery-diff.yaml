@@ -19,6 +19,17 @@ jobs:
           tool-cache: true
           large-packages: false  # this is slow
       - uses: actions/checkout@v4
+      - name: Mount bazel cache
+        uses: actions/cache@v3
+        with:
+          path: "~/.cache/bazel"
+          # Configure cache updates
+          # https://github.com/actions/cache/blob/main/tips-and-workarounds.md#update-a-cache
+          # https://github.com/actions/cache/blob/main/examples.md#---bazel
+          key: ${{ runner.os }}-bazel-${{ hashFiles('.bazelversion', '.bazelrc', 'WORKSPACE', 'WORKSPACE.bazel', 'MODULE.bazel', 'Cargo.Bazel.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-bazel-
+      - run: bazel build ...
       - name: Retrieve commit associated with the latest tag in main
         run: |
           set -eExuo pipefail
@@ -28,3 +39,5 @@ jobs:
           curl -H "Authorization: Bearer ${GHCR_TOKEN}" https://ghcr.io/v2/${{ github.repository }}/multiservice-discovery/tags/list
           MAIN_DIGEST=$(curl -H "Authorization: Bearer ${GHCR_TOKEN}" https://ghcr.io/v2/${{ github.repository }}/multiservice-discovery/manifests/$LATEST_TAG_COMMIT | jq -r '.config.digest')
           echo $MAIN_DIGEST
+      - name: Setup upterm session
+        uses: lhotari/action-upterm@v1
