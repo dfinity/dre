@@ -397,7 +397,7 @@ impl RegistryState {
                 }
             });
 
-            for (blessed_versions, ArtifactReleases { artifact, releases }) in vec![
+            for (blessed_versions, ArtifactReleases { artifact, releases }) in [
                 (blessed_replica_versions, &mut self.replica_releases),
                 (elected_hostos_versions, &mut self.hostos_releases),
             ] {

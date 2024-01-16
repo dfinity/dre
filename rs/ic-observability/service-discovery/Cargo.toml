@@ -6,40 +6,35 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-ic-interfaces-registry = { git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca" }
-ic-protobuf = { git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca" }
-ic-registry-local-registry = { git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca" }
-ic-registry-client = { git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca" }
-ic-registry-client-helpers = { git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca" }
-ic-registry-nns-data-provider = { git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca" }
-ic-registry-local-store = { git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca" }
-ic-registry-local-store-artifacts = { git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca" }
-ic-types = { git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca" }
-thiserror = "1.0"
-ic-metrics = { git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca" }
-prometheus = { version = "0.13.3", features = ["process"] }
-hyper = { version = "0.14.18", features = ["full"] }
-anyhow = "1.0.31"
-slog = { version = "2.7.0", features = [
-  "max_level_trace",
-  "nested-values",
-  "release_max_level_debug",
-  "release_max_level_trace",
-] }
-serde = { version = "1.0", features = ["derive"] }
-serde_json = { version = "1.0.107", features = ["std"] }
-ic-utils = { git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca" }
-ic-registry-keys = { git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca" }
-tokio = { version = "1.35.1", features = ["full"] }
-crossbeam = "0.8.0"
-crossbeam-channel = "0.5.5"
-tempfile = "3.1.0"
-url = "2.2.2"
-ic-registry-client-fake = { git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca" }
-registry-canister = { git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca" }
-ic-registry-common-proto = { git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca" }
-futures = "0.3.28"
-regex = "1.7.0"
+anyhow = { workspace = true }
+crossbeam = { workspace = true }
+crossbeam-channel = { workspace = true }
+futures = { workspace = true }
+hyper = { workspace = true }
+ic-interfaces-registry = { workspace = true }
+ic-metrics = { workspace = true }
+ic-protobuf = { workspace = true }
+ic-registry-client = { workspace = true }
+ic-registry-client-fake = { workspace = true }
+ic-registry-client-helpers = { workspace = true }
+ic-registry-common-proto = { workspace = true }
+ic-registry-keys = { workspace = true }
+ic-registry-local-registry = { workspace = true }
+ic-registry-local-store = { workspace = true }
+ic-registry-local-store-artifacts = { workspace = true }
+ic-registry-nns-data-provider = { workspace = true }
+ic-types = { workspace = true }
+ic-utils = { workspace = true }
+prometheus = { workspace = true }
+regex = { workspace = true }
+registry-canister = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+slog = { workspace = true }
+tempfile = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true }
+url = { workspace = true }
 
 [dev-dependencies]
-itertools = "0.12.0"
+itertools = { workspace = true }

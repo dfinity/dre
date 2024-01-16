@@ -9,31 +9,25 @@ documentation.workspace = true
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-actix-web = "4.3.1"
-ic-management-types = { path = "../ic-management-types" }
+actix-web = { workspace = true }
+anyhow = { workspace = true }
 ic-management-backend = { path = "../ic-management-backend" }
-ic-types = { git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca" }
-ic-registry-local-registry = { git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca" }
-tokio = { version = "1.29.1", features = ["full"] }
+ic-management-types = { path = "../ic-management-types" }
+ic-types = { workspace = true }
+rand = { workspace = true }
+reqwest = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+serde_yaml = { workspace = true }
+tokio = { workspace = true }
 tokio-util = "0.7.8"
-actix = "0.13.0"
-url = "2.4.0"
-reqwest = { version = "0.11.18", features = ["blocking"] }
-serde_json = "1.0.102"
-serde = "1.0.171"
-chrono = "0.4.31"
-figment = { version = "0.10.10", features = ["env", "yaml"] }
-ic-interfaces-registry = { git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca" }
-ic-registry-client-helpers = { git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca" }
-serde_yaml = "0.9.25"
-rand = "0.8.5"
 tracing = { version = "0.1.37", features = ["log"] }
-tracing-subscriber = "0.3.17"
 tracing-log = { version = "0.2.0", features = ["log-tracer"] }
-anyhow = "1.0.75"
+tracing-subscriber = "0.3.17"
+url = { workspace = true }
 
 [dev-dependencies]
-tempfile = "3.8.0"
+tempfile = { workspace = true }
 pretty_assertions = "1.4.0"
 httptest = "0.15.4"
 # Default features disabled because it would require env_logger, and we are not using it
