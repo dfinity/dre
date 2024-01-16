@@ -25,5 +25,6 @@ jobs:
           git pull
           LATEST_TAG_COMMIT=$(git show-ref --tags -d | sort -k2,2 | tail -n 1 | awk '{print $1}')
           GHCR_TOKEN=$(echo ${{ secrets.GITHUB_TOKEN }} | base64)
+          curl -H "Authorization: Bearer ${GHCR_TOKEN}" https://ghcr.io/v2/USER/IMAGE/tags/list
           MAIN_DIGEST=$(curl -H "Authorization: Bearer ${GHCR_TOKEN}" https://ghcr.io/v2/${{ github.repository }}/multiservice-discovery/manifests/$LATEST_TAG_COMMIT | jq -r '.config.digest')
           echo $MAIN_DIGEST
