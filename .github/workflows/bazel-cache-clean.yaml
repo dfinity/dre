@@ -5,6 +5,7 @@ on:
       - "test-sha-ci"
       - "test-sha-diff"
 
+
 jobs:
   bazel:
     runs-on: ubuntu-22.04
