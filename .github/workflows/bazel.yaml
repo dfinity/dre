@@ -68,5 +68,7 @@ jobs:
           pip3 install GitPython requests
 
       - name: Push images to GitHub Container Registry
+        env:
+          USERNAME: ${{ github.actor }}
         run: |
           python3 scripts/ghcr-checker.py

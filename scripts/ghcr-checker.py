@@ -18,13 +18,13 @@ def run_target(target):
     subprocess.run(["bazel", "run", target["run_target"], "--", "--tag", target["commit"]], check=True)
 
 
-def get_last_pushed_sha(targets, access_token):
+def get_last_pushed_sha(targets, access_token, username):
     repo = git.Repo(".")
     prefix = "https://ghcr.io/v2/dfinity/dre/"
     print("Will check following targets:", targets)
 
     response = requests.get(
-        'https://ghcr.io/token?scope="repository:dfinity/dre:pull"', auth=HTTPBasicAuth("nikola-milosa", access_token)
+        'https://ghcr.io/token?scope="repository:dfinity/dre:pull"', auth=HTTPBasicAuth(username, access_token)
     )
     if response.status_code != 200:
         print(response.text)
@@ -84,5 +84,5 @@ def get_bazel_targets():
 
 
 targets = get_bazel_targets()
-target_sha_pairs = get_last_pushed_sha(targets, os.environ.get("GITHUB_TOKEN"))
-print(target_sha_pairs)
+target_sha_pairs = get_last_pushed_sha(targets, os.environ.get("GITHUB_TOKEN"), os.environ.get("USERNAME"))
+update_missing_images(target_sha_pairs)
