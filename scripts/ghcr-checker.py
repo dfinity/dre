@@ -3,8 +3,6 @@ import os
 import subprocess
 
 import git
-import requests
-from requests.auth import HTTPBasicAuth
 
 
 def update_missing_images(targets):
@@ -18,30 +16,16 @@ def run_target(target):
     subprocess.run(["bazel", "run", target["run_target"], "--", "--tag", target["commit"]], check=True)
 
 
-def get_last_pushed_sha(targets, access_token, username):
+def get_last_pushed_sha(targets, cmd):
     repo = git.Repo(".")
-    prefix = "https://ghcr.io/v2/dfinity/dre/"
+    prefix = "ghcr.io/dfinity/dre/"
     print("Will check following targets:", targets)
 
-    response = requests.get(
-        'https://ghcr.io/token?scope="repository:dfinity/dre:pull"', auth=HTTPBasicAuth(username, access_token)
-    )
-    if response.status_code != 200:
-        print(response.text)
-        exit(1)
-
-    headers = {
-        "Authorization": f"Bearer {response.json()['token']}",
-        "Accept": ", ".join(
-            ["application/vnd.docker.distribution.manifest.v2+json", "application/vnd.oci.image.manifest.v1+json"]
-        ),
-    }
     to_update = {}
 
     for target in targets:
-        url = prefix + target + "/manifests/" + targets[target]["sha256"]
-        response = requests.get(url, headers=headers)
-        if response.status_code == 200:
+        full = prefix + target + ":" + targets[target]["sha256"]
+        if check_image(full, cmd) == 0:
             print("Found tag", target["sha256"], "and will not push the new image")
             continue
 
@@ -52,6 +36,10 @@ def get_last_pushed_sha(targets, access_token, username):
         }
 
     return to_update
+
+
+def check_image(img, cmd):
+    return subprocess.run([cmd, "pull", img]).returncode
 
 
 def get_bazel_targets():
@@ -84,5 +72,5 @@ def get_bazel_targets():
 
 
 targets = get_bazel_targets()
-target_sha_pairs = get_last_pushed_sha(targets, os.environ.get("GITHUB_TOKEN"), os.environ.get("USERNAME"))
+target_sha_pairs = get_last_pushed_sha(targets, os.environ.get("CMD"))
 update_missing_images(target_sha_pairs)

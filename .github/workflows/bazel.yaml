@@ -65,10 +65,10 @@ jobs:
         run: |
           sudo apt-get install python3
           python3 -m pip install --upgrade pip
-          pip3 install GitPython requests
+          pip3 install GitPython
 
       - name: Push images to GitHub Container Registry
         env:
-          USERNAME: ${{ github.actor }}
+          CMD: docker
         run: |
           python3 scripts/ghcr-checker.py
