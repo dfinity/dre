@@ -26,7 +26,7 @@ def get_last_pushed_sha(targets, cmd):
     for target in targets:
         full = prefix + target + ":" + targets[target]["sha256"]
         if check_image(full, cmd) == 0:
-            print("Found tag", target["sha256"], "and will not push the new image")
+            print("Found tag", targets[target]["sha256"], "and will not push the new image")
             continue
 
         to_update[target] = {
