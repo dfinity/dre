@@ -16,10 +16,7 @@ fn mainnet_targets_tests() {
     let path_buf = temp_dir.path().to_path_buf();
     let args = vec!["--targets-dir", path_buf.to_str().unwrap()];
     let bazel_path = "rs/ic-observability/multiservice-discovery/multiservice-discovery";
-    let mut cmd = match Command::cargo_bin("multiservice-discovery") {
-        Ok(v) => v,
-        Err(_) => Command::new(bazel_path),
-    };
+    let mut cmd = Command::cargo_bin("multiservice-discovery").unwrap_or_else(|_| Command::new(bazel_path));
     let mut child_process = cmd
         .args(&args)
         .spawn()

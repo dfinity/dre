@@ -7,6 +7,15 @@ DEPS = [
     "//rs/ic-observability/multiservice-discovery-shared"
 ]
 
+DEV_DEPENDENCIES = [
+    "@crate_index//:assert_cmd",
+    "@crate_index//:tokio",
+    "@crate_index//:tempdir",
+    "@crate_index//:anyhow",
+    "@crate_index//:reqwest",
+    "@crate_index//:serde_json",
+]
+
 rust_binary(
     name = "multiservice-discovery",
     srcs = glob(["src/**/*.rs"]),
