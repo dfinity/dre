@@ -204,6 +204,13 @@ oci_pull(
     image = "index.docker.io/library/debian",
 )
 
+oci_pull(
+    # tag = 3.11.7-bullseye
+    name = "python-bullseye",
+    digest = "sha256:f3e9ff769670251ae58b8d3915f9d0b7a42f794b8fad8efc84acc34d5d696cd0",
+    image = "index.docker.io/library/python",
+)
+
 http_archive(
     name = "rules_pkg",
     sha256 = "8f9ee2dc10c1ae514ee599a8b42ed99fa262b757058f65ad3c384289ff70c4b8",

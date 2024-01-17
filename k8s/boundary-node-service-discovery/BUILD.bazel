@@ -15,5 +15,5 @@ py_binary(
 python_oci_image_rules(
     name = "oci_image",
     src = ":boundary-node-service-discovery",
-    base_image = "@debian-slim"
+    base_image = "@python-bullseye"
 )
