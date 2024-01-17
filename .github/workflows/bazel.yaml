@@ -9,6 +9,8 @@ jobs:
         with:
           python-version: 3.x
 
+      - uses: actions/checkout@v4
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
@@ -21,7 +23,6 @@ jobs:
           # when set to "true" but frees about 6 GB
           tool-cache: true
           large-packages: false  # this is slow
-      - uses: actions/checkout@v4
       - uses: bazelbuild/setup-bazelisk@v2
       - name: Mount bazel cache
         uses: actions/cache@v3
