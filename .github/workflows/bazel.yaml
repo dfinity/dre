@@ -71,4 +71,4 @@ jobs:
         env:
           CMD: docker
         run: |
-          python3 scripts/ghcr-checker.py
+          python3 scripts/ghcr-check-and-push.py
