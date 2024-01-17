@@ -2,6 +2,7 @@ use std::collections::BTreeSet;
 use std::process::Command;
 use tempdir::TempDir;
 use std::time::Duration;
+use assert_cmd::cargo::CommandCargoExt;
 use tokio::runtime::Runtime;
 use tokio::task::JoinHandle;
 use tokio::time::sleep;
@@ -14,7 +15,12 @@ fn mainnet_targets_tests() {
     let temp_dir = TempDir::new("target").expect("Failed to create temporary directory");
     let path_buf = temp_dir.path().to_path_buf();
     let args = vec!["--targets-dir", path_buf.to_str().unwrap()];
-    let mut child_process = Command::new("rs/ic-observability/multiservice-discovery/multiservice-discovery")
+    let bazel_path = "rs/ic-observability/multiservice-discovery/multiservice-discovery";
+    let mut cmd = match Command::cargo_bin("multiservice-discovery") {
+        Ok(v) => v,
+        Err(_) => Command::new(bazel_path),
+    };
+    let mut child_process = cmd
         .args(&args)
         .spawn()
         .expect("Failed to run command");

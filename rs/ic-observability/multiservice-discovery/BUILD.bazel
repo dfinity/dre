@@ -45,6 +45,9 @@ rust_test(
     name = "mainnet_targets_tests",
     srcs = ["tests/tests.rs"],
     data = [":multiservice-discovery"],
+    proc_macro_deps = all_crate_deps(
+        proc_macro_dev = True,
+    ),
     deps = all_crate_deps(
         normal_dev = True,
     ) + DEPS,
