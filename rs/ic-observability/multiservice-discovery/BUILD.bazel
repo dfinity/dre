@@ -44,9 +44,8 @@ rust_test(
 rust_test(
     name = "mainnet_targets_tests",
     srcs = ["tests/tests.rs"],
-    env = {
-        "MULTISERVICE_DISCOVERY_BIN": "$(rootpath //rs/ic-observability/multiservice-discovery)",
-    },
+    data = [":multiservice-discovery"],
     deps = all_crate_deps(
         normal_dev = True,
-    ) + DEPS,)
+    ) + DEPS,
+    )
