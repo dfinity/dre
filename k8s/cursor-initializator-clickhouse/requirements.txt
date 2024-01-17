@@ -1,8 +1,0 @@
-certifi==2023.7.22 ; python_version >= "3.8" and python_version < "4.0"
-cffi==1.16.0 ; python_version >= "3.8" and python_version < "4.0" and platform_python_implementation == "PyPy"
-clickhouse-connect==0.6.14 ; python_version >= "3.8" and python_version < "4.0"
-lz4==4.3.2 ; python_version >= "3.8" and python_version < "4.0"
-pycparser==2.21 ; python_version >= "3.8" and python_version < "4.0" and platform_python_implementation == "PyPy"
-pytz==2023.3.post1 ; python_version >= "3.8" and python_version < "4.0"
-urllib3==2.0.6 ; python_version >= "3.8" and python_version < "4.0"
-zstandard==0.21.0 ; python_version >= "3.8" and python_version < "4.0"
