@@ -73,4 +73,4 @@ jobs:
             release/*
       - name: Push images to GitHub Container Registry
         run: |
-          python run scripts/ghcr-checker.py
+          python scripts/ghcr-checker.py
