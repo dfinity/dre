@@ -7,7 +7,7 @@ import git
 
 def update_missing_images(targets):
     for target in targets:
-        run_target(target)
+        run_target(targets[target])
 
 
 def run_target(target):
