@@ -13,12 +13,12 @@ fn mainnet_targets_tests() {
 
     let rt = Runtime::new().unwrap();
     let temp_dir = TempDir::new("target").expect("Failed to create temporary directory");
-    let mut cmd = Command::cargo_bin("multiservice-discovery").expect("Failed to find binary");
-
-    // Add the necessary arguments
-    cmd.arg("--targets-dir").arg(temp_dir.path().to_path_buf().to_str().unwrap());
-
-    let mut child_process: Child = cmd.spawn().expect("Failed to run command");
+    let path_buf = temp_dir.path().to_path_buf();
+    let args = vec!["--targets-dir", path_buf.to_str().unwrap()];
+    let mut child_process = Command::new("rs/ic-observability/multiservice-discovery")
+        .args(&args)
+        .spawn()
+        .expect("Failed to run command");
 
     let handle: JoinHandle<anyhow::Result<BTreeSet<PrometheusStaticConfig>>> = rt.spawn(async {
             let timeout_duration = Duration::from_secs(300);
