@@ -1,8 +1,7 @@
 use std::collections::BTreeSet;
-use std::process::{Command, Child};
+use std::process::Command;
 use tempdir::TempDir;
 use std::time::Duration;
-use assert_cmd::cargo::CommandCargoExt;
 use tokio::runtime::Runtime;
 use tokio::task::JoinHandle;
 use tokio::time::sleep;
@@ -12,10 +11,11 @@ use multiservice_discovery_shared::builders::prometheus_config_structure::Promet
 fn mainnet_targets_tests() {
 
     let rt = Runtime::new().unwrap();
+    let binary_path = concat!(env!("CARGO_MANIFEST_DIR"), "/target/debug/multiservice-discovery");
     let temp_dir = TempDir::new("target").expect("Failed to create temporary directory");
     let path_buf = temp_dir.path().to_path_buf();
     let args = vec!["--targets-dir", path_buf.to_str().unwrap()];
-    let mut child_process = Command::new("rs/ic-observability/multiservice-discovery")
+    let mut child_process = Command::new(binary_path)
         .args(&args)
         .spawn()
         .expect("Failed to run command");
