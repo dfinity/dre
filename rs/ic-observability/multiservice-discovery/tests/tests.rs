@@ -11,7 +11,8 @@ use multiservice_discovery_shared::builders::prometheus_config_structure::Promet
 fn mainnet_targets_tests() {
 
     let rt = Runtime::new().unwrap();
-    let binary_path = concat!(env!("CARGO_MANIFEST_DIR"), "/target/debug/multiservice-discovery");
+    let binary_path = env!("MULTISERVICE_DISCOVERY_BIN"));
+    println!("binary path: {:?}", binary_path);
     let temp_dir = TempDir::new("target").expect("Failed to create temporary directory");
     let path_buf = temp_dir.path().to_path_buf();
     let args = vec!["--targets-dir", path_buf.to_str().unwrap()];
