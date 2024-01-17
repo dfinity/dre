@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "cursor-intialization"
+version = "0.1.0"
+description = ""
+authors = ["Your Name <you@example.com>"]
+readme = "README.md"
+packages = [{include = "cursor_intialization"}]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+elasticsearch = "^8.10.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
