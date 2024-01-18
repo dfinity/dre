@@ -206,10 +206,10 @@ To start the release dashboard locally, run the following from dashboard folder
 yarn dev
 ```
 
-To use `release_cli` with the local dashboard instance run it with `--dev` flag.
+To use the `dre` CLI tool with the local dashboard instance run it with `--dev` flag.
 
 E.g.
 
 ```sh
-release_cli --dev subnet --id <id> replace -o1
+dre --dev subnet --id <id> replace -o1
 ```

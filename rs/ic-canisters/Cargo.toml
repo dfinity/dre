@@ -1,22 +1,32 @@
 [package]
 name = "ic-canisters"
-version = "0.1.0"
-edition = "2021"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+description.workspace = true
+documentation.workspace = true
 
 [dependencies]
-ic-nns-constants = { git = "https://github.com/dfinity/ic.git", rev = "abac636d8a281a1e7600d876aaed10f7ce7e5040" }
-url = "2.2.2"
-ic-agent = "0.27.0"
-anyhow = "1.0.44"
-candid = "0.9.5"
-serde = { version = "1.0.130", features = ["derive"] }
-serde_json = "1.0.68"
-ic-canister-client = { git = "https://github.com/dfinity/ic.git", rev = "abac636d8a281a1e7600d876aaed10f7ce7e5040" }
-ic-sys = { git = "https://github.com/dfinity/ic.git", rev = "abac636d8a281a1e7600d876aaed10f7ce7e5040" }
-ic-nns-governance = { git = "https://github.com/dfinity/ic.git", rev = "abac636d8a281a1e7600d876aaed10f7ce7e5040" }
-ic-nns-common = { git = "https://github.com/dfinity/ic.git", rev = "abac636d8a281a1e7600d876aaed10f7ce7e5040" }
-ic-canister-client-sender = { git = "https://github.com/dfinity/ic.git", rev = "abac636d8a281a1e7600d876aaed10f7ce7e5040" }
-reqwest = "0.11.22"
-
-[lib]
-path = "src/governance.rs"
+anyhow = { workspace = true }
+backoff = { workspace = true }
+candid = { workspace = true }
+hex = { workspace = true }
+ic-agent = { workspace = true }
+ic-base-types = { workspace = true }
+ic-canister-client = { workspace = true }
+ic-canister-client-sender = { workspace = true }
+ic-ic00-types = { workspace = true }
+ic-nns-common = { workspace = true }
+ic-nns-constants = { workspace = true }
+ic-nns-governance = { workspace = true }
+ic-protobuf = { workspace = true }
+ic-registry-transport = { workspace = true }
+ic-sys = { workspace = true }
+ic-utils = "0.30.2"
+pkcs11 = { workspace = true }
+prost = { workspace = true }
+serde = { workspace = true }
+sha2 = { workspace = true }
+simple_asn1 = { workspace = true }
+thiserror = { workspace = true }
+url = { workspace = true }

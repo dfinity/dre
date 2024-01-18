@@ -1,0 +1,28 @@
+[package]
+name = "prometheus-config-updater"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = { workspace = true }
+base64 = { workspace = true }
+clap = { workspace = true }
+config-writer-common = { path = "../config-writer-common" }
+crossbeam = { workspace = true }
+futures-util = { workspace = true }
+humantime = { workspace = true }
+ic-async-utils = { workspace = true }
+ic-config = { workspace = true }
+ic-crypto-utils-threshold-sig-der = { workspace = true }
+ic-http-endpoints-metrics = { workspace = true }
+ic-metrics = { workspace = true }
+ic-types = { workspace = true }
+regex = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+service-discovery = { path = "../service-discovery" }
+slog = { workspace = true }
+slog-async = { workspace = true }
+slog-term = { workspace = true }
+tokio = { workspace = true }
+url = { workspace = true }

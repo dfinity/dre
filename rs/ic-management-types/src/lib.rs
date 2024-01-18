@@ -2,8 +2,11 @@ pub mod errors;
 pub mod requests;
 pub use crate::errors::*;
 
+use anyhow::anyhow;
 use candid::{CandidType, Decode};
+use clap::{Parser, ValueEnum};
 use core::hash::Hash;
+use ic_base_types::NodeId;
 use ic_nns_governance::pb::v1::NnsFunction;
 use ic_nns_governance::pb::v1::ProposalInfo;
 use ic_nns_governance::pb::v1::ProposalStatus;
@@ -13,6 +16,9 @@ use registry_canister::mutations::do_add_nodes_to_subnet::AddNodesToSubnetPayloa
 use registry_canister::mutations::do_change_subnet_membership::ChangeSubnetMembershipPayload;
 use registry_canister::mutations::do_create_subnet::CreateSubnetPayload;
 use registry_canister::mutations::do_remove_nodes_from_subnet::RemoveNodesFromSubnetPayload;
+use registry_canister::mutations::do_update_elected_hostos_versions::UpdateElectedHostosVersionsPayload;
+use registry_canister::mutations::do_update_elected_replica_versions::UpdateElectedReplicaVersionsPayload;
+use registry_canister::mutations::do_update_nodes_hostos_version::UpdateNodesHostosVersionPayload;
 use registry_canister::mutations::do_update_subnet_replica::UpdateSubnetReplicaVersionPayload;
 use registry_canister::mutations::node_management::do_remove_nodes::RemoveNodesPayload;
 use serde::{Deserialize, Serialize};
@@ -22,6 +28,7 @@ use std::convert::TryFrom;
 use std::net::Ipv6Addr;
 use std::ops::Deref;
 use std::str::FromStr;
+use std::{fmt, i32};
 use strum::VariantNames;
 use strum_macros::{Display, EnumString, EnumVariantNames};
 use url::Url;
@@ -53,12 +60,24 @@ impl NnsFunctionProposal for UpdateSubnetReplicaVersionPayload {
     const TYPE: NnsFunction = NnsFunction::UpdateSubnetReplicaVersion;
 }
 
+impl NnsFunctionProposal for UpdateElectedHostosVersionsPayload {
+    const TYPE: NnsFunction = NnsFunction::UpdateElectedHostosVersions;
+}
+
+impl NnsFunctionProposal for UpdateNodesHostosVersionPayload {
+    const TYPE: NnsFunction = NnsFunction::UpdateNodesHostosVersion;
+}
+
 impl NnsFunctionProposal for ChangeSubnetMembershipPayload {
     const TYPE: NnsFunction = NnsFunction::ChangeSubnetMembership;
 }
 
 impl NnsFunctionProposal for RemoveNodesPayload {
     const TYPE: NnsFunction = NnsFunction::RemoveNodes;
+}
+
+impl NnsFunctionProposal for UpdateElectedReplicaVersionsPayload {
+    const TYPE: NnsFunction = NnsFunction::UpdateElectedReplicaVersions;
 }
 
 pub trait TopologyChangePayload: NnsFunctionProposal {
@@ -145,6 +164,27 @@ pub struct TopologyChangeProposal {
     pub id: u64,
 }
 
+#[derive(CandidType, Serialize, Deserialize, Clone, Debug)]
+pub struct UpdateElectedReplicaVersionsProposal {
+    pub proposal_id: u64,
+    pub version_elect: String,
+    pub versions_unelect: Vec<String>,
+}
+
+#[derive(CandidType, Serialize, Deserialize, Clone, Debug)]
+pub struct UpdateElectedHostosVersionsProposal {
+    pub proposal_id: u64,
+    pub version_elect: String,
+    pub versions_unelect: Vec<String>,
+}
+
+#[derive(CandidType, Serialize, Deserialize, Clone, Debug)]
+pub struct UpdateNodesHostosVersionsProposal {
+    pub proposal_id: u64,
+    pub hostos_version_id: String,
+    pub node_ids: Vec<NodeId>,
+}
+
 impl<T: TopologyChangePayload> From<(ProposalInfo, T)> for TopologyChangeProposal {
     fn from((info, payload): (ProposalInfo, T)) -> Self {
         Self {
@@ -165,7 +205,7 @@ pub struct Subnet {
     pub replica_version: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub proposal: Option<TopologyChangeProposal>,
-    pub replica_release: Option<ReplicaRelease>,
+    pub replica_release: Option<Release>,
 }
 
 type Application = String;
@@ -189,6 +229,8 @@ pub struct Node {
     pub hostname: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub subnet_id: Option<PrincipalId>,
+    pub hostos_release: Option<Release>,
+    pub hostos_version: String,
     pub dfinity_owned: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub proposal: Option<TopologyChangeProposal>,
@@ -221,7 +263,7 @@ impl NodeFeature {
     }
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, Default)]
+#[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
 pub struct MinNakamotoCoefficients {
     pub coefficients: BTreeMap<NodeFeature, f64>,
     pub average: f64,
@@ -385,7 +427,7 @@ pub enum Health {
     Unknown,
 }
 
-#[derive(PartialOrd, Ord, Eq, PartialEq, EnumString, Serialize, Display, Deserialize, Debug, Clone)]
+#[derive(PartialOrd, Ord, Eq, PartialEq, EnumString, Serialize, Display, Deserialize, Debug, Clone, Hash)]
 pub enum Status {
     Healthy,
     Degraded,
@@ -423,15 +465,15 @@ pub struct NodeVersion {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash, PartialOrd, Ord)]
-pub struct ReplicaRelease {
+pub struct Release {
     pub commit_hash: String,
     pub branch: String,
     pub name: String,
     pub time: chrono::NaiveDateTime,
-    pub previous_patch_release: Option<Box<ReplicaRelease>>,
+    pub previous_patch_release: Option<Box<Release>>,
 }
 
-impl ReplicaRelease {
+impl Release {
     pub fn patch_count(&self) -> u32 {
         match &self.previous_patch_release {
             Some(rv) => rv.patch_count(),
@@ -439,7 +481,7 @@ impl ReplicaRelease {
         }
     }
 
-    pub fn patches(&self, replica_release: &ReplicaRelease) -> bool {
+    pub fn patches(&self, replica_release: &Release) -> bool {
         match &self.previous_patch_release {
             Some(rv) => rv.deref().eq(replica_release) || rv.patches(replica_release),
             None => false,
@@ -455,7 +497,7 @@ impl ReplicaRelease {
                 .unwrap_or_default()
     }
 
-    pub fn patches_for(&self, commit_hash: &str) -> Result<Vec<ReplicaRelease>, String> {
+    pub fn patches_for(&self, commit_hash: &str) -> Result<Vec<Release>, String> {
         if self.commit_hash == *commit_hash {
             Ok(vec![])
         } else if let Some(previous) = &self.previous_patch_release {
@@ -468,13 +510,50 @@ impl ReplicaRelease {
         }
     }
 
-    pub fn get(&self, commit_hash: &str) -> Result<ReplicaRelease, String> {
+    pub fn get(&self, commit_hash: &str) -> Result<Release, String> {
         if self.commit_hash == *commit_hash {
             Ok(self.clone())
         } else if let Some(previous) = &self.previous_patch_release {
             previous.get(commit_hash)
         } else {
             Err("doesn't patch this release".to_string())
+        }
+    }
+}
+
+pub struct ArtifactReleases {
+    pub artifact: Artifact,
+    pub releases: Vec<Release>,
+}
+
+impl ArtifactReleases {
+    pub fn new(artifact: Artifact) -> ArtifactReleases {
+        ArtifactReleases {
+            artifact,
+            releases: Vec::new(),
+        }
+    }
+}
+
+#[derive(Display, Serialize, Deserialize, PartialEq, Eq, Hash, Clone)]
+#[strum(serialize_all = "lowercase")]
+#[serde(rename_all = "lowercase")]
+pub enum Artifact {
+    Replica,
+    HostOs,
+}
+
+impl Artifact {
+    pub fn s3_folder(&self) -> String {
+        match self {
+            Artifact::Replica => String::from("guest-os"),
+            Artifact::HostOs => String::from("host-os"),
+        }
+    }
+    pub fn capitalized(&self) -> String {
+        match self {
+            Artifact::Replica => String::from("Replica"),
+            Artifact::HostOs => String::from("Hostos"),
         }
     }
 }
@@ -504,7 +583,7 @@ impl Network {
         match self {
             Network::Mainnet => Url::from_str("https://ic0.app").unwrap(),
             // Workaround for staging boundary node not working properly (503 Service unavailable)
-            Network::Staging => Url::from_str("https://[2600:3004:1200:1200:5000:62ff:fedc:fe3c]:8080").unwrap(),
+            Network::Staging => Url::from_str("https://[2600:3000:6100:200:5000:b0ff:fe8e:6b7b]:8080").unwrap(),
             Self::Url(url) => url.clone(),
         }
     }
@@ -518,9 +597,114 @@ impl Network {
     }
 }
 
-#[derive(Clone)]
-pub struct UpdateReplicaVersions {
-    pub summary: String,
-    pub update_urls: Vec<String>,
-    pub stringified_hash: String,
+#[derive(ValueEnum, Copy, Clone, Debug, Ord, Eq, PartialEq, PartialOrd, Serialize, Deserialize, Parser, Default)]
+pub enum NodeOwner {
+    Dfinity,
+    Others,
+    #[default]
+    All,
+}
+
+#[derive(ValueEnum, Copy, Clone, Debug, Ord, Eq, PartialEq, PartialOrd, Serialize, Deserialize, Default)]
+pub enum NodeAssignment {
+    Unassigned,
+    Assigned,
+    #[default]
+    All,
+}
+
+#[derive(Copy, Clone, Debug, Ord, Eq, PartialEq, PartialOrd, Serialize, Deserialize)]
+pub struct NodeGroup {
+    pub assignment: NodeAssignment,
+    pub owner: NodeOwner,
+}
+
+impl NodeGroup {
+    pub fn new(assignment: NodeAssignment, owner: NodeOwner) -> Self {
+        NodeGroup { assignment, owner }
+    }
+}
+impl fmt::Display for NodeGroup {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "GROUP {{ subnet: {:?}, owner: {:?} }}", self.assignment, self.owner)
+    }
+}
+#[derive(Copy, Clone, Debug, Ord, Eq, PartialEq, PartialOrd, Serialize, Deserialize)]
+pub enum NumberOfNodes {
+    Percentage(i32),
+    Absolute(i32),
+}
+impl FromStr for NumberOfNodes {
+    type Err = anyhow::Error;
+    fn from_str(input: &str) -> Result<Self, Self::Err> {
+        if input.ends_with('%') {
+            let percentage = i32::from_str(input.trim_end_matches('%'))?;
+            if (0..=100).contains(&percentage) {
+                Ok(NumberOfNodes::Percentage(percentage))
+            } else {
+                Err(anyhow!("Percentage must be between 0 and 100"))
+            }
+        } else {
+            Ok(NumberOfNodes::Absolute(i32::from_str(input)?))
+        }
+    }
+}
+
+impl Default for NumberOfNodes {
+    fn default() -> Self {
+        NumberOfNodes::Percentage(100)
+    }
+}
+impl NumberOfNodes {
+    pub fn get_value(&self) -> i32 {
+        match self {
+            NumberOfNodes::Percentage(value) | NumberOfNodes::Absolute(value) => *value,
+        }
+    }
+}
+impl fmt::Display for NumberOfNodes {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            NumberOfNodes::Percentage(x) => write!(f, "{}% of", x),
+            NumberOfNodes::Absolute(x) => write!(f, "{}", x),
+        }
+    }
+}
+#[derive(Copy, Clone, Debug, Ord, Eq, PartialEq, PartialOrd, Serialize, Deserialize)]
+pub struct NodeGroupUpdate {
+    pub node_group: NodeGroup,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub maybe_number_nodes: Option<NumberOfNodes>,
+}
+impl NodeGroupUpdate {
+    pub fn new(assignment: Option<NodeAssignment>, owner: Option<NodeOwner>, nodes_per_subnet: NumberOfNodes) -> Self {
+        NodeGroupUpdate {
+            node_group: NodeGroup::new(assignment.unwrap_or_default(), owner.unwrap_or_default()),
+            maybe_number_nodes: Some(nodes_per_subnet),
+        }
+    }
+    pub fn new_all(assignment: NodeAssignment, owner: NodeOwner) -> Self {
+        NodeGroupUpdate {
+            node_group: NodeGroup::new(assignment, owner),
+            maybe_number_nodes: None,
+        }
+    }
+
+    pub fn with_assignment(&self, assignment: NodeAssignment) -> Self {
+        Self {
+            node_group: NodeGroup {
+                assignment,
+                owner: self.node_group.owner,
+            },
+            maybe_number_nodes: self.maybe_number_nodes,
+        }
+    }
+    pub fn nodes_to_take(&self, group_size: usize) -> usize {
+        match self.maybe_number_nodes.unwrap_or_default() {
+            NumberOfNodes::Percentage(percent_to_update) => {
+                (group_size as f32 * percent_to_update as f32 / 100.0).floor() as usize
+            }
+            NumberOfNodes::Absolute(number_nodes) => number_nodes as usize,
+        }
+    }
 }

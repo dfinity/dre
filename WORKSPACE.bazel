@@ -1,5 +1,5 @@
 workspace(
-    name = "release",
+    name = "dre",
 )
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive", "http_file")
@@ -35,11 +35,11 @@ load("@rules_python//python/pip_install:pip_repository.bzl", "package_annotation
 py_repositories()
 
 python_register_toolchains(
-    name = "python3_8",
-    python_version = "3.8.16",
+    name = "python3_11",
+    python_version = "3.11.1",
 )
 
-load("@python3_8//:defs.bzl", "interpreter")
+load("@python3_11//:defs.bzl", "interpreter")
 load("@rules_python//python:pip.bzl", "pip_parse")
 
 pip_parse(
@@ -62,11 +62,11 @@ load("@python_deps//:requirements.bzl", "install_deps")
 
 install_deps()
 
-IC_REPO_VERSION = "abac636d8a281a1e7600d876aaed10f7ce7e5040"
+IC_REPO_VERSION = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca"
 
 http_archive(
     name = "ic_repo",
-    sha256 = "1b85209dcf456defc25ecb7f4710327ff64eaed94bff36dc5748f5bb96823400",
+    sha256 = "34426b59612b23357799be48aed82870d298f7dbee96c9792ee3fe744ad2c2e3",
     strip_prefix = "ic-{}".format(IC_REPO_VERSION),
     url = "https://github.com/dfinity/ic/archive/{}.tar.gz".format(IC_REPO_VERSION),
 )
@@ -99,15 +99,15 @@ load("//bazel:external_crates.bzl", "external_crates_repository")
 
 external_crates_repository()
 
-load("@crate_index_release//:defs.bzl", "crate_repositories")
+load("@crate_index_dre//:defs.bzl", "crate_repositories")
 
 crate_repositories()
 
 http_file(
     name = "ic-icrc1-archive",
     downloaded_file_path = "ic-icrc1-archive.wasm.gz",
-    sha256 = "1b85209dcf456defc25ecb7f4710327ff64eaed94bff36dc5748f5bb96823400",
-    url = "https://download.dfinity.systems/ic/abac636d8a281a1e7600d876aaed10f7ce7e5040/canisters/ic-icrc1-archive.wasm.gz",
+    sha256 = "46aac8f1db925e166a1d8fc45ff33505a41afb6f9ba0581028b76199e0a07727",
+    url = "https://download.dfinity.systems/ic/4b3b2ce76c4bde0c1c60fb80b0915931003b7eca/canisters/ic-icrc1-archive.wasm.gz",
 )
 
 http_archive(
@@ -162,7 +162,6 @@ load("@rules_oci//oci:repositories.bzl", "LATEST_CRANE_VERSION", "LATEST_ZOT_VER
 oci_register_toolchains(
     name = "oci",
     crane_version = LATEST_CRANE_VERSION,
-    zot_version = LATEST_ZOT_VERSION,
 )
 
 load("@rules_oci//oci:pull.bzl", "oci_pull")
@@ -171,6 +170,44 @@ oci_pull(
     name = "distroless_cc",
     digest = "sha256:8aad707f96620ee89e27febef51b01c6ff244277a3560fcfcfbe68633ef09193",
     image = "gcr.io/distroless/cc",
+    platforms = [
+        "linux/amd64",
+        "linux/arm64",
+    ],
+)
+
+oci_pull(
+    # tag = 0.34.1-distroless-libc
+    name = "vector",
+    digest = "sha256:4447025bc3a99b3a96ed0352e990c44040784590de5a1ea8e4e5b75b76a16665",
+    image = "index.docker.io/timberio/vector",
+)
+
+oci_pull(
+    # tag = 0.34.1-debian
+    name = "vector-debian",
+    digest = "sha256:6d8cf7cbafe8591d3e04d9f4aa9889c720ab36bb8712cad04979261d35b501cf",
+    image = "index.docker.io/timberio/vector",
+)
+
+oci_pull(
+    # tag = "2.43.0-debian-11-r1",
+    name = "bitnami_git_docker_img",
+    digest = "sha256:a8e11f1fdcb57ef7b2ab12995bb28b9060e7dbffa17f75136f523e92f6f270e0",
+    image = "index.docker.io/bitnami/git",
+)
+
+oci_pull(
+    # tag = bookworm-20231218-slim
+    name = "debian-slim",
+    digest = "sha256:45287d89d96414e57c7705aa30cb8f9836ef30ae8897440dd8f06c4cff801eec",
+    image = "index.docker.io/library/debian",
+)
+
+oci_pull(
+    name = "distroless_python3",
+    digest = "sha256:db34936540e7bc575cc24a318e41eae7ad8c426b8d8e20a465f0dd67843590eb",
+    image = "gcr.io/distroless/python3",
     platforms = [
         "linux/amd64",
         "linux/arm64",

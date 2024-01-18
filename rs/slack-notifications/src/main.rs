@@ -2,6 +2,7 @@ use ic_nns_governance::pb::v1::{ListProposalInfo, ListProposalInfoResponse, Prop
 
 use anyhow::Result;
 use candid::Decode;
+use ic_agent::agent::http_transport::reqwest_transport::ReqwestHttpReplicaV2Transport;
 use ic_agent::Agent;
 use log::{info, warn};
 use serde::{Deserialize, Serialize};
@@ -93,8 +94,7 @@ impl ProposalPoller {
     fn new() -> Self {
         let agent = Agent::builder()
             .with_transport(
-                ic_agent::agent::http_transport::ReqwestHttpReplicaV2Transport::create("https://ic0.app")
-                    .expect("failed to create transport"),
+                ReqwestHttpReplicaV2Transport::create("https://ic0.app").expect("failed to create transport"),
             )
             .build()
             .expect("failed to build the agent");
@@ -242,7 +242,7 @@ async fn notify_for_failed_proposals() {
             let mut new_failed_proposals = pending_proposals
                 .into_iter()
                 .filter(|proposal| {
-                    ProposalStatus::from_i32(proposal.status).expect("invalid proposal status")
+                    ProposalStatus::try_from(proposal.status).expect("invalid proposal status")
                         == ProposalStatus::Failed
                         && proposal.failed_timestamp_seconds > checkpoint.get().time.unwrap_or_default()
                 })

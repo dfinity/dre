@@ -1,0 +1,22 @@
+[package]
+name = "config-writer-common"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+regex = { workspace = true }
+service-discovery = { path = "../service-discovery" }
+ic-types = { workspace = true }
+slog = { workspace = true }
+slog-async = { workspace = true }
+slog-term = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+ic-utils = { workspace = true }
+erased-serde = { workspace = true }
+serde_derive = { workspace = true }
+crossbeam = { workspace = true }
+crossbeam-channel = { workspace = true }
+url = { workspace = true }

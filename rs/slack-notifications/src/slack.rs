@@ -162,7 +162,7 @@ impl SlackMessage {
     pub fn render_payload(&self) -> Value {
         let message = self.alert_mention.clone()
             + if self.proposals.iter().all(|p| {
-                ProposalStatus::from_i32(p.status).expect("failed to parse proposal status") == ProposalStatus::Failed
+                ProposalStatus::try_from(p.status).expect("failed to parse proposal status") == ProposalStatus::Failed
             }) {
                 "the following proposal(s) failed"
             } else {

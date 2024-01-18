@@ -1,4 +1,5 @@
 pub mod governance_canister;
+pub mod hostos;
 pub mod nodes_ops;
 pub mod query_decentralization;
 pub mod release;
@@ -31,15 +32,15 @@ pub async fn run_backend(
     target_network: Network,
     listen_ip: &str,
     listen_port: u16,
-    run_from_release_cli: bool,
+    run_from_cli: bool,
     mpsc_tx: Option<std::sync::mpsc::Sender<actix_web::dev::ServerHandle>>,
 ) -> std::io::Result<()> {
     debug!("Starting backend");
     let registry_state = Arc::new(RwLock::new(
-        registry::RegistryState::new(target_network.clone(), run_from_release_cli).await,
+        registry::RegistryState::new(target_network.clone(), run_from_cli).await,
     ));
 
-    if run_from_release_cli {
+    if run_from_cli {
         registry::update_node_details(&registry_state).await;
     } else {
         if std::env::var(GITLAB_TOKEN_RELEASE_ENV).is_err() {
@@ -61,11 +62,11 @@ pub async fn run_backend(
         });
     }
 
-    let num_workers = if run_from_release_cli { 1 } else { 8 };
+    let num_workers = if run_from_cli { 1 } else { 8 };
 
     let mut srv = HttpServer::new(move || {
         let network = target_network.clone();
-        // For release_cli invocations we don't need more than one worker
+        // For `dre` cli invocations we don't need more than one worker
 
         let middleware_registry_state = registry_state.clone();
         App::new()
@@ -82,7 +83,7 @@ pub async fn run_backend(
                     if registry_canister
                         .get_latest_version()
                         .await
-                        .map_or(true, |v| v != registry_version && !run_from_release_cli)
+                        .map_or(true, |v| v != registry_version && !run_from_cli)
                     {
                         Err(actix_web::error::ErrorServiceUnavailable("version updating"))
                     } else {
@@ -108,10 +109,12 @@ pub async fn run_backend(
             .service(self::subnet::resize)
             .service(self::subnet::change_preview)
             .service(self::nodes_ops::remove)
+            .service(self::hostos::rollout_nodes)
             .service(self::query_decentralization::decentralization_subnet_query)
             .service(self::query_decentralization::decentralization_whatif_query)
             .service(self::release::releases_list_all)
             .service(self::release::retireable)
+            .service(self::release::blessed)
             .service(self::release::get_nns_replica_version)
             .service(self::governance_canister::governance_canister_version_endpoint)
     })
@@ -120,7 +123,7 @@ pub async fn run_backend(
     .bind((listen_ip, listen_port))
     .unwrap();
 
-    if run_from_release_cli {
+    if run_from_cli {
         // params reference: https://github.com/actix/actix-web/blob/master/actix-web/tests/test_httpserver.rs
         srv = srv
             .backlog(1)

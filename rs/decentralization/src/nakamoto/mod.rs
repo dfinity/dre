@@ -433,6 +433,8 @@ impl Display for NakamotoScore {
 
 #[cfg(test)]
 mod tests {
+    use std::str::FromStr;
+
     use crate::network::{DecentralizedSubnet, SubnetChangeRequest};
     use ic_base_types::PrincipalId;
     use itertools::Itertools;
@@ -747,7 +749,7 @@ mod tests {
                 &["NP1", "NP2", "NP2", "NP3", "NP4", "NP4", "NP5"],
             ),
         );
-        subnet_initial.check_business_rules().unwrap();
+        assert_eq!(subnet_initial.check_business_rules().unwrap(), (0, vec![]));
 
         // There are 2 spare nodes, but both are DFINITY
         let nodes_available =
@@ -873,5 +875,72 @@ mod tests {
 
         let new_subnet = new_subnet_result.unwrap();
         assert_eq!(new_subnet.nodes.len(), want_subnet_size)
+    }
+
+    #[test]
+    fn test_european_subnet_european_nodes_good() {
+        let subnet_initial = new_test_subnet_with_overrides(
+            0,
+            0,
+            7,
+            1,
+            (
+                &NodeFeature::Continent,
+                &["Europe", "Europe", "Europe", "Europe", "Europe", "Europe", "Europe"],
+            ),
+        )
+        .with_subnet_id(
+            PrincipalId::from_str("bkfrj-6k62g-dycql-7h53p-atvkj-zg4to-gaogh-netha-ptybj-ntsgw-rqe").unwrap(),
+        );
+        assert_eq!(subnet_initial.check_business_rules().unwrap(), (0, vec![]));
+    }
+
+    #[test]
+    fn test_european_subnet_european_nodes_bad_1() {
+        let subnet_mix = new_test_subnet_with_overrides(
+            1,
+            0,
+            7,
+            1,
+            (
+                &NodeFeature::Continent,
+                &["Europe", "Asia", "Europe", "Europe", "Europe", "Europe", "Europe"],
+            ),
+        )
+        .with_subnet_id(
+            PrincipalId::from_str("bkfrj-6k62g-dycql-7h53p-atvkj-zg4to-gaogh-netha-ptybj-ntsgw-rqe").unwrap(),
+        );
+        assert_eq!(
+            subnet_mix.check_business_rules().unwrap(),
+            (1000, vec!["European subnet has 1 non-European node(s)".to_string()])
+        );
+    }
+    #[test]
+    fn test_european_subnet_european_nodes_bad_2() {
+        let subnet_mix = new_test_subnet_with_overrides(
+            1,
+            0,
+            7,
+            1,
+            (
+                &NodeFeature::Continent,
+                &[
+                    "Europe",
+                    "Asia",
+                    "America",
+                    "Australia",
+                    "Europe",
+                    "Africa",
+                    "South America",
+                ],
+            ),
+        )
+        .with_subnet_id(
+            PrincipalId::from_str("bkfrj-6k62g-dycql-7h53p-atvkj-zg4to-gaogh-netha-ptybj-ntsgw-rqe").unwrap(),
+        );
+        assert_eq!(
+            subnet_mix.check_business_rules().unwrap(),
+            (5000, vec!["European subnet has 5 non-European node(s)".to_string()])
+        );
     }
 }

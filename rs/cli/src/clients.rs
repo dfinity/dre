@@ -1,11 +1,13 @@
 use async_trait::async_trait;
 use decentralization::SubnetChangeResponse;
 use ic_base_types::PrincipalId;
+use ic_management_types::requests::HostosRolloutResponse;
 use ic_management_types::{
     requests::{
-        MembershipReplaceRequest, NodesRemoveRequest, NodesRemoveResponse, SubnetCreateRequest, SubnetResizeRequest,
+        HostosRolloutRequest, MembershipReplaceRequest, NodesRemoveRequest, NodesRemoveResponse, SubnetCreateRequest,
+        SubnetResizeRequest,
     },
-    Network, NetworkError, ReplicaRelease, TopologyProposal,
+    Artifact, Network, NetworkError, Release, TopologyProposal,
 };
 use log::error;
 use serde::de::DeserializeOwned;
@@ -16,6 +18,8 @@ pub struct DashboardBackendClient {
 }
 
 impl DashboardBackendClient {
+    // Only used in tests, which should be cleaned up together with this code.
+    #[allow(dead_code)]
     pub fn new(network: Network, dev: bool) -> DashboardBackendClient {
         Self {
             url: reqwest::Url::parse(if !dev {
@@ -84,9 +88,13 @@ impl DashboardBackendClient {
             .await
     }
 
-    pub async fn get_retireable_versions(&self) -> anyhow::Result<Vec<ReplicaRelease>> {
+    pub async fn get_retireable_versions(&self, release_artifact: &Artifact) -> anyhow::Result<Vec<Release>> {
         reqwest::Client::new()
-            .get(self.url.join("release/retireable").map_err(|e| anyhow::anyhow!(e))?)
+            .get(
+                self.url
+                    .join(&format!("release/retireable/{}", release_artifact))
+                    .map_err(|e| anyhow::anyhow!(e))?,
+            )
             .rest_send()
             .await
     }
@@ -94,6 +102,25 @@ impl DashboardBackendClient {
     pub async fn get_nns_replica_version(&self) -> anyhow::Result<String> {
         reqwest::Client::new()
             .get(self.url.join("release/versions/nns").map_err(|e| anyhow::anyhow!(e))?)
+            .rest_send()
+            .await
+    }
+
+    pub async fn get_blessed_versions(&self, release_artifact: &Artifact) -> anyhow::Result<Option<Vec<String>>> {
+        reqwest::Client::new()
+            .get(
+                self.url
+                    .join(&format!("release/versions/blessed/{}", release_artifact))
+                    .map_err(|e| anyhow::anyhow!(e))?,
+            )
+            .rest_send()
+            .await
+    }
+
+    pub async fn hostos_rollout_nodes(&self, request: HostosRolloutRequest) -> anyhow::Result<HostosRolloutResponse> {
+        reqwest::Client::new()
+            .post(self.url.join("hostos/rollout_nodes").map_err(|e| anyhow::anyhow!(e))?)
+            .json(&request)
             .rest_send()
             .await
     }

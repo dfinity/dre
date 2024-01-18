@@ -1,13 +1,12 @@
-use crate::cli::version::Commands::Update;
-use crate::general::vote_on_proposals;
+use crate::general::{get_node_metrics_history, vote_on_proposals};
 use crate::ic_admin::IcAdminWrapper;
 use clap::{error::ErrorKind, CommandFactory, Parser};
 use dotenv::dotenv;
-use ic_canisters::governance_canister_version;
+use ic_base_types::CanisterId;
+use ic_canisters::governance::governance_canister_version;
 use ic_management_backend::endpoints;
 use ic_management_types::requests::NodesRemoveRequest;
-use ic_management_types::{MinNakamotoCoefficients, Network, NodeFeature};
-use itertools::Itertools;
+use ic_management_types::{Artifact, MinNakamotoCoefficients, Network, NodeFeature, NodeGroupUpdate, NumberOfNodes};
 use log::info;
 use std::collections::BTreeMap;
 use std::str::FromStr;
@@ -111,7 +110,6 @@ async fn main() -> Result<(), anyhow::Error> {
                         only,
                         include,
                         min_nakamoto_coefficients,
-                        verbose,
                     } => {
                         let min_nakamoto_coefficients = parse_min_nakamoto_coefficients(&mut cmd, min_nakamoto_coefficients);
                             let runner = runner::Runner::new_with_network_url(cli::Cli::from_opts(&cli_opts, true).await?.into(), backend_port).await?;
@@ -142,10 +140,10 @@ async fn main() -> Result<(), anyhow::Error> {
                                     only: only.clone(),
                                     include: include.clone().into(),
                                     min_nakamoto_coefficients,
-                                }, *verbose, simulate)
+                                }, cli_opts.verbose, simulate)
                                 .await
                     }
-                    cli::subnet::Commands::Resize { add, remove, include, only, exclude, motivation, verbose, } => {
+                    cli::subnet::Commands::Resize { add, remove, include, only, exclude, motivation, } => {
                         if let Some(motivation) = motivation.clone() {
                             let runner = runner::Runner::new_with_network_url(cli::Cli::from_opts(&cli_opts, true).await?.into(), backend_port).await?;
                             runner.subnet_resize(ic_management_types::requests::SubnetResizeRequest {
@@ -155,7 +153,7 @@ async fn main() -> Result<(), anyhow::Error> {
                                 only: only.clone().into(),
                                 exclude: exclude.clone().into(),
                                 include: include.clone().into(),
-                            }, motivation, *verbose, simulate).await
+                            }, motivation, cli_opts.verbose, simulate).await
                         } else {
                             cmd.error(
                                 ErrorKind::MissingRequiredArgument,
@@ -164,7 +162,7 @@ async fn main() -> Result<(), anyhow::Error> {
                             .exit();
                         }
                     }
-                    cli::subnet::Commands::Create { size, min_nakamoto_coefficients, exclude, only, include, motivation, verbose, replica_version } => {
+                    cli::subnet::Commands::Create { size, min_nakamoto_coefficients, exclude, only, include, motivation, replica_version } => {
                         let min_nakamoto_coefficients = parse_min_nakamoto_coefficients(&mut cmd, min_nakamoto_coefficients);
                         if let Some(motivation) = motivation.clone() {
                             let runner = runner::Runner::new_with_network_url(cli::Cli::from_opts(&cli_opts, true).await?.into(), backend_port).await?;
@@ -174,7 +172,7 @@ async fn main() -> Result<(), anyhow::Error> {
                                 only: only.clone().into(),
                                 exclude: exclude.clone().into(),
                                 include: include.clone().into(),
-                            }, motivation, *verbose, simulate, replica_version.clone()).await
+                            }, motivation, cli_opts.verbose, simulate, replica_version.clone()).await
                         } else {
                             cmd.error(
                                 ErrorKind::MissingRequiredArgument,
@@ -196,42 +194,56 @@ async fn main() -> Result<(), anyhow::Error> {
                 ic_admin.run_passthrough_propose(args, simulate)
             },
 
-            cli::Commands::Version(cmd) => {
-                match &cmd.subcommand {
-                    Update { version, release_tag} => {
-                        // FIXME: backend needs gitlab access to figure out RCs and versions to retire
-                        let runner = runner::Runner::from_opts(&cli_opts).await?;
-                        let (_, retire_versions) = runner.prepare_versions_to_retire(false).await?;
+            cli::Commands::Version(version_command) => {
+                match &version_command {
+                    cli::version::Cmd::Update(update_command) => {
+                        let runner = runner::Runner::new_with_network_url(cli::Cli::from_opts(&cli_opts, true).await?.into(), backend_port).await?;
                         let ic_admin: IcAdminWrapper = cli::Cli::from_opts(&cli_opts, true).await?.into();
-                        let new_replica_info = ic_admin::IcAdminWrapper::prepare_to_propose_to_update_elected_replica_versions(version, release_tag).await?;
-                        let proposal_title = if retire_versions.is_empty() {
-                            Some(format!("Elect new IC/Replica revision (commit {})", &version[..8]))
-                        } else {
-                            let pluralize = if retire_versions.len() == 1 {
-                                "version"
-                            } else {
-                                "versions"
-                            };
-                            Some(format!("Elect new IC/Replica revision (commit {}), and retire old replica {} {}", &version[..8], pluralize, retire_versions.iter().map(|v| &v[..8]).join(",")))
-                        };
+                        let release_artifact: &Artifact = &update_command.subcommand.clone().into();
 
-                        ic_admin.propose_run(ic_admin::ProposeCommand::UpdateElectedReplicaVersions{
-                            version_to_bless: version.to_string(),
-                            update_urls: new_replica_info.update_urls,
-                            stringified_hash: new_replica_info.stringified_hash,
-                            versions_to_retire: retire_versions.clone(),
-                        }, ic_admin::ProposeOptions{
-                            title: proposal_title,
-                            summary: Some(new_replica_info.summary),
-                            motivation: None,
-                        }, simulate)
+                        let update_version = match &update_command.subcommand {
+                            cli::version::UpdateCommands::Replica { version, release_tag} | cli::version::UpdateCommands::HostOS { version, release_tag} => {
+                                ic_admin::IcAdminWrapper::prepare_to_propose_to_update_elected_versions(
+                                    release_artifact,
+                                    version,
+                                    release_tag,
+                                    runner.prepare_versions_to_retire(release_artifact, false).await.map(|res| res.1)?,
+                                )
+                            }
+                        }.await?;
+
+                        ic_admin.propose_run(ic_admin::ProposeCommand::UpdateElectedVersions {
+                                                 release_artifact: update_version.release_artifact.clone(),
+                                                 args: cli::Cli::get_update_cmd_args(&update_version)
+                                             },
+                                             ic_admin::ProposeOptions{
+                                                 title: Some(update_version.title),
+                                                 summary: Some(update_version.summary.clone()),
+                                                 motivation: None,
+                                             }, simulate)
                     }
                 }
             },
 
+            cli::Commands::Hostos(nodes) => {
+                match &nodes.subcommand {
+                    cli::hostos::Commands::Rollout { version,nodes} => {
+                        let runner = runner::Runner::new_with_network_url(cli::Cli::from_opts(&cli_opts, true).await?.into(), backend_port).await?;
+                        runner.hostos_rollout(nodes.clone(), version, simulate, None).await
+                    },
+                    cli::hostos::Commands::RolloutFromNodeGroup {version, assignment, owner, nodes_in_group, exclude } => {
+                        let update_group  = NodeGroupUpdate::new(*assignment, *owner, NumberOfNodes::from_str(nodes_in_group)?);
+                        let runner = runner::Runner::new_with_network_url(cli::Cli::from_opts(&cli_opts, true).await?.into(), backend_port).await?;
+                        if let Some((nodes_to_update, summary)) = runner.hostos_rollout_nodes(update_group, version, exclude).await? {
+                            return runner.hostos_rollout(nodes_to_update, version, simulate, Some(summary)).await
+                        }
+                        Ok(())
+                    }
+                }
+            },
             cli::Commands::Nodes(nodes) => {
                 match &nodes.subcommand {
-                    cli::nodes::Commands::Remove { extra_nodes_filter, no_auto, exclude, motivation } => {
+                    cli::nodes::Commands::Remove { extra_nodes_filter, no_auto, remove_degraded, exclude, motivation } => {
                         if motivation.is_none() && !extra_nodes_filter.is_empty() {
                             cmd.error(
                                 ErrorKind::MissingRequiredArgument,
@@ -243,6 +255,7 @@ async fn main() -> Result<(), anyhow::Error> {
                         runner.remove_nodes(NodesRemoveRequest {
                             extra_nodes_filter: extra_nodes_filter.clone(),
                             no_auto: *no_auto,
+                            remove_degraded: *remove_degraded,
                             exclude: Some(exclude.clone()),
                             motivation: motivation.clone().unwrap_or_default(),
                         }, simulate).await
@@ -255,8 +268,16 @@ async fn main() -> Result<(), anyhow::Error> {
                 vote_on_proposals(match cli.get_neuron() {
                     Some(neuron) => neuron,
                     None => return Err(anyhow::anyhow!("Neuron required for this command")),
-                }, cli.get_nns_url(), accepted_neurons, accepted_topics).await
+                }, cli.get_nns_url(), accepted_neurons, accepted_topics, simulate).await
             },
+
+            cli::Commands::TrustworthyMetrics { wallet, start_at_timestamp, subnet_ids } => {
+                let cli = cli::Cli::from_opts(&cli_opts, true).await?;
+                get_node_metrics_history(CanisterId::from_str(wallet)?, subnet_ids.clone(), *start_at_timestamp, match cli.get_neuron() {
+                    Some(neuron) => neuron,
+                    None => return Err(anyhow::anyhow!("Neuron required for this command")),
+                }, cli.get_nns_url()).await
+            }
         }
     })
     .await?;

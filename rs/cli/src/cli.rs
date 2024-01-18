@@ -1,6 +1,7 @@
 use clap::{Parser, Subcommand};
 use clap_num::maybe_hex;
-use ic_management_types::Network;
+use ic_base_types::PrincipalId;
+use ic_management_types::{Artifact, Network};
 use log::error;
 
 use crate::detect_neuron::{detect_hsm_auth, detect_neuron, Auth, Neuron};
@@ -64,8 +65,12 @@ pub(crate) enum Commands {
         #[clap(allow_hyphen_values = true)]
         args: Vec<String>,
     },
-    /// Manage replica versions blessing
+    /// Manage replica/host-os versions blessing
+    #[clap(subcommand)]
     Version(version::Cmd),
+
+    /// Rollout hostos version
+    Hostos(hostos::Cmd),
 
     /// Manage nodes
     Nodes(nodes::Cmd),
@@ -101,6 +106,20 @@ pub(crate) enum Commands {
         )]
         accepted_topics: Vec<i32>,
     },
+
+    /// Trustworthy Metrics
+    TrustworthyMetrics {
+        /// Wallet that should be used to query node metrics history
+        /// in form of canister id
+        wallet: String,
+
+        /// Start at timestamp in nanoseconds
+        start_at_timestamp: u64,
+
+        /// Vector of subnets to query, if empty will dump metrics for
+        /// all subnets
+        subnet_ids: Vec<PrincipalId>,
+    },
 }
 
 pub(crate) mod subnet {
@@ -135,7 +154,7 @@ pub(crate) mod subnet {
             optimize: Option<usize>,
 
             /// Motivation for replacing custom nodes
-            #[clap(short, long)]
+            #[clap(short, long, aliases = ["summary"])]
             motivation: Option<String>,
 
             /// Minimum Nakamoto coefficients after the replacement
@@ -154,11 +173,6 @@ pub(crate) mod subnet {
             /// regardless of the decentralization score
             #[clap(long, num_args(1..))]
             include: Vec<PrincipalId>,
-
-            /// More verbose execution. For instance, print logs from the
-            /// backend.
-            #[clap(long)]
-            verbose: bool,
         },
 
         /// Resize the subnet
@@ -185,13 +199,8 @@ pub(crate) mod subnet {
             include: Vec<PrincipalId>,
 
             /// Motivation for resing the subnet
-            #[clap(short, long)]
+            #[clap(short, long, aliases = ["summary"])]
             motivation: Option<String>,
-
-            /// More verbose execution. For instance, print logs from the
-            /// backend.
-            #[clap(long)]
-            verbose: bool,
         },
 
         /// Create a new subnet
@@ -218,13 +227,8 @@ pub(crate) mod subnet {
             include: Vec<PrincipalId>,
 
             /// Motivation for creating the subnet
-            #[clap(short, long)]
+            #[clap(short, long, aliases = ["summary"])]
             motivation: Option<String>,
-
-            /// More verbose execution. For instance, print logs from the
-            /// backend.
-            #[clap(long)]
-            verbose: bool,
 
             #[clap(long)]
             replica_version: Option<String>,
@@ -235,22 +239,88 @@ pub(crate) mod subnet {
 pub(crate) mod version {
     use super::*;
 
+    #[derive(Subcommand, Clone)]
+    pub enum Cmd {
+        Update(UpdateCmd),
+    }
+
     #[derive(Parser, Clone)]
-    pub struct Cmd {
+    pub struct UpdateCmd {
         #[clap(subcommand)]
-        pub subcommand: Commands,
+        pub subcommand: UpdateCommands,
     }
 
     #[derive(Subcommand, Clone)]
-    pub enum Commands {
+    pub enum UpdateCommands {
         /// Update the elected/blessed replica versions in the registry
         /// by adding a new version and potentially removing obsolete versions
-        Update {
+        Replica {
             /// Specify the commit hash of the version that is being elected.
             version: String,
 
             /// Git tag for the release.
             release_tag: String,
+        },
+        /// Update the elected/blessed HostOS versions in the registry
+        /// by adding a new version and potentially removing obsolete versions
+        HostOS {
+            /// Specify the commit hash of the version that is being elected.
+            version: String,
+
+            /// Git tag for the release.
+            release_tag: String,
+        },
+    }
+    impl From<UpdateCommands> for Artifact {
+        fn from(value: UpdateCommands) -> Self {
+            match value {
+                UpdateCommands::Replica { .. } => Artifact::Replica,
+                UpdateCommands::HostOS { .. } => Artifact::HostOs,
+            }
+        }
+    }
+}
+
+pub(crate) mod hostos {
+    use super::*;
+    use ic_base_types::PrincipalId;
+    use ic_management_types::{NodeAssignment, NodeOwner};
+
+    #[derive(Parser, Clone)]
+    pub struct Cmd {
+        #[clap(subcommand)]
+        pub subcommand: Commands,
+    }
+    #[derive(Subcommand, Clone)]
+    pub enum Commands {
+        /// Create a new proposal to rollout an elected HostOS version
+        /// to a specified list of nodes
+        Rollout {
+            version: String,
+            /// Node IDs where to rollout the version
+            #[clap(long, num_args(1..))]
+            nodes: Vec<PrincipalId>,
+        },
+        /// Select a list of nodes from the registry using node group and
+        /// rollout an elected HostOS version to them
+        RolloutFromNodeGroup {
+            version: String,
+            /// Specify if the group of nodes considered for the rollout should be assigned on
+            /// a subnet or not
+            #[arg(value_enum)]
+            #[clap(long)]
+            assignment: Option<NodeAssignment>,
+            /// Owner of the group of nodes considered for the rollout
+            #[arg(value_enum)]
+            #[clap(long)]
+            owner: Option<NodeOwner>,
+            /// Specifies the filter used to exclude from the update a set of nodes
+            #[clap(long, num_args(1..))]
+            exclude: Option<Vec<PrincipalId>>,
+            /// How many nodes in the group to update with the version specified
+            /// supported values are absolute numbers (10) or percentage (10%)
+            #[clap(long)]
+            nodes_in_group: String,
         },
     }
 }
@@ -272,6 +342,10 @@ pub(crate) mod nodes {
             #[clap(long)]
             no_auto: bool,
 
+            /// Remove also degraded nodes; by default only dead (offline) nodes are automatically removed
+            #[clap(long)]
+            remove_degraded: bool,
+
             /// Specifies the filter used to remove extra nodes
             extra_nodes_filter: Vec<String>,
 
@@ -280,7 +354,7 @@ pub(crate) mod nodes {
             exclude: Vec<String>,
 
             /// Motivation for removing additional nodes
-            #[clap(long)]
+            #[clap(long, aliases = ["summary"])]
             motivation: Option<String>,
         },
     }
@@ -294,6 +368,17 @@ pub struct Cli {
     pub neuron: Option<Neuron>,
 }
 
+#[derive(Clone)]
+pub struct UpdateVersion {
+    pub release_artifact: Artifact,
+    pub version: String,
+    pub title: String,
+    pub summary: String,
+    pub update_urls: Vec<String>,
+    pub stringified_hash: String,
+    pub versions_to_retire: Option<Vec<String>>,
+}
+
 impl Cli {
     pub fn get_neuron(&self) -> &Option<Neuron> {
         &self.neuron
@@ -301,6 +386,31 @@ impl Cli {
 
     pub fn get_nns_url(&self) -> &url::Url {
         &self.nns_url
+    }
+
+    pub fn get_update_cmd_args(update_version: &UpdateVersion) -> Vec<String> {
+        [
+            [
+                vec![
+                    format!("--{}-version-to-elect", update_version.release_artifact),
+                    update_version.version.to_string(),
+                    "--release-package-sha256-hex".to_string(),
+                    update_version.stringified_hash.to_string(),
+                    "--release-package-urls".to_string(),
+                ],
+                update_version.update_urls.clone(),
+            ]
+            .concat(),
+            match update_version.versions_to_retire.clone() {
+                Some(versions) => [
+                    vec![format!("--{}-versions-to-unelect", update_version.release_artifact)],
+                    versions,
+                ]
+                .concat(),
+                None => vec![],
+            },
+        ]
+        .concat()
     }
 
     pub async fn from_opts(opts: &Opts, require_authentication: bool) -> anyhow::Result<Self> {

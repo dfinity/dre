@@ -1,0 +1,40 @@
+[package]
+name = "service-discovery"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = { workspace = true }
+crossbeam = { workspace = true }
+crossbeam-channel = { workspace = true }
+futures = { workspace = true }
+hyper = { workspace = true }
+ic-interfaces-registry = { workspace = true }
+ic-metrics = { workspace = true }
+ic-protobuf = { workspace = true }
+ic-registry-client = { workspace = true }
+ic-registry-client-fake = { workspace = true }
+ic-registry-client-helpers = { workspace = true }
+ic-registry-common-proto = { workspace = true }
+ic-registry-keys = { workspace = true }
+ic-registry-local-registry = { workspace = true }
+ic-registry-local-store = { workspace = true }
+ic-registry-local-store-artifacts = { workspace = true }
+ic-registry-nns-data-provider = { workspace = true }
+ic-types = { workspace = true }
+ic-utils = { workspace = true }
+prometheus = { workspace = true }
+regex = { workspace = true }
+registry-canister = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+slog = { workspace = true }
+tempfile = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true }
+url = { workspace = true }
+
+[dev-dependencies]
+itertools = { workspace = true }

@@ -1,0 +1,31 @@
+[package]
+name = "multiservice-discovery"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+base64 = { workspace = true }
+clap = { workspace = true }
+crossbeam = { workspace = true }
+crossbeam-channel = { workspace = true }
+erased-serde = { workspace = true }
+futures-util = { workspace = true }
+humantime = { workspace = true }
+ic-async-utils = { workspace = true }
+ic-crypto-utils-threshold-sig-der = { workspace = true }
+ic-registry-client = { workspace = true }
+ic-types = { workspace = true }
+ic-utils = { workspace = true }
+multiservice-discovery-shared = { path = "../multiservice-discovery-shared" }
+regex = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+service-discovery = { path = "../service-discovery" }
+slog = { workspace = true }
+slog-async = { workspace = true }
+slog-term = { workspace = true }
+tokio = { workspace = true }
+url = { workspace = true }
+warp = { workspace = true }

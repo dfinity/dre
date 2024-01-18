@@ -1,0 +1,31 @@
+[package]
+name = "node-status-updater"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = { workspace = true }
+clap = { workspace = true }
+crossbeam = { workspace = true }
+crossbeam-channel = { workspace = true }
+futures-util = { workspace = true }
+humantime = { workspace = true }
+ic-agent = { workspace = true }
+ic-async-utils = { workspace = true }
+ic-metrics = { workspace = true }
+obs-canister-clients = { path = "../obs-canister-clients" }
+prometheus-http-query = { version = "0.6.6", default_features = false, features = [
+  "rustls-tls-webpki-roots",
+] }
+service-discovery = { path = "../service-discovery" }
+slog = { workspace = true }
+slog-async = { workspace = true }
+slog-term = { workspace = true }
+tokio = { workspace = true }
+url = { workspace = true }
+
+[[bin]]
+name = "node-status-updater"
+path = "src/main.rs"
