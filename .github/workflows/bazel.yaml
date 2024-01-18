@@ -5,6 +5,7 @@ jobs:
     runs-on: ubuntu-22.04
     container:
       image: gcr.io/bazel-public/bazel:6.3.0
+      options: --user "$(id -u):$(id -g)"
     steps:
       - name: Free Disk Space (Ubuntu)
         uses: jlumbroso/free-disk-space@v1.3.1
