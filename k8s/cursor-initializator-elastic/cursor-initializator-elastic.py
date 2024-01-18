@@ -33,7 +33,7 @@ def main():
     args = parse()
     logger = get_logger()
 
-    logger.info(f"Initializing elastic client with url: {args.elastic_url}")
+    logger.info("Initializing elastic client with url: %s", args.elastic_url)
     client = Elasticsearch(args.elastic_url, request_timeout=args.timeout)
 
     indices = [i for i in list(client.indices.get(index=args.index_pattern)) if not i.startswith(".")]
@@ -41,7 +41,7 @@ def main():
     total_nodes = {}
     for pattern in args.index_pattern:
         if not any([re.match(pattern, i) for i in indices]):
-            logger.info(f"No indices found for pattern {pattern}")
+            logger.info("No indices found for pattern %s", pattern)
             continue
 
         field = "ic_node"
@@ -58,7 +58,7 @@ def main():
         ]
 
         if len(nodes) == 0:
-            logger.info(f"No nodes found for pattern {pattern} and filter {args.node_filter}")
+            logger.info("No nodes found for pattern %s and filter %s", pattern, args.node_filter)
             continue
 
         for job in JOBS:
@@ -78,7 +78,6 @@ def main():
             }
 
             last_logs = client.search(index=pattern, body=body)["hits"]["hits"]
-            # logger.info(f"Last logs: {json.dumps(last_logs, indent=4)}")
 
             nodes_and_cursors = [
                 {
@@ -99,7 +98,7 @@ def main():
                     total_nodes[entry["node"]][job] = entry
 
     created = 0
-    logger.info(f"{json.dumps(total_nodes, indent=4, default=str)}")
+    logger.info("%s", json.dumps(total_nodes, indent=4, default=str))
     for node in total_nodes:
         for job in total_nodes[node]:
             file_name = total_nodes[node][job]["node"]
@@ -113,14 +112,14 @@ def main():
             if not os.path.exists(path):
                 os.mkdir(path)
             else:
-                logger.warning(f"Directory already exists, maybe this shouldn't be overriden? {path}")
+                logger.warning("Directory already exists, maybe this shouldn't be overriden? %s", path)
 
             checkpointer = os.path.join(path, "checkpoint.txt")
             with open(checkpointer, "w", encoding="utf-8") as f:
                 f.write(total_nodes[node][job]["cursor"] + "\n")
                 created += 1
 
-    logger.info(f"Successfully initialized cursors {created} on path {args.output_dir}")
+    logger.info("Successfully initialized cursors %s on path %s", created, args.output_dir)
 
 
 if __name__ == "__main__":
