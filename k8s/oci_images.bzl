@@ -5,7 +5,7 @@ rules for creating oci images from python binaries
 load("@rules_oci//oci:defs.bzl", "oci_image", "oci_push")
 load("@rules_pkg//:pkg.bzl", "pkg_tar")
 
-def python_oci_image_rules(name, src, base_image = "@distroless_cc"):
+def python_oci_image_rules(name, src, base_image = "@distroless_python3"):
     """macro for creating oci image from python binary
 
     Args:
