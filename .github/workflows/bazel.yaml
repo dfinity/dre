@@ -3,9 +3,10 @@ on: [push]
 jobs:
   bazel:
     runs-on: ubuntu-latest
+    container:
+      image: gcr.io/bazel-public/bazel:6.3.0
     steps:
       - uses: actions/checkout@v4
-      - uses: bazelbuild/setup-bazelisk@v2
       - name: Mount bazel cache
         uses: actions/cache@v3
         with:
