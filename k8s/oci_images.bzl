@@ -18,6 +18,13 @@ def python_oci_image_rules(name, src, base_image = "@distroless_cc"):
     pkg_tar(
         name = tar_rule_name,
         srcs = [binary],
+        include_runfiles = True,
+        strip_prefix = "/",
+        remap_paths = {
+            "k8s/{}/{}.py".format(binary.name, binary.name): "{}.runfiles/dre/k8s/{}/{}.py".format(binary.name, binary.name, binary.name),
+            "k8s/{}/{}".format(binary.name, binary.name): "{}".format(binary.name),
+            "external": "{}.runfiles".format(binary.name),
+        }
     )
 
     image_rule_name = "{}-image".format(binary.name)
@@ -25,8 +32,11 @@ def python_oci_image_rules(name, src, base_image = "@distroless_cc"):
         name = image_rule_name,
         # Consider using even more minimalistic docker image since we're using static compile
         base = base_image,
-        entrypoint = ["/{}".format(binary.name)],
+        entrypoint = ["python3", "/{}".format(binary.name)],
         tars = [tar_rule_name],
+        env = {
+            "GIT_PYTHON_REFRESH": "quiet"
+        }
     )
 
     oci_push(

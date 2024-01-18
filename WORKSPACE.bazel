@@ -205,10 +205,13 @@ oci_pull(
 )
 
 oci_pull(
-    # tag = 3.11.7-bullseye
-    name = "python-bullseye",
-    digest = "sha256:f3e9ff769670251ae58b8d3915f9d0b7a42f794b8fad8efc84acc34d5d696cd0",
-    image = "index.docker.io/library/python",
+    name = "distroless_python3",
+    digest = "sha256:db34936540e7bc575cc24a318e41eae7ad8c426b8d8e20a465f0dd67843590eb",
+    image = "gcr.io/distroless/python3",
+    platforms = [
+        "linux/amd64",
+        "linux/arm64",
+    ],
 )
 
 http_archive(
