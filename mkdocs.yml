@@ -2,8 +2,8 @@ site_name: DRE team docs
 site_description: >-
   A collection of docs for the DRE team
 
-repo_name: core/release
-repo_url: https://gitlab.com/dfinity-lab/core/release/
+repo_name: Decentralized Reliability Engineering
+repo_url: https://github.com/dfinity/dre/
 edit_uri: edit/main/docs/
 
 theme:
