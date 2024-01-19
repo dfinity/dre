@@ -2,7 +2,7 @@
 rules for creating oci images from python binaries
 """
 
-load("@rules_oci//oci:defs.bzl", "oci_image", "oci_push")
+load("@rules_oci//oci:defs.bzl", "oci_image", "oci_push", "oci_tarball")
 load("@rules_pkg//:pkg.bzl", "pkg_tar")
 
 def python_oci_image_rules(name, src, base_image = "@distroless_python3"):
@@ -37,6 +37,13 @@ def python_oci_image_rules(name, src, base_image = "@distroless_python3"):
         env = {
             "GIT_PYTHON_REFRESH": "quiet"
         }
+    )
+
+    tarball_name = "{}-tarball".format(binary.name)
+    oci_tarball(
+        name = tarball_name,
+        image = image_rule_name,
+        repo_tags = ["localhost/{}:latest".format(binary.name)]
     )
 
     oci_push(

@@ -214,6 +214,12 @@ oci_pull(
     ],
 )
 
+oci_pull(
+    name = "python3",
+    digest = "sha256:5120c734a5ba810c47b97a80cdc6e03004bd4ff7ad98e492b9ccdaf70ff2b8d6",
+    image = "index.docker.io/library/python",
+)
+
 http_archive(
     name = "rules_pkg",
     sha256 = "8f9ee2dc10c1ae514ee599a8b42ed99fa262b757058f65ad3c384289ff70c4b8",
