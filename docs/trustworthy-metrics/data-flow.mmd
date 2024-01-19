@@ -1,0 +1,27 @@
+graph TD
+    subgraph "IC Community"
+        F["Community Members\n[verify metrics]"] -->T[DRE Tooling]
+        F --> H[Data Analysis Tools]
+        H --> J[JSON data with metrics]
+        J --> I[Community Insight and Verification of Node Performance]
+    end
+    subgraph Sx["IC subnet X"]
+        T <----> W
+        W[Wallet Canister]
+        W <-..->|fetch data| D1
+        A1[Consensus Layer] -->|Exposes block maker information| B1["Message Routing (MR) Layer"]
+        B1 -->|Aggregates and writes| C1(((Replicated State)))
+        D1[Management Canister] -->|Trustworthy metrics API| C1
+    end
+    subgraph Sy["IC subnet Y"]
+        W <-...->|"Fetch data with\ncross-subnet (XNet) calls"| D2
+        A2[Consensus Layer] -->|Exposes block maker information| B2["Message Routing (MR) Layer"]
+        B2 -->|Aggregates and writes| C2(((Replicated State)))
+        D2[Management Canister] -->|Trustworthy metrics API| C2
+    end
+    subgraph Sz["IC subnet Z"]
+        W <-...->|"Fetch data with\ncross-subnet (XNet) calls"| D3
+        A3[Consensus Layer] -->|Exposes block maker information| B3["Message Routing (MR) Layer"]
+        B3 -->|Aggregates and writes| C3(((Replicated State)))
+        D3[Management Canister] -->|Trustworthy metrics API| C3
+    end
