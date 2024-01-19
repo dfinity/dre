@@ -1,8 +1,8 @@
 [tool.poetry]
-name = "release"
-version = "0.1.0"
+name = "dre-repo"
+version = "0.2.0"
 description = ""
-authors = ["Release Team <eng-release@dfinity.org>"]
+authors = ["DRE Team <dept-DRE@dfinity.org>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]

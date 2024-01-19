@@ -746,9 +746,9 @@ jupyterlab-server==2.25.2 ; python_full_version >= "3.10.0" and python_version <
 jupyterlab-widgets==3.0.9 ; python_full_version >= "3.10.0" and python_version < "4" \
     --hash=sha256:3cf5bdf5b897bf3bccf1c11873aa4afd776d7430200f765e0686bd352487b58d \
     --hash=sha256:6005a4e974c7beee84060fdfba341a3218495046de8ae3ec64888e5fe19fdb4c
-jupyterlab==4.0.10 ; python_full_version >= "3.10.0" and python_version < "4" \
-    --hash=sha256:46177eb8ede70dc73be922ac99f8ef943bdc2dfbc6a31b353c4bde848a35dee1 \
-    --hash=sha256:fe010ad9e37017488b468632ef2ead255fc7c671c5b64d9ca13e1f7b7e665c37
+jupyterlab==4.0.11 ; python_full_version >= "3.10.0" and python_version < "4" \
+    --hash=sha256:536bf0e78723153a5016ca7efb88ed0ecd7070d3f1555d5b0e2770658f900a3c \
+    --hash=sha256:d1aec24712566bc25a36229788242778e498ca4088028e2f9aa156b8b7fdc8fc
 keyring==24.3.0 ; python_full_version >= "3.10.0" and python_version < "4.0" \
     --hash=sha256:4446d35d636e6a10b8bce7caa66913dd9eca5fd222ca03a3d42c38608ac30836 \
     --hash=sha256:e730ecffd309658a08ee82535a3b5ec4b4c8669a9be11efb66249d8e0aeb9a25
@@ -1094,9 +1094,9 @@ nodeenv==1.8.0 ; python_full_version >= "3.10.0" and python_version < "4" \
 notebook-shim==0.2.3 ; python_full_version >= "3.10.0" and python_version < "4" \
     --hash=sha256:a83496a43341c1674b093bfcebf0fe8e74cbe7eda5fd2bbc56f8e39e1486c0c7 \
     --hash=sha256:f69388ac283ae008cd506dda10d0288b09a017d822d5e8c7129a152cbd3ce7e9
-notebook==7.0.6 ; python_full_version >= "3.10.0" and python_version < "4" \
-    --hash=sha256:0fe8f67102fea3744fedf652e4c15339390902ca70c5a31c4f547fa23da697cc \
-    --hash=sha256:ec6113b06529019f7f287819af06c97a2baf7a95ac21a8f6e32192898e9f9a58
+notebook==7.0.7 ; python_full_version >= "3.10.0" and python_version < "4" \
+    --hash=sha256:289b606d7e173f75a18beb1406ef411b43f97f7a9c55ba03efa3622905a62346 \
+    --hash=sha256:3bcff00c17b3ac142ef5f436d50637d936b274cfa0b41f6ac0175363de9b4e09
 numpy==1.26.3 ; python_full_version >= "3.10.0" and python_version < "4" \
     --hash=sha256:02f98011ba4ab17f46f80f7f8f1c291ee7d855fcef0a5a98db80767a468c85cd \
     --hash=sha256:0b7e807d6888da0db6e7e75838444d62495e2b588b99e90dd80c3459594e857b \
