@@ -214,6 +214,13 @@ oci_pull(
     ],
 )
 
+oci_pull(
+    # tag = busybox:1.36.1-uclibc
+    name = "busybox_uclibc",
+    digest = "sha256:21de0dff31b277e0d37fe21f6e89e461f5c07415719d225235121c144287dc17",
+    image = "docker.io/library/busybox",
+)
+
 http_archive(
     name = "rules_pkg",
     sha256 = "8f9ee2dc10c1ae514ee599a8b42ed99fa262b757058f65ad3c384289ff70c4b8",
