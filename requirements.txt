@@ -478,6 +478,9 @@ httpcore==1.0.2 ; python_full_version >= "3.9.0" and python_version < "4" \
 httpx==0.26.0 ; python_full_version >= "3.9.0" and python_version < "4" \
     --hash=sha256:451b55c30d5185ea6b23c2c793abf9bb237d2a7dfb901ced6ff69ad37ec1dfaf \
     --hash=sha256:8915f5a3627c4d47b73e8202457cb28f1266982d1159bd5779d86a80c0eab1cd
+humanfriendly==10.0 ; python_full_version >= "3.9.0" and python_version < "4" \
+    --hash=sha256:1697e1a8a8f550fd43c2865cd84542fc175a61dcb779b6fee18cf6b6ccba1477 \
+    --hash=sha256:6b0b831ce8f15f7300721aa49829fc4e83921a9a301cc7f606be6686a2288ddc
 ic-py==1.0.1 ; python_full_version >= "3.9.0" and python_version < "4" \
     --hash=sha256:d44d3f4d127e928cdc6b898e68d08a826cb43bb19fafe6d429bafc74838d55c9 \
     --hash=sha256:d72a214689ed8b2a645e9b5a910f62646b00e3375a1491910590fd5228aa6e9b
@@ -827,6 +830,9 @@ pynacl==1.5.0 ; python_full_version >= "3.9.0" and python_version < "4" \
 pyproject-hooks==1.0.0 ; python_full_version >= "3.9.0" and python_version < "4.0" \
     --hash=sha256:283c11acd6b928d2f6a7c73fa0d01cb2bdc5f07c57a2eeb6e83d5e56b97976f8 \
     --hash=sha256:f271b298b97f5955d53fb12b72c1fb1948c22c1a6b70b315c54cedaca0264ef5
+pyreadline3==3.4.1 ; sys_platform == "win32" and python_full_version >= "3.9.0" and python_version < "4" \
+    --hash=sha256:6f3d1f7b8a31ba32b73917cefc1f28cc660562f39aea8646d30bd6eff21f7bae \
+    --hash=sha256:b0efb6516fd4fb07b45949053826a62fa4cb353db5be2bbb4a7aa1fdd1e345fb
 python-dateutil==2.8.2 ; python_version >= "3.9" and python_version < "4" \
     --hash=sha256:0123cacc1627ae19ddf3c27a5de5bd67ee4586fbdd6440d9748f8abb483d3e86 \
     --hash=sha256:961d03dc3453ebbc59dbdea9e4e11c5651520a876d0f4db161e8674aae935da9
