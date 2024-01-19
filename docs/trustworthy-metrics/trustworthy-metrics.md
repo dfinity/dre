@@ -48,6 +48,8 @@ To be able to fetch trustworthy metrics there are a couple of things needed prio
 
 ### Using the cli
 
+You can obtain the DRE tool by following [getting started](../getting-started.md)
+
 To test out the command you can run the following command
 
 ```bash
@@ -103,8 +105,6 @@ Or with an HSM:
 ```bash
 dre --private-key-pem identity.pem trustworthy-metrics nanx4-baaaa-aaaap-qb4sq-cai 0 > data.json
 ```
-
-You can obtain the DRE tool by following [getting started](../getting-started.md)
 
 You can check some examples of the analytics possible with the IC Mainnet data in the following [Jupyter Notebook](./TrustworthyMetricsAnalytics.ipynb)
 If you don't have Jupyter notebooks locally, you can use [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/dfinity/dre/main?labpath=docs%2Ftrustworthy-metrics%2FTrustworthyMetricsAnalytics.ipynb) to run it online.
