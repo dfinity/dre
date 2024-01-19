@@ -46,13 +46,43 @@ The DRE team provided open source tooling that fetches the metrics from the mana
 
 - The metrics will be retrieved from all subnets in parallel, whenever possible, to reduce the amount of time needed to fetch them, taking into account the possible increase of the number of subnets in the future.
 
-- See [trustworth-metrics](./trustworth-metrics.md)
+- See [trustworthy-metrics](./trustworthy-metrics.md)
 
 ## Detailed Architectural Diagrams and Data Flow
 
 The high-level and in-depth technical diagrams provide a visual representation of the data flow within the IC architecture with to the implementation of the Trustworthy Node Metrics feature.
 
-[![](https://mermaid.ink/img/pako:eNqtlFFv2jAQx7_KyU8gQSWSNzRVotCqoMEqQKNrwoNJLonVxEa2M8pKv3vPoYMwqa2K5pdYd3__7-4Xy88sUjGyLks1X2cwH4QSaJlytQ-EbNiHviqKUgq7Ddk-7dZNELJDAsZYrFCbMJTBb9Qi2UKBVovILEO2hHb7ch4MptcwVyoXMl3WbFwSboMBtxx6kudbI0ylMzXVbaUaBaPZjwnETroRNjvWOAhHlXAYHDsbSiPSzAKXMfx0rYmIW6EkqAQmNDvcoU6ULriM8M0IZfwPhtlTUJGggEQL9zTUseYcvrXbruziGFsEC57nJO1zKYxFXdMvSH9x0b7cJWijrBpnB4POUdDrUP_SoDSlge98S6fdWLvrp7UyaGCVq-gRCv6IGoSsmncT7eCqQ22O0RieIkxVaYk1NMbT5t7lpOurTuXZS1ONKbdk6whttKDtDvqdRqMxxXXuaGEMM0ufZrN5PD_oBGMuqVCBsjZmZTrXpbEbpW12uAfQuxs623cJb08I_zrpdU_MIQvZzQFadQfoxkVaGdN-O9i4n6BtQkT0TciIq1fj6p3L1fsCV-9Drt6nXL1zuHrvcv1zwvXhv3H1a1z9c7n6X-Dqf8jV_5Srfw5Xv8aVtViB1LuI6b18domQ2Yz8QtalbYwJL3Pr3sgXkvLSqtlWRqxrdYktVq6JLQ4Ep_9SsG7Cc0NRjIVVerx_g6unuMXWXD4o9Vfz8gpvRMv6?type=png)](https://mermaid.live/edit#pako:eNqtlFFv2jAQx7_KyU8gQSWSNzRVotCqoMEqQKNrwoNJLonVxEa2M8pKv3vPoYMwqa2K5pdYd3__7-4Xy88sUjGyLks1X2cwH4QSaJlytQ-EbNiHviqKUgq7Ddk-7dZNELJDAsZYrFCbMJTBb9Qi2UKBVovILEO2hHb7ch4MptcwVyoXMl3WbFwSboMBtxx6kudbI0ylMzXVbaUaBaPZjwnETroRNjvWOAhHlXAYHDsbSiPSzAKXMfx0rYmIW6EkqAQmNDvcoU6ULriM8M0IZfwPhtlTUJGggEQL9zTUseYcvrXbruziGFsEC57nJO1zKYxFXdMvSH9x0b7cJWijrBpnB4POUdDrUP_SoDSlge98S6fdWLvrp7UyaGCVq-gRCv6IGoSsmncT7eCqQ22O0RieIkxVaYk1NMbT5t7lpOurTuXZS1ONKbdk6whttKDtDvqdRqMxxXXuaGEMM0ufZrN5PD_oBGMuqVCBsjZmZTrXpbEbpW12uAfQuxs623cJb08I_zrpdU_MIQvZzQFadQfoxkVaGdN-O9i4n6BtQkT0TciIq1fj6p3L1fsCV-9Drt6nXL1zuHrvcv1zwvXhv3H1a1z9c7n6X-Dqf8jV_5Srfw5Xv8aVtViB1LuI6b18domQ2Yz8QtalbYwJL3Pr3sgXkvLSqtlWRqxrdYktVq6JLQ4Ep_9SsG7Cc0NRjIVVerx_g6unuMXWXD4o9Vfz8gpvRMv6)
+```mermaid
+graph TD
+    subgraph "IC Community"
+        F["Community Members\n[verify metrics]"] -->T[DRE Tooling]
+        F --> H[Data Analysis Tools]
+        H --> J[JSON data with metrics]
+        J --> I[Community Insight and Verification of Node Performance]
+    end
+    subgraph Sx["IC subnet X"]
+        T <----> W
+        W[Wallet Canister]
+        W <-..->|fetch data| D1
+        A1[Consensus Layer] -->|Exposes block maker information| B1["Message Routing (MR) Layer"]
+        B1 -->|Aggregates and writes| C1(((Replicated State)))
+        D1[Management Canister] -->|Trustworthy metrics API| C1
+    end
+    subgraph Sy["IC subnet Y"]
+        W <-.....->|"Fetch data with\ncross-subnet (XNet) calls"| D2
+        A2[Consensus Layer] -->|Exposes block maker information| B2["Message Routing (MR) Layer"]
+        B2 -->|Aggregates and writes| C2(((Replicated State)))
+        D2[Management Canister] -->|Trustworthy metrics API| C2
+    end
+    subgraph Sz["IC subnet Z"]
+        W <-.....->|"Fetch data with\ncross-subnet (XNet) calls"| D3
+        A3[Consensus Layer] -->|Exposes block maker information| B3["Message Routing (MR) Layer"]
+        B3 -->|Aggregates and writes| C3(((Replicated State)))
+        D3[Management Canister] -->|Trustworthy metrics API| C3
+    end
+```
+
+[Link for online editing with preview](https://mermaid.live/edit#pako:eNqtlFFv2jAQx7_KyU8gQSWSNzRVoqRVQYNVgEbXhAeTHMFqYiPbGWWl373n0JEwqa2K5pdYd3__7-4Xy88sVgmyLks136xhFkQSaJlieQhEbNCHvsrzQgq7i9gh7dZNGLFjAkaYL1GbKJLhb9RitYMcrRaxWURsAe325SwMJtcwUyoTMl3UbFwSbsOAWw49ybOdEabUmZrqtlQNw-H0xxgSJ90Ku65qHIXDUjgIq84G0oh0bYHLBH661kTMrVAS1ArGNDvcoV4pnXMZ45sRyuQfDNOnsCRBAYkW7mmoquYMvrXbruy8is3DOc8ykva5FMairunnpL-4aF_uV2jjdTnOHoJOJeh1qH9pUJrCwHe-o9NurP3100YZNLDMVPwIOX9EDUKWzbuJ9nDVoTZHaAxPESaqsMQaGqNJ8-By0vVVp_TspanGlFuydYS2WtB2D_1Oo9GY4CZztDCBqaVPs9mszgedcMQlFcpR1sYsTWe6MHartF0f7wH07gbO9l3CuxPCv056PRC7KKFF7OaIrbwFdOdirYxpvx1t3I_RNiEm_iZiRNarkfXOJet9gaz3IVnvU7LeOWS9d8n-OSH78B_J-jWy_rlk_S-Q9T8k639K1j-HrF8jy1osR-pdJPRmPrtExOya_CLWpW2CK15k1r2TLyTlhVXTnYxZ1-oCW6zYEFsMBKc_k7PuimeGopgIq_To8A6Xz3GLbbh8UOqv5uUVRR7Msg)
 
 ## Changes in the Public Specification
 
