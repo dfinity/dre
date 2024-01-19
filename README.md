@@ -1,4 +1,4 @@
-# Repo docs in Github Pages
+# Documentation in Github Pages
 
 Searchable docs are available as GitHub pages at https://dfinity.github.io/dre/
 
