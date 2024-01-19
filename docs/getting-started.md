@@ -6,7 +6,7 @@ These instructions are for a Linux based system. We tested on Ubuntu 22.04.
 
 ```bash
 mkdir -p $HOME/bin
-curl -L https://github.com/dfinity/dre/releases/download/v0.1.0/dre -o $HOME/bin/dre
+curl -L https://github.com/dfinity/dre/releases/download/v0.2.0/dre -o $HOME/bin/dre
 chmod +x $HOME/bin/dre
 ```
 
