@@ -13,5 +13,5 @@ py_binary(
 python_oci_image_rules(
     name = "oci_image",
     src = ":cursor-initializator-elastic",
-    additional_tars = ["@busybox_uclibc"]
+    base_image = "@python3"
 )
