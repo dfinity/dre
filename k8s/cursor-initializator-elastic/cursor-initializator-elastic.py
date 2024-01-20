@@ -34,7 +34,7 @@ def main():
     logger = get_logger()
 
     logger.info("Initializing elastic client with url: %s", args.elastic_url)
-    client = Elasticsearch(args.elastic_url, request_timeout=args.timeout)
+    client = Elasticsearch(args.elastic_url, timeout=args.timeout, retry_on_timeout=True, max_retries=3)
 
     indices = [i for i in list(client.indices.get(index=args.index_pattern)) if not i.startswith(".")]
 
