@@ -58,7 +58,10 @@ dre <key-params> trustworthy-metrics <wallet-canister-id> <start-at-timestamp> [
 
 Arguments explanation:
 
-1. `wallet-canister-id` - id of the created wallet canister created in the step 4 above
+1. `wallet-canister-id` - id of the created wallet canister created in the step 4 above, or obtained by
+   ```bash
+    dfx identity --network ic get-wallet
+    ```
 2. `start-at-timestamp` - used for filtering the output. To get all metrics, provide 0
 3. `subnet-id` - subnets to query, if empty will provide metrics for all subnets
 4. `key-params` - depending on which identity you used to deploy the wallet canister you have two options:
