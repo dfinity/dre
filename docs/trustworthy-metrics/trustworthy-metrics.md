@@ -73,7 +73,7 @@ If you used a purely new identity (which is advised since the tool can then para
     
 2. replace `<key-params>` in the command with something like: `--private-key-pem identity.pem`
 
-If you used an HSM then replace `<key-params>` with: `-hsm-slot 0 --hsm-key-id 0 --hsm-pin $(cat <pin-file>)`. Note that the HSM is less parallel than the key file due to hardware limits, so getting metrics with an HSM will be a bit slower.
+If you used an HSM then replace `<key-params>` with: `--hsm-slot 0 --hsm-key-id 0 --hsm-pin $(cat <pin-file>)`. Note that the HSM is less parallel than the key file due to hardware limits, so getting metrics with an HSM will be a bit slower.
 
 Even if created the wallet canister with an HSM you can still add another file-based controller to the wallet canister:
 
@@ -103,8 +103,9 @@ dre --private-key-pem identity.pem trustworthy-metrics nanx4-baaaa-aaaap-qb4sq-c
 
 Or with an HSM:
 ```bash
-dre --private-key-pem identity.pem trustworthy-metrics nanx4-baaaa-aaaap-qb4sq-cai 0 > data.json
+dre --hsm-slot 0 --hsm-key-id 0 --hsm-pin "<pin>" trustworthy-metrics nanx4-baaaa-aaaap-qb4sq-cai 0 > data.json
 ```
 
 You can check some examples of the analytics possible with the IC Mainnet data in the following [Jupyter Notebook](./TrustworthyMetricsAnalytics.ipynb)
-If you don't have Jupyter notebooks locally, you can use [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/dfinity/dre/main?labpath=docs%2Ftrustworthy-metrics%2FTrustworthyMetricsAnalytics.ipynb) to run it online.
+
+If you don't have Jupyter notebooks locally, you can use [Google Colaboratory](https://colab.research.google.com/github/dfinity/dre/blob/main/docs/trustworthy-metrics/TrustworthyMetricsAnalytics.ipynb) or [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/dfinity/dre/main?labpath=docs%2Ftrustworthy-metrics%2FTrustworthyMetricsAnalytics.ipynb) to run it online for free.
