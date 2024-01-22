@@ -46,7 +46,7 @@ backoff = { version = "0.4.0", features = ["tokio"] }
 backon = "0.4.1"
 candid = "0.9.11"
 chrono = { version = "0.4.31", features = ["serde"] }
-clap-num = "1.0.0"
+clap-num = "1.1.1"
 clap = { version = "4.4.17", features = [
     "derive",
     "env",
