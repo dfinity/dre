@@ -6,7 +6,7 @@ use config_writer_common::{
 };
 use serde::{Serialize, Serializer};
 use service_discovery::job_types::JobType;
-use service_discovery::{jobs::Job, TargetGroup};
+use service_discovery::TargetGroup;
 
 #[derive(Serialize, Debug, Clone, PartialEq, PartialOrd, Ord, Eq)]
 pub struct PrometheusStaticConfig {
@@ -60,34 +60,39 @@ impl PrometheusConfigBuilder {
     }
 }
 
-fn get_endpoints(target_group: TargetGroup, _job: Job) -> BTreeSet<String> {
+fn get_endpoints(target_group: TargetGroup, job_type: JobType, is_boundary_node: bool) -> BTreeSet<String> {
     target_group
         .targets
         .into_iter()
-        .map(|g| g.to_string())
+        .map(|g| job_type.sockaddr(g, is_boundary_node).to_string())
         .collect()
 }
 
 impl ConfigBuilder for PrometheusConfigBuilder {
-    fn build(&mut self, target_groups: BTreeSet<TargetGroup>, job: Job) -> Box<dyn Config> {
+    fn build(&mut self, target_groups: BTreeSet<TargetGroup>, job_type: JobType) -> Box<dyn Config> {
         let new_configs: BTreeSet<PrometheusStaticConfig> = target_groups
             .into_iter()
             .map(|tg| PrometheusStaticConfig {
-                targets: get_endpoints(tg.clone(), job.clone()),
+                targets: get_endpoints(tg.clone(), job_type, false),
                 labels: {
-                    let mut labels = BTreeMap::new();
-                    labels.insert(labels_keys::IC_NAME.into(), tg.ic_name);
-                    labels.insert(labels_keys::IC_NODE.into(), tg.node_id.to_string());
-                    if let Some(subnet_id) = tg.subnet_id {
-                        labels.insert(labels_keys::IC_SUBNET.into(), subnet_id.to_string());
-                    }
-                    labels.insert(labels_keys::JOB.into(), job._type.to_string());
-                    labels
+                    BTreeMap::from([
+                        (labels_keys::IC_NAME, tg.ic_name),
+                        (labels_keys::IC_NODE, tg.node_id.to_string()),
+                        (labels_keys::JOB, job_type.to_string()),
+                    ])
+                    .into_iter()
+                    .map(|k| (k.0.to_string(), k.1))
+                    .chain(if let Some(subnet_id) = tg.subnet_id {
+                        BTreeMap::from([(labels_keys::IC_SUBNET.to_string(), subnet_id.to_string())])
+                    } else {
+                        BTreeMap::new()
+                    })
+                    .collect::<BTreeMap<_, _>>()
                 },
             })
             .collect();
 
-        let updated = match self.get_old_config(job._type) {
+        let updated = match self.get_old_config(job_type) {
             None => true,
             Some(config) if config.configs == new_configs => false,
             Some(_) => true,
@@ -95,12 +100,12 @@ impl ConfigBuilder for PrometheusConfigBuilder {
 
         let new_file_config = PrometheusFileSdConfig {
             configs: new_configs,
-            job: job._type,
+            job: job_type,
             updated,
         };
 
         if updated {
-            self.set_old_config(job._type, new_file_config.clone());
+            self.set_old_config(job_type, new_file_config.clone());
         }
 
         Box::new(new_file_config)
@@ -118,15 +123,12 @@ mod prometheus_serialize {
 
     use crate::prometheus_config::PrometheusConfigBuilder;
     use config_writer_common::config_builder::ConfigBuilder;
-    use service_discovery::jobs::Job;
 
     use super::get_endpoints;
 
     fn create_dummy_target_group(ipv6: &str, with_subnet_id: bool) -> TargetGroup {
         let mut targets = BTreeSet::new();
-        targets.insert(std::net::SocketAddr::V6(
-            SocketAddrV6::from_str(ipv6).unwrap(),
-        ));
+        targets.insert(std::net::SocketAddr::V6(SocketAddrV6::from_str(ipv6).unwrap()));
         let subnet_id = match with_subnet_id {
             true => Some(SubnetId::from(PrincipalId::new_anonymous())),
             false => None,
@@ -153,7 +155,7 @@ mod prometheus_serialize {
         let tg2 = create_dummy_target_group("[2a02:800:2:2003:6801:f6ff:fec4:4c87]:9091", false);
         target_groups.insert(tg2.clone());
 
-        let config = cb.build(target_groups, Job::from(JobType::Replica));
+        let config = cb.build(target_groups, JobType::Replica);
 
         let expected_config = json!(
             [
@@ -191,24 +193,23 @@ mod prometheus_serialize {
         let tg1 = create_dummy_target_group("[2a02:800:2:2003:6801:f6ff:fec4:4c86]:9091", true);
         target_groups.insert(tg1);
 
-        let config = cb.build(target_groups.clone(), Job::from(JobType::Replica));
+        let config = cb.build(target_groups.clone(), JobType::Replica);
         assert!(config.updated());
 
-        let config = cb.build(target_groups.clone(), Job::from(JobType::Replica));
+        let config = cb.build(target_groups.clone(), JobType::Replica);
         assert!(!config.updated());
 
         let tg2 = create_dummy_target_group("[2a02:800:2:2003:6801:f6ff:fec4:4c87]:9091", true);
         target_groups.insert(tg2);
 
-        let config = cb.build(target_groups.clone(), Job::from(JobType::Replica));
+        let config = cb.build(target_groups.clone(), JobType::Replica);
         assert!(config.updated());
     }
 
     #[test]
     fn test_get_endpoints() {
-        let target_group =
-            create_dummy_target_group("[2a02:800:2:2003:6801:f6ff:fec4:4c87]:9091", true);
-        let endpoints = get_endpoints(target_group, Job::from(JobType::Replica));
+        let target_group = create_dummy_target_group("[2a02:800:2:2003:6801:f6ff:fec4:4c87]:9091", true);
+        let endpoints = get_endpoints(target_group, JobType::Replica, false);
         let mut expected_endpoints = BTreeSet::new();
         expected_endpoints.insert("[2a02:800:2:2003:6801:f6ff:fec4:4c87]:9091".to_string());
 

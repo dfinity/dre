@@ -3,7 +3,6 @@ use std::collections::{BTreeMap, BTreeSet};
 use ic_types::PrincipalId;
 use serde::{Serialize, Serializer};
 use service_discovery::job_types::JobType;
-use service_discovery::jobs::Job;
 
 use crate::{builders::ConfigBuilder, contracts::target::TargetDto};
 
@@ -32,23 +31,10 @@ impl Serialize for PrometheusFileSdConfig {
 pub struct PrometheusConfigBuilder {}
 
 fn get_endpoints(target_group: TargetDto, job: JobType) -> BTreeSet<String> {
-    let binding = Job::all();
-    let job = binding.iter().find(|j| j._type == job).unwrap();
+    let binding = JobType::all();
+    let job = binding.iter().find(|j| **j == job).unwrap();
 
-    target_group
-        .targets
-        .iter()
-        .map(|g| {
-            let mut g = *g;
-            g.set_port(job.port);
-            format!(
-                "{}://{}/{}",
-                job.scheme,
-                g,
-                job.endpoint.trim_start_matches('/'),
-            )
-        })
-        .collect()
+    target_group.targets.iter().map(|g| job.url(*g, false)).collect()
 }
 
 const IC_NAME: &str = "ic";

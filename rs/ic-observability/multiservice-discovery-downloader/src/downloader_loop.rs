@@ -6,12 +6,12 @@ use multiservice_discovery_shared::filters::node_regex_id_filter::NodeIDRegexFil
 use multiservice_discovery_shared::filters::{TargetGroupFilter, TargetGroupFilterList};
 use multiservice_discovery_shared::{
     builders::{
-        log_vector_config_structure::VectorConfigBuilderImpl,
-        prometheus_config_structure::PrometheusConfigBuilder, ConfigBuilder,
+        log_vector_config_structure::VectorConfigBuilderImpl, prometheus_config_structure::PrometheusConfigBuilder,
+        ConfigBuilder,
     },
     contracts::target::TargetDto,
 };
-use service_discovery::job_types::{JobType, NodeOS};
+use service_discovery::job_types::JobType;
 use slog::{debug, info, warn, Logger};
 use std::{
     collections::hash_map::DefaultHasher,
@@ -49,10 +49,7 @@ pub async fn run_downloader_loop(logger: Logger, cli: CliArgs, stop_signal: Rece
             },
             recv(interval) -> msg => msg.expect("tick failed!")
         };
-        info!(
-            logger,
-            "Downloading from {} @ interval {:?}", cli.sd_url, tick
-        );
+        info!(logger, "Downloading from {} @ interval {:?}", cli.sd_url, tick);
 
         let response = match client.get(cli.sd_url.clone()).send().await {
             Ok(res) => res,
@@ -91,10 +88,7 @@ pub async fn run_downloader_loop(logger: Logger, cli: CliArgs, stop_signal: Rece
 
         let mut hasher = DefaultHasher::new();
 
-        let targets = targets
-            .into_iter()
-            .filter(|f| filters.filter(f))
-            .collect::<Vec<_>>();
+        let targets = targets.into_iter().filter(|f| filters.filter(f)).collect::<Vec<_>>();
 
         for target in &targets {
             target.hash(&mut hasher);
@@ -103,10 +97,7 @@ pub async fn run_downloader_loop(logger: Logger, cli: CliArgs, stop_signal: Rece
         let hash = hasher.finish();
 
         if current_hash != hash {
-            info!(
-                logger,
-                "Received new targets from {} @ interval {:?}", cli.sd_url, tick
-            );
+            info!(logger, "Received new targets from {} @ interval {:?}", cli.sd_url, tick);
             current_hash = hash;
 
             generate_config(&cli, targets, logger.clone());
@@ -116,17 +107,8 @@ pub async fn run_downloader_loop(logger: Logger, cli: CliArgs, stop_signal: Rece
 
 fn generate_config(cli: &CliArgs, targets: Vec<TargetDto>, logger: Logger) {
     let jobs = match cli.generator {
-        crate::Generator::Log(_) => vec![
-            JobType::NodeExporter(NodeOS::Guest),
-            JobType::NodeExporter(NodeOS::Host),
-        ],
-        crate::Generator::Metric => vec![
-            JobType::NodeExporter(NodeOS::Guest),
-            JobType::NodeExporter(NodeOS::Host),
-            JobType::Orchestrator,
-            JobType::Replica,
-            JobType::MetricsProxy,
-        ],
+        crate::Generator::Log(_) => JobType::all_for_logs(),
+        crate::Generator::Metric => JobType::all(),
     };
 
     if std::fs::metadata(&cli.output_dir).is_err() {
@@ -148,8 +130,7 @@ fn generate_config(cli: &CliArgs, targets: Vec<TargetDto>, logger: Logger) {
         let config = match &cli.generator {
             crate::Generator::Log(subtype) => match &subtype.subcommands {
                 Subtype::SystemdJournalGatewayd { batch_size } => {
-                    VectorConfigBuilderImpl::new(*batch_size, subtype.port, subtype.bn_port)
-                        .build(targets_with_job)
+                    VectorConfigBuilderImpl::new(*batch_size, subtype.port, subtype.bn_port).build(targets_with_job)
                 }
                 Subtype::ExecAndJournald {
                     script_path,

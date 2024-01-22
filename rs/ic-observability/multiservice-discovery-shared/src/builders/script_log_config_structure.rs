@@ -6,7 +6,7 @@ use serde::Serialize;
 use crate::contracts::target::TargetDto;
 
 use super::{
-    log_vector_config_structure::{handle_ip, VectorRemapTransform},
+    log_vector_config_structure::VectorRemapTransform,
     vector_config_enriched::{VectorConfigEnriched, VectorSource, VectorTransform},
     ConfigBuilder,
 };
@@ -23,10 +23,7 @@ pub struct ScriptLogConfigBuilderImpl {
 }
 
 impl ConfigBuilder for ScriptLogConfigBuilderImpl {
-    fn build(
-        &self,
-        target_groups: std::collections::BTreeSet<crate::contracts::target::TargetDto>,
-    ) -> String {
+    fn build(&self, target_groups: std::collections::BTreeSet<crate::contracts::target::TargetDto>) -> String {
         let mut config = VectorConfigEnriched::new();
         let mut edited_records: Vec<TargetDto> = vec![];
 
@@ -63,7 +60,7 @@ impl ConfigBuilder for ScriptLogConfigBuilderImpl {
                         "--url",
                         format!(
                             "http://[{}]:{}/entries",
-                            handle_ip(record.clone(), job, is_bn),
+                            job.sockaddr(*record.targets.first().unwrap(), is_bn).ip(),
                             match is_bn {
                                 true => self.bn_port,
                                 false => self.port,
@@ -75,11 +72,7 @@ impl ConfigBuilder for ScriptLogConfigBuilderImpl {
                         "--cursor-path",
                         format!("{}/{}/checkpoint.txt", self.worker_cursor_folder, key).as_str(),
                         "--expected-vector-cursor-path",
-                        format!(
-                            "{}/{}/checkpoint.txt",
-                            self.data_folder, journald_source_key
-                        )
-                        .as_str(),
+                        format!("{}/{}/checkpoint.txt", self.data_folder, journald_source_key).as_str(),
                     ]
                     .into_iter()
                     .map(|s| s.to_string())
@@ -96,22 +89,14 @@ impl ConfigBuilder for ScriptLogConfigBuilderImpl {
                     journal_directory: format!("{}/{}", self.journals_folder, key),
                 };
 
-                let transform = VectorRemapTransform::from(
-                    record.clone(),
-                    *job,
-                    journald_source_key.clone(),
-                    is_bn,
-                );
+                let transform = VectorRemapTransform::from(record.clone(), *job, journald_source_key.clone(), is_bn);
 
                 let mut source_map = HashMap::new();
                 source_map.insert(
                     format!("{}-script", key),
                     Box::new(script_source) as Box<dyn VectorSource>,
                 );
-                source_map.insert(
-                    journald_source_key,
-                    Box::new(journald_source) as Box<dyn VectorSource>,
-                );
+                source_map.insert(journald_source_key, Box::new(journald_source) as Box<dyn VectorSource>);
 
                 let mut transform_map = HashMap::new();
                 transform_map.insert(

@@ -6,7 +6,7 @@ use serde::Serialize;
 use crate::contracts::target::TargetDto;
 
 use super::{
-    log_vector_config_structure::{handle_ip, VectorRemapTransform},
+    log_vector_config_structure::VectorRemapTransform,
     vector_config_enriched::{VectorConfigEnriched, VectorSource, VectorTransform},
     ConfigBuilder,
 };
@@ -22,10 +22,7 @@ pub struct ExecLogConfigBuilderImpl {
 }
 
 impl ConfigBuilder for ExecLogConfigBuilderImpl {
-    fn build(
-        &self,
-        target_groups: std::collections::BTreeSet<crate::contracts::target::TargetDto>,
-    ) -> String {
+    fn build(&self, target_groups: std::collections::BTreeSet<crate::contracts::target::TargetDto>) -> String {
         let mut config = VectorConfigEnriched::new();
         let mut edited_records: Vec<TargetDto> = vec![];
 
@@ -60,7 +57,7 @@ impl ConfigBuilder for ExecLogConfigBuilderImpl {
                         "--url",
                         format!(
                             "http://[{}]:{}/entries",
-                            handle_ip(record.clone(), job, is_bn),
+                            job.sockaddr(*record.targets.first().unwrap(), is_bn).ip(),
                             match is_bn {
                                 true => self.bn_port,
                                 false => self.port,
@@ -82,8 +79,7 @@ impl ConfigBuilder for ExecLogConfigBuilderImpl {
                     include_stderr: self.include_stderr,
                 };
 
-                let transform =
-                    VectorRemapTransform::from(record.clone(), *job, key.clone(), is_bn);
+                let transform = VectorRemapTransform::from(record.clone(), *job, key.clone(), is_bn);
 
                 let mut source_map = HashMap::new();
                 source_map.insert(key.clone(), Box::new(source) as Box<dyn VectorSource>);

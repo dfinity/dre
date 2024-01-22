@@ -1,7 +1,7 @@
 use std::collections::BTreeSet;
 use std::fmt::Debug;
 
-use service_discovery::{jobs::Job, TargetGroup};
+use service_discovery::{job_types::JobType, TargetGroup};
 
 pub trait Config: erased_serde::Serialize + Debug {
     fn updated(&self) -> bool;
@@ -10,5 +10,5 @@ pub trait Config: erased_serde::Serialize + Debug {
 erased_serde::serialize_trait_object!(Config);
 
 pub trait ConfigBuilder {
-    fn build(&mut self, target_groups: BTreeSet<TargetGroup>, job: Job) -> Box<dyn Config>;
+    fn build(&mut self, target_groups: BTreeSet<TargetGroup>, job_type: JobType) -> Box<dyn Config>;
 }

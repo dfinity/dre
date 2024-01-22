@@ -7,9 +7,9 @@
 //!
 #![allow(clippy::await_holding_lock, clippy::result_large_err)]
 use std::{
-    collections::{btree_map::Entry, BTreeMap, BTreeSet, HashMap},
+    collections::{btree_map::Entry, BTreeMap, BTreeSet},
     convert::TryFrom,
-    net::{IpAddr, Ipv6Addr, SocketAddr},
+    net::SocketAddr,
     path::{Path, PathBuf},
     sync::{Arc, RwLock},
     time::Duration,
@@ -25,7 +25,7 @@ use ic_registry_client_helpers::{
 };
 use ic_registry_local_registry::{LocalRegistry, LocalRegistryError};
 use ic_types::{registry::RegistryClientError, NodeId, PrincipalId, RegistryVersion, SubnetId};
-use job_types::{JobType, NodeOS};
+use job_types::JobType;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use slog::{warn, Logger};
@@ -33,7 +33,6 @@ use thiserror::Error;
 
 pub mod file_sd;
 pub mod job_types;
-pub mod jobs;
 pub mod mainnet_registry;
 pub mod metrics;
 pub mod poll_loop;
@@ -104,8 +103,6 @@ pub struct IcServiceDiscoveryImpl {
     /// An in-memory representation of the registries that is updated when
     /// calling `load_new_scraping_targets`.
     registries: Arc<RwLock<BTreeMap<String, LocalRegistry>>>,
-
-    jobs: HashMap<JobType, u16>,
 }
 
 impl IcServiceDiscoveryImpl {
@@ -116,7 +113,6 @@ impl IcServiceDiscoveryImpl {
         log: Logger,
         ic_scraping_targets_dir: P,
         registry_query_timeout: Duration,
-        jobs: HashMap<JobType, u16>,
     ) -> Result<Self, IcServiceDiscoveryError> {
         let ic_scraping_targets_dir = PathBuf::from(ic_scraping_targets_dir.as_ref());
         if !ic_scraping_targets_dir.is_dir() {
@@ -129,7 +125,6 @@ impl IcServiceDiscoveryImpl {
             ic_scraping_targets_dir,
             registry_query_timeout,
             registries,
-            jobs,
         };
         self_.load_new_ics(log)?;
         Ok(self_)
@@ -224,9 +219,7 @@ impl IcServiceDiscoveryImpl {
                 Err(e) => {
                     warn!(
                         log,
-                        "Error while fetching get_subnet_transport_info for node id {}: {:?}",
-                        subnet_id,
-                        e
+                        "Error while fetching get_subnet_transport_info for node id {}: {:?}", subnet_id, e
                     );
                     continue;
                 }
@@ -285,8 +278,7 @@ impl IcServiceDiscoveryImpl {
         subnet_id: Option<SubnetId>,
         ic_name: &str,
     ) -> Result<(), IcServiceDiscoveryError> {
-        let socket_addr =
-            Self::node_record_to_target_addr(node_id, latest_version, node_record.clone())?;
+        let socket_addr = Self::node_record_to_target_addr(node_id, latest_version, node_record.clone())?;
 
         let operator_id = PrincipalId::try_from(node_record.node_operator_id).unwrap_or_default();
 
@@ -302,8 +294,7 @@ impl IcServiceDiscoveryImpl {
             ic_name: ic_name.into(),
             dc_id: node_operator.dc_id,
             operator_id,
-            node_provider_id: PrincipalId::try_from(node_operator.node_provider_principal_id)
-                .unwrap_or_default(),
+            node_provider_id: PrincipalId::try_from(node_operator.node_provider_principal_id).unwrap_or_default(),
         });
 
         Ok(())
@@ -332,58 +323,25 @@ impl IcServiceDiscoveryImpl {
 impl IcServiceDiscovery for IcServiceDiscoveryImpl {
     fn get_target_groups(
         &self,
-        job: JobType,
+        job_type: JobType,
         log: Logger,
     ) -> Result<BTreeSet<TargetGroup>, IcServiceDiscoveryError> {
-        let mut mapping: Option<Box<dyn Fn(SocketAddr) -> Option<SocketAddr>>> = None;
-
-        if job == JobType::NodeExporter(NodeOS::Host) {
-            mapping = Some(Box::new(|sockaddr: SocketAddr| {
-                guest_to_host_address((set_port(job.port()))(sockaddr))
-            }));
-        } else if job == JobType::MetricsProxy {
-            mapping = Some(Box::new(|sockaddr: SocketAddr| {
-                guest_to_host_address((set_port(job.port()))(sockaddr))
-            }));
-        }
-
-        for (listed_job, port) in &self.jobs {
-            if mapping.is_some() {
-                break;
-            }
-
-            if *listed_job == job {
-                mapping = Some(some_after(set_port(*port)));
-                break;
-            }
-        }
-
-        if mapping.is_none() {
-            return Err(IcServiceDiscoveryError::JobNameNotFound {
-                job_name: job.to_string(),
-            });
-        }
-
+        let mapping = Box::new(|sockaddr: SocketAddr| job_type.sockaddr(sockaddr, false));
         let registries_lock_guard = self.registries.read().unwrap();
-        let target_list = registries_lock_guard.iter().try_fold(
-            BTreeSet::new(),
-            |mut a, (ic_name, registry)| {
+        let target_list = registries_lock_guard
+            .iter()
+            .try_fold(BTreeSet::new(), |mut a, (ic_name, registry)| {
                 a.append(&mut Self::get_targets(registry, ic_name, log.clone())?);
                 Ok::<_, IcServiceDiscoveryError>(a)
-            },
-        )?;
+            })?;
 
         Ok(target_list
             .into_iter()
             .filter_map(|target_group| {
                 // replica targets are only exposed if they are assigned to a
                 // subnet (i.e. if the subnet id is set)
-                if job != JobType::Replica || target_group.subnet_id.is_some() {
-                    let targets: BTreeSet<_> = target_group
-                        .targets
-                        .into_iter()
-                        .filter_map(&mapping.as_ref().unwrap())
-                        .collect();
+                if job_type != JobType::Replica || target_group.subnet_id.is_some() {
+                    let targets: BTreeSet<_> = target_group.targets.into_iter().map(&mapping).collect();
                     if !targets.is_empty() {
                         return Some(TargetGroup {
                             targets,
@@ -397,51 +355,12 @@ impl IcServiceDiscovery for IcServiceDiscoveryImpl {
     }
 }
 
-fn set_port(port: u16) -> Box<dyn Fn(SocketAddr) -> SocketAddr> {
-    Box::new(move |mut sockaddr: SocketAddr| {
-        sockaddr.set_port(port);
-        sockaddr
-    })
-}
-
-/// Take a function f and return `Some . f`
-fn some_after(
-    f: Box<dyn Fn(SocketAddr) -> SocketAddr>,
-) -> Box<dyn Fn(SocketAddr) -> Option<SocketAddr>> {
-    Box::new(move |s| Some(f(s)))
-}
-
-/// By convention, the first two bytes of the host-part of the replica's IP
-/// address are 0x6801. The corresponding segment for the host is 0x6800.
-///
-/// (The MAC starts with 0x6a00. The 7'th bit of the first byte is flipped. See
-/// https://en.wikipedia.org/wiki/MAC_address)
-pub fn guest_to_host_address(sockaddr: SocketAddr) -> Option<SocketAddr> {
-    match sockaddr.ip() {
-        IpAddr::V6(a) if a.segments()[4] == 0x6801 => {
-            let s = a.segments();
-            let new_addr = Ipv6Addr::new(s[0], s[1], s[2], s[3], 0x6800, s[5], s[6], s[7]);
-            let ip = IpAddr::V6(new_addr);
-            Some(SocketAddr::new(ip, sockaddr.port()))
-        }
-        _ip => None,
-    }
-}
-
 trait MapRegistryClientErr<T> {
-    fn map_registry_err(
-        self,
-        version: RegistryVersion,
-        context: &str,
-    ) -> Result<T, IcServiceDiscoveryError>;
+    fn map_registry_err(self, version: RegistryVersion, context: &str) -> Result<T, IcServiceDiscoveryError>;
 }
 
 impl<T> MapRegistryClientErr<T> for RegistryClientResult<T> {
-    fn map_registry_err(
-        self,
-        version: RegistryVersion,
-        context: &str,
-    ) -> Result<T, IcServiceDiscoveryError> {
+    fn map_registry_err(self, version: RegistryVersion, context: &str) -> Result<T, IcServiceDiscoveryError> {
         use IcServiceDiscoveryError::*;
         match self {
             Ok(Some(v)) => Ok(v),
@@ -469,10 +388,7 @@ pub enum IcServiceDiscoveryError {
         source: std::io::Error,
     },
     #[error("Missing registry value. context: {context} version: {version}")]
-    MissingRegistryValue {
-        version: RegistryVersion,
-        context: String,
-    },
+    MissingRegistryValue { version: RegistryVersion, context: String },
     #[error("RegistryClientError")]
     RegistryClient {
         #[from]
@@ -522,12 +438,9 @@ mod tests {
 
         let log = slog::Logger::root(slog::Discard, o!());
 
-        let ic_scraper =
-            IcServiceDiscoveryImpl::new(log.clone(), tempdir.path(), QUERY_TIMEOUT, jobs).unwrap();
+        let ic_scraper = IcServiceDiscoveryImpl::new(log.clone(), tempdir.path(), QUERY_TIMEOUT, jobs).unwrap();
         ic_scraper.load_new_ics(log.clone()).unwrap();
-        let target_groups = ic_scraper
-            .get_target_groups(JobType::Replica, log.clone())
-            .unwrap();
+        let target_groups = ic_scraper.get_target_groups(JobType::Replica, log.clone()).unwrap();
 
         let nns_targets: HashSet<_> = target_groups
             .iter()
