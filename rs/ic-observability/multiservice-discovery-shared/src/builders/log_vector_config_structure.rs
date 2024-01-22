@@ -66,7 +66,7 @@ pub(crate) fn from_targets_into_vector_config(
             let key = format!("{}-{}", key, job);
             let source = VectorSystemdGatewayJournaldSource {
                 _type: "systemd_journal_gatewayd".into(),
-                endpoint: job.sockaddr(*record.targets.first().unwrap(), is_bn).ip().to_string(),
+                endpoint: job.ip(*record.targets.first().unwrap(), is_bn).to_string(),
                 data_dir: "logs".to_string(),
                 batch_size: builder.batch_size,
                 port: match is_bn {
@@ -139,11 +139,12 @@ impl VectorRemapTransform {
             node_id = target.clone().name
         }
 
-        let endpoint = job.sockaddr(*target.targets.first().unwrap(), is_bn).ip().to_string();
-
         labels.insert(IC_NAME.into(), target_group.ic_name.to_string());
         labels.insert(IC_NODE.into(), node_id.clone());
-        labels.insert(ADDRESS.into(), endpoint);
+        labels.insert(
+            ADDRESS.into(),
+            job.ip(*target.targets.first().unwrap(), is_bn).to_string(),
+        );
         labels.insert(NODE_PROVIDER_ID.into(), target_group.node_provider_id.to_string());
         labels.insert(DC.into(), target_group.dc_id);
         labels.extend(target.custom_labels);

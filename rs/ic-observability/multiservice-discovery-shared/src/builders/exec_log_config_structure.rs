@@ -57,7 +57,7 @@ impl ConfigBuilder for ExecLogConfigBuilderImpl {
                         "--url",
                         format!(
                             "http://[{}]:{}/entries",
-                            job.sockaddr(*record.targets.first().unwrap(), is_bn).ip(),
+                            job.ip(*record.targets.first().unwrap(), is_bn),
                             match is_bn {
                                 true => self.bn_port,
                                 false => self.port,

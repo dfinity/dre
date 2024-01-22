@@ -84,6 +84,10 @@ impl JobType {
         }
     }
 
+    pub fn ip(&self, s: SocketAddr, is_boundary_node: bool) -> IpAddr {
+        self.sockaddr(s, is_boundary_node).ip()
+    }
+
     pub fn url(&self, s: SocketAddr, is_boundary_node: bool) -> String {
         format!(
             "{}://{}/{}",
