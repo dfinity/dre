@@ -96,7 +96,7 @@ impl JobType {
 
 /// This is duplicated in impl Job.
 impl JobType {
-    pub fn all() -> Vec<Self> {
+    pub fn all_for_ic_nodes() -> Vec<Self> {
         [
             JobType::Replica,
             JobType::Orchestrator,
@@ -104,6 +104,15 @@ impl JobType {
             JobType::NodeExporter(NodeOS::Host),
             JobType::MetricsProxy(NodeOS::Host),
             JobType::MetricsProxy(NodeOS::Guest),
+        ]
+        .into_iter()
+        .collect::<Vec<Self>>()
+    }
+
+    pub fn all_for_boundary_nodes() -> Vec<Self> {
+        [
+            JobType::NodeExporter(NodeOS::Guest),
+            JobType::NodeExporter(NodeOS::Host),
         ]
         .into_iter()
         .collect::<Vec<Self>>()

@@ -22,7 +22,7 @@ pub async fn export_prometheus_config(binding: ExportDefinitionConfigBinding) ->
     let mut total_targets: Vec<TargetDto> = vec![];
 
     for def in definitions.iter() {
-        for job_type in JobType::all() {
+        for job_type in JobType::all_for_ic_nodes() {
             let targets = match def.ic_discovery.get_target_groups(job_type, binding.log.clone()) {
                 Ok(targets) => targets,
                 Err(_) => continue,

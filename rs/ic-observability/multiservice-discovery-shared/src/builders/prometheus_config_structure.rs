@@ -2,7 +2,6 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use ic_types::PrincipalId;
 use serde::{Serialize, Serializer};
-use service_discovery::job_types::JobType;
 
 use crate::{builders::ConfigBuilder, contracts::target::TargetDto};
 
@@ -30,13 +29,6 @@ impl Serialize for PrometheusFileSdConfig {
 #[derive(Debug, Clone)]
 pub struct PrometheusConfigBuilder {}
 
-fn get_endpoints(target_group: TargetDto, job: JobType) -> BTreeSet<String> {
-    let binding = JobType::all();
-    let job = binding.iter().find(|j| **j == job).unwrap();
-
-    target_group.targets.iter().map(|g| job.url(*g, false)).collect()
-}
-
 const IC_NAME: &str = "ic";
 const IC_NODE: &str = "ic_node";
 const IC_SUBNET: &str = "ic_subnet";
@@ -54,7 +46,7 @@ pub fn map_target_group(target_groups: BTreeSet<TargetDto>) -> BTreeSet<Promethe
             let mut ret = vec![];
             for job in &tg.jobs {
                 ret.push(PrometheusStaticConfig {
-                    targets: get_endpoints(tg.clone(), *job),
+                    targets: tg.targets.iter().map(|sa| job.url(*sa, false)).collect(),
                     labels: {
                         let anonymous = PrincipalId::new_anonymous().to_string();
                         let mut node_id = tg.node_id.to_string();

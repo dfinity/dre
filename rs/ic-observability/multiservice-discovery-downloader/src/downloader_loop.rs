@@ -108,7 +108,7 @@ pub async fn run_downloader_loop(logger: Logger, cli: CliArgs, stop_signal: Rece
 fn generate_config(cli: &CliArgs, targets: Vec<TargetDto>, logger: Logger) {
     let jobs = match cli.generator {
         crate::Generator::Log(_) => JobType::all_for_logs(),
-        crate::Generator::Metric => JobType::all(),
+        crate::Generator::Metric => JobType::all_for_ic_nodes(),
     };
 
     if std::fs::metadata(&cli.output_dir).is_err() {
