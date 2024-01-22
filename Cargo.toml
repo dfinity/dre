@@ -62,7 +62,7 @@ clap = { version = "4.4.17", features = [
 colored = "2.0.0"
 counter = "0.5.2"
 crossbeam = "0.8.0"
-crossbeam-channel = "0.5.5"
+crossbeam-channel = "0.5.11"
 cryptoki = "0.3.1"
 csv = "1.1.6"
 custom_error = "1.9.2"
