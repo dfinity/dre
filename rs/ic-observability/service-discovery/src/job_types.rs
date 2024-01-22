@@ -115,6 +115,8 @@ impl JobType {
 
     pub fn all_for_boundary_nodes() -> Vec<Self> {
         [
+            JobType::Replica,
+            JobType::Orchestrator,
             JobType::NodeExporter(NodeOS::Guest),
             JobType::NodeExporter(NodeOS::Host),
         ]
