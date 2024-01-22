@@ -2,6 +2,7 @@
 import argparse
 import base64
 import logging
+import os
 
 import requests
 import yaml
@@ -18,7 +19,6 @@ def get_logger():
 def parse():
     parser = argparse.ArgumentParser(description="Script to push boundary nodes to service discovery")
     parser.add_argument("sd_url", help="Service discovery url, i.e. http://localhost:8000")
-    parser.add_argument("repo_key", help="Key to access the repo")
 
     return parser.parse_args()
 
@@ -27,7 +27,10 @@ def main():
     args = parse()
     logging = get_logger()
 
-    key = args.repo_key.strip()
+    key = os.environ.get("RELEASE_REPO_KEY", "")
+    if not key:
+        logging.error("RELEASE_REPO_KEY environment variable not found.")
+        exit(1)
 
     # envs = next(os.walk(RELEASE_REPO_DIR / "deployments" / "boundary-nodes" / "env"))[1]
     envs = ["prod"]
