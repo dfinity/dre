@@ -8,7 +8,6 @@ py_binary(
     deps = [
         requirement("requests"),
         requirement("pyyaml"),
-        requirement("gitpython"),
     ]
 )
 
