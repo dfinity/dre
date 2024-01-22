@@ -82,10 +82,11 @@ impl ConfigBuilder for PrometheusConfigBuilder {
                     ])
                     .into_iter()
                     .map(|k| (k.0.to_string(), k.1))
-                    .chain(if let Some(subnet_id) = tg.subnet_id {
-                        BTreeMap::from([(labels_keys::IC_SUBNET.to_string(), subnet_id.to_string())])
-                    } else {
-                        BTreeMap::new()
+                    .chain(match tg.subnet_id {
+                        Some(subnet_id) => {
+                            BTreeMap::from([(labels_keys::IC_SUBNET.to_string(), subnet_id.to_string())])
+                        }
+                        None => BTreeMap::new(),
                     })
                     .collect::<BTreeMap<_, _>>()
                 },

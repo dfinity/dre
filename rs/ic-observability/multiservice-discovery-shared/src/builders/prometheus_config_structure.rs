@@ -48,25 +48,30 @@ pub fn map_target_group(target_groups: BTreeSet<TargetDto>) -> BTreeSet<Promethe
                 ret.push(PrometheusStaticConfig {
                     targets: tg.targets.iter().map(|sa| job.url(*sa, false)).collect(),
                     labels: {
-                        let anonymous = PrincipalId::new_anonymous().to_string();
-                        let mut node_id = tg.node_id.to_string();
-                        if node_id == anonymous {
-                            node_id = tg.name.clone()
-                        }
-                        let mut labels = BTreeMap::new();
-                        labels.insert(IC_NAME.into(), tg.ic_name.clone());
-                        labels.insert(IC_NODE.into(), node_id);
-                        if let Some(subnet_id) = tg.subnet_id {
-                            labels.insert(IC_SUBNET.into(), subnet_id.to_string());
-                        }
-                        labels.insert(JOB.into(), job.to_string());
-                        labels.extend(tg.custom_labels.clone().into_iter());
+                        BTreeMap::from([
+                            (IC_NAME.into(), tg.ic_name.clone()),
+                            (
+                                IC_NODE.into(),
+                                if tg.node_id.to_string() == PrincipalId::new_anonymous().to_string() {
+                                    tg.name.clone()
+                                } else {
+                                    tg.node_id.to_string()
+                                },
+                            ),
+                            (JOB.into(), job.to_string()),
+                        ])
+                        .into_iter()
+                        .chain(match tg.subnet_id {
+                            Some(subnet_id) => vec![(IC_SUBNET.into(), subnet_id.to_string())],
+                            None => vec![],
+                        })
+                        .chain(tg.custom_labels.clone().into_iter())
+                        .collect()
                         // TODO: Re-add the labels below once we resolve the issues with the public dashboard queries
                         // https://dfinity.atlassian.net/browse/OB-442
                         // labels.insert(DC.into(), tg.dc_id.clone());
                         // labels.insert(NODE_PROVIDER_ID.into(), tg.node_provider_id.to_string());
                         // labels.insert(NODE_OPERATOR_ID.into(), tg.operator_id.to_string());
-                        labels
                     },
                 })
             }

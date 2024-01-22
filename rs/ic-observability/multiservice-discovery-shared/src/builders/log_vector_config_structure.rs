@@ -131,7 +131,6 @@ const NODE_PROVIDER_ID: &str = "node_provider_id";
 impl VectorRemapTransform {
     pub fn from(target: TargetDto, job: JobType, input: String, is_bn: bool) -> Self {
         let target_group = Into::<TargetGroup>::into(&target);
-        let mut labels: HashMap<String, String> = HashMap::new();
 
         let anonymous = PrincipalId::new_anonymous().to_string();
         let mut node_id = target_group.node_id.to_string();
@@ -139,18 +138,22 @@ impl VectorRemapTransform {
             node_id = target.clone().name
         }
 
-        labels.insert(IC_NAME.into(), target_group.ic_name.to_string());
-        labels.insert(IC_NODE.into(), node_id.clone());
-        labels.insert(
-            ADDRESS.into(),
-            job.ip(*target.targets.first().unwrap(), is_bn).to_string(),
-        );
-        labels.insert(NODE_PROVIDER_ID.into(), target_group.node_provider_id.to_string());
-        labels.insert(DC.into(), target_group.dc_id);
-        labels.extend(target.custom_labels);
-        if let Some(subnet_id) = target_group.subnet_id {
-            labels.insert(IC_SUBNET.into(), subnet_id.to_string());
-        }
+        let ip = job.ip(*target.targets.first().unwrap(), is_bn).to_string();
+        let labels = HashMap::from([
+            (IC_NAME.into(), target_group.ic_name.to_string()),
+            (IC_NODE.into(), node_id.clone()),
+            (ADDRESS.into(), ip),
+            (NODE_PROVIDER_ID.into(), target_group.node_provider_id.to_string()),
+            (DC.into(), target_group.dc_id),
+        ])
+        .into_iter()
+        .chain(target.custom_labels.into_iter())
+        .chain(match target_group.subnet_id {
+            Some(subnet_id) => vec![(IC_SUBNET.into(), subnet_id.to_string())],
+            None => vec![],
+        })
+        .collect::<HashMap<_, _>>();
+
         Self {
             _type: "remap".into(),
             inputs: vec![input],

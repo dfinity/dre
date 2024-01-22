@@ -75,7 +75,7 @@ pub async fn export_prometheus_config(binding: ExportDefinitionConfigBinding) ->
                                 ("job", bn.job_type.to_string()),
                             ])
                             .into_iter()
-                            .map(|k| (k.0.to_string(), k.1))
+                            .map(|(k, v)| (k.to_string(), v))
                             .chain(bn.custom_labels.clone())
                             .collect::<BTreeMap<_, _>>()
                         },
