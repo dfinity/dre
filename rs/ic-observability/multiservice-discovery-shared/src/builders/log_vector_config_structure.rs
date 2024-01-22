@@ -3,8 +3,6 @@ use std::collections::{BTreeSet, HashMap};
 use ic_types::PrincipalId;
 use serde::Serialize;
 
-use service_discovery::guest_to_host_address;
-use service_discovery::job_types::NodeOS;
 use service_discovery::{job_types::JobType, TargetGroup};
 
 use crate::builders::vector_config_enriched::VectorSource;
@@ -68,7 +66,7 @@ pub(crate) fn from_targets_into_vector_config(
             let key = format!("{}-{}", key, job);
             let source = VectorSystemdGatewayJournaldSource {
                 _type: "systemd_journal_gatewayd".into(),
-                endpoint: handle_ip(record.clone(), job, is_bn),
+                endpoint: job.ip(*record.targets.first().unwrap(), is_bn).to_string(),
                 data_dir: "logs".to_string(),
                 batch_size: builder.batch_size,
                 port: match is_bn {
@@ -77,8 +75,7 @@ pub(crate) fn from_targets_into_vector_config(
                 },
             };
             let source_key = format!("{}-source", key);
-            let transform =
-                VectorRemapTransform::from(record.clone(), *job, source_key.clone(), is_bn);
+            let transform = VectorRemapTransform::from(record.clone(), *job, source_key.clone(), is_bn);
 
             let mut sources_map = HashMap::new();
             sources_map.insert(source_key, Box::new(source) as Box<dyn VectorSource>);
@@ -134,7 +131,6 @@ const NODE_PROVIDER_ID: &str = "node_provider_id";
 impl VectorRemapTransform {
     pub fn from(target: TargetDto, job: JobType, input: String, is_bn: bool) -> Self {
         let target_group = Into::<TargetGroup>::into(&target);
-        let mut labels: HashMap<String, String> = HashMap::new();
 
         let anonymous = PrincipalId::new_anonymous().to_string();
         let mut node_id = target_group.node_id.to_string();
@@ -142,20 +138,22 @@ impl VectorRemapTransform {
             node_id = target.clone().name
         }
 
-        let endpoint = handle_ip(target.clone(), &job, is_bn);
+        let ip = job.ip(*target.targets.first().unwrap(), is_bn).to_string();
+        let labels = HashMap::from([
+            (IC_NAME.into(), target_group.ic_name.to_string()),
+            (IC_NODE.into(), node_id.clone()),
+            (ADDRESS.into(), ip),
+            (NODE_PROVIDER_ID.into(), target_group.node_provider_id.to_string()),
+            (DC.into(), target_group.dc_id),
+        ])
+        .into_iter()
+        .chain(target.custom_labels.into_iter())
+        .chain(match target_group.subnet_id {
+            Some(subnet_id) => vec![(IC_SUBNET.into(), subnet_id.to_string())],
+            None => vec![],
+        })
+        .collect::<HashMap<_, _>>();
 
-        labels.insert(IC_NAME.into(), target_group.ic_name.to_string());
-        labels.insert(IC_NODE.into(), node_id.clone());
-        labels.insert(ADDRESS.into(), endpoint);
-        labels.insert(
-            NODE_PROVIDER_ID.into(),
-            target_group.node_provider_id.to_string(),
-        );
-        labels.insert(DC.into(), target_group.dc_id);
-        labels.extend(target.custom_labels);
-        if let Some(subnet_id) = target_group.subnet_id {
-            labels.insert(IC_SUBNET.into(), subnet_id.to_string());
-        }
         Self {
             _type: "remap".into(),
             inputs: vec![input],
@@ -167,32 +165,6 @@ impl VectorRemapTransform {
                 .collect::<Vec<String>>()
                 .join("\n"),
         }
-    }
-}
-
-pub fn handle_ip(target_group: TargetDto, job_type: &JobType, is_bn: bool) -> String {
-    match job_type {
-        JobType::NodeExporter(NodeOS::Guest) => {
-            target_group.targets.first().unwrap().ip().to_string()
-        }
-        JobType::NodeExporter(NodeOS::Host) => match is_bn {
-            true => target_group.targets.first().unwrap().ip().to_string(),
-            false => guest_to_host_address(*target_group.targets.first().unwrap())
-                .unwrap()
-                .ip()
-                .to_string(),
-        },
-        JobType::MetricsProxy => match is_bn {
-            // It should not be possible for this to ever be true.
-            // There is a structural typing problem somewhere here.
-            true => target_group.targets.first().unwrap().ip().to_string(),
-            false => guest_to_host_address(*target_group.targets.first().unwrap())
-                .unwrap()
-                .ip()
-                .to_string(),
-        },
-        JobType::Replica => panic!("Unsupported job type for handle_ip"),
-        JobType::Orchestrator => panic!("Unsupported job type for handle_ip"),
     }
 }
 
@@ -217,9 +189,7 @@ mod tests {
         let mut parts = ipv6.split(':');
 
         for item in &mut array {
-            *item = u16::from_str_radix(parts.next().unwrap(), 16)
-                .unwrap()
-                .to_be();
+            *item = u16::from_str_radix(parts.next().unwrap(), 16).unwrap().to_be();
         }
 
         array

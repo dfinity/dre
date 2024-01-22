@@ -21,11 +21,7 @@ pub struct VectorConfigBuilderImpl {
 }
 
 impl VectorConfigBuilderImpl {
-    pub fn new(
-        proxy_url: Option<Url>,
-        scrape_interval: u64,
-        jobs_parameters: HashMap<JobType, JobParameters>,
-    ) -> Self {
+    pub fn new(proxy_url: Option<Url>, scrape_interval: u64, jobs_parameters: HashMap<JobType, JobParameters>) -> Self {
         Self {
             proxy_url,
             scrape_interval,
@@ -33,11 +29,7 @@ impl VectorConfigBuilderImpl {
         }
     }
 
-    fn add_target_groups_with_job(
-        &self,
-        targets: BTreeSet<TargetGroup>,
-        job: JobType,
-    ) -> VectorConfigEnriched {
+    fn add_target_groups_with_job(&self, targets: BTreeSet<TargetGroup>, job: JobType) -> VectorConfigEnriched {
         let mut config = VectorConfigEnriched::new();
         for target in targets {
             let key = target
@@ -54,8 +46,7 @@ impl VectorConfigBuilderImpl {
                 self.scrape_interval,
                 self.proxy_url.as_ref().cloned(),
             );
-            let transform =
-                VectorPrometheusScrapeTransform::from_target_group_with_job(target, &job);
+            let transform = VectorPrometheusScrapeTransform::from_target_group_with_job(target, &job);
             config.add_target_group(key, Box::new(source), Box::new(transform))
         }
         config
@@ -151,13 +142,17 @@ impl VectorTransform for VectorPrometheusScrapeTransform {
 
 impl VectorPrometheusScrapeTransform {
     fn from_target_group_with_job(tg: TargetGroup, job: &JobType) -> Self {
-        let mut labels: HashMap<String, String> = HashMap::new();
-        labels.insert(IC_NAME.into(), tg.ic_name);
-        labels.insert(IC_NODE.into(), tg.node_id.to_string());
-        if let Some(subnet_id) = tg.subnet_id {
-            labels.insert(IC_SUBNET.into(), subnet_id.to_string());
-        }
-        labels.insert("job".into(), job.to_string());
+        let labels = HashMap::from([
+            (IC_NAME.into(), tg.ic_name),
+            (IC_NODE.into(), tg.node_id.to_string()),
+            ("job".into(), job.to_string()),
+        ])
+        .into_iter()
+        .chain(match tg.subnet_id {
+            Some(subnet_id) => vec![(IC_SUBNET.into(), subnet_id.to_string())],
+            None => vec![],
+        })
+        .collect();
         Self {
             _type: "remap".into(),
             inputs: tg
@@ -202,24 +197,16 @@ mod tests {
         let sources_key = String::from(original_addr) + "-source";
         let mut targets = BTreeSet::new();
 
-        targets.insert(SocketAddr::V6(
-            SocketAddrV6::from_str(original_addr).unwrap(),
-        ));
+        targets.insert(SocketAddr::V6(SocketAddrV6::from_str(original_addr).unwrap()));
 
         let ptg = TargetGroup {
             node_id: NodeId::from(
-                PrincipalId::from_str(
-                    "iylgr-zpxwq-kqgmf-4srtx-o4eey-d6bln-smmq6-we7px-ibdea-nondy-eae",
-                )
-                .unwrap(),
+                PrincipalId::from_str("iylgr-zpxwq-kqgmf-4srtx-o4eey-d6bln-smmq6-we7px-ibdea-nondy-eae").unwrap(),
             ),
             ic_name: "mercury".into(),
             targets,
             subnet_id: Some(SubnetId::from(
-                PrincipalId::from_str(
-                    "x33ed-h457x-bsgyx-oqxqf-6pzwv-wkhzr-rm2j3-npodi-purzm-n66cg-gae",
-                )
-                .unwrap(),
+                PrincipalId::from_str("x33ed-h457x-bsgyx-oqxqf-6pzwv-wkhzr-rm2j3-npodi-purzm-n66cg-gae").unwrap(),
             )),
             dc_id: None,
             operator_id: None,
@@ -236,10 +223,7 @@ mod tests {
         let sources_config_endpoint = binding.get(&sources_key);
 
         if let Some(conf) = sources_config_endpoint {
-            let downcast = conf
-                .as_any()
-                .downcast_ref::<VectorPrometheusScrapeSource>()
-                .unwrap();
+            let downcast = conf.as_any().downcast_ref::<VectorPrometheusScrapeSource>().unwrap();
             assert_eq!(
                 downcast.endpoints[0],
                 url::Url::parse(&("http://".to_owned() + original_addr))

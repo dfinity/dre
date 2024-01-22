@@ -1,11 +1,8 @@
 use crossbeam_channel::Receiver;
 use crossbeam_channel::Sender;
 use ic_registry_client::client::ThresholdSigPublicKey;
-use service_discovery::job_types::map_jobs;
 use service_discovery::job_types::JobType;
-use service_discovery::{
-    job_types::JobAndPort, registry_sync::sync_local_registry, IcServiceDiscoveryImpl,
-};
+use service_discovery::{registry_sync::sync_local_registry, IcServiceDiscoveryImpl};
 use slog::{debug, info, warn, Logger};
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
@@ -44,8 +41,7 @@ impl Definition {
         registry_query_timeout: Duration,
         stop_signal_sender: Sender<()>,
     ) -> Self {
-        let global_registry_path =
-            std::fs::canonicalize(global_registry_path).expect("Invalid global registry path");
+        let global_registry_path = std::fs::canonicalize(global_registry_path).expect("Invalid global registry path");
         let registry_path = global_registry_path.join(name.clone());
         if std::fs::metadata(&registry_path).is_err() {
             std::fs::create_dir_all(registry_path.clone()).unwrap();
@@ -60,26 +56,14 @@ impl Definition {
             stop_signal,
             registry_query_timeout,
             stop_signal_sender,
-            ic_discovery: Arc::new(
-                IcServiceDiscoveryImpl::new(
-                    log,
-                    registry_path,
-                    registry_query_timeout,
-                    map_jobs(&JobAndPort::all()),
-                )
-                .unwrap(),
-            ),
+            ic_discovery: Arc::new(IcServiceDiscoveryImpl::new(log, registry_path, registry_query_timeout).unwrap()),
             boundary_nodes: vec![],
         }
     }
 
     async fn initial_registry_sync(&self) {
         info!(self.log, "Syncing local registry for {} started", self.name);
-        info!(
-            self.log,
-            "Using local registry path: {}",
-            self.registry_path.display()
-        );
+        info!(self.log, "Using local registry path: {}", self.registry_path.display());
 
         sync_local_registry(
             self.log.clone(),
@@ -90,10 +74,7 @@ impl Definition {
         )
         .await;
 
-        info!(
-            self.log,
-            "Syncing local registry for {} completed", self.name
-        );
+        info!(self.log, "Syncing local registry for {} completed", self.name);
     }
 
     async fn poll_loop(&mut self) {
@@ -107,10 +88,7 @@ impl Definition {
             if let Err(e) = self.ic_discovery.load_new_ics(self.log.clone()) {
                 warn!(
                     self.log,
-                    "Failed to load new scraping targets for {} @ interval {:?}: {:?}",
-                    self.name,
-                    tick,
-                    e
+                    "Failed to load new scraping targets for {} @ interval {:?}: {:?}", self.name, tick, e
                 );
             }
             debug!(self.log, "Update registries for {}", self.name);
@@ -134,10 +112,7 @@ impl Definition {
     async fn run(&mut self) {
         self.initial_registry_sync().await;
 
-        info!(
-            self.log,
-            "Starting to watch for changes for definition {}", self.name
-        );
+        info!(self.log, "Starting to watch for changes for definition {}", self.name);
 
         self.poll_loop().await;
 
