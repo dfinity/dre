@@ -1,9 +1,11 @@
 use std::collections::{BTreeMap, BTreeSet};
+use std::net::{IpAddr, SocketAddr};
 
 use ic_types::PrincipalId;
 use serde::{Serialize, Serializer};
-use service_discovery::job_types::JobType;
+use service_discovery::job_types::NodeOS;
 use service_discovery::jobs::Job;
+use service_discovery::{guest_to_host_address, job_types::JobType};
 
 use crate::{builders::ConfigBuilder, contracts::target::TargetDto};
 
@@ -40,15 +42,18 @@ fn get_endpoints(target_group: TargetDto, job: JobType) -> BTreeSet<String> {
         .iter()
         .map(|g| {
             let mut g = *g;
+            g.set_ip(handle_ip(&g, &job._type));
             g.set_port(job.port);
-            format!(
-                "{}://{}/{}",
-                job.scheme,
-                g,
-                job.endpoint.trim_start_matches('/'),
-            )
+            format!("{}://{}/{}", job.scheme, g, job.endpoint.trim_start_matches('/'),)
         })
         .collect()
+}
+
+pub fn handle_ip(socket: &SocketAddr, job_type: &JobType) -> IpAddr {
+    match job_type {
+        JobType::NodeExporter(NodeOS::Guest) | JobType::Replica | JobType::Orchestrator => socket.ip(),
+        JobType::NodeExporter(NodeOS::Host) | JobType::MetricsProxy => guest_to_host_address(*socket).unwrap().ip(),
+    }
 }
 
 const IC_NAME: &str = "ic";
