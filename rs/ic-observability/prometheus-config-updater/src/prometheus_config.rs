@@ -161,7 +161,7 @@ mod prometheus_serialize {
             [
                 {
                     "targets": [
-                        "[2a02:800:2:2003:6801:f6ff:fec4:4c86]:9091"
+                        "[2a02:800:2:2003:6801:f6ff:fec4:4c86]:9090"
                     ],
                     "labels": {
                         "ic": tg1.ic_name,
@@ -172,7 +172,7 @@ mod prometheus_serialize {
                 },
                 {
                     "targets": [
-                        "[2a02:800:2:2003:6801:f6ff:fec4:4c87]:9091"
+                        "[2a02:800:2:2003:6801:f6ff:fec4:4c87]:9090"
                     ],
                     "labels": {
                         "ic": tg2.ic_name,
@@ -208,10 +208,11 @@ mod prometheus_serialize {
 
     #[test]
     fn test_get_endpoints() {
+        // Whatever the port supplied, the get_endpoints() function should substitute with the correct port for the service type.
         let target_group = create_dummy_target_group("[2a02:800:2:2003:6801:f6ff:fec4:4c87]:9091", true);
         let endpoints = get_endpoints(target_group, JobType::Replica, false);
         let mut expected_endpoints = BTreeSet::new();
-        expected_endpoints.insert("[2a02:800:2:2003:6801:f6ff:fec4:4c87]:9091".to_string());
+        expected_endpoints.insert("[2a02:800:2:2003:6801:f6ff:fec4:4c87]:9090".to_string());
 
         assert_eq!(endpoints, expected_endpoints)
     }

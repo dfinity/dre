@@ -417,7 +417,7 @@ pub enum IcServiceDiscoveryError {
 
 #[cfg(test)]
 mod tests {
-    use std::collections::{HashMap, HashSet};
+    use std::collections::HashSet;
 
     use slog::o;
     use tempfile::TempDir;
@@ -433,12 +433,10 @@ mod tests {
         let tempdir = TempDir::new().unwrap();
         let ic_dir = PathBuf::from(tempdir.path()).join("mainnet");
         let _store = create_local_store_from_changelog(ic_dir, get_mainnet_delta_6d_c1());
-        let mut jobs: HashMap<JobType, u16> = HashMap::new();
-        jobs.insert(JobType::Replica, 9090);
 
         let log = slog::Logger::root(slog::Discard, o!());
 
-        let ic_scraper = IcServiceDiscoveryImpl::new(log.clone(), tempdir.path(), QUERY_TIMEOUT, jobs).unwrap();
+        let ic_scraper = IcServiceDiscoveryImpl::new(log.clone(), tempdir.path(), QUERY_TIMEOUT).unwrap();
         ic_scraper.load_new_ics(log.clone()).unwrap();
         let target_groups = ic_scraper.get_target_groups(JobType::Replica, log.clone()).unwrap();
 
