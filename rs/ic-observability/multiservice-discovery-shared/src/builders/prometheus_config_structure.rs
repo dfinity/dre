@@ -39,7 +39,7 @@ const JOB: &str = "job";
 // const NODE_PROVIDER_ID: &str = "node_provider_id";
 // const NODE_OPERATOR_ID: &str = "node_operator_id";
 
-pub fn map_target_group(target_groups: BTreeSet<TargetDto>) -> BTreeSet<PrometheusStaticConfig> {
+pub fn map_target_group(target_groups: Vec<TargetDto>) -> Vec<PrometheusStaticConfig> {
     target_groups
         .into_iter()
         .flat_map(|tg| {
@@ -82,8 +82,7 @@ pub fn map_target_group(target_groups: BTreeSet<TargetDto>) -> BTreeSet<Promethe
 
 impl ConfigBuilder for PrometheusConfigBuilder {
     fn build(&self, target_groups: BTreeSet<TargetDto>) -> String {
-        let new_configs: BTreeSet<PrometheusStaticConfig> = map_target_group(target_groups);
-
+        let new_configs: Vec<PrometheusStaticConfig> = map_target_group(target_groups.into_iter().collect());
         serde_json::to_string_pretty(&new_configs).unwrap()
     }
 }

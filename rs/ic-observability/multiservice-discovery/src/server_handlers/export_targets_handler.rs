@@ -19,7 +19,7 @@ pub struct ExportTargetsBinding {
 pub async fn export_targets(binding: ExportTargetsBinding) -> WebResult<impl Reply> {
     let definitions = binding.definitions.lock().await;
 
-    let mut total_targets: Vec<TargetDto> = vec![];
+    let mut ic_node_targets: Vec<TargetDto> = vec![];
 
     for def in definitions.iter() {
         for job_type in JobType::all_for_ic_nodes() {
@@ -29,10 +29,10 @@ pub async fn export_targets(binding: ExportTargetsBinding) -> WebResult<impl Rep
             };
 
             targets.iter().for_each(|target_group| {
-                if let Some(target) = total_targets.iter_mut().find(|t| t.node_id == target_group.node_id) {
+                if let Some(target) = ic_node_targets.iter_mut().find(|t| t.node_id == target_group.node_id) {
                     target.jobs.push(job_type);
                 } else {
-                    total_targets.push(map_to_target_dto(
+                    ic_node_targets.push(map_to_target_dto(
                         target_group,
                         job_type,
                         BTreeMap::new(),
@@ -44,42 +44,41 @@ pub async fn export_targets(binding: ExportTargetsBinding) -> WebResult<impl Rep
         }
     }
 
-    total_targets.extend(
-        definitions
-            .iter()
-            .flat_map(|def| {
-                def.boundary_nodes.iter().filter_map(|bn| {
-                    // Boundary nodes do not have metrics-proxy.
-                    if let JobType::MetricsProxy(_) = bn.job_type {
-                        return None;
-                    }
-                    // If this boundary node is under the test environment,
-                    // and the job is Node Exporter, then skip adding this
-                    // target altogether.
-                    if bn
-                        .custom_labels
-                        .iter()
-                        .any(|(k, v)| k.as_str() == "env" && v.as_str() == "test")
-                        && bn.job_type == JobType::NodeExporter(NodeOS::Host)
-                    {
-                        return None;
-                    }
-                    Some(TargetDto {
-                        name: bn.name.clone(),
-                        node_id: NodeId::from(PrincipalId::new_anonymous()),
-                        jobs: vec![bn.job_type],
-                        custom_labels: bn.custom_labels.clone(),
-                        targets: bn.targets.clone(),
-                        dc_id: "".to_string(),
-                        ic_name: def.name.clone(),
-                        node_provider_id: PrincipalId::new_anonymous(),
-                        operator_id: PrincipalId::new_anonymous(),
-                        subnet_id: None,
-                    })
+    let boundary_nodes_targets = definitions
+        .iter()
+        .flat_map(|def| {
+            def.boundary_nodes.iter().filter_map(|bn| {
+                // Since boundary nodes have been checked for correct job
+                // type when they were added via POST, then we can trust
+                // the correct job type is at play here.
+                // If, however, this boundary node is under the test environment,
+                // and the job is Node Exporter, then skip adding this
+                // target altogether.
+                if bn
+                    .custom_labels
+                    .iter()
+                    .any(|(k, v)| k.as_str() == "env" && v.as_str() == "test")
+                    && bn.job_type == JobType::NodeExporter(NodeOS::Host)
+                {
+                    return None;
+                }
+                Some(TargetDto {
+                    name: bn.name.clone(),
+                    node_id: NodeId::from(PrincipalId::new_anonymous()),
+                    jobs: vec![bn.job_type],
+                    custom_labels: bn.custom_labels.clone(),
+                    targets: bn.targets.clone(),
+                    dc_id: "".to_string(),
+                    ic_name: def.name.clone(),
+                    node_provider_id: PrincipalId::new_anonymous(),
+                    operator_id: PrincipalId::new_anonymous(),
+                    subnet_id: None,
                 })
             })
-            .collect::<Vec<TargetDto>>(),
-    );
+        })
+        .collect::<Vec<TargetDto>>();
+
+    let total_targets = [ic_node_targets, boundary_nodes_targets].concat();
 
     Ok(warp::reply::with_status(
         serde_json::to_string_pretty(&total_targets).unwrap(),
