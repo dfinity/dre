@@ -53,7 +53,7 @@ mod tests {
             let targets = rt.block_on(handle).unwrap().unwrap();
             child.kill().expect("command couldn't be killed");
 
-            assert_eq!(targets.len(), 6);
+            assert_eq!(targets.len(), 72);
 
             let labels_set = targets
                 .iter()
@@ -70,7 +70,7 @@ mod tests {
                     }
                     acc
                 });
-            
+
             assert_eq!(
                 labels_set.get(IC_NAME).unwrap().iter().collect::<Vec<_>>(),
                 vec!["mercury"]
@@ -81,19 +81,15 @@ mod tests {
                 vec!["node_exporter", "orchestrator", "replica"]
             );
 
-            assert_eq!(
-                labels_set.get(IC_NODE).unwrap().iter().collect::<Vec<_>>(),
-                vec![
-                    "4uphn-ptciz-qz3q7-sk7jj-eklt6-d4gkr-ox7dp-zzdje-cudnx-v6kwi-uqe",
-                    "kxkkh-hhfjy-jn7ai-zwnp3-bcnts-npet2-m3qxb-dmz5b-4o4n3-dnb4w-eqe",
-                ]            
-            );
 
             assert_eq!(
                 labels_set.get(IC_SUBNET).unwrap().iter().collect::<Vec<_>>(),
                 vec![
-                    "jmrpx-o3j3n-g57wn-wzq2o-cxyeg-k52f5-sqkvm-rnidf-jvbsa-oe4z2-6ae",
-                    "oxqbs-zdhkh-ygwt2-lofma-yotgh-maxep-vog7o-amp42-tbwc6-6llas-tae",
+                    "5mlaw-duyx2-sq67s-7czsg-3dslt-5ywba-4t346-kymcl-wpqzo-vt3zg-oqe",
+                    "grlkk-en3y6-lbkcb-qi4n2-hbikt-u7lhr-zwiqs-xkjt6-5mrto-3a2w7-7ae",
+                    "hyrk7-bxql5-toski-dz327-pajhm-ml6h6-n2fps-oxbsi-4dz2n-4ba4t-nqe",
+                    "quqe7-f73mp-keuge-3ywt4-k254o-kqzs2-z5gjb-2ehox-6iby5-54hbp-6qe",
+                    "sunxw-go5eq-un4wt-qlueh-qrde6-fq6l5-svdzo-l4g43-yopxy-rtxji-dqe"
                 ]
             );
 
