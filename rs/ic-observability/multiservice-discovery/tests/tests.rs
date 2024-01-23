@@ -35,6 +35,18 @@ mod tests {
     }
     #[test]
     fn prom_targets_tests() {
+        let output = Command::new("ls")
+            .output()
+            .expect("Failed to execute command");
+
+        if output.status.success() {
+            let stdout = String::from_utf8_lossy(&output.stdout);
+            println!("ls command output:\n{}", stdout);
+        } else {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            eprintln!("Error running ls command:\n{}", stderr);
+        }
+
         let rt = Runtime::new().unwrap();
         let args = [
             "--targets-dir",
