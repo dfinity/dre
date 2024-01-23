@@ -52,16 +52,24 @@ jobs:
       - name: If running on schedule (at night) and on main, completely delete bazel cache then update deps
         # if: "${{github.event.schedule == '30 1 * * *' && github.ref == 'refs/heads/main'}}"
         run: |
+          set -eExou pipefail
+          # Remove bazel cache
           sudo rm -rf ~/.cache/bazel/*
+          # Make sure local git repo tracks the correct remote branch
           if [[ -n "${GITHUB_HEAD_REF:-}" ]]; then REMOTE_BRANCH="$GITHUB_HEAD_REF"; else REMOTE_BRANCH="${GITHUB_REF_NAME:-}"; fi
           git clean -ffdx
           git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/$GITHUB_REPOSITORY
-          git checkout "${REMOTE_BRANCH}"
-          git reset --hard "origin/${REMOTE_BRANCH}"
+          git checkout "origin/${REMOTE_BRANCH}"
+          #
+          # Update dependencies
+          #
           cargo update
           poetry update
           ./bin/poetry-export.sh
           CARGO_BAZEL_REPIN=true bazel query //...
+          #
+          # Commit and push changes
+          #
           git add -A
           git -c "user.name=DRE Automation" -c "user.email=dept-DRE@dfinity.org" commit -m "Update dependencies"
           git push origin HEAD:${REMOTE_BRANCH}
