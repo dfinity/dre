@@ -70,9 +70,7 @@ mod tests {
                     }
                     acc
                 });
-
-            println!(la)
-
+            
             assert_eq!(
                 labels_set.get(IC_NAME).unwrap().iter().collect::<Vec<_>>(),
                 vec!["mercury"]
@@ -81,6 +79,22 @@ mod tests {
             assert_eq!(
                 labels_set.get(JOB).unwrap().iter().collect::<Vec<_>>(),
                 vec!["node_exporter", "orchestrator", "replica"]
+            );
+
+            assert_eq!(
+                labels_set.get(IC_NODE).unwrap().iter().collect::<Vec<_>>(),
+                vec![
+                    "4uphn-ptciz-qz3q7-sk7jj-eklt6-d4gkr-ox7dp-zzdje-cudnx-v6kwi-uqe",
+                    "kxkkh-hhfjy-jn7ai-zwnp3-bcnts-npet2-m3qxb-dmz5b-4o4n3-dnb4w-eqe",
+                ]            
+            );
+
+            assert_eq!(
+                labels_set.get(IC_SUBNET).unwrap().iter().collect::<Vec<_>>(),
+                vec![
+                    "jmrpx-o3j3n-g57wn-wzq2o-cxyeg-k52f5-sqkvm-rnidf-jvbsa-oe4z2-6ae",
+                    "oxqbs-zdhkh-ygwt2-lofma-yotgh-maxep-vog7o-amp42-tbwc6-6llas-tae",
+                ]
             );
 
         } else {
