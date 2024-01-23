@@ -1,5 +1,8 @@
 name: Bazel
-on: [push]
+on:
+  push:
+  pull_request:
+  merge_group:
 jobs:
   bazel:
     runs-on: ubuntu-22.04
