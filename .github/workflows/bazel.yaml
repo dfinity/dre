@@ -130,6 +130,8 @@ jobs:
         run: |
             set -eExou pipefail
 
+            cd .git
+
             # checkout branch
             git clone "https://gitlab-ci-token:${GITLAB_API_TOKEN}@gitlab.com/dfinity-lab/private/k8s/k8s.git"
 
