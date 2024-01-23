@@ -1,3 +1,4 @@
+use base64::{engine::general_purpose as b64, Engine as _};
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::thread::JoinHandle;
@@ -26,7 +27,7 @@ pub struct AddDefinitionBinding {
 pub async fn add_definition(definition: DefinitionDto, binding: AddDefinitionBinding) -> WebResult<impl Reply> {
     let public_key = match definition.public_key {
         Some(pk) => {
-            let decoded = base64::decode(pk).unwrap();
+            let decoded = b64::STANDARD.decode(pk).unwrap();
 
             match parse_threshold_sig_key_from_der(&decoded) {
                 Ok(key) => Some(key),

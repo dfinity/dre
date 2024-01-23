@@ -7,29 +7,26 @@ description.workspace = true
 documentation.workspace = true
 
 [dependencies]
-ic-nns-constants = { git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca" }
-url = "2.2.2"
-ic-agent = "0.30.2"
-anyhow = "1.0.44"
-candid = "0.9.5"
-serde = { version = "1.0.130", features = ["derive"] }
-serde_json = "1.0.68"
-ic-canister-client = { git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca" }
-ic-sys = { git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca" }
-ic-nns-governance = { git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca" }
-ic-nns-common = { git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca" }
-ic-canister-client-sender = { git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca" }
-reqwest = "0.11.22"
-backoff = { version = "0.4.0", features = ["tokio"] }
-ic-base-types = { git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca" }
-ic-ic00-types = { git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca" }
+anyhow = { workspace = true }
+backoff = { workspace = true }
+candid = { workspace = true }
+hex = { workspace = true }
+ic-agent = { workspace = true }
+ic-base-types = { workspace = true }
+ic-canister-client = { workspace = true }
+ic-canister-client-sender = { workspace = true }
+ic-ic00-types = { workspace = true }
+ic-nns-common = { workspace = true }
+ic-nns-constants = { workspace = true }
+ic-nns-governance = { workspace = true }
+ic-protobuf = { workspace = true }
+ic-registry-transport = { workspace = true }
+ic-sys = { workspace = true }
 ic-utils = "0.30.2"
-ic-identity-hsm = "0.30.2"
-ic-protobuf = { git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca" }
-ic-registry-transport = { git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca" }
-prost = "0.12.3"
-pkcs11 = "0.5.0"
-simple_asn1 = "0.6.0"
-hex = "0.4.3"
-sha2 = "0.10.6"
-thiserror = "1.0.40"
+pkcs11 = { workspace = true }
+prost = { workspace = true }
+serde = { workspace = true }
+sha2 = { workspace = true }
+simple_asn1 = { workspace = true }
+thiserror = { workspace = true }
+url = { workspace = true }

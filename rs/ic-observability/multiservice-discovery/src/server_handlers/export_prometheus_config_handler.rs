@@ -114,8 +114,11 @@ pub async fn export_prometheus_config(
 
     let prom_config = serde_json::to_string_pretty(&total_set).unwrap();
 
-    Ok(warp::reply::with_status(
-        prom_config,
-        warp::http::StatusCode::OK,
-    ))
+    let status_code = if !total_set.is_empty() {
+        warp::http::StatusCode::OK
+    } else {
+        warp::http::StatusCode::NOT_FOUND
+    };
+
+    Ok(warp::reply::with_status(prom_config, status_code))
 }

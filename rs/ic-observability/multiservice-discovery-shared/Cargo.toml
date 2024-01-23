@@ -1,15 +1,15 @@
 [package]
 name = "multiservice-discovery-shared"
-version = "0.1.0"
-edition = "2021"
+version = { workspace = true }
+edition = { workspace = true }
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 service-discovery = { path = "../service-discovery" }
-serde = { version = "1.0", features = ["derive"] }
-serde_json = { version = "1.0.107", features = ["std"] }
-ic-types = { git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca" }
-erased-serde = "0.3.23"
-regex = "1.7.0"
-ring = "0.16"
+serde = { workspace = true }
+serde_json = { workspace = true }
+ic-types = { workspace = true }
+erased-serde = { workspace = true }
+regex = { workspace = true }
+ring = { workspace = true }

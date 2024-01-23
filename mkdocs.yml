@@ -2,8 +2,8 @@ site_name: DRE team docs
 site_description: >-
   A collection of docs for the DRE team
 
-repo_name: core/release
-repo_url: https://gitlab.com/dfinity-lab/core/release/
+repo_name: Decentralized Reliability Engineering
+repo_url: https://github.com/dfinity/dre/
 edit_uri: edit/main/docs/
 
 theme:
@@ -41,5 +41,9 @@ markdown_extensions:
   - pymdownx.keys
   - pymdownx.tabbed:
       alternate_style: true
-  - pymdownx.superfences
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
   - tables

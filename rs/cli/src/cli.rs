@@ -389,7 +389,7 @@ impl Cli {
     }
 
     pub fn get_update_cmd_args(update_version: &UpdateVersion) -> Vec<String> {
-        vec![
+        [
             [
                 vec![
                     format!("--{}-version-to-elect", update_version.release_artifact),
@@ -402,7 +402,7 @@ impl Cli {
             ]
             .concat(),
             match update_version.versions_to_retire.clone() {
-                Some(versions) => vec![
+                Some(versions) => [
                     vec![format!("--{}-versions-to-unelect", update_version.release_artifact)],
                     versions,
                 ]

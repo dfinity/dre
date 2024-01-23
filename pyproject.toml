@@ -1,12 +1,12 @@
 [tool.poetry]
-name = "release"
-version = "0.1.0"
+name = "dre-repo"
+version = "0.2.0"
 description = ""
-authors = ["Release Team <eng-release@dfinity.org>"]
+authors = ["DRE Team <dept-DRE@dfinity.org>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = ">=3.9.0,<4"
+python = ">=3.10.0,<4"
 ansible = ">=7.0.0,<9.0.0"
 colorama = "*"
 elasticsearch = "<8.0,>=7.16"
@@ -30,6 +30,11 @@ poetry = "^1.6.1"
 ic-py = "*"
 mkdocs-material = "^9.4.8"
 mkdocs = "^1.5.3"
+clickhouse-connect = "^0.6.23"
+humanfriendly = "^10.0"
+jupyter = "^1.0.0"
+matplotlib = "^3.8.2"
+ipython = "^8.20.0"
 
 
 [tool.poetry.group.dev.dependencies]

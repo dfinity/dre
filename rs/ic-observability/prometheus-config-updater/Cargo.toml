@@ -1,34 +1,28 @@
 [package]
 name = "prometheus-config-updater"
-version = "0.1.0"
-edition = "2021"
+version = { workspace = true }
+edition = { workspace = true }
 
 [dependencies]
-anyhow = "1.0.31"
-clap = { version = "3.2.25", features = ["derive"] }
-crossbeam = "0.8.0"
-crossbeam-channel = "0.5.5"
-futures-util = "0.3.5"
-humantime = "2.0"
-ic-async-utils = { git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca" }
-ic-metrics = { git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca" }
-ic-types = { git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca" }
-ic-crypto-utils-threshold-sig-der = { git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca" }
-base64 = { version = "0.13.1" }
-regex = "1.7.0"
-serde = { version = "1.0", features = ["derive"] }
-serde_json = { version = "1.0.107", features = ["std"] }
-service-discovery = { path = "../service-discovery" }
-slog = { version = "2.7.0", features = [
-  "max_level_trace",
-  "nested-values",
-  "release_max_level_debug",
-  "release_max_level_trace",
-] }
-slog-async = { version = "2.5", features = ["nested-values"] }
-slog-term = "2.6.0"
-tokio = { version = "1.35.1", features = ["full"] }
-url = { version = "2.1.1", features = ["serde"] }
+anyhow = { workspace = true }
+base64 = { workspace = true }
+clap = { workspace = true }
 config-writer-common = { path = "../config-writer-common" }
-ic-config = { git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca" }
-ic-http-endpoints-metrics = { git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca" }
+crossbeam = { workspace = true }
+futures-util = { workspace = true }
+humantime = { workspace = true }
+ic-async-utils = { workspace = true }
+ic-config = { workspace = true }
+ic-crypto-utils-threshold-sig-der = { workspace = true }
+ic-http-endpoints-metrics = { workspace = true }
+ic-metrics = { workspace = true }
+ic-types = { workspace = true }
+regex = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+service-discovery = { path = "../service-discovery" }
+slog = { workspace = true }
+slog-async = { workspace = true }
+slog-term = { workspace = true }
+tokio = { workspace = true }
+url = { workspace = true }

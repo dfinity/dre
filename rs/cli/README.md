@@ -31,7 +31,7 @@ sudo ln -s /usr/local/homebrew/Cellar/openssl@3/3.0.8 /usr/local/opt/openssl@3
 ## Install
 
 ```shell
-cargo install --git ssh://git@gitlab.com/dfinity-lab/core/release release_cli
+cargo install --git https://github.com/dfinity/dre.git dre
 ```
 
 Make sure you have `libssl.so.1.1` on your system (Ubuntu 22.04 and later
@@ -40,7 +40,7 @@ will not carry it).  See below under *Troubleshooting* to get that going.
 ## Usage
 
 ```shell
-release_cli --help
+dre --help
 ```
 
 ## Troubleshooting

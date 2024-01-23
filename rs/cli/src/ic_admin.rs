@@ -233,13 +233,13 @@ impl IcAdminWrapper {
         let args = if args[0].starts_with("get-") {
             // The user did provide the "get-" prefix, so let's just keep it and use it.
             // This provides a convenient backward compatibility with ic-admin commands
-            // i.e., `release_cli get get-subnet 0` still works, although `release_cli get
+            // i.e., `dre get get-subnet 0` still works, although `dre get
             // subnet 0` is preferred
             args.to_vec()
         } else {
             // But since ic-admin expects these commands to include the "get-" prefix, we
             // need to add it back Example:
-            // `release_cli get subnet 0` becomes
+            // `dre get subnet 0` becomes
             // `ic-admin --nns-url "http://[2600:3000:6100:200:5000:b0ff:fe8e:6b7b]:8080" get-subnet 0`
             let mut args_with_get_prefix = vec![String::from("get-") + args[0].as_str()];
             args_with_get_prefix.extend_from_slice(args.split_at(1).1);
@@ -588,7 +588,7 @@ impl ProposeCommand {
                 subnet_id,
                 node_ids_add: nodes_ids_add,
                 node_ids_remove: nodes_ids_remove,
-            } => vec![
+            } => [
                 vec!["--subnet-id".to_string(), subnet_id.to_string()],
                 if !nodes_ids_add.is_empty() {
                     [
@@ -614,7 +614,7 @@ impl ProposeCommand {
                 vec![subnet.to_string(), version.clone()]
             }
             Self::Raw { command: _, args } => args.clone(),
-            Self::UpdateNodesHostosVersion { nodes, version } => vec![
+            Self::UpdateNodesHostosVersion { nodes, version } => [
                 nodes.iter().map(|n| n.to_string()).collect::<Vec<_>>(),
                 vec!["--hostos-version-id".to_string(), version.to_string()],
             ]

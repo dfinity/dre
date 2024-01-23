@@ -4,6 +4,7 @@ use backon::Retryable;
 use candid::{Decode, Encode};
 
 use futures_util::future::try_join_all;
+use ic_agent::agent::http_transport::reqwest_transport::ReqwestHttpReplicaV2Transport;
 use ic_agent::Agent;
 use ic_management_types::{NnsFunctionProposal, TopologyChangePayload, TopologyChangeProposal};
 use ic_management_types::{
@@ -76,10 +77,7 @@ pub struct SubnetUpdateProposal {
 impl ProposalAgent {
     pub fn new(url: String) -> Self {
         let agent = Agent::builder()
-            .with_transport(
-                ic_agent::agent::http_transport::ReqwestHttpReplicaV2Transport::create(url)
-                    .expect("failed to create transport"),
-            )
+            .with_transport(ReqwestHttpReplicaV2Transport::create(url).expect("failed to create transport"))
             .build()
             .expect("failed to build the agent");
         Self { agent }

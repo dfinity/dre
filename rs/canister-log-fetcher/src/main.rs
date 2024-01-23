@@ -15,6 +15,7 @@ use crate::entry::Entry;
 
 mod entry;
 
+#[allow(clippy::iter_skip_zero)]
 #[tokio::main]
 async fn main() -> Result<(), anyhow::Error> {
     let args = Cli::parse();
