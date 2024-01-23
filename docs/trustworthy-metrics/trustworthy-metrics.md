@@ -29,7 +29,7 @@ To be able to fetch trustworthy metrics there are a couple of things needed prio
     
     If you have less than 2 Trillion Cycles (TC) worth of ICP, based on the [current ICP value](https://www.coinbase.com/converter/icp/xdr), you can top up the ICP balance by sending funds to the principal, e.g., from [https://ic0.app/wallet/](https://ic0.app/wallet/).
     
-    1 TC is the same as 1 XDR (it's a stable currency), which is approximately 1 USD. Canister creation itself will cost 1 TC, and you will need some cycles more to execute commands.
+    1 TC corresponds to 1 XDR at the time of conversion. XDR is the currency symbol of the IMF SDR, a basket of five fiat currencies, corresponding to 1.33 U.S. dollar at the time of writing. Canister creation itself will cost 1 TC, and you will need some cycles more to execute commands.
     
 4. Create the wallet canister, after that you will get the wallet canister id in the output.
     
