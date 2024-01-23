@@ -5,7 +5,7 @@ rules for creating oci images from rust binaries
 load("@rules_oci//oci:defs.bzl", "oci_image", "oci_push")
 load("@rules_pkg//:pkg.bzl", "pkg_tar")
 
-def rust_binary_oci_image_rules(name, src, base_image = "@ubuntu:22.04"):
+def rust_binary_oci_image_rules(name, src, base_image = "@ubuntu"):
     """macro for creating oci image from rust binary
 
     Args:
