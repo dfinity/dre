@@ -61,7 +61,7 @@ jobs:
           git add -A
           git -c "user.name=DRE Automation" -c "user.email=dept-DRE@dfinity.org" commit -m "Update dependencies"
           git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/$GITHUB_REPOSITORY
-          git push
+          git push origin HEAD:${GITHUB_REF}
       ########################################
       # Build and test
       ########################################
