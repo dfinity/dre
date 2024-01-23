@@ -53,15 +53,17 @@ jobs:
         # if: "${{github.event.schedule == '30 1 * * *' && github.ref == 'refs/heads/main'}}"
         run: |
           sudo rm -rf ~/.cache/bazel/*
+          if [[ -n "${GITHUB_HEAD_REF:-}" ]]; then REMOTE_BRANCH="$GITHUB_HEAD_REF"; else REMOTE_BRANCH="${GITHUB_REF_NAME:-}"; fi
           git clean -ffdx
+          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/$GITHUB_REPOSITORY
+          git checkout "${REMOTE_BRANCH}"
+          git reset --hard "origin/${REMOTE_BRANCH}"
           cargo update
           poetry update
           ./bin/poetry-export.sh
           CARGO_BAZEL_REPIN=true bazel query //...
           git add -A
           git -c "user.name=DRE Automation" -c "user.email=dept-DRE@dfinity.org" commit -m "Update dependencies"
-          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/$GITHUB_REPOSITORY
-          if [[ -n "${GITHUB_HEAD_REF:-}" ]]; then REMOTE_BRANCH="$GITHUB_HEAD_REF"; else REMOTE_BRANCH="${GITHUB_REF_NAME:-}"; fi
           git push origin HEAD:${REMOTE_BRANCH}
       ########################################
       # Build and test
