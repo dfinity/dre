@@ -55,9 +55,6 @@ jobs:
           set -eExou pipefail
           # Remove bazel cache
           sudo rm -rf ~/.cache/bazel/*
-          # Make sure local git repo tracks the correct remote branch
-          if [[ -n "${GITHUB_HEAD_REF:-}" ]]; then REMOTE_BRANCH="$GITHUB_HEAD_REF"; else REMOTE_BRANCH="${GITHUB_REF_NAME:-}"; fi
-          git clean -ffdx
           #
           # Update dependencies
           #
@@ -65,14 +62,10 @@ jobs:
           poetry update
           ./bin/poetry-export.sh
           CARGO_BAZEL_REPIN=true bazel query //...
-          #
-          # Commit and push changes
-          #
-          git add -A
-          git -c "user.name=DRE Automation" -c "user.email=dept-DRE@dfinity.org" commit -m "Update dependencies"
-          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/$GITHUB_REPOSITORY
-          git fetch --unshallow
-          git push origin HEAD:${REMOTE_BRANCH}
+      - uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: Update dependencies
+
       ########################################
       # Build and test
       ########################################
