@@ -45,56 +45,51 @@ mod tests {
         let bazel_path = "rs/ic-observability/multiservice-discovery/multiservice-discovery";
 
         let mut cmd = Command::cargo_bin("multiservice-discovery").unwrap_or_else(|_| Command::new(bazel_path));
+        let mut child = cmd.args(args).spawn().unwrap();
+        let handle = rt.spawn(async {
+            fetch_targets().await
+        });
+        let targets = rt.block_on(handle).unwrap().unwrap();
+        child.kill().expect("command couldn't be killed");
 
-        if let Ok(mut child) = cmd.args(args).spawn() {
-            let handle = rt.spawn(async {
-                fetch_targets().await
-            });
-            let targets = rt.block_on(handle).unwrap().unwrap();
-            child.kill().expect("command couldn't be killed");
+        assert_eq!(targets.len(), 72);
 
-            assert_eq!(targets.len(), 72);
-
-            let labels_set = targets
-                .iter()
-                .cloned()
-                .fold(BTreeMap::new(), |mut acc: BTreeMap<String, BTreeSet<String>>, v| {
-                    for (key, value) in v.labels {
-                        if let Some(grouped_set) = acc.get_mut(&key) {
-                            grouped_set.insert(value);
-                        } else {
-                            let mut new_set = BTreeSet::new();
-                            new_set.insert(value);
-                            acc.insert(key,new_set);
-                        }
+        let labels_set = targets
+            .iter()
+            .cloned()
+            .fold(BTreeMap::new(), |mut acc: BTreeMap<String, BTreeSet<String>>, v| {
+                for (key, value) in v.labels {
+                    if let Some(grouped_set) = acc.get_mut(&key) {
+                        grouped_set.insert(value);
+                    } else {
+                        let mut new_set = BTreeSet::new();
+                        new_set.insert(value);
+                        acc.insert(key,new_set);
                     }
-                    acc
-                });
+                }
+                acc
+            });
 
-            assert_eq!(
-                labels_set.get(IC_NAME).unwrap().iter().collect::<Vec<_>>(),
-                vec!["mercury"]
-            );
+        assert_eq!(
+            labels_set.get(IC_NAME).unwrap().iter().collect::<Vec<_>>(),
+            vec!["mercury"]
+        );
 
-            assert_eq!(
-                labels_set.get(JOB).unwrap().iter().collect::<Vec<_>>(),
-                vec!["node_exporter", "orchestrator", "replica"]
-            );
+        assert_eq!(
+            labels_set.get(JOB).unwrap().iter().collect::<Vec<_>>(),
+            vec!["node_exporter", "orchestrator", "replica"]
+        );
 
 
-            assert_eq!(
-                labels_set.get(IC_SUBNET).unwrap().iter().collect::<Vec<_>>(),
-                vec![
-                    "5mlaw-duyx2-sq67s-7czsg-3dslt-5ywba-4t346-kymcl-wpqzo-vt3zg-oqe",
-                    "grlkk-en3y6-lbkcb-qi4n2-hbikt-u7lhr-zwiqs-xkjt6-5mrto-3a2w7-7ae",
-                    "hyrk7-bxql5-toski-dz327-pajhm-ml6h6-n2fps-oxbsi-4dz2n-4ba4t-nqe",
-                    "quqe7-f73mp-keuge-3ywt4-k254o-kqzs2-z5gjb-2ehox-6iby5-54hbp-6qe",
-                    "sunxw-go5eq-un4wt-qlueh-qrde6-fq6l5-svdzo-l4g43-yopxy-rtxji-dqe"
-                ]
-            );
-
-        } else {
-            panic!("yes command didn't start");
-        }
+        assert_eq!(
+            labels_set.get(IC_SUBNET).unwrap().iter().collect::<Vec<_>>(),
+            vec![
+                "5mlaw-duyx2-sq67s-7czsg-3dslt-5ywba-4t346-kymcl-wpqzo-vt3zg-oqe",
+                "grlkk-en3y6-lbkcb-qi4n2-hbikt-u7lhr-zwiqs-xkjt6-5mrto-3a2w7-7ae",
+                "hyrk7-bxql5-toski-dz327-pajhm-ml6h6-n2fps-oxbsi-4dz2n-4ba4t-nqe",
+                "quqe7-f73mp-keuge-3ywt4-k254o-kqzs2-z5gjb-2ehox-6iby5-54hbp-6qe",
+                "sunxw-go5eq-un4wt-qlueh-qrde6-fq6l5-svdzo-l4g43-yopxy-rtxji-dqe"
+            ]
+        );
     }
 }
