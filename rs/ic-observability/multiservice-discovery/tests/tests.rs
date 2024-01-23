@@ -8,6 +8,11 @@ mod tests {
     use tokio::time::sleep;
     use multiservice_discovery_shared::builders::prometheus_config_structure::{PrometheusStaticConfig, JOB, IC_NAME, IC_SUBNET};
 
+    const CRAGO_BIN_PATH: &str = "multiservice-discovery";
+    const CRAGO_DATA_PATH: &str = "tests/test_data";
+    const BAZEL_BIN_PATH: &str = "rs/ic-observability/multiservice-discovery/multiservice-discovery";
+    const BAZEL_DATA_PATH: &str = "rs/ic-observability/multiservice-discovery/tests/test_data";
+
     async fn fetch_targets() -> anyhow::Result<BTreeSet<PrometheusStaticConfig>> {
         let timeout_duration = Duration::from_secs(300);
         let start_time = std::time::Instant::now();
@@ -41,21 +46,14 @@ mod tests {
             "http://donotupdate.app",
             "--targets-dir",
         ];
-
-        let cargo_bin_path = "multiservice-discovery";
-        let cargo_data_path = "tests/test_data";
-
-        let bazel_bin_path = "rs/ic-observability/multiservice-discovery/multiservice-discovery";
-        let bazel_data_path = "rs/ic-observability/multiservice-discovery/tests/test_data";
-
-        let mut cmd = match Command::cargo_bin(cargo_bin_path) {
+        let mut cmd = match Command::cargo_bin(CRAGO_BIN_PATH) {
             Ok(command) => {
-                args.push(cargo_data_path);
+                args.push(CRAGO_DATA_PATH);
                 command
             },
             _ => {
-                args.push(bazel_data_path);
-                Command::new(bazel_bin_path)
+                args.push(BAZEL_DATA_PATH);
+                Command::new(BAZEL_BIN_PATH)
             }
         };
         
