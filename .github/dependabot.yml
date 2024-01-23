@@ -9,7 +9,36 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+      day: "monday"
+      time: "07:15"
+      timezone: "Etc/UTC"
+    groups:
+      # Group name will be used in PR titles and branch names
+      cargo-dependencies:
+        patterns:
+          - "*" # match all dependencies; risk: this may open a very large PR!
   - package-ecosystem: "pip"
     directory: "/"
     schedule:
       interval: "weekly"
+      day: "monday"
+      time: "07:15"
+      timezone: "Etc/UTC"
+    groups:
+      # Group name will be used in PR titles and branch names
+      python-dependencies:
+        patterns:
+          - "*" # match all dependencies; risk: this may open a very large PR!
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      # Check for updates to GitHub Actions every week
+      interval: "weekly"
+      day: "monday"
+      time: "07:15"
+      timezone: "Etc/UTC"
+    groups:
+      # Group name will be used in PR titles and branch names
+      github-actions-dependencies:
+        patterns:
+          - "*" # match all dependencies; risk: this may open a very large PR!
