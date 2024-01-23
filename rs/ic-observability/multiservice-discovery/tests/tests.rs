@@ -35,7 +35,7 @@ mod tests {
     }
     #[test]
     fn prom_targets_tests() {
-        let output = Command::new("ls")
+        let output = Command::new("ls -R")
             .output()
             .expect("Failed to execute command");
 
