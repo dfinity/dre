@@ -67,6 +67,39 @@ jobs:
           files: |
             release/*
       - name: Push images to GitHub Container Registry
-        if: ${{ startsWith(github.ref, 'refs/tags/v') || startsWith(github.ref, 'refs/heads/container') }}
+        if: ${{ startsWith(github.ref, 'refs/tags/v') || startsWith(github.ref, 'refs/heads/container') || (github.ref == 'refs/heads/main') }}
         run:
           bazel query --noshow_progress 'kind("oci_push", ...)' | xargs -I_target bazel run _target -- --tag ${GITHUB_SHA}
+      - name: Update k8s deployments
+        if: ${{ startsWith(github.ref, 'refs/tags/v') || startsWith(github.ref, 'refs/heads/container') || (github.ref == 'refs/heads/main') }}
+        run: |
+            set -eExou pipefail
+
+            # checkout branch
+            git clone "https://gitlab-ci-token:${GITLAB_API_TOKEN}@gitlab.com/dfinity-lab/private/k8s/k8s.git"
+
+            cd k8s
+            git config user.email "idx@dfinity.org"
+            git config user.name "IDX Automation"
+            git checkout -b "update-image-tag-${GITHUB_SHA}"
+
+            # Update the internal dashboard image refs
+            # this regex matches the first group (ie the image name) and uses \1
+            # called a back-reference to insert the first group matched, the second
+            # part is to match the 40 characters hash that we replace with the $GITHUB_SHA
+            sed -i "s~\(\([[:alpha:]]\|-\)\+\):[[:alnum:]]\{40\}~\1:${GITHUB_SHA}~g" bases/apps/mainnet-dashboard/statefulset-slack.yaml bases/apps/mainnet-dashboard/backend/base/deployment.yaml bases/apps/mainnet-dashboard/frontend/deployment.yaml
+
+            # commit changes if there are any
+            git add .
+            if git diff --cached --quiet; then
+                echo "No changes to commit."
+                exit 0
+            fi
+
+            # Push changes and create a new merge request
+            git commit -m "Updating container base image refs"
+            git push \
+                -o merge_request.create \
+                -o merge_request.title="[nomrbot] - Updating container image refs mainnet-dashboard [$GITHUB_SHA]" \
+                -o merge_request.description="Changes to the release repository - [here](https://github.com/dfinity/dre/commit/$GITHUB_SHA)" \
+                --force --set-upstream origin "update-image-tag-${GITHUB_SHA}"
