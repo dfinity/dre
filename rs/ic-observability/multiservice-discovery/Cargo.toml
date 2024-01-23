@@ -33,6 +33,6 @@ warp = { workspace = true }
 [dev-dependencies]
 tempdir = "0.3.7"
 reqwest = "0.11.23"
-assert_cmd = "1.0"
+assert_cmd = "2.0.13"
 anyhow = "1.0.79"
 
