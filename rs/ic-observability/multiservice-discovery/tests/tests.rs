@@ -6,7 +6,7 @@ mod tests {
     use std::time::Duration;
     use tokio::runtime::Runtime;
     use tokio::time::sleep;
-    use multiservice_discovery_shared::builders::prometheus_config_structure::{PrometheusStaticConfig, JOB, IC_NAME, IC_NODE, IC_SUBNET};
+    use multiservice_discovery_shared::builders::prometheus_config_structure::{PrometheusStaticConfig, JOB, IC_NAME, IC_SUBNET};
 
     async fn fetch_targets() -> anyhow::Result<BTreeSet<PrometheusStaticConfig>> {
         let timeout_duration = Duration::from_secs(300);
