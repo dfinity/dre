@@ -61,7 +61,7 @@ jobs:
           git add -A
           git -c "user.name=DRE Automation" -c "user.email=dept-DRE@dfinity.org" commit -m "Update dependencies"
           git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/$GITHUB_REPOSITORY
-          if [[ -n "${GITHUB_HEAD_REF:-}" ]]; then REMOTE_BRANCH="GITHUB_HEAD_REF"; else REMOTE_BRANCH="${GITHUB_REF_NAME:-}"; fi
+          if [[ -n "${GITHUB_HEAD_REF:-}" ]]; then REMOTE_BRANCH="$GITHUB_HEAD_REF"; else REMOTE_BRANCH="${GITHUB_REF_NAME:-}"; fi
           git push origin HEAD:${REMOTE_BRANCH}
       ########################################
       # Build and test
