@@ -51,10 +51,10 @@ fn get_endpoints(target_group: TargetDto, job: JobType) -> BTreeSet<String> {
         .collect()
 }
 
-const IC_NAME: &str = "ic";
-const IC_NODE: &str = "ic_node";
-const IC_SUBNET: &str = "ic_subnet";
-const JOB: &str = "job";
+pub const IC_NAME: &str = "ic";
+pub const IC_NODE: &str = "ic_node";
+pub const IC_SUBNET: &str = "ic_subnet";
+pub const JOB: &str = "job";
 // TODO: Re-add the labels below once we resolve the issues with the public dashboard queries
 // https://dfinity.atlassian.net/browse/OB-442
 // const DC: &str = "dc";
