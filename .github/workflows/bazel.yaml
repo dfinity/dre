@@ -12,6 +12,10 @@ jobs:
   bazel:
     runs-on: ubuntu-22.04
     steps:
+
+      ########################################
+      # Setup
+      ########################################
       - name: Free Disk Space (Ubuntu)
         uses: jlumbroso/free-disk-space@v1.3.1
         with:
@@ -20,19 +24,11 @@ jobs:
           tool-cache: true
           large-packages: false  # this is slow
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v4
-        with:
-          python-version: "3.11"
-      - uses: snok/install-poetry@v1
-      - name: If running on schedule (at night) and on main, completely delete bazel cache then update deps
-        # if: "${{github.event.schedule == '30 1 * * *' && github.ref == 'refs/heads/main'}}"
-        run: |
-          sudo rm -rf ~/.cache/bazel/*
-          cargo update
-          poetry update
-          ./bin/poetry-export.sh
-          CARGO_BAZEL_REPIN=true bazel query //...
       - uses: bazelbuild/setup-bazelisk@v2
+
+      ########################################
+      # Download and unpack cache
+      ########################################
       - name: Mount bazel cache
         uses: actions/cache@v3
         with:
@@ -43,6 +39,32 @@ jobs:
           key: ${{ runner.os }}-bazel-${{ hashFiles('.bazelversion', '.bazelrc', 'WORKSPACE', 'WORKSPACE.bazel', 'MODULE.bazel', 'Cargo.Bazel.lock') }}
           restore-keys: |
             ${{ runner.os }}-bazel-
+
+      ########################################
+      # Once per night, update dependencies and completely delete bazel cache
+      ########################################
+      - uses: actions/setup-python@v4
+        # if: "${{github.event.schedule == '30 1 * * *' && github.ref == 'refs/heads/main'}}"
+        with:
+          python-version: "3.11"
+      - uses: snok/install-poetry@v1
+        # if: "${{github.event.schedule == '30 1 * * *' && github.ref == 'refs/heads/main'}}"
+      - name: If running on schedule (at night) and on main, completely delete bazel cache then update deps
+        # if: "${{github.event.schedule == '30 1 * * *' && github.ref == 'refs/heads/main'}}"
+        run: |
+          sudo rm -rf ~/.cache/bazel/*
+          git clean -ffdx
+          cargo update
+          poetry update
+          ./bin/poetry-export.sh
+          CARGO_BAZEL_REPIN=true bazel query //...
+          git add -A
+          git -c "user.name=DRE Automation" -c "user.email=dept-DRE@dfinity.org" commit -m "Update dependencies"
+          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/$GITHUB_REPOSITORY
+          git push
+      ########################################
+      # Build and test
+      ########################################
       - name: Set GIT_HASH variable
         run: |
           # Set GIT_HASH variable based on the type of GitHub reference
@@ -53,15 +75,13 @@ jobs:
           fi
       - run: bazel build ...
       - run: bazel test ...
+
+      ########################################
+      # Prepare release
+      ########################################
       - name: Optimize bazel cache directory before uploading
         run: bin/optimize-bazel-cache.sh
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Get bazel binaries, so they can be pushed as GitHub artifacts in the next step
+      - name: Extract binaries from bazel, so they can be pushed as GitHub artifacts in the next steps
         if: startsWith(github.ref, 'refs/tags/v')
         run: |
           set -eExuo pipefail
@@ -81,10 +101,24 @@ jobs:
           prerelease: true
           files: |
             release/*
+
+      ########################################
+      # Upload container images
+      ########################################
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Push images to GitHub Container Registry
         if: ${{ startsWith(github.ref, 'refs/tags/v') || startsWith(github.ref, 'refs/heads/container') || (github.ref == 'refs/heads/main') }}
         run:
           bazel query --noshow_progress 'kind("oci_push", ...)' | xargs -I_target bazel run _target -- --tag ${GITHUB_SHA}
+
+      ########################################
+      # Update k8s deployments
+      ########################################
       - name: Update k8s deployments
         if: ${{ startsWith(github.ref, 'refs/tags/v') || startsWith(github.ref, 'refs/heads/container') || (github.ref == 'refs/heads/main') }}
         run: |
@@ -118,3 +152,9 @@ jobs:
                 -o merge_request.title="[nomrbot] - Updating container image refs mainnet-dashboard [$GITHUB_SHA]" \
                 -o merge_request.description="Changes to the release repository - [here](https://github.com/dfinity/dre/commit/$GITHUB_SHA)" \
                 --force --set-upstream origin "update-image-tag-${GITHUB_SHA}"
+
+      ########################################
+      # Optimize bazel cache by hard-linking duplicate files
+      ########################################
+      - name: Optimize bazel cache directory before uploading
+        run: bin/optimize-bazel-cache.sh
