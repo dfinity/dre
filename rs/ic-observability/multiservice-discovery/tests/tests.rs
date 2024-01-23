@@ -35,29 +35,30 @@ mod tests {
     }
     #[test]
     fn prom_targets_tests() {
-        let output = Command::new("ls")
-            .arg("-R")
-            .output()
-            .expect("Failed to execute command");
-
-        if output.status.success() {
-            let stdout = String::from_utf8_lossy(&output.stdout);
-            println!("ls command output:\n{}", stdout);
-        } else {
-            let stderr = String::from_utf8_lossy(&output.stderr);
-            eprintln!("Error running ls command:\n{}", stderr);
-        }
-
         let rt = Runtime::new().unwrap();
-        let args = [
-            "--targets-dir",
-            "tests/test_data",
+        let mut args = vec![
             "--nns-url",
-            "http://donotupdate.app"
+            "http://donotupdate.app",
+            "--targets-dir",
         ];
-        let bazel_path = "rs/ic-observability/multiservice-discovery/multiservice-discovery";
 
-        let mut cmd = Command::cargo_bin("multiservice-discovery").unwrap_or_else(|_| Command::new(bazel_path));
+        let cargo_bin_path = "multiservice-discovery";
+        let cargo_data_path = "tests/test_data";
+
+        let bazel_bin_path = "rs/ic-observability/multiservice-discovery/multiservice-discovery";
+        let bazel_data_path = "rs/ic-observability/multiservice-discovery/tests/test_data";
+
+        let mut cmd = match Command::cargo_bin(cargo_bin_path) {
+            Ok(command) => {
+                args.push(cargo_data_path);
+                command
+            },
+            _ => {
+                args.push(bazel_data_path);
+                Command::new(bazel_bin_path)
+            }
+        };
+        
         let mut child = cmd.args(args).spawn().unwrap();
         let handle = rt.spawn(async {
             fetch_targets().await
