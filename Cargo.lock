@@ -942,7 +942,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c48f0051a4b4c5e0b6d365cd04af53aeaa209e3cc15ec2cdb69e73cc87fbd0dc"
 dependencies = [
  "memchr",
- "regex-automata 0.4.3",
+ "regex-automata 0.4.4",
  "serde",
 ]
 
@@ -1161,7 +1161,7 @@ name = "canister-log-fetcher"
 version = "0.2.0"
 dependencies = [
  "anyhow",
- "clap 4.4.17",
+ "clap 4.4.18",
  "humantime",
  "log",
  "pretty_env_logger",
@@ -1217,9 +1217,9 @@ checksum = "fd16c4719339c4530435d38e511904438d07cce7950afa3718a84ac36c10e89e"
 
 [[package]]
 name = "chrono"
-version = "0.4.31"
+version = "0.4.32"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7f2c685bad3eb3d45a01354cedb7d5faa66194d1d58ba6e267a8de788f79db38"
+checksum = "41daef31d7a747c5c847246f36de49ced6f7403b4cdabc807a97b5cc184cda7a"
 dependencies = [
  "android-tzdata",
  "iana-time-zone",
@@ -1227,7 +1227,7 @@ dependencies = [
  "num-traits",
  "serde",
  "wasm-bindgen",
- "windows-targets 0.48.5",
+ "windows-targets 0.52.0",
 ]
 
 [[package]]
@@ -1285,9 +1285,9 @@ dependencies = [
 
 [[package]]
 name = "clap"
-version = "4.4.17"
+version = "4.4.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "80932e03c33999b9235edb8655bc9df3204adc9887c2f95b50cb1deb9fd54253"
+checksum = "1e578d6ec4194633722ccf9544794b71b1385c3c027efe0c55db226fc880865c"
 dependencies = [
  "clap_builder",
  "clap_derive 4.4.7",
@@ -1295,18 +1295,18 @@ dependencies = [
 
 [[package]]
 name = "clap-num"
-version = "1.0.2"
+version = "1.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "488557e97528174edaa2ee268b23a809e0c598213a4bbcb4f34575a46fda147e"
+checksum = "0e063d263364859dc54fb064cedb7c122740cd4733644b14b176c097f51e8ab7"
 dependencies = [
  "num-traits",
 ]
 
 [[package]]
 name = "clap_builder"
-version = "4.4.17"
+version = "4.4.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d6c0db58c659eef1c73e444d298c27322a1b52f6927d2ad470c0c0f96fa7b8fa"
+checksum = "4df4df40ec50c46000231c914968278b1eb05098cf8f1b3a518a95030e71d1c7"
 dependencies = [
  "anstream",
  "anstyle",
@@ -1540,11 +1540,10 @@ dependencies = [
 
 [[package]]
 name = "crossbeam"
-version = "0.8.3"
+version = "0.8.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6eb9105919ca8e40d437fc9cbb8f1975d916f1bd28afe795a48aae32a2cc8920"
+checksum = "1137cd7e7fc0fb5d3c5a8678be38ec56e819125d8d7907411fe24ccb943faca8"
 dependencies = [
- "cfg-if",
  "crossbeam-channel",
  "crossbeam-deque",
  "crossbeam-epoch",
@@ -1554,11 +1553,10 @@ dependencies = [
 
 [[package]]
 name = "crossbeam-channel"
-version = "0.5.10"
+version = "0.5.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "82a9b73a36529d9c47029b9fb3a6f0ea3cc916a261195352ba19e770fc1748b2"
+checksum = "176dc175b78f56c0f321911d9c8eb2b77a78a4860b9c19db83835fea1a46649b"
 dependencies = [
- "cfg-if",
  "crossbeam-utils",
 ]
 
@@ -2183,7 +2181,7 @@ dependencies = [
  "anyhow",
  "async-trait",
  "candid",
- "clap 4.4.17",
+ "clap 4.4.18",
  "clap-num",
  "colored",
  "cryptoki",
@@ -2340,9 +2338,9 @@ dependencies = [
 
 [[package]]
 name = "env_logger"
-version = "0.10.1"
+version = "0.10.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "95b3f3e67048839cb0d0781f445682a35113da7121f7c949db0e2be96a4fbece"
+checksum = "4cd405aab171cb85d6735e5c8d9db038c17d3ca007a4d2c25f337935c3d90580"
 dependencies = [
  "humantime",
  "is-terminal",
@@ -4186,7 +4184,7 @@ dependencies = [
  "itertools 0.12.0",
  "lazy_static",
  "log",
- "prometheus-http-query 0.4.2",
+ "prometheus-http-query",
  "regex",
  "registry-canister",
  "reqwest",
@@ -4207,7 +4205,7 @@ dependencies = [
  "anyhow",
  "candid",
  "chrono",
- "clap 4.4.17",
+ "clap 4.4.18",
  "ic-base-types",
  "ic-nns-governance",
  "ic-registry-subnet-type",
@@ -5505,7 +5503,7 @@ name = "log-fetcher"
 version = "0.2.0"
 dependencies = [
  "anyhow",
- "clap 4.4.17",
+ "clap 4.4.18",
  "log",
  "pretty_env_logger",
  "reqwest",
@@ -5713,7 +5711,7 @@ dependencies = [
  "anyhow",
  "assert_cmd",
  "base64 0.21.7",
- "clap 4.4.17",
+ "clap 4.4.18",
  "crossbeam",
  "crossbeam-channel",
  "erased-serde 0.4.2",
@@ -5743,7 +5741,7 @@ dependencies = [
 name = "multiservice-discovery-downloader"
 version = "0.2.0"
 dependencies = [
- "clap 4.4.17",
+ "clap 4.4.18",
  "crossbeam",
  "crossbeam-channel",
  "futures-util",
@@ -5827,7 +5825,7 @@ name = "node-status-updater"
 version = "0.2.0"
 dependencies = [
  "anyhow",
- "clap 4.4.17",
+ "clap 4.4.18",
  "crossbeam",
  "crossbeam-channel",
  "futures-util",
@@ -5836,7 +5834,7 @@ dependencies = [
  "ic-async-utils",
  "ic-metrics",
  "obs-canister-clients",
- "prometheus-http-query 0.6.7",
+ "prometheus-http-query",
  "service-discovery",
  "slog",
  "slog-async",
@@ -6669,7 +6667,7 @@ version = "0.2.0"
 dependencies = [
  "anyhow",
  "base64 0.21.7",
- "clap 4.4.17",
+ "clap 4.4.18",
  "config-writer-common",
  "crossbeam",
  "futures-util",
@@ -6688,19 +6686,6 @@ dependencies = [
  "slog-async",
  "slog-term",
  "tokio",
- "url",
-]
-
-[[package]]
-name = "prometheus-http-query"
-version = "0.4.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6886b96a7a96d2a7cc0a1d69b20fa083cf5792982afe799dcdd05468bc51f351"
-dependencies = [
- "reqwest",
- "serde",
- "serde_json",
- "time",
  "url",
 ]
 
@@ -6967,13 +6952,13 @@ dependencies = [
 
 [[package]]
 name = "regex"
-version = "1.10.2"
+version = "1.10.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "380b951a9c5e80ddfd6136919eef32310721aa4aacd4889a8d39124b026ab343"
+checksum = "b62dbe01f0b06f9d8dc7d49e05a0785f153b00b2c227856282f671e0318c9b15"
 dependencies = [
  "aho-corasick",
  "memchr",
- "regex-automata 0.4.3",
+ "regex-automata 0.4.4",
  "regex-syntax 0.8.2",
 ]
 
@@ -6988,9 +6973,9 @@ dependencies = [
 
 [[package]]
 name = "regex-automata"
-version = "0.4.3"
+version = "0.4.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5f804c7828047e88b2d32e2d7fe5a105da8ee3264f01902f796c8e067dc2483f"
+checksum = "3b7fa1134405e2ec9353fd416b17f8dacd46c473d7d3fd1cf202706a14eb792a"
 dependencies = [
  "aho-corasick",
  "memchr",
@@ -7841,7 +7826,7 @@ checksum = "4dccd0940a2dcdf68d092b8cbab7dc0ad8fa938bf95787e1b916b0e3d0e8e970"
 name = "sns-downloader"
 version = "0.2.0"
 dependencies = [
- "clap 4.4.17",
+ "clap 4.4.18",
  "crossbeam",
  "crossbeam-channel",
  "futures-util",
