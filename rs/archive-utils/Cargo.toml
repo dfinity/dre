@@ -1,0 +1,15 @@
+[package]
+name = "archive-utils"
+version = { workspace = true }
+edition = { workspace = true }
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+reqwest = { workspace = true , features = ["stream"]  }
+flate2 = { workspace = true }
+tokio = { workspace = true }
+anyhow = { workspace = true }
+tar = { workspace = true }
+futures-lite = { workspace = true}
+flume = "0.11.0"
