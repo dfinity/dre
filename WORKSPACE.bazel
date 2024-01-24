@@ -157,7 +157,7 @@ load("@rules_oci//oci:dependencies.bzl", "rules_oci_dependencies")
 
 rules_oci_dependencies()
 
-load("@rules_oci//oci:repositories.bzl", "LATEST_CRANE_VERSION", "LATEST_ZOT_VERSION", "oci_register_toolchains")
+load("@rules_oci//oci:repositories.bzl", "LATEST_CRANE_VERSION", "oci_register_toolchains")
 
 oci_register_toolchains(
     name = "oci",
@@ -167,9 +167,13 @@ oci_register_toolchains(
 load("@rules_oci//oci:pull.bzl", "oci_pull")
 
 oci_pull(
-    name = "distroless_cc",
-    digest = "sha256:8aad707f96620ee89e27febef51b01c6ff244277a3560fcfcfbe68633ef09193",
-    image = "gcr.io/distroless/cc",
+    # Debian 12 image has a new glibc.
+    # https://console.cloud.google.com/gcr/images/distroless/global/cc-debian12
+    name = "distroless_cc_debian12",
+    # Note: this is a "debug" image, which means that it has busybox, so also a shell at /busybox/sh
+    # https://github.com/GoogleContainerTools/distroless/tree/9dc924b9fe812eec2fa0061824dcad39eb09d0d6?tab=readme-ov-file#debug-images
+    digest = "sha256:53895c8e3a37652d075d22dde58f40b310daa4a7a59d078b8a7f604d11b1adc6",
+    image = "gcr.io/distroless/cc-debian12",
     platforms = [
         "linux/amd64",
         "linux/arm64",

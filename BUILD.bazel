@@ -14,12 +14,16 @@ alias(
 alias(
     name = "poetry",
     actual = "@python_deps_poetry//:rules_python_wheel_entry_point_poetry",
+    tags = ["no-cache"],
 )
 
 py_binary(
     name = "mkdocs",
-    deps = ["@python_deps_mkdocs_material//:pkg"],
     srcs = ["@python_deps_mkdocs//:rules_python_wheel_entry_point_mkdocs"],
-    data = ["mkdocs.yml", "docs"],
+    data = [
+        "docs",
+        "mkdocs.yml",
+    ],
     main = "rules_python_wheel_entry_point_mkdocs.py",
+    deps = ["@python_deps_mkdocs_material//:pkg"],
 )
