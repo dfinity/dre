@@ -4,11 +4,11 @@ load("@//rs:oci_images.bzl", "rust_binary_oci_image_rules")
 
 DEPS = [
     "//rs/ic-observability/service-discovery",
-    "//rs/ic-observability/multiservice-discovery-shared"
+    "//rs/ic-observability/multiservice-discovery-shared",
+    "//rs/archive-utils",
 ]
 
 DEV_DEPENDENCIES = [
-    "//rs/archive-utils",
     "@crate_index_dre//:assert_cmd",
     "@crate_index_dre//:tokio",
     "@crate_index_dre//:tempdir",
@@ -54,7 +54,7 @@ rust_test(
 rust_test(
     name = "prom_targets_tests",
     srcs = ["tests/tests.rs"],
-    data = [":multiservice-discovery"] + glob(["tests/test_data/**"]),
+    data = [":multiservice-discovery"] + glob(["tests/**"]),
     proc_macro_deps = all_crate_deps(
         proc_macro_dev = True,
     ),
