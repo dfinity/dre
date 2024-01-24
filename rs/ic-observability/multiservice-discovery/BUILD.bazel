@@ -8,6 +8,7 @@ DEPS = [
 ]
 
 DEV_DEPENDENCIES = [
+    "//rs/archive-utils",
     "@crate_index_dre//:assert_cmd",
     "@crate_index_dre//:tokio",
     "@crate_index_dre//:tempdir",
