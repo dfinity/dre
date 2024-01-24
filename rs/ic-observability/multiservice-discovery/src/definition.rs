@@ -42,7 +42,9 @@ impl Definition {
         stop_signal_sender: Sender<()>,
     ) -> Self {
         let global_registry_path = std::fs::canonicalize(global_registry_path).expect("Invalid global registry path");
-        let registry_path = global_registry_path.join(name.clone());
+        // The path needs to be sanitized otherwise any file in the environment can be overwritten,
+        let sanitized_name = name.replace(".", "_").replace("/", "_");
+        let registry_path = global_registry_path.join(sanitized_name);
         if std::fs::metadata(&registry_path).is_err() {
             std::fs::create_dir_all(registry_path.clone()).unwrap();
         }

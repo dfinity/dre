@@ -147,7 +147,7 @@ impl VectorRemapTransform {
             (DC.into(), target_group.dc_id),
         ])
         .into_iter()
-        .chain(target.custom_labels.into_iter())
+        .chain(target.custom_labels)
         .chain(match target_group.subnet_id {
             Some(subnet_id) => vec![(IC_SUBNET.into(), subnet_id.to_string())],
             None => vec![],
