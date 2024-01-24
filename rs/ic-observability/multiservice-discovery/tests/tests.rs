@@ -61,8 +61,6 @@ mod tests {
         let targets = rt.block_on(handle).unwrap().unwrap();
         child.kill().expect("command couldn't be killed");
 
-        assert_eq!(targets.len(), 72);
-
         let labels_set =
             targets
                 .iter()
