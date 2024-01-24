@@ -29,7 +29,7 @@ To be able to fetch trustworthy metrics there are a couple of things needed prio
     
     If you have less than 2 Trillion Cycles (TC) worth of ICP, based on the [current ICP value](https://www.coinbase.com/converter/icp/xdr), you can top up the ICP balance by sending funds to the principal, e.g., from [https://ic0.app/wallet/](https://ic0.app/wallet/).
     
-    1 TC is the same as 1 XDR (it's a stable currency), which is approximately 1 USD. Canister creation itself will cost 1 TC, and you will need some cycles more to execute commands.
+    1 TC corresponds to 1 XDR at the time of conversion. XDR is the currency symbol of the IMF SDR, a basket of five fiat currencies, corresponding to 1.33 U.S. dollar at the time of writing. Canister creation itself will cost 1 TC, and you will need some cycles more to execute commands.
     
 4. Create the wallet canister, after that you will get the wallet canister id in the output.
     
@@ -58,7 +58,10 @@ dre <key-params> trustworthy-metrics <wallet-canister-id> <start-at-timestamp> [
 
 Arguments explanation:
 
-1. `wallet-canister-id` - id of the created wallet canister created in the step 4 above
+1. `wallet-canister-id` - id of the created wallet canister created in the step 4 above, or obtained by
+   ```bash
+    dfx identity --network ic get-wallet
+    ```
 2. `start-at-timestamp` - used for filtering the output. To get all metrics, provide 0
 3. `subnet-id` - subnets to query, if empty will provide metrics for all subnets
 4. `key-params` - depending on which identity you used to deploy the wallet canister you have two options:
@@ -73,7 +76,7 @@ If you used a purely new identity (which is advised since the tool can then para
     
 2. replace `<key-params>` in the command with something like: `--private-key-pem identity.pem`
 
-If you used an HSM then replace `<key-params>` with: `-hsm-slot 0 --hsm-key-id 0 --hsm-pin $(cat <pin-file>)`. Note that the HSM is less parallel than the key file due to hardware limits, so getting metrics with an HSM will be a bit slower.
+If you used an HSM then replace `<key-params>` with: `--hsm-slot 0 --hsm-key-id 0 --hsm-pin $(cat <pin-file>)`. Note that the HSM is less parallel than the key file due to hardware limits, so getting metrics with an HSM will be a bit slower.
 
 Even if created the wallet canister with an HSM you can still add another file-based controller to the wallet canister:
 
@@ -103,8 +106,9 @@ dre --private-key-pem identity.pem trustworthy-metrics nanx4-baaaa-aaaap-qb4sq-c
 
 Or with an HSM:
 ```bash
-dre --private-key-pem identity.pem trustworthy-metrics nanx4-baaaa-aaaap-qb4sq-cai 0 > data.json
+dre --hsm-slot 0 --hsm-key-id 0 --hsm-pin "<pin>" trustworthy-metrics nanx4-baaaa-aaaap-qb4sq-cai 0 > data.json
 ```
 
 You can check some examples of the analytics possible with the IC Mainnet data in the following [Jupyter Notebook](./TrustworthyMetricsAnalytics.ipynb)
-If you don't have Jupyter notebooks locally, you can use [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/dfinity/dre/main?labpath=docs%2Ftrustworthy-metrics%2FTrustworthyMetricsAnalytics.ipynb) to run it online.
+
+If you don't have Jupyter notebooks locally, you can use [Google Colaboratory](https://colab.research.google.com/github/dfinity/dre/blob/main/docs/trustworthy-metrics/TrustworthyMetricsAnalytics.ipynb) or [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/dfinity/dre/main?labpath=docs%2Ftrustworthy-metrics%2FTrustworthyMetricsAnalytics.ipynb) to run it online for free.

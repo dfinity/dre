@@ -1,15 +1,11 @@
 #!/usr/bin/env python3
 import argparse
+import base64
 import logging
 import os
-import tempfile
-from pathlib import Path
-from pprint import pprint
 
 import requests
 import yaml
-from git import Repo
-from git.remote import Remote
 
 SCRIPT_NAME = "boundary-nodes-updater"
 
@@ -23,62 +19,32 @@ def get_logger():
 def parse():
     parser = argparse.ArgumentParser(description="Script to push boundary nodes to service discovery")
     parser.add_argument("sd_url", help="Service discovery url, i.e. http://localhost:8000")
-    parser.add_argument("repo_key", help="Key to access the repo")
 
     return parser.parse_args()
-
-
-def git_sparse_checkout(repo_url, dir_path, branch, checked_out):
-    repo = Repo.init(dir_path)
-    origin = Remote(repo, "origin")
-    if not origin.exists():
-        Remote.create(repo, "origin", repo_url)
-
-    git = repo.git()
-    git.remote()
-    git.config("core.sparseCheckout", "true")
-    git.config("pull.rebase", "true")
-
-    sparse_checkout_path = Path(dir_path) / ".git/info/sparse-checkout"
-    for p in checked_out:
-        # Will overwrite everything in the file everytime
-        with open(sparse_checkout_path, "w") as f:
-            f.write(p)
-
-    git.pull("--depth", "1", "origin", branch)
-
-
-def git_checkout(repo_url, dir_path, branch):
-    repo = Repo.init(dir_path)
-    origin = Remote(repo, "origin")
-    if not origin.exists():
-        Remote.create(repo, "origin", repo_url)
-    origin.pull(f"refs/heads/{branch}:refs/heads/origin")
 
 
 def main():
     args = parse()
     logging = get_logger()
-    # TMP_DIR = "/tmp/boundary-nodes-scraping-config/"
-    TMP_DIR = tempfile.TemporaryDirectory()
-    TMP_DIR_PATH = TMP_DIR.name
-    RELEASE_REPO_DIR = Path(TMP_DIR_PATH) / "release"
 
-    key = args.repo_key.strip()
-
-    git_sparse_checkout(
-        f"https://oauth2:{key}@gitlab.com/dfinity-lab/core/release.git",
-        RELEASE_REPO_DIR,
-        "main",
-        ["deployments/boundary-nodes/env/"],
-    )
+    key = os.environ.get("RELEASE_REPO_KEY", "")
+    if not key:
+        logging.error("RELEASE_REPO_KEY environment variable not found.")
+        exit(1)
 
     # envs = next(os.walk(RELEASE_REPO_DIR / "deployments" / "boundary-nodes" / "env"))[1]
     envs = ["prod"]
     raw_hosts = {}
     for env in envs:
-        with open(RELEASE_REPO_DIR / f"deployments/boundary-nodes/env/{env}/hosts.yml") as f:
-            raw_hosts[env] = yaml.safe_load(f.read())["boundary"]["hosts"]
+        response = requests.get(
+            f"https://gitlab.com/api/v4/projects/29756090/repository/files/deployments%2Fboundary-nodes%2Fenv%2F{env}%2Fhosts.yml?ref=main",
+            headers={"PRIVATE-TOKEN": key},
+        )
+        if response.status_code != 200:
+            logging.error("Couldn't fetch code due to error: %s", response.text)
+            exit(1)
+        content = base64.b64decode(response.json()["content"])
+        raw_hosts[env] = yaml.safe_load(content.decode())["boundary"]["hosts"]
 
     hosts = {}
     for env in envs:
@@ -119,12 +85,12 @@ def main():
             response = requests.post(args.sd_url, json=guest)
 
             if response.status_code == 400:
-                logging.warning(f"GuestOS Node {name} already exists in service discovery: error {response.text}")
+                logging.warning("GuestOS Node %s already exists in service discovery: error %s", name, response.text)
             elif response.status_code == 200:
-                logging.info(f"GuestOS Node {name} added to service discovery")
+                logging.info("GuestOS Node %s added to service discovery", name)
             else:
-                logging.error(f"Failed to add GuestOS Node {name} to service discovery: error {response.json()}")
-                os.exit(1)
+                logging.error("Failed to add GuestOS Node %s to service discovery: error %s", name, response.json())
+                exit(1)
 
             host = {
                 "name": f"{name}-host",
@@ -141,13 +107,11 @@ def main():
             response = requests.post(args.sd_url, json=host)
 
             if response.status_code == 400:
-                logging.warning(f"HostOS Node {name} already exists in service discovery: error {response.text}")
+                logging.warning("HostOS Node %s already exists in service discovery: error %s", name, response.text)
             elif response.status_code == 200:
-                logging.info(f"HostOS Node {name} added to service discovery")
+                logging.info("HostOS Node %s added to service discovery", name)
             else:
-                logging.error(f"Failed to add HostOS Node {name} to service discovery: error {response.json()}")
-
-    TMP_DIR.cleanup()
+                logging.error("Failed to add HostOS Node %s to service discovery: error %s", name, response.json())
 
 
 if __name__ == "__main__":

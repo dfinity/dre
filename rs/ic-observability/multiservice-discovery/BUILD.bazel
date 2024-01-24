@@ -7,6 +7,15 @@ DEPS = [
     "//rs/ic-observability/multiservice-discovery-shared"
 ]
 
+DEV_DEPENDENCIES = [
+    "@crate_index_dre//:assert_cmd",
+    "@crate_index_dre//:tokio",
+    "@crate_index_dre//:tempdir",
+    "@crate_index_dre//:anyhow",
+    "@crate_index_dre//:reqwest",
+    "@crate_index_dre//:serde_json",
+]
+
 rust_binary(
     name = "multiservice-discovery",
     srcs = glob(["src/**/*.rs"]),
@@ -40,3 +49,15 @@ rust_test(
         normal_dev = True,
     ) + DEPS,
 )
+
+rust_test(
+    name = "prom_targets_tests",
+    srcs = ["tests/tests.rs"],
+    data = [":multiservice-discovery"] + glob(["tests/test_data/**"]),
+    proc_macro_deps = all_crate_deps(
+        proc_macro_dev = True,
+    ),
+    deps = all_crate_deps(
+        normal_dev = True,
+    ) + DEPS + DEV_DEPENDENCIES,
+    )
