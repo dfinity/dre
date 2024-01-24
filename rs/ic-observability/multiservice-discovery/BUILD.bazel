@@ -4,11 +4,11 @@ load("@//rs:oci_images.bzl", "rust_binary_oci_image_rules")
 
 DEPS = [
     "//rs/ic-observability/service-discovery",
-    "//rs/ic-observability/multiservice-discovery-shared",
-    "//rs/archive-utils",
+    "//rs/ic-observability/multiservice-discovery-shared"
 ]
 
 DEV_DEPENDENCIES = [
+    "//rs/ic-observability/archive-utils",
     "@crate_index_dre//:assert_cmd",
     "@crate_index_dre//:tokio",
     "@crate_index_dre//:tempdir",

@@ -14,9 +14,9 @@ members = [
     "rs/ic-observability/prometheus-config-updater",
     "rs/ic-observability/service-discovery",
     "rs/ic-observability/sns-downloader",
+    "rs/ic-observability/archive-utils",
     "rs/log-fetcher",
     "rs/canister-log-fetcher",
-    "rs/archive-utils",
     "rs/np-notifications",
     "rs/slack-notifications",
 ]
