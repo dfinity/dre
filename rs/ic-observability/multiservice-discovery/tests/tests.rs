@@ -42,7 +42,6 @@ mod tests {
             }
         }
     }
-
     #[test]
     fn prom_targets_tests() {
         let rt = Runtime::new().unwrap();
