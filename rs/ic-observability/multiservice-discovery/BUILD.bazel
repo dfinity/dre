@@ -1,6 +1,9 @@
 load("@crate_index_dre//:defs.bzl", "aliases", "all_crate_deps")
 load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_test")
 load("@//rs:oci_images.bzl", "rust_binary_oci_image_rules")
+load("//rs/ic-observability/multiservice-discovery:mainnet_registry.bzl", "mainnet_registry")
+
+mainnet_registry(name = "mainnet_registry")
 
 DEPS = [
     "//rs/ic-observability/service-discovery",
