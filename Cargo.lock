@@ -3066,7 +3066,7 @@ dependencies = [
  "httpdate",
  "itoa",
  "pin-project-lite",
- "socket2 0.5.5",
+ "socket2 0.4.10",
  "tokio",
  "tower-service",
  "tracing",
@@ -4177,7 +4177,7 @@ dependencies = [
  "itertools 0.12.0",
  "lazy_static",
  "log",
- "prometheus-http-query 0.4.2",
+ "prometheus-http-query",
  "regex",
  "registry-canister",
  "reqwest",
@@ -5827,7 +5827,7 @@ dependencies = [
  "ic-async-utils",
  "ic-metrics",
  "obs-canister-clients",
- "prometheus-http-query 0.6.7",
+ "prometheus-http-query",
  "service-discovery",
  "slog",
  "slog-async",
@@ -6678,19 +6678,6 @@ dependencies = [
  "slog-async",
  "slog-term",
  "tokio",
- "url",
-]
-
-[[package]]
-name = "prometheus-http-query"
-version = "0.4.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6886b96a7a96d2a7cc0a1d69b20fa083cf5792982afe799dcdd05468bc51f351"
-dependencies = [
- "reqwest",
- "serde",
- "serde_json",
- "time",
  "url",
 ]
 
