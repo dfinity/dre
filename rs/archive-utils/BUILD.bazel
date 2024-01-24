@@ -4,7 +4,7 @@ package(default_visibility = ["//visibility:public"])
 
 DEPS = []
 
-rust_binary(
+rust_library(
     name = "archive-utils",
     srcs = glob(["src/**/*.rs"]),
     aliases = aliases(),
