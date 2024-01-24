@@ -11,7 +11,7 @@ URL = "https://github.com/dfinity/dre/raw/ic-registry-mainnet/rs/ic-observabilit
 
 def _mainnet_registry_impl(repository_ctx):
     repository_ctx.report_progress("Fetching " + repository_ctx.name)
-    repository_ctx.download(url = URL, output = "mainnet_registry", sha256 = SHA256[platform], executable = False)
+    repository_ctx.download(url = URL, output = "mainnet_registry", executable = False)
     repository_ctx.file("BUILD.bazel", MAINNET_REGISTRY_BUILD, executable = False)
 
 _mainnet_registry = repository_rule(
