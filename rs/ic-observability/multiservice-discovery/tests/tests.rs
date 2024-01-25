@@ -13,7 +13,7 @@ mod tests {
     const CRAGO_BIN_PATH: &str = "multiservice-discovery";
     const CRAGO_DATA_PATH: &str = "tests/test_data";
     const BAZEL_BIN_PATH: &str = "rs/ic-observability/multiservice-discovery/multiservice-discovery";
-    const BAZEL_DATA_PATH: &str = "/external/mainnet_registry";
+    const BAZEL_DATA_PATH: &str = "external/mainnet_registry";
 
     const REGISTRY_MAINNET_URL: &str = "https://github.com/dfinity/dre/raw/ic-registry-mainnet/rs/ic-observability/multiservice-discovery/tests/test_data/mercury.tar.gz";
 
