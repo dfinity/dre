@@ -18,6 +18,12 @@ http_archive(
     urls = ["https://github.com/dfinity/dre/raw/ic-registry-mainnet/rs/ic-observability/multiservice-discovery/tests/test_data/mercury.tar.gz"]
 )
 
+filegroup(
+    name = "mainnet_registry_data",
+    srcs = ["@mainnet_registry//:mercury.tar.gz"],
+    visibility = ["//visibility:public"],
+)
+
 load("@bazel_skylib//:workspace.bzl", "bazel_skylib_workspace")
 
 bazel_skylib_workspace()
