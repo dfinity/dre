@@ -11,6 +11,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/workflows/setup-bazel
+        name: Setup bazel
 
       ########################################
       # Build and test
@@ -25,7 +26,9 @@ jobs:
             echo "GIT_HASH=$GITHUB_SHA" >> "$GITHUB_ENV"  # Embed commit SHA as GIT_HASH
           fi
       - run: bazel build ...
+        name: Building
       - run: bazel test ...
+        name: Testing
 
       ########################################
       # Prepare release
