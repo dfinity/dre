@@ -44,6 +44,18 @@ mod tests {
     }
     #[test]
     fn prom_targets_tests() {
+
+        let output = Command::new("ls")
+        .arg("-R")
+        .output()
+        .expect("Failed to execute command");
+
+        // Print the output as a UTF-8 string
+        if !output.stdout.is_empty() {
+            let result = String::from_utf8_lossy(&output.stdout);
+            println!("{}", result);
+        }
+
         let rt = Runtime::new().unwrap();
         let mut args = vec![
             "--nns-url",
