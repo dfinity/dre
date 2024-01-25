@@ -1,124 +1,95 @@
-use std::{collections::BTreeMap, sync::Arc};
-
+use super::WebResult;
+use crate::definition::Definition;
+use multiservice_discovery_shared::builders::prometheus_config_structure::{map_target_group, PrometheusStaticConfig};
+use multiservice_discovery_shared::contracts::target::{map_to_target_dto, TargetDto};
 use service_discovery::{
     job_types::{JobType, NodeOS},
-    jobs::Job,
     IcServiceDiscovery,
 };
 use slog::Logger;
+use std::{collections::BTreeMap, sync::Arc};
 use tokio::sync::Mutex;
 use warp::reply::Reply;
-
-use crate::definition::Definition;
-use multiservice_discovery_shared::{
-    builders::prometheus_config_structure::{map_target_group, PrometheusStaticConfig},
-    contracts::target::TargetDto,
-};
-
-use super::WebResult;
 
 pub struct ExportDefinitionConfigBinding {
     pub definitions: Arc<Mutex<Vec<Definition>>>,
     pub log: Logger,
 }
 
-pub async fn export_prometheus_config(
-    binding: ExportDefinitionConfigBinding,
-) -> WebResult<impl Reply> {
+pub async fn export_prometheus_config(binding: ExportDefinitionConfigBinding) -> WebResult<impl Reply> {
     let definitions = binding.definitions.lock().await;
 
-    let all_jobs = [
-        JobType::Replica,
-        JobType::Orchestrator,
-        JobType::NodeExporter(NodeOS::Guest),
-        JobType::NodeExporter(NodeOS::Host),
-        JobType::MetricsProxy,
-    ];
-
-    let mut total_targets: Vec<TargetDto> = vec![];
+    let mut ic_node_targets: Vec<TargetDto> = vec![];
 
     for def in definitions.iter() {
-        for job_type in all_jobs {
-            let targets = match def
-                .ic_discovery
-                .get_target_groups(job_type, binding.log.clone())
-            {
+        for job_type in JobType::all_for_ic_nodes() {
+            let targets = match def.ic_discovery.get_target_groups(job_type, binding.log.clone()) {
                 Ok(targets) => targets,
                 Err(_) => continue,
             };
 
-            for target in targets {
-                if let Some(entry) = total_targets
-                    .iter_mut()
-                    .find(|t| t.node_id == target.node_id)
-                {
-                    entry.jobs.push(job_type);
+            targets.iter().for_each(|target_group| {
+                if let Some(target) = ic_node_targets.iter_mut().find(|t| t.node_id == target_group.node_id) {
+                    target.jobs.push(job_type);
                 } else {
-                    let mut mapped = Into::<TargetDto>::into(&target);
-                    mapped.ic_name = def.name.clone();
-                    total_targets.push(TargetDto {
-                        jobs: vec![job_type],
-                        ..mapped
-                    });
+                    ic_node_targets.push(map_to_target_dto(
+                        target_group,
+                        job_type,
+                        BTreeMap::new(),
+                        target_group.node_id.to_string(),
+                        def.name.clone(),
+                    ));
                 }
-            }
+            });
         }
     }
 
-    let mut total_set = map_target_group(total_targets.into_iter().collect());
+    let ic_node_targets: Vec<PrometheusStaticConfig> = map_target_group(ic_node_targets.into_iter().collect());
 
-    definitions.iter().for_each(|def| {
-        def.boundary_nodes.iter().for_each(|bn| {
-            // Boundary nodes do not get the metrics-proxy installed.
-            if bn.job_type == JobType::MetricsProxy {
-                return;
-            }
-
-            // If this boundary node is under the test environment,
-            // and the job is Node Exporter, then skip adding this
-            // target altogether.
-            if bn
-                .custom_labels
-                .iter()
-                .any(|(k, v)| k.as_str() == "env" && v.as_str() == "test")
-                && bn.job_type == JobType::NodeExporter(NodeOS::Host)
-            {
-                return;
-            }
-
-            let binding = Job::all();
-            let job = binding.iter().find(|j| j._type == bn.job_type).unwrap();
-
-            total_set.insert(PrometheusStaticConfig {
-                targets: bn
-                    .targets
-                    .clone()
+    let boundary_nodes_targets = definitions
+        .iter()
+        .flat_map(|def| {
+            def.boundary_nodes.iter().filter_map(|bn| {
+                // Since boundary nodes have been checked for correct job
+                // type when they were added via POST, then we can trust
+                // the correct job type is at play here.
+                // If, however, this boundary node is under the test environment,
+                // and the job is Node Exporter, then skip adding this
+                // target altogether.
+                if bn
+                    .custom_labels
                     .iter()
-                    .map(|g| {
-                        let mut g = *g;
-                        g.set_port(job.port);
-                        format!("http://{}/{}", g, job.endpoint.trim_start_matches('/'),)
-                    })
-                    .collect(),
-                labels: {
-                    let mut labels = BTreeMap::new();
-                    labels.insert("ic".to_string(), def.name.clone());
-                    labels.insert("name".to_string(), bn.name.clone());
-                    labels.extend(bn.custom_labels.clone());
-                    labels.insert("job".to_string(), bn.job_type.to_string());
-                    labels
-                },
-            });
+                    .any(|(k, v)| k.as_str() == "env" && v.as_str() == "test")
+                    && bn.job_type == JobType::NodeExporter(NodeOS::Host)
+                {
+                    return None;
+                }
+                Some(PrometheusStaticConfig {
+                    targets: bn.targets.clone().iter().map(|g| bn.job_type.url(*g, true)).collect(),
+                    labels: {
+                        BTreeMap::from([
+                            ("ic", def.name.clone()),
+                            ("name", bn.name.clone()),
+                            ("job", bn.job_type.to_string()),
+                        ])
+                        .into_iter()
+                        .map(|(k, v)| (k.to_string(), v))
+                        .chain(bn.custom_labels.clone())
+                        .collect::<BTreeMap<_, _>>()
+                    },
+                })
+            })
         })
-    });
+        .collect();
 
-    let prom_config = serde_json::to_string_pretty(&total_set).unwrap();
+    let total_targets = [ic_node_targets, boundary_nodes_targets].concat();
 
-    let status_code = if !total_set.is_empty() {
-        warp::http::StatusCode::OK
-    } else {
-        warp::http::StatusCode::NOT_FOUND
-    };
-
-    Ok(warp::reply::with_status(prom_config, status_code))
+    Ok(warp::reply::with_status(
+        serde_json::to_string_pretty(&total_targets).unwrap(),
+        if !total_targets.is_empty() {
+            warp::http::StatusCode::OK
+        } else {
+            warp::http::StatusCode::NOT_FOUND
+        },
+    ))
 }
