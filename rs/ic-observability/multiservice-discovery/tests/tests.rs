@@ -15,7 +15,7 @@ mod tests {
     const BAZEL_BIN_PATH: &str = "rs/ic-observability/multiservice-discovery/multiservice-discovery";
     const BAZEL_DATA_PATH: &str = "rs/ic-observability/multiservice-discovery/tests/test_data";
 
-    const REGISTRY_MAINNET_URL: &str = "https://github.com/dfinity/dre/raw/ic-registry-mainnet/rs/ic-observability/multiservice-discovery/tests/test_data/mercury.gz";
+    const REGISTRY_MAINNET_URL: &str = "https://github.com/dfinity/dre/raw/ic-registry-mainnet/rs/ic-observability/multiservice-discovery/tests/test_data/mercury.tar.gz";
 
     async fn fetch_targets() -> anyhow::Result<BTreeSet<PrometheusStaticConfig>> {
         let timeout_duration = Duration::from_secs(300);

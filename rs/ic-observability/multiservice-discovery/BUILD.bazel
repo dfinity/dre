@@ -1,6 +1,13 @@
 load("@crate_index_dre//:defs.bzl", "aliases", "all_crate_deps")
 load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_test")
 load("@//rs:oci_images.bzl", "rust_binary_oci_image_rules")
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "download_and_extract")
+
+download_and_extract(
+    name = "mainnet_registry",
+    urls = ["https://github.com/dfinity/dre/raw/ic-registry-mainnet/rs/ic-observability/multiservice-discovery/tests/test_data/mercury.tar.gz"],
+    download_only = True,
+)
 
 DEPS = [
     "//rs/ic-observability/service-discovery",
@@ -54,7 +61,7 @@ rust_test(
 rust_test(
     name = "prom_targets_tests",
     srcs = ["tests/tests.rs"],
-    data = [":multiservice-discovery"],
+    data = [":multiservice-discovery", "@mainnet_registry//:mercury.tar.gz"],
     proc_macro_deps = all_crate_deps(
         proc_macro_dev = True,
     ),
