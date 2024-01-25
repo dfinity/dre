@@ -1,14 +1,10 @@
-use base64::{engine::general_purpose as b64, Engine as _};
-use std::error::Error;
-use std::fmt::{Display, Error as FmtError, Formatter};
+use slog::{error, info, Logger};
+
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::thread::JoinHandle;
 use std::time::Duration;
 
-use ic_crypto_utils_threshold_sig_der::parse_threshold_sig_key_from_der;
-use service_discovery::registry_sync::nns_reachable;
-use slog::{error, Logger};
 use tokio::sync::Mutex;
 use warp::Reply;
 
@@ -16,7 +12,9 @@ use crate::definition::{wrap, Definition};
 use crate::server_handlers::dto::DefinitionDto;
 use crate::server_handlers::WebResult;
 
-pub struct AddDefinitionBinding {
+use super::dto::BadDtoError;
+
+pub(crate) struct AddDefinitionBinding {
     pub definitions: Arc<Mutex<Vec<Definition>>>,
     pub log: Logger,
     pub registry_path: PathBuf,
@@ -26,92 +24,58 @@ pub struct AddDefinitionBinding {
     pub handles: Arc<Mutex<Vec<JoinHandle<()>>>>,
 }
 
-#[derive(Debug)]
-pub(crate) enum AddDefinitionError {
-    InvalidPublicKey(String, std::io::Error),
-    AlreadyExists(String),
-    NNSUnreachable(String),
-}
+async fn _add_definition(
+    tentative_definition: DefinitionDto,
+    binding: AddDefinitionBinding,
+) -> Result<(), BadDtoError> {
+    let mut existing_definitions = binding.definitions.lock().await;
 
-impl Error for AddDefinitionError {}
-
-impl Display for AddDefinitionError {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        match self {
-            Self::InvalidPublicKey(name, e) => {
-                write!(f, "public key of definition {} is invalid: {}", name, e)
-            }
-            Self::AlreadyExists(name) => write!(f, "definition {} already exists", name),
-            Self::NNSUnreachable(name) => {
-                write!(f, "cannot reach any of the NNS nodes specified in definition {}", name)
-            }
-        }
+    let dname = tentative_definition.name.clone();
+    if existing_definitions.iter().any(|d| d.name == tentative_definition.name) {
+        return Err(BadDtoError::AlreadyExists(dname));
     }
-}
 
-async fn _add_definition(definition: DefinitionDto, binding: AddDefinitionBinding) -> Result<(), AddDefinitionError> {
-    let public_key = match definition.public_key {
-        Some(pk) => {
-            let decoded = b64::STANDARD.decode(pk).unwrap();
-
-            match parse_threshold_sig_key_from_der(&decoded) {
-                Ok(key) => Some(key),
-                Err(e) => {
-                    error!(
-                        binding.log,
-                        "Submitted definition {} has invalid public key", definition.name
-                    );
-                    return Err(AddDefinitionError::InvalidPublicKey(definition.name, e));
-                }
-            }
-        }
-        None => None,
+    let new_definition = match tentative_definition
+        .try_into_definition(
+            binding.log.clone(),
+            binding.registry_path.clone(),
+            binding.poll_interval,
+            binding.registry_query_timeout,
+        )
+        .await
+    {
+        Ok(def) => def,
+        Err(e) => return Err(e),
     };
+    info!(binding.log, "Adding new definition {} to existing", dname);
+    existing_definitions.push(new_definition.clone());
 
-    let mut definitions = binding.definitions.lock().await;
-
-    if definitions.iter().any(|d| d.name == definition.name) {
-        error!(binding.log, "Submitted definition {} already exists", definition.name);
-        return Err(AddDefinitionError::AlreadyExists(definition.name));
-    }
-
-    if !nns_reachable(definition.nns_urls.clone()).await {
-        error!(binding.log, "Submitted definition {} is not reachable", definition.name);
-        return Err(AddDefinitionError::NNSUnreachable(definition.name));
-    }
-
-    let (stop_signal_sender, stop_signal_rcv) = crossbeam::channel::bounded::<()>(0);
-    let definition = Definition::new(
-        definition.nns_urls,
-        binding.registry_path.clone(),
-        definition.name.clone(),
-        binding.log,
-        public_key,
-        binding.poll_interval,
-        stop_signal_rcv,
-        binding.registry_query_timeout,
-        stop_signal_sender,
-    );
-
-    definitions.push(definition.clone());
-
-    let ic_handle = std::thread::spawn(wrap(definition, binding.rt));
-    let mut handles = binding.handles.lock().await;
-    handles.push(ic_handle);
+    let mut existing_handles = binding.handles.lock().await;
+    // ...then start and record the handles for the new definitions.
+    info!(binding.log, "Starting thread for definition: {:?}", dname);
+    let joinhandle = std::thread::spawn(wrap(new_definition, binding.rt));
+    existing_handles.push(joinhandle);
 
     Ok(())
 }
 
 pub async fn add_definition(definition: DefinitionDto, binding: AddDefinitionBinding) -> WebResult<impl Reply> {
+    let log = binding.log.clone();
     let dname = definition.name.clone();
     match _add_definition(definition, binding).await {
-        Ok(_) => Ok(warp::reply::with_status(
-            format!("Definition {} added successfully", dname),
-            warp::http::StatusCode::OK,
-        )),
-        Err(e) => Ok(warp::reply::with_status(
-            format!("Definition {} could not be added: {}", dname, e),
-            warp::http::StatusCode::BAD_REQUEST,
-        )),
+        Ok(_) => {
+            info!(log, "Added new definition {} to existing ones", dname);
+            Ok(warp::reply::with_status(
+                format!("Definition {} added successfully", dname),
+                warp::http::StatusCode::OK,
+            ))
+        }
+        Err(e) => {
+            error!(log, "Definition could not be added: {}", e);
+            Ok(warp::reply::with_status(
+                format!("Definition could not be added: {}", e),
+                warp::http::StatusCode::BAD_REQUEST,
+            ))
+        }
     }
 }

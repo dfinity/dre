@@ -1,22 +1,18 @@
-use base64::{engine::general_purpose as b64, Engine as _};
 use std::error::Error;
 use std::fmt::{Display, Error as FmtError, Formatter};
 
-use ic_crypto_utils_threshold_sig_der::parse_threshold_sig_key_from_der;
-use service_discovery::registry_sync::nns_reachable;
 use slog::{error, info};
 
 use warp::Reply;
 
 use crate::definition::{wrap, Definition};
-use crate::server_handlers::add_definition_handler::AddDefinitionError as ReplaceDefinitionError;
-use crate::server_handlers::dto::DefinitionDto;
+use crate::server_handlers::dto::{BadDtoError, DefinitionDto};
 use crate::server_handlers::AddDefinitionBinding as ReplaceDefinitionsBinding;
 use crate::server_handlers::WebResult;
 
 #[derive(Debug)]
 struct ReplaceDefinitionsError {
-    errors: Vec<ReplaceDefinitionError>,
+    errors: Vec<BadDtoError>,
 }
 
 impl Error for ReplaceDefinitionsError {}
@@ -35,7 +31,6 @@ async fn _replace_definitions(
     binding: ReplaceDefinitionsBinding,
 ) -> Result<(), ReplaceDefinitionsError> {
     let mut existing_definitions = binding.definitions.lock().await;
-    let mut existing_handles = binding.handles.lock().await;
 
     // Move all existing definitions to backed up lists.
     let mut backed_up_definitions: Vec<Definition> = vec![];
@@ -49,52 +44,24 @@ async fn _replace_definitions(
     // as they happen.  Do not start their threads yet.
     let mut error = ReplaceDefinitionsError { errors: vec![] };
     for tentative_definition in tentative_definitions {
-        let public_key = match tentative_definition.public_key {
-            Some(pk) => {
-                let decoded = b64::STANDARD.decode(pk).unwrap();
-
-                match parse_threshold_sig_key_from_der(&decoded) {
-                    Ok(key) => Some(key),
-                    Err(e) => {
-                        error!(
-                            binding.log,
-                            "Submitted definition {} has invalid public key", tentative_definition.name
-                        );
-                        error
-                            .errors
-                            .push(ReplaceDefinitionError::InvalidPublicKey(tentative_definition.name, e));
-                        continue;
-                    }
-                }
+        let dname = tentative_definition.name.clone();
+        let new_definition = match tentative_definition
+            .try_into_definition(
+                binding.log.clone(),
+                binding.registry_path.clone(),
+                binding.poll_interval,
+                binding.registry_query_timeout,
+            )
+            .await
+        {
+            Ok(def) => def,
+            Err(e) => {
+                error.errors.push(e);
+                continue;
             }
-            None => None,
         };
-
-        if !nns_reachable(tentative_definition.nns_urls.clone()).await {
-            error!(
-                binding.log,
-                "Submitted definition {} is not reachable", tentative_definition.name
-            );
-            error
-                .errors
-                .push(ReplaceDefinitionError::NNSUnreachable(tentative_definition.name));
-            continue;
-        }
-
-        let (stop_signal_sender, stop_signal_rcv) = crossbeam::channel::bounded::<()>(0);
-        let def = Definition::new(
-            tentative_definition.nns_urls,
-            binding.registry_path.clone(),
-            tentative_definition.name,
-            binding.log.clone(),
-            public_key,
-            binding.poll_interval,
-            stop_signal_rcv,
-            binding.registry_query_timeout,
-            stop_signal_sender,
-        );
-        info!(binding.log, "Adding new definition {} to existing", def.name);
-        existing_definitions.push(def);
+        info!(binding.log, "Adding new definition {} to existing", dname);
+        existing_definitions.push(new_definition);
     }
 
     // Was there an error?  Restore the definitions and handles to their
@@ -118,6 +85,7 @@ async fn _replace_definitions(
         old_definition.stop_signal_sender.send(()).unwrap();
     }
     // ...and join their threads, emptying the handles vector...
+    let mut existing_handles = binding.handles.lock().await;
     for old_handle in existing_handles.drain(..) {
         info!(binding.log, "Waiting for thread to finish...");
         if let Err(e) = old_handle.join() {
@@ -141,14 +109,26 @@ pub async fn replace_definitions(
     definitions: Vec<DefinitionDto>,
     binding: ReplaceDefinitionsBinding,
 ) -> WebResult<impl Reply> {
+    let log = binding.log.clone();
+    let dnames = definitions
+        .iter()
+        .map(|d| d.name.clone())
+        .collect::<Vec<String>>()
+        .join(", ");
     match _replace_definitions(definitions, binding).await {
-        Ok(_) => Ok(warp::reply::with_status(
-            "Definitions added successfully".to_string(),
-            warp::http::StatusCode::OK,
-        )),
-        Err(error) => Ok(warp::reply::with_status(
-            format!("Definitions could not be replaced:\n{}", error),
-            warp::http::StatusCode::BAD_REQUEST,
-        )),
+        Ok(_) => {
+            info!(log, "Added new definitions {} to existing ones", dnames);
+            Ok(warp::reply::with_status(
+                format!("Definitions {} added successfully", dnames),
+                warp::http::StatusCode::OK,
+            ))
+        }
+        Err(e) => {
+            error!(log, "Definitions could not be added:\n{}", e);
+            Ok(warp::reply::with_status(
+                format!("Definitions could not be replaced:\n{}", e),
+                warp::http::StatusCode::BAD_REQUEST,
+            ))
+        }
     }
 }
