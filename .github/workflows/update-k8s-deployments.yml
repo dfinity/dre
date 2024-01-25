@@ -4,7 +4,7 @@ on:
 
 jobs:
   update:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-20.04
     steps:
       - env:
           GITLAB_API_TOKEN: ${{ secrets.GITLAB_API_TOKEN }}

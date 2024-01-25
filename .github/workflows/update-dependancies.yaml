@@ -6,12 +6,9 @@ on:
 
 jobs:
   update:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-20.04
     steps:
       - uses: ./.github/workflows/setup-bazel
-
-      - name: Build
-        run: bazel build ...
 
       ########################################
       # Once per night, update dependencies and completely delete and recreate bazel cache
@@ -20,6 +17,7 @@ jobs:
         with:
           python-version: "3.11"
       - uses: snok/install-poetry@v1
+
       - name: Completely delete bazel cache then update deps
         run: |
           set -eExou pipefail
@@ -34,6 +32,10 @@ jobs:
           poetry update
           ./bin/poetry-export.sh
           CARGO_BAZEL_REPIN=true bazel query //...
+
+      - name: Build
+        run: bazel buld ...
+
       - uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit-message: "chore: Update dependencies"
