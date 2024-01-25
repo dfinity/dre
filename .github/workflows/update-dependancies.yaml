@@ -20,7 +20,7 @@ jobs:
         with:
           python-version: "3.11"
       - uses: snok/install-poetry@v1
-      - name: If running on schedule (at night) and on main, completely delete bazel cache then update deps
+      - name: Completely delete bazel cache then update deps
         run: |
           set -eExou pipefail
           #
@@ -36,7 +36,7 @@ jobs:
           CARGO_BAZEL_REPIN=true bazel query //...
       - uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "chore: Update dependencies"
+          commit-message: "chore: Update dependencies"
           branch: bot-update-deps
 
       ########################################
