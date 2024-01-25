@@ -4,6 +4,7 @@ use std::{path::PathBuf, sync::Arc};
 use clap::Parser;
 use futures_util::FutureExt;
 use humantime::parse_duration;
+use slog::{error, info};
 use slog::{o, Drain, Logger};
 use tokio::runtime::Runtime;
 use tokio::sync::oneshot::{self};
@@ -13,7 +14,7 @@ use url::Url;
 use definition::{wrap, Definition};
 use ic_async_utils::shutdown_signal;
 
-use crate::server_handlers::prepare_server;
+use crate::server_handlers::Server;
 
 mod definition;
 mod server_handlers;
@@ -38,27 +39,31 @@ fn main() {
     let handles = Arc::new(Mutex::new(handles));
 
     //Configure server
-    let server_handle = rt.spawn(prepare_server(
-        oneshot_receiver,
+    let server = Server::new(
         log.clone(),
         definitions.clone(),
-        cli_args,
+        cli_args.poll_interval,
+        cli_args.registry_query_timeout,
+        cli_args.targets_dir,
         handles.clone(),
         rt.handle().clone(),
-    ));
+    );
+    let server_handle = rt.spawn(server.run(oneshot_receiver));
 
     rt.block_on(shutdown_signal);
     //Stop the server
     oneshot_sender.send(()).unwrap();
 
-    let mut handles = rt.block_on(handles.lock());
-
-    for definition in rt.block_on(definitions.lock()).iter() {
+    for definition in rt.block_on(definitions.lock()).drain(..) {
+        info!(log, "Sending termination signal to definition {}", definition.name);
         definition.stop_signal_sender.send(()).unwrap();
     }
 
-    while let Some(handle) = handles.pop() {
-        handle.join().unwrap();
+    for handle in rt.block_on(handles.lock()).drain(..) {
+        info!(log, "Joining definition thread");
+        if let Err(e) = handle.join() {
+            error!(log, "Could not join thread handle of definition being removed: {:?}", e);
+        }
     }
 
     rt.block_on(server_handle).unwrap();

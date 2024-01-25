@@ -21,10 +21,7 @@ pub async fn add_boundary_node(
 ) -> WebResult<impl Reply> {
     let mut definitions = binding.definitions.lock().await;
 
-    let definition = match definitions
-        .iter_mut()
-        .find(|d| d.name == boundary_node.ic_name)
-    {
+    let definition = match definitions.iter_mut().find(|d| d.name == boundary_node.ic_name) {
         Some(def) => def,
         None => {
             return Ok(warp::reply::with_status(
@@ -46,15 +43,25 @@ pub async fn add_boundary_node(
     };
 
     let job_type = match JobType::from_str(&boundary_node.job_type) {
-        Ok(jt) => jt,
         Err(e) => {
+            // We don't have this job type here.
             return Ok(warp::reply::with_status(
-                format!(
-                    "Job type {} is not supported: {}",
-                    boundary_node.job_type, e
-                ),
+                format!("Job type {} is not known: {}", boundary_node.job_type, e),
                 warp::http::StatusCode::BAD_REQUEST,
-            ))
+            ));
+        }
+        Ok(jt) => {
+            // Forbid addition of any job type not known to be supported by boundary nodes.
+            if !JobType::all_for_boundary_nodes().contains(&jt) {
+                return Ok(warp::reply::with_status(
+                    format!(
+                        "Job type {} is not supported for boundary nodes.",
+                        boundary_node.job_type
+                    ),
+                    warp::http::StatusCode::BAD_REQUEST,
+                ));
+            }
+            jt
         }
     };
 
@@ -66,7 +73,7 @@ pub async fn add_boundary_node(
     });
 
     Ok(warp::reply::with_status(
-        "success".to_string(),
-        warp::http::StatusCode::OK,
+        "".to_string(),
+        warp::http::StatusCode::CREATED,
     ))
 }

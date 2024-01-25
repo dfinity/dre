@@ -1,0 +1,48 @@
+name: Update dependencies
+on:
+  schedule:
+    # * is a special character in YAML so you have to quote this string
+    - cron:  '30 1 * * *'
+
+jobs:
+  update:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: ./.github/workflows/setup-bazel
+
+      ########################################
+      # Once per night, update dependencies and completely delete and recreate bazel cache
+      ########################################
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+      - uses: snok/install-poetry@v1
+
+      - name: Completely delete bazel cache then update deps
+        run: |
+          set -eExou pipefail
+          #
+          # Completely delete bazel cache
+          #
+          sudo rm -rf ~/.cache/bazel/*
+          #
+          # Update dependencies
+          #
+          cargo update
+          poetry update
+          ./bin/poetry-export.sh
+          CARGO_BAZEL_REPIN=true bazel query //...
+
+      - name: Build
+        run: bazel build ...
+
+      - uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit-message: "chore: Update dependencies"
+          branch: bot-update-deps
+
+      ########################################
+      # Optimize bazel cache by hard-linking duplicate files
+      ########################################
+      - name: Optimize bazel cache directory before uploading
+        run: bin/optimize-bazel-cache.sh

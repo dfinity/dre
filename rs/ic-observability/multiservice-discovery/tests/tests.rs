@@ -1,17 +1,19 @@
 #[cfg(test)]
 mod tests {
+    use assert_cmd::cargo::CommandCargoExt;
+    use multiservice_discovery_shared::builders::prometheus_config_structure::{
+        PrometheusStaticConfig, IC_NAME, IC_SUBNET, JOB,
+    };
     use std::collections::{BTreeMap, BTreeSet};
     use std::fs;
     use std::path::Path;
     use std::process::Command;
-    use assert_cmd::cargo::CommandCargoExt;
     use std::time::Duration;
     use tokio::runtime::Runtime;
     use tokio::time::sleep;
-    use multiservice_discovery_shared::builders::prometheus_config_structure::{PrometheusStaticConfig, JOB, IC_NAME, IC_SUBNET};
 
-    const CRAGO_BIN_PATH: &str = "multiservice-discovery";
-    const CRAGO_DATA_PATH: &str = "tests/test_data";
+    const CARGO_BIN_PATH: &str = "multiservice-discovery";
+    const CARGO_DATA_PATH: &str = "tests/test_data";
     const BAZEL_BIN_PATH: &str = "rs/ic-observability/multiservice-discovery/multiservice-discovery";
     const BAZEL_DATA_PATH: &str = "external/mainnet_registry";
 
@@ -28,7 +30,8 @@ mod tests {
             sleep(Duration::from_secs(5)).await;
 
             let response = reqwest::get("http://localhost:8000/prom/targets").await?.text().await?;
-            let deserialized: Result<BTreeSet<PrometheusStaticConfig>, serde_json::Error> = serde_json::from_str(&response);
+            let deserialized: Result<BTreeSet<PrometheusStaticConfig>, serde_json::Error> =
+                serde_json::from_str(&response);
 
             match deserialized {
                 Ok(mainnet_targets) => {
@@ -87,9 +90,8 @@ mod tests {
                         new_set.insert(value);
                         acc.insert(key,new_set);
                     }
-                }
-                acc
-            });
+                    acc
+                });
 
         assert_eq!(
             labels_set.get(IC_NAME).unwrap().iter().collect::<Vec<_>>(),

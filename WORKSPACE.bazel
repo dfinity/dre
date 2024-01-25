@@ -172,7 +172,7 @@ oci_register_toolchains(
 load("@rules_oci//oci:pull.bzl", "oci_pull")
 
 oci_pull(
-    # Debian 12 image has a new glibc.
+    # Debian 12 image has a newer glibc than Debian 11 in regular distrolles containers.
     # https://console.cloud.google.com/gcr/images/distroless/global/cc-debian12
     name = "distroless_cc_debian12",
     # Note: this is a "debug" image, which means that it has busybox, so also a shell at /busybox/sh
@@ -183,6 +183,7 @@ oci_pull(
         "linux/amd64",
         "linux/arm64",
     ],
+    reproducible = True,
 )
 
 oci_pull(
@@ -200,10 +201,11 @@ oci_pull(
 )
 
 oci_pull(
-    # tag = "2.43.0-debian-11-r1",
+    # tag = "2.43.0-debian-11-r6",
     name = "bitnami_git_docker_img",
-    digest = "sha256:a8e11f1fdcb57ef7b2ab12995bb28b9060e7dbffa17f75136f523e92f6f270e0",
+    digest = "sha256:405124df0b75c75afc972cd73425838aacbd06a5dc4b7e0a2af4d9d3117163e8",
     image = "index.docker.io/bitnami/git",
+    reproducible = True,
 )
 
 oci_pull(
