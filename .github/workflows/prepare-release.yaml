@@ -1,0 +1,38 @@
+name: Prepare release
+on:
+  workflow_call:
+    inputs:
+      ARTIFACT_NAME:
+        required: true
+        description: "Name of the artifact to download"
+        type: string
+  
+jobs:
+  prepare:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Download built artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: ${{ inputs.ARTIFACT_NAME }}
+
+      - name: Chmod 
+        env:
+          ARTIFACT_NAME: ${{ inputs.ARTIFACT_NAME }}
+        run: chmod +x $ARTIFACT_NAME
+
+      - name: Prepare release
+        # v0.1.15
+        uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          body_path: CHANGELOG.md
+          generate_release_notes: true
+          draft: true
+          prerelease: true
+          files: |
+            release/*
+
+      - uses: geekyeggo/delete-artifact@v4
+        with:
+          name: dre

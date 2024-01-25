@@ -1,0 +1,32 @@
+name: Setup bazel
+description: Reusable action for setting up bazel
+
+runs:
+  using: composite
+  steps:
+    ########################################
+    # Setup
+    ########################################
+    - name: Free Disk Space (Ubuntu)
+      uses: jlumbroso/free-disk-space@v1.3.1
+      with:
+        # this might remove tools that are actually needed,
+        # when set to "true" but frees about 6 GB
+        tool-cache: true
+        large-packages: false  # this is slow
+    - uses: actions/checkout@v4
+    - uses: bazelbuild/setup-bazelisk@v2
+
+    ########################################
+    # Download and unpack cache
+    ########################################
+    - name: Mount bazel cache
+      uses: actions/cache@v3
+      with:
+        path: "~/.cache/bazel"
+        # Configure cache updates
+        # https://github.com/actions/cache/blob/main/tips-and-workarounds.md#update-a-cache
+        # https://github.com/actions/cache/blob/main/examples.md#---bazel
+        key: ${{ runner.os }}-bazel-${{ hashFiles('.bazelversion', '.bazelrc', 'WORKSPACE', 'WORKSPACE.bazel', 'MODULE.bazel', 'Cargo.Bazel.lock') }}
+        restore-keys: |
+            ${{ runner.os }}-bazel-
