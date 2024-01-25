@@ -1,5 +1,5 @@
 
-# Documentation
+# How to Update Documentation
 
 We use MkDocs to generate, serve, and search the team documentation.
 For full documentation visit [mkdocs.org](https://www.mkdocs.org).

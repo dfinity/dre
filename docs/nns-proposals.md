@@ -1,4 +1,4 @@
-# NNS/ic-admin operations
+# Submitting NNS proposals
 
 Most of the commands here can be run in multiple ways. Currently we are putting in the effort to make `dre` as useful as possible. As such it provides support for `dry_run` as default and that can be highly beneficial in most scenarios (for eg. if someone is asking you to submit a proposal for them the best practice way is to run a `dry_run` and ask them to double check the command and the payload that would be submitted) and that is why we recommend using `dre` whenever possible. In some use-cases `dre` cannot help you, and that is when you should use whatever tool/script is at hand.
 
@@ -29,7 +29,7 @@ dre get firewall-rules replica_nodes | jq
 ### Get the Node Rewards Table, used for the Node Provider compensation
 
 ```bash
-ic-admin --nns-url https://ic0.app get-node-rewards-table
+dre get node-rewards-table
 {
   "table": {
     "Asia": {
@@ -37,40 +37,13 @@ ic-admin --nns-url https://ic0.app get-node-rewards-table
 }
 ```
 
-- Alternative
-
-```bash
-dre get node-rewards-table
-```
-
 ### Update the Node Rewards Table
-
-```bash
-ic-admin --nns-url https://ic0.app --use-hsm --pin $(cat ~/.hsm-pin) --key-id 01 --slot 0 propose-to-update-node-rewards-table --proposer $PROPOSER_NEURON_INDEX --summary-file 2022-12-type3.md --updated-node-rewards "$(cat 2022-12-type3-rewards.json)"
-```
-
-- Alternative
 
 ```bash
 dre propose update-node-rewards-table --summary-file 2022-12-type3.md --updated-node-rewards "$(cat 2022-12-type3-rewards.json | jq -c)"
 ```
 
 ### Enable the HTTPs outcalls on a subnet
-
-```bash
-cargo run --bin ic-admin -- --nns-url https://ic0.app/ \	
-	--use-hsm \
-	--pin $(cat ~/.hsm-pin) \
-	--key-id 01 \
-	--slot 0 \
-	propose-to-update-subnet \
-	--proposer  <neuron>  \
-	--features "http_requests" \
-	--subnet uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe \
-	--summary "Enable the HTTPS outcalls feature on the non-whitelisted uzr34 subnet so that the exchange rate canister can query exchange rate data."
-```
-
-- Alternative
 
 ```bash
 dre propose update-subnet \
