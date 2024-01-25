@@ -10,8 +10,8 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-      - uses: ./.github/workflows/setup-bazel
-
+      - uses: .github/workflows/setup-bazel
+        name: Setup bazel
       ########################################
       # Build and test
       ########################################
@@ -37,7 +37,7 @@ jobs:
           name: dre
           path: bazel-out/k8-opt/bin/rs/cli/dre
       - name: Call prepare release
-        uses: ./.github/workflows/prepare-release.yaml
+        uses: .github/workflows/prepare-release.yaml
 
       ########################################
       # Upload container images
@@ -58,7 +58,7 @@ jobs:
       ########################################
       - name: Update k8s deployments
         if: ${{ startsWith(github.ref, 'refs/tags/v') || startsWith(github.ref, 'refs/heads/container') || (github.ref == 'refs/heads/main') }}
-        uses: ./.github/workflows/update-deployments.yaml
+        uses: .github/workflows/update-deployments.yaml
 
       ########################################
       # Optimize bazel cache by hard-linking duplicate files
