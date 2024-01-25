@@ -59,7 +59,7 @@ async fn _add_definition(
     Ok(())
 }
 
-pub async fn add_definition(definition: DefinitionDto, binding: AddDefinitionBinding) -> WebResult<impl Reply> {
+pub(crate) async fn add_definition(definition: DefinitionDto, binding: AddDefinitionBinding) -> WebResult<impl Reply> {
     let log = binding.log.clone();
     let dname = definition.name.clone();
     match _add_definition(definition, binding).await {

@@ -105,7 +105,7 @@ async fn _replace_definitions(
     Ok(())
 }
 
-pub async fn replace_definitions(
+pub(crate) async fn replace_definitions(
     definitions: Vec<DefinitionDto>,
     binding: ReplaceDefinitionsBinding,
 ) -> WebResult<impl Reply> {
