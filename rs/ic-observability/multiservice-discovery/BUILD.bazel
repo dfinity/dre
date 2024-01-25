@@ -4,6 +4,11 @@ load("@//rs:oci_images.bzl", "rust_binary_oci_image_rules")
 
 # Define a custom rule to copy the .zip file as a data dependency
 
+filegroup(
+    name = "mainnet_registry_data",
+    srcs = ["@external//:mercury.tar.gz"],
+    visibility = ["//visibility:public"],
+)
 
 DEPS = [
     "//rs/ic-observability/service-discovery",
