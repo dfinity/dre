@@ -58,8 +58,6 @@ jobs:
       - name: Update k8s deployments
         if: ${{ startsWith(github.ref, 'refs/tags/v') || startsWith(github.ref, 'refs/heads/container') || (github.ref == 'refs/heads/main') }}
         uses: ./.github/workflows/update-deployments.yaml
-        secrets:
-          GITLAB_API_TOKEN: ${{ secrets.GITLAB_API_TOKEN }}
 
       ########################################
       # Optimize bazel cache by hard-linking duplicate files

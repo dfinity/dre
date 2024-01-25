@@ -1,10 +1,6 @@
 name: Update k8s deployments
 on:
   workflow_call:
-    secrets:
-      GITLAB_API_TOKEN:
-        description: Token for gitlab repository
-        required: true
 
 jobs:
   update:
