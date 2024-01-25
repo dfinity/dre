@@ -6,7 +6,7 @@ load("@//rs:oci_images.bzl", "rust_binary_oci_image_rules")
 
 filegroup(
     name = "mainnet_registry_data",
-    srcs = ["@external//:mercury.tar.gz"],
+    srcs = ["@mainnet_registry//:mercury.tar.gz"],
     visibility = ["//visibility:public"],
 )
 
