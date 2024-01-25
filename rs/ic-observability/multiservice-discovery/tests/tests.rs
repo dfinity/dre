@@ -13,7 +13,7 @@ mod tests {
     const CRAGO_BIN_PATH: &str = "multiservice-discovery";
     const CRAGO_DATA_PATH: &str = "tests/test_data";
     const BAZEL_BIN_PATH: &str = "rs/ic-observability/multiservice-discovery/multiservice-discovery";
-    const BAZEL_DATA_PATH: &str = "rs/ic-observability/multiservice-discovery/tests/test_data";
+    const BAZEL_DATA_PATH: &str = "/external/mainnet_registry";
 
     const REGISTRY_MAINNET_URL: &str = "https://github.com/dfinity/dre/raw/ic-registry-mainnet/rs/ic-observability/multiservice-discovery/tests/test_data/mercury.tar.gz";
 
@@ -44,18 +44,6 @@ mod tests {
     }
     #[test]
     fn prom_targets_tests() {
-
-        let output = Command::new("ls")
-        .arg("-R")
-        .output()
-        .expect("Failed to execute command");
-
-        // Print the output as a UTF-8 string
-        if !output.stdout.is_empty() {
-            let result = String::from_utf8_lossy(&output.stdout);
-            println!("{}", result);
-        }
-
         let rt = Runtime::new().unwrap();
         let mut args = vec![
             "--nns-url",
@@ -63,16 +51,18 @@ mod tests {
             "--targets-dir",
         ];
         let (mut cmd, data_path) = match Command::cargo_bin(CRAGO_BIN_PATH) {
-            Ok(command) => (command, CRAGO_DATA_PATH),
+            Ok(command) => {
+                rt.block_on(rt.spawn(async {
+                    archive_utils::download_and_extract(REGISTRY_MAINNET_URL, Path::new(CRAGO_DATA_PATH)).await
+                })).unwrap().unwrap();
+        
+                (command, CRAGO_DATA_PATH)
+            },
             _ => {
                 let command = Command::new(BAZEL_BIN_PATH);
                 (command, BAZEL_DATA_PATH)
             }
         };
-
-        rt.block_on(rt.spawn(async {
-            archive_utils::download_and_extract(REGISTRY_MAINNET_URL, Path::new(data_path)).await
-        })).unwrap().unwrap();
 
         args.push(data_path);
         let mut child = cmd.args(args).spawn().unwrap();
