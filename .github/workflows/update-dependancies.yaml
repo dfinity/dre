@@ -10,6 +10,9 @@ jobs:
     steps:
       - uses: ./.github/workflows/setup-bazel
 
+      - name: Build
+        run: bazel build ...
+
       ########################################
       # Once per night, update dependencies and completely delete and recreate bazel cache
       ########################################
