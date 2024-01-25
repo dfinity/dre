@@ -55,7 +55,7 @@ rust_test(
 rust_test(
     name = "prom_targets_tests",
     srcs = ["tests/tests.rs"],
-    data = [":multiservice-discovery", ":mainnet_registry_data"],
+    data = [":multiservice-discovery"],
     proc_macro_deps = all_crate_deps(
         proc_macro_dev = True,
     ),
