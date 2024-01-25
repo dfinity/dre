@@ -14,15 +14,19 @@ pub struct ServiceDiscoveryRecord {
 
 impl From<TargetGroup> for ServiceDiscoveryRecord {
     fn from(group: TargetGroup) -> Self {
-        let targets: Vec<_> = group.targets.into_iter().map(|x| x.to_string()).collect();
-        let mut labels = BTreeMap::new();
-
-        labels.insert(IC_NAME.into(), group.ic_name);
-        labels.insert(IC_NODE.into(), group.node_id.to_string());
-        if let Some(subnet_id) = group.subnet_id {
-            labels.insert(IC_SUBNET.into(), subnet_id.to_string());
+        Self {
+            targets: group.targets.into_iter().map(|x| x.to_string()).collect(),
+            labels: BTreeMap::from([
+                (IC_NAME.into(), group.ic_name),
+                (IC_NODE.into(), group.node_id.to_string()),
+            ])
+            .into_iter()
+            .chain(match group.subnet_id {
+                Some(subnet_id) => vec![(IC_SUBNET.into(), subnet_id.to_string())],
+                None => vec![],
+            })
+            .collect(),
         }
-        Self { targets, labels }
     }
 }
 

@@ -8,8 +8,7 @@ use ic_metrics::MetricsRegistry;
 use obs_canister_clients::node_status_canister_client::NodeStatusCanister;
 use prometheus_http_query::Client;
 use service_discovery::{
-    job_types::JobType, metrics::Metrics, poll_loop::make_poll_loop,
-    registry_sync::sync_local_registry, IcServiceDiscoveryImpl,
+    metrics::Metrics, poll_loop::make_poll_loop, registry_sync::sync_local_registry, IcServiceDiscoveryImpl,
 };
 use slog::{info, o, Drain};
 use std::{path::PathBuf, sync::Arc, time::Duration};
@@ -47,10 +46,6 @@ fn main() -> Result<()> {
         log.clone(),
         cli_args.targets_dir,
         cli_args.registry_query_timeout,
-        [(JobType::Replica, 9090)]
-            .iter()
-            .map(|(j, p)| (*j, *p))
-            .collect(),
     )?);
 
     let (stop_signal_sender, stop_signal_rcv) = crossbeam::channel::bounded::<()>(0);
@@ -66,10 +61,7 @@ fn main() -> Result<()> {
         1,
     );
 
-    info!(
-        log,
-        "Spawning scraping thread. Interval: {:?}", cli_args.poll_interval
-    );
+    info!(log, "Spawning scraping thread. Interval: {:?}", cli_args.poll_interval);
     let join_handle = std::thread::spawn(poll_loop);
     handles.push(join_handle);
 
