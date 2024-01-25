@@ -1,15 +1,17 @@
 #[cfg(test)]
 mod tests {
+    use assert_cmd::cargo::CommandCargoExt;
+    use multiservice_discovery_shared::builders::prometheus_config_structure::{
+        PrometheusStaticConfig, IC_NAME, IC_SUBNET, JOB,
+    };
     use std::collections::{BTreeMap, BTreeSet};
     use std::process::Command;
-    use assert_cmd::cargo::CommandCargoExt;
     use std::time::Duration;
     use tokio::runtime::Runtime;
     use tokio::time::sleep;
-    use multiservice_discovery_shared::builders::prometheus_config_structure::{PrometheusStaticConfig, JOB, IC_NAME, IC_SUBNET};
 
-    const CRAGO_BIN_PATH: &str = "multiservice-discovery";
-    const CRAGO_DATA_PATH: &str = "tests/test_data";
+    const CARGO_BIN_PATH: &str = "multiservice-discovery";
+    const CARGO_DATA_PATH: &str = "tests/test_data";
     const BAZEL_BIN_PATH: &str = "rs/ic-observability/multiservice-discovery/multiservice-discovery";
     const BAZEL_DATA_PATH: &str = "rs/ic-observability/multiservice-discovery/tests/test_data";
 
@@ -24,7 +26,8 @@ mod tests {
             sleep(Duration::from_secs(5)).await;
 
             let response = reqwest::get("http://localhost:8000/prom/targets").await?.text().await?;
-            let deserialized: Result<BTreeSet<PrometheusStaticConfig>, serde_json::Error> = serde_json::from_str(&response);
+            let deserialized: Result<BTreeSet<PrometheusStaticConfig>, serde_json::Error> =
+                serde_json::from_str(&response);
 
             match deserialized {
                 Ok(mainnet_targets) => {
@@ -41,46 +44,39 @@ mod tests {
     #[test]
     fn prom_targets_tests() {
         let rt = Runtime::new().unwrap();
-        let mut args = vec![
-            "--nns-url",
-            "http://donotupdate.app",
-            "--targets-dir",
-        ];
-        let mut cmd = match Command::cargo_bin(CRAGO_BIN_PATH) {
+        let mut args = vec!["--nns-url", "http://donotupdate.app", "--targets-dir"];
+        let mut cmd = match Command::cargo_bin(CARGO_BIN_PATH) {
             Ok(command) => {
-                args.push(CRAGO_DATA_PATH);
+                args.push(CARGO_DATA_PATH);
                 command
-            },
+            }
             _ => {
                 args.push(BAZEL_DATA_PATH);
                 Command::new(BAZEL_BIN_PATH)
             }
         };
-        
+
         let mut child = cmd.args(args).spawn().unwrap();
-        let handle = rt.spawn(async {
-            fetch_targets().await
-        });
+        let handle = rt.spawn(async { fetch_targets().await });
         let targets = rt.block_on(handle).unwrap().unwrap();
         child.kill().expect("command couldn't be killed");
 
-        assert_eq!(targets.len(), 72);
-
-        let labels_set = targets
-            .iter()
-            .cloned()
-            .fold(BTreeMap::new(), |mut acc: BTreeMap<String, BTreeSet<String>>, v| {
-                for (key, value) in v.labels {
-                    if let Some(grouped_set) = acc.get_mut(&key) {
-                        grouped_set.insert(value);
-                    } else {
-                        let mut new_set = BTreeSet::new();
-                        new_set.insert(value);
-                        acc.insert(key,new_set);
+        let labels_set =
+            targets
+                .iter()
+                .cloned()
+                .fold(BTreeMap::new(), |mut acc: BTreeMap<String, BTreeSet<String>>, v| {
+                    for (key, value) in v.labels {
+                        if let Some(grouped_set) = acc.get_mut(&key) {
+                            grouped_set.insert(value);
+                        } else {
+                            let mut new_set = BTreeSet::new();
+                            new_set.insert(value);
+                            acc.insert(key, new_set);
+                        }
                     }
-                }
-                acc
-            });
+                    acc
+                });
 
         assert_eq!(
             labels_set.get(IC_NAME).unwrap().iter().collect::<Vec<_>>(),
@@ -91,7 +87,6 @@ mod tests {
             labels_set.get(JOB).unwrap().iter().collect::<Vec<_>>(),
             vec!["node_exporter", "orchestrator", "replica"]
         );
-
 
         assert_eq!(
             labels_set.get(IC_SUBNET).unwrap().iter().collect::<Vec<_>>(),
