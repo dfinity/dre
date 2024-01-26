@@ -38,6 +38,9 @@ jobs:
       - name: Call prepare release
         if: startsWith(github.ref, 'refs/tags/v')
         uses: ./.github/workflows/prepare-release.yml
+        with:
+          ARTIFACT_NAME: dre
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       ########################################
       # Upload container images
@@ -58,6 +61,8 @@ jobs:
       - name: Update k8s deployments
         if: ${{ startsWith(github.ref, 'refs/tags/v') || startsWith(github.head_ref, 'container') || startsWith(github.ref, 'refs/heads/container') || (github.ref == 'refs/heads/main') }}
         uses: ./.github/workflows/update-k8s-deployments
+        with:
+          gitlab_api_token: ${{ secrets.GITLAB_API_TOKEN }}
 
       ########################################
       # Clean up runner

@@ -1,11 +1,16 @@
 name: Update k8s deployments
 description: Reusable action for updating k8s deployments
 
+inputs:
+  gitlab_api_token:
+    description: 'A GitLab API token with access to the k8s repository'
+    required: true
+
 runs:
   using: composite
   steps:
     - env:
-        GITLAB_API_TOKEN: ${{ secrets.GITLAB_API_TOKEN }}
+        GITLAB_API_TOKEN: ${{ inputs.gitlab_api_token }}
       shell: bash
       run: |
         set -eExou pipefail
