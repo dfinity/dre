@@ -14,6 +14,7 @@ rust_binary(
     name = "dre",
     srcs = glob(["src/**/*.rs"]),
     aliases = aliases(),
+    rustc_env_files = [":generate_rustc_env_file"],
     proc_macro_deps = all_crate_deps(
         proc_macro = True,
     ),
@@ -38,13 +39,15 @@ rust_test(
     ) + DEPS,
 )
 
+genrule(
+    name = "generate_rustc_env_file",
+    outs = ["rustc_env_file"],
+    cmd = "echo \"CARGO_PKG_VERSION=$$(awk '$$1 == \"RELEASE_VERSION\" {print $$2}' bazel-out/volatile-status.txt)-$$(awk '$$1 == \"GIT_REV\" {print $$2}' bazel-out/volatile-status.txt)\" > $@",
+    stamp = True,
+)
+
 cargo_build_script(
     name = "build_script",
     srcs = ["build.rs"],
 )
-# rustc_env_files... has been disabled
-# the correct way to pass this variable into build.rs
-# is to either let build.rs use git to determine the
-# correct git hash (the default) or set the variable
-# GIT_HASH in the bazel build process, and pass additional
-# argument --action_env=GIT_HASH.
+

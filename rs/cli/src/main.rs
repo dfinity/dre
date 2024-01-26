@@ -28,7 +28,7 @@ const STAGING_NEURON_ID: u64 = 49;
 async fn main() -> Result<(), anyhow::Error> {
     dotenv().ok();
     init_logger();
-    info!("Running version {}", env!("GIT_HASH"));
+    info!("Running version {}", env!("CARGO_PKG_VERSION"));
 
     let mut cli_opts = cli::Opts::parse();
     let mut cmd = cli::Opts::command();
