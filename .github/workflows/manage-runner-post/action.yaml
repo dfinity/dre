@@ -8,8 +8,9 @@ runs:
     # Optimize bazel cache by hard-linking duplicate files
     ########################################
     - name: Optimize bazel cache directory before uploading
-      run: bin/optimize-bazel-cache.sh
-    
+      run: ./bin/optimize-bazel-cache.sh
+      shell: bash
+
     ########################################
     # Save cache:
     #
@@ -19,7 +20,7 @@ runs:
     - name: Saving cache on main only
       if: ${{ github.ref == 'refs/heads/main' }}
       uses: actions/cache/save@v3
-      with: 
+      with:
         path: "~/.cache/bazel"
         # Configure cache updates
         # https://github.com/actions/cache/blob/main/tips-and-workarounds.md#update-a-cache
