@@ -37,7 +37,7 @@ jobs:
       - name: Build
         run: bazel build ...
 
-      - uses: stefanzweifel/git-auto-commit-action@v5
+      - uses: peter-evans/create-pull-request@v5
         with:
           commit-message: "chore: Update dependencies"
           branch: bot-update-deps
