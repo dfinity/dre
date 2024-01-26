@@ -1,8 +1,9 @@
 name: Update dependencies
 on:
+  workflow_dispatch:
   schedule:
     # * is a special character in YAML so you have to quote this string
-    - cron:  '30 1 * * *'
+    - cron:  '30 1 * * Mon,Wed,Fri'
 
 jobs:
   update:
