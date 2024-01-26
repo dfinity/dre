@@ -57,6 +57,13 @@ jobs:
         run: bazel query --noshow_progress 'kind("oci_push", ...)' | xargs -I_target bazel run _target -- --tag ${GITHUB_SHA}
 
       ########################################
+      # Update k8s deployments
+      ########################################
+      - name: Update k8s deployments
+        if: ${{ startsWith(github.ref, 'refs/tags/v') || startsWith(github.ref, 'refs/heads/container') || (github.ref == 'refs/heads/main') }}
+        uses: ./.github/workflows/update-k8s-deployments
+
+      ########################################
       # Optimize bazel cache by hard-linking duplicate files
       ########################################
       - name: Optimize bazel cache directory before uploading
