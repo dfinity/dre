@@ -8,6 +8,7 @@ runs:
     # Optimize bazel cache by hard-linking duplicate files
     ########################################
     - name: Optimize bazel cache directory before uploading
+      if: ${{ github.ref == 'refs/heads/main' }}
       run: ./bin/optimize-bazel-cache.sh
       shell: bash
 

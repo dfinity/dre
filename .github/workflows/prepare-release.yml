@@ -6,6 +6,10 @@ on:
         required: true
         description: "Name of the artifact to download"
         type: string
+      GITHUB_TOKEN:
+        required: true
+        description: "GitHub token"
+        type: string
 
 jobs:
   prepare:
@@ -25,7 +29,7 @@ jobs:
         # v0.1.15
         uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ inputs.GITHUB_TOKEN }}
           body_path: CHANGELOG.md
           generate_release_notes: true
           draft: true
