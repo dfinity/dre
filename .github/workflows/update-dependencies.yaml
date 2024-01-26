@@ -19,23 +19,21 @@ jobs:
           python-version: "3.11"
       - uses: snok/install-poetry@v1
 
-      - name: Completely delete bazel cache then update deps
+      - name: Completely delete bazel cache and then recreate it
         run: |
           set -eExou pipefail
           #
-          # Completely delete bazel cache
-          #
-          sudo rm -rf ~/.cache/bazel/*
-          #
-          # Update dependencies
+          # Update dependencies and export files that bazel can consume
           #
           cargo update
           poetry update
           ./bin/poetry-export.sh
-          CARGO_BAZEL_REPIN=true bazel query //...
-
-      - name: Build
-        run: bazel build ...
+          #
+          # Completely delete the bazel cache and then recreate it
+          # Cache should have everything that bazel build requires, and nothing more
+          #
+          sudo rm -rf ~/.cache/bazel/*
+          CARGO_BAZEL_REPIN=true bazel build ...
 
       - uses: peter-evans/create-pull-request@v5
         with:
