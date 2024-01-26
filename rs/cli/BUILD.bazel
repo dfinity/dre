@@ -1,13 +1,11 @@
 load("@crate_index_dre//:defs.bzl", "aliases", "all_crate_deps")
 load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_test")
-load("@rules_rust//cargo:defs.bzl", "cargo_build_script")
 
 DEPS = [
     "//rs/ic-canisters",
     "//rs/decentralization",
     "//rs/ic-management-types",
     "//rs/ic-management-backend:ic-management-backend-lib",
-    ":build_script",
 ]
 
 rust_binary(
@@ -18,7 +16,6 @@ rust_binary(
     proc_macro_deps = all_crate_deps(
         proc_macro = True,
     ),
-    stamp = 1,
     deps = all_crate_deps(
         normal = True,
     ) + DEPS,
@@ -45,9 +42,3 @@ genrule(
     cmd = "echo \"CARGO_PKG_VERSION=$$(awk '$$1 == \"RELEASE_VERSION\" {print $$2}' bazel-out/volatile-status.txt)-$$(awk '$$1 == \"GIT_REV\" {print $$2}' bazel-out/volatile-status.txt)\" > $@",
     stamp = True,
 )
-
-cargo_build_script(
-    name = "build_script",
-    srcs = ["build.rs"],
-)
-
