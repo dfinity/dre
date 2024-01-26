@@ -6,7 +6,7 @@ on:
         required: true
         description: "Name of the artifact to download"
         type: string
-  
+
 jobs:
   prepare:
     runs-on: ubuntu-20.04
@@ -16,7 +16,7 @@ jobs:
         with:
           name: ${{ inputs.ARTIFACT_NAME }}
 
-      - name: Chmod 
+      - name: Chmod
         env:
           ARTIFACT_NAME: ${{ inputs.ARTIFACT_NAME }}
         run: chmod +x $ARTIFACT_NAME

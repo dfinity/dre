@@ -1,13 +1,15 @@
 name: Update dependencies
 on:
+  workflow_dispatch:
   schedule:
     # * is a special character in YAML so you have to quote this string
-    - cron:  '30 1 * * *'
+    - cron:  '30 1 * * Mon,Wed,Fri'
 
 jobs:
   update:
     runs-on: ubuntu-20.04
     steps:
+      - uses: actions/checkout@v4
       - uses: ./.github/workflows/setup-bazel
 
       ########################################
@@ -18,25 +20,23 @@ jobs:
           python-version: "3.11"
       - uses: snok/install-poetry@v1
 
-      - name: Completely delete bazel cache then update deps
+      - name: Completely delete bazel cache and then recreate it
         run: |
           set -eExou pipefail
           #
-          # Completely delete bazel cache
-          #
-          sudo rm -rf ~/.cache/bazel/*
-          #
-          # Update dependencies
+          # Update dependencies and export files that bazel can consume
           #
           cargo update
           poetry update
           ./bin/poetry-export.sh
-          CARGO_BAZEL_REPIN=true bazel query //...
+          #
+          # Completely delete the bazel cache and then recreate it
+          # Cache should have everything that bazel build requires, and nothing more
+          #
+          sudo rm -rf ~/.cache/bazel/*
+          CARGO_BAZEL_REPIN=true bazel build ...
 
-      - name: Build
-        run: bazel build ...
-
-      - uses: stefanzweifel/git-auto-commit-action@v5
+      - uses: peter-evans/create-pull-request@v5
         with:
           commit-message: "chore: Update dependencies"
           branch: bot-update-deps
@@ -46,3 +46,15 @@ jobs:
       ########################################
       - name: Optimize bazel cache directory before uploading
         run: bin/optimize-bazel-cache.sh
+
+      ########################################
+      # Save cache only on main
+      ########################################
+      - name: Saving cache on main
+        uses: actions/cache/save@v3
+        with: 
+          path: "~/.cache/bazel"
+          # Configure cache updates
+          # https://github.com/actions/cache/blob/main/tips-and-workarounds.md#update-a-cache
+          # https://github.com/actions/cache/blob/main/examples.md#---bazel
+          key: ${{ runner.os }}-bazel-${{ hashFiles('.bazelversion', '.bazelrc', 'WORKSPACE', 'WORKSPACE.bazel', 'MODULE.bazel', 'Cargo.Bazel.lock') }}

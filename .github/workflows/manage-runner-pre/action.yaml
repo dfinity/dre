@@ -1,5 +1,5 @@
-name: Setup bazel
-description: Reusable action for setting up bazel
+name: Setup runner
+description: Reusable action for setting up the github runner
 
 runs:
   using: composite
@@ -20,7 +20,7 @@ runs:
     # Download and unpack cache
     ########################################
     - name: Mount bazel cache
-      uses: actions/cache@v3
+      uses: actions/cache/restore@v3
       with:
         path: "~/.cache/bazel"
         # Configure cache updates
