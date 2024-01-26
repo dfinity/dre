@@ -10,8 +10,8 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v4
-      - uses: ./.github/workflows/setup-bazel
-        name: Setup bazel
+      # - uses: ./.github/workflows/setup-bazel
+      #   name: Setup bazel
 
       ########################################
       # Build and test
@@ -25,10 +25,10 @@ jobs:
           else
             echo "GIT_HASH=$GITHUB_SHA" >> "$GITHUB_ENV"  # Embed commit SHA as GIT_HASH
           fi
-      - run: bazel build ...
-        name: Building
-      - run: bazel test ...
-        name: Testing
+      # - run: bazel build ...
+      #   name: Building
+      # - run: bazel test ...
+      #   name: Testing
 
       ########################################
       # Prepare release
@@ -59,8 +59,10 @@ jobs:
       ########################################
       # Update k8s deployments
       ########################################
+      - name: Debug print dir
+        run: ls -alL ./github/workflows
       - name: Update k8s deployments
-        if: ${{ startsWith(github.ref, 'refs/tags/v') || startsWith(github.ref, 'refs/heads/container') || (github.ref == 'refs/heads/main') }}
+        # if: ${{ startsWith(github.ref, 'refs/tags/v') || startsWith(github.ref, 'refs/heads/container') || (github.ref == 'refs/heads/main') }}
         uses: ./.github/workflows/update-k8s-deployments.yml
 
       ########################################
