@@ -1,10 +1,6 @@
 name: Update k8s deployments
 on:
-  workflow_run:
-    workflows:
-      - "Build and test"
-    types:
-      - "completed"
+  workflow_call:
 
 jobs:
   update:
