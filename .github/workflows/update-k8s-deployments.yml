@@ -1,19 +1,16 @@
 name: Update k8s deployments
 on:
-  workflow_call:
-    inputs:
-      message: 
-        deprecationMessage: "Debug print"
-        type: string
-        required: true
+  workflow_run:
+    workflows:
+      - "Build and test"
+    types:
+      - "completed"
 
 jobs:
   update:
     runs-on: ubuntu-20.04
     steps:
       - name: Debug print
-        env: 
-          MESSAGE: ${{ inputs.message }}
         run: echo hello
       # - env:
       #     GITLAB_API_TOKEN: ${{ secrets.GITLAB_API_TOKEN }}
