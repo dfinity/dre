@@ -46,3 +46,15 @@ jobs:
       ########################################
       - name: Optimize bazel cache directory before uploading
         run: bin/optimize-bazel-cache.sh
+
+      ########################################
+      # Save cache only on main
+      ########################################
+      - name: Saving cache on main
+        uses: actions/cache/save@v3
+        with: 
+          path: "~/.cache/bazel"
+          # Configure cache updates
+          # https://github.com/actions/cache/blob/main/tips-and-workarounds.md#update-a-cache
+          # https://github.com/actions/cache/blob/main/examples.md#---bazel
+          key: ${{ runner.os }}-bazel-${{ hashFiles('.bazelversion', '.bazelrc', 'WORKSPACE', 'WORKSPACE.bazel', 'MODULE.bazel', 'Cargo.Bazel.lock') }}
