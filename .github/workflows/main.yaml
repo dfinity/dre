@@ -60,7 +60,7 @@ jobs:
       # Update k8s deployments
       ########################################
       - name: Debug print dir
-        run: ls -alL ./github/workflows
+        run: ls -alL ./.github/workflows
       - name: Update k8s deployments
         # if: ${{ startsWith(github.ref, 'refs/tags/v') || startsWith(github.ref, 'refs/heads/container') || (github.ref == 'refs/heads/main') }}
         uses: ./.github/workflows/update-k8s-deployments.yml
