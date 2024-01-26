@@ -76,7 +76,7 @@ mod tests {
 
         child.kill().expect("command couldn't be killed");
 
-        assert_eq!(targets.len(), 5931);
+        assert_eq!(targets.len(), 7274);
 
         let labels_set = targets
             .iter()
@@ -101,7 +101,7 @@ mod tests {
 
         assert_eq!(
             labels_set.get(JOB).unwrap().iter().collect::<Vec<_>>(),
-            vec!["host_node_exporter", "metrics-proxy", "node_exporter", "orchestrator", "replica"]
+            vec!["guest_metrics_proxy", "host_metrics_proxy", "host_node_exporter", "node_exporter", "orchestrator", "replica"]
         );
 
  
