@@ -53,13 +53,13 @@ mod tests {
             "http://donotupdate.app",
             "--targets-dir",
         ];
-        let (mut cmd, data_path) = match Command::cargo_bin(CRAGO_BIN_PATH) {
+        let (mut cmd, data_path) = match Command::cargo_bin(CARGO_BIN_PATH) {
             Ok(command) => {
                 rt.block_on(rt.spawn(async {
-                    archive_utils::download_and_extract(REGISTRY_MAINNET_URL, Path::new(CRAGO_DATA_PATH)).await
+                    archive_utils::download_and_extract(REGISTRY_MAINNET_URL, Path::new(CARGO_DATA_PATH)).await
                 })).unwrap().unwrap();
         
-                (command, CRAGO_DATA_PATH)
+                (command, CARGO_DATA_PATH)
             },
             _ => {
                 let command = Command::new(BAZEL_BIN_PATH);
@@ -90,8 +90,9 @@ mod tests {
                         new_set.insert(value);
                         acc.insert(key,new_set);
                     }
-                    acc
-                });
+                }
+                acc
+            });
 
         assert_eq!(
             labels_set.get(IC_NAME).unwrap().iter().collect::<Vec<_>>(),
