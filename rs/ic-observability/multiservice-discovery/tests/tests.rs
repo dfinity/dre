@@ -70,11 +70,16 @@ mod tests {
         args.push(data_path);
         let mut child = cmd.args(args).spawn().unwrap();
 
-        let targets = rt.block_on(rt.spawn(async {
+        let targets_res = rt.block_on(rt.spawn(async {
             fetch_targets().await
-        })).unwrap().unwrap();
+        }));
 
-        child.kill().expect("command couldn't be killed");
+        child.kill().map(|res| {
+            fs::remove_dir_all(data_path).unwrap();
+            res
+        }).unwrap();
+
+        let targets = targets_res.unwrap().unwrap();
 
         assert_eq!(targets.len(), 7274);
 
@@ -149,6 +154,5 @@ mod tests {
         for subnet in expected_subnets {
             assert!(subnets.contains(&subnet.to_string()))
         }
-        fs::remove_dir_all(data_path).unwrap();
     }
 }
