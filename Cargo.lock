@@ -1217,9 +1217,9 @@ checksum = "fd16c4719339c4530435d38e511904438d07cce7950afa3718a84ac36c10e89e"
 
 [[package]]
 name = "chrono"
-version = "0.4.32"
+version = "0.4.33"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "41daef31d7a747c5c847246f36de49ced6f7403b4cdabc807a97b5cc184cda7a"
+checksum = "9f13690e35a5e4ace198e7beea2895d29f3a9cc55015fcebe6336bd2010af9eb"
 dependencies = [
  "android-tzdata",
  "iana-time-zone",
@@ -2837,7 +2837,7 @@ dependencies = [
  "futures-sink",
  "futures-util",
  "http",
- "indexmap 2.1.0",
+ "indexmap 2.2.1",
  "slab",
  "tokio",
  "tokio-util",
@@ -4177,13 +4177,13 @@ dependencies = [
  "itertools 0.12.0",
  "lazy_static",
  "log",
- "prometheus-http-query 0.4.2",
+ "prometheus-http-query",
  "regex",
  "registry-canister",
  "reqwest",
  "serde",
  "serde_json",
- "serde_yaml 0.9.30",
+ "serde_yaml 0.9.31",
  "strum 0.25.0",
  "strum_macros 0.25.3",
  "tokio",
@@ -5186,9 +5186,9 @@ dependencies = [
 
 [[package]]
 name = "indexmap"
-version = "2.1.0"
+version = "2.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d530e1a18b1cb4c484e6e34556a0d948706958449fca0cab753d649f2bce3d1f"
+checksum = "433de089bd45971eecf4668ee0ee8f4cec17db4f8bd8f7bc3197a6ce37aa7d9b"
 dependencies = [
  "equivalent",
  "hashbrown 0.14.3",
@@ -5316,9 +5316,9 @@ dependencies = [
 
 [[package]]
 name = "keyring"
-version = "2.3.1"
+version = "2.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "85b479dcf9eae65481044dfda57af7fe2da6c1401180360f6898801fe9ed4db9"
+checksum = "1be8bc4c6b6e9d85ecdad090fcf342a9216f53d747a537cc05e3452fd650ca46"
 dependencies = [
  "byteorder",
  "lazy_static",
@@ -5827,7 +5827,7 @@ dependencies = [
  "ic-async-utils",
  "ic-metrics",
  "obs-canister-clients",
- "prometheus-http-query 0.6.7",
+ "prometheus-http-query",
  "service-discovery",
  "slog",
  "slog-async",
@@ -5867,7 +5867,7 @@ dependencies = [
  "reqwest",
  "serde",
  "serde_json",
- "serde_yaml 0.9.30",
+ "serde_yaml 0.9.31",
  "tempfile",
  "test-log",
  "tokio",
@@ -6305,7 +6305,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e1d3afd2628e69da2be385eb6f2fd57c8ac7977ceeff6dc166ff1657b0e386a9"
 dependencies = [
  "fixedbitset",
- "indexmap 2.1.0",
+ "indexmap 2.2.1",
 ]
 
 [[package]]
@@ -6678,19 +6678,6 @@ dependencies = [
  "slog-async",
  "slog-term",
  "tokio",
- "url",
-]
-
-[[package]]
-name = "prometheus-http-query"
-version = "0.4.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6886b96a7a96d2a7cc0a1d69b20fa083cf5792982afe799dcdd05468bc51f351"
-dependencies = [
- "reqwest",
- "serde",
- "serde_json",
- "time",
  "url",
 ]
 
@@ -7489,9 +7476,9 @@ dependencies = [
 
 [[package]]
 name = "serde_json"
-version = "1.0.111"
+version = "1.0.113"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "176e46fa42316f18edd598015a5166857fc835ec732f5215eac6b7bdbf0a84f4"
+checksum = "69801b70b1c3dac963ecb03a364ba0ceda9cf60c71cfe475e99864759c8b8a79"
 dependencies = [
  "itoa",
  "ryu",
@@ -7579,11 +7566,11 @@ dependencies = [
 
 [[package]]
 name = "serde_yaml"
-version = "0.9.30"
+version = "0.9.31"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b1bf28c79a99f70ee1f1d83d10c875d2e70618417fda01ad1785e027579d9d38"
+checksum = "adf8a49373e98a4c5f0ceb5d05aa7c648d75f63774981ed95b7c7443bbd50c6e"
 dependencies = [
- "indexmap 2.1.0",
+ "indexmap 2.2.1",
  "itoa",
  "ryu",
  "serde",
@@ -7750,7 +7737,7 @@ dependencies = [
  "retry",
  "serde",
  "serde_json",
- "serde_yaml 0.9.30",
+ "serde_yaml 0.9.31",
  "tokio",
 ]
 
@@ -8412,7 +8399,7 @@ version = "0.19.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1b5bb770da30e5cbfde35a2d7b9b8a2c4b8ef89548a7a6aeab5c9a576e3e7421"
 dependencies = [
- "indexmap 2.1.0",
+ "indexmap 2.2.1",
  "toml_datetime",
  "winnow",
 ]
@@ -8423,7 +8410,7 @@ version = "0.21.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d34d383cd00a163b4a5b85053df514d45bc330f6de7737edfe0a93311d1eaa03"
 dependencies = [
- "indexmap 2.1.0",
+ "indexmap 2.2.1",
  "toml_datetime",
  "winnow",
 ]
