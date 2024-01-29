@@ -1,0 +1,46 @@
+name: Update dependencies
+on:
+  workflow_dispatch:
+  schedule:
+    # * is a special character in YAML so you have to quote this string
+    - cron:  '30 1 * * Mon,Wed,Fri'
+
+jobs:
+  update:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/workflows/manage-runner-pre
+        name: Setup runner
+
+      ########################################
+      # Once per night, update dependencies and completely delete and recreate bazel cache
+      ########################################
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+      - uses: snok/install-poetry@v1
+
+      - name: Completely delete bazel cache and then recreate it
+        run: |
+          set -eExou pipefail
+          #
+          # Update dependencies and export files that bazel can consume
+          #
+          cargo update
+          poetry update
+          ./bin/poetry-export.sh
+          #
+          # Completely delete the bazel cache and then recreate it
+          # Cache should have everything that bazel build requires, and nothing more
+          #
+          sudo rm -rf ~/.cache/bazel/*
+          CARGO_BAZEL_REPIN=true bazel build ...
+
+      - uses: peter-evans/create-pull-request@v5
+        with:
+          commit-message: "chore: Update dependencies"
+          branch: bot-update-deps
+
+      - uses: ./.github/workflows/manage-runner-post
+        name: Tear down runner

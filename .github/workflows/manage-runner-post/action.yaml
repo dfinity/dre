@@ -1,0 +1,29 @@
+name: Setup runner
+description: Reusable action for tearing down the github runner
+
+runs:
+  using: composite
+  steps:
+    ########################################
+    # Optimize bazel cache by hard-linking duplicate files
+    ########################################
+    - name: Optimize bazel cache directory before uploading
+      if: ${{ github.ref == 'refs/heads/main' }}
+      run: ./bin/optimize-bazel-cache.sh
+      shell: bash
+
+    ########################################
+    # Save cache:
+    #
+    # Cache is saved on main only to avoid cache evictions due to github restrictions:
+    # https://docs.github.com/en/actions/using-workflows/caching-dependencies-to-speed-up-workflows#restrictions-for-accessing-a-cache
+    ########################################
+    - name: Saving cache on main only
+      if: ${{ github.ref == 'refs/heads/main' }}
+      uses: actions/cache/save@v3
+      with:
+        path: "~/.cache/bazel"
+        # Configure cache updates
+        # https://github.com/actions/cache/blob/main/tips-and-workarounds.md#update-a-cache
+        # https://github.com/actions/cache/blob/main/examples.md#---bazel
+        key: ${{ runner.os }}-bazel-${{ hashFiles('.bazelversion', '.bazelrc', 'WORKSPACE', 'WORKSPACE.bazel', 'MODULE.bazel', 'Cargo.Bazel.lock') }}
