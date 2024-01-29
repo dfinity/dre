@@ -104,10 +104,11 @@ async fn _replace_definitions(
         }
     }
     // ...then start and record the handles for the new definitions.
-    for new_definition in existing_definitions.iter() {
+    for new_definition in new_definitions.iter() {
         info!(binding.log, "Starting thread for definition: {:?}", new_definition.name);
         let joinhandle = std::thread::spawn(wrap(new_definition.clone(), binding.rt.clone()));
         existing_handles.push(joinhandle);
+        existing_definitions.push(new_definition.clone());
     }
 
     Ok(())
