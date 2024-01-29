@@ -4,6 +4,7 @@
 
 This document offers a deeper look at the architectural design of the Trustworthy Node Metrics feature on the Internet Computer (IC). It is tailored for IC stakeholders and technical professionals, providing a detailed understanding of both the functional and structural aspects.
 
+For a higher-level document please take a look [here](./trustworthy-metrics.md).
 
 ## Objectives
 
