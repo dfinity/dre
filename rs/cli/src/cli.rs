@@ -8,7 +8,7 @@ use crate::detect_neuron::{detect_hsm_auth, detect_neuron, Auth, Neuron};
 
 // For more info about the version setup, look at https://docs.rs/clap/latest/clap/struct.Command.html#method.version
 #[derive(Parser, Clone)]
-#[clap(about, version = env!("GIT_HASH"), author)]
+#[clap(about, version = env!("CARGO_PKG_VERSION"), author)]
 pub struct Opts {
     #[clap(long, env = "HSM_PIN", global = true)]
     pub(crate) hsm_pin: Option<String>,
