@@ -40,11 +40,18 @@ async fn _replace_definitions(
     }
     info!(binding.log, "Finished backing up existing definitions");
 
+    let mut new_definitions: Vec<Definition> = vec![];
+
     // Add all-new definitions, checking them all and saving errors
     // as they happen.  Do not start their threads yet.
     let mut error = ReplaceDefinitionsError { errors: vec![] };
     for tentative_definition in tentative_definitions {
         let dname = tentative_definition.name.clone();
+
+        if new_definitions.iter().any(|d| d.name == dname) {
+            error.errors.push(BadDtoError::AlreadyExists(dname));
+            continue;
+        }
         let new_definition = match tentative_definition
             .try_into_definition(
                 binding.log.clone(),
@@ -60,8 +67,9 @@ async fn _replace_definitions(
                 continue;
             }
         };
+
         info!(binding.log, "Adding new definition {} to existing", dname);
-        existing_definitions.push(new_definition);
+        new_definitions.push(new_definition);
     }
 
     // Was there an error?  Restore the definitions and handles to their
