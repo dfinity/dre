@@ -10,7 +10,8 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v4
-      - uses: ./.github/workflows/setup-bazel
+      - uses: ./.github/workflows/manage-runner-pre
+        name: Setup runner
 
       ########################################
       # Once per night, update dependencies and completely delete and recreate bazel cache
@@ -41,20 +42,5 @@ jobs:
           commit-message: "chore: Update dependencies"
           branch: bot-update-deps
 
-      ########################################
-      # Optimize bazel cache by hard-linking duplicate files
-      ########################################
-      - name: Optimize bazel cache directory before uploading
-        run: bin/optimize-bazel-cache.sh
-
-      ########################################
-      # Save cache only on main
-      ########################################
-      - name: Saving cache on main
-        uses: actions/cache/save@v3
-        with: 
-          path: "~/.cache/bazel"
-          # Configure cache updates
-          # https://github.com/actions/cache/blob/main/tips-and-workarounds.md#update-a-cache
-          # https://github.com/actions/cache/blob/main/examples.md#---bazel
-          key: ${{ runner.os }}-bazel-${{ hashFiles('.bazelversion', '.bazelrc', 'WORKSPACE', 'WORKSPACE.bazel', 'MODULE.bazel', 'Cargo.Bazel.lock') }}
+      - uses: ./.github/workflows/manage-runner-post
+        name: Tear down runner
