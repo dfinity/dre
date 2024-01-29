@@ -2,12 +2,14 @@ load("@crate_index_dre//:defs.bzl", "aliases", "all_crate_deps")
 load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_test")
 load("@//rs:oci_images.bzl", "rust_binary_oci_image_rules")
 
+# Define a custom rule to copy the .zip file as a data dependency
 DEPS = [
     "//rs/ic-observability/service-discovery",
     "//rs/ic-observability/multiservice-discovery-shared"
 ]
 
 DEV_DEPENDENCIES = [
+    "//rs/archive-utils",
     "@crate_index_dre//:assert_cmd",
     "@crate_index_dre//:tokio",
     "@crate_index_dre//:tempdir",
@@ -50,17 +52,14 @@ rust_test(
     ) + DEPS,
 )
 
-# broken test disabled.
-# no documented way to update the protobufs used as input and
-# no correspondence between input protobufs and expected values
-#rust_test(
-#    name = "prom_targets_tests",
-#    srcs = ["tests/tests.rs"],
-#    data = [":multiservice-discovery"] + glob(["tests/test_data/**"]),
-#    proc_macro_deps = all_crate_deps(
-#        proc_macro_dev = True,
-#    ),
-#    deps = all_crate_deps(
-#        normal_dev = True,
-#    ) + DEPS + DEV_DEPENDENCIES,
-#    )
+rust_test(
+    name = "prom_targets_tests",
+    srcs = ["tests/tests.rs"],
+    data = [":multiservice-discovery", "@mainnet_registry//:mercury"],
+    proc_macro_deps = all_crate_deps(
+        proc_macro_dev = True,
+    ),
+    deps = all_crate_deps(
+        normal_dev = True,
+    ) + DEPS + DEV_DEPENDENCIES,
+    )
