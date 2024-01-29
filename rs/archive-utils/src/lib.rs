@@ -45,7 +45,6 @@ pub async fn download_and_extract(url: &str, output_target_dir: &Path) -> io::Re
     Ok(())
 }
 
-// Wrap a channel into something that impls `io::Read`
 struct ChannelRead {
     rx: flume::Receiver<Vec<u8>>,
     current: io::Cursor<Vec<u8>>,
@@ -63,13 +62,9 @@ impl ChannelRead {
 impl Read for ChannelRead {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
         if self.current.position() == self.current.get_ref().len() as u64 {
-            // We've exhausted the previous chunk, get a new one.
             if let Ok(vec) = self.rx.recv() {
                 self.current = io::Cursor::new(vec);
             }
-            // If recv() "fails", it means the sender closed its part of
-            // the channel, which means EOF. Propagate EOF by allowing
-            // a read from the exhausted cursor.
         }
         self.current.read(buf)
     }
