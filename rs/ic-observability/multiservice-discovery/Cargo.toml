@@ -11,6 +11,7 @@ clap = { workspace = true }
 crossbeam = { workspace = true }
 crossbeam-channel = { workspace = true }
 erased-serde = { workspace = true }
+futures.workspace = true
 futures-util = { workspace = true }
 humantime = { workspace = true }
 ic-async-utils = { workspace = true }

@@ -1,20 +1,19 @@
-use std::sync::Arc;
-
-use tokio::sync::Mutex;
 use warp::reply::json;
 use warp::Reply;
 
-use crate::definition::Definition;
+use crate::definition::DefinitionsSupervisor;
 use crate::server_handlers::dto::DefinitionDto;
 use crate::server_handlers::WebResult;
 
-pub async fn get_definitions(definitions: Arc<Mutex<Vec<Definition>>>) -> WebResult<impl Reply> {
-    let definitions = definitions.lock().await;
+pub async fn get_definitions(supervisor: DefinitionsSupervisor) -> WebResult<impl Reply> {
+    let definitions = supervisor.definitions.lock().await;
 
-    Ok(json(
-        &definitions
-            .iter()
-            .map(|d| d.into())
-            .collect::<Vec<DefinitionDto>>(),
-    ))
+    let list = &definitions
+        .iter()
+        .map(|(_, d)| {
+            let x = &d.definition;
+            x.into()
+        })
+        .collect::<Vec<DefinitionDto>>();
+    Ok(json(list))
 }

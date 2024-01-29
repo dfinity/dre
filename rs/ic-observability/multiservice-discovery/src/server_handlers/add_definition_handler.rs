@@ -1,40 +1,46 @@
 use slog::{error, info, Logger};
 
+use std::error::Error;
 use std::path::PathBuf;
-use std::sync::Arc;
-use std::thread::JoinHandle;
 use std::time::Duration;
 
-use tokio::sync::Mutex;
+use std::fmt::{Display, Error as FmtError, Formatter};
 use warp::Reply;
 
-use crate::definition::{wrap, Definition};
+use crate::definition::{DefinitionsSupervisor, StartDefinitionError};
+use crate::server_handlers::dto::BadDtoError;
 use crate::server_handlers::dto::DefinitionDto;
 use crate::server_handlers::WebResult;
 
-use super::dto::BadDtoError;
-
 pub(crate) struct AddDefinitionBinding {
-    pub definitions: Arc<Mutex<Vec<Definition>>>,
+    pub supervisor: DefinitionsSupervisor,
     pub log: Logger,
     pub registry_path: PathBuf,
     pub poll_interval: Duration,
     pub registry_query_timeout: Duration,
-    pub rt: tokio::runtime::Handle,
-    pub handles: Arc<Mutex<Vec<JoinHandle<()>>>>,
+}
+
+#[derive(Debug)]
+pub enum AddDefinitionError {
+    StartDefinitionError(StartDefinitionError),
+    BadDtoError(BadDtoError),
+}
+
+impl Error for AddDefinitionError {}
+
+impl Display for AddDefinitionError {
+    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        match self {
+            Self::StartDefinitionError(e) => write!(f, "{}", e),
+            Self::BadDtoError(e) => write!(f, "{}", e),
+        }
+    }
 }
 
 async fn _add_definition(
     tentative_definition: DefinitionDto,
     binding: AddDefinitionBinding,
-) -> Result<(), BadDtoError> {
-    let mut existing_definitions = binding.definitions.lock().await;
-
-    let dname = tentative_definition.name.clone();
-    if existing_definitions.iter().any(|d| d.name == tentative_definition.name) {
-        return Err(BadDtoError::AlreadyExists(dname));
-    }
-
+) -> Result<(), AddDefinitionError> {
     let new_definition = match tentative_definition
         .try_into_definition(
             binding.log.clone(),
@@ -45,18 +51,15 @@ async fn _add_definition(
         .await
     {
         Ok(def) => def,
-        Err(e) => return Err(e),
+        Err(e) => return Err(AddDefinitionError::BadDtoError(e)),
     };
-    info!(binding.log, "Adding new definition {} to existing", dname);
-    existing_definitions.push(new_definition.clone());
 
-    let mut existing_handles = binding.handles.lock().await;
-    // ...then start and record the handles for the new definitions.
-    info!(binding.log, "Starting thread for definition: {:?}", dname);
-    let joinhandle = std::thread::spawn(wrap(new_definition, binding.rt));
-    existing_handles.push(joinhandle);
-
-    Ok(())
+    match binding.supervisor.start(vec![new_definition], false).await {
+        Ok(()) => Ok(()),
+        Err(e) => Err(AddDefinitionError::StartDefinitionError(
+            e.errors.into_iter().next().unwrap(),
+        )),
+    }
 }
 
 pub(crate) async fn add_definition(definition: DefinitionDto, binding: AddDefinitionBinding) -> WebResult<impl Reply> {

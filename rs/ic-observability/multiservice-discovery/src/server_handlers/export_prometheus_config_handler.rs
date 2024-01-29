@@ -1,29 +1,25 @@
 use super::WebResult;
-use crate::definition::Definition;
+use crate::definition::DefinitionsSupervisor;
 use multiservice_discovery_shared::builders::prometheus_config_structure::{map_target_group, PrometheusStaticConfig};
 use multiservice_discovery_shared::contracts::target::{map_to_target_dto, TargetDto};
-use service_discovery::{
-    job_types::{JobType, NodeOS},
-    IcServiceDiscovery,
-};
+use service_discovery::job_types::{JobType, NodeOS};
 use slog::Logger;
-use std::{collections::BTreeMap, sync::Arc};
-use tokio::sync::Mutex;
+use std::collections::BTreeMap;
 use warp::reply::Reply;
 
 pub struct ExportDefinitionConfigBinding {
-    pub definitions: Arc<Mutex<Vec<Definition>>>,
+    pub supervisor: DefinitionsSupervisor,
     pub log: Logger,
 }
 
 pub async fn export_prometheus_config(binding: ExportDefinitionConfigBinding) -> WebResult<impl Reply> {
-    let definitions = binding.definitions.lock().await;
+    let definitions = binding.supervisor.definitions.lock().await;
 
     let mut ic_node_targets: Vec<TargetDto> = vec![];
 
-    for def in definitions.iter() {
+    for (_, def) in definitions.iter() {
         for job_type in JobType::all_for_ic_nodes() {
-            let targets = match def.ic_discovery.get_target_groups(job_type, binding.log.clone()) {
+            let targets = match def.get_target_groups(job_type) {
                 Ok(targets) => targets,
                 Err(_) => continue,
             };
@@ -37,7 +33,7 @@ pub async fn export_prometheus_config(binding: ExportDefinitionConfigBinding) ->
                         job_type,
                         BTreeMap::new(),
                         target_group.node_id.to_string(),
-                        def.name.clone(),
+                        def.name(),
                     ));
                 }
             });
@@ -48,8 +44,8 @@ pub async fn export_prometheus_config(binding: ExportDefinitionConfigBinding) ->
 
     let boundary_nodes_targets = definitions
         .iter()
-        .flat_map(|def| {
-            def.boundary_nodes.iter().filter_map(|bn| {
+        .flat_map(|(_, def)| {
+            def.definition.boundary_nodes.iter().filter_map(|bn| {
                 // Since boundary nodes have been checked for correct job
                 // type when they were added via POST, then we can trust
                 // the correct job type is at play here.
@@ -68,7 +64,7 @@ pub async fn export_prometheus_config(binding: ExportDefinitionConfigBinding) ->
                     targets: bn.targets.clone().iter().map(|g| bn.job_type.url(*g, true)).collect(),
                     labels: {
                         BTreeMap::from([
-                            ("ic", def.name.clone()),
+                            ("ic", def.name()),
                             ("name", bn.name.clone()),
                             ("job", bn.job_type.to_string()),
                         ])
