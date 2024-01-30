@@ -32,7 +32,7 @@ jobs:
       # Prepare release
       ########################################
       - name: "🚢 Prepare release"
-        if: ${{ startsWith(github.ref, 'refs/tags/v') || startsWith(github.head_ref, 'release') }}
+        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
         uses: ./.github/workflows/prepare-release
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
