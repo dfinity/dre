@@ -1,5 +1,5 @@
 {
-  "checksum": "ec753ecb06335b978717a4f454580c78e4088f9255e77c92f1482b6dd3487532",
+  "checksum": "50059ed743d8139dafd6e4b27ef55253af52088328687ea060a031b67d599b07",
   "crates": {
     "actix-codec 0.5.1": {
       "name": "actix-codec",
@@ -27157,29 +27157,23 @@
         ],
         "crate_features": {
           "common": [
+            "elf",
+            "errno",
             "general",
             "ioctl",
             "no_std"
           ],
           "selects": {
             "aarch64-unknown-linux-gnu": [
-              "elf",
-              "errno",
               "std"
             ],
             "arm-unknown-linux-gnueabi": [
-              "elf",
-              "errno",
               "std"
             ],
             "armv7-unknown-linux-gnueabi": [
-              "elf",
-              "errno",
               "std"
             ],
             "i686-unknown-linux-gnu": [
-              "elf",
-              "errno",
               "std"
             ],
             "powerpc-unknown-linux-gnu": [
@@ -27189,8 +27183,6 @@
               "std"
             ],
             "x86_64-unknown-linux-gnu": [
-              "elf",
-              "errno",
               "std"
             ]
           }
