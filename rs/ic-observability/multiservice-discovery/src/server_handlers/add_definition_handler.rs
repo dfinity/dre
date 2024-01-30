@@ -6,7 +6,7 @@ use std::time::Duration;
 use super::{bad_request, ok, WebResult};
 use warp::Reply;
 
-use crate::definition::DefinitionsSupervisor;
+use crate::definition::{DefinitionsSupervisor, StartMode};
 use crate::server_handlers::dto::DefinitionDto;
 
 #[derive(Clone)]
@@ -34,7 +34,11 @@ pub(crate) async fn add_definition(definition: DefinitionDto, binding: AddDefini
         Ok(def) => def,
         Err(e) => return bad_request(log, rej, e),
     };
-    match binding.supervisor.start(vec![new_definition], false).await {
+    match binding
+        .supervisor
+        .start(vec![new_definition], StartMode::AddToDefinitions)
+        .await
+    {
         Ok(()) => ok(log, format!("Definition {} added successfully", dname)),
         Err(e) => bad_request(log, rej, e.errors.into_iter().next().unwrap()),
     }

@@ -9,8 +9,9 @@ use tokio::runtime::Runtime;
 use tokio::sync::oneshot::{self};
 use url::Url;
 
-use definition::{Definition, DefinitionsSupervisor};
+use definition::{Definition, DefinitionsSupervisor, StartMode};
 use ic_async_utils::shutdown_signal;
+use ic_management_types::Network;
 
 use crate::server_handlers::Server;
 
@@ -23,7 +24,7 @@ fn main() {
     let shutdown_signal = shutdown_signal(log.clone()).shared();
     let cli_args = CliArgs::parse();
 
-    let supervisor = DefinitionsSupervisor::new(rt.handle().clone());
+    let supervisor = DefinitionsSupervisor::new(rt.handle().clone(), cli_args.start_without_mainnet);
     let (server_stop, server_stop_receiver) = oneshot::channel();
 
     //Configure server
@@ -40,7 +41,10 @@ fn main() {
     if !cli_args.start_without_mainnet {
         rt.block_on(async {
             let _ = supervisor
-                .start(vec![get_mainnet_definition(&cli_args, log.clone())], false)
+                .start(
+                    vec![get_mainnet_definition(&cli_args, log.clone())],
+                    StartMode::AddToDefinitions,
+                )
                 .await;
         });
     }
@@ -127,7 +131,7 @@ fn get_mainnet_definition(cli_args: &CliArgs, log: Logger) -> Definition {
     Definition::new(
         vec![cli_args.nns_url.clone()],
         cli_args.targets_dir.clone(),
-        "mercury".to_string(),
+        Network::Mainnet.legacy_name(),
         log.clone(),
         None,
         cli_args.poll_interval,

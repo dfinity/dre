@@ -60,6 +60,16 @@ where
         warp::http::StatusCode::NOT_FOUND,
     ))
 }
+pub(crate) fn forbidden<T>(log: Logger, message: String, err: T) -> WebResult<warp::reply::WithStatus<String>>
+where
+    T: Display,
+{
+    info!(log, "{}: {}", message, err);
+    Ok(warp::reply::with_status(
+        format!("{}: {}", message, err),
+        warp::http::StatusCode::FORBIDDEN,
+    ))
+}
 
 pub(crate) struct Server {
     log: Logger,

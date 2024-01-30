@@ -1,5 +1,7 @@
 use crossbeam_channel::Receiver;
 use crossbeam_channel::Sender;
+use futures_util::future::join_all;
+use ic_management_types::Network;
 use ic_registry_client::client::ThresholdSigPublicKey;
 use service_discovery::job_types::JobType;
 use service_discovery::IcServiceDiscovery;
@@ -225,7 +227,7 @@ impl RunningDefinition {
 
         self.poll_loop().await;
 
-        if self.definition.name != "mercury" {
+        if self.definition.name != Network::Mainnet.legacy_name() {
             info!(
                 self.definition.log,
                 "Removing registry dir '{}' for definition {}...",
@@ -273,6 +275,7 @@ pub struct BoundaryNode {
 #[derive(Debug)]
 pub(crate) enum StartDefinitionError {
     AlreadyExists(String),
+    DeletionDisallowed(String),
 }
 
 impl Error for StartDefinitionError {}
@@ -281,6 +284,7 @@ impl Display for StartDefinitionError {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
         match self {
             Self::AlreadyExists(name) => write!(f, "definition {} is already running", name),
+            Self::DeletionDisallowed(name) => write!(f, "definition {} may not be deleted without a replacement", name),
         }
     }
 }
@@ -303,6 +307,7 @@ impl Display for StartDefinitionsError {
 #[derive(Debug)]
 pub(crate) enum StopDefinitionError {
     DoesNotExist(String),
+    DeletionDisallowed(String),
 }
 
 impl Error for StopDefinitionError {}
@@ -311,6 +316,7 @@ impl Display for StopDefinitionError {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
         match self {
             Self::DoesNotExist(name) => write!(f, "definition {} does not exist", name),
+            Self::DeletionDisallowed(name) => write!(f, "definition {} may not be deleted", name),
         }
     }
 }
@@ -330,17 +336,25 @@ impl Display for StopDefinitionsError {
     }
 }
 
+#[derive(PartialEq)]
+pub(crate) enum StartMode {
+    AddToDefinitions,
+    ReplaceExistingDefinitions,
+}
+
 #[derive(Clone)]
 pub(crate) struct DefinitionsSupervisor {
     rt: tokio::runtime::Handle,
     pub(crate) definitions: Arc<Mutex<BTreeMap<String, RunningDefinition>>>,
+    allow_mercury_deletion: bool,
 }
 
 impl DefinitionsSupervisor {
-    pub(crate) fn new(rt: tokio::runtime::Handle) -> Self {
+    pub(crate) fn new(rt: tokio::runtime::Handle, allow_mercury_deletion: bool) -> Self {
         DefinitionsSupervisor {
             rt,
             definitions: Arc::new(Mutex::new(BTreeMap::new())),
+            allow_mercury_deletion,
         }
     }
 
@@ -348,41 +362,68 @@ impl DefinitionsSupervisor {
         &self,
         existing: &mut BTreeMap<String, RunningDefinition>,
         definitions: Vec<Definition>,
-        replace_existing: bool,
+        start_mode: StartMode,
     ) -> Result<(), StartDefinitionsError> {
         let mut error = StartDefinitionsError { errors: vec![] };
-        let mut names_added: HashSet<String> = HashSet::new();
+        let mut ic_names_to_add: HashSet<String> = HashSet::new();
 
         for definition in definitions.iter() {
-            let dname = definition.name.clone();
+            let ic_name = definition.name.clone();
             // Check if we already have something running with the same name,
             // if the user does not want to replace those with newer defs.
-            if !replace_existing && existing.contains_key(&dname) {
-                error.errors.push(StartDefinitionError::AlreadyExists(dname.clone()));
+            if start_mode == StartMode::AddToDefinitions && existing.contains_key(&ic_name) {
+                error.errors.push(StartDefinitionError::AlreadyExists(ic_name.clone()));
                 continue;
             }
 
             // Check for incoming duplicates.
-            if names_added.contains(&dname) {
-                error.errors.push(StartDefinitionError::AlreadyExists(dname.clone()));
+            if ic_names_to_add.contains(&ic_name) {
+                error.errors.push(StartDefinitionError::AlreadyExists(ic_name.clone()));
                 continue;
             }
-            names_added.insert(dname);
+            ic_names_to_add.insert(ic_name);
+        }
+
+        if !self.allow_mercury_deletion && !ic_names_to_add.contains(&Network::Mainnet.legacy_name()) {
+            error
+                .errors
+                .push(StartDefinitionError::DeletionDisallowed(Network::Mainnet.legacy_name()))
         }
 
         if !error.errors.is_empty() {
             return Err(error);
         }
 
+        // We stop X before we start X' because otherwise
+        // the newly-running definition will fight over
+        // shared disk space (a folder) and probably die.
+        let ic_names_to_end: Vec<String> = existing
+            .clone()
+            .into_keys()
+            .filter(|ic_name| match start_mode {
+                // In this mode, we only remove existing definitions if they are going to be replaced.
+                StartMode::AddToDefinitions => ic_names_to_add.contains(ic_name),
+                // In this mode, we remove all definitions.
+                StartMode::ReplaceExistingDefinitions => true,
+            })
+            .collect();
+        // Get definitions to end.
+        let mut defs_to_end = ic_names_to_end
+            .iter()
+            .map(|ic_name| existing.remove(&ic_name.clone()).unwrap())
+            .collect::<Vec<_>>();
+        // End them and join them all.
+        join_all(defs_to_end.iter_mut().map(|def| async { def.end().await })).await;
+        // Remove from running definitions list.
+        ic_names_to_end
+            .iter()
+            .map(|ic_name| existing.remove(&ic_name.clone()))
+            .for_each(drop);
+        drop(defs_to_end);
+        drop(ic_names_to_end);
+
+        // Now we add the incoming definitions.
         for definition in definitions.into_iter() {
-            // Here is where we stop already running definitions
-            // that have a name similar to the one being added.
-            if let Some(d) = existing.get_mut(&definition.name) {
-                d.end().await
-            }
-            // We stop X before we start X' because otherwise
-            // the newly-running definition will fight over
-            // shared disk space (a folder) and probably die.
             existing.insert(definition.name.clone(), definition.run(self.rt.clone()).await);
         }
         Ok(())
@@ -397,31 +438,34 @@ impl DefinitionsSupervisor {
     pub(crate) async fn start(
         &self,
         definitions: Vec<Definition>,
-        replace_existing: bool,
+        start_mode: StartMode,
     ) -> Result<(), StartDefinitionsError> {
-        let mut u = self.definitions.lock().await;
-        self.start_inner(&mut u, definitions, replace_existing).await
+        let mut existing = self.definitions.lock().await;
+        self.start_inner(&mut existing, definitions, start_mode).await
     }
 
-    async fn end_inner(&self, definitions: &mut BTreeMap<String, RunningDefinition>) {
-        for (_, definition) in definitions.iter_mut() {
+    /// Stop all definitions and end.
+    pub(crate) async fn end(&self) {
+        let mut existing = self.definitions.lock().await;
+        for (_, definition) in existing.iter_mut() {
             definition.end().await
         }
-        definitions.clear()
-    }
-
-    pub(crate) async fn end(&self) {
-        let mut u = self.definitions.lock().await;
-        self.end_inner(&mut u).await
+        existing.clear()
     }
 
     pub(crate) async fn stop(&self, definition_names: Vec<String>) -> Result<(), StopDefinitionsError> {
         let mut defs = self.definitions.lock().await;
-        let errors: Vec<StopDefinitionError> = definition_names
+        let mut errors: Vec<StopDefinitionError> = definition_names
             .iter()
             .filter(|n| defs.contains_key(*n))
             .map(|n| StopDefinitionError::DoesNotExist(n.clone()))
             .collect();
+        errors.extend(
+            definition_names
+                .iter()
+                .filter(|n| **n == Network::Mainnet.legacy_name() && !self.allow_mercury_deletion)
+                .map(|n| StopDefinitionError::DeletionDisallowed(n.clone())),
+        );
         if !errors.is_empty() {
             return Err(StopDefinitionsError { errors });
         }

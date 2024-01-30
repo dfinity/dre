@@ -3,7 +3,7 @@ use warp::Reply;
 
 use super::{bad_request, ok, WebResult};
 
-use crate::definition::Definition;
+use crate::definition::{Definition, StartMode};
 use crate::server_handlers::dto::{BadDtoError, DefinitionDto};
 use crate::server_handlers::AddDefinitionBinding as ReplaceDefinitionsBinding;
 
@@ -48,7 +48,11 @@ pub(crate) async fn replace_definitions(
     }
 
     let new_definitions: Vec<_> = new_definitions.into_iter().map(Result::unwrap).collect();
-    match binding.supervisor.start(new_definitions, true).await {
+    match binding
+        .supervisor
+        .start(new_definitions, StartMode::ReplaceExistingDefinitions)
+        .await
+    {
         Ok(_) => ok(log, format!("Added new definitions {} to existing ones", dnames)),
         Err(e) => bad_request(log, rej, format!(":\n{}", e)),
     }

@@ -5713,6 +5713,7 @@ dependencies = [
  "humantime",
  "ic-async-utils",
  "ic-crypto-utils-threshold-sig-der",
+ "ic-management-types",
  "ic-registry-client",
  "ic-types",
  "ic-utils 0.9.0",
