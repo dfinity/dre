@@ -85,9 +85,9 @@ pub async fn sync_local_registry(
     };
 
     loop {
-        match stop_signal.try_recv() {
-            Ok(_) => return Err(Interrupted {}),
-            Err(_) => {}
+        if stop_signal.try_recv().is_ok() {
+            // Interrupted early.  Let's get out of here.
+            return Err(Interrupted {});
         }
 
         if match registry_canister.get_latest_version().await {

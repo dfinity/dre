@@ -226,7 +226,7 @@ impl RunningDefinition {
     }
 
     async fn run(&self) {
-        if let Err(_) = self.initial_registry_sync().await {
+        if self.initial_registry_sync().await.is_err() {
             return;
         };
 
