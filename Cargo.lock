@@ -5712,7 +5712,6 @@ dependencies = [
  "crossbeam",
  "crossbeam-channel",
  "erased-serde 0.4.2",
- "flate2",
  "futures-util",
  "humantime",
  "ic-async-utils",

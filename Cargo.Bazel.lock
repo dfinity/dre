@@ -1,5 +1,5 @@
 {
-  "checksum": "bacb1d8d7d95953eeae884d9aafd58240a36cb358fa341ae0796f211d4d02822",
+  "checksum": "f235c46dad3d0ef80280aabfed19cc2cb28e9e3d322c4338b911aaacafd21313",
   "crates": {
     "actix-codec 0.5.1": {
       "name": "actix-codec",
@@ -28534,10 +28534,6 @@
             {
               "id": "assert_cmd 2.0.13",
               "target": "assert_cmd"
-            },
-            {
-              "id": "flate2 1.0.28",
-              "target": "flate2"
             },
             {
               "id": "reqwest 0.11.23",
