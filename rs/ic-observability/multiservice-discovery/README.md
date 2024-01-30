@@ -12,6 +12,31 @@ networks on the fly.
 Containers built by the DRE repository CI are published to [GHCR](https://ghcr.io/dfinity/dre/).
 They are only built from PRs stemming from branches named `container-*`.
 
+## Test
+
+We are performing these checks to ensure that the multiservice-discovery fetches all the necessary targets
+before deploying it in production.
+If less or erroneus targets end up in production, we risk compromising the observability stack leading
+to incomplete or erroneus observability data.
+If the mainnet registry gets updated or if the logic for target discovery is modified,
+this assertions should be updated accordingly.
+One can run the multiservice-discovery from local and manually update the targets after inspection:
+
+```bash
+mkdir /tmp/mainnet-registry
+cargo run --package multiservice-discovery -- --targets-dir /tmp/mainnet-registry
+curl -L -v http://localhost:8000/prom/targets > targets.json
+
+# Check number of targets:
+jq -r '[.[] | .targets[]] | length' targets.json
+
+# List unique jobs:
+jq -r '.[].labels.job' targets.json | sort -u
+
+# List unique subnets:
+jq -r '.[].labels.ic_subnet'  targets.json | sort -u
+```
+
 ## API spec
 
 ### `GET` /
@@ -73,11 +98,10 @@ Use content type `application/json` and submit a body like this:
 
 **NOTE**: The `name` field should be unique within the instance of the service discovery.
 
-
 ### `PUT` /
 
 Replaces all known IC networks for scraping by the multiservice discovery with a new
-list of IC networks.  The content type is `application/json` with a content like:
+list of IC networks. The content type is `application/json` with a content like:
 
 ```JSON
 [
@@ -123,7 +147,7 @@ Used for retrieving a list of nodes available from all the scraping targets of t
 ```JSON
 [
     {
-        "node_id": "o4j7n-2j2vj-xutgj-4n4it-xfnqw-o6gdr-zpumz-aaogx-znicu-bezl3-jqe", 
+        "node_id": "o4j7n-2j2vj-xutgj-4n4it-xfnqw-o6gdr-zpumz-aaogx-znicu-bezl3-jqe",
         "ic_name": "benchmarkxsmall01", // This entry is linked to the scraping target named benchmarkxsmall01
         "targets": [
             "[2a00:fb01:400:42:5000:aeff:fee0:fc5f]:9090"
@@ -155,7 +179,7 @@ Used for adding boundary nodes to a certain scraping target. Since they are not 
 
 ```JSON
 {
-    "name": "bnp-00" 
+    "name": "bnp-00"
     "ic_name": "benchmarkxsmall01",
     "custom_labels": {
         "example": "value"

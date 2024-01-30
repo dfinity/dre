@@ -1,19 +1,27 @@
+// Note: If you need to update the assertions, please check the README.md file for guidelines.
 #[cfg(test)]
 mod tests {
+    use assert_cmd::cargo::CommandCargoExt;
+    use dirs::home_dir;
+    use flate2::read::GzDecoder;
     use multiservice_discovery_shared::builders::prometheus_config_structure::{
         PrometheusStaticConfig, IC_NAME, IC_SUBNET, JOB,
     };
     use std::collections::{BTreeMap, BTreeSet};
-    use std::fs;
+    use std::path::Path;
     use std::path::PathBuf;
     use std::process::Command;
-    use std::str::FromStr;
     use std::time::Duration;
+    use std::{fs, thread};
+    use tar::Archive;
     use tokio::runtime::Runtime;
-    use tokio::time::sleep;
 
-    const BAZEL_BIN_PATH: &str = "rs/ic-observability/multiservice-discovery/multiservice-discovery";
-    const BAZEL_DATA_PATH: &str = "external/mainnet_registry";
+    const BAZEL_SD_PATH: &str = "rs/ic-observability/multiservice-discovery/multiservice-discovery";
+    const CARGO_SD_PATH: &str = "multiservice-discovery";
+    const BAZEL_REGISTRY_PATH: &str = "external/mainnet_registry";
+    const CARGO_REGISTRY_PATH: &str = ".cache/mainnet_registry";
+
+    const REGISTRY_MAINNET_URL: &str = "https://github.com/dfinity/dre/raw/ic-registry-mainnet/rs/ic-observability/multiservice-discovery/tests/test_data/mercury.tar.gz";
 
     async fn fetch_targets() -> anyhow::Result<BTreeSet<PrometheusStaticConfig>> {
         let timeout_duration = Duration::from_secs(300);
@@ -23,47 +31,62 @@ mod tests {
             if start_time.elapsed() > timeout_duration {
                 return Err(anyhow::anyhow!("Timeout reached"));
             }
-            sleep(Duration::from_secs(5)).await;
-
-            let response = reqwest::get("http://localhost:8000/prom/targets").await?.text().await?;
-            let deserialized: Result<BTreeSet<PrometheusStaticConfig>, serde_json::Error> =
-                serde_json::from_str(&response);
-
-            match deserialized {
-                Ok(mainnet_targets) => {
-                    if !mainnet_targets.is_empty() {
-                        return Ok(mainnet_targets);
-                    }
-                }
-                Err(err) => {
-                    return Err(anyhow::anyhow!("Failed to deserialize: {}", err));
+            if let Ok(response) = reqwest::get("http://localhost:8000/prom/targets").await {
+                if response.status().is_success() {
+                    let text = response.text().await?;
+                    let targets: BTreeSet<PrometheusStaticConfig> = serde_json::from_str(&text).unwrap();
+                    return Ok(targets);
                 }
             }
+            thread::sleep(Duration::from_secs(5));
         }
     }
+
+    async fn download_and_extract(url: &str, output_target_dir: &Path) -> anyhow::Result<()> {
+        let response = reqwest::get(url).await?.bytes().await?;
+        let decoder = GzDecoder::new(&response[..]);
+        let mut archive = Archive::new(decoder);
+        archive.unpack(output_target_dir)?;
+
+        Ok(())
+    }
+
+    async fn command_from_env() -> anyhow::Result<(std::process::Command, PathBuf)> {
+        if let Ok(command) = Command::cargo_bin(CARGO_SD_PATH) {
+            // Runs cargo test
+            let mut registry_cache_dir = home_dir().unwrap();
+            registry_cache_dir.push(CARGO_REGISTRY_PATH);
+            if !fs::metadata(registry_cache_dir.as_path()).is_ok() {
+                download_and_extract(REGISTRY_MAINNET_URL, registry_cache_dir.as_path()).await?;
+            }
+
+            Ok((command, registry_cache_dir))
+        } else {
+            // Runs bazel test
+            let registry_path = PathBuf::from(BAZEL_REGISTRY_PATH);
+            let command = Command::new(BAZEL_SD_PATH);
+            Ok((command, registry_path))
+        }
+    }
+
     #[test]
     fn prom_targets_tests() {
         let rt = Runtime::new().unwrap();
-        let mut args = vec!["--nns-url", "http://donotupdate.app", "--targets-dir"];
-        let data_path = PathBuf::from_str(BAZEL_DATA_PATH).unwrap();
-        let mut command = Command::new(BAZEL_BIN_PATH);
-
-        args.push(data_path.as_path().to_str().unwrap());
-        let mut child = command.args(args).spawn().unwrap();
-
-        let targets_res = rt.block_on(rt.spawn(async { fetch_targets().await }));
-
-        child
-            .kill()
-            .map(|res| {
-                fs::remove_dir_all(data_path).unwrap();
-                res
-            })
+        let (mut command, registry_path) = rt
+            .block_on(rt.spawn(async { command_from_env().await }))
+            .unwrap()
             .unwrap();
 
-        let targets = targets_res.unwrap().unwrap();
+        let args = vec![
+            "--nns-url",
+            "http://donotupdate.app",
+            "--targets-dir",
+            registry_path.as_path().to_str().unwrap(),
+        ];
 
-        assert_eq!(targets.len(), 7274);
+        let mut sd_server = command.args(args).spawn().unwrap();
+        let targets = rt.block_on(rt.spawn(async { fetch_targets().await })).unwrap().unwrap();
+        sd_server.kill().unwrap();
 
         let labels_set =
             targets
@@ -81,6 +104,8 @@ mod tests {
                     }
                     acc
                 });
+
+        assert_eq!(targets.len(), 7359);
 
         assert_eq!(
             labels_set.get(IC_NAME).unwrap().iter().collect::<Vec<_>>(),
