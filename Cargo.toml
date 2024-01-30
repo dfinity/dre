@@ -1,23 +1,23 @@
 [workspace]
 
 members = [
-    "rs/cli",
-    "rs/decentralization",
-    "rs/ic-management-backend",
-    "rs/ic-management-types",
-    "rs/ic-observability/config-writer-common",
-    "rs/ic-observability/multiservice-discovery",
-    "rs/ic-observability/multiservice-discovery-downloader",
-    "rs/ic-observability/multiservice-discovery-shared",
-    "rs/ic-observability/node-status-updater",
-    "rs/ic-observability/obs-canister-clients",
-    "rs/ic-observability/prometheus-config-updater",
-    "rs/ic-observability/service-discovery",
-    "rs/ic-observability/sns-downloader",
-    "rs/log-fetcher",
-    "rs/canister-log-fetcher",
-    "rs/np-notifications",
-    "rs/slack-notifications",
+  "rs/cli",
+  "rs/decentralization",
+  "rs/ic-management-backend",
+  "rs/ic-management-types",
+  "rs/ic-observability/config-writer-common",
+  "rs/ic-observability/multiservice-discovery",
+  "rs/ic-observability/multiservice-discovery-downloader",
+  "rs/ic-observability/multiservice-discovery-shared",
+  "rs/ic-observability/node-status-updater",
+  "rs/ic-observability/obs-canister-clients",
+  "rs/ic-observability/prometheus-config-updater",
+  "rs/ic-observability/service-discovery",
+  "rs/ic-observability/sns-downloader",
+  "rs/log-fetcher",
+  "rs/canister-log-fetcher",
+  "rs/np-notifications",
+  "rs/slack-notifications",
 ]
 
 resolver = "2"
@@ -32,8 +32,8 @@ documentation = "https://github.com/dfinity/dre/"
 [workspace.dependencies]
 actix = "0.13.1"
 actix-web = { version = "4.2.1", default-features = false, features = [
-    "compress-gzip",
-    "macros",
+  "compress-gzip",
+  "macros",
 ] }
 actix-rt = "2.2.0"
 ahash = "0.8.3"
@@ -48,16 +48,16 @@ candid = "0.9.11"
 chrono = { version = "0.4.31", features = ["serde"] }
 clap-num = "1.0.0"
 clap = { version = "4.4.17", features = [
-    "derive",
-    "env",
-    "usage",
-    "color",
-    "help",
-    "error-context",
-    "suggestions",
-    "wrap_help",
-    "string",
-    "cargo",
+  "derive",
+  "env",
+  "usage",
+  "color",
+  "help",
+  "error-context",
+  "suggestions",
+  "wrap_help",
+  "string",
+  "cargo",
 ] }
 colored = "2.0.0"
 counter = "0.5.2"
@@ -154,10 +154,10 @@ simple_asn1 = "0.6.0"
 slog-async = { version = "2.8.0", features = ["nested-values"] }
 slog-term = "2.9.0"
 slog = { version = "2.7.0", features = [
-    "max_level_trace",
-    "nested-values",
-    "release_max_level_debug",
-    "release_max_level_trace",
+  "max_level_trace",
+  "nested-values",
+  "release_max_level_debug",
+  "release_max_level_trace",
 ] }
 socket2 = "0.5.5"
 spinners = "4.1.1"
