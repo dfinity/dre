@@ -6,14 +6,15 @@ mod tests {
     };
     use std::collections::{BTreeMap, BTreeSet};
     use std::fs;
-    use std::path::Path;
+    use std::path::PathBuf;
     use std::process::Command;
+    use std::str::FromStr;
     use std::time::Duration;
+    use tempfile::TempDir;
     use tokio::runtime::Runtime;
     use tokio::time::sleep;
 
     const CARGO_BIN_PATH: &str = "multiservice-discovery";
-    const CARGO_DATA_PATH: &str = "tests/test_data";
     const BAZEL_BIN_PATH: &str = "rs/ic-observability/multiservice-discovery/multiservice-discovery";
     const BAZEL_DATA_PATH: &str = "external/mainnet_registry";
 
@@ -48,56 +49,60 @@ mod tests {
     #[test]
     fn prom_targets_tests() {
         let rt = Runtime::new().unwrap();
-        let mut args = vec![
-            "--nns-url",
-            "http://donotupdate.app",
-            "--targets-dir",
-        ];
+        let mut args = vec!["--nns-url", "http://donotupdate.app", "--targets-dir"];
         let (mut cmd, data_path) = match Command::cargo_bin(CARGO_BIN_PATH) {
             Ok(command) => {
-                rt.block_on(rt.spawn(async {
-                    archive_utils::download_and_extract(REGISTRY_MAINNET_URL, Path::new(CARGO_DATA_PATH)).await
-                })).unwrap().unwrap();
-        
-                (command, CARGO_DATA_PATH)
-            },
+                let tempdir = PathBuf::from(TempDir::new().unwrap().path());
+                let tempdir_cloned = tempdir.clone();
+
+                rt.block_on(rt.spawn(async move {
+                    archive_utils::download_and_extract(REGISTRY_MAINNET_URL, tempdir_cloned.as_path()).await
+                }))
+                .unwrap()
+                .unwrap();
+
+                (command, tempdir)
+            }
             _ => {
+                let data_path = PathBuf::from_str(BAZEL_DATA_PATH).unwrap();
                 let command = Command::new(BAZEL_BIN_PATH);
-                (command, BAZEL_DATA_PATH)
+                (command, data_path)
             }
         };
 
-        args.push(data_path);
+        args.push(data_path.as_path().to_str().unwrap());
         let mut child = cmd.args(args).spawn().unwrap();
 
-        let targets_res = rt.block_on(rt.spawn(async {
-            fetch_targets().await
-        }));
+        let targets_res = rt.block_on(rt.spawn(async { fetch_targets().await }));
 
-        child.kill().map(|res| {
-            fs::remove_dir_all(data_path).unwrap();
-            res
-        }).unwrap();
+        child
+            .kill()
+            .map(|res| {
+                fs::remove_dir_all(data_path).unwrap();
+                res
+            })
+            .unwrap();
 
         let targets = targets_res.unwrap().unwrap();
 
         assert_eq!(targets.len(), 7274);
 
-        let labels_set = targets
-            .iter()
-            .cloned()
-            .fold(BTreeMap::new(), |mut acc: BTreeMap<String, BTreeSet<String>>, v| {
-                for (key, value) in v.labels {
-                    if let Some(grouped_set) = acc.get_mut(&key) {
-                        grouped_set.insert(value);
-                    } else {
-                        let mut new_set = BTreeSet::new();
-                        new_set.insert(value);
-                        acc.insert(key,new_set);
+        let labels_set =
+            targets
+                .iter()
+                .cloned()
+                .fold(BTreeMap::new(), |mut acc: BTreeMap<String, BTreeSet<String>>, v| {
+                    for (key, value) in v.labels {
+                        if let Some(grouped_set) = acc.get_mut(&key) {
+                            grouped_set.insert(value);
+                        } else {
+                            let mut new_set = BTreeSet::new();
+                            new_set.insert(value);
+                            acc.insert(key, new_set);
+                        }
                     }
-                }
-                acc
-            });
+                    acc
+                });
 
         assert_eq!(
             labels_set.get(IC_NAME).unwrap().iter().collect::<Vec<_>>(),
@@ -106,10 +111,16 @@ mod tests {
 
         assert_eq!(
             labels_set.get(JOB).unwrap().iter().collect::<Vec<_>>(),
-            vec!["guest_metrics_proxy", "host_metrics_proxy", "host_node_exporter", "node_exporter", "orchestrator", "replica"]
+            vec![
+                "guest_metrics_proxy",
+                "host_metrics_proxy",
+                "host_node_exporter",
+                "node_exporter",
+                "orchestrator",
+                "replica"
+            ]
         );
 
- 
         let subnets = labels_set.get(IC_SUBNET).unwrap().iter().cloned().collect::<Vec<_>>();
         let expected_subnets = vec![
             "2fq7c-slacv-26cgz-vzbx2-2jrcs-5edph-i5s2j-tck77-c3rlz-iobzx-mqe",
@@ -148,7 +159,7 @@ mod tests {
             "w4asl-4nmyj-qnr7c-6cqq4-tkwmt-o26di-iupkq-vx4kt-asbrx-jzuxh-4ae",
             "w4rem-dv5e3-widiz-wbpea-kbttk-mnzfm-tzrc7-svcj3-kbxyb-zamch-hqe",
             "x33ed-h457x-bsgyx-oqxqf-6pzwv-wkhzr-rm2j3-npodi-purzm-n66cg-gae",
-            "yinp6-35cfo-wgcd2-oc4ty-2kqpf-t4dul-rfk33-fsq3r-mfmua-m2ngh-jqe"
+            "yinp6-35cfo-wgcd2-oc4ty-2kqpf-t4dul-rfk33-fsq3r-mfmua-m2ngh-jqe",
         ];
 
         for subnet in expected_subnets {
