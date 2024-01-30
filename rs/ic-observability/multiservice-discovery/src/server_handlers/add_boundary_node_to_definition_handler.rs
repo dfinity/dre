@@ -16,13 +16,15 @@ pub struct AddBoundaryNodeToDefinitionBinding {
 
 #[derive(Debug)]
 
-struct DefinitionNotFound(String);
+struct DefinitionNotFound {
+    ic_name: String,
+}
 
 impl Error for DefinitionNotFound {}
 
 impl Display for DefinitionNotFound {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        write!(f, "definition {} not found", self)
+        write!(f, "definition {} not found", self.ic_name)
     }
 }
 
@@ -33,12 +35,13 @@ pub(crate) async fn add_boundary_node(
     let log = binding.log.clone();
     let name = boundary_node.name.clone();
     let ic_name = boundary_node.ic_name.clone();
+    let rej: String = format!("Definition {} could not be added", name);
+
     let mut definitions = binding.supervisor.definitions.lock().await;
-    let rej = format!("Definition {} could not be added", name);
 
     let running_definition = match definitions.get_mut(&ic_name) {
         Some(d) => d,
-        None => return not_found(log, rej, DefinitionNotFound(ic_name)),
+        None => return not_found(log, rej, DefinitionNotFound { ic_name }),
     };
 
     let bn = match boundary_node.try_into_boundary_node() {
@@ -48,6 +51,6 @@ pub(crate) async fn add_boundary_node(
 
     match running_definition.add_boundary_node(bn).await {
         Ok(()) => ok(log, format!("Definition {} added successfully", name)),
-        Err(e) => return bad_request(log, rej, e),
+        Err(e) => bad_request(log, rej, e),
     }
 }

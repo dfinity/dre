@@ -36,6 +36,6 @@ pub(crate) async fn add_definition(definition: DefinitionDto, binding: AddDefini
     };
     match binding.supervisor.start(vec![new_definition], false).await {
         Ok(()) => ok(log, format!("Definition {} added successfully", dname)),
-        Err(e) => return bad_request(log, rej, e.errors.into_iter().next().unwrap()),
+        Err(e) => bad_request(log, rej, e.errors.into_iter().next().unwrap()),
     }
 }

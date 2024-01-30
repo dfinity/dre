@@ -34,9 +34,8 @@ pub(crate) async fn replace_definitions(
         .collect();
     let defsresults: Vec<Result<Definition, BadDtoError>> = join_all(defsresults_futures).await;
     let (new_definitions, errors): (Vec<_>, Vec<_>) = defsresults.into_iter().partition(Result::is_ok);
-    let new_definitions: Vec<_> = new_definitions.into_iter().map(Result::unwrap).collect();
-    let errors: Vec<_> = errors.into_iter().map(Result::unwrap_err).collect();
 
+    let errors: Vec<_> = errors.into_iter().map(Result::unwrap_err).collect();
     if !errors.is_empty() {
         return bad_request(
             log,
@@ -48,6 +47,7 @@ pub(crate) async fn replace_definitions(
         );
     }
 
+    let new_definitions: Vec<_> = new_definitions.into_iter().map(Result::unwrap).collect();
     match binding.supervisor.start(new_definitions, true).await {
         Ok(_) => ok(log, format!("Added new definitions {} to existing ones", dnames)),
         Err(e) => bad_request(log, rej, format!(":\n{}", e)),
