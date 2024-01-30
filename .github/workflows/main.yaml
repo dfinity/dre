@@ -17,31 +17,24 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v4
-      - name: Setup runner
+      - name: "☁️ Setup runner"
         uses: ./.github/workflows/manage-runner-pre
 
       ########################################
       # Build and test
       ########################################
-      - run: bazel build ...
-        name: Building
+      - name: "🚀 Building"
+        run: bazel build ...
       - run: bazel test ...
-        name: Testing
+        name: "🚀 Testing"
 
       ########################################
       # Prepare release
       ########################################
-      - name: Upload artifact for release
-        uses: actions/upload-artifact@v2
-        if: startsWith(github.ref, 'refs/tags/v')
-        with:
-          name: dre
-          path: bazel-out/k8-opt/bin/rs/cli/dre
       - name: Call prepare release
-        if: startsWith(github.ref, 'refs/tags/v')
-        uses: ./.github/workflows/prepare-release.yml
+        if: ${{ startsWith(github.ref, 'refs/tags/v') || startsWith(github.head_ref, 'release') }}
+        uses: ./.github/workflows/prepare-release
         with:
-          ARTIFACT_NAME: dre
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       ########################################
