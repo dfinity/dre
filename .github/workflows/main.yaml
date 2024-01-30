@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - name: Debug print github context
-        run: echo ${{ toJSON(github) }}
+        run: echo '${{ toJSON(github) }}'
       # - uses: actions/checkout@v4
       # - name: Setup runner
       #   uses: ./.github/workflows/manage-runner-pre
