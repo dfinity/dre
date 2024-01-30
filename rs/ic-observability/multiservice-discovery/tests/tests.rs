@@ -1,6 +1,5 @@
 #[cfg(test)]
 mod tests {
-    use assert_cmd::cargo::CommandCargoExt;
     use multiservice_discovery_shared::builders::prometheus_config_structure::{
         PrometheusStaticConfig, IC_NAME, IC_SUBNET, JOB,
     };
@@ -10,15 +9,11 @@ mod tests {
     use std::process::Command;
     use std::str::FromStr;
     use std::time::Duration;
-    use tempfile::TempDir;
     use tokio::runtime::Runtime;
     use tokio::time::sleep;
 
-    const CARGO_BIN_PATH: &str = "multiservice-discovery";
     const BAZEL_BIN_PATH: &str = "rs/ic-observability/multiservice-discovery/multiservice-discovery";
     const BAZEL_DATA_PATH: &str = "external/mainnet_registry";
-
-    const REGISTRY_MAINNET_URL: &str = "https://github.com/dfinity/dre/raw/ic-registry-mainnet/rs/ic-observability/multiservice-discovery/tests/test_data/mercury.tar.gz";
 
     async fn fetch_targets() -> anyhow::Result<BTreeSet<PrometheusStaticConfig>> {
         let timeout_duration = Duration::from_secs(300);
@@ -50,28 +45,11 @@ mod tests {
     fn prom_targets_tests() {
         let rt = Runtime::new().unwrap();
         let mut args = vec!["--nns-url", "http://donotupdate.app", "--targets-dir"];
-        let (mut cmd, data_path) = match Command::cargo_bin(CARGO_BIN_PATH) {
-            Ok(command) => {
-                let tempdir = PathBuf::from(TempDir::new().unwrap().path());
-                let tempdir_cloned = tempdir.clone();
-
-                rt.block_on(rt.spawn(async move {
-                    archive_utils::download_and_extract(REGISTRY_MAINNET_URL, tempdir_cloned.as_path()).await
-                }))
-                .unwrap()
-                .unwrap();
-
-                (command, tempdir)
-            }
-            _ => {
-                let data_path = PathBuf::from_str(BAZEL_DATA_PATH).unwrap();
-                let command = Command::new(BAZEL_BIN_PATH);
-                (command, data_path)
-            }
-        };
+        let data_path = PathBuf::from_str(BAZEL_DATA_PATH).unwrap();
+        let mut command = Command::new(BAZEL_BIN_PATH);
 
         args.push(data_path.as_path().to_str().unwrap());
-        let mut child = cmd.args(args).spawn().unwrap();
+        let mut child = command.args(args).spawn().unwrap();
 
         let targets_res = rt.block_on(rt.spawn(async { fetch_targets().await }));
 
