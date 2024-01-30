@@ -1,17 +1,15 @@
-use slog::{error, info, Logger};
+use slog::Logger;
 
-use std::error::Error;
 use std::path::PathBuf;
 use std::time::Duration;
 
-use std::fmt::{Display, Error as FmtError, Formatter};
+use super::{bad_request, ok, WebResult};
 use warp::Reply;
 
-use crate::definition::{DefinitionsSupervisor, StartDefinitionError};
-use crate::server_handlers::dto::BadDtoError;
+use crate::definition::DefinitionsSupervisor;
 use crate::server_handlers::dto::DefinitionDto;
-use crate::server_handlers::WebResult;
 
+#[derive(Clone)]
 pub(crate) struct AddDefinitionBinding {
     pub supervisor: DefinitionsSupervisor,
     pub log: Logger,
@@ -20,28 +18,11 @@ pub(crate) struct AddDefinitionBinding {
     pub registry_query_timeout: Duration,
 }
 
-#[derive(Debug)]
-pub enum AddDefinitionError {
-    StartDefinitionError(StartDefinitionError),
-    BadDtoError(BadDtoError),
-}
-
-impl Error for AddDefinitionError {}
-
-impl Display for AddDefinitionError {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        match self {
-            Self::StartDefinitionError(e) => write!(f, "{}", e),
-            Self::BadDtoError(e) => write!(f, "{}", e),
-        }
-    }
-}
-
-async fn _add_definition(
-    tentative_definition: DefinitionDto,
-    binding: AddDefinitionBinding,
-) -> Result<(), AddDefinitionError> {
-    let new_definition = match tentative_definition
+pub(crate) async fn add_definition(definition: DefinitionDto, binding: AddDefinitionBinding) -> WebResult<impl Reply> {
+    let log = binding.log.clone();
+    let dname = definition.name.clone();
+    let rej = format!("Definition {} could not be added", dname);
+    let new_definition = match definition
         .try_into_definition(
             binding.log.clone(),
             binding.registry_path.clone(),
@@ -51,34 +32,10 @@ async fn _add_definition(
         .await
     {
         Ok(def) => def,
-        Err(e) => return Err(AddDefinitionError::BadDtoError(e)),
+        Err(e) => return bad_request(log, rej, e),
     };
-
     match binding.supervisor.start(vec![new_definition], false).await {
-        Ok(()) => Ok(()),
-        Err(e) => Err(AddDefinitionError::StartDefinitionError(
-            e.errors.into_iter().next().unwrap(),
-        )),
-    }
-}
-
-pub(crate) async fn add_definition(definition: DefinitionDto, binding: AddDefinitionBinding) -> WebResult<impl Reply> {
-    let log = binding.log.clone();
-    let dname = definition.name.clone();
-    match _add_definition(definition, binding).await {
-        Ok(_) => {
-            info!(log, "Added new definition {} to existing ones", dname);
-            Ok(warp::reply::with_status(
-                format!("Definition {} added successfully", dname),
-                warp::http::StatusCode::OK,
-            ))
-        }
-        Err(e) => {
-            error!(log, "Definition could not be added: {}", e);
-            Ok(warp::reply::with_status(
-                format!("Definition could not be added: {}", e),
-                warp::http::StatusCode::BAD_REQUEST,
-            ))
-        }
+        Ok(()) => ok(log, format!("Definition {} added successfully", dname)),
+        Err(e) => return bad_request(log, rej, e.errors.into_iter().next().unwrap()),
     }
 }

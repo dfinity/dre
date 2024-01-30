@@ -7,6 +7,7 @@ use slog::Logger;
 use std::collections::BTreeMap;
 use warp::reply::Reply;
 
+#[derive(Clone)]
 pub struct ExportTargetsBinding {
     pub supervisor: DefinitionsSupervisor,
     pub log: Logger,

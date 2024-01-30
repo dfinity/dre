@@ -1,67 +1,25 @@
-use std::error::Error;
-use std::fmt::{Display, Error as FmtError, Formatter};
-
-use slog::{error, info};
-
 use futures::future::join_all;
 use warp::Reply;
 
-use crate::definition::{Definition, StartDefinitionError};
+use super::{bad_request, ok, WebResult};
+
+use crate::definition::Definition;
 use crate::server_handlers::dto::{BadDtoError, DefinitionDto};
 use crate::server_handlers::AddDefinitionBinding as ReplaceDefinitionsBinding;
-use crate::server_handlers::WebResult;
 
-#[derive(Debug)]
-enum ReplaceDefinitionError {
-    BadDtoError(BadDtoError),
-    StartDefinitionError(StartDefinitionError),
-}
-
-impl Error for ReplaceDefinitionError {}
-
-impl Display for ReplaceDefinitionError {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        match self {
-            Self::BadDtoError(e) => write!(f, "{}", e),
-            Self::StartDefinitionError(e) => write!(f, "{}", e),
-        }
-    }
-}
-
-impl From<BadDtoError> for ReplaceDefinitionError {
-    fn from(e: BadDtoError) -> Self {
-        Self::BadDtoError(e)
-    }
-}
-
-impl From<StartDefinitionError> for ReplaceDefinitionError {
-    fn from(e: StartDefinitionError) -> Self {
-        Self::StartDefinitionError(e)
-    }
-}
-
-#[derive(Debug)]
-struct ReplaceDefinitionsError {
-    errors: Vec<ReplaceDefinitionError>,
-}
-
-impl Error for ReplaceDefinitionsError {}
-
-impl Display for ReplaceDefinitionsError {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        for e in self.errors.iter() {
-            write!(f, "* {}", e)?
-        }
-        Ok(())
-    }
-}
-
-async fn _replace_definitions(
-    tentative_definitions: Vec<DefinitionDto>,
+pub(crate) async fn replace_definitions(
+    definitions: Vec<DefinitionDto>,
     binding: ReplaceDefinitionsBinding,
-) -> Result<(), ReplaceDefinitionsError> {
-    // Transform all definitions with checking.
-    let defsresults_futures: Vec<_> = tentative_definitions
+) -> WebResult<impl Reply> {
+    let log = binding.log.clone();
+    let rej = "Definitions could not be changed".to_string();
+    let dnames = definitions
+        .iter()
+        .map(|d| d.name.clone())
+        .collect::<Vec<String>>()
+        .join(", ");
+
+    let defsresults_futures: Vec<_> = definitions
         .into_iter()
         .map(|tentative_definition| async {
             tentative_definition
@@ -80,43 +38,18 @@ async fn _replace_definitions(
     let errors: Vec<_> = errors.into_iter().map(Result::unwrap_err).collect();
 
     if !errors.is_empty() {
-        return Err(ReplaceDefinitionsError {
-            errors: errors.into_iter().map(ReplaceDefinitionError::from).collect(),
-        });
+        return bad_request(
+            log,
+            rej,
+            format!(
+                ":\n * {}",
+                errors.iter().map(|e| e.to_string()).collect::<Vec<_>>().join("\n * ")
+            ),
+        );
     }
 
     match binding.supervisor.start(new_definitions, true).await {
-        Ok(()) => Ok(()),
-        Err(e) => Err(ReplaceDefinitionsError {
-            errors: e.errors.into_iter().map(ReplaceDefinitionError::from).collect(),
-        }),
-    }
-}
-
-pub(crate) async fn replace_definitions(
-    definitions: Vec<DefinitionDto>,
-    binding: ReplaceDefinitionsBinding,
-) -> WebResult<impl Reply> {
-    let log = binding.log.clone();
-    let dnames = definitions
-        .iter()
-        .map(|d| d.name.clone())
-        .collect::<Vec<String>>()
-        .join(", ");
-    match _replace_definitions(definitions, binding).await {
-        Ok(_) => {
-            info!(log, "Added new definitions {} to existing ones", dnames);
-            Ok(warp::reply::with_status(
-                format!("Definitions {} added successfully", dnames),
-                warp::http::StatusCode::OK,
-            ))
-        }
-        Err(e) => {
-            error!(log, "Definitions could not be added:\n{}", e);
-            Ok(warp::reply::with_status(
-                format!("Definitions could not be replaced:\n{}", e),
-                warp::http::StatusCode::BAD_REQUEST,
-            ))
-        }
+        Ok(_) => ok(log, format!("Added new definitions {} to existing ones", dnames)),
+        Err(e) => bad_request(log, rej, format!(":\n{}", e)),
     }
 }
