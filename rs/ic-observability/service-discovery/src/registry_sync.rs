@@ -1,11 +1,13 @@
 use futures::TryFutureExt;
 use std::{
+    error::Error,
     ops::Add,
     path::{Path, PathBuf},
     sync::Arc,
     time::Instant,
 };
 
+use crossbeam_channel::Receiver;
 use ic_interfaces_registry::{RegistryClient, RegistryValue, ZERO_REGISTRY_VERSION};
 use ic_protobuf::registry::crypto::v1::PublicKey;
 use ic_registry_client::client::ThresholdSigPublicKey;
@@ -19,7 +21,19 @@ use ic_registry_nns_data_provider::registry::RegistryCanister;
 use ic_types::{PrincipalId, RegistryVersion, SubnetId};
 use registry_canister::mutations::common::decode_registry_value;
 use slog::{debug, error, info, warn, Logger};
+use std::fmt::{Display, Error as FmtError, Formatter};
 use url::Url;
+
+#[derive(Debug)]
+pub struct Interrupted {}
+
+impl Error for Interrupted {}
+
+impl Display for Interrupted {
+    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        write!(f, "interrupted")
+    }
+}
 
 pub async fn sync_local_registry(
     log: Logger,
@@ -27,7 +41,8 @@ pub async fn sync_local_registry(
     nns_urls: Vec<Url>,
     use_current_version: bool,
     public_key: Option<ThresholdSigPublicKey>,
-) {
+    stop_signal: &Receiver<()>,
+) -> Result<(), Interrupted> {
     let start = Instant::now();
     let local_store = Arc::new(LocalStoreImpl::new(local_path.clone()));
     let registry_canister = RegistryCanister::new(nns_urls);
@@ -43,7 +58,7 @@ pub async fn sync_local_registry(
 
     if use_current_version && latest_version != ZERO_REGISTRY_VERSION {
         debug!(log, "Skipping syncing with registry, using local version");
-        return;
+        return Ok(());
     } else if use_current_version {
         warn!(
             log,
@@ -63,13 +78,18 @@ pub async fn sync_local_registry(
             if let Err(e) = maybe_key {
                 let network_name = local_path.file_name().unwrap().to_str().unwrap();
                 debug!(log, "Unable to fetch public key for network {}: {:?}", network_name, e);
-                return;
+                return Ok(()); // FIXME: what?!;
             }
             maybe_key.unwrap()
         }
     };
 
     loop {
+        match stop_signal.try_recv() {
+            Ok(_) => return Err(Interrupted {}),
+            Err(_) => {}
+        }
+
         if match registry_canister.get_latest_version().await {
             Ok(v) => {
                 debug!(log, "Latest registry version: {}", v);
@@ -155,7 +175,8 @@ pub async fn sync_local_registry(
 
     futures::future::join_all(updates).await;
     local_store.update_certified_time(latest_certified_time).unwrap();
-    info!(log, "Synced all registry versions in : {:?}", start.elapsed())
+    info!(log, "Synced all registry versions in : {:?}", start.elapsed());
+    Ok(())
 }
 
 async fn get_nns_public_key(registry_canister: &RegistryCanister) -> anyhow::Result<ThresholdSigPublicKey> {

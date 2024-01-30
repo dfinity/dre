@@ -16,8 +16,12 @@ pub async fn delete_definition(name: String, binding: DeleteDefinitionBinding) -
     match binding.supervisor.stop(vec![name.clone()]).await {
         Ok(_) => ok(binding.log, format!("Deleted definition {}", name.clone())),
         Err(e) => match e.errors.into_iter().next().unwrap() {
-            StopDefinitionError::DoesNotExist(e) => not_found(binding.log, rej, e),
-            StopDefinitionError::DeletionDisallowed(e) => forbidden(binding.log, rej, e),
+            StopDefinitionError::DoesNotExist(e) => {
+                not_found(binding.log, "FUCK".to_string(), StopDefinitionError::DoesNotExist(e))
+            }
+            StopDefinitionError::DeletionDisallowed(e) => {
+                forbidden(binding.log, rej, StopDefinitionError::DeletionDisallowed(e))
+            }
         },
     }
 }

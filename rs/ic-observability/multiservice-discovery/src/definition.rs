@@ -4,6 +4,7 @@ use futures_util::future::join_all;
 use ic_management_types::Network;
 use ic_registry_client::client::ThresholdSigPublicKey;
 use service_discovery::job_types::JobType;
+use service_discovery::registry_sync::Interrupted;
 use service_discovery::IcServiceDiscovery;
 use service_discovery::IcServiceDiscoveryError;
 use service_discovery::TargetGroup;
@@ -159,7 +160,7 @@ impl RunningDefinition {
             .get_target_groups(job_type, self.definition.log.clone())
     }
 
-    async fn initial_registry_sync(&self) {
+    async fn initial_registry_sync(&self) -> Result<(), Interrupted> {
         info!(
             self.definition.log,
             "Syncing local registry for {} started", self.definition.name
@@ -170,19 +171,26 @@ impl RunningDefinition {
             self.definition.registry_path.display()
         );
 
-        sync_local_registry(
+        let r = sync_local_registry(
             self.definition.log.clone(),
             self.definition.registry_path.join("targets"),
             self.definition.nns_urls.clone(),
             false,
             self.definition.public_key,
+            &self.stop_signal,
         )
         .await;
-
-        info!(
-            self.definition.log,
-            "Syncing local registry for {} completed", self.definition.name
-        );
+        match r {
+            Ok(_) => info!(
+                self.definition.log,
+                "Syncing local registry for {} completed", self.definition.name,
+            ),
+            Err(_) => warn!(
+                self.definition.log,
+                "Interrupted initial sync of definition {}", self.definition.name
+            ),
+        }
+        r
     }
 
     async fn poll_loop(&self) {
@@ -218,7 +226,9 @@ impl RunningDefinition {
     }
 
     async fn run(&self) {
-        self.initial_registry_sync().await;
+        if let Err(_) = self.initial_registry_sync().await {
+            return;
+        };
 
         info!(
             self.definition.log,
@@ -284,7 +294,7 @@ impl Display for StartDefinitionError {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
         match self {
             Self::AlreadyExists(name) => write!(f, "definition {} is already running", name),
-            Self::DeletionDisallowed(name) => write!(f, "definition {} may not be deleted without a replacement", name),
+            Self::DeletionDisallowed(name) => write!(f, "deletion of {} is disallowed without a replacement", name),
         }
     }
 }
@@ -316,7 +326,7 @@ impl Display for StopDefinitionError {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
         match self {
             Self::DoesNotExist(name) => write!(f, "definition {} does not exist", name),
-            Self::DeletionDisallowed(name) => write!(f, "definition {} may not be deleted", name),
+            Self::DeletionDisallowed(name) => write!(f, "deletion of {} is disallowed by configuration", name),
         }
     }
 }
@@ -456,8 +466,9 @@ impl DefinitionsSupervisor {
     pub(crate) async fn stop(&self, definition_names: Vec<String>) -> Result<(), StopDefinitionsError> {
         let mut defs = self.definitions.lock().await;
         let mut errors: Vec<StopDefinitionError> = definition_names
-            .iter()
-            .filter(|n| defs.contains_key(*n))
+            .clone()
+            .into_iter()
+            .filter(|n| !defs.contains_key(n))
             .map(|n| StopDefinitionError::DoesNotExist(n.clone()))
             .collect();
         errors.extend(
