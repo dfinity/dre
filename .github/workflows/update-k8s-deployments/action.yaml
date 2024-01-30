@@ -9,7 +9,8 @@ inputs:
 runs:
   using: composite
   steps:
-    - env:
+    - name: "☸️ Update k8s deployments"
+      env:
         GITLAB_API_TOKEN: ${{ inputs.gitlab_api_token }}
       shell: bash
       run: |

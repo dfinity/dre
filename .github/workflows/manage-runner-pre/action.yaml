@@ -7,7 +7,7 @@ runs:
     ########################################
     # Setup
     ########################################
-    - name: Free Disk Space (Ubuntu)
+    - name: "🔧 Free Up Disk Space"
       uses: jlumbroso/free-disk-space@v1.3.1
       with:
         # this might remove tools that are actually needed,
@@ -19,7 +19,7 @@ runs:
     ########################################
     # Download and unpack cache
     ########################################
-    - name: Mount bazel cache
+    - name: "☁️ ⬇️ Restore bazel cache"
       uses: actions/cache/restore@v3
       with:
         path: "~/.cache/bazel"
