@@ -1217,9 +1217,9 @@ checksum = "fd16c4719339c4530435d38e511904438d07cce7950afa3718a84ac36c10e89e"
 
 [[package]]
 name = "chrono"
-version = "0.4.32"
+version = "0.4.33"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "41daef31d7a747c5c847246f36de49ced6f7403b4cdabc807a97b5cc184cda7a"
+checksum = "9f13690e35a5e4ace198e7beea2895d29f3a9cc55015fcebe6336bd2010af9eb"
 dependencies = [
  "android-tzdata",
  "iana-time-zone",
@@ -1852,7 +1852,7 @@ dependencies = [
  "ic-base-types",
  "ic-management-types",
  "include_dir",
- "itertools 0.12.0",
+ "itertools 0.12.1",
  "log",
  "rand 0.8.5",
  "rand_seeder",
@@ -2193,7 +2193,7 @@ dependencies = [
  "ic-nns-constants",
  "ic-nns-governance",
  "ic-sys",
- "itertools 0.12.0",
+ "itertools 0.12.1",
  "keyring",
  "log",
  "pretty_env_logger",
@@ -2831,7 +2831,7 @@ dependencies = [
  "futures-sink",
  "futures-util",
  "http",
- "indexmap 2.1.0",
+ "indexmap 2.2.1",
  "slab",
  "tokio",
  "tokio-util",
@@ -3289,7 +3289,7 @@ dependencies = [
  "ic-ic00-types",
  "ic-protobuf",
  "ic-types",
- "itertools 0.12.0",
+ "itertools 0.12.1",
  "prost",
  "rustls",
  "serde",
@@ -3389,7 +3389,7 @@ dependencies = [
  "ic-registry-subnet-type",
  "ic-replicated-state",
  "ic-types",
- "itertools 0.12.0",
+ "itertools 0.12.1",
  "leb128",
  "phantom_newtype",
  "scoped_threadpool",
@@ -3405,7 +3405,7 @@ version = "0.9.0"
 source = "git+https://github.com/dfinity/ic.git?rev=4b3b2ce76c4bde0c1c60fb80b0915931003b7eca#4b3b2ce76c4bde0c1c60fb80b0915931003b7eca"
 dependencies = [
  "ic-crypto-tree-hash",
- "itertools 0.12.0",
+ "itertools 0.12.1",
  "leb128",
  "scoped_threadpool",
  "thiserror",
@@ -3601,7 +3601,7 @@ dependencies = [
  "hex",
  "ic-crypto-getrandom-for-wasm",
  "ic_bls12_381",
- "itertools 0.12.0",
+ "itertools 0.12.1",
  "lazy_static",
  "pairing",
  "paste",
@@ -4178,16 +4178,16 @@ dependencies = [
  "ic-registry-nns-data-provider",
  "ic-registry-subnet-type",
  "ic-types",
- "itertools 0.12.0",
+ "itertools 0.12.1",
  "lazy_static",
  "log",
- "prometheus-http-query 0.4.2",
+ "prometheus-http-query",
  "regex",
  "registry-canister",
  "reqwest",
  "serde",
  "serde_json",
- "serde_yaml 0.9.30",
+ "serde_yaml 0.9.31",
  "strum 0.25.0",
  "strum_macros 0.25.3",
  "tokio",
@@ -4472,7 +4472,7 @@ dependencies = [
  "ic-stable-structures",
  "ic-types",
  "icp-ledger",
- "itertools 0.12.0",
+ "itertools 0.12.1",
  "lazy_static",
  "maplit",
  "mockall",
@@ -4730,7 +4730,7 @@ dependencies = [
  "ic-types",
  "ic-utils 0.9.0",
  "ic-wasm-types",
- "itertools 0.12.0",
+ "itertools 0.12.1",
  "lazy_static",
  "libc",
  "maplit",
@@ -4879,7 +4879,7 @@ dependencies = [
  "ic-stable-structures",
  "icp-ledger",
  "icrc-ledger-types",
- "itertools 0.12.0",
+ "itertools 0.12.1",
  "lazy_static",
  "maplit",
  "prost",
@@ -5190,9 +5190,9 @@ dependencies = [
 
 [[package]]
 name = "indexmap"
-version = "2.1.0"
+version = "2.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d530e1a18b1cb4c484e6e34556a0d948706958449fca0cab753d649f2bce3d1f"
+checksum = "433de089bd45971eecf4668ee0ee8f4cec17db4f8bd8f7bc3197a6ce37aa7d9b"
 dependencies = [
  "equivalent",
  "hashbrown 0.14.3",
@@ -5271,9 +5271,9 @@ dependencies = [
 
 [[package]]
 name = "itertools"
-version = "0.12.0"
+version = "0.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "25db6b064527c5d482d0423354fcd07a89a2dfe07b67892e62411946db7f07b0"
+checksum = "ba291022dbbd398a455acf126c1e341954079855bc60dfdda641363bd6922569"
 dependencies = [
  "either",
 ]
@@ -5320,9 +5320,9 @@ dependencies = [
 
 [[package]]
 name = "keyring"
-version = "2.3.1"
+version = "2.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "85b479dcf9eae65481044dfda57af7fe2da6c1401180360f6898801fe9ed4db9"
+checksum = "1be8bc4c6b6e9d85ecdad090fcf342a9216f53d747a537cc05e3452fd650ca46"
 dependencies = [
  "byteorder",
  "lazy_static",
@@ -5831,7 +5831,7 @@ dependencies = [
  "ic-async-utils",
  "ic-metrics",
  "obs-canister-clients",
- "prometheus-http-query 0.6.7",
+ "prometheus-http-query",
  "service-discovery",
  "slog",
  "slog-async",
@@ -5871,7 +5871,7 @@ dependencies = [
  "reqwest",
  "serde",
  "serde_json",
- "serde_yaml 0.9.30",
+ "serde_yaml 0.9.31",
  "tempfile",
  "test-log",
  "tokio",
@@ -6309,7 +6309,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e1d3afd2628e69da2be385eb6f2fd57c8ac7977ceeff6dc166ff1657b0e386a9"
 dependencies = [
  "fixedbitset",
- "indexmap 2.1.0",
+ "indexmap 2.2.1",
 ]
 
 [[package]]
@@ -6682,19 +6682,6 @@ dependencies = [
  "slog-async",
  "slog-term",
  "tokio",
- "url",
-]
-
-[[package]]
-name = "prometheus-http-query"
-version = "0.4.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6886b96a7a96d2a7cc0a1d69b20fa083cf5792982afe799dcdd05468bc51f351"
-dependencies = [
- "reqwest",
- "serde",
- "serde_json",
- "time",
  "url",
 ]
 
@@ -7447,9 +7434,9 @@ dependencies = [
 
 [[package]]
 name = "serde_json"
-version = "1.0.111"
+version = "1.0.113"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "176e46fa42316f18edd598015a5166857fc835ec732f5215eac6b7bdbf0a84f4"
+checksum = "69801b70b1c3dac963ecb03a364ba0ceda9cf60c71cfe475e99864759c8b8a79"
 dependencies = [
  "itoa",
  "ryu",
@@ -7537,11 +7524,11 @@ dependencies = [
 
 [[package]]
 name = "serde_yaml"
-version = "0.9.30"
+version = "0.9.31"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b1bf28c79a99f70ee1f1d83d10c875d2e70618417fda01ad1785e027579d9d38"
+checksum = "adf8a49373e98a4c5f0ceb5d05aa7c648d75f63774981ed95b7c7443bbd50c6e"
 dependencies = [
- "indexmap 2.1.0",
+ "indexmap 2.2.1",
  "itoa",
  "ryu",
  "serde",
@@ -7571,7 +7558,7 @@ dependencies = [
  "ic-registry-nns-data-provider",
  "ic-types",
  "ic-utils 0.9.0",
- "itertools 0.12.0",
+ "itertools 0.12.1",
  "prometheus",
  "regex",
  "registry-canister",
@@ -7699,7 +7686,7 @@ dependencies = [
  "ic-nns-common",
  "ic-nns-constants",
  "ic-nns-governance",
- "itertools 0.12.0",
+ "itertools 0.12.1",
  "lazy_static",
  "log",
  "regex",
@@ -7708,7 +7695,7 @@ dependencies = [
  "retry",
  "serde",
  "serde_json",
- "serde_yaml 0.9.30",
+ "serde_yaml 0.9.31",
  "tokio",
 ]
 
@@ -8360,7 +8347,7 @@ version = "0.19.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1b5bb770da30e5cbfde35a2d7b9b8a2c4b8ef89548a7a6aeab5c9a576e3e7421"
 dependencies = [
- "indexmap 2.1.0",
+ "indexmap 2.2.1",
  "toml_datetime",
  "winnow",
 ]
@@ -8371,7 +8358,7 @@ version = "0.21.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d34d383cd00a163b4a5b85053df514d45bc330f6de7737edfe0a93311d1eaa03"
 dependencies = [
- "indexmap 2.1.0",
+ "indexmap 2.2.1",
  "toml_datetime",
  "winnow",
 ]
