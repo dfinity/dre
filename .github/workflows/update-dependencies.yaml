@@ -10,18 +10,20 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v4
-      - uses: ./.github/workflows/manage-runner-pre
-        name: Setup runner
+      - name: "🔧 Setup runner"
+        uses: ./.github/workflows/manage-runner-pre
 
       ########################################
       # Once per night, update dependencies and completely delete and recreate bazel cache
       ########################################
-      - uses: actions/setup-python@v4
+      - name: "🐍 Setup Python"
+        uses: actions/setup-python@v4
         with:
           python-version: "3.11"
-      - uses: snok/install-poetry@v1
+      - name: "🐍 Install Poetry"
+        uses: snok/install-poetry@v1
 
-      - name: Completely delete bazel cache and then recreate it
+      - name: "⚒️ Completely delete bazel cache and then recreate it"
         run: |
           set -eExou pipefail
           #
@@ -37,10 +39,11 @@ jobs:
           sudo rm -rf ~/.cache/bazel/*
           CARGO_BAZEL_REPIN=true bazel build ...
 
-      - uses: peter-evans/create-pull-request@v5
+      - name: "🆕 Create a new Pull Request with the changes"
+        uses: peter-evans/create-pull-request@v5
         with:
           commit-message: "chore: Update dependencies"
           branch: bot-update-deps
 
-      - uses: ./.github/workflows/manage-runner-post
-        name: Tear down runner
+      - name: "🪓 Tear down runner"
+        uses: ./.github/workflows/manage-runner-post

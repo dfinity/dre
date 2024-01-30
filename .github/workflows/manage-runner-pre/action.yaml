@@ -7,7 +7,7 @@ runs:
     ########################################
     # Setup
     ########################################
-    - name: Free Disk Space (Ubuntu)
+    - name: "🔧 Free Up Disk Space"
       uses: jlumbroso/free-disk-space@v1.3.1
       with:
         # this might remove tools that are actually needed,
@@ -19,7 +19,7 @@ runs:
     ########################################
     # Download and unpack cache
     ########################################
-    - name: Mount bazel cache
+    - name: "☁️ ⬇️ Restore bazel cache"
       uses: actions/cache/restore@v3
       with:
         path: "~/.cache/bazel"
@@ -29,3 +29,9 @@ runs:
         key: ${{ runner.os }}-bazel-${{ hashFiles('.bazelversion', '.bazelrc', 'WORKSPACE', 'WORKSPACE.bazel', 'MODULE.bazel', 'Cargo.Bazel.lock') }}
         restore-keys: |
             ${{ runner.os }}-bazel-
+    - name: "🧹 Clean bazel cache if we're preparing a new release"
+      if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+      # This is desirable to make sure bazel does not use stale pre-built binaries
+      # Bazel actually keeps all intermediate objects so builds are still fast
+      run: bazel clean
+      shell: bash
