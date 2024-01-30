@@ -13,20 +13,20 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-    - name: Checkout Repository
+    - name: "☁️ ⬇️ Checkout Repository"
       uses: actions/checkout@v3
 
-    - name: Set up Python
+    - name: "🔧 Set up Python"
       uses: actions/setup-python@v2
       with:
         python-version: 3.x
 
-    - name: Install dependencies
+    - name: "🔧 Install dependencies"
       run: |
         python -m pip install --upgrade pip
         pip install mkdocs mkdocs-material
 
-    - name: Deploy to GitHub Pages
+    - name: "🚢 Deploy to GitHub Pages"
       run: |
         git config --global user.email "actions@github.com"
         git config --global user.name "GitHub Actions"

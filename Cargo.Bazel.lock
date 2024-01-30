@@ -1,5 +1,5 @@
 {
-  "checksum": "f235c46dad3d0ef80280aabfed19cc2cb28e9e3d322c4338b911aaacafd21313",
+  "checksum": "fdd95fd9da734e10bce28317e6c1ca023d7a38e61e439eba2df424fc47224d40",
   "crates": {
     "actix-codec 0.5.1": {
       "name": "actix-codec",
@@ -5784,9 +5784,9 @@
       },
       "license": "Apache-2.0"
     },
-    "canister-log-fetcher 0.2.0": {
+    "canister-log-fetcher 0.2.1": {
       "name": "canister-log-fetcher",
-      "version": "0.2.0",
+      "version": "0.2.1",
       "repository": null,
       "targets": [],
       "library_target_name": null,
@@ -5840,7 +5840,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.2.0"
+        "version": "0.2.1"
       },
       "license": null
     },
@@ -7153,9 +7153,9 @@
       },
       "license": "Apache-2.0 OR MIT"
     },
-    "config-writer-common 0.2.0": {
+    "config-writer-common 0.2.1": {
       "name": "config-writer-common",
-      "version": "0.2.0",
+      "version": "0.2.1",
       "repository": null,
       "targets": [
         {
@@ -7236,7 +7236,7 @@
           ],
           "selects": {}
         },
-        "version": "0.2.0"
+        "version": "0.2.1"
       },
       "license": null
     },
@@ -9226,9 +9226,9 @@
       },
       "license": "MIT OR Apache-2.0"
     },
-    "decentralization 0.2.0": {
+    "decentralization 0.2.1": {
       "name": "decentralization",
-      "version": "0.2.0",
+      "version": "0.2.1",
       "repository": null,
       "targets": [
         {
@@ -9330,7 +9330,7 @@
           ],
           "selects": {}
         },
-        "version": "0.2.0"
+        "version": "0.2.1"
       },
       "license": null
     },
@@ -10891,9 +10891,9 @@
       },
       "license": "MIT"
     },
-    "dre 0.2.0": {
+    "dre 0.2.1": {
       "name": "dre",
-      "version": "0.2.0",
+      "version": "0.2.1",
       "repository": null,
       "targets": [
         {
@@ -10950,7 +10950,7 @@
               "target": "dotenv"
             },
             {
-              "id": "dre 0.2.0",
+              "id": "dre 0.2.1",
               "target": "build_script_build"
             },
             {
@@ -11075,7 +11075,7 @@
           ],
           "selects": {}
         },
-        "version": "0.2.0"
+        "version": "0.2.1"
       },
       "build_script_attrs": {
         "data_glob": [
@@ -16678,9 +16678,9 @@
       },
       "license": null
     },
-    "ic-canisters 0.2.0": {
+    "ic-canisters 0.2.1": {
       "name": "ic-canisters",
-      "version": "0.2.0",
+      "version": "0.2.1",
       "repository": null,
       "targets": [
         {
@@ -16796,7 +16796,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.2.0"
+        "version": "0.2.1"
       },
       "license": null
     },
@@ -20525,9 +20525,9 @@
       },
       "license": null
     },
-    "ic-management-backend 0.2.0": {
+    "ic-management-backend 0.2.1": {
       "name": "ic-management-backend",
-      "version": "0.2.0",
+      "version": "0.2.1",
       "repository": null,
       "targets": [
         {
@@ -20765,13 +20765,13 @@
           ],
           "selects": {}
         },
-        "version": "0.2.0"
+        "version": "0.2.1"
       },
       "license": null
     },
-    "ic-management-types 0.2.0": {
+    "ic-management-types 0.2.1": {
       "name": "ic-management-types",
-      "version": "0.2.0",
+      "version": "0.2.1",
       "repository": null,
       "targets": [
         {
@@ -20864,7 +20864,7 @@
           ],
           "selects": {}
         },
-        "version": "0.2.0"
+        "version": "0.2.1"
       },
       "license": null
     },
@@ -27298,9 +27298,9 @@
       },
       "license": "MIT OR Apache-2.0"
     },
-    "log-fetcher 0.2.0": {
+    "log-fetcher 0.2.1": {
       "name": "log-fetcher",
-      "version": "0.2.0",
+      "version": "0.2.1",
       "repository": null,
       "targets": [],
       "library_target_name": null,
@@ -27350,7 +27350,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.2.0"
+        "version": "0.2.1"
       },
       "license": null
     },
@@ -28426,9 +28426,9 @@
       },
       "license": "MIT/Apache-2.0"
     },
-    "multiservice-discovery 0.2.0": {
+    "multiservice-discovery 0.2.1": {
       "name": "multiservice-discovery",
-      "version": "0.2.0",
+      "version": "0.2.1",
       "repository": null,
       "targets": [],
       "library_target_name": null,
@@ -28547,13 +28547,13 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.2.0"
+        "version": "0.2.1"
       },
       "license": null
     },
-    "multiservice-discovery-downloader 0.2.0": {
+    "multiservice-discovery-downloader 0.2.1": {
       "name": "multiservice-discovery-downloader",
-      "version": "0.2.0",
+      "version": "0.2.1",
       "repository": null,
       "targets": [],
       "library_target_name": null,
@@ -28623,13 +28623,13 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.2.0"
+        "version": "0.2.1"
       },
       "license": null
     },
-    "multiservice-discovery-shared 0.2.0": {
+    "multiservice-discovery-shared 0.2.1": {
       "name": "multiservice-discovery-shared",
-      "version": "0.2.0",
+      "version": "0.2.1",
       "repository": null,
       "targets": [
         {
@@ -28677,7 +28677,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.2.0"
+        "version": "0.2.1"
       },
       "license": null
     },
@@ -28979,9 +28979,9 @@
       },
       "license": "MIT"
     },
-    "node-status-updater 0.2.0": {
+    "node-status-updater 0.2.1": {
       "name": "node-status-updater",
-      "version": "0.2.0",
+      "version": "0.2.1",
       "repository": null,
       "targets": [],
       "library_target_name": null,
@@ -29055,7 +29055,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.2.0"
+        "version": "0.2.1"
       },
       "license": null
     },
@@ -29140,9 +29140,9 @@
       },
       "license": "Apache-2.0"
     },
-    "np-notifications 0.2.0": {
+    "np-notifications 0.2.1": {
       "name": "np-notifications",
-      "version": "0.2.0",
+      "version": "0.2.1",
       "repository": null,
       "targets": [],
       "library_target_name": null,
@@ -29233,7 +29233,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.2.0"
+        "version": "0.2.1"
       },
       "license": null
     },
@@ -30221,9 +30221,9 @@
       },
       "license": "Apache-2.0 OR MIT"
     },
-    "obs-canister-clients 0.2.0": {
+    "obs-canister-clients 0.2.1": {
       "name": "obs-canister-clients",
-      "version": "0.2.0",
+      "version": "0.2.1",
       "repository": null,
       "targets": [
         {
@@ -30271,7 +30271,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.2.0"
+        "version": "0.2.1"
       },
       "license": null
     },
@@ -33476,9 +33476,9 @@
       },
       "license": "Apache-2.0"
     },
-    "prometheus-config-updater 0.2.0": {
+    "prometheus-config-updater 0.2.1": {
       "name": "prometheus-config-updater",
-      "version": "0.2.0",
+      "version": "0.2.1",
       "repository": null,
       "targets": [],
       "library_target_name": null,
@@ -33572,7 +33572,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.2.0"
+        "version": "0.2.1"
       },
       "license": null
     },
@@ -38153,9 +38153,9 @@
       },
       "license": "MIT OR Apache-2.0"
     },
-    "service-discovery 0.2.0": {
+    "service-discovery 0.2.1": {
       "name": "service-discovery",
-      "version": "0.2.0",
+      "version": "0.2.1",
       "repository": null,
       "targets": [
         {
@@ -38304,7 +38304,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.2.0"
+        "version": "0.2.1"
       },
       "license": null
     },
@@ -38841,9 +38841,9 @@
       },
       "license": "MIT"
     },
-    "slack-notifications 0.2.0": {
+    "slack-notifications 0.2.1": {
       "name": "slack-notifications",
-      "version": "0.2.0",
+      "version": "0.2.1",
       "repository": null,
       "targets": [],
       "library_target_name": null,
@@ -38937,7 +38937,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.2.0"
+        "version": "0.2.1"
       },
       "license": null
     },
@@ -39356,9 +39356,9 @@
       },
       "license": "MIT OR Apache-2.0"
     },
-    "sns-downloader 0.2.0": {
+    "sns-downloader 0.2.1": {
       "name": "sns-downloader",
-      "version": "0.2.0",
+      "version": "0.2.1",
       "repository": null,
       "targets": [],
       "library_target_name": null,
@@ -39432,7 +39432,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.2.0"
+        "version": "0.2.1"
       },
       "license": null
     },
@@ -48152,24 +48152,24 @@
   },
   "binary_crates": [],
   "workspace_members": {
-    "canister-log-fetcher 0.2.0": "rs/canister-log-fetcher",
-    "config-writer-common 0.2.0": "rs/ic-observability/config-writer-common",
-    "decentralization 0.2.0": "rs/decentralization",
-    "dre 0.2.0": "rs/cli",
-    "ic-canisters 0.2.0": "rs/ic-canisters",
-    "ic-management-backend 0.2.0": "rs/ic-management-backend",
-    "ic-management-types 0.2.0": "rs/ic-management-types",
-    "log-fetcher 0.2.0": "rs/log-fetcher",
-    "multiservice-discovery 0.2.0": "rs/ic-observability/multiservice-discovery",
-    "multiservice-discovery-downloader 0.2.0": "rs/ic-observability/multiservice-discovery-downloader",
-    "multiservice-discovery-shared 0.2.0": "rs/ic-observability/multiservice-discovery-shared",
-    "node-status-updater 0.2.0": "rs/ic-observability/node-status-updater",
-    "np-notifications 0.2.0": "rs/np-notifications",
-    "obs-canister-clients 0.2.0": "rs/ic-observability/obs-canister-clients",
-    "prometheus-config-updater 0.2.0": "rs/ic-observability/prometheus-config-updater",
-    "service-discovery 0.2.0": "rs/ic-observability/service-discovery",
-    "slack-notifications 0.2.0": "rs/slack-notifications",
-    "sns-downloader 0.2.0": "rs/ic-observability/sns-downloader"
+    "canister-log-fetcher 0.2.1": "rs/canister-log-fetcher",
+    "config-writer-common 0.2.1": "rs/ic-observability/config-writer-common",
+    "decentralization 0.2.1": "rs/decentralization",
+    "dre 0.2.1": "rs/cli",
+    "ic-canisters 0.2.1": "rs/ic-canisters",
+    "ic-management-backend 0.2.1": "rs/ic-management-backend",
+    "ic-management-types 0.2.1": "rs/ic-management-types",
+    "log-fetcher 0.2.1": "rs/log-fetcher",
+    "multiservice-discovery 0.2.1": "rs/ic-observability/multiservice-discovery",
+    "multiservice-discovery-downloader 0.2.1": "rs/ic-observability/multiservice-discovery-downloader",
+    "multiservice-discovery-shared 0.2.1": "rs/ic-observability/multiservice-discovery-shared",
+    "node-status-updater 0.2.1": "rs/ic-observability/node-status-updater",
+    "np-notifications 0.2.1": "rs/np-notifications",
+    "obs-canister-clients 0.2.1": "rs/ic-observability/obs-canister-clients",
+    "prometheus-config-updater 0.2.1": "rs/ic-observability/prometheus-config-updater",
+    "service-discovery 0.2.1": "rs/ic-observability/service-discovery",
+    "slack-notifications 0.2.1": "rs/slack-notifications",
+    "sns-downloader 0.2.1": "rs/ic-observability/sns-downloader"
   },
   "conditions": {
     "aarch64-apple-darwin": [
