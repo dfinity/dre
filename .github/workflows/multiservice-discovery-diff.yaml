@@ -30,8 +30,11 @@ jobs:
       - name: branch-run
         id: branch-run
         run: |
-          mkdir -p registry
-          bazel run //rs/ic-observability/multiservice-discovery -- --targets-dir /home/runner/work/dre/dre/registry &
+          set -exuo pipefail
+          RESULT_DIR = /home/runner/work/targets-branch
+          mkdir -p /home/runner/work/tmp
+          mkdir -p $RESULT_DIR
+          bazel run //rs/ic-observability/multiservice-discovery -- --targets-dir /home/runner/work/tmp &
           pid=$!
           url="http://localhost:8000/prom/targets"
           max_retries=100
@@ -50,12 +53,9 @@ jobs:
                   fi
               fi
           done
-          result=$(curl -sL http://localhost:8000/prom/targets)
+          curl -sL http://localhost:8000/prom/targets > $RESULT_DIR/targets.json
           kill $pid
-          EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
-          echo "result<<$EOF" >> $GITHUB_OUTPUT
-          echo "$result" >> $GITHUB_OUTPUT
-          echo "$EOF" >> $GITHUB_OUTPUT
+          echo "result_dir=$RESULT_DIR" >> $GITHUB_OUTPUT
 
       - uses: actions/checkout@v4
         with:
@@ -64,8 +64,10 @@ jobs:
       - name: main run
         id: main-run
         run: |
-          mkdir -p registry
-          bazel run //rs/ic-observability/multiservice-discovery -- --targets-dir /home/runner/work/dre/dre/registry &
+          set -exuo pipefail
+          RESULT_DIR = /home/runner/work/targets-main
+          mkdir -p $RESULT_DIR
+          bazel run //rs/ic-observability/multiservice-discovery -- --targets-dir /home/runner/work/tmp &
           pid=$!
           url="http://localhost:8000/prom/targets"
           max_retries=100
@@ -74,27 +76,21 @@ jobs:
           while true; do
               http_status=$(curl -s -o /dev/null -w "%{http_code}" "$url" || true)
               if [ "$http_status" -eq 200 ]; then
-                  echo "Status 200 received. Exiting loop."
                   break
               else
                   retry_count=$((retry_count + 1))
-                  echo "Retry $retry_count: Status $http_status. Retrying in $retry_interval seconds..."
                   sleep $retry_interval
 
                   if [ $retry_count -eq $max_retries ]; then
-                      echo "Max retries reached. Exiting."
                       break
                   fi
               fi
           done
-          result=$(curl -sL http://localhost:8000/prom/targets)
+          curl -sL http://localhost:8000/prom/targets > $RESULT_DIR/targets.json
           kill $pid
-          EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
-          echo "result<<$EOF" >> $GITHUB_OUTPUT
-          echo "$result" >> $GITHUB_OUTPUT
-          echo "$EOF" >> $GITHUB_OUTPUT
+          echo "result_dir=$RESULT_DIR" >> $GITHUB_OUTPUT
 
       - uses: int128/diff-action@v1
         with:
-          base: ${{ steps.main-run.outputs.result }}
-          head: ${{ steps.branch-run.outputs.result }}
+          base: ${{ steps.main-run.outputs.result_dir }}
+          head: ${{ steps.branch-run.outputs.result_dir }}
