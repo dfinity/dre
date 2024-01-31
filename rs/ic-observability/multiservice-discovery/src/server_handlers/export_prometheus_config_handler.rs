@@ -68,7 +68,7 @@ pub async fn export_prometheus_config(binding: ExportDefinitionConfigBinding) ->
                     targets: bn.targets.clone().iter().map(|g| bn.job_type.url(*g, true)).collect(),
                     labels: {
                         BTreeMap::from([
-                            ("ic-diff", def.name.clone()),
+                            ("ic", def.name.clone()),
                             ("name", bn.name.clone()),
                             ("job", bn.job_type.to_string()),
                         ])
