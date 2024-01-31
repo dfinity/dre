@@ -26,6 +26,7 @@ jobs:
 
       - name: branch-run
         id: branch-run
+        shell: bash
         run: |
           mkdir -p registry
           bazel run //rs/ic-observability/multiservice-discovery -- --targets-dir /home/runner/work/dre/dre/registry &
