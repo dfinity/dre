@@ -1,18 +1,17 @@
+use std::path::PathBuf;
 use std::time::Duration;
-use std::{path::PathBuf, sync::Arc};
 
 use clap::Parser;
 use futures_util::FutureExt;
 use humantime::parse_duration;
-use slog::{error, info};
 use slog::{o, Drain, Logger};
 use tokio::runtime::Runtime;
 use tokio::sync::oneshot::{self};
-use tokio::sync::Mutex;
 use url::Url;
 
-use definition::{wrap, Definition};
+use definition::{Definition, DefinitionsSupervisor, StartMode};
 use ic_async_utils::shutdown_signal;
+use ic_management_types::Network;
 
 use crate::server_handlers::Server;
 
@@ -24,48 +23,42 @@ fn main() {
     let log = make_logger();
     let shutdown_signal = shutdown_signal(log.clone()).shared();
     let cli_args = CliArgs::parse();
-    let mut handles = vec![];
-    let mut definitions = vec![];
 
-    let (oneshot_sender, oneshot_receiver) = oneshot::channel();
-    if !cli_args.start_without_mainnet {
-        let mainnet_definition = get_mainnet_definition(&cli_args, log.clone());
-        definitions.push(mainnet_definition.clone());
-
-        let ic_handle = std::thread::spawn(wrap(mainnet_definition, rt.handle().clone()));
-        handles.push(ic_handle);
-    }
-    let definitions = Arc::new(Mutex::new(definitions));
-    let handles = Arc::new(Mutex::new(handles));
+    let supervisor = DefinitionsSupervisor::new(rt.handle().clone(), cli_args.start_without_mainnet);
+    let (server_stop, server_stop_receiver) = oneshot::channel();
 
     //Configure server
-    let server = Server::new(
-        log.clone(),
-        definitions.clone(),
-        cli_args.poll_interval,
-        cli_args.registry_query_timeout,
-        cli_args.targets_dir,
-        handles.clone(),
-        rt.handle().clone(),
+    let server_handle = rt.spawn(
+        Server::new(
+            log.clone(),
+            supervisor.clone(),
+            cli_args.poll_interval,
+            cli_args.registry_query_timeout,
+            cli_args.targets_dir.clone(),
+        )
+        .run(server_stop_receiver),
     );
-    let server_handle = rt.spawn(server.run(oneshot_receiver));
+    if !cli_args.start_without_mainnet {
+        rt.block_on(async {
+            let _ = supervisor
+                .start(
+                    vec![get_mainnet_definition(&cli_args, log.clone())],
+                    StartMode::AddToDefinitions,
+                )
+                .await;
+        });
+    }
 
+    // Wait for shutdown signal.
     rt.block_on(shutdown_signal);
-    //Stop the server
-    oneshot_sender.send(()).unwrap();
 
-    for definition in rt.block_on(definitions.lock()).drain(..) {
-        info!(log, "Sending termination signal to definition {}", definition.name);
-        definition.stop_signal_sender.send(()).unwrap();
-    }
+    // Signal server to stop.  Stop happens in parallel with supervisor stop.
+    server_stop.send(()).unwrap();
 
-    for handle in rt.block_on(handles.lock()).drain(..) {
-        info!(log, "Joining definition thread");
-        if let Err(e) = handle.join() {
-            error!(log, "Could not join thread handle of definition being removed: {:?}", e);
-        }
-    }
+    //Stop all definitions.  End happens in parallel with server stop.
+    rt.block_on(supervisor.end());
 
+    // Wait for server to stop.  Should have stopped by now.
     rt.block_on(server_handle).unwrap();
 }
 
@@ -135,17 +128,13 @@ Start the discovery without the IC Mainnet target.
 }
 
 fn get_mainnet_definition(cli_args: &CliArgs, log: Logger) -> Definition {
-    let (ic_stop_signal_sender, ic_stop_signal_rcv) = crossbeam::channel::bounded::<()>(0);
-
     Definition::new(
         vec![cli_args.nns_url.clone()],
         cli_args.targets_dir.clone(),
-        "mercury".to_string(),
+        Network::Mainnet.legacy_name(),
         log.clone(),
         None,
         cli_args.poll_interval,
-        ic_stop_signal_rcv,
         cli_args.registry_query_timeout,
-        ic_stop_signal_sender,
     )
 }

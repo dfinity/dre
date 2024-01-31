@@ -1,38 +1,27 @@
-use std::sync::Arc;
-
-use tokio::sync::Mutex;
+use crate::definition::DefinitionsSupervisor;
+use crate::definition::StopDefinitionError;
+use slog::Logger;
 use warp::Reply;
 
-use crate::definition::Definition;
-use crate::server_handlers::WebResult;
+use super::{forbidden, not_found, ok, WebResult};
 
-pub async fn delete_definition(
-    name: String,
-    definitions: Arc<Mutex<Vec<Definition>>>,
-) -> WebResult<impl Reply> {
-    if name == "ic" {
-        return Ok(warp::reply::with_status(
-            "Cannot delete ic definition".to_string(),
-            warp::http::StatusCode::BAD_REQUEST,
-        ));
-    }
+#[derive(Clone)]
+pub(super) struct DeleteDefinitionBinding {
+    pub(crate) supervisor: DefinitionsSupervisor,
+    pub(crate) log: Logger,
+}
 
-    let mut definitions = definitions.lock().await;
-
-    let index = definitions.iter().position(|d| d.name == name);
-
-    match index {
-        Some(index) => {
-            let definition = definitions.remove(index);
-            definition.stop_signal_sender.send(()).unwrap();
-            Ok(warp::reply::with_status(
-                "success".to_string(),
-                warp::http::StatusCode::OK,
-            ))
-        }
-        None => Ok(warp::reply::with_status(
-            "Definition with this name does not exist".to_string(),
-            warp::http::StatusCode::BAD_REQUEST,
-        )),
+pub(super) async fn delete_definition(name: String, binding: DeleteDefinitionBinding) -> WebResult<impl Reply> {
+    let rej = format!("Definition {} could not be deleted", name);
+    match binding.supervisor.stop(vec![name.clone()]).await {
+        Ok(_) => ok(binding.log, format!("Deleted definition {}", name.clone())),
+        Err(e) => match e.errors.into_iter().next().unwrap() {
+            StopDefinitionError::DoesNotExist(e) => {
+                not_found(binding.log, "FUCK".to_string(), StopDefinitionError::DoesNotExist(e))
+            }
+            StopDefinitionError::DeletionDisallowed(e) => {
+                forbidden(binding.log, rej, StopDefinitionError::DeletionDisallowed(e))
+            }
+        },
     }
 }

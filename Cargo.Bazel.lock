@@ -1,5 +1,5 @@
 {
-  "checksum": "f203e9dcc4e6e080a4f754b99976dfa1a3953eb9ff9552f892dfe347328cd688",
+  "checksum": "3b6f4e6a48e1285d47063867a49f78b534b79328b33a12ee0397984b3b9fca0c",
   "crates": {
     "actix-codec 0.5.1": {
       "name": "actix-codec",
@@ -28289,6 +28289,10 @@
             {
               "id": "erased-serde 0.4.2",
               "target": "erased_serde"
+            },
+            {
+              "id": "futures 0.3.30",
+              "target": "futures"
             },
             {
               "id": "futures-util 0.3.30",
