@@ -3,17 +3,15 @@ use crate::definition::DefinitionsSupervisor;
 use ic_types::{NodeId, PrincipalId};
 use multiservice_discovery_shared::contracts::target::{map_to_target_dto, TargetDto};
 use service_discovery::job_types::{JobType, NodeOS};
-use slog::Logger;
 use std::collections::BTreeMap;
 use warp::reply::Reply;
 
 #[derive(Clone)]
-pub struct ExportTargetsBinding {
-    pub supervisor: DefinitionsSupervisor,
-    pub log: Logger,
+pub(super) struct ExportTargetsBinding {
+    pub(crate) supervisor: DefinitionsSupervisor,
 }
 
-pub async fn export_targets(binding: ExportTargetsBinding) -> WebResult<impl Reply> {
+pub(super) async fn export_targets(binding: ExportTargetsBinding) -> WebResult<impl Reply> {
     let definitions = binding.supervisor.definitions.lock().await;
 
     let mut ic_node_targets: Vec<TargetDto> = vec![];

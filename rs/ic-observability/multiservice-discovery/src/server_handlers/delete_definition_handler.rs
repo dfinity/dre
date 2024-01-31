@@ -6,12 +6,12 @@ use warp::Reply;
 use super::{forbidden, not_found, ok, WebResult};
 
 #[derive(Clone)]
-pub(crate) struct DeleteDefinitionBinding {
-    pub supervisor: DefinitionsSupervisor,
-    pub log: Logger,
+pub(super) struct DeleteDefinitionBinding {
+    pub(crate) supervisor: DefinitionsSupervisor,
+    pub(crate) log: Logger,
 }
 
-pub async fn delete_definition(name: String, binding: DeleteDefinitionBinding) -> WebResult<impl Reply> {
+pub(super) async fn delete_definition(name: String, binding: DeleteDefinitionBinding) -> WebResult<impl Reply> {
     let rej = format!("Definition {} could not be deleted", name);
     match binding.supervisor.stop(vec![name.clone()]).await {
         Ok(_) => ok(binding.log, format!("Deleted definition {}", name.clone())),

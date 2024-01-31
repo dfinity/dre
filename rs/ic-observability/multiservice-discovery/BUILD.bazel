@@ -6,6 +6,7 @@ load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_test")
 DEPS = [
     "//rs/ic-observability/service-discovery",
     "//rs/ic-observability/multiservice-discovery-shared",
+    "//rs/ic-management-types",
 ]
 
 DEV_DEPENDENCIES = [

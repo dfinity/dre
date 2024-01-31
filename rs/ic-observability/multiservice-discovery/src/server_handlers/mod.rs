@@ -142,7 +142,6 @@ impl Server {
 
         let binding = ExportDefinitionConfigBinding {
             supervisor: self.supervisor.clone(),
-            log: self.log.clone(),
         };
         let export_prometheus = warp::path!("prom" / "targets")
             .and(warp::get())
@@ -151,7 +150,6 @@ impl Server {
 
         let binding = ExportTargetsBinding {
             supervisor: self.supervisor.clone(),
-            log: self.log.clone(),
         };
         let export_targets = warp::path!("targets")
             .and(warp::get())

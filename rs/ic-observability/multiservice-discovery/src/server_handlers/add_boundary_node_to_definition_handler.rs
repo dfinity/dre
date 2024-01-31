@@ -4,14 +4,14 @@ use std::fmt::{Display, Error as FmtError, Formatter};
 
 use warp::Reply;
 
-use super::{bad_request, not_found, ok, WebResult};
 use crate::definition::DefinitionsSupervisor;
 use crate::server_handlers::dto::BoundaryNodeDto;
+use crate::server_handlers::{bad_request, not_found, ok, WebResult};
 
 #[derive(Clone)]
-pub struct AddBoundaryNodeToDefinitionBinding {
-    pub supervisor: DefinitionsSupervisor,
-    pub log: Logger,
+pub(super) struct AddBoundaryNodeToDefinitionBinding {
+    pub(crate) supervisor: DefinitionsSupervisor,
+    pub(crate) log: Logger,
 }
 
 #[derive(Debug)]
@@ -28,7 +28,7 @@ impl Display for DefinitionNotFound {
     }
 }
 
-pub(crate) async fn add_boundary_node(
+pub(super) async fn add_boundary_node(
     boundary_node: BoundaryNodeDto,
     binding: AddBoundaryNodeToDefinitionBinding,
 ) -> WebResult<impl Reply> {

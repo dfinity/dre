@@ -353,9 +353,9 @@ pub(crate) enum StartMode {
 }
 
 #[derive(Clone)]
-pub(crate) struct DefinitionsSupervisor {
+pub(super) struct DefinitionsSupervisor {
     rt: tokio::runtime::Handle,
-    pub(crate) definitions: Arc<Mutex<BTreeMap<String, RunningDefinition>>>,
+    pub(super) definitions: Arc<Mutex<BTreeMap<String, RunningDefinition>>>,
     allow_mercury_deletion: bool,
 }
 

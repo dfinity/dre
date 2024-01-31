@@ -3,17 +3,15 @@ use crate::definition::DefinitionsSupervisor;
 use multiservice_discovery_shared::builders::prometheus_config_structure::{map_target_group, PrometheusStaticConfig};
 use multiservice_discovery_shared::contracts::target::{map_to_target_dto, TargetDto};
 use service_discovery::job_types::{JobType, NodeOS};
-use slog::Logger;
 use std::collections::BTreeMap;
 use warp::reply::Reply;
 
 #[derive(Clone)]
-pub struct ExportDefinitionConfigBinding {
-    pub supervisor: DefinitionsSupervisor,
-    pub log: Logger,
+pub(super) struct ExportDefinitionConfigBinding {
+    pub(crate) supervisor: DefinitionsSupervisor,
 }
 
-pub async fn export_prometheus_config(binding: ExportDefinitionConfigBinding) -> WebResult<impl Reply> {
+pub(super) async fn export_prometheus_config(binding: ExportDefinitionConfigBinding) -> WebResult<impl Reply> {
     let definitions = binding.supervisor.definitions.lock().await;
 
     let mut ic_node_targets: Vec<TargetDto> = vec![];

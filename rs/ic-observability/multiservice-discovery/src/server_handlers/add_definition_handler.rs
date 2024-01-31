@@ -10,15 +10,15 @@ use crate::definition::{DefinitionsSupervisor, StartMode};
 use crate::server_handlers::dto::DefinitionDto;
 
 #[derive(Clone)]
-pub(crate) struct AddDefinitionBinding {
-    pub supervisor: DefinitionsSupervisor,
+pub(super) struct AddDefinitionBinding {
+    pub(crate) supervisor: DefinitionsSupervisor,
     pub log: Logger,
     pub registry_path: PathBuf,
     pub poll_interval: Duration,
     pub registry_query_timeout: Duration,
 }
 
-pub(crate) async fn add_definition(definition: DefinitionDto, binding: AddDefinitionBinding) -> WebResult<impl Reply> {
+pub(super) async fn add_definition(definition: DefinitionDto, binding: AddDefinitionBinding) -> WebResult<impl Reply> {
     let log = binding.log.clone();
     let dname = definition.name.clone();
     let rej = format!("Definition {} could not be added", dname);

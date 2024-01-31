@@ -5,7 +5,7 @@ use crate::definition::DefinitionsSupervisor;
 use crate::server_handlers::dto::DefinitionDto;
 use crate::server_handlers::WebResult;
 
-pub async fn get_definitions(supervisor: DefinitionsSupervisor) -> WebResult<impl Reply> {
+pub(super) async fn get_definitions(supervisor: DefinitionsSupervisor) -> WebResult<impl Reply> {
     let definitions = supervisor.definitions.lock().await;
 
     let list = &definitions

@@ -7,7 +7,7 @@ use crate::definition::{Definition, StartMode};
 use crate::server_handlers::dto::{BadDtoError, DefinitionDto};
 use crate::server_handlers::AddDefinitionBinding as ReplaceDefinitionsBinding;
 
-pub(crate) async fn replace_definitions(
+pub(super) async fn replace_definitions(
     definitions: Vec<DefinitionDto>,
     binding: ReplaceDefinitionsBinding,
 ) -> WebResult<impl Reply> {
