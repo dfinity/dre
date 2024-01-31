@@ -34,7 +34,7 @@ jobs:
           result=$(curl -sL http://localhost:8000/prom/targets)
           kill $pid
           EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
-          echo "text<<$EOF" >> $GITHUB_OUTPUT
+          echo "result<<$EOF" >> $GITHUB_OUTPUT
           echo "$result" >> $GITHUB_OUTPUT
           echo "$EOF" >> $GITHUB_OUTPUT
 
@@ -52,7 +52,7 @@ jobs:
           result=$(curl -sL http://localhost:8000/prom/targets)
           kill $pid
           EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
-          echo "text<<$EOF" >> $GITHUB_OUTPUT
+          echo "result<<$EOF" >> $GITHUB_OUTPUT
           echo "$result" >> $GITHUB_OUTPUT
           echo "$EOF" >> $GITHUB_OUTPUT
 
