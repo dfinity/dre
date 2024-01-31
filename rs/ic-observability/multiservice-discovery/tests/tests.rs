@@ -23,7 +23,7 @@ mod tests {
 
     const REGISTRY_MAINNET_URL: &str = "https://github.com/dfinity/dre/raw/ic-registry-mainnet/rs/ic-observability/multiservice-discovery/tests/test_data/mercury.tar.gz";
 
-    async fn fetch_targets() -> anyhow::Result<BTreeSet<PrometheusStaticConfig>> {
+    async fn fetch_targets() -> anyhow::Result<Vec<PrometheusStaticConfig>> {
         let timeout_duration = Duration::from_secs(300);
         let start_time = std::time::Instant::now();
 
@@ -34,7 +34,7 @@ mod tests {
             if let Ok(response) = reqwest::get("http://localhost:8000/prom/targets").await {
                 if response.status().is_success() {
                     let text = response.text().await?;
-                    let targets: BTreeSet<PrometheusStaticConfig> = serde_json::from_str(&text).unwrap();
+                    let targets: Vec<PrometheusStaticConfig> = serde_json::from_str(&text).unwrap();
                     return Ok(targets);
                 }
             }
@@ -105,7 +105,7 @@ mod tests {
                     acc
                 });
 
-        assert_eq!(targets.len(), 7359);
+        assert_eq!(targets.len(), 7364);
 
         assert_eq!(
             labels_set.get(IC_NAME).unwrap().iter().collect::<Vec<_>>(),
