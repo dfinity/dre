@@ -29,14 +29,7 @@ jobs:
         run: |
           mkdir -p registry
           bazel run //rs/ic-observability/multiservice-discovery -- --targets-dir /home/runner/work/dre/dre/registry  & disown
-          until curl -sL -o /dev/null http://localhost:8000; do
-          sleep 5
-          elapsed=$((elapsed + 5))
-          if [ $elapsed -ge 300 ]; then
-            echo "Timeout reached. Exiting."
-            exit 1
-          fi
-          done
+          sleep 120
           result=$(curl -sL http://localhost:8000/prom/targets)
           echo "result=$result" >> $GITHUB_OUTPUT
 
@@ -49,14 +42,7 @@ jobs:
         run: |
           mkdir -p registry
           bazel run //rs/ic-observability/multiservice-discovery -- --targets-dir /home/runner/work/dre/dre/registry  & disown
-          until curl -sL -o /dev/null http://localhost:8000; do
-          sleep 5
-          elapsed=$((elapsed + 5))
-          if [ $elapsed -ge 300 ]; then
-            echo "Timeout reached. Exiting."
-            exit 1
-          fi
-          done
+          sleep 120
           result=$(curl -sL http://localhost:8000/prom/targets)
           echo "result=$result" >> $GITHUB_OUTPUT
 
