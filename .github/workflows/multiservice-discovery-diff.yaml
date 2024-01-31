@@ -30,8 +30,22 @@ jobs:
           mkdir -p registry
           bazel run //rs/ic-observability/multiservice-discovery -- --targets-dir /home/runner/work/dre/dre/registry &
           pid=$!
-          while ! nc -z localhost 8000; do
-              sleep 1
+          url="http://localhost:8000/prom/targets"
+          max_retries=100
+          retry_interval=5
+          retry_count=0
+          while true; do
+              http_status=$(curl -s -o /dev/null -w "%{http_code}" "$url")
+              if [ "$http_status" -eq 200 ]; then
+                  break
+              else
+                  retry_count=$((retry_count + 1))
+                  sleep $retry_interval
+
+                  if [ $retry_count -eq $max_retries ]; then
+                      break
+                  fi
+              fi
           done
           result=$(curl -sL http://localhost:8000/prom/targets)
           kill $pid
@@ -50,8 +64,22 @@ jobs:
           mkdir -p registry
           bazel run //rs/ic-observability/multiservice-discovery -- --targets-dir /home/runner/work/dre/dre/registry &
           pid=$!
-          while ! nc -z localhost 8000; do
-              sleep 1
+          url="http://localhost:8000/prom/targets"
+          max_retries=100
+          retry_interval=5
+          retry_count=0
+          while true; do
+              http_status=$(curl -s -o /dev/null -w "%{http_code}" "$url")
+              if [ "$http_status" -eq 200 ]; then
+                  break
+              else
+                  retry_count=$((retry_count + 1))
+                  sleep $retry_interval
+
+                  if [ $retry_count -eq $max_retries ]; then
+                      break
+                  fi
+              fi
           done
           result=$(curl -sL http://localhost:8000/prom/targets)
           kill $pid
