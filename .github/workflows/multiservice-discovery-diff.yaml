@@ -33,7 +33,10 @@ jobs:
           sleep 120
           result=$(curl -sL http://localhost:8000/prom/targets)
           kill $pid
-          echo "result=$result" >> $GITHUB_OUTPUT
+          EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
+          echo "text<<$EOF" >> $GITHUB_OUTPUT
+          echo "$result" >> $GITHUB_OUTPUT
+          echo "$EOF" >> $GITHUB_OUTPUT
 
       - uses: actions/checkout@v4
         with:
@@ -48,7 +51,10 @@ jobs:
           sleep 120
           result=$(curl -sL http://localhost:8000/prom/targets)
           kill $pid
-          echo "result=$result" >> $GITHUB_OUTPUT
+          EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
+          echo "text<<$EOF" >> $GITHUB_OUTPUT
+          echo "$result" >> $GITHUB_OUTPUT
+          echo "$EOF" >> $GITHUB_OUTPUT
 
       - uses: int128/diff-action@v1
         with:
