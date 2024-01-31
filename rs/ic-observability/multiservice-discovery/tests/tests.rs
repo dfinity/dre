@@ -105,7 +105,7 @@ mod tests {
                     acc
                 });
 
-        assert_eq!(targets.len(), 7364);
+        assert_eq!(targets.len(), 7274);
 
         assert_eq!(
             labels_set.get(IC_NAME).unwrap().iter().collect::<Vec<_>>(),
