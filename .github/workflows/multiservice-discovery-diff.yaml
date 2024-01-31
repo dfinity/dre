@@ -9,44 +9,54 @@ on:
       - synchronize
 
 jobs:
-  observability-check:
+  compute-targets-diff:
     runs-on: ubuntu-20.04
-
-    strategy:
-      matrix:
-        branch: [main, ${{ github.event.pull_request.head.ref }}]
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+
       - name: "🔧 Setup runner"
         uses: ./.github/workflows/manage-runner-pre
-      - name: Build and Run on Current Branch
-        run: |
-          bazel build //rs/ic-observability/multiservice-discovery/src:your_bazel_target
-          bazel-bin/rs/ic-observability/multiservice-discovery/src/your_bazel_target \
-          && curl -sSf http://localhost > result_new
 
-      - name: Checkout main branch
+      - name: branch-run
+        id: branch-run
         run: |
-          git fetch
-          git checkout origin/main -b main
-
-      - name: Build and Run on Main Branch
-        run: |
-          bazel build //rs/ic-observability/multiservice-discovery/src:your_bazel_target
-          bazel-bin/rs/ic-observability/multiservice-discovery/src/your_bazel_target \
-          && curl -sSf http://localhost > result_main
-
-      - name: Compare Results and Comment on PR
-        run: |
-          diff_result=$(diff -u result_main result_new) || true
-          if [ -n "$diff_result" ]; then
-            echo "Differences found. Commenting on the PR."
-            echo "$diff_result" | tee comment.txt
-            curl -XPOST -sSf -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-            -H "Content-Type: application/json" \
-            -d "{\"body\": \"\`diff\n$(cat comment.txt)\n\`\"}" \
-            "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments"
-          else
-            echo "No differences found."
+          mkdir /branch-result
+          mkdir /discovery_wd
+          bazel run //rs/ic-observability/multiservice-discovery -- --targets-dir /discovery_wd
+          until curl -sSf -o /dev/null http://localhost; do
+          sleep 5
+          elapsed=$((elapsed + 5))
+          if [ $elapsed -ge 300 ]; then
+            echo "Timeout reached. Exiting."
+            exit 1
           fi
+          done
+          curl -sSf http://localhost > "/branch-result/targets.json"
+
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: main run
+        id: main-run
+        run: |
+          mkdir /main-result
+          bazel run //rs/ic-observability/multiservice-discovery -- --targets-dir /discovery_wd
+          until curl -sSf -o /dev/null http://localhost; do
+          sleep 5
+          elapsed=$((elapsed + 5))
+          if [ $elapsed -ge 300 ]; then
+            echo "Timeout reached. Exiting."
+            exit 1
+          fi
+          done
+          bazel-bin/rs/ic-observability/multiservice-discovery/src/your_bazel_target \
+          && curl -sSf http://localhost > "/main-result/targets.json"
+
+      - uses: int128/diff-action@v1
+        with:
+          base: ${{ steps.main-run.outputs.directory }}
+          head: ${{ steps.branch-run.outputs.directory }}
