@@ -28,7 +28,7 @@ jobs:
         id: branch-run
         run: |
           set -exuo pipefail
-          RESULT_DIR = /home/runner/work/targets-branch
+          RESULT_DIR=/home/runner/work/targets-branch
           mkdir -p /home/runner/work/tmp
           mkdir -p $RESULT_DIR
           bazel run //rs/ic-observability/multiservice-discovery -- --targets-dir /home/runner/work/tmp &
@@ -62,7 +62,7 @@ jobs:
         id: main-run
         run: |
           set -exuo pipefail
-          RESULT_DIR = /home/runner/work/targets-main
+          RESULT_DIR=/home/runner/work/targets-main
           mkdir -p $RESULT_DIR
           bazel run //rs/ic-observability/multiservice-discovery -- --targets-dir /home/runner/work/tmp &
           pid=$!
