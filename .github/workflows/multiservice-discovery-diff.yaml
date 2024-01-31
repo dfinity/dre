@@ -1,12 +1,16 @@
 name: multiservice-discovery diff
 
 on:
-  pull_request:
-    paths:
-      - 'rs/ic-observability/multiservice-discovery/src/*'
-    types:
-      - opened
-      - synchronize
+  push:
+    branches:
+      - add-multiservice-discovery-diff
+# on:
+#   pull_request:
+#     paths:
+#       - 'rs/ic-observability/multiservice-discovery/src/*'
+#     types:
+#       - opened
+#       - synchronize
 
 jobs:
   compute-targets-diff:
