@@ -24,13 +24,17 @@ jobs:
       - name: "🔧 Setup runner"
         uses: ./.github/workflows/manage-runner-pre
 
+      - name: "make registry dir"
+        shell: bash
+        run: |
+          set -eExuo pipefail
+          mkdir -p registry
+
       - name: branch-run
         id: branch-run
         run: |
-          mkdir /branch-result
-          mkdir /discovery_wd
-          bazel run //rs/ic-observability/multiservice-discovery -- --targets-dir /discovery_wd
-          until curl -sSf -o /dev/null http://localhost; do
+          bazel run //rs/ic-observability/multiservice-discovery -- --targets-dir registry
+          until curl -sL -o /dev/null http://localhost:8000; do
           sleep 5
           elapsed=$((elapsed + 5))
           if [ $elapsed -ge 300 ]; then
@@ -38,7 +42,8 @@ jobs:
             exit 1
           fi
           done
-          curl -sSf http://localhost > "/branch-result/targets.json"
+          result=(curl -sL http://localhost:8000/prom/targets)
+          echo "result=$result" >> $GITHUB_OUTPUT
 
       - uses: actions/checkout@v4
         with:
@@ -47,9 +52,8 @@ jobs:
       - name: main run
         id: main-run
         run: |
-          mkdir /main-result
-          bazel run //rs/ic-observability/multiservice-discovery -- --targets-dir /discovery_wd
-          until curl -sSf -o /dev/null http://localhost; do
+          bazel run //rs/ic-observability/multiservice-discovery -- --targets-dir /
+          until curl -sL -o /dev/null http://localhost:8000; do
           sleep 5
           elapsed=$((elapsed + 5))
           if [ $elapsed -ge 300 ]; then
@@ -57,10 +61,10 @@ jobs:
             exit 1
           fi
           done
-          bazel-bin/rs/ic-observability/multiservice-discovery/src/your_bazel_target \
-          && curl -sSf http://localhost > "/main-result/targets.json"
+          result=(curl -sL http://localhost:8000/prom/targets)
+          echo "result=$result" >> $GITHUB_OUTPUT
 
       - uses: int128/diff-action@v1
         with:
-          base: ${{ steps.main-run.outputs.directory }}
-          head: ${{ steps.branch-run.outputs.directory }}
+          base: ${{ steps.main-run.outputs.result }}
+          head: ${{ steps.branch-run.outputs.result }}
