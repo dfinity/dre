@@ -48,7 +48,7 @@ jobs:
           mkdir -p registry
           bazel run //rs/ic-observability/multiservice-discovery -- --targets-dir /home/runner/work/dre/dre/registry &
           pid=$!
-          sleep 120
+          sleep 300
           result=$(curl -sL http://localhost:8000/prom/targets)
           kill $pid
           EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
