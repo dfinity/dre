@@ -29,7 +29,8 @@ jobs:
         run: |
           set -eExuo pipefail
           mkdir -p registry
-
+      - name: Setup upterm session
+        uses: lhotari/action-upterm@v1
       - name: branch-run
         id: branch-run
         run: |
