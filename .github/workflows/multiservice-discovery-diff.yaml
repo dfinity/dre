@@ -28,7 +28,7 @@ jobs:
         id: branch-run
         run: |
           mkdir -p registry
-          bazel run //rs/ic-observability/multiservice-discovery -- --targets-dir /home/runner/work/dre/dre/registry
+          bazel run //rs/ic-observability/multiservice-discovery -- --targets-dir /home/runner/work/dre/dre/registry  & disown
           until curl -sL -o /dev/null http://localhost:8000; do
           sleep 5
           elapsed=$((elapsed + 5))
@@ -48,7 +48,7 @@ jobs:
         id: main-run
         run: |
           mkdir -p registry
-          bazel run //rs/ic-observability/multiservice-discovery -- --targets-dir /home/runner/work/dre/dre/registry
+          bazel run //rs/ic-observability/multiservice-discovery -- --targets-dir /home/runner/work/dre/dre/registry  & disown
           until curl -sL -o /dev/null http://localhost:8000; do
           sleep 5
           elapsed=$((elapsed + 5))
