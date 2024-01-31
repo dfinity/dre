@@ -21,17 +21,14 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.ref }}
 
-      - name: "make registry dir"
-        shell: bash
-        run: |
-          set -eExuo pipefail
-          mkdir -p registry
-      - name: Setup upterm session
-        uses: lhotari/action-upterm@v1
+      - name: "🔧 Setup runner"
+        uses: ./.github/workflows/manage-runner-pre
+
       - name: branch-run
         id: branch-run
         run: |
-          bazel run //rs/ic-observability/multiservice-discovery -- --targets-dir registry
+          mkdir -p registry
+          bazel run //rs/ic-observability/multiservice-discovery -- --targets-dir /home/runner/work/dre/dre/registry
           until curl -sL -o /dev/null http://localhost:8000; do
           sleep 5
           elapsed=$((elapsed + 5))
@@ -50,7 +47,8 @@ jobs:
       - name: main run
         id: main-run
         run: |
-          bazel run //rs/ic-observability/multiservice-discovery -- --targets-dir /
+          mkdir -p registry
+          bazel run //rs/ic-observability/multiservice-discovery -- --targets-dir /home/runner/work/dre/dre/registry
           until curl -sL -o /dev/null http://localhost:8000; do
           sleep 5
           elapsed=$((elapsed + 5))
