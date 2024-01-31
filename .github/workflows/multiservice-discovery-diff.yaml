@@ -1,0 +1,50 @@
+name: multiservice-discovery diff
+
+on:
+  pull_request:
+    paths:
+      - 'rs/ic-observability/multiservice-discovery/src/*'
+    types:
+      - opened
+      - synchronize
+
+jobs:
+  observability-check:
+    runs-on: ubuntu-20.04
+
+    strategy:
+      matrix:
+        branch: [main, ${{ github.event.pull_request.head.ref }}]
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: "🔧 Setup runner"
+        uses: ./.github/workflows/manage-runner-pre
+
+      - name: Build and Run
+        run: |
+          bazel build //rs/ic-observability/multiservice-discovery/src:your_bazel_target
+          until curl -sSf -o /dev/null http://localhost; do
+            sleep 5
+            elapsed=$((elapsed + 5))
+            if [ $elapsed -ge 300 ]; then
+              echo "Timeout reached. Exiting."
+              exit 1
+            fi
+          done
+          bazel-bin/rs/ic-observability/multiservice-discovery/src/your_bazel_target \
+          && curl -sSf http://localhost > "result_${{ matrix.branch }}"
+      - name: Compare Results and Comment on PR
+        if: matrix.branch == 'main'
+        run: |
+          diff_result=$(diff -u result_main result_${{ github.event.pull_request.head.ref }}) || true
+          if [ -n "$diff_result" ]; then
+            echo "Differences found. Commenting on the PR."
+            echo "$diff_result" | tee comment.txt
+            curl -XPOST -sSf -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d "{\"body\": \"\`diff\n$(cat comment.txt)\n\`\"}" \
+            "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments"
+          else
+            echo "No differences found."
+          fi
