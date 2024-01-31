@@ -37,7 +37,7 @@ jobs:
             exit 1
           fi
           done
-          result=(curl -sL http://localhost:8000/prom/targets)
+          result=$(curl -sL http://localhost:8000/prom/targets)
           echo "result=$result" >> $GITHUB_OUTPUT
 
       - uses: actions/checkout@v4
@@ -57,7 +57,7 @@ jobs:
             exit 1
           fi
           done
-          result=(curl -sL http://localhost:8000/prom/targets)
+          result=$(curl -sL http://localhost:8000/prom/targets)
           echo "result=$result" >> $GITHUB_OUTPUT
 
       - uses: int128/diff-action@v1
