@@ -69,7 +69,7 @@ jobs:
           pid=$!
           url="http://localhost:8000/prom/targets"
           max_retries=100
-          retry_interval=5
+          retry_interval=10
           retry_count=0
           while true; do
               http_status=$(curl -s -o /dev/null -w "%{http_code}" "$url")
