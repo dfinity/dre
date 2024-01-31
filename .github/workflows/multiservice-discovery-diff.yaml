@@ -21,6 +21,8 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.ref }}
 
+      - name: "🔧 Setup runner"
+        uses: ./.github/workflows/manage-runner-pre
 
       - name: branch-run
         id: branch-run
