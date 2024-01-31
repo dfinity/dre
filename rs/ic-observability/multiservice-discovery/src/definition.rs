@@ -71,7 +71,7 @@ impl Display for BoundaryNodeAlreadyExists {
 }
 
 #[derive(Clone)]
-pub(crate) struct RunningDefinition {
+pub struct RunningDefinition {
     pub(crate) definition: Definition,
     stop_signal: Receiver<()>,
     ender: Arc<Mutex<Option<Ender>>>,
