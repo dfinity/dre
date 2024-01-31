@@ -1,18 +1,20 @@
+use crate::definition::RunningDefinition;
+
 use super::WebResult;
-use crate::definition::DefinitionsSupervisor;
 use ic_types::{NodeId, PrincipalId};
 use multiservice_discovery_shared::contracts::target::{map_to_target_dto, TargetDto};
 use service_discovery::job_types::{JobType, NodeOS};
-use std::collections::BTreeMap;
+use std::{collections::BTreeMap, sync::Arc};
+use tokio::sync::Mutex;
 use warp::reply::Reply;
 
 #[derive(Clone)]
 pub(super) struct ExportTargetsBinding {
-    pub(crate) supervisor: DefinitionsSupervisor,
+    pub(crate) definitions_ref: Arc<Mutex<BTreeMap<String, RunningDefinition>>>,
 }
 
 pub(super) async fn export_targets(binding: ExportTargetsBinding) -> WebResult<impl Reply> {
-    let definitions = binding.supervisor.definitions.lock().await;
+    let definitions = binding.definitions_ref.lock().await;
 
     let mut ic_node_targets: Vec<TargetDto> = vec![];
 
