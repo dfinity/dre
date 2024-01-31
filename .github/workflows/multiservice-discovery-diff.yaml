@@ -34,7 +34,7 @@ jobs:
           retry_interval=5
           retry_count=0
           while true; do
-              http_status=$(curl -s -o /dev/null -w "%{http_code}" "$url")
+              http_status=$(curl -s -o /dev/null -w "%{http_code}" "$url" || true)
               if [ "$http_status" -eq 200 ]; then
                   break
               else
@@ -68,7 +68,7 @@ jobs:
           retry_interval=5
           retry_count=0
           while true; do
-              http_status=$(curl -s -o /dev/null -w "%{http_code}" "$url")
+              http_status=$(curl -s -o /dev/null -w "%{http_code}" "$url" || true)
               if [ "$http_status" -eq 200 ]; then
                   echo "Status 200 received. Exiting loop."
                   break
