@@ -20,24 +20,26 @@ jobs:
       - uses: actions/checkout@v4
       - name: "🔧 Setup runner"
         uses: ./.github/workflows/manage-runner-pre
-
-      - name: Build and Run
+      - name: Build and Run on Current Branch
         run: |
           bazel build //rs/ic-observability/multiservice-discovery/src:your_bazel_target
-          until curl -sSf -o /dev/null http://localhost; do
-            sleep 5
-            elapsed=$((elapsed + 5))
-            if [ $elapsed -ge 300 ]; then
-              echo "Timeout reached. Exiting."
-              exit 1
-            fi
-          done
           bazel-bin/rs/ic-observability/multiservice-discovery/src/your_bazel_target \
-          && curl -sSf http://localhost > "result_${{ matrix.branch }}"
-      - name: Compare Results and Comment on PR
-        if: matrix.branch == 'main'
+          && curl -sSf http://localhost > result_new
+
+      - name: Checkout main branch
         run: |
-          diff_result=$(diff -u result_main result_${{ github.event.pull_request.head.ref }}) || true
+          git fetch
+          git checkout origin/main -b main
+
+      - name: Build and Run on Main Branch
+        run: |
+          bazel build //rs/ic-observability/multiservice-discovery/src:your_bazel_target
+          bazel-bin/rs/ic-observability/multiservice-discovery/src/your_bazel_target \
+          && curl -sSf http://localhost > result_main
+
+      - name: Compare Results and Comment on PR
+        run: |
+          diff_result=$(diff -u result_main result_new) || true
           if [ -n "$diff_result" ]; then
             echo "Differences found. Commenting on the PR."
             echo "$diff_result" | tee comment.txt
