@@ -87,6 +87,8 @@ jobs:
           kill $pid
           echo "result_dir=$RESULT_DIR" >> $GITHUB_OUTPUT
 
+      - name: Setup upterm session
+        uses: lhotari/action-upterm@v1
       - uses: int128/diff-action@v1
         with:
           base: ${{ steps.main-run.outputs.result_dir }}
