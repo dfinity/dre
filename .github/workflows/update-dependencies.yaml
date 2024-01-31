@@ -44,6 +44,7 @@ jobs:
         with:
           commit-message: "chore: Update dependencies"
           branch: bot-update-deps
+          token: ${{ secrets.GIX_CREATE_PR_PAT }}
 
       - name: "🪓 Tear down runner"
         uses: ./.github/workflows/manage-runner-post
