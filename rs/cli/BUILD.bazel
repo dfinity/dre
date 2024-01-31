@@ -6,6 +6,7 @@ DEPS = [
     "//rs/decentralization",
     "//rs/ic-management-types",
     "//rs/ic-management-backend:ic-management-backend-lib",
+    "//rs/ic-observability/service-discovery"
 ]
 
 rust_binary(

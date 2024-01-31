@@ -48,6 +48,19 @@ tabled = { workspace = true }
 tabular = { workspace = true }
 tokio = { workspace = true }
 url = { workspace = true }
+ic-registry-local-registry = { workspace = true }
+ic-registry-local-store = { workspace = true }
+ic-registry-client-fake = { workspace = true }
+tempdir = "0.3"
+uuid = "1.7.0"
+ic-interfaces-registry = { workspace = true }
+service-discovery = {path = "../ic-observability/service-discovery"}
+slog = { workspace = true }
+slog-async = { workspace = true }
+slog-term = { workspace = true }
+ic-registry-keys = { workspace = true }
+ic-protobuf = { workspace = true }
+shellexpand = "3.1.0"
 
 [dev-dependencies]
 tempfile = "3.3.0"
