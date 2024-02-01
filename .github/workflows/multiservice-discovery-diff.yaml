@@ -8,15 +8,15 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v4
+      - name: "🔧 Setup runner"
+        uses: ./.github/workflows/manage-runner-pre
+
       - name: "Download main test artifact"
         uses: dawidd6/action-download-artifact@v3.0.0
         with:
           name: test-artifacts
           branch: main
-          search_artifacts: true
           workflow: main.yaml
-      - name: "🔧 Setup runner"
-        uses: ./.github/workflows/manage-runner-pre
 
       - name: "Compute MSD"
         run: |
@@ -24,8 +24,8 @@ jobs:
           ./test-artifacts -- --targets-dir . > /home/runner/work/main-targets
           bazel run //rs/ic-observability/multiservice-discovery -- --targets-dir . > /home/runner/work/branch-targets
 
-      - uses: "int128/diff-action@v1"
-        name: Check MSD Diff
+      - name: Check MSD Diff
+        uses: "int128/diff-action@v1"
         with:
           base: main-targets
           head: branch-targets
