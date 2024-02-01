@@ -1,4 +1,4 @@
-name: multiservice-discovery diff
+name: MSD diff
 
 on:
   push:
@@ -12,61 +12,43 @@ on:
       - synchronize
 
 jobs:
-  compute-targets-diff:
+  setup-runners:
     runs-on: ubuntu-20.04
-
     steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: main
-
       - name: "🔧 Setup runner"
         uses: ./.github/workflows/manage-runner-pre
 
-      - name: main run
-        id: main-run
+  compute-msd:
+    runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        branch: [branch, main]
+    steps:
+      - name: Branch Check
+        id: branch-check
         run: |
-          set -exuo pipefail
-          RESULT_DIR=/home/runner/work/targets-main
-          mkdir -p $RESULT_DIR
-          bazel run //rs/ic-observability/multiservice-discovery -- --targets-dir /home/runner/work/tmp &
-          pid=$!
-          url="http://localhost:8000/prom/targets"
-          max_retries=100
-          retry_interval=5
-          retry_count=0
-          while true; do
-              http_status=$(curl -s -o /dev/null -w "%{http_code}" "$url" || true)
-              if [ "$http_status" -eq 200 ]; then
-                  break
-              else
-                  retry_count=$((retry_count + 1))
-                  sleep $retry_interval
-
-                  if [ $retry_count -eq $max_retries ]; then
-                      break
-                  fi
-              fi
-          done
-          curl -sL http://localhost:8000/prom/targets > $RESULT_DIR/targets.json
-          kill $pid
-          echo "result_dir=$RESULT_DIR" >> $GITHUB_OUTPUT
+          if [ ${{ matrix.branch }} -eq "branch" ]; then
+              BRANCH=${{ github.event.pull_request.head.ref }}
+          else
+              BRANCH=main
+          fi
+          echo "branch=$BRANCH" >> $GITHUB_OUTPUT
 
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.ref }}
-          
-      - name: branch-run
-        id: branch-run
+          ref: ${{ steps.branch-check.outputs.branch }}
+
+      - name: Compute MSD
+        id: msd
         run: |
           set -exuo pipefail
-          RESULT_DIR=/home/runner/work/targets-branch
-          mkdir -p /home/runner/work/tmp
+          RESULT_DIR=/home/runner/work/targets-${{ steps.branch-check.outputs.branch }}
           mkdir -p $RESULT_DIR
+          mkdir -p /home/runner/work/tmp
           bazel run //rs/ic-observability/multiservice-discovery -- --targets-dir /home/runner/work/tmp &
           pid=$!
           url="http://localhost:8000/prom/targets"
-          max_retries=100
+          max_retries=500
           retry_interval=5
           retry_count=0
           while true; do
@@ -85,8 +67,12 @@ jobs:
           curl -sL http://localhost:8000/prom/targets > $RESULT_DIR/targets.json
           kill $pid
           echo "result_dir=$RESULT_DIR" >> $GITHUB_OUTPUT
-
+          
+  Diff:
+    runs-on: ubuntu-20.04
+    steps:
       - uses: int128/diff-action@v1
+        name: Check MSD Diff
         with:
-          base: ${{ steps.main-run.outputs.result_dir }}
-          head: ${{ steps.branch-run.outputs.result_dir }}
+          base: /home/runner/work/targets-main
+          head: /home/runner/work/targets-${{ github.event.pull_request.head.ref }}
