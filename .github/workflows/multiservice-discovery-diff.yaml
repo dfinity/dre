@@ -1,9 +1,6 @@
 name: MSD diff
 
 on:
-  push:
-    branches:
-      - add-multiservice-discovery-diff
   pull_request:
     paths:
       - 'rs/ic-observability/multiservice-discovery*/src/**'
@@ -18,7 +15,7 @@ jobs:
       - name: Branch Check
         id: branch-check
         run: |
-          if [ ${{ matrix.branch }} -eq "branch" ]; then
+          if [ "${{ matrix.branch }}" -eq "branch" ]; then
               BRANCH=${{ github.event.pull_request.head.ref }}
           else
               BRANCH=main
