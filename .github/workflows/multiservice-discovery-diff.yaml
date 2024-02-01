@@ -66,6 +66,7 @@ jobs:
           echo "result_dir=$RESULT_DIR" >> $GITHUB_OUTPUT
 
   Diff:
+    needs: compute-msd
     runs-on: ubuntu-20.04
     steps:
       - uses: int128/diff-action@v1
