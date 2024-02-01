@@ -8,6 +8,8 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v4
+      - name: "🔧 Setup runner"
+        uses: ./.github/workflows/manage-runner-pre
 
       - name: "Download main test artifact"
         uses: dawidd6/action-download-artifact@v3.0.0
