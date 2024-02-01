@@ -1,4 +1,4 @@
-name: MSD diff
+name: MSD Diff
 
 on:
   pull_request:
@@ -10,69 +10,25 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v4
+
       - name: "🔧 Setup runner"
         uses: ./.github/workflows/manage-runner-pre
 
-  compute-msd:
-    runs-on: ubuntu-20.04
-    needs: setup-runner
-    strategy:
-      matrix:
-        branch: [branch, main]
-    steps:
-      - name: Branch Check
-        id: branch-check
-        run: |
-          if [ "${{ matrix.branch }}" == "branch" ]; then
-              BRANCH=${{ github.event.pull_request.head.ref }}
-          else
-              BRANCH=main
-          fi
-          echo "branch=$BRANCH" >> $GITHUB_OUTPUT
-
-      - uses: actions/checkout@v4
+      - name: "Download main test artifact"
+        uses: dawidd6/action-download-artifact@v3.0.0
         with:
-          ref: ${{ steps.branch-check.outputs.branch }}
+          name: test-artifacts
+          branch: main
 
-      - name: Compute MSD
-        id: msd
+      - name: "Compute MSD"
         run: |
           set -exuo pipefail
-          RESULT_DIR=/home/runner/work/targets-${{ steps.branch-check.outputs.branch }}
-          mkdir -p $RESULT_DIR
           mkdir -p /home/runner/work/tmp
-          bazel run //rs/ic-observability/multiservice-discovery -- --targets-dir /home/runner/work/tmp &
-          pid=$!
-          url="http://localhost:8000/prom/targets"
-          max_retries=500
-          retry_interval=5
-          retry_count=0
-          while true; do
-              http_status=$(curl -s -o /dev/null -w "%{http_code}" "$url" || true)
-              if [ "$http_status" -eq 200 ]; then
-                  break
-              else
-                  retry_count=$((retry_count + 1))
-                  sleep $retry_interval
+          ./test-artifacts -- --targets-dir /home/runner/work/tmp/registry --destination-targets /home/runner/work/main-targets
+          bazel run //rs/ic-observability/multiservice-discovery -- --targets-dir /home/runner/work/tmp/registry --destination-targets /home/runner/work/branch-targets
 
-                  if [ $retry_count -eq $max_retries ]; then
-                      break
-                  fi
-              fi
-          done
-          curl -sL http://localhost:8000/prom/targets > $RESULT_DIR/targets.json
-          kill $pid
-          echo "result_dir=$RESULT_DIR" >> $GITHUB_OUTPUT
-
-  diff:
-    needs: compute-msd
-    runs-on: ubuntu-20.04
-    steps:
-      - name: Setup upterm session
-        uses: lhotari/action-upterm@v1
-
-      - uses: int128/diff-action@v1
+      - uses: "int128/diff-action@v1"
         name: Check MSD Diff
         with:
-          base: /home/runner/work/targets-main
-          head: /home/runner/work/targets-${{ github.event.pull_request.head.ref }}
+          base: /home/runner/work/main-targets
+          head: /home/runner/work/branch-targets
