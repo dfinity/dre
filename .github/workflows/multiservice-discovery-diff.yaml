@@ -11,6 +11,7 @@ jobs:
       - name: "Download main test artifact"
         uses: dawidd6/action-download-artifact@v3.0.0
         with:
+          name: test-artifacts.zip
           search_artifacts: true
       - name: "🔧 Setup runner"
         uses: ./.github/workflows/manage-runner-pre
