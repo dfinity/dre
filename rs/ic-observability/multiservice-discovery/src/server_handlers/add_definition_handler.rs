@@ -12,10 +12,10 @@ use crate::server_handlers::dto::DefinitionDto;
 #[derive(Clone)]
 pub(super) struct AddDefinitionBinding {
     pub(crate) supervisor: DefinitionsSupervisor,
-    pub log: Logger,
-    pub registry_path: PathBuf,
-    pub poll_interval: Duration,
-    pub registry_query_timeout: Duration,
+    pub(crate) log: Logger,
+    pub(crate) registry_path: PathBuf,
+    pub(crate) poll_interval: Duration,
+    pub(crate) registry_query_timeout: Duration,
 }
 
 pub(super) async fn add_definition(definition: DefinitionDto, binding: AddDefinitionBinding) -> WebResult<impl Reply> {

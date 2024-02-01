@@ -25,7 +25,7 @@ mod add_boundary_node_to_definition_handler;
 mod add_definition_handler;
 mod delete_definition_handler;
 pub mod dto;
-mod export_prometheus_config_handler;
+pub mod export_prometheus_config_handler;
 mod export_targets_handler;
 mod get_definition_handler;
 mod replace_definitions_handler;
@@ -141,7 +141,7 @@ impl Server {
             .and_then(delete_definition);
 
         let binding = ExportDefinitionConfigBinding {
-            supervisor: self.supervisor.clone(),
+            definitions_ref: self.supervisor.definitions.clone(),
         };
         let export_prometheus = warp::path!("prom" / "targets")
             .and(warp::get())
@@ -149,7 +149,7 @@ impl Server {
             .and_then(export_prometheus_config);
 
         let binding = ExportTargetsBinding {
-            supervisor: self.supervisor.clone(),
+            definitions_ref: self.supervisor.definitions.clone(),
         };
         let export_targets = warp::path!("targets")
             .and(warp::get())

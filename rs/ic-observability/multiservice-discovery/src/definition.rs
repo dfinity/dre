@@ -71,7 +71,7 @@ impl Display for BoundaryNodeAlreadyExists {
 }
 
 #[derive(Clone)]
-pub(crate) struct RunningDefinition {
+pub struct RunningDefinition {
     pub(crate) definition: Definition,
     stop_signal: Receiver<()>,
     ender: Arc<Mutex<Option<Ender>>>,
@@ -225,10 +225,24 @@ impl RunningDefinition {
         }
     }
 
+    /// Syncs the registry then stops.
+    pub async fn sync(&self) {
+        let _ = self.initial_registry_sync().await;
+        // if self.initial_registry_sync().await.is_err() {
+        // FIXME: Error has been logged, but ideally, it should be handled.
+        // E.g. telemetry should collect this.
+        // return;
+        // }
+    }
+
+    // Syncs the registry and keeps running, syncing as new
+    // registry versions come in.
     async fn run(&self) {
         if self.initial_registry_sync().await.is_err() {
+            // FIXME: Error has been logged, but ideally, it should be handled.
+            // E.g. telemetry should collect this.
             return;
-        };
+        }
 
         info!(
             self.definition.log,
@@ -237,21 +251,10 @@ impl RunningDefinition {
 
         self.poll_loop().await;
 
-        if self.definition.name != Network::Mainnet.legacy_name() {
-            info!(
-                self.definition.log,
-                "Removing registry dir '{}' for definition {}...",
-                self.definition.registry_path.display(),
-                self.definition.name
-            );
-
-            if let Err(e) = std::fs::remove_dir_all(self.definition.registry_path.clone()) {
-                warn!(
-                    self.definition.log,
-                    "Failed to remove registry dir for definition {}: {:?}", self.definition.name, e
-                );
-            }
-        }
+        // We used to delete storage here, but that was unsafe
+        // because another definition may be started in its name,
+        // so it is racy to delete the folder it will be using.
+        // So we no longer delete storage here.
     }
 
     pub(crate) async fn add_boundary_node(&mut self, target: BoundaryNode) -> Result<(), BoundaryNodeAlreadyExists> {
