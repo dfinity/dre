@@ -12,12 +12,6 @@ on:
       - synchronize
 
 jobs:
-  setup-runners:
-    runs-on: ubuntu-20.04
-    steps:
-      - name: "🔧 Setup runner"
-        uses: ./.github/workflows/manage-runner-pre
-
   compute-msd:
     runs-on: ubuntu-20.04
     strategy:
@@ -37,6 +31,9 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ steps.branch-check.outputs.branch }}
+
+      - name: "🔧 Setup runner"
+        uses: ./.github/workflows/manage-runner-pre
 
       - name: Compute MSD
         id: msd
@@ -67,7 +64,7 @@ jobs:
           curl -sL http://localhost:8000/prom/targets > $RESULT_DIR/targets.json
           kill $pid
           echo "result_dir=$RESULT_DIR" >> $GITHUB_OUTPUT
-          
+
   Diff:
     runs-on: ubuntu-20.04
     steps:
