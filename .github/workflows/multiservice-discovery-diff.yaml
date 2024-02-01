@@ -69,6 +69,9 @@ jobs:
     needs: compute-msd
     runs-on: ubuntu-20.04
     steps:
+      - name: Setup upterm session
+        uses: lhotari/action-upterm@v1
+
       - uses: int128/diff-action@v1
         name: Check MSD Diff
         with:
