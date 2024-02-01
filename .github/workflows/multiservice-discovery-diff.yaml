@@ -15,8 +15,7 @@ jobs:
           name: test-artifacts
           branch: main
           workflow: main.yaml
-      - name: Setup upterm session
-        uses: lhotari/action-upterm@v1
+
       - name: "Compute MSD"
         run: |
           set -exuo pipefail
