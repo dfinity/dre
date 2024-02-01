@@ -1,10 +1,8 @@
 name: MSD Diff
-
 on:
   pull_request:
     paths:
       - 'rs/ic-observability/multiservice-discovery*/src/**'
-
 jobs:
   setup-runner:
     runs-on: ubuntu-20.04
@@ -23,12 +21,11 @@ jobs:
       - name: "Compute MSD"
         run: |
           set -exuo pipefail
-          mkdir -p /home/runner/work/tmp
-          ./test-artifacts -- --targets-dir /home/runner/work/tmp/registry --destination-targets /home/runner/work/main-targets
-          bazel run //rs/ic-observability/multiservice-discovery -- --targets-dir /home/runner/work/tmp/registry --destination-targets /home/runner/work/branch-targets
+          ./test-artifacts -- --targets-dir . > /home/runner/work/main-targets
+          bazel run //rs/ic-observability/multiservice-discovery -- --targets-dir . > /home/runner/work/branch-targets
 
       - uses: "int128/diff-action@v1"
         name: Check MSD Diff
         with:
-          base: /home/runner/work/main-targets
-          head: /home/runner/work/branch-targets
+          base: main-targets
+          head: branch-targets
