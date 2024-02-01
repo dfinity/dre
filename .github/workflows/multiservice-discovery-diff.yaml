@@ -24,7 +24,7 @@ jobs:
           mkdir -p tmp/main-registry tmp/branch-registry main-targets branch-targets
           chmod +x multiservice-discovery
           ./multiservice-discovery --targets-dir tmp/main-registry --render-prom-targets-to-stdout > main-targets/targets.json
-          bazel run //rs/ic-observability/multiservice-discovery -- --targets-dir tmp/branch-registry --render-prom-targets-to-stdout > branch-targets/targets.json
+          bazel run //rs/ic-observability/multiservice-discovery -- --targets-dir $(pwd)/tmp/branch-registry --render-prom-targets-to-stdout > branch-targets/targets.json
 
       - name: "Check MSD Diff"
         uses: "int128/diff-action@v1"
