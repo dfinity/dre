@@ -7,9 +7,6 @@ on:
   pull_request:
     paths:
       - 'rs/ic-observability/multiservice-discovery*/src/**'
-    types:
-      - opened
-      - synchronize
 
 jobs:
   compute-msd:
