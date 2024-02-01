@@ -1,4 +1,5 @@
 use ic_base_types::{CanisterId, PrincipalId};
+use slog::{info, warn, Logger};
 use spinners::{Spinner, Spinners};
 use std::{
     collections::{HashMap, HashSet},
@@ -12,7 +13,6 @@ use ic_canisters::{
     CanisterClient, IcAgentCanisterClient,
 };
 use ic_nns_governance::pb::v1::ProposalInfo;
-use log::{info, warn};
 use url::Url;
 
 use crate::detect_neuron::{Auth, Neuron};
@@ -23,6 +23,7 @@ pub(crate) async fn vote_on_proposals(
     accepted_proposers: &[u64],
     accepted_topics: &[i32],
     simulate: bool,
+    logger: Logger,
 ) -> anyhow::Result<()> {
     let client: GovernanceCanisterWrapper = match &neuron.auth {
         Auth::Hsm { pin, slot, key_id } => {
@@ -52,6 +53,7 @@ pub(crate) async fn vote_on_proposals(
         std::io::stdout().flush().unwrap();
         for proposal in proposals_to_vote.into_iter() {
             info!(
+                logger,
                 "Voting on proposal {} (topic {:?}, proposer {}) -> {}",
                 proposal.id.unwrap().id,
                 proposal.topic(),
@@ -61,9 +63,9 @@ pub(crate) async fn vote_on_proposals(
 
             if !simulate {
                 let response = client.register_vote(neuron.id, proposal.id.unwrap().id).await?;
-                info!("{}", response);
+                info!(logger, "{}", response);
             } else {
-                info!("Simulating vote");
+                info!(logger, "Simulating vote");
             }
             voted_proposals.insert(proposal.id.unwrap().id);
         }
@@ -75,7 +77,7 @@ pub(crate) async fn vote_on_proposals(
         let sleep = tokio::time::sleep(Duration::from_secs(15));
         tokio::select! {
             _ = tokio::signal::ctrl_c() => {
-                info!("Received Ctrl-C, exiting...");
+                info!(logger, "Received Ctrl-C, exiting...");
                 sp.stop();
                 break;
             }
@@ -95,6 +97,7 @@ pub(crate) async fn get_node_metrics_history(
     start_at_nanos: u64,
     neuron: &Neuron,
     nns_url: &Url,
+    logger: Logger,
 ) -> anyhow::Result<()> {
     let lock = Mutex::new(());
     let canister_agent = match &neuron.auth {
@@ -103,7 +106,7 @@ pub(crate) async fn get_node_metrics_history(
         }
         Auth::Keyfile { path } => IcAgentCanisterClient::from_key_file(path.into(), nns_url.clone())?,
     };
-    info!("Started action...");
+    info!(logger, "Started action...");
     let wallet_client = WalletCanisterWrapper::new(canister_agent.agent.clone());
 
     let subnets = match subnets.is_empty() {
@@ -115,10 +118,10 @@ pub(crate) async fn get_node_metrics_history(
     };
 
     let mut metrics_by_subnet = HashMap::new();
-    info!("Running in parallel mode");
+    info!(logger, "Running in parallel mode");
     let mut handles = vec![];
     for subnet in subnets {
-        info!("Spawning thread for subnet: {}", subnet);
+        info!(logger, "Spawning thread for subnet: {}", subnet);
         let current_client = wallet_client.clone();
         handles.push(tokio::spawn(async move {
             (
@@ -133,11 +136,14 @@ pub(crate) async fn get_node_metrics_history(
         let (subnet, resp) = handle.await?;
         match resp {
             Ok(metrics) => {
-                info!("Received response for subnet: {}", subnet);
+                info!(logger, "Received response for subnet: {}", subnet);
                 metrics_by_subnet.insert(subnet, metrics);
             }
             Err(e) => {
-                warn!("Couldn't fetch trustworthy metrics for subnet {}: {:?}", subnet, e)
+                warn!(
+                    logger,
+                    "Couldn't fetch trustworthy metrics for subnet {}: {:?}", subnet, e
+                )
             }
         }
     }

@@ -7,7 +7,7 @@ use ic_canisters::governance::governance_canister_version;
 use ic_management_backend::endpoints;
 use ic_management_types::requests::NodesRemoveRequest;
 use ic_management_types::{Artifact, MinNakamotoCoefficients, Network, NodeFeature, NodeGroupUpdate, NumberOfNodes};
-use log::info;
+use slog::{info, o, Drain, Logger};
 use std::collections::BTreeMap;
 use std::str::FromStr;
 use std::sync::mpsc;
@@ -28,8 +28,8 @@ const STAGING_NEURON_ID: u64 = 49;
 #[tokio::main]
 async fn main() -> Result<(), anyhow::Error> {
     dotenv().ok();
-    init_logger();
-    info!("Running version {}", env!("CARGO_PKG_VERSION"));
+    let logger = make_logger();
+    info!(logger, "Running version {}", env!("CARGO_PKG_VERSION"));
 
     let mut cli_opts = cli::Opts::parse();
     let mut cmd = cli::Opts::command();
@@ -51,7 +51,7 @@ async fn main() -> Result<(), anyhow::Error> {
     });
     let srv = rx.recv().unwrap();
 
-    ic_admin::with_ic_admin(governance_canister_version.into(), async {
+    ic_admin::with_ic_admin(logger.clone(), governance_canister_version.into(), async {
 
         // Start of actually doing stuff with commands.
         if cli_opts.network == Network::Staging {
@@ -99,7 +99,7 @@ async fn main() -> Result<(), anyhow::Error> {
 
                 match &subnet.subcommand {
                     cli::subnet::Commands::Deploy { version } => {
-                        let runner = runner::Runner::new_with_network_url(cli::Cli::from_opts(&cli_opts, false).await?.into(), backend_port).await?;
+                        let runner = runner::Runner::new_with_network_url(cli::Cli::from_opts(&cli_opts, false, logger.clone()).await?.into(), backend_port, logger).await?;
                         runner.deploy(&subnet.id.unwrap(), version, simulate)
                     },
                     cli::subnet::Commands::Replace {
@@ -113,7 +113,7 @@ async fn main() -> Result<(), anyhow::Error> {
                         min_nakamoto_coefficients,
                     } => {
                         let min_nakamoto_coefficients = parse_min_nakamoto_coefficients(&mut cmd, min_nakamoto_coefficients);
-                            let runner = runner::Runner::new_with_network_url(cli::Cli::from_opts(&cli_opts, true).await?.into(), backend_port).await?;
+                            let runner = runner::Runner::new_with_network_url(cli::Cli::from_opts(&cli_opts, true, logger.clone()).await?.into(), backend_port, logger).await?;
                             runner
                                 .membership_replace(ic_management_types::requests::MembershipReplaceRequest {
                                     target: match &subnet.id {
@@ -146,7 +146,7 @@ async fn main() -> Result<(), anyhow::Error> {
                     }
                     cli::subnet::Commands::Resize { add, remove, include, only, exclude, motivation, } => {
                         if let Some(motivation) = motivation.clone() {
-                            let runner = runner::Runner::new_with_network_url(cli::Cli::from_opts(&cli_opts, true).await?.into(), backend_port).await?;
+                            let runner = runner::Runner::new_with_network_url(cli::Cli::from_opts(&cli_opts, true, logger.clone()).await?.into(), backend_port, logger).await?;
                             runner.subnet_resize(ic_management_types::requests::SubnetResizeRequest {
                                 subnet: subnet.id.unwrap(),
                                 add: *add,
@@ -166,7 +166,7 @@ async fn main() -> Result<(), anyhow::Error> {
                     cli::subnet::Commands::Create { size, min_nakamoto_coefficients, exclude, only, include, motivation, replica_version } => {
                         let min_nakamoto_coefficients = parse_min_nakamoto_coefficients(&mut cmd, min_nakamoto_coefficients);
                         if let Some(motivation) = motivation.clone() {
-                            let runner = runner::Runner::new_with_network_url(cli::Cli::from_opts(&cli_opts, true).await?.into(), backend_port).await?;
+                            let runner = runner::Runner::new_with_network_url(cli::Cli::from_opts(&cli_opts, true, logger.clone()).await?.into(), backend_port, logger).await?;
                             runner.subnet_create(ic_management_types::requests::SubnetCreateRequest {
                                 size: *size,
                                 min_nakamoto_coefficients,
@@ -186,20 +186,20 @@ async fn main() -> Result<(), anyhow::Error> {
             }
 
             cli::Commands::Get { args } => {
-                let ic_admin: IcAdminWrapper = cli::Cli::from_opts(&cli_opts, false).await?.into();
-                ic_admin.run_passthrough_get(args)
+                let ic_admin: IcAdminWrapper = cli::Cli::from_opts(&cli_opts, false, logger.clone()).await?.into();
+                ic_admin.run_passthrough_get(args, logger)
             },
 
             cli::Commands::Propose { args } => {
-                let ic_admin: IcAdminWrapper = cli::Cli::from_opts(&cli_opts, true).await?.into();
-                ic_admin.run_passthrough_propose(args, simulate)
+                let ic_admin: IcAdminWrapper = cli::Cli::from_opts(&cli_opts, true, logger.clone()).await?.into();
+                ic_admin.run_passthrough_propose(args, simulate, logger)
             },
 
             cli::Commands::Version(version_command) => {
                 match &version_command {
                     cli::version::Cmd::Update(update_command) => {
-                        let runner = runner::Runner::new_with_network_url(cli::Cli::from_opts(&cli_opts, true).await?.into(), backend_port).await?;
-                        let ic_admin: IcAdminWrapper = cli::Cli::from_opts(&cli_opts, true).await?.into();
+                        let runner = runner::Runner::new_with_network_url(cli::Cli::from_opts(&cli_opts, true, logger.clone()).await?.into(), backend_port, logger.clone()).await?;
+                        let ic_admin: IcAdminWrapper = cli::Cli::from_opts(&cli_opts, true, logger.clone()).await?.into();
                         let release_artifact: &Artifact = &update_command.subcommand.clone().into();
 
                         let update_version = match &update_command.subcommand {
@@ -209,6 +209,7 @@ async fn main() -> Result<(), anyhow::Error> {
                                     version,
                                     release_tag,
                                     runner.prepare_versions_to_retire(release_artifact, false).await.map(|res| res.1)?,
+                                    logger.clone()
                                 )
                             }
                         }.await?;
@@ -221,7 +222,7 @@ async fn main() -> Result<(), anyhow::Error> {
                                                  title: Some(update_version.title),
                                                  summary: Some(update_version.summary.clone()),
                                                  motivation: None,
-                                             }, simulate)
+                                             }, simulate, logger)
                     }
                 }
             },
@@ -229,12 +230,12 @@ async fn main() -> Result<(), anyhow::Error> {
             cli::Commands::Hostos(nodes) => {
                 match &nodes.subcommand {
                     cli::hostos::Commands::Rollout { version,nodes} => {
-                        let runner = runner::Runner::new_with_network_url(cli::Cli::from_opts(&cli_opts, true).await?.into(), backend_port).await?;
+                        let runner = runner::Runner::new_with_network_url(cli::Cli::from_opts(&cli_opts, true, logger.clone()).await?.into(), backend_port, logger.clone()).await?;
                         runner.hostos_rollout(nodes.clone(), version, simulate, None).await
                     },
                     cli::hostos::Commands::RolloutFromNodeGroup {version, assignment, owner, nodes_in_group, exclude } => {
                         let update_group  = NodeGroupUpdate::new(*assignment, *owner, NumberOfNodes::from_str(nodes_in_group)?);
-                        let runner = runner::Runner::new_with_network_url(cli::Cli::from_opts(&cli_opts, true).await?.into(), backend_port).await?;
+                        let runner = runner::Runner::new_with_network_url(cli::Cli::from_opts(&cli_opts, true, logger.clone()).await?.into(), backend_port, logger.clone()).await?;
                         if let Some((nodes_to_update, summary)) = runner.hostos_rollout_nodes(update_group, version, exclude).await? {
                             return runner.hostos_rollout(nodes_to_update, version, simulate, Some(summary)).await
                         }
@@ -252,7 +253,7 @@ async fn main() -> Result<(), anyhow::Error> {
                             )
                             .exit();
                         }
-                        let runner = runner::Runner::new_with_network_url(cli::Cli::from_opts(&cli_opts, true).await?.into(), backend_port).await?;
+                        let runner = runner::Runner::new_with_network_url(cli::Cli::from_opts(&cli_opts, true, logger.clone()).await?.into(), backend_port, logger).await?;
                         runner.remove_nodes(NodesRemoveRequest {
                             extra_nodes_filter: extra_nodes_filter.clone(),
                             no_auto: *no_auto,
@@ -265,23 +266,23 @@ async fn main() -> Result<(), anyhow::Error> {
             },
 
             cli::Commands::Vote {accepted_neurons, accepted_topics}=> {
-                let cli = cli::Cli::from_opts(&cli_opts, true).await?;
+                let cli = cli::Cli::from_opts(&cli_opts, true, logger.clone()).await?;
                 vote_on_proposals(match cli.get_neuron() {
                     Some(neuron) => neuron,
                     None => return Err(anyhow::anyhow!("Neuron required for this command")),
-                }, cli.get_nns_url(), accepted_neurons, accepted_topics, simulate).await
+                }, cli.get_nns_url(), accepted_neurons, accepted_topics, simulate, logger).await
             },
 
             cli::Commands::TrustworthyMetrics { wallet, start_at_timestamp, subnet_ids } => {
-                let cli = cli::Cli::from_opts(&cli_opts, true).await?;
+                let cli = cli::Cli::from_opts(&cli_opts, true, logger.clone()).await?;
                 get_node_metrics_history(CanisterId::from_str(wallet)?, subnet_ids.clone(), *start_at_timestamp, match cli.get_neuron() {
                     Some(neuron) => neuron,
                     None => return Err(anyhow::anyhow!("Neuron required for this command")),
-                }, cli.get_nns_url()).await
+                }, cli.get_nns_url(), logger).await
             },
 
             cli::Commands::DumpRegistry { path, version } => {
-                registry_dump::dump_registry(path, version, &cli_opts.network).await
+                registry_dump::dump_registry(logger, path, version, &cli_opts.network).await
             }
         }
     })
@@ -384,17 +385,9 @@ fn local_unused_port() -> u16 {
     tcp.local_addr().unwrap().port()
 }
 
-fn init_logger() {
-    match std::env::var("RUST_LOG") {
-        Ok(val) => std::env::set_var("LOG_LEVEL", val),
-        Err(_) => {
-            if std::env::var("LOG_LEVEL").is_err() {
-                // Default logging level is: info generally, warn for mio and actix_server
-                // You can override defaults by setting environment variables
-                // RUST_LOG or LOG_LEVEL
-                std::env::set_var("LOG_LEVEL", "info,mio::=warn,actix_server::=warn")
-            }
-        }
-    }
-    pretty_env_logger::init_custom_env("LOG_LEVEL");
+fn make_logger() -> Logger {
+    let decorator = slog_term::TermDecorator::new().build();
+    let drain = slog_term::FullFormat::new(decorator).build().fuse();
+    let drain = slog_async::Async::new(drain).chan_size(8192).build();
+    Logger::root(drain.fuse(), o!())
 }

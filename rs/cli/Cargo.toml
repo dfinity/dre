@@ -34,8 +34,6 @@ ic-nns-governance = { workspace = true }
 ic-sys = { workspace = true }
 itertools = { workspace = true }
 keyring = { workspace = true }
-log = { workspace = true }
-pretty_env_logger = { workspace = true }
 regex = { workspace = true }
 reqwest = { workspace = true }
 serde = { workspace = true }

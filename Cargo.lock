@@ -2201,8 +2201,6 @@ dependencies = [
  "ic-sys",
  "itertools 0.12.0",
  "keyring",
- "log",
- "pretty_env_logger",
  "regex",
  "reqwest",
  "serde",

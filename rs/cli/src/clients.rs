@@ -9,7 +9,6 @@ use ic_management_types::{
     },
     Artifact, Network, NetworkError, Release, TopologyProposal,
 };
-use log::error;
 use serde::de::DeserializeOwned;
 
 #[derive(Clone)]
@@ -146,10 +145,11 @@ impl RESTRequestBuilder for reqwest::RequestBuilder {
         if let Err(e) = response_result.error_for_status_ref() {
             let response = response_result.text().await?;
             match serde_json::from_str(&response) {
-                Ok(NetworkError::ResizeFailed(s)) => {
-                    error!("{}", s);
-                    Err(anyhow::anyhow!("failed request (error: {})", e))
-                }
+                Ok(NetworkError::ResizeFailed(s)) => Err(anyhow::anyhow!(
+                    "failed request with resize failing due to {} (error: {})",
+                    s,
+                    e
+                )),
                 _ => Err(anyhow::anyhow!("failed request (error: {}, response: {})", e, response)),
             }
         } else {

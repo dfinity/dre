@@ -8,10 +8,10 @@ use futures::Future;
 use ic_base_types::PrincipalId;
 use ic_management_types::Artifact;
 use itertools::Itertools;
-use log::{error, info, warn};
 use regex::Regex;
 use reqwest::StatusCode;
 use sha2::{Digest, Sha256};
+use slog::{error, info, warn, Logger};
 use std::fs::File;
 use std::io::Write;
 use std::os::unix::fs::PermissionsExt;
@@ -44,8 +44,9 @@ impl From<Cli> for IcAdminWrapper {
 }
 
 impl IcAdminWrapper {
-    fn print_ic_admin_command_line(&self, cmd: &Command) {
+    fn print_ic_admin_command_line(&self, cmd: &Command, logger: Logger) {
         info!(
+            logger,
             "running ic-admin: \n$ {}{}",
             cmd.get_program().to_str().unwrap().yellow(),
             cmd.get_args()
@@ -78,61 +79,69 @@ impl IcAdminWrapper {
         );
     }
 
-    pub(crate) fn propose_run(&self, cmd: ProposeCommand, opts: ProposeOptions, simulate: bool) -> anyhow::Result<()> {
-        let exec = |cli: &IcAdminWrapper, cmd: ProposeCommand, opts: ProposeOptions, add_dryrun_arg: bool| {
-            if let Some(summary) = opts.clone().summary {
-                let summary_count = summary.chars().count();
-                if summary_count > MAX_SUMMARY_CHAR_COUNT {
-                    return Err(anyhow!(
-                        "Summary length {} exceeded MAX_SUMMARY_CHAR_COUNT {}",
-                        summary_count,
-                        MAX_SUMMARY_CHAR_COUNT,
-                    ));
+    pub(crate) fn propose_run(
+        &self,
+        cmd: ProposeCommand,
+        opts: ProposeOptions,
+        simulate: bool,
+        logger: Logger,
+    ) -> anyhow::Result<()> {
+        let exec =
+            |cli: &IcAdminWrapper, cmd: ProposeCommand, opts: ProposeOptions, add_dryrun_arg: bool, logger: Logger| {
+                if let Some(summary) = opts.clone().summary {
+                    let summary_count = summary.chars().count();
+                    if summary_count > MAX_SUMMARY_CHAR_COUNT {
+                        return Err(anyhow!(
+                            "Summary length {} exceeded MAX_SUMMARY_CHAR_COUNT {}",
+                            summary_count,
+                            MAX_SUMMARY_CHAR_COUNT,
+                        ));
+                    }
                 }
-            }
-            cli.run(
-                &cmd.get_command_name(),
-                [
-                    // Make sure there is no more than one `--dry-run` argument, or else ic-admin will complain.
-                    if add_dryrun_arg && !cmd.args().contains(&String::from("--dry-run")) {
-                        vec!["--dry-run".to_string()]
-                    } else {
-                        Default::default()
-                    },
-                    opts.title
-                        .map(|t| vec!["--proposal-title".to_string(), t])
-                        .unwrap_or_default(),
-                    opts.summary
-                        .map(|s| {
-                            vec![
-                                "--summary".to_string(),
-                                format!(
-                                    "{}{}",
-                                    s,
-                                    opts.motivation
-                                        .map(|m| format!("\n\nMotivation: {m}"))
-                                        .unwrap_or_default(),
-                                ),
-                            ]
-                        })
-                        .unwrap_or_default(),
-                    cli.neuron.as_ref().map(|n| n.as_arg_vec()).unwrap_or_default(),
-                    cmd.args(),
-                ]
-                .concat()
-                .as_slice(),
-                true,
-            )
-        };
+                cli.run(
+                    &cmd.get_command_name(),
+                    [
+                        // Make sure there is no more than one `--dry-run` argument, or else ic-admin will complain.
+                        if add_dryrun_arg && !cmd.args().contains(&String::from("--dry-run")) {
+                            vec!["--dry-run".to_string()]
+                        } else {
+                            Default::default()
+                        },
+                        opts.title
+                            .map(|t| vec!["--proposal-title".to_string(), t])
+                            .unwrap_or_default(),
+                        opts.summary
+                            .map(|s| {
+                                vec![
+                                    "--summary".to_string(),
+                                    format!(
+                                        "{}{}",
+                                        s,
+                                        opts.motivation
+                                            .map(|m| format!("\n\nMotivation: {m}"))
+                                            .unwrap_or_default(),
+                                    ),
+                                ]
+                            })
+                            .unwrap_or_default(),
+                        cli.neuron.as_ref().map(|n| n.as_arg_vec()).unwrap_or_default(),
+                        cmd.args(),
+                    ]
+                    .concat()
+                    .as_slice(),
+                    true,
+                    logger,
+                )
+            };
 
         // Simulated, or --help executions run immediately and do not proceed.
         if simulate || cmd.args().contains(&String::from("--help")) || cmd.args().contains(&String::from("--dry-run")) {
-            return exec(self, cmd, opts, simulate);
+            return exec(self, cmd, opts, simulate, logger);
         }
 
         // If --yes was not specified, ask the user if they want to proceed
         if !self.yes {
-            exec(self, cmd.clone(), opts.clone(), true)?;
+            exec(self, cmd.clone(), opts.clone(), true, logger.clone())?;
         }
 
         // User wants to proceed but does not have neuron configuration. Bail out.
@@ -147,13 +156,13 @@ impl IcAdminWrapper {
         {
             // User confirmed the desire to submit the proposal and no obvious problems were
             // found. Proceeding!
-            exec(self, cmd, opts, false)
+            exec(self, cmd, opts, false, logger)
         } else {
             Err(anyhow::anyhow!("Action aborted"))
         }
     }
 
-    fn _run_ic_admin_with_args(&self, ic_admin_args: &[String], with_auth: bool) -> anyhow::Result<()> {
+    fn _run_ic_admin_with_args(&self, ic_admin_args: &[String], with_auth: bool, logger: Logger) -> anyhow::Result<()> {
         let ic_admin_path = self.ic_admin.clone().unwrap_or_else(|| "ic-admin".to_string());
         let mut cmd = Command::new(ic_admin_path);
         let auth_options = if with_auth {
@@ -164,7 +173,7 @@ impl IcAdminWrapper {
         let root_options = [auth_options, vec!["--nns-url".to_string(), self.nns_url.to_string()]].concat();
         let cmd = cmd.args([&root_options, ic_admin_args].concat());
 
-        self.print_ic_admin_command_line(cmd);
+        self.print_ic_admin_command_line(cmd, logger);
 
         match cmd.spawn() {
             Ok(mut child) => match child.wait() {
@@ -184,15 +193,15 @@ impl IcAdminWrapper {
         }
     }
 
-    pub(crate) fn run(&self, command: &str, args: &[String], with_auth: bool) -> anyhow::Result<()> {
+    pub(crate) fn run(&self, command: &str, args: &[String], with_auth: bool, logger: Logger) -> anyhow::Result<()> {
         let ic_admin_args = [&[command.to_string()], args].concat();
-        self._run_ic_admin_with_args(&ic_admin_args, with_auth)
+        self._run_ic_admin_with_args(&ic_admin_args, with_auth, logger)
     }
 
     /// Run ic-admin and parse sub-commands that it lists with "--help",
     /// extract the ones matching `needle_regex` and return them as a
     /// `Vec<String>`
-    fn grep_subcommands(&self, needle_regex: &str) -> Vec<String> {
+    fn grep_subcommands(&self, needle_regex: &str, logger: Logger) -> Vec<String> {
         let ic_admin_path = self.ic_admin.clone().unwrap_or_else(|| "ic-admin".to_string());
         let cmd_result = Command::new(ic_admin_path).args(["--help"]).output();
         match cmd_result.map_err(|e| e.to_string()) {
@@ -205,6 +214,7 @@ impl IcAdminWrapper {
                         .collect()
                 } else {
                     error!(
+                        logger,
                         "Execution of ic-admin failed: {}",
                         String::from_utf8_lossy(output.stderr.as_ref())
                     );
@@ -212,17 +222,17 @@ impl IcAdminWrapper {
                 }
             }
             Err(err) => {
-                error!("Error starting ic-admin process: {}", err);
+                error!(logger, "Error starting ic-admin process: {}", err);
                 vec![]
             }
         }
     }
 
     /// Run an `ic-admin get-*` command directly, and without an HSM
-    pub(crate) fn run_passthrough_get(&self, args: &[String]) -> anyhow::Result<()> {
+    pub(crate) fn run_passthrough_get(&self, args: &[String], logger: Logger) -> anyhow::Result<()> {
         if args.is_empty() {
             println!("List of available ic-admin 'get' sub-commands:\n");
-            for subcmd in self.grep_subcommands(r"\s+get-(.+?)\s") {
+            for subcmd in self.grep_subcommands(r"\s+get-(.+?)\s", logger) {
                 println!("\t{}", subcmd)
             }
             std::process::exit(1);
@@ -246,14 +256,24 @@ impl IcAdminWrapper {
             args_with_get_prefix
         };
 
-        self.run(&args[0], &args.iter().skip(1).cloned().collect::<Vec<_>>(), false)
+        self.run(
+            &args[0],
+            &args.iter().skip(1).cloned().collect::<Vec<_>>(),
+            false,
+            logger,
+        )
     }
 
     /// Run an `ic-admin propose-to-*` command directly
-    pub(crate) fn run_passthrough_propose(&self, args: &[String], simulate: bool) -> anyhow::Result<()> {
+    pub(crate) fn run_passthrough_propose(
+        &self,
+        args: &[String],
+        simulate: bool,
+        logger: Logger,
+    ) -> anyhow::Result<()> {
         if args.is_empty() {
             println!("List of available ic-admin 'propose' sub-commands:\n");
-            for subcmd in self.grep_subcommands(r"\s+propose-to-(.+?)\s") {
+            for subcmd in self.grep_subcommands(r"\s+propose-to-(.+?)\s", logger) {
                 println!("\t{}", subcmd)
             }
             std::process::exit(1);
@@ -294,7 +314,7 @@ impl IcAdminWrapper {
             args: args.iter().skip(1).cloned().collect::<Vec<_>>(),
         };
         let simulate = simulate || cmd.args().contains(&String::from("--dry-run"));
-        self.propose_run(cmd, Default::default(), simulate)
+        self.propose_run(cmd, Default::default(), simulate, logger)
     }
 
     fn get_s3_cdn_image_url(version: &String, s3_subdir: &String) -> String {
@@ -311,7 +331,7 @@ impl IcAdminWrapper {
         )
     }
 
-    async fn download_file_and_get_sha256(download_url: &String) -> anyhow::Result<String> {
+    async fn download_file_and_get_sha256(download_url: &String, logger: Logger) -> anyhow::Result<String> {
         let url = url::Url::parse(download_url)?;
         let subdir = format!(
             "{}{}",
@@ -342,7 +362,7 @@ impl IcAdminWrapper {
                 download_url
             ));
         }
-        info!("Download {} succeeded {}", download_url, response.status());
+        info!(logger, "Download {} succeeded {}", download_url, response.status());
 
         let mut file = match File::create(download_image) {
             Ok(file) => file,
@@ -361,6 +381,7 @@ impl IcAdminWrapper {
             .collect::<Vec<String>>()
             .join("");
         info!(
+            logger,
             "File saved at {} has sha256 {}",
             download_image.display(),
             stringified_hash
@@ -371,6 +392,7 @@ impl IcAdminWrapper {
     async fn download_images_and_validate_sha256(
         image: &Artifact,
         version: &String,
+        logger: Logger,
     ) -> anyhow::Result<(Vec<String>, String)> {
         let update_urls = vec![
             Self::get_s3_cdn_image_url(version, &image.s3_folder()),
@@ -378,15 +400,15 @@ impl IcAdminWrapper {
         ];
 
         // Download images, verify them and compare the SHA256
-        let hash_and_valid_urls: Vec<(String, &String)> = stream::iter(&update_urls)
-            .filter_map(|update_url| async move {
-                match Self::download_file_and_get_sha256(update_url).await {
+        let hash_and_valid_urls: Vec<(String, String)> = stream::iter(update_urls.clone())
+            .filter_map(|update_url| async {
+                match Self::download_file_and_get_sha256(&update_url, logger.clone()).await {
                     Ok(hash) => {
-                        info!("SHA256 of {}: {}", update_url, hash);
+                        info!(logger, "SHA256 of {}: {}", update_url, hash);
                         Some((hash, update_url))
                     }
                     Err(err) => {
-                        warn!("Error downloading {}: {}", update_url, err);
+                        warn!(logger, "Error downloading {}: {}", update_url, err);
                         None
                     }
                 }
@@ -407,7 +429,7 @@ impl IcAdminWrapper {
             }
             1 => {
                 let hash = hashes_unique.into_iter().next().unwrap();
-                info!("SHA256 of all download images is: {}", hash);
+                info!(logger, "SHA256 of all download images is: {}", hash);
                 hash
             }
             _ => {
@@ -420,10 +442,7 @@ impl IcAdminWrapper {
                 ))
             }
         };
-        let update_urls = hash_and_valid_urls
-            .into_iter()
-            .map(|(_, u)| u.clone())
-            .collect::<Vec<String>>();
+        let update_urls = hash_and_valid_urls.into_iter().map(|(_, u)| u).collect::<Vec<String>>();
 
         if update_urls.is_empty() {
             return Err(anyhow::anyhow!(
@@ -431,7 +450,10 @@ impl IcAdminWrapper {
                 update_urls.join(", ")
             ));
         } else if update_urls.len() == 1 {
-            warn!("Only 1 update image is available. At least 2 should be present in the proposal");
+            warn!(
+                logger,
+                "Only 1 update image is available. At least 2 should be present in the proposal"
+            );
         }
         Ok((update_urls, expected_hash))
     }
@@ -441,8 +463,10 @@ impl IcAdminWrapper {
         version: &String,
         release_tag: &String,
         retire_versions: Option<Vec<String>>,
+        logger: Logger,
     ) -> anyhow::Result<UpdateVersion> {
-        let (update_urls, expected_hash) = Self::download_images_and_validate_sha256(release_artifact, version).await?;
+        let (update_urls, expected_hash) =
+            Self::download_images_and_validate_sha256(release_artifact, version, logger).await?;
 
         let template = format!(
             r#"Elect new {release_artifact} binary revision [{version}](https://github.com/dfinity/ic/tree/{release_tag})
@@ -650,7 +674,7 @@ pub struct ProposeOptions {
 }
 
 /// Returns a path to downloaded ic-admin binary
-async fn download_ic_admin(version: Option<String>) -> Result<String> {
+async fn download_ic_admin(version: Option<String>, logger: Logger) -> Result<String> {
     let version = version
         .unwrap_or_else(|| defaults::DEFAULT_IC_ADMIN_VERSION.to_string())
         .trim()
@@ -667,7 +691,7 @@ async fn download_ic_admin(version: Option<String>) -> Result<String> {
         } else {
             format!("https://download.dfinity.systems/ic/{version}/binaries/x86_64-linux/ic-admin.gz")
         };
-        info!("Downloading ic-admin version: {} from {}", version, url);
+        info!(logger, "Downloading ic-admin version: {} from {}", version, url);
         let body = reqwest::get(url).await?.bytes().await?;
         let mut decoded = GzDecoder::new(body.as_ref());
 
@@ -678,16 +702,16 @@ async fn download_ic_admin(version: Option<String>) -> Result<String> {
         std::io::copy(&mut decoded, &mut out)?;
         std::fs::set_permissions(path, std::fs::Permissions::from_mode(0o755))?;
     }
-    info!("Using ic-admin: {}", path.display());
+    info!(logger, "Using ic-admin: {}", path.display());
 
     Ok(path.to_string_lossy().to_string())
 }
 
-pub async fn with_ic_admin<F, U>(version: Option<String>, closure: F) -> Result<U>
+pub async fn with_ic_admin<F, U>(logger: Logger, version: Option<String>, closure: F) -> Result<U>
 where
     F: Future<Output = Result<U>>,
 {
-    let ic_admin_path = download_ic_admin(version).await?;
+    let ic_admin_path = download_ic_admin(version, logger).await?;
     let bin_dir = Path::new(&ic_admin_path).parent().unwrap();
     std::env::set_var(
         "PATH",

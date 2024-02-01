@@ -7,7 +7,7 @@ use ic_base_types::PrincipalId;
 use ic_management_types::requests::{HostosRolloutRequest, HostosRolloutResponse, NodesRemoveRequest};
 use ic_management_types::{Artifact, Node, NodeFeature, NodeGroupUpdate};
 use itertools::Itertools;
-use log::{info, warn};
+use slog::{info, warn, Logger};
 use std::collections::BTreeMap;
 use tabled::builder::Builder;
 use tabled::settings::Style;
@@ -16,6 +16,7 @@ use tabled::settings::Style;
 pub struct Runner {
     ic_admin: ic_admin::IcAdminWrapper,
     dashboard_backend_client: DashboardBackendClient,
+    logger: Logger,
 }
 
 impl Runner {
@@ -32,6 +33,7 @@ impl Runner {
                     motivation: None,
                 },
                 simulate,
+                self.logger.clone(),
             )
             .map_err(|e| anyhow::anyhow!(e))?;
 
@@ -117,6 +119,7 @@ impl Runner {
                 motivation: Some(motivation.clone()),
             },
             simulate,
+            self.logger.clone(),
         )
     }
 
@@ -171,16 +174,22 @@ impl Runner {
                 },
                 options,
                 simulate,
+                self.logger.clone(),
             )
             .map_err(|e| anyhow::anyhow!(e))
     }
 
-    pub async fn new_with_network_url(ic_admin: ic_admin::IcAdminWrapper, backend_port: u16) -> anyhow::Result<Self> {
+    pub async fn new_with_network_url(
+        ic_admin: ic_admin::IcAdminWrapper,
+        backend_port: u16,
+        logger: Logger,
+    ) -> anyhow::Result<Self> {
         let dashboard_backend_client =
             DashboardBackendClient::new_with_network_url(format!("http://localhost:{}/", backend_port));
         Ok(Self {
             ic_admin,
             dashboard_backend_client,
+            logger,
         })
     }
 
@@ -197,7 +206,10 @@ impl Runner {
         let versions = if retireable_versions.is_empty() {
             Vec::new()
         } else {
-            info!("Waiting for you to pick the versions to retire in your editor");
+            info!(
+                self.logger,
+                "Waiting for you to pick the versions to retire in your editor"
+            );
             let template = "# In the below lines, comment out the versions that you DO NOT want to retire".to_string();
             let versions = edit::edit(format!(
                 "{}\n{}",
@@ -216,7 +228,7 @@ impl Runner {
             .collect::<Vec<_>>();
 
             if versions.is_empty() {
-                warn!("Empty list of replica versions to unelect");
+                warn!(self.logger, "Empty list of replica versions to unelect");
             }
             versions
         };
@@ -225,7 +237,7 @@ impl Runner {
             "Removing the obsolete IC replica versions from the registry, to prevent unintended version downgrades in the future"
                 .to_string();
         if edit_summary {
-            info!("Edit summary");
+            info!(self.logger, "Edit summary");
             template = edit::edit(template)?.trim().replace("\r(\n)?", "\n");
         }
 
@@ -389,6 +401,7 @@ impl Runner {
                     motivation: None,
                 },
                 simulate,
+                self.logger.clone(),
             )
             .map_err(|e| anyhow::anyhow!(e))?;
 
@@ -440,6 +453,7 @@ impl Runner {
                 motivation: node_remove_response.motivation.into(),
             },
             simulate,
+            self.logger.clone(),
         )
     }
 }

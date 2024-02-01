@@ -14,10 +14,15 @@ use ic_interfaces_registry::{RegistryClient, RegistryValue};
 use ic_management_types::Network;
 use ic_registry_local_registry::LocalRegistry;
 use service_discovery::registry_sync::sync_local_registry;
-use slog::{o, Drain, Logger};
+use slog::Logger;
 use uuid::Uuid;
 
-pub async fn dump_registry(path: &Option<PathBuf>, version: &i64, network: &Network) -> Result<(), Error> {
+pub async fn dump_registry(
+    logger: Logger,
+    path: &Option<PathBuf>,
+    version: &i64,
+    network: &Network,
+) -> Result<(), Error> {
     let (path, should_dispose) = match path {
         Some(val) => (val.clone(), false),
         None => {
@@ -31,7 +36,6 @@ pub async fn dump_registry(path: &Option<PathBuf>, version: &i64, network: &Netw
         }
     };
 
-    let logger = make_logger();
     sync_local_registry(logger.clone(), path.clone(), vec![network.get_url()], false, None).await;
 
     // nodes,dc,node_operators,node_providers,
@@ -78,13 +82,6 @@ pub async fn dump_registry(path: &Option<PathBuf>, version: &i64, network: &Netw
         fs::remove_dir_all(path).map_err(|e| anyhow::anyhow!("Error removing created dir: {:?}", e))?
     }
     Ok(())
-}
-
-fn make_logger() -> Logger {
-    let decorator = slog_term::TermDecorator::new().build();
-    let drain = slog_term::FullFormat::new(decorator).build().fuse();
-    let drain = slog_async::Async::new(drain).chan_size(8192).build();
-    Logger::root(drain.fuse(), o!())
 }
 
 trait RegistryEntry: RegistryValue {

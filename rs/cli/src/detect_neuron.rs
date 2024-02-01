@@ -11,7 +11,7 @@ use ic_nns_constants::GOVERNANCE_CANISTER_ID;
 use ic_nns_governance::pb::v1::{ListNeurons, ListNeuronsResponse};
 use ic_sys::utility_command::UtilityCommand;
 use keyring::{Entry, Error};
-use log::info;
+use slog::{info, Logger};
 
 #[derive(Clone)]
 pub struct Neuron {
@@ -66,8 +66,8 @@ impl Auth {
     }
 }
 
-pub fn detect_hsm_auth() -> anyhow::Result<Option<Auth>> {
-    info!("Detecting HSM devices");
+pub fn detect_hsm_auth(logger: Logger) -> anyhow::Result<Option<Auth>> {
+    info!(logger, "Detecting HSM devices");
     let ctx = get_pkcs11_ctx()?;
     for slot in ctx.get_slots_with_token()? {
         let info = ctx.get_slot_info(slot)?;
@@ -84,7 +84,7 @@ pub fn detect_hsm_auth() -> anyhow::Result<Option<Auth>> {
             flags.set_serial_session(true);
             let session = ctx.open_session_no_callback(slot, flags).unwrap();
             session.login(UserType::User, Some(&pin))?;
-            info!("HSM login successful!");
+            info!(logger, "HSM login successful!");
             pin_entry.set_password(&pin)?;
             return Ok(Some(Auth::Hsm {
                 pin,
@@ -96,8 +96,8 @@ pub fn detect_hsm_auth() -> anyhow::Result<Option<Auth>> {
     Ok(None)
 }
 
-pub async fn detect_neuron(url: url::Url) -> anyhow::Result<Option<Neuron>> {
-    if let Some(Auth::Hsm { pin, slot, key_id }) = detect_hsm_auth()? {
+pub async fn detect_neuron(url: url::Url, logger: Logger) -> anyhow::Result<Option<Neuron>> {
+    if let Some(Auth::Hsm { pin, slot, key_id }) = detect_hsm_auth(logger)? {
         let auth = Auth::Hsm {
             pin: pin.clone(),
             slot,

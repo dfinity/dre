@@ -1,5 +1,5 @@
 {
-  "checksum": "b8fec8b55c5df63633561a54c2d4ec1414abc2ba61d643d9a8582f0da5d12161",
+  "checksum": "aefd7832dbf1f01cdb97655f4bc81be23caac665af4fa621289714fb9b32a0fb",
   "crates": {
     "actix-codec 0.5.1": {
       "name": "actix-codec",
@@ -11016,14 +11016,6 @@
             {
               "id": "keyring 2.3.1",
               "target": "keyring"
-            },
-            {
-              "id": "log 0.4.20",
-              "target": "log"
-            },
-            {
-              "id": "pretty_env_logger 0.5.0",
-              "target": "pretty_env_logger"
             },
             {
               "id": "regex 1.10.3",
