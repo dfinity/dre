@@ -11,7 +11,7 @@ jobs:
       - name: "Download main test artifact"
         uses: dawidd6/action-download-artifact@v3.0.0
         with:
-          name: test-artifacts.zip
+          name: test-artifacts
           branch: main
           search_artifacts: true
           workflow: main.yaml
