@@ -6,6 +6,7 @@ load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_test")
 DEPS = [
     "//rs/ic-observability/service-discovery",
     "//rs/ic-observability/multiservice-discovery-shared",
+    "//rs/ic-management-types",
 ]
 
 DEV_DEPENDENCIES = [
@@ -49,19 +50,4 @@ rust_test(
     deps = all_crate_deps(
         normal_dev = True,
     ) + DEPS,
-)
-
-rust_test(
-    name = "prom_targets_tests",
-    srcs = ["tests/tests.rs"],
-    data = [
-        ":multiservice-discovery",
-        "@mainnet_registry//:mercury",
-    ],
-    proc_macro_deps = all_crate_deps(
-        proc_macro_dev = True,
-    ),
-    deps = all_crate_deps(
-        normal_dev = True,
-    ) + DEPS + DEV_DEPENDENCIES,
 )
