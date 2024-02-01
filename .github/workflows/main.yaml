@@ -29,6 +29,12 @@ jobs:
         name: "🚀 Testing"
 
       ########################################
+      # Prepare test artifacts
+      ########################################
+      - name: "🧪 Prepare test artifacts"
+        uses: ./.github/workflows/prepare-test-artifacts
+
+      ########################################
       # Prepare release
       ########################################
       - name: "🚢 Prepare release"
