@@ -9,6 +9,7 @@ jobs:
   setup-runner:
     runs-on: ubuntu-20.04
     steps:
+      - uses: actions/checkout@v4
       - name: "🔧 Setup runner"
         uses: ./.github/workflows/manage-runner-pre
 
