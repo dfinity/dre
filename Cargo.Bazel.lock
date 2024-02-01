@@ -1,5 +1,5 @@
 {
-  "checksum": "aefd7832dbf1f01cdb97655f4bc81be23caac665af4fa621289714fb9b32a0fb",
+  "checksum": "7d6e6b87aa99403a3b44a64d4e08692932e5027f7004f151b6dfe4ef0af6f9b0",
   "crates": {
     "actix-codec 0.5.1": {
       "name": "actix-codec",
@@ -1939,69 +1939,6 @@
         "version": "2.0.2"
       },
       "license": "MIT"
-    },
-    "assert_cmd 2.0.13": {
-      "name": "assert_cmd",
-      "version": "2.0.13",
-      "repository": {
-        "Http": {
-          "url": "https://crates.io/api/v1/crates/assert_cmd/2.0.13/download",
-          "sha256": "00ad3f3a942eee60335ab4342358c161ee296829e0d16ff42fc1d6cb07815467"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "assert_cmd",
-            "crate_root": "src/lib.rs",
-            "srcs": [
-              "**/*.rs"
-            ]
-          }
-        }
-      ],
-      "library_target_name": "assert_cmd",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "anstyle 1.0.4",
-              "target": "anstyle"
-            },
-            {
-              "id": "bstr 1.9.0",
-              "target": "bstr"
-            },
-            {
-              "id": "doc-comment 0.3.3",
-              "target": "doc_comment"
-            },
-            {
-              "id": "predicates 3.1.0",
-              "target": "predicates"
-            },
-            {
-              "id": "predicates-core 1.0.6",
-              "target": "predicates_core"
-            },
-            {
-              "id": "predicates-tree 1.0.9",
-              "target": "predicates_tree"
-            },
-            {
-              "id": "wait-timeout 0.2.0",
-              "target": "wait_timeout"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2021",
-        "version": "2.0.13"
-      },
-      "license": "MIT OR Apache-2.0"
     },
     "assert_matches 1.5.0": {
       "name": "assert_matches",
@@ -4627,58 +4564,6 @@
         },
         "edition": "2018",
         "version": "0.2.17"
-      },
-      "license": "MIT OR Apache-2.0"
-    },
-    "bstr 1.9.0": {
-      "name": "bstr",
-      "version": "1.9.0",
-      "repository": {
-        "Http": {
-          "url": "https://crates.io/api/v1/crates/bstr/1.9.0/download",
-          "sha256": "c48f0051a4b4c5e0b6d365cd04af53aeaa209e3cc15ec2cdb69e73cc87fbd0dc"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "bstr",
-            "crate_root": "src/lib.rs",
-            "srcs": [
-              "**/*.rs"
-            ]
-          }
-        }
-      ],
-      "library_target_name": "bstr",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "crate_features": {
-          "common": [
-            "alloc",
-            "default",
-            "std",
-            "unicode"
-          ],
-          "selects": {}
-        },
-        "deps": {
-          "common": [
-            {
-              "id": "memchr 2.7.1",
-              "target": "memchr"
-            },
-            {
-              "id": "regex-automata 0.4.4",
-              "target": "regex_automata"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2021",
-        "version": "1.9.0"
       },
       "license": "MIT OR Apache-2.0"
     },
@@ -10770,59 +10655,6 @@
         "version": "0.2.4"
       },
       "license": "MIT OR Apache-2.0"
-    },
-    "doc-comment 0.3.3": {
-      "name": "doc-comment",
-      "version": "0.3.3",
-      "repository": {
-        "Http": {
-          "url": "https://crates.io/api/v1/crates/doc-comment/0.3.3/download",
-          "sha256": "fea41bba32d969b513997752735605054bc0dfa92b4c56bf1189f2e174be7a10"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "doc_comment",
-            "crate_root": "src/lib.rs",
-            "srcs": [
-              "**/*.rs"
-            ]
-          }
-        },
-        {
-          "BuildScript": {
-            "crate_name": "build_script_build",
-            "crate_root": "build.rs",
-            "srcs": [
-              "**/*.rs"
-            ]
-          }
-        }
-      ],
-      "library_target_name": "doc_comment",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "doc-comment 0.3.3",
-              "target": "build_script_build"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2015",
-        "version": "0.3.3"
-      },
-      "build_script_attrs": {
-        "data_glob": [
-          "**"
-        ]
-      },
-      "license": "MIT"
     },
     "dotenv 0.15.0": {
       "name": "dotenv",
@@ -28529,6 +28361,10 @@
               "target": "erased_serde"
             },
             {
+              "id": "futures 0.3.30",
+              "target": "futures"
+            },
+            {
               "id": "futures-util 0.3.30",
               "target": "futures_util"
             },
@@ -28591,27 +28427,6 @@
             {
               "id": "warp 0.3.6",
               "target": "warp"
-            }
-          ],
-          "selects": {}
-        },
-        "deps_dev": {
-          "common": [
-            {
-              "id": "anyhow 1.0.79",
-              "target": "anyhow"
-            },
-            {
-              "id": "assert_cmd 2.0.13",
-              "target": "assert_cmd"
-            },
-            {
-              "id": "reqwest 0.11.23",
-              "target": "reqwest"
-            },
-            {
-              "id": "tempfile 3.9.0",
-              "target": "tempfile"
             }
           ],
           "selects": {}
@@ -32519,59 +32334,6 @@
       },
       "license": "MIT OR Apache-2.0"
     },
-    "predicates 3.1.0": {
-      "name": "predicates",
-      "version": "3.1.0",
-      "repository": {
-        "Http": {
-          "url": "https://crates.io/api/v1/crates/predicates/3.1.0/download",
-          "sha256": "68b87bfd4605926cdfefc1c3b5f8fe560e3feca9d5552cf68c466d3d8236c7e8"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "predicates",
-            "crate_root": "src/lib.rs",
-            "srcs": [
-              "**/*.rs"
-            ]
-          }
-        }
-      ],
-      "library_target_name": "predicates",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "crate_features": {
-          "common": [
-            "diff"
-          ],
-          "selects": {}
-        },
-        "deps": {
-          "common": [
-            {
-              "id": "anstyle 1.0.4",
-              "target": "anstyle"
-            },
-            {
-              "id": "difflib 0.4.0",
-              "target": "difflib"
-            },
-            {
-              "id": "predicates-core 1.0.6",
-              "target": "predicates_core"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2021",
-        "version": "3.1.0"
-      },
-      "license": "MIT OR Apache-2.0"
-    },
     "predicates-core 1.0.6": {
       "name": "predicates-core",
       "version": "1.0.6",
@@ -35168,7 +34930,6 @@
           "common": [
             "alloc",
             "dfa-onepass",
-            "dfa-search",
             "hybrid",
             "meta",
             "nfa-backtrack",
@@ -44592,47 +44353,6 @@
         "version": "1.0.2"
       },
       "license": "MIT"
-    },
-    "wait-timeout 0.2.0": {
-      "name": "wait-timeout",
-      "version": "0.2.0",
-      "repository": {
-        "Http": {
-          "url": "https://crates.io/api/v1/crates/wait-timeout/0.2.0/download",
-          "sha256": "9f200f5b12eb75f8c1ed65abd4b2db8a6e1b138a20de009dacee265a2498f3f6"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "wait_timeout",
-            "crate_root": "src/lib.rs",
-            "srcs": [
-              "**/*.rs"
-            ]
-          }
-        }
-      ],
-      "library_target_name": "wait_timeout",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [],
-          "selects": {
-            "cfg(unix)": [
-              {
-                "id": "libc 0.2.152",
-                "target": "libc"
-              }
-            ]
-          }
-        },
-        "edition": "2015",
-        "version": "0.2.0"
-      },
-      "license": "MIT/Apache-2.0"
     },
     "waker-fn 1.1.1": {
       "name": "waker-fn",

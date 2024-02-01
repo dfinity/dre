@@ -10,7 +10,7 @@ use prometheus_http_query::Client;
 use service_discovery::{
     metrics::Metrics, poll_loop::make_poll_loop, registry_sync::sync_local_registry, IcServiceDiscoveryImpl,
 };
-use slog::{info, o, Drain};
+use slog::{info, o, warn, Drain};
 use std::{path::PathBuf, sync::Arc, time::Duration};
 use url::Url;
 
@@ -33,13 +33,22 @@ fn main() -> Result<()> {
     info!(log, "Starting service discovery ...");
     let mercury_target_dir = cli_args.targets_dir.join("mercury");
     let nns_url = vec![cli_args.nns_url.clone()];
-    rt.block_on(sync_local_registry(
-        log.clone(),
-        mercury_target_dir,
-        nns_url,
-        cli_args.skip_sync,
-        None,
-    ));
+    let (stop_signal_sender, stop_signal_rcv) = crossbeam::channel::bounded::<()>(0);
+
+    if rt
+        .block_on(sync_local_registry(
+            log.clone(),
+            mercury_target_dir,
+            nns_url,
+            cli_args.skip_sync,
+            None,
+            Some(&stop_signal_rcv),
+        ))
+        .is_err()
+    {
+        warn!(log, "Interrupted IcServiceDiscovery ...");
+        return Ok(());
+    }
 
     info!(log, "Starting IcServiceDiscovery ...");
     let ic_discovery = Arc::new(IcServiceDiscoveryImpl::new(
@@ -48,7 +57,6 @@ fn main() -> Result<()> {
         cli_args.registry_query_timeout,
     )?);
 
-    let (stop_signal_sender, stop_signal_rcv) = crossbeam::channel::bounded::<()>(0);
     let (update_signal_sender, update_signal_rcv) = crossbeam::channel::bounded::<()>(0);
     let poll_loop = make_poll_loop(
         log.clone(),

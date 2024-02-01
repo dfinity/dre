@@ -1,6 +1,7 @@
 use base64::{engine::general_purpose as b64, Engine as _};
 use ic_crypto_utils_threshold_sig_der::parse_threshold_sig_key_from_der;
 use ic_registry_client::client::ThresholdSigPublicKey;
+use service_discovery::job_types::{JobType, JobTypeParseError};
 use service_discovery::registry_sync::nns_reachable;
 
 use serde::{Deserialize, Serialize};
@@ -10,10 +11,11 @@ use std::error::Error;
 use std::fmt::{Display, Error as FmtError, Formatter};
 use std::net::SocketAddr;
 use std::path::PathBuf;
+use std::str::FromStr;
 use std::time::Duration;
 use url::Url;
 
-use crate::definition::Definition;
+use crate::definition::{BoundaryNode, Definition};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct DefinitionDto {
@@ -25,7 +27,6 @@ pub struct DefinitionDto {
 #[derive(Debug)]
 pub(crate) enum BadDtoError {
     InvalidPublicKey(String, std::io::Error),
-    AlreadyExists(String),
     NNSUnreachable(String),
 }
 
@@ -37,7 +38,6 @@ impl Display for BadDtoError {
             Self::InvalidPublicKey(name, e) => {
                 write!(f, "public key of definition {} is invalid: {}", name, e)
             }
-            Self::AlreadyExists(name) => write!(f, "definition {} already exists", name),
             Self::NNSUnreachable(name) => {
                 write!(f, "cannot reach any of the NNS nodes specified in definition {}", name)
             }
@@ -57,7 +57,6 @@ impl DefinitionDto {
             return Err(BadDtoError::NNSUnreachable(self.name));
         }
 
-        let (stop_signal_sender, stop_signal_rcv) = crossbeam::channel::bounded::<()>(0);
         Ok(Definition::new(
             self.nns_urls.clone(),
             registry_path,
@@ -65,9 +64,7 @@ impl DefinitionDto {
             log,
             self.decode_public_key()?,
             poll_interval,
-            stop_signal_rcv,
             registry_query_timeout,
-            stop_signal_sender,
         ))
     }
 
@@ -103,4 +100,46 @@ pub struct BoundaryNodeDto {
     pub custom_labels: BTreeMap<String, String>,
     pub targets: BTreeSet<SocketAddr>,
     pub job_type: String,
+}
+
+impl BoundaryNodeDto {
+    pub(crate) fn try_into_boundary_node(self) -> Result<BoundaryNode, BadBoundaryNodeDtoError> {
+        let job_type = match JobType::from_str(&self.job_type) {
+            Err(e) => {
+                // We don't have this job type here.
+                return Err(BadBoundaryNodeDtoError::JobTypeParseError(e));
+            }
+            Ok(jt) => {
+                // Forbid addition of any job type not known to be supported by boundary nodes.
+                if !JobType::all_for_boundary_nodes().contains(&jt) {
+                    return Err(BadBoundaryNodeDtoError::UnsupportedJobType(self.job_type));
+                }
+                jt
+            }
+        };
+
+        Ok(BoundaryNode {
+            name: self.name,
+            custom_labels: self.custom_labels,
+            targets: self.targets,
+            job_type,
+        })
+    }
+}
+
+#[derive(Debug)]
+pub enum BadBoundaryNodeDtoError {
+    JobTypeParseError(JobTypeParseError),
+    UnsupportedJobType(String),
+}
+
+impl Error for BadBoundaryNodeDtoError {}
+
+impl Display for BadBoundaryNodeDtoError {
+    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        match self {
+            Self::JobTypeParseError(e) => write!(f, "{}", e),
+            Self::UnsupportedJobType(name) => write!(f, "job type {} is not supported for boundary nodes", name),
+        }
+    }
 }

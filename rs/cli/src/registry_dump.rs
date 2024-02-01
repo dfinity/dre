@@ -36,7 +36,9 @@ pub async fn dump_registry(
         }
     };
 
-    sync_local_registry(logger.clone(), path.clone(), vec![network.get_url()], false, None).await;
+    sync_local_registry(logger.clone(), path.clone(), vec![network.get_url()], false, None, None)
+        .await
+        .map_err(|e| anyhow::anyhow!("Error while syncing registry: {:?}", e))?;
 
     // nodes,dc,node_operators,node_providers,
     let client = LocalRegistry::new(path.clone(), Duration::from_secs(10))

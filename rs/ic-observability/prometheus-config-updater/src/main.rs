@@ -17,7 +17,7 @@ use regex::Regex;
 use service_discovery::job_types::{JobType, NodeOS};
 use service_discovery::registry_sync::sync_local_registry;
 use service_discovery::{metrics::Metrics, poll_loop::make_poll_loop, IcServiceDiscoveryImpl};
-use slog::{info, o, Drain, Logger};
+use slog::{info, o, warn, Drain, Logger};
 use url::Url;
 
 use crate::custom_filters::OldMachinesFilter;
@@ -56,15 +56,23 @@ fn main() -> Result<()> {
     info!(log, "Starting prometheus-config-updater");
     let mercury_target_dir = cli_args.targets_dir.join(cli_args.ic_name);
 
-    rt.block_on(sync_local_registry(
-        log.clone(),
-        mercury_target_dir,
-        nns_urls,
-        cli_args.skip_sync,
-        public_key,
-    ));
+    let (stop_signal_sender, stop_signal_rcv) = crossbeam::channel::bounded::<()>(0);
+    if rt
+        .block_on(sync_local_registry(
+            log.clone(),
+            mercury_target_dir,
+            nns_urls,
+            cli_args.skip_sync,
+            public_key,
+            Some(&stop_signal_rcv),
+        ))
+        .is_err()
+    {
+        warn!(log, "Interrupted Prometheus config updater ...");
+        return Ok(());
+    };
 
-    info!(log, "Starting IcServiceDiscovery ...");
+    info!(log, "Starting Prometheus config updater ...");
     let ic_discovery = Arc::new(IcServiceDiscoveryImpl::new(
         log.clone(),
         cli_args.targets_dir,
@@ -80,7 +88,6 @@ fn main() -> Result<()> {
     let _metrics_endpoint =
         MetricsHttpEndpoint::new_insecure(rt.handle().clone(), exporter_config, metrics_registry, &log);
 
-    let (stop_signal_sender, stop_signal_rcv) = crossbeam::channel::bounded::<()>(0);
     let (update_signal_sender, update_signal_rcv) = crossbeam::channel::bounded::<()>(0);
     let loop_fn = make_poll_loop(
         log.clone(),

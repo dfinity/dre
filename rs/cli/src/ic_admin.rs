@@ -724,6 +724,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    use slog::{o, Drain};
     use std::{io::Write, str::FromStr};
     use tempfile::NamedTempFile;
     use wiremock::MockServer;
@@ -731,6 +732,10 @@ mod tests {
     #[ignore]
     #[tokio::test]
     async fn test_propose_dry_run() -> Result<()> {
+        let decorator = slog_term::TermDecorator::new().build();
+        let drain = slog_term::FullFormat::new(decorator).build().fuse();
+        let drain = slog_async::Async::new(drain).chan_size(8192).build();
+        let logger = Logger::root(drain.fuse(), o!());
         let mut file = NamedTempFile::new()?;
         writeln!(
             file,
@@ -808,8 +813,8 @@ oSMDIQBa2NLmSmaqjDXej4rrJEuEhKIz7/pGXpxztViWhB+X9Q==
             ]
             .concat()
             .to_vec();
-            let out = with_ic_admin(Default::default(), async {
-                cli.run(&cmd.get_command_name(), &vector, true)
+            let out = with_ic_admin(logger.clone(), Default::default(), async {
+                cli.run(&cmd.get_command_name(), &vector, true, logger.clone())
                     .map_err(|e| anyhow::anyhow!(e))
             })
             .await;
