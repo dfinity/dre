@@ -1,6 +1,8 @@
 name: MSD Diff
 on:
   pull_request:
+    branches:
+      - "main"
     paths:
       - 'rs/ic-observability/multiservice-discovery*/src/**'
 jobs:
