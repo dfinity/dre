@@ -36,5 +36,7 @@ jobs:
         with:
           base: /home/runner/work/dre/dre/main-targets
           head: /home/runner/work/dre/dre/branch-targets
-          comment-header: ## MSD Diff
+          comment-header: |
+            ## MSD Diff
+            Remove `prevent-merging-MSD-diff` label to merge after inspection
           label: prevent-merging-MSD-diff
