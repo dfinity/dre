@@ -7,7 +7,7 @@ on:
     paths:
       - 'rs/ic-observability/multiservice-discovery*/src/**'
 jobs:
-  setup-runner:
+  msd-diff:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v4
@@ -41,9 +41,10 @@ jobs:
             ## MSD Diff
             Remove `prevent-merging-MSD-diff` label to merge after inspection
           label: prevent-merging-MSD-diff
-          
+
   enforce-label:
     runs-on: ubuntu-20.04
+    needs: msd-diff
     steps:
     - uses: yogevbd/enforce-label-action@2.1.0
       with:
