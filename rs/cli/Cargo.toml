@@ -48,6 +48,12 @@ tabled = { workspace = true }
 tabular = { workspace = true }
 tokio = { workspace = true }
 url = { workspace = true }
+tempdir = "0.3"
+uuid = "1.7.0"
+shellexpand = "3.1.0"
+ic-registry-local-registry = { workspace = true }
+ic-protobuf = { workspace = true }
+ic-interfaces-registry = { workspace = true }
 
 [dev-dependencies]
 tempfile = "3.3.0"

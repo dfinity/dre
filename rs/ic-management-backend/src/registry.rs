@@ -82,7 +82,7 @@ pub struct RegistryState {
     hostos_releases: ArtifactReleases,
     ic_repo: Option<IcRepo>,
 }
-trait RegistryEntry: RegistryValue {
+pub trait RegistryEntry: RegistryValue {
     const KEY_PREFIX: &'static str;
 }
 
@@ -102,9 +102,13 @@ impl RegistryEntry for SubnetRecord {
     const KEY_PREFIX: &'static str = SUBNET_RECORD_KEY_PREFIX;
 }
 
-trait RegistryFamilyEntries {
+pub trait RegistryFamilyEntries {
     fn get_family_entries<T: RegistryEntry + Default>(&self) -> Result<BTreeMap<String, T>>;
     fn get_family_entries_versioned<T: RegistryEntry + Default>(&self) -> Result<BTreeMap<String, (u64, T)>>;
+    fn get_family_entries_of_version<T: RegistryEntry + Default>(
+        &self,
+        version: RegistryVersion,
+    ) -> Result<BTreeMap<String, (u64, T)>>;
 }
 
 impl RegistryFamilyEntries for LocalRegistry {
@@ -127,12 +131,19 @@ impl RegistryFamilyEntries for LocalRegistry {
     }
 
     fn get_family_entries_versioned<T: RegistryEntry + Default>(&self) -> Result<BTreeMap<String, (u64, T)>> {
+        self.get_family_entries_of_version(self.get_latest_version())
+    }
+
+    fn get_family_entries_of_version<T: RegistryEntry + Default>(
+        &self,
+        version: RegistryVersion,
+    ) -> Result<BTreeMap<String, (u64, T)>> {
         let prefix_length = T::KEY_PREFIX.len();
         Ok(self
-            .get_key_family(T::KEY_PREFIX, self.get_latest_version())?
+            .get_key_family(T::KEY_PREFIX, version)?
             .iter()
             .filter_map(|key| {
-                self.get_versioned_value(key, self.get_latest_version())
+                self.get_versioned_value(key, version)
                     .map(|r| {
                         r.value.as_ref().map(|v| {
                             (
