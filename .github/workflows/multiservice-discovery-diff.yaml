@@ -20,13 +20,13 @@ jobs:
           name: test-artifacts
           branch: main
           workflow: main.yaml
-
+      - name: Setup upterm session
+        uses: lhotari/action-upterm@v1
       - name: "🔭 Compute MSD"
         run: |
           set -exuo pipefail
           mkdir -p tmp/main-registry tmp/branch-registry main-targets branch-targets
           chmod +x multiservice-discovery
-          ./multiservice-discovery --targets-dir tmp/main-registry --render-prom-targets-to-stdout 
           ./multiservice-discovery --targets-dir tmp/main-registry --render-prom-targets-to-stdout > main-targets/targets.json
           bazel run //rs/ic-observability/multiservice-discovery -- --targets-dir $(pwd)/tmp/branch-registry --render-prom-targets-to-stdout > branch-targets/targets.json
 
