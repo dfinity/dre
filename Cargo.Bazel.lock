@@ -1,5 +1,5 @@
 {
-  "checksum": "3b6f4e6a48e1285d47063867a49f78b534b79328b33a12ee0397984b3b9fca0c",
+  "checksum": "38e4f7af836ed8555a07ec60bd3bb4fde2497b779ff6f08e30622d00dc6c905c",
   "crates": {
     "actix-codec 0.5.1": {
       "name": "actix-codec",
@@ -10812,6 +10812,14 @@
             {
               "id": "ic-nns-governance 0.9.0",
               "target": "ic_nns_governance"
+            },
+            {
+              "id": "ic-protobuf 0.9.0",
+              "target": "ic_protobuf"
+            },
+            {
+              "id": "ic-registry-local-registry 0.9.0",
+              "target": "ic_registry_local_registry"
             },
             {
               "id": "ic-sys 0.9.0",
