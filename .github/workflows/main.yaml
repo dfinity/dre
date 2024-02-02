@@ -29,6 +29,16 @@ jobs:
         name: "🚀 Testing"
 
       ########################################
+      # Upload test artifacts
+      ########################################
+      - name: "🧪 Upload test artifacts"
+        if: ${{ github.ref == 'refs/heads/main' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-artifacts
+          path: bazel-out/k8-opt/bin/rs/ic-observability/multiservice-discovery/multiservice-discovery
+
+      ########################################
       # Prepare release
       ########################################
       - name: "🚢 Prepare release"

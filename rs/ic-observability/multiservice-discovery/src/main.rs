@@ -1,19 +1,21 @@
+use std::collections::BTreeMap;
+use std::path::PathBuf;
 use std::time::Duration;
-use std::{path::PathBuf, sync::Arc};
+use std::vec;
 
 use clap::Parser;
-use futures_util::FutureExt;
 use humantime::parse_duration;
-use slog::{error, info};
-use slog::{o, Drain, Logger};
+use slog::{info, o, Drain, Logger};
 use tokio::runtime::Runtime;
 use tokio::sync::oneshot::{self};
-use tokio::sync::Mutex;
 use url::Url;
 
-use definition::{wrap, Definition};
+use definition::{Definition, DefinitionsSupervisor, StartMode};
 use ic_async_utils::shutdown_signal;
+use ic_management_types::Network;
 
+use crate::definition::{RunningDefinition, TestDefinition};
+use crate::server_handlers::export_prometheus_config_handler::serialize_definitions_to_prometheus_config;
 use crate::server_handlers::Server;
 
 mod definition;
@@ -22,51 +24,86 @@ mod server_handlers;
 fn main() {
     let rt = Runtime::new().unwrap();
     let log = make_logger();
-    let shutdown_signal = shutdown_signal(log.clone()).shared();
+    let shutdown_signal = shutdown_signal(log.clone());
     let cli_args = CliArgs::parse();
-    let mut handles = vec![];
-    let mut definitions = vec![];
 
-    let (oneshot_sender, oneshot_receiver) = oneshot::channel();
-    if !cli_args.start_without_mainnet {
-        let mainnet_definition = get_mainnet_definition(&cli_args, log.clone());
-        definitions.push(mainnet_definition.clone());
-
-        let ic_handle = std::thread::spawn(wrap(mainnet_definition, rt.handle().clone()));
-        handles.push(ic_handle);
-    }
-    let definitions = Arc::new(Mutex::new(definitions));
-    let handles = Arc::new(Mutex::new(handles));
-
-    //Configure server
-    let server = Server::new(
-        log.clone(),
-        definitions.clone(),
-        cli_args.poll_interval,
-        cli_args.registry_query_timeout,
-        cli_args.targets_dir,
-        handles.clone(),
-        rt.handle().clone(),
-    );
-    let server_handle = rt.spawn(server.run(oneshot_receiver));
-
-    rt.block_on(shutdown_signal);
-    //Stop the server
-    oneshot_sender.send(()).unwrap();
-
-    for definition in rt.block_on(definitions.lock()).drain(..) {
-        info!(log, "Sending termination signal to definition {}", definition.name);
-        definition.stop_signal_sender.send(()).unwrap();
+    fn get_mainnet_definition(cli_args: &CliArgs, log: Logger) -> Definition {
+        Definition::new(
+            vec![cli_args.nns_url.clone()],
+            cli_args.targets_dir.clone(),
+            Network::Mainnet.legacy_name(),
+            log.clone(),
+            None,
+            cli_args.poll_interval,
+            cli_args.registry_query_timeout,
+        )
     }
 
-    for handle in rt.block_on(handles.lock()).drain(..) {
-        info!(log, "Joining definition thread");
-        if let Err(e) = handle.join() {
-            error!(log, "Could not join thread handle of definition being removed: {:?}", e);
+    if cli_args.render_prom_targets_to_stdout {
+        async fn sync(
+            cli_args: &CliArgs,
+            log: &Logger,
+            shutdown_signal: impl futures_util::Future<Output = ()>,
+        ) -> Option<RunningDefinition> {
+            let def = get_mainnet_definition(cli_args, log.clone());
+            let mut test_def = TestDefinition::new(def);
+            let sync_fut = test_def.sync_and_stop();
+            tokio::select! {
+                _ = sync_fut => {
+                    info!(log, "Synchronization done");
+                    Some(test_def.running_def)
+                },
+                _ = shutdown_signal => {
+                    test_def.running_def.end().await;
+                    None
+                }
+            }
         }
-    }
+        if let Some(running_def) = rt.block_on(sync(&cli_args, &log, shutdown_signal)) {
+            let mut definitions_ref: BTreeMap<String, RunningDefinition> = BTreeMap::new();
+            definitions_ref.insert(running_def.name().clone(), running_def);
+            let (_, text) = serialize_definitions_to_prometheus_config(definitions_ref);
+            print!("{}", text);
+        }
+    } else {
+        let supervisor = DefinitionsSupervisor::new(rt.handle().clone(), cli_args.start_without_mainnet);
+        let (server_stop, server_stop_receiver) = oneshot::channel();
 
-    rt.block_on(server_handle).unwrap();
+        //Configure server
+        let server_handle = rt.spawn(
+            Server::new(
+                log.clone(),
+                supervisor.clone(),
+                cli_args.poll_interval,
+                cli_args.registry_query_timeout,
+                cli_args.targets_dir.clone(),
+            )
+            .run(server_stop_receiver),
+        );
+
+        if !cli_args.start_without_mainnet {
+            rt.block_on(async {
+                let _ = supervisor
+                    .start(
+                        vec![get_mainnet_definition(&cli_args, log.clone())],
+                        StartMode::AddToDefinitions,
+                    )
+                    .await;
+            });
+        }
+
+        // Wait for shutdown signal.
+        rt.block_on(shutdown_signal);
+
+        // Signal server to stop.  Stop happens in parallel with supervisor stop.
+        server_stop.send(()).unwrap();
+
+        //Stop all definitions.  End happens in parallel with server stop.
+        rt.block_on(supervisor.end());
+
+        // Wait for server to stop.  Should have stopped by now.
+        rt.block_on(server_handle).unwrap();
+    }
 }
 
 fn make_logger() -> Logger {
@@ -132,20 +169,15 @@ Start the discovery without the IC Mainnet target.
 "#
     )]
     start_without_mainnet: bool,
-}
 
-fn get_mainnet_definition(cli_args: &CliArgs, log: Logger) -> Definition {
-    let (ic_stop_signal_sender, ic_stop_signal_rcv) = crossbeam::channel::bounded::<()>(0);
-
-    Definition::new(
-        vec![cli_args.nns_url.clone()],
-        cli_args.targets_dir.clone(),
-        "mercury".to_string(),
-        log.clone(),
-        None,
-        cli_args.poll_interval,
-        ic_stop_signal_rcv,
-        cli_args.registry_query_timeout,
-        ic_stop_signal_sender,
-    )
+    #[clap(
+        long = "render-prom-targets-to-stdout",
+        default_value = "false",
+        action,
+        help = r#"
+Do not run the server; instead, sync and (after syncing) output
+the Prometheus targets of mainnet as a JSON structure on stdout.
+"#
+    )]
+    render_prom_targets_to_stdout: bool,
 }
