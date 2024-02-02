@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, Error, Result};
 use cli::UpdateVersion;
 use colored::Colorize;
 use dialoguer::Confirm;
@@ -6,7 +6,10 @@ use flate2::read::GzDecoder;
 use futures::stream::{self, StreamExt};
 use futures::Future;
 use ic_base_types::PrincipalId;
-use ic_management_types::Artifact;
+use ic_management_backend::registry::{local_registry_path, RegistryFamilyEntries, RegistryState};
+use ic_management_types::{Artifact, Network};
+use ic_protobuf::registry::subnet::v1::SubnetRecord;
+use ic_registry_local_registry::LocalRegistry;
 use itertools::Itertools;
 use log::{error, info, warn};
 use regex::Regex;
@@ -15,6 +18,7 @@ use sha2::{Digest, Sha256};
 use std::fs::File;
 use std::io::Write;
 use std::os::unix::fs::PermissionsExt;
+use std::time::Duration;
 use std::{path::Path, process::Command};
 use strum::Display;
 
@@ -529,6 +533,56 @@ must be identical, and must match the SHA256 from the payload of the NNS proposa
             })
         }
     }
+
+    pub async fn update_unassigned_nodes(
+        &self,
+        nns_subned_id: &String,
+        network: Network,
+        simulate: bool,
+    ) -> Result<(), Error> {
+        let local_registry_path = local_registry_path(network.clone());
+        let local_registry = LocalRegistry::new(local_registry_path, Duration::from_secs(10))
+            .map_err(|e| anyhow::anyhow!("Error in creating local registry instance: {:?}", e))?;
+
+        local_registry
+            .sync_with_nns()
+            .await
+            .map_err(|e| anyhow::anyhow!("Error when syncing with NNS: {:?}", e))?;
+
+        let subnets = local_registry.get_family_entries::<SubnetRecord>()?;
+
+        let nns = match subnets.get_key_value(nns_subned_id) {
+            Some((_, value)) => value,
+            None => return Err(anyhow::anyhow!("Couldn't find nns subnet with id '{}'", nns_subned_id)),
+        };
+
+        let registry_state = RegistryState::new(network, true).await;
+        let unassigned_version = registry_state.get_unassigned_nodes_replica_version().await?;
+
+        if nns.replica_version_id.eq(&unassigned_version) {
+            info!(
+                "Unassigned nodes and nns are of the same version '{}', skipping proposal submition.",
+                unassigned_version
+            );
+            return Ok(());
+        }
+
+        info!(
+            "NNS version '{}' and Unassigned nodes '{}' differ",
+            nns.replica_version_id, unassigned_version
+        );
+
+        let command = ProposeCommand::UpdateUnassignedNodes {
+            replica_version: unassigned_version,
+        };
+        let options = ProposeOptions {
+            summary: Some("Update the unassigned nodes to the latest rolled-out version".to_string()),
+            motivation: None,
+            title: Some("Update all unassigned nodes".to_string()),
+        };
+
+        self.propose_run(command, options, simulate)
+    }
 }
 
 #[derive(Display, Clone)]
@@ -562,6 +616,9 @@ pub(crate) enum ProposeCommand {
         node_ids: Vec<PrincipalId>,
         replica_version: String,
     },
+    UpdateUnassignedNodes {
+        replica_version: String,
+    },
 }
 
 impl ProposeCommand {
@@ -575,6 +632,7 @@ impl ProposeCommand {
                     release_artifact,
                     args: _,
                 } => format!("update-elected-{}-versions", release_artifact),
+                Self::UpdateUnassignedNodes { replica_version: _ } => "update-unassigned-nodes-config".to_string(),
                 _ => self.to_string(),
             }
         )
@@ -637,6 +695,9 @@ impl ProposeCommand {
                     args.push(id.to_string())
                 }
                 args
+            }
+            Self::UpdateUnassignedNodes { replica_version } => {
+                vec!["--replica-version-id".to_string(), replica_version.clone()]
             }
         }
     }

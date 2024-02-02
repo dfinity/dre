@@ -82,7 +82,7 @@ pub struct RegistryState {
     hostos_releases: ArtifactReleases,
     ic_repo: Option<IcRepo>,
 }
-trait RegistryEntry: RegistryValue {
+pub trait RegistryEntry: RegistryValue {
     const KEY_PREFIX: &'static str;
 }
 
@@ -102,7 +102,7 @@ impl RegistryEntry for SubnetRecord {
     const KEY_PREFIX: &'static str = SUBNET_RECORD_KEY_PREFIX;
 }
 
-trait RegistryFamilyEntries {
+pub trait RegistryFamilyEntries {
     fn get_family_entries<T: RegistryEntry + Default>(&self) -> Result<BTreeMap<String, T>>;
     fn get_family_entries_versioned<T: RegistryEntry + Default>(&self) -> Result<BTreeMap<String, (u64, T)>>;
 }

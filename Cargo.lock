@@ -2160,6 +2160,8 @@ dependencies = [
  "ic-management-types",
  "ic-nns-constants",
  "ic-nns-governance",
+ "ic-protobuf",
+ "ic-registry-local-registry",
  "ic-sys",
  "itertools 0.12.0",
  "keyring",
