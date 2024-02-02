@@ -2,29 +2,21 @@
 #[cfg(test)]
 mod tests {
     use assert_cmd::cargo::CommandCargoExt;
-    use dirs::home_dir;
-    use flate2::read::GzDecoder;
     use multiservice_discovery_shared::builders::prometheus_config_structure::{
         PrometheusStaticConfig, IC_NAME, IC_SUBNET, JOB,
     };
+    use tempfile::tempdir;
     use std::collections::{BTreeMap, BTreeSet};
-    use std::path::Path;
-    use std::path::PathBuf;
     use std::process::Command;
     use std::time::Duration;
-    use std::{fs, thread};
-    use tar::Archive;
+    use std::thread;
     use tokio::runtime::Runtime;
 
-    const BAZEL_SD_PATH: &str = "rs/ic-observability/multiservice-discovery/multiservice-discovery";
-    const CARGO_SD_PATH: &str = "multiservice-discovery";
-    const BAZEL_REGISTRY_PATH: &str = "external/mainnet_registry";
-    const CARGO_REGISTRY_PATH: &str = ".cache/mainnet_registry";
-
-    const REGISTRY_MAINNET_URL: &str = "https://github.com/dfinity/dre/raw/ic-registry-mainnet/rs/ic-observability/multiservice-discovery/tests/test_data/mercury.tar.gz";
+    const BAZEL_SD_BIN: &str = "rs/ic-observability/multiservice-discovery/multiservice-discovery";
+    const CARGO_SD_BIN: &str = "multiservice-discovery";
 
     async fn fetch_targets() -> anyhow::Result<Vec<PrometheusStaticConfig>> {
-        let timeout_duration = Duration::from_secs(300);
+        let timeout_duration = Duration::from_secs(500);
         let start_time = std::time::Instant::now();
 
         loop {
@@ -42,50 +34,25 @@ mod tests {
         }
     }
 
-    async fn download_and_extract(url: &str, output_target_dir: &Path) -> anyhow::Result<()> {
-        let response = reqwest::get(url).await?.bytes().await?;
-        let decoder = GzDecoder::new(&response[..]);
-        let mut archive = Archive::new(decoder);
-        archive.unpack(output_target_dir)?;
-
-        Ok(())
-    }
-
-    async fn command_from_env() -> anyhow::Result<(std::process::Command, PathBuf)> {
-        if let Ok(command) = Command::cargo_bin(CARGO_SD_PATH) {
-            // Runs cargo test
-            let mut registry_cache_dir = home_dir().unwrap();
-            registry_cache_dir.push(CARGO_REGISTRY_PATH);
-            if !fs::metadata(registry_cache_dir.as_path()).is_ok() {
-                download_and_extract(REGISTRY_MAINNET_URL, registry_cache_dir.as_path()).await?;
-            }
-
-            Ok((command, registry_cache_dir))
-        } else {
-            // Runs bazel test
-            let registry_path = PathBuf::from(BAZEL_REGISTRY_PATH);
-            let command = Command::new(BAZEL_SD_PATH);
-            Ok((command, registry_path))
-        }
-    }
-
     #[test]
     fn prom_targets_tests() {
         let rt = Runtime::new().unwrap();
-        let (mut command, registry_path) = rt
-            .block_on(rt.spawn(async { command_from_env().await }))
-            .unwrap()
-            .unwrap();
-
+        let registry_dir = tempdir().unwrap();
+        registry_dir.path().to_str().unwrap();
         let args = vec![
-            "--nns-url",
-            "http://donotupdate.app",
             "--targets-dir",
-            registry_path.as_path().to_str().unwrap(),
+            registry_dir.path().to_str().unwrap(),
         ];
 
-        let mut sd_server = command.args(args).spawn().unwrap();
-        let targets = rt.block_on(rt.spawn(async { fetch_targets().await })).unwrap().unwrap();
+        let mut sd_server = Command::cargo_bin(CARGO_SD_BIN)
+            .unwrap_or(Command::new(BAZEL_SD_BIN))
+            .args(args)
+            .spawn()
+            .unwrap();
+
+        let targets = rt.block_on(rt.spawn(async { 
+            fetch_targets().await 
+        })).unwrap().unwrap();
         sd_server.kill().unwrap();
 
         let labels_set =
@@ -105,7 +72,12 @@ mod tests {
                     acc
                 });
 
-        assert_eq!(targets.len(), 7274);
+        assert_eq!(targets.len(), 7374);
+
+        assert_eq!(
+            labels_set.keys().collect::<Vec<_>>(),
+            vec!["ic", "ic_node", "ic_subnet", "job"]
+        );
 
         assert_eq!(
             labels_set.get(IC_NAME).unwrap().iter().collect::<Vec<_>>(),
