@@ -56,7 +56,8 @@ jobs:
 
           echo "targets_main=$TARGETS_DIR_MAIN" >> $GITHUB_OUTPUT
           echo "targets_branch=$TARGETS_DIR_BRANCH" >> $GITHUB_OUTPUT
-
+      - name: Setup upterm session
+        uses: lhotari/action-upterm@v1
       - name: "Check MSD Diff"
         uses: "int128/diff-action@v1"
         with:
@@ -66,6 +67,7 @@ jobs:
             ## MSD Diff
             Remove `prevent-merging-MSD-diff` label to merge after inspection
           label: prevent-merging-MSD-diff
+    
 
   enforce-label:
     runs-on: ubuntu-20.04
