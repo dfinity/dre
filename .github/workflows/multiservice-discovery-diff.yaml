@@ -29,10 +29,8 @@ jobs:
           ./multiservice-discovery --targets-dir tmp/main-registry --render-prom-targets-to-stdout > main-targets/targets.json
           bazel run //rs/ic-observability/multiservice-discovery -- --targets-dir $(pwd)/tmp/branch-registry --render-prom-targets-to-stdout > branch-targets/targets.json
 
-      - name: Setup upterm session
-        uses: lhotari/action-upterm@v1
       - name: "Check MSD Diff"
         uses: "int128/diff-action@v1"
         with:
-          base: main-targets
-          head: branch-targets
+          base: /home/runner/work/dre/dre/main-targets
+          head: /home/runner/work/dre/dre/branch-targets
