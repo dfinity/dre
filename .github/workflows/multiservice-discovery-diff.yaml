@@ -64,5 +64,3 @@ jobs:
           head: ${{ steps.msd-diff.outputs.targets_branch }}
           comment-header: |
             ## MSD Diff
-            Remove `prevent-merging-MSD-diff` label to merge after inspection
-          label: prevent-merging-MSD-diff
