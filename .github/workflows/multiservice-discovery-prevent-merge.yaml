@@ -1,0 +1,20 @@
+name: Prevent Merging - MSD Diff
+
+on:
+  workflow_run:
+    workflows: ["MSD Diff"]
+    types:
+      - completed
+  pull_request:
+    branches:
+      - main
+    types:
+      - unlabeled
+
+jobs:
+  enforce-label:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: yogevbd/enforce-label-action@2.1.0
+        with:
+          BANNED_LABELS: "prevent-merging-MSD-diff"

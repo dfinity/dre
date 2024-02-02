@@ -54,8 +54,7 @@ jobs:
 
           echo "targets_main=$TARGETS_DIR_MAIN" >> $GITHUB_OUTPUT
           echo "targets_branch=$TARGETS_DIR_BRANCH" >> $GITHUB_OUTPUT
-      - name: Setup upterm session
-        uses: lhotari/action-upterm@v1
+
       - name: "Check MSD Diff"
         uses: "int128/diff-action@v1"
         with:
