@@ -1,0 +1,38 @@
+name: MSD Diff
+on:
+  pull_request:
+    paths:
+      - 'rs/ic-observability/multiservice-discovery*/src/**'
+jobs:
+  setup-runner:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+
+      - name: "🔧 Setup runner"
+        uses: ./.github/workflows/manage-runner-pre
+
+      - name: "📥 Download main test artifact"
+        uses: dawidd6/action-download-artifact@v3.0.0
+        with:
+          name: test-artifacts
+          branch: main
+          workflow: main.yaml
+
+      - name: "🔭 Compute MSD"
+        run: |
+          set -exuo pipefail
+          mkdir -p tmp/main-registry tmp/branch-registry main-targets branch-targets
+          chmod +x multiservice-discovery
+          ./multiservice-discovery --targets-dir tmp/main-registry --render-prom-targets-to-stdout > main-targets/targets.json
+          bazel run //rs/ic-observability/multiservice-discovery -- --targets-dir $(pwd)/tmp/branch-registry --render-prom-targets-to-stdout > branch-targets/targets.json
+
+      - name: "Check MSD Diff"
+        uses: "int128/diff-action@v1"
+        with:
+          base: /home/runner/work/dre/dre/main-targets
+          head: /home/runner/work/dre/dre/branch-targets
+          comment-header: ## MSD Diff
+          label: prevent-merging-MSD-diff
