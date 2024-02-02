@@ -77,6 +77,37 @@ pub struct RunningDefinition {
     ender: Arc<Mutex<Option<Ender>>>,
 }
 
+pub struct TestDefinition {
+    pub(crate) running_def: RunningDefinition
+}
+
+impl TestDefinition {
+    pub(crate) fn new(definition: Definition) -> Self {
+        let (_, stop_signal) = crossbeam::channel::bounded::<()>(0);
+        let ender: Arc<Mutex<Option<Ender>>> = Arc::new(Mutex::new(None));
+        Self {
+            running_def: RunningDefinition{
+                definition,
+                stop_signal,
+                ender
+            }
+        }
+    }
+
+    /// Syncs the registry update the in-memory cache then stops.
+    pub async fn sync_and_stop(&self) {
+        let _ = self.running_def.initial_registry_sync().await;
+        // if self.initial_registry_sync().await.is_err() {
+        // FIXME: Error has been logged, but ideally, it should be handled.
+        // E.g. telemetry should collect this.
+        // return;
+        // }
+        let _ = self.running_def.definition.ic_discovery
+            .load_new_ics(self.running_def.definition.log.clone());
+    }
+
+}
+
 impl Definition {
     pub(crate) fn new(
         nns_urls: Vec<Url>,
@@ -225,15 +256,6 @@ impl RunningDefinition {
         }
     }
 
-    /// Syncs the registry then stops.
-    pub async fn sync(&self) {
-        let _ = self.initial_registry_sync().await;
-        // if self.initial_registry_sync().await.is_err() {
-        // FIXME: Error has been logged, but ideally, it should be handled.
-        // E.g. telemetry should collect this.
-        // return;
-        // }
-    }
 
     // Syncs the registry and keeps running, syncing as new
     // registry versions come in.

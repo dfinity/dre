@@ -14,7 +14,7 @@ use definition::{Definition, DefinitionsSupervisor, StartMode};
 use ic_async_utils::shutdown_signal;
 use ic_management_types::Network;
 
-use crate::definition::RunningDefinition;
+use crate::definition::{RunningDefinition, TestDefinition};
 use crate::server_handlers::export_prometheus_config_handler::serialize_definitions_to_prometheus_config;
 use crate::server_handlers::Server;
 
@@ -43,24 +43,23 @@ fn main() {
         async fn sync(
             cli_args: &CliArgs,
             log: &Logger,
-            rt: &Runtime,
             shutdown_signal: impl futures_util::Future<Output = ()>,
         ) -> Option<RunningDefinition> {
             let def = get_mainnet_definition(cli_args, log.clone());
-            let mut running_def = def.run(rt.handle().clone()).await;
-            let sync_fut = running_def.sync();
+            let mut test_def = TestDefinition::new(def);
+            let sync_fut = test_def.sync_and_stop();
             tokio::select! {
                 _ = sync_fut => {
                     info!(log, "Synchronization done");
-                    Some(running_def)
+                    Some(test_def.running_def)
                 },
                 _ = shutdown_signal => {
-                    running_def.end().await;
+                    test_def.running_def.end().await;
                     None
                 }
             }
         }
-        if let Some(running_def) = rt.block_on(sync(&cli_args, &log, &rt, shutdown_signal)) {
+        if let Some(running_def) = rt.block_on(sync(&cli_args, &log, shutdown_signal)) {
             let mut definitions_ref: BTreeMap<String, RunningDefinition> = BTreeMap::new();
             definitions_ref.insert(running_def.name().clone(), running_def);
             let (_, text) = serialize_definitions_to_prometheus_config(definitions_ref);
