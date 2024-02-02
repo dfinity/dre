@@ -33,23 +33,25 @@ jobs:
         id: msd-diff
         run: |
           set -exuo pipefail
-          REGISTRY_DIR="$HOME/tmp/main-registry"
+          REGISTRY_DIR_MAIN="$HOME/tmp/main-registry"
+          REGISTRY_DIR_BRANCH="$HOME/tmp/branch-registry"
           TARGETS_DIR_MAIN="$HOME/main-targets"
           TARGETS_DIR_BRANCH="$HOME/branch-targets"
 
-          mkdir -p "$REGISTRY_DIR" \
+          mkdir -p "$REGISTRY_DIR_MAIN" \
+                  "$REGISTRY_DIR_BRANCH" \
                   "$TARGETS_DIR_MAIN" \
                   "$TARGETS_DIR_BRANCH"
           chmod +x multiservice-discovery
 
           # Run multiservice-discovery for main targets
           ./multiservice-discovery \
-              --targets-dir "$REGISTRY_DIR" \
+              --targets-dir "$REGISTRY_DIR_MAIN" \
               --render-prom-targets-to-stdout > "$TARGETS_DIR_MAIN/targets.json"
 
           # Run multiservice-discovery for branch targets with bazel
           bazel run //rs/ic-observability/multiservice-discovery -- \
-              --targets-dir "$REGISTRY_DIR" \
+              --targets-dir "$REGISTRY_DIR_BRANCH" \
               --render-prom-targets-to-stdout > "$TARGETS_DIR_BRANCH/targets.json"
 
           echo "targets_main=$TARGETS_DIR_MAIN" >> $GITHUB_OUTPUT
