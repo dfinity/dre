@@ -14,13 +14,12 @@ They are only built from PRs stemming from branches named `container-*`.
 
 ## Test
 
-We are performing these checks to ensure that the multiservice-discovery fetches all the necessary targets
-before deploying it in production.
-If less or erroneus targets end up in production, we risk compromising the observability stack leading
-to incomplete or erroneus observability data.
-If the mainnet registry gets updated or if the logic for target discovery is modified,
-this assertions should be updated accordingly.
-One can run the multiservice-discovery from local and manually update the targets after inspection:
+Integration tests check if the multiservice-discovery lists all expected targets and their labels.
+If not all targets are listed, or if some targets do not have the appropriate labels, we risk compromising the entire observability stack and the public dashboard.
+Whenever the mainnet registry gets updated or if the logic for target discovery is modified, the tests need to be updated accordingly.
+
+The tests can be run locally for inspection:
+
 
 ```bash
 mkdir /tmp/mainnet-registry
