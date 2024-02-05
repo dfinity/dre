@@ -1,19 +1,22 @@
-use warp::reply::json;
-use warp::Reply;
+use axum::extract::State;
+use axum::http::StatusCode;
+use axum::Json;
 
-use crate::definition::DefinitionsSupervisor;
 use crate::server_handlers::dto::DefinitionDto;
-use crate::server_handlers::WebResult;
 
-pub(super) async fn get_definitions(supervisor: DefinitionsSupervisor) -> WebResult<impl Reply> {
-    let definitions = supervisor.definitions.lock().await;
+use super::Server;
 
-    let list = &definitions
+pub(super) async fn get_definitions(
+    State(supervisor): State<Server>,
+) -> Result<Json<Vec<DefinitionDto>>, (StatusCode, String)> {
+    let definitions = supervisor.supervisor.definitions.lock().await;
+
+    let list = definitions
         .iter()
         .map(|(_, d)| {
             let x = &d.definition;
             x.into()
         })
         .collect::<Vec<DefinitionDto>>();
-    Ok(json(list))
+    Ok(Json(list))
 }

@@ -1,12 +1,12 @@
 use crate::definition::RunningDefinition;
 
-use super::WebResult;
+use super::Server;
+use axum::extract::State;
+use axum::http::StatusCode;
 use multiservice_discovery_shared::builders::prometheus_config_structure::{map_target_group, PrometheusStaticConfig};
 use multiservice_discovery_shared::contracts::target::{map_to_target_dto, TargetDto};
 use service_discovery::job_types::{JobType, NodeOS};
-use std::{collections::BTreeMap, sync::Arc};
-use tokio::sync::Mutex;
-use warp::reply::Reply;
+use std::collections::BTreeMap;
 
 pub fn serialize_definitions_to_prometheus_config(definitions: BTreeMap<String, RunningDefinition>) -> (usize, String) {
     let mut ic_node_targets: Vec<TargetDto> = vec![];
@@ -80,20 +80,12 @@ pub fn serialize_definitions_to_prometheus_config(definitions: BTreeMap<String, 
     )
 }
 
-#[derive(Clone)]
-pub(super) struct ExportDefinitionConfigBinding {
-    pub(crate) definitions_ref: Arc<Mutex<BTreeMap<String, RunningDefinition>>>,
-}
-
-pub(super) async fn export_prometheus_config(binding: ExportDefinitionConfigBinding) -> WebResult<impl Reply> {
-    let definitions = binding.definitions_ref.lock().await;
+pub(super) async fn export_prometheus_config(State(binding): State<Server>) -> Result<String, (StatusCode, String)> {
+    let definitions = binding.supervisor.definitions.lock().await;
     let (targets_len, text) = serialize_definitions_to_prometheus_config(definitions.clone());
-    Ok(warp::reply::with_status(
-        text,
-        if targets_len > 0 {
-            warp::http::StatusCode::OK
-        } else {
-            warp::http::StatusCode::NOT_FOUND
-        },
-    ))
+    if targets_len > 0 {
+        Ok(text)
+    } else {
+        Err((StatusCode::NOT_FOUND, "No targets found".to_string()))
+    }
 }
