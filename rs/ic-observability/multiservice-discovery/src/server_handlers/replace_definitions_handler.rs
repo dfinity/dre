@@ -6,12 +6,12 @@ use futures::future::join_all;
 use crate::definition::{Definition, StartMode};
 use crate::server_handlers::dto::{BadDtoError, DefinitionDto};
 
-use super::Server;
+use super::{bad_request, ok, Server, WebResult};
 
 pub(super) async fn replace_definitions(
     State(binding): State<Server>,
     Json(definitions): Json<Vec<DefinitionDto>>,
-) -> Result<String, (StatusCode, String)> {
+) -> WebResult<String> {
     let dnames = definitions
         .iter()
         .map(|d| d.name.clone())
@@ -51,7 +51,10 @@ pub(super) async fn replace_definitions(
         .start(new_definitions, StartMode::ReplaceExistingDefinitions)
         .await
     {
-        Ok(_) => Ok(format!("Added new definitions {} to existing ones", dnames)),
-        Err(e) => Err((StatusCode::BAD_REQUEST, format!(":\n{}", e))),
+        Ok(_) => ok(
+            binding.log,
+            format!("Added new definitions {} to existing ones", dnames),
+        ),
+        Err(e) => bad_request(binding.log, format!(":\n{}", e), e),
     }
 }

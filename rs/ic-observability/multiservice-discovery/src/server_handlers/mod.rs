@@ -1,9 +1,11 @@
+use std::fmt::Display;
 use std::path::PathBuf;
 use std::time::Duration;
 
+use axum::http::StatusCode;
 use axum::routing::{delete, get, post, put};
 use axum::Router;
-use slog::{info, Logger};
+use slog::{debug, info, Logger};
 
 use crate::definition::DefinitionsSupervisor;
 use crate::server_handlers::add_boundary_node_to_definition_handler::add_boundary_node;
@@ -23,46 +25,35 @@ mod export_targets_handler;
 mod get_definition_handler;
 mod replace_definitions_handler;
 
-// pub type WebResult<T> = Result<T, Rejection>;
+pub type WebResult<T> = Result<T, (StatusCode, String)>;
 
-// pub(crate) fn ok(log: Logger, message: String) -> WebResult<warp::reply::WithStatus<String>> {
-//     info!(log, "{}", message);
-//     let r: WithStatus<String> = warp::reply::with_status(message, warp::http::StatusCode::OK);
-//     let rr: WebResult<warp::reply::WithStatus<String>> = Ok(r);
-//     rr
-// }
+pub(crate) fn ok(log: Logger, message: String) -> WebResult<String> {
+    debug!(log, "{}", message);
+    Ok(message)
+}
 
-// pub(crate) fn bad_request<T>(log: Logger, message: String, err: T) -> WebResult<warp::reply::WithStatus<String>>
-// where
-//     T: Display,
-// {
-//     info!(log, "{}: {}", message, err);
-//     Ok(warp::reply::with_status(
-//         format!("{}: {}", message, err),
-//         warp::http::StatusCode::BAD_REQUEST,
-//     ))
-// }
+pub(crate) fn bad_request<T>(log: Logger, message: String, err: T) -> WebResult<String>
+where
+    T: Display,
+{
+    debug!(log, "{}: {}", message, err);
+    Err((StatusCode::BAD_REQUEST, format!("{}: {}", message, err)))
+}
 
-// pub(crate) fn not_found<T>(log: Logger, message: String, err: T) -> WebResult<warp::reply::WithStatus<String>>
-// where
-//     T: Display,
-// {
-//     info!(log, "{}: {}", message, err);
-//     Ok(warp::reply::with_status(
-//         format!("{}: {}", message, err),
-//         warp::http::StatusCode::NOT_FOUND,
-//     ))
-// }
-// pub(crate) fn forbidden<T>(log: Logger, message: String, err: T) -> WebResult<warp::reply::WithStatus<String>>
-// where
-//     T: Display,
-// {
-//     info!(log, "{}: {}", message, err);
-//     Ok(warp::reply::with_status(
-//         format!("{}: {}", message, err),
-//         warp::http::StatusCode::FORBIDDEN,
-//     ))
-// }
+pub(crate) fn not_found<T>(log: Logger, message: String, err: T) -> WebResult<String>
+where
+    T: Display,
+{
+    info!(log, "{}: {}", message, err);
+    Err((StatusCode::NOT_FOUND, format!("{}: {}", message, err)))
+}
+pub(crate) fn forbidden<T>(log: Logger, message: String, err: T) -> WebResult<String>
+where
+    T: Display,
+{
+    info!(log, "{}: {}", message, err);
+    Err((StatusCode::FORBIDDEN, format!("{}: {}", message, err)))
+}
 
 #[derive(Clone)]
 pub(crate) struct Server {

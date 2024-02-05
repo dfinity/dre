@@ -6,7 +6,7 @@ use std::fmt::{Display, Error as FmtError, Formatter};
 
 use crate::server_handlers::dto::BoundaryNodeDto;
 
-use super::Server;
+use super::{bad_request, not_found, ok, Server};
 
 #[derive(Debug)]
 
@@ -28,26 +28,28 @@ pub(super) async fn add_boundary_node(
 ) -> Result<String, (StatusCode, String)> {
     let name = boundary_node.name.clone();
     let ic_name = boundary_node.ic_name.clone();
+    let rejection = format!("Definition {} could not be added", name);
 
     let mut definitions = binding.supervisor.definitions.lock().await;
 
     let running_definition = match definitions.get_mut(&ic_name) {
         Some(d) => d,
         None => {
-            return Err((
-                StatusCode::NOT_FOUND,
+            return not_found(
+                binding.log,
                 format!("Couldn't find definition: '{}'", ic_name),
-            ))
+                DefinitionNotFound { ic_name },
+            )
         }
     };
 
     let bn = match boundary_node.try_into_boundary_node() {
         Ok(bn) => bn,
-        Err(e) => return Err((StatusCode::BAD_REQUEST, e.to_string())),
+        Err(e) => return bad_request(binding.log, rejection, e),
     };
 
     match running_definition.add_boundary_node(bn).await {
-        Ok(()) => Ok(format!("Definition {} added successfully", name)),
-        Err(e) => Err((StatusCode::BAD_REQUEST, e.to_string())),
+        Ok(()) => ok(binding.log, format!("Definition {} added successfully", name)),
+        Err(e) => bad_request(binding.log, rejection, e),
     }
 }

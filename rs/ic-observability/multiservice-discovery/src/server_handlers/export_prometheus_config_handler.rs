@@ -1,6 +1,6 @@
 use crate::definition::RunningDefinition;
 
-use super::Server;
+use super::{ok, Server};
 use axum::extract::State;
 use axum::http::StatusCode;
 use multiservice_discovery_shared::builders::prometheus_config_structure::{map_target_group, PrometheusStaticConfig};
@@ -84,7 +84,7 @@ pub(super) async fn export_prometheus_config(State(binding): State<Server>) -> R
     let definitions = binding.supervisor.definitions.lock().await;
     let (targets_len, text) = serialize_definitions_to_prometheus_config(definitions.clone());
     if targets_len > 0 {
-        Ok(text)
+        ok(binding.log, text)
     } else {
         Err((StatusCode::NOT_FOUND, "No targets found".to_string()))
     }

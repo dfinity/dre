@@ -2,7 +2,7 @@ use crate::definition::StopDefinitionError;
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
 
-use super::Server;
+use super::{forbidden, not_found, Server};
 
 pub(super) async fn delete_definition(
     Path(name): Path<String>,
@@ -12,12 +12,11 @@ pub(super) async fn delete_definition(
         Ok(_) => Ok(format!("Deleted definition {}", name.clone())),
         Err(e) => match e.errors.into_iter().next().unwrap() {
             StopDefinitionError::DoesNotExist(e) => {
-                Err((StatusCode::NOT_FOUND, StopDefinitionError::DoesNotExist(e).to_string()))
+                not_found(binding.log, format!("Definition with name '{}' doesn't exist", name), e)
             }
-            StopDefinitionError::DeletionDisallowed(e) => Err((
-                StatusCode::FORBIDDEN,
-                StopDefinitionError::DeletionDisallowed(e).to_string(),
-            )),
+            StopDefinitionError::DeletionDisallowed(e) => {
+                forbidden(binding.log, "That definition cannot be deleted".to_string(), e)
+            }
         },
     }
 }
