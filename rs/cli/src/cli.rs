@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use clap::{Parser, Subcommand};
 use clap_num::maybe_hex;
 use ic_base_types::PrincipalId;
@@ -65,6 +67,17 @@ pub(crate) enum Commands {
         #[clap(allow_hyphen_values = true)]
         args: Vec<String>,
     },
+
+    /// Place a proposal for updating unassigned nodes config
+    UpdateUnassignedNodes {
+        /// NNS subnet id. By default 'tdb26-jop6k-aogll-7ltgs-eruif-6kk7m-qpktf-gdiqx-mxtrf-vb5e6-eqe'
+        #[clap(
+            long,
+            default_value = "tdb26-jop6k-aogll-7ltgs-eruif-6kk7m-qpktf-gdiqx-mxtrf-vb5e6-eqe"
+        )]
+        nns_subnet_id: String,
+    },
+
     /// Manage replica/host-os versions blessing
     #[clap(subcommand)]
     Version(version::Cmd),
@@ -119,6 +132,16 @@ pub(crate) enum Commands {
         /// Vector of subnets to query, if empty will dump metrics for
         /// all subnets
         subnet_ids: Vec<PrincipalId>,
+    },
+
+    /// Dump registry
+    DumpRegistry {
+        /// Version to dump. If value is less than 0 will dump the latest version
+        #[clap(long, default_value = "-1")]
+        version: i64,
+        /// Optional path to cached registry
+        #[clap(long, env = "LOCAL_REGISTRY_PATH")]
+        path: Option<PathBuf>,
     },
 }
 
