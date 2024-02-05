@@ -67,6 +67,17 @@ pub(crate) enum Commands {
         #[clap(allow_hyphen_values = true)]
         args: Vec<String>,
     },
+
+    /// Place a proposal for updating unassigned nodes config
+    UpdateUnassignedNodes {
+        /// NNS subnet id. By default 'tdb26-jop6k-aogll-7ltgs-eruif-6kk7m-qpktf-gdiqx-mxtrf-vb5e6-eqe'
+        #[clap(
+            long,
+            default_value = "tdb26-jop6k-aogll-7ltgs-eruif-6kk7m-qpktf-gdiqx-mxtrf-vb5e6-eqe"
+        )]
+        nns_subnet_id: String,
+    },
+
     /// Manage replica/host-os versions blessing
     #[clap(subcommand)]
     Version(version::Cmd),

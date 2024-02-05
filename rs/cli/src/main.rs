@@ -195,6 +195,11 @@ async fn main() -> Result<(), anyhow::Error> {
                 ic_admin.run_passthrough_propose(args, simulate)
             },
 
+            cli::Commands::UpdateUnassignedNodes { nns_subnet_id } => {
+                let ic_admin: IcAdminWrapper = cli::Cli::from_opts(&cli_opts, true).await?.into();
+                ic_admin.update_unassigned_nodes( nns_subnet_id, cli_opts.network, simulate).await
+            },
+
             cli::Commands::Version(version_command) => {
                 match &version_command {
                     cli::version::Cmd::Update(update_command) => {
