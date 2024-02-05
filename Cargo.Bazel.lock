@@ -1,5 +1,5 @@
 {
-  "checksum": "e4288ebdbd83d6f98338d5aa782ea0a4bcee406ece9870a5b2b1d1b506bfce22",
+  "checksum": "16d7cc668490a31190e154b19d4cde16f6f7c1d76f18cb4abedb25219a7240d9",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -1968,7 +1968,7 @@
         "deps": {
           "common": [
             {
-              "id": "anstyle 1.0.4",
+              "id": "anstyle 1.0.5",
               "target": "anstyle"
             },
             {
@@ -4671,7 +4671,7 @@
               "target": "memchr"
             },
             {
-              "id": "regex-automata 0.4.4",
+              "id": "regex-automata 0.4.5",
               "target": "regex_automata"
             }
           ],
@@ -12439,7 +12439,7 @@
             ],
             "cfg(unix)": [
               {
-                "id": "libc 0.2.152",
+                "id": "libc 0.2.153",
                 "target": "libc"
               }
             ],
@@ -28690,7 +28690,7 @@
               "target": "flate2"
             },
             {
-              "id": "reqwest 0.11.23",
+              "id": "reqwest 0.11.24",
               "target": "reqwest"
             },
             {
@@ -32671,7 +32671,7 @@
         "deps": {
           "common": [
             {
-              "id": "anstyle 1.0.4",
+              "id": "anstyle 1.0.5",
               "target": "anstyle"
             },
             {
@@ -41374,7 +41374,7 @@
           "selects": {
             "cfg(unix)": [
               {
-                "id": "libc 0.2.152",
+                "id": "libc 0.2.153",
                 "target": "libc"
               },
               {
@@ -41386,6 +41386,49 @@
         },
         "edition": "2018",
         "version": "0.4.40"
+      },
+      "license": "MIT/Apache-2.0"
+    },
+    "tempdir 0.3.7": {
+      "name": "tempdir",
+      "version": "0.3.7",
+      "repository": {
+        "Http": {
+          "url": "https://crates.io/api/v1/crates/tempdir/0.3.7/download",
+          "sha256": "15f2b5fb00ccdf689e0149d1b1b3c03fead81c2b37735d812fa8bddbbf41b6d8"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "tempdir",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "tempdir",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "rand 0.4.6",
+              "target": "rand"
+            },
+            {
+              "id": "remove_dir_all 0.5.3",
+              "target": "remove_dir_all"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2015",
+        "version": "0.3.7"
       },
       "license": "MIT/Apache-2.0"
     },
@@ -44766,7 +44809,7 @@
           "selects": {
             "cfg(unix)": [
               {
-                "id": "libc 0.2.152",
+                "id": "libc 0.2.153",
                 "target": "libc"
               }
             ]
@@ -47918,14 +47961,14 @@
         "deps": {
           "common": [
             {
-              "id": "rustix 0.38.30",
+              "id": "rustix 0.38.31",
               "target": "rustix"
             }
           ],
           "selects": {
             "cfg(any(target_os = \"freebsd\", target_os = \"netbsd\"))": [
               {
-                "id": "libc 0.2.152",
+                "id": "libc 0.2.153",
                 "target": "libc"
               }
             ],
@@ -47942,7 +47985,7 @@
       },
       "license": "MIT/Apache-2.0"
     },
-    "xdg-home 1.0.0": {
+    "xdg-home 1.1.0": {
       "name": "xdg-home",
       "version": "1.1.0",
       "repository": {
