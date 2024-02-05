@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use clap::{Parser, Subcommand};
 use clap_num::maybe_hex;
 use ic_base_types::PrincipalId;
@@ -130,6 +132,16 @@ pub(crate) enum Commands {
         /// Vector of subnets to query, if empty will dump metrics for
         /// all subnets
         subnet_ids: Vec<PrincipalId>,
+    },
+
+    /// Dump registry
+    DumpRegistry {
+        /// Version to dump. If value is less than 0 will dump the latest version
+        #[clap(long, default_value = "-1")]
+        version: i64,
+        /// Optional path to cached registry
+        #[clap(long, env = "LOCAL_REGISTRY_PATH")]
+        path: Option<PathBuf>,
     },
 }
 
