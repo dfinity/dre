@@ -1,6 +1,11 @@
 name: Setup runner
 description: Reusable action for tearing down the github runner
 
+inputs:
+  github_token:
+    description: 'Automatically assigned GitHub Token'
+    required: true
+
 runs:
   using: composite
   steps:
@@ -18,12 +23,34 @@ runs:
     # Cache is saved on main only to avoid cache evictions due to github restrictions:
     # https://docs.github.com/en/actions/using-workflows/caching-dependencies-to-speed-up-workflows#restrictions-for-accessing-a-cache
     ########################################
+    - name: First delete cache entry if it exists
+      if: ${{ github.ref == 'refs/heads/main' }}
+      run: |
+        set -eExou pipefail
+
+        gh extension install actions/gh-actions-cache
+
+        REPO=${{ github.repository }}
+        BRANCH=${{ github.ref }}
+
+        echo "Fetching list of cache key"
+        cacheKeys=$(gh actions-cache list -R $REPO -B $BRANCH | cut -f 1 )
+
+        ## Setting this to not fail the workflow while deleting cache keys.
+        echo "Deleting caches..."
+        for cacheKey in $cacheKeys
+        do
+            gh actions-cache delete $cacheKey -R $REPO -B $BRANCH --confirm || true
+        done
+        echo "Done"
+      env:
+        GH_TOKEN: ${{ inputs.GITHUB_TOKEN }}
     - name: "☁️ ⬆️ Saving cache on main only"
       if: ${{ github.ref == 'refs/heads/main' }}
-      uses: actions/cache/save@v3
+      uses: actions/cache/save@v4
       with:
         path: "~/.cache/bazel"
         # Configure cache updates
         # https://github.com/actions/cache/blob/main/tips-and-workarounds.md#update-a-cache
         # https://github.com/actions/cache/blob/main/examples.md#---bazel
-        key: ${{ runner.os }}-bazel-${{ hashFiles('.bazelversion', '.bazelrc', 'WORKSPACE', 'WORKSPACE.bazel', 'MODULE.bazel', 'Cargo.Bazel.lock') }}
+        key: ${{ runner.os }}-bazel-${{ hashFiles('.bazelversion', '.bazelrc', 'WORKSPACE.bazel', 'Cargo.Bazel.lock', 'requirements.txt') }}
