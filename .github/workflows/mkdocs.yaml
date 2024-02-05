@@ -24,7 +24,7 @@ jobs:
     - name: "🔧 Install dependencies"
       run: |
         python -m pip install --upgrade pip
-        pip install mkdocs mkdocs-material
+        pip install mkdocs mkdocs-material mkdocs-git-revision-date-localized-plugin mkdocs-git-committers-plugin-2
 
     - name: "🚢 Deploy to GitHub Pages"
       run: |
