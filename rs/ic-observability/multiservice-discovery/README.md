@@ -16,25 +16,6 @@ They are only built from PRs stemming from branches named `container-*`.
 
 Integration tests check if the multiservice-discovery lists all expected targets and their labels.
 If not all targets are listed, or if some targets do not have the appropriate labels, we risk compromising the entire observability stack and the public dashboard.
-Whenever the mainnet registry gets updated or if the logic for target discovery is modified, the tests need to be updated accordingly.
-
-The tests can be run locally for inspection:
-
-
-```bash
-mkdir /tmp/mainnet-registry
-cargo run --package multiservice-discovery -- --targets-dir /tmp/mainnet-registry
-curl -L -v http://localhost:8000/prom/targets > targets.json
-
-# Check number of targets:
-jq -r '[.[] | .targets[]] | length' targets.json
-
-# List unique jobs:
-jq -r '.[].labels.job' targets.json | sort -u
-
-# List unique subnets:
-jq -r '.[].labels.ic_subnet'  targets.json | sort -u
-```
 
 ## API spec
 
