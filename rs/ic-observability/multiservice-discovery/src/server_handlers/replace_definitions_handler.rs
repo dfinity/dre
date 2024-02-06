@@ -1,18 +1,17 @@
+use axum::extract::State;
+use axum::http::StatusCode;
+use axum::Json;
 use futures::future::join_all;
-use warp::Reply;
-
-use super::{bad_request, ok, WebResult};
 
 use crate::definition::{Definition, StartMode};
 use crate::server_handlers::dto::{BadDtoError, DefinitionDto};
-use crate::server_handlers::AddDefinitionBinding as ReplaceDefinitionsBinding;
+
+use super::{bad_request, ok, Server, WebResult};
 
 pub(super) async fn replace_definitions(
-    definitions: Vec<DefinitionDto>,
-    binding: ReplaceDefinitionsBinding,
-) -> WebResult<impl Reply> {
-    let log = binding.log.clone();
-    let rej = "Definitions could not be changed".to_string();
+    State(binding): State<Server>,
+    Json(definitions): Json<Vec<DefinitionDto>>,
+) -> WebResult<String> {
     let dnames = definitions
         .iter()
         .map(|d| d.name.clone())
@@ -37,14 +36,13 @@ pub(super) async fn replace_definitions(
 
     let errors: Vec<_> = errors.into_iter().map(Result::unwrap_err).collect();
     if !errors.is_empty() {
-        return bad_request(
-            log,
-            rej,
+        return Err((
+            StatusCode::BAD_REQUEST,
             format!(
                 ":\n * {}",
                 errors.iter().map(|e| e.to_string()).collect::<Vec<_>>().join("\n * ")
             ),
-        );
+        ));
     }
 
     let new_definitions: Vec<_> = new_definitions.into_iter().map(Result::unwrap).collect();
@@ -53,7 +51,10 @@ pub(super) async fn replace_definitions(
         .start(new_definitions, StartMode::ReplaceExistingDefinitions)
         .await
     {
-        Ok(_) => ok(log, format!("Added new definitions {} to existing ones", dnames)),
-        Err(e) => bad_request(log, rej, format!(":\n{}", e)),
+        Ok(_) => ok(
+            binding.log,
+            format!("Added new definitions {} to existing ones", dnames),
+        ),
+        Err(e) => bad_request(binding.log, format!(":\n{}", e), e),
     }
 }

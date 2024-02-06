@@ -29,7 +29,6 @@ slog-async = { workspace = true }
 slog-term = { workspace = true }
 tokio = { workspace = true }
 url = { workspace = true }
-warp = { workspace = true }
 futures.workspace = true
 
 [dev-dependencies]

@@ -1,25 +1,16 @@
-use slog::Logger;
+use axum::extract::State;
+use axum::http::StatusCode;
+use axum::Json;
 
-use std::path::PathBuf;
-use std::time::Duration;
-
-use super::{bad_request, ok, WebResult};
-use warp::Reply;
-
-use crate::definition::{DefinitionsSupervisor, StartMode};
+use crate::definition::StartMode;
 use crate::server_handlers::dto::DefinitionDto;
 
-#[derive(Clone)]
-pub(super) struct AddDefinitionBinding {
-    pub(crate) supervisor: DefinitionsSupervisor,
-    pub(crate) log: Logger,
-    pub(crate) registry_path: PathBuf,
-    pub(crate) poll_interval: Duration,
-    pub(crate) registry_query_timeout: Duration,
-}
+use super::{bad_request, ok, Server};
 
-pub(super) async fn add_definition(definition: DefinitionDto, binding: AddDefinitionBinding) -> WebResult<impl Reply> {
-    let log = binding.log.clone();
+pub(super) async fn add_definition(
+    State(binding): State<Server>,
+    Json(definition): Json<DefinitionDto>,
+) -> Result<String, (StatusCode, String)> {
     let dname = definition.name.clone();
     let rej = format!("Definition {} could not be added", dname);
     let new_definition = match definition
@@ -32,14 +23,14 @@ pub(super) async fn add_definition(definition: DefinitionDto, binding: AddDefini
         .await
     {
         Ok(def) => def,
-        Err(e) => return bad_request(log, rej, e),
+        Err(e) => return bad_request(binding.log, rej, e),
     };
     match binding
         .supervisor
         .start(vec![new_definition], StartMode::AddToDefinitions)
         .await
     {
-        Ok(()) => ok(log, format!("Definition {} added successfully", dname)),
-        Err(e) => bad_request(log, rej, e.errors.into_iter().next().unwrap()),
+        Ok(()) => ok(binding.log, format!("Definition {} added successfully", dname)),
+        Err(e) => bad_request(binding.log, rej, e),
     }
 }
