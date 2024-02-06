@@ -78,7 +78,7 @@ pub struct RunningDefinition {
 }
 
 pub struct TestDefinition {
-    pub(crate) running_def: RunningDefinition
+    pub(crate) running_def: RunningDefinition,
 }
 
 impl TestDefinition {
@@ -86,11 +86,11 @@ impl TestDefinition {
         let (_, stop_signal) = crossbeam::channel::bounded::<()>(0);
         let ender: Arc<Mutex<Option<Ender>>> = Arc::new(Mutex::new(None));
         Self {
-            running_def: RunningDefinition{
+            running_def: RunningDefinition {
                 definition,
                 stop_signal,
-                ender
-            }
+                ender,
+            },
         }
     }
 
@@ -102,10 +102,12 @@ impl TestDefinition {
         // E.g. telemetry should collect this.
         // return;
         // }
-        let _ = self.running_def.definition.ic_discovery
+        let _ = self
+            .running_def
+            .definition
+            .ic_discovery
             .load_new_ics(self.running_def.definition.log.clone());
     }
-
 }
 
 impl Definition {
@@ -255,7 +257,6 @@ impl RunningDefinition {
             }
         }
     }
-
 
     // Syncs the registry and keeps running, syncing as new
     // registry versions come in.
@@ -419,7 +420,10 @@ impl DefinitionsSupervisor {
             ic_names_to_add.insert(ic_name);
         }
 
-        if !self.allow_mercury_deletion && !ic_names_to_add.contains(&Network::Mainnet.legacy_name()) {
+        if !self.allow_mercury_deletion
+            && !ic_names_to_add.contains(&Network::Mainnet.legacy_name())
+            && start_mode == StartMode::ReplaceExistingDefinitions
+        {
             error
                 .errors
                 .push(StartDefinitionError::DeletionDisallowed(Network::Mainnet.legacy_name()))

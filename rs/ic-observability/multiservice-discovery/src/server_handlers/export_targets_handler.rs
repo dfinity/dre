@@ -1,20 +1,15 @@
-use crate::definition::RunningDefinition;
-
-use super::WebResult;
+use axum::{extract::State, http::StatusCode, Json};
 use ic_types::{NodeId, PrincipalId};
 use multiservice_discovery_shared::contracts::target::{map_to_target_dto, TargetDto};
 use service_discovery::job_types::{JobType, NodeOS};
-use std::{collections::BTreeMap, sync::Arc};
-use tokio::sync::Mutex;
-use warp::reply::Reply;
+use std::collections::BTreeMap;
 
-#[derive(Clone)]
-pub(super) struct ExportTargetsBinding {
-    pub(crate) definitions_ref: Arc<Mutex<BTreeMap<String, RunningDefinition>>>,
-}
+use super::Server;
 
-pub(super) async fn export_targets(binding: ExportTargetsBinding) -> WebResult<impl Reply> {
-    let definitions = binding.definitions_ref.lock().await;
+pub(super) async fn export_targets(
+    State(binding): State<Server>,
+) -> Result<Json<Vec<TargetDto>>, (StatusCode, String)> {
+    let definitions = binding.supervisor.definitions.lock().await;
 
     let mut ic_node_targets: Vec<TargetDto> = vec![];
 
@@ -77,12 +72,9 @@ pub(super) async fn export_targets(binding: ExportTargetsBinding) -> WebResult<i
 
     let total_targets = [ic_node_targets, boundary_nodes_targets].concat();
 
-    Ok(warp::reply::with_status(
-        serde_json::to_string_pretty(&total_targets).unwrap(),
-        if !total_targets.is_empty() {
-            warp::http::StatusCode::OK
-        } else {
-            warp::http::StatusCode::NOT_FOUND
-        },
-    ))
+    if !total_targets.is_empty() {
+        Ok(Json(total_targets))
+    } else {
+        Err((StatusCode::NOT_FOUND, "No targets found".to_string()))
+    }
 }
