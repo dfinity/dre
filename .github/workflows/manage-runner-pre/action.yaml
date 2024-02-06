@@ -20,13 +20,13 @@ runs:
     # Download and unpack cache
     ########################################
     - name: "☁️ ⬇️ Restore bazel cache"
-      uses: actions/cache/restore@v3
+      uses: actions/cache/restore@v4
       with:
         path: "~/.cache/bazel"
         # Configure cache updates
         # https://github.com/actions/cache/blob/main/tips-and-workarounds.md#update-a-cache
         # https://github.com/actions/cache/blob/main/examples.md#---bazel
-        key: ${{ runner.os }}-bazel-${{ hashFiles('.bazelversion', '.bazelrc', 'WORKSPACE', 'WORKSPACE.bazel', 'MODULE.bazel', 'Cargo.Bazel.lock') }}
+        key: ${{ runner.os }}-bazel-${{ hashFiles('.bazelversion', '.bazelrc', 'WORKSPACE.bazel', 'Cargo.Bazel.lock', 'requirements.txt') }}
         restore-keys: |
             ${{ runner.os }}-bazel-
     - name: "🧹 Clean bazel cache if we're preparing a new release"
