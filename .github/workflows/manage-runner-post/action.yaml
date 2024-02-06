@@ -45,6 +45,7 @@ runs:
         echo "Done"
       env:
         GH_TOKEN: ${{ inputs.GITHUB_TOKEN }}
+      shell: bash
     - name: "☁️ ⬆️ Saving cache on main only"
       if: ${{ github.ref == 'refs/heads/main' }}
       uses: actions/cache/save@v4
