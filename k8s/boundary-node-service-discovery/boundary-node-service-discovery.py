@@ -19,6 +19,9 @@ def get_logger():
 def parse():
     parser = argparse.ArgumentParser(description="Script to push boundary nodes to service discovery")
     parser.add_argument("sd_url", help="Service discovery url, i.e. http://localhost:8000")
+    parser.add_argument(
+        "--network-name", help="Network name. Default is 'mercury'", dest="network_name", default="mercury"
+    )
 
     return parser.parse_args()
 
@@ -72,7 +75,7 @@ def main():
 
             guest = {
                 "name": f"{name}-guest",
-                "ic_name": "ic",
+                "ic_name": args.network_name,
                 "targets": [guest_addr],
                 "job_type": "node_exporter",
                 "custom_labels": {
@@ -94,7 +97,7 @@ def main():
 
             host = {
                 "name": f"{name}-host",
-                "ic_name": "ic",
+                "ic_name": args.network_name,
                 "targets": [host_addr],
                 "job_type": "host_node_exporter",
                 "custom_labels": {
