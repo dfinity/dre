@@ -56,5 +56,5 @@ ic-protobuf = { workspace = true }
 ic-interfaces-registry = { workspace = true }
 
 [dev-dependencies]
-tempfile = "3.3.0"
+tempfile = "3.10.0"
 wiremock = "0.5.21"
