@@ -453,11 +453,6 @@ impl DefinitionsSupervisor {
             .collect::<Vec<_>>();
         // End them and join them all.
         join_all(defs_to_end.iter_mut().map(|def| async { def.end().await })).await;
-        // Remove from running definitions list.
-        ic_names_to_end
-            .iter()
-            .map(|ic_name| existing.remove(&ic_name.clone()))
-            .for_each(drop);
         drop(defs_to_end);
         drop(ic_names_to_end);
 

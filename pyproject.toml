@@ -34,7 +34,9 @@ clickhouse-connect = "^0.7.0"
 humanfriendly = "^10.0"
 jupyter = "^1.0.0"
 matplotlib = "^3.8.2"
-ipython = "^8.20.0"
+ipython = "^8.21.0"
+mkdocs-git-revision-date-localized-plugin = "^1.2.4"
+mkdocs-git-committers-plugin-2 = "^2.2.3"
 
 
 [tool.poetry.group.dev.dependencies]
