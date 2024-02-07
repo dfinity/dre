@@ -1,5 +1,5 @@
 {
-  "checksum": "86820685790dc151c444b969cb6cb2ce2835933116a79bd69d9979b0df78d0db",
+  "checksum": "2bda21c3422f1e2a634bfe6e3d48e0041bd5dbb73f9d63b191e5393c2e338c19",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -28157,23 +28157,29 @@
         ],
         "crate_features": {
           "common": [
-            "elf",
-            "errno",
             "general",
             "ioctl",
             "no_std"
           ],
           "selects": {
             "aarch64-unknown-linux-gnu": [
+              "elf",
+              "errno",
               "std"
             ],
             "arm-unknown-linux-gnueabi": [
+              "elf",
+              "errno",
               "std"
             ],
             "armv7-unknown-linux-gnueabi": [
+              "elf",
+              "errno",
               "std"
             ],
             "i686-unknown-linux-gnu": [
+              "elf",
+              "errno",
               "std"
             ],
             "powerpc-unknown-linux-gnu": [
@@ -28183,6 +28189,8 @@
               "std"
             ],
             "x86_64-unknown-linux-gnu": [
+              "elf",
+              "errno",
               "std"
             ]
           }
@@ -29396,6 +29404,10 @@
             {
               "id": "regex 1.10.3",
               "target": "regex"
+            },
+            {
+              "id": "retry 2.0.0",
+              "target": "retry"
             },
             {
               "id": "serde 1.0.196",

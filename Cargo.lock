@@ -5909,6 +5909,7 @@ dependencies = [
  "multiservice-discovery-shared",
  "regex",
  "reqwest",
+ "retry",
  "serde",
  "serde_json",
  "service-discovery",

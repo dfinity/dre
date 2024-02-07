@@ -67,6 +67,10 @@ fn main() {
         }
     } else {
         let supervisor = DefinitionsSupervisor::new(rt.handle().clone(), cli_args.start_without_mainnet);
+        if let Some(networks_state_file) = cli_args.networks_state_file.clone() {
+            rt.block_on(supervisor.load_or_create_defs(networks_state_file)).unwrap();
+        }
+
         let (server_stop, server_stop_receiver) = oneshot::channel();
 
         //Configure server
@@ -98,6 +102,11 @@ fn main() {
         // Signal server to stop.  Stop happens in parallel with supervisor stop.
         server_stop.send(()).unwrap();
 
+        // Persist definitions to disk before ending the supervisor.
+        if let Some(networks_state_file) = cli_args.networks_state_file.clone() {
+            rt.block_on(supervisor.persist_defs(networks_state_file)).unwrap();
+        }
+        
         //Stop all definitions.  End happens in parallel with server stop.
         rt.block_on(supervisor.end());
 
@@ -180,4 +189,15 @@ the Prometheus targets of mainnet as a JSON structure on stdout.
 "#
     )]
     render_prom_targets_to_stdout: bool,
+    
+    #[clap(
+        long = "networks-state-file",
+        default_value = None,
+        action,
+        help = r#"
+Preload networks definitions from file path. In case the file does not
+exist, it will be created.
+"#
+    )]
+    networks_state_file: Option<PathBuf>,
 }
