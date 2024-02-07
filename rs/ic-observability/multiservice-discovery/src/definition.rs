@@ -3,6 +3,8 @@ use crossbeam_channel::Sender;
 use futures_util::future::join_all;
 use ic_management_types::Network;
 use ic_registry_client::client::ThresholdSigPublicKey;
+use serde::Deserialize;
+use serde::Serialize;
 use service_discovery::job_types::JobType;
 use service_discovery::registry_sync::Interrupted;
 use service_discovery::IcServiceDiscovery;
@@ -16,6 +18,8 @@ use std::collections::HashSet;
 use std::error::Error;
 use std::fmt::Debug;
 use std::fmt::{Display, Error as FmtError, Formatter};
+use std::fs;
+use std::io::Write;
 use std::net::SocketAddr;
 use std::sync::Arc;
 use std::{
@@ -24,6 +28,33 @@ use std::{
 };
 use tokio::sync::Mutex;
 use url::Url;
+
+use crate::make_logger;
+
+#[derive(Clone, Serialize, Deserialize)]
+pub struct FSDefinition {
+    pub nns_urls: Vec<Url>,
+    pub registry_path: PathBuf,
+    pub name: String,
+    pub public_key: Option<ThresholdSigPublicKey>,
+    pub poll_interval: Duration,
+    pub registry_query_timeout: Duration,
+    pub boundary_nodes: Vec<BoundaryNode>,
+}
+
+impl From<Definition> for FSDefinition {
+    fn from(definition: Definition) -> Self {
+        Self {
+            nns_urls: definition.nns_urls, 
+            registry_path: definition.registry_path,
+            name: definition.name,
+            public_key: definition.public_key,
+            poll_interval: definition.poll_interval,
+            registry_query_timeout: definition.registry_query_timeout,
+            boundary_nodes: definition.boundary_nodes
+        }
+    }
+}
 
 #[derive(Clone)]
 pub struct Definition {
@@ -36,6 +67,20 @@ pub struct Definition {
     pub registry_query_timeout: Duration,
     pub ic_discovery: Arc<IcServiceDiscoveryImpl>,
     pub boundary_nodes: Vec<BoundaryNode>,
+}
+
+impl From<FSDefinition> for Definition {
+    fn from(fs_definition: FSDefinition) -> Self {
+        Definition::new(
+            fs_definition.nns_urls, 
+            fs_definition.registry_path, 
+            fs_definition.name, 
+            make_logger(), 
+            fs_definition.public_key, 
+            fs_definition.poll_interval, 
+            fs_definition.registry_query_timeout
+        )
+    }
 }
 
 impl Debug for Definition {
@@ -300,7 +345,7 @@ impl RunningDefinition {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct BoundaryNode {
     pub name: String,
     pub targets: BTreeSet<SocketAddr>,
@@ -392,6 +437,42 @@ impl DefinitionsSupervisor {
             definitions: Arc::new(Mutex::new(BTreeMap::new())),
             allow_mercury_deletion,
         }
+    }
+
+    pub(crate) async fn load_or_create_defs(&self, networks_state_file: PathBuf) -> Result<(), Box<dyn Error>> {
+        if networks_state_file.exists() {
+            let file_content = fs::read_to_string(networks_state_file)?;
+            let initial_definitions: Vec<FSDefinition> = serde_json::from_str(&file_content)?;
+            self.start(
+                initial_definitions.into_iter().map(|def| def.into()).collect(),
+                StartMode::AddToDefinitions,
+            )
+            .await?;
+        }
+        Ok(())
+    }
+
+    pub(crate) async fn persist_defs(&self, networks_state_file: PathBuf) -> Result<(), Box<dyn Error>> {
+        let existing = self.definitions.lock().await;
+        retry::retry(retry::delay::Exponential::from_millis(10).take(5), || {
+            std::fs::OpenOptions::new()
+                .create(true)
+                .write(true)
+                .open(&networks_state_file.as_path())
+                .and_then(|mut file| {
+                    let fs_def: Vec<FSDefinition> = existing
+                    .values()
+                    .cloned()
+                    .into_iter()
+                    .map(|running_def| running_def.definition.into())
+                    .collect::<Vec<_>>(); 
+
+                    file.write_all(serde_json::to_string(&fs_def)?.as_bytes())
+                        .map(|_| file)
+                })
+                .and_then(|mut file| file.flush())
+        })?;
+        Ok(())
     }
 
     async fn start_inner(

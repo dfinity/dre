@@ -5793,6 +5793,7 @@ dependencies = [
  "ic-utils 0.9.0",
  "multiservice-discovery-shared",
  "regex",
+ "retry",
  "serde",
  "serde_json",
  "service-discovery",
