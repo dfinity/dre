@@ -30,7 +30,10 @@ pub(super) async fn add_definition(
         .start(vec![new_definition], StartMode::AddToDefinitions)
         .await
     {
-        Ok(()) => ok(binding.log, format!("Definition {} added successfully", dname)),
+        Ok(()) => {
+            binding.metrics.definitions.add(1, &vec![]);
+            ok(binding.log, format!("Definition {} added successfully", dname))
+        }
         Err(e) => bad_request(binding.log, rej, e),
     }
 }

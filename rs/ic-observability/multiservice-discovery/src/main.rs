@@ -3,6 +3,7 @@ use std::path::PathBuf;
 use std::time::Duration;
 use std::vec;
 
+use axum_otel_metrics::HttpMetricsLayerBuilder;
 use clap::Parser;
 use humantime::parse_duration;
 use slog::{info, o, Drain, Logger};
@@ -19,6 +20,7 @@ use crate::server_handlers::export_prometheus_config_handler::serialize_definiti
 use crate::server_handlers::Server;
 
 mod definition;
+mod metrics;
 mod server_handlers;
 
 fn main() {
@@ -68,6 +70,7 @@ fn main() {
     } else {
         let supervisor = DefinitionsSupervisor::new(rt.handle().clone(), cli_args.start_without_mainnet);
         let (server_stop, server_stop_receiver) = oneshot::channel();
+        let metrics_layer = HttpMetricsLayerBuilder::new().build();
 
         //Configure server
         let server_handle = rt.spawn(
@@ -78,7 +81,7 @@ fn main() {
                 cli_args.registry_query_timeout,
                 cli_args.targets_dir.clone(),
             )
-            .run(server_stop_receiver),
+            .run(server_stop_receiver, metrics_layer),
         );
 
         if !cli_args.start_without_mainnet {
