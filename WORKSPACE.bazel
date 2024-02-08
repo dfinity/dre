@@ -13,11 +13,6 @@ http_archive(
     ],
 )
 
-http_archive(
-    name = "mainnet_registry",
-    urls = ["https://github.com/dfinity/dre/raw/ic-registry-mainnet/rs/ic-observability/multiservice-discovery/tests/test_data/mercury.tar.gz"]
-)
-
 load("@bazel_skylib//:workspace.bzl", "bazel_skylib_workspace")
 
 bazel_skylib_workspace()

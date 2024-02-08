@@ -51,3 +51,18 @@ rust_test(
         normal_dev = True,
     ) + DEPS,
 )
+
+rust_test(
+    name = "prom_targets_tests",
+    srcs = ["tests/tests.rs"],
+    data = [
+        ":multiservice-discovery",
+    ],
+    tags = ["requires-network"],
+    proc_macro_deps = all_crate_deps(
+        proc_macro_dev = True,
+    ),
+    deps = all_crate_deps(
+        normal_dev = True,
+    ) + DEPS + DEV_DEPENDENCIES,
+)

@@ -77,6 +77,13 @@ fn main() {
         let metrics_layer = HttpMetricsLayerBuilder::new().build();
         let metrics = MSDMetrics::new();
 
+        if let Some(networks_state_file) = cli_args.networks_state_file.clone() {
+            rt.block_on(
+                supervisor.load_or_create_defs(networks_state_file, metrics.running_definition_metrics.clone()),
+            )
+            .unwrap();
+        }
+
         // First check if we should start the mainnet definition so we can
         // serve it right after the server starts.
         if !cli_args.start_without_mainnet {
@@ -110,6 +117,11 @@ fn main() {
 
         // Signal server to stop.  Stop happens in parallel with supervisor stop.
         server_stop.send(()).unwrap();
+
+        // Persist definitions to disk before ending the supervisor.
+        if let Some(networks_state_file) = cli_args.networks_state_file.clone() {
+            rt.block_on(supervisor.persist_defs(networks_state_file)).unwrap();
+        }
 
         //Stop all definitions.  End happens in parallel with server stop.
         rt.block_on(supervisor.end());
@@ -193,4 +205,15 @@ the Prometheus targets of mainnet as a JSON structure on stdout.
 "#
     )]
     render_prom_targets_to_stdout: bool,
+
+    #[clap(
+        long = "networks-state-file",
+        default_value = None,
+        action,
+        help = r#"
+Preload networks definitions from file path. In case the file does not
+exist, it will be created.
+"#
+    )]
+    networks_state_file: Option<PathBuf>,
 }
