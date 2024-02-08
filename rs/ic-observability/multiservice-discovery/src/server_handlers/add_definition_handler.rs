@@ -31,10 +31,7 @@ pub(super) async fn add_definition(
         .await
     {
         Ok(()) => {
-            binding
-                .metrics
-                .definitions
-                .observe(binding.supervisor.definition_count().await as u64, &vec![]);
+            binding.metrics.definitions.add(1, &vec![]);
             ok(binding.log, format!("Definition {} added successfully", dname))
         }
         Err(e) => bad_request(binding.log, rej, e),

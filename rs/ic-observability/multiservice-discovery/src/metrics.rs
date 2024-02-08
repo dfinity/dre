@@ -1,8 +1,8 @@
-use opentelemetry::{global, metrics::ObservableGauge};
+use opentelemetry::{global, metrics::UpDownCounter};
 
 #[derive(Clone)]
 pub struct MSDMetrics {
-    pub definitions: ObservableGauge<u64>,
+    pub definitions: UpDownCounter<i64>,
 }
 
 impl Default for MSDMetrics {
@@ -15,7 +15,7 @@ impl MSDMetrics {
     pub fn new() -> Self {
         let meter = global::meter("axum-app");
         let definitions = meter
-            .u64_observable_gauge("msd.definitions")
+            .i64_up_down_counter("msd.definitions")
             .with_description("Total number of definitions that multiservice discovery is scraping")
             .init();
 

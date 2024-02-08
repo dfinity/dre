@@ -12,6 +12,7 @@ pub(super) async fn replace_definitions(
     State(binding): State<Server>,
     Json(definitions): Json<Vec<DefinitionDto>>,
 ) -> WebResult<String> {
+    let old_size = binding.supervisor.definition_count().await;
     let dnames = definitions
         .iter()
         .map(|d| d.name.clone())
@@ -46,6 +47,7 @@ pub(super) async fn replace_definitions(
     }
 
     let new_definitions: Vec<_> = new_definitions.into_iter().map(Result::unwrap).collect();
+    let new_len = new_definitions.len();
     match binding
         .supervisor
         .start(new_definitions, StartMode::ReplaceExistingDefinitions)
@@ -53,10 +55,8 @@ pub(super) async fn replace_definitions(
     {
         Ok(_) => {
             // Reset the metric to 0 and reinit it to correct count of definition targets
-            binding
-                .metrics
-                .definitions
-                .observe(binding.supervisor.definition_count().await as u64, &[]);
+            binding.metrics.definitions.add(-(old_size as i64), &[]);
+            binding.metrics.definitions.add(new_len as i64, &[]);
             ok(
                 binding.log,
                 format!("Added new definitions {} to existing ones", dnames),

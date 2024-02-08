@@ -88,7 +88,7 @@ fn main() {
                     )
                     .await;
             });
-            metrics.definitions.observe(1, &[]);
+            metrics.definitions.add(1, &[]);
         }
 
         //Configure server
