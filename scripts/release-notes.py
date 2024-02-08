@@ -287,6 +287,13 @@ def main():
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         )
+        print("Resetting HEAD to latest origin/master.")
+        subprocess.check_call(
+            ["git", "reset", "--hard", "origin/master"],
+            cwd=ic_repo_path,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
     else:
         print("Cloning IC repo to {}".format(ic_repo_path))
         subprocess.check_call(
@@ -310,22 +317,28 @@ def main():
         print("WARNING: max commits limit reached, increase depth")
         exit(1)
 
-    replica_packages = (
-        subprocess.check_output(
-            [
-                "gitlab-ci/container/container-run.sh",
-                "bazel",
-                "query",
-                "--universe_scope=//...",
-                "deps(//ic-os/guestos/envs/prod:update-img.tar.gz) union deps(//ic-os/setupos/envs/prod:disk-img.tar.gz)",
-                "--output=package",
-            ],
-            cwd=ic_repo_path,
-            text=True,
-        )
-        .strip()
-        .splitlines()
+    bazel_query = ["bazel",
+        "query",
+        "--universe_scope=//...",
+        "deps(//ic-os/guestos/envs/prod:update-img.tar.gz) union deps(//ic-os/setupos/envs/prod:disk-img.tar.gz)",
+        "--output=package",
+    ]
+    p = subprocess.run(
+        ["gitlab-ci/container/container-run.sh"] + bazel_query,
+        cwd=ic_repo_path,
+        text=True,
+        stdout=subprocess.PIPE,
     )
+    if p.returncode != 0:
+        print("Failure running Bazel through container.  Attempting direct run.", file=sys.stderr)
+        p = subprocess.run(
+            bazel_query,
+             cwd=ic_repo_path,
+             text=True,
+            stdout=subprocess.PIPE,
+            check=True,
+         )
+    replica_packages = p.stdout.strip().splitlines()
 
     replica_packages_filtered = [
         p for p in replica_packages if not any(re.match(f, p) for f in EXCLUDE_PACKAGES_FILTERS)
