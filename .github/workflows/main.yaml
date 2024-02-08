@@ -35,7 +35,7 @@ jobs:
               git config user.email "actions@github.com"
               git add Cargo.Bazel.lock
               git commit -m "GITHUB ACTIONS: run bazel REPIN"
-              git push origin ${{ github.head_ref }}
+              git push origin HEAD:${{ github.head_ref }}
               return 1
               exit 1
           fi
