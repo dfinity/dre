@@ -24,7 +24,17 @@ jobs:
       # Build and test
       ########################################
       - name: "🚀 Building"
-        run: bazel build ...
+        run: |
+          set +e -x
+          build_output=$(bazel build ... 2>&1)
+          exit_code=$?
+          if [[ $exit_code -ne 0 ]] && grep -q "Digests do not match:" <<< "$build_output"; then
+              export CARGO_BAZEL_REPIN=true
+              build_output=$(bazel build ... 2>&1)
+              exit_code=$?
+          fi
+          echo "$build_output"
+          exit $exit_code
       - run: bazel test ...
         name: "🚀 Testing"
 
