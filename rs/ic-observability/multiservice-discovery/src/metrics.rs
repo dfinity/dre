@@ -19,7 +19,7 @@ impl MSDMetrics {
     pub fn new() -> Self {
         let meter = global::meter("axum-app");
         let definitions = meter
-            .i64_up_down_counter("msd.definitions.total")
+            .i64_up_down_counter("msd.definitions")
             .with_description("Total number of definitions that multiservice discovery is scraping")
             .init();
 
@@ -40,12 +40,12 @@ impl RunningDefinitionsMetrics {
     pub fn new() -> Self {
         let meter = global::meter("axum-app");
         let load_new_targets_error = meter
-            .u64_counter("msd.definitions.load.errors.total")
+            .u64_counter("msd.definitions.load.errors")
             .with_description("Total number of errors while loading new targets per definition")
             .init();
 
         let sync_registry_error = meter
-            .u64_counter("msd.definitions.sync.errors.total")
+            .u64_counter("msd.definitions.sync.errors")
             .with_description("Total number of errors while syncing the registry per definition")
             .init();
 
