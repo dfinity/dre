@@ -19,7 +19,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: "☁️ Setup runner"
         uses: ./.github/workflows/manage-runner-pre
-
+      - name: Setup upterm session
+        uses: lhotari/action-upterm@v1
       ########################################
       # Build and test
       ########################################
