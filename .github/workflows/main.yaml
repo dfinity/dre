@@ -31,11 +31,11 @@ jobs:
           exit_code=$?
           if [[ $exit_code -ne 0 ]] && grep -q "Digests do not match:" <<< "$build_output"; then
               export CARGO_BAZEL_REPIN=true
-              bazel build ...
+              build_output=$(bazel build ... 2>&1)
               git config user.name "GitHub Actions"
               git config user.email "actions@github.com"
               git add Cargo.Bazel.lock
-              git commit -m "ACTION: run bazel REPIN"
+              git commit -m "GITHUB ACTIONS: run bazel REPIN"
               git push origin HEAD:${{ github.ref_name }}
               return 1
               exit 1
