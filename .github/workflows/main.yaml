@@ -30,8 +30,11 @@ jobs:
           exit_code=$?
           if [[ $exit_code -ne 0 ]] && grep -q "Digests do not match:" <<< "$build_output"; then
               export CARGO_BAZEL_REPIN=true
-              build_output=$(bazel build ... 2>&1)
-              exit_code=$?
+              bazel build ...
+              git add Cargo.Bazel.lock
+              git commit -m "ACTION: run bazel REPIN"
+              git push
+              exit 1
           fi
           echo "$build_output"
           exit $exit_code
