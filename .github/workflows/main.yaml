@@ -25,19 +25,29 @@ jobs:
       ########################################
       - name: "🚀 Building"
         run: |
-          set +e -x
-          build_output=$(bazel build ... 2>&1)
-          exit_code=$?
-          if [[ $exit_code -ne 0 ]] && grep -q "Digests do not match:" <<< "$build_output"; then
-              export CARGO_BAZEL_REPIN=true
-              bazel build ...
-              git add Cargo.Bazel.lock
-              git commit -m "ACTION: run bazel REPIN"
-              git push
-              exit 1
-          fi
-          echo "$build_output"
-          exit $exit_code
+          set -x +e
+          function bazel_build_auto_repin() {
+              local MYTMPDIR="$(mktemp -d)"
+              trap 'rm -rf -- "$MYTMPDIR"' EXIT
+              local r=0
+              local logfile="$MYTMPDIR/bazel-out.log"
+              bazel "$@" 2>&1 | tee "$logfile" >&2 || r=?
+              if [ "$r" != "0" ]; then
+                  if grep -q 'Digests do not match' "$logfile" ; then
+                      CARGO_BAZEL_REPIN=true bazel "$@" || return $?
+                      git config user.name "GitHub Actions"
+                      git config user.email "actions@github.com"
+                      git add Cargo.Bazel.lock
+                      git commit -m "ACTION: run bazel REPIN"
+                      git push origin HEAD:${{ github.ref_name }}
+                      return 1
+                  else
+                      return $r
+                  fi
+              fi
+          }
+          bazel_build_auto_repin build ...
+
       - run: bazel test ...
         name: "🚀 Testing"
 
