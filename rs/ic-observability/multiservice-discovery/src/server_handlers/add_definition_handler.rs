@@ -27,7 +27,11 @@ pub(super) async fn add_definition(
     };
     match binding
         .supervisor
-        .start(vec![new_definition], StartMode::AddToDefinitions)
+        .start(
+            vec![new_definition],
+            StartMode::AddToDefinitions,
+            binding.metrics.running_definition_metrics,
+        )
         .await
     {
         Ok(()) => {

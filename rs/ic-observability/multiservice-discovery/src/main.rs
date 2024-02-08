@@ -16,7 +16,7 @@ use ic_async_utils::shutdown_signal;
 use ic_management_types::Network;
 
 use crate::definition::{RunningDefinition, TestDefinition};
-use crate::metrics::MSDMetrics;
+use crate::metrics::{MSDMetrics, RunningDefinitionsMetrics};
 use crate::server_handlers::export_prometheus_config_handler::serialize_definitions_to_prometheus_config;
 use crate::server_handlers::Server;
 
@@ -49,7 +49,7 @@ fn main() {
             shutdown_signal: impl futures_util::Future<Output = ()>,
         ) -> Option<RunningDefinition> {
             let def = get_mainnet_definition(cli_args, log.clone());
-            let mut test_def = TestDefinition::new(def);
+            let mut test_def = TestDefinition::new(def, RunningDefinitionsMetrics::new());
             let sync_fut = test_def.sync_and_stop();
             tokio::select! {
                 _ = sync_fut => {
@@ -85,6 +85,7 @@ fn main() {
                     .start(
                         vec![get_mainnet_definition(&cli_args, log.clone())],
                         StartMode::AddToDefinitions,
+                        metrics.running_definition_metrics.clone(),
                     )
                     .await;
             });

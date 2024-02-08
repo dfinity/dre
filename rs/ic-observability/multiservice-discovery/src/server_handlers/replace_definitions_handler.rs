@@ -50,7 +50,11 @@ pub(super) async fn replace_definitions(
     let new_len = new_definitions.len();
     match binding
         .supervisor
-        .start(new_definitions, StartMode::ReplaceExistingDefinitions)
+        .start(
+            new_definitions,
+            StartMode::ReplaceExistingDefinitions,
+            binding.metrics.running_definition_metrics,
+        )
         .await
     {
         Ok(_) => {
