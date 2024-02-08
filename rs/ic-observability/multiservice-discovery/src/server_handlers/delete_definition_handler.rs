@@ -10,7 +10,10 @@ pub(super) async fn delete_definition(
 ) -> Result<String, (StatusCode, String)> {
     match binding.supervisor.stop(vec![name.clone()]).await {
         Ok(_) => {
-            binding.metrics.definitions.add(-1, &vec![]);
+            binding
+                .metrics
+                .definitions
+                .observe(binding.supervisor.definition_count().await as u64, &vec![]);
             Ok(format!("Deleted definition {}", name.clone()))
         }
         Err(e) => match e.errors.into_iter().next().unwrap() {

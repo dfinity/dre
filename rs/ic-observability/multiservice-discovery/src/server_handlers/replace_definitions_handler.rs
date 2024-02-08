@@ -51,10 +51,17 @@ pub(super) async fn replace_definitions(
         .start(new_definitions, StartMode::ReplaceExistingDefinitions)
         .await
     {
-        Ok(_) => ok(
-            binding.log,
-            format!("Added new definitions {} to existing ones", dnames),
-        ),
+        Ok(_) => {
+            // Reset the metric to 0 and reinit it to correct count of definition targets
+            binding
+                .metrics
+                .definitions
+                .observe(binding.supervisor.definition_count().await as u64, &[]);
+            ok(
+                binding.log,
+                format!("Added new definitions {} to existing ones", dnames),
+            )
+        }
         Err(e) => bad_request(binding.log, format!(":\n{}", e), e),
     }
 }

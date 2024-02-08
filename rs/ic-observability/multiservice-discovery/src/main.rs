@@ -16,6 +16,7 @@ use ic_async_utils::shutdown_signal;
 use ic_management_types::Network;
 
 use crate::definition::{RunningDefinition, TestDefinition};
+use crate::metrics::MSDMetrics;
 use crate::server_handlers::export_prometheus_config_handler::serialize_definitions_to_prometheus_config;
 use crate::server_handlers::Server;
 
@@ -70,20 +71,14 @@ fn main() {
     } else {
         let supervisor = DefinitionsSupervisor::new(rt.handle().clone(), cli_args.start_without_mainnet);
         let (server_stop, server_stop_receiver) = oneshot::channel();
+
+        // Initialize the metrics layer because in the build method the `global::provider`
+        // is set. We can use global::meter only after that call.
         let metrics_layer = HttpMetricsLayerBuilder::new().build();
+        let metrics = MSDMetrics::new();
 
-        //Configure server
-        let server_handle = rt.spawn(
-            Server::new(
-                log.clone(),
-                supervisor.clone(),
-                cli_args.poll_interval,
-                cli_args.registry_query_timeout,
-                cli_args.targets_dir.clone(),
-            )
-            .run(server_stop_receiver, metrics_layer),
-        );
-
+        // First check if we should start the mainnet definition so we can
+        // serve it right after the server starts.
         if !cli_args.start_without_mainnet {
             rt.block_on(async {
                 let _ = supervisor
@@ -93,7 +88,21 @@ fn main() {
                     )
                     .await;
             });
+            metrics.definitions.observe(1, &[]);
         }
+
+        //Configure server
+        let server_handle = rt.spawn(
+            Server::new(
+                log.clone(),
+                supervisor.clone(),
+                cli_args.poll_interval,
+                cli_args.registry_query_timeout,
+                cli_args.targets_dir.clone(),
+                metrics,
+            )
+            .run(server_stop_receiver, metrics_layer),
+        );
 
         // Wait for shutdown signal.
         rt.block_on(shutdown_signal);

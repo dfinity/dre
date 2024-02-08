@@ -478,6 +478,10 @@ impl DefinitionsSupervisor {
         self.start_inner(&mut existing, definitions, start_mode).await
     }
 
+    pub(crate) async fn definition_count(&self) -> usize {
+        self.definitions.lock().await.len()
+    }
+
     /// Stop all definitions and end.
     pub(crate) async fn end(&self) {
         let mut existing = self.definitions.lock().await;

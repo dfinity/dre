@@ -74,6 +74,7 @@ impl Server {
         poll_interval: Duration,
         registry_query_timeout: Duration,
         registry_path: PathBuf,
+        metrics: MSDMetrics,
     ) -> Self {
         Self {
             log,
@@ -81,15 +82,10 @@ impl Server {
             poll_interval,
             registry_query_timeout,
             registry_path,
-            metrics: MSDMetrics::default(),
+            metrics,
         }
     }
     pub(crate) async fn run(self, recv: tokio::sync::oneshot::Receiver<()>, metrics_layer: HttpMetricsLayer) {
-        // Set initial definitions count
-        self.metrics
-            .definitions
-            .add(self.supervisor.definitions.lock().await.len() as i64, &vec![]);
-
         let app = Router::new()
             .merge(metrics_layer.routes())
             .route("/", post(add_definition))
