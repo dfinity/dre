@@ -190,7 +190,7 @@ impl Definition {
     }
 
     pub(crate) async fn run(self, rt: tokio::runtime::Handle, metrics: RunningDefinitionsMetrics) -> RunningDefinition {
-        fn wrap(definition: RunningDefinition, rt: tokio::runtime::Handle) -> impl FnMut() {
+        fn wrap(mut definition: RunningDefinition, rt: tokio::runtime::Handle) -> impl FnMut() {
             move || {
                 rt.block_on(definition.run());
             }
@@ -276,7 +276,7 @@ impl RunningDefinition {
         r
     }
 
-    async fn poll_loop(&self) {
+    async fn poll_loop(&mut self) {
         let interval = crossbeam::channel::tick(self.definition.poll_interval);
         let mut tick = Instant::now();
         loop {
@@ -291,7 +291,11 @@ impl RunningDefinition {
                 );
                 self.metrics
                     .load_new_targets_error
-                    .add(1, &[KeyValue::new("definition", self.name())])
+                    .add(1, &[KeyValue::new("network", self.name())]);
+                self.metrics.set_failed_load(self.name(), self.definition.log.clone())
+            } else {
+                self.metrics
+                    .set_successful_load(self.name(), self.definition.log.clone())
             }
             debug!(self.definition.log, "Update registries for {}", self.definition.name);
             if let Err(e) = self.definition.ic_discovery.update_registries().await {
@@ -301,7 +305,11 @@ impl RunningDefinition {
                 );
                 self.metrics
                     .sync_registry_error
-                    .add(1, &[KeyValue::new("definition", self.name())])
+                    .add(1, &[KeyValue::new("network", self.name())]);
+                self.metrics.set_failed_sync(self.name(), self.definition.log.clone())
+            } else {
+                self.metrics
+                    .set_successful_sync(self.name(), self.definition.log.clone())
             }
 
             tick = crossbeam::select! {
@@ -316,7 +324,7 @@ impl RunningDefinition {
 
     // Syncs the registry and keeps running, syncing as new
     // registry versions come in.
-    async fn run(&self) {
+    async fn run(&mut self) {
         if self.initial_registry_sync().await.is_err() {
             // FIXME: Error has been logged, but ideally, it should be handled.
             // E.g. telemetry should collect this.
