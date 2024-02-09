@@ -24,36 +24,9 @@ jobs:
       # Build and test
       ########################################
       - name: "🚀 Building"
-        uses: ./.github/workflows/prepare-release
+        uses: ./.github/workflows/build
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          set -x
-          function bazel_build_auto_repin() {
-              local MYTMPDIR="$(mktemp -d)"
-              trap 'rm -rf -- "$MYTMPDIR"' EXIT
-              local logfile="$MYTMPDIR/bazel-out.log" 
-              bazel "$@" 2>&1 | tee "$logfile" >&2
-              local r=${PIPESTATUS[0]}
-              if [ "$r" != "0" ]; then
-                  if grep -q 'Digests do not match' "$logfile" ; then
-                      # Repin necessary; only apply to this build
-                      CARGO_BAZEL_REPIN=true bazel "$@" || return $?
-                      git pull
-                      git config user.name "GitHub Actions"
-                      git config user.email "actions@github.com"
-                      git add Cargo.Bazel.lock
-                      git commit -m "GITHUB ACTIONS: run bazel REPIN"
-                      git push origin HEAD:${{ github.head_ref }}
-                      return 1
-                  else
-                      # Other failure, let's make like a tree and leave
-                      return $r
-                  fi
-              fi
-          }
-          
-          bazel_build_auto_repin build ...
       - run: bazel test ...
         name: "🚀 Testing"
 
