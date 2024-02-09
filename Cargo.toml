@@ -47,7 +47,7 @@ backon = "0.4.1"
 candid = "0.9.11"
 chrono = { version = "0.4.31", features = ["serde"] }
 clap-num = "1.0.0"
-clap = { version = "4.4.17", features = [
+clap = { version = "4.5.0", features = [
   "derive",
   "env",
   "usage",
@@ -165,7 +165,7 @@ strum = { version = "0.25.0", features = ["derive"] }
 strum_macros = "0.25.3"
 tabled = "0.15.0"
 tabular = "0.2"
-tempfile = "3.8.0"
+tempfile = "3.10.0"
 thiserror = "1.0.40"
 tokio = { version = "1.2.0", features = ["full"] }
 url = "2.5.0"

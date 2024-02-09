@@ -1248,7 +1248,7 @@ name = "canister-log-fetcher"
 version = "0.2.1"
 dependencies = [
  "anyhow",
- "clap 4.4.18",
+ "clap 4.5.0",
  "humantime",
  "log",
  "pretty_env_logger",
@@ -1376,19 +1376,19 @@ dependencies = [
  "clap_lex 0.2.4",
  "indexmap 1.9.3",
  "once_cell",
- "strsim",
+ "strsim 0.10.0",
  "termcolor",
  "textwrap",
 ]
 
 [[package]]
 name = "clap"
-version = "4.4.18"
+version = "4.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1e578d6ec4194633722ccf9544794b71b1385c3c027efe0c55db226fc880865c"
+checksum = "80c21025abd42669a92efc996ef13cfb2c5c627858421ea58d5c3b331a6c134f"
 dependencies = [
  "clap_builder",
- "clap_derive 4.4.7",
+ "clap_derive 4.5.0",
 ]
 
 [[package]]
@@ -1402,14 +1402,14 @@ dependencies = [
 
 [[package]]
 name = "clap_builder"
-version = "4.4.18"
+version = "4.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4df4df40ec50c46000231c914968278b1eb05098cf8f1b3a518a95030e71d1c7"
+checksum = "458bf1f341769dfcf849846f65dffdf9146daa56bcd2a47cb4e1de9915567c99"
 dependencies = [
  "anstream",
  "anstyle",
- "clap_lex 0.6.0",
- "strsim",
+ "clap_lex 0.7.0",
+ "strsim 0.11.0",
  "terminal_size",
 ]
 
@@ -1428,9 +1428,9 @@ dependencies = [
 
 [[package]]
 name = "clap_derive"
-version = "4.4.7"
+version = "4.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cf9804afaaf59a91e75b022a30fb7229a7901f60c755489cc61c9b423b836442"
+checksum = "307bc0538d5f0f83b8248db3087aa92fe504e4691294d0c96c0eabc33f47ba47"
 dependencies = [
  "heck",
  "proc-macro2",
@@ -1449,9 +1449,9 @@ dependencies = [
 
 [[package]]
 name = "clap_lex"
-version = "0.6.0"
+version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "702fc72eb24e5a1e48ce58027a675bc24edd52096d5397d4aea7c6dd9eca0bd1"
+checksum = "98cc8fbded0c607b7ba9dd60cd98df59af97e84d24e49c8557331cfc26d301ce"
 
 [[package]]
 name = "codespan-reporting"
@@ -1879,7 +1879,7 @@ dependencies = [
  "ident_case",
  "proc-macro2",
  "quote",
- "strsim",
+ "strsim 0.10.0",
  "syn 1.0.109",
 ]
 
@@ -1893,7 +1893,7 @@ dependencies = [
  "ident_case",
  "proc-macro2",
  "quote",
- "strsim",
+ "strsim 0.10.0",
  "syn 1.0.109",
 ]
 
@@ -2279,7 +2279,7 @@ dependencies = [
  "anyhow",
  "async-trait",
  "candid",
- "clap 4.4.18",
+ "clap 4.5.0",
  "clap-num",
  "colored",
  "cryptoki",
@@ -4382,7 +4382,7 @@ dependencies = [
  "itertools 0.12.1",
  "lazy_static",
  "log",
- "prometheus-http-query 0.8.2",
+ "prometheus-http-query",
  "regex",
  "registry-canister",
  "reqwest",
@@ -4403,7 +4403,7 @@ dependencies = [
  "anyhow",
  "candid",
  "chrono",
- "clap 4.4.18",
+ "clap 4.5.0",
  "ic-base-types",
  "ic-nns-governance",
  "ic-registry-subnet-type",
@@ -5719,7 +5719,7 @@ name = "log-fetcher"
 version = "0.2.1"
 dependencies = [
  "anyhow",
- "clap 4.4.18",
+ "clap 4.5.0",
  "log",
  "pretty_env_logger",
  "reqwest",
@@ -5900,7 +5900,7 @@ dependencies = [
  "assert_cmd",
  "axum 0.7.4",
  "base64 0.21.7",
- "clap 4.4.18",
+ "clap 4.5.0",
  "crossbeam",
  "crossbeam-channel",
  "dirs",
@@ -5936,7 +5936,7 @@ dependencies = [
 name = "multiservice-discovery-downloader"
 version = "0.2.1"
 dependencies = [
- "clap 4.4.18",
+ "clap 4.5.0",
  "crossbeam",
  "crossbeam-channel",
  "futures-util",
@@ -6020,7 +6020,7 @@ name = "node-status-updater"
 version = "0.2.1"
 dependencies = [
  "anyhow",
- "clap 4.4.18",
+ "clap 4.5.0",
  "crossbeam",
  "crossbeam-channel",
  "futures-util",
@@ -6029,7 +6029,7 @@ dependencies = [
  "ic-async-utils",
  "ic-metrics",
  "obs-canister-clients",
- "prometheus-http-query 0.6.7",
+ "prometheus-http-query",
  "service-discovery",
  "slog",
  "slog-async",
@@ -6890,7 +6890,7 @@ version = "0.2.1"
 dependencies = [
  "anyhow",
  "base64 0.21.7",
- "clap 4.4.18",
+ "clap 4.5.0",
  "config-writer-common",
  "crossbeam",
  "futures-util",
@@ -6909,20 +6909,6 @@ dependencies = [
  "slog-async",
  "slog-term",
  "tokio",
- "url",
-]
-
-[[package]]
-name = "prometheus-http-query"
-version = "0.6.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6704e3a7a78545b1496524d518658005a6cc308abc90ce5fccf01891ecdc298b"
-dependencies = [
- "mime",
- "reqwest",
- "serde",
- "serde_json",
- "time",
  "url",
 ]
 
@@ -8022,7 +8008,7 @@ checksum = "e6ecd384b10a64542d77071bd64bd7b231f4ed5940fba55e98c3de13824cf3d7"
 name = "sns-downloader"
 version = "0.2.1"
 dependencies = [
- "clap 4.4.18",
+ "clap 4.5.0",
  "crossbeam",
  "crossbeam-channel",
  "futures-util",
@@ -8130,6 +8116,12 @@ name = "strsim"
 version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "73473c0e59e6d5812c5dfe2a064a6444949f089e20eec9a2e5506596494e4623"
+
+[[package]]
+name = "strsim"
+version = "0.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5ee073c9e4cd00e28217186dbe12796d692868f432bf2e97ee73bed0c56dfa01"
 
 [[package]]
 name = "strum"
@@ -8318,13 +8310,12 @@ dependencies = [
 
 [[package]]
 name = "tempfile"
-version = "3.9.0"
+version = "3.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "01ce4141aa927a6d1bd34a041795abd0db1cccba5d5f24b009f694bdf3a1f3fa"
+checksum = "a365e8cd18e44762ef95d87f284f4b5cd04107fec2ff3052bd6a3e6069669e67"
 dependencies = [
  "cfg-if",
  "fastrand 2.0.1",
- "redox_syscall",
  "rustix 0.38.31",
  "windows-sys 0.52.0",
 ]
