@@ -43,8 +43,8 @@ runs:
       if: ${{ steps.build.outputs.repin == 'true' }}"
       run: |
         CARGO_BAZEL_REPIN=true bazel build ... || return $?
-        git config --local user.email "github-actions[bot]@users.noreply.github.com"
-        git config --local user.name "github-actions[bot]"
+        git config --local user.email "${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com"
+        git config --local user.name "${{ github.actor }}"
         git commit -a -m "Github Action: Bazel Repin"
       shell: bash
 
