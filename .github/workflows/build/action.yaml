@@ -39,6 +39,12 @@ runs:
         ref: ${{ github.head_ref }}
         fetch-depth: 0
 
+    - uses: tibdex/github-app-token@v1
+      id: generate-token
+      with:
+        app_id: ${{ secrets.APP_ID }}
+        private_key: ${{ secrets.APP_PRIVATE_KEY }}
+
     - name: Commit files
       if: ${{ steps.build.outputs.repin == 'true' }}"
       run: |
@@ -53,3 +59,4 @@ runs:
       uses: ad-m/github-push-action@master
       with:
         branch: ${{ github.head_ref }}
+        github_token: ${{ steps.generate-token.outputs.token }}
