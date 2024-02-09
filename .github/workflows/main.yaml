@@ -26,7 +26,8 @@ jobs:
       - name: "🚀 Building"
         uses: ./.github/workflows/build
         with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          app_id: ${{ secrets.APP_ID }}
+          app_private_key: ${{ secrets.APP_PRIVATE_KEY }}
       - run: bazel test ...
         name: "🚀 Testing"
 

@@ -2,10 +2,13 @@ name: Build and repin
 description: Reusable action for building and repin with bazel
 
 inputs:
-  github_token:
-    description: 'Automatically assigned GitHub Token'
+  app_id:
+    description: 'App id for token generation'
     required: true
-
+  app_private_key:
+    description: 'Private key for the app to generate token'
+    required: true
+    
 runs:
   using: composite
   steps:
@@ -42,8 +45,8 @@ runs:
     - uses: tibdex/github-app-token@v1
       id: generate-token
       with:
-        app_id: ${{ secrets.APP_ID }}
-        private_key: ${{ secrets.APP_PRIVATE_KEY }}
+        app_id: ${{ inputs.app_id }}
+        app_private_key: ${{ inputs.app_private_key }}
 
     - name: Commit files
       if: ${{ steps.build.outputs.repin == 'true' }}"
