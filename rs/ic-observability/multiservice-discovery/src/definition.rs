@@ -45,13 +45,13 @@ pub struct FSDefinition {
 impl From<Definition> for FSDefinition {
     fn from(definition: Definition) -> Self {
         Self {
-            nns_urls: definition.nns_urls, 
+            nns_urls: definition.nns_urls,
             registry_path: definition.registry_path,
             name: definition.name,
             public_key: definition.public_key,
             poll_interval: definition.poll_interval,
             registry_query_timeout: definition.registry_query_timeout,
-            boundary_nodes: definition.boundary_nodes
+            boundary_nodes: definition.boundary_nodes,
         }
     }
 }
@@ -72,13 +72,13 @@ pub struct Definition {
 impl From<FSDefinition> for Definition {
     fn from(fs_definition: FSDefinition) -> Self {
         Definition::new(
-            fs_definition.nns_urls, 
-            fs_definition.registry_path, 
-            fs_definition.name, 
-            make_logger(), 
-            fs_definition.public_key, 
-            fs_definition.poll_interval, 
-            fs_definition.registry_query_timeout
+            fs_definition.nns_urls,
+            fs_definition.registry_path,
+            fs_definition.name,
+            make_logger(),
+            fs_definition.public_key,
+            fs_definition.poll_interval,
+            fs_definition.registry_query_timeout,
         )
     }
 }
@@ -458,17 +458,15 @@ impl DefinitionsSupervisor {
             std::fs::OpenOptions::new()
                 .create(true)
                 .write(true)
-                .open(&networks_state_file.as_path())
+                .open(networks_state_file.as_path())
                 .and_then(|mut file| {
                     let fs_def: Vec<FSDefinition> = existing
-                    .values()
-                    .cloned()
-                    .into_iter()
-                    .map(|running_def| running_def.definition.into())
-                    .collect::<Vec<_>>(); 
+                        .values()
+                        .cloned()
+                        .map(|running_def| running_def.definition.into())
+                        .collect::<Vec<_>>();
 
-                    file.write_all(serde_json::to_string(&fs_def)?.as_bytes())
-                        .map(|_| file)
+                    file.write_all(serde_json::to_string(&fs_def)?.as_bytes()).map(|_| file)
                 })
                 .and_then(|mut file| file.flush())
         })?;
