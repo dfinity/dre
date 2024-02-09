@@ -1,12 +1,11 @@
 use std::{
     collections::{BTreeMap, HashSet},
-    convert::TryInto,
     str::FromStr,
 };
 
 use ic_base_types::PrincipalId;
 use ic_management_types::{Network, Status};
-use prometheus_http_query::{Client, InstantVector, Selector};
+use prometheus_http_query::{Client, Selector};
 
 use crate::prometheus;
 
@@ -24,15 +23,16 @@ impl HealthClient {
     }
 
     pub async fn subnet(&self, subnet: PrincipalId) -> anyhow::Result<BTreeMap<PrincipalId, Status>> {
-        let query_up: InstantVector = Selector::new()
+        let ic_name = self.network.legacy_name();
+        let subnet_name = subnet.to_string();
+        let query_up = Selector::new()
             .metric("up")
-            .with("ic", &self.network.legacy_name())
-            .with("job", "replica")
-            .with("ic_subnet", subnet.to_string().as_str())
-            .try_into()?;
+            .eq("ic", ic_name.as_str())
+            .eq("job", "replica")
+            .eq("ic_subnet", subnet_name.as_str());
 
-        let response_up = self.client.query(query_up, None, None).await?;
-        let instant_up = response_up.as_instant().expect("Expected instant vector");
+        let response_up = self.client.query(query_up).get().await?;
+        let instant_up = response_up.data().as_vector().expect("Expected instant vector");
 
         // Alerts are synthetic time series and cannot be queries as regular metrics
         // https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/#inspecting-alerts-during-runtime
@@ -41,8 +41,8 @@ impl HealthClient {
             self.network.legacy_name(),
             subnet
         );
-        let response_alert = self.client.query(query_alert, None, None).await?;
-        let instant_alert = response_alert.as_instant().expect("Expected instant vector");
+        let response_alert = self.client.query(query_alert).get().await?;
+        let instant_alert = response_alert.data().as_vector().expect("Expected instant vector");
         let node_ids_with_alerts: HashSet<PrincipalId> = instant_alert
             .iter()
             .filter_map(|r| r.metric().get("ic_node").and_then(|id| PrincipalId::from_str(id).ok()))
@@ -71,12 +71,12 @@ impl HealthClient {
     }
 
     pub async fn nodes(&self) -> anyhow::Result<BTreeMap<PrincipalId, Status>> {
-        let query: InstantVector = InstantVector(format!(
+        let query = format!(
             r#"ic_replica_orchestrator:health_state:bottomk_1{{ic="{network}"}}"#,
             network = self.network.legacy_name(),
-        ));
-        let response = self.client.query(query, None, None).await?;
-        let results = response.as_instant().expect("Expected instant vector");
+        );
+        let response = self.client.query(query).get().await?;
+        let results = response.data().as_vector().expect("Expected instant vector");
         Ok(results
             .iter()
             .filter_map(|r| {
