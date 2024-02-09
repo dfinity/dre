@@ -47,7 +47,7 @@ backon = "0.4.1"
 candid = "0.9.11"
 chrono = { version = "0.4.31", features = ["serde"] }
 clap-num = "1.0.0"
-clap = { version = "4.4.17", features = [
+clap = { version = "4.5.0", features = [
   "derive",
   "env",
   "usage",
@@ -133,7 +133,7 @@ lru = "0.12.1"
 phantom_newtype = { git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca" }
 pkcs11 = "0.5.0"
 pretty_env_logger = "0.5.0"
-prometheus-http-query = "0.4.0"
+prometheus-http-query = "0.6.7"
 prometheus = { version = "0.13.3", features = ["process"] }
 prost = "0.12.1"
 rand = { version = "0.8.5", features = ["std_rng"] }
@@ -165,7 +165,7 @@ strum = { version = "0.25.0", features = ["derive"] }
 strum_macros = "0.25.3"
 tabled = "0.15.0"
 tabular = "0.2"
-tempfile = "3.8.0"
+tempfile = "3.10.0"
 thiserror = "1.0.40"
 tokio = { version = "1.2.0", features = ["full"] }
 url = "2.5.0"
