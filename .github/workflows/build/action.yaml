@@ -18,8 +18,8 @@ runs:
             local MYTMPDIR="$(mktemp -d)"
             trap 'rm -rf -- "$MYTMPDIR"' EXIT
             local logfile="$MYTMPDIR/bazel-out.log" 
-            bazel "$@" 2>&1 | tee "$logfile" >&2
-            local r=${PIPESTATUS[0]}
+            local r=0
+            bazel "$@" 2>&1 | tee "$logfile" >&2 || r=1
             if [ "$r" != "0" ]; then
                 if grep -q 'Digests do not match' "$logfile" ; then
                     echo "repin=true" >> $GITHUB_OUTPUT
