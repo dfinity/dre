@@ -474,7 +474,7 @@ impl DefinitionsSupervisor {
             std::fs::OpenOptions::new()
                 .create(true)
                 .write(true)
-                .open(&networks_state_file.as_path())
+                .open(networks_state_file.as_path())
                 .and_then(|mut file| {
                     let fs_def: Vec<FSDefinition> = existing
                         .values()
