@@ -476,7 +476,9 @@ must be identical, and must match the SHA256 from the payload of the NNS proposa
         // Regex can be analyzed and tested at:
         // https://rregex.dev/?version=1.7&method=replace&regex=%5Cs*%3C%21--.%2B%3F--%3E%5Cs*&replace=+&text=*+%5Babc%5D+%3C%21--+ignored+1+--%3E+line%0A*+%5Babc%5D+%3C%21--+ignored+2+--%3E+comment+1+%3C%21--+ignored+3+--%3E+comment+2%0A
         let re_comment = Regex::new(r"\s*<!--.+?-->\s*").unwrap();
-        let edited = edit::edit(template)?
+        let mut builder = edit::Builder::new();
+        let with_suffix = builder.suffix(".md");
+        let edited = edit::edit_with_builder(template, &with_suffix)?
             .trim()
             .replace("\r(\n)?", "\n")
             .split('\n')
