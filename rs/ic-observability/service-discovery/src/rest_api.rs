@@ -73,11 +73,8 @@ impl RestApi {
         &self,
         target_groups: Result<BTreeSet<TargetGroup>, IcServiceDiscoveryError>,
     ) -> Result<Response<Body>, hyper::http::Error> {
-        let groups = target_groups.map(|l| -> Vec<_> {
-            l.into_iter()
-                .map(ServiceDiscoveryRecord::from)
-                .collect::<Vec<_>>()
-        });
+        let groups =
+            target_groups.map(|l| -> Vec<_> { l.into_iter().map(ServiceDiscoveryRecord::from).collect::<Vec<_>>() });
         match groups {
             Ok(groups) => {
                 let response = serde_json::to_vec(&groups).unwrap();

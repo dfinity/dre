@@ -21,11 +21,7 @@ fn main() {
 
     info!(logger, "Starting downloader loop"; "cli_args" => ?cli_args);
 
-    let downloader_handle = rt.spawn(run_downloader_loop(
-        logger.clone(),
-        cli_args,
-        stop_signal_rcv,
-    ));
+    let downloader_handle = rt.spawn(run_downloader_loop(logger.clone(), cli_args, stop_signal_rcv));
 
     rt.block_on(shutdown_signal);
     info!(logger, "Received shutdown signal, shutting down ...");
@@ -127,11 +123,7 @@ pub mod log_subtype {
     use super::*;
     #[derive(Parser, Clone, Debug)]
     pub struct LogSubtype {
-        #[clap(
-            long = "port",
-            help = "Custom port for standard nodes",
-            default_value = "19531"
-        )]
+        #[clap(long = "port", help = "Custom port for standard nodes", default_value = "19531")]
         pub port: u64,
         #[clap(
             long = "boundary-nodes-port",
@@ -158,10 +150,7 @@ pub mod log_subtype {
             #[clap(long = "journals-folder", help = "Path to the root journals folder")]
             journals_folder: String,
 
-            #[clap(
-                long = "worker-cursor-folder",
-                help = "Path for the root worker cursors folder"
-            )]
+            #[clap(long = "worker-cursor-folder", help = "Path for the root worker cursors folder")]
             worker_cursor_folder: String,
 
             #[clap(long = "data-folder", help = "Path for the data folder")]
