@@ -19,7 +19,7 @@ impl MSDMetrics {
     pub fn new() -> Self {
         let meter = global::meter("axum-app");
         let definitions = meter
-            .i64_up_down_counter("msd.definitions.total")
+            .i64_up_down_counter("msd.definitions")
             .with_description("Total number of definitions that multiservice discovery is scraping")
             .init();
 
