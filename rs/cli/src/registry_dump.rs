@@ -72,7 +72,7 @@ fn get_nodes(
     local_registry: &LocalRegistry,
     version: RegistryVersion,
     node_operators: &BTreeMap<PrincipalId, NodeOperator>,
-    subnets: &Vec<SubnetRecord>,
+    subnets: &[SubnetRecord],
 ) -> Result<Vec<NodeDetails>, Error> {
     let nodes = local_registry
         .get_family_entries_of_version::<NodeRecord>(version)
@@ -138,7 +138,7 @@ fn get_subnets(local_registry: &LocalRegistry, version: RegistryVersion) -> Resu
             max_instructions_per_message: record.max_instructions_per_message,
             max_instructions_per_round: record.max_instructions_per_round,
             max_instructions_per_install_code: record.max_instructions_per_install_code,
-            features: record.features.clone().unwrap_or_default().into(),
+            features: record.features.clone().unwrap_or_default(),
             max_number_of_canisters: record.max_number_of_canisters,
             ssh_readonly_access: record.ssh_readonly_access,
             ssh_backup_access: record.ssh_backup_access,
