@@ -3,7 +3,7 @@ description: Reusable action for building and repin with bazel
 
 inputs:
   ssh_pk_workflow:
-    description: 'SSH pk for the repo allowing workflows to run actions'
+    description: 'SSH PK for the repo allowing workflows to run actions'
     required: true
 
 runs:
@@ -28,6 +28,7 @@ runs:
             echo "repin=false" >> $GITHUB_OUTPUT
             return $r
         }
+        echo "repin=false" >> $GITHUB_OUTPUT
         
         bazel_build_auto_repin build ...
       shell: bash
