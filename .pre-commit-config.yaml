@@ -20,10 +20,6 @@ repos:
               experimental/.*
           )$
       - id: rustfmt
-        exclude: |
-          (?x)(
-              ic
-          ) # exclude these directories; more can be added by |ing them.
       - id: ormolu
 
   - repo: https://github.com/ambv/black
