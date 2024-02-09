@@ -23,6 +23,7 @@ runs:
                 if grep -q 'Digests do not match' "$logfile" ; then
                     echo "repin=true" >> $GITHUB_OUTPUT
                     return 0
+                fi
             fi
             echo "repin=false" >> $GITHUB_OUTPUT
             return $r
