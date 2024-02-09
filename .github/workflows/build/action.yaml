@@ -22,6 +22,7 @@ runs:
             local r=${PIPESTATUS[0]}
             if [ "$r" != "0" ]; then
                 if grep -q 'Digests do not match' "$logfile" ; then
+                    echo "repin=true" >> $GITHUB_OUTPUT
                     CARGO_BAZEL_REPIN=true bazel "$@" || return $?
                 else
                     return $r
@@ -30,6 +31,7 @@ runs:
         }
         
         bazel_build_auto_repin build ...
+      shell: bash
 
     - name: Commit & Push changes
       uses: actions-js/push@master
