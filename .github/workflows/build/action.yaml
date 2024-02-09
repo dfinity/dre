@@ -19,9 +19,10 @@ runs:
             local logfile="$MYTMPDIR/bazel-out.log" 
             local r=0
             bazel "$@" 2>&1 | tee "$logfile" >&2 || r=1
+            echo "repin=false" >> $GITHUB_OUTPUT
             if [ "$r" != "0" ]; then
                 if grep -q 'Digests do not match' "$logfile" ; then
-                    echo "repin=true" >> $GITHUB_OUTPUT
+                    echo "repin=true" > $GITHUB_OUTPUT
                     return 0
                 else
                     return $r
