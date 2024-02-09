@@ -338,6 +338,7 @@ impl Ord for NakamotoScore {
 
 impl PartialOrd for NakamotoScore {
     /// By default, the higher value will take the precedence
+    #[allow(clippy::non_canonical_partial_ord_impl)]
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         // Prefer higher score across all features
         let mut cmp = self.score_min().partial_cmp(&other.score_min());

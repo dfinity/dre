@@ -286,7 +286,7 @@ async fn main() -> Result<(), anyhow::Error> {
             },
 
             cli::Commands::DumpRegistry { version, path } => {
-                registry_dump::dump_registry(path, version, cli_opts.network).await
+                registry_dump::dump_registry(path, cli_opts.network, version).await
             }
         }
     })
