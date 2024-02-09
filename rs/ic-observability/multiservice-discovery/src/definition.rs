@@ -579,8 +579,14 @@ impl DefinitionsSupervisor {
         self.start_inner(&mut existing, definitions, start_mode, metrics).await
     }
 
-    pub(crate) async fn definition_count(&self) -> usize {
-        self.definitions.lock().await.len()
+    pub(crate) async fn definition_names(&self) -> Vec<String> {
+        self.definitions
+            .lock()
+            .await
+            .clone()
+            .into_iter()
+            .map(|(name, _)| name)
+            .collect()
     }
 
     /// Stop all definitions and end.

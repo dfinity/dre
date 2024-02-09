@@ -96,7 +96,7 @@ fn main() {
                     )
                     .await;
             });
-            metrics.definitions.add(1, &[]);
+            metrics.inc("mercury".to_string());
         }
 
         //Configure server

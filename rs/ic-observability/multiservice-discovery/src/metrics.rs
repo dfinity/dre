@@ -1,7 +1,10 @@
 use opentelemetry::{
     global,
     metrics::{Counter, UpDownCounter},
+    KeyValue,
 };
+
+const NETWORK: &str = "network";
 
 #[derive(Clone)]
 pub struct MSDMetrics {
@@ -27,6 +30,14 @@ impl MSDMetrics {
             definitions,
             running_definition_metrics: RunningDefinitionsMetrics::new(),
         }
+    }
+
+    pub fn inc(&self, network: String) {
+        self.definitions.add(1, &[KeyValue::new(NETWORK, network)])
+    }
+
+    pub fn dec(&self, network: String) {
+        self.definitions.add(-1, &[KeyValue::new(NETWORK, network)])
     }
 }
 

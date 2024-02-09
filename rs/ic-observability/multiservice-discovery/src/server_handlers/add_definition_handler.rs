@@ -25,17 +25,18 @@ pub(super) async fn add_definition(
         Ok(def) => def,
         Err(e) => return bad_request(binding.log, rej, e),
     };
+    let new_name = new_definition.name.clone();
     match binding
         .supervisor
         .start(
             vec![new_definition],
             StartMode::AddToDefinitions,
-            binding.metrics.running_definition_metrics,
+            binding.metrics.running_definition_metrics.clone(),
         )
         .await
     {
         Ok(()) => {
-            binding.metrics.definitions.add(1, &vec![]);
+            binding.metrics.inc(new_name);
             ok(binding.log, format!("Definition {} added successfully", dname))
         }
         Err(e) => bad_request(binding.log, rej, e),
