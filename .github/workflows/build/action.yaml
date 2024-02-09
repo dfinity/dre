@@ -13,7 +13,7 @@ runs:
     - name: "Build and repin"
       id: build
       run: |
-        set -eExou pipefail
+        set -x
         function bazel_build_auto_repin() {
             local MYTMPDIR="$(mktemp -d)"
             trap 'rm -rf -- "$MYTMPDIR"' EXIT
