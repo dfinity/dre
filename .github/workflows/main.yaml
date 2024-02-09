@@ -25,6 +25,9 @@ jobs:
       # Build and test
       ########################################
       - name: "🚀 Building"
+        uses: ./.github/workflows/prepare-release
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -x
           function bazel_build_auto_repin() {
