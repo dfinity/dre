@@ -2,8 +2,8 @@ name: Build and repin
 description: Reusable action for building and repin with bazel
 
 inputs:
-  pat_workflow_push:
-    description: 'PAT for allowing workflows to run actions'
+  ssh_pk_workflow:
+    description: 'SSH pk for the repo allowing workflows to run actions'
     required: true
 
 runs:
