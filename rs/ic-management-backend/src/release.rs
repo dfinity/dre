@@ -506,7 +506,7 @@ impl RolloutState {
                         // Limit the stage size to the number of
                         MAX_ROLLOUT_STAGE_SIZE,
                         current_day_first_stage_size + i
-                        // Add 1 if not first stage of the day 
+                        // Add 1 if not first stage of the day
                         + std::cmp::min(self.rollout_days.iter().find(|rd| rd.date == day.date).expect("rollout day should exist").rollout_stages_subnets.len() + rollout_stages_sizes[i].len(), 1),
                     ),
                     // Limit the stage size to the number of available subnets
@@ -589,7 +589,7 @@ async fn get_update_states(
             count by (ic_subnet) (ic_replica_info{{ic="{network}", ic_active_version!="{version}"}})
                 /
             max by (ic_subnet) (consensus_dkg_current_committee_size{{ic="{network}"}})
-        , 
+        ,
             "{state_field}", "{preparing_state}", "", ""
         )
             or ignoring({state_field})
@@ -645,8 +645,8 @@ async fn get_update_states(
         period = Utc::now().timestamp() - since.timestamp(),
     );
     info!("release ({}) query: {}", release.commit_hash, query);
-    let response = prometheus_client.query(query, None, None).await?;
-    let results = response.as_instant().expect("Expected instant vector");
+    let response = prometheus_client.query(query).get().await?;
+    let results = response.data().as_vector().expect("Expected instant vector");
     Ok(results
         .iter()
         .filter_map(|r| {
