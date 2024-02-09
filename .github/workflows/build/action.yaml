@@ -27,21 +27,19 @@ runs:
             fi
             echo "repin=false" >> $GITHUB_OUTPUT
             return $r
-        }
-        echo "repin=false" >> $GITHUB_OUTPUT
-        
+        }        
         bazel_build_auto_repin build ...
       shell: bash
     
     - uses: actions/checkout@v4
-      if: ${{ steps.build.outputs.repin == 'true' }}"
+      if: ${{ steps.build.outputs.repin == 'true' }}
       with:
         ref: ${{ github.head_ref }}
         ssh-key: ${{ inputs.ssh_pk_workflow }}
         fetch-depth: 0
 
     - name: Commit files
-      if: ${{ steps.build.outputs.repin == 'true' }}"
+      if: ${{ steps.build.outputs.repin == 'true' }}
       run: |
         CARGO_BAZEL_REPIN=true bazel build ... || return $?
         git config --local user.email "github-actions[bot]@users.noreply.github.com"
@@ -50,7 +48,7 @@ runs:
       shell: bash
 
     - name: Push changes
-      if: ${{ steps.build.outputs.repin == 'true' }}"
+      if: ${{ steps.build.outputs.repin == 'true' }}
       uses: ad-m/github-push-action@master
       with:
         branch: ${{ github.head_ref }}
