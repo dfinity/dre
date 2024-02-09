@@ -9,7 +9,6 @@ inputs:
 runs:
   using: composite
   steps:
-
     - name: "Build and repin"
       id: build
       run: |
@@ -23,7 +22,7 @@ runs:
             if [ "$r" != "0" ]; then
                 if grep -q 'Digests do not match' "$logfile" ; then
                     echo "repin=true" >> $GITHUB_OUTPUT
-                    CARGO_BAZEL_REPIN=true bazel "$@" || return $?
+                    return 0
                 else
                     return $r
                 fi
@@ -32,11 +31,23 @@ runs:
         
         bazel_build_auto_repin build ...
       shell: bash
-
-    - name: Commit & Push changes
-      uses: actions-js/push@master
+    
+    - uses: actions/checkout@v4
       if: ${{ steps.build.outputs.repin == 'true' }}"
       with:
-        github_token: ${{ inputs.GITHUB_TOKEN }}
+        ref: ${{ github.head_ref }}
+        fetch-depth: 0
+
+    - name: Commit files
+      if: ${{ steps.build.outputs.repin == 'true' }}"
+      run: |
+        CARGO_BAZEL_REPIN=true bazel build ... || return $?
+        git config --local user.email "github-actions[bot]@users.noreply.github.com"
+        git config --local user.name "github-actions[bot]"
+        git commit -a -m "Github Action: Bazel Repin"
+
+    - name: Push changes
+      if: ${{ steps.build.outputs.repin == 'true' }}"
+      uses: ad-m/github-push-action@master
+      with:
         branch: ${{ github.head_ref }}
-        message: "Github Action: Bazel Repin"
