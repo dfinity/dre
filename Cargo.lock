@@ -2000,6 +2000,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b42b6fa04a440b495c8b04d0e71b707c585f83cb9cb28cf8cd0d976c315e31b4"
 dependencies = [
  "powerfmt",
+ "serde",
 ]
 
 [[package]]
@@ -2295,31 +2296,33 @@ dependencies = [
  "ic-interfaces-registry",
  "ic-management-backend",
  "ic-management-types",
+ "ic-nns-common",
  "ic-nns-constants",
  "ic-nns-governance",
  "ic-protobuf",
+ "ic-registry-keys",
  "ic-registry-local-registry",
+ "ic-registry-subnet-type",
  "ic-sys",
  "itertools 0.12.1",
  "keyring",
  "log",
  "pretty_env_logger",
+ "prost",
  "regex",
+ "registry-canister",
  "reqwest",
  "serde",
  "serde_json",
  "sha2 0.10.8",
- "shellexpand",
  "socket2 0.5.5",
  "spinners",
  "strum 0.25.0",
  "tabled",
  "tabular",
- "tempdir",
  "tempfile",
  "tokio",
  "url",
- "uuid",
  "wiremock",
 ]
 
@@ -2416,6 +2419,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7268b386296a025e474d5140678f75d6de9493ae55a5d709eeb9dd08149945e1"
 dependencies = [
  "cfg-if",
+]
+
+[[package]]
+name = "enum-as-inner"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5ffccbb6966c05b32ef8fbac435df276c4ae4d3dc55a8cd0eb9745e6c12f546a"
+dependencies = [
+ "heck",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.48",
 ]
 
 [[package]]
@@ -2660,12 +2675,6 @@ dependencies = [
  "libc",
  "winapi",
 ]
-
-[[package]]
-name = "fuchsia-cprng"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a06f77d526c1a601b7c4cdd98f54b5eaabffc14d5f2f0296febdc7f357c6d3ba"
 
 [[package]]
 name = "funty"
@@ -4373,7 +4382,7 @@ dependencies = [
  "itertools 0.12.1",
  "lazy_static",
  "log",
- "prometheus-http-query 0.4.2",
+ "prometheus-http-query 0.8.2",
  "regex",
  "registry-canister",
  "reqwest",
@@ -6905,10 +6914,11 @@ dependencies = [
 
 [[package]]
 name = "prometheus-http-query"
-version = "0.4.2"
+version = "0.6.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6886b96a7a96d2a7cc0a1d69b20fa083cf5792982afe799dcdd05468bc51f351"
+checksum = "6704e3a7a78545b1496524d518658005a6cc308abc90ce5fccf01891ecdc298b"
 dependencies = [
+ "mime",
  "reqwest",
  "serde",
  "serde_json",
@@ -6918,14 +6928,14 @@ dependencies = [
 
 [[package]]
 name = "prometheus-http-query"
-version = "0.6.7"
+version = "0.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6704e3a7a78545b1496524d518658005a6cc308abc90ce5fccf01891ecdc298b"
+checksum = "e0de773a6ba25c9164ed9d86d653a92fac759a6f0e683fd141d56bb96e80fd8b"
 dependencies = [
+ "enum-as-inner",
  "mime",
  "reqwest",
  "serde",
- "serde_json",
  "time",
  "url",
 ]
@@ -7036,19 +7046,6 @@ checksum = "dc33ff2d4973d518d823d61aa239014831e521c75da58e3df4840d3f47749d09"
 
 [[package]]
 name = "rand"
-version = "0.4.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "552840b97013b1a26992c11eac34bdd778e464601a4c2054b5f0bff7c6761293"
-dependencies = [
- "fuchsia-cprng",
- "libc",
- "rand_core 0.3.1",
- "rdrand",
- "winapi",
-]
-
-[[package]]
-name = "rand"
 version = "0.7.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6a6b1679d49b24bbfe0c803429aa1874472f50d9b363131f0e89fc356b544d03"
@@ -7093,21 +7090,6 @@ dependencies = [
 
 [[package]]
 name = "rand_core"
-version = "0.3.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7a6fdeb83b075e8266dcc8762c22776f6877a63111121f5f8c7411e5be7eed4b"
-dependencies = [
- "rand_core 0.4.2",
-]
-
-[[package]]
-name = "rand_core"
-version = "0.4.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9c33a3c44ca05fa6f1807d8e6743f3824e8509beca625669633be0acbdf509dc"
-
-[[package]]
-name = "rand_core"
 version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "90bde5296fc891b0cef12a6d03ddccc162ce7b2aff54160af9338f8d40df6d19"
@@ -7147,15 +7129,6 @@ name = "rangemap"
 version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "977b1e897f9d764566891689e642653e5ed90c6895106acd005eb4c1d0203991"
-
-[[package]]
-name = "rdrand"
-version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "678054eb77286b51581ba43620cc911abf02758c91f93f479767aed0f90458b2"
-dependencies = [
- "rand_core 0.3.1",
-]
 
 [[package]]
 name = "redox_syscall"
@@ -7268,15 +7241,6 @@ dependencies = [
  "serde",
  "serde_cbor",
  "url",
-]
-
-[[package]]
-name = "remove_dir_all"
-version = "0.5.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3acd125665422973a33ac9d3dd2df85edad0f4ae9b00dafb1a05e43a9f5ef8e7"
-dependencies = [
- "winapi",
 ]
 
 [[package]]
@@ -7904,15 +7868,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "24188a676b6ae68c3b2cb3a01be17fbf7240ce009799bb56d5b1409051e78fde"
 
 [[package]]
-name = "shellexpand"
-version = "3.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "da03fa3b94cc19e3ebfc88c4229c49d8f08cdbd1228870a45f0ffdf84988e14b"
-dependencies = [
- "dirs",
-]
-
-[[package]]
 name = "signal-hook-registry"
 version = "1.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -8359,16 +8314,6 @@ dependencies = [
  "filetime",
  "libc",
  "xattr",
-]
-
-[[package]]
-name = "tempdir"
-version = "0.3.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "15f2b5fb00ccdf689e0149d1b1b3c03fead81c2b37735d812fa8bddbbf41b6d8"
-dependencies = [
- "rand 0.4.6",
- "remove_dir_all",
 ]
 
 [[package]]

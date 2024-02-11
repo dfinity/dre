@@ -24,7 +24,9 @@ jobs:
       # Build and test
       ########################################
       - name: "🚀 Building"
-        run: bazel build ...
+        uses: ./.github/workflows/build
+        with:
+          ssh_pk_workflow: ${{ secrets.SSH_PK_WORKFLOW }}
       - run: bazel test ...
         name: "🚀 Testing"
 

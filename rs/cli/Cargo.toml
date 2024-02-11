@@ -27,16 +27,24 @@ futures = { workspace = true }
 ic-base-types = { workspace = true }
 ic-canister-client = { workspace = true }
 ic-canisters = { workspace = true }
+ic-interfaces-registry = { workspace = true }
 ic-management-backend = { workspace = true }
 ic-management-types = { workspace = true }
+ic-nns-common = { workspace = true }
 ic-nns-constants = { workspace = true }
 ic-nns-governance = { workspace = true }
+ic-protobuf = { workspace = true }
+ic-registry-keys = { workspace = true }
+ic-registry-local-registry = { workspace = true }
+ic-registry-subnet-type = { workspace = true }
 ic-sys = { workspace = true }
 itertools = { workspace = true }
 keyring = { workspace = true }
 log = { workspace = true }
 pretty_env_logger = { workspace = true }
+prost = { workspace = true }
 regex = { workspace = true }
+registry-canister = { workspace = true }
 reqwest = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
@@ -48,12 +56,6 @@ tabled = { workspace = true }
 tabular = { workspace = true }
 tokio = { workspace = true }
 url = { workspace = true }
-tempdir = "0.3"
-uuid = "1.7.0"
-shellexpand = "3.1.0"
-ic-registry-local-registry = { workspace = true }
-ic-protobuf = { workspace = true }
-ic-interfaces-registry = { workspace = true }
 
 [dev-dependencies]
 tempfile = "3.3.0"
