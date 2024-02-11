@@ -4,14 +4,11 @@ use clap::{error::ErrorKind, CommandFactory, Parser};
 use dotenv::dotenv;
 use ic_base_types::CanisterId;
 use ic_canisters::governance::governance_canister_version;
-use ic_management_backend::endpoints;
 use ic_management_types::requests::NodesRemoveRequest;
 use ic_management_types::{Artifact, MinNakamotoCoefficients, Network, NodeFeature, NodeGroupUpdate, NumberOfNodes};
 use log::info;
 use std::collections::BTreeMap;
 use std::str::FromStr;
-use std::sync::mpsc;
-use std::thread;
 
 mod cli;
 mod clients;
@@ -38,19 +35,7 @@ async fn main() -> Result<(), anyhow::Error> {
     let governance_canister_version = governance_canister_v.stringified_hash;
 
     let target_network = cli_opts.network.clone();
-    let (tx, rx) = mpsc::channel();
-
-    let backend_port = local_unused_port();
-    thread::spawn(move || {
-        let rt = tokio::runtime::Runtime::new().unwrap();
-        rt.block_on(async move {
-            endpoints::run_backend(target_network, "127.0.0.1", backend_port, true, Some(tx))
-                .await
-                .expect("failed")
-        });
-    });
-    let srv = rx.recv().unwrap();
-
+      
     ic_admin::with_ic_admin(governance_canister_version.into(), async {
 
         // Start of actually doing stuff with commands.
@@ -99,7 +84,7 @@ async fn main() -> Result<(), anyhow::Error> {
 
                 match &subnet.subcommand {
                     cli::subnet::Commands::Deploy { version } => {
-                        let runner = runner::Runner::new_with_network_url(cli::Cli::from_opts(&cli_opts, false).await?.into(), backend_port).await?;
+                        let runner = runner::Runner::new_with_network_url(cli::Cli::from_opts(&cli_opts, false).await?.into(), target_network.clone()).await?;
                         runner.deploy(&subnet.id.unwrap(), version, simulate)
                     },
                     cli::subnet::Commands::Replace {
@@ -113,7 +98,7 @@ async fn main() -> Result<(), anyhow::Error> {
                         min_nakamoto_coefficients,
                     } => {
                         let min_nakamoto_coefficients = parse_min_nakamoto_coefficients(&mut cmd, min_nakamoto_coefficients);
-                            let runner = runner::Runner::new_with_network_url(cli::Cli::from_opts(&cli_opts, true).await?.into(), backend_port).await?;
+                            let runner = runner::Runner::new_with_network_url(cli::Cli::from_opts(&cli_opts, true).await?.into(), target_network.clone()).await?;
                             runner
                                 .membership_replace(ic_management_types::requests::MembershipReplaceRequest {
                                     target: match &subnet.id {
@@ -146,7 +131,7 @@ async fn main() -> Result<(), anyhow::Error> {
                     }
                     cli::subnet::Commands::Resize { add, remove, include, only, exclude, motivation, } => {
                         if let Some(motivation) = motivation.clone() {
-                            let runner = runner::Runner::new_with_network_url(cli::Cli::from_opts(&cli_opts, true).await?.into(), backend_port).await?;
+                            let runner = runner::Runner::new_with_network_url(cli::Cli::from_opts(&cli_opts, true).await?.into(), target_network.clone()).await?;
                             runner.subnet_resize(ic_management_types::requests::SubnetResizeRequest {
                                 subnet: subnet.id.unwrap(),
                                 add: *add,
@@ -166,7 +151,7 @@ async fn main() -> Result<(), anyhow::Error> {
                     cli::subnet::Commands::Create { size, min_nakamoto_coefficients, exclude, only, include, motivation, replica_version } => {
                         let min_nakamoto_coefficients = parse_min_nakamoto_coefficients(&mut cmd, min_nakamoto_coefficients);
                         if let Some(motivation) = motivation.clone() {
-                            let runner = runner::Runner::new_with_network_url(cli::Cli::from_opts(&cli_opts, true).await?.into(), backend_port).await?;
+                            let runner = runner::Runner::new_with_network_url(cli::Cli::from_opts(&cli_opts, true).await?.into(), target_network.clone()).await?;
                             runner.subnet_create(ic_management_types::requests::SubnetCreateRequest {
                                 size: *size,
                                 min_nakamoto_coefficients,
@@ -203,7 +188,7 @@ async fn main() -> Result<(), anyhow::Error> {
             cli::Commands::Version(version_command) => {
                 match &version_command {
                     cli::version::Cmd::Update(update_command) => {
-                        let runner = runner::Runner::new_with_network_url(cli::Cli::from_opts(&cli_opts, true).await?.into(), backend_port).await?;
+                        let runner = runner::Runner::new_with_network_url(cli::Cli::from_opts(&cli_opts, true).await?.into(), target_network.clone()).await?;
                         let ic_admin: IcAdminWrapper = cli::Cli::from_opts(&cli_opts, true).await?.into();
                         let release_artifact: &Artifact = &update_command.subcommand.clone().into();
 
@@ -234,13 +219,13 @@ async fn main() -> Result<(), anyhow::Error> {
             cli::Commands::Hostos(nodes) => {
                 match &nodes.subcommand {
                     cli::hostos::Commands::Rollout { version,nodes} => {
-                        let runner = runner::Runner::new_with_network_url(cli::Cli::from_opts(&cli_opts, true).await?.into(), backend_port).await?;
+                        let runner = runner::Runner::new_with_network_url(cli::Cli::from_opts(&cli_opts, true).await?.into(), target_network.clone()).await?;
                         runner.hostos_rollout(nodes.clone(), version, simulate, None).await
                     },
                     cli::hostos::Commands::RolloutFromNodeGroup {version, assignment, owner, nodes_in_group, exclude } => {
                         let update_group  = NodeGroupUpdate::new(*assignment, *owner, NumberOfNodes::from_str(nodes_in_group)?);
-                        let runner = runner::Runner::new_with_network_url(cli::Cli::from_opts(&cli_opts, true).await?.into(), backend_port).await?;
-                        if let Some((nodes_to_update, summary)) = runner.hostos_rollout_nodes(update_group, version, exclude).await? {
+                        let runner = runner::Runner::new_with_network_url(cli::Cli::from_opts(&cli_opts, true).await?.into(), target_network.clone()).await?;
+                        if let Some((nodes_to_update, summary)) = runner.hostos_rollout_node_group(update_group, version, exclude).await? {
                             return runner.hostos_rollout(nodes_to_update, version, simulate, Some(summary)).await
                         }
                         Ok(())
@@ -257,7 +242,7 @@ async fn main() -> Result<(), anyhow::Error> {
                             )
                             .exit();
                         }
-                        let runner = runner::Runner::new_with_network_url(cli::Cli::from_opts(&cli_opts, true).await?.into(), backend_port).await?;
+                        let runner = runner::Runner::new_with_network_url(cli::Cli::from_opts(&cli_opts, true).await?.into(), target_network.clone()).await?;
                         runner.remove_nodes(NodesRemoveRequest {
                             extra_nodes_filter: extra_nodes_filter.clone(),
                             no_auto: *no_auto,
@@ -291,9 +276,6 @@ async fn main() -> Result<(), anyhow::Error> {
         }
     })
     .await?;
-
-    srv.stop(false).await;
-
     Ok(())
 }
 

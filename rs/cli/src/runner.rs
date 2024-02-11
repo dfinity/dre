@@ -1,21 +1,24 @@
 use crate::clients::DashboardBackendClient;
-use crate::ic_admin;
+use crate::{ic_admin, local_unused_port};
 use crate::ic_admin::ProposeOptions;
 use crate::ops_subnet_node_replace;
 use decentralization::SubnetChangeResponse;
 use ic_base_types::PrincipalId;
-use ic_management_types::requests::{HostosRolloutRequest, HostosRolloutResponse, NodesRemoveRequest};
-use ic_management_types::{Artifact, Node, NodeFeature, NodeGroupUpdate};
+use ic_management_backend::public_dashboard::query_ic_dashboard_list;
+use ic_management_backend::{hostos_rollout, proposal};
+use ic_management_backend::registry::{self, RegistryState};
+use ic_management_types::requests::{ HostosRolloutResponse, NodesRemoveRequest};
+use ic_management_types::{Artifact, Network, Node, NodeFeature, NodeGroupUpdate, NodeProvidersResponse};
 use itertools::Itertools;
 use log::{info, warn};
 use std::collections::BTreeMap;
 use tabled::builder::Builder;
 use tabled::settings::Style;
 
-#[derive(Clone)]
 pub struct Runner {
     ic_admin: ic_admin::IcAdminWrapper,
-    dashboard_backend_client: DashboardBackendClient,
+    registry: RegistryState,
+    dashboard_backend_client: DashboardBackendClient
 }
 
 impl Runner {
@@ -175,12 +178,19 @@ impl Runner {
             .map_err(|e| anyhow::anyhow!(e))
     }
 
-    pub async fn new_with_network_url(ic_admin: ic_admin::IcAdminWrapper, backend_port: u16) -> anyhow::Result<Self> {
-        let dashboard_backend_client =
-            DashboardBackendClient::new_with_network_url(format!("http://localhost:{}/", backend_port));
+    pub async fn new_with_network_url(ic_admin: ic_admin::IcAdminWrapper, network: Network) -> anyhow::Result<Self> {
+        let backend_port = local_unused_port();
+        let dashboard_backend_client = DashboardBackendClient::new_with_network_url(format!("http://localhost:{}/", backend_port));
+        let mut registry = registry::RegistryState::new(network, true).await;
+        let node_providers = query_ic_dashboard_list::<NodeProvidersResponse>("v3/node-providers").await?.node_providers;
+        let _ = registry
+            .update_node_details(&node_providers)
+            .await?;
+
         Ok(Self {
             ic_admin,
-            dashboard_backend_client,
+            registry,
+            dashboard_backend_client
         })
     }
 
@@ -256,31 +266,29 @@ impl Runner {
             })
     }
 
-    pub(crate) async fn hostos_rollout_nodes(
+    pub(crate) async fn hostos_rollout_node_group(
         &self,
         node_group: NodeGroupUpdate,
         version: &String,
         exclude: &Option<Vec<PrincipalId>>,
     ) -> anyhow::Result<Option<(Vec<PrincipalId>, String)>> {
-        let maybe_elected_versions = self
-            .dashboard_backend_client
-            .get_blessed_versions(&Artifact::HostOs)
-            .await?;
-        if let Some(elected_versions) = maybe_elected_versions {
-            if !elected_versions.contains(&version.to_string()) {
-                return Err(anyhow::anyhow!(format!(
-                    "The version {} has not being elected.\nVersions elected are: {:?}",
-                    version, elected_versions,
-                )));
-            }
+        let elected_versions =self.registry.blessed_versions(&Artifact::HostOs).await.unwrap();
+        if !elected_versions.contains(&version.to_string()) {
+            return Err(anyhow::anyhow!(format!(
+                "The version {} has not being elected.\nVersions elected are: {:?}",
+                version, elected_versions,
+            )));
         }
-        let request = HostosRolloutRequest {
-            exclude: exclude.clone(),
-            version: version.to_string(),
-            node_group,
-        };
+        let hostos_rollout = hostos_rollout::HostosRollout::new(
+            self.registry.nodes(),
+            self.registry.subnets(),
+            self.registry.network(),
+            proposal::ProposalAgent::new(self.registry.nns_url()),
+            &version,
+            &exclude,
+        );
 
-        match self.dashboard_backend_client.hostos_rollout_nodes(request).await? {
+        match hostos_rollout.execute(node_group).await? {
             HostosRolloutResponse::Ok(nodes_to_update, maybe_subnets_affected) => {
                 let mut summary = "## List of nodes\n".to_string();
                 let mut builder_dc = Builder::default();
@@ -369,6 +377,7 @@ impl Runner {
             }
         }
     }
+
     pub async fn hostos_rollout(
         &self,
         nodes: Vec<PrincipalId>,
