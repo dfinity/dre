@@ -1,6 +1,6 @@
 use std::{collections::HashMap, sync::Arc};
 
-use opentelemetry::{global, KeyValue};
+use opentelemetry::{global, metrics::Observer, KeyValue};
 use std::sync::Mutex;
 
 const NETWORK: &str = "network";
@@ -57,82 +57,47 @@ impl RunningDefinitionsMetrics {
             .u64_observable_gauge("msd.definitions.load.errors")
             .with_description("Total number of errors while loading new targets per definition")
             .init();
-
         let sync_registry_error = meter
             .u64_observable_gauge("msd.definitions.sync.errors")
             .with_description("Total number of errors while syncing the registry per definition")
             .init();
-
         let definitions_load_successful = meter
             .u64_observable_gauge("msd.definitions.load.successful")
             .with_description("Status of last load of the registry per definition")
             .init();
-
         let definitions_sync_successful = meter
             .u64_observable_gauge("msd.definitions.sync.successful")
             .with_description("Status of last sync of the registry with NNS of definition")
             .init();
+        let instruments = [
+            load_new_targets_error.as_any(),
+            sync_registry_error.as_any(),
+            definitions_load_successful.as_any(),
+            definitions_sync_successful.as_any(),
+        ];
 
         let latest_values_arc = Arc::new(Mutex::new(LatestValuesByNetwork::new()));
-
         let s = latest_values_arc.clone();
-        meter
-            .register_callback(&[load_new_targets_error.as_any()], move |observer| {
-                // We blocking-lock because this is not async code, and this code
-                // does not need to be async, since it just needs to read local data.
-                // C.f. https://docs.rs/tokio/1.24.2/tokio/sync/struct.Mutex.html#method.blocking_lock
-                let l = s.lock().unwrap();
-                for (network, seen_value) in l.iter() {
-                    observer.observe_u64(
-                        &load_new_targets_error,
-                        seen_value.load_new_targets_error,
-                        &[KeyValue::new(NETWORK, network.clone())],
-                    )
+        let update_instruments = move |observer: &dyn Observer| {
+            // We blocking-lock because this is not async code, and this code
+            // does not need to be async, since it just needs to read local data.
+            // C.f. https://docs.rs/tokio/1.24.2/tokio/sync/struct.Mutex.html#method.blocking_lock
+            let l = s.lock().unwrap();
+            for (network, latest_values) in l.iter() {
+                let attrs = [KeyValue::new(NETWORK, network.clone())];
+                for (instrument, measurement) in [
+                    (&load_new_targets_error, latest_values.load_new_targets_error),
+                    (&sync_registry_error, latest_values.sync_registry_error),
+                    (&definitions_load_successful, latest_values.definitions_load_successful),
+                    (&definitions_sync_successful, latest_values.definitions_sync_successful),
+                ]
+                .into_iter()
+                {
+                    observer.observe_u64(instrument, measurement, &attrs)
                 }
-            })
-            .unwrap();
-
-        let s = latest_values_arc.clone();
-        meter
-            .register_callback(&[sync_registry_error.as_any()], move |observer| {
-                let l = s.lock().unwrap();
-                for (network, seen_value) in l.iter() {
-                    observer.observe_u64(
-                        &sync_registry_error,
-                        seen_value.sync_registry_error,
-                        &[KeyValue::new(NETWORK, network.clone())],
-                    )
-                }
-            })
-            .unwrap();
-
-        let s = latest_values_arc.clone();
-        meter
-            .register_callback(&[definitions_load_successful.as_any()], move |observer| {
-                let l = s.lock().unwrap();
-                for (network, seen_value) in l.iter() {
-                    observer.observe_u64(
-                        &definitions_load_successful,
-                        seen_value.definitions_load_successful,
-                        &[KeyValue::new(NETWORK, network.clone())],
-                    )
-                }
-            })
-            .unwrap();
-
-        let s = latest_values_arc.clone();
-        meter
-            .register_callback(&[definitions_sync_successful.as_any()], move |observer| {
-                let l = s.lock().unwrap();
-                for (network, seen_value) in l.iter() {
-                    observer.observe_u64(
-                        &definitions_sync_successful,
-                        seen_value.definitions_sync_successful,
-                        &[KeyValue::new(NETWORK, network.clone())],
-                    )
-                }
-            })
-            .unwrap();
+            }
+        };
+        meter.register_callback(&instruments, update_instruments).unwrap();
 
         Self {
             latest_values: latest_values_arc,
