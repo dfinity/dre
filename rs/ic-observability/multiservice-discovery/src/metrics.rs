@@ -1,16 +1,18 @@
+use std::{collections::HashMap, sync::Arc};
+
 use opentelemetry::{
     global,
-    metrics::{Counter, ObservableGauge, UpDownCounter},
+    metrics::{CallbackRegistration, Counter, ObservableGauge},
     KeyValue,
 };
-use slog::{error, Logger};
+use slog::{error, info, Logger};
+use tokio::sync::Mutex;
 
 const NETWORK: &str = "network";
 const AXUM_APP: &str = "axum-app";
 
 #[derive(Clone)]
 pub struct MSDMetrics {
-    pub definitions: UpDownCounter<i64>,
     pub running_definition_metrics: RunningDefinitionsMetrics,
 }
 
@@ -22,24 +24,9 @@ impl Default for MSDMetrics {
 
 impl MSDMetrics {
     pub fn new() -> Self {
-        let meter = global::meter(AXUM_APP);
-        let definitions = meter
-            .i64_up_down_counter("msd.definitions")
-            .with_description("Total number of definitions that multiservice discovery is scraping")
-            .init();
-
         Self {
-            definitions,
             running_definition_metrics: RunningDefinitionsMetrics::new(),
         }
-    }
-
-    pub fn inc(&self, network: String) {
-        self.definitions.add(1, &[KeyValue::new(NETWORK, network)])
-    }
-
-    pub fn dec(&self, network: String) {
-        self.definitions.add(-1, &[KeyValue::new(NETWORK, network)])
     }
 }
 
@@ -50,6 +37,8 @@ pub struct RunningDefinitionsMetrics {
 
     pub sync_registry_error: Counter<u64>,
     pub definitions_sync_successful: ObservableGauge<i64>,
+
+    pub definition_callbacks: Arc<Mutex<HashMap<String, Vec<Box<dyn CallbackRegistration>>>>>,
 }
 
 impl RunningDefinitionsMetrics {
@@ -80,52 +69,102 @@ impl RunningDefinitionsMetrics {
             definitions_load_successful,
             sync_registry_error,
             definitions_sync_successful,
+            definition_callbacks: Arc::new(Mutex::new(HashMap::new())),
         }
     }
 
-    pub fn set_successful_sync(&self, network: String, logger: Logger) {
-        self.set_sync_callback(network, logger, 1)
+    pub async fn set_successful_sync(&mut self, network: String, logger: Logger) {
+        Self::set_callback(
+            network,
+            logger,
+            1,
+            &self.definitions_sync_successful,
+            &self.definition_callbacks,
+        )
+        .await
     }
 
-    pub fn set_failed_sync(&mut self, network: String, logger: Logger) {
-        self.set_sync_callback(network, logger, 0)
+    pub async fn set_failed_sync(&mut self, network: String, logger: Logger) {
+        Self::set_callback(
+            network,
+            logger,
+            0,
+            &self.definitions_sync_successful,
+            &self.definition_callbacks,
+        )
+        .await
     }
 
-    fn set_sync_callback(&self, network: String, logger: Logger, status: i64) {
+    pub async fn set_successful_load(&mut self, network: String, logger: Logger) {
+        Self::set_callback(
+            network,
+            logger,
+            1,
+            &self.definitions_load_successful,
+            &self.definition_callbacks,
+        )
+        .await
+    }
+
+    pub async fn set_failed_load(&mut self, network: String, logger: Logger) {
+        Self::set_callback(
+            network,
+            logger,
+            0,
+            &self.definitions_load_successful,
+            &self.definition_callbacks,
+        )
+        .await
+    }
+
+    async fn set_callback(
+        network: String,
+        logger: Logger,
+        status: i64,
+        gague: &ObservableGauge<i64>,
+        callbacks: &Arc<Mutex<HashMap<String, Vec<Box<dyn CallbackRegistration>>>>>,
+    ) {
         let meter = global::meter(AXUM_APP);
         let network_clone = network.clone();
-        let local_clone = self.definitions_sync_successful.clone();
+        let local_clone = gague.clone();
 
-        if let Err(e) = meter.register_callback(&[local_clone.as_any()], move |observer| {
+        match meter.register_callback(&[local_clone.as_any()], move |observer| {
             observer.observe_i64(&local_clone, status, &[KeyValue::new(NETWORK, network.clone())])
         }) {
-            error!(
+            Ok(callback) => {
+                info!(logger, "Registering callback for '{}'", &network_clone);
+                let mut locked = callbacks.lock().await;
+
+                if let Some(definition) = locked.get_mut(&network_clone) {
+                    definition.push(callback)
+                } else {
+                    locked.insert(network_clone, vec![callback]);
+                }
+            }
+            Err(e) => error!(
                 logger,
                 "Couldn't register callback for network '{}': {:?}", network_clone, e
-            )
-        };
+            ),
+        }
     }
 
-    pub fn set_successful_load(&mut self, network: String, logger: Logger) {
-        self.set_load_callback(network, logger, 1)
-    }
+    pub async fn unregister_callback(&self, network: String, logger: Logger) {
+        let mut locked = self.definition_callbacks.lock().await;
 
-    pub fn set_failed_load(&mut self, network: String, logger: Logger) {
-        self.set_load_callback(network, logger, 0)
-    }
-
-    fn set_load_callback(&self, network: String, logger: Logger, status: i64) {
-        let meter = global::meter(AXUM_APP);
-        let network_clone = network.clone();
-        let local_clone = self.definitions_load_successful.clone();
-
-        if let Err(e) = meter.register_callback(&[local_clone.as_any()], move |observer| {
-            observer.observe_i64(&local_clone, status, &[KeyValue::new(NETWORK, network.clone())])
-        }) {
+        if let Some(callbacks) = locked.remove(&network) {
+            for mut callback in callbacks {
+                if let Err(e) = callback.unregister() {
+                    error!(
+                        logger,
+                        "Couldn't unregister callback for network '{}': {:?}", network, e
+                    )
+                }
+            }
+        } else {
             error!(
                 logger,
-                "Couldn't register callback for network '{}': {:?}", network_clone, e
+                "Couldn't unregister callbacks for network '{}': key not found", &network
             )
-        };
+        }
     }
 }

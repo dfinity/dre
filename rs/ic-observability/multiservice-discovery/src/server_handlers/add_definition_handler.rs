@@ -25,7 +25,6 @@ pub(super) async fn add_definition(
         Ok(def) => def,
         Err(e) => return bad_request(binding.log, rej, e),
     };
-    let new_name = new_definition.name.clone();
     match binding
         .supervisor
         .start(
@@ -35,10 +34,7 @@ pub(super) async fn add_definition(
         )
         .await
     {
-        Ok(()) => {
-            binding.metrics.inc(new_name);
-            ok(binding.log, format!("Definition {} added successfully", dname))
-        }
+        Ok(()) => ok(binding.log, format!("Definition {} added successfully", dname)),
         Err(e) => bad_request(binding.log, rej, e),
     }
 }

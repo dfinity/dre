@@ -292,10 +292,13 @@ impl RunningDefinition {
                 self.metrics
                     .load_new_targets_error
                     .add(1, &[KeyValue::new("network", self.name())]);
-                self.metrics.set_failed_load(self.name(), self.definition.log.clone())
+                self.metrics
+                    .set_failed_load(self.name(), self.definition.log.clone())
+                    .await
             } else {
                 self.metrics
                     .set_successful_load(self.name(), self.definition.log.clone())
+                    .await
             }
             debug!(self.definition.log, "Update registries for {}", self.definition.name);
             if let Err(e) = self.definition.ic_discovery.update_registries().await {
@@ -306,10 +309,13 @@ impl RunningDefinition {
                 self.metrics
                     .sync_registry_error
                     .add(1, &[KeyValue::new("network", self.name())]);
-                self.metrics.set_failed_sync(self.name(), self.definition.log.clone())
+                self.metrics
+                    .set_failed_sync(self.name(), self.definition.log.clone())
+                    .await
             } else {
                 self.metrics
                     .set_successful_sync(self.name(), self.definition.log.clone())
+                    .await
             }
 
             tick = crossbeam::select! {
@@ -588,13 +594,7 @@ impl DefinitionsSupervisor {
     }
 
     pub(crate) async fn definition_names(&self) -> Vec<String> {
-        self.definitions
-            .lock()
-            .await
-            .clone()
-            .into_iter()
-            .map(|(name, _)| name)
-            .collect()
+        self.definitions.lock().await.clone().into_keys().collect()
     }
 
     /// Stop all definitions and end.

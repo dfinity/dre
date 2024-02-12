@@ -10,8 +10,12 @@ pub(super) async fn delete_definition(
 ) -> Result<String, (StatusCode, String)> {
     match binding.supervisor.stop(vec![name.clone()]).await {
         Ok(_) => {
-            binding.metrics.dec(name.clone());
-            Ok(format!("Deleted definition {}", name.clone()))
+            binding
+                .metrics
+                .running_definition_metrics
+                .unregister_callback(name.clone(), binding.log)
+                .await;
+            Ok(format!("Deleted definition {}", name))
         }
         Err(e) => match e.errors.into_iter().next().unwrap() {
             StopDefinitionError::DoesNotExist(e) => {

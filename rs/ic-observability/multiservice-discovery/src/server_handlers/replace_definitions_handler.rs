@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum::Json;
@@ -51,21 +53,23 @@ pub(super) async fn replace_definitions(
     match binding
         .supervisor
         .start(
-            new_definitions,
+            new_definitions.clone(),
             StartMode::ReplaceExistingDefinitions,
             binding.metrics.running_definition_metrics.clone(),
         )
         .await
     {
         Ok(_) => {
-            // Reset the metric to 0 and reinit it to correct count of definition targets
-            old_names.into_iter().for_each(|n| binding.metrics.dec(n));
-            binding
-                .supervisor
-                .definition_names()
-                .await
-                .into_iter()
-                .for_each(|n| binding.metrics.inc(n));
+            let old_set: HashSet<String> = old_names.iter().cloned().collect();
+            let new_set: HashSet<String> = new_definitions.iter().cloned().map(|d| d.name).collect();
+            let difference = old_set.difference(&new_set);
+            for network in difference {
+                binding
+                    .metrics
+                    .running_definition_metrics
+                    .unregister_callback(network.clone(), binding.log.clone())
+                    .await
+            }
             ok(
                 binding.log,
                 format!("Added new definitions {} to existing ones", dnames),
