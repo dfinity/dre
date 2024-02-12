@@ -64,7 +64,7 @@ pub(crate) struct Server {
     poll_interval: Duration,
     registry_query_timeout: Duration,
     registry_path: PathBuf,
-    pub metrics: MSDMetrics,
+    metrics: MSDMetrics,
 }
 
 impl Server {

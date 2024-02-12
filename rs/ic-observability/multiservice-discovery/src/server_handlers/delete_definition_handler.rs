@@ -9,14 +9,7 @@ pub(super) async fn delete_definition(
     State(binding): State<Server>,
 ) -> Result<String, (StatusCode, String)> {
     match binding.supervisor.stop(vec![name.clone()]).await {
-        Ok(_) => {
-            binding
-                .metrics
-                .running_definition_metrics
-                .unregister_callback(name.clone(), binding.log)
-                .await;
-            Ok(format!("Deleted definition {}", name))
-        }
+        Ok(_) => Ok(format!("Deleted definition {}", name)),
         Err(e) => match e.errors.into_iter().next().unwrap() {
             StopDefinitionError::DoesNotExist(e) => {
                 not_found(binding.log, format!("Definition with name '{}' doesn't exist", name), e)

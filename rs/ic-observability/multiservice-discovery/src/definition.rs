@@ -214,25 +214,6 @@ impl Definition {
 }
 
 impl RunningDefinition {
-    pub(crate) async fn end(&mut self) {
-        let mut ender = self.ender.lock().await;
-        if let Some(s) = ender.take() {
-            // We have pulled out the channel from its container.  After this,
-            // all senders will have been dropped, and no more messages can be sent.
-            // https://docs.rs/crossbeam/latest/crossbeam/channel/index.html#disconnection
-            info!(
-                self.definition.log,
-                "Sending termination signal to definition {}", self.definition.name
-            );
-            s.stop_signal_sender.send(()).unwrap();
-            info!(
-                self.definition.log,
-                "Joining definition {} thread", self.definition.name
-            );
-            s.join_handle.join().unwrap();
-        }
-    }
-
     pub(crate) fn get_target_groups(
         &self,
         job_type: JobType,
@@ -253,6 +234,9 @@ impl RunningDefinition {
             self.definition.registry_path.display()
         );
 
+        // FIXME: sync_local_registry() needs to update the metrics just
+        // as poll_loop() does.  Otherwise an initially hung or failed
+        // sync_local_registry() is going to give false results.
         let r = sync_local_registry(
             self.definition.log.clone(),
             self.definition.registry_path.join("targets"),
@@ -263,10 +247,12 @@ impl RunningDefinition {
         )
         .await;
         match r {
-            Ok(_) => info!(
-                self.definition.log,
-                "Syncing local registry for {} completed", self.definition.name,
-            ),
+            Ok(_) => {
+                info!(
+                    self.definition.log,
+                    "Syncing local registry for {} completed", self.definition.name,
+                )
+            }
             Err(_) => warn!(
                 self.definition.log,
                 "Interrupted initial sync of definition {}", self.definition.name
@@ -288,16 +274,10 @@ impl RunningDefinition {
                     self.definition.log,
                     "Failed to load new scraping targets for {} @ interval {:?}: {:?}", self.definition.name, tick, e
                 );
-                self.metrics
-                    .inc_load_errors(self.name(), self.definition.log.clone())
-                    .await;
-                self.metrics
-                    .set_failed_load(self.name(), self.definition.log.clone())
-                    .await
+                self.metrics.inc_load_errors(self.name());
+                self.metrics.set_failed_load(self.name())
             } else {
-                self.metrics
-                    .set_successful_load(self.name(), self.definition.log.clone())
-                    .await
+                self.metrics.set_successful_load(self.name())
             }
             debug!(self.definition.log, "Update registries for {}", self.definition.name);
             if let Err(e) = self.definition.ic_discovery.update_registries().await {
@@ -305,16 +285,10 @@ impl RunningDefinition {
                     self.definition.log,
                     "Failed to sync registry for {} @ interval {:?}: {:?}", self.definition.name, tick, e
                 );
-                self.metrics
-                    .inc_sync_errors(self.name(), self.definition.log.clone())
-                    .await;
-                self.metrics
-                    .set_failed_sync(self.name(), self.definition.log.clone())
-                    .await
+                self.metrics.inc_sync_errors(self.name());
+                self.metrics.set_failed_sync(self.name())
             } else {
-                self.metrics
-                    .set_successful_sync(self.name(), self.definition.log.clone())
-                    .await
+                self.metrics.set_successful_sync(self.name())
             }
 
             tick = crossbeam::select! {
@@ -325,28 +299,6 @@ impl RunningDefinition {
                 recv(interval) -> msg => msg.expect("tick failed!")
             }
         }
-    }
-
-    // Syncs the registry and keeps running, syncing as new
-    // registry versions come in.
-    async fn run(&mut self) {
-        if self.initial_registry_sync().await.is_err() {
-            // FIXME: Error has been logged, but ideally, it should be handled.
-            // E.g. telemetry should collect this.
-            return;
-        }
-
-        info!(
-            self.definition.log,
-            "Starting to watch for changes for definition {}", self.definition.name
-        );
-
-        self.poll_loop().await;
-
-        // We used to delete storage here, but that was unsafe
-        // because another definition may be started in its name,
-        // so it is racy to delete the folder it will be using.
-        // So we no longer delete storage here.
     }
 
     pub(crate) async fn add_boundary_node(&mut self, target: BoundaryNode) -> Result<(), BoundaryNodeAlreadyExists> {
@@ -361,6 +313,50 @@ impl RunningDefinition {
                 Ok(())
             }
             _ => Ok(()), // Ended.  Do nothing.
+        }
+    }
+
+    // Syncs the registry and keeps running, syncing as new
+    // registry versions come in.
+    async fn run(&mut self) {
+        if self.initial_registry_sync().await.is_err() {
+            // Initial sync was interrupted.
+            self.metrics.set_ended(self.name());
+            return;
+        }
+        self.metrics.set_successful_sync(self.name());
+
+        info!(
+            self.definition.log,
+            "Starting to watch for changes for definition {}", self.definition.name
+        );
+
+        self.poll_loop().await;
+
+        self.metrics.set_ended(self.name());
+
+        // We used to delete storage here, but that was unsafe
+        // because another definition may be started in its name,
+        // so it is racy to delete the folder it will be using.
+        // So we no longer delete storage here.
+    }
+
+    pub(crate) async fn end(&mut self) {
+        let mut ender = self.ender.lock().await;
+        if let Some(s) = ender.take() {
+            // We have pulled out the channel from its container.  After this,
+            // all senders will have been dropped, and no more messages can be sent.
+            // https://docs.rs/crossbeam/latest/crossbeam/channel/index.html#disconnection
+            info!(
+                self.definition.log,
+                "Sending termination signal to definition {}", self.definition.name
+            );
+            s.stop_signal_sender.send(()).unwrap();
+            info!(
+                self.definition.log,
+                "Joining definition {} thread", self.definition.name
+            );
+            s.join_handle.join().unwrap();
         }
     }
 
@@ -590,10 +586,6 @@ impl DefinitionsSupervisor {
     ) -> Result<(), StartDefinitionsError> {
         let mut existing = self.definitions.lock().await;
         self.start_inner(&mut existing, definitions, start_mode, metrics).await
-    }
-
-    pub(crate) async fn definition_names(&self) -> Vec<String> {
-        self.definitions.lock().await.clone().into_keys().collect()
     }
 
     /// Stop all definitions and end.
