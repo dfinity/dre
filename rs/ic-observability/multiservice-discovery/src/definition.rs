@@ -214,6 +214,25 @@ impl Definition {
 }
 
 impl RunningDefinition {
+    pub(crate) async fn end(&mut self) {
+        let mut ender = self.ender.lock().await;
+        if let Some(s) = ender.take() {
+            // We have pulled out the channel from its container.  After this,
+            // all senders will have been dropped, and no more messages can be sent.
+            // https://docs.rs/crossbeam/latest/crossbeam/channel/index.html#disconnection
+            info!(
+                self.definition.log,
+                "Sending termination signal to definition {}", self.definition.name
+            );
+            s.stop_signal_sender.send(()).unwrap();
+            info!(
+                self.definition.log,
+                "Joining definition {} thread", self.definition.name
+            );
+            s.join_handle.join().unwrap();
+        }
+    }
+
     pub(crate) fn get_target_groups(
         &self,
         job_type: JobType,
@@ -339,25 +358,6 @@ impl RunningDefinition {
         // because another definition may be started in its name,
         // so it is racy to delete the folder it will be using.
         // So we no longer delete storage here.
-    }
-
-    pub(crate) async fn end(&mut self) {
-        let mut ender = self.ender.lock().await;
-        if let Some(s) = ender.take() {
-            // We have pulled out the channel from its container.  After this,
-            // all senders will have been dropped, and no more messages can be sent.
-            // https://docs.rs/crossbeam/latest/crossbeam/channel/index.html#disconnection
-            info!(
-                self.definition.log,
-                "Sending termination signal to definition {}", self.definition.name
-            );
-            s.stop_signal_sender.send(()).unwrap();
-            info!(
-                self.definition.log,
-                "Joining definition {} thread", self.definition.name
-            );
-            s.join_handle.join().unwrap();
-        }
     }
 
     pub fn name(&self) -> String {
