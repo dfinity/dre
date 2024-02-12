@@ -255,7 +255,9 @@ impl RunningDefinition {
 
         // FIXME: sync_local_registry() needs to update the metrics just
         // as poll_loop() does.  Otherwise an initially hung or failed
-        // sync_local_registry() is going to give false results.
+        // sync_local_registry() is not going to be trackable via metrics.
+        // Right now, the callee simply says metrics sync successful once
+        // this function returns.
         let r = sync_local_registry(
             self.definition.log.clone(),
             self.definition.registry_path.join("targets"),
