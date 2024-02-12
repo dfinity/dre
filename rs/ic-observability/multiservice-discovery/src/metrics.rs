@@ -64,36 +64,38 @@ pub struct InstrumentCollection {
 
 impl InstrumentCollection {
     fn new(meter: Meter) -> Self {
-        let load_new_targets_error = meter
-            .u64_observable_gauge("msd.definitions.load.errors")
-            .with_description("Total number of errors while loading new targets per definition")
-            .init();
-        let sync_registry_error = meter
-            .u64_observable_gauge("msd.definitions.sync.errors")
-            .with_description("Total number of errors while syncing the registry per definition")
-            .init();
-        let definitions_load_successful = meter
-            .u64_observable_gauge("msd.definitions.load.successful")
-            .with_description("Status of last load of the registry per definition")
-            .init();
-        let definitions_sync_successful = meter
-            .u64_observable_gauge("msd.definitions.sync.successful")
-            .with_description("Status of last sync of the registry with NNS of definition")
-            .init();
         Self {
-            meter,
-            load_new_targets_error,
-            sync_registry_error,
-            definitions_load_successful,
-            definitions_sync_successful,
+            meter: meter.clone(),
+            load_new_targets_error: meter
+                .clone()
+                .u64_observable_gauge("msd.definitions.load.errors")
+                .with_description("Total number of errors while loading new targets per definition")
+                .init(),
+            sync_registry_error: meter
+                .clone()
+                .u64_observable_gauge("msd.definitions.sync.errors")
+                .with_description("Total number of errors while syncing the registry per definition")
+                .init(),
+            definitions_load_successful: meter
+                .clone()
+                .u64_observable_gauge("msd.definitions.load.successful")
+                .with_description("Status of last load of the registry per definition")
+                .init(),
+            definitions_sync_successful: meter
+                .clone()
+                .u64_observable_gauge("msd.definitions.sync.successful")
+                .with_description("Status of last sync of the registry with NNS of definition")
+                .init(),
         }
     }
 
     fn register_instrument_callbacks(&self, latest_values_by_network: Arc<Mutex<LatestValuesByNetwork>>) {
-        let load_new_targets_error = self.load_new_targets_error.clone();
-        let sync_registry_error = self.sync_registry_error.clone();
-        let definitions_load_successful = self.definitions_load_successful.clone();
-        let definitions_sync_successful = self.definitions_sync_successful.clone();
+        let (load_new_targets_error, sync_registry_error, definitions_load_successful, definitions_sync_successful) = (
+            self.load_new_targets_error.clone(),
+            self.sync_registry_error.clone(),
+            self.definitions_load_successful.clone(),
+            self.definitions_sync_successful.clone(),
+        );
         let instruments = [
             load_new_targets_error.as_any(),
             sync_registry_error.as_any(),
@@ -125,9 +127,8 @@ impl InstrumentCollection {
 
 impl RunningDefinitionsMetrics {
     pub fn new() -> Self {
-        let meter = global::meter(AXUM_APP);
         let latest_values_by_network = Arc::new(Mutex::new(LatestValuesByNetwork::new()));
-        let instruments = InstrumentCollection::new(meter);
+        let instruments = InstrumentCollection::new(global::meter(AXUM_APP));
         instruments.register_instrument_callbacks(latest_values_by_network.clone());
         Self {
             latest_values_by_network: latest_values_by_network,

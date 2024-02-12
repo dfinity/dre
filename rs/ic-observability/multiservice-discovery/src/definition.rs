@@ -295,9 +295,9 @@ impl RunningDefinition {
                     self.definition.log,
                     "Failed to load new scraping targets for {} @ interval {:?}: {:?}", self.definition.name, tick, e
                 );
-                self.metrics.observe_load(self.name(), true)
-            } else {
                 self.metrics.observe_load(self.name(), false)
+            } else {
+                self.metrics.observe_load(self.name(), true)
             }
             debug!(self.definition.log, "Update registries for {}", self.definition.name);
             if let Err(e) = self.definition.ic_discovery.update_registries().await {
@@ -305,9 +305,9 @@ impl RunningDefinition {
                     self.definition.log,
                     "Failed to sync registry for {} @ interval {:?}: {:?}", self.definition.name, tick, e
                 );
-                self.metrics.observe_sync(self.name(), true)
-            } else {
                 self.metrics.observe_sync(self.name(), false)
+            } else {
+                self.metrics.observe_sync(self.name(), true)
             }
 
             tick = crossbeam::select! {
