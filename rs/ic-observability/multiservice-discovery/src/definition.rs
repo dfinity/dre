@@ -322,21 +322,6 @@ impl RunningDefinition {
         }
     }
 
-    pub(crate) async fn add_boundary_node(&mut self, target: BoundaryNode) -> Result<(), BoundaryNodeAlreadyExists> {
-        // Lock modifications to this object while mods are happening.
-        match self.ender.lock().await.as_ref() {
-            Some(_) => {
-                if let Some(bn) = self.definition.boundary_nodes.iter().find(|bn| bn.name == target.name) {
-                    return Err(BoundaryNodeAlreadyExists { name: bn.name.clone() });
-                };
-
-                self.definition.boundary_nodes.push(target);
-                Ok(())
-            }
-            _ => Ok(()), // Ended.  Do nothing.
-        }
-    }
-
     // Syncs the registry and keeps running, syncing as new
     // registry versions come in.
     async fn run(&mut self) {
@@ -360,6 +345,21 @@ impl RunningDefinition {
         // because another definition may be started in its name,
         // so it is racy to delete the folder it will be using.
         // So we no longer delete storage here.
+    }
+
+    pub(crate) async fn add_boundary_node(&mut self, target: BoundaryNode) -> Result<(), BoundaryNodeAlreadyExists> {
+        // Lock modifications to this object while mods are happening.
+        match self.ender.lock().await.as_ref() {
+            Some(_) => {
+                if let Some(bn) = self.definition.boundary_nodes.iter().find(|bn| bn.name == target.name) {
+                    return Err(BoundaryNodeAlreadyExists { name: bn.name.clone() });
+                };
+
+                self.definition.boundary_nodes.push(target);
+                Ok(())
+            }
+            _ => Ok(()), // Ended.  Do nothing.
+        }
     }
 
     pub fn name(&self) -> String {
