@@ -3,7 +3,6 @@ use crossbeam_channel::Sender;
 use futures_util::future::join_all;
 use ic_management_types::Network;
 use ic_registry_client::client::ThresholdSigPublicKey;
-use opentelemetry::KeyValue;
 use serde::Deserialize;
 use serde::Serialize;
 use service_discovery::job_types::JobType;
@@ -290,8 +289,8 @@ impl RunningDefinition {
                     "Failed to load new scraping targets for {} @ interval {:?}: {:?}", self.definition.name, tick, e
                 );
                 self.metrics
-                    .load_new_targets_error
-                    .add(1, &[KeyValue::new("network", self.name())]);
+                    .inc_load_errors(self.name(), self.definition.log.clone())
+                    .await;
                 self.metrics
                     .set_failed_load(self.name(), self.definition.log.clone())
                     .await
@@ -307,8 +306,8 @@ impl RunningDefinition {
                     "Failed to sync registry for {} @ interval {:?}: {:?}", self.definition.name, tick, e
                 );
                 self.metrics
-                    .sync_registry_error
-                    .add(1, &[KeyValue::new("network", self.name())]);
+                    .inc_sync_errors(self.name(), self.definition.log.clone())
+                    .await;
                 self.metrics
                     .set_failed_sync(self.name(), self.definition.log.clone())
                     .await
