@@ -14,10 +14,7 @@ pub fn get_mainnet_delta_6d_c1() -> Changelog {
 /// in this particular case, as this method is only used on startup and the
 /// missing versions will be fetched through subsequent updates of the local
 /// store.
-pub fn create_local_store_from_changelog<P: AsRef<Path>>(
-    path: P,
-    changelog: Changelog,
-) -> LocalStoreImpl {
+pub fn create_local_store_from_changelog<P: AsRef<Path>>(path: P, changelog: Changelog) -> LocalStoreImpl {
     let store = LocalStoreImpl::new(path.as_ref());
     for (v, changelog_entry) in changelog.into_iter().enumerate() {
         store

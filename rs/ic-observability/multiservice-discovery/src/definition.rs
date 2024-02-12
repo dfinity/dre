@@ -30,6 +30,7 @@ use tokio::sync::Mutex;
 use url::Url;
 
 use crate::make_logger;
+use crate::metrics::RunningDefinitionsMetrics;
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct FSDefinition {
@@ -120,6 +121,7 @@ pub struct RunningDefinition {
     pub(crate) definition: Definition,
     stop_signal: Receiver<()>,
     ender: Arc<Mutex<Option<Ender>>>,
+    metrics: RunningDefinitionsMetrics,
 }
 
 pub struct TestDefinition {
@@ -127,7 +129,7 @@ pub struct TestDefinition {
 }
 
 impl TestDefinition {
-    pub(crate) fn new(definition: Definition) -> Self {
+    pub(crate) fn new(definition: Definition, metrics: RunningDefinitionsMetrics) -> Self {
         let (_, stop_signal) = crossbeam::channel::bounded::<()>(0);
         let ender: Arc<Mutex<Option<Ender>>> = Arc::new(Mutex::new(None));
         Self {
@@ -135,6 +137,7 @@ impl TestDefinition {
                 definition,
                 stop_signal,
                 ender,
+                metrics,
             },
         }
     }
@@ -185,8 +188,8 @@ impl Definition {
         }
     }
 
-    pub(crate) async fn run(self, rt: tokio::runtime::Handle) -> RunningDefinition {
-        fn wrap(definition: RunningDefinition, rt: tokio::runtime::Handle) -> impl FnMut() {
+    pub(crate) async fn run(self, rt: tokio::runtime::Handle, metrics: RunningDefinitionsMetrics) -> RunningDefinition {
+        fn wrap(mut definition: RunningDefinition, rt: tokio::runtime::Handle) -> impl FnMut() {
             move || {
                 rt.block_on(definition.run());
             }
@@ -199,6 +202,7 @@ impl Definition {
             definition: self,
             stop_signal,
             ender: ender.clone(),
+            metrics,
         };
         let join_handle = std::thread::spawn(wrap(d.clone(), rt));
         ender.lock().await.replace(Ender {
@@ -271,7 +275,7 @@ impl RunningDefinition {
         r
     }
 
-    async fn poll_loop(&self) {
+    async fn poll_loop(&mut self) {
         let interval = crossbeam::channel::tick(self.definition.poll_interval);
         let mut tick = Instant::now();
         loop {
@@ -284,6 +288,16 @@ impl RunningDefinition {
                     self.definition.log,
                     "Failed to load new scraping targets for {} @ interval {:?}: {:?}", self.definition.name, tick, e
                 );
+                self.metrics
+                    .inc_load_errors(self.name(), self.definition.log.clone())
+                    .await;
+                self.metrics
+                    .set_failed_load(self.name(), self.definition.log.clone())
+                    .await
+            } else {
+                self.metrics
+                    .set_successful_load(self.name(), self.definition.log.clone())
+                    .await
             }
             debug!(self.definition.log, "Update registries for {}", self.definition.name);
             if let Err(e) = self.definition.ic_discovery.update_registries().await {
@@ -291,6 +305,16 @@ impl RunningDefinition {
                     self.definition.log,
                     "Failed to sync registry for {} @ interval {:?}: {:?}", self.definition.name, tick, e
                 );
+                self.metrics
+                    .inc_sync_errors(self.name(), self.definition.log.clone())
+                    .await;
+                self.metrics
+                    .set_failed_sync(self.name(), self.definition.log.clone())
+                    .await
+            } else {
+                self.metrics
+                    .set_successful_sync(self.name(), self.definition.log.clone())
+                    .await
             }
 
             tick = crossbeam::select! {
@@ -305,7 +329,7 @@ impl RunningDefinition {
 
     // Syncs the registry and keeps running, syncing as new
     // registry versions come in.
-    async fn run(&self) {
+    async fn run(&mut self) {
         if self.initial_registry_sync().await.is_err() {
             // FIXME: Error has been logged, but ideally, it should be handled.
             // E.g. telemetry should collect this.
@@ -439,13 +463,18 @@ impl DefinitionsSupervisor {
         }
     }
 
-    pub(crate) async fn load_or_create_defs(&self, networks_state_file: PathBuf) -> Result<(), Box<dyn Error>> {
+    pub(crate) async fn load_or_create_defs(
+        &self,
+        networks_state_file: PathBuf,
+        metrics: RunningDefinitionsMetrics,
+    ) -> Result<(), Box<dyn Error>> {
         if networks_state_file.exists() {
             let file_content = fs::read_to_string(networks_state_file)?;
             let initial_definitions: Vec<FSDefinition> = serde_json::from_str(&file_content)?;
             self.start(
                 initial_definitions.into_iter().map(|def| def.into()).collect(),
                 StartMode::AddToDefinitions,
+                metrics,
             )
             .await?;
         }
@@ -463,6 +492,7 @@ impl DefinitionsSupervisor {
                     let fs_def: Vec<FSDefinition> = existing
                         .values()
                         .cloned()
+                        .into_iter()
                         .map(|running_def| running_def.definition.into())
                         .collect::<Vec<_>>();
 
@@ -478,6 +508,7 @@ impl DefinitionsSupervisor {
         existing: &mut BTreeMap<String, RunningDefinition>,
         definitions: Vec<Definition>,
         start_mode: StartMode,
+        metrics: RunningDefinitionsMetrics,
     ) -> Result<(), StartDefinitionsError> {
         let mut error = StartDefinitionsError { errors: vec![] };
         let mut ic_names_to_add: HashSet<String> = HashSet::new();
@@ -537,7 +568,10 @@ impl DefinitionsSupervisor {
 
         // Now we add the incoming definitions.
         for definition in definitions.into_iter() {
-            existing.insert(definition.name.clone(), definition.run(self.rt.clone()).await);
+            existing.insert(
+                definition.name.clone(),
+                definition.run(self.rt.clone(), metrics.clone()).await,
+            );
         }
         Ok(())
     }
@@ -552,9 +586,14 @@ impl DefinitionsSupervisor {
         &self,
         definitions: Vec<Definition>,
         start_mode: StartMode,
+        metrics: RunningDefinitionsMetrics,
     ) -> Result<(), StartDefinitionsError> {
         let mut existing = self.definitions.lock().await;
-        self.start_inner(&mut existing, definitions, start_mode).await
+        self.start_inner(&mut existing, definitions, start_mode, metrics).await
+    }
+
+    pub(crate) async fn definition_names(&self) -> Vec<String> {
+        self.definitions.lock().await.clone().into_keys().collect()
     }
 
     /// Stop all definitions and end.

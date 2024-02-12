@@ -26,8 +26,7 @@ pub fn config_writer_loop(
     metrics: Metrics,
 ) -> impl FnMut() {
     move || {
-        let mut config_writer =
-            ConfigWriter::new(vector_config_dir.clone(), filters.clone(), log.clone());
+        let mut config_writer = ConfigWriter::new(vector_config_dir.clone(), filters.clone(), log.clone());
         loop {
             for job in &jobs {
                 let targets = match discovery.get_target_groups(*job, log.clone()) {
@@ -42,10 +41,7 @@ pub fn config_writer_loop(
                     .with_label_values(&[job.to_string().as_str()])
                     .set(targets.len().try_into().unwrap());
                 if let Err(e) = config_writer.write_config(*job, targets, &vector_config_builder) {
-                    warn!(
-                        log,
-                        "Failed to write config for targets for job {}: {:?}", job, e
-                    );
+                    warn!(log, "Failed to write config for targets for job {}: {:?}", job, e);
                 };
             }
             select! {

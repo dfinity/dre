@@ -22,11 +22,7 @@ pub struct ConfigWriter {
 }
 
 impl ConfigWriter {
-    pub fn new<P: AsRef<Path>>(
-        write_path: P,
-        filters: Arc<dyn TargetGroupFilter>,
-        log: Logger,
-    ) -> Self {
+    pub fn new<P: AsRef<Path>>(write_path: P, filters: Arc<dyn TargetGroupFilter>, log: Logger) -> Self {
         ConfigWriter {
             base_directory: PathBuf::from(write_path.as_ref()),
             last_targets: Default::default(),
@@ -48,16 +44,10 @@ impl ConfigWriter {
     ) -> std::io::Result<()> {
         let last_job_targets = self.last_targets.entry(job.to_string()).or_default();
         if last_job_targets == &target_groups {
-            debug!(
-                self.log,
-                "Targets didn't change, skipped regenerating config"
-            );
+            debug!(self.log, "Targets didn't change, skipped regenerating config");
             return Ok(());
         }
-        debug!(
-            self.log,
-            "Targets changed, proceeding with regenerating config"
-        );
+        debug!(self.log, "Targets changed, proceeding with regenerating config");
         let target_path = self.base_directory.join(format!("{}.json", job));
 
         let filtered_target_groups: BTreeSet<TargetGroup> = target_groups
@@ -69,12 +59,8 @@ impl ConfigWriter {
         let vector_config = vector_config_builder.build(filtered_target_groups, job);
 
         ic_utils::fs::write_atomically(target_path.as_path(), |f| {
-            serde_json::to_writer_pretty(f, &vector_config).map_err(|e| {
-                std::io::Error::new(
-                    std::io::ErrorKind::Other,
-                    format!("Serialization error: {:?}", e),
-                )
-            })
+            serde_json::to_writer_pretty(f, &vector_config)
+                .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, format!("Serialization error: {:?}", e)))
         })?;
         self.last_targets.insert(job.to_string(), target_groups);
         Ok(())
@@ -84,25 +70,15 @@ impl ConfigWriter {
 impl ConfigUpdater for ConfigWriter {
     fn update(&self, config: &dyn Config) -> Result<(), Box<dyn Error>> {
         if !config.updated() {
-            debug!(
-                self.log,
-                "Targets didn't change, skipped regenerating config"
-            );
+            debug!(self.log, "Targets didn't change, skipped regenerating config");
             return Ok(());
         }
-        debug!(
-            self.log,
-            "Targets changed, proceeding with regenerating config"
-        );
+        debug!(self.log, "Targets changed, proceeding with regenerating config");
         let target_path = self.base_directory.join(format!("{}.json", config.name()));
 
         ic_utils::fs::write_atomically(target_path.as_path(), |f| {
-            serde_json::to_writer_pretty(f, &config).map_err(|e| {
-                std::io::Error::new(
-                    std::io::ErrorKind::Other,
-                    format!("Serialization error: {:?}", e),
-                )
-            })
+            serde_json::to_writer_pretty(f, &config)
+                .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, format!("Serialization error: {:?}", e)))
         })?;
         Ok(())
     }

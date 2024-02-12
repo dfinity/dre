@@ -5,9 +5,11 @@ use std::time::Duration;
 use axum::http::StatusCode;
 use axum::routing::{delete, get, post, put};
 use axum::Router;
+use axum_otel_metrics::HttpMetricsLayer;
 use slog::{debug, info, Logger};
 
 use crate::definition::DefinitionsSupervisor;
+use crate::metrics::MSDMetrics;
 use crate::server_handlers::add_boundary_node_to_definition_handler::add_boundary_node;
 use crate::server_handlers::add_definition_handler::add_definition;
 use crate::server_handlers::delete_definition_handler::delete_definition;
@@ -62,6 +64,7 @@ pub(crate) struct Server {
     poll_interval: Duration,
     registry_query_timeout: Duration,
     registry_path: PathBuf,
+    pub metrics: MSDMetrics,
 }
 
 impl Server {
@@ -71,6 +74,7 @@ impl Server {
         poll_interval: Duration,
         registry_query_timeout: Duration,
         registry_path: PathBuf,
+        metrics: MSDMetrics,
     ) -> Self {
         Self {
             log,
@@ -78,10 +82,12 @@ impl Server {
             poll_interval,
             registry_query_timeout,
             registry_path,
+            metrics,
         }
     }
-    pub(crate) async fn run(self, recv: tokio::sync::oneshot::Receiver<()>) {
+    pub(crate) async fn run(self, recv: tokio::sync::oneshot::Receiver<()>, metrics_layer: HttpMetricsLayer) {
         let app = Router::new()
+            .merge(metrics_layer.routes())
             .route("/", post(add_definition))
             .route("/", put(replace_definitions))
             .route("/", get(get_definitions))
@@ -89,6 +95,7 @@ impl Server {
             .route("/prom/targets", get(export_prometheus_config))
             .route("/targets", get(export_targets))
             .route("/add_boundary_node", post(add_boundary_node))
+            .layer(metrics_layer)
             .with_state(self.clone());
 
         let listener = tokio::net::TcpListener::bind("0.0.0.0:8000").await.unwrap();

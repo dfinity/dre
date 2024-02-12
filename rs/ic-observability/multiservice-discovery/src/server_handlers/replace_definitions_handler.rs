@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum::Json;
@@ -12,6 +14,8 @@ pub(super) async fn replace_definitions(
     State(binding): State<Server>,
     Json(definitions): Json<Vec<DefinitionDto>>,
 ) -> WebResult<String> {
+    // Cache old names if we need to remove them from metrics
+    let old_names = binding.supervisor.definition_names().await;
     let dnames = definitions
         .iter()
         .map(|d| d.name.clone())
@@ -48,13 +52,29 @@ pub(super) async fn replace_definitions(
     let new_definitions: Vec<_> = new_definitions.into_iter().map(Result::unwrap).collect();
     match binding
         .supervisor
-        .start(new_definitions, StartMode::ReplaceExistingDefinitions)
+        .start(
+            new_definitions.clone(),
+            StartMode::ReplaceExistingDefinitions,
+            binding.metrics.running_definition_metrics.clone(),
+        )
         .await
     {
-        Ok(_) => ok(
-            binding.log,
-            format!("Added new definitions {} to existing ones", dnames),
-        ),
+        Ok(_) => {
+            let old_set: HashSet<String> = old_names.iter().cloned().collect();
+            let new_set: HashSet<String> = new_definitions.iter().cloned().map(|d| d.name).collect();
+            let difference = old_set.difference(&new_set);
+            for network in difference {
+                binding
+                    .metrics
+                    .running_definition_metrics
+                    .unregister_callback(network.clone(), binding.log.clone())
+                    .await
+            }
+            ok(
+                binding.log,
+                format!("Added new definitions {} to existing ones", dnames),
+            )
+        }
         Err(e) => bad_request(binding.log, format!(":\n{}", e), e),
     }
 }

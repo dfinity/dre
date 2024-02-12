@@ -38,14 +38,8 @@ pub fn make_poll_loop(
             info!(log, "Update registries");
             let timer = metrics.registries_update_latency_seconds.start_timer();
             if let Err(e) = rt.block_on(ic_discovery.update_registries()) {
-                warn!(
-                    log,
-                    "Failed to sync registry @ interval {:?}: {:?}", tick, e
-                );
-                metrics
-                    .poll_error_count
-                    .with_label_values(&["update_registries"])
-                    .inc();
+                warn!(log, "Failed to sync registry @ interval {:?}: {:?}", tick, e);
+                metrics.poll_error_count.with_label_values(&["update_registries"]).inc();
                 err = true;
             }
             if let Some(sender) = &update_notifier {

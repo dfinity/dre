@@ -3,6 +3,7 @@ use std::path::PathBuf;
 use std::time::Duration;
 use std::vec;
 
+use axum_otel_metrics::HttpMetricsLayerBuilder;
 use clap::Parser;
 use humantime::parse_duration;
 use slog::{info, o, Drain, Logger};
@@ -15,10 +16,12 @@ use ic_async_utils::shutdown_signal;
 use ic_management_types::Network;
 
 use crate::definition::{RunningDefinition, TestDefinition};
+use crate::metrics::{MSDMetrics, RunningDefinitionsMetrics};
 use crate::server_handlers::export_prometheus_config_handler::serialize_definitions_to_prometheus_config;
 use crate::server_handlers::Server;
 
 mod definition;
+mod metrics;
 mod server_handlers;
 
 fn main() {
@@ -46,7 +49,7 @@ fn main() {
             shutdown_signal: impl futures_util::Future<Output = ()>,
         ) -> Option<RunningDefinition> {
             let def = get_mainnet_definition(cli_args, log.clone());
-            let mut test_def = TestDefinition::new(def);
+            let mut test_def = TestDefinition::new(def, RunningDefinitionsMetrics::new());
             let sync_fut = test_def.sync_and_stop();
             tokio::select! {
                 _ = sync_fut => {
@@ -67,11 +70,33 @@ fn main() {
         }
     } else {
         let supervisor = DefinitionsSupervisor::new(rt.handle().clone(), cli_args.start_without_mainnet);
+        let (server_stop, server_stop_receiver) = oneshot::channel();
+
+        // Initialize the metrics layer because in the build method the `global::provider`
+        // is set. We can use global::meter only after that call.
+        let metrics_layer = HttpMetricsLayerBuilder::new().build();
+        let metrics = MSDMetrics::new();
+
         if let Some(networks_state_file) = cli_args.networks_state_file.clone() {
-            rt.block_on(supervisor.load_or_create_defs(networks_state_file)).unwrap();
+            rt.block_on(
+                supervisor.load_or_create_defs(networks_state_file, metrics.running_definition_metrics.clone()),
+            )
+            .unwrap();
         }
 
-        let (server_stop, server_stop_receiver) = oneshot::channel();
+        // First check if we should start the mainnet definition so we can
+        // serve it right after the server starts.
+        if !cli_args.start_without_mainnet {
+            rt.block_on(async {
+                let _ = supervisor
+                    .start(
+                        vec![get_mainnet_definition(&cli_args, log.clone())],
+                        StartMode::AddToDefinitions,
+                        metrics.running_definition_metrics.clone(),
+                    )
+                    .await;
+            });
+        }
 
         //Configure server
         let server_handle = rt.spawn(
@@ -81,20 +106,10 @@ fn main() {
                 cli_args.poll_interval,
                 cli_args.registry_query_timeout,
                 cli_args.targets_dir.clone(),
+                metrics,
             )
-            .run(server_stop_receiver),
+            .run(server_stop_receiver, metrics_layer),
         );
-
-        if !cli_args.start_without_mainnet {
-            rt.block_on(async {
-                let _ = supervisor
-                    .start(
-                        vec![get_mainnet_definition(&cli_args, log.clone())],
-                        StartMode::AddToDefinitions,
-                    )
-                    .await;
-            });
-        }
 
         // Wait for shutdown signal.
         rt.block_on(shutdown_signal);
@@ -106,7 +121,7 @@ fn main() {
         if let Some(networks_state_file) = cli_args.networks_state_file.clone() {
             rt.block_on(supervisor.persist_defs(networks_state_file)).unwrap();
         }
-        
+
         //Stop all definitions.  End happens in parallel with server stop.
         rt.block_on(supervisor.end());
 
@@ -189,7 +204,7 @@ the Prometheus targets of mainnet as a JSON structure on stdout.
 "#
     )]
     render_prom_targets_to_stdout: bool,
-    
+
     #[clap(
         long = "networks-state-file",
         default_value = None,
