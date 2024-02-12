@@ -385,7 +385,7 @@ def main():
 
         teams = []
         if ownership:
-            max_ownership = max(ownership.items(), key=lambda _team, changed_lines: changed_lines)[1]
+            max_ownership = max(ownership.items(), key=lambda changed_lines_per_team: changed_lines_per_team[1])[1]
             # Since multiple teams can own a path in CODEOWNERS we have to handle what happens if two teams have max changes
             for key, value in ownership.items():
                 if value >= max_ownership * MAX_OWNERSHIP_AREA:
