@@ -139,49 +139,31 @@ impl RunningDefinitionsMetrics {
         }
     }
 
-    pub fn inc_load_errors(&self, network: String) {
+    pub fn observe_sync(&mut self, network: String, success: bool) {
         let mut s = self.latest_values.lock().unwrap();
-        s.entry(network)
-            .and_modify(|latest_values| latest_values.load_new_targets_error += 1)
-            .or_insert(LatestValues::new());
+        let latest_values = s.entry(network).or_insert(LatestValues::new());
+        latest_values.definitions_sync_successful = match success {
+            true => 1,
+            false => {
+                latest_values.sync_registry_error += 1;
+                0
+            }
+        }
     }
 
-    pub fn inc_sync_errors(&self, network: String) {
+    pub fn observe_load(&mut self, network: String, success: bool) {
         let mut s = self.latest_values.lock().unwrap();
-        s.entry(network)
-            .and_modify(|latest_values| latest_values.sync_registry_error += 1)
-            .or_insert(LatestValues::new());
+        let latest_values = s.entry(network).or_insert(LatestValues::new());
+        latest_values.definitions_load_successful = match success {
+            true => 1,
+            false => {
+                latest_values.load_new_targets_error += 1;
+                0
+            }
+        };
     }
 
-    pub fn set_successful_sync(&mut self, network: String) {
-        let mut s = self.latest_values.lock().unwrap();
-        s.entry(network)
-            .and_modify(|latest_values| latest_values.definitions_sync_successful = 1)
-            .or_insert(LatestValues::new());
-    }
-
-    pub fn set_failed_sync(&mut self, network: String) {
-        let mut s = self.latest_values.lock().unwrap();
-        s.entry(network)
-            .and_modify(|latest_values| latest_values.definitions_sync_successful = 0)
-            .or_insert(LatestValues::new());
-    }
-
-    pub fn set_successful_load(&mut self, network: String) {
-        let mut s = self.latest_values.lock().unwrap();
-        s.entry(network)
-            .and_modify(|latest_values| latest_values.definitions_load_successful = 1)
-            .or_insert(LatestValues::new());
-    }
-
-    pub fn set_failed_load(&mut self, network: String) {
-        let mut s = self.latest_values.lock().unwrap();
-        s.entry(network)
-            .and_modify(|latest_values| latest_values.definitions_load_successful = 0)
-            .or_insert(LatestValues::new());
-    }
-
-    pub fn set_ended(&mut self, network: String) {
+    pub fn observe_end(&mut self, network: String) {
         let mut s = self.latest_values.lock().unwrap();
         s.remove(&network);
     }

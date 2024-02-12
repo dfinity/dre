@@ -295,10 +295,9 @@ impl RunningDefinition {
                     self.definition.log,
                     "Failed to load new scraping targets for {} @ interval {:?}: {:?}", self.definition.name, tick, e
                 );
-                self.metrics.inc_load_errors(self.name());
-                self.metrics.set_failed_load(self.name())
+                self.metrics.observe_load(self.name(), false)
             } else {
-                self.metrics.set_successful_load(self.name())
+                self.metrics.observe_load(self.name(), true)
             }
             debug!(self.definition.log, "Update registries for {}", self.definition.name);
             if let Err(e) = self.definition.ic_discovery.update_registries().await {
@@ -306,10 +305,9 @@ impl RunningDefinition {
                     self.definition.log,
                     "Failed to sync registry for {} @ interval {:?}: {:?}", self.definition.name, tick, e
                 );
-                self.metrics.inc_sync_errors(self.name());
-                self.metrics.set_failed_sync(self.name())
+                self.metrics.observe_sync(self.name(), false)
             } else {
-                self.metrics.set_successful_sync(self.name())
+                self.metrics.observe_sync(self.name(), false)
             }
 
             tick = crossbeam::select! {
@@ -327,10 +325,10 @@ impl RunningDefinition {
     async fn run(&mut self) {
         if self.initial_registry_sync().await.is_err() {
             // Initial sync was interrupted.
-            self.metrics.set_ended(self.name());
+            self.metrics.observe_end(self.name());
             return;
         }
-        self.metrics.set_successful_sync(self.name());
+        self.metrics.observe_sync(self.name(), true);
 
         info!(
             self.definition.log,
@@ -339,7 +337,7 @@ impl RunningDefinition {
 
         self.poll_loop().await;
 
-        self.metrics.set_ended(self.name());
+        self.metrics.observe_end(self.name());
 
         // We used to delete storage here, but that was unsafe
         // because another definition may be started in its name,
