@@ -459,6 +459,11 @@ impl DefinitionsSupervisor {
         }
     }
 
+    // FIXME: if the file is corrupted, that may be a partial write from another
+    // MSD sharing the same directory.  Retry the error.
+    // FIXME: definitions should be reloaded if the file is changed.
+    // FIXME: if the definitions loaded are the same as the currently-loaded
+    // definitions, no action should be taken on this MSD.
     pub(crate) async fn load_or_create_defs(
         &self,
         networks_state_file: PathBuf,
@@ -477,6 +482,9 @@ impl DefinitionsSupervisor {
         Ok(())
     }
 
+    // FIXME: if the file contents on disk are the same as the contents about to
+    // be persisted, then the file should not be overwritten because it was
+    // already updated by another MSD sharing the same directory.
     pub(crate) async fn persist_defs(&self, networks_state_file: PathBuf) -> Result<(), Box<dyn Error>> {
         let existing = self.definitions.lock().await;
         retry::retry(retry::delay::Exponential::from_millis(10).take(5), || {
