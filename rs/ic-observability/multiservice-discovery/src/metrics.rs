@@ -1,6 +1,10 @@
 use std::{collections::HashMap, sync::Arc};
 
-use opentelemetry::{global, metrics::Observer, KeyValue};
+use opentelemetry::{
+    global,
+    metrics::{Meter, ObservableGauge, Observer},
+    KeyValue,
+};
 use std::sync::Mutex;
 
 const NETWORK: &str = "network";
@@ -47,12 +51,19 @@ type LatestValuesByNetwork = HashMap<String, LatestValues>;
 
 #[derive(Clone)]
 pub struct RunningDefinitionsMetrics {
-    latest_values: Arc<Mutex<LatestValuesByNetwork>>,
+    latest_values_by_network: Arc<Mutex<LatestValuesByNetwork>>,
 }
 
-impl RunningDefinitionsMetrics {
-    pub fn new() -> Self {
-        let meter = global::meter(AXUM_APP);
+pub struct InstrumentCollection {
+    meter: Meter,
+    load_new_targets_error: ObservableGauge<u64>,
+    sync_registry_error: ObservableGauge<u64>,
+    definitions_load_successful: ObservableGauge<u64>,
+    definitions_sync_successful: ObservableGauge<u64>,
+}
+
+impl InstrumentCollection {
+    fn new(meter: Meter) -> Self {
         let load_new_targets_error = meter
             .u64_observable_gauge("msd.definitions.load.errors")
             .with_description("Total number of errors while loading new targets per definition")
@@ -69,21 +80,32 @@ impl RunningDefinitionsMetrics {
             .u64_observable_gauge("msd.definitions.sync.successful")
             .with_description("Status of last sync of the registry with NNS of definition")
             .init();
+        Self {
+            meter,
+            load_new_targets_error,
+            sync_registry_error,
+            definitions_load_successful,
+            definitions_sync_successful,
+        }
+    }
+
+    fn register_instrument_callbacks(&self, latest_values_by_network: Arc<Mutex<LatestValuesByNetwork>>) {
+        let load_new_targets_error = self.load_new_targets_error.clone();
+        let sync_registry_error = self.sync_registry_error.clone();
+        let definitions_load_successful = self.definitions_load_successful.clone();
+        let definitions_sync_successful = self.definitions_sync_successful.clone();
         let instruments = [
             load_new_targets_error.as_any(),
             sync_registry_error.as_any(),
             definitions_load_successful.as_any(),
             definitions_sync_successful.as_any(),
         ];
-
-        let latest_values_arc = Arc::new(Mutex::new(LatestValuesByNetwork::new()));
-        let s = latest_values_arc.clone();
         let update_instruments = move |observer: &dyn Observer| {
             // We blocking-lock because this is not async code, and this code
             // does not need to be async, since it just needs to read local data.
             // C.f. https://docs.rs/tokio/1.24.2/tokio/sync/struct.Mutex.html#method.blocking_lock
-            let l = s.lock().unwrap();
-            for (network, latest_values) in l.iter() {
+            let latest_values_by_network = latest_values_by_network.lock().unwrap();
+            for (network, latest_values) in latest_values_by_network.iter() {
                 let attrs = [KeyValue::new(NETWORK, network.clone())];
                 for (instrument, measurement) in [
                     (&load_new_targets_error, latest_values.load_new_targets_error),
@@ -97,15 +119,23 @@ impl RunningDefinitionsMetrics {
                 }
             }
         };
-        meter.register_callback(&instruments, update_instruments).unwrap();
+        self.meter.register_callback(&instruments, update_instruments).unwrap();
+    }
+}
 
+impl RunningDefinitionsMetrics {
+    pub fn new() -> Self {
+        let meter = global::meter(AXUM_APP);
+        let latest_values_by_network = Arc::new(Mutex::new(LatestValuesByNetwork::new()));
+        let instruments = InstrumentCollection::new(meter);
+        instruments.register_instrument_callbacks(latest_values_by_network.clone());
         Self {
-            latest_values: latest_values_arc,
+            latest_values_by_network: latest_values_by_network,
         }
     }
 
     pub fn observe_sync(&mut self, network: String, success: bool) {
-        let mut s = self.latest_values.lock().unwrap();
+        let mut s = self.latest_values_by_network.lock().unwrap();
         let latest_values = s.entry(network).or_insert(LatestValues::new());
         latest_values.definitions_sync_successful = match success {
             true => 1,
@@ -117,7 +147,7 @@ impl RunningDefinitionsMetrics {
     }
 
     pub fn observe_load(&mut self, network: String, success: bool) {
-        let mut s = self.latest_values.lock().unwrap();
+        let mut s = self.latest_values_by_network.lock().unwrap();
         let latest_values = s.entry(network).or_insert(LatestValues::new());
         latest_values.definitions_load_successful = match success {
             true => 1,
@@ -129,7 +159,7 @@ impl RunningDefinitionsMetrics {
     }
 
     pub fn observe_end(&mut self, network: String) {
-        let mut s = self.latest_values.lock().unwrap();
+        let mut s = self.latest_values_by_network.lock().unwrap();
         s.remove(&network);
     }
 }
