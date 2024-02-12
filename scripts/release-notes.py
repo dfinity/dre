@@ -439,8 +439,8 @@ def main():
             )
         )
         output.write(
-            "<br><p>Change log between git revision [{0}](https://dashboard.internetcomputer.org/release/{0}) and [{1}](https://dashboard.internetcomputer.org/release/{1})</p>\n".format(
-                first_commit, last_commit
+            "<br><p>Change log since git revision [{0}](https://dashboard.internetcomputer.org/release/{0})</p>\n".format(
+                first_commit
             )
         )
 
