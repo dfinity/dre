@@ -227,7 +227,7 @@ def file_changes_for_commit(commit_hash, repo_dir):
 
 
 def parse_codeowners(codeowners_path):
-    with open(codeowners_path) as f:
+    with open(codeowners_path, encoding="utf8") as f:
         codeowners = f.readlines()
         filtered = [line.strip() for line in codeowners]
         filtered = [line for line in filtered if line and not line.startswith("#")]
@@ -317,7 +317,8 @@ def main():
         print("WARNING: max commits limit reached, increase depth")
         exit(1)
 
-    bazel_query = ["bazel",
+    bazel_query = [
+        "bazel",
         "query",
         "--universe_scope=//...",
         "deps(//ic-os/guestos/envs/prod:update-img.tar.gz) union deps(//ic-os/setupos/envs/prod:disk-img.tar.gz)",
@@ -328,16 +329,17 @@ def main():
         cwd=ic_repo_path,
         text=True,
         stdout=subprocess.PIPE,
+        check=False,
     )
     if p.returncode != 0:
         print("Failure running Bazel through container.  Attempting direct run.", file=sys.stderr)
         p = subprocess.run(
             bazel_query,
-             cwd=ic_repo_path,
-             text=True,
+            cwd=ic_repo_path,
+            text=True,
             stdout=subprocess.PIPE,
             check=True,
-         )
+        )
     replica_packages = p.stdout.strip().splitlines()
 
     replica_packages_filtered = [
@@ -383,7 +385,7 @@ def main():
 
         teams = []
         if ownership:
-            max_ownership = ownership[max(ownership, key=lambda x: ownership[x])]
+            max_ownership = max(ownership.items(), key=lambda changed_lines_per_team: changed_lines_per_team[1])[1]
             # Since multiple teams can own a path in CODEOWNERS we have to handle what happens if two teams have max changes
             for key, value in ownership.items():
                 if value >= max_ownership * MAX_OWNERSHIP_AREA:
@@ -434,6 +436,11 @@ def main():
         output.write(
             '<h1 id="{0}" style="font-size: 14pt; font-family: Roboto">Release Notes for <a style="font-size: 10pt; font-family: Roboto Mono" href="https://github.com/dfinity/ic/tree/{0}">{0}</a> <span style="font-family: Roboto Mono; font-weight: normal; font-size: 10pt">({1})</span></h1>\n'.format(
                 rc_name, last_commit
+            )
+        )
+        output.write(
+            "<br><p>Change log since git revision [{0}](https://dashboard.internetcomputer.org/release/{0})</p>\n".format(
+                first_commit
             )
         )
 
