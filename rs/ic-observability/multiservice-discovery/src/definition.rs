@@ -253,6 +253,11 @@ impl RunningDefinition {
             self.definition.registry_path.display()
         );
 
+        // FIXME: sync_local_registry() needs to update the metrics just
+        // as poll_loop() does.  Otherwise an initially hung or failed
+        // sync_local_registry() is not going to be trackable via metrics.
+        // Right now, the callee simply says metrics sync successful once
+        // this function returns.
         let r = sync_local_registry(
             self.definition.log.clone(),
             self.definition.registry_path.join("targets"),
@@ -263,10 +268,12 @@ impl RunningDefinition {
         )
         .await;
         match r {
-            Ok(_) => info!(
-                self.definition.log,
-                "Syncing local registry for {} completed", self.definition.name,
-            ),
+            Ok(_) => {
+                info!(
+                    self.definition.log,
+                    "Syncing local registry for {} completed", self.definition.name,
+                )
+            }
             Err(_) => warn!(
                 self.definition.log,
                 "Interrupted initial sync of definition {}", self.definition.name
@@ -288,16 +295,9 @@ impl RunningDefinition {
                     self.definition.log,
                     "Failed to load new scraping targets for {} @ interval {:?}: {:?}", self.definition.name, tick, e
                 );
-                self.metrics
-                    .inc_load_errors(self.name(), self.definition.log.clone())
-                    .await;
-                self.metrics
-                    .set_failed_load(self.name(), self.definition.log.clone())
-                    .await
+                self.metrics.observe_load(self.name(), false)
             } else {
-                self.metrics
-                    .set_successful_load(self.name(), self.definition.log.clone())
-                    .await
+                self.metrics.observe_load(self.name(), true)
             }
             debug!(self.definition.log, "Update registries for {}", self.definition.name);
             if let Err(e) = self.definition.ic_discovery.update_registries().await {
@@ -305,16 +305,9 @@ impl RunningDefinition {
                     self.definition.log,
                     "Failed to sync registry for {} @ interval {:?}: {:?}", self.definition.name, tick, e
                 );
-                self.metrics
-                    .inc_sync_errors(self.name(), self.definition.log.clone())
-                    .await;
-                self.metrics
-                    .set_failed_sync(self.name(), self.definition.log.clone())
-                    .await
+                self.metrics.observe_sync(self.name(), false)
             } else {
-                self.metrics
-                    .set_successful_sync(self.name(), self.definition.log.clone())
-                    .await
+                self.metrics.observe_sync(self.name(), true)
             }
 
             tick = crossbeam::select! {
@@ -331,10 +324,11 @@ impl RunningDefinition {
     // registry versions come in.
     async fn run(&mut self) {
         if self.initial_registry_sync().await.is_err() {
-            // FIXME: Error has been logged, but ideally, it should be handled.
-            // E.g. telemetry should collect this.
+            // Initial sync was interrupted.
+            self.metrics.observe_end(self.name());
             return;
         }
+        self.metrics.observe_sync(self.name(), true);
 
         info!(
             self.definition.log,
@@ -342,6 +336,8 @@ impl RunningDefinition {
         );
 
         self.poll_loop().await;
+
+        self.metrics.observe_end(self.name());
 
         // We used to delete storage here, but that was unsafe
         // because another definition may be started in its name,
@@ -463,6 +459,11 @@ impl DefinitionsSupervisor {
         }
     }
 
+    // FIXME: if the file is corrupted, that may be a partial write from another
+    // MSD sharing the same directory.  Retry the error.
+    // FIXME: definitions should be reloaded if the file is changed.
+    // FIXME: if the definitions loaded are the same as the currently-loaded
+    // definitions, no action should be taken on this MSD.
     pub(crate) async fn load_or_create_defs(
         &self,
         networks_state_file: PathBuf,
@@ -481,6 +482,9 @@ impl DefinitionsSupervisor {
         Ok(())
     }
 
+    // FIXME: if the file contents on disk are the same as the contents about to
+    // be persisted, then the file should not be overwritten because it was
+    // already updated by another MSD sharing the same directory.
     pub(crate) async fn persist_defs(&self, networks_state_file: PathBuf) -> Result<(), Box<dyn Error>> {
         let existing = self.definitions.lock().await;
         retry::retry(retry::delay::Exponential::from_millis(10).take(5), || {
@@ -492,7 +496,6 @@ impl DefinitionsSupervisor {
                     let fs_def: Vec<FSDefinition> = existing
                         .values()
                         .cloned()
-                        .into_iter()
                         .map(|running_def| running_def.definition.into())
                         .collect::<Vec<_>>();
 
@@ -590,10 +593,6 @@ impl DefinitionsSupervisor {
     ) -> Result<(), StartDefinitionsError> {
         let mut existing = self.definitions.lock().await;
         self.start_inner(&mut existing, definitions, start_mode, metrics).await
-    }
-
-    pub(crate) async fn definition_names(&self) -> Vec<String> {
-        self.definitions.lock().await.clone().into_keys().collect()
     }
 
     /// Stop all definitions and end.

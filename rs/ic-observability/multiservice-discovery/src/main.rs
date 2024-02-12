@@ -118,6 +118,8 @@ fn main() {
         server_stop.send(()).unwrap();
 
         // Persist definitions to disk before ending the supervisor.
+        // FIXME: persistence should happen when the definitions structure
+        // changes, not just on end.  E.g. when a public key is updated.
         if let Some(networks_state_file) = cli_args.networks_state_file.clone() {
             rt.block_on(supervisor.persist_defs(networks_state_file)).unwrap();
         }

@@ -1,20 +1,10 @@
 use std::{collections::HashMap, sync::Arc};
 
-use opentelemetry::{
-    global,
-    metrics::{CallbackRegistration, ObservableGauge},
-    KeyValue,
-};
-use slog::{error, info, Logger};
-use tokio::sync::Mutex;
+use opentelemetry::{global, metrics::Observer, KeyValue};
+use std::sync::Mutex;
 
 const NETWORK: &str = "network";
 const AXUM_APP: &str = "axum-app";
-const LOAD: &str = "load";
-const SYNC: &str = "sync";
-
-type StatusCallbacks = Arc<Mutex<HashMap<String, Vec<Box<dyn CallbackRegistration>>>>>;
-type ValueCallbacks = Arc<Mutex<HashMap<String, Vec<NamedCallbackWithValue<i64>>>>>;
 
 #[derive(Clone)]
 pub struct MSDMetrics {
@@ -35,274 +25,114 @@ impl MSDMetrics {
     }
 }
 
+struct LatestValues {
+    load_new_targets_error: u64,
+    sync_registry_error: u64,
+    definitions_load_successful: u64,
+    definitions_sync_successful: u64,
+}
+
+impl LatestValues {
+    fn new() -> Self {
+        Self {
+            load_new_targets_error: 0,
+            sync_registry_error: 0,
+            definitions_load_successful: 0,
+            definitions_sync_successful: 0,
+        }
+    }
+}
+
+type LatestValuesByNetwork = HashMap<String, LatestValues>;
+
 #[derive(Clone)]
 pub struct RunningDefinitionsMetrics {
-    pub load_new_targets_error: ObservableGauge<i64>,
-    pub definitions_load_successful: ObservableGauge<i64>,
-
-    pub sync_registry_error: ObservableGauge<i64>,
-    pub definitions_sync_successful: ObservableGauge<i64>,
-
-    definition_status_callbacks: StatusCallbacks,
-    definition_value_callbacks: ValueCallbacks,
+    latest_values_by_network: Arc<Mutex<LatestValuesByNetwork>>,
 }
 
 impl RunningDefinitionsMetrics {
     pub fn new() -> Self {
+        let latest_values_by_network = Arc::new(Mutex::new(LatestValuesByNetwork::new()));
         let meter = global::meter(AXUM_APP);
         let load_new_targets_error = meter
-            .i64_observable_gauge("msd.definitions.load.errors")
+            .clone()
+            .u64_observable_gauge("msd.definitions.load.errors")
             .with_description("Total number of errors while loading new targets per definition")
             .init();
-
         let sync_registry_error = meter
-            .i64_observable_gauge("msd.definitions.sync.errors")
+            .clone()
+            .u64_observable_gauge("msd.definitions.sync.errors")
             .with_description("Total number of errors while syncing the registry per definition")
             .init();
-
         let definitions_load_successful = meter
-            .i64_observable_gauge("msd.definitions.load.successful")
+            .clone()
+            .u64_observable_gauge("msd.definitions.load.successful")
             .with_description("Status of last load of the registry per definition")
             .init();
-
         let definitions_sync_successful = meter
-            .i64_observable_gauge("msd.definitions.sync.successful")
+            .clone()
+            .u64_observable_gauge("msd.definitions.sync.successful")
             .with_description("Status of last sync of the registry with NNS of definition")
             .init();
+        let instruments = [
+            load_new_targets_error.as_any(),
+            sync_registry_error.as_any(),
+            definitions_load_successful.as_any(),
+            definitions_sync_successful.as_any(),
+        ];
+        let s = latest_values_by_network.clone();
+        let update_instruments = move |observer: &dyn Observer| {
+            // We blocking-lock because this is not async code, and this code
+            // does not need to be async, since it just needs to read local data.
+            // C.f. https://docs.rs/tokio/1.24.2/tokio/sync/struct.Mutex.html#method.blocking_lock
+            let latest_values_by_network = s.lock().unwrap();
+            for (network, latest_values) in latest_values_by_network.iter() {
+                let attrs = [KeyValue::new(NETWORK, network.clone())];
+                for (instrument, measurement) in [
+                    (&load_new_targets_error, latest_values.load_new_targets_error),
+                    (&sync_registry_error, latest_values.sync_registry_error),
+                    (&definitions_load_successful, latest_values.definitions_load_successful),
+                    (&definitions_sync_successful, latest_values.definitions_sync_successful),
+                ]
+                .into_iter()
+                {
+                    observer.observe_u64(instrument, measurement, &attrs)
+                }
+            }
+        };
+        meter.register_callback(&instruments, update_instruments).unwrap();
 
         Self {
-            load_new_targets_error,
-            definitions_load_successful,
-            sync_registry_error,
-            definitions_sync_successful,
-            definition_status_callbacks: Arc::new(Mutex::new(HashMap::new())),
-            definition_value_callbacks: Arc::new(Mutex::new(HashMap::new())),
+            latest_values_by_network,
         }
     }
 
-    pub async fn inc_load_errors(&self, network: String, logger: Logger) {
-        Self::inc_counter(
-            network,
-            logger,
-            &self.definition_value_callbacks,
-            &self.load_new_targets_error,
-            LOAD.to_string(),
-        )
-        .await
-    }
-
-    pub async fn inc_sync_errors(&self, network: String, logger: Logger) {
-        Self::inc_counter(
-            network,
-            logger,
-            &self.definition_value_callbacks,
-            &self.sync_registry_error,
-            SYNC.to_string(),
-        )
-        .await
-    }
-
-    pub async fn set_successful_sync(&mut self, network: String, logger: Logger) {
-        Self::set_status(
-            network,
-            logger,
-            1,
-            &self.definitions_sync_successful,
-            &self.definition_status_callbacks,
-        )
-        .await
-    }
-
-    pub async fn set_failed_sync(&mut self, network: String, logger: Logger) {
-        Self::set_status(
-            network,
-            logger,
-            0,
-            &self.definitions_sync_successful,
-            &self.definition_status_callbacks,
-        )
-        .await
-    }
-
-    pub async fn set_successful_load(&mut self, network: String, logger: Logger) {
-        Self::set_status(
-            network,
-            logger,
-            1,
-            &self.definitions_load_successful,
-            &self.definition_status_callbacks,
-        )
-        .await
-    }
-
-    pub async fn set_failed_load(&mut self, network: String, logger: Logger) {
-        Self::set_status(
-            network,
-            logger,
-            0,
-            &self.definitions_load_successful,
-            &self.definition_status_callbacks,
-        )
-        .await
-    }
-
-    async fn set_status(
-        network: String,
-        logger: Logger,
-        status: i64,
-        gague: &ObservableGauge<i64>,
-        callbacks: &StatusCallbacks,
-    ) {
-        let meter = global::meter(AXUM_APP);
-        let network_clone = network.clone();
-        let local_clone = gague.clone();
-
-        match meter.register_callback(&[local_clone.as_any()], move |observer| {
-            observer.observe_i64(&local_clone, status, &[KeyValue::new(NETWORK, network.clone())])
-        }) {
-            Ok(callback) => {
-                info!(logger, "Registering callback for '{}'", &network_clone);
-                let mut locked = callbacks.lock().await;
-
-                if let Some(definition) = locked.get_mut(&network_clone) {
-                    definition.push(callback)
-                } else {
-                    locked.insert(network_clone, vec![callback]);
-                }
-            }
-            Err(e) => error!(
-                logger,
-                "Couldn't register callback for network '{}': {:?}", network_clone, e
-            ),
-        }
-    }
-
-    pub async fn unregister_callback(&self, network: String, logger: Logger) {
-        self.unregister_unnamed_callback(network.clone(), logger.clone()).await;
-        self.unregister_named_callback(network, logger).await
-    }
-
-    async fn unregister_named_callback(&self, network: String, logger: Logger) {
-        let mut locked = self.definition_value_callbacks.lock().await;
-
-        if let Some(callbacks) = locked.remove(&network) {
-            for mut nc in callbacks {
-                if let Err(e) = nc.callback.unregister() {
-                    error!(
-                        logger,
-                        "Couldn't unregister callback for network '{}': {:?}", network, e
-                    )
-                }
+    pub fn observe_sync(&mut self, network: String, success: bool) {
+        let mut s = self.latest_values_by_network.lock().unwrap();
+        let latest_values = s.entry(network).or_insert(LatestValues::new());
+        latest_values.definitions_sync_successful = match success {
+            true => 1,
+            false => {
+                latest_values.sync_registry_error += 1;
+                0
             }
         }
     }
 
-    async fn unregister_unnamed_callback(&self, network: String, logger: Logger) {
-        let mut locked = self.definition_status_callbacks.lock().await;
-
-        if let Some(callbacks) = locked.remove(&network) {
-            for mut callback in callbacks {
-                if let Err(e) = callback.unregister() {
-                    error!(
-                        logger,
-                        "Couldn't unregister callback for network '{}': {:?}", network, e
-                    )
-                }
+    pub fn observe_load(&mut self, network: String, success: bool) {
+        let mut s = self.latest_values_by_network.lock().unwrap();
+        let latest_values = s.entry(network).or_insert(LatestValues::new());
+        latest_values.definitions_load_successful = match success {
+            true => 1,
+            false => {
+                latest_values.load_new_targets_error += 1;
+                0
             }
-        } else {
-            error!(
-                logger,
-                "Couldn't unregister callbacks for network '{}': key not found", &network
-            )
-        }
+        };
     }
 
-    async fn inc_counter(
-        network: String,
-        logger: Logger,
-        callbacks: &ValueCallbacks,
-        counter: &ObservableGauge<i64>,
-        metric_name: String,
-    ) {
-        let mut locked = callbacks.lock().await;
-        let network_clone = network.clone();
-        let meter = global::meter(AXUM_APP);
-        let local_clone = counter.clone();
-
-        match locked.get_mut(&network) {
-            Some(callbacks) => match callbacks.iter_mut().find(|nc| nc.name == metric_name) {
-                Some(nc) => {
-                    info!(logger, "Updating the named callback for network '{}'", network.clone());
-                    if let Err(e) = nc.callback.unregister() {
-                        error!(logger, "Couldn't unregister metric for network '{}': {:?}", network, e);
-                        return;
-                    }
-
-                    nc.value += 1;
-                    let cloned = nc.value;
-
-                    match meter.register_callback(&[local_clone.as_any()], move |observer| {
-                        observer.observe_i64(&local_clone, cloned, &[KeyValue::new(NETWORK, network.clone())])
-                    }) {
-                        Ok(callback) => nc.callback = callback,
-                        Err(e) => {
-                            error!(
-                                logger,
-                                "Couldn't register counter for network '{}': {:?}", network_clone, e
-                            )
-                        }
-                    }
-                }
-                None => {
-                    match meter.register_callback(&[local_clone.as_any()], move |observer| {
-                        observer.observe_i64(&local_clone, 1, &[KeyValue::new(NETWORK, network.clone())])
-                    }) {
-                        Ok(callback) => {
-                            let named = NamedCallbackWithValue {
-                                value: 1_i64,
-                                callback,
-                                name: metric_name,
-                            };
-
-                            callbacks.push(named)
-                        }
-                        Err(e) => {
-                            error!(
-                                logger,
-                                "Couldn't register counter for network '{}': {:?}", network_clone, e
-                            )
-                        }
-                    }
-                }
-            },
-            None => {
-                match meter.register_callback(&[local_clone.as_any()], move |observer| {
-                    observer.observe_i64(&local_clone, 1, &[KeyValue::new(NETWORK, network.clone())])
-                }) {
-                    Ok(callback) => {
-                        info!(logger, "Registering new counter for '{}'", network_clone);
-                        let named = NamedCallbackWithValue {
-                            value: 1_i64,
-                            callback,
-                            name: metric_name,
-                        };
-
-                        locked.insert(network_clone, vec![named]);
-                    }
-                    Err(e) => {
-                        error!(
-                            logger,
-                            "Couldn't register counter for network '{}': {:?}", network_clone, e
-                        )
-                    }
-                }
-            }
-        }
+    pub fn observe_end(&mut self, network: String) {
+        let mut s = self.latest_values_by_network.lock().unwrap();
+        s.remove(&network);
     }
-}
-
-struct NamedCallbackWithValue<T> {
-    callback: Box<dyn CallbackRegistration>,
-    value: T,
-    name: String,
 }
