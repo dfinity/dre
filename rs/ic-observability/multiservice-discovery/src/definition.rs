@@ -488,7 +488,6 @@ impl DefinitionsSupervisor {
                     let fs_def: Vec<FSDefinition> = existing
                         .values()
                         .cloned()
-                        .into_iter()
                         .map(|running_def| running_def.definition.into())
                         .collect::<Vec<_>>();
 
