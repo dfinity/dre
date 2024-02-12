@@ -438,7 +438,7 @@ def main():
                 rc_name, last_commit
             )
         )
-        output.write("<p>Change log between git revision {} and {}</p>\n".format(first_commit, last_commit))
+        output.write("<br><p>Change log between git revision {} and {}</p>\n".format(first_commit, last_commit))
 
         for current_type in sorted(TYPE_PRETTY_MAP, key=lambda x: TYPE_PRETTY_MAP[x][1]):
             if current_type not in change_infos:
