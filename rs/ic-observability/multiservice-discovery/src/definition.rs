@@ -143,8 +143,21 @@ impl TestDefinition {
     }
 
     /// Syncs the registry update the in-memory cache then stops.
-    pub async fn sync_and_stop(&self) {
-        let _ = self.running_def.initial_registry_sync().await;
+    pub async fn sync_and_stop(&self, skip_update_local_registry: bool) {
+        let _ = if skip_update_local_registry {
+            sync_local_registry(
+                self.running_def.definition.log.clone(),
+                self.running_def.definition.registry_path.join("targets"),
+                self.running_def.definition.nns_urls.clone(),
+                true,
+                self.running_def.definition.public_key,
+                &self.running_def.stop_signal,
+            )
+            .await.unwrap();
+        } else {
+            self.running_def.initial_registry_sync().await.unwrap();
+        };
+        
         // if self.initial_registry_sync().await.is_err() {
         // FIXME: Error has been logged, but ideally, it should be handled.
         // E.g. telemetry should collect this.
