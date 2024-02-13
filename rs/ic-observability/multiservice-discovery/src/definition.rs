@@ -189,7 +189,7 @@ impl Definition {
     }
 
     pub(crate) async fn run(self, rt: tokio::runtime::Handle, metrics: RunningDefinitionsMetrics) -> RunningDefinition {
-        fn wrap(mut definition: RunningDefinition, rt: tokio::runtime::Handle) -> impl FnMut() {
+        fn wrap(definition: RunningDefinition, rt: tokio::runtime::Handle) -> impl FnMut() {
             move || {
                 rt.block_on(definition.run());
             }
@@ -214,7 +214,7 @@ impl Definition {
 }
 
 impl RunningDefinition {
-    pub(crate) async fn end(&mut self) {
+    pub(crate) async fn end(&self) {
         let mut ender = self.ender.lock().await;
         if let Some(s) = ender.take() {
             // We have pulled out the channel from its container.  After this,
@@ -282,7 +282,7 @@ impl RunningDefinition {
         r
     }
 
-    async fn poll_loop(&mut self) {
+    async fn poll_loop(&self) {
         let interval = crossbeam::channel::tick(self.definition.poll_interval);
         let mut tick = Instant::now();
         loop {
@@ -322,7 +322,7 @@ impl RunningDefinition {
 
     // Syncs the registry and keeps running, syncing as new
     // registry versions come in.
-    async fn run(&mut self) {
+    async fn run(&self) {
         if self.initial_registry_sync().await.is_err() {
             // Initial sync was interrupted.
             self.metrics.observe_end(self.name());

@@ -49,7 +49,7 @@ fn main() {
             shutdown_signal: impl futures_util::Future<Output = ()>,
         ) -> Option<RunningDefinition> {
             let def = get_mainnet_definition(cli_args, log.clone());
-            let mut test_def = TestDefinition::new(def, RunningDefinitionsMetrics::new());
+            let test_def = TestDefinition::new(def, RunningDefinitionsMetrics::new());
             let sync_fut = test_def.sync_and_stop();
             tokio::select! {
                 _ = sync_fut => {
