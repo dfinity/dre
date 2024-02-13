@@ -28,6 +28,7 @@ pub async fn run_downloader_loop(logger: Logger, cli: CliArgs, stop_signal: Rece
     }
 
     let mut current_hash: u64 = 0;
+    let mut limit: u64 = 20;
 
     loop {
         let tick = crossbeam::select! {
@@ -39,7 +40,7 @@ pub async fn run_downloader_loop(logger: Logger, cli: CliArgs, stop_signal: Rece
         };
         info!(logger, "Downloading from {} @ interval {:?}", cli.sd_url, tick);
 
-        let response = match client.get(cli.sd_url.clone()).send().await {
+        let response = match client.get(cli.sd_url.clone()).query(&[("limit", limit)]).send().await {
             Ok(res) => res,
             Err(e) => {
                 warn!(
@@ -76,6 +77,16 @@ pub async fn run_downloader_loop(logger: Logger, cli: CliArgs, stop_signal: Rece
                 continue;
             }
         };
+
+        if limit == targets.len() as u64 {
+            limit += 10;
+            info!(
+                logger,
+                "Limit reached. Increasing in next scrape from '{}' to '{}'",
+                targets.len(),
+                limit
+            )
+        }
         let mut snses = vec![];
         for target in targets {
             let mut sns = Sns {
@@ -103,7 +114,8 @@ pub async fn run_downloader_loop(logger: Logger, cli: CliArgs, stop_signal: Rece
 
         let mut hasher = DefaultHasher::new();
 
-        let targets = snses.into_iter().filter(|f| filters.filter(f)).collect::<Vec<_>>();
+        let mut targets = snses.into_iter().filter(|f| filters.filter(f)).collect::<Vec<_>>();
+        targets.sort_by_key(|f| f.root_canister_id.to_string());
 
         for target in &targets {
             target.hash(&mut hasher);
@@ -112,7 +124,14 @@ pub async fn run_downloader_loop(logger: Logger, cli: CliArgs, stop_signal: Rece
         let hash = hasher.finish();
 
         if current_hash != hash {
-            info!(logger, "Received new targets from {} @ interval {:?}", cli.sd_url, tick);
+            info!(
+                logger,
+                "Received new targets from {} @ interval {:?}, old hash '{}' != '{}' new hash",
+                cli.sd_url,
+                tick,
+                current_hash,
+                hash
+            );
             current_hash = hash;
 
             generate_config(&cli, targets, logger.clone());
@@ -164,8 +183,7 @@ async fn get_canisters(cli: &CliArgs, root_canister_id: String, client: &Client,
             return vec![];
         }
     };
-
-    match &contract["canisters"] {
+    let mut canisters = match &contract["canisters"] {
         serde_json::Value::Array(ar) => ar
             .iter()
             .map(|val| Canister {
@@ -181,5 +199,8 @@ async fn get_canisters(cli: &CliArgs, root_canister_id: String, client: &Client,
             );
             vec![]
         }
-    }
+    };
+
+    canisters.sort_by_key(|c| c.canister_id.to_string());
+    canisters
 }
