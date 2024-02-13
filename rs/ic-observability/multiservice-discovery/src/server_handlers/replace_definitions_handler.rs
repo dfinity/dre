@@ -12,6 +12,7 @@ pub(super) async fn replace_definitions(
     State(binding): State<Server>,
     Json(definitions): Json<Vec<DefinitionDto>>,
 ) -> WebResult<String> {
+    // Cache old names if we need to remove them from metrics
     let dnames = definitions
         .iter()
         .map(|d| d.name.clone())
@@ -48,7 +49,11 @@ pub(super) async fn replace_definitions(
     let new_definitions: Vec<_> = new_definitions.into_iter().map(Result::unwrap).collect();
     match binding
         .supervisor
-        .start(new_definitions, StartMode::ReplaceExistingDefinitions)
+        .start(
+            new_definitions.clone(),
+            StartMode::ReplaceExistingDefinitions,
+            binding.metrics.running_definition_metrics.clone(),
+        )
         .await
     {
         Ok(_) => ok(

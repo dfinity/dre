@@ -13,8 +13,7 @@ impl TargetGroupFilter for OldMachinesFilter {
             .iter()
             // Maps addresses to true if they are new
             .map(|sockaddr: &SocketAddr| {
-                sockaddr.port() != 9100
-                    || !matches!(sockaddr.ip(), IpAddr::V6(a) if a.segments()[4] == 0x5000)
+                sockaddr.port() != 9100 || !matches!(sockaddr.ip(), IpAddr::V6(a) if a.segments()[4] == 0x5000)
             })
             .all(|is_new| is_new)
     }
@@ -32,9 +31,7 @@ mod tests {
 
     fn create_dummy_target_group(ipv6: &str) -> TargetGroup {
         let mut targets = BTreeSet::new();
-        targets.insert(std::net::SocketAddr::V6(
-            SocketAddrV6::from_str(ipv6).unwrap(),
-        ));
+        targets.insert(std::net::SocketAddr::V6(SocketAddrV6::from_str(ipv6).unwrap()));
         TargetGroup {
             node_id: NodeId::from(PrincipalId::new_anonymous()),
             ic_name: "mercury".into(),
@@ -50,12 +47,10 @@ mod tests {
     fn old_machine_filter_test() {
         let filter = OldMachinesFilter {};
 
-        let new_orchestrator_tg =
-            create_dummy_target_group("[2a02:800:2:2003:6801:f6ff:fec4:4c86]:9091");
+        let new_orchestrator_tg = create_dummy_target_group("[2a02:800:2:2003:6801:f6ff:fec4:4c86]:9091");
         assert!(TargetGroupFilter::filter(&filter, new_orchestrator_tg));
 
-        let old_orchestrator_tg =
-            create_dummy_target_group("[2a02:800:2:2003:5000:f6ff:fec4:4c86]:9091");
+        let old_orchestrator_tg = create_dummy_target_group("[2a02:800:2:2003:5000:f6ff:fec4:4c86]:9091");
         assert!(TargetGroupFilter::filter(&filter, old_orchestrator_tg));
 
         let old_host_tg = create_dummy_target_group("[2a02:800:2:2003:5000:f6ff:fec4:4c86]:9100");

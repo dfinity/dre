@@ -31,11 +31,7 @@ impl FileSd {
     /// The assumption is that no external process manipulates or deletes the written files.
     /// FileSd will memoize the calls. Thus, calling this method twice with the
     /// same arguments will have no effect.
-    pub fn write_sd_config(
-        &self,
-        job: JobType,
-        p8s_target_groups: BTreeSet<TargetGroup>,
-    ) -> std::io::Result<()> {
+    pub fn write_sd_config(&self, job: JobType, p8s_target_groups: BTreeSet<TargetGroup>) -> std::io::Result<()> {
         let mut last_targets = self.last_targets.write().unwrap();
         let last_job_targets = last_targets.entry(job.to_string()).or_default();
         if last_job_targets == &p8s_target_groups {
@@ -53,12 +49,8 @@ impl FileSd {
             .map(ServiceDiscoveryRecord::from)
             .collect();
         ic_utils::fs::write_atomically(target_path.as_path(), |f| {
-            serde_json::to_writer_pretty(f, &targets).map_err(|e| {
-                std::io::Error::new(
-                    std::io::ErrorKind::Other,
-                    format!("Serialization error: {:?}", e),
-                )
-            })
+            serde_json::to_writer_pretty(f, &targets)
+                .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, format!("Serialization error: {:?}", e)))
         })?;
         last_targets.insert(job.to_string(), p8s_target_groups);
         Ok(())

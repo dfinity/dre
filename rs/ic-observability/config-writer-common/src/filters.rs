@@ -62,9 +62,7 @@ mod tests {
 
     fn create_dummy_target_group(ipv6: &str) -> TargetGroup {
         let mut targets = BTreeSet::new();
-        targets.insert(std::net::SocketAddr::V6(
-            SocketAddrV6::from_str(ipv6).unwrap(),
-        ));
+        targets.insert(std::net::SocketAddr::V6(SocketAddrV6::from_str(ipv6).unwrap()));
         TargetGroup {
             node_id: NodeId::from(PrincipalId::new_anonymous()),
             ic_name: "mercury".into(),
@@ -82,10 +80,7 @@ mod tests {
 
         let accepted_tg = TargetGroup {
             node_id: NodeId::from(
-                PrincipalId::from_str(
-                    "iylgr-zpxwq-kqgmf-4srtx-o4eey-d6bln-smmq6-we7px-ibdea-nondy-eae",
-                )
-                .unwrap(),
+                PrincipalId::from_str("iylgr-zpxwq-kqgmf-4srtx-o4eey-d6bln-smmq6-we7px-ibdea-nondy-eae").unwrap(),
             ),
             ic_name: "mercury".into(),
             targets: BTreeSet::new(),
@@ -98,10 +93,7 @@ mod tests {
 
         let rejected_tg = TargetGroup {
             node_id: NodeId::from(
-                PrincipalId::from_str(
-                    "x33ed-h457x-bsgyx-oqxqf-6pzwv-wkhzr-rm2j3-npodi-purzm-n66cg-gae",
-                )
-                .unwrap(),
+                PrincipalId::from_str("x33ed-h457x-bsgyx-oqxqf-6pzwv-wkhzr-rm2j3-npodi-purzm-n66cg-gae").unwrap(),
             ),
             ic_name: "mercury".into(),
             targets: BTreeSet::new(),
@@ -121,10 +113,7 @@ mod tests {
 
         let accepted_tg = TargetGroup {
             node_id: NodeId::from(
-                PrincipalId::from_str(
-                    "iylgr-zpxwq-kqgmf-4srtx-o4eey-d6bln-smmq6-we7px-ibdea-nondy-eae",
-                )
-                .unwrap(),
+                PrincipalId::from_str("iylgr-zpxwq-kqgmf-4srtx-o4eey-d6bln-smmq6-we7px-ibdea-nondy-eae").unwrap(),
             ),
             ic_name: "mercury".into(),
             targets: BTreeSet::new(),
@@ -137,10 +126,7 @@ mod tests {
 
         let rejected_tg_1 = TargetGroup {
             node_id: NodeId::from(
-                PrincipalId::from_str(
-                    "x33ed-h457x-bsgyx-oqxqf-6pzwv-wkhzr-rm2j3-npodi-purzm-n66cg-gae",
-                )
-                .unwrap(),
+                PrincipalId::from_str("x33ed-h457x-bsgyx-oqxqf-6pzwv-wkhzr-rm2j3-npodi-purzm-n66cg-gae").unwrap(),
             ),
             ic_name: "mercury".into(),
             targets: BTreeSet::new(),

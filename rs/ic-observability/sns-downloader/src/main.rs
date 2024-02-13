@@ -21,11 +21,7 @@ fn main() {
 
     info!(logger, "Starting downloader loop"; "cli_args" => ?cli_args);
 
-    let downloader_handle = rt.spawn(run_downloader_loop(
-        logger.clone(),
-        cli_args,
-        stop_signal_rcv,
-    ));
+    let downloader_handle = rt.spawn(run_downloader_loop(logger.clone(), cli_args, stop_signal_rcv));
 
     rt.block_on(shutdown_signal);
     info!(logger, "Received shutdown signal, shutting down ...");

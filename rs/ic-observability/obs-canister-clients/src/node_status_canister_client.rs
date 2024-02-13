@@ -71,20 +71,14 @@ impl NodeStatusCanister {
         agent
     }
 
-    pub async fn get_node_status(
-        &self,
-        format_for_frontend: bool,
-    ) -> Result<Vec<NodeStatus>, NodeStatusCanisterError> {
+    pub async fn get_node_status(&self, format_for_frontend: bool) -> Result<Vec<NodeStatus>, NodeStatusCanisterError> {
         match self
             .choose_random_agent()
             .await
             .query(&self.canister_id, "get_node_status")
             .with_effective_canister_id(self.canister_id)
             .with_arg(Encode! { &format_for_frontend }.map_err(|err| {
-                NodeStatusCanisterError::Encoding(format!(
-                    "Error encoding argument for get_node_status: {}",
-                    err
-                ))
+                NodeStatusCanisterError::Encoding(format!("Error encoding argument for get_node_status: {}", err))
             })?)
             .call()
             .await
@@ -103,20 +97,14 @@ impl NodeStatusCanister {
         }
     }
 
-    pub async fn update_node_statuses(
-        &self,
-        statuses: Vec<NodeStatus>,
-    ) -> Result<bool, NodeStatusCanisterError> {
+    pub async fn update_node_statuses(&self, statuses: Vec<NodeStatus>) -> Result<bool, NodeStatusCanisterError> {
         let request_id = match self
             .choose_random_agent()
             .await
             .update(&self.canister_id, "update_node_status")
             .with_effective_canister_id(self.canister_id)
             .with_arg(Encode! { &statuses }.map_err(|err| {
-                NodeStatusCanisterError::Encoding(format!(
-                    "Error encoding argument for update_node_status: {}",
-                    err
-                ))
+                NodeStatusCanisterError::Encoding(format!("Error encoding argument for update_node_status: {}", err))
             })?)
             .call()
             .await
