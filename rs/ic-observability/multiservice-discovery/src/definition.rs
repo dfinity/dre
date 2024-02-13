@@ -146,6 +146,12 @@ impl TestDefinition {
     /// Syncs the registry update the in-memory cache then stops.
     pub async fn sync_and_stop(&self, skip_update_local_registry: bool) {
         if let Err(e) = if skip_update_local_registry {
+            // The function, when invoked with use_current_version=true, prioritizes utilizing the 
+            // local registry and omits the synchronization step. If however the local registry is found to be empty,
+            // perhaps as a consequence of a prior execution error or a buggy version, the function will then proceed 
+            // to synchronize the registry. 
+            // This mechanism ensures clarity in handling scenarios where a comparison between two MSD versions starts 
+            // from a baseline of an empty registry due to issues in earlier runs.
             sync_local_registry(
                 self.running_def.definition.log.clone(),
                 self.running_def.definition.registry_path.join("targets"),
