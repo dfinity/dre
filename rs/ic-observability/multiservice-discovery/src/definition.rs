@@ -150,6 +150,7 @@ impl TestDefinition {
                 self.running_def.definition.log,
                 "Error while running initial sync for definition named '{}': {:?}", self.running_def.definition.name, e
             );
+            self.running_def.metrics.observe_sync(self.running_def.name(), false);
             return;
         }
         let _ = self
@@ -270,13 +271,15 @@ impl RunningDefinition {
                     self.definition.log,
                     "Syncing local registry for {} completed", self.definition.name,
                 );
-                self.metrics.observe_load(self.name(), true);
                 self.metrics.observe_sync(self.name(), true)
             }
-            Err(_) => warn!(
-                self.definition.log,
-                "Interrupted initial sync of definition {}", self.definition.name
-            ),
+            Err(_) => {
+                warn!(
+                    self.definition.log,
+                    "Interrupted initial sync of definition {}", self.definition.name
+                );
+                self.metrics.observe_sync(self.name(), false)
+            }
         }
         r
     }
