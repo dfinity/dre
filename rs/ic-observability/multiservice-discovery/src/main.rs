@@ -212,7 +212,7 @@ the Prometheus targets of mainnet as a JSON structure on stdout.
         default_value = "false",
         action,
         help = r#"
-Used for testing: Weather to skip the update of the local mainnet registry.
+Used for testing: Whether to skip the update of the local mainnet registry.
 "#
     )]
     skip_update_local_registry: bool,
