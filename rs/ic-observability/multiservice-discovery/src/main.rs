@@ -69,7 +69,12 @@ fn main() {
             print!("{}", text);
         }
     } else {
-        let supervisor = DefinitionsSupervisor::new(rt.handle().clone(), cli_args.start_without_mainnet);
+        let supervisor = DefinitionsSupervisor::new(
+            rt.handle().clone(), 
+            cli_args.start_without_mainnet, 
+            cli_args.networks_state_file.clone(),
+            make_logger(),
+        );
         let (server_stop, server_stop_receiver) = oneshot::channel();
 
         // Initialize the metrics layer because in the build method the `global::provider`
@@ -77,12 +82,10 @@ fn main() {
         let metrics_layer = HttpMetricsLayerBuilder::new().build();
         let metrics = MSDMetrics::new();
 
-        if let Some(networks_state_file) = cli_args.networks_state_file.clone() {
-            rt.block_on(
-                supervisor.load_or_create_defs(networks_state_file, metrics.running_definition_metrics.clone()),
-            )
-            .unwrap();
-        }
+        rt.block_on(
+            supervisor.load_or_create_defs(metrics.running_definition_metrics.clone()),
+        )
+        .unwrap();
 
         // First check if we should start the mainnet definition so we can
         // serve it right after the server starts.
@@ -116,13 +119,6 @@ fn main() {
 
         // Signal server to stop.  Stop happens in parallel with supervisor stop.
         server_stop.send(()).unwrap();
-
-        // Persist definitions to disk before ending the supervisor.
-        // FIXME: persistence should happen when the definitions structure
-        // changes, not just on end.  E.g. when a public key is updated.
-        if let Some(networks_state_file) = cli_args.networks_state_file.clone() {
-            rt.block_on(supervisor.persist_defs(networks_state_file)).unwrap();
-        }
 
         //Stop all definitions.  End happens in parallel with server stop.
         rt.block_on(supervisor.end());
