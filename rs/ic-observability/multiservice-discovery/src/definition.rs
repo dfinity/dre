@@ -6,11 +6,12 @@ use ic_registry_client::client::ThresholdSigPublicKey;
 use serde::Deserialize;
 use serde::Serialize;
 use service_discovery::job_types::JobType;
-use service_discovery::registry_sync::Interrupted;
+use service_discovery::registry_sync::SyncError;
 use service_discovery::IcServiceDiscovery;
 use service_discovery::IcServiceDiscoveryError;
 use service_discovery::TargetGroup;
 use service_discovery::{registry_sync::sync_local_registry, IcServiceDiscoveryImpl};
+use slog::error;
 use slog::{debug, info, warn, Logger};
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
@@ -144,12 +145,13 @@ impl TestDefinition {
 
     /// Syncs the registry update the in-memory cache then stops.
     pub async fn sync_and_stop(&self) {
-        let _ = self.running_def.initial_registry_sync().await;
-        // if self.initial_registry_sync().await.is_err() {
-        // FIXME: Error has been logged, but ideally, it should be handled.
-        // E.g. telemetry should collect this.
-        // return;
-        // }
+        if let Err(e) = self.running_def.initial_registry_sync().await {
+            error!(
+                self.running_def.definition.log,
+                "Error while running initial sync for definition named '{}': {:?}", self.running_def.definition.name, e
+            );
+            return;
+        }
         let _ = self
             .running_def
             .definition
@@ -242,7 +244,7 @@ impl RunningDefinition {
             .get_target_groups(job_type, self.definition.log.clone())
     }
 
-    async fn initial_registry_sync(&self) -> Result<(), Interrupted> {
+    async fn initial_registry_sync(&self) -> Result<(), SyncError> {
         info!(
             self.definition.log,
             "Syncing local registry for {} started", self.definition.name
@@ -253,11 +255,6 @@ impl RunningDefinition {
             self.definition.registry_path.display()
         );
 
-        // FIXME: sync_local_registry() needs to update the metrics just
-        // as poll_loop() does.  Otherwise an initially hung or failed
-        // sync_local_registry() is not going to be trackable via metrics.
-        // Right now, the callee simply says metrics sync successful once
-        // this function returns.
         let r = sync_local_registry(
             self.definition.log.clone(),
             self.definition.registry_path.join("targets"),
@@ -272,7 +269,9 @@ impl RunningDefinition {
                 info!(
                     self.definition.log,
                     "Syncing local registry for {} completed", self.definition.name,
-                )
+                );
+                self.metrics.observe_load(self.name(), true);
+                self.metrics.observe_sync(self.name(), true)
             }
             Err(_) => warn!(
                 self.definition.log,
@@ -338,11 +337,6 @@ impl RunningDefinition {
         self.poll_loop().await;
 
         self.metrics.observe_end(self.name());
-
-        // We used to delete storage here, but that was unsafe
-        // because another definition may be started in its name,
-        // so it is racy to delete the folder it will be using.
-        // So we no longer delete storage here.
     }
 
     pub(crate) async fn add_boundary_node(&mut self, target: BoundaryNode) -> Result<(), BoundaryNodeAlreadyExists> {
@@ -459,11 +453,6 @@ impl DefinitionsSupervisor {
         }
     }
 
-    // FIXME: if the file is corrupted, that may be a partial write from another
-    // MSD sharing the same directory.  Retry the error.
-    // FIXME: definitions should be reloaded if the file is changed.
-    // FIXME: if the definitions loaded are the same as the currently-loaded
-    // definitions, no action should be taken on this MSD.
     pub(crate) async fn load_or_create_defs(
         &self,
         networks_state_file: PathBuf,
@@ -482,9 +471,6 @@ impl DefinitionsSupervisor {
         Ok(())
     }
 
-    // FIXME: if the file contents on disk are the same as the contents about to
-    // be persisted, then the file should not be overwritten because it was
-    // already updated by another MSD sharing the same directory.
     pub(crate) async fn persist_defs(&self, networks_state_file: PathBuf) -> Result<(), Box<dyn Error>> {
         let existing = self.definitions.lock().await;
         retry::retry(retry::delay::Exponential::from_millis(10).take(5), || {
