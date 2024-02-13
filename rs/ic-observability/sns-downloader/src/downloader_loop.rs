@@ -28,7 +28,9 @@ pub async fn run_downloader_loop(logger: Logger, cli: CliArgs, stop_signal: Rece
     }
 
     let mut current_hash: u64 = 0;
-    let mut limit: u64 = 20;
+    // Can be found: https://sns-api.internetcomputer.org/docs#/snses/list_snses_api_v1_snses_get
+    // Its the default maximum value
+    let limit: u64 = 100;
 
     loop {
         let tick = crossbeam::select! {
@@ -38,78 +40,86 @@ pub async fn run_downloader_loop(logger: Logger, cli: CliArgs, stop_signal: Rece
             },
             recv(interval) -> msg => msg.expect("tick failed!")
         };
-        info!(logger, "Downloading from {} @ interval {:?}", cli.sd_url, tick);
 
-        let response = match client.get(cli.sd_url.clone()).query(&[("limit", limit)]).send().await {
-            Ok(res) => res,
-            Err(e) => {
-                warn!(
-                    logger,
-                    "Failed to download from {} @ interval {:?}: {:?}", cli.sd_url, tick, e
-                );
-                continue;
-            }
-        };
+        let mut current_page: u64 = 0;
+        let mut snses = vec![];
 
-        if !response.status().is_success() {
-            warn!(
-                logger,
-                "Received failed status {} @ interval {:?}: {:?}", cli.sd_url, tick, response
-            );
-            continue;
-        }
-
-        let targets: serde_json::Value = match response.json().await {
-            Ok(targets) => targets,
-            Err(e) => {
-                warn!(
-                    logger,
-                    "Failed to parse response from {} @ interval {:?}: {:?}", cli.sd_url, tick, e
-                );
-                continue;
-            }
-        };
-
-        let targets = match &targets["data"] {
-            serde_json::Value::Array(ar) => ar,
-            _ => {
-                warn!(logger, "Didn't receive expected structure of payload");
-                continue;
-            }
-        };
-
-        if limit == targets.len() as u64 {
-            limit += 10;
+        loop {
             info!(
                 logger,
-                "Limit reached. Increasing in next scrape from '{}' to '{}'",
-                targets.len(),
-                limit
-            )
-        }
-        let mut snses = vec![];
-        for target in targets {
-            let mut sns = Sns {
-                description: target["description"].as_str().unwrap().to_string(),
-                enabled: target["enabled"].as_bool().unwrap(),
-                root_canister_id: target["root_canister_id"].as_str().unwrap().to_string(),
-                name: target["name"].as_str().unwrap().to_string(),
-                url: target["url"].as_str().unwrap().to_string(),
-                canisters: get_canisters(
-                    &cli,
-                    target["root_canister_id"].as_str().unwrap().to_string(),
-                    &client,
-                    logger.clone(),
-                )
-                .await,
+                "Downloading from {} page {} @ interval {:?}", cli.sd_url, current_page, tick
+            );
+            let response = match client
+                .get(cli.sd_url.clone())
+                .query(&[("limit", limit), ("offset", current_page * limit)])
+                .send()
+                .await
+            {
+                Ok(res) => res,
+                Err(e) => {
+                    warn!(
+                        logger,
+                        "Failed to download from {} @ interval {:?}: {:?}", cli.sd_url, tick, e
+                    );
+                    continue;
+                }
             };
-            sns.canisters.push(Canister {
-                canister_id: target["root_canister_id"].as_str().unwrap().to_string(),
-                canister_type: "root".to_string(),
-                module_hash: "".to_string(),
-            });
 
-            snses.push(sns)
+            if !response.status().is_success() {
+                warn!(
+                    logger,
+                    "Received failed status {} @ interval {:?}: {:?}", cli.sd_url, tick, response
+                );
+                continue;
+            }
+
+            let targets: serde_json::Value = match response.json().await {
+                Ok(targets) => targets,
+                Err(e) => {
+                    warn!(
+                        logger,
+                        "Failed to parse response from {} @ interval {:?}: {:?}", cli.sd_url, tick, e
+                    );
+                    continue;
+                }
+            };
+
+            let targets = match &targets["data"] {
+                serde_json::Value::Array(ar) => ar,
+                _ => {
+                    warn!(logger, "Didn't receive expected structure of payload");
+                    continue;
+                }
+            };
+
+            for target in targets {
+                let mut sns = Sns {
+                    description: target["description"].as_str().unwrap().to_string(),
+                    enabled: target["enabled"].as_bool().unwrap(),
+                    root_canister_id: target["root_canister_id"].as_str().unwrap().to_string(),
+                    name: target["name"].as_str().unwrap().to_string(),
+                    url: target["url"].as_str().unwrap().to_string(),
+                    canisters: get_canisters(
+                        &cli,
+                        target["root_canister_id"].as_str().unwrap().to_string(),
+                        &client,
+                        logger.clone(),
+                    )
+                    .await,
+                };
+                sns.canisters.push(Canister {
+                    canister_id: target["root_canister_id"].as_str().unwrap().to_string(),
+                    canister_type: "root".to_string(),
+                    module_hash: "".to_string(),
+                });
+
+                snses.push(sns)
+            }
+
+            if targets.len() < limit as usize {
+                break;
+            }
+            current_page += 1
         }
 
         let mut hasher = DefaultHasher::new();
