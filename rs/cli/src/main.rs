@@ -19,6 +19,7 @@ mod ic_admin;
 mod ops_subnet_node_replace;
 mod registry_dump;
 mod runner;
+mod operations;
 
 const STAGING_NEURON_ID: u64 = 49;
 
@@ -98,36 +99,36 @@ async fn main() -> Result<(), anyhow::Error> {
                         min_nakamoto_coefficients,
                     } => {
                         let min_nakamoto_coefficients = parse_min_nakamoto_coefficients(&mut cmd, min_nakamoto_coefficients);
-                            let runner = runner::Runner::new_with_network_url(cli::Cli::from_opts(&cli_opts, true).await?.into(), target_network.clone()).await?;
-                            runner
+                        let runner = runner::Runner::new_with_network_url(cli::Cli::from_opts(&cli_opts, true).await?.into(), target_network.clone()).await?;
+runner
                                 .membership_replace(ic_management_types::requests::MembershipReplaceRequest {
                                     target: match &subnet.id {
-                                        Some(subnet) => {
-                                            ic_management_types::requests::ReplaceTarget::Subnet(*subnet)
-                                        }
-                                        None => {
-                                            if let Some(motivation) = motivation.clone() {
-                                                ic_management_types::requests::ReplaceTarget::Nodes {
-                                                    nodes: nodes.clone(),
-                                                    motivation,
-                                                }
-                                            } else {
-                                                cmd.error(
-                                                    ErrorKind::MissingRequiredArgument,
-                                                    "Required argument `motivation` not found",
-                                                )
-                                                .exit();
-                                            }
-                                        }
-                                    },
+                            Some(subnet) => {
+                                ic_management_types::requests::ReplaceTarget::Subnet(*subnet)
+                            }
+                            None => {
+                                if let Some(motivation) = motivation.clone() {
+                                    ic_management_types::requests::ReplaceTarget::Nodes {
+                                        nodes: nodes.clone(),
+                                        motivation,
+                                    }
+                                } else {
+                                    cmd.error(
+                                        ErrorKind::MissingRequiredArgument,
+                                        "Required argument `motivation` not found",
+                                    )
+                                    .exit();
+                                }
+                            }
+                        },
                                     heal: !no_heal,
                                     optimize: *optimize,
                                     exclude: exclude.clone().into(),
-                                    only: only.clone(),
-                                    include: include.clone().into(),
-                                    min_nakamoto_coefficients,
+                                only: only.clone(),
+                                include: include.clone().into(),
+                                min_nakamoto_coefficients,
                                 }, cli_opts.verbose, simulate)
-                                .await
+                            .await
                     }
                     cli::subnet::Commands::Resize { add, remove, include, only, exclude, motivation, } => {
                         if let Some(motivation) = motivation.clone() {

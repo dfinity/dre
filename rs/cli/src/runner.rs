@@ -1,13 +1,14 @@
 use crate::clients::DashboardBackendClient;
+use crate::operations::hostos_rollout::{self, HostosRolloutResponse};
 use crate::{ic_admin, local_unused_port};
 use crate::ic_admin::ProposeOptions;
 use crate::ops_subnet_node_replace;
 use decentralization::SubnetChangeResponse;
 use ic_base_types::PrincipalId;
 use ic_management_backend::public_dashboard::query_ic_dashboard_list;
-use ic_management_backend::{hostos_rollout, proposal};
+use ic_management_backend::proposal;
 use ic_management_backend::registry::{self, RegistryState};
-use ic_management_types::requests::{ HostosRolloutResponse, NodesRemoveRequest};
+use ic_management_types::requests::NodesRemoveRequest;
 use ic_management_types::{Artifact, Network, Node, NodeFeature, NodeGroupUpdate, NodeProvidersResponse};
 use itertools::Itertools;
 use log::{info, warn};
@@ -123,7 +124,7 @@ impl Runner {
         )
     }
 
-    pub async fn membership_replace(
+        pub async fn membership_replace(
         &self,
         request: ic_management_types::requests::MembershipReplaceRequest,
         verbose: bool,

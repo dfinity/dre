@@ -2277,6 +2277,7 @@ name = "dre"
 version = "0.2.1"
 dependencies = [
  "anyhow",
+ "async-recursion",
  "async-trait",
  "candid",
  "clap 4.4.18",
@@ -2290,6 +2291,7 @@ dependencies = [
  "edit",
  "flate2",
  "futures",
+ "futures-util",
  "ic-base-types",
  "ic-canister-client",
  "ic-canisters",
@@ -4343,7 +4345,6 @@ dependencies = [
  "actix-web",
  "anyhow",
  "assert_matches",
- "async-recursion",
  "async-trait",
  "backon",
  "candid",

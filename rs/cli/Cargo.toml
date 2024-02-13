@@ -12,6 +12,8 @@ documentation.workspace = true
 [dependencies]
 anyhow = { workspace = true }
 async-trait = { workspace = true }
+async-recursion = { workspace = true }
+futures-util = { workspace = true }
 candid = { workspace = true }
 clap = { workspace = true }
 clap-num = { workspace = true }

@@ -2,18 +2,45 @@ use anyhow::anyhow;
 use async_recursion::async_recursion;
 use futures_util::future::try_join;
 use ic_base_types::{NodeId, PrincipalId};
-use ic_management_types::requests::{HostosRolloutReason, HostosRolloutResponse, HostosRolloutSubnetAffected};
+use ic_management_backend::health;
+use ic_management_backend::proposal::ProposalAgent;
 use ic_management_types::{
     Network, Node, NodeAssignment, NodeGroup, NodeGroupUpdate, NodeOwner, Status, Subnet,
     UpdateNodesHostosVersionsProposal,
 };
 use log::{debug, info};
-use proposal::ProposalAgent;
 use std::collections::BTreeMap;
+use std::fmt::Display;
 
-use crate::health;
-use crate::proposal;
+pub enum HostosRolloutResponse {
+    Ok(Vec<Node>, Option<Vec<HostosRolloutSubnetAffected>>),
+    None(Vec<(NodeGroup, HostosRolloutReason)>),
+}
 
+#[derive(Clone, Eq, PartialEq)]
+pub struct HostosRolloutSubnetAffected {
+    pub subnet_id: PrincipalId,
+    pub subnet_size: usize,
+}
+
+#[derive(Eq, PartialEq)]
+pub enum HostosRolloutReason {
+    NoNodeHealthy,
+    NoNodeWithoutProposal,
+    AllAlreadyUpdated,
+    NoNodeSelected,
+}
+
+impl Display for HostosRolloutReason {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::NoNodeHealthy => write!(f, "No healthy node found in the group"),
+            Self::NoNodeWithoutProposal => write!(f, "No node without open proposals found in the group"),
+            Self::AllAlreadyUpdated => write!(f, "All candidate nodes have been already updated"),
+            Self::NoNodeSelected => write!(f, "No candidate nodes have been selected"),
+        }
+    }
+}
 enum CandidatesSelection {
     Ok(Vec<Node>),
     None(HostosRolloutReason),
