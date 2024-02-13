@@ -17,6 +17,15 @@ pub enum HostosRolloutResponse {
     None(Vec<(NodeGroup, HostosRolloutReason)>),
 }
 
+impl HostosRolloutResponse {
+    pub fn unwrap(self) -> Vec<Node> {
+        match self {
+            HostosRolloutResponse::Ok(val, _) => val,
+            _ => panic!("called `Option::unwrap()` on a `None` value"),
+        }
+    }
+}
+
 #[derive(Clone, Eq, PartialEq)]
 pub struct HostosRolloutSubnetAffected {
     pub subnet_id: PrincipalId,
@@ -412,8 +421,8 @@ impl HostosRollout {
 
 #[cfg(test)]
 pub mod test {
-    use crate::hostos_rollout::NodeAssignment::{Assigned, Unassigned};
-    use crate::hostos_rollout::NodeOwner::{Dfinity, Others};
+    use crate::operations::hostos_rollout::NodeAssignment::{Assigned, Unassigned};
+    use crate::operations::hostos_rollout::NodeOwner::{Dfinity, Others};
     use ic_management_types::{Network, Node, NumberOfNodes, Operator, Provider, Subnet};
     use std::net::Ipv6Addr;
 

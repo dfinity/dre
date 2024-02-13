@@ -100,7 +100,7 @@ async fn main() -> Result<(), anyhow::Error> {
                     } => {
                         let min_nakamoto_coefficients = parse_min_nakamoto_coefficients(&mut cmd, min_nakamoto_coefficients);
                         let runner = runner::Runner::new_with_network_url(cli::Cli::from_opts(&cli_opts, true).await?.into(), target_network.clone()).await?;
-runner
+                        runner
                                 .membership_replace(ic_management_types::requests::MembershipReplaceRequest {
                                     target: match &subnet.id {
                             Some(subnet) => {
