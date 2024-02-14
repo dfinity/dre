@@ -305,9 +305,10 @@ pub(crate) mod version {
 }
 
 pub(crate) mod hostos {
+    use crate::operations::hostos_rollout::{NodeAssignment, NodeOwner};
+
     use super::*;
     use ic_base_types::PrincipalId;
-    use ic_management_types::{NodeAssignment, NodeOwner};
 
     #[derive(Parser, Clone)]
     pub struct Cmd {
