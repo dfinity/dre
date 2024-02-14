@@ -1,5 +1,5 @@
 {
-  "checksum": "5f20b91851f0676df47d73f7fc00816fa99dd7895eb15cf8e406976340d609c1",
+  "checksum": "fa9c5ec1956d51c1cac90100f8a47bb608eccab8b72bbc4d77757bc85bd4b0c7",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -11621,6 +11621,10 @@
               "target": "futures"
             },
             {
+              "id": "futures-util 0.3.30",
+              "target": "futures_util"
+            },
+            {
               "id": "ic-base-types 0.9.0",
               "target": "ic_base_types"
             },
@@ -11755,6 +11759,10 @@
         "edition": "2021",
         "proc_macro_deps": {
           "common": [
+            {
+              "id": "async-recursion 1.0.5",
+              "target": "async_recursion"
+            },
             {
               "id": "async-trait 0.1.77",
               "target": "async_trait"
@@ -21842,10 +21850,6 @@
         "edition": "2021",
         "proc_macro_deps": {
           "common": [
-            {
-              "id": "async-recursion 1.0.5",
-              "target": "async_recursion"
-            },
             {
               "id": "async-trait 0.1.77",
               "target": "async_trait"
