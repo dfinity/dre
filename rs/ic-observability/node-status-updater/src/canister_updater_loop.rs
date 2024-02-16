@@ -22,7 +22,8 @@ pub fn canister_updater_loop(
             match rt.block_on(prom_client.query("up{ ic_node=~\".+\", job=\"node_exporter\" }").get()) {
                 Ok(response) => response
                     .data()
-                    .as_vector()
+                    .clone()
+                    .into_vector()
                     .unwrap_or_default()
                     .iter()
                     .map(|entry| NodeStatus {
