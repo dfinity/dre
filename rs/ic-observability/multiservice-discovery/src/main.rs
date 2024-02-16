@@ -30,25 +30,19 @@ fn main() {
     let shutdown_signal = shutdown_signal(log.clone());
     let cli_args = CliArgs::parse();
 
-    fn get_mainnet_definition(cli_args: &CliArgs, log: Logger) -> Definition {
-        Definition::new(
-            vec![cli_args.nns_url.clone()],
-            cli_args.targets_dir.clone(),
-            Network::Mainnet.legacy_name(),
-            log.clone(),
-            None,
-            cli_args.poll_interval,
-            cli_args.registry_query_timeout,
-        )
-    }
+    let mainnet_definition = Definition::new(
+        vec![cli_args.nns_url.clone()],
+        cli_args.targets_dir.clone(),
+        Network::Mainnet.legacy_name(),
+        log.clone(),
+        None,
+        cli_args.poll_interval,
+        cli_args.registry_query_timeout,
+    );
 
     if cli_args.render_prom_targets_to_stdout {
-        async fn sync(
-            cli_args: &CliArgs,
-            log: &Logger,
-            shutdown_signal: impl futures_util::Future<Output = ()>,
-        ) -> Option<RunningDefinition> {
-            let def = get_mainnet_definition(cli_args, log.clone());
+        if let Some(running_def) = rt.block_on(async {
+            let def = mainnet_definition.clone();
             let mut test_def = TestDefinition::new(def, RunningDefinitionsMetrics::new());
             let sync_fut = test_def.sync_and_stop();
             tokio::select! {
@@ -61,8 +55,7 @@ fn main() {
                     None
                 }
             }
-        }
-        if let Some(running_def) = rt.block_on(sync(&cli_args, &log, shutdown_signal)) {
+        }) {
             let mut definitions_ref: BTreeMap<String, RunningDefinition> = BTreeMap::new();
             definitions_ref.insert(running_def.name().clone(), running_def);
             let (_, text) = serialize_definitions_to_prometheus_config(definitions_ref);
@@ -90,7 +83,7 @@ fn main() {
             rt.block_on(async {
                 let _ = supervisor
                     .start(
-                        vec![get_mainnet_definition(&cli_args, log.clone())],
+                        vec![mainnet_definition.clone()],
                         StartMode::AddToDefinitions,
                         metrics.running_definition_metrics.clone(),
                     )
