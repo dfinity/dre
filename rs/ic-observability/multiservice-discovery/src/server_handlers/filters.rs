@@ -43,7 +43,7 @@ impl AttributesFilter {
 }
 
 mod tests {
-    use std::{collections::BTreeSet, net::SocketAddrV6, str::FromStr};
+    use std::{collections::BTreeSet, str::FromStr};
     use ic_types::{NodeId, PrincipalId, SubnetId};
     use service_discovery::TargetGroup;
 
@@ -84,6 +84,22 @@ mod tests {
         assert!(filter.filter(&target_group));
 
         let filter = AttributesFilter{
+            subnet_id: Some(SubnetId::from(PrincipalId::new_anonymous())),
+            ..Default::default()
+        };
+        assert!(!filter.filter(&target_group));
+
+        let filter = AttributesFilter{
+            ic_name: Some("mercury".into()),
+            subnet_id: Some(SubnetId::from(
+                PrincipalId::from_str("x33ed-h457x-bsgyx-oqxqf-6pzwv-wkhzr-rm2j3-npodi-purzm-n66cg-gae").unwrap()
+            )),
+            ..Default::default()
+        };
+        assert!(filter.filter(&target_group));
+
+        let filter = AttributesFilter{
+            ic_name: Some("mercury".into()),
             subnet_id: Some(SubnetId::from(PrincipalId::new_anonymous())),
             ..Default::default()
         };
