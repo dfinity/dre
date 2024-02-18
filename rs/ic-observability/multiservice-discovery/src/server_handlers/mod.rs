@@ -26,6 +26,7 @@ pub mod export_prometheus_config_handler;
 mod export_targets_handler;
 mod get_definition_handler;
 mod replace_definitions_handler;
+mod filters;
 
 pub type WebResult<T> = Result<T, (StatusCode, String)>;
 
