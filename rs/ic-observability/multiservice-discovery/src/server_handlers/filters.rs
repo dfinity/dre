@@ -4,7 +4,7 @@ use service_discovery::TargetGroup;
 
 #[derive(Deserialize, Clone, Debug)]
 #[serde(deny_unknown_fields)]
-pub(crate) struct AttributesFilter {
+pub struct AttributesFilter {
     ic_name: Option<String>,
     dc_id: Option<String>,
     operator_id: Option<PrincipalId>,
@@ -42,6 +42,7 @@ impl AttributesFilter {
     }
 }
 
+#[cfg(test)]
 mod tests {
     use std::{collections::BTreeSet, str::FromStr};
     use ic_types::{NodeId, PrincipalId, SubnetId};
