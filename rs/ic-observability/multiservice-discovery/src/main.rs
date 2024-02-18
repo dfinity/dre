@@ -50,7 +50,7 @@ fn main() {
         ) -> Option<RunningDefinition> {
             let def = get_mainnet_definition(cli_args, log.clone());
             let mut test_def = TestDefinition::new(def, RunningDefinitionsMetrics::new());
-            let sync_fut = test_def.sync_and_stop();
+            let sync_fut = test_def.sync_and_stop(cli_args.skip_update_local_registry);
             tokio::select! {
                 _ = sync_fut => {
                     info!(log, "Synchronization done");
@@ -206,6 +206,16 @@ the Prometheus targets of mainnet as a JSON structure on stdout.
 "#
     )]
     render_prom_targets_to_stdout: bool,
+
+    #[clap(
+        long = "skip-update-local-registry",
+        default_value = "false",
+        action,
+        help = r#"
+Used for testing: Whether to skip the update of the local mainnet registry.
+"#
+    )]
+    skip_update_local_registry: bool,
 
     #[clap(
         long = "networks-state-file",
