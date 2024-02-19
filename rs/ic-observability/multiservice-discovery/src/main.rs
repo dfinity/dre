@@ -49,7 +49,7 @@ fn main() {
             shutdown_signal: impl futures_util::Future<Output = ()>,
         ) -> Option<RunningDefinition> {
             let def = get_mainnet_definition(cli_args, log.clone());
-            let mut test_def = TestDefinition::new(def, RunningDefinitionsMetrics::new());
+            let test_def = TestDefinition::new(def, RunningDefinitionsMetrics::new());
             let sync_fut = test_def.sync_and_stop(cli_args.skip_update_local_registry);
             tokio::select! {
                 _ = sync_fut => {
@@ -70,8 +70,8 @@ fn main() {
         }
     } else {
         let supervisor = DefinitionsSupervisor::new(
-            rt.handle().clone(), 
-            cli_args.start_without_mainnet, 
+            rt.handle().clone(),
+            cli_args.start_without_mainnet,
             cli_args.networks_state_file.clone(),
             make_logger(),
         );
@@ -82,10 +82,8 @@ fn main() {
         let metrics_layer = HttpMetricsLayerBuilder::new().build();
         let metrics = MSDMetrics::new();
 
-        rt.block_on(
-            supervisor.load_or_create_defs(metrics.running_definition_metrics.clone()),
-        )
-        .unwrap();
+        rt.block_on(supervisor.load_or_create_defs(metrics.running_definition_metrics.clone()))
+            .unwrap();
 
         // First check if we should start the mainnet definition so we can
         // serve it right after the server starts.

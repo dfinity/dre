@@ -21,17 +21,20 @@ use ic_registry_nns_data_provider::registry::RegistryCanister;
 use ic_types::{PrincipalId, RegistryVersion, SubnetId};
 use registry_canister::mutations::common::decode_registry_value;
 use slog::{debug, error, info, warn, Logger};
-use std::fmt::{Display, Error as FmtError, Formatter};
+use std::fmt::{Display, Formatter};
 use url::Url;
 
 #[derive(Debug)]
-pub struct Interrupted {}
+pub enum SyncError {
+    Interrupted,
+    PublicKey(String),
+}
 
-impl Error for Interrupted {}
+impl Error for SyncError {}
 
-impl Display for Interrupted {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        write!(f, "interrupted")
+impl Display for SyncError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.write_fmt(format_args!("{:?}", self))
     }
 }
 
@@ -42,7 +45,7 @@ pub async fn sync_local_registry(
     use_current_version: bool,
     public_key: Option<ThresholdSigPublicKey>,
     stop_signal: &Receiver<()>,
-) -> Result<(), Interrupted> {
+) -> Result<(), SyncError> {
     let start = Instant::now();
     let local_store = Arc::new(LocalStoreImpl::new(local_path.clone()));
     let registry_canister = RegistryCanister::new(nns_urls);
@@ -70,24 +73,20 @@ pub async fn sync_local_registry(
     let mut updates = vec![];
     let nns_public_key = match public_key {
         Some(pk) => pk,
-        _ => {
-            let maybe_key = get_nns_public_key(&registry_canister)
-                .await
-                .map_err(|e| anyhow::format_err!("Failed to get nns_public_key: {}", e));
-
-            if let Err(e) = maybe_key {
+        _ => match get_nns_public_key(&registry_canister).await {
+            Ok(key) => key,
+            Err(e) => {
                 let network_name = local_path.file_name().unwrap().to_str().unwrap();
                 debug!(log, "Unable to fetch public key for network {}: {:?}", network_name, e);
-                return Ok(()); // FIXME: what?!;
+                return Err(SyncError::PublicKey(e.to_string()));
             }
-            maybe_key.unwrap()
-        }
+        },
     };
 
     loop {
         if stop_signal.try_recv().is_ok() {
             // Interrupted early.  Let's get out of here.
-            return Err(Interrupted {});
+            return Err(SyncError::Interrupted);
         }
 
         if match registry_canister.get_latest_version().await {
