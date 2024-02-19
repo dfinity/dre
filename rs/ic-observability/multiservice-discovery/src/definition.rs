@@ -144,14 +144,31 @@ impl TestDefinition {
     }
 
     /// Syncs the registry update the in-memory cache then stops.
-    pub async fn sync_and_stop(&self) {
-        if let Err(e) = self.running_def.initial_registry_sync().await {
+    pub async fn sync_and_stop(&self, skip_update_local_registry: bool) {
+        // If skip_update_local_registry is true, first try and use the existing one
+        if skip_update_local_registry {
+            match self.running_def.initial_registry_sync(true).await {
+                Ok(()) => return,
+                Err(e) => {
+                    error!(
+                        self.running_def.definition.log,
+                        "Error while running initial sync with the registry for definition named '{}': {:?}",
+                        self.running_def.definition.name,
+                        e
+                    );
+                    self.running_def.metrics.observe_sync(self.running_def.name(), false);
+                }
+            }
+        }
+        // If skip_update_local_registry is false, or the inital sync failed try to do a full initial sync
+        if let Err(e) = self.running_def.initial_registry_sync(false).await {
             error!(
                 self.running_def.definition.log,
-                "Error while running initial sync for definition named '{}': {:?}", self.running_def.definition.name, e
+                "Error while running full initial sync with the registry for definition named '{}': {:?}",
+                self.running_def.definition.name,
+                e
             );
             self.running_def.metrics.observe_sync(self.running_def.name(), false);
-            return;
         }
         let _ = self
             .running_def
@@ -245,7 +262,7 @@ impl RunningDefinition {
             .get_target_groups(job_type, self.definition.log.clone())
     }
 
-    async fn initial_registry_sync(&self) -> Result<(), SyncError> {
+    async fn initial_registry_sync(&self, use_current_version: bool) -> Result<(), SyncError> {
         info!(
             self.definition.log,
             "Syncing local registry for {} started", self.definition.name
@@ -260,7 +277,7 @@ impl RunningDefinition {
             self.definition.log.clone(),
             self.definition.registry_path.join("targets"),
             self.definition.nns_urls.clone(),
-            false,
+            use_current_version,
             self.definition.public_key,
             &self.stop_signal,
         )
@@ -325,7 +342,7 @@ impl RunningDefinition {
     // Syncs the registry and keeps running, syncing as new
     // registry versions come in.
     async fn run(&self) {
-        if self.initial_registry_sync().await.is_err() {
+        if self.initial_registry_sync(false).await.is_err() {
             // Initial sync was interrupted.
             self.metrics.observe_end(self.name());
             return;
@@ -445,53 +462,77 @@ pub(super) struct DefinitionsSupervisor {
     rt: tokio::runtime::Handle,
     pub(super) definitions: Arc<Mutex<BTreeMap<String, RunningDefinition>>>,
     allow_mercury_deletion: bool,
+    networks_state_file: Option<PathBuf>,
+    log: Logger,
 }
 
 impl DefinitionsSupervisor {
-    pub(crate) fn new(rt: tokio::runtime::Handle, allow_mercury_deletion: bool) -> Self {
+    pub(crate) fn new(
+        rt: tokio::runtime::Handle,
+        allow_mercury_deletion: bool,
+        networks_state_file: Option<PathBuf>,
+        log: Logger,
+    ) -> Self {
         DefinitionsSupervisor {
             rt,
             definitions: Arc::new(Mutex::new(BTreeMap::new())),
             allow_mercury_deletion,
+            networks_state_file,
+            log,
         }
     }
 
-    pub(crate) async fn load_or_create_defs(
-        &self,
-        networks_state_file: PathBuf,
-        metrics: RunningDefinitionsMetrics,
-    ) -> Result<(), Box<dyn Error>> {
-        if networks_state_file.exists() {
-            let file_content = fs::read_to_string(networks_state_file)?;
-            let initial_definitions: Vec<FSDefinition> = serde_json::from_str(&file_content)?;
-            self.start(
-                initial_definitions.into_iter().map(|def| def.into()).collect(),
-                StartMode::AddToDefinitions,
-                metrics,
-            )
-            .await?;
+    pub(crate) async fn load_or_create_defs(&self, metrics: RunningDefinitionsMetrics) -> Result<(), Box<dyn Error>> {
+        if let Some(networks_state_file) = self.networks_state_file.clone() {
+            if networks_state_file.exists() {
+                let file_content = fs::read_to_string(networks_state_file.clone())?;
+                let initial_definitions: Vec<FSDefinition> = serde_json::from_str(&file_content)?;
+                let names = initial_definitions
+                    .iter()
+                    .map(|def| def.name.clone())
+                    .collect::<Vec<_>>();
+                info!(
+                    self.log,
+                    "Definitions loaded from {:?}:\n{:?}",
+                    networks_state_file.as_path(),
+                    names
+                );
+                self.start(
+                    initial_definitions.into_iter().map(|def| def.into()).collect(),
+                    StartMode::AddToDefinitions,
+                    metrics,
+                )
+                .await?;
+            }
         }
         Ok(())
     }
 
-    pub(crate) async fn persist_defs(&self, networks_state_file: PathBuf) -> Result<(), Box<dyn Error>> {
-        let existing = self.definitions.lock().await;
-        retry::retry(retry::delay::Exponential::from_millis(10).take(5), || {
-            std::fs::OpenOptions::new()
-                .create(true)
-                .write(true)
-                .open(networks_state_file.as_path())
-                .and_then(|mut file| {
-                    let fs_def: Vec<FSDefinition> = existing
-                        .values()
-                        .cloned()
-                        .map(|running_def| running_def.definition.into())
-                        .collect::<Vec<_>>();
+    // FIXME: if the file contents on disk are the same as the contents about to
+    // be persisted, then the file should not be overwritten because it was
+    // already updated by another MSD sharing the same directory.
+    pub(crate) async fn persist_defs(
+        &self,
+        existing: &mut BTreeMap<String, RunningDefinition>,
+    ) -> Result<(), Box<dyn Error>> {
+        if let Some(networks_state_file) = self.networks_state_file.clone() {
+            retry::retry(retry::delay::Exponential::from_millis(10).take(5), || {
+                std::fs::OpenOptions::new()
+                    .create(true)
+                    .write(true)
+                    .open(networks_state_file.as_path())
+                    .and_then(|mut file| {
+                        let fs_def: Vec<FSDefinition> = existing
+                            .values()
+                            .cloned()
+                            .map(|running_def| running_def.definition.into())
+                            .collect::<Vec<_>>();
 
-                    file.write_all(serde_json::to_string(&fs_def)?.as_bytes()).map(|_| file)
-                })
-                .and_then(|mut file| file.flush())
-        })?;
+                        file.write_all(serde_json::to_string(&fs_def)?.as_bytes()).map(|_| file)
+                    })
+                    .and_then(|mut file| file.flush())
+            })?;
+        }
         Ok(())
     }
 
@@ -557,13 +598,16 @@ impl DefinitionsSupervisor {
         join_all(defs_to_end.iter_mut().map(|def| async { def.end().await })).await;
         drop(defs_to_end);
         drop(ic_names_to_end);
-
         // Now we add the incoming definitions.
         for definition in definitions.into_iter() {
             existing.insert(
                 definition.name.clone(),
                 definition.run(self.rt.clone(), metrics.clone()).await,
             );
+        }
+        // Now we rewrite definitions to disk.
+        if let Err(e) = self.persist_defs(existing).await {
+            warn!(self.log, "Error while peristing definitions to disk '{}'", e);
         }
         Ok(())
     }
