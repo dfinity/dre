@@ -1,4 +1,9 @@
+use candid::Decode;
+use dialoguer::Confirm;
 use ic_base_types::{CanisterId, PrincipalId};
+use ic_management_backend::registry::RegistryState;
+use ic_management_types::Network;
+use registry_canister::mutations::do_update_subnet_replica::UpdateSubnetReplicaVersionPayload;
 use spinners::{Spinner, Spinners};
 use std::{
     collections::{HashMap, HashSet},
@@ -11,8 +16,8 @@ use ic_canisters::{
     governance::GovernanceCanisterWrapper, management::WalletCanisterWrapper, registry::RegistryCanisterWrapper,
     CanisterClient, IcAgentCanisterClient,
 };
-use ic_nns_governance::pb::v1::ProposalInfo;
-use log::{info, warn};
+use ic_nns_governance::pb::v1::{ExecuteNnsFunction, ProposalInfo};
+use log::{error, info, warn};
 use url::Url;
 
 use crate::detect_neuron::{Auth, Neuron};
@@ -37,6 +42,23 @@ pub(crate) async fn vote_on_proposals(
     let mut voted_proposals = HashSet::new();
 
     loop {
+        // We create a new instance each time in order to update the local registry in
+        // case there was a new version voted in during the execution of a script
+        let registry_state = RegistryState::new(Network::Url(nns_url.clone()), false).await;
+        let latest_version = match registry_state.get_blessed_replica_versions().await {
+            Ok(v) => {
+                let binding = v.first();
+                match binding {
+                    Some(str) => str.to_string(),
+                    None => "".to_string(),
+                }
+            }
+            Err(e) => {
+                error!("Couldn't get last replica versions: {:?}", e);
+                "".to_string()
+            }
+        };
+
         let proposals = client.get_pending_proposals().await?;
         let proposals: Vec<&ProposalInfo> = proposals
             .iter()
@@ -51,12 +73,41 @@ pub(crate) async fn vote_on_proposals(
         print!("\x1B[1A\x1B[K");
         std::io::stdout().flush().unwrap();
         for proposal in proposals_to_vote.into_iter() {
+            let content = proposal.proposal.as_ref().unwrap().action.as_ref().unwrap();
+            let parsed = match content {
+                ic_nns_governance::pb::v1::proposal::Action::ExecuteNnsFunction(ExecuteNnsFunction {
+                    nns_function: _,
+                    payload,
+                }) => match Decode!(&payload, UpdateSubnetReplicaVersionPayload) {
+                    Ok(payload) => payload,
+                    Err(e) => {
+                        error!("Couldn't decode into update subnet replica version payload: {:?}", e);
+                        continue;
+                    }
+                },
+                _ => {
+                    warn!("Proposal's content wasn't correct. Skipping...");
+                    continue;
+                }
+            };
+
+            if parsed.replica_version_id != *latest_version
+                && !Confirm::new()
+                    .with_prompt(format!("CAUTION! You are about to vote on a proposal that will update the subnet '{}' to a non-latest version! Do you want to continue?", parsed.subnet_id.0.to_string().split('-').collect::<Vec<_>>().first().unwrap()))
+                    .default(false)
+                    .interact()?
+            {
+                info!("Skipping voting on proposal {}", proposal.id.as_ref().unwrap().id);
+                voted_proposals.insert(proposal.id.unwrap().id);
+                continue;
+            }
+
             info!(
                 "Voting on proposal {} (topic {:?}, proposer {}) -> {}",
                 proposal.id.unwrap().id,
                 proposal.topic(),
                 proposal.proposer.unwrap_or_default().id,
-                proposal.proposal.clone().unwrap().title.unwrap()
+                proposal.proposal.as_ref().unwrap().title.as_ref().unwrap()
             );
 
             if !simulate {
