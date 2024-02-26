@@ -1,0 +1,97 @@
+name: Dfinity release cycle index
+description: |
+  Description
+version: v1
+
+standardRolloutSchema:
+  monday:
+    batches:
+      - time: 9:00
+        subnets: [io67a]
+      - time: 11:00
+        subnets: [shefu, uzr34]
+  tuesday:
+    batches:
+      - time: 7:00
+        subnets: [pjljw, qdvhd, bkfrj]
+      - time: 9:00
+        subnets: [snjp4, w4asl, qxesv]
+      - time: 11:00
+        subnets: [4zbus, ejbmu, 2fq7c]  
+  wednesday:
+    batches:
+      - time: 7:00
+        subnets: [pae4o, 5kdm2, csyj4]
+      - time: 9:00
+        subnets: [eq6en, lhg73, brlsh]
+      - time: 11:00
+        subnets: [k44fs, cv73p, 4ecnw]
+      - time: 13:00
+        subnets: [opn46, lspz2, o3ow2] 
+  thursday:
+    batches:
+      - time: 7:00
+        subnets: [w4rem, 6pbhf, e66qm]
+      - time: 9:00
+        subnets: [yinp6, fuqsr, jtdsg]
+      - time: 11:00
+        subnets: [mpubz, x33ed, pzp6e]
+      - time: 13:00
+        subnets: [3hhby, nl6hn, gmq5v]   
+  mondayNextWeek:
+    batches:
+      - time: 7:00
+        subnets: [tdb26]
+
+index:
+  - name: Release for week of 26th of February
+    start: 2024-02-26T09:00:00.000+00:00
+    end: 2024-03-04T07:30:00.000+00:00
+    versions:
+      regular:
+        version: 2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f
+        tag: release-2024-02-21_23-01
+        proposal: https://dashboard.internetcomputer.org/proposal/128087
+      feature:
+        - version: 85bd56a70e55b2cea75cae6405ae11243e5fdad8
+          proposal: https://dashboard.internetcomputer.org/proposal/128088
+          tag: release-2024-02-21_23-01-p2p
+    rolloutSchema:
+      monday:
+        batches:
+          - time: 9:00
+            subnets: [io67a]
+          - time: 11:00
+            subnets: [shefu, uzr34]
+      tuesday:
+        batches:
+          - time: 7:00
+            subnets: [pjljw, qdvhd, bkfrj]
+          - time: 9:00
+            subnets: [snjp4, w4asl, qxesv]
+          - time: 11:00
+            subnets: [4zbus, ejbmu, 2fq7c]  
+      wednesday:
+        batches:
+          - time: 7:00
+            subnets: [pae4o, 5kdm2, csyj4]
+          - time: 9:00
+            subnets: [eq6en, lhg73, brlsh]
+          - time: 11:00
+            subnets: [k44fs, cv73p, 4ecnw]
+          - time: 13:00
+            subnets: [opn46, lspz2, o3ow2] 
+      thursday:
+        batches:
+          - time: 7:00
+            subnets: [w4rem, 6pbhf, e66qm]
+          - time: 9:00
+            subnets: [yinp6, fuqsr, jtdsg]
+          - time: 11:00
+            subnets: [mpubz, x33ed, pzp6e]
+          - time: 13:00
+            subnets: [3hhby, nl6hn, gmq5v]   
+      mondayNextWeek:
+        batches:
+          - time: 7:00
+            subnets: [tdb26]

@@ -1,0 +1,188 @@
+{
+    "$schema": "http://json-schema.org/draft-06/schema#",
+    "$ref": "#/definitions/releaseIndexShema",
+    "definitions": {
+        "releaseIndexShema": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "string"
+                },
+                "standardRolloutSchema": {
+                    "$ref": "#/definitions/RolloutSchema"
+                },
+                "index": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Index"
+                    }
+                }
+            },
+            "required": [
+                "index",
+                "name",
+                "standardRolloutSchema",
+                "version"
+            ],
+            "title": "releaseIndexShema"
+        },
+        "Index": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "start": {
+                    "type": "string",
+                    "format": "date-time"
+                },
+                "end": {
+                    "type": "string",
+                    "format": "date-time"
+                },
+                "versions": {
+                    "$ref": "#/definitions/Versions"
+                },
+                "rolloutSchema": {
+                    "$ref": "#/definitions/RolloutSchema"
+                }
+            },
+            "required": [
+                "end",
+                "name",
+                "rolloutSchema",
+                "start",
+                "versions"
+            ],
+            "title": "Index"
+        },
+        "RolloutSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "monday": {
+                    "$ref": "#/definitions/Monday"
+                },
+                "tuesday": {
+                    "$ref": "#/definitions/Monday"
+                },
+                "wednesday": {
+                    "$ref": "#/definitions/Monday"
+                },
+                "thursday": {
+                    "$ref": "#/definitions/Monday"
+                },
+                "mondayNextWeek": {
+                    "$ref": "#/definitions/Monday"
+                }
+            },
+            "required": [
+                "monday",
+                "mondayNextWeek",
+                "thursday",
+                "tuesday",
+                "wednesday"
+            ],
+            "title": "RolloutSchema"
+        },
+        "Monday": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "batches": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Batch"
+                    }
+                }
+            },
+            "required": [
+                "batches"
+            ],
+            "title": "Monday"
+        },
+        "Batch": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "time": {
+                    "$ref": "#/definitions/Time"
+                },
+                "subnets": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            },
+            "required": [
+                "subnets",
+                "time"
+            ],
+            "title": "Batch"
+        },
+        "Versions": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "regular": {
+                    "$ref": "#/definitions/Regular"
+                },
+                "feature": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Regular"
+                    }
+                }
+            },
+            "required": [
+                "feature",
+                "regular"
+            ],
+            "title": "Versions"
+        },
+        "Regular": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "version": {
+                    "type": "string"
+                },
+                "proposal": {
+                    "type": "string",
+                    "format": "uri",
+                    "qt-uri-protocols": [
+                        "https"
+                    ]
+                },
+                "tag": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "proposal",
+                "tag",
+                "version"
+            ],
+            "title": "Regular"
+        },
+        "Time": {
+            "type": "string",
+            "enum": [
+                "9:00",
+                "11:00",
+                "7:00",
+                "13:00"
+            ],
+            "title": "Time"
+        }
+    }
+}
