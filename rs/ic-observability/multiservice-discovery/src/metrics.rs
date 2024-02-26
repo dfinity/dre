@@ -1,7 +1,9 @@
-use std::{collections::HashMap, sync::Arc};
+use std::{
+    collections::HashMap,
+    sync::{Arc, RwLock},
+};
 
 use opentelemetry::{global, metrics::Observer, KeyValue};
-use std::sync::Mutex;
 
 const NETWORK: &str = "network";
 const AXUM_APP: &str = "axum-app";
@@ -47,12 +49,12 @@ type LatestValuesByNetwork = HashMap<String, LatestValues>;
 
 #[derive(Clone)]
 pub struct RunningDefinitionsMetrics {
-    latest_values_by_network: Arc<Mutex<LatestValuesByNetwork>>,
+    latest_values_by_network: Arc<RwLock<LatestValuesByNetwork>>,
 }
 
 impl RunningDefinitionsMetrics {
     pub fn new() -> Self {
-        let latest_values_by_network = Arc::new(Mutex::new(LatestValuesByNetwork::new()));
+        let latest_values_by_network = Arc::new(RwLock::new(LatestValuesByNetwork::new()));
         let meter = global::meter(AXUM_APP);
         let load_new_targets_error = meter
             .clone()
@@ -85,7 +87,7 @@ impl RunningDefinitionsMetrics {
             // We blocking-lock because this is not async code, and this code
             // does not need to be async, since it just needs to read local data.
             // C.f. https://docs.rs/tokio/1.24.2/tokio/sync/struct.Mutex.html#method.blocking_lock
-            let latest_values_by_network = s.lock().unwrap();
+            let latest_values_by_network = s.read().unwrap();
             for (network, latest_values) in latest_values_by_network.iter() {
                 let attrs = [KeyValue::new(NETWORK, network.clone())];
                 for (instrument, measurement) in [
@@ -107,8 +109,8 @@ impl RunningDefinitionsMetrics {
         }
     }
 
-    pub fn observe_sync(&mut self, network: String, success: bool) {
-        let mut s = self.latest_values_by_network.lock().unwrap();
+    pub fn observe_sync(&self, network: String, success: bool) {
+        let mut s = self.latest_values_by_network.write().unwrap();
         let latest_values = s.entry(network).or_insert(LatestValues::new());
         latest_values.definitions_sync_successful = match success {
             true => 1,
@@ -119,8 +121,8 @@ impl RunningDefinitionsMetrics {
         }
     }
 
-    pub fn observe_load(&mut self, network: String, success: bool) {
-        let mut s = self.latest_values_by_network.lock().unwrap();
+    pub fn observe_load(&self, network: String, success: bool) {
+        let mut s = self.latest_values_by_network.write().unwrap();
         let latest_values = s.entry(network).or_insert(LatestValues::new());
         latest_values.definitions_load_successful = match success {
             true => 1,
@@ -131,8 +133,8 @@ impl RunningDefinitionsMetrics {
         };
     }
 
-    pub fn observe_end(&mut self, network: String) {
-        let mut s = self.latest_values_by_network.lock().unwrap();
+    pub fn observe_end(&self, network: String) {
+        let mut s = self.latest_values_by_network.write().unwrap();
         s.remove(&network);
     }
 }

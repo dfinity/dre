@@ -36,7 +36,7 @@ actix-web = { version = "4.2.1", default-features = false, features = [
   "macros",
 ] }
 actix-rt = "2.2.0"
-ahash = "0.8.3"
+ahash = "0.8.8"
 anyhow = "1.0.79"
 assert_matches = "1.4.0"
 async-recursion = "1.0.5"
@@ -45,9 +45,9 @@ async-trait = "0.1.53"
 backoff = { version = "0.4.0", features = ["tokio"] }
 backon = "0.4.1"
 candid = "0.9.11"
-chrono = { version = "0.4.31", features = ["serde"] }
+chrono = { version = "0.4.34", features = ["serde"] }
 clap-num = "1.0.0"
-clap = { version = "4.4.17", features = [
+clap = { version = "4.4.18,<4.5", features = [
   "derive",
   "env",
   "usage",
@@ -75,7 +75,7 @@ dotenv = "0.15.0"
 base64 = "0.21.7"
 easy-parallel = "3.1.0"
 edit = "0.1.4"
-either = "1.6.1"
+either = "1.10.0"
 enum-map = "1.1.1"
 env_logger = "0.10.0"
 erased-serde = "0.4.2"
@@ -165,8 +165,8 @@ strum = { version = "0.25.0", features = ["derive"] }
 strum_macros = "0.25.3"
 tabled = "0.15.0"
 tabular = "0.2"
-tempfile = "3.8.0"
-thiserror = "1.0.40"
+tempfile = "3.10.0"
+thiserror = "1.0.57"
 tokio = { version = "1.2.0", features = ["full"] }
 url = "2.5.0"
 urlencoding = "2.1.0"
