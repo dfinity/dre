@@ -1,6 +1,6 @@
 name: Dfinity release cycle index
 description: |
-  Description
+  Index for storing Dfinity releases and managing history
 version: v1
 
 standardRolloutSchema:
@@ -62,35 +62,99 @@ index:
           - time: 9:00
             subnets: [io67a]
           - time: 11:00
-            subnets: [shefu, uzr34]
+            subnets:
+              - subnet: shefu
+                version: 85bd56a70e55b2cea75cae6405ae11243e5fdad8
+              - subnet: uzr34
       tuesday:
         batches:
           - time: 7:00
-            subnets: [pjljw, qdvhd, bkfrj]
+            subnets:
+              - subnet: pjljw
+              - subnet: qdvhd
+                version: 85bd56a70e55b2cea75cae6405ae11243e5fdad8
+              - subnet: bkfrj
+                version: 85bd56a70e55b2cea75cae6405ae11243e5fdad8
           - time: 9:00
-            subnets: [snjp4, w4asl, qxesv]
+            subnets:
+              - subnet: snjp4
+                version: 85bd56a70e55b2cea75cae6405ae11243e5fdad8
+              - subnet: qxesv
+                version: 85bd56a70e55b2cea75cae6405ae11243e5fdad8
+              - subnet: w4asl
+                version: 85bd56a70e55b2cea75cae6405ae11243e5fdad8
           - time: 11:00
-            subnets: [4zbus, ejbmu, 2fq7c]  
+            subnets:
+              - subnet: 4zbus
+                version: 85bd56a70e55b2cea75cae6405ae11243e5fdad8
+              - subnet: ejbmu
+                version: 85bd56a70e55b2cea75cae6405ae11243e5fdad8
+              - subnet: 2fq7c
+                version: 85bd56a70e55b2cea75cae6405ae11243e5fdad8
       wednesday:
         batches:
           - time: 7:00
-            subnets: [pae4o, 5kdm2, csyj4]
+            subnets:
+              - subnet: pae4o
+                version: 85bd56a70e55b2cea75cae6405ae11243e5fdad8
+              - subnet: csyj4
+                version: 85bd56a70e55b2cea75cae6405ae11243e5fdad8
+              - subnet: 5kdm2
+                version: 85bd56a70e55b2cea75cae6405ae11243e5fdad8
           - time: 9:00
-            subnets: [eq6en, lhg73, brlsh]
+            subnets:
+              - subnet: eq6en
+                version: 85bd56a70e55b2cea75cae6405ae11243e5fdad8
+              - subnet: lhg73
+              - subnet: brlsh
+                version: 85bd56a70e55b2cea75cae6405ae11243e5fdad8
           - time: 11:00
-            subnets: [k44fs, cv73p, 4ecnw]
+            subnets:
+              - subnet: k44fs
+                version: 85bd56a70e55b2cea75cae6405ae11243e5fdad8
+              - subnet: cv73p
+                version: 85bd56a70e55b2cea75cae6405ae11243e5fdad8
+              - subnet: 4ecnw
+                version: 85bd56a70e55b2cea75cae6405ae11243e5fdad8
           - time: 13:00
-            subnets: [opn46, lspz2, o3ow2] 
+            subnets:
+              - subnet: opn46
+                version: 85bd56a70e55b2cea75cae6405ae11243e5fdad8
+              - subnet: lspz2
+                version: 85bd56a70e55b2cea75cae6405ae11243e5fdad8
+              - subnet: o3ow2
+                version: 85bd56a70e55b2cea75cae6405ae11243e5fdad8
       thursday:
         batches:
           - time: 7:00
-            subnets: [w4rem, 6pbhf, e66qm]
+            subnets:
+              - subnet: w4rem
+                version: 85bd56a70e55b2cea75cae6405ae11243e5fdad8
+              - subnet: 6pbhf
+                version: 85bd56a70e55b2cea75cae6405ae11243e5fdad8
+              - subnet: e66qm
+                version: 85bd56a70e55b2cea75cae6405ae11243e5fdad8
           - time: 9:00
-            subnets: [yinp6, fuqsr, jtdsg]
+            subnets:
+              - subnet: yinp6
+              - subnet: jtdsg
+                version: 85bd56a70e55b2cea75cae6405ae11243e5fdad8
+              - subnet: fuqsr
+                version: 85bd56a70e55b2cea75cae6405ae11243e5fdad8
           - time: 11:00
-            subnets: [mpubz, x33ed, pzp6e]
+            subnets:
+              - subnet: mpubz
+                version: 85bd56a70e55b2cea75cae6405ae11243e5fdad8
+              - subnet: pzp6e
+              - subnet: x33ed
+                version: 85bd56a70e55b2cea75cae6405ae11243e5fdad8
           - time: 13:00
-            subnets: [3hhby, nl6hn, gmq5v]   
+            subnets:
+              - subnet: 3hhby
+                version: 85bd56a70e55b2cea75cae6405ae11243e5fdad8
+              - subnet: nl6hn
+                version: 85bd56a70e55b2cea75cae6405ae11243e5fdad8
+              - subnet: gmq5v
       mondayNextWeek:
         batches:
           - time: 7:00

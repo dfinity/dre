@@ -16,7 +16,7 @@
                     "type": "string"
                 },
                 "standardRolloutSchema": {
-                    "$ref": "#/definitions/RolloutSchema"
+                    "$ref": "#/definitions/StandardRolloutSchema"
                 },
                 "index": {
                     "type": "array",
@@ -69,19 +69,19 @@
             "additionalProperties": false,
             "properties": {
                 "monday": {
-                    "$ref": "#/definitions/Monday"
+                    "$ref": "#/definitions/PurpleMonday"
                 },
                 "tuesday": {
-                    "$ref": "#/definitions/Monday"
+                    "$ref": "#/definitions/Sday"
                 },
                 "wednesday": {
-                    "$ref": "#/definitions/Monday"
+                    "$ref": "#/definitions/Sday"
                 },
                 "thursday": {
-                    "$ref": "#/definitions/Monday"
+                    "$ref": "#/definitions/Sday"
                 },
                 "mondayNextWeek": {
-                    "$ref": "#/definitions/Monday"
+                    "$ref": "#/definitions/MondayNextWeekClass"
                 }
             },
             "required": [
@@ -93,28 +93,80 @@
             ],
             "title": "RolloutSchema"
         },
-        "Monday": {
+        "PurpleMonday": {
             "type": "object",
             "additionalProperties": false,
             "properties": {
                 "batches": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/Batch"
+                        "$ref": "#/definitions/PurpleBatch"
                     }
                 }
             },
             "required": [
                 "batches"
             ],
-            "title": "Monday"
+            "title": "PurpleMonday"
         },
-        "Batch": {
+        "PurpleBatch": {
             "type": "object",
             "additionalProperties": false,
             "properties": {
                 "time": {
-                    "$ref": "#/definitions/Time"
+                    "type": "string"
+                },
+                "subnets": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/SubnetUnion"
+                    }
+                }
+            },
+            "required": [
+                "subnets",
+                "time"
+            ],
+            "title": "PurpleBatch"
+        },
+        "SubnetClass": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "subnet": {
+                    "type": "string"
+                },
+                "version": {
+                    "$ref": "#/definitions/Version"
+                }
+            },
+            "required": [
+                "subnet"
+            ],
+            "title": "SubnetClass"
+        },
+        "MondayNextWeekClass": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "batches": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/MondayNextWeekBatch"
+                    }
+                }
+            },
+            "required": [
+                "batches"
+            ],
+            "title": "MondayNextWeekClass"
+        },
+        "MondayNextWeekBatch": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "time": {
+                    "type": "string"
                 },
                 "subnets": {
                     "type": "array",
@@ -127,7 +179,43 @@
                 "subnets",
                 "time"
             ],
-            "title": "Batch"
+            "title": "MondayNextWeekBatch"
+        },
+        "Sday": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "batches": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/FluffyBatch"
+                    }
+                }
+            },
+            "required": [
+                "batches"
+            ],
+            "title": "Sday"
+        },
+        "FluffyBatch": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "time": {
+                    "type": "string"
+                },
+                "subnets": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/SubnetClass"
+                    }
+                }
+            },
+            "required": [
+                "subnets",
+                "time"
+            ],
+            "title": "FluffyBatch"
         },
         "Versions": {
             "type": "object",
@@ -174,15 +262,52 @@
             ],
             "title": "Regular"
         },
-        "Time": {
+        "StandardRolloutSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "monday": {
+                    "$ref": "#/definitions/MondayNextWeekClass"
+                },
+                "tuesday": {
+                    "$ref": "#/definitions/MondayNextWeekClass"
+                },
+                "wednesday": {
+                    "$ref": "#/definitions/MondayNextWeekClass"
+                },
+                "thursday": {
+                    "$ref": "#/definitions/MondayNextWeekClass"
+                },
+                "mondayNextWeek": {
+                    "$ref": "#/definitions/MondayNextWeekClass"
+                }
+            },
+            "required": [
+                "monday",
+                "mondayNextWeek",
+                "thursday",
+                "tuesday",
+                "wednesday"
+            ],
+            "title": "StandardRolloutSchema"
+        },
+        "SubnetUnion": {
+            "anyOf": [
+                {
+                    "$ref": "#/definitions/SubnetClass"
+                },
+                {
+                    "type": "string"
+                }
+            ],
+            "title": "SubnetUnion"
+        },
+        "Version": {
             "type": "string",
             "enum": [
-                "9:00",
-                "11:00",
-                "7:00",
-                "13:00"
+                "85bd56a70e55b2cea75cae6405ae11243e5fdad8"
             ],
-            "title": "Time"
+            "title": "Version"
         }
     }
 }
