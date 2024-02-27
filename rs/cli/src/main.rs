@@ -288,6 +288,11 @@ async fn main() -> Result<(), anyhow::Error> {
             cli::Commands::DumpRegistry { version, path } => {
                 registry_dump::dump_registry(path, cli_opts.network, version).await
             }
+
+            cli::Commands::Firewall => {
+                let ic_admin: IcAdminWrapper = cli::Cli::from_opts(&cli_opts, true).await?.into();
+                ic_admin.update_replica_nodes_firewall(cli_opts.network).await
+            }
         }
     })
     .await?;

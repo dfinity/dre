@@ -6,15 +6,20 @@ use flate2::read::GzDecoder;
 use futures::stream::{self, StreamExt};
 use futures::Future;
 use ic_base_types::PrincipalId;
+use ic_interfaces_registry::RegistryClient;
 use ic_management_backend::registry::{local_registry_path, RegistryFamilyEntries, RegistryState};
 use ic_management_types::{Artifact, Network};
+use ic_protobuf::registry::firewall::v1::{FirewallRule, FirewallRuleSet};
 use ic_protobuf::registry::subnet::v1::SubnetRecord;
+use ic_registry_keys::make_firewall_rules_record_key;
 use ic_registry_local_registry::LocalRegistry;
 use itertools::Itertools;
 use log::{error, info, warn};
+use prost::Message;
 use regex::Regex;
 use reqwest::StatusCode;
 use sha2::{Digest, Sha256};
+use std::collections::BTreeMap;
 use std::fs::File;
 use std::io::Write;
 use std::os::unix::fs::PermissionsExt;
@@ -584,6 +589,91 @@ must be identical, and must match the SHA256 from the payload of the NNS proposa
         };
 
         self.propose_run(command, options, simulate)
+    }
+
+    pub async fn update_replica_nodes_firewall(&self, network: Network) -> Result<(), Error> {
+        let local_registry_path = local_registry_path(network.clone());
+        let local_registry = LocalRegistry::new(local_registry_path, Duration::from_secs(10))
+            .map_err(|e| anyhow::anyhow!("Error in creating local registry instance: {:?}", e))?;
+
+        local_registry
+            .sync_with_nns()
+            .await
+            .map_err(|e| anyhow::anyhow!("Error when syncing with NNS: {:?}", e))?;
+
+        let value = local_registry
+            .get_value(
+                &make_firewall_rules_record_key(&ic_registry_keys::FirewallRulesScope::ReplicaNodes),
+                local_registry.get_latest_version(),
+            )
+            .map_err(|e| anyhow::anyhow!("Error fetching firewall rules for replica nodes: {:?}", e))?;
+
+        let rules = if let Some(value) = value {
+            FirewallRuleSet::decode(value.as_slice())
+                .map_err(|e| anyhow::anyhow!("Failed to deserialize firewall ruleset: {:?}", e))?
+        } else {
+            FirewallRuleSet::default()
+        };
+
+        let rules: BTreeMap<usize, &FirewallRule> = rules
+            .entries
+            .iter()
+            .enumerate()
+            .sorted_by(|a, b| a.0.cmp(&b.0))
+            .collect();
+
+        let mut builder = edit::Builder::new();
+        let with_suffix = builder.suffix(".json");
+        let pretty = serde_json::to_string_pretty(&rules)
+            .map_err(|e| anyhow::anyhow!("Error serializing ruleset to string: {:?}", e))?;
+        let edited: BTreeMap<usize, FirewallRule>;
+        loop {
+            info!("Spawning edit window...");
+            let edited_string = edit::edit_with_builder(pretty.clone(), &with_suffix)?;
+            match serde_json::from_str(&edited_string) {
+                Ok(ruleset) => {
+                    edited = ruleset;
+                    break;
+                }
+                Err(e) => {
+                    warn!("Couldn't parse the input you provided, please retry. Error: {:?}", e);
+                }
+            }
+        }
+
+        let mut added_entries: BTreeMap<usize, &FirewallRule> = BTreeMap::new();
+        let mut updated_entries: BTreeMap<usize, &FirewallRule> = BTreeMap::new();
+        for (key, rule) in edited.iter() {
+            if let Some(old_rule) = rules.get(key) {
+                if rule != *old_rule {
+                    // Same key but different value meaning it was just updated
+                    updated_entries.insert(*key, rule);
+                }
+                continue;
+            }
+            // Doesn't exist in old ones meaning it was just added
+            added_entries.insert(*key, rule);
+        }
+
+        // Collect removed entries (keys from old set not present in new set)
+        let removed_entries: BTreeMap<usize, &FirewallRule> =
+            rules.into_iter().filter(|(key, _)| !edited.contains_key(key)).collect();
+
+        let added = serde_json::to_string_pretty(&added_entries).unwrap();
+        info!("Pretty printing diff ----- added: \n{}", added);
+
+        let updated = serde_json::to_string_pretty(&updated_entries).unwrap();
+        info!("Pretty printing diff ----- updated: \n{}", updated);
+
+        let removed = serde_json::to_string_pretty(&removed_entries).unwrap();
+        info!("Pretty printing diff ----- removed: \n{}", removed);
+
+        if added_entries.is_empty() && updated_entries.is_empty() && removed_entries.is_empty() {
+            info!("No modifications should be made");
+            return Ok(());
+        }
+
+        Ok(())
     }
 }
 

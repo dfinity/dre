@@ -143,6 +143,9 @@ pub(crate) enum Commands {
         #[clap(long, env = "LOCAL_REGISTRY_PATH")]
         path: Option<PathBuf>,
     },
+
+    /// Firewall rules
+    Firewall,
 }
 
 pub(crate) mod subnet {
