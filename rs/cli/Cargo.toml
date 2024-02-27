@@ -60,5 +60,5 @@ tokio = { workspace = true }
 url = { workspace = true }
 
 [dev-dependencies]
-tempfile = "3.10.0"
+tempfile = "3.10.1"
 wiremock = "0.6.0"

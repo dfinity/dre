@@ -31,7 +31,7 @@ tempfile = { workspace = true }
 pretty_assertions = "1.4.0"
 httptest = "0.15.4"
 # Default features disabled because it would require env_logger, and we are not using it
-test-log = { version = "0.2.12", default-features = false, features = [
+test-log = { version = "0.2.15", default-features = false, features = [
     "trace",
 ] }
 # Necessary for test-log
