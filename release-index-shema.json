@@ -1,171 +1,39 @@
 {
     "$schema": "http://json-schema.org/draft-06/schema#",
-    "$ref": "#/definitions/releaseIndexShema",
+    "$ref": "#/definitions/Welcome3",
     "definitions": {
-        "releaseIndexShema": {
+        "Welcome3": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "rollout": {
+                    "$ref": "#/definitions/Rollout"
+                },
+                "features": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Feature"
+                    }
+                },
+                "releases": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Release"
+                    }
+                }
+            },
+            "required": [
+                "features",
+                "releases",
+                "rollout"
+            ],
+            "title": "Welcome3"
+        },
+        "Feature": {
             "type": "object",
             "additionalProperties": false,
             "properties": {
                 "name": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "version": {
-                    "type": "string"
-                },
-                "standardRolloutSchema": {
-                    "$ref": "#/definitions/StandardRolloutSchema"
-                },
-                "index": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/Index"
-                    }
-                }
-            },
-            "required": [
-                "index",
-                "name",
-                "standardRolloutSchema",
-                "version"
-            ],
-            "title": "releaseIndexShema"
-        },
-        "Index": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-                "name": {
-                    "type": "string"
-                },
-                "start": {
-                    "type": "string",
-                    "format": "date-time"
-                },
-                "end": {
-                    "type": "string",
-                    "format": "date-time"
-                },
-                "versions": {
-                    "$ref": "#/definitions/Versions"
-                },
-                "rolloutSchema": {
-                    "$ref": "#/definitions/RolloutSchema"
-                }
-            },
-            "required": [
-                "end",
-                "name",
-                "rolloutSchema",
-                "start",
-                "versions"
-            ],
-            "title": "Index"
-        },
-        "RolloutSchema": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-                "monday": {
-                    "$ref": "#/definitions/PurpleMonday"
-                },
-                "tuesday": {
-                    "$ref": "#/definitions/Sday"
-                },
-                "wednesday": {
-                    "$ref": "#/definitions/Sday"
-                },
-                "thursday": {
-                    "$ref": "#/definitions/Sday"
-                },
-                "mondayNextWeek": {
-                    "$ref": "#/definitions/MondayNextWeekClass"
-                }
-            },
-            "required": [
-                "monday",
-                "mondayNextWeek",
-                "thursday",
-                "tuesday",
-                "wednesday"
-            ],
-            "title": "RolloutSchema"
-        },
-        "PurpleMonday": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-                "batches": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/PurpleBatch"
-                    }
-                }
-            },
-            "required": [
-                "batches"
-            ],
-            "title": "PurpleMonday"
-        },
-        "PurpleBatch": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-                "time": {
-                    "type": "string"
-                },
-                "subnets": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/SubnetUnion"
-                    }
-                }
-            },
-            "required": [
-                "subnets",
-                "time"
-            ],
-            "title": "PurpleBatch"
-        },
-        "SubnetClass": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-                "subnet": {
-                    "type": "string"
-                },
-                "version": {
-                    "$ref": "#/definitions/Version"
-                }
-            },
-            "required": [
-                "subnet"
-            ],
-            "title": "SubnetClass"
-        },
-        "MondayNextWeekClass": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-                "batches": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/MondayNextWeekBatch"
-                    }
-                }
-            },
-            "required": [
-                "batches"
-            ],
-            "title": "MondayNextWeekClass"
-        },
-        "MondayNextWeekBatch": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-                "time": {
                     "type": "string"
                 },
                 "subnets": {
@@ -176,138 +44,94 @@
                 }
             },
             "required": [
-                "subnets",
-                "time"
+                "name",
+                "subnets"
             ],
-            "title": "MondayNextWeekBatch"
+            "title": "Feature"
         },
-        "Sday": {
+        "Release": {
             "type": "object",
             "additionalProperties": false,
             "properties": {
-                "batches": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/FluffyBatch"
-                    }
-                }
-            },
-            "required": [
-                "batches"
-            ],
-            "title": "Sday"
-        },
-        "FluffyBatch": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-                "time": {
+                "rc_name": {
                     "type": "string"
                 },
-                "subnets": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/SubnetClass"
-                    }
-                }
-            },
-            "required": [
-                "subnets",
-                "time"
-            ],
-            "title": "FluffyBatch"
-        },
-        "Versions": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-                "regular": {
-                    "$ref": "#/definitions/Regular"
-                },
-                "feature": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/Regular"
-                    }
-                }
-            },
-            "required": [
-                "feature",
-                "regular"
-            ],
-            "title": "Versions"
-        },
-        "Regular": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
                 "version": {
                     "type": "string"
                 },
-                "proposal": {
+                "publish": {
                     "type": "string",
-                    "format": "uri",
-                    "qt-uri-protocols": [
-                        "https"
-                    ]
+                    "format": "date-time"
                 },
-                "tag": {
-                    "type": "string"
+                "features": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             },
             "required": [
-                "proposal",
-                "tag",
+                "features",
+                "publish",
+                "rc_name",
                 "version"
             ],
-            "title": "Regular"
+            "title": "Release"
         },
-        "StandardRolloutSchema": {
+        "Rollout": {
             "type": "object",
             "additionalProperties": false,
             "properties": {
-                "monday": {
-                    "$ref": "#/definitions/MondayNextWeekClass"
+                "rc_name": {
+                    "type": "string"
                 },
-                "tuesday": {
-                    "$ref": "#/definitions/MondayNextWeekClass"
+                "pause": {
+                    "type": "boolean"
                 },
-                "wednesday": {
-                    "$ref": "#/definitions/MondayNextWeekClass"
+                "skip_days": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "format": "date"
+                    }
                 },
-                "thursday": {
-                    "$ref": "#/definitions/MondayNextWeekClass"
-                },
-                "mondayNextWeek": {
-                    "$ref": "#/definitions/MondayNextWeekClass"
+                "stages": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Stage"
+                    }
                 }
             },
             "required": [
-                "monday",
-                "mondayNextWeek",
-                "thursday",
-                "tuesday",
-                "wednesday"
+                "pause",
+                "rc_name",
+                "skip_days",
+                "stages"
             ],
-            "title": "StandardRolloutSchema"
+            "title": "Rollout"
         },
-        "SubnetUnion": {
-            "anyOf": [
-                {
-                    "$ref": "#/definitions/SubnetClass"
+        "Stage": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "subnets": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
-                {
+                "bake_time": {
                     "type": "string"
+                },
+                "wait_for_next_week": {
+                    "type": "boolean"
                 }
+            },
+            "required": [
+                "bake_time",
+                "subnets"
             ],
-            "title": "SubnetUnion"
-        },
-        "Version": {
-            "type": "string",
-            "enum": [
-                "85bd56a70e55b2cea75cae6405ae11243e5fdad8"
-            ],
-            "title": "Version"
+            "title": "Stage"
         }
     }
 }
