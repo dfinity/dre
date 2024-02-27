@@ -1,10 +1,9 @@
 use async_trait::async_trait;
 use decentralization::SubnetChangeResponse;
 use ic_base_types::PrincipalId;
-use ic_management_types::requests::HostosRolloutResponse;
 use ic_management_types::{
     requests::{
-        HostosRolloutRequest, MembershipReplaceRequest, NodesRemoveRequest, NodesRemoveResponse, SubnetCreateRequest,
+        MembershipReplaceRequest, NodesRemoveRequest, NodesRemoveResponse, SubnetCreateRequest,
         SubnetResizeRequest,
     },
     Artifact, Network, NetworkError, Release, TopologyProposal,
@@ -102,25 +101,6 @@ impl DashboardBackendClient {
     pub async fn get_nns_replica_version(&self) -> anyhow::Result<String> {
         reqwest::Client::new()
             .get(self.url.join("release/versions/nns").map_err(|e| anyhow::anyhow!(e))?)
-            .rest_send()
-            .await
-    }
-
-    pub async fn get_blessed_versions(&self, release_artifact: &Artifact) -> anyhow::Result<Option<Vec<String>>> {
-        reqwest::Client::new()
-            .get(
-                self.url
-                    .join(&format!("release/versions/blessed/{}", release_artifact))
-                    .map_err(|e| anyhow::anyhow!(e))?,
-            )
-            .rest_send()
-            .await
-    }
-
-    pub async fn hostos_rollout_nodes(&self, request: HostosRolloutRequest) -> anyhow::Result<HostosRolloutResponse> {
-        reqwest::Client::new()
-            .post(self.url.join("hostos/rollout_nodes").map_err(|e| anyhow::anyhow!(e))?)
-            .json(&request)
             .rest_send()
             .await
     }
