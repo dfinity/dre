@@ -575,7 +575,7 @@ must be identical, and must match the SHA256 from the payload of the NNS proposa
         );
 
         let command = ProposeCommand::UpdateUnassignedNodes {
-            replica_version: unassigned_version,
+            replica_version: nns.replica_version_id.clone(),
         };
         let options = ProposeOptions {
             summary: Some("Update the unassigned nodes to the latest rolled-out version".to_string()),
