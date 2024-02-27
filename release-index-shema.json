@@ -1,0 +1,137 @@
+{
+    "$schema": "http://json-schema.org/draft-06/schema#",
+    "$ref": "#/definitions/Welcome3",
+    "definitions": {
+        "Welcome3": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "rollout": {
+                    "$ref": "#/definitions/Rollout"
+                },
+                "features": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Feature"
+                    }
+                },
+                "releases": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Release"
+                    }
+                }
+            },
+            "required": [
+                "features",
+                "releases",
+                "rollout"
+            ],
+            "title": "Welcome3"
+        },
+        "Feature": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "subnets": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            },
+            "required": [
+                "name",
+                "subnets"
+            ],
+            "title": "Feature"
+        },
+        "Release": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "rc_name": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "string"
+                },
+                "publish": {
+                    "type": "string",
+                    "format": "date-time"
+                },
+                "features": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            },
+            "required": [
+                "features",
+                "publish",
+                "rc_name",
+                "version"
+            ],
+            "title": "Release"
+        },
+        "Rollout": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "rc_name": {
+                    "type": "string"
+                },
+                "pause": {
+                    "type": "boolean"
+                },
+                "skip_days": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "format": "date"
+                    }
+                },
+                "stages": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Stage"
+                    }
+                }
+            },
+            "required": [
+                "pause",
+                "rc_name",
+                "skip_days",
+                "stages"
+            ],
+            "title": "Rollout"
+        },
+        "Stage": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "subnets": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "bake_time": {
+                    "type": "string"
+                },
+                "wait_for_next_week": {
+                    "type": "boolean"
+                }
+            },
+            "required": [
+                "bake_time",
+                "subnets"
+            ],
+            "title": "Stage"
+        }
+    }
+}

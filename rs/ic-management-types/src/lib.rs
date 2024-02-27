@@ -2,9 +2,7 @@ pub mod errors;
 pub mod requests;
 pub use crate::errors::*;
 
-use anyhow::anyhow;
 use candid::{CandidType, Decode};
-use clap::{Parser, ValueEnum};
 use core::hash::Hash;
 use ic_base_types::NodeId;
 use ic_nns_governance::pb::v1::NnsFunction;
@@ -28,7 +26,6 @@ use std::convert::TryFrom;
 use std::net::Ipv6Addr;
 use std::ops::Deref;
 use std::str::FromStr;
-use std::{fmt, i32};
 use strum::VariantNames;
 use strum_macros::{Display, EnumString, EnumVariantNames};
 use url::Url;
@@ -593,118 +590,6 @@ impl Network {
             Network::Mainnet => "mercury".to_string(),
             Network::Staging => "staging".to_string(),
             Self::Url(url) => format!("testnet-{url}"),
-        }
-    }
-}
-
-#[derive(ValueEnum, Copy, Clone, Debug, Ord, Eq, PartialEq, PartialOrd, Serialize, Deserialize, Parser, Default)]
-pub enum NodeOwner {
-    Dfinity,
-    Others,
-    #[default]
-    All,
-}
-
-#[derive(ValueEnum, Copy, Clone, Debug, Ord, Eq, PartialEq, PartialOrd, Serialize, Deserialize, Default)]
-pub enum NodeAssignment {
-    Unassigned,
-    Assigned,
-    #[default]
-    All,
-}
-
-#[derive(Copy, Clone, Debug, Ord, Eq, PartialEq, PartialOrd, Serialize, Deserialize)]
-pub struct NodeGroup {
-    pub assignment: NodeAssignment,
-    pub owner: NodeOwner,
-}
-
-impl NodeGroup {
-    pub fn new(assignment: NodeAssignment, owner: NodeOwner) -> Self {
-        NodeGroup { assignment, owner }
-    }
-}
-impl fmt::Display for NodeGroup {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "GROUP {{ subnet: {:?}, owner: {:?} }}", self.assignment, self.owner)
-    }
-}
-#[derive(Copy, Clone, Debug, Ord, Eq, PartialEq, PartialOrd, Serialize, Deserialize)]
-pub enum NumberOfNodes {
-    Percentage(i32),
-    Absolute(i32),
-}
-impl FromStr for NumberOfNodes {
-    type Err = anyhow::Error;
-    fn from_str(input: &str) -> Result<Self, Self::Err> {
-        if input.ends_with('%') {
-            let percentage = i32::from_str(input.trim_end_matches('%'))?;
-            if (0..=100).contains(&percentage) {
-                Ok(NumberOfNodes::Percentage(percentage))
-            } else {
-                Err(anyhow!("Percentage must be between 0 and 100"))
-            }
-        } else {
-            Ok(NumberOfNodes::Absolute(i32::from_str(input)?))
-        }
-    }
-}
-
-impl Default for NumberOfNodes {
-    fn default() -> Self {
-        NumberOfNodes::Percentage(100)
-    }
-}
-impl NumberOfNodes {
-    pub fn get_value(&self) -> i32 {
-        match self {
-            NumberOfNodes::Percentage(value) | NumberOfNodes::Absolute(value) => *value,
-        }
-    }
-}
-impl fmt::Display for NumberOfNodes {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            NumberOfNodes::Percentage(x) => write!(f, "{}% of", x),
-            NumberOfNodes::Absolute(x) => write!(f, "{}", x),
-        }
-    }
-}
-#[derive(Copy, Clone, Debug, Ord, Eq, PartialEq, PartialOrd, Serialize, Deserialize)]
-pub struct NodeGroupUpdate {
-    pub node_group: NodeGroup,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub maybe_number_nodes: Option<NumberOfNodes>,
-}
-impl NodeGroupUpdate {
-    pub fn new(assignment: Option<NodeAssignment>, owner: Option<NodeOwner>, nodes_per_subnet: NumberOfNodes) -> Self {
-        NodeGroupUpdate {
-            node_group: NodeGroup::new(assignment.unwrap_or_default(), owner.unwrap_or_default()),
-            maybe_number_nodes: Some(nodes_per_subnet),
-        }
-    }
-    pub fn new_all(assignment: NodeAssignment, owner: NodeOwner) -> Self {
-        NodeGroupUpdate {
-            node_group: NodeGroup::new(assignment, owner),
-            maybe_number_nodes: None,
-        }
-    }
-
-    pub fn with_assignment(&self, assignment: NodeAssignment) -> Self {
-        Self {
-            node_group: NodeGroup {
-                assignment,
-                owner: self.node_group.owner,
-            },
-            maybe_number_nodes: self.maybe_number_nodes,
-        }
-    }
-    pub fn nodes_to_take(&self, group_size: usize) -> usize {
-        match self.maybe_number_nodes.unwrap_or_default() {
-            NumberOfNodes::Percentage(percent_to_update) => {
-                (group_size as f32 * percent_to_update as f32 / 100.0).floor() as usize
-            }
-            NumberOfNodes::Absolute(number_nodes) => number_nodes as usize,
         }
     }
 }
