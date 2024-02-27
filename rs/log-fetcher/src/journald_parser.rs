@@ -12,21 +12,29 @@ pub struct JournalEntry {
     pub fields: Vec<(String, JournalField)>,
 }
 
+#[derive(Debug, Clone)]
+enum LineStatus {
+    NotStarted,
+    Started,
+    Utf8,
+    Binary,
+}
+
 pub fn parse_journal_entries_new(body: &[u8]) -> Vec<JournalEntry> {
     let mut entries = Vec::new();
     let mut current_entry = Vec::new();
     let mut current_line = Vec::new();
 
-    let mut first_found = -2;
+    let mut first_found = LineStatus::NotStarted;
 
     let mut iter = body.iter();
     while let Some(byte) = iter.next() {
-        match (byte, first_found) {
-            (b'=', -1) => {
+        match (byte, first_found.clone()) {
+            (b'=', LineStatus::Started) => {
                 current_line.push(*byte);
-                first_found = 0;
+                first_found = LineStatus::Utf8;
             }
-            (b'\n', -1) => {
+            (b'\n', LineStatus::Started) => {
                 current_entry.push(current_line.clone());
                 current_line.clear();
                 let mut next = vec![];
@@ -45,27 +53,27 @@ pub fn parse_journal_entries_new(body: &[u8]) -> Vec<JournalEntry> {
                 iter.next();
                 current_entry.push(current_line.clone());
                 current_line.clear();
-                first_found = -2;
+                first_found = LineStatus::NotStarted;
             }
-            (b'\n', 0) => {
+            (b'\n', LineStatus::Utf8) => {
                 current_entry.push(current_line.clone());
                 current_line.clear();
-                first_found = -2;
+                first_found = LineStatus::NotStarted;
             }
-            (b'\n', -2) => {
+            (b'\n', LineStatus::NotStarted) => {
                 if let Some(entry) = parse_journal_entry(current_entry.as_slice()) {
                     entries.push(entry);
                 }
                 current_entry.clear();
                 current_line.clear();
-                first_found = -2;
+                first_found = LineStatus::NotStarted;
             }
-            (_, -1) | (_, 0) => current_line.push(*byte),
-            (_, -2) => {
+            (_, LineStatus::Started) | (_, LineStatus::Utf8) => current_line.push(*byte),
+            (_, LineStatus::NotStarted) => {
                 current_line.push(*byte);
-                first_found = -1;
+                first_found = LineStatus::Started;
             }
-            (a, b) => unreachable!("Shouldn't happen: {}, {}", a, b),
+            (a, b) => unreachable!("Shouldn't happen: {}, {:?}", a, b),
         }
     }
     // Check if there's an entry at the end of the body
@@ -111,14 +119,6 @@ pub fn _parse_journal_entries(body: &[u8]) -> Vec<JournalEntry> {
 
 fn parse_journal_entry(entry_lines: &[Vec<u8>]) -> Option<JournalEntry> {
     let mut entry = JournalEntry { fields: Vec::new() };
-
-    println!(
-        "Received lines: \n{:?}",
-        entry_lines
-            .into_iter()
-            .map(|line| String::from_utf8_lossy(line))
-            .collect::<Vec<_>>()
-    );
 
     let mut iter = entry_lines.iter();
     while let Some(line) = iter.next() {
