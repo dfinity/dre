@@ -1,5 +1,5 @@
 use std::{
-    collections::HashMap,
+    collections::BTreeMap,
     fs::{self, File},
     io::{Read, Write},
     path::PathBuf,
@@ -15,7 +15,7 @@ use tokio::select;
 use tokio::sync::mpsc;
 use url::Url;
 
-use crate::journald_parser::{parse_journal_entries, JournalField};
+use crate::journald_parser::{parse_journal_entries_new, JournalField};
 
 mod journald_parser;
 
@@ -95,10 +95,10 @@ async fn main() -> Result<(), anyhow::Error> {
             }
         };
 
-        let entries = parse_journal_entries(&body);
+        let entries = parse_journal_entries_new(&body);
 
         for entry in &entries {
-            let map: HashMap<String, String> = entry
+            let map: BTreeMap<String, String> = entry
                 .fields
                 .iter()
                 .map(|(name, val)| match val {
