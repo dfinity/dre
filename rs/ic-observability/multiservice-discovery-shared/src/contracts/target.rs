@@ -36,6 +36,10 @@ impl DataContract for TargetDto {
     fn get_id(&self) -> String {
         self.node_id.to_string()
     }
+
+    fn get_target_name(&self) -> String {
+        self.name.to_string()
+    }
 }
 
 pub fn map_to_target_dto(

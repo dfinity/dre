@@ -47,4 +47,8 @@ impl DataContract for Sns {
     fn get_id(&self) -> String {
         self.root_canister_id.to_string()
     }
+
+    fn get_target_name(&self) -> String {
+        self.name.to_string()
+    }
 }

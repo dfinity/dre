@@ -23,7 +23,12 @@ impl NodeIDRegexFilter {
 impl TargetGroupFilter for NodeIDRegexFilter {
     fn filter(&self, target_group: &dyn DataContract) -> bool {
         if target_group.get_id() == self.bn_principal_placeholder.to_string() {
-            return self.regex.is_match(&target_group.get_name().to_string());
+            println!(
+                "Checking if {} is bn with name {}",
+                target_group.get_id(),
+                target_group.get_target_name()
+            );
+            return self.regex.is_match(&target_group.get_target_name().to_string());
         }
 
         self.regex.is_match(&target_group.get_id())
