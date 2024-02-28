@@ -6,10 +6,10 @@ use candid::{Decode, Encode};
 use futures_util::future::try_join_all;
 use ic_agent::agent::http_transport::reqwest_transport::ReqwestHttpReplicaV2Transport;
 use ic_agent::Agent;
+use ic_management_types::UpdateElectedHostosVersionsProposal;
+use ic_management_types::UpdateNodesHostosVersionsProposal;
 use ic_management_types::{NnsFunctionProposal, TopologyChangePayload, TopologyChangeProposal};
-use ic_management_types::{
-    UpdateElectedHostosVersionsProposal, UpdateElectedReplicaVersionsProposal, UpdateNodesHostosVersionsProposal,
-};
+use ic_management_types::UpdateElectedReplicaVersionsProposal;
 use ic_nns_governance::pb::v1::{proposal::Action, ListProposalInfo, ListProposalInfoResponse, NnsFunction};
 use ic_nns_governance::pb::v1::{ProposalInfo, ProposalStatus, Topic};
 use itertools::Itertools;

@@ -47,9 +47,14 @@ def main():
         field = "ic_node"
         if pattern.startswith("boundary"):
             field = "_HOSTNAME"
-        nodes = client.search(
-            index=pattern, body={"aggs": {"patterns": {"terms": {"field": f"{field}.keyword", "size": 2_000}}}}
-        )["aggregations"]["patterns"]["buckets"]
+
+        try:
+            nodes = client.search(
+                index=pattern, body={"aggs": {"patterns": {"terms": {"field": f"{field}.keyword", "size": 2_000}}}}
+            )["aggregations"]["patterns"]["buckets"]
+        except Exception:
+            logger.warning("Couldn't fetch nodes for pattern %s", pattern)
+            continue
 
         nodes = [
             i["key"]
@@ -77,7 +82,11 @@ def main():
                 },
             }
 
-            last_logs = client.search(index=pattern, body=body)["hits"]["hits"]
+            try:
+                last_logs = client.search(index=pattern, body=body)["hits"]["hits"]
+            except Exception as e:
+                logger.warning("Couldn't fetch last logs for job %s for pattern %s, Exception: %s", job, pattern, e)
+                continue
 
             nodes_and_cursors = [
                 {

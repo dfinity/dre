@@ -2,7 +2,7 @@ name: Setup runner
 description: Reusable action for tearing down the github runner
 
 inputs:
-  github_token:
+  GITHUB_TOKEN:
     description: 'Automatically assigned GitHub Token'
     required: true
 
