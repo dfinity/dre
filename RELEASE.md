@@ -121,3 +121,15 @@ Since the security hotfix do not have release notes, release controller won't an
           version: 2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f
           security: true
 ```
+
+
+### Proposed version is rejected
+
+Mark the version as rejected. Make sure to do this before you add a new version, otherwise the release notes might not be generated properly.
+
+```yaml
+      - name: initial
+        version: 2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f
+        release_notes_ready: true
+        rejected: true
+```
