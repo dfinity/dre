@@ -106,7 +106,7 @@ impl Runner {
                 .expect("Should get a replica version"),
         );
 
-        self.ic_admin.propose_run_mapped(
+        self.ic_admin.propose_run(
             ic_admin::ProposeCommand::CreateSubnet {
                 node_ids: subnet_creation_data.added,
                 replica_version,
@@ -117,7 +117,8 @@ impl Runner {
                 motivation: Some(motivation.clone()),
             },
             simulate,
-        )
+        )?;
+        Ok(())
     }
 
     pub async fn membership_replace(
@@ -163,7 +164,7 @@ impl Runner {
         }
 
         self.ic_admin
-            .propose_run_mapped(
+            .propose_run(
                 ic_admin::ProposeCommand::ChangeSubnetMembership {
                     subnet_id,
                     node_ids_add: change.added.clone(),
@@ -172,7 +173,8 @@ impl Runner {
                 options,
                 simulate,
             )
-            .map_err(|e| anyhow::anyhow!(e))
+            .map_err(|e| anyhow::anyhow!(e))?;
+        Ok(())
     }
 
     pub async fn new_with_network_url(ic_admin: ic_admin::IcAdminWrapper, backend_port: u16) -> anyhow::Result<Self> {
@@ -430,7 +432,7 @@ impl Runner {
         }
         println!("{}", table);
 
-        self.ic_admin.propose_run_mapped(
+        self.ic_admin.propose_run(
             ic_admin::ProposeCommand::RemoveNodes {
                 nodes: node_removals.iter().map(|n| n.node.principal).collect(),
             },
@@ -440,6 +442,7 @@ impl Runner {
                 motivation: node_remove_response.motivation.into(),
             },
             simulate,
-        )
+        )?;
+        Ok(())
     }
 }

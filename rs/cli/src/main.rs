@@ -218,7 +218,7 @@ async fn main() -> Result<(), anyhow::Error> {
                             }
                         }.await?;
 
-                        ic_admin.propose_run_mapped(ic_admin::ProposeCommand::UpdateElectedVersions {
+                        ic_admin.propose_run(ic_admin::ProposeCommand::UpdateElectedVersions {
                                                  release_artifact: update_version.release_artifact.clone(),
                                                  args: cli::Cli::get_update_cmd_args(&update_version)
                                              },
@@ -226,7 +226,8 @@ async fn main() -> Result<(), anyhow::Error> {
                                                  title: Some(update_version.title),
                                                  summary: Some(update_version.summary.clone()),
                                                  motivation: None,
-                                             }, simulate)
+                                             }, simulate)?;
+                        Ok(())
                     }
                 }
             },

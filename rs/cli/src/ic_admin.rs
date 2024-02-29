@@ -88,15 +88,6 @@ impl IcAdminWrapper {
                 .yellow(),
         );
     }
-    pub(crate) fn propose_run_mapped(
-        &self,
-        cmd: ProposeCommand,
-        opts: ProposeOptions,
-        simulate: bool,
-    ) -> anyhow::Result<()> {
-        self.propose_run(cmd, opts, simulate)?;
-        return Ok(());
-    }
 
     pub(crate) fn propose_run(
         &self,
@@ -330,7 +321,8 @@ impl IcAdminWrapper {
             args: args.iter().skip(1).cloned().collect::<Vec<_>>(),
         };
         let simulate = simulate || cmd.args().contains(&String::from("--dry-run"));
-        self.propose_run_mapped(cmd, Default::default(), simulate)
+        self.propose_run(cmd, Default::default(), simulate)?;
+        Ok(())
     }
 
     fn get_s3_cdn_image_url(version: &String, s3_subdir: &String) -> String {
@@ -615,7 +607,8 @@ must be identical, and must match the SHA256 from the payload of the NNS proposa
             title: Some("Update all unassigned nodes".to_string()),
         };
 
-        self.propose_run_mapped(command, options, simulate)
+        self.propose_run(command, options, simulate)?;
+        Ok(())
     }
 
     pub async fn update_replica_nodes_firewall(&self, network: Network, simulate: bool) -> Result<(), Error> {
@@ -656,7 +649,7 @@ must be identical, and must match the SHA256 from the payload of the NNS proposa
         let edited: BTreeMap<usize, FirewallRule>;
         loop {
             info!("Spawning edit window...");
-            let edited_string = edit::edit_with_builder(pretty.clone(), &with_suffix)?;
+            let edited_string = edit::edit_with_builder(pretty.clone(), with_suffix)?;
             match serde_json::from_str(&edited_string) {
                 Ok(ruleset) => {
                     edited = ruleset;
@@ -733,7 +726,7 @@ must be identical, and must match the SHA256 from the payload of the NNS proposa
 
                 let cmd = ProposeCommand::Raw {
                     command: format!("{}-firewall-rules", change_type),
-                    args: vec![
+                    args: [
                         "--test",
                         "replica_nodes",
                         file.path().to_str().unwrap(),
@@ -784,7 +777,7 @@ must be identical, and must match the SHA256 from the payload of the NNS proposa
                     motivation: Some(format!("Proposal to {} firewall rule", change_type)),
                     summary: Some(format!("Proposal to {} firewall rule", change_type)),
                 };
-                admin_wrapper.propose_run_mapped(cmd, options, simulate)?
+                admin_wrapper.propose_run(cmd, options, simulate)?;
             }
             Ok(())
         }
