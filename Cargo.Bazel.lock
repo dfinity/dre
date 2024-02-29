@@ -1,5 +1,5 @@
 {
-  "checksum": "872ac0e7ad6530e912d6f269ea87a37b5f210f23b0528c8c8e9d194d980e5c0a",
+  "checksum": "35baebb9ebb55e7994363dfedd074554d53eca611f932763d41e6846a346f08e",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -11678,6 +11678,10 @@
               "target": "tabular"
             },
             {
+              "id": "tempfile 3.10.0",
+              "target": "tempfile"
+            },
+            {
               "id": "tokio 1.36.0",
               "target": "tokio"
             },
@@ -11690,10 +11694,6 @@
         },
         "deps_dev": {
           "common": [
-            {
-              "id": "tempfile 3.10.0",
-              "target": "tempfile"
-            },
             {
               "id": "wiremock 0.6.0",
               "target": "wiremock"
