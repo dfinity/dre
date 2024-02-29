@@ -71,6 +71,18 @@ pub struct Definition {
     pub boundary_nodes: Vec<BoundaryNode>,
 }
 
+impl PartialEq for Definition {
+    fn eq(&self, other: &Self) -> bool {
+        self.nns_urls == other.nns_urls &&
+        self.registry_path == other.registry_path &&
+        self.name == other.name &&
+        self.public_key == other.public_key &&
+        self.poll_interval == other.poll_interval &&
+        self.registry_query_timeout == other.registry_query_timeout &&
+        self.boundary_nodes == other.boundary_nodes
+    }
+}
+
 impl From<FSDefinition> for Definition {
     fn from(fs_definition: FSDefinition) -> Self {
         if std::fs::metadata(&fs_definition.registry_path).is_err() {
@@ -385,7 +397,7 @@ impl RunningDefinition {
     }
 }
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize, PartialEq)]
 pub struct BoundaryNode {
     pub name: String,
     pub targets: BTreeSet<SocketAddr>,
@@ -514,9 +526,6 @@ impl DefinitionsSupervisor {
         Ok(())
     }
 
-    // FIXME: if the file contents on disk are the same as the contents about to
-    // be persisted, then the file should not be overwritten because it was
-    // already updated by another MSD sharing the same directory.
     pub(crate) async fn persist_defs(
         &self,
         existing: &mut BTreeMap<String, RunningDefinition>,
@@ -665,5 +674,52 @@ impl DefinitionsSupervisor {
             defs.remove(&name).unwrap().end().await
         }
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::{collections::BTreeMap, str::FromStr, time::Duration};
+    use ic_management_types::Network;
+    use tempfile::tempdir;
+    use crate::{definition::DefinitionsSupervisor, make_logger, metrics::RunningDefinitionsMetrics};
+    use super::{Definition, TestDefinition};
+
+    #[tokio::test]
+    async fn persist_defs() {
+        let handle = tokio::runtime::Handle::current();
+        let definitions_dir = tempdir().unwrap();
+        let definitions_path = definitions_dir.path().join(String::from("definitions.json"));
+        let log = make_logger();
+        let supervisor = DefinitionsSupervisor::new(
+            handle.clone(),
+            false,
+            Some(definitions_path.clone()),
+            log,
+        );
+
+        let mocked_definition = Definition::new(
+            vec![url::Url::from_str("http://[2a00:fb01:400:42:5000:3cff:fe45:6c61]:8080").unwrap()],
+            definitions_dir.as_ref().to_path_buf(),
+            Network::Mainnet.legacy_name(),
+            log.clone(),
+            None,
+            Duration::from_secs(0),
+            Duration::from_secs(0),
+        );
+        supervisor.persist_defs(&mut BTreeMap::from([
+            (String::from("test"), TestDefinition::new(mocked_definition.clone(), RunningDefinitionsMetrics::new()).running_def)
+        ])
+        ).await.unwrap();
+        supervisor.definitions.lock().await.clear();
+        supervisor.load_or_create_defs(RunningDefinitionsMetrics::new()).await.unwrap();
+        let loaded_definition = supervisor.definitions.lock().await
+            .values()
+            .cloned()
+            .map(|def| def.definition)
+            .next()
+            .unwrap();
+
+        assert_eq!(mocked_definition, loaded_definition);
     }
 }
