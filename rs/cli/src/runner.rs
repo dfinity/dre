@@ -106,7 +106,7 @@ impl Runner {
                 .expect("Should get a replica version"),
         );
 
-        self.ic_admin.propose_run(
+        self.ic_admin.propose_run_mapped(
             ic_admin::ProposeCommand::CreateSubnet {
                 node_ids: subnet_creation_data.added,
                 replica_version,
@@ -163,7 +163,7 @@ impl Runner {
         }
 
         self.ic_admin
-            .propose_run(
+            .propose_run_mapped(
                 ic_admin::ProposeCommand::ChangeSubnetMembership {
                     subnet_id,
                     node_ids_add: change.added.clone(),
@@ -430,7 +430,7 @@ impl Runner {
         }
         println!("{}", table);
 
-        self.ic_admin.propose_run(
+        self.ic_admin.propose_run_mapped(
             ic_admin::ProposeCommand::RemoveNodes {
                 nodes: node_removals.iter().map(|n| n.node.principal).collect(),
             },

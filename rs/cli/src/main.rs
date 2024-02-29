@@ -218,7 +218,7 @@ async fn main() -> Result<(), anyhow::Error> {
                             }
                         }.await?;
 
-                        ic_admin.propose_run(ic_admin::ProposeCommand::UpdateElectedVersions {
+                        ic_admin.propose_run_mapped(ic_admin::ProposeCommand::UpdateElectedVersions {
                                                  release_artifact: update_version.release_artifact.clone(),
                                                  args: cli::Cli::get_update_cmd_args(&update_version)
                                              },
@@ -291,7 +291,7 @@ async fn main() -> Result<(), anyhow::Error> {
 
             cli::Commands::Firewall => {
                 let ic_admin: IcAdminWrapper = cli::Cli::from_opts(&cli_opts, true).await?.into();
-                ic_admin.update_replica_nodes_firewall(cli_opts.network).await
+                ic_admin.update_replica_nodes_firewall(cli_opts.network, cli_opts.simulate).await
             }
         }
     })
