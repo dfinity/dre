@@ -11,6 +11,7 @@ documentation.workspace = true
 
 [dependencies]
 anyhow = { workspace = true }
+async-recursion = { workspace = true }
 async-trait = { workspace = true }
 candid = { workspace = true }
 clap = { workspace = true }
@@ -24,6 +25,7 @@ dotenv = { workspace = true }
 edit = { workspace = true }
 flate2 = { workspace = true }
 futures = { workspace = true }
+futures-util = { workspace = true }
 ic-base-types = { workspace = true }
 ic-canister-client = { workspace = true }
 ic-canisters = { workspace = true }

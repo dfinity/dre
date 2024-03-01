@@ -1,18 +1,164 @@
 use anyhow::anyhow;
 use async_recursion::async_recursion;
+use clap::{Parser, ValueEnum};
 use futures_util::future::try_join;
 use ic_base_types::{NodeId, PrincipalId};
-use ic_management_types::requests::{HostosRolloutReason, HostosRolloutResponse, HostosRolloutSubnetAffected};
-use ic_management_types::{
-    Network, Node, NodeAssignment, NodeGroup, NodeGroupUpdate, NodeOwner, Status, Subnet,
-    UpdateNodesHostosVersionsProposal,
-};
+use ic_management_backend::health;
+use ic_management_backend::proposal::ProposalAgent;
+use ic_management_types::{Network, Node, Status, Subnet, UpdateNodesHostosVersionsProposal};
 use log::{debug, info};
-use proposal::ProposalAgent;
-use std::collections::BTreeMap;
+use std::{collections::BTreeMap, fmt::Display, str::FromStr};
 
-use crate::health;
-use crate::proposal;
+pub enum HostosRolloutResponse {
+    Ok(Vec<Node>, Option<Vec<HostosRolloutSubnetAffected>>),
+    None(Vec<(NodeGroup, HostosRolloutReason)>),
+}
+
+impl HostosRolloutResponse {
+    pub fn unwrap(self) -> Vec<Node> {
+        match self {
+            HostosRolloutResponse::Ok(val, _) => val,
+            _ => panic!("called `Option::unwrap()` on a `None` value"),
+        }
+    }
+}
+
+#[derive(Clone, Eq, PartialEq)]
+pub struct HostosRolloutSubnetAffected {
+    pub subnet_id: PrincipalId,
+    pub subnet_size: usize,
+}
+
+#[derive(Eq, PartialEq)]
+pub enum HostosRolloutReason {
+    NoNodeHealthy,
+    NoNodeWithoutProposal,
+    AllAlreadyUpdated,
+    NoNodeSelected,
+}
+
+impl Display for HostosRolloutReason {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::NoNodeHealthy => write!(f, "No healthy node found in the group"),
+            Self::NoNodeWithoutProposal => write!(f, "No node without open proposals found in the group"),
+            Self::AllAlreadyUpdated => write!(f, "All candidate nodes have been already updated"),
+            Self::NoNodeSelected => write!(f, "No candidate nodes have been selected"),
+        }
+    }
+}
+
+#[derive(ValueEnum, Copy, Clone, Debug, Ord, Eq, PartialEq, PartialOrd, Parser, Default)]
+pub enum NodeOwner {
+    Dfinity,
+    Others,
+    #[default]
+    All,
+}
+
+#[derive(ValueEnum, Copy, Clone, Debug, Ord, Eq, PartialEq, PartialOrd, Default)]
+pub enum NodeAssignment {
+    Unassigned,
+    Assigned,
+    #[default]
+    All,
+}
+
+#[derive(Copy, Clone, Debug, Ord, Eq, PartialEq, PartialOrd)]
+pub struct NodeGroup {
+    pub assignment: NodeAssignment,
+    pub owner: NodeOwner,
+}
+
+impl NodeGroup {
+    pub fn new(assignment: NodeAssignment, owner: NodeOwner) -> Self {
+        NodeGroup { assignment, owner }
+    }
+}
+impl std::fmt::Display for NodeGroup {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "GROUP {{ subnet: {:?}, owner: {:?} }}", self.assignment, self.owner)
+    }
+}
+#[derive(Copy, Clone, Debug, Ord, Eq, PartialEq, PartialOrd)]
+pub enum NumberOfNodes {
+    Percentage(i32),
+    Absolute(i32),
+}
+impl FromStr for NumberOfNodes {
+    type Err = anyhow::Error;
+    fn from_str(input: &str) -> Result<Self, Self::Err> {
+        if input.ends_with('%') {
+            let percentage = i32::from_str(input.trim_end_matches('%'))?;
+            if (0..=100).contains(&percentage) {
+                Ok(NumberOfNodes::Percentage(percentage))
+            } else {
+                Err(anyhow!("Percentage must be between 0 and 100"))
+            }
+        } else {
+            Ok(NumberOfNodes::Absolute(i32::from_str(input)?))
+        }
+    }
+}
+
+impl Default for NumberOfNodes {
+    fn default() -> Self {
+        NumberOfNodes::Percentage(100)
+    }
+}
+impl NumberOfNodes {
+    pub fn get_value(&self) -> i32 {
+        match self {
+            NumberOfNodes::Percentage(value) | NumberOfNodes::Absolute(value) => *value,
+        }
+    }
+}
+impl std::fmt::Display for NumberOfNodes {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            NumberOfNodes::Percentage(x) => write!(f, "{}% of", x),
+            NumberOfNodes::Absolute(x) => write!(f, "{}", x),
+        }
+    }
+}
+
+#[derive(Copy, Clone, Debug, Ord, Eq, PartialEq, PartialOrd)]
+pub struct NodeGroupUpdate {
+    pub node_group: NodeGroup,
+    pub maybe_number_nodes: Option<NumberOfNodes>,
+}
+impl NodeGroupUpdate {
+    pub fn new(assignment: Option<NodeAssignment>, owner: Option<NodeOwner>, nodes_per_subnet: NumberOfNodes) -> Self {
+        NodeGroupUpdate {
+            node_group: NodeGroup::new(assignment.unwrap_or_default(), owner.unwrap_or_default()),
+            maybe_number_nodes: Some(nodes_per_subnet),
+        }
+    }
+    pub fn new_all(assignment: NodeAssignment, owner: NodeOwner) -> Self {
+        NodeGroupUpdate {
+            node_group: NodeGroup::new(assignment, owner),
+            maybe_number_nodes: None,
+        }
+    }
+
+    pub fn with_assignment(&self, assignment: NodeAssignment) -> Self {
+        Self {
+            node_group: NodeGroup {
+                assignment,
+                owner: self.node_group.owner,
+            },
+            maybe_number_nodes: self.maybe_number_nodes,
+        }
+    }
+    pub fn nodes_to_take(&self, group_size: usize) -> usize {
+        match self.maybe_number_nodes.unwrap_or_default() {
+            NumberOfNodes::Percentage(percent_to_update) => {
+                (group_size as f32 * percent_to_update as f32 / 100.0).floor() as usize
+            }
+            NumberOfNodes::Absolute(number_nodes) => number_nodes as usize,
+        }
+    }
+}
 
 enum CandidatesSelection {
     Ok(Vec<Node>),
@@ -385,9 +531,9 @@ impl HostosRollout {
 
 #[cfg(test)]
 pub mod test {
-    use crate::hostos_rollout::NodeAssignment::{Assigned, Unassigned};
-    use crate::hostos_rollout::NodeOwner::{Dfinity, Others};
-    use ic_management_types::{Network, Node, NumberOfNodes, Operator, Provider, Subnet};
+    use crate::operations::hostos_rollout::NodeAssignment::{Assigned, Unassigned};
+    use crate::operations::hostos_rollout::NodeOwner::{Dfinity, Others};
+    use ic_management_types::{Network, Node, Operator, Provider, Subnet};
     use std::net::Ipv6Addr;
 
     use super::*;

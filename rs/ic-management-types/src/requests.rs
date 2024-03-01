@@ -1,7 +1,6 @@
-use crate::{MinNakamotoCoefficients, Node, NodeGroup, NodeGroupUpdate, Status};
+use crate::{MinNakamotoCoefficients, Node, Status};
 use ic_base_types::PrincipalId;
 use serde::{Deserialize, Serialize};
-use std::fmt::Display;
 
 #[derive(Serialize, Deserialize)]
 pub struct MembershipReplaceRequest {
@@ -79,53 +78,6 @@ pub struct SubnetResizeRequest {
     pub exclude: Option<Vec<String>>,
     pub only: Option<Vec<String>>,
     pub include: Option<Vec<PrincipalId>>,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct HostosRolloutRequest {
-    pub exclude: Option<Vec<PrincipalId>>,
-    pub version: String,
-    pub node_group: NodeGroupUpdate,
-}
-
-#[derive(Serialize, Deserialize)]
-pub enum HostosRolloutResponse {
-    Ok(Vec<Node>, Option<Vec<HostosRolloutSubnetAffected>>),
-    None(Vec<(NodeGroup, HostosRolloutReason)>),
-}
-
-impl HostosRolloutResponse {
-    pub fn unwrap(self) -> Vec<Node> {
-        match self {
-            HostosRolloutResponse::Ok(val, _) => val,
-            _ => panic!("called `Option::unwrap()` on a `None` value"),
-        }
-    }
-}
-
-#[derive(Serialize, Deserialize, Clone, Eq, PartialEq)]
-pub struct HostosRolloutSubnetAffected {
-    pub subnet_id: PrincipalId,
-    pub subnet_size: usize,
-}
-
-#[derive(Serialize, Deserialize, Eq, PartialEq)]
-pub enum HostosRolloutReason {
-    NoNodeHealthy,
-    NoNodeWithoutProposal,
-    AllAlreadyUpdated,
-    NoNodeSelected,
-}
-
-impl Display for HostosRolloutReason {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::NoNodeHealthy => write!(f, "No healthy node found in the group"),
-            Self::NoNodeWithoutProposal => write!(f, "No node without open proposals found in the group"),
-            Self::AllAlreadyUpdated => write!(f, "All candidate nodes have been already updated"),
-            Self::NoNodeSelected => write!(f, "No candidate nodes have been selected"),
-        }
-    }
 }
 
 #[derive(Serialize, Deserialize)]

@@ -1,12 +1,13 @@
 use crate::general::{get_node_metrics_history, vote_on_proposals};
 use crate::ic_admin::IcAdminWrapper;
+use crate::operations::hostos_rollout::{NodeGroupUpdate, NumberOfNodes};
 use clap::{error::ErrorKind, CommandFactory, Parser};
 use dotenv::dotenv;
 use ic_base_types::CanisterId;
 use ic_canisters::governance::governance_canister_version;
 use ic_management_backend::endpoints;
 use ic_management_types::requests::NodesRemoveRequest;
-use ic_management_types::{Artifact, MinNakamotoCoefficients, Network, NodeFeature, NodeGroupUpdate, NumberOfNodes};
+use ic_management_types::{Artifact, MinNakamotoCoefficients, Network, NodeFeature};
 use log::info;
 use std::collections::BTreeMap;
 use std::str::FromStr;
@@ -19,6 +20,7 @@ pub(crate) mod defaults;
 mod detect_neuron;
 mod general;
 mod ic_admin;
+mod operations;
 mod ops_subnet_node_replace;
 mod registry_dump;
 mod runner;
@@ -41,10 +43,11 @@ async fn main() -> Result<(), anyhow::Error> {
     let (tx, rx) = mpsc::channel();
 
     let backend_port = local_unused_port();
+    let target_network_backend = target_network.clone();
     thread::spawn(move || {
         let rt = tokio::runtime::Runtime::new().unwrap();
         rt.block_on(async move {
-            endpoints::run_backend(target_network, "127.0.0.1", backend_port, true, Some(tx))
+            endpoints::run_backend(target_network_backend, "127.0.0.1", backend_port, true, Some(tx))
                 .await
                 .expect("failed")
         });
@@ -240,7 +243,7 @@ async fn main() -> Result<(), anyhow::Error> {
                     },
                     cli::hostos::Commands::RolloutFromNodeGroup {version, assignment, owner, nodes_in_group, exclude } => {
                         let update_group  = NodeGroupUpdate::new(*assignment, *owner, NumberOfNodes::from_str(nodes_in_group)?);
-                        let runner = runner::Runner::new_with_network_url(cli::Cli::from_opts(&cli_opts, true).await?.into(), backend_port).await?;
+                        let runner = runner::Runner::new(cli::Cli::from_opts(&cli_opts, true).await?.into(), target_network.clone()).await?;
                         if let Some((nodes_to_update, summary)) = runner.hostos_rollout_nodes(update_group, version, exclude).await? {
                             return runner.hostos_rollout(nodes_to_update, version, simulate, Some(summary)).await
                         }
