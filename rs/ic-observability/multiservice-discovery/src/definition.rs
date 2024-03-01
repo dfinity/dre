@@ -695,14 +695,14 @@ mod tests {
             handle.clone(),
             false,
             Some(definitions_path.clone()),
-            log,
+            log.clone(),
         );
 
         let mocked_definition = Definition::new(
             vec![url::Url::from_str("http://[2a00:fb01:400:42:5000:3cff:fe45:6c61]:8080").unwrap()],
             definitions_dir.as_ref().to_path_buf(),
             Network::Mainnet.legacy_name(),
-            log.clone(),
+            log,
             None,
             Duration::from_secs(0),
             Duration::from_secs(0),
