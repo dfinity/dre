@@ -1,12 +1,13 @@
 use std::{path::PathBuf, time::Duration};
 
+use sha2::{Digest, Sha256};
 use slog::{debug, info, Logger};
 use tokio::{
     fs::{create_dir_all, File},
-    io::AsyncWriteExt,
+    io::{AsyncReadExt, AsyncWriteExt},
     process::Command,
     select,
-    sync::broadcast::Receiver,
+    sync::broadcast::{Receiver, Sender},
 };
 
 pub async fn watch_git(
@@ -16,6 +17,7 @@ pub async fn watch_git(
     mut shutdown: Receiver<()>,
     url: String,
     release_index: String,
+    sender: Sender<()>,
 ) -> anyhow::Result<()> {
     if !path.exists() {
         info!(logger, "Git directory not found. Creating...");
@@ -37,14 +39,16 @@ pub async fn watch_git(
             info!(logger, "Received shutdown in 'git' thread");
             return Ok(());
         }
-        res = configure_git_repo(&path, url, logger.clone(), release_index) => match res {
+        res = configure_git_repo(&path, url, logger.clone(), &release_index) => match res {
             Ok(_) => debug!(logger, "Repo configured"),
             Err(e) => return Err(e),
         }
     }
 
-    // Loop and pool
+    // Loop and pull
     let mut interval = tokio::time::interval(poll_interval);
+    let mut file_hash = get_file_hash(path.join(&release_index)).await?;
+    info!(logger, "Calculated hash of release file: '{}'", file_hash);
     loop {
         select! {
             tick = interval.tick() => {
@@ -57,11 +61,21 @@ pub async fn watch_git(
         }
 
         debug!(logger, "Syncing git repo");
-        execute_git_command(&path, &["pull"]).await?
+        execute_git_command(&path, &["pull"]).await?;
+
+        let new_hash = get_file_hash(path.join(&release_index)).await?;
+        debug!(logger, "Comparing hashes: Old({}) == New({})", file_hash, new_hash);
+        if new_hash != file_hash {
+            info!(logger, "Release file changed. New hash: '{}'", new_hash);
+            file_hash = new_hash;
+            sender
+                .send(())
+                .map_err(|e| anyhow::anyhow!("Couldn't send update signal for release file: {:?}", e))?;
+        }
     }
 }
 
-async fn configure_git_repo(path: &PathBuf, url: String, logger: Logger, release_index: String) -> anyhow::Result<()> {
+async fn configure_git_repo(path: &PathBuf, url: String, logger: Logger, release_index: &String) -> anyhow::Result<()> {
     debug!(logger, "Initializing repository on path '{}'", path.display());
     execute_git_command(path, &["init"]).await?;
     debug!(logger, "Configuring sparse checkout");
@@ -93,4 +107,21 @@ async fn execute_git_command(path: &PathBuf, args: &[&str]) -> anyhow::Result<()
         .await
         .map_err(|e| anyhow::anyhow!("Couldn't execute command 'git {}': {:?}", args.join(" "), e))?;
     Ok(())
+}
+
+async fn get_file_hash(path: PathBuf) -> anyhow::Result<String> {
+    let mut file = File::open(path)
+        .await
+        .map_err(|e| anyhow::anyhow!("Couldn't open release file: {:?}", e))?;
+    let mut buf = vec![];
+    file.read(&mut buf)
+        .await
+        .map_err(|e| anyhow::anyhow!("Couldn't read release index: {:?}", e))?;
+    let bytes = Sha256::digest(buf);
+    let stringified_hash = bytes[..]
+        .iter()
+        .map(|byte| format!("{:01$x?}", byte, 2))
+        .collect::<Vec<String>>()
+        .join("");
+    Ok(stringified_hash)
 }

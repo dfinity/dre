@@ -10,10 +10,11 @@ use tokio::{
     sync::broadcast,
 };
 
-use crate::git::watch_git;
+use crate::{git_sync::watch_git, release_file_watcher::handle_file_update};
 
-mod git;
+mod git_sync;
 mod registry_wrappers;
+mod release_file_watcher;
 
 fn main() -> anyhow::Result<()> {
     let runtime = Runtime::new().unwrap();
@@ -58,14 +59,27 @@ async fn async_main(rt: Handle) -> anyhow::Result<()> {
 
     // Tokio threads
     let (sender, receiver_sync) = broadcast::channel(1);
+
+    // Channel for sending updates of release file
+    let (file_notification_sender, file_notification_receiver) = broadcast::channel(1);
+
     let mut futures_tokio = vec![];
     futures_tokio.push(rt.spawn(watch_git(
         logger.clone(),
-        args.git_repo_path,
+        args.git_repo_path.clone(),
         args.poll_interval,
         receiver_sync,
         args.git_repo_url,
-        args.release_index,
+        args.release_index.clone(),
+        file_notification_sender,
+    )));
+
+    // Configure file watcher
+    let shutdown_file_watcher = sender.subscribe();
+    futures_tokio.push(rt.spawn(handle_file_update(
+        logger.clone(),
+        file_notification_receiver,
+        shutdown_file_watcher,
     )));
 
     shutdown

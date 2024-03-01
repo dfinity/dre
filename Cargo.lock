@@ -2345,6 +2345,7 @@ dependencies = [
  "humantime",
  "ic-management-types",
  "service-discovery",
+ "sha2 0.10.8",
  "slog",
  "slog-async",
  "slog-term",
