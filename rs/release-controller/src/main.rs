@@ -10,6 +10,9 @@ use tokio::{
     sync::broadcast,
 };
 
+use crate::git::watch_git;
+
+mod git;
 mod registry_wrappers;
 
 fn main() -> anyhow::Result<()> {
@@ -38,15 +41,32 @@ async fn async_main(rt: Handle) -> anyhow::Result<()> {
         Err(e) => return Err(anyhow::anyhow!("Error during inital sync: {:?}", e)),
     }
 
-    let (sender, receiver_sync) = broadcast::channel(1);
-
     // Special case for this thread because it was developed with mostly sync specific code
     let mut futures_crossbeam = vec![];
     let (sender_poll, receiver_poll) = crossbeam_channel::bounded(1);
     let logger_cloned = logger.clone();
+    let rt_cloned = rt.clone();
     futures_crossbeam.push(std::thread::spawn(move || {
-        registry_wrappers::poll(logger_cloned, args.targets_dir, args.poll_interval, receiver_poll, rt)
+        registry_wrappers::poll(
+            logger_cloned,
+            args.targets_dir,
+            args.poll_interval,
+            receiver_poll,
+            rt_cloned,
+        )
     }));
+
+    // Tokio threads
+    let (sender, receiver_sync) = broadcast::channel(1);
+    let mut futures_tokio = vec![];
+    futures_tokio.push(rt.spawn(watch_git(
+        logger.clone(),
+        args.git_repo_path,
+        args.poll_interval,
+        receiver_sync,
+        args.git_repo_url,
+        args.release_index,
+    )));
 
     shutdown
         .await
@@ -127,6 +147,35 @@ The interval at which ICs are polled for updates.
 "#
         )]
     poll_interval: Duration,
+
+    #[clap(
+        long = "git-repo-path",
+        help = r#"
+The path to the directory that will be used for git sync
+
+"#
+    )]
+    git_repo_path: PathBuf,
+
+    #[clap(
+        long = "git-repo-url",
+        default_value = "git@github.com:dfinity/dre.git",
+        help = r#"
+The url of the repository with which we should sync.
+
+"#
+    )]
+    git_repo_url: String,
+
+    #[clap(
+        long = "release-file-name",
+        default_value = "release-index.yaml",
+        help = r#"
+The fully qualified name of release index file in the git repositry.
+
+"#
+    )]
+    release_index: String,
 }
 
 #[derive(Debug, Clone)]

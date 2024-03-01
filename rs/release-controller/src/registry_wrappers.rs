@@ -48,7 +48,10 @@ pub fn poll(
     let interval = crossbeam::channel::tick(registry_query_timeout);
     loop {
         crossbeam::select! {
-            recv(shutdown) -> _ => return Ok(()),
+            recv(shutdown) -> _ => {
+                info!(logger, "Received shutdown in 'registry sync' thread");
+                return Ok(())
+            },
             recv(interval) -> tick => {
                 debug!(logger, "Received tick {:?}", tick.unwrap())
             }
