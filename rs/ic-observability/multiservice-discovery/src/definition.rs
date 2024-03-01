@@ -98,7 +98,7 @@ impl From<FSDefinition> for Definition {
             poll_interval: fs_definition.poll_interval,
             registry_query_timeout: fs_definition.registry_query_timeout.clone(),
             ic_discovery: Arc::new(IcServiceDiscoveryImpl::new(log, fs_definition.registry_path, fs_definition.registry_query_timeout).unwrap()),
-            boundary_nodes: vec![],
+            boundary_nodes: fs_definition.boundary_nodes,
         }
     }
 }
@@ -640,7 +640,7 @@ impl DefinitionsSupervisor {
         metrics: RunningDefinitionsMetrics,
     ) -> Result<(), StartDefinitionsError> {
         let mut existing = self.definitions.lock().await;
-        self.start_inner(&mut existing, definitions, start_mode, metrics).await
+                self.start_inner(&mut existing, definitions, start_mode, metrics).await
     }
 
     /// Stop all definitions and end.
