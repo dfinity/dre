@@ -3,7 +3,7 @@ use std::{path::PathBuf, time::Duration};
 use ic_management_types::Network;
 use service_discovery::{registry_sync::sync_local_registry, IcServiceDiscoveryImpl};
 use slog::{debug, info, warn, Logger};
-use tokio::{select, sync::broadcast::Receiver};
+use tokio::{runtime::Handle, select};
 
 pub async fn inital_sync_wrap(
     logger: Logger,
@@ -34,25 +34,23 @@ pub enum InitSyncCompletionStatus {
     ShutdownRequested,
 }
 
-pub async fn poll(
+pub fn poll(
     logger: Logger,
     targets_dir: PathBuf,
     registry_query_timeout: Duration,
-    mut shutdown: Receiver<()>,
+    shutdown: crossbeam::channel::Receiver<()>,
+    rt: Handle,
 ) -> anyhow::Result<()> {
     let disc = IcServiceDiscoveryImpl::new(logger.clone(), targets_dir, registry_query_timeout)
         .map_err(|e| anyhow::anyhow!("Couldn't create service discovery: {:?}", e))?;
 
     info!(logger, "Starting watching the network...");
-    let mut interval = tokio::time::interval(registry_query_timeout);
+    let interval = crossbeam::channel::tick(registry_query_timeout);
     loop {
-        select! {
-            tick = interval.tick() => {
-                debug!(logger, "Tick received, {:?}", tick);
-            }
-            _ = shutdown.recv() => {
-                info!(logger, "Received shutdown request in 'poll' loop");
-                return Ok(())
+        crossbeam::select! {
+            recv(shutdown) -> _ => return Ok(()),
+            recv(interval) -> tick => {
+                debug!(logger, "Received tick {:?}", tick.unwrap())
             }
         }
 
@@ -61,7 +59,7 @@ pub async fn poll(
             warn!(logger, "Loading new targets failed! Error: {:?}", e)
         }
         debug!(logger, "Updating registries...");
-        if let Err(e) = disc.update_registries().await {
+        if let Err(e) = rt.block_on(disc.update_registries()) {
             warn!(logger, "Updating registries failed! Error: {:?}", e)
         }
     }

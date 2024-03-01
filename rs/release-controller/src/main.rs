@@ -5,12 +5,21 @@ use humantime::parse_duration;
 use ic_management_types::Network;
 use registry_wrappers::inital_sync_wrap;
 use slog::{info, o, Drain, Level, Logger};
-use tokio::sync::broadcast;
+use tokio::{
+    runtime::{Handle, Runtime},
+    sync::broadcast,
+};
 
 mod registry_wrappers;
 
-#[tokio::main]
-async fn main() -> anyhow::Result<()> {
+fn main() -> anyhow::Result<()> {
+    let runtime = Runtime::new().unwrap();
+    let handle = runtime.handle().clone();
+
+    runtime.block_on(async_main(handle))
+}
+
+async fn async_main(rt: Handle) -> anyhow::Result<()> {
     let args = Cli::parse();
     let logger = make_logger(args.log_level.clone().into());
 
@@ -18,7 +27,7 @@ async fn main() -> anyhow::Result<()> {
     info!(logger, "Running release controller with arguments: {:#?}", args);
     info!(logger, "Syncing registry for network '{:?}'", args.network);
 
-    match inital_sync_wrap(logger.clone(), args.targets_dir, args.network).await {
+    match inital_sync_wrap(logger.clone(), args.targets_dir.clone(), args.network).await {
         Ok(registry_wrappers::InitSyncCompletionStatus::Completed) => {
             info!(logger, "Initial sync completed. Proceeding...")
         }
@@ -29,20 +38,33 @@ async fn main() -> anyhow::Result<()> {
         Err(e) => return Err(anyhow::anyhow!("Error during inital sync: {:?}", e)),
     }
 
-    let futures = vec![];
-    let (sender, mut receiver_sync) = broadcast::channel(1);
+    let (sender, receiver_sync) = broadcast::channel(1);
 
-    futures.push(tokio::spawn(registry_wrappers::poll(
-        logger.clone(),
-        args.targets_dir,
-        args.poll_interval,
-        receiver_sync,
-    )));
+    // Special case for this thread because it was developed with mostly sync specific code
+    let mut futures_crossbeam = vec![];
+    let (sender_poll, receiver_poll) = crossbeam_channel::bounded(1);
+    let logger_cloned = logger.clone();
+    futures_crossbeam.push(std::thread::spawn(move || {
+        registry_wrappers::poll(logger_cloned, args.targets_dir, args.poll_interval, receiver_poll, rt)
+    }));
 
     shutdown
         .await
         .map_err(|e| anyhow::anyhow!("Couldn't receive shutdown: {:?}", e))?;
     info!(logger, "Received shutdown signal");
+
+    sender
+        .send(())
+        .map_err(|e| anyhow::anyhow!("Couldn't send stop signal: {:?}", e))?;
+    sender_poll
+        .send(())
+        .map_err(|e| anyhow::anyhow!("Couldn't send stop signal to poll loop: {:?}", e))?;
+
+    for future in futures_crossbeam {
+        future
+            .join()
+            .map_err(|e| anyhow::anyhow!("Couldn't join crossbeam thread: {:?}", e))??;
+    }
 
     Ok(())
 }
