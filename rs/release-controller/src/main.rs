@@ -4,10 +4,7 @@ use clap::Parser;
 use humantime::parse_duration;
 use ic_management_types::Network;
 use slog::{info, o, warn, Drain, Level, Logger};
-use tokio::{
-    runtime::{Handle, Runtime},
-    select,
-};
+use tokio::select;
 use tokio_util::sync::CancellationToken;
 
 use crate::{git_sync::sync_git, registry_wrappers::sync_wrap};
@@ -26,7 +23,7 @@ async fn main() -> anyhow::Result<()> {
 
     let shutdown_logger = logger.clone();
     let shutdown_token = token.clone();
-    let shutdown_handle = rt.spawn(async move {
+    let shutdown_handle = tokio::spawn(async move {
         shutdown.await.unwrap();
         info!(shutdown_logger, "Received shutdown");
         shutdown_token.cancel();
@@ -47,7 +44,7 @@ async fn main() -> anyhow::Result<()> {
 
         // Sync registry
         info!(logger, "Syncing registry for network '{:?}'", args.network);
-        match sync_wrap(logger, args.targets_dir.clone(), args.network.clone()).await {
+        match sync_wrap(logger.clone(), args.targets_dir.clone(), args.network.clone()).await {
             Ok(()) => info!(logger, "Syncing registry completed"),
             Err(e) => {
                 warn!(logger, "{:?}", e);
