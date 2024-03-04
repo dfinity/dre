@@ -566,11 +566,7 @@ pub enum Network {
 
 impl Debug for Network {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Staging => write!(f, "Staging"),
-            Self::Mainnet => write!(f, "Mainnet"),
-            Self::Url(arg0) => f.debug_tuple("Url").field(&arg0.to_string()).finish(),
-        }
+        write!(f, "{}", self)
     }
 }
 

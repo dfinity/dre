@@ -1,5 +1,5 @@
 {
-  "checksum": "31d82c87ade3e86047151e372880dfce73e2f29df3b85b644ef14ecccb64d524",
+  "checksum": "223ce9cbd8a92b0591514be8e5f8cc08ea46749b86d8bcbaa8d622e11ac361bb",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -11738,6 +11738,70 @@
         "data_glob": [
           "**"
         ]
+      },
+      "license": null
+    },
+    "dre-release-controller 0.2.1": {
+      "name": "dre-release-controller",
+      "version": "0.2.1",
+      "repository": null,
+      "targets": [],
+      "library_target_name": null,
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "anyhow 1.0.80",
+              "target": "anyhow"
+            },
+            {
+              "id": "clap 4.4.18",
+              "target": "clap"
+            },
+            {
+              "id": "crossbeam 0.8.4",
+              "target": "crossbeam"
+            },
+            {
+              "id": "crossbeam-channel 0.5.11",
+              "target": "crossbeam_channel"
+            },
+            {
+              "id": "humantime 2.1.0",
+              "target": "humantime"
+            },
+            {
+              "id": "sha2 0.10.8",
+              "target": "sha2"
+            },
+            {
+              "id": "slog 2.7.0",
+              "target": "slog"
+            },
+            {
+              "id": "slog-async 2.8.0",
+              "target": "slog_async"
+            },
+            {
+              "id": "slog-term 2.9.1",
+              "target": "slog_term"
+            },
+            {
+              "id": "tokio 1.36.0",
+              "target": "tokio"
+            },
+            {
+              "id": "tokio-util 0.6.10",
+              "target": "tokio_util"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "0.2.1"
       },
       "license": null
     },
@@ -43278,6 +43342,71 @@
       },
       "license": "MIT"
     },
+    "tokio-util 0.6.10": {
+      "name": "tokio-util",
+      "version": "0.6.10",
+      "repository": {
+        "Http": {
+          "url": "https://crates.io/api/v1/crates/tokio-util/0.6.10/download",
+          "sha256": "36943ee01a6d67977dd3f84a5a1d2efeb4ada3a1ae771cadfaa535d9d9fc6507"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "tokio_util",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "tokio_util",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "crate_features": {
+          "common": [
+            "default"
+          ],
+          "selects": {}
+        },
+        "deps": {
+          "common": [
+            {
+              "id": "bytes 1.5.0",
+              "target": "bytes"
+            },
+            {
+              "id": "futures-core 0.3.30",
+              "target": "futures_core"
+            },
+            {
+              "id": "futures-sink 0.3.30",
+              "target": "futures_sink"
+            },
+            {
+              "id": "log 0.4.20",
+              "target": "log"
+            },
+            {
+              "id": "pin-project-lite 0.2.13",
+              "target": "pin_project_lite"
+            },
+            {
+              "id": "tokio 1.36.0",
+              "target": "tokio"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2018",
+        "version": "0.6.10"
+      },
+      "license": "MIT"
+    },
     "tokio-util 0.7.10": {
       "name": "tokio-util",
       "version": "0.7.10",
@@ -49368,6 +49497,7 @@
     "config-writer-common 0.2.1": "rs/ic-observability/config-writer-common",
     "decentralization 0.2.1": "rs/decentralization",
     "dre 0.2.1": "rs/cli",
+    "dre-release-controller 0.2.1": "rs/release-controller",
     "ic-canisters 0.2.1": "rs/ic-canisters",
     "ic-management-backend 0.2.1": "rs/ic-management-backend",
     "ic-management-types 0.2.1": "rs/ic-management-types",

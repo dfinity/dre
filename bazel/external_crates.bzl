@@ -67,6 +67,7 @@ def external_crates_repository():
             "//rs/log-fetcher:Cargo.toml",
             "//rs/np-notifications:Cargo.toml",
             "//rs/slack-notifications:Cargo.toml",
+            "//rs/release-controller:Cargo.toml"
         ],
         splicing_config = splicing_config(
             resolver_version = "2",

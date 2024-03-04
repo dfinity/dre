@@ -3,18 +3,17 @@ use std::{path::PathBuf, time::Duration};
 use clap::Parser;
 use humantime::parse_duration;
 use ic_management_types::Network;
-use registry_wrappers::inital_sync_wrap;
-use slog::{info, o, Drain, Level, Logger};
+use slog::{info, o, warn, Drain, Level, Logger};
 use tokio::{
     runtime::{Handle, Runtime},
-    sync::broadcast,
+    select,
 };
+use tokio_util::sync::CancellationToken;
 
-use crate::{git_sync::watch_git, release_file_watcher::handle_file_update};
+use crate::{git_sync::sync_git, registry_wrappers::sync_wrap};
 
 mod git_sync;
 mod registry_wrappers;
-mod release_file_watcher;
 
 fn main() -> anyhow::Result<()> {
     let runtime = Runtime::new().unwrap();
@@ -28,77 +27,68 @@ async fn async_main(rt: Handle) -> anyhow::Result<()> {
     let logger = make_logger(args.log_level.clone().into());
 
     let shutdown = tokio::signal::ctrl_c();
+    let token = CancellationToken::new();
     info!(logger, "Running release controller with arguments: {:#?}", args);
-    info!(logger, "Syncing registry for network '{:?}'", args.network);
 
-    match inital_sync_wrap(logger.clone(), args.targets_dir.clone(), args.network).await {
-        Ok(registry_wrappers::InitSyncCompletionStatus::Completed) => {
-            info!(logger, "Initial sync completed. Proceeding...")
+    let shutdown_logger = logger.clone();
+    let shutdown_token = token.clone();
+    let shutdown_handle = rt.spawn(async move {
+        shutdown.await.unwrap();
+        info!(shutdown_logger, "Received shutdown");
+        shutdown_token.cancel();
+    });
+
+    let mut interval = tokio::time::interval(args.poll_interval);
+    let mut should_sleep = false;
+    loop {
+        if should_sleep {
+            select! {
+                tick = interval.tick() => info!(logger, "Running loop @ {:?}", tick),
+                _ = token.cancelled() => break,
+            }
         }
-        Ok(registry_wrappers::InitSyncCompletionStatus::ShutdownRequested) => {
-            info!(logger, "Received shutdown signal");
-            return Ok(());
+        should_sleep = true;
+
+        // Sync registry
+        info!(logger, "Syncing registry for network '{:?}'", args.network);
+        select! {
+            res = sync_wrap(logger.clone(), args.targets_dir.clone(), args.network.clone()) => match res {
+                Ok(()) => info!(logger, "Syncing registry complete"),
+                Err(e) => {
+                    warn!(logger, "{:?}", e);
+                    should_sleep = false;
+                    continue;
+                }
+            },
+            _ = token.cancelled() => break,
         }
-        Err(e) => return Err(anyhow::anyhow!("Error during inital sync: {:?}", e)),
+
+        // Sync git
+        info!(logger, "Syncing git repository");
+        select! {
+            res = sync_git(&logger, &args.git_repo_path, &args.git_repo_url, &args.release_index) => match res {
+                Ok(()) => info!(logger, "Syncing git repository complete"),
+                Err(e) => {
+                    warn!(logger, "{:?}", e);
+                    should_sleep = false;
+                    continue;
+                }
+            },
+            _ = token.cancelled() => break
+        }
+
+        // Read prometheus
+
+        // Read last iteration from disk
+
+        // Calculate what should be done
+
+        // Apply changes
+
+        // Serialize new state to disk
     }
-
-    // Special case for this thread because it was developed with mostly sync specific code
-    let mut futures_crossbeam = vec![];
-    let (sender_poll, receiver_poll) = crossbeam_channel::bounded(1);
-    let logger_cloned = logger.clone();
-    let rt_cloned = rt.clone();
-    futures_crossbeam.push(std::thread::spawn(move || {
-        registry_wrappers::poll(
-            logger_cloned,
-            args.targets_dir,
-            args.poll_interval,
-            receiver_poll,
-            rt_cloned,
-        )
-    }));
-
-    // Tokio threads
-    let (sender, receiver_sync) = broadcast::channel(1);
-
-    // Channel for sending updates of release file
-    let (file_notification_sender, file_notification_receiver) = broadcast::channel(1);
-
-    let mut futures_tokio = vec![];
-    futures_tokio.push(rt.spawn(watch_git(
-        logger.clone(),
-        args.git_repo_path.clone(),
-        args.poll_interval,
-        receiver_sync,
-        args.git_repo_url,
-        args.release_index.clone(),
-        file_notification_sender,
-    )));
-
-    // Configure file watcher
-    let shutdown_file_watcher = sender.subscribe();
-    futures_tokio.push(rt.spawn(handle_file_update(
-        logger.clone(),
-        file_notification_receiver,
-        shutdown_file_watcher,
-    )));
-
-    shutdown
-        .await
-        .map_err(|e| anyhow::anyhow!("Couldn't receive shutdown: {:?}", e))?;
-    info!(logger, "Received shutdown signal");
-
-    sender
-        .send(())
-        .map_err(|e| anyhow::anyhow!("Couldn't send stop signal: {:?}", e))?;
-    sender_poll
-        .send(())
-        .map_err(|e| anyhow::anyhow!("Couldn't send stop signal to poll loop: {:?}", e))?;
-
-    for future in futures_crossbeam {
-        future
-            .join()
-            .map_err(|e| anyhow::anyhow!("Couldn't join crossbeam thread: {:?}", e))??;
-    }
+    info!(logger, "Shutdown complete");
+    shutdown_handle.await.unwrap();
 
     Ok(())
 }

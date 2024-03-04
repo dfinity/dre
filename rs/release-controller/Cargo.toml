@@ -20,4 +20,4 @@ ic-management-types = { workspace = true }
 crossbeam = { workspace = true }
 crossbeam-channel = { workspace = true }
 humantime = { workspace = true }
-sha2 = " 0.10.8"
+tokio-util = "0.6.10"

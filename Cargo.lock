@@ -15,7 +15,7 @@ dependencies = [
  "memchr",
  "pin-project-lite",
  "tokio",
- "tokio-util",
+ "tokio-util 0.7.10",
  "tracing",
 ]
 
@@ -51,7 +51,7 @@ dependencies = [
  "sha1",
  "smallvec",
  "tokio",
- "tokio-util",
+ "tokio-util 0.7.10",
  "tracing",
 ]
 
@@ -2345,11 +2345,11 @@ dependencies = [
  "humantime",
  "ic-management-types",
  "service-discovery",
- "sha2 0.10.8",
  "slog",
  "slog-async",
  "slog-term",
  "tokio",
+ "tokio-util 0.6.10",
 ]
 
 [[package]]
@@ -3012,7 +3012,7 @@ dependencies = [
  "indexmap 2.2.3",
  "slab",
  "tokio",
- "tokio-util",
+ "tokio-util 0.7.10",
  "tracing",
 ]
 
@@ -3031,7 +3031,7 @@ dependencies = [
  "indexmap 2.2.3",
  "slab",
  "tokio",
- "tokio-util",
+ "tokio-util 0.7.10",
  "tracing",
 ]
 
@@ -6081,7 +6081,7 @@ dependencies = [
  "tempfile",
  "test-log",
  "tokio",
- "tokio-util",
+ "tokio-util 0.7.10",
  "tracing",
  "tracing-log",
  "tracing-subscriber",
@@ -7308,7 +7308,7 @@ dependencies = [
  "tokio",
  "tokio-native-tls",
  "tokio-rustls",
- "tokio-util",
+ "tokio-util 0.7.10",
  "tower-service",
  "url",
  "wasm-bindgen",
@@ -8572,6 +8572,20 @@ dependencies = [
 
 [[package]]
 name = "tokio-util"
+version = "0.6.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "36943ee01a6d67977dd3f84a5a1d2efeb4ada3a1ae771cadfaa535d9d9fc6507"
+dependencies = [
+ "bytes",
+ "futures-core",
+ "futures-sink",
+ "log",
+ "pin-project-lite",
+ "tokio",
+]
+
+[[package]]
+name = "tokio-util"
 version = "0.7.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5419f34732d9eb6ee4c3578b7989078579b7f039cbbb9ca2c4da015749371e15"
@@ -8667,7 +8681,7 @@ dependencies = [
  "rand",
  "slab",
  "tokio",
- "tokio-util",
+ "tokio-util 0.7.10",
  "tower-layer",
  "tower-service",
  "tracing",
