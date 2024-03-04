@@ -15,14 +15,8 @@ use crate::{git_sync::sync_git, registry_wrappers::sync_wrap};
 mod git_sync;
 mod registry_wrappers;
 
-fn main() -> anyhow::Result<()> {
-    let runtime = Runtime::new().unwrap();
-    let handle = runtime.handle().clone();
-
-    runtime.block_on(async_main(handle))
-}
-
-async fn async_main(rt: Handle) -> anyhow::Result<()> {
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
     let args = Cli::parse();
     let logger = make_logger(args.log_level.clone().into());
 
@@ -46,30 +40,31 @@ async fn async_main(rt: Handle) -> anyhow::Result<()> {
                 tick = interval.tick() => info!(logger, "Running loop @ {:?}", tick),
                 _ = token.cancelled() => break,
             }
+        } else if token.is_cancelled() {
+            break;
         }
         should_sleep = true;
 
         // Sync registry
         info!(logger, "Syncing registry for network '{:?}'", args.network);
-        easier_select!(
-            token,
-            should_sleep,
-            sync_wrap,
-            logger.clone(),
-            args.targets_dir.clone(),
-            args.network.clone()
-        );
+        match sync_wrap(logger, args.targets_dir.clone(), args.network.clone()).await {
+            Ok(()) => info!(logger, "Syncing registry completed"),
+            Err(e) => {
+                warn!(logger, "{:?}", e);
+                should_sleep = false;
+                continue;
+            }
+        };
 
-        // Sync git
-        easier_select!(
-            token,
-            should_sleep,
-            sync_git,
-            &logger,
-            &args.git_repo_path,
-            &args.git_repo_url,
-            &args.release_index
-        );
+        info!(logger, "Syncing git repo");
+        match sync_git(&logger, &args.git_repo_path, &args.git_repo_url, &args.release_index).await {
+            Ok(()) => info!(logger, "Syncing git repo completed"),
+            Err(e) => {
+                warn!(logger, "{:?}", e);
+                should_sleep = false;
+                continue;
+            }
+        }
 
         // Read prometheus
 
@@ -96,23 +91,6 @@ fn make_logger(level: Level) -> Logger {
     .fuse();
     let drain = slog_async::Async::new(drain).chan_size(8192).build();
     Logger::root(drain.fuse(), o!())
-}
-
-#[macro_export]
-macro_rules! easier_select {
-    ($token:expr, $should_sleep:expr, $func:expr, $logger:expr, $($param:expr),*) => {
-        select! {
-            res = $func($logger, $($param), *) => match res {
-                Ok(()) => info!($logger, "Running function: {} complete", stringify!($func)),
-                Err(e) => {
-                    warn!($logger, "{:?}", e);
-                    $should_sleep = false;
-                    continue;
-                }
-            },
-            _ = $token.cancelled() => break
-        }
-    };
 }
 
 #[derive(Parser, Debug)]
