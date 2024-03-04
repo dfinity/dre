@@ -17,6 +17,7 @@ members = [
   "rs/log-fetcher",
   "rs/canister-log-fetcher",
   "rs/np-notifications",
+  "rs/rollout-controller",
   "rs/slack-notifications",
 ]
 

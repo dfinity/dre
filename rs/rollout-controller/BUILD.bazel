@@ -1,0 +1,32 @@
+load("@//rs:oci_images.bzl", "rust_binary_oci_image_rules")
+load("@crate_index_dre//:defs.bzl", "aliases", "all_crate_deps")
+load("@rules_rust//rust:defs.bzl", "rust_binary")
+
+# Define a custom rule to copy the .zip file as a data dependency
+DEPS = [
+    "//rs/ic-observability/service-discovery",
+    "//rs/ic-management-types",
+]
+
+
+rust_binary(
+    name = "rollout-controller",
+    srcs = glob(["src/**/*.rs"]),
+    aliases = aliases(),
+    proc_macro_deps = all_crate_deps(
+        proc_macro = True,
+    ),
+    stamp = 1,
+    deps = all_crate_deps(
+        normal = True,
+    ) + DEPS,
+)
+
+rust_binary_oci_image_rules(
+    name = "oci_image",
+    src = ":rollout-controller",
+    base_image = "@debian-slim",
+)
+
+
+

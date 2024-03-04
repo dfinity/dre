@@ -23,6 +23,7 @@ use serde::{Deserialize, Serialize};
 use std::cmp::{Eq, Ord, PartialEq, PartialOrd};
 use std::collections::BTreeMap;
 use std::convert::TryFrom;
+use std::fmt::Debug;
 use std::net::Ipv6Addr;
 use std::ops::Deref;
 use std::str::FromStr;
@@ -561,6 +562,12 @@ pub enum Network {
     Staging,
     Mainnet,
     Url(url::Url),
+}
+
+impl Debug for Network {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self)
+    }
 }
 
 impl FromStr for Network {
