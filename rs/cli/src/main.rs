@@ -20,10 +20,10 @@ pub(crate) mod defaults;
 mod detect_neuron;
 mod general;
 mod ic_admin;
+mod operations;
 mod ops_subnet_node_replace;
 mod registry_dump;
 mod runner;
-mod operations;
 
 const STAGING_NEURON_ID: u64 = 49;
 
@@ -229,7 +229,8 @@ async fn main() -> Result<(), anyhow::Error> {
                                                  title: Some(update_version.title),
                                                  summary: Some(update_version.summary.clone()),
                                                  motivation: None,
-                                             }, simulate)
+                                             }, simulate)?;
+                        Ok(())
                     }
                 }
             },
@@ -290,6 +291,11 @@ async fn main() -> Result<(), anyhow::Error> {
 
             cli::Commands::DumpRegistry { version, path } => {
                 registry_dump::dump_registry(path, cli_opts.network, version).await
+            }
+
+            cli::Commands::Firewall => {
+                let ic_admin: IcAdminWrapper = cli::Cli::from_opts(&cli_opts, true).await?.into();
+                ic_admin.update_replica_nodes_firewall(cli_opts.network, cli_opts.simulate).await
             }
         }
     })

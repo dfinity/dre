@@ -6,21 +6,28 @@ use flate2::read::GzDecoder;
 use futures::stream::{self, StreamExt};
 use futures::Future;
 use ic_base_types::PrincipalId;
+use ic_interfaces_registry::RegistryClient;
 use ic_management_backend::registry::{local_registry_path, RegistryFamilyEntries, RegistryState};
 use ic_management_types::{Artifact, Network};
+use ic_protobuf::registry::firewall::v1::{FirewallRule, FirewallRuleSet};
 use ic_protobuf::registry::subnet::v1::SubnetRecord;
+use ic_registry_keys::make_firewall_rules_record_key;
 use ic_registry_local_registry::LocalRegistry;
 use itertools::Itertools;
 use log::{error, info, warn};
+use prost::Message;
 use regex::Regex;
 use reqwest::StatusCode;
 use sha2::{Digest, Sha256};
+use std::collections::BTreeMap;
 use std::fs::File;
-use std::io::Write;
+use std::io::{Read, Write};
 use std::os::unix::fs::PermissionsExt;
+use std::process::Stdio;
 use std::time::Duration;
 use std::{path::Path, process::Command};
 use strum::Display;
+use tempfile::NamedTempFile;
 
 use crate::cli::Cli;
 use crate::detect_neuron::{Auth, Neuron};
@@ -82,7 +89,12 @@ impl IcAdminWrapper {
         );
     }
 
-    pub(crate) fn propose_run(&self, cmd: ProposeCommand, opts: ProposeOptions, simulate: bool) -> anyhow::Result<()> {
+    pub(crate) fn propose_run(
+        &self,
+        cmd: ProposeCommand,
+        opts: ProposeOptions,
+        simulate: bool,
+    ) -> anyhow::Result<String> {
         let exec = |cli: &IcAdminWrapper, cmd: ProposeCommand, opts: ProposeOptions, add_dryrun_arg: bool| {
             if let Some(summary) = opts.clone().summary {
                 let summary_count = summary.chars().count();
@@ -157,7 +169,7 @@ impl IcAdminWrapper {
         }
     }
 
-    fn _run_ic_admin_with_args(&self, ic_admin_args: &[String], with_auth: bool) -> anyhow::Result<()> {
+    fn _run_ic_admin_with_args(&self, ic_admin_args: &[String], with_auth: bool) -> anyhow::Result<String> {
         let ic_admin_path = self.ic_admin.clone().unwrap_or_else(|| "ic-admin".to_string());
         let mut cmd = Command::new(ic_admin_path);
         let auth_options = if with_auth {
@@ -169,12 +181,22 @@ impl IcAdminWrapper {
         let cmd = cmd.args([&root_options, ic_admin_args].concat());
 
         self.print_ic_admin_command_line(cmd);
+        cmd.stdout(Stdio::piped());
 
         match cmd.spawn() {
             Ok(mut child) => match child.wait() {
                 Ok(s) => {
                     if s.success() {
-                        Ok(())
+                        if let Some(mut output) = child.stdout {
+                            let mut readbuf = vec![];
+                            output
+                                .read_to_end(&mut readbuf)
+                                .map_err(|e| anyhow::anyhow!("Error reading output: {:?}", e))?;
+                            let converted = String::from_utf8_lossy(&readbuf).to_string();
+                            println!("{}", converted);
+                            return Ok(converted);
+                        }
+                        Ok("".to_string())
                     } else {
                         Err(anyhow::anyhow!(
                             "ic-admin failed with non-zero exit code {}",
@@ -188,7 +210,7 @@ impl IcAdminWrapper {
         }
     }
 
-    pub(crate) fn run(&self, command: &str, args: &[String], with_auth: bool) -> anyhow::Result<()> {
+    pub(crate) fn run(&self, command: &str, args: &[String], with_auth: bool) -> anyhow::Result<String> {
         let ic_admin_args = [&[command.to_string()], args].concat();
         self._run_ic_admin_with_args(&ic_admin_args, with_auth)
     }
@@ -250,7 +272,8 @@ impl IcAdminWrapper {
             args_with_get_prefix
         };
 
-        self.run(&args[0], &args.iter().skip(1).cloned().collect::<Vec<_>>(), false)
+        self.run(&args[0], &args.iter().skip(1).cloned().collect::<Vec<_>>(), false)?;
+        Ok(())
     }
 
     /// Run an `ic-admin propose-to-*` command directly
@@ -298,7 +321,8 @@ impl IcAdminWrapper {
             args: args.iter().skip(1).cloned().collect::<Vec<_>>(),
         };
         let simulate = simulate || cmd.args().contains(&String::from("--dry-run"));
-        self.propose_run(cmd, Default::default(), simulate)
+        self.propose_run(cmd, Default::default(), simulate)?;
+        Ok(())
     }
 
     fn get_s3_cdn_image_url(version: &String, s3_subdir: &String) -> String {
@@ -583,7 +607,185 @@ must be identical, and must match the SHA256 from the payload of the NNS proposa
             title: Some("Update all unassigned nodes".to_string()),
         };
 
-        self.propose_run(command, options, simulate)
+        self.propose_run(command, options, simulate)?;
+        Ok(())
+    }
+
+    pub async fn update_replica_nodes_firewall(&self, network: Network, simulate: bool) -> Result<(), Error> {
+        let local_registry_path = local_registry_path(network.clone());
+        let local_registry = LocalRegistry::new(local_registry_path, Duration::from_secs(10))
+            .map_err(|e| anyhow::anyhow!("Error in creating local registry instance: {:?}", e))?;
+
+        local_registry
+            .sync_with_nns()
+            .await
+            .map_err(|e| anyhow::anyhow!("Error when syncing with NNS: {:?}", e))?;
+
+        let value = local_registry
+            .get_value(
+                &make_firewall_rules_record_key(&ic_registry_keys::FirewallRulesScope::ReplicaNodes),
+                local_registry.get_latest_version(),
+            )
+            .map_err(|e| anyhow::anyhow!("Error fetching firewall rules for replica nodes: {:?}", e))?;
+
+        let rules = if let Some(value) = value {
+            FirewallRuleSet::decode(value.as_slice())
+                .map_err(|e| anyhow::anyhow!("Failed to deserialize firewall ruleset: {:?}", e))?
+        } else {
+            FirewallRuleSet::default()
+        };
+
+        let rules: BTreeMap<usize, &FirewallRule> = rules
+            .entries
+            .iter()
+            .enumerate()
+            .sorted_by(|a, b| a.0.cmp(&b.0))
+            .collect();
+
+        let mut builder = edit::Builder::new();
+        let with_suffix = builder.suffix(".json");
+        let pretty = serde_json::to_string_pretty(&rules)
+            .map_err(|e| anyhow::anyhow!("Error serializing ruleset to string: {:?}", e))?;
+        let edited: BTreeMap<usize, FirewallRule>;
+        loop {
+            info!("Spawning edit window...");
+            let edited_string = edit::edit_with_builder(pretty.clone(), with_suffix)?;
+            match serde_json::from_str(&edited_string) {
+                Ok(ruleset) => {
+                    edited = ruleset;
+                    break;
+                }
+                Err(e) => {
+                    warn!("Couldn't parse the input you provided, please retry. Error: {:?}", e);
+                }
+            }
+        }
+
+        let mut added_entries: BTreeMap<usize, &FirewallRule> = BTreeMap::new();
+        let mut updated_entries: BTreeMap<usize, &FirewallRule> = BTreeMap::new();
+        for (key, rule) in edited.iter() {
+            if let Some(old_rule) = rules.get(key) {
+                if rule != *old_rule {
+                    // Same key but different value meaning it was just updated
+                    updated_entries.insert(*key, rule);
+                }
+                continue;
+            }
+            // Doesn't exist in old ones meaning it was just added
+            added_entries.insert(*key, rule);
+        }
+
+        // Collect removed entries (keys from old set not present in new set)
+        let removed_entries: BTreeMap<usize, &FirewallRule> =
+            rules.into_iter().filter(|(key, _)| !edited.contains_key(key)).collect();
+
+        fn pretty_print_diff(change_type: &str, entries: &BTreeMap<usize, &FirewallRule>) {
+            if entries.is_empty() {
+                return;
+            }
+            let diff = serde_json::to_string_pretty(entries).unwrap();
+            info!("Pretty printing diff ----- {}:\n{}", change_type, diff);
+        }
+
+        pretty_print_diff("added", &added_entries);
+        pretty_print_diff("updated", &updated_entries);
+        pretty_print_diff("removed", &removed_entries);
+
+        if added_entries.is_empty() && updated_entries.is_empty() && removed_entries.is_empty() {
+            info!("No modifications should be made");
+            return Ok(());
+        }
+
+        if added_entries.len() + updated_entries.len() + removed_entries.len() > 1 {
+            return Err(anyhow::anyhow!(
+                "Cannot apply more than 1 change at a time due to hash changes"
+            ));
+        }
+
+        //TODO: adapt to use set-firewall config so we can modify more than 1 rule at a time
+
+        fn submit_proposals(
+            admin_wrapper: &IcAdminWrapper,
+            change_type: &str,
+            rules: BTreeMap<usize, &FirewallRule>,
+            simulate: bool,
+        ) -> anyhow::Result<()> {
+            if rules.is_empty() {
+                return Ok(());
+            }
+            info!("Proceeding with creating proposals to '{}' rules", change_type);
+            for (position, rule) in rules {
+                let mut file =
+                    NamedTempFile::new().map_err(|e| anyhow::anyhow!("Couldn't create temp file: {:?}", e))?;
+
+                let array = vec![rule];
+                let serialized = serde_json::to_string(&array).unwrap();
+
+                file.write_all(serialized.as_bytes())
+                    .map_err(|e| anyhow::anyhow!("Couldn't write to tempfile: {:?}", e))?;
+
+                let cmd = ProposeCommand::Raw {
+                    command: format!("{}-firewall-rules", change_type),
+                    args: [
+                        "--test",
+                        "replica_nodes",
+                        file.path().to_str().unwrap(),
+                        position.to_string().as_str(),
+                        "none",
+                    ]
+                    .iter()
+                    .map(|arg| arg.to_string())
+                    .collect(),
+                };
+
+                let output = admin_wrapper
+                    .propose_run(cmd, ProposeOptions::default(), true)
+                    .map_err(|e| {
+                        anyhow::anyhow!("Couldn't execute test for {}-firewall-rules: {:?}", change_type, e)
+                    })?;
+
+                let parsed: serde_json::Value = serde_json::from_str(&output).map_err(|e| {
+                    anyhow::anyhow!(
+                        "Error deserializing --test output while performing '{}': {:?}",
+                        change_type,
+                        e
+                    )
+                })?;
+                let hash = match parsed.get("hash") {
+                    Some(serde_json::Value::String(hash)) => hash,
+                    _ => {
+                        return Err(anyhow::anyhow!(
+                            "Couldn't find string value for key 'hash'. Whole dump:\n{}",
+                            serde_json::to_string_pretty(&parsed).unwrap()
+                        ))
+                    }
+                };
+                info!("Computed hash for firewall rule at position '{}': {}", position, hash);
+
+                let cmd = ProposeCommand::Raw {
+                    command: format!("{}-firewall-rules", change_type),
+                    args: vec![
+                        "replica_nodes".to_string(),
+                        file.path().to_str().unwrap().to_string(),
+                        position.to_string(),
+                        hash.to_string(),
+                    ],
+                };
+
+                let options = ProposeOptions {
+                    title: Some(format!("Proposal to {} firewall rule", change_type)),
+                    motivation: Some(format!("Proposal to {} firewall rule", change_type)),
+                    summary: Some(format!("Proposal to {} firewall rule", change_type)),
+                };
+                admin_wrapper.propose_run(cmd, options, simulate)?;
+            }
+            Ok(())
+        }
+
+        submit_proposals(self, "add", added_entries, simulate)?;
+        submit_proposals(self, "update", updated_entries, simulate)?;
+        submit_proposals(self, "removed", removed_entries, simulate)?;
+        Ok(())
     }
 }
 

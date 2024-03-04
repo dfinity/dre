@@ -5,9 +5,7 @@ use futures_util::future::try_join;
 use ic_base_types::{NodeId, PrincipalId};
 use ic_management_backend::health;
 use ic_management_backend::proposal::ProposalAgent;
-use ic_management_types::{
-    Network, Node, Status, Subnet, UpdateNodesHostosVersionsProposal
-};
+use ic_management_types::{Network, Node, Status, Subnet, UpdateNodesHostosVersionsProposal};
 use log::{debug, info};
 use std::{collections::BTreeMap, fmt::Display, str::FromStr};
 
@@ -161,7 +159,6 @@ impl NodeGroupUpdate {
         }
     }
 }
-
 
 enum CandidatesSelection {
     Ok(Vec<Node>),
@@ -534,9 +531,9 @@ impl HostosRollout {
 
 #[cfg(test)]
 pub mod test {
-    use ic_management_types::{Network, Node, Operator, Provider, Subnet};
-    use crate::operations::hostos_rollout::NodeOwner::{Dfinity, Others};
     use crate::operations::hostos_rollout::NodeAssignment::{Assigned, Unassigned};
+    use crate::operations::hostos_rollout::NodeOwner::{Dfinity, Others};
+    use ic_management_types::{Network, Node, Operator, Provider, Subnet};
     use std::net::Ipv6Addr;
 
     use super::*;
