@@ -51,31 +51,25 @@ async fn async_main(rt: Handle) -> anyhow::Result<()> {
 
         // Sync registry
         info!(logger, "Syncing registry for network '{:?}'", args.network);
-        select! {
-            res = sync_wrap(logger.clone(), args.targets_dir.clone(), args.network.clone()) => match res {
-                Ok(()) => info!(logger, "Syncing registry complete"),
-                Err(e) => {
-                    warn!(logger, "{:?}", e);
-                    should_sleep = false;
-                    continue;
-                }
-            },
-            _ = token.cancelled() => break,
-        }
+        easier_select!(
+            token,
+            should_sleep,
+            sync_wrap,
+            logger.clone(),
+            args.targets_dir.clone(),
+            args.network.clone()
+        );
 
         // Sync git
-        info!(logger, "Syncing git repository");
-        select! {
-            res = sync_git(&logger, &args.git_repo_path, &args.git_repo_url, &args.release_index) => match res {
-                Ok(()) => info!(logger, "Syncing git repository complete"),
-                Err(e) => {
-                    warn!(logger, "{:?}", e);
-                    should_sleep = false;
-                    continue;
-                }
-            },
-            _ = token.cancelled() => break
-        }
+        easier_select!(
+            token,
+            should_sleep,
+            sync_git,
+            &logger,
+            &args.git_repo_path,
+            &args.git_repo_url,
+            &args.release_index
+        );
 
         // Read prometheus
 
@@ -102,6 +96,23 @@ fn make_logger(level: Level) -> Logger {
     .fuse();
     let drain = slog_async::Async::new(drain).chan_size(8192).build();
     Logger::root(drain.fuse(), o!())
+}
+
+#[macro_export]
+macro_rules! easier_select {
+    ($token:expr, $should_sleep:expr, $func:expr, $logger:expr, $($param:expr),*) => {
+        select! {
+            res = $func($logger, $($param), *) => match res {
+                Ok(()) => info!($logger, "Running function: {} complete", stringify!($func)),
+                Err(e) => {
+                    warn!($logger, "{:?}", e);
+                    $should_sleep = false;
+                    continue;
+                }
+            },
+            _ = $token.cancelled() => break
+        }
+    };
 }
 
 #[derive(Parser, Debug)]

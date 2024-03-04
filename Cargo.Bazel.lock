@@ -1,5 +1,5 @@
 {
-  "checksum": "223ce9cbd8a92b0591514be8e5f8cc08ea46749b86d8bcbaa8d622e11ac361bb",
+  "checksum": "c6c561c567e5cfeaa3fa1e60f3c2a50f26f39d5a08f862715460b164093930c9",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -11772,10 +11772,6 @@
             {
               "id": "humantime 2.1.0",
               "target": "humantime"
-            },
-            {
-              "id": "sha2 0.10.8",
-              "target": "sha2"
             },
             {
               "id": "slog 2.7.0",
