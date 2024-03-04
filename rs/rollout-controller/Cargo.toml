@@ -1,5 +1,5 @@
 [package]
-name = "dre-release-controller"
+name = "rollout-controller"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true

@@ -10,7 +10,7 @@ DEPS = [
 
 
 rust_binary(
-    name = "dre-release-controller",
+    name = "rollout-controller",
     srcs = glob(["src/**/*.rs"]),
     aliases = aliases(),
     proc_macro_deps = all_crate_deps(
@@ -24,7 +24,7 @@ rust_binary(
 
 rust_binary_oci_image_rules(
     name = "oci_image",
-    src = ":dre-release-controller",
+    src = ":rollout-controller",
     base_image = "@debian-slim",
 )
 

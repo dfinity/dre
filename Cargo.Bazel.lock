@@ -1,5 +1,5 @@
 {
-  "checksum": "7ce0be287e014dc43ca293e731b466fae438262a69ded411d3ab9da5433a9572",
+  "checksum": "4cbc45073b367bdd54509e9c2c2a37238dcc5ab9c68dc9258cc18bd1975156f7",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -11738,66 +11738,6 @@
         "data_glob": [
           "**"
         ]
-      },
-      "license": null
-    },
-    "dre-release-controller 0.2.1": {
-      "name": "dre-release-controller",
-      "version": "0.2.1",
-      "repository": null,
-      "targets": [],
-      "library_target_name": null,
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "anyhow 1.0.80",
-              "target": "anyhow"
-            },
-            {
-              "id": "clap 4.4.18",
-              "target": "clap"
-            },
-            {
-              "id": "crossbeam 0.8.4",
-              "target": "crossbeam"
-            },
-            {
-              "id": "crossbeam-channel 0.5.12",
-              "target": "crossbeam_channel"
-            },
-            {
-              "id": "humantime 2.1.0",
-              "target": "humantime"
-            },
-            {
-              "id": "slog 2.7.0",
-              "target": "slog"
-            },
-            {
-              "id": "slog-async 2.8.0",
-              "target": "slog_async"
-            },
-            {
-              "id": "slog-term 2.9.1",
-              "target": "slog_term"
-            },
-            {
-              "id": "tokio 1.36.0",
-              "target": "tokio"
-            },
-            {
-              "id": "tokio-util 0.6.10",
-              "target": "tokio_util"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2021",
-        "version": "0.2.1"
       },
       "license": null
     },
@@ -37142,6 +37082,66 @@
       },
       "license": "MIT"
     },
+    "rollout-controller 0.2.1": {
+      "name": "rollout-controller",
+      "version": "0.2.1",
+      "repository": null,
+      "targets": [],
+      "library_target_name": null,
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "anyhow 1.0.80",
+              "target": "anyhow"
+            },
+            {
+              "id": "clap 4.4.18",
+              "target": "clap"
+            },
+            {
+              "id": "crossbeam 0.8.4",
+              "target": "crossbeam"
+            },
+            {
+              "id": "crossbeam-channel 0.5.12",
+              "target": "crossbeam_channel"
+            },
+            {
+              "id": "humantime 2.1.0",
+              "target": "humantime"
+            },
+            {
+              "id": "slog 2.7.0",
+              "target": "slog"
+            },
+            {
+              "id": "slog-async 2.8.0",
+              "target": "slog_async"
+            },
+            {
+              "id": "slog-term 2.9.1",
+              "target": "slog_term"
+            },
+            {
+              "id": "tokio 1.36.0",
+              "target": "tokio"
+            },
+            {
+              "id": "tokio-util 0.6.10",
+              "target": "tokio_util"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "0.2.1"
+      },
+      "license": null
+    },
     "rust_decimal 1.34.3": {
       "name": "rust_decimal",
       "version": "1.34.3",
@@ -49536,7 +49536,6 @@
     "config-writer-common 0.2.1": "rs/ic-observability/config-writer-common",
     "decentralization 0.2.1": "rs/decentralization",
     "dre 0.2.1": "rs/cli",
-    "dre-release-controller 0.2.1": "rs/release-controller",
     "ic-canisters 0.2.1": "rs/ic-canisters",
     "ic-management-backend 0.2.1": "rs/ic-management-backend",
     "ic-management-types 0.2.1": "rs/ic-management-types",
@@ -49548,6 +49547,7 @@
     "np-notifications 0.2.1": "rs/np-notifications",
     "obs-canister-clients 0.2.1": "rs/ic-observability/obs-canister-clients",
     "prometheus-config-updater 0.2.1": "rs/ic-observability/prometheus-config-updater",
+    "rollout-controller 0.2.1": "rs/rollout-controller",
     "service-discovery 0.2.1": "rs/ic-observability/service-discovery",
     "slack-notifications 0.2.1": "rs/slack-notifications",
     "sns-downloader 0.2.1": "rs/ic-observability/sns-downloader"
