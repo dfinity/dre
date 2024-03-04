@@ -11,6 +11,7 @@ use crate::{git_sync::sync_git, registry_wrappers::sync_wrap};
 
 mod git_sync;
 mod registry_wrappers;
+mod rollout_schedule;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -42,7 +43,6 @@ async fn main() -> anyhow::Result<()> {
         }
         should_sleep = true;
 
-        // Sync registry
         info!(logger, "Syncing registry for network '{:?}'", args.network);
         match sync_wrap(logger.clone(), args.targets_dir.clone(), args.network.clone()).await {
             Ok(()) => info!(logger, "Syncing registry completed"),
@@ -62,6 +62,8 @@ async fn main() -> anyhow::Result<()> {
                 continue;
             }
         }
+
+        info!(logger, "Checking the progress of current release");
 
         // Read prometheus
 
