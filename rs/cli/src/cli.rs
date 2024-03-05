@@ -145,7 +145,14 @@ pub(crate) enum Commands {
     },
 
     /// Firewall rules
-    Firewall,
+    Firewall {
+        #[clap(long, default_value = Some("Proposal to modify firewall rules"))]
+        title: Option<String>,
+        #[clap(long, default_value = None)]
+        summary: Option<String>,
+        #[clap(long, default_value = None)]
+        motivation: Option<String>,
+    },
 }
 
 pub(crate) mod subnet {
