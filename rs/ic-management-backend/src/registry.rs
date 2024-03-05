@@ -1,7 +1,7 @@
 use crate::config::get_nns_url_vec_from_target_network;
 use crate::factsdb;
 use crate::git_ic_repo::IcRepo;
-use crate::proposal;
+use crate::proposal::{self, SubnetUpdateProposal};
 use crate::public_dashboard::query_ic_dashboard_list;
 use async_trait::async_trait;
 use decentralization::network::{AvailableNodesQuerier, SubnetQuerier, SubnetQueryBy};
@@ -716,6 +716,12 @@ impl RegistryState {
             Artifact::HostOs => self.get_elected_hostos_versions().await,
             Artifact::Replica => self.get_blessed_replica_versions().await,
         }
+    }
+
+    pub async fn open_subnet_upgrade_proposals(&self) -> Result<Vec<SubnetUpdateProposal>> {
+        let proposal_agent = proposal::ProposalAgent::new(self.nns_url.clone());
+
+        proposal_agent.list_update_subnet_version_proposals().await
     }
 
     async fn retireable_hostos_versions(&self) -> Result<Vec<Release>> {

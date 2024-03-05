@@ -40,9 +40,11 @@ async fn main() -> anyhow::Result<()> {
     let shutdown_logger = logger.clone();
     let shutdown_token = token.clone();
     let shutdown_handle = tokio::spawn(async move {
-        shutdown.await.unwrap();
+        select! {
+            _ = shutdown => shutdown_token.cancel(),
+            _ = shutdown_token.cancelled() => {}
+        }
         info!(shutdown_logger, "Received shutdown");
-        shutdown_token.cancel();
     });
 
     let mut interval = tokio::time::interval(args.poll_interval);
@@ -50,23 +52,23 @@ async fn main() -> anyhow::Result<()> {
     loop {
         if should_sleep {
             select! {
-                tick = interval.tick() => info!(logger, "Running loop @ {:?}", tick),
                 _ = token.cancelled() => break,
+                tick = interval.tick() => info!(logger, "Running loop @ {:?}", tick),
             }
         } else if token.is_cancelled() {
             break;
         }
         should_sleep = true;
 
-        // info!(logger, "Syncing registry for network '{:?}'", args.network);
-        // match sync_wrap(logger.clone(), args.targets_dir.clone(), args.network.clone()).await {
-        //     Ok(()) => info!(logger, "Syncing registry completed"),
-        //     Err(e) => {
-        //         warn!(logger, "{:?}", e);
-        //         should_sleep = false;
-        //         continue;
-        //     }
-        // };
+        info!(logger, "Syncing registry for network '{:?}'", args.network);
+        match sync_wrap(logger.clone(), args.targets_dir.clone(), args.network.clone()).await {
+            Ok(()) => info!(logger, "Syncing registry completed"),
+            Err(e) => {
+                warn!(logger, "{:?}", e);
+                should_sleep = false;
+                continue;
+            }
+        };
 
         // info!(logger, "Syncing git repo");
         // match sync_git(&logger, &args.git_repo_path, &args.git_repo_url, &args.release_index).await {
@@ -80,7 +82,7 @@ async fn main() -> anyhow::Result<()> {
 
         // Calculate what should be done
         info!(logger, "Calculating the progress of the current release");
-        match calculate_progress(
+        let actions = match calculate_progress(
             &logger,
             &args.git_repo_path.join(&args.release_index),
             &args.network,
@@ -89,14 +91,21 @@ async fn main() -> anyhow::Result<()> {
         )
         .await
         {
-            Ok(()) => info!(logger, "Calculating completed"),
+            Ok(actions) => actions,
             Err(e) => {
                 warn!(logger, "{:?}", e);
                 continue;
             }
-        }
+        };
+        info!(logger, "Calculating completed");
 
+        if actions.is_empty() {
+            info!(logger, "No actions needed, sleeping");
+            continue;
+        }
+        info!(logger, "Calculated actions: {:#?}", actions);
         // Apply changes
+        token.cancel();
     }
     info!(logger, "Shutdown complete");
     shutdown_handle.await.unwrap();

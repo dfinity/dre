@@ -1,7 +1,7 @@
 use std::{collections::BTreeMap, path::PathBuf, time::Duration};
 
 use anyhow::Ok;
-use chrono::{Days, Local, NaiveDate};
+use chrono::{Local, NaiveDate};
 use humantime::format_duration;
 use ic_management_backend::registry::RegistryState;
 use ic_management_types::Network;
@@ -17,7 +17,7 @@ pub async fn calculate_progress(
     network: &Network,
     token: CancellationToken,
     prometheus_client: &Client,
-) -> anyhow::Result<()> {
+) -> anyhow::Result<Vec<String>> {
     // Deserialize the index
     debug!(logger, "Deserializing index");
     let mut index = String::from("");
@@ -34,14 +34,14 @@ pub async fn calculate_progress(
     // Check if the plan is paused
     if index.rollout.pause {
         info!(logger, "Release is paused, no progress to be made.");
-        return Ok(());
+        return Ok(vec![]);
     }
 
     // Check if this day should be skipped
     let today = Local::now().to_utc().date_naive();
     if index.rollout.skip_days.iter().any(|f| f.eq(&today)) {
         info!(logger, "'{}' should be skipped as per rollout skip days", today);
-        return Ok(());
+        return Ok(vec![]);
     }
 
     // Check if the desired rollout version is elected
@@ -50,7 +50,7 @@ pub async fn calculate_progress(
         res = RegistryState::new(network.clone(), true) => res,
         _ = token.cancelled() => {
             info!(logger, "Received shutdown while creating registry");
-            return Ok(())
+            return Ok(vec![])
         }
     };
     debug!(logger, "Updating registry with data");
@@ -59,7 +59,7 @@ pub async fn calculate_progress(
         res = registry_state.update_node_details(&node_provider_data) => res?,
         _ = token.cancelled() => {
             info!(logger, "Received shutdown while creating registry");
-            return Ok(())
+            return Ok(vec![])
         }
     }
     debug!(
@@ -101,8 +101,38 @@ pub async fn calculate_progress(
 
         current_release_feature_spec.insert(version.version.to_string(), version.subnets.clone());
     }
+
+    let mut last_bake_status: BTreeMap<String, f64> = BTreeMap::new();
+    let result = prometheus_client
+        .query(
+            r#"
+        time() - max(last_over_time(
+            (timestamp(
+                sum by(ic_active_version,ic_subnet) (ic_replica_info)
+            ))[21d:1m]
+        ) unless (sum by (ic_active_version, ic_subnet) (ic_replica_info))) by (ic_subnet)
+        "#,
+        )
+        .get()
+        .await?;
+
+    let last = match result.data().clone().into_vector().into_iter().last() {
+        Some(data) => data,
+        None => return Err(anyhow::anyhow!("There should be data regarding ic_replica_info")),
+    };
+
+    for vector in last.iter() {
+        let subnet = vector.metric().get("ic_subnet").expect("To have ic_subnet key");
+        let last_update = vector.sample().value();
+        last_bake_status.insert(subnet.to_string(), last_update);
+    }
+
+    let subnet_update_proposals = registry_state.open_subnet_upgrade_proposals().await?;
+
     for (i, stage) in index.rollout.stages.iter().enumerate() {
         info!(logger, "### Checking stage {}", i);
+        let mut actions = vec![];
+        let mut stage_baked = true;
 
         if stage.update_unassigned_nodes {
             debug!(logger, "Unassigned nodes stage");
@@ -113,7 +143,9 @@ pub async fn calculate_progress(
                 info!(logger, "Unassigned version already at version '{}'", current_version);
                 continue;
             }
-            // Update unassigned nodes
+            // Should update unassigned nodes
+            actions.push(format!("Update unassigned nodes to version: {}", current_version));
+            return Ok(actions);
         }
 
         debug!(logger, "Regular nodes stage");
@@ -147,93 +179,53 @@ pub async fn calculate_progress(
             if subnet.replica_version.eq(desired_version) {
                 info!(logger, "Subnet {} is at desired version", subnet_short);
                 // Check bake time
-                let now = Local::now().to_utc();
-                let principal = subnet.principal.to_string();
-                let result = prometheus_client
-                    .query_range(
-                        format!(
-                            r#"
-last_over_time(
-    (timestamp(
-        sum by(ic_active_version,ic_subnet) (ic_replica_info{{ic_subnet="{0}", ic_active_version="{1}"}})
-    ))[7d:1m]
-)
-"#,
-                            principal, desired_version
-                        ),
-                        now.checked_sub_days(Days::new(7)).unwrap().timestamp(),
-                        now.timestamp(),
-                        10.0,
-                    )
-                    .get()
-                    .await?;
-
-                if let Some(range) = result.data().as_matrix() {
-                    let first = match range.first() {
-                        Some(val) => match val.samples().first() {
-                            Some(val) => val.timestamp(),
-                            None => {
-                                return Err(anyhow::anyhow!(
-                                    "Expected samples to have first data for bake time for subnet '{}'",
-                                    subnet_short,
-                                ))
-                            }
-                        },
-                        None => {
-                            return Err(anyhow::anyhow!(
-                                "Expected range vector to have first data for bake time for subnet '{}'",
-                                subnet_short
-                            ))
-                        }
-                    };
-
-                    let last = match range.last() {
-                        Some(val) => match val.samples().last() {
-                            Some(val) => val.timestamp(),
-                            None => {
-                                return Err(anyhow::anyhow!(
-                                    "Expected samples to have last data for bake time for subnet '{}'",
-                                    subnet_short
-                                ))
-                            }
-                        },
-                        None => {
-                            return Err(anyhow::anyhow!(
-                                "Expected range vector to have last data for bake time for subnet '{}'",
-                                subnet_short
-                            ))
-                        }
-                    };
-
-                    let diff = last - first;
-
-                    debug!(
-                        logger,
-                        "For subnet '{}' comparing bake time - {} {} - diff",
-                        subnet_short,
-                        stage.bake_time.as_secs_f64(),
-                        diff
-                    );
-
-                    if diff > stage.bake_time.as_secs_f64() {
-                        info!(logger, "Subnet {} is baked", subnet_short);
-                        continue;
-                    } else {
-                        let remaining = Duration::from_secs_f64(stage.bake_time.as_secs_f64() - diff);
-                        let formatted = format_duration(remaining);
-                        info!(
-                            logger,
-                            "Waiting for subnet {} to bake, pending {}", subnet_short, formatted
-                        );
-                        return Ok(());
-                    }
+                let bake = last_bake_status
+                    .get(&subnet.principal.to_string())
+                    .expect("Should have key");
+                if bake.gt(&stage.bake_time.as_secs_f64()) {
+                    info!(logger, "Subnet {} is baked", subnet_short);
+                    continue;
                 } else {
-                    return Err(anyhow::anyhow!("Expected result data to be a matrix"));
+                    let remaining = Duration::from_secs_f64(stage.bake_time.as_secs_f64() - bake);
+                    let formatted = format_duration(remaining);
+                    info!(
+                        logger,
+                        "Waiting for subnet {} to bake, pending {}", subnet_short, formatted
+                    );
+                    stage_baked |= false;
                 }
             }
-            info!(logger, "Subnet {} is not at desired version", subnet_short)
+            info!(logger, "Subnet {} is not at desired version", subnet_short);
             // Check if there is an open proposal => if yes, wait; if false, place and exit
+
+            if let Some(proposal) = subnet_update_proposals.iter().find(|proposal| {
+                proposal.payload.subnet_id == subnet.principal
+                    && proposal.payload.replica_version_id.eq(desired_version)
+                    && !proposal.info.executed
+            }) {
+                info!(
+                    logger,
+                    "For subnet '{}' found open proposal 'https://dashboard.internetcomputer.org/proposal/{}'",
+                    subnet_short,
+                    proposal.info.id
+                );
+                continue;
+            }
+
+            actions.push(format!(
+                "Should update subnet '{}' to version '{}'",
+                subnet_short, desired_version
+            ))
         }
+
+        if !stage_baked {
+            return Ok(vec![]);
+        }
+
+        if !actions.is_empty() {
+            return Ok(actions);
+        }
+
         info!(logger, "### Stage {} completed", i)
     }
 
@@ -246,7 +238,7 @@ last_over_time(
     //               to see if there were any alerts and if the bake time has passed. If the bake
     //               time didn't pass don't do anything. If there were alerts don't do anything.
 
-    Ok(())
+    Ok(vec![])
 }
 
 #[derive(Deserialize)]
