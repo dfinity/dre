@@ -7377,11 +7377,18 @@ name = "rollout-controller"
 version = "0.2.1"
 dependencies = [
  "anyhow",
+ "chrono",
  "clap 4.4.18",
  "crossbeam",
  "crossbeam-channel",
  "humantime",
+ "ic-management-backend",
  "ic-management-types",
+ "ic-registry-keys",
+ "ic-registry-local-registry",
+ "serde",
+ "serde_json",
+ "serde_yaml 0.9.32",
  "service-discovery",
  "slog",
  "slog-async",

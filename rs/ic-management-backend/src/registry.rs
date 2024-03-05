@@ -1,4 +1,4 @@
-use crate::config::{get_nns_url_string_from_target_network, get_nns_url_vec_from_target_network};
+use crate::config::get_nns_url_vec_from_target_network;
 use crate::factsdb;
 use crate::git_ic_repo::IcRepo;
 use crate::proposal;
@@ -195,7 +195,7 @@ impl ReleasesOps for ArtifactReleases {
 
 impl RegistryState {
     pub async fn new(network: Network, without_update_loop: bool) -> Self {
-        let nns_url = get_nns_url_string_from_target_network(&network);
+        let nns_url = network.get_url().to_string();
 
         sync_local_store(network.clone())
             .await

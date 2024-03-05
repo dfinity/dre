@@ -7,7 +7,7 @@ use slog::{info, o, warn, Drain, Level, Logger};
 use tokio::select;
 use tokio_util::sync::CancellationToken;
 
-use crate::{git_sync::sync_git, registry_wrappers::sync_wrap};
+use crate::{git_sync::sync_git, registry_wrappers::sync_wrap, rollout_schedule::calculate_progress};
 
 mod git_sync;
 mod registry_wrappers;
@@ -43,27 +43,41 @@ async fn main() -> anyhow::Result<()> {
         }
         should_sleep = true;
 
-        info!(logger, "Syncing registry for network '{:?}'", args.network);
-        match sync_wrap(logger.clone(), args.targets_dir.clone(), args.network.clone()).await {
-            Ok(()) => info!(logger, "Syncing registry completed"),
-            Err(e) => {
-                warn!(logger, "{:?}", e);
-                should_sleep = false;
-                continue;
-            }
-        };
+        // info!(logger, "Syncing registry for network '{:?}'", args.network);
+        // match sync_wrap(logger.clone(), args.targets_dir.clone(), args.network.clone()).await {
+        //     Ok(()) => info!(logger, "Syncing registry completed"),
+        //     Err(e) => {
+        //         warn!(logger, "{:?}", e);
+        //         should_sleep = false;
+        //         continue;
+        //     }
+        // };
 
-        info!(logger, "Syncing git repo");
-        match sync_git(&logger, &args.git_repo_path, &args.git_repo_url, &args.release_index).await {
-            Ok(()) => info!(logger, "Syncing git repo completed"),
+        // info!(logger, "Syncing git repo");
+        // match sync_git(&logger, &args.git_repo_path, &args.git_repo_url, &args.release_index).await {
+        //     Ok(()) => info!(logger, "Syncing git repo completed"),
+        //     Err(e) => {
+        //         warn!(logger, "{:?}", e);
+        //         should_sleep = false;
+        //         continue;
+        //     }
+        // }
+
+        info!(logger, "Calculating the progress of the current release");
+        match calculate_progress(
+            &logger,
+            &args.git_repo_path.join(&args.release_index),
+            &args.network,
+            token.clone(),
+        )
+        .await
+        {
+            Ok(()) => info!(logger, "Calculating completed"),
             Err(e) => {
                 warn!(logger, "{:?}", e);
-                should_sleep = false;
                 continue;
             }
         }
-
-        info!(logger, "Checking the progress of current release");
 
         // Read prometheus
 

@@ -1,50 +1,206 @@
-use std::path::PathBuf;
+use std::{collections::BTreeMap, path::PathBuf};
 
-use slog::Logger;
+use anyhow::Ok;
+use chrono::{Local, NaiveDate};
+use ic_management_backend::registry::RegistryState;
+use ic_management_types::Network;
+use serde::Deserialize;
+use slog::{debug, info, Logger};
+use tokio::{fs::File, io::AsyncReadExt, select};
+use tokio_util::sync::CancellationToken;
 
-pub async fn calculate_progress(logger: &Logger, release_index: &PathBuf) -> anyhow::Result<()> {
+pub async fn calculate_progress(
+    logger: &Logger,
+    release_index: &PathBuf,
+    network: &Network,
+    token: CancellationToken,
+) -> anyhow::Result<()> {
     // Deserialize the index
+    debug!(logger, "Deserializing index");
+    let mut index = String::from("");
+    let mut rel_index = File::open(release_index)
+        .await
+        .map_err(|e| anyhow::anyhow!("Couldn't open release index: {:?}", e))?;
+    rel_index
+        .read_to_string(&mut index)
+        .await
+        .map_err(|e| anyhow::anyhow!("Couldn't read release index: {:?}", e))?;
+    let index: Index =
+        serde_yaml::from_str(&index).map_err(|e| anyhow::anyhow!("Couldn't parse release indes: {:?}", e))?;
+
+    // Check if the plan is paused
+    if index.rollout.pause {
+        info!(logger, "Release is paused, no progress to be made.");
+        return Ok(());
+    }
+
+    // Check if this day should be skipped
+    let today = Local::now().date_naive();
+    if index.rollout.skip_days.iter().any(|f| f.eq(&today)) {
+        info!(logger, "'{}' should be skipped as per rollout skip days", today);
+        return Ok(());
+    }
 
     // Check if the desired rollout version is elected
+    debug!(logger, "Creating registry");
+    let mut registry_state = select! {
+        res = RegistryState::new(network.clone(), true) => res,
+        _ = token.cancelled() => {
+            info!(logger, "Received shutdown while creating registry");
+            return Ok(())
+        }
+    };
+    debug!(logger, "Updating registry with data");
+    let node_provider_data = vec![];
+    select! {
+        res = registry_state.update_node_details(&node_provider_data) => res?,
+        _ = token.cancelled() => {
+            info!(logger, "Received shutdown while creating registry");
+            return Ok(())
+        }
+    }
+    debug!(
+        logger,
+        "Created registry with latest version: '{}'",
+        registry_state.version()
+    );
+    debug!(logger, "Fetching elected versions");
+    let elected_versions = registry_state.get_blessed_replica_versions().await?;
+    let current_release = match index.releases.first() {
+        Some(release) => release,
+        None => return Err(anyhow::anyhow!("Expected to have atleast one release")),
+    };
+
+    debug!(logger, "Checking if versions are elected");
+    let mut current_release_feature_spec: BTreeMap<String, Vec<String>> = BTreeMap::new();
+    let mut current_version = String::from("");
+    for version in &current_release.versions {
+        if !elected_versions.contains(&version.version) {
+            return Err(anyhow::anyhow!(
+                "Version '{}' is not blessed and is required for release '{}' with build name: {}",
+                version.version,
+                current_release.rc_name,
+                version.name
+            ));
+        }
+
+        if version.name.eq(&current_release.rc_name) {
+            current_version = version.version.to_string();
+            continue;
+        }
+
+        if !version.name.eq(&current_release.rc_name) && version.subnets.is_empty() {
+            return Err(anyhow::anyhow!(
+                "Feature build '{}' doesn't have subnets specified",
+                version.name
+            ));
+        }
+
+        current_release_feature_spec.insert(version.version.to_string(), version.subnets.clone());
+    }
+
+    for (i, stage) in index.rollout.stages.iter().enumerate() {
+        info!(logger, "### Checking stage {}", i);
+
+        if stage.update_unassigned_nodes {
+            debug!(logger, "Unassigned nodes stage");
+
+            let unassigned_nodes_version = registry_state.get_unassigned_nodes_replica_version().await?;
+
+            if unassigned_nodes_version.eq(&current_version) {
+                info!(logger, "Unassigned version already at version '{}'", current_version);
+                continue;
+            }
+        }
+
+        debug!(logger, "Regular nodes stage");
+        for subnet_short in &stage.subnets {
+            let desired_version = match current_release_feature_spec
+                .iter()
+                .find(|(_, subnets)| subnets.contains(&subnet_short))
+            {
+                Some((name, _)) => name,
+                None => &current_version,
+            };
+            debug!(
+                logger,
+                "Checking if subnet {} is on desired version '{}'", subnet_short, desired_version
+            );
+
+            let subnet = match registry_state
+                .subnets()
+                .into_iter()
+                .find(|(key, _)| key.to_string().starts_with(subnet_short))
+            {
+                Some((_, subnet)) => subnet,
+                None => {
+                    return Err(anyhow::anyhow!(
+                        "Couldn't find subnet that starts with '{}'",
+                        subnet_short
+                    ))
+                }
+            };
+
+            if subnet.replica_version.eq(desired_version) {
+                info!(logger, "Subnet {} is at desired version", subnet_short);
+                // Check bake time
+                continue;
+            }
+
+            info!(logger, "Subnet {} is not at desired version", subnet_short)
+            // Check if there is an open proposal => if yes, wait; if false, place and exit
+        }
+        info!(logger, "### Stage {} completed", i)
+    }
 
     // Iterate over stages and compare desired state from file and the state it is live
     // Take into consideration:
-    //      0. Check if the plan is paused. If it is do nothing
     //      1. If the subnet is on the desired version, proceed
     //      2. If the subnet isn't on the desired version:
     //          2.1. Check if there is an open proposal for upgrading, if there isn't place one
     //          2.2. If the proposal is executed check when it was upgraded and query prometheus
     //               to see if there were any alerts and if the bake time has passed. If the bake
     //               time didn't pass don't do anything. If there were alerts don't do anything.
+
+    Ok(())
 }
 
+#[derive(Deserialize)]
 pub struct Index {
     pub rollout: Rollout,
-    pub features: Vec<Feature>,
     pub releases: Vec<Release>,
 }
 
+#[derive(Deserialize)]
 pub struct Rollout {
-    pub rc_name: String,
+    #[serde(default)]
     pub pause: bool,
-    pub skip_days: Vec<String>,
+    pub skip_days: Vec<NaiveDate>,
     pub stages: Vec<Stage>,
 }
+
+#[derive(Deserialize, Default)]
+#[serde(default)]
 
 pub struct Stage {
     pub subnets: Vec<String>,
     pub bake_time: String,
     pub wait_for_next_week: bool,
+    update_unassigned_nodes: bool,
 }
 
-pub struct Feature {
-    pub name: String,
-    pub subnets: Vec<String>,
-}
-
+#[derive(Deserialize)]
 pub struct Release {
-    pub name: String,
+    pub rc_name: String,
+    pub versions: Vec<Version>,
+}
+
+#[derive(Deserialize)]
+pub struct Version {
     pub version: String,
-    pub publish: String,
-    pub features: Vec<String>,
+    pub name: String,
+    #[serde(default)]
+    pub release_notes_read: bool,
+    #[serde(default)]
+    pub subnets: Vec<String>,
 }

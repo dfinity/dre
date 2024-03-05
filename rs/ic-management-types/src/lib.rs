@@ -587,7 +587,7 @@ impl Network {
         match self {
             Network::Mainnet => Url::from_str("https://ic0.app").unwrap(),
             // Workaround for staging boundary node not working properly (503 Service unavailable)
-            Network::Staging => Url::from_str("https://[2600:3000:6100:200:5000:b0ff:fe8e:6b7b]:8080").unwrap(),
+            Network::Staging => Url::from_str("http://[2600:3000:6100:200:5000:b0ff:fe8e:6b7b]:8080").unwrap(),
             Self::Url(url) => url.clone(),
         }
     }
