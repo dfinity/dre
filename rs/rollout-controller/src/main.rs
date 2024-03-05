@@ -1,11 +1,13 @@
-use std::{path::PathBuf, time::Duration};
+use std::{path::PathBuf, str::FromStr, time::Duration};
 
 use clap::Parser;
 use humantime::parse_duration;
 use ic_management_types::Network;
+use prometheus_http_query::Client;
 use slog::{info, o, warn, Drain, Level, Logger};
 use tokio::select;
 use tokio_util::sync::CancellationToken;
+use url::Url;
 
 use crate::{git_sync::sync_git, registry_wrappers::sync_wrap, rollout_schedule::calculate_progress};
 
@@ -17,6 +19,19 @@ mod rollout_schedule;
 async fn main() -> anyhow::Result<()> {
     let args = Cli::parse();
     let logger = make_logger(args.log_level.clone().into());
+    let prometheus_endpoint = match &args.network {
+        Network::Mainnet => Url::from_str("https://victoria.ch1-obs1.dfinity.network")
+            .map_err(|e| anyhow::anyhow!("Couldn't parse url: {:?}", e))?,
+        Network::Staging => Url::from_str("https://victoria.ch1-obsstage1.dfinity.network")
+            .map_err(|e| anyhow::anyhow!("Couldn't parse url: {:?}", e))?,
+        Network::Url(url) => url.clone(),
+    };
+    let prometheus_endpoint = prometheus_endpoint
+        .join("select/0/prometheus")
+        .map_err(|e| anyhow::anyhow!("Couldn't append victoria prometheus endpoint: {:?}", e))?;
+
+    let client = Client::try_from(prometheus_endpoint.to_string())
+        .map_err(|e| anyhow::anyhow!("Couldn't create prometheus client: {:?}", e))?;
 
     let shutdown = tokio::signal::ctrl_c();
     let token = CancellationToken::new();
@@ -63,12 +78,14 @@ async fn main() -> anyhow::Result<()> {
         //     }
         // }
 
+        // Calculate what should be done
         info!(logger, "Calculating the progress of the current release");
         match calculate_progress(
             &logger,
             &args.git_repo_path.join(&args.release_index),
             &args.network,
             token.clone(),
+            &client,
         )
         .await
         {
@@ -79,15 +96,7 @@ async fn main() -> anyhow::Result<()> {
             }
         }
 
-        // Read prometheus
-
-        // Read last iteration from disk
-
-        // Calculate what should be done
-
         // Apply changes
-
-        // Serialize new state to disk
     }
     info!(logger, "Shutdown complete");
     shutdown_handle.await.unwrap();
@@ -182,6 +191,19 @@ The fully qualified name of release index file in the git repositry.
 "#
     )]
     release_index: String,
+
+    #[clap(
+        long = "prometheus-endpoint",
+        help = r#"
+Optional url of prometheus endpoint to use for querying bake time.
+If not specified it will take following based on 'Network' values:
+        1. Mainnet => https://victoria.ch1-obs1.dfinity.network
+        2. Staging => https://victoria.ch1-obsstage1.dfinity.network
+        3. arbitrary nns url => must be specified or will error
+
+"#
+    )]
+    victoria_url: Option<String>,
 }
 
 #[derive(Debug, Clone)]

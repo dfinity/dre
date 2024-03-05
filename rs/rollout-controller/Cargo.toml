@@ -28,3 +28,6 @@ ic-registry-keys = { workspace = true }
 ic-registry-local-registry = { workspace = true }
 ic-management-backend = { workspace = true }
 chrono = { version = "0.4", features = [ "serde" ] }
+url = { workspace = true }
+prometheus-http-query = { workspace = true }
+humantime-serde = "1.1.1"

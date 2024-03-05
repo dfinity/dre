@@ -1,9 +1,11 @@
-use std::{collections::BTreeMap, path::PathBuf};
+use std::{collections::BTreeMap, path::PathBuf, time::Duration};
 
 use anyhow::Ok;
-use chrono::{Local, NaiveDate};
+use chrono::{Days, Local, NaiveDate};
+use humantime::format_duration;
 use ic_management_backend::registry::RegistryState;
 use ic_management_types::Network;
+use prometheus_http_query::Client;
 use serde::Deserialize;
 use slog::{debug, info, Logger};
 use tokio::{fs::File, io::AsyncReadExt, select};
@@ -14,6 +16,7 @@ pub async fn calculate_progress(
     release_index: &PathBuf,
     network: &Network,
     token: CancellationToken,
+    prometheus_client: &Client,
 ) -> anyhow::Result<()> {
     // Deserialize the index
     debug!(logger, "Deserializing index");
@@ -35,7 +38,7 @@ pub async fn calculate_progress(
     }
 
     // Check if this day should be skipped
-    let today = Local::now().date_naive();
+    let today = Local::now().to_utc().date_naive();
     if index.rollout.skip_days.iter().any(|f| f.eq(&today)) {
         info!(logger, "'{}' should be skipped as per rollout skip days", today);
         return Ok(());
@@ -98,7 +101,6 @@ pub async fn calculate_progress(
 
         current_release_feature_spec.insert(version.version.to_string(), version.subnets.clone());
     }
-
     for (i, stage) in index.rollout.stages.iter().enumerate() {
         info!(logger, "### Checking stage {}", i);
 
@@ -111,6 +113,7 @@ pub async fn calculate_progress(
                 info!(logger, "Unassigned version already at version '{}'", current_version);
                 continue;
             }
+            // Update unassigned nodes
         }
 
         debug!(logger, "Regular nodes stage");
@@ -144,9 +147,90 @@ pub async fn calculate_progress(
             if subnet.replica_version.eq(desired_version) {
                 info!(logger, "Subnet {} is at desired version", subnet_short);
                 // Check bake time
-                continue;
-            }
+                let now = Local::now().to_utc();
+                let principal = subnet.principal.to_string();
+                let result = prometheus_client
+                    .query_range(
+                        format!(
+                            r#"
+last_over_time(
+    (timestamp(
+        sum by(ic_active_version,ic_subnet) (ic_replica_info{{ic_subnet="{0}", ic_active_version="{1}"}})
+    ))[7d:1m]
+)
+"#,
+                            principal, desired_version
+                        ),
+                        now.checked_sub_days(Days::new(7)).unwrap().timestamp(),
+                        now.timestamp(),
+                        10.0,
+                    )
+                    .get()
+                    .await?;
 
+                if let Some(range) = result.data().as_matrix() {
+                    let first = match range.first() {
+                        Some(val) => match val.samples().first() {
+                            Some(val) => val.timestamp(),
+                            None => {
+                                return Err(anyhow::anyhow!(
+                                    "Expected samples to have first data for bake time for subnet '{}'",
+                                    subnet_short,
+                                ))
+                            }
+                        },
+                        None => {
+                            return Err(anyhow::anyhow!(
+                                "Expected range vector to have first data for bake time for subnet '{}'",
+                                subnet_short
+                            ))
+                        }
+                    };
+
+                    let last = match range.last() {
+                        Some(val) => match val.samples().last() {
+                            Some(val) => val.timestamp(),
+                            None => {
+                                return Err(anyhow::anyhow!(
+                                    "Expected samples to have last data for bake time for subnet '{}'",
+                                    subnet_short
+                                ))
+                            }
+                        },
+                        None => {
+                            return Err(anyhow::anyhow!(
+                                "Expected range vector to have last data for bake time for subnet '{}'",
+                                subnet_short
+                            ))
+                        }
+                    };
+
+                    let diff = last - first;
+
+                    debug!(
+                        logger,
+                        "For subnet '{}' comparing bake time - {} {} - diff",
+                        subnet_short,
+                        stage.bake_time.as_secs_f64(),
+                        diff
+                    );
+
+                    if diff > stage.bake_time.as_secs_f64() {
+                        info!(logger, "Subnet {} is baked", subnet_short);
+                        continue;
+                    } else {
+                        let remaining = Duration::from_secs_f64(stage.bake_time.as_secs_f64() - diff);
+                        let formatted = format_duration(remaining);
+                        info!(
+                            logger,
+                            "Waiting for subnet {} to bake, pending {}", subnet_short, formatted
+                        );
+                        return Ok(());
+                    }
+                } else {
+                    return Err(anyhow::anyhow!("Expected result data to be a matrix"));
+                }
+            }
             info!(logger, "Subnet {} is not at desired version", subnet_short)
             // Check if there is an open proposal => if yes, wait; if false, place and exit
         }
@@ -184,7 +268,8 @@ pub struct Rollout {
 
 pub struct Stage {
     pub subnets: Vec<String>,
-    pub bake_time: String,
+    #[serde(with = "humantime_serde")]
+    pub bake_time: Duration,
     pub wait_for_next_week: bool,
     update_unassigned_nodes: bool,
 }
