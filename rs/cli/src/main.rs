@@ -293,9 +293,13 @@ async fn main() -> Result<(), anyhow::Error> {
                 registry_dump::dump_registry(path, cli_opts.network, version).await
             }
 
-            cli::Commands::Firewall => {
+            cli::Commands::Firewall{title, summary, motivation} => {
                 let ic_admin: IcAdminWrapper = cli::Cli::from_opts(&cli_opts, true).await?.into();
-                ic_admin.update_replica_nodes_firewall(cli_opts.network, cli_opts.simulate).await
+                ic_admin.update_replica_nodes_firewall(cli_opts.network, ic_admin::ProposeOptions{
+                    title: title.clone(),
+                    summary: summary.clone(),
+                    motivation: motivation.clone(),
+                }, cli_opts.simulate).await
             }
         }
     })
