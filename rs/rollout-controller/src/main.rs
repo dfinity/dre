@@ -9,9 +9,9 @@ use tokio::select;
 use tokio_util::sync::CancellationToken;
 use url::Url;
 
-use crate::{git_sync::sync_git, registry_wrappers::sync_wrap, rollout_schedule::calculate_progress};
+use crate::{registry_wrappers::sync_wrap, rollout_schedule::calculate_progress};
 
-mod git_sync;
+mod fetching;
 mod registry_wrappers;
 mod rollout_schedule;
 
@@ -47,6 +47,15 @@ async fn main() -> anyhow::Result<()> {
         info!(shutdown_logger, "Received shutdown");
     });
 
+    let fetcher = fetching::resolve(
+        args.mode,
+        logger.clone(),
+        args.git_repo_path.clone(),
+        args.git_repo_url.clone(),
+        args.release_index.clone(),
+    )
+    .await?;
+
     let mut interval = tokio::time::interval(args.poll_interval);
     let mut should_sleep = false;
     loop {
@@ -70,15 +79,18 @@ async fn main() -> anyhow::Result<()> {
             }
         };
 
-        // info!(logger, "Syncing git repo");
-        // match sync_git(&logger, &args.git_repo_path, &args.git_repo_url, &args.release_index).await {
-        //     Ok(()) => info!(logger, "Syncing git repo completed"),
-        //     Err(e) => {
-        //         warn!(logger, "{:?}", e);
-        //         should_sleep = false;
-        //         continue;
-        //     }
-        // }
+        info!(logger, "Fetching rollout index");
+        let index = match fetcher.fetch().await {
+            Ok(index) => {
+                info!(logger, "Fetching of new index complete");
+                index
+            }
+            Err(e) => {
+                warn!(logger, "{:?}", e);
+                should_sleep = false;
+                continue;
+            }
+        };
 
         // Calculate what should be done
         info!(logger, "Calculating the progress of the current release");
@@ -213,6 +225,17 @@ If not specified it will take following based on 'Network' values:
 "#
     )]
     victoria_url: Option<String>,
+
+    #[clap(
+        long = "mode",
+        help = r#"
+Mode for fetching the release index. Available modes:
+        1. git => runs using 'sparse checkout' of a file
+        2. curl => runs using fetching of raw file
+
+"#
+    )]
+    mode: String,
 }
 
 #[derive(Debug, Clone)]

@@ -152,7 +152,7 @@ pub async fn calculate_progress(
         for subnet_short in &stage.subnets {
             let desired_version = match current_release_feature_spec
                 .iter()
-                .find(|(_, subnets)| subnets.contains(&subnet_short))
+                .find(|(_, subnets)| subnets.contains(subnet_short))
             {
                 Some((name, _)) => name,
                 None => &current_version,
