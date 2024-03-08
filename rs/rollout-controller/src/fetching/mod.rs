@@ -1,10 +1,11 @@
-use std::path::PathBuf;
-
 use slog::Logger;
 
-use crate::rollout_schedule::Index;
+use crate::{rollout_schedule::Index, Commands};
 
-use self::{curl_fetcher::CurlFetcher, sparse_checkout_fetcher::SparseCheckoutFetcher};
+use self::{
+    curl_fetcher::{CurlFetcher, CurlFetcherConfig},
+    sparse_checkout_fetcher::{SparseCheckoutFetcher, SparseCheckoutFetcherConfig},
+};
 
 pub mod curl_fetcher;
 pub mod sparse_checkout_fetcher;
@@ -18,19 +19,18 @@ pub enum RolloutScheduleFetcherImplementation {
     Git(SparseCheckoutFetcher),
 }
 
-pub async fn resolve(
-    mode: String,
-    logger: Logger,
-    path: PathBuf,
-    url: String,
-    release_index: String,
-) -> anyhow::Result<RolloutScheduleFetcherImplementation> {
-    match mode.to_lowercase().as_str() {
-        "git" => SparseCheckoutFetcher::new(logger, path, url, release_index)
+pub async fn resolve(subcmd: Commands, logger: Logger) -> anyhow::Result<RolloutScheduleFetcherImplementation> {
+    match subcmd {
+        Commands::Git(SparseCheckoutFetcherConfig {
+            repo_url,
+            release_index,
+            repo_path,
+        }) => SparseCheckoutFetcher::new(logger, repo_path, repo_url, release_index)
             .await
             .map(RolloutScheduleFetcherImplementation::Git),
-        "curl" => CurlFetcher::new(logger, url).map(RolloutScheduleFetcherImplementation::Curl),
-        _ => Err(anyhow::anyhow!("Couldn't construct index fetcher for mode '{}'", mode)),
+        Commands::Curl(CurlFetcherConfig { url }) => {
+            CurlFetcher::new(logger, url).map(RolloutScheduleFetcherImplementation::Curl)
+        }
     }
 }
 

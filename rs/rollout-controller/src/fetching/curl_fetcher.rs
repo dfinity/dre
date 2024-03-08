@@ -1,7 +1,21 @@
+use clap::Parser;
 use reqwest::Client;
 use slog::{debug, Logger};
 
 use super::RolloutScheduleFetcher;
+
+#[derive(Parser, Clone, Debug)]
+pub struct CurlFetcherConfig {
+    #[clap(
+        long = "url",
+        default_value = "https://raw.githubusercontent.com/dfinity/dre/main/release-index.yaml",
+        help = r#"
+The url of the raw file in github
+
+"#
+    )]
+    pub url: String,
+}
 
 #[derive(Clone)]
 pub struct CurlFetcher {

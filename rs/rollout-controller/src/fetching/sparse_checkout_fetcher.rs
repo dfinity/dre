@@ -1,5 +1,6 @@
 use std::path::PathBuf;
 
+use clap::Parser;
 use slog::{debug, info, Logger};
 use tokio::{
     fs::{create_dir_all, File},
@@ -10,6 +11,38 @@ use tokio::{
 use crate::rollout_schedule::Index;
 
 use super::RolloutScheduleFetcher;
+
+#[derive(Parser, Clone, Debug)]
+pub struct SparseCheckoutFetcherConfig {
+    #[clap(
+        long = "repo-path",
+        help = r#"
+The path to the directory that will be used for git sync
+
+"#
+    )]
+    pub repo_path: PathBuf,
+
+    #[clap(
+        long = "repo-url",
+        default_value = "git@github.com:dfinity/dre.git",
+        help = r#"
+The url of the repository with which we should sync.
+
+"#
+    )]
+    pub repo_url: String,
+
+    #[clap(
+        long = "release-file-name",
+        default_value = "release-index.yaml",
+        help = r#"
+The fully qualified name of release index file in the git repositry.
+
+"#
+    )]
+    pub release_index: String,
+}
 
 #[derive(Clone)]
 pub struct SparseCheckoutFetcher {

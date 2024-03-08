@@ -1,36 +1,19 @@
-use std::{collections::BTreeMap, path::PathBuf, time::Duration};
+use std::{collections::BTreeMap, time::Duration};
 
 use anyhow::Ok;
 use chrono::{Local, NaiveDate};
 use humantime::format_duration;
 use ic_management_backend::registry::RegistryState;
-use ic_management_types::Network;
 use prometheus_http_query::Client;
 use serde::Deserialize;
 use slog::{debug, info, Logger};
-use tokio::{fs::File, io::AsyncReadExt, select};
-use tokio_util::sync::CancellationToken;
 
 pub async fn calculate_progress(
     logger: &Logger,
-    release_index: &PathBuf,
-    network: &Network,
-    token: CancellationToken,
+    index: Index,
     prometheus_client: &Client,
+    registry_state: RegistryState,
 ) -> anyhow::Result<Vec<String>> {
-    // Deserialize the index
-    debug!(logger, "Deserializing index");
-    let mut index = String::from("");
-    let mut rel_index = File::open(release_index)
-        .await
-        .map_err(|e| anyhow::anyhow!("Couldn't open release index: {:?}", e))?;
-    rel_index
-        .read_to_string(&mut index)
-        .await
-        .map_err(|e| anyhow::anyhow!("Couldn't read release index: {:?}", e))?;
-    let index: Index =
-        serde_yaml::from_str(&index).map_err(|e| anyhow::anyhow!("Couldn't parse release indes: {:?}", e))?;
-
     // Check if the plan is paused
     if index.rollout.pause {
         info!(logger, "Release is paused, no progress to be made.");
@@ -44,29 +27,6 @@ pub async fn calculate_progress(
         return Ok(vec![]);
     }
 
-    // Check if the desired rollout version is elected
-    debug!(logger, "Creating registry");
-    let mut registry_state = select! {
-        res = RegistryState::new(network.clone(), true) => res,
-        _ = token.cancelled() => {
-            info!(logger, "Received shutdown while creating registry");
-            return Ok(vec![])
-        }
-    };
-    debug!(logger, "Updating registry with data");
-    let node_provider_data = vec![];
-    select! {
-        res = registry_state.update_node_details(&node_provider_data) => res?,
-        _ = token.cancelled() => {
-            info!(logger, "Received shutdown while creating registry");
-            return Ok(vec![])
-        }
-    }
-    debug!(
-        logger,
-        "Created registry with latest version: '{}'",
-        registry_state.version()
-    );
     debug!(logger, "Fetching elected versions");
     let elected_versions = registry_state.get_blessed_replica_versions().await?;
     let current_release = match index.releases.first() {

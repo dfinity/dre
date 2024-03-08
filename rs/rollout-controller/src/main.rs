@@ -1,6 +1,7 @@
 use std::{path::PathBuf, str::FromStr, time::Duration};
 
-use clap::Parser;
+use clap::{Parser, Subcommand};
+use fetching::{curl_fetcher::CurlFetcherConfig, sparse_checkout_fetcher::SparseCheckoutFetcherConfig};
 use humantime::parse_duration;
 use ic_management_types::Network;
 use prometheus_http_query::Client;
@@ -47,14 +48,7 @@ async fn main() -> anyhow::Result<()> {
         info!(shutdown_logger, "Received shutdown");
     });
 
-    let fetcher = fetching::resolve(
-        args.mode,
-        logger.clone(),
-        args.git_repo_path.clone(),
-        args.git_repo_url.clone(),
-        args.release_index.clone(),
-    )
-    .await?;
+    let fetcher = fetching::resolve(args.subcommand, logger.clone()).await?;
 
     let mut interval = tokio::time::interval(args.poll_interval);
     let mut should_sleep = false;
@@ -70,8 +64,15 @@ async fn main() -> anyhow::Result<()> {
         should_sleep = true;
 
         info!(logger, "Syncing registry for network '{:?}'", args.network);
-        match sync_wrap(logger.clone(), args.targets_dir.clone(), args.network.clone()).await {
-            Ok(()) => info!(logger, "Syncing registry completed"),
+        let maybe_registry_state = select! {
+            res = sync_wrap(logger.clone(), args.targets_dir.clone(), args.network.clone()) => res,
+            _ = token.cancelled() => break,
+        };
+        let registry_state = match maybe_registry_state {
+            Ok(state) => {
+                info!(logger, "Syncing registry completed");
+                state
+            }
             Err(e) => {
                 warn!(logger, "{:?}", e);
                 should_sleep = false;
@@ -94,15 +95,7 @@ async fn main() -> anyhow::Result<()> {
 
         // Calculate what should be done
         info!(logger, "Calculating the progress of the current release");
-        let actions = match calculate_progress(
-            &logger,
-            &args.git_repo_path.join(&args.release_index),
-            &args.network,
-            token.clone(),
-            &client,
-        )
-        .await
-        {
+        let actions = match calculate_progress(&logger, index, &client, registry_state).await {
             Ok(actions) => actions,
             Err(e) => {
                 warn!(logger, "{:?}", e);
@@ -185,35 +178,6 @@ The interval at which ICs are polled for updates.
     poll_interval: Duration,
 
     #[clap(
-        long = "git-repo-path",
-        help = r#"
-The path to the directory that will be used for git sync
-
-"#
-    )]
-    git_repo_path: PathBuf,
-
-    #[clap(
-        long = "git-repo-url",
-        default_value = "git@github.com:dfinity/dre.git",
-        help = r#"
-The url of the repository with which we should sync.
-
-"#
-    )]
-    git_repo_url: String,
-
-    #[clap(
-        long = "release-file-name",
-        default_value = "release-index.yaml",
-        help = r#"
-The fully qualified name of release index file in the git repositry.
-
-"#
-    )]
-    release_index: String,
-
-    #[clap(
         long = "prometheus-endpoint",
         help = r#"
 Optional url of prometheus endpoint to use for querying bake time.
@@ -226,16 +190,14 @@ If not specified it will take following based on 'Network' values:
     )]
     victoria_url: Option<String>,
 
-    #[clap(
-        long = "mode",
-        help = r#"
-Mode for fetching the release index. Available modes:
-        1. git => runs using 'sparse checkout' of a file
-        2. curl => runs using fetching of raw file
+    #[clap(subcommand)]
+    pub(crate) subcommand: Commands,
+}
 
-"#
-    )]
-    mode: String,
+#[derive(Subcommand, Clone, Debug)]
+enum Commands {
+    Git(SparseCheckoutFetcherConfig),
+    Curl(CurlFetcherConfig),
 }
 
 #[derive(Debug, Clone)]
