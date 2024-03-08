@@ -1,5 +1,5 @@
 {
-  "checksum": "4cbc45073b367bdd54509e9c2c2a37238dcc5ab9c68dc9258cc18bd1975156f7",
+  "checksum": "a5133e8350a1044ca018fd8519fc227babb0d02b5c2b8b2c263dc054d6dd51ff",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -16177,6 +16177,49 @@
         "version": "2.1.0"
       },
       "license": "MIT/Apache-2.0"
+    },
+    "humantime-serde 1.1.1": {
+      "name": "humantime-serde",
+      "version": "1.1.1",
+      "repository": {
+        "Http": {
+          "url": "https://crates.io/api/v1/crates/humantime-serde/1.1.1/download",
+          "sha256": "57a3db5ea5923d99402c94e9feb261dc5ee9b4efa158b0315f788cf549cc200c"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "humantime_serde",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "humantime_serde",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "humantime 2.1.0",
+              "target": "humantime"
+            },
+            {
+              "id": "serde 1.0.197",
+              "target": "serde"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2018",
+        "version": "1.1.1"
+      },
+      "license": "MIT OR Apache-2.0"
     },
     "hyper 0.14.28": {
       "name": "hyper",
@@ -37099,6 +37142,10 @@
               "target": "anyhow"
             },
             {
+              "id": "chrono 0.4.34",
+              "target": "chrono"
+            },
+            {
               "id": "clap 4.4.18",
               "target": "clap"
             },
@@ -37113,6 +37160,38 @@
             {
               "id": "humantime 2.1.0",
               "target": "humantime"
+            },
+            {
+              "id": "humantime-serde 1.1.1",
+              "target": "humantime_serde"
+            },
+            {
+              "id": "ic-registry-keys 0.9.0",
+              "target": "ic_registry_keys"
+            },
+            {
+              "id": "ic-registry-local-registry 0.9.0",
+              "target": "ic_registry_local_registry"
+            },
+            {
+              "id": "prometheus-http-query 0.8.2",
+              "target": "prometheus_http_query"
+            },
+            {
+              "id": "reqwest 0.11.24",
+              "target": "reqwest"
+            },
+            {
+              "id": "serde 1.0.197",
+              "target": "serde"
+            },
+            {
+              "id": "serde_json 1.0.114",
+              "target": "serde_json"
+            },
+            {
+              "id": "serde_yaml 0.9.32",
+              "target": "serde_yaml"
             },
             {
               "id": "slog 2.7.0",
@@ -37133,6 +37212,10 @@
             {
               "id": "tokio-util 0.6.10",
               "target": "tokio_util"
+            },
+            {
+              "id": "url 2.5.0",
+              "target": "url"
             }
           ],
           "selects": {}
