@@ -37,7 +37,17 @@ matplotlib = "^3.8.2"
 ipython = "^8.21.0"
 mkdocs-git-revision-date-localized-plugin = "^1.2.4"
 mkdocs-git-committers-plugin-2 = "^2.2.3"
-
+pydiscourse = "^1.6.1"
+datamodel-code-generator = "^0.25.4"
+pydantic-yaml = "^1.2.1"
+google-api-python-client = "^2.119.0"
+google-auth-httplib2 = "^0.2.0"
+google-auth-oauthlib = "^1.2.0"
+pydrive2 = "^1.19.0"
+markdownify = "^0.11.6"
+pytest = "^8.0.2"
+pygithub = "^2.2.0"
+pytest-mock = "^3.12.0"
 
 [tool.poetry.group.dev.dependencies]
 black = "*"

@@ -17,23 +17,34 @@ from tenacity import retry
 from tenacity import stop_after_attempt
 from tenacity import wait_exponential
 
+from ic.agent import Agent
+from ic.certificate import lookup
+from ic.client import Client
+from ic.identity import Identity
+from ic.principal import Principal
+
+
 from pylib.ic_deployment import IcDeployment
 from pylib.ic_utils import download_ic_executable
+
+GOV_PRINCIPAL = "rrkah-fqaaa-aaaaa-aaaaq-cai"
 
 
 class IcAdmin:
     """Interface with the ic-admin utility."""
 
-    def __init__(self, deployment: typing.Optional[IcDeployment] = None, git_revision: str = ""):
+    def __init__(self, deployment: typing.Optional[IcDeployment | str] = None, git_revision: str = ""):
         """Create an object with the specified ic-admin path and NNS URL."""
-        if git_revision:
-            self.ic_admin_path = download_ic_executable(git_revision=git_revision, executable_name="ic-admin")
-        else:
-            self.ic_admin_path = pathlib.Path("ic-admin")
-        if not deployment:
+        if isinstance(deployment, str):
+            self.nns_url = deployment
+        elif not deployment:
             deployment = IcDeployment("mainnet")
-        self.deployment = deployment
-        self.nns_url = deployment.get_nns_url()
+            self.deployment = deployment
+            self.nns_url = deployment.get_nns_url()
+        if not git_revision:
+            agent = Agent(Identity(), Client(self.nns_url))
+            git_revision = canister_version(agent, GOV_PRINCIPAL)
+        self.ic_admin_path = download_ic_executable(git_revision=git_revision, executable_name="ic-admin")
 
     @retry(
         reraise=True,
@@ -113,7 +124,22 @@ class IcAdmin:
         self._ic_admin_run("get-subnet-public-key", "0", out_filename)
 
 
+def canister_version(agent: Agent, canister_principal: str) -> str:
+    """Get the canister version."""
+    paths = [
+        "canister".encode(),
+        Principal.from_str(canister_principal).bytes,
+        "metadata".encode(),
+        "git_commit_id".encode(),
+    ]
+    tree = agent.read_state_raw(canister_principal, [paths])
+    response = lookup(paths, tree)
+    version = response.decode("utf-8").rstrip("\n")
+    return version
+
+
 if __name__ == "__main__":
     # One can run some simple one-off tests here, e.g.:
     ic_admin = IcAdmin()
+
     print(ic_admin.get_subnet_replica_versions())
