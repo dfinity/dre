@@ -37,6 +37,7 @@ matplotlib = "^3.8.2"
 ipython = "^8.21.0"
 mkdocs-git-revision-date-localized-plugin = "^1.2.4"
 mkdocs-git-committers-plugin-2 = "^2.2.3"
+python-changelog = "^0.3.3"
 
 
 [tool.poetry.group.dev.dependencies]
