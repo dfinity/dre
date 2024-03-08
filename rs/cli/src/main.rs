@@ -36,7 +36,16 @@ async fn main() -> Result<(), anyhow::Error> {
     let mut cli_opts = cli::Opts::parse();
     let mut cmd = cli::Opts::command();
 
-    let governance_canister_v = governance_canister_version(cli_opts.network.get_url()).await?;
+    let governance_canister_v = match governance_canister_version(cli_opts.network.get_url()).await {
+        Ok(c) => c,
+        Err(e) => {
+            return Err(anyhow::anyhow!(
+                "While determining the governance canister version: {}",
+                e
+            ))
+        }
+    };
+
     let governance_canister_version = governance_canister_v.stringified_hash;
 
     let target_network = cli_opts.network.clone();
@@ -52,9 +61,10 @@ async fn main() -> Result<(), anyhow::Error> {
                 .expect("failed")
         });
     });
+
     let srv = rx.recv().unwrap();
 
-    ic_admin::with_ic_admin(governance_canister_version.into(), async {
+    let r = ic_admin::with_ic_admin(governance_canister_version.into(), async {
 
         // Start of actually doing stuff with commands.
         if cli_opts.network == Network::Staging {
@@ -211,11 +221,12 @@ async fn main() -> Result<(), anyhow::Error> {
                         let release_artifact: &Artifact = &update_command.subcommand.clone().into();
 
                         let update_version = match &update_command.subcommand {
-                            cli::version::UpdateCommands::Replica { version, release_tag} | cli::version::UpdateCommands::HostOS { version, release_tag} => {
+                            cli::version::UpdateCommands::Replica { version, release_tag, force} | cli::version::UpdateCommands::HostOS { version, release_tag, force} => {
                                 ic_admin::IcAdminWrapper::prepare_to_propose_to_update_elected_versions(
                                     release_artifact,
                                     version,
                                     release_tag,
+                                    *force,
                                     runner.prepare_versions_to_retire(release_artifact, false).await.map(|res| res.1)?,
                                 )
                             }
@@ -293,17 +304,21 @@ async fn main() -> Result<(), anyhow::Error> {
                 registry_dump::dump_registry(path, cli_opts.network, version).await
             }
 
-            cli::Commands::Firewall => {
+            cli::Commands::Firewall{title, summary, motivation} => {
                 let ic_admin: IcAdminWrapper = cli::Cli::from_opts(&cli_opts, true).await?.into();
-                ic_admin.update_replica_nodes_firewall(cli_opts.network, cli_opts.simulate).await
+                ic_admin.update_replica_nodes_firewall(cli_opts.network, ic_admin::ProposeOptions{
+                    title: title.clone(),
+                    summary: summary.clone(),
+                    motivation: motivation.clone(),
+                }, cli_opts.simulate).await
             }
         }
     })
-    .await?;
+    .await;
 
     srv.stop(false).await;
 
-    Ok(())
+    r
 }
 
 // Construct MinNakamotoCoefficients from an array (slice) of ["key=value"], and

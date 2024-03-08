@@ -145,7 +145,14 @@ pub(crate) enum Commands {
     },
 
     /// Firewall rules
-    Firewall,
+    Firewall {
+        #[clap(long, default_value = Some("Proposal to modify firewall rules"))]
+        title: Option<String>,
+        #[clap(long, default_value = None)]
+        summary: Option<String>,
+        #[clap(long, default_value = None)]
+        motivation: Option<String>,
+    },
 }
 
 pub(crate) mod subnet {
@@ -286,6 +293,10 @@ pub(crate) mod version {
 
             /// Git tag for the release.
             release_tag: String,
+
+            /// Force proposal submission, ignoring missing download URLs
+            #[clap(long)]
+            force: bool,
         },
         /// Update the elected/blessed HostOS versions in the registry
         /// by adding a new version and potentially removing obsolete versions
@@ -295,6 +306,10 @@ pub(crate) mod version {
 
             /// Git tag for the release.
             release_tag: String,
+
+            /// Force proposal submission, ignoring missing download URLs
+            #[clap(long)]
+            force: bool,
         },
     }
     impl From<UpdateCommands> for Artifact {
