@@ -221,11 +221,12 @@ async fn main() -> Result<(), anyhow::Error> {
                         let release_artifact: &Artifact = &update_command.subcommand.clone().into();
 
                         let update_version = match &update_command.subcommand {
-                            cli::version::UpdateCommands::Replica { version, release_tag} | cli::version::UpdateCommands::HostOS { version, release_tag} => {
+                            cli::version::UpdateCommands::Replica { version, release_tag, force} | cli::version::UpdateCommands::HostOS { version, release_tag, force} => {
                                 ic_admin::IcAdminWrapper::prepare_to_propose_to_update_elected_versions(
                                     release_artifact,
                                     version,
                                     release_tag,
+                                    *force,
                                     runner.prepare_versions_to_retire(release_artifact, false).await.map(|res| res.1)?,
                                 )
                             }

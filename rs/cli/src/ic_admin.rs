@@ -500,6 +500,7 @@ impl IcAdminWrapper {
     async fn download_images_and_validate_sha256(
         image: &Artifact,
         version: &String,
+        ignore_missing_urls: bool,
     ) -> anyhow::Result<(Vec<String>, String)> {
         let update_urls = vec![
             Self::get_s3_cdn_image_url(version, &image.s3_folder()),
@@ -560,7 +561,13 @@ impl IcAdminWrapper {
                 update_urls.join(", ")
             ));
         } else if update_urls.len() == 1 {
-            warn!("Only 1 update image is available. At least 2 should be present in the proposal");
+            if ignore_missing_urls {
+                warn!("Only 1 update image is available. At least 2 should be present in the proposal");
+            } else {
+                return Err(anyhow::anyhow!(
+                    "Only 1 update image is available. At least 2 should be present in the proposal"
+                ));
+            }
         }
         Ok((update_urls, expected_hash))
     }
@@ -569,9 +576,11 @@ impl IcAdminWrapper {
         release_artifact: &Artifact,
         version: &String,
         release_tag: &String,
+        force: bool,
         retire_versions: Option<Vec<String>>,
     ) -> anyhow::Result<UpdateVersion> {
-        let (update_urls, expected_hash) = Self::download_images_and_validate_sha256(release_artifact, version).await?;
+        let (update_urls, expected_hash) =
+            Self::download_images_and_validate_sha256(release_artifact, version, force).await?;
 
         let template = format!(
             r#"Elect new {release_artifact} binary revision [{version}](https://github.com/dfinity/ic/tree/{release_tag})

@@ -293,6 +293,10 @@ pub(crate) mod version {
 
             /// Git tag for the release.
             release_tag: String,
+
+            /// Force proposal submission, ignoring missing download URLs
+            #[clap(long)]
+            force: bool,
         },
         /// Update the elected/blessed HostOS versions in the registry
         /// by adding a new version and potentially removing obsolete versions
@@ -302,6 +306,10 @@ pub(crate) mod version {
 
             /// Git tag for the release.
             release_tag: String,
+
+            /// Force proposal submission, ignoring missing download URLs
+            #[clap(long)]
+            force: bool,
         },
     }
     impl From<UpdateCommands> for Artifact {
