@@ -6,7 +6,7 @@ load("@rules_rust//rust:defs.bzl", "rust_binary")
 DEPS = [
     "//rs/ic-observability/service-discovery",
     "//rs/ic-management-types",
-]
+    "//rs/ic-management-backend:ic-management-backend-lib",]
 
 
 rust_binary(
