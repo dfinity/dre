@@ -44,7 +44,7 @@ async-recursion = "1.0.5"
 async-timer = "0.7.4"
 async-trait = "0.1.53"
 backoff = { version = "0.4.0", features = ["tokio"] }
-backon = "0.4.1"
+backon = "0.4.3"
 candid = "0.9.11"
 chrono = { version = "0.4.34", features = ["serde"] }
 clap-num = "1.0.0"
