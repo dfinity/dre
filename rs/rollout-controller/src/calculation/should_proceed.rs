@@ -1,4 +1,4 @@
-use chrono::{Local, NaiveDate};
+use chrono::NaiveDate;
 
 use super::Index;
 
@@ -19,6 +19,8 @@ pub fn should_proceed(index: &Index, today: NaiveDate) -> bool {
 #[cfg(test)]
 mod should_proceed_tests {
     use std::str::FromStr;
+
+    use chrono::Local;
 
     use crate::calculation::Rollout;
 

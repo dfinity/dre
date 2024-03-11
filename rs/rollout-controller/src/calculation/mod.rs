@@ -1,4 +1,4 @@
-use std::time::Duration;
+use std::{collections::BTreeMap, time::Duration};
 
 use crate::calculation::should_proceed::should_proceed;
 use chrono::{Local, NaiveDate};
@@ -7,10 +7,14 @@ use prometheus_http_query::Client;
 use serde::Deserialize;
 use slog::{info, Logger};
 
-use self::current_release_finder::find_latest_release;
+use self::{
+    release_actions::{create_current_release_feature_spec, find_latest_release},
+    stage_checks::check_stages,
+};
 
-mod current_release_finder;
+mod release_actions;
 mod should_proceed;
+mod stage_checks;
 
 #[derive(Deserialize, Clone, Default)]
 pub struct Index {
@@ -56,15 +60,59 @@ pub struct Version {
 pub async fn calculate_progress(
     logger: &Logger,
     index: Index,
-    _prometheus_client: &Client,
-    _registry_state: RegistryState,
+    prometheus_client: &Client,
+    registry_state: RegistryState,
 ) -> anyhow::Result<Vec<String>> {
     if !should_proceed(&index, Local::now().to_utc().date_naive()) {
         info!(logger, "Rollout controller paused or should skip this day.");
         return Ok(vec![]);
     }
 
-    let _latest_release = find_latest_release(&index)?;
+    let latest_release = find_latest_release(&index)?;
+    let elected_versions = registry_state.get_blessed_replica_versions().await?;
 
-    Ok(vec![])
+    let (current_version, current_feature_spec) =
+        create_current_release_feature_spec(&latest_release, elected_versions)
+            .map_err(|e| anyhow::anyhow!(e.to_string()))?;
+
+    let mut last_bake_status: BTreeMap<String, f64> = BTreeMap::new();
+    let result = prometheus_client
+        .query(
+            r#"
+                time() - max(last_over_time(
+                    (timestamp(
+                        sum by(ic_active_version,ic_subnet) (ic_replica_info)
+                    ))[21d:1m]
+                ) unless (sum by (ic_active_version, ic_subnet) (ic_replica_info))) by (ic_subnet)
+                "#,
+        )
+        .get()
+        .await?;
+
+    let last = match result.data().clone().into_vector().into_iter().last() {
+        Some(data) => data,
+        None => return Err(anyhow::anyhow!("There should be data regarding ic_replica_info")),
+    };
+
+    for vector in last.iter() {
+        let subnet = vector.metric().get("ic_subnet").expect("To have ic_subnet key");
+        let last_update = vector.sample().value();
+        last_bake_status.insert(subnet.to_string(), last_update);
+    }
+
+    let subnet_update_proposals = registry_state.open_subnet_upgrade_proposals().await?;
+    let unassigned_nodes_version = registry_state.get_unassigned_nodes_replica_version().await?;
+
+    let actions = check_stages(
+        &current_version,
+        current_feature_spec,
+        last_bake_status,
+        subnet_update_proposals,
+        &index.rollout.stages,
+        Some(&logger),
+        &unassigned_nodes_version,
+        &registry_state.subnets().into_values().collect(),
+    )?;
+
+    Ok(actions)
 }
