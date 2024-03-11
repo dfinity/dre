@@ -1,5 +1,5 @@
 {
-  "checksum": "4218a3a0b99f7fd1793172866779a8b0c99c41a0694d14cc5f341d7525dc0a40",
+  "checksum": "94ffc0c7cde9267f85fd498a75116124c116b3062440be99519b5c1ff4eece59",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -2445,13 +2445,13 @@
       },
       "license": "Apache-2.0 OR MIT"
     },
-    "async-io 2.3.1": {
+    "async-io 2.3.2": {
       "name": "async-io",
-      "version": "2.3.1",
+      "version": "2.3.2",
       "repository": {
         "Http": {
-          "url": "https://crates.io/api/v1/crates/async-io/2.3.1/download",
-          "sha256": "8f97ab0c5b00a7cdbe5a371b9a782ee7be1316095885c8a4ea1daf490eb0ef65"
+          "url": "https://crates.io/api/v1/crates/async-io/2.3.2/download",
+          "sha256": "dcccb0f599cfa2f8ace422d3555572f47424da5648a4382a9dd0310ff8210884"
         }
       },
       "targets": [
@@ -2523,7 +2523,7 @@
           }
         },
         "edition": "2021",
-        "version": "2.3.1"
+        "version": "2.3.2"
       },
       "license": "Apache-2.0 OR MIT"
     },
@@ -2782,7 +2782,7 @@
           "selects": {
             "cfg(unix)": [
               {
-                "id": "async-io 2.3.1",
+                "id": "async-io 2.3.2",
                 "target": "async_io"
               },
               {
@@ -3400,7 +3400,7 @@
               "target": "serde_json"
             },
             {
-              "id": "serde_path_to_error 0.1.15",
+              "id": "serde_path_to_error 0.1.16",
               "target": "serde_path_to_error"
             },
             {
@@ -3832,13 +3832,13 @@
       },
       "license": "MIT/Apache-2.0"
     },
-    "backon 0.4.2": {
+    "backon 0.4.3": {
       "name": "backon",
-      "version": "0.4.2",
+      "version": "0.4.3",
       "repository": {
         "Http": {
-          "url": "https://crates.io/api/v1/crates/backon/0.4.2/download",
-          "sha256": "c79c8ef183b8b663e8cb19cf92fb7d98c56739977bd47eae2de2717bd5de2c2c"
+          "url": "https://crates.io/api/v1/crates/backon/0.4.3/download",
+          "sha256": "c491fa80d69c03084223a4e73c378dd9f9a1e612eb54051213f88b2d5249b458"
         }
       },
       "targets": [
@@ -3879,7 +3879,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.4.2"
+        "version": "0.4.3"
       },
       "license": "Apache-2.0"
     },
@@ -6334,7 +6334,7 @@
               "target": "pretty_env_logger"
             },
             {
-              "id": "reqwest 0.11.24",
+              "id": "reqwest 0.11.25",
               "target": "reqwest"
             },
             {
@@ -7757,7 +7757,7 @@
               "target": "crossbeam_channel"
             },
             {
-              "id": "erased-serde 0.4.3",
+              "id": "erased-serde 0.4.4",
               "target": "erased_serde"
             },
             {
@@ -11665,7 +11665,7 @@
               "target": "registry_canister"
             },
             {
-              "id": "reqwest 0.11.24",
+              "id": "reqwest 0.11.25",
               "target": "reqwest"
             },
             {
@@ -12527,13 +12527,13 @@
       },
       "license": "MIT OR Apache-2.0"
     },
-    "erased-serde 0.4.3": {
+    "erased-serde 0.4.4": {
       "name": "erased-serde",
-      "version": "0.4.3",
+      "version": "0.4.4",
       "repository": {
         "Http": {
-          "url": "https://crates.io/api/v1/crates/erased-serde/0.4.3/download",
-          "sha256": "388979d208a049ffdfb22fa33b9c81942215b940910bccfe258caeb25d125cb3"
+          "url": "https://crates.io/api/v1/crates/erased-serde/0.4.4/download",
+          "sha256": "2b73807008a3c7f171cc40312f37d95ef0396e048b5848d775f54b1a4dd4a0d3"
         }
       },
       "targets": [
@@ -12570,7 +12570,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.4.3"
+        "version": "0.4.4"
       },
       "license": "MIT OR Apache-2.0"
     },
@@ -14608,7 +14608,7 @@
               "target": "percent_encoding"
             },
             {
-              "id": "reqwest 0.11.24",
+              "id": "reqwest 0.11.25",
               "target": "reqwest"
             },
             {
@@ -17069,7 +17069,7 @@
               "target": "rangemap"
             },
             {
-              "id": "reqwest 0.11.24",
+              "id": "reqwest 0.11.25",
               "target": "reqwest"
             },
             {
@@ -21625,7 +21625,7 @@
               "target": "anyhow"
             },
             {
-              "id": "backon 0.4.2",
+              "id": "backon 0.4.3",
               "target": "backon"
             },
             {
@@ -21773,7 +21773,7 @@
               "target": "registry_canister"
             },
             {
-              "id": "reqwest 0.11.24",
+              "id": "reqwest 0.11.25",
               "target": "reqwest"
             },
             {
@@ -21897,7 +21897,7 @@
               "target": "registry_canister"
             },
             {
-              "id": "reqwest 0.11.24",
+              "id": "reqwest 0.11.25",
               "target": "reqwest"
             },
             {
@@ -28462,7 +28462,7 @@
               "target": "pretty_env_logger"
             },
             {
-              "id": "reqwest 0.11.24",
+              "id": "reqwest 0.11.25",
               "target": "reqwest"
             },
             {
@@ -29417,7 +29417,7 @@
               "target": "crossbeam_channel"
             },
             {
-              "id": "erased-serde 0.4.3",
+              "id": "erased-serde 0.4.4",
               "target": "erased_serde"
             },
             {
@@ -29514,7 +29514,7 @@
               "target": "flate2"
             },
             {
-              "id": "reqwest 0.11.24",
+              "id": "reqwest 0.11.25",
               "target": "reqwest"
             },
             {
@@ -29582,7 +29582,7 @@
               "target": "regex"
             },
             {
-              "id": "reqwest 0.11.24",
+              "id": "reqwest 0.11.25",
               "target": "reqwest"
             },
             {
@@ -29636,7 +29636,7 @@
         "deps": {
           "common": [
             {
-              "id": "erased-serde 0.4.3",
+              "id": "erased-serde 0.4.4",
               "target": "erased_serde"
             },
             {
@@ -30155,7 +30155,7 @@
               "target": "rand"
             },
             {
-              "id": "reqwest 0.11.24",
+              "id": "reqwest 0.11.25",
               "target": "reqwest"
             },
             {
@@ -34987,7 +34987,7 @@
               "target": "mime"
             },
             {
-              "id": "reqwest 0.11.24",
+              "id": "reqwest 0.11.25",
               "target": "reqwest"
             },
             {
@@ -36483,13 +36483,13 @@
       },
       "license": "MIT"
     },
-    "reqwest 0.11.24": {
+    "reqwest 0.11.25": {
       "name": "reqwest",
-      "version": "0.11.24",
+      "version": "0.11.25",
       "repository": {
         "Http": {
-          "url": "https://crates.io/api/v1/crates/reqwest/0.11.24/download",
-          "sha256": "c6920094eb85afde5e4a138be3f2de8bbdf28000f0029e72c45025a56b042251"
+          "url": "https://crates.io/api/v1/crates/reqwest/0.11.25/download",
+          "sha256": "0eea5a9eb898d3783f17c6407670e3592fd174cb81a10e51d4c37f49450b9946"
         }
       },
       "targets": [
@@ -36687,7 +36687,7 @@
             ],
             "cfg(target_os = \"macos\")": [
               {
-                "id": "system-configuration 0.5.1",
+                "id": "system-configuration 0.6.0",
                 "target": "system_configuration"
               }
             ],
@@ -36699,8 +36699,8 @@
             ]
           }
         },
-        "edition": "2018",
-        "version": "0.11.24"
+        "edition": "2021",
+        "version": "0.11.25"
       },
       "license": "MIT OR Apache-2.0"
     },
@@ -38994,13 +38994,13 @@
       },
       "license": "MIT OR Apache-2.0"
     },
-    "serde_path_to_error 0.1.15": {
+    "serde_path_to_error 0.1.16": {
       "name": "serde_path_to_error",
-      "version": "0.1.15",
+      "version": "0.1.16",
       "repository": {
         "Http": {
-          "url": "https://crates.io/api/v1/crates/serde_path_to_error/0.1.15/download",
-          "sha256": "ebd154a240de39fdebcf5775d2675c204d7c13cf39a4c697be6493c8e734337c"
+          "url": "https://crates.io/api/v1/crates/serde_path_to_error/0.1.16/download",
+          "sha256": "af99884400da37c88f5e9146b7f1fd0fbcae8f6eec4e9da38b67d05486f814a6"
         }
       },
       "targets": [
@@ -39033,7 +39033,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.1.15"
+        "version": "0.1.16"
       },
       "license": "MIT OR Apache-2.0"
     },
@@ -40152,7 +40152,7 @@
               "target": "registry_canister"
             },
             {
-              "id": "reqwest 0.11.24",
+              "id": "reqwest 0.11.25",
               "target": "reqwest"
             },
             {
@@ -40641,7 +40641,7 @@
               "target": "regex"
             },
             {
-              "id": "reqwest 0.11.24",
+              "id": "reqwest 0.11.25",
               "target": "reqwest"
             },
             {
@@ -41709,13 +41709,13 @@
       },
       "license": "MIT"
     },
-    "system-configuration 0.5.1": {
+    "system-configuration 0.6.0": {
       "name": "system-configuration",
-      "version": "0.5.1",
+      "version": "0.6.0",
       "repository": {
         "Http": {
-          "url": "https://crates.io/api/v1/crates/system-configuration/0.5.1/download",
-          "sha256": "ba3a3adc5c275d719af8cb4272ea1c4a6d668a777f37e115f6d11ddbc1c8e0e7"
+          "url": "https://crates.io/api/v1/crates/system-configuration/0.6.0/download",
+          "sha256": "658bc6ee10a9b4fcf576e9b0819d95ec16f4d2c02d39fd83ac1c8789785c4a42"
         }
       },
       "targets": [
@@ -41737,7 +41737,7 @@
         "deps": {
           "common": [
             {
-              "id": "bitflags 1.3.2",
+              "id": "bitflags 2.4.2",
               "target": "bitflags"
             },
             {
@@ -41745,24 +41745,24 @@
               "target": "core_foundation"
             },
             {
-              "id": "system-configuration-sys 0.5.0",
+              "id": "system-configuration-sys 0.6.0",
               "target": "system_configuration_sys"
             }
           ],
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.5.1"
+        "version": "0.6.0"
       },
       "license": "MIT OR Apache-2.0"
     },
-    "system-configuration-sys 0.5.0": {
+    "system-configuration-sys 0.6.0": {
       "name": "system-configuration-sys",
-      "version": "0.5.0",
+      "version": "0.6.0",
       "repository": {
         "Http": {
-          "url": "https://crates.io/api/v1/crates/system-configuration-sys/0.5.0/download",
-          "sha256": "a75fb188eb626b924683e3b95e3a48e63551fcfb51949de2f06a9d91dbee93c9"
+          "url": "https://crates.io/api/v1/crates/system-configuration-sys/0.6.0/download",
+          "sha256": "8e1d1b10ced5ca923a1fcb8d03e96b8d3268065d724548c0211415ff6ac6bac4"
         }
       },
       "targets": [
@@ -41801,14 +41801,14 @@
               "target": "libc"
             },
             {
-              "id": "system-configuration-sys 0.5.0",
+              "id": "system-configuration-sys 0.6.0",
               "target": "build_script_build"
             }
           ],
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.5.0"
+        "version": "0.6.0"
       },
       "build_script_attrs": {
         "data_glob": [
