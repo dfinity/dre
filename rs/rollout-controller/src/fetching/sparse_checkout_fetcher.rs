@@ -8,7 +8,7 @@ use tokio::{
     process::Command,
 };
 
-use crate::rollout_schedule::Index;
+use crate::calculation::Index;
 
 use super::RolloutScheduleFetcher;
 

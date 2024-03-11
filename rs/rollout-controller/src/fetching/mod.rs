@@ -1,6 +1,6 @@
 use slog::Logger;
 
-use crate::{rollout_schedule::Index, Commands};
+use crate::{calculation::Index, Commands};
 
 use self::{
     curl_fetcher::{CurlFetcher, CurlFetcherConfig},

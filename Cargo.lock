@@ -7408,6 +7408,7 @@ dependencies = [
  "ic-registry-keys",
  "ic-registry-local-registry",
  "prometheus-http-query",
+ "regex",
  "reqwest",
  "serde",
  "serde_json",

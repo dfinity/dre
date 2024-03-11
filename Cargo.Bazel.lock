@@ -1,5 +1,5 @@
 {
-  "checksum": "f592b7f11408309a32e1101beaa290cf3b72fc911291d8bae0589e0655ec91d4",
+  "checksum": "1752fa655d1b64c6a41f586b4679a9dc4e0ebd622211e259c04151e41d5a3edd",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -37223,6 +37223,10 @@
             {
               "id": "prometheus-http-query 0.8.2",
               "target": "prometheus_http_query"
+            },
+            {
+              "id": "regex 1.10.3",
+              "target": "regex"
             },
             {
               "id": "reqwest 0.11.24",

@@ -35,7 +35,7 @@ impl CurlFetcher {
 }
 
 impl RolloutScheduleFetcher for CurlFetcher {
-    async fn fetch(&self) -> anyhow::Result<crate::rollout_schedule::Index> {
+    async fn fetch(&self) -> anyhow::Result<crate::calculation::Index> {
         debug!(self.logger, "Fetching rollout index");
 
         let response = self

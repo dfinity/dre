@@ -10,11 +10,11 @@ use tokio::select;
 use tokio_util::sync::CancellationToken;
 use url::Url;
 
-use crate::{registry_wrappers::sync_wrap, rollout_schedule::calculate_progress};
+use crate::{calculation::calculate_progress, registry_wrappers::sync_wrap};
 
+mod calculation;
 mod fetching;
 mod registry_wrappers;
-mod rollout_schedule;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
