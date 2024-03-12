@@ -3,13 +3,14 @@ use std::{collections::BTreeMap, time::Duration};
 use crate::calculation::should_proceed::should_proceed;
 use chrono::{Local, NaiveDate};
 use ic_management_backend::registry::RegistryState;
+use ic_management_types::Subnet;
 use prometheus_http_query::Client;
 use serde::Deserialize;
 use slog::{info, Logger};
 
 use self::{
     release_actions::{create_current_release_feature_spec, find_latest_release},
-    stage_checks::check_stages,
+    stage_checks::{check_stages, SubnetAction},
 };
 
 mod release_actions;
@@ -57,12 +58,12 @@ pub struct Version {
     pub subnets: Vec<String>,
 }
 
-pub async fn calculate_progress(
-    logger: &Logger,
+pub async fn calculate_progress<'a>(
+    logger: &'a Logger,
     index: Index,
-    prometheus_client: &Client,
+    prometheus_client: &'a Client,
     registry_state: RegistryState,
-) -> anyhow::Result<Vec<String>> {
+) -> anyhow::Result<Vec<SubnetAction>> {
     if !should_proceed(&index, Local::now().to_utc().date_naive()) {
         info!(logger, "Rollout controller paused or should skip this day.");
         return Ok(vec![]);
@@ -105,13 +106,13 @@ pub async fn calculate_progress(
 
     let actions = check_stages(
         &current_version,
-        current_feature_spec,
-        last_bake_status,
-        subnet_update_proposals,
+        &current_feature_spec,
+        &last_bake_status,
+        &subnet_update_proposals,
         &index.rollout.stages,
         Some(&logger),
         &unassigned_nodes_version,
-        &registry_state.subnets().into_values().collect(),
+        &registry_state.subnets().into_values().collect::<Vec<Subnet>>(),
     )?;
 
     Ok(actions)
