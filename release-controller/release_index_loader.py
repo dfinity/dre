@@ -12,6 +12,21 @@ from publish_notes import REPLICA_RELEASES_DIR
 RELEASE_INDEX_FILE = "release-index.yaml"
 
 
+def _verify_release_instructions(version):
+    return f"""
+# IC-OS Verification
+
+To build and verify the IC-OS disk image, run:
+
+```
+# From https://github.com/dfinity/ic#verifying-releases
+sudo apt-get install -y curl && curl --proto '=https' --tlsv1.2 -sSLO https://raw.githubusercontent.com/dfinity/ic/{version}/gitlab-ci/tools/repro-check.sh && chmod +x repro-check.sh && ./repro-check.sh -c {version}
+```
+
+The two SHA256 sums printed above from a) the downloaded CDN image and b) the locally built image, must be identical, and must match the SHA256 from the payload of the NNS proposal.
+"""
+
+
 class ReleaseLoader:
     def __init__(self, release_index_dir: pathlib.Path):
         self.release_index_dir = release_index_dir
@@ -22,7 +37,8 @@ class ReleaseLoader:
     def changelog(self, version: str) -> str | None:
         version_changelog_path = self.release_index_dir / f"{REPLICA_RELEASES_DIR}/{version}.md"
         if version_changelog_path.exists():
-            return open(version_changelog_path, "r").read()
+            return open(version_changelog_path, "r").read() + _verify_release_instructions(version)
+
         return None
 
 
@@ -53,14 +69,14 @@ class GitReleaseLoader(ReleaseLoader):
 
 
 class StaticReleaseLoader(ReleaseLoader):
-    def __init__(self, config):
+    def __init__(self, config, changelogs: dict[str, str] = {}):
         self.tempdir = tempfile.TemporaryDirectory()
         super().__init__(pathlib.Path(self.tempdir.name))
-        self.overwrite_config(config)
-
-    def overwrite_config(self, config):
         with open(self.release_index_dir / RELEASE_INDEX_FILE, "w") as f:
             f.write(config)
+        for v, changelog in changelogs.items():
+            with open(self.release_index_dir / f"{v}.md", "w") as f:
+                f.write(changelog)
 
     def __del__(self):
         self.tempdir.cleanup()

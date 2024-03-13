@@ -1,5 +1,7 @@
 import pytest
-from reconciler import Reconciler
+import tempfile
+import pathlib
+from reconciler import Reconciler, ReconcilerState
 from mock_discourse import DiscourseClientMock
 from mock_google_docs import ReleaseNotesClientMock
 from forum import ReleaseCandidateForumClient
@@ -8,9 +10,18 @@ from publish_notes import PublishNotesClient
 from github import Github
 
 
-def test_create_release_notes_on_new_release(mocker):
+class TestReconcilerState(ReconcilerState):
+    def __init__(self):
+        self.tempdir = tempfile.TemporaryDirectory()
+        super().__init__(pathlib.Path(self.tempdir.name))
+
+    def __del__(self):
+        self.tempdir.cleanup()
+
+
+def test_e2e_mock_new_release(mocker):
     """
-    Test that when the new release is added to the index, reconciler creates release notes for engineers to edit
+    Test the workflow when a new release is added to the index
     """
 
     discourse_client = DiscourseClientMock()
@@ -35,6 +46,8 @@ releases:
         notes_client=notes_client,
         loader=StaticReleaseLoader(config),
         publish_client=PublishNotesClient(repo),
+        nns_url="",
+        state=TestReconcilerState(),
     )
     mocker.patch.object(reconciler.publish_client, "ensure_published")
 
@@ -45,8 +58,8 @@ releases:
 
     reconciler.reconcile()
 
-    created = notes_client.markdown_file("2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f")
-    assert "TODO:" == created
+    created_changelog = notes_client.markdown_file("2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f")
+    assert "TODO:" == created_changelog
     assert discourse_client.created_posts == []
     assert discourse_client.created_topics == []
     assert reconciler.publish_client.ensure_published.call_count == 0
@@ -74,8 +87,42 @@ releases:
     assert discourse_client.created_posts == []
     assert discourse_client.created_topics == []
 
-    # TODO: mock file is merged into main
+    # Changelog merged into main
+    mocker.patch.object(reconciler.publish_client, "ensure_published")
+    mocker.patch.object(
+        reconciler.governance_canister,
+        "replica_version_proposals",
+        return_value={"2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f": [{"id": 12345}]},
+    )
+    reconciler.loader = StaticReleaseLoader(config, changelogs={"2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f": "TODO:"})
+    reconciler.reconcile()
 
+    # TODO: change to not called
+    # assert reconciler.publish_client.ensure_published.call_count == 0
+    # TODO: posts should be created
+    # TODO: governance canister should be called
+    # TODO: ic-admin should be executed with certain arguments, also with forum link
+    # TODO: forum post should have been updated with proposal linked
+    assert len(discourse_client.created_posts) == 1
+    assert len(discourse_client.created_topics) == 1
+
+
+def test_unelect_versions():
+    {
+  "key": "blessed_replica_versions",
+  "version": 41803,
+  "value": {
+    "blessed_version_ids": [
+      "8d4b6898d878fa3db4028b316b78b469ed29f293",
+      "85bd56a70e55b2cea75cae6405ae11243e5fdad8",
+      "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f",
+      "48da85ee6c03e8c15f3e90b21bf9ccae7b753ee6",
+      "a2cf671f832c36c0153d4960148d3e676659a747",
+      "778d2bb870f858952ca9fbe69324f9864e3cf5e7",
+      "fff20526e154f8b8d24373efd9b50f588d147e91"
+    ]
+  }
+}
 
 def test_do_not_create_release_notes_for_old_releases():
     """

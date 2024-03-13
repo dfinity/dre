@@ -45,6 +45,7 @@ class ReleaseNotesClient:
         )
         gdoc.SetContentString(htmldoc)
         gdoc.Upload()
+        # TODO: send slack notification
         return gdoc
 
     def file(self, version: str):

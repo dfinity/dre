@@ -1,6 +1,7 @@
 import os
 import pathlib
 import subprocess
+from release_index import Release
 
 
 class GitFetcher:
@@ -34,3 +35,29 @@ class GitFetcher:
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
             )
+
+# TODO: test
+def push_release_tag(git: GitFetcher, release: Release):
+    for v in release.versions:
+        subprocess.check_call(
+            [
+                "git",
+                "tag",
+                f"release-{release.rc_name.removeprefix("rc--")}-{v.name}",
+                v.version,
+            ],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            cwd=git.dir,
+        )
+    subprocess.check_call(
+        [
+            "git",
+            "push",
+            "origin"
+            "--tags",
+        ],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        cwd=git.dir,
+    )

@@ -78,7 +78,7 @@ EXCLUDED_TEAMS = set(TEAM_PRETTY_MAP.keys()) - REPLICA_TEAMS
 MAX_OWNERSHIP_AREA = 0.5
 
 max_commits = 1000
-branch = 'master'
+branch = "master"
 
 
 # https://stackoverflow.com/a/34482761
@@ -397,26 +397,22 @@ def release_notes(first_commit, last_commit, rc_name) -> str:
             }
         )
 
-    notes = '''\
+    notes = """\
 # Release Notes for [{rc_name}](https://github.com/dfinity/ic/tree/{rc_name}) ({last_commit})
-Change log since git revision [{first_commit}](https://dashboard.internetcomputer.org/release/{first_commit})
-'''.format(
-            rc_name=rc_name,
-            last_commit=last_commit,
-            first_commit=first_commit,
-        )
+Changelog since git revision [{first_commit}](https://dashboard.internetcomputer.org/release/{first_commit})
+""".format(
+        rc_name=rc_name,
+        last_commit=last_commit,
+        first_commit=first_commit,
+    )
 
     for current_type in sorted(TYPE_PRETTY_MAP, key=lambda x: TYPE_PRETTY_MAP[x][1]):
         if current_type not in change_infos:
             continue
-        notes += '## {0}:\n'.format(
-            TYPE_PRETTY_MAP[current_type][0]
-        )
+        notes += "## {0}:\n".format(TYPE_PRETTY_MAP[current_type][0])
 
         for change in sorted(change_infos[current_type], key=lambda x: ",".join(x["team"])):
-            commit_part = '[`{0}`](https://github.com/dfinity/ic/commit/{0})'.format(
-                change["commit"][:9]
-            )
+            commit_part = "[`{0}`](https://github.com/dfinity/ic/commit/{0})".format(change["commit"][:9])
             team_part = ",".join([TEAM_PRETTY_MAP[team] for team in change["team"]])
             team_part = team_part if team_part else "General"
             scope_part = (
@@ -428,9 +424,7 @@ Change log since git revision [{first_commit}](https://dashboard.internetcompute
             commiter_part = f"<!-- {change['commiter']} -->"
             commiter_part = ""
 
-            text = "{0} {4} {1}{2} {3}".format(
-                commit_part, team_part, scope_part, message_part, commiter_part
-            )
+            text = "{0} {4} {1}{2} {3}".format(commit_part, team_part, scope_part, message_part, commiter_part)
             if not change["included"]:
                 text = "~~{}~~".format(text)
             notes += "* " + text + "\n"

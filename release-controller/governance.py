@@ -28,7 +28,7 @@ class GovernanceCanister:
         version = response.decode("utf-8").rstrip("\n")
         return version
 
-    def replica_version_proposals(self):
+    def replica_version_proposals(self) -> dict[str, int]:
         with tempfile.TemporaryDirectory() as tmpdirname:
             version = self.version()
             governance_did = pathlib.Path(tmpdirname) / "governance.did"
@@ -48,15 +48,15 @@ class GovernanceCanister:
                     "include_all_manage_neuron_proposals": [False],
                 }
             )
+            result = {}
             for p in proposals:
                 proposal_info = p["proposal_info"][0]
                 proposal = proposal_info.get("proposal", [{}])[0]
                 execute_function = proposal.get("action", [{}])[0].get("ExecuteNnsFunction", {})
                 if execute_function.get("nns_function", None) != 38:
-                    print("continuing")
                     continue
 
-                payload = decode(
+                version = decode(
                     bytes(execute_function["payload"]),
                     # TODO: replace with .did parsing. this record type is present in registry.did
                     retTypes=Types.Record(
@@ -68,18 +68,16 @@ class GovernanceCanister:
                             "release_package_sha256_hex": Types.Opt(Types.Text),
                         }
                     ),
-                )
-                yield payload
+                )[0]["value"]["replica_version_to_elect"][0]
+                if version not in result:
+                    result[version] = proposal_info["id"][0]["id"]
+
+            return result
 
 
 def main():
     canister = GovernanceCanister()
-    params = [{"type": Types.Nat, "value": 10}]
-    data = encode(params)
-    print(decode(data))
-    print(data)
-    for p in canister.replica_version_proposals():
-        print(json.dumps(p, indent=2))
+    print(json.dumps(canister.replica_version_proposals(), indent=2))
 
 
 if __name__ == "__main__":

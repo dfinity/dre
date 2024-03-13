@@ -148,8 +148,13 @@ or remove the version?
 
 ### Release is rejected
 
+#### Resubmitting the proposal
+
 TODO:
 
+#### Adjusting the changelog for the next release
+
+TODO:
 
 ## Debugging release / rollout controller
 
