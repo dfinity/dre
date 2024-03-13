@@ -18,6 +18,7 @@ from prometheus import ICPrometheus
 import release_index
 import urllib.request
 import tempfile
+from release_notes import release_notes
 
 
 class ReconcilerState:
@@ -128,13 +129,26 @@ class Reconciler:
     def reconcile(self):
         config = self.loader.index()
         active_versions = self.ic_prometheus.active_versions()
-        for rc in config.root.releases[config.root.releases.index(oldest_active_release(config, active_versions)) :]:
+        for rc_idx, rc in enumerate(
+            config.root.releases[config.root.releases.index(oldest_active_release(config, active_versions)) :]
+        ):
             rc_forum_topic = self.forum_client.get_or_create(rc)
             # update to create posts for any releases
             rc_forum_topic.update(changelog=self.loader.changelog, proposal=self.state.version_proposal)
-            for v in rc.versions:
+            for v_idx, v in enumerate(rc.versions):
                 # TODO: push tag. maybe publish later?
-                self.notes_client.ensure(v.version, "TODO:")
+                self.notes_client.ensure(
+                    version=v.version,
+                    content=release_notes(
+                        first_commit=(
+                            config.root.releases[rc_idx + 1].versions[0].version  # take first version in previous rc
+                            if v_idx == 0
+                            else rc.versions[v_idx - 1].version  # take previous version from same rc
+                        ),
+                        last_commit=v.version,
+                        rc_name=rc.rc_name,
+                    ),
+                )
                 if v.release_notes_ready:
                     changelog = self.notes_client.markdown_file(v.version)
                     if not changelog:
