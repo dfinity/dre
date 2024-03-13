@@ -160,7 +160,8 @@ fn check_stage<'a>(
                 stage_actions.push(SubnetAction::Baking {
                     subnet_short: subnet_short.clone(),
                     remaining: remaining_duration,
-                })
+                });
+                continue;
             }
 
             if let Some(logger) = logger {
@@ -176,7 +177,8 @@ fn check_stage<'a>(
 
             stage_actions.push(SubnetAction::Noop {
                 subnet_short: subnet_short.clone(),
-            })
+            });
+            continue;
         }
 
         // If subnet is not on desired version, check if there is an open proposal
@@ -190,7 +192,8 @@ fn check_stage<'a>(
             stage_actions.push(SubnetAction::PendingProposal {
                 subnet_short: subnet_short.clone(),
                 proposal_id: proposal.info.id,
-            })
+            });
+            continue;
         }
 
         // If subnet is not on desired version and there is no open proposal submit it
@@ -545,6 +548,8 @@ mod check_stages_tests_no_feature_builds {
 
     use candid::Principal;
     use ic_base_types::PrincipalId;
+    use ic_management_backend::proposal::ProposalInfoInternal;
+    use registry_canister::mutations::do_update_subnet_replica::UpdateSubnetReplicaVersionPayload;
 
     use crate::calculation::{Index, Release, Rollout, Version};
 
@@ -674,6 +679,14 @@ mod check_stages_tests_no_feature_builds {
         ]
     }
 
+    fn replace_versions(subnets: &mut Vec<Subnet>, tuples: &[(&str, &str)]) {
+        for (id, ver) in tuples {
+            if let Some(subnet) = subnets.iter_mut().find(|s| s.principal.to_string().contains(id)) {
+                subnet.replica_version = ver.to_string();
+            }
+        }
+    }
+
     /// Use-Case 1: Beginning of a new rollout
     ///
     /// `current_version` - set to a commit that is being rolled out `2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f`
@@ -685,7 +698,7 @@ mod check_stages_tests_no_feature_builds {
     /// `start_of_release` - some `2024-02-21`
     /// `now` - same `2024-02-21`
     #[test]
-    fn test_rollout_beginning() {
+    fn test_use_case_1() {
         let index = craft_index_state();
         let current_version = "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f".to_string();
         let last_bake_status = BTreeMap::new();
@@ -718,13 +731,245 @@ mod check_stages_tests_no_feature_builds {
             match action {
                 SubnetAction::PlaceProposal {
                     is_unassigned,
-                    subnet_principal: _,
+                    subnet_principal,
                     version,
                 } => {
                     assert_eq!(is_unassigned, false);
                     assert_eq!(version, current_version);
+                    assert!(subnet_principal.starts_with("io67a"))
                 }
                 // Fail the test
+                _ => assert!(false),
+            }
+        }
+    }
+
+    /// Use case 2: First batch is submitted but the proposal wasn't executed
+    ///
+    /// `current_version` - set to a commit that is being rolled out `2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f`
+    /// `last_bake_status` - empty, because no subnets have the version
+    /// `subnet_update_proposals` - contains proposals from the first stage
+    /// `unassigned_version` - one from previous week `85bd56a70e55b2cea75cae6405ae11243e5fdad8`
+    /// `subnets` - can be seen in `craft_index_state`
+    /// `start_of_release` - some `2024-02-21`
+    /// `now` - same `2024-02-21`
+    #[test]
+    fn test_use_case_2() {
+        let index = craft_index_state();
+        let current_version = "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f".to_string();
+        let last_bake_status = BTreeMap::new();
+        let subnet_principal = Principal::from_str("io67a-2jmkw-zup3h-snbwi-g6a5n-rm5dn-b6png-lvdpl-nqnto-yih6l-gqe")
+            .expect("Should be possible to create principal");
+        let subnet_update_proposals = vec![SubnetUpdateProposal {
+            info: ProposalInfoInternal {
+                executed: false,
+                executed_timestamp_seconds: 0,
+                proposal_timestamp_seconds: 0,
+                id: 1,
+            },
+            payload: UpdateSubnetReplicaVersionPayload {
+                subnet_id: PrincipalId(subnet_principal.clone()),
+                replica_version_id: "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f".to_string(),
+            },
+        }];
+        let stages = &index.rollout.stages;
+        let unassigned_version = "85bd56a70e55b2cea75cae6405ae11243e5fdad8".to_string();
+        let subnets = &craft_subnets();
+        let current_release_feature_spec = BTreeMap::new();
+        let start_of_release = NaiveDate::parse_from_str("2024-02-21", "%Y-%m-%d").expect("Should parse date");
+        let now = NaiveDate::parse_from_str("2024-02-21", "%Y-%m-%d").expect("Should parse date");
+
+        let maybe_actions = check_stages(
+            &current_version,
+            &current_release_feature_spec,
+            &last_bake_status,
+            &subnet_update_proposals,
+            stages,
+            None,
+            &unassigned_version,
+            subnets,
+            start_of_release,
+            now,
+        );
+
+        assert!(maybe_actions.is_ok());
+        let actions = maybe_actions.unwrap();
+        println!("{:#?}", actions);
+        assert_eq!(actions.len(), 1);
+        for action in actions {
+            match action {
+                SubnetAction::PendingProposal {
+                    subnet_short,
+                    proposal_id,
+                } => {
+                    assert_eq!(proposal_id, 1);
+                    assert!(subnet_principal.to_string().starts_with(&subnet_short))
+                }
+                // Just fail
+                _ => assert!(false),
+            }
+        }
+    }
+
+    /// Use case 3: First batch is submitted the proposal was executed and the subnet is baking
+    ///
+    /// `current_version` - set to a commit that is being rolled out `2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f`
+    /// `last_bake_status` - contains the status for the first subnet
+    /// `subnet_update_proposals` - contains proposals from the first stage
+    /// `unassigned_version` - one from previous week `85bd56a70e55b2cea75cae6405ae11243e5fdad8`
+    /// `subnets` - can be seen in `craft_index_state`
+    /// `start_of_release` - some `2024-02-21`
+    /// `now` - same `2024-02-21`
+    #[test]
+    fn test_use_case_3() {
+        let index = craft_index_state();
+        let current_version = "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f".to_string();
+        let last_bake_status = [(
+            "io67a-2jmkw-zup3h-snbwi-g6a5n-rm5dn-b6png-lvdpl-nqnto-yih6l-gqe",
+            humantime::parse_duration("3h"),
+        )]
+        .iter()
+        .map(|(id, duration)| {
+            (
+                id.to_string(),
+                duration.clone().expect("Should parse duration").as_secs_f64(),
+            )
+        })
+        .collect();
+        let subnet_principal = Principal::from_str("io67a-2jmkw-zup3h-snbwi-g6a5n-rm5dn-b6png-lvdpl-nqnto-yih6l-gqe")
+            .expect("Should be possible to create principal");
+        let subnet_update_proposals = vec![SubnetUpdateProposal {
+            info: ProposalInfoInternal {
+                executed: true,
+                executed_timestamp_seconds: 0,
+                proposal_timestamp_seconds: 0,
+                id: 1,
+            },
+            payload: UpdateSubnetReplicaVersionPayload {
+                subnet_id: PrincipalId(subnet_principal.clone()),
+                replica_version_id: "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f".to_string(),
+            },
+        }];
+        let stages = &index.rollout.stages;
+        let unassigned_version = "85bd56a70e55b2cea75cae6405ae11243e5fdad8".to_string();
+        let mut subnets = craft_subnets();
+        replace_versions(&mut subnets, &[("io67a", "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f")]);
+        let current_release_feature_spec = BTreeMap::new();
+        let start_of_release = NaiveDate::parse_from_str("2024-02-21", "%Y-%m-%d").expect("Should parse date");
+        let now = NaiveDate::parse_from_str("2024-02-21", "%Y-%m-%d").expect("Should parse date");
+
+        let maybe_actions = check_stages(
+            &current_version,
+            &current_release_feature_spec,
+            &last_bake_status,
+            &subnet_update_proposals,
+            stages,
+            None,
+            &unassigned_version,
+            &subnets,
+            start_of_release,
+            now,
+        );
+
+        assert!(maybe_actions.is_ok());
+        let actions = maybe_actions.unwrap();
+        println!("{:#?}", actions);
+        assert_eq!(actions.len(), 1);
+        for action in actions {
+            match action {
+                SubnetAction::Baking {
+                    subnet_short,
+                    remaining,
+                } => {
+                    assert!(subnet_principal.to_string().starts_with(&subnet_short));
+                    assert!(remaining.eq(&humantime::parse_duration("5h").expect("Should parse duration")))
+                }
+                // Just fail
+                _ => assert!(false),
+            }
+        }
+    }
+
+    /// Use case 4: First batch is submitted the proposal was executed and the subnet is baked, placing proposal for next stage
+    ///
+    /// `current_version` - set to a commit that is being rolled out `2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f`
+    /// `last_bake_status` - contains the status for the first subnet
+    /// `subnet_update_proposals` - contains proposals from the first stage
+    /// `unassigned_version` - one from previous week `85bd56a70e55b2cea75cae6405ae11243e5fdad8`
+    /// `subnets` - can be seen in `craft_index_state`
+    /// `start_of_release` - some `2024-02-21`
+    /// `now` - same `2024-02-21`
+    #[test]
+    fn test_use_case_4() {
+        let index = craft_index_state();
+        let current_version = "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f".to_string();
+        let last_bake_status = [(
+            "io67a-2jmkw-zup3h-snbwi-g6a5n-rm5dn-b6png-lvdpl-nqnto-yih6l-gqe",
+            humantime::parse_duration("9h"),
+        )]
+        .iter()
+        .map(|(id, duration)| {
+            (
+                id.to_string(),
+                duration.clone().expect("Should parse duration").as_secs_f64(),
+            )
+        })
+        .collect();
+        let subnet_principal = Principal::from_str("io67a-2jmkw-zup3h-snbwi-g6a5n-rm5dn-b6png-lvdpl-nqnto-yih6l-gqe")
+            .expect("Should be possible to create principal");
+        let subnet_update_proposals = vec![SubnetUpdateProposal {
+            info: ProposalInfoInternal {
+                executed: true,
+                executed_timestamp_seconds: 0,
+                proposal_timestamp_seconds: 0,
+                id: 1,
+            },
+            payload: UpdateSubnetReplicaVersionPayload {
+                subnet_id: PrincipalId(subnet_principal.clone()),
+                replica_version_id: "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f".to_string(),
+            },
+        }];
+        let stages = &index.rollout.stages;
+        let unassigned_version = "85bd56a70e55b2cea75cae6405ae11243e5fdad8".to_string();
+        let mut subnets = craft_subnets();
+        replace_versions(&mut subnets, &[("io67a", "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f")]);
+        let current_release_feature_spec = BTreeMap::new();
+        let start_of_release = NaiveDate::parse_from_str("2024-02-21", "%Y-%m-%d").expect("Should parse date");
+        let now = NaiveDate::parse_from_str("2024-02-21", "%Y-%m-%d").expect("Should parse date");
+
+        let maybe_actions = check_stages(
+            &current_version,
+            &current_release_feature_spec,
+            &last_bake_status,
+            &subnet_update_proposals,
+            stages,
+            None,
+            &unassigned_version,
+            &subnets,
+            start_of_release,
+            now,
+        );
+
+        assert!(maybe_actions.is_ok());
+        let actions = maybe_actions.unwrap();
+        println!("{:#?}", actions);
+        assert_eq!(actions.len(), 2);
+        let subnets = vec![
+            "shefu-t3kr5-t5q3w-mqmdq-jabyv-vyvtf-cyyey-3kmo4-toyln-emubw-4qe",
+            "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
+        ];
+        for action in actions {
+            match action {
+                SubnetAction::PlaceProposal {
+                    is_unassigned,
+                    subnet_principal,
+                    version,
+                } => {
+                    assert_eq!(is_unassigned, false);
+                    assert_eq!(version, current_version);
+                    assert!(subnets.contains(&subnet_principal.as_str()))
+                }
+                // Just fail
                 _ => assert!(false),
             }
         }
