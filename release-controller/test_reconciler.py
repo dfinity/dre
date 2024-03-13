@@ -1,13 +1,17 @@
+from unittest.mock import Mock, call
 import pytest
 import tempfile
 import pathlib
-from reconciler import Reconciler, ReconcilerState
+from reconciler import Reconciler, ReconcilerState, oldest_active_release, versions_to_unelect, version_package_checksum
 from mock_discourse import DiscourseClientMock
 from mock_google_docs import ReleaseNotesClientMock
 from forum import ReleaseCandidateForumClient
 from release_index_loader import StaticReleaseLoader
 from publish_notes import PublishNotesClient
 from github import Github
+from pydantic_yaml import parse_yaml_raw_as
+import release_index
+import urllib.request
 
 
 class TestReconcilerState(ReconcilerState):
@@ -38,7 +42,7 @@ releases:
   - rc_name: rc--2024-02-21_23-01
     versions:
       - version: 2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f
-        name: rc--2024-02-21_23-01
+        name: default
         release_notes_ready: false
 """
     reconciler = Reconciler(
@@ -72,7 +76,7 @@ releases:
   - rc_name: rc--2024-02-21_23-01
     versions:
       - version: 2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f
-        name: rc--2024-02-21_23-01
+        name: default
         release_notes_ready: true
 """
     reconciler.loader = StaticReleaseLoader(config)
@@ -107,72 +111,161 @@ releases:
     assert len(discourse_client.created_topics) == 1
 
 
-def test_unelect_versions():
-    {
-  "key": "blessed_replica_versions",
-  "version": 41803,
-  "value": {
-    "blessed_version_ids": [
-      "8d4b6898d878fa3db4028b316b78b469ed29f293",
-      "85bd56a70e55b2cea75cae6405ae11243e5fdad8",
-      "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f",
-      "48da85ee6c03e8c15f3e90b21bf9ccae7b753ee6",
-      "a2cf671f832c36c0153d4960148d3e676659a747",
-      "778d2bb870f858952ca9fbe69324f9864e3cf5e7",
-      "fff20526e154f8b8d24373efd9b50f588d147e91"
+def test_versions_to_unelect():
+    index = parse_yaml_raw_as(
+        release_index.Model,
+        """
+rollout:
+  stages: []
+
+releases:
+  - rc_name: rc--2024-02-21_23-01
+    versions:
+      - version: 2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f
+        name: default
+        release_notes_ready: true
+  - rc_name: rc--2024-02-14_23-01
+    versions:
+      - version: 31e9076fb99dfc36eb27fb3a2edc68885e6163ac
+        name: default
+        release_notes_ready: true
+      - version: 799e8401952ae9188242585cb9d52e19a8296a71
+        name: hotfix
+        release_notes_ready: true
+  - rc_name: rc--2024-02-07_23-01
+    versions:
+      - version: db583db46f0894d35bcbcfdea452d93abdadd8a6
+        name: default
+        release_notes_ready: true
+""",
+    )
+
+    assert versions_to_unelect(
+        index,
+        active_versions=["2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f"],
+        elected_versions=[
+            "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f",
+            "31e9076fb99dfc36eb27fb3a2edc68885e6163ac",
+            "799e8401952ae9188242585cb9d52e19a8296a71",
+            "db583db46f0894d35bcbcfdea452d93abdadd8a6",
+        ],
+    ) == [
+        "31e9076fb99dfc36eb27fb3a2edc68885e6163ac",
+        "799e8401952ae9188242585cb9d52e19a8296a71",
+        "db583db46f0894d35bcbcfdea452d93abdadd8a6",
     ]
-  }
-}
-
-def test_do_not_create_release_notes_for_old_releases():
-    """
-    Test that when the new release is added to the index, reconciler doesn't
-    """
-
-
-def test_elect_version():
-    """
-    Test that when the new release is added to the index, reconciler doesn't
-    """
-
-
-def test_do_no_elect_version_for_old_retired_releases():
-    """
-    Test that when the new release notes are added to the repo, reconciler doesn't re-elect versions that have since been retired
-    """
-
-
-def test_forum_post_is_updated_after_electing_new_version():
-    """
-    Test that when the new release is proposed, reconciler updates forum post description
-    """
-
-
-def test_adding_hotfix_for_last_two_releases():
-    """
-    Test adding a hotfix version to both releases works properly
-    """
+    assert versions_to_unelect(
+        index,
+        active_versions=["31e9076fb99dfc36eb27fb3a2edc68885e6163ac", "799e8401952ae9188242585cb9d52e19a8296a71"],
+        elected_versions=[
+            "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f",
+            "31e9076fb99dfc36eb27fb3a2edc68885e6163ac",
+            "799e8401952ae9188242585cb9d52e19a8296a71",
+            "db583db46f0894d35bcbcfdea452d93abdadd8a6",
+        ],
+    ) == [
+        "db583db46f0894d35bcbcfdea452d93abdadd8a6",
+    ]
+    assert versions_to_unelect(
+        index,
+        active_versions=["799e8401952ae9188242585cb9d52e19a8296a71"],
+        elected_versions=[
+            "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f",
+            "31e9076fb99dfc36eb27fb3a2edc68885e6163ac",
+            "799e8401952ae9188242585cb9d52e19a8296a71",
+            "db583db46f0894d35bcbcfdea452d93abdadd8a6",
+        ],
+    ) == [
+        "db583db46f0894d35bcbcfdea452d93abdadd8a6",
+    ]
 
 
-def test_forum_updates_when_versions_are_ready_out_of_order():
-    """
-    Test that versions are elected in order. This is important because forum posts on the topic need to be ordered in the same way.
-    """
+def test_oldest_active_release():
+    index = parse_yaml_raw_as(
+        release_index.Model,
+        """
+rollout:
+  stages: []
+
+releases:
+  - rc_name: rc--2024-02-21_23-01
+    versions:
+      - version: 2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f
+        name: default
+        release_notes_ready: true
+  - rc_name: rc--2024-02-14_23-01
+    versions:
+      - version: 31e9076fb99dfc36eb27fb3a2edc68885e6163ac
+        name: default
+        release_notes_ready: true
+  - rc_name: rc--2024-02-07_23-01
+    versions:
+      - version: db583db46f0894d35bcbcfdea452d93abdadd8a6
+        name: default
+        release_notes_ready: true
+""",
+    )
+
+    assert (
+        oldest_active_release(index, active_versions=["2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f"]).rc_name
+        == "rc--2024-02-21_23-01"
+    )
+    assert (
+        oldest_active_release(
+            index,
+            active_versions=["2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f", "31e9076fb99dfc36eb27fb3a2edc68885e6163ac"],
+        ).rc_name
+        == "rc--2024-02-14_23-01"
+    )
+    assert (
+        oldest_active_release(index, active_versions=["31e9076fb99dfc36eb27fb3a2edc68885e6163ac"]).rc_name
+        == "rc--2024-02-14_23-01"
+    )
 
 
-# TODO: test git diff is generated from the last non-rejected release.
-# scenario 1: initial release was rejected, hotfix was applied
-# scenario 2: initial release was rejected, another release replaces it
+def test_version_package_checksum(mocker):
+    def mock_download_files(_: str, path: str):
+        content = ""
+        if path.endswith("shasum"):
+            content = """\
+556b26661590495016052a58d07886e8dcce48c77a5dfc458fbcc5f01a95b1b3 *update-img-test.tar.gz
+ed1ff4e1db979b0c89cf333c09777488a0c50a3ba74c0f9491d6ba153a8dbfdb *update-img-test.tar.zst
+9ca7002a723b932c3fb25293fc541e0b156170ec1e9a2c6a83c9733995051187 *update-img.tar.gz
+dff2072e34071110234b0cb169705efc13284e4a99b7795ef1951af1fe7b41ac *update-img.tar.zst
+"""
+        elif path.endswith(".tar.gz"):
+            content = "some bytes..."
+
+        with open(path, "w") as f:
+            f.write(content)
+
+    mocker.patch("urllib.request.urlretrieve", new=Mock(side_effect=mock_download_files))
+    assert version_package_checksum("notimporant") == "9ca7002a723b932c3fb25293fc541e0b156170ec1e9a2c6a83c9733995051187"
+    assert urllib.request.urlretrieve.call_count == 3
 
 
-def test_release_is_rejected():
-    """
-    If the release proposal is rejected, do not create the proposal again.
-    Also need to make sure that next proposal calculates changelog correctly.
-    """
+def test_version_package_checksum_mismatch(mocker):
+    def mock_download_files(url: str, path: str):
+        content = ""
+        if path.endswith("shasum"):
+            content = """\
+556b26661590495016052a58d07886e8dcce48c77a5dfc458fbcc5f01a95b1b3 *update-img-test.tar.gz
+ed1ff4e1db979b0c89cf333c09777488a0c50a3ba74c0f9491d6ba153a8dbfdb *update-img-test.tar.zst
+9ca7002a723b932c3fb25293fc541e0b156170ec1e9a2c6a83c9733995051187 *update-img.tar.gz
+dff2072e34071110234b0cb169705efc13284e4a99b7795ef1951af1fe7b41ac *update-img.tar.zst
+"""
+        elif "dfinity.network" in url:
+            content = "some bytes..."
+        else:
+            content = "some other bytes..."
 
+        with open(path, "w") as f:
+            f.write(content)
 
-def test_update_only_active_releases():
-    """
-    We don't need to update historic releases to prevent potential unexpected behaviour
-    """
+    mocker.patch("urllib.request.urlretrieve", new=Mock(side_effect=mock_download_files))
+
+    with pytest.raises(Exception) as e:
+        version_package_checksum("notimporant")
+        assert urllib.request.urlretrieve.call_count == 3
+
+    assert repr(e.value) == repr(RuntimeError("checksums do not match"))

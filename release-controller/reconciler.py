@@ -1,3 +1,4 @@
+import hashlib
 import json
 import logging
 import os
@@ -15,6 +16,8 @@ from publish_notes import PublishNotesClient
 from governance import GovernanceCanister
 from prometheus import ICPrometheus
 import release_index
+import urllib.request
+import tempfile
 
 
 class ReconcilerState:
@@ -66,6 +69,43 @@ def versions_to_unelect(
     return [v for v in elected_versions if v not in active_releases_versions]
 
 
+# https://stackoverflow.com/a/44873382
+def sha256sum(filename):
+    h = hashlib.sha256()
+    b = bytearray(128 * 1024)
+    mv = memoryview(b)
+    with open(filename, "rb", buffering=0) as f:
+        for n in iter(lambda: f.readinto(mv), 0):
+            h.update(mv[:n])
+    return h.hexdigest()
+
+
+def version_package_urls(version: str):
+    return [
+        f"https://download.dfinity.systems/ic/{version}/guest-os/update-img/update-img.tar.gz",
+        f"https://download.dfinity.network/ic/{version}/guest-os/update-img/update-img.tar.gz",
+    ]
+
+
+def version_package_checksum(version: str):
+    with tempfile.TemporaryDirectory() as d:
+        shasum_file = str(pathlib.Path(d) / "shasum")
+        urllib.request.urlretrieve(
+            f"https://download.dfinity.systems/ic/{version}/guest-os/update-img/SHA256SUMS", shasum_file
+        )
+        checksum = [l for l in open(shasum_file).readlines() if l.strip().endswith("update-img.tar.gz")][0].split(" ")[
+            0
+        ]
+
+        for u in version_package_urls(version):
+            image_file = str(pathlib.Path(d) / "update-img.tar.gz")
+            urllib.request.urlretrieve(u, image_file)
+            if sha256sum(image_file) != checksum:
+                raise RuntimeError("checksums do not match")
+
+        return checksum
+
+
 class Reconciler:
     def __init__(
         self,
@@ -88,11 +128,7 @@ class Reconciler:
     def reconcile(self):
         config = self.loader.index()
         active_versions = self.ic_prometheus.active_versions()
-        blessed_versions = json.loads(IcAdmin(self.nns_url)._ic_admin_run("get-blessed-replica-versions", "--json"))[
-            "value"
-        ]["blessed_version_ids"]
-        # TODO: get active releases only
-        for rc in config.root.releases:
+        for rc in config.root.releases[config.root.releases.index(oldest_active_release(config, active_versions)) :]:
             rc_forum_topic = self.forum_client.get_or_create(rc)
             # update to create posts for any releases
             rc_forum_topic.update(changelog=self.loader.changelog, proposal=self.state.version_proposal)
@@ -114,10 +150,6 @@ class Reconciler:
 
                         unelect_versions_args = []
                         if v.version == rc.versions[0].version:
-                            prometheus = ICPrometheus(
-                                url="https://victoria.mainnet.dfinity.network/select/0/prometheus"
-                            )
-                            active_versions = prometheus.active_versions()
                             unelect_versions_args.append("--replica-versions-to-unelect")
                             unelect_versions_args.extend(
                                 versions_to_unelect(
@@ -129,10 +161,7 @@ class Reconciler:
                                 ),
                             )
 
-                        summary = changelog  # TODO: add forum link to the proposal
-                        # TODO: add unelect if first release
-                        # TODO: add version to propose
-                        # TODO: verify that artifacts exist and checksum match
+                        summary = changelog + f"\n\nLink to the forum post: {rc_forum_topic.post_url(v.version)}"
                         IcAdmin(self.nns_url)._ic_admin_run(
                             "propose-to-update-elected-replica-versions",
                             "--proposal-title",
@@ -141,9 +170,9 @@ class Reconciler:
                             summary,
                             "--dry-run",  # TODO: remove
                             "--release-package-sha256-hex",
-                            # TODO: hex
+                            version_package_checksum(v.version),
                             "--release-package-urls",
-                            # TODO: urls
+                            *version_package_urls(v.version),
                             "--replica-version-to-elect",
                             v.version,
                             *unelect_versions_args,

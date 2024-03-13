@@ -38,6 +38,7 @@ class GitFetcher:
 
 # TODO: test
 def push_release_tag(git: GitFetcher, release: Release):
+    git.fetch()
     for v in release.versions:
         subprocess.check_call(
             [
