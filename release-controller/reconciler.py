@@ -3,6 +3,7 @@ import json
 import logging
 import os
 import pathlib
+import time
 from pydiscourse import DiscourseClient
 from pydantic_yaml import parse_yaml_raw_as
 from release_index import Model as ReleaseIndexModel
@@ -139,6 +140,7 @@ class Reconciler:
                 # TODO: push tag. maybe publish later?
                 self.notes_client.ensure(
                     version=v.version,
+                    # TODO: might be good to run this inside the notes_client so that it's not called every loop
                     content=release_notes(
                         first_commit=(
                             config.root.releases[rc_idx + 1].versions[0].version  # take first version in previous rc
@@ -223,11 +225,9 @@ def main():
         state=state,
     )
 
-    # TODO: loop
-    reconciler.reconcile()
-    # while True:
-    #     time.sleep(10)
-    # TODO: only check active RCs and newer. e.g., if mainnet has version B & C currently dpeloyed to subnet, and version D on the way, we don't need to do anything about version A
+    while True:
+        reconciler.reconcile()
+        time.sleep(60)
     # TODO: skip initial releases already managed in old way
 
 
