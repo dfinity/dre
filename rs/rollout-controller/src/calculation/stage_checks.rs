@@ -106,7 +106,7 @@ fn check_stage<'a>(
             get_desired_version_for_subnet(subnet_short, current_release_feature_spec, current_version);
 
         // Find subnet to by the subnet_short
-        let subnet = find_subnet_by_short(subnets, subnet_short)?;
+        let subnet = find_subnet_by_short_id(subnets, subnet_short)?;
 
         if let Some(logger) = logger {
             debug!(
@@ -184,7 +184,7 @@ fn get_desired_version_for_subnet<'a>(
     };
 }
 
-fn find_subnet_by_short<'a>(subnets: &'a [Subnet], subnet_short: &'a String) -> anyhow::Result<&'a Subnet> {
+fn find_subnet_by_short_id<'a>(subnets: &'a [Subnet], subnet_short: &'a String) -> anyhow::Result<&'a Subnet> {
     return match subnets
         .iter()
         .find(|s| s.principal.to_string().starts_with(subnet_short))
@@ -221,9 +221,149 @@ fn get_remaining_bake_time_for_subnet(
 fn get_open_proposal_for_subnet<'a>(
     subnet_update_proposals: &'a [SubnetUpdateProposal],
     subnet: &'a Subnet,
-    desired_version: &'a String,
+    desired_version: &'a str,
 ) -> Option<&'a SubnetUpdateProposal> {
     subnet_update_proposals.iter().find(|p| {
         p.payload.subnet_id == subnet.principal && p.payload.replica_version_id.eq(desired_version) && !p.info.executed
     })
+}
+
+#[cfg(test)]
+mod get_open_proposal_for_subnet_tests {
+    use std::str::FromStr;
+
+    use candid::Principal;
+    use ic_base_types::PrincipalId;
+    use ic_management_backend::proposal::ProposalInfoInternal;
+    use registry_canister::mutations::do_update_subnet_replica::UpdateSubnetReplicaVersionPayload;
+
+    use super::*;
+
+    fn craft_proposals<'a>(
+        subnet_with_execution_status: &'a [(&'a str, bool)],
+        version: &'a str,
+    ) -> impl Iterator<Item = SubnetUpdateProposal> + 'a {
+        subnet_with_execution_status
+            .iter()
+            .enumerate()
+            .map(|(i, (id, executed))| SubnetUpdateProposal {
+                payload: UpdateSubnetReplicaVersionPayload {
+                    subnet_id: PrincipalId(Principal::from_str(id).expect("Can create principal")),
+                    replica_version_id: version.to_string(),
+                },
+                info: ProposalInfoInternal {
+                    id: i as u64,
+                    // These values are not important for the function
+                    executed_timestamp_seconds: 1,
+                    proposal_timestamp_seconds: 1,
+                    executed: *executed,
+                },
+            })
+    }
+
+    fn craft_open_proposals<'a>(subnet_ids: &'a [&'a str], version: &'a str) -> Vec<SubnetUpdateProposal> {
+        craft_proposals(
+            &subnet_ids.iter().map(|id| (*id, false)).collect::<Vec<(&str, bool)>>(),
+            version,
+        )
+        .collect()
+    }
+
+    fn craft_executed_proposals<'a>(subnet_ids: &'a [&'a str], version: &'a str) -> Vec<SubnetUpdateProposal> {
+        craft_proposals(
+            &subnet_ids.iter().map(|id| (*id, true)).collect::<Vec<(&str, bool)>>(),
+            version,
+        )
+        .collect()
+    }
+
+    #[test]
+    fn should_find_open_proposal_for_subnet() {
+        let proposals = craft_open_proposals(
+            &vec![
+                "snjp4-xlbw4-mnbog-ddwy6-6ckfd-2w5a2-eipqo-7l436-pxqkh-l6fuv-vae",
+                "pae4o-o6dxf-xki7q-ezclx-znyd6-fnk6w-vkv5z-5lfwh-xym2i-otrrw-fqe",
+            ],
+            "version",
+        );
+
+        let subnet = Subnet {
+            principal: PrincipalId(
+                Principal::from_str("snjp4-xlbw4-mnbog-ddwy6-6ckfd-2w5a2-eipqo-7l436-pxqkh-l6fuv-vae")
+                    .expect("Can create principal"),
+            ),
+            ..Default::default()
+        };
+        let proposal = get_open_proposal_for_subnet(&proposals, &subnet, "version");
+
+        assert!(proposal.is_some())
+    }
+
+    #[test]
+    fn should_not_find_open_proposal_all_are_executed() {
+        let proposals = craft_executed_proposals(
+            &vec![
+                "snjp4-xlbw4-mnbog-ddwy6-6ckfd-2w5a2-eipqo-7l436-pxqkh-l6fuv-vae",
+                "pae4o-o6dxf-xki7q-ezclx-znyd6-fnk6w-vkv5z-5lfwh-xym2i-otrrw-fqe",
+            ],
+            "version",
+        );
+        let subnet = Subnet {
+            principal: PrincipalId(
+                Principal::from_str("snjp4-xlbw4-mnbog-ddwy6-6ckfd-2w5a2-eipqo-7l436-pxqkh-l6fuv-vae")
+                    .expect("Can create principal"),
+            ),
+            ..Default::default()
+        };
+        let proposal = get_open_proposal_for_subnet(&proposals, &subnet, "version");
+
+        assert!(proposal.is_none())
+    }
+
+    #[test]
+    fn should_not_find_open_proposal_all_are_executed_for_different_version() {
+        let proposals = craft_executed_proposals(
+            &vec![
+                "snjp4-xlbw4-mnbog-ddwy6-6ckfd-2w5a2-eipqo-7l436-pxqkh-l6fuv-vae",
+                "pae4o-o6dxf-xki7q-ezclx-znyd6-fnk6w-vkv5z-5lfwh-xym2i-otrrw-fqe",
+            ],
+            "other-version",
+        );
+        let subnet = Subnet {
+            principal: PrincipalId(
+                Principal::from_str("snjp4-xlbw4-mnbog-ddwy6-6ckfd-2w5a2-eipqo-7l436-pxqkh-l6fuv-vae")
+                    .expect("Can create principal"),
+            ),
+            ..Default::default()
+        };
+        let proposal = get_open_proposal_for_subnet(&proposals, &subnet, "version");
+
+        assert!(proposal.is_none())
+    }
+
+    #[test]
+    fn should_not_find_open_proposal_all_are_executed_for_different_subnets() {
+        let proposals = craft_executed_proposals(
+            &vec![
+                "snjp4-xlbw4-mnbog-ddwy6-6ckfd-2w5a2-eipqo-7l436-pxqkh-l6fuv-vae",
+                "pae4o-o6dxf-xki7q-ezclx-znyd6-fnk6w-vkv5z-5lfwh-xym2i-otrrw-fqe",
+            ],
+            "version",
+        );
+        let subnet = Subnet {
+            principal: PrincipalId(
+                Principal::from_str("5kdm2-62fc6-fwnja-hutkz-ycsnm-4z33i-woh43-4cenu-ev7mi-gii6t-4ae")
+                    .expect("Can create principal"),
+            ),
+            ..Default::default()
+        };
+        let proposal = get_open_proposal_for_subnet(&proposals, &subnet, "version");
+
+        assert!(proposal.is_none())
+    }
+}
+
+#[cfg(test)]
+mod get_remaining_bake_time_for_subnet_tests {
+    use super::*;
 }

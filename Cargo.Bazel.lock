@@ -1,5 +1,5 @@
 {
-  "checksum": "0a3544653a97a98cdf0a217ae9d9dc03617c23c7740ecb6690766998f600132a",
+  "checksum": "99d3ca2a43da6e64e7bdad694a356c67e45ea008484fb76de23a5c64174144ee",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -37189,6 +37189,10 @@
               "target": "anyhow"
             },
             {
+              "id": "candid 0.9.11",
+              "target": "candid"
+            },
+            {
               "id": "chrono 0.4.35",
               "target": "chrono"
             },
@@ -37213,6 +37217,10 @@
               "target": "humantime_serde"
             },
             {
+              "id": "ic-base-types 0.9.0",
+              "target": "ic_base_types"
+            },
+            {
               "id": "ic-registry-keys 0.9.0",
               "target": "ic_registry_keys"
             },
@@ -37227,6 +37235,10 @@
             {
               "id": "regex 1.10.3",
               "target": "regex"
+            },
+            {
+              "id": "registry-canister 0.9.0",
+              "target": "registry_canister"
             },
             {
               "id": "reqwest 0.11.25",

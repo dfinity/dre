@@ -33,4 +33,7 @@ prometheus-http-query = { workspace = true }
 humantime-serde = "1.1.1"
 reqwest = { workspace = true }
 regex = { workspace = true }
+registry-canister = { workspace = true }
+candid = { workspace = true }
+ic-base-types = { workspace = true }
 
