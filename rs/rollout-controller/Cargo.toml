@@ -37,3 +37,5 @@ registry-canister = { workspace = true }
 candid = { workspace = true }
 ic-base-types = { workspace = true }
 
+[dev-dependencies]
+rstest = "0.18.2"

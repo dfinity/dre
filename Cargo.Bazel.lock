@@ -1,5 +1,5 @@
 {
-  "checksum": "99d3ca2a43da6e64e7bdad694a356c67e45ea008484fb76de23a5c64174144ee",
+  "checksum": "043dcfd1c559f8778e799b8b70dde7599cbb44e8047be3ce3719437a4bf15e90",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -14176,6 +14176,36 @@
         "version": "0.3.30"
       },
       "license": "MIT OR Apache-2.0"
+    },
+    "futures-timer 3.0.3": {
+      "name": "futures-timer",
+      "version": "3.0.3",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/futures-timer/3.0.3/download",
+          "sha256": "f288b0a4f20f9a56b5d1da57e2227c661b7b16168e2f72365f57b63326e29b24"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "futures_timer",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "futures_timer",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "edition": "2018",
+        "version": "3.0.3"
+      },
+      "license": "MIT/Apache-2.0"
     },
     "futures-util 0.3.30": {
       "name": "futures-util",
@@ -36469,6 +36499,42 @@
       },
       "license": null
     },
+    "relative-path 1.9.2": {
+      "name": "relative-path",
+      "version": "1.9.2",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/relative-path/1.9.2/download",
+          "sha256": "e898588f33fdd5b9420719948f9f2a32c922a246964576f71ba7f24f80610fbc"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "relative_path",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "relative_path",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "crate_features": {
+          "common": [
+            "default"
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "1.9.2"
+      },
+      "license": "MIT OR Apache-2.0"
+    },
     "rend 0.4.2": {
       "name": "rend",
       "version": "0.4.2",
@@ -37283,10 +37349,178 @@
           ],
           "selects": {}
         },
+        "deps_dev": {
+          "common": [
+            {
+              "id": "rstest 0.18.2",
+              "target": "rstest"
+            }
+          ],
+          "selects": {}
+        },
         "edition": "2021",
         "version": "0.3.0"
       },
       "license": null
+    },
+    "rstest 0.18.2": {
+      "name": "rstest",
+      "version": "0.18.2",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/rstest/0.18.2/download",
+          "sha256": "97eeab2f3c0a199bc4be135c36c924b6590b88c377d416494288c14f2db30199"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "rstest",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "rstest",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "crate_features": {
+          "common": [
+            "async-timeout",
+            "default"
+          ],
+          "selects": {}
+        },
+        "deps": {
+          "common": [
+            {
+              "id": "futures 0.3.30",
+              "target": "futures"
+            },
+            {
+              "id": "futures-timer 3.0.3",
+              "target": "futures_timer"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "proc_macro_deps": {
+          "common": [
+            {
+              "id": "rstest_macros 0.18.2",
+              "target": "rstest_macros"
+            }
+          ],
+          "selects": {}
+        },
+        "version": "0.18.2"
+      },
+      "license": "MIT OR Apache-2.0"
+    },
+    "rstest_macros 0.18.2": {
+      "name": "rstest_macros",
+      "version": "0.18.2",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/rstest_macros/0.18.2/download",
+          "sha256": "d428f8247852f894ee1be110b375111b586d4fa431f6c46e64ba5a0dcccbe605"
+        }
+      },
+      "targets": [
+        {
+          "ProcMacro": {
+            "crate_name": "rstest_macros",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        },
+        {
+          "BuildScript": {
+            "crate_name": "build_script_build",
+            "crate_root": "build.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "rstest_macros",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "crate_features": {
+          "common": [
+            "async-timeout"
+          ],
+          "selects": {}
+        },
+        "deps": {
+          "common": [
+            {
+              "id": "cfg-if 1.0.0",
+              "target": "cfg_if"
+            },
+            {
+              "id": "glob 0.3.1",
+              "target": "glob"
+            },
+            {
+              "id": "proc-macro2 1.0.78",
+              "target": "proc_macro2"
+            },
+            {
+              "id": "quote 1.0.35",
+              "target": "quote"
+            },
+            {
+              "id": "regex 1.10.3",
+              "target": "regex"
+            },
+            {
+              "id": "relative-path 1.9.2",
+              "target": "relative_path"
+            },
+            {
+              "id": "rstest_macros 0.18.2",
+              "target": "build_script_build"
+            },
+            {
+              "id": "syn 2.0.52",
+              "target": "syn"
+            },
+            {
+              "id": "unicode-ident 1.0.12",
+              "target": "unicode_ident"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "0.18.2"
+      },
+      "build_script_attrs": {
+        "data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "rustc_version 0.4.0",
+              "target": "rustc_version"
+            }
+          ],
+          "selects": {}
+        }
+      },
+      "license": "MIT OR Apache-2.0"
     },
     "rust_decimal 1.34.3": {
       "name": "rust_decimal",

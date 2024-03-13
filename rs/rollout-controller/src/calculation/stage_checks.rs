@@ -209,7 +209,7 @@ fn get_remaining_bake_time_for_subnet(
         }
     };
 
-    return match bake.gt(&stage_bake_time) {
+    return match bake.ge(&stage_bake_time) {
         true => Ok(0.0),
         false => {
             let remaining = Duration::from_secs_f64(stage_bake_time - bake);
@@ -238,8 +238,16 @@ mod get_open_proposal_for_subnet_tests {
     use registry_canister::mutations::do_update_subnet_replica::UpdateSubnetReplicaVersionPayload;
 
     use super::*;
+    use rstest::rstest;
 
-    fn craft_proposals<'a>(
+    pub(super) fn craft_subnet_from_id<'a>(subnet_id: &'a str) -> Subnet {
+        Subnet {
+            principal: PrincipalId(Principal::from_str(subnet_id).expect("Can create principal")),
+            ..Default::default()
+        }
+    }
+
+    pub(super) fn craft_proposals<'a>(
         subnet_with_execution_status: &'a [(&'a str, bool)],
         version: &'a str,
     ) -> impl Iterator<Item = SubnetUpdateProposal> + 'a {
@@ -261,7 +269,7 @@ mod get_open_proposal_for_subnet_tests {
             })
     }
 
-    fn craft_open_proposals<'a>(subnet_ids: &'a [&'a str], version: &'a str) -> Vec<SubnetUpdateProposal> {
+    pub(super) fn craft_open_proposals<'a>(subnet_ids: &'a [&'a str], version: &'a str) -> Vec<SubnetUpdateProposal> {
         craft_proposals(
             &subnet_ids.iter().map(|id| (*id, false)).collect::<Vec<(&str, bool)>>(),
             version,
@@ -269,7 +277,10 @@ mod get_open_proposal_for_subnet_tests {
         .collect()
     }
 
-    fn craft_executed_proposals<'a>(subnet_ids: &'a [&'a str], version: &'a str) -> Vec<SubnetUpdateProposal> {
+    pub(super) fn craft_executed_proposals<'a>(
+        subnet_ids: &'a [&'a str],
+        version: &'a str,
+    ) -> Vec<SubnetUpdateProposal> {
         craft_proposals(
             &subnet_ids.iter().map(|id| (*id, true)).collect::<Vec<(&str, bool)>>(),
             version,
@@ -287,77 +298,42 @@ mod get_open_proposal_for_subnet_tests {
             "version",
         );
 
-        let subnet = Subnet {
-            principal: PrincipalId(
-                Principal::from_str("snjp4-xlbw4-mnbog-ddwy6-6ckfd-2w5a2-eipqo-7l436-pxqkh-l6fuv-vae")
-                    .expect("Can create principal"),
-            ),
-            ..Default::default()
-        };
+        let subnet = craft_subnet_from_id("snjp4-xlbw4-mnbog-ddwy6-6ckfd-2w5a2-eipqo-7l436-pxqkh-l6fuv-vae");
         let proposal = get_open_proposal_for_subnet(&proposals, &subnet, "version");
 
         assert!(proposal.is_some())
     }
 
-    #[test]
-    fn should_not_find_open_proposal_all_are_executed() {
+    #[rstest]
+    #[case(
+        "version",
+        "snjp4-xlbw4-mnbog-ddwy6-6ckfd-2w5a2-eipqo-7l436-pxqkh-l6fuv-vae",
+        "version"
+    )]
+    #[case(
+        "other-version",
+        "snjp4-xlbw4-mnbog-ddwy6-6ckfd-2w5a2-eipqo-7l436-pxqkh-l6fuv-vae",
+        "version"
+    )]
+    #[case(
+        "version",
+        "5kdm2-62fc6-fwnja-hutkz-ycsnm-4z33i-woh43-4cenu-ev7mi-gii6t-4ae",
+        "version"
+    )]
+    fn should_not_find_open_proposal(
+        #[case] proposal_version: &str,
+        #[case] subnet_id: &str,
+        #[case] current_version: &str,
+    ) {
         let proposals = craft_executed_proposals(
             &vec![
                 "snjp4-xlbw4-mnbog-ddwy6-6ckfd-2w5a2-eipqo-7l436-pxqkh-l6fuv-vae",
                 "pae4o-o6dxf-xki7q-ezclx-znyd6-fnk6w-vkv5z-5lfwh-xym2i-otrrw-fqe",
             ],
-            "version",
+            proposal_version,
         );
-        let subnet = Subnet {
-            principal: PrincipalId(
-                Principal::from_str("snjp4-xlbw4-mnbog-ddwy6-6ckfd-2w5a2-eipqo-7l436-pxqkh-l6fuv-vae")
-                    .expect("Can create principal"),
-            ),
-            ..Default::default()
-        };
-        let proposal = get_open_proposal_for_subnet(&proposals, &subnet, "version");
-
-        assert!(proposal.is_none())
-    }
-
-    #[test]
-    fn should_not_find_open_proposal_all_are_executed_for_different_version() {
-        let proposals = craft_executed_proposals(
-            &vec![
-                "snjp4-xlbw4-mnbog-ddwy6-6ckfd-2w5a2-eipqo-7l436-pxqkh-l6fuv-vae",
-                "pae4o-o6dxf-xki7q-ezclx-znyd6-fnk6w-vkv5z-5lfwh-xym2i-otrrw-fqe",
-            ],
-            "other-version",
-        );
-        let subnet = Subnet {
-            principal: PrincipalId(
-                Principal::from_str("snjp4-xlbw4-mnbog-ddwy6-6ckfd-2w5a2-eipqo-7l436-pxqkh-l6fuv-vae")
-                    .expect("Can create principal"),
-            ),
-            ..Default::default()
-        };
-        let proposal = get_open_proposal_for_subnet(&proposals, &subnet, "version");
-
-        assert!(proposal.is_none())
-    }
-
-    #[test]
-    fn should_not_find_open_proposal_all_are_executed_for_different_subnets() {
-        let proposals = craft_executed_proposals(
-            &vec![
-                "snjp4-xlbw4-mnbog-ddwy6-6ckfd-2w5a2-eipqo-7l436-pxqkh-l6fuv-vae",
-                "pae4o-o6dxf-xki7q-ezclx-znyd6-fnk6w-vkv5z-5lfwh-xym2i-otrrw-fqe",
-            ],
-            "version",
-        );
-        let subnet = Subnet {
-            principal: PrincipalId(
-                Principal::from_str("5kdm2-62fc6-fwnja-hutkz-ycsnm-4z33i-woh43-4cenu-ev7mi-gii6t-4ae")
-                    .expect("Can create principal"),
-            ),
-            ..Default::default()
-        };
-        let proposal = get_open_proposal_for_subnet(&proposals, &subnet, "version");
+        let subnet = craft_subnet_from_id(subnet_id);
+        let proposal = get_open_proposal_for_subnet(&proposals, &subnet, current_version);
 
         assert!(proposal.is_none())
     }
@@ -366,4 +342,58 @@ mod get_open_proposal_for_subnet_tests {
 #[cfg(test)]
 mod get_remaining_bake_time_for_subnet_tests {
     use super::*;
+    use rstest::rstest;
+
+    fn craft_bake_status_from_tuples(tuples: &[(&str, f64)]) -> BTreeMap<String, f64> {
+        tuples
+            .iter()
+            .map(|(id, bake_time)| (id.to_string(), *bake_time))
+            .collect::<BTreeMap<String, f64>>()
+    }
+
+    #[test]
+    fn should_return_error_subnet_not_found() {
+        let subnet = get_open_proposal_for_subnet_tests::craft_subnet_from_id(
+            "pae4o-o6dxf-xki7q-ezclx-znyd6-fnk6w-vkv5z-5lfwh-xym2i-otrrw-fqe",
+        );
+
+        let bake_status = craft_bake_status_from_tuples(&[("random-subnet", 1.0)]);
+
+        let maybe_remaining_bake_time = get_remaining_bake_time_for_subnet(&bake_status, &subnet, 100.0);
+
+        assert!(maybe_remaining_bake_time.is_err())
+    }
+
+    #[rstest]
+    #[case(100.0, 100.0, 0.0)]
+    #[case(150.0, 100.0, 0.0)]
+    #[case(100.0, 150.0, 50.0)]
+    // Should these be allowed? Technically we will never get
+    // something like this from prometheus and there should
+    // be validation for incoming configuration, but it is a
+    // possibility in our code. Maybe we could add validation
+    // checks that disallow of negative baking time?
+    #[case(-100.0, 150.0, 250.0)]
+    #[case(-100.0, -150.0, 0.0)]
+    #[case(-100.0, -50.0, 50.0)]
+    fn should_return_subnet_baking_time(
+        #[case] subnet_bake_status: f64,
+        #[case] stage_bake: f64,
+        #[case] remaining: f64,
+    ) {
+        let subnet = get_open_proposal_for_subnet_tests::craft_subnet_from_id(
+            "pae4o-o6dxf-xki7q-ezclx-znyd6-fnk6w-vkv5z-5lfwh-xym2i-otrrw-fqe",
+        );
+
+        let bake_status = craft_bake_status_from_tuples(&[(
+            "pae4o-o6dxf-xki7q-ezclx-znyd6-fnk6w-vkv5z-5lfwh-xym2i-otrrw-fqe",
+            subnet_bake_status,
+        )]);
+
+        let maybe_remaining_bake_time = get_remaining_bake_time_for_subnet(&bake_status, &subnet, stage_bake);
+
+        assert!(maybe_remaining_bake_time.is_ok());
+        let remaining_bake_time = maybe_remaining_bake_time.unwrap();
+        assert_eq!(remaining_bake_time, remaining)
+    }
 }
