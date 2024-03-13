@@ -171,20 +171,20 @@ fn check_stage<'a>(
 }
 
 fn get_desired_version_for_subnet<'a>(
-    subnet_short: &'a String,
+    subnet_short: &'a str,
     current_release_feature_spec: &'a BTreeMap<String, Vec<String>>,
-    current_version: &'a String,
-) -> &'a String {
+    current_version: &'a str,
+) -> &'a str {
     return match current_release_feature_spec
         .iter()
-        .find(|(_, subnets)| subnets.contains(subnet_short))
+        .find(|(_, subnets)| subnets.contains(&subnet_short.to_string()))
     {
         Some((name, _)) => name,
         None => current_version,
     };
 }
 
-fn find_subnet_by_short_id<'a>(subnets: &'a [Subnet], subnet_short: &'a String) -> anyhow::Result<&'a Subnet> {
+fn find_subnet_by_short_id<'a>(subnets: &'a [Subnet], subnet_short: &'a str) -> anyhow::Result<&'a Subnet> {
     return match subnets
         .iter()
         .find(|s| s.principal.to_string().starts_with(subnet_short))
@@ -395,5 +395,76 @@ mod get_remaining_bake_time_for_subnet_tests {
         assert!(maybe_remaining_bake_time.is_ok());
         let remaining_bake_time = maybe_remaining_bake_time.unwrap();
         assert_eq!(remaining_bake_time, remaining)
+    }
+}
+
+#[cfg(test)]
+mod find_subnet_by_short_id_tests {
+    use self::get_open_proposal_for_subnet_tests::craft_subnet_from_id;
+
+    use super::*;
+
+    #[test]
+    fn should_find_subnet() {
+        let subnet_1 = craft_subnet_from_id("5kdm2-62fc6-fwnja-hutkz-ycsnm-4z33i-woh43-4cenu-ev7mi-gii6t-4ae");
+        let subnet_2 = craft_subnet_from_id("snjp4-xlbw4-mnbog-ddwy6-6ckfd-2w5a2-eipqo-7l436-pxqkh-l6fuv-vae");
+        let subnets = &[subnet_1, subnet_2];
+
+        let maybe_subnet = find_subnet_by_short_id(subnets, "5kdm2");
+
+        assert!(maybe_subnet.is_ok());
+        let subnet = maybe_subnet.unwrap();
+        let subnet_principal = subnet.principal.to_string();
+        assert!(subnet_principal.starts_with("5kdm2"));
+        assert!(subnet_principal.eq("5kdm2-62fc6-fwnja-hutkz-ycsnm-4z33i-woh43-4cenu-ev7mi-gii6t-4ae"));
+    }
+
+    #[test]
+    fn should_find_not_subnet() {
+        let subnet_1 = craft_subnet_from_id("5kdm2-62fc6-fwnja-hutkz-ycsnm-4z33i-woh43-4cenu-ev7mi-gii6t-4ae");
+        let subnet_2 = craft_subnet_from_id("snjp4-xlbw4-mnbog-ddwy6-6ckfd-2w5a2-eipqo-7l436-pxqkh-l6fuv-vae");
+        let subnets = &[subnet_1, subnet_2];
+
+        let maybe_subnet = find_subnet_by_short_id(subnets, "random-subnet");
+
+        assert!(maybe_subnet.is_err());
+    }
+}
+
+#[cfg(test)]
+mod get_desired_version_for_subnet_test {
+    use super::*;
+
+    pub(super) fn craft_feature_spec(tuples: &[(&str, &[&str])]) -> BTreeMap<String, Vec<String>> {
+        tuples
+            .iter()
+            .map(|(commit, subnets)| (commit.to_string(), subnets.iter().map(|id| id.to_string()).collect()))
+            .collect::<BTreeMap<String, Vec<String>>>()
+    }
+
+    #[test]
+    fn should_return_current_version() {
+        let current_release_feature_spec =
+            craft_feature_spec(&[("feature-a-commit", &["subnet-1", "subnet-2", "subnet-3"])]);
+
+        let version = get_desired_version_for_subnet("subnet", &current_release_feature_spec, "current_version");
+        assert_eq!(version, "current_version")
+    }
+
+    #[test]
+    fn should_return_current_version_empty_feature_spec() {
+        let current_release_feature_spec = craft_feature_spec(&vec![]);
+
+        let version = get_desired_version_for_subnet("subnet", &current_release_feature_spec, "current_version");
+        assert_eq!(version, "current_version")
+    }
+
+    #[test]
+    fn should_return_feature_version() {
+        let current_release_feature_spec =
+            craft_feature_spec(&[("feature-a-commit", &["subnet-1", "subnet-2", "subnet-3"])]);
+
+        let version = get_desired_version_for_subnet("subnet-1", &current_release_feature_spec, "current_version");
+        assert_eq!(version, "feature-a-commit")
     }
 }
