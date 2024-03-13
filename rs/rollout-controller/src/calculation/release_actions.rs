@@ -5,7 +5,7 @@ use regex::Regex;
 
 use super::{Index, Release};
 
-pub fn find_latest_release(index: &Index) -> anyhow::Result<Release> {
+pub fn find_latest_release(index: &Index) -> anyhow::Result<(Release, NaiveDateTime)> {
     let regex = Regex::new(r"rc--(?P<datetime>\d{4}-\d{2}-\d{2}_\d{2}-\d{2})").unwrap();
 
     let mut mapped: Vec<(Release, NaiveDateTime)> = index
@@ -30,7 +30,7 @@ pub fn find_latest_release(index: &Index) -> anyhow::Result<Release> {
     mapped.reverse();
 
     match mapped.first() {
-        Some((found, _)) => Ok(found.clone()),
+        Some((found, datetime)) => Ok((found.clone(), datetime.clone())),
         None => Err(anyhow::anyhow!("There aren't any releases that match the criteria")),
     }
 }

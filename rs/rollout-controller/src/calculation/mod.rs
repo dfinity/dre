@@ -69,7 +69,7 @@ pub async fn calculate_progress<'a>(
         return Ok(vec![]);
     }
 
-    let latest_release = find_latest_release(&index)?;
+    let (latest_release, start_date) = find_latest_release(&index)?;
     let elected_versions = registry_state.get_blessed_replica_versions().await?;
 
     let (current_version, current_feature_spec) =
@@ -113,6 +113,8 @@ pub async fn calculate_progress<'a>(
         Some(&logger),
         &unassigned_nodes_version,
         &registry_state.subnets().into_values().collect::<Vec<Subnet>>(),
+        start_date.date(),
+        Local::now().date_naive(),
     )?;
 
     Ok(actions)

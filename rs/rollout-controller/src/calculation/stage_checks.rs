@@ -1,5 +1,6 @@
 use std::{collections::BTreeMap, time::Duration};
 
+use chrono::{Datelike, Days, NaiveDate, Weekday};
 use humantime::format_duration;
 use ic_management_backend::proposal::SubnetUpdateProposal;
 use ic_management_types::Subnet;
@@ -25,6 +26,9 @@ pub enum SubnetAction {
         subnet_principal: String,
         version: String,
     },
+    WaitForNextWeek {
+        subnet_short: String,
+    },
 }
 
 pub fn check_stages<'a>(
@@ -36,11 +40,25 @@ pub fn check_stages<'a>(
     logger: Option<&'a Logger>,
     unassigned_version: &'a String,
     subnets: &'a [Subnet],
+    start_of_release: NaiveDate,
+    now: NaiveDate,
 ) -> anyhow::Result<Vec<SubnetAction>> {
     for (i, stage) in stages.iter().enumerate() {
         if let Some(logger) = logger {
             info!(logger, "Checking stage {}", i)
         }
+
+        if stage.wait_for_next_week && !week_passed(start_of_release, now) {
+            let actions = stage
+                .subnets
+                .iter()
+                .map(|subnet| SubnetAction::WaitForNextWeek {
+                    subnet_short: subnet.to_string(),
+                })
+                .collect();
+            return Ok(actions);
+        }
+
         let stage_actions = check_stage(
             current_version,
             current_release_feature_spec,
@@ -71,6 +89,22 @@ pub fn check_stages<'a>(
     }
 
     Ok(vec![])
+}
+
+fn week_passed(release_start: NaiveDate, now: NaiveDate) -> bool {
+    let counter = release_start.clone();
+    counter
+        .checked_add_days(Days::new(1))
+        .expect("Should be able to add a day");
+    while counter <= now {
+        if counter.weekday() == Weekday::Mon {
+            return true;
+        }
+        counter
+            .checked_add_days(Days::new(1))
+            .expect("Should be able to add a day");
+    }
+    false
 }
 
 fn check_stage<'a>(
@@ -247,6 +281,19 @@ mod get_open_proposal_for_subnet_tests {
         }
     }
 
+    pub(super) fn craft_subnet_from_similar_id<'a>(subnet_id: &'a str) -> Subnet {
+        let original_principal = Principal::from_str(subnet_id).expect("Can create principal");
+        let mut new_principal = original_principal.as_slice().to_vec();
+        let len = new_principal.len();
+        if let Some(byte) = new_principal.get_mut(len - 1) {
+            *byte += 1;
+        }
+        Subnet {
+            principal: PrincipalId(Principal::try_from_slice(&new_principal[..]).expect("Can create principal")),
+            ..Default::default()
+        }
+    }
+
     pub(super) fn craft_proposals<'a>(
         subnet_with_execution_status: &'a [(&'a str, bool)],
         version: &'a str,
@@ -400,7 +447,7 @@ mod get_remaining_bake_time_for_subnet_tests {
 
 #[cfg(test)]
 mod find_subnet_by_short_id_tests {
-    use self::get_open_proposal_for_subnet_tests::craft_subnet_from_id;
+    use self::get_open_proposal_for_subnet_tests::{craft_subnet_from_id, craft_subnet_from_similar_id};
 
     use super::*;
 
@@ -408,15 +455,16 @@ mod find_subnet_by_short_id_tests {
     fn should_find_subnet() {
         let subnet_1 = craft_subnet_from_id("5kdm2-62fc6-fwnja-hutkz-ycsnm-4z33i-woh43-4cenu-ev7mi-gii6t-4ae");
         let subnet_2 = craft_subnet_from_id("snjp4-xlbw4-mnbog-ddwy6-6ckfd-2w5a2-eipqo-7l436-pxqkh-l6fuv-vae");
-        let subnets = &[subnet_1, subnet_2];
+        let subnet_3 = craft_subnet_from_similar_id("snjp4-xlbw4-mnbog-ddwy6-6ckfd-2w5a2-eipqo-7l436-pxqkh-l6fuv-vae");
+        let subnets = &[subnet_1, subnet_2, subnet_3];
 
-        let maybe_subnet = find_subnet_by_short_id(subnets, "5kdm2");
+        let maybe_subnet = find_subnet_by_short_id(subnets, "snjp4");
 
         assert!(maybe_subnet.is_ok());
         let subnet = maybe_subnet.unwrap();
         let subnet_principal = subnet.principal.to_string();
-        assert!(subnet_principal.starts_with("5kdm2"));
-        assert!(subnet_principal.eq("5kdm2-62fc6-fwnja-hutkz-ycsnm-4z33i-woh43-4cenu-ev7mi-gii6t-4ae"));
+        assert!(subnet_principal.starts_with("snjp4"));
+        assert!(subnet_principal.eq("snjp4-xlbw4-mnbog-ddwy6-6ckfd-2w5a2-eipqo-7l436-pxqkh-l6fuv-vae"));
     }
 
     #[test]
@@ -468,3 +516,111 @@ mod get_desired_version_for_subnet_test {
         assert_eq!(version, "feature-a-commit")
     }
 }
+
+// E2E tests for decision making process for happy path without feature builds
+#[cfg(test)]
+mod check_stages_tests_no_feature_builds {
+    use crate::calculation::{Index, Release, Rollout, Version};
+
+    use super::*;
+
+    /// Part one => No feature builds
+    /// `current_version` - can be defined
+    /// `current_release_feature_spec` - empty because we don't have feature builds for this part
+    /// `last_bake_status` - can be defined
+    /// `subnet_update_proposals` - can be defined
+    /// `stages` - must be defined
+    /// `logger` - can be defined, but won't be because these are only tests
+    /// `unassigned_version` - should be defined
+    /// `subnets` - should be defined
+    ///
+    /// For all use cases we will use the following setup
+    /// rollout:
+    ///     pause: false // Tested in `should_proceed.rs` module
+    ///     skip_days: [] // Tested in `should_proceed.rs` module
+    ///     stages:
+    ///         - subnets: [io67a]
+    ///           bake_time: 8h
+    ///         - subnets: [shefu, uzr34]
+    ///           bake_time: 4h
+    ///         - update_unassigned_nodes: true
+    ///         - subnets: [pjljw]
+    ///           wait_for_next_week: true
+    ///           bake_time: 4h
+    /// releases:
+    ///     - rc_name: rc--2024-02-21_23-01
+    ///       versions:
+    ///         - version: 2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f
+    ///           name: rc--2024-02-21_23-01
+    ///           release_notes_ready: <not-important>
+    ///           subnets: [] // empty because its a regular build
+    ///     - rc_name: rc--2024-02-14_23-01
+    ///       versions:
+    ///         - version: 85bd56a70e55b2cea75cae6405ae11243e5fdad8
+    ///           name: rc--2024-02-14_23-01
+    ///           release_notes_ready: <not-important>
+    ///           subnets: [] // empty because its a regular build
+    fn craft_index_state() -> Index {
+        Index {
+            rollout: Rollout {
+                pause: false,
+                skip_days: [],
+                stages: [
+                    Stage {
+                        subnets: ["io67a".to_string()],
+                        bake_time: humantime::parse_duration("8h").expect("Should be able to parse."),
+                        ..Default::default()
+                    },
+                    Stage {
+                        subnets: ["shefu".to_string(), "uzr34".to_string()],
+                        bake_time: humantime::parse_duration("4h").expect("Should be able to parse."),
+                        ..Default::default()
+                    },
+                    Stage {
+                        update_unassigned_nodes: true,
+                        ..Default::default()
+                    },
+                    Stage {
+                        subnets: ["pjljw".to_string()],
+                        bake_time: humantime::parse_duration("4h").expect("Should be able to parse."),
+                        wait_for_next_week: true,
+                        ..Default::default()
+                    },
+                ],
+            },
+            releases: [
+                Release {
+                    rc_name: "rc--2024-02-21_23-01".to_string(),
+                    versions: [Version {
+                        name: "rc--2024-02-21_23-01".to_string(),
+                        version: "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f".to_string(),
+                        ..Default::default()
+                    }],
+                },
+                Release {
+                    rc_name: "rc--2024-02-14_23-01".to_string(),
+                    versions: [Version {
+                        name: "rc--2024-02-14_23-01".to_string(),
+                        version: "85bd56a70e55b2cea75cae6405ae11243e5fdad8".to_string(),
+                        ..Default::default()
+                    }],
+                },
+            ],
+        }
+    }
+
+    /// Use-Case 1: Beginning of a new rollout
+    ///
+    /// `current_version` - set to a commit that is being rolled out
+    /// `last_bake_status` - empty, because no subnets have the version
+    /// `subnet_update_proposals` - can be empty but doesn't have to be. For e.g. if its Monday it is possible to have an open proposal for NNS
+    ///                             But it is for a different version (one from last week)
+    /// `unassigned_version` - one from previous week
+    /// `subnets` - can be seen in `craft_index_state`
+    #[test]
+    fn test_rollout_beginning() {}
+}
+
+// E2E tests for decision making process for happy path with feature builds
+#[cfg(test)]
+mod check_stages_tests_feature_builds {}
