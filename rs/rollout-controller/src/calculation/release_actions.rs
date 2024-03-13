@@ -140,6 +140,8 @@ impl Display for CreateCurrentReleaseFeatureSpecError {
 
 #[cfg(test)]
 mod find_latest_release_tests {
+    use chrono::NaiveDate;
+
     use super::*;
 
     #[test]
@@ -186,9 +188,13 @@ mod find_latest_release_tests {
         let latest = find_latest_release(&index);
 
         assert!(latest.is_ok());
-        let latest = latest.unwrap();
+        let (latest, date) = latest.unwrap();
 
-        assert_eq!(latest.rc_name, String::from("rc--2024-03-10_23-01"))
+        assert_eq!(latest.rc_name, String::from("rc--2024-03-10_23-01"));
+        assert_eq!(
+            date.date(),
+            NaiveDate::parse_from_str("2024-03-10", "%Y-%m-%d").expect("Should parse date")
+        )
     }
 
     #[test]

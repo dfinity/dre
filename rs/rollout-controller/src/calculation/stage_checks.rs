@@ -92,15 +92,15 @@ pub fn check_stages<'a>(
 }
 
 fn week_passed(release_start: NaiveDate, now: NaiveDate) -> bool {
-    let counter = release_start.clone();
-    counter
+    let mut counter = release_start.clone();
+    counter = counter
         .checked_add_days(Days::new(1))
         .expect("Should be able to add a day");
     while counter <= now {
         if counter.weekday() == Weekday::Mon {
             return true;
         }
-        counter
+        counter = counter
             .checked_add_days(Days::new(1))
             .expect("Should be able to add a day");
     }
@@ -260,6 +260,27 @@ fn get_open_proposal_for_subnet<'a>(
     subnet_update_proposals.iter().find(|p| {
         p.payload.subnet_id == subnet.principal && p.payload.replica_version_id.eq(desired_version) && !p.info.executed
     })
+}
+
+#[cfg(test)]
+mod week_passed_tests {
+    use super::*;
+    use chrono::NaiveDate;
+    use rstest::rstest;
+
+    #[rstest]
+    #[case("2024-03-13", "2024-03-18", true)]
+    #[case("2024-03-13", "2024-03-19", true)]
+    #[case("2024-03-03", "2024-03-19", true)]
+    #[case("2024-03-13", "2024-03-13", false)]
+    #[case("2024-03-13", "2024-03-15", false)]
+    #[case("2024-03-13", "2024-03-17", false)]
+    fn should_complete(#[case] release_start: &str, #[case] now: &str, #[case] outcome: bool) {
+        let release_start = NaiveDate::parse_from_str(release_start, "%Y-%m-%d").expect("Should be able to parse date");
+        let now = NaiveDate::parse_from_str(now, "%Y-%m-%d").expect("Should be able to parse date");
+
+        assert_eq!(week_passed(release_start, now), outcome)
+    }
 }
 
 #[cfg(test)]
@@ -564,15 +585,15 @@ mod check_stages_tests_no_feature_builds {
         Index {
             rollout: Rollout {
                 pause: false,
-                skip_days: [],
-                stages: [
+                skip_days: vec![],
+                stages: vec![
                     Stage {
-                        subnets: ["io67a".to_string()],
+                        subnets: vec!["io67a".to_string()],
                         bake_time: humantime::parse_duration("8h").expect("Should be able to parse."),
                         ..Default::default()
                     },
                     Stage {
-                        subnets: ["shefu".to_string(), "uzr34".to_string()],
+                        subnets: vec!["shefu".to_string(), "uzr34".to_string()],
                         bake_time: humantime::parse_duration("4h").expect("Should be able to parse."),
                         ..Default::default()
                     },
@@ -581,17 +602,17 @@ mod check_stages_tests_no_feature_builds {
                         ..Default::default()
                     },
                     Stage {
-                        subnets: ["pjljw".to_string()],
+                        subnets: vec!["pjljw".to_string()],
                         bake_time: humantime::parse_duration("4h").expect("Should be able to parse."),
                         wait_for_next_week: true,
                         ..Default::default()
                     },
                 ],
             },
-            releases: [
+            releases: vec![
                 Release {
                     rc_name: "rc--2024-02-21_23-01".to_string(),
-                    versions: [Version {
+                    versions: vec![Version {
                         name: "rc--2024-02-21_23-01".to_string(),
                         version: "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f".to_string(),
                         ..Default::default()
@@ -599,7 +620,7 @@ mod check_stages_tests_no_feature_builds {
                 },
                 Release {
                     rc_name: "rc--2024-02-14_23-01".to_string(),
-                    versions: [Version {
+                    versions: vec![Version {
                         name: "rc--2024-02-14_23-01".to_string(),
                         version: "85bd56a70e55b2cea75cae6405ae11243e5fdad8".to_string(),
                         ..Default::default()
