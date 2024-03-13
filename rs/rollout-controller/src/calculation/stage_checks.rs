@@ -541,6 +541,11 @@ mod get_desired_version_for_subnet_test {
 // E2E tests for decision making process for happy path without feature builds
 #[cfg(test)]
 mod check_stages_tests_no_feature_builds {
+    use std::str::FromStr;
+
+    use candid::Principal;
+    use ic_base_types::PrincipalId;
+
     use crate::calculation::{Index, Release, Rollout, Version};
 
     use super::*;
@@ -554,6 +559,8 @@ mod check_stages_tests_no_feature_builds {
     /// `logger` - can be defined, but won't be because these are only tests
     /// `unassigned_version` - should be defined
     /// `subnets` - should be defined
+    /// `start_of_release` - should be defined
+    /// `now` - should be defined
     ///
     /// For all use cases we will use the following setup
     /// rollout:
@@ -630,16 +637,98 @@ mod check_stages_tests_no_feature_builds {
         }
     }
 
+    fn craft_subnets() -> Vec<Subnet> {
+        vec![
+            Subnet {
+                principal: PrincipalId(
+                    Principal::from_str("io67a-2jmkw-zup3h-snbwi-g6a5n-rm5dn-b6png-lvdpl-nqnto-yih6l-gqe")
+                        .expect("Should be able to create a principal"),
+                ),
+                replica_version: "85bd56a70e55b2cea75cae6405ae11243e5fdad8".to_string(),
+                ..Default::default()
+            },
+            Subnet {
+                principal: PrincipalId(
+                    Principal::from_str("shefu-t3kr5-t5q3w-mqmdq-jabyv-vyvtf-cyyey-3kmo4-toyln-emubw-4qe")
+                        .expect("Should be able to create a principal"),
+                ),
+                replica_version: "85bd56a70e55b2cea75cae6405ae11243e5fdad8".to_string(),
+                ..Default::default()
+            },
+            Subnet {
+                principal: PrincipalId(
+                    Principal::from_str("uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe")
+                        .expect("Should be able to create a principal"),
+                ),
+                replica_version: "85bd56a70e55b2cea75cae6405ae11243e5fdad8".to_string(),
+                ..Default::default()
+            },
+            Subnet {
+                principal: PrincipalId(
+                    Principal::from_str("pjljw-kztyl-46ud4-ofrj6-nzkhm-3n4nt-wi3jt-ypmav-ijqkt-gjf66-uae")
+                        .expect("Should be able to create a principal"),
+                ),
+                replica_version: "85bd56a70e55b2cea75cae6405ae11243e5fdad8".to_string(),
+                ..Default::default()
+            },
+        ]
+    }
+
     /// Use-Case 1: Beginning of a new rollout
     ///
-    /// `current_version` - set to a commit that is being rolled out
+    /// `current_version` - set to a commit that is being rolled out `2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f`
     /// `last_bake_status` - empty, because no subnets have the version
     /// `subnet_update_proposals` - can be empty but doesn't have to be. For e.g. if its Monday it is possible to have an open proposal for NNS
     ///                             But it is for a different version (one from last week)
-    /// `unassigned_version` - one from previous week
+    /// `unassigned_version` - one from previous week `85bd56a70e55b2cea75cae6405ae11243e5fdad8`
     /// `subnets` - can be seen in `craft_index_state`
+    /// `start_of_release` - some `2024-02-21`
+    /// `now` - same `2024-02-21`
     #[test]
-    fn test_rollout_beginning() {}
+    fn test_rollout_beginning() {
+        let index = craft_index_state();
+        let current_version = "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f".to_string();
+        let last_bake_status = BTreeMap::new();
+        let subnet_update_proposals = Vec::new();
+        let stages = &index.rollout.stages;
+        let unassigned_version = "85bd56a70e55b2cea75cae6405ae11243e5fdad8".to_string();
+        let subnets = &craft_subnets();
+        let current_release_feature_spec = BTreeMap::new();
+        let start_of_release = NaiveDate::parse_from_str("2024-02-21", "%Y-%m-%d").expect("Should parse date");
+        let now = NaiveDate::parse_from_str("2024-02-21", "%Y-%m-%d").expect("Should parse date");
+
+        let maybe_actions = check_stages(
+            &current_version,
+            &current_release_feature_spec,
+            &last_bake_status,
+            &subnet_update_proposals,
+            stages,
+            None,
+            &unassigned_version,
+            subnets,
+            start_of_release,
+            now,
+        );
+
+        assert!(maybe_actions.is_ok());
+        let actions = maybe_actions.unwrap();
+
+        assert_eq!(actions.len(), 1);
+        for action in actions {
+            match action {
+                SubnetAction::PlaceProposal {
+                    is_unassigned,
+                    subnet_principal: _,
+                    version,
+                } => {
+                    assert_eq!(is_unassigned, false);
+                    assert_eq!(version, current_version);
+                }
+                // Fail the test
+                _ => assert!(false),
+            }
+        }
+    }
 }
 
 // E2E tests for decision making process for happy path with feature builds
