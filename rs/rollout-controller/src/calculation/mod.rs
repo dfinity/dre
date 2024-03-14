@@ -103,12 +103,14 @@ pub async fn calculate_progress<'a>(
 
     let subnet_update_proposals = registry_state.open_subnet_upgrade_proposals().await?;
     let unassigned_nodes_version = registry_state.get_unassigned_nodes_replica_version().await?;
+    let unassigned_nodes_proposals = registry_state.open_upgrade_unassigned_nodes_proposals().await?;
 
     let actions = check_stages(
         &current_version,
         &current_feature_spec,
         &last_bake_status,
         &subnet_update_proposals,
+        &unassigned_nodes_proposals,
         &index.rollout.stages,
         Some(&logger),
         &unassigned_nodes_version,

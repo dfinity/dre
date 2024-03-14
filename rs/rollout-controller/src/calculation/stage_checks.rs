@@ -2,7 +2,7 @@ use std::{collections::BTreeMap, time::Duration};
 
 use chrono::{Datelike, Days, NaiveDate, Weekday};
 use humantime::format_duration;
-use ic_management_backend::proposal::SubnetUpdateProposal;
+use ic_management_backend::proposal::{SubnetUpdateProposal, UpdateUnassignedNodesProposal};
 use ic_management_types::Subnet;
 use slog::{debug, info, Logger};
 
@@ -36,6 +36,7 @@ pub fn check_stages<'a>(
     current_release_feature_spec: &'a BTreeMap<String, Vec<String>>,
     last_bake_status: &'a BTreeMap<String, f64>,
     subnet_update_proposals: &'a [SubnetUpdateProposal],
+    unassigned_node_update_proposals: &'a [UpdateUnassignedNodesProposal],
     stages: &'a [Stage],
     logger: Option<&'a Logger>,
     unassigned_version: &'a String,
@@ -64,6 +65,7 @@ pub fn check_stages<'a>(
             current_release_feature_spec,
             last_bake_status,
             subnet_update_proposals,
+            unassigned_node_update_proposals,
             stage,
             logger,
             unassigned_version,
@@ -112,6 +114,7 @@ fn check_stage<'a>(
     current_release_feature_spec: &'a BTreeMap<String, Vec<String>>,
     last_bake_status: &'a BTreeMap<String, f64>,
     subnet_update_proposals: &'a [SubnetUpdateProposal],
+    unassigned_node_update_proposals: &'a [UpdateUnassignedNodesProposal],
     stage: &'a Stage,
     logger: Option<&'a Logger>,
     unassigned_version: &'a String,
@@ -125,13 +128,33 @@ fn check_stage<'a>(
         }
 
         if !unassigned_version.eq(current_version) {
-            stage_actions.push(SubnetAction::PlaceProposal {
-                is_unassigned: true,
-                subnet_principal: "".to_string(),
-                version: current_version.clone(),
-            });
+            match unassigned_node_update_proposals.iter().find(|proposal| {
+                if !proposal.info.executed {
+                    if let Some(version) = &proposal.payload.replica_version {
+                        if version.eq(current_version) {
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            }) {
+                None => stage_actions.push(SubnetAction::PlaceProposal {
+                    is_unassigned: true,
+                    subnet_principal: "".to_string(),
+                    version: current_version.clone(),
+                }),
+                Some(proposal) => stage_actions.push(SubnetAction::PendingProposal {
+                    subnet_short: "unassigned-version".to_string(),
+                    proposal_id: proposal.info.id,
+                }),
+            }
             return Ok(stage_actions);
         }
+
+        stage_actions.push(SubnetAction::Noop {
+            subnet_short: "unassigned-nodes".to_string(),
+        });
+        return Ok(stage_actions);
     }
 
     for subnet_short in &stage.subnets {
@@ -547,9 +570,13 @@ mod check_stages_tests_no_feature_builds {
     use std::str::FromStr;
 
     use candid::Principal;
+    use check_stages_tests_no_feature_builds::get_open_proposal_for_subnet_tests::craft_executed_proposals;
     use ic_base_types::PrincipalId;
     use ic_management_backend::proposal::ProposalInfoInternal;
-    use registry_canister::mutations::do_update_subnet_replica::UpdateSubnetReplicaVersionPayload;
+    use registry_canister::mutations::{
+        do_update_subnet_replica::UpdateSubnetReplicaVersionPayload,
+        do_update_unassigned_nodes_config::UpdateUnassignedNodesConfigPayload,
+    };
 
     use crate::calculation::{Index, Release, Rollout, Version};
 
@@ -693,6 +720,7 @@ mod check_stages_tests_no_feature_builds {
     /// `last_bake_status` - empty, because no subnets have the version
     /// `subnet_update_proposals` - can be empty but doesn't have to be. For e.g. if its Monday it is possible to have an open proposal for NNS
     ///                             But it is for a different version (one from last week)
+    /// `unassigned_nodes_proposals` - empty
     /// `unassigned_version` - one from previous week `85bd56a70e55b2cea75cae6405ae11243e5fdad8`
     /// `subnets` - can be seen in `craft_index_state`
     /// `start_of_release` - some `2024-02-21`
@@ -705,6 +733,7 @@ mod check_stages_tests_no_feature_builds {
         let subnet_update_proposals = Vec::new();
         let stages = &index.rollout.stages;
         let unassigned_version = "85bd56a70e55b2cea75cae6405ae11243e5fdad8".to_string();
+        let unassigned_nodes_proposals = vec![];
         let subnets = &craft_subnets();
         let current_release_feature_spec = BTreeMap::new();
         let start_of_release = NaiveDate::parse_from_str("2024-02-21", "%Y-%m-%d").expect("Should parse date");
@@ -715,6 +744,7 @@ mod check_stages_tests_no_feature_builds {
             &current_release_feature_spec,
             &last_bake_status,
             &subnet_update_proposals,
+            &unassigned_nodes_proposals,
             stages,
             None,
             &unassigned_version,
@@ -749,6 +779,7 @@ mod check_stages_tests_no_feature_builds {
     /// `current_version` - set to a commit that is being rolled out `2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f`
     /// `last_bake_status` - empty, because no subnets have the version
     /// `subnet_update_proposals` - contains proposals from the first stage
+    /// `unassigned_nodes_proposals` - empty
     /// `unassigned_version` - one from previous week `85bd56a70e55b2cea75cae6405ae11243e5fdad8`
     /// `subnets` - can be seen in `craft_index_state`
     /// `start_of_release` - some `2024-02-21`
@@ -774,6 +805,7 @@ mod check_stages_tests_no_feature_builds {
         }];
         let stages = &index.rollout.stages;
         let unassigned_version = "85bd56a70e55b2cea75cae6405ae11243e5fdad8".to_string();
+        let unassigned_nodes_proposals = vec![];
         let subnets = &craft_subnets();
         let current_release_feature_spec = BTreeMap::new();
         let start_of_release = NaiveDate::parse_from_str("2024-02-21", "%Y-%m-%d").expect("Should parse date");
@@ -784,6 +816,7 @@ mod check_stages_tests_no_feature_builds {
             &current_release_feature_spec,
             &last_bake_status,
             &subnet_update_proposals,
+            &unassigned_nodes_proposals,
             stages,
             None,
             &unassigned_version,
@@ -816,6 +849,7 @@ mod check_stages_tests_no_feature_builds {
     /// `current_version` - set to a commit that is being rolled out `2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f`
     /// `last_bake_status` - contains the status for the first subnet
     /// `subnet_update_proposals` - contains proposals from the first stage
+    /// `unassigned_nodes_proposals` - empty
     /// `unassigned_version` - one from previous week `85bd56a70e55b2cea75cae6405ae11243e5fdad8`
     /// `subnets` - can be seen in `craft_index_state`
     /// `start_of_release` - some `2024-02-21`
@@ -852,6 +886,7 @@ mod check_stages_tests_no_feature_builds {
         }];
         let stages = &index.rollout.stages;
         let unassigned_version = "85bd56a70e55b2cea75cae6405ae11243e5fdad8".to_string();
+        let unassigned_nodes_proposals = vec![];
         let mut subnets = craft_subnets();
         replace_versions(&mut subnets, &[("io67a", "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f")]);
         let current_release_feature_spec = BTreeMap::new();
@@ -863,6 +898,7 @@ mod check_stages_tests_no_feature_builds {
             &current_release_feature_spec,
             &last_bake_status,
             &subnet_update_proposals,
+            &unassigned_nodes_proposals,
             stages,
             None,
             &unassigned_version,
@@ -895,6 +931,7 @@ mod check_stages_tests_no_feature_builds {
     /// `current_version` - set to a commit that is being rolled out `2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f`
     /// `last_bake_status` - contains the status for the first subnet
     /// `subnet_update_proposals` - contains proposals from the first stage
+    /// `unassigned_nodes_proposals` - empty
     /// `unassigned_version` - one from previous week `85bd56a70e55b2cea75cae6405ae11243e5fdad8`
     /// `subnets` - can be seen in `craft_index_state`
     /// `start_of_release` - some `2024-02-21`
@@ -931,6 +968,7 @@ mod check_stages_tests_no_feature_builds {
         }];
         let stages = &index.rollout.stages;
         let unassigned_version = "85bd56a70e55b2cea75cae6405ae11243e5fdad8".to_string();
+        let unassigned_nodes_proposals = vec![];
         let mut subnets = craft_subnets();
         replace_versions(&mut subnets, &[("io67a", "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f")]);
         let current_release_feature_spec = BTreeMap::new();
@@ -942,6 +980,7 @@ mod check_stages_tests_no_feature_builds {
             &current_release_feature_spec,
             &last_bake_status,
             &subnet_update_proposals,
+            &unassigned_nodes_proposals,
             stages,
             None,
             &unassigned_version,
@@ -968,6 +1007,204 @@ mod check_stages_tests_no_feature_builds {
                     assert_eq!(is_unassigned, false);
                     assert_eq!(version, current_version);
                     assert!(subnets.contains(&subnet_principal.as_str()))
+                }
+                // Just fail
+                _ => assert!(false),
+            }
+        }
+    }
+
+    /// Use case 5: Updating unassigned nodes
+    ///
+    /// `current_version` - set to a commit that is being rolled out `2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f`
+    /// `last_bake_status` - contains the status for all subnets before unassigned nodes
+    /// `subnet_update_proposals` - contains proposals from previous two stages
+    /// `unassigned_nodes_proposals` - empty
+    /// `unassigned_version` - one from previous week `85bd56a70e55b2cea75cae6405ae11243e5fdad8`
+    /// `subnets` - can be seen in `craft_index_state`
+    /// `start_of_release` - some `2024-02-21`
+    /// `now` - same `2024-02-21`
+    #[test]
+    fn test_use_case_5() {
+        let index = craft_index_state();
+        let current_version = "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f".to_string();
+        let last_bake_status = [
+            (
+                "io67a-2jmkw-zup3h-snbwi-g6a5n-rm5dn-b6png-lvdpl-nqnto-yih6l-gqe",
+                humantime::parse_duration("9h"),
+            ),
+            (
+                "shefu-t3kr5-t5q3w-mqmdq-jabyv-vyvtf-cyyey-3kmo4-toyln-emubw-4qe",
+                humantime::parse_duration("5h"),
+            ),
+            (
+                "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
+                humantime::parse_duration("5h"),
+            ),
+        ]
+        .iter()
+        .map(|(id, duration)| {
+            (
+                id.to_string(),
+                duration.clone().expect("Should parse duration").as_secs_f64(),
+            )
+        })
+        .collect();
+        let subnet_update_proposals = craft_executed_proposals(
+            &[
+                "io67a-2jmkw-zup3h-snbwi-g6a5n-rm5dn-b6png-lvdpl-nqnto-yih6l-gqe",
+                "shefu-t3kr5-t5q3w-mqmdq-jabyv-vyvtf-cyyey-3kmo4-toyln-emubw-4qe",
+                "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
+            ],
+            &current_version,
+        );
+        let stages = &index.rollout.stages;
+        let unassigned_version = "85bd56a70e55b2cea75cae6405ae11243e5fdad8".to_string();
+        let unassigned_nodes_proposals = vec![];
+        let mut subnets = craft_subnets();
+        replace_versions(
+            &mut subnets,
+            &[
+                ("io67a", "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f"),
+                ("shefu", "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f"),
+                ("uzr34", "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f"),
+            ],
+        );
+        let current_release_feature_spec = BTreeMap::new();
+        let start_of_release = NaiveDate::parse_from_str("2024-02-21", "%Y-%m-%d").expect("Should parse date");
+        let now = NaiveDate::parse_from_str("2024-02-21", "%Y-%m-%d").expect("Should parse date");
+
+        let maybe_actions = check_stages(
+            &current_version,
+            &current_release_feature_spec,
+            &last_bake_status,
+            &subnet_update_proposals,
+            &unassigned_nodes_proposals,
+            stages,
+            None,
+            &unassigned_version,
+            &subnets,
+            start_of_release,
+            now,
+        );
+
+        assert!(maybe_actions.is_ok());
+        let actions = maybe_actions.unwrap();
+        println!("{:#?}", actions);
+        assert_eq!(actions.len(), 1);
+        for action in actions {
+            match action {
+                SubnetAction::PlaceProposal {
+                    is_unassigned,
+                    subnet_principal: _,
+                    version,
+                } => {
+                    assert!(is_unassigned);
+                    assert_eq!(version, current_version);
+                }
+                // Just fail
+                _ => assert!(false),
+            }
+        }
+    }
+
+    /// Use case 6: Proposal sent for updating unassigned nodes but it is not executed
+    ///
+    /// `current_version` - set to a commit that is being rolled out `2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f`
+    /// `last_bake_status` - contains the status for all subnets before unassigned nodes
+    /// `subnet_update_proposals` - contains proposals from previous two stages
+    /// `unassigned_nodes_proposals` - contains open proposal for unassigned nodes
+    /// `unassigned_version` - one from previous week `85bd56a70e55b2cea75cae6405ae11243e5fdad8`
+    /// `subnets` - can be seen in `craft_index_state`
+    /// `start_of_release` - some `2024-02-21`
+    /// `now` - same `2024-02-21`
+    #[test]
+    fn test_use_case_6() {
+        let index = craft_index_state();
+        let current_version = "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f".to_string();
+        let last_bake_status = [
+            (
+                "io67a-2jmkw-zup3h-snbwi-g6a5n-rm5dn-b6png-lvdpl-nqnto-yih6l-gqe",
+                humantime::parse_duration("9h"),
+            ),
+            (
+                "shefu-t3kr5-t5q3w-mqmdq-jabyv-vyvtf-cyyey-3kmo4-toyln-emubw-4qe",
+                humantime::parse_duration("5h"),
+            ),
+            (
+                "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
+                humantime::parse_duration("5h"),
+            ),
+        ]
+        .iter()
+        .map(|(id, duration)| {
+            (
+                id.to_string(),
+                duration.clone().expect("Should parse duration").as_secs_f64(),
+            )
+        })
+        .collect();
+        let subnet_update_proposals = craft_executed_proposals(
+            &[
+                "io67a-2jmkw-zup3h-snbwi-g6a5n-rm5dn-b6png-lvdpl-nqnto-yih6l-gqe",
+                "shefu-t3kr5-t5q3w-mqmdq-jabyv-vyvtf-cyyey-3kmo4-toyln-emubw-4qe",
+                "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
+            ],
+            &current_version,
+        );
+        let stages = &index.rollout.stages;
+        let unassigned_version = "85bd56a70e55b2cea75cae6405ae11243e5fdad8".to_string();
+        let unassigned_nodes_proposal = vec![UpdateUnassignedNodesProposal {
+            info: ProposalInfoInternal {
+                executed: false,
+                executed_timestamp_seconds: 0,
+                id: 5,
+                proposal_timestamp_seconds: 0,
+            },
+            payload: UpdateUnassignedNodesConfigPayload {
+                ssh_readonly_access: None,
+                replica_version: Some(current_version.clone()),
+            },
+        }];
+        let mut subnets = craft_subnets();
+        replace_versions(
+            &mut subnets,
+            &[
+                ("io67a", "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f"),
+                ("shefu", "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f"),
+                ("uzr34", "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f"),
+            ],
+        );
+        let current_release_feature_spec = BTreeMap::new();
+        let start_of_release = NaiveDate::parse_from_str("2024-02-21", "%Y-%m-%d").expect("Should parse date");
+        let now = NaiveDate::parse_from_str("2024-02-21", "%Y-%m-%d").expect("Should parse date");
+
+        let maybe_actions = check_stages(
+            &current_version,
+            &current_release_feature_spec,
+            &last_bake_status,
+            &subnet_update_proposals,
+            &unassigned_nodes_proposal,
+            stages,
+            None,
+            &unassigned_version,
+            &subnets,
+            start_of_release,
+            now,
+        );
+
+        assert!(maybe_actions.is_ok());
+        let actions = maybe_actions.unwrap();
+        println!("{:#?}", actions);
+        assert_eq!(actions.len(), 1);
+        for action in actions {
+            match action {
+                SubnetAction::PendingProposal {
+                    proposal_id,
+                    subnet_short,
+                } => {
+                    assert_eq!(proposal_id, 5);
+                    assert_eq!(subnet_short, "unassigned-version");
                 }
                 // Just fail
                 _ => assert!(false),
