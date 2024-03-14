@@ -181,13 +181,13 @@ class Reconciler:
                                     config,
                                     active_versions=active_versions,
                                     elected_versions=json.loads(
-                                        IcAdmin(self.nns_url)._ic_admin_run("get-blessed-replica-versions", "--json")
+                                        IcAdmin(self.nns_url, git_revision="e5c6356b5a752a7f5912de133000ae60e0e25aaf")._ic_admin_run("get-blessed-replica-versions", "--json")
                                     )["value"]["blessed_version_ids"],
                                 ),
                             )
 
                         summary = changelog + f"\n\nLink to the forum post: {rc_forum_topic.post_url(v.version)}"
-                        IcAdmin(self.nns_url)._ic_admin_run(
+                        IcAdmin(self.nns_url, git_revision="e5c6356b5a752a7f5912de133000ae60e0e25aaf")._ic_admin_run(
                             "propose-to-update-elected-replica-versions",
                             "--proposal-title",
                             f"Elect new IC/Replica revision (commit {v.version[:7]})",
