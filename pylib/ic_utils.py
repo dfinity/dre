@@ -23,7 +23,7 @@ from tenacity import retry_if_not_exception_type
 from tenacity import stop_after_attempt
 from tenacity import wait_exponential
 
-repo_root = os.environ.get('GIT_ROOT')
+repo_root = os.environ.get("GIT_ROOT")
 if not repo_root:
     git_repo = git.Repo(os.path.dirname(__file__), search_parent_directories=True)
     repo_root = git_repo.git.rev_parse("--show-toplevel")
@@ -368,7 +368,7 @@ def download_ic_executable(git_revision: str, executable_name: str, blessed: boo
         return local_path
 
     platform_lower = platform.system().lower()
-    remote_path = f"{git_revision}/openssl-static-binaries/x86_64-{platform_lower}/{executable_name}.gz"
+    remote_path = f"{git_revision}/binaries/x86_64-{platform_lower}/{executable_name}.gz"
     contents = download_ic_binary(remote_path=remote_path, blessed=blessed)
 
     local_path.parent.mkdir(exist_ok=True, parents=True)  # Ensure the parent directory exists

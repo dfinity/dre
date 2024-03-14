@@ -24,8 +24,8 @@ from ic.identity import Identity
 from ic.principal import Principal
 
 
-from pylib.ic_deployment import IcDeployment
-from pylib.ic_utils import download_ic_executable
+from ic_deployment import IcDeployment
+from ic_utils import download_ic_executable
 
 GOV_PRINCIPAL = "rrkah-fqaaa-aaaaa-aaaaq-cai"
 
@@ -140,6 +140,6 @@ def canister_version(agent: Agent, canister_principal: str) -> str:
 
 if __name__ == "__main__":
     # One can run some simple one-off tests here, e.g.:
-    ic_admin = IcAdmin()
+    ic_admin = IcAdmin("https://ic0.app", git_revision="7a3db052ed4c3306272ed372039d9775f189c0bc")
 
     print(ic_admin.get_subnet_replica_versions())
