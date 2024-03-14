@@ -1,3 +1,4 @@
+import os
 import tempfile
 from pydrive2.auth import GoogleAuth
 from pydrive2.drive import GoogleDrive
@@ -5,6 +6,7 @@ from pydrive2.files import GoogleDriveFile
 from markdownify import markdownify
 from release_notes import release_notes
 import markdown
+import slack
 
 md = markdown.Markdown(extensions=["pymdownx.tilde"])
 
@@ -28,24 +30,26 @@ class ReleaseNotesClient:
         gauth.ServiceAuth()
         self.drive = GoogleDrive(gauth)
 
-    def notes_title(self, version: str) -> str:
-        return "Release Notes ({})".format(version)
-
-    def ensure(self, version: str, content: str):
+    def ensure(self, version_name: str, version: str, content: str):
         existing_file = self.file(version)
         if existing_file:
             return existing_file
         htmldoc = md.convert(content)
         gdoc = self.drive.CreateFile(
             {
-                "title": "Release Notes ({})".format(version),
+                "title": f"Release Notes - {version_name} ({version})",
                 "mimeType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                 "parents": [{"kind": "drive#fileLink", "id": release_notes_folder}],
             }
         )
         gdoc.SetContentString(htmldoc)
         gdoc.Upload()
-        # TODO: send slack notification
+        slack.announce_release(
+            os.environ["SLACK_WEBHOOK_URL"],
+            "release-2024-03-06_23-01+p2p",
+            gdoc["alternateLink"],
+            False,
+        )
         return gdoc
 
     def file(self, version: str):
@@ -76,7 +80,7 @@ def main():
     version = "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f"
     notes = release_notes("8d4b6898d878fa3db4028b316b78b469ed29f293", version, release)
     print(notes)
-    gdoc = client.ensure(version=version, content=notes)
+    gdoc = client.ensure(version_name=release, version=version, content=notes)
     print(gdoc["alternateLink"])
 
 

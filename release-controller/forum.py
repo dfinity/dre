@@ -5,7 +5,7 @@ from pydantic_yaml import parse_yaml_raw_as
 from pydiscourse import DiscourseClient
 from release_index import Release, Model
 from typing import Callable
-
+from util import version_name
 
 
 def _post_template(changelog, version_name, proposal=None):
@@ -22,11 +22,6 @@ Here is a summary of the changes since the last release:
 
 {changelog}
 """
-
-
-def version_name(rc_name: str, name: str):
-    return f"release-{rc_name.removeprefix("rc--")}-{name}"
-
 
 class ReleaseCandidateForumPost:
     def __init__(self, version_name: str, changelog: str | None, proposal: int | None):

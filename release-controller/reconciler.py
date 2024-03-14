@@ -20,6 +20,8 @@ import release_index
 import urllib.request
 import tempfile
 from release_notes import release_notes
+from util import version_name
+from git_repo import GitRepo, push_release_tags
 
 
 class ReconcilerState:
@@ -117,6 +119,8 @@ class Reconciler:
         publish_client: PublishNotesClient,
         nns_url: str,
         state: ReconcilerState,
+        ic_repo: GitRepo,
+        ignore_releases=[],
     ):
         self.forum_client = forum_client
         self.loader = loader
@@ -126,20 +130,25 @@ class Reconciler:
         self.governance_canister = GovernanceCanister()
         self.state = state
         self.ic_prometheus = ICPrometheus(url="https://victoria.mainnet.dfinity.network/select/0/prometheus")
+        self.ic_repo = ic_repo
+        self.ignore_releases = ignore_releases
 
     def reconcile(self):
         config = self.loader.index()
         active_versions = self.ic_prometheus.active_versions()
         for rc_idx, rc in enumerate(
-            config.root.releases[config.root.releases.index(oldest_active_release(config, active_versions)) :]
+            config.root.releases[: config.root.releases.index(oldest_active_release(config, active_versions)) + 1]
         ):
+            if rc.rc_name in self.ignore_releases:
+                continue
             rc_forum_topic = self.forum_client.get_or_create(rc)
             # update to create posts for any releases
             rc_forum_topic.update(changelog=self.loader.changelog, proposal=self.state.version_proposal)
             for v_idx, v in enumerate(rc.versions):
-                # TODO: push tag. maybe publish later?
+                push_release_tags(self.ic_repo, rc)
                 self.notes_client.ensure(
                     version=v.version,
+                    version_name=version_name(rc_name=rc.rc_name, name=v.name),
                     # TODO: might be good to run this inside the notes_client so that it's not called every loop
                     content=release_notes(
                         first_commit=(
@@ -210,7 +219,13 @@ def main():
         api_username=os.environ["DISCOURSE_USER"],
         api_key=os.environ["DISCOURSE_KEY"],
     )
-    config_loader = GitReleaseLoader() if "dev" not in os.environ else DevReleaseLoader()
+    # TODO: remove -testing suffix
+    dre_repo = "dfinity/dre-testing"
+    config_loader = (
+        GitReleaseLoader(f"https://github.com/{dre_repo}.git")
+        if "dev" not in os.environ
+        else DevReleaseLoader()
+    )
     state = ReconcilerState(pathlib.Path.home() / ".cache/release-controller")
     forum_client = ReleaseCandidateForumClient(
         discourse_client,
@@ -220,9 +235,15 @@ def main():
         forum_client=forum_client,
         loader=config_loader,
         notes_client=ReleaseNotesClient(credentials_file=pathlib.Path(__file__).parent.resolve() / "credentials.json"),
-        publish_client=PublishNotesClient(github_client.get_repo("dfinity/dre")),
-        nns_url="TODO:",
+        publish_client=PublishNotesClient(github_client.get_repo(dre_repo)),
+        nns_url="https://ic0.app",
         state=state,
+        ignore_releases=[
+            "rc--2024-02-28_23-01",
+            "rc--2024-03-06_23-01",
+        ],
+        # TODO: remove suffix -dre-testing
+        ic_repo = GitRepo(f"https://oauth2:{os.environ["GITHUB_TOKEN"]}@github.com/dfinity/ic-dre-testing.git"),
     )
 
     while True:

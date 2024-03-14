@@ -5,7 +5,7 @@ class ReleaseNotesClientMock(ReleaseNotesClient):
     def __init__(self):
         self.notes = {}
 
-    def ensure(self, version: str, content: str):
+    def ensure(self, version_name: str, version: str, content: str):
         if version in self.notes:
             return
         self.notes[version] = content

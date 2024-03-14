@@ -6,7 +6,7 @@ import tempfile
 
 from pydantic_yaml import parse_yaml_raw_as
 import release_index
-from git_fetcher import GitFetcher
+from git_repo import GitRepo
 from publish_notes import REPLICA_RELEASES_DIR
 
 RELEASE_INDEX_FILE = "release-index.yaml"
@@ -55,16 +55,16 @@ class DevReleaseLoader(ReleaseLoader):
 
 
 class GitReleaseLoader(ReleaseLoader):
-    def __init__(self):
-        self.git_fetcher = GitFetcher("https://github.com/dfinity/dre.git")
-        super().__init__(self.git_fetcher.dir)
+    def __init__(self, git_repo: str):
+        self.git_repo = GitRepo(git_repo)
+        super().__init__(self.git_repo.dir)
 
     def index(self):
-        self.git_fetcher.fetch()
+        self.git_repo.fetch()
         return super().index()
 
     def changelog(self, version):
-        self.git_fetcher.fetch()
+        self.git_repo.fetch()
         return super().changelog(version)
 
 

@@ -1,9 +1,11 @@
 import os
 import logging
+from dotenv import load_dotenv
 from github.Repository import Repository
 from github import Github, Auth
 
 REPLICA_RELEASES_DIR = "replica-releases"
+
 
 class PublishNotesClient:
     def __init__(self, repo: Repository):
@@ -33,8 +35,9 @@ class PublishNotesClient:
 
 
 def main():
+    load_dotenv()
     github_client = Github(auth=Auth.Token(os.environ["GITHUB_TOKEN"]))
-    client = PublishNotesClient(github_client.get_repo("dfinity-lab/dre-testing"))
+    client = PublishNotesClient(github_client.get_repo("dfinity/dre-testing"))
     client.ensure_published("85bd56a70e55b2cea75cae6405ae11243e5fdad8", "test")
 
 
