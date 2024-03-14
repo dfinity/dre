@@ -1211,6 +1211,308 @@ mod check_stages_tests_no_feature_builds {
             }
         }
     }
+
+    /// Use case 7: Executed update unassigned nodes, waiting for next week
+    ///
+    /// `current_version` - set to a commit that is being rolled out `2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f`
+    /// `last_bake_status` - contains the status for all subnets before unassigned nodes
+    /// `subnet_update_proposals` - contains proposals from previous two stages
+    /// `unassigned_nodes_proposals` - contains executed proposal for unassigned nodes
+    /// `unassigned_version` - same as `current_version`
+    /// `subnets` - can be seen in `craft_index_state`
+    /// `start_of_release` - some `2024-02-21`
+    /// `now` - same `2024-02-24`
+    #[test]
+    fn test_use_case_7() {
+        let index = craft_index_state();
+        let current_version = "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f".to_string();
+        let last_bake_status = [
+            (
+                "io67a-2jmkw-zup3h-snbwi-g6a5n-rm5dn-b6png-lvdpl-nqnto-yih6l-gqe",
+                humantime::parse_duration("9h"),
+            ),
+            (
+                "shefu-t3kr5-t5q3w-mqmdq-jabyv-vyvtf-cyyey-3kmo4-toyln-emubw-4qe",
+                humantime::parse_duration("5h"),
+            ),
+            (
+                "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
+                humantime::parse_duration("5h"),
+            ),
+        ]
+        .iter()
+        .map(|(id, duration)| {
+            (
+                id.to_string(),
+                duration.clone().expect("Should parse duration").as_secs_f64(),
+            )
+        })
+        .collect();
+        let subnet_update_proposals = craft_executed_proposals(
+            &[
+                "io67a-2jmkw-zup3h-snbwi-g6a5n-rm5dn-b6png-lvdpl-nqnto-yih6l-gqe",
+                "shefu-t3kr5-t5q3w-mqmdq-jabyv-vyvtf-cyyey-3kmo4-toyln-emubw-4qe",
+                "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
+            ],
+            &current_version,
+        );
+        let stages = &index.rollout.stages;
+        let unassigned_version = current_version.clone();
+        let unassigned_nodes_proposal = vec![UpdateUnassignedNodesProposal {
+            info: ProposalInfoInternal {
+                executed: true,
+                executed_timestamp_seconds: 0,
+                id: 5,
+                proposal_timestamp_seconds: 0,
+            },
+            payload: UpdateUnassignedNodesConfigPayload {
+                ssh_readonly_access: None,
+                replica_version: Some(current_version.clone()),
+            },
+        }];
+        let mut subnets = craft_subnets();
+        replace_versions(
+            &mut subnets,
+            &[
+                ("io67a", "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f"),
+                ("shefu", "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f"),
+                ("uzr34", "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f"),
+            ],
+        );
+        let current_release_feature_spec = BTreeMap::new();
+        let start_of_release = NaiveDate::parse_from_str("2024-02-21", "%Y-%m-%d").expect("Should parse date");
+        let now = NaiveDate::parse_from_str("2024-02-24", "%Y-%m-%d").expect("Should parse date");
+
+        let maybe_actions = check_stages(
+            &current_version,
+            &current_release_feature_spec,
+            &last_bake_status,
+            &subnet_update_proposals,
+            &unassigned_nodes_proposal,
+            stages,
+            None,
+            &unassigned_version,
+            &subnets,
+            start_of_release,
+            now,
+        );
+
+        assert!(maybe_actions.is_ok());
+        let actions = maybe_actions.unwrap();
+        println!("{:#?}", actions);
+        assert_eq!(actions.len(), 1);
+        for action in actions {
+            match action {
+                SubnetAction::WaitForNextWeek { subnet_short } => {
+                    assert_eq!(subnet_short, "pjljw");
+                }
+                // Just fail
+                _ => assert!(false),
+            }
+        }
+    }
+
+    /// Use case 8: Next monday came, should place proposal for updating the last subnet
+    ///
+    /// `current_version` - set to a commit that is being rolled out `2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f`
+    /// `last_bake_status` - contains the status for all subnets before unassigned nodes
+    /// `subnet_update_proposals` - contains proposals from previous two stages
+    /// `unassigned_nodes_proposals` - contains executed proposal for unassigned nodes
+    /// `unassigned_version` - same as `current_version`
+    /// `subnets` - can be seen in `craft_index_state`
+    /// `start_of_release` - some `2024-02-21`
+    /// `now` - same `2024-02-26`
+    #[test]
+    fn test_use_case_8() {
+        let index = craft_index_state();
+        let current_version = "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f".to_string();
+        let last_bake_status = [
+            (
+                "io67a-2jmkw-zup3h-snbwi-g6a5n-rm5dn-b6png-lvdpl-nqnto-yih6l-gqe",
+                humantime::parse_duration("9h"),
+            ),
+            (
+                "shefu-t3kr5-t5q3w-mqmdq-jabyv-vyvtf-cyyey-3kmo4-toyln-emubw-4qe",
+                humantime::parse_duration("5h"),
+            ),
+            (
+                "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
+                humantime::parse_duration("5h"),
+            ),
+        ]
+        .iter()
+        .map(|(id, duration)| {
+            (
+                id.to_string(),
+                duration.clone().expect("Should parse duration").as_secs_f64(),
+            )
+        })
+        .collect();
+        let subnet_update_proposals = craft_executed_proposals(
+            &[
+                "io67a-2jmkw-zup3h-snbwi-g6a5n-rm5dn-b6png-lvdpl-nqnto-yih6l-gqe",
+                "shefu-t3kr5-t5q3w-mqmdq-jabyv-vyvtf-cyyey-3kmo4-toyln-emubw-4qe",
+                "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
+            ],
+            &current_version,
+        );
+        let stages = &index.rollout.stages;
+        let unassigned_version = current_version.clone();
+        let unassigned_nodes_proposal = vec![UpdateUnassignedNodesProposal {
+            info: ProposalInfoInternal {
+                executed: true,
+                executed_timestamp_seconds: 0,
+                id: 5,
+                proposal_timestamp_seconds: 0,
+            },
+            payload: UpdateUnassignedNodesConfigPayload {
+                ssh_readonly_access: None,
+                replica_version: Some(current_version.clone()),
+            },
+        }];
+        let mut subnets = craft_subnets();
+        replace_versions(
+            &mut subnets,
+            &[
+                ("io67a", "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f"),
+                ("shefu", "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f"),
+                ("uzr34", "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f"),
+            ],
+        );
+        let current_release_feature_spec = BTreeMap::new();
+        let start_of_release = NaiveDate::parse_from_str("2024-02-21", "%Y-%m-%d").expect("Should parse date");
+        let now = NaiveDate::parse_from_str("2024-02-28", "%Y-%m-%d").expect("Should parse date");
+
+        let maybe_actions = check_stages(
+            &current_version,
+            &current_release_feature_spec,
+            &last_bake_status,
+            &subnet_update_proposals,
+            &unassigned_nodes_proposal,
+            stages,
+            None,
+            &unassigned_version,
+            &subnets,
+            start_of_release,
+            now,
+        );
+
+        assert!(maybe_actions.is_ok());
+        let actions = maybe_actions.unwrap();
+        println!("{:#?}", actions);
+        assert_eq!(actions.len(), 1);
+        for action in actions {
+            match action {
+                SubnetAction::PlaceProposal {
+                    is_unassigned,
+                    subnet_principal,
+                    version,
+                } => {
+                    assert!(subnet_principal.starts_with("pjljw"));
+                    assert_eq!(is_unassigned, false);
+                    assert_eq!(version, current_version)
+                }
+                // Just fail
+                _ => assert!(false),
+            }
+        }
+    }
+
+    /// Use case 9: Next monday came, proposal for last subnet executed and bake time passed. Rollout finished
+    ///
+    /// `current_version` - set to a commit that is being rolled out `2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f`
+    /// `last_bake_status` - contains the status for all subnets before unassigned nodes
+    /// `subnet_update_proposals` - contains proposals from previous two stages
+    /// `unassigned_nodes_proposals` - contains executed proposal for unassigned nodes
+    /// `unassigned_version` - same as `current_version`
+    /// `subnets` - can be seen in `craft_index_state`
+    /// `start_of_release` - some `2024-02-21`
+    /// `now` - same `2024-02-26`
+    #[test]
+    fn test_use_case_9() {
+        let index = craft_index_state();
+        let current_version = "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f".to_string();
+        let last_bake_status = [
+            (
+                "io67a-2jmkw-zup3h-snbwi-g6a5n-rm5dn-b6png-lvdpl-nqnto-yih6l-gqe",
+                humantime::parse_duration("9h"),
+            ),
+            (
+                "shefu-t3kr5-t5q3w-mqmdq-jabyv-vyvtf-cyyey-3kmo4-toyln-emubw-4qe",
+                humantime::parse_duration("5h"),
+            ),
+            (
+                "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
+                humantime::parse_duration("5h"),
+            ),
+            (
+                "pjljw-kztyl-46ud4-ofrj6-nzkhm-3n4nt-wi3jt-ypmav-ijqkt-gjf66-uae",
+                humantime::parse_duration("5h"),
+            ),
+        ]
+        .iter()
+        .map(|(id, duration)| {
+            (
+                id.to_string(),
+                duration.clone().expect("Should parse duration").as_secs_f64(),
+            )
+        })
+        .collect();
+        let subnet_update_proposals = craft_executed_proposals(
+            &[
+                "io67a-2jmkw-zup3h-snbwi-g6a5n-rm5dn-b6png-lvdpl-nqnto-yih6l-gqe",
+                "shefu-t3kr5-t5q3w-mqmdq-jabyv-vyvtf-cyyey-3kmo4-toyln-emubw-4qe",
+                "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
+                "pjljw-kztyl-46ud4-ofrj6-nzkhm-3n4nt-wi3jt-ypmav-ijqkt-gjf66-uae",
+            ],
+            &current_version,
+        );
+        let stages = &index.rollout.stages;
+        let unassigned_version = current_version.clone();
+        let unassigned_nodes_proposal = vec![UpdateUnassignedNodesProposal {
+            info: ProposalInfoInternal {
+                executed: true,
+                executed_timestamp_seconds: 0,
+                id: 5,
+                proposal_timestamp_seconds: 0,
+            },
+            payload: UpdateUnassignedNodesConfigPayload {
+                ssh_readonly_access: None,
+                replica_version: Some(current_version.clone()),
+            },
+        }];
+        let mut subnets = craft_subnets();
+        replace_versions(
+            &mut subnets,
+            &[
+                ("io67a", "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f"),
+                ("shefu", "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f"),
+                ("uzr34", "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f"),
+                ("pjljw", "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f"),
+            ],
+        );
+        let current_release_feature_spec = BTreeMap::new();
+        let start_of_release = NaiveDate::parse_from_str("2024-02-21", "%Y-%m-%d").expect("Should parse date");
+        let now = NaiveDate::parse_from_str("2024-02-28", "%Y-%m-%d").expect("Should parse date");
+
+        let maybe_actions = check_stages(
+            &current_version,
+            &current_release_feature_spec,
+            &last_bake_status,
+            &subnet_update_proposals,
+            &unassigned_nodes_proposal,
+            stages,
+            None,
+            &unassigned_version,
+            &subnets,
+            start_of_release,
+            now,
+        );
+
+        assert!(maybe_actions.is_ok());
+        let actions = maybe_actions.unwrap();
+        assert_eq!(actions.len(), 0);
+    }
 }
 
 // E2E tests for decision making process for happy path with feature builds
