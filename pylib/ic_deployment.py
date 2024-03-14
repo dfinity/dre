@@ -6,8 +6,8 @@ import subprocess
 
 import yaml
 
-from ic_utils import find_deployment_env_root
-from ic_utils import repo_root
+from .ic_utils import find_deployment_env_root
+from .ic_utils import repo_root
 
 
 class IcDeployment:

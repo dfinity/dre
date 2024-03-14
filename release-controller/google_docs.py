@@ -30,7 +30,7 @@ class ReleaseNotesClient:
         gauth.ServiceAuth()
         self.drive = GoogleDrive(gauth)
 
-    def ensure(self, version_name: str, version: str, content: str):
+    def ensure(self, version_name: str, version: str, content: str, tag_teams_on_create: bool):
         existing_file = self.file(version)
         if existing_file:
             return existing_file
@@ -45,10 +45,10 @@ class ReleaseNotesClient:
         gdoc.SetContentString(htmldoc)
         gdoc.Upload()
         slack.announce_release(
-            os.environ["SLACK_WEBHOOK_URL"],
-            "release-2024-03-06_23-01+p2p",
-            gdoc["alternateLink"],
-            False,
+            slack_url=os.environ["SLACK_WEBHOOK_URL"],
+            version_name=version_name,
+            google_doc_url=gdoc["alternateLink"],
+            tag_all_teams=tag_teams_on_create,
         )
         return gdoc
 

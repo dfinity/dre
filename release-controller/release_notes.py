@@ -242,7 +242,7 @@ def best_matching_regex(file_path, regex_list):
     return matches[0]
 
 
-def release_notes(first_commit, last_commit, rc_name) -> str:
+def release_notes(first_commit, last_commit, release_name) -> str:
     conv_commit_pattern = re.compile(r"^(\w+)(\([^\)]*\))?: (.+)$")
     jira_ticket_regex = r" *\b[A-Z]{2,}\d?-\d+\b:?"  # <whitespace?><word boundary><uppercase letters><digit?><hyphen><digits><word boundary><colon?>
     empty_brackets_regex = r" *\[ *\]:?"  # Sometimes Jira tickets are in square brackets
@@ -401,7 +401,7 @@ def release_notes(first_commit, last_commit, rc_name) -> str:
 # Release Notes for [{rc_name}](https://github.com/dfinity/ic/tree/{rc_name}) ({last_commit})
 Changelog since git revision [{first_commit}](https://dashboard.internetcomputer.org/release/{first_commit})
 """.format(
-        rc_name=rc_name,
+        rc_name=release_name,
         last_commit=last_commit,
         first_commit=first_commit,
     )
@@ -421,8 +421,8 @@ Changelog since git revision [{first_commit}](https://dashboard.internetcomputer
                 else "({0}):".format(change["scope"])
             )
             message_part = change["message"]
-            commiter_part = f"<!-- {change['commiter']} -->"
-            commiter_part = ""
+            commiter_part = f"(author: {change['commiter']})"
+            # commiter_part = ""
 
             text = "{0} {4} {1}{2} {3}".format(commit_part, team_part, scope_part, message_part, commiter_part)
             if not change["included"]:

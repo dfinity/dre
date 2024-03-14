@@ -4,6 +4,7 @@ import logging
 import os
 import pathlib
 import time
+import __fix_import_paths
 from pydiscourse import DiscourseClient
 from pydantic_yaml import parse_yaml_raw_as
 from release_index import Model as ReleaseIndexModel
@@ -157,8 +158,9 @@ class Reconciler:
                             else rc.versions[v_idx - 1].version  # take previous version from same rc
                         ),
                         last_commit=v.version,
-                        rc_name=rc.rc_name,
+                        release_name=version_name(rc_name=rc.rc_name, name=v.name),
                     ),
+                    tag_teams_on_create=v_idx == 0,
                 )
                 if v.release_notes_ready:
                     changelog = self.notes_client.markdown_file(v.version)
@@ -174,7 +176,7 @@ class Reconciler:
                         self.state.mark_submitted(v.version)
 
                         unelect_versions_args = []
-                        if v.version == rc.versions[0].version:
+                        if v_idx == 0:
                             unelect_versions_args.append("--replica-versions-to-unelect")
                             unelect_versions_args.extend(
                                 versions_to_unelect(
@@ -243,13 +245,12 @@ def main():
             "rc--2024-03-06_23-01",
         ],
         # TODO: remove suffix -dre-testing
-        ic_repo = GitRepo(f"https://oauth2:{os.environ["GITHUB_TOKEN"]}@github.com/dfinity/ic-dre-testing.git"),
+        ic_repo = GitRepo(f"https://oauth2:{os.environ["GITHUB_TOKEN"]}@github.com/dfinity/ic-dre-testing.git", main_branch="master"),
     )
 
     while True:
         reconciler.reconcile()
         time.sleep(60)
-    # TODO: skip initial releases already managed in old way
 
 
 if __name__ == "__main__":

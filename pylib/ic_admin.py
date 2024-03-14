@@ -24,8 +24,8 @@ from ic.identity import Identity
 from ic.principal import Principal
 
 
-from ic_deployment import IcDeployment
-from ic_utils import download_ic_executable
+from .ic_deployment import IcDeployment
+from .ic_utils import download_ic_executable
 
 GOV_PRINCIPAL = "rrkah-fqaaa-aaaaa-aaaaq-cai"
 
