@@ -8,7 +8,7 @@ use ic_management_types::{Release, Subnet};
 use itertools::Itertools;
 use slog::{debug, info, Logger};
 
-use super::Stage;
+use super::{Index, Stage};
 
 #[derive(Debug)]
 pub enum SubnetAction {
@@ -34,24 +34,23 @@ pub enum SubnetAction {
 }
 
 pub fn check_stages<'a>(
-    current_version: &'a String,
-    current_release_feature_spec: &'a BTreeMap<String, Vec<String>>,
     last_bake_status: &'a BTreeMap<String, f64>,
     subnet_update_proposals: &'a [SubnetUpdateProposal],
     unassigned_node_update_proposals: &'a [UpdateUnassignedNodesProposal],
-    stages: &'a [Stage],
+    index: Index,
     logger: Option<&'a Logger>,
     unassigned_version: &'a String,
     subnets: &'a [Subnet],
-    start_of_release: NaiveDate,
     now: NaiveDate,
 ) -> anyhow::Result<Vec<SubnetAction>> {
-    for (i, stage) in stages.iter().enumerate() {
+    let desired_versions = desired_rollout_release_version(subnets.to_vec(), index.releases);
+    for (i, stage) in index.rollout.stages.iter().enumerate() {
         if let Some(logger) = logger {
             info!(logger, "Checking stage {}", i)
         }
 
-        if stage.wait_for_next_week && !week_passed(start_of_release, now) {
+        let start_of_release = desired_versions.release.date();
+        if stage.wait_for_next_week && !week_passed(start_of_release.date(), now) {
             let actions = stage
                 .subnets
                 .iter()
@@ -63,8 +62,6 @@ pub fn check_stages<'a>(
         }
 
         let stage_actions = check_stage(
-            current_version,
-            current_release_feature_spec,
             last_bake_status,
             subnet_update_proposals,
             unassigned_node_update_proposals,
@@ -72,6 +69,7 @@ pub fn check_stages<'a>(
             logger,
             unassigned_version,
             subnets,
+            desired_versions.clone(),
         )?;
 
         if !stage_actions.iter().all(|a| {
@@ -89,7 +87,10 @@ pub fn check_stages<'a>(
     }
 
     if let Some(logger) = logger {
-        info!(logger, "The current rollout '{}' is completed.", current_version);
+        info!(
+            logger,
+            "The current rollout '{}' is completed.", desired_versions.release.rc_name
+        );
     }
 
     Ok(vec![])
@@ -112,8 +113,6 @@ fn week_passed(release_start: NaiveDate, now: NaiveDate) -> bool {
 }
 
 fn check_stage<'a>(
-    current_version: &'a String,
-    current_release_feature_spec: &'a BTreeMap<String, Vec<String>>,
     last_bake_status: &'a BTreeMap<String, f64>,
     subnet_update_proposals: &'a [SubnetUpdateProposal],
     unassigned_node_update_proposals: &'a [UpdateUnassignedNodesProposal],
@@ -121,6 +120,7 @@ fn check_stage<'a>(
     logger: Option<&'a Logger>,
     unassigned_version: &'a String,
     subnets: &'a [Subnet],
+    desired_versions: DesiredReleaseVersion,
 ) -> anyhow::Result<Vec<SubnetAction>> {
     let mut stage_actions = vec![];
     if stage.update_unassigned_nodes {
@@ -129,11 +129,11 @@ fn check_stage<'a>(
             debug!(logger, "Unassigned nodes stage");
         }
 
-        if !unassigned_version.eq(current_version) {
+        if *unassigned_version != desired_versions.unassigned_nodes.version {
             match unassigned_node_update_proposals.iter().find(|proposal| {
                 if !proposal.info.executed {
                     if let Some(version) = &proposal.payload.replica_version {
-                        if version.eq(current_version) {
+                        if *version == desired_versions.unassigned_nodes.version {
                             return true;
                         }
                     }
@@ -143,7 +143,7 @@ fn check_stage<'a>(
                 None => stage_actions.push(SubnetAction::PlaceProposal {
                     is_unassigned: true,
                     subnet_principal: "".to_string(),
-                    version: current_version.clone(),
+                    version: desired_versions.unassigned_nodes.version,
                 }),
                 Some(proposal) => stage_actions.push(SubnetAction::PendingProposal {
                     subnet_short: "unassigned-version".to_string(),
@@ -161,21 +161,27 @@ fn check_stage<'a>(
 
     for subnet_short in &stage.subnets {
         // Get desired version
-        let desired_version =
-            get_desired_version_for_subnet(subnet_short, current_release_feature_spec, current_version);
+        let (subnet_principal, desired_version) = desired_versions
+            .subnets
+            .iter()
+            .find(|(s, v)| s.to_string().starts_with(subnet_short))
+            .expect("should find the subnet");
 
         // Find subnet to by the subnet_short
-        let subnet = find_subnet_by_short_id(subnets, subnet_short)?;
+        let subnet = subnets
+            .iter()
+            .find(|s| *subnet_principal == s.principal)
+            .expect("subnet should exist");
 
         if let Some(logger) = logger {
             debug!(
                 logger,
-                "Checking if subnet {} is on desired version '{}'", subnet_short, desired_version
+                "Checking if subnet {} is on desired version '{}'", subnet_short, desired_version.version
             );
         }
 
         // If subnet is on desired version, check bake time
-        if subnet.replica_version.eq(desired_version) {
+        if *subnet.replica_version == desired_version.version {
             let remaining =
                 get_remaining_bake_time_for_subnet(last_bake_status, subnet, stage.bake_time.as_secs_f64())?;
             let remaining_duration = Duration::from_secs_f64(remaining);
@@ -207,7 +213,8 @@ fn check_stage<'a>(
         }
 
         // If subnet is not on desired version, check if there is an open proposal
-        if let Some(proposal) = get_open_proposal_for_subnet(subnet_update_proposals, subnet, desired_version) {
+        if let Some(proposal) = get_open_proposal_for_subnet(subnet_update_proposals, subnet, &desired_version.version)
+        {
             if let Some(logger) = logger {
                 info!(
                     logger,
@@ -225,7 +232,7 @@ fn check_stage<'a>(
         stage_actions.push(SubnetAction::PlaceProposal {
             is_unassigned: false,
             subnet_principal: subnet.principal.to_string(),
-            version: desired_version.to_string(),
+            version: desired_version.version.clone(),
         })
     }
 
@@ -246,10 +253,17 @@ fn get_desired_version_for_subnet<'a>(
     };
 }
 
+#[derive(Clone)]
+struct DesiredReleaseVersion {
+    subnets: BTreeMap<PrincipalId, crate::calculation::Version>,
+    unassigned_nodes: crate::calculation::Version,
+    release: crate::calculation::Release,
+}
+
 fn desired_rollout_release_version(
     subnets: Vec<Subnet>,
     releases: Vec<crate::calculation::Release>,
-) -> BTreeMap<PrincipalId, crate::calculation::Version> {
+) -> DesiredReleaseVersion {
     let subnets_releases = subnets
         .iter()
         .map(|s| {
@@ -276,8 +290,9 @@ fn desired_rollout_release_version(
             .expect("release should exist")
             .saturating_sub(1)];
     }
-    // need to add some checks here to verify
-    subnets
+    DesiredReleaseVersion {
+        release: newest_release.clone(),
+        subnets: subnets
         .iter()
         .map(|s| {
             (
@@ -289,7 +304,9 @@ fn desired_rollout_release_version(
                     .expect("versions should not be empty so it should return the first element if it doesn't match anything").clone(),
             )
         })
-        .collect()
+        .collect(),
+         unassigned_nodes: newest_release.versions[0].clone(),
+    }
 }
 
 fn find_subnet_by_short_id<'a>(subnets: &'a [Subnet], subnet_short: &'a str) -> anyhow::Result<&'a Subnet> {
@@ -724,16 +741,17 @@ mod test {
                     .collect(),
             },
         ] {
-            let release = desired_rollout_release_version(tc.subnets, tc.releases)
-                .into_iter()
-                .map(|(k, v)| (k, v.version))
-                .collect::<Vec<_>>();
+            let desired_release = desired_rollout_release_version(tc.subnets, tc.releases);
             assert_eq!(
                 tc.want
                     .into_iter()
                     .map(|(k, v)| (PrincipalId::new_subnet_test_id(k), v))
                     .collect::<Vec<_>>(),
-                release,
+                desired_release
+                    .subnets
+                    .into_iter()
+                    .map(|(k, v)| (k, v.version))
+                    .collect::<Vec<_>>(),
                 "test case '{}' failed",
                 tc.name,
             )
@@ -912,21 +930,17 @@ mod check_stages_tests_no_feature_builds {
         let unassigned_version = "85bd56a70e55b2cea75cae6405ae11243e5fdad8".to_string();
         let unassigned_nodes_proposals = vec![];
         let subnets = &craft_subnets();
-        let current_release_feature_spec = BTreeMap::new();
         let start_of_release = NaiveDate::parse_from_str("2024-02-21", "%Y-%m-%d").expect("Should parse date");
         let now = NaiveDate::parse_from_str("2024-02-21", "%Y-%m-%d").expect("Should parse date");
 
         let maybe_actions = check_stages(
-            &current_version,
-            &current_release_feature_spec,
             &last_bake_status,
             &subnet_update_proposals,
             &unassigned_nodes_proposals,
-            stages,
+            index,
             None,
             &unassigned_version,
             subnets,
-            start_of_release,
             now,
         );
 
@@ -984,21 +998,17 @@ mod check_stages_tests_no_feature_builds {
         let unassigned_version = "85bd56a70e55b2cea75cae6405ae11243e5fdad8".to_string();
         let unassigned_nodes_proposals = vec![];
         let subnets = &craft_subnets();
-        let current_release_feature_spec = BTreeMap::new();
         let start_of_release = NaiveDate::parse_from_str("2024-02-21", "%Y-%m-%d").expect("Should parse date");
         let now = NaiveDate::parse_from_str("2024-02-21", "%Y-%m-%d").expect("Should parse date");
 
         let maybe_actions = check_stages(
-            &current_version,
-            &current_release_feature_spec,
             &last_bake_status,
             &subnet_update_proposals,
             &unassigned_nodes_proposals,
-            stages,
+            index,
             None,
             &unassigned_version,
             subnets,
-            start_of_release,
             now,
         );
 
@@ -1066,21 +1076,17 @@ mod check_stages_tests_no_feature_builds {
         let unassigned_nodes_proposals = vec![];
         let mut subnets = craft_subnets();
         replace_versions(&mut subnets, &[("io67a", "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f")]);
-        let current_release_feature_spec = BTreeMap::new();
         let start_of_release = NaiveDate::parse_from_str("2024-02-21", "%Y-%m-%d").expect("Should parse date");
         let now = NaiveDate::parse_from_str("2024-02-21", "%Y-%m-%d").expect("Should parse date");
 
         let maybe_actions = check_stages(
-            &current_version,
-            &current_release_feature_spec,
             &last_bake_status,
             &subnet_update_proposals,
             &unassigned_nodes_proposals,
-            stages,
+            index,
             None,
             &unassigned_version,
             &subnets,
-            start_of_release,
             now,
         );
 
@@ -1148,21 +1154,17 @@ mod check_stages_tests_no_feature_builds {
         let unassigned_nodes_proposals = vec![];
         let mut subnets = craft_subnets();
         replace_versions(&mut subnets, &[("io67a", "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f")]);
-        let current_release_feature_spec = BTreeMap::new();
         let start_of_release = NaiveDate::parse_from_str("2024-02-21", "%Y-%m-%d").expect("Should parse date");
         let now = NaiveDate::parse_from_str("2024-02-21", "%Y-%m-%d").expect("Should parse date");
 
         let maybe_actions = check_stages(
-            &current_version,
-            &current_release_feature_spec,
             &last_bake_status,
             &subnet_update_proposals,
             &unassigned_nodes_proposals,
-            stages,
+            index,
             None,
             &unassigned_version,
             &subnets,
-            start_of_release,
             now,
         );
 
@@ -1247,21 +1249,17 @@ mod check_stages_tests_no_feature_builds {
                 ("uzr34", "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f"),
             ],
         );
-        let current_release_feature_spec = BTreeMap::new();
         let start_of_release = NaiveDate::parse_from_str("2024-02-21", "%Y-%m-%d").expect("Should parse date");
         let now = NaiveDate::parse_from_str("2024-02-21", "%Y-%m-%d").expect("Should parse date");
 
         let maybe_actions = check_stages(
-            &current_version,
-            &current_release_feature_spec,
             &last_bake_status,
             &subnet_update_proposals,
             &unassigned_nodes_proposals,
-            stages,
+            index,
             None,
             &unassigned_version,
             &subnets,
-            start_of_release,
             now,
         );
 
@@ -1352,21 +1350,17 @@ mod check_stages_tests_no_feature_builds {
                 ("uzr34", "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f"),
             ],
         );
-        let current_release_feature_spec = BTreeMap::new();
         let start_of_release = NaiveDate::parse_from_str("2024-02-21", "%Y-%m-%d").expect("Should parse date");
         let now = NaiveDate::parse_from_str("2024-02-21", "%Y-%m-%d").expect("Should parse date");
 
         let maybe_actions = check_stages(
-            &current_version,
-            &current_release_feature_spec,
             &last_bake_status,
             &subnet_update_proposals,
             &unassigned_nodes_proposal,
-            stages,
+            index,
             None,
             &unassigned_version,
             &subnets,
-            start_of_release,
             now,
         );
 
@@ -1456,21 +1450,17 @@ mod check_stages_tests_no_feature_builds {
                 ("uzr34", "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f"),
             ],
         );
-        let current_release_feature_spec = BTreeMap::new();
         let start_of_release = NaiveDate::parse_from_str("2024-02-21", "%Y-%m-%d").expect("Should parse date");
         let now = NaiveDate::parse_from_str("2024-02-24", "%Y-%m-%d").expect("Should parse date");
 
         let maybe_actions = check_stages(
-            &current_version,
-            &current_release_feature_spec,
             &last_bake_status,
             &subnet_update_proposals,
             &unassigned_nodes_proposal,
-            stages,
+            index,
             None,
             &unassigned_version,
             &subnets,
-            start_of_release,
             now,
         );
 
@@ -1556,21 +1546,17 @@ mod check_stages_tests_no_feature_builds {
                 ("uzr34", "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f"),
             ],
         );
-        let current_release_feature_spec = BTreeMap::new();
         let start_of_release = NaiveDate::parse_from_str("2024-02-21", "%Y-%m-%d").expect("Should parse date");
         let now = NaiveDate::parse_from_str("2024-02-28", "%Y-%m-%d").expect("Should parse date");
 
         let maybe_actions = check_stages(
-            &current_version,
-            &current_release_feature_spec,
             &last_bake_status,
             &subnet_update_proposals,
             &unassigned_nodes_proposal,
-            stages,
+            index,
             None,
             &unassigned_version,
             &subnets,
-            start_of_release,
             now,
         );
 
@@ -1668,21 +1654,17 @@ mod check_stages_tests_no_feature_builds {
                 ("pjljw", "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f"),
             ],
         );
-        let current_release_feature_spec = BTreeMap::new();
         let start_of_release = NaiveDate::parse_from_str("2024-02-21", "%Y-%m-%d").expect("Should parse date");
         let now = NaiveDate::parse_from_str("2024-02-28", "%Y-%m-%d").expect("Should parse date");
 
         let maybe_actions = check_stages(
-            &current_version,
-            &current_release_feature_spec,
             &last_bake_status,
             &subnet_update_proposals,
             &unassigned_nodes_proposal,
-            stages,
+            index,
             None,
             &unassigned_version,
             &subnets,
-            start_of_release,
             now,
         );
 
@@ -1838,22 +1820,20 @@ mod check_stages_tests_feature_builds {
             .versions
             .get(1)
             .expect("Should be set to be the second version being rolled out");
+        // TODO: replace in index
         let mut current_release_feature_spec = BTreeMap::new();
         current_release_feature_spec.insert(feature.version.clone(), feature.subnets.clone());
         let start_of_release = NaiveDate::parse_from_str("2024-02-21", "%Y-%m-%d").expect("Should parse date");
         let now = NaiveDate::parse_from_str("2024-02-21", "%Y-%m-%d").expect("Should parse date");
 
         let maybe_actions = check_stages(
-            &current_version,
-            &current_release_feature_spec,
             &last_bake_status,
             &subnet_update_proposals,
             &unassigned_nodes_proposals,
-            stages,
+            index.clone(),
             None,
             &unassigned_version,
             subnets,
-            start_of_release,
             now,
         );
 
@@ -1931,22 +1911,20 @@ mod check_stages_tests_feature_builds {
             .versions
             .get(1)
             .expect("Should be set to be the second version being rolled out");
+        // TODO: replace in index
         let mut current_release_feature_spec = BTreeMap::new();
         current_release_feature_spec.insert(feature.version.clone(), feature.subnets.clone());
         let start_of_release = NaiveDate::parse_from_str("2024-02-21", "%Y-%m-%d").expect("Should parse date");
         let now = NaiveDate::parse_from_str("2024-02-21", "%Y-%m-%d").expect("Should parse date");
 
         let maybe_actions = check_stages(
-            &current_version,
-            &current_release_feature_spec,
             &last_bake_status,
             &subnet_update_proposals,
             &unassigned_nodes_proposals,
-            stages,
+            index.clone(),
             None,
             &unassigned_version,
             &subnets,
-            start_of_release,
             now,
         );
 

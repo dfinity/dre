@@ -1,15 +1,16 @@
 use std::{collections::BTreeMap, time::Duration};
 
 use crate::calculation::should_proceed::should_proceed;
-use chrono::{Local, NaiveDate};
+use chrono::{Local, NaiveDate, NaiveDateTime};
 use ic_management_backend::registry::RegistryState;
 use ic_management_types::Subnet;
 use prometheus_http_query::Client;
+use regex::Regex;
 use serde::Deserialize;
 use slog::{info, Logger};
 
 use self::{
-    release_actions::{create_current_release_feature_spec, find_latest_release},
+    release_actions::create_current_release_feature_spec,
     stage_checks::{check_stages, SubnetAction},
 };
 
@@ -48,6 +49,23 @@ pub struct Release {
     pub versions: Vec<Version>,
 }
 
+impl Release {
+    pub fn date(&self) -> NaiveDateTime {
+        let regex = Regex::new(r"rc--(?P<datetime>\d{4}-\d{2}-\d{2}_\d{2}-\d{2})").unwrap();
+
+        NaiveDateTime::parse_from_str(
+            regex
+                .captures(&self.rc_name)
+                .expect("should have format with date")
+                .name("datetime")
+                .expect("should match group datetime")
+                .as_str(),
+            "%Y-%m-%d_%H-%M",
+        )
+        .expect("should be valid date")
+    }
+}
+
 #[derive(Deserialize, Clone, Default, Eq, PartialEq, Hash)]
 pub struct Version {
     pub version: String,
@@ -69,12 +87,8 @@ pub async fn calculate_progress<'a>(
         return Ok(vec![]);
     }
 
-    let (latest_release, start_date) = find_latest_release(&index)?;
+    // TODO: this hsould be used somewhere else to check if proposal can be placed
     let elected_versions = registry_state.get_blessed_replica_versions().await?;
-
-    let (current_version, current_feature_spec) =
-        create_current_release_feature_spec(&latest_release, elected_versions)
-            .map_err(|e| anyhow::anyhow!(e.to_string()))?;
 
     let mut last_bake_status: BTreeMap<String, f64> = BTreeMap::new();
     let result = prometheus_client
@@ -106,16 +120,13 @@ pub async fn calculate_progress<'a>(
     let unassigned_nodes_proposals = registry_state.open_upgrade_unassigned_nodes_proposals().await?;
 
     let actions = check_stages(
-        &current_version,
-        &current_feature_spec,
         &last_bake_status,
         &subnet_update_proposals,
         &unassigned_nodes_proposals,
-        &index.rollout.stages,
+        index,
         Some(&logger),
         &unassigned_nodes_version,
         &registry_state.subnets().into_values().collect::<Vec<Subnet>>(),
-        start_date.date(),
         Local::now().date_naive(),
     )?;
 
