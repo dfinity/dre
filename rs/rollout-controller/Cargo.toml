@@ -27,7 +27,7 @@ serde_yaml = "0.9.32"
 ic-registry-keys = { workspace = true }
 ic-registry-local-registry = { workspace = true }
 ic-management-backend = { workspace = true }
-chrono = { version = "0.4", features = [ "serde" ] }
+chrono = { version = "0.4", features = ["serde"] }
 url = { workspace = true }
 prometheus-http-query = { workspace = true }
 humantime-serde = "1.1.1"
@@ -36,6 +36,8 @@ regex = { workspace = true }
 registry-canister = { workspace = true }
 candid = { workspace = true }
 ic-base-types = { workspace = true }
+pretty_assertions = { workspace = true }
+itertools = { workspace = true }
 
 [dev-dependencies]
 rstest = "0.18.2"

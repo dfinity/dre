@@ -2,8 +2,10 @@ use std::{collections::BTreeMap, time::Duration};
 
 use chrono::{Datelike, Days, NaiveDate, Weekday};
 use humantime::format_duration;
+use ic_base_types::PrincipalId;
 use ic_management_backend::proposal::{SubnetUpdateProposal, UpdateUnassignedNodesProposal};
-use ic_management_types::Subnet;
+use ic_management_types::{Release, Subnet};
+use itertools::Itertools;
 use slog::{debug, info, Logger};
 
 use super::Stage;
@@ -242,6 +244,52 @@ fn get_desired_version_for_subnet<'a>(
         Some((name, _)) => name,
         None => current_version,
     };
+}
+
+fn desired_rollout_release_version(
+    subnets: Vec<Subnet>,
+    releases: Vec<crate::calculation::Release>,
+) -> BTreeMap<PrincipalId, crate::calculation::Version> {
+    let subnets_releases = subnets
+        .iter()
+        .map(|s| {
+            releases
+                .iter()
+                .find(|r| r.versions.iter().any(|v| v.version == s.replica_version))
+                .expect("version should exist in releases")
+        })
+        .unique()
+        .collect::<Vec<_>>();
+    // assumes `releases` are already sorted, but we can sort it if needed
+    if subnets_releases.len() > 2 {
+        panic!("more than two releases active")
+    }
+    let mut newest_release = releases
+        .iter()
+        .find(|r| subnets_releases.contains(r))
+        .expect("should find some release");
+
+    if subnets_releases.len() == 1 {
+        newest_release = &releases[releases
+            .iter()
+            .position(|r| r == newest_release)
+            .expect("release should exist")
+            .saturating_sub(1)];
+    }
+    // need to add some checks here to verify
+    subnets
+        .iter()
+        .map(|s| {
+            (
+                s.principal,
+                newest_release
+                    .versions
+                    .iter()
+                    .find_or_first(|v| v.subnets.iter().any(|vs| s.principal.to_string().starts_with(vs)))
+                    .expect("versions should not be empty so it should return the first element if it doesn't match anything").clone(),
+            )
+        })
+        .collect()
 }
 
 fn find_subnet_by_short_id<'a>(subnets: &'a [Subnet], subnet_short: &'a str) -> anyhow::Result<&'a Subnet> {
@@ -561,6 +609,135 @@ mod get_desired_version_for_subnet_test {
 
         let version = get_desired_version_for_subnet("subnet-1", &current_release_feature_spec, "current_version");
         assert_eq!(version, "feature-a-commit")
+    }
+}
+
+#[cfg(test)]
+mod test {
+
+    use ic_base_types::PrincipalId;
+    use ic_management_types::SubnetMetadata;
+    use pretty_assertions::assert_eq;
+
+    use crate::calculation::{Release, Version};
+
+    use super::*;
+
+    #[test]
+    fn desired_version_test_cases() {
+        struct TestCase {
+            name: &'static str,
+            subnets: Vec<Subnet>,
+            releases: Vec<Release>,
+            want: BTreeMap<u64, String>,
+        }
+
+        fn subnet(id: u64, version: &str) -> Subnet {
+            Subnet {
+                principal: PrincipalId::new_subnet_test_id(id),
+                replica_version: version.to_string(),
+                metadata: SubnetMetadata {
+                    name: format!("{id}"),
+                    ..Default::default()
+                },
+                ..Default::default()
+            }
+        }
+
+        fn release(name: &str, versions: Vec<(&str, Vec<u64>)>) -> Release {
+            Release {
+                rc_name: name.to_string(),
+                versions: versions
+                    .iter()
+                    .map(|(v, subnets)| Version {
+                        version: v.to_string(),
+                        subnets: subnets
+                            .iter()
+                            .map(|id| PrincipalId::new_subnet_test_id(*id).to_string())
+                            .collect(),
+                        ..Default::default()
+                    })
+                    .collect(),
+            }
+        }
+
+        for tc in vec![
+            TestCase {
+                name: "all versions on the newest version already",
+                subnets: vec![subnet(1, "A.default")],
+                releases: vec![release("A", vec![("A.default", vec![])])],
+                want: vec![(1, "A.default")]
+                    .into_iter()
+                    .map(|(k, v)| (k, v.to_string()))
+                    .collect(),
+            },
+            TestCase {
+                name: "upgrade one subnet",
+                subnets: vec![subnet(1, "B.default"), subnet(2, "A.default")],
+                releases: vec![
+                    release("B", vec![("B.default", vec![])]),
+                    release("A", vec![("A.default", vec![])]),
+                ],
+                want: vec![(1, "B.default"), (2, "B.default")]
+                    .into_iter()
+                    .map(|(k, v)| (k, v.to_string()))
+                    .collect(),
+            },
+            TestCase {
+                name: "extra new and old releases are ignored",
+                subnets: vec![subnet(1, "C.default"), subnet(2, "B.default")],
+                releases: vec![
+                    release("D", vec![("D.default", vec![])]),
+                    release("C", vec![("C.default", vec![])]),
+                    release("B", vec![("B.default", vec![])]),
+                    release("A", vec![("A.default", vec![])]),
+                ],
+                want: vec![(1, "C.default"), (2, "C.default")]
+                    .into_iter()
+                    .map(|(k, v)| (k, v.to_string()))
+                    .collect(),
+            },
+            TestCase {
+                name: "all subnets on same release, should proceed to upgrade everything to newer release",
+                subnets: vec![subnet(1, "B.default"), subnet(2, "B.default")],
+                releases: vec![
+                    release("D", vec![("D.default", vec![])]),
+                    release("C", vec![("C.default", vec![]), ("C.feature", vec![2])]),
+                    release("B", vec![("B.default", vec![])]),
+                    release("A", vec![("A.default", vec![])]),
+                ],
+                want: vec![(1, "C.default"), (2, "C.feature")]
+                    .into_iter()
+                    .map(|(k, v)| (k, v.to_string()))
+                    .collect(),
+            },
+            TestCase {
+                name: "feature",
+                subnets: vec![subnet(1, "B.default"), subnet(2, "A.default"), subnet(3, "A.default")],
+                releases: vec![
+                    release("B", vec![("B.default", vec![]), ("B.feature", vec![2])]),
+                    release("A", vec![("A.default", vec![])]),
+                ],
+                want: vec![(1, "B.default"), (2, "B.feature"), (3, "B.default")]
+                    .into_iter()
+                    .map(|(k, v)| (k, v.to_string()))
+                    .collect(),
+            },
+        ] {
+            let release = desired_rollout_release_version(tc.subnets, tc.releases)
+                .into_iter()
+                .map(|(k, v)| (k, v.version))
+                .collect::<Vec<_>>();
+            assert_eq!(
+                tc.want
+                    .into_iter()
+                    .map(|(k, v)| (PrincipalId::new_subnet_test_id(k), v))
+                    .collect::<Vec<_>>(),
+                release,
+                "test case '{}' failed",
+                tc.name,
+            )
+        }
     }
 }
 

@@ -7421,6 +7421,8 @@ dependencies = [
  "ic-management-types",
  "ic-registry-keys",
  "ic-registry-local-registry",
+ "itertools 0.12.1",
+ "pretty_assertions",
  "prometheus-http-query",
  "regex",
  "registry-canister",
