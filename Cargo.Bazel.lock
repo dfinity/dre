@@ -1,5 +1,5 @@
 {
-  "checksum": "043dcfd1c559f8778e799b8b70dde7599cbb44e8047be3ce3719437a4bf15e90",
+  "checksum": "683ef224e0a517f71f7b62868192a1d7a020d93d122f65348365ef7029c150ee",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -781,7 +781,7 @@
               "target": "actix_router"
             },
             {
-              "id": "proc-macro2 1.0.78",
+              "id": "proc-macro2 1.0.79",
               "target": "proc_macro2"
             },
             {
@@ -1529,13 +1529,13 @@
       },
       "license": "MIT OR Apache-2.0"
     },
-    "anyhow 1.0.80": {
+    "anyhow 1.0.81": {
       "name": "anyhow",
-      "version": "1.0.80",
+      "version": "1.0.81",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/anyhow/1.0.80/download",
-          "sha256": "5ad32ce52e4161730f7098c077cd2ed6229b5804ccf99e5366be1ab72a98b4e1"
+          "url": "https://static.crates.io/crates/anyhow/1.0.81/download",
+          "sha256": "0952808a6c2afd1aa8947271f3a60f1a6763c7b912d210184c5149b5cf147247"
         }
       },
       "targets": [
@@ -1573,14 +1573,14 @@
         "deps": {
           "common": [
             {
-              "id": "anyhow 1.0.80",
+              "id": "anyhow 1.0.81",
               "target": "build_script_build"
             }
           ],
           "selects": {}
         },
         "edition": "2018",
-        "version": "1.0.80"
+        "version": "1.0.81"
       },
       "build_script_attrs": {
         "data_glob": [
@@ -1817,7 +1817,7 @@
               "target": "rusticata_macros"
             },
             {
-              "id": "thiserror 1.0.57",
+              "id": "thiserror 1.0.58",
               "target": "thiserror"
             },
             {
@@ -1877,7 +1877,7 @@
         "deps": {
           "common": [
             {
-              "id": "proc-macro2 1.0.78",
+              "id": "proc-macro2 1.0.79",
               "target": "proc_macro2"
             },
             {
@@ -1928,7 +1928,7 @@
         "deps": {
           "common": [
             {
-              "id": "proc-macro2 1.0.78",
+              "id": "proc-macro2 1.0.79",
               "target": "proc_macro2"
             },
             {
@@ -2724,7 +2724,7 @@
         "deps": {
           "common": [
             {
-              "id": "proc-macro2 1.0.78",
+              "id": "proc-macro2 1.0.79",
               "target": "proc_macro2"
             },
             {
@@ -2903,7 +2903,7 @@
         "deps": {
           "common": [
             {
-              "id": "proc-macro2 1.0.78",
+              "id": "proc-macro2 1.0.79",
               "target": "proc_macro2"
             },
             {
@@ -3000,7 +3000,7 @@
               "target": "build_script_build"
             },
             {
-              "id": "proc-macro2 1.0.78",
+              "id": "proc-macro2 1.0.79",
               "target": "proc_macro2"
             },
             {
@@ -3356,7 +3356,7 @@
               "target": "http_body"
             },
             {
-              "id": "http-body-util 0.1.0",
+              "id": "http-body-util 0.1.1",
               "target": "http_body_util"
             },
             {
@@ -3624,7 +3624,7 @@
               "target": "http_body"
             },
             {
-              "id": "http-body-util 0.1.0",
+              "id": "http-body-util 0.1.1",
               "target": "http_body_util"
             },
             {
@@ -4323,7 +4323,7 @@
               "target": "either"
             },
             {
-              "id": "proc-macro2 1.0.78",
+              "id": "proc-macro2 1.0.79",
               "target": "proc_macro2"
             },
             {
@@ -4948,7 +4948,7 @@
               "target": "proc_macro_crate"
             },
             {
-              "id": "proc-macro2 1.0.78",
+              "id": "proc-macro2 1.0.79",
               "target": "proc_macro2"
             },
             {
@@ -5184,7 +5184,7 @@
         "deps": {
           "common": [
             {
-              "id": "anyhow 1.0.80",
+              "id": "anyhow 1.0.81",
               "target": "anyhow"
             },
             {
@@ -5344,7 +5344,7 @@
         "deps": {
           "common": [
             {
-              "id": "anyhow 1.0.80",
+              "id": "anyhow 1.0.81",
               "target": "anyhow"
             },
             {
@@ -5376,7 +5376,7 @@
               "target": "proc_macro_error"
             },
             {
-              "id": "proc-macro2 1.0.78",
+              "id": "proc-macro2 1.0.79",
               "target": "proc_macro2"
             },
             {
@@ -5629,7 +5629,7 @@
         "deps": {
           "common": [
             {
-              "id": "proc-macro2 1.0.78",
+              "id": "proc-macro2 1.0.79",
               "target": "proc_macro2"
             },
             {
@@ -5946,7 +5946,7 @@
               "target": "once_cell"
             },
             {
-              "id": "thiserror 1.0.57",
+              "id": "thiserror 1.0.58",
               "target": "thiserror"
             }
           ],
@@ -6007,7 +6007,7 @@
               "target": "once_cell"
             },
             {
-              "id": "thiserror 1.0.57",
+              "id": "thiserror 1.0.58",
               "target": "thiserror"
             }
           ],
@@ -6129,7 +6129,7 @@
         "deps": {
           "common": [
             {
-              "id": "anyhow 1.0.80",
+              "id": "anyhow 1.0.81",
               "target": "anyhow"
             },
             {
@@ -6205,7 +6205,7 @@
               "target": "sha2"
             },
             {
-              "id": "thiserror 1.0.57",
+              "id": "thiserror 1.0.58",
               "target": "thiserror"
             }
           ],
@@ -6282,7 +6282,7 @@
               "target": "lazy_static"
             },
             {
-              "id": "proc-macro2 1.0.78",
+              "id": "proc-macro2 1.0.79",
               "target": "proc_macro2"
             },
             {
@@ -6314,7 +6314,7 @@
         "deps": {
           "common": [
             {
-              "id": "anyhow 1.0.80",
+              "id": "anyhow 1.0.81",
               "target": "anyhow"
             },
             {
@@ -6334,7 +6334,7 @@
               "target": "pretty_env_logger"
             },
             {
-              "id": "reqwest 0.11.25",
+              "id": "reqwest 0.11.26",
               "target": "reqwest"
             },
             {
@@ -7189,7 +7189,7 @@
               "target": "proc_macro_error"
             },
             {
-              "id": "proc-macro2 1.0.78",
+              "id": "proc-macro2 1.0.79",
               "target": "proc_macro2"
             },
             {
@@ -7246,7 +7246,7 @@
               "target": "heck"
             },
             {
-              "id": "proc-macro2 1.0.78",
+              "id": "proc-macro2 1.0.79",
               "target": "proc_macro2"
             },
             {
@@ -7610,7 +7610,7 @@
               "target": "convert_case"
             },
             {
-              "id": "proc-macro2 1.0.78",
+              "id": "proc-macro2 1.0.79",
               "target": "proc_macro2"
             },
             {
@@ -7661,7 +7661,7 @@
               "target": "convert_case"
             },
             {
-              "id": "proc-macro2 1.0.78",
+              "id": "proc-macro2 1.0.79",
               "target": "proc_macro2"
             },
             {
@@ -9528,7 +9528,7 @@
               "target": "ident_case"
             },
             {
-              "id": "proc-macro2 1.0.78",
+              "id": "proc-macro2 1.0.79",
               "target": "proc_macro2"
             },
             {
@@ -9594,7 +9594,7 @@
               "target": "ident_case"
             },
             {
-              "id": "proc-macro2 1.0.78",
+              "id": "proc-macro2 1.0.79",
               "target": "proc_macro2"
             },
             {
@@ -9875,7 +9875,7 @@
               "target": "ahash"
             },
             {
-              "id": "anyhow 1.0.80",
+              "id": "anyhow 1.0.81",
               "target": "anyhow"
             },
             {
@@ -10162,7 +10162,7 @@
         "deps": {
           "common": [
             {
-              "id": "proc-macro2 1.0.78",
+              "id": "proc-macro2 1.0.79",
               "target": "proc_macro2"
             },
             {
@@ -10305,7 +10305,7 @@
               "target": "darling"
             },
             {
-              "id": "proc-macro2 1.0.78",
+              "id": "proc-macro2 1.0.79",
               "target": "proc_macro2"
             },
             {
@@ -10356,7 +10356,7 @@
               "target": "darling"
             },
             {
-              "id": "proc-macro2 1.0.78",
+              "id": "proc-macro2 1.0.79",
               "target": "proc_macro2"
             },
             {
@@ -10524,7 +10524,7 @@
               "target": "convert_case"
             },
             {
-              "id": "proc-macro2 1.0.78",
+              "id": "proc-macro2 1.0.79",
               "target": "proc_macro2"
             },
             {
@@ -10613,7 +10613,7 @@
               "target": "build_script_build"
             },
             {
-              "id": "proc-macro2 1.0.78",
+              "id": "proc-macro2 1.0.79",
               "target": "proc_macro2"
             },
             {
@@ -10961,7 +10961,7 @@
               "target": "tempfile"
             },
             {
-              "id": "thiserror 1.0.57",
+              "id": "thiserror 1.0.58",
               "target": "thiserror"
             },
             {
@@ -11375,7 +11375,7 @@
         "deps": {
           "common": [
             {
-              "id": "proc-macro2 1.0.78",
+              "id": "proc-macro2 1.0.79",
               "target": "proc_macro2"
             },
             {
@@ -11537,7 +11537,7 @@
         "deps": {
           "common": [
             {
-              "id": "anyhow 1.0.80",
+              "id": "anyhow 1.0.81",
               "target": "anyhow"
             },
             {
@@ -11665,7 +11665,7 @@
               "target": "registry_canister"
             },
             {
-              "id": "reqwest 0.11.25",
+              "id": "reqwest 0.11.26",
               "target": "reqwest"
             },
             {
@@ -11911,7 +11911,7 @@
               "target": "sha2"
             },
             {
-              "id": "thiserror 1.0.57",
+              "id": "thiserror 1.0.58",
               "target": "thiserror"
             },
             {
@@ -12266,7 +12266,7 @@
               "target": "heck"
             },
             {
-              "id": "proc-macro2 1.0.78",
+              "id": "proc-macro2 1.0.79",
               "target": "proc_macro2"
             },
             {
@@ -12367,7 +12367,7 @@
         "deps": {
           "common": [
             {
-              "id": "proc-macro2 1.0.78",
+              "id": "proc-macro2 1.0.79",
               "target": "proc_macro2"
             },
             {
@@ -13083,7 +13083,7 @@
               "target": "num_traits"
             },
             {
-              "id": "proc-macro2 1.0.78",
+              "id": "proc-macro2 1.0.79",
               "target": "proc_macro2"
             },
             {
@@ -14083,7 +14083,7 @@
         "deps": {
           "common": [
             {
-              "id": "proc-macro2 1.0.78",
+              "id": "proc-macro2 1.0.79",
               "target": "proc_macro2"
             },
             {
@@ -14638,7 +14638,7 @@
               "target": "percent_encoding"
             },
             {
-              "id": "reqwest 0.11.25",
+              "id": "reqwest 0.11.26",
               "target": "reqwest"
             },
             {
@@ -14654,7 +14654,7 @@
               "target": "serde_urlencoded"
             },
             {
-              "id": "thiserror 1.0.57",
+              "id": "thiserror 1.0.58",
               "target": "thiserror"
             },
             {
@@ -14779,7 +14779,7 @@
               "target": "combine"
             },
             {
-              "id": "thiserror 1.0.57",
+              "id": "thiserror 1.0.58",
               "target": "thiserror"
             }
           ],
@@ -14893,7 +14893,7 @@
               "target": "lazy_static"
             },
             {
-              "id": "proc-macro2 1.0.78",
+              "id": "proc-macro2 1.0.79",
               "target": "proc_macro2"
             },
             {
@@ -14952,7 +14952,7 @@
               "target": "graphql_client_codegen"
             },
             {
-              "id": "proc-macro2 1.0.78",
+              "id": "proc-macro2 1.0.79",
               "target": "proc_macro2"
             },
             {
@@ -15948,13 +15948,13 @@
       },
       "license": "MIT"
     },
-    "http-body-util 0.1.0": {
+    "http-body-util 0.1.1": {
       "name": "http-body-util",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/http-body-util/0.1.0/download",
-          "sha256": "41cb79eb393015dadd30fc252023adb0b2400a0caee0fa2a077e6e21a551e840"
+          "url": "https://static.crates.io/crates/http-body-util/0.1.1/download",
+          "sha256": "0475f8b2ac86659c21b64320d5d653f9efe42acd2a4e560073ec61a155a34f1d"
         }
       },
       "targets": [
@@ -15980,8 +15980,8 @@
               "target": "bytes"
             },
             {
-              "id": "futures-util 0.3.30",
-              "target": "futures_util"
+              "id": "futures-core 0.3.30",
+              "target": "futures_core"
             },
             {
               "id": "http 1.1.0",
@@ -15999,7 +15999,7 @@
           "selects": {}
         },
         "edition": "2018",
-        "version": "0.1.0"
+        "version": "0.1.1"
       },
       "license": "MIT"
     },
@@ -17142,7 +17142,7 @@
               "target": "rangemap"
             },
             {
-              "id": "reqwest 0.11.25",
+              "id": "reqwest 0.11.26",
               "target": "reqwest"
             },
             {
@@ -17174,7 +17174,7 @@
               "target": "simple_asn1"
             },
             {
-              "id": "thiserror 1.0.57",
+              "id": "thiserror 1.0.58",
               "target": "thiserror"
             },
             {
@@ -17843,7 +17843,7 @@
         "deps": {
           "common": [
             {
-              "id": "anyhow 1.0.80",
+              "id": "anyhow 1.0.81",
               "target": "anyhow"
             },
             {
@@ -17927,7 +17927,7 @@
               "target": "simple_asn1"
             },
             {
-              "id": "thiserror 1.0.57",
+              "id": "thiserror 1.0.58",
               "target": "thiserror"
             },
             {
@@ -18091,7 +18091,7 @@
               "target": "serde_cbor"
             },
             {
-              "id": "thiserror 1.0.57",
+              "id": "thiserror 1.0.58",
               "target": "thiserror"
             }
           ],
@@ -18149,7 +18149,7 @@
               "target": "scoped_threadpool"
             },
             {
-              "id": "thiserror 1.0.57",
+              "id": "thiserror 1.0.58",
               "target": "thiserror"
             }
           ],
@@ -18252,7 +18252,7 @@
               "target": "candid"
             },
             {
-              "id": "proc-macro2 1.0.78",
+              "id": "proc-macro2 1.0.79",
               "target": "proc_macro2"
             },
             {
@@ -19714,7 +19714,7 @@
               "target": "strum"
             },
             {
-              "id": "thiserror 1.0.57",
+              "id": "thiserror 1.0.58",
               "target": "thiserror"
             },
             {
@@ -20208,7 +20208,7 @@
               "target": "serde_bytes"
             },
             {
-              "id": "thiserror 1.0.57",
+              "id": "thiserror 1.0.58",
               "target": "thiserror"
             }
           ],
@@ -20585,7 +20585,7 @@
               "target": "slog"
             },
             {
-              "id": "thiserror 1.0.57",
+              "id": "thiserror 1.0.58",
               "target": "thiserror"
             },
             {
@@ -20786,7 +20786,7 @@
               "target": "tempfile"
             },
             {
-              "id": "thiserror 1.0.57",
+              "id": "thiserror 1.0.58",
               "target": "thiserror"
             }
           ],
@@ -21262,7 +21262,7 @@
               "target": "serde_bytes"
             },
             {
-              "id": "thiserror 1.0.57",
+              "id": "thiserror 1.0.58",
               "target": "thiserror"
             },
             {
@@ -21383,7 +21383,7 @@
               "target": "phantom_newtype"
             },
             {
-              "id": "thiserror 1.0.57",
+              "id": "thiserror 1.0.58",
               "target": "thiserror"
             }
           ],
@@ -21694,7 +21694,7 @@
               "target": "actix_web"
             },
             {
-              "id": "anyhow 1.0.80",
+              "id": "anyhow 1.0.81",
               "target": "anyhow"
             },
             {
@@ -21846,7 +21846,7 @@
               "target": "registry_canister"
             },
             {
-              "id": "reqwest 0.11.25",
+              "id": "reqwest 0.11.26",
               "target": "reqwest"
             },
             {
@@ -21934,7 +21934,7 @@
               "target": "actix_web"
             },
             {
-              "id": "anyhow 1.0.80",
+              "id": "anyhow 1.0.81",
               "target": "anyhow"
             },
             {
@@ -21970,7 +21970,7 @@
               "target": "registry_canister"
             },
             {
-              "id": "reqwest 0.11.25",
+              "id": "reqwest 0.11.26",
               "target": "reqwest"
             },
             {
@@ -22244,7 +22244,7 @@
         "deps": {
           "common": [
             {
-              "id": "anyhow 1.0.80",
+              "id": "anyhow 1.0.81",
               "target": "anyhow"
             },
             {
@@ -23710,7 +23710,7 @@
               "target": "serde_cbor"
             },
             {
-              "id": "thiserror 1.0.57",
+              "id": "thiserror 1.0.58",
               "target": "thiserror"
             }
           ],
@@ -23884,7 +23884,7 @@
               "target": "ic_types"
             },
             {
-              "id": "thiserror 1.0.57",
+              "id": "thiserror 1.0.58",
               "target": "thiserror"
             },
             {
@@ -25553,7 +25553,7 @@
               "target": "sha2"
             },
             {
-              "id": "thiserror 1.0.57",
+              "id": "thiserror 1.0.58",
               "target": "thiserror"
             }
           ],
@@ -25700,7 +25700,7 @@
               "target": "strum"
             },
             {
-              "id": "thiserror 1.0.57",
+              "id": "thiserror 1.0.58",
               "target": "thiserror"
             },
             {
@@ -25791,7 +25791,7 @@
               "target": "strum"
             },
             {
-              "id": "thiserror 1.0.57",
+              "id": "thiserror 1.0.58",
               "target": "thiserror"
             },
             {
@@ -25891,7 +25891,7 @@
                 "target": "nix"
               },
               {
-                "id": "thiserror 1.0.57",
+                "id": "thiserror 1.0.58",
                 "target": "thiserror"
               }
             ]
@@ -26586,7 +26586,7 @@
         "deps": {
           "common": [
             {
-              "id": "proc-macro2 1.0.78",
+              "id": "proc-macro2 1.0.79",
               "target": "proc_macro2"
             },
             {
@@ -27004,7 +27004,7 @@
               "target": "serde"
             },
             {
-              "id": "thiserror 1.0.57",
+              "id": "thiserror 1.0.58",
               "target": "thiserror"
             }
           ],
@@ -28519,7 +28519,7 @@
         "deps": {
           "common": [
             {
-              "id": "anyhow 1.0.80",
+              "id": "anyhow 1.0.81",
               "target": "anyhow"
             },
             {
@@ -28535,7 +28535,7 @@
               "target": "pretty_env_logger"
             },
             {
-              "id": "reqwest 0.11.25",
+              "id": "reqwest 0.11.26",
               "target": "reqwest"
             },
             {
@@ -28646,7 +28646,7 @@
               "target": "fnv"
             },
             {
-              "id": "proc-macro2 1.0.78",
+              "id": "proc-macro2 1.0.79",
               "target": "proc_macro2"
             },
             {
@@ -29404,7 +29404,7 @@
               "target": "cfg_if"
             },
             {
-              "id": "proc-macro2 1.0.78",
+              "id": "proc-macro2 1.0.79",
               "target": "proc_macro2"
             },
             {
@@ -29571,7 +29571,7 @@
         "deps_dev": {
           "common": [
             {
-              "id": "anyhow 1.0.80",
+              "id": "anyhow 1.0.81",
               "target": "anyhow"
             },
             {
@@ -29587,7 +29587,7 @@
               "target": "flate2"
             },
             {
-              "id": "reqwest 0.11.25",
+              "id": "reqwest 0.11.26",
               "target": "reqwest"
             },
             {
@@ -29655,7 +29655,7 @@
               "target": "regex"
             },
             {
-              "id": "reqwest 0.11.25",
+              "id": "reqwest 0.11.26",
               "target": "reqwest"
             },
             {
@@ -30051,7 +30051,7 @@
         "deps": {
           "common": [
             {
-              "id": "anyhow 1.0.80",
+              "id": "anyhow 1.0.81",
               "target": "anyhow"
             },
             {
@@ -30216,7 +30216,7 @@
               "target": "actix_web"
             },
             {
-              "id": "anyhow 1.0.80",
+              "id": "anyhow 1.0.81",
               "target": "anyhow"
             },
             {
@@ -30228,7 +30228,7 @@
               "target": "rand"
             },
             {
-              "id": "reqwest 0.11.25",
+              "id": "reqwest 0.11.26",
               "target": "reqwest"
             },
             {
@@ -31157,7 +31157,7 @@
               "target": "proc_macro_crate"
             },
             {
-              "id": "proc-macro2 1.0.78",
+              "id": "proc-macro2 1.0.79",
               "target": "proc_macro2"
             },
             {
@@ -31575,7 +31575,7 @@
         "deps": {
           "common": [
             {
-              "id": "proc-macro2 1.0.78",
+              "id": "proc-macro2 1.0.79",
               "target": "proc_macro2"
             },
             {
@@ -31783,7 +31783,7 @@
               "target": "pin_project_lite"
             },
             {
-              "id": "thiserror 1.0.57",
+              "id": "thiserror 1.0.58",
               "target": "thiserror"
             },
             {
@@ -31989,7 +31989,7 @@
               "target": "rand"
             },
             {
-              "id": "thiserror 1.0.57",
+              "id": "thiserror 1.0.58",
               "target": "thiserror"
             },
             {
@@ -32893,7 +32893,7 @@
               "target": "memchr"
             },
             {
-              "id": "thiserror 1.0.57",
+              "id": "thiserror 1.0.58",
               "target": "thiserror"
             },
             {
@@ -33000,7 +33000,7 @@
               "target": "pest_meta"
             },
             {
-              "id": "proc-macro2 1.0.78",
+              "id": "proc-macro2 1.0.79",
               "target": "proc_macro2"
             },
             {
@@ -33304,7 +33304,7 @@
         "deps": {
           "common": [
             {
-              "id": "proc-macro2 1.0.78",
+              "id": "proc-macro2 1.0.79",
               "target": "proc_macro2"
             },
             {
@@ -34201,7 +34201,7 @@
               "target": "build_script_build"
             },
             {
-              "id": "proc-macro2 1.0.78",
+              "id": "proc-macro2 1.0.79",
               "target": "proc_macro2"
             },
             {
@@ -34458,7 +34458,7 @@
               "target": "build_script_build"
             },
             {
-              "id": "proc-macro2 1.0.78",
+              "id": "proc-macro2 1.0.79",
               "target": "proc_macro2"
             },
             {
@@ -34541,7 +34541,7 @@
               "target": "build_script_build"
             },
             {
-              "id": "proc-macro2 1.0.78",
+              "id": "proc-macro2 1.0.79",
               "target": "proc_macro2"
             },
             {
@@ -34623,13 +34623,13 @@
       },
       "license": "MIT OR Apache-2.0"
     },
-    "proc-macro2 1.0.78": {
+    "proc-macro2 1.0.79": {
       "name": "proc-macro2",
-      "version": "1.0.78",
+      "version": "1.0.79",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/proc-macro2/1.0.78/download",
-          "sha256": "e2422ad645d89c99f8f3e6b88a9fdeca7fabeac836b1002371c4367c8f984aae"
+          "url": "https://static.crates.io/crates/proc-macro2/1.0.79/download",
+          "sha256": "e835ff2298f5721608eb1a980ecaee1aef2c132bf95ecc026a11b7bf3c01c02e"
         }
       },
       "targets": [
@@ -34667,7 +34667,7 @@
         "deps": {
           "common": [
             {
-              "id": "proc-macro2 1.0.78",
+              "id": "proc-macro2 1.0.79",
               "target": "build_script_build"
             },
             {
@@ -34678,7 +34678,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "1.0.78"
+        "version": "1.0.79"
       },
       "build_script_attrs": {
         "data_glob": [
@@ -34898,7 +34898,7 @@
               "target": "protobuf"
             },
             {
-              "id": "thiserror 1.0.57",
+              "id": "thiserror 1.0.58",
               "target": "thiserror"
             }
           ],
@@ -34934,7 +34934,7 @@
         "deps": {
           "common": [
             {
-              "id": "anyhow 1.0.80",
+              "id": "anyhow 1.0.81",
               "target": "anyhow"
             },
             {
@@ -35060,7 +35060,7 @@
               "target": "mime"
             },
             {
-              "id": "reqwest 0.11.25",
+              "id": "reqwest 0.11.26",
               "target": "reqwest"
             },
             {
@@ -35276,7 +35276,7 @@
         "deps": {
           "common": [
             {
-              "id": "anyhow 1.0.80",
+              "id": "anyhow 1.0.81",
               "target": "anyhow"
             },
             {
@@ -35284,7 +35284,7 @@
               "target": "itertools"
             },
             {
-              "id": "proc-macro2 1.0.78",
+              "id": "proc-macro2 1.0.79",
               "target": "proc_macro2"
             },
             {
@@ -35524,7 +35524,7 @@
         "deps": {
           "common": [
             {
-              "id": "proc-macro2 1.0.78",
+              "id": "proc-macro2 1.0.79",
               "target": "proc_macro2"
             },
             {
@@ -35578,7 +35578,7 @@
         "deps": {
           "common": [
             {
-              "id": "proc-macro2 1.0.78",
+              "id": "proc-macro2 1.0.79",
               "target": "proc_macro2"
             }
           ],
@@ -35993,7 +35993,7 @@
               "target": "libredox"
             },
             {
-              "id": "thiserror 1.0.57",
+              "id": "thiserror 1.0.58",
               "target": "thiserror"
             }
           ],
@@ -36592,13 +36592,13 @@
       },
       "license": "MIT"
     },
-    "reqwest 0.11.25": {
+    "reqwest 0.11.26": {
       "name": "reqwest",
-      "version": "0.11.25",
+      "version": "0.11.26",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/reqwest/0.11.25/download",
-          "sha256": "0eea5a9eb898d3783f17c6407670e3592fd174cb81a10e51d4c37f49450b9946"
+          "url": "https://static.crates.io/crates/reqwest/0.11.26/download",
+          "sha256": "78bf93c4af7a8bb7d879d51cebe797356ff10ae8516ace542b5182d9dcac10b2"
         }
       },
       "targets": [
@@ -36796,7 +36796,7 @@
             ],
             "cfg(target_os = \"macos\")": [
               {
-                "id": "system-configuration 0.6.0",
+                "id": "system-configuration 0.5.1",
                 "target": "system_configuration"
               }
             ],
@@ -36809,7 +36809,7 @@
           }
         },
         "edition": "2021",
-        "version": "0.11.25"
+        "version": "0.11.26"
       },
       "license": "MIT OR Apache-2.0"
     },
@@ -37219,7 +37219,7 @@
         "deps": {
           "common": [
             {
-              "id": "proc-macro2 1.0.78",
+              "id": "proc-macro2 1.0.79",
               "target": "proc_macro2"
             },
             {
@@ -37251,7 +37251,7 @@
         "deps": {
           "common": [
             {
-              "id": "anyhow 1.0.80",
+              "id": "anyhow 1.0.81",
               "target": "anyhow"
             },
             {
@@ -37295,6 +37295,14 @@
               "target": "ic_registry_local_registry"
             },
             {
+              "id": "itertools 0.12.1",
+              "target": "itertools"
+            },
+            {
+              "id": "pretty_assertions 1.4.0",
+              "target": "pretty_assertions"
+            },
+            {
               "id": "prometheus-http-query 0.8.2",
               "target": "prometheus_http_query"
             },
@@ -37307,7 +37315,7 @@
               "target": "registry_canister"
             },
             {
-              "id": "reqwest 0.11.25",
+              "id": "reqwest 0.11.26",
               "target": "reqwest"
             },
             {
@@ -37473,7 +37481,7 @@
               "target": "glob"
             },
             {
-              "id": "proc-macro2 1.0.78",
+              "id": "proc-macro2 1.0.79",
               "target": "proc_macro2"
             },
             {
@@ -39234,7 +39242,7 @@
         "deps": {
           "common": [
             {
-              "id": "proc-macro2 1.0.78",
+              "id": "proc-macro2 1.0.79",
               "target": "proc_macro2"
             },
             {
@@ -39398,7 +39406,7 @@
         "deps": {
           "common": [
             {
-              "id": "proc-macro2 1.0.78",
+              "id": "proc-macro2 1.0.79",
               "target": "proc_macro2"
             },
             {
@@ -39445,7 +39453,7 @@
         "deps": {
           "common": [
             {
-              "id": "proc-macro2 1.0.78",
+              "id": "proc-macro2 1.0.79",
               "target": "proc_macro2"
             },
             {
@@ -39603,7 +39611,7 @@
               "target": "darling"
             },
             {
-              "id": "proc-macro2 1.0.78",
+              "id": "proc-macro2 1.0.79",
               "target": "proc_macro2"
             },
             {
@@ -39751,7 +39759,7 @@
         "deps": {
           "common": [
             {
-              "id": "anyhow 1.0.80",
+              "id": "anyhow 1.0.81",
               "target": "anyhow"
             },
             {
@@ -39855,7 +39863,7 @@
               "target": "tempfile"
             },
             {
-              "id": "thiserror 1.0.57",
+              "id": "thiserror 1.0.58",
               "target": "thiserror"
             },
             {
@@ -40295,7 +40303,7 @@
               "target": "num_traits"
             },
             {
-              "id": "thiserror 1.0.57",
+              "id": "thiserror 1.0.58",
               "target": "thiserror"
             },
             {
@@ -40429,7 +40437,7 @@
         "deps": {
           "common": [
             {
-              "id": "anyhow 1.0.80",
+              "id": "anyhow 1.0.81",
               "target": "anyhow"
             },
             {
@@ -40485,7 +40493,7 @@
               "target": "registry_canister"
             },
             {
-              "id": "reqwest 0.11.25",
+              "id": "reqwest 0.11.26",
               "target": "reqwest"
             },
             {
@@ -40974,7 +40982,7 @@
               "target": "regex"
             },
             {
-              "id": "reqwest 0.11.25",
+              "id": "reqwest 0.11.26",
               "target": "reqwest"
             },
             {
@@ -41603,7 +41611,7 @@
               "target": "heck"
             },
             {
-              "id": "proc-macro2 1.0.78",
+              "id": "proc-macro2 1.0.79",
               "target": "proc_macro2"
             },
             {
@@ -41663,7 +41671,7 @@
               "target": "heck"
             },
             {
-              "id": "proc-macro2 1.0.78",
+              "id": "proc-macro2 1.0.79",
               "target": "proc_macro2"
             },
             {
@@ -41812,7 +41820,7 @@
         "deps": {
           "common": [
             {
-              "id": "proc-macro2 1.0.78",
+              "id": "proc-macro2 1.0.79",
               "target": "proc_macro2"
             },
             {
@@ -41884,7 +41892,7 @@
         "deps": {
           "common": [
             {
-              "id": "proc-macro2 1.0.78",
+              "id": "proc-macro2 1.0.79",
               "target": "proc_macro2"
             },
             {
@@ -41935,7 +41943,7 @@
               "target": "proc_macro_error"
             },
             {
-              "id": "proc-macro2 1.0.78",
+              "id": "proc-macro2 1.0.79",
               "target": "proc_macro2"
             },
             {
@@ -42019,7 +42027,7 @@
         "deps": {
           "common": [
             {
-              "id": "proc-macro2 1.0.78",
+              "id": "proc-macro2 1.0.79",
               "target": "proc_macro2"
             },
             {
@@ -42042,13 +42050,13 @@
       },
       "license": "MIT"
     },
-    "system-configuration 0.6.0": {
+    "system-configuration 0.5.1": {
       "name": "system-configuration",
-      "version": "0.6.0",
+      "version": "0.5.1",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/system-configuration/0.6.0/download",
-          "sha256": "658bc6ee10a9b4fcf576e9b0819d95ec16f4d2c02d39fd83ac1c8789785c4a42"
+          "url": "https://static.crates.io/crates/system-configuration/0.5.1/download",
+          "sha256": "ba3a3adc5c275d719af8cb4272ea1c4a6d668a777f37e115f6d11ddbc1c8e0e7"
         }
       },
       "targets": [
@@ -42070,7 +42078,7 @@
         "deps": {
           "common": [
             {
-              "id": "bitflags 2.4.2",
+              "id": "bitflags 1.3.2",
               "target": "bitflags"
             },
             {
@@ -42078,24 +42086,24 @@
               "target": "core_foundation"
             },
             {
-              "id": "system-configuration-sys 0.6.0",
+              "id": "system-configuration-sys 0.5.0",
               "target": "system_configuration_sys"
             }
           ],
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.6.0"
+        "version": "0.5.1"
       },
       "license": "MIT OR Apache-2.0"
     },
-    "system-configuration-sys 0.6.0": {
+    "system-configuration-sys 0.5.0": {
       "name": "system-configuration-sys",
-      "version": "0.6.0",
+      "version": "0.5.0",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/system-configuration-sys/0.6.0/download",
-          "sha256": "8e1d1b10ced5ca923a1fcb8d03e96b8d3268065d724548c0211415ff6ac6bac4"
+          "url": "https://static.crates.io/crates/system-configuration-sys/0.5.0/download",
+          "sha256": "a75fb188eb626b924683e3b95e3a48e63551fcfb51949de2f06a9d91dbee93c9"
         }
       },
       "targets": [
@@ -42134,14 +42142,14 @@
               "target": "libc"
             },
             {
-              "id": "system-configuration-sys 0.6.0",
+              "id": "system-configuration-sys 0.5.0",
               "target": "build_script_build"
             }
           ],
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.6.0"
+        "version": "0.5.0"
       },
       "build_script_attrs": {
         "data_glob": [
@@ -42248,7 +42256,7 @@
               "target": "proc_macro_error"
             },
             {
-              "id": "proc-macro2 1.0.78",
+              "id": "proc-macro2 1.0.79",
               "target": "proc_macro2"
             },
             {
@@ -42756,7 +42764,7 @@
         "deps": {
           "common": [
             {
-              "id": "proc-macro2 1.0.78",
+              "id": "proc-macro2 1.0.79",
               "target": "proc_macro2"
             },
             {
@@ -42805,13 +42813,13 @@
       },
       "license": "MIT"
     },
-    "thiserror 1.0.57": {
+    "thiserror 1.0.58": {
       "name": "thiserror",
-      "version": "1.0.57",
+      "version": "1.0.58",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/thiserror/1.0.57/download",
-          "sha256": "1e45bcbe8ed29775f228095caf2cd67af7a4ccf756ebff23a306bf3e8b47b24b"
+          "url": "https://static.crates.io/crates/thiserror/1.0.58/download",
+          "sha256": "03468839009160513471e86a034bb2c5c0e4baae3b43f79ffc55c4a5427b3297"
         }
       },
       "targets": [
@@ -42842,7 +42850,7 @@
         "deps": {
           "common": [
             {
-              "id": "thiserror 1.0.57",
+              "id": "thiserror 1.0.58",
               "target": "build_script_build"
             }
           ],
@@ -42852,13 +42860,13 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "thiserror-impl 1.0.57",
+              "id": "thiserror-impl 1.0.58",
               "target": "thiserror_impl"
             }
           ],
           "selects": {}
         },
-        "version": "1.0.57"
+        "version": "1.0.58"
       },
       "build_script_attrs": {
         "data_glob": [
@@ -42867,13 +42875,13 @@
       },
       "license": "MIT OR Apache-2.0"
     },
-    "thiserror-impl 1.0.57": {
+    "thiserror-impl 1.0.58": {
       "name": "thiserror-impl",
-      "version": "1.0.57",
+      "version": "1.0.58",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/thiserror-impl/1.0.57/download",
-          "sha256": "a953cb265bef375dae3de6663da4d3804eee9682ea80d8e2542529b73c531c81"
+          "url": "https://static.crates.io/crates/thiserror-impl/1.0.58/download",
+          "sha256": "c61f3ba182994efc43764a46c018c347bc492c79f024e705f46567b418f6d4f7"
         }
       },
       "targets": [
@@ -42895,7 +42903,7 @@
         "deps": {
           "common": [
             {
-              "id": "proc-macro2 1.0.78",
+              "id": "proc-macro2 1.0.79",
               "target": "proc_macro2"
             },
             {
@@ -42910,7 +42918,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "1.0.57"
+        "version": "1.0.58"
       },
       "license": "MIT OR Apache-2.0"
     },
@@ -43489,7 +43497,7 @@
         "deps": {
           "common": [
             {
-              "id": "proc-macro2 1.0.78",
+              "id": "proc-macro2 1.0.79",
               "target": "proc_macro2"
             },
             {
@@ -44145,7 +44153,7 @@
               "target": "prettyplease"
             },
             {
-              "id": "proc-macro2 1.0.78",
+              "id": "proc-macro2 1.0.79",
               "target": "proc_macro2"
             },
             {
@@ -44445,7 +44453,7 @@
         "deps": {
           "common": [
             {
-              "id": "proc-macro2 1.0.78",
+              "id": "proc-macro2 1.0.79",
               "target": "proc_macro2"
             },
             {
@@ -45968,7 +45976,7 @@
               "target": "once_cell"
             },
             {
-              "id": "proc-macro2 1.0.78",
+              "id": "proc-macro2 1.0.79",
               "target": "proc_macro2"
             },
             {
@@ -46128,7 +46136,7 @@
         "deps": {
           "common": [
             {
-              "id": "proc-macro2 1.0.78",
+              "id": "proc-macro2 1.0.79",
               "target": "proc_macro2"
             },
             {
@@ -48400,7 +48408,7 @@
               "target": "http"
             },
             {
-              "id": "http-body-util 0.1.0",
+              "id": "http-body-util 0.1.1",
               "target": "http_body_util"
             },
             {
@@ -48591,7 +48599,7 @@
               "target": "rusticata_macros"
             },
             {
-              "id": "thiserror 1.0.57",
+              "id": "thiserror 1.0.58",
               "target": "thiserror"
             },
             {
@@ -48668,7 +48676,7 @@
               "target": "rusticata_macros"
             },
             {
-              "id": "thiserror 1.0.57",
+              "id": "thiserror 1.0.58",
               "target": "thiserror"
             },
             {
@@ -49119,7 +49127,7 @@
               "target": "proc_macro_crate"
             },
             {
-              "id": "proc-macro2 1.0.78",
+              "id": "proc-macro2 1.0.79",
               "target": "proc_macro2"
             },
             {
@@ -49268,7 +49276,7 @@
         "deps": {
           "common": [
             {
-              "id": "proc-macro2 1.0.78",
+              "id": "proc-macro2 1.0.79",
               "target": "proc_macro2"
             },
             {
@@ -49362,7 +49370,7 @@
         "deps": {
           "common": [
             {
-              "id": "proc-macro2 1.0.78",
+              "id": "proc-macro2 1.0.79",
               "target": "proc_macro2"
             },
             {
@@ -49520,7 +49528,7 @@
               "target": "log"
             },
             {
-              "id": "thiserror 1.0.57",
+              "id": "thiserror 1.0.58",
               "target": "thiserror"
             },
             {
@@ -49839,7 +49847,7 @@
               "target": "proc_macro_crate"
             },
             {
-              "id": "proc-macro2 1.0.78",
+              "id": "proc-macro2 1.0.79",
               "target": "proc_macro2"
             },
             {
@@ -49890,7 +49898,7 @@
         "deps": {
           "common": [
             {
-              "id": "proc-macro2 1.0.78",
+              "id": "proc-macro2 1.0.79",
               "target": "proc_macro2"
             },
             {
