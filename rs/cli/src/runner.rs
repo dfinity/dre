@@ -210,7 +210,7 @@ impl Runner {
         })
     }
 
-    pub(crate) async fn prepare_versions_to_retire(
+    pub async fn prepare_versions_to_retire(
         &self,
         release_artifact: &Artifact,
         edit_summary: bool,
@@ -282,7 +282,7 @@ impl Runner {
             })
     }
 
-    pub(crate) async fn hostos_rollout_nodes(
+    pub async fn hostos_rollout_nodes(
         &self,
         node_group: NodeGroupUpdate,
         version: &String,
