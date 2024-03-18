@@ -4,7 +4,7 @@ use chrono::{Datelike, Days, NaiveDate, Weekday};
 use humantime::format_duration;
 use ic_base_types::PrincipalId;
 use ic_management_backend::proposal::{SubnetUpdateProposal, UpdateUnassignedNodesProposal};
-use ic_management_types::{Release, Subnet};
+use ic_management_types::Subnet;
 use itertools::Itertools;
 use slog::{debug, info, Logger};
 
@@ -164,7 +164,7 @@ fn check_stage<'a>(
         let (subnet_principal, desired_version) = desired_versions
             .subnets
             .iter()
-            .find(|(s, v)| s.to_string().starts_with(subnet_short))
+            .find(|(s, _)| s.to_string().starts_with(subnet_short))
             .expect("should find the subnet");
 
         // Find subnet to by the subnet_short
@@ -239,20 +239,6 @@ fn check_stage<'a>(
     Ok(stage_actions)
 }
 
-fn get_desired_version_for_subnet<'a>(
-    subnet_short: &'a str,
-    current_release_feature_spec: &'a BTreeMap<String, Vec<String>>,
-    current_version: &'a str,
-) -> &'a str {
-    return match current_release_feature_spec
-        .iter()
-        .find(|(_, subnets)| subnets.contains(&subnet_short.to_string()))
-    {
-        Some((name, _)) => name,
-        None => current_version,
-    };
-}
-
 #[derive(Clone)]
 struct DesiredReleaseVersion {
     subnets: BTreeMap<PrincipalId, crate::calculation::Version>,
@@ -307,16 +293,6 @@ fn desired_rollout_release_version(
         .collect(),
          unassigned_nodes: newest_release.versions[0].clone(),
     }
-}
-
-fn find_subnet_by_short_id<'a>(subnets: &'a [Subnet], subnet_short: &'a str) -> anyhow::Result<&'a Subnet> {
-    return match subnets
-        .iter()
-        .find(|s| s.principal.to_string().starts_with(subnet_short))
-    {
-        Some(subnet) => Ok(subnet),
-        None => Err(anyhow::anyhow!("No subnet with short id '{}'", subnet_short)),
-    };
 }
 
 fn get_remaining_bake_time_for_subnet(
@@ -389,19 +365,6 @@ mod get_open_proposal_for_subnet_tests {
     pub(super) fn craft_subnet_from_id<'a>(subnet_id: &'a str) -> Subnet {
         Subnet {
             principal: PrincipalId(Principal::from_str(subnet_id).expect("Can create principal")),
-            ..Default::default()
-        }
-    }
-
-    pub(super) fn craft_subnet_from_similar_id<'a>(subnet_id: &'a str) -> Subnet {
-        let original_principal = Principal::from_str(subnet_id).expect("Can create principal");
-        let mut new_principal = original_principal.as_slice().to_vec();
-        let len = new_principal.len();
-        if let Some(byte) = new_principal.get_mut(len - 1) {
-            *byte += 1;
-        }
-        Subnet {
-            principal: PrincipalId(Principal::try_from_slice(&new_principal[..]).expect("Can create principal")),
             ..Default::default()
         }
     }
@@ -558,78 +521,6 @@ mod get_remaining_bake_time_for_subnet_tests {
 }
 
 #[cfg(test)]
-mod find_subnet_by_short_id_tests {
-    use self::get_open_proposal_for_subnet_tests::{craft_subnet_from_id, craft_subnet_from_similar_id};
-
-    use super::*;
-
-    #[test]
-    fn should_find_subnet() {
-        let subnet_1 = craft_subnet_from_id("5kdm2-62fc6-fwnja-hutkz-ycsnm-4z33i-woh43-4cenu-ev7mi-gii6t-4ae");
-        let subnet_2 = craft_subnet_from_id("snjp4-xlbw4-mnbog-ddwy6-6ckfd-2w5a2-eipqo-7l436-pxqkh-l6fuv-vae");
-        let subnet_3 = craft_subnet_from_similar_id("snjp4-xlbw4-mnbog-ddwy6-6ckfd-2w5a2-eipqo-7l436-pxqkh-l6fuv-vae");
-        let subnets = &[subnet_1, subnet_2, subnet_3];
-
-        let maybe_subnet = find_subnet_by_short_id(subnets, "snjp4");
-
-        assert!(maybe_subnet.is_ok());
-        let subnet = maybe_subnet.unwrap();
-        let subnet_principal = subnet.principal.to_string();
-        assert!(subnet_principal.starts_with("snjp4"));
-        assert!(subnet_principal.eq("snjp4-xlbw4-mnbog-ddwy6-6ckfd-2w5a2-eipqo-7l436-pxqkh-l6fuv-vae"));
-    }
-
-    #[test]
-    fn should_find_not_subnet() {
-        let subnet_1 = craft_subnet_from_id("5kdm2-62fc6-fwnja-hutkz-ycsnm-4z33i-woh43-4cenu-ev7mi-gii6t-4ae");
-        let subnet_2 = craft_subnet_from_id("snjp4-xlbw4-mnbog-ddwy6-6ckfd-2w5a2-eipqo-7l436-pxqkh-l6fuv-vae");
-        let subnets = &[subnet_1, subnet_2];
-
-        let maybe_subnet = find_subnet_by_short_id(subnets, "random-subnet");
-
-        assert!(maybe_subnet.is_err());
-    }
-}
-
-#[cfg(test)]
-mod get_desired_version_for_subnet_test {
-    use super::*;
-
-    pub(super) fn craft_feature_spec(tuples: &[(&str, &[&str])]) -> BTreeMap<String, Vec<String>> {
-        tuples
-            .iter()
-            .map(|(commit, subnets)| (commit.to_string(), subnets.iter().map(|id| id.to_string()).collect()))
-            .collect::<BTreeMap<String, Vec<String>>>()
-    }
-
-    #[test]
-    fn should_return_current_version() {
-        let current_release_feature_spec =
-            craft_feature_spec(&[("feature-a-commit", &["subnet-1", "subnet-2", "subnet-3"])]);
-
-        let version = get_desired_version_for_subnet("subnet", &current_release_feature_spec, "current_version");
-        assert_eq!(version, "current_version")
-    }
-
-    #[test]
-    fn should_return_current_version_empty_feature_spec() {
-        let current_release_feature_spec = craft_feature_spec(&vec![]);
-
-        let version = get_desired_version_for_subnet("subnet", &current_release_feature_spec, "current_version");
-        assert_eq!(version, "current_version")
-    }
-
-    #[test]
-    fn should_return_feature_version() {
-        let current_release_feature_spec =
-            craft_feature_spec(&[("feature-a-commit", &["subnet-1", "subnet-2", "subnet-3"])]);
-
-        let version = get_desired_version_for_subnet("subnet-1", &current_release_feature_spec, "current_version");
-        assert_eq!(version, "feature-a-commit")
-    }
-}
-
-#[cfg(test)]
 mod test {
 
     use ic_base_types::PrincipalId;
@@ -778,15 +669,13 @@ mod check_stages_tests_no_feature_builds {
     use super::*;
 
     /// Part one => No feature builds
-    /// `current_version` - can be defined
-    /// `current_release_feature_spec` - empty because we don't have feature builds for this part
     /// `last_bake_status` - can be defined
     /// `subnet_update_proposals` - can be defined
-    /// `stages` - must be defined
+    /// `unassigned_node_update_proposals` - can be defined
+    /// `index` - must be defined
     /// `logger` - can be defined, but won't be because these are only tests
     /// `unassigned_version` - should be defined
     /// `subnets` - should be defined
-    /// `start_of_release` - should be defined
     /// `now` - should be defined
     ///
     /// For all use cases we will use the following setup
@@ -911,14 +800,11 @@ mod check_stages_tests_no_feature_builds {
 
     /// Use-Case 1: Beginning of a new rollout
     ///
-    /// `current_version` - set to a commit that is being rolled out `2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f`
     /// `last_bake_status` - empty, because no subnets have the version
     /// `subnet_update_proposals` - can be empty but doesn't have to be. For e.g. if its Monday it is possible to have an open proposal for NNS
     ///                             But it is for a different version (one from last week)
     /// `unassigned_nodes_proposals` - empty
-    /// `unassigned_version` - one from previous week `85bd56a70e55b2cea75cae6405ae11243e5fdad8`
     /// `subnets` - can be seen in `craft_index_state`
-    /// `start_of_release` - some `2024-02-21`
     /// `now` - same `2024-02-21`
     #[test]
     fn test_use_case_1() {
@@ -926,11 +812,9 @@ mod check_stages_tests_no_feature_builds {
         let current_version = "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f".to_string();
         let last_bake_status = BTreeMap::new();
         let subnet_update_proposals = Vec::new();
-        let stages = &index.rollout.stages;
         let unassigned_version = "85bd56a70e55b2cea75cae6405ae11243e5fdad8".to_string();
         let unassigned_nodes_proposals = vec![];
         let subnets = &craft_subnets();
-        let start_of_release = NaiveDate::parse_from_str("2024-02-21", "%Y-%m-%d").expect("Should parse date");
         let now = NaiveDate::parse_from_str("2024-02-21", "%Y-%m-%d").expect("Should parse date");
 
         let maybe_actions = check_stages(
@@ -967,18 +851,14 @@ mod check_stages_tests_no_feature_builds {
 
     /// Use case 2: First batch is submitted but the proposal wasn't executed
     ///
-    /// `current_version` - set to a commit that is being rolled out `2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f`
     /// `last_bake_status` - empty, because no subnets have the version
     /// `subnet_update_proposals` - contains proposals from the first stage
     /// `unassigned_nodes_proposals` - empty
-    /// `unassigned_version` - one from previous week `85bd56a70e55b2cea75cae6405ae11243e5fdad8`
     /// `subnets` - can be seen in `craft_index_state`
-    /// `start_of_release` - some `2024-02-21`
     /// `now` - same `2024-02-21`
     #[test]
     fn test_use_case_2() {
         let index = craft_index_state();
-        let current_version = "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f".to_string();
         let last_bake_status = BTreeMap::new();
         let subnet_principal = Principal::from_str("io67a-2jmkw-zup3h-snbwi-g6a5n-rm5dn-b6png-lvdpl-nqnto-yih6l-gqe")
             .expect("Should be possible to create principal");
@@ -994,11 +874,9 @@ mod check_stages_tests_no_feature_builds {
                 replica_version_id: "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f".to_string(),
             },
         }];
-        let stages = &index.rollout.stages;
         let unassigned_version = "85bd56a70e55b2cea75cae6405ae11243e5fdad8".to_string();
         let unassigned_nodes_proposals = vec![];
         let subnets = &craft_subnets();
-        let start_of_release = NaiveDate::parse_from_str("2024-02-21", "%Y-%m-%d").expect("Should parse date");
         let now = NaiveDate::parse_from_str("2024-02-21", "%Y-%m-%d").expect("Should parse date");
 
         let maybe_actions = check_stages(
@@ -1033,18 +911,14 @@ mod check_stages_tests_no_feature_builds {
 
     /// Use case 3: First batch is submitted the proposal was executed and the subnet is baking
     ///
-    /// `current_version` - set to a commit that is being rolled out `2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f`
     /// `last_bake_status` - contains the status for the first subnet
     /// `subnet_update_proposals` - contains proposals from the first stage
     /// `unassigned_nodes_proposals` - empty
-    /// `unassigned_version` - one from previous week `85bd56a70e55b2cea75cae6405ae11243e5fdad8`
     /// `subnets` - can be seen in `craft_index_state`
-    /// `start_of_release` - some `2024-02-21`
     /// `now` - same `2024-02-21`
     #[test]
     fn test_use_case_3() {
         let index = craft_index_state();
-        let current_version = "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f".to_string();
         let last_bake_status = [(
             "io67a-2jmkw-zup3h-snbwi-g6a5n-rm5dn-b6png-lvdpl-nqnto-yih6l-gqe",
             humantime::parse_duration("3h"),
@@ -1071,12 +945,10 @@ mod check_stages_tests_no_feature_builds {
                 replica_version_id: "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f".to_string(),
             },
         }];
-        let stages = &index.rollout.stages;
         let unassigned_version = "85bd56a70e55b2cea75cae6405ae11243e5fdad8".to_string();
         let unassigned_nodes_proposals = vec![];
         let mut subnets = craft_subnets();
         replace_versions(&mut subnets, &[("io67a", "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f")]);
-        let start_of_release = NaiveDate::parse_from_str("2024-02-21", "%Y-%m-%d").expect("Should parse date");
         let now = NaiveDate::parse_from_str("2024-02-21", "%Y-%m-%d").expect("Should parse date");
 
         let maybe_actions = check_stages(
@@ -1111,13 +983,10 @@ mod check_stages_tests_no_feature_builds {
 
     /// Use case 4: First batch is submitted the proposal was executed and the subnet is baked, placing proposal for next stage
     ///
-    /// `current_version` - set to a commit that is being rolled out `2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f`
     /// `last_bake_status` - contains the status for the first subnet
     /// `subnet_update_proposals` - contains proposals from the first stage
     /// `unassigned_nodes_proposals` - empty
-    /// `unassigned_version` - one from previous week `85bd56a70e55b2cea75cae6405ae11243e5fdad8`
     /// `subnets` - can be seen in `craft_index_state`
-    /// `start_of_release` - some `2024-02-21`
     /// `now` - same `2024-02-21`
     #[test]
     fn test_use_case_4() {
@@ -1149,12 +1018,10 @@ mod check_stages_tests_no_feature_builds {
                 replica_version_id: "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f".to_string(),
             },
         }];
-        let stages = &index.rollout.stages;
         let unassigned_version = "85bd56a70e55b2cea75cae6405ae11243e5fdad8".to_string();
         let unassigned_nodes_proposals = vec![];
         let mut subnets = craft_subnets();
         replace_versions(&mut subnets, &[("io67a", "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f")]);
-        let start_of_release = NaiveDate::parse_from_str("2024-02-21", "%Y-%m-%d").expect("Should parse date");
         let now = NaiveDate::parse_from_str("2024-02-21", "%Y-%m-%d").expect("Should parse date");
 
         let maybe_actions = check_stages(
@@ -1195,13 +1062,10 @@ mod check_stages_tests_no_feature_builds {
 
     /// Use case 5: Updating unassigned nodes
     ///
-    /// `current_version` - set to a commit that is being rolled out `2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f`
     /// `last_bake_status` - contains the status for all subnets before unassigned nodes
     /// `subnet_update_proposals` - contains proposals from previous two stages
     /// `unassigned_nodes_proposals` - empty
-    /// `unassigned_version` - one from previous week `85bd56a70e55b2cea75cae6405ae11243e5fdad8`
     /// `subnets` - can be seen in `craft_index_state`
-    /// `start_of_release` - some `2024-02-21`
     /// `now` - same `2024-02-21`
     #[test]
     fn test_use_case_5() {
@@ -1237,7 +1101,6 @@ mod check_stages_tests_no_feature_builds {
             ],
             &current_version,
         );
-        let stages = &index.rollout.stages;
         let unassigned_version = "85bd56a70e55b2cea75cae6405ae11243e5fdad8".to_string();
         let unassigned_nodes_proposals = vec![];
         let mut subnets = craft_subnets();
@@ -1249,7 +1112,6 @@ mod check_stages_tests_no_feature_builds {
                 ("uzr34", "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f"),
             ],
         );
-        let start_of_release = NaiveDate::parse_from_str("2024-02-21", "%Y-%m-%d").expect("Should parse date");
         let now = NaiveDate::parse_from_str("2024-02-21", "%Y-%m-%d").expect("Should parse date");
 
         let maybe_actions = check_stages(
@@ -1285,13 +1147,10 @@ mod check_stages_tests_no_feature_builds {
 
     /// Use case 6: Proposal sent for updating unassigned nodes but it is not executed
     ///
-    /// `current_version` - set to a commit that is being rolled out `2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f`
     /// `last_bake_status` - contains the status for all subnets before unassigned nodes
     /// `subnet_update_proposals` - contains proposals from previous two stages
     /// `unassigned_nodes_proposals` - contains open proposal for unassigned nodes
-    /// `unassigned_version` - one from previous week `85bd56a70e55b2cea75cae6405ae11243e5fdad8`
     /// `subnets` - can be seen in `craft_index_state`
-    /// `start_of_release` - some `2024-02-21`
     /// `now` - same `2024-02-21`
     #[test]
     fn test_use_case_6() {
@@ -1327,7 +1186,6 @@ mod check_stages_tests_no_feature_builds {
             ],
             &current_version,
         );
-        let stages = &index.rollout.stages;
         let unassigned_version = "85bd56a70e55b2cea75cae6405ae11243e5fdad8".to_string();
         let unassigned_nodes_proposal = vec![UpdateUnassignedNodesProposal {
             info: ProposalInfoInternal {
@@ -1350,7 +1208,6 @@ mod check_stages_tests_no_feature_builds {
                 ("uzr34", "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f"),
             ],
         );
-        let start_of_release = NaiveDate::parse_from_str("2024-02-21", "%Y-%m-%d").expect("Should parse date");
         let now = NaiveDate::parse_from_str("2024-02-21", "%Y-%m-%d").expect("Should parse date");
 
         let maybe_actions = check_stages(
@@ -1385,13 +1242,10 @@ mod check_stages_tests_no_feature_builds {
 
     /// Use case 7: Executed update unassigned nodes, waiting for next week
     ///
-    /// `current_version` - set to a commit that is being rolled out `2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f`
     /// `last_bake_status` - contains the status for all subnets before unassigned nodes
     /// `subnet_update_proposals` - contains proposals from previous two stages
     /// `unassigned_nodes_proposals` - contains executed proposal for unassigned nodes
-    /// `unassigned_version` - same as `current_version`
     /// `subnets` - can be seen in `craft_index_state`
-    /// `start_of_release` - some `2024-02-21`
     /// `now` - same `2024-02-24`
     #[test]
     fn test_use_case_7() {
@@ -1427,7 +1281,6 @@ mod check_stages_tests_no_feature_builds {
             ],
             &current_version,
         );
-        let stages = &index.rollout.stages;
         let unassigned_version = current_version.clone();
         let unassigned_nodes_proposal = vec![UpdateUnassignedNodesProposal {
             info: ProposalInfoInternal {
@@ -1450,7 +1303,6 @@ mod check_stages_tests_no_feature_builds {
                 ("uzr34", "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f"),
             ],
         );
-        let start_of_release = NaiveDate::parse_from_str("2024-02-21", "%Y-%m-%d").expect("Should parse date");
         let now = NaiveDate::parse_from_str("2024-02-24", "%Y-%m-%d").expect("Should parse date");
 
         let maybe_actions = check_stages(
@@ -1481,13 +1333,10 @@ mod check_stages_tests_no_feature_builds {
 
     /// Use case 8: Next monday came, should place proposal for updating the last subnet
     ///
-    /// `current_version` - set to a commit that is being rolled out `2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f`
     /// `last_bake_status` - contains the status for all subnets before unassigned nodes
     /// `subnet_update_proposals` - contains proposals from previous two stages
     /// `unassigned_nodes_proposals` - contains executed proposal for unassigned nodes
-    /// `unassigned_version` - same as `current_version`
     /// `subnets` - can be seen in `craft_index_state`
-    /// `start_of_release` - some `2024-02-21`
     /// `now` - same `2024-02-26`
     #[test]
     fn test_use_case_8() {
@@ -1523,7 +1372,6 @@ mod check_stages_tests_no_feature_builds {
             ],
             &current_version,
         );
-        let stages = &index.rollout.stages;
         let unassigned_version = current_version.clone();
         let unassigned_nodes_proposal = vec![UpdateUnassignedNodesProposal {
             info: ProposalInfoInternal {
@@ -1546,7 +1394,6 @@ mod check_stages_tests_no_feature_builds {
                 ("uzr34", "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f"),
             ],
         );
-        let start_of_release = NaiveDate::parse_from_str("2024-02-21", "%Y-%m-%d").expect("Should parse date");
         let now = NaiveDate::parse_from_str("2024-02-28", "%Y-%m-%d").expect("Should parse date");
 
         let maybe_actions = check_stages(
@@ -1583,13 +1430,10 @@ mod check_stages_tests_no_feature_builds {
 
     /// Use case 9: Next monday came, proposal for last subnet executed and bake time passed. Rollout finished
     ///
-    /// `current_version` - set to a commit that is being rolled out `2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f`
     /// `last_bake_status` - contains the status for all subnets before unassigned nodes
     /// `subnet_update_proposals` - contains proposals from previous two stages
     /// `unassigned_nodes_proposals` - contains executed proposal for unassigned nodes
-    /// `unassigned_version` - same as `current_version`
     /// `subnets` - can be seen in `craft_index_state`
-    /// `start_of_release` - some `2024-02-21`
     /// `now` - same `2024-02-26`
     #[test]
     fn test_use_case_9() {
@@ -1630,7 +1474,6 @@ mod check_stages_tests_no_feature_builds {
             ],
             &current_version,
         );
-        let stages = &index.rollout.stages;
         let unassigned_version = current_version.clone();
         let unassigned_nodes_proposal = vec![UpdateUnassignedNodesProposal {
             info: ProposalInfoInternal {
@@ -1654,7 +1497,6 @@ mod check_stages_tests_no_feature_builds {
                 ("pjljw", "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f"),
             ],
         );
-        let start_of_release = NaiveDate::parse_from_str("2024-02-21", "%Y-%m-%d").expect("Should parse date");
         let now = NaiveDate::parse_from_str("2024-02-28", "%Y-%m-%d").expect("Should parse date");
 
         let maybe_actions = check_stages(
@@ -1690,16 +1532,12 @@ mod check_stages_tests_feature_builds {
     use super::*;
 
     /// Part two => Feature builds
-    /// `current_version` - has to be defined
-    /// `current_release_feature_spec` - has to be defined with mapped versions to subnets
     /// `last_bake_status` - can be defined depending on the use case
     /// `subnet_update_proposals` - can be defined depending on the use case
     /// `unassigned_nodes_update_proposals` - can be defined depending on the use case
-    /// `stages` - has to be defined
+    /// `index` - has to be defined
     /// `logger` - can be defined, but won't be because these are only tests
-    /// `unassigned_version` - has to be defined
     /// `subnets` - has to be defined
-    /// `start_of_release` - has to be defined
     /// `now` - has to be defined
     ///
     /// For all use cases we will use the following setup
@@ -1793,23 +1631,17 @@ mod check_stages_tests_feature_builds {
 
     /// Use-Case 1: Beginning of a new rollout
     ///
-    /// `current_version` - set to a commit that is being rolled out `2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f
-    /// `current_release_feature_spec` - contains the spec for version `76521ef765e86187c43f7d6a02e63332a6556c8c`
     /// `last_bake_status` - empty, because no subnets have the version
     /// `subnet_update_proposals` - can be empty but doesn't have to be. For e.g. if its Monday it is possible to have an open proposal for NNS
     ///                             But it is for a different version (one from last week)
     /// `unassigned_nodes_proposals` - empty
-    /// `unassigned_version` - one from previous week `85bd56a70e55b2cea75cae6405ae11243e5fdad8`
     /// `subnets` - can be seen in `craft_index_state`
-    /// `start_of_release` - some `2024-02-21`
     /// `now` - same `2024-02-21`
     #[test]
     fn test_use_case_1() {
         let index = craft_index_state();
-        let current_version = "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f".to_string();
         let last_bake_status = BTreeMap::new();
         let subnet_update_proposals = Vec::new();
-        let stages = &index.rollout.stages;
         let unassigned_version = "85bd56a70e55b2cea75cae6405ae11243e5fdad8".to_string();
         let unassigned_nodes_proposals = vec![];
         let subnets = &craft_subnets();
@@ -1823,7 +1655,6 @@ mod check_stages_tests_feature_builds {
         // TODO: replace in index
         let mut current_release_feature_spec = BTreeMap::new();
         current_release_feature_spec.insert(feature.version.clone(), feature.subnets.clone());
-        let start_of_release = NaiveDate::parse_from_str("2024-02-21", "%Y-%m-%d").expect("Should parse date");
         let now = NaiveDate::parse_from_str("2024-02-21", "%Y-%m-%d").expect("Should parse date");
 
         let maybe_actions = check_stages(
@@ -1860,14 +1691,10 @@ mod check_stages_tests_feature_builds {
 
     /// Use case 2: First batch is submitted the proposal was executed and the subnet is baked, placing proposal for next stage
     ///
-    /// `current_version` - set to a commit that is being rolled out `2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f`
-    /// `current_release_feature_spec` - contains the spec for version `76521ef765e86187c43f7d6a02e63332a6556c8c`
     /// `last_bake_status` - contains the status for the first subnet
     /// `subnet_update_proposals` - contains proposals from the first stage
     /// `unassigned_nodes_proposals` - empty
-    /// `unassigned_version` - one from previous week `85bd56a70e55b2cea75cae6405ae11243e5fdad8`
     /// `subnets` - can be seen in `craft_index_state`
-    /// `start_of_release` - some `2024-02-21`
     /// `now` - same `2024-02-21`
     #[test]
     fn test_use_case_2() {
@@ -1899,7 +1726,6 @@ mod check_stages_tests_feature_builds {
                 replica_version_id: "76521ef765e86187c43f7d6a02e63332a6556c8c".to_string(),
             },
         }];
-        let stages = &index.rollout.stages;
         let unassigned_version = "85bd56a70e55b2cea75cae6405ae11243e5fdad8".to_string();
         let unassigned_nodes_proposals = vec![];
         let mut subnets = craft_subnets();
@@ -1914,7 +1740,6 @@ mod check_stages_tests_feature_builds {
         // TODO: replace in index
         let mut current_release_feature_spec = BTreeMap::new();
         current_release_feature_spec.insert(feature.version.clone(), feature.subnets.clone());
-        let start_of_release = NaiveDate::parse_from_str("2024-02-21", "%Y-%m-%d").expect("Should parse date");
         let now = NaiveDate::parse_from_str("2024-02-21", "%Y-%m-%d").expect("Should parse date");
 
         let maybe_actions = check_stages(

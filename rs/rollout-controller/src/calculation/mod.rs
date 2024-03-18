@@ -9,12 +9,8 @@ use regex::Regex;
 use serde::Deserialize;
 use slog::{info, Logger};
 
-use self::{
-    release_actions::create_current_release_feature_spec,
-    stage_checks::{check_stages, SubnetAction},
-};
+use self::stage_checks::{check_stages, SubnetAction};
 
-mod release_actions;
 mod should_proceed;
 mod stage_checks;
 
@@ -86,9 +82,6 @@ pub async fn calculate_progress<'a>(
         info!(logger, "Rollout controller paused or should skip this day.");
         return Ok(vec![]);
     }
-
-    // TODO: this hsould be used somewhere else to check if proposal can be placed
-    let elected_versions = registry_state.get_blessed_replica_versions().await?;
 
     let mut last_bake_status: BTreeMap<String, f64> = BTreeMap::new();
     let result = prometheus_client
