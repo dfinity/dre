@@ -1,6 +1,5 @@
 rollout:
-  rc_name: rc--2024-02-21_23-01 # changed in step 4 & 5
-  pause: true
+  pause: false
   skip_days:
     - 2024-02-26
   stages:
@@ -12,7 +11,7 @@ rollout:
       bake_time: 4h
     - subnets: [snjp4, w4asl, qxesv]
       bake_time: 2h
-    - subnets: [4zbus, ejbmu, 2fq7c]  
+    - subnets: [4zbus, ejbmu, 2fq7c]
       bake_time: 2h
     - subnets: [pae4o, 5kdm2, csyj4]
       bake_time: 2h
@@ -20,7 +19,7 @@ rollout:
       bake_time: 2h
     - subnets: [k44fs, cv73p, 4ecnw]
       bake_time: 1h
-    - subnets: [opn46, lspz2, o3ow2] 
+    - subnets: [opn46, lspz2, o3ow2]
       bake_time: 1h
     - subnets: [w4rem, 6pbhf, e66qm]
       bake_time: 1h
@@ -28,52 +27,48 @@ rollout:
       bake_time: 30m
     - subnets: [mpubz, x33ed, pzp6e]
       bake_time: 30m
-    - subnets: [3hhby, nl6hn, gmq5v]   
+    - subnets: [3hhby, nl6hn, gmq5v]
       bake_time: 30m
-    - subnets: [tdb26] 
+    - update_unassigned_nodes: true
+    - subnets: [tdb26]
       bake_time: 2h
       wait_for_next_week: true
 
-features: # can be changed in step 4 $ 5
-  - name: p2p
-    subnets:
-      - shefu
-      - qdvhd
-      - bkfrj
-      - snjp4
-      - qxesv
-      - w4asl
-      - 4zbus
-      - ejbmu
-      - 2fq7c
-      - pae4o
-      - csyj4
-      - 5kdm2
-      - eq6en
-      - brlsh
-      - k44fs
-      - cv73p
-      - 4ecnw
-      - opn46
-      - lspz2
-      - o3ow2
-      - w4rem
-      - 6pbhf
-      - e66qm
-      - jtdsg
-      - fuqsr
-      - mpubz
-      - x33ed
-      - 3hhby
-      - nl6hn
-
 releases: # add new release in step 2
   - rc_name: rc--2024-02-21_23-01
-    version: 85bd56a70e55b2cea75cae6405ae11243e5fdad8
-    publish: 2024-02-26T14:20:00+00:00 # changed in step 3
-    features:
-      - p2p
-  - rc_name: rc--2024-02-21_23-01
-    version: 2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f
-    publish: 2024-02-26T14:20:00+00:00 # changed in step 3
-    features: []
+    versions:
+      - version: 2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f
+        name: rc--2024-02-21_23-01
+        release_notes_ready: false
+      - version: 85bd56a70e55b2cea75cae6405ae11243e5fdad8
+        name: p2p
+        release_notes_ready: false
+        subnets: 
+          - shefu
+          - qdvhd
+          - bkfrj
+          - snjp4
+          - qxesv
+          - w4asl
+          - 4zbus
+          - ejbmu
+          - 2fq7c
+          - pae4o
+          - csyj4
+          - 5kdm2
+          - eq6en
+          - brlsh
+          - k44fs
+          - cv73p
+          - 4ecnw
+          - opn46
+          - lspz2
+          - o3ow2
+          - 6pbhf
+          - e66qm
+          - jtdsg
+          - fuqsr
+          - mpubz
+          - x33ed
+          - 3hhby
+          - nl6hn

@@ -7,9 +7,9 @@ use futures_util::future::try_join_all;
 use ic_agent::agent::http_transport::reqwest_transport::ReqwestHttpReplicaV2Transport;
 use ic_agent::Agent;
 use ic_management_types::UpdateElectedHostosVersionsProposal;
+use ic_management_types::UpdateElectedReplicaVersionsProposal;
 use ic_management_types::UpdateNodesHostosVersionsProposal;
 use ic_management_types::{NnsFunctionProposal, TopologyChangePayload, TopologyChangeProposal};
-use ic_management_types::UpdateElectedReplicaVersionsProposal;
 use ic_nns_governance::pb::v1::{proposal::Action, ListProposalInfo, ListProposalInfoResponse, NnsFunction};
 use ic_nns_governance::pb::v1::{ProposalInfo, ProposalStatus, Topic};
 use itertools::Itertools;
@@ -21,6 +21,7 @@ use registry_canister::mutations::do_update_elected_hostos_versions::UpdateElect
 use registry_canister::mutations::do_update_elected_replica_versions::UpdateElectedReplicaVersionsPayload;
 use registry_canister::mutations::do_update_nodes_hostos_version::UpdateNodesHostosVersionPayload;
 use registry_canister::mutations::do_update_subnet_replica::UpdateSubnetReplicaVersionPayload;
+use registry_canister::mutations::do_update_unassigned_nodes_config::UpdateUnassignedNodesConfigPayload;
 use registry_canister::mutations::node_management::do_remove_nodes::RemoveNodesPayload;
 use serde::Serialize;
 
@@ -72,6 +73,12 @@ impl From<ProposalInfo> for ProposalInfoInternal {
 pub struct SubnetUpdateProposal {
     pub info: ProposalInfoInternal,
     pub payload: UpdateSubnetReplicaVersionPayload,
+}
+
+#[derive(Clone, Serialize)]
+pub struct UpdateUnassignedNodesProposal {
+    pub info: ProposalInfoInternal,
+    pub payload: UpdateUnassignedNodesConfigPayload,
 }
 
 impl ProposalAgent {
@@ -194,6 +201,16 @@ impl ProposalAgent {
         Ok(filter_map_nns_function_proposals(&self.list_proposals(vec![]).await?)
             .into_iter()
             .map(|(info, payload)| SubnetUpdateProposal {
+                info: info.into(),
+                payload,
+            })
+            .collect::<Vec<_>>())
+    }
+
+    pub async fn list_update_unassigned_nodes_version_proposals(&self) -> Result<Vec<UpdateUnassignedNodesProposal>> {
+        Ok(filter_map_nns_function_proposals(&self.list_proposals(vec![]).await?)
+            .into_iter()
+            .map(|(info, payload)| UpdateUnassignedNodesProposal {
                 info: info.into(),
                 payload,
             })

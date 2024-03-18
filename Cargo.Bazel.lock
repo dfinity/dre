@@ -1,5 +1,5 @@
 {
-  "checksum": "be44b05507bdd5e808d3642e8733557edd053bb89b63983230a575ca14a9fb34",
+  "checksum": "683ef224e0a517f71f7b62868192a1d7a020d93d122f65348365ef7029c150ee",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -14177,6 +14177,36 @@
       },
       "license": "MIT OR Apache-2.0"
     },
+    "futures-timer 3.0.3": {
+      "name": "futures-timer",
+      "version": "3.0.3",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/futures-timer/3.0.3/download",
+          "sha256": "f288b0a4f20f9a56b5d1da57e2227c661b7b16168e2f72365f57b63326e29b24"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "futures_timer",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "futures_timer",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "edition": "2018",
+        "version": "3.0.3"
+      },
+      "license": "MIT/Apache-2.0"
+    },
     "futures-util 0.3.30": {
       "name": "futures-util",
       "version": "0.3.30",
@@ -16183,6 +16213,49 @@
         "version": "2.1.0"
       },
       "license": "MIT/Apache-2.0"
+    },
+    "humantime-serde 1.1.1": {
+      "name": "humantime-serde",
+      "version": "1.1.1",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/humantime-serde/1.1.1/download",
+          "sha256": "57a3db5ea5923d99402c94e9feb261dc5ee9b4efa158b0315f788cf549cc200c"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "humantime_serde",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "humantime_serde",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "humantime 2.1.0",
+              "target": "humantime"
+            },
+            {
+              "id": "serde 1.0.197",
+              "target": "serde"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2018",
+        "version": "1.1.1"
+      },
+      "license": "MIT OR Apache-2.0"
     },
     "hyper 0.14.28": {
       "name": "hyper",
@@ -36426,6 +36499,42 @@
       },
       "license": null
     },
+    "relative-path 1.9.2": {
+      "name": "relative-path",
+      "version": "1.9.2",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/relative-path/1.9.2/download",
+          "sha256": "e898588f33fdd5b9420719948f9f2a32c922a246964576f71ba7f24f80610fbc"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "relative_path",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "relative_path",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "crate_features": {
+          "common": [
+            "default"
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "1.9.2"
+      },
+      "license": "MIT OR Apache-2.0"
+    },
     "rend 0.4.2": {
       "name": "rend",
       "version": "0.4.2",
@@ -37146,6 +37255,14 @@
               "target": "anyhow"
             },
             {
+              "id": "candid 0.9.11",
+              "target": "candid"
+            },
+            {
+              "id": "chrono 0.4.35",
+              "target": "chrono"
+            },
+            {
               "id": "clap 4.4.18",
               "target": "clap"
             },
@@ -37160,6 +37277,58 @@
             {
               "id": "humantime 2.1.0",
               "target": "humantime"
+            },
+            {
+              "id": "humantime-serde 1.1.1",
+              "target": "humantime_serde"
+            },
+            {
+              "id": "ic-base-types 0.9.0",
+              "target": "ic_base_types"
+            },
+            {
+              "id": "ic-registry-keys 0.9.0",
+              "target": "ic_registry_keys"
+            },
+            {
+              "id": "ic-registry-local-registry 0.9.0",
+              "target": "ic_registry_local_registry"
+            },
+            {
+              "id": "itertools 0.12.1",
+              "target": "itertools"
+            },
+            {
+              "id": "pretty_assertions 1.4.0",
+              "target": "pretty_assertions"
+            },
+            {
+              "id": "prometheus-http-query 0.8.2",
+              "target": "prometheus_http_query"
+            },
+            {
+              "id": "regex 1.10.3",
+              "target": "regex"
+            },
+            {
+              "id": "registry-canister 0.9.0",
+              "target": "registry_canister"
+            },
+            {
+              "id": "reqwest 0.11.26",
+              "target": "reqwest"
+            },
+            {
+              "id": "serde 1.0.197",
+              "target": "serde"
+            },
+            {
+              "id": "serde_json 1.0.114",
+              "target": "serde_json"
+            },
+            {
+              "id": "serde_yaml 0.9.32",
+              "target": "serde_yaml"
             },
             {
               "id": "slog 2.7.0",
@@ -37180,6 +37349,19 @@
             {
               "id": "tokio-util 0.6.10",
               "target": "tokio_util"
+            },
+            {
+              "id": "url 2.5.0",
+              "target": "url"
+            }
+          ],
+          "selects": {}
+        },
+        "deps_dev": {
+          "common": [
+            {
+              "id": "rstest 0.18.2",
+              "target": "rstest"
             }
           ],
           "selects": {}
@@ -37188,6 +37370,165 @@
         "version": "0.3.0"
       },
       "license": null
+    },
+    "rstest 0.18.2": {
+      "name": "rstest",
+      "version": "0.18.2",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/rstest/0.18.2/download",
+          "sha256": "97eeab2f3c0a199bc4be135c36c924b6590b88c377d416494288c14f2db30199"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "rstest",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "rstest",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "crate_features": {
+          "common": [
+            "async-timeout",
+            "default"
+          ],
+          "selects": {}
+        },
+        "deps": {
+          "common": [
+            {
+              "id": "futures 0.3.30",
+              "target": "futures"
+            },
+            {
+              "id": "futures-timer 3.0.3",
+              "target": "futures_timer"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "proc_macro_deps": {
+          "common": [
+            {
+              "id": "rstest_macros 0.18.2",
+              "target": "rstest_macros"
+            }
+          ],
+          "selects": {}
+        },
+        "version": "0.18.2"
+      },
+      "license": "MIT OR Apache-2.0"
+    },
+    "rstest_macros 0.18.2": {
+      "name": "rstest_macros",
+      "version": "0.18.2",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/rstest_macros/0.18.2/download",
+          "sha256": "d428f8247852f894ee1be110b375111b586d4fa431f6c46e64ba5a0dcccbe605"
+        }
+      },
+      "targets": [
+        {
+          "ProcMacro": {
+            "crate_name": "rstest_macros",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        },
+        {
+          "BuildScript": {
+            "crate_name": "build_script_build",
+            "crate_root": "build.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "rstest_macros",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "crate_features": {
+          "common": [
+            "async-timeout"
+          ],
+          "selects": {}
+        },
+        "deps": {
+          "common": [
+            {
+              "id": "cfg-if 1.0.0",
+              "target": "cfg_if"
+            },
+            {
+              "id": "glob 0.3.1",
+              "target": "glob"
+            },
+            {
+              "id": "proc-macro2 1.0.79",
+              "target": "proc_macro2"
+            },
+            {
+              "id": "quote 1.0.35",
+              "target": "quote"
+            },
+            {
+              "id": "regex 1.10.3",
+              "target": "regex"
+            },
+            {
+              "id": "relative-path 1.9.2",
+              "target": "relative_path"
+            },
+            {
+              "id": "rstest_macros 0.18.2",
+              "target": "build_script_build"
+            },
+            {
+              "id": "syn 2.0.52",
+              "target": "syn"
+            },
+            {
+              "id": "unicode-ident 1.0.12",
+              "target": "unicode_ident"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "0.18.2"
+      },
+      "build_script_attrs": {
+        "data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "rustc_version 0.4.0",
+              "target": "rustc_version"
+            }
+          ],
+          "selects": {}
+        }
+      },
+      "license": "MIT OR Apache-2.0"
     },
     "rust_decimal 1.34.3": {
       "name": "rust_decimal",

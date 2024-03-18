@@ -1,19 +1,13 @@
 {
     "$schema": "http://json-schema.org/draft-06/schema#",
-    "$ref": "#/definitions/Welcome3",
+    "$ref": "#/definitions/Welcome8",
     "definitions": {
-        "Welcome3": {
+        "Welcome8": {
             "type": "object",
             "additionalProperties": false,
             "properties": {
                 "rollout": {
                     "$ref": "#/definitions/Rollout"
-                },
-                "features": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/Feature"
-                    }
                 },
                 "releases": {
                     "type": "array",
@@ -23,18 +17,43 @@
                 }
             },
             "required": [
-                "features",
                 "releases",
                 "rollout"
             ],
-            "title": "Welcome3"
+            "title": "Welcome8"
         },
-        "Feature": {
+        "Release": {
             "type": "object",
             "additionalProperties": false,
             "properties": {
+                "rc_name": {
+                    "type": "string"
+                },
+                "versions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Version"
+                    }
+                }
+            },
+            "required": [
+                "rc_name",
+                "versions"
+            ],
+            "title": "Release"
+        },
+        "Version": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "version": {
+                    "type": "string"
+                },
                 "name": {
                     "type": "string"
+                },
+                "release_notes_ready": {
+                    "type": "boolean"
                 },
                 "subnets": {
                     "type": "array",
@@ -45,46 +64,15 @@
             },
             "required": [
                 "name",
-                "subnets"
-            ],
-            "title": "Feature"
-        },
-        "Release": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-                "rc_name": {
-                    "type": "string"
-                },
-                "version": {
-                    "type": "string"
-                },
-                "publish": {
-                    "type": "string",
-                    "format": "date-time"
-                },
-                "features": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            },
-            "required": [
-                "features",
-                "publish",
-                "rc_name",
+                "release_notes_ready",
                 "version"
             ],
-            "title": "Release"
+            "title": "Version"
         },
         "Rollout": {
             "type": "object",
             "additionalProperties": false,
             "properties": {
-                "rc_name": {
-                    "type": "string"
-                },
                 "pause": {
                     "type": "boolean"
                 },
@@ -104,7 +92,6 @@
             },
             "required": [
                 "pause",
-                "rc_name",
                 "skip_days",
                 "stages"
             ],
@@ -123,14 +110,14 @@
                 "bake_time": {
                     "type": "string"
                 },
+                "update_unassigned_nodes": {
+                    "type": "boolean"
+                },
                 "wait_for_next_week": {
                     "type": "boolean"
                 }
             },
-            "required": [
-                "bake_time",
-                "subnets"
-            ],
+            "required": [],
             "title": "Stage"
         }
     }
