@@ -1,5 +1,5 @@
 {
-  "checksum": "683ef224e0a517f71f7b62868192a1d7a020d93d122f65348365ef7029c150ee",
+  "checksum": "3e505218ac8b9878195c82edc086ac1c9c01901eaf619e2cc955439273525d79",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -11520,6 +11520,15 @@
       "repository": null,
       "targets": [
         {
+          "Library": {
+            "crate_name": "dre",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        },
+        {
           "BuildScript": {
             "crate_name": "build_script_build",
             "crate_root": "build.rs",
@@ -11529,7 +11538,7 @@
           }
         }
       ],
-      "library_target_name": null,
+      "library_target_name": "dre",
       "common_attrs": {
         "compile_data_glob": [
           "**"

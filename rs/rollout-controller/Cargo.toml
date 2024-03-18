@@ -38,6 +38,7 @@ candid = { workspace = true }
 ic-base-types = { workspace = true }
 pretty_assertions = { workspace = true }
 itertools = { workspace = true }
+dre = { path = "../cli"}
 
 [dev-dependencies]
 rstest = "0.18.2"
