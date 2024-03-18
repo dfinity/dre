@@ -10,8 +10,9 @@ use tokio::select;
 use tokio_util::sync::CancellationToken;
 use url::Url;
 
-use crate::{calculation::calculate_progress, registry_wrappers::sync_wrap};
+use crate::{actions::ActionExecutor, calculation::calculate_progress, registry_wrappers::sync_wrap};
 
+mod actions;
 mod calculation;
 mod fetching;
 mod registry_wrappers;
@@ -49,6 +50,11 @@ async fn main() -> anyhow::Result<()> {
     });
 
     let fetcher = fetching::resolve(args.subcommand, logger.clone()).await?;
+
+    let executor = match args.private_key_pem {
+        Some(path) => ActionExecutor::new(args.neuron_id, path, args.network.clone(), false, Some(&logger)).await?,
+        None => ActionExecutor::test(args.network.clone(), Some(&logger)).await?,
+    };
 
     let mut interval = tokio::time::interval(args.poll_interval);
     let mut should_sleep = false;
@@ -105,12 +111,11 @@ async fn main() -> anyhow::Result<()> {
         info!(logger, "Calculating completed");
 
         if actions.is_empty() {
-            info!(logger, "No actions needed, sleeping");
-            continue;
+            info!(logger, "Rollout completed");
+            token.cancel();
+            break;
         }
         info!(logger, "Calculated actions: {:#?}", actions);
-        // Apply changes
-        token.cancel();
     }
     info!(logger, "Shutdown complete");
     shutdown_handle.await.unwrap();
@@ -189,6 +194,25 @@ If not specified it will take following based on 'Network' values:
 "#
     )]
     victoria_url: Option<String>,
+
+    #[clap(
+        long = "private-key-pem",
+        help = r#"
+Path to private key pem file that will be used to submit proposals.
+If not specified will run in dry-run mode.
+        "#
+    )]
+    private_key_pem: Option<String>,
+
+    #[clap(
+        long = "neuron-id",
+        help = r#"
+Neuron id that corresponds to the key that is in private key pem.
+By default is 0.
+    "#,
+        default_value = "0"
+    )]
+    neuron_id: u64,
 
     #[clap(subcommand)]
     pub(crate) subcommand: Commands,

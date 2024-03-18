@@ -9,7 +9,7 @@ use log::error;
 use crate::detect_neuron::{detect_hsm_auth, detect_neuron, Auth, Neuron};
 
 // For more info about the version setup, look at https://docs.rs/clap/latest/clap/struct.Command.html#method.version
-#[derive(Parser, Clone)]
+#[derive(Parser, Clone, Default)]
 #[clap(about, version = env!("CARGO_PKG_VERSION"), author)]
 pub struct Opts {
     #[clap(long, env = "HSM_PIN", global = true)]
@@ -153,6 +153,12 @@ pub enum Commands {
         #[clap(long, default_value = None)]
         motivation: Option<String>,
     },
+}
+
+impl Default for Commands {
+    fn default() -> Self {
+        Commands::Get { args: vec![] }
+    }
 }
 
 pub mod subnet {

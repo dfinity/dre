@@ -569,6 +569,12 @@ pub enum Network {
     Url(url::Url),
 }
 
+impl Default for Network {
+    fn default() -> Self {
+        Network::Mainnet
+    }
+}
+
 impl Debug for Network {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self)

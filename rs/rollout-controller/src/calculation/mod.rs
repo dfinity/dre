@@ -9,7 +9,8 @@ use regex::Regex;
 use serde::Deserialize;
 use slog::{info, Logger};
 
-use self::stage_checks::{check_stages, SubnetAction};
+use self::stage_checks::check_stages;
+use crate::actions::SubnetAction;
 
 mod should_proceed;
 mod stage_checks;

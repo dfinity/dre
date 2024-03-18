@@ -1,5 +1,6 @@
 use std::{collections::BTreeMap, time::Duration};
 
+use crate::actions::SubnetAction;
 use chrono::{Datelike, Days, NaiveDate, Weekday};
 use humantime::format_duration;
 use ic_base_types::PrincipalId;
@@ -9,29 +10,6 @@ use itertools::Itertools;
 use slog::{debug, info, Logger};
 
 use super::{Index, Stage};
-
-#[derive(Debug)]
-pub enum SubnetAction {
-    Noop {
-        subnet_short: String,
-    },
-    Baking {
-        subnet_short: String,
-        remaining: Duration,
-    },
-    PendingProposal {
-        subnet_short: String,
-        proposal_id: u64,
-    },
-    PlaceProposal {
-        is_unassigned: bool,
-        subnet_principal: String,
-        version: String,
-    },
-    WaitForNextWeek {
-        subnet_short: String,
-    },
-}
 
 pub fn check_stages<'a>(
     last_bake_status: &'a BTreeMap<String, f64>,
