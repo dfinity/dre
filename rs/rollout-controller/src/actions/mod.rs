@@ -32,7 +32,7 @@ pub enum SubnetAction {
 }
 
 impl<'a> SubnetAction {
-    fn execute(&self, executor: &'a ActionExecutor) -> anyhow::Result<()> {
+    fn execute(&self, executor: &'a ActionExecutor, blessed_replica_versions: &'a [String]) -> anyhow::Result<()> {
         match self {
             SubnetAction::Noop { subnet_short } => {
                 if let Some(logger) = executor.logger {
@@ -71,6 +71,9 @@ impl<'a> SubnetAction {
                 subnet_principal,
                 version,
             } => {
+                if !blessed_replica_versions.contains(version) {
+                    return Err(anyhow::anyhow!("Replica version '{}' is not blessed.", version));
+                }
                 let principal_string = subnet_principal.to_string();
                 if let Some(logger) = executor.logger {
                     info!(
@@ -164,7 +167,7 @@ impl<'a> ActionExecutor<'a> {
         })
     }
 
-    pub fn execute(&self, actions: Vec<SubnetAction>) -> anyhow::Result<()> {
+    pub fn execute(&self, actions: &[SubnetAction], blessed_replica_versions: &[String]) -> anyhow::Result<()> {
         if let Some(logger) = self.logger {
             info!(logger, "Executing following actions: {:?}", actions)
         }
@@ -173,7 +176,7 @@ impl<'a> ActionExecutor<'a> {
             if let Some(logger) = self.logger {
                 info!(logger, "Executing action {}: {:?}", i, action)
             }
-            action.execute(self)?;
+            action.execute(self, blessed_replica_versions)?;
         }
 
         Ok(())

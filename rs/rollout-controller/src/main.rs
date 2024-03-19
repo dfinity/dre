@@ -99,6 +99,16 @@ async fn main() -> anyhow::Result<()> {
             }
         };
 
+        // Get blessed replica versions for later
+        let blessed_versions = match registry_state.get_blessed_replica_versions().await {
+            Ok(versions) => versions,
+            Err(e) => {
+                warn!(logger, "{:?}", e);
+                should_sleep = false;
+                continue;
+            }
+        };
+
         // Calculate what should be done
         info!(logger, "Calculating the progress of the current release");
         let actions = match calculate_progress(&logger, index, &client, registry_state).await {
@@ -116,7 +126,7 @@ async fn main() -> anyhow::Result<()> {
             break;
         }
         info!(logger, "Calculated actions: {:#?}", actions);
-        match executor.execute(actions) {
+        match executor.execute(&actions, &blessed_versions) {
             Ok(()) => info!(logger, "Actions taken successfully"),
             Err(e) => warn!(logger, "{:?}", e),
         };
