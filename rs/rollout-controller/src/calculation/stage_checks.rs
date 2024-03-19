@@ -630,12 +630,10 @@ mod test {
 
 // E2E tests for decision making process for happy path without feature builds
 #[cfg(test)]
-mod check_stages_tests_no_feature_builds {
+#[allow(dead_code)]
+mod check_stages_tests {
 
-    use candid::Principal;
-    use check_stages_tests_no_feature_builds::{
-        get_open_proposal_for_subnet_tests::craft_executed_proposals, test::subnet,
-    };
+    use check_stages_tests::test::subnet;
     use ic_base_types::PrincipalId;
     use ic_management_backend::proposal::ProposalInfoInternal;
     use registry_canister::mutations::{
@@ -779,7 +777,7 @@ mod check_stages_tests_no_feature_builds {
                 .iter()
                 .map(|(id, executed, version)| {
                     if *executed {
-                        if let Some(mut subnet) = self
+                        if let Some(subnet) = self
                             .subnets
                             .iter_mut()
                             .find(|subnet| subnet.principal.eq(&principal(*id)))
@@ -876,7 +874,7 @@ mod check_stages_tests_no_feature_builds {
     }
 
     #[test]
-    fn test_use_cases() {
+    fn test_use_cases_no_feature_builds() {
         let tests = vec![
             TestCase::new("Beginning of a new rollout").want_actions(vec![SubnetAction::PlaceProposal {
                 is_unassigned: false,
@@ -956,271 +954,61 @@ mod check_stages_tests_no_feature_builds {
             assert_eq!(actions, test.want_actions, "test case '{}' failed", test.name)
         }
     }
-}
 
-// E2E tests for decision making process for happy path with feature builds
-#[cfg(test)]
-mod check_stages_tests_feature_builds {
-    use std::str::FromStr;
-
-    use candid::Principal;
-    use check_stages_tests_feature_builds::check_stages_tests_no_feature_builds::craft_subnets;
-    use ic_base_types::PrincipalId;
-    use ic_management_backend::proposal::ProposalInfoInternal;
-    use registry_canister::mutations::do_update_subnet_replica::UpdateSubnetReplicaVersionPayload;
-
-    use crate::calculation::{Index, Release, Rollout, Version};
-
-    use super::*;
-
-    /// Part two => Feature builds
-    /// `last_bake_status` - can be defined depending on the use case
-    /// `subnet_update_proposals` - can be defined depending on the use case
-    /// `unassigned_nodes_update_proposals` - can be defined depending on the use case
-    /// `index` - has to be defined
-    /// `logger` - can be defined, but won't be because these are only tests
-    /// `subnets` - has to be defined
-    /// `now` - has to be defined
-    ///
-    /// For all use cases we will use the following setup
-    /// rollout:
-    ///     pause: false // Tested in `should_proceed.rs` module
-    ///     skip_days: [] // Tested in `should_proceed.rs` module
-    ///     stages:
-    ///         - subnets: [io67a]
-    ///           bake_time: 8h
-    ///         - subnets: [shefu, uzr34]
-    ///           bake_time: 4h
-    ///         - update_unassigned_nodes: true
-    ///         - subnets: [pjljw]
-    ///           wait_for_next_week: true
-    ///           bake_time: 4h
-    /// releases:
-    ///     - rc_name: rc--2024-02-21_23-01
-    ///       versions:
-    ///         - version: 2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f
-    ///           name: rc--2024-02-21_23-01
-    ///           release_notes_ready: <not-important>
-    ///           subnets: []
-    ///         - version: 76521ef765e86187c43f7d6a02e63332a6556c8c
-    ///           name: rc--2024-02-21_23-01-feat
-    ///           release_notes_ready: <not-important>
-    ///           subnets:
-    ///             - shefu
-    ///             - io67a
-    ///     - rc_name: rc--2024-02-14_23-01
-    ///       versions:
-    ///         - version: 85bd56a70e55b2cea75cae6405ae11243e5fdad8
-    ///           name: rc--2024-02-14_23-01
-    ///           release_notes_ready: <not-important>
-    ///           subnets: [] // empty because its a regular build
-    fn craft_index_state() -> Index {
-        Index {
+    #[test]
+    fn test_use_cases_with_feature_builds() {
+        let index_with_features = Index {
             rollout: Rollout {
                 pause: false,
                 skip_days: vec![],
                 stages: vec![
-                    Stage {
-                        subnets: vec!["io67a".to_string()],
-                        bake_time: humantime::parse_duration("8h").expect("Should be able to parse."),
-                        ..Default::default()
-                    },
-                    Stage {
-                        subnets: vec!["shefu".to_string(), "uzr34".to_string()],
-                        bake_time: humantime::parse_duration("4h").expect("Should be able to parse."),
-                        ..Default::default()
-                    },
-                    Stage {
-                        update_unassigned_nodes: true,
-                        ..Default::default()
-                    },
-                    Stage {
-                        subnets: vec!["pjljw".to_string()],
-                        bake_time: humantime::parse_duration("4h").expect("Should be able to parse."),
-                        wait_for_next_week: true,
-                        ..Default::default()
-                    },
+                    stage(&vec![1], "8h"),
+                    stage(&vec![2, 3], "4h"),
+                    stage_unassigned(),
+                    stage_next_week(&vec![4], "4h"),
                 ],
             },
             releases: vec![
-                Release {
-                    rc_name: "rc--2024-02-21_23-01".to_string(),
-                    versions: vec![
-                        Version {
-                            name: "rc--2024-02-21_23-01".to_string(),
-                            version: "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f".to_string(),
-                            ..Default::default()
-                        },
-                        Version {
-                            name: "rc--2024-02-21_23-01-feat".to_string(),
-                            version: "76521ef765e86187c43f7d6a02e63332a6556c8c".to_string(),
-                            subnets: ["io67a", "shefu"].iter().map(|f| f.to_string()).collect(),
-                            ..Default::default()
-                        },
-                    ],
-                },
-                Release {
-                    rc_name: "rc--2024-02-14_23-01".to_string(),
-                    versions: vec![Version {
-                        name: "rc--2024-02-14_23-01".to_string(),
-                        version: "85bd56a70e55b2cea75cae6405ae11243e5fdad8".to_string(),
-                        ..Default::default()
-                    }],
-                },
+                release("rc--2024-02-21_23-01", vec![("b", vec![]), ("b.feat", vec![1, 2])]),
+                release("rc--2024-02-14_23-01", vec![("a", vec![])]),
             ],
-        }
-    }
+        };
+        let tests = vec![TestCase::new("Beginning of a new rollout")
+            .index(index_with_features.clone())
+            .want_actions(vec![SubnetAction::PlaceProposal {
+                is_unassigned: false,
+                subnet_principal: principal(1),
+                version: "b.feat".to_string(),
+            }]), TestCase::new("First batch is submitted the proposal was executed and the subnet is baked, placing proposal for next stage")
+            .index(index_with_features)
+            .last_bake_status(vec![(1, "9h")])
+            .subnet_update_proposals(vec![(1, true, "b.feat")])
+            .want_actions(vec![SubnetAction::PlaceProposal { is_unassigned: false, subnet_principal: principal(2), version: "b.feat".to_string() }, SubnetAction::PlaceProposal { is_unassigned: false, subnet_principal: principal(3), version: "b".to_string() }])];
 
-    /// Use-Case 1: Beginning of a new rollout
-    ///
-    /// `last_bake_status` - empty, because no subnets have the version
-    /// `subnet_update_proposals` - can be empty but doesn't have to be. For e.g. if its Monday it is possible to have an open proposal for NNS
-    ///                             But it is for a different version (one from last week)
-    /// `unassigned_nodes_proposals` - empty
-    /// `subnets` - can be seen in `craft_index_state`
-    /// `now` - same `2024-02-21`
-    // #[test]
-    fn test_use_case_1() {
-        let index = craft_index_state();
-        let last_bake_status = BTreeMap::new();
-        let subnet_update_proposals = Vec::new();
-        let unassigned_version = "85bd56a70e55b2cea75cae6405ae11243e5fdad8".to_string();
-        let unassigned_nodes_proposals = vec![];
-        let subnets = &craft_subnets();
-        let feature = index
-            .releases
-            .get(0)
-            .expect("Should be at least one")
-            .versions
-            .get(1)
-            .expect("Should be set to be the second version being rolled out");
-        // TODO: replace in index
-        let mut current_release_feature_spec = BTreeMap::new();
-        current_release_feature_spec.insert(feature.version.clone(), feature.subnets.clone());
-        let now = NaiveDate::parse_from_str("2024-02-21", "%Y-%m-%d").expect("Should parse date");
+        for test in tests {
+            let maybe_actions = check_stages(
+                &test.last_bake_status,
+                &test.subnet_update_proposals,
+                &test.unassigned_node_proposals,
+                test.index,
+                None,
+                &test.unassigned_node_version,
+                &test.subnets,
+                test.now,
+            );
 
-        let maybe_actions = check_stages(
-            &last_bake_status,
-            &subnet_update_proposals,
-            &unassigned_nodes_proposals,
-            index.clone(),
-            None,
-            &unassigned_version,
-            subnets,
-            now,
-        );
-
-        assert!(maybe_actions.is_ok());
-        let actions = maybe_actions.unwrap();
-
-        assert_eq!(actions.len(), 1);
-        for action in actions {
-            match action {
-                SubnetAction::PlaceProposal {
-                    is_unassigned,
-                    subnet_principal,
-                    version,
-                } => {
-                    assert_eq!(is_unassigned, false);
-                    assert_eq!(version, feature.version);
-                    assert!(subnet_principal.to_string().starts_with("io67a"))
-                }
-                // Fail the test
-                _ => assert!(false),
+            assert_eq!(
+                maybe_actions.is_ok(),
+                test.want_outcome_success,
+                "test case '{}' failed",
+                test.name
+            );
+            if !test.want_outcome_success {
+                continue;
             }
-        }
-    }
 
-    /// Use case 2: First batch is submitted the proposal was executed and the subnet is baked, placing proposal for next stage
-    ///
-    /// `last_bake_status` - contains the status for the first subnet
-    /// `subnet_update_proposals` - contains proposals from the first stage
-    /// `unassigned_nodes_proposals` - empty
-    /// `subnets` - can be seen in `craft_index_state`
-    /// `now` - same `2024-02-21`
-    // #[test]
-    fn test_use_case_2() {
-        let index = craft_index_state();
-        let current_version = "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f".to_string();
-        let last_bake_status = [(
-            "io67a-2jmkw-zup3h-snbwi-g6a5n-rm5dn-b6png-lvdpl-nqnto-yih6l-gqe",
-            humantime::parse_duration("9h"),
-        )]
-        .iter()
-        .map(|(id, duration)| {
-            (
-                id.to_string(),
-                duration.clone().expect("Should parse duration").as_secs_f64(),
-            )
-        })
-        .collect();
-        let subnet_principal = Principal::from_str("io67a-2jmkw-zup3h-snbwi-g6a5n-rm5dn-b6png-lvdpl-nqnto-yih6l-gqe")
-            .expect("Should be possible to create principal");
-        let subnet_update_proposals = vec![SubnetUpdateProposal {
-            info: ProposalInfoInternal {
-                executed: true,
-                executed_timestamp_seconds: 0,
-                proposal_timestamp_seconds: 0,
-                id: 1,
-            },
-            payload: UpdateSubnetReplicaVersionPayload {
-                subnet_id: PrincipalId(subnet_principal.clone()),
-                replica_version_id: "76521ef765e86187c43f7d6a02e63332a6556c8c".to_string(),
-            },
-        }];
-        let unassigned_version = "85bd56a70e55b2cea75cae6405ae11243e5fdad8".to_string();
-        let unassigned_nodes_proposals = vec![];
-        let mut subnets = craft_subnets();
-        // replace_versions(&mut subnets, &[("io67a", "76521ef765e86187c43f7d6a02e63332a6556c8c")]);
-        let feature = index
-            .releases
-            .get(0)
-            .expect("Should be at least one")
-            .versions
-            .get(1)
-            .expect("Should be set to be the second version being rolled out");
-        // TODO: replace in index
-        let mut current_release_feature_spec = BTreeMap::new();
-        current_release_feature_spec.insert(feature.version.clone(), feature.subnets.clone());
-        let now = NaiveDate::parse_from_str("2024-02-21", "%Y-%m-%d").expect("Should parse date");
-
-        let maybe_actions = check_stages(
-            &last_bake_status,
-            &subnet_update_proposals,
-            &unassigned_nodes_proposals,
-            index.clone(),
-            None,
-            &unassigned_version,
-            &subnets,
-            now,
-        );
-
-        assert!(maybe_actions.is_ok());
-        let actions = maybe_actions.unwrap();
-        println!("{:#?}", actions);
-        assert_eq!(actions.len(), 2);
-        let subnets = vec![
-            "shefu-t3kr5-t5q3w-mqmdq-jabyv-vyvtf-cyyey-3kmo4-toyln-emubw-4qe",
-            "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
-        ];
-        for action in actions {
-            match action {
-                SubnetAction::PlaceProposal {
-                    is_unassigned,
-                    subnet_principal,
-                    version,
-                } => {
-                    assert_eq!(is_unassigned, false);
-                    if subnet_principal.to_string().starts_with("shefu") {
-                        assert_eq!(version, feature.version);
-                    } else {
-                        assert_eq!(version, current_version);
-                    }
-                    assert!(subnets.contains(&subnet_principal.to_string().as_str()))
-                }
-                // Just fail
-                _ => assert!(false),
-            }
+            let actions = maybe_actions.unwrap();
+            assert_eq!(actions, test.want_actions, "test case '{}' failed", test.name)
         }
     }
 }
