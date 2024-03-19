@@ -20,7 +20,7 @@ rust_binary(
     ),
     deps = all_crate_deps(
         normal = True,
-    ) + DEPS,
+    ) + DEPS + ["//rs/cli:dre-lib"],
 )
 
 rust_library(

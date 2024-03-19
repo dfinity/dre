@@ -734,8 +734,8 @@ mod check_stages_tests {
         now: NaiveDate,
         last_bake_status: BTreeMap<String, f64>,
         unassigned_node_version: String,
-        want_outcome_success: bool,
-        want_actions: Vec<SubnetAction>,
+        expect_outcome_success: bool,
+        expect_actions: Vec<SubnetAction>,
     }
 
     impl Default for TestCase {
@@ -747,10 +747,10 @@ mod check_stages_tests {
                 subnet_update_proposals: Default::default(),
                 unassigned_node_proposals: Default::default(),
                 now: NaiveDate::parse_from_str("2024-02-21", "%Y-%m-%d").expect("Should parse date"),
-                want_actions: Default::default(),
+                expect_actions: Default::default(),
                 last_bake_status: Default::default(),
                 unassigned_node_version: Default::default(),
-                want_outcome_success: true,
+                expect_outcome_success: true,
             }
         }
     }
@@ -823,8 +823,8 @@ mod check_stages_tests {
             self
         }
 
-        pub fn want_actions(mut self, want_actions: Vec<SubnetAction>) -> Self {
-            self.want_actions = want_actions;
+        pub fn expect_actions(mut self, expect_actions: Vec<SubnetAction>) -> Self {
+            self.expect_actions = expect_actions;
             self
         }
 
@@ -848,8 +848,8 @@ mod check_stages_tests {
             self
         }
 
-        pub fn want_outcome_success(mut self, want_outcome_success: bool) -> Self {
-            self.want_outcome_success = want_outcome_success;
+        pub fn expect_outcome_success(mut self, expect_outcome_success: bool) -> Self {
+            self.expect_outcome_success = expect_outcome_success;
             self
         }
     }
@@ -876,60 +876,60 @@ mod check_stages_tests {
     #[test]
     fn test_use_cases_no_feature_builds() {
         let tests = vec![
-            TestCase::new("Beginning of a new rollout").want_actions(vec![SubnetAction::PlaceProposal {
+            TestCase::new("Beginning of a new rollout").expect_actions(vec![SubnetAction::PlaceProposal {
                 is_unassigned: false,
                 subnet_principal: principal(1),
                 version: "b".to_string(),
             }]),
             TestCase::new("First batch is submitted but the proposal wasn't executed")
                 .subnet_update_proposals(vec![(1, false, "b")])
-                .want_actions(vec![SubnetAction::PendingProposal {
+                .expect_actions(vec![SubnetAction::PendingProposal {
                     subnet_short: principal(1).to_string(),
                     proposal_id: 1,
                 }]),
             TestCase::new("First batch is submitted the proposal was executed and the subnet is baking")
                 .subnet_update_proposals(vec![(1, true, "b")])
                 .last_bake_status(vec![(1, "3h")])
-                .want_actions(vec![SubnetAction::Baking {
+                .expect_actions(vec![SubnetAction::Baking {
                     subnet_short: principal(1).to_string(),
                     remaining: humantime::parse_duration("5h").expect("Should parse duration"),
                 }]),
             TestCase::new("First batch is submitted the proposal was executed and the subnet is baked, placing proposal for next stage")
                 .subnet_update_proposals(vec![(1, true, "b")])
                 .last_bake_status(vec![(1, "9h")])
-                .want_actions(vec![SubnetAction::PlaceProposal { is_unassigned: false, subnet_principal: principal(2), version: "b".to_string() }, SubnetAction::PlaceProposal { is_unassigned: false, subnet_principal: principal(3), version: "b".to_string() }]),
+                .expect_actions(vec![SubnetAction::PlaceProposal { is_unassigned: false, subnet_principal: principal(2), version: "b".to_string() }, SubnetAction::PlaceProposal { is_unassigned: false, subnet_principal: principal(3), version: "b".to_string() }]),
             TestCase::new("Updating unassigned nodes")
                 .subnet_update_proposals(vec![(1, true, "b"), (2, true, "b"), (3, true, "b")])
                 .last_bake_status(vec![(1, "9h"), (2, "5h"), (3, "5h")])
                 .unassigned_node_version("a")
-                .want_actions(vec![SubnetAction::PlaceProposal { is_unassigned: true, subnet_principal: PrincipalId::new_anonymous(), version: "b".to_string()}]),
+                .expect_actions(vec![SubnetAction::PlaceProposal { is_unassigned: true, subnet_principal: PrincipalId::new_anonymous(), version: "b".to_string()}]),
             TestCase::new("Proposal sent for updating unassigned nodes but it is not executed")
                 .subnet_update_proposals(vec![(1, true, "b"), (2, true, "b"), (3, true, "b")])
                 .last_bake_status(vec![(1, "9h"), (2, "5h"), (3, "5h")])
                 .unassigned_node_version("a")
                 .unassigned_node_proposals(vec![(false, "b")])
-                .want_actions(vec![SubnetAction::PendingProposal { subnet_short: PrincipalId::new_anonymous().to_string(), proposal_id: 0 }]),
+                .expect_actions(vec![SubnetAction::PendingProposal { subnet_short: PrincipalId::new_anonymous().to_string(), proposal_id: 0 }]),
             TestCase::new("Executed update unassigned nodes, waiting for next week")
                 .subnet_update_proposals(vec![(1, true, "b"), (2, true, "b"), (3, true, "b")])
                 .last_bake_status(vec![(1, "9h"), (2, "5h"), (3, "5h")])
                 .unassigned_node_proposals(vec![(true, "b")])
-                .want_actions(vec![SubnetAction::WaitForNextWeek { subnet_short: principal(4).to_string() }]),
+                .expect_actions(vec![SubnetAction::WaitForNextWeek { subnet_short: principal(4).to_string() }]),
             TestCase::new("Next monday came, should place proposal for updating the last subnet")
                 .subnet_update_proposals(vec![(1, true, "b"), (2, true, "b"), (3, true, "b")])
                 .last_bake_status(vec![(1, "9h"), (2, "5h"), (3, "5h")])
                 .unassigned_node_proposals(vec![(true, "b")])
                 .now("2024-02-28")
-                .want_actions(vec![SubnetAction::PlaceProposal { is_unassigned: false, subnet_principal: principal(4), version: "b".to_string() }]),
+                .expect_actions(vec![SubnetAction::PlaceProposal { is_unassigned: false, subnet_principal: principal(4), version: "b".to_string() }]),
             TestCase::new("Next monday came, proposal for last subnet executed and bake time passed. Rollout finished")
                 .subnet_update_proposals(vec![(1, true, "b"), (2, true, "b"), (3, true, "b"), (4, true, "b")])
                 .last_bake_status(vec![(1, "9h"), (2, "5h"), (3, "5h"), (4, "5h")])
                 .unassigned_node_proposals(vec![(true, "b")])
                 .now("2024-02-28")
-                .want_actions(vec![]),
+                .expect_actions(vec![]),
             TestCase::new("Partially executed step, a subnet is baking but the other doesn't have a submitted proposal")
                 .subnet_update_proposals(vec![(1, true, "b"), (2, true, "b")])
                 .last_bake_status(vec![(1, "9h"), (2, "3h")])
-                .want_actions(vec![SubnetAction::Baking { subnet_short: principal(2).to_string(), remaining: humantime::parse_duration("1h").expect("Should parse duration") }, SubnetAction::PlaceProposal { is_unassigned: false, subnet_principal: principal(3), version: "b".to_string() }])
+                .expect_actions(vec![SubnetAction::Baking { subnet_short: principal(2).to_string(), remaining: humantime::parse_duration("1h").expect("Should parse duration") }, SubnetAction::PlaceProposal { is_unassigned: false, subnet_principal: principal(3), version: "b".to_string() }])
         ];
 
         for test in tests {
@@ -946,16 +946,16 @@ mod check_stages_tests {
 
             assert_eq!(
                 maybe_actions.is_ok(),
-                test.want_outcome_success,
+                test.expect_outcome_success,
                 "test case '{}' failed",
                 test.name
             );
-            if !test.want_outcome_success {
+            if !test.expect_outcome_success {
                 continue;
             }
 
             let actions = maybe_actions.unwrap();
-            assert_eq!(actions, test.want_actions, "test case '{}' failed", test.name)
+            assert_eq!(actions, test.expect_actions, "test case '{}' failed", test.name)
         }
     }
 
@@ -979,7 +979,7 @@ mod check_stages_tests {
         };
         let tests = vec![TestCase::new("Beginning of a new rollout")
             .index(index_with_features.clone())
-            .want_actions(vec![SubnetAction::PlaceProposal {
+            .expect_actions(vec![SubnetAction::PlaceProposal {
                 is_unassigned: false,
                 subnet_principal: principal(1),
                 version: "b.feat".to_string(),
@@ -987,7 +987,7 @@ mod check_stages_tests {
             .index(index_with_features)
             .last_bake_status(vec![(1, "9h")])
             .subnet_update_proposals(vec![(1, true, "b.feat")])
-            .want_actions(vec![SubnetAction::PlaceProposal { is_unassigned: false, subnet_principal: principal(2), version: "b.feat".to_string() }, SubnetAction::PlaceProposal { is_unassigned: false, subnet_principal: principal(3), version: "b".to_string() }])];
+            .expect_actions(vec![SubnetAction::PlaceProposal { is_unassigned: false, subnet_principal: principal(2), version: "b.feat".to_string() }, SubnetAction::PlaceProposal { is_unassigned: false, subnet_principal: principal(3), version: "b".to_string() }])];
 
         for test in tests {
             let maybe_actions = check_stages(
@@ -1003,16 +1003,16 @@ mod check_stages_tests {
 
             assert_eq!(
                 maybe_actions.is_ok(),
-                test.want_outcome_success,
+                test.expect_outcome_success,
                 "test case '{}' failed",
                 test.name
             );
-            if !test.want_outcome_success {
+            if !test.expect_outcome_success {
                 continue;
             }
 
             let actions = maybe_actions.unwrap();
-            assert_eq!(actions, test.want_actions, "test case '{}' failed", test.name)
+            assert_eq!(actions, test.expect_actions, "test case '{}' failed", test.name)
         }
     }
 }
