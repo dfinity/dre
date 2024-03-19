@@ -11,6 +11,9 @@ use slog::{debug, info, Logger};
 
 use super::{Index, Stage};
 
+/// For the set of inputs, generate a vector of `SubnetAction`'s for an arbitrary stage.
+/// All produced actions are always related to the same stage of an index rollout.
+/// To find out more take a look at the e2e tests
 pub fn check_stages<'a>(
     last_bake_status: &'a BTreeMap<String, f64>,
     subnet_update_proposals: &'a [SubnetUpdateProposal],
@@ -762,17 +765,17 @@ mod check_stages_tests {
             case
         }
 
-        pub fn index(mut self, index: Index) -> Self {
+        pub fn with_index(mut self, index: Index) -> Self {
             self.index = index;
             self
         }
 
-        pub fn subnets(mut self, subnets: Vec<Subnet>) -> Self {
+        pub fn with_subnets(mut self, subnets: Vec<Subnet>) -> Self {
             self.subnets = subnets;
             self
         }
 
-        pub fn subnet_update_proposals(mut self, subnet_update_proposals: Vec<(u64, bool, &'static str)>) -> Self {
+        pub fn with_subnet_update_proposals(mut self, subnet_update_proposals: Vec<(u64, bool, &'static str)>) -> Self {
             self.subnet_update_proposals = subnet_update_proposals
                 .iter()
                 .map(|(id, executed, version)| {
@@ -791,7 +794,7 @@ mod check_stages_tests {
             self
         }
 
-        pub fn unassigned_node_proposals(
+        pub fn with_unassigned_node_proposals(
             mut self,
             unassigned_node_update_proposals: Vec<(bool, &'static str)>,
         ) -> Self {
@@ -818,7 +821,7 @@ mod check_stages_tests {
             self
         }
 
-        pub fn now(mut self, now: &'static str) -> Self {
+        pub fn with_now(mut self, now: &'static str) -> Self {
             self.now = NaiveDate::parse_from_str(now, "%Y-%m-%d").expect("Should parse date");
             self
         }
@@ -828,7 +831,7 @@ mod check_stages_tests {
             self
         }
 
-        pub fn last_bake_status(mut self, last_bake_status: Vec<(u64, &'static str)>) -> Self {
+        pub fn with_last_bake_status(mut self, last_bake_status: Vec<(u64, &'static str)>) -> Self {
             self.last_bake_status = last_bake_status
                 .iter()
                 .map(|(id, duration)| {
@@ -843,7 +846,7 @@ mod check_stages_tests {
             self
         }
 
-        pub fn unassigned_node_version(mut self, unassigned_node_version: &'static str) -> Self {
+        pub fn with_unassigned_node_version(mut self, unassigned_node_version: &'static str) -> Self {
             self.unassigned_node_version = unassigned_node_version.to_string();
             self
         }
@@ -882,53 +885,53 @@ mod check_stages_tests {
                 version: "b".to_string(),
             }]),
             TestCase::new("First batch is submitted but the proposal wasn't executed")
-                .subnet_update_proposals(vec![(1, false, "b")])
+                .with_subnet_update_proposals(vec![(1, false, "b")])
                 .expect_actions(vec![SubnetAction::PendingProposal {
                     subnet_short: principal(1).to_string(),
                     proposal_id: 1,
                 }]),
             TestCase::new("First batch is submitted the proposal was executed and the subnet is baking")
-                .subnet_update_proposals(vec![(1, true, "b")])
-                .last_bake_status(vec![(1, "3h")])
+                .with_subnet_update_proposals(vec![(1, true, "b")])
+                .with_last_bake_status(vec![(1, "3h")])
                 .expect_actions(vec![SubnetAction::Baking {
                     subnet_short: principal(1).to_string(),
                     remaining: humantime::parse_duration("5h").expect("Should parse duration"),
                 }]),
             TestCase::new("First batch is submitted the proposal was executed and the subnet is baked, placing proposal for next stage")
-                .subnet_update_proposals(vec![(1, true, "b")])
-                .last_bake_status(vec![(1, "9h")])
+                .with_subnet_update_proposals(vec![(1, true, "b")])
+                .with_last_bake_status(vec![(1, "9h")])
                 .expect_actions(vec![SubnetAction::PlaceProposal { is_unassigned: false, subnet_principal: principal(2), version: "b".to_string() }, SubnetAction::PlaceProposal { is_unassigned: false, subnet_principal: principal(3), version: "b".to_string() }]),
             TestCase::new("Updating unassigned nodes")
-                .subnet_update_proposals(vec![(1, true, "b"), (2, true, "b"), (3, true, "b")])
-                .last_bake_status(vec![(1, "9h"), (2, "5h"), (3, "5h")])
-                .unassigned_node_version("a")
+                .with_subnet_update_proposals(vec![(1, true, "b"), (2, true, "b"), (3, true, "b")])
+                .with_last_bake_status(vec![(1, "9h"), (2, "5h"), (3, "5h")])
+                .with_unassigned_node_version("a")
                 .expect_actions(vec![SubnetAction::PlaceProposal { is_unassigned: true, subnet_principal: PrincipalId::new_anonymous(), version: "b".to_string()}]),
             TestCase::new("Proposal sent for updating unassigned nodes but it is not executed")
-                .subnet_update_proposals(vec![(1, true, "b"), (2, true, "b"), (3, true, "b")])
-                .last_bake_status(vec![(1, "9h"), (2, "5h"), (3, "5h")])
-                .unassigned_node_version("a")
-                .unassigned_node_proposals(vec![(false, "b")])
+                .with_subnet_update_proposals(vec![(1, true, "b"), (2, true, "b"), (3, true, "b")])
+                .with_last_bake_status(vec![(1, "9h"), (2, "5h"), (3, "5h")])
+                .with_unassigned_node_version("a")
+                .with_unassigned_node_proposals(vec![(false, "b")])
                 .expect_actions(vec![SubnetAction::PendingProposal { subnet_short: PrincipalId::new_anonymous().to_string(), proposal_id: 0 }]),
             TestCase::new("Executed update unassigned nodes, waiting for next week")
-                .subnet_update_proposals(vec![(1, true, "b"), (2, true, "b"), (3, true, "b")])
-                .last_bake_status(vec![(1, "9h"), (2, "5h"), (3, "5h")])
-                .unassigned_node_proposals(vec![(true, "b")])
+                .with_subnet_update_proposals(vec![(1, true, "b"), (2, true, "b"), (3, true, "b")])
+                .with_last_bake_status(vec![(1, "9h"), (2, "5h"), (3, "5h")])
+                .with_unassigned_node_proposals(vec![(true, "b")])
                 .expect_actions(vec![SubnetAction::WaitForNextWeek { subnet_short: principal(4).to_string() }]),
             TestCase::new("Next monday came, should place proposal for updating the last subnet")
-                .subnet_update_proposals(vec![(1, true, "b"), (2, true, "b"), (3, true, "b")])
-                .last_bake_status(vec![(1, "9h"), (2, "5h"), (3, "5h")])
-                .unassigned_node_proposals(vec![(true, "b")])
-                .now("2024-02-28")
+                .with_subnet_update_proposals(vec![(1, true, "b"), (2, true, "b"), (3, true, "b")])
+                .with_last_bake_status(vec![(1, "9h"), (2, "5h"), (3, "5h")])
+                .with_unassigned_node_proposals(vec![(true, "b")])
+                .with_now("2024-02-28")
                 .expect_actions(vec![SubnetAction::PlaceProposal { is_unassigned: false, subnet_principal: principal(4), version: "b".to_string() }]),
             TestCase::new("Next monday came, proposal for last subnet executed and bake time passed. Rollout finished")
-                .subnet_update_proposals(vec![(1, true, "b"), (2, true, "b"), (3, true, "b"), (4, true, "b")])
-                .last_bake_status(vec![(1, "9h"), (2, "5h"), (3, "5h"), (4, "5h")])
-                .unassigned_node_proposals(vec![(true, "b")])
-                .now("2024-02-28")
+                .with_subnet_update_proposals(vec![(1, true, "b"), (2, true, "b"), (3, true, "b"), (4, true, "b")])
+                .with_last_bake_status(vec![(1, "9h"), (2, "5h"), (3, "5h"), (4, "5h")])
+                .with_unassigned_node_proposals(vec![(true, "b")])
+                .with_now("2024-02-28")
                 .expect_actions(vec![]),
             TestCase::new("Partially executed step, a subnet is baking but the other doesn't have a submitted proposal")
-                .subnet_update_proposals(vec![(1, true, "b"), (2, true, "b")])
-                .last_bake_status(vec![(1, "9h"), (2, "3h")])
+                .with_subnet_update_proposals(vec![(1, true, "b"), (2, true, "b")])
+                .with_last_bake_status(vec![(1, "9h"), (2, "3h")])
                 .expect_actions(vec![SubnetAction::Baking { subnet_short: principal(2).to_string(), remaining: humantime::parse_duration("1h").expect("Should parse duration") }, SubnetAction::PlaceProposal { is_unassigned: false, subnet_principal: principal(3), version: "b".to_string() }])
         ];
 
@@ -978,15 +981,15 @@ mod check_stages_tests {
             ],
         };
         let tests = vec![TestCase::new("Beginning of a new rollout")
-            .index(index_with_features.clone())
+            .with_index(index_with_features.clone())
             .expect_actions(vec![SubnetAction::PlaceProposal {
                 is_unassigned: false,
                 subnet_principal: principal(1),
                 version: "b.feat".to_string(),
             }]), TestCase::new("First batch is submitted the proposal was executed and the subnet is baked, placing proposal for next stage")
-            .index(index_with_features)
-            .last_bake_status(vec![(1, "9h")])
-            .subnet_update_proposals(vec![(1, true, "b.feat")])
+            .with_index(index_with_features)
+            .with_last_bake_status(vec![(1, "9h")])
+            .with_subnet_update_proposals(vec![(1, true, "b.feat")])
             .expect_actions(vec![SubnetAction::PlaceProposal { is_unassigned: false, subnet_principal: principal(2), version: "b.feat".to_string() }, SubnetAction::PlaceProposal { is_unassigned: false, subnet_principal: principal(3), version: "b".to_string() }])];
 
         for test in tests {
