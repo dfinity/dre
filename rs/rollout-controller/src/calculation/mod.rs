@@ -40,7 +40,7 @@ pub struct Stage {
     update_unassigned_nodes: bool,
 }
 
-#[derive(Deserialize, Clone, Default, Eq, PartialEq, Hash)]
+#[derive(Deserialize, Clone, Default, Eq, PartialEq, Hash, Debug)]
 pub struct Release {
     pub rc_name: String,
     pub versions: Vec<Version>,
@@ -63,7 +63,7 @@ impl Release {
     }
 }
 
-#[derive(Deserialize, Clone, Default, Eq, PartialEq, Hash)]
+#[derive(Deserialize, Clone, Default, Eq, PartialEq, Hash, Debug)]
 pub struct Version {
     pub version: String,
     pub name: String,

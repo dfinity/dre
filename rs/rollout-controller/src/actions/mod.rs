@@ -8,7 +8,7 @@ use ic_base_types::PrincipalId;
 use ic_management_types::Network;
 use slog::{info, Logger};
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum SubnetAction {
     Noop {
         subnet_short: String,
