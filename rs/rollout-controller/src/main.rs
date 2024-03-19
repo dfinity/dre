@@ -116,6 +116,10 @@ async fn main() -> anyhow::Result<()> {
             break;
         }
         info!(logger, "Calculated actions: {:#?}", actions);
+        match executor.execute(actions) {
+            Ok(()) => info!(logger, "Actions taken successfully"),
+            Err(e) => warn!(logger, "{:?}", e),
+        };
     }
     info!(logger, "Shutdown complete");
     shutdown_handle.await.unwrap();

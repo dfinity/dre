@@ -1,6 +1,10 @@
 use std::time::Duration;
 
-use dre::{cli::Opts, ic_admin::IcAdminWrapper};
+use dre::{
+    cli::Opts,
+    ic_admin::{IcAdminWrapper, ProposeCommand, ProposeOptions},
+};
+use ic_base_types::PrincipalId;
 use ic_management_types::Network;
 use slog::{info, Logger};
 
@@ -19,7 +23,7 @@ pub enum SubnetAction {
     },
     PlaceProposal {
         is_unassigned: bool,
-        subnet_principal: String,
+        subnet_principal: PrincipalId,
         version: String,
     },
     WaitForNextWeek {
@@ -67,17 +71,43 @@ impl<'a> SubnetAction {
                 subnet_principal,
                 version,
             } => {
+                let principal_string = subnet_principal.to_string();
                 if let Some(logger) = executor.logger {
                     info!(
                         logger,
                         "Placing proposal for '{}' to upgrade to version '{}'",
                         match is_unassigned {
                             true => "unassigned nodes",
-                            false => subnet_principal.as_str(),
+                            false => principal_string.as_str(),
                         },
                         version
                     )
                 }
+
+                let proposal = match is_unassigned {
+                    true => ProposeCommand::UpdateUnassignedNodes {
+                        replica_version: version.to_string(),
+                    },
+                    false => ProposeCommand::UpdateSubnetReplicaVersion {
+                        subnet: *subnet_principal,
+                        version: version.to_string(),
+                    },
+                };
+
+                let opts = ProposeOptions {
+                    title: Some(format!(
+                        "Update subnet {} to replica version {}",
+                        principal_string.split_once('-').expect("Should contain '-'").0,
+                        version.split_at(8).0
+                    )),
+                    summary: Some(format!(
+                        "Update subnet {} to replica version {}",
+                        principal_string, version
+                    )),
+                    ..Default::default()
+                };
+
+                executor.ic_admin.propose_run(proposal, opts, executor.simulate)?;
             }
         }
 
@@ -134,7 +164,7 @@ impl<'a> ActionExecutor<'a> {
         })
     }
 
-    pub async fn execute(&self, actions: Vec<SubnetAction>) -> anyhow::Result<()> {
+    pub fn execute(&self, actions: Vec<SubnetAction>) -> anyhow::Result<()> {
         if let Some(logger) = self.logger {
             info!(logger, "Executing following actions: {:?}", actions)
         }

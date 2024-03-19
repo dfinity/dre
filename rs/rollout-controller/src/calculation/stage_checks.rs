@@ -120,7 +120,7 @@ fn check_stage<'a>(
             }) {
                 None => stage_actions.push(SubnetAction::PlaceProposal {
                     is_unassigned: true,
-                    subnet_principal: "".to_string(),
+                    subnet_principal: PrincipalId::new_anonymous(),
                     version: desired_versions.unassigned_nodes.version,
                 }),
                 Some(proposal) => stage_actions.push(SubnetAction::PendingProposal {
@@ -209,7 +209,7 @@ fn check_stage<'a>(
         // If subnet is not on desired version and there is no open proposal submit it
         stage_actions.push(SubnetAction::PlaceProposal {
             is_unassigned: false,
-            subnet_principal: subnet.principal.to_string(),
+            subnet_principal: subnet.principal,
             version: desired_version.version.clone(),
         })
     }
@@ -819,7 +819,7 @@ mod check_stages_tests_no_feature_builds {
                 } => {
                     assert_eq!(is_unassigned, false);
                     assert_eq!(version, current_version);
-                    assert!(subnet_principal.starts_with("io67a"))
+                    assert!(subnet_principal.to_string().starts_with("io67a"))
                 }
                 // Fail the test
                 _ => assert!(false),
@@ -1030,7 +1030,7 @@ mod check_stages_tests_no_feature_builds {
                 } => {
                     assert_eq!(is_unassigned, false);
                     assert_eq!(version, current_version);
-                    assert!(subnets.contains(&subnet_principal.as_str()))
+                    assert!(subnets.contains(&subnet_principal.to_string().as_str()))
                 }
                 // Just fail
                 _ => assert!(false),
@@ -1396,7 +1396,7 @@ mod check_stages_tests_no_feature_builds {
                     subnet_principal,
                     version,
                 } => {
-                    assert!(subnet_principal.starts_with("pjljw"));
+                    assert!(subnet_principal.to_string().starts_with("pjljw"));
                     assert_eq!(is_unassigned, false);
                     assert_eq!(version, current_version)
                 }
@@ -1659,7 +1659,7 @@ mod check_stages_tests_feature_builds {
                 } => {
                     assert_eq!(is_unassigned, false);
                     assert_eq!(version, feature.version);
-                    assert!(subnet_principal.starts_with("io67a"))
+                    assert!(subnet_principal.to_string().starts_with("io67a"))
                 }
                 // Fail the test
                 _ => assert!(false),
@@ -1747,12 +1747,12 @@ mod check_stages_tests_feature_builds {
                     version,
                 } => {
                     assert_eq!(is_unassigned, false);
-                    if subnet_principal.starts_with("shefu") {
+                    if subnet_principal.to_string().starts_with("shefu") {
                         assert_eq!(version, feature.version);
                     } else {
                         assert_eq!(version, current_version);
                     }
-                    assert!(subnets.contains(&subnet_principal.as_str()))
+                    assert!(subnets.contains(&subnet_principal.to_string().as_str()))
                 }
                 // Just fail
                 _ => assert!(false),
