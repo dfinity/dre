@@ -925,7 +925,11 @@ mod check_stages_tests {
                 .last_bake_status(vec![(1, "9h"), (2, "5h"), (3, "5h"), (4, "5h")])
                 .unassigned_node_proposals(vec![(true, "b")])
                 .now("2024-02-28")
-                .want_actions(vec![])
+                .want_actions(vec![]),
+            TestCase::new("Partially executed step, a subnet is baking but the other doesn't have a submitted proposal")
+                .subnet_update_proposals(vec![(1, true, "b"), (2, true, "b")])
+                .last_bake_status(vec![(1, "9h"), (2, "3h")])
+                .want_actions(vec![SubnetAction::Baking { subnet_short: principal(2).to_string(), remaining: humantime::parse_duration("1h").expect("Should parse duration") }, SubnetAction::PlaceProposal { is_unassigned: false, subnet_principal: principal(3), version: "b".to_string() }])
         ];
 
         for test in tests {
