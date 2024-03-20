@@ -1,8 +1,9 @@
-use crate::general::{get_node_metrics_history, vote_on_proposals};
 use crate::ic_admin::IcAdminWrapper;
-use crate::operations::hostos_rollout::{NodeGroupUpdate, NumberOfNodes};
 use clap::{error::ErrorKind, CommandFactory, Parser};
 use dotenv::dotenv;
+use dre::general::{get_node_metrics_history, vote_on_proposals};
+use dre::operations::hostos_rollout::{NodeGroupUpdate, NumberOfNodes};
+use dre::{cli, ic_admin, local_unused_port, registry_dump, runner};
 use ic_base_types::CanisterId;
 use ic_canisters::governance::governance_canister_version;
 use ic_management_backend::endpoints;
@@ -13,17 +14,6 @@ use std::collections::BTreeMap;
 use std::str::FromStr;
 use std::sync::mpsc;
 use std::thread;
-
-mod cli;
-mod clients;
-pub(crate) mod defaults;
-mod detect_neuron;
-mod general;
-mod ic_admin;
-mod operations;
-mod ops_subnet_node_replace;
-mod registry_dump;
-mod runner;
 
 const STAGING_NEURON_ID: u64 = 49;
 
@@ -396,21 +386,6 @@ fn parse_min_nakamoto_coefficients(
         coefficients: min_nakamoto_coefficients,
         average,
     })
-}
-
-/// Get a localhost socket address with random, unused port.
-fn local_unused_port() -> u16 {
-    let addr: std::net::SocketAddr = "127.0.0.1:0".parse().unwrap();
-    let socket = socket2::Socket::new(
-        socket2::Domain::IPV4,
-        socket2::Type::STREAM,
-        Some(socket2::Protocol::TCP),
-    )
-    .unwrap();
-    socket.bind(&addr.into()).unwrap();
-    socket.set_reuse_address(true).unwrap();
-    let tcp = std::net::TcpListener::from(socket);
-    tcp.local_addr().unwrap().port()
 }
 
 fn init_logger() {

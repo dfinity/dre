@@ -1,15 +1,16 @@
 use std::{collections::BTreeMap, time::Duration};
 
 use crate::calculation::should_proceed::should_proceed;
-use chrono::{Local, NaiveDate, NaiveDateTime};
+use chrono::{Local, NaiveDate, TimeDelta};
 use ic_management_backend::registry::RegistryState;
 use ic_management_types::Subnet;
+use itertools::Itertools;
 use prometheus_http_query::Client;
-use regex::Regex;
 use serde::Deserialize;
 use slog::{info, Logger};
 
-use self::stage_checks::{check_stages, SubnetAction};
+use self::stage_checks::{check_stages, desired_rollout_release_version};
+use crate::actions::SubnetAction;
 
 mod should_proceed;
 mod stage_checks;
@@ -39,30 +40,13 @@ pub struct Stage {
     update_unassigned_nodes: bool,
 }
 
-#[derive(Deserialize, Clone, Default, Eq, PartialEq, Hash)]
+#[derive(Deserialize, Clone, Default, Eq, PartialEq, Hash, Debug)]
 pub struct Release {
     pub rc_name: String,
     pub versions: Vec<Version>,
 }
 
-impl Release {
-    pub fn date(&self) -> NaiveDateTime {
-        let regex = Regex::new(r"rc--(?P<datetime>\d{4}-\d{2}-\d{2}_\d{2}-\d{2})").unwrap();
-
-        NaiveDateTime::parse_from_str(
-            regex
-                .captures(&self.rc_name)
-                .expect("should have format with date")
-                .name("datetime")
-                .expect("should match group datetime")
-                .as_str(),
-            "%Y-%m-%d_%H-%M",
-        )
-        .expect("should be valid date")
-    }
-}
-
-#[derive(Deserialize, Clone, Default, Eq, PartialEq, Hash)]
+#[derive(Deserialize, Clone, Default, Eq, PartialEq, Hash, Debug)]
 pub struct Version {
     pub version: String,
     pub name: String,
@@ -108,6 +92,31 @@ pub async fn calculate_progress<'a>(
         last_bake_status.insert(subnet.to_string(), last_update);
     }
 
+    let subnets = registry_state.subnets().into_values().collect::<Vec<Subnet>>();
+    let desired_versions = desired_rollout_release_version(&subnets, &index.releases);
+    let concatenated_versions = desired_versions
+        .release
+        .versions
+        .iter()
+        .map(|v| v.version.clone())
+        .join("|");
+
+    let result = prometheus_client.query(format!(r#"
+    time() - first_over_time((timestamp(group(ic_replica_info{{ic_active_version=~"{concatenated_versions}"}})))[14d:1d])
+    "#)).get().await?;
+
+    let since_start = match result.data().clone().into_vector().into_iter().last() {
+        Some(data) => match data.iter().last() {
+            Some(data) => data.sample().value(),
+            None => {
+                return Err(anyhow::anyhow!(
+                    "There should be data regarding start of releases in response vector"
+                ))
+            }
+        },
+        None => return Err(anyhow::anyhow!("There should be data regarding start of releases")),
+    };
+
     let subnet_update_proposals = registry_state.open_subnet_upgrade_proposals().await?;
     let unassigned_nodes_version = registry_state.get_unassigned_nodes_replica_version().await?;
     let unassigned_nodes_proposals = registry_state.open_upgrade_unassigned_nodes_proposals().await?;
@@ -119,8 +128,15 @@ pub async fn calculate_progress<'a>(
         index,
         Some(&logger),
         &unassigned_nodes_version,
-        &registry_state.subnets().into_values().collect::<Vec<Subnet>>(),
+        &subnets,
         Local::now().date_naive(),
+        Local::now()
+            .checked_sub_signed(
+                TimeDelta::try_seconds(since_start as i64).expect("Should be able to convert to seconds"),
+            )
+            .expect("Should be able to sub from now")
+            .date_naive(),
+        desired_versions,
     )?;
 
     Ok(actions)
