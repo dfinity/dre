@@ -23,15 +23,15 @@ pub fn check_stages<'a>(
     unassigned_version: &'a String,
     subnets: &'a [Subnet],
     now: NaiveDate,
+    start_of_release: NaiveDate,
+    desired_versions: DesiredReleaseVersion,
 ) -> anyhow::Result<Vec<SubnetAction>> {
-    let desired_versions = desired_rollout_release_version(subnets.to_vec(), index.releases);
     for (i, stage) in index.rollout.stages.iter().enumerate() {
         if let Some(logger) = logger {
             info!(logger, "Checking stage {}", i)
         }
 
-        let start_of_release = desired_versions.release.date();
-        if stage.wait_for_next_week && !week_passed(start_of_release.date(), now) {
+        if stage.wait_for_next_week && !week_passed(start_of_release, now) {
             let actions = stage
                 .subnets
                 .iter()
@@ -221,15 +221,15 @@ fn check_stage<'a>(
 }
 
 #[derive(Clone, Debug)]
-struct DesiredReleaseVersion {
-    subnets: BTreeMap<PrincipalId, crate::calculation::Version>,
-    unassigned_nodes: crate::calculation::Version,
-    release: crate::calculation::Release,
+pub struct DesiredReleaseVersion {
+    pub subnets: BTreeMap<PrincipalId, crate::calculation::Version>,
+    pub unassigned_nodes: crate::calculation::Version,
+    pub release: crate::calculation::Release,
 }
 
-fn desired_rollout_release_version(
-    subnets: Vec<Subnet>,
-    releases: Vec<crate::calculation::Release>,
+pub fn desired_rollout_release_version<'a>(
+    subnets: &'a [Subnet],
+    releases: &'a [crate::calculation::Release],
 ) -> DesiredReleaseVersion {
     let subnets_releases = subnets
         .iter()
@@ -613,7 +613,7 @@ mod test {
                     .collect(),
             },
         ] {
-            let desired_release = desired_rollout_release_version(tc.subnets, tc.releases);
+            let desired_release = desired_rollout_release_version(&tc.subnets, &tc.releases);
             assert_eq!(
                 tc.want
                     .into_iter()
@@ -739,6 +739,7 @@ mod check_stages_tests {
         unassigned_node_version: String,
         expect_outcome_success: bool,
         expect_actions: Vec<SubnetAction>,
+        release_start: NaiveDate,
     }
 
     impl Default for TestCase {
@@ -749,11 +750,12 @@ mod check_stages_tests {
                 subnets: craft_subnets(),
                 subnet_update_proposals: Default::default(),
                 unassigned_node_proposals: Default::default(),
-                now: NaiveDate::parse_from_str("2024-02-21", "%Y-%m-%d").expect("Should parse date"),
+                now: NaiveDate::parse_from_str("2024-02-26", "%Y-%m-%d").expect("Should parse date"),
                 expect_actions: Default::default(),
                 last_bake_status: Default::default(),
                 unassigned_node_version: Default::default(),
                 expect_outcome_success: true,
+                release_start: NaiveDate::parse_from_str("2024-02-26", "%Y-%m-%d").expect("Should parse date"),
             }
         }
     }
@@ -855,6 +857,11 @@ mod check_stages_tests {
             self.expect_outcome_success = expect_outcome_success;
             self
         }
+
+        pub fn with_release_start(mut self, release_start: &'static str) -> Self {
+            self.release_start = NaiveDate::parse_from_str(release_start, "%Y-%m-%d").expect("Should parse date");
+            self
+        }
     }
 
     fn principal(id: u64) -> PrincipalId {
@@ -916,18 +923,19 @@ mod check_stages_tests {
                 .with_subnet_update_proposals(&[(1, true, "b"), (2, true, "b"), (3, true, "b")])
                 .with_last_bake_status(&[(1, "9h"), (2, "5h"), (3, "5h")])
                 .with_unassigned_node_proposals(&[(true, "b")])
+                .with_now("2024-03-03")
                 .expect_actions(&[SubnetAction::WaitForNextWeek { subnet_short: principal(4).to_string() }]),
             TestCase::new("Next monday came, should place proposal for updating the last subnet")
                 .with_subnet_update_proposals(&[(1, true, "b"), (2, true, "b"), (3, true, "b")])
                 .with_last_bake_status(&[(1, "9h"), (2, "5h"), (3, "5h")])
                 .with_unassigned_node_proposals(&[(true, "b")])
-                .with_now("2024-02-28")
+                .with_now("2024-03-04")
                 .expect_actions(&[SubnetAction::PlaceProposal { is_unassigned: false, subnet_principal: principal(4), version: "b".to_string() }]),
             TestCase::new("Next monday came, proposal for last subnet executed and bake time passed. Rollout finished")
                 .with_subnet_update_proposals(&[(1, true, "b"), (2, true, "b"), (3, true, "b"), (4, true, "b")])
                 .with_last_bake_status(&[(1, "9h"), (2, "5h"), (3, "5h"), (4, "5h")])
                 .with_unassigned_node_proposals(&[(true, "b")])
-                .with_now("2024-02-28")
+                .with_now("2024-03-04")
                 .expect_actions(&vec![]),
             TestCase::new("Partially executed step, a subnet is baking but the other doesn't have a submitted proposal")
                 .with_subnet_update_proposals(&[(1, true, "b"), (2, true, "b")])
@@ -936,6 +944,7 @@ mod check_stages_tests {
         ];
 
         for test in tests {
+            let desired_versions = desired_rollout_release_version(&test.subnets, &test.index.releases);
             let maybe_actions = check_stages(
                 &test.last_bake_status,
                 &test.subnet_update_proposals,
@@ -945,6 +954,8 @@ mod check_stages_tests {
                 &test.unassigned_node_version,
                 &test.subnets,
                 test.now,
+                test.release_start,
+                desired_versions,
             );
 
             assert_eq!(
@@ -993,6 +1004,7 @@ mod check_stages_tests {
             .expect_actions(&[SubnetAction::PlaceProposal { is_unassigned: false, subnet_principal: principal(2), version: "b.feat".to_string() }, SubnetAction::PlaceProposal { is_unassigned: false, subnet_principal: principal(3), version: "b".to_string() }])];
 
         for test in tests {
+            let desired_versions = desired_rollout_release_version(&test.subnets, &test.index.releases);
             let maybe_actions = check_stages(
                 &test.last_bake_status,
                 &test.subnet_update_proposals,
@@ -1002,6 +1014,8 @@ mod check_stages_tests {
                 &test.unassigned_node_version,
                 &test.subnets,
                 test.now,
+                test.release_start,
+                desired_versions,
             );
 
             assert_eq!(

@@ -31,87 +31,83 @@ pub enum SubnetAction {
     },
 }
 
-impl<'a> SubnetAction {
-    fn execute(&self, executor: &'a ActionExecutor, blessed_replica_versions: &'a [String]) -> anyhow::Result<()> {
+impl SubnetAction {
+    fn print(&self) -> String {
         match self {
-            SubnetAction::Noop { subnet_short } => {
-                if let Some(logger) = executor.logger {
-                    info!(logger, "Noop for subnet '{}'", subnet_short)
-                }
-            }
+            SubnetAction::Noop { subnet_short } => format!("Noop for subnet '{}'", subnet_short),
             SubnetAction::Baking {
                 subnet_short,
                 remaining,
             } => {
                 let humantime = humantime::format_duration(*remaining);
-                if let Some(logger) = executor.logger {
-                    info!(logger, "Subnet '{}' is pending to bake for {}", subnet_short, humantime)
-                }
+                format!("Subnet '{}' is pending to bake for {}", subnet_short, humantime)
             }
             SubnetAction::PendingProposal {
                 subnet_short,
                 proposal_id,
-            } => {
-                if let Some(logger) = executor.logger {
-                    info!(
-                        logger,
-                        "Subnet '{}' has a pending proposal with id '{}' that has to be voted on",
-                        subnet_short,
-                        proposal_id
-                    )
-                }
-            }
-            SubnetAction::WaitForNextWeek { subnet_short } => {
-                if let Some(logger) = executor.logger {
-                    info!(logger, "Waiting for next week to place proposal for '{}'", subnet_short)
-                }
-            }
+            } => format!(
+                "Subnet '{}' has a pending proposal with id '{}' that has to be voted on",
+                subnet_short, proposal_id
+            ),
             SubnetAction::PlaceProposal {
                 is_unassigned,
                 subnet_principal,
                 version,
-            } => {
-                if !blessed_replica_versions.contains(version) {
-                    return Err(anyhow::anyhow!("Replica version '{}' is not blessed.", version));
-                }
-                let principal_string = subnet_principal.to_string();
-                if let Some(logger) = executor.logger {
-                    info!(
-                        logger,
-                        "Placing proposal for '{}' to upgrade to version '{}'",
-                        match is_unassigned {
-                            true => "unassigned nodes",
-                            false => principal_string.as_str(),
-                        },
-                        version
-                    )
-                }
-
-                let proposal = match is_unassigned {
-                    true => ProposeCommand::UpdateUnassignedNodes {
-                        replica_version: version.to_string(),
-                    },
-                    false => ProposeCommand::UpdateSubnetReplicaVersion {
-                        subnet: *subnet_principal,
-                        version: version.to_string(),
-                    },
-                };
-
-                let opts = ProposeOptions {
-                    title: Some(format!(
-                        "Update subnet {} to replica version {}",
-                        principal_string.split_once('-').expect("Should contain '-'").0,
-                        version.split_at(8).0
-                    )),
-                    summary: Some(format!(
-                        "Update subnet {} to replica version {}",
-                        principal_string, version
-                    )),
-                    ..Default::default()
-                };
-
-                executor.ic_admin.propose_run(proposal, opts, executor.simulate)?;
+            } => format!(
+                "Placing proposal for '{}' to upgrade to version '{}'",
+                match is_unassigned {
+                    true => "unassigned nodes".to_string(),
+                    false => subnet_principal.to_string(),
+                },
+                version
+            ),
+            SubnetAction::WaitForNextWeek { subnet_short } => {
+                format!("Waiting for next week to place proposal for '{}'", subnet_short)
             }
+        }
+    }
+}
+
+impl<'a> SubnetAction {
+    fn execute(&self, executor: &'a ActionExecutor, blessed_replica_versions: &'a [String]) -> anyhow::Result<()> {
+        if let Some(logger) = executor.logger {
+            info!(logger, "Subnet action: {}", self.print())
+        }
+        if let SubnetAction::PlaceProposal {
+            is_unassigned,
+            subnet_principal,
+            version,
+        } = self
+        {
+            if !blessed_replica_versions.contains(version) {
+                return Err(anyhow::anyhow!("Replica version '{}' is not blessed.", version));
+            }
+            let principal_string = subnet_principal.to_string();
+
+            let proposal = match is_unassigned {
+                true => ProposeCommand::UpdateUnassignedNodes {
+                    replica_version: version.to_string(),
+                },
+                false => ProposeCommand::UpdateSubnetReplicaVersion {
+                    subnet: *subnet_principal,
+                    version: version.to_string(),
+                },
+            };
+
+            let opts = ProposeOptions {
+                title: Some(format!(
+                    "Update subnet {} to replica version {}",
+                    principal_string.split_once('-').expect("Should contain '-'").0,
+                    version.split_at(8).0
+                )),
+                summary: Some(format!(
+                    "Update subnet {} to replica version {}",
+                    principal_string, version
+                )),
+                ..Default::default()
+            };
+
+            executor.ic_admin.propose_run(proposal, opts, executor.simulate)?;
         }
 
         Ok(())
