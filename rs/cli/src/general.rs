@@ -19,16 +19,16 @@ use crate::detect_neuron::{Auth, Neuron};
 
 pub async fn vote_on_proposals(
     neuron: &Neuron,
-    nns_url: &Url,
+    nns_urls: &Vec<Url>,
     accepted_proposers: &[u64],
     accepted_topics: &[i32],
     simulate: bool,
 ) -> anyhow::Result<()> {
     let client: GovernanceCanisterWrapper = match &neuron.auth {
         Auth::Hsm { pin, slot, key_id } => {
-            CanisterClient::from_hsm(pin.to_string(), *slot, key_id.to_string(), nns_url)?.into()
+            CanisterClient::from_hsm(pin.to_string(), *slot, key_id.to_string(), &nns_urls[0])?.into()
         }
-        Auth::Keyfile { path } => CanisterClient::from_key_file(path.into(), nns_url)?.into(),
+        Auth::Keyfile { path } => CanisterClient::from_key_file(path.into(), &nns_urls[0])?.into(),
     };
 
     // In case of incorrectly set voting following, or in case of some other errors,

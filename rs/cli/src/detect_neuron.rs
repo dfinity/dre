@@ -11,7 +11,7 @@ use ic_nns_constants::GOVERNANCE_CANISTER_ID;
 use ic_nns_governance::pb::v1::{ListNeurons, ListNeuronsResponse};
 use ic_sys::utility_command::UtilityCommand;
 use keyring::{Entry, Error};
-use log::info;
+use log::{info, warn};
 
 #[derive(Clone)]
 pub struct Neuron {
@@ -96,7 +96,7 @@ pub fn detect_hsm_auth() -> anyhow::Result<Option<Auth>> {
     Ok(None)
 }
 
-pub async fn detect_neuron(url: url::Url) -> anyhow::Result<Option<Neuron>> {
+pub async fn detect_neuron(nns_urls: &Vec<url::Url>) -> anyhow::Result<Option<Neuron>> {
     if let Some(Auth::Hsm { pin, slot, key_id }) = detect_hsm_auth()? {
         let auth = Auth::Hsm {
             pin: pin.clone(),
@@ -112,7 +112,7 @@ pub async fn detect_neuron(url: url::Url) -> anyhow::Result<Option<Neuron>> {
                 )
             }),
         );
-        let agent = Agent::new(url, sender);
+        let agent = Agent::new(nns_urls[0].clone(), sender);
         let neuron_id = if let Some(response) = agent
             .execute_query(
                 &GOVERNANCE_CANISTER_ID,

@@ -1,4 +1,3 @@
-mod config;
 mod endpoints;
 mod factsdb;
 mod git_ic_repo;

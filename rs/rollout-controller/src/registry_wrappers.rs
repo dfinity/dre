@@ -11,7 +11,7 @@ pub async fn sync_wrap(logger: Logger, targets_dir: PathBuf, network: Network) -
     sync_local_registry(
         logger.clone(),
         targets_dir,
-        vec![network.get_url()],
+        network.get_nns_urls(),
         false,
         None,
         &stop_signal,
@@ -21,7 +21,7 @@ pub async fn sync_wrap(logger: Logger, targets_dir: PathBuf, network: Network) -
 
     // Check if the desired rollout version is elected
     debug!(logger, "Creating registry");
-    let mut registry_state = RegistryState::new(network.clone(), true).await;
+    let mut registry_state = RegistryState::new(&network, true).await;
 
     debug!(logger, "Updating registry with data");
     let node_provider_data = vec![];

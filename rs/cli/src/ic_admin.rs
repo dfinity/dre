@@ -139,23 +139,21 @@ impl FirewallRuleModifications {
 #[derive(Clone)]
 pub struct IcAdminWrapper {
     ic_admin: Option<String>,
-    nns_url: url::Url,
+    network: Network,
     yes: bool,
     neuron: Option<Neuron>,
 }
 
-impl From<Cli> for IcAdminWrapper {
-    fn from(cli: Cli) -> Self {
+impl IcAdminWrapper {
+    fn from(cli: Cli, network: Network) -> Self {
         Self {
             ic_admin: cli.ic_admin,
-            nns_url: cli.nns_url,
+            network,
             yes: cli.yes,
             neuron: cli.neuron,
         }
     }
-}
 
-impl IcAdminWrapper {
     fn print_ic_admin_command_line(&self, cmd: &Command) {
         info!(
             "running ic-admin: \n$ {}{}",
@@ -273,7 +271,14 @@ impl IcAdminWrapper {
         } else {
             vec![]
         };
-        let root_options = [auth_options, vec!["--nns-url".to_string(), self.nns_url.to_string()]].concat();
+        let root_options = [
+            auth_options,
+            vec![
+                "--nns-urls".to_string(),
+                self.network.get_nns_urls().iter().map(|u| u.to_string()).join(","),
+            ],
+        ]
+        .concat();
         let cmd = cmd.args([&root_options, ic_admin_args].concat());
 
         self.print_ic_admin_command_line(cmd);
@@ -668,10 +673,10 @@ must be identical, and must match the SHA256 from the payload of the NNS proposa
     pub async fn update_unassigned_nodes(
         &self,
         nns_subned_id: &String,
-        network: Network,
+        network: &Network,
         simulate: bool,
     ) -> Result<(), Error> {
-        let local_registry_path = local_registry_path(network.clone());
+        let local_registry_path = local_registry_path(network);
         let local_registry = LocalRegistry::new(local_registry_path, Duration::from_secs(10))
             .map_err(|e| anyhow::anyhow!("Error in creating local registry instance: {:?}", e))?;
 
@@ -718,11 +723,11 @@ must be identical, and must match the SHA256 from the payload of the NNS proposa
 
     pub async fn update_replica_nodes_firewall(
         &self,
-        network: Network,
+        network: &Network,
         propose_options: ProposeOptions,
         simulate: bool,
     ) -> Result<(), Error> {
-        let local_registry_path = local_registry_path(network.clone());
+        let local_registry_path = local_registry_path(network);
         let local_registry = LocalRegistry::new(local_registry_path, Duration::from_secs(10))
             .map_err(|e| anyhow::anyhow!("Error in creating local registry instance: {:?}", e))?;
 
@@ -1109,10 +1114,13 @@ oSMDIQBa2NLmSmaqjDXej4rrJEuEhKIz7/pGXpxztViWhB+X9Q==
 
         // Start a background HTTP server on a random local port
         let mock_server = MockServer::start().await;
+        let network = Network::new("testnet", Some(vec![url::Url::from_str(&mock_server.uri()).unwrap()]))
+            .await
+            .expect("Failed to create network");
 
         for cmd in test_cases {
             let cli = IcAdminWrapper {
-                nns_url: url::Url::from_str(&mock_server.uri()).unwrap(),
+                network: network,
                 yes: false,
                 neuron: Neuron {
                     id: 3,

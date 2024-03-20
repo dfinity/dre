@@ -26,7 +26,19 @@ async fn main() -> Result<(), anyhow::Error> {
     let mut cli_opts = cli::Opts::parse();
     let mut cmd = cli::Opts::command();
 
-    let governance_canister_v = match governance_canister_version(cli_opts.network.get_url()).await {
+    let target_network = ic_management_types::Network::new(cli_opts.network, cli_opts.nns_urls)
+        .await
+        .expect("Failed to create network");
+
+    // Start of actually doing stuff with commands.
+    if target_network.name == "staging" {
+        cli_opts.private_key_pem = Some(
+            std::env::var("HOME").expect("Please set HOME env var")
+                + "/.config/dfx/identity/bootstrap-super-leader/identity.pem",
+        );
+        cli_opts.neuron_id = Some(STAGING_NEURON_ID);
+    }
+    let governance_canister_v = match governance_canister_version(target_network.get_nns_urls().clone()).await {
         Ok(c) => c,
         Err(e) => {
             return Err(anyhow::anyhow!(
@@ -38,7 +50,6 @@ async fn main() -> Result<(), anyhow::Error> {
 
     let governance_canister_version = governance_canister_v.stringified_hash;
 
-    let target_network = cli_opts.network.clone();
     let (tx, rx) = mpsc::channel();
 
     let backend_port = local_unused_port();
@@ -46,7 +57,7 @@ async fn main() -> Result<(), anyhow::Error> {
     thread::spawn(move || {
         let rt = tokio::runtime::Runtime::new().unwrap();
         rt.block_on(async move {
-            endpoints::run_backend(target_network_backend, "127.0.0.1", backend_port, true, Some(tx))
+            endpoints::run_backend(&target_network_backend, "127.0.0.1", backend_port, true, Some(tx))
                 .await
                 .expect("failed")
         });
@@ -55,12 +66,6 @@ async fn main() -> Result<(), anyhow::Error> {
     let srv = rx.recv().unwrap();
 
     let r = ic_admin::with_ic_admin(governance_canister_version.into(), async {
-
-        // Start of actually doing stuff with commands.
-        if cli_opts.network == Network::Staging {
-            cli_opts.private_key_pem = Some(std::env::var("HOME").expect("Please set HOME env var") + "/.config/dfx/identity/bootstrap-super-leader/identity.pem");
-            cli_opts.neuron_id = Some(STAGING_NEURON_ID);
-        }
 
         let simulate = cli_opts.simulate;
 
@@ -200,7 +205,7 @@ async fn main() -> Result<(), anyhow::Error> {
 
             cli::Commands::UpdateUnassignedNodes { nns_subnet_id } => {
                 let ic_admin: IcAdminWrapper = cli::Cli::from_opts(&cli_opts, true).await?.into();
-                ic_admin.update_unassigned_nodes( nns_subnet_id, cli_opts.network, simulate).await
+                ic_admin.update_unassigned_nodes( nns_subnet_id, &target_network, simulate).await
             },
 
             cli::Commands::Version(version_command) => {
@@ -279,7 +284,7 @@ async fn main() -> Result<(), anyhow::Error> {
                 vote_on_proposals(match cli.get_neuron() {
                     Some(neuron) => neuron,
                     None => return Err(anyhow::anyhow!("Neuron required for this command")),
-                }, cli.get_nns_url(), accepted_neurons, accepted_topics, simulate).await
+                }, &target_network.get_nns_urls(), accepted_neurons, accepted_topics, simulate).await
             },
 
             cli::Commands::TrustworthyMetrics { wallet, start_at_timestamp, subnet_ids } => {
@@ -287,11 +292,11 @@ async fn main() -> Result<(), anyhow::Error> {
                 get_node_metrics_history(CanisterId::from_str(wallet)?, subnet_ids.clone(), *start_at_timestamp, match cli.get_neuron() {
                     Some(neuron) => neuron,
                     None => return Err(anyhow::anyhow!("Neuron required for this command")),
-                }, cli.get_nns_url()).await
+                }, &target_network.get_nns_urls()).await
             },
 
             cli::Commands::DumpRegistry { version, path } => {
-                registry_dump::dump_registry(path, cli_opts.network, version).await
+                registry_dump::dump_registry(path, &target_network, version).await
             }
 
             cli::Commands::Firewall{title, summary, motivation} => {

@@ -28,11 +28,7 @@ impl DashboardBackendClient {
             .expect("invalid base url")
             .join("api/proxy/registry/")
             .expect("failed to join url")
-            .join(match network {
-                Network::Mainnet => "mainnet/",
-                Network::Staging => "staging/",
-                Network::Url(_) => "/",
-            })
+            .join(&network.name)
             .expect("failed to join url"),
         }
     }
@@ -154,22 +150,28 @@ impl RESTRequestBuilder for reqwest::RequestBuilder {
 mod tests {
     use super::*;
 
-    #[test]
-    fn dashboard_backend_client_url() {
+    #[tokio::test]
+    async fn dashboard_backend_client_url() {
+        let mainnet = Network::new("mainnet", None)
+            .await
+            .expect("failed to create mainnet network");
+        let staging = Network::new("staging", None)
+            .await
+            .expect("failed to create staging network");
         assert_eq!(
-            DashboardBackendClient::new(Network::Mainnet, false).url.to_string(),
+            DashboardBackendClient::new(mainnet, false).url.to_string(),
             "https://dashboard.internal.dfinity.network/api/proxy/registry/mainnet/"
         );
         assert_eq!(
-            DashboardBackendClient::new(Network::Staging, false).url.to_string(),
+            DashboardBackendClient::new(staging, false).url.to_string(),
             "https://dashboard.internal.dfinity.network/api/proxy/registry/staging/"
         );
         assert_eq!(
-            DashboardBackendClient::new(Network::Mainnet, true).url.to_string(),
+            DashboardBackendClient::new(mainnet, true).url.to_string(),
             "http://localhost:17000/api/proxy/registry/mainnet/"
         );
         assert_eq!(
-            DashboardBackendClient::new(Network::Staging, true).url.to_string(),
+            DashboardBackendClient::new(staging, true).url.to_string(),
             "http://localhost:17000/api/proxy/registry/staging/"
         );
     }

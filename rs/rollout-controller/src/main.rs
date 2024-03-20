@@ -69,9 +69,10 @@ async fn main() -> anyhow::Result<()> {
         }
         should_sleep = true;
 
-        info!(logger, "Syncing registry for network '{:?}'", args.network);
+        let network = Network::new(args.network.clone(), None).await.unwrap();
+        info!(logger, "Syncing registry for network '{}'", network);
         let maybe_registry_state = select! {
-            res = sync_wrap(logger.clone(), args.targets_dir.clone(), args.network.clone()) => res,
+            res = sync_wrap(logger.clone(), args.targets_dir.clone(), network.clone()) => res,
             _ = token.cancelled() => break,
         };
         let registry_state = match maybe_registry_state {
@@ -164,7 +165,7 @@ instances are stored.
         long,
         default_value = "mainnet",
         help = r#"
-Target network to observe and update with the controller. 
+Target network to observe and update with the controller.
 Can be one of:
     1. mainnet,
     2. staging,
@@ -172,7 +173,7 @@ Can be one of:
 
 "#
     )]
-    network: Network,
+    network: String,
 
     #[clap(
         long,
@@ -191,7 +192,7 @@ Log level to use for running. You can use standard log levels 'info',
         value_parser = parse_duration,
         help = r#"
 The interval at which ICs are polled for updates.
-    
+
 "#
         )]
     poll_interval: Duration,

@@ -21959,6 +21959,10 @@
               "target": "clap"
             },
             {
+              "id": "futures 0.3.30",
+              "target": "futures"
+            },
+            {
               "id": "ic-base-types 0.9.0",
               "target": "ic_base_types"
             },
@@ -21993,6 +21997,10 @@
             {
               "id": "strum 0.25.0",
               "target": "strum"
+            },
+            {
+              "id": "tokio 1.36.0",
+              "target": "tokio"
             },
             {
               "id": "url 2.5.0",

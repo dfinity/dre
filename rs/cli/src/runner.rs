@@ -184,6 +184,7 @@ impl Runner {
     pub async fn new_with_network_url(ic_admin: ic_admin::IcAdminWrapper, backend_port: u16) -> anyhow::Result<Self> {
         let dashboard_backend_client =
             DashboardBackendClient::new_with_network_url(format!("http://localhost:{}/", backend_port));
+        let network = Network::new("");
         Ok(Self {
             ic_admin,
             dashboard_backend_client,
@@ -299,7 +300,7 @@ impl Runner {
             self.registry.nodes(),
             self.registry.subnets(),
             self.registry.network(),
-            ProposalAgent::new(self.registry.nns_url()),
+            ProposalAgent::new(self.registry.get_nns_urls()),
             &version,
             &exclude,
         );

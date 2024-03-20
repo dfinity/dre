@@ -5,6 +5,7 @@ use clap_num::maybe_hex;
 use ic_base_types::PrincipalId;
 use ic_management_types::{Artifact, Network};
 use log::error;
+use url::Url;
 
 use crate::detect_neuron::{detect_hsm_auth, detect_neuron, Auth, Neuron};
 
@@ -411,7 +412,7 @@ pub mod nodes {
 #[derive(Clone)]
 pub struct Cli {
     pub ic_admin: Option<String>,
-    pub nns_url: url::Url,
+    pub nns_urls: Vec<url::Url>,
     pub yes: bool,
     pub neuron: Option<Neuron>,
 }
@@ -432,8 +433,8 @@ impl Cli {
         &self.neuron
     }
 
-    pub fn get_nns_url(&self) -> &url::Url {
-        &self.nns_url
+    pub fn get_nns_url(&self) -> Vec<url::Url> {
+        self.nns_urls
     }
 
     pub fn get_update_cmd_args(update_version: &UpdateVersion) -> Vec<String> {
@@ -462,7 +463,17 @@ impl Cli {
     }
 
     pub async fn from_opts(opts: &Opts, require_authentication: bool) -> anyhow::Result<Self> {
-        let nns_url = opts.network.get_url();
+        let network = Network::new(opts.network.clone(), opts.nns_urls.clone())
+            .await
+            .map_err(|e| {
+                anyhow::anyhow!(
+                    "Failed to create network with name {} and urls {:?}: {}",
+                    opts.network,
+                    opts.nns_urls,
+                    e
+                )
+            })?;
+        let nns_urls = network.get_nns_urls();
         let neuron = if let Some(id) = opts.neuron_id {
             Some(Neuron {
                 id,
@@ -479,7 +490,7 @@ impl Cli {
             })
         } else if require_authentication {
             // Early warn if there will be a problem because a neuron was not detected.
-            match detect_neuron(nns_url.clone()).await {
+            match detect_neuron(&nns_urls).await {
                 Ok(Some(n)) => Some(n),
                 Ok(None) => {
                     error!("No neuron detected.  Your HSM device is not detectable (or override variables HSM_PIN, HSM_SLOT, HSM_KEY_ID are incorrectly set); your variables NEURON_ID, PRIVATE_KEY_PEM might not be defined either.");
@@ -494,7 +505,7 @@ impl Cli {
             yes: opts.yes,
             neuron,
             ic_admin: opts.ic_admin.clone(),
-            nns_url,
+            nns_urls: nns_urls.clone(),
         })
     }
 }

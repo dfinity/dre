@@ -3,7 +3,7 @@ use hyper::StatusCode;
 use ic_management_types::{FactsDBGuest, Guest};
 use log::warn;
 
-pub async fn query_guests(gitlab_client: AsyncGitlab, network: String) -> anyhow::Result<Vec<Guest>> {
+pub async fn query_guests(gitlab_client: AsyncGitlab, network: &String) -> anyhow::Result<Vec<Guest>> {
     ::gitlab::api::raw(
         ::gitlab::api::projects::repository::files::FileRaw::builder()
             .ref_("refs/heads/main")

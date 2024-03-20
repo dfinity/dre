@@ -4424,6 +4424,7 @@ dependencies = [
  "candid",
  "chrono",
  "clap 4.4.18",
+ "futures",
  "ic-base-types",
  "ic-nns-governance",
  "ic-registry-subnet-type",
@@ -4434,6 +4435,7 @@ dependencies = [
  "serde_json",
  "strum 0.25.0",
  "strum_macros 0.25.3",
+ "tokio",
  "url",
 ]
 

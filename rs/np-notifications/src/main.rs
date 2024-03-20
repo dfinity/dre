@@ -30,7 +30,6 @@ use std::sync::mpsc;
 use actix_web::rt::signal;
 use actix_web::{web, App, HttpServer};
 use health_check::HealthCheckLoopConfig;
-use ic_management_backend::config::target_network;
 
 use notification::NotificationSenderLoopConfig;
 
