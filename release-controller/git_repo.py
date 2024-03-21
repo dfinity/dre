@@ -106,8 +106,8 @@ def main():
 
     repo = GitRepo(f"https://oauth2:{os.environ["GITHUB_TOKEN"]}@github.com/dfinity/ic-dre-testing.git", main_branch="master")
     push_release_tags(repo, Release(rc_name="rc--2024-02-28_23-01", versions=[
-        Version(name="default", version="48da85ee6c03e8c15f3e90b21bf9ccae7b753ee6", release_notes_ready=True),
-        # Version(name="p2p", version="a2cf671f832c36c0153d4960148d3e676659a747", release_notes_ready=True),
+        Version(name="default", version="48da85ee6c03e8c15f3e90b21bf9ccae7b753ee6"),
+        # Version(name="p2p", version="a2cf671f832c36c0153d4960148d3e676659a747"),
     ]))
 
 

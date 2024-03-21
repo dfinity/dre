@@ -17,8 +17,8 @@ def test_create_release_notes_on_new_release():
         Release(
             rc_name="rc--2024-02-21_23-06",
             versions=[
-                Version(name="default", release_notes_ready=True, version="test1"),
-                Version(name="feat", release_notes_ready=True, version="test2"),
+                Version(name="default", version="test1"),
+                Version(name="feat", version="test2"),
             ],
         )
     )

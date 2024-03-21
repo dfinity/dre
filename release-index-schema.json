@@ -52,9 +52,6 @@
                 "name": {
                     "type": "string"
                 },
-                "release_notes_ready": {
-                    "type": "boolean"
-                },
                 "subnets": {
                     "type": "array",
                     "items": {

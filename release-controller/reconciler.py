@@ -246,7 +246,10 @@ def main():
     )
 
     while True:
-        reconciler.reconcile()
+        try:
+            reconciler.reconcile()
+        except Exception as e:
+            logging.error(f"failed to reconcile: {e}")
         time.sleep(60)
 
 

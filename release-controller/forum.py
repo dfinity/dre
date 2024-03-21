@@ -123,13 +123,10 @@ releases:
     versions:
       - version: 2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f
         name: default
-        release_notes_ready: true
       - version: 31e9076fb99dfc36eb27fb3a2edc68885e6163ac
         name: feat
-        release_notes_ready: true
       - version: db583db46f0894d35bcbcfdea452d93abdadd8a6
         name: feat-hotfix1
-        release_notes_ready: true
 """,
     )
     forum_client = ReleaseCandidateForumClient(

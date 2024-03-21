@@ -10,26 +10,12 @@ releases: # add new release in step 2
     versions:
       - name: initial
         version: 2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f
-        release_notes_ready: false
         default: true
 ```
 
-2. When the notes are ready, flip the `release_notes_ready` flag.
+2. Approve the release notes from automatically created PR.
 
-```diff
-    releases: # add new release in step 2
-    - rc_name: rc--2024-02-21_23-01
-        versions:
-        - name: initial
-            version: 2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f
-+           release_notes_ready: true
--           release_notes_ready: false
-        default: true
-```
-
-3. Approve the release notes from automatically created PR.
-
-4. Change the rollout release and modify rollout plan if needed.
+3. Change the rollout release and modify rollout plan if needed.
 
 ```yaml
 rollout:
@@ -86,11 +72,9 @@ releases:
     versions:
       - name: initial
         version: 2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f
-        release_notes_ready: true
         default: true
       - name: hotfix-initial
         version: 6c2921d320602b01aa038812f5309dedaa693f80
-        release_notes_ready: true
         hotfix:
           version: 2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f
 ```
@@ -102,7 +86,6 @@ Sometimes we don't want to publish hotfixes to some subnets either because they 
 ```yaml
       - name: hotfix-initial
         version: 6c2921d320602b01aa038812f5309dedaa693f80
-        release_notes_ready: true
         hotfix:
           version: 2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f
           excludes_subnets:
@@ -116,7 +99,6 @@ Since the security hotfix do not have release notes, release controller won't an
 ```yaml
       - name: hotfix-initial
         version: 6c2921d320602b01aa038812f5309dedaa693f80
-        release_notes_ready: true
         hotfix:
           version: 2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f
           security: true
@@ -130,7 +112,6 @@ Mark the version as rejected. Make sure to do this before you add a new version,
 ```yaml
       - name: initial
         version: 2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f
-        release_notes_ready: true
         rejected: true
 ```
 
@@ -139,7 +120,6 @@ Mark the version as rejected. Make sure to do this before you add a new version,
 ```yaml
       - name: initial
         version: 2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f
-        release_notes_ready: true
         broken: true
 ```
 
