@@ -14,6 +14,7 @@
 # check that version exists on ic repo, unless it's marked as a security fix
 # validate that excludes_subnets are present on the rollout plan (i.e. valid subnets)
 # validate that wait_for_next_week is only set for last stage
+# check that version belongs to specified RC
 
 # TODO: additionally consider these
 # generate rollout plan to PR if it's different from main branch - how would that look like?

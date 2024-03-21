@@ -162,13 +162,10 @@ class Reconciler:
                     ),
                     tag_teams_on_create=v_idx == 0,
                 )
-                if v.release_notes_ready:
-                    changelog = self.notes_client.markdown_file(v.version)
-                    if not changelog:
-                        logging.warn(f"changelog for version {v.version} not found in google docs")
-                        continue
-                    self.publish_client.ensure_published(version=v.version, changelog=changelog)
 
+                self.publish_client.publish_if_ready(google_doc_markdownified=self.notes_client.markdown_file(v.version), version=v.version)
+
+                # returns a result only if changelog is published
                 changelog = self.loader.changelog(v.version)
                 if changelog:
                     if not self.state.proposal_submitted(v.version):
@@ -189,6 +186,7 @@ class Reconciler:
                             )
 
                         summary = changelog + f"\n\nLink to the forum post: {rc_forum_topic.post_url(v.version)}"
+                        # TODO: remove hardcoded git revision. this should work on linux
                         IcAdmin(self.nns_url, git_revision="e5c6356b5a752a7f5912de133000ae60e0e25aaf")._ic_admin_run(
                             "propose-to-update-elected-replica-versions",
                             "--proposal-title",
@@ -244,8 +242,7 @@ def main():
             "rc--2024-02-28_23-01",
             "rc--2024-03-06_23-01",
         ],
-        # TODO: remove suffix -dre-testing
-        ic_repo = GitRepo(f"https://oauth2:{os.environ["GITHUB_TOKEN"]}@github.com/dfinity/ic-dre-testing.git", main_branch="master"),
+        ic_repo = GitRepo(f"https://oauth2:{os.environ["GITHUB_TOKEN"]}@github.com/dfinity/ic.git", main_branch="master"),
     )
 
     while True:

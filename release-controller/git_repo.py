@@ -11,7 +11,16 @@ class GitRepo:
     def __init__(self, repo, repo_cache_dir=pathlib.Path.home() / ".cache/git", main_branch="main"):
         self.repo = repo
         self.main_branch = main_branch
+
+        if not repo_cache_dir:
+            self.cache_temp_dir = tempfile.TemporaryDirectory()
+            repo_cache_dir = pathlib.Path(self.cache_temp_dir.name)
+
         self.dir = repo_cache_dir / "{}".format("/".join(repo.split("/")[-2:]))
+
+    def __del__(self):
+        if self.cache_temp_dir:
+            self.cache_temp_dir.cleanup()
 
     def fetch(self):
         if (self.dir / '.git').exists():
@@ -66,11 +75,12 @@ def push_release_tags(repo: GitRepo, release: Release):
             stderr=subprocess.DEVNULL,
             cwd=repo.dir,
         )
+        tag = f"release-{release.rc_name.removeprefix("rc--")}-{v.name}"
         subprocess.check_call(
             [
                 "git",
                 "tag",
-                f"release-{release.rc_name.removeprefix("rc--")}-{v.name}",
+                tag,
                 v.version,
                 "-f",
             ],
@@ -78,17 +88,18 @@ def push_release_tags(repo: GitRepo, release: Release):
             stderr=subprocess.DEVNULL,
             cwd=repo.dir,
         )
-    subprocess.check_call(
-        [
-            "git",
-            "push",
-            "origin",
-            "--tags",
-        ],
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-        cwd=repo.dir,
-    )
+        subprocess.check_call(
+            [
+                "git",
+                "push",
+                "origin",
+                tag,
+                "-f"
+            ],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            cwd=repo.dir,
+        )
 
 def main():
     load_dotenv()

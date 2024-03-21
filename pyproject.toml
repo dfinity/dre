@@ -49,6 +49,7 @@ pytest = "^8.0.2"
 pygithub = "^2.2.0"
 pytest-mock = "^3.12.0"
 slack-webhook = "^1.0.7"
+mammoth = "^1.7.0"
 
 [tool.poetry.group.dev.dependencies]
 black = "*"

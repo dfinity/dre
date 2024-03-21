@@ -1,3 +1,4 @@
+import subprocess
 from unittest.mock import Mock, call
 import pytest
 import tempfile
@@ -12,6 +13,7 @@ from github import Github
 from pydantic_yaml import parse_yaml_raw_as
 import release_index
 import urllib.request
+from git_repo import GitRepo
 
 
 class TestReconcilerState(ReconcilerState):
@@ -21,6 +23,21 @@ class TestReconcilerState(ReconcilerState):
 
     def __del__(self):
         self.tempdir.cleanup()
+
+
+def setup_test_ic_repo(dir: tempfile.TemporaryDirectory):
+    subprocess.check_call(
+        ["git", "init", "--bare"],
+        cwd=dir.name,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+    subprocess.check_call(
+        ["git", "init", "--bare"],
+        cwd=dir.name,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
 
 
 def test_e2e_mock_new_release(mocker):
@@ -52,6 +69,7 @@ releases:
         publish_client=PublishNotesClient(repo),
         nns_url="",
         state=TestReconcilerState(),
+        ic_repo=GitRepo(repo=, repo_cache_dir=None, main_branch="master"),
     )
     mocker.patch.object(reconciler.publish_client, "ensure_published")
 

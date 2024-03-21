@@ -3,6 +3,7 @@ import logging
 from dotenv import load_dotenv
 from github.Repository import Repository
 from github import Github, Auth
+import re
 
 REPLICA_RELEASES_DIR = "replica-releases"
 
@@ -32,6 +33,35 @@ class PublishNotesClient:
 
         logging.info(f"creating pull request for {version}, branch {branch_name}")
         self.repo.create_pull(title=f"Elect version {version}", base="main", head=pull_head)
+
+    def publish_if_ready(self, google_doc_markdownified, version: str):
+        if not isinstance(google_doc_markdownified, str):
+            logging.info(f"didn't get markdown notes for {version}, skipping")
+            return
+
+        changelog = google_doc_markdownified
+        changelog = "\n".join(
+            [
+                # remove author
+                re.sub(r"(?<=^\* )author:[^|]+\| ", "", l)
+                for l in changelog.split("\n")
+                # remove crossed out lines (including reviewer checklist)
+                if not "~~" in l
+            ]
+        )
+
+        release_notes_start = changelog.find("Release Notes")
+        if release_notes_start == -1:
+            logging.warn(f"could not find release notes section for version {version}")
+            return
+
+        if "@team" in changelog[:release_notes_start]:
+            logging.info(f"release notes for version {version} not yet ready")
+            return
+
+        changelog = changelog[release_notes_start:]
+        # TODO: parse markdown to check formatting is correct
+        self.ensure_published(version=version, changelog=changelog)
 
 
 def main():

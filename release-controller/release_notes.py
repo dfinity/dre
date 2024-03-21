@@ -398,6 +398,18 @@ def release_notes(first_commit, last_commit, release_name) -> str:
         )
 
     notes = """\
+# Review checklist
+
+<span style="color: red">Please cross-out your team once you finished the review</span>
+
+- @team-consensus
+- @team-crypto
+- @team-execution
+- @team-messaging
+- @team-networking
+- @node-team
+- @team-runtime
+
 # Release Notes for [{rc_name}](https://github.com/dfinity/ic/tree/{rc_name}) ({last_commit})
 Changelog since git revision [{first_commit}](https://dashboard.internetcomputer.org/release/{first_commit})
 """.format(
@@ -421,10 +433,9 @@ Changelog since git revision [{first_commit}](https://dashboard.internetcomputer
                 else "({0}):".format(change["scope"])
             )
             message_part = change["message"]
-            commiter_part = f"(author: {change['commiter']})"
-            # commiter_part = ""
+            commiter_part = f"author: {change['commiter']}"
 
-            text = "{0} {4} {1}{2} {3}".format(commit_part, team_part, scope_part, message_part, commiter_part)
+            text = "{4} | {0} {1}{2} {3}".format(commit_part, team_part, scope_part, message_part, commiter_part)
             if not change["included"]:
                 text = "~~{}~~".format(text)
             notes += "* " + text + "\n"
