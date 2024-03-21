@@ -34,41 +34,14 @@ rollout:
       bake_time: 2h
       wait_for_next_week: true
 
-releases: # add new release in step 2
-  - rc_name: rc--2024-02-21_23-01
+releases:
+  - rc_name: rc--2024-03-20_23-01
     versions:
-      - version: 2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f
-        name: rc--2024-02-21_23-01
-        release_notes_ready: false
-      - version: 85bd56a70e55b2cea75cae6405ae11243e5fdad8
-        name: p2p
-        release_notes_ready: false
-        subnets: 
-          - shefu
-          - qdvhd
-          - bkfrj
-          - snjp4
-          - qxesv
-          - w4asl
-          - 4zbus
-          - ejbmu
-          - 2fq7c
-          - pae4o
-          - csyj4
-          - 5kdm2
-          - eq6en
-          - brlsh
-          - k44fs
-          - cv73p
-          - 4ecnw
-          - opn46
-          - lspz2
-          - o3ow2
-          - 6pbhf
-          - e66qm
-          - jtdsg
-          - fuqsr
-          - mpubz
-          - x33ed
-          - 3hhby
-          - nl6hn
+      - name: default
+        version: 463296c0bc82ad5999b70245e5f125c14ba7d090
+  - rc_name: rc--2024-03-06_23-01
+    versions:
+      - name: default
+        version: 778d2bb870f858952ca9fbe69324f9864e3cf5e7
+      - name: p2p
+        version: fff20526e154f8b8d24373efd9b50f588d147e91
