@@ -19,7 +19,7 @@ class GitRepo:
         self.dir = repo_cache_dir / "{}".format("/".join(repo.split("/")[-2:]))
 
     def __del__(self):
-        if self.cache_temp_dir:
+        if hasattr(self, 'cache_temp_dir'):
             self.cache_temp_dir.cleanup()
 
     def fetch(self):
@@ -88,25 +88,33 @@ def push_release_tags(repo: GitRepo, release: Release):
             stderr=subprocess.DEVNULL,
             cwd=repo.dir,
         )
-        subprocess.check_call(
+        if not subprocess.check_output(
             [
                 "git",
-                "push",
+                "ls-remote",
                 "origin",
-                tag,
-                "-f"
+                f"refs/tags/{tag}",
             ],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
             cwd=repo.dir,
-        )
+        ).decode("utf-8").strip():
+            subprocess.check_call(
+                [
+                    "git",
+                    "push",
+                    "origin",
+                    tag,
+                ],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                cwd=repo.dir,
+            )
 
 def main():
     load_dotenv()
 
     repo = GitRepo(f"https://oauth2:{os.environ["GITHUB_TOKEN"]}@github.com/dfinity/ic-dre-testing.git", main_branch="master")
-    push_release_tags(repo, Release(rc_name="rc--2024-02-28_23-01", versions=[
-        Version(name="default", version="48da85ee6c03e8c15f3e90b21bf9ccae7b753ee6"),
+    push_release_tags(repo, Release(rc_name="rc--2024-02-21_23-01", versions=[
+        Version(name="default", version="2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f"),
         # Version(name="p2p", version="a2cf671f832c36c0153d4960148d3e676659a747"),
     ]))
 

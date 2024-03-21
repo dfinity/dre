@@ -3,6 +3,7 @@ import json
 import logging
 import os
 import pathlib
+import sys
 import time
 import __fix_import_paths
 from pydiscourse import DiscourseClient
@@ -212,15 +213,17 @@ class Reconciler:
 
 
 def main():
-    load_dotenv()
+    if len(sys.argv) == 2:
+        load_dotenv(sys.argv[1])
+    else:
+        load_dotenv()
 
     discourse_client = DiscourseClient(
         host=os.environ["DISCOURSE_URL"],
         api_username=os.environ["DISCOURSE_USER"],
         api_key=os.environ["DISCOURSE_KEY"],
     )
-    # TODO: remove -testing suffix
-    dre_repo = "dfinity/dre-testing"
+    dre_repo = "dfinity/dre"
     config_loader = (
         GitReleaseLoader(f"https://github.com/{dre_repo}.git")
         if "dev" not in os.environ
@@ -239,7 +242,6 @@ def main():
         nns_url="https://ic0.app",
         state=state,
         ignore_releases=[
-            "rc--2024-02-28_23-01",
             "rc--2024-03-06_23-01",
         ],
         ic_repo = GitRepo(f"https://oauth2:{os.environ["GITHUB_TOKEN"]}@github.com/dfinity/ic.git", main_branch="master"),
