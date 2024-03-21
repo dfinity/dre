@@ -283,6 +283,10 @@ async fn main() -> Result<(), anyhow::Error> {
             },
 
             cli::Commands::TrustworthyMetrics { wallet, start_at_timestamp, subnet_ids } => {
+                // Neuron is not actually needed for this operation, we only need other authentication params
+                // Unfortunately, we need to create a Cli object to get the NNS URL and this object at the moment
+                // requires a neuron to be set. We set a dummy neuron here to get around this.
+                let cli_opts = cli::Opts { neuron_id: Some(0), ..cli_opts.clone() };
                 let cli = cli::Cli::from_opts(&cli_opts, true).await?;
                 get_node_metrics_history(CanisterId::from_str(wallet)?, subnet_ids.clone(), *start_at_timestamp, match cli.get_neuron() {
                     Some(neuron) => neuron,
