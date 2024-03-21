@@ -42,8 +42,13 @@ class PublishNotesClient:
         changelog = google_doc_markdownified
         changelog = "\n".join(
             [
-                # remove author
-                re.sub(r"(?<=^\* )author:[^|]+\| ", "", l)
+                # add ticks around commit hash
+                re.sub(
+                    r"(?<=^\* \[)([a-h0-9]{9})(?=\])",
+                    r"`\g<1>`",
+                    # remove author
+                    re.sub(r"(?<=^\* )author:[^|]+\| ", "", l),
+                )
                 for l in changelog.split("\n")
                 # remove crossed out lines (including reviewer checklist)
                 if not "~~" in l

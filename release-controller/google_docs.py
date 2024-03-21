@@ -9,7 +9,7 @@ from pydrive2.files import GoogleDriveFile
 from markdownify import markdownify
 from release_notes import release_notes
 import markdown
-import slack
+import slack_announce
 
 md = markdown.Markdown(
     extensions=["pymdownx.tilde"],
@@ -49,7 +49,7 @@ class ReleaseNotesClient:
         gdoc.SetContentString(htmldoc)
         gdoc.Upload()
         if "SLACK_WEBHOOK_URL" in os.environ:
-            slack.announce_release(
+            slack_announce.announce_release(
                 slack_url=os.environ["SLACK_WEBHOOK_URL"],
                 version_name=version_name,
                 google_doc_url=gdoc["alternateLink"],
