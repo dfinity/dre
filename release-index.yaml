@@ -37,7 +37,7 @@ rollout:
 releases:
   - rc_name: rc--2024-03-20_23-01
     versions:
-      - name: default
+      - name: base
         version: 463296c0bc82ad5999b70245e5f125c14ba7d090
   - rc_name: rc--2024-03-06_23-01
     versions:
