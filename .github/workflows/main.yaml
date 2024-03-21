@@ -6,6 +6,8 @@ on:
     tags:
       - "v*"
   pull_request:
+    paths-ignore:
+      - 'release-index.yaml'
   merge_group:
 
 concurrency:
