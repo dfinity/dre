@@ -71,6 +71,8 @@ class ReleaseNotesClient:
         with tempfile.TemporaryDirectory() as d:
             release_docx = pathlib.Path(d) / "release.docx"
             f.GetContentFile(release_docx)
+            # google docs will convert the document to docx format first time it's saved
+            # before that, it should be in html
             try:
                 with open(release_docx, "tr") as f:  # try open file in text mode
                     release_html = f.read()
