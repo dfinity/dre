@@ -110,11 +110,16 @@ fn check_stage<'a>(
             debug!(logger, "Unassigned nodes stage");
         }
 
-        if *unassigned_version != desired_versions.unassigned_nodes.version {
+        let version_to_check = match desired_versions.unassigned_nodes.overrided_by {
+            None => desired_versions.unassigned_nodes.version,
+            Some(overrided_by) => overrided_by.version,
+        };
+
+        if *unassigned_version != version_to_check {
             match unassigned_node_update_proposals.iter().find(|proposal| {
                 if !proposal.info.executed {
                     if let Some(version) = &proposal.payload.replica_version {
-                        if *version == desired_versions.unassigned_nodes.version {
+                        if *version == version_to_check {
                             return true;
                         }
                     }
@@ -124,7 +129,7 @@ fn check_stage<'a>(
                 None => stage_actions.push(SubnetAction::PlaceProposal {
                     is_unassigned: true,
                     subnet_principal: PrincipalId::new_anonymous(),
-                    version: desired_versions.unassigned_nodes.version,
+                    version: version_to_check,
                 }),
                 Some(proposal) => stage_actions.push(SubnetAction::PendingProposal {
                     subnet_short: PrincipalId::new_anonymous().to_string(),
@@ -154,17 +159,27 @@ fn check_stage<'a>(
             .find(|s| *subnet_principal == s.principal)
             .expect("subnet should exist");
 
+        let (version, bake) = match &desired_version.overrided_by {
+            None => (desired_version.version.clone(), stage.bake_time.as_secs_f64()),
+            Some(overrided_by) => (
+                overrided_by.version.clone(),
+                match overrided_by.bake_time {
+                    None => stage.bake_time.as_secs_f64(),
+                    Some(bake_time) => bake_time.as_secs_f64(),
+                },
+            ),
+        };
+
         if let Some(logger) = logger {
             debug!(
                 logger,
-                "Checking if subnet {} is on desired version '{}'", subnet_short, desired_version.version
+                "Checking if subnet {} is on desired version '{}'", subnet_short, version
             );
         }
 
         // If subnet is on desired version, check bake time
-        if *subnet.replica_version == desired_version.version {
-            let remaining =
-                get_remaining_bake_time_for_subnet(last_bake_status, subnet, stage.bake_time.as_secs_f64())?;
+        if *subnet.replica_version == version {
+            let remaining = get_remaining_bake_time_for_subnet(last_bake_status, subnet, bake)?;
             let remaining_duration = Duration::from_secs_f64(remaining);
             let formatted = format_duration(remaining_duration);
 
@@ -194,8 +209,7 @@ fn check_stage<'a>(
         }
 
         // If subnet is not on desired version, check if there is an open proposal
-        if let Some(proposal) = get_open_proposal_for_subnet(subnet_update_proposals, subnet, &desired_version.version)
-        {
+        if let Some(proposal) = get_open_proposal_for_subnet(subnet_update_proposals, subnet, &version) {
             if let Some(logger) = logger {
                 info!(
                     logger,
@@ -213,7 +227,7 @@ fn check_stage<'a>(
         stage_actions.push(SubnetAction::PlaceProposal {
             is_unassigned: false,
             subnet_principal: subnet.principal,
-            version: desired_version.version.clone(),
+            version: version.clone(),
         })
     }
 
@@ -236,7 +250,15 @@ pub fn desired_rollout_release_version<'a>(
         .map(|s| {
             releases
                 .iter()
-                .find(|r| r.versions.iter().any(|v| v.version == s.replica_version))
+                .find(|r| {
+                    r.versions.iter().any(|v| {
+                        let mut result = v.version == s.replica_version;
+                        if let Some(overrided_by) = &v.overrided_by {
+                            result |= overrided_by.version == s.replica_version
+                        }
+                        result
+                    })
+                })
                 .expect("version should exist in releases")
         })
         .unique()
@@ -782,11 +804,22 @@ mod check_stages_tests {
         pub fn with_overrided_version_in_index(
             mut self,
             version: &'static str,
+            override_by: &'static str,
             bake_time: Option<&'static str>,
         ) -> Self {
-            let last_release = self.index.releases.last_mut().expect("There should be two rc's");
-            let last_version = last_release.versions.last_mut().expect("There should be one version");
-            last_version.overrided_by = overrided_by(version, bake_time);
+            // Find version to override and not always override the last one.
+            let release = self
+                .index
+                .releases
+                .iter_mut()
+                .find(|r| r.versions.iter().any(|v| v.version == version))
+                .expect(&format!("There should be a release with version '{}'", version));
+            let version = release
+                .versions
+                .iter_mut()
+                .find(|v| v.version == version)
+                .expect("There should be a version");
+            version.overrided_by = overrided_by(override_by, bake_time);
 
             self
         }
@@ -970,15 +1003,20 @@ mod check_stages_tests {
                 .with_last_bake_status(&[(1, "9h"), (2, "5h"), (3, "5h")])
                 .expect_actions(&[SubnetAction::PlaceProposal { is_unassigned: true, subnet_principal: PrincipalId::new_anonymous(), version: "b".to_string() }]),
             TestCase::new("There is a version override added to the release, rollout controller should continue working with overide version instead of the one specified in the Version struct")
-                .with_overrided_version_in_index("b.override", None)
+                .with_overrided_version_in_index("b", "b.override", None)
                 .with_subnet_update_proposals(&[(1, true, "b"), (2, true, "b")])
                 .with_last_bake_status(&[(1, "9h"), (2, "5h")])
                 .expect_actions(&[SubnetAction::PlaceProposal { is_unassigned: false, subnet_principal: principal(1), version: "b.override".to_string()}]),
             TestCase::new("There is a version override and the rollout controller already started rolling it out")
-                .with_overrided_version_in_index("b.override", None)
+                .with_overrided_version_in_index("b", "b.override", None)
                 .with_subnet_update_proposals(&[(1, true, "b.override"), (2, true, "b.override")])
                 .with_last_bake_status(&[(1, "9h"), (2, "3h")])
-                .expect_actions(&[SubnetAction::Baking { subnet_short: principal(2).to_string(), remaining: humantime::parse_duration("1h").expect("Should be able to parse duration") }, SubnetAction::PlaceProposal { is_unassigned: false, subnet_principal: principal(3), version: "b.override".to_string() }])
+                .expect_actions(&[SubnetAction::Baking { subnet_short: principal(2).to_string(), remaining: humantime::parse_duration("1h").expect("Should be able to parse duration") }, SubnetAction::PlaceProposal { is_unassigned: false, subnet_principal: principal(3), version: "b.override".to_string() }]),
+            TestCase::new("There is a version rolled out to all subnets and an override to all but unassigned nodes and last batch. Should place proposal for unassigned")
+                .with_overrided_version_in_index("b", "b.override", None)
+                .with_subnet_update_proposals(&[(1, true, "b.override"), (2, true, "b.override"), (3, true, "b.override")])
+                .with_last_bake_status(&[(1, "9h"), (2, "5h"), (3, "5h")])
+                .expect_actions(&[SubnetAction::PlaceProposal { is_unassigned: true, subnet_principal: PrincipalId::new_anonymous(), version: "b.override".to_string() }])
         ];
 
         for test in tests {
