@@ -56,6 +56,12 @@ pub struct Version {
     pub subnets: Vec<String>,
 }
 
+pub struct Override {
+    pub version: String,
+    #[serde(with = "humantime_serde")]
+    pub bake_time: Duration,
+}
+
 pub async fn calculate_progress<'a>(
     logger: &'a Logger,
     index: Index,

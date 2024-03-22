@@ -45,3 +45,4 @@ releases:
         version: 778d2bb870f858952ca9fbe69324f9864e3cf5e7
       - name: p2p
         version: fff20526e154f8b8d24373efd9b50f588d147e91
+        subnets: [io67a, shefu, uzr34, pjljw, qdvhd, bkfrj, snjp4, w4asl, qxesv, 4zbus, ejbmu, 2fq7c, pae4o, 5kdm2, csyj4, eq6en, lhg73, brlsh, k44fs, cv73p, 4ecnw, opn46, lspz2, o3ow2, w4rem, 6pbhf, e66qm, yinp6, fuqsr, jtdsg, mpubz, x33ed, pzp6e, 3hhby, nl6hn, gmq5v] # All but nns

@@ -940,7 +940,16 @@ mod check_stages_tests {
             TestCase::new("Partially executed step, a subnet is baking but the other doesn't have a submitted proposal")
                 .with_subnet_update_proposals(&[(1, true, "b"), (2, true, "b")])
                 .with_last_bake_status(&[(1, "9h"), (2, "3h")])
-                .expect_actions(&[SubnetAction::Baking { subnet_short: principal(2).to_string(), remaining: humantime::parse_duration("1h").expect("Should parse duration") }, SubnetAction::PlaceProposal { is_unassigned: false, subnet_principal: principal(3), version: "b".to_string() }])
+                .expect_actions(&[SubnetAction::Baking { subnet_short: principal(2).to_string(), remaining: humantime::parse_duration("1h").expect("Should parse duration") }, SubnetAction::PlaceProposal { is_unassigned: false, subnet_principal: principal(3), version: "b".to_string() }]),
+            TestCase::new("In the middle of a rollout a new version is added that should be rolled out next week")
+                .with_index({
+                    let mut modified_index = craft_index_state();
+                    modified_index.releases.push(release("rc--2024-02-21_23-01", vec![("c", vec![])]));
+
+                    modified_index
+                }).with_subnet_update_proposals(&[(1, true, "b"), (2, true, "b"), (3, true, "b")])
+                .with_last_bake_status(&[(1, "9h"), (2, "5h"), (3, "5h")])
+                .expect_actions(&[SubnetAction::PlaceProposal { is_unassigned: true, subnet_principal: PrincipalId::new_anonymous(), version: "b".to_string() }])
         ];
 
         for test in tests {
