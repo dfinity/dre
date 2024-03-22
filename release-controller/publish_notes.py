@@ -14,7 +14,7 @@ class PublishNotesClient:
 
     def ensure_published(self, version: str, changelog: str):
         branch_name = f"replica-release-notes-{version}"
-        pull_head = f"LittleChimera:{branch_name}"
+        pull_head = f"dfinity:{branch_name}"
         if self.repo.get_pulls(head=pull_head, state="all").totalCount > 0:
             return
 
@@ -60,7 +60,10 @@ class PublishNotesClient:
             logging.warn(f"could not find release notes section for version {version}")
             return
 
-        if "@team" in changelog[:release_notes_start]:
+        if not re.match(
+            r"^Review checklist=+Please cross-out your team once you finished the review\s*$",
+            changelog[:release_notes_start].replace("\n", ""),
+        ):
             logging.info(f"release notes for version {version} not yet ready")
             return
 

@@ -8,7 +8,10 @@ from release_index import Release, Version
 
 
 class GitRepo:
-    def __init__(self, repo, repo_cache_dir=pathlib.Path.home() / ".cache/git", main_branch="main"):
+    def __init__(self, repo: str, repo_cache_dir=pathlib.Path.home() / ".cache/git", main_branch="main"):
+        if not repo.startswith("https://"):
+            raise ValueError("invalid repo")
+
         self.repo = repo
         self.main_branch = main_branch
 
@@ -16,7 +19,7 @@ class GitRepo:
             self.cache_temp_dir = tempfile.TemporaryDirectory()
             repo_cache_dir = pathlib.Path(self.cache_temp_dir.name)
 
-        self.dir = repo_cache_dir / "{}".format("/".join(repo.split("/")[-2:]))
+        self.dir = repo_cache_dir / (repo.split("@", 1)[1] if "@" in repo else repo.removeprefix("https://"))
 
     def __del__(self):
         if hasattr(self, 'cache_temp_dir'):

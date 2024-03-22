@@ -6,6 +6,7 @@ import functools
 import ipaddress
 import json
 import logging
+import os
 import pathlib
 import re
 import subprocess
@@ -52,7 +53,18 @@ class IcAdmin:
         wait=wait_exponential(multiplier=1, min=2, max=10),
     )
     def _ic_admin_run(self, *cmd):
-        cmd = [self.ic_admin_path, "--nns-url", self.nns_url, *cmd]
+        if cmd[0].startswith("propose"):
+            if "HSM_PIN" in os.environ:
+                auth = ["--use-hsm", "--pin", os.environ["HSM_PIN"], "--slot", "4", "--key-id", "01"]
+            else:
+                # TODO
+                print("not HSM_PIN")
+                auth = []
+        else:
+            print("not propose")
+            auth = []
+
+        cmd = [self.ic_admin_path, *auth, "--nns-url", self.nns_url, *cmd]
         cmd = [str(a) for a in cmd]
         logging.info("$ %s", cmd)
         return subprocess.check_output(cmd)

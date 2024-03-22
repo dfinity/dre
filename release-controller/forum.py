@@ -1,4 +1,3 @@
-import itertools
 import os
 from dotenv import load_dotenv
 from pydantic_yaml import parse_yaml_raw_as
@@ -83,7 +82,11 @@ class ReleaseCandidateForumTopic:
 
     def post_url(self, version: str):
         post_index = [ i for i, v in enumerate(self.release.versions) if v.version == version ][0]
-        return f"{self.client.host.removesuffix("/")}/t/{self.topic_id}/{self.created_posts()[post_index]["id"]}"
+        post = self.client.post_by_id(post_id=self.created_posts()[post_index]["id"])
+        if not post:
+            raise RuntimeError("failed to find post")
+
+        return f"{self.client.host.removesuffix("/")}/t/{post['topic_slug']}/{post['topic_id']}/{post["post_number"]}"
 
     def add_version(self, content: str):
         self.client.create_post(
@@ -119,7 +122,7 @@ rollout:
   stages: []
 
 releases:
-  - rc_name: rc--2024-03-13_23-04
+  - rc_name: rc--2024-03-13_23-05
     versions:
       - version: 2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f
         name: default

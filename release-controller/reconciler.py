@@ -5,6 +5,9 @@ import os
 import pathlib
 import sys
 import time
+import traceback
+
+import requests
 import __fix_import_paths
 from pydiscourse import DiscourseClient
 from pydantic_yaml import parse_yaml_raw_as
@@ -28,6 +31,8 @@ from git_repo import GitRepo, push_release_tags
 
 class ReconcilerState:
     def __init__(self, dir: pathlib.Path):
+        if not dir.exists():
+            os.makedirs(dir)
         self.dir = dir
 
     def _version_path(self, version: str):
@@ -49,7 +54,7 @@ class ReconcilerState:
         self._version_path(version).touch()
 
     def save_proposal(self, version: str, proposal_id: int):
-        if not self.version_proposal(version):
+        if self.version_proposal(version) or not self._version_path(version).exists():
             return
         with open(self._version_path(version), "w") as f:
             f.write(str(proposal_id))
@@ -103,9 +108,12 @@ def version_package_checksum(version: str):
             0
         ]
 
-        for u in version_package_urls(version):
-            image_file = str(pathlib.Path(d) / "update-img.tar.gz")
-            urllib.request.urlretrieve(u, image_file)
+        for i, u in enumerate(version_package_urls(version)):
+            image_file = str(pathlib.Path(d) / f"update-img-{i}.tar.gz")
+            logging.debug(f"fetching package {u}")
+            with open(image_file, "wb") as file:
+                response = requests.get(u)
+                file.write(response.content)
             if sha256sum(image_file) != checksum:
                 raise RuntimeError("checksums do not match")
 
@@ -138,6 +146,8 @@ class Reconciler:
     def reconcile(self):
         config = self.loader.index()
         active_versions = self.ic_prometheus.active_versions()
+        # TODO: remove hardcoded git revision
+        ic_admin = IcAdmin(self.nns_url, git_revision="e5c6356b5a752a7f5912de133000ae60e0e25aaf")
         for rc_idx, rc in enumerate(
             config.root.releases[: config.root.releases.index(oldest_active_release(config, active_versions)) + 1]
         ):
@@ -170,9 +180,6 @@ class Reconciler:
                 changelog = self.loader.changelog(v.version)
                 if changelog:
                     if not self.state.proposal_submitted(v.version):
-                        # this is a defensive approach in case the ic-admin run fails but still manages to submit the proposal. we had cases like this in the past
-                        self.state.mark_submitted(v.version)
-
                         unelect_versions_args = []
                         if v_idx == 0:
                             unelect_versions_args.append("--replica-versions-to-unelect")
@@ -181,20 +188,24 @@ class Reconciler:
                                     config,
                                     active_versions=active_versions,
                                     elected_versions=json.loads(
-                                        IcAdmin(self.nns_url, git_revision="e5c6356b5a752a7f5912de133000ae60e0e25aaf")._ic_admin_run("get-blessed-replica-versions", "--json")
+                                        ic_admin._ic_admin_run("get-blessed-replica-versions", "--json")
                                     )["value"]["blessed_version_ids"],
                                 ),
                             )
 
+                        # this is a defensive approach in case the ic-admin run fails but still manages to submit the proposal. we had cases like this in the past
+                        self.state.mark_submitted(v.version)
+
                         summary = changelog + f"\n\nLink to the forum post: {rc_forum_topic.post_url(v.version)}"
-                        # TODO: remove hardcoded git revision. this should work on linux
-                        IcAdmin(self.nns_url, git_revision="e5c6356b5a752a7f5912de133000ae60e0e25aaf")._ic_admin_run(
+                        logging.info(f"submitting proposal for version {v.version}")
+                        ic_admin._ic_admin_run(
                             "propose-to-update-elected-replica-versions",
                             "--proposal-title",
                             f"Elect new IC/Replica revision (commit {v.version[:7]})",
                             "--summary",
                             summary,
-                            "--dry-run",  # TODO: remove
+                            # "--dry-run",  # TODO: remove
+                            "--proposer", "39", # TODO: replace with system proposer
                             "--release-package-sha256-hex",
                             version_package_checksum(v.version),
                             "--release-package-urls",
@@ -205,6 +216,7 @@ class Reconciler:
                         )
 
                     versions_proposals = self.governance_canister.replica_version_proposals()
+                    print(versions_proposals)
                     if v.version in versions_proposals:
                         self.state.save_proposal(v.version, versions_proposals[v.version])
 
@@ -217,6 +229,8 @@ def main():
         load_dotenv(sys.argv[1])
     else:
         load_dotenv()
+
+    logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
     discourse_client = DiscourseClient(
         host=os.environ["DISCOURSE_URL"],
@@ -244,13 +258,14 @@ def main():
         ignore_releases=[
             "rc--2024-03-06_23-01",
         ],
-        ic_repo = GitRepo(f"https://oauth2:{os.environ["GITHUB_TOKEN"]}@github.com/dfinity/ic.git", main_branch="master"),
+        ic_repo = GitRepo(f"https://oauth2:{os.environ["GITLAB_TOKEN"]}@gitlab.com/dfinity-lab/public/ic.git", main_branch="master"),
     )
 
     while True:
         try:
             reconciler.reconcile()
         except Exception as e:
+            logging.error(traceback.format_exc())
             logging.error(f"failed to reconcile: {e}")
         time.sleep(60)
 
