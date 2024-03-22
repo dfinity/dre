@@ -190,12 +190,7 @@ impl IcAdminWrapper {
         );
     }
 
-    pub(crate) fn propose_run(
-        &self,
-        cmd: ProposeCommand,
-        opts: ProposeOptions,
-        simulate: bool,
-    ) -> anyhow::Result<String> {
+    pub fn propose_run(&self, cmd: ProposeCommand, opts: ProposeOptions, simulate: bool) -> anyhow::Result<String> {
         let exec = |cli: &IcAdminWrapper, cmd: ProposeCommand, opts: ProposeOptions, add_dryrun_arg: bool| {
             if let Some(summary) = opts.clone().summary {
                 let summary_count = summary.chars().count();
@@ -311,7 +306,7 @@ impl IcAdminWrapper {
         }
     }
 
-    pub(crate) fn run(&self, command: &str, args: &[String], with_auth: bool) -> anyhow::Result<String> {
+    pub fn run(&self, command: &str, args: &[String], with_auth: bool) -> anyhow::Result<String> {
         let ic_admin_args = [&[command.to_string()], args].concat();
         self._run_ic_admin_with_args(&ic_admin_args, with_auth)
     }
@@ -346,7 +341,7 @@ impl IcAdminWrapper {
     }
 
     /// Run an `ic-admin get-*` command directly, and without an HSM
-    pub(crate) fn run_passthrough_get(&self, args: &[String]) -> anyhow::Result<()> {
+    pub fn run_passthrough_get(&self, args: &[String]) -> anyhow::Result<()> {
         if args.is_empty() {
             println!("List of available ic-admin 'get' sub-commands:\n");
             for subcmd in self.grep_subcommands(r"\s+get-(.+?)\s") {
@@ -378,7 +373,7 @@ impl IcAdminWrapper {
     }
 
     /// Run an `ic-admin propose-to-*` command directly
-    pub(crate) fn run_passthrough_propose(&self, args: &[String], simulate: bool) -> anyhow::Result<()> {
+    pub fn run_passthrough_propose(&self, args: &[String], simulate: bool) -> anyhow::Result<()> {
         if args.is_empty() {
             println!("List of available ic-admin 'propose' sub-commands:\n");
             for subcmd in self.grep_subcommands(r"\s+propose-to-(.+?)\s") {
@@ -572,7 +567,7 @@ impl IcAdminWrapper {
         Ok((update_urls, expected_hash))
     }
 
-    pub(crate) async fn prepare_to_propose_to_update_elected_versions(
+    pub async fn prepare_to_propose_to_update_elected_versions(
         release_artifact: &Artifact,
         version: &String,
         release_tag: &String,
@@ -910,7 +905,7 @@ must be identical, and must match the SHA256 from the payload of the NNS proposa
 
 #[derive(Display, Clone)]
 #[strum(serialize_all = "kebab-case")]
-pub(crate) enum ProposeCommand {
+pub enum ProposeCommand {
     ChangeSubnetMembership {
         subnet_id: PrincipalId,
         node_ids_add: Vec<PrincipalId>,

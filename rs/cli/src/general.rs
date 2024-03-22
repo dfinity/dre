@@ -17,7 +17,7 @@ use url::Url;
 
 use crate::detect_neuron::{Auth, Neuron};
 
-pub(crate) async fn vote_on_proposals(
+pub async fn vote_on_proposals(
     neuron: &Neuron,
     nns_url: &Url,
     accepted_proposers: &[u64],
@@ -89,7 +89,7 @@ pub(crate) async fn vote_on_proposals(
     Ok(())
 }
 
-pub(crate) async fn get_node_metrics_history(
+pub async fn get_node_metrics_history(
     wallet: CanisterId,
     subnets: Vec<PrincipalId>,
     start_at_nanos: u64,
