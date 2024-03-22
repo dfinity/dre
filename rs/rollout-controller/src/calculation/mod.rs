@@ -54,12 +54,14 @@ pub struct Version {
     pub release_notes_read: bool,
     #[serde(default)]
     pub subnets: Vec<String>,
+    pub overrided_by: Option<Override>,
 }
 
+#[derive(Deserialize, Clone, Default, Eq, PartialEq, Hash, Debug)]
 pub struct Override {
     pub version: String,
     #[serde(with = "humantime_serde")]
-    pub bake_time: Duration,
+    pub bake_time: Option<Duration>,
 }
 
 pub async fn calculate_progress<'a>(

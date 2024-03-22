@@ -644,7 +644,7 @@ mod check_stages_tests {
         do_update_unassigned_nodes_config::UpdateUnassignedNodesConfigPayload,
     };
 
-    use crate::calculation::{Index, Rollout};
+    use crate::calculation::{Index, Override, Rollout};
 
     use self::test::release;
 
@@ -724,6 +724,13 @@ mod check_stages_tests {
         stage
     }
 
+    fn overrided_by(version: &'static str, bake_time: Option<&'static str>) -> Option<Override> {
+        Some(Override {
+            version: version.to_string(),
+            bake_time: bake_time.map(|f| humantime::parse_duration(f).expect("Should be able to parse")),
+        })
+    }
+
     pub(super) fn craft_subnets() -> Vec<Subnet> {
         vec![subnet(1, "a"), subnet(2, "a"), subnet(3, "a"), subnet(4, "a")]
     }
@@ -769,6 +776,18 @@ mod check_stages_tests {
 
         pub fn with_index(mut self, index: Index) -> Self {
             self.index = index;
+            self
+        }
+
+        pub fn with_overrided_version_in_index(
+            mut self,
+            version: &'static str,
+            bake_time: Option<&'static str>,
+        ) -> Self {
+            let last_release = self.index.releases.last_mut().expect("There should be two rc's");
+            let last_version = last_release.versions.last_mut().expect("There should be one version");
+            last_version.overrided_by = overrided_by(version, bake_time);
+
             self
         }
 
@@ -949,7 +968,17 @@ mod check_stages_tests {
                     modified_index
                 }).with_subnet_update_proposals(&[(1, true, "b"), (2, true, "b"), (3, true, "b")])
                 .with_last_bake_status(&[(1, "9h"), (2, "5h"), (3, "5h")])
-                .expect_actions(&[SubnetAction::PlaceProposal { is_unassigned: true, subnet_principal: PrincipalId::new_anonymous(), version: "b".to_string() }])
+                .expect_actions(&[SubnetAction::PlaceProposal { is_unassigned: true, subnet_principal: PrincipalId::new_anonymous(), version: "b".to_string() }]),
+            TestCase::new("There is a version override added to the release, rollout controller should continue working with overide version instead of the one specified in the Version struct")
+                .with_overrided_version_in_index("b.override", None)
+                .with_subnet_update_proposals(&[(1, true, "b"), (2, true, "b")])
+                .with_last_bake_status(&[(1, "9h"), (2, "5h")])
+                .expect_actions(&[SubnetAction::PlaceProposal { is_unassigned: false, subnet_principal: principal(1), version: "b.override".to_string()}]),
+            TestCase::new("There is a version override and the rollout controller already started rolling it out")
+                .with_overrided_version_in_index("b.override", None)
+                .with_subnet_update_proposals(&[(1, true, "b.override"), (2, true, "b.override")])
+                .with_last_bake_status(&[(1, "9h"), (2, "3h")])
+                .expect_actions(&[SubnetAction::Baking { subnet_short: principal(2).to_string(), remaining: humantime::parse_duration("1h").expect("Should be able to parse duration") }, SubnetAction::PlaceProposal { is_unassigned: false, subnet_principal: principal(3), version: "b.override".to_string() }])
         ];
 
         for test in tests {
