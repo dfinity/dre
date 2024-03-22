@@ -1,5 +1,23 @@
 # dre Changelog
 
+## [v0.3.1](https://github.com/dfinity/dre/compare/v0.3.0...v0.3.1) (2024-3-21)
+
+### feat
+
+* **cli:** Check that there are two download URLs for elect proposals (#236) ([1ac8581](https://github.com/dfinity/dre/commit/1ac8581e1d091170f66d7dff084d5479ca4e67db))
+* **rollout:** Rollout controller refactoring part 1 - fetcher logic (#237) ([bf0b89a](https://github.com/dfinity/dre/commit/bf0b89a137348a705dff9ca21768513b62f89953))
+* rollout-controller: Implementing action taking and refactoring tests (#249) ([6e6a377](https://github.com/dfinity/dre/commit/6e6a3772f766bf0c52e01151fd47fed733f27fff))
+
+### chore
+
+* Update dependencies (#225) ([820266c](https://github.com/dfinity/dre/commit/820266c888a1a1af3ffe2ac11248859033b433cd))
+* Update dependencies (#240) ([996a004](https://github.com/dfinity/dre/commit/996a0043d26b99d8c664c78e1bfc769330a6d11a))
+* Update dependencies (#244) ([4a6db31](https://github.com/dfinity/dre/commit/4a6db31796536f24a0e49a07faf3e2dc7fa812af))
+
+### fix
+
+* **dre:** DRE-147 Do not require neuron id for fetching trustworthy metrics (#251) ([03dfe1f](https://github.com/dfinity/dre/commit/03dfe1f1e9fc4780880d1957594a344f83382dd6))
+
 ## [v0.3.0](https://github.com/dfinity/dre/compare/v0.2.1...v0.3.0) (2024-3-6)
 
 ### docs
@@ -235,4 +253,4 @@
 * Update docs and dependencies for trustworthy metrics ([9b17936](https://github.com/dfinity/dre/commit/9b17936ef9d4f3284d30a38aa878b8615f5fcecb))
 * Add architectural doc for trustworthy node metrics (#77) ([d20c679](https://github.com/dfinity/dre/commit/d20c679d6c80a942cbc767d651e077bfd73c957f))
 
-::> 989 commits in 4 version tags, last considered commit: bdd1208fc93355c6f1f4479a6ed4ff265e28f29e
+::> 1000 commits in 5 version tags, last considered commit: e6229b71100b863829e292fa3e28957572572f26

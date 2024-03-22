@@ -62,3 +62,11 @@ tempfile = "3.10.0"
 
 [dev-dependencies]
 wiremock = "0.6.0"
+
+[[bin]]
+name = "dre"
+path = "src/main.rs"
+
+[lib]
+name = "dre"
+path = "src/lib.rs"

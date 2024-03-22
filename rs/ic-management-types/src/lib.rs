@@ -18,6 +18,7 @@ use registry_canister::mutations::do_update_elected_hostos_versions::UpdateElect
 use registry_canister::mutations::do_update_elected_replica_versions::UpdateElectedReplicaVersionsPayload;
 use registry_canister::mutations::do_update_nodes_hostos_version::UpdateNodesHostosVersionPayload;
 use registry_canister::mutations::do_update_subnet_replica::UpdateSubnetReplicaVersionPayload;
+use registry_canister::mutations::do_update_unassigned_nodes_config::UpdateUnassignedNodesConfigPayload;
 use registry_canister::mutations::node_management::do_remove_nodes::RemoveNodesPayload;
 use serde::{Deserialize, Serialize};
 use std::cmp::{Eq, Ord, PartialEq, PartialOrd};
@@ -40,6 +41,10 @@ pub trait NnsFunctionProposal: CandidType + serde::de::DeserializeOwned {
             Err(anyhow::format_err!("unsupported NNS function"))
         }
     }
+}
+
+impl NnsFunctionProposal for UpdateUnassignedNodesConfigPayload {
+    const TYPE: NnsFunction = NnsFunction::UpdateUnassignedNodesConfig;
 }
 
 impl NnsFunctionProposal for AddNodesToSubnetPayload {
@@ -564,6 +569,12 @@ pub enum Network {
     Url(url::Url),
 }
 
+impl Default for Network {
+    fn default() -> Self {
+        Network::Mainnet
+    }
+}
+
 impl Debug for Network {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self)
@@ -587,7 +598,7 @@ impl Network {
         match self {
             Network::Mainnet => Url::from_str("https://ic0.app").unwrap(),
             // Workaround for staging boundary node not working properly (503 Service unavailable)
-            Network::Staging => Url::from_str("https://[2600:3000:6100:200:5000:b0ff:fe8e:6b7b]:8080").unwrap(),
+            Network::Staging => Url::from_str("http://[2600:3000:6100:200:5000:b0ff:fe8e:6b7b]:8080").unwrap(),
             Self::Url(url) => url.clone(),
         }
     }

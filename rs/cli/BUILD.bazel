@@ -1,5 +1,5 @@
 load("@crate_index_dre//:defs.bzl", "aliases", "all_crate_deps")
-load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_test")
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_test", "rust_library")
 
 DEPS = [
     "//rs/ic-canisters",
@@ -8,11 +8,27 @@ DEPS = [
     "//rs/ic-management-backend:ic-management-backend-lib",
 ]
 
+package(default_visibility = ["//visibility:public"])
+
 rust_binary(
     name = "dre",
     srcs = glob(["src/**/*.rs"]),
     aliases = aliases(),
     rustc_env_files = [":generate_rustc_env_file"],
+    proc_macro_deps = all_crate_deps(
+        proc_macro = True,
+    ),
+    deps = all_crate_deps(
+        normal = True,
+    ) + DEPS + ["//rs/cli:dre-lib"],
+)
+
+rust_library(
+    name = "dre-lib",
+    srcs = glob(["src/**/*.rs"]),
+    aliases = aliases(),
+    compile_data = glob(["config/**/*"]),
+    crate_name = "dre",
     proc_macro_deps = all_crate_deps(
         proc_macro = True,
     ),
