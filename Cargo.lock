@@ -1253,7 +1253,7 @@ dependencies = [
 
 [[package]]
 name = "canister-log-fetcher"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "anyhow",
  "clap 4.4.18",
@@ -1547,7 +1547,7 @@ dependencies = [
 
 [[package]]
 name = "config-writer-common"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "crossbeam",
  "crossbeam-channel",
@@ -1953,7 +1953,7 @@ checksum = "63dfa964fe2a66f3fde91fc70b267fe193d822c7e603e2a675a49a7f46ad3f49"
 
 [[package]]
 name = "decentralization"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "actix-web",
  "ahash 0.8.11",
@@ -2281,7 +2281,7 @@ checksum = "1435fa1053d8b2fbbe9be7e97eca7f33d37b28409959813daefc1446a14247f1"
 
 [[package]]
 name = "dre"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "anyhow",
  "async-recursion",
@@ -3559,7 +3559,7 @@ dependencies = [
 
 [[package]]
 name = "ic-canisters"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "anyhow",
  "backoff",
@@ -4358,7 +4358,7 @@ dependencies = [
 
 [[package]]
 name = "ic-management-backend"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "actix-rt",
  "actix-web",
@@ -4417,7 +4417,7 @@ dependencies = [
 
 [[package]]
 name = "ic-management-types"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "actix-web",
  "anyhow",
@@ -5729,7 +5729,7 @@ checksum = "90ed8c1e510134f979dbc4f070f87d4313098b704861a105fe34231c70a3901c"
 
 [[package]]
 name = "log-fetcher"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "anyhow",
  "clap 4.4.18",
@@ -5907,7 +5907,7 @@ checksum = "e5ce46fe64a9d73be07dcbe690a38ce1b293be448fd8ce1e6c1b8062c9f72c6a"
 
 [[package]]
 name = "multiservice-discovery"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "anyhow",
  "assert_cmd",
@@ -5949,7 +5949,7 @@ dependencies = [
 
 [[package]]
 name = "multiservice-discovery-downloader"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "clap 4.4.18",
  "crossbeam",
@@ -5971,7 +5971,7 @@ dependencies = [
 
 [[package]]
 name = "multiservice-discovery-shared"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "erased-serde 0.4.4",
  "ic-types",
@@ -6032,7 +6032,7 @@ dependencies = [
 
 [[package]]
 name = "node-status-updater"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "anyhow",
  "clap 4.4.18",
@@ -6071,7 +6071,7 @@ checksum = "61807f77802ff30975e01f4f071c8ba10c022052f98b3294119f3e615d13e5be"
 
 [[package]]
 name = "np-notifications"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "actix-web",
  "anyhow",
@@ -6257,7 +6257,7 @@ dependencies = [
 
 [[package]]
 name = "obs-canister-clients"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "candid",
  "ic-agent",
@@ -6960,7 +6960,7 @@ dependencies = [
 
 [[package]]
 name = "prometheus-config-updater"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "anyhow",
  "base64 0.21.7",
@@ -7406,7 +7406,7 @@ dependencies = [
 
 [[package]]
 name = "rollout-controller"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "anyhow",
  "candid",
@@ -7870,7 +7870,7 @@ dependencies = [
 
 [[package]]
 name = "service-discovery"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "anyhow",
  "crossbeam",
@@ -8008,7 +8008,7 @@ dependencies = [
 
 [[package]]
 name = "slack-notifications"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "anyhow",
  "candid",
@@ -8107,7 +8107,7 @@ checksum = "e6ecd384b10a64542d77071bd64bd7b231f4ed5940fba55e98c3de13824cf3d7"
 
 [[package]]
 name = "sns-downloader"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "clap 4.4.18",
  "crossbeam",
