@@ -39,6 +39,10 @@ releases:
     versions:
       - name: base
         version: 463296c0bc82ad5999b70245e5f125c14ba7d090
+      - name: p2p
+        version: 04775a0d6a27b65be2412f73172e529a138a6f44
+      - name: ecdsa-latency
+        version: 425a0012aeb40008e2e72d913318bc9dbdf3b4f4
   - rc_name: rc--2024-03-06_23-01
     versions:
       - name: default
