@@ -216,7 +216,6 @@ class Reconciler:
                         )
 
                     versions_proposals = self.governance_canister.replica_version_proposals()
-                    print(versions_proposals)
                     if v.version in versions_proposals:
                         self.state.save_proposal(v.version, versions_proposals[v.version])
 

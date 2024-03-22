@@ -15,7 +15,7 @@ def _post_template(changelog, version_name, proposal=None):
 Hello there!
 
 We are happy to announce that voting is now open for [a new IC release](https://github.com/dfinity/ic/tree/{version_name}).
-The NNS proposal is here: [IC NNS Proposal 128295](https://dashboard.internetcomputer.org/proposal/{proposal}).
+The NNS proposal is here: [IC NNS Proposal {proposal}](https://dashboard.internetcomputer.org/proposal/{proposal}).
 
 Here is a summary of the changes since the last release:
 
