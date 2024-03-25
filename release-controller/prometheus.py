@@ -9,7 +9,9 @@ class ICPrometheus:
     def active_versions(self) -> list[str]:
         versions = [
             r["metric"]["ic_active_version"]
-            for r in self.query("max_over_time((count by (ic_active_version) (ic_replica_info))[1h])")["data"]["result"]
+            for r in self.query(
+                'max_over_time((count by (ic_active_version) (ic_replica_info or topk(1, ic_orchestrator_info{ic_subnet=""})))[1h])'
+            )["data"]["result"]
         ]
         if not versions:
             raise Exception("expected at least one active version")
