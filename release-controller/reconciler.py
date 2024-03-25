@@ -180,10 +180,9 @@ class Reconciler:
                 changelog = self.loader.changelog(v.version)
                 if changelog:
                     if not self.state.proposal_submitted(v.version):
-                        unelect_versions_args = []
+                        unelect_versions = []
                         if v_idx == 0:
-                            unelect_versions_args.append("--replica-versions-to-unelect")
-                            unelect_versions_args.extend(
+                            unelect_versions.extend(
                                 versions_to_unelect(
                                     config,
                                     active_versions=active_versions,
@@ -192,27 +191,15 @@ class Reconciler:
                                     )["value"]["blessed_version_ids"],
                                 ),
                             )
-
                         # this is a defensive approach in case the ic-admin run fails but still manages to submit the proposal. we had cases like this in the past
                         self.state.mark_submitted(v.version)
 
-                        summary = changelog + f"\n\nLink to the forum post: {rc_forum_topic.post_url(v.version)}"
-                        logging.info(f"submitting proposal for version {v.version}")
-                        ic_admin._ic_admin_run(
-                            "propose-to-update-elected-replica-versions",
-                            "--proposal-title",
-                            f"Elect new IC/Replica revision (commit {v.version[:7]})",
-                            "--summary",
-                            summary,
-                            # "--dry-run",  # TODO: remove
-                            "--proposer", "39", # TODO: replace with system proposer
-                            "--release-package-sha256-hex",
-                            version_package_checksum(v.version),
-                            "--release-package-urls",
-                            *version_package_urls(v.version),
-                            "--replica-version-to-elect",
-                            v.version,
-                            *unelect_versions_args,
+                        place_proposal(
+                            ic_admin=ic_admin,
+                            changelog=changelog,
+                            version=v.version,
+                            forum_post_url=rc_forum_topic.post_url(v.version),
+                            unelect_versions=unelect_versions
                         )
 
                     versions_proposals = self.governance_canister.replica_version_proposals()
@@ -223,20 +210,43 @@ class Reconciler:
             rc_forum_topic.update(changelog=self.loader.changelog, proposal=self.state.version_proposal)
 
 
+def place_proposal(ic_admin, changelog, version: str, forum_post_url: str, unelect_versions: list[str], dry_run=False):
+    unelect_versions_args = []
+    if len(unelect_versions) > 0:
+        unelect_versions_args.append("--replica-versions-to-unelect")
+        unelect_versions_args.extend(unelect_versions)
+    summary = changelog + f"\n\nLink to the forum post: {forum_post_url}"
+    logging.info(f"submitting proposal for version {version}")
+    ic_admin._ic_admin_run(
+        "propose-to-update-elected-replica-versions",
+        "--proposal-title",
+        f"Elect new IC/Replica revision (commit {version[:7]})",
+        "--summary",
+        summary,
+        *(["--dry-run"] if dry_run else []),
+        "--proposer", "39", # TODO: replace with system proposer
+        "--release-package-sha256-hex",
+        version_package_checksum(version),
+        "--release-package-urls",
+        *version_package_urls(version),
+        "--replica-version-to-elect",
+        version,
+        *unelect_versions_args,
+    )
+
+dre_repo = "dfinity/dre"
+
 def main():
     if len(sys.argv) == 2:
         load_dotenv(sys.argv[1])
     else:
         load_dotenv()
 
-    logging.basicConfig(stream=sys.stdout, level=logging.INFO)
-
     discourse_client = DiscourseClient(
         host=os.environ["DISCOURSE_URL"],
         api_username=os.environ["DISCOURSE_USER"],
         api_key=os.environ["DISCOURSE_KEY"],
     )
-    dre_repo = "dfinity/dre"
     config_loader = (
         GitReleaseLoader(f"https://github.com/{dre_repo}.git")
         if "dev" not in os.environ
@@ -269,5 +279,27 @@ def main():
         time.sleep(60)
 
 
+def oneoff():
+    release_loader = GitReleaseLoader(f"https://github.com/{dre_repo}.git")
+    version = "463296c0bc82ad5999b70245e5f125c14ba7d090"
+    changelog = release_loader.changelog("463296c0bc82ad5999b70245e5f125c14ba7d090")
+
+    ic_admin = IcAdmin("https://ic0.app", git_revision="e5c6356b5a752a7f5912de133000ae60e0e25aaf")
+    place_proposal(
+        ic_admin=ic_admin,
+        changelog=changelog,
+        version=version,
+        forum_post_url="https://forum.dfinity.org/t/proposal-to-elect-new-release-rc-2024-03-20-23-01/28746/12",
+        unelect_versions=[
+            "8d4b6898d878fa3db4028b316b78b469ed29f293",
+            "85bd56a70e55b2cea75cae6405ae11243e5fdad8",
+            "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f",
+            "48da85ee6c03e8c15f3e90b21bf9ccae7b753ee6",
+            "a2cf671f832c36c0153d4960148d3e676659a747",
+        ]
+    )
+
+
 if __name__ == "__main__":
+    logging.basicConfig(stream=sys.stdout, level=logging.INFO)
     main()
