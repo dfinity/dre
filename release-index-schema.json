@@ -1,8 +1,8 @@
 {
     "$schema": "http://json-schema.org/draft-06/schema#",
-    "$ref": "#/definitions/Welcome8",
+    "$ref": "#/definitions/ReleaseIndex",
     "definitions": {
-        "Welcome8": {
+        "ReleaseIndex": {
             "type": "object",
             "additionalProperties": false,
             "properties": {
@@ -20,7 +20,7 @@
                 "releases",
                 "rollout"
             ],
-            "title": "Welcome8"
+            "title": "ReleaseIndex"
         },
         "Release": {
             "type": "object",
@@ -91,8 +91,6 @@
                 }
             },
             "required": [
-                "pause",
-                "skip_days",
                 "stages"
             ],
             "title": "Rollout"

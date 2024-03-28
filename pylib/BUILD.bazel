@@ -10,5 +10,6 @@ py_library(
         requirement("paramiko"),
         requirement("requests"),
         requirement("ansible"),
+        requirement("GitPython"),
     ],
 )

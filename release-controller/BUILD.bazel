@@ -1,0 +1,63 @@
+load("@python_deps//:requirements.bzl", "requirement")
+load("@rules_python//python:defs.bzl", "py_binary")
+load("@//tools/python:py_oci_image.bzl", "py_oci_image")
+
+deps = [
+    requirement("requests"),
+    requirement("pydrive2"),
+    requirement("markdown"),
+    requirement("markdownify"),
+    requirement("pymdown-extensions"),
+    requirement("pytest"),
+    requirement("pygithub"),
+    requirement("pytest-mock"),
+    requirement("mammoth"),
+    requirement("slack-sdk"),
+    requirement("python-dotenv"),
+    requirement("pydiscourse"),
+    requirement("pydantic-yaml"),
+    requirement("ic-py"),
+    "//pylib",
+]
+
+env = {
+    "BAZEL": "true",
+}
+
+py_binary(
+    name = "reconciler",
+    srcs = ["reconciler.py"],
+    env = env,
+    deps = deps + [
+        ":release-controller-lib",
+    ],
+)
+
+py_library(
+    name = "release-controller-lib",
+    srcs = glob(
+        ["*.py"],
+        exclude = [
+            "test_*.py",
+            "reconciler.py",
+            "pytest.py",
+        ],
+    ),
+    deps = deps,
+)
+
+py_test(
+    name = "pytest",
+    srcs = ["pytest.py"],
+    data = glob(["test_*.py"]),
+    env = env,
+    deps = deps + [
+        ":release-controller-lib",
+    ],
+)
+
+py_oci_image(
+    name = "oci_image",
+    base = "@bazel_image_6_5_0",
+    binary = ":reconciler",
+)

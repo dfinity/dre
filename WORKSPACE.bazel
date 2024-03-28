@@ -19,40 +19,30 @@ bazel_skylib_workspace()
 
 http_archive(
     name = "rules_python",
-    patch_args = ["-p1"],
-    patches = [
-        # https://github.com/bazelbuild/rules_python/pull/1166#issuecomment-1641878169
-        "//bazel/patches:rules_python_annotation.patch",
-    ],
-    sha256 = "0a8003b044294d7840ac7d9d73eef05d6ceb682d7516781a4ec62eeb34702578",
-    strip_prefix = "rules_python-0.24.0",
-    url = "https://github.com/bazelbuild/rules_python/releases/download/0.24.0/rules_python-0.24.0.tar.gz",
+    sha256 = "c285495ee02df843a337c78617c196b7a87ea11da8961b7dd5ae28d43f9a1d85",
+    strip_prefix = "rules_python-c5c03b2477dd1ce0c06c9dc60bf816995f222bcf",
+    url = "https://github.com/bazelbuild/rules_python/archive/c5c03b2477dd1ce0c06c9dc60bf816995f222bcf.zip",
 )
 
 load("@rules_python//python:repositories.bzl", "py_repositories", "python_register_toolchains")
-load("@rules_python//python/pip_install:pip_repository.bzl", "package_annotation")
 
 py_repositories()
 
 python_register_toolchains(
-    name = "python3_11",
-    python_version = "3.11.1",
+    name = "python3_12",
+    python_version = "3.12.2",
 )
 
-load("@python3_11//:defs.bzl", "interpreter")
+load("@python3_12//:defs.bzl", "interpreter")
 load("@rules_python//python:pip.bzl", "pip_parse")
 
 pip_parse(
     name = "python_deps",
-    annotations = {
-        "poetry-plugin-export": package_annotation(
-            excluded_deps = ["poetry"],
-        ),
-        "ansible-base": package_annotation(
-            additive_build_content = '''
-exports_files(["bin/ansible-inventory"])
-            ''',
-        ),
+    experimental_requirement_cycles = {
+        "poetry": [
+            "poetry",
+            "poetry-plugin-export",
+        ],
     },
     python_interpreter_target = interpreter,
     requirements_lock = "//:requirements.txt",
@@ -61,6 +51,23 @@ exports_files(["bin/ansible-inventory"])
 load("@python_deps//:requirements.bzl", "install_deps")
 
 install_deps()
+
+http_archive(
+    name = "aspect_bazel_lib",
+    sha256 = "3e0a430ada9b8f0f845767a267cf584bc94b8ec642d6093f31dca3938b18f6a1",
+    strip_prefix = "bazel-lib-2.6.0",
+    url = "https://github.com/aspect-build/bazel-lib/releases/download/v2.6.0/bazel-lib-v2.6.0.tar.gz",
+)
+
+load("@aspect_bazel_lib//lib:repositories.bzl", "aspect_bazel_lib_dependencies", "aspect_bazel_lib_register_toolchains")
+
+# Required bazel-lib dependencies
+
+aspect_bazel_lib_dependencies()
+
+# Register bazel-lib toolchains
+
+aspect_bazel_lib_register_toolchains()
 
 IC_REPO_VERSION = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca"
 
@@ -224,6 +231,12 @@ oci_pull(
     name = "python3",
     digest = "sha256:5120c734a5ba810c47b97a80cdc6e03004bd4ff7ad98e492b9ccdaf70ff2b8d6",
     image = "index.docker.io/library/python",
+)
+
+oci_pull(
+    name = "bazel_image_6_5_0",
+    digest = "sha256:7506002de2e90431e194f8391f4600b57cf229280002b2fc473b88a95d7104bc",
+    image = "gcr.io/bazel-public/bazel",
 )
 
 http_archive(
