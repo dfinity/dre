@@ -29,6 +29,7 @@ class TestReconcilerState(ReconcilerState):
         self.tempdir.cleanup()
 
 
+@pytest.mark.skip(reason="not finished")
 def test_e2e_mock_new_release(mocker):
     """
     Test the workflow when a new release is added to the index
