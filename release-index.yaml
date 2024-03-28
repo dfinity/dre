@@ -35,6 +35,12 @@ rollout:
       wait_for_next_week: true
 
 releases:
+  - rc_name: rc--2024-03-27_23-01
+    versions:
+      - name: base
+        version: ac971e7b4c851b89b312bee812f6de542ed907c5
+      - name: p2p
+        version: 30a4021d7463e4e9ee96b3f279cf38e01b1028ca
   - rc_name: rc--2024-03-20_23-01
     versions:
       - name: base
