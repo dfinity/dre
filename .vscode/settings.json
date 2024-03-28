@@ -1,5 +1,5 @@
 {
     "yaml.schemas": {
-        "release-index-schema.json": "release-index.yaml"
+        "release-index-shema.json": "release-index.yaml"
     }
 }
