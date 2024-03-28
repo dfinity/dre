@@ -249,7 +249,7 @@ def main():
         if "dev" not in os.environ
         else DevReleaseLoader()
     )
-    state = ReconcilerState(pathlib.Path.home() / ".cache/release-controller")
+    state = ReconcilerState(pathlib.Path(os.environ.get('RECONCILER_STATE_DIR', pathlib.Path.home() / ".cache/release-controller")))
     forum_client = ReleaseCandidateForumClient(
         discourse_client,
     )
@@ -257,7 +257,7 @@ def main():
     reconciler = Reconciler(
         forum_client=forum_client,
         loader=config_loader,
-        notes_client=ReleaseNotesClient(credentials_file=pathlib.Path(__file__).parent.resolve() / "credentials.json"),
+        notes_client=ReleaseNotesClient(credentials_file=pathlib.Path(os.environ.get('GDOCS_CREDENTIALS_PATH', pathlib.Path(__file__).parent.resolve() / "credentials.json"))),
         publish_client=PublishNotesClient(github_client.get_repo(dre_repo)),
         nns_url="https://ic0.app",
         state=state,
