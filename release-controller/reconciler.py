@@ -143,8 +143,7 @@ class Reconciler:
     def reconcile(self):
         config = self.loader.index()
         active_versions = self.ic_prometheus.active_versions()
-        # TODO: remove hardcoded git revision
-        ic_admin = IcAdmin(self.nns_url, git_revision="e5c6356b5a752a7f5912de133000ae60e0e25aaf")
+        ic_admin = IcAdmin(self.nns_url, git_revision=os.environ.get("IC_ADMIN_VERSION"))
         for rc_idx, rc in enumerate(
             config.root.releases[: config.root.releases.index(oldest_active_release(config, active_versions)) + 1]
         ):
@@ -221,7 +220,7 @@ def place_proposal(ic_admin, changelog, version: str, forum_post_url: str, unele
         "--summary",
         summary,
         *(["--dry-run"] if dry_run else []),
-        "--proposer", "39", # TODO: replace with system proposer
+        "--proposer", os.environ["PROPOSER_NEURON_ID"], # TODO: replace with system proposer
         "--release-package-sha256-hex",
         version_package_checksum(version),
         "--release-package-urls",
@@ -249,7 +248,7 @@ def main():
         if "dev" not in os.environ
         else DevReleaseLoader()
     )
-    state = ReconcilerState(pathlib.Path.home() / ".cache/release-controller")
+    state = ReconcilerState(pathlib.Path(os.environ.get('RECONCILER_STATE_DIR', pathlib.Path.home() / ".cache/release-controller")))
     forum_client = ReleaseCandidateForumClient(
         discourse_client,
     )
@@ -257,7 +256,7 @@ def main():
     reconciler = Reconciler(
         forum_client=forum_client,
         loader=config_loader,
-        notes_client=ReleaseNotesClient(credentials_file=pathlib.Path(__file__).parent.resolve() / "credentials.json"),
+        notes_client=ReleaseNotesClient(credentials_file=pathlib.Path(os.environ.get('GDOCS_CREDENTIALS_PATH', pathlib.Path(__file__).parent.resolve() / "credentials.json"))),
         publish_client=PublishNotesClient(github_client.get_repo(dre_repo)),
         nns_url="https://ic0.app",
         state=state,

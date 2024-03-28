@@ -26,34 +26,23 @@ env = {
 
 py_binary(
     name = "reconciler",
-    srcs = ["reconciler.py"],
-    env = env,
-    deps = deps + [
-        ":release-controller-lib",
-    ],
-)
-
-py_library(
-    name = "release-controller-lib",
     srcs = glob(
         ["*.py"],
         exclude = [
             "test_*.py",
-            "reconciler.py",
             "pytest.py",
         ],
     ),
+    env = env,
     deps = deps,
 )
 
 py_test(
     name = "pytest",
     srcs = ["pytest.py"],
-    data = glob(["test_*.py"]),
+    data = glob(["*.py"]),
     env = env,
-    deps = deps + [
-        ":release-controller-lib",
-    ],
+    deps = deps,
 )
 
 py_oci_image(
