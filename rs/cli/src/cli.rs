@@ -9,45 +9,45 @@ use log::error;
 use crate::detect_neuron::{detect_hsm_auth, detect_neuron, Auth, Neuron};
 
 // For more info about the version setup, look at https://docs.rs/clap/latest/clap/struct.Command.html#method.version
-#[derive(Parser, Clone)]
+#[derive(Parser, Clone, Default)]
 #[clap(about, version = env!("CARGO_PKG_VERSION"), author)]
 pub struct Opts {
     #[clap(long, env = "HSM_PIN", global = true)]
-    pub(crate) hsm_pin: Option<String>,
+    pub hsm_pin: Option<String>,
     #[clap(long, value_parser=maybe_hex::<u64>, env = "HSM_SLOT", global = true)]
-    pub(crate) hsm_slot: Option<u64>,
+    pub hsm_slot: Option<u64>,
     #[clap(long, env = "HSM_KEY_ID", global = true)]
-    pub(crate) hsm_key_id: Option<String>,
+    pub hsm_key_id: Option<String>,
     #[clap(long, env = "PRIVATE_KEY_PEM", global = true)]
-    pub(crate) private_key_pem: Option<String>,
+    pub private_key_pem: Option<String>,
     #[clap(long, env = "NEURON_ID", global = true)]
-    pub(crate) neuron_id: Option<u64>,
+    pub neuron_id: Option<u64>,
     #[clap(long, env = "IC_ADMIN", global = true)]
-    pub(crate) ic_admin: Option<String>,
+    pub ic_admin: Option<String>,
     #[clap(long, env = "DEV", global = true)]
-    pub(crate) dev: bool,
+    pub dev: bool,
 
     // Skip the confirmation prompt
     #[clap(short, long, env = "YES", global = true, conflicts_with = "simulate")]
-    pub(crate) yes: bool,
+    pub yes: bool,
 
     // Simulate submission of the proposal, but do not actually submit it.
     #[clap(long, aliases = ["dry-run", "dryrun", "no"], global = true, conflicts_with = "yes")]
-    pub(crate) simulate: bool,
+    pub simulate: bool,
 
     #[clap(long, env = "VERBOSE", global = true)]
-    pub(crate) verbose: bool,
+    pub verbose: bool,
 
     // Specify the target network: "mainnet" (default), "staging", or NNS URL
     #[clap(long, env = "NETWORK", default_value = "mainnet")]
-    pub(crate) network: Network,
+    pub network: Network,
 
     #[clap(subcommand)]
-    pub(crate) subcommand: Commands,
+    pub subcommand: Commands,
 }
 
 #[derive(Subcommand, Clone)]
-pub(crate) enum Commands {
+pub enum Commands {
     // Convert a DER file to a Principal
     DerToPrincipal {
         /// Path to the DER file
@@ -143,9 +143,25 @@ pub(crate) enum Commands {
         #[clap(long, env = "LOCAL_REGISTRY_PATH")]
         path: Option<PathBuf>,
     },
+
+    /// Firewall rules
+    Firewall {
+        #[clap(long, default_value = Some("Proposal to modify firewall rules"))]
+        title: Option<String>,
+        #[clap(long, default_value = None)]
+        summary: Option<String>,
+        #[clap(long, default_value = None)]
+        motivation: Option<String>,
+    },
 }
 
-pub(crate) mod subnet {
+impl Default for Commands {
+    fn default() -> Self {
+        Commands::Get { args: vec![] }
+    }
+}
+
+pub mod subnet {
     use super::*;
     use ic_base_types::PrincipalId;
 
@@ -259,7 +275,7 @@ pub(crate) mod subnet {
     }
 }
 
-pub(crate) mod version {
+pub mod version {
     use super::*;
 
     #[derive(Subcommand, Clone)]
@@ -283,6 +299,10 @@ pub(crate) mod version {
 
             /// Git tag for the release.
             release_tag: String,
+
+            /// Force proposal submission, ignoring missing download URLs
+            #[clap(long)]
+            force: bool,
         },
         /// Update the elected/blessed HostOS versions in the registry
         /// by adding a new version and potentially removing obsolete versions
@@ -292,6 +312,10 @@ pub(crate) mod version {
 
             /// Git tag for the release.
             release_tag: String,
+
+            /// Force proposal submission, ignoring missing download URLs
+            #[clap(long)]
+            force: bool,
         },
     }
     impl From<UpdateCommands> for Artifact {
@@ -304,7 +328,7 @@ pub(crate) mod version {
     }
 }
 
-pub(crate) mod hostos {
+pub mod hostos {
     use crate::operations::hostos_rollout::{NodeAssignment, NodeOwner};
 
     use super::*;
@@ -349,7 +373,7 @@ pub(crate) mod hostos {
     }
 }
 
-pub(crate) mod nodes {
+pub mod nodes {
     use super::*;
 
     #[derive(Parser, Clone)]

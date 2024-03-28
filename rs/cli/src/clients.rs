@@ -3,8 +3,7 @@ use decentralization::SubnetChangeResponse;
 use ic_base_types::PrincipalId;
 use ic_management_types::{
     requests::{
-        MembershipReplaceRequest, NodesRemoveRequest, NodesRemoveResponse, SubnetCreateRequest,
-        SubnetResizeRequest,
+        MembershipReplaceRequest, NodesRemoveRequest, NodesRemoveResponse, SubnetCreateRequest, SubnetResizeRequest,
     },
     Artifact, Network, NetworkError, Release, TopologyProposal,
 };

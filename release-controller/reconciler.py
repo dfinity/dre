@@ -263,6 +263,7 @@ def main():
         state=state,
         ignore_releases=[
             "rc--2024-03-06_23-01",
+            "rc--2024-03-20_23-01",
         ],
         ic_repo = GitRepo(f"https://oauth2:{os.environ["GITLAB_TOKEN"]}@gitlab.com/dfinity-lab/public/ic.git", main_branch="master"),
     )

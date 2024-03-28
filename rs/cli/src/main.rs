@@ -1,8 +1,9 @@
-use crate::general::{get_node_metrics_history, vote_on_proposals};
 use crate::ic_admin::IcAdminWrapper;
-use crate::operations::hostos_rollout::{NodeGroupUpdate, NumberOfNodes};
 use clap::{error::ErrorKind, CommandFactory, Parser};
 use dotenv::dotenv;
+use dre::general::{get_node_metrics_history, vote_on_proposals};
+use dre::operations::hostos_rollout::{NodeGroupUpdate, NumberOfNodes};
+use dre::{cli, ic_admin, local_unused_port, registry_dump, runner};
 use ic_base_types::CanisterId;
 use ic_canisters::governance::governance_canister_version;
 use ic_management_backend::endpoints;
@@ -13,17 +14,6 @@ use std::collections::BTreeMap;
 use std::str::FromStr;
 use std::sync::mpsc;
 use std::thread;
-
-mod cli;
-mod clients;
-pub(crate) mod defaults;
-mod detect_neuron;
-mod general;
-mod ic_admin;
-mod ops_subnet_node_replace;
-mod registry_dump;
-mod runner;
-mod operations;
 
 const STAGING_NEURON_ID: u64 = 49;
 
@@ -36,7 +26,16 @@ async fn main() -> Result<(), anyhow::Error> {
     let mut cli_opts = cli::Opts::parse();
     let mut cmd = cli::Opts::command();
 
-    let governance_canister_v = governance_canister_version(cli_opts.network.get_url()).await?;
+    let governance_canister_v = match governance_canister_version(cli_opts.network.get_url()).await {
+        Ok(c) => c,
+        Err(e) => {
+            return Err(anyhow::anyhow!(
+                "While determining the governance canister version: {}",
+                e
+            ))
+        }
+    };
+
     let governance_canister_version = governance_canister_v.stringified_hash;
 
     let target_network = cli_opts.network.clone();
@@ -52,9 +51,10 @@ async fn main() -> Result<(), anyhow::Error> {
                 .expect("failed")
         });
     });
+
     let srv = rx.recv().unwrap();
 
-    ic_admin::with_ic_admin(governance_canister_version.into(), async {
+    let r = ic_admin::with_ic_admin(governance_canister_version.into(), async {
 
         // Start of actually doing stuff with commands.
         if cli_opts.network == Network::Staging {
@@ -211,11 +211,12 @@ async fn main() -> Result<(), anyhow::Error> {
                         let release_artifact: &Artifact = &update_command.subcommand.clone().into();
 
                         let update_version = match &update_command.subcommand {
-                            cli::version::UpdateCommands::Replica { version, release_tag} | cli::version::UpdateCommands::HostOS { version, release_tag} => {
+                            cli::version::UpdateCommands::Replica { version, release_tag, force} | cli::version::UpdateCommands::HostOS { version, release_tag, force} => {
                                 ic_admin::IcAdminWrapper::prepare_to_propose_to_update_elected_versions(
                                     release_artifact,
                                     version,
                                     release_tag,
+                                    *force,
                                     runner.prepare_versions_to_retire(release_artifact, false).await.map(|res| res.1)?,
                                 )
                             }
@@ -229,7 +230,8 @@ async fn main() -> Result<(), anyhow::Error> {
                                                  title: Some(update_version.title),
                                                  summary: Some(update_version.summary.clone()),
                                                  motivation: None,
-                                             }, simulate)
+                                             }, simulate)?;
+                        Ok(())
                     }
                 }
             },
@@ -281,6 +283,10 @@ async fn main() -> Result<(), anyhow::Error> {
             },
 
             cli::Commands::TrustworthyMetrics { wallet, start_at_timestamp, subnet_ids } => {
+                // Neuron is not actually needed for this operation, we only need other authentication params
+                // Unfortunately, we need to create a Cli object to get the NNS URL and this object at the moment
+                // requires a neuron to be set. We set a dummy neuron here to get around this.
+                let cli_opts = cli::Opts { neuron_id: Some(0), ..cli_opts.clone() };
                 let cli = cli::Cli::from_opts(&cli_opts, true).await?;
                 get_node_metrics_history(CanisterId::from_str(wallet)?, subnet_ids.clone(), *start_at_timestamp, match cli.get_neuron() {
                     Some(neuron) => neuron,
@@ -291,13 +297,22 @@ async fn main() -> Result<(), anyhow::Error> {
             cli::Commands::DumpRegistry { version, path } => {
                 registry_dump::dump_registry(path, cli_opts.network, version).await
             }
+
+            cli::Commands::Firewall{title, summary, motivation} => {
+                let ic_admin: IcAdminWrapper = cli::Cli::from_opts(&cli_opts, true).await?.into();
+                ic_admin.update_replica_nodes_firewall(cli_opts.network, ic_admin::ProposeOptions{
+                    title: title.clone(),
+                    summary: summary.clone(),
+                    motivation: motivation.clone(),
+                }, cli_opts.simulate).await
+            }
         }
     })
-    .await?;
+    .await;
 
     srv.stop(false).await;
 
-    Ok(())
+    r
 }
 
 // Construct MinNakamotoCoefficients from an array (slice) of ["key=value"], and
@@ -375,21 +390,6 @@ fn parse_min_nakamoto_coefficients(
         coefficients: min_nakamoto_coefficients,
         average,
     })
-}
-
-/// Get a localhost socket address with random, unused port.
-fn local_unused_port() -> u16 {
-    let addr: std::net::SocketAddr = "127.0.0.1:0".parse().unwrap();
-    let socket = socket2::Socket::new(
-        socket2::Domain::IPV4,
-        socket2::Type::STREAM,
-        Some(socket2::Protocol::TCP),
-    )
-    .unwrap();
-    socket.bind(&addr.into()).unwrap();
-    socket.set_reuse_address(true).unwrap();
-    let tcp = std::net::TcpListener::from(socket);
-    tcp.local_addr().unwrap().port()
 }
 
 fn init_logger() {

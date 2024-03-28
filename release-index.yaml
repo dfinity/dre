@@ -35,19 +35,17 @@ rollout:
       wait_for_next_week: true
 
 releases:
+  - rc_name: rc--2024-03-20_23-01
+    versions:
+      - name: base
+        version: 463296c0bc82ad5999b70245e5f125c14ba7d090
+      - name: p2p
+        version: 04775a0d6a27b65be2412f73172e529a138a6f44
+      - name: ecdsa-latency
+        version: 425a0012aeb40008e2e72d913318bc9dbdf3b4f4
   - rc_name: rc--2024-03-06_23-01
     versions:
       - name: default
         version: 778d2bb870f858952ca9fbe69324f9864e3cf5e7
-        release_notes_ready: true
       - name: p2p
         version: fff20526e154f8b8d24373efd9b50f588d147e91
-        release_notes_ready: true
-  - rc_name: rc--2024-02-28_23-01
-    versions:
-      - name: default
-        version: 48da85ee6c03e8c15f3e90b21bf9ccae7b753ee6
-        release_notes_ready: true
-      - name: p2p
-        version: a2cf671f832c36c0153d4960148d3e676659a747
-        release_notes_ready: true

@@ -73,15 +73,21 @@ pub struct Definition {
 
 impl From<FSDefinition> for Definition {
     fn from(fs_definition: FSDefinition) -> Self {
-        Definition::new(
-            fs_definition.nns_urls,
-            fs_definition.registry_path,
-            fs_definition.name,
-            make_logger(),
-            fs_definition.public_key,
-            fs_definition.poll_interval,
-            fs_definition.registry_query_timeout,
-        )
+        if std::fs::metadata(&fs_definition.registry_path).is_err() {
+            std::fs::create_dir_all(fs_definition.registry_path.clone()).unwrap();
+        }
+        let log = make_logger();
+        Self {
+            nns_urls: fs_definition.nns_urls,
+            registry_path: fs_definition.registry_path.clone(),
+            name: fs_definition.name,
+            log: log.clone(),
+            public_key: fs_definition.public_key,
+            poll_interval: fs_definition.poll_interval,
+            registry_query_timeout: fs_definition.registry_query_timeout.clone(),
+            ic_discovery: Arc::new(IcServiceDiscoveryImpl::new(log, fs_definition.registry_path, fs_definition.registry_query_timeout).unwrap()),
+            boundary_nodes: vec![],
+        }
     }
 }
 

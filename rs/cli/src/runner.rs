@@ -1,8 +1,8 @@
 use crate::clients::DashboardBackendClient;
-use crate::operations::hostos_rollout::{HostosRollout, HostosRolloutResponse, NodeGroupUpdate};
-use crate::{ic_admin, local_unused_port};
 use crate::ic_admin::ProposeOptions;
+use crate::operations::hostos_rollout::{HostosRollout, HostosRolloutResponse, NodeGroupUpdate};
 use crate::ops_subnet_node_replace;
+use crate::{ic_admin, local_unused_port};
 use decentralization::SubnetChangeResponse;
 use ic_base_types::PrincipalId;
 use ic_management_backend::proposal::ProposalAgent;
@@ -121,7 +121,8 @@ impl Runner {
                 motivation: Some(motivation.clone()),
             },
             simulate,
-        )
+        )?;
+        Ok(())
     }
 
     pub async fn membership_replace(
@@ -176,7 +177,8 @@ impl Runner {
                 options,
                 simulate,
             )
-            .map_err(|e| anyhow::anyhow!(e))
+            .map_err(|e| anyhow::anyhow!(e))?;
+        Ok(())
     }
 
     pub async fn new_with_network_url(ic_admin: ic_admin::IcAdminWrapper, backend_port: u16) -> anyhow::Result<Self> {
@@ -187,27 +189,28 @@ impl Runner {
             dashboard_backend_client,
             // TODO: Remove once DREL-118 completed.
             // Fake registry not used for methods that still rely on backend.
-            registry: registry::RegistryState::new(Network::Mainnet, true).await 
+            registry: registry::RegistryState::new(Network::Mainnet, true).await,
         })
     }
 
     pub async fn new(ic_admin: ic_admin::IcAdminWrapper, network: Network) -> anyhow::Result<Self> {
         // TODO: Remove once DREL-118 completed.
-        let dashboard_backend_client = DashboardBackendClient::new_with_network_url(format!("http://localhost:{}/", local_unused_port()));
+        let dashboard_backend_client =
+            DashboardBackendClient::new_with_network_url(format!("http://localhost:{}/", local_unused_port()));
 
         let mut registry = registry::RegistryState::new(network, true).await;
-        let node_providers = query_ic_dashboard_list::<NodeProvidersResponse>("v3/node-providers").await?.node_providers;
-        let _ = registry
-            .update_node_details(&node_providers)
-            .await?;
+        let node_providers = query_ic_dashboard_list::<NodeProvidersResponse>("v3/node-providers")
+            .await?
+            .node_providers;
+        let _ = registry.update_node_details(&node_providers).await?;
         Ok(Self {
             ic_admin,
             dashboard_backend_client,
-            registry
+            registry,
         })
     }
 
-    pub(crate) async fn prepare_versions_to_retire(
+    pub async fn prepare_versions_to_retire(
         &self,
         release_artifact: &Artifact,
         edit_summary: bool,
@@ -279,13 +282,13 @@ impl Runner {
             })
     }
 
-    pub(crate) async fn hostos_rollout_nodes(
+    pub async fn hostos_rollout_nodes(
         &self,
         node_group: NodeGroupUpdate,
         version: &String,
         exclude: &Option<Vec<PrincipalId>>,
     ) -> anyhow::Result<Option<(Vec<PrincipalId>, String)>> {
-        let elected_versions =self.registry.blessed_versions(&Artifact::HostOs).await.unwrap();
+        let elected_versions = self.registry.blessed_versions(&Artifact::HostOs).await.unwrap();
         if !elected_versions.contains(&version.to_string()) {
             return Err(anyhow::anyhow!(format!(
                 "The version {} has not being elected.\nVersions elected are: {:?}",
@@ -461,6 +464,7 @@ impl Runner {
                 motivation: node_remove_response.motivation.into(),
             },
             simulate,
-        )
+        )?;
+        Ok(())
     }
 }

@@ -58,7 +58,15 @@ tabled = { workspace = true }
 tabular = { workspace = true }
 tokio = { workspace = true }
 url = { workspace = true }
+tempfile = "3.10.0"
 
 [dev-dependencies]
-tempfile = "3.10.0"
 wiremock = "0.6.0"
+
+[[bin]]
+name = "dre"
+path = "src/main.rs"
+
+[lib]
+name = "dre"
+path = "src/lib.rs"
