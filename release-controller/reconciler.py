@@ -143,8 +143,7 @@ class Reconciler:
     def reconcile(self):
         config = self.loader.index()
         active_versions = self.ic_prometheus.active_versions()
-        # TODO: remove hardcoded git revision
-        ic_admin = IcAdmin(self.nns_url, git_revision="e5c6356b5a752a7f5912de133000ae60e0e25aaf")
+        ic_admin = IcAdmin(self.nns_url, git_revision=os.environ.get("IC_ADMIN_VERSION"))
         for rc_idx, rc in enumerate(
             config.root.releases[: config.root.releases.index(oldest_active_release(config, active_versions)) + 1]
         ):

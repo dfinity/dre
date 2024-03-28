@@ -34,7 +34,7 @@ GOV_PRINCIPAL = "rrkah-fqaaa-aaaaa-aaaaq-cai"
 class IcAdmin:
     """Interface with the ic-admin utility."""
 
-    def __init__(self, deployment: typing.Optional[IcDeployment | str] = None, git_revision: str = ""):
+    def __init__(self, deployment: typing.Optional[IcDeployment | str] = None, git_revision: str | None = None):
         """Create an object with the specified ic-admin path and NNS URL."""
         if isinstance(deployment, str):
             self.nns_url = deployment
