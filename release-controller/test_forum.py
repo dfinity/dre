@@ -36,7 +36,7 @@ def test_create_release_notes_on_new_release():
 Hello there!
 
 We are happy to announce that voting is now open for [a new IC release](https://github.com/dfinity/ic/tree/release-2024-02-21_23-06-default).
-The NNS proposal is here: [IC NNS Proposal 128295](https://dashboard.internetcomputer.org/proposal/1).
+The NNS proposal is here: [IC NNS Proposal 1](https://dashboard.internetcomputer.org/proposal/1).
 
 Here is a summary of the changes since the last release:
 
@@ -50,7 +50,7 @@ release notes for version test1...
 Hello there!
 
 We are happy to announce that voting is now open for [a new IC release](https://github.com/dfinity/ic/tree/release-2024-02-21_23-06-feat).
-The NNS proposal is here: [IC NNS Proposal 128295](https://dashboard.internetcomputer.org/proposal/2).
+The NNS proposal is here: [IC NNS Proposal 2](https://dashboard.internetcomputer.org/proposal/2).
 
 Here is a summary of the changes since the last release:
 

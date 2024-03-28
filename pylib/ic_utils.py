@@ -23,11 +23,12 @@ from tenacity import retry_if_not_exception_type
 from tenacity import stop_after_attempt
 from tenacity import wait_exponential
 
-repo_root = os.environ.get("GIT_ROOT")
-if not repo_root:
-    git_repo = git.Repo(os.path.dirname(__file__), search_parent_directories=True)
-    repo_root = git_repo.git.rev_parse("--show-toplevel")
-repo_root = pathlib.Path(repo_root)
+if os.environ.get("BAZEL") != "true":
+    repo_root = os.environ.get("GIT_ROOT")
+    if not repo_root:
+        git_repo = git.Repo(os.path.dirname(__file__), search_parent_directories=True)
+        repo_root = git_repo.git.rev_parse("--show-toplevel")
+    repo_root = pathlib.Path(repo_root)
 
 PHY_HOST_USER = "dfnadmin"
 NNS_URL = os.environ.get("NNS_URL") or "http://[2a00:fb01:400:100:5000:5bff:fe6b:75c6]:8080"

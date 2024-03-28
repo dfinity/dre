@@ -3,6 +3,8 @@ from unittest.mock import Mock, call
 import pytest
 import tempfile
 import pathlib
+
+import requests
 from reconciler import Reconciler, ReconcilerState, oldest_active_release, versions_to_unelect, version_package_checksum
 from mock_discourse import DiscourseClientMock
 from mock_google_docs import ReleaseNotesClientMock
@@ -14,6 +16,8 @@ from pydantic_yaml import parse_yaml_raw_as
 import release_index
 import urllib.request
 from git_repo import GitRepo
+import git_repo
+from types import SimpleNamespace
 
 
 class TestReconcilerState(ReconcilerState):
@@ -23,21 +27,6 @@ class TestReconcilerState(ReconcilerState):
 
     def __del__(self):
         self.tempdir.cleanup()
-
-
-def setup_test_ic_repo(dir: tempfile.TemporaryDirectory):
-    subprocess.check_call(
-        ["git", "init", "--bare"],
-        cwd=dir.name,
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-    )
-    subprocess.check_call(
-        ["git", "init", "--bare"],
-        cwd=dir.name,
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-    )
 
 
 def test_e2e_mock_new_release(mocker):
@@ -51,6 +40,8 @@ def test_e2e_mock_new_release(mocker):
     github_client = Github()
     mocker.patch.object(github_client, "get_repo")
     repo = github_client.get_repo("dfinity/non-existent-mock")
+    ic_repo_mock = Mock()
+    mocker.patch("git_repo.push_release_tags")
     config = """\
 rollout:
   stages: []
@@ -60,6 +51,10 @@ releases:
     versions:
       - version: 2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f
         name: default
+  - rc_name: rc--2024-02-07_23-01
+    versions:
+      - version: 8d4b6898d878fa3db4028b316b78b469ed29f293
+        name: default
 """
     reconciler = Reconciler(
         forum_client=forum_client,
@@ -68,7 +63,8 @@ releases:
         publish_client=PublishNotesClient(repo),
         nns_url="",
         state=TestReconcilerState(),
-        ic_repo=GitRepo(repo=, repo_cache_dir=None, main_branch="master"),
+        ic_repo=ic_repo_mock,
+        ignore_releases=[""],
     )
     mocker.patch.object(reconciler.publish_client, "ensure_published")
 
@@ -76,6 +72,7 @@ releases:
     assert discourse_client.created_posts == []
     assert discourse_client.created_topics == []
     assert reconciler.publish_client.ensure_published.call_count == 0
+    assert git_repo.push_release_tags.call_count == 0
 
     reconciler.reconcile()
 
@@ -84,6 +81,18 @@ releases:
     assert discourse_client.created_posts == []
     assert discourse_client.created_topics == []
     assert reconciler.publish_client.ensure_published.call_count == 0
+    git_repo.push_release_tags.assert_called_once_with(
+        ic_repo_mock,
+        release_index.Release(
+            rc_name="rc--2024-02-21_23-01",
+            versions=[
+                release_index.Version(
+                    version="2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f",
+                    name="default",
+                )
+            ],
+        ),
+    )
 
     config = """\
 rollout:
@@ -233,30 +242,29 @@ releases:
 
 
 def test_version_package_checksum(mocker):
-    def mock_download_files(_: str, path: str):
+    def mock_download_files(url: str):
         content = ""
-        if path.endswith("shasum"):
+        if url.endswith("SHA256SUMS"):
             content = """\
 556b26661590495016052a58d07886e8dcce48c77a5dfc458fbcc5f01a95b1b3 *update-img-test.tar.gz
 ed1ff4e1db979b0c89cf333c09777488a0c50a3ba74c0f9491d6ba153a8dbfdb *update-img-test.tar.zst
 9ca7002a723b932c3fb25293fc541e0b156170ec1e9a2c6a83c9733995051187 *update-img.tar.gz
 dff2072e34071110234b0cb169705efc13284e4a99b7795ef1951af1fe7b41ac *update-img.tar.zst
 """
-        elif path.endswith(".tar.gz"):
+        elif url.endswith(".tar.gz"):
             content = "some bytes..."
 
-        with open(path, "w") as f:
-            f.write(content)
+        return SimpleNamespace(content=content.encode())
 
-    mocker.patch("urllib.request.urlretrieve", new=Mock(side_effect=mock_download_files))
+    mocker.patch("requests.get", new=Mock(side_effect=mock_download_files))
     assert version_package_checksum("notimporant") == "9ca7002a723b932c3fb25293fc541e0b156170ec1e9a2c6a83c9733995051187"
-    assert urllib.request.urlretrieve.call_count == 3
+    assert requests.get.call_count == 3
 
 
 def test_version_package_checksum_mismatch(mocker):
-    def mock_download_files(url: str, path: str):
+    def mock_download_files(url: str):
         content = ""
-        if path.endswith("shasum"):
+        if url.endswith("SHA256SUMS"):
             content = """\
 556b26661590495016052a58d07886e8dcce48c77a5dfc458fbcc5f01a95b1b3 *update-img-test.tar.gz
 ed1ff4e1db979b0c89cf333c09777488a0c50a3ba74c0f9491d6ba153a8dbfdb *update-img-test.tar.zst
@@ -268,13 +276,12 @@ dff2072e34071110234b0cb169705efc13284e4a99b7795ef1951af1fe7b41ac *update-img.tar
         else:
             content = "some other bytes..."
 
-        with open(path, "w") as f:
-            f.write(content)
+        return SimpleNamespace(content=content.encode())
 
-    mocker.patch("urllib.request.urlretrieve", new=Mock(side_effect=mock_download_files))
+    mocker.patch("requests.get", new=Mock(side_effect=mock_download_files))
 
     with pytest.raises(Exception) as e:
         version_package_checksum("notimporant")
-        assert urllib.request.urlretrieve.call_count == 3
+        assert requests.get.call_count == 3
 
     assert repr(e.value) == repr(RuntimeError("checksums do not match"))

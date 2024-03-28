@@ -15,4 +15,5 @@ bazel run //:poetry -- run datamodel-codegen \
     --input-file-type jsonschema \
     --output $git_root/release-controller/release_index.py \
     --target-python-version 3.10 \
-    --output-model-type pydantic_v2.BaseModel
+    --output-model-type pydantic_v2.BaseModel \
+    --disable-timestamp

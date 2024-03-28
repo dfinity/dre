@@ -100,11 +100,8 @@ def version_package_urls(version: str):
 
 def version_package_checksum(version: str):
     with tempfile.TemporaryDirectory() as d:
-        shasum_file = str(pathlib.Path(d) / "shasum")
-        urllib.request.urlretrieve(
-            f"https://download.dfinity.systems/ic/{version}/guest-os/update-img/SHA256SUMS", shasum_file
-        )
-        checksum = [l for l in open(shasum_file).readlines() if l.strip().endswith("update-img.tar.gz")][0].split(" ")[
+        response = requests.get(f"https://download.dfinity.systems/ic/{version}/guest-os/update-img/SHA256SUMS")
+        checksum = [l for l in response.content.decode('utf-8').splitlines() if l.strip().endswith("update-img.tar.gz")][0].split(" ")[
             0
         ]
 
