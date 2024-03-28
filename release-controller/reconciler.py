@@ -220,7 +220,7 @@ def place_proposal(ic_admin, changelog, version: str, forum_post_url: str, unele
         "--summary",
         summary,
         *(["--dry-run"] if dry_run else []),
-        "--proposer", "39", # TODO: replace with system proposer
+        "--proposer", os.environ["PROPOSER_NEURON_ID"], # TODO: replace with system proposer
         "--release-package-sha256-hex",
         version_package_checksum(version),
         "--release-package-urls",

@@ -56,12 +56,12 @@ class IcAdmin:
         if cmd[0].startswith("propose"):
             if "HSM_PIN" in os.environ:
                 auth = ["--use-hsm", "--pin", os.environ["HSM_PIN"], "--slot", "4", "--key-id", "01"]
+            elif "PROPOSER_KEY_FILE" in os.environ:
+                auth = ["-s", os.environ["PROPOSER_KEY_FILE"]]
             else:
-                # TODO
-                print("not HSM_PIN")
+                logging.error("no auth")
                 auth = []
         else:
-            print("not propose")
             auth = []
 
         cmd = [self.ic_admin_path, *auth, "--nns-url", self.nns_url, *cmd]
