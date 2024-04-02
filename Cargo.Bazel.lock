@@ -1,5 +1,5 @@
 {
-  "checksum": "94f07b97f978324a0fed498ee9cd0f2574e0284ede5c160bdb44671a0cedf128",
+  "checksum": "1c7502cc1f0ae9dd85becfbeec12e11a482d835580957ac5e338a03604c454c7",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -31884,12 +31884,6 @@
         "compile_data_glob": [
           "**"
         ],
-        "data": {
-          "common": [
-            "@openssl"
-          ],
-          "selects": {}
-        },
         "deps": {
           "common": [
             {
@@ -31903,26 +31897,12 @@
           ],
           "selects": {}
         },
-        "extra_deps": {
-          "common": [
-            "@openssl"
-          ],
-          "selects": {}
-        },
         "edition": "2018",
         "version": "0.9.102"
       },
       "build_script_attrs": {
-        "data": {
-          "common": [
-            "@openssl//:gen_dir",
-            "@openssl//:openssl"
-          ],
-          "selects": {}
-        },
         "data_glob": [
-          "**",
-          "build/**/*.c"
+          "**"
         ],
         "deps": {
           "common": [
@@ -31939,13 +31919,6 @@
               "target": "vcpkg"
             }
           ],
-          "selects": {}
-        },
-        "build_script_env": {
-          "common": {
-            "OPENSSL_DIR": "$(execpath @openssl//:gen_dir)",
-            "OPENSSL_STATIC": "true"
-          },
           "selects": {}
         },
         "links": "openssl"
