@@ -77,7 +77,7 @@ def versions_to_unelect(
         for v in rc.versions:
             active_releases_versions.append(v.version)
 
-    return [v for v in elected_versions if v not in active_releases_versions]
+    return [v for v in elected_versions if v not in active_releases_versions and v not in active_versions]
 
 
 # https://stackoverflow.com/a/44873382

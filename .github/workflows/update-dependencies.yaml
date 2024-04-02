@@ -17,7 +17,7 @@ jobs:
       # Once per night, update dependencies and completely delete and recreate bazel cache
       ########################################
       - name: "🐍 Setup Python"
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: "3.11"
       - name: "🐍 Install Poetry"
@@ -31,7 +31,8 @@ jobs:
           #
           cargo update
           poetry update
-          ./bin/poetry-export.sh
+          CARGO_BAZEL_REPIN=true bazel query
+          ./bin/poetry.sh
           #
           # Completely delete the bazel cache and then recreate it
           # Cache should have everything that bazel build requires, and nothing more
@@ -40,7 +41,7 @@ jobs:
           CARGO_BAZEL_REPIN=true bazel build ...
 
       - name: "🆕 Create a new Pull Request with the changes"
-        uses: peter-evans/create-pull-request@v5
+        uses: peter-evans/create-pull-request@v6
         with:
           commit-message: "chore: Update dependencies"
           branch: bot-update-deps
