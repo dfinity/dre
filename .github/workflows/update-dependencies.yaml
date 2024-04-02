@@ -31,8 +31,7 @@ jobs:
           #
           cargo update
           poetry update
-          CARGO_BAZEL_REPIN=true bazel query
-          ./bin/poetry.sh
+          ./bin/poetry-export.sh
           #
           # Completely delete the bazel cache and then recreate it
           # Cache should have everything that bazel build requires, and nothing more
