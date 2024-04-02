@@ -1,4 +1,4 @@
-name: Build and publish dashboard
+name: Build and push dashboard image
 on:
   push:
     paths:
@@ -16,6 +16,7 @@ jobs:
   build:
     runs-on: ubuntu-20.04
     steps:
+      - uses: actions/checkout@v4
       - name: "🚀 Building"
         run: |
           docker build -t ghcr.io/dfinity/dre/ic-management-frontend:$GITHUB_SHA -f dashboard/Dockerfile dashboard
