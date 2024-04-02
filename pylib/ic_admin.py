@@ -6,6 +6,7 @@ import functools
 import ipaddress
 import json
 import logging
+import os
 import pathlib
 import re
 import subprocess
@@ -17,23 +18,34 @@ from tenacity import retry
 from tenacity import stop_after_attempt
 from tenacity import wait_exponential
 
+from ic.agent import Agent
+from ic.certificate import lookup
+from ic.client import Client
+from ic.identity import Identity
+from ic.principal import Principal
+
+
 from pylib.ic_deployment import IcDeployment
 from pylib.ic_utils import download_ic_executable
+
+GOV_PRINCIPAL = "rrkah-fqaaa-aaaaa-aaaaq-cai"
 
 
 class IcAdmin:
     """Interface with the ic-admin utility."""
 
-    def __init__(self, deployment: typing.Optional[IcDeployment] = None, git_revision: str = ""):
+    def __init__(self, deployment: typing.Optional[IcDeployment | str] = None, git_revision: str | None = None):
         """Create an object with the specified ic-admin path and NNS URL."""
-        if git_revision:
-            self.ic_admin_path = download_ic_executable(git_revision=git_revision, executable_name="ic-admin")
-        else:
-            self.ic_admin_path = pathlib.Path("ic-admin")
-        if not deployment:
+        if isinstance(deployment, str):
+            self.nns_url = deployment
+        elif not deployment:
             deployment = IcDeployment("mainnet")
-        self.deployment = deployment
-        self.nns_url = deployment.get_nns_url()
+            self.deployment = deployment
+            self.nns_url = deployment.get_nns_url()
+        if not git_revision:
+            agent = Agent(Identity(), Client(self.nns_url))
+            git_revision = canister_version(agent, GOV_PRINCIPAL)
+        self.ic_admin_path = download_ic_executable(git_revision=git_revision, executable_name="ic-admin")
 
     @retry(
         reraise=True,
@@ -41,7 +53,18 @@ class IcAdmin:
         wait=wait_exponential(multiplier=1, min=2, max=10),
     )
     def _ic_admin_run(self, *cmd):
-        cmd = [self.ic_admin_path, "--nns-url", self.nns_url, *cmd]
+        if cmd[0].startswith("propose"):
+            if "HSM_PIN" in os.environ:
+                auth = ["--use-hsm", "--pin", os.environ["HSM_PIN"], "--slot", "4", "--key-id", "01"]
+            elif "PROPOSER_KEY_FILE" in os.environ:
+                auth = ["-s", os.environ["PROPOSER_KEY_FILE"]]
+            else:
+                logging.error("no auth")
+                auth = []
+        else:
+            auth = []
+
+        cmd = [self.ic_admin_path, *auth, "--nns-url", self.nns_url, *cmd]
         cmd = [str(a) for a in cmd]
         logging.info("$ %s", cmd)
         return subprocess.check_output(cmd)
@@ -113,7 +136,22 @@ class IcAdmin:
         self._ic_admin_run("get-subnet-public-key", "0", out_filename)
 
 
+def canister_version(agent: Agent, canister_principal: str) -> str:
+    """Get the canister version."""
+    paths = [
+        "canister".encode(),
+        Principal.from_str(canister_principal).bytes,
+        "metadata".encode(),
+        "git_commit_id".encode(),
+    ]
+    tree = agent.read_state_raw(canister_principal, [paths])
+    response = lookup(paths, tree)
+    version = response.decode("utf-8").rstrip("\n")
+    return version
+
+
 if __name__ == "__main__":
     # One can run some simple one-off tests here, e.g.:
-    ic_admin = IcAdmin()
+    ic_admin = IcAdmin("https://ic0.app", git_revision="e5c6356b5a752a7f5912de133000ae60e0e25aaf")
+
     print(ic_admin.get_subnet_replica_versions())
