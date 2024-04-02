@@ -1112,8 +1112,3 @@ checksum = "b7520bbdec7211caa7c4e682eb1fbe07abe20cee6756b6e00f537c82c11816aa"
 dependencies = [
  "memchr",
 ]
-
-[[patch.unused]]
-name = "build-info-build"
-version = "0.0.26"
-source = "git+https://github.com/dfinity-lab/build-info?rev=abb2971c5d07a9b40d41a0c84b63a3156f2ff764#abb2971c5d07a9b40d41a0c84b63a3156f2ff764"

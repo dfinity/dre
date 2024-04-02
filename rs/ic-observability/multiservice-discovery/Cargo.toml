@@ -10,7 +10,6 @@ base64 = { workspace = true }
 clap = { workspace = true }
 crossbeam = { workspace = true }
 crossbeam-channel = { workspace = true }
-erased-serde = { workspace = true }
 futures-util = { workspace = true }
 humantime = { workspace = true }
 ic-async-utils = { workspace = true }
@@ -18,9 +17,7 @@ ic-crypto-utils-threshold-sig-der = { workspace = true }
 ic-registry-client = { workspace = true }
 ic-management-types = { workspace = true }
 ic-types = { workspace = true }
-ic-utils = { workspace = true }
 multiservice-discovery-shared = { path = "../multiservice-discovery-shared" }
-regex = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 service-discovery = { path = "../service-discovery" }

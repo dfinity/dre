@@ -32,7 +32,6 @@ ic-canisters = { workspace = true }
 ic-interfaces-registry = { workspace = true }
 ic-management-backend = { workspace = true }
 ic-management-types = { workspace = true }
-ic-nns-common = { workspace = true }
 ic-nns-constants = { workspace = true }
 ic-nns-governance = { workspace = true }
 ic-protobuf = { workspace = true }

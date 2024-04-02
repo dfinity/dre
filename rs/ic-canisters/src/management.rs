@@ -2,7 +2,7 @@ use anyhow::Context;
 use candid::{Decode, Encode};
 use ic_agent::Agent;
 use ic_base_types::{CanisterId, PrincipalId};
-use ic_ic00_types::{NodeMetrics as NM, NodeMetricsHistoryArgs, NodeMetricsHistoryResponse as NMHR};
+use ic_management_canister_types::{NodeMetrics as NM, NodeMetricsHistoryArgs, NodeMetricsHistoryResponse as NMHR};
 use ic_utils::interfaces::{wallet::CallResult, WalletCanister};
 use serde::Serialize;
 use std::str::FromStr;

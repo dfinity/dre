@@ -28,24 +28,10 @@ def external_crates_repository():
                     "IC_ICRC1_ARCHIVE_WASM_PATH": "$(execpath @ic-icrc1-archive//file)",
                 },
             )],
-            "openssl-sys": [crate.annotation(
-                build_script_data = [
-                    "@openssl//:gen_dir",
-                    "@openssl//:openssl",
-                ],
-                # https://github.com/sfackler/rust-openssl/tree/master/openssl-sys/build
-                build_script_data_glob = ["build/**/*.c"],
-                build_script_env = {
-                    "OPENSSL_DIR": "$(execpath @openssl//:gen_dir)",
-                    "OPENSSL_STATIC": "true",
-                },
-                data = ["@openssl"],
-                deps = ["@openssl"],
-            )],
         },
         cargo_config = "//:.cargo/config.toml",
         cargo_lockfile = "//:Cargo.lock",
-        isolated = True,
+        isolated = False,
         lockfile = "//:Cargo.Bazel.lock",
         manifests = [
             "//:Cargo.toml",
@@ -67,7 +53,7 @@ def external_crates_repository():
             "//rs/log-fetcher:Cargo.toml",
             "//rs/np-notifications:Cargo.toml",
             "//rs/slack-notifications:Cargo.toml",
-            "//rs/rollout-controller:Cargo.toml"
+            "//rs/rollout-controller:Cargo.toml",
         ],
         splicing_config = splicing_config(
             resolver_version = "2",
