@@ -20,7 +20,7 @@ ic-management-types = { workspace = true }
 crossbeam = { workspace = true }
 crossbeam-channel = { workspace = true }
 humantime = { workspace = true }
-tokio-util = "0.6.10"
+tokio-util = "0.7.10"
 serde = { workspace = true }
 serde_json = { workspace = true }
 serde_yaml = "0.9.32"
