@@ -1,0 +1,33 @@
+name: Build and publish dashboard
+on:
+  push:
+    paths:
+      - dashboard
+    branches:
+      - "main"
+  pull_request:
+  merge_group:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: "🚀 Building"
+        run: |
+          docker build -t ghcr.io/dfinity/dre/ic-management-frontend:$GITHUB_SHA -f dashboard/Dockerfile dashboard
+      
+      - name:  "🔧 Login to GitHub Container Registry"
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: "📦 Push images to GitHub Container Registry"
+        if: ${{ startsWith(github.head_ref, 'container') || startsWith(github.ref, 'refs/heads/container') || (github.ref == 'refs/heads/main') }}
+        run: |
+          docker push ghcr.io/dfinity/dre/ic-management-frontend:$GITHUB_SHA
