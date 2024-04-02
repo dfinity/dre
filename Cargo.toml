@@ -68,17 +68,17 @@ cryptoki = "0.3.1"
 csv = "1.1.6"
 custom_error = "1.9.2"
 decentralization = { path = "rs/decentralization" }
-derive_builder = "0.12.0"
+derive_builder = "0.20.0"
 derive_more = "0.99.16"
 dialoguer = "0.11.0"
 dirs = "5.0.1"
 dotenv = "0.15.0"
-base64 = "0.21.7"
+base64 = "0.22.0"
 easy-parallel = "3.1.0"
 edit = "0.1.4"
 either = "1.10.0"
 enum-map = "1.1.1"
-env_logger = "0.10.0"
+env_logger = "0.11.3"
 erased-serde = "0.4.2"
 exitcode = "1.1.2"
 flate2 = "1.0.22"
@@ -87,12 +87,12 @@ fs2 = "0.4.3"
 futures = "0.3.21"
 futures-core = "0.3.16"
 futures-util = "0.3.21"
-gitlab = "0.1603.0"
+gitlab = "0.1610.0"
 hex = "0.4.3"
 humantime = "2.1.0"
 hyper = { version = "0.14.11", features = ["http2", "stream"] }
-hyper-tls = "0.5.0"
-ic-agent = "0.30.2"
+hyper-tls = "0.6.0"
+ic-agent = "0.30"
 ic-async-utils = { git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca" }
 ic-base-types = { git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca" }
 ic-canister-client = { git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca" }
@@ -102,7 +102,7 @@ ic-config = { git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c
 ic-crypto-utils-threshold-sig-der = { git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca" }
 ic-http-endpoints-metrics = { git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca" }
 ic-ic00-types = { git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca" }
-ic-identity-hsm = "0.30.2"
+ic-identity-hsm = "0.34.0"
 ic-interfaces-registry = { git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca" }
 ic-management-backend = { path = "rs/ic-management-backend" }
 ic-management-types = { path = "rs/ic-management-types" }
@@ -143,7 +143,7 @@ rand_seeder = "0.2.3"
 rayon = "1.8.0"
 regex = "1.10.2"
 registry-canister = { git = "https://github.com/dfinity/ic.git", rev = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca" }
-reqwest = { version = "0.11", features = ["json"] }
+reqwest = { version = "0.12.2", features = ["json"] }
 retry = "2.0.0"
 reverse_geocoder = "4.0.0"
 ring = "0.17.7"
@@ -163,8 +163,8 @@ slog = { version = "2.7.0", features = [
 ] }
 socket2 = "0.5.5"
 spinners = "4.1.1"
-strum = { version = "0.25.0", features = ["derive"] }
-strum_macros = "0.25.3"
+strum = { version = "0.26.2", features = ["derive"] }
+strum_macros = "0.26.2"
 tabled = "0.15.0"
 tabular = "0.2"
 tempfile = "3.10.0"
