@@ -38,7 +38,7 @@ repos:
           - --application-directories=.:gitlab-ci/src/
 
   - repo: https://github.com/pycqa/flake8
-    rev: "3.8.4"
+    rev: "7.0.0"
     hooks:
       - id: flake8
         args: ["--config=flake8.cfg"]

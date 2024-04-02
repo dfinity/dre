@@ -64,7 +64,6 @@ impl RolloutStage {
             start_date_time: Utc
                 .timestamp_opt(
                     day.and_time(NaiveTime::from_hms_opt(0, 0, 0).expect("failed to create naive time"))
-                        .and_utc()
                         .timestamp(),
                     0,
                 )
