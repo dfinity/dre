@@ -201,6 +201,21 @@ releases:
         "db583db46f0894d35bcbcfdea452d93abdadd8a6",
     ]
 
+    # version not in release index
+    assert versions_to_unelect(
+        index,
+        active_versions=["799e8401952ae9188242585cb9d52e19a8296a71", "9979097df5672caa85c5eec9f9878453a9f2deae"],
+        elected_versions=[
+            "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f",
+            "31e9076fb99dfc36eb27fb3a2edc68885e6163ac",
+            "799e8401952ae9188242585cb9d52e19a8296a71",
+            "db583db46f0894d35bcbcfdea452d93abdadd8a6",
+            "9979097df5672caa85c5eec9f9878453a9f2deae",
+        ],
+    ) == [
+        "db583db46f0894d35bcbcfdea452d93abdadd8a6",
+    ]
+
 
 def test_oldest_active_release():
     index = parse_yaml_raw_as(
