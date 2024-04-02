@@ -34,7 +34,7 @@ GOV_PRINCIPAL = "rrkah-fqaaa-aaaaa-aaaaq-cai"
 class IcAdmin:
     """Interface with the ic-admin utility."""
 
-    def __init__(self, deployment: typing.Optional[IcDeployment | str] = None, git_revision: str = ""):
+    def __init__(self, deployment: typing.Optional[IcDeployment | str] = None, git_revision: str | None = None):
         """Create an object with the specified ic-admin path and NNS URL."""
         if isinstance(deployment, str):
             self.nns_url = deployment
@@ -56,12 +56,12 @@ class IcAdmin:
         if cmd[0].startswith("propose"):
             if "HSM_PIN" in os.environ:
                 auth = ["--use-hsm", "--pin", os.environ["HSM_PIN"], "--slot", "4", "--key-id", "01"]
+            elif "PROPOSER_KEY_FILE" in os.environ:
+                auth = ["-s", os.environ["PROPOSER_KEY_FILE"]]
             else:
-                # TODO
-                print("not HSM_PIN")
+                logging.error("no auth")
                 auth = []
         else:
-            print("not propose")
             auth = []
 
         cmd = [self.ic_admin_path, *auth, "--nns-url", self.nns_url, *cmd]
