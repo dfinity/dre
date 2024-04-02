@@ -1,5 +1,4 @@
 mod commit_refs;
-pub use commit_refs::CommitRefs;
 use gitlab::{AsyncGitlab, GitlabBuilder};
 use serde::{Deserialize, Serialize};
 
