@@ -1,5 +1,5 @@
 {
-  "checksum": "68c60539e1329e0d3f2eaecbce9119d7413c4a7e83874391e1d5ca198fd35f1d",
+  "checksum": "cce1756869964bf7a7046d38e576eb7f9c88672a1bcdd79da6f24f6017d05e24",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -6175,7 +6175,7 @@
               "target": "anyhow"
             },
             {
-              "id": "clap 4.4.18",
+              "id": "clap 4.5.4",
               "target": "clap"
             },
             {
@@ -6830,13 +6830,13 @@
       },
       "license": "MIT OR Apache-2.0"
     },
-    "clap 4.4.18": {
+    "clap 4.5.4": {
       "name": "clap",
-      "version": "4.4.18",
+      "version": "4.5.4",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/clap/4.4.18/download",
-          "sha256": "1e578d6ec4194633722ccf9544794b71b1385c3c027efe0c55db226fc880865c"
+          "url": "https://static.crates.io/crates/clap/4.5.4/download",
+          "sha256": "90bc066a67923782aa8515dbaea16946c5bcc5addbd668bb80af688e53e548a0"
         }
       },
       "targets": [
@@ -6875,7 +6875,7 @@
         "deps": {
           "common": [
             {
-              "id": "clap_builder 4.4.18",
+              "id": "clap_builder 4.5.2",
               "target": "clap_builder"
             }
           ],
@@ -6885,13 +6885,13 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "clap_derive 4.4.7",
+              "id": "clap_derive 4.5.4",
               "target": "clap_derive"
             }
           ],
           "selects": {}
         },
-        "version": "4.4.18"
+        "version": "4.5.4"
       },
       "license": "MIT OR Apache-2.0"
     },
@@ -6934,13 +6934,13 @@
       },
       "license": "MIT"
     },
-    "clap_builder 4.4.18": {
+    "clap_builder 4.5.2": {
       "name": "clap_builder",
-      "version": "4.4.18",
+      "version": "4.5.2",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/clap_builder/4.4.18/download",
-          "sha256": "4df4df40ec50c46000231c914968278b1eb05098cf8f1b3a518a95030e71d1c7"
+          "url": "https://static.crates.io/crates/clap_builder/4.5.2/download",
+          "sha256": "ae129e2e766ae0ec03484e609954119f123cc1fe650337e155d03b022f24f7b4"
         }
       },
       "targets": [
@@ -6985,11 +6985,11 @@
               "target": "anstyle"
             },
             {
-              "id": "clap_lex 0.6.0",
+              "id": "clap_lex 0.7.0",
               "target": "clap_lex"
             },
             {
-              "id": "strsim 0.10.0",
+              "id": "strsim 0.11.0",
               "target": "strsim"
             },
             {
@@ -7000,7 +7000,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "4.4.18"
+        "version": "4.5.2"
       },
       "license": "MIT OR Apache-2.0"
     },
@@ -7065,13 +7065,13 @@
       },
       "license": "MIT OR Apache-2.0"
     },
-    "clap_derive 4.4.7": {
+    "clap_derive 4.5.4": {
       "name": "clap_derive",
-      "version": "4.4.7",
+      "version": "4.5.4",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/clap_derive/4.4.7/download",
-          "sha256": "cf9804afaaf59a91e75b022a30fb7229a7901f60c755489cc61c9b423b836442"
+          "url": "https://static.crates.io/crates/clap_derive/4.5.4/download",
+          "sha256": "528131438037fd55894f62d6e9f068b8f45ac57ffa77517819645d10aed04f64"
         }
       },
       "targets": [
@@ -7099,7 +7099,7 @@
         "deps": {
           "common": [
             {
-              "id": "heck 0.4.1",
+              "id": "heck 0.5.0",
               "target": "heck"
             },
             {
@@ -7118,7 +7118,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "4.4.7"
+        "version": "4.5.4"
       },
       "license": "MIT OR Apache-2.0"
     },
@@ -7161,13 +7161,13 @@
       },
       "license": "MIT OR Apache-2.0"
     },
-    "clap_lex 0.6.0": {
+    "clap_lex 0.7.0": {
       "name": "clap_lex",
-      "version": "0.6.0",
+      "version": "0.7.0",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/clap_lex/0.6.0/download",
-          "sha256": "702fc72eb24e5a1e48ce58027a675bc24edd52096d5397d4aea7c6dd9eca0bd1"
+          "url": "https://static.crates.io/crates/clap_lex/0.7.0/download",
+          "sha256": "98cc8fbded0c607b7ba9dd60cd98df59af97e84d24e49c8557331cfc26d301ce"
         }
       },
       "targets": [
@@ -7187,7 +7187,7 @@
           "**"
         ],
         "edition": "2021",
-        "version": "0.6.0"
+        "version": "0.7.0"
       },
       "license": "MIT OR Apache-2.0"
     },
@@ -11512,7 +11512,7 @@
               "target": "candid"
             },
             {
-              "id": "clap 4.4.18",
+              "id": "clap 4.5.4",
               "target": "clap"
             },
             {
@@ -15520,6 +15520,36 @@
         },
         "edition": "2018",
         "version": "0.4.1"
+      },
+      "license": "MIT OR Apache-2.0"
+    },
+    "heck 0.5.0": {
+      "name": "heck",
+      "version": "0.5.0",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/heck/0.5.0/download",
+          "sha256": "2304e00983f87ffb38b55b444b5e3b60a884b5d30c0fca7d82fe33449bbe55ea"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "heck",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "heck",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "edition": "2021",
+        "version": "0.5.0"
       },
       "license": "MIT OR Apache-2.0"
     },
@@ -28850,7 +28880,7 @@
               "target": "anyhow"
             },
             {
-              "id": "clap 4.4.18",
+              "id": "clap 4.5.4",
               "target": "clap"
             },
             {
@@ -29659,7 +29689,7 @@
               "target": "base64"
             },
             {
-              "id": "clap 4.4.18",
+              "id": "clap 4.5.4",
               "target": "clap"
             },
             {
@@ -29792,7 +29822,7 @@
         "deps": {
           "common": [
             {
-              "id": "clap 4.4.18",
+              "id": "clap 4.5.4",
               "target": "clap"
             },
             {
@@ -30186,7 +30216,7 @@
               "target": "anyhow"
             },
             {
-              "id": "clap 4.4.18",
+              "id": "clap 4.5.4",
               "target": "clap"
             },
             {
@@ -34835,7 +34865,7 @@
               "target": "base64"
             },
             {
-              "id": "clap 4.4.18",
+              "id": "clap 4.5.4",
               "target": "clap"
             },
             {
@@ -37234,7 +37264,7 @@
               "target": "chrono"
             },
             {
-              "id": "clap 4.4.18",
+              "id": "clap 4.5.4",
               "target": "clap"
             },
             {
@@ -40772,7 +40802,7 @@
         "deps": {
           "common": [
             {
-              "id": "clap 4.4.18",
+              "id": "clap 4.5.4",
               "target": "clap"
             },
             {
@@ -41239,6 +41269,36 @@
         ],
         "edition": "2015",
         "version": "0.10.0"
+      },
+      "license": "MIT"
+    },
+    "strsim 0.11.0": {
+      "name": "strsim",
+      "version": "0.11.0",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/strsim/0.11.0/download",
+          "sha256": "5ee073c9e4cd00e28217186dbe12796d692868f432bf2e97ee73bed0c56dfa01"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "strsim",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "strsim",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "edition": "2015",
+        "version": "0.11.0"
       },
       "license": "MIT"
     },
