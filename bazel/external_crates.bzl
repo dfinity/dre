@@ -31,7 +31,7 @@ def external_crates_repository():
         },
         cargo_config = "//:.cargo/config.toml",
         cargo_lockfile = "//:Cargo.lock",
-        isolated = True,
+        isolated = False,
         lockfile = "//:Cargo.Bazel.lock",
         manifests = [
             "//:Cargo.toml",
