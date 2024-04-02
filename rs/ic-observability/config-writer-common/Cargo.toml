@@ -6,17 +6,18 @@ edition = { workspace = true }
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-regex = { workspace = true }
-service-discovery = { path = "../service-discovery" }
+crossbeam = { workspace = true }
+crossbeam-channel = { workspace = true }
+erased-serde = { workspace = true }
 ic-types = { workspace = true }
+ic-utils = { workspace = true }
+ic-sys = { workspace = true }
+regex = { workspace = true }
+serde = { workspace = true }
+serde_derive = { workspace = true }
+serde_json = { workspace = true }
+service-discovery = { path = "../service-discovery" }
 slog = { workspace = true }
 slog-async = { workspace = true }
 slog-term = { workspace = true }
-serde = { workspace = true }
-serde_json = { workspace = true }
-ic-utils = { workspace = true }
-erased-serde = { workspace = true }
-serde_derive = { workspace = true }
-crossbeam = { workspace = true }
-crossbeam-channel = { workspace = true }
 url = { workspace = true }

@@ -69,7 +69,7 @@ aspect_bazel_lib_dependencies()
 
 aspect_bazel_lib_register_toolchains()
 
-IC_REPO_VERSION = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca"
+IC_REPO_VERSION = "778d2bb870f858952ca9fbe69324f9864e3cf5e7"
 
 http_archive(
     name = "ic_repo",
@@ -114,7 +114,7 @@ http_file(
     name = "ic-icrc1-archive",
     downloaded_file_path = "ic-icrc1-archive.wasm.gz",
     sha256 = "46aac8f1db925e166a1d8fc45ff33505a41afb6f9ba0581028b76199e0a07727",
-    url = "https://download.dfinity.systems/ic/4b3b2ce76c4bde0c1c60fb80b0915931003b7eca/canisters/ic-icrc1-archive.wasm.gz",
+    url = "https://download.dfinity.systems/ic/778d2bb870f858952ca9fbe69324f9864e3cf5e7/canisters/ic-icrc1-archive.wasm.gz",
 )
 
 http_archive(
@@ -144,14 +144,6 @@ http_archive(
 load("@rules_foreign_cc//foreign_cc:repositories.bzl", "rules_foreign_cc_dependencies")
 
 rules_foreign_cc_dependencies()
-
-load("@ic_repo//third_party/openssl:openssl_repositories.bzl", "openssl_repositories")
-
-openssl_repositories()
-
-load("@ic_repo//third_party/openssl:openssl_setup.bzl", "openssl_setup")
-
-openssl_setup()
 
 http_archive(
     name = "rules_oci",

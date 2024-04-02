@@ -29,7 +29,7 @@ use std::net::Ipv6Addr;
 use std::ops::Deref;
 use std::str::FromStr;
 use strum::VariantNames;
-use strum_macros::{Display, EnumString, EnumVariantNames};
+use strum_macros::{Display, EnumString};
 use url::Url;
 
 pub trait NnsFunctionProposal: CandidType + serde::de::DeserializeOwned {
@@ -244,7 +244,7 @@ pub struct Node {
 }
 
 #[derive(
-    Display, EnumString, EnumVariantNames, Hash, Eq, PartialEq, Ord, PartialOrd, Clone, Serialize, Deserialize, Debug,
+    Display, EnumString, VariantNames, Hash, Eq, PartialEq, Ord, PartialOrd, Clone, Serialize, Deserialize, Debug,
 )]
 #[strum(serialize_all = "snake_case")]
 #[serde(rename_all = "snake_case")]
