@@ -10,14 +10,9 @@ crossbeam = { workspace = true }
 crossbeam-channel = { workspace = true }
 erased-serde = { workspace = true }
 ic-types = { workspace = true }
-ic-utils = { workspace = true }
 ic-sys = { workspace = true }
 regex = { workspace = true }
 serde = { workspace = true }
-serde_derive = { workspace = true }
 serde_json = { workspace = true }
 service-discovery = { path = "../service-discovery" }
 slog = { workspace = true }
-slog-async = { workspace = true }
-slog-term = { workspace = true }
-url = { workspace = true }
