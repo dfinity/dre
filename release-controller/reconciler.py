@@ -276,6 +276,7 @@ def main():
         time.sleep(60)
 
 
+# use this as a template in case you need to manually submit a proposal
 def oneoff():
     release_loader = GitReleaseLoader(f"https://github.com/{dre_repo}.git")
     version = "ac971e7b4c851b89b312bee812f6de542ed907c5"
