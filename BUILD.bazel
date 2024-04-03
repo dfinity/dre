@@ -31,7 +31,7 @@ py_binary(
     data = [
         "mkdocs.yml",
         ":release-docs",
-    ] + glob(["docs/**/*.md"]),
+    ] + glob(["docs/**/*"]),
     main = "rules_python_wheel_entry_point_mkdocs.py",
     deps = [
         requirement("mkdocs-material"),
