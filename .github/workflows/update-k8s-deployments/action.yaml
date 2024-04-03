@@ -5,9 +5,6 @@ inputs:
   gitlab_api_token:
     description: 'A GitLab API token with access to the k8s repository'
     required: true
-  paths:
-    description: 'Paths in k8s repo to update'
-    required: true
 
 runs:
   using: composite
@@ -15,12 +12,10 @@ runs:
     - name: "☸️ Update k8s deployments"
       env:
         GITLAB_API_TOKEN: ${{ inputs.gitlab_api_token }}
-        K8S_PATHS: ${{ inputs.paths }}
       shell: bash
       run: |
         set -eExou pipefail
 
-        files=$K8S_PATHS
         echo "Should change following files:"
         echo $files
 
@@ -38,7 +33,7 @@ runs:
         # this regex matches the first group (ie the image name) and uses \1
         # called a back-reference to insert the first group matched, the second
         # part is to match the 40 characters hash that we replace with the $GITHUB_SHA
-        sed -i "s~\(\([[:alpha:]]\|-\)\+\):[[:alnum:]]\{40\}~\1:${GITHUB_SHA}~g" ${K8S_PATHS}
+        sed -i "s~\(\([[:alpha:]]\|-\)\+\):[[:alnum:]]\{40\}~\1:${GITHUB_SHA}~g" $files
 
         # commit changes if there are any
         git add .

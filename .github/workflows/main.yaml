@@ -104,7 +104,6 @@ jobs:
         uses: ./.github/workflows/update-k8s-deployments
         with:
           gitlab_api_token: ${{ secrets.GITLAB_K8S_API_TOKEN }}
-          paths: $filesJson
 
 
       ########################################
