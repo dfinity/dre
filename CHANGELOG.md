@@ -1,7 +1,6 @@
 # dre Changelog
 
 <!-- insertion marker -->
-
 ## [v0.3.1](https://github.com/dfinity/dre/compare/v0.3.0...v0.3.1) (2024-3-21)
 
 ### feat
