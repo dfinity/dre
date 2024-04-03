@@ -1,6 +1,24 @@
 # dre Changelog
 
 <!-- insertion marker -->
+## [0.3.2](https://github.com/dfinity/dre/releases/tag/0.3.2) - 2024-04-03
+
+<small>[Compare with first commit](https://github.com/dfinity/dre/compare/a89c1826bf57646dd88d40f619bc216b3961cf64...0.3.2)</small>
+
+### Added
+
+- Add features for release rc--2024-03-20_23-01 (#257) ([a89c182](https://github.com/dfinity/dre/commit/a89c1826bf57646dd88d40f619bc216b3961cf64) by Luka Skugor).
+
+### Fixed
+
+- fix ([f0c44d7](https://github.com/dfinity/dre/commit/f0c44d767050687b7e268977a5a32b20584c2222) by Saša Tomić).
+- fix command order ([f3d6ea9](https://github.com/dfinity/dre/commit/f3d6ea9d671457bcfaeaf623a33342650d7c34b6) by Saša Tomić).
+- fix docker image run issues (#268) ([bb9acec](https://github.com/dfinity/dre/commit/bb9acecaad2854d0f01b6bd2d1177b900aa86b73) by Luka Skugor).
+
+### Changed
+
+- Changes by create-pull-request action (#245) ([278cc64](https://github.com/dfinity/dre/commit/278cc64a87850edb30a58b613522cd69e0693ae0) by sa-github-api).
+
 ## [v0.3.1](https://github.com/dfinity/dre/compare/v0.3.0...v0.3.1) (2024-3-21)
 
 ### feat
