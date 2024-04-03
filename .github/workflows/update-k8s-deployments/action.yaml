@@ -20,7 +20,7 @@ runs:
       run: |
         set -eExou pipefail
 
-        files=$(echo $K8S_PATHS | jq -r '.[]')
+        files=$K8S_PATHS
         echo "Should change following files:"
         echo $files
 

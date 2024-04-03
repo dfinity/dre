@@ -79,25 +79,22 @@ jobs:
 
       - name: "💲 Setting correct paths to update"
         id: paths
-        env:
-          PATH_CHANGED: $changed
         shell: bash
         run: |
           files=(
             bases/apps/mainnet-dashboard/statefulset-slack.yaml
             bases/apps/mainnet-dashboard/backend/base/deployment.yaml
           )
-          if [[ $PATH_CHANGED == "true" ]]; then
+          if [[ $changed == "true" ]]; then
             echo "Adding frontend to list of files"
             files+=( bases/apps/mainnet-dashboard/frontend/deployment.yaml )
           else
             echo "Skipping adding of frontend to list of files"
           fi
 
-          files_json=$(echo "${files[@]}" | jq -R . | jq -s .)
           echo "Output of this step:"
-          echo $files_json
-          echo "filesJson=$files_json" >> $GITHUB_ENV
+          echo ${files[@]}
+          echo "files=${files[@]}" >> $GITHUB_ENV
 
       ########################################
       # Update k8s deployments
