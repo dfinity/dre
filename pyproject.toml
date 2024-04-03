@@ -50,11 +50,11 @@ pygithub = "^2.2.0"
 pytest-mock = "^3.12.0"
 mammoth = "^1.7.0"
 slack-sdk = "^3.27.1"
-python-changelog = "^0.3.3"
+git-changelog = "^2.5.1"
 
 
 [tool.poetry.group.dev.dependencies]
-black = "*"
+black = "^24"
 
 [build-system]
 requires = ["poetry-core"]
