@@ -74,7 +74,7 @@ def main():
         sys.exit(0)
     current_version = get_current_version()
     new_version = args.new_version
-    if new_version.starts_with("v"):
+    if new_version.startswith("v"):
         new_version = new_version[1:]
     # Check that the new version has format x.y.z
     if not re.match(r"\d+\.\d+\.\d+", new_version):
