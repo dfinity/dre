@@ -21,7 +21,6 @@ jobs:
         uses: Sibz/github-status-action@v1
         if: ${{ steps.changed-files.outputs.all_changed_files_count > 0 && steps.changed-files.outputs.other_changed_files_count == 0  }}
         with:
-        with:
           authToken: ${{secrets.GITHUB_TOKEN}}
           context: 'bazel'
           description: 'Passed'
