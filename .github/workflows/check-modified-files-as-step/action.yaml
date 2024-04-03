@@ -10,7 +10,7 @@ runs:
   using: composite
   steps:
     ########################################
-    # Optimize bazel cache by hard-linking duplicate files
+    # Check to see if files changed
     ########################################
     - name: "🔍 Check if $PATH_TO_CHECK is modified in last commit "
       env: 
