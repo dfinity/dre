@@ -62,10 +62,6 @@ def update_change_log(current_version, new_version):
     subprocess.check_call(["poetry", "run", "git-changelog", "--filter-commits", current_version + "..", "--in-place", "--output", "CHANGELOG.md", "--bump", new_version])
     # Add the CHANGELOG.md to the commit
     subprocess.check_call(["git", "add", "CHANGELOG.md"])
-    # Commit the changes
-    subprocess.check_call(["git", "commit", "-m", f"Release {new_version}"])
-    # Push the new branch
-    subprocess.check_call(["git", "push", "origin", "--force", f"release-{new_version}"])
 
 
 def main():
@@ -88,10 +84,14 @@ def main():
     subprocess.check_call(["git", "checkout", "main"])
     subprocess.check_call(["git", "pull"])
     # Create a new branch for the release
-    subprocess.check_call(["git", "checkout", "-b", f"release-{args.new_version}"])
     patch_file("Cargo.toml", r'^version = "[\d\.]+"', f'version = "{args.new_version}"')
     patch_file("VERSION", f"^{current_version}$", args.new_version)
     update_change_log(current_version, args.new_version)
+    subprocess.check_call(["git", "checkout", "-b", f"release-{args.new_version}"])
+    # Commit the changes
+    subprocess.check_call(["git", "commit", "-m", f"Release {new_version}"])
+    # Push the new branch
+    subprocess.check_call(["git", "push", "origin", "--force", f"release-{new_version}"])
 
 
 if __name__ == "__main__":
