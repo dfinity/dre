@@ -35,7 +35,7 @@ def get_current_version():
 def parse_args():
     parser = argparse.ArgumentParser(description="Update the version in the repo")
     parser.add_argument("new_version", type=str, help="New version")
-    parser.add_argument("--tag", type=store_true, help="Only create and push the git tag for the new version")
+    parser.add_argument("--tag", action="store_true", help="Only create and push the git tag for the new version")
     return parser.parse_args()
 
 
