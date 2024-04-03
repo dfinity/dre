@@ -30,7 +30,7 @@ runs:
         if [[ $file != $PATH_TO_CHECK ]]; then
           echo "::set-output name=changed::false"
         else
-          echo "This modified file matches $PATH_TO_CHECK"
+          echo "File $file matches $PATH_TO_CHECK"
           echo "::set-output name=changed::true"
           break
         fi
