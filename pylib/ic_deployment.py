@@ -6,8 +6,10 @@ import subprocess
 
 import yaml
 
-from .ic_utils import find_deployment_env_root
-from .ic_utils import repo_root
+from pylib.ic_utils import find_deployment_env_root
+
+if os.environ.get("BAZEL") != "true":
+    from pylib.ic_utils import repo_root
 
 
 class IcDeployment:
@@ -43,13 +45,17 @@ class IcDeployment:
         if self.decentralized_deployment:
             env["DECENTRALIZED_DEPLOYMENT"] = "true"
         output = subprocess.check_output(
-            ([
-                "ansible-inventory",
-            ] if 'ANSIBLE_INVENTORY_BIN' not in os.environ else [
-                "python3",
-                os.environ['ANSIBLE_INVENTORY_BIN'],
-            ]) +
-            [
+            (
+                [
+                    "ansible-inventory",
+                ]
+                if "ANSIBLE_INVENTORY_BIN" not in os.environ
+                else [
+                    "python3",
+                    os.environ["ANSIBLE_INVENTORY_BIN"],
+                ]
+            )
+            + [
                 "-i",
                 self._deployment_env_root / "hosts",
                 "--list",

@@ -246,7 +246,7 @@ pub struct Node {
 #[derive(
     strum_macros::Display,
     EnumString,
-    EnumVariantNames,
+    VariantNames,
     Hash,
     Eq,
     PartialEq,

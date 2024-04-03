@@ -24,7 +24,6 @@ tokio = { workspace = true }
 url = { workspace = true }
 anyhow = { workspace = true }
 candid = { workspace = true }
-clap = { workspace = true }
 
 [lib]
 path = "src/lib.rs"

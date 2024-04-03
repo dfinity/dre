@@ -108,7 +108,7 @@ impl ProposalPoller {
                 &ic_agent::export::Principal::from_slice(ic_nns_constants::GOVERNANCE_CANISTER_ID.get().as_slice()),
                 "get_pending_proposals",
             )
-            .with_arg(candid::IDLArgs::new(&[]).to_bytes().unwrap().as_slice())
+            .with_arg(candid::encode_one(()).expect("failed to encode arguments"))
             .call()
             .await?;
 

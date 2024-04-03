@@ -23,8 +23,7 @@ ic-registry-local-registry = { workspace = true }
 ic-registry-local-store = { workspace = true }
 ic-registry-local-store-artifacts = { workspace = true }
 ic-registry-nns-data-provider = { workspace = true }
-ic-types = { workspace = true }
-ic-utils = { workspace = true }
+ic-sys = { workspace = true }
 prometheus = { workspace = true }
 regex = { workspace = true }
 registry-canister = { workspace = true }
