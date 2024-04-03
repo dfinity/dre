@@ -59,7 +59,7 @@ def add_git_tag(tag_name):
 
 def update_change_log(current_version, new_version):
     # call poetry run pychangelog generate to update CHANGELOG.md
-    subprocess.check_call(["poetry", "run", "git-changelog", "--filter-commits", current_version + "..", "--in-place", "--output", "CHANGELOG.md", "--bump", new_version])
+    subprocess.check_call(["poetry", "run", "git-changelog", "--filter-commits", f"v{current_version}..", "--in-place", "--output", "CHANGELOG.md", "--bump", new_version])
     # Add the CHANGELOG.md to the commit
     subprocess.check_call(["git", "add", "CHANGELOG.md"])
 
@@ -67,27 +67,30 @@ def update_change_log(current_version, new_version):
 def main():
     args = parse_args()
     if args.tag:
+        subprocess.check_call(["git", "checkout", "main"])
         new_git_tag = f"v{args.new_version}"
         add_git_tag(new_git_tag)
         subprocess.check_call(["git", "push", "origin", "--force", new_git_tag])
         sys.exit(0)
     current_version = get_current_version()
+    new_version = args.new_version
+    if new_version.starts_with("v"):
+        new_version = new_version[1:]
     # Check that the new version has format x.y.z
-    if not re.match(r"\d+\.\d+\.\d+", args.new_version):
-        raise SystemExit(f"New version needs to be provided in format x.y.z {args.new_version}")
+    if not re.match(r"\d+\.\d+\.\d+", new_version):
+        raise SystemExit(f"New version needs to be provided in format x.y.z {new_version}")
     # Check that the new version is greater than the current version
-    if args.new_version <= current_version:
+    if new_version <= current_version:
         raise SystemExit(
-            f"New version {args.new_version} needs to be greater than the current version {current_version}"
+            f"New version {new_version} needs to be greater than the current version {current_version}"
         )
-    log.info("Updating version from %s to %s", current_version, args.new_version)
-    subprocess.check_call(["git", "checkout", "main"])
+    log.info("Updating version from %s to %s", current_version, new_version)
     subprocess.check_call(["git", "pull"])
+    patch_file("Cargo.toml", r'^version = "[\d\.]+"', f'version = "{new_version}"')
+    patch_file("VERSION", f"^{current_version}$", new_version)
     # Create a new branch for the release
-    patch_file("Cargo.toml", r'^version = "[\d\.]+"', f'version = "{args.new_version}"')
-    patch_file("VERSION", f"^{current_version}$", args.new_version)
-    update_change_log(current_version, args.new_version)
-    subprocess.check_call(["git", "checkout", "-b", f"release-{args.new_version}"])
+    update_change_log(current_version, new_version)
+    subprocess.check_call(["git", "checkout", "-b", f"release-{new_version}"])
     # Commit the changes
     subprocess.check_call(["git", "commit", "-m", f"Release {new_version}"])
     # Push the new branch
