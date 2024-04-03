@@ -34,6 +34,7 @@ rollout:
       bake_time: 2h
       wait_for_next_week: true
 
+# test change
 releases:
   - rc_name: rc--2024-03-27_23-01
     versions:
