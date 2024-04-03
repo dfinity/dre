@@ -12,7 +12,6 @@ crossbeam = { workspace = true }
 futures-util = { workspace = true }
 humantime = { workspace = true }
 ic-async-utils = { workspace = true }
-ic-types = { workspace = true }
 multiservice-discovery-shared = { path = "../multiservice-discovery-shared" }
 regex = { workspace = true }
 reqwest = { workspace = true }

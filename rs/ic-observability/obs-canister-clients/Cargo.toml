@@ -11,4 +11,3 @@ candid = { workspace = true }
 serde = { workspace = true }
 rand = { workspace = true }
 url = { workspace = true }
-slog = { workspace = true }

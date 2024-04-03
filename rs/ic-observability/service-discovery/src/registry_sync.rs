@@ -1,4 +1,5 @@
 use futures::TryFutureExt;
+use ic_registry_client_helpers::{node::SubnetId, node_operator::PrincipalId};
 use std::{
     error::Error,
     ops::Add,
@@ -10,7 +11,7 @@ use std::{
 use crossbeam_channel::Receiver;
 use ic_interfaces_registry::{RegistryClient, RegistryValue, ZERO_REGISTRY_VERSION};
 use ic_protobuf::registry::crypto::v1::PublicKey;
-use ic_registry_client::client::ThresholdSigPublicKey;
+use ic_registry_client::client::{RegistryVersion, ThresholdSigPublicKey};
 use ic_registry_client_fake::FakeRegistryClient;
 use ic_registry_common_proto::pb::local_store::v1::{
     ChangelogEntry as PbChangelogEntry, KeyMutation as PbKeyMutation, MutationType,
@@ -18,7 +19,6 @@ use ic_registry_common_proto::pb::local_store::v1::{
 use ic_registry_keys::{make_crypto_threshold_signing_pubkey_key, ROOT_SUBNET_ID_KEY};
 use ic_registry_local_store::{Changelog, ChangelogEntry, KeyMutation, LocalStoreImpl, LocalStoreWriter};
 use ic_registry_nns_data_provider::registry::RegistryCanister;
-use ic_types::{PrincipalId, RegistryVersion, SubnetId};
 use registry_canister::mutations::common::decode_registry_value;
 use slog::{debug, error, info, warn, Logger};
 use std::fmt::{Display, Formatter};

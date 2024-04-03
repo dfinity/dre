@@ -8,7 +8,6 @@
 #![allow(clippy::await_holding_lock, clippy::result_large_err)]
 use std::{
     collections::{btree_map::Entry, BTreeMap, BTreeSet},
-    convert::TryFrom,
     net::SocketAddr,
     path::{Path, PathBuf},
     sync::{Arc, RwLock},
@@ -18,13 +17,13 @@ use std::{
 use anyhow::Result;
 use ic_interfaces_registry::{RegistryClient, RegistryClientResult};
 use ic_protobuf::registry::node::v1::NodeRecord;
+use ic_registry_client::client::{RegistryClientError, RegistryVersion};
 use ic_registry_client_helpers::{
-    node::NodeRegistry,
-    node_operator::NodeOperatorRegistry,
+    node::{NodeId, NodeRegistry, SubnetId},
+    node_operator::{NodeOperatorRegistry, PrincipalId},
     subnet::{SubnetListRegistry, SubnetTransportRegistry},
 };
 use ic_registry_local_registry::{LocalRegistry, LocalRegistryError};
-use ic_types::{registry::RegistryClientError, NodeId, PrincipalId, RegistryVersion, SubnetId};
 use job_types::JobType;
 use regex::Regex;
 use serde::{Deserialize, Serialize};

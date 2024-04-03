@@ -1,6 +1,5 @@
 exports_files([
     "archive_canister.wasm.gz",
-    "build-info-build.patch",
     "clippy.toml",
     "rustfmt.toml",
     "WORKSPACE.bazel",
