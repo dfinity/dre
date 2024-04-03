@@ -20,6 +20,10 @@ runs:
       run: |
         set -eExou pipefail
 
+        files=$(echo $K8S_PATHS | jq -r '.[]')
+        echo "Should change following files:"
+        echo $files
+
         cd .git
 
         # checkout branch
