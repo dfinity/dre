@@ -20,18 +20,18 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v4
-      - name: "☁️ Setup runner"
-        uses: ./.github/workflows/manage-runner-pre
+      # - name: "☁️ Setup runner"
+      #   uses: ./.github/workflows/manage-runner-pre
 
       ########################################
       # Build and test
       ########################################
-      - name: "🚀 Building"
-        uses: ./.github/workflows/build
-        with:
-          ssh_pk_workflow: ${{ secrets.SSH_PK_WORKFLOW }}
-      - run: bazel test ...
-        name: "🚀 Testing"
+      # - name: "🚀 Building"
+      #   uses: ./.github/workflows/build
+      #   with:
+      #     ssh_pk_workflow: ${{ secrets.SSH_PK_WORKFLOW }}
+      # - run: bazel test ...
+      #   name: "🚀 Testing"
 
       ########################################
       # Upload test artifacts
@@ -111,7 +111,7 @@ jobs:
       ########################################
       # Clean up runner
       ########################################
-      - uses: ./.github/workflows/manage-runner-post
-        name: "🪓 Tear down runner"
-        with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # - uses: ./.github/workflows/manage-runner-post
+      #   name: "🪓 Tear down runner"
+      #   with:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

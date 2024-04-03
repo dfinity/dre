@@ -18,7 +18,7 @@ runs:
       shell: bash
       run: |
         set -eExou pipefail
-
+        pwd
         echo "=============== list modified files ==============="
         git diff --name-only HEAD^ HEAD
         
