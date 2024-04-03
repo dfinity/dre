@@ -90,11 +90,14 @@ def main():
     patch_file("VERSION", f"^{current_version}$", new_version)
     # Create a new branch for the release
     update_change_log(current_version, new_version)
+    if subprocess.call(["git", "rev-parse", "--verify", f"release-{new_version}"]) == 0:
+        subprocess.check_call(["git", "branch", "-d", f"release-{new_version}"])
     subprocess.check_call(["git", "checkout", "-b", f"release-{new_version}"])
     # Commit the changes
     subprocess.check_call(["git", "commit", "-m", f"Release {new_version}"])
     # Push the new branch
     subprocess.check_call(["git", "push", "origin", "--force", f"release-{new_version}"])
+    # git branch --set-upstream-to=origin/<branch> release-0.3.2
 
 
 if __name__ == "__main__":
