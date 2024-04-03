@@ -15,15 +15,18 @@ runs:
     - name: "🔍 Check if $PATH_TO_CHECK is modified in last commit "
       env: 
         PATH_TO_CHECK: ${{ inputs.path }}
+        SHA: ${{ github.sha }}
       shell: bash
       run: |
         set -eExou pipefail
-        git status
+
+        echo "Github sha: $SHA"
+
         echo "=============== list modified files ==============="
-        git diff --name-only HEAD^ HEAD
+        git diff --name-only $SHA^ $SHA
         
         echo "========== check paths of modified files =========="
-        git diff --name-only HEAD^ HEAD &gt; files.txt
+        git diff --name-only $SHA^ $SHA &gt; files.txt
         while IFS= read -r file
         do
         echo $file
