@@ -278,22 +278,16 @@ def main():
 
 def oneoff():
     release_loader = GitReleaseLoader(f"https://github.com/{dre_repo}.git")
-    version = "463296c0bc82ad5999b70245e5f125c14ba7d090"
-    changelog = release_loader.changelog("463296c0bc82ad5999b70245e5f125c14ba7d090")
+    version = "ac971e7b4c851b89b312bee812f6de542ed907c5"
+    changelog = release_loader.changelog(version)
 
     ic_admin = IcAdmin("https://ic0.app", git_revision="e5c6356b5a752a7f5912de133000ae60e0e25aaf")
     place_proposal(
         ic_admin=ic_admin,
         changelog=changelog,
         version=version,
-        forum_post_url="https://forum.dfinity.org/t/proposal-to-elect-new-release-rc-2024-03-20-23-01/28746/12",
-        unelect_versions=[
-            "8d4b6898d878fa3db4028b316b78b469ed29f293",
-            "85bd56a70e55b2cea75cae6405ae11243e5fdad8",
-            "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f",
-            "48da85ee6c03e8c15f3e90b21bf9ccae7b753ee6",
-            "a2cf671f832c36c0153d4960148d3e676659a747",
-        ]
+        forum_post_url="https://forum.dfinity.org/t/proposal-to-elect-new-release-rc-2024-03-27-23-01/29042/7",
+        unelect_versions=[],
     )
 
 
