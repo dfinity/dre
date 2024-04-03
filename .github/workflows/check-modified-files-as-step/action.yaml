@@ -18,14 +18,14 @@ runs:
       shell: bash
       run: |
         set -eExou pipefail
-
-        echo "Github sha: $GITHUB_SHA"
+        SHA=$(git log -1 --pretty=format:"%H")
+        echo "Github sha: $SHA"
 
         echo "=============== list modified files ==============="
-        git diff --name-only $GITHUB_SHA^ $GITHUB_SHA
+        git diff --name-only $SHA^ $SHA
         
         echo "========== check paths of modified files =========="
-        git diff --name-only $GITHUB_SHA^ $GITHUB_SHA &gt; files.txt
+        git diff --name-only $SHA^ $SHA &gt; files.txt
         while IFS= read -r file
         do
         echo $file
