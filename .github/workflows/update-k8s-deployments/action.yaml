@@ -27,8 +27,8 @@ runs:
         cd k8s
         git config user.email "idx@dfinity.org"
         git config user.name "IDX Automation"
-        DRE_REPO_BRANCH="${{ github.head_ref || github.event.pull_request.head.ref }}"
-        K8S_REPO_BRANCH="update-dre-images"
+        DRE_REPO_BRANCH="${{ github.head_ref || github.ref_name }}"
+        K8S_REPO_BRANCH="update-dre-images-$DRE_REPO_BRANCH"
         git checkout -b "${K8S_REPO_BRANCH}"
 
         # Update the internal dashboard image refs
@@ -45,7 +45,7 @@ runs:
         fi
 
         # Push changes and create a new merge request
-        git commit -m "Updating DRE container images"
+        git commit -m "Updating DRE container images from $DRE_REPO_BRANCH branch"
         git push \
           -o merge_request.create \
           -o merge_request.title="[nomrbot] - Updating DRE container images" \
