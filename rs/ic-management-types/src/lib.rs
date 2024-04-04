@@ -581,32 +581,49 @@ pub struct Network {
 }
 
 impl Network {
-    pub async fn new<S: AsRef<str>>(name: S, nns_urls: Option<Vec<url::Url>>) -> Result<Self, String> {
-        match name.as_ref() {
-            "mainnet" => Ok(Network {
-                name: "mainnet".to_string(),
-                nns_urls: find_reachable_nns_urls(vec![Url::from_str("https://ic0.app").unwrap()]).await,
-            }),
-            "staging" => Ok(Network {
-                name: "staging".to_string(),
-                nns_urls: find_reachable_nns_urls(vec![Url::from_str(
-                    "https://[2600:3000:6100:200:5000:b0ff:fe8e:6b7b]:8080",
-                )
-                .unwrap()])
-                .await,
-            }),
-            _ => match nns_urls {
-                Some(nns_urls) => Ok(Network {
-                    name: name.as_ref().to_string(),
-                    nns_urls: find_reachable_nns_urls(nns_urls).await,
-                }),
-                None => Err("No NNS URLs provided".to_string()),
-            },
-        }
+    pub async fn new<S: AsRef<str>>(name: S, nns_urls: &Vec<url::Url>) -> Result<Self, String> {
+        let (name, nns_urls) = match name.as_ref() {
+            "mainnet" => (
+                "mainnet".to_string(),
+                if nns_urls.is_empty() {
+                    vec![Url::from_str("https://ic0.app").unwrap()]
+                } else {
+                    nns_urls.clone()
+                },
+            ),
+            "staging" => (
+                "mainnet".to_string(),
+                if nns_urls.is_empty() {
+                    vec![Url::from_str("http://[2600:3000:6100:200:5000:b0ff:fe8e:6b7b]:8080").unwrap()]
+                } else {
+                    nns_urls.clone()
+                },
+            ),
+            _ => (
+                name.as_ref().to_string(),
+                if nns_urls.is_empty() {
+                    return Err("No NNS URLs provided".to_string());
+                } else {
+                    nns_urls.clone()
+                },
+            ),
+        };
+        Ok(Network {
+            name,
+            nns_urls: find_reachable_nns_urls(nns_urls).await,
+        })
     }
 
     pub fn get_nns_urls(&self) -> &Vec<Url> {
         &self.nns_urls
+    }
+
+    pub fn get_nns_urls_string(&self) -> String {
+        self.nns_urls
+            .iter()
+            .map(|url| url.to_string())
+            .collect::<Vec<String>>()
+            .join(", ")
     }
 
     pub fn legacy_name(&self) -> String {
@@ -614,6 +631,12 @@ impl Network {
             "mainnet" => "mercury".to_string(),
             _ => self.name.clone(),
         }
+    }
+}
+
+impl std::fmt::Display for Network {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{} ({})", self.name, self.get_nns_urls_string())
     }
 }
 

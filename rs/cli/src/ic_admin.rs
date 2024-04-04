@@ -138,17 +138,17 @@ impl FirewallRuleModifications {
 
 #[derive(Clone)]
 pub struct IcAdminWrapper {
-    ic_admin: Option<String>,
     network: Network,
+    ic_admin: Option<String>,
     yes: bool,
     neuron: Option<Neuron>,
 }
 
 impl IcAdminWrapper {
-    fn from(cli: Cli, network: Network) -> Self {
+    pub fn from_cli(cli: Cli) -> Self {
         Self {
+            network: cli.network,
             ic_admin: cli.ic_admin,
-            network,
             yes: cli.yes,
             neuron: cli.neuron,
         }
@@ -273,10 +273,7 @@ impl IcAdminWrapper {
         };
         let root_options = [
             auth_options,
-            vec![
-                "--nns-urls".to_string(),
-                self.network.get_nns_urls().iter().map(|u| u.to_string()).join(","),
-            ],
+            vec!["--nns-urls".to_string(), self.network.get_nns_urls_string()],
         ]
         .concat();
         let cmd = cmd.args([&root_options, ic_admin_args].concat());
@@ -1114,13 +1111,13 @@ oSMDIQBa2NLmSmaqjDXej4rrJEuEhKIz7/pGXpxztViWhB+X9Q==
 
         // Start a background HTTP server on a random local port
         let mock_server = MockServer::start().await;
-        let network = Network::new("testnet", Some(vec![url::Url::from_str(&mock_server.uri()).unwrap()]))
+        let network = Network::new("testnet", &vec![url::Url::from_str(&mock_server.uri()).unwrap()])
             .await
             .expect("Failed to create network");
 
         for cmd in test_cases {
             let cli = IcAdminWrapper {
-                network: network,
+                network: network.clone(),
                 yes: false,
                 neuron: Neuron {
                     id: 3,

@@ -32,7 +32,7 @@ pub async fn start_registry_updater_loop(config: RegistryLoopConfig) {
             break;
         }
         config.service_health.set_registry_updater_loop_readiness(true);
-        if let Err(e) = registry::sync_local_store(config.target_network.clone()).await {
+        if let Err(e) = registry::sync_local_store(&config.target_network).await {
             error!(message = "Failed to update local registry", error = e.to_string());
         }
         tokio::time::sleep(std::time::Duration::from_secs(5)).await;

@@ -194,8 +194,6 @@ impl ReleasesOps for ArtifactReleases {
 
 impl RegistryState {
     pub async fn new(network: &Network, without_update_loop: bool) -> Self {
-        let nns_url = network.get_nns_urls();
-
         sync_local_store(&network).await.expect("failed to init local store");
 
         if !without_update_loop {
@@ -715,13 +713,13 @@ impl RegistryState {
     }
 
     pub async fn open_subnet_upgrade_proposals(&self) -> Result<Vec<SubnetUpdateProposal>> {
-        let proposal_agent = proposal::ProposalAgent::new(self.nns_url.clone());
+        let proposal_agent = proposal::ProposalAgent::new(self.get_nns_urls());
 
         proposal_agent.list_update_subnet_version_proposals().await
     }
 
     pub async fn open_upgrade_unassigned_nodes_proposals(&self) -> Result<Vec<UpdateUnassignedNodesProposal>> {
-        let proposal_agent = proposal::ProposalAgent::new(self.nns_url.clone());
+        let proposal_agent = proposal::ProposalAgent::new(self.get_nns_urls());
 
         proposal_agent.list_update_unassigned_nodes_version_proposals().await
     }

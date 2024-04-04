@@ -94,14 +94,18 @@ pub async fn get_node_metrics_history(
     subnets: Vec<PrincipalId>,
     start_at_nanos: u64,
     neuron: &Neuron,
-    nns_url: &Url,
+    nns_urls: &Vec<Url>,
 ) -> anyhow::Result<()> {
     let lock = Mutex::new(());
     let canister_agent = match &neuron.auth {
-        Auth::Hsm { pin, slot, key_id } => {
-            IcAgentCanisterClient::from_hsm(pin.to_string(), *slot, key_id.to_string(), nns_url.clone(), Some(lock))?
-        }
-        Auth::Keyfile { path } => IcAgentCanisterClient::from_key_file(path.into(), nns_url.clone())?,
+        Auth::Hsm { pin, slot, key_id } => IcAgentCanisterClient::from_hsm(
+            pin.to_string(),
+            *slot,
+            key_id.to_string(),
+            nns_urls[0].clone(),
+            Some(lock),
+        )?,
+        Auth::Keyfile { path } => IcAgentCanisterClient::from_key_file(path.into(), nns_urls[0].clone())?,
     };
     info!("Started action...");
     let wallet_client = WalletCanisterWrapper::new(canister_agent.agent.clone());

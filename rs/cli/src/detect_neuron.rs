@@ -11,7 +11,7 @@ use ic_nns_constants::GOVERNANCE_CANISTER_ID;
 use ic_nns_governance::pb::v1::{ListNeurons, ListNeuronsResponse};
 use ic_sys::utility_command::UtilityCommand;
 use keyring::{Entry, Error};
-use log::{info, warn};
+use log::info;
 
 #[derive(Clone)]
 pub struct Neuron {

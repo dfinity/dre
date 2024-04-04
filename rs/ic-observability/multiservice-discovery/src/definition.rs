@@ -284,7 +284,7 @@ impl RunningDefinition {
         let r = sync_local_registry(
             self.definition.log.clone(),
             self.definition.registry_path.join("targets"),
-            &self.definition.nns_urls,
+            &self.definition.nns_urls.clone(),
             use_current_version,
             self.definition.public_key,
             &self.stop_signal,

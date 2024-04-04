@@ -48,7 +48,7 @@ pub async fn sync_local_registry(
 ) -> Result<(), SyncError> {
     let start = Instant::now();
     let local_store = Arc::new(LocalStoreImpl::new(local_path.clone()));
-    let registry_canister = RegistryCanister::new(nns_urls.clone());
+    let registry_canister = RegistryCanister::new(nns_urls.to_vec());
 
     let mut latest_version = if !Path::new(&local_path).exists() {
         ZERO_REGISTRY_VERSION

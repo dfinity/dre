@@ -178,7 +178,7 @@ impl HostosRollout {
     pub fn new(
         nodes: BTreeMap<PrincipalId, Node>,
         subnets: BTreeMap<PrincipalId, Subnet>,
-        network: Network,
+        network: &Network,
         proposal_agent: ProposalAgent,
         rollout_version: &str,
         nodes_filter: &Option<Vec<PrincipalId>>,
@@ -213,7 +213,7 @@ impl HostosRollout {
         HostosRollout {
             grouped_nodes,
             subnets,
-            network,
+            network: network.clone(),
             proposal_agent,
             exclude: nodes_filter.clone(),
             version: rollout_version.to_string(),
@@ -535,7 +535,6 @@ pub mod test {
     use crate::operations::hostos_rollout::NodeOwner::{Dfinity, Others};
     use ic_management_types::{Network, Node, Operator, Provider, Subnet};
     use std::net::Ipv6Addr;
-    use url::Url;
 
     use super::*;
 
@@ -579,12 +578,13 @@ pub mod test {
 
         let open_proposals: Vec<UpdateNodesHostosVersionsProposal> = vec![];
 
-        let network = Network::new("mainnet".to_string(), None).await.unwrap();
+        let network = Network::new("mainnet", &vec![]).await.unwrap();
+        let nns_urls = network.get_nns_urls();
         let hostos_rollout = HostosRollout::new(
             union.clone(),
             subnet.clone(),
-            network,
-            ProposalAgent::new(&network.get_nns_urls()),
+            &network,
+            ProposalAgent::new(nns_urls),
             version_one.clone().as_str(),
             &None,
         );
@@ -615,8 +615,8 @@ pub mod test {
         let hostos_rollout = HostosRollout::new(
             union.clone(),
             subnet.clone(),
-            network,
-            ProposalAgent::new(&network.get_nns_urls()),
+            &network,
+            ProposalAgent::new(nns_urls),
             version_one.clone().as_str(),
             &Some(nodes_to_exclude),
         );
@@ -639,8 +639,8 @@ pub mod test {
         let hostos_rollout = HostosRollout::new(
             union.clone(),
             subnet.clone(),
-            network,
-            ProposalAgent::new(&network.get_nns_urls()),
+            &network,
+            ProposalAgent::new(nns_urls),
             version_two.clone().as_str(),
             &None,
         );
