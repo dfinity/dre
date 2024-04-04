@@ -105,6 +105,15 @@ jobs:
         with:
           gitlab_api_token: ${{ secrets.GITLAB_K8S_API_TOKEN }}
 
+      ########################################
+      # Deploy to github pages
+      ########################################
+      - name: "🚢 Deploy to GitHub Pages"
+        if: ${{ github.ref == 'refs/heads/main' }}
+        run: |
+          git config --global user.email "actions@github.com"
+          git config --global user.name "GitHub Actions"
+          bazel run "//:mkdocs" -- gh-deploy --force
 
       ########################################
       # Clean up runner

@@ -1,3 +1,5 @@
+load("@python_deps//:requirements.bzl", "requirement")
+
 exports_files([
     "archive_canister.wasm.gz",
     "clippy.toml",
@@ -16,13 +18,24 @@ alias(
     tags = ["no-cache"],
 )
 
+genrule(
+    name = "release-docs",
+    srcs = ["//release-controller:README.md"],
+    outs = ["docs/release.md"],
+    cmd = "cp $< $@",
+)
+
 py_binary(
     name = "mkdocs",
     srcs = ["@python_deps_mkdocs//:rules_python_wheel_entry_point_mkdocs"],
     data = [
-        "docs",
         "mkdocs.yml",
-    ],
+        ":release-docs",
+    ] + glob(["docs/**/*"]),
     main = "rules_python_wheel_entry_point_mkdocs.py",
-    deps = ["@python_deps_mkdocs_material//:pkg"],
+    deps = [
+        requirement("mkdocs-material"),
+        requirement("mkdocs-git-revision-date-localized-plugin"),
+        requirement("mkdocs-git-committers-plugin-2"),
+    ],
 )
