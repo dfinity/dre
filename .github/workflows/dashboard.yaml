@@ -3,6 +3,7 @@ on:
   push:
     paths:
       - dashboard
+      - ./.github/workflows/dashboard.yaml
     branches:
       - "main"
   pull_request:
@@ -29,6 +30,6 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       
       - name: "📦 Push images to GitHub Container Registry"
-        if: ${{ startsWith(github.head_ref, 'container') || startsWith(github.ref, 'refs/heads/container') || (github.ref == 'refs/heads/main') }}
+        if: ${{ startsWith(github.ref, 'refs/tags/v') || startsWith(github.head_ref, 'container') || startsWith(github.ref, 'refs/heads/container') || (github.ref == 'refs/heads/main') }}
         run: |
           docker push ghcr.io/dfinity/dre/ic-management-frontend:$GITHUB_SHA
