@@ -29,6 +29,9 @@ runs:
         git config user.name "IDX Automation"
         DRE_REPO_BRANCH="${{ github.head_ref || github.event.pull_request.head.ref }}"
         K8S_REPO_BRANCH="update-dre-images"
+        if [ -n "$NEW_BRANCH" ]; then
+          NEW_BRANCH=$K8S_REPO_BRANCH
+        fi
         git checkout -b "${NEW_BRANCH}"
 
         # Update the internal dashboard image refs

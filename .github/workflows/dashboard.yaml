@@ -2,7 +2,7 @@ name: Build and push dashboard image
 on:
   push:
     paths:
-      - dashboard
+      - dashboard/**
       - ./.github/workflows/dashboard.yaml
     branches:
       - "main"
