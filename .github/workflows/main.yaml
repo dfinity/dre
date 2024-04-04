@@ -25,15 +25,15 @@ jobs:
       - name: "☁️ Setup runner"
         uses: ./.github/workflows/manage-runner-pre
 
-      # ########################################
-      # # Build and test
-      # ########################################
-      # - name: "🚀 Building"
-      #   uses: ./.github/workflows/build
-      #   with:
-      #     ssh_pk_workflow: ${{ secrets.SSH_PK_WORKFLOW }}
-      # - run: bazel test ...
-      #   name: "🚀 Testing"
+      ########################################
+      # Build and test
+      ########################################
+      - name: "🚀 Building"
+        uses: ./.github/workflows/build
+        with:
+          ssh_pk_workflow: ${{ secrets.SSH_PK_WORKFLOW }}
+      - run: bazel test ...
+        name: "🚀 Testing"
 
       ########################################
       # Upload test artifacts
@@ -100,7 +100,7 @@ jobs:
       # Update k8s deployments
       ########################################
       - name: "🤖 Update k8s deployments"
-        # if: ${{ startsWith(github.ref, 'refs/tags/v') || startsWith(github.head_ref, 'container') || startsWith(github.ref, 'refs/heads/container') || (github.ref == 'refs/heads/main') }}
+        if: ${{ startsWith(github.ref, 'refs/tags/v') || startsWith(github.head_ref, 'container') || startsWith(github.ref, 'refs/heads/container') || (github.ref == 'refs/heads/main') }}
         uses: ./.github/workflows/update-k8s-deployments
         with:
           gitlab_api_token: ${{ secrets.GITLAB_K8S_API_TOKEN }}
