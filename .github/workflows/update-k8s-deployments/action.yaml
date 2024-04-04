@@ -22,12 +22,14 @@ runs:
         cd .git
 
         # checkout branch
-        git clone "https://gitlab-ci-token:${GITLAB_API_TOKEN}@gitlab.com/dfinity-lab/private/k8s/k8s.git"
+        git clone --depth 10 --branch "main" "https://gitlab-ci-token:${GITLAB_API_TOKEN}@gitlab.com/dfinity-lab/private/k8s/k8s.git"
 
         cd k8s
         git config user.email "idx@dfinity.org"
         git config user.name "IDX Automation"
-        git checkout -b "update-image-tag-${GITHUB_SHA}"
+        DRE_REPO_BRANCH="${{ github.head_ref || github.event.pull_request.head.ref }}"
+        K8S_REPO_BRANCH="update-dre-images"
+        git checkout -b "${NEW_BRANCH}"
 
         # Update the internal dashboard image refs
         # this regex matches the first group (ie the image name) and uses \1
@@ -43,9 +45,10 @@ runs:
         fi
 
         # Push changes and create a new merge request
-        git commit -m "Updating container base image refs"
+        git commit -m "Updating DRE container images"
         git push \
           -o merge_request.create \
-          -o merge_request.title="[nomrbot] - Updating container image refs mainnet-dashboard [$GITHUB_SHA]" \
-          -o merge_request.description="Changes to the release repository - [here](https://github.com/dfinity/dre/commit/$GITHUB_SHA)" \
-          --force --set-upstream origin "update-image-tag-${GITHUB_SHA}"
+          -o merge_request.title="[nomrbot] - Updating DRE container images" \
+          -o merge_request.description="Updating the DRE container images based on the latest changes in the DRE repository - [here](https://github.com/dfinity/dre/commits/$DRE_REPO_BRANCH" \
+          --force --set-upstream origin "${NEW_BRANCH}" || \
+          git push --force --set-upstream origin "${NEW_BRANCH}"
