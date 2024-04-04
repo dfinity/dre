@@ -29,7 +29,7 @@ runs:
         git config user.name "IDX Automation"
         DRE_REPO_BRANCH="${{ github.head_ref || github.event.pull_request.head.ref }}"
         K8S_REPO_BRANCH="update-dre-images"
-        git checkout -b "${NEW_BRANCH}"
+        git checkout -b "${K8S_REPO_BRANCH}"
 
         # Update the internal dashboard image refs
         # this regex matches the first group (ie the image name) and uses \1
@@ -50,5 +50,5 @@ runs:
           -o merge_request.create \
           -o merge_request.title="[nomrbot] - Updating DRE container images" \
           -o merge_request.description="Updating the DRE container images based on the latest changes in the DRE repository - [here](https://github.com/dfinity/dre/commits/$DRE_REPO_BRANCH" \
-          --force --set-upstream origin "${NEW_BRANCH}" || \
-          git push --force --set-upstream origin "${NEW_BRANCH}"
+          --force --set-upstream origin "${K8S_REPO_BRANCH}" || \
+          git push --force --set-upstream origin "${K8S_REPO_BRANCH}"

@@ -68,7 +68,7 @@ jobs:
         run: bazel query --noshow_progress 'kind("oci_push", ...)' | xargs -I_target bazel run _target -- --tag ${GITHUB_SHA}
 
       ########################################
-      # Check if dashboard/* changed to see if 
+      # Check if dashboard/* changed to see if
       # it also needs to be updated in k8s
       ########################################
       - name: "❓ Check if dashboard/* changed in last commit"
