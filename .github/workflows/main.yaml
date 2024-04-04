@@ -68,7 +68,7 @@ jobs:
         run: bazel query --noshow_progress 'kind("oci_push", ...)' | xargs -I_target bazel run _target -- --tag ${GITHUB_SHA}
 
       ########################################
-      # Check if dashboard/* changed to see if 
+      # Check if dashboard/* changed to see if
       # it also needs to be updated in k8s
       ########################################
       - name: "❓ Check if dashboard/* changed in last commit"
@@ -100,7 +100,7 @@ jobs:
       # Update k8s deployments
       ########################################
       - name: "🤖 Update k8s deployments"
-        if: ${{ startsWith(github.ref, 'refs/tags/v') || startsWith(github.head_ref, 'container') || startsWith(github.ref, 'refs/heads/container') || (github.ref == 'refs/heads/main') }}
+        # if: ${{ startsWith(github.ref, 'refs/tags/v') || startsWith(github.head_ref, 'container') || startsWith(github.ref, 'refs/heads/container') || (github.ref == 'refs/heads/main') }}
         uses: ./.github/workflows/update-k8s-deployments
         with:
           gitlab_api_token: ${{ secrets.GITLAB_K8S_API_TOKEN }}
