@@ -1,5 +1,5 @@
 {
-  "checksum": "244cb963c9d906d64fd728bd61c79e93eace27a39e17189082687eab85c35b92",
+  "checksum": "0d742837d1df78e837f78cb7669d16c82c024d35e3f97054c91fca738cab4b51",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -21786,6 +21786,10 @@
               "target": "chrono"
             },
             {
+              "id": "clap 4.5.4",
+              "target": "clap"
+            },
+            {
               "id": "csv 1.3.0",
               "target": "csv"
             },
@@ -22111,6 +22115,10 @@
             {
               "id": "chrono 0.4.37",
               "target": "chrono"
+            },
+            {
+              "id": "futures 0.3.30",
+              "target": "futures"
             },
             {
               "id": "ic-base-types 0.9.0",
@@ -30383,6 +30391,10 @@
             {
               "id": "anyhow 1.0.81",
               "target": "anyhow"
+            },
+            {
+              "id": "clap 4.5.4",
+              "target": "clap"
             },
             {
               "id": "ic-types 0.9.0",

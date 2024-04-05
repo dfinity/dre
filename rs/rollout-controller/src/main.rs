@@ -1,9 +1,8 @@
-use std::{path::PathBuf, str::FromStr, time::Duration};
+use std::{path::PathBuf, time::Duration};
 
 use clap::{Parser, Subcommand};
 use fetching::{curl_fetcher::CurlFetcherConfig, sparse_checkout_fetcher::SparseCheckoutFetcherConfig};
 use humantime::parse_duration;
-use ic_management_types::Network;
 use prometheus_http_query::Client;
 use slog::{info, o, warn, Drain, Level, Logger};
 use tokio::select;

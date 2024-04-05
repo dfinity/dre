@@ -1,7 +1,6 @@
 use std::time::Duration;
 
 use dre::{
-    cli::Opts,
     detect_neuron::Neuron,
     ic_admin::{IcAdminWrapper, ProposeCommand, ProposeOptions},
 };

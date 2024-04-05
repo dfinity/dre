@@ -4,10 +4,9 @@ use clap::{Parser, Subcommand};
 use clap_num::maybe_hex;
 use ic_base_types::PrincipalId;
 use ic_management_types::{Artifact, Network};
-use log::error;
 use url::Url;
 
-use crate::detect_neuron::{auto_detect_neuron, detect_hsm_auth, Auth, Neuron};
+use crate::detect_neuron::Neuron;
 
 // For more info about the version setup, look at https://docs.rs/clap/latest/clap/struct.Command.html#method.version
 #[derive(Parser, Clone, Default)]

@@ -1,7 +1,6 @@
 use anyhow::{anyhow, Error, Result};
 use cli::UpdateVersion;
 use colored::Colorize;
-use decentralization::network;
 use dialoguer::Confirm;
 use flate2::read::GzDecoder;
 use futures::stream::{self, StreamExt};

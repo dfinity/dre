@@ -29,7 +29,7 @@ use std::net::Ipv6Addr;
 use std::ops::Deref;
 use std::str::FromStr;
 use strum::VariantNames;
-use strum_macros::{EnumString, EnumVariantNames};
+use strum_macros::EnumString;
 use url::Url;
 
 pub trait NnsFunctionProposal: CandidType + serde::de::DeserializeOwned {
