@@ -353,8 +353,12 @@ impl RegistryState {
                 match ic_repo.get_branches_with_commit(commit_hash) {
                     // For each commit get a list of branches that have the commit
                     Ok(branches) => {
-                        info!("Found {} branches for git rev: {}", branches.len(), commit_hash);
-                        debug!("Commit {} ==> branches: {}", commit_hash, branches.join(", "));
+                        debug!(
+                            "Git rev {} ==> {} branches: {}",
+                            commit_hash,
+                            branches.len(),
+                            branches.join(", ")
+                        );
                         for branch in branches.into_iter().sorted() {
                             match RE.captures(&branch) {
                                 Some(capture) => {
@@ -389,8 +393,8 @@ impl RegistryState {
                                 }
                                 None => {
                                     if branch != "master" && branch != "HEAD" {
-                                        warn!(
-                                            "branch {} for git rev {} does not match RC regex",
+                                        debug!(
+                                            "Git rev {}: branch {} does not match the RC regex",
                                             &commit_hash, &branch
                                         );
                                     }
