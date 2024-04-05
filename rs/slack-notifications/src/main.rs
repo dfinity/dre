@@ -11,12 +11,16 @@ use std::io::Write;
 use std::time::SystemTime;
 use tokio::time::{sleep, Duration};
 mod slack;
+use clap::Parser;
 
 #[macro_use]
 extern crate lazy_static;
 
 #[derive(Deserialize)]
 struct Config {}
+
+#[derive(Parser)]
+struct Args {}
 
 // Time to wait for a new proposal after the last one was created before sending
 // out the Slack notification.
@@ -26,6 +30,7 @@ const SLACK_URL_ENV: &str = "SLACK_URL";
 
 #[tokio::main]
 async fn main() {
+    let _args = Args::parse();
     std::env::set_var("RUST_LOG", "info");
     env_logger::init();
     dotenv::dotenv().ok();

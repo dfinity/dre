@@ -20,6 +20,8 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
       - name: "☁️ Setup runner"
         uses: ./.github/workflows/manage-runner-pre
 
@@ -66,6 +68,35 @@ jobs:
         run: bazel query --noshow_progress 'kind("oci_push", ...)' | xargs -I_target bazel run _target -- --tag ${GITHUB_SHA}
 
       ########################################
+      # Check if dashboard/* changed to see if
+      # it also needs to be updated in k8s
+      ########################################
+      - name: "❓ Check if dashboard/* changed in last commit"
+        id: check
+        uses: ./.github/workflows/check-modified-files-as-step
+        with:
+          path: dashboard/*
+
+      - name: "💲 Setting correct paths to update"
+        id: paths
+        shell: bash
+        run: |
+          files=(
+            bases/apps/mainnet-dashboard/statefulset-slack.yaml
+            bases/apps/mainnet-dashboard/backend/base/deployment.yaml
+          )
+          if [[ $changed == "true" ]]; then
+            echo "Adding frontend to list of files"
+            files+=( bases/apps/mainnet-dashboard/frontend/deployment.yaml )
+          else
+            echo "Skipping adding of frontend to list of files"
+          fi
+
+          echo "Output of this step:"
+          echo ${files[@]}
+          echo "files=${files[@]}" >> $GITHUB_ENV
+
+      ########################################
       # Update k8s deployments
       ########################################
       - name: "🤖 Update k8s deployments"
@@ -74,12 +105,15 @@ jobs:
         with:
           gitlab_api_token: ${{ secrets.GITLAB_K8S_API_TOKEN }}
 
+      ########################################
+      # Deploy to github pages
+      ########################################
       - name: "🚢 Deploy to GitHub Pages"
         if: ${{ github.ref == 'refs/heads/main' }}
         run: |
           git config --global user.email "actions@github.com"
           git config --global user.name "GitHub Actions"
-          bazel run "//:mkdocs" gh-deploy --force
+          bazel run "//:mkdocs" -- gh-deploy --force
 
       ########################################
       # Clean up runner
