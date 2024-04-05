@@ -7,10 +7,7 @@ use ic_management_types::{Artifact, Network};
 use log::error;
 use url::Url;
 
-use crate::{
-    detect_neuron::{detect_hsm_auth, detect_neuron, Auth, Neuron},
-    ic_admin::IcAdminWrapper,
-};
+use crate::detect_neuron::{auto_detect_neuron, detect_hsm_auth, Auth, Neuron};
 
 // For more info about the version setup, look at https://docs.rs/clap/latest/clap/struct.Command.html#method.version
 #[derive(Parser, Clone, Default)]
@@ -47,7 +44,7 @@ pub struct Opts {
     pub network: String,
 
     // NNS_URLs for the target network, comma separated.
-    // The argument is mandatory for testnets, optional for mainnet and staging
+    // The argument is mandatory for testnets, and is optional for mainnet and staging
     #[clap(long, env = "NNS_URLS", aliases = &["registry-url", "nns-url"], value_delimiter = ',')]
     pub nns_urls: Vec<Url>,
 
@@ -418,11 +415,11 @@ pub mod nodes {
 }
 
 #[derive(Clone)]
-pub struct Cli {
+pub struct ParsedCli {
     pub network: Network,
-    pub ic_admin: Option<String>,
+    pub ic_admin_bin_path: Option<String>,
     pub yes: bool,
-    pub neuron: Option<Neuron>,
+    pub neuron: Neuron,
 }
 
 #[derive(Clone)]
@@ -436,8 +433,8 @@ pub struct UpdateVersion {
     pub versions_to_retire: Option<Vec<String>>,
 }
 
-impl Cli {
-    pub fn get_neuron(&self) -> &Option<Neuron> {
+impl ParsedCli {
+    pub fn get_neuron(&self) -> &Neuron {
         &self.neuron
     }
 
@@ -475,38 +472,21 @@ impl Cli {
                 e
             )
         })?;
-        let neuron = if let Some(id) = opts.neuron_id {
-            Some(Neuron {
-                id,
-                auth: if let Some(path) = opts.private_key_pem.clone() {
-                    Auth::Keyfile { path }
-                } else if let (Some(slot), Some(pin), Some(key_id)) =
-                    (opts.hsm_slot, opts.hsm_pin.clone(), opts.hsm_key_id.clone())
-                {
-                    Auth::Hsm { pin, slot, key_id }
-                } else {
-                    detect_hsm_auth()?
-                        .ok_or_else(|| anyhow::anyhow!("No valid authentication method found for neuron: {id}"))?
-                },
-            })
-        } else if require_authentication {
-            // Early warn if there will be a problem because a neuron was not detected.
-            match detect_neuron(&network.get_nns_urls()).await {
-                Ok(Some(n)) => Some(n),
-                Ok(None) => {
-                    error!("No neuron detected.  Your HSM device is not detectable (or override variables HSM_PIN, HSM_SLOT, HSM_KEY_ID are incorrectly set); your variables NEURON_ID, PRIVATE_KEY_PEM might not be defined either.");
-                    None
-                },
-                Err(e) => return Err(anyhow::anyhow!("Failed to detect neuron: {}.  Your HSM device is not detectable (or override variables HSM_PIN, HSM_SLOT, HSM_KEY_ID are incorrectly set); your variables NEURON_ID, PRIVATE_KEY_PEM might not be defined either.", e)),
-            }
-        } else {
-            None
-        };
-        Ok(Cli {
+        let neuron = Neuron::new(
+            &network,
+            require_authentication,
+            opts.neuron_id,
+            opts.private_key_pem.clone(),
+            opts.hsm_slot.clone(),
+            opts.hsm_pin.clone(),
+            opts.hsm_key_id.clone(),
+        )
+        .await?;
+        Ok(ParsedCli {
             network: network,
             yes: opts.yes,
             neuron,
-            ic_admin: opts.ic_admin.clone(),
+            ic_admin_bin_path: opts.ic_admin.clone(),
         })
     }
 }

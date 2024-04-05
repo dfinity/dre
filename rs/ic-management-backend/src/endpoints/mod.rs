@@ -11,7 +11,6 @@ use crate::{
 use actix_web::dev::Service;
 use actix_web::{get, post, web, App, Error, HttpResponse, HttpServer, Responder, Result};
 use decentralization::network::AvailableNodesQuerier;
-use gitlab::api::projects::repository::tags;
 use ic_management_types::Network;
 use ic_registry_nns_data_provider::registry::RegistryCanister;
 use ic_types::PrincipalId;

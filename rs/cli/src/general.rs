@@ -93,11 +93,11 @@ pub async fn get_node_metrics_history(
     wallet: CanisterId,
     subnets: Vec<PrincipalId>,
     start_at_nanos: u64,
-    neuron: &Neuron,
+    auth: &Auth,
     nns_urls: &Vec<Url>,
 ) -> anyhow::Result<()> {
     let lock = Mutex::new(());
-    let canister_agent = match &neuron.auth {
+    let canister_agent = match auth {
         Auth::Hsm { pin, slot, key_id } => IcAgentCanisterClient::from_hsm(
             pin.to_string(),
             *slot,

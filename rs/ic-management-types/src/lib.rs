@@ -626,6 +626,15 @@ impl Network {
             .join(", ")
     }
 
+    pub fn get_prometheus_endpoint(&self) -> Url {
+        match self.name.as_str() {
+            "mainnet" => "https://victoria.mainnet.dfinity.network/select/0/prometheus/",
+            _ => "https://victoria.testnet.dfinity.network/select/0/prometheus",
+        }
+        .parse()
+        .expect("Couldn't parse url")
+    }
+
     pub fn legacy_name(&self) -> String {
         match self.name.as_str() {
             "mainnet" => "mercury".to_string(),

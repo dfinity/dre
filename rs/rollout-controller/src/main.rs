@@ -20,17 +20,11 @@ mod registry_wrappers;
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     let args = Cli::parse();
+    let target_network = ic_management_types::Network::new(args.network.clone(), &args.nns_urls)
+        .await
+        .expect("Failed to create network");
     let logger = make_logger(args.log_level.clone().into());
-    let prometheus_endpoint = match &args.network {
-        Network::Mainnet => Url::from_str("https://victoria.ch1-obs1.dfinity.network")
-            .map_err(|e| anyhow::anyhow!("Couldn't parse url: {:?}", e))?,
-        Network::Staging => Url::from_str("https://victoria.ch1-obsstage1.dfinity.network")
-            .map_err(|e| anyhow::anyhow!("Couldn't parse url: {:?}", e))?,
-        Network::Url(url) => url.clone(),
-    };
-    let prometheus_endpoint = prometheus_endpoint
-        .join("select/0/prometheus")
-        .map_err(|e| anyhow::anyhow!("Couldn't append victoria prometheus endpoint: {:?}", e))?;
+    let prometheus_endpoint = target_network.get_prometheus_endpoint();
 
     let client = Client::try_from(prometheus_endpoint.to_string())
         .map_err(|e| anyhow::anyhow!("Couldn't create prometheus client: {:?}", e))?;
@@ -52,8 +46,8 @@ async fn main() -> anyhow::Result<()> {
     let fetcher = fetching::resolve(args.subcommand, logger.clone()).await?;
 
     let executor = match args.private_key_pem {
-        Some(path) => ActionExecutor::new(args.neuron_id, path, args.network.clone(), false, Some(&logger)).await?,
-        None => ActionExecutor::test(args.network.clone(), Some(&logger)).await?,
+        Some(path) => ActionExecutor::new(args.neuron_id, path, target_network.clone(), false, Some(&logger)).await?,
+        None => ActionExecutor::test(target_network.clone(), Some(&logger)).await?,
     };
 
     let mut interval = tokio::time::interval(args.poll_interval);
@@ -69,10 +63,9 @@ async fn main() -> anyhow::Result<()> {
         }
         should_sleep = true;
 
-        let network = Network::new(args.network.clone(), None).await.unwrap();
-        info!(logger, "Syncing registry for network '{}'", network);
+        info!(logger, "Syncing registry for network '{}'", target_network);
         let maybe_registry_state = select! {
-            res = sync_wrap(logger.clone(), args.targets_dir.clone(), network.clone()) => res,
+            res = sync_wrap(logger.clone(), args.targets_dir.clone(), target_network.clone()) => res,
             _ = token.cancelled() => break,
         };
         let registry_state = match maybe_registry_state {
@@ -161,19 +154,14 @@ instances are stored.
     )]
     targets_dir: PathBuf,
 
-    #[clap(
-        long,
-        default_value = "mainnet",
-        help = r#"
-Target network to observe and update with the controller.
-Can be one of:
-    1. mainnet,
-    2. staging,
-    3. arbitrary nns url
-
-"#
-    )]
+    // Target network. Can be one of: "mainnet", "staging", or an arbitrary "<testnet>" name
+    #[clap(long, env = "NETWORK", default_value = "mainnet")]
     network: String,
+
+    // NNS_URLs for the target network, comma separated.
+    // The argument is mandatory for testnets, and is optional for mainnet and staging
+    #[clap(long, env = "NNS_URLS", aliases = &["registry-url", "nns-url"], value_delimiter = ',')]
+    pub nns_urls: Vec<Url>,
 
     #[clap(
         long,

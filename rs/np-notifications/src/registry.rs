@@ -39,11 +39,10 @@ pub async fn start_registry_updater_loop(config: RegistryLoopConfig) {
     }
 }
 
-pub async fn create_registry_state() -> RegistryState {
-    let target_network = ic_management_backend::config::target_network();
-    ic_management_backend::registry::sync_local_store(target_network.clone())
+pub async fn create_registry_state(target_network: Network) -> RegistryState {
+    ic_management_backend::registry::sync_local_store(&target_network)
         .await
         .expect("failed to init local store");
 
-    RegistryState::new(ic_management_types::Network::Mainnet, true).await
+    RegistryState::new(&target_network, true).await
 }

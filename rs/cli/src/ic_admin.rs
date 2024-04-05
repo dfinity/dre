@@ -1,6 +1,7 @@
 use anyhow::{anyhow, Error, Result};
 use cli::UpdateVersion;
 use colored::Colorize;
+use decentralization::network;
 use dialoguer::Confirm;
 use flate2::read::GzDecoder;
 use futures::stream::{self, StreamExt};
@@ -31,7 +32,7 @@ use std::{fmt::Display, path::Path, process::Command};
 use strum::Display;
 use tempfile::NamedTempFile;
 
-use crate::cli::Cli;
+use crate::cli::ParsedCli;
 use crate::detect_neuron::{Auth, Neuron};
 use crate::{cli, defaults};
 
@@ -139,17 +140,31 @@ impl FirewallRuleModifications {
 #[derive(Clone)]
 pub struct IcAdminWrapper {
     network: Network,
-    ic_admin: Option<String>,
-    yes: bool,
-    neuron: Option<Neuron>,
+    ic_admin_bin_path: Option<String>,
+    proceed_without_confirmation: bool,
+    neuron: Neuron,
 }
 
 impl IcAdminWrapper {
-    pub fn from_cli(cli: Cli) -> Self {
+    pub fn new(
+        network: Network,
+        ic_admin_bin_path: Option<String>,
+        proceed_without_confirmation: bool,
+        neuron: Neuron,
+    ) -> Self {
+        Self {
+            network,
+            ic_admin_bin_path,
+            proceed_without_confirmation,
+            neuron,
+        }
+    }
+
+    pub fn from_cli(cli: ParsedCli) -> Self {
         Self {
             network: cli.network,
-            ic_admin: cli.ic_admin,
-            yes: cli.yes,
+            ic_admin_bin_path: cli.ic_admin_bin_path,
+            proceed_without_confirmation: cli.yes,
             neuron: cli.neuron,
         }
     }
@@ -162,19 +177,12 @@ impl IcAdminWrapper {
                 .map(|s| s.to_str().unwrap().to_string())
                 .fold("".to_string(), |acc, s| {
                     let s = if s.contains('\n') { format!(r#""{}""#, s) } else { s };
-                    if self
-                        .neuron
-                        .as_ref()
-                        .and_then(|n| {
-                            if let Auth::Hsm { pin, .. } = &n.auth {
-                                Some(pin.clone())
-                            } else {
-                                None
-                            }
-                        })
-                        .unwrap_or_default()
-                        == s
-                    {
+                    let hsm_pin = if let Auth::Hsm { pin, .. } = &self.neuron.auth {
+                        &pin
+                    } else {
+                        ""
+                    };
+                    if hsm_pin == s {
                         format!("{acc} <redacted>")
                     } else if s.starts_with("--") {
                         format!("{acc} \\\n    {s}")
@@ -226,7 +234,7 @@ impl IcAdminWrapper {
                             ]
                         })
                         .unwrap_or_default(),
-                    cli.neuron.as_ref().map(|n| n.as_arg_vec()).unwrap_or_default(),
+                    cli.neuron.as_arg_vec(),
                     cmd.args(),
                 ]
                 .concat()
@@ -241,13 +249,8 @@ impl IcAdminWrapper {
         }
 
         // If --yes was not specified, ask the user if they want to proceed
-        if !self.yes {
+        if !self.proceed_without_confirmation {
             exec(self, cmd.clone(), opts.clone(), true)?;
-        }
-
-        // User wants to proceed but does not have neuron configuration. Bail out.
-        if self.neuron.is_none() {
-            return Err(anyhow::anyhow!("Submitting this proposal requires a neuron, which was not detected -- and would cause ic-admin to fail during submition. Please look through your scroll buffer for specific error messages about your HSM and address the issue that prevents your neuron from being detected."));
         }
 
         if Confirm::new()
@@ -264,13 +267,9 @@ impl IcAdminWrapper {
     }
 
     fn _run_ic_admin_with_args(&self, ic_admin_args: &[String], with_auth: bool) -> anyhow::Result<String> {
-        let ic_admin_path = self.ic_admin.clone().unwrap_or_else(|| "ic-admin".to_string());
+        let ic_admin_path = self.ic_admin_bin_path.clone().unwrap_or_else(|| "ic-admin".to_string());
         let mut cmd = Command::new(ic_admin_path);
-        let auth_options = if with_auth {
-            self.neuron.as_ref().map(|n| n.auth.as_arg_vec()).unwrap_or_default()
-        } else {
-            vec![]
-        };
+        let auth_options = if with_auth { self.neuron.as_arg_vec() } else { vec![] };
         let root_options = [
             auth_options,
             vec!["--nns-urls".to_string(), self.network.get_nns_urls_string()],
@@ -317,7 +316,7 @@ impl IcAdminWrapper {
     /// extract the ones matching `needle_regex` and return them as a
     /// `Vec<String>`
     fn grep_subcommands(&self, needle_regex: &str) -> Vec<String> {
-        let ic_admin_path = self.ic_admin.clone().unwrap_or_else(|| "ic-admin".to_string());
+        let ic_admin_path = self.ic_admin_bin_path.clone().unwrap_or_else(|| "ic-admin".to_string());
         let cmd_result = Command::new(ic_admin_path).args(["--help"]).output();
         match cmd_result.map_err(|e| e.to_string()) {
             Ok(output) => {
@@ -1118,7 +1117,7 @@ oSMDIQBa2NLmSmaqjDXej4rrJEuEhKIz7/pGXpxztViWhB+X9Q==
         for cmd in test_cases {
             let cli = IcAdminWrapper {
                 network: network.clone(),
-                yes: false,
+                proceed_without_confirmation: false,
                 neuron: Neuron {
                     id: 3,
                     auth: Auth::Keyfile {
@@ -1130,7 +1129,7 @@ oSMDIQBa2NLmSmaqjDXej4rrJEuEhKIz7/pGXpxztViWhB+X9Q==
                     },
                 }
                 .into(),
-                ic_admin: None,
+                ic_admin_bin_path: None,
             };
 
             let cmd_name = cmd.to_string();
@@ -1141,7 +1140,7 @@ oSMDIQBa2NLmSmaqjDXej4rrJEuEhKIz7/pGXpxztViWhB+X9Q==
             };
 
             let vector = vec![
-                if !cli.yes {
+                if !cli.proceed_without_confirmation {
                     vec!["--dry-run".to_string()]
                 } else {
                     Default::default()
@@ -1163,7 +1162,7 @@ oSMDIQBa2NLmSmaqjDXej4rrJEuEhKIz7/pGXpxztViWhB+X9Q==
                         ]
                     })
                     .unwrap_or_default(),
-                cli.neuron.as_ref().map(|n| n.as_arg_vec()).unwrap_or_default(),
+                cli.neuron.as_arg_vec(),
                 cmd.args(),
             ]
             .concat()

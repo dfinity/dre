@@ -1,6 +1,7 @@
 use crate::ic_admin::IcAdminWrapper;
 use clap::{error::ErrorKind, CommandFactory, Parser};
 use dotenv::dotenv;
+use dre::detect_neuron::Auth;
 use dre::general::{get_node_metrics_history, vote_on_proposals};
 use dre::operations::hostos_rollout::{NodeGroupUpdate, NumberOfNodes};
 use dre::{cli, ic_admin, local_unused_port, registry_dump, runner};
@@ -75,13 +76,13 @@ async fn main() -> Result<(), anyhow::Error> {
         let simulate = cli_opts.simulate;
 
         let runner_unauth = || async {
-            let cli = cli::Cli::from_opts(&cli_opts, false).await.expect("Failed to create unauthenticated CLI");
+            let cli = cli::ParsedCli::from_opts(&cli_opts, false).await.expect("Failed to create unauthenticated CLI");
             let ic_admin_wrapper = IcAdminWrapper::from_cli(cli);
             runner::Runner::new_with_network_url(ic_admin_wrapper, backend_port).await.expect("Failed to create unauthenticated runner")
         };
 
         let runner_auth = || async {
-            let cli = cli::Cli::from_opts(&cli_opts, true).await.expect("Failed to create authenticated CLI");
+            let cli = cli::ParsedCli::from_opts(&cli_opts, true).await.expect("Failed to create authenticated CLI");
             let ic_admin_wrapper = IcAdminWrapper::from_cli(cli);
             runner::Runner::new_with_network_url(ic_admin_wrapper, backend_port).await.expect("Failed to create authenticated runner")
         };
@@ -239,7 +240,7 @@ async fn main() -> Result<(), anyhow::Error> {
 
                         runner_auth.ic_admin.propose_run(ic_admin::ProposeCommand::UpdateElectedVersions {
                                                  release_artifact: update_version.release_artifact.clone(),
-                                                 args: cli::Cli::get_update_cmd_args(&update_version)
+                                                 args: cli::ParsedCli::get_update_cmd_args(&update_version)
                                              },
                                              ic_admin::ProposeOptions{
                                                  title: Some(update_version.title),
@@ -287,23 +288,13 @@ async fn main() -> Result<(), anyhow::Error> {
             },
 
             cli::Commands::Vote {accepted_neurons, accepted_topics}=> {
-                let cli = cli::Cli::from_opts(&cli_opts, true).await?;
-                vote_on_proposals(match cli.get_neuron() {
-                    Some(neuron) => neuron,
-                    None => return Err(anyhow::anyhow!("Neuron required for this command")),
-                }, &target_network.get_nns_urls(), accepted_neurons, accepted_topics, simulate).await
+                let cli = cli::ParsedCli::from_opts(&cli_opts, true).await?;
+                vote_on_proposals(cli.get_neuron(), &target_network.get_nns_urls(), accepted_neurons, accepted_topics, simulate).await
             },
 
             cli::Commands::TrustworthyMetrics { wallet, start_at_timestamp, subnet_ids } => {
-                // Neuron is not actually needed for this operation, we only need other authentication params
-                // Unfortunately, we need to create a Cli object to get the NNS URL and this object at the moment
-                // requires a neuron to be set. We set a dummy neuron here to get around this.
-                let cli_opts = cli::Opts { neuron_id: Some(0), ..cli_opts.clone() };
-                let cli = cli::Cli::from_opts(&cli_opts, true).await?;
-                get_node_metrics_history(CanisterId::from_str(wallet)?, subnet_ids.clone(), *start_at_timestamp, match cli.get_neuron() {
-                    Some(neuron) => neuron,
-                    None => return Err(anyhow::anyhow!("Neuron required for this command")),
-                }, &target_network.get_nns_urls()).await
+                let auth = Auth::from_cli_args(cli_opts.private_key_pem, cli_opts.hsm_slot, cli_opts.hsm_pin, cli_opts.hsm_key_id)?;
+                get_node_metrics_history(CanisterId::from_str(wallet)?, subnet_ids.clone(), *start_at_timestamp, &auth, &target_network.get_nns_urls()).await
             },
 
             cli::Commands::DumpRegistry { version, path } => {
