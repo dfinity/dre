@@ -18,9 +18,6 @@ use reqwest::Url;
 #[macro_use]
 extern crate lazy_static;
 
-#[derive(Deserialize)]
-struct Config {}
-
 // Time to wait for a new proposal after the last one was created before sending
 // out the Slack notification.
 const COOLING_PERIOD_SECS: u64 = 60;
