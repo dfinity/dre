@@ -788,6 +788,7 @@ mod tests {
         assert_eq!(network.get_nns_urls(), &expected_nns_urls);
     }
 
+    #[ignore] // Ignore failures since staging IC is not accessible from GitHub actions
     #[tokio::test]
     async fn test_network_new_staging() {
         let network = Network::new("staging", &vec![]).await.unwrap();
