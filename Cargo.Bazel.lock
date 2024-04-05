@@ -1,5 +1,5 @@
 {
-  "checksum": "244cb963c9d906d64fd728bd61c79e93eace27a39e17189082687eab85c35b92",
+  "checksum": "31058f9f66529f2b114e4c4508e3cc6dbf7243335ca17851bca859ae720bcccd",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -21786,6 +21786,10 @@
               "target": "chrono"
             },
             {
+              "id": "clap 4.5.4",
+              "target": "clap"
+            },
+            {
               "id": "csv 1.3.0",
               "target": "csv"
             },
@@ -30381,6 +30385,10 @@
               "target": "anyhow"
             },
             {
+              "id": "clap 4.5.4",
+              "target": "clap"
+            },
+            {
               "id": "ic-types 0.9.0",
               "target": "ic_types"
             },
@@ -31571,6 +31579,12 @@
           ],
           "selects": {}
         },
+        "extra_deps": {
+          "common": [
+            "@openssl//:openssl"
+          ],
+          "selects": {}
+        },
         "edition": "2018",
         "proc_macro_deps": {
           "common": [
@@ -31672,6 +31686,12 @@
         "compile_data_glob": [
           "**"
         ],
+        "extra_deps": {
+          "common": [
+            "@openssl//:openssl"
+          ],
+          "selects": {}
+        },
         "edition": "2015",
         "version": "0.1.5"
       },
@@ -31721,6 +31741,12 @@
               "id": "openssl-sys 0.9.101",
               "target": "build_script_main"
             }
+          ],
+          "selects": {}
+        },
+        "extra_deps": {
+          "common": [
+            "@openssl//:openssl"
           ],
           "selects": {}
         },
@@ -40291,6 +40317,10 @@
             {
               "id": "candid 0.10.6",
               "target": "candid"
+            },
+            {
+              "id": "clap 4.5.4",
+              "target": "clap"
             },
             {
               "id": "dotenv 0.15.0",

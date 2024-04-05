@@ -45,6 +45,7 @@ use crate::registry::{start_registry_updater_loop, RegistryLoopConfig};
 use crate::router::Router;
 use crate::service_health::ServiceHealth;
 use crate::sink::{LogSink, Sink};
+use clap::Parser;
 
 mod health_check;
 mod nodes_status;
@@ -54,8 +55,13 @@ mod router;
 mod service_health;
 mod sink;
 
+#[derive(Parser)]
+struct Args {}
+
 #[actix_web::main]
 async fn main() {
+    let _args = Args::parse();
+
     let subscriber = FmtSubscriber::builder().with_max_level(Level::INFO).compact().finish();
     LogTracer::builder().init().expect("can create a log tracer");
     tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");

@@ -53,3 +53,20 @@ runs:
       with:
         branch: ${{ github.head_ref }}
         ssh: true
+
+    - name: Dry run tarballs
+      shell: bash
+      run: |
+        #!/bin/bash
+
+        set -euo pipefail
+        bazel query ... | grep -E "tarball$" | while IFS= read -r target; do
+            echo "Testing $target"
+            bazel run $target
+
+            image=$(echo $target | awk -F: '{ print $1 }' | awk -F/ '{ print $NF }')
+            image="localhost/$image"
+            echo "Testing dry run on image: $image"
+            docker run --rm $image --help
+        done
+
