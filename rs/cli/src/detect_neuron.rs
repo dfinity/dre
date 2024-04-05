@@ -136,7 +136,7 @@ impl Auth {
         hsm_key_id: Option<String>,
     ) -> anyhow::Result<Self> {
         match (private_key_pem, hsm_slot, hsm_pin, hsm_key_id) {
-            (Some(path), None, None, None) => Ok(Auth::Keyfile { path }),
+            (Some(path), _, _, _) => Ok(Auth::Keyfile { path }),
             (None, Some(slot), Some(pin), Some(key_id)) => Ok(Auth::Hsm { pin, slot, key_id }),
             _ => Err(anyhow::anyhow!("Invalid auth arguments")),
         }
