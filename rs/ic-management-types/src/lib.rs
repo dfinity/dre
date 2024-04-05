@@ -738,9 +738,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_network_new_mainnet() {
-        let name = "mainnet";
-        let nns_urls = vec![];
-        let network = Network::new(name, &nns_urls).await.unwrap();
+        let network = Network::new("mainnet", &vec![]).await.unwrap();
 
         assert_eq!(network.name, "mainnet");
         assert_eq!(network.get_nns_urls(), &vec![Url::from_str("https://ic0.app").unwrap()]);
