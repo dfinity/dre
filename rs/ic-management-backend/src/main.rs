@@ -14,13 +14,8 @@ use clap::Parser;
 use dotenv::dotenv;
 use url::Url;
 
-#[derive(Parser)]
-struct Args {}
-
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    let _args = Args::parse();
-
     dotenv().ok();
     std::env::set_var("RUST_LOG", "info");
     env_logger::init();

@@ -25,5 +25,8 @@ url = { workspace = true }
 anyhow = { workspace = true }
 candid = { workspace = true }
 
+[dev-dependencies]
+wiremock = { workspace = true }
+
 [lib]
 path = "src/lib.rs"

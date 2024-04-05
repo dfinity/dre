@@ -592,7 +592,7 @@ impl Network {
                 },
             ),
             "staging" => (
-                "mainnet".to_string(),
+                "staging".to_string(),
                 if nns_urls.is_empty() {
                     vec![Url::from_str("http://[2600:3000:6100:200:5000:b0ff:fe8e:6b7b]:8080").unwrap()]
                 } else {
@@ -608,10 +608,11 @@ impl Network {
                 },
             ),
         };
-        Ok(Network {
-            name,
-            nns_urls: find_reachable_nns_urls(nns_urls).await,
-        })
+        let nns_urls = find_reachable_nns_urls(nns_urls).await;
+        if nns_urls.is_empty() {
+            return Err("No reachable NNS URLs provided".to_string());
+        }
+        Ok(Network { name, nns_urls })
     }
 
     pub fn get_nns_urls(&self) -> &Vec<Url> {
@@ -623,13 +624,13 @@ impl Network {
             .iter()
             .map(|url| url.to_string())
             .collect::<Vec<String>>()
-            .join(", ")
+            .join(",")
     }
 
     pub fn get_prometheus_endpoint(&self) -> Url {
         match self.name.as_str() {
             "mainnet" => "https://victoria.mainnet.dfinity.network/select/0/prometheus/",
-            _ => "https://victoria.testnet.dfinity.network/select/0/prometheus",
+            _ => "https://victoria.testnet.dfinity.network/select/0/prometheus/",
         }
         .parse()
         .expect("Couldn't parse url")
@@ -728,4 +729,130 @@ async fn find_reachable_nns_urls(nns_urls: Vec<Url>) -> Vec<Url> {
     }
 
     Vec::new()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use wiremock::MockServer;
+
+    #[tokio::test]
+    async fn test_network_new_mainnet() {
+        let name = "mainnet";
+        let nns_urls = vec![];
+        let network = Network::new(name, &nns_urls).await.unwrap();
+
+        assert_eq!(network.name, "mainnet");
+        assert_eq!(network.get_nns_urls(), &vec![Url::from_str("https://ic0.app").unwrap()]);
+    }
+
+    #[tokio::test]
+    async fn test_network_new_mainnet_custom_url() {
+        let mock_server = MockServer::start().await;
+        let mock_server_url: Url = mock_server.uri().parse().unwrap();
+        let network = Network::new("mainnet", &vec![mock_server_url.clone()]).await.unwrap();
+
+        assert_eq!(network.name, "mainnet");
+        assert_eq!(network.get_nns_urls(), &vec![mock_server_url]);
+    }
+
+    #[tokio::test]
+    async fn test_network_new_mainnet_custom_and_invalid_url() {
+        let mock_server = MockServer::start().await;
+        let mock_server_url: Url = mock_server.uri().parse().unwrap();
+        let invalid_url1 = Url::from_str("https://unreachable.url1").unwrap();
+        let invalid_url2 = Url::from_str("https://unreachable.url2").unwrap();
+
+        let expected_nns_urls = vec![mock_server_url.clone()];
+
+        // Test with the invalid URL last
+        let network = Network::new("mainnet", &vec![mock_server_url.clone(), invalid_url1.clone()])
+            .await
+            .unwrap();
+
+        assert_eq!(network.name, "mainnet");
+        assert_eq!(network.get_nns_urls(), &expected_nns_urls);
+
+        // Test with the invalid URL first
+        let network = Network::new("mainnet", &vec![invalid_url1.clone(), mock_server_url.clone()])
+            .await
+            .unwrap();
+
+        assert_eq!(network.name, "mainnet");
+        assert_eq!(network.get_nns_urls(), &expected_nns_urls);
+
+        // Test with the valid URL in the middle
+        let network = Network::new("mainnet", &vec![invalid_url1, mock_server_url.clone(), invalid_url2])
+            .await
+            .unwrap();
+
+        assert_eq!(network.name, "mainnet");
+        assert_eq!(network.get_nns_urls(), &expected_nns_urls);
+    }
+
+    #[tokio::test]
+    async fn test_network_new_staging() {
+        let network = Network::new("staging", &vec![]).await.unwrap();
+
+        assert_eq!(network.name, "staging");
+        assert_eq!(
+            network.get_nns_urls(),
+            &vec![Url::from_str("http://[2600:3000:6100:200:5000:b0ff:fe8e:6b7b]:8080").unwrap()]
+        );
+    }
+
+    #[tokio::test]
+    async fn test_network_new_all_unreachable() {
+        let name = "custom";
+        let nns_urls = vec![Url::from_str("https://unreachable.url").unwrap()];
+        let network = Network::new(name, &nns_urls).await;
+
+        assert_eq!(network, Err("No reachable NNS URLs provided".to_string()));
+    }
+
+    #[test]
+    fn test_network_get_nns_urls_string() {
+        let nns_urls = vec![
+            Url::from_str("https://ic0.app").unwrap(),
+            Url::from_str("https://custom.nns").unwrap(),
+        ];
+        let network = Network {
+            name: "mainnet".to_string(),
+            nns_urls,
+        };
+
+        assert_eq!(network.get_nns_urls_string(), "https://ic0.app/,https://custom.nns/");
+    }
+
+    #[test]
+    fn test_network_get_prometheus_endpoint() {
+        let network = Network {
+            name: "mainnet".to_string(),
+            nns_urls: vec![],
+        };
+
+        assert_eq!(
+            network.get_prometheus_endpoint(),
+            Url::parse("https://victoria.mainnet.dfinity.network/select/0/prometheus/").unwrap()
+        );
+
+        let network = Network {
+            name: "some_testnet".to_string(),
+            nns_urls: vec![],
+        };
+        assert_eq!(
+            network.get_prometheus_endpoint(),
+            Url::parse("https://victoria.testnet.dfinity.network/select/0/prometheus/").unwrap()
+        );
+    }
+
+    #[test]
+    fn test_network_legacy_name() {
+        let network = Network {
+            name: "mainnet".to_string(),
+            nns_urls: vec![],
+        };
+
+        assert_eq!(network.legacy_name(), "mercury");
+    }
 }

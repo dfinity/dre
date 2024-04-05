@@ -2,8 +2,5 @@ use ic_management_types::Network;
 use prometheus_http_query::Client;
 
 pub fn client(network: &Network) -> Client {
-    match network.name.as_str() {
-        "mainnet" => Client::try_from("https://victoria.mainnet.dfinity.network/select/0/prometheus/").unwrap(),
-        _ => Client::try_from("https://victoria.testnet.dfinity.network/select/0/prometheus").unwrap(),
-    }
+    Client::try_from(network.get_prometheus_endpoint().as_str()).unwrap()
 }

@@ -46,7 +46,6 @@ use crate::registry::{start_registry_updater_loop, RegistryLoopConfig};
 use crate::router::Router;
 use crate::service_health::ServiceHealth;
 use crate::sink::{LogSink, Sink};
-use clap::Parser;
 
 mod health_check;
 mod nodes_status;
