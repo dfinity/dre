@@ -78,13 +78,13 @@ async fn main() -> Result<(), anyhow::Error> {
         let runner_unauth = || async {
             let cli = cli::ParsedCli::from_opts(&cli_opts, false).await.expect("Failed to create unauthenticated CLI");
             let ic_admin_wrapper = IcAdminWrapper::from_cli(cli);
-            runner::Runner::new_with_network_url(ic_admin_wrapper, backend_port).await.expect("Failed to create unauthenticated runner")
+            runner::Runner::new_with_network_and_backend_port(ic_admin_wrapper, &target_network, backend_port).await.expect("Failed to create unauthenticated runner")
         };
 
         let runner_auth = || async {
             let cli = cli::ParsedCli::from_opts(&cli_opts, true).await.expect("Failed to create authenticated CLI");
             let ic_admin_wrapper = IcAdminWrapper::from_cli(cli);
-            runner::Runner::new_with_network_url(ic_admin_wrapper, backend_port).await.expect("Failed to create authenticated runner")
+            runner::Runner::new_with_network_and_backend_port(ic_admin_wrapper, &target_network, backend_port).await.expect("Failed to create authenticated runner")
         };
 
         match &cli_opts.subcommand {

@@ -33,7 +33,7 @@ impl DashboardBackendClient {
         }
     }
 
-    pub fn new_with_network_url(url: String) -> Self {
+    pub fn new_with_backend_url(url: String) -> Self {
         Self {
             url: reqwest::Url::parse(&url).unwrap(),
         }

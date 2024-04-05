@@ -181,13 +181,14 @@ impl Runner {
         Ok(())
     }
 
-    pub async fn new_with_network_url(ic_admin: ic_admin::IcAdminWrapper, backend_port: u16) -> anyhow::Result<Self> {
+    pub async fn new_with_network_and_backend_port(
+        ic_admin: ic_admin::IcAdminWrapper,
+        network: &Network,
+        backend_port: u16,
+    ) -> anyhow::Result<Self> {
         let backend_url = format!("http://localhost:{}/", backend_port);
-        let network = Network::new("localhost", &vec![backend_url.parse()?])
-            .await
-            .map_err(|e| anyhow::format_err!("{}", e))?;
 
-        let dashboard_backend_client = DashboardBackendClient::new_with_network_url(backend_url);
+        let dashboard_backend_client = DashboardBackendClient::new_with_backend_url(backend_url);
         Ok(Self {
             ic_admin,
             dashboard_backend_client,
@@ -201,7 +202,7 @@ impl Runner {
         // TODO: Remove once DREL-118 completed.
         let backend_port = local_unused_port();
         let backend_url = format!("http://localhost:{}/", backend_port);
-        let dashboard_backend_client = DashboardBackendClient::new_with_network_url(backend_url);
+        let dashboard_backend_client = DashboardBackendClient::new_with_backend_url(backend_url);
 
         let mut registry = registry::RegistryState::new(network, true).await;
         let node_providers = query_ic_dashboard_list::<NodeProvidersResponse>("v3/node-providers")
