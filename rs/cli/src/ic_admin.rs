@@ -268,7 +268,11 @@ impl IcAdminWrapper {
     fn _run_ic_admin_with_args(&self, ic_admin_args: &[String], with_auth: bool) -> anyhow::Result<String> {
         let ic_admin_path = self.ic_admin_bin_path.clone().unwrap_or_else(|| "ic-admin".to_string());
         let mut cmd = Command::new(ic_admin_path);
-        let auth_options = if with_auth { self.neuron.as_arg_vec() } else { vec![] };
+        let auth_options = if with_auth {
+            self.neuron.auth.as_arg_vec()
+        } else {
+            vec![]
+        };
         let root_options = [
             auth_options,
             vec!["--nns-urls".to_string(), self.network.get_nns_urls_string()],
@@ -1161,7 +1165,7 @@ oSMDIQBa2NLmSmaqjDXej4rrJEuEhKIz7/pGXpxztViWhB+X9Q==
                         ]
                     })
                     .unwrap_or_default(),
-                cli.neuron.as_arg_vec(),
+                cli.neuron.auth.as_arg_vec(),
                 cmd.args(),
             ]
             .concat()
