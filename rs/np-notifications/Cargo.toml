@@ -26,7 +26,6 @@ tracing = { version = "0.1.37", features = ["log"] }
 tracing-log = { version = "0.2.0", features = ["log-tracer"] }
 tracing-subscriber = "0.3.17"
 url = { workspace = true }
-clap = { workspace = true }
 
 [dev-dependencies]
 tempfile = { workspace = true }

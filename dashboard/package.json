@@ -7,9 +7,9 @@
   },
   "scripts": {
     "dev-staging": "concurrently \"yarn start\" \"yarn start-backend\" \"yarn start-rust-backend-staging\"",
-    "start-rust-backend-staging": "cd .. && BACKEND_PORT=8081 RUST_BACKTRACE=1 cargo watch -C rs/ic-management-backend -x 'run --release --color=always' --network staging",
+    "start-rust-backend-staging": "cd .. && BACKEND_PORT=8081 RUST_BACKTRACE=1 cargo watch -C rs/ic-management-backend -x 'run --release --color=always -- --network staging'",
     "dev-mainnet": "concurrently \"yarn start\" \"yarn start-backend\" \"yarn start-rust-backend-mainnet\"",
-    "start-rust-backend-mainnet": "cd .. && RUST_BACKTRACE=1 cargo watch -C rs/ic-management-backend -x 'run --release --color=always' --network mainnet",
+    "start-rust-backend-mainnet": "cd .. && RUST_BACKTRACE=1 cargo watch -C rs/ic-management-backend -x 'run --release --color=always -- --network mainnet'",
     "dev": "concurrently \"yarn start\" \"yarn start-backend\" \"yarn start-rust-backend-staging\" \"yarn start-rust-backend-mainnet\"",
     "start": "yarn workspace app start",
     "start-backend": "yarn workspace backend start",
