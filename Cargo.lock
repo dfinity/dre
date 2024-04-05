@@ -4357,6 +4357,7 @@ dependencies = [
  "backon",
  "candid",
  "chrono",
+ "clap 4.5.4",
  "csv",
  "custom_error",
  "decentralization",
@@ -6074,6 +6075,7 @@ version = "0.3.2"
 dependencies = [
  "actix-web",
  "anyhow",
+ "clap 4.5.4",
  "httptest",
  "ic-management-backend",
  "ic-management-types",
@@ -7961,6 +7963,7 @@ version = "0.3.2"
 dependencies = [
  "anyhow",
  "candid",
+ "clap 4.5.4",
  "dotenv",
  "env_logger 0.11.3",
  "futures",
