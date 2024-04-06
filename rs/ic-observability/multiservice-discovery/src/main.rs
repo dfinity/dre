@@ -65,7 +65,7 @@ fn main() {
         if let Some(running_def) = rt.block_on(sync(&cli_args, &log, shutdown_signal)) {
             let mut definitions_ref: BTreeMap<String, RunningDefinition> = BTreeMap::new();
             definitions_ref.insert(running_def.name().clone(), running_def);
-            let (_, text) = serialize_definitions_to_prometheus_config(definitions_ref);
+            let (_, text) = serialize_definitions_to_prometheus_config(definitions_ref, None);
             print!("{}", text);
         }
     } else {

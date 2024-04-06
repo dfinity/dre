@@ -1,22 +1,26 @@
 use crate::definition::RunningDefinition;
 
+use super::filters::AttributesFilter;
 use super::{ok, Server};
-use axum::extract::State;
+use axum::extract::{Query, State};
 use axum::http::StatusCode;
 use multiservice_discovery_shared::builders::prometheus_config_structure::{map_target_group, PrometheusStaticConfig};
 use multiservice_discovery_shared::contracts::target::{map_to_target_dto, TargetDto};
 use service_discovery::job_types::{JobType, NodeOS};
-use std::collections::BTreeMap;
+use service_discovery::TargetGroup;
+use std::collections::{BTreeMap, BTreeSet};
 
-pub fn serialize_definitions_to_prometheus_config(definitions: BTreeMap<String, RunningDefinition>) -> (usize, String) {
+pub fn serialize_definitions_to_prometheus_config(definitions: BTreeMap<String, RunningDefinition>, target_group_filter: Option<AttributesFilter>) -> (usize, String) {
     let mut ic_node_targets: Vec<TargetDto> = vec![];
-
     for (_, def) in definitions.iter() {
         for job_type in JobType::all_for_ic_nodes() {
-            let targets = match def.get_target_groups(job_type) {
+            let targets: BTreeSet<TargetGroup> = match def.get_target_groups(job_type) {
                 Ok(targets) => targets,
                 Err(_) => continue,
-            };
+            }
+            .into_iter()
+            .filter(|tg| target_group_filter.as_ref().map_or(true, |f| f.filter(tg)))
+            .collect();
 
             targets.iter().for_each(|target_group| {
                 if let Some(target) = ic_node_targets.iter_mut().find(|t| t.node_id == target_group.node_id) {
@@ -80,9 +84,9 @@ pub fn serialize_definitions_to_prometheus_config(definitions: BTreeMap<String, 
     )
 }
 
-pub(super) async fn export_prometheus_config(State(binding): State<Server>) -> Result<String, (StatusCode, String)> {
+pub(super) async fn export_prometheus_config(State(binding): State<Server>, Query(filter): Query<AttributesFilter>) -> Result<String, (StatusCode, String)> {
     let definitions = binding.supervisor.definitions.lock().await;
-    let (targets_len, text) = serialize_definitions_to_prometheus_config(definitions.clone());
+    let (targets_len, text) = serialize_definitions_to_prometheus_config(definitions.clone(), Some(filter));
     if targets_len > 0 {
         ok(binding.log, text)
     } else {
