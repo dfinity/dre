@@ -121,7 +121,7 @@ mod tests {
         // Node added
         // Node removed
         // Node unchanged
-        let ids = vec![
+        let ids = [
             PrincipalId::new_node_test_id(0),
             PrincipalId::new_node_test_id(1),
             PrincipalId::new_node_test_id(2),

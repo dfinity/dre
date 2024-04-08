@@ -1,4 +1,5 @@
-use std::{cell::RefCell, sync::Arc};
+use std::cell::RefCell;
+use std::rc::Rc;
 
 use anyhow::anyhow;
 use anyhow::Result;
@@ -13,7 +14,7 @@ pub enum Sink {
     #[allow(unused)]
     Webhook(WebhookSink),
     #[allow(unused)]
-    Test(Arc<TestSink>),
+    Test(Rc<TestSink>),
 }
 
 impl Sink {

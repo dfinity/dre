@@ -193,6 +193,7 @@ impl ReleasesOps for ArtifactReleases {
     }
 }
 
+#[allow(dead_code)]
 impl RegistryState {
     pub async fn new(network: Network, without_update_loop: bool) -> Self {
         let nns_url = network.get_url().to_string();

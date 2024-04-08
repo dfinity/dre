@@ -143,7 +143,8 @@ mod tests {
     use rand::distributions::Alphanumeric;
     use rand::{thread_rng, Rng};
     use std::path::Path;
-    use std::{fs::File, io::Write, str::FromStr, sync::Arc};
+    use std::rc::Rc;
+    use std::{fs::File, io::Write, str::FromStr};
 
     use crate::router::CONFIG_FILE_PATH_VAR_NAME;
     use crate::{
@@ -292,7 +293,7 @@ node_providers:
             status_change: (Status::Healthy, Status::Degraded),
         };
 
-        let test_sink = Arc::new(TestSink::new());
+        let test_sink = Rc::new(TestSink::new());
         let router = Router {
             routes: vec![Route {
                 matcher: Matcher {

@@ -133,7 +133,6 @@ impl NakamotoScore {
             // all strings and their counts
             let value_counts = counters
                 .into_iter()
-                .map(|(feat, cnt)| (feat, cnt))
                 .sorted_by_key(|(_feat, cnt)| -(*cnt as isize))
                 .collect::<Vec<_>>();
 
@@ -810,8 +809,8 @@ mod tests {
             nodes: subnet_all
                 .nodes
                 .iter()
-                .cloned()
                 .filter(|n| !re_unhealthy_nodes.is_match(&n.id.to_string()))
+                .cloned()
                 .collect(),
             removed_nodes: Vec::new(),
             min_nakamoto_coefficients: None,

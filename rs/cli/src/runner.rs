@@ -202,7 +202,7 @@ impl Runner {
         let node_providers = query_ic_dashboard_list::<NodeProvidersResponse>("v3/node-providers")
             .await?
             .node_providers;
-        let _ = registry.update_node_details(&node_providers).await?;
+        registry.update_node_details(&node_providers).await?;
         Ok(Self {
             ic_admin,
             dashboard_backend_client,
@@ -300,8 +300,8 @@ impl Runner {
             self.registry.subnets(),
             self.registry.network(),
             ProposalAgent::new(self.registry.nns_url()),
-            &version,
-            &exclude,
+            version,
+            exclude,
         );
 
         match hostos_rollout.execute(node_group).await? {

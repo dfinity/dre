@@ -81,6 +81,7 @@ pub struct UpdateUnassignedNodesProposal {
     pub payload: UpdateUnassignedNodesConfigPayload,
 }
 
+#[allow(dead_code)]
 impl ProposalAgent {
     pub fn new(url: String) -> Self {
         let agent = Agent::builder()

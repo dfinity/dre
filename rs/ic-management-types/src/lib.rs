@@ -561,18 +561,13 @@ impl Artifact {
     }
 }
 
-#[derive(Clone, PartialEq, Eq, strum_macros::Display)]
+#[derive(Clone, PartialEq, Eq, strum_macros::Display, Default)]
 #[strum(serialize_all = "lowercase")]
 pub enum Network {
     Staging,
+    #[default]
     Mainnet,
     Url(url::Url),
-}
-
-impl Default for Network {
-    fn default() -> Self {
-        Network::Mainnet
-    }
 }
 
 impl Debug for Network {
