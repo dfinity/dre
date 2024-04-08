@@ -44,7 +44,7 @@ async-recursion = "1.1.0"
 async-timer = "0.7.4"
 async-trait = "0.1.79"
 backoff = { version = "0.4.0", features = ["tokio"] }
-backon = "0.4.3"
+backon = "0.4.4"
 candid = "0.10.6"
 chrono = { version = "0.4.37", features = ["serde"] }
 clap-num = "1.1"
@@ -139,7 +139,7 @@ pretty_assertions = "1.4.0"
 pretty_env_logger = "0.5.0"
 prometheus-http-query = "0.8.2"
 prometheus = { version = "0.13.3", features = ["process"] }
-prost = "0.12.3"
+prost = "0.12.4"
 rand = { version = "0.8.5", features = ["std_rng"] }
 rand_seeder = "0.2.3"
 rayon = "1.10.0"
@@ -171,7 +171,7 @@ tabled = "0.15.0"
 tabular = "0.2"
 tempfile = "3.10.0"
 thiserror = "1.0.57"
-tokio = { version = "1.2.0", features = ["full"] }
+tokio = { version = "1.37.0", features = ["full"] }
 url = "2.5.0"
 urlencoding = "2.1.0"
 warp = "0.3"
