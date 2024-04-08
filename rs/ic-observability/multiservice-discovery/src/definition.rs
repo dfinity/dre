@@ -1,7 +1,6 @@
 use crossbeam_channel::Receiver;
 use crossbeam_channel::Sender;
 use futures_util::future::join_all;
-use ic_management_types::Network;
 use ic_registry_client::client::ThresholdSigPublicKey;
 use serde::Deserialize;
 use serde::Serialize;
@@ -285,7 +284,7 @@ impl RunningDefinition {
         let r = sync_local_registry(
             self.definition.log.clone(),
             self.definition.registry_path.join("targets"),
-            self.definition.nns_urls.clone(),
+            &self.definition.nns_urls.clone(),
             use_current_version,
             self.definition.public_key,
             &self.stop_signal,
@@ -573,12 +572,12 @@ impl DefinitionsSupervisor {
         }
 
         if !self.allow_mercury_deletion
-            && !ic_names_to_add.contains(&Network::Mainnet.legacy_name())
+            && !ic_names_to_add.contains("mercury")
             && start_mode == StartMode::ReplaceExistingDefinitions
         {
             error
                 .errors
-                .push(StartDefinitionError::DeletionDisallowed(Network::Mainnet.legacy_name()))
+                .push(StartDefinitionError::DeletionDisallowed("mercury".to_string()))
         }
 
         if !error.errors.is_empty() {
@@ -657,7 +656,7 @@ impl DefinitionsSupervisor {
         errors.extend(
             definition_names
                 .iter()
-                .filter(|n| **n == Network::Mainnet.legacy_name() && !self.allow_mercury_deletion)
+                .filter(|n| *n == "mercury" && !self.allow_mercury_deletion)
                 .map(|n| StopDefinitionError::DeletionDisallowed(n.clone())),
         );
         if !errors.is_empty() {

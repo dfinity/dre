@@ -29,8 +29,8 @@ use std::sync::mpsc;
 
 use actix_web::rt::signal;
 use actix_web::{web, App, HttpServer};
+use clap::Parser;
 use health_check::HealthCheckLoopConfig;
-use ic_management_backend::config::target_network;
 
 use notification::NotificationSenderLoopConfig;
 
@@ -38,6 +38,7 @@ use tokio_util::sync::CancellationToken;
 use tracing::{debug, info, Level};
 use tracing_log::LogTracer;
 use tracing_subscriber::FmtSubscriber;
+use url::Url;
 
 use crate::health_check::start_health_check_loop;
 use crate::notification::start_notification_sender_loop;
@@ -45,7 +46,6 @@ use crate::registry::{start_registry_updater_loop, RegistryLoopConfig};
 use crate::router::Router;
 use crate::service_health::ServiceHealth;
 use crate::sink::{LogSink, Sink};
-use clap::Parser;
 
 mod health_check;
 mod nodes_status;
@@ -55,12 +55,12 @@ mod router;
 mod service_health;
 mod sink;
 
-#[derive(Parser)]
-struct Args {}
-
 #[actix_web::main]
 async fn main() {
-    let _args = Args::parse();
+    let cli_opts = Cli::parse();
+    let target_network = ic_management_types::Network::new(cli_opts.network.clone(), &cli_opts.nns_urls)
+        .await
+        .expect("Failed to create network");
 
     let subscriber = FmtSubscriber::builder().with_max_level(Level::INFO).compact().finish();
     LogTracer::builder().init().expect("can create a log tracer");
@@ -76,14 +76,14 @@ async fn main() {
 
     actix_web::rt::spawn(start_registry_updater_loop(RegistryLoopConfig {
         cancellation_token: cancellation_token.clone(),
-        target_network: target_network(),
+        target_network: target_network.clone(),
         service_health: service_health.clone(),
     }));
 
     actix_web::rt::spawn(start_health_check_loop(HealthCheckLoopConfig {
         notification_sender: notif_sender.clone(),
         cancellation_token: cancellation_token.clone(),
-        registry_state: registry::create_registry_state().await,
+        registry_state: registry::create_registry_state(target_network).await,
         service_health: service_health.clone(),
     }));
 
@@ -125,4 +125,17 @@ async fn main() {
     cancellation_token.cancel();
     debug!("Stopping server");
     srv_handle.stop(true).await
+}
+
+#[derive(Parser, Debug)]
+#[clap(about, version)]
+struct Cli {
+    // Target network. Can be one of: "mainnet", "staging", or an arbitrary "<testnet>" name
+    #[clap(long, env = "NETWORK", default_value = "mainnet")]
+    network: String,
+
+    // NNS_URLs for the target network, comma separated.
+    // The argument is mandatory for testnets, and is optional for mainnet and staging
+    #[clap(long, env = "NNS_URLS", aliases = &["registry-url", "nns-url"], value_delimiter = ',')]
+    pub nns_urls: Vec<Url>,
 }

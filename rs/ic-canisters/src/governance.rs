@@ -18,11 +18,14 @@ pub struct GovernanceCanisterVersion {
     pub stringified_hash: String,
 }
 
-pub async fn governance_canister_version(nns_url: Url) -> Result<GovernanceCanisterVersion, anyhow::Error> {
+pub async fn governance_canister_version(nns_urls: &[Url]) -> Result<GovernanceCanisterVersion, anyhow::Error> {
     let canister_agent = Agent::builder()
         .with_transport(
-            ic_agent::agent::http_transport::reqwest_transport::ReqwestHttpReplicaV2Transport::create(nns_url)?,
+            ic_agent::agent::http_transport::reqwest_transport::ReqwestHttpReplicaV2Transport::create(
+                nns_urls[0].clone(),
+            )?,
         )
+        .with_verify_query_signatures(false)
         .build()?;
 
     canister_agent.fetch_root_key().await?;

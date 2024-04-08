@@ -24,6 +24,7 @@ use registry_canister::mutations::do_update_subnet_replica::UpdateSubnetReplicaV
 use registry_canister::mutations::do_update_unassigned_nodes_config::UpdateUnassignedNodesConfigPayload;
 use registry_canister::mutations::node_management::do_remove_nodes::RemoveNodesPayload;
 use serde::Serialize;
+use url::Url;
 
 #[derive(Clone)]
 pub struct ProposalAgent {
@@ -83,9 +84,12 @@ pub struct UpdateUnassignedNodesProposal {
 
 #[allow(dead_code)]
 impl ProposalAgent {
-    pub fn new(url: String) -> Self {
+    pub fn new(nns_urls: &[Url]) -> Self {
         let agent = Agent::builder()
-            .with_transport(ReqwestHttpReplicaV2Transport::create(url).expect("failed to create transport"))
+            .with_transport(
+                ReqwestHttpReplicaV2Transport::create(nns_urls[0].clone()).expect("failed to create transport"),
+            )
+            .with_verify_query_signatures(false)
             .build()
             .expect("failed to build the agent");
         Self { agent }

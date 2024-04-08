@@ -61,7 +61,7 @@ fn main() -> Result<()> {
         .block_on(sync_local_registry(
             log.clone(),
             mercury_target_dir,
-            nns_urls,
+            &nns_urls,
             cli_args.skip_sync,
             public_key,
             &stop_signal_rcv,

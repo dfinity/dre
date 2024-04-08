@@ -60,7 +60,7 @@ url = { workspace = true }
 tempfile = "3.10.0"
 
 [dev-dependencies]
-wiremock = "0.6.0"
+wiremock = { workspace = true }
 
 [[bin]]
 name = "dre"

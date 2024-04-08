@@ -70,6 +70,7 @@ impl IcAgentCanisterClient {
             agent: Agent::builder()
                 .with_identity(identity)
                 .with_transport(ReqwestTransport::create(url)?)
+                .with_verify_query_signatures(false)
                 .build()?,
         })
     }
@@ -81,6 +82,7 @@ impl IcAgentCanisterClient {
             agent: Agent::builder()
                 .with_identity(identity)
                 .with_transport(ReqwestTransport::create(url)?)
+                .with_verify_query_signatures(false)
                 .build()?,
         })
     }

@@ -18,11 +18,11 @@ use itertools::Itertools;
 use registry_canister::mutations::common::decode_registry_value;
 use serde::Serialize;
 
-pub async fn dump_registry(path: &Option<PathBuf>, network: Network, version: &i64) -> Result<(), Error> {
+pub async fn dump_registry(path: &Option<PathBuf>, network: &Network, version: &i64) -> Result<(), Error> {
     if let Some(path) = path {
         std::env::set_var("LOCAL_REGISTRY_PATH", path)
     }
-    sync_local_store(network.clone()).await?;
+    sync_local_store(network).await?;
 
     let local_registry = LocalRegistry::new(local_registry_path(network), Duration::from_secs(10))
         .map_err(|e| anyhow::anyhow!("Couldn't create local registry client instance: {:?}", e))?;

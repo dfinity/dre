@@ -5,8 +5,8 @@ pub mod release;
 pub mod subnet;
 
 use crate::{
-    config::get_nns_url_vec_from_target_network, gitlab_dfinity, health, prometheus, proposal, registry,
-    registry::RegistryState, release::list_subnets_release_statuses, release::RolloutBuilder,
+    gitlab_dfinity, health, prometheus, proposal, registry, registry::RegistryState,
+    release::list_subnets_release_statuses, release::RolloutBuilder,
 };
 use actix_web::dev::Service;
 use actix_web::{get, post, web, App, Error, HttpResponse, HttpServer, Responder, Result};
@@ -28,7 +28,7 @@ const GITLAB_TOKEN_RELEASE_ENV: &str = "GITLAB_API_TOKEN_RELEASE";
 const GITLAB_API_TOKEN_FALLBACK: &str = "GITLAB_API_TOKEN";
 
 pub async fn run_backend(
-    target_network: Network,
+    target_network: &Network,
     listen_ip: &str,
     listen_port: u16,
     run_from_cli: bool,
@@ -36,7 +36,7 @@ pub async fn run_backend(
 ) -> std::io::Result<()> {
     debug!("Starting backend");
     let registry_state = Arc::new(RwLock::new(
-        registry::RegistryState::new(target_network.clone(), run_from_cli).await,
+        registry::RegistryState::new(target_network, run_from_cli).await,
     ));
 
     if run_from_cli {
@@ -63,8 +63,9 @@ pub async fn run_backend(
 
     let num_workers = if run_from_cli { 1 } else { 8 };
 
+    let closure_target_network = target_network.clone();
     let mut srv = HttpServer::new(move || {
-        let network = target_network.clone();
+        let network = closure_target_network.clone();
         // For `dre` cli invocations we don't need more than one worker
 
         let middleware_registry_state = registry_state.clone();
@@ -75,8 +76,8 @@ pub async fn run_backend(
                 let registry_state = middleware_registry_state.clone();
                 let network = network.clone();
                 async move {
-                    let nns_urls = get_nns_url_vec_from_target_network(&network);
-                    let registry_canister = RegistryCanister::new(nns_urls.clone());
+                    let nns_urls = network.get_nns_urls().clone();
+                    let registry_canister = RegistryCanister::new(nns_urls);
                     let registry_reader = registry_state.read().await;
                     let registry_version = registry_reader.version();
                     if registry_canister
@@ -180,7 +181,7 @@ async fn get_subnet(
 #[get("/rollout")]
 async fn rollout(registry: web::Data<Arc<RwLock<registry::RegistryState>>>) -> Result<HttpResponse, Error> {
     let registry = registry.read().await;
-    let proposal_agent = proposal::ProposalAgent::new(registry.nns_url());
+    let proposal_agent = proposal::ProposalAgent::new(registry.get_nns_urls());
     let network = registry.network();
     let prometheus_client = prometheus::client(&network);
     let service = RolloutBuilder {
@@ -196,7 +197,7 @@ async fn rollout(registry: web::Data<Arc<RwLock<registry::RegistryState>>>) -> R
 #[get("/subnets/versions")]
 async fn subnets_release(registry: web::Data<Arc<RwLock<registry::RegistryState>>>) -> Result<HttpResponse, Error> {
     let registry = registry.read().await;
-    let proposal_agent = proposal::ProposalAgent::new(registry.nns_url());
+    let proposal_agent = proposal::ProposalAgent::new(registry.get_nns_urls());
     let network = registry.network();
     let prometheus_client = prometheus::client(&network);
     response_from_result(
