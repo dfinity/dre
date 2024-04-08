@@ -1,5 +1,6 @@
 use std::{path::PathBuf, str::FromStr};
 
+use anyhow::Context;
 use candid::{Decode, Encode};
 use cryptoki::{
     context::{CInitializeArgs, Pkcs11},
@@ -22,6 +23,69 @@ pub struct Neuron {
 impl Neuron {
     pub fn as_arg_vec(&self) -> Vec<String> {
         vec!["--proposer".to_string(), self.id.to_string()]
+    }
+
+    // FIXME: make this auth lazy
+    pub async fn new(
+        network: &ic_management_types::Network,
+        require_authentication: bool,
+        neuron_id: Option<u64>,
+        private_key_pem: Option<String>,
+        hsm_slot: Option<u64>,
+        hsm_pin: Option<String>,
+        hsm_key_id: Option<String>,
+    ) -> anyhow::Result<Self> {
+        match require_authentication {
+            // Auth required, try to find valid neuron id using HSM or with the private key
+            true => {
+                // If private key is provided, use it without checking
+                if let Some(path) = private_key_pem {
+                    Ok(Self {
+                        id: neuron_id.context("Neuron ID is required when using a private key")?,
+                        auth: Auth::Keyfile { path },
+                    })
+                // If HSM slot, pin and key id are provided, use them without checking
+                } else if let (Some(slot), Some(pin), Some(key_id)) = (hsm_slot, hsm_pin, hsm_key_id) {
+                    Ok(Self {
+                        id: neuron_id.context("Neuron ID is required when using HSM")?,
+                        auth: Auth::Hsm { pin, slot, key_id },
+                    })
+                } else {
+                    // Fully automatic detection of the neuron id using HSM
+                    let auth = match detect_hsm_auth()? {
+                        Some(auth) => auth,
+                        None => return Err(anyhow::anyhow!("No HSM detected")),
+                    };
+                    match auto_detect_neuron(&network.get_nns_urls(), auth).await {
+                        Ok(Some(n)) => Ok(n),
+                        Ok(None) => anyhow::bail!("No HSM detected. Please provide HSM slot, pin, and key id."),
+                        Err(e) => anyhow::bail!("Error while detectin neuron: {}", e),
+                    }
+                }
+            }
+            // Auth not required, don't attempt to talk to HSM and the NNS, but accept values provided by the user.
+            false => {
+                if let Some(path) = private_key_pem {
+                    Ok(Self {
+                        id: neuron_id.unwrap_or_default(),
+                        auth: Auth::Keyfile { path },
+                    })
+                // If HSM slot, pin and key id are provided, use them without checking
+                } else if let (Some(slot), Some(pin), Some(key_id)) = (hsm_slot, hsm_pin, hsm_key_id) {
+                    Ok(Self {
+                        id: neuron_id.unwrap_or_default(),
+                        auth: Auth::Hsm { pin, slot, key_id },
+                    })
+                } else {
+                    Ok(Self {
+                        id: neuron_id.unwrap_or_default(),
+                        auth: Auth::Keyfile {
+                            path: "/fake/path/to/private_key.pem".to_string(),
+                        },
+                    })
+                }
+            }
+        }
     }
 }
 
@@ -64,6 +128,19 @@ impl Auth {
             Auth::Keyfile { path } => vec!["--secret-key-pem".to_string(), path.clone()],
         }
     }
+
+    pub fn from_cli_args(
+        private_key_pem: Option<String>,
+        hsm_slot: Option<u64>,
+        hsm_pin: Option<String>,
+        hsm_key_id: Option<String>,
+    ) -> anyhow::Result<Self> {
+        match (private_key_pem, hsm_slot, hsm_pin, hsm_key_id) {
+            (Some(path), _, _, _) => Ok(Auth::Keyfile { path }),
+            (None, Some(slot), Some(pin), Some(key_id)) => Ok(Auth::Hsm { pin, slot, key_id }),
+            _ => Err(anyhow::anyhow!("Invalid auth arguments")),
+        }
+    }
 }
 
 pub fn detect_hsm_auth() -> anyhow::Result<Option<Auth>> {
@@ -96,8 +173,9 @@ pub fn detect_hsm_auth() -> anyhow::Result<Option<Auth>> {
     Ok(None)
 }
 
-pub async fn detect_neuron(url: url::Url) -> anyhow::Result<Option<Neuron>> {
-    if let Some(Auth::Hsm { pin, slot, key_id }) = detect_hsm_auth()? {
+// FIXME: This function should use either the HSM or the private key, instead of assuming the HSM
+pub async fn auto_detect_neuron(nns_urls: &Vec<url::Url>, auth: Auth) -> anyhow::Result<Option<Neuron>> {
+    if let Auth::Hsm { pin, slot, key_id } = auth {
         let auth = Auth::Hsm {
             pin: pin.clone(),
             slot,
@@ -112,7 +190,7 @@ pub async fn detect_neuron(url: url::Url) -> anyhow::Result<Option<Neuron>> {
                 )
             }),
         );
-        let agent = Agent::new(url, sender);
+        let agent = Agent::new(nns_urls[0].clone(), sender);
         let neuron_id = if let Some(response) = agent
             .execute_query(
                 &GOVERNANCE_CANISTER_ID,

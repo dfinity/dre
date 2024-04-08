@@ -41,14 +41,14 @@ impl Display for SyncError {
 pub async fn sync_local_registry(
     log: Logger,
     local_path: PathBuf,
-    nns_urls: Vec<Url>,
+    nns_urls: &Vec<Url>,
     use_current_version: bool,
     public_key: Option<ThresholdSigPublicKey>,
     stop_signal: &Receiver<()>,
 ) -> Result<(), SyncError> {
     let start = Instant::now();
     let local_store = Arc::new(LocalStoreImpl::new(local_path.clone()));
-    let registry_canister = RegistryCanister::new(nns_urls);
+    let registry_canister = RegistryCanister::new(nns_urls.to_vec());
 
     let mut latest_version = if !Path::new(&local_path).exists() {
         ZERO_REGISTRY_VERSION

@@ -29,7 +29,7 @@ use std::net::Ipv6Addr;
 use std::ops::Deref;
 use std::str::FromStr;
 use strum::VariantNames;
-use strum_macros::{Display, EnumString};
+use strum_macros::EnumString;
 use url::Url;
 
 pub trait NnsFunctionProposal: CandidType + serde::de::DeserializeOwned {
@@ -244,7 +244,18 @@ pub struct Node {
 }
 
 #[derive(
-    Display, EnumString, VariantNames, Hash, Eq, PartialEq, Ord, PartialOrd, Clone, Serialize, Deserialize, Debug,
+    strum_macros::Display,
+    EnumString,
+    VariantNames,
+    Hash,
+    Eq,
+    PartialEq,
+    Ord,
+    PartialOrd,
+    Clone,
+    Serialize,
+    Deserialize,
+    Debug,
 )]
 #[strum(serialize_all = "snake_case")]
 #[serde(rename_all = "snake_case")]
@@ -430,7 +441,9 @@ pub enum Health {
     Unknown,
 }
 
-#[derive(PartialOrd, Ord, Eq, PartialEq, EnumString, Serialize, Display, Deserialize, Debug, Clone, Hash)]
+#[derive(
+    PartialOrd, Ord, Eq, PartialEq, EnumString, Serialize, strum_macros::Display, Deserialize, Debug, Clone, Hash,
+)]
 pub enum Status {
     Healthy,
     Degraded,
@@ -538,7 +551,7 @@ impl ArtifactReleases {
     }
 }
 
-#[derive(Display, Serialize, Deserialize, PartialEq, Eq, Hash, Clone)]
+#[derive(strum_macros::Display, Serialize, Deserialize, PartialEq, Eq, Hash, Clone)]
 #[strum(serialize_all = "lowercase")]
 #[serde(rename_all = "lowercase")]
 pub enum Artifact {
@@ -561,53 +574,284 @@ impl Artifact {
     }
 }
 
-#[derive(Clone, PartialEq, Eq, strum_macros::Display)]
-#[strum(serialize_all = "lowercase")]
-pub enum Network {
-    Staging,
-    Mainnet,
-    Url(url::Url),
-}
-
-impl Default for Network {
-    fn default() -> Self {
-        Network::Mainnet
-    }
-}
-
-impl Debug for Network {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self)
-    }
-}
-
-impl FromStr for Network {
-    type Err = String;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(match s {
-            "mainnet" => Self::Mainnet,
-            "staging" => Self::Staging,
-            _ => Self::Url(url::Url::from_str(s).map_err(|e| format!("{}", e))?),
-        })
-    }
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct Network {
+    pub name: String,
+    pub nns_urls: Vec<url::Url>,
 }
 
 impl Network {
-    pub fn get_url(&self) -> Url {
-        match self {
-            Network::Mainnet => Url::from_str("https://ic0.app").unwrap(),
-            // Workaround for staging boundary node not working properly (503 Service unavailable)
-            Network::Staging => Url::from_str("http://[2600:3000:6100:200:5000:b0ff:fe8e:6b7b]:8080").unwrap(),
-            Self::Url(url) => url.clone(),
+    pub async fn new<S: AsRef<str>>(name: S, nns_urls: &Vec<url::Url>) -> Result<Self, String> {
+        let (name, nns_urls) = match name.as_ref() {
+            "mainnet" => (
+                "mainnet".to_string(),
+                if nns_urls.is_empty() {
+                    vec![Url::from_str("https://ic0.app").unwrap()]
+                } else {
+                    nns_urls.clone()
+                },
+            ),
+            "staging" => (
+                "staging".to_string(),
+                if nns_urls.is_empty() {
+                    vec![Url::from_str("http://[2600:3000:6100:200:5000:b0ff:fe8e:6b7b]:8080").unwrap()]
+                } else {
+                    nns_urls.clone()
+                },
+            ),
+            _ => (
+                name.as_ref().to_string(),
+                if nns_urls.is_empty() {
+                    return Err("No NNS URLs provided".to_string());
+                } else {
+                    nns_urls.clone()
+                },
+            ),
+        };
+        let nns_urls = find_reachable_nns_urls(nns_urls).await;
+        if nns_urls.is_empty() {
+            return Err("No reachable NNS URLs provided".to_string());
         }
+        Ok(Network { name, nns_urls })
+    }
+
+    pub fn get_nns_urls(&self) -> &Vec<Url> {
+        &self.nns_urls
+    }
+
+    pub fn get_nns_urls_string(&self) -> String {
+        self.nns_urls
+            .iter()
+            .map(|url| url.to_string())
+            .collect::<Vec<String>>()
+            .join(",")
+    }
+
+    pub fn get_prometheus_endpoint(&self) -> Url {
+        match self.name.as_str() {
+            "mainnet" => "https://victoria.mainnet.dfinity.network/select/0/prometheus/",
+            _ => "https://victoria.testnet.dfinity.network/select/0/prometheus/",
+        }
+        .parse()
+        .expect("Couldn't parse url")
     }
 
     pub fn legacy_name(&self) -> String {
-        match self {
-            Network::Mainnet => "mercury".to_string(),
-            Network::Staging => "staging".to_string(),
-            Self::Url(url) => format!("testnet-{url}"),
+        match self.name.as_str() {
+            "mainnet" => "mercury".to_string(),
+            _ => self.name.clone(),
         }
+    }
+}
+
+impl std::fmt::Display for Network {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{} ({})", self.name, self.get_nns_urls_string())
+    }
+}
+
+/// Utility function to convert a Url to a host:port string.
+fn url_to_host_with_port(url: Url) -> String {
+    let host = url.host_str().unwrap_or("");
+    let host = if host.contains(':') && !host.starts_with('[') && !host.ends_with(']') {
+        // Likely an IPv6 address, enclose in brackets
+        format!("[{}]", host)
+    } else {
+        // IPv4 or hostname
+        host.to_string()
+    };
+    let port = url.port_or_known_default().unwrap_or(8080);
+
+    format!("{}:{}", host, port)
+}
+
+/// Utility function to find NNS URLs that the local machine can connect to.
+async fn find_reachable_nns_urls(nns_urls: Vec<Url>) -> Vec<Url> {
+    // Early return, otherwise `futures::future::select_all` will panic without a good error
+    // message.
+    if nns_urls.is_empty() {
+        return Vec::new();
+    }
+
+    let retries_max = 3;
+    let timeout_duration = tokio::time::Duration::from_secs(10);
+
+    for i in 1..=retries_max {
+        let tasks: Vec<_> = nns_urls
+            .iter()
+            .map(|url| {
+                Box::pin(async move {
+                    let host_with_port = url_to_host_with_port(url.clone());
+
+                    match tokio::net::lookup_host(host_with_port.clone()).await {
+                        Ok(ips) => {
+                            for ip in ips {
+                                match tokio::time::timeout(timeout_duration, tokio::net::TcpStream::connect(ip)).await {
+                                    Ok(connection) => match connection {
+                                        Ok(_) => return Some(url.clone()),
+                                        Err(err) => {
+                                            eprintln!("WARNING: Failed to connect to {}: {:?}", ip, err);
+                                        }
+                                    },
+                                    Err(err) => {
+                                        eprintln!("WARNING: Failed to connect to {}: {:?}", ip, err);
+                                    }
+                                }
+                            }
+                        }
+                        Err(err) => {
+                            eprintln!("WARNING: Failed to lookup {}: {:?}", host_with_port, err);
+                        }
+                    }
+                    None
+                })
+            })
+            .collect();
+
+        // Wait for the first task to complete ==> until we have a reachable NNS URL.
+        // select_all returns the completed future at position 0, and the remaining futures at position 2.
+        let (completed_task, _, remaining_tasks) = futures::future::select_all(tasks).await;
+        match completed_task {
+            Some(url) => return vec![url],
+            None => {
+                for task in remaining_tasks {
+                    if let Some(url) = task.await {
+                        return vec![url];
+                    }
+                }
+                eprintln!(
+                    "WARNING: None of the provided NNS urls are reachable. Retrying in 5 seconds... ({}/{})",
+                    i, retries_max
+                );
+                tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
+            }
+        }
+    }
+
+    Vec::new()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use wiremock::MockServer;
+
+    #[tokio::test]
+    async fn test_network_new_mainnet() {
+        let network = Network::new("mainnet", &vec![]).await.unwrap();
+
+        assert_eq!(network.name, "mainnet");
+        assert_eq!(network.get_nns_urls(), &vec![Url::from_str("https://ic0.app").unwrap()]);
+    }
+
+    #[tokio::test]
+    async fn test_network_new_mainnet_custom_url() {
+        let mock_server = MockServer::start().await;
+        let mock_server_url: Url = mock_server.uri().parse().unwrap();
+        let network = Network::new("mainnet", &vec![mock_server_url.clone()]).await.unwrap();
+
+        assert_eq!(network.name, "mainnet");
+        assert_eq!(network.get_nns_urls(), &vec![mock_server_url]);
+    }
+
+    #[tokio::test]
+    async fn test_network_new_mainnet_custom_and_invalid_url() {
+        let mock_server = MockServer::start().await;
+        let mock_server_url: Url = mock_server.uri().parse().unwrap();
+        let invalid_url1 = Url::from_str("https://unreachable.url1").unwrap();
+        let invalid_url2 = Url::from_str("https://unreachable.url2").unwrap();
+
+        let expected_nns_urls = vec![mock_server_url.clone()];
+
+        // Test with the invalid URL last
+        let network = Network::new("mainnet", &vec![mock_server_url.clone(), invalid_url1.clone()])
+            .await
+            .unwrap();
+
+        assert_eq!(network.name, "mainnet");
+        assert_eq!(network.get_nns_urls(), &expected_nns_urls);
+
+        // Test with the invalid URL first
+        let network = Network::new("mainnet", &vec![invalid_url1.clone(), mock_server_url.clone()])
+            .await
+            .unwrap();
+
+        assert_eq!(network.name, "mainnet");
+        assert_eq!(network.get_nns_urls(), &expected_nns_urls);
+
+        // Test with the valid URL in the middle
+        let network = Network::new("mainnet", &vec![invalid_url1, mock_server_url.clone(), invalid_url2])
+            .await
+            .unwrap();
+
+        assert_eq!(network.name, "mainnet");
+        assert_eq!(network.get_nns_urls(), &expected_nns_urls);
+    }
+
+    #[ignore] // Ignore failures since staging IC is not accessible from GitHub actions
+    #[tokio::test]
+    async fn test_network_new_staging() {
+        let network = Network::new("staging", &vec![]).await.unwrap();
+
+        assert_eq!(network.name, "staging");
+        assert_eq!(
+            network.get_nns_urls(),
+            &vec![Url::from_str("http://[2600:3000:6100:200:5000:b0ff:fe8e:6b7b]:8080").unwrap()]
+        );
+    }
+
+    #[tokio::test]
+    async fn test_network_new_all_unreachable() {
+        let name = "custom";
+        let nns_urls = vec![Url::from_str("https://unreachable.url").unwrap()];
+        let network = Network::new(name, &nns_urls).await;
+
+        assert_eq!(network, Err("No reachable NNS URLs provided".to_string()));
+    }
+
+    #[test]
+    fn test_network_get_nns_urls_string() {
+        let nns_urls = vec![
+            Url::from_str("https://ic0.app").unwrap(),
+            Url::from_str("https://custom.nns").unwrap(),
+        ];
+        let network = Network {
+            name: "mainnet".to_string(),
+            nns_urls,
+        };
+
+        assert_eq!(network.get_nns_urls_string(), "https://ic0.app/,https://custom.nns/");
+    }
+
+    #[test]
+    fn test_network_get_prometheus_endpoint() {
+        let network = Network {
+            name: "mainnet".to_string(),
+            nns_urls: vec![],
+        };
+
+        assert_eq!(
+            network.get_prometheus_endpoint(),
+            Url::parse("https://victoria.mainnet.dfinity.network/select/0/prometheus/").unwrap()
+        );
+
+        let network = Network {
+            name: "some_testnet".to_string(),
+            nns_urls: vec![],
+        };
+        assert_eq!(
+            network.get_prometheus_endpoint(),
+            Url::parse("https://victoria.testnet.dfinity.network/select/0/prometheus/").unwrap()
+        );
+    }
+
+    #[test]
+    fn test_network_legacy_name() {
+        let network = Network {
+            name: "mainnet".to_string(),
+            nns_urls: vec![],
+        };
+
+        assert_eq!(network.legacy_name(), "mercury");
     }
 }

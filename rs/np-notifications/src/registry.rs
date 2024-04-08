@@ -32,18 +32,17 @@ pub async fn start_registry_updater_loop(config: RegistryLoopConfig) {
             break;
         }
         config.service_health.set_registry_updater_loop_readiness(true);
-        if let Err(e) = registry::sync_local_store(config.target_network.clone()).await {
+        if let Err(e) = registry::sync_local_store(&config.target_network).await {
             error!(message = "Failed to update local registry", error = e.to_string());
         }
         tokio::time::sleep(std::time::Duration::from_secs(5)).await;
     }
 }
 
-pub async fn create_registry_state() -> RegistryState {
-    let target_network = ic_management_backend::config::target_network();
-    ic_management_backend::registry::sync_local_store(target_network.clone())
+pub async fn create_registry_state(target_network: Network) -> RegistryState {
+    ic_management_backend::registry::sync_local_store(&target_network)
         .await
         .expect("failed to init local store");
 
-    RegistryState::new(ic_management_types::Network::Mainnet, true).await
+    RegistryState::new(&target_network, true).await
 }

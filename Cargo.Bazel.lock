@@ -1,5 +1,5 @@
 {
-  "checksum": "31058f9f66529f2b114e4c4508e3cc6dbf7243335ca17851bca859ae720bcccd",
+  "checksum": "b6737f3f6bdb970486578a3c4c615afe6fd16e0bf32c3930b649d568c6be06c5",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -22117,6 +22117,10 @@
               "target": "chrono"
             },
             {
+              "id": "futures 0.3.30",
+              "target": "futures"
+            },
+            {
               "id": "ic-base-types 0.9.0",
               "target": "ic_base_types"
             },
@@ -22153,8 +22157,21 @@
               "target": "strum"
             },
             {
+              "id": "tokio 1.36.0",
+              "target": "tokio"
+            },
+            {
               "id": "url 2.5.0",
               "target": "url"
+            }
+          ],
+          "selects": {}
+        },
+        "deps_dev": {
+          "common": [
+            {
+              "id": "wiremock 0.6.0",
+              "target": "wiremock"
             }
           ],
           "selects": {}

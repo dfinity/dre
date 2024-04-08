@@ -13,7 +13,6 @@ use url::Url;
 
 use definition::{Definition, DefinitionsSupervisor, StartMode};
 use ic_async_utils::shutdown_signal;
-use ic_management_types::Network;
 
 use crate::definition::{RunningDefinition, TestDefinition};
 use crate::metrics::{MSDMetrics, RunningDefinitionsMetrics};
@@ -34,7 +33,7 @@ fn main() {
         Definition::new(
             vec![cli_args.nns_url.clone()],
             cli_args.targets_dir.clone(),
-            Network::Mainnet.legacy_name(),
+            "mercury".to_string(),
             log.clone(),
             None,
             cli_args.poll_interval,

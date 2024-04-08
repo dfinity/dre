@@ -27,7 +27,10 @@ impl std::fmt::Debug for HealthCheckLoopConfig {
 #[tracing::instrument]
 pub async fn start_health_check_loop(config: HealthCheckLoopConfig) {
     info!("Starting health check loop");
-    let hc = HealthClient::new(ic_management_types::Network::Mainnet);
+    let network = ic_management_types::Network::new("mainnet", &vec![])
+        .await
+        .expect("failed to create mainnet network");
+    let hc = HealthClient::new(network);
     let mut nodes_status = NodesStatus::from(hc.nodes().await.unwrap());
 
     let mut rs = config.registry_state;
