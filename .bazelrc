@@ -50,6 +50,7 @@ build:dfinity --bes_results_url=https://dash.idx.dfinity.network/invocation/
 build:dfinity --bes_backend=bes.idx.dfinity.network
 build --bes_timeout=30s # Default is no timeout.
 build:ci --bes_timeout=180s # Default is no timeout.
+build:ci --bes_upload_mode=fully_async
 
 build --remote_local_fallback
 build --experimental_repository_downloader_retries=3 # https://bazel.build/reference/command-line-reference#flag--experimental_repository_downloader_retries
