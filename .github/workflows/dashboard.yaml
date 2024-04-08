@@ -7,6 +7,9 @@ on:
     branches:
       - "main"
   pull_request:
+    paths:
+      - dashboard/**
+      - ./.github/workflows/dashboard.yaml
   merge_group:
 
 concurrency:
