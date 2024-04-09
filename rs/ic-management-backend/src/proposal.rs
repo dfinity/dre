@@ -82,8 +82,9 @@ pub struct UpdateUnassignedNodesProposal {
     pub payload: UpdateUnassignedNodesConfigPayload,
 }
 
+#[allow(dead_code)]
 impl ProposalAgent {
-    pub fn new(nns_urls: &Vec<Url>) -> Self {
+    pub fn new(nns_urls: &[Url]) -> Self {
         let agent = Agent::builder()
             .with_transport(
                 ReqwestHttpReplicaV2Transport::create(nns_urls[0].clone()).expect("failed to create transport"),

@@ -44,7 +44,7 @@ async fn main() -> Result<(), anyhow::Error> {
             cli_opts.neuron_id = Some(STAGING_NEURON_ID);
         }
     }
-    let governance_canister_v = match governance_canister_version(&nns_urls).await {
+    let governance_canister_v = match governance_canister_version(nns_urls).await {
         Ok(c) => c,
         Err(e) => {
             return Err(anyhow::anyhow!(
@@ -289,12 +289,12 @@ async fn main() -> Result<(), anyhow::Error> {
 
             cli::Commands::Vote {accepted_neurons, accepted_topics}=> {
                 let cli = cli::ParsedCli::from_opts(&cli_opts, true).await?;
-                vote_on_proposals(cli.get_neuron(), &target_network.get_nns_urls(), accepted_neurons, accepted_topics, simulate).await
+                vote_on_proposals(cli.get_neuron(), target_network.get_nns_urls(), accepted_neurons, accepted_topics, simulate).await
             },
 
             cli::Commands::TrustworthyMetrics { wallet, start_at_timestamp, subnet_ids } => {
                 let auth = Auth::from_cli_args(cli_opts.private_key_pem, cli_opts.hsm_slot, cli_opts.hsm_pin, cli_opts.hsm_key_id)?;
-                get_node_metrics_history(CanisterId::from_str(wallet)?, subnet_ids.clone(), *start_at_timestamp, &auth, &target_network.get_nns_urls()).await
+                get_node_metrics_history(CanisterId::from_str(wallet)?, subnet_ids.clone(), *start_at_timestamp, &auth, target_network.get_nns_urls()).await
             },
 
             cli::Commands::DumpRegistry { version, path } => {

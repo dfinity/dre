@@ -19,7 +19,7 @@ use crate::detect_neuron::{Auth, Neuron};
 
 pub async fn vote_on_proposals(
     neuron: &Neuron,
-    nns_urls: &Vec<Url>,
+    nns_urls: &[Url],
     accepted_proposers: &[u64],
     accepted_topics: &[i32],
     simulate: bool,
@@ -94,7 +94,7 @@ pub async fn get_node_metrics_history(
     subnets: Vec<PrincipalId>,
     start_at_nanos: u64,
     auth: &Auth,
-    nns_urls: &Vec<Url>,
+    nns_urls: &[Url],
 ) -> anyhow::Result<()> {
     let lock = Mutex::new(());
     let canister_agent = match auth {

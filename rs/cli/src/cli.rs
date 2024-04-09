@@ -476,13 +476,13 @@ impl ParsedCli {
             require_authentication,
             opts.neuron_id,
             opts.private_key_pem.clone(),
-            opts.hsm_slot.clone(),
+            opts.hsm_slot,
             opts.hsm_pin.clone(),
             opts.hsm_key_id.clone(),
         )
         .await?;
         Ok(ParsedCli {
-            network: network,
+            network,
             yes: opts.yes,
             neuron,
             ic_admin_bin_path: opts.ic_admin.clone(),

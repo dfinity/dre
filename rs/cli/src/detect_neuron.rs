@@ -56,7 +56,7 @@ impl Neuron {
                         Some(auth) => auth,
                         None => return Err(anyhow::anyhow!("No HSM detected")),
                     };
-                    match auto_detect_neuron(&network.get_nns_urls(), auth).await {
+                    match auto_detect_neuron(network.get_nns_urls(), auth).await {
                         Ok(Some(n)) => Ok(n),
                         Ok(None) => anyhow::bail!("No HSM detected. Please provide HSM slot, pin, and key id."),
                         Err(e) => anyhow::bail!("Error while detectin neuron: {}", e),
@@ -174,7 +174,7 @@ pub fn detect_hsm_auth() -> anyhow::Result<Option<Auth>> {
 }
 
 // FIXME: This function should use either the HSM or the private key, instead of assuming the HSM
-pub async fn auto_detect_neuron(nns_urls: &Vec<url::Url>, auth: Auth) -> anyhow::Result<Option<Neuron>> {
+pub async fn auto_detect_neuron(nns_urls: &[url::Url], auth: Auth) -> anyhow::Result<Option<Neuron>> {
     if let Auth::Hsm { pin, slot, key_id } = auth {
         let auth = Auth::Hsm {
             pin: pin.clone(),

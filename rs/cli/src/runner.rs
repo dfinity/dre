@@ -194,7 +194,7 @@ impl Runner {
             dashboard_backend_client,
             // TODO: Remove once DREL-118 completed.
             // Fake registry that is not used, but some methods still rely on backend.
-            registry: registry::RegistryState::new(&network, true).await,
+            registry: registry::RegistryState::new(network, true).await,
         })
     }
 
@@ -208,7 +208,7 @@ impl Runner {
         let node_providers = query_ic_dashboard_list::<NodeProvidersResponse>("v3/node-providers")
             .await?
             .node_providers;
-        let _ = registry.update_node_details(&node_providers).await?;
+        registry.update_node_details(&node_providers).await?;
         Ok(Self {
             ic_admin,
             dashboard_backend_client,
@@ -306,8 +306,8 @@ impl Runner {
             self.registry.subnets(),
             &self.registry.network(),
             ProposalAgent::new(self.registry.get_nns_urls()),
-            &version,
-            &exclude,
+            version,
+            exclude,
         );
 
         match hostos_rollout.execute(node_group).await? {

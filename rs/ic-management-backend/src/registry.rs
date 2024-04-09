@@ -192,9 +192,10 @@ impl ReleasesOps for ArtifactReleases {
     }
 }
 
+#[allow(dead_code)]
 impl RegistryState {
     pub async fn new(network: &Network, without_update_loop: bool) -> Self {
-        sync_local_store(&network).await.expect("failed to init local store");
+        sync_local_store(network).await.expect("failed to init local store");
 
         if !without_update_loop {
             let closure_network = network.clone();
@@ -651,7 +652,7 @@ impl RegistryState {
 
     pub async fn nodes_with_proposals(&self) -> Result<BTreeMap<PrincipalId, Node>> {
         let nodes = self.nodes.clone();
-        let proposal_agent = proposal::ProposalAgent::new(&self.network.get_nns_urls());
+        let proposal_agent = proposal::ProposalAgent::new(self.network.get_nns_urls());
 
         let topology_proposals = proposal_agent.list_open_topology_proposals().await?;
 
@@ -669,18 +670,18 @@ impl RegistryState {
     }
 
     pub async fn open_elect_replica_proposals(&self) -> Result<Vec<UpdateElectedReplicaVersionsProposal>> {
-        let proposal_agent = proposal::ProposalAgent::new(&self.network.get_nns_urls());
+        let proposal_agent = proposal::ProposalAgent::new(self.network.get_nns_urls());
         proposal_agent.list_open_elect_replica_proposals().await
     }
 
     pub async fn open_elect_hostos_proposals(&self) -> Result<Vec<UpdateElectedHostosVersionsProposal>> {
-        let proposal_agent = proposal::ProposalAgent::new(&self.network.get_nns_urls());
+        let proposal_agent = proposal::ProposalAgent::new(self.network.get_nns_urls());
         proposal_agent.list_open_elect_hostos_proposals().await
     }
 
     pub async fn subnets_with_proposals(&self) -> Result<BTreeMap<PrincipalId, Subnet>> {
         let subnets = self.subnets.clone();
-        let proposal_agent = proposal::ProposalAgent::new(&self.network.get_nns_urls());
+        let proposal_agent = proposal::ProposalAgent::new(self.network.get_nns_urls());
 
         let topology_proposals = proposal_agent.list_open_topology_proposals().await?;
 

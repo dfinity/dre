@@ -17,7 +17,6 @@ enum LineStatus {
     NotStarted,
     Started,
     Utf8,
-    Binary,
 }
 
 pub fn parse_journal_entries_new(body: &[u8]) -> Vec<JournalEntry> {
@@ -35,6 +34,7 @@ pub fn parse_journal_entries_new(body: &[u8]) -> Vec<JournalEntry> {
                 first_found = LineStatus::Utf8;
             }
             (b'\n', LineStatus::Started) => {
+                // Binary field case
                 current_entry.push(current_line.clone());
                 current_line.clear();
                 let mut next = vec![];
@@ -73,7 +73,6 @@ pub fn parse_journal_entries_new(body: &[u8]) -> Vec<JournalEntry> {
                 current_line.push(*byte);
                 first_found = LineStatus::Started;
             }
-            (a, b) => unreachable!("Shouldn't happen: {}, {:?}", a, b),
         }
     }
     // Check if there's an entry at the end of the body

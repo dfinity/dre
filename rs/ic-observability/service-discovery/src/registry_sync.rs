@@ -41,7 +41,7 @@ impl Display for SyncError {
 pub async fn sync_local_registry(
     log: Logger,
     local_path: PathBuf,
-    nns_urls: &Vec<Url>,
+    nns_urls: &[Url],
     use_current_version: bool,
     public_key: Option<ThresholdSigPublicKey>,
     stop_signal: &Receiver<()>,

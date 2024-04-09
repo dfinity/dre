@@ -38,7 +38,7 @@ mod should_proceed_tests {
         let day = NaiveDate::from_str("2024-03-11").unwrap();
         let index = Index {
             rollout: Rollout {
-                skip_days: vec![day.clone()],
+                skip_days: vec![day],
                 ..Default::default()
             },
             ..Default::default()

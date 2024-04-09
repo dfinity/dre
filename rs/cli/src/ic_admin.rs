@@ -177,7 +177,7 @@ impl IcAdminWrapper {
                 .fold("".to_string(), |acc, s| {
                     let s = if s.contains('\n') { format!(r#""{}""#, s) } else { s };
                     let hsm_pin = if let Auth::Hsm { pin, .. } = &self.neuron.auth {
-                        &pin
+                        pin
                     } else {
                         ""
                     };
@@ -611,7 +611,7 @@ must be identical, and must match the SHA256 from the payload of the NNS proposa
         let re_comment = Regex::new(r"\s*<!--.+?-->\s*").unwrap();
         let mut builder = edit::Builder::new();
         let with_suffix = builder.suffix(".md");
-        let edited = edit::edit_with_builder(template, &with_suffix)?
+        let edited = edit::edit_with_builder(template, with_suffix)?
             .trim()
             .replace("\r(\n)?", "\n")
             .split('\n')
@@ -899,11 +899,13 @@ must be identical, and must match the SHA256 from the payload of the NNS proposa
             Ok(())
         }
 
-        for (_, mods) in reverse_sorted.into_iter() {
-            submit_proposal(self, mods, propose_options.clone(), simulate)?;
-            break; // no more than one rule mod implemented currenty -- FIXME
+        // no more than one rule mod implemented currenty -- FIXME
+        match reverse_sorted.into_iter().last() {
+            Some((_, mods)) => submit_proposal(self, mods, propose_options.clone(), simulate),
+            None => Err(anyhow::anyhow!(
+                "Expected to have one item for firewall rule modification"
+            )),
         }
-        Ok(())
     }
 }
 

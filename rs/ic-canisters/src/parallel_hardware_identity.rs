@@ -279,7 +279,7 @@ fn get_ec_point(
     let der_encoded_ec_point = get_variable_length_attribute(ctx, session_handle, object_handle, CKA_EC_POINT)?;
 
     let blocks = from_der(der_encoded_ec_point.as_slice()).map_err(HardwareIdentityError::ASN1Decode)?;
-    let block = blocks.get(0).ok_or(HardwareIdentityError::EcPointEmpty)?;
+    let block = blocks.first().ok_or(HardwareIdentityError::EcPointEmpty)?;
     if let OctetString(_size, data) = block {
         Ok(data.clone())
     } else {
@@ -298,7 +298,7 @@ fn get_attribute_length(
     ctx.get_attribute_value(session_handle, object_handle, &mut attributes)?;
 
     let first = attributes
-        .get(0)
+        .first()
         .ok_or(HardwareIdentityError::AttributeNotFound(attribute_type))?;
     Ok(first.ulValueLen as usize)
 }

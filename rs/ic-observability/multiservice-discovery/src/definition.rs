@@ -83,7 +83,7 @@ impl From<FSDefinition> for Definition {
             log: log.clone(),
             public_key: fs_definition.public_key,
             poll_interval: fs_definition.poll_interval,
-            registry_query_timeout: fs_definition.registry_query_timeout.clone(),
+            registry_query_timeout: fs_definition.registry_query_timeout,
             ic_discovery: Arc::new(
                 IcServiceDiscoveryImpl::new(log, fs_definition.registry_path, fs_definition.registry_query_timeout)
                     .unwrap(),
