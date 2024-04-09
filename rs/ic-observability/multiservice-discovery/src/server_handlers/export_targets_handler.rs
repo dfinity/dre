@@ -1,4 +1,9 @@
-use axum::{extract::State, http::StatusCode, Json};
+use crate::TargetFilterSpec;
+use axum::{
+    extract::{Query, State},
+    http::StatusCode,
+    Json,
+};
 use ic_types::{NodeId, PrincipalId};
 use multiservice_discovery_shared::contracts::target::{map_to_target_dto, TargetDto};
 use service_discovery::job_types::{JobType, NodeOS};
@@ -8,31 +13,38 @@ use super::Server;
 
 pub(super) async fn export_targets(
     State(binding): State<Server>,
+    filters: Query<TargetFilterSpec>,
 ) -> Result<Json<Vec<TargetDto>>, (StatusCode, String)> {
+    let filters = filters.0;
     let definitions = binding.supervisor.definitions.lock().await;
 
     let mut ic_node_targets: Vec<TargetDto> = vec![];
 
-    for (_, def) in definitions.iter() {
-        for job_type in JobType::all_for_ic_nodes() {
-            let targets = match def.get_target_groups(job_type) {
-                Ok(targets) => targets,
-                Err(_) => continue,
-            };
+    for (ic_name, def) in definitions.iter() {
+        if filters.matches_ic(ic_name) {
+            for job_type in JobType::all_for_ic_nodes() {
+                let targets = match def.get_target_groups(job_type) {
+                    Ok(targets) => targets,
+                    Err(_) => continue,
+                };
 
-            targets.iter().for_each(|target_group| {
-                if let Some(target) = ic_node_targets.iter_mut().find(|t| t.node_id == target_group.node_id) {
-                    target.jobs.push(job_type);
-                } else {
-                    ic_node_targets.push(map_to_target_dto(
-                        target_group,
-                        job_type,
-                        BTreeMap::new(),
-                        target_group.node_id.to_string(),
-                        def.name(),
-                    ));
-                }
-            });
+                targets.iter().for_each(|target_group| {
+                    if let Some(target) = ic_node_targets.iter_mut().find(|t| t.node_id == target_group.node_id) {
+                        target.jobs.push(job_type);
+                    } else {
+                        let target = map_to_target_dto(
+                            target_group,
+                            job_type,
+                            BTreeMap::new(),
+                            target_group.node_id.to_string(),
+                            def.name(),
+                        );
+                        if filters.matches_ic_node(&target) {
+                            ic_node_targets.push(target)
+                        };
+                    }
+                });
+            }
         }
     }
 
@@ -52,6 +64,9 @@ pub(super) async fn export_targets(
                     .any(|(k, v)| k.as_str() == "env" && v.as_str() == "test")
                     && bn.job_type == JobType::NodeExporter(NodeOS::Host)
                 {
+                    return None;
+                }
+                if !filters.matches_boundary_node(bn) {
                     return None;
                 }
                 Some(TargetDto {

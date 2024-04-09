@@ -2,6 +2,7 @@ use crossbeam_channel::Receiver;
 use crossbeam_channel::Sender;
 use futures_util::future::join_all;
 use ic_registry_client::client::ThresholdSigPublicKey;
+use multiservice_discovery_shared::contracts::target::TargetDto;
 use serde::Deserialize;
 use serde::Serialize;
 use service_discovery::job_types::JobType;
@@ -667,5 +668,74 @@ impl DefinitionsSupervisor {
             defs.remove(&name).unwrap().end().await
         }
         Ok(())
+    }
+}
+
+#[derive(Deserialize)]
+pub struct TargetFilterSpec {
+    pub node_provider_id: Option<String>,
+    pub operator_id: Option<String>,
+    pub dc_id: Option<String>,
+    pub ic_name: Option<String>,
+    pub subnet_id: Option<String>,
+}
+
+impl TargetFilterSpec {
+    pub fn matches_ic_node(&self, t: &TargetDto) -> bool {
+        // self.ic_name is explicitly excluded here.
+        // Call self.matches_ic().
+        let o = match &self.operator_id {
+            None => true,
+            Some(operator_id) => t.operator_id.to_string() == operator_id.to_owned(),
+        };
+        let n = match &self.node_provider_id {
+            None => true,
+            Some(node_provider_id) => t.node_provider_id.to_string() == node_provider_id.to_owned(),
+        };
+        let d = match &self.dc_id {
+            None => true,
+            Some(dc_id) => t.dc_id.to_string() == dc_id.to_owned(),
+        };
+        let s = match &self.subnet_id {
+            None => true,
+            Some(subnet_id) => match t.subnet_id {
+                Some(t_subnet_id) => t_subnet_id.to_string() == subnet_id.to_owned(),
+                None => subnet_id.as_str() == "",
+            },
+        };
+        o && n && d && s
+    }
+
+    pub fn matches_boundary_node(&self, b: &BoundaryNode) -> bool {
+        // self.ic_name is explicitly excluded here.
+        // Call self.matches_ic().
+        if self.operator_id.is_some() || self.node_provider_id.is_some() || self.subnet_id.is_some() {
+            return true;
+        };
+        let d = match &self.dc_id {
+            None => true,
+            Some(dc_id) => match b.custom_labels.get("dc") {
+                Some(b_dc_id) => b_dc_id.to_owned() == dc_id.to_owned(),
+                None => "" == dc_id.as_str(),
+            },
+        };
+        d
+    }
+
+    pub fn matches_ic(&self, ic_name: &String) -> bool {
+        match &self.ic_name {
+            None => true,
+            Some(my_ic_name) => ic_name.to_owned() == my_ic_name.to_owned(),
+        }
+    }
+
+    pub fn empty() -> Self {
+        Self {
+            node_provider_id: None,
+            operator_id: None,
+            dc_id: None,
+            ic_name: None,
+            subnet_id: None,
+        }
     }
 }
