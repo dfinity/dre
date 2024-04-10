@@ -1,6 +1,6 @@
 use crate::definition::RunningDefinition;
 
-use super::{ok, Server};
+use super::Server;
 use crate::TargetFilterSpec;
 use axum::extract::{Query, State};
 use axum::http::StatusCode;
@@ -99,7 +99,7 @@ pub(super) async fn export_prometheus_config(
     let definitions = binding.supervisor.definitions.lock().await;
     let (targets_len, text) = serialize_definitions_to_prometheus_config(definitions.clone(), filters.0);
     if targets_len > 0 {
-        ok(binding.log, text)
+        Ok(text)
     } else {
         Err((StatusCode::NOT_FOUND, "No targets found".to_string()))
     }
