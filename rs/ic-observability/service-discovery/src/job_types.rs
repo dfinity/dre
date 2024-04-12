@@ -96,6 +96,9 @@ impl JobType {
             self.endpoint().trim_start_matches('/'),
         )
     }
+    pub fn host_port(&self, s: SocketAddr, is_boundary_node: bool) -> String {
+        format!("{}", self.sockaddr(s, is_boundary_node),)
+    }
 }
 
 /// This is duplicated in impl Job.

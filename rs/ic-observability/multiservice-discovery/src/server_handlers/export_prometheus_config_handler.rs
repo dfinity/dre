@@ -25,7 +25,12 @@ pub fn serialize_definitions_to_prometheus_config(
     let boundary_nodes_targets = boundary_nodes_from_definitions(&definitions, &filters)
         .iter()
         .map(|(definition_name, bn)| PrometheusStaticConfig {
-            targets: bn.targets.clone().iter().map(|g| bn.job_type.url(*g, true)).collect(),
+            targets: bn
+                .targets
+                .clone()
+                .iter()
+                .map(|g| bn.job_type.host_port(*g, true))
+                .collect(),
             labels: {
                 BTreeMap::from([
                     ("ic", definition_name.clone()),

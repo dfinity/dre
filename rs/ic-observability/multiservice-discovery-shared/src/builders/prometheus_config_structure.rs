@@ -46,7 +46,7 @@ pub fn map_target_group(target_groups: Vec<TargetDto>) -> Vec<PrometheusStaticCo
             let mut ret = vec![];
             for job in &tg.jobs {
                 ret.push(PrometheusStaticConfig {
-                    targets: tg.targets.iter().map(|sa| job.url(*sa, false)).collect(),
+                    targets: tg.targets.iter().map(|sa| job.host_port(*sa, false)).collect(),
                     labels: {
                         BTreeMap::from([
                             (IC_NAME.into(), tg.ic_name.clone()),
