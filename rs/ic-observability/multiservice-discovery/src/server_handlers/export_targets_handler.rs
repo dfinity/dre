@@ -23,12 +23,12 @@ pub(super) async fn export_targets(
     for (ic_name, def) in definitions.iter() {
         if filters.matches_ic(ic_name) {
             for job_type in JobType::all_for_ic_nodes() {
-                let targets = match def.get_target_groups(job_type) {
-                    Ok(targets) => targets,
+                let target_groups = match def.get_target_groups(job_type) {
+                    Ok(target_groups) => target_groups,
                     Err(_) => continue,
                 };
 
-                targets.iter().for_each(|target_group| {
+                target_groups.iter().for_each(|target_group| {
                     if let Some(target) = ic_node_targets.iter_mut().find(|t| t.node_id == target_group.node_id) {
                         target.jobs.push(job_type);
                     } else {
