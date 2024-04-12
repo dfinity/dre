@@ -160,19 +160,19 @@ mod tests {
             .expect("failed to create staging network");
         assert_eq!(
             DashboardBackendClient::new(&mainnet, false).url.to_string(),
-            "https://dashboard.internal.dfinity.network/api/proxy/registry/mainnet/"
+            "https://dashboard.internal.dfinity.network/api/proxy/registry/mainnet"
         );
         assert_eq!(
             DashboardBackendClient::new(&staging, false).url.to_string(),
-            "https://dashboard.internal.dfinity.network/api/proxy/registry/staging/"
+            "https://dashboard.internal.dfinity.network/api/proxy/registry/staging"
         );
         assert_eq!(
             DashboardBackendClient::new(&mainnet, true).url.to_string(),
-            "http://localhost:17000/api/proxy/registry/mainnet/"
+            "http://localhost:17000/api/proxy/registry/mainnet"
         );
         assert_eq!(
             DashboardBackendClient::new(&staging, true).url.to_string(),
-            "http://localhost:17000/api/proxy/registry/staging/"
+            "http://localhost:17000/api/proxy/registry/staging"
         );
     }
 }
