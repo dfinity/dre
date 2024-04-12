@@ -710,7 +710,7 @@ impl TargetFilterSpec {
         // self.ic_name is explicitly excluded here.
         // Call self.matches_ic().
         if self.operator_id.is_some() || self.node_provider_id.is_some() || self.subnet_id.is_some() {
-            return true;
+            return false;
         };
         let d = match &self.dc_id {
             None => true,
