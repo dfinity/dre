@@ -6,7 +6,8 @@ use crate::{
 };
 use axum::{
     extract::{Query, State},
-    http::StatusCode,
+    http::header,
+    http::{HeaderMap, StatusCode},
 };
 use multiservice_discovery_shared::builders::prometheus_config_structure::{map_target_group, PrometheusStaticConfig};
 use std::collections::BTreeMap;
@@ -50,11 +51,13 @@ pub fn serialize_definitions_to_prometheus_config(
 pub(super) async fn export_prometheus_config(
     State(binding): State<Server>,
     filters: Query<TargetFilterSpec>,
-) -> Result<String, (StatusCode, String)> {
+) -> Result<(HeaderMap, String), (StatusCode, String)> {
     let definitions = binding.supervisor.definitions.lock().await;
     let (targets_len, text) = serialize_definitions_to_prometheus_config(definitions.clone(), filters.0);
     if targets_len > 0 {
-        Ok(text)
+        let mut headers = HeaderMap::new();
+        headers.insert(header::CONTENT_TYPE, "application/json".parse().unwrap());
+        Ok((headers, text))
     } else {
         Err((StatusCode::NOT_FOUND, "No targets found".to_string()))
     }
