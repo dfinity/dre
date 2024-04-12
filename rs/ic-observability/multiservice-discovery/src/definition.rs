@@ -2,10 +2,11 @@ use crossbeam_channel::Receiver;
 use crossbeam_channel::Sender;
 use futures_util::future::join_all;
 use ic_registry_client::client::ThresholdSigPublicKey;
+use multiservice_discovery_shared::contracts::target::map_to_target_dto;
 use multiservice_discovery_shared::contracts::target::TargetDto;
 use serde::Deserialize;
 use serde::Serialize;
-use service_discovery::job_types::JobType;
+use service_discovery::job_types::{JobType, NodeOS};
 use service_discovery::registry_sync::SyncError;
 use service_discovery::IcServiceDiscovery;
 use service_discovery::IcServiceDiscoveryError;
@@ -686,20 +687,20 @@ impl TargetFilterSpec {
         // Call self.matches_ic().
         let o = match &self.operator_id {
             None => true,
-            Some(operator_id) => t.operator_id.to_string() == operator_id.to_owned(),
+            Some(operator_id) => t.operator_id.to_string() == *operator_id,
         };
         let n = match &self.node_provider_id {
             None => true,
-            Some(node_provider_id) => t.node_provider_id.to_string() == node_provider_id.to_owned(),
+            Some(node_provider_id) => t.node_provider_id.to_string() == *node_provider_id,
         };
         let d = match &self.dc_id {
             None => true,
-            Some(dc_id) => t.dc_id.to_string() == dc_id.to_owned(),
+            Some(dc_id) => *t.dc_id == *dc_id,
         };
         let s = match &self.subnet_id {
             None => true,
             Some(subnet_id) => match t.subnet_id {
-                Some(t_subnet_id) => t_subnet_id.to_string() == subnet_id.to_owned(),
+                Some(t_subnet_id) => t_subnet_id.to_string() == *subnet_id,
                 None => subnet_id.as_str() == "",
             },
         };
@@ -715,7 +716,7 @@ impl TargetFilterSpec {
         let d = match &self.dc_id {
             None => true,
             Some(dc_id) => match b.custom_labels.get("dc") {
-                Some(b_dc_id) => b_dc_id.to_owned() == dc_id.to_owned(),
+                Some(b_dc_id) => *b_dc_id == *dc_id,
                 None => "" == dc_id.as_str(),
             },
         };
@@ -725,7 +726,7 @@ impl TargetFilterSpec {
     pub fn matches_ic(&self, ic_name: &String) -> bool {
         match &self.ic_name {
             None => true,
-            Some(my_ic_name) => ic_name.to_owned() == my_ic_name.to_owned(),
+            Some(my_ic_name) => *ic_name == *my_ic_name,
         }
     }
 
@@ -738,4 +739,73 @@ impl TargetFilterSpec {
             subnet_id: None,
         }
     }
+}
+
+pub fn ic_node_target_dtos_from_definitions(
+    definitions: &BTreeMap<String, RunningDefinition>,
+    filters: &TargetFilterSpec,
+) -> Vec<TargetDto> {
+    let mut ic_node_targets: Vec<TargetDto> = vec![];
+
+    for (_, def) in definitions.iter() {
+        if filters.matches_ic(&def.name()) {
+            for job_type in JobType::all_for_ic_nodes() {
+                let target_groups = match def.get_target_groups(job_type) {
+                    Ok(target_groups) => target_groups,
+                    Err(_) => continue,
+                };
+
+                target_groups.iter().for_each(|target_group| {
+                    if let Some(target) = ic_node_targets.iter_mut().find(|t| t.node_id == target_group.node_id) {
+                        target.jobs.push(job_type);
+                    } else {
+                        let target = map_to_target_dto(
+                            target_group,
+                            job_type,
+                            BTreeMap::new(),
+                            target_group.node_id.to_string(),
+                            def.name(),
+                        );
+                        if filters.matches_ic_node(&target) {
+                            ic_node_targets.push(target)
+                        };
+                    }
+                });
+            }
+        }
+    }
+
+    ic_node_targets
+}
+
+pub fn boundary_nodes_from_definitions(
+    definitions: &BTreeMap<String, RunningDefinition>,
+    filters: &TargetFilterSpec,
+) -> Vec<(String, BoundaryNode)> {
+    definitions
+        .iter()
+        .filter(|(_, def)| filters.matches_ic(&def.name()))
+        .flat_map(|(_, def)| {
+            def.definition.boundary_nodes.iter().filter_map(|bn| {
+                // Since boundary nodes have been checked for correct job
+                // type when they were added via POST, then we can trust
+                // the correct job type is at play here.
+                // If, however, this boundary node is under the test environment,
+                // and the job is Node Exporter, then skip adding this
+                // target altogether.
+                if bn
+                    .custom_labels
+                    .iter()
+                    .any(|(k, v)| k.as_str() == "env" && v.as_str() == "test")
+                    && bn.job_type == JobType::NodeExporter(NodeOS::Host)
+                {
+                    return None;
+                }
+                if !filters.matches_boundary_node(bn) {
+                    return None;
+                }
+                Some((def.name(), bn.clone()))
+            })
+        })
+        .collect()
 }
