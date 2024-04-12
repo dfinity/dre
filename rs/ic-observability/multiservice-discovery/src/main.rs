@@ -14,7 +14,7 @@ use url::Url;
 use definition::{Definition, DefinitionsSupervisor, StartMode};
 use ic_async_utils::shutdown_signal;
 
-use crate::definition::{RunningDefinition, TestDefinition};
+use crate::definition::{RunningDefinition, TargetFilterSpec, TestDefinition};
 use crate::metrics::{MSDMetrics, RunningDefinitionsMetrics};
 use crate::server_handlers::export_prometheus_config_handler::serialize_definitions_to_prometheus_config;
 use crate::server_handlers::Server;
@@ -64,7 +64,7 @@ fn main() {
         if let Some(running_def) = rt.block_on(sync(&cli_args, &log, shutdown_signal)) {
             let mut definitions_ref: BTreeMap<String, RunningDefinition> = BTreeMap::new();
             definitions_ref.insert(running_def.name().clone(), running_def);
-            let (_, text) = serialize_definitions_to_prometheus_config(definitions_ref);
+            let (_, text) = serialize_definitions_to_prometheus_config(definitions_ref, TargetFilterSpec::empty());
             print!("{}", text);
         }
     } else {
