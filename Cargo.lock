@@ -1393,6 +1393,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "clap_complete"
+version = "4.5.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dd79504325bf38b10165b02e89b4347300f855f273c4cb30c4a3209e6583275e"
+dependencies = [
+ "clap 4.5.4",
+]
+
+[[package]]
 name = "clap_derive"
 version = "3.2.25"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2279,6 +2288,7 @@ dependencies = [
  "candid",
  "clap 4.5.4",
  "clap-num",
+ "clap_complete",
  "colored",
  "cryptoki",
  "decentralization",
@@ -2286,6 +2296,7 @@ dependencies = [
  "dirs",
  "dotenv",
  "edit",
+ "file_diff",
  "flate2",
  "futures",
  "futures-util",
@@ -2625,6 +2636,12 @@ dependencies = [
  "rand_core 0.6.4",
  "subtle",
 ]
+
+[[package]]
+name = "file_diff"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "31a7a908b8f32538a2143e59a6e4e2508988832d5d4d6f7c156b3cbc762643a5"
 
 [[package]]
 name = "filetime"

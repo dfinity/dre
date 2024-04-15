@@ -1,20 +1,26 @@
 use crate::ic_admin::IcAdminWrapper;
+use clap::Command;
 use clap::{error::ErrorKind, CommandFactory, Parser};
+use clap_complete::generate_to;
+use clap_complete::shells::Bash;
+use dirs::cache_dir;
 use dotenv::dotenv;
 use dre::detect_neuron::Auth;
 use dre::general::{get_node_metrics_history, vote_on_proposals};
 use dre::operations::hostos_rollout::{NodeGroupUpdate, NumberOfNodes};
 use dre::{cli, ic_admin, local_unused_port, registry_dump, runner};
+use file_diff::diff;
 use ic_base_types::CanisterId;
 use ic_canisters::governance::governance_canister_version;
 use ic_management_backend::endpoints;
 use ic_management_types::requests::NodesRemoveRequest;
 use ic_management_types::{Artifact, MinNakamotoCoefficients, NodeFeature};
-use log::info;
+use log::{info, warn};
 use std::collections::BTreeMap;
 use std::str::FromStr;
 use std::sync::mpsc;
-use std::thread;
+use std::{fs, thread};
+use tempfile::tempdir;
 
 const STAGING_NEURON_ID: u64 = 49;
 
@@ -26,6 +32,8 @@ async fn main() -> Result<(), anyhow::Error> {
 
     let mut cli_opts = cli::Opts::parse();
     let mut cmd = cli::Opts::command();
+
+    generate_completions(&mut cmd);
 
     let target_network = ic_management_types::Network::new(cli_opts.network.clone(), &cli_opts.nns_urls)
         .await
@@ -409,4 +417,58 @@ fn init_logger() {
         }
     }
     pretty_env_logger::init_custom_env("LOG_LEVEL");
+}
+
+fn generate_completions(command: &mut Command) {
+    let completions_dir = cache_dir().unwrap().join("completions");
+    match fs::create_dir_all(&completions_dir) {
+        Ok(_) => info!("Created completions directory"),
+        Err(e) => {
+            warn!("Couldn't create completions dir: {:?}", e);
+            return;
+        }
+    }
+
+    let current_completions = completions_dir.join("dre.bash");
+    if !current_completions.exists() {
+        if let Err(e) = fs::File::create(&current_completions) {
+            warn!(
+                "Couldn't create file '{}' due to: {:?}",
+                current_completions.display(),
+                e
+            );
+            return;
+        }
+    }
+    if let Err(e) = fs::File::open(&current_completions) {
+        warn!("Couldn't open file '{}' due to: {:?}", current_completions.display(), e);
+        return;
+    }
+
+    let temp = match tempdir() {
+        Ok(d) => d,
+        Err(e) => {
+            warn!("Couldn't create tempdir due to: {:?}", e);
+            return;
+        }
+    };
+
+    let path = match generate_to(Bash, command, "dre", temp.into_path()) {
+        Ok(path) => path,
+        Err(e) => {
+            warn!("Couldn't write completions due to: {:?}", e);
+            return;
+        }
+    };
+
+    if diff(path.to_str().unwrap(), current_completions.to_str().unwrap()) {
+        info!("Complitions file is up to date.");
+        return;
+    }
+
+    info!("Updating completions file.");
+    match fs::copy(path, current_completions) {
+        Ok(_) => info!("Successfully copied completions"),
+        Err(e) => warn!("Couldn't copy complitions due to: {:?}", e),
+    }
 }
