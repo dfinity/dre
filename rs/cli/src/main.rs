@@ -30,10 +30,10 @@ async fn main() -> Result<(), anyhow::Error> {
     init_logger();
     info!("Running version {}", env!("CARGO_PKG_VERSION"));
 
-    let mut cli_opts = cli::Opts::parse();
     let mut cmd = cli::Opts::command();
-
     generate_completions(&mut cmd);
+
+    let mut cli_opts = cli::Opts::parse();
 
     let target_network = ic_management_types::Network::new(cli_opts.network.clone(), &cli_opts.nns_urls)
         .await
