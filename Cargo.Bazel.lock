@@ -1,5 +1,5 @@
 {
-  "checksum": "b6737f3f6bdb970486578a3c4c615afe6fd16e0bf32c3930b649d568c6be06c5",
+  "checksum": "54c60347f247a5806c210bfb382c8b6e7095468864b1282b9b656202370f032c",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -7004,6 +7004,51 @@
       },
       "license": "MIT OR Apache-2.0"
     },
+    "clap_complete 4.5.2": {
+      "name": "clap_complete",
+      "version": "4.5.2",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/clap_complete/4.5.2/download",
+          "sha256": "dd79504325bf38b10165b02e89b4347300f855f273c4cb30c4a3209e6583275e"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "clap_complete",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "clap_complete",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "crate_features": {
+          "common": [
+            "default"
+          ],
+          "selects": {}
+        },
+        "deps": {
+          "common": [
+            {
+              "id": "clap 4.5.4",
+              "target": "clap"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "4.5.2"
+      },
+      "license": "MIT OR Apache-2.0"
+    },
     "clap_derive 3.2.25": {
       "name": "clap_derive",
       "version": "3.2.25",
@@ -11520,6 +11565,10 @@
               "target": "clap_num"
             },
             {
+              "id": "clap_complete 4.5.2",
+              "target": "clap_complete"
+            },
+            {
               "id": "colored 2.1.0",
               "target": "colored"
             },
@@ -11546,6 +11595,10 @@
             {
               "id": "edit 0.1.5",
               "target": "edit"
+            },
+            {
+              "id": "file_diff 1.0.0",
+              "target": "file_diff"
             },
             {
               "id": "flate2 1.0.28",
@@ -13231,6 +13284,36 @@
         "version": "0.13.0"
       },
       "license": "MIT/Apache-2.0"
+    },
+    "file_diff 1.0.0": {
+      "name": "file_diff",
+      "version": "1.0.0",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/file_diff/1.0.0/download",
+          "sha256": "31a7a908b8f32538a2143e59a6e4e2508988832d5d4d6f7c156b3cbc762643a5"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "file_diff",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "file_diff",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "edition": "2015",
+        "version": "1.0.0"
+      },
+      "license": "BSD-3-Clause"
     },
     "filetime 0.2.23": {
       "name": "filetime",
