@@ -1,5 +1,6 @@
 load("@crate_index_dre//:defs.bzl", "aliases", "all_crate_deps")
 load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_test", "rust_library")
+load("@rules_rust//cargo:defs.bzl", "cargo_build_script")
 
 DEPS = [
     "//rs/ic-canisters",
@@ -8,7 +9,19 @@ DEPS = [
     "//rs/ic-management-backend:ic-management-backend-lib",
 ]
 
+BUILD_SCRIPT_DEPS = [
+    "//rs/ic-management-types",
+]
+
 package(default_visibility = ["//visibility:public"])
+
+cargo_build_script(
+    name = "build_script",
+    srcs = ["src/cli.rs", "src/build_script_.rs"],
+    deps = all_crate_deps(
+        build = True
+    ) + BUILD_SCRIPT_DEPS
+)
 
 rust_binary(
     name = "dre",
@@ -20,7 +33,7 @@ rust_binary(
     ),
     deps = all_crate_deps(
         normal = True,
-    ) + DEPS + ["//rs/cli:dre-lib"],
+    ) + DEPS + ["//rs/cli:dre-lib", ":build_script"],
 )
 
 rust_library(

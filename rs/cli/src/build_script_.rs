@@ -3,7 +3,7 @@ use clap::{CommandFactory, ValueEnum};
 use clap_complete::{generate_to, Shell};
 use std::{env, fs, process::Command};
 
-include!("src/cli.rs");
+include!("cli.rs");
 
 fn main() {
     // taken from https://stackoverflow.com/questions/43753491/include-git-commit-hash-as-string-into-rust-program

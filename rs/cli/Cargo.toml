@@ -1,6 +1,7 @@
 [package]
 name = "dre"
-build = "build.rs"
+# Required because of BAZEL
+build = "src/build_script_.rs"
 version.workspace = true
 authors.workspace = true
 edition.workspace = true
