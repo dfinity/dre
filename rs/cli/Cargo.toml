@@ -58,11 +58,17 @@ tabular = { workspace = true }
 tokio = { workspace = true }
 url = { workspace = true }
 tempfile = "3.10.0"
-clap_complete = "4.5.2"
-file_diff = "1.0.0"
 
 [dev-dependencies]
 wiremock = { workspace = true }
+
+[build-dependencies]
+clap_complete = "4.5.2"
+clap = { workspace = true }
+clap-num = { workspace = true }
+ic-base-types = { workspace = true }
+ic-management-types = { workspace = true }
+url = { workspace = true }
 
 [[bin]]
 name = "dre"

@@ -1,25 +1,20 @@
 use crate::ic_admin::IcAdminWrapper;
-use clap::Command;
-use clap::{error::ErrorKind, CommandFactory, Parser, ValueEnum};
-use clap_complete::shells::Bash;
-use clap_complete::{generate_to, Generator, Shell};
+use clap::{error::ErrorKind, CommandFactory, Parser};
 use dotenv::dotenv;
 use dre::detect_neuron::Auth;
 use dre::general::{get_node_metrics_history, vote_on_proposals};
 use dre::operations::hostos_rollout::{NodeGroupUpdate, NumberOfNodes};
 use dre::{cli, ic_admin, local_unused_port, registry_dump, runner};
-use file_diff::diff;
 use ic_base_types::CanisterId;
 use ic_canisters::governance::governance_canister_version;
 use ic_management_backend::endpoints;
 use ic_management_types::requests::NodesRemoveRequest;
 use ic_management_types::{Artifact, MinNakamotoCoefficients, NodeFeature};
-use log::{info, warn};
+use log::info;
 use std::collections::BTreeMap;
 use std::str::FromStr;
 use std::sync::mpsc;
-use std::{fs, thread};
-use tempfile::tempdir;
+use std::thread;
 
 const STAGING_NEURON_ID: u64 = 49;
 
@@ -30,8 +25,6 @@ async fn main() -> Result<(), anyhow::Error> {
     info!("Running version {}", env!("CARGO_PKG_VERSION"));
 
     let mut cmd = cli::Opts::command();
-    generate_completions(&mut cmd);
-
     let mut cli_opts = cli::Opts::parse();
 
     let target_network = ic_management_types::Network::new(cli_opts.network.clone(), &cli_opts.nns_urls)
@@ -83,13 +76,13 @@ async fn main() -> Result<(), anyhow::Error> {
         let simulate = cli_opts.simulate;
 
         let runner_unauth = || async {
-            let cli = cli::ParsedCli::from_opts(&cli_opts, false).await.expect("Failed to create unauthenticated CLI");
+            let cli = dre::parsed_cli::ParsedCli::from_opts(&cli_opts, false).await.expect("Failed to create unauthenticated CLI");
             let ic_admin_wrapper = IcAdminWrapper::from_cli(cli);
             runner::Runner::new_with_network_and_backend_port(ic_admin_wrapper, &target_network, backend_port).await.expect("Failed to create unauthenticated runner")
         };
 
         let runner_auth = || async {
-            let cli = cli::ParsedCli::from_opts(&cli_opts, true).await.expect("Failed to create authenticated CLI");
+            let cli = dre::parsed_cli::ParsedCli::from_opts(&cli_opts, true).await.expect("Failed to create authenticated CLI");
             let ic_admin_wrapper = IcAdminWrapper::from_cli(cli);
             runner::Runner::new_with_network_and_backend_port(ic_admin_wrapper, &target_network, backend_port).await.expect("Failed to create authenticated runner")
         };
@@ -247,7 +240,7 @@ async fn main() -> Result<(), anyhow::Error> {
 
                         runner_auth.ic_admin.propose_run(ic_admin::ProposeCommand::UpdateElectedVersions {
                                                  release_artifact: update_version.release_artifact.clone(),
-                                                 args: cli::ParsedCli::get_update_cmd_args(&update_version)
+                                                 args: dre::parsed_cli::ParsedCli::get_update_cmd_args(&update_version)
                                              },
                                              ic_admin::ProposeOptions{
                                                  title: Some(update_version.title),
@@ -295,7 +288,7 @@ async fn main() -> Result<(), anyhow::Error> {
             },
 
             cli::Commands::Vote {accepted_neurons, accepted_topics}=> {
-                let cli = cli::ParsedCli::from_opts(&cli_opts, true).await?;
+                let cli = dre::parsed_cli::ParsedCli::from_opts(&cli_opts, true).await?;
                 vote_on_proposals(cli.get_neuron(), target_network.get_nns_urls(), accepted_neurons, accepted_topics, simulate).await
             },
 
@@ -416,56 +409,4 @@ fn init_logger() {
         }
     }
     pretty_env_logger::init_custom_env("LOG_LEVEL");
-}
-
-fn generate_completions(command: &mut Command) {
-    let completions_dir = dirs::data_local_dir().unwrap().join("completions");
-    if let Err(e) = fs::create_dir_all(&completions_dir) {
-        warn!("Couldn't create '{}' dir: {:?}", completions_dir.display(), e);
-        return;
-    }
-
-    for &shell in Shell::value_variants() {
-        let current_completions = completions_dir.join(shell.file_name("dre"));
-
-        if !current_completions.exists() {
-            if let Err(e) = fs::File::create(&current_completions) {
-                warn!(
-                    "Couldn't create file '{}' due to: {:?}",
-                    current_completions.display(),
-                    e
-                );
-                continue;
-            }
-        }
-        if let Err(e) = fs::File::open(&current_completions) {
-            warn!("Couldn't open file '{}' due to: {:?}", current_completions.display(), e);
-            continue;
-        }
-
-        let temp = match tempdir() {
-            Ok(d) => d,
-            Err(e) => {
-                warn!("Couldn't create tempdir due to: {:?}", e);
-                continue;
-            }
-        };
-
-        let path = match generate_to(Bash, command, "dre", temp.into_path()) {
-            Ok(path) => path,
-            Err(e) => {
-                warn!("Couldn't write completions due to: {:?}", e);
-                continue;
-            }
-        };
-
-        if diff(path.to_str().unwrap(), current_completions.to_str().unwrap()) {
-            continue;
-        }
-
-        match fs::copy(path, current_completions) {
-            Ok(_) => info!("Successfully copied completions"),
-            Err(e) => warn!("Couldn't copy complitions due to: {:?}", e),
-        }
-    }
 }
