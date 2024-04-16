@@ -420,12 +420,9 @@ fn init_logger() {
 
 fn generate_completions(command: &mut Command) {
     let completions_dir = dirs::data_local_dir().unwrap().join("completions");
-    match fs::create_dir_all(&completions_dir) {
-        Ok(_) => info!("Created '{}' directory", completions_dir.display()),
-        Err(e) => {
-            warn!("Couldn't create '{}' dir: {:?}", completions_dir.display(), e);
-            return;
-        }
+    if let Err(e) = fs::create_dir_all(&completions_dir) {
+        warn!("Couldn't create '{}' dir: {:?}", completions_dir.display(), e);
+        return;
     }
 
     for &shell in Shell::value_variants() {
@@ -463,19 +460,9 @@ fn generate_completions(command: &mut Command) {
         };
 
         if diff(path.to_str().unwrap(), current_completions.to_str().unwrap()) {
-            info!(
-                "Complitions for {} shell is up to date on path '{}'",
-                shell,
-                current_completions.display()
-            );
             continue;
         }
 
-        info!(
-            "Updating completions file '{}' for shell {}.",
-            current_completions.display(),
-            shell
-        );
         match fs::copy(path, current_completions) {
             Ok(_) => info!("Successfully copied completions"),
             Err(e) => warn!("Couldn't copy complitions due to: {:?}", e),

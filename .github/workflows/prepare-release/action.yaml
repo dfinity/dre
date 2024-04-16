@@ -16,6 +16,16 @@ runs:
         # query the location of the bazel "dre" binary and copy it to the "release" directory
         mkdir -p release
         cp --dereference bazel-out/k8-opt/bin/rs/cli/dre release/dre
+    - name: "💲 Generate completion scripts"
+      shell: bash
+      run: |
+        set -eExuo pipefail
+        
+        # Run any command to generate completions
+        release/dre --help
+
+        completions=${XDG_DATA_HOME:-$HOME/.local/share}/completions
+        cp -r $completions release
     - name: "🆕 📢 Prepare release"
       # v0.1.15
       uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844
