@@ -1,9 +1,8 @@
 use crate::ic_admin::IcAdminWrapper;
 use clap::Command;
-use clap::{error::ErrorKind, CommandFactory, Parser};
-use clap_complete::generate_to;
+use clap::{error::ErrorKind, CommandFactory, Parser, ValueEnum};
 use clap_complete::shells::Bash;
-use dirs::cache_dir;
+use clap_complete::{generate_to, Generator, Shell};
 use dotenv::dotenv;
 use dre::detect_neuron::Auth;
 use dre::general::{get_node_metrics_history, vote_on_proposals};
@@ -420,55 +419,66 @@ fn init_logger() {
 }
 
 fn generate_completions(command: &mut Command) {
-    let completions_dir = cache_dir().unwrap().join("completions");
+    let completions_dir = dirs::data_local_dir().unwrap().join("completions");
     match fs::create_dir_all(&completions_dir) {
-        Ok(_) => info!("Created completions directory"),
+        Ok(_) => info!("Created '{}' directory", completions_dir.display()),
         Err(e) => {
-            warn!("Couldn't create completions dir: {:?}", e);
+            warn!("Couldn't create '{}' dir: {:?}", completions_dir.display(), e);
             return;
         }
     }
 
-    let current_completions = completions_dir.join("dre.bash");
-    if !current_completions.exists() {
-        if let Err(e) = fs::File::create(&current_completions) {
-            warn!(
-                "Couldn't create file '{}' due to: {:?}",
-                current_completions.display(),
-                e
+    for &shell in Shell::value_variants() {
+        let current_completions = completions_dir.join(shell.file_name("dre"));
+
+        if !current_completions.exists() {
+            if let Err(e) = fs::File::create(&current_completions) {
+                warn!(
+                    "Couldn't create file '{}' due to: {:?}",
+                    current_completions.display(),
+                    e
+                );
+                continue;
+            }
+        }
+        if let Err(e) = fs::File::open(&current_completions) {
+            warn!("Couldn't open file '{}' due to: {:?}", current_completions.display(), e);
+            continue;
+        }
+
+        let temp = match tempdir() {
+            Ok(d) => d,
+            Err(e) => {
+                warn!("Couldn't create tempdir due to: {:?}", e);
+                continue;
+            }
+        };
+
+        let path = match generate_to(Bash, command, "dre", temp.into_path()) {
+            Ok(path) => path,
+            Err(e) => {
+                warn!("Couldn't write completions due to: {:?}", e);
+                continue;
+            }
+        };
+
+        if diff(path.to_str().unwrap(), current_completions.to_str().unwrap()) {
+            info!(
+                "Complitions for {} shell is up to date on path '{}'",
+                shell,
+                current_completions.display()
             );
-            return;
+            continue;
         }
-    }
-    if let Err(e) = fs::File::open(&current_completions) {
-        warn!("Couldn't open file '{}' due to: {:?}", current_completions.display(), e);
-        return;
-    }
 
-    let temp = match tempdir() {
-        Ok(d) => d,
-        Err(e) => {
-            warn!("Couldn't create tempdir due to: {:?}", e);
-            return;
+        info!(
+            "Updating completions file '{}' for shell {}.",
+            current_completions.display(),
+            shell
+        );
+        match fs::copy(path, current_completions) {
+            Ok(_) => info!("Successfully copied completions"),
+            Err(e) => warn!("Couldn't copy complitions due to: {:?}", e),
         }
-    };
-
-    let path = match generate_to(Bash, command, "dre", temp.into_path()) {
-        Ok(path) => path,
-        Err(e) => {
-            warn!("Couldn't write completions due to: {:?}", e);
-            return;
-        }
-    };
-
-    if diff(path.to_str().unwrap(), current_completions.to_str().unwrap()) {
-        info!("Complitions file is up to date.");
-        return;
-    }
-
-    info!("Updating completions file.");
-    match fs::copy(path, current_completions) {
-        Ok(_) => info!("Successfully copied completions"),
-        Err(e) => warn!("Couldn't copy complitions due to: {:?}", e),
     }
 }
