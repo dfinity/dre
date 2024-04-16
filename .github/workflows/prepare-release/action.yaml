@@ -16,7 +16,7 @@ runs:
         # query the location of the bazel "dre" binary and copy it to the "release" directory
         mkdir -p release
         cp --dereference bazel-out/k8-opt/bin/rs/cli/dre release/dre
-        cp -r bazel-out/k8-opt/bin/rs/cli/build_script.out_dir/completions release
+        tar -cf release/completions.tar -C bazel-out/k8-opt/bin/rs/cli/build_script.out_dir completions
     - name: "🆕 📢 Prepare release"
       # v0.1.15
       uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844
