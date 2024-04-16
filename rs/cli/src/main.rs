@@ -24,8 +24,8 @@ async fn main() -> Result<(), anyhow::Error> {
     init_logger();
     info!("Running version {}", env!("CARGO_PKG_VERSION"));
 
-    let mut cli_opts = cli::Opts::parse();
     let mut cmd = cli::Opts::command();
+    let mut cli_opts = cli::Opts::parse();
 
     let target_network = ic_management_types::Network::new(cli_opts.network.clone(), &cli_opts.nns_urls)
         .await
@@ -76,13 +76,13 @@ async fn main() -> Result<(), anyhow::Error> {
         let simulate = cli_opts.simulate;
 
         let runner_unauth = || async {
-            let cli = cli::ParsedCli::from_opts(&cli_opts, false).await.expect("Failed to create unauthenticated CLI");
+            let cli = dre::parsed_cli::ParsedCli::from_opts(&cli_opts, false).await.expect("Failed to create unauthenticated CLI");
             let ic_admin_wrapper = IcAdminWrapper::from_cli(cli);
             runner::Runner::new_with_network_and_backend_port(ic_admin_wrapper, &target_network, backend_port).await.expect("Failed to create unauthenticated runner")
         };
 
         let runner_auth = || async {
-            let cli = cli::ParsedCli::from_opts(&cli_opts, true).await.expect("Failed to create authenticated CLI");
+            let cli = dre::parsed_cli::ParsedCli::from_opts(&cli_opts, true).await.expect("Failed to create authenticated CLI");
             let ic_admin_wrapper = IcAdminWrapper::from_cli(cli);
             runner::Runner::new_with_network_and_backend_port(ic_admin_wrapper, &target_network, backend_port).await.expect("Failed to create authenticated runner")
         };
@@ -240,7 +240,7 @@ async fn main() -> Result<(), anyhow::Error> {
 
                         runner_auth.ic_admin.propose_run(ic_admin::ProposeCommand::UpdateElectedVersions {
                                                  release_artifact: update_version.release_artifact.clone(),
-                                                 args: cli::ParsedCli::get_update_cmd_args(&update_version)
+                                                 args: dre::parsed_cli::ParsedCli::get_update_cmd_args(&update_version)
                                              },
                                              ic_admin::ProposeOptions{
                                                  title: Some(update_version.title),
@@ -288,7 +288,7 @@ async fn main() -> Result<(), anyhow::Error> {
             },
 
             cli::Commands::Vote {accepted_neurons, accepted_topics}=> {
-                let cli = cli::ParsedCli::from_opts(&cli_opts, true).await?;
+                let cli = dre::parsed_cli::ParsedCli::from_opts(&cli_opts, true).await?;
                 vote_on_proposals(cli.get_neuron(), target_network.get_nns_urls(), accepted_neurons, accepted_topics, simulate).await
             },
 

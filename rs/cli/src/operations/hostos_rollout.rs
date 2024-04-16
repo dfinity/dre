@@ -1,6 +1,5 @@
 use anyhow::anyhow;
 use async_recursion::async_recursion;
-use clap::{Parser, ValueEnum};
 use futures_util::future::try_join;
 use ic_base_types::{NodeId, PrincipalId};
 use ic_management_backend::health;
@@ -8,6 +7,8 @@ use ic_management_backend::proposal::ProposalAgent;
 use ic_management_types::{Network, Node, Status, Subnet, UpdateNodesHostosVersionsProposal};
 use log::{debug, info};
 use std::{collections::BTreeMap, fmt::Display, str::FromStr};
+
+use crate::cli::hostos::{NodeAssignment, NodeOwner};
 
 pub enum HostosRolloutResponse {
     Ok(Vec<Node>, Option<Vec<HostosRolloutSubnetAffected>>),
@@ -46,22 +47,6 @@ impl Display for HostosRolloutReason {
             Self::NoNodeSelected => write!(f, "No candidate nodes have been selected"),
         }
     }
-}
-
-#[derive(ValueEnum, Copy, Clone, Debug, Ord, Eq, PartialEq, PartialOrd, Parser, Default)]
-pub enum NodeOwner {
-    Dfinity,
-    Others,
-    #[default]
-    All,
-}
-
-#[derive(ValueEnum, Copy, Clone, Debug, Ord, Eq, PartialEq, PartialOrd, Default)]
-pub enum NodeAssignment {
-    Unassigned,
-    Assigned,
-    #[default]
-    All,
 }
 
 #[derive(Copy, Clone, Debug, Ord, Eq, PartialEq, PartialOrd)]

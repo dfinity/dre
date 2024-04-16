@@ -6,6 +6,7 @@ pub mod general;
 pub mod ic_admin;
 pub mod operations;
 pub mod ops_subnet_node_replace;
+pub mod parsed_cli;
 pub mod registry_dump;
 pub mod runner;
 

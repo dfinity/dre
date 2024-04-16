@@ -1,5 +1,5 @@
 {
-  "checksum": "b6737f3f6bdb970486578a3c4c615afe6fd16e0bf32c3930b649d568c6be06c5",
+  "checksum": "609adbd55213e511bf8a56e610f0951465973518256678db9c4af1ca7fb1587d",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -7004,6 +7004,51 @@
       },
       "license": "MIT OR Apache-2.0"
     },
+    "clap_complete 4.5.2": {
+      "name": "clap_complete",
+      "version": "4.5.2",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/clap_complete/4.5.2/download",
+          "sha256": "dd79504325bf38b10165b02e89b4347300f855f273c4cb30c4a3209e6583275e"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "clap_complete",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "clap_complete",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "crate_features": {
+          "common": [
+            "default"
+          ],
+          "selects": {}
+        },
+        "deps": {
+          "common": [
+            {
+              "id": "clap 4.5.4",
+              "target": "clap"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "4.5.2"
+      },
+      "license": "MIT OR Apache-2.0"
+    },
     "clap_derive 3.2.25": {
       "name": "clap_derive",
       "version": "3.2.25",
@@ -11488,8 +11533,8 @@
         },
         {
           "BuildScript": {
-            "crate_name": "build_script_build",
-            "crate_root": "build.rs",
+            "crate_name": "build_script_build_script_",
+            "crate_root": "src/build_script_.rs",
             "srcs": [
               "**/*.rs"
             ]
@@ -11541,7 +11586,7 @@
             },
             {
               "id": "dre 0.3.2",
-              "target": "build_script_build"
+              "target": "build_script_build_script_"
             },
             {
               "id": "edit 0.1.5",
@@ -11706,7 +11751,32 @@
       "build_script_attrs": {
         "data_glob": [
           "**"
-        ]
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "clap 4.5.4",
+              "target": "clap"
+            },
+            {
+              "id": "clap-num 1.1.1",
+              "target": "clap_num"
+            },
+            {
+              "id": "clap_complete 4.5.2",
+              "target": "clap_complete"
+            },
+            {
+              "id": "ic-base-types 0.9.0",
+              "target": "ic_base_types"
+            },
+            {
+              "id": "url 2.5.0",
+              "target": "url"
+            }
+          ],
+          "selects": {}
+        }
       },
       "license": null
     },
@@ -16820,6 +16890,8 @@
         ],
         "crate_features": {
           "common": [
+            "client",
+            "client-legacy",
             "default",
             "http1",
             "http2",
@@ -16827,124 +16899,7 @@
             "server-auto",
             "tokio"
           ],
-          "selects": {
-            "aarch64-apple-darwin": [
-              "client",
-              "client-legacy"
-            ],
-            "aarch64-apple-ios": [
-              "client",
-              "client-legacy"
-            ],
-            "aarch64-apple-ios-sim": [
-              "client",
-              "client-legacy"
-            ],
-            "aarch64-fuchsia": [
-              "client",
-              "client-legacy"
-            ],
-            "aarch64-linux-android": [
-              "client",
-              "client-legacy"
-            ],
-            "aarch64-pc-windows-msvc": [
-              "client",
-              "client-legacy"
-            ],
-            "aarch64-unknown-linux-gnu": [
-              "client",
-              "client-legacy"
-            ],
-            "arm-unknown-linux-gnueabi": [
-              "client",
-              "client-legacy"
-            ],
-            "armv7-linux-androideabi": [
-              "client",
-              "client-legacy"
-            ],
-            "armv7-unknown-linux-gnueabi": [
-              "client",
-              "client-legacy"
-            ],
-            "i686-apple-darwin": [
-              "client",
-              "client-legacy"
-            ],
-            "i686-linux-android": [
-              "client",
-              "client-legacy"
-            ],
-            "i686-pc-windows-msvc": [
-              "client",
-              "client-legacy"
-            ],
-            "i686-unknown-freebsd": [
-              "client",
-              "client-legacy"
-            ],
-            "i686-unknown-linux-gnu": [
-              "client",
-              "client-legacy"
-            ],
-            "powerpc-unknown-linux-gnu": [
-              "client",
-              "client-legacy"
-            ],
-            "riscv32imc-unknown-none-elf": [
-              "client",
-              "client-legacy"
-            ],
-            "riscv64gc-unknown-none-elf": [
-              "client",
-              "client-legacy"
-            ],
-            "s390x-unknown-linux-gnu": [
-              "client",
-              "client-legacy"
-            ],
-            "thumbv7em-none-eabi": [
-              "client",
-              "client-legacy"
-            ],
-            "thumbv8m.main-none-eabi": [
-              "client",
-              "client-legacy"
-            ],
-            "x86_64-apple-darwin": [
-              "client",
-              "client-legacy"
-            ],
-            "x86_64-apple-ios": [
-              "client",
-              "client-legacy"
-            ],
-            "x86_64-fuchsia": [
-              "client",
-              "client-legacy"
-            ],
-            "x86_64-linux-android": [
-              "client",
-              "client-legacy"
-            ],
-            "x86_64-pc-windows-msvc": [
-              "client",
-              "client-legacy"
-            ],
-            "x86_64-unknown-freebsd": [
-              "client",
-              "client-legacy"
-            ],
-            "x86_64-unknown-linux-gnu": [
-              "client",
-              "client-legacy"
-            ],
-            "x86_64-unknown-none": [
-              "client",
-              "client-legacy"
-            ]
-          }
+          "selects": {}
         },
         "deps": {
           "common": [
@@ -38037,94 +37992,10 @@
             "default",
             "fs",
             "std",
+            "termios",
             "use-libc-auxv"
           ],
-          "selects": {
-            "aarch64-apple-darwin": [
-              "termios"
-            ],
-            "aarch64-apple-ios": [
-              "termios"
-            ],
-            "aarch64-apple-ios-sim": [
-              "termios"
-            ],
-            "aarch64-fuchsia": [
-              "termios"
-            ],
-            "aarch64-linux-android": [
-              "termios"
-            ],
-            "aarch64-unknown-linux-gnu": [
-              "termios"
-            ],
-            "arm-unknown-linux-gnueabi": [
-              "termios"
-            ],
-            "armv7-linux-androideabi": [
-              "termios"
-            ],
-            "armv7-unknown-linux-gnueabi": [
-              "termios"
-            ],
-            "i686-apple-darwin": [
-              "termios"
-            ],
-            "i686-linux-android": [
-              "termios"
-            ],
-            "i686-unknown-freebsd": [
-              "termios"
-            ],
-            "i686-unknown-linux-gnu": [
-              "termios"
-            ],
-            "powerpc-unknown-linux-gnu": [
-              "termios"
-            ],
-            "riscv32imc-unknown-none-elf": [
-              "termios"
-            ],
-            "riscv64gc-unknown-none-elf": [
-              "termios"
-            ],
-            "s390x-unknown-linux-gnu": [
-              "termios"
-            ],
-            "thumbv7em-none-eabi": [
-              "termios"
-            ],
-            "thumbv8m.main-none-eabi": [
-              "termios"
-            ],
-            "wasm32-unknown-unknown": [
-              "termios"
-            ],
-            "wasm32-wasi": [
-              "termios"
-            ],
-            "x86_64-apple-darwin": [
-              "termios"
-            ],
-            "x86_64-apple-ios": [
-              "termios"
-            ],
-            "x86_64-fuchsia": [
-              "termios"
-            ],
-            "x86_64-linux-android": [
-              "termios"
-            ],
-            "x86_64-unknown-freebsd": [
-              "termios"
-            ],
-            "x86_64-unknown-linux-gnu": [
-              "termios"
-            ],
-            "x86_64-unknown-none": [
-              "termios"
-            ]
-          }
+          "selects": {}
         },
         "deps": {
           "common": [

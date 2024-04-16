@@ -1,5 +1,5 @@
+use crate::parsed_cli::UpdateVersion;
 use anyhow::{anyhow, Error, Result};
-use cli::UpdateVersion;
 use colored::Colorize;
 use dialoguer::Confirm;
 use flate2::read::GzDecoder;
@@ -31,9 +31,9 @@ use std::{fmt::Display, path::Path, process::Command};
 use strum::Display;
 use tempfile::NamedTempFile;
 
-use crate::cli::ParsedCli;
+use crate::defaults;
 use crate::detect_neuron::{Auth, Neuron};
-use crate::{cli, defaults};
+use crate::parsed_cli::ParsedCli;
 
 const MAX_SUMMARY_CHAR_COUNT: usize = 14000;
 
