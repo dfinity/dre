@@ -364,41 +364,34 @@ impl RunningDefinition {
         // Loop to do retries of initial sync and handle cancellation.
         // We keep retries outside the callee to make the callee easier
         // to test and more solid state.
-        loop {
-            match self.initial_registry_sync(false).await {
-                Err(e) => {
-                    match e {
-                        SyncError::Interrupted => {
-                            // Signal sent to callee via channel, initial sync interrupted.
-                            // We signal observation end because we are going to return.
+        while let Err(e) = self.initial_registry_sync(false).await {
+            match e {
+                SyncError::Interrupted => {
+                    // Signal sent to callee via channel, initial sync interrupted.
+                    // We signal observation end because we are going to return.
+                    self.metrics.observe_end(self.name());
+                    return;
+                }
+                SyncError::PublicKey(_) => {
+                    // Initial sync failed.
+                    error!(
+                        self.definition.log,
+                        "Will retry sync of {} until successful after {:#?}",
+                        self.definition.name,
+                        self.definition.poll_interval,
+                    );
+                    // Wait a prudent interval before retrying, but watch for
+                    // termination during that wait.
+                    let interval = crossbeam::channel::tick(self.definition.poll_interval);
+                    crossbeam::select! {
+                        recv(self.stop_signal) -> _ => {
+                            // Terminated!  Note the event and mark sync end.
+                            info!(self.definition.log, "Received shutdown signal while waiting for initial sync retry of definition {}", self.definition.name);
                             self.metrics.observe_end(self.name());
                             return;
-                        }
-                        SyncError::PublicKey(_) => {
-                            // Initial sync failed.
-                            error!(
-                                self.definition.log,
-                                "Will retry sync of {} until successful after {:#?}",
-                                self.definition.name,
-                                self.definition.poll_interval,
-                            );
-                            // Wait a prudent interval before retrying, but watch for
-                            // termination during that wait.
-                            let interval = crossbeam::channel::tick(self.definition.poll_interval);
-                            crossbeam::select! {
-                                recv(self.stop_signal) -> _ => {
-                                    // Terminated!  Note the event and mark sync end.
-                                    info!(self.definition.log, "Received shutdown signal while waiting for initial sync retry of definition {}", self.definition.name);
-                                    self.metrics.observe_end(self.name());
-                                    return;
-                                },
-                                recv(interval) -> _ => continue,
-                            }
-                        }
+                        },
+                        recv(interval) -> _ => continue,
                     }
-                }
-                Ok(_) => {
-                    break;
                 }
             }
         }
