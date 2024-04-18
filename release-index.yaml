@@ -35,6 +35,14 @@ rollout:
       wait_for_next_week: true
 
 releases:
+  - rc_name: rc--2024-04-17_23-01
+    versions:
+      - name: base
+        # Successful qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/pipelines/1258259180
+        version: abcea3eff0be52dc5328e71de98288991de854bf
+      - name: query-stats
+        # Qualification pipeline in progress at the time this record was created.
+        version: 0a51fd74f08b2e6f23d6e1d60f1f52eb73b40ccc
   - rc_name: rc--2024-04-10_23-01
     versions:
       - name: base

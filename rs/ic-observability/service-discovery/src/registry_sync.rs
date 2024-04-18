@@ -50,6 +50,11 @@ pub async fn sync_local_registry(
     let local_store = Arc::new(LocalStoreImpl::new(local_path.clone()));
     let registry_canister = RegistryCanister::new(nns_urls.to_vec());
 
+    if stop_signal.try_recv().is_ok() {
+        // Interrupted early.  Let's get out of here.
+        return Err(SyncError::Interrupted);
+    }
+
     let mut latest_version = if !Path::new(&local_path).exists() {
         ZERO_REGISTRY_VERSION
     } else {
@@ -85,7 +90,7 @@ pub async fn sync_local_registry(
 
     loop {
         if stop_signal.try_recv().is_ok() {
-            // Interrupted early.  Let's get out of here.
+            // Interrupted.  Let's get out of here.
             return Err(SyncError::Interrupted);
         }
 
