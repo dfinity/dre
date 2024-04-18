@@ -5,10 +5,13 @@ on:
       - "main"
     tags:
       - "v*"
+    paths-ignore:
+      - "release-index.yaml"
+      - "replica-releases/**"
   pull_request:
     paths-ignore:
-      - 'release-index.yaml'
-      - 'replica-releases/**'
+      - "release-index.yaml"
+      - "replica-releases/**"
   merge_group:
 
 concurrency:
@@ -57,7 +60,7 @@ jobs:
       ########################################
       # Upload container images
       ########################################
-      - name:  "🔧 Login to GitHub Container Registry"
+      - name: "🔧 Login to GitHub Container Registry"
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
