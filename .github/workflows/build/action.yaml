@@ -3,7 +3,7 @@ description: Reusable action for building and repin with bazel
 
 inputs:
   ssh_pk_workflow:
-    description: 'SSH PK for the repo allowing workflows to run actions'
+    description: "SSH PK for the repo allowing workflows to run actions"
     required: true
 
 runs:
@@ -30,7 +30,7 @@ runs:
         }        
         bazel_build_auto_repin build --config=ci ...
       shell: bash
-    
+
     - uses: actions/checkout@v4
       if: ${{ steps.build.outputs.repin == 'true' }}
       with:
@@ -67,6 +67,12 @@ runs:
             image=$(echo $target | awk -F: '{ print $1 }' | awk -F/ '{ print $NF }')
             image="localhost/$image"
             echo "Testing dry run on image: $image"
-            docker run --rm $image --help
+            ret=0
+            output=$(docker run --rm $image --help 2>&1) || ret=$?
+            if [ "$ret" != "0" ]
+            then
+              echo "$image failed to run.  Output:" >&2
+              echo "$output" >&2
+              exit "$ret"
+            fi
         done
-
