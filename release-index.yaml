@@ -49,6 +49,8 @@ releases:
         version: 19dbb5cc6e3dc85c0ccd899b3182552612f1607d
       - name: query-stats
         version: 02dcaf3ccdfe46bd959d683d43c5513d37a1420d
+      - name: hotfix-bitcoin
+        version: 33dd2ef2184a64c00e64ff0412e7378d46507005
   - rc_name: rc--2024-04-03_23-01
     versions:
       - name: base
