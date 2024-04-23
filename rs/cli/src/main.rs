@@ -1,5 +1,6 @@
 use crate::ic_admin::IcAdminWrapper;
 use clap::{error::ErrorKind, CommandFactory, Parser};
+use dialoguer::Confirm;
 use dotenv::dotenv;
 use dre::detect_neuron::Auth;
 use dre::general::{get_node_metrics_history, vote_on_proposals};
@@ -10,19 +11,35 @@ use ic_canisters::governance::governance_canister_version;
 use ic_management_backend::endpoints;
 use ic_management_types::requests::NodesRemoveRequest;
 use ic_management_types::{Artifact, MinNakamotoCoefficients, NodeFeature};
-use log::info;
+use log::{info, warn};
+use serde_json::Value;
 use std::collections::BTreeMap;
 use std::str::FromStr;
 use std::sync::mpsc;
 use std::thread;
+use tokio::runtime::Runtime;
 
 const STAGING_NEURON_ID: u64 = 49;
 
-#[tokio::main]
-async fn main() -> Result<(), anyhow::Error> {
-    dotenv().ok();
+fn main() -> Result<(), anyhow::Error> {
     init_logger();
-    info!("Running version {}", env!("CARGO_PKG_VERSION"));
+    let version = env!("CARGO_PKG_VERSION");
+    info!("Running version {}", version);
+
+    match check_latest_release(version)? {
+        UpdateStatus::RefusedUpdate | UpdateStatus::UpToDate => {}
+        UpdateStatus::Updated => {
+            info!("Rerun the binary to use the newest version");
+            return Ok(());
+        }
+    };
+
+    let runtime = Runtime::new()?;
+    runtime.block_on(async_main())
+}
+
+async fn async_main() -> Result<(), anyhow::Error> {
+    dotenv().ok();
 
     let mut cmd = cli::Opts::command();
     let mut cli_opts = cli::Opts::parse();
@@ -409,4 +426,97 @@ fn init_logger() {
         }
     }
     pretty_env_logger::init_custom_env("LOG_LEVEL");
+}
+
+fn check_latest_release(curr_version: &str) -> anyhow::Result<UpdateStatus> {
+    let current_version = match curr_version.split_once('-') {
+        None => {
+            return Err(anyhow::anyhow!(
+                "Version '{}' doesn't follow expected naming",
+                curr_version
+            ))
+        }
+        Some((ver, _)) => ver,
+    };
+
+    let maybe_configured_backend = self_update::backends::github::ReleaseList::configure()
+        .repo_owner("dfinity")
+        .repo_name("dre")
+        .build()
+        .map_err(|e| anyhow::anyhow!("Configuring backend failed: {:?}", e))?;
+
+    let releases = maybe_configured_backend
+        .fetch()
+        .map_err(|e| anyhow::anyhow!("Fetching releases failed: {:?}", e))?;
+
+    let latest_release = match releases.first() {
+        Some(v) => v,
+        None => return Err(anyhow::anyhow!("No releases found")),
+    };
+
+    if latest_release.version.eq(current_version) {
+        info!("Binary up to date.");
+        return Ok(UpdateStatus::UpToDate);
+    }
+
+    if !Confirm::new()
+        .with_prompt(format!(
+            "There is a newer version available.\nUpdate {} -> {}?",
+            current_version, latest_release.version
+        ))
+        .default(true)
+        .interact()?
+    {
+        warn!("Running with non-latest version may have incompatibilies!");
+        return Ok(UpdateStatus::RefusedUpdate);
+    }
+
+    info!("Binary not up to date. Updating to {}", latest_release.version);
+
+    let asset = match latest_release.asset_for("dre", None) {
+        Some(asset) => asset,
+        None => return Err(anyhow::anyhow!("No assets found for release")),
+    };
+
+    let tmp_dir = tempfile::Builder::new()
+        .prefix("self_update")
+        .tempdir_in(::std::env::current_dir().unwrap())
+        .map_err(|e| anyhow::anyhow!("Couldn't create temp dir: {:?}", e))?;
+
+    let new_dre_path = tmp_dir.path().join(&asset.name);
+    let asset_path = tmp_dir.path().join("asset");
+    let asset_file =
+        std::fs::File::create(&asset_path).map_err(|e| anyhow::anyhow!("Couldn't create file: {:?}", e))?;
+    let new_dre_file =
+        std::fs::File::create(&new_dre_path).map_err(|e| anyhow::anyhow!("Couldn't create file: {:?}", e))?;
+
+    self_update::Download::from_url(&asset.download_url)
+        .download_to(&asset_file)
+        .map_err(|e| anyhow::anyhow!("Couldn't download asset: {:?}", e))?;
+
+    info!("Asset downloaded successfully");
+
+    let value: Value = serde_json::from_str(&std::fs::read_to_string(&asset_path).unwrap())
+        .map_err(|e| anyhow::anyhow!("Couldn't open asset: {:?}", e))?;
+
+    let download_url = match value.get("browser_download_url") {
+        Some(Value::String(d)) => d,
+        Some(_) => return Err(anyhow::anyhow!("Unexpected type for url in asset")),
+        None => return Err(anyhow::anyhow!("Download url not present in asset")),
+    };
+
+    self_update::Download::from_url(download_url)
+        .download_to(&new_dre_file)
+        .map_err(|e| anyhow::anyhow!("Couldn't download binary: {:?}", e))?;
+
+    self_update::self_replace::self_replace(new_dre_path)
+        .map_err(|e| anyhow::anyhow!("Couldn't upgrade to the newest version: {:?}", e))?;
+
+    Ok(UpdateStatus::Updated)
+}
+
+enum UpdateStatus {
+    RefusedUpdate,
+    Updated,
+    UpToDate,
 }
