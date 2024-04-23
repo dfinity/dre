@@ -26,7 +26,7 @@ fn main() -> Result<(), anyhow::Error> {
     let version = env!("CARGO_PKG_VERSION");
     info!("Running version {}", version);
 
-    match check_latest_release(&version)? {
+    match check_latest_release(version)? {
         UpdateStatus::RefusedUpdate | UpdateStatus::UpToDate => {}
         UpdateStatus::Updated => {
             info!("Rerun the binary to use the newest version");
@@ -449,7 +449,7 @@ fn check_latest_release(curr_version: &str) -> anyhow::Result<UpdateStatus> {
         .fetch()
         .map_err(|e| anyhow::anyhow!("Fetching releases failed: {:?}", e))?;
 
-    let latest_release = match releases.get(0) {
+    let latest_release = match releases.first() {
         Some(v) => v,
         None => return Err(anyhow::anyhow!("No releases found")),
     };
@@ -505,7 +505,7 @@ fn check_latest_release(curr_version: &str) -> anyhow::Result<UpdateStatus> {
         None => return Err(anyhow::anyhow!("Download url not present in asset")),
     };
 
-    self_update::Download::from_url(&download_url)
+    self_update::Download::from_url(download_url)
         .download_to(&new_dre_file)
         .map_err(|e| anyhow::anyhow!("Couldn't download binary: {:?}", e))?;
 
