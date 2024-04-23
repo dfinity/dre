@@ -43,6 +43,10 @@ releases:
       - name: query-stats
         # Qualification pipeline in progress at the time this record was created.
         version: 0a51fd74f08b2e6f23d6e1d60f1f52eb73b40ccc
+      - name: hotfix-bitcoin
+        version: 687de34189de20c5346e6b6167d22bcdd11e7ae5
+      - name: hotfix-bitcoin-query-stats
+        version: 63acf4f88b20ec0c6384f4e18f0f6f69fc5d9b9f
   - rc_name: rc--2024-04-10_23-01
     versions:
       - name: base
