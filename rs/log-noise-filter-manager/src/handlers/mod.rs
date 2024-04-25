@@ -14,6 +14,8 @@ use axum::routing::{get, put};
 mod get;
 mod put;
 
+pub const SEPARATOR: &str = " || ";
+
 #[derive(Clone)]
 pub struct Server {
     pub logger: Logger,
@@ -56,8 +58,13 @@ impl Server {
             Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
                 match tokio::fs::File::create(&self.file_path).await {
                     Ok(_) => {
+                        if inputs.is_empty() {
+                            error!(self.logger, "Vector needs at least one input.");
+                            panic!()
+                        }
                         self.write_structure(&Self::get_initial(reroute_unmatched, inputs))
                             .await;
+                        info!(self.logger, "Serialized initial structure")
                     }
                     Err(e) => {
                         error!(self.logger, "Received an error while creating the file: {:?}", e);
@@ -96,7 +103,7 @@ impl Server {
             }
         };
         match tokio::fs::write(&self.file_path, &serialized.as_bytes()).await {
-            Ok(_) => info!(self.logger, "Serialized initial structure"),
+            Ok(_) => {}
             Err(e) => {
                 error!(self.logger, "Couldn't serialize initial strucuture: {:?}", e);
                 panic!()

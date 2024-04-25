@@ -1,7 +1,7 @@
 use axum::http::StatusCode;
 use axum::{extract::State, Json};
 
-use super::{Server, TopLevelVectorTransform};
+use super::{Server, TopLevelVectorTransform, SEPARATOR};
 
 pub(crate) async fn content(
     State(state): State<Server>,
@@ -17,7 +17,7 @@ pub(crate) async fn only_routes(State(state): State<Server>) -> Result<Json<Vec<
             .noise_filter
             .route
             .noisy
-            .split('\n')
+            .split(SEPARATOR)
             .map(|t| t.to_string())
             .collect(),
     ))

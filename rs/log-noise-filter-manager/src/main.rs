@@ -20,7 +20,7 @@ async fn main() {
     info!(logger, "Running noise filter manager {}", socket);
 
     let server = Server::new(logger.clone(), cli.file_path);
-    server.run(socket, cli.reroute_unmached, cli.inputs).await;
+    server.run(socket, cli.reroute_unmatched, cli.inputs).await;
 
     info!(logger, "Noise filter manager stopped");
 }
@@ -62,7 +62,7 @@ Log level to use for running. You can use standard log levels 'info',
         long,
         help = "Explained: https://vector.dev/docs/reference/configuration/transforms/route/#reroute_unmatched"
     )]
-    reroute_unmached: String,
+    reroute_unmatched: String,
 
     #[clap(long, help = "All inputs that should be linked to this transform")]
     inputs: Vec<String>,

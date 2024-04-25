@@ -1,6 +1,6 @@
 use axum::{extract::State, http::StatusCode, Json};
 
-use super::{Server, TopLevelVectorTransform};
+use super::{Server, TopLevelVectorTransform, SEPARATOR};
 
 pub async fn update(
     State(state): State<Server>,
@@ -10,7 +10,7 @@ pub async fn update(
     if routes.is_empty() {
         content.transforms.noise_filter.route.noisy = "false".to_string();
     } else {
-        content.transforms.noise_filter.route.noisy = routes.join("\n")
+        content.transforms.noise_filter.route.noisy = routes.join(SEPARATOR)
     }
 
     state.write_structure(&content).await;
