@@ -318,13 +318,13 @@ async fn async_main() -> Result<(), anyhow::Error> {
                 registry_dump::dump_registry(path, &target_network, version).await
             }
 
-            cli::Commands::Firewall{title, summary, motivation} => {
+            cli::Commands::Firewall{title, summary} => {
                 let runner_auth = runner_auth().await;
 
                 runner_auth.ic_admin.update_replica_nodes_firewall(&target_network, ic_admin::ProposeOptions{
                     title: title.clone(),
                     summary: summary.clone(),
-                    motivation: motivation.clone(),
+                    ..Default::default()
                 }, cli_opts.simulate).await
             }
         }
