@@ -151,10 +151,8 @@ pub enum Commands {
     Firewall {
         #[clap(long, default_value = Some("Proposal to modify firewall rules"))]
         title: Option<String>,
-        #[clap(long, default_value = None)]
+        #[clap(long, default_value = None, required = true)]
         summary: Option<String>,
-        #[clap(long, default_value = None)]
-        motivation: Option<String>,
     },
 }
 

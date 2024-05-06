@@ -59,6 +59,7 @@ tabular = { workspace = true }
 tokio = { workspace = true }
 url = { workspace = true }
 tempfile = "3.10.0"
+self_update = { version = "0.39.0", features = [ "archive-tar" ]}
 
 [dev-dependencies]
 wiremock = { workspace = true }
