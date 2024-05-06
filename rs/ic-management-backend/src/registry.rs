@@ -330,6 +330,10 @@ impl RegistryState {
     }
 
     async fn update_releases(&mut self) -> Result<()> {
+        // If the network isn't mainnet we don't need to check git branches
+        if !self.network.eq(&Network::new("mainnet", &vec![]).await.unwrap()) {
+            return Ok(());
+        }
         if self.ic_repo.is_some() {
             lazy_static! {
                 // TODO: We don't need to distinguish release branch and name, they can be the same
