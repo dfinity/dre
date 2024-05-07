@@ -6,6 +6,7 @@ use ic_interfaces_registry::RegistryClient;
 use ic_management_backend::registry::{local_registry_path, sync_local_store, RegistryFamilyEntries};
 use ic_management_types::Network;
 use ic_protobuf::registry::{
+    api_boundary_node::v1::ApiBoundaryNodeRecord,
     dc::v1::DataCenterRecord,
     node::v1::{ConnectionEndpoint, IPv4InterfaceConfig, NodeRecord},
     node_operator::v1::NodeOperatorRecord,
@@ -15,6 +16,7 @@ use ic_registry_keys::NODE_REWARDS_TABLE_KEY;
 use ic_registry_local_registry::LocalRegistry;
 use ic_registry_subnet_type::SubnetType;
 use itertools::Itertools;
+use log::warn;
 use registry_canister::mutations::common::decode_registry_value;
 use serde::Serialize;
 
@@ -44,7 +46,9 @@ pub async fn dump_registry(path: &Option<PathBuf>, network: &Network, version: &
 
     let nodes = get_nodes(&local_registry, version, &node_operators, &subnets)?;
 
-    let node_rewards_table = get_node_rewards_table(&local_registry, version);
+    let node_rewards_table = get_node_rewards_table(&local_registry, version, network);
+
+    let api_bns = get_api_boundary_nodes(&local_registry, version)?;
 
     #[derive(Serialize)]
     struct RegistryDump {
@@ -53,6 +57,7 @@ pub async fn dump_registry(path: &Option<PathBuf>, network: &Network, version: &
         dcs: Vec<DataCenterRecord>,
         node_operators: Vec<NodeOperator>,
         node_rewards_table: NodeRewardsTableFlattened,
+        api_bns: Vec<ApiBoundaryNodeDetails>,
     }
     println!(
         "{}",
@@ -61,7 +66,8 @@ pub async fn dump_registry(path: &Option<PathBuf>, network: &Network, version: &
             subnets,
             dcs,
             node_operators: node_operators.values().cloned().collect_vec(),
-            node_rewards_table
+            node_rewards_table,
+            api_bns
         })?
     );
 
@@ -183,13 +189,62 @@ fn get_node_operators(
     Ok(node_operators)
 }
 
-fn get_node_rewards_table(local_registry: &LocalRegistry, version: RegistryVersion) -> NodeRewardsTableFlattened {
-    let rewards_table_bytes = local_registry
-        .get_value(NODE_REWARDS_TABLE_KEY, version)
-        .expect("Failed to get Node Rewards Table")
-        .expect("Failed to get Node Rewards Table");
+fn get_node_rewards_table(
+    local_registry: &LocalRegistry,
+    version: RegistryVersion,
+    network: &Network,
+) -> NodeRewardsTableFlattened {
+    let rewards_table_bytes = local_registry.get_value(NODE_REWARDS_TABLE_KEY, version);
+
+    let rewards_table_bytes = match rewards_table_bytes {
+        Ok(r) => match r {
+            Some(r) => r,
+            None => {
+                if network.name.eq("mainnet") {
+                    panic!("Failed to get Node Rewards Table")
+                } else {
+                    warn!("Didn't find any node rewards details for network: {}", network.name);
+                    vec![]
+                }
+            }
+        },
+        Err(_) => {
+            if network.name.eq("mainnet") {
+                panic!("Failed to get Node Rewards Table for mainnet")
+            } else {
+                warn!("Failed to get Node Rewards Table for {}", network.name);
+                vec![]
+            }
+        }
+    };
 
     decode_registry_value::<NodeRewardsTableFlattened>(rewards_table_bytes)
+}
+
+fn get_api_boundary_nodes(
+    local_registry: &LocalRegistry,
+    version: RegistryVersion,
+) -> Result<Vec<ApiBoundaryNodeDetails>, Error> {
+    let api_bns = local_registry
+        .get_family_entries_of_version::<ApiBoundaryNodeRecord>(version)
+        .map_err(|e| anyhow::anyhow!("Couldn't get api boundary nodes: {:?}", e))?
+        .into_iter()
+        .map(|(k, (_, record))| {
+            let principal = PrincipalId::from_str(&k).expect("Couldn't parse principal id");
+            ApiBoundaryNodeDetails {
+                principal,
+                version: record.version,
+            }
+        })
+        .collect();
+
+    Ok(api_bns)
+}
+
+#[derive(Serialize, Clone)]
+struct ApiBoundaryNodeDetails {
+    principal: PrincipalId,
+    version: String,
 }
 
 #[derive(Serialize, Clone)]
