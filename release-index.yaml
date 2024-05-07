@@ -35,6 +35,22 @@ rollout:
       wait_for_next_week: true
 
 releases:
+  - rc_name: rc--2024-05-01_23-01
+    versions:
+      # Successful qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/jobs/6763468648
+      - name: base
+        version: bb76748d1d225c08d88037e99ca9a066f97de496
+      # Successful qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/jobs/6764186162
+      - name: storage-layer
+        version: f58424c4ba894ab8a12c8e223655d5d378fb1010
+  - rc_name: rc--2024-04-24_23-01
+    versions:
+      - name: base
+        # Successful qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/jobs/6713878735
+        version: 80e0363393ea26a36b77e8c75f7f183cb521f67f
+      - name: storage-layer
+        # Successful qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/jobs/6714600392
+        version: 5e285dcaf77db014ac85d6f96ff392fe461945f5
   - rc_name: rc--2024-04-17_23-01
     versions:
       - name: base
