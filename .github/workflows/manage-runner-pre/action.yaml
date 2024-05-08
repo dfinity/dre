@@ -19,16 +19,16 @@ runs:
     ########################################
     # Download and unpack cache
     ########################################
-    - name: "☁️ ⬇️ Restore bazel cache"
-      uses: actions/cache/restore@v4
-      with:
-        path: "~/.cache/bazel"
-        # Configure cache updates
-        # https://github.com/actions/cache/blob/main/tips-and-workarounds.md#update-a-cache
-        # https://github.com/actions/cache/blob/main/examples.md#---bazel
-        key: ${{ runner.os }}-bazel-${{ hashFiles('.bazelversion', '.bazelrc', 'WORKSPACE.bazel', 'Cargo.Bazel.lock', 'requirements.txt') }}
-        restore-keys: |
-            ${{ runner.os }}-bazel-
+    - name: "☁️ ⬇️ Mount caches"
+      run: |
+        mkdir -p ~/.cache/bazel
+        sudo chown -R $USER:$USER ~/.cache/bazel
+        sudo apt-get install -y s3fs
+        s3fs dre-s3fs-ci-cache ~/.cache/bazel -o passwd_file=$HOME/.passwd-s3fs -o url=https://s3.eu-central-2.wasabisys.com -o use_path_request_style -o umask=0007
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.WASABI_ACCESS_KEY }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.WASABI_SECRET_KEY }}
+      shell: bash
     - name: "🧹 Clean bazel cache if we're preparing a new release"
       if: ${{ startsWith(github.ref, 'refs/tags/v') }}
       # This is desirable to make sure bazel does not use stale pre-built binaries
