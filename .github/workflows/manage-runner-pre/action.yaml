@@ -1,6 +1,14 @@
 name: Setup runner
 description: Reusable action for setting up the github runner
 
+inputs:
+  AWS_ACCESS_KEY_ID:
+    description: 'Access key for the S3 bucket'
+    required: true
+  AWS_SECRET_ACCESS_KEY:
+    description: 'Secret key for the S3 bucket'
+    required: true
+
 runs:
   using: composite
   steps:
@@ -26,8 +34,8 @@ runs:
         sudo apt-get install -y s3fs
         s3fs dre-s3fs-ci-cache ~/.cache/bazel -o passwd_file=$HOME/.passwd-s3fs -o url=https://s3.eu-central-2.wasabisys.com -o use_path_request_style -o umask=0007
       env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.WASABI_ACCESS_KEY }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.WASABI_SECRET_KEY }}
+        AWS_ACCESS_KEY_ID: ${{ inputs.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ inputs.AWS_SECRET_ACCESS_KEY }}
       shell: bash
     - name: "🧹 Clean bazel cache if we're preparing a new release"
       if: ${{ startsWith(github.ref, 'refs/tags/v') }}

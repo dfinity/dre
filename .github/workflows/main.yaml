@@ -28,6 +28,9 @@ jobs:
           fetch-depth: 2
       - name: "☁️ Setup runner"
         uses: ./.github/workflows/manage-runner-pre
+        with:
+          AWS_ACCESS_KEY_ID: "${{ secrets.WASABI_ACCESS_KEY }}"
+          AWS_SECRET_ACCESS_KEY: "${{ secrets.WASABI_SECRET_KEY }}"
 
       ########################################
       # Build and test
