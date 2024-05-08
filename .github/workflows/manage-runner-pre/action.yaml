@@ -32,7 +32,7 @@ runs:
         mkdir -p ~/.cache/bazel
         sudo chown -R $USER:$USER ~/.cache/bazel
         sudo apt-get install -y s3fs
-        s3fs dre-s3fs-ci-cache ~/.cache/bazel -o passwd_file=$HOME/.passwd-s3fs -o url=https://s3.eu-central-2.wasabisys.com -o use_path_request_style -o umask=0007
+        s3fs dre-s3fs-ci-cache ~/.cache/bazel -o url=https://s3.eu-central-2.wasabisys.com -o use_path_request_style -o umask=0007
       env:
         AWS_ACCESS_KEY_ID: ${{ inputs.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ inputs.AWS_SECRET_ACCESS_KEY }}
