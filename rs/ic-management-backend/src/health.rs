@@ -14,7 +14,7 @@ use url::Url;
 use crate::prometheus;
 
 pub struct HealthClient {
-    implementation: HealthStatusAquirerImplementations,
+    implementation: HealthStatusQuerierImplementations,
 }
 
 impl HealthClient {
@@ -25,37 +25,37 @@ impl HealthClient {
     }
 }
 
-impl HealthStatusAquirer for HealthClient {
+impl HealthStatusQuerier for HealthClient {
     async fn subnet(&self, subnet: PrincipalId) -> anyhow::Result<BTreeMap<PrincipalId, Status>> {
         match &self.implementation {
-            HealthStatusAquirerImplementations::Dashboard(c) => c.subnet(subnet).await,
-            HealthStatusAquirerImplementations::Prometheus(c) => c.subnet(subnet).await,
+            HealthStatusQuerierImplementations::Dashboard(c) => c.subnet(subnet).await,
+            HealthStatusQuerierImplementations::Prometheus(c) => c.subnet(subnet).await,
         }
     }
 
     async fn nodes(&self) -> anyhow::Result<BTreeMap<PrincipalId, Status>> {
         match &self.implementation {
-            HealthStatusAquirerImplementations::Dashboard(c) => c.nodes().await,
-            HealthStatusAquirerImplementations::Prometheus(c) => c.nodes().await,
+            HealthStatusQuerierImplementations::Dashboard(c) => c.nodes().await,
+            HealthStatusQuerierImplementations::Prometheus(c) => c.nodes().await,
         }
     }
 }
 
-enum HealthStatusAquirerImplementations {
+enum HealthStatusQuerierImplementations {
     Dashboard(PublicDashboardHealthClient),
     Prometheus(PrometheusHealthClient),
 }
 
-impl From<Network> for HealthStatusAquirerImplementations {
+impl From<Network> for HealthStatusQuerierImplementations {
     fn from(value: Network) -> Self {
         match value.name.as_str() {
-            "mainnet" => HealthStatusAquirerImplementations::Dashboard(PublicDashboardHealthClient::new(None)),
-            _ => HealthStatusAquirerImplementations::Prometheus(PrometheusHealthClient::new(value.clone())),
+            "mainnet" => HealthStatusQuerierImplementations::Dashboard(PublicDashboardHealthClient::new(None)),
+            _ => HealthStatusQuerierImplementations::Prometheus(PrometheusHealthClient::new(value.clone())),
         }
     }
 }
 
-pub trait HealthStatusAquirer {
+pub trait HealthStatusQuerier {
     fn subnet(
         &self,
         subnet: PrincipalId,
@@ -198,7 +198,7 @@ struct ShortNodeInfo {
     status: Status,
 }
 
-impl HealthStatusAquirer for PublicDashboardHealthClient {
+impl HealthStatusQuerier for PublicDashboardHealthClient {
     async fn subnet(&self, subnet: PrincipalId) -> anyhow::Result<BTreeMap<PrincipalId, Status>> {
         Ok(self
             .get_all_nodes()
@@ -236,7 +236,7 @@ impl PrometheusHealthClient {
     }
 }
 
-impl HealthStatusAquirer for PrometheusHealthClient {
+impl HealthStatusQuerier for PrometheusHealthClient {
     async fn subnet(&self, subnet: PrincipalId) -> anyhow::Result<BTreeMap<PrincipalId, Status>> {
         let ic_name = self.network.legacy_name();
         let subnet_name = subnet.to_string();

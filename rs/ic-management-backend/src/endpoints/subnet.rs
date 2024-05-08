@@ -1,5 +1,5 @@
 use super::*;
-use crate::health::HealthStatusAquirer;
+use crate::health::HealthStatusQuerier;
 use crate::{health, subnets::get_proposed_subnet_changes};
 use decentralization::network::{SubnetQueryBy, TopologyManager};
 use ic_base_types::PrincipalId;

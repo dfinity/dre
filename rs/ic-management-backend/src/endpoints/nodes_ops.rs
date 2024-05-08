@@ -3,7 +3,7 @@ use ic_management_types::requests::{NodeRemoval, NodeRemovalReason, NodesRemoveR
 use itertools::Itertools;
 
 use super::*;
-use crate::health::{self, HealthStatusAquirer};
+use crate::health::{self, HealthStatusQuerier};
 use decentralization::network::Node as DecentralizationNode;
 
 /// Finds all nodes that need to be removed from the network either because
