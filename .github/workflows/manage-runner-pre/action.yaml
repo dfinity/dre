@@ -22,8 +22,7 @@ runs:
     ########################################
     - name: "☁️ ⬇️ Mount caches"
       run: |
-        sudo apt install -y s3ql
-        # ./bin/install-s3ql.sh
+        ./bin/install-s3ql.sh
         mkdir -p ~/.s3ql
         cat <<_EOF | install -m 0600 /dev/stdin ~/.s3ql/authinfo2
         [default]
