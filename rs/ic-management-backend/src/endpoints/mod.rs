@@ -4,6 +4,7 @@ pub mod query_decentralization;
 pub mod release;
 pub mod subnet;
 
+use crate::health::HealthStatusAquirer;
 use crate::{
     gitlab_dfinity, health, prometheus, proposal, registry, registry::RegistryState,
     release::list_subnets_release_statuses, release::RolloutBuilder,
