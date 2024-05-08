@@ -22,7 +22,8 @@ runs:
     ########################################
     - name: "☁️ ⬇️ Mount caches"
       run: |
-        ./bin/install-s3ql.sh
+        sudo apt install -y s3ql
+        # ./bin/install-s3ql.sh
         mkdir -p ~/.s3ql
         cat <<_EOF | install -m 0600 /dev/stdin ~/.s3ql/authinfo2
         [default]
@@ -31,9 +32,9 @@ runs:
         backend-password: ${{ inputs.AWS_SECRET_ACCESS_KEY}}
         _EOF
 
-        mkdir -p ~/.cache/bazel
+        mkdir -p ~/.cache/bazel ~/.cache/s3ql
         sudo chown -R $USER:$USER ~/.cache/bazel
-        mount.s3ql --cachedir /var/cache/s3ql --authfile ~/.s3ql/authinfo2 --cachesize 20971520 s3c://s3.eu-central-2.wasabisys.com:443/dre-ci-cache/s3ql ~/.cache/bazel
+        mount.s3ql --cachedir ~/.cache/s3ql --authfile ~/.s3ql/authinfo2 --cachesize 20971520 s3c://s3.eu-central-2.wasabisys.com:443/dre-ci-cache/s3ql ~/.cache/bazel
       shell: bash
     - name: "🧹 Clean bazel cache if we're preparing a new release"
       if: ${{ startsWith(github.ref, 'refs/tags/v') }}
