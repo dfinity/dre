@@ -14,5 +14,5 @@ runs:
     ########################################################
     - name: "☁️ ⬆️ Persisting cache"
       run: |
-        sudo umount ~/.cache/bazel
+        umount.s3ql ~/.cache/bazel
       shell: bash
