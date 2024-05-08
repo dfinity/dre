@@ -8,6 +8,7 @@ on:
     paths-ignore:
       - "release-index.yaml"
       - "replica-releases/**"
+      - "factsdb/**"
   pull_request:
     paths-ignore:
       - "release-index.yaml"
