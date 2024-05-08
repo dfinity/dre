@@ -14,5 +14,6 @@ runs:
     ########################################################
     - name: "☁️ ⬆️ Persisting cache"
       run: |
+        bazel shutdown
         umount.s3ql ~/.cache/bazel
       shell: bash
