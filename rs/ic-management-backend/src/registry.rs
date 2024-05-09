@@ -1,5 +1,6 @@
 use crate::factsdb;
 use crate::git_ic_repo::IcRepo;
+use crate::health::HealthStatusQuerier;
 use crate::proposal::{self, SubnetUpdateProposal, UpdateUnassignedNodesProposal};
 use crate::public_dashboard::query_ic_dashboard_list;
 use async_trait::async_trait;
