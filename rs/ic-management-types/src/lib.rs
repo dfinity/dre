@@ -451,6 +451,18 @@ pub enum Status {
     Unknown,
 }
 
+/// Even if `from_str` is implemented by `EnumString` in derive, public api returns them capitalized and this is the implementation for that convertion
+impl Status {
+    pub fn from_str_from_dashboard(s: &str) -> Self {
+        match s {
+            "UP" => Self::Healthy,
+            "DEGRADED" => Self::Degraded,
+            "DOWN" => Self::Dead,
+            _ => Self::Unknown,
+        }
+    }
+}
+
 impl From<i64> for Health {
     fn from(value: i64) -> Self {
         match value {
