@@ -129,7 +129,7 @@ impl PublicDashboardHealthClient {
                     // Serde to_string() returns quoted strings which means we have to skip first and last char.
                     let p = p.to_string();
                     let p = get_unquoted(&p);
-                    match PrincipalId::from_str(&p) {
+                    match PrincipalId::from_str(p) {
                         Ok(p) => p,
                         Err(e) => {
                             warn!(
@@ -150,7 +150,7 @@ impl PublicDashboardHealthClient {
                 Some(s) => {
                     let s = s.to_string();
                     let s = get_unquoted(&s);
-                    Status::from_str_from_dashboard(&s)
+                    Status::from_str_from_dashboard(s)
                 }
             };
 
@@ -159,7 +159,7 @@ impl PublicDashboardHealthClient {
                 Some(pr) => {
                     let p = pr.to_string();
                     let p = get_unquoted(&p);
-                    match PrincipalId::from_str(&p) {
+                    match PrincipalId::from_str(p) {
                         Ok(p) => Some(p),
                         // Serde returns quoted strings but if the value is null it doesn't quote it, meaning we get (after skipping) 'ul'
                         Err(_) if p == "ul" => None,
