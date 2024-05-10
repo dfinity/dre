@@ -11,6 +11,7 @@ REPLICA_TEAMS = set(
     [
         "consensus-owners",
         "crypto-owners",
+        "interface-owners",
         "Orchestrator",
         "message-routing-owners",
         "networking-team",
