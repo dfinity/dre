@@ -30,6 +30,7 @@ jobs:
         id: bazel-remote-creds
         shell: bash
         run: |
+          mkdir -p ~/.aws
           cat <<_EOF | install -m 0600 /dev/stdin ~/.aws/config
           [wasabi]
           region = eu-central-2

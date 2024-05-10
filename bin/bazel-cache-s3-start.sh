@@ -2,6 +2,7 @@
 
 set -eExuo pipefail
 
+mkdir -p ~/.cache/bazel-remote
 docker run --detach --name=bazel-remote -u $(id -u):$(id -g) \
     -v ~/.cache/bazel-remote:/data -v $HOME/.aws:/aws-config \
     -p 9090:8080 -p 9092:9092 \
