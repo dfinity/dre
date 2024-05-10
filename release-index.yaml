@@ -40,6 +40,9 @@ releases:
       # Successful qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/jobs/6822217391
       - name: base
         version: 2c4566b7b7af453167785504ba3c563e09f38504
+      # Successful qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/jobs/6822856632
+      - name: storage-layer
+        version: 9866a6f5cb43c54e3d87fa02a4eb80d0f159dddb
   - rc_name: rc--2024-05-01_23-01
     versions:
       # Successful qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/jobs/6763468648
