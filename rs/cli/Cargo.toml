@@ -1,6 +1,7 @@
 [package]
 name = "dre"
-build = "build.rs"
+# Required because of BAZEL
+build = "src/build_script_.rs"
 version.workspace = true
 authors.workspace = true
 edition.workspace = true
@@ -58,9 +59,18 @@ tabular = { workspace = true }
 tokio = { workspace = true }
 url = { workspace = true }
 tempfile = "3.10.0"
+self_update = { version = "0.39.0", features = [ "archive-tar" ]}
 
 [dev-dependencies]
-wiremock = "0.6.0"
+wiremock = { workspace = true }
+
+[build-dependencies]
+clap_complete = "4.5.2"
+clap = { workspace = true }
+clap-num = { workspace = true }
+ic-base-types = { workspace = true }
+ic-management-types = { workspace = true }
+url = { workspace = true }
 
 [[bin]]
 name = "dre"

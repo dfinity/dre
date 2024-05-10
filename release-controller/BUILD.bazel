@@ -50,3 +50,5 @@ py_oci_image(
     base = "@bazel_image_6_5_0",
     binary = ":reconciler",
 )
+
+exports_files(["README.md"])

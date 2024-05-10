@@ -1,13 +1,14 @@
 use anyhow::anyhow;
 use async_recursion::async_recursion;
-use clap::{Parser, ValueEnum};
 use futures_util::future::try_join;
 use ic_base_types::{NodeId, PrincipalId};
-use ic_management_backend::health;
+use ic_management_backend::health::{self, HealthStatusQuerier};
 use ic_management_backend::proposal::ProposalAgent;
 use ic_management_types::{Network, Node, Status, Subnet, UpdateNodesHostosVersionsProposal};
 use log::{debug, info};
 use std::{collections::BTreeMap, fmt::Display, str::FromStr};
+
+use crate::cli::hostos::{NodeAssignment, NodeOwner};
 
 pub enum HostosRolloutResponse {
     Ok(Vec<Node>, Option<Vec<HostosRolloutSubnetAffected>>),
@@ -46,22 +47,6 @@ impl Display for HostosRolloutReason {
             Self::NoNodeSelected => write!(f, "No candidate nodes have been selected"),
         }
     }
-}
-
-#[derive(ValueEnum, Copy, Clone, Debug, Ord, Eq, PartialEq, PartialOrd, Parser, Default)]
-pub enum NodeOwner {
-    Dfinity,
-    Others,
-    #[default]
-    All,
-}
-
-#[derive(ValueEnum, Copy, Clone, Debug, Ord, Eq, PartialEq, PartialOrd, Default)]
-pub enum NodeAssignment {
-    Unassigned,
-    Assigned,
-    #[default]
-    All,
 }
 
 #[derive(Copy, Clone, Debug, Ord, Eq, PartialEq, PartialOrd)]
@@ -178,7 +163,7 @@ impl HostosRollout {
     pub fn new(
         nodes: BTreeMap<PrincipalId, Node>,
         subnets: BTreeMap<PrincipalId, Subnet>,
-        network: Network,
+        network: &Network,
         proposal_agent: ProposalAgent,
         rollout_version: &str,
         nodes_filter: &Option<Vec<PrincipalId>>,
@@ -213,7 +198,7 @@ impl HostosRollout {
         HostosRollout {
             grouped_nodes,
             subnets,
-            network,
+            network: network.clone(),
             proposal_agent,
             exclude: nodes_filter.clone(),
             version: rollout_version.to_string(),
@@ -578,11 +563,13 @@ pub mod test {
 
         let open_proposals: Vec<UpdateNodesHostosVersionsProposal> = vec![];
 
+        let network = Network::new("mainnet", &vec![]).await.unwrap();
+        let nns_urls = network.get_nns_urls();
         let hostos_rollout = HostosRollout::new(
             union.clone(),
             subnet.clone(),
-            Network::Mainnet,
-            ProposalAgent::new("https://ic0.app".to_string()),
+            &network,
+            ProposalAgent::new(nns_urls),
             version_one.clone().as_str(),
             &None,
         );
@@ -613,8 +600,8 @@ pub mod test {
         let hostos_rollout = HostosRollout::new(
             union.clone(),
             subnet.clone(),
-            Network::Mainnet,
-            ProposalAgent::new("https://ic0.app".to_string()),
+            &network,
+            ProposalAgent::new(nns_urls),
             version_one.clone().as_str(),
             &Some(nodes_to_exclude),
         );
@@ -637,8 +624,8 @@ pub mod test {
         let hostos_rollout = HostosRollout::new(
             union.clone(),
             subnet.clone(),
-            Network::Mainnet,
-            ProposalAgent::new("https://ic0.app".to_string()),
+            &network,
+            ProposalAgent::new(nns_urls),
             version_two.clone().as_str(),
             &None,
         );

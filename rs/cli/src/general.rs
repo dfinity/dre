@@ -19,16 +19,16 @@ use crate::detect_neuron::{Auth, Neuron};
 
 pub async fn vote_on_proposals(
     neuron: &Neuron,
-    nns_url: &Url,
+    nns_urls: &[Url],
     accepted_proposers: &[u64],
     accepted_topics: &[i32],
     simulate: bool,
 ) -> anyhow::Result<()> {
     let client: GovernanceCanisterWrapper = match &neuron.auth {
         Auth::Hsm { pin, slot, key_id } => {
-            CanisterClient::from_hsm(pin.to_string(), *slot, key_id.to_string(), nns_url)?.into()
+            CanisterClient::from_hsm(pin.to_string(), *slot, key_id.to_string(), &nns_urls[0])?.into()
         }
-        Auth::Keyfile { path } => CanisterClient::from_key_file(path.into(), nns_url)?.into(),
+        Auth::Keyfile { path } => CanisterClient::from_key_file(path.into(), &nns_urls[0])?.into(),
     };
 
     // In case of incorrectly set voting following, or in case of some other errors,
@@ -93,15 +93,19 @@ pub async fn get_node_metrics_history(
     wallet: CanisterId,
     subnets: Vec<PrincipalId>,
     start_at_nanos: u64,
-    neuron: &Neuron,
-    nns_url: &Url,
+    auth: &Auth,
+    nns_urls: &[Url],
 ) -> anyhow::Result<()> {
     let lock = Mutex::new(());
-    let canister_agent = match &neuron.auth {
-        Auth::Hsm { pin, slot, key_id } => {
-            IcAgentCanisterClient::from_hsm(pin.to_string(), *slot, key_id.to_string(), nns_url.clone(), Some(lock))?
-        }
-        Auth::Keyfile { path } => IcAgentCanisterClient::from_key_file(path.into(), nns_url.clone())?,
+    let canister_agent = match auth {
+        Auth::Hsm { pin, slot, key_id } => IcAgentCanisterClient::from_hsm(
+            pin.to_string(),
+            *slot,
+            key_id.to_string(),
+            nns_urls[0].clone(),
+            Some(lock),
+        )?,
+        Auth::Keyfile { path } => IcAgentCanisterClient::from_key_file(path.into(), nns_urls[0].clone())?,
     };
     info!("Started action...");
     let wallet_client = WalletCanisterWrapper::new(canister_agent.agent.clone());

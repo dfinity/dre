@@ -1,11 +1,12 @@
 use crossbeam_channel::Receiver;
 use crossbeam_channel::Sender;
 use futures_util::future::join_all;
-use ic_management_types::Network;
 use ic_registry_client::client::ThresholdSigPublicKey;
+use multiservice_discovery_shared::contracts::target::map_to_target_dto;
+use multiservice_discovery_shared::contracts::target::TargetDto;
 use serde::Deserialize;
 use serde::Serialize;
-use service_discovery::job_types::JobType;
+use service_discovery::job_types::{JobType, NodeOS};
 use service_discovery::registry_sync::SyncError;
 use service_discovery::IcServiceDiscovery;
 use service_discovery::IcServiceDiscoveryError;
@@ -84,8 +85,11 @@ impl From<FSDefinition> for Definition {
             log: log.clone(),
             public_key: fs_definition.public_key,
             poll_interval: fs_definition.poll_interval,
-            registry_query_timeout: fs_definition.registry_query_timeout.clone(),
-            ic_discovery: Arc::new(IcServiceDiscoveryImpl::new(log, fs_definition.registry_path, fs_definition.registry_query_timeout).unwrap()),
+            registry_query_timeout: fs_definition.registry_query_timeout,
+            ic_discovery: Arc::new(
+                IcServiceDiscoveryImpl::new(log, fs_definition.registry_path, fs_definition.registry_query_timeout)
+                    .unwrap(),
+            ),
             boundary_nodes: vec![],
         }
     }
@@ -271,18 +275,15 @@ impl RunningDefinition {
     async fn initial_registry_sync(&self, use_current_version: bool) -> Result<(), SyncError> {
         info!(
             self.definition.log,
-            "Syncing local registry for {} started", self.definition.name
-        );
-        info!(
-            self.definition.log,
-            "Using local registry path: {}",
-            self.definition.registry_path.display()
+            "Syncing local registry for {} (to local registry path {}) started",
+            self.definition.name,
+            self.definition.registry_path.display(),
         );
 
         let r = sync_local_registry(
             self.definition.log.clone(),
             self.definition.registry_path.join("targets"),
-            self.definition.nns_urls.clone(),
+            &self.definition.nns_urls.clone(),
             use_current_version,
             self.definition.public_key,
             &self.stop_signal,
@@ -294,17 +295,29 @@ impl RunningDefinition {
                     self.definition.log,
                     "Syncing local registry for {} completed", self.definition.name,
                 );
-                self.metrics.observe_sync(self.name(), true)
+                self.metrics.observe_sync(self.name(), true);
+                Ok(())
             }
-            Err(_) => {
-                warn!(
-                    self.definition.log,
-                    "Interrupted initial sync of definition {}", self.definition.name
-                );
-                self.metrics.observe_sync(self.name(), false)
+            Err(e) => {
+                match e {
+                    SyncError::PublicKey(ref pkey) => {
+                        error!(
+                            self.definition.log,
+                            "Failure in initial sync of {}: {}", self.definition.name, pkey,
+                        );
+                        // Note failure in metrics.  On the other leg of the match
+                        // we do not note either success or failure, since we don't
+                        // know yet whether it was successful or not.
+                        self.metrics.observe_sync(self.name(), false);
+                    }
+                    SyncError::Interrupted => info!(
+                        self.definition.log,
+                        "Interrupted initial sync of {}", self.definition.name
+                    ),
+                };
+                Err(e)
             }
         }
-        r
     }
 
     async fn poll_loop(&self) {
@@ -348,13 +361,42 @@ impl RunningDefinition {
     // Syncs the registry and keeps running, syncing as new
     // registry versions come in.
     async fn run(&self) {
-        if self.initial_registry_sync(false).await.is_err() {
-            // Initial sync was interrupted.
-            self.metrics.observe_end(self.name());
-            return;
+        // Loop to do retries of initial sync and handle cancellation.
+        // We keep retries outside the callee to make the callee easier
+        // to test and more solid state.
+        while let Err(e) = self.initial_registry_sync(false).await {
+            match e {
+                SyncError::Interrupted => {
+                    // Signal sent to callee via channel, initial sync interrupted.
+                    // We signal observation end because we are going to return.
+                    self.metrics.observe_end(self.name());
+                    return;
+                }
+                SyncError::PublicKey(_) => {
+                    // Initial sync failed.
+                    error!(
+                        self.definition.log,
+                        "Will retry sync of {} until successful after {:#?}",
+                        self.definition.name,
+                        self.definition.poll_interval,
+                    );
+                    // Wait a prudent interval before retrying, but watch for
+                    // termination during that wait.
+                    let interval = crossbeam::channel::tick(self.definition.poll_interval);
+                    crossbeam::select! {
+                        recv(self.stop_signal) -> _ => {
+                            // Terminated!  Note the event and mark sync end.
+                            info!(self.definition.log, "Received shutdown signal while waiting for initial sync retry of definition {}", self.definition.name);
+                            self.metrics.observe_end(self.name());
+                            return;
+                        },
+                        recv(interval) -> _ => continue,
+                    }
+                }
+            }
         }
-        self.metrics.observe_sync(self.name(), true);
 
+        // Ready to incrementally sync.
         info!(
             self.definition.log,
             "Starting to watch for changes for definition {}", self.definition.name
@@ -570,12 +612,12 @@ impl DefinitionsSupervisor {
         }
 
         if !self.allow_mercury_deletion
-            && !ic_names_to_add.contains(&Network::Mainnet.legacy_name())
+            && !ic_names_to_add.contains("mercury")
             && start_mode == StartMode::ReplaceExistingDefinitions
         {
             error
                 .errors
-                .push(StartDefinitionError::DeletionDisallowed(Network::Mainnet.legacy_name()))
+                .push(StartDefinitionError::DeletionDisallowed("mercury".to_string()))
         }
 
         if !error.errors.is_empty() {
@@ -654,7 +696,7 @@ impl DefinitionsSupervisor {
         errors.extend(
             definition_names
                 .iter()
-                .filter(|n| **n == Network::Mainnet.legacy_name() && !self.allow_mercury_deletion)
+                .filter(|n| *n == "mercury" && !self.allow_mercury_deletion)
                 .map(|n| StopDefinitionError::DeletionDisallowed(n.clone())),
         );
         if !errors.is_empty() {
@@ -666,4 +708,142 @@ impl DefinitionsSupervisor {
         }
         Ok(())
     }
+}
+
+#[derive(Deserialize)]
+pub struct TargetFilterSpec {
+    pub node_provider_id: Option<String>,
+    pub operator_id: Option<String>,
+    pub dc_id: Option<String>,
+    pub ic_name: Option<String>,
+    pub subnet_id: Option<String>,
+}
+
+impl TargetFilterSpec {
+    pub fn matches_ic_node(&self, t: &TargetDto) -> bool {
+        // self.ic_name is explicitly excluded here.
+        // Call self.matches_ic().
+        let o = match &self.operator_id {
+            None => true,
+            Some(operator_id) => t.operator_id.to_string() == *operator_id,
+        };
+        let n = match &self.node_provider_id {
+            None => true,
+            Some(node_provider_id) => t.node_provider_id.to_string() == *node_provider_id,
+        };
+        let d = match &self.dc_id {
+            None => true,
+            Some(dc_id) => *t.dc_id == *dc_id,
+        };
+        let s = match &self.subnet_id {
+            None => true,
+            Some(subnet_id) => match t.subnet_id {
+                Some(t_subnet_id) => t_subnet_id.to_string() == *subnet_id,
+                None => subnet_id.as_str() == "",
+            },
+        };
+        o && n && d && s
+    }
+
+    pub fn matches_boundary_node(&self, b: &BoundaryNode) -> bool {
+        // self.ic_name is explicitly excluded here.
+        // Call self.matches_ic().
+        if self.operator_id.is_some() || self.node_provider_id.is_some() || self.subnet_id.is_some() {
+            return false;
+        };
+        let d = match &self.dc_id {
+            None => true,
+            Some(dc_id) => match b.custom_labels.get("dc") {
+                Some(b_dc_id) => *b_dc_id == *dc_id,
+                None => "" == dc_id.as_str(),
+            },
+        };
+        d
+    }
+
+    pub fn matches_ic(&self, ic_name: &String) -> bool {
+        match &self.ic_name {
+            None => true,
+            Some(my_ic_name) => *ic_name == *my_ic_name,
+        }
+    }
+
+    pub fn empty() -> Self {
+        Self {
+            node_provider_id: None,
+            operator_id: None,
+            dc_id: None,
+            ic_name: None,
+            subnet_id: None,
+        }
+    }
+}
+
+pub fn ic_node_target_dtos_from_definitions(
+    definitions: &BTreeMap<String, RunningDefinition>,
+    filters: &TargetFilterSpec,
+) -> Vec<TargetDto> {
+    let mut ic_node_targets: Vec<TargetDto> = vec![];
+
+    for (_, def) in definitions.iter() {
+        if filters.matches_ic(&def.name()) {
+            for job_type in JobType::all_for_ic_nodes() {
+                let target_groups = match def.get_target_groups(job_type) {
+                    Ok(target_groups) => target_groups,
+                    Err(_) => continue,
+                };
+
+                target_groups.iter().for_each(|target_group| {
+                    if let Some(target) = ic_node_targets.iter_mut().find(|t| t.node_id == target_group.node_id) {
+                        target.jobs.push(job_type);
+                    } else {
+                        let target = map_to_target_dto(
+                            target_group,
+                            job_type,
+                            BTreeMap::new(),
+                            target_group.node_id.to_string(),
+                            def.name(),
+                        );
+                        if filters.matches_ic_node(&target) {
+                            ic_node_targets.push(target)
+                        };
+                    }
+                });
+            }
+        }
+    }
+
+    ic_node_targets
+}
+
+pub fn boundary_nodes_from_definitions(
+    definitions: &BTreeMap<String, RunningDefinition>,
+    filters: &TargetFilterSpec,
+) -> Vec<(String, BoundaryNode)> {
+    definitions
+        .iter()
+        .filter(|(_, def)| filters.matches_ic(&def.name()))
+        .flat_map(|(_, def)| {
+            def.definition.boundary_nodes.iter().filter_map(|bn| {
+                // Since boundary nodes have been checked for correct job
+                // type when they were added via POST, then we can trust
+                // the correct job type is at play here.
+                // If, however, this boundary node is under the test environment,
+                // and the job is Node Exporter, then skip adding this
+                // target altogether.
+                if bn
+                    .custom_labels
+                    .iter()
+                    .any(|(k, v)| k.as_str() == "env" && v.as_str() == "test")
+                    && bn.job_type == JobType::NodeExporter(NodeOS::Host)
+                {
+                    return None;
+                }
+                if !filters.matches_boundary_node(bn) {
+                    return None;
+                }
+                Some((def.name(), bn.clone()))
+            })
+        })
+        .collect()
 }

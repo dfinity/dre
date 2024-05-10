@@ -5,11 +5,15 @@ on:
       - "main"
     tags:
       - "v*"
+    paths-ignore:
+      - "release-index.yaml"
+      - "replica-releases/**"
+      - "factsdb/**"
   pull_request:
     paths-ignore:
-      - 'release-index.yaml'
-      - 'replica-releases/**'
-  merge_group:
+      - "release-index.yaml"
+      - "replica-releases/**"
+      - "factsdb/**"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -20,6 +24,23 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - name: "☁️ Setup S3 cache credentials"
+        id: bazel-remote-creds
+        shell: bash
+        run: |
+          mkdir -p ~/.aws
+          cat <<_EOF | install -m 0600 /dev/stdin ~/.aws/config
+          [wasabi]
+          region = eu-central-2
+          _EOF
+
+          cat <<_EOF | install -m 0600 /dev/stdin ~/.aws/credentials
+          [wasabi]
+          aws_access_key_id = ${{ secrets.WASABI_ACCESS_KEY }}
+          aws_secret_access_key = ${{ secrets.WASABI_SECRET_KEY }}
+          _EOF
       - name: "☁️ Setup runner"
         uses: ./.github/workflows/manage-runner-pre
 
@@ -55,7 +76,7 @@ jobs:
       ########################################
       # Upload container images
       ########################################
-      - name:  "🔧 Login to GitHub Container Registry"
+      - name: "🔧 Login to GitHub Container Registry"
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
@@ -66,6 +87,35 @@ jobs:
         run: bazel query --noshow_progress 'kind("oci_push", ...)' | xargs -I_target bazel run _target -- --tag ${GITHUB_SHA}
 
       ########################################
+      # Check if dashboard/* changed to see if
+      # it also needs to be updated in k8s
+      ########################################
+      - name: "❓ Check if dashboard/* changed in last commit"
+        id: check
+        uses: ./.github/workflows/check-modified-files-as-step
+        with:
+          path: dashboard/*
+
+      - name: "💲 Setting correct paths to update"
+        id: paths
+        shell: bash
+        run: |
+          files=(
+            bases/apps/mainnet-dashboard/statefulset-slack.yaml
+            bases/apps/mainnet-dashboard/backend/base/deployment.yaml
+          )
+          if [[ $changed == "true" ]]; then
+            echo "Adding frontend to list of files"
+            files+=( bases/apps/mainnet-dashboard/frontend/deployment.yaml )
+          else
+            echo "Skipping adding of frontend to list of files"
+          fi
+
+          echo "Output of this step:"
+          echo ${files[@]}
+          echo "files=${files[@]}" >> $GITHUB_ENV
+
+      ########################################
       # Update k8s deployments
       ########################################
       - name: "🤖 Update k8s deployments"
@@ -73,6 +123,16 @@ jobs:
         uses: ./.github/workflows/update-k8s-deployments
         with:
           gitlab_api_token: ${{ secrets.GITLAB_K8S_API_TOKEN }}
+
+      ########################################
+      # Deploy to github pages
+      ########################################
+      - name: "🚢 Deploy to GitHub Pages"
+        if: ${{ github.ref == 'refs/heads/main' }}
+        run: |
+          git config --global user.email "actions@github.com"
+          git config --global user.name "GitHub Actions"
+          bazel run "//:mkdocs" -- gh-deploy --force
 
       ########################################
       # Clean up runner

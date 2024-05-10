@@ -11,6 +11,7 @@ documentation.workspace = true
 [dependencies]
 actix-web = { workspace = true }
 anyhow = { workspace = true }
+clap = { workspace = true }
 ic-management-backend = { path = "../ic-management-backend" }
 ic-management-types = { path = "../ic-management-types" }
 ic-types = { workspace = true }

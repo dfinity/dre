@@ -3,10 +3,8 @@ use std::path::PathBuf;
 use clap::{Parser, Subcommand};
 use clap_num::maybe_hex;
 use ic_base_types::PrincipalId;
-use ic_management_types::{Artifact, Network};
-use log::error;
-
-use crate::detect_neuron::{detect_hsm_auth, detect_neuron, Auth, Neuron};
+use ic_management_types::Artifact;
+use url::Url;
 
 // For more info about the version setup, look at https://docs.rs/clap/latest/clap/struct.Command.html#method.version
 #[derive(Parser, Clone, Default)]
@@ -38,9 +36,14 @@ pub struct Opts {
     #[clap(long, env = "VERBOSE", global = true)]
     pub verbose: bool,
 
-    // Specify the target network: "mainnet" (default), "staging", or NNS URL
+    // Specify the target network: "mainnet" (default), "staging", or a testnet name
     #[clap(long, env = "NETWORK", default_value = "mainnet")]
-    pub network: Network,
+    pub network: String,
+
+    // NNS_URLs for the target network, comma separated.
+    // The argument is mandatory for testnets, and is optional for mainnet and staging
+    #[clap(long, env = "NNS_URLS", aliases = &["registry-url", "nns-url"], value_delimiter = ',')]
+    pub nns_urls: Vec<Url>,
 
     #[clap(subcommand)]
     pub subcommand: Commands,
@@ -148,10 +151,8 @@ pub enum Commands {
     Firewall {
         #[clap(long, default_value = Some("Proposal to modify firewall rules"))]
         title: Option<String>,
-        #[clap(long, default_value = None)]
+        #[clap(long, default_value = None, required = true)]
         summary: Option<String>,
-        #[clap(long, default_value = None)]
-        motivation: Option<String>,
     },
 }
 
@@ -329,9 +330,24 @@ pub mod version {
 }
 
 pub mod hostos {
-    use crate::operations::hostos_rollout::{NodeAssignment, NodeOwner};
+    #[derive(ValueEnum, Copy, Clone, Debug, Ord, Eq, PartialEq, PartialOrd, Parser, Default)]
+    pub enum NodeOwner {
+        Dfinity,
+        Others,
+        #[default]
+        All,
+    }
+
+    #[derive(ValueEnum, Copy, Clone, Debug, Ord, Eq, PartialEq, PartialOrd, Default)]
+    pub enum NodeAssignment {
+        Unassigned,
+        Assigned,
+        #[default]
+        All,
+    }
 
     use super::*;
+    use clap::ValueEnum;
     use ic_base_types::PrincipalId;
 
     #[derive(Parser, Clone)]
@@ -405,96 +421,5 @@ pub mod nodes {
             #[clap(long, aliases = ["summary"])]
             motivation: Option<String>,
         },
-    }
-}
-
-#[derive(Clone)]
-pub struct Cli {
-    pub ic_admin: Option<String>,
-    pub nns_url: url::Url,
-    pub yes: bool,
-    pub neuron: Option<Neuron>,
-}
-
-#[derive(Clone)]
-pub struct UpdateVersion {
-    pub release_artifact: Artifact,
-    pub version: String,
-    pub title: String,
-    pub summary: String,
-    pub update_urls: Vec<String>,
-    pub stringified_hash: String,
-    pub versions_to_retire: Option<Vec<String>>,
-}
-
-impl Cli {
-    pub fn get_neuron(&self) -> &Option<Neuron> {
-        &self.neuron
-    }
-
-    pub fn get_nns_url(&self) -> &url::Url {
-        &self.nns_url
-    }
-
-    pub fn get_update_cmd_args(update_version: &UpdateVersion) -> Vec<String> {
-        [
-            [
-                vec![
-                    format!("--{}-version-to-elect", update_version.release_artifact),
-                    update_version.version.to_string(),
-                    "--release-package-sha256-hex".to_string(),
-                    update_version.stringified_hash.to_string(),
-                    "--release-package-urls".to_string(),
-                ],
-                update_version.update_urls.clone(),
-            ]
-            .concat(),
-            match update_version.versions_to_retire.clone() {
-                Some(versions) => [
-                    vec![format!("--{}-versions-to-unelect", update_version.release_artifact)],
-                    versions,
-                ]
-                .concat(),
-                None => vec![],
-            },
-        ]
-        .concat()
-    }
-
-    pub async fn from_opts(opts: &Opts, require_authentication: bool) -> anyhow::Result<Self> {
-        let nns_url = opts.network.get_url();
-        let neuron = if let Some(id) = opts.neuron_id {
-            Some(Neuron {
-                id,
-                auth: if let Some(path) = opts.private_key_pem.clone() {
-                    Auth::Keyfile { path }
-                } else if let (Some(slot), Some(pin), Some(key_id)) =
-                    (opts.hsm_slot, opts.hsm_pin.clone(), opts.hsm_key_id.clone())
-                {
-                    Auth::Hsm { pin, slot, key_id }
-                } else {
-                    detect_hsm_auth()?
-                        .ok_or_else(|| anyhow::anyhow!("No valid authentication method found for neuron: {id}"))?
-                },
-            })
-        } else if require_authentication {
-            // Early warn if there will be a problem because a neuron was not detected.
-            match detect_neuron(nns_url.clone()).await {
-                Ok(Some(n)) => Some(n),
-                Ok(None) => {
-                    error!("No neuron detected.  Your HSM device is not detectable (or override variables HSM_PIN, HSM_SLOT, HSM_KEY_ID are incorrectly set); your variables NEURON_ID, PRIVATE_KEY_PEM might not be defined either.");
-                    None
-                },
-                Err(e) => return Err(anyhow::anyhow!("Failed to detect neuron: {}.  Your HSM device is not detectable (or override variables HSM_PIN, HSM_SLOT, HSM_KEY_ID are incorrectly set); your variables NEURON_ID, PRIVATE_KEY_PEM might not be defined either.", e)),
-            }
-        } else {
-            None
-        };
-        Ok(Cli {
-            yes: opts.yes,
-            neuron,
-            ic_admin: opts.ic_admin.clone(),
-            nns_url,
-        })
     }
 }

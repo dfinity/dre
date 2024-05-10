@@ -16,14 +16,15 @@ use itertools::Itertools;
 use registry_canister::mutations::do_add_nodes_to_subnet::AddNodesToSubnetPayload;
 use registry_canister::mutations::do_change_subnet_membership::ChangeSubnetMembershipPayload;
 use registry_canister::mutations::do_create_subnet::CreateSubnetPayload;
+use registry_canister::mutations::do_deploy_guestos_to_all_subnet_nodes::DeployGuestosToAllSubnetNodesPayload;
 use registry_canister::mutations::do_remove_nodes_from_subnet::RemoveNodesFromSubnetPayload;
+use registry_canister::mutations::do_revise_elected_replica_versions::ReviseElectedGuestosVersionsPayload;
 use registry_canister::mutations::do_update_elected_hostos_versions::UpdateElectedHostosVersionsPayload;
-use registry_canister::mutations::do_update_elected_replica_versions::UpdateElectedReplicaVersionsPayload;
 use registry_canister::mutations::do_update_nodes_hostos_version::UpdateNodesHostosVersionPayload;
-use registry_canister::mutations::do_update_subnet_replica::UpdateSubnetReplicaVersionPayload;
 use registry_canister::mutations::do_update_unassigned_nodes_config::UpdateUnassignedNodesConfigPayload;
 use registry_canister::mutations::node_management::do_remove_nodes::RemoveNodesPayload;
 use serde::Serialize;
+use url::Url;
 
 #[derive(Clone)]
 pub struct ProposalAgent {
@@ -72,7 +73,7 @@ impl From<ProposalInfo> for ProposalInfoInternal {
 #[derive(Clone, Serialize)]
 pub struct SubnetUpdateProposal {
     pub info: ProposalInfoInternal,
-    pub payload: UpdateSubnetReplicaVersionPayload,
+    pub payload: DeployGuestosToAllSubnetNodesPayload,
 }
 
 #[derive(Clone, Serialize)]
@@ -81,10 +82,14 @@ pub struct UpdateUnassignedNodesProposal {
     pub payload: UpdateUnassignedNodesConfigPayload,
 }
 
+#[allow(dead_code)]
 impl ProposalAgent {
-    pub fn new(url: String) -> Self {
+    pub fn new(nns_urls: &[Url]) -> Self {
         let agent = Agent::builder()
-            .with_transport(ReqwestHttpReplicaV2Transport::create(url).expect("failed to create transport"))
+            .with_transport(
+                ReqwestHttpReplicaV2Transport::create(nns_urls[0].clone()).expect("failed to create transport"),
+            )
+            .with_verify_query_signatures(false)
             .build()
             .expect("failed to build the agent");
         Self { agent }
@@ -130,7 +135,7 @@ impl ProposalAgent {
     pub async fn list_open_elect_replica_proposals(&self) -> Result<Vec<UpdateElectedReplicaVersionsProposal>> {
         let proposals = &self.list_proposals(vec![ProposalStatus::Open]).await?;
         let open_elect_guest_proposals =
-            filter_map_nns_function_proposals::<UpdateElectedReplicaVersionsPayload>(proposals);
+            filter_map_nns_function_proposals::<ReviseElectedGuestosVersionsPayload>(proposals);
 
         let result = open_elect_guest_proposals
             .into_iter()
@@ -245,7 +250,7 @@ impl ProposalAgent {
                                 Topic::NetworkCanisterManagement,
                                 Topic::Kyc,
                                 Topic::NodeProviderRewards,
-                                Topic::SnsDecentralizationSale,
+                                Topic::SnsAndCommunityFund,
                                 // Topic::SubnetReplicaVersionManagement,
                                 // Topic::ReplicaVersionManagement,
                                 Topic::SnsAndCommunityFund,

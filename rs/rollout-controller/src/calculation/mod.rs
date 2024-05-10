@@ -126,7 +126,7 @@ pub async fn calculate_progress<'a>(
         &subnet_update_proposals,
         &unassigned_nodes_proposals,
         index,
-        Some(&logger),
+        Some(logger),
         &unassigned_nodes_version,
         &subnets,
         Local::now().date_naive(),

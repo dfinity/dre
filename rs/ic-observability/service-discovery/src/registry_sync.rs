@@ -17,7 +17,7 @@ use ic_registry_common_proto::pb::local_store::v1::{
     ChangelogEntry as PbChangelogEntry, KeyMutation as PbKeyMutation, MutationType,
 };
 use ic_registry_keys::{make_crypto_threshold_signing_pubkey_key, ROOT_SUBNET_ID_KEY};
-use ic_registry_local_store::{Changelog, ChangelogEntry, KeyMutation, LocalStoreImpl, LocalStoreWriter};
+use ic_registry_local_store::{Changelog, ChangelogEntry, KeyMutation, LocalStoreImpl};
 use ic_registry_nns_data_provider::registry::RegistryCanister;
 use registry_canister::mutations::common::decode_registry_value;
 use slog::{debug, error, info, warn, Logger};
@@ -41,14 +41,19 @@ impl Display for SyncError {
 pub async fn sync_local_registry(
     log: Logger,
     local_path: PathBuf,
-    nns_urls: Vec<Url>,
+    nns_urls: &[Url],
     use_current_version: bool,
     public_key: Option<ThresholdSigPublicKey>,
     stop_signal: &Receiver<()>,
 ) -> Result<(), SyncError> {
     let start = Instant::now();
     let local_store = Arc::new(LocalStoreImpl::new(local_path.clone()));
-    let registry_canister = RegistryCanister::new(nns_urls);
+    let registry_canister = RegistryCanister::new(nns_urls.to_vec());
+
+    if stop_signal.try_recv().is_ok() {
+        // Interrupted early.  Let's get out of here.
+        return Err(SyncError::Interrupted);
+    }
 
     let mut latest_version = if !Path::new(&local_path).exists() {
         ZERO_REGISTRY_VERSION
@@ -69,7 +74,6 @@ pub async fn sync_local_registry(
         );
     }
 
-    let mut latest_certified_time = 0;
     let mut updates = vec![];
     let nns_public_key = match public_key {
         Some(pk) => pk,
@@ -85,7 +89,7 @@ pub async fn sync_local_registry(
 
     loop {
         if stop_signal.try_recv().is_ok() {
-            // Interrupted early.  Let's get out of here.
+            // Interrupted.  Let's get out of here.
             return Err(SyncError::Interrupted);
         }
 
@@ -102,7 +106,7 @@ pub async fn sync_local_registry(
             break;
         }
 
-        if let Ok((mut initial_records, _, t)) = registry_canister
+        if let Ok((mut initial_records, _, _)) = registry_canister
             .get_certified_changes_since(latest_version.get(), &nns_public_key)
             .await
         {
@@ -167,13 +171,11 @@ pub async fn sync_local_registry(
 
             latest_version = latest_version.add(RegistryVersion::new(versions_count as u64));
 
-            latest_certified_time = t.as_nanos_since_unix_epoch();
             debug!(log, "Initial sync reached version {}", latest_version);
         }
     }
 
     futures::future::join_all(updates).await;
-    local_store.update_certified_time(latest_certified_time).unwrap();
     info!(log, "Synced all registry versions in : {:?}", start.elapsed());
     Ok(())
 }

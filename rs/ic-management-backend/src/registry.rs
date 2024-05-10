@@ -1,6 +1,6 @@
-use crate::config::get_nns_url_vec_from_target_network;
 use crate::factsdb;
 use crate::git_ic_repo::IcRepo;
+use crate::health::HealthStatusQuerier;
 use crate::proposal::{self, SubnetUpdateProposal, UpdateUnassignedNodesProposal};
 use crate::public_dashboard::query_ic_dashboard_list;
 use async_trait::async_trait;
@@ -15,6 +15,7 @@ use ic_management_types::{
     NodeProvidersResponse, Operator, Provider, Release, Subnet, SubnetMetadata, UpdateElectedHostosVersionsProposal,
     UpdateElectedReplicaVersionsProposal,
 };
+use ic_protobuf::registry::api_boundary_node::v1::ApiBoundaryNodeRecord;
 use ic_protobuf::registry::crypto::v1::PublicKey;
 use ic_protobuf::registry::hostos_version::v1::HostosVersionRecord;
 use ic_protobuf::registry::replica_version::v1::BlessedReplicaVersions;
@@ -28,14 +29,14 @@ use ic_registry_client_helpers::node::NodeRegistry;
 use ic_registry_common_proto::pb::local_store::v1::{
     ChangelogEntry as PbChangelogEntry, KeyMutation as PbKeyMutation, MutationType,
 };
-use ic_registry_keys::DATA_CENTER_KEY_PREFIX;
 use ic_registry_keys::{
     make_blessed_replica_versions_key, HOSTOS_VERSION_KEY_PREFIX, NODE_OPERATOR_RECORD_KEY_PREFIX,
     NODE_RECORD_KEY_PREFIX, SUBNET_RECORD_KEY_PREFIX,
 };
 use ic_registry_keys::{make_crypto_threshold_signing_pubkey_key, ROOT_SUBNET_ID_KEY};
+use ic_registry_keys::{API_BOUNDARY_NODE_RECORD_KEY_PREFIX, DATA_CENTER_KEY_PREFIX};
 use ic_registry_local_registry::LocalRegistry;
-use ic_registry_local_store::{Changelog, ChangelogEntry, KeyMutation, LocalStoreImpl, LocalStoreWriter};
+use ic_registry_local_store::{Changelog, ChangelogEntry, KeyMutation, LocalStoreImpl};
 use ic_registry_nns_data_provider::registry::RegistryCanister;
 use ic_registry_subnet_type::SubnetType;
 use ic_types::PrincipalId;
@@ -57,6 +58,7 @@ use std::{
 };
 use tokio::sync::RwLock;
 use tokio::time::{sleep, Duration};
+use url::Url;
 extern crate env_logger;
 
 use anyhow::Result;
@@ -67,7 +69,6 @@ pub const NNS_SUBNET_NAME: &str = "NNS";
 pub const DFINITY_DCS: &str = "zh2 mr1 bo1 sh1";
 
 pub struct RegistryState {
-    nns_url: String,
     network: Network,
     local_registry: Arc<LocalRegistry>,
 
@@ -100,6 +101,10 @@ impl RegistryEntry for NodeRecord {
 
 impl RegistryEntry for SubnetRecord {
     const KEY_PREFIX: &'static str = SUBNET_RECORD_KEY_PREFIX;
+}
+
+impl RegistryEntry for ApiBoundaryNodeRecord {
+    const KEY_PREFIX: &'static str = API_BOUNDARY_NODE_RECORD_KEY_PREFIX;
 }
 
 pub trait RegistryFamilyEntries {
@@ -193,19 +198,16 @@ impl ReleasesOps for ArtifactReleases {
     }
 }
 
+#[allow(dead_code)]
 impl RegistryState {
-    pub async fn new(network: Network, without_update_loop: bool) -> Self {
-        let nns_url = network.get_url().to_string();
-
-        sync_local_store(network.clone())
-            .await
-            .expect("failed to init local store");
+    pub async fn new(network: &Network, without_update_loop: bool) -> Self {
+        sync_local_store(network).await.expect("failed to init local store");
 
         if !without_update_loop {
             let closure_network = network.clone();
             tokio::spawn(async move {
                 loop {
-                    if let Err(e) = sync_local_store(closure_network.clone()).await {
+                    if let Err(e) = sync_local_store(&closure_network).await {
                         error!("Failed to update local registry: {}", e);
                     }
                     tokio::time::sleep(std::time::Duration::from_secs(5)).await;
@@ -213,10 +215,10 @@ impl RegistryState {
             });
         }
 
-        let local_registry_path = local_registry_path(network.clone());
+        let local_registry_path = local_registry_path(&network.clone());
         info!(
             "Using local registry path for network {}: {}",
-            network.to_string(),
+            network.name,
             local_registry_path.display()
         );
         let local_registry: Arc<LocalRegistry> = Arc::new(
@@ -225,8 +227,7 @@ impl RegistryState {
         );
 
         Self {
-            nns_url,
-            network,
+            network: network.clone(),
             local_registry,
             version: 0,
             subnets: BTreeMap::<PrincipalId, Subnet>::new(),
@@ -276,7 +277,7 @@ impl RegistryState {
 
     pub fn update_factsdb_guests(&mut self, factsdb_guests: Vec<Guest>) {
         self.factsdb_guests = factsdb_guests;
-        if !matches!(self.network, Network::Mainnet) {
+        if self.network.name != "mainnet" {
             for g in &mut self.factsdb_guests {
                 g.dfinity_owned = true;
             }
@@ -330,6 +331,10 @@ impl RegistryState {
     }
 
     async fn update_releases(&mut self) -> Result<()> {
+        // If the network isn't mainnet we don't need to check git branches
+        if !self.network.eq(&Network::new("mainnet", &vec![]).await.unwrap()) {
+            return Ok(());
+        }
         if self.ic_repo.is_some() {
             lazy_static! {
                 // TODO: We don't need to distinguish release branch and name, they can be the same
@@ -359,8 +364,12 @@ impl RegistryState {
                 match ic_repo.get_branches_with_commit(commit_hash) {
                     // For each commit get a list of branches that have the commit
                     Ok(branches) => {
-                        info!("Found {} branches for git rev: {}", branches.len(), commit_hash);
-                        debug!("Commit {} ==> branches: {}", commit_hash, branches.join(", "));
+                        debug!(
+                            "Git rev {} ==> {} branches: {}",
+                            commit_hash,
+                            branches.len(),
+                            branches.join(", ")
+                        );
                         for branch in branches.into_iter().sorted() {
                             match RE.captures(&branch) {
                                 Some(capture) => {
@@ -395,8 +404,8 @@ impl RegistryState {
                                 }
                                 None => {
                                     if branch != "master" && branch != "HEAD" {
-                                        warn!(
-                                            "branch {} for git rev {} does not match RC regex",
+                                        debug!(
+                                            "Git rev {}: branch {} does not match the RC regex",
                                             &commit_hash, &branch
                                         );
                                     }
@@ -653,7 +662,7 @@ impl RegistryState {
 
     pub async fn nodes_with_proposals(&self) -> Result<BTreeMap<PrincipalId, Node>> {
         let nodes = self.nodes.clone();
-        let proposal_agent = proposal::ProposalAgent::new(self.nns_url.clone());
+        let proposal_agent = proposal::ProposalAgent::new(self.network.get_nns_urls());
 
         let topology_proposals = proposal_agent.list_open_topology_proposals().await?;
 
@@ -671,18 +680,18 @@ impl RegistryState {
     }
 
     pub async fn open_elect_replica_proposals(&self) -> Result<Vec<UpdateElectedReplicaVersionsProposal>> {
-        let proposal_agent = proposal::ProposalAgent::new(self.nns_url.clone());
+        let proposal_agent = proposal::ProposalAgent::new(self.network.get_nns_urls());
         proposal_agent.list_open_elect_replica_proposals().await
     }
 
     pub async fn open_elect_hostos_proposals(&self) -> Result<Vec<UpdateElectedHostosVersionsProposal>> {
-        let proposal_agent = proposal::ProposalAgent::new(self.nns_url.clone());
+        let proposal_agent = proposal::ProposalAgent::new(self.network.get_nns_urls());
         proposal_agent.list_open_elect_hostos_proposals().await
     }
 
     pub async fn subnets_with_proposals(&self) -> Result<BTreeMap<PrincipalId, Subnet>> {
         let subnets = self.subnets.clone();
-        let proposal_agent = proposal::ProposalAgent::new(self.nns_url.clone());
+        let proposal_agent = proposal::ProposalAgent::new(self.network.get_nns_urls());
 
         let topology_proposals = proposal_agent.list_open_topology_proposals().await?;
 
@@ -719,13 +728,13 @@ impl RegistryState {
     }
 
     pub async fn open_subnet_upgrade_proposals(&self) -> Result<Vec<SubnetUpdateProposal>> {
-        let proposal_agent = proposal::ProposalAgent::new(self.nns_url.clone());
+        let proposal_agent = proposal::ProposalAgent::new(self.get_nns_urls());
 
         proposal_agent.list_update_subnet_version_proposals().await
     }
 
     pub async fn open_upgrade_unassigned_nodes_proposals(&self) -> Result<Vec<UpdateUnassignedNodesProposal>> {
-        let proposal_agent = proposal::ProposalAgent::new(self.nns_url.clone());
+        let proposal_agent = proposal::ProposalAgent::new(self.get_nns_urls());
 
         proposal_agent.list_update_unassigned_nodes_version_proposals().await
     }
@@ -829,8 +838,8 @@ impl RegistryState {
         self.replica_releases.releases.clone()
     }
 
-    pub fn nns_url(&self) -> String {
-        self.nns_url.clone()
+    pub fn get_nns_urls(&self) -> &Vec<Url> {
+        self.network.get_nns_urls()
     }
 
     pub async fn get_unassigned_nodes_replica_version(&self) -> Result<String, anyhow::Error> {
@@ -957,7 +966,7 @@ fn node_ip_addr(nr: &NodeRecord) -> Ipv6Addr {
     Ipv6Addr::from_str(&nr.http.clone().expect("missing ipv6 address").ip_addr).expect("invalid ipv6 address")
 }
 
-pub fn local_registry_path(network: Network) -> PathBuf {
+pub fn local_registry_path(network: &Network) -> PathBuf {
     match std::env::var("LOCAL_REGISTRY_PATH") {
         Ok(path) => PathBuf::from(path),
         Err(_) => match dirs::cache_dir() {
@@ -966,7 +975,7 @@ pub fn local_registry_path(network: Network) -> PathBuf {
         },
     }
     .join("ic-registry-cache")
-    .join(Path::new(network.to_string().as_str()))
+    .join(Path::new(network.name.as_str()))
     .join("local_registry")
 }
 
@@ -994,10 +1003,11 @@ pub async fn nns_public_key(registry_canister: &RegistryCanister) -> anyhow::Res
 }
 
 /// Sync all versions of the registry, up to the latest one.
-pub async fn sync_local_store(target_network: Network) -> anyhow::Result<()> {
-    let local_registry_path = local_registry_path(target_network.clone());
+pub async fn sync_local_store(target_network: &Network) -> anyhow::Result<()> {
+    let local_registry_path = local_registry_path(target_network);
     let local_store = Arc::new(LocalStoreImpl::new(local_registry_path.clone()));
-    let registry_canister = RegistryCanister::new(get_nns_url_vec_from_target_network(&target_network));
+    let nns_urls = target_network.get_nns_urls().clone();
+    let registry_canister = RegistryCanister::new(nns_urls);
     let mut local_latest_version = if !Path::new(&local_registry_path).exists() {
         ZERO_REGISTRY_VERSION
     } else {
@@ -1005,7 +1015,6 @@ pub async fn sync_local_store(target_network: Network) -> anyhow::Result<()> {
         registry_cache.update_to_latest_version();
         registry_cache.get_latest_version()
     };
-    let mut latest_certified_time = 0;
     let mut updates = vec![];
     let nns_public_key = nns_public_key(&registry_canister).await?;
 
@@ -1026,7 +1035,7 @@ pub async fn sync_local_store(target_network: Network) -> anyhow::Result<()> {
                 Ordering::Greater => {
                     warn!(
                         "Removing faulty local copy of the registry for the IC network {}: {}",
-                        target_network,
+                        target_network.name,
                         local_registry_path.display()
                     );
                     std::fs::remove_dir_all(&local_registry_path)?;
@@ -1040,7 +1049,7 @@ pub async fn sync_local_store(target_network: Network) -> anyhow::Result<()> {
                 error!("Failed to get latest registry version: {}", e);
             }
         }
-        if let Ok((mut initial_records, _, t)) = registry_canister
+        if let Ok((mut initial_records, _, _)) = registry_canister
             .get_certified_changes_since(local_latest_version.get(), &nns_public_key)
             .await
         {
@@ -1111,14 +1120,12 @@ pub async fn sync_local_store(target_network: Network) -> anyhow::Result<()> {
 
             local_latest_version = local_latest_version.add(RegistryVersion::new(versions_count as u64));
 
-            latest_certified_time = t.as_nanos_since_unix_epoch();
             debug!("Sync reached version {local_latest_version}");
             tokio::time::sleep(std::time::Duration::from_secs(1)).await;
         }
     }
 
     futures::future::join_all(updates).await;
-    local_store.update_certified_time(latest_certified_time)?;
     Ok(())
 }
 
@@ -1127,7 +1134,8 @@ pub async fn poll(
     registry_state: Arc<RwLock<RegistryState>>,
     target_network: Network,
 ) {
-    let registry_canister = RegistryCanister::new(get_nns_url_vec_from_target_network(&target_network));
+    let nns_urls = target_network.get_nns_urls().clone();
+    let registry_canister = RegistryCanister::new(nns_urls);
     loop {
         sleep(Duration::from_secs(1)).await;
         let latest_version = if let Ok(v) = registry_canister.get_latest_version().await {
@@ -1154,7 +1162,7 @@ async fn fetch_and_add_factsdb_guests_to_registry(
     target_network: &Network,
     registry_state: &Arc<RwLock<RegistryState>>,
 ) {
-    let guests_result = factsdb::query_guests(gitlab_client_release_repo.clone(), target_network.to_string()).await;
+    let guests_result = factsdb::query_guests(gitlab_client_release_repo.clone(), &target_network.name).await;
 
     match guests_result {
         Ok(factsdb_guests) => {

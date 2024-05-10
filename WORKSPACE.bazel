@@ -69,7 +69,7 @@ aspect_bazel_lib_dependencies()
 
 aspect_bazel_lib_register_toolchains()
 
-IC_REPO_VERSION = "778d2bb870f858952ca9fbe69324f9864e3cf5e7"
+IC_REPO_VERSION = "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
 
 http_archive(
     name = "ic_repo",
@@ -165,6 +165,12 @@ oci_register_toolchains(
 
 load("@rules_oci//oci:pull.bzl", "oci_pull")
 
+load("//3rdparty/bazel-rules-openssl:repos.bzl", openssl_repos="repos")
+openssl_repos()
+
+load("@com_github_3rdparty_bazel_rules_openssl//bazel:deps.bzl", openssl_deps="deps")
+openssl_deps()
+
 oci_pull(
     # Debian 12 image has a newer glibc than Debian 11 in regular distrolles containers.
     # https://console.cloud.google.com/gcr/images/distroless/global/cc-debian12
@@ -195,11 +201,15 @@ oci_pull(
 )
 
 oci_pull(
-    # tag = "2.43.0-debian-11-r6",
+    # tag = "2.44.0-debian-12-r2",
     name = "bitnami_git_docker_img",
-    digest = "sha256:405124df0b75c75afc972cd73425838aacbd06a5dc4b7e0a2af4d9d3117163e8",
+    digest = "sha256:bbd4ffc32f62b2b7bb2b85f289803d564a0381a2c75fd61f19f8bfc0815791e4",
     image = "index.docker.io/bitnami/git",
     reproducible = True,
+    platforms = [
+        "linux/amd64",
+        "linux/arm64",
+    ],
 )
 
 oci_pull(

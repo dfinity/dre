@@ -17,7 +17,7 @@ use tabled::builder::Builder;
 use tabled::settings::Style;
 
 pub struct Runner {
-    ic_admin: ic_admin::IcAdminWrapper,
+    pub ic_admin: ic_admin::IcAdminWrapper,
     dashboard_backend_client: DashboardBackendClient,
     registry: RegistryState,
 }
@@ -181,28 +181,34 @@ impl Runner {
         Ok(())
     }
 
-    pub async fn new_with_network_url(ic_admin: ic_admin::IcAdminWrapper, backend_port: u16) -> anyhow::Result<Self> {
-        let dashboard_backend_client =
-            DashboardBackendClient::new_with_network_url(format!("http://localhost:{}/", backend_port));
+    pub async fn new_with_network_and_backend_port(
+        ic_admin: ic_admin::IcAdminWrapper,
+        network: &Network,
+        backend_port: u16,
+    ) -> anyhow::Result<Self> {
+        let backend_url = format!("http://localhost:{}/", backend_port);
+
+        let dashboard_backend_client = DashboardBackendClient::new_with_backend_url(backend_url);
         Ok(Self {
             ic_admin,
             dashboard_backend_client,
             // TODO: Remove once DREL-118 completed.
-            // Fake registry not used for methods that still rely on backend.
-            registry: registry::RegistryState::new(Network::Mainnet, true).await,
+            // Fake registry that is not used, but some methods still rely on backend.
+            registry: registry::RegistryState::new(network, true).await,
         })
     }
 
-    pub async fn new(ic_admin: ic_admin::IcAdminWrapper, network: Network) -> anyhow::Result<Self> {
+    pub async fn new(ic_admin: ic_admin::IcAdminWrapper, network: &Network) -> anyhow::Result<Self> {
         // TODO: Remove once DREL-118 completed.
-        let dashboard_backend_client =
-            DashboardBackendClient::new_with_network_url(format!("http://localhost:{}/", local_unused_port()));
+        let backend_port = local_unused_port();
+        let backend_url = format!("http://localhost:{}/", backend_port);
+        let dashboard_backend_client = DashboardBackendClient::new_with_backend_url(backend_url);
 
         let mut registry = registry::RegistryState::new(network, true).await;
         let node_providers = query_ic_dashboard_list::<NodeProvidersResponse>("v3/node-providers")
             .await?
             .node_providers;
-        let _ = registry.update_node_details(&node_providers).await?;
+        registry.update_node_details(&node_providers).await?;
         Ok(Self {
             ic_admin,
             dashboard_backend_client,
@@ -298,10 +304,10 @@ impl Runner {
         let hostos_rollout = HostosRollout::new(
             self.registry.nodes(),
             self.registry.subnets(),
-            self.registry.network(),
-            ProposalAgent::new(self.registry.nns_url()),
-            &version,
-            &exclude,
+            &self.registry.network(),
+            ProposalAgent::new(self.registry.get_nns_urls()),
+            version,
+            exclude,
         );
 
         match hostos_rollout.execute(node_group).await? {

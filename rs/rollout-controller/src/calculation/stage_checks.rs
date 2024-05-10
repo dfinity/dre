@@ -57,7 +57,7 @@ pub fn check_stages<'a>(
             if let SubnetAction::Noop { subnet_short: _ } = a {
                 return true;
             }
-            return false;
+            false
         }) {
             return Ok(stage_actions);
         }
@@ -78,7 +78,7 @@ pub fn check_stages<'a>(
 }
 
 fn week_passed(release_start: NaiveDate, now: NaiveDate) -> bool {
-    let mut counter = release_start.clone();
+    let mut counter = release_start;
     counter = counter
         .checked_add_days(Days::new(1))
         .expect("Should be able to add a day");
@@ -119,7 +119,7 @@ fn check_stage<'a>(
                         }
                     }
                 }
-                return false;
+                false
             }) {
                 None => stage_actions.push(SubnetAction::PlaceProposal {
                     is_unassigned: true,
@@ -291,13 +291,13 @@ fn get_remaining_bake_time_for_subnet(
         }
     };
 
-    return match bake.ge(&stage_bake_time) {
+    match bake.ge(&stage_bake_time) {
         true => Ok(0.0),
         false => {
             let remaining = Duration::from_secs_f64(stage_bake_time - bake);
-            return Ok(remaining.as_secs_f64());
+            Ok(remaining.as_secs_f64())
         }
-    };
+    }
 }
 
 fn get_open_proposal_for_subnet<'a>(
@@ -338,12 +338,12 @@ mod get_open_proposal_for_subnet_tests {
     use candid::Principal;
     use ic_base_types::PrincipalId;
     use ic_management_backend::proposal::ProposalInfoInternal;
-    use registry_canister::mutations::do_update_subnet_replica::UpdateSubnetReplicaVersionPayload;
+    use registry_canister::mutations::do_deploy_guestos_to_all_subnet_nodes::DeployGuestosToAllSubnetNodesPayload;
 
     use super::*;
     use rstest::rstest;
 
-    pub(super) fn craft_subnet_from_id<'a>(subnet_id: &'a str) -> Subnet {
+    pub(super) fn craft_subnet_from_id(subnet_id: &str) -> Subnet {
         Subnet {
             principal: PrincipalId(Principal::from_str(subnet_id).expect("Can create principal")),
             ..Default::default()
@@ -358,7 +358,7 @@ mod get_open_proposal_for_subnet_tests {
             .iter()
             .enumerate()
             .map(|(i, (id, executed))| SubnetUpdateProposal {
-                payload: UpdateSubnetReplicaVersionPayload {
+                payload: DeployGuestosToAllSubnetNodesPayload {
                     subnet_id: PrincipalId(Principal::from_str(id).expect("Can create principal")),
                     replica_version_id: version.to_string(),
                 },
@@ -394,7 +394,7 @@ mod get_open_proposal_for_subnet_tests {
     #[test]
     fn should_find_open_proposal_for_subnet() {
         let proposals = craft_open_proposals(
-            &vec![
+            &[
                 "snjp4-xlbw4-mnbog-ddwy6-6ckfd-2w5a2-eipqo-7l436-pxqkh-l6fuv-vae",
                 "pae4o-o6dxf-xki7q-ezclx-znyd6-fnk6w-vkv5z-5lfwh-xym2i-otrrw-fqe",
             ],
@@ -429,7 +429,7 @@ mod get_open_proposal_for_subnet_tests {
         #[case] current_version: &str,
     ) {
         let proposals = craft_executed_proposals(
-            &vec![
+            &[
                 "snjp4-xlbw4-mnbog-ddwy6-6ckfd-2w5a2-eipqo-7l436-pxqkh-l6fuv-vae",
                 "pae4o-o6dxf-xki7q-ezclx-znyd6-fnk6w-vkv5z-5lfwh-xym2i-otrrw-fqe",
             ],
@@ -640,7 +640,7 @@ mod check_stages_tests {
     use ic_base_types::PrincipalId;
     use ic_management_backend::proposal::ProposalInfoInternal;
     use registry_canister::mutations::{
-        do_update_subnet_replica::UpdateSubnetReplicaVersionPayload,
+        do_deploy_guestos_to_all_subnet_nodes::DeployGuestosToAllSubnetNodesPayload,
         do_update_unassigned_nodes_config::UpdateUnassignedNodesConfigPayload,
     };
 
@@ -762,9 +762,10 @@ mod check_stages_tests {
 
     impl TestCase {
         pub fn new(name: &'static str) -> Self {
-            let mut case = Self::default();
-            case.name = name;
-            case
+            TestCase {
+                name,
+                ..Default::default()
+            }
         }
 
         pub fn with_index(mut self, index: Index) -> Self {
@@ -876,7 +877,7 @@ mod check_stages_tests {
                 proposal_timestamp_seconds: 0,
                 id: subnet_id,
             },
-            payload: UpdateSubnetReplicaVersionPayload {
+            payload: DeployGuestosToAllSubnetNodesPayload {
                 replica_version_id: version.to_string(),
                 subnet_id: principal(subnet_id),
             },
@@ -936,7 +937,7 @@ mod check_stages_tests {
                 .with_last_bake_status(&[(1, "9h"), (2, "5h"), (3, "5h"), (4, "5h")])
                 .with_unassigned_node_proposals(&[(true, "b")])
                 .with_now("2024-03-04")
-                .expect_actions(&vec![]),
+                .expect_actions(&[]),
             TestCase::new("Partially executed step, a subnet is baking but the other doesn't have a submitted proposal")
                 .with_subnet_update_proposals(&[(1, true, "b"), (2, true, "b")])
                 .with_last_bake_status(&[(1, "9h"), (2, "3h")])
@@ -980,10 +981,10 @@ mod check_stages_tests {
                 pause: false,
                 skip_days: vec![],
                 stages: vec![
-                    stage(&vec![1], "8h"),
-                    stage(&vec![2, 3], "4h"),
+                    stage(&[1], "8h"),
+                    stage(&[2, 3], "4h"),
                     stage_unassigned(),
-                    stage_next_week(&vec![4], "4h"),
+                    stage_next_week(&[4], "4h"),
                 ],
             },
             releases: vec![

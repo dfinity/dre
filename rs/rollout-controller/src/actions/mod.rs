@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use dre::{
-    cli::Opts,
+    detect_neuron::Neuron,
     ic_admin::{IcAdminWrapper, ProposeCommand, ProposeOptions},
 };
 use ic_base_types::PrincipalId;
@@ -107,7 +107,9 @@ impl<'a> SubnetAction {
                 ..Default::default()
             };
 
-            executor.ic_admin.propose_run(proposal, opts, executor.simulate)?;
+            executor
+                .ic_admin_wrapper
+                .propose_run(proposal, opts, executor.simulate)?;
         }
 
         Ok(())
@@ -115,7 +117,7 @@ impl<'a> SubnetAction {
 }
 
 pub struct ActionExecutor<'a> {
-    ic_admin: IcAdminWrapper,
+    ic_admin_wrapper: IcAdminWrapper,
     simulate: bool,
     logger: Option<&'a Logger>,
 }
@@ -128,36 +130,18 @@ impl<'a> ActionExecutor<'a> {
         simulate: bool,
         logger: Option<&'a Logger>,
     ) -> anyhow::Result<Self> {
+        let neuron = Neuron::new(&network, true, Some(neuron_id), Some(private_key_pem), None, None, None).await?;
         Ok(Self {
-            ic_admin: dre::cli::Cli::from_opts(
-                &Opts {
-                    neuron_id: Some(neuron_id),
-                    private_key_pem: Some(private_key_pem),
-                    yes: true,
-                    network,
-                    ..Default::default()
-                },
-                true,
-            )
-            .await?
-            .into(),
+            ic_admin_wrapper: IcAdminWrapper::new(network, None, true, neuron),
             simulate,
             logger,
         })
     }
 
     pub async fn test(network: Network, logger: Option<&'a Logger>) -> anyhow::Result<Self> {
+        let neuron = Neuron::new(&network, false, None, None, None, None, None).await?;
         Ok(Self {
-            ic_admin: dre::cli::Cli::from_opts(
-                &Opts {
-                    yes: true,
-                    network,
-                    ..Default::default()
-                },
-                false,
-            )
-            .await?
-            .into(),
+            ic_admin_wrapper: IcAdminWrapper::new(network, None, true, neuron),
             simulate: true,
             logger,
         })

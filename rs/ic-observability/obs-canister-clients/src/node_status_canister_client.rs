@@ -51,6 +51,7 @@ impl NodeStatusCanister {
                     Agent::builder()
                         .with_url(url.as_str())
                         .with_identity(AnonymousIdentity)
+                        .with_verify_query_signatures(false)
                         .build()
                         .unwrap()
                 })

@@ -35,6 +35,56 @@ rollout:
       wait_for_next_week: true
 
 releases:
+  - rc_name: rc--2024-05-09_23-02
+    versions:
+      # Successful qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/jobs/6822217391
+      - name: base
+        version: 2c4566b7b7af453167785504ba3c563e09f38504
+      # Successful qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/jobs/6822856632
+      - name: storage-layer
+        version: 9866a6f5cb43c54e3d87fa02a4eb80d0f159dddb
+  - rc_name: rc--2024-05-01_23-01
+    versions:
+      # Successful qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/jobs/6763468648
+      - name: base
+        version: bb76748d1d225c08d88037e99ca9a066f97de496
+      # Successful qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/jobs/6764186162
+      - name: storage-layer
+        version: f58424c4ba894ab8a12c8e223655d5d378fb1010
+  - rc_name: rc--2024-04-24_23-01
+    versions:
+      - name: base
+        # Successful qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/jobs/6713878735
+        version: 80e0363393ea26a36b77e8c75f7f183cb521f67f
+      - name: storage-layer
+        # Successful qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/jobs/6714600392
+        version: 5e285dcaf77db014ac85d6f96ff392fe461945f5
+  - rc_name: rc--2024-04-17_23-01
+    versions:
+      - name: base
+        # Successful qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/pipelines/1258259180
+        version: abcea3eff0be52dc5328e71de98288991de854bf
+      - name: query-stats
+        # Qualification pipeline in progress at the time this record was created.
+        version: 0a51fd74f08b2e6f23d6e1d60f1f52eb73b40ccc
+      - name: hotfix-bitcoin
+        version: 687de34189de20c5346e6b6167d22bcdd11e7ae5
+      - name: hotfix-bitcoin-query-stats
+        version: 63acf4f88b20ec0c6384f4e18f0f6f69fc5d9b9f
+  - rc_name: rc--2024-04-10_23-01
+    versions:
+      - name: base
+        version: 19dbb5cc6e3dc85c0ccd899b3182552612f1607d
+      - name: query-stats
+        version: 02dcaf3ccdfe46bd959d683d43c5513d37a1420d
+      - name: hotfix-bitcoin
+        version: 33dd2ef2184a64c00e64ff0412e7378d46507005
+      - name: hotfix-bitcoin-query-stats
+        version: 4e9b02fc3c0fa377b2fba44b15841d6ef73593a3
+  - rc_name: rc--2024-04-03_23-01
+    versions:
+      - name: base
+        version: ff10ea1dba07c0f66c66536a46a97146cf260e90
   - rc_name: rc--2024-03-27_23-01
     versions:
       - name: base

@@ -1,4 +1,3 @@
-pub mod config;
 pub mod endpoints;
 pub mod factsdb;
 pub mod git_ic_repo;
