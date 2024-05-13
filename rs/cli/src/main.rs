@@ -12,6 +12,8 @@ use ic_canisters::CanisterClient;
 use ic_management_backend::endpoints;
 use ic_management_types::requests::NodesRemoveRequest;
 use ic_management_types::{Artifact, MinNakamotoCoefficients, NodeFeature};
+use ic_nns_common::pb::v1::ProposalId;
+use ic_nns_governance::pb::v1::ListProposalInfo;
 use log::{info, warn};
 use serde_json::Value;
 use std::collections::BTreeMap;
@@ -328,7 +330,7 @@ async fn async_main() -> Result<(), anyhow::Error> {
                     ..Default::default()
                 }, cli_opts.simulate).await
             }
-            cli::Commands::Proposals(p) => match p.subcommand {
+            cli::Commands::Proposals(p) => match &p.subcommand {
                 cli::proposals::Commands::Pending => {
                     let nns_url = target_network.get_nns_urls().first().expect("Should have at least one NNS URL");
                     let client = GovernanceCanisterWrapper::from(CanisterClient::from_anonymous(nns_url)?);
@@ -337,6 +339,25 @@ async fn async_main() -> Result<(), anyhow::Error> {
                     println!("{}", proposals);
                     Ok(())
                 }
+                cli::proposals::Commands::List { limit, before_proposal, exclude_topic, include_reward_status, include_status, include_all_manage_neuron_proposals, omit_large_fields } => {
+                    let nns_url = target_network.get_nns_urls().first().expect("Should have at least one NNS URL");
+                    let client = GovernanceCanisterWrapper::from(CanisterClient::from_anonymous(nns_url)?);
+                    let proposals = client.list_proposals(ListProposalInfo {
+                        before_proposal: match before_proposal {
+                            None => None,
+                            Some(p) => Some(ProposalId { id: *p })
+                        },
+                        exclude_topic: exclude_topic.clone(),
+                        include_all_manage_neuron_proposals: *include_all_manage_neuron_proposals,
+                        include_reward_status: include_reward_status.clone(),
+                        include_status: include_status.clone(),
+                        limit: *limit,
+                        omit_large_fields: *omit_large_fields
+                    }).await?;
+                    let proposals = serde_json::to_string(&proposals).map_err(|e| anyhow::anyhow!("Couldn't serialize to string: {:?}", e))?;
+                    println!("{}", proposals);
+                    Ok(())
+                },
             },
         }
     })

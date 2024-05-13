@@ -35,6 +35,7 @@ ic-management-backend = { workspace = true }
 ic-management-types = { workspace = true }
 ic-nns-constants = { workspace = true }
 ic-nns-governance = { workspace = true }
+ic-nns-common = { workspace = true }
 ic-protobuf = { workspace = true }
 ic-registry-keys = { workspace = true }
 ic-registry-local-registry = { workspace = true }
