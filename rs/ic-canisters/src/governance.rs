@@ -4,6 +4,8 @@ use ic_nns_common::pb::v1::NeuronId;
 use ic_nns_common::pb::v1::ProposalId;
 use ic_nns_constants::GOVERNANCE_CANISTER_ID;
 use ic_nns_governance::pb::v1::manage_neuron::RegisterVote;
+use ic_nns_governance::pb::v1::ListProposalInfo;
+use ic_nns_governance::pb::v1::ListProposalInfoResponse;
 use ic_nns_governance::pb::v1::ManageNeuron;
 use ic_nns_governance::pb::v1::ManageNeuronResponse;
 use ic_nns_governance::pb::v1::ProposalInfo;
@@ -139,6 +141,23 @@ impl GovernanceCanisterWrapper {
             },
             Ok(None) => Ok(ManageNeuronResponse::default()),
             Err(err) => Err(anyhow::anyhow!("Error executing update: {}", err)),
+        }
+    }
+
+    pub async fn list_proposals(&self, contract: ListProposalInfo) -> anyhow::Result<Vec<ProposalInfo>> {
+        let args = Encode! { &contract }?;
+        match self
+            .client
+            .agent
+            .execute_query(&GOVERNANCE_CANISTER_ID, "list_proposals", args)
+            .await
+        {
+            Ok(Some(response)) => match Decode!(response.as_slice(), ListProposalInfoResponse) {
+                Ok(response) => Ok(response.proposal_info),
+                Err(e) => Err(anyhow::anyhow!("Error deserializing response: {:?}", e)),
+            },
+            Ok(None) => Ok(vec![]),
+            Err(e) => Err(anyhow::anyhow!("Error executing query: {}", e)),
         }
     }
 }
