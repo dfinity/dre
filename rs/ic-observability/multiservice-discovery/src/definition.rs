@@ -783,29 +783,52 @@ pub fn ic_node_target_dtos_from_definitions(
     definitions: &BTreeMap<String, RunningDefinition>,
     filters: &TargetFilterSpec,
 ) -> Vec<TargetDto> {
-    let mut ic_node_targets: Vec<TargetDto> = vec![];
+    from_definitions_into_targets(definitions, filters, JobType::all_for_ic_nodes(), |target| {
+        target.is_api_bn
+    })
+}
+
+pub fn api_boundary_nodes_target_dtos_from_definitions(
+    definitions: &BTreeMap<String, RunningDefinition>,
+    filters: &TargetFilterSpec,
+) -> Vec<TargetDto> {
+    from_definitions_into_targets(definitions, filters, JobType::all_for_api_boundary_nodes(), |target| {
+        !target.is_api_bn
+    })
+}
+
+fn from_definitions_into_targets(
+    definitions: &BTreeMap<String, RunningDefinition>,
+    filters: &TargetFilterSpec,
+    jobs: Vec<JobType>,
+    skip_filter: impl Fn(&TargetGroup) -> bool,
+) -> Vec<TargetDto> {
+    let mut result: Vec<TargetDto> = vec![];
 
     for (_, def) in definitions.iter() {
         if filters.matches_ic(&def.name()) {
-            for job_type in JobType::all_for_ic_nodes() {
-                let target_groups = match def.get_target_groups(job_type) {
+            for job_type in &jobs {
+                let target_groups = match def.get_target_groups(*job_type) {
                     Ok(target_groups) => target_groups,
                     Err(_) => continue,
                 };
 
                 target_groups.iter().for_each(|target_group| {
-                    if let Some(target) = ic_node_targets.iter_mut().find(|t| t.node_id == target_group.node_id) {
-                        target.jobs.push(job_type);
+                    if skip_filter(target_group) {
+                        return;
+                    }
+                    if let Some(target) = result.iter_mut().find(|t| t.node_id == target_group.node_id) {
+                        target.jobs.push(*job_type);
                     } else {
                         let target = map_to_target_dto(
                             target_group,
-                            job_type,
+                            *job_type,
                             BTreeMap::new(),
                             target_group.node_id.to_string(),
                             def.name(),
                         );
                         if filters.matches_ic_node(&target) {
-                            ic_node_targets.push(target)
+                            result.push(target)
                         };
                     }
                 });
@@ -813,7 +836,7 @@ pub fn ic_node_target_dtos_from_definitions(
         }
     }
 
-    ic_node_targets
+    result
 }
 
 pub fn boundary_nodes_from_definitions(
