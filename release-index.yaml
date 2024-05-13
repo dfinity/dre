@@ -43,6 +43,8 @@ releases:
       # Successful qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/jobs/6822856632
       - name: storage-layer
         version: 9866a6f5cb43c54e3d87fa02a4eb80d0f159dddb
+      - name: hotfix-tecdsa
+        version: 30bf45e80e6b5c1660cd12c6b554d4f1e85a2d11
   - rc_name: rc--2024-05-01_23-01
     versions:
       # Successful qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/jobs/6763468648
