@@ -72,6 +72,7 @@ clap-num = { workspace = true }
 ic-base-types = { workspace = true }
 ic-management-types = { workspace = true }
 url = { workspace = true }
+ic-nns-governance = { workspace = true }
 
 [[bin]]
 name = "dre"

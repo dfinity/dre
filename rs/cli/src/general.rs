@@ -1,4 +1,8 @@
 use ic_base_types::{CanisterId, PrincipalId};
+use ic_management_types::Network;
+use ic_nns_common::pb::v1::ProposalId;
+use itertools::Itertools;
+use serde::{Deserialize, Serialize};
 use spinners::{Spinner, Spinners};
 use std::{
     collections::{HashMap, HashSet},
@@ -6,12 +10,13 @@ use std::{
     sync::Mutex,
     time::Duration,
 };
+use strum::IntoEnumIterator;
 
 use ic_canisters::{
     governance::GovernanceCanisterWrapper, management::WalletCanisterWrapper, registry::RegistryCanisterWrapper,
     CanisterClient, IcAgentCanisterClient,
 };
-use ic_nns_governance::pb::v1::ProposalInfo;
+use ic_nns_governance::pb::v1::{ListProposalInfo, ProposalInfo, ProposalStatus, Topic};
 use log::{info, warn};
 use url::Url;
 
@@ -149,4 +154,96 @@ pub async fn get_node_metrics_history(
     println!("{}", serde_json::to_string_pretty(&metrics_by_subnet)?);
 
     Ok(())
+}
+
+pub async fn filter_proposals(
+    network: Network,
+    limit: &u32,
+    statuses: Vec<ProposalStatus>,
+    topics: Vec<Topic>,
+) -> anyhow::Result<()> {
+    let nns_url = match network.get_nns_urls().first() {
+        Some(url) => url,
+        None => return Err(anyhow::anyhow!("Could not get NNS URL from network config")),
+    };
+    let client = GovernanceCanisterWrapper::from(CanisterClient::from_anonymous(nns_url)?);
+    let exclude_topic = match topics.is_empty() {
+        true => vec![],
+        false => {
+            let mut exclude_topics = Topic::iter().collect_vec();
+            for topic in topics {
+                exclude_topics.retain(|t| t != &topic);
+            }
+            exclude_topics
+        }
+    };
+    let mut remaining = *limit;
+    let mut proposals: Vec<Proposal> = vec![];
+    info!(
+        "Querying {} proposals, excluding topics {:?}, including status {:?}",
+        remaining, exclude_topic, statuses
+    );
+
+    loop {
+        let payload = ListProposalInfo {
+            limit: remaining,
+            before_proposal: proposals.last().map(|p| ProposalId { id: p.id }),
+            exclude_topic: exclude_topic.iter().cloned().map(|f| f.into()).collect_vec(),
+            include_status: statuses.iter().cloned().map(|s| s.into()).collect_vec(),
+            ..Default::default()
+        };
+        info!("Payload: {:?}", payload);
+        let current_batch = client
+            .list_proposals(payload)
+            .await?
+            .into_iter()
+            .map(|f| f.into())
+            .sorted_by(|a: &Proposal, b: &Proposal| b.id.cmp(&a.id))
+            .collect_vec();
+
+        // No more proposals match the filters, exit
+        if current_batch.is_empty() {
+            info!("No more proposals match the filters, exiting...");
+            break;
+        }
+
+        remaining -= current_batch.len() as u32;
+        info!("Remaining after iteration: {}", remaining);
+
+        proposals.extend(current_batch);
+
+        if remaining == 0 {
+            break;
+        }
+    }
+
+    println!("{}", serde_json::to_string_pretty(&proposals)?);
+
+    Ok(())
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct Proposal {
+    id: u64,
+    proposer: u64,
+    title: String,
+    summary: String,
+    proposal_timestamp_seconds: u64,
+    topic: Topic,
+    status: ProposalStatus,
+}
+
+impl From<ProposalInfo> for Proposal {
+    fn from(value: ProposalInfo) -> Self {
+        let proposal = value.proposal.clone().unwrap();
+        Self {
+            id: value.id.unwrap().id,
+            proposal_timestamp_seconds: value.proposal_timestamp_seconds,
+            proposer: value.proposer.unwrap().id,
+            status: value.status(),
+            summary: proposal.summary,
+            title: proposal.title.unwrap(),
+            topic: value.topic(),
+        }
+    }
 }
