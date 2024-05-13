@@ -2333,6 +2333,7 @@ dependencies = [
  "ic-interfaces-registry",
  "ic-management-backend",
  "ic-management-types",
+ "ic-nns-common",
  "ic-nns-constants",
  "ic-nns-governance",
  "ic-protobuf",

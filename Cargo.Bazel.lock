@@ -1,5 +1,5 @@
 {
-  "checksum": "e6da14722080ba8a0b4069a6eb6deaec83172a87557d77964c9e84894b72a822",
+  "checksum": "a23efd2a9223be99e707de45f95191617e14ea319d026e8ae5eff0ec08ad9243",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -11743,6 +11743,10 @@
             {
               "id": "ic-interfaces-registry 0.9.0",
               "target": "ic_interfaces_registry"
+            },
+            {
+              "id": "ic-nns-common 0.9.0",
+              "target": "ic_nns_common"
             },
             {
               "id": "ic-nns-constants 0.9.0",
