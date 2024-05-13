@@ -127,6 +127,7 @@ const IC_SUBNET: &str = "ic_subnet";
 const DC: &str = "dc";
 const ADDRESS: &str = "address";
 const NODE_PROVIDER_ID: &str = "node_provider_id";
+const IS_API_BN: &str = "is_api_bn";
 
 impl VectorRemapTransform {
     pub fn from(target: TargetDto, job: JobType, input: String, is_bn: bool) -> Self {
@@ -145,6 +146,7 @@ impl VectorRemapTransform {
             (ADDRESS.into(), ip),
             (NODE_PROVIDER_ID.into(), target_group.node_provider_id.to_string()),
             (DC.into(), target_group.dc_id),
+            (IS_API_BN.into(), target.is_api_bn.to_string()),
         ])
         .into_iter()
         .chain(target.custom_labels)
@@ -217,6 +219,7 @@ mod tests {
             jobs: jobs.clone(),
             operator_id: PrincipalId::new_anonymous(),
             custom_labels: custom_labels.clone(),
+            is_api_bn: false,
         });
         target_dto.insert(TargetDto {
             node_id: PrincipalId::new_anonymous().into(),
@@ -229,6 +232,7 @@ mod tests {
             jobs: jobs.clone(),
             operator_id: PrincipalId::new_anonymous(),
             custom_labels: custom_labels.clone(),
+            is_api_bn: false,
         });
 
         let config = builder.build(target_dto);

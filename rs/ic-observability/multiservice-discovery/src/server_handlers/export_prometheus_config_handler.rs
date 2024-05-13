@@ -1,5 +1,5 @@
 use super::Server;
-use crate::definition::RunningDefinition;
+use crate::definition::{api_boundary_nodes_target_dtos_from_definitions, RunningDefinition};
 use crate::{
     definition::{boundary_nodes_from_definitions, ic_node_target_dtos_from_definitions},
     TargetFilterSpec,
@@ -40,7 +40,13 @@ pub fn serialize_definitions_to_prometheus_config(
         })
         .collect();
 
-    let total_targets = [ic_node_targets, boundary_nodes_targets].concat();
+    let api_boundary_nodes_targets: Vec<PrometheusStaticConfig> = map_target_group(
+        api_boundary_nodes_target_dtos_from_definitions(&definitions, &filters)
+            .into_iter()
+            .collect(),
+    );
+
+    let total_targets = [ic_node_targets, boundary_nodes_targets, api_boundary_nodes_targets].concat();
 
     (
         total_targets.len(),

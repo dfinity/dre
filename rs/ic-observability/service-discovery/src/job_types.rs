@@ -14,6 +14,7 @@ pub enum JobType {
     NodeExporter(NodeOS),
     Orchestrator,
     MetricsProxy(NodeOS),
+    IcBoundary,
 }
 
 /// By convention, the first two bytes of the host-part of the replica's IP
@@ -43,6 +44,7 @@ impl JobType {
             Self::Orchestrator => 9091,
             Self::MetricsProxy(NodeOS::Host) => 19100,
             Self::MetricsProxy(NodeOS::Guest) => 19100,
+            Self::IcBoundary => 9324,
         }
     }
     pub fn endpoint(&self) -> &'static str {
@@ -51,6 +53,7 @@ impl JobType {
             Self::NodeExporter(_) => "/metrics",
             Self::Orchestrator => "/",
             Self::MetricsProxy(_) => "/metrics",
+            Self::IcBoundary => "/metrics",
         }
     }
     pub fn scheme(&self) -> &'static str {
@@ -59,6 +62,7 @@ impl JobType {
             Self::NodeExporter(_) => "https",
             Self::Orchestrator => "http",
             Self::MetricsProxy(_) => "https",
+            Self::IcBoundary => "http",
         }
     }
 
@@ -124,6 +128,18 @@ impl JobType {
         .collect::<Vec<Self>>()
     }
 
+    pub fn all_for_api_boundary_nodes() -> Vec<Self> {
+        [
+            JobType::Replica,
+            JobType::Orchestrator,
+            JobType::NodeExporter(NodeOS::Guest),
+            JobType::NodeExporter(NodeOS::Host),
+            JobType::IcBoundary,
+        ]
+        .into_iter()
+        .collect::<Vec<Self>>()
+    }
+
     pub fn all_for_logs() -> Vec<Self> {
         [
             JobType::NodeExporter(NodeOS::Guest),
@@ -184,6 +200,7 @@ impl fmt::Display for JobType {
             JobType::Orchestrator => write!(f, "orchestrator"),
             JobType::MetricsProxy(NodeOS::Host) => write!(f, "host_metrics_proxy"),
             JobType::MetricsProxy(NodeOS::Guest) => write!(f, "guest_metrics_proxy"),
+            JobType::IcBoundary => write!(f, "ic_boundary"),
         }
     }
 }
