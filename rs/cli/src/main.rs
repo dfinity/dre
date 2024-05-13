@@ -343,10 +343,7 @@ async fn async_main() -> Result<(), anyhow::Error> {
                     let nns_url = target_network.get_nns_urls().first().expect("Should have at least one NNS URL");
                     let client = GovernanceCanisterWrapper::from(CanisterClient::from_anonymous(nns_url)?);
                     let proposals = client.list_proposals(ListProposalInfo {
-                        before_proposal: match before_proposal {
-                            None => None,
-                            Some(p) => Some(ProposalId { id: *p })
-                        },
+                        before_proposal: before_proposal.as_ref().map(|p| ProposalId { id: *p }),
                         exclude_topic: exclude_topic.clone(),
                         include_all_manage_neuron_proposals: *include_all_manage_neuron_proposals,
                         include_reward_status: include_reward_status.clone(),
