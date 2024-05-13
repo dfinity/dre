@@ -7,7 +7,8 @@ use dre::general::{get_node_metrics_history, vote_on_proposals};
 use dre::operations::hostos_rollout::{NodeGroupUpdate, NumberOfNodes};
 use dre::{cli, ic_admin, local_unused_port, registry_dump, runner};
 use ic_base_types::CanisterId;
-use ic_canisters::governance::governance_canister_version;
+use ic_canisters::governance::{governance_canister_version, GovernanceCanisterWrapper};
+use ic_canisters::CanisterClient;
 use ic_management_backend::endpoints;
 use ic_management_types::requests::NodesRemoveRequest;
 use ic_management_types::{Artifact, MinNakamotoCoefficients, NodeFeature};
@@ -327,6 +328,16 @@ async fn async_main() -> Result<(), anyhow::Error> {
                     ..Default::default()
                 }, cli_opts.simulate).await
             }
+            cli::Commands::Proposals(p) => match p.subcommand {
+                cli::proposals::Commands::Pending => {
+                    let nns_url = target_network.get_nns_urls().first().expect("Should have at least one NNS URL");
+                    let client = GovernanceCanisterWrapper::from(CanisterClient::from_anonymous(nns_url)?);
+                    let proposals = client.get_pending_proposals().await?;
+                    let proposals = serde_json::to_string(&proposals).map_err(|e| anyhow::anyhow!("Couldn't serialize to string: {:?}", e))?;
+                    println!("{}", proposals);
+                    Ok(())
+                }
+            },
         }
     })
     .await;

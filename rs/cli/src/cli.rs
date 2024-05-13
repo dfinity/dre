@@ -154,6 +154,9 @@ pub enum Commands {
         #[clap(long, default_value = None, required = true)]
         summary: Option<String>,
     },
+
+    /// Proposal Listing
+    Proposals(proposals::Cmd),
 }
 
 impl Default for Commands {
@@ -421,5 +424,21 @@ pub mod nodes {
             #[clap(long, aliases = ["summary"])]
             motivation: Option<String>,
         },
+    }
+}
+
+pub mod proposals {
+    use super::*;
+
+    #[derive(Parser, Clone)]
+    pub struct Cmd {
+        #[clap(subcommand)]
+        pub subcommand: Commands,
+    }
+
+    #[derive(Subcommand, Clone)]
+    pub enum Commands {
+        /// Get list of pending proposals
+        Pending,
     }
 }
