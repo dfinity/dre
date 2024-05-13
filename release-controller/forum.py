@@ -68,7 +68,6 @@ class ReleaseCandidateForumTopic:
 
         created_posts = self.created_posts()
         for i, p in enumerate(posts):
-            print(p.version_name)
             if i < len(created_posts):
                 self.client.update_post(
                     post_id=created_posts[i]["id"],
