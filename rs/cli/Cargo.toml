@@ -61,6 +61,10 @@ tokio = { workspace = true }
 url = { workspace = true }
 tempfile = "3.10.0"
 self_update = { version = "0.39.0", features = [ "archive-tar" ]}
+ic-nervous-system-root = { workspace = true }
+ic-nervous-system-clients = { workspace = true }
+cycles-minting-canister = { workspace = true }
+ic-sns-wasm = { workspace = true }
 
 [dev-dependencies]
 wiremock = { workspace = true }

@@ -126,6 +126,10 @@ ic-registry-subnet-type = { git = "https://github.com/dfinity/ic.git", rev = "b5
 ic-registry-transport = { git = "https://github.com/dfinity/ic.git", rev = "b531d2e0a7438d61ce14915a2d0b43684ff7d667" }
 ic-sys = { git = "https://github.com/dfinity/ic.git", rev = "b531d2e0a7438d61ce14915a2d0b43684ff7d667" }
 ic-types = { git = "https://github.com/dfinity/ic.git", rev = "b531d2e0a7438d61ce14915a2d0b43684ff7d667" }
+ic-nervous-system-root = { git = "https://github.com/dfinity/ic.git", rev = "b531d2e0a7438d61ce14915a2d0b43684ff7d667" }
+ic-nervous-system-clients = { git = "https://github.com/dfinity/ic.git", rev = "b531d2e0a7438d61ce14915a2d0b43684ff7d667" }
+ic-sns-wasm = { git = "https://github.com/dfinity/ic.git", rev = "b531d2e0a7438d61ce14915a2d0b43684ff7d667" }
+cycles-minting-canister = { git = "https://github.com/dfinity/ic.git", rev = "b531d2e0a7438d61ce14915a2d0b43684ff7d667" }
 ic-utils = "0.34.0"
 include_dir = "0.7.3"
 itertools = "0.12.0"
@@ -145,7 +149,7 @@ rand_seeder = "0.2.3"
 rayon = "1.10.0"
 regex = "1.10.4"
 registry-canister = { git = "https://github.com/dfinity/ic.git", rev = "b531d2e0a7438d61ce14915a2d0b43684ff7d667" }
-reqwest = { version = "0.12.2", features = ["json"] }
+reqwest = { version = "0.12", features = ["json"] }
 retry = "2.0.0"
 reverse_geocoder = "4.1.1"
 ring = "0.17.8"
