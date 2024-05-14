@@ -10,7 +10,6 @@ use std::{
     sync::Mutex,
     time::Duration,
 };
-use strum::IntoEnumIterator;
 
 use ic_canisters::{
     governance::GovernanceCanisterWrapper, management::WalletCanisterWrapper, registry::RegistryCanisterWrapper,
@@ -167,32 +166,15 @@ pub async fn filter_proposals(
         None => return Err(anyhow::anyhow!("Could not get NNS URL from network config")),
     };
     let client = GovernanceCanisterWrapper::from(CanisterClient::from_anonymous(nns_url)?);
-    let exclude_topic = match topics.is_empty() {
-        true => vec![],
-        false => {
-            let mut exclude_topics = Topic::iter().collect_vec();
-            for topic in topics {
-                exclude_topics.retain(|t| t != &topic);
-            }
-            exclude_topics
-        }
-    };
+
     let mut remaining = *limit;
     let mut proposals: Vec<Proposal> = vec![];
+    let mut payload = ListProposalInfo { ..Default::default() };
     info!(
-        "Querying {} proposals, excluding topics {:?}, including status {:?}",
-        remaining, exclude_topic, statuses
+        "Querying {} proposals where status is one of {:?} and topic is one of {:?}",
+        limit, statuses, topics
     );
-
     loop {
-        let payload = ListProposalInfo {
-            limit: remaining,
-            before_proposal: proposals.last().map(|p| ProposalId { id: p.id }),
-            exclude_topic: exclude_topic.iter().cloned().map(|f| f.into()).collect_vec(),
-            include_status: statuses.iter().cloned().map(|s| s.into()).collect_vec(),
-            ..Default::default()
-        };
-        info!("Payload: {:?}", payload);
         let current_batch = client
             .list_proposals(payload)
             .await?
@@ -200,23 +182,46 @@ pub async fn filter_proposals(
             .map(|f| f.into())
             .sorted_by(|a: &Proposal, b: &Proposal| b.id.cmp(&a.id))
             .collect_vec();
+        payload = ListProposalInfo {
+            before_proposal: current_batch.clone().last().map(|p| ProposalId { id: p.id }),
+            ..Default::default()
+        };
+        let current_batch = current_batch
+            .into_iter()
+            .filter(|p| {
+                if !statuses.is_empty() && !statuses.contains(&p.status) {
+                    return false;
+                }
+                if !topics.is_empty() && !topics.contains(&p.topic) {
+                    return false;
+                }
+                true
+            })
+            .collect_vec();
 
-        // No more proposals match the filters, exit
-        if current_batch.is_empty() {
-            info!("No more proposals match the filters, exiting...");
-            break;
+        if current_batch.len() > remaining as usize {
+            let current_batch = current_batch.into_iter().take(remaining as usize).collect_vec();
+            remaining = 0;
+            proposals.extend(current_batch)
+        } else {
+            remaining -= current_batch.len() as u32;
+            proposals.extend(current_batch)
         }
 
-        remaining -= current_batch.len() as u32;
         info!("Remaining after iteration: {}", remaining);
-
-        proposals.extend(current_batch);
 
         if remaining == 0 {
             break;
         }
-    }
 
+        if let None = payload.before_proposal {
+            warn!(
+                "No more proposals available and there is {} remaining to find",
+                remaining
+            );
+            break;
+        }
+    }
     println!("{}", serde_json::to_string_pretty(&proposals)?);
 
     Ok(())
@@ -242,7 +247,7 @@ impl From<ProposalInfo> for Proposal {
             proposer: value.proposer.unwrap().id,
             status: value.status(),
             summary: proposal.summary,
-            title: proposal.title.unwrap(),
+            title: proposal.title.unwrap_or_default(),
             topic: value.topic(),
         }
     }

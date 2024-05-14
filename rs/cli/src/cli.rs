@@ -497,12 +497,12 @@ pub mod proposals {
 
             /// Proposal statuses to include. If not specified will include all proposals.
             #[arg(value_enum)]
-            #[clap(long)]
+            #[clap(long, aliases = ["status"], short = 's')]
             statuses: Vec<ProposalStatus>,
 
             /// Proposal topics to include. If not specified will include all proposals.
             #[arg(value_enum)]
-            #[clap(long)]
+            #[clap(long, aliases = ["topic"], short = 't')]
             topics: Vec<Topic>,
         },
     }
