@@ -10,6 +10,7 @@ use std::{
     sync::Mutex,
     time::Duration,
 };
+use strum::IntoEnumIterator;
 
 use ic_canisters::{
     governance::GovernanceCanisterWrapper, management::WalletCanisterWrapper, registry::RegistryCanisterWrapper,
@@ -167,12 +168,31 @@ pub async fn filter_proposals(
     };
     let client = GovernanceCanisterWrapper::from(CanisterClient::from_anonymous(nns_url)?);
 
+    let exclude_topic = match topics.is_empty() {
+        true => vec![],
+        false => {
+            let mut all_topics = Topic::iter().collect_vec();
+            for topic in &topics {
+                all_topics.retain(|t| t != topic);
+            }
+            all_topics
+        }
+    };
+
     let mut remaining = *limit;
     let mut proposals: Vec<Proposal> = vec![];
     let mut payload = ListProposalInfo { ..Default::default() };
     info!(
-        "Querying {} proposals where status is one of {:?} and topic is one of {:?}",
-        limit, statuses, topics
+        "Querying {} proposals where status is {} and topic is {}",
+        limit,
+        match statuses.is_empty() {
+            true => "any".to_string(),
+            false => format!("{:?}", statuses),
+        },
+        match exclude_topic.is_empty() {
+            true => "any".to_string(),
+            false => format!("not in {:?}", exclude_topic),
+        }
     );
     loop {
         let current_batch = client
@@ -184,20 +204,11 @@ pub async fn filter_proposals(
             .collect_vec();
         payload = ListProposalInfo {
             before_proposal: current_batch.clone().last().map(|p| ProposalId { id: p.id }),
+            exclude_topic: exclude_topic.clone().into_iter().map(|t| t.into()).collect_vec(),
+            include_status: statuses.clone().into_iter().map(|s| s.into()).collect_vec(),
+            include_all_manage_neuron_proposals: Some(true),
             ..Default::default()
         };
-        let current_batch = current_batch
-            .into_iter()
-            .filter(|p| {
-                if !statuses.is_empty() && !statuses.contains(&p.status) {
-                    return false;
-                }
-                if !topics.is_empty() && !topics.contains(&p.topic) {
-                    return false;
-                }
-                true
-            })
-            .collect_vec();
 
         if current_batch.len() > remaining as usize {
             let current_batch = current_batch.into_iter().take(remaining as usize).collect_vec();
