@@ -10,15 +10,15 @@ ENV TZ=UTC
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone && \
     apt -yq update && \
     apt -yqq install --no-install-recommends \
-        git openssh-client curl xz-utils time apt-transport-https ca-certificates lsb-release gnupg2 && \
+    git openssh-client curl xz-utils time apt-transport-https ca-certificates lsb-release gnupg2 && \
     apt -yq update && \
     echo Installing Python build dependencies >&2 && \
     apt -yq install --no-install-recommends \
-        build-essential libncurses-dev libbz2-dev libreadline-dev \
-        libssl-dev make build-essential libssl-dev zlib1g-dev \
-        libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm \
-        libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev \
-        libffi-dev liblzma-dev
+    build-essential libncurses-dev libbz2-dev libreadline-dev \
+    libssl-dev make build-essential libssl-dev zlib1g-dev \
+    libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm \
+    libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev \
+    libffi-dev liblzma-dev
 
 # Set Python up in /opt/pyenv.
 RUN mkdir -p /opt/pyenv
@@ -61,19 +61,19 @@ ENV TZ=UTC
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone && \
     apt -yq update && \
     apt -yqq install --no-install-recommends \
-        git openssh-client curl xz-utils time apt-transport-https ca-certificates lsb-release gnupg2 && \
+    git openssh-client curl xz-utils time apt-transport-https ca-certificates lsb-release gnupg2 && \
     echo "deb http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_20.04/ /" > /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list && \
     curl -s -L "https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable/xUbuntu_20.04/Release.key" | apt-key add - && \
     apt -yq update && \
     apt -yqq install --no-install-recommends \
-        build-essential pkg-config libssl-dev cmake libbz2-dev gcc-multilib rsync \
-        clang lld lldb liblz4-dev librocksdb-dev libsnappy-dev libzstd-dev \
-        liblmdb0 libsqlite3-dev sqlite3 vim nano jq zip unzip shellcheck \
-        iputils-ping sudo gosu podman tini && \
+    build-essential pkg-config libssl-dev cmake libbz2-dev gcc-multilib rsync \
+    clang lld lldb liblz4-dev librocksdb-dev libsnappy-dev libzstd-dev \
+    liblmdb0 libsqlite3-dev sqlite3 vim nano jq zip unzip shellcheck \
+    iputils-ping sudo gosu podman tini && \
     chmod +s /usr/sbin/gosu && \
     echo Installing Python runtime dependencies for the Python built before >&2 && \
     apt -yqq install --no-install-recommends \
-        libtk8.6 && \
+    libtk8.6 && \
     echo Cleaning out APT cache for smaller images as per 'http://docs.projectatomic.io/container-best-practices/#_clearing_packaging_caches_and_temporary_package_downloads' >&2 && \
     apt-get clean
 
@@ -116,7 +116,7 @@ ENV RUSTUP_HOME=/opt/rustup \
 # Make sure /rust-toolchain.toml has the same version
 ARG rust_version=1.66.1
 RUN curl --fail https://sh.rustup.rs -sSf \
-        | sh -s -- -y --default-toolchain ${rust_version}-x86_64-unknown-linux-gnu --no-modify-path && \
+    | sh -s -- -y --default-toolchain ${rust_version}-x86_64-unknown-linux-gnu --no-modify-path && \
     rustup default ${rust_version}-x86_64-unknown-linux-gnu && \
     rustup component add rls && \
     chown -R ubuntu.ubuntu ${RUSTUP_HOME} ${CARGO_HOME}
@@ -129,7 +129,7 @@ ENV CARGO_HOME=/cargo
 COPY docker /docker
 
 # Download ic-admin
-ARG ic_git_revision=28b13ef800046c4c7befc0a936411ba70b8f908e
+ARG ic_git_revision=5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d
 RUN  curl --fail https://download.dfinity.systems/ic/${ic_git_revision}/release/ic-admin.gz -o - | gunzip -c >| /usr/bin/ic-admin && \
     chmod +x /usr/bin/ic-admin
 

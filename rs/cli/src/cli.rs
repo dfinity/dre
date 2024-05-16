@@ -632,6 +632,8 @@ pub mod proposals {
         SnsAndCommunityFund = 14,
         /// Proposals related to the management of API Boundary Nodes
         ApiBoundaryNodeManagement = 15,
+        /// Proposals related to the management of API Boundary Nodes
+        SubnetRental = 16,
     }
 
     impl From<Topic> for TopicUpstream {
@@ -652,6 +654,7 @@ pub mod proposals {
                 Topic::IcOsVersionElection => Self::IcOsVersionElection,
                 Topic::SnsAndCommunityFund => Self::SnsAndCommunityFund,
                 Topic::ApiBoundaryNodeManagement => Self::ApiBoundaryNodeManagement,
+                Topic::SubnetRental => Self::SubnetRental,
             }
         }
     }
@@ -674,6 +677,7 @@ pub mod proposals {
                 TopicUpstream::IcOsVersionElection => Self::IcOsVersionElection,
                 TopicUpstream::SnsAndCommunityFund => Self::SnsAndCommunityFund,
                 TopicUpstream::ApiBoundaryNodeManagement => Self::ApiBoundaryNodeManagement,
+                TopicUpstream::SubnetRental => Self::SubnetRental,
             }
         }
     }

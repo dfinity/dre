@@ -15,7 +15,7 @@ use ic_sns_wasm::pb::v1::{
 use itertools::Itertools;
 use registry_canister::mutations::{
     complete_canister_migration::CompleteCanisterMigrationPayload,
-    do_add_api_boundary_node::AddApiBoundaryNodePayload,
+    do_add_api_boundary_nodes::AddApiBoundaryNodesPayload,
     do_add_node_operator::AddNodeOperatorPayload,
     do_add_nodes_to_subnet::AddNodesToSubnetPayload,
     do_bless_replica_version::BlessReplicaVersionPayload,
@@ -56,7 +56,7 @@ use ic_canisters::{
     CanisterClient, IcAgentCanisterClient,
 };
 use ic_nns_governance::{
-    governance::BitcoinSetConfigProposal,
+    governance::{BitcoinSetConfigProposal, SubnetRentalRequest},
     pb::v1::{proposal::Action, ListProposalInfo, ProposalInfo, ProposalStatus, Topic},
 };
 use log::{error, info, warn};
@@ -452,8 +452,8 @@ impl TryFrom<ProposalInfo> for Proposal {
                             )?,
                             // Unable to resolve rustls deps when adding `ic-nns-test-utils`
                             ic_nns_governance::pb::v1::NnsFunction::HardResetNnsRootToVersion => "".to_string(),
-                            ic_nns_governance::pb::v1::NnsFunction::AddApiBoundaryNode => {
-                                serde_json::to_string(&(Decode!(a.payload.as_slice(), AddApiBoundaryNodePayload)?))?
+                            ic_nns_governance::pb::v1::NnsFunction::AddApiBoundaryNodes => {
+                                serde_json::to_string(&(Decode!(a.payload.as_slice(), AddApiBoundaryNodesPayload)?))?
                             }
                             ic_nns_governance::pb::v1::NnsFunction::RemoveApiBoundaryNodes => {
                                 serde_json::to_string(&(Decode!(a.payload.as_slice(), RemoveApiBoundaryNodesPayload)?))?
@@ -489,6 +489,9 @@ impl TryFrom<ProposalInfo> for Proposal {
                             ic_nns_governance::pb::v1::NnsFunction::DeployHostosToSomeNodes => serde_json::to_string(
                                 &(Decode!(a.payload.as_slice(), UpdateNodesHostosVersionPayload)?),
                             )?,
+                            ic_nns_governance::pb::v1::NnsFunction::SubnetRentalRequest => {
+                                serde_json::to_string(&(Decode!(a.payload.as_slice(), SubnetRentalRequest)?))?
+                            }
                         }
                     }
                 }

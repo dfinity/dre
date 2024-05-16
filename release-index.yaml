@@ -35,6 +35,14 @@ rollout:
       wait_for_next_week: true
 
 releases:
+  - rc_name: rc--2024-05-15_23-02
+    versions:
+      # Successful qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/pipelines/1293055180
+      - name: base
+        version: 5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d
+      # Successful qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/pipelines/1293583561
+      - name: storage-layer
+        version: b6b2ef469bb00d38b48b789cae91251f27011b82
   - rc_name: rc--2024-05-09_23-02
     versions:
       # Successful qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/jobs/6822217391
@@ -43,6 +51,7 @@ releases:
       # Successful qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/jobs/6822856632
       - name: storage-layer
         version: 9866a6f5cb43c54e3d87fa02a4eb80d0f159dddb
+      # Successful qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/jobs/6839384204
       - name: hotfix-tecdsa
         version: 30bf45e80e6b5c1660cd12c6b554d4f1e85a2d11
   - rc_name: rc--2024-05-01_23-01

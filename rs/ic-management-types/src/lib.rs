@@ -455,7 +455,7 @@ pub enum Status {
 impl Status {
     pub fn from_str_from_dashboard(s: &str) -> Self {
         match s {
-            "UP" => Self::Healthy,
+            "UP" | "UNASSIGNED" => Self::Healthy,
             "DEGRADED" => Self::Degraded,
             "DOWN" => Self::Dead,
             _ => Self::Unknown,
