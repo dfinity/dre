@@ -7,23 +7,20 @@ import ipaddress
 import json
 import logging
 import os
-import pathlib
 import re
 import subprocess
 import typing
 from multiprocessing import cpu_count
 from multiprocessing import Pool
 
-from tenacity import retry
-from tenacity import stop_after_attempt
-from tenacity import wait_exponential
-
 from ic.agent import Agent
 from ic.certificate import lookup
 from ic.client import Client
 from ic.identity import Identity
 from ic.principal import Principal
-
+from tenacity import retry
+from tenacity import stop_after_attempt
+from tenacity import wait_exponential
 
 from pylib.ic_deployment import IcDeployment
 from pylib.ic_utils import download_ic_executable
@@ -52,7 +49,8 @@ class IcAdmin:
         stop=stop_after_attempt(5),
         wait=wait_exponential(multiplier=1, min=2, max=10),
     )
-    def _ic_admin_run(self, *cmd):
+    def ic_admin_run(self, *cmd):
+        """Run the ic-admin utility with the specified command and authentication set."""
         if cmd[0].startswith("propose"):
             if "HSM_PIN" in os.environ:
                 auth = ["--use-hsm", "--pin", os.environ["HSM_PIN"], "--slot", "4", "--key-id", "01"]
@@ -73,7 +71,7 @@ class IcAdmin:
     def get_topology(self):
         """Get the network topology."""
         logging.info("Querying the network topology")
-        return json.loads(self._ic_admin_run("get-topology"))
+        return json.loads(self.ic_admin_run("get-topology"))
 
     @functools.lru_cache(maxsize=32)
     def get_node_ids(self):
@@ -89,15 +87,20 @@ class IcAdmin:
                     node_ids[member] = subnet_id
         return node_ids
 
+    def get_blessed_versions(self):
+        """Query the blessed versions."""
+        logging.debug("NNS %s: get-blessed-replica-versions", self.nns_url)
+        return json.loads(self.ic_admin_run("get-blessed-replica-versions", "--json"))
+
     def get_subnet(self, subnet_num):
         """Query the subnet data."""
         logging.debug("NNS %s: get-subnet %s", self.nns_url, subnet_num)
-        return json.loads(self._ic_admin_run("get-subnet", str(subnet_num)))
+        return json.loads(self.ic_admin_run("get-subnet", str(subnet_num)))
 
     @functools.lru_cache(maxsize=32)
     def _get_subnet_list(self):
         logging.debug("NNS %s: get-subnet-list", self.nns_url)
-        return json.loads(self._ic_admin_run("get-subnet-list"))
+        return json.loads(self.ic_admin_run("get-subnet-list"))
 
     def get_subnets(self):
         """Query the network topology and extract subnets."""
@@ -122,7 +125,7 @@ class IcAdmin:
 
     def _get_node(self, node_id):
         logging.debug("NNS %s: getting node info: %s", self.nns_url, node_id)
-        return self._ic_admin_run("get-node", node_id)
+        return self.ic_admin_run("get-node", node_id)
 
     def node_get_ipv6(self, node_id):
         """Return the IPv6 address for the provided node ID."""
@@ -133,7 +136,7 @@ class IcAdmin:
 
     def get_nns_public_key(self, out_filename):
         """Save the NNS public key in the specified out_filename."""
-        self._ic_admin_run("get-subnet-public-key", "0", out_filename)
+        self.ic_admin_run("get-subnet-public-key", "0", out_filename)
 
 
 def canister_version(agent: Agent, canister_principal: str) -> str:
@@ -152,6 +155,6 @@ def canister_version(agent: Agent, canister_principal: str) -> str:
 
 if __name__ == "__main__":
     # One can run some simple one-off tests here, e.g.:
-    ic_admin = IcAdmin("https://ic0.app", git_revision="e5c6356b5a752a7f5912de133000ae60e0e25aaf")
+    ic_admin = IcAdmin("https://ic0.app", git_revision="5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d")
 
     print(ic_admin.get_subnet_replica_versions())
