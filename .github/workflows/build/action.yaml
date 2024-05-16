@@ -14,7 +14,7 @@ runs:
       run: |
         set -x
         sudo rm -rf ~/.cache/bazel
-        rm -rf ~/work/_temp/*
+        rm -rf /home/runner/work/_temp/*/cache.tzst
         function bazel_build_auto_repin() {
             local MYTMPDIR="$(mktemp -d)"
             trap 'rm -rf -- "$MYTMPDIR"' EXIT
