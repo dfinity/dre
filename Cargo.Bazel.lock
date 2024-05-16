@@ -1,5 +1,5 @@
 {
-  "checksum": "5235d65521f1ce9bdebaa4a2ef8dcbbd22db159d5ec3ea6e8d2e7bb878a07b00",
+  "checksum": "c00bb631ec3542a209120b2d90500a100e415b96d15634e49da36ef83acb4c9c",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -9298,6 +9298,10 @@
             {
               "id": "ic-metrics-encoder 1.1.1",
               "target": "ic_metrics_encoder"
+            },
+            {
+              "id": "ic-nervous-system-common 0.9.0",
+              "target": "ic_nervous_system_common"
             },
             {
               "id": "ic-nervous-system-governance 0.0.1",
@@ -20653,81 +20657,6 @@
       },
       "license": null
     },
-    "ic-crypto-tls-interfaces 0.9.0": {
-      "name": "ic-crypto-tls-interfaces",
-      "version": "0.9.0",
-      "repository": {
-        "Git": {
-          "remote": "https://github.com/dfinity/ic.git",
-          "commitish": {
-            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
-          },
-          "strip_prefix": "rs/crypto/tls_interfaces"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "ic_crypto_tls_interfaces",
-            "crate_root": "src/lib.rs",
-            "srcs": [
-              "**/*.rs"
-            ]
-          }
-        }
-      ],
-      "library_target_name": "ic_crypto_tls_interfaces",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "ic-protobuf 0.9.0",
-              "target": "ic_protobuf"
-            },
-            {
-              "id": "ic-types 0.9.0",
-              "target": "ic_types"
-            },
-            {
-              "id": "rustls 0.21.12",
-              "target": "rustls"
-            },
-            {
-              "id": "serde 1.0.197",
-              "target": "serde"
-            },
-            {
-              "id": "thiserror 1.0.58",
-              "target": "thiserror"
-            },
-            {
-              "id": "tokio 1.37.0",
-              "target": "tokio"
-            },
-            {
-              "id": "x509-parser 0.15.1",
-              "target": "x509_parser"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2021",
-        "proc_macro_deps": {
-          "common": [
-            {
-              "id": "async-trait 0.1.79",
-              "target": "async_trait"
-            }
-          ],
-          "selects": {}
-        },
-        "version": "0.9.0"
-      },
-      "license": null
-    },
     "ic-crypto-tree-hash 0.9.0": {
       "name": "ic-crypto-tree-hash",
       "version": "0.9.0",
@@ -21108,28 +21037,12 @@
               "target": "ic_config"
             },
             {
-              "id": "ic-crypto-tls-interfaces 0.9.0",
-              "target": "ic_crypto_tls_interfaces"
-            },
-            {
-              "id": "ic-interfaces-registry 0.9.0",
-              "target": "ic_interfaces_registry"
-            },
-            {
               "id": "ic-metrics 0.9.0",
               "target": "ic_metrics"
             },
             {
-              "id": "ic-types 0.9.0",
-              "target": "ic_types"
-            },
-            {
               "id": "prometheus 0.13.3",
               "target": "prometheus"
-            },
-            {
-              "id": "serde 1.0.197",
-              "target": "serde"
             },
             {
               "id": "slog 2.7.0",
