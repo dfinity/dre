@@ -1,9 +1,11 @@
 import os
+from typing import Callable
+
 from dotenv import load_dotenv
 from pydantic_yaml import parse_yaml_raw_as
 from pydiscourse import DiscourseClient
-from release_index import Release, Model
-from typing import Callable
+from release_index import Model
+from release_index import Release
 from util import version_name
 
 
@@ -22,19 +24,28 @@ Here is a summary of the changes since the last release:
 {changelog}
 """
 
+
 class ReleaseCandidateForumPost:
+    """A post in a release candidate forum topic."""
+
     def __init__(self, version_name: str, changelog: str | None, proposal: int | None):
+        """Create a new post."""
         self.version_name = version_name
         self.changelog = changelog
         self.proposal = proposal
 
 
 class ReleaseCandidateForumTopic:
+    """A topic in the governance category for a release candidate."""
+
     def __init__(self, release: Release, client: DiscourseClient, governance_category):
+        """Create a new topic."""
         self.release = release
         self.client = client
         self.governance_category = governance_category
-        topic = next((t for t in client.topics_by(self.client.api_username) if self.release.rc_name in t["title"]), None)
+        topic = next(
+            (t for t in client.topics_by(self.client.api_username) if self.release.rc_name in t["title"]), None
+        )
         if topic:
             self.topic_id = topic["id"]
         else:
@@ -50,6 +61,7 @@ class ReleaseCandidateForumTopic:
                 raise RuntimeError("post not created")
 
     def created_posts(self):
+        """Return a list of posts created by the current user."""
         topic_posts = self.client.topic_posts(topic_id=self.topic_id)
         if not topic_posts:
             raise RuntimeError("failed to list topic posts")
@@ -57,14 +69,15 @@ class ReleaseCandidateForumTopic:
         return [p for p in topic_posts.get("post_stream", {}).get("posts", {}) if p["yours"]]
 
     def update(self, changelog: Callable[[str], str | None], proposal: Callable[[str], int | None]):
+        """Update the topic with the latest release information."""
         posts = [
-                ReleaseCandidateForumPost(
-                    version_name=version_name(self.release.rc_name, v.name),
-                    changelog=changelog(v.version),
-                    proposal=proposal(v.version),
-                )
-                for v in self.release.versions
-            ]
+            ReleaseCandidateForumPost(
+                version_name=version_name(self.release.rc_name, v.name),
+                changelog=changelog(v.version),
+                proposal=proposal(v.version),
+            )
+            for v in self.release.versions
+        ]
 
         created_posts = self.created_posts()
         for i, p in enumerate(posts):
@@ -80,14 +93,17 @@ class ReleaseCandidateForumTopic:
                 )
 
     def post_url(self, version: str):
-        post_index = [ i for i, v in enumerate(self.release.versions) if v.version == version ][0]
+        """Return the URL of the post for the given version."""
+        post_index = [i for i, v in enumerate(self.release.versions) if v.version == version][0]
         post = self.client.post_by_id(post_id=self.created_posts()[post_index]["id"])
         if not post:
             raise RuntimeError("failed to find post")
 
-        return f"{self.client.host.removesuffix("/")}/t/{post['topic_slug']}/{post['topic_id']}/{post["post_number"]}"
+        host = self.client.host.removesuffix("/")
+        return f"{host}/t/{post['topic_slug']}/{post['topic_id']}/{post['post_number']}"
 
     def add_version(self, content: str):
+        """Add a new version to the topic."""
         self.client.create_post(
             topic_id=self.topic_id,
             content=content,
@@ -95,15 +111,20 @@ class ReleaseCandidateForumTopic:
 
 
 class ReleaseCandidateForumClient:
+    """A client for interacting with release candidate forum topics."""
+
     def __init__(self, discourse_client: DiscourseClient):
+        """Create a new client."""
         self.discourse_client = discourse_client
         self.governance_category = next(c for c in self.discourse_client.categories() if c["name"] == "Governance")
 
     def get_or_create(self, release: Release) -> ReleaseCandidateForumTopic:
+        """Get or create a forum topic for the given release."""
         return ReleaseCandidateForumTopic(
-            release=release, client=self.discourse_client, governance_category=self.governance_category,
+            release=release,
+            client=self.discourse_client,
+            governance_category=self.governance_category,
         )
-
 
 
 def main():
