@@ -1,5 +1,5 @@
 {
-  "checksum": "a23efd2a9223be99e707de45f95191617e14ea319d026e8ae5eff0ec08ad9243",
+  "checksum": "c00bb631ec3542a209120b2d90500a100e415b96d15634e49da36ef83acb4c9c",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -3358,7 +3358,7 @@
               "target": "http_body_util"
             },
             {
-              "id": "hyper 1.2.0",
+              "id": "hyper 1.3.1",
               "target": "hyper"
             },
             {
@@ -9207,7 +9207,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/nns/cmc"
         }
@@ -9298,6 +9298,10 @@
             {
               "id": "ic-metrics-encoder 1.1.1",
               "target": "ic_metrics_encoder"
+            },
+            {
+              "id": "ic-nervous-system-common 0.9.0",
+              "target": "ic_nervous_system_common"
             },
             {
               "id": "ic-nervous-system-governance 0.0.1",
@@ -10783,7 +10787,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/rust_canisters/dfn_candid"
         }
@@ -10841,7 +10845,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/rust_canisters/dfn_core"
         }
@@ -10887,7 +10891,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/rust_canisters/dfn_http"
         }
@@ -10945,7 +10949,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/rust_canisters/dfn_http_metrics"
         }
@@ -11003,7 +11007,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/rust_canisters/dfn_protobuf"
         }
@@ -12179,6 +12183,7 @@
             "default",
             "digest",
             "fast",
+            "hazmat",
             "merlin",
             "pem",
             "pkcs8",
@@ -13463,7 +13468,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/crypto/internal/crypto_lib/threshold_sig/tecdsa/fe-derive"
         }
@@ -16872,13 +16877,13 @@
       },
       "license": "MIT"
     },
-    "hyper 1.2.0": {
+    "hyper 1.3.1": {
       "name": "hyper",
-      "version": "1.2.0",
+      "version": "1.3.1",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/hyper/1.2.0/download",
-          "sha256": "186548d73ac615b32a73aafe38fb4f56c0d340e110e5a200bcadbaf2e199263a"
+          "url": "https://static.crates.io/crates/hyper/1.3.1/download",
+          "sha256": "fe575dd17d0862a9a33781c8c4696a55c320909004a67a00fb286ba8b1bc496d"
         }
       },
       "targets": [
@@ -16966,7 +16971,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "1.2.0"
+        "version": "1.3.1"
       },
       "license": "MIT"
     },
@@ -17029,7 +17034,7 @@
               "target": "log"
             },
             {
-              "id": "rustls 0.21.10",
+              "id": "rustls 0.21.12",
               "target": "rustls"
             },
             {
@@ -17194,7 +17199,7 @@
               "target": "http_body_util"
             },
             {
-              "id": "hyper 1.2.0",
+              "id": "hyper 1.3.1",
               "target": "hyper"
             },
             {
@@ -17286,7 +17291,7 @@
               "target": "http_body"
             },
             {
-              "id": "hyper 1.2.0",
+              "id": "hyper 1.3.1",
               "target": "hyper"
             },
             {
@@ -17465,7 +17470,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/monitoring/adapter_metrics"
         }
@@ -17539,7 +17544,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/monitoring/adapter_metrics_service"
         }
@@ -17809,7 +17814,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/async_utils"
         }
@@ -17887,7 +17892,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/types/base_types"
         }
@@ -18011,7 +18016,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/bitcoin/types/internal"
         }
@@ -18073,7 +18078,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/canister_client"
         }
@@ -18153,7 +18158,7 @@
               "target": "prost"
             },
             {
-              "id": "rustls 0.21.10",
+              "id": "rustls 0.21.12",
               "target": "rustls"
             },
             {
@@ -18191,7 +18196,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/canister_client/sender"
         }
@@ -18253,7 +18258,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/rust_canisters/canister_log"
         }
@@ -18295,7 +18300,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/rust_canisters/canister_profiler"
         }
@@ -18463,7 +18468,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/rust_canisters/http_types"
         }
@@ -18513,7 +18518,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/canonical_state"
         }
@@ -18624,7 +18629,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/canonical_state/tree_hash"
         }
@@ -18919,7 +18924,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/certification"
         }
@@ -19048,7 +19053,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/canonical_state/certification_version"
         }
@@ -19146,7 +19151,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/config"
         }
@@ -19224,7 +19229,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/constants"
         }
@@ -19257,7 +19262,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/monitoring/context_logger"
         }
@@ -19299,7 +19304,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/crypto/ecdsa_secp256k1"
         }
@@ -19365,7 +19370,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/crypto/ed25519"
         }
@@ -19397,12 +19402,20 @@
               "target": "ed25519_dalek"
             },
             {
+              "id": "hkdf 0.12.4",
+              "target": "hkdf"
+            },
+            {
               "id": "pem 1.1.1",
               "target": "pem"
             },
             {
               "id": "rand 0.8.5",
               "target": "rand"
+            },
+            {
+              "id": "sha2 0.10.8",
+              "target": "sha2"
             },
             {
               "id": "zeroize 1.7.0",
@@ -19423,7 +19436,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/crypto/getrandom_for_wasm"
         }
@@ -19473,7 +19486,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/crypto/interfaces/sig_verification"
         }
@@ -19515,7 +19528,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/crypto/internal/crypto_lib/basic_sig/der_utils"
         }
@@ -19565,7 +19578,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/crypto/internal/crypto_lib/basic_sig/ed25519"
         }
@@ -19663,7 +19676,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/crypto/internal/crypto_lib/bls12_381/type"
         }
@@ -19750,7 +19763,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/crypto/internal/crypto_lib/hmac"
         }
@@ -19792,7 +19805,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/crypto/internal/crypto_lib/multi_sig/bls12_381"
         }
@@ -19878,7 +19891,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/crypto/internal/crypto_lib/seed"
         }
@@ -19940,7 +19953,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/crypto/internal/crypto_lib/sha2"
         }
@@ -19982,7 +19995,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/crypto/internal/crypto_lib/threshold_sig/bls12_381"
         }
@@ -20101,7 +20114,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/crypto/internal/crypto_lib/threshold_sig/tecdsa"
         }
@@ -20236,7 +20249,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/crypto/internal/crypto_lib/types"
         }
@@ -20319,7 +20332,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/crypto/node_key_validation"
         }
@@ -20401,7 +20414,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/crypto/secrets_containers"
         }
@@ -20447,7 +20460,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/crypto/sha2"
         }
@@ -20489,7 +20502,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/crypto/test_utils/keys"
         }
@@ -20539,7 +20552,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/crypto/test_utils/reproducible_rng"
         }
@@ -20585,7 +20598,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/crypto/node_key_validation/tls_cert_validation"
         }
@@ -20644,81 +20657,6 @@
       },
       "license": null
     },
-    "ic-crypto-tls-interfaces 0.9.0": {
-      "name": "ic-crypto-tls-interfaces",
-      "version": "0.9.0",
-      "repository": {
-        "Git": {
-          "remote": "https://github.com/dfinity/ic.git",
-          "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
-          },
-          "strip_prefix": "rs/crypto/tls_interfaces"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "ic_crypto_tls_interfaces",
-            "crate_root": "src/lib.rs",
-            "srcs": [
-              "**/*.rs"
-            ]
-          }
-        }
-      ],
-      "library_target_name": "ic_crypto_tls_interfaces",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "ic-protobuf 0.9.0",
-              "target": "ic_protobuf"
-            },
-            {
-              "id": "ic-types 0.9.0",
-              "target": "ic_types"
-            },
-            {
-              "id": "serde 1.0.197",
-              "target": "serde"
-            },
-            {
-              "id": "thiserror 1.0.58",
-              "target": "thiserror"
-            },
-            {
-              "id": "tokio 1.37.0",
-              "target": "tokio"
-            },
-            {
-              "id": "tokio-rustls 0.24.1",
-              "target": "tokio_rustls"
-            },
-            {
-              "id": "x509-parser 0.15.1",
-              "target": "x509_parser"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2021",
-        "proc_macro_deps": {
-          "common": [
-            {
-              "id": "async-trait 0.1.79",
-              "target": "async_trait"
-            }
-          ],
-          "selects": {}
-        },
-        "version": "0.9.0"
-      },
-      "license": null
-    },
     "ic-crypto-tree-hash 0.9.0": {
       "name": "ic-crypto-tree-hash",
       "version": "0.9.0",
@@ -20726,7 +20664,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/crypto/tree_hash"
         }
@@ -20792,7 +20730,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/crypto/utils/basic_sig"
         }
@@ -20842,7 +20780,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/crypto/utils/ni_dkg"
         }
@@ -20892,7 +20830,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/crypto/utils/threshold_sig"
         }
@@ -20946,7 +20884,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/crypto/utils/threshold_sig_der"
         }
@@ -21000,7 +20938,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/types/error_types"
         }
@@ -21063,7 +21001,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/http_endpoints/metrics"
         }
@@ -21099,28 +21037,12 @@
               "target": "ic_config"
             },
             {
-              "id": "ic-crypto-tls-interfaces 0.9.0",
-              "target": "ic_crypto_tls_interfaces"
-            },
-            {
-              "id": "ic-interfaces-registry 0.9.0",
-              "target": "ic_interfaces_registry"
-            },
-            {
               "id": "ic-metrics 0.9.0",
               "target": "ic_metrics"
             },
             {
-              "id": "ic-types 0.9.0",
-              "target": "ic_types"
-            },
-            {
               "id": "prometheus 0.13.3",
               "target": "prometheus"
-            },
-            {
-              "id": "serde 1.0.197",
-              "target": "serde"
             },
             {
               "id": "slog 2.7.0",
@@ -21157,7 +21079,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/rosetta-api/icrc1"
         }
@@ -21255,7 +21177,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/rosetta-api/icrc1/index-ng"
         }
@@ -21384,7 +21306,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/rosetta-api/icrc1/ledger"
         }
@@ -21559,7 +21481,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/rosetta-api/icrc1/tokens_u64"
         }
@@ -21617,7 +21539,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/interfaces"
         }
@@ -21719,7 +21641,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/interfaces/registry"
         }
@@ -21769,7 +21691,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/interfaces/state_manager"
         }
@@ -21823,7 +21745,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/rosetta-api/ledger_canister_core"
         }
@@ -21910,7 +21832,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/rosetta-api/ledger_core"
         }
@@ -21968,7 +21890,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "packages/ic-ledger-hash-of"
         }
@@ -22018,7 +21940,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/monitoring/logger"
         }
@@ -22180,7 +22102,7 @@
               "target": "gitlab"
             },
             {
-              "id": "hyper 0.14.28",
+              "id": "hyper 1.3.1",
               "target": "hyper"
             },
             {
@@ -22340,7 +22262,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/types/management_canister_types"
         }
@@ -22543,7 +22465,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/monitoring/metrics"
         }
@@ -22642,7 +22564,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/nervous_system/clients"
         }
@@ -22670,6 +22592,10 @@
               "target": "candid"
             },
             {
+              "id": "dfn_candid 0.9.0",
+              "target": "dfn_candid"
+            },
+            {
               "id": "dfn_core 0.9.0",
               "target": "dfn_core"
             },
@@ -22682,8 +22608,16 @@
               "target": "ic_error_types"
             },
             {
+              "id": "ic-ledger-core 0.9.0",
+              "target": "ic_ledger_core"
+            },
+            {
               "id": "ic-management-canister-types 0.9.0",
               "target": "ic_management_canister_types"
+            },
+            {
+              "id": "ic-nervous-system-common 0.9.0",
+              "target": "ic_nervous_system_common"
             },
             {
               "id": "ic-nervous-system-proxied-canister-calls-tracker 0.9.0",
@@ -22692,6 +22626,14 @@
             {
               "id": "ic-nervous-system-runtime 0.9.0",
               "target": "ic_nervous_system_runtime"
+            },
+            {
+              "id": "icrc-ledger-client 0.1.2",
+              "target": "icrc_ledger_client"
+            },
+            {
+              "id": "icrc-ledger-types 0.1.5",
+              "target": "icrc_ledger_types"
             },
             {
               "id": "num-traits 0.2.18",
@@ -22725,7 +22667,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/nervous_system/collections/union_multi_map"
         }
@@ -22758,7 +22700,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/nervous_system/common"
         }
@@ -22940,7 +22882,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/nervous_system/common/build_metadata"
         }
@@ -22973,7 +22915,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/nervous_system/common/test_keys"
         }
@@ -23035,7 +22977,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/nervous_system/governance"
         }
@@ -23093,7 +23035,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/nervous_system/lock"
         }
@@ -23126,7 +23068,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/nervous_system/proto"
         }
@@ -23188,7 +23130,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/nervous_system/proxied_canister_calls_tracker"
         }
@@ -23230,7 +23172,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/nervous_system/root"
         }
@@ -23304,7 +23246,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/nervous_system/runtime"
         }
@@ -23371,7 +23313,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/nervous_system/string"
         }
@@ -23404,7 +23346,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/nervous_system/neurons_fund"
         }
@@ -23471,7 +23413,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/nns/common"
         }
@@ -23581,7 +23523,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/nns/constants"
         }
@@ -23623,7 +23565,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/nns/governance"
         }
@@ -23916,7 +23858,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/nns/gtc_accounts"
         }
@@ -23949,7 +23891,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/nns/handlers/root/interface"
         }
@@ -24024,7 +23966,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/protobuf"
         }
@@ -24094,7 +24036,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/registry/client"
         }
@@ -24164,7 +24106,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/registry/fake"
         }
@@ -24210,7 +24152,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/registry/helpers"
         }
@@ -24296,7 +24238,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/registry/proto"
         }
@@ -24338,7 +24280,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/registry/keys"
         }
@@ -24396,7 +24338,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/registry/local_registry"
         }
@@ -24478,7 +24420,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/registry/local_store"
         }
@@ -24536,7 +24478,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/registry/local_store/artifacts"
         }
@@ -24569,7 +24511,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/registry/nns_data_provider"
         }
@@ -24659,7 +24601,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/registry/provisional_whitelist"
         }
@@ -24705,7 +24647,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/registry/routing_table"
         }
@@ -24759,7 +24701,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/registry/subnet_features"
         }
@@ -24813,7 +24755,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/registry/subnet_type"
         }
@@ -24876,7 +24818,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/registry/transport"
         }
@@ -24934,7 +24876,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/replicated_state"
         }
@@ -25129,7 +25071,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/sns/governance"
         }
@@ -25399,7 +25341,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/sns/governance/proposal_criticality"
         }
@@ -25441,7 +25383,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/sns/governance/proposals_amount_total_limit"
         }
@@ -25500,7 +25442,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/sns/governance/token_valuation"
         }
@@ -25599,7 +25541,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/sns/init"
         }
@@ -25717,7 +25659,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/sns/root"
         }
@@ -25871,7 +25813,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/sns/swap"
         }
@@ -26061,7 +26003,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/sns/swap/proto_library"
         }
@@ -26131,7 +26073,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/nns/sns-wasm"
         }
@@ -26337,7 +26279,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/sys"
         }
@@ -26504,7 +26446,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/types/types"
         }
@@ -26754,7 +26696,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/utils"
         }
@@ -26812,7 +26754,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/utils/thread"
         }
@@ -26976,7 +26918,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/types/wasm_types"
         }
@@ -27277,7 +27219,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/rosetta-api/icp_ledger"
         }
@@ -27412,7 +27354,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "packages/icrc-ledger-client"
         }
@@ -27471,7 +27413,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "packages/icrc-ledger-types"
         }
@@ -32412,7 +32354,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/rust_canisters/on_wire"
         }
@@ -34175,7 +34117,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/phantom_newtype"
         }
@@ -37341,7 +37283,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/registry/canister"
         }
@@ -37785,7 +37727,7 @@
                 "target": "pin_project_lite"
               },
               {
-                "id": "rustls 0.21.10",
+                "id": "rustls 0.21.12",
                 "target": "rustls"
               },
               {
@@ -37958,7 +37900,7 @@
                 "target": "http_body_util"
               },
               {
-                "id": "hyper 1.2.0",
+                "id": "hyper 1.3.1",
                 "target": "hyper"
               },
               {
@@ -39215,13 +39157,13 @@
       },
       "license": "Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT"
     },
-    "rustls 0.21.10": {
+    "rustls 0.21.12": {
       "name": "rustls",
-      "version": "0.21.10",
+      "version": "0.21.12",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/rustls/0.21.10/download",
-          "sha256": "f9d5a6813c0759e4609cd494e8e725babae6a2ca7b62a5536a13daaec6fcb7ba"
+          "url": "https://static.crates.io/crates/rustls/0.21.12/download",
+          "sha256": "3f56a14d1f48b391359b22f731fd4bd7e43c97f3c50eee276f3aa09c94784d3e"
         }
       },
       "targets": [
@@ -39270,7 +39212,7 @@
               "target": "ring"
             },
             {
-              "id": "rustls 0.21.10",
+              "id": "rustls 0.21.12",
               "target": "build_script_build"
             },
             {
@@ -39285,7 +39227,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.21.10"
+        "version": "0.21.12"
       },
       "build_script_attrs": {
         "data_glob": [
@@ -40890,10 +40832,6 @@
             {
               "id": "futures 0.3.30",
               "target": "futures"
-            },
-            {
-              "id": "hyper 0.14.28",
-              "target": "hyper"
             },
             {
               "id": "ic-interfaces-registry 0.9.0",
@@ -44669,17 +44607,103 @@
         ],
         "crate_features": {
           "common": [
-            "dangerous_configuration",
-            "default",
             "logging",
             "tls12"
           ],
-          "selects": {}
+          "selects": {
+            "aarch64-apple-darwin": [
+              "default"
+            ],
+            "aarch64-apple-ios": [
+              "default"
+            ],
+            "aarch64-apple-ios-sim": [
+              "default"
+            ],
+            "aarch64-fuchsia": [
+              "default"
+            ],
+            "aarch64-linux-android": [
+              "default"
+            ],
+            "aarch64-pc-windows-msvc": [
+              "default"
+            ],
+            "aarch64-unknown-linux-gnu": [
+              "default"
+            ],
+            "arm-unknown-linux-gnueabi": [
+              "default"
+            ],
+            "armv7-linux-androideabi": [
+              "default"
+            ],
+            "armv7-unknown-linux-gnueabi": [
+              "default"
+            ],
+            "i686-apple-darwin": [
+              "default"
+            ],
+            "i686-linux-android": [
+              "default"
+            ],
+            "i686-pc-windows-msvc": [
+              "default"
+            ],
+            "i686-unknown-freebsd": [
+              "default"
+            ],
+            "i686-unknown-linux-gnu": [
+              "default"
+            ],
+            "powerpc-unknown-linux-gnu": [
+              "default"
+            ],
+            "riscv32imc-unknown-none-elf": [
+              "default"
+            ],
+            "riscv64gc-unknown-none-elf": [
+              "default"
+            ],
+            "s390x-unknown-linux-gnu": [
+              "default"
+            ],
+            "thumbv7em-none-eabi": [
+              "default"
+            ],
+            "thumbv8m.main-none-eabi": [
+              "default"
+            ],
+            "x86_64-apple-darwin": [
+              "default"
+            ],
+            "x86_64-apple-ios": [
+              "default"
+            ],
+            "x86_64-fuchsia": [
+              "default"
+            ],
+            "x86_64-linux-android": [
+              "default"
+            ],
+            "x86_64-pc-windows-msvc": [
+              "default"
+            ],
+            "x86_64-unknown-freebsd": [
+              "default"
+            ],
+            "x86_64-unknown-linux-gnu": [
+              "default"
+            ],
+            "x86_64-unknown-none": [
+              "default"
+            ]
+          }
         },
         "deps": {
           "common": [
             {
-              "id": "rustls 0.21.10",
+              "id": "rustls 0.21.12",
               "target": "rustls"
             },
             {
@@ -45644,7 +45668,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "b531d2e0a7438d61ce14915a2d0b43684ff7d667"
+            "Rev": "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
           },
           "strip_prefix": "rs/tree_deserializer"
         }
@@ -49448,7 +49472,7 @@
               "target": "http_body_util"
             },
             {
-              "id": "hyper 1.2.0",
+              "id": "hyper 1.3.1",
               "target": "hyper"
             },
             {

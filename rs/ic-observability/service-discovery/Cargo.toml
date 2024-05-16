@@ -10,7 +10,6 @@ anyhow = { workspace = true }
 crossbeam = { workspace = true }
 crossbeam-channel = { workspace = true }
 futures = { workspace = true }
-hyper = { workspace = true }
 ic-interfaces-registry = { workspace = true }
 ic-metrics = { workspace = true }
 ic-protobuf = { workspace = true }

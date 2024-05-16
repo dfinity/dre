@@ -85,8 +85,7 @@ fn main() -> Result<()> {
         exporter: Exporter::Http(cli_args.metrics_listen_addr),
         ..Default::default()
     };
-    let _metrics_endpoint =
-        MetricsHttpEndpoint::new_insecure(rt.handle().clone(), exporter_config, metrics_registry, &log);
+    let _metrics_endpoint = MetricsHttpEndpoint::new(rt.handle().clone(), exporter_config, metrics_registry, &log);
 
     let (update_signal_sender, update_signal_rcv) = crossbeam::channel::bounded::<()>(0);
     let loop_fn = make_poll_loop(
