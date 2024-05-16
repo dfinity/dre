@@ -223,7 +223,13 @@ pub async fn filter_proposals(
 
     let mut remaining = *limit;
     let mut proposals: Vec<Proposal> = vec![];
-    let mut payload = ListProposalInfo { ..Default::default() };
+    let mut payload = ListProposalInfo {
+        before_proposal: None,
+        exclude_topic: exclude_topic.clone().into_iter().map(|t| t.into()).collect_vec(),
+        include_status: statuses.clone().into_iter().map(|s| s.into()).collect_vec(),
+        include_all_manage_neuron_proposals: Some(true),
+        ..Default::default()
+    };
     info!(
         "Querying {} proposals where status is {} and topic is {}",
         limit,
