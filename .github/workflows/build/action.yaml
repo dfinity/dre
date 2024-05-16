@@ -13,7 +13,6 @@ runs:
       id: build
       run: |
         set -x
-        sudo rm -rf ~/.cache/bazel
         rm -rf /home/runner/work/_temp/*/cache.tzst
         function bazel_build_auto_repin() {
             local MYTMPDIR="$(mktemp -d)"
