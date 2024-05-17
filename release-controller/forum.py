@@ -92,7 +92,7 @@ class ReleaseCandidateForumTopic:
                     # log the complete URL of the post
                     logging.info("post up to date: %s", self.post_to_url(post))
                     continue
-                if post["can_edit"]:
+                elif post["can_edit"]:
                     logging.info("updating post %s", post_id)
                     self.client.update_post(post_id=post_id, content=content_expected)
                 else:
