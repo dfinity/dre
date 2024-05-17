@@ -1,5 +1,5 @@
 {
-  "checksum": "c00bb631ec3542a209120b2d90500a100e415b96d15634e49da36ef83acb4c9c",
+  "checksum": "b76ca6e07b594e6c690a4f7a63269eecaae962d8a2bcb5976e90b3420b116d04",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -6228,7 +6228,7 @@
               "target": "pretty_env_logger"
             },
             {
-              "id": "reqwest 0.12.2",
+              "id": "reqwest 0.12.4",
               "target": "reqwest"
             },
             {
@@ -11705,6 +11705,10 @@
               "target": "cryptoki"
             },
             {
+              "id": "cycles-minting-canister 0.9.0",
+              "target": "cycles_minting_canister"
+            },
+            {
               "id": "dialoguer 0.11.0",
               "target": "dialoguer"
             },
@@ -11749,6 +11753,14 @@
               "target": "ic_interfaces_registry"
             },
             {
+              "id": "ic-nervous-system-clients 0.0.1",
+              "target": "ic_nervous_system_clients"
+            },
+            {
+              "id": "ic-nervous-system-root 0.9.0",
+              "target": "ic_nervous_system_root"
+            },
+            {
               "id": "ic-nns-common 0.9.0",
               "target": "ic_nns_common"
             },
@@ -11775,6 +11787,10 @@
             {
               "id": "ic-registry-subnet-type 0.9.0",
               "target": "ic_registry_subnet_type"
+            },
+            {
+              "id": "ic-sns-wasm 1.0.0",
+              "target": "ic_sns_wasm"
             },
             {
               "id": "ic-sys 0.9.0",
@@ -11809,7 +11825,7 @@
               "target": "registry_canister"
             },
             {
-              "id": "reqwest 0.12.2",
+              "id": "reqwest 0.12.4",
               "target": "reqwest"
             },
             {
@@ -11909,6 +11925,10 @@
             {
               "id": "ic-base-types 0.9.0",
               "target": "ic_base_types"
+            },
+            {
+              "id": "ic-nns-governance 0.9.0",
+              "target": "ic_nns_governance"
             },
             {
               "id": "url 2.5.0",
@@ -16850,7 +16870,7 @@
               "target": "pin_project_lite"
             },
             {
-              "id": "socket2 0.5.6",
+              "id": "socket2 0.4.10",
               "target": "socket2"
             },
             {
@@ -22194,7 +22214,7 @@
               "target": "registry_canister"
             },
             {
-              "id": "reqwest 0.12.2",
+              "id": "reqwest 0.12.4",
               "target": "reqwest"
             },
             {
@@ -22409,7 +22429,7 @@
               "target": "registry_canister"
             },
             {
-              "id": "reqwest 0.12.2",
+              "id": "reqwest 0.12.4",
               "target": "reqwest"
             },
             {
@@ -29747,7 +29767,7 @@
               "target": "pretty_env_logger"
             },
             {
-              "id": "reqwest 0.12.2",
+              "id": "reqwest 0.12.4",
               "target": "reqwest"
             },
             {
@@ -30756,7 +30776,7 @@
               "target": "regex"
             },
             {
-              "id": "reqwest 0.12.2",
+              "id": "reqwest 0.12.4",
               "target": "reqwest"
             },
             {
@@ -31299,7 +31319,7 @@
               "target": "rand"
             },
             {
-              "id": "reqwest 0.12.2",
+              "id": "reqwest 0.12.4",
               "target": "reqwest"
             },
             {
@@ -37796,13 +37816,13 @@
       },
       "license": "MIT OR Apache-2.0"
     },
-    "reqwest 0.12.2": {
+    "reqwest 0.12.4": {
       "name": "reqwest",
-      "version": "0.12.2",
+      "version": "0.12.4",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/reqwest/0.12.2/download",
-          "sha256": "2d66674f2b6fb864665eea7a3c1ac4e3dfacd2fda83cf6f935a612e01b0e3338"
+          "url": "https://static.crates.io/crates/reqwest/0.12.4/download",
+          "sha256": "566cafdd92868e0939d3fb961bd0dc25fcfaaed179291093b3d43e6b3150ea10"
         }
       },
       "targets": [
@@ -37837,7 +37857,7 @@
         "deps": {
           "common": [
             {
-              "id": "base64 0.21.7",
+              "id": "base64 0.22.0",
               "target": "base64"
             },
             {
@@ -37941,7 +37961,7 @@
                 "target": "pin_project_lite"
               },
               {
-                "id": "rustls-pemfile 1.0.4",
+                "id": "rustls-pemfile 2.1.2",
                 "target": "rustls_pemfile"
               },
               {
@@ -37979,14 +37999,14 @@
             ],
             "cfg(windows)": [
               {
-                "id": "winreg 0.50.0",
+                "id": "winreg 0.52.0",
                 "target": "winreg"
               }
             ]
           }
         },
         "edition": "2021",
-        "version": "0.12.2"
+        "version": "0.12.4"
       },
       "license": "MIT OR Apache-2.0"
     },
@@ -38395,7 +38415,7 @@
               "target": "registry_canister"
             },
             {
-              "id": "reqwest 0.12.2",
+              "id": "reqwest 0.12.4",
               "target": "reqwest"
             },
             {
@@ -39341,6 +39361,94 @@
         "version": "1.0.4"
       },
       "license": "Apache-2.0 OR ISC OR MIT"
+    },
+    "rustls-pemfile 2.1.2": {
+      "name": "rustls-pemfile",
+      "version": "2.1.2",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/rustls-pemfile/2.1.2/download",
+          "sha256": "29993a25686778eb88d4189742cd713c9bce943bc54251a33509dc63cbacf73d"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "rustls_pemfile",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "rustls_pemfile",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "crate_features": {
+          "common": [
+            "default",
+            "std"
+          ],
+          "selects": {}
+        },
+        "deps": {
+          "common": [
+            {
+              "id": "base64 0.22.0",
+              "target": "base64"
+            },
+            {
+              "id": "rustls-pki-types 1.7.0",
+              "target": "rustls_pki_types",
+              "alias": "pki_types"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2018",
+        "version": "2.1.2"
+      },
+      "license": "Apache-2.0 OR ISC OR MIT"
+    },
+    "rustls-pki-types 1.7.0": {
+      "name": "rustls-pki-types",
+      "version": "1.7.0",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/rustls-pki-types/1.7.0/download",
+          "sha256": "976295e77ce332211c0d24d92c0e83e50f5c5f046d11082cea19f3df13a3562d"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "rustls_pki_types",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "rustls_pki_types",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "crate_features": {
+          "common": [
+            "alloc",
+            "default"
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "1.7.0"
+      },
+      "license": "MIT OR Apache-2.0"
     },
     "rustls-webpki 0.101.7": {
       "name": "rustls-webpki",
@@ -41511,7 +41619,7 @@
               "target": "registry_canister"
             },
             {
-              "id": "reqwest 0.12.2",
+              "id": "reqwest 0.12.4",
               "target": "reqwest"
             },
             {
@@ -42000,7 +42108,7 @@
               "target": "regex"
             },
             {
-              "id": "reqwest 0.12.2",
+              "id": "reqwest 0.12.4",
               "target": "reqwest"
             },
             {
@@ -47561,7 +47669,9 @@
             "winbase",
             "wincon",
             "winerror",
-            "winnt"
+            "winnt",
+            "ws2ipdef",
+            "ws2tcpip"
           ],
           "selects": {}
         },
@@ -49420,6 +49530,49 @@
       },
       "license": "MIT"
     },
+    "winreg 0.52.0": {
+      "name": "winreg",
+      "version": "0.52.0",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/winreg/0.52.0/download",
+          "sha256": "a277a57398d4bfa075df44f501a17cfdf8542d224f0d36095a2adc7aee4ef0a5"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "winreg",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "winreg",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "cfg-if 1.0.0",
+              "target": "cfg_if"
+            },
+            {
+              "id": "windows-sys 0.48.0",
+              "target": "windows_sys"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2018",
+        "version": "0.52.0"
+      },
+      "license": "MIT"
+    },
     "wiremock 0.6.0": {
       "name": "wiremock",
       "version": "0.6.0",
@@ -50632,7 +50785,7 @@
               "target": "build_script_build"
             },
             {
-              "id": "zstd-sys 2.0.9+zstd.1.5.5",
+              "id": "zstd-sys 2.0.10+zstd.1.5.6",
               "target": "zstd_sys"
             }
           ],
@@ -50648,7 +50801,7 @@
         "link_deps": {
           "common": [
             {
-              "id": "zstd-sys 2.0.9+zstd.1.5.5",
+              "id": "zstd-sys 2.0.10+zstd.1.5.6",
               "target": "zstd_sys"
             }
           ],
@@ -50657,13 +50810,13 @@
       },
       "license": "MIT/Apache-2.0"
     },
-    "zstd-sys 2.0.9+zstd.1.5.5": {
+    "zstd-sys 2.0.10+zstd.1.5.6": {
       "name": "zstd-sys",
-      "version": "2.0.9+zstd.1.5.5",
+      "version": "2.0.10+zstd.1.5.6",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/zstd-sys/2.0.9+zstd.1.5.5/download",
-          "sha256": "9e16efa8a874a0481a574084d34cc26fdb3b99627480f785888deb6386506656"
+          "url": "https://static.crates.io/crates/zstd-sys/2.0.10+zstd.1.5.6/download",
+          "sha256": "c253a4914af5bafc8fa8c86ee400827e83cf6ec01195ec1f1ed8441bf00d65aa"
         }
       },
       "targets": [
@@ -50702,14 +50855,14 @@
         "deps": {
           "common": [
             {
-              "id": "zstd-sys 2.0.9+zstd.1.5.5",
+              "id": "zstd-sys 2.0.10+zstd.1.5.6",
               "target": "build_script_build"
             }
           ],
           "selects": {}
         },
         "edition": "2018",
-        "version": "2.0.9+zstd.1.5.5"
+        "version": "2.0.10+zstd.1.5.6"
       },
       "build_script_attrs": {
         "data_glob": [
