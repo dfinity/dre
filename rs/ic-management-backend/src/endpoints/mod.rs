@@ -6,8 +6,8 @@ pub mod subnet;
 
 use crate::health::HealthStatusQuerier;
 use crate::{
-    gitlab_dfinity, health, prometheus, proposal, registry, registry::RegistryState,
-    release::list_subnets_release_statuses, release::RolloutBuilder,
+    health, prometheus, proposal, registry, registry::RegistryState, release::list_subnets_release_statuses,
+    release::RolloutBuilder,
 };
 use actix_web::dev::Service;
 use actix_web::{get, post, web, App, Error, HttpResponse, HttpServer, Responder, Result};
@@ -15,18 +15,14 @@ use decentralization::network::AvailableNodesQuerier;
 use ic_management_types::Network;
 use ic_registry_nns_data_provider::registry::RegistryCanister;
 use ic_types::PrincipalId;
-use log::{debug, error, info};
+use log::{debug, info};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::ops::Deref;
-use std::process;
 use std::str::FromStr;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::RwLock;
-
-const GITLAB_TOKEN_RELEASE_ENV: &str = "GITLAB_API_TOKEN_RELEASE";
-const GITLAB_API_TOKEN_FALLBACK: &str = "GITLAB_API_TOKEN";
 
 pub async fn run_backend(
     target_network: &Network,
@@ -43,23 +39,9 @@ pub async fn run_backend(
     if run_from_cli {
         registry::update_node_details(&registry_state).await;
     } else {
-        if std::env::var(GITLAB_TOKEN_RELEASE_ENV).is_err() {
-            let fallback_token = std::env::var(GITLAB_API_TOKEN_FALLBACK);
-            if fallback_token.is_err() {
-                error!(
-                    "Could not lead the Gitlab token from variable {} or {}",
-                    GITLAB_TOKEN_RELEASE_ENV, GITLAB_API_TOKEN_FALLBACK
-                );
-                process::exit(exitcode::CONFIG);
-            }
-            std::env::set_var(GITLAB_TOKEN_RELEASE_ENV, fallback_token.unwrap());
-        }
-        let gitlab_client_release_repo = gitlab_dfinity::authenticated_client(GITLAB_TOKEN_RELEASE_ENV).await;
         let closure_target_network = target_network.clone();
         let registry_state_poll = registry_state.clone();
-        tokio::spawn(async {
-            registry::poll(gitlab_client_release_repo, registry_state_poll, closure_target_network).await
-        });
+        tokio::spawn(async { registry::poll(registry_state_poll, closure_target_network).await });
     }
 
     let num_workers = if run_from_cli { 1 } else { 8 };

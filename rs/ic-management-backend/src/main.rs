@@ -1,8 +1,7 @@
 mod endpoints;
-mod factsdb;
 mod git_ic_repo;
-mod gitlab_dfinity;
 mod health;
+mod node_labels;
 mod prometheus;
 mod proposal;
 mod public_dashboard;
