@@ -210,7 +210,7 @@ pub async fn auto_detect_neuron_id(nns_urls: &[url::Url], auth: Auth) -> anyhow:
         let response = Decode!(&response, ListNeuronsResponse)?;
         let neuron_ids = response.neuron_infos.keys().copied().collect::<Vec<_>>();
         match neuron_ids.len() {
-            0 => return Err(anyhow::anyhow!("HSM doesn't control any neurons")),
+            0 => Err(anyhow::anyhow!("HSM doesn't control any neurons")),
             1 => Ok(neuron_ids[0]),
             _ => Select::with_theme(&ColorfulTheme::default())
                 .items(&neuron_ids)
