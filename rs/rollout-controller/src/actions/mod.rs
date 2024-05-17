@@ -69,7 +69,11 @@ impl SubnetAction {
 }
 
 impl<'a> SubnetAction {
-    fn execute(&self, executor: &'a ActionExecutor, blessed_replica_versions: &'a [String]) -> anyhow::Result<()> {
+    async fn execute(
+        &self,
+        executor: &'a ActionExecutor<'_>,
+        blessed_replica_versions: &'a [String],
+    ) -> anyhow::Result<()> {
         if let Some(logger) = executor.logger {
             info!(logger, "Subnet action: {}", self.print())
         }
@@ -109,7 +113,8 @@ impl<'a> SubnetAction {
 
             executor
                 .ic_admin_wrapper
-                .propose_run(proposal, opts, executor.simulate)?;
+                .propose_run(proposal, opts, executor.simulate)
+                .await?;
         }
 
         Ok(())
@@ -130,7 +135,7 @@ impl<'a> ActionExecutor<'a> {
         simulate: bool,
         logger: Option<&'a Logger>,
     ) -> anyhow::Result<Self> {
-        let neuron = Neuron::new(&network, true, Some(neuron_id), Some(private_key_pem), None, None, None).await?;
+        let neuron = Neuron::new(&network, Some(neuron_id), Some(private_key_pem), None, None, None).await;
         Ok(Self {
             ic_admin_wrapper: IcAdminWrapper::new(network, None, true, neuron),
             simulate,
@@ -139,7 +144,7 @@ impl<'a> ActionExecutor<'a> {
     }
 
     pub async fn test(network: Network, logger: Option<&'a Logger>) -> anyhow::Result<Self> {
-        let neuron = Neuron::new(&network, false, None, None, None, None, None).await?;
+        let neuron = Neuron::new(&network, None, None, None, None, None).await;
         Ok(Self {
             ic_admin_wrapper: IcAdminWrapper::new(network, None, true, neuron),
             simulate: true,
@@ -147,7 +152,7 @@ impl<'a> ActionExecutor<'a> {
         })
     }
 
-    pub fn execute(&self, actions: &[SubnetAction], blessed_replica_versions: &[String]) -> anyhow::Result<()> {
+    pub async fn execute(&self, actions: &[SubnetAction], blessed_replica_versions: &[String]) -> anyhow::Result<()> {
         if let Some(logger) = self.logger {
             info!(logger, "Executing following actions: {:?}", actions)
         }
@@ -156,7 +161,7 @@ impl<'a> ActionExecutor<'a> {
             if let Some(logger) = self.logger {
                 info!(logger, "Executing action {}: {:?}", i, action)
             }
-            action.execute(self, blessed_replica_versions)?;
+            action.execute(self, blessed_replica_versions).await?;
         }
 
         Ok(())

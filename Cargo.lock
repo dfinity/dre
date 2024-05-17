@@ -2330,6 +2330,7 @@ dependencies = [
  "futures-util",
  "ic-base-types",
  "ic-canister-client",
+ "ic-canister-client-sender",
  "ic-canisters",
  "ic-interfaces-registry",
  "ic-management-backend",

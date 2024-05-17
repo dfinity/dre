@@ -1,6 +1,5 @@
-use std::{path::PathBuf, str::FromStr};
+use std::{cell::RefCell, fs::read_to_string, path::PathBuf, str::FromStr};
 
-use anyhow::Context;
 use candid::{Decode, Encode};
 use cryptoki::{
     context::{CInitializeArgs, Pkcs11},
@@ -8,6 +7,7 @@ use cryptoki::{
 };
 use dialoguer::{console::Term, theme::ColorfulTheme, Password, Select};
 use ic_canister_client::{Agent, Sender};
+use ic_canister_client_sender::SigKeys;
 use ic_nns_constants::GOVERNANCE_CANISTER_ID;
 use ic_nns_governance::pb::v1::{ListNeurons, ListNeuronsResponse};
 use ic_sys::utility_command::UtilityCommand;
@@ -16,75 +16,79 @@ use log::info;
 
 #[derive(Clone)]
 pub struct Neuron {
-    pub id: u64,
-    pub auth: Auth,
+    network: ic_management_types::Network,
+    neuron_id: RefCell<Option<u64>>,
+    private_key_pem: Option<String>,
+    hsm_slot: Option<u64>,
+    hsm_pin: Option<String>,
+    hsm_key_id: Option<String>,
+    auth_cache: RefCell<Option<Auth>>,
 }
 
 impl Neuron {
-    pub fn as_arg_vec(&self) -> Vec<String> {
-        vec!["--proposer".to_string(), self.id.to_string()]
+    pub async fn get_auth(&self) -> anyhow::Result<Auth> {
+        if let Some(auth) = &*self.auth_cache.borrow() {
+            return Ok(auth.clone());
+        };
+        let auth = if let Some(path) = &self.private_key_pem {
+            Auth::Keyfile { path: path.clone() }
+        } else {
+            // If HSM slot, pin and key id are provided, use them without checking
+            if let (Some(slot), Some(pin), Some(key_id)) = (self.hsm_slot, &self.hsm_pin, &self.hsm_key_id) {
+                Auth::Hsm {
+                    pin: pin.clone(),
+                    slot,
+                    key_id: key_id.clone(),
+                }
+            } else {
+                // Fully automatic detection of the neuron id using HSM
+                match detect_hsm_auth()? {
+                    Some(auth) => auth,
+                    None => return Err(anyhow::anyhow!("No HSM detected")),
+                }
+            }
+        };
+        self.auth_cache.borrow_mut().get_or_insert_with(|| auth.clone());
+        Ok(auth)
     }
 
-    // FIXME: make this auth lazy
+    pub async fn get_neuron_id(&self) -> anyhow::Result<u64> {
+        if let Some(neuron_id) = *self.neuron_id.borrow() {
+            return Ok(neuron_id);
+        };
+        let neuron_id = auto_detect_neuron_id(self.network.get_nns_urls(), self.get_auth().await?).await?;
+        self.neuron_id.replace(Some(neuron_id));
+        Ok(neuron_id)
+    }
+
+    pub async fn as_arg_vec(&self, with_auth: bool) -> anyhow::Result<Vec<String>> {
+        if !with_auth {
+            return Ok(vec![]);
+        };
+
+        // Auth required, try to find valid neuron id using HSM or with the private key
+        // If private key is provided, use it without checking
+        let auth = self.get_auth().await?;
+        let neuron_id = auto_detect_neuron_id(self.network.get_nns_urls(), auth).await?;
+        Ok(vec!["--proposer".to_string(), neuron_id.to_string()])
+    }
+
     pub async fn new(
         network: &ic_management_types::Network,
-        require_authentication: bool,
         neuron_id: Option<u64>,
         private_key_pem: Option<String>,
         hsm_slot: Option<u64>,
         hsm_pin: Option<String>,
         hsm_key_id: Option<String>,
-    ) -> anyhow::Result<Self> {
-        match require_authentication {
-            // Auth required, try to find valid neuron id using HSM or with the private key
-            true => {
-                // If private key is provided, use it without checking
-                if let Some(path) = private_key_pem {
-                    Ok(Self {
-                        id: neuron_id.context("Neuron ID is required when using a private key")?,
-                        auth: Auth::Keyfile { path },
-                    })
-                // If HSM slot, pin and key id are provided, use them without checking
-                } else if let (Some(slot), Some(pin), Some(key_id)) = (hsm_slot, hsm_pin, hsm_key_id) {
-                    Ok(Self {
-                        id: neuron_id.context("Neuron ID is required when using HSM")?,
-                        auth: Auth::Hsm { pin, slot, key_id },
-                    })
-                } else {
-                    // Fully automatic detection of the neuron id using HSM
-                    let auth = match detect_hsm_auth()? {
-                        Some(auth) => auth,
-                        None => return Err(anyhow::anyhow!("No HSM detected")),
-                    };
-                    match auto_detect_neuron(network.get_nns_urls(), auth).await {
-                        Ok(Some(n)) => Ok(n),
-                        Ok(None) => anyhow::bail!("No HSM detected. Please provide HSM slot, pin, and key id."),
-                        Err(e) => anyhow::bail!("Error while detectin neuron: {}", e),
-                    }
-                }
-            }
-            // Auth not required, don't attempt to talk to HSM and the NNS, but accept values provided by the user.
-            false => {
-                if let Some(path) = private_key_pem {
-                    Ok(Self {
-                        id: neuron_id.unwrap_or_default(),
-                        auth: Auth::Keyfile { path },
-                    })
-                // If HSM slot, pin and key id are provided, use them without checking
-                } else if let (Some(slot), Some(pin), Some(key_id)) = (hsm_slot, hsm_pin, hsm_key_id) {
-                    Ok(Self {
-                        id: neuron_id.unwrap_or_default(),
-                        auth: Auth::Hsm { pin, slot, key_id },
-                    })
-                } else {
-                    Ok(Self {
-                        id: neuron_id.unwrap_or_default(),
-                        auth: Auth::Keyfile {
-                            path: "/fake/path/to/private_key.pem".to_string(),
-                        },
-                    })
-                }
-            }
+    ) -> Self {
+        Self {
+            network: network.clone(),
+            neuron_id: RefCell::new(neuron_id),
+            private_key_pem,
+            hsm_slot,
+            hsm_pin,
+            hsm_key_id,
+            auth_cache: RefCell::new(None),
         }
     }
 }
@@ -173,15 +177,9 @@ pub fn detect_hsm_auth() -> anyhow::Result<Option<Auth>> {
     Ok(None)
 }
 
-// FIXME: This function should use either the HSM or the private key, instead of assuming the HSM
-pub async fn auto_detect_neuron(nns_urls: &[url::Url], auth: Auth) -> anyhow::Result<Option<Neuron>> {
-    if let Auth::Hsm { pin, slot, key_id } = auth {
-        let auth = Auth::Hsm {
-            pin: pin.clone(),
-            slot,
-            key_id: key_id.clone(),
-        };
-        let sender = Sender::from_external_hsm(
+pub async fn auto_detect_neuron_id(nns_urls: &[url::Url], auth: Auth) -> anyhow::Result<u64> {
+    let sender = match auth {
+        Auth::Hsm { pin, slot, key_id } => Sender::from_external_hsm(
             UtilityCommand::read_public_key(Some(&slot.to_string()), Some(&key_id)).execute()?,
             std::sync::Arc::new(move |input| {
                 Ok(
@@ -189,38 +187,39 @@ pub async fn auto_detect_neuron(nns_urls: &[url::Url], auth: Auth) -> anyhow::Re
                         .execute()?,
                 )
             }),
-        );
-        let agent = Agent::new(nns_urls[0].clone(), sender);
-        let neuron_id = if let Some(response) = agent
-            .execute_query(
-                &GOVERNANCE_CANISTER_ID,
-                "list_neurons",
-                Encode!(&ListNeurons {
-                    include_neurons_readable_by_caller: true,
-                    neuron_ids: vec![],
-                })?,
-            )
-            .await
-            .map_err(|e| anyhow::anyhow!(e))?
-        {
-            let response = Decode!(&response, ListNeuronsResponse)?;
-            let neuron_ids = response.neuron_infos.keys().copied().collect::<Vec<_>>();
-            match neuron_ids.len() {
-                0 => return Err(anyhow::anyhow!("HSM doesn't control any neurons")),
-                1 => neuron_ids[0],
-                _ => Select::with_theme(&ColorfulTheme::default())
-                    .items(&neuron_ids)
-                    .default(0)
-                    .interact_on_opt(&Term::stderr())?
-                    .map(|i| neuron_ids[i])
-                    .ok_or_else(|| anyhow::anyhow!("No neuron selected"))?,
-            }
-        } else {
-            return Err(anyhow::anyhow!("Empty response when listing controlled neurons"));
-        };
-
-        Ok(Some(Neuron { id: neuron_id, auth }))
+        ),
+        Auth::Keyfile { path } => {
+            let contents = read_to_string(path).expect("Could not read key file");
+            let sig_keys = SigKeys::from_pem(&contents).expect("Failed to parse pem file");
+            Sender::SigKeys(sig_keys)
+        }
+    };
+    let agent = Agent::new(nns_urls[0].clone(), sender);
+    if let Some(response) = agent
+        .execute_query(
+            &GOVERNANCE_CANISTER_ID,
+            "list_neurons",
+            Encode!(&ListNeurons {
+                include_neurons_readable_by_caller: true,
+                neuron_ids: vec![],
+            })?,
+        )
+        .await
+        .map_err(|e| anyhow::anyhow!(e))?
+    {
+        let response = Decode!(&response, ListNeuronsResponse)?;
+        let neuron_ids = response.neuron_infos.keys().copied().collect::<Vec<_>>();
+        match neuron_ids.len() {
+            0 => return Err(anyhow::anyhow!("HSM doesn't control any neurons")),
+            1 => Ok(neuron_ids[0]),
+            _ => Select::with_theme(&ColorfulTheme::default())
+                .items(&neuron_ids)
+                .default(0)
+                .interact_on_opt(&Term::stderr())?
+                .map(|i| neuron_ids[i])
+                .ok_or_else(|| anyhow::anyhow!("No neuron selected")),
+        }
     } else {
-        Ok(None)
+        Err(anyhow::anyhow!("Empty response when listing controlled neurons"))
     }
 }

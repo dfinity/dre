@@ -1,5 +1,5 @@
 {
-  "checksum": "c00bb631ec3542a209120b2d90500a100e415b96d15634e49da36ef83acb4c9c",
+  "checksum": "3bdd7b8bb5daaafe7df2feb649407ed9b42dbbb26e3984d8c84a10d3e11dcc29",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -11743,6 +11743,10 @@
             {
               "id": "ic-canister-client 0.9.0",
               "target": "ic_canister_client"
+            },
+            {
+              "id": "ic-canister-client-sender 0.9.0",
+              "target": "ic_canister_client_sender"
             },
             {
               "id": "ic-interfaces-registry 0.9.0",
