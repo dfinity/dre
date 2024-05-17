@@ -3,14 +3,17 @@ use clap::{error::ErrorKind, CommandFactory, Parser};
 use dialoguer::Confirm;
 use dotenv::dotenv;
 use dre::detect_neuron::Auth;
-use dre::general::{get_node_metrics_history, vote_on_proposals};
+use dre::general::{filter_proposals, get_node_metrics_history, vote_on_proposals};
 use dre::operations::hostos_rollout::{NodeGroupUpdate, NumberOfNodes};
 use dre::{cli, ic_admin, local_unused_port, registry_dump, runner};
 use ic_base_types::CanisterId;
-use ic_canisters::governance::governance_canister_version;
+use ic_canisters::governance::{governance_canister_version, GovernanceCanisterWrapper};
+use ic_canisters::CanisterClient;
 use ic_management_backend::endpoints;
 use ic_management_types::requests::NodesRemoveRequest;
 use ic_management_types::{Artifact, MinNakamotoCoefficients, NodeFeature};
+use ic_nns_common::pb::v1::ProposalId;
+use ic_nns_governance::pb::v1::ListProposalInfo;
 use log::{info, warn};
 use serde_json::Value;
 use std::collections::BTreeMap;
@@ -92,16 +95,10 @@ async fn async_main() -> Result<(), anyhow::Error> {
 
         let simulate = cli_opts.simulate;
 
-        let runner_unauth = || async {
-            let cli = dre::parsed_cli::ParsedCli::from_opts(&cli_opts, false).await.expect("Failed to create unauthenticated CLI");
+        let runner_instance = {
+            let cli = dre::parsed_cli::ParsedCli::from_opts(&cli_opts).await.expect("Failed to create authenticated CLI");
             let ic_admin_wrapper = IcAdminWrapper::from_cli(cli);
-            runner::Runner::new_with_network_and_backend_port(ic_admin_wrapper, &target_network, backend_port).await.expect("Failed to create unauthenticated runner")
-        };
-
-        let runner_auth = || async {
-            let cli = dre::parsed_cli::ParsedCli::from_opts(&cli_opts, true).await.expect("Failed to create authenticated CLI");
-            let ic_admin_wrapper = IcAdminWrapper::from_cli(cli);
-            runner::Runner::new_with_network_and_backend_port(ic_admin_wrapper, &target_network, backend_port).await.expect("Failed to create authenticated runner")
+            runner::Runner::new_with_network_and_backend_port(ic_admin_wrapper, &target_network, backend_port).await.expect("Failed to create a runner")
         };
 
         match &cli_opts.subcommand {
@@ -142,7 +139,7 @@ async fn async_main() -> Result<(), anyhow::Error> {
 
                 match &subnet.subcommand {
                     cli::subnet::Commands::Deploy { version } => {
-                        runner_auth().await.deploy(&subnet.id.unwrap(), version, simulate)
+                        runner_instance.deploy(&subnet.id.unwrap(), version, simulate).await
                     },
                     cli::subnet::Commands::Replace {
                         nodes,
@@ -155,7 +152,7 @@ async fn async_main() -> Result<(), anyhow::Error> {
                         min_nakamoto_coefficients,
                     } => {
                         let min_nakamoto_coefficients = parse_min_nakamoto_coefficients(&mut cmd, min_nakamoto_coefficients);
-                            runner_auth().await
+                            runner_instance
                                 .membership_replace(ic_management_types::requests::MembershipReplaceRequest {
                                     target: match &subnet.id {
                                         Some(subnet) => {
@@ -187,7 +184,7 @@ async fn async_main() -> Result<(), anyhow::Error> {
                     }
                     cli::subnet::Commands::Resize { add, remove, include, only, exclude, motivation, } => {
                         if let Some(motivation) = motivation.clone() {
-                            runner_auth().await.subnet_resize(ic_management_types::requests::SubnetResizeRequest {
+                            runner_instance.subnet_resize(ic_management_types::requests::SubnetResizeRequest {
                                 subnet: subnet.id.unwrap(),
                                 add: *add,
                                 remove: *remove,
@@ -206,7 +203,7 @@ async fn async_main() -> Result<(), anyhow::Error> {
                     cli::subnet::Commands::Create { size, min_nakamoto_coefficients, exclude, only, include, motivation, replica_version } => {
                         let min_nakamoto_coefficients = parse_min_nakamoto_coefficients(&mut cmd, min_nakamoto_coefficients);
                         if let Some(motivation) = motivation.clone() {
-                            runner_auth().await.subnet_create(ic_management_types::requests::SubnetCreateRequest {
+                            runner_instance.subnet_create(ic_management_types::requests::SubnetCreateRequest {
                                 size: *size,
                                 min_nakamoto_coefficients,
                                 only: only.clone().into(),
@@ -225,23 +222,21 @@ async fn async_main() -> Result<(), anyhow::Error> {
             }
 
             cli::Commands::Get { args } => {
-                runner_unauth().await.ic_admin.run_passthrough_get(args)
+                runner_instance.ic_admin.run_passthrough_get(args).await
             },
 
             cli::Commands::Propose { args } => {
-                runner_auth().await.ic_admin.run_passthrough_propose(args, simulate)
+                runner_instance.ic_admin.run_passthrough_propose(args, simulate).await
             },
 
             cli::Commands::UpdateUnassignedNodes { nns_subnet_id } => {
-                runner_auth().await.ic_admin.update_unassigned_nodes( nns_subnet_id, &target_network, simulate).await
+                runner_instance.ic_admin.update_unassigned_nodes( nns_subnet_id, &target_network, simulate).await
             },
 
             cli::Commands::Version(version_command) => {
                 match &version_command {
                     cli::version::Cmd::Update(update_command) => {
                         let release_artifact: &Artifact = &update_command.subcommand.clone().into();
-
-                        let runner_auth = runner_auth().await;
 
                         let update_version = match &update_command.subcommand {
                             cli::version::UpdateCommands::Replica { version, release_tag, force} | cli::version::UpdateCommands::HostOS { version, release_tag, force} => {
@@ -250,12 +245,12 @@ async fn async_main() -> Result<(), anyhow::Error> {
                                     version,
                                     release_tag,
                                     *force,
-                                    runner_auth.prepare_versions_to_retire(release_artifact, false).await.map(|res| res.1)?,
+                                    runner_instance.prepare_versions_to_retire(release_artifact, false).await.map(|res| res.1)?,
                                 )
                             }
                         }.await?;
 
-                        runner_auth.ic_admin.propose_run(ic_admin::ProposeCommand::UpdateElectedVersions {
+                        runner_instance.ic_admin.propose_run(ic_admin::ProposeCommand::UpdateElectedVersions {
                                                  release_artifact: update_version.release_artifact.clone(),
                                                  args: dre::parsed_cli::ParsedCli::get_update_cmd_args(&update_version)
                                              },
@@ -263,7 +258,7 @@ async fn async_main() -> Result<(), anyhow::Error> {
                                                  title: Some(update_version.title),
                                                  summary: Some(update_version.summary.clone()),
                                                  motivation: None,
-                                             }, simulate)?;
+                                             }, simulate).await?;
                         Ok(())
                     }
                 }
@@ -272,12 +267,12 @@ async fn async_main() -> Result<(), anyhow::Error> {
             cli::Commands::Hostos(nodes) => {
                 match &nodes.subcommand {
                     cli::hostos::Commands::Rollout { version,nodes} => {
-                        runner_auth().await.hostos_rollout(nodes.clone(), version, simulate, None).await
+                        runner_instance.hostos_rollout(nodes.clone(), version, simulate, None).await
                     },
                     cli::hostos::Commands::RolloutFromNodeGroup {version, assignment, owner, nodes_in_group, exclude } => {
                         let update_group  = NodeGroupUpdate::new(*assignment, *owner, NumberOfNodes::from_str(nodes_in_group)?);
-                        if let Some((nodes_to_update, summary)) = runner_auth().await.hostos_rollout_nodes(update_group, version, exclude).await? {
-                            return runner_auth().await.hostos_rollout(nodes_to_update, version, simulate, Some(summary)).await
+                        if let Some((nodes_to_update, summary)) = runner_instance.hostos_rollout_nodes(update_group, version, exclude).await? {
+                            return runner_instance.hostos_rollout(nodes_to_update, version, simulate, Some(summary)).await
                         }
                         Ok(())
                     }
@@ -293,7 +288,7 @@ async fn async_main() -> Result<(), anyhow::Error> {
                             )
                             .exit();
                         }
-                        runner_auth().await.remove_nodes(NodesRemoveRequest {
+                        runner_instance.remove_nodes(NodesRemoveRequest {
                             extra_nodes_filter: extra_nodes_filter.clone(),
                             no_auto: *no_auto,
                             remove_degraded: *remove_degraded,
@@ -305,7 +300,7 @@ async fn async_main() -> Result<(), anyhow::Error> {
             },
 
             cli::Commands::Vote {accepted_neurons, accepted_topics}=> {
-                let cli = dre::parsed_cli::ParsedCli::from_opts(&cli_opts, true).await?;
+                let cli = dre::parsed_cli::ParsedCli::from_opts(&cli_opts).await?;
                 vote_on_proposals(cli.get_neuron(), target_network.get_nns_urls(), accepted_neurons, accepted_topics, simulate).await
             },
 
@@ -318,15 +313,42 @@ async fn async_main() -> Result<(), anyhow::Error> {
                 registry_dump::dump_registry(path, &target_network, version).await
             }
 
-            cli::Commands::Firewall{title, summary, motivation} => {
-                let runner_auth = runner_auth().await;
-
-                runner_auth.ic_admin.update_replica_nodes_firewall(&target_network, ic_admin::ProposeOptions{
+            cli::Commands::Firewall{title, summary} => {
+                runner_instance.ic_admin.update_replica_nodes_firewall(&target_network, ic_admin::ProposeOptions{
                     title: title.clone(),
                     summary: summary.clone(),
-                    motivation: motivation.clone(),
+                    ..Default::default()
                 }, cli_opts.simulate).await
             }
+            cli::Commands::Proposals(p) => match &p.subcommand {
+                cli::proposals::Commands::Pending => {
+                    let nns_url = target_network.get_nns_urls().first().expect("Should have at least one NNS URL");
+                    let client = GovernanceCanisterWrapper::from(CanisterClient::from_anonymous(nns_url)?);
+                    let proposals = client.get_pending_proposals().await?;
+                    let proposals = serde_json::to_string(&proposals).map_err(|e| anyhow::anyhow!("Couldn't serialize to string: {:?}", e))?;
+                    println!("{}", proposals);
+                    Ok(())
+                }
+                cli::proposals::Commands::List { limit, before_proposal, exclude_topic, include_reward_status, include_status, include_all_manage_neuron_proposals, omit_large_fields } => {
+                    let nns_url = target_network.get_nns_urls().first().expect("Should have at least one NNS URL");
+                    let client = GovernanceCanisterWrapper::from(CanisterClient::from_anonymous(nns_url)?);
+                    let proposals = client.list_proposals(ListProposalInfo {
+                        before_proposal: before_proposal.as_ref().map(|p| ProposalId { id: *p }),
+                        exclude_topic: exclude_topic.clone(),
+                        include_all_manage_neuron_proposals: *include_all_manage_neuron_proposals,
+                        include_reward_status: include_reward_status.clone(),
+                        include_status: include_status.clone(),
+                        limit: *limit,
+                        omit_large_fields: *omit_large_fields
+                    }).await?;
+                    let proposals = serde_json::to_string(&proposals).map_err(|e| anyhow::anyhow!("Couldn't serialize to string: {:?}", e))?;
+                    println!("{}", proposals);
+                    Ok(())
+                },
+                cli::proposals::Commands::Filter { limit, statuses, topics } => {
+                    filter_proposals(target_network, limit, statuses.iter().map(|s| s.clone().into()).collect(), topics.iter().map(|t| t.clone().into()).collect()).await
+                }
+            },
         }
     })
     .await;

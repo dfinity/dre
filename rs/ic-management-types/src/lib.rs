@@ -13,11 +13,11 @@ use ic_types::PrincipalId;
 use registry_canister::mutations::do_add_nodes_to_subnet::AddNodesToSubnetPayload;
 use registry_canister::mutations::do_change_subnet_membership::ChangeSubnetMembershipPayload;
 use registry_canister::mutations::do_create_subnet::CreateSubnetPayload;
+use registry_canister::mutations::do_deploy_guestos_to_all_subnet_nodes::DeployGuestosToAllSubnetNodesPayload;
 use registry_canister::mutations::do_remove_nodes_from_subnet::RemoveNodesFromSubnetPayload;
+use registry_canister::mutations::do_revise_elected_replica_versions::ReviseElectedGuestosVersionsPayload;
 use registry_canister::mutations::do_update_elected_hostos_versions::UpdateElectedHostosVersionsPayload;
-use registry_canister::mutations::do_update_elected_replica_versions::UpdateElectedReplicaVersionsPayload;
 use registry_canister::mutations::do_update_nodes_hostos_version::UpdateNodesHostosVersionPayload;
-use registry_canister::mutations::do_update_subnet_replica::UpdateSubnetReplicaVersionPayload;
 use registry_canister::mutations::do_update_unassigned_nodes_config::UpdateUnassignedNodesConfigPayload;
 use registry_canister::mutations::node_management::do_remove_nodes::RemoveNodesPayload;
 use serde::{Deserialize, Serialize};
@@ -59,8 +59,8 @@ impl NnsFunctionProposal for CreateSubnetPayload {
     const TYPE: NnsFunction = NnsFunction::CreateSubnet;
 }
 
-impl NnsFunctionProposal for UpdateSubnetReplicaVersionPayload {
-    const TYPE: NnsFunction = NnsFunction::UpdateSubnetReplicaVersion;
+impl NnsFunctionProposal for DeployGuestosToAllSubnetNodesPayload {
+    const TYPE: NnsFunction = NnsFunction::DeployGuestosToAllSubnetNodes;
 }
 
 impl NnsFunctionProposal for UpdateElectedHostosVersionsPayload {
@@ -79,8 +79,8 @@ impl NnsFunctionProposal for RemoveNodesPayload {
     const TYPE: NnsFunction = NnsFunction::RemoveNodes;
 }
 
-impl NnsFunctionProposal for UpdateElectedReplicaVersionsPayload {
-    const TYPE: NnsFunction = NnsFunction::UpdateElectedReplicaVersions;
+impl NnsFunctionProposal for ReviseElectedGuestosVersionsPayload {
+    const TYPE: NnsFunction = NnsFunction::ReviseElectedGuestosVersions;
 }
 
 pub trait TopologyChangePayload: NnsFunctionProposal {
@@ -449,6 +449,18 @@ pub enum Status {
     Degraded,
     Dead,
     Unknown,
+}
+
+/// Even if `from_str` is implemented by `EnumString` in derive, public api returns them capitalized and this is the implementation for that convertion
+impl Status {
+    pub fn from_str_from_dashboard(s: &str) -> Self {
+        match s {
+            "UP" | "UNASSIGNED" => Self::Healthy,
+            "DEGRADED" => Self::Degraded,
+            "DOWN" => Self::Dead,
+            _ => Self::Unknown,
+        }
+    }
 }
 
 impl From<i64> for Health {

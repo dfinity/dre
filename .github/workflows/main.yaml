@@ -8,10 +8,12 @@ on:
     paths-ignore:
       - "release-index.yaml"
       - "replica-releases/**"
+      - "factsdb/**"
   pull_request:
     paths-ignore:
       - "release-index.yaml"
       - "replica-releases/**"
+      - "factsdb/**"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -24,6 +26,21 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 2
+      - name: "☁️ Setup S3 cache credentials"
+        id: bazel-remote-creds
+        shell: bash
+        run: |
+          mkdir -p ~/.aws
+          cat <<_EOF | install -m 0600 /dev/stdin ~/.aws/config
+          [wasabi]
+          region = eu-central-2
+          _EOF
+
+          cat <<_EOF | install -m 0600 /dev/stdin ~/.aws/credentials
+          [wasabi]
+          aws_access_key_id = ${{ secrets.WASABI_ACCESS_KEY }}
+          aws_secret_access_key = ${{ secrets.WASABI_SECRET_KEY }}
+          _EOF
       - name: "☁️ Setup runner"
         uses: ./.github/workflows/manage-runner-pre
 

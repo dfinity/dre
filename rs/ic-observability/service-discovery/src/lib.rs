@@ -19,6 +19,7 @@ use ic_interfaces_registry::{RegistryClient, RegistryClientResult};
 use ic_protobuf::registry::node::v1::NodeRecord;
 use ic_registry_client::client::{RegistryClientError, RegistryVersion};
 use ic_registry_client_helpers::{
+    api_boundary_node::ApiBoundaryNodeRegistry,
     node::{NodeId, NodeRegistry, SubnetId},
     node_operator::{NodeOperatorRegistry, PrincipalId},
     subnet::{SubnetListRegistry, SubnetTransportRegistry},
@@ -36,7 +37,6 @@ pub mod mainnet_registry;
 pub mod metrics;
 pub mod poll_loop;
 pub mod registry_sync;
-pub mod rest_api;
 pub mod service_discovery_record;
 
 /// Provide service discovery for a set of Internet Computers.
@@ -67,6 +67,7 @@ pub struct TargetGroup {
     pub dc_id: String,
     pub operator_id: PrincipalId,
     pub node_provider_id: PrincipalId,
+    pub is_api_bn: bool,
 }
 
 impl TargetGroup {
@@ -208,6 +209,14 @@ impl IcServiceDiscoveryImpl {
             .get_subnet_ids(latest_version)
             .map_registry_err(latest_version, "get_subnet_ids")?;
 
+        let api_bns = match reg_client.get_api_boundary_node_ids(latest_version) {
+            Ok(abn) => abn,
+            Err(e) => {
+                warn!(log, "Error while fetching api boundary node ids: {:?}", e);
+                vec![]
+            }
+        };
+
         for subnet_id in subnet_ids {
             let t_infos = reg_client
                 .get_subnet_node_records(subnet_id, latest_version)
@@ -233,6 +242,7 @@ impl IcServiceDiscoveryImpl {
                     &mut node_targets,
                     Some(subnet_id),
                     ic_name,
+                    api_bns.contains(&node_id),
                 )?;
                 unassigned_node_ids.remove(&node_id);
             }
@@ -263,6 +273,7 @@ impl IcServiceDiscoveryImpl {
                 &mut node_targets,
                 None,
                 ic_name,
+                api_bns.contains(&node_id),
             )?;
         }
         Ok(node_targets)
@@ -276,6 +287,7 @@ impl IcServiceDiscoveryImpl {
         node_targets: &mut BTreeSet<TargetGroup>,
         subnet_id: Option<SubnetId>,
         ic_name: &str,
+        is_api_bn: bool,
     ) -> Result<(), IcServiceDiscoveryError> {
         let socket_addr = Self::node_record_to_target_addr(node_id, latest_version, node_record.clone())?;
 
@@ -294,6 +306,7 @@ impl IcServiceDiscoveryImpl {
             dc_id: node_operator.dc_id,
             operator_id,
             node_provider_id: PrincipalId::try_from(node_operator.node_provider_principal_id).unwrap_or_default(),
+            is_api_bn,
         });
 
         Ok(())

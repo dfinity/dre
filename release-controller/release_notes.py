@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import fnmatch
-import os
 import pathlib
 import re
 import subprocess
@@ -12,6 +11,7 @@ REPLICA_TEAMS = set(
     [
         "consensus-owners",
         "crypto-owners",
+        "interface-owners",
         "Orchestrator",
         "message-routing-owners",
         "networking-team",
@@ -58,6 +58,7 @@ TEAM_PRETTY_MAP = {
     "prodsec": "Prodsec",
     "runtime-owners": "Runtime",
     "trust-team": "Trust",
+    "sdk-team": "SDK",
 }
 
 
