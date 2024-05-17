@@ -10,6 +10,8 @@ class DiscourseClientMock(DiscourseClient):
         self.created_topics = []
         self.created_posts = []
         self.api_username = "test"
+        self.api_key = "test_api_key"
+        self.timeout = 10
 
     def categories(self):
         """Return a list of categories."""
