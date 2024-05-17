@@ -165,7 +165,7 @@ class Reconciler:
             # update to create posts for any releases
             rc_forum_topic.update(changelog=self.loader.changelog, proposal=self.state.version_proposal)
             for v_idx, v in enumerate(rc.versions):
-                logging.info("Updating version %s", v)
+                logging.info(f"Updating version {v}")
                 push_release_tags(self.ic_repo, rc)
                 self.notes_client.ensure(
                     version=v.version,
