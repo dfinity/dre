@@ -8,12 +8,12 @@ on:
     paths-ignore:
       - "release-index.yaml"
       - "replica-releases/**"
-      - "factsdb/**"
+      - "node-labels/**"
   pull_request:
     paths-ignore:
       - "release-index.yaml"
       - "replica-releases/**"
-      - "factsdb/**"
+      - "node-labels/**"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
