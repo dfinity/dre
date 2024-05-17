@@ -119,7 +119,7 @@ async fn main() -> anyhow::Result<()> {
             break;
         }
         info!(logger, "Calculated actions: {:#?}", actions);
-        match executor.execute(&actions, &blessed_versions) {
+        match executor.execute(&actions, &blessed_versions).await {
             Ok(()) => info!(logger, "Actions taken successfully"),
             Err(e) => warn!(logger, "{:?}", e),
         };
