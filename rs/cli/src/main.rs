@@ -3,7 +3,7 @@ use clap::{error::ErrorKind, CommandFactory, Parser};
 use dialoguer::Confirm;
 use dotenv::dotenv;
 use dre::detect_neuron::Auth;
-use dre::general::{get_node_metrics_history, vote_on_proposals};
+use dre::general::{filter_proposals, get_node_metrics_history, vote_on_proposals};
 use dre::operations::hostos_rollout::{NodeGroupUpdate, NumberOfNodes};
 use dre::{cli, ic_admin, local_unused_port, registry_dump, runner};
 use ic_base_types::CanisterId;
@@ -355,6 +355,9 @@ async fn async_main() -> Result<(), anyhow::Error> {
                     println!("{}", proposals);
                     Ok(())
                 },
+                cli::proposals::Commands::Filter { limit, statuses, topics } => {
+                    filter_proposals(target_network, limit, statuses.iter().map(|s| s.clone().into()).collect(), topics.iter().map(|t| t.clone().into()).collect()).await
+                }
             },
         }
     })
