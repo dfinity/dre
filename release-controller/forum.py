@@ -1,3 +1,4 @@
+import logging
 import os
 from typing import Callable
 
@@ -82,10 +83,20 @@ class ReleaseCandidateForumTopic:
         created_posts = self.created_posts()
         for i, p in enumerate(posts):
             if i < len(created_posts):
-                self.client.update_post(
-                    post_id=created_posts[i]["id"],
-                    content=_post_template(version_name=p.version_name, changelog=p.changelog, proposal=p.proposal),
+                post_id = created_posts[i]["id"]
+                content_expected = _post_template(
+                    version_name=p.version_name, changelog=p.changelog, proposal=p.proposal
                 )
+                post = self.client.post_by_id(post_id)
+                if post["raw"] == content_expected:
+                    # log the complete URL of the post
+                    logging.info("post up to date: %s", self.post_to_url(post))
+                    continue
+                if post["can_edit"]:
+                    logging.info("updating post %s", post_id)
+                    self.client.update_post(post_id=post_id, content=content_expected)
+                else:
+                    logging.error("cannot update post %s", post_id)
             else:
                 self.client.create_post(
                     topic_id=self.topic_id,
@@ -98,7 +109,10 @@ class ReleaseCandidateForumTopic:
         post = self.client.post_by_id(post_id=self.created_posts()[post_index]["id"])
         if not post:
             raise RuntimeError("failed to find post")
+        return self.post_to_url(post)
 
+    def post_to_url(self, post: dict):
+        """Return the complete URL of the given post."""
         host = self.client.host.removesuffix("/")
         return f"{host}/t/{post['topic_slug']}/{post['topic_id']}/{post['post_number']}"
 
