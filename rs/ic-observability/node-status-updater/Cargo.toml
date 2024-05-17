@@ -16,7 +16,7 @@ ic-agent = { workspace = true }
 ic-async-utils = { workspace = true }
 ic-metrics = { workspace = true }
 obs-canister-clients = { path = "../obs-canister-clients" }
-prometheus-http-query = { version = "0.8.2", default_features = false, features = [
+prometheus-http-query = { version = "0.8.3", default_features = false, features = [
   "rustls-tls-webpki-roots",
 ] }
 service-discovery = { path = "../service-discovery" }
