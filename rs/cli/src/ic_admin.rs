@@ -168,7 +168,8 @@ impl IcAdminWrapper {
         }
     }
 
-    fn print_ic_admin_command_line(&self, cmd: &Command) {
+    async fn print_ic_admin_command_line(&self, cmd: &Command) {
+        let auth = self.neuron.get_auth().await.unwrap();
         info!(
             "running ic-admin: \n$ {}{}",
             cmd.get_program().to_str().unwrap().yellow(),
@@ -176,11 +177,7 @@ impl IcAdminWrapper {
                 .map(|s| s.to_str().unwrap().to_string())
                 .fold("".to_string(), |acc, s| {
                     let s = if s.contains('\n') { format!(r#""{}""#, s) } else { s };
-                    let hsm_pin = if let Auth::Hsm { pin, .. } = &self.neuron.auth {
-                        pin
-                    } else {
-                        ""
-                    };
+                    let hsm_pin = if let Auth::Hsm { pin, .. } = &auth { pin } else { "" };
                     if hsm_pin == s {
                         format!("{acc} <redacted>")
                     } else if s.starts_with("--") {
@@ -195,61 +192,67 @@ impl IcAdminWrapper {
         );
     }
 
-    pub fn propose_run(&self, cmd: ProposeCommand, opts: ProposeOptions, simulate: bool) -> anyhow::Result<String> {
-        let exec = |cli: &IcAdminWrapper, cmd: ProposeCommand, opts: ProposeOptions, add_dryrun_arg: bool| {
-            if let Some(summary) = opts.clone().summary {
-                let summary_count = summary.chars().count();
-                if summary_count > MAX_SUMMARY_CHAR_COUNT {
-                    return Err(anyhow!(
-                        "Summary length {} exceeded MAX_SUMMARY_CHAR_COUNT {}",
-                        summary_count,
-                        MAX_SUMMARY_CHAR_COUNT,
-                    ));
-                }
+    async fn _exec(&self, cmd: ProposeCommand, opts: ProposeOptions, as_simulation: bool) -> anyhow::Result<String> {
+        if let Some(summary) = opts.clone().summary {
+            let summary_count = summary.chars().count();
+            if summary_count > MAX_SUMMARY_CHAR_COUNT {
+                return Err(anyhow!(
+                    "Summary length {} exceeded MAX_SUMMARY_CHAR_COUNT {}",
+                    summary_count,
+                    MAX_SUMMARY_CHAR_COUNT,
+                ));
             }
-            cli.run(
-                &cmd.get_command_name(),
-                [
-                    // Make sure there is no more than one `--dry-run` argument, or else ic-admin will complain.
-                    if add_dryrun_arg && !cmd.args().contains(&String::from("--dry-run")) {
-                        vec!["--dry-run".to_string()]
-                    } else {
-                        Default::default()
-                    },
-                    opts.title
-                        .map(|t| vec!["--proposal-title".to_string(), t])
-                        .unwrap_or_default(),
-                    opts.summary
-                        .map(|s| {
-                            vec![
-                                "--summary".to_string(),
-                                format!(
-                                    "{}{}",
-                                    s,
-                                    opts.motivation
-                                        .map(|m| format!("\n\nMotivation: {m}"))
-                                        .unwrap_or_default(),
-                                ),
-                            ]
-                        })
-                        .unwrap_or_default(),
-                    cli.neuron.as_arg_vec(),
-                    cmd.args(),
-                ]
-                .concat()
-                .as_slice(),
-                true,
-            )
-        };
+        }
+        self.run(
+            &cmd.get_command_name(),
+            [
+                // Make sure there is no more than one `--dry-run` argument, or else ic-admin will complain.
+                if as_simulation && !cmd.args().contains(&String::from("--dry-run")) {
+                    vec!["--dry-run".to_string()]
+                } else {
+                    Default::default()
+                },
+                opts.title
+                    .map(|t| vec!["--proposal-title".to_string(), t])
+                    .unwrap_or_default(),
+                opts.summary
+                    .map(|s| {
+                        vec![
+                            "--summary".to_string(),
+                            format!(
+                                "{}{}",
+                                s,
+                                opts.motivation
+                                    .map(|m| format!("\n\nMotivation: {m}"))
+                                    .unwrap_or_default(),
+                            ),
+                        ]
+                    })
+                    .unwrap_or_default(),
+                self.neuron.as_arg_vec(!as_simulation).await?,
+                cmd.args(),
+            ]
+            .concat()
+            .as_slice(),
+            !as_simulation,
+        )
+        .await
+    }
 
+    pub async fn propose_run(
+        &self,
+        cmd: ProposeCommand,
+        opts: ProposeOptions,
+        simulate: bool,
+    ) -> anyhow::Result<String> {
         // Simulated, or --help executions run immediately and do not proceed.
         if simulate || cmd.args().contains(&String::from("--help")) || cmd.args().contains(&String::from("--dry-run")) {
-            return exec(self, cmd, opts, simulate);
+            return self._exec(cmd, opts, simulate).await;
         }
 
         // If --yes was not specified, ask the user if they want to proceed
         if !self.proceed_without_confirmation {
-            exec(self, cmd.clone(), opts.clone(), true)?;
+            self._exec(cmd.clone(), opts.clone(), true).await?;
         }
 
         if Confirm::new()
@@ -259,17 +262,17 @@ impl IcAdminWrapper {
         {
             // User confirmed the desire to submit the proposal and no obvious problems were
             // found. Proceeding!
-            exec(self, cmd, opts, false)
+            self._exec(cmd, opts, false).await
         } else {
             Err(anyhow::anyhow!("Action aborted"))
         }
     }
 
-    fn _run_ic_admin_with_args(&self, ic_admin_args: &[String], with_auth: bool) -> anyhow::Result<String> {
+    async fn _run_ic_admin_with_args(&self, ic_admin_args: &[String], with_auth: bool) -> anyhow::Result<String> {
         let ic_admin_path = self.ic_admin_bin_path.clone().unwrap_or_else(|| "ic-admin".to_string());
         let mut cmd = Command::new(ic_admin_path);
         let auth_options = if with_auth {
-            self.neuron.auth.as_arg_vec()
+            self.neuron.get_auth().await?.as_arg_vec()
         } else {
             vec![]
         };
@@ -280,7 +283,7 @@ impl IcAdminWrapper {
         .concat();
         let cmd = cmd.args([&root_options, ic_admin_args].concat());
 
-        self.print_ic_admin_command_line(cmd);
+        self.print_ic_admin_command_line(cmd).await;
         cmd.stdout(Stdio::piped());
 
         match cmd.spawn() {
@@ -310,9 +313,9 @@ impl IcAdminWrapper {
         }
     }
 
-    pub fn run(&self, command: &str, args: &[String], with_auth: bool) -> anyhow::Result<String> {
+    pub async fn run(&self, command: &str, args: &[String], with_auth: bool) -> anyhow::Result<String> {
         let ic_admin_args = [&[command.to_string()], args].concat();
-        self._run_ic_admin_with_args(&ic_admin_args, with_auth)
+        self._run_ic_admin_with_args(&ic_admin_args, with_auth).await
     }
 
     /// Run ic-admin and parse sub-commands that it lists with "--help",
@@ -345,7 +348,7 @@ impl IcAdminWrapper {
     }
 
     /// Run an `ic-admin get-*` command directly, and without an HSM
-    pub fn run_passthrough_get(&self, args: &[String]) -> anyhow::Result<()> {
+    pub async fn run_passthrough_get(&self, args: &[String]) -> anyhow::Result<()> {
         if args.is_empty() {
             println!("List of available ic-admin 'get' sub-commands:\n");
             for subcmd in self.grep_subcommands(r"\s+get-(.+?)\s") {
@@ -372,12 +375,13 @@ impl IcAdminWrapper {
             args_with_get_prefix
         };
 
-        self.run(&args[0], &args.iter().skip(1).cloned().collect::<Vec<_>>(), false)?;
+        self.run(&args[0], &args.iter().skip(1).cloned().collect::<Vec<_>>(), false)
+            .await?;
         Ok(())
     }
 
     /// Run an `ic-admin propose-to-*` command directly
-    pub fn run_passthrough_propose(&self, args: &[String], simulate: bool) -> anyhow::Result<()> {
+    pub async fn run_passthrough_propose(&self, args: &[String], simulate: bool) -> anyhow::Result<()> {
         if args.is_empty() {
             println!("List of available ic-admin 'propose' sub-commands:\n");
             for subcmd in self.grep_subcommands(r"\s+propose-to-(.+?)\s") {
@@ -421,7 +425,7 @@ impl IcAdminWrapper {
             args: args.iter().skip(1).cloned().collect::<Vec<_>>(),
         };
         let simulate = simulate || cmd.args().contains(&String::from("--dry-run"));
-        self.propose_run(cmd, Default::default(), simulate)?;
+        self.propose_run(cmd, Default::default(), simulate).await?;
         Ok(())
     }
 
@@ -716,7 +720,7 @@ must be identical, and must match the SHA256 from the payload of the NNS proposa
             title: Some("Update all unassigned nodes".to_string()),
         };
 
-        self.propose_run(command, options, simulate)?;
+        self.propose_run(command, options, simulate).await?;
         Ok(())
     }
 
@@ -819,7 +823,7 @@ must be identical, and must match the SHA256 from the payload of the NNS proposa
 
         //TODO: adapt to use set-firewall config so we can modify more than 1 rule at a time
 
-        fn submit_proposal(
+        async fn submit_proposal(
             admin_wrapper: &IcAdminWrapper,
             modifications: Vec<FirewallRuleModification>,
             propose_options: ProposeOptions,
@@ -862,6 +866,7 @@ must be identical, and must match the SHA256 from the payload of the NNS proposa
 
             let output = admin_wrapper
                 .propose_run(cmd, propose_options.clone(), true)
+                .await
                 .map_err(|e| anyhow::anyhow!("Couldn't execute test for {}-firewall-rules: {:?}", change_type, e))?;
 
             let parsed: serde_json::Value = serde_json::from_str(&output).map_err(|e| {
@@ -894,14 +899,16 @@ must be identical, and must match the SHA256 from the payload of the NNS proposa
                 args: final_args,
             };
 
-            admin_wrapper.propose_run(cmd, propose_options.clone(), simulate)?;
+            admin_wrapper
+                .propose_run(cmd, propose_options.clone(), simulate)
+                .await?;
 
             Ok(())
         }
 
         // no more than one rule mod implemented currenty -- FIXME
         match reverse_sorted.into_iter().last() {
-            Some((_, mods)) => submit_proposal(self, mods, propose_options.clone(), simulate),
+            Some((_, mods)) => submit_proposal(self, mods, propose_options.clone(), simulate).await,
             None => Err(anyhow::anyhow!(
                 "Expected to have one item for firewall rule modification"
             )),
@@ -1123,17 +1130,15 @@ oSMDIQBa2NLmSmaqjDXej4rrJEuEhKIz7/pGXpxztViWhB+X9Q==
             let cli = IcAdminWrapper {
                 network: network.clone(),
                 proceed_without_confirmation: false,
-                neuron: Neuron {
-                    id: 3,
-                    auth: Auth::Keyfile {
-                        path: file
-                            .path()
-                            .to_str()
-                            .ok_or_else(|| anyhow::format_err!("Could not convert temp file path to string"))?
-                            .to_string(),
-                    },
-                }
-                .into(),
+                neuron: Neuron::new(
+                    &network,
+                    Some(3),
+                    Some(file.path().to_string_lossy().to_string()),
+                    None,
+                    None,
+                    None,
+                )
+                .await,
                 ic_admin_bin_path: None,
             };
 
@@ -1167,13 +1172,14 @@ oSMDIQBa2NLmSmaqjDXej4rrJEuEhKIz7/pGXpxztViWhB+X9Q==
                         ]
                     })
                     .unwrap_or_default(),
-                cli.neuron.auth.as_arg_vec(),
+                cli.neuron.get_auth().await?.as_arg_vec(),
                 cmd.args(),
             ]
             .concat()
             .to_vec();
             let out = with_ic_admin(Default::default(), async {
                 cli.run(&cmd.get_command_name(), &vector, true)
+                    .await
                     .map_err(|e| anyhow::anyhow!(e))
             })
             .await;

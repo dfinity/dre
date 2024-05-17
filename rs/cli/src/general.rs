@@ -71,7 +71,7 @@ pub async fn vote_on_proposals(
     accepted_topics: &[i32],
     simulate: bool,
 ) -> anyhow::Result<()> {
-    let client: GovernanceCanisterWrapper = match &neuron.auth {
+    let client: GovernanceCanisterWrapper = match &neuron.get_auth().await? {
         Auth::Hsm { pin, slot, key_id } => {
             CanisterClient::from_hsm(pin.to_string(), *slot, key_id.to_string(), &nns_urls[0])?.into()
         }
@@ -107,7 +107,9 @@ pub async fn vote_on_proposals(
             );
 
             if !simulate {
-                let response = client.register_vote(neuron.id, proposal.id.unwrap().id).await?;
+                let response = client
+                    .register_vote(neuron.get_neuron_id().await?, proposal.id.unwrap().id)
+                    .await?;
                 info!("{}", response);
             } else {
                 info!("Simulating vote");

@@ -23,7 +23,7 @@ pub struct Runner {
 }
 
 impl Runner {
-    pub fn deploy(&self, subnet: &PrincipalId, version: &str, simulate: bool) -> anyhow::Result<()> {
+    pub async fn deploy(&self, subnet: &PrincipalId, version: &str, simulate: bool) -> anyhow::Result<()> {
         self.ic_admin
             .propose_run(
                 ic_admin::ProposeCommand::UpdateSubnetReplicaVersion {
@@ -37,6 +37,7 @@ impl Runner {
                 },
                 simulate,
             )
+            .await
             .map_err(|e| anyhow::anyhow!(e))?;
 
         Ok(())
@@ -110,18 +111,20 @@ impl Runner {
                 .expect("Should get a replica version"),
         );
 
-        self.ic_admin.propose_run(
-            ic_admin::ProposeCommand::CreateSubnet {
-                node_ids: subnet_creation_data.added,
-                replica_version,
-            },
-            ic_admin::ProposeOptions {
-                title: Some("Creating new subnet".into()),
-                summary: Some("# Creating new subnet with nodes: ".into()),
-                motivation: Some(motivation.clone()),
-            },
-            simulate,
-        )?;
+        self.ic_admin
+            .propose_run(
+                ic_admin::ProposeCommand::CreateSubnet {
+                    node_ids: subnet_creation_data.added,
+                    replica_version,
+                },
+                ic_admin::ProposeOptions {
+                    title: Some("Creating new subnet".into()),
+                    summary: Some("# Creating new subnet with nodes: ".into()),
+                    motivation: Some(motivation.clone()),
+                },
+                simulate,
+            )
+            .await?;
         Ok(())
     }
 
@@ -177,6 +180,7 @@ impl Runner {
                 options,
                 simulate,
             )
+            .await
             .map_err(|e| anyhow::anyhow!(e))?;
         Ok(())
     }
@@ -420,6 +424,7 @@ impl Runner {
                 },
                 simulate,
             )
+            .await
             .map_err(|e| anyhow::anyhow!(e))?;
 
         println!("Submitted proposal to updated the following nodes:\n{:?}", nodes);
@@ -460,17 +465,19 @@ impl Runner {
         }
         println!("{}", table);
 
-        self.ic_admin.propose_run(
-            ic_admin::ProposeCommand::RemoveNodes {
-                nodes: node_removals.iter().map(|n| n.node.principal).collect(),
-            },
-            ProposeOptions {
-                title: "Remove nodes from the network".to_string().into(),
-                summary: "Remove nodes from the network".to_string().into(),
-                motivation: node_remove_response.motivation.into(),
-            },
-            simulate,
-        )?;
+        self.ic_admin
+            .propose_run(
+                ic_admin::ProposeCommand::RemoveNodes {
+                    nodes: node_removals.iter().map(|n| n.node.principal).collect(),
+                },
+                ProposeOptions {
+                    title: "Remove nodes from the network".to_string().into(),
+                    summary: "Remove nodes from the network".to_string().into(),
+                    motivation: node_remove_response.motivation.into(),
+                },
+                simulate,
+            )
+            .await?;
         Ok(())
     }
 }
