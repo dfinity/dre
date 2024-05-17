@@ -1,9 +1,5 @@
 {
-<<<<<<< HEAD
-  "checksum": "6e01376a572a18f15875c2a18faf3459bb7b8f52838e73dbb9e3cf026b202c60",
-=======
-  "checksum": "b76ca6e07b594e6c690a4f7a63269eecaae962d8a2bcb5976e90b3420b116d04",
->>>>>>> 649719d (feat(dre): Better listing proposals (#382))
+  "checksum": "d8e5afea1adddd97c03bb859700e8ab5d2939cdd1db7c398172156b233b0fd24",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -39285,12 +39281,8 @@
         "crate_features": {
           "common": [
             "alloc",
-<<<<<<< HEAD
             "default",
             "std"
-=======
-            "default"
->>>>>>> 649719d (feat(dre): Better listing proposals (#382))
           ],
           "selects": {}
         },
