@@ -104,6 +104,7 @@ jobs:
             bases/apps/ic-release-controller/sts.yaml
             bases/apps/mainnet-dashboard/backend/base/deployment.yaml
             bases/apps/mainnet-dashboard/statefulset-slack.yaml
+            bases/apps/service-discovery/service-discovery.yaml
             bases/apps/vector-testnets/vector.yaml
             bases/apps/vector/vector.yaml
           )
