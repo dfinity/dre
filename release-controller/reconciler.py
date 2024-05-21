@@ -108,7 +108,9 @@ def version_package_urls(version: str):
 
 def version_package_checksum(version: str):
     with tempfile.TemporaryDirectory() as d:
-        response = requests.get(f"https://download.dfinity.systems/ic/{version}/guest-os/update-img/SHA256SUMS")
+        response = requests.get(
+            f"https://download.dfinity.systems/ic/{version}/guest-os/update-img/SHA256SUMS", timeout=10
+        )
         checksum = [
             line for line in response.content.decode("utf-8").splitlines() if line.strip().endswith("update-img.tar.gz")
         ][0].split(" ")[0]
@@ -117,7 +119,7 @@ def version_package_checksum(version: str):
             image_file = str(pathlib.Path(d) / f"update-img-{i}.tar.gz")
             logging.debug("fetching package %s", u)
             with open(image_file, "wb") as file:
-                response = requests.get(u)
+                response = requests.get(u, timeout=10)
                 file.write(response.content)
             if sha256sum(image_file) != checksum:
                 raise RuntimeError("checksums do not match")
@@ -165,7 +167,7 @@ class Reconciler:
             # update to create posts for any releases
             rc_forum_topic.update(changelog=self.loader.changelog, proposal=self.state.version_proposal)
             for v_idx, v in enumerate(rc.versions):
-                logging.info(f"Updating version {v}")
+                logging.info("Updating version %s", v)
                 push_release_tags(self.ic_repo, rc)
                 self.notes_client.ensure(
                     version=v.version,

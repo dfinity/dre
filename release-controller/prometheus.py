@@ -2,11 +2,14 @@ import requests
 
 
 class ICPrometheus:
+    """A simple client for querying the Internet Computer's Prometheus instance."""
 
     def __init__(self, url):
+        """Create a new ICPrometheus client."""
         self.prometheus_url = url
 
     def active_versions(self) -> list[str]:
+        """Return a list of active versions."""
         versions = [
             r["metric"]["ic_active_version"]
             for r in self.query(
@@ -18,7 +21,8 @@ class ICPrometheus:
         return versions
 
     def query(self, query):
-        return requests.get(self.prometheus_url + "/api/v1/query", params={"query": query}).json()
+        """Query the Prometheus instance."""
+        return requests.get(self.prometheus_url + "/api/v1/query", params={"query": query}, timeout=10).json()
 
 
 def main():
