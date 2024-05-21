@@ -3,7 +3,11 @@ use core::time;
 use ic_management_types::NodeProvidersResponse;
 use std::sync::mpsc::Sender;
 
-use ic_management_backend::{health::HealthClient, public_dashboard::query_ic_dashboard_list, registry::RegistryState};
+use ic_management_backend::{
+    health::{HealthClient, HealthStatusQuerier},
+    public_dashboard::query_ic_dashboard_list,
+    registry::RegistryState,
+};
 use tokio_util::sync::CancellationToken;
 use tracing::{error, info};
 

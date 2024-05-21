@@ -51,10 +51,12 @@ pytest-mock = "^3.12.0"
 mammoth = "^1.7.0"
 slack-sdk = "^3.27.1"
 git-changelog = "^2.5.1"
+wrapt = "1.16.0"
 
 
 [tool.poetry.group.dev.dependencies]
 black = "^24"
+httpretty = "^1.1.4"
 
 [build-system]
 requires = ["poetry-core"]

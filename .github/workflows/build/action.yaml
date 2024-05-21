@@ -13,10 +13,11 @@ runs:
       id: build
       run: |
         set -x
+        rm -rf /home/runner/work/_temp/*/cache.tzst
         function bazel_build_auto_repin() {
             local MYTMPDIR="$(mktemp -d)"
             trap 'rm -rf -- "$MYTMPDIR"' EXIT
-            local logfile="$MYTMPDIR/bazel-out.log" 
+            local logfile="$MYTMPDIR/bazel-out.log"
             local r=0
             bazel "$@" 2>&1 | tee "$logfile" >&2 || r=1
             if [ "$r" != "0" ]; then
@@ -27,7 +28,7 @@ runs:
             fi
             echo "repin=false" >> $GITHUB_OUTPUT
             return $r
-        }        
+        }
         bazel_build_auto_repin build --config=ci ...
       shell: bash
 

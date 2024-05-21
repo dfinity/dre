@@ -1,4 +1,5 @@
 use super::*;
+use crate::health::HealthStatusQuerier;
 use crate::{health, subnets::get_proposed_subnet_changes};
 use decentralization::network::{SubnetQueryBy, TopologyManager};
 use ic_base_types::PrincipalId;
@@ -131,6 +132,11 @@ async fn replace(
             .collect::<Vec<_>>();
 
         if !unhealthy.is_empty() {
+            // Do not check the health of the force-included nodes
+            let unhealthy = unhealthy
+                .into_iter()
+                .filter(|n| !request.include.as_ref().unwrap_or(&vec![]).contains(&n.id))
+                .collect::<Vec<_>>();
             replacements_unhealthy.extend(unhealthy);
         }
     }

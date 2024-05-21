@@ -1,11 +1,11 @@
-use crate::factsdb;
 use crate::git_ic_repo::IcRepo;
+use crate::health::HealthStatusQuerier;
+use crate::node_labels;
 use crate::proposal::{self, SubnetUpdateProposal, UpdateUnassignedNodesProposal};
 use crate::public_dashboard::query_ic_dashboard_list;
 use async_trait::async_trait;
 use decentralization::network::{AvailableNodesQuerier, SubnetQuerier, SubnetQueryBy};
 use futures::TryFutureExt;
-use gitlab::AsyncGitlab;
 use ic_base_types::NodeId;
 use ic_base_types::{RegistryVersion, SubnetId};
 use ic_interfaces_registry::{RegistryClient, RegistryValue, ZERO_REGISTRY_VERSION};
@@ -14,6 +14,7 @@ use ic_management_types::{
     NodeProvidersResponse, Operator, Provider, Release, Subnet, SubnetMetadata, UpdateElectedHostosVersionsProposal,
     UpdateElectedReplicaVersionsProposal,
 };
+use ic_protobuf::registry::api_boundary_node::v1::ApiBoundaryNodeRecord;
 use ic_protobuf::registry::crypto::v1::PublicKey;
 use ic_protobuf::registry::hostos_version::v1::HostosVersionRecord;
 use ic_protobuf::registry::replica_version::v1::BlessedReplicaVersions;
@@ -27,14 +28,14 @@ use ic_registry_client_helpers::node::NodeRegistry;
 use ic_registry_common_proto::pb::local_store::v1::{
     ChangelogEntry as PbChangelogEntry, KeyMutation as PbKeyMutation, MutationType,
 };
-use ic_registry_keys::DATA_CENTER_KEY_PREFIX;
 use ic_registry_keys::{
     make_blessed_replica_versions_key, HOSTOS_VERSION_KEY_PREFIX, NODE_OPERATOR_RECORD_KEY_PREFIX,
     NODE_RECORD_KEY_PREFIX, SUBNET_RECORD_KEY_PREFIX,
 };
 use ic_registry_keys::{make_crypto_threshold_signing_pubkey_key, ROOT_SUBNET_ID_KEY};
+use ic_registry_keys::{API_BOUNDARY_NODE_RECORD_KEY_PREFIX, DATA_CENTER_KEY_PREFIX};
 use ic_registry_local_registry::LocalRegistry;
-use ic_registry_local_store::{Changelog, ChangelogEntry, KeyMutation, LocalStoreImpl, LocalStoreWriter};
+use ic_registry_local_store::{Changelog, ChangelogEntry, KeyMutation, LocalStoreImpl};
 use ic_registry_nns_data_provider::registry::RegistryCanister;
 use ic_registry_subnet_type::SubnetType;
 use ic_types::PrincipalId;
@@ -74,7 +75,7 @@ pub struct RegistryState {
     subnets: BTreeMap<PrincipalId, Subnet>,
     nodes: BTreeMap<PrincipalId, Node>,
     operators: BTreeMap<PrincipalId, Operator>,
-    factsdb_guests: Vec<Guest>,
+    node_labels_guests: Vec<Guest>,
     known_subnets: BTreeMap<PrincipalId, String>,
 
     replica_releases: ArtifactReleases,
@@ -99,6 +100,10 @@ impl RegistryEntry for NodeRecord {
 
 impl RegistryEntry for SubnetRecord {
     const KEY_PREFIX: &'static str = SUBNET_RECORD_KEY_PREFIX;
+}
+
+impl RegistryEntry for ApiBoundaryNodeRecord {
+    const KEY_PREFIX: &'static str = API_BOUNDARY_NODE_RECORD_KEY_PREFIX;
 }
 
 pub trait RegistryFamilyEntries {
@@ -227,7 +232,7 @@ impl RegistryState {
             subnets: BTreeMap::<PrincipalId, Subnet>::new(),
             nodes: BTreeMap::new(),
             operators: BTreeMap::new(),
-            factsdb_guests: Vec::new(),
+            node_labels_guests: Vec::new(),
             replica_releases: ArtifactReleases::new(Artifact::Replica),
             hostos_releases: ArtifactReleases::new(Artifact::HostOs),
             ic_repo: Some(IcRepo::new().expect("failed to init ic repo")),
@@ -269,10 +274,10 @@ impl RegistryState {
         }
     }
 
-    pub fn update_factsdb_guests(&mut self, factsdb_guests: Vec<Guest>) {
-        self.factsdb_guests = factsdb_guests;
+    pub fn update_node_labels_guests(&mut self, node_label_guests: Vec<Guest>) {
+        self.node_labels_guests = node_label_guests;
         if self.network.name != "mainnet" {
-            for g in &mut self.factsdb_guests {
+            for g in &mut self.node_labels_guests {
                 g.dfinity_owned = true;
             }
         }
@@ -325,6 +330,10 @@ impl RegistryState {
     }
 
     async fn update_releases(&mut self) -> Result<()> {
+        // If the network isn't mainnet we don't need to check git branches
+        if !self.network.eq(&Network::new("mainnet", &vec![]).await.unwrap()) {
+            return Ok(());
+        }
         if self.ic_repo.is_some() {
             lazy_static! {
                 // TODO: We don't need to distinguish release branch and name, they can be the same
@@ -476,7 +485,7 @@ impl RegistryState {
     }
 
     fn node_record_guest(&self, nr: &NodeRecord) -> Option<Guest> {
-        self.factsdb_guests
+        self.node_labels_guests
             .iter()
             .find(|g| g.ipv6 == Ipv6Addr::from_str(&nr.http.clone().unwrap().ip_addr).unwrap())
             .cloned()
@@ -804,12 +813,12 @@ impl RegistryState {
     }
 
     pub fn guests(&self) -> Vec<Guest> {
-        self.factsdb_guests.clone()
+        self.node_labels_guests.clone()
     }
 
     pub fn missing_guests(&self) -> Vec<Guest> {
         let mut missing_guests = self
-            .factsdb_guests
+            .node_labels_guests
             .clone()
             .into_iter()
             .filter(|g| {
@@ -1005,7 +1014,6 @@ pub async fn sync_local_store(target_network: &Network) -> anyhow::Result<()> {
         registry_cache.update_to_latest_version();
         registry_cache.get_latest_version()
     };
-    let mut latest_certified_time = 0;
     let mut updates = vec![];
     let nns_public_key = nns_public_key(&registry_canister).await?;
 
@@ -1040,7 +1048,7 @@ pub async fn sync_local_store(target_network: &Network) -> anyhow::Result<()> {
                 error!("Failed to get latest registry version: {}", e);
             }
         }
-        if let Ok((mut initial_records, _, t)) = registry_canister
+        if let Ok((mut initial_records, _, _)) = registry_canister
             .get_certified_changes_since(local_latest_version.get(), &nns_public_key)
             .await
         {
@@ -1111,22 +1119,16 @@ pub async fn sync_local_store(target_network: &Network) -> anyhow::Result<()> {
 
             local_latest_version = local_latest_version.add(RegistryVersion::new(versions_count as u64));
 
-            latest_certified_time = t.as_nanos_since_unix_epoch();
             debug!("Sync reached version {local_latest_version}");
             tokio::time::sleep(std::time::Duration::from_secs(1)).await;
         }
     }
 
     futures::future::join_all(updates).await;
-    local_store.update_certified_time(latest_certified_time)?;
     Ok(())
 }
 
-pub async fn poll(
-    gitlab_client_release_repo: AsyncGitlab,
-    registry_state: Arc<RwLock<RegistryState>>,
-    target_network: Network,
-) {
+pub async fn poll(registry_state: Arc<RwLock<RegistryState>>, target_network: Network) {
     let nns_urls = target_network.get_nns_urls().clone();
     let registry_canister = RegistryCanister::new(nns_urls);
     loop {
@@ -1137,8 +1139,7 @@ pub async fn poll(
             continue;
         };
         if latest_version != registry_state.read().await.version() {
-            fetch_and_add_factsdb_guests_to_registry(&gitlab_client_release_repo, &target_network, &registry_state)
-                .await;
+            fetch_and_add_node_labels_guests_to_registry(&target_network, &registry_state).await;
             update_node_details(&registry_state).await;
         } else {
             debug!(
@@ -1149,18 +1150,17 @@ pub async fn poll(
     }
 }
 
-// TODO: try to get rid of factsdb data source
-async fn fetch_and_add_factsdb_guests_to_registry(
-    gitlab_client_release_repo: &AsyncGitlab,
+// TODO: try to get rid of node_labels data source
+async fn fetch_and_add_node_labels_guests_to_registry(
     target_network: &Network,
     registry_state: &Arc<RwLock<RegistryState>>,
 ) {
-    let guests_result = factsdb::query_guests(gitlab_client_release_repo.clone(), &target_network.name).await;
+    let guests_result = node_labels::query_guests(&target_network.name).await;
 
     match guests_result {
-        Ok(factsdb_guests) => {
+        Ok(node_labels_guests) => {
             let mut registry_state = registry_state.write().await;
-            registry_state.update_factsdb_guests(factsdb_guests);
+            registry_state.update_node_labels_guests(node_labels_guests);
         }
         Err(e) => {
             warn!("Failed querying guests file: {}", e);

@@ -2,7 +2,7 @@ use anyhow::anyhow;
 use async_recursion::async_recursion;
 use futures_util::future::try_join;
 use ic_base_types::{NodeId, PrincipalId};
-use ic_management_backend::health;
+use ic_management_backend::health::{self, HealthStatusQuerier};
 use ic_management_backend::proposal::ProposalAgent;
 use ic_management_types::{Network, Node, Status, Subnet, UpdateNodesHostosVersionsProposal};
 use log::{debug, info};

@@ -338,7 +338,7 @@ mod get_open_proposal_for_subnet_tests {
     use candid::Principal;
     use ic_base_types::PrincipalId;
     use ic_management_backend::proposal::ProposalInfoInternal;
-    use registry_canister::mutations::do_update_subnet_replica::UpdateSubnetReplicaVersionPayload;
+    use registry_canister::mutations::do_deploy_guestos_to_all_subnet_nodes::DeployGuestosToAllSubnetNodesPayload;
 
     use super::*;
     use rstest::rstest;
@@ -358,7 +358,7 @@ mod get_open_proposal_for_subnet_tests {
             .iter()
             .enumerate()
             .map(|(i, (id, executed))| SubnetUpdateProposal {
-                payload: UpdateSubnetReplicaVersionPayload {
+                payload: DeployGuestosToAllSubnetNodesPayload {
                     subnet_id: PrincipalId(Principal::from_str(id).expect("Can create principal")),
                     replica_version_id: version.to_string(),
                 },
@@ -640,7 +640,7 @@ mod check_stages_tests {
     use ic_base_types::PrincipalId;
     use ic_management_backend::proposal::ProposalInfoInternal;
     use registry_canister::mutations::{
-        do_update_subnet_replica::UpdateSubnetReplicaVersionPayload,
+        do_deploy_guestos_to_all_subnet_nodes::DeployGuestosToAllSubnetNodesPayload,
         do_update_unassigned_nodes_config::UpdateUnassignedNodesConfigPayload,
     };
 
@@ -877,7 +877,7 @@ mod check_stages_tests {
                 proposal_timestamp_seconds: 0,
                 id: subnet_id,
             },
-            payload: UpdateSubnetReplicaVersionPayload {
+            payload: DeployGuestosToAllSubnetNodesPayload {
                 replica_version_id: version.to_string(),
                 subnet_id: principal(subnet_id),
             },

@@ -100,7 +100,7 @@ impl From<NM> for NodeMetrics {
     fn from(value: NM) -> Self {
         Self {
             node_id: value.node_id,
-            num_blocks_total: value.num_blocks_total,
+            num_blocks_total: value.num_blocks_proposed_total,
             num_block_failures_total: value.num_block_failures_total,
         }
     }

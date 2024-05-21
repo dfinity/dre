@@ -1,62 +1,71 @@
 import hashlib
-import json
 import logging
 import os
 import pathlib
+import socket
 import sys
+import tempfile
 import time
 import traceback
 
+import __fix_import_paths  # isort:skip  # noqa: F401 # pylint: disable=W0611
+import release_index
 import requests
-import __fix_import_paths
-from pydiscourse import DiscourseClient
-from pydantic_yaml import parse_yaml_raw_as
-from release_index import Model as ReleaseIndexModel
-from forum import ReleaseCandidateForumClient, ReleaseCandidateForumPost
 from dotenv import load_dotenv
-from pylib.ic_admin import IcAdmin
-from release_index_loader import ReleaseLoader, DevReleaseLoader, GitReleaseLoader
+from forum import ReleaseCandidateForumClient
+from git_repo import GitRepo
+from git_repo import push_release_tags
+from github import Auth
+from github import Github
 from google_docs import ReleaseNotesClient
-from github import Github, Auth
-from publish_notes import PublishNotesClient
 from governance import GovernanceCanister
 from prometheus import ICPrometheus
-import release_index
-import urllib.request
-import tempfile
+from publish_notes import PublishNotesClient
+from pydiscourse import DiscourseClient
+from release_index_loader import DevReleaseLoader
+from release_index_loader import GitReleaseLoader
+from release_index_loader import ReleaseLoader
 from release_notes import release_notes
 from util import version_name
-from git_repo import GitRepo, push_release_tags
+
+from pylib.ic_admin import IcAdmin
 
 
 class ReconcilerState:
-    def __init__(self, dir: pathlib.Path):
-        if not dir.exists():
-            os.makedirs(dir)
-        self.dir = dir
+    """State for the reconciler. This is used to keep track of the proposals that have been submitted."""
+
+    def __init__(self, path: pathlib.Path):
+        """Create a new state object."""
+        if not path.exists():
+            os.makedirs(path)
+        self.path = path
 
     def _version_path(self, version: str):
-        return self.dir / version
+        return self.path / version
 
     def version_proposal(self, version: str) -> int | None:
+        """Get the proposal ID for the given version. If the version has not been submitted, return None."""
         version_file = self._version_path(version)
         if not version_file.exists():
             return None
-        content = open(version_file).read()
+        content = open(version_file, encoding="utf8").read()
         if len(content) == 0:
             return None
         return int(content)
 
     def proposal_submitted(self, version: str) -> bool:
+        """Check if a proposal has been submitted for the given version."""
         return self._version_path(version).exists()
 
     def mark_submitted(self, version: str):
+        """Mark a proposal as submitted."""
         self._version_path(version).touch()
 
     def save_proposal(self, version: str, proposal_id: int):
+        """Save the proposal ID for the given version."""
         if self.version_proposal(version) or not self._version_path(version).exists():
             return
-        with open(self._version_path(version), "w") as f:
+        with open(self._version_path(version), "w", encoding="utf8") as f:
             f.write(str(proposal_id))
 
 
@@ -100,16 +109,18 @@ def version_package_urls(version: str):
 
 def version_package_checksum(version: str):
     with tempfile.TemporaryDirectory() as d:
-        response = requests.get(f"https://download.dfinity.systems/ic/{version}/guest-os/update-img/SHA256SUMS")
-        checksum = [l for l in response.content.decode('utf-8').splitlines() if l.strip().endswith("update-img.tar.gz")][0].split(" ")[
-            0
-        ]
+        response = requests.get(
+            f"https://download.dfinity.systems/ic/{version}/guest-os/update-img/SHA256SUMS", timeout=10
+        )
+        checksum = [
+            line for line in response.content.decode("utf-8").splitlines() if line.strip().endswith("update-img.tar.gz")
+        ][0].split(" ")[0]
 
         for i, u in enumerate(version_package_urls(version)):
             image_file = str(pathlib.Path(d) / f"update-img-{i}.tar.gz")
-            logging.debug(f"fetching package {u}")
+            logging.debug("fetching package %s", u)
             with open(image_file, "wb") as file:
-                response = requests.get(u)
+                response = requests.get(u, timeout=10)
                 file.write(response.content)
             if sha256sum(image_file) != checksum:
                 raise RuntimeError("checksums do not match")
@@ -118,6 +129,8 @@ def version_package_checksum(version: str):
 
 
 class Reconciler:
+    """Reconcile the state of the network with the release index, and create a forum post if needed."""
+
     def __init__(
         self,
         forum_client: ReleaseCandidateForumClient,
@@ -127,8 +140,9 @@ class Reconciler:
         nns_url: str,
         state: ReconcilerState,
         ic_repo: GitRepo,
-        ignore_releases=[],
+        ignore_releases=None,
     ):
+        """Create a new reconciler."""
         self.forum_client = forum_client
         self.loader = loader
         self.notes_client = notes_client
@@ -138,9 +152,10 @@ class Reconciler:
         self.state = state
         self.ic_prometheus = ICPrometheus(url="https://victoria.mainnet.dfinity.network/select/0/prometheus")
         self.ic_repo = ic_repo
-        self.ignore_releases = ignore_releases
+        self.ignore_releases = ignore_releases or []
 
     def reconcile(self):
+        """Reconcile the state of the network with the release index."""
         config = self.loader.index()
         active_versions = self.ic_prometheus.active_versions()
         ic_admin = IcAdmin(self.nns_url, git_revision=os.environ.get("IC_ADMIN_VERSION"))
@@ -153,6 +168,7 @@ class Reconciler:
             # update to create posts for any releases
             rc_forum_topic.update(changelog=self.loader.changelog, proposal=self.state.version_proposal)
             for v_idx, v in enumerate(rc.versions):
+                logging.info("Updating version %s", v)
                 push_release_tags(self.ic_repo, rc)
                 self.notes_client.ensure(
                     version=v.version,
@@ -170,7 +186,9 @@ class Reconciler:
                     tag_teams_on_create=v_idx == 0,
                 )
 
-                self.publish_client.publish_if_ready(google_doc_markdownified=self.notes_client.markdown_file(v.version), version=v.version)
+                self.publish_client.publish_if_ready(
+                    google_doc_markdownified=self.notes_client.markdown_file(v.version), version=v.version
+                )
 
                 # returns a result only if changelog is published
                 changelog = self.loader.changelog(v.version)
@@ -182,12 +200,12 @@ class Reconciler:
                                 versions_to_unelect(
                                     config,
                                     active_versions=active_versions,
-                                    elected_versions=json.loads(
-                                        ic_admin._ic_admin_run("get-blessed-replica-versions", "--json")
-                                    )["value"]["blessed_version_ids"],
+                                    elected_versions=ic_admin.get_blessed_versions()["value"]["blessed_version_ids"],
                                 ),
                             )
-                        # this is a defensive approach in case the ic-admin run fails but still manages to submit the proposal. we had cases like this in the past
+                        # This is a defensive approach in case the ic-admin exits with failure
+                        # but still manages to submit the proposal, e.g. because it fails to decode the response.
+                        # We had cases like this in the past.
                         self.state.mark_submitted(v.version)
 
                         place_proposal(
@@ -195,7 +213,7 @@ class Reconciler:
                             changelog=changelog,
                             version=v.version,
                             forum_post_url=rc_forum_topic.post_url(v.version),
-                            unelect_versions=unelect_versions
+                            unelect_versions=unelect_versions,
                         )
 
                     versions_proposals = self.governance_canister.replica_version_proposals()
@@ -212,15 +230,16 @@ def place_proposal(ic_admin, changelog, version: str, forum_post_url: str, unele
         unelect_versions_args.append("--replica-versions-to-unelect")
         unelect_versions_args.extend(unelect_versions)
     summary = changelog + f"\n\nLink to the forum post: {forum_post_url}"
-    logging.info(f"submitting proposal for version {version}")
-    ic_admin._ic_admin_run(
+    logging.info("submitting proposal for version %s", version)
+    ic_admin.ic_admin_run(
         "propose-to-update-elected-replica-versions",
         "--proposal-title",
         f"Elect new IC/Replica revision (commit {version[:7]})",
         "--summary",
         summary,
         *(["--dry-run"] if dry_run else []),
-        "--proposer", os.environ["PROPOSER_NEURON_ID"], # TODO: replace with system proposer
+        "--proposer",
+        os.environ["PROPOSER_NEURON_ID"],  # TODO: replace with system proposer
         "--release-package-sha256-hex",
         version_package_checksum(version),
         "--release-package-urls",
@@ -230,7 +249,9 @@ def place_proposal(ic_admin, changelog, version: str, forum_post_url: str, unele
         *unelect_versions_args,
     )
 
+
 dre_repo = "dfinity/dre"
+
 
 def main():
     if len(sys.argv) == 2:
@@ -244,19 +265,24 @@ def main():
         api_key=os.environ["DISCOURSE_KEY"],
     )
     config_loader = (
-        GitReleaseLoader(f"https://github.com/{dre_repo}.git")
-        if "dev" not in os.environ
-        else DevReleaseLoader()
+        GitReleaseLoader(f"https://github.com/{dre_repo}.git") if "dev" not in os.environ else DevReleaseLoader()
     )
-    state = ReconcilerState(pathlib.Path(os.environ.get('RECONCILER_STATE_DIR', pathlib.Path.home() / ".cache/release-controller")))
+    state = ReconcilerState(
+        pathlib.Path(os.environ.get("RECONCILER_STATE_DIR", pathlib.Path.home() / ".cache/release-controller"))
+    )
     forum_client = ReleaseCandidateForumClient(
         discourse_client,
     )
     github_client = Github(auth=Auth.Token(os.environ["GITHUB_TOKEN"]))
+    token = os.environ["GITLAB_TOKEN"]
     reconciler = Reconciler(
         forum_client=forum_client,
         loader=config_loader,
-        notes_client=ReleaseNotesClient(credentials_file=pathlib.Path(os.environ.get('GDOCS_CREDENTIALS_PATH', pathlib.Path(__file__).parent.resolve() / "credentials.json"))),
+        notes_client=ReleaseNotesClient(
+            credentials_file=pathlib.Path(
+                os.environ.get("GDOCS_CREDENTIALS_PATH", pathlib.Path(__file__).parent.resolve() / "credentials.json")
+            )
+        ),
         publish_client=PublishNotesClient(github_client.get_repo(dre_repo)),
         nns_url="https://ic0.app",
         state=state,
@@ -264,7 +290,7 @@ def main():
             "rc--2024-03-06_23-01",
             "rc--2024-03-20_23-01",
         ],
-        ic_repo = GitRepo(f"https://oauth2:{os.environ["GITLAB_TOKEN"]}@gitlab.com/dfinity-lab/public/ic.git", main_branch="master"),
+        ic_repo=GitRepo(f"https://oauth2:{token}@gitlab.com/dfinity-lab/public/ic.git", main_branch="master"),
     )
 
     while True:
@@ -272,31 +298,27 @@ def main():
             reconciler.reconcile()
         except Exception as e:
             logging.error(traceback.format_exc())
-            logging.error(f"failed to reconcile: {e}")
+            logging.error("failed to reconcile: %s", e)
         time.sleep(60)
 
 
+# use this as a template in case you need to manually submit a proposal
 def oneoff():
     release_loader = GitReleaseLoader(f"https://github.com/{dre_repo}.git")
-    version = "463296c0bc82ad5999b70245e5f125c14ba7d090"
-    changelog = release_loader.changelog("463296c0bc82ad5999b70245e5f125c14ba7d090")
+    version = "ac971e7b4c851b89b312bee812f6de542ed907c5"
+    changelog = release_loader.changelog(version)
 
-    ic_admin = IcAdmin("https://ic0.app", git_revision="e5c6356b5a752a7f5912de133000ae60e0e25aaf")
+    ic_admin = IcAdmin("https://ic0.app", git_revision="5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d")
     place_proposal(
         ic_admin=ic_admin,
         changelog=changelog,
         version=version,
-        forum_post_url="https://forum.dfinity.org/t/proposal-to-elect-new-release-rc-2024-03-20-23-01/28746/12",
-        unelect_versions=[
-            "8d4b6898d878fa3db4028b316b78b469ed29f293",
-            "85bd56a70e55b2cea75cae6405ae11243e5fdad8",
-            "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f",
-            "48da85ee6c03e8c15f3e90b21bf9ccae7b753ee6",
-            "a2cf671f832c36c0153d4960148d3e676659a747",
-        ]
+        forum_post_url="https://forum.dfinity.org/t/proposal-to-elect-new-release-rc-2024-03-27-23-01/29042/7",
+        unelect_versions=[],
     )
 
 
 if __name__ == "__main__":
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+    socket.setdefaulttimeout(15)
     main()

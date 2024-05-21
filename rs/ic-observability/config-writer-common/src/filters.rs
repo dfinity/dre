@@ -71,6 +71,7 @@ mod tests {
             dc_id: "test".to_string(),
             operator_id: PrincipalId::new_anonymous(),
             node_provider_id: PrincipalId::new_anonymous(),
+            is_api_bn: false,
         }
     }
 
@@ -88,6 +89,7 @@ mod tests {
             dc_id: "test".to_string(),
             operator_id: PrincipalId::new_anonymous(),
             node_provider_id: PrincipalId::new_anonymous(),
+            is_api_bn: false,
         };
         assert!(filter.filter(accepted_tg));
 
@@ -101,6 +103,7 @@ mod tests {
             dc_id: "test".to_string(),
             operator_id: PrincipalId::new_anonymous(),
             node_provider_id: PrincipalId::new_anonymous(),
+            is_api_bn: false,
         };
         assert!(!filter.filter(rejected_tg));
     }
@@ -121,6 +124,7 @@ mod tests {
             dc_id: "test".to_string(),
             operator_id: PrincipalId::new_anonymous(),
             node_provider_id: PrincipalId::new_anonymous(),
+            is_api_bn: false,
         };
         assert!(filterlist.filter(accepted_tg));
 
@@ -134,6 +138,7 @@ mod tests {
             dc_id: "test".to_string(),
             operator_id: PrincipalId::new_anonymous(),
             node_provider_id: PrincipalId::new_anonymous(),
+            is_api_bn: false,
         };
         assert!(!filterlist.filter(rejected_tg_1));
 
