@@ -103,6 +103,7 @@ jobs:
           files=(
             bases/apps/mainnet-dashboard/statefulset-slack.yaml
             bases/apps/mainnet-dashboard/backend/base/deployment.yaml
+            bases/apps/ic-release-controller/sts.yaml
           )
           if [[ $changed == "true" ]]; then
             echo "Adding frontend to list of files"

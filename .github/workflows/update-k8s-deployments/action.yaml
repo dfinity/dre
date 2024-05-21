@@ -16,6 +16,8 @@ runs:
       run: |
         set -eExou pipefail
 
+        # List of files can be update in
+        # .github/workflows/main.yaml
         echo "Should change following files:"
         echo $files
 
