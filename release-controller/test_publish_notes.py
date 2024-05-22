@@ -1,4 +1,3 @@
-import pytest
 from github import Github
 from publish_notes import PublishNotesClient
 
@@ -45,7 +44,7 @@ Features:
         "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f",
     )
 
-    publish_client.ensure_published.assert_called_once_with(
+    publish_client.ensure_published.assert_called_once_with(  # pylint: disable=no-member
         version="2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f",
         changelog="""\
 Release Notes for [**rc--2024-02-21\\_23-01**](https://github.com/dfinity/ic/tree/rc--2024-02-21_23-01) (2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f)
@@ -106,7 +105,7 @@ Features:
         "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f",
     )
 
-    assert publish_client.ensure_published.call_count == 0
+    assert publish_client.ensure_published.call_count == 0  # pylint: disable=no-member
 
 
 def test_publish_if_ready__not_ready2(mocker):
@@ -151,4 +150,4 @@ Features:
         "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f",
     )
 
-    assert publish_client.ensure_published.call_count == 0
+    assert publish_client.ensure_published.call_count == 0  # pylint: disable=no-member
