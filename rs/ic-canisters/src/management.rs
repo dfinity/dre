@@ -41,7 +41,7 @@ impl WalletCanisterWrapper {
     ) -> anyhow::Result<Vec<NodeMetricsHistoryResponse>> {
         let contract = NodeMetricsHistoryArgs {
             start_at_timestamp_nanos: start_at_timestamp,
-            subnet_id: subnet_id,
+            subnet_id,
         };
         let wallet_canister = WalletCanister::from_canister(
             ic_utils::Canister::builder()
@@ -70,7 +70,7 @@ impl WalletCanisterWrapper {
         match result {
             Ok(result) => {
                 match Decode!(&result.r#return, Vec<NodeMetricsHistoryResponse>) {
-                    Ok(result) => Ok(result.into_iter().map(|f| f.into()).collect()),
+                    Ok(result) => Ok(result.to_vec()),
                     Err(_) => {
                         info!("Failed to decode Trustworthy Metrics of subnet {} using the new format. Falling back to the old format.", subnet_id);
                         // Try to decode as Vec<NodeMetricsHistoryResponseOld> as a fallback, since some subnets may still be running the old version of the management canister.
