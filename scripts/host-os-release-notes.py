@@ -324,12 +324,12 @@ def main():
         commit_hash, commit_message, commiter, merge_commit = commit_info
 
         file_changes = file_changes_for_commit(commit_hash, ic_repo_path)
-        changed_paths = []
+        changed_paths = set()
         for p in relevant_paths:
             for c in file_changes:
                 changed_prefix = c["file_path"][1:]
                 if changed_prefix.startswith(p):
-                    changed_paths.append(p)
+                    changed_paths.add(p)
         if not changed_paths:
             continue
 
