@@ -9,7 +9,7 @@ from release_index import Version
 def test_create_release_notes_on_new_release():
     """Release notes are created when a new release is added to the index."""
     discourse_client = DiscourseClientMock()
-    get_url = discourse_client.host + "posts/1.json"
+    get_url = discourse_client.host + "/posts/1.json"
     httpretty.register_uri(
         httpretty.GET,
         get_url,
