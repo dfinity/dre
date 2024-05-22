@@ -21,7 +21,7 @@ runs:
         # this might remove tools that are actually needed,
         # when set to "true" but frees about 6 GB
         tool-cache: true
-        large-packages: false  # this is slow
+        large-packages: true  # this is slow
     - uses: bazelbuild/setup-bazelisk@v2
 
     ########################################
