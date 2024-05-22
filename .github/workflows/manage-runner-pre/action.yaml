@@ -38,4 +38,5 @@ runs:
       shell: bash
 
     - name: "🌎 Creating path cache path if it doesn't exist"
+      shell: bash
       run: mkdir -p ~/.cache
