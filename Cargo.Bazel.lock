@@ -1,5 +1,5 @@
 {
-  "checksum": "b0c1429a1d74326f983596231a5f060a6870760dedec91dc54e2a44ca49c6975",
+  "checksum": "3be9f0f64dc894dc197dfa66905c30cbcddf085666768a4cbbe06451358145e1",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -11346,6 +11346,10 @@
             {
               "id": "ic-sys 0.9.0",
               "target": "ic_sys"
+            },
+            {
+              "id": "ic-types 0.9.0",
+              "target": "ic_types"
             },
             {
               "id": "itertools 0.12.1",
