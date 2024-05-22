@@ -14,8 +14,6 @@ runs:
       run: |
         set -x
         rm -rf /home/runner/work/_temp/*/cache.tzst
-        echo "Running in directory: $(pwd)"ž
-        echo "Last commit: $(git rev-parse HEAD)"
         function bazel_build_auto_repin() {
             local MYTMPDIR="$(mktemp -d)"
             trap 'rm -rf -- "$MYTMPDIR"' EXIT
