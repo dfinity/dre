@@ -103,6 +103,6 @@ runs:
         sudo systemctl enable docker.service
         sudo systemctl enable containerd.service
         
-        docker info
+        sudo docker info
 
         sleep 3600
