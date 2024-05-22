@@ -52,6 +52,7 @@ runs:
         OPENSSL_VERSION="1.1.1w"
         OPENSSL_URL="https://www.openssl.org/source/old/1.1.1/openssl-${OPENSSL_VERSION}.tar.gz"
         TARGET_DIR="openssl"
+        mkdir $TARGET_DIR
 
         # Download the specified OpenSSL version
         echo "Downloading OpenSSL ${OPENSSL_VERSION}..."
