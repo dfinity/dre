@@ -45,6 +45,7 @@ jobs:
           #
           sudo rm -rf ~/.cache/bazel/*
           CARGO_BAZEL_REPIN=true bazel build ...
+          bazel test
 
       - name: "🆕 Create a new Pull Request with the changes"
         uses: peter-evans/create-pull-request@v6
