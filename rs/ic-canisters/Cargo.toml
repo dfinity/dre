@@ -23,6 +23,7 @@ ic-protobuf = { workspace = true }
 ic-registry-transport = { workspace = true }
 ic-sys = { workspace = true }
 ic-utils = { workspace = true }
+log = { workspace = true }
 pkcs11 = { workspace = true }
 prost = { workspace = true }
 serde = { workspace = true }
