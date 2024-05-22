@@ -7,13 +7,6 @@ runs:
     ########################################
     # Setup
     ########################################
-    - name: "🔧 Free Up Disk Space"
-      uses: jlumbroso/free-disk-space@v1.3.1
-      with:
-        # this might remove tools that are actually needed,
-        # when set to "true" but frees about 6 GB
-        tool-cache: true
-        large-packages: true  # this is slow
     - uses: bazelbuild/setup-bazelisk@v2
 
     ########################################
@@ -34,8 +27,4 @@ runs:
       # This is desirable to make sure bazel does not use stale pre-built binaries
       # Bazel actually keeps all intermediate objects so builds are still fast
       run: bazel clean
-      shell: bash
-
-    - name: "💾 Start bazel-remote s3 cache"
-      run: ./bin/bazel-cache-s3-start.sh
       shell: bash
