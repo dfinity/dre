@@ -42,5 +42,6 @@ runs:
       run: |
         sudo apt update -y
         sudo apt upgrade -y
-        sudo apt install git-all gcc -y
+        sudo apt install git-all gcc docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin -y
+        sudo service docker start
         mkdir -p ~/.cache/bazel
