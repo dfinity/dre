@@ -43,6 +43,6 @@ runs:
         sudo apt-get update -y
         sudo apt-get upgrade -y
 
-        sudo apt-get install ca-certificates curl git-all gcc -y
+        sudo apt-get install ca-certificates curl git-all gcc g++ clang -y
         mkdir -p ~/.cache/bazel
         pwd
