@@ -40,5 +40,7 @@ runs:
     - name: "🌎 Setting up missing software"
       shell: bash
       run: |
-        sudo apt install git-all -y
+        sudo apt update
+        sudo apt upgrade 
+        sudo install git-all -y
         mkdir -p ~/.cache/bazel
