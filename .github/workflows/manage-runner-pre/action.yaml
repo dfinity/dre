@@ -42,5 +42,5 @@ runs:
       run: |
         sudo apt update -y
         sudo apt upgrade -y
-        sudo apt install git-all -y
+        sudo apt install git-all gcc -y
         mkdir -p ~/.cache/bazel
