@@ -45,3 +45,4 @@ runs:
 
         sudo apt-get install ca-certificates curl git-all gcc -y
         mkdir -p ~/.cache/bazel
+        pwd
