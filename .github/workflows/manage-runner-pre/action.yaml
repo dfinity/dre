@@ -37,6 +37,8 @@ runs:
       run: bazel clean
       shell: bash
 
-    - name: "🌎 Creating path cache path if it doesn't exist"
+    - name: "🌎 Setting up missing software"
       shell: bash
-      run: mkdir -p ~/.cache/bazel
+      run: |
+        sudo apt install git-all -y
+        mkdir -p ~/.cache/bazel
