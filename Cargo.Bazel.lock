@@ -1,5 +1,5 @@
 {
-  "checksum": "df6cd8ac2b9ae09159db419dfe2add82ed7e2a07160c72fc167bbb77b19f804e",
+  "checksum": "b0c1429a1d74326f983596231a5f060a6870760dedec91dc54e2a44ca49c6975",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -17775,6 +17775,10 @@
             {
               "id": "ic-utils 0.34.0",
               "target": "ic_utils"
+            },
+            {
+              "id": "log 0.4.21",
+              "target": "log"
             },
             {
               "id": "pkcs11 0.5.0",

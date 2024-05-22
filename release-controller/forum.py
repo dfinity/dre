@@ -96,7 +96,7 @@ class ReleaseCandidateForumTopic:
                     logging.info("updating post %s", post_id)
                     self.client.update_post(post_id=post_id, content=content_expected)
                 else:
-                    logging.error("cannot update post %s", post_id)
+                    logging.warning("post is not editable %s", post_id)
             else:
                 self.client.create_post(
                     topic_id=self.topic_id,
