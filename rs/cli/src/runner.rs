@@ -26,13 +26,13 @@ impl Runner {
     pub async fn deploy(&self, subnet: &PrincipalId, version: &str, simulate: bool) -> anyhow::Result<()> {
         self.ic_admin
             .propose_run(
-                ic_admin::ProposeCommand::UpdateSubnetReplicaVersion {
+                ic_admin::ProposeCommand::DeployGuestosToAllSubnetNodes {
                     subnet: *subnet,
                     version: version.to_string(),
                 },
                 ic_admin::ProposeOptions {
-                    title: format!("Update subnet {subnet} to replica version {version}").into(),
-                    summary: format!("Update subnet {subnet} to replica version {version}").into(),
+                    title: format!("Update subnet {subnet} to GuestOS version {version}").into(),
+                    summary: format!("Update subnet {subnet} to GuestOS version {version}").into(),
                     motivation: None,
                 },
                 simulate,
@@ -108,7 +108,7 @@ impl Runner {
             self.dashboard_backend_client
                 .get_nns_replica_version()
                 .await
-                .expect("Should get a replica version"),
+                .expect("Failed to get a GuestOS version of the NNS subnet"),
         );
 
         self.ic_admin
@@ -252,13 +252,13 @@ impl Runner {
             .collect::<Vec<_>>();
 
             if versions.is_empty() {
-                warn!("Empty list of replica versions to unelect");
+                warn!("Empty list of GuestOS versions to unelect");
             }
             versions
         };
 
         let mut template =
-            "Removing the obsolete IC replica versions from the registry, to prevent unintended version downgrades in the future"
+            "Removing the obsolete GuestOS versions from the registry, to prevent unintended version downgrades in the future"
                 .to_string();
         if edit_summary {
             info!("Edit summary");
@@ -413,7 +413,7 @@ impl Runner {
         let title = format!("Set HostOS version: {version} on {} nodes", nodes.clone().len());
         self.ic_admin
             .propose_run(
-                ic_admin::ProposeCommand::UpdateNodesHostosVersion {
+                ic_admin::ProposeCommand::DeployHostosToSomeNodes {
                     nodes: nodes.clone(),
                     version: version.to_string(),
                 },

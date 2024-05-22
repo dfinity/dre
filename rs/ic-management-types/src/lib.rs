@@ -567,20 +567,20 @@ impl ArtifactReleases {
 #[strum(serialize_all = "lowercase")]
 #[serde(rename_all = "lowercase")]
 pub enum Artifact {
-    Replica,
+    GuestOs,
     HostOs,
 }
 
 impl Artifact {
     pub fn s3_folder(&self) -> String {
         match self {
-            Artifact::Replica => String::from("guest-os"),
+            Artifact::GuestOs => String::from("guest-os"),
             Artifact::HostOs => String::from("host-os"),
         }
     }
     pub fn capitalized(&self) -> String {
         match self {
-            Artifact::Replica => String::from("Replica"),
+            Artifact::GuestOs => String::from("Guestos"),
             Artifact::HostOs => String::from("Hostos"),
         }
     }

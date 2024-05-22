@@ -222,7 +222,8 @@ async fn async_main() -> Result<(), anyhow::Error> {
             }
 
             cli::Commands::Get { args } => {
-                runner_instance.ic_admin.run_passthrough_get(args).await
+                runner_instance.ic_admin.run_passthrough_get(args, false).await?;
+                Ok(())
             },
 
             cli::Commands::Propose { args } => {
@@ -230,7 +231,15 @@ async fn async_main() -> Result<(), anyhow::Error> {
             },
 
             cli::Commands::UpdateUnassignedNodes { nns_subnet_id } => {
-                runner_instance.ic_admin.update_unassigned_nodes( nns_subnet_id, &target_network, simulate).await
+                let nns_subnet_id = match nns_subnet_id {
+                    Some(subnet_id) => subnet_id.to_owned(),
+                    None => {
+                        let res = runner_instance.ic_admin.run_passthrough_get(&["get-subnet-list".to_string()], true).await?;
+                        let subnet_list: Vec<String> = serde_json::from_str(&res)?;
+                        subnet_list.first().ok_or_else(|| anyhow::anyhow!("No subnet found"))?.clone()
+                    }
+                };
+                runner_instance.ic_admin.update_unassigned_nodes(&nns_subnet_id, &target_network, simulate).await
             },
 
             cli::Commands::Version(version_command) => {
@@ -239,7 +248,7 @@ async fn async_main() -> Result<(), anyhow::Error> {
                         let release_artifact: &Artifact = &update_command.subcommand.clone().into();
 
                         let update_version = match &update_command.subcommand {
-                            cli::version::UpdateCommands::Replica { version, release_tag, force} | cli::version::UpdateCommands::HostOS { version, release_tag, force} => {
+                            cli::version::UpdateCommands::GuestOS { version, release_tag, force} | cli::version::UpdateCommands::HostOS { version, release_tag, force} => {
                                 ic_admin::IcAdminWrapper::prepare_to_propose_to_update_elected_versions(
                                     release_artifact,
                                     version,
@@ -250,7 +259,7 @@ async fn async_main() -> Result<(), anyhow::Error> {
                             }
                         }.await?;
 
-                        runner_instance.ic_admin.propose_run(ic_admin::ProposeCommand::UpdateElectedVersions {
+                        runner_instance.ic_admin.propose_run(ic_admin::ProposeCommand::ReviseElectedVersions {
                                                  release_artifact: update_version.release_artifact.clone(),
                                                  args: dre::parsed_cli::ParsedCli::get_update_cmd_args(&update_version)
                                              },

@@ -92,8 +92,8 @@ async fn main() -> anyhow::Result<()> {
             }
         };
 
-        // Get blessed replica versions for later
-        let blessed_versions = match registry_state.get_blessed_replica_versions().await {
+        // Get elected GuestOS versions for later
+        let elected_guestos_versions = match registry_state.get_elected_guestos_versions().await {
             Ok(versions) => versions,
             Err(e) => {
                 warn!(logger, "{:?}", e);
@@ -119,7 +119,7 @@ async fn main() -> anyhow::Result<()> {
             break;
         }
         info!(logger, "Calculated actions: {:#?}", actions);
-        match executor.execute(&actions, &blessed_versions).await {
+        match executor.execute(&actions, &elected_guestos_versions).await {
             Ok(()) => info!(logger, "Actions taken successfully"),
             Err(e) => warn!(logger, "{:?}", e),
         };

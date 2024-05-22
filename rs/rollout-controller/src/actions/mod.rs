@@ -84,15 +84,15 @@ impl<'a> SubnetAction {
         } = self
         {
             if !blessed_replica_versions.contains(version) {
-                return Err(anyhow::anyhow!("Replica version '{}' is not blessed.", version));
+                return Err(anyhow::anyhow!("GuestOS version '{}' is not elected.", version));
             }
             let principal_string = subnet_principal.to_string();
 
             let proposal = match is_unassigned {
-                true => ProposeCommand::UpdateUnassignedNodes {
+                true => ProposeCommand::DeployGuestosToAllUnassignedNodes {
                     replica_version: version.to_string(),
                 },
-                false => ProposeCommand::UpdateSubnetReplicaVersion {
+                false => ProposeCommand::DeployGuestosToAllSubnetNodes {
                     subnet: *subnet_principal,
                     version: version.to_string(),
                 },
@@ -100,12 +100,12 @@ impl<'a> SubnetAction {
 
             let opts = ProposeOptions {
                 title: Some(format!(
-                    "Update subnet {} to replica version {}",
+                    "Update subnet {} to GuestOS version {}",
                     principal_string.split_once('-').expect("Should contain '-'").0,
                     version.split_at(8).0
                 )),
                 summary: Some(format!(
-                    "Update subnet {} to replica version {}",
+                    "Update subnet {} to GuestOS version {}",
                     principal_string, version
                 )),
                 ..Default::default()
