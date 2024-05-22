@@ -320,5 +320,5 @@ def oneoff():
 
 if __name__ == "__main__":
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)
-    socket.setdefaulttimeout(15)
+    socket.setdefaulttimeout(60)
     main()
