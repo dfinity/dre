@@ -64,7 +64,6 @@
             },
             "required": [
                 "name",
-                "release_notes_ready",
                 "version"
             ],
             "title": "Version"
