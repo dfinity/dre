@@ -40,10 +40,43 @@ runs:
     - name: "🌎 Setting up missing software"
       shell: bash
       run: |
+        set -euo pipefail
+
         sudo apt-get update -y
         sudo apt-get upgrade -y
 
-        sudo apt-get install ca-certificates curl git-all gcc g++ clang libssl-dev pkg-config -y
-        openssl version
+        sudo apt-get install ca-certificates curl git-all gcc g++ clang pkg-config make -y
+
         mkdir -p ~/.cache/bazel
-        pwd
+
+        OPENSSL_VERSION="1.1.1w"
+        OPENSSL_URL="https://www.openssl.org/source/old/1.1.1/openssl-${OPENSSL_VERSION}.tar.gz"
+        TARGET_DIR="openssl"
+
+        # Download the specified OpenSSL version
+        echo "Downloading OpenSSL ${OPENSSL_VERSION}..."
+        curl -o "${TARGET_DIR}/openssl-${OPENSSL_VERSION}.tar.gz" -L "${OPENSSL_URL}"
+
+        # Extract the tarball
+        echo "Extracting OpenSSL ${OPENSSL_VERSION}..."
+        mkdir -p "${TARGET_DIR}"
+        tar -xzvf "${TARGET_DIR}/openssl-${OPENSSL_VERSION}.tar.gz" -C "${TARGET_DIR}"
+
+        # Change to the OpenSSL directory
+        cd "${TARGET_DIR}/openssl-${OPENSSL_VERSION}"
+
+        # Configure the build
+        echo "Configuring OpenSSL ${OPENSSL_VERSION}..."
+        ./config
+
+        # Build OpenSSL
+        echo "Building OpenSSL ${OPENSSL_VERSION}..."
+        make
+
+        # Install OpenSSL
+        echo "Installing OpenSSL ${OPENSSL_VERSION}..."
+        sudo make install
+
+        echo "OpenSSL ${OPENSSL_VERSION} installation completed successfully."
+
+        openssl version
