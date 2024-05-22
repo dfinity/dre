@@ -27,6 +27,10 @@ repos:
     hooks:
       - id: black
         additional_dependencies: ["click==8.0.4"]
+        exclude: |
+          (?x)^(
+              release-controller/release_index.py
+          )$
         args:
           - --line-length=120
 
@@ -34,6 +38,10 @@ repos:
     rev: v3.12.0
     hooks:
       - id: reorder-python-imports
+        exclude: |
+          (?x)^(
+              release-controller/release_index.py
+          )$
         args:
           - --application-directories=.:gitlab-ci/src/
 
@@ -47,6 +55,10 @@ repos:
     rev: 5.1.1
     hooks:
       - id: pydocstyle
+        exclude: |
+          (?x)^(
+              release-controller/release_index.py
+          )$
         args:
           - --ignore=D100,D103,D104,D203,D212
             # The default for pydocstyle is to match only on files that end in .py,
@@ -69,6 +81,10 @@ repos:
     hooks:
       - id: pylint
         name: pylint
+        exclude: |
+          (?x)^(
+              release-controller/release_index.py
+          )$
         entry: python3 -m pylint.__main__
         types: [python]
         args: [
