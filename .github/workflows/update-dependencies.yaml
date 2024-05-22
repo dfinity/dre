@@ -37,7 +37,7 @@ jobs:
           git reset --hard origin/main
           cargo update
           poetry update
-          CARGO_BAZEL_REPIN=true bazel query
+          CARGO_BAZEL_REPIN=true bazel query >/dev/null
           ./bin/poetry.sh
           #
           # Completely delete the bazel cache and then recreate it
