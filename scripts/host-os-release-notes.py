@@ -60,7 +60,7 @@ TEAM_PRETTY_MAP = {
     "prodsec": "Prodsec",
     "runtime-owners": "Runtime",
     "trust-team": "Trust",
-    "sdk-team": "SDK"
+    "sdk-team": "SDK",
 }
 
 
@@ -92,6 +92,7 @@ parser.add_argument(
 )
 args = parser.parse_args()
 
+
 # https://stackoverflow.com/a/34482761
 def progressbar(it, prefix="", size=60, out=sys.stdout):  # Python3.6+
     count = len(it)
@@ -115,6 +116,7 @@ def progressbar(it, prefix="", size=60, out=sys.stdout):  # Python3.6+
         yield i, item
         show(i + 1, item)
     print("\n", flush=True, file=out)
+
 
 def get_commits(repo_dir, first_commit, last_commit):
     def get_commits_info(git_commit_format):
@@ -215,6 +217,13 @@ def best_matching_regex(file_path, regex_list):
     matches = list(reversed([match[0] for match in matches]))
     return matches[0]
 
+
+def strip_ansi_sequences(input_text):
+    # https://stackoverflow.com/a/14693789
+    ansi_escape = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
+    return ansi_escape.sub("", input_text)
+
+
 def run_bazel_query(query, ic_repo_path):
     p = subprocess.run(
         ["gitlab-ci/container/container-run.sh"] + query,
@@ -232,7 +241,8 @@ def run_bazel_query(query, ic_repo_path):
             stdout=subprocess.PIPE,
             check=True,
         )
-    return p.stdout.strip().splitlines()
+    return [p.strip() for p in strip_ansi_sequences(p.stdout).strip().splitlines() if p.strip()]
+
 
 def main():
     first_commit = args.first_commit
@@ -295,25 +305,32 @@ def main():
     commits = get_commits(ic_repo_path, first_commit, last_commit)
     for i in range(len(commits)):
         commits[i] = commits[i] + (str(commits[i][0]),)
-    
+
     print("Generating changes for hostos from {} commits".format(len(commits)))
-    
+
+    # Find all the packages that are relevant to the HostOS update image
     bazel_query = [
         "bazel",
         "query",
-        "--universe_scope=//...",
         "deps(//ic-os/hostos/envs/prod:update-img.tar.gz)",
         "--output=package",
     ]
-    whitelisted_paths = [p for p in run_bazel_query(bazel_query, ic_repo_path) if not p.startswith("@")]
+
+    relevant_packages = run_bazel_query(bazel_query, ic_repo_path)
+    relevant_paths = [p for p in relevant_packages if not p.startswith("@")]
 
     for i, _ in progressbar([i[0] for i in commits], "Processing commit: ", 80):
         commit_info = commits[i]
         commit_hash, commit_message, commiter, merge_commit = commit_info
 
         file_changes = file_changes_for_commit(commit_hash, ic_repo_path)
-        replica_change = any(any(c["file_path"][1:].startswith(p) for c in file_changes) for p in whitelisted_paths)
-        if not replica_change:
+        changed_paths = []
+        for p in relevant_paths:
+            for c in file_changes:
+                changed_prefix = c["file_path"][1:]
+                if changed_prefix.startswith(p):
+                    changed_paths.append(p)
+        if not changed_paths:
             continue
 
         ownership = {}
@@ -380,7 +397,8 @@ def main():
                 "scope": conventional["scope"] if conventional["scope"] else "",
                 "message": conventional["message"],
                 "commiter": commiter,
-                "included": included
+                "included": included,
+                "changed_path": ":".join(changed_paths),
             }
         )
 
@@ -425,7 +443,7 @@ def main():
                     else "({0}):".format(change["scope"])
                 )
                 message_part = change["message"]
-                commiter_part = f"&lt!-- {change['commiter']} --&gt"
+                commiter_part = f"&lt!-- {change['commiter']} {change['changed_path']} --&gt"
 
                 text = "* {0} {4} {1}{2} {3}<br>".format(
                     commit_part, team_part, scope_part, message_part, commiter_part
