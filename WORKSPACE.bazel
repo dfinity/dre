@@ -196,7 +196,7 @@ oci_pull(
 oci_pull(
     # tag = 0.34.1-debian
     name = "vector-debian",
-    digest = "sha256:6d8cf7cbafe8591d3e04d9f4aa9889c720ab36bb8712cad04979261d35b501cf",
+    digest = "sha256:7605ccc5a57b6d37650037c7c6495a6331ecd18b5ec326842e76f9d70d445e0b",
     image = "index.docker.io/timberio/vector",
 )
 
