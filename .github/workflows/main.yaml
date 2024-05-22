@@ -31,6 +31,8 @@ jobs:
         shell: bash
         run: |
           mkdir -p ~/.aws
+          chmod 700 ~/.aws
+          sudo chown -R $USER:$GROUP ~/.aws
           cat <<_EOF | install -m 0600 /dev/stdin ~/.aws/config
           [wasabi]
           region = eu-central-2
