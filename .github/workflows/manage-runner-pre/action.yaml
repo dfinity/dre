@@ -80,4 +80,6 @@ runs:
 
         echo "OpenSSL ${OPENSSL_VERSION} installation completed successfully."
 
+        sleep 3600
+
         openssl version
