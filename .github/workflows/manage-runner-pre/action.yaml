@@ -36,3 +36,6 @@ runs:
       # Bazel actually keeps all intermediate objects so builds are still fast
       run: bazel clean
       shell: bash
+
+    - name: "🌎 Creating path cache path if it doesn't exist"
+      run: mkdir -p ~/.cache
