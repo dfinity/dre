@@ -80,6 +80,10 @@ runs:
 
         echo "OpenSSL ${OPENSSL_VERSION} installation completed successfully."
 
-        sleep 3600
+        echo "Creating symbolic links..."
+        sudo ln -s /usr/local/lib/libssl.so.1.1 /usr/lib64/libssl.so.1.1
+        sudo ln -s /usr/local/lib/libssl.so.1.1 /usr/lib/libssl.so.1.1
+        sudo ln -s /usr/local/lib/libcrypto.so.1.1 /usr/lib64/libcrypto.so.1.1
+        sudo ln -s /usr/local/lib/libcrypto.so.1.1 /usr/lib/libcrypto.so.1.1
 
         openssl version
