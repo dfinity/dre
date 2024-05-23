@@ -159,6 +159,15 @@ impl IcAdminWrapper {
         }
     }
 
+    pub fn as_automation(self) -> Self {
+        Self {
+            network: self.network,
+            ic_admin_bin_path: self.ic_admin_bin_path,
+            proceed_without_confirmation: self.proceed_without_confirmation,
+            neuron: self.neuron.as_automation(),
+        }
+    }
+
     pub fn from_cli(cli: ParsedCli) -> Self {
         Self {
             network: cli.network,
@@ -203,6 +212,7 @@ impl IcAdminWrapper {
                 ));
             }
         }
+
         self.run(
             &cmd.get_command_name(),
             [
@@ -229,12 +239,12 @@ impl IcAdminWrapper {
                         ]
                     })
                     .unwrap_or_default(),
-                self.neuron.as_arg_vec(!as_simulation).await?,
+                self.neuron.as_arg_vec(true).await?,
                 cmd.args(),
             ]
             .concat()
             .as_slice(),
-            !as_simulation,
+            true,
             false,
         )
         .await
@@ -256,10 +266,11 @@ impl IcAdminWrapper {
             self._exec(cmd.clone(), opts.clone(), true).await?;
         }
 
-        if Confirm::new()
-            .with_prompt("Do you want to continue?")
-            .default(false)
-            .interact()?
+        if self.proceed_without_confirmation
+            || Confirm::new()
+                .with_prompt("Do you want to continue?")
+                .default(false)
+                .interact()?
         {
             // User confirmed the desire to submit the proposal and no obvious problems were
             // found. Proceeding!

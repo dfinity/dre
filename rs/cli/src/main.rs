@@ -231,6 +231,11 @@ async fn async_main() -> Result<(), anyhow::Error> {
             },
 
             cli::Commands::UpdateUnassignedNodes { nns_subnet_id } => {
+                let runner_instance = if target_network.is_mainnet() {
+                    runner_instance.as_automation()
+                } else {
+                    runner_instance
+                };
                 let nns_subnet_id = match nns_subnet_id {
                     Some(subnet_id) => subnet_id.to_owned(),
                     None => {
@@ -356,6 +361,14 @@ async fn async_main() -> Result<(), anyhow::Error> {
                 },
                 cli::proposals::Commands::Filter { limit, statuses, topics } => {
                     filter_proposals(target_network, limit, statuses.iter().map(|s| s.clone().into()).collect(), topics.iter().map(|t| t.clone().into()).collect()).await
+                }
+                cli::proposals::Commands::Get { proposal_id } => {
+                    let nns_url = target_network.get_nns_urls().first().expect("Should have at least one NNS URL");
+                    let client = GovernanceCanisterWrapper::from(CanisterClient::from_anonymous(nns_url)?);
+                    let proposal = client.get_proposal(*proposal_id).await?;
+                    let proposal = serde_json::to_string_pretty(&proposal).map_err(|e| anyhow::anyhow!("Couldn't serialize to string: {:?}", e))?;
+                    println!("{}", proposal);
+                    Ok(())
                 }
             },
         }

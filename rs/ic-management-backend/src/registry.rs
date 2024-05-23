@@ -288,7 +288,7 @@ impl RegistryState {
 
     pub fn update_node_labels_guests(&mut self, node_label_guests: Vec<Guest>) {
         self.node_labels_guests = node_label_guests;
-        if self.network.name != "mainnet" {
+        if !self.network.is_mainnet() {
             for g in &mut self.node_labels_guests {
                 g.dfinity_owned = true;
             }
