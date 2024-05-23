@@ -2251,6 +2251,7 @@ dependencies = [
  "ic-registry-subnet-type",
  "ic-sns-wasm",
  "ic-sys",
+ "ic-types",
  "itertools 0.12.1",
  "keyring",
  "log",
