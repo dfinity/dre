@@ -1,16 +1,17 @@
 import os
+
 from dotenv import load_dotenv
-from slack_sdk.webhook import WebhookClient
 from slack_sdk.http_retry.handler import RetryHandler
+from slack_sdk.webhook import WebhookClient
 
 teams = [
-    "SRJ3R849E",  # consensus
-    "SU7BZQ78E",  # crypto
+    # "SRJ3R849E",  # consensus
+    # "SU7BZQ78E",  # crypto
     "S01A577UL56",  # execution
     "S01SVC713PS",  # messaging
-    "SR6KC1DMZ",  # networking
-    "S027838EY30",  # node team
-    "S03BM6C0CJY",  # runtime
+    # "SR6KC1DMZ",  # networking
+    # "S027838EY30",  # node team
+    # "S03BM6C0CJY",  # runtime
 ]
 
 
