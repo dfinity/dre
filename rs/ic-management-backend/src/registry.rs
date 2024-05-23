@@ -78,7 +78,7 @@ pub struct RegistryState {
     node_labels_guests: Vec<Guest>,
     known_subnets: BTreeMap<PrincipalId, String>,
 
-    replica_releases: ArtifactReleases,
+    guestos_releases: ArtifactReleases,
     hostos_releases: ArtifactReleases,
     ic_repo: Option<IcRepo>,
 }
@@ -245,7 +245,7 @@ impl RegistryState {
             nodes: BTreeMap::new(),
             operators: BTreeMap::new(),
             node_labels_guests: Vec::new(),
-            replica_releases: ArtifactReleases::new(Artifact::Replica),
+            guestos_releases: ArtifactReleases::new(Artifact::GuestOs),
             hostos_releases: ArtifactReleases::new(Artifact::HostOs),
             ic_repo: Some(IcRepo::new().expect("failed to init ic repo")),
             known_subnets: [
@@ -309,7 +309,7 @@ impl RegistryState {
         Ok(())
     }
 
-    pub async fn get_blessed_replica_versions(&self) -> Result<Vec<String>, anyhow::Error> {
+    pub async fn get_elected_guestos_versions(&self) -> Result<Vec<String>, anyhow::Error> {
         match self.local_registry.get_value(
             &make_blessed_replica_versions_key(),
             self.local_registry.get_latest_version(),
@@ -320,7 +320,7 @@ impl RegistryState {
 
                 Ok(cfg.blessed_version_ids)
             }
-            _ => Err(anyhow::anyhow!("No blessed replica version found".to_string(),)),
+            _ => Err(anyhow::anyhow!("No elected GuestOS versions found".to_string(),)),
         }
     }
     pub async fn get_elected_hostos_versions(&self) -> Result<Vec<String>, anyhow::Error> {
@@ -359,7 +359,7 @@ impl RegistryState {
                     *DATETIME_NAME_GROUP,
                 )).unwrap();
             }
-            let blessed_replica_versions = self.get_blessed_replica_versions().await?;
+            let blessed_replica_versions = self.get_elected_guestos_versions().await?;
             let elected_hostos_versions = self.get_elected_hostos_versions().await?;
 
             let blessed_versions: HashSet<&String> = blessed_replica_versions
@@ -429,7 +429,7 @@ impl RegistryState {
             });
 
             for (blessed_versions, ArtifactReleases { artifact, releases }) in [
-                (blessed_replica_versions, &mut self.replica_releases),
+                (blessed_replica_versions, &mut self.guestos_releases),
                 (elected_hostos_versions, &mut self.hostos_releases),
             ] {
                 releases.clear();
@@ -640,7 +640,7 @@ impl RegistryState {
                         },
                         replica_version: sr.replica_version_id.clone(),
                         replica_release: self
-                            .replica_releases
+                            .guestos_releases
                             .releases
                             .iter()
                             .find(|r| r.commit_hash == sr.replica_version_id)
@@ -727,14 +727,14 @@ impl RegistryState {
     pub async fn retireable_versions(&self, artifact: &Artifact) -> Result<Vec<Release>> {
         match artifact {
             Artifact::HostOs => self.retireable_hostos_versions().await,
-            Artifact::Replica => self.retireable_replica_versions().await,
+            Artifact::GuestOs => self.retireable_guestos_versions().await,
         }
     }
 
     pub async fn blessed_versions(&self, artifact: &Artifact) -> Result<Vec<String>> {
         match artifact {
             Artifact::HostOs => self.get_elected_hostos_versions().await,
-            Artifact::Replica => self.get_blessed_replica_versions().await,
+            Artifact::GuestOs => self.get_elected_guestos_versions().await,
         }
     }
 
@@ -777,8 +777,8 @@ impl RegistryState {
             .collect())
     }
 
-    async fn retireable_replica_versions(&self) -> Result<Vec<Release>> {
-        let active_releases = self.replica_releases.get_active_branches();
+    async fn retireable_guestos_versions(&self) -> Result<Vec<Release>> {
+        let active_releases = self.guestos_releases.get_active_branches();
         let subnet_versions: BTreeSet<String> = self.subnets.values().map(|s| s.replica_version.clone()).collect();
         let version_on_unassigned_nodes = self.get_unassigned_nodes_replica_version().await?;
         let versions_in_proposals: BTreeSet<String> = self
@@ -790,16 +790,16 @@ impl RegistryState {
             .collect();
         info!("Active releases: {}", active_releases.iter().join(", "));
         info!(
-            "Replica versions in use on subnets: {}",
+            "GuestOS versions in use on subnets: {}",
             subnet_versions.iter().join(", ")
         );
-        info!("Replica version on unassigned nodes: {}", version_on_unassigned_nodes);
+        info!("GuestOS version on unassigned nodes: {}", version_on_unassigned_nodes);
         info!(
-            "Replica versions in open proposals: {}",
+            "GuestOS versions in open proposals: {}",
             versions_in_proposals.iter().join(", ")
         );
         Ok(self
-            .replica_releases
+            .guestos_releases
             .releases
             .clone()
             .into_iter()
@@ -846,7 +846,7 @@ impl RegistryState {
     }
 
     pub fn replica_releases(&self) -> Vec<Release> {
-        self.replica_releases.releases.clone()
+        self.guestos_releases.releases.clone()
     }
 
     pub fn get_nns_urls(&self) -> &Vec<Url> {
@@ -867,7 +867,7 @@ impl RegistryState {
                 Ok(cfg.replica_version)
             }
             _ => Err(anyhow::anyhow!(
-                "No replica version for unassigned nodes found".to_string(),
+                "No GuestOS version for unassigned nodes found".to_string(),
             )),
         }
     }
