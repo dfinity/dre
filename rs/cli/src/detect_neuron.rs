@@ -14,7 +14,9 @@ use ic_sys::utility_command::UtilityCommand;
 use keyring::{Entry, Error};
 use log::info;
 
-#[derive(Clone)]
+static AUTOMATION_PRIVATE_KEY_PEM_HOME_SUBDIR: &str = ".config/dfx/identity/release-automation/identity.pem";
+
+#[derive(Clone, Debug)]
 pub struct Neuron {
     network: ic_management_types::Network,
     neuron_id: RefCell<Option<u64>>,
@@ -26,11 +28,27 @@ pub struct Neuron {
 }
 
 impl Neuron {
-    pub async fn get_auth(&self) -> anyhow::Result<Auth> {
+    pub async fn get_auth(&self, for_automation: bool) -> anyhow::Result<Auth> {
         if let Some(auth) = &*self.auth_cache.borrow() {
             return Ok(auth.clone());
         };
-        let auth = if let Some(path) = &self.private_key_pem {
+
+        let private_key_pem = if for_automation {
+            Some(
+                dirs::home_dir()
+                    .expect("failed to find the home dir")
+                    .join(AUTOMATION_PRIVATE_KEY_PEM_HOME_SUBDIR),
+            )
+        } else {
+            match &self.private_key_pem {
+                Some(path) => Some(PathBuf::from_str(path).expect("Invalid private key path")),
+                None => None,
+            }
+        };
+
+        println!("private_key pem: {:?} self {:?}", private_key_pem, self);
+
+        let auth = if let Some(path) = private_key_pem {
             Auth::Keyfile { path: path.clone() }
         } else {
             // If HSM slot, pin and key id are provided, use them without checking
@@ -52,23 +70,24 @@ impl Neuron {
         Ok(auth)
     }
 
-    pub async fn get_neuron_id(&self) -> anyhow::Result<u64> {
+    pub async fn get_neuron_id(&self, for_automation: bool) -> anyhow::Result<u64> {
         if let Some(neuron_id) = *self.neuron_id.borrow() {
             return Ok(neuron_id);
         };
-        let neuron_id = auto_detect_neuron_id(self.network.get_nns_urls(), self.get_auth().await?).await?;
+        let neuron_id =
+            auto_detect_neuron_id(self.network.get_nns_urls(), self.get_auth(for_automation).await?).await?;
         self.neuron_id.replace(Some(neuron_id));
         Ok(neuron_id)
     }
 
-    pub async fn as_arg_vec(&self, with_auth: bool) -> anyhow::Result<Vec<String>> {
+    pub async fn as_arg_vec(&self, with_auth: bool, for_automation: bool) -> anyhow::Result<Vec<String>> {
         if !with_auth {
             return Ok(vec![]);
         };
 
         // Auth required, try to find valid neuron id using HSM or with the private key
         // If private key is provided, use it without checking
-        let auth = self.get_auth().await?;
+        let auth = self.get_auth(for_automation).await?;
         let neuron_id = auto_detect_neuron_id(self.network.get_nns_urls(), auth).await?;
         Ok(vec!["--proposer".to_string(), neuron_id.to_string()])
     }
@@ -93,10 +112,10 @@ impl Neuron {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum Auth {
     Hsm { pin: String, slot: u64, key_id: String },
-    Keyfile { path: String },
+    Keyfile { path: PathBuf },
 }
 
 fn pkcs11_lib_path() -> anyhow::Result<PathBuf> {
@@ -129,7 +148,7 @@ impl Auth {
                 "--key-id".to_string(),
                 key_id.clone(),
             ],
-            Auth::Keyfile { path } => vec!["--secret-key-pem".to_string(), path.clone()],
+            Auth::Keyfile { path } => vec!["--secret-key-pem".to_string(), path.to_string_lossy().to_string()],
         }
     }
 
@@ -140,7 +159,10 @@ impl Auth {
         hsm_key_id: Option<String>,
     ) -> anyhow::Result<Self> {
         match (private_key_pem, hsm_slot, hsm_pin, hsm_key_id) {
-            (Some(path), _, _, _) => Ok(Auth::Keyfile { path }),
+            (Some(path), _, _, _) if PathBuf::from(path.clone()).exists() => Ok(Auth::Keyfile {
+                path: PathBuf::from(path),
+            }),
+            (Some(path), _, _, _) => Err(anyhow::anyhow!("Invalid key file path: {}", path)),
             (None, Some(slot), Some(pin), Some(key_id)) => Ok(Auth::Hsm { pin, slot, key_id }),
             _ => Err(anyhow::anyhow!("Invalid auth arguments")),
         }
@@ -210,7 +232,10 @@ pub async fn auto_detect_neuron_id(nns_urls: &[url::Url], auth: Auth) -> anyhow:
         let response = Decode!(&response, ListNeuronsResponse)?;
         let neuron_ids = response.neuron_infos.keys().copied().collect::<Vec<_>>();
         match neuron_ids.len() {
-            0 => Err(anyhow::anyhow!("HSM doesn't control any neurons")),
+            0 => Err(anyhow::anyhow!(
+                "HSM doesn't control any neurons. Response fro governance canister: {:?}",
+                response
+            )),
             1 => Ok(neuron_ids[0]),
             _ => Select::with_theme(&ColorfulTheme::default())
                 .items(&neuron_ids)
