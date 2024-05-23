@@ -48,9 +48,10 @@ enum HealthStatusQuerierImplementations {
 
 impl From<Network> for HealthStatusQuerierImplementations {
     fn from(value: Network) -> Self {
-        match value.name.as_str() {
-            "mainnet" => HealthStatusQuerierImplementations::Dashboard(PublicDashboardHealthClient::new(None)),
-            _ => HealthStatusQuerierImplementations::Prometheus(PrometheusHealthClient::new(value.clone())),
+        if value.is_mainnet() {
+            HealthStatusQuerierImplementations::Dashboard(PublicDashboardHealthClient::new(None))
+        } else {
+            HealthStatusQuerierImplementations::Prometheus(PrometheusHealthClient::new(value))
         }
     }
 }

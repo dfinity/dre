@@ -502,6 +502,12 @@ pub mod proposals {
             #[clap(long, aliases = ["topic"], short = 't')]
             topics: Vec<Topic>,
         },
+
+        /// Get a proposal by ID
+        Get {
+            /// Proposal ID
+            proposal_id: u64,
+        },
     }
 
     #[derive(ValueEnum, Clone, Debug)]
