@@ -5,7 +5,7 @@ use ic_management_types::{
     requests::{
         MembershipReplaceRequest, NodesRemoveRequest, NodesRemoveResponse, SubnetCreateRequest, SubnetResizeRequest,
     },
-    Network, NetworkError, ReplicaRelease, TopologyProposal,
+    Artifact, Network, NetworkError, Release, TopologyProposal,
 };
 use log::error;
 use serde::de::DeserializeOwned;
@@ -16,7 +16,9 @@ pub struct DashboardBackendClient {
 }
 
 impl DashboardBackendClient {
-    pub fn new(network: Network, dev: bool) -> DashboardBackendClient {
+    // Only used in tests, which should be cleaned up together with this code.
+    #[allow(dead_code)]
+    pub fn new(network: &Network, dev: bool) -> DashboardBackendClient {
         Self {
             url: reqwest::Url::parse(if !dev {
                 "https://dashboard.internal.dfinity.network/"
@@ -26,16 +28,12 @@ impl DashboardBackendClient {
             .expect("invalid base url")
             .join("api/proxy/registry/")
             .expect("failed to join url")
-            .join(match network {
-                Network::Mainnet => "mainnet/",
-                Network::Staging => "staging/",
-                Network::Url(_) => "/",
-            })
+            .join(&network.name)
             .expect("failed to join url"),
         }
     }
 
-    pub fn new_with_network_url(url: String) -> Self {
+    pub fn new_with_backend_url(url: String) -> Self {
         Self {
             url: reqwest::Url::parse(&url).unwrap(),
         }
@@ -84,9 +82,13 @@ impl DashboardBackendClient {
             .await
     }
 
-    pub async fn get_retireable_versions(&self) -> anyhow::Result<Vec<ReplicaRelease>> {
+    pub async fn get_retireable_versions(&self, release_artifact: &Artifact) -> anyhow::Result<Vec<Release>> {
         reqwest::Client::new()
-            .get(self.url.join("release/retireable").map_err(|e| anyhow::anyhow!(e))?)
+            .get(
+                self.url
+                    .join(&format!("release/retireable/{}", release_artifact))
+                    .map_err(|e| anyhow::anyhow!(e))?,
+            )
             .rest_send()
             .await
     }
@@ -148,23 +150,29 @@ impl RESTRequestBuilder for reqwest::RequestBuilder {
 mod tests {
     use super::*;
 
-    #[test]
-    fn dashboard_backend_client_url() {
+    #[tokio::test]
+    async fn dashboard_backend_client_url() {
+        let mainnet = Network::new("mainnet", &vec![])
+            .await
+            .expect("failed to create mainnet network");
+        let staging = Network::new("staging", &vec![])
+            .await
+            .expect("failed to create staging network");
         assert_eq!(
-            DashboardBackendClient::new(Network::Mainnet, false).url.to_string(),
-            "https://dashboard.internal.dfinity.network/api/proxy/registry/mainnet/"
+            DashboardBackendClient::new(&mainnet, false).url.to_string(),
+            "https://dashboard.internal.dfinity.network/api/proxy/registry/mainnet"
         );
         assert_eq!(
-            DashboardBackendClient::new(Network::Staging, false).url.to_string(),
-            "https://dashboard.internal.dfinity.network/api/proxy/registry/staging/"
+            DashboardBackendClient::new(&staging, false).url.to_string(),
+            "https://dashboard.internal.dfinity.network/api/proxy/registry/staging"
         );
         assert_eq!(
-            DashboardBackendClient::new(Network::Mainnet, true).url.to_string(),
-            "http://localhost:17000/api/proxy/registry/mainnet/"
+            DashboardBackendClient::new(&mainnet, true).url.to_string(),
+            "http://localhost:17000/api/proxy/registry/mainnet"
         );
         assert_eq!(
-            DashboardBackendClient::new(Network::Staging, true).url.to_string(),
-            "http://localhost:17000/api/proxy/registry/staging/"
+            DashboardBackendClient::new(&staging, true).url.to_string(),
+            "http://localhost:17000/api/proxy/registry/staging"
         );
     }
 }

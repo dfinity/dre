@@ -1,7 +1,6 @@
 # macOS
 .DS_Store
 
-.vscode
 .vscode_copy
 
 # Logs
@@ -62,3 +61,6 @@ bazel-build-log.json
 
 # slack-notifications
 checkpoint*
+
+# mkdocs
+.cache

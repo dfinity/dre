@@ -1,0 +1,17 @@
+load("@python_deps//:requirements.bzl", "requirement")
+load("@rules_python//python:defs.bzl", "py_binary")
+load("@//k8s:oci_images.bzl", "python_oci_image_rules")
+
+py_binary(
+    name = "boundary-node-service-discovery",
+    srcs = ["boundary-node-service-discovery.py"],
+    deps = [
+        requirement("requests"),
+        requirement("pyyaml"),
+    ]
+)
+
+python_oci_image_rules(
+    name = "oci_image",
+    src = ":boundary-node-service-discovery",
+)

@@ -1,70 +1,89 @@
 [package]
-name = "release_cli"
-version = "0.1.0"
-edition = "2021"
-build = "build.rs"
+name = "dre"
+# Required because of BAZEL
+build = "src/build_script_.rs"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+description.workspace = true
+documentation.workspace = true
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-serde = { version = "1.0.130", features = ["derive"] }
-clap = { version = "4.2.7", features = [
-    "derive",
-    "env",
-    "usage",
-    "color",
-    "help",
-    "error-context",
-    "suggestions",
-    "wrap_help",
-    "string",
-    "cargo",
-] }
-reqwest = { version = "0.11", features = ["json"] }
-serde_json = "1.0.68"
-anyhow = "1.0.44"
-futures = "0.3.21"
-colored = "2.0.0"
-log = "0.4.14"
-pretty_env_logger = "0.5.0"
-regex = "1.5.4"
-ic-base-types = { git = "https://github.com/dfinity/ic.git", rev = "abac636d8a281a1e7600d876aaed10f7ce7e5040" }
-ic-nns-constants = { git = "https://github.com/dfinity/ic.git", rev = "abac636d8a281a1e7600d876aaed10f7ce7e5040" }
-ic-nns-governance = { git = "https://github.com/dfinity/ic.git", rev = "abac636d8a281a1e7600d876aaed10f7ce7e5040" }
-ic-canister-client = { git = "https://github.com/dfinity/ic.git", rev = "abac636d8a281a1e7600d876aaed10f7ce7e5040" }
-ic-sys = { git = "https://github.com/dfinity/ic.git", rev = "abac636d8a281a1e7600d876aaed10f7ce7e5040" }
-ic-registry-nns-data-provider = { git = "https://github.com/dfinity/ic.git", rev = "abac636d8a281a1e7600d876aaed10f7ce7e5040" }
-ic-registry-keys = { git = "https://github.com/dfinity/ic.git", rev = "abac636d8a281a1e7600d876aaed10f7ce7e5040" }
-ic-registry-transport = { git = "https://github.com/dfinity/ic.git", rev = "abac636d8a281a1e7600d876aaed10f7ce7e5040" }
-ic-protobuf = { git = "https://github.com/dfinity/ic.git", rev = "abac636d8a281a1e7600d876aaed10f7ce7e5040" }
-ic-canisters = { path = "../ic-canisters" }
-prost = "0.12.1"
-tokio = { version = "1.14.0", features = ["full"] }
-strum = { version = "0.25.0", features = ["derive"] }
-strum_macros = "0.25.1"
-flate2 = "1.0.22"
-dirs = "5.0.1"
-decentralization = { path = "../decentralization" }
-ic-management-types = { path = "../ic-management-types" }
-ic-management-backend = { path = "../ic-management-backend" }
-dialoguer = "0.10.0"
-itertools = "0.11.0"
-async-trait = "0.1.53"
-keyring = "2.0.2"
-cryptoki = "0.3.1"
-candid = "0.9.5"
-url = "2.3.1"
-clap-num = "1.0.0"
-sha2 = "0.10.6"
-edit = "0.1.4"
-tabular = "0.2"
-ic-agent = "0.27.0"
-actix-web = { version = "4.2.1", default-features = false, features = [
-    "compress-gzip",
-    "macros",
-] }
-dotenv = "0.15.0"
-socket2 = "0.5.4"
+anyhow = { workspace = true }
+async-recursion = { workspace = true }
+async-trait = { workspace = true }
+candid = { workspace = true }
+clap = { workspace = true }
+clap-num = { workspace = true }
+colored = { workspace = true }
+cryptoki = { workspace = true }
+cycles-minting-canister = { workspace = true }
+decentralization = { workspace = true }
+dialoguer = { workspace = true }
+dirs = { workspace = true }
+dotenv = { workspace = true }
+edit = { workspace = true }
+flate2 = { workspace = true }
+futures = { workspace = true }
+futures-util = { workspace = true }
+ic-base-types = { workspace = true }
+ic-canister-client = { workspace = true }
+ic-canister-client-sender = { workspace = true }
+ic-canisters = { workspace = true }
+ic-interfaces-registry = { workspace = true }
+ic-management-backend = { workspace = true }
+ic-management-types = { workspace = true }
+ic-nervous-system-clients = { workspace = true }
+ic-nns-constants = { workspace = true }
+ic-nervous-system-root = { workspace = true }
+ic-nns-common = { workspace = true }
+ic-nns-governance = { workspace = true }
+ic-protobuf = { workspace = true }
+ic-registry-keys = { workspace = true }
+ic-registry-local-registry = { workspace = true }
+ic-registry-subnet-type = { workspace = true }
+ic-sns-wasm = { workspace = true }
+ic-sys = { workspace = true }
+ic-types = { workspace = true }
+itertools = { workspace = true }
+keyring = { workspace = true }
+log = { workspace = true }
+pretty_env_logger = { workspace = true }
+prost = { workspace = true }
+regex = { workspace = true }
+registry-canister = { workspace = true }
+reqwest = { workspace = true }
+self_update = { version = "0.40.0", features = ["archive-tar"] }
+serde = { workspace = true }
+serde_json = { workspace = true }
+sha2 = { workspace = true }
+socket2 = { workspace = true }
+spinners = { workspace = true }
+strum = { workspace = true }
+tabled = { workspace = true }
+tabular = { workspace = true }
+tempfile = "3.10.0"
+tokio = { workspace = true }
+url = { workspace = true }
 
 [dev-dependencies]
-tempfile = "3.3.0"
+wiremock = { workspace = true }
+
+[build-dependencies]
+clap_complete = "4.5.2"
+clap = { workspace = true }
+clap-num = { workspace = true }
+ic-base-types = { workspace = true }
+ic-management-types = { workspace = true }
+url = { workspace = true }
+ic-nns-governance = { workspace = true }
+
+[[bin]]
+name = "dre"
+path = "src/main.rs"
+
+[lib]
+name = "dre"
+path = "src/lib.rs"

@@ -1,0 +1,39 @@
+[package]
+name = "rollout-controller"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+description.workspace = true
+documentation.workspace = true
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = { workspace = true }
+candid = { workspace = true }
+chrono = { workspace = true }
+clap = { workspace = true }
+crossbeam = { workspace = true }
+dre = { path = "../cli" }
+humantime = { workspace = true }
+humantime-serde = { workspace = true }
+ic-base-types = { workspace = true }
+ic-management-backend = { workspace = true }
+ic-management-types = { workspace = true }
+itertools = { workspace = true }
+pretty_assertions = { workspace = true }
+prometheus-http-query = { workspace = true }
+registry-canister = { workspace = true }
+reqwest = { workspace = true }
+serde = { workspace = true }
+serde_yaml = { workspace = true }
+service-discovery = { path = "../ic-observability/service-discovery" }
+slog = { workspace = true }
+slog-async = { workspace = true }
+slog-term = { workspace = true }
+tokio = { workspace = true }
+tokio-util = { workspace = true }
+url = { workspace = true }
+
+[dev-dependencies]
+rstest = "0.18.2"

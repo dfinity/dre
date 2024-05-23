@@ -1,39 +1,41 @@
-use crate::config::{get_nns_url_string_from_target_network, get_nns_url_vec_from_target_network};
-use crate::factsdb;
 use crate::git_ic_repo::IcRepo;
-use crate::proposal;
+use crate::health::HealthStatusQuerier;
+use crate::node_labels;
+use crate::proposal::{self, SubnetUpdateProposal, UpdateUnassignedNodesProposal};
 use crate::public_dashboard::query_ic_dashboard_list;
 use async_trait::async_trait;
 use decentralization::network::{AvailableNodesQuerier, SubnetQuerier, SubnetQueryBy};
 use futures::TryFutureExt;
-use gitlab::AsyncGitlab;
 use ic_base_types::NodeId;
 use ic_base_types::{RegistryVersion, SubnetId};
 use ic_interfaces_registry::{RegistryClient, RegistryValue, ZERO_REGISTRY_VERSION};
 use ic_management_types::{
-    Datacenter, DatacenterOwner, Guest, Network, NetworkError, Node, NodeProviderDetails, NodeProvidersResponse,
-    Operator, Provider, ReplicaRelease, Subnet, SubnetMetadata,
+    Artifact, ArtifactReleases, Datacenter, DatacenterOwner, Guest, Network, NetworkError, Node, NodeProviderDetails,
+    NodeProvidersResponse, Operator, Provider, Release, Subnet, SubnetMetadata, UpdateElectedHostosVersionsProposal,
+    UpdateElectedReplicaVersionsProposal,
 };
+use ic_protobuf::registry::api_boundary_node::v1::ApiBoundaryNodeRecord;
 use ic_protobuf::registry::crypto::v1::PublicKey;
-use ic_protobuf::registry::replica_version::v1::BlessedReplicaVersions;
+use ic_protobuf::registry::hostos_version::v1::HostosVersionRecord;
+use ic_protobuf::registry::replica_version::v1::{BlessedReplicaVersions, ReplicaVersionRecord};
 use ic_protobuf::registry::unassigned_nodes_config::v1::UnassignedNodesConfigRecord;
 use ic_protobuf::registry::{
     dc::v1::DataCenterRecord, node::v1::NodeRecord, node_operator::v1::NodeOperatorRecord, subnet::v1::SubnetRecord,
 };
 use ic_registry_client::client::ThresholdSigPublicKey;
 use ic_registry_client_fake::FakeRegistryClient;
-use ic_registry_client_helpers::{node::NodeRegistry, subnet::SubnetListRegistry};
+use ic_registry_client_helpers::node::NodeRegistry;
 use ic_registry_common_proto::pb::local_store::v1::{
     ChangelogEntry as PbChangelogEntry, KeyMutation as PbKeyMutation, MutationType,
 };
-use ic_registry_keys::DATA_CENTER_KEY_PREFIX;
 use ic_registry_keys::{
-    make_blessed_replica_versions_key, NODE_OPERATOR_RECORD_KEY_PREFIX, NODE_RECORD_KEY_PREFIX,
-    SUBNET_RECORD_KEY_PREFIX,
+    make_blessed_replica_versions_key, HOSTOS_VERSION_KEY_PREFIX, NODE_OPERATOR_RECORD_KEY_PREFIX,
+    NODE_RECORD_KEY_PREFIX, REPLICA_VERSION_KEY_PREFIX, SUBNET_RECORD_KEY_PREFIX,
 };
 use ic_registry_keys::{make_crypto_threshold_signing_pubkey_key, ROOT_SUBNET_ID_KEY};
+use ic_registry_keys::{API_BOUNDARY_NODE_RECORD_KEY_PREFIX, DATA_CENTER_KEY_PREFIX};
 use ic_registry_local_registry::LocalRegistry;
-use ic_registry_local_store::{Changelog, ChangelogEntry, KeyMutation, LocalStoreImpl, LocalStoreWriter};
+use ic_registry_local_store::{Changelog, ChangelogEntry, KeyMutation, LocalStoreImpl};
 use ic_registry_nns_data_provider::registry::RegistryCanister;
 use ic_registry_subnet_type::SubnetType;
 use ic_types::PrincipalId;
@@ -55,16 +57,17 @@ use std::{
 };
 use tokio::sync::RwLock;
 use tokio::time::{sleep, Duration};
+use url::Url;
 extern crate env_logger;
 
 use anyhow::Result;
+use ic_registry_client_helpers::subnet::SubnetListRegistry;
 
 pub const NNS_SUBNET_NAME: &str = "NNS";
 
-pub const DFINITY_DCS: &str = "zh2 mr1 bo1 st1";
+pub const DFINITY_DCS: &str = "zh2 mr1 bo1 sh1";
 
 pub struct RegistryState {
-    nns_url: String,
     network: Network,
     local_registry: Arc<LocalRegistry>,
 
@@ -72,13 +75,14 @@ pub struct RegistryState {
     subnets: BTreeMap<PrincipalId, Subnet>,
     nodes: BTreeMap<PrincipalId, Node>,
     operators: BTreeMap<PrincipalId, Operator>,
-    factsdb_guests: Vec<Guest>,
+    node_labels_guests: Vec<Guest>,
     known_subnets: BTreeMap<PrincipalId, String>,
 
-    replica_releases: Vec<ReplicaRelease>,
+    guestos_releases: ArtifactReleases,
+    hostos_releases: ArtifactReleases,
     ic_repo: Option<IcRepo>,
 }
-trait RegistryEntry: RegistryValue {
+pub trait RegistryEntry: RegistryValue {
     const KEY_PREFIX: &'static str;
 }
 
@@ -98,9 +102,29 @@ impl RegistryEntry for SubnetRecord {
     const KEY_PREFIX: &'static str = SUBNET_RECORD_KEY_PREFIX;
 }
 
-trait RegistryFamilyEntries {
+impl RegistryEntry for ReplicaVersionRecord {
+    const KEY_PREFIX: &'static str = REPLICA_VERSION_KEY_PREFIX;
+}
+
+impl RegistryEntry for HostosVersionRecord {
+    const KEY_PREFIX: &'static str = HOSTOS_VERSION_KEY_PREFIX;
+}
+
+impl RegistryEntry for UnassignedNodesConfigRecord {
+    const KEY_PREFIX: &'static str = "unassigned_nodes_config";
+}
+
+impl RegistryEntry for ApiBoundaryNodeRecord {
+    const KEY_PREFIX: &'static str = API_BOUNDARY_NODE_RECORD_KEY_PREFIX;
+}
+
+pub trait RegistryFamilyEntries {
     fn get_family_entries<T: RegistryEntry + Default>(&self) -> Result<BTreeMap<String, T>>;
     fn get_family_entries_versioned<T: RegistryEntry + Default>(&self) -> Result<BTreeMap<String, (u64, T)>>;
+    fn get_family_entries_of_version<T: RegistryEntry + Default>(
+        &self,
+        version: RegistryVersion,
+    ) -> Result<BTreeMap<String, (u64, T)>>;
 }
 
 impl RegistryFamilyEntries for LocalRegistry {
@@ -123,12 +147,19 @@ impl RegistryFamilyEntries for LocalRegistry {
     }
 
     fn get_family_entries_versioned<T: RegistryEntry + Default>(&self) -> Result<BTreeMap<String, (u64, T)>> {
+        self.get_family_entries_of_version(self.get_latest_version())
+    }
+
+    fn get_family_entries_of_version<T: RegistryEntry + Default>(
+        &self,
+        version: RegistryVersion,
+    ) -> Result<BTreeMap<String, (u64, T)>> {
         let prefix_length = T::KEY_PREFIX.len();
         Ok(self
-            .get_key_family(T::KEY_PREFIX, self.get_latest_version())?
+            .get_key_family(T::KEY_PREFIX, version)?
             .iter()
             .filter_map(|key| {
-                self.get_versioned_value(key, self.get_latest_version())
+                self.get_versioned_value(key, version)
                     .map(|r| {
                         r.value.as_ref().map(|v| {
                             (
@@ -146,19 +177,48 @@ impl RegistryFamilyEntries for LocalRegistry {
     }
 }
 
-impl RegistryState {
-    pub async fn new(network: Network, without_update_loop: bool) -> Self {
-        let nns_url = get_nns_url_string_from_target_network(&network);
+trait ReleasesOps {
+    fn get_active_branches(&self) -> Vec<String>;
+}
+impl ReleasesOps for ArtifactReleases {
+    fn get_active_branches(&self) -> Vec<String> {
+        const NUM_RELEASE_BRANCHES_TO_KEEP: usize = 2;
+        if self.releases.is_empty() {
+            warn!(
+                "No {} releases found in the registry. THIS MAY BE A BUG!",
+                self.artifact
+            );
+        } else {
+            info!(
+                "{} versions: {}",
+                self.artifact,
+                self.releases
+                    .iter()
+                    .map(|r| format!("{} ({})", r.commit_hash.clone(), r.branch))
+                    .join("\n")
+            );
+        };
+        self.releases
+            .clone()
+            .into_iter()
+            .rev()
+            .map(|rr| rr.branch)
+            .unique()
+            .take(NUM_RELEASE_BRANCHES_TO_KEEP)
+            .collect::<Vec<_>>()
+    }
+}
 
-        sync_local_store(network.clone())
-            .await
-            .expect("failed to init local store");
+#[allow(dead_code)]
+impl RegistryState {
+    pub async fn new(network: &Network, without_update_loop: bool) -> Self {
+        sync_local_store(network).await.expect("failed to init local store");
 
         if !without_update_loop {
             let closure_network = network.clone();
             tokio::spawn(async move {
                 loop {
-                    if let Err(e) = sync_local_store(closure_network.clone()).await {
+                    if let Err(e) = sync_local_store(&closure_network).await {
                         error!("Failed to update local registry: {}", e);
                     }
                     tokio::time::sleep(std::time::Duration::from_secs(5)).await;
@@ -166,10 +226,10 @@ impl RegistryState {
             });
         }
 
-        let local_registry_path = local_registry_path(network.clone());
+        let local_registry_path = local_registry_path(&network.clone());
         info!(
             "Using local registry path for network {}: {}",
-            network.to_string(),
+            network.name,
             local_registry_path.display()
         );
         let local_registry: Arc<LocalRegistry> = Arc::new(
@@ -178,16 +238,16 @@ impl RegistryState {
         );
 
         Self {
-            nns_url,
-            network,
+            network: network.clone(),
             local_registry,
             version: 0,
             subnets: BTreeMap::<PrincipalId, Subnet>::new(),
             nodes: BTreeMap::new(),
             operators: BTreeMap::new(),
-            factsdb_guests: Vec::new(),
-            replica_releases: Vec::new(),
-            ic_repo: Some(IcRepo::new(Some(1000)).expect("failed to init ic repo")),
+            node_labels_guests: Vec::new(),
+            guestos_releases: ArtifactReleases::new(Artifact::GuestOs),
+            hostos_releases: ArtifactReleases::new(Artifact::HostOs),
+            ic_repo: Some(IcRepo::new().expect("failed to init ic repo")),
             known_subnets: [
                 (
                     "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
@@ -210,6 +270,10 @@ impl RegistryState {
                     "tECDSA signing",
                 ),
                 ("x33ed-h457x-bsgyx-oqxqf-6pzwv-wkhzr-rm2j3-npodi-purzm-n66cg-gae", "SNS"),
+                (
+                    "bkfrj-6k62g-dycql-7h53p-atvkj-zg4to-gaogh-netha-ptybj-ntsgw-rqe",
+                    "European",
+                ),
             ]
             .iter()
             .map(|(p, name)| {
@@ -222,10 +286,10 @@ impl RegistryState {
         }
     }
 
-    pub fn update_factsdb_guests(&mut self, factsdb_guests: Vec<Guest>) {
-        self.factsdb_guests = factsdb_guests;
-        if !matches!(self.network, Network::Mainnet) {
-            for g in &mut self.factsdb_guests {
+    pub fn update_node_labels_guests(&mut self, node_label_guests: Vec<Guest>) {
+        self.node_labels_guests = node_label_guests;
+        if self.network.name != "mainnet" {
+            for g in &mut self.node_labels_guests {
                 g.dfinity_owned = true;
             }
         }
@@ -236,7 +300,7 @@ impl RegistryState {
             .sync_with_local_store()
             .await
             .map_err(|e| anyhow::anyhow!(e))?;
-        self.update_replica_releases().await?;
+        self.update_releases().await?;
         self.update_operators(providers)?;
         self.update_nodes()?;
         self.update_subnets()?;
@@ -245,21 +309,44 @@ impl RegistryState {
         Ok(())
     }
 
-    async fn update_replica_releases(&mut self) -> Result<()> {
-        let blessed_versions = BlessedReplicaVersions::decode(
-            self.local_registry
-                .get_value(
-                    &make_blessed_replica_versions_key(),
-                    self.local_registry.get_latest_version(),
-                )?
-                .unwrap_or_default()
-                .as_slice(),
-        )
-        .expect("failed to decode blessed replica versions")
-        .blessed_version_ids;
+    pub async fn get_elected_guestos_versions(&self) -> Result<Vec<String>, anyhow::Error> {
+        match self.local_registry.get_value(
+            &make_blessed_replica_versions_key(),
+            self.local_registry.get_latest_version(),
+        ) {
+            Ok(Some(bytes)) => {
+                let cfg = BlessedReplicaVersions::decode(&bytes[..])
+                    .expect("Error decoding BlessedReplicaVersions from the LocalRegistry");
 
-        if let Some(ic_repo) = &mut self.ic_repo {
-            debug!("Updating replica releases");
+                Ok(cfg.blessed_version_ids)
+            }
+            _ => Err(anyhow::anyhow!("No elected GuestOS versions found".to_string(),)),
+        }
+    }
+    pub async fn get_elected_hostos_versions(&self) -> Result<Vec<String>, anyhow::Error> {
+        let registry_version = self.local_registry.get_latest_version();
+        let keys = self
+            .local_registry
+            .get_key_family(HOSTOS_VERSION_KEY_PREFIX, registry_version)?;
+
+        let mut records = Vec::new();
+        for key in keys {
+            let bytes = self.local_registry.get_value(&key, registry_version);
+            let hostos_version_proto =
+                ic_registry_client_helpers::deserialize_registry_value::<HostosVersionRecord>(bytes)?
+                    .unwrap_or_default();
+            records.push(hostos_version_proto.hostos_version_id)
+        }
+
+        Ok(records)
+    }
+
+    async fn update_releases(&mut self) -> Result<()> {
+        // If the network isn't mainnet we don't need to check git branches
+        if !self.network.eq(&Network::new("mainnet", &vec![]).await.unwrap()) {
+            return Ok(());
+        }
+        if self.ic_repo.is_some() {
             lazy_static! {
                 // TODO: We don't need to distinguish release branch and name, they can be the same
                 static ref RELEASE_BRANCH_GROUP: &'static str = "release_branch";
@@ -272,15 +359,28 @@ impl RegistryState {
                     *DATETIME_NAME_GROUP,
                 )).unwrap();
             }
+            let blessed_replica_versions = self.get_elected_guestos_versions().await?;
+            let elected_hostos_versions = self.get_elected_hostos_versions().await?;
+
+            let blessed_versions: HashSet<&String> = blessed_replica_versions
+                .iter()
+                .chain(elected_hostos_versions.iter())
+                .collect();
 
             // A HashMap from the git revision to the latest commit branch in which the
             // commit is present
-            let mut commit_to_release: HashMap<String, ReplicaRelease> = HashMap::new();
-            for commit_hash in blessed_versions.iter() {
+            let mut commit_to_release: HashMap<String, Release> = HashMap::new();
+            blessed_versions.into_iter().for_each(|commit_hash| {
+                let ic_repo = self.ic_repo.as_mut().unwrap();
                 match ic_repo.get_branches_with_commit(commit_hash) {
                     // For each commit get a list of branches that have the commit
                     Ok(branches) => {
-                        debug!("Commit {} ==> branches {:?}", commit_hash, branches);
+                        debug!(
+                            "Git rev {} ==> {} branches: {}",
+                            commit_hash,
+                            branches.len(),
+                            branches.join(", ")
+                        );
                         for branch in branches.into_iter().sorted() {
                             match RE.captures(&branch) {
                                 Some(capture) => {
@@ -300,9 +400,10 @@ impl RegistryState {
                                         "%Y-%m-%d_%H-%M",
                                     )
                                     .expect("invalid datetime format");
+
                                     commit_to_release.insert(
                                         commit_hash.clone(),
-                                        ReplicaRelease {
+                                        Release {
                                             name: release_name.to_string(),
                                             branch: release_branch.to_string(),
                                             commit_hash: commit_hash.clone(),
@@ -310,42 +411,38 @@ impl RegistryState {
                                             time: release_datetime,
                                         },
                                     );
+                                    break;
                                 }
                                 None => {
-                                    warn!(
-                                        "branch {} for git rev {} does not match RC regex",
-                                        &commit_hash, &branch
-                                    );
+                                    if branch != "master" && branch != "HEAD" {
+                                        debug!(
+                                            "Git rev {}: branch {} does not match the RC regex",
+                                            &commit_hash, &branch
+                                        );
+                                    }
                                 }
                             };
                         }
                     }
                     Err(e) => error!("failed to find branches for git rev: {}; {}", &commit_hash, e),
                 }
-            }
+            });
 
-            let versions: Vec<ReplicaRelease> = commit_to_release
-                .into_values()
-                .map(|mut nrr| {
-                    nrr.previous_patch_release = self
-                        .replica_releases
+            for (blessed_versions, ArtifactReleases { artifact, releases }) in [
+                (blessed_replica_versions, &mut self.guestos_releases),
+                (elected_hostos_versions, &mut self.hostos_releases),
+            ] {
+                releases.clear();
+                releases.extend(
+                    blessed_versions
                         .iter()
-                        .rfind(|rr| rr.name == nrr.name && rr.commit_hash != nrr.commit_hash)
-                        .map(|rr| rr.clone().into());
-                    nrr
-                })
-                .collect_vec();
-
-            self.replica_releases.clear();
-            self.replica_releases.extend(
-                versions
-                    .into_iter()
-                    .sorted_by_key(|rr| rr.time)
-                    .collect::<Vec<ReplicaRelease>>(),
-            );
-            debug!("Updated replica releases to {:?}", self.replica_releases);
+                        .map(|version| commit_to_release.get(version).unwrap().clone())
+                        .sorted_by_key(|rr| rr.time)
+                        .collect::<Vec<Release>>(),
+                );
+                debug!("Updated {} releases to {:?}", artifact, releases);
+            }
         }
-
         Ok(())
     }
 
@@ -400,7 +497,7 @@ impl RegistryState {
     }
 
     fn node_record_guest(&self, nr: &NodeRecord) -> Option<Guest> {
-        self.factsdb_guests
+        self.node_labels_guests
             .iter()
             .find(|g| g.ipv6 == Ipv6Addr::from_str(&nr.http.clone().unwrap().ip_addr).unwrap())
             .cloned()
@@ -462,6 +559,13 @@ impl RegistryState {
                             )
                             .expect("failed to get subnet id")
                             .map(|s| s.get()),
+                        hostos_version: nr.hostos_version_id.clone().unwrap_or_default(),
+                        hostos_release: self
+                            .hostos_releases
+                            .releases
+                            .iter()
+                            .find(|r| r.commit_hash == nr.hostos_version_id.clone().unwrap_or_default())
+                            .cloned(),
                         operator,
                         proposal: None,
                         label: guest.map(|g| g.name),
@@ -536,7 +640,8 @@ impl RegistryState {
                         },
                         replica_version: sr.replica_version_id.clone(),
                         replica_release: self
-                            .replica_releases
+                            .guestos_releases
+                            .releases
                             .iter()
                             .find(|r| r.commit_hash == sr.replica_version_id)
                             .cloned(),
@@ -568,7 +673,7 @@ impl RegistryState {
 
     pub async fn nodes_with_proposals(&self) -> Result<BTreeMap<PrincipalId, Node>> {
         let nodes = self.nodes.clone();
-        let proposal_agent = proposal::ProposalAgent::new(self.nns_url.clone());
+        let proposal_agent = proposal::ProposalAgent::new(self.network.get_nns_urls());
 
         let topology_proposals = proposal_agent.list_open_topology_proposals().await?;
 
@@ -585,9 +690,19 @@ impl RegistryState {
             .collect())
     }
 
+    pub async fn open_elect_replica_proposals(&self) -> Result<Vec<UpdateElectedReplicaVersionsProposal>> {
+        let proposal_agent = proposal::ProposalAgent::new(self.network.get_nns_urls());
+        proposal_agent.list_open_elect_replica_proposals().await
+    }
+
+    pub async fn open_elect_hostos_proposals(&self) -> Result<Vec<UpdateElectedHostosVersionsProposal>> {
+        let proposal_agent = proposal::ProposalAgent::new(self.network.get_nns_urls());
+        proposal_agent.list_open_elect_hostos_proposals().await
+    }
+
     pub async fn subnets_with_proposals(&self) -> Result<BTreeMap<PrincipalId, Subnet>> {
         let subnets = self.subnets.clone();
-        let proposal_agent = proposal::ProposalAgent::new(self.nns_url.clone());
+        let proposal_agent = proposal::ProposalAgent::new(self.network.get_nns_urls());
 
         let topology_proposals = proposal_agent.list_open_topology_proposals().await?;
 
@@ -609,25 +724,88 @@ impl RegistryState {
             .collect())
     }
 
-    pub async fn retireable_versions(&self) -> Result<Vec<ReplicaRelease>> {
-        const NUM_RELEASE_BRANCHES_TO_KEEP: usize = 2;
-        let active_releases = self
-            .replica_releases
+    pub async fn retireable_versions(&self, artifact: &Artifact) -> Result<Vec<Release>> {
+        match artifact {
+            Artifact::HostOs => self.retireable_hostos_versions().await,
+            Artifact::GuestOs => self.retireable_guestos_versions().await,
+        }
+    }
+
+    pub async fn blessed_versions(&self, artifact: &Artifact) -> Result<Vec<String>> {
+        match artifact {
+            Artifact::HostOs => self.get_elected_hostos_versions().await,
+            Artifact::GuestOs => self.get_elected_guestos_versions().await,
+        }
+    }
+
+    pub async fn open_subnet_upgrade_proposals(&self) -> Result<Vec<SubnetUpdateProposal>> {
+        let proposal_agent = proposal::ProposalAgent::new(self.get_nns_urls());
+
+        proposal_agent.list_update_subnet_version_proposals().await
+    }
+
+    pub async fn open_upgrade_unassigned_nodes_proposals(&self) -> Result<Vec<UpdateUnassignedNodesProposal>> {
+        let proposal_agent = proposal::ProposalAgent::new(self.get_nns_urls());
+
+        proposal_agent.list_update_unassigned_nodes_version_proposals().await
+    }
+
+    async fn retireable_hostos_versions(&self) -> Result<Vec<Release>> {
+        let active_releases = self.hostos_releases.get_active_branches();
+        let hostos_versions: BTreeSet<String> = self.nodes.values().map(|s| s.hostos_version.clone()).collect();
+        let versions_in_proposals: BTreeSet<String> = self
+            .open_elect_hostos_proposals()
+            .await?
+            .iter()
+            .flat_map(|p| p.versions_unelect.iter())
+            .cloned()
+            .collect();
+        info!("Active releases: {}", active_releases.iter().join(", "));
+        info!("HostOS versions in use on nodes: {}", hostos_versions.iter().join(", "));
+        info!(
+            "HostOS versions in open proposals: {}",
+            versions_in_proposals.iter().join(", ")
+        );
+        Ok(self
+            .hostos_releases
+            .releases
             .clone()
             .into_iter()
-            .rev()
-            .map(|rr| rr.branch)
-            .unique()
-            .take(NUM_RELEASE_BRANCHES_TO_KEEP)
-            .collect::<Vec<_>>();
+            .filter(|rr| !active_releases.contains(&rr.branch))
+            .filter(|rr| !hostos_versions.contains(&rr.commit_hash))
+            .filter(|rr| !versions_in_proposals.contains(&rr.commit_hash))
+            .collect())
+    }
+
+    async fn retireable_guestos_versions(&self) -> Result<Vec<Release>> {
+        let active_releases = self.guestos_releases.get_active_branches();
         let subnet_versions: BTreeSet<String> = self.subnets.values().map(|s| s.replica_version.clone()).collect();
-        let version_on_unassigned_nodes = self.get_unassigned_nodes_version().await?;
+        let version_on_unassigned_nodes = self.get_unassigned_nodes_replica_version().await?;
+        let versions_in_proposals: BTreeSet<String> = self
+            .open_elect_replica_proposals()
+            .await?
+            .iter()
+            .flat_map(|p| p.versions_unelect.iter())
+            .cloned()
+            .collect();
+        info!("Active releases: {}", active_releases.iter().join(", "));
+        info!(
+            "GuestOS versions in use on subnets: {}",
+            subnet_versions.iter().join(", ")
+        );
+        info!("GuestOS version on unassigned nodes: {}", version_on_unassigned_nodes);
+        info!(
+            "GuestOS versions in open proposals: {}",
+            versions_in_proposals.iter().join(", ")
+        );
         Ok(self
-            .replica_releases
+            .guestos_releases
+            .releases
             .clone()
             .into_iter()
             .filter(|rr| !active_releases.contains(&rr.branch))
             .filter(|rr| !subnet_versions.contains(&rr.commit_hash) && rr.commit_hash != version_on_unassigned_nodes)
+            .filter(|rr| !versions_in_proposals.contains(&rr.commit_hash))
             .collect())
     }
 
@@ -647,12 +825,12 @@ impl RegistryState {
     }
 
     pub fn guests(&self) -> Vec<Guest> {
-        self.factsdb_guests.clone()
+        self.node_labels_guests.clone()
     }
 
     pub fn missing_guests(&self) -> Vec<Guest> {
         let mut missing_guests = self
-            .factsdb_guests
+            .node_labels_guests
             .clone()
             .into_iter()
             .filter(|g| {
@@ -667,15 +845,15 @@ impl RegistryState {
         missing_guests
     }
 
-    pub fn replica_releases(&self) -> Vec<ReplicaRelease> {
-        self.replica_releases.clone()
+    pub fn replica_releases(&self) -> Vec<Release> {
+        self.guestos_releases.releases.clone()
     }
 
-    pub fn nns_url(&self) -> String {
-        self.nns_url.clone()
+    pub fn get_nns_urls(&self) -> &Vec<Url> {
+        self.network.get_nns_urls()
     }
 
-    pub async fn get_unassigned_nodes_version(&self) -> Result<String, anyhow::Error> {
+    pub async fn get_unassigned_nodes_replica_version(&self) -> Result<String, anyhow::Error> {
         let unassigned_config_key = ic_registry_keys::make_unassigned_nodes_config_record_key();
 
         match self
@@ -689,7 +867,7 @@ impl RegistryState {
                 Ok(cfg.replica_version)
             }
             _ => Err(anyhow::anyhow!(
-                "No replica version for unassigned nodes found".to_string(),
+                "No GuestOS version for unassigned nodes found".to_string(),
             )),
         }
     }
@@ -799,7 +977,7 @@ fn node_ip_addr(nr: &NodeRecord) -> Ipv6Addr {
     Ipv6Addr::from_str(&nr.http.clone().expect("missing ipv6 address").ip_addr).expect("invalid ipv6 address")
 }
 
-pub fn local_registry_path(network: Network) -> PathBuf {
+pub fn local_registry_path(network: &Network) -> PathBuf {
     match std::env::var("LOCAL_REGISTRY_PATH") {
         Ok(path) => PathBuf::from(path),
         Err(_) => match dirs::cache_dir() {
@@ -808,7 +986,7 @@ pub fn local_registry_path(network: Network) -> PathBuf {
         },
     }
     .join("ic-registry-cache")
-    .join(Path::new(network.to_string().as_str()))
+    .join(Path::new(network.name.as_str()))
     .join("local_registry")
 }
 
@@ -836,10 +1014,11 @@ pub async fn nns_public_key(registry_canister: &RegistryCanister) -> anyhow::Res
 }
 
 /// Sync all versions of the registry, up to the latest one.
-pub async fn sync_local_store(target_network: Network) -> anyhow::Result<()> {
-    let local_registry_path = local_registry_path(target_network.clone());
+pub async fn sync_local_store(target_network: &Network) -> anyhow::Result<()> {
+    let local_registry_path = local_registry_path(target_network);
     let local_store = Arc::new(LocalStoreImpl::new(local_registry_path.clone()));
-    let registry_canister = RegistryCanister::new(get_nns_url_vec_from_target_network(&target_network));
+    let nns_urls = target_network.get_nns_urls().clone();
+    let registry_canister = RegistryCanister::new(nns_urls);
     let mut local_latest_version = if !Path::new(&local_registry_path).exists() {
         ZERO_REGISTRY_VERSION
     } else {
@@ -847,7 +1026,6 @@ pub async fn sync_local_store(target_network: Network) -> anyhow::Result<()> {
         registry_cache.update_to_latest_version();
         registry_cache.get_latest_version()
     };
-    let mut latest_certified_time = 0;
     let mut updates = vec![];
     let nns_public_key = nns_public_key(&registry_canister).await?;
 
@@ -868,7 +1046,7 @@ pub async fn sync_local_store(target_network: Network) -> anyhow::Result<()> {
                 Ordering::Greater => {
                     warn!(
                         "Removing faulty local copy of the registry for the IC network {}: {}",
-                        target_network,
+                        target_network.name,
                         local_registry_path.display()
                     );
                     std::fs::remove_dir_all(&local_registry_path)?;
@@ -882,7 +1060,7 @@ pub async fn sync_local_store(target_network: Network) -> anyhow::Result<()> {
                 error!("Failed to get latest registry version: {}", e);
             }
         }
-        if let Ok((mut initial_records, _, t)) = registry_canister
+        if let Ok((mut initial_records, _, _)) = registry_canister
             .get_certified_changes_since(local_latest_version.get(), &nns_public_key)
             .await
         {
@@ -953,23 +1131,18 @@ pub async fn sync_local_store(target_network: Network) -> anyhow::Result<()> {
 
             local_latest_version = local_latest_version.add(RegistryVersion::new(versions_count as u64));
 
-            latest_certified_time = t.as_nanos_since_unix_epoch();
             debug!("Sync reached version {local_latest_version}");
             tokio::time::sleep(std::time::Duration::from_secs(1)).await;
         }
     }
 
     futures::future::join_all(updates).await;
-    local_store.update_certified_time(latest_certified_time)?;
     Ok(())
 }
 
-pub async fn poll(
-    gitlab_client_release_repo: AsyncGitlab,
-    registry_state: Arc<RwLock<RegistryState>>,
-    target_network: Network,
-) {
-    let registry_canister = RegistryCanister::new(get_nns_url_vec_from_target_network(&target_network));
+pub async fn poll(registry_state: Arc<RwLock<RegistryState>>, target_network: Network) {
+    let nns_urls = target_network.get_nns_urls().clone();
+    let registry_canister = RegistryCanister::new(nns_urls);
     loop {
         sleep(Duration::from_secs(1)).await;
         let latest_version = if let Ok(v) = registry_canister.get_latest_version().await {
@@ -978,8 +1151,7 @@ pub async fn poll(
             continue;
         };
         if latest_version != registry_state.read().await.version() {
-            fetch_and_add_factsdb_guests_to_registry(&gitlab_client_release_repo, &target_network, &registry_state)
-                .await;
+            fetch_and_add_node_labels_guests_to_registry(&target_network, &registry_state).await;
             update_node_details(&registry_state).await;
         } else {
             debug!(
@@ -990,35 +1162,17 @@ pub async fn poll(
     }
 }
 
-// TODO: try to get rid of factsdb data source
-async fn fetch_and_add_factsdb_guests_to_registry(
-    gitlab_client_release_repo: &AsyncGitlab,
+// TODO: try to get rid of node_labels data source
+async fn fetch_and_add_node_labels_guests_to_registry(
     target_network: &Network,
     registry_state: &Arc<RwLock<RegistryState>>,
 ) {
-    let guests_result = factsdb::query_guests(gitlab_client_release_repo.clone(), target_network.to_string()).await;
+    let guests_result = node_labels::query_guests(&target_network.name).await;
 
-    let guests_result = if matches!(target_network, Network::Mainnet) {
-        let guests_result_old = factsdb::query_guests(
-            gitlab_client_release_repo.clone(),
-            target_network.legacy_name().to_string(),
-        )
-        .await;
-        guests_result.and_then(|guests_decentralized| {
-            guests_result_old.map(|guests_old| {
-                guests_decentralized
-                    .into_iter()
-                    .chain(guests_old.into_iter())
-                    .collect::<Vec<_>>()
-            })
-        })
-    } else {
-        guests_result
-    };
     match guests_result {
-        Ok(factsdb_guests) => {
+        Ok(node_labels_guests) => {
             let mut registry_state = registry_state.write().await;
-            registry_state.update_factsdb_guests(factsdb_guests);
+            registry_state.update_node_labels_guests(node_labels_guests);
         }
         Err(e) => {
             warn!("Failed querying guests file: {}", e);

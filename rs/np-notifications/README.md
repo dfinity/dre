@@ -3,16 +3,23 @@
 This binary is used to notify Node Providers of the Internet Computer of an issue 
 with their nodes.
 
-To run this, you will need to have a Matrix account ready, with its username and password.
-See below for configuring the credentials for matrix.
+This service polls our metrics backend for the status of all the nodes currently being seen
+by monitoring, and will send a webhook to the NPs defined in the file indicated by the 
+$CONFIG_FILE_PATH_VAR_NAME. If this variable is not defined, no webhooks will be sent.
+
+By default, all notifications will be logged using the Log Sink, which is currently hardcoded.
 
 ## Configuration
 
 | Variable name | Required | Default |
 |---|---|---|
-| NP_MATRIX_USERNAME | True | None |
-| NP_MATRIX PASSWORD | True | None | 
-| NP_MATRIX_INSTANCE | False | "https://matrix.org" |
+| NNS_URL | True | None |
+| NETWORK | True | None | 
+| CONFIG_FILE_PATH_VAR_NAME | False | None |
+
+### Configuration file format
+
+See `example.conf.yaml`
 
 ## Running 
 
@@ -26,11 +33,4 @@ Running tests
 
 ``` shell
 cargo test
-```
-
-Running tests that require external services
-
-``` shell
-export NP_MATRIX_ROOM_ID="<room id in which to receive the test message>"
-cargo test -- --ignored
 ```

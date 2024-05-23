@@ -1,7 +1,9 @@
+use ic_management_types::Network;
 use ic_nns_governance::pb::v1::{ListProposalInfo, ListProposalInfoResponse, ProposalInfo, ProposalStatus};
 
 use anyhow::Result;
 use candid::Decode;
+use ic_agent::agent::http_transport::reqwest_transport::ReqwestHttpReplicaV2Transport;
 use ic_agent::Agent;
 use log::{info, warn};
 use serde::{Deserialize, Serialize};
@@ -10,12 +12,11 @@ use std::io::Write;
 use std::time::SystemTime;
 use tokio::time::{sleep, Duration};
 mod slack;
+use clap::Parser;
+use reqwest::Url;
 
 #[macro_use]
 extern crate lazy_static;
-
-#[derive(Deserialize)]
-struct Config {}
 
 // Time to wait for a new proposal after the last one was created before sending
 // out the Slack notification.
@@ -29,10 +30,28 @@ async fn main() {
     env_logger::init();
     dotenv::dotenv().ok();
 
-    let failed_proposals_handle = tokio::spawn(notify_for_failed_proposals());
-    let new_proposals_handle = tokio::spawn(notify_for_new_proposals());
+    let args = Cli::parse();
+    let target_network = ic_management_types::Network::new(args.network.clone(), &args.nns_urls)
+        .await
+        .expect("Failed to create network");
+
+    let failed_proposals_handle = tokio::spawn(notify_for_failed_proposals(target_network.clone()));
+    let new_proposals_handle = tokio::spawn(notify_for_new_proposals(target_network));
 
     futures::future::join_all(vec![failed_proposals_handle, new_proposals_handle]).await;
+}
+
+#[derive(Parser, Debug)]
+#[clap(about, version)]
+struct Cli {
+    // Target network. Can be one of: "mainnet", "staging", or an arbitrary "<testnet>" name
+    #[clap(long, env = "NETWORK", default_value = "mainnet")]
+    network: String,
+
+    // NNS_URLs for the target network, comma separated.
+    // The argument is mandatory for testnets, and is optional for mainnet and staging
+    #[clap(long, env = "NNS_URLS", aliases = &["registry-url", "nns-url"], value_delimiter = ',')]
+    pub nns_urls: Vec<Url>,
 }
 
 #[derive(Default)]
@@ -90,12 +109,10 @@ struct ProposalPoller {
 }
 
 impl ProposalPoller {
-    fn new() -> Self {
+    fn new(target_network: Network) -> Self {
+        let nns_url = target_network.get_nns_urls()[0].clone();
         let agent = Agent::builder()
-            .with_transport(
-                ic_agent::agent::http_transport::ReqwestHttpReplicaV2Transport::create("https://ic0.app")
-                    .expect("failed to create transport"),
-            )
+            .with_transport(ReqwestHttpReplicaV2Transport::create(nns_url).expect("failed to create transport"))
             .build()
             .expect("failed to build the agent");
         Self { agent }
@@ -108,7 +125,7 @@ impl ProposalPoller {
                 &ic_agent::export::Principal::from_slice(ic_nns_constants::GOVERNANCE_CANISTER_ID.get().as_slice()),
                 "get_pending_proposals",
             )
-            .with_arg(candid::IDLArgs::new(&[]).to_bytes().unwrap().as_slice())
+            .with_arg(candid::encode_one(()).expect("failed to encode arguments"))
             .call()
             .await?;
 
@@ -141,10 +158,10 @@ impl ProposalPoller {
     }
 }
 
-async fn notify_for_new_proposals() {
+async fn notify_for_new_proposals(target_network: Network) {
     let mut last_notified_proposal =
         ProposalCheckpointStore::new("new").expect("failed to initialize last notified proposal tracking");
-    let proposal_poller = ProposalPoller::new();
+    let proposal_poller = ProposalPoller::new(target_network);
     loop {
         info!("sleeping");
         sleep(Duration::from_secs(10)).await;
@@ -219,10 +236,10 @@ async fn notify_for_new_proposals() {
     }
 }
 
-async fn notify_for_failed_proposals() {
+async fn notify_for_failed_proposals(target_network: Network) {
     let mut checkpoint =
         ProposalCheckpointStore::new("failed").expect("failed to initialize last notified proposal tracking");
-    let proposal_poller = ProposalPoller::new();
+    let proposal_poller = ProposalPoller::new(target_network);
     loop {
         info!("checking for failed proposals");
         if let Ok(mut proposals) = proposal_poller.poll_not_executed_once().await {
@@ -242,7 +259,7 @@ async fn notify_for_failed_proposals() {
             let mut new_failed_proposals = pending_proposals
                 .into_iter()
                 .filter(|proposal| {
-                    ProposalStatus::from_i32(proposal.status).expect("invalid proposal status")
+                    ProposalStatus::try_from(proposal.status).expect("invalid proposal status")
                         == ProposalStatus::Failed
                         && proposal.failed_timestamp_seconds > checkpoint.get().time.unwrap_or_default()
                 })

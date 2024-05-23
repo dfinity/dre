@@ -1,0 +1,37 @@
+name: Check if a path was modified
+description: Reusable action for checking if a file path is modified as a step. It outputs a `changed` variable which can be referenced later.
+
+inputs:
+  path:
+    description: 'Path to check'
+    required: true
+
+runs:
+  using: composite
+  steps:
+    ########################################
+    # Check to see if files changed
+    ########################################
+    - name: "🔍 Check if $PATH_TO_CHECK is modified in last commit "
+      env: 
+        PATH_TO_CHECK: ${{ inputs.path }}
+      shell: bash
+      run: |
+        set -eExou pipefail
+
+        echo "=============== list modified files ==============="
+        git diff --name-only HEAD^ HEAD
+        
+        echo "========== check paths of modified files =========="
+        git diff --name-only HEAD^ HEAD > files.txt
+        while IFS= read -r file
+        do
+        echo $file
+        if [[ $file != $PATH_TO_CHECK ]]; then
+          echo "changed=false" >> $GITHUB_ENV
+        else
+          echo "File $file matches $PATH_TO_CHECK"
+          echo "changed=true" >> $GITHUB_ENV
+          break
+        fi
+        done < files.txt

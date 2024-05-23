@@ -1,0 +1,56 @@
+name: Update k8s deployments
+description: Reusable action for updating k8s deployments
+
+inputs:
+  gitlab_api_token:
+    description: 'A GitLab API token with access to the k8s repository'
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: "☸️ Update k8s deployments"
+      env:
+        GITLAB_API_TOKEN: ${{ inputs.gitlab_api_token }}
+      shell: bash
+      run: |
+        set -eExou pipefail
+
+        # List of files can be update in
+        # .github/workflows/main.yaml
+        echo "Should change following files:"
+        echo $files
+
+        cd .git
+
+        # checkout branch
+        git clone --depth 10 --branch "main" "https://gitlab-ci-token:${GITLAB_API_TOKEN}@gitlab.com/dfinity-lab/private/k8s/k8s.git"
+
+        cd k8s
+        git config user.email "idx@dfinity.org"
+        git config user.name "IDX Automation"
+        DRE_REPO_BRANCH="${{ github.head_ref || github.ref_name }}"
+        K8S_REPO_BRANCH="update-dre-images-$DRE_REPO_BRANCH"
+        git checkout -b "${K8S_REPO_BRANCH}"
+
+        # Update the internal dashboard image refs
+        # this regex matches the first group (ie the image name) and uses \1
+        # called a back-reference to insert the first group matched, the second
+        # part is to match the 40 characters hash that we replace with the $GITHUB_SHA
+        sed -i "s~\(\([[:alpha:]]\|-\)\+\):[[:alnum:]]\{40\}~\1:${GITHUB_SHA}~g" $files
+
+        # commit changes if there are any
+        git add .
+        if git diff --cached --quiet; then
+          echo "No changes to commit."
+          exit 0
+        fi
+
+        # Push changes and create a new merge request
+        git commit -m "Updating DRE container images from $DRE_REPO_BRANCH branch"
+        git push \
+          -o merge_request.create \
+          -o merge_request.title="[nomrbot] - Updating DRE container images" \
+          -o merge_request.description="Updating the DRE container images based on the latest changes in the DRE repository - [here](https://github.com/dfinity/dre/commits/$DRE_REPO_BRANCH" \
+          --force --set-upstream origin "${K8S_REPO_BRANCH}" || \
+          git push --force --set-upstream origin "${K8S_REPO_BRANCH}"

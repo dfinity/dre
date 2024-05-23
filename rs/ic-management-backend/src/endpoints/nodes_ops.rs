@@ -3,7 +3,7 @@ use ic_management_types::requests::{NodeRemoval, NodeRemovalReason, NodesRemoveR
 use itertools::Itertools;
 
 use super::*;
-use crate::health;
+use crate::health::{self, HealthStatusQuerier};
 use decentralization::network::Node as DecentralizationNode;
 
 /// Finds all nodes that need to be removed from the network either because
@@ -65,7 +65,13 @@ async fn remove(
                                     reason: NodeRemovalReason::Duplicates(principal),
                                 });
                             }
-                            if !matches!(status, ic_management_types::Status::Healthy) {
+                            let should_remove_node = if request.remove_degraded {
+                                matches!(status, ic_management_types::Status::Dead)
+                                    || matches!(status, ic_management_types::Status::Degraded)
+                            } else {
+                                matches!(status, ic_management_types::Status::Dead)
+                            };
+                            if should_remove_node {
                                 return Some(NodeRemoval {
                                     node: n,
                                     reason: NodeRemovalReason::Unhealthy(status),

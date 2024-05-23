@@ -13,6 +13,42 @@ pub struct MembershipReplaceRequest {
     pub min_nakamoto_coefficients: Option<MinNakamotoCoefficients>,
 }
 
+// impl Display for MembershipReplaceRequest
+impl std::fmt::Display for MembershipReplaceRequest {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let target = match &self.target {
+            ReplaceTarget::Subnet(subnet) => format!("subnet {}", subnet),
+            ReplaceTarget::Nodes { nodes, motivation } => {
+                format!("nodes {:?} ({})", nodes, motivation)
+            }
+        };
+        write!(f, "target: {}", target)?;
+        if self.heal {
+            write!(f, " heal: {}", self.heal)?;
+        }
+        if let Some(optimize) = self.optimize {
+            write!(f, " optimize: {}", optimize)?;
+        }
+        if let Some(exclude) = &self.exclude {
+            if !exclude.is_empty() {
+                write!(f, " exclude: {:?}", self.exclude)?;
+            }
+        }
+        if !self.only.is_empty() {
+            write!(f, " only: {:?}", self.only)?;
+        }
+        if let Some(include) = &self.include {
+            if !include.is_empty() {
+                write!(f, " include: {:?}", include)?;
+            }
+        }
+        if let Some(min_nakamoto_coefficients) = &self.min_nakamoto_coefficients {
+            write!(f, " min_nakamoto_coefficients: {:?}", min_nakamoto_coefficients)?;
+        }
+        Ok(())
+    }
+}
+
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum ReplaceTarget {
@@ -47,6 +83,7 @@ pub struct SubnetResizeRequest {
 #[derive(Serialize, Deserialize)]
 pub struct NodesRemoveRequest {
     pub no_auto: bool,
+    pub remove_degraded: bool,
     pub extra_nodes_filter: Vec<String>,
     pub exclude: Option<Vec<String>>,
     pub motivation: String,

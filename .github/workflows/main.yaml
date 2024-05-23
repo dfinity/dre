@@ -1,0 +1,135 @@
+name: Build and test
+on:
+  push:
+    branches:
+      - "main"
+    tags:
+      - "v*"
+    paths-ignore:
+      - "release-index.yaml"
+      - "replica-releases/**"
+      - "node-labels/**"
+  pull_request:
+    paths-ignore:
+      - "release-index.yaml"
+      - "replica-releases/**"
+      - "node-labels/**"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  bazel:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - name: "☁️ Setup runner"
+        uses: ./.github/workflows/manage-runner-pre
+        with:
+          aws_access_key_id: ${{ secrets.WASABI_ACCESS_KEY }}
+          aws_secret_access_key: ${{ secrets.WASABI_SECRET_KEY }}
+
+      ########################################
+      # Build and test
+      ########################################
+      - name: "🚀 Building"
+        uses: ./.github/workflows/build
+        with:
+          ssh_pk_workflow: ${{ secrets.SSH_PK_WORKFLOW }}
+      - run: bazel test ...
+        name: "🚀 Testing"
+
+      ########################################
+      # Upload test artifacts
+      ########################################
+      - name: "🧪 Upload test artifacts"
+        if: ${{ github.ref == 'refs/heads/main' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-artifacts
+          path: bazel-out/k8-opt/bin/rs/ic-observability/multiservice-discovery/multiservice-discovery
+
+      ########################################
+      # Prepare release
+      ########################################
+      - name: "🚢 Prepare release"
+        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+        uses: ./.github/workflows/prepare-release
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      ########################################
+      # Upload container images
+      ########################################
+      - name: "🔧 Login to GitHub Container Registry"
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: "📦 Push images to GitHub Container Registry"
+        if: ${{ startsWith(github.ref, 'refs/tags/v') || startsWith(github.head_ref, 'container') || startsWith(github.ref, 'refs/heads/container') || (github.ref == 'refs/heads/main') }}
+        run: bazel query --noshow_progress 'kind("oci_push", ...)' | xargs -I_target bazel run _target -- --tag ${GITHUB_SHA}
+
+      ########################################
+      # Check if dashboard/* changed to see if
+      # it also needs to be updated in k8s
+      ########################################
+      - name: "❓ Check if dashboard/* changed in last commit"
+        id: check
+        uses: ./.github/workflows/check-modified-files-as-step
+        with:
+          path: dashboard/*
+
+      - name: "💲 Setting correct paths to update"
+        id: paths
+        shell: bash
+        run: |
+          files=(
+            bases/apps/ic-release-controller/sts.yaml
+            bases/apps/mainnet-dashboard/backend/base/deployment.yaml
+            bases/apps/mainnet-dashboard/statefulset-slack.yaml
+            bases/apps/service-discovery/service-discovery.yaml
+            bases/apps/vector-testnets/vector.yaml
+            bases/apps/vector/vector.yaml
+          )
+          if [[ $changed == "true" ]]; then
+            echo "Adding frontend to list of files"
+            files+=( bases/apps/mainnet-dashboard/frontend/deployment.yaml )
+          else
+            echo "Skipping adding of frontend to list of files"
+          fi
+
+          echo "Output of this step:"
+          echo ${files[@]}
+          echo "files=${files[@]}" >> $GITHUB_ENV
+
+      ########################################
+      # Update k8s deployments
+      ########################################
+      - name: "🤖 Update k8s deployments"
+        if: ${{ startsWith(github.ref, 'refs/tags/v') || startsWith(github.head_ref, 'container') || startsWith(github.ref, 'refs/heads/container') || (github.ref == 'refs/heads/main') }}
+        uses: ./.github/workflows/update-k8s-deployments
+        with:
+          gitlab_api_token: ${{ secrets.GITLAB_K8S_API_TOKEN }}
+
+      ########################################
+      # Deploy to github pages
+      ########################################
+      - name: "🚢 Deploy to GitHub Pages"
+        if: ${{ github.ref == 'refs/heads/main' }}
+        run: |
+          git config --global user.email "actions@github.com"
+          git config --global user.name "GitHub Actions"
+          bazel run "//:mkdocs" -- gh-deploy --force
+
+      ########################################
+      # Clean up runner
+      ########################################
+      - uses: ./.github/workflows/manage-runner-post
+        name: "🪓 Tear down runner"
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

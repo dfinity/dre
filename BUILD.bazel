@@ -1,6 +1,7 @@
+load("@python_deps//:requirements.bzl", "requirement")
+
 exports_files([
     "archive_canister.wasm.gz",
-    "build-info-build.patch",
     "clippy.toml",
     "rustfmt.toml",
     "WORKSPACE.bazel",
@@ -14,4 +15,27 @@ alias(
 alias(
     name = "poetry",
     actual = "@python_deps_poetry//:rules_python_wheel_entry_point_poetry",
+    tags = ["no-cache"],
+)
+
+genrule(
+    name = "release-docs",
+    srcs = ["//release-controller:README.md"],
+    outs = ["docs/release.md"],
+    cmd = "cp $< $@",
+)
+
+py_binary(
+    name = "mkdocs",
+    srcs = ["@python_deps_mkdocs//:rules_python_wheel_entry_point_mkdocs"],
+    data = [
+        "mkdocs.yml",
+        ":release-docs",
+    ] + glob(["docs/**/*"]),
+    main = "rules_python_wheel_entry_point_mkdocs.py",
+    deps = [
+        requirement("mkdocs-material"),
+        requirement("mkdocs-git-revision-date-localized-plugin"),
+        requirement("mkdocs-git-committers-plugin-2"),
+    ],
 )

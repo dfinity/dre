@@ -1,4 +1,16 @@
-build --workspace_status_command=$(pwd)/bazel/workspace_status.sh
+build --workspace_status_command=$(pwd)/bazel/workspace_status.sh --stamp
+
+# Use local disk cache by default
+build --disk_cache=~/.cache/bazel/local_cache
+
+# Repository cache
+build --repository_cache=~/.cache/bazel/repository_cache
+
+# Use hard links in the repository cache, to save disk space
+build --experimental_repository_cache_hardlinks=true
+
+# Retry downloads
+build --experimental_repository_downloader_retries=3
 
 # Use hermetic JDK
 # See https://bazel.build/docs/bazel-and-java#hermetic-testing
@@ -6,13 +18,15 @@ build --java_runtime_version=remotejdk_17
 
 # --config=ci implies --config=lint
 build:ci --config=lint
+# --config=ci implies --config=dfinity
+build:ci --config=dfinity
 # --config=lint implies both --config=fmt and --config=clippy.
 build:lint --config=fmt
 build:lint --config=clippy
 
 build:ci --progress_report_interval=30
 
-build --nosandbox_default_allow_network
+build --sandbox_default_allow_network
 build --incompatible_strict_action_env # use an environment with a static value for PATH and do not inherit LD_LIBRARY_PATH
 
 # default to optimized and unstripped binaries.
@@ -21,22 +35,30 @@ build --@rules_rust//:extra_rustc_flags=-Cdebug-assertions=on
 build --@rules_rust//:extra_rustc_flag=-Dbindings_with_variant_name
 build --strip=never
 
-build --remote_cache=bazel-remote.idx.dfinity.network
-build --experimental_remote_cache_async
+# build:dfinity --remote_cache=bazel-remote.idx.dfinity.network
+build --remote_cache=grpc://localhost:9092
+build --remote_instance_name=default
+build --google_default_credentials=false
+build --remote_upload_local_results=false
+# build --experimental_remote_cache_async
+build --experimental_remote_cache_compression # compress/decompress cache blobs with zstd
 build --remote_timeout=30s # Default is 60s.
 build:ci --remote_timeout=5m # Default is 60s.
+build:ci --remote_upload_local_results=true
 
-build --experimental_remote_downloader=bazel-remote.idx.dfinity.network --experimental_remote_downloader_local_fallback
+# build:dfinity --experimental_remote_downloader=bazel-remote.idx.dfinity.network --experimental_remote_downloader_local_fallback
 build:local --experimental_remote_downloader=
 
 # Does not produce valid JSON. See https://github.com/bazelbuild/bazel/issues/14209
 build --execution_log_json_file=bazel-build-log.json
-build:ci --build_event_binary_file=bazel-bep.pb
 
-build --bes_results_url=https://dash.idx.dfinity.network/invocation/
-build --bes_backend=bes.idx.dfinity.network
+# build:dfinity --bes_results_url=https://dash.idx.dfinity.network/invocation/
+# build:dfinity --bes_backend=bes.idx.dfinity.network
 build --bes_timeout=30s # Default is no timeout.
 build:ci --bes_timeout=180s # Default is no timeout.
+build:ci --bes_upload_mode=fully_async
+build:ci --bes_results_url=
+build:ci --bes_backend=
 
 build --remote_local_fallback
 build --experimental_repository_downloader_retries=3 # https://bazel.build/reference/command-line-reference#flag--experimental_repository_downloader_retries
