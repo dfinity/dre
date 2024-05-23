@@ -35,7 +35,7 @@ use crate::defaults;
 use crate::detect_neuron::{Auth, Neuron};
 use crate::parsed_cli::ParsedCli;
 
-const MAX_SUMMARY_CHAR_COUNT: usize = 14000;
+const MAX_SUMMARY_CHAR_COUNT: usize = 29000;
 
 #[derive(Clone, Serialize, PartialEq)]
 enum FirewallRuleModificationType {
