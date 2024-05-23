@@ -231,6 +231,11 @@ async fn async_main() -> Result<(), anyhow::Error> {
             },
 
             cli::Commands::UpdateUnassignedNodes { nns_subnet_id } => {
+                let runner_instance = if target_network.is_mainnet() {
+                    runner_instance.as_automation()
+                } else {
+                    runner_instance
+                };
                 let nns_subnet_id = match nns_subnet_id {
                     Some(subnet_id) => subnet_id.to_owned(),
                     None => {

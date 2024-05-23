@@ -262,7 +262,7 @@ fn get_node_rewards_table(
         Ok(r) => match r {
             Some(r) => r,
             None => {
-                if network.name.eq("mainnet") {
+                if network.is_mainnet() {
                     panic!("Failed to get Node Rewards Table")
                 } else {
                     warn!("Didn't find any node rewards details for network: {}", network.name);
@@ -271,7 +271,7 @@ fn get_node_rewards_table(
             }
         },
         Err(_) => {
-            if network.name.eq("mainnet") {
+            if network.is_mainnet() {
                 panic!("Failed to get Node Rewards Table for mainnet")
             } else {
                 warn!("Failed to get Node Rewards Table for {}", network.name);
