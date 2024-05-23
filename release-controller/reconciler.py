@@ -158,6 +158,7 @@ class Reconciler:
         """Reconcile the state of the network with the release index."""
         config = self.loader.index()
         active_versions = self.ic_prometheus.active_versions()
+        logging.info("GuestOS versions active on subnets or unassigned nodes: %s", active_versions)
         ic_admin = IcAdmin(self.nns_url, git_revision=os.environ.get("IC_ADMIN_VERSION"))
         for rc_idx, rc in enumerate(
             config.root.releases[: config.root.releases.index(oldest_active_release(config, active_versions)) + 1]
