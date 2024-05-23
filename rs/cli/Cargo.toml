@@ -46,6 +46,7 @@ ic-registry-local-registry = { workspace = true }
 ic-registry-subnet-type = { workspace = true }
 ic-sns-wasm = { workspace = true }
 ic-sys = { workspace = true }
+ic-types = { workspace = true }
 itertools = { workspace = true }
 keyring = { workspace = true }
 log = { workspace = true }
