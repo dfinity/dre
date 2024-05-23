@@ -654,6 +654,10 @@ impl Network {
             _ => self.name.clone(),
         }
     }
+
+    pub fn is_mainnet(&self) -> bool {
+        self.name == "mainnet"
+    }
 }
 
 impl std::fmt::Display for Network {

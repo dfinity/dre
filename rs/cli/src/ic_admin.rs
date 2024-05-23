@@ -159,6 +159,15 @@ impl IcAdminWrapper {
         }
     }
 
+    pub fn as_automation(self) -> Self {
+        Self {
+            network: self.network,
+            ic_admin_bin_path: self.ic_admin_bin_path,
+            proceed_without_confirmation: self.proceed_without_confirmation,
+            neuron: self.neuron.as_automation(),
+        }
+    }
+
     pub fn from_cli(cli: ParsedCli) -> Self {
         Self {
             network: cli.network,
@@ -168,8 +177,8 @@ impl IcAdminWrapper {
         }
     }
 
-    async fn print_ic_admin_command_line(&self, cmd: &Command, for_automation: bool) {
-        let auth = self.neuron.get_auth(for_automation).await.unwrap();
+    async fn print_ic_admin_command_line(&self, cmd: &Command) {
+        let auth = self.neuron.get_auth().await.unwrap();
         info!(
             "running ic-admin: \n$ {}{}",
             cmd.get_program().to_str().unwrap().yellow(),
@@ -203,13 +212,6 @@ impl IcAdminWrapper {
                 ));
             }
         }
-        // Deploy* commands should use the automation credentials
-        let as_automation = match cmd {
-            ProposeCommand::DeployGuestosToAllSubnetNodes { .. } => true,
-            ProposeCommand::DeployGuestosToAllUnassignedNodes { .. } => true,
-            ProposeCommand::DeployHostosToSomeNodes { .. } => true,
-            _ => false,
-        };
 
         self.run(
             &cmd.get_command_name(),
@@ -237,14 +239,13 @@ impl IcAdminWrapper {
                         ]
                     })
                     .unwrap_or_default(),
-                self.neuron.as_arg_vec(true, as_automation).await?,
+                self.neuron.as_arg_vec(true).await?,
                 cmd.args(),
             ]
             .concat()
             .as_slice(),
             true,
             false,
-            as_automation,
         )
         .await
     }
@@ -265,10 +266,11 @@ impl IcAdminWrapper {
             self._exec(cmd.clone(), opts.clone(), true).await?;
         }
 
-        if Confirm::new()
-            .with_prompt("Do you want to continue?")
-            .default(false)
-            .interact()?
+        if self.proceed_without_confirmation
+            || Confirm::new()
+                .with_prompt("Do you want to continue?")
+                .default(false)
+                .interact()?
         {
             // User confirmed the desire to submit the proposal and no obvious problems were
             // found. Proceeding!
@@ -283,12 +285,11 @@ impl IcAdminWrapper {
         ic_admin_args: &[String],
         with_auth: bool,
         silent: bool,
-        as_automation: bool,
     ) -> anyhow::Result<String> {
         let ic_admin_path = self.ic_admin_bin_path.clone().unwrap_or_else(|| "ic-admin".to_string());
         let mut cmd = Command::new(ic_admin_path);
         let auth_options = if with_auth {
-            self.neuron.get_auth(as_automation).await?.as_arg_vec()
+            self.neuron.get_auth().await?.as_arg_vec()
         } else {
             vec![]
         };
@@ -302,7 +303,7 @@ impl IcAdminWrapper {
         if silent {
             cmd.stderr(Stdio::piped());
         } else {
-            self.print_ic_admin_command_line(cmd, as_automation).await;
+            self.print_ic_admin_command_line(cmd).await;
         }
         cmd.stdout(Stdio::piped());
 
@@ -346,17 +347,9 @@ impl IcAdminWrapper {
         }
     }
 
-    pub async fn run(
-        &self,
-        command: &str,
-        args: &[String],
-        with_auth: bool,
-        silent: bool,
-        as_automation: bool,
-    ) -> anyhow::Result<String> {
+    pub async fn run(&self, command: &str, args: &[String], with_auth: bool, silent: bool) -> anyhow::Result<String> {
         let ic_admin_args = [&[command.to_string()], args].concat();
-        self._run_ic_admin_with_args(&ic_admin_args, with_auth, silent, as_automation)
-            .await
+        self._run_ic_admin_with_args(&ic_admin_args, with_auth, silent).await
     }
 
     /// Run ic-admin and parse sub-commands that it lists with "--help",
@@ -422,7 +415,6 @@ impl IcAdminWrapper {
                 &args.iter().skip(1).cloned().collect::<Vec<_>>(),
                 false,
                 silent,
-                false,
             )
             .await?;
         Ok(stdout)
@@ -1221,13 +1213,13 @@ oSMDIQBa2NLmSmaqjDXej4rrJEuEhKIz7/pGXpxztViWhB+X9Q==
                         ]
                     })
                     .unwrap_or_default(),
-                cli.neuron.get_auth(false).await?.as_arg_vec(),
+                cli.neuron.get_auth().await?.as_arg_vec(),
                 cmd.args(),
             ]
             .concat()
             .to_vec();
             let out = with_ic_admin(Default::default(), async {
-                cli.run(&cmd.get_command_name(), &vector, true, false, false)
+                cli.run(&cmd.get_command_name(), &vector, true, false)
                     .await
                     .map_err(|e| anyhow::anyhow!(e))
             })

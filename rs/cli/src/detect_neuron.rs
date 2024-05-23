@@ -12,15 +12,16 @@ use ic_nns_constants::GOVERNANCE_CANISTER_ID;
 use ic_nns_governance::pb::v1::{ListNeurons, ListNeuronsResponse};
 use ic_sys::utility_command::UtilityCommand;
 use keyring::{Entry, Error};
-use log::info;
+use log::{info, warn};
 
-static AUTOMATION_PRIVATE_KEY_PEM_HOME_SUBDIR: &str = ".config/dfx/identity/release-automation/identity.pem";
+static RELEASE_AUTOMATION_DEFAULT_PRIVATE_KEY_PEM: &str = ".config/dfx/identity/release-automation/identity.pem"; // Relative to the home directory
+const RELEASE_AUTOMATION_NEURON_ID: u64 = 80;
 
 #[derive(Clone, Debug)]
 pub struct Neuron {
     network: ic_management_types::Network,
     neuron_id: RefCell<Option<u64>>,
-    private_key_pem: Option<String>,
+    private_key_pem: Option<PathBuf>,
     hsm_slot: Option<u64>,
     hsm_pin: Option<String>,
     hsm_key_id: Option<String>,
@@ -28,27 +29,41 @@ pub struct Neuron {
 }
 
 impl Neuron {
-    pub async fn get_auth(&self, for_automation: bool) -> anyhow::Result<Auth> {
+    pub async fn new(
+        network: &ic_management_types::Network,
+        neuron_id: Option<u64>,
+        private_key_pem: Option<String>,
+        hsm_slot: Option<u64>,
+        hsm_pin: Option<String>,
+        hsm_key_id: Option<String>,
+    ) -> Self {
+        let private_key_pem = match private_key_pem {
+            Some(path) => match PathBuf::from_str(&path).expect("Cannot parse the private key path") {
+                path if path.exists() => Some(path),
+                _ => {
+                    warn!("Invalid private key path");
+                    None
+                }
+            },
+            None => None,
+        };
+        Self {
+            network: network.clone(),
+            neuron_id: RefCell::new(neuron_id),
+            private_key_pem,
+            hsm_slot,
+            hsm_pin,
+            hsm_key_id,
+            auth_cache: RefCell::new(None),
+        }
+    }
+
+    pub async fn get_auth(&self) -> anyhow::Result<Auth> {
         if let Some(auth) = &*self.auth_cache.borrow() {
             return Ok(auth.clone());
         };
 
-        let private_key_pem = if for_automation {
-            Some(
-                dirs::home_dir()
-                    .expect("failed to find the home dir")
-                    .join(AUTOMATION_PRIVATE_KEY_PEM_HOME_SUBDIR),
-            )
-        } else {
-            match &self.private_key_pem {
-                Some(path) => Some(PathBuf::from_str(path).expect("Invalid private key path")),
-                None => None,
-            }
-        };
-
-        println!("private_key pem: {:?} self {:?}", private_key_pem, self);
-
-        let auth = if let Some(path) = private_key_pem {
+        let auth = if let Some(path) = &self.private_key_pem {
             Auth::Keyfile { path: path.clone() }
         } else {
             // If HSM slot, pin and key id are provided, use them without checking
@@ -70,44 +85,39 @@ impl Neuron {
         Ok(auth)
     }
 
-    pub async fn get_neuron_id(&self, for_automation: bool) -> anyhow::Result<u64> {
+    pub async fn get_neuron_id(&self) -> anyhow::Result<u64> {
         if let Some(neuron_id) = *self.neuron_id.borrow() {
             return Ok(neuron_id);
         };
-        let neuron_id =
-            auto_detect_neuron_id(self.network.get_nns_urls(), self.get_auth(for_automation).await?).await?;
+        let neuron_id = auto_detect_neuron_id(self.network.get_nns_urls(), self.get_auth().await?).await?;
         self.neuron_id.replace(Some(neuron_id));
         Ok(neuron_id)
     }
 
-    pub async fn as_arg_vec(&self, with_auth: bool, for_automation: bool) -> anyhow::Result<Vec<String>> {
+    pub async fn as_arg_vec(&self, with_auth: bool) -> anyhow::Result<Vec<String>> {
         if !with_auth {
             return Ok(vec![]);
         };
 
         // Auth required, try to find valid neuron id using HSM or with the private key
         // If private key is provided, use it without checking
-        let auth = self.get_auth(for_automation).await?;
+        let auth = self.get_auth().await?;
         let neuron_id = auto_detect_neuron_id(self.network.get_nns_urls(), auth).await?;
         Ok(vec!["--proposer".to_string(), neuron_id.to_string()])
     }
 
-    pub async fn new(
-        network: &ic_management_types::Network,
-        neuron_id: Option<u64>,
-        private_key_pem: Option<String>,
-        hsm_slot: Option<u64>,
-        hsm_pin: Option<String>,
-        hsm_key_id: Option<String>,
-    ) -> Self {
+    pub fn as_automation(self) -> Self {
+        let private_key_pem = match self.private_key_pem {
+            Some(private_key_pem) => private_key_pem,
+            None => dirs::home_dir()
+                .expect("failed to find the home dir")
+                .join(RELEASE_AUTOMATION_DEFAULT_PRIVATE_KEY_PEM),
+        };
+
         Self {
-            network: network.clone(),
-            neuron_id: RefCell::new(neuron_id),
-            private_key_pem,
-            hsm_slot,
-            hsm_pin,
-            hsm_key_id,
-            auth_cache: RefCell::new(None),
+            private_key_pem: Some(private_key_pem),
+            neuron_id: RefCell::new(Some(RELEASE_AUTOMATION_NEURON_ID)),
+            ..self
         }
     }
 }

@@ -43,6 +43,14 @@ impl Runner {
         Ok(())
     }
 
+    pub fn as_automation(self) -> Self {
+        Self {
+            ic_admin: self.ic_admin.as_automation(),
+            dashboard_backend_client: self.dashboard_backend_client,
+            registry: self.registry,
+        }
+    }
+
     pub async fn subnet_resize(
         &self,
         request: ic_management_types::requests::SubnetResizeRequest,
