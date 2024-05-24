@@ -243,20 +243,7 @@ pub struct Node {
     pub duplicates: Option<PrincipalId>,
 }
 
-#[derive(
-    strum_macros::Display,
-    EnumString,
-    VariantNames,
-    Hash,
-    Eq,
-    PartialEq,
-    Ord,
-    PartialOrd,
-    Clone,
-    Serialize,
-    Deserialize,
-    Debug,
-)]
+#[derive(strum_macros::Display, EnumString, VariantNames, Hash, Eq, PartialEq, Ord, PartialOrd, Clone, Serialize, Deserialize, Debug)]
 #[strum(serialize_all = "snake_case")]
 #[serde(rename_all = "snake_case")]
 pub enum NodeFeature {
@@ -270,10 +257,7 @@ pub enum NodeFeature {
 
 impl NodeFeature {
     pub fn variants() -> Vec<Self> {
-        NodeFeature::VARIANTS
-            .iter()
-            .map(|f| NodeFeature::from_str(f).unwrap())
-            .collect()
+        NodeFeature::VARIANTS.iter().map(|f| NodeFeature::from_str(f).unwrap()).collect()
     }
 }
 
@@ -385,19 +369,9 @@ pub struct FactsDBGuest {
 impl From<FactsDBGuest> for Guest {
     fn from(g: FactsDBGuest) -> Self {
         Guest {
-            datacenter: g
-                .physical_system
-                .split('.')
-                .nth(1)
-                .expect("invalid physical system name")
-                .to_string(),
+            datacenter: g.physical_system.split('.').nth(1).expect("invalid physical system name").to_string(),
             ipv6: g.ipv6,
-            name: g
-                .physical_system
-                .split('.')
-                .next()
-                .expect("invalid physical system name")
-                .to_string(),
+            name: g.physical_system.split('.').next().expect("invalid physical system name").to_string(),
             dfinity_owned: g.node_type.contains("dfinity"),
             decentralized: g.ipv6.segments()[4] == 0x6801,
         }
@@ -441,9 +415,7 @@ pub enum Health {
     Unknown,
 }
 
-#[derive(
-    PartialOrd, Ord, Eq, PartialEq, EnumString, Serialize, strum_macros::Display, Deserialize, Debug, Clone, Hash,
-)]
+#[derive(PartialOrd, Ord, Eq, PartialEq, EnumString, Serialize, strum_macros::Display, Deserialize, Debug, Clone, Hash)]
 pub enum Status {
     Healthy,
     Degraded,
@@ -642,11 +614,7 @@ impl Network {
     }
 
     pub fn get_nns_urls_string(&self) -> String {
-        self.nns_urls
-            .iter()
-            .map(|url| url.to_string())
-            .collect::<Vec<String>>()
-            .join(",")
+        self.nns_urls.iter().map(|url| url.to_string()).collect::<Vec<String>>().join(",")
     }
 
     pub fn get_prometheus_endpoint(&self) -> Url {
@@ -837,10 +805,7 @@ mod tests {
 
     #[test]
     fn test_network_get_nns_urls_string() {
-        let nns_urls = vec![
-            Url::from_str("https://ic0.app").unwrap(),
-            Url::from_str("https://custom.nns").unwrap(),
-        ];
+        let nns_urls = vec![Url::from_str("https://ic0.app").unwrap(), Url::from_str("https://custom.nns").unwrap()];
         let network = Network {
             name: "mainnet".to_string(),
             nns_urls,

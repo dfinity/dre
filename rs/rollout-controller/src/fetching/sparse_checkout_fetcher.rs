@@ -53,22 +53,14 @@ pub struct SparseCheckoutFetcher {
 
 impl SparseCheckoutFetcher {
     pub async fn new(logger: Logger, path: PathBuf, url: String, release_index: String) -> anyhow::Result<Self> {
-        let fetcher = Self {
-            logger,
-            path,
-            release_index,
-        };
+        let fetcher = Self { logger, path, release_index };
 
         if !fetcher.path.exists() {
             info!(fetcher.logger, "Git directory not found. Creating...");
             create_dir_all(&fetcher.path)
                 .await
                 .map_err(|e| anyhow::anyhow!("Couldn't create directory for git repo: {:?}", e))?;
-            debug!(
-                fetcher.logger,
-                "Created directory for github repo at: '{}'",
-                fetcher.path.display()
-            );
+            debug!(fetcher.logger, "Created directory for github repo at: '{}'", fetcher.path.display());
 
             fetcher.configure_git_repo(&url).await?;
             debug!(fetcher.logger, "Repo configured")

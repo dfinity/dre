@@ -42,11 +42,7 @@ fn main() {
     }
 
     if cli_args.render_prom_targets_to_stdout {
-        async fn sync(
-            cli_args: &CliArgs,
-            log: &Logger,
-            shutdown_signal: impl futures_util::Future<Output = ()>,
-        ) -> Option<RunningDefinition> {
+        async fn sync(cli_args: &CliArgs, log: &Logger, shutdown_signal: impl futures_util::Future<Output = ()>) -> Option<RunningDefinition> {
             let def = get_mainnet_definition(cli_args, log.clone());
             let test_def = TestDefinition::new(def, RunningDefinitionsMetrics::new());
             let sync_fut = test_def.sync_and_stop(cli_args.skip_update_local_registry);

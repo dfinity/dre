@@ -7,10 +7,7 @@ use crate::server_handlers::dto::DefinitionDto;
 
 use super::{bad_request, ok, Server};
 
-pub(super) async fn add_definition(
-    State(binding): State<Server>,
-    Json(definition): Json<DefinitionDto>,
-) -> Result<String, (StatusCode, String)> {
+pub(super) async fn add_definition(State(binding): State<Server>, Json(definition): Json<DefinitionDto>) -> Result<String, (StatusCode, String)> {
     let dname = definition.name.clone();
     let rej = format!("Definition {} could not be added", dname);
     let new_definition = match definition

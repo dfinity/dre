@@ -169,9 +169,7 @@ impl Auth {
         hsm_key_id: Option<String>,
     ) -> anyhow::Result<Self> {
         match (private_key_pem, hsm_slot, hsm_pin, hsm_key_id) {
-            (Some(path), _, _, _) if PathBuf::from(path.clone()).exists() => Ok(Auth::Keyfile {
-                path: PathBuf::from(path),
-            }),
+            (Some(path), _, _, _) if PathBuf::from(path.clone()).exists() => Ok(Auth::Keyfile { path: PathBuf::from(path) }),
             (Some(path), _, _, _) => Err(anyhow::anyhow!("Invalid key file path: {}", path)),
             (None, Some(slot), Some(pin), Some(key_id)) => Ok(Auth::Hsm { pin, slot, key_id }),
             _ => Err(anyhow::anyhow!("Invalid auth arguments")),
@@ -214,10 +212,7 @@ pub async fn auto_detect_neuron_id(nns_urls: &[url::Url], auth: Auth) -> anyhow:
         Auth::Hsm { pin, slot, key_id } => Sender::from_external_hsm(
             UtilityCommand::read_public_key(Some(&slot.to_string()), Some(&key_id)).execute()?,
             std::sync::Arc::new(move |input| {
-                Ok(
-                    UtilityCommand::sign_message(input.to_vec(), Some(&slot.to_string()), Some(&pin), Some(&key_id))
-                        .execute()?,
-                )
+                Ok(UtilityCommand::sign_message(input.to_vec(), Some(&slot.to_string()), Some(&pin), Some(&key_id)).execute()?)
             }),
         ),
         Auth::Keyfile { path } => {

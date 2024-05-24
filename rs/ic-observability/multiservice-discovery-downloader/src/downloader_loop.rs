@@ -5,10 +5,7 @@ use multiservice_discovery_shared::filters::ic_name_regex_filter::IcNameRegexFil
 use multiservice_discovery_shared::filters::node_regex_id_filter::NodeIDRegexFilter;
 use multiservice_discovery_shared::filters::{TargetGroupFilter, TargetGroupFilterList};
 use multiservice_discovery_shared::{
-    builders::{
-        log_vector_config_structure::VectorConfigBuilderImpl, prometheus_config_structure::PrometheusConfigBuilder,
-        ConfigBuilder,
-    },
+    builders::{log_vector_config_structure::VectorConfigBuilderImpl, prometheus_config_structure::PrometheusConfigBuilder, ConfigBuilder},
     contracts::target::TargetDto,
 };
 use service_discovery::job_types::JobType;
@@ -54,29 +51,20 @@ pub async fn run_downloader_loop(logger: Logger, cli: CliArgs, stop_signal: Rece
         let response = match client.get(cli.sd_url.clone()).send().await {
             Ok(res) => res,
             Err(e) => {
-                warn!(
-                    logger,
-                    "Failed to download from {} @ interval {:?}: {:?}", cli.sd_url, tick, e
-                );
+                warn!(logger, "Failed to download from {} @ interval {:?}: {:?}", cli.sd_url, tick, e);
                 continue;
             }
         };
 
         if !response.status().is_success() {
-            warn!(
-                logger,
-                "Received failed status {} @ interval {:?}: {:?}", cli.sd_url, tick, response
-            );
+            warn!(logger, "Received failed status {} @ interval {:?}: {:?}", cli.sd_url, tick, response);
             continue;
         }
 
         let targets: Vec<TargetDto> = match response.json().await {
             Ok(targets) => targets,
             Err(e) => {
-                warn!(
-                    logger,
-                    "Failed to parse response from {} @ interval {:?}: {:?}", cli.sd_url, tick, e
-                );
+                warn!(logger, "Failed to parse response from {} @ interval {:?}: {:?}", cli.sd_url, tick, e);
                 continue;
             }
         };

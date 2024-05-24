@@ -92,17 +92,11 @@ impl ConfigBuilder for ScriptLogConfigBuilderImpl {
                 let transform = VectorRemapTransform::from(record.clone(), *job, journald_source_key.clone(), is_bn);
 
                 let mut source_map = HashMap::new();
-                source_map.insert(
-                    format!("{}-script", key),
-                    Box::new(script_source) as Box<dyn VectorSource>,
-                );
+                source_map.insert(format!("{}-script", key), Box::new(script_source) as Box<dyn VectorSource>);
                 source_map.insert(journald_source_key, Box::new(journald_source) as Box<dyn VectorSource>);
 
                 let mut transform_map = HashMap::new();
-                transform_map.insert(
-                    format!("{}-transform", key),
-                    Box::new(transform) as Box<dyn VectorTransform>,
-                );
+                transform_map.insert(format!("{}-transform", key), Box::new(transform) as Box<dyn VectorTransform>);
 
                 config.add_target_group(source_map, transform_map);
             }

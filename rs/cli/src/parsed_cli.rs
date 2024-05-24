@@ -40,11 +40,7 @@ impl ParsedCli {
             ]
             .concat(),
             match update_version.versions_to_retire.clone() {
-                Some(versions) => [
-                    vec![format!("--{}-versions-to-unelect", update_version.release_artifact)],
-                    versions,
-                ]
-                .concat(),
+                Some(versions) => [vec![format!("--{}-versions-to-unelect", update_version.release_artifact)], versions].concat(),
                 None => vec![],
             },
         ]

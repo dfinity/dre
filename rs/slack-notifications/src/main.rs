@@ -94,10 +94,7 @@ impl ProposalCheckpointStore {
                 .create(true)
                 .write(true)
                 .open(&self.file_path)
-                .and_then(|mut file| {
-                    file.write_all(serde_json::to_string(&self.checkpoint)?.as_bytes())
-                        .map(|_| file)
-                })
+                .and_then(|mut file| file.write_all(serde_json::to_string(&self.checkpoint)?.as_bytes()).map(|_| file))
                 .and_then(|mut file| file.flush())
         })?;
         Ok(())
@@ -141,11 +138,7 @@ impl ProposalPoller {
             )
             .with_arg(candid::encode_one(ListProposalInfo {
                 limit: 1000,
-                include_status: vec![
-                    ProposalStatus::Failed.into(),
-                    ProposalStatus::Open.into(),
-                    ProposalStatus::Adopted.into(),
-                ],
+                include_status: vec![ProposalStatus::Failed.into(), ProposalStatus::Open.into(), ProposalStatus::Adopted.into()],
                 omit_large_fields: Some(true),
                 ..Default::default()
             })?)
@@ -159,8 +152,7 @@ impl ProposalPoller {
 }
 
 async fn notify_for_new_proposals(target_network: Network) {
-    let mut last_notified_proposal =
-        ProposalCheckpointStore::new("new").expect("failed to initialize last notified proposal tracking");
+    let mut last_notified_proposal = ProposalCheckpointStore::new("new").expect("failed to initialize last notified proposal tracking");
     let proposal_poller = ProposalPoller::new(target_network);
     loop {
         info!("sleeping");
@@ -170,11 +162,7 @@ async fn notify_for_new_proposals(target_network: Network) {
 
         let mut proposals = proposal_poller.poll_pending_once().await.unwrap_or_default();
 
-        proposals.sort_by(|a, b| {
-            a.id.expect("proposal has no id")
-                .id
-                .cmp(&b.id.expect("proposal has no id").id)
-        });
+        proposals.sort_by(|a, b| a.id.expect("proposal has no id").id.cmp(&b.id.expect("proposal has no id").id));
 
         let new_proposals = proposals
             .into_iter()
@@ -203,18 +191,17 @@ async fn notify_for_new_proposals(target_network: Network) {
             }
 
             if let Ok(message_groups) = slack::MessageGroups::try_from(new_proposals.clone()) {
-                let slack_hook = slack::SlackHook::new(
-                    std::env::var(SLACK_URL_ENV).expect("SLACK_URL environment variable must be set"),
-                );
+                let slack_hook = slack::SlackHook::new(std::env::var(SLACK_URL_ENV).expect("SLACK_URL environment variable must be set"));
 
                 for slack_message in message_groups.message_groups.iter() {
                     match slack_hook.send(slack_message).await {
                         Ok(response) => {
                             println!(
                                 "Got a response: {}",
-                                response.text_with_charset("utf8").await.unwrap_or_else(|_| {
-                                    "ERROR: failed to decode the response from the slack servers".to_string()
-                                })
+                                response
+                                    .text_with_charset("utf8")
+                                    .await
+                                    .unwrap_or_else(|_| { "ERROR: failed to decode the response from the slack servers".to_string() })
                             );
                         }
                         Err(e) => {
@@ -237,30 +224,22 @@ async fn notify_for_new_proposals(target_network: Network) {
 }
 
 async fn notify_for_failed_proposals(target_network: Network) {
-    let mut checkpoint =
-        ProposalCheckpointStore::new("failed").expect("failed to initialize last notified proposal tracking");
+    let mut checkpoint = ProposalCheckpointStore::new("failed").expect("failed to initialize last notified proposal tracking");
     let proposal_poller = ProposalPoller::new(target_network);
     loop {
         info!("checking for failed proposals");
         if let Ok(mut proposals) = proposal_poller.poll_not_executed_once().await {
-            proposals.sort_by(|a, b| {
-                a.id.expect("proposal has no id")
-                    .id
-                    .cmp(&b.id.expect("proposal has no id").id)
-            });
+            proposals.sort_by(|a, b| a.id.expect("proposal has no id").id.cmp(&b.id.expect("proposal has no id").id));
 
             let pending_proposals = proposals
                 .into_iter()
-                .skip_while(|proposal| {
-                    proposal.id.expect("proposal has no id").id < checkpoint.get().proposal_id.unwrap_or_default()
-                })
+                .skip_while(|proposal| proposal.id.expect("proposal has no id").id < checkpoint.get().proposal_id.unwrap_or_default())
                 .collect::<Vec<_>>();
             let oldest_pending_proposal: Option<ProposalInfo> = pending_proposals.first().cloned();
             let mut new_failed_proposals = pending_proposals
                 .into_iter()
                 .filter(|proposal| {
-                    ProposalStatus::try_from(proposal.status).expect("invalid proposal status")
-                        == ProposalStatus::Failed
+                    ProposalStatus::try_from(proposal.status).expect("invalid proposal status") == ProposalStatus::Failed
                         && proposal.failed_timestamp_seconds > checkpoint.get().time.unwrap_or_default()
                 })
                 .collect::<Vec<_>>();
@@ -272,18 +251,17 @@ async fn notify_for_failed_proposals(target_network: Network) {
             }
 
             if let Ok(message_groups) = slack::MessageGroups::try_from(new_failed_proposals.clone()) {
-                let slack_hook = slack::SlackHook::new(
-                    std::env::var(SLACK_URL_ENV).expect("SLACK_URL environment variable must be set"),
-                );
+                let slack_hook = slack::SlackHook::new(std::env::var(SLACK_URL_ENV).expect("SLACK_URL environment variable must be set"));
 
                 for slack_message in message_groups.message_groups.iter() {
                     match slack_hook.send(slack_message).await {
                         Ok(response) => {
                             println!(
                                 "Got a response: {}",
-                                response.text_with_charset("utf8").await.unwrap_or_else(|_| {
-                                    "ERROR: failed to decode the response from the slack servers".to_string()
-                                })
+                                response
+                                    .text_with_charset("utf8")
+                                    .await
+                                    .unwrap_or_else(|_| { "ERROR: failed to decode the response from the slack servers".to_string() })
                             );
                         }
                         Err(e) => {

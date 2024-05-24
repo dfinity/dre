@@ -50,7 +50,6 @@ impl RolloutScheduleFetcher for CurlFetcher {
             .await
             .map_err(|e| anyhow::anyhow!("Error converting body to bytes: {:?}", e))?;
 
-        serde_yaml::from_slice(bytes.to_vec().as_slice())
-            .map_err(|e| anyhow::anyhow!("Couldn't parse release index: {:?}", e))
+        serde_yaml::from_slice(bytes.to_vec().as_slice()).map_err(|e| anyhow::anyhow!("Couldn't parse release index: {:?}", e))
     }
 }

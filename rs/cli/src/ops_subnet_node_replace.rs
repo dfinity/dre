@@ -5,10 +5,7 @@ use decentralization::SubnetChangeResponse;
 mod tests;
 
 pub fn replace_proposal_options(change: &SubnetChangeResponse) -> anyhow::Result<ic_admin::ProposeOptions> {
-    let subnet_id = change
-        .subnet_id
-        .ok_or_else(|| anyhow::anyhow!("subnet_id is required"))?
-        .to_string();
+    let subnet_id = change.subnet_id.ok_or_else(|| anyhow::anyhow!("subnet_id is required"))?.to_string();
 
     let replace_target = if change.added.len() > 1 || change.removed.len() > 1 {
         "nodes"

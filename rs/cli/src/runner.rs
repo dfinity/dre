@@ -71,12 +71,8 @@ impl Runner {
             return Ok(());
         }
         if change.added.len() == change.removed.len() {
-            self.run_membership_change(
-                change.clone(),
-                ops_subnet_node_replace::replace_proposal_options(&change)?,
-                simulate,
-            )
-            .await
+            self.run_membership_change(change.clone(), ops_subnet_node_replace::replace_proposal_options(&change)?, simulate)
+                .await
         } else {
             let action = if change.added.len() < change.removed.len() {
                 "Removing nodes from"
@@ -153,23 +149,12 @@ impl Runner {
         if change.added.is_empty() && change.removed.is_empty() {
             return Ok(());
         }
-        self.run_membership_change(
-            change.clone(),
-            ops_subnet_node_replace::replace_proposal_options(&change)?,
-            simulate,
-        )
-        .await
+        self.run_membership_change(change.clone(), ops_subnet_node_replace::replace_proposal_options(&change)?, simulate)
+            .await
     }
 
-    async fn run_membership_change(
-        &self,
-        change: SubnetChangeResponse,
-        options: ProposeOptions,
-        simulate: bool,
-    ) -> anyhow::Result<()> {
-        let subnet_id = change
-            .subnet_id
-            .ok_or_else(|| anyhow::anyhow!("subnet_id is required"))?;
+    async fn run_membership_change(&self, change: SubnetChangeResponse, options: ProposeOptions, simulate: bool) -> anyhow::Result<()> {
+        let subnet_id = change.subnet_id.ok_or_else(|| anyhow::anyhow!("subnet_id is required"))?;
         let pending_action = self.dashboard_backend_client.subnet_pending_action(subnet_id).await?;
         if let Some(proposal) = pending_action {
             return Err(anyhow::anyhow!(format!(
@@ -193,11 +178,7 @@ impl Runner {
         Ok(())
     }
 
-    pub async fn new_with_network_and_backend_port(
-        ic_admin: ic_admin::IcAdminWrapper,
-        network: &Network,
-        backend_port: u16,
-    ) -> anyhow::Result<Self> {
+    pub async fn new_with_network_and_backend_port(ic_admin: ic_admin::IcAdminWrapper, network: &Network, backend_port: u16) -> anyhow::Result<Self> {
         let backend_url = format!("http://localhost:{}/", backend_port);
 
         let dashboard_backend_client = DashboardBackendClient::new_with_backend_url(backend_url);
@@ -228,15 +209,8 @@ impl Runner {
         })
     }
 
-    pub async fn prepare_versions_to_retire(
-        &self,
-        release_artifact: &Artifact,
-        edit_summary: bool,
-    ) -> anyhow::Result<(String, Option<Vec<String>>)> {
-        let retireable_versions = self
-            .dashboard_backend_client
-            .get_retireable_versions(release_artifact)
-            .await?;
+    pub async fn prepare_versions_to_retire(&self, release_artifact: &Artifact, edit_summary: bool) -> anyhow::Result<(String, Option<Vec<String>>)> {
+        let retireable_versions = self.dashboard_backend_client.get_retireable_versions(release_artifact).await?;
 
         let versions = if retireable_versions.is_empty() {
             Vec::new()
@@ -266,8 +240,7 @@ impl Runner {
         };
 
         let mut template =
-            "Removing the obsolete GuestOS versions from the registry, to prevent unintended version downgrades in the future"
-                .to_string();
+            "Removing the obsolete GuestOS versions from the registry, to prevent unintended version downgrades in the future".to_string();
         if edit_summary {
             info!("Edit summary");
             template = edit::edit(template)?.trim().replace("\r(\n)?", "\n");
@@ -293,9 +266,7 @@ impl Runner {
                 )
             })
             .fold(BTreeMap::new(), |mut acc, (node_id, subnet, dc)| {
-                acc.entry(dc.unwrap_or_default().name)
-                    .or_default()
-                    .push((node_id, subnet));
+                acc.entry(dc.unwrap_or_default().name).or_default().push((node_id, subnet));
                 acc
             })
     }
@@ -347,13 +318,7 @@ impl Runner {
                 if let Some(subnets_affected) = maybe_subnets_affected {
                     summary.push_str("## Updated nodes per subnet\n");
                     let mut builder_subnets = Builder::default();
-                    builder_subnets.push_record([
-                        "subnet_id",
-                        "updated_nodes",
-                        "count",
-                        "subnet_size",
-                        "percent_subnet",
-                    ]);
+                    builder_subnets.push_record(["subnet_id", "updated_nodes", "count", "subnet_size", "percent_subnet"]);
 
                     subnets_affected
                         .into_iter()
@@ -370,24 +335,12 @@ impl Runner {
                                 })
                                 .collect::<Vec<PrincipalId>>();
                             let subnet_id = subnet.subnet_id.to_string().split('-').next().unwrap().to_string();
-                            let updated_nodes = nodes_id
-                                .iter()
-                                .map(|p| p.to_string().split('-').next().unwrap().to_string())
-                                .join("\n");
+                            let updated_nodes = nodes_id.iter().map(|p| p.to_string().split('-').next().unwrap().to_string()).join("\n");
                             let updates_nodes_count = nodes_id.len().to_string();
                             let subnet_size = subnet.subnet_size.to_string();
-                            let percent_of_subnet_size = format!(
-                                "{}%",
-                                (nodes_id.len() as f32 / subnet.subnet_size as f32 * 100.0).round()
-                            );
+                            let percent_of_subnet_size = format!("{}%", (nodes_id.len() as f32 / subnet.subnet_size as f32 * 100.0).round());
 
-                            [
-                                subnet_id,
-                                updated_nodes,
-                                updates_nodes_count,
-                                subnet_size.clone(),
-                                percent_of_subnet_size,
-                            ]
+                            [subnet_id, updated_nodes, updates_nodes_count, subnet_size.clone(), percent_of_subnet_size]
                         })
                         .sorted_by(|a, b| a[3].cmp(&b[3]))
                         .for_each(|row| {
@@ -398,10 +351,7 @@ impl Runner {
                     table_subnets.with(Style::markdown());
                     summary.push_str(table_subnets.to_string().as_str());
                 };
-                Ok(Some((
-                    nodes_to_update.into_iter().map(|n| n.principal).collect::<Vec<_>>(),
-                    summary,
-                )))
+                Ok(Some((nodes_to_update.into_iter().map(|n| n.principal).collect::<Vec<_>>(), summary)))
             }
             HostosRolloutResponse::None(reason) => {
                 reason
@@ -411,13 +361,7 @@ impl Runner {
             }
         }
     }
-    pub async fn hostos_rollout(
-        &self,
-        nodes: Vec<PrincipalId>,
-        version: &str,
-        simulate: bool,
-        maybe_summary: Option<String>,
-    ) -> anyhow::Result<()> {
+    pub async fn hostos_rollout(&self, nodes: Vec<PrincipalId>, version: &str, simulate: bool, maybe_summary: Option<String>) -> anyhow::Result<()> {
         let title = format!("Set HostOS version: {version} on {} nodes", nodes.clone().len());
         self.ic_admin
             .propose_run(

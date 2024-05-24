@@ -7,10 +7,7 @@ use std::{
 
 use service_discovery::{job_types::JobType, TargetGroup};
 
-use crate::{
-    config_builder::Config, config_updater::ConfigUpdater, filters::TargetGroupFilter,
-    vector_config_structure::VectorConfigBuilder,
-};
+use crate::{config_builder::Config, config_updater::ConfigUpdater, filters::TargetGroupFilter, vector_config_structure::VectorConfigBuilder};
 use slog::{debug, Logger};
 
 #[derive(Debug)]
@@ -50,11 +47,7 @@ impl ConfigWriter {
         debug!(self.log, "Targets changed, proceeding with regenerating config");
         let target_path = self.base_directory.join(format!("{}.json", job));
 
-        let filtered_target_groups: BTreeSet<TargetGroup> = target_groups
-            .clone()
-            .into_iter()
-            .filter(|tg| self.filters.filter(tg.clone()))
-            .collect();
+        let filtered_target_groups: BTreeSet<TargetGroup> = target_groups.clone().into_iter().filter(|tg| self.filters.filter(tg.clone())).collect();
 
         let vector_config = vector_config_builder.build(filtered_target_groups, job);
 

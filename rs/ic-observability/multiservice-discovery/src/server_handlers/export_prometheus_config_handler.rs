@@ -12,15 +12,9 @@ use axum::{
 use multiservice_discovery_shared::builders::prometheus_config_structure::{map_target_group, PrometheusStaticConfig};
 use std::collections::BTreeMap;
 
-pub fn serialize_definitions_to_prometheus_config(
-    definitions: BTreeMap<String, RunningDefinition>,
-    filters: TargetFilterSpec,
-) -> (usize, String) {
-    let ic_node_targets: Vec<PrometheusStaticConfig> = map_target_group(
-        ic_node_target_dtos_from_definitions(&definitions, &filters)
-            .into_iter()
-            .collect(),
-    );
+pub fn serialize_definitions_to_prometheus_config(definitions: BTreeMap<String, RunningDefinition>, filters: TargetFilterSpec) -> (usize, String) {
+    let ic_node_targets: Vec<PrometheusStaticConfig> =
+        map_target_group(ic_node_target_dtos_from_definitions(&definitions, &filters).into_iter().collect());
 
     let boundary_nodes_targets = boundary_nodes_from_definitions(&definitions, &filters)
         .iter()
@@ -48,10 +42,7 @@ pub fn serialize_definitions_to_prometheus_config(
 
     let total_targets = [ic_node_targets, boundary_nodes_targets, api_boundary_nodes_targets].concat();
 
-    (
-        total_targets.len(),
-        serde_json::to_string_pretty(&total_targets).unwrap(),
-    )
+    (total_targets.len(), serde_json::to_string_pretty(&total_targets).unwrap())
 }
 
 pub(super) async fn export_prometheus_config(

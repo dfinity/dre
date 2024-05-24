@@ -31,12 +31,7 @@ impl RegistryCanisterWrapper {
         let mut buf = vec![];
         request.encode(&mut buf)?;
 
-        let response = self
-            .agent
-            .query(&REGISTRY_CANISTER_ID.into(), "get_value")
-            .with_arg(buf)
-            .call()
-            .await?;
+        let response = self.agent.query(&REGISTRY_CANISTER_ID.into(), "get_value").with_arg(buf).call().await?;
 
         let decoded_resp = RegistryGetValueResponse::decode(&response[..])?;
         if let Some(error) = decoded_resp.error {
@@ -45,10 +40,6 @@ impl RegistryCanisterWrapper {
 
         let mapped = SubnetListRecord::decode(&decoded_resp.value[..])?;
 
-        Ok(mapped
-            .subnets
-            .into_iter()
-            .map(|id: Vec<u8>| PrincipalId::try_from(id).unwrap())
-            .collect())
+        Ok(mapped.subnets.into_iter().map(|id: Vec<u8>| PrincipalId::try_from(id).unwrap()).collect())
     }
 }

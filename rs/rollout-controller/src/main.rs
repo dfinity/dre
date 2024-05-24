@@ -25,8 +25,7 @@ async fn main() -> anyhow::Result<()> {
     let logger = make_logger(args.log_level.clone().into());
     let prometheus_endpoint = target_network.get_prometheus_endpoint();
 
-    let client = Client::try_from(prometheus_endpoint.to_string())
-        .map_err(|e| anyhow::anyhow!("Couldn't create prometheus client: {:?}", e))?;
+    let client = Client::try_from(prometheus_endpoint.to_string()).map_err(|e| anyhow::anyhow!("Couldn't create prometheus client: {:?}", e))?;
 
     let shutdown = tokio::signal::ctrl_c();
     let token = CancellationToken::new();
@@ -133,10 +132,7 @@ async fn main() -> anyhow::Result<()> {
 fn make_logger(level: Level) -> Logger {
     let decorator = slog_term::TermDecorator::new().build();
     let full_format = slog_term::FullFormat::new(decorator).build().fuse();
-    let drain = slog::Filter::new(full_format, move |record: &slog::Record| {
-        record.level().is_at_least(level)
-    })
-    .fuse();
+    let drain = slog::Filter::new(full_format, move |record: &slog::Record| record.level().is_at_least(level)).fuse();
     let drain = slog_async::Async::new(drain).chan_size(8192).build();
     Logger::root(drain.fuse(), o!())
 }

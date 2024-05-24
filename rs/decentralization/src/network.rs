@@ -30,12 +30,7 @@ pub struct Node {
 }
 
 impl Node {
-    pub fn new_test_node(
-        node_number: u64,
-        features: nakamoto::NodeFeatures,
-        dfinity_owned: bool,
-        decentralized: bool,
-    ) -> Self {
+    pub fn new_test_node(node_number: u64, features: nakamoto::NodeFeatures, dfinity_owned: bool, decentralized: bool) -> Self {
         Node {
             id: PrincipalId::new_node_test_id(node_number),
             features,
@@ -196,10 +191,7 @@ impl DecentralizedSubnet {
                     self.run_log
                 } else {
                     let mut run_log = self.run_log;
-                    run_log.push(format!(
-                        "Force-including nodes {:?}",
-                        nodes.iter().map(|n| n.id).collect::<Vec<_>>()
-                    ));
+                    run_log.push(format!("Force-including nodes {:?}", nodes.iter().map(|n| n.id).collect::<Vec<_>>()));
                     run_log
                 }
             },
@@ -255,12 +247,11 @@ impl DecentralizedSubnet {
         let is_european_subnet = subnet_id_str == *"bkfrj-6k62g-dycql-7h53p-atvkj-zg4to-gaogh-netha-ptybj-ntsgw-rqe";
 
         let dfinity_owned_nodes_count: usize = nodes.iter().map(|n| n.dfinity_owned as usize).sum();
-        let target_dfinity_owned_nodes_count =
-            if subnet_id_str == *"tdb26-jop6k-aogll-7ltgs-eruif-6kk7m-qpktf-gdiqx-mxtrf-vb5e6-eqe" {
-                3
-            } else {
-                1
-            };
+        let target_dfinity_owned_nodes_count = if subnet_id_str == *"tdb26-jop6k-aogll-7ltgs-eruif-6kk7m-qpktf-gdiqx-mxtrf-vb5e6-eqe" {
+            3
+        } else {
+            1
+        };
 
         if dfinity_owned_nodes_count != target_dfinity_owned_nodes_count {
             checks.push(format!(
@@ -272,10 +263,7 @@ impl DecentralizedSubnet {
 
         let count_non_decentralized_nodes = nodes.iter().filter(|n| !n.decentralized).count();
         if count_non_decentralized_nodes > 0 {
-            checks.push(format!(
-                "Subnet has {} non-decentralized node(s)",
-                count_non_decentralized_nodes
-            ));
+            checks.push(format!("Subnet has {} non-decentralized node(s)", count_non_decentralized_nodes));
             penalties += count_non_decentralized_nodes * 100;
         }
 
@@ -312,19 +300,10 @@ impl DecentralizedSubnet {
             let continent_counts = nakamoto_scores.feature_value_counts(&NodeFeature::Continent);
             let non_european_nodes_count = continent_counts
                 .iter()
-                .filter_map(|(continent, count)| {
-                    if continent == &"Europe".to_string() {
-                        None
-                    } else {
-                        Some(*count)
-                    }
-                })
+                .filter_map(|(continent, count)| if continent == &"Europe".to_string() { None } else { Some(*count) })
                 .sum::<usize>();
             if non_european_nodes_count > 0 {
-                checks.push(format!(
-                    "European subnet has {} non-European node(s)",
-                    non_european_nodes_count
-                ));
+                checks.push(format!("European subnet has {} non-European node(s)", non_european_nodes_count));
                 penalties += non_european_nodes_count * 1000;
             }
         }
@@ -366,10 +345,7 @@ impl DecentralizedSubnet {
         }
 
         for feature in &NodeFeature::variants() {
-            match (
-                nakamoto_scores.score_feature(feature),
-                nakamoto_scores.controlled_nodes(feature),
-            ) {
+            match (nakamoto_scores.score_feature(feature), nakamoto_scores.controlled_nodes(feature)) {
                 (Some(score), Some(controlled_nodes)) => {
                     let european_subnet_continent_penalty = is_european_subnet && feature == &NodeFeature::Continent;
 
@@ -394,11 +370,7 @@ impl DecentralizedSubnet {
             }
         }
 
-        debug!(
-            "Business rules checks succeeded for subnet {}: {:?}",
-            subnet_id.to_string(),
-            checks
-        );
+        debug!("Business rules checks succeeded for subnet {}: {:?}", subnet_id.to_string(), checks);
         Ok((penalties, checks))
     }
 
@@ -415,10 +387,7 @@ impl DecentralizedSubnet {
     /// of current nodes.  Since the node IDs are unique, we seed a PRNG
     /// with the sorted joined node IDs. We then choose a result
     /// randomly but deterministically using this seed.
-    fn choose_deterministic_random(
-        best_results: &Vec<ReplacementCandidate>,
-        current_nodes: &[Node],
-    ) -> Option<ReplacementCandidate> {
+    fn choose_deterministic_random(best_results: &Vec<ReplacementCandidate>, current_nodes: &[Node]) -> Option<ReplacementCandidate> {
         if best_results.is_empty() {
             None
         } else {
@@ -441,18 +410,13 @@ impl DecentralizedSubnet {
             // the same set of machines with the best score, we always
             // get the same one.
             let mut id_sorted_best_results = best_results.clone();
-            id_sorted_best_results
-                .sort_by(|r1, r2| std::cmp::Ord::cmp(&r1.node.id.to_string(), &r2.node.id.to_string()));
+            id_sorted_best_results.sort_by(|r1, r2| std::cmp::Ord::cmp(&r1.node.id.to_string(), &r2.node.id.to_string()));
             id_sorted_best_results.choose(&mut rng).cloned()
         }
     }
 
     /// Pick the best result amongst the list of "suitable" candidates.
-    fn choose_best_candidate(
-        &self,
-        candidates: Vec<ReplacementCandidate>,
-        run_log: &mut Vec<String>,
-    ) -> Option<ReplacementCandidate> {
+    fn choose_best_candidate(&self, candidates: Vec<ReplacementCandidate>, run_log: &mut Vec<String>) -> Option<ReplacementCandidate> {
         // First, sort the candidates by their Nakamoto Coefficients
         let candidates = candidates
             .into_iter()
@@ -476,10 +440,7 @@ impl DecentralizedSubnet {
             .collect::<Vec<ReplacementCandidate>>();
 
         run_log.push("Sorted candidate nodes, with the best candidate at the end:".to_string());
-        run_log.push(
-            "     <node-id>                                                      <penalty>  <Nakamoto score>"
-                .to_string(),
-        );
+        run_log.push("     <node-id>                                                      <penalty>  <Nakamoto score>".to_string());
         for s in &candidates {
             run_log.push(format!(" -=> {} {} {}", s.node.id, s.penalty, s.score));
         }
@@ -525,11 +486,7 @@ impl DecentralizedSubnet {
     }
 
     /// Add nodes to a subnet in a way that provides the best decentralization.
-    pub fn subnet_with_more_nodes(
-        self,
-        how_many_nodes: usize,
-        available_nodes: &[Node],
-    ) -> anyhow::Result<DecentralizedSubnet> {
+    pub fn subnet_with_more_nodes(self, how_many_nodes: usize, available_nodes: &[Node]) -> anyhow::Result<DecentralizedSubnet> {
         let mut run_log = self.run_log.clone();
 
         let mut nodes_initial = self.nodes.clone();
@@ -593,12 +550,7 @@ impl DecentralizedSubnet {
                         }
                     }
                 }
-                None => {
-                    return Err(anyhow!(
-                        "Could not complete the extension. Run log:\n{}",
-                        run_log.join("\n")
-                    ))
-                }
+                None => return Err(anyhow!("Could not complete the extension. Run log:\n{}", run_log.join("\n"))),
             }
         }
         assert_eq!(nodes_after_extension.len(), self.nodes.len() + how_many_nodes);
@@ -634,8 +586,7 @@ impl DecentralizedSubnet {
                 .nodes
                 .iter()
                 .filter_map(|node| {
-                    let candidate_subnet_nodes: Vec<Node> =
-                        self.nodes.iter().filter(|n| n.id != node.id).cloned().collect();
+                    let candidate_subnet_nodes: Vec<Node> = self.nodes.iter().filter(|n| n.id != node.id).cloned().collect();
                     self._node_to_replacement_candidate(&candidate_subnet_nodes, node, &mut run_log)
                 })
                 .collect();
@@ -670,19 +621,16 @@ impl DecentralizedSubnet {
                                 business_rules_log.join("\n"),
                                 if how_many_nodes > 1 {
                                     "Note that the penalty for nodes before the last node may not be relevant in the end. We leave this to humans to assess."
-                                } else { "" }
+                                } else {
+                                    ""
+                                }
                             ));
                         } else {
                             comment = None;
                         }
                     }
                 }
-                None => {
-                    return Err(anyhow!(
-                        "Could not complete the extension. Run log:\n{}",
-                        run_log.join("\n")
-                    ))
-                }
+                None => return Err(anyhow!("Could not complete the extension. Run log:\n{}", run_log.join("\n"))),
             }
         }
         assert_eq!(self.nodes.len(), nodes_initial_len - how_many_nodes);
@@ -697,12 +645,7 @@ impl DecentralizedSubnet {
         })
     }
 
-    fn _node_to_replacement_candidate(
-        &self,
-        subnet_nodes: &[Node],
-        touched_node: &Node,
-        err_log: &mut Vec<String>,
-    ) -> Option<ReplacementCandidate> {
+    fn _node_to_replacement_candidate(&self, subnet_nodes: &[Node], touched_node: &Node, err_log: &mut Vec<String>) -> Option<ReplacementCandidate> {
         match Self::_check_business_rules_for_nodes(&self.id, subnet_nodes, &self.min_nakamoto_coefficients) {
             Ok((penalty, business_rules_log)) => {
                 let new_score = Self::_calc_nakamoto_score(subnet_nodes);
@@ -781,8 +724,7 @@ pub enum DecentralizationError {
 impl ResponseError for DecentralizationError {
     fn error_response(&self) -> HttpResponse {
         let out: serde_json::Value =
-            serde_json::from_str("{\"message\": \"NodeFeature not available. For access contact the administrator\"}")
-                .unwrap();
+            serde_json::from_str("{\"message\": \"NodeFeature not available. For access contact the administrator\"}").unwrap();
         HttpResponse::BadRequest().json(out)
     }
 
@@ -893,10 +835,7 @@ impl SubnetChangeRequest {
                 .filter(|n| only_nodes_or_features.iter().any(|v| n.matches_feature_value(v)))
                 .collect()
         };
-        Self {
-            available_nodes,
-            ..self
-        }
+        Self { available_nodes, ..self }
     }
 
     pub fn with_custom_available_nodes(self, nodes: Vec<Node>) -> Self {
@@ -915,11 +854,7 @@ impl SubnetChangeRequest {
 
     /// Optimize is implemented by removing a certain number of nodes and then
     /// adding the same number back.
-    pub fn optimize(
-        mut self,
-        optimize_count: usize,
-        replacements_unhealthy: &Vec<Node>,
-    ) -> Result<SubnetChange, NetworkError> {
+    pub fn optimize(mut self, optimize_count: usize, replacements_unhealthy: &Vec<Node>) -> Result<SubnetChange, NetworkError> {
         let old_nodes = self.subnet.nodes.clone();
         self.subnet = self.subnet.without_nodes(replacements_unhealthy.clone())?;
         let result = self.resize(optimize_count + replacements_unhealthy.len(), optimize_count)?;
@@ -927,11 +862,7 @@ impl SubnetChangeRequest {
     }
 
     /// Add or remove nodes from the subnet.
-    pub fn resize(
-        &self,
-        how_many_nodes_to_add: usize,
-        how_many_nodes_to_remove: usize,
-    ) -> Result<SubnetChange, NetworkError> {
+    pub fn resize(&self, how_many_nodes_to_add: usize, how_many_nodes_to_remove: usize) -> Result<SubnetChange, NetworkError> {
         println!(
             "Resizing subnet {} by adding {} nodes and removing {} nodes",
             self.subnet.id, how_many_nodes_to_add, how_many_nodes_to_remove
@@ -1019,19 +950,11 @@ impl SubnetChange {
     }
 
     pub fn added(&self) -> Vec<Node> {
-        self.new_nodes
-            .clone()
-            .into_iter()
-            .filter(|n| !self.old_nodes.contains(n))
-            .collect()
+        self.new_nodes.clone().into_iter().filter(|n| !self.old_nodes.contains(n)).collect()
     }
 
     pub fn removed(&self) -> Vec<Node> {
-        self.old_nodes
-            .clone()
-            .into_iter()
-            .filter(|n| !self.new_nodes.contains(n))
-            .collect()
+        self.old_nodes.clone().into_iter().filter(|n| !self.new_nodes.contains(n)).collect()
     }
 
     pub fn before(&self) -> DecentralizedSubnet {
@@ -1049,12 +972,7 @@ impl SubnetChange {
         DecentralizedSubnet {
             id: self.id,
             nodes: self.new_nodes.clone(),
-            removed_nodes: self
-                .old_nodes
-                .clone()
-                .into_iter()
-                .filter(|n| !self.new_nodes.contains(n))
-                .collect(),
+            removed_nodes: self.old_nodes.clone().into_iter().filter(|n| !self.new_nodes.contains(n)).collect(),
             min_nakamoto_coefficients: self.min_nakamoto_coefficients.clone(),
             comment: self.comment.clone(),
             run_log: self.run_log.clone(),

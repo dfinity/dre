@@ -85,10 +85,7 @@ pub async fn start_health_check_loop(config: HealthCheckLoopConfig) {
                 // Make sure we are resilient there
                 config.cancellation_token.cancel();
                 config.service_health.set_health_check_loop_readiness(true);
-                error!(
-                    message = "Issue while getting the nodes statuses",
-                    error = e.to_string()
-                );
+                error!(message = "Issue while getting the nodes statuses", error = e.to_string());
                 break;
             }
         }

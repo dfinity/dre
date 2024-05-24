@@ -9,9 +9,7 @@ use ic_protobuf::registry::{
     dc::v1::AddOrRemoveDataCentersProposalPayload, node_operator::v1::RemoveNodeOperatorsPayload,
     node_rewards::v2::UpdateNodeRewardsTableProposalPayload,
 };
-use ic_sns_wasm::pb::v1::{
-    AddWasmRequest, InsertUpgradePathEntriesRequest, UpdateAllowedPrincipalsRequest, UpdateSnsSubnetListRequest,
-};
+use ic_sns_wasm::pb::v1::{AddWasmRequest, InsertUpgradePathEntriesRequest, UpdateAllowedPrincipalsRequest, UpdateSnsSubnetListRequest};
 use itertools::Itertools;
 use registry_canister::mutations::{
     complete_canister_migration::CompleteCanisterMigrationPayload,
@@ -52,8 +50,8 @@ use std::{
 use strum::IntoEnumIterator;
 
 use ic_canisters::{
-    governance::GovernanceCanisterWrapper, management::WalletCanisterWrapper, registry::RegistryCanisterWrapper,
-    CanisterClient, IcAgentCanisterClient,
+    governance::GovernanceCanisterWrapper, management::WalletCanisterWrapper, registry::RegistryCanisterWrapper, CanisterClient,
+    IcAgentCanisterClient,
 };
 use ic_nns_governance::{
     governance::{BitcoinSetConfigProposal, SubnetRentalRequest},
@@ -72,9 +70,7 @@ pub async fn vote_on_proposals(
     simulate: bool,
 ) -> anyhow::Result<()> {
     let client: GovernanceCanisterWrapper = match &neuron.get_auth().await? {
-        Auth::Hsm { pin, slot, key_id } => {
-            CanisterClient::from_hsm(pin.to_string(), *slot, key_id.to_string(), &nns_urls[0])?.into()
-        }
+        Auth::Hsm { pin, slot, key_id } => CanisterClient::from_hsm(pin.to_string(), *slot, key_id.to_string(), &nns_urls[0])?.into(),
         Auth::Keyfile { path } => CanisterClient::from_key_file(path.into(), &nns_urls[0])?.into(),
     };
 
@@ -107,9 +103,7 @@ pub async fn vote_on_proposals(
             );
 
             if !simulate {
-                let response = client
-                    .register_vote(neuron.get_neuron_id().await?, proposal.id.unwrap().id)
-                    .await?;
+                let response = client.register_vote(neuron.get_neuron_id().await?, proposal.id.unwrap().id).await?;
                 info!("{}", response);
             } else {
                 info!("Simulating vote");
@@ -117,10 +111,7 @@ pub async fn vote_on_proposals(
             voted_proposals.insert(proposal.id.unwrap().id);
         }
 
-        let mut sp = Spinner::with_timer(
-            Spinners::Dots12,
-            "Sleeping 15s before another check for pending proposals...".into(),
-        );
+        let mut sp = Spinner::with_timer(Spinners::Dots12, "Sleeping 15s before another check for pending proposals...".into());
         let sleep = tokio::time::sleep(Duration::from_secs(15));
         tokio::select! {
             _ = tokio::signal::ctrl_c() => {
@@ -147,13 +138,9 @@ pub async fn get_node_metrics_history(
 ) -> anyhow::Result<()> {
     let lock = Mutex::new(());
     let canister_agent = match auth {
-        Auth::Hsm { pin, slot, key_id } => IcAgentCanisterClient::from_hsm(
-            pin.to_string(),
-            *slot,
-            key_id.to_string(),
-            nns_urls[0].clone(),
-            Some(lock),
-        )?,
+        Auth::Hsm { pin, slot, key_id } => {
+            IcAgentCanisterClient::from_hsm(pin.to_string(), *slot, key_id.to_string(), nns_urls[0].clone(), Some(lock))?
+        }
         Auth::Keyfile { path } => IcAgentCanisterClient::from_key_file(path.into(), nns_urls[0].clone())?,
     };
     info!("Started action...");
@@ -174,12 +161,7 @@ pub async fn get_node_metrics_history(
         info!("Spawning thread for subnet: {}", subnet);
         let current_client = wallet_client.clone();
         handles.push(tokio::spawn(async move {
-            (
-                subnet,
-                current_client
-                    .get_node_metrics_history(wallet, start_at_nanos, subnet)
-                    .await,
-            )
+            (subnet, current_client.get_node_metrics_history(wallet, start_at_nanos, subnet).await)
         }))
     }
     for handle in handles {
@@ -200,12 +182,7 @@ pub async fn get_node_metrics_history(
     Ok(())
 }
 
-pub async fn filter_proposals(
-    network: Network,
-    limit: &u32,
-    statuses: Vec<ProposalStatus>,
-    topics: Vec<Topic>,
-) -> anyhow::Result<()> {
+pub async fn filter_proposals(network: Network, limit: &u32, statuses: Vec<ProposalStatus>, topics: Vec<Topic>) -> anyhow::Result<()> {
     let nns_url = match network.get_nns_urls().first() {
         Some(url) => url,
         None => return Err(anyhow::anyhow!("Could not get NNS URL from network config")),
@@ -282,10 +259,7 @@ pub async fn filter_proposals(
         }
 
         if payload.before_proposal.is_none() {
-            warn!(
-                "No more proposals available and there is {} remaining to find",
-                remaining
-            );
+            warn!("No more proposals available and there is {} remaining to find", remaining);
             break;
         }
     }
@@ -357,10 +331,7 @@ impl TryFrom<ProposalInfo> for Proposal {
                                 serde_json::to_value(Decode!(a.payload.as_slice(), UpdateIcpXdrConversionRatePayload)?)?
                             }
                             ic_nns_governance::pb::v1::NnsFunction::DeployGuestosToAllSubnetNodes => {
-                                serde_json::to_value(Decode!(
-                                    a.payload.as_slice(),
-                                    DeployGuestosToAllSubnetNodesPayload
-                                )?)?
+                                serde_json::to_value(Decode!(a.payload.as_slice(), DeployGuestosToAllSubnetNodesPayload)?)?
                             }
                             // Has an empty payload
                             ic_nns_governance::pb::v1::NnsFunction::ClearProvisionalWhitelist => serde_json::json!({}),
@@ -385,17 +356,14 @@ impl TryFrom<ProposalInfo> for Proposal {
                             ic_nns_governance::pb::v1::NnsFunction::UninstallCode => {
                                 serde_json::to_value(Decode!(a.payload.as_slice(), CanisterIdRecord)?)?
                             }
-                            ic_nns_governance::pb::v1::NnsFunction::UpdateNodeRewardsTable => serde_json::to_value(
-                                Decode!(a.payload.as_slice(), UpdateNodeRewardsTableProposalPayload)?,
-                            )?,
-                            ic_nns_governance::pb::v1::NnsFunction::AddOrRemoveDataCenters => serde_json::to_value(
-                                Decode!(a.payload.as_slice(), AddOrRemoveDataCentersProposalPayload)?,
-                            )?,
+                            ic_nns_governance::pb::v1::NnsFunction::UpdateNodeRewardsTable => {
+                                serde_json::to_value(Decode!(a.payload.as_slice(), UpdateNodeRewardsTableProposalPayload)?)?
+                            }
+                            ic_nns_governance::pb::v1::NnsFunction::AddOrRemoveDataCenters => {
+                                serde_json::to_value(Decode!(a.payload.as_slice(), AddOrRemoveDataCentersProposalPayload)?)?
+                            }
                             ic_nns_governance::pb::v1::NnsFunction::UpdateUnassignedNodesConfig => {
-                                serde_json::to_value(Decode!(
-                                    a.payload.as_slice(),
-                                    UpdateUnassignedNodesConfigPayload
-                                )?)?
+                                serde_json::to_value(Decode!(a.payload.as_slice(), UpdateUnassignedNodesConfigPayload)?)?
                             }
                             ic_nns_governance::pb::v1::NnsFunction::RemoveNodeOperators => {
                                 serde_json::to_value(Decode!(a.payload.as_slice(), RemoveNodeOperatorsPayload)?)?
@@ -443,19 +411,13 @@ impl TryFrom<ProposalInfo> for Proposal {
                                 serde_json::to_value(Decode!(a.payload.as_slice(), InsertUpgradePathEntriesRequest)?)?
                             }
                             ic_nns_governance::pb::v1::NnsFunction::ReviseElectedGuestosVersions => {
-                                serde_json::to_value(Decode!(
-                                    a.payload.as_slice(),
-                                    ReviseElectedGuestosVersionsPayload
-                                )?)?
+                                serde_json::to_value(Decode!(a.payload.as_slice(), ReviseElectedGuestosVersionsPayload)?)?
                             }
                             ic_nns_governance::pb::v1::NnsFunction::BitcoinSetConfig => {
                                 serde_json::to_value(Decode!(a.payload.as_slice(), BitcoinSetConfigProposal)?)?
                             }
                             ic_nns_governance::pb::v1::NnsFunction::UpdateElectedHostosVersions => {
-                                serde_json::to_value(Decode!(
-                                    a.payload.as_slice(),
-                                    UpdateElectedHostosVersionsPayload
-                                )?)?
+                                serde_json::to_value(Decode!(a.payload.as_slice(), UpdateElectedHostosVersionsPayload)?)?
                             }
                             ic_nns_governance::pb::v1::NnsFunction::UpdateNodesHostosVersion => {
                                 serde_json::to_value(Decode!(a.payload.as_slice(), UpdateNodesHostosVersionPayload)?)?
@@ -469,34 +431,19 @@ impl TryFrom<ProposalInfo> for Proposal {
                                 serde_json::to_value(Decode!(a.payload.as_slice(), RemoveApiBoundaryNodesPayload)?)?
                             }
                             ic_nns_governance::pb::v1::NnsFunction::UpdateApiBoundaryNodesVersion => {
-                                serde_json::to_value(Decode!(
-                                    a.payload.as_slice(),
-                                    UpdateApiBoundaryNodesVersionPayload
-                                )?)?
+                                serde_json::to_value(Decode!(a.payload.as_slice(), UpdateApiBoundaryNodesVersionPayload)?)?
                             }
                             ic_nns_governance::pb::v1::NnsFunction::DeployGuestosToSomeApiBoundaryNodes => {
-                                serde_json::to_value(Decode!(
-                                    a.payload.as_slice(),
-                                    UpdateApiBoundaryNodesVersionPayload
-                                )?)?
+                                serde_json::to_value(Decode!(a.payload.as_slice(), UpdateApiBoundaryNodesVersionPayload)?)?
                             }
                             ic_nns_governance::pb::v1::NnsFunction::DeployGuestosToAllUnassignedNodes => {
-                                serde_json::to_value(Decode!(
-                                    a.payload.as_slice(),
-                                    DeployGuestosToAllUnassignedNodesPayload
-                                )?)?
+                                serde_json::to_value(Decode!(a.payload.as_slice(), DeployGuestosToAllUnassignedNodesPayload)?)?
                             }
                             ic_nns_governance::pb::v1::NnsFunction::UpdateSshReadonlyAccessForAllUnassignedNodes => {
-                                serde_json::to_value(Decode!(
-                                    a.payload.as_slice(),
-                                    UpdateSshReadOnlyAccessForAllUnassignedNodesPayload
-                                )?)?
+                                serde_json::to_value(Decode!(a.payload.as_slice(), UpdateSshReadOnlyAccessForAllUnassignedNodesPayload)?)?
                             }
                             ic_nns_governance::pb::v1::NnsFunction::ReviseElectedHostosVersions => {
-                                serde_json::to_value(Decode!(
-                                    a.payload.as_slice(),
-                                    UpdateElectedHostosVersionsPayload
-                                )?)?
+                                serde_json::to_value(Decode!(a.payload.as_slice(), UpdateElectedHostosVersionsPayload)?)?
                             }
                             ic_nns_governance::pb::v1::NnsFunction::DeployHostosToSomeNodes => {
                                 serde_json::to_value(Decode!(a.payload.as_slice(), UpdateNodesHostosVersionPayload)?)?

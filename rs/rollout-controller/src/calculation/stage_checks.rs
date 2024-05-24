@@ -68,10 +68,7 @@ pub fn check_stages<'a>(
     }
 
     if let Some(logger) = logger {
-        info!(
-            logger,
-            "The current rollout '{}' is completed.", desired_versions.release.rc_name
-        );
+        info!(logger, "The current rollout '{}' is completed.", desired_versions.release.rc_name);
     }
 
     Ok(vec![])
@@ -79,16 +76,12 @@ pub fn check_stages<'a>(
 
 fn week_passed(release_start: NaiveDate, now: NaiveDate) -> bool {
     let mut counter = release_start;
-    counter = counter
-        .checked_add_days(Days::new(1))
-        .expect("Should be able to add a day");
+    counter = counter.checked_add_days(Days::new(1)).expect("Should be able to add a day");
     while counter <= now {
         if counter.weekday() == Weekday::Mon {
             return true;
         }
-        counter = counter
-            .checked_add_days(Days::new(1))
-            .expect("Should be able to add a day");
+        counter = counter.checked_add_days(Days::new(1)).expect("Should be able to add a day");
     }
     false
 }
@@ -149,10 +142,7 @@ fn check_stage<'a>(
             .expect("should find the subnet");
 
         // Find subnet to by the subnet_short
-        let subnet = subnets
-            .iter()
-            .find(|s| *subnet_principal == s.principal)
-            .expect("subnet should exist");
+        let subnet = subnets.iter().find(|s| *subnet_principal == s.principal).expect("subnet should exist");
 
         if let Some(logger) = logger {
             debug!(
@@ -163,8 +153,7 @@ fn check_stage<'a>(
 
         // If subnet is on desired version, check bake time
         if *subnet.replica_version == desired_version.version {
-            let remaining =
-                get_remaining_bake_time_for_subnet(last_bake_status, subnet, stage.bake_time.as_secs_f64())?;
+            let remaining = get_remaining_bake_time_for_subnet(last_bake_status, subnet, stage.bake_time.as_secs_f64())?;
             let remaining_duration = Duration::from_secs_f64(remaining);
             let formatted = format_duration(remaining_duration);
 
@@ -180,10 +169,7 @@ fn check_stage<'a>(
                 if remaining == 0.0 {
                     debug!(logger, "Subnet {} baked", subnet_short)
                 } else {
-                    debug!(
-                        logger,
-                        "Waiting for subnet {} to bake, remaining {}", subnet_short, formatted
-                    )
+                    debug!(logger, "Waiting for subnet {} to bake, remaining {}", subnet_short, formatted)
                 }
             }
 
@@ -194,13 +180,9 @@ fn check_stage<'a>(
         }
 
         // If subnet is not on desired version, check if there is an open proposal
-        if let Some(proposal) = get_open_proposal_for_subnet(subnet_update_proposals, subnet, &desired_version.version)
-        {
+        if let Some(proposal) = get_open_proposal_for_subnet(subnet_update_proposals, subnet, &desired_version.version) {
             if let Some(logger) = logger {
-                info!(
-                    logger,
-                    "For subnet '{}' found open proposal with id '{}'", subnet_short, proposal.info.id
-                )
+                info!(logger, "For subnet '{}' found open proposal with id '{}'", subnet_short, proposal.info.id)
             }
             stage_actions.push(SubnetAction::PendingProposal {
                 subnet_short: subnet_short.clone(),
@@ -227,10 +209,7 @@ pub struct DesiredReleaseVersion {
     pub release: crate::calculation::Release,
 }
 
-pub fn desired_rollout_release_version<'a>(
-    subnets: &'a [Subnet],
-    releases: &'a [crate::calculation::Release],
-) -> DesiredReleaseVersion {
+pub fn desired_rollout_release_version<'a>(subnets: &'a [Subnet], releases: &'a [crate::calculation::Release]) -> DesiredReleaseVersion {
     let subnets_releases = subnets
         .iter()
         .map(|s| {
@@ -245,10 +224,7 @@ pub fn desired_rollout_release_version<'a>(
     if subnets_releases.len() > 2 {
         panic!("more than two releases active")
     }
-    let mut newest_release = releases
-        .iter()
-        .find(|r| subnets_releases.contains(r))
-        .expect("should find some release");
+    let mut newest_release = releases.iter().find(|r| subnets_releases.contains(r)).expect("should find some release");
 
     if subnets_releases.len() == 1 {
         newest_release = &releases[releases
@@ -260,35 +236,27 @@ pub fn desired_rollout_release_version<'a>(
     DesiredReleaseVersion {
         release: newest_release.clone(),
         subnets: subnets
-        .iter()
-        .map(|s| {
-            (
-                s.principal,
-                newest_release
-                    .versions
-                    .iter()
-                    .find_or_first(|v| v.subnets.iter().any(|vs| s.principal.to_string().starts_with(vs)))
-                    .expect("versions should not be empty so it should return the first element if it doesn't match anything").clone(),
-            )
-        })
-        .collect(),
-         unassigned_nodes: newest_release.versions[0].clone(),
+            .iter()
+            .map(|s| {
+                (
+                    s.principal,
+                    newest_release
+                        .versions
+                        .iter()
+                        .find_or_first(|v| v.subnets.iter().any(|vs| s.principal.to_string().starts_with(vs)))
+                        .expect("versions should not be empty so it should return the first element if it doesn't match anything")
+                        .clone(),
+                )
+            })
+            .collect(),
+        unassigned_nodes: newest_release.versions[0].clone(),
     }
 }
 
-fn get_remaining_bake_time_for_subnet(
-    last_bake_status: &BTreeMap<String, f64>,
-    subnet: &Subnet,
-    stage_bake_time: f64,
-) -> anyhow::Result<f64> {
+fn get_remaining_bake_time_for_subnet(last_bake_status: &BTreeMap<String, f64>, subnet: &Subnet, stage_bake_time: f64) -> anyhow::Result<f64> {
     let bake = match last_bake_status.get(&subnet.principal.to_string()) {
         Some(bake) => bake,
-        None => {
-            return Err(anyhow::anyhow!(
-                "Subnet with principal '{}' not found",
-                subnet.principal.to_string()
-            ))
-        }
+        None => return Err(anyhow::anyhow!("Subnet with principal '{}' not found", subnet.principal.to_string())),
     };
 
     match bake.ge(&stage_bake_time) {
@@ -305,9 +273,9 @@ fn get_open_proposal_for_subnet<'a>(
     subnet: &'a Subnet,
     desired_version: &'a str,
 ) -> Option<&'a SubnetUpdateProposal> {
-    subnet_update_proposals.iter().find(|p| {
-        p.payload.subnet_id == subnet.principal && p.payload.replica_version_id.eq(desired_version) && !p.info.executed
-    })
+    subnet_update_proposals
+        .iter()
+        .find(|p| p.payload.subnet_id == subnet.principal && p.payload.replica_version_id.eq(desired_version) && !p.info.executed)
 }
 
 #[cfg(test)]
@@ -373,22 +341,11 @@ mod get_open_proposal_for_subnet_tests {
     }
 
     pub(super) fn craft_open_proposals<'a>(subnet_ids: &'a [&'a str], version: &'a str) -> Vec<SubnetUpdateProposal> {
-        craft_proposals(
-            &subnet_ids.iter().map(|id| (*id, false)).collect::<Vec<(&str, bool)>>(),
-            version,
-        )
-        .collect()
+        craft_proposals(&subnet_ids.iter().map(|id| (*id, false)).collect::<Vec<(&str, bool)>>(), version).collect()
     }
 
-    pub(super) fn craft_executed_proposals<'a>(
-        subnet_ids: &'a [&'a str],
-        version: &'a str,
-    ) -> Vec<SubnetUpdateProposal> {
-        craft_proposals(
-            &subnet_ids.iter().map(|id| (*id, true)).collect::<Vec<(&str, bool)>>(),
-            version,
-        )
-        .collect()
+    pub(super) fn craft_executed_proposals<'a>(subnet_ids: &'a [&'a str], version: &'a str) -> Vec<SubnetUpdateProposal> {
+        craft_proposals(&subnet_ids.iter().map(|id| (*id, true)).collect::<Vec<(&str, bool)>>(), version).collect()
     }
 
     #[test]
@@ -408,26 +365,10 @@ mod get_open_proposal_for_subnet_tests {
     }
 
     #[rstest]
-    #[case(
-        "version",
-        "snjp4-xlbw4-mnbog-ddwy6-6ckfd-2w5a2-eipqo-7l436-pxqkh-l6fuv-vae",
-        "version"
-    )]
-    #[case(
-        "other-version",
-        "snjp4-xlbw4-mnbog-ddwy6-6ckfd-2w5a2-eipqo-7l436-pxqkh-l6fuv-vae",
-        "version"
-    )]
-    #[case(
-        "version",
-        "5kdm2-62fc6-fwnja-hutkz-ycsnm-4z33i-woh43-4cenu-ev7mi-gii6t-4ae",
-        "version"
-    )]
-    fn should_not_find_open_proposal(
-        #[case] proposal_version: &str,
-        #[case] subnet_id: &str,
-        #[case] current_version: &str,
-    ) {
+    #[case("version", "snjp4-xlbw4-mnbog-ddwy6-6ckfd-2w5a2-eipqo-7l436-pxqkh-l6fuv-vae", "version")]
+    #[case("other-version", "snjp4-xlbw4-mnbog-ddwy6-6ckfd-2w5a2-eipqo-7l436-pxqkh-l6fuv-vae", "version")]
+    #[case("version", "5kdm2-62fc6-fwnja-hutkz-ycsnm-4z33i-woh43-4cenu-ev7mi-gii6t-4ae", "version")]
+    fn should_not_find_open_proposal(#[case] proposal_version: &str, #[case] subnet_id: &str, #[case] current_version: &str) {
         let proposals = craft_executed_proposals(
             &[
                 "snjp4-xlbw4-mnbog-ddwy6-6ckfd-2w5a2-eipqo-7l436-pxqkh-l6fuv-vae",
@@ -456,9 +397,7 @@ mod get_remaining_bake_time_for_subnet_tests {
 
     #[test]
     fn should_return_error_subnet_not_found() {
-        let subnet = get_open_proposal_for_subnet_tests::craft_subnet_from_id(
-            "pae4o-o6dxf-xki7q-ezclx-znyd6-fnk6w-vkv5z-5lfwh-xym2i-otrrw-fqe",
-        );
+        let subnet = get_open_proposal_for_subnet_tests::craft_subnet_from_id("pae4o-o6dxf-xki7q-ezclx-znyd6-fnk6w-vkv5z-5lfwh-xym2i-otrrw-fqe");
 
         let bake_status = craft_bake_status_from_tuples(&[("random-subnet", 1.0)]);
 
@@ -479,19 +418,10 @@ mod get_remaining_bake_time_for_subnet_tests {
     #[case(-100.0, 150.0, 250.0)]
     #[case(-100.0, -150.0, 0.0)]
     #[case(-100.0, -50.0, 50.0)]
-    fn should_return_subnet_baking_time(
-        #[case] subnet_bake_status: f64,
-        #[case] stage_bake: f64,
-        #[case] remaining: f64,
-    ) {
-        let subnet = get_open_proposal_for_subnet_tests::craft_subnet_from_id(
-            "pae4o-o6dxf-xki7q-ezclx-znyd6-fnk6w-vkv5z-5lfwh-xym2i-otrrw-fqe",
-        );
+    fn should_return_subnet_baking_time(#[case] subnet_bake_status: f64, #[case] stage_bake: f64, #[case] remaining: f64) {
+        let subnet = get_open_proposal_for_subnet_tests::craft_subnet_from_id("pae4o-o6dxf-xki7q-ezclx-znyd6-fnk6w-vkv5z-5lfwh-xym2i-otrrw-fqe");
 
-        let bake_status = craft_bake_status_from_tuples(&[(
-            "pae4o-o6dxf-xki7q-ezclx-znyd6-fnk6w-vkv5z-5lfwh-xym2i-otrrw-fqe",
-            subnet_bake_status,
-        )]);
+        let bake_status = craft_bake_status_from_tuples(&[("pae4o-o6dxf-xki7q-ezclx-znyd6-fnk6w-vkv5z-5lfwh-xym2i-otrrw-fqe", subnet_bake_status)]);
 
         let maybe_remaining_bake_time = get_remaining_bake_time_for_subnet(&bake_status, &subnet, stage_bake);
 
@@ -531,10 +461,7 @@ mod test {
                 .iter()
                 .map(|(v, subnets)| Version {
                     version: v.to_string(),
-                    subnets: subnets
-                        .iter()
-                        .map(|id| PrincipalId::new_subnet_test_id(*id).to_string())
-                        .collect(),
+                    subnets: subnets.iter().map(|id| PrincipalId::new_subnet_test_id(*id).to_string()).collect(),
                     ..Default::default()
                 })
                 .collect(),
@@ -555,18 +482,12 @@ mod test {
                 name: "all versions on the newest version already",
                 subnets: vec![subnet(1, "A.default")],
                 releases: vec![release("A", vec![("A.default", vec![])])],
-                want: vec![(1, "A.default")]
-                    .into_iter()
-                    .map(|(k, v)| (k, v.to_string()))
-                    .collect(),
+                want: vec![(1, "A.default")].into_iter().map(|(k, v)| (k, v.to_string())).collect(),
             },
             TestCase {
                 name: "upgrade one subnet",
                 subnets: vec![subnet(1, "B.default"), subnet(2, "A.default")],
-                releases: vec![
-                    release("B", vec![("B.default", vec![])]),
-                    release("A", vec![("A.default", vec![])]),
-                ],
+                releases: vec![release("B", vec![("B.default", vec![])]), release("A", vec![("A.default", vec![])])],
                 want: vec![(1, "B.default"), (2, "B.default")]
                     .into_iter()
                     .map(|(k, v)| (k, v.to_string()))
@@ -619,11 +540,7 @@ mod test {
                     .into_iter()
                     .map(|(k, v)| (PrincipalId::new_subnet_test_id(k), v))
                     .collect::<Vec<_>>(),
-                desired_release
-                    .subnets
-                    .into_iter()
-                    .map(|(k, v)| (k, v.version))
-                    .collect::<Vec<_>>(),
+                desired_release.subnets.into_iter().map(|(k, v)| (k, v.version)).collect::<Vec<_>>(),
                 "test case '{}' failed",
                 tc.name,
             )
@@ -691,12 +608,7 @@ mod check_stages_tests {
             rollout: Rollout {
                 pause: false,
                 skip_days: vec![],
-                stages: vec![
-                    stage(&[1], "8h"),
-                    stage(&[2, 3], "4h"),
-                    stage_unassigned(),
-                    stage_next_week(&[4], "4h"),
-                ],
+                stages: vec![stage(&[1], "8h"), stage(&[2, 3], "4h"), stage_unassigned(), stage_next_week(&[4], "4h")],
             },
             releases: vec![
                 release("rc--2024-02-21_23-01", vec![("b", vec![])]),
@@ -762,10 +674,7 @@ mod check_stages_tests {
 
     impl TestCase {
         pub fn new(name: &'static str) -> Self {
-            TestCase {
-                name,
-                ..Default::default()
-            }
+            TestCase { name, ..Default::default() }
         }
 
         pub fn with_index(mut self, index: Index) -> Self {
@@ -783,11 +692,7 @@ mod check_stages_tests {
                 .iter()
                 .map(|(id, executed, version)| {
                     if *executed {
-                        if let Some(subnet) = self
-                            .subnets
-                            .iter_mut()
-                            .find(|subnet| subnet.principal.eq(&principal(*id)))
-                        {
+                        if let Some(subnet) = self.subnets.iter_mut().find(|subnet| subnet.principal.eq(&principal(*id))) {
                             subnet.replica_version = version.to_string()
                         }
                     }
@@ -797,10 +702,7 @@ mod check_stages_tests {
             self
         }
 
-        pub fn with_unassigned_node_proposals(
-            mut self,
-            unassigned_node_update_proposals: &[(bool, &'static str)],
-        ) -> Self {
+        pub fn with_unassigned_node_proposals(mut self, unassigned_node_update_proposals: &[(bool, &'static str)]) -> Self {
             self.unassigned_node_proposals = unassigned_node_update_proposals
                 .iter()
                 .map(|(executed, v)| {
@@ -891,15 +793,15 @@ mod check_stages_tests {
                 is_unassigned: false,
                 subnet_principal: principal(1),
                 version: "b".to_string(),
-            },]),
+            }]),
             TestCase::new("First batch is submitted but the proposal wasn't executed")
-                .with_subnet_update_proposals(&[(1, false, "b"),])
+                .with_subnet_update_proposals(&[(1, false, "b")])
                 .expect_actions(&[SubnetAction::PendingProposal {
                     subnet_short: principal(1).to_string(),
                     proposal_id: 1,
                 }]),
             TestCase::new("First batch is submitted the proposal was executed and the subnet is baking")
-                .with_subnet_update_proposals(&[(1, true, "b"),])
+                .with_subnet_update_proposals(&[(1, true, "b")])
                 .with_last_bake_status(&[(1, "3h")])
                 .expect_actions(&[SubnetAction::Baking {
                     subnet_short: principal(1).to_string(),
@@ -908,30 +810,54 @@ mod check_stages_tests {
             TestCase::new("First batch is submitted the proposal was executed and the subnet is baked, placing proposal for next stage")
                 .with_subnet_update_proposals(&[(1, true, "b")])
                 .with_last_bake_status(&[(1, "9h")])
-                .expect_actions(&[SubnetAction::PlaceProposal { is_unassigned: false, subnet_principal: principal(2), version: "b".to_string() }, SubnetAction::PlaceProposal { is_unassigned: false, subnet_principal: principal(3), version: "b".to_string() }]),
+                .expect_actions(&[
+                    SubnetAction::PlaceProposal {
+                        is_unassigned: false,
+                        subnet_principal: principal(2),
+                        version: "b".to_string(),
+                    },
+                    SubnetAction::PlaceProposal {
+                        is_unassigned: false,
+                        subnet_principal: principal(3),
+                        version: "b".to_string(),
+                    },
+                ]),
             TestCase::new("Updating unassigned nodes")
                 .with_subnet_update_proposals(&[(1, true, "b"), (2, true, "b"), (3, true, "b")])
                 .with_last_bake_status(&[(1, "9h"), (2, "5h"), (3, "5h")])
                 .with_unassigned_node_version("a")
-                .expect_actions(&[SubnetAction::PlaceProposal { is_unassigned: true, subnet_principal: PrincipalId::new_anonymous(), version: "b".to_string()}]),
+                .expect_actions(&[SubnetAction::PlaceProposal {
+                    is_unassigned: true,
+                    subnet_principal: PrincipalId::new_anonymous(),
+                    version: "b".to_string(),
+                }]),
             TestCase::new("Proposal sent for updating unassigned nodes but it is not executed")
                 .with_subnet_update_proposals(&[(1, true, "b"), (2, true, "b"), (3, true, "b")])
                 .with_last_bake_status(&[(1, "9h"), (2, "5h"), (3, "5h")])
                 .with_unassigned_node_version("a")
                 .with_unassigned_node_proposals(&[(false, "b")])
-                .expect_actions(&[SubnetAction::PendingProposal { subnet_short: PrincipalId::new_anonymous().to_string(), proposal_id: 0 }]),
+                .expect_actions(&[SubnetAction::PendingProposal {
+                    subnet_short: PrincipalId::new_anonymous().to_string(),
+                    proposal_id: 0,
+                }]),
             TestCase::new("Executed update unassigned nodes, waiting for next week")
                 .with_subnet_update_proposals(&[(1, true, "b"), (2, true, "b"), (3, true, "b")])
                 .with_last_bake_status(&[(1, "9h"), (2, "5h"), (3, "5h")])
                 .with_unassigned_node_proposals(&[(true, "b")])
                 .with_now("2024-03-03")
-                .expect_actions(&[SubnetAction::WaitForNextWeek { subnet_short: principal(4).to_string() }]),
+                .expect_actions(&[SubnetAction::WaitForNextWeek {
+                    subnet_short: principal(4).to_string(),
+                }]),
             TestCase::new("Next monday came, should place proposal for updating the last subnet")
                 .with_subnet_update_proposals(&[(1, true, "b"), (2, true, "b"), (3, true, "b")])
                 .with_last_bake_status(&[(1, "9h"), (2, "5h"), (3, "5h")])
                 .with_unassigned_node_proposals(&[(true, "b")])
                 .with_now("2024-03-04")
-                .expect_actions(&[SubnetAction::PlaceProposal { is_unassigned: false, subnet_principal: principal(4), version: "b".to_string() }]),
+                .expect_actions(&[SubnetAction::PlaceProposal {
+                    is_unassigned: false,
+                    subnet_principal: principal(4),
+                    version: "b".to_string(),
+                }]),
             TestCase::new("Next monday came, proposal for last subnet executed and bake time passed. Rollout finished")
                 .with_subnet_update_proposals(&[(1, true, "b"), (2, true, "b"), (3, true, "b"), (4, true, "b")])
                 .with_last_bake_status(&[(1, "9h"), (2, "5h"), (3, "5h"), (4, "5h")])
@@ -941,7 +867,17 @@ mod check_stages_tests {
             TestCase::new("Partially executed step, a subnet is baking but the other doesn't have a submitted proposal")
                 .with_subnet_update_proposals(&[(1, true, "b"), (2, true, "b")])
                 .with_last_bake_status(&[(1, "9h"), (2, "3h")])
-                .expect_actions(&[SubnetAction::Baking { subnet_short: principal(2).to_string(), remaining: humantime::parse_duration("1h").expect("Should parse duration") }, SubnetAction::PlaceProposal { is_unassigned: false, subnet_principal: principal(3), version: "b".to_string() }])
+                .expect_actions(&[
+                    SubnetAction::Baking {
+                        subnet_short: principal(2).to_string(),
+                        remaining: humantime::parse_duration("1h").expect("Should parse duration"),
+                    },
+                    SubnetAction::PlaceProposal {
+                        is_unassigned: false,
+                        subnet_principal: principal(3),
+                        version: "b".to_string(),
+                    },
+                ]),
         ];
 
         for test in tests {
@@ -959,12 +895,7 @@ mod check_stages_tests {
                 desired_versions,
             );
 
-            assert_eq!(
-                maybe_actions.is_ok(),
-                test.expect_outcome_success,
-                "test case '{}' failed",
-                test.name
-            );
+            assert_eq!(maybe_actions.is_ok(), test.expect_outcome_success, "test case '{}' failed", test.name);
             if !test.expect_outcome_success {
                 continue;
             }
@@ -980,29 +911,38 @@ mod check_stages_tests {
             rollout: Rollout {
                 pause: false,
                 skip_days: vec![],
-                stages: vec![
-                    stage(&[1], "8h"),
-                    stage(&[2, 3], "4h"),
-                    stage_unassigned(),
-                    stage_next_week(&[4], "4h"),
-                ],
+                stages: vec![stage(&[1], "8h"), stage(&[2, 3], "4h"), stage_unassigned(), stage_next_week(&[4], "4h")],
             },
             releases: vec![
                 release("rc--2024-02-21_23-01", vec![("b", vec![]), ("b.feat", vec![1, 2])]),
                 release("rc--2024-02-14_23-01", vec![("a", vec![])]),
             ],
         };
-        let tests = vec![TestCase::new("Beginning of a new rollout")
-            .with_index(index_with_features.clone())
-            .expect_actions(&[SubnetAction::PlaceProposal {
-                is_unassigned: false,
-                subnet_principal: principal(1),
-                version: "b.feat".to_string(),
-            }]), TestCase::new("First batch is submitted the proposal was executed and the subnet is baked, placing proposal for next stage")
-            .with_index(index_with_features)
-            .with_last_bake_status(&[(1, "9h")])
-            .with_subnet_update_proposals(&[(1, true, "b.feat")])
-            .expect_actions(&[SubnetAction::PlaceProposal { is_unassigned: false, subnet_principal: principal(2), version: "b.feat".to_string() }, SubnetAction::PlaceProposal { is_unassigned: false, subnet_principal: principal(3), version: "b".to_string() }])];
+        let tests = vec![
+            TestCase::new("Beginning of a new rollout")
+                .with_index(index_with_features.clone())
+                .expect_actions(&[SubnetAction::PlaceProposal {
+                    is_unassigned: false,
+                    subnet_principal: principal(1),
+                    version: "b.feat".to_string(),
+                }]),
+            TestCase::new("First batch is submitted the proposal was executed and the subnet is baked, placing proposal for next stage")
+                .with_index(index_with_features)
+                .with_last_bake_status(&[(1, "9h")])
+                .with_subnet_update_proposals(&[(1, true, "b.feat")])
+                .expect_actions(&[
+                    SubnetAction::PlaceProposal {
+                        is_unassigned: false,
+                        subnet_principal: principal(2),
+                        version: "b.feat".to_string(),
+                    },
+                    SubnetAction::PlaceProposal {
+                        is_unassigned: false,
+                        subnet_principal: principal(3),
+                        version: "b".to_string(),
+                    },
+                ]),
+        ];
 
         for test in tests {
             let desired_versions = desired_rollout_release_version(&test.subnets, &test.index.releases);
@@ -1019,12 +959,7 @@ mod check_stages_tests {
                 desired_versions,
             );
 
-            assert_eq!(
-                maybe_actions.is_ok(),
-                test.expect_outcome_success,
-                "test case '{}' failed",
-                test.name
-            );
+            assert_eq!(maybe_actions.is_ok(), test.expect_outcome_success, "test case '{}' failed", test.name);
             if !test.expect_outcome_success {
                 continue;
             }

@@ -43,11 +43,7 @@ impl FileSd {
         }
         let target_path = job_path.join("ic_service_discovery.json");
 
-        let targets: Vec<_> = p8s_target_groups
-            .clone()
-            .into_iter()
-            .map(ServiceDiscoveryRecord::from)
-            .collect();
+        let targets: Vec<_> = p8s_target_groups.clone().into_iter().map(ServiceDiscoveryRecord::from).collect();
         ic_sys::fs::write_atomically(target_path.as_path(), |f| {
             serde_json::to_writer_pretty(f, &targets)
                 .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, format!("Serialization error: {:?}", e)))
