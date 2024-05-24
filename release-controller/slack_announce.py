@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 from slack_sdk.http_retry.handler import RetryHandler
 from slack_sdk.webhook import WebhookClient
 
-from .release_notes import RELEASE_NOTES_REVIEWERS
+from release_notes import RELEASE_NOTES_REVIEWERS
 
 
 def announce_release(slack_url, version_name, google_doc_url, tag_all_teams):
