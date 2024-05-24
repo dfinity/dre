@@ -354,8 +354,8 @@ async fn async_main() -> Result<(), anyhow::Error> {
                         include_status: include_status.clone(),
                         limit: *limit,
                         omit_large_fields: *omit_large_fields
-                    }).await?;
-                    let proposals = serde_json::to_string(&proposals).map_err(|e| anyhow::anyhow!("Couldn't serialize to string: {:?}", e))?;
+                    }).await?.into_iter().map(|p| dre::general::Proposal::try_from(p.clone()).map(|r| serde_json::to_value(r).expect("cannot serialize to json")).unwrap_or_else(|_e| serde_json::to_value(p).expect("cannot serialize to json"))).collect::<Vec<_>>();
+                    let proposals = serde_json::to_string_pretty(&proposals).map_err(|e| anyhow::anyhow!("Couldn't serialize to string: {:?}", e))?;
                     println!("{}", proposals);
                     Ok(())
                 },
