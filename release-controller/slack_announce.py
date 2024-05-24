@@ -4,20 +4,16 @@ from dotenv import load_dotenv
 from slack_sdk.http_retry.handler import RetryHandler
 from slack_sdk.webhook import WebhookClient
 
-teams = [
-    # "SRJ3R849E",  # consensus
-    # "SU7BZQ78E",  # crypto
-    "S01A577UL56",  # execution
-    "S01SVC713PS",  # messaging
-    # "SR6KC1DMZ",  # networking
-    # "S027838EY30",  # node team
-    # "S03BM6C0CJY",  # runtime
-]
+from release_notes import RELEASE_NOTES_REVIEWERS
 
 
 def announce_release(slack_url, version_name, google_doc_url, tag_all_teams):
     slack = WebhookClient(url=slack_url, retry_handlers=[RetryHandler(max_retry_count=2)])
-    notify_line = " ".join([f"<!subteam^{t}>" for t in teams]) if tag_all_teams else "everyone"
+    notify_line = (
+        " ".join([f"<!subteam^{t.slack_id}>" for t in RELEASE_NOTES_REVIEWERS if t.send_announcement])
+        if tag_all_teams
+        else "everyone"
+    )
     slack.send(
         text=f"""\
 Hi {notify_line}!
