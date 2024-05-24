@@ -1,6 +1,42 @@
 # dre Changelog
 
 <!-- insertion marker -->
+## [0.4.0](https://github.com/dfinity/dre/releases/tag/0.4.0) - 2024-05-24
+
+<small>[Compare with first commit](https://github.com/dfinity/dre/compare/d9dd38cf5b5018a2108bb6ab28d0fff965dbb5ee...0.4.0)</small>
+
+### Added
+
+- Add logging to identify which version had an error (#390) ([d328d8d](https://github.com/dfinity/dre/commit/d328d8db15a88b4a7a8d9ca0c99fb37c365bc150) by Luka Skugor).
+- Add config for testing release controller in vscode (#352) ([480bf81](https://github.com/dfinity/dre/commit/480bf8169fd23d8c7862e228629a4ef8ea883897) by Luka Skugor).
+- adding api boundary nodes to multiservice discovery and multiservice discovery downloader (#360) ([bb381c4](https://github.com/dfinity/dre/commit/bb381c4d155d380eb0eed0d6d7da49e3b38fadab) by Nikola Milosavljevic).
+- adding feature build (#367) ([9219db6](https://github.com/dfinity/dre/commit/9219db6d0ee1d3e7e5596ea14cd26e15620cc073) by Nikola Milosavljevic).
+- adding missing team pretty map (#365) ([05d1f3c](https://github.com/dfinity/dre/commit/05d1f3ca9080ca5146e88804ccc7b21fc15250fc) by Nikola Milosavljevic).
+- Add release rc--2024-05-01_23-01 (#353) ([5070813](https://github.com/dfinity/dre/commit/5070813d41e98fb1f082036efc10ea799069f53a) by Luka Skugor).
+- Add 2024-04-10 hotfix query-stats (#335) ([3394fdf](https://github.com/dfinity/dre/commit/3394fdf11e7cbfb0ba145bd27397176a5589f9b5) by pietrodimarco-dfinity).
+- Add bitcoin hotfix version for rc--2024-04-10_23-01 (#333) ([d5cf73c](https://github.com/dfinity/dre/commit/d5cf73c7892889cc6a48831f398483ba31f39411) by pietrodimarco-dfinity).
+- add rc--2024-04-10_23-01 release (#311) ([2014803](https://github.com/dfinity/dre/commit/2014803769ccef5981d9910754e01ad7d6eece95) by Luka Skugor).
+- add missing favicon (#293) ([c65a2f9](https://github.com/dfinity/dre/commit/c65a2f962077035f4a4ffc154d51292da5601ead) by Luka Skugor).
+
+### Fixed
+
+- fix(dashboard): Show DC in the node label/name (#406) ([f48e685](https://github.com/dfinity/dre/commit/f48e685be32251ad9b2bf50be507e71fa976c238) by Saša Tomić).
+- fix(dre): Add compatibility in fetching trustworthy metrics from old subnet versions (#401) ([77e39d2](https://github.com/dfinity/dre/commit/77e39d2609a421300e8289953894b5b056852ccc) by Saša Tomić).
+- fix(release-controller): Set the default socket timeout to 60s ([55c2abb](https://github.com/dfinity/dre/commit/55c2abba5e565c2591f7f1733a364eb5c08051e7) by Saša Tomić).
+- fix(release-controller): [DRE-166] use requests instead of urllib, to handle timeouts (#398) ([4838df8](https://github.com/dfinity/dre/commit/4838df81bed2d3d1ef553367424c7d200f66e868) by Saša Tomić).
+- fix(release-controller): [DRE-166] Add timeouts to the URL requests (#395) ([ec25f69](https://github.com/dfinity/dre/commit/ec25f6963f2e27f01ae8dd5c80d389e3d629f5ee) by Saša Tomić).
+- fix(release controller): Only update posts if different and can_edit (#391) ([846345a](https://github.com/dfinity/dre/commit/846345acb80e711f6f8de41f0bfecec7bfd28285) by Saša Tomić).
+- fix: adding missing mapping for unassigned status from public dashboard (#379) ([2e14819](https://github.com/dfinity/dre/commit/2e148192156e2ec60c30c696028e8f8ff86df8ae) by Nikola Milosavljevic).
+- fix(backend): Do not check the health of the force-included nodes (#377) ([2ab31fb](https://github.com/dfinity/dre/commit/2ab31fb172b258d3fc469397d10d0d5b4534dbc2) by Saša Tomić).
+- fix(release-notes): Ensure "interface-owners" changes are included (#366) ([f517739](https://github.com/dfinity/dre/commit/f51773948fd2af3a3f439a45c37b56b06e94c858) by Saša Tomić).
+- fixing deleting when not enough parameters (#310) ([3da987d](https://github.com/dfinity/dre/commit/3da987d9c2db1e6ec2e1596da455374b20dde242) by Nikola Milosavljevic).
+- fix: build dashboard on PR only if it was referenced in the branch (#308) ([c072728](https://github.com/dfinity/dre/commit/c07272843431b26985a38001cdb9db30913223b1) by Nikola Milosavljevic).
+- fix: Openssl missing and dry run in CI (#303) ([b8bc57e](https://github.com/dfinity/dre/commit/b8bc57eed6ab5d1f21f4250b5a6890d73b4cb270) by Nikola Milosavljevic).
+- fix(ci): fixing condition for pushing of dashboard image (#296) ([283e346](https://github.com/dfinity/dre/commit/283e34636d2f0c14b81adb69d0938f567b79c6b0) by Nikola Milosavljevic).
+- fix(ci): k8s repo make MR (#297) ([2c0e676](https://github.com/dfinity/dre/commit/2c0e6764f00950971908e74ea71dfbd525ace8a4) by Saša Tomić).
+- Fix mkdocs deploy (#291) ([36617e3](https://github.com/dfinity/dre/commit/36617e3185ad9a27b5b9780e470db5cd6f330b15) by Luka Skugor).
+- fix: Fix bin/mk-release to not tag versions with "vv" in some cases (#288) ([d9dd38c](https://github.com/dfinity/dre/commit/d9dd38cf5b5018a2108bb6ab28d0fff965dbb5ee) by Saša Tomić).
+
 ## [0.3.2](https://github.com/dfinity/dre/releases/tag/0.3.2) - 2024-04-03
 
 <small>[Compare with first commit](https://github.com/dfinity/dre/compare/a89c1826bf57646dd88d40f619bc216b3961cf64...0.3.2)</small>
