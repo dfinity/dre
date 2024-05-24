@@ -22,7 +22,6 @@ from tenacity import retry
 from tenacity import stop_after_attempt
 from tenacity import wait_exponential
 
-from pylib.ic_deployment import IcDeployment
 from pylib.ic_utils import download_ic_executable
 
 GOV_PRINCIPAL = "rrkah-fqaaa-aaaaa-aaaaq-cai"
@@ -31,14 +30,12 @@ GOV_PRINCIPAL = "rrkah-fqaaa-aaaaa-aaaaq-cai"
 class IcAdmin:
     """Interface with the ic-admin utility."""
 
-    def __init__(self, deployment: typing.Optional[IcDeployment | str] = None, git_revision: str | None = None):
+    def __init__(self, nns_urls: typing.Optional[str] = None, git_revision: str | None = None):
         """Create an object with the specified ic-admin path and NNS URL."""
-        if isinstance(deployment, str):
-            self.nns_url = deployment
-        elif not deployment:
-            deployment = IcDeployment("mainnet")
-            self.deployment = deployment
-            self.nns_url = deployment.get_nns_url()
+        if isinstance(nns_urls, str):
+            self.nns_url = nns_urls
+        else:
+            self.nns_url = "https://ic0.app"
         if not git_revision:
             agent = Agent(Identity(), Client(self.nns_url))
             git_revision = canister_version(agent, GOV_PRINCIPAL)
