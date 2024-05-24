@@ -24,7 +24,7 @@ members = [
 resolver = "2"
 
 [workspace.package]
-version = "0.3.2"
+version = "0.4.0"
 edition = "2021"
 authors = ["IC Decentralized Reliability Engineering (DRE) Team"]
 description = "Tooling for managing the Internet Computer"

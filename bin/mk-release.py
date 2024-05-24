@@ -68,6 +68,8 @@ def update_change_log(current_version, new_version):
             "git-changelog",
             "--filter-commits",
             f"v{current_version}..",
+            "--convention",
+            "conventional",
             "--in-place",
             "--output",
             "CHANGELOG.md",
