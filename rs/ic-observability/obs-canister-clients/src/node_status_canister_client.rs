@@ -38,10 +38,7 @@ impl Default for NodeStatus {
 
 impl NodeStatusCanister {
     pub fn new(url: Vec<Url>, canister_id: String) -> Self {
-        assert!(
-            !url.is_empty(),
-            "empty list of URLs passed to NodeStatusCanister::new()"
-        );
+        assert!(!url.is_empty(), "empty list of URLs passed to NodeStatusCanister::new()");
 
         NodeStatusCanister {
             canister_id: Principal::from_text(canister_id).unwrap(),
@@ -78,9 +75,10 @@ impl NodeStatusCanister {
             .await
             .query(&self.canister_id, "get_node_status")
             .with_effective_canister_id(self.canister_id)
-            .with_arg(Encode! { &format_for_frontend }.map_err(|err| {
-                NodeStatusCanisterError::Encoding(format!("Error encoding argument for get_node_status: {}", err))
-            })?)
+            .with_arg(
+                Encode! { &format_for_frontend }
+                    .map_err(|err| NodeStatusCanisterError::Encoding(format!("Error encoding argument for get_node_status: {}", err)))?,
+            )
             .call()
             .await
         {
@@ -91,10 +89,7 @@ impl NodeStatusCanister {
                     e
                 ))),
             },
-            Err(err) => Err(NodeStatusCanisterError::Unknown(format!(
-                "Error on get_node_status: {}",
-                err
-            ))),
+            Err(err) => Err(NodeStatusCanisterError::Unknown(format!("Error on get_node_status: {}", err))),
         }
     }
 
@@ -104,27 +99,18 @@ impl NodeStatusCanister {
             .await
             .update(&self.canister_id, "update_node_status")
             .with_effective_canister_id(self.canister_id)
-            .with_arg(Encode! { &statuses }.map_err(|err| {
-                NodeStatusCanisterError::Encoding(format!("Error encoding argument for update_node_status: {}", err))
-            })?)
+            .with_arg(
+                Encode! { &statuses }
+                    .map_err(|err| NodeStatusCanisterError::Encoding(format!("Error encoding argument for update_node_status: {}", err)))?,
+            )
             .call()
             .await
         {
             Ok(result) => result,
-            Err(err) => {
-                return Err(NodeStatusCanisterError::Unknown(format!(
-                    "Error on update_node_status request: {}",
-                    err
-                )))
-            }
+            Err(err) => return Err(NodeStatusCanisterError::Unknown(format!("Error on update_node_status request: {}", err))),
         };
 
-        match self
-            .choose_random_agent()
-            .await
-            .wait(request_id, self.canister_id)
-            .await
-        {
+        match self.choose_random_agent().await.wait(request_id, self.canister_id).await {
             Ok(response) => match Decode!(response.as_slice(), bool) {
                 Ok(response) => Ok(response),
                 Err(e) => Err(NodeStatusCanisterError::Decoding(format!(

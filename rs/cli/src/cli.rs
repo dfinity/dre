@@ -110,13 +110,7 @@ pub enum Commands {
         /// everything else should be double checked manually
         ///
         /// By default: SubnetReplicaVersionManagement
-        #[clap(
-            long,
-            use_value_delimiter = true,
-            value_delimiter = ',',
-            value_name = "PROPOSER_ID",
-            default_value = "12"
-        )]
+        #[clap(long, use_value_delimiter = true, value_delimiter = ',', value_name = "PROPOSER_ID", default_value = "12")]
         accepted_topics: Vec<i32>,
     },
 

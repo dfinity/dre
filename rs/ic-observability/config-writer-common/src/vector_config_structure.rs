@@ -47,12 +47,7 @@ impl VectorConfigEnriched {
         }
     }
 
-    pub fn add_target_group(
-        &mut self,
-        key: String,
-        source: Box<dyn VectorSource>,
-        transform: Box<dyn VectorTransform>,
-    ) {
+    pub fn add_target_group(&mut self, key: String, source: Box<dyn VectorSource>, transform: Box<dyn VectorTransform>) {
         self.sources.insert(key.clone() + "-source", source);
         self.transforms.insert(key + "-transform", transform);
     }

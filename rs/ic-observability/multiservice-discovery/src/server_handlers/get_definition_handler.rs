@@ -6,9 +6,7 @@ use crate::server_handlers::dto::DefinitionDto;
 
 use super::Server;
 
-pub(super) async fn get_definitions(
-    State(supervisor): State<Server>,
-) -> Result<Json<Vec<DefinitionDto>>, (StatusCode, String)> {
+pub(super) async fn get_definitions(State(supervisor): State<Server>) -> Result<Json<Vec<DefinitionDto>>, (StatusCode, String)> {
     let definitions = supervisor.supervisor.definitions.lock().await;
 
     let list = definitions

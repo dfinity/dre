@@ -104,9 +104,7 @@ impl RunningDefinitionsMetrics {
         };
         meter.register_callback(&instruments, update_instruments).unwrap();
 
-        Self {
-            latest_values_by_network,
-        }
+        Self { latest_values_by_network }
     }
 
     pub fn observe_sync(&self, network: String, success: bool) {

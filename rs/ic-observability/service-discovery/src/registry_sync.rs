@@ -13,9 +13,7 @@ use ic_interfaces_registry::{RegistryClient, RegistryValue, ZERO_REGISTRY_VERSIO
 use ic_protobuf::registry::crypto::v1::PublicKey;
 use ic_registry_client::client::{RegistryVersion, ThresholdSigPublicKey};
 use ic_registry_client_fake::FakeRegistryClient;
-use ic_registry_common_proto::pb::local_store::v1::{
-    ChangelogEntry as PbChangelogEntry, KeyMutation as PbKeyMutation, MutationType,
-};
+use ic_registry_common_proto::pb::local_store::v1::{ChangelogEntry as PbChangelogEntry, KeyMutation as PbKeyMutation, MutationType};
 use ic_registry_keys::{make_crypto_threshold_signing_pubkey_key, ROOT_SUBNET_ID_KEY};
 use ic_registry_local_store::{Changelog, ChangelogEntry, KeyMutation, LocalStoreImpl};
 use ic_registry_nns_data_provider::registry::RegistryCanister;
@@ -68,10 +66,7 @@ pub async fn sync_local_registry(
         debug!(log, "Skipping syncing with registry, using local version");
         return Ok(());
     } else if use_current_version {
-        warn!(
-            log,
-            "Unable to use current version of registry since its a zero registry version"
-        );
+        warn!(log, "Unable to use current version of registry since its a zero registry version");
     }
 
     let mut updates = vec![];
@@ -106,10 +101,7 @@ pub async fn sync_local_registry(
             break;
         }
 
-        if let Ok((mut initial_records, _, _)) = registry_canister
-            .get_certified_changes_since(latest_version.get(), &nns_public_key)
-            .await
-        {
+        if let Ok((mut initial_records, _, _)) = registry_canister.get_certified_changes_since(latest_version.get(), &nns_public_key).await {
             initial_records.sort_by_key(|r| r.version);
             let changelog = initial_records.iter().fold(Changelog::default(), |mut cl, r| {
                 let rel_version = (r.version - latest_version).get();
@@ -130,14 +122,9 @@ pub async fn sync_local_registry(
                 let local_registry_path = local_path.clone();
                 updates.push(async move {
                     let path_str = format!("{:016x}.pb", v.get());
-                    let v_path = &[
-                        &path_str[0..10],
-                        &path_str[10..12],
-                        &path_str[12..14],
-                        &path_str[14..19],
-                    ]
-                    .iter()
-                    .collect::<PathBuf>();
+                    let v_path = &[&path_str[0..10], &path_str[10..12], &path_str[12..14], &path_str[14..19]]
+                        .iter()
+                        .collect::<PathBuf>();
 
                     let path = local_registry_path.join(v_path.as_path());
                     tokio::fs::create_dir_all(path.clone().parent().unwrap())
@@ -188,11 +175,9 @@ async fn get_nns_public_key(registry_canister: &RegistryCanister) -> anyhow::Res
     let nns_subnet_id = decode_registry_value::<ic_protobuf::types::v1::SubnetId>(nns_subnet_id_vec);
     let (nns_pub_key_vec, _) = registry_canister
         .get_value(
-            make_crypto_threshold_signing_pubkey_key(SubnetId::new(
-                PrincipalId::try_from(nns_subnet_id.principal_id.unwrap().raw).unwrap(),
-            ))
-            .as_bytes()
-            .to_vec(),
+            make_crypto_threshold_signing_pubkey_key(SubnetId::new(PrincipalId::try_from(nns_subnet_id.principal_id.unwrap().raw).unwrap()))
+                .as_bytes()
+                .to_vec(),
             None,
         )
         .await

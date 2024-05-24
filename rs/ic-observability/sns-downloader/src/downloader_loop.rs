@@ -45,10 +45,7 @@ pub async fn run_downloader_loop(logger: Logger, cli: CliArgs, stop_signal: Rece
         let mut snses = vec![];
 
         loop {
-            info!(
-                logger,
-                "Downloading from {} page {} @ interval {:?}", cli.sd_url, current_page, tick
-            );
+            info!(logger, "Downloading from {} page {} @ interval {:?}", cli.sd_url, current_page, tick);
             let response = match client
                 .get(cli.sd_url.clone())
                 .query(&[("limit", limit), ("offset", current_page * limit)])
@@ -57,29 +54,20 @@ pub async fn run_downloader_loop(logger: Logger, cli: CliArgs, stop_signal: Rece
             {
                 Ok(res) => res,
                 Err(e) => {
-                    warn!(
-                        logger,
-                        "Failed to download from {} @ interval {:?}: {:?}", cli.sd_url, tick, e
-                    );
+                    warn!(logger, "Failed to download from {} @ interval {:?}: {:?}", cli.sd_url, tick, e);
                     continue;
                 }
             };
 
             if !response.status().is_success() {
-                warn!(
-                    logger,
-                    "Received failed status {} @ interval {:?}: {:?}", cli.sd_url, tick, response
-                );
+                warn!(logger, "Received failed status {} @ interval {:?}: {:?}", cli.sd_url, tick, response);
                 continue;
             }
 
             let targets: serde_json::Value = match response.json().await {
                 Ok(targets) => targets,
                 Err(e) => {
-                    warn!(
-                        logger,
-                        "Failed to parse response from {} @ interval {:?}: {:?}", cli.sd_url, tick, e
-                    );
+                    warn!(logger, "Failed to parse response from {} @ interval {:?}: {:?}", cli.sd_url, tick, e);
                     continue;
                 }
             };
@@ -99,13 +87,7 @@ pub async fn run_downloader_loop(logger: Logger, cli: CliArgs, stop_signal: Rece
                     root_canister_id: target["root_canister_id"].as_str().unwrap().to_string(),
                     name: target["name"].as_str().unwrap().to_string(),
                     url: target["url"].as_str().unwrap().to_string(),
-                    canisters: get_canisters(
-                        &cli,
-                        target["root_canister_id"].as_str().unwrap().to_string(),
-                        &client,
-                        logger.clone(),
-                    )
-                    .await,
+                    canisters: get_canisters(&cli, target["root_canister_id"].as_str().unwrap().to_string(), &client, logger.clone()).await,
                 };
                 sns.canisters.push(Canister {
                     canister_id: target["root_canister_id"].as_str().unwrap().to_string(),
@@ -136,11 +118,7 @@ pub async fn run_downloader_loop(logger: Logger, cli: CliArgs, stop_signal: Rece
         if current_hash != hash {
             info!(
                 logger,
-                "Received new targets from {} @ interval {:?}, old hash '{}' != '{}' new hash",
-                cli.sd_url,
-                tick,
-                current_hash,
-                hash
+                "Received new targets from {} @ interval {:?}, old hash '{}' != '{}' new hash", cli.sd_url, tick, current_hash, hash
             );
             current_hash = hash;
 
@@ -203,10 +181,7 @@ async fn get_canisters(cli: &CliArgs, root_canister_id: String, client: &Client,
             })
             .collect(),
         other => {
-            warn!(
-                logger,
-                "Unexpected schema for sns with root canister id {}:\n{}", root_canister_id, other
-            );
+            warn!(logger, "Unexpected schema for sns with root canister id {}:\n{}", root_canister_id, other);
             vec![]
         }
     };

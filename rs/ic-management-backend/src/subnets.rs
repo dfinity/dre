@@ -62,13 +62,8 @@ mod tests {
             nodes: all_nodes.values().take(13).cloned().collect(),
             ..Default::default()
         };
-        let err = get_proposed_subnet_changes(&all_nodes, &subnet)
-            .unwrap_err()
-            .to_string();
-        assert_eq!(
-            err,
-            "subnet fscpm-uiaaa-aaaaa-aaaap-yai does not have open membership change proposals"
-        );
+        let err = get_proposed_subnet_changes(&all_nodes, &subnet).unwrap_err().to_string();
+        assert_eq!(err, "subnet fscpm-uiaaa-aaaaa-aaaap-yai does not have open membership change proposals");
     }
 
     #[test]

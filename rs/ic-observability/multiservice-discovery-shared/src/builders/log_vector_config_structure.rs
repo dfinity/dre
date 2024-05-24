@@ -21,11 +21,7 @@ pub struct VectorConfigBuilderImpl {
 
 impl VectorConfigBuilderImpl {
     pub fn new(batch_size: u64, port: u64, bn_port: u64) -> Self {
-        Self {
-            batch_size,
-            port,
-            bn_port,
-        }
+        Self { batch_size, port, bn_port }
     }
 }
 
@@ -35,10 +31,7 @@ impl ConfigBuilder for VectorConfigBuilderImpl {
     }
 }
 
-pub(crate) fn from_targets_into_vector_config(
-    builder: &VectorConfigBuilderImpl,
-    records: BTreeSet<TargetDto>,
-) -> String {
+pub(crate) fn from_targets_into_vector_config(builder: &VectorConfigBuilderImpl, records: BTreeSet<TargetDto>) -> String {
     let mut config = VectorConfigEnriched::new();
     let mut edited_records: Vec<TargetDto> = vec![];
 
@@ -81,10 +74,7 @@ pub(crate) fn from_targets_into_vector_config(
             sources_map.insert(source_key, Box::new(source) as Box<dyn VectorSource>);
 
             let mut transforms_map = HashMap::new();
-            transforms_map.insert(
-                format!("{}-transform", key),
-                Box::new(transform) as Box<dyn VectorTransform>,
-            );
+            transforms_map.insert(format!("{}-transform", key), Box::new(transform) as Box<dyn VectorTransform>);
             config.add_target_group(sources_map, transforms_map);
         }
     }

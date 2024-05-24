@@ -5,10 +5,7 @@ pub mod release;
 pub mod subnet;
 
 use crate::health::HealthStatusQuerier;
-use crate::{
-    health, prometheus, proposal, registry, registry::RegistryState, release::list_subnets_release_statuses,
-    release::RolloutBuilder,
-};
+use crate::{health, prometheus, proposal, registry, registry::RegistryState, release::list_subnets_release_statuses, release::RolloutBuilder};
 use actix_web::dev::Service;
 use actix_web::{get, post, web, App, Error, HttpResponse, HttpServer, Responder, Result};
 use decentralization::network::AvailableNodesQuerier;
@@ -32,9 +29,7 @@ pub async fn run_backend(
     mpsc_tx: Option<std::sync::mpsc::Sender<actix_web::dev::ServerHandle>>,
 ) -> std::io::Result<()> {
     debug!("Starting backend");
-    let registry_state = Arc::new(RwLock::new(
-        registry::RegistryState::new(target_network, run_from_cli).await,
-    ));
+    let registry_state = Arc::new(RwLock::new(registry::RegistryState::new(target_network, run_from_cli).await));
 
     if run_from_cli {
         registry::update_node_details(&registry_state).await;
@@ -226,14 +221,7 @@ async fn nodes_healths(registry: web::Data<Arc<RwLock<registry::RegistryState>>>
         registry
             .nodes()
             .values()
-            .map(|n| {
-                (
-                    n.principal,
-                    healths
-                        .remove(&n.principal)
-                        .unwrap_or(ic_management_types::Status::Unknown),
-                )
-            })
+            .map(|n| (n.principal, healths.remove(&n.principal).unwrap_or(ic_management_types::Status::Unknown)))
             .collect::<BTreeMap<_, _>>()
     }))
 }
@@ -253,9 +241,7 @@ async fn operators(registry: web::Data<Arc<RwLock<registry::RegistryState>>>) ->
     query_registry(registry, |r| r.operators()).await
 }
 
-fn response_from_result<T: Serialize, E: std::fmt::Debug + std::fmt::Display + 'static>(
-    result: Result<T, E>,
-) -> Result<HttpResponse, Error> {
+fn response_from_result<T: Serialize, E: std::fmt::Debug + std::fmt::Display + 'static>(result: Result<T, E>) -> Result<HttpResponse, Error> {
     match result {
         Ok(data) => Ok(HttpResponse::Ok().json(data)),
         Err(e) => Err(actix_web::error::ErrorInternalServerError(e)),

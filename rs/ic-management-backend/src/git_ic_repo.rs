@@ -32,11 +32,7 @@ impl IcRepo {
         .join("git")
         .join("ic");
         let lock_file_path = format!("{}.lock", &repo_path.display());
-        info!(
-            "IC git repo path: {}, lock file path: {}",
-            &repo_path.display(),
-            &lock_file_path
-        );
+        info!("IC git repo path: {}, lock file path: {}", &repo_path.display(), &lock_file_path);
 
         if !repo_path.exists() {
             std::fs::create_dir_all(&repo_path).map_err(|e| IoError::Io {
@@ -60,10 +56,7 @@ impl IcRepo {
         if repo_path.exists() {
             // If the directory exists, but git status does not return success, remove the
             // directory
-            if !match Command::new("git")
-                .args(["-C", repo_path.to_str().unwrap(), "status"])
-                .output()
-            {
+            if !match Command::new("git").args(["-C", repo_path.to_str().unwrap(), "status"]).output() {
                 Ok(output) => output.status.success(),
                 Err(_) => false,
             } {
@@ -102,8 +95,7 @@ impl IcRepo {
                 source: e,
                 path: self.cache_file_path.to_path_buf(),
             })?;
-            let cache: HashMap<String, Vec<String>> =
-                serde_json::from_reader(cache_file).map_err(|e| anyhow::format_err!(e))?;
+            let cache: HashMap<String, Vec<String>> = serde_json::from_reader(cache_file).map_err(|e| anyhow::format_err!(e))?;
             self.cache = cache;
         }
         Ok(())
@@ -142,10 +134,7 @@ impl IcRepo {
                     .collect();
 
                 if branches.is_empty() {
-                    warn!(
-                        "No branches found for commit {} -- do you have a full repo clone?",
-                        commit_sha
-                    )
+                    warn!("No branches found for commit {} -- do you have a full repo clone?", commit_sha)
                 } else {
                     self.cache.insert(commit_sha.to_string(), branches.clone());
                     self.save_commit_branch_cache()?;

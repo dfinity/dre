@@ -25,14 +25,8 @@ pub fn make_poll_loop(
             let mut err = false;
             info!(log, "Loading new scraping targets (tick: {:?})", tick);
             if let Err(e) = ic_discovery.load_new_ics(log.clone()) {
-                warn!(
-                    log,
-                    "Failed to load new scraping targets @ interval {:?}: {:?}", tick, e
-                );
-                metrics
-                    .poll_error_count
-                    .with_label_values(&["load_new_scraping_targets"])
-                    .inc();
+                warn!(log, "Failed to load new scraping targets @ interval {:?}: {:?}", tick, e);
+                metrics.poll_error_count.with_label_values(&["load_new_scraping_targets"]).inc();
                 err = true;
             }
             info!(log, "Update registries");

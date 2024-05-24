@@ -12,9 +12,7 @@ impl TargetGroupFilter for OldMachinesFilter {
             .targets
             .iter()
             // Maps addresses to true if they are new
-            .map(|sockaddr: &SocketAddr| {
-                sockaddr.port() != 9100 || !matches!(sockaddr.ip(), IpAddr::V6(a) if a.segments()[4] == 0x5000)
-            })
+            .map(|sockaddr: &SocketAddr| sockaddr.port() != 9100 || !matches!(sockaddr.ip(), IpAddr::V6(a) if a.segments()[4] == 0x5000))
             .all(|is_new| is_new)
     }
 }

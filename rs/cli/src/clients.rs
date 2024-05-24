@@ -2,9 +2,7 @@ use async_trait::async_trait;
 use decentralization::SubnetChangeResponse;
 use ic_base_types::PrincipalId;
 use ic_management_types::{
-    requests::{
-        MembershipReplaceRequest, NodesRemoveRequest, NodesRemoveResponse, SubnetCreateRequest, SubnetResizeRequest,
-    },
+    requests::{MembershipReplaceRequest, NodesRemoveRequest, NodesRemoveResponse, SubnetCreateRequest, SubnetResizeRequest},
     Artifact, Network, NetworkError, Release, TopologyProposal,
 };
 use log::error;
@@ -52,11 +50,7 @@ impl DashboardBackendClient {
 
     pub async fn membership_replace(&self, request: MembershipReplaceRequest) -> anyhow::Result<SubnetChangeResponse> {
         reqwest::Client::new()
-            .post(
-                self.url
-                    .join("subnet/membership/replace")
-                    .map_err(|e| anyhow::anyhow!(e))?,
-            )
+            .post(self.url.join("subnet/membership/replace").map_err(|e| anyhow::anyhow!(e))?)
             .json(&request)
             .rest_send()
             .await
@@ -64,11 +58,7 @@ impl DashboardBackendClient {
 
     pub async fn subnet_resize(&self, request: SubnetResizeRequest) -> anyhow::Result<SubnetChangeResponse> {
         reqwest::Client::new()
-            .post(
-                self.url
-                    .join("subnet/membership/resize")
-                    .map_err(|e| anyhow::anyhow!(e))?,
-            )
+            .post(self.url.join("subnet/membership/resize").map_err(|e| anyhow::anyhow!(e))?)
             .json(&request)
             .rest_send()
             .await
@@ -128,20 +118,10 @@ impl RESTRequestBuilder for reqwest::RequestBuilder {
                 _ => Err(anyhow::anyhow!("failed request (error: {}, response: {})", e, response)),
             }
         } else {
-            response_result
-                .text()
-                .await
-                .map_err(|e| anyhow::anyhow!(e))
-                .and_then(|body| {
-                    serde_json::from_str::<T>(&body).map_err(|e| {
-                        anyhow::anyhow!(
-                            "Error decoding {} from backend output: {}\n{}",
-                            std::any::type_name::<T>(),
-                            body,
-                            e
-                        )
-                    })
-                })
+            response_result.text().await.map_err(|e| anyhow::anyhow!(e)).and_then(|body| {
+                serde_json::from_str::<T>(&body)
+                    .map_err(|e| anyhow::anyhow!("Error decoding {} from backend output: {}\n{}", std::any::type_name::<T>(), body, e))
+            })
         }
     }
 }
@@ -152,12 +132,8 @@ mod tests {
 
     #[tokio::test]
     async fn dashboard_backend_client_url() {
-        let mainnet = Network::new("mainnet", &vec![])
-            .await
-            .expect("failed to create mainnet network");
-        let staging = Network::new("staging", &vec![])
-            .await
-            .expect("failed to create staging network");
+        let mainnet = Network::new("mainnet", &vec![]).await.expect("failed to create mainnet network");
+        let staging = Network::new("staging", &vec![]).await.expect("failed to create staging network");
         assert_eq!(
             DashboardBackendClient::new(&mainnet, false).url.to_string(),
             "https://dashboard.internal.dfinity.network/api/proxy/registry/mainnet"
