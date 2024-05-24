@@ -43,7 +43,7 @@ def local_image_sha256_unchecked(creator="docker"):
 def find_ci_files():
     matches = []
     for root, dirs, filenames in os.walk(repo_root):
-        dirs[:] = [d for d in dirs if d not in [".git", "ic", "deployments"]]
+        dirs[:] = [d for d in dirs if d not in [".git"]]
         for filename in fnmatch.filter(filenames, "*.yml"):
             matches.append(os.path.join(root, filename))
     return matches
