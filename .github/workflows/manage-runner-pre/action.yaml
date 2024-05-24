@@ -1,6 +1,14 @@
 name: Setup runner
 description: Reusable action for setting up the github runner
 
+inputs:
+  aws_access_key_id:
+    description: 'AWS Access Key ID'
+    required: true
+  aws_secret_access_key:
+    description: 'AWS Secret Access Key'
+    required: true
+
 runs:
   using: composite
   steps:
@@ -35,6 +43,24 @@ runs:
       # Bazel actually keeps all intermediate objects so builds are still fast
       run: bazel clean
       shell: bash
+
+    - name: "☁️ Setup S3 cache credentials"
+      id: bazel-remote-creds
+      shell: bash
+      run: |
+        mkdir -p ~/.aws
+        chmod 700 ~/.aws
+        sudo chown -R $USER:$GROUP ~/.aws
+        cat <<_EOF | install -m 0600 /dev/stdin ~/.aws/config
+        [wasabi]
+        region = eu-central-2
+        _EOF
+
+        cat <<_EOF | install -m 0600 /dev/stdin ~/.aws/credentials
+        [wasabi]
+        aws_access_key_id = ${{ inputs.aws_access_key_id }}
+        aws_secret_access_key = ${{ inputs.aws_secret_access_key }}
+        _EOF
 
     - name: "💾 Start bazel-remote s3 cache"
       run: ./bin/bazel-cache-s3-start.sh

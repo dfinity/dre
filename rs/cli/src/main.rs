@@ -222,7 +222,8 @@ async fn async_main() -> Result<(), anyhow::Error> {
             }
 
             cli::Commands::Get { args } => {
-                runner_instance.ic_admin.run_passthrough_get(args).await
+                runner_instance.ic_admin.run_passthrough_get(args, false).await?;
+                Ok(())
             },
 
             cli::Commands::Propose { args } => {
@@ -230,7 +231,20 @@ async fn async_main() -> Result<(), anyhow::Error> {
             },
 
             cli::Commands::UpdateUnassignedNodes { nns_subnet_id } => {
-                runner_instance.ic_admin.update_unassigned_nodes( nns_subnet_id, &target_network, simulate).await
+                let runner_instance = if target_network.is_mainnet() {
+                    runner_instance.as_automation()
+                } else {
+                    runner_instance
+                };
+                let nns_subnet_id = match nns_subnet_id {
+                    Some(subnet_id) => subnet_id.to_owned(),
+                    None => {
+                        let res = runner_instance.ic_admin.run_passthrough_get(&["get-subnet-list".to_string()], true).await?;
+                        let subnet_list: Vec<String> = serde_json::from_str(&res)?;
+                        subnet_list.first().ok_or_else(|| anyhow::anyhow!("No subnet found"))?.clone()
+                    }
+                };
+                runner_instance.ic_admin.update_unassigned_nodes(&nns_subnet_id, &target_network, simulate).await
             },
 
             cli::Commands::Version(version_command) => {
@@ -239,7 +253,7 @@ async fn async_main() -> Result<(), anyhow::Error> {
                         let release_artifact: &Artifact = &update_command.subcommand.clone().into();
 
                         let update_version = match &update_command.subcommand {
-                            cli::version::UpdateCommands::Replica { version, release_tag, force} | cli::version::UpdateCommands::HostOS { version, release_tag, force} => {
+                            cli::version::UpdateCommands::GuestOS { version, release_tag, force} | cli::version::UpdateCommands::HostOS { version, release_tag, force} => {
                                 ic_admin::IcAdminWrapper::prepare_to_propose_to_update_elected_versions(
                                     release_artifact,
                                     version,
@@ -250,7 +264,7 @@ async fn async_main() -> Result<(), anyhow::Error> {
                             }
                         }.await?;
 
-                        runner_instance.ic_admin.propose_run(ic_admin::ProposeCommand::UpdateElectedVersions {
+                        runner_instance.ic_admin.propose_run(ic_admin::ProposeCommand::ReviseElectedVersions {
                                                  release_artifact: update_version.release_artifact.clone(),
                                                  args: dre::parsed_cli::ParsedCli::get_update_cmd_args(&update_version)
                                              },
@@ -347,6 +361,14 @@ async fn async_main() -> Result<(), anyhow::Error> {
                 },
                 cli::proposals::Commands::Filter { limit, statuses, topics } => {
                     filter_proposals(target_network, limit, statuses.iter().map(|s| s.clone().into()).collect(), topics.iter().map(|t| t.clone().into()).collect()).await
+                }
+                cli::proposals::Commands::Get { proposal_id } => {
+                    let nns_url = target_network.get_nns_urls().first().expect("Should have at least one NNS URL");
+                    let client = GovernanceCanisterWrapper::from(CanisterClient::from_anonymous(nns_url)?);
+                    let proposal = client.get_proposal(*proposal_id).await?;
+                    let proposal = serde_json::to_string_pretty(&proposal).map_err(|e| anyhow::anyhow!("Couldn't serialize to string: {:?}", e))?;
+                    println!("{}", proposal);
+                    Ok(())
                 }
             },
         }
@@ -513,6 +535,7 @@ fn check_latest_release(curr_version: &str) -> anyhow::Result<UpdateStatus> {
         std::fs::File::create(&new_dre_path).map_err(|e| anyhow::anyhow!("Couldn't create file: {:?}", e))?;
 
     self_update::Download::from_url(&asset.download_url)
+        .show_progress(true)
         .download_to(&asset_file)
         .map_err(|e| anyhow::anyhow!("Couldn't download asset: {:?}", e))?;
 
@@ -528,6 +551,7 @@ fn check_latest_release(curr_version: &str) -> anyhow::Result<UpdateStatus> {
     };
 
     self_update::Download::from_url(download_url)
+        .show_progress(true)
         .download_to(&new_dre_file)
         .map_err(|e| anyhow::anyhow!("Couldn't download binary: {:?}", e))?;
 

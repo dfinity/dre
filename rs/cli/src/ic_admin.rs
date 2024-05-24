@@ -35,7 +35,7 @@ use crate::defaults;
 use crate::detect_neuron::{Auth, Neuron};
 use crate::parsed_cli::ParsedCli;
 
-const MAX_SUMMARY_CHAR_COUNT: usize = 14000;
+const MAX_SUMMARY_CHAR_COUNT: usize = 29000;
 
 #[derive(Clone, Serialize, PartialEq)]
 enum FirewallRuleModificationType {
@@ -159,6 +159,15 @@ impl IcAdminWrapper {
         }
     }
 
+    pub fn as_automation(self) -> Self {
+        Self {
+            network: self.network,
+            ic_admin_bin_path: self.ic_admin_bin_path,
+            proceed_without_confirmation: self.proceed_without_confirmation,
+            neuron: self.neuron.as_automation(),
+        }
+    }
+
     pub fn from_cli(cli: ParsedCli) -> Self {
         Self {
             network: cli.network,
@@ -203,6 +212,7 @@ impl IcAdminWrapper {
                 ));
             }
         }
+
         self.run(
             &cmd.get_command_name(),
             [
@@ -229,12 +239,13 @@ impl IcAdminWrapper {
                         ]
                     })
                     .unwrap_or_default(),
-                self.neuron.as_arg_vec(!as_simulation).await?,
+                self.neuron.as_arg_vec(true).await?,
                 cmd.args(),
             ]
             .concat()
             .as_slice(),
-            !as_simulation,
+            true,
+            false,
         )
         .await
     }
@@ -255,10 +266,11 @@ impl IcAdminWrapper {
             self._exec(cmd.clone(), opts.clone(), true).await?;
         }
 
-        if Confirm::new()
-            .with_prompt("Do you want to continue?")
-            .default(false)
-            .interact()?
+        if self.proceed_without_confirmation
+            || Confirm::new()
+                .with_prompt("Do you want to continue?")
+                .default(false)
+                .interact()?
         {
             // User confirmed the desire to submit the proposal and no obvious problems were
             // found. Proceeding!
@@ -268,7 +280,12 @@ impl IcAdminWrapper {
         }
     }
 
-    async fn _run_ic_admin_with_args(&self, ic_admin_args: &[String], with_auth: bool) -> anyhow::Result<String> {
+    async fn _run_ic_admin_with_args(
+        &self,
+        ic_admin_args: &[String],
+        with_auth: bool,
+        silent: bool,
+    ) -> anyhow::Result<String> {
         let ic_admin_path = self.ic_admin_bin_path.clone().unwrap_or_else(|| "ic-admin".to_string());
         let mut cmd = Command::new(ic_admin_path);
         let auth_options = if with_auth {
@@ -283,7 +300,11 @@ impl IcAdminWrapper {
         .concat();
         let cmd = cmd.args([&root_options, ic_admin_args].concat());
 
-        self.print_ic_admin_command_line(cmd).await;
+        if silent {
+            cmd.stderr(Stdio::piped());
+        } else {
+            self.print_ic_admin_command_line(cmd).await;
+        }
         cmd.stdout(Stdio::piped());
 
         match cmd.spawn() {
@@ -295,15 +316,28 @@ impl IcAdminWrapper {
                             output
                                 .read_to_end(&mut readbuf)
                                 .map_err(|e| anyhow::anyhow!("Error reading output: {:?}", e))?;
-                            let converted = String::from_utf8_lossy(&readbuf).to_string();
-                            println!("{}", converted);
+                            let converted = String::from_utf8_lossy(&readbuf).trim().to_string();
+                            if !silent {
+                                println!("{}", converted);
+                            }
                             return Ok(converted);
                         }
                         Ok("".to_string())
                     } else {
+                        let readbuf = match child.stderr {
+                            Some(mut stderr) => {
+                                let mut readbuf = String::new();
+                                stderr
+                                    .read_to_string(&mut readbuf)
+                                    .map_err(|e| anyhow::anyhow!("Error reading output: {:?}", e))?;
+                                readbuf
+                            }
+                            None => "".to_string(),
+                        };
                         Err(anyhow::anyhow!(
-                            "ic-admin failed with non-zero exit code {}",
-                            s.code().map(|c| c.to_string()).unwrap_or_else(|| "<none>".to_string())
+                            "ic-admin failed with non-zero exit code {} stderr ==>\n{}",
+                            s.code().map(|c| c.to_string()).unwrap_or_else(|| "<none>".to_string()),
+                            readbuf
                         ))
                     }
                 }
@@ -313,9 +347,9 @@ impl IcAdminWrapper {
         }
     }
 
-    pub async fn run(&self, command: &str, args: &[String], with_auth: bool) -> anyhow::Result<String> {
+    pub async fn run(&self, command: &str, args: &[String], with_auth: bool, silent: bool) -> anyhow::Result<String> {
         let ic_admin_args = [&[command.to_string()], args].concat();
-        self._run_ic_admin_with_args(&ic_admin_args, with_auth).await
+        self._run_ic_admin_with_args(&ic_admin_args, with_auth, silent).await
     }
 
     /// Run ic-admin and parse sub-commands that it lists with "--help",
@@ -348,7 +382,7 @@ impl IcAdminWrapper {
     }
 
     /// Run an `ic-admin get-*` command directly, and without an HSM
-    pub async fn run_passthrough_get(&self, args: &[String]) -> anyhow::Result<()> {
+    pub async fn run_passthrough_get(&self, args: &[String], silent: bool) -> anyhow::Result<String> {
         if args.is_empty() {
             println!("List of available ic-admin 'get' sub-commands:\n");
             for subcmd in self.grep_subcommands(r"\s+get-(.+?)\s") {
@@ -375,9 +409,15 @@ impl IcAdminWrapper {
             args_with_get_prefix
         };
 
-        self.run(&args[0], &args.iter().skip(1).cloned().collect::<Vec<_>>(), false)
+        let stdout = self
+            .run(
+                &args[0],
+                &args.iter().skip(1).cloned().collect::<Vec<_>>(),
+                false,
+                silent,
+            )
             .await?;
-        Ok(())
+        Ok(stdout)
     }
 
     /// Run an `ic-admin propose-to-*` command directly
@@ -711,7 +751,7 @@ must be identical, and must match the SHA256 from the payload of the NNS proposa
             nns.replica_version_id, unassigned_version
         );
 
-        let command = ProposeCommand::UpdateUnassignedNodes {
+        let command = ProposeCommand::DeployGuestosToAllUnassignedNodes {
             replica_version: nns.replica_version_id.clone(),
         };
         let options = ProposeOptions {
@@ -924,30 +964,30 @@ pub enum ProposeCommand {
         node_ids_add: Vec<PrincipalId>,
         node_ids_remove: Vec<PrincipalId>,
     },
-    UpdateSubnetReplicaVersion {
+    DeployGuestosToAllSubnetNodes {
         subnet: PrincipalId,
+        version: String,
+    },
+    DeployGuestosToAllUnassignedNodes {
+        replica_version: String,
+    },
+    DeployHostosToSomeNodes {
+        nodes: Vec<PrincipalId>,
         version: String,
     },
     Raw {
         command: String,
         args: Vec<String>,
     },
-    UpdateNodesHostosVersion {
-        nodes: Vec<PrincipalId>,
-        version: String,
-    },
     RemoveNodes {
         nodes: Vec<PrincipalId>,
     },
-    UpdateElectedVersions {
+    ReviseElectedVersions {
         release_artifact: Artifact,
         args: Vec<String>,
     },
     CreateSubnet {
         node_ids: Vec<PrincipalId>,
-        replica_version: String,
-    },
-    UpdateUnassignedNodes {
         replica_version: String,
     },
 }
@@ -959,11 +999,12 @@ impl ProposeCommand {
             "{PROPOSE_CMD_PREFIX}{}",
             match self {
                 Self::Raw { command, args: _ } => command.trim_start_matches(PROPOSE_CMD_PREFIX).to_string(),
-                Self::UpdateElectedVersions {
+                Self::ReviseElectedVersions {
                     release_artifact,
                     args: _,
-                } => format!("update-elected-{}-versions", release_artifact),
-                Self::UpdateUnassignedNodes { replica_version: _ } => "update-unassigned-nodes-config".to_string(),
+                } => format!("revise-elected-{}-versions", release_artifact),
+                Self::DeployGuestosToAllUnassignedNodes { replica_version: _ } =>
+                    "deploy-guestos-to-all-unassigned-nodes".to_string(),
                 _ => self.to_string(),
             }
         )
@@ -999,17 +1040,17 @@ impl ProposeCommand {
                 },
             ]
             .concat(),
-            Self::UpdateSubnetReplicaVersion { subnet, version } => {
+            Self::DeployGuestosToAllSubnetNodes { subnet, version } => {
                 vec![subnet.to_string(), version.clone()]
             }
             Self::Raw { command: _, args } => args.clone(),
-            Self::UpdateNodesHostosVersion { nodes, version } => [
+            Self::DeployHostosToSomeNodes { nodes, version } => [
                 nodes.iter().map(|n| n.to_string()).collect::<Vec<_>>(),
                 vec!["--hostos-version-id".to_string(), version.to_string()],
             ]
             .concat(),
             Self::RemoveNodes { nodes } => nodes.iter().map(|n| n.to_string()).collect(),
-            Self::UpdateElectedVersions {
+            Self::ReviseElectedVersions {
                 release_artifact: _,
                 args,
             } => args.clone(),
@@ -1027,7 +1068,7 @@ impl ProposeCommand {
                 }
                 args
             }
-            Self::UpdateUnassignedNodes { replica_version } => {
+            Self::DeployGuestosToAllUnassignedNodes { replica_version } => {
                 vec!["--replica-version-id".to_string(), replica_version.clone()]
             }
         }
@@ -1114,7 +1155,7 @@ oSMDIQBa2NLmSmaqjDXej4rrJEuEhKIz7/pGXpxztViWhB+X9Q==
                 node_ids_add: vec![Default::default()],
                 node_ids_remove: vec![Default::default()],
             },
-            ProposeCommand::UpdateSubnetReplicaVersion {
+            ProposeCommand::DeployGuestosToAllSubnetNodes {
                 subnet: Default::default(),
                 version: "0000000000000000000000000000000000000000".to_string(),
             },
@@ -1178,7 +1219,7 @@ oSMDIQBa2NLmSmaqjDXej4rrJEuEhKIz7/pGXpxztViWhB+X9Q==
             .concat()
             .to_vec();
             let out = with_ic_admin(Default::default(), async {
-                cli.run(&cmd.get_command_name(), &vector, true)
+                cli.run(&cmd.get_command_name(), &vector, true, false)
                     .await
                     .map_err(|e| anyhow::anyhow!(e))
             })
