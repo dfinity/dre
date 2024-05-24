@@ -1,13 +1,12 @@
 [tool.poetry]
 name = "dre-repo"
-version = "0.2.0"
+version = "0.4.0"
 description = ""
 authors = ["DRE Team <dept-DRE@dfinity.org>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
 python = ">=3.10.0,<4"
-ansible = ">=7.0.0,<10.0.0"
 colorama = "*"
 elasticsearch = "<8.0,>=7.16"
 elasticsearch-dsl = "*"
@@ -52,6 +51,7 @@ mammoth = "^1.7.0"
 slack-sdk = "^3.27.1"
 git-changelog = "^2.5.1"
 wrapt = "1.16.0"
+poetry-plugin-export = "^1.8.0"
 
 
 [tool.poetry.group.dev.dependencies]
