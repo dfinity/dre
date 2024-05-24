@@ -535,6 +535,7 @@ fn check_latest_release(curr_version: &str) -> anyhow::Result<UpdateStatus> {
         std::fs::File::create(&new_dre_path).map_err(|e| anyhow::anyhow!("Couldn't create file: {:?}", e))?;
 
     self_update::Download::from_url(&asset.download_url)
+        .show_progress(true)
         .download_to(&asset_file)
         .map_err(|e| anyhow::anyhow!("Couldn't download asset: {:?}", e))?;
 
@@ -550,6 +551,7 @@ fn check_latest_release(curr_version: &str) -> anyhow::Result<UpdateStatus> {
     };
 
     self_update::Download::from_url(download_url)
+        .show_progress(true)
         .download_to(&new_dre_file)
         .map_err(|e| anyhow::anyhow!("Couldn't download binary: {:?}", e))?;
 
