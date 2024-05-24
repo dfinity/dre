@@ -606,7 +606,17 @@ impl Network {
             "staging" => (
                 "staging".to_string(),
                 if nns_urls.is_empty() {
-                    vec![Url::from_str("http://[2600:3000:6100:200:5000:b0ff:fe8e:6b7b]:8080").unwrap()]
+                    [
+                        "http://[2600:2c01:21:0:5000:d7ff:fe63:6512]:8080/",
+                        "http://[2600:2c01:21:0:5000:beff:fecb:ff53]:8080/",
+                        "http://[2600:3000:6100:200:5000:14ff:fecd:3307]:8080/",
+                        "http://[2600:3000:6100:200:5000:47ff:fee3:1779]:8080/",
+                        "http://[2604:7e00:50:0:5000:a2ff:fed7:e98c]:8080/",
+                        "http://[2600:3000:6100:200:5000:b0ff:fe8e:6b7b]:8080/",
+                    ]
+                    .iter()
+                    .map(|s| Url::from_str(s).unwrap())
+                    .collect()
                 } else {
                     nns_urls.clone()
                 },
@@ -653,6 +663,10 @@ impl Network {
             "mainnet" => "mercury".to_string(),
             _ => self.name.clone(),
         }
+    }
+
+    pub fn is_mainnet(&self) -> bool {
+        self.name == "mainnet"
     }
 }
 
