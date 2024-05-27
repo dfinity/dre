@@ -12,9 +12,12 @@ inputs:
 runs:
   using: composite
   steps:
-  - name: "👮‍♀️ Setup runner"
-    shell: bash
-    run: sudo chown -R 1001:1001 ~/.cache
+    - name: "👮‍♀️ Setup runner"
+      shell: bash
+      run: |
+        set -euo pipefail
+        sudo chown -R 1001:1001 ~/.cache
+        echo "Changed ownership of cache to 1001:1001"
 
     ########################################
     # Setup
