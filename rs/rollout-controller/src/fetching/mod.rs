@@ -28,9 +28,7 @@ pub async fn resolve(subcmd: Commands, logger: Logger) -> anyhow::Result<Rollout
         }) => SparseCheckoutFetcher::new(logger, repo_path, repo_url, release_index)
             .await
             .map(RolloutScheduleFetcherImplementation::Git),
-        Commands::Curl(CurlFetcherConfig { url }) => {
-            CurlFetcher::new(logger, url).map(RolloutScheduleFetcherImplementation::Curl)
-        }
+        Commands::Curl(CurlFetcherConfig { url }) => CurlFetcher::new(logger, url).map(RolloutScheduleFetcherImplementation::Curl),
     }
 }
 

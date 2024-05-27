@@ -48,18 +48,16 @@ enum HealthStatusQuerierImplementations {
 
 impl From<Network> for HealthStatusQuerierImplementations {
     fn from(value: Network) -> Self {
-        match value.name.as_str() {
-            "mainnet" => HealthStatusQuerierImplementations::Dashboard(PublicDashboardHealthClient::new(None)),
-            _ => HealthStatusQuerierImplementations::Prometheus(PrometheusHealthClient::new(value.clone())),
+        if value.is_mainnet() {
+            HealthStatusQuerierImplementations::Dashboard(PublicDashboardHealthClient::new(None))
+        } else {
+            HealthStatusQuerierImplementations::Prometheus(PrometheusHealthClient::new(value))
         }
     }
 }
 
 pub trait HealthStatusQuerier {
-    fn subnet(
-        &self,
-        subnet: PrincipalId,
-    ) -> impl std::future::Future<Output = anyhow::Result<BTreeMap<PrincipalId, Status>>> + Send;
+    fn subnet(&self, subnet: PrincipalId) -> impl std::future::Future<Output = anyhow::Result<BTreeMap<PrincipalId, Status>>> + Send;
     fn nodes(&self) -> impl std::future::Future<Output = anyhow::Result<BTreeMap<PrincipalId, Status>>> + Send;
 }
 
@@ -111,11 +109,7 @@ impl PublicDashboardHealthClient {
         let mut response = vec![];
 
         let nodes = match nodes.as_array() {
-            None => {
-                return Err(anyhow::anyhow!(
-                    "Unexpected data contract. Couldn't parse response as array"
-                ))
-            }
+            None => return Err(anyhow::anyhow!("Unexpected data contract. Couldn't parse response as array")),
             Some(n) => n,
         };
 
@@ -132,10 +126,7 @@ impl PublicDashboardHealthClient {
                     match PrincipalId::from_str(p) {
                         Ok(p) => p,
                         Err(e) => {
-                            warn!(
-                                "Couldn't parse principal from string {} which shouldn't happen! Error: {:?}",
-                                p, e
-                            );
+                            warn!("Couldn't parse principal from string {} which shouldn't happen! Error: {:?}", p, e);
                             continue;
                         }
                     }
@@ -164,10 +155,7 @@ impl PublicDashboardHealthClient {
                         // Serde returns quoted strings but if the value is null it doesn't quote it, meaning we get (after skipping) 'ul'
                         Err(_) if p == "ul" => None,
                         Err(e) => {
-                            warn!(
-                                "Couldn't parse principal from string '{}' which shouldn't happen! Error: {:?}",
-                                p, e
-                            );
+                            warn!("Couldn't parse principal from string '{}' which shouldn't happen! Error: {:?}", p, e);
                             None
                         }
                     }
@@ -213,12 +201,7 @@ impl HealthStatusQuerier for PublicDashboardHealthClient {
     }
 
     async fn nodes(&self) -> anyhow::Result<BTreeMap<PrincipalId, Status>> {
-        Ok(self
-            .get_all_nodes()
-            .await?
-            .into_iter()
-            .map(|n| (n.node_id, n.status))
-            .collect())
+        Ok(self.get_all_nodes().await?.into_iter().map(|n| (n.node_id, n.status)).collect())
     }
 }
 
@@ -266,21 +249,18 @@ impl HealthStatusQuerier for PrometheusHealthClient {
         Ok(instant_up
             .iter()
             .filter_map(|r| {
-                r.metric()
-                    .get("ic_node")
-                    .and_then(|id| PrincipalId::from_str(id).ok())
-                    .map(|id| {
-                        let status = if r.sample().value() == 1.0 {
-                            if node_ids_with_alerts.contains(&id) {
-                                Status::Degraded
-                            } else {
-                                Status::Healthy
-                            }
+                r.metric().get("ic_node").and_then(|id| PrincipalId::from_str(id).ok()).map(|id| {
+                    let status = if r.sample().value() == 1.0 {
+                        if node_ids_with_alerts.contains(&id) {
+                            Status::Degraded
                         } else {
-                            Status::Dead
-                        };
-                        (id, status)
-                    })
+                            Status::Healthy
+                        }
+                    } else {
+                        Status::Dead
+                    };
+                    (id, status)
+                })
             })
             .collect())
     }
@@ -297,9 +277,7 @@ impl HealthStatusQuerier for PrometheusHealthClient {
             .filter_map(|r| {
                 let status = Status::from_str(r.metric().get("state").expect("all vectors should have a state label"))
                     .expect("all vectors should have a valid label");
-                r.metric()
-                    .get("ic_node")
-                    .map(|id| (PrincipalId::from_str(id).unwrap(), status))
+                r.metric().get("ic_node").map(|id| (PrincipalId::from_str(id).unwrap(), status))
             })
             .collect())
     }

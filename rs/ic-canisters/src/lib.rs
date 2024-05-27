@@ -31,10 +31,7 @@ impl CanisterClient {
         let sender = Sender::from_external_hsm(
             UtilityCommand::read_public_key(Some(&slot.to_string()), Some(&key_id)).execute()?,
             std::sync::Arc::new(move |input| {
-                Ok(
-                    UtilityCommand::sign_message(input.to_vec(), Some(&slot.to_string()), Some(&pin), Some(&key_id))
-                        .execute()?,
-                )
+                Ok(UtilityCommand::sign_message(input.to_vec(), Some(&slot.to_string()), Some(&pin), Some(&key_id)).execute()?)
             }),
         );
 
@@ -69,8 +66,7 @@ impl IcAgentCanisterClient {
         let identity: Box<dyn Identity> = if let Ok(identity) = BasicIdentity::from_pem_file(&path) {
             Box::new(identity)
         } else {
-            let identity = Secp256k1Identity::from_pem_file(&path)
-                .map_err(|e| anyhow::anyhow!("Couldn't load identity: {:?}", e))?;
+            let identity = Secp256k1Identity::from_pem_file(&path).map_err(|e| anyhow::anyhow!("Couldn't load identity: {:?}", e))?;
             Box::new(identity)
         };
         Self::build_agent(url, identity)

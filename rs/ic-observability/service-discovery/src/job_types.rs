@@ -141,12 +141,9 @@ impl JobType {
     }
 
     pub fn all_for_logs() -> Vec<Self> {
-        [
-            JobType::NodeExporter(NodeOS::Guest),
-            JobType::NodeExporter(NodeOS::Host),
-        ]
-        .into_iter()
-        .collect::<Vec<Self>>()
+        [JobType::NodeExporter(NodeOS::Guest), JobType::NodeExporter(NodeOS::Host)]
+            .into_iter()
+            .collect::<Vec<Self>>()
     }
 }
 

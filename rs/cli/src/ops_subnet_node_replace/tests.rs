@@ -12,9 +12,7 @@ fn replace_proposal_options_1_node() {
             .unwrap()
             .into(),
         added: vec![PrincipalId::from_str("afx6y-22h67-ct72t-etddn-t2jaz-gfsrz-u3yxw-oocjp-gj3za-de3ot-2ae").unwrap()],
-        removed: vec![
-            PrincipalId::from_str("z3tum-w7bue-lt6ca-qgynf-us6oq-nc3qc-7miiq-34rbp-ekuoa-g6cqr-wqe").unwrap(),
-        ],
+        removed: vec![PrincipalId::from_str("z3tum-w7bue-lt6ca-qgynf-us6oq-nc3qc-7miiq-34rbp-ekuoa-g6cqr-wqe").unwrap()],
         motivation: Some("For testing purposes".to_string()),
         ..Default::default()
     };

@@ -65,10 +65,7 @@ impl SnsCanisterConfigStructure {
                 sources.insert(key.clone(), Box::new(source) as Box<dyn VectorSource>);
 
                 let mut transforms = HashMap::new();
-                transforms.insert(
-                    format!("{}-transform", key),
-                    Box::new(transform) as Box<dyn VectorTransform>,
-                );
+                transforms.insert(format!("{}-transform", key), Box::new(transform) as Box<dyn VectorTransform>);
 
                 config.add_target_group(sources, transforms)
             }

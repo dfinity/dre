@@ -55,10 +55,8 @@ async fn async_main() -> Result<(), anyhow::Error> {
     // Start of actually doing stuff with commands.
     if target_network.name == "staging" {
         if cli_opts.private_key_pem.is_none() {
-            cli_opts.private_key_pem = Some(
-                std::env::var("HOME").expect("Please set HOME env var")
-                    + "/.config/dfx/identity/bootstrap-super-leader/identity.pem",
-            );
+            cli_opts.private_key_pem =
+                Some(std::env::var("HOME").expect("Please set HOME env var") + "/.config/dfx/identity/bootstrap-super-leader/identity.pem");
         }
         if cli_opts.neuron_id.is_none() {
             cli_opts.neuron_id = Some(STAGING_NEURON_ID);
@@ -66,12 +64,7 @@ async fn async_main() -> Result<(), anyhow::Error> {
     }
     let governance_canister_v = match governance_canister_version(nns_urls).await {
         Ok(c) => c,
-        Err(e) => {
-            return Err(anyhow::anyhow!(
-                "While determining the governance canister version: {}",
-                e
-            ))
-        }
+        Err(e) => return Err(anyhow::anyhow!("While determining the governance canister version: {}", e)),
     };
 
     let governance_canister_version = governance_canister_v.stringified_hash;
@@ -92,13 +85,16 @@ async fn async_main() -> Result<(), anyhow::Error> {
     let srv = rx.recv().unwrap();
 
     let r = ic_admin::with_ic_admin(governance_canister_version.into(), async {
-
         let simulate = cli_opts.simulate;
 
         let runner_instance = {
-            let cli = dre::parsed_cli::ParsedCli::from_opts(&cli_opts).await.expect("Failed to create authenticated CLI");
+            let cli = dre::parsed_cli::ParsedCli::from_opts(&cli_opts)
+                .await
+                .expect("Failed to create authenticated CLI");
             let ic_admin_wrapper = IcAdminWrapper::from_cli(cli);
-            runner::Runner::new_with_network_and_backend_port(ic_admin_wrapper, &target_network, backend_port).await.expect("Failed to create a runner")
+            runner::Runner::new_with_network_and_backend_port(ic_admin_wrapper, &target_network, backend_port)
+                .await
+                .expect("Failed to create a runner")
         };
 
         match &cli_opts.subcommand {
@@ -112,14 +108,10 @@ async fn async_main() -> Result<(), anyhow::Error> {
                 match &subnet.subcommand {
                     cli::subnet::Commands::Deploy { .. } | cli::subnet::Commands::Resize { .. } => {
                         if subnet.id.is_none() {
-                            cmd.error(ErrorKind::MissingRequiredArgument, "Required argument `id` not found")
-                                .exit();
+                            cmd.error(ErrorKind::MissingRequiredArgument, "Required argument `id` not found").exit();
                         }
                     }
-                    cli::subnet::Commands::Replace {
-                        nodes,
-                        ..
-                    } => {
+                    cli::subnet::Commands::Replace { nodes, .. } => {
                         if !nodes.is_empty() && subnet.id.is_some() {
                             cmd.error(
                                 ErrorKind::ArgumentConflict,
@@ -138,9 +130,7 @@ async fn async_main() -> Result<(), anyhow::Error> {
                 }
 
                 match &subnet.subcommand {
-                    cli::subnet::Commands::Deploy { version } => {
-                        runner_instance.deploy(&subnet.id.unwrap(), version, simulate).await
-                    },
+                    cli::subnet::Commands::Deploy { version } => runner_instance.deploy(&subnet.id.unwrap(), version, simulate).await,
                     cli::subnet::Commands::Replace {
                         nodes,
                         no_heal,
@@ -152,12 +142,11 @@ async fn async_main() -> Result<(), anyhow::Error> {
                         min_nakamoto_coefficients,
                     } => {
                         let min_nakamoto_coefficients = parse_min_nakamoto_coefficients(&mut cmd, min_nakamoto_coefficients);
-                            runner_instance
-                                .membership_replace(ic_management_types::requests::MembershipReplaceRequest {
+                        runner_instance
+                            .membership_replace(
+                                ic_management_types::requests::MembershipReplaceRequest {
                                     target: match &subnet.id {
-                                        Some(subnet) => {
-                                            ic_management_types::requests::ReplaceTarget::Subnet(*subnet)
-                                        }
+                                        Some(subnet) => ic_management_types::requests::ReplaceTarget::Subnet(*subnet),
                                         None => {
                                             if let Some(motivation) = motivation.clone() {
                                                 ic_management_types::requests::ReplaceTarget::Nodes {
@@ -165,11 +154,8 @@ async fn async_main() -> Result<(), anyhow::Error> {
                                                     motivation,
                                                 }
                                             } else {
-                                                cmd.error(
-                                                    ErrorKind::MissingRequiredArgument,
-                                                    "Required argument `motivation` not found",
-                                                )
-                                                .exit();
+                                                cmd.error(ErrorKind::MissingRequiredArgument, "Required argument `motivation` not found")
+                                                    .exit();
                                             }
                                         }
                                     },
@@ -179,146 +165,234 @@ async fn async_main() -> Result<(), anyhow::Error> {
                                     only: only.clone(),
                                     include: include.clone().into(),
                                     min_nakamoto_coefficients,
-                                }, cli_opts.verbose, simulate)
-                                .await
-                    }
-                    cli::subnet::Commands::Resize { add, remove, include, only, exclude, motivation, } => {
-                        if let Some(motivation) = motivation.clone() {
-                            runner_instance.subnet_resize(ic_management_types::requests::SubnetResizeRequest {
-                                subnet: subnet.id.unwrap(),
-                                add: *add,
-                                remove: *remove,
-                                only: only.clone().into(),
-                                exclude: exclude.clone().into(),
-                                include: include.clone().into(),
-                            }, motivation, cli_opts.verbose, simulate).await
-                        } else {
-                            cmd.error(
-                                ErrorKind::MissingRequiredArgument,
-                                "Required argument `motivation` not found",
+                                },
+                                cli_opts.verbose,
+                                simulate,
                             )
-                            .exit();
+                            .await
+                    }
+                    cli::subnet::Commands::Resize {
+                        add,
+                        remove,
+                        include,
+                        only,
+                        exclude,
+                        motivation,
+                    } => {
+                        if let Some(motivation) = motivation.clone() {
+                            runner_instance
+                                .subnet_resize(
+                                    ic_management_types::requests::SubnetResizeRequest {
+                                        subnet: subnet.id.unwrap(),
+                                        add: *add,
+                                        remove: *remove,
+                                        only: only.clone().into(),
+                                        exclude: exclude.clone().into(),
+                                        include: include.clone().into(),
+                                    },
+                                    motivation,
+                                    cli_opts.verbose,
+                                    simulate,
+                                )
+                                .await
+                        } else {
+                            cmd.error(ErrorKind::MissingRequiredArgument, "Required argument `motivation` not found")
+                                .exit();
                         }
                     }
-                    cli::subnet::Commands::Create { size, min_nakamoto_coefficients, exclude, only, include, motivation, replica_version } => {
+                    cli::subnet::Commands::Create {
+                        size,
+                        min_nakamoto_coefficients,
+                        exclude,
+                        only,
+                        include,
+                        motivation,
+                        replica_version,
+                    } => {
                         let min_nakamoto_coefficients = parse_min_nakamoto_coefficients(&mut cmd, min_nakamoto_coefficients);
                         if let Some(motivation) = motivation.clone() {
-                            runner_instance.subnet_create(ic_management_types::requests::SubnetCreateRequest {
-                                size: *size,
-                                min_nakamoto_coefficients,
-                                only: only.clone().into(),
-                                exclude: exclude.clone().into(),
-                                include: include.clone().into(),
-                            }, motivation, cli_opts.verbose, simulate, replica_version.clone()).await
+                            runner_instance
+                                .subnet_create(
+                                    ic_management_types::requests::SubnetCreateRequest {
+                                        size: *size,
+                                        min_nakamoto_coefficients,
+                                        only: only.clone().into(),
+                                        exclude: exclude.clone().into(),
+                                        include: include.clone().into(),
+                                    },
+                                    motivation,
+                                    cli_opts.verbose,
+                                    simulate,
+                                    replica_version.clone(),
+                                )
+                                .await
                         } else {
-                            cmd.error(
-                                ErrorKind::MissingRequiredArgument,
-                                "Required argument `motivation` not found",
-                            )
-                            .exit();
+                            cmd.error(ErrorKind::MissingRequiredArgument, "Required argument `motivation` not found")
+                                .exit();
                         }
                     }
                 }
             }
 
             cli::Commands::Get { args } => {
-                runner_instance.ic_admin.run_passthrough_get(args).await
-            },
-
-            cli::Commands::Propose { args } => {
-                runner_instance.ic_admin.run_passthrough_propose(args, simulate).await
-            },
-
-            cli::Commands::UpdateUnassignedNodes { nns_subnet_id } => {
-                runner_instance.ic_admin.update_unassigned_nodes( nns_subnet_id, &target_network, simulate).await
-            },
-
-            cli::Commands::Version(version_command) => {
-                match &version_command {
-                    cli::version::Cmd::Update(update_command) => {
-                        let release_artifact: &Artifact = &update_command.subcommand.clone().into();
-
-                        let update_version = match &update_command.subcommand {
-                            cli::version::UpdateCommands::Replica { version, release_tag, force} | cli::version::UpdateCommands::HostOS { version, release_tag, force} => {
-                                ic_admin::IcAdminWrapper::prepare_to_propose_to_update_elected_versions(
-                                    release_artifact,
-                                    version,
-                                    release_tag,
-                                    *force,
-                                    runner_instance.prepare_versions_to_retire(release_artifact, false).await.map(|res| res.1)?,
-                                )
-                            }
-                        }.await?;
-
-                        runner_instance.ic_admin.propose_run(ic_admin::ProposeCommand::UpdateElectedVersions {
-                                                 release_artifact: update_version.release_artifact.clone(),
-                                                 args: dre::parsed_cli::ParsedCli::get_update_cmd_args(&update_version)
-                                             },
-                                             ic_admin::ProposeOptions{
-                                                 title: Some(update_version.title),
-                                                 summary: Some(update_version.summary.clone()),
-                                                 motivation: None,
-                                             }, simulate).await?;
-                        Ok(())
-                    }
-                }
-            },
-
-            cli::Commands::Hostos(nodes) => {
-                match &nodes.subcommand {
-                    cli::hostos::Commands::Rollout { version,nodes} => {
-                        runner_instance.hostos_rollout(nodes.clone(), version, simulate, None).await
-                    },
-                    cli::hostos::Commands::RolloutFromNodeGroup {version, assignment, owner, nodes_in_group, exclude } => {
-                        let update_group  = NodeGroupUpdate::new(*assignment, *owner, NumberOfNodes::from_str(nodes_in_group)?);
-                        if let Some((nodes_to_update, summary)) = runner_instance.hostos_rollout_nodes(update_group, version, exclude).await? {
-                            return runner_instance.hostos_rollout(nodes_to_update, version, simulate, Some(summary)).await
-                        }
-                        Ok(())
-                    }
-                }
-            },
-            cli::Commands::Nodes(nodes) => {
-                match &nodes.subcommand {
-                    cli::nodes::Commands::Remove { extra_nodes_filter, no_auto, remove_degraded, exclude, motivation } => {
-                        if motivation.is_none() && !extra_nodes_filter.is_empty() {
-                            cmd.error(
-                                ErrorKind::MissingRequiredArgument,
-                                "Required argument `motivation` not found",
-                            )
-                            .exit();
-                        }
-                        runner_instance.remove_nodes(NodesRemoveRequest {
-                            extra_nodes_filter: extra_nodes_filter.clone(),
-                            no_auto: *no_auto,
-                            remove_degraded: *remove_degraded,
-                            exclude: Some(exclude.clone()),
-                            motivation: motivation.clone().unwrap_or_default(),
-                        }, simulate).await
-                    },
-                }
-            },
-
-            cli::Commands::Vote {accepted_neurons, accepted_topics}=> {
-                let cli = dre::parsed_cli::ParsedCli::from_opts(&cli_opts).await?;
-                vote_on_proposals(cli.get_neuron(), target_network.get_nns_urls(), accepted_neurons, accepted_topics, simulate).await
-            },
-
-            cli::Commands::TrustworthyMetrics { wallet, start_at_timestamp, subnet_ids } => {
-                let auth = Auth::from_cli_args(cli_opts.private_key_pem, cli_opts.hsm_slot, cli_opts.hsm_pin, cli_opts.hsm_key_id)?;
-                get_node_metrics_history(CanisterId::from_str(wallet)?, subnet_ids.clone(), *start_at_timestamp, &auth, target_network.get_nns_urls()).await
-            },
-
-            cli::Commands::DumpRegistry { version, path } => {
-                registry_dump::dump_registry(path, &target_network, version).await
+                runner_instance.ic_admin.run_passthrough_get(args, false).await?;
+                Ok(())
             }
 
-            cli::Commands::Firewall{title, summary} => {
-                runner_instance.ic_admin.update_replica_nodes_firewall(&target_network, ic_admin::ProposeOptions{
-                    title: title.clone(),
-                    summary: summary.clone(),
-                    ..Default::default()
-                }, cli_opts.simulate).await
+            cli::Commands::Propose { args } => runner_instance.ic_admin.run_passthrough_propose(args, simulate).await,
+
+            cli::Commands::UpdateUnassignedNodes { nns_subnet_id } => {
+                let runner_instance = if target_network.is_mainnet() {
+                    runner_instance.as_automation()
+                } else {
+                    runner_instance
+                };
+                let nns_subnet_id = match nns_subnet_id {
+                    Some(subnet_id) => subnet_id.to_owned(),
+                    None => {
+                        let res = runner_instance
+                            .ic_admin
+                            .run_passthrough_get(&["get-subnet-list".to_string()], true)
+                            .await?;
+                        let subnet_list: Vec<String> = serde_json::from_str(&res)?;
+                        subnet_list.first().ok_or_else(|| anyhow::anyhow!("No subnet found"))?.clone()
+                    }
+                };
+                runner_instance
+                    .ic_admin
+                    .update_unassigned_nodes(&nns_subnet_id, &target_network, simulate)
+                    .await
+            }
+
+            cli::Commands::Version(version_command) => match &version_command {
+                cli::version::Cmd::Update(update_command) => {
+                    let release_artifact: &Artifact = &update_command.subcommand.clone().into();
+
+                    let update_version = match &update_command.subcommand {
+                        cli::version::UpdateCommands::GuestOS { version, release_tag, force }
+                        | cli::version::UpdateCommands::HostOS { version, release_tag, force } => {
+                            ic_admin::IcAdminWrapper::prepare_to_propose_to_update_elected_versions(
+                                release_artifact,
+                                version,
+                                release_tag,
+                                *force,
+                                runner_instance
+                                    .prepare_versions_to_retire(release_artifact, false)
+                                    .await
+                                    .map(|res| res.1)?,
+                            )
+                        }
+                    }
+                    .await?;
+
+                    runner_instance
+                        .ic_admin
+                        .propose_run(
+                            ic_admin::ProposeCommand::ReviseElectedVersions {
+                                release_artifact: update_version.release_artifact.clone(),
+                                args: dre::parsed_cli::ParsedCli::get_update_cmd_args(&update_version),
+                            },
+                            ic_admin::ProposeOptions {
+                                title: Some(update_version.title),
+                                summary: Some(update_version.summary.clone()),
+                                motivation: None,
+                            },
+                            simulate,
+                        )
+                        .await?;
+                    Ok(())
+                }
+            },
+
+            cli::Commands::Hostos(nodes) => match &nodes.subcommand {
+                cli::hostos::Commands::Rollout { version, nodes } => runner_instance.hostos_rollout(nodes.clone(), version, simulate, None).await,
+                cli::hostos::Commands::RolloutFromNodeGroup {
+                    version,
+                    assignment,
+                    owner,
+                    nodes_in_group,
+                    exclude,
+                } => {
+                    let update_group = NodeGroupUpdate::new(*assignment, *owner, NumberOfNodes::from_str(nodes_in_group)?);
+                    if let Some((nodes_to_update, summary)) = runner_instance.hostos_rollout_nodes(update_group, version, exclude).await? {
+                        return runner_instance.hostos_rollout(nodes_to_update, version, simulate, Some(summary)).await;
+                    }
+                    Ok(())
+                }
+            },
+            cli::Commands::Nodes(nodes) => match &nodes.subcommand {
+                cli::nodes::Commands::Remove {
+                    extra_nodes_filter,
+                    no_auto,
+                    remove_degraded,
+                    exclude,
+                    motivation,
+                } => {
+                    if motivation.is_none() && !extra_nodes_filter.is_empty() {
+                        cmd.error(ErrorKind::MissingRequiredArgument, "Required argument `motivation` not found")
+                            .exit();
+                    }
+                    runner_instance
+                        .remove_nodes(
+                            NodesRemoveRequest {
+                                extra_nodes_filter: extra_nodes_filter.clone(),
+                                no_auto: *no_auto,
+                                remove_degraded: *remove_degraded,
+                                exclude: Some(exclude.clone()),
+                                motivation: motivation.clone().unwrap_or_default(),
+                            },
+                            simulate,
+                        )
+                        .await
+                }
+            },
+
+            cli::Commands::Vote {
+                accepted_neurons,
+                accepted_topics,
+            } => {
+                let cli = dre::parsed_cli::ParsedCli::from_opts(&cli_opts).await?;
+                vote_on_proposals(
+                    cli.get_neuron(),
+                    target_network.get_nns_urls(),
+                    accepted_neurons,
+                    accepted_topics,
+                    simulate,
+                )
+                .await
+            }
+
+            cli::Commands::TrustworthyMetrics {
+                wallet,
+                start_at_timestamp,
+                subnet_ids,
+            } => {
+                let auth = Auth::from_cli_args(cli_opts.private_key_pem, cli_opts.hsm_slot, cli_opts.hsm_pin, cli_opts.hsm_key_id)?;
+                get_node_metrics_history(
+                    CanisterId::from_str(wallet)?,
+                    subnet_ids.clone(),
+                    *start_at_timestamp,
+                    &auth,
+                    target_network.get_nns_urls(),
+                )
+                .await
+            }
+
+            cli::Commands::DumpRegistry { version, path } => registry_dump::dump_registry(path, &target_network, version).await,
+
+            cli::Commands::Firewall { title, summary } => {
+                runner_instance
+                    .ic_admin
+                    .update_replica_nodes_firewall(
+                        &target_network,
+                        ic_admin::ProposeOptions {
+                            title: title.clone(),
+                            summary: summary.clone(),
+                            ..Default::default()
+                        },
+                        cli_opts.simulate,
+                    )
+                    .await
             }
             cli::Commands::Proposals(p) => match &p.subcommand {
                 cli::proposals::Commands::Pending => {
@@ -329,24 +403,55 @@ async fn async_main() -> Result<(), anyhow::Error> {
                     println!("{}", proposals);
                     Ok(())
                 }
-                cli::proposals::Commands::List { limit, before_proposal, exclude_topic, include_reward_status, include_status, include_all_manage_neuron_proposals, omit_large_fields } => {
+                cli::proposals::Commands::List {
+                    limit,
+                    before_proposal,
+                    exclude_topic,
+                    include_reward_status,
+                    include_status,
+                    include_all_manage_neuron_proposals,
+                    omit_large_fields,
+                } => {
                     let nns_url = target_network.get_nns_urls().first().expect("Should have at least one NNS URL");
                     let client = GovernanceCanisterWrapper::from(CanisterClient::from_anonymous(nns_url)?);
-                    let proposals = client.list_proposals(ListProposalInfo {
-                        before_proposal: before_proposal.as_ref().map(|p| ProposalId { id: *p }),
-                        exclude_topic: exclude_topic.clone(),
-                        include_all_manage_neuron_proposals: *include_all_manage_neuron_proposals,
-                        include_reward_status: include_reward_status.clone(),
-                        include_status: include_status.clone(),
-                        limit: *limit,
-                        omit_large_fields: *omit_large_fields
-                    }).await?;
-                    let proposals = serde_json::to_string(&proposals).map_err(|e| anyhow::anyhow!("Couldn't serialize to string: {:?}", e))?;
+                    let proposals = client
+                        .list_proposals(ListProposalInfo {
+                            before_proposal: before_proposal.as_ref().map(|p| ProposalId { id: *p }),
+                            exclude_topic: exclude_topic.clone(),
+                            include_all_manage_neuron_proposals: *include_all_manage_neuron_proposals,
+                            include_reward_status: include_reward_status.clone(),
+                            include_status: include_status.clone(),
+                            limit: *limit,
+                            omit_large_fields: *omit_large_fields,
+                        })
+                        .await?
+                        .into_iter()
+                        .map(|p| {
+                            dre::general::Proposal::try_from(p.clone())
+                                .map(|r| serde_json::to_value(r).expect("cannot serialize to json"))
+                                .unwrap_or_else(|_e| serde_json::to_value(p).expect("cannot serialize to json"))
+                        })
+                        .collect::<Vec<_>>();
+                    let proposals = serde_json::to_string_pretty(&proposals).map_err(|e| anyhow::anyhow!("Couldn't serialize to string: {:?}", e))?;
                     println!("{}", proposals);
                     Ok(())
-                },
+                }
                 cli::proposals::Commands::Filter { limit, statuses, topics } => {
-                    filter_proposals(target_network, limit, statuses.iter().map(|s| s.clone().into()).collect(), topics.iter().map(|t| t.clone().into()).collect()).await
+                    filter_proposals(
+                        target_network,
+                        limit,
+                        statuses.iter().map(|s| s.clone().into()).collect(),
+                        topics.iter().map(|t| t.clone().into()).collect(),
+                    )
+                    .await
+                }
+                cli::proposals::Commands::Get { proposal_id } => {
+                    let nns_url = target_network.get_nns_urls().first().expect("Should have at least one NNS URL");
+                    let client = GovernanceCanisterWrapper::from(CanisterClient::from_anonymous(nns_url)?);
+                    let proposal = client.get_proposal(*proposal_id).await?;
+                    let proposal = serde_json::to_string_pretty(&proposal).map_err(|e| anyhow::anyhow!("Couldn't serialize to string: {:?}", e))?;
+                    println!("{}", proposal);
+                    Ok(())
                 }
             },
         }
@@ -378,15 +483,9 @@ async fn async_main() -> Result<(), anyhow::Error> {
 //           -> "data_centers" NC >= 4.0
 //           -> "node_provider" NC >= 5.0 (default)
 //           -> average NC >= 3.0 (default)
-fn parse_min_nakamoto_coefficients(
-    cmd: &mut clap::Command,
-    min_nakamoto_coefficients: &[String],
-) -> Option<MinNakamotoCoefficients> {
+fn parse_min_nakamoto_coefficients(cmd: &mut clap::Command, min_nakamoto_coefficients: &[String]) -> Option<MinNakamotoCoefficients> {
     let min_nakamoto_coefficients: Vec<String> = if min_nakamoto_coefficients.is_empty() {
-        ["node_provider=5", "average=3"]
-            .iter()
-            .map(|s| String::from(*s))
-            .collect()
+        ["node_provider=5", "average=3"].iter().map(|s| String::from(*s)).collect()
     } else {
         min_nakamoto_coefficients.to_vec()
     };
@@ -397,32 +496,22 @@ fn parse_min_nakamoto_coefficients(
         .filter_map(|s| {
             let (key, val) = match s.split_once('=') {
                 Some(s) => s,
-                None => cmd
-                    .error(ErrorKind::ValueValidation, "Value requires exactly one '=' symbol")
-                    .exit(),
+                None => cmd.error(ErrorKind::ValueValidation, "Value requires exactly one '=' symbol").exit(),
             };
             if key.to_lowercase() == "average" {
                 average = val
                     .parse::<f64>()
-                    .map_err(|_| {
-                        cmd.error(ErrorKind::ValueValidation, "Failed to parse feature from string")
-                            .exit()
-                    })
+                    .map_err(|_| cmd.error(ErrorKind::ValueValidation, "Failed to parse feature from string").exit())
                     .unwrap();
                 None
             } else {
                 let feature = match NodeFeature::from_str(key) {
                     Ok(v) => v,
-                    Err(_) => cmd
-                        .error(ErrorKind::ValueValidation, "Failed to parse feature from string")
-                        .exit(),
+                    Err(_) => cmd.error(ErrorKind::ValueValidation, "Failed to parse feature from string").exit(),
                 };
                 let val: f64 = val
                     .parse::<f64>()
-                    .map_err(|_| {
-                        cmd.error(ErrorKind::ValueValidation, "Failed to parse feature from string")
-                            .exit()
-                    })
+                    .map_err(|_| cmd.error(ErrorKind::ValueValidation, "Failed to parse feature from string").exit())
                     .unwrap();
                 Some((feature, val))
             }
@@ -452,12 +541,7 @@ fn init_logger() {
 
 fn check_latest_release(curr_version: &str) -> anyhow::Result<UpdateStatus> {
     let current_version = match curr_version.split_once('-') {
-        None => {
-            return Err(anyhow::anyhow!(
-                "Version '{}' doesn't follow expected naming",
-                curr_version
-            ))
-        }
+        None => return Err(anyhow::anyhow!("Version '{}' doesn't follow expected naming", curr_version)),
         Some((ver, _)) => ver,
     };
 
@@ -507,19 +591,18 @@ fn check_latest_release(curr_version: &str) -> anyhow::Result<UpdateStatus> {
 
     let new_dre_path = tmp_dir.path().join(&asset.name);
     let asset_path = tmp_dir.path().join("asset");
-    let asset_file =
-        std::fs::File::create(&asset_path).map_err(|e| anyhow::anyhow!("Couldn't create file: {:?}", e))?;
-    let new_dre_file =
-        std::fs::File::create(&new_dre_path).map_err(|e| anyhow::anyhow!("Couldn't create file: {:?}", e))?;
+    let asset_file = std::fs::File::create(&asset_path).map_err(|e| anyhow::anyhow!("Couldn't create file: {:?}", e))?;
+    let new_dre_file = std::fs::File::create(&new_dre_path).map_err(|e| anyhow::anyhow!("Couldn't create file: {:?}", e))?;
 
     self_update::Download::from_url(&asset.download_url)
+        .show_progress(true)
         .download_to(&asset_file)
         .map_err(|e| anyhow::anyhow!("Couldn't download asset: {:?}", e))?;
 
     info!("Asset downloaded successfully");
 
-    let value: Value = serde_json::from_str(&std::fs::read_to_string(&asset_path).unwrap())
-        .map_err(|e| anyhow::anyhow!("Couldn't open asset: {:?}", e))?;
+    let value: Value =
+        serde_json::from_str(&std::fs::read_to_string(&asset_path).unwrap()).map_err(|e| anyhow::anyhow!("Couldn't open asset: {:?}", e))?;
 
     let download_url = match value.get("browser_download_url") {
         Some(Value::String(d)) => d,
@@ -528,11 +611,11 @@ fn check_latest_release(curr_version: &str) -> anyhow::Result<UpdateStatus> {
     };
 
     self_update::Download::from_url(download_url)
+        .show_progress(true)
         .download_to(&new_dre_file)
         .map_err(|e| anyhow::anyhow!("Couldn't download binary: {:?}", e))?;
 
-    self_update::self_replace::self_replace(new_dre_path)
-        .map_err(|e| anyhow::anyhow!("Couldn't upgrade to the newest version: {:?}", e))?;
+    self_update::self_replace::self_replace(new_dre_path).map_err(|e| anyhow::anyhow!("Couldn't upgrade to the newest version: {:?}", e))?;
 
     Ok(UpdateStatus::Updated)
 }

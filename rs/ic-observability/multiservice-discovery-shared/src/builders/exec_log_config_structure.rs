@@ -85,10 +85,7 @@ impl ConfigBuilder for ExecLogConfigBuilderImpl {
                 source_map.insert(key.clone(), Box::new(source) as Box<dyn VectorSource>);
 
                 let mut transform_map = HashMap::new();
-                transform_map.insert(
-                    format!("{}-transform", key),
-                    Box::new(transform) as Box<dyn VectorTransform>,
-                );
+                transform_map.insert(format!("{}-transform", key), Box::new(transform) as Box<dyn VectorTransform>);
 
                 config.add_target_group(source_map, transform_map);
             }

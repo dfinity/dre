@@ -73,12 +73,9 @@ pub enum Commands {
 
     /// Place a proposal for updating unassigned nodes config
     UpdateUnassignedNodes {
-        /// NNS subnet id. By default 'tdb26-jop6k-aogll-7ltgs-eruif-6kk7m-qpktf-gdiqx-mxtrf-vb5e6-eqe'
-        #[clap(
-            long,
-            default_value = "tdb26-jop6k-aogll-7ltgs-eruif-6kk7m-qpktf-gdiqx-mxtrf-vb5e6-eqe"
-        )]
-        nns_subnet_id: String,
+        /// NNS subnet id
+        #[clap(long)]
+        nns_subnet_id: Option<String>,
     },
 
     /// Manage replica/host-os versions blessing
@@ -113,13 +110,7 @@ pub enum Commands {
         /// everything else should be double checked manually
         ///
         /// By default: SubnetReplicaVersionManagement
-        #[clap(
-            long,
-            use_value_delimiter = true,
-            value_delimiter = ',',
-            value_name = "PROPOSER_ID",
-            default_value = "12"
-        )]
+        #[clap(long, use_value_delimiter = true, value_delimiter = ',', value_name = "PROPOSER_ID", default_value = "12")]
         accepted_topics: Vec<i32>,
     },
 
@@ -295,9 +286,9 @@ pub mod version {
 
     #[derive(Subcommand, Clone)]
     pub enum UpdateCommands {
-        /// Update the elected/blessed replica versions in the registry
+        /// Update the elected/blessed GuestOS versions in the registry
         /// by adding a new version and potentially removing obsolete versions
-        Replica {
+        GuestOS {
             /// Specify the commit hash of the version that is being elected.
             version: String,
 
@@ -325,7 +316,7 @@ pub mod version {
     impl From<UpdateCommands> for Artifact {
         fn from(value: UpdateCommands) -> Self {
             match value {
-                UpdateCommands::Replica { .. } => Artifact::Replica,
+                UpdateCommands::GuestOS { .. } => Artifact::GuestOs,
                 UpdateCommands::HostOS { .. } => Artifact::HostOs,
             }
         }
@@ -504,6 +495,12 @@ pub mod proposals {
             #[arg(value_enum)]
             #[clap(long, aliases = ["topic"], short = 't')]
             topics: Vec<Topic>,
+        },
+
+        /// Get a proposal by ID
+        Get {
+            /// Proposal ID
+            proposal_id: u64,
         },
     }
 

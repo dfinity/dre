@@ -64,23 +64,22 @@ impl WalletCanisterWrapper {
             wallet_canister.update("wallet_call").with_arg(&callin)
         };
 
-        let (result,): (Result<CallResult, String>,) =
-            builder.build().call_and_wait().await.context("Failed wallet call.")?;
+        let (result,): (Result<CallResult, String>,) = builder.build().call_and_wait().await.context("Failed wallet call.")?;
 
         match result {
             Ok(result) => {
                 match Decode!(&result.r#return, Vec<NodeMetricsHistoryResponse>) {
                     Ok(result) => Ok(result.to_vec()),
                     Err(_) => {
-                        info!("Failed to decode Trustworthy Metrics of subnet {} using the new format. Falling back to the old format.", subnet_id);
+                        info!(
+                            "Failed to decode Trustworthy Metrics of subnet {} using the new format. Falling back to the old format.",
+                            subnet_id
+                        );
                         // Try to decode as Vec<NodeMetricsHistoryResponseOld> as a fallback, since some subnets may still be running the old version of the management canister.
                         match Decode!(&result.r#return, Vec<NodeMetricsHistoryResponseOld>) {
                             Ok(result) => Ok(result.into_iter().map(|f| f.into()).collect()),
                             Err(err) => {
-                                error!(
-                                    "Failed to decode Trustworthy Metrics of subnet {} using the old format.",
-                                    subnet_id
-                                );
+                                error!("Failed to decode Trustworthy Metrics of subnet {} using the old format.", subnet_id);
                                 Err(anyhow::anyhow!(err))
                             }
                         }

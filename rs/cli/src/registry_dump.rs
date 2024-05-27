@@ -1,6 +1,5 @@
 use std::{collections::BTreeMap, path::PathBuf, str::FromStr, time::Duration};
 
-use anyhow::Error;
 use ic_base_types::{PrincipalId, RegistryVersion};
 use ic_interfaces_registry::RegistryClient;
 use ic_management_backend::registry::{local_registry_path, sync_local_store, RegistryFamilyEntries};
@@ -8,9 +7,12 @@ use ic_management_types::Network;
 use ic_protobuf::registry::{
     api_boundary_node::v1::ApiBoundaryNodeRecord,
     dc::v1::DataCenterRecord,
+    hostos_version::v1::HostosVersionRecord,
     node::v1::{ConnectionEndpoint, IPv4InterfaceConfig, NodeRecord},
     node_operator::v1::NodeOperatorRecord,
+    replica_version::v1::ReplicaVersionRecord,
     subnet::v1::{EcdsaConfig, GossipConfig as GossipConfigProto, SubnetFeatures, SubnetRecord as SubnetRecordProto},
+    unassigned_nodes_config::v1::UnassignedNodesConfigRecord,
 };
 use ic_registry_keys::NODE_REWARDS_TABLE_KEY;
 use ic_registry_local_registry::LocalRegistry;
@@ -20,14 +22,13 @@ use log::warn;
 use registry_canister::mutations::common::decode_registry_value;
 use serde::Serialize;
 
-pub async fn dump_registry(path: &Option<PathBuf>, network: &Network, version: &i64) -> Result<(), Error> {
+pub async fn dump_registry(path: &Option<PathBuf>, network: &Network, version: &i64) -> Result<(), anyhow::Error> {
     if let Some(path) = path {
         std::env::set_var("LOCAL_REGISTRY_PATH", path)
     }
     sync_local_store(network).await?;
 
-    let local_registry = LocalRegistry::new(local_registry_path(network), Duration::from_secs(10))
-        .map_err(|e| anyhow::anyhow!("Couldn't create local registry client instance: {:?}", e))?;
+    let local_registry = LocalRegistry::new(local_registry_path(network), Duration::from_secs(10))?;
 
     // determine desired version
     let version = {
@@ -38,11 +39,20 @@ pub async fn dump_registry(path: &Option<PathBuf>, network: &Network, version: &
         }
     };
 
+    let elected_guest_os_versions = get_elected_guest_os_versions(&local_registry, version)?;
+    let elected_host_os_versions = get_elected_host_os_versions(&local_registry, version)?;
+
     let node_operators = get_node_operators(&local_registry, version)?;
 
     let dcs = get_data_centers(&local_registry, version)?;
 
     let subnets = get_subnets(&local_registry, version)?;
+
+    let unassigned_nodes_config = match get_unassigned_nodes(&local_registry, version) {
+        Ok(config) => Some(config),
+        Err(RegistryDumpError::RecordNotFound) => None,
+        Err(e) => return Err(e.into()),
+    };
 
     let nodes = get_nodes(&local_registry, version, &node_operators, &subnets)?;
 
@@ -52,8 +62,11 @@ pub async fn dump_registry(path: &Option<PathBuf>, network: &Network, version: &
 
     #[derive(Serialize)]
     struct RegistryDump {
+        elected_guest_os_versions: Vec<ReplicaVersionRecord>,
+        elected_host_os_versions: Vec<HostosVersionRecord>,
         nodes: Vec<NodeDetails>,
         subnets: Vec<SubnetRecord>,
+        unassigned_nodes_config: Option<UnassignedNodesConfigRecord>,
         dcs: Vec<DataCenterRecord>,
         node_operators: Vec<NodeOperator>,
         node_rewards_table: NodeRewardsTableFlattened,
@@ -62,8 +75,11 @@ pub async fn dump_registry(path: &Option<PathBuf>, network: &Network, version: &
     println!(
         "{}",
         serde_json::to_string(&RegistryDump {
+            elected_guest_os_versions,
+            elected_host_os_versions,
             nodes,
             subnets,
+            unassigned_nodes_config,
             dcs,
             node_operators: node_operators.values().cloned().collect_vec(),
             node_rewards_table,
@@ -74,19 +90,38 @@ pub async fn dump_registry(path: &Option<PathBuf>, network: &Network, version: &
     Ok(())
 }
 
+fn get_elected_guest_os_versions(local_registry: &LocalRegistry, version: RegistryVersion) -> Result<Vec<ReplicaVersionRecord>, RegistryDumpError> {
+    let elected_versions = local_registry
+        .get_family_entries_of_version::<ReplicaVersionRecord>(version)
+        .map_err(|e| anyhow::anyhow!("Couldn't get elected versions: {:?}", e))?
+        .into_iter()
+        .map(|(_, (_, record))| record)
+        .collect();
+    Ok(elected_versions)
+}
+
+fn get_elected_host_os_versions(local_registry: &LocalRegistry, version: RegistryVersion) -> Result<Vec<HostosVersionRecord>, RegistryDumpError> {
+    let elected_versions = local_registry
+        .get_family_entries_of_version::<HostosVersionRecord>(version)
+        .map_err(|e| anyhow::anyhow!("Couldn't get elected versions: {:?}", e))?
+        .into_iter()
+        .map(|(_, (_, record))| record)
+        .collect();
+    Ok(elected_versions)
+}
+
 fn get_nodes(
     local_registry: &LocalRegistry,
     version: RegistryVersion,
     node_operators: &BTreeMap<PrincipalId, NodeOperator>,
     subnets: &[SubnetRecord],
-) -> Result<Vec<NodeDetails>, Error> {
+) -> Result<Vec<NodeDetails>, RegistryDumpError> {
     let nodes = local_registry
         .get_family_entries_of_version::<NodeRecord>(version)
         .map_err(|e| anyhow::anyhow!("Couldn't get nodes: {:?}", e))?
         .into_iter()
         .map(|(k, (_, record))| {
-            let node_operator_id =
-                PrincipalId::try_from(&record.node_operator_id).expect("Couldn't parse principal id");
+            let node_operator_id = PrincipalId::try_from(&record.node_operator_id).expect("Couldn't parse principal id");
             NodeDetails {
                 node_id: PrincipalId::from_str(&k).expect("Couldn't parse principal id"),
                 xnet: record.xnet,
@@ -114,7 +149,7 @@ fn get_nodes(
     Ok(nodes)
 }
 
-fn get_subnets(local_registry: &LocalRegistry, version: RegistryVersion) -> Result<Vec<SubnetRecord>, Error> {
+fn get_subnets(local_registry: &LocalRegistry, version: RegistryVersion) -> Result<Vec<SubnetRecord>, RegistryDumpError> {
     Ok(local_registry
         .get_family_entries_of_version::<SubnetRecordProto>(version)
         .map_err(|e| anyhow::anyhow!("Couldn't get subnets: {:?}", e))?
@@ -153,7 +188,18 @@ fn get_subnets(local_registry: &LocalRegistry, version: RegistryVersion) -> Resu
         .collect::<Vec<_>>())
 }
 
-fn get_data_centers(local_registry: &LocalRegistry, version: RegistryVersion) -> Result<Vec<DataCenterRecord>, Error> {
+fn get_unassigned_nodes(local_registry: &LocalRegistry, version: RegistryVersion) -> Result<UnassignedNodesConfigRecord, RegistryDumpError> {
+    let unassigned_nodes_config = local_registry
+        .get_family_entries_of_version::<UnassignedNodesConfigRecord>(version)
+        .map_err(|e| anyhow::anyhow!("Couldn't get unassigned nodes config: {:?}", e))?
+        .into_iter()
+        .map(|(_, (_, record))| record)
+        .next()
+        .ok_or(RegistryDumpError::RecordNotFound)?;
+    Ok(unassigned_nodes_config)
+}
+
+fn get_data_centers(local_registry: &LocalRegistry, version: RegistryVersion) -> Result<Vec<DataCenterRecord>, RegistryDumpError> {
     Ok(local_registry
         .get_family_entries_of_version::<DataCenterRecord>(version)
         .map_err(|e| anyhow::anyhow!("Couldn't get data centers: {:?}", e))?
@@ -162,10 +208,7 @@ fn get_data_centers(local_registry: &LocalRegistry, version: RegistryVersion) ->
         .collect())
 }
 
-fn get_node_operators(
-    local_registry: &LocalRegistry,
-    version: RegistryVersion,
-) -> Result<BTreeMap<PrincipalId, NodeOperator>, Error> {
+fn get_node_operators(local_registry: &LocalRegistry, version: RegistryVersion) -> Result<BTreeMap<PrincipalId, NodeOperator>, RegistryDumpError> {
     let node_operators = local_registry
         .get_family_entries_of_version::<NodeOperatorRecord>(version)
         .map_err(|e| anyhow::anyhow!("Couldn't get node operators: {:?}", e))?
@@ -177,8 +220,7 @@ fn get_node_operators(
                 NodeOperator {
                     node_operator_principal_id,
                     node_allowance: record.node_allowance,
-                    node_provider_principal_id: PrincipalId::try_from(record.node_provider_principal_id)
-                        .expect("Couldn't parse principal id"),
+                    node_provider_principal_id: PrincipalId::try_from(record.node_provider_principal_id).expect("Couldn't parse principal id"),
                     dc_id: record.dc_id,
                     rewardable_nodes: record.rewardable_nodes,
                     ipv6: record.ipv6,
@@ -189,18 +231,14 @@ fn get_node_operators(
     Ok(node_operators)
 }
 
-fn get_node_rewards_table(
-    local_registry: &LocalRegistry,
-    version: RegistryVersion,
-    network: &Network,
-) -> NodeRewardsTableFlattened {
+fn get_node_rewards_table(local_registry: &LocalRegistry, version: RegistryVersion, network: &Network) -> NodeRewardsTableFlattened {
     let rewards_table_bytes = local_registry.get_value(NODE_REWARDS_TABLE_KEY, version);
 
     let rewards_table_bytes = match rewards_table_bytes {
         Ok(r) => match r {
             Some(r) => r,
             None => {
-                if network.name.eq("mainnet") {
+                if network.is_mainnet() {
                     panic!("Failed to get Node Rewards Table")
                 } else {
                     warn!("Didn't find any node rewards details for network: {}", network.name);
@@ -209,7 +247,7 @@ fn get_node_rewards_table(
             }
         },
         Err(_) => {
-            if network.name.eq("mainnet") {
+            if network.is_mainnet() {
                 panic!("Failed to get Node Rewards Table for mainnet")
             } else {
                 warn!("Failed to get Node Rewards Table for {}", network.name);
@@ -221,10 +259,7 @@ fn get_node_rewards_table(
     decode_registry_value::<NodeRewardsTableFlattened>(rewards_table_bytes)
 }
 
-fn get_api_boundary_nodes(
-    local_registry: &LocalRegistry,
-    version: RegistryVersion,
-) -> Result<Vec<ApiBoundaryNodeDetails>, Error> {
+fn get_api_boundary_nodes(local_registry: &LocalRegistry, version: RegistryVersion) -> Result<Vec<ApiBoundaryNodeDetails>, RegistryDumpError> {
     let api_bns = local_registry
         .get_family_entries_of_version::<ApiBoundaryNodeRecord>(version)
         .map_err(|e| anyhow::anyhow!("Couldn't get api boundary nodes: {:?}", e))?
@@ -325,4 +360,62 @@ pub struct NodeRewardsTableFlattened {
     #[prost(btree_map = "string, message", tag = "1")]
     #[serde(flatten)]
     pub table: BTreeMap<String, NodeRewardRatesFlattened>,
+}
+
+enum RegistryDumpError {
+    RegistryClientError(ic_types::registry::RegistryClientError),
+    LocalRegistryError(ic_registry_local_registry::LocalRegistryError),
+    IoError(std::io::Error),
+    SerdeError(serde_json::Error),
+    GenericError(String),
+    RecordNotFound,
+}
+
+impl From<ic_types::registry::RegistryClientError> for RegistryDumpError {
+    fn from(e: ic_types::registry::RegistryClientError) -> Self {
+        RegistryDumpError::RegistryClientError(e)
+    }
+}
+
+impl From<ic_registry_local_registry::LocalRegistryError> for RegistryDumpError {
+    fn from(e: ic_registry_local_registry::LocalRegistryError) -> Self {
+        RegistryDumpError::LocalRegistryError(e)
+    }
+}
+
+impl From<std::io::Error> for RegistryDumpError {
+    fn from(e: std::io::Error) -> Self {
+        RegistryDumpError::IoError(e)
+    }
+}
+
+impl From<serde_json::Error> for RegistryDumpError {
+    fn from(e: serde_json::Error) -> Self {
+        RegistryDumpError::SerdeError(e)
+    }
+}
+
+impl From<String> for RegistryDumpError {
+    fn from(e: String) -> Self {
+        RegistryDumpError::GenericError(e)
+    }
+}
+
+impl From<anyhow::Error> for RegistryDumpError {
+    fn from(e: anyhow::Error) -> Self {
+        RegistryDumpError::GenericError(e.to_string())
+    }
+}
+
+impl From<RegistryDumpError> for anyhow::Error {
+    fn from(e: RegistryDumpError) -> Self {
+        match e {
+            RegistryDumpError::RegistryClientError(e) => anyhow::anyhow!("Registry client error: {:?}", e),
+            RegistryDumpError::LocalRegistryError(e) => anyhow::anyhow!("Registry error: {:?}", e),
+            RegistryDumpError::IoError(e) => anyhow::anyhow!("IO error: {:?}", e),
+            RegistryDumpError::SerdeError(e) => anyhow::anyhow!("Serde error: {:?}", e),
+            RegistryDumpError::GenericError(e) => anyhow::anyhow!("Generic error: {:?}", e),
+            RegistryDumpError::RecordNotFound => anyhow::anyhow!("Record not found"),
+        }
+    }
 }

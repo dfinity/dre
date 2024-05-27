@@ -55,10 +55,7 @@ pub enum ReplaceTarget {
     /// Subnet targeted for replacements
     Subnet(PrincipalId),
     /// Nodes on the same subnet that need to be replaced for other reasons
-    Nodes {
-        nodes: Vec<PrincipalId>,
-        motivation: String,
-    },
+    Nodes { nodes: Vec<PrincipalId>, motivation: String },
 }
 
 #[derive(Serialize, Deserialize)]

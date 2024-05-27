@@ -2,9 +2,7 @@ use std::collections::{BTreeSet, HashMap};
 
 use serde::Serialize;
 
-use config_writer_common::vector_config_structure::{
-    VectorConfigBuilder, VectorConfigEnriched, VectorSource, VectorTransform,
-};
+use config_writer_common::vector_config_structure::{VectorConfigBuilder, VectorConfigEnriched, VectorSource, VectorTransform};
 use service_discovery::{job_types::JobType, TargetGroup};
 use url::Url;
 
@@ -32,13 +30,7 @@ impl VectorConfigBuilderImpl {
     fn add_target_groups_with_job(&self, targets: BTreeSet<TargetGroup>, job: JobType) -> VectorConfigEnriched {
         let mut config = VectorConfigEnriched::new();
         for target in targets {
-            let key = target
-                .clone()
-                .targets
-                .into_iter()
-                .map(|t| t.to_string())
-                .next()
-                .unwrap();
+            let key = target.clone().targets.into_iter().map(|t| t.to_string()).next().unwrap();
 
             let source = VectorPrometheusScrapeSource::from_target_group_with_job(
                 target.clone(),
@@ -78,12 +70,7 @@ impl VectorSource for VectorPrometheusScrapeSource {
 }
 
 impl VectorPrometheusScrapeSource {
-    fn from_target_group_with_job(
-        tg: TargetGroup,
-        job_parameters: &JobParameters,
-        scrape_interval: u64,
-        proxy_url: Option<Url>,
-    ) -> Self {
+    fn from_target_group_with_job(tg: TargetGroup, job_parameters: &JobParameters, scrape_interval: u64, proxy_url: Option<Url>) -> Self {
         let endpoints: Vec<String> = tg
             .targets
             .into_iter()
@@ -155,12 +142,7 @@ impl VectorPrometheusScrapeTransform {
         .collect();
         Self {
             _type: "remap".into(),
-            inputs: tg
-                .targets
-                .into_iter()
-                .map(|g| g.to_string())
-                .map(|g| g + "-source")
-                .collect(),
+            inputs: tg.targets.into_iter().map(|g| g.to_string()).map(|g| g + "-source").collect(),
             source: labels
                 .into_iter()
                 // Might be dangerous as the tag value is coming from an outside source and
@@ -200,9 +182,7 @@ mod tests {
         targets.insert(SocketAddr::V6(SocketAddrV6::from_str(original_addr).unwrap()));
 
         let ptg = TargetGroup {
-            node_id: NodeId::from(
-                PrincipalId::from_str("iylgr-zpxwq-kqgmf-4srtx-o4eey-d6bln-smmq6-we7px-ibdea-nondy-eae").unwrap(),
-            ),
+            node_id: NodeId::from(PrincipalId::from_str("iylgr-zpxwq-kqgmf-4srtx-o4eey-d6bln-smmq6-we7px-ibdea-nondy-eae").unwrap()),
             ic_name: "mercury".into(),
             targets,
             subnet_id: Some(SubnetId::from(
@@ -226,9 +206,7 @@ mod tests {
             let downcast = conf.as_any().downcast_ref::<VectorPrometheusScrapeSource>().unwrap();
             assert_eq!(
                 downcast.endpoints[0],
-                url::Url::parse(&("http://".to_owned() + original_addr))
-                    .unwrap()
-                    .to_string()
+                url::Url::parse(&("http://".to_owned() + original_addr)).unwrap().to_string()
             )
         }
     }

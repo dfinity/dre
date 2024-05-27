@@ -35,7 +35,7 @@ use crate::defaults;
 use crate::detect_neuron::{Auth, Neuron};
 use crate::parsed_cli::ParsedCli;
 
-const MAX_SUMMARY_CHAR_COUNT: usize = 14000;
+const MAX_SUMMARY_CHAR_COUNT: usize = 29000;
 
 #[derive(Clone, Serialize, PartialEq)]
 enum FirewallRuleModificationType {
@@ -145,17 +145,21 @@ pub struct IcAdminWrapper {
 }
 
 impl IcAdminWrapper {
-    pub fn new(
-        network: Network,
-        ic_admin_bin_path: Option<String>,
-        proceed_without_confirmation: bool,
-        neuron: Neuron,
-    ) -> Self {
+    pub fn new(network: Network, ic_admin_bin_path: Option<String>, proceed_without_confirmation: bool, neuron: Neuron) -> Self {
         Self {
             network,
             ic_admin_bin_path,
             proceed_without_confirmation,
             neuron,
+        }
+    }
+
+    pub fn as_automation(self) -> Self {
+        Self {
+            network: self.network,
+            ic_admin_bin_path: self.ic_admin_bin_path,
+            proceed_without_confirmation: self.proceed_without_confirmation,
+            neuron: self.neuron.as_automation(),
         }
     }
 
@@ -203,6 +207,7 @@ impl IcAdminWrapper {
                 ));
             }
         }
+
         self.run(
             &cmd.get_command_name(),
             [
@@ -212,39 +217,27 @@ impl IcAdminWrapper {
                 } else {
                     Default::default()
                 },
-                opts.title
-                    .map(|t| vec!["--proposal-title".to_string(), t])
-                    .unwrap_or_default(),
+                opts.title.map(|t| vec!["--proposal-title".to_string(), t]).unwrap_or_default(),
                 opts.summary
                     .map(|s| {
                         vec![
                             "--summary".to_string(),
-                            format!(
-                                "{}{}",
-                                s,
-                                opts.motivation
-                                    .map(|m| format!("\n\nMotivation: {m}"))
-                                    .unwrap_or_default(),
-                            ),
+                            format!("{}{}", s, opts.motivation.map(|m| format!("\n\nMotivation: {m}")).unwrap_or_default(),),
                         ]
                     })
                     .unwrap_or_default(),
-                self.neuron.as_arg_vec(!as_simulation).await?,
+                self.neuron.as_arg_vec(true).await?,
                 cmd.args(),
             ]
             .concat()
             .as_slice(),
-            !as_simulation,
+            true,
+            false,
         )
         .await
     }
 
-    pub async fn propose_run(
-        &self,
-        cmd: ProposeCommand,
-        opts: ProposeOptions,
-        simulate: bool,
-    ) -> anyhow::Result<String> {
+    pub async fn propose_run(&self, cmd: ProposeCommand, opts: ProposeOptions, simulate: bool) -> anyhow::Result<String> {
         // Simulated, or --help executions run immediately and do not proceed.
         if simulate || cmd.args().contains(&String::from("--help")) || cmd.args().contains(&String::from("--dry-run")) {
             return self._exec(cmd, opts, simulate).await;
@@ -255,11 +248,7 @@ impl IcAdminWrapper {
             self._exec(cmd.clone(), opts.clone(), true).await?;
         }
 
-        if Confirm::new()
-            .with_prompt("Do you want to continue?")
-            .default(false)
-            .interact()?
-        {
+        if self.proceed_without_confirmation || Confirm::new().with_prompt("Do you want to continue?").default(false).interact()? {
             // User confirmed the desire to submit the proposal and no obvious problems were
             // found. Proceeding!
             self._exec(cmd, opts, false).await
@@ -268,22 +257,18 @@ impl IcAdminWrapper {
         }
     }
 
-    async fn _run_ic_admin_with_args(&self, ic_admin_args: &[String], with_auth: bool) -> anyhow::Result<String> {
+    async fn _run_ic_admin_with_args(&self, ic_admin_args: &[String], with_auth: bool, silent: bool) -> anyhow::Result<String> {
         let ic_admin_path = self.ic_admin_bin_path.clone().unwrap_or_else(|| "ic-admin".to_string());
         let mut cmd = Command::new(ic_admin_path);
-        let auth_options = if with_auth {
-            self.neuron.get_auth().await?.as_arg_vec()
-        } else {
-            vec![]
-        };
-        let root_options = [
-            auth_options,
-            vec!["--nns-urls".to_string(), self.network.get_nns_urls_string()],
-        ]
-        .concat();
+        let auth_options = if with_auth { self.neuron.get_auth().await?.as_arg_vec() } else { vec![] };
+        let root_options = [auth_options, vec!["--nns-urls".to_string(), self.network.get_nns_urls_string()]].concat();
         let cmd = cmd.args([&root_options, ic_admin_args].concat());
 
-        self.print_ic_admin_command_line(cmd).await;
+        if silent {
+            cmd.stderr(Stdio::piped());
+        } else {
+            self.print_ic_admin_command_line(cmd).await;
+        }
         cmd.stdout(Stdio::piped());
 
         match cmd.spawn() {
@@ -295,15 +280,28 @@ impl IcAdminWrapper {
                             output
                                 .read_to_end(&mut readbuf)
                                 .map_err(|e| anyhow::anyhow!("Error reading output: {:?}", e))?;
-                            let converted = String::from_utf8_lossy(&readbuf).to_string();
-                            println!("{}", converted);
+                            let converted = String::from_utf8_lossy(&readbuf).trim().to_string();
+                            if !silent {
+                                println!("{}", converted);
+                            }
                             return Ok(converted);
                         }
                         Ok("".to_string())
                     } else {
+                        let readbuf = match child.stderr {
+                            Some(mut stderr) => {
+                                let mut readbuf = String::new();
+                                stderr
+                                    .read_to_string(&mut readbuf)
+                                    .map_err(|e| anyhow::anyhow!("Error reading output: {:?}", e))?;
+                                readbuf
+                            }
+                            None => "".to_string(),
+                        };
                         Err(anyhow::anyhow!(
-                            "ic-admin failed with non-zero exit code {}",
-                            s.code().map(|c| c.to_string()).unwrap_or_else(|| "<none>".to_string())
+                            "ic-admin failed with non-zero exit code {} stderr ==>\n{}",
+                            s.code().map(|c| c.to_string()).unwrap_or_else(|| "<none>".to_string()),
+                            readbuf
                         ))
                     }
                 }
@@ -313,9 +311,9 @@ impl IcAdminWrapper {
         }
     }
 
-    pub async fn run(&self, command: &str, args: &[String], with_auth: bool) -> anyhow::Result<String> {
+    pub async fn run(&self, command: &str, args: &[String], with_auth: bool, silent: bool) -> anyhow::Result<String> {
         let ic_admin_args = [&[command.to_string()], args].concat();
-        self._run_ic_admin_with_args(&ic_admin_args, with_auth).await
+        self._run_ic_admin_with_args(&ic_admin_args, with_auth, silent).await
     }
 
     /// Run ic-admin and parse sub-commands that it lists with "--help",
@@ -333,10 +331,7 @@ impl IcAdminWrapper {
                         .map(|capt| String::from(capt.get(1).expect("group 1 not found").as_str().trim()))
                         .collect()
                 } else {
-                    error!(
-                        "Execution of ic-admin failed: {}",
-                        String::from_utf8_lossy(output.stderr.as_ref())
-                    );
+                    error!("Execution of ic-admin failed: {}", String::from_utf8_lossy(output.stderr.as_ref()));
                     vec![]
                 }
             }
@@ -348,7 +343,7 @@ impl IcAdminWrapper {
     }
 
     /// Run an `ic-admin get-*` command directly, and without an HSM
-    pub async fn run_passthrough_get(&self, args: &[String]) -> anyhow::Result<()> {
+    pub async fn run_passthrough_get(&self, args: &[String], silent: bool) -> anyhow::Result<String> {
         if args.is_empty() {
             println!("List of available ic-admin 'get' sub-commands:\n");
             for subcmd in self.grep_subcommands(r"\s+get-(.+?)\s") {
@@ -375,9 +370,10 @@ impl IcAdminWrapper {
             args_with_get_prefix
         };
 
-        self.run(&args[0], &args.iter().skip(1).cloned().collect::<Vec<_>>(), false)
+        let stdout = self
+            .run(&args[0], &args.iter().skip(1).cloned().collect::<Vec<_>>(), false, silent)
             .await?;
-        Ok(())
+        Ok(stdout)
     }
 
     /// Run an `ic-admin propose-to-*` command directly
@@ -408,13 +404,7 @@ impl IcAdminWrapper {
         // make sure the expected argument is provided
         let args = if !args.contains(&String::from("--summary")) && args.contains(&String::from("--motivation")) {
             args.iter()
-                .map(|arg| {
-                    if arg == "--motivation" {
-                        "--summary".to_string()
-                    } else {
-                        arg.clone()
-                    }
-                })
+                .map(|arg| if arg == "--motivation" { "--summary".to_string() } else { arg.clone() })
                 .collect::<Vec<_>>()
         } else {
             args.to_vec()
@@ -445,22 +435,13 @@ impl IcAdminWrapper {
 
     async fn download_file_and_get_sha256(download_url: &String) -> anyhow::Result<String> {
         let url = url::Url::parse(download_url)?;
-        let subdir = format!(
-            "{}{}",
-            url.domain().expect("url.domain() is None"),
-            url.path().to_owned()
-        );
+        let subdir = format!("{}{}", url.domain().expect("url.domain() is None"), url.path().to_owned());
         // replace special characters in subdir with _
         let subdir = subdir.replace(|c: char| !c.is_ascii_alphanumeric(), "_");
-        let download_dir = format!(
-            "{}/tmp/ic/{}",
-            dirs::home_dir().expect("home_dir is not set").as_path().display(),
-            subdir
-        );
+        let download_dir = format!("{}/tmp/ic/{}", dirs::home_dir().expect("home_dir is not set").as_path().display(), subdir);
         let download_dir = Path::new(&download_dir);
 
-        std::fs::create_dir_all(download_dir)
-            .unwrap_or_else(|_| panic!("create_dir_all failed for {}", download_dir.display()));
+        std::fs::create_dir_all(download_dir).unwrap_or_else(|_| panic!("create_dir_all failed for {}", download_dir.display()));
 
         let download_image = format!("{}/update-img.tar.gz", download_dir.to_str().unwrap());
         let download_image = Path::new(&download_image);
@@ -487,16 +468,8 @@ impl IcAdminWrapper {
         let mut hasher = Sha256::new();
         hasher.update(&content);
         let hash = hasher.finalize();
-        let stringified_hash = hash[..]
-            .iter()
-            .map(|byte| format!("{:01$x?}", byte, 2))
-            .collect::<Vec<String>>()
-            .join("");
-        info!(
-            "File saved at {} has sha256 {}",
-            download_image.display(),
-            stringified_hash
-        );
+        let stringified_hash = hash[..].iter().map(|byte| format!("{:01$x?}", byte, 2)).collect::<Vec<String>>().join("");
+        info!("File saved at {} has sha256 {}", download_image.display(), stringified_hash);
         Ok(stringified_hash)
     }
 
@@ -526,11 +499,7 @@ impl IcAdminWrapper {
             })
             .collect()
             .await;
-        let hashes_unique = hash_and_valid_urls
-            .iter()
-            .map(|(h, _)| h.clone())
-            .unique()
-            .collect::<Vec<String>>();
+        let hashes_unique = hash_and_valid_urls.iter().map(|(h, _)| h.clone()).unique().collect::<Vec<String>>();
         let expected_hash: String = match hashes_unique.len() {
             0 => {
                 return Err(anyhow::anyhow!(
@@ -546,17 +515,11 @@ impl IcAdminWrapper {
             _ => {
                 return Err(anyhow::anyhow!(
                     "Update images do not have the same hash: {:?}",
-                    hash_and_valid_urls
-                        .iter()
-                        .map(|(h, u)| format!("{}  {}", h, u))
-                        .join("\n")
+                    hash_and_valid_urls.iter().map(|(h, u)| format!("{}  {}", h, u)).join("\n")
                 ))
             }
         };
-        let update_urls = hash_and_valid_urls
-            .into_iter()
-            .map(|(_, u)| u.clone())
-            .collect::<Vec<String>>();
+        let update_urls = hash_and_valid_urls.into_iter().map(|(_, u)| u.clone()).collect::<Vec<String>>();
 
         if update_urls.is_empty() {
             return Err(anyhow::anyhow!(
@@ -582,8 +545,7 @@ impl IcAdminWrapper {
         force: bool,
         retire_versions: Option<Vec<String>>,
     ) -> anyhow::Result<UpdateVersion> {
-        let (update_urls, expected_hash) =
-            Self::download_images_and_validate_sha256(release_artifact, version, force).await?;
+        let (update_urls, expected_hash) = Self::download_images_and_validate_sha256(release_artifact, version, force).await?;
 
         let template = format!(
             r#"Elect new {release_artifact} binary revision [{version}](https://github.com/dfinity/ic/tree/{release_tag})
@@ -629,19 +591,14 @@ must be identical, and must match the SHA256 from the payload of the NNS proposa
                     Some((left, message)) => {
                         let commit_hash = left.split_once('[').unwrap().1.to_string();
 
-                        format!(
-                            "* [[{}](https://github.com/dfinity/ic/commit/{})] {}",
-                            commit_hash, commit_hash, message
-                        )
+                        format!("* [[{}](https://github.com/dfinity/ic/commit/{})] {}", commit_hash, commit_hash, message)
                     }
                     None => f.to_string(),
                 }
             })
             .join("\n");
         if edited.contains(&String::from("Remove this block of text from the proposal.")) {
-            Err(anyhow::anyhow!(
-                "The edited proposal text has not been edited to add release notes."
-            ))
+            Err(anyhow::anyhow!("The edited proposal text has not been edited to add release notes."))
         } else {
             let proposal_title = match &retire_versions {
                 Some(v) => {
@@ -654,11 +611,7 @@ must be identical, and must match the SHA256 from the payload of the NNS proposa
                         v.iter().map(|v| &v[..8]).join(",")
                     )
                 }
-                None => format!(
-                    "Elect new IC/{} revision (commit {})",
-                    release_artifact.capitalized(),
-                    &version[..8]
-                ),
+                None => format!("Elect new IC/{} revision (commit {})", release_artifact.capitalized(), &version[..8]),
             };
 
             Ok(UpdateVersion {
@@ -673,12 +626,7 @@ must be identical, and must match the SHA256 from the payload of the NNS proposa
         }
     }
 
-    pub async fn update_unassigned_nodes(
-        &self,
-        nns_subned_id: &String,
-        network: &Network,
-        simulate: bool,
-    ) -> Result<(), Error> {
+    pub async fn update_unassigned_nodes(&self, nns_subned_id: &String, network: &Network, simulate: bool) -> Result<(), Error> {
         let local_registry_path = local_registry_path(network);
         let local_registry = LocalRegistry::new(local_registry_path, Duration::from_secs(10))
             .map_err(|e| anyhow::anyhow!("Error in creating local registry instance: {:?}", e))?;
@@ -711,7 +659,7 @@ must be identical, and must match the SHA256 from the payload of the NNS proposa
             nns.replica_version_id, unassigned_version
         );
 
-        let command = ProposeCommand::UpdateUnassignedNodes {
+        let command = ProposeCommand::DeployGuestosToAllUnassignedNodes {
             replica_version: nns.replica_version_id.clone(),
         };
         let options = ProposeOptions {
@@ -724,12 +672,7 @@ must be identical, and must match the SHA256 from the payload of the NNS proposa
         Ok(())
     }
 
-    pub async fn update_replica_nodes_firewall(
-        &self,
-        network: &Network,
-        propose_options: ProposeOptions,
-        simulate: bool,
-    ) -> Result<(), Error> {
+    pub async fn update_replica_nodes_firewall(&self, network: &Network, propose_options: ProposeOptions, simulate: bool) -> Result<(), Error> {
         let local_registry_path = local_registry_path(network);
         let local_registry = LocalRegistry::new(local_registry_path, Duration::from_secs(10))
             .map_err(|e| anyhow::anyhow!("Error in creating local registry instance: {:?}", e))?;
@@ -747,23 +690,16 @@ must be identical, and must match the SHA256 from the payload of the NNS proposa
             .map_err(|e| anyhow::anyhow!("Error fetching firewall rules for replica nodes: {:?}", e))?;
 
         let rules = if let Some(value) = value {
-            FirewallRuleSet::decode(value.as_slice())
-                .map_err(|e| anyhow::anyhow!("Failed to deserialize firewall ruleset: {:?}", e))?
+            FirewallRuleSet::decode(value.as_slice()).map_err(|e| anyhow::anyhow!("Failed to deserialize firewall ruleset: {:?}", e))?
         } else {
             FirewallRuleSet::default()
         };
 
-        let rules: BTreeMap<usize, &FirewallRule> = rules
-            .entries
-            .iter()
-            .enumerate()
-            .sorted_by(|a, b| a.0.cmp(&b.0))
-            .collect();
+        let rules: BTreeMap<usize, &FirewallRule> = rules.entries.iter().enumerate().sorted_by(|a, b| a.0.cmp(&b.0)).collect();
 
         let mut builder = edit::Builder::new();
         let with_suffix = builder.suffix(".json");
-        let pretty = serde_json::to_string_pretty(&rules)
-            .map_err(|e| anyhow::anyhow!("Error serializing ruleset to string: {:?}", e))?;
+        let pretty = serde_json::to_string_pretty(&rules).map_err(|e| anyhow::anyhow!("Error serializing ruleset to string: {:?}", e))?;
         let edited: BTreeMap<usize, FirewallRule>;
         loop {
             info!("Spawning edit window...");
@@ -794,8 +730,7 @@ must be identical, and must match the SHA256 from the payload of the NNS proposa
         }
 
         // Collect removed entries (keys from old set not present in new set)
-        let removed_entries: BTreeMap<usize, &FirewallRule> =
-            rules.into_iter().filter(|(key, _)| !edited.contains_key(key)).collect();
+        let removed_entries: BTreeMap<usize, &FirewallRule> = rules.into_iter().filter(|(key, _)| !edited.contains_key(key)).collect();
 
         let mut mods = FirewallRuleModifications::new();
         for (pos, rule) in added_entries.into_iter() {
@@ -842,10 +777,7 @@ must be identical, and must match the SHA256 from the payload of the NNS proposa
                     "none".to_string(),
                 ],
                 _ => {
-                    let rules = modifications
-                        .iter()
-                        .map(|modif| modif.clone().rule_being_modified)
-                        .collect::<Vec<_>>();
+                    let rules = modifications.iter().map(|modif| modif.clone().rule_being_modified).collect::<Vec<_>>();
                     let serialized = serde_json::to_string(&rules).unwrap();
                     file.write_all(serialized.as_bytes())
                         .map_err(|e| anyhow::anyhow!("Couldn't write to tempfile: {:?}", e))?;
@@ -869,13 +801,8 @@ must be identical, and must match the SHA256 from the payload of the NNS proposa
                 .await
                 .map_err(|e| anyhow::anyhow!("Couldn't execute test for {}-firewall-rules: {:?}", change_type, e))?;
 
-            let parsed: serde_json::Value = serde_json::from_str(&output).map_err(|e| {
-                anyhow::anyhow!(
-                    "Error deserializing --test output while performing '{}': {:?}",
-                    change_type,
-                    e
-                )
-            })?;
+            let parsed: serde_json::Value = serde_json::from_str(&output)
+                .map_err(|e| anyhow::anyhow!("Error deserializing --test output while performing '{}': {:?}", change_type, e))?;
             let hash = match parsed.get("hash") {
                 Some(serde_json::Value::String(hash)) => hash,
                 _ => {
@@ -899,9 +826,7 @@ must be identical, and must match the SHA256 from the payload of the NNS proposa
                 args: final_args,
             };
 
-            admin_wrapper
-                .propose_run(cmd, propose_options.clone(), simulate)
-                .await?;
+            admin_wrapper.propose_run(cmd, propose_options.clone(), simulate).await?;
 
             Ok(())
         }
@@ -909,9 +834,7 @@ must be identical, and must match the SHA256 from the payload of the NNS proposa
         // no more than one rule mod implemented currenty -- FIXME
         match reverse_sorted.into_iter().last() {
             Some((_, mods)) => submit_proposal(self, mods, propose_options.clone(), simulate).await,
-            None => Err(anyhow::anyhow!(
-                "Expected to have one item for firewall rule modification"
-            )),
+            None => Err(anyhow::anyhow!("Expected to have one item for firewall rule modification")),
         }
     }
 }
@@ -924,30 +847,30 @@ pub enum ProposeCommand {
         node_ids_add: Vec<PrincipalId>,
         node_ids_remove: Vec<PrincipalId>,
     },
-    UpdateSubnetReplicaVersion {
+    DeployGuestosToAllSubnetNodes {
         subnet: PrincipalId,
+        version: String,
+    },
+    DeployGuestosToAllUnassignedNodes {
+        replica_version: String,
+    },
+    DeployHostosToSomeNodes {
+        nodes: Vec<PrincipalId>,
         version: String,
     },
     Raw {
         command: String,
         args: Vec<String>,
     },
-    UpdateNodesHostosVersion {
-        nodes: Vec<PrincipalId>,
-        version: String,
-    },
     RemoveNodes {
         nodes: Vec<PrincipalId>,
     },
-    UpdateElectedVersions {
+    ReviseElectedVersions {
         release_artifact: Artifact,
         args: Vec<String>,
     },
     CreateSubnet {
         node_ids: Vec<PrincipalId>,
-        replica_version: String,
-    },
-    UpdateUnassignedNodes {
         replica_version: String,
     },
 }
@@ -959,11 +882,8 @@ impl ProposeCommand {
             "{PROPOSE_CMD_PREFIX}{}",
             match self {
                 Self::Raw { command, args: _ } => command.trim_start_matches(PROPOSE_CMD_PREFIX).to_string(),
-                Self::UpdateElectedVersions {
-                    release_artifact,
-                    args: _,
-                } => format!("update-elected-{}-versions", release_artifact),
-                Self::UpdateUnassignedNodes { replica_version: _ } => "update-unassigned-nodes-config".to_string(),
+                Self::ReviseElectedVersions { release_artifact, args: _ } => format!("revise-elected-{}-versions", release_artifact),
+                Self::DeployGuestosToAllUnassignedNodes { replica_version: _ } => "deploy-guestos-to-all-unassigned-nodes".to_string(),
                 _ => self.to_string(),
             }
         )
@@ -999,24 +919,18 @@ impl ProposeCommand {
                 },
             ]
             .concat(),
-            Self::UpdateSubnetReplicaVersion { subnet, version } => {
+            Self::DeployGuestosToAllSubnetNodes { subnet, version } => {
                 vec![subnet.to_string(), version.clone()]
             }
             Self::Raw { command: _, args } => args.clone(),
-            Self::UpdateNodesHostosVersion { nodes, version } => [
+            Self::DeployHostosToSomeNodes { nodes, version } => [
                 nodes.iter().map(|n| n.to_string()).collect::<Vec<_>>(),
                 vec!["--hostos-version-id".to_string(), version.to_string()],
             ]
             .concat(),
             Self::RemoveNodes { nodes } => nodes.iter().map(|n| n.to_string()).collect(),
-            Self::UpdateElectedVersions {
-                release_artifact: _,
-                args,
-            } => args.clone(),
-            Self::CreateSubnet {
-                node_ids,
-                replica_version,
-            } => {
+            Self::ReviseElectedVersions { release_artifact: _, args } => args.clone(),
+            Self::CreateSubnet { node_ids, replica_version } => {
                 let mut args = vec!["--subnet-type".to_string(), "application".to_string()];
 
                 args.push("--replica-version-id".to_string());
@@ -1027,7 +941,7 @@ impl ProposeCommand {
                 }
                 args
             }
-            Self::UpdateUnassignedNodes { replica_version } => {
+            Self::DeployGuestosToAllUnassignedNodes { replica_version } => {
                 vec!["--replica-version-id".to_string(), replica_version.clone()]
             }
         }
@@ -1064,8 +978,7 @@ async fn download_ic_admin(version: Option<String>) -> Result<String> {
         let mut decoded = GzDecoder::new(body.as_ref());
 
         let path_parent = path.parent().expect("path parent unwrap failed!");
-        std::fs::create_dir_all(path_parent)
-            .unwrap_or_else(|_| panic!("create_dir_all failed for {}", path_parent.display()));
+        std::fs::create_dir_all(path_parent).unwrap_or_else(|_| panic!("create_dir_all failed for {}", path_parent.display()));
         let mut out = std::fs::File::create(path)?;
         std::io::copy(&mut decoded, &mut out)?;
         std::fs::set_permissions(path, std::fs::Permissions::from_mode(0o755))?;
@@ -1081,10 +994,7 @@ where
 {
     let ic_admin_path = download_ic_admin(version).await?;
     let bin_dir = Path::new(&ic_admin_path).parent().unwrap();
-    std::env::set_var(
-        "PATH",
-        format!("{}:{}", bin_dir.display(), std::env::var("PATH").unwrap()),
-    );
+    std::env::set_var("PATH", format!("{}:{}", bin_dir.display(), std::env::var("PATH").unwrap()));
 
     closure.await
 }
@@ -1114,7 +1024,7 @@ oSMDIQBa2NLmSmaqjDXej4rrJEuEhKIz7/pGXpxztViWhB+X9Q==
                 node_ids_add: vec![Default::default()],
                 node_ids_remove: vec![Default::default()],
             },
-            ProposeCommand::UpdateSubnetReplicaVersion {
+            ProposeCommand::DeployGuestosToAllSubnetNodes {
                 subnet: Default::default(),
                 version: "0000000000000000000000000000000000000000".to_string(),
             },
@@ -1130,15 +1040,7 @@ oSMDIQBa2NLmSmaqjDXej4rrJEuEhKIz7/pGXpxztViWhB+X9Q==
             let cli = IcAdminWrapper {
                 network: network.clone(),
                 proceed_without_confirmation: false,
-                neuron: Neuron::new(
-                    &network,
-                    Some(3),
-                    Some(file.path().to_string_lossy().to_string()),
-                    None,
-                    None,
-                    None,
-                )
-                .await,
+                neuron: Neuron::new(&network, Some(3), Some(file.path().to_string_lossy().to_string()), None, None, None).await,
                 ic_admin_bin_path: None,
             };
 
@@ -1155,20 +1057,12 @@ oSMDIQBa2NLmSmaqjDXej4rrJEuEhKIz7/pGXpxztViWhB+X9Q==
                 } else {
                     Default::default()
                 },
-                opts.title
-                    .map(|t| vec!["--proposal-title".to_string(), t])
-                    .unwrap_or_default(),
+                opts.title.map(|t| vec!["--proposal-title".to_string(), t]).unwrap_or_default(),
                 opts.summary
                     .map(|s| {
                         vec![
                             "--summary".to_string(),
-                            format!(
-                                "{}{}",
-                                s,
-                                opts.motivation
-                                    .map(|m| format!("\n\nMotivation: {m}"))
-                                    .unwrap_or_default(),
-                            ),
+                            format!("{}{}", s, opts.motivation.map(|m| format!("\n\nMotivation: {m}")).unwrap_or_default(),),
                         ]
                     })
                     .unwrap_or_default(),
@@ -1178,7 +1072,7 @@ oSMDIQBa2NLmSmaqjDXej4rrJEuEhKIz7/pGXpxztViWhB+X9Q==
             .concat()
             .to_vec();
             let out = with_ic_admin(Default::default(), async {
-                cli.run(&cmd.get_command_name(), &vector, true)
+                cli.run(&cmd.get_command_name(), &vector, true, false)
                     .await
                     .map_err(|e| anyhow::anyhow!(e))
             })

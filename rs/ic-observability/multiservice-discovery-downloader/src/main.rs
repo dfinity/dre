@@ -125,11 +125,7 @@ pub mod log_subtype {
     pub struct LogSubtype {
         #[clap(long = "port", help = "Custom port for standard nodes", default_value = "19531")]
         pub port: u64,
-        #[clap(
-            long = "boundary-nodes-port",
-            help = "Custom port for boundary nodes",
-            default_value = "19531"
-        )]
+        #[clap(long = "boundary-nodes-port", help = "Custom port for boundary nodes", default_value = "19531")]
         pub bn_port: u64,
         #[clap(subcommand)]
         pub subcommands: Subtype,

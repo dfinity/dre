@@ -94,25 +94,21 @@ pub async fn calculate_progress<'a>(
 
     let subnets = registry_state.subnets().into_values().collect::<Vec<Subnet>>();
     let desired_versions = desired_rollout_release_version(&subnets, &index.releases);
-    let concatenated_versions = desired_versions
-        .release
-        .versions
-        .iter()
-        .map(|v| v.version.clone())
-        .join("|");
+    let concatenated_versions = desired_versions.release.versions.iter().map(|v| v.version.clone()).join("|");
 
-    let result = prometheus_client.query(format!(r#"
+    let result = prometheus_client
+        .query(format!(
+            r#"
     time() - first_over_time((timestamp(group(ic_replica_info{{ic_active_version=~"{concatenated_versions}"}})))[14d:1d])
-    "#)).get().await?;
+    "#
+        ))
+        .get()
+        .await?;
 
     let since_start = match result.data().clone().into_vector().into_iter().last() {
         Some(data) => match data.iter().last() {
             Some(data) => data.sample().value(),
-            None => {
-                return Err(anyhow::anyhow!(
-                    "There should be data regarding start of releases in response vector"
-                ))
-            }
+            None => return Err(anyhow::anyhow!("There should be data regarding start of releases in response vector")),
         },
         None => return Err(anyhow::anyhow!("There should be data regarding start of releases")),
     };
@@ -131,9 +127,7 @@ pub async fn calculate_progress<'a>(
         &subnets,
         Local::now().date_naive(),
         Local::now()
-            .checked_sub_signed(
-                TimeDelta::try_seconds(since_start as i64).expect("Should be able to convert to seconds"),
-            )
+            .checked_sub_signed(TimeDelta::try_seconds(since_start as i64).expect("Should be able to convert to seconds"))
             .expect("Should be able to sub from now")
             .date_naive(),
         desired_versions,

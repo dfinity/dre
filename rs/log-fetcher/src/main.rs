@@ -134,9 +134,7 @@ async fn main() -> Result<(), anyhow::Error> {
 }
 
 fn fetch_cursor(path: &PathBuf) -> Result<String, anyhow::Error> {
-    let dir = path
-        .parent()
-        .ok_or_else(|| anyhow!("Invalid path {}", path.display()))?;
+    let dir = path.parent().ok_or_else(|| anyhow!("Invalid path {}", path.display()))?;
 
     fs::create_dir_all(dir).map_err(|e| anyhow!("Error while creating directories: {:?}", e))?;
 
