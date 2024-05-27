@@ -275,17 +275,17 @@ pub mod version {
 
     #[derive(Subcommand, Clone)]
     pub enum Cmd {
-        Update(UpdateCmd),
+        ReviseElectedVersions(ReviseElectedVersionsCmd),
     }
 
     #[derive(Parser, Clone)]
-    pub struct UpdateCmd {
+    pub struct ReviseElectedVersionsCmd {
         #[clap(subcommand)]
-        pub subcommand: UpdateCommands,
+        pub subcommand: ReviseElectedVersionsCommands,
     }
 
     #[derive(Subcommand, Clone)]
-    pub enum UpdateCommands {
+    pub enum ReviseElectedVersionsCommands {
         /// Update the elected/blessed GuestOS versions in the registry
         /// by adding a new version and potentially removing obsolete versions
         GuestOS {
@@ -313,11 +313,11 @@ pub mod version {
             force: bool,
         },
     }
-    impl From<UpdateCommands> for Artifact {
-        fn from(value: UpdateCommands) -> Self {
+    impl From<ReviseElectedVersionsCommands> for Artifact {
+        fn from(value: ReviseElectedVersionsCommands) -> Self {
             match value {
-                UpdateCommands::GuestOS { .. } => Artifact::GuestOs,
-                UpdateCommands::HostOS { .. } => Artifact::HostOs,
+                ReviseElectedVersionsCommands::GuestOS { .. } => Artifact::GuestOs,
+                ReviseElectedVersionsCommands::HostOS { .. } => Artifact::HostOs,
             }
         }
     }
@@ -351,17 +351,21 @@ pub mod hostos {
     }
     #[derive(Subcommand, Clone)]
     pub enum Commands {
-        /// Create a new proposal to rollout an elected HostOS version
-        /// to a specified list of nodes
+        /// Roll out an elected HostOS version to the specified list of nodes.
+        /// The provided "version" must be already elected.
+        /// The "nodes" list must contain the node IDs where the version should be rolled out.
         Rollout {
+            #[clap(long, required = true)]
             version: String,
             /// Node IDs where to rollout the version
-            #[clap(long, num_args(1..))]
+            #[clap(long, num_args(1..), required = true)]
             nodes: Vec<PrincipalId>,
         },
-        /// Select a list of nodes from the registry using node group and
-        /// rollout an elected HostOS version to them
+        /// Smarter roll out of the elected HostOS version to groups of nodes.
+        /// The groups of nodes are created based on assignment to subnets, and on the owner of the nodes: DFINITY/other.
+        /// The provided "version" must be already elected.
         RolloutFromNodeGroup {
+            #[clap(long, required = true)]
             version: String,
             /// Specify if the group of nodes considered for the rollout should be assigned on
             /// a subnet or not
