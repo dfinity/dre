@@ -12,6 +12,10 @@ inputs:
 runs:
   using: composite
   steps:
+  - name: "👮‍♀️ Setup runner"
+    shell: bash
+    run: sudo chown -R 1001:1001 ~/.cache
+
     ########################################
     # Setup
     ########################################
