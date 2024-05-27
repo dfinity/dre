@@ -538,7 +538,7 @@ impl IcAdminWrapper {
         Ok((update_urls, expected_hash))
     }
 
-    pub async fn prepare_to_propose_to_update_elected_versions(
+    pub async fn prepare_to_propose_to_revise_elected_versions(
         release_artifact: &Artifact,
         version: &String,
         release_tag: &String,
