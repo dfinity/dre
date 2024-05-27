@@ -23,6 +23,7 @@ jobs:
   bazel:
     runs-on: 
       labels: dre-runner-custom
+    container: ghcr.io/dfinity/dre/actions-runner:0.1.0
     steps:
       - uses: actions/checkout@v4
         with:
