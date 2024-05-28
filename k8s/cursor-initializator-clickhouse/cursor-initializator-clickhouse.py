@@ -46,7 +46,7 @@ def main():
         with open(os.path.join(args.output_dir, f"{r[0]}.txt"), "w", encoding="utf-8") as f:
             f.write(f"{r[1]}\n")
 
-    logger.info(f"Successfully initialized %d cursors on path %s", len(result.result_rows), args.output_dir)
+    logger.info("Successfully initialized %d cursors on path %s", len(result.result_rows), args.output_dir)
 
 
 if __name__ == "__main__":
