@@ -46,8 +46,7 @@ impl Runner {
     pub fn as_automation(self) -> Self {
         Self {
             ic_admin: self.ic_admin.as_automation(),
-            dashboard_backend_client: self.dashboard_backend_client,
-            registry: self.registry,
+            ..self
         }
     }
 
@@ -182,12 +181,17 @@ impl Runner {
         let backend_url = format!("http://localhost:{}/", backend_port);
 
         let dashboard_backend_client = DashboardBackendClient::new_with_backend_url(backend_url);
+        let mut registry = registry::RegistryState::new(network, true).await;
+        let node_providers = query_ic_dashboard_list::<NodeProvidersResponse>("v3/node-providers")
+            .await?
+            .node_providers;
+        registry.update_node_details(&node_providers).await?;
+
         Ok(Self {
             ic_admin,
             dashboard_backend_client,
             // TODO: Remove once DREL-118 completed.
-            // Fake registry that is not used, but some methods still rely on backend.
-            registry: registry::RegistryState::new(network, true).await,
+            registry,
         })
     }
 

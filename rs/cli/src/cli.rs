@@ -332,12 +332,32 @@ pub mod hostos {
         All,
     }
 
+    impl std::fmt::Display for NodeOwner {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            match self {
+                NodeOwner::Dfinity => write!(f, "DFINITY"),
+                NodeOwner::Others => write!(f, "External"),
+                NodeOwner::All => write!(f, "DFINITY+External"),
+            }
+        }
+    }
+
     #[derive(ValueEnum, Copy, Clone, Debug, Ord, Eq, PartialEq, PartialOrd, Default)]
     pub enum NodeAssignment {
         Unassigned,
         Assigned,
         #[default]
         All,
+    }
+
+    impl std::fmt::Display for NodeAssignment {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            match self {
+                NodeAssignment::Unassigned => write!(f, "Unassigned"),
+                NodeAssignment::Assigned => write!(f, "In Subnet"),
+                NodeAssignment::All => write!(f, "In Subnet+Unassigned"),
+            }
+        }
     }
 
     use super::*;
