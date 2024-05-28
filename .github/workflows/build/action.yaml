@@ -58,25 +58,26 @@ runs:
     # TODO: right now we can't do it because our runners run in "kubernetes mode"
     #       we need them in "dind mode". Not sure how it will affect other parts
     #       of the runners.
-    # - name: Dry run tarballs
-    #   shell: bash
-    #   run: |
-    #     #!/bin/bash
+    - name: Dry run tarballs
+      if: ${{ !startsWith(runner.name, 'dre-runner-custom') }}
+      shell: bash
+      run: |
+        #!/bin/bash
 
-    #     set -euo pipefail
-    #     bazel query ... | grep -E "tarball$" | while IFS= read -r target; do
-    #         echo "Testing $target"
-    #         bazel run $target
+        set -euo pipefail
+        bazel query ... | grep -E "tarball$" | while IFS= read -r target; do
+            echo "Testing $target"
+            bazel run $target
 
-    #         image=$(echo $target | awk -F: '{ print $1 }' | awk -F/ '{ print $NF }')
-    #         image="localhost/$image"
-    #         echo "Testing dry run on image: $image"
-    #         ret=0
-    #         output=$(docker run --rm $image --help 2>&1) || ret=$?
-    #         if [ "$ret" != "0" ]
-    #         then
-    #           echo "$image failed to run.  Output:" >&2
-    #           echo "$output" >&2
-    #           exit "$ret"
-    #         fi
-    #     done
+            image=$(echo $target | awk -F: '{ print $1 }' | awk -F/ '{ print $NF }')
+            image="localhost/$image"
+            echo "Testing dry run on image: $image"
+            ret=0
+            output=$(docker run --rm $image --help 2>&1) || ret=$?
+            if [ "$ret" != "0" ]
+            then
+              echo "$image failed to run.  Output:" >&2
+              echo "$output" >&2
+              exit "$ret"
+            fi
+        done
