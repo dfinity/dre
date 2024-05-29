@@ -3,7 +3,7 @@ use ic_nns_governance::pb::v1::{ListProposalInfo, ListProposalInfoResponse, Prop
 
 use anyhow::Result;
 use candid::Decode;
-use ic_agent::agent::http_transport::reqwest_transport::ReqwestHttpReplicaV2Transport;
+use ic_agent::agent::http_transport::reqwest_transport::ReqwestTransport;
 use ic_agent::Agent;
 use log::{info, warn};
 use serde::{Deserialize, Serialize};
@@ -108,8 +108,13 @@ struct ProposalPoller {
 impl ProposalPoller {
     fn new(target_network: Network) -> Self {
         let nns_url = target_network.get_nns_urls()[0].clone();
+        let client = reqwest::Client::builder()
+            .use_rustls_tls()
+            .timeout(Duration::from_secs(30))
+            .build()
+            .expect("Could not create HTTP client.");
         let agent = Agent::builder()
-            .with_transport(ReqwestHttpReplicaV2Transport::create(nns_url).expect("failed to create transport"))
+            .with_transport(ReqwestTransport::create_with_client(nns_url, client).expect("failed to create transport"))
             .build()
             .expect("failed to build the agent");
         Self { agent }
