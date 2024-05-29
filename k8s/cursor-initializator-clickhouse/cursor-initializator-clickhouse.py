@@ -43,7 +43,12 @@ def main():
     )
 
     for r in result.result_rows:
-        with open(os.path.join(args.output_dir, f"{r[0]}.txt"), "w", encoding="utf-8") as f:
+        dir = os.path.join(args.output_dir, f"{r[0]}-node_exporter")
+
+        if not os.path.exists(dir):
+            os.mkdir(dir)
+
+        with open(os.path.join(dir, f"checkpoint.txt"), "w", encoding="utf-8") as f:
             f.write(f"{r[1]}\n")
 
     logger.info(f"Successfully initialized %d cursors on path %s", len(result.result_rows), args.output_dir)
