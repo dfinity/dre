@@ -18,8 +18,24 @@ runs:
       run: |
         set -euo pipefail
         whoami
-        sudo chown -R 1001:1001 ~/.cache
-        echo "Changed ownership of cache to 1001:1001"
+
+        path_to_check="/home/runner/.cache"
+
+        current_owner=$(stat -c "%u" "$path_to_check")
+        current_group=$(stat -c "%g" "$path_to_check")
+
+        desired_owner=1001
+        desired_group=1001
+
+        # Check if the current owner and group match the desired owner and group
+        if [ "$current_owner" -ne "$desired_owner" ] || [ "$current_group" -ne "$desired_group" ]; then
+            echo "Owner or group of cache does not match. Changing ownership..."
+            # Change the owner and group recursively
+            sudo chown -R $desired_owner:$desired_group "$path_to_check"
+            echo "Ownership changed to $desired_owner:$desired_group for $path_to_check"
+        else
+            echo "Ownership is already set to $desired_owner:$desired_group for $path_to_check"
+        fi
 
     ########################################
     # Setup
