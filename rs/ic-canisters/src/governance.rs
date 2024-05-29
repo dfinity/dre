@@ -1,4 +1,5 @@
 use candid::Decode;
+use ic_agent::agent::http_transport::ReqwestTransport;
 use ic_agent::Agent;
 use ic_nns_common::pb::v1::NeuronId;
 use ic_nns_common::pb::v1::ProposalId;
@@ -12,6 +13,7 @@ use ic_nns_governance::pb::v1::ProposalInfo;
 use log::warn;
 use serde::{self, Serialize};
 use std::str::FromStr;
+use std::time::Duration;
 use url::Url;
 
 use crate::CanisterClient;
@@ -23,10 +25,13 @@ pub struct GovernanceCanisterVersion {
 }
 
 pub async fn governance_canister_version(nns_urls: &[Url]) -> Result<GovernanceCanisterVersion, anyhow::Error> {
+    let client = reqwest::Client::builder()
+        .use_rustls_tls()
+        .timeout(Duration::from_secs(30))
+        .build()
+        .expect("Could not create HTTP client.");
     let canister_agent = Agent::builder()
-        .with_transport(ic_agent::agent::http_transport::reqwest_transport::ReqwestHttpReplicaV2Transport::create(
-            nns_urls[0].clone(),
-        )?)
+        .with_transport(ReqwestTransport::create_with_client(nns_urls[0].clone(), client)?)
         .with_verify_query_signatures(false)
         .build()?;
 

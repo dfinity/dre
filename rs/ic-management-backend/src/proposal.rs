@@ -1,10 +1,12 @@
+use std::time::Duration;
+
 use anyhow::Result;
 use backon::ExponentialBuilder;
 use backon::Retryable;
 use candid::{Decode, Encode};
 
 use futures_util::future::try_join_all;
-use ic_agent::agent::http_transport::reqwest_transport::ReqwestHttpReplicaV2Transport;
+use ic_agent::agent::http_transport::ReqwestTransport;
 use ic_agent::Agent;
 use ic_management_types::UpdateElectedHostosVersionsProposal;
 use ic_management_types::UpdateElectedReplicaVersionsProposal;
@@ -85,11 +87,17 @@ pub struct UpdateUnassignedNodesProposal {
 #[allow(dead_code)]
 impl ProposalAgent {
     pub fn new(nns_urls: &[Url]) -> Self {
+        let client = reqwest::Client::builder()
+            .use_rustls_tls()
+            .timeout(Duration::from_secs(30))
+            .build()
+            .expect("Could not create HTTP client.");
         let agent = Agent::builder()
-            .with_transport(ReqwestHttpReplicaV2Transport::create(nns_urls[0].clone()).expect("failed to create transport"))
+            .with_transport(ReqwestTransport::create_with_client(nns_urls[0].clone(), client).expect("Failed to create transport"))
             .with_verify_query_signatures(false)
             .build()
             .expect("failed to build the agent");
+
         Self { agent }
     }
 

@@ -1,5 +1,5 @@
 {
-  "checksum": "7a9aa96b6d31f919eab3d394e6a709320b6fc922ef8948a393e4af1a40bc3cbb",
+  "checksum": "f489637eb29f8ee955d6f7a7b93fccf6d868effc11c11a3eed989ac48731dcc3",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -2558,6 +2558,13 @@
         "compile_data_glob": [
           "**"
         ],
+        "crate_features": {
+          "common": [
+            "default",
+            "std"
+          ],
+          "selects": {}
+        },
         "deps": {
           "common": [
             {
@@ -7475,10 +7482,37 @@
         ],
         "crate_features": {
           "common": [
-            "default",
             "std"
           ],
-          "selects": {}
+          "selects": {
+            "aarch64-unknown-linux-gnu": [
+              "default"
+            ],
+            "arm-unknown-linux-gnueabi": [
+              "default"
+            ],
+            "armv7-unknown-linux-gnueabi": [
+              "default"
+            ],
+            "i686-unknown-freebsd": [
+              "default"
+            ],
+            "i686-unknown-linux-gnu": [
+              "default"
+            ],
+            "powerpc-unknown-linux-gnu": [
+              "default"
+            ],
+            "s390x-unknown-linux-gnu": [
+              "default"
+            ],
+            "x86_64-unknown-freebsd": [
+              "default"
+            ],
+            "x86_64-unknown-linux-gnu": [
+              "default"
+            ]
+          }
         },
         "deps": {
           "common": [
@@ -9751,7 +9785,7 @@
               "target": "ic_base_types"
             },
             {
-              "id": "itertools 0.12.1",
+              "id": "itertools 0.13.0",
               "target": "itertools"
             },
             {
@@ -11304,7 +11338,7 @@
               "target": "ic_types"
             },
             {
-              "id": "itertools 0.12.1",
+              "id": "itertools 0.13.0",
               "target": "itertools"
             },
             {
@@ -12660,6 +12694,13 @@
         "compile_data_glob": [
           "**"
         ],
+        "crate_features": {
+          "common": [
+            "parking",
+            "std"
+          ],
+          "selects": {}
+        },
         "deps": {
           "common": [
             {
@@ -12767,6 +12808,12 @@
         "compile_data_glob": [
           "**"
         ],
+        "crate_features": {
+          "common": [
+            "std"
+          ],
+          "selects": {}
+        },
         "deps": {
           "common": [
             {
@@ -16925,13 +16972,13 @@
       },
       "license": null
     },
-    "ic-agent 0.34.0": {
+    "ic-agent 0.35.0": {
       "name": "ic-agent",
-      "version": "0.34.0",
+      "version": "0.35.0",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/ic-agent/0.34.0/download",
-          "sha256": "555eda283b8ba1a996d44d80b6c9a6d38a6cbb81797a7b7bbee134fdde64ce48"
+          "url": "https://static.crates.io/crates/ic-agent/0.35.0/download",
+          "sha256": "8f08d1b54f1834fb9637a57855f1d87bb9dbec7a9dec09499737580692829cb0"
         }
       },
       "targets": [
@@ -16960,6 +17007,10 @@
         },
         "deps": {
           "common": [
+            {
+              "id": "async-lock 3.3.0",
+              "target": "async_lock"
+            },
             {
               "id": "backoff 0.4.0",
               "target": "backoff"
@@ -16997,7 +17048,7 @@
               "target": "ic_certification"
             },
             {
-              "id": "ic-transport-types 0.34.0",
+              "id": "ic-transport-types 0.35.0",
               "target": "ic_transport_types"
             },
             {
@@ -17033,7 +17084,7 @@
               "target": "rangemap"
             },
             {
-              "id": "reqwest 0.11.27",
+              "id": "reqwest 0.12.4",
               "target": "reqwest"
             },
             {
@@ -17100,7 +17151,7 @@
           ],
           "selects": {}
         },
-        "version": "0.34.0"
+        "version": "0.35.0"
       },
       "license": "Apache-2.0"
     },
@@ -17675,7 +17726,7 @@
               "target": "hex"
             },
             {
-              "id": "ic-agent 0.34.0",
+              "id": "ic-agent 0.35.0",
               "target": "ic_agent"
             },
             {
@@ -17719,7 +17770,7 @@
               "target": "ic_sys"
             },
             {
-              "id": "ic-utils 0.34.0",
+              "id": "ic-utils 0.35.0",
               "target": "ic_utils"
             },
             {
@@ -17733,6 +17784,10 @@
             {
               "id": "prost 0.12.6",
               "target": "prost"
+            },
+            {
+              "id": "reqwest 0.12.4",
+              "target": "reqwest"
             },
             {
               "id": "serde 1.0.203",
@@ -21407,7 +21462,7 @@
               "target": "hyper"
             },
             {
-              "id": "ic-agent 0.34.0",
+              "id": "ic-agent 0.35.0",
               "target": "ic_agent"
             },
             {
@@ -21471,7 +21526,7 @@
               "target": "ic_types"
             },
             {
-              "id": "itertools 0.12.1",
+              "id": "itertools 0.13.0",
               "target": "itertools"
             },
             {
@@ -25668,13 +25723,13 @@
       },
       "license": null
     },
-    "ic-transport-types 0.34.0": {
+    "ic-transport-types 0.35.0": {
       "name": "ic-transport-types",
-      "version": "0.34.0",
+      "version": "0.35.0",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/ic-transport-types/0.34.0/download",
-          "sha256": "7c06d3c1292368c813f8104d9d8294bda5577ea6fe4501a65997d0b7f155f15f"
+          "url": "https://static.crates.io/crates/ic-transport-types/0.35.0/download",
+          "sha256": "c1c68959f501cfcb79319b6720fd1903a661d77b503e6128bfce31f91ad87aca"
         }
       },
       "targets": [
@@ -25740,7 +25795,7 @@
           ],
           "selects": {}
         },
-        "version": "0.34.0"
+        "version": "0.35.0"
       },
       "license": "Apache-2.0"
     },
@@ -25902,13 +25957,13 @@
       },
       "license": null
     },
-    "ic-utils 0.34.0": {
+    "ic-utils 0.35.0": {
       "name": "ic-utils",
-      "version": "0.34.0",
+      "version": "0.35.0",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/ic-utils/0.34.0/download",
-          "sha256": "c83e1b5aea342fd6209b2de903eaf11c98f9724131f906da090cc14ec8329d0e"
+          "url": "https://static.crates.io/crates/ic-utils/0.35.0/download",
+          "sha256": "61fd20379ac2d86f85e177e75e72b27eaa595a9561891d5be0e7d0ca37604bbb"
         }
       },
       "targets": [
@@ -25938,7 +25993,7 @@
               "target": "futures_util"
             },
             {
-              "id": "ic-agent 0.34.0",
+              "id": "ic-agent 0.35.0",
               "target": "ic_agent"
             },
             {
@@ -25972,6 +26027,10 @@
             {
               "id": "time 0.3.36",
               "target": "time"
+            },
+            {
+              "id": "tokio 1.37.0",
+              "target": "tokio"
             }
           ],
           "selects": {}
@@ -25990,7 +26049,7 @@
           ],
           "selects": {}
         },
-        "version": "0.34.0"
+        "version": "0.35.0"
       },
       "license": "Apache-2.0"
     },
@@ -27635,6 +27694,53 @@
         },
         "edition": "2018",
         "version": "0.12.1"
+      },
+      "license": "MIT OR Apache-2.0"
+    },
+    "itertools 0.13.0": {
+      "name": "itertools",
+      "version": "0.13.0",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/itertools/0.13.0/download",
+          "sha256": "413ee7dfc52ee1a4949ceeb7dbc8a33f2d6c088194d9f922fb8318faf1f01186"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "itertools",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "itertools",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "crate_features": {
+          "common": [
+            "default",
+            "use_alloc",
+            "use_std"
+          ],
+          "selects": {}
+        },
+        "deps": {
+          "common": [
+            {
+              "id": "either 1.12.0",
+              "target": "either"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2018",
+        "version": "0.13.0"
       },
       "license": "MIT OR Apache-2.0"
     },
@@ -30508,7 +30614,7 @@
               "target": "humantime"
             },
             {
-              "id": "ic-agent 0.34.0",
+              "id": "ic-agent 0.35.0",
               "target": "ic_agent"
             },
             {
@@ -31563,12 +31669,16 @@
               "target": "candid"
             },
             {
-              "id": "ic-agent 0.34.0",
+              "id": "ic-agent 0.35.0",
               "target": "ic_agent"
             },
             {
               "id": "rand 0.8.5",
               "target": "rand"
+            },
+            {
+              "id": "reqwest 0.12.4",
+              "target": "reqwest"
             },
             {
               "id": "serde 1.0.203",
@@ -37327,24 +37437,13 @@
         ],
         "crate_features": {
           "common": [
-            "__rustls",
             "__tls",
             "blocking",
             "default",
             "default-tls",
-            "hyper-rustls",
             "hyper-tls",
-            "json",
             "native-tls-crate",
-            "rustls",
-            "rustls-tls-webpki-roots",
-            "serde_json",
-            "stream",
-            "tokio-native-tls",
-            "tokio-rustls",
-            "tokio-util",
-            "wasm-streams",
-            "webpki-roots"
+            "tokio-native-tls"
           ],
           "selects": {}
         },
@@ -37373,10 +37472,6 @@
             {
               "id": "serde 1.0.203",
               "target": "serde"
-            },
-            {
-              "id": "serde_json 1.0.117",
-              "target": "serde_json"
             },
             {
               "id": "serde_urlencoded 0.7.1",
@@ -37414,10 +37509,6 @@
                 "target": "hyper"
               },
               {
-                "id": "hyper-rustls 0.24.2",
-                "target": "hyper_rustls"
-              },
-              {
                 "id": "hyper-tls 0.5.0",
                 "target": "hyper_tls"
               },
@@ -37451,10 +37542,6 @@
                 "target": "pin_project_lite"
               },
               {
-                "id": "rustls 0.21.12",
-                "target": "rustls"
-              },
-              {
                 "id": "rustls-pemfile 1.0.4",
                 "target": "rustls_pemfile"
               },
@@ -37465,18 +37552,6 @@
               {
                 "id": "tokio-native-tls 0.3.1",
                 "target": "tokio_native_tls"
-              },
-              {
-                "id": "tokio-rustls 0.24.1",
-                "target": "tokio_rustls"
-              },
-              {
-                "id": "tokio-util 0.7.11",
-                "target": "tokio_util"
-              },
-              {
-                "id": "webpki-roots 0.25.4",
-                "target": "webpki_roots"
               }
             ],
             "cfg(target_arch = \"wasm32\")": [
@@ -37485,16 +37560,16 @@
                 "target": "js_sys"
               },
               {
+                "id": "serde_json 1.0.117",
+                "target": "serde_json"
+              },
+              {
                 "id": "wasm-bindgen 0.2.92",
                 "target": "wasm_bindgen"
               },
               {
                 "id": "wasm-bindgen-futures 0.4.42",
                 "target": "wasm_bindgen_futures"
-              },
-              {
-                "id": "wasm-streams 0.4.0",
-                "target": "wasm_streams"
               },
               {
                 "id": "web-sys 0.3.69",
@@ -37558,7 +37633,8 @@
             "json",
             "macos-system-configuration",
             "rustls-pki-types",
-            "rustls-tls-webpki-roots"
+            "rustls-tls-webpki-roots",
+            "stream"
           ],
           "selects": {
             "aarch64-apple-darwin": [
@@ -37789,6 +37865,10 @@
                 "target": "tokio_rustls"
               },
               {
+                "id": "tokio-util 0.7.11",
+                "target": "tokio_util"
+              },
+              {
                 "id": "webpki-roots 0.26.1",
                 "target": "webpki_roots"
               }
@@ -37805,6 +37885,10 @@
               {
                 "id": "wasm-bindgen-futures 0.4.42",
                 "target": "wasm_bindgen_futures"
+              },
+              {
+                "id": "wasm-streams 0.4.0",
+                "target": "wasm_streams"
               },
               {
                 "id": "web-sys 0.3.69",
@@ -38226,7 +38310,7 @@
               "target": "ic_base_types"
             },
             {
-              "id": "itertools 0.12.1",
+              "id": "itertools 0.13.0",
               "target": "itertools"
             },
             {
@@ -41155,7 +41239,7 @@
         "deps_dev": {
           "common": [
             {
-              "id": "itertools 0.12.1",
+              "id": "itertools 0.13.0",
               "target": "itertools"
             }
           ],
@@ -41699,7 +41783,7 @@
               "target": "futures"
             },
             {
-              "id": "ic-agent 0.34.0",
+              "id": "ic-agent 0.35.0",
               "target": "ic_agent"
             },
             {
@@ -41715,7 +41799,7 @@
               "target": "ic_nns_governance"
             },
             {
-              "id": "itertools 0.12.1",
+              "id": "itertools 0.13.0",
               "target": "itertools"
             },
             {
@@ -44967,95 +45051,7 @@
             "logging",
             "tls12"
           ],
-          "selects": {
-            "aarch64-apple-darwin": [
-              "default"
-            ],
-            "aarch64-apple-ios": [
-              "default"
-            ],
-            "aarch64-apple-ios-sim": [
-              "default"
-            ],
-            "aarch64-fuchsia": [
-              "default"
-            ],
-            "aarch64-linux-android": [
-              "default"
-            ],
-            "aarch64-pc-windows-msvc": [
-              "default"
-            ],
-            "aarch64-unknown-linux-gnu": [
-              "default"
-            ],
-            "arm-unknown-linux-gnueabi": [
-              "default"
-            ],
-            "armv7-linux-androideabi": [
-              "default"
-            ],
-            "armv7-unknown-linux-gnueabi": [
-              "default"
-            ],
-            "i686-apple-darwin": [
-              "default"
-            ],
-            "i686-linux-android": [
-              "default"
-            ],
-            "i686-pc-windows-msvc": [
-              "default"
-            ],
-            "i686-unknown-freebsd": [
-              "default"
-            ],
-            "i686-unknown-linux-gnu": [
-              "default"
-            ],
-            "powerpc-unknown-linux-gnu": [
-              "default"
-            ],
-            "riscv32imc-unknown-none-elf": [
-              "default"
-            ],
-            "riscv64gc-unknown-none-elf": [
-              "default"
-            ],
-            "s390x-unknown-linux-gnu": [
-              "default"
-            ],
-            "thumbv7em-none-eabi": [
-              "default"
-            ],
-            "thumbv8m.main-none-eabi": [
-              "default"
-            ],
-            "x86_64-apple-darwin": [
-              "default"
-            ],
-            "x86_64-apple-ios": [
-              "default"
-            ],
-            "x86_64-fuchsia": [
-              "default"
-            ],
-            "x86_64-linux-android": [
-              "default"
-            ],
-            "x86_64-pc-windows-msvc": [
-              "default"
-            ],
-            "x86_64-unknown-freebsd": [
-              "default"
-            ],
-            "x86_64-unknown-linux-gnu": [
-              "default"
-            ],
-            "x86_64-unknown-none": [
-              "default"
-            ]
-          }
+          "selects": {}
         },
         "deps": {
           "common": [
@@ -48000,36 +47996,6 @@
         "version": "0.3.69"
       },
       "license": "MIT OR Apache-2.0"
-    },
-    "webpki-roots 0.25.4": {
-      "name": "webpki-roots",
-      "version": "0.25.4",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/webpki-roots/0.25.4/download",
-          "sha256": "5f20c57d8d7db6d3b86154206ae5d8fba62dd39573114de97c2cb0578251f8e1"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "webpki_roots",
-            "crate_root": "src/lib.rs",
-            "srcs": [
-              "**/*.rs"
-            ]
-          }
-        }
-      ],
-      "library_target_name": "webpki_roots",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "edition": "2018",
-        "version": "0.25.4"
-      },
-      "license": "MPL-2.0"
     },
     "webpki-roots 0.26.1": {
       "name": "webpki-roots",

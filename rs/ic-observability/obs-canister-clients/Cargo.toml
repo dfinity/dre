@@ -10,4 +10,5 @@ ic-agent = { workspace = true }
 candid = { workspace = true }
 serde = { workspace = true }
 rand = { workspace = true }
+reqwest = { workspace = true }
 url = { workspace = true }
