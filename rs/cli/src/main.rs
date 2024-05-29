@@ -265,13 +265,13 @@ async fn async_main() -> Result<(), anyhow::Error> {
             }
 
             cli::Commands::Version(version_command) => match &version_command {
-                cli::version::Cmd::Update(update_command) => {
+                cli::version::Cmd::ReviseElectedVersions(update_command) => {
                     let release_artifact: &Artifact = &update_command.subcommand.clone().into();
 
                     let update_version = match &update_command.subcommand {
-                        cli::version::UpdateCommands::GuestOS { version, release_tag, force }
-                        | cli::version::UpdateCommands::HostOS { version, release_tag, force } => {
-                            ic_admin::IcAdminWrapper::prepare_to_propose_to_update_elected_versions(
+                        cli::version::ReviseElectedVersionsCommands::GuestOS { version, release_tag, force }
+                        | cli::version::ReviseElectedVersionsCommands::HostOS { version, release_tag, force } => {
+                            ic_admin::IcAdminWrapper::prepare_to_propose_to_revise_elected_versions(
                                 release_artifact,
                                 version,
                                 release_tag,
@@ -304,22 +304,29 @@ async fn async_main() -> Result<(), anyhow::Error> {
                 }
             },
 
-            cli::Commands::Hostos(nodes) => match &nodes.subcommand {
-                cli::hostos::Commands::Rollout { version, nodes } => runner_instance.hostos_rollout(nodes.clone(), version, simulate, None).await,
-                cli::hostos::Commands::RolloutFromNodeGroup {
-                    version,
-                    assignment,
-                    owner,
-                    nodes_in_group,
-                    exclude,
-                } => {
-                    let update_group = NodeGroupUpdate::new(*assignment, *owner, NumberOfNodes::from_str(nodes_in_group)?);
-                    if let Some((nodes_to_update, summary)) = runner_instance.hostos_rollout_nodes(update_group, version, exclude).await? {
-                        return runner_instance.hostos_rollout(nodes_to_update, version, simulate, Some(summary)).await;
+            cli::Commands::Hostos(nodes) => {
+                let runner_instance = if target_network.is_mainnet() {
+                    runner_instance.as_automation()
+                } else {
+                    runner_instance
+                };
+                match &nodes.subcommand {
+                    cli::hostos::Commands::Rollout { version, nodes } => runner_instance.hostos_rollout(nodes.clone(), version, simulate, None).await,
+                    cli::hostos::Commands::RolloutFromNodeGroup {
+                        version,
+                        assignment,
+                        owner,
+                        nodes_in_group,
+                        exclude,
+                    } => {
+                        let update_group = NodeGroupUpdate::new(*assignment, *owner, NumberOfNodes::from_str(nodes_in_group)?);
+                        if let Some((nodes_to_update, summary)) = runner_instance.hostos_rollout_nodes(update_group, version, exclude).await? {
+                            return runner_instance.hostos_rollout(nodes_to_update, version, simulate, Some(summary)).await;
+                        }
+                        Ok(())
                     }
-                    Ok(())
                 }
-            },
+            }
             cli::Commands::Nodes(nodes) => match &nodes.subcommand {
                 cli::nodes::Commands::Remove {
                     extra_nodes_filter,

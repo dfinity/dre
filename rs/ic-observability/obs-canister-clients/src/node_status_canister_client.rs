@@ -1,4 +1,7 @@
+use std::time::Duration;
+
 use candid::{CandidType, Decode, Encode};
+use ic_agent::agent::http_transport::ReqwestTransport;
 use ic_agent::{export::Principal, identity::AnonymousIdentity, Agent};
 use rand::seq::SliceRandom;
 use serde::Deserialize;
@@ -45,12 +48,17 @@ impl NodeStatusCanister {
             agent: url
                 .iter()
                 .map(|url| {
+                    let client = reqwest::Client::builder()
+                        .use_rustls_tls()
+                        .timeout(Duration::from_secs(30))
+                        .build()
+                        .expect("Could not create HTTP client.");
                     Agent::builder()
-                        .with_url(url.as_str())
+                        .with_transport(ReqwestTransport::create_with_client(url.as_str(), client).expect("Failed to create transport"))
                         .with_identity(AnonymousIdentity)
                         .with_verify_query_signatures(false)
                         .build()
-                        .unwrap()
+                        .expect("Failed to build agent")
                 })
                 .collect(),
         }

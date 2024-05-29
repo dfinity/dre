@@ -218,7 +218,7 @@ impl TryFrom<Vec<ProposalInfo>> for MessageGroups {
     fn try_from(proposals: Vec<ProposalInfo>) -> Result<Self, anyhow::Error> {
         let message_groups = proposals
             .into_iter()
-            .group_by(|p| {
+            .chunk_by(|p| {
                 (
                     slack_channel_for_proposal(p),
                     alert_mention(p.proposer.as_ref().expect("No NeuronId in the proposal")),

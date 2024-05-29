@@ -15,6 +15,7 @@ use serde::Deserialize;
 use std::path::PathBuf;
 use std::str::FromStr;
 use std::sync::Mutex;
+use std::time::Duration;
 use url::Url;
 
 pub mod governance;
@@ -83,13 +84,17 @@ impl IcAgentCanisterClient {
     }
 
     fn build_agent(url: Url, identity: Box<dyn Identity>) -> anyhow::Result<Self> {
-        Ok(Self {
-            agent: Agent::builder()
-                .with_identity(identity)
-                .with_transport(ReqwestTransport::create(url)?)
-                .with_verify_query_signatures(false)
-                .build()?,
-        })
+        let client = reqwest::Client::builder()
+            .use_rustls_tls()
+            .timeout(Duration::from_secs(30))
+            .build()
+            .expect("Could not create HTTP client.");
+        let agent = Agent::builder()
+            .with_identity(identity)
+            .with_transport(ReqwestTransport::create_with_client(url, client)?)
+            .with_verify_query_signatures(false)
+            .build()?;
+        Ok(Self { agent })
     }
 }
 

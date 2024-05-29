@@ -30,7 +30,7 @@ pub struct HostosRolloutSubnetAffected {
     pub subnet_size: usize,
 }
 
-#[derive(Eq, PartialEq)]
+#[derive(Eq, PartialEq, Debug)]
 pub enum HostosRolloutReason {
     NoNodeHealthy,
     NoNodeWithoutProposal,
@@ -275,23 +275,7 @@ impl HostosRollout {
                     info!("All valid nodes in the subnet: {} have been updated", subnet_id);
                     None
                 } else {
-                    if nodes.len() < nodes_to_take {
-                        debug!(
-                            "Updating all valid nodes ({}) left in the subnet: {}\n\
-                                {}% of all nodes in the subnet",
-                            nodes.len(),
-                            subnet_id,
-                            actual_percent
-                        );
-                    } else {
-                        debug!(
-                            "Updating {} valid nodes in the subnet: {}\n\
-                                {}% of all nodes in the subnet",
-                            nodes.len(),
-                            subnet_id,
-                            actual_percent
-                        );
-                    }
+                    info!("Updating {} nodes ({}%) in the subnet {}", nodes.len(), actual_percent, subnet_id,);
                     Some(nodes)
                 }
             })
@@ -385,7 +369,22 @@ impl HostosRollout {
         nodes_with_open_proposals: Vec<UpdateNodesHostosVersionsProposal>,
         update_group: NodeGroupUpdate,
     ) -> anyhow::Result<HostosRolloutResponse> {
-        info!("CANDIDATES SELECTION FOR {:?}", &update_group);
+        info!(
+            "CANDIDATES SELECTION FROM {} HEALTHY NODES FOR {} {} {}",
+            nodes_health
+                .iter()
+                .filter_map(|(principal, status)| {
+                    if *status == Status::Healthy {
+                        Some(principal)
+                    } else {
+                        None
+                    }
+                })
+                .count(),
+            update_group.maybe_number_nodes.unwrap_or_default(),
+            update_group.node_group.owner,
+            update_group.node_group.assignment
+        );
 
         match update_group.node_group.assignment {
             NodeAssignment::Unassigned => {
@@ -398,13 +397,18 @@ impl HostosRollout {
                     CandidatesSelection::Ok(candidates_unassigned) => {
                         let nodes_to_take = update_group.nodes_to_take(unassigned_nodes.len());
                         let nodes_to_update = candidates_unassigned.into_iter().take(nodes_to_take).collect::<Vec<_>>();
+                        info!("{} candidate nodes selected for: {}", nodes_to_update.len(), update_group.node_group);
                         Ok(HostosRolloutResponse::Ok(nodes_to_update, None))
                     }
-                    CandidatesSelection::None(reason) => Ok(HostosRolloutResponse::None(vec![(update_group.node_group, reason)])),
+                    CandidatesSelection::None(reason) => {
+                        info!("No candidate nodes selected for: {} ==> {:?}", update_group.node_group, reason);
+                        Ok(HostosRolloutResponse::None(vec![(update_group.node_group, reason)]))
+                    }
                 }
             }
             NodeAssignment::Assigned => {
                 let assigned_nodes = self.filter_nodes_in_group(update_group).await?;
+                info!("{} candidate nodes selected for: {}", assigned_nodes.len(), update_group.node_group);
 
                 match self
                     .candidates_selection(nodes_health, nodes_with_open_proposals, assigned_nodes.clone())
@@ -428,9 +432,13 @@ impl HostosRollout {
                             })
                             .collect::<Vec<HostosRolloutSubnetAffected>>();
 
+                        info!("{} candidate nodes selected for: {}", nodes_to_update.len(), update_group.node_group);
                         Ok(HostosRolloutResponse::Ok(nodes_to_update, Some(subnets_affected)))
                     }
-                    CandidatesSelection::None(reason) => Ok(HostosRolloutResponse::None(vec![(update_group.node_group, reason)])),
+                    CandidatesSelection::None(reason) => {
+                        info!("No candidate nodes selected for: {} ==> {:?}", update_group.node_group, reason);
+                        Ok(HostosRolloutResponse::None(vec![(update_group.node_group, reason)]))
+                    }
                 }
             }
             NodeAssignment::All => {
@@ -449,14 +457,32 @@ impl HostosRollout {
                 )
                 .await
                 .map(|response| match response {
-                    (Ok(assigned_nodes, subnet_affected), None(_)) => Ok(assigned_nodes, subnet_affected),
-                    (None(_), Ok(unassigned_nodes, _)) => Ok(unassigned_nodes, Option::None),
+                    (Ok(assigned_nodes, subnet_affected), None(reason)) => {
+                        info!("No unassigned nodes selected for: {:?} ==> {:?}", update_group.node_group, reason);
+                        Ok(assigned_nodes, subnet_affected)
+                    }
+                    (None(reason), Ok(unassigned_nodes, _)) => {
+                        info!("No assigned nodes selected for: {:?} ==> {:?}", update_group.node_group, reason);
+                        Ok(unassigned_nodes, Option::None)
+                    }
 
                     (Ok(assigned_nodes, subnet_affected), Ok(unassigned_nodes, _)) => {
+                        info!(
+                            "{} assigned nodes and {} unassigned nodes selected for: {}",
+                            assigned_nodes.len(),
+                            unassigned_nodes.len(),
+                            update_group.node_group
+                        );
                         Ok(assigned_nodes.into_iter().chain(unassigned_nodes).collect(), subnet_affected.clone())
                     }
 
-                    (None(assigned_reason), None(unassigned_reason)) => None(assigned_reason.into_iter().chain(unassigned_reason).collect()),
+                    (None(assigned_reason), None(unassigned_reason)) => {
+                        info!(
+                            "No candidate nodes selected for: {:?} ==> {:?} {:?}",
+                            update_group.node_group, assigned_reason, unassigned_reason
+                        );
+                        None(assigned_reason.into_iter().chain(unassigned_reason).collect())
+                    }
                 })
             }
         }
