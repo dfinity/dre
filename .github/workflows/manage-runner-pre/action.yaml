@@ -17,6 +17,7 @@ runs:
       shell: bash
       run: |
         set -euo pipefail
+        whoami
         sudo chown -R 1001:1001 ~/.cache
         echo "Changed ownership of cache to 1001:1001"
 
