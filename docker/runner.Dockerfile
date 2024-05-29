@@ -3,8 +3,8 @@ FROM ubuntu:20.04
 LABEL org.opencontainers.image.source="https://github.com/dfinity/dre"
 
 ENV TZ=UTC
-ARG DEBIAN_FRONTEND=noninteractive
-ARG RUNNER_UID=1000
+ENV DEBIAN_FRONTEND=noninteractive
+ENV RUNNER_UID=1001
 
 RUN apt-get update && \
     apt-get upgrade -y && \
