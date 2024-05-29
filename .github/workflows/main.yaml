@@ -23,7 +23,8 @@ jobs:
   bazel:
     runs-on: 
       labels: dre-runner-custom
-    container: ghcr.io/dfinity/dre/actions-runner:0.1.0
+    # This image is based on ubuntu:20.04
+    container: ghcr.io/dfinity/dre/actions-runner:0.2.0
     steps:
       - uses: actions/checkout@v4
         with:
