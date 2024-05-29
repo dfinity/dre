@@ -48,7 +48,7 @@ def main():
         if not os.path.exists(dir):
             os.mkdir(dir)
 
-        with open(os.path.join(dir, f"checkpoint.txt"), "w", encoding="utf-8") as f:
+        with open(os.path.join(dir, "checkpoint.txt"), "w", encoding="utf-8") as f:
             f.write(f"{r[1]}\n")
 
     logger.info("Successfully initialized %d cursors on path %s", len(result.result_rows), args.output_dir)
