@@ -55,7 +55,11 @@ runs:
         branch: ${{ github.head_ref }}
         ssh: true
 
+    # TODO: right now we can't do it because our runners run in "kubernetes mode"
+    #       we need them in "dind mode". Not sure how it will affect other parts
+    #       of the runners.
     - name: Dry run tarballs
+      if: ${{ !startsWith(runner.name, 'dre-runner-custom') }}
       shell: bash
       run: |
         #!/bin/bash
