@@ -91,6 +91,7 @@ TEAM_PRETTY_MAP = {
     "runtime-owners": "Runtime",
     "trust-team": "Trust",
     "sdk-team": "SDK",
+    "utopia": "Utopia"
 }
 
 
@@ -455,7 +456,7 @@ Changelog since git revision [{first_commit}](https://dashboard.internetcomputer
 
         for change in sorted(change_infos[current_type], key=lambda x: ",".join(x["team"])):
             commit_part = "[`{0}`](https://github.com/dfinity/ic/commit/{0})".format(change["commit"][:9])
-            team_part = ",".join([TEAM_PRETTY_MAP[team] for team in change["team"]])
+            team_part = ",".join([TEAM_PRETTY_MAP.get(team, team) for team in change["team"]])
             team_part = team_part if team_part else "General"
             scope_part = (
                 ":"
