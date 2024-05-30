@@ -57,7 +57,7 @@ pub async fn dump_registry(path: &Option<PathBuf>, network: &Network, version: &
         Err(e) => return Err(e.into()),
     };
 
-    let nodes = get_nodes(&local_registry, version, &node_operators, &subnets, &network).await?;
+    let nodes = get_nodes(&local_registry, version, &node_operators, &subnets, network).await?;
     // Calculate number of rewardable nodes for node operators
     for node_operator in node_operators.values_mut() {
         node_operator.total_up_nodes = nodes
