@@ -61,6 +61,7 @@ TEAM_PRETTY_MAP = {
     "runtime-owners": "Runtime",
     "trust-team": "Trust",
     "sdk-team": "SDK",
+    "utopia": "Utopia"
 }
 
 
@@ -435,7 +436,7 @@ def main():
                 commit_part = '[<a href="https://github.com/dfinity/ic/commit/{0}">{0}</a>]'.format(
                     change["commit"][:9]
                 )
-                team_part = ",".join([TEAM_PRETTY_MAP[team] for team in change["team"]])
+                team_part = ",".join([TEAM_PRETTY_MAP.get(team, team) for team in change["team"]])
                 team_part = team_part if team_part else "General"
                 scope_part = (
                     ":"
