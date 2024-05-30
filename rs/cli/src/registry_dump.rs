@@ -1,12 +1,18 @@
-use std::{collections::BTreeMap, path::PathBuf, str::FromStr, time::Duration};
+use std::{
+    collections::{BTreeMap, HashMap},
+    path::PathBuf,
+    str::FromStr,
+    time::Duration,
+};
 
 use ic_base_types::{PrincipalId, RegistryVersion};
 use ic_interfaces_registry::RegistryClient;
 use ic_management_backend::{
     health::{HealthClient, HealthStatusQuerier},
+    public_dashboard::query_ic_dashboard_list,
     registry::{local_registry_path, sync_local_store, RegistryFamilyEntries},
 };
-use ic_management_types::{Network, Status};
+use ic_management_types::{Network, NodeProvidersResponse, Status};
 use ic_protobuf::registry::{
     api_boundary_node::v1::ApiBoundaryNodeRecord,
     dc::v1::DataCenterRecord,
@@ -45,7 +51,14 @@ pub async fn dump_registry(path: &Option<PathBuf>, network: &Network, version: &
     let elected_guest_os_versions = get_elected_guest_os_versions(&local_registry, version)?;
     let elected_host_os_versions = get_elected_host_os_versions(&local_registry, version)?;
 
-    let mut node_operators = get_node_operators(&local_registry, version)?;
+    let node_provider_names: HashMap<PrincipalId, String> = HashMap::from_iter(
+        query_ic_dashboard_list::<NodeProvidersResponse>("v3/node-providers")
+            .await?
+            .node_providers
+            .iter()
+            .map(|np| (np.principal_id.clone(), np.display_name.clone())),
+    );
+    let mut node_operators = get_node_operators(&local_registry, version, &node_provider_names)?;
 
     let dcs = get_data_centers(&local_registry, version)?;
 
@@ -60,6 +73,15 @@ pub async fn dump_registry(path: &Option<PathBuf>, network: &Network, version: &
     let nodes = get_nodes(&local_registry, version, &node_operators, &subnets, network).await?;
     // Calculate number of rewardable nodes for node operators
     for node_operator in node_operators.values_mut() {
+        let mut nodes_by_health = BTreeMap::new();
+        for node_details in nodes.iter().filter(|n| n.node_operator_id == node_operator.node_operator_principal_id) {
+            let node_id = node_details.node_id.clone();
+            let node_status = node_details.status.clone().to_string();
+            let health = node_status.clone().to_string();
+            let nodes = nodes_by_health.entry(health).or_insert_with(Vec::new);
+            nodes.push(node_id.clone());
+        }
+        node_operator.nodes_health = nodes_by_health;
         node_operator.total_up_nodes = nodes
             .iter()
             .filter(|n| {
@@ -229,23 +251,47 @@ fn get_data_centers(local_registry: &LocalRegistry, version: RegistryVersion) ->
         .collect())
 }
 
-fn get_node_operators(local_registry: &LocalRegistry, version: RegistryVersion) -> Result<BTreeMap<PrincipalId, NodeOperator>, RegistryDumpError> {
+fn get_node_operators(
+    local_registry: &LocalRegistry,
+    version: RegistryVersion,
+    node_provider_names: &HashMap<PrincipalId, String>,
+) -> Result<BTreeMap<PrincipalId, NodeOperator>, RegistryDumpError> {
+    let all_nodes = local_registry
+        .get_family_entries_of_version::<NodeRecord>(version)
+        .map_err(|e| anyhow::anyhow!("Couldn't get nodes: {:?}", e))?
+        .into_iter()
+        .map(|(k, (_, record))| (k, record))
+        .collect::<BTreeMap<_, _>>();
     let node_operators = local_registry
         .get_family_entries_of_version::<NodeOperatorRecord>(version)
         .map_err(|e| anyhow::anyhow!("Couldn't get node operators: {:?}", e))?
         .into_iter()
         .map(|(k, (_, record))| {
             let node_operator_principal_id = PrincipalId::from_str(&k).expect("Couldn't parse principal id");
+            let node_provider_name = node_provider_names
+                .get(&PrincipalId::try_from(&record.node_provider_principal_id).expect("Couldn't parse principal id"))
+                .expect("Couldn't find node provider name")
+                .clone();
+            // Find the number of nodes registered by this operator
+            let operator_registered_nodes_num = all_nodes
+                .iter()
+                .filter(|(_, record)| {
+                    PrincipalId::try_from(&record.node_operator_id).expect("Couldn't parse principal") == node_operator_principal_id
+                })
+                .count() as u64;
             (
                 node_operator_principal_id,
                 NodeOperator {
                     node_operator_principal_id,
-                    node_allowance: record.node_allowance,
+                    node_allowance_remaining: record.node_allowance,
+                    node_allowance_total: record.node_allowance + operator_registered_nodes_num,
                     node_provider_principal_id: PrincipalId::try_from(record.node_provider_principal_id).expect("Couldn't parse principal id"),
+                    node_provider_name,
                     dc_id: record.dc_id,
                     rewardable_nodes: record.rewardable_nodes,
                     ipv6: record.ipv6,
                     total_up_nodes: 0,
+                    nodes_health: Default::default(),
                     rewards_correct: false,
                 },
             )
@@ -350,12 +396,15 @@ struct SubnetRecord {
 #[derive(Clone, Serialize)]
 struct NodeOperator {
     node_operator_principal_id: PrincipalId,
-    node_allowance: u64,
+    node_allowance_remaining: u64,
+    node_allowance_total: u64,
     node_provider_principal_id: PrincipalId,
+    node_provider_name: String,
     dc_id: String,
-    rewardable_nodes: std::collections::BTreeMap<String, u32>,
+    rewardable_nodes: BTreeMap<String, u32>,
     ipv6: Option<String>,
     total_up_nodes: u32,
+    nodes_health: BTreeMap<String, Vec<PrincipalId>>,
     rewards_correct: bool,
 }
 
