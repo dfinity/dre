@@ -41,7 +41,7 @@ impl HealthStatusQuerier for HealthClient {
     }
 }
 
-enum HealthStatusQuerierImplementations {
+pub enum HealthStatusQuerierImplementations {
     Dashboard(PublicDashboardHealthClient),
     Prometheus(PrometheusHealthClient),
 }
