@@ -16,7 +16,7 @@ runs:
       if: ${{ startsWith(runner.name, 'dre-runner-custom') }}
       shell: bash
       run: |
-        set -euo pipefail
+        set -exuo pipefail
         whoami
 
         path_to_check="/home/runner/.cache"
