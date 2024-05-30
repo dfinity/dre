@@ -2,8 +2,11 @@ use std::{collections::BTreeMap, path::PathBuf, str::FromStr, time::Duration};
 
 use ic_base_types::{PrincipalId, RegistryVersion};
 use ic_interfaces_registry::RegistryClient;
-use ic_management_backend::registry::{local_registry_path, sync_local_store, RegistryFamilyEntries};
-use ic_management_types::Network;
+use ic_management_backend::{
+    health::{HealthClient, HealthStatusQuerier},
+    registry::{local_registry_path, sync_local_store, RegistryFamilyEntries},
+};
+use ic_management_types::{Network, Status};
 use ic_protobuf::registry::{
     api_boundary_node::v1::ApiBoundaryNodeRecord,
     dc::v1::DataCenterRecord,
@@ -42,7 +45,7 @@ pub async fn dump_registry(path: &Option<PathBuf>, network: &Network, version: &
     let elected_guest_os_versions = get_elected_guest_os_versions(&local_registry, version)?;
     let elected_host_os_versions = get_elected_host_os_versions(&local_registry, version)?;
 
-    let node_operators = get_node_operators(&local_registry, version)?;
+    let mut node_operators = get_node_operators(&local_registry, version)?;
 
     let dcs = get_data_centers(&local_registry, version)?;
 
@@ -54,8 +57,20 @@ pub async fn dump_registry(path: &Option<PathBuf>, network: &Network, version: &
         Err(e) => return Err(e.into()),
     };
 
-    let nodes = get_nodes(&local_registry, version, &node_operators, &subnets)?;
+    let nodes = get_nodes(&local_registry, version, &node_operators, &subnets, network).await?;
+    // Calculate number of rewardable nodes for node operators
+    for node_operator in node_operators.values_mut() {
+        node_operator.total_up_nodes = nodes
+            .iter()
+            .filter(|n| {
+                n.node_operator_id == node_operator.node_operator_principal_id && (n.status == Status::Healthy || n.status == Status::Degraded)
+            })
+            .count() as u32;
 
+        if node_operator.total_up_nodes == node_operator.rewardable_nodes.iter().map(|n| n.1).sum::<u32>() {
+            node_operator.rewards_correct = true;
+        }
+    }
     let node_rewards_table = get_node_rewards_table(&local_registry, version, network);
 
     let api_bns = get_api_boundary_nodes(&local_registry, version)?;
@@ -110,20 +125,25 @@ fn get_elected_host_os_versions(local_registry: &LocalRegistry, version: Registr
     Ok(elected_versions)
 }
 
-fn get_nodes(
+async fn get_nodes(
     local_registry: &LocalRegistry,
     version: RegistryVersion,
     node_operators: &BTreeMap<PrincipalId, NodeOperator>,
     subnets: &[SubnetRecord],
+    network: &Network,
 ) -> Result<Vec<NodeDetails>, RegistryDumpError> {
+    let health_client = HealthClient::new(network.clone());
+    let nodes_health = health_client.nodes().await?;
+
     let nodes = local_registry
         .get_family_entries_of_version::<NodeRecord>(version)
         .map_err(|e| anyhow::anyhow!("Couldn't get nodes: {:?}", e))?
         .into_iter()
         .map(|(k, (_, record))| {
             let node_operator_id = PrincipalId::try_from(&record.node_operator_id).expect("Couldn't parse principal id");
+            let node_id = PrincipalId::from_str(&k).expect("Couldn't parse principal id");
             NodeDetails {
-                node_id: PrincipalId::from_str(&k).expect("Couldn't parse principal id"),
+                node_id,
                 xnet: record.xnet,
                 http: record.http,
                 node_operator_id,
@@ -143,6 +163,7 @@ fn get_nodes(
                     .expect("Couldn't find node provider for node operator")
                     .dc_id
                     .clone(),
+                status: nodes_health.get(&node_id).unwrap_or(&ic_management_types::Status::Unknown).clone(),
             }
         })
         .collect::<Vec<_>>();
@@ -224,6 +245,8 @@ fn get_node_operators(local_registry: &LocalRegistry, version: RegistryVersion) 
                     dc_id: record.dc_id,
                     rewardable_nodes: record.rewardable_nodes,
                     ipv6: record.ipv6,
+                    total_up_nodes: 0,
+                    rewards_correct: false,
                 },
             )
         })
@@ -294,6 +317,7 @@ struct NodeDetails {
     subnet_id: Option<PrincipalId>,
     dc_id: String,
     node_provider_id: PrincipalId,
+    status: Status,
 }
 
 /// User-friendly representation of a SubnetRecord. For instance,
@@ -331,6 +355,8 @@ struct NodeOperator {
     dc_id: String,
     rewardable_nodes: std::collections::BTreeMap<String, u32>,
     ipv6: Option<String>,
+    total_up_nodes: u32,
+    rewards_correct: bool,
 }
 
 // We re-create the rewards structs here in order to convert the output of get-rewards-table into the format
