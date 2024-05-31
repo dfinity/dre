@@ -140,11 +140,7 @@ pub async fn dump_registry(
 
     if incorrect_rewards_info_only {
         let node_operators = &get_registry(path, network, version).await?;
-        let node_operators = node_operators
-            .node_operators
-            .iter()
-            .filter(|rec| rec.rewards_correct == false)
-            .collect_vec();
+        let node_operators = node_operators.node_operators.iter().filter(|rec| !rec.rewards_correct).collect_vec();
         serde_json::to_writer_pretty(writer, &node_operators)?;
     } else {
         serde_json::to_writer_pretty(writer, &get_registry(path, network, version).await?)?;

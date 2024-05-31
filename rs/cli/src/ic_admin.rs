@@ -1051,7 +1051,7 @@ oSMDIQBa2NLmSmaqjDXej4rrJEuEhKIz7/pGXpxztViWhB+X9Q==
                 ..Default::default()
             };
 
-            let vector = vec![
+            let vector = [
                 if !cli.proceed_without_confirmation {
                     vec!["--dry-run".to_string()]
                 } else {
