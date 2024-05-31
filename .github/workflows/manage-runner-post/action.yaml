@@ -10,13 +10,6 @@ runs:
   using: composite
   steps:
     ########################################
-    # Stop bazel-remote cache
-    ########################################
-    - name: "💾 Stop bazel-remote s3 cache"
-      run: ./bin/bazel-cache-s3-stop.sh
-      shell: bash
-
-    ########################################
     # Optimize bazel cache by hard-linking duplicate files
     ########################################
     - name: "🧹 Optimize bazel cache directory before uploading"

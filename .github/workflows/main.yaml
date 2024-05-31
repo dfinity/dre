@@ -21,7 +21,7 @@ concurrency:
 
 jobs:
   bazel:
-    runs-on: 
+    runs-on:
       labels: dre-runner-custom
     # This image is based on ubuntu:20.04
     container: ghcr.io/dfinity/dre/actions-runner:0.2.1
@@ -31,9 +31,6 @@ jobs:
           fetch-depth: 2
       - name: "☁️ Setup runner"
         uses: ./.github/workflows/manage-runner-pre
-        with:
-          aws_access_key_id: ${{ secrets.WASABI_ACCESS_KEY }}
-          aws_secret_access_key: ${{ secrets.WASABI_SECRET_KEY }}
 
       ########################################
       # Build and test
