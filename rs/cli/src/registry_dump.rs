@@ -76,8 +76,7 @@ pub async fn dump_registry(path: &Option<PathBuf>, network: &Network, version: &
         let mut nodes_by_health = BTreeMap::new();
         for node_details in nodes.iter().filter(|n| n.node_operator_id == node_operator.node_operator_principal_id) {
             let node_id = node_details.node_id;
-            let node_status = node_details.status.clone().to_string();
-            let health = node_status.clone().to_string();
+            let health = node_details.status.to_string();
             let nodes = nodes_by_health.entry(health).or_insert_with(Vec::new);
             nodes.push(node_id);
         }
