@@ -128,14 +128,23 @@ pub enum Commands {
         subnet_ids: Vec<PrincipalId>,
     },
 
-    /// Dump registry
-    DumpRegistry {
+    /// Registry inspection (dump) operations
+    Registry {
         /// Version to dump. If value is less than 0 will dump the latest version
         #[clap(long, default_value = "-1")]
         version: i64,
-        /// Optional path to cached registry
+
+        /// Output file (default is stdout)
+        #[clap(short = 'o', long)]
+        output: Option<PathBuf>,
+
+        /// Output only information related to the node operator records with incorrect rewards
+        #[clap(long)]
+        incorrect_rewards: bool,
+
+        /// Optional path to cached registry, can be used to inspect an arbitrary path
         #[clap(long, env = "LOCAL_REGISTRY_PATH")]
-        path: Option<PathBuf>,
+        local_registry_path: Option<PathBuf>,
     },
 
     /// Firewall rules

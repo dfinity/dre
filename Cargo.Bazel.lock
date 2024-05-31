@@ -1,5 +1,5 @@
 {
-  "checksum": "3a9ddccd192ecaabb665b92fbd8a6adf3543082654e59da9f2d5b85e20ba9bcb",
+  "checksum": "8d1ceda5312fa6e96465e84a886797d3685283a413ab48c9ee12f0766afc3859",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -11266,6 +11266,10 @@
               "target": "flate2"
             },
             {
+              "id": "fs-err 2.11.0",
+              "target": "fs_err"
+            },
+            {
               "id": "futures 0.3.30",
               "target": "futures"
             },
@@ -13579,6 +13583,68 @@
         "version": "2.0.0"
       },
       "license": "Apache-2.0"
+    },
+    "fs-err 2.11.0": {
+      "name": "fs-err",
+      "version": "2.11.0",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/fs-err/2.11.0/download",
+          "sha256": "88a41f105fe1d5b6b34b2055e3dc59bb79b46b48b2040b9e6c7b4b5de097aa41"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "fs_err",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        },
+        {
+          "BuildScript": {
+            "crate_name": "build_script_build",
+            "crate_root": "build.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "fs_err",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "fs-err 2.11.0",
+              "target": "build_script_build"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2018",
+        "version": "2.11.0"
+      },
+      "build_script_attrs": {
+        "data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "autocfg 1.3.0",
+              "target": "autocfg"
+            }
+          ],
+          "selects": {}
+        }
+      },
+      "license": "MIT/Apache-2.0"
     },
     "fs2 0.4.3": {
       "name": "fs2",

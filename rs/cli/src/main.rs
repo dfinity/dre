@@ -385,7 +385,12 @@ async fn async_main() -> Result<(), anyhow::Error> {
                 .await
             }
 
-            cli::Commands::DumpRegistry { version, path } => registry_dump::dump_registry(path, &target_network, version).await,
+            cli::Commands::Registry {
+                version,
+                output,
+                local_registry_path,
+                incorrect_rewards,
+            } => registry_dump::dump_registry(local_registry_path, &target_network, version, output, *incorrect_rewards).await,
 
             cli::Commands::Firewall { title, summary } => {
                 runner_instance

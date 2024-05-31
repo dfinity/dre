@@ -27,11 +27,24 @@ use ic_registry_keys::NODE_REWARDS_TABLE_KEY;
 use ic_registry_local_registry::LocalRegistry;
 use ic_registry_subnet_type::SubnetType;
 use itertools::Itertools;
-use log::warn;
+use log::{info, warn};
 use registry_canister::mutations::common::decode_registry_value;
 use serde::Serialize;
 
-pub async fn dump_registry(path: &Option<PathBuf>, network: &Network, version: &i64) -> Result<(), anyhow::Error> {
+#[derive(Debug, Serialize)]
+struct RegistryDump {
+    elected_guest_os_versions: Vec<ReplicaVersionRecord>,
+    elected_host_os_versions: Vec<HostosVersionRecord>,
+    nodes: Vec<NodeDetails>,
+    subnets: Vec<SubnetRecord>,
+    unassigned_nodes_config: Option<UnassignedNodesConfigRecord>,
+    dcs: Vec<DataCenterRecord>,
+    node_operators: Vec<NodeOperator>,
+    node_rewards_table: NodeRewardsTableFlattened,
+    api_bns: Vec<ApiBoundaryNodeDetails>,
+}
+
+async fn get_registry(path: &Option<PathBuf>, network: &Network, version: &i64) -> Result<RegistryDump, anyhow::Error> {
     if let Some(path) = path {
         std::env::set_var("LOCAL_REGISTRY_PATH", path)
     }
@@ -96,32 +109,46 @@ pub async fn dump_registry(path: &Option<PathBuf>, network: &Network, version: &
 
     let api_bns = get_api_boundary_nodes(&local_registry, version)?;
 
-    #[derive(Serialize)]
-    struct RegistryDump {
-        elected_guest_os_versions: Vec<ReplicaVersionRecord>,
-        elected_host_os_versions: Vec<HostosVersionRecord>,
-        nodes: Vec<NodeDetails>,
-        subnets: Vec<SubnetRecord>,
-        unassigned_nodes_config: Option<UnassignedNodesConfigRecord>,
-        dcs: Vec<DataCenterRecord>,
-        node_operators: Vec<NodeOperator>,
-        node_rewards_table: NodeRewardsTableFlattened,
-        api_bns: Vec<ApiBoundaryNodeDetails>,
+    Ok(RegistryDump {
+        elected_guest_os_versions,
+        elected_host_os_versions,
+        nodes,
+        subnets,
+        unassigned_nodes_config,
+        dcs,
+        node_operators: node_operators.values().cloned().collect_vec(),
+        node_rewards_table,
+        api_bns,
+    })
+}
+
+pub async fn dump_registry(
+    path: &Option<PathBuf>,
+    network: &Network,
+    version: &i64,
+    output: &Option<PathBuf>,
+    incorrect_rewards_info_only: bool,
+) -> Result<(), anyhow::Error> {
+    let writer: Box<dyn std::io::Write> = match output {
+        Some(path) => {
+            let path = path.with_extension("json").canonicalize()?;
+            info!("Writing to file: {:?}", path);
+            Box::new(std::io::BufWriter::new(fs_err::File::create(path)?))
+        }
+        None => Box::new(std::io::stdout()),
+    };
+
+    if incorrect_rewards_info_only {
+        let node_operators = &get_registry(path, network, version).await?;
+        let node_operators = node_operators
+            .node_operators
+            .iter()
+            .filter(|rec| rec.rewards_correct == false)
+            .collect_vec();
+        serde_json::to_writer_pretty(writer, &node_operators)?;
+    } else {
+        serde_json::to_writer_pretty(writer, &get_registry(path, network, version).await?)?;
     }
-    println!(
-        "{}",
-        serde_json::to_string(&RegistryDump {
-            elected_guest_os_versions,
-            elected_host_os_versions,
-            nodes,
-            subnets,
-            unassigned_nodes_config,
-            dcs,
-            node_operators: node_operators.values().cloned().collect_vec(),
-            node_rewards_table,
-            api_bns
-        })?
-    );
 
     Ok(())
 }
@@ -344,13 +371,13 @@ fn get_api_boundary_nodes(local_registry: &LocalRegistry, version: RegistryVersi
     Ok(api_bns)
 }
 
-#[derive(Serialize, Clone)]
+#[derive(Clone, Debug, Serialize)]
 struct ApiBoundaryNodeDetails {
     principal: PrincipalId,
     version: String,
 }
 
-#[derive(Serialize, Clone)]
+#[derive(Debug, Serialize, Clone)]
 struct NodeDetails {
     node_id: PrincipalId,
     xnet: Option<ConnectionEndpoint>,
@@ -367,7 +394,7 @@ struct NodeDetails {
 
 /// User-friendly representation of a SubnetRecord. For instance,
 /// the `membership` field is a `Vec<String>` to pretty-print the node IDs.
-#[derive(Default, Serialize, Clone)]
+#[derive(Debug, Default, Serialize, Clone)]
 struct SubnetRecord {
     subnet_id: PrincipalId,
     membership: Vec<String>,
@@ -392,7 +419,7 @@ struct SubnetRecord {
     ecdsa_config: Option<EcdsaConfig>,
 }
 
-#[derive(Clone, Serialize)]
+#[derive(Clone, Debug, Serialize)]
 struct NodeOperator {
     node_operator_principal_id: PrincipalId,
     node_allowance_remaining: u64,
