@@ -56,7 +56,7 @@ pub async fn dump_registry(path: &Option<PathBuf>, network: &Network, version: &
             .await?
             .node_providers
             .iter()
-            .map(|np| (np.principal_id.clone(), np.display_name.clone())),
+            .map(|np| (np.principal_id, np.display_name.clone())),
     );
     let mut node_operators = get_node_operators(&local_registry, version, &node_provider_names)?;
 
@@ -75,11 +75,11 @@ pub async fn dump_registry(path: &Option<PathBuf>, network: &Network, version: &
     for node_operator in node_operators.values_mut() {
         let mut nodes_by_health = BTreeMap::new();
         for node_details in nodes.iter().filter(|n| n.node_operator_id == node_operator.node_operator_principal_id) {
-            let node_id = node_details.node_id.clone();
+            let node_id = node_details.node_id;
             let node_status = node_details.status.clone().to_string();
             let health = node_status.clone().to_string();
             let nodes = nodes_by_health.entry(health).or_insert_with(Vec::new);
-            nodes.push(node_id.clone());
+            nodes.push(node_id);
         }
         node_operator.nodes_health = nodes_by_health;
         node_operator.total_up_nodes = nodes
