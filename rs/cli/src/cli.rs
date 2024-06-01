@@ -56,6 +56,14 @@ pub enum Commands {
         /// Path to the DER file
         path: String,
     },
+
+    Heal {
+        /// Amount of nodes to be replaced by decentralization optimization
+        /// algorithm
+        #[clap(short, long)]
+        optimize: Option<usize>,
+    },
+
     /// Manage an existing subnet
     Subnet(subnet::Cmd),
     /// Get a value using ic-admin CLI

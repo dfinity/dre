@@ -104,6 +104,12 @@ async fn async_main() -> Result<(), anyhow::Error> {
                 Ok(())
             }
 
+            cli::Commands::Heal{ optimize} => {
+                let principal = ic_base_types::PrincipalId::new_self_authenticating(&std::fs::read(path)?);
+                println!("{}", principal);
+                Ok(())
+            }
+
             cli::Commands::Subnet(subnet) => {
                 match &subnet.subcommand {
                     cli::subnet::Commands::Deploy { .. } | cli::subnet::Commands::Resize { .. } => {
