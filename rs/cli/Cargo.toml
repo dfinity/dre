@@ -26,6 +26,7 @@ dirs = { workspace = true }
 dotenv = { workspace = true }
 edit = { workspace = true }
 flate2 = { workspace = true }
+fs-err = { workspace = true }
 futures = { workspace = true }
 futures-util = { workspace = true }
 ic-base-types = { workspace = true }
