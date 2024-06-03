@@ -72,21 +72,20 @@ pub async fn run_downloader_loop(logger: Logger, cli: CliArgs, stop_signal: Rece
                 }
             };
 
-            let targets = match &targets["data"] {
-                serde_json::Value::Array(ar) => ar,
+            let targets: Vec<_> = match &targets["data"] {
+                serde_json::Value::Array(ar) => ar.iter().filter(|v| v["name"].as_str().is_some()).collect(),
                 _ => {
                     warn!(logger, "Didn't receive expected structure of payload");
                     continue;
                 }
             };
-
-            for target in targets {
+            for target in &targets {
                 let mut sns = Sns {
-                    description: target["description"].as_str().unwrap().to_string(),
-                    enabled: target["enabled"].as_bool().unwrap(),
+                    description: target["description"].as_str().unwrap_or_default().to_string(),
+                    enabled: target["enabled"].as_bool().unwrap_or_default(),
                     root_canister_id: target["root_canister_id"].as_str().unwrap().to_string(),
-                    name: target["name"].as_str().unwrap().to_string(),
-                    url: target["url"].as_str().unwrap().to_string(),
+                    name: target["name"].as_str().unwrap_or_default().to_string(),
+                    url: target["url"].as_str().unwrap_or_default().to_string(),
                     canisters: get_canisters(&cli, target["root_canister_id"].as_str().unwrap().to_string(), &client, logger.clone()).await,
                 };
                 sns.canisters.push(Canister {
@@ -176,7 +175,7 @@ async fn get_canisters(cli: &CliArgs, root_canister_id: String, client: &Client,
             .iter()
             .map(|val| Canister {
                 canister_id: val["canister_id"].as_str().unwrap().to_string(),
-                module_hash: val["module_hash"].as_str().unwrap().to_string(),
+                module_hash: val["module_hash"].as_str().unwrap_or_default().to_string(),
                 canister_type: val["canister_type"].as_str().unwrap().to_string(),
             })
             .collect(),
