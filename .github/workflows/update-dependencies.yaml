@@ -12,9 +12,6 @@ jobs:
       - uses: actions/checkout@v4
       - name: "🔧 Setup runner"
         uses: ./.github/workflows/manage-runner-pre
-        with:
-          aws_access_key_id: ${{ secrets.WASABI_ACCESS_KEY }}
-          aws_secret_access_key: ${{ secrets.WASABI_SECRET_KEY }}
 
       ########################################
       # Once per night, update dependencies and completely delete and recreate bazel cache

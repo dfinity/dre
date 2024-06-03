@@ -1,14 +1,6 @@
 name: Setup runner
 description: Reusable action for setting up the github runner
 
-inputs:
-  aws_access_key_id:
-    description: 'AWS Access Key ID'
-    required: true
-  aws_secret_access_key:
-    description: 'AWS Secret Access Key'
-    required: true
-
 runs:
   using: composite
   steps:
@@ -65,34 +57,10 @@ runs:
         key: ${{ runner.os }}-bazel-${{ hashFiles('.bazelversion', '.bazelrc', 'WORKSPACE.bazel', 'Cargo.Bazel.lock', 'requirements.txt') }}
         restore-keys: |
             ${{ runner.os }}-bazel-
-    
+
     - name: "🧹 Clean bazel cache if we're preparing a new release"
       if: ${{ startsWith(github.ref, 'refs/tags/v') && !startsWith(runner.name, 'dre-runner-custom') }}
       # This is desirable to make sure bazel does not use stale pre-built binaries
       # Bazel actually keeps all intermediate objects so builds are still fast
       run: bazel clean
       shell: bash
-
-    - name: "☁️ Setup S3 cache credentials"
-      if: ${{ !startsWith(runner.name, 'dre-runner-custom') }}
-      id: bazel-remote-creds
-      shell: bash
-      run: |
-        mkdir -p ~/.aws
-        chmod 700 ~/.aws
-        sudo chown -R $USER:$GROUP ~/.aws
-        cat <<_EOF | install -m 0600 /dev/stdin ~/.aws/config
-        [wasabi]
-        region = eu-central-2
-        _EOF
-        cat <<_EOF | install -m 0600 /dev/stdin ~/.aws/credentials
-        [wasabi]
-        aws_access_key_id = ${{ inputs.aws_access_key_id }}
-        aws_secret_access_key = ${{ inputs.aws_secret_access_key }}
-        _EOF
-
-    - name: "💾 Start bazel-remote s3 cache"
-      if: ${{ !startsWith(runner.name, 'dre-runner-custom') }}
-      run: ./bin/bazel-cache-s3-start.sh
-      shell: bash
-        

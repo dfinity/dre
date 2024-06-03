@@ -36,7 +36,7 @@ build --@rules_rust//:extra_rustc_flag=-Dbindings_with_variant_name
 build --strip=never
 
 # build:dfinity --remote_cache=bazel-remote.idx.dfinity.network
-build --remote_cache=grpc://localhost:9092
+# build --remote_cache=grpc://localhost:9092
 build --remote_instance_name=default
 build --google_default_credentials=false
 build --remote_upload_local_results=false
