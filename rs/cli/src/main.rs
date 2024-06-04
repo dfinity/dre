@@ -104,7 +104,7 @@ async fn async_main() -> Result<(), anyhow::Error> {
                 Ok(())
             }
 
-            cli::Commands::Heal{ optimize} => {
+            cli::Commands::Heal { optimize } => {
                 let principal = ic_base_types::PrincipalId::new_self_authenticating(&std::fs::read(path)?);
                 println!("{}", principal);
                 Ok(())
