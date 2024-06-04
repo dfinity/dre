@@ -676,7 +676,7 @@ must be identical, and must match the SHA256 from the payload of the NNS proposa
         &self,
         network: &Network,
         propose_options: ProposeOptions,
-        firewall_rules_scope: FirewallRulesScope,
+        firewall_rules_scope: &FirewallRulesScope,
         simulate: bool,
     ) -> Result<(), Error> {
         let local_registry_path = local_registry_path(network);
@@ -768,7 +768,7 @@ must be identical, and must match the SHA256 from the payload of the NNS proposa
             admin_wrapper: &IcAdminWrapper,
             modifications: Vec<FirewallRuleModification>,
             propose_options: ProposeOptions,
-            firewall_rules_scope: FirewallRulesScope,
+            firewall_rules_scope: &FirewallRulesScope,
             simulate: bool,
         ) -> anyhow::Result<()> {
             let positions = modifications.iter().map(|modif| modif.position).join(",");
