@@ -75,10 +75,19 @@ The HTTP-request timeout used when quering for registry updates.
         long = "nns-urls",
         default_value = "https://ic0.app",
         help = r#"
-Service Discovery url to use for syncing the targets.
+NNS url to use for syncing the targets.
 "#
     )]
     pub nns_urls: Vec<Url>,
+
+    #[clap(
+        long = "sd-url",
+        default_value = "https://sns-api.internetcomputer.org/api/v1/snses",
+        help = r#"
+Service Discovery url to use for syncing the targets.
+"#
+    )]
+    pub sd_url: Url,
 
     #[clap(long = "script-path", help = "Path for the script file")]
     script_path: String,

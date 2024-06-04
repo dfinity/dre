@@ -24,20 +24,20 @@ impl SnsCanisterConfigStructure {
 
         for sns in snses {
             if sns.root_canister_id != String::default() {
-                self.insert_into_config(&mut config, &sns.root_canister_id, "root");
+                self.insert_into_config(&mut config, &sns.root_canister_id, "root", &sns.name);
             }
             if sns.swap_canister_id != String::default() {
-                self.insert_into_config(&mut config, &sns.swap_canister_id, "swap");
+                self.insert_into_config(&mut config, &sns.swap_canister_id, "swap", &sns.name);
             }
             if sns.governance_canister_id != String::default() {
-                self.insert_into_config(&mut config, &sns.governance_canister_id, "governance");
+                self.insert_into_config(&mut config, &sns.governance_canister_id, "governance", &sns.name);
             }
         }
 
         serde_json::to_string_pretty(&config).unwrap()
     }
 
-    fn insert_into_config(&self, config: &mut VectorConfigEnriched, canister_id: &str, canister_type: &str) {
+    fn insert_into_config(&self, config: &mut VectorConfigEnriched, canister_id: &str, canister_type: &str, sns_name: &str) {
         let source = VectorScriptSource {
             _type: "exec".to_string(),
             command: [
@@ -58,7 +58,7 @@ impl SnsCanisterConfigStructure {
         let transform = VectorRemapTransform {
             _type: "remap".to_string(),
             inputs: vec![canister_id.to_string()],
-            source: vec![("canister_id", canister_id), ("canister_type", canister_type)]
+            source: vec![("canister_id", canister_id), ("canister_type", canister_type), ("sns_name", sns_name)]
                 .into_iter()
                 .map(|(k, v)| format!(".{} = \"{}\"", k, v))
                 .collect::<Vec<String>>()

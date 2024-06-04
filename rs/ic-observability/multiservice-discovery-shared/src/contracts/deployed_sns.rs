@@ -8,6 +8,7 @@ pub struct Sns {
     pub ledger_canister_id: String,
     pub swap_canister_id: String,
     pub index_canister_id: String,
+    pub name: String,
 }
 
 impl From<DeployedSns> for Sns {
@@ -33,6 +34,7 @@ impl From<DeployedSns> for Sns {
                 None => "".to_string(),
                 Some(val) => val.to_string(),
             },
+            name: "".to_string(),
         }
     }
 }
@@ -44,5 +46,6 @@ impl Hash for Sns {
         self.ledger_canister_id.hash(state);
         self.swap_canister_id.hash(state);
         self.index_canister_id.hash(state);
+        self.name.hash(state);
     }
 }
