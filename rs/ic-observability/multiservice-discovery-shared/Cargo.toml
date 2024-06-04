@@ -12,3 +12,4 @@ serde_json = { workspace = true }
 ic-types = { workspace = true }
 erased-serde = { workspace = true }
 regex = { workspace = true }
+ic-sns-wasm = { workspace = true }

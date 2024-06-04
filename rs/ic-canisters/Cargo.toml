@@ -32,3 +32,4 @@ sha2 = { workspace = true }
 simple_asn1 = { workspace = true }
 thiserror = { workspace = true }
 url = { workspace = true }
+ic-sns-wasm = { workspace = true }
