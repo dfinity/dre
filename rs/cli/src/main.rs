@@ -392,16 +392,17 @@ async fn async_main() -> Result<(), anyhow::Error> {
                 incorrect_rewards,
             } => registry_dump::dump_registry(local_registry_path, &target_network, version, output, *incorrect_rewards).await,
 
-            cli::Commands::Firewall { title, summary } => {
+            cli::Commands::Firewall { title, summary, rules_scope } => {
                 runner_instance
                     .ic_admin
-                    .update_replica_nodes_firewall(
+                    .update_firewall(
                         &target_network,
                         ic_admin::ProposeOptions {
                             title: title.clone(),
                             summary: summary.clone(),
                             ..Default::default()
                         },
+                        rules_scope,
                         cli_opts.simulate,
                     )
                     .await
