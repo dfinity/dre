@@ -840,7 +840,7 @@ must be identical, and must match the SHA256 from the payload of the NNS proposa
 
         // no more than one rule mod implemented currenty -- FIXME
         match reverse_sorted.into_iter().last() {
-            Some((_, mods)) => submit_proposal(self, mods, propose_options.clone(), simulate).await,
+            Some((_, mods)) => submit_proposal(self, mods, propose_options.clone(), firewall_rules_scope, simulate).await,
             None => Err(anyhow::anyhow!("Expected to have one item for firewall rule modification")),
         }
     }
