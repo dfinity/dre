@@ -5,7 +5,6 @@ use downloader_loop::run_downloader_loop;
 use futures_util::FutureExt;
 use humantime::parse_duration;
 use ic_async_utils::shutdown_signal;
-use regex::Regex;
 use slog::{info, o, Drain, Logger};
 use tokio::runtime::Runtime;
 use url::Url;
@@ -73,21 +72,13 @@ The HTTP-request timeout used when quering for registry updates.
     pub registry_query_timeout: Duration,
 
     #[clap(
-        long = "sd-url",
+        long = "nns-urls",
+        default_value = "https://ic0.app",
         help = r#"
 Service Discovery url to use for syncing the targets.
 "#
     )]
-    pub sd_url: Url,
-
-    #[clap(
-        long = "filter-sns-name-regex",
-        help = r#"
-Regex used to filter the sns name
-
-"#
-    )]
-    filter_sns_name_regex: Option<Regex>,
+    pub nns_urls: Vec<Url>,
 
     #[clap(long = "script-path", help = "Path for the script file")]
     script_path: String,

@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use serde::Serialize;
 
-use crate::contracts::sns::Sns;
+use crate::contracts::deployed_sns::Sns;
 
 use super::{
     log_vector_config_structure::VectorRemapTransform,
@@ -17,61 +17,61 @@ pub struct SnsCanisterConfigStructure {
     pub include_stderr: bool,
 }
 
-static SCRAPABLE_TYPES: [&str; 3] = ["root", "swap", "governance"];
-
+// Scrapable types are: root, swap, governance
 impl SnsCanisterConfigStructure {
     pub fn build(&self, snses: Vec<Sns>) -> String {
         let mut config = VectorConfigEnriched::new();
 
         for sns in snses {
-            for canister in sns.canisters {
-                if !SCRAPABLE_TYPES.contains(&canister.canister_type.as_str()) {
-                    continue;
-                }
-
-                let key = canister.canister_id.to_string();
-                let source = VectorScriptSource {
-                    _type: "exec".to_string(),
-                    command: [
-                        self.script_path.as_str(),
-                        "--url",
-                        format!("https://{}.raw.icp0.io/logs", canister.canister_id).as_str(),
-                    ]
-                    .iter()
-                    .map(|s| s.to_string())
-                    .collect(),
-                    mode: "streaming".to_string(),
-                    streaming: SourceStreamingWrapper {
-                        respawn_on_exit: self.restart_on_exit,
-                    },
-                    include_stderr: self.include_stderr,
-                };
-
-                let transform = VectorRemapTransform {
-                    _type: "remap".to_string(),
-                    inputs: vec![key.clone()],
-                    source: vec![
-                        ("canister_id", canister.canister_id),
-                        ("canister_type", canister.canister_type),
-                        ("module_hash", canister.module_hash),
-                    ]
-                    .into_iter()
-                    .map(|(k, v)| format!(".{} = \"{}\"", k, v))
-                    .collect::<Vec<String>>()
-                    .join("\n"),
-                };
-
-                let mut sources = HashMap::new();
-                sources.insert(key.clone(), Box::new(source) as Box<dyn VectorSource>);
-
-                let mut transforms = HashMap::new();
-                transforms.insert(format!("{}-transform", key), Box::new(transform) as Box<dyn VectorTransform>);
-
-                config.add_target_group(sources, transforms)
+            if sns.root_canister_id != String::default() {
+                self.insert_into_config(&mut config, &sns.root_canister_id, "root");
+            }
+            if sns.swap_canister_id != String::default() {
+                self.insert_into_config(&mut config, &sns.swap_canister_id, "swap");
+            }
+            if sns.governance_canister_id != String::default() {
+                self.insert_into_config(&mut config, &sns.governance_canister_id, "governance");
             }
         }
 
         serde_json::to_string_pretty(&config).unwrap()
+    }
+
+    fn insert_into_config(&self, config: &mut VectorConfigEnriched, canister_id: &str, canister_type: &str) {
+        let source = VectorScriptSource {
+            _type: "exec".to_string(),
+            command: [
+                self.script_path.as_str(),
+                "--url",
+                format!("https://{}.raw.icp0.io/logs", canister_id).as_str(),
+            ]
+            .iter()
+            .map(|s| s.to_string())
+            .collect(),
+            mode: "streaming".to_string(),
+            streaming: SourceStreamingWrapper {
+                respawn_on_exit: self.restart_on_exit,
+            },
+            include_stderr: self.include_stderr,
+        };
+
+        let transform = VectorRemapTransform {
+            _type: "remap".to_string(),
+            inputs: vec![canister_id.to_string()],
+            source: vec![("canister_id", canister_id), ("canister_type", canister_type)]
+                .into_iter()
+                .map(|(k, v)| format!(".{} = \"{}\"", k, v))
+                .collect::<Vec<String>>()
+                .join("\n"),
+        };
+
+        let mut sources = HashMap::new();
+        sources.insert(canister_id.to_string(), Box::new(source) as Box<dyn VectorSource>);
+
+        let mut transforms = HashMap::new();
+        transforms.insert(format!("{}-transform", canister_id), Box::new(transform) as Box<dyn VectorTransform>);
+
+        config.add_target_group(sources, transforms)
     }
 }
 

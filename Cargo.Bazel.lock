@@ -1,5 +1,5 @@
 {
-  "checksum": "3a9ddccd192ecaabb665b92fbd8a6adf3543082654e59da9f2d5b85e20ba9bcb",
+  "checksum": "71b86b8f2afb3f67dc545da86409dff50d1239250fe258ae19478405063549db",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -17766,6 +17766,10 @@
               "target": "ic_registry_transport"
             },
             {
+              "id": "ic-sns-wasm 1.0.0",
+              "target": "ic_sns_wasm"
+            },
+            {
               "id": "ic-sys 0.9.0",
               "target": "ic_sys"
             },
@@ -30284,6 +30288,10 @@
             {
               "id": "erased-serde 0.4.5",
               "target": "erased_serde"
+            },
+            {
+              "id": "ic-sns-wasm 1.0.0",
+              "target": "ic_sns_wasm"
             },
             {
               "id": "ic-types 0.9.0",
