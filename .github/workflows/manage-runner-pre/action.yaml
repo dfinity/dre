@@ -19,7 +19,7 @@ runs:
         else
           runner_cache=$(( ($(<"$CACHE_FILE") + 1) % 4 ))
         fi
-        echo "$current_cache" > "$CACHE_FILE"
+        echo "$runner_cache" > "$CACHE_FILE"
         TARGET_DIR="/home/runner/.cache_pool/cache_${current_cache}"
         [ ! -d "$TARGET_DIR" ] && mkdir -p "$TARGET_DIR"
         ln -snf "$TARGET_DIR" "$LINK_DIR"
