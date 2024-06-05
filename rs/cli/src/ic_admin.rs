@@ -11,7 +11,7 @@ use ic_management_backend::registry::{local_registry_path, RegistryFamilyEntries
 use ic_management_types::{Artifact, Network};
 use ic_protobuf::registry::firewall::v1::{FirewallRule, FirewallRuleSet};
 use ic_protobuf::registry::subnet::v1::SubnetRecord;
-use ic_registry_keys::make_firewall_rules_record_key;
+use ic_registry_keys::{make_firewall_rules_record_key, FirewallRulesScope};
 use ic_registry_local_registry::LocalRegistry;
 use itertools::Itertools;
 use log::{error, info, warn};
@@ -672,7 +672,13 @@ must be identical, and must match the SHA256 from the payload of the NNS proposa
         Ok(())
     }
 
-    pub async fn update_replica_nodes_firewall(&self, network: &Network, propose_options: ProposeOptions, simulate: bool) -> Result<(), Error> {
+    pub async fn update_firewall(
+        &self,
+        network: &Network,
+        propose_options: ProposeOptions,
+        firewall_rules_scope: &FirewallRulesScope,
+        simulate: bool,
+    ) -> Result<(), Error> {
         let local_registry_path = local_registry_path(network);
         let local_registry = LocalRegistry::new(local_registry_path, Duration::from_secs(10))
             .map_err(|e| anyhow::anyhow!("Error in creating local registry instance: {:?}", e))?;
@@ -683,10 +689,7 @@ must be identical, and must match the SHA256 from the payload of the NNS proposa
             .map_err(|e| anyhow::anyhow!("Error when syncing with NNS: {:?}", e))?;
 
         let value = local_registry
-            .get_value(
-                &make_firewall_rules_record_key(&ic_registry_keys::FirewallRulesScope::ReplicaNodes),
-                local_registry.get_latest_version(),
-            )
+            .get_value(&make_firewall_rules_record_key(firewall_rules_scope), local_registry.get_latest_version())
             .map_err(|e| anyhow::anyhow!("Error fetching firewall rules for replica nodes: {:?}", e))?;
 
         let rules = if let Some(value) = value {
@@ -762,6 +765,7 @@ must be identical, and must match the SHA256 from the payload of the NNS proposa
             admin_wrapper: &IcAdminWrapper,
             modifications: Vec<FirewallRuleModification>,
             propose_options: ProposeOptions,
+            firewall_rules_scope: &FirewallRulesScope,
             simulate: bool,
         ) -> anyhow::Result<()> {
             let positions = modifications.iter().map(|modif| modif.position).join(",");
@@ -772,7 +776,7 @@ must be identical, and must match the SHA256 from the payload of the NNS proposa
             let test_args = match change_type {
                 FirewallRuleModificationType::Removal => vec![
                     "--test".to_string(),
-                    "replica_nodes".to_string(),
+                    firewall_rules_scope.to_string(),
                     positions.to_string(),
                     "none".to_string(),
                 ],
@@ -783,7 +787,7 @@ must be identical, and must match the SHA256 from the payload of the NNS proposa
                         .map_err(|e| anyhow::anyhow!("Couldn't write to tempfile: {:?}", e))?;
                     vec![
                         "--test".to_string(),
-                        "replica_nodes".to_string(),
+                        firewall_rules_scope.to_string(),
                         file.path().to_str().unwrap().to_string(),
                         positions.to_string(),
                         "none".to_string(),
@@ -833,7 +837,7 @@ must be identical, and must match the SHA256 from the payload of the NNS proposa
 
         // no more than one rule mod implemented currenty -- FIXME
         match reverse_sorted.into_iter().last() {
-            Some((_, mods)) => submit_proposal(self, mods, propose_options.clone(), simulate).await,
+            Some((_, mods)) => submit_proposal(self, mods, propose_options.clone(), firewall_rules_scope, simulate).await,
             None => Err(anyhow::anyhow!("Expected to have one item for firewall rule modification")),
         }
     }

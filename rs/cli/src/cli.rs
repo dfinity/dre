@@ -4,6 +4,7 @@ use clap::{Parser, Subcommand};
 use clap_num::maybe_hex;
 use ic_base_types::PrincipalId;
 use ic_management_types::Artifact;
+use ic_registry_keys::FirewallRulesScope;
 use url::Url;
 
 // For more info about the version setup, look at https://docs.rs/clap/latest/clap/struct.Command.html#method.version
@@ -153,6 +154,9 @@ pub enum Commands {
         title: Option<String>,
         #[clap(long, default_value = None, required = true)]
         summary: Option<String>,
+        /// Ruleset scope: "global", "replica_nodes", "api_boundary_nodes", "subnet(SUBNET_ID)", "node(NODE_ID)"
+        #[clap(long, default_value = None, required = true)]
+        rules_scope: FirewallRulesScope,
     },
 
     /// Proposal Listing
