@@ -10,7 +10,7 @@ use url::Url;
 #[derive(Parser, Clone, Default)]
 #[clap(about, version = env!("CARGO_PKG_VERSION"), author)]
 pub struct Opts {
-    #[clap(long, env = "HSM_PIN", global = true)]
+    #[clap(long, env = "HSM_PIN", global = true, hide_env_values = true)]
     pub hsm_pin: Option<String>,
     #[clap(long, value_parser=maybe_hex::<u64>, env = "HSM_SLOT", global = true)]
     pub hsm_slot: Option<u64>,

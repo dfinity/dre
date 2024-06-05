@@ -4,7 +4,6 @@ use crate::contracts::DataContract;
 
 pub mod ic_name_regex_filter;
 pub mod node_regex_id_filter;
-pub mod sns_name_regex_filter;
 
 pub trait TargetGroupFilter: Send + Sync + Debug {
     fn filter(&self, target_groups: &dyn DataContract) -> bool;

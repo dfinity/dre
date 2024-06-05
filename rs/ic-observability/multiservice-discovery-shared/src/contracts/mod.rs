@@ -1,4 +1,4 @@
-pub mod sns;
+pub mod deployed_sns;
 pub mod target;
 
 pub trait DataContract {

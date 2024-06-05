@@ -3529,6 +3529,7 @@ dependencies = [
  "ic-nns-governance",
  "ic-protobuf",
  "ic-registry-transport",
+ "ic-sns-wasm",
  "ic-sys",
  "ic-utils 0.35.0",
  "log",
@@ -6073,6 +6074,7 @@ name = "multiservice-discovery-shared"
 version = "0.4.0"
 dependencies = [
  "erased-serde 0.4.5",
+ "ic-sns-wasm",
  "ic-types",
  "regex",
  "serde",
@@ -8372,6 +8374,7 @@ dependencies = [
  "futures-util",
  "humantime",
  "ic-async-utils",
+ "ic-canisters",
  "multiservice-discovery-shared",
  "regex",
  "reqwest 0.12.4",
