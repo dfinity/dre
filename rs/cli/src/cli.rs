@@ -248,7 +248,7 @@ pub mod subnet {
             #[clap(long, num_args(1..))]
             include: Vec<PrincipalId>,
 
-            /// Motivation for resing the subnet
+            /// Motivation for resizing the subnet
             #[clap(short, long, aliases = ["summary"])]
             motivation: Option<String>,
         },
@@ -476,8 +476,13 @@ pub mod api_boundary_nodes {
             /// Node IDs where to rollout the version
             #[clap(long, num_args(1..), required = true)]
             nodes: Vec<PrincipalId>,
+
             #[clap(long, required = true)]
             version: String,
+
+            /// Motivation for creating the subnet
+            #[clap(short, long, aliases = ["summary"], required = true)]
+            motivation: Option<String>,
         },
 
         /// Turn a set of unassigned nodes into API BNs
@@ -489,6 +494,10 @@ pub mod api_boundary_nodes {
             /// guestOS version
             #[clap(long, required = true)]
             version: String,
+
+            /// Motivation for creating the subnet
+            #[clap(short, long, aliases = ["summary"], required = true)]
+            motivation: Option<String>,
         },
 
         /// Decommission a set of API BNs and turn them again in unassigned nodes

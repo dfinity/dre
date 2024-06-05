@@ -356,7 +356,7 @@ async fn async_main() -> Result<(), anyhow::Error> {
             },
 
             cli::Commands::ApiBoundaryNodes(api_boundary_nodes) => match &api_boundary_nodes.subcommand {
-                cli::api_boundary_nodes::Commands::Update { nodes, version } => {
+                cli::api_boundary_nodes::Commands::Update { nodes, version, motivation } => {
                     runner_instance
                         .ic_admin
                         .propose_run(
@@ -367,14 +367,14 @@ async fn async_main() -> Result<(), anyhow::Error> {
                             ic_admin::ProposeOptions {
                                 title: Some(format!("Update {} API boundary node(s) to {version}", nodes.clone().len())),
                                 summary: Some(format!("Update {} API boundary node(s) to {version}", nodes.clone().len())),
-                                motivation: None,
+                                motivation: motivation.clone(),
                             },
                             simulate,
                         )
                         .await?;
                     Ok(())
                 }
-                cli::api_boundary_nodes::Commands::Add { nodes, version } => {
+                cli::api_boundary_nodes::Commands::Add { nodes, version, motivation } => {
                     runner_instance
                         .ic_admin
                         .propose_run(
@@ -385,7 +385,7 @@ async fn async_main() -> Result<(), anyhow::Error> {
                             ic_admin::ProposeOptions {
                                 title: Some(format!("Add {} API boundary node(s)", nodes.clone().len())),
                                 summary: Some(format!("Add {} API boundary node(s)", nodes.clone().len())),
-                                motivation: None,
+                                motivation: motivation.clone(),
                             },
                             simulate,
                         )
