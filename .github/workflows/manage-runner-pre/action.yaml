@@ -11,9 +11,6 @@ runs:
         set -exuo pipefail
         whoami
 
-
-        sleep 5000
-
         path_to_check="/home/runner/.cache"
 
         current_owner=$(stat -c "%u" "$path_to_check")
