@@ -72,6 +72,18 @@ pub struct Definition {
     pub boundary_nodes: Vec<BoundaryNode>,
 }
 
+impl PartialEq for Definition {
+    fn eq(&self, other: &Self) -> bool {
+        self.nns_urls == other.nns_urls
+            && self.registry_path == other.registry_path
+            && self.name == other.name
+            && self.public_key == other.public_key
+            && self.poll_interval == other.poll_interval
+            && self.registry_query_timeout == other.registry_query_timeout
+            && self.boundary_nodes == other.boundary_nodes
+    }
+}
+
 impl From<FSDefinition> for Definition {
     fn from(fs_definition: FSDefinition) -> Self {
         if std::fs::metadata(&fs_definition.registry_path).is_err() {
@@ -87,7 +99,7 @@ impl From<FSDefinition> for Definition {
             poll_interval: fs_definition.poll_interval,
             registry_query_timeout: fs_definition.registry_query_timeout,
             ic_discovery: Arc::new(IcServiceDiscoveryImpl::new(log, fs_definition.registry_path, fs_definition.registry_query_timeout).unwrap()),
-            boundary_nodes: vec![],
+            boundary_nodes: fs_definition.boundary_nodes,
         }
     }
 }
@@ -398,7 +410,7 @@ impl RunningDefinition {
     }
 }
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize, PartialEq)]
 pub struct BoundaryNode {
     pub name: String,
     pub targets: BTreeSet<SocketAddr>,
@@ -797,4 +809,52 @@ pub fn boundary_nodes_from_definitions(definitions: &BTreeMap<String, RunningDef
             })
         })
         .collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{Definition, TestDefinition};
+    use crate::{definition::DefinitionsSupervisor, make_logger, metrics::RunningDefinitionsMetrics};
+    use ic_management_types::Network;
+    use std::{collections::BTreeMap, str::FromStr, time::Duration};
+    use tempfile::tempdir;
+
+    #[tokio::test]
+    async fn persist_defs() {
+        let handle = tokio::runtime::Handle::current();
+        let definitions_dir = tempdir().unwrap();
+        let definitions_path = definitions_dir.path().join(String::from("definitions.json"));
+        let log = make_logger();
+        let supervisor = DefinitionsSupervisor::new(handle.clone(), false, Some(definitions_path.clone()), log.clone());
+
+        let mocked_definition = Definition::new(
+            vec![url::Url::from_str("http://[2a00:fb01:400:42:5000:3cff:fe45:6c61]:8080").unwrap()],
+            definitions_dir.as_ref().to_path_buf(),
+            Network::new("mainnet", &vec![]).await.unwrap().legacy_name(),
+            log,
+            None,
+            Duration::from_secs(0),
+            Duration::from_secs(0),
+        );
+        supervisor
+            .persist_defs(&mut BTreeMap::from([(
+                String::from("test"),
+                TestDefinition::new(mocked_definition.clone(), RunningDefinitionsMetrics::new()).running_def,
+            )]))
+            .await
+            .unwrap();
+        supervisor.definitions.lock().await.clear();
+        supervisor.load_or_create_defs(RunningDefinitionsMetrics::new()).await.unwrap();
+        let loaded_definition = supervisor
+            .definitions
+            .lock()
+            .await
+            .values()
+            .cloned()
+            .map(|def| def.definition)
+            .next()
+            .unwrap();
+
+        assert_eq!(mocked_definition, loaded_definition);
+    }
 }

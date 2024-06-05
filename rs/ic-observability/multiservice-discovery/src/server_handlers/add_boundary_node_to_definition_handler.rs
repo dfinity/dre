@@ -1,6 +1,7 @@
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum::Json;
+use slog::warn;
 use std::error::Error;
 use std::fmt::{Display, Error as FmtError, Formatter};
 
@@ -49,7 +50,12 @@ pub(super) async fn add_boundary_node(
     };
 
     match running_definition.add_boundary_node(bn).await {
-        Ok(()) => ok(binding.log, format!("Definition {} added successfully", name)),
+        Ok(()) => {
+            if let Err(e) = binding.supervisor.persist_defs(&mut definitions).await {
+                warn!(binding.log, "Error while peristing definitions to disk '{}'", e);
+            }
+            ok(binding.log, format!("Definition {} added successfully", name))
+        }
         Err(e) => bad_request(binding.log, rejection, e),
     }
 }
