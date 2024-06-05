@@ -360,7 +360,10 @@ async fn async_main() -> Result<(), anyhow::Error> {
                     runner_instance
                         .ic_admin
                         .propose_run(
-                            ic_admin::ProposeCommand::DeployGuestosToSomeApiBoundaryNodes { nodes, version },
+                            ic_admin::ProposeCommand::DeployGuestosToSomeApiBoundaryNodes {
+                                nodes: nodes.to_vec(),
+                                version: version.to_string(),
+                            },
                             ic_admin::ProposeOptions {
                                 title: Some(format!("Update {} API boundary node(s) to {version}", nodes.clone().len())),
                                 summary: Some(format!("Update {} API boundary node(s) to {version}", nodes.clone().len())),
@@ -375,7 +378,10 @@ async fn async_main() -> Result<(), anyhow::Error> {
                     runner_instance
                         .ic_admin
                         .propose_run(
-                            ic_admin::ProposeCommand::AddApiBoundaryNodes { nodes, version },
+                            ic_admin::ProposeCommand::AddApiBoundaryNodes {
+                                nodes: nodes.to_vec(),
+                                version: version.to_string(),
+                            },
                             ic_admin::ProposeOptions {
                                 title: Some(format!("Add {} API boundary node(s)", nodes.clone().len())),
                                 summary: Some(format!("Add {} API boundary node(s)", nodes.clone().len())),
@@ -390,7 +396,7 @@ async fn async_main() -> Result<(), anyhow::Error> {
                     runner_instance
                         .ic_admin
                         .propose_run(
-                            ic_admin::ProposeCommand::RemoveApiBoundaryNodes { nodes },
+                            ic_admin::ProposeCommand::RemoveApiBoundaryNodes { nodes: nodes.to_vec() },
                             ic_admin::ProposeOptions {
                                 title: Some(format!("Remove {} API boundary node(s)", nodes.clone().len())),
                                 summary: Some(format!("Remove {} API boundary node(s)", nodes.clone().len())),
