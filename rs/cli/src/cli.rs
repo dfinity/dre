@@ -42,7 +42,6 @@ pub struct Opts {
 
     // NNS_URLs for the target network, comma separated.
     // The argument is mandatory for testnets, and is optional for mainnet and staging
-    // test CI
     #[clap(long, env = "NNS_URLS", aliases = &["registry-url", "nns-url"], value_delimiter = ',')]
     pub nns_urls: Vec<Url>,
 
