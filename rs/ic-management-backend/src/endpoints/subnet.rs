@@ -1,10 +1,9 @@
 use super::*;
+use crate::health::HealthStatusQuerier;
 use crate::{health, subnets::get_proposed_subnet_changes};
 use decentralization::network::{SubnetQueryBy, TopologyManager};
 use ic_base_types::PrincipalId;
-use ic_management_types::requests::{
-    MembershipReplaceRequest, ReplaceTarget, SubnetCreateRequest, SubnetResizeRequest,
-};
+use ic_management_types::requests::{MembershipReplaceRequest, ReplaceTarget, SubnetCreateRequest, SubnetResizeRequest};
 use ic_management_types::Node;
 use log::warn;
 use serde::Deserialize;
@@ -16,10 +15,7 @@ struct SubnetRequest {
 }
 
 #[get("/subnet/{subnet}/pending_action")]
-async fn pending_action(
-    request: web::Path<SubnetRequest>,
-    registry: web::Data<Arc<RwLock<RegistryState>>>,
-) -> Result<HttpResponse, Error> {
+async fn pending_action(request: web::Path<SubnetRequest>, registry: web::Data<Arc<RwLock<RegistryState>>>) -> Result<HttpResponse, Error> {
     match registry.read().await.subnets_with_proposals().await {
         Ok(subnets) => {
             if let Some(subnet) = subnets.get(&request.subnet) {
@@ -31,33 +27,24 @@ async fn pending_action(
                 )))
             }
         }
-        Err(e) => Err(actix_web::error::ErrorInternalServerError(format!(
-            "failed to fetch subnets: {}",
-            e
-        ))),
+        Err(e) => Err(actix_web::error::ErrorInternalServerError(format!("failed to fetch subnets: {}", e))),
     }
 }
 
 #[get("/subnet/{subnet}/change_preview")]
-async fn change_preview(
-    request: web::Path<SubnetRequest>,
-    registry: web::Data<Arc<RwLock<RegistryState>>>,
-) -> Result<HttpResponse, Error> {
+async fn change_preview(request: web::Path<SubnetRequest>, registry: web::Data<Arc<RwLock<RegistryState>>>) -> Result<HttpResponse, Error> {
     match registry.read().await.subnets_with_proposals().await {
         Ok(subnets) => {
-            let subnet = subnets.get(&request.subnet).ok_or_else(|| {
-                actix_web::error::ErrorNotFound(anyhow::format_err!("subnet {} not found", request.subnet))
-            })?;
+            let subnet = subnets
+                .get(&request.subnet)
+                .ok_or_else(|| actix_web::error::ErrorNotFound(anyhow::format_err!("subnet {} not found", request.subnet)))?;
             let registry_nodes: BTreeMap<PrincipalId, Node> = registry.read().await.nodes();
 
             get_proposed_subnet_changes(&registry_nodes, subnet)
                 .map_err(actix_web::error::ErrorBadRequest)
                 .map(|r| HttpResponse::Ok().json(r))
         }
-        Err(e) => Err(actix_web::error::ErrorInternalServerError(format!(
-            "failed to fetch subnets: {}",
-            e
-        ))),
+        Err(e) => Err(actix_web::error::ErrorInternalServerError(format!("failed to fetch subnets: {}", e))),
     }
 }
 
@@ -70,10 +57,7 @@ async fn change_preview(
 ///
 /// All nodes in the request must belong to exactly one subnet.
 #[post("/subnet/membership/replace")]
-async fn replace(
-    request: web::Json<MembershipReplaceRequest>,
-    registry: web::Data<Arc<RwLock<RegistryState>>>,
-) -> Result<HttpResponse, Error> {
+async fn replace(request: web::Json<MembershipReplaceRequest>, registry: web::Data<Arc<RwLock<RegistryState>>>) -> Result<HttpResponse, Error> {
     let registry = registry.read().await;
     let all_nodes = registry.nodes();
 
@@ -93,9 +77,7 @@ async fn replace(
                 .filter_map(|n| all_nodes.get(n))
                 .map(decentralization::network::Node::from)
                 .collect::<Vec<_>>();
-            registry
-                .modify_subnet_nodes(SubnetQueryBy::NodeList(nodes_to_replace))
-                .await?
+            registry.modify_subnet_nodes(SubnetQueryBy::NodeList(nodes_to_replace)).await?
         }
     }
     .with_exclude_nodes(request.exclude.clone().unwrap_or_default())
@@ -131,6 +113,11 @@ async fn replace(
             .collect::<Vec<_>>();
 
         if !unhealthy.is_empty() {
+            // Do not check the health of the force-included nodes
+            let unhealthy = unhealthy
+                .into_iter()
+                .filter(|n| !request.include.as_ref().unwrap_or(&vec![]).contains(&n.id))
+                .collect::<Vec<_>>();
             replacements_unhealthy.extend(unhealthy);
         }
     }
@@ -162,21 +149,15 @@ async fn replace(
     let num_optimized = change.removed().len() - replacements.len();
     if num_optimized > 0 {
         let replace_target = if num_optimized == 1 { "node" } else { "nodes" };
-        motivations.push(format!(
-            "replacing {num_optimized} {replace_target} to improve subnet decentralization"
-        ));
+        motivations.push(format!("replacing {num_optimized} {replace_target} to improve subnet decentralization"));
     }
 
-    Ok(HttpResponse::Ok()
-        .json(decentralization::SubnetChangeResponse::from(&change).with_motivation(motivations.join("; "))))
+    Ok(HttpResponse::Ok().json(decentralization::SubnetChangeResponse::from(&change).with_motivation(motivations.join("; "))))
 }
 
 /// Simulates creation of a new subnet
 #[post("/subnet/create")]
-async fn create_subnet(
-    registry: web::Data<Arc<RwLock<RegistryState>>>,
-    request: web::Json<SubnetCreateRequest>,
-) -> Result<HttpResponse, Error> {
+async fn create_subnet(registry: web::Data<Arc<RwLock<RegistryState>>>, request: web::Json<SubnetCreateRequest>) -> Result<HttpResponse, Error> {
     let registry = registry.read().await;
     println!(
         "Received a request to create a subnet of size {:?} and MinNakamotoCoefficients {}",
@@ -199,10 +180,7 @@ async fn create_subnet(
 
 /// Simulates resizing the subnet, i.e. adding or removing nodes to a subnet.
 #[post("/subnet/membership/resize")]
-async fn resize(
-    request: web::Json<SubnetResizeRequest>,
-    registry: web::Data<Arc<RwLock<RegistryState>>>,
-) -> Result<HttpResponse, Error> {
+async fn resize(request: web::Json<SubnetResizeRequest>, registry: web::Data<Arc<RwLock<RegistryState>>>) -> Result<HttpResponse, Error> {
     let registry = registry.read().await;
 
     let change = registry

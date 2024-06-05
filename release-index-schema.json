@@ -1,0 +1,121 @@
+{
+    "$schema": "http://json-schema.org/draft-06/schema#",
+    "$ref": "#/definitions/ReleaseIndex",
+    "definitions": {
+        "ReleaseIndex": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "rollout": {
+                    "$ref": "#/definitions/Rollout"
+                },
+                "releases": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Release"
+                    }
+                }
+            },
+            "required": [
+                "releases",
+                "rollout"
+            ],
+            "title": "ReleaseIndex"
+        },
+        "Release": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "rc_name": {
+                    "type": "string"
+                },
+                "versions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Version"
+                    }
+                }
+            },
+            "required": [
+                "rc_name",
+                "versions"
+            ],
+            "title": "Release"
+        },
+        "Version": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "version": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "release_notes_ready": {
+                    "type": "boolean"
+                },
+                "subnets": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            },
+            "required": [
+                "name",
+                "version"
+            ],
+            "title": "Version"
+        },
+        "Rollout": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "pause": {
+                    "type": "boolean"
+                },
+                "skip_days": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "format": "date"
+                    }
+                },
+                "stages": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Stage"
+                    }
+                }
+            },
+            "required": [
+                "stages"
+            ],
+            "title": "Rollout"
+        },
+        "Stage": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "subnets": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "bake_time": {
+                    "type": "string"
+                },
+                "update_unassigned_nodes": {
+                    "type": "boolean"
+                },
+                "wait_for_next_week": {
+                    "type": "boolean"
+                }
+            },
+            "required": [],
+            "title": "Stage"
+        }
+    }
+}

@@ -64,6 +64,7 @@ impl RolloutStage {
             start_date_time: Utc
                 .timestamp_opt(
                     day.and_time(NaiveTime::from_hms_opt(0, 0, 0).expect("failed to create naive time"))
+                        .and_utc()
                         .timestamp(),
                     0,
                 )
@@ -184,21 +185,11 @@ impl RolloutBuilder {
         Ok(rollouts)
     }
 
-    async fn new_for_release(
-        &self,
-        release: Release,
-        subnet_update_proposals: Vec<SubnetUpdateProposal>,
-    ) -> Result<Rollout> {
-        let config: RolloutConfig =
-            serde_yaml::from_slice(include_bytes!("../config/releases/default.yaml")).expect("invalid config");
+    async fn new_for_release(&self, release: Release, subnet_update_proposals: Vec<SubnetUpdateProposal>) -> Result<Rollout> {
+        let config: RolloutConfig = serde_yaml::from_slice(include_bytes!("../config/releases/default.yaml")).expect("invalid config");
         let submitted_stages = self.stages_from_proposals(&release, subnet_update_proposals).await?;
         let today = Utc::now().date_naive();
-        let rollout_days = config.rollout_days(
-            submitted_stages
-                .first()
-                .map(|s| s.start_date_time.date_naive())
-                .unwrap_or(today),
-        );
+        let rollout_days = config.rollout_days(submitted_stages.first().map(|s| s.start_date_time.date_naive()).unwrap_or(today));
 
         let schedule = RolloutState {
             nns_subnet: self
@@ -232,12 +223,7 @@ impl RolloutBuilder {
                         RolloutStage::new_scheduled(
                             subnets
                                 .iter()
-                                .map(|s| {
-                                    self.create_subnet_update(
-                                        self.subnets.get(s).expect("subnet should exist"),
-                                        &release,
-                                    )
-                                })
+                                .map(|s| self.create_subnet_update(self.subnets.get(s).expect("subnet should exist"), &release))
                                 .collect(),
                             rd.date,
                         )
@@ -249,11 +235,10 @@ impl RolloutBuilder {
 
         Ok(Rollout {
             latest_release: release,
-            status: if stages.iter().all(|s| {
-                s.updates
-                    .iter()
-                    .all(|u| matches!(u.state, SubnetUpdateState::Scheduled))
-            }) {
+            status: if stages
+                .iter()
+                .all(|s| s.updates.iter().all(|u| matches!(u.state, SubnetUpdateState::Scheduled)))
+            {
                 RolloutStatus::Scheduled
             } else if stages
                 .iter()
@@ -283,19 +268,11 @@ impl RolloutBuilder {
         }
     }
 
-    async fn stages_from_proposals(
-        &self,
-        release: &Release,
-        subnet_update_proposals: Vec<SubnetUpdateProposal>,
-    ) -> Result<Vec<RolloutStage>> {
+    async fn stages_from_proposals(&self, release: &Release, subnet_update_proposals: Vec<SubnetUpdateProposal>) -> Result<Vec<RolloutStage>> {
         const ROLLOUT_BATCH_PROPOSAL_LAG_TOLERANCE_SECONDS: u64 = 60 * 30;
 
         let mut proposals = subnet_update_proposals;
-        proposals.sort_by(|a, b| {
-            a.info
-                .proposal_timestamp_seconds
-                .cmp(&b.info.proposal_timestamp_seconds)
-        });
+        proposals.sort_by(|a, b| a.info.proposal_timestamp_seconds.cmp(&b.info.proposal_timestamp_seconds));
         let mut stages: Vec<RolloutStage> = proposals.into_iter().fold(vec![], |mut acc, proposal| {
             let update = SubnetUpdate {
                 proposal: proposal.clone().into(),
@@ -312,12 +289,8 @@ impl RolloutBuilder {
                     .metadata
                     .name
                     .clone(),
-                patches_available: release
-                    .patches_for(&proposal.payload.replica_version_id)
-                    .expect("missing version"),
-                replica_release: release
-                    .get(&proposal.payload.replica_version_id)
-                    .expect("missing version"),
+                patches_available: release.patches_for(&proposal.payload.replica_version_id).expect("missing version"),
+                replica_release: release.get(&proposal.payload.replica_version_id).expect("missing version"),
             };
             match acc.last_mut() {
                 Some(stage)
@@ -326,8 +299,7 @@ impl RolloutBuilder {
                         .last()
                         .map(|last| match &last.proposal {
                             Some(last_update_proposal) => {
-                                proposal.info.proposal_timestamp_seconds
-                                    - last_update_proposal.info.proposal_timestamp_seconds
+                                proposal.info.proposal_timestamp_seconds - last_update_proposal.info.proposal_timestamp_seconds
                                     < ROLLOUT_BATCH_PROPOSAL_LAG_TOLERANCE_SECONDS
                             }
                             _ => unreachable!(),
@@ -343,30 +315,17 @@ impl RolloutBuilder {
                             u.state = SubnetUpdateState::Complete;
                         }
                     }
-                    acc.push(RolloutStage::new_submitted(
-                        vec![update],
-                        proposal.info.proposal_timestamp_seconds,
-                    ))
+                    acc.push(RolloutStage::new_submitted(vec![update], proposal.info.proposal_timestamp_seconds))
                 }
             }
             acc
         });
 
         if let Some(last_stage) = stages.last_mut() {
-            let releases = last_stage
-                .updates
-                .iter()
-                .map(|u| u.replica_release.clone())
-                .collect::<BTreeSet<_>>();
+            let releases = last_stage.updates.iter().map(|u| u.replica_release.clone()).collect::<BTreeSet<_>>();
             let mut update_states = BTreeMap::new();
             for release in releases {
-                let release_update_states = get_update_states(
-                    &self.network,
-                    &self.prometheus_client,
-                    &release,
-                    last_stage.start_date_time,
-                )
-                .await?;
+                let release_update_states = get_update_states(&self.network, &self.prometheus_client, &release, last_stage.start_date_time).await?;
                 update_states.insert(release, release_update_states);
             }
             for u in &mut last_stage.updates {
@@ -380,10 +339,7 @@ impl RolloutBuilder {
                     }
                 }
             }
-            last_stage.active = last_stage
-                .updates
-                .iter()
-                .any(|u| !matches!(u.state, SubnetUpdateState::Complete));
+            last_stage.active = last_stage.updates.iter().any(|u| !matches!(u.state, SubnetUpdateState::Complete));
         }
         Ok(stages)
     }
@@ -437,9 +393,7 @@ impl RolloutState {
             remaining_rollout_days_overheads = vec![];
         } else {
             // Increase overhead for last day of app subnet rollout
-            *remaining_rollout_days_overheads
-                .last_mut()
-                .expect("should contain at least one day") += 2;
+            *remaining_rollout_days_overheads.last_mut().expect("should contain at least one day") += 2;
 
             // Clear submitted subnets and set overhead instead by the number of already
             // submitted stages
@@ -481,8 +435,7 @@ impl RolloutState {
             + 1;
 
         const MAX_ROLLOUT_STAGE_SIZE: usize = 4;
-        let mut rollout_stages_sizes: Vec<Vec<usize>> =
-            remaining_rollout_days.iter().map(|_| vec![]).collect::<Vec<_>>();
+        let mut rollout_stages_sizes: Vec<Vec<usize>> = remaining_rollout_days.iter().map(|_| vec![]).collect::<Vec<_>>();
         let mut leftover_subnets_count = leftover_subnets.len();
         while leftover_subnets_count != 0 {
             let min_day_stages_count = rollout_stages_sizes
@@ -524,10 +477,7 @@ impl RolloutState {
             }
             remaining_rollout_days.push(RolloutDay {
                 date: rollout_date,
-                rollout_stages_subnets: sizes
-                    .iter()
-                    .map(|size| leftover_subnets.drain(0..*size).collect())
-                    .collect(),
+                rollout_stages_subnets: sizes.iter().map(|size| leftover_subnets.drain(0..*size).collect()).collect(),
             });
         }
 
@@ -555,12 +505,7 @@ impl RolloutState {
             // left, and then use the first one and drop the last
             // one
             } else {
-                self.rollout_days
-                    .iter()
-                    .rev()
-                    .nth(1)
-                    .expect("should have at least 2 days available")
-                    .date
+                self.rollout_days.iter().rev().nth(1).expect("should have at least 2 days available").date
             };
             remaining_rollout_days.push(RolloutDay {
                 rollout_stages_subnets: vec![vec![self.nns_subnet]],
@@ -686,23 +631,14 @@ pub async fn list_subnets_release_statuses(
     subnet_update_proposals.reverse();
     let latest_updates = subnets
         .keys()
-        .map(|p| {
-            (
-                p,
-                subnet_update_proposals.iter().find(|sup| sup.payload.subnet_id == *p),
-            )
-        })
+        .map(|p| (p, subnet_update_proposals.iter().find(|sup| sup.payload.subnet_id == *p)))
         .collect::<BTreeMap<_, _>>();
 
     let active_releases = latest_updates
         .values()
         .filter_map(|u| {
-            u.map(|sup| {
-                releases
-                    .iter()
-                    .find(|r| r.commit_hash == *sup.payload.replica_version_id)
-            })
-            .flatten()
+            u.map(|sup| releases.iter().find(|r| r.commit_hash == *sup.payload.replica_version_id))
+                .flatten()
         })
         .collect::<Vec<_>>();
 
@@ -742,11 +678,7 @@ pub async fn list_subnets_release_statuses(
     .into_iter()
     .collect::<BTreeMap<_, _>>();
 
-    let latest_releases = releases
-        .iter()
-        .rev()
-        .unique_by(|r| r.branch.clone())
-        .collect::<Vec<_>>();
+    let latest_releases = releases.iter().rev().unique_by(|r| r.branch.clone()).collect::<Vec<_>>();
 
     Ok(subnets
         .values()
@@ -800,10 +732,8 @@ mod test {
 
     #[test]
     fn test_schedule() {
-        let nns_subnet: PrincipalId =
-            PrincipalId::from_str("tdb26-jop6k-aogll-7ltgs-eruif-6kk7m-qpktf-gdiqx-mxtrf-vb5e6-eqe").unwrap();
-        let canary_subnet: PrincipalId =
-            PrincipalId::from_str("io67a-2jmkw-zup3h-snbwi-g6a5n-rm5dn-b6png-lvdpl-nqnto-yih6l-gqe").unwrap();
+        let nns_subnet: PrincipalId = PrincipalId::from_str("tdb26-jop6k-aogll-7ltgs-eruif-6kk7m-qpktf-gdiqx-mxtrf-vb5e6-eqe").unwrap();
+        let canary_subnet: PrincipalId = PrincipalId::from_str("io67a-2jmkw-zup3h-snbwi-g6a5n-rm5dn-b6png-lvdpl-nqnto-yih6l-gqe").unwrap();
         let other_subnets: &[PrincipalId] = &[
             PrincipalId::from_str("2fq7c-slacv-26cgz-vzbx2-2jrcs-5edph-i5s2j-tck77-c3rlz-iobzx-mqe").unwrap(),
             PrincipalId::from_str("3hhby-wmtmw-umt4t-7ieyg-bbiig-xiylg-sblrt-voxgt-bqckd-a75bf-rqe").unwrap(),
@@ -897,19 +827,11 @@ mod test {
             },
             RolloutDay {
                 date: week_1_wednesday,
-                rollout_stages_subnets: vec![
-                    subnets[7..10].to_vec(),
-                    subnets[10..14].to_vec(),
-                    subnets[14..18].to_vec(),
-                ],
+                rollout_stages_subnets: vec![subnets[7..10].to_vec(), subnets[10..14].to_vec(), subnets[14..18].to_vec()],
             },
             RolloutDay {
                 date: week_1_thursday,
-                rollout_stages_subnets: vec![
-                    subnets[18..22].to_vec(),
-                    subnets[22..26].to_vec(),
-                    subnets[26..30].to_vec(),
-                ],
+                rollout_stages_subnets: vec![subnets[18..22].to_vec(), subnets[22..26].to_vec(), subnets[26..30].to_vec()],
             },
             RolloutDay {
                 date: week_1_friday,
@@ -963,19 +885,11 @@ mod test {
             },
             RolloutDay {
                 date: week_1_wednesday,
-                rollout_stages_subnets: vec![
-                    subnets[7..10].to_vec(),
-                    subnets[10..14].to_vec(),
-                    subnets[14..18].to_vec(),
-                ],
+                rollout_stages_subnets: vec![subnets[7..10].to_vec(), subnets[10..14].to_vec(), subnets[14..18].to_vec()],
             },
             RolloutDay {
                 date: week_1_thursday,
-                rollout_stages_subnets: vec![
-                    subnets[18..22].to_vec(),
-                    subnets[22..26].to_vec(),
-                    subnets[26..30].to_vec(),
-                ],
+                rollout_stages_subnets: vec![subnets[18..22].to_vec(), subnets[22..26].to_vec(), subnets[26..30].to_vec()],
             },
             RolloutDay {
                 date: week_1_friday,
@@ -1029,19 +943,11 @@ mod test {
             },
             RolloutDay {
                 date: week_1_wednesday,
-                rollout_stages_subnets: vec![
-                    subnets[7..10].to_vec(),
-                    subnets[10..14].to_vec(),
-                    subnets[14..18].to_vec(),
-                ],
+                rollout_stages_subnets: vec![subnets[7..10].to_vec(), subnets[10..14].to_vec(), subnets[14..18].to_vec()],
             },
             RolloutDay {
                 date: week_1_thursday,
-                rollout_stages_subnets: vec![
-                    subnets[18..22].to_vec(),
-                    subnets[22..26].to_vec(),
-                    subnets[26..30].to_vec(),
-                ],
+                rollout_stages_subnets: vec![subnets[18..22].to_vec(), subnets[22..26].to_vec(), subnets[26..30].to_vec()],
             },
             RolloutDay {
                 date: week_1_friday,
@@ -1066,11 +972,7 @@ mod test {
                 },
                 RolloutDay {
                     date: week_1_tuesday,
-                    rollout_stages_subnets: vec![
-                        subnets[1..3].to_vec(),
-                        subnets[3..6].to_vec(),
-                        subnets[6..7].to_vec(),
-                    ],
+                    rollout_stages_subnets: vec![subnets[1..3].to_vec(), subnets[3..6].to_vec(), subnets[6..7].to_vec()],
                 },
                 RolloutDay {
                     date: week_1_wednesday,
@@ -1345,11 +1247,7 @@ mod test {
             rollout_stages_subnets: vec![vec![nns_subnet]],
         }];
 
-        assert_eq!(
-            want,
-            state.schedule(),
-            "sunday, rollout should complete next day (monday)"
-        );
+        assert_eq!(want, state.schedule(), "sunday, rollout should complete next day (monday)");
 
         // Only NNS is left to deploy today
         let state = RolloutState {
@@ -1505,10 +1403,6 @@ mod test {
             rollout_stages_subnets: vec![vec![nns_subnet]],
         }];
 
-        assert_eq!(
-            want,
-            state.schedule(),
-            "monday is skipped, nns rolls out day after tomorrow"
-        );
+        assert_eq!(want, state.schedule(), "monday is skipped, nns rolls out day after tomorrow");
     }
 }

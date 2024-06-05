@@ -19,40 +19,30 @@ bazel_skylib_workspace()
 
 http_archive(
     name = "rules_python",
-    patch_args = ["-p1"],
-    patches = [
-        # https://github.com/bazelbuild/rules_python/pull/1166#issuecomment-1641878169
-        "//bazel/patches:rules_python_annotation.patch",
-    ],
-    sha256 = "0a8003b044294d7840ac7d9d73eef05d6ceb682d7516781a4ec62eeb34702578",
-    strip_prefix = "rules_python-0.24.0",
-    url = "https://github.com/bazelbuild/rules_python/releases/download/0.24.0/rules_python-0.24.0.tar.gz",
+    sha256 = "c285495ee02df843a337c78617c196b7a87ea11da8961b7dd5ae28d43f9a1d85",
+    strip_prefix = "rules_python-c5c03b2477dd1ce0c06c9dc60bf816995f222bcf",
+    url = "https://github.com/bazelbuild/rules_python/archive/c5c03b2477dd1ce0c06c9dc60bf816995f222bcf.zip",
 )
 
 load("@rules_python//python:repositories.bzl", "py_repositories", "python_register_toolchains")
-load("@rules_python//python/pip_install:pip_repository.bzl", "package_annotation")
 
 py_repositories()
 
 python_register_toolchains(
-    name = "python3_11",
-    python_version = "3.11.1",
+    name = "python3_12",
+    python_version = "3.12.2",
 )
 
-load("@python3_11//:defs.bzl", "interpreter")
+load("@python3_12//:defs.bzl", "interpreter")
 load("@rules_python//python:pip.bzl", "pip_parse")
 
 pip_parse(
     name = "python_deps",
-    annotations = {
-        "poetry-plugin-export": package_annotation(
-            excluded_deps = ["poetry"],
-        ),
-        "ansible-base": package_annotation(
-            additive_build_content = '''
-exports_files(["bin/ansible-inventory"])
-            ''',
-        ),
+    experimental_requirement_cycles = {
+        "poetry": [
+            "poetry",
+            "poetry-plugin-export",
+        ],
     },
     python_interpreter_target = interpreter,
     requirements_lock = "//:requirements.txt",
@@ -62,7 +52,24 @@ load("@python_deps//:requirements.bzl", "install_deps")
 
 install_deps()
 
-IC_REPO_VERSION = "4b3b2ce76c4bde0c1c60fb80b0915931003b7eca"
+http_archive(
+    name = "aspect_bazel_lib",
+    sha256 = "3e0a430ada9b8f0f845767a267cf584bc94b8ec642d6093f31dca3938b18f6a1",
+    strip_prefix = "bazel-lib-2.6.0",
+    url = "https://github.com/aspect-build/bazel-lib/releases/download/v2.6.0/bazel-lib-v2.6.0.tar.gz",
+)
+
+load("@aspect_bazel_lib//lib:repositories.bzl", "aspect_bazel_lib_dependencies", "aspect_bazel_lib_register_toolchains")
+
+# Required bazel-lib dependencies
+
+aspect_bazel_lib_dependencies()
+
+# Register bazel-lib toolchains
+
+aspect_bazel_lib_register_toolchains()
+
+IC_REPO_VERSION = "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
 
 http_archive(
     name = "ic_repo",
@@ -87,7 +94,7 @@ rust_analyzer_dependencies()
 rust_register_toolchains(
     edition = "2021",
     versions = [
-        "1.71.1",
+        "1.75.0",
     ],
 )
 
@@ -106,8 +113,8 @@ crate_repositories()
 http_file(
     name = "ic-icrc1-archive",
     downloaded_file_path = "ic-icrc1-archive.wasm.gz",
-    sha256 = "46aac8f1db925e166a1d8fc45ff33505a41afb6f9ba0581028b76199e0a07727",
-    url = "https://download.dfinity.systems/ic/4b3b2ce76c4bde0c1c60fb80b0915931003b7eca/canisters/ic-icrc1-archive.wasm.gz",
+    sha256 = "6e9869a0d51a4e0f6b6f111958c06fbca0a6476483d6048a512d4df845ebe0ae",
+    url = "https://download.dfinity.systems/ic/778d2bb870f858952ca9fbe69324f9864e3cf5e7/canisters/ic-icrc1-archive.wasm.gz",
 )
 
 http_archive(
@@ -138,14 +145,6 @@ load("@rules_foreign_cc//foreign_cc:repositories.bzl", "rules_foreign_cc_depende
 
 rules_foreign_cc_dependencies()
 
-load("@ic_repo//third_party/openssl:openssl_repositories.bzl", "openssl_repositories")
-
-openssl_repositories()
-
-load("@ic_repo//third_party/openssl:openssl_setup.bzl", "openssl_setup")
-
-openssl_setup()
-
 http_archive(
     name = "rules_oci",
     sha256 = "176e601d21d1151efd88b6b027a24e782493c5d623d8c6211c7767f306d655c8",
@@ -165,6 +164,12 @@ oci_register_toolchains(
 )
 
 load("@rules_oci//oci:pull.bzl", "oci_pull")
+
+load("//3rdparty/bazel-rules-openssl:repos.bzl", openssl_repos="repos")
+openssl_repos()
+
+load("@com_github_3rdparty_bazel_rules_openssl//bazel:deps.bzl", openssl_deps="deps")
+openssl_deps()
 
 oci_pull(
     # Debian 12 image has a newer glibc than Debian 11 in regular distrolles containers.
@@ -189,18 +194,22 @@ oci_pull(
 )
 
 oci_pull(
-    # tag = 0.34.1-debian
+    # tag = 0.38.0-debian
     name = "vector-debian",
-    digest = "sha256:6d8cf7cbafe8591d3e04d9f4aa9889c720ab36bb8712cad04979261d35b501cf",
+    digest = "sha256:f33f11c554d522fb9a3d1725c9212725da8f1eee70a3971e587e78d46e72a779",
     image = "index.docker.io/timberio/vector",
 )
 
 oci_pull(
-    # tag = "2.43.0-debian-11-r6",
+    # tag = "2.44.0-debian-12-r2",
     name = "bitnami_git_docker_img",
-    digest = "sha256:405124df0b75c75afc972cd73425838aacbd06a5dc4b7e0a2af4d9d3117163e8",
+    digest = "sha256:bbd4ffc32f62b2b7bb2b85f289803d564a0381a2c75fd61f19f8bfc0815791e4",
     image = "index.docker.io/bitnami/git",
     reproducible = True,
+    platforms = [
+        "linux/amd64",
+        "linux/arm64",
+    ],
 )
 
 oci_pull(
@@ -224,6 +233,12 @@ oci_pull(
     name = "python3",
     digest = "sha256:5120c734a5ba810c47b97a80cdc6e03004bd4ff7ad98e492b9ccdaf70ff2b8d6",
     image = "index.docker.io/library/python",
+)
+
+oci_pull(
+    name = "bazel_image_6_5_0",
+    digest = "sha256:7506002de2e90431e194f8391f4600b57cf229280002b2fc473b88a95d7104bc",
+    image = "gcr.io/bazel-public/bazel",
 )
 
 http_archive(

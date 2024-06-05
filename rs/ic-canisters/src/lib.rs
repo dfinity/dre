@@ -1,5 +1,6 @@
 use candid::CandidType;
 use ic_agent::agent::http_transport::ReqwestTransport;
+use ic_agent::identity::AnonymousIdentity;
 use ic_agent::identity::BasicIdentity;
 use ic_agent::identity::Secp256k1Identity;
 use ic_agent::Agent;
@@ -14,12 +15,14 @@ use serde::Deserialize;
 use std::path::PathBuf;
 use std::str::FromStr;
 use std::sync::Mutex;
+use std::time::Duration;
 use url::Url;
 
 pub mod governance;
 pub mod management;
 pub mod parallel_hardware_identity;
 pub mod registry;
+pub mod sns_wasm;
 
 pub struct CanisterClient {
     pub agent: CanisterClientAgent,
@@ -30,10 +33,7 @@ impl CanisterClient {
         let sender = Sender::from_external_hsm(
             UtilityCommand::read_public_key(Some(&slot.to_string()), Some(&key_id)).execute()?,
             std::sync::Arc::new(move |input| {
-                Ok(
-                    UtilityCommand::sign_message(input.to_vec(), Some(&slot.to_string()), Some(&pin), Some(&key_id))
-                        .execute()?,
-                )
+                Ok(UtilityCommand::sign_message(input.to_vec(), Some(&slot.to_string()), Some(&pin), Some(&key_id)).execute()?)
             }),
         );
 
@@ -51,6 +51,12 @@ impl CanisterClient {
             agent: CanisterClientAgent::new(nns_url.clone(), sender),
         })
     }
+
+    pub fn from_anonymous(nns_url: &Url) -> anyhow::Result<Self> {
+        Ok(Self {
+            agent: CanisterClientAgent::new(nns_url.clone(), Sender::Anonymous),
+        })
+    }
 }
 
 pub struct IcAgentCanisterClient {
@@ -62,27 +68,34 @@ impl IcAgentCanisterClient {
         let identity: Box<dyn Identity> = if let Ok(identity) = BasicIdentity::from_pem_file(&path) {
             Box::new(identity)
         } else {
-            let identity = Secp256k1Identity::from_pem_file(&path)
-                .map_err(|e| anyhow::anyhow!("Couldn't load identity: {:?}", e))?;
+            let identity = Secp256k1Identity::from_pem_file(&path).map_err(|e| anyhow::anyhow!("Couldn't load identity: {:?}", e))?;
             Box::new(identity)
         };
-        Ok(Self {
-            agent: Agent::builder()
-                .with_identity(identity)
-                .with_transport(ReqwestTransport::create(url)?)
-                .build()?,
-        })
+        Self::build_agent(url, identity)
     }
 
     pub fn from_hsm(pin: String, slot: u64, key_id: String, url: Url, lock: Option<Mutex<()>>) -> anyhow::Result<Self> {
         let pin_fn = || Ok(pin);
         let identity = ParallelHardwareIdentity::new(pkcs11_lib_path()?, slot as usize, &key_id, pin_fn, lock)?;
-        Ok(Self {
-            agent: Agent::builder()
-                .with_identity(identity)
-                .with_transport(ReqwestTransport::create(url)?)
-                .build()?,
-        })
+        Self::build_agent(url, Box::new(identity))
+    }
+
+    pub fn from_anonymous(url: Url) -> anyhow::Result<Self> {
+        Self::build_agent(url, Box::new(AnonymousIdentity))
+    }
+
+    fn build_agent(url: Url, identity: Box<dyn Identity>) -> anyhow::Result<Self> {
+        let client = reqwest::Client::builder()
+            .use_rustls_tls()
+            .timeout(Duration::from_secs(30))
+            .build()
+            .expect("Could not create HTTP client.");
+        let agent = Agent::builder()
+            .with_identity(identity)
+            .with_transport(ReqwestTransport::create_with_client(url, client)?)
+            .with_verify_query_signatures(false)
+            .build()?;
+        Ok(Self { agent })
     }
 }
 

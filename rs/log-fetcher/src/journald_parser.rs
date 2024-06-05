@@ -17,7 +17,6 @@ enum LineStatus {
     NotStarted,
     Started,
     Utf8,
-    Binary,
 }
 
 pub fn parse_journal_entries_new(body: &[u8]) -> Vec<JournalEntry> {
@@ -35,6 +34,7 @@ pub fn parse_journal_entries_new(body: &[u8]) -> Vec<JournalEntry> {
                 first_found = LineStatus::Utf8;
             }
             (b'\n', LineStatus::Started) => {
+                // Binary field case
                 current_entry.push(current_line.clone());
                 current_line.clear();
                 let mut next = vec![];
@@ -44,8 +44,7 @@ pub fn parse_journal_entries_new(body: &[u8]) -> Vec<JournalEntry> {
                     current_line.push(*current)
                 }
 
-                let to_take =
-                    i64::from_le_bytes([next[0], next[1], next[2], next[3], next[4], next[5], next[6], next[7]]);
+                let to_take = i64::from_le_bytes([next[0], next[1], next[2], next[3], next[4], next[5], next[6], next[7]]);
                 for _ in 0..to_take {
                     current_line.push(*iter.next().unwrap())
                 }
@@ -73,7 +72,6 @@ pub fn parse_journal_entries_new(body: &[u8]) -> Vec<JournalEntry> {
                 current_line.push(*byte);
                 first_found = LineStatus::Started;
             }
-            (a, b) => unreachable!("Shouldn't happen: {}, {:?}", a, b),
         }
     }
     // Check if there's an entry at the end of the body
@@ -157,10 +155,9 @@ fn parse_journal_entry(entry_lines: &[Vec<u8>]) -> Option<JournalEntry> {
             }
         }
 
-        entry.fields.push((
-            name,
-            JournalField::Binary(String::from_utf8_lossy(&multiline).to_string()),
-        ))
+        entry
+            .fields
+            .push((name, JournalField::Binary(String::from_utf8_lossy(&multiline).to_string())))
     }
 
     if entry.fields.is_empty() {
@@ -192,11 +189,7 @@ mod tests {
 
     use std::io::Write;
 
-    pub fn serialize_string_field<W: Write>(
-        field_name: &str,
-        field_data: &str,
-        writer: &mut W,
-    ) -> Result<(), std::io::Error> {
+    pub fn serialize_string_field<W: Write>(field_name: &str, field_data: &str, writer: &mut W) -> Result<(), std::io::Error> {
         // Serialize as binary field
         writer.write_all(field_name.as_bytes())?;
         writer.write_all(b"\n")?;
@@ -220,26 +213,14 @@ mod tests {
         // Verify the first entry
         let entry1 = &entries[0];
         assert_eq!(entry1.fields.len(), 2);
-        assert_eq!(
-            entry1.fields[0],
-            ("field1".to_string(), JournalField::Utf8("value1".to_string()))
-        );
-        assert_eq!(
-            entry1.fields[1],
-            ("field2".to_string(), JournalField::Utf8("value2".to_string()))
-        );
+        assert_eq!(entry1.fields[0], ("field1".to_string(), JournalField::Utf8("value1".to_string())));
+        assert_eq!(entry1.fields[1], ("field2".to_string(), JournalField::Utf8("value2".to_string())));
 
         // Verify the second entry
         let entry2 = &entries[1];
         assert_eq!(entry2.fields.len(), 2);
-        assert_eq!(
-            entry2.fields[0],
-            ("field3".to_string(), JournalField::Utf8("value3".to_string()))
-        );
-        assert_eq!(
-            entry2.fields[1],
-            ("field4".to_string(), JournalField::Utf8("".to_string()))
-        );
+        assert_eq!(entry2.fields[0], ("field3".to_string(), JournalField::Utf8("value3".to_string())));
+        assert_eq!(entry2.fields[1], ("field4".to_string(), JournalField::Utf8("".to_string())));
     }
 
     #[test]
@@ -258,14 +239,8 @@ mod tests {
         // Verify the entry with binary data
         let entry = &entries[0];
         assert_eq!(entry.fields.len(), 2);
-        assert_eq!(
-            entry.fields[0],
-            ("field1".to_string(), JournalField::Utf8("value1".to_string()))
-        );
-        assert_eq!(
-            entry.fields[1],
-            ("MESSAGE".to_string(), JournalField::Binary("foo\nbar".to_string()))
-        );
+        assert_eq!(entry.fields[0], ("field1".to_string(), JournalField::Utf8("value1".to_string())));
+        assert_eq!(entry.fields[1], ("MESSAGE".to_string(), JournalField::Binary("foo\nbar".to_string())));
     }
 
     #[test]
@@ -293,14 +268,16 @@ mod tests {
         assert_eq!(entry.fields.len(), 7);
         assert_eq!(
             entry.fields[0],
-            ("__CURSOR".to_string(), JournalField::Utf8("s=bcce4fb8ffcb40e9a6e05eee8b7831bf;i=5ef603;b=ec25d6795f0645619ddac9afdef453ee;m=545242e7049;t=50f1202".to_string()))
+            (
+                "__CURSOR".to_string(),
+                JournalField::Utf8(
+                    "s=bcce4fb8ffcb40e9a6e05eee8b7831bf;i=5ef603;b=ec25d6795f0645619ddac9afdef453ee;m=545242e7049;t=50f1202".to_string()
+                )
+            )
         );
         assert_eq!(
             entry.fields[1],
-            (
-                "__REALTIME_TIMESTAMP".to_string(),
-                JournalField::Utf8("1423944916375353".to_string())
-            )
+            ("__REALTIME_TIMESTAMP".to_string(), JournalField::Utf8("1423944916375353".to_string()))
         );
         assert_eq!(
             entry.fields[2],
@@ -308,26 +285,14 @@ mod tests {
         );
         assert_eq!(
             entry.fields[3],
-            (
-                "OTHER_BIN".to_string(),
-                JournalField::Binary("some random data\nbar".to_string())
-            )
+            ("OTHER_BIN".to_string(), JournalField::Binary("some random data\nbar".to_string()))
         );
-        assert_eq!(
-            entry.fields[4],
-            ("_AUDIT_LOGINUID".to_string(), JournalField::Utf8("1001".to_string()))
-        );
+        assert_eq!(entry.fields[4], ("_AUDIT_LOGINUID".to_string(), JournalField::Utf8("1001".to_string())));
         assert_eq!(
             entry.fields[5],
-            (
-                "SYSLOG_IDENTIFIER".to_string(),
-                JournalField::Utf8("python3".to_string())
-            )
+            ("SYSLOG_IDENTIFIER".to_string(), JournalField::Utf8("python3".to_string()))
         );
-        assert_eq!(
-            entry.fields[6],
-            ("MESSAGE".to_string(), JournalField::Binary("foo\nbar".to_string()))
-        );
+        assert_eq!(entry.fields[6], ("MESSAGE".to_string(), JournalField::Binary("foo\nbar".to_string())));
     }
 
     #[test]
@@ -355,14 +320,16 @@ mod tests {
         assert_eq!(entry.fields.len(), 7);
         assert_eq!(
             entry.fields[0],
-            ("__CURSOR".to_string(), JournalField::Utf8("s=bcce4fb8ffcb40e9a6e05eee8b7831bf;i=5ef603;b=ec25d6795f0645619ddac9afdef453ee;m=545242e7049;t=50f1202".to_string()))
+            (
+                "__CURSOR".to_string(),
+                JournalField::Utf8(
+                    "s=bcce4fb8ffcb40e9a6e05eee8b7831bf;i=5ef603;b=ec25d6795f0645619ddac9afdef453ee;m=545242e7049;t=50f1202".to_string()
+                )
+            )
         );
         assert_eq!(
             entry.fields[1],
-            (
-                "__REALTIME_TIMESTAMP".to_string(),
-                JournalField::Utf8("1423944916375353".to_string())
-            )
+            ("__REALTIME_TIMESTAMP".to_string(), JournalField::Utf8("1423944916375353".to_string()))
         );
         assert_eq!(
             entry.fields[2],
@@ -370,26 +337,14 @@ mod tests {
         );
         assert_eq!(
             entry.fields[3],
-            (
-                "OTHER_BIN".to_string(),
-                JournalField::Binary("some random data\nbar\n".to_string())
-            )
+            ("OTHER_BIN".to_string(), JournalField::Binary("some random data\nbar\n".to_string()))
         );
-        assert_eq!(
-            entry.fields[4],
-            ("_AUDIT_LOGINUID".to_string(), JournalField::Utf8("1001".to_string()))
-        );
+        assert_eq!(entry.fields[4], ("_AUDIT_LOGINUID".to_string(), JournalField::Utf8("1001".to_string())));
         assert_eq!(
             entry.fields[5],
-            (
-                "SYSLOG_IDENTIFIER".to_string(),
-                JournalField::Utf8("python3".to_string())
-            )
+            ("SYSLOG_IDENTIFIER".to_string(), JournalField::Utf8("python3".to_string()))
         );
-        assert_eq!(
-            entry.fields[6],
-            ("MESSAGE".to_string(), JournalField::Binary("foo\nbar".to_string()))
-        );
+        assert_eq!(entry.fields[6], ("MESSAGE".to_string(), JournalField::Binary("foo\nbar".to_string())));
     }
 
     #[test]

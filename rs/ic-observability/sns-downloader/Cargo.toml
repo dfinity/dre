@@ -15,10 +15,10 @@ ic-async-utils = { workspace = true }
 multiservice-discovery-shared = { path = "../multiservice-discovery-shared" }
 regex = { workspace = true }
 reqwest = { workspace = true }
-serde = { workspace = true }
 serde_json = { workspace = true }
 slog = { workspace = true }
 slog-async = { workspace = true }
 slog-term = { workspace = true }
 tokio = { workspace = true }
 url = { workspace = true }
+ic-canisters = { path = "../../ic-canisters" }

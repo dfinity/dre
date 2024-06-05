@@ -8,16 +8,9 @@ use crate::server_handlers::dto::{BadDtoError, DefinitionDto};
 
 use super::{bad_request, ok, Server, WebResult};
 
-pub(super) async fn replace_definitions(
-    State(binding): State<Server>,
-    Json(definitions): Json<Vec<DefinitionDto>>,
-) -> WebResult<String> {
+pub(super) async fn replace_definitions(State(binding): State<Server>, Json(definitions): Json<Vec<DefinitionDto>>) -> WebResult<String> {
     // Cache old names if we need to remove them from metrics
-    let dnames = definitions
-        .iter()
-        .map(|d| d.name.clone())
-        .collect::<Vec<String>>()
-        .join(", ");
+    let dnames = definitions.iter().map(|d| d.name.clone()).collect::<Vec<String>>().join(", ");
 
     let defsresults_futures: Vec<_> = definitions
         .into_iter()
@@ -39,10 +32,7 @@ pub(super) async fn replace_definitions(
     if !errors.is_empty() {
         return Err((
             StatusCode::BAD_REQUEST,
-            format!(
-                ":\n * {}",
-                errors.iter().map(|e| e.to_string()).collect::<Vec<_>>().join("\n * ")
-            ),
+            format!(":\n * {}", errors.iter().map(|e| e.to_string()).collect::<Vec<_>>().join("\n * ")),
         ));
     }
 
@@ -56,10 +46,7 @@ pub(super) async fn replace_definitions(
         )
         .await
     {
-        Ok(_) => ok(
-            binding.log,
-            format!("Added new definitions {} to existing ones", dnames),
-        ),
+        Ok(_) => ok(binding.log, format!("Added new definitions {} to existing ones", dnames)),
         Err(e) => bad_request(binding.log, format!(":\n{}", e), e),
     }
 }

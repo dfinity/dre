@@ -10,7 +10,6 @@ anyhow = { workspace = true }
 crossbeam = { workspace = true }
 crossbeam-channel = { workspace = true }
 futures = { workspace = true }
-hyper = { workspace = true }
 ic-interfaces-registry = { workspace = true }
 ic-metrics = { workspace = true }
 ic-protobuf = { workspace = true }
@@ -23,8 +22,7 @@ ic-registry-local-registry = { workspace = true }
 ic-registry-local-store = { workspace = true }
 ic-registry-local-store-artifacts = { workspace = true }
 ic-registry-nns-data-provider = { workspace = true }
-ic-types = { workspace = true }
-ic-utils = { workspace = true }
+ic-sys = { workspace = true }
 prometheus = { workspace = true }
 regex = { workspace = true }
 registry-canister = { workspace = true }

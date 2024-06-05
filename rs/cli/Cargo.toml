@@ -1,6 +1,7 @@
 [package]
 name = "dre"
-build = "build.rs"
+# Required because of BAZEL
+build = "src/build_script_.rs"
 version.workspace = true
 authors.workspace = true
 edition.workspace = true
@@ -18,28 +19,35 @@ clap = { workspace = true }
 clap-num = { workspace = true }
 colored = { workspace = true }
 cryptoki = { workspace = true }
+cycles-minting-canister = { workspace = true }
 decentralization = { workspace = true }
 dialoguer = { workspace = true }
 dirs = { workspace = true }
 dotenv = { workspace = true }
 edit = { workspace = true }
 flate2 = { workspace = true }
+fs-err = { workspace = true }
 futures = { workspace = true }
 futures-util = { workspace = true }
 ic-base-types = { workspace = true }
 ic-canister-client = { workspace = true }
+ic-canister-client-sender = { workspace = true }
 ic-canisters = { workspace = true }
 ic-interfaces-registry = { workspace = true }
 ic-management-backend = { workspace = true }
 ic-management-types = { workspace = true }
-ic-nns-common = { workspace = true }
+ic-nervous-system-clients = { workspace = true }
 ic-nns-constants = { workspace = true }
+ic-nervous-system-root = { workspace = true }
+ic-nns-common = { workspace = true }
 ic-nns-governance = { workspace = true }
 ic-protobuf = { workspace = true }
 ic-registry-keys = { workspace = true }
 ic-registry-local-registry = { workspace = true }
 ic-registry-subnet-type = { workspace = true }
+ic-sns-wasm = { workspace = true }
 ic-sys = { workspace = true }
+ic-types = { workspace = true }
 itertools = { workspace = true }
 keyring = { workspace = true }
 log = { workspace = true }
@@ -48,6 +56,7 @@ prost = { workspace = true }
 regex = { workspace = true }
 registry-canister = { workspace = true }
 reqwest = { workspace = true }
+self_update = { version = "0.40.0", features = ["archive-tar"] }
 serde = { workspace = true }
 serde_json = { workspace = true }
 sha2 = { workspace = true }
@@ -56,9 +65,27 @@ spinners = { workspace = true }
 strum = { workspace = true }
 tabled = { workspace = true }
 tabular = { workspace = true }
+tempfile = "3.10.0"
 tokio = { workspace = true }
 url = { workspace = true }
 
 [dev-dependencies]
-tempfile = "3.10.0"
-wiremock = "0.6.0"
+wiremock = { workspace = true }
+
+[build-dependencies]
+clap_complete = "4.5.2"
+clap = { workspace = true }
+clap-num = { workspace = true }
+ic-base-types = { workspace = true }
+ic-management-types = { workspace = true }
+url = { workspace = true }
+ic-nns-governance = { workspace = true }
+ic-registry-keys = { workspace = true }
+
+[[bin]]
+name = "dre"
+path = "src/main.rs"
+
+[lib]
+name = "dre"
+path = "src/lib.rs"

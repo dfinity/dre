@@ -9,6 +9,7 @@ documentation.workspace = true
 [dependencies]
 actix-web = { workspace = true }
 chrono = { workspace = true }
+futures = { workspace = true }
 ic-base-types = { workspace = true }
 ic-nns-governance = { workspace = true }
 ic-registry-subnet-type = { workspace = true }
@@ -19,10 +20,13 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 strum = { workspace = true }
 strum_macros = { workspace = true }
+tokio = { workspace = true }
 url = { workspace = true }
 anyhow = { workspace = true }
 candid = { workspace = true }
-clap = { workspace = true }
+
+[dev-dependencies]
+wiremock = { workspace = true }
 
 [lib]
 path = "src/lib.rs"

@@ -149,9 +149,23 @@ Used for retrieving a list of nodes available from all the scraping targets of t
 ]
 ```
 
+The following query string parameters are accepted:
+
+* `node_provider_id` (optional, string): exclude from results nodes not belonging to the specified node provider ID;
+  boundary nodes will not be included in the output.
+* `operator_id` (optional, string): exclude from results nodes not operated by the specified operator ID.
+  boundary nodes will not be included in the output.
+* `dc_id` (optional, string): exclude from results nodes not in the specified datacenter by ID; boundary nodes
+  will be included only if they match the datacenter specified by ID.
+* `subnet_id` (optional, string): exclude from results nodes not belonging to the specified subnet ID; if an empty
+  `subnet_id` is specified, then only nodes not belonging to any subnet will be returned; boundary nodes will not
+  be included in the output.
+
 ### `GET` /prom/targets
 
 Used for fetching all targets from service discovery in prometheus format which can be used as a prometheus target.
+
+The same query string parameters available for `/targets` are accepted for this endpoint.
 
 ### `POST` /add_boundary_node
 

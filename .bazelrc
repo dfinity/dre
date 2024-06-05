@@ -26,7 +26,7 @@ build:lint --config=clippy
 
 build:ci --progress_report_interval=30
 
-build --nosandbox_default_allow_network
+build --sandbox_default_allow_network
 build --incompatible_strict_action_env # use an environment with a static value for PATH and do not inherit LD_LIBRARY_PATH
 
 # default to optimized and unstripped binaries.
@@ -35,22 +35,30 @@ build --@rules_rust//:extra_rustc_flags=-Cdebug-assertions=on
 build --@rules_rust//:extra_rustc_flag=-Dbindings_with_variant_name
 build --strip=never
 
-build:dfinity --remote_cache=bazel-remote.idx.dfinity.network
-build --experimental_remote_cache_async
+# build:dfinity --remote_cache=bazel-remote.idx.dfinity.network
+# build --remote_cache=grpc://localhost:9092
+build --remote_instance_name=default
+build --google_default_credentials=false
+build --remote_upload_local_results=false
+# build --experimental_remote_cache_async
+build --experimental_remote_cache_compression # compress/decompress cache blobs with zstd
 build --remote_timeout=30s # Default is 60s.
 build:ci --remote_timeout=5m # Default is 60s.
+build:ci --remote_upload_local_results=true
 
-build:dfinity --experimental_remote_downloader=bazel-remote.idx.dfinity.network --experimental_remote_downloader_local_fallback
+# build:dfinity --experimental_remote_downloader=bazel-remote.idx.dfinity.network --experimental_remote_downloader_local_fallback
 build:local --experimental_remote_downloader=
 
 # Does not produce valid JSON. See https://github.com/bazelbuild/bazel/issues/14209
 build --execution_log_json_file=bazel-build-log.json
-build:ci --build_event_binary_file=bazel-bep.pb
 
-build:dfinity --bes_results_url=https://dash.idx.dfinity.network/invocation/
-build:dfinity --bes_backend=bes.idx.dfinity.network
+# build:dfinity --bes_results_url=https://dash.idx.dfinity.network/invocation/
+# build:dfinity --bes_backend=bes.idx.dfinity.network
 build --bes_timeout=30s # Default is no timeout.
 build:ci --bes_timeout=180s # Default is no timeout.
+build:ci --bes_upload_mode=fully_async
+build:ci --bes_results_url=
+build:ci --bes_backend=
 
 build --remote_local_fallback
 build --experimental_repository_downloader_retries=3 # https://bazel.build/reference/command-line-reference#flag--experimental_repository_downloader_retries
@@ -71,7 +79,7 @@ test:precommit --build_tests_only
 # Run all tests once by default, run flaky tests up to 3 times in CI.
 test    --flaky_test_attempts=1
 test:ci --flaky_test_attempts=default
-build:ci --noremote_local_fallback
+build:ci --remote_local_fallback
 # So that developers can build in debug mode.
 build:dev --compilation_mode=fastbuild
 build:macos_ci --compilation_mode=fastbuild

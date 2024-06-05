@@ -75,10 +75,7 @@ impl RouterConfig {
                 matcher: Matcher {
                     node_provider_id: Some(np.principal_id),
                 },
-                sinks: vec![Sink::Webhook(WebhookSink {
-                    url: np.url,
-                    auth: None,
-                })],
+                sinks: vec![Sink::Webhook(WebhookSink { url: np.url, auth: None })],
             })
             .collect()
     }
@@ -127,9 +124,7 @@ impl Router {
 
 impl From<RouterConfig> for Router {
     fn from(config: RouterConfig) -> Self {
-        Self {
-            routes: config.get_routes(),
-        }
+        Self { routes: config.get_routes() }
     }
 }
 
@@ -143,7 +138,8 @@ mod tests {
     use rand::distributions::Alphanumeric;
     use rand::{thread_rng, Rng};
     use std::path::Path;
-    use std::{fs::File, io::Write, str::FromStr, sync::Arc};
+    use std::rc::Rc;
+    use std::{fs::File, io::Write, str::FromStr};
 
     use crate::router::CONFIG_FILE_PATH_VAR_NAME;
     use crate::{
@@ -203,11 +199,7 @@ node_providers:
 
     #[test]
     fn fail_loading_config_from_non_existing_file() {
-        let random_file_name: String = thread_rng()
-            .sample_iter(&Alphanumeric)
-            .take(30)
-            .map(char::from)
-            .collect();
+        let random_file_name: String = thread_rng().sample_iter(&Alphanumeric).take(30).map(char::from).collect();
 
         // This file has good chances not to exist
         let filepath = Path::new("/tmp/").join(random_file_name);
@@ -292,7 +284,7 @@ node_providers:
             status_change: (Status::Healthy, Status::Degraded),
         };
 
-        let test_sink = Arc::new(TestSink::new());
+        let test_sink = Rc::new(TestSink::new());
         let router = Router {
             routes: vec![Route {
                 matcher: Matcher {

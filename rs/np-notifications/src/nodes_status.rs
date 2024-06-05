@@ -43,10 +43,7 @@ impl NodesStatus {
         let current_status_node_ids = self.get_set_of_node_ids();
         let new_status_node_ids = new_statuses.get_set_of_node_ids();
 
-        let added_nodes: BTreeSet<PrincipalId> = new_status_node_ids
-            .difference(&current_status_node_ids)
-            .cloned()
-            .collect();
+        let added_nodes: BTreeSet<PrincipalId> = new_status_node_ids.difference(&current_status_node_ids).cloned().collect();
 
         for node_id in added_nodes {
             notifications.push(Notification {
@@ -62,10 +59,7 @@ impl NodesStatus {
             })
         }
 
-        let removed_nodes: BTreeSet<PrincipalId> = current_status_node_ids
-            .difference(&new_status_node_ids)
-            .cloned()
-            .collect();
+        let removed_nodes: BTreeSet<PrincipalId> = current_status_node_ids.difference(&new_status_node_ids).cloned().collect();
 
         for node_id in removed_nodes {
             notifications.push(Notification {
@@ -80,10 +74,7 @@ impl NodesStatus {
             })
         }
 
-        let kept_nodes: BTreeSet<PrincipalId> = current_status_node_ids
-            .intersection(&new_status_node_ids)
-            .cloned()
-            .collect();
+        let kept_nodes: BTreeSet<PrincipalId> = current_status_node_ids.intersection(&new_status_node_ids).cloned().collect();
 
         for node_id in kept_nodes {
             if self.get(node_id) != new_statuses.get(node_id) {
@@ -121,7 +112,7 @@ mod tests {
         // Node added
         // Node removed
         // Node unchanged
-        let ids = vec![
+        let ids = [
             PrincipalId::new_node_test_id(0),
             PrincipalId::new_node_test_id(1),
             PrincipalId::new_node_test_id(2),
@@ -129,18 +120,10 @@ mod tests {
         ];
 
         let statuses = NodesStatus {
-            nodes: BTreeMap::from([
-                (ids[0], Status::Healthy),
-                (ids[1], Status::Healthy),
-                (ids[2], Status::Healthy),
-            ]),
+            nodes: BTreeMap::from([(ids[0], Status::Healthy), (ids[1], Status::Healthy), (ids[2], Status::Healthy)]),
         };
         let new_statuses = NodesStatus {
-            nodes: BTreeMap::from([
-                (ids[0], Status::Healthy),
-                (ids[1], Status::Degraded),
-                (ids[3], Status::Healthy),
-            ]),
+            nodes: BTreeMap::from([(ids[0], Status::Healthy), (ids[1], Status::Degraded), (ids[3], Status::Healthy)]),
         };
         let (statuses, notifications) = statuses.updated(new_statuses.clone());
 

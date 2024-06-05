@@ -1,15 +1,14 @@
 use anyhow::anyhow;
 use async_recursion::async_recursion;
-use clap::{Parser, ValueEnum};
 use futures_util::future::try_join;
 use ic_base_types::{NodeId, PrincipalId};
-use ic_management_backend::health;
+use ic_management_backend::health::{self, HealthStatusQuerier};
 use ic_management_backend::proposal::ProposalAgent;
-use ic_management_types::{
-    Network, Node, Status, Subnet, UpdateNodesHostosVersionsProposal
-};
+use ic_management_types::{Network, Node, Status, Subnet, UpdateNodesHostosVersionsProposal};
 use log::{debug, info};
 use std::{collections::BTreeMap, fmt::Display, str::FromStr};
+
+use crate::cli::hostos::{NodeAssignment, NodeOwner};
 
 pub enum HostosRolloutResponse {
     Ok(Vec<Node>, Option<Vec<HostosRolloutSubnetAffected>>),
@@ -31,7 +30,7 @@ pub struct HostosRolloutSubnetAffected {
     pub subnet_size: usize,
 }
 
-#[derive(Eq, PartialEq)]
+#[derive(Eq, PartialEq, Debug)]
 pub enum HostosRolloutReason {
     NoNodeHealthy,
     NoNodeWithoutProposal,
@@ -48,22 +47,6 @@ impl Display for HostosRolloutReason {
             Self::NoNodeSelected => write!(f, "No candidate nodes have been selected"),
         }
     }
-}
-
-#[derive(ValueEnum, Copy, Clone, Debug, Ord, Eq, PartialEq, PartialOrd, Parser, Default)]
-pub enum NodeOwner {
-    Dfinity,
-    Others,
-    #[default]
-    All,
-}
-
-#[derive(ValueEnum, Copy, Clone, Debug, Ord, Eq, PartialEq, PartialOrd, Default)]
-pub enum NodeAssignment {
-    Unassigned,
-    Assigned,
-    #[default]
-    All,
 }
 
 #[derive(Copy, Clone, Debug, Ord, Eq, PartialEq, PartialOrd)]
@@ -154,14 +137,11 @@ impl NodeGroupUpdate {
     }
     pub fn nodes_to_take(&self, group_size: usize) -> usize {
         match self.maybe_number_nodes.unwrap_or_default() {
-            NumberOfNodes::Percentage(percent_to_update) => {
-                (group_size as f32 * percent_to_update as f32 / 100.0).floor() as usize
-            }
+            NumberOfNodes::Percentage(percent_to_update) => (group_size as f32 * percent_to_update as f32 / 100.0).floor() as usize,
             NumberOfNodes::Absolute(number_nodes) => number_nodes as usize,
         }
     }
 }
-
 
 enum CandidatesSelection {
     Ok(Vec<Node>),
@@ -181,7 +161,7 @@ impl HostosRollout {
     pub fn new(
         nodes: BTreeMap<PrincipalId, Node>,
         subnets: BTreeMap<PrincipalId, Subnet>,
-        network: Network,
+        network: &Network,
         proposal_agent: ProposalAgent,
         rollout_version: &str,
         nodes_filter: &Option<Vec<PrincipalId>>,
@@ -216,18 +196,14 @@ impl HostosRollout {
         HostosRollout {
             grouped_nodes,
             subnets,
-            network,
+            network: network.clone(),
             proposal_agent,
             exclude: nodes_filter.clone(),
             version: rollout_version.to_string(),
         }
     }
     async fn nodes_different_version(&self, nodes: Vec<Node>) -> Option<Vec<Node>> {
-        let nodes_different_version = nodes
-            .iter()
-            .filter(|n| n.hostos_version != self.version)
-            .cloned()
-            .collect::<Vec<_>>();
+        let nodes_different_version = nodes.iter().filter(|n| n.hostos_version != self.version).cloned().collect::<Vec<_>>();
 
         if !nodes_different_version.is_empty() {
             return Some(nodes_different_version);
@@ -250,10 +226,7 @@ impl HostosRollout {
             .filter_map(|n| {
                 let node_id: NodeId = NodeId::from(n.principal);
                 if nodes_with_open_proposals_ids.contains(&node_id) {
-                    debug!(
-                        "Skipping update on node: {} because there is an open proposal for it",
-                        &node_id
-                    );
+                    debug!("Skipping update on node: {} because there is an open proposal for it", &node_id);
                     None
                 } else {
                     Some(n)
@@ -267,27 +240,15 @@ impl HostosRollout {
         None
     }
 
-    async fn nodes_by_status(
-        &self,
-        nodes: Vec<Node>,
-        nodes_health: BTreeMap<PrincipalId, Status>,
-    ) -> BTreeMap<Status, Vec<Node>> {
+    async fn nodes_by_status(&self, nodes: Vec<Node>, nodes_health: BTreeMap<PrincipalId, Status>) -> BTreeMap<Status, Vec<Node>> {
         let nodes_by_status = nodes
             .iter()
             .cloned()
-            .map(|node| {
-                (
-                    nodes_health.get(&node.principal).cloned().unwrap_or(Status::Unknown),
-                    node,
-                )
-            })
-            .fold(
-                BTreeMap::new(),
-                |mut acc: BTreeMap<Status, Vec<Node>>, (status, node)| {
-                    acc.entry(status).or_default().push(node);
-                    acc
-                },
-            );
+            .map(|node| (nodes_health.get(&node.principal).cloned().unwrap_or(Status::Unknown), node))
+            .fold(BTreeMap::new(), |mut acc: BTreeMap<Status, Vec<Node>>, (status, node)| {
+                acc.entry(status).or_default().push(node);
+                acc
+            });
 
         nodes_by_status
             .iter()
@@ -314,23 +275,7 @@ impl HostosRollout {
                     info!("All valid nodes in the subnet: {} have been updated", subnet_id);
                     None
                 } else {
-                    if nodes.len() < nodes_to_take {
-                        debug!(
-                            "Updating all valid nodes ({}) left in the subnet: {}\n\
-                                {}% of all nodes in the subnet",
-                            nodes.len(),
-                            subnet_id,
-                            actual_percent
-                        );
-                    } else {
-                        debug!(
-                            "Updating {} valid nodes in the subnet: {}\n\
-                                {}% of all nodes in the subnet",
-                            nodes.len(),
-                            subnet_id,
-                            actual_percent
-                        );
-                    }
+                    info!("Updating {} nodes ({}%) in the subnet {}", nodes.len(), actual_percent, subnet_id,);
                     Some(nodes)
                 }
             })
@@ -362,11 +307,7 @@ impl HostosRollout {
     }
 
     async fn nodes_not_excluded(&self, nodes: Vec<Node>, excluded: &[PrincipalId]) -> Option<Vec<Node>> {
-        let nodes_not_excluded = nodes
-            .iter()
-            .filter(|n| !excluded.contains(&n.principal))
-            .cloned()
-            .collect::<Vec<_>>();
+        let nodes_not_excluded = nodes.iter().filter(|n| !excluded.contains(&n.principal)).cloned().collect::<Vec<_>>();
 
         if !nodes_not_excluded.is_empty() {
             return Some(nodes_not_excluded);
@@ -392,10 +333,7 @@ impl HostosRollout {
         };
 
         info!("Filtering out candidate nodes with an open proposal");
-        let nodes_without_proposals = match self
-            .nodes_without_proposals(nodes_healthy, nodes_with_open_proposals)
-            .await
-        {
+        let nodes_without_proposals = match self.nodes_without_proposals(nodes_healthy, nodes_with_open_proposals).await {
             Some(nodes_without_proposals) => nodes_without_proposals,
             None => {
                 return Ok(CandidatesSelection::None(HostosRolloutReason::NoNodeWithoutProposal));
@@ -431,7 +369,22 @@ impl HostosRollout {
         nodes_with_open_proposals: Vec<UpdateNodesHostosVersionsProposal>,
         update_group: NodeGroupUpdate,
     ) -> anyhow::Result<HostosRolloutResponse> {
-        info!("CANDIDATES SELECTION FOR {:?}", &update_group);
+        info!(
+            "CANDIDATES SELECTION FROM {} HEALTHY NODES FOR {} {} {}",
+            nodes_health
+                .iter()
+                .filter_map(|(principal, status)| {
+                    if *status == Status::Healthy {
+                        Some(principal)
+                    } else {
+                        None
+                    }
+                })
+                .count(),
+            update_group.maybe_number_nodes.unwrap_or_default(),
+            update_group.node_group.owner,
+            update_group.node_group.assignment
+        );
 
         match update_group.node_group.assignment {
             NodeAssignment::Unassigned => {
@@ -443,19 +396,19 @@ impl HostosRollout {
                 {
                     CandidatesSelection::Ok(candidates_unassigned) => {
                         let nodes_to_take = update_group.nodes_to_take(unassigned_nodes.len());
-                        let nodes_to_update = candidates_unassigned
-                            .into_iter()
-                            .take(nodes_to_take)
-                            .collect::<Vec<_>>();
+                        let nodes_to_update = candidates_unassigned.into_iter().take(nodes_to_take).collect::<Vec<_>>();
+                        info!("{} candidate nodes selected for: {}", nodes_to_update.len(), update_group.node_group);
                         Ok(HostosRolloutResponse::Ok(nodes_to_update, None))
                     }
                     CandidatesSelection::None(reason) => {
+                        info!("No candidate nodes selected for: {} ==> {:?}", update_group.node_group, reason);
                         Ok(HostosRolloutResponse::None(vec![(update_group.node_group, reason)]))
                     }
                 }
             }
             NodeAssignment::Assigned => {
                 let assigned_nodes = self.filter_nodes_in_group(update_group).await?;
+                info!("{} candidate nodes selected for: {}", assigned_nodes.len(), update_group.node_group);
 
                 match self
                     .candidates_selection(nodes_health, nodes_with_open_proposals, assigned_nodes.clone())
@@ -468,10 +421,7 @@ impl HostosRollout {
                             .values()
                             .cloned()
                             .filter_map(|subnet| {
-                                if nodes_to_update
-                                    .iter()
-                                    .any(|node| node.subnet_id.unwrap_or_default() == subnet.principal)
-                                {
+                                if nodes_to_update.iter().any(|node| node.subnet_id.unwrap_or_default() == subnet.principal) {
                                     Some(HostosRolloutSubnetAffected {
                                         subnet_id: subnet.principal,
                                         subnet_size: subnet.nodes.len(),
@@ -482,9 +432,11 @@ impl HostosRollout {
                             })
                             .collect::<Vec<HostosRolloutSubnetAffected>>();
 
+                        info!("{} candidate nodes selected for: {}", nodes_to_update.len(), update_group.node_group);
                         Ok(HostosRolloutResponse::Ok(nodes_to_update, Some(subnets_affected)))
                     }
                     CandidatesSelection::None(reason) => {
+                        info!("No candidate nodes selected for: {} ==> {:?}", update_group.node_group, reason);
                         Ok(HostosRolloutResponse::None(vec![(update_group.node_group, reason)]))
                     }
                 }
@@ -505,15 +457,30 @@ impl HostosRollout {
                 )
                 .await
                 .map(|response| match response {
-                    (Ok(assigned_nodes, subnet_affected), None(_)) => Ok(assigned_nodes, subnet_affected),
-                    (None(_), Ok(unassigned_nodes, _)) => Ok(unassigned_nodes, Option::None),
+                    (Ok(assigned_nodes, subnet_affected), None(reason)) => {
+                        info!("No unassigned nodes selected for: {:?} ==> {:?}", update_group.node_group, reason);
+                        Ok(assigned_nodes, subnet_affected)
+                    }
+                    (None(reason), Ok(unassigned_nodes, _)) => {
+                        info!("No assigned nodes selected for: {:?} ==> {:?}", update_group.node_group, reason);
+                        Ok(unassigned_nodes, Option::None)
+                    }
 
-                    (Ok(assigned_nodes, subnet_affected), Ok(unassigned_nodes, _)) => Ok(
-                        assigned_nodes.into_iter().chain(unassigned_nodes).collect(),
-                        subnet_affected.clone(),
-                    ),
+                    (Ok(assigned_nodes, subnet_affected), Ok(unassigned_nodes, _)) => {
+                        info!(
+                            "{} assigned nodes and {} unassigned nodes selected for: {}",
+                            assigned_nodes.len(),
+                            unassigned_nodes.len(),
+                            update_group.node_group
+                        );
+                        Ok(assigned_nodes.into_iter().chain(unassigned_nodes).collect(), subnet_affected.clone())
+                    }
 
                     (None(assigned_reason), None(unassigned_reason)) => {
+                        info!(
+                            "No candidate nodes selected for: {:?} ==> {:?} {:?}",
+                            update_group.node_group, assigned_reason, unassigned_reason
+                        );
                         None(assigned_reason.into_iter().chain(unassigned_reason).collect())
                     }
                 })
@@ -534,9 +501,9 @@ impl HostosRollout {
 
 #[cfg(test)]
 pub mod test {
-    use ic_management_types::{Network, Node, Operator, Provider, Subnet};
-    use crate::operations::hostos_rollout::NodeOwner::{Dfinity, Others};
     use crate::operations::hostos_rollout::NodeAssignment::{Assigned, Unassigned};
+    use crate::operations::hostos_rollout::NodeOwner::{Dfinity, Others};
+    use ic_management_types::{Network, Node, Operator, Provider, Subnet};
     use std::net::Ipv6Addr;
 
     use super::*;
@@ -581,22 +548,20 @@ pub mod test {
 
         let open_proposals: Vec<UpdateNodesHostosVersionsProposal> = vec![];
 
+        let network = Network::new("mainnet", &vec![]).await.unwrap();
+        let nns_urls = network.get_nns_urls();
         let hostos_rollout = HostosRollout::new(
             union.clone(),
             subnet.clone(),
-            Network::Mainnet,
-            ProposalAgent::new("https://ic0.app".to_string()),
+            &network,
+            ProposalAgent::new(nns_urls),
             version_one.clone().as_str(),
             &None,
         );
 
         let results = hostos_rollout
             .clone()
-            .with_nodes_health_and_open_proposals(
-                healthy_nodes.clone(),
-                open_proposals.clone(),
-                NodeGroupUpdate::new_all(Assigned, Others),
-            )
+            .with_nodes_health_and_open_proposals(healthy_nodes.clone(), open_proposals.clone(), NodeGroupUpdate::new_all(Assigned, Others))
             .await
             .unwrap()
             .unwrap()
@@ -616,19 +581,15 @@ pub mod test {
         let hostos_rollout = HostosRollout::new(
             union.clone(),
             subnet.clone(),
-            Network::Mainnet,
-            ProposalAgent::new("https://ic0.app".to_string()),
+            &network,
+            ProposalAgent::new(nns_urls),
             version_one.clone().as_str(),
             &Some(nodes_to_exclude),
         );
 
         let results = hostos_rollout
             .clone()
-            .with_nodes_health_and_open_proposals(
-                healthy_nodes.clone(),
-                open_proposals.clone(),
-                NodeGroupUpdate::new_all(Assigned, Others),
-            )
+            .with_nodes_health_and_open_proposals(healthy_nodes.clone(), open_proposals.clone(), NodeGroupUpdate::new_all(Assigned, Others))
             .await
             .unwrap();
 
@@ -640,8 +601,8 @@ pub mod test {
         let hostos_rollout = HostosRollout::new(
             union.clone(),
             subnet.clone(),
-            Network::Mainnet,
-            ProposalAgent::new("https://ic0.app".to_string()),
+            &network,
+            ProposalAgent::new(nns_urls),
             version_two.clone().as_str(),
             &None,
         );
@@ -659,12 +620,7 @@ pub mod test {
             .map(|n| n.principal)
             .collect::<Vec<_>>()[0];
 
-        let want = unassigned_dfinity_nodes
-            .clone()
-            .iter()
-            .next()
-            .map(|(_, n)| n.principal)
-            .unwrap();
+        let want = unassigned_dfinity_nodes.clone().iter().next().map(|(_, n)| n.principal).unwrap();
 
         assert_eq!(results, want, "the first unassigned_dfinity_node should be updated");
     }

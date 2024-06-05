@@ -7,9 +7,7 @@ use ic_async_utils::shutdown_signal;
 use ic_metrics::MetricsRegistry;
 use obs_canister_clients::node_status_canister_client::NodeStatusCanister;
 use prometheus_http_query::Client;
-use service_discovery::{
-    metrics::Metrics, poll_loop::make_poll_loop, registry_sync::sync_local_registry, IcServiceDiscoveryImpl,
-};
+use service_discovery::{metrics::Metrics, poll_loop::make_poll_loop, registry_sync::sync_local_registry, IcServiceDiscoveryImpl};
 use slog::{info, o, warn, Drain};
 use std::{path::PathBuf, sync::Arc, time::Duration};
 use url::Url;
@@ -39,7 +37,7 @@ fn main() -> Result<()> {
         .block_on(sync_local_registry(
             log.clone(),
             mercury_target_dir,
-            nns_url,
+            &nns_url,
             cli_args.skip_sync,
             None,
             &stop_signal_rcv,

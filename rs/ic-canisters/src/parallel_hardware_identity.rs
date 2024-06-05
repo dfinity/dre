@@ -2,9 +2,9 @@ use ic_agent::{agent::EnvelopeContent, export::Principal, identity::Delegation, 
 
 use pkcs11::{
     types::{
-        CKA_CLASS, CKA_EC_PARAMS, CKA_EC_POINT, CKA_ID, CKA_KEY_TYPE, CKF_LOGIN_REQUIRED, CKF_SERIAL_SESSION,
-        CKK_ECDSA, CKM_ECDSA, CKO_PRIVATE_KEY, CKO_PUBLIC_KEY, CKU_USER, CK_ATTRIBUTE, CK_ATTRIBUTE_TYPE, CK_KEY_TYPE,
-        CK_MECHANISM, CK_OBJECT_CLASS, CK_OBJECT_HANDLE, CK_SESSION_HANDLE, CK_SLOT_ID,
+        CKA_CLASS, CKA_EC_PARAMS, CKA_EC_POINT, CKA_ID, CKA_KEY_TYPE, CKF_LOGIN_REQUIRED, CKF_SERIAL_SESSION, CKK_ECDSA, CKM_ECDSA, CKO_PRIVATE_KEY,
+        CKO_PUBLIC_KEY, CKU_USER, CK_ATTRIBUTE, CK_ATTRIBUTE_TYPE, CK_KEY_TYPE, CK_MECHANISM, CK_OBJECT_CLASS, CK_OBJECT_HANDLE, CK_SESSION_HANDLE,
+        CK_SLOT_ID,
     },
     Ctx,
 };
@@ -188,12 +188,7 @@ fn open_session(ctx: &Ctx, slot_id: CK_SLOT_ID) -> Result<CK_SESSION_HANDLE, Har
 }
 
 // We might need to log in.  This requires the PIN.
-fn login_if_required(
-    ctx: &Ctx,
-    session_handle: CK_SESSION_HANDLE,
-    pin: String,
-    slot_id: CK_SLOT_ID,
-) -> Result<bool, HardwareIdentityError> {
+fn login_if_required(ctx: &Ctx, session_handle: CK_SESSION_HANDLE, pin: String, slot_id: CK_SLOT_ID) -> Result<bool, HardwareIdentityError> {
     let token_info = ctx.get_token_info(slot_id)?;
     let login_required = token_info.flags & CKF_LOGIN_REQUIRED != 0;
 
@@ -205,11 +200,7 @@ fn login_if_required(
 
 // Return the DER-encoded public key in the expected format.
 // We also validate that it's an ECDSA key on the correct curve.
-fn get_der_encoded_public_key(
-    ctx: &Ctx,
-    session_handle: CK_SESSION_HANDLE,
-    key_id: &KeyId,
-) -> Result<DerPublicKeyVec, HardwareIdentityError> {
+fn get_der_encoded_public_key(ctx: &Ctx, session_handle: CK_SESSION_HANDLE, key_id: &KeyId) -> Result<DerPublicKeyVec, HardwareIdentityError> {
     let object_handle = get_public_key_handle(ctx, session_handle, key_id)?;
 
     validate_key_type(ctx, session_handle, object_handle)?;
@@ -219,10 +210,7 @@ fn get_der_encoded_public_key(
 
     let oid_ecdsa = oid!(1, 2, 840, 10045, 2, 1);
     let oid_curve_secp256r1 = oid!(1, 2, 840, 10045, 3, 1, 7);
-    let ec_param = Sequence(
-        0,
-        vec![ObjectIdentifier(0, oid_ecdsa), ObjectIdentifier(0, oid_curve_secp256r1)],
-    );
+    let ec_param = Sequence(0, vec![ObjectIdentifier(0, oid_ecdsa), ObjectIdentifier(0, oid_curve_secp256r1)]);
     let ec_point = BitString(0, ec_point.len() * 8, ec_point);
     let public_key = Sequence(0, vec![ec_param, ec_point]);
     let der = to_der(&public_key)?;
@@ -230,11 +218,7 @@ fn get_der_encoded_public_key(
 }
 
 // Ensure that the key type is ECDSA.
-fn validate_key_type(
-    ctx: &Ctx,
-    session_handle: CK_SESSION_HANDLE,
-    object_handle: CK_OBJECT_HANDLE,
-) -> Result<(), HardwareIdentityError> {
+fn validate_key_type(ctx: &Ctx, session_handle: CK_SESSION_HANDLE, object_handle: CK_OBJECT_HANDLE) -> Result<(), HardwareIdentityError> {
     // The call to ctx.get_attribute_value() will mutate kt!
     // with_ck_ulong` stores &kt as a mutable pointer by casting it to CK_VOID_PTR, which is:
     //      pub type CK_VOID_PTR = *mut CK_VOID;
@@ -252,11 +236,7 @@ fn validate_key_type(
 
 // We just want to make sure that we are using the expected EC curve prime256v1 (secp256r1),
 // since the HSMs also support things like secp384r1 and secp512r1.
-fn validate_ec_params(
-    ctx: &Ctx,
-    session_handle: CK_SESSION_HANDLE,
-    object_handle: CK_OBJECT_HANDLE,
-) -> Result<(), HardwareIdentityError> {
+fn validate_ec_params(ctx: &Ctx, session_handle: CK_SESSION_HANDLE, object_handle: CK_OBJECT_HANDLE) -> Result<(), HardwareIdentityError> {
     let ec_params = get_ec_params(ctx, session_handle, object_handle)?;
     if ec_params != EXPECTED_EC_PARAMS {
         Err(HardwareIdentityError::InvalidEcParams {
@@ -271,15 +251,11 @@ fn validate_ec_params(
 // Obtain the EcPoint, which is an (x,y) coordinate.  Each coordinate is 32 bytes.
 // These are preceded by an 04 byte meaning "uncompressed point."
 // The returned vector will therefore have len=65.
-fn get_ec_point(
-    ctx: &Ctx,
-    session_handle: CK_SESSION_HANDLE,
-    object_handle: CK_OBJECT_HANDLE,
-) -> Result<Vec<u8>, HardwareIdentityError> {
+fn get_ec_point(ctx: &Ctx, session_handle: CK_SESSION_HANDLE, object_handle: CK_OBJECT_HANDLE) -> Result<Vec<u8>, HardwareIdentityError> {
     let der_encoded_ec_point = get_variable_length_attribute(ctx, session_handle, object_handle, CKA_EC_POINT)?;
 
     let blocks = from_der(der_encoded_ec_point.as_slice()).map_err(HardwareIdentityError::ASN1Decode)?;
-    let block = blocks.get(0).ok_or(HardwareIdentityError::EcPointEmpty)?;
+    let block = blocks.first().ok_or(HardwareIdentityError::EcPointEmpty)?;
     if let OctetString(_size, data) = block {
         Ok(data.clone())
     } else {
@@ -297,9 +273,7 @@ fn get_attribute_length(
     let mut attributes = vec![CK_ATTRIBUTE::new(attribute_type)];
     ctx.get_attribute_value(session_handle, object_handle, &mut attributes)?;
 
-    let first = attributes
-        .get(0)
-        .ok_or(HardwareIdentityError::AttributeNotFound(attribute_type))?;
+    let first = attributes.first().ok_or(HardwareIdentityError::AttributeNotFound(attribute_type))?;
     Ok(first.ulValueLen as usize)
 }
 
@@ -318,27 +292,15 @@ fn get_variable_length_attribute(
     Ok(value)
 }
 
-fn get_ec_params(
-    ctx: &Ctx,
-    session_handle: CK_SESSION_HANDLE,
-    object_handle: CK_OBJECT_HANDLE,
-) -> Result<Vec<u8>, HardwareIdentityError> {
+fn get_ec_params(ctx: &Ctx, session_handle: CK_SESSION_HANDLE, object_handle: CK_OBJECT_HANDLE) -> Result<Vec<u8>, HardwareIdentityError> {
     get_variable_length_attribute(ctx, session_handle, object_handle, CKA_EC_PARAMS)
 }
 
-fn get_public_key_handle(
-    ctx: &Ctx,
-    session_handle: CK_SESSION_HANDLE,
-    key_id: &KeyId,
-) -> Result<CK_OBJECT_HANDLE, HardwareIdentityError> {
+fn get_public_key_handle(ctx: &Ctx, session_handle: CK_SESSION_HANDLE, key_id: &KeyId) -> Result<CK_OBJECT_HANDLE, HardwareIdentityError> {
     get_object_handle_for_key(ctx, session_handle, key_id, CKO_PUBLIC_KEY)
 }
 
-fn get_private_key_handle(
-    ctx: &Ctx,
-    session_handle: CK_SESSION_HANDLE,
-    key_id: &KeyId,
-) -> Result<CK_OBJECT_HANDLE, HardwareIdentityError> {
+fn get_private_key_handle(ctx: &Ctx, session_handle: CK_SESSION_HANDLE, key_id: &KeyId) -> Result<CK_OBJECT_HANDLE, HardwareIdentityError> {
     get_object_handle_for_key(ctx, session_handle, key_id, CKO_PRIVATE_KEY)
 }
 
@@ -369,10 +331,9 @@ fn str_to_key_id(s: &str) -> Result<KeyIdVec, HardwareIdentityError> {
 impl ParallelHardwareIdentity {
     fn sign_hash(&self, hash: &Sha256Hash) -> Result<Vec<u8>, String> {
         let session_handle = open_session(&self.ctx, self.slot_id).map_err(|e| e.to_string())?;
-        login_if_required(&self.ctx, session_handle, self.cached_pin.clone(), self.slot_id)
-            .map_err(|e| e.to_string())?;
-        let private_key_handle = get_private_key_handle(&self.ctx, session_handle, &self.key_id)
-            .map_err(|e| format!("Failed to get private key handle: {}", e))?;
+        login_if_required(&self.ctx, session_handle, self.cached_pin.clone(), self.slot_id).map_err(|e| e.to_string())?;
+        let private_key_handle =
+            get_private_key_handle(&self.ctx, session_handle, &self.key_id).map_err(|e| format!("Failed to get private key handle: {}", e))?;
 
         let mechanism = CK_MECHANISM {
             mechanism: CKM_ECDSA,

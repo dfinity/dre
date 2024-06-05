@@ -13,9 +13,8 @@ use url::Url;
 
 use definition::{Definition, DefinitionsSupervisor, StartMode};
 use ic_async_utils::shutdown_signal;
-use ic_management_types::Network;
 
-use crate::definition::{RunningDefinition, TestDefinition};
+use crate::definition::{RunningDefinition, TargetFilterSpec, TestDefinition};
 use crate::metrics::{MSDMetrics, RunningDefinitionsMetrics};
 use crate::server_handlers::export_prometheus_config_handler::serialize_definitions_to_prometheus_config;
 use crate::server_handlers::Server;
@@ -34,7 +33,7 @@ fn main() {
         Definition::new(
             vec![cli_args.nns_url.clone()],
             cli_args.targets_dir.clone(),
-            Network::Mainnet.legacy_name(),
+            "mercury".to_string(),
             log.clone(),
             None,
             cli_args.poll_interval,
@@ -43,11 +42,7 @@ fn main() {
     }
 
     if cli_args.render_prom_targets_to_stdout {
-        async fn sync(
-            cli_args: &CliArgs,
-            log: &Logger,
-            shutdown_signal: impl futures_util::Future<Output = ()>,
-        ) -> Option<RunningDefinition> {
+        async fn sync(cli_args: &CliArgs, log: &Logger, shutdown_signal: impl futures_util::Future<Output = ()>) -> Option<RunningDefinition> {
             let def = get_mainnet_definition(cli_args, log.clone());
             let test_def = TestDefinition::new(def, RunningDefinitionsMetrics::new());
             let sync_fut = test_def.sync_and_stop(cli_args.skip_update_local_registry);
@@ -65,7 +60,7 @@ fn main() {
         if let Some(running_def) = rt.block_on(sync(&cli_args, &log, shutdown_signal)) {
             let mut definitions_ref: BTreeMap<String, RunningDefinition> = BTreeMap::new();
             definitions_ref.insert(running_def.name().clone(), running_def);
-            let (_, text) = serialize_definitions_to_prometheus_config(definitions_ref);
+            let (_, text) = serialize_definitions_to_prometheus_config(definitions_ref, TargetFilterSpec::empty());
             print!("{}", text);
         }
     } else {

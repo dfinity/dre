@@ -7,10 +7,7 @@ use std::{
 
 use service_discovery::{job_types::JobType, TargetGroup};
 
-use crate::{
-    config_builder::Config, config_updater::ConfigUpdater, filters::TargetGroupFilter,
-    vector_config_structure::VectorConfigBuilder,
-};
+use crate::{config_builder::Config, config_updater::ConfigUpdater, filters::TargetGroupFilter, vector_config_structure::VectorConfigBuilder};
 use slog::{debug, Logger};
 
 #[derive(Debug)]
@@ -50,15 +47,11 @@ impl ConfigWriter {
         debug!(self.log, "Targets changed, proceeding with regenerating config");
         let target_path = self.base_directory.join(format!("{}.json", job));
 
-        let filtered_target_groups: BTreeSet<TargetGroup> = target_groups
-            .clone()
-            .into_iter()
-            .filter(|tg| self.filters.filter(tg.clone()))
-            .collect();
+        let filtered_target_groups: BTreeSet<TargetGroup> = target_groups.clone().into_iter().filter(|tg| self.filters.filter(tg.clone())).collect();
 
         let vector_config = vector_config_builder.build(filtered_target_groups, job);
 
-        ic_utils::fs::write_atomically(target_path.as_path(), |f| {
+        ic_sys::fs::write_atomically(target_path.as_path(), |f| {
             serde_json::to_writer_pretty(f, &vector_config)
                 .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, format!("Serialization error: {:?}", e)))
         })?;
@@ -76,7 +69,7 @@ impl ConfigUpdater for ConfigWriter {
         debug!(self.log, "Targets changed, proceeding with regenerating config");
         let target_path = self.base_directory.join(format!("{}.json", config.name()));
 
-        ic_utils::fs::write_atomically(target_path.as_path(), |f| {
+        ic_sys::fs::write_atomically(target_path.as_path(), |f| {
             serde_json::to_writer_pretty(f, &config)
                 .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, format!("Serialization error: {:?}", e)))
         })?;

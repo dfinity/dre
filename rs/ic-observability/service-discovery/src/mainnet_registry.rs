@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use ic_registry_local_store::{compact_delta_to_changelog, Changelog, LocalStoreImpl};
+use ic_registry_local_store::{compact_delta_to_changelog, Changelog, LocalStoreImpl, LocalStoreWriter};
 
 pub fn get_mainnet_delta_6d_c1() -> Changelog {
     compact_delta_to_changelog(ic_registry_local_store_artifacts::MAINNET_DELTA_00_6D_C1)
@@ -17,9 +17,7 @@ pub fn get_mainnet_delta_6d_c1() -> Changelog {
 pub fn create_local_store_from_changelog<P: AsRef<Path>>(path: P, changelog: Changelog) -> LocalStoreImpl {
     let store = LocalStoreImpl::new(path.as_ref());
     for (v, changelog_entry) in changelog.into_iter().enumerate() {
-        store
-            .write_changelog_entry_unsafe((v + 1) as u64, changelog_entry)
-            .unwrap();
+        store.store(((v + 1) as u64).into(), changelog_entry).unwrap();
     }
     store
 }

@@ -1,5 +1,12 @@
 {
     "yaml.schemas": {
         "release-index-shema.json": "release-index.yaml"
-    }
+    },
+    "rust-analyzer.showUnlinkedFileNotification": false,
+    "python.testing.pytestArgs": [
+        "release-controller",
+        "-vv"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true,
 }

@@ -13,6 +13,7 @@ async-trait = { workspace = true }
 backon = { workspace = true }
 candid = { workspace = true }
 chrono = { workspace = true }
+clap = { workspace = true }
 csv = { workspace = true }
 custom_error = { workspace = true }
 decentralization = { path = "../decentralization" }
@@ -24,7 +25,7 @@ exitcode = { workspace = true }
 fs2 = { workspace = true }
 futures = { workspace = true }
 futures-util = { workspace = true }
-gitlab = { workspace = true }
+octocrab = { workspace = true }
 hyper = { workspace = true }
 ic-agent = { workspace = true }
 ic-base-types = { workspace = true }
@@ -58,6 +59,7 @@ strum = { workspace = true }
 strum_macros = { workspace = true }
 tokio = { workspace = true }
 url = { workspace = true }
+base64 = { workspace = true }
 
 [dev-dependencies]
 assert_matches = { workspace = true }

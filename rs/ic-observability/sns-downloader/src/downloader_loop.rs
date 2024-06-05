@@ -1,12 +1,12 @@
 use crossbeam_channel::Receiver;
+use ic_canisters::sns_wasm::SnsWasmCanister;
+use ic_canisters::IcAgentCanisterClient;
 use multiservice_discovery_shared::builders::sns_canister_config_structure::SnsCanisterConfigStructure;
-use multiservice_discovery_shared::contracts::sns::{Canister, Sns};
-use multiservice_discovery_shared::filters::sns_name_regex_filter::SnsNameRegexFilter;
-use multiservice_discovery_shared::filters::{TargetGroupFilter, TargetGroupFilterList};
+use multiservice_discovery_shared::contracts::deployed_sns::Sns;
 use reqwest::Client;
 use slog::{debug, info, warn, Logger};
 use std::{
-    collections::hash_map::DefaultHasher,
+    collections::{hash_map::DefaultHasher, BTreeMap},
     hash::{Hash, Hasher},
 };
 
@@ -15,21 +15,10 @@ use crate::CliArgs;
 pub async fn run_downloader_loop(logger: Logger, cli: CliArgs, stop_signal: Receiver<()>) {
     let interval = crossbeam::channel::tick(cli.poll_interval);
 
-    let client = reqwest::Client::builder()
-        .timeout(cli.registry_query_timeout)
-        .danger_accept_invalid_certs(true)
-        .build()
-        .expect("Failed to build reqwest client");
-
-    let mut filters = TargetGroupFilterList::new(vec![]);
-
-    if let Some(regex) = &cli.filter_sns_name_regex {
-        filters.add(Box::new(SnsNameRegexFilter::new(regex.clone())))
-    }
+    let sns_canister: SnsWasmCanister = IcAgentCanisterClient::from_anonymous(cli.nns_urls[0].clone()).unwrap().into();
+    let client = Client::builder().timeout(cli.registry_query_timeout).build().unwrap();
 
     let mut current_hash: u64 = 0;
-    // Can be found: https://sns-api.internetcomputer.org/docs#/snses/list_snses_api_v1_snses_get
-    // Its the default maximum value
     let limit: u64 = 100;
 
     loop {
@@ -41,45 +30,32 @@ pub async fn run_downloader_loop(logger: Logger, cli: CliArgs, stop_signal: Rece
             recv(interval) -> msg => msg.expect("tick failed!")
         };
 
+        let mut api_targets = BTreeMap::new();
         let mut current_page: u64 = 0;
-        let mut snses = vec![];
-
         loop {
-            info!(
-                logger,
-                "Downloading from {} page {} @ interval {:?}", cli.sd_url, current_page, tick
-            );
+            info!(logger, "Downloading from {} page {}", cli.sd_url, current_page);
             let response = match client
                 .get(cli.sd_url.clone())
                 .query(&[("limit", limit), ("offset", current_page * limit)])
                 .send()
                 .await
             {
-                Ok(res) => res,
+                Ok(r) => r,
                 Err(e) => {
-                    warn!(
-                        logger,
-                        "Failed to download from {} @ interval {:?}: {:?}", cli.sd_url, tick, e
-                    );
+                    warn!(logger, "Failed to download from {}: {:?}", cli.sd_url, e);
                     continue;
                 }
             };
 
             if !response.status().is_success() {
-                warn!(
-                    logger,
-                    "Received failed status {} @ interval {:?}: {:?}", cli.sd_url, tick, response
-                );
+                warn!(logger, "Received failed status {:?}", response);
                 continue;
             }
 
             let targets: serde_json::Value = match response.json().await {
-                Ok(targets) => targets,
+                Ok(t) => t,
                 Err(e) => {
-                    warn!(
-                        logger,
-                        "Failed to parse response from {} @ interval {:?}: {:?}", cli.sd_url, tick, e
-                    );
+                    warn!(logger, "Failed to parse response: {:?}", e);
                     continue;
                 }
             };
@@ -92,40 +68,43 @@ pub async fn run_downloader_loop(logger: Logger, cli: CliArgs, stop_signal: Rece
                 }
             };
 
-            for target in targets {
-                let mut sns = Sns {
-                    description: target["description"].as_str().unwrap().to_string(),
-                    enabled: target["enabled"].as_bool().unwrap(),
-                    root_canister_id: target["root_canister_id"].as_str().unwrap().to_string(),
-                    name: target["name"].as_str().unwrap().to_string(),
-                    url: target["url"].as_str().unwrap().to_string(),
-                    canisters: get_canisters(
-                        &cli,
-                        target["root_canister_id"].as_str().unwrap().to_string(),
-                        &client,
-                        logger.clone(),
-                    )
-                    .await,
-                };
-                sns.canisters.push(Canister {
-                    canister_id: target["root_canister_id"].as_str().unwrap().to_string(),
-                    canister_type: "root".to_string(),
-                    module_hash: "".to_string(),
+            targets
+                .iter()
+                .filter(|v| v["name"].as_str().is_some() && v["root_canister_id"].as_str().is_some())
+                .for_each(|v| {
+                    let name = v["name"].as_str().unwrap();
+                    let root = v["root_canister_id"].as_str().unwrap();
+                    api_targets.insert(root.to_string(), name.to_string());
                 });
-
-                snses.push(sns)
-            }
 
             if targets.len() < limit as usize {
                 break;
             }
-            current_page += 1
+
+            current_page += 1;
         }
+
+        let mut targets: Vec<Sns> = match sns_canister.list_deployed_snses().await {
+            Ok(r) => r
+                .instances
+                .into_iter()
+                .map(|d| {
+                    let mut sns: Sns = d.into();
+                    if let Some(name) = api_targets.get(&sns.root_canister_id) {
+                        sns.name = name.to_string();
+                    }
+                    sns
+                })
+                .collect(),
+            Err(e) => {
+                warn!(logger, "Received error: {:?}", e);
+                continue;
+            }
+        };
 
         let mut hasher = DefaultHasher::new();
 
-        let mut targets = snses.into_iter().filter(|f| filters.filter(f)).collect::<Vec<_>>();
-        targets.sort_by_key(|f| f.root_canister_id.to_string());
+        targets.sort_by_key(|f| f.root_canister_id.clone());
 
         for target in &targets {
             target.hash(&mut hasher);
@@ -136,11 +115,7 @@ pub async fn run_downloader_loop(logger: Logger, cli: CliArgs, stop_signal: Rece
         if current_hash != hash {
             info!(
                 logger,
-                "Received new targets from {} @ interval {:?}, old hash '{}' != '{}' new hash",
-                cli.sd_url,
-                tick,
-                current_hash,
-                hash
+                "Received new targets from {} @ interval {:?}, old hash '{}' != '{}' new hash", cli.nns_urls[0], tick, current_hash, hash
             );
             current_hash = hash;
 
@@ -167,50 +142,4 @@ fn generate_config(cli: &CliArgs, targets: Vec<Sns>, logger: Logger) {
         Ok(_) => {}
         Err(e) => debug!(logger, "Failed to write config to file"; "err" => format!("{}", e)),
     }
-}
-
-async fn get_canisters(cli: &CliArgs, root_canister_id: String, client: &Client, logger: Logger) -> Vec<Canister> {
-    let mut url = cli.sd_url.clone();
-    url.path_segments_mut().unwrap().push(&root_canister_id);
-    let response = match client.get(url).send().await {
-        Ok(resp) => resp,
-        Err(e) => {
-            warn!(
-                logger,
-                "Couldn't fetch canisters for sns with root canister id {}:\n{}", root_canister_id, e
-            );
-            return vec![];
-        }
-    };
-
-    let contract: serde_json::Value = match response.json().await {
-        Ok(res) => res,
-        Err(e) => {
-            warn!(
-                logger,
-                "Couldn't unmarshal from json for sns with root canister id {}:\n{}", root_canister_id, e
-            );
-            return vec![];
-        }
-    };
-    let mut canisters = match &contract["canisters"] {
-        serde_json::Value::Array(ar) => ar
-            .iter()
-            .map(|val| Canister {
-                canister_id: val["canister_id"].as_str().unwrap().to_string(),
-                module_hash: val["module_hash"].as_str().unwrap().to_string(),
-                canister_type: val["canister_type"].as_str().unwrap().to_string(),
-            })
-            .collect(),
-        other => {
-            warn!(
-                logger,
-                "Unexpected schema for sns with root canister id {}:\n{}", root_canister_id, other
-            );
-            vec![]
-        }
-    };
-
-    canisters.sort_by_key(|c| c.canister_id.to_string());
-    canisters
 }
