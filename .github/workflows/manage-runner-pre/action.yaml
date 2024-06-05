@@ -11,20 +11,20 @@ runs:
         set -exuo pipefail
 
         RUNNERS_AVAILABLE=4
-        CACHE_FILE="/home/runner/.cache_pool/current_cache.txt"
-        LINK_DIR="/home/runner/.cache"
+        CURRENT_CACHE_FILE="/home/runner/.cache_pool/current_cache.txt"
+        RUNNER_CACHE="/home/runner/.cache"
         
-        if [ ! -f "$CACHE_FILE" ]; then
+        if [ ! -f "$CURRENT_CACHE_FILE" ]; then
           runner_cache=0
         else
-          runner_cache=$(( ($(<"$CACHE_FILE") + 1) % "$RUNNERS_AVAILABLE" ))
+          runner_cache=$(( ($(<"$CURRENT_CACHE_FILE") + 1) % "$RUNNERS_AVAILABLE" ))
         fi
 
-        echo "$runner_cache" > "$CACHE_FILE"
+        echo "$runner_cache" > "$CURRENT_CACHE_FILE"
 
         TARGET_DIR="/home/runner/.cache_pool/cache_${runner_cache}"
         [ ! -d "$TARGET_DIR" ] && mkdir -p "$TARGET_DIR"
-        ln -snf "$TARGET_DIR" "$LINK_DIR"
+        ln -snf "$TARGET_DIR" "$RUNNER_CACHE"
 
     - name: "👮‍♀️ Setup runner"
       if: ${{ startsWith(runner.name, 'dre-runner-custom') }}
