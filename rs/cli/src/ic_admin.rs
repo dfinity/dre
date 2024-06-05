@@ -689,10 +689,7 @@ must be identical, and must match the SHA256 from the payload of the NNS proposa
             .map_err(|e| anyhow::anyhow!("Error when syncing with NNS: {:?}", e))?;
 
         let value = local_registry
-            .get_value(
-                &make_firewall_rules_record_key(&firewall_rules_scope),
-                local_registry.get_latest_version(),
-            )
+            .get_value(&make_firewall_rules_record_key(firewall_rules_scope), local_registry.get_latest_version())
             .map_err(|e| anyhow::anyhow!("Error fetching firewall rules for replica nodes: {:?}", e))?;
 
         let rules = if let Some(value) = value {
