@@ -11,8 +11,18 @@ runs:
         set -exuo pipefail
         whoami
 
-
-        sleep 5000
+        CACHE_FILE="/home/runner/.cache_pool/current_cache.txt"
+        LINK_DIR="/home/runner/.cache"
+        
+        if [ ! -f "$CACHE_FILE" ]; then
+          runner_cache=0
+        else
+          runner_cache=$(( ($(<"$CACHE_FILE") + 1) % 4 ))
+        fi
+        echo "$current_cache" > "$CACHE_FILE"
+        TARGET_DIR="/home/runner/.cache_pool/cache_${current_cache}"
+        [ ! -d "$TARGET_DIR" ] && mkdir -p "$TARGET_DIR"
+        ln -snf "$TARGET_DIR" "$LINK_DIR"
 
         path_to_check="/home/runner/.cache"
 
