@@ -55,7 +55,7 @@ pub(super) async fn add_boundary_node(
                 warn!(binding.log, "Error while peristing definitions to disk '{}'", e);
             }
             ok(binding.log, format!("Definition {} added successfully", name))
-        },
+        }
         Err(e) => bad_request(binding.log, rejection, e),
     }
 }

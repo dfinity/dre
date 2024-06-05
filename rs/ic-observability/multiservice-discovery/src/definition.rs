@@ -74,13 +74,13 @@ pub struct Definition {
 
 impl PartialEq for Definition {
     fn eq(&self, other: &Self) -> bool {
-        self.nns_urls == other.nns_urls &&
-        self.registry_path == other.registry_path &&
-        self.name == other.name &&
-        self.public_key == other.public_key &&
-        self.poll_interval == other.poll_interval &&
-        self.registry_query_timeout == other.registry_query_timeout &&
-        self.boundary_nodes == other.boundary_nodes
+        self.nns_urls == other.nns_urls
+            && self.registry_path == other.registry_path
+            && self.name == other.name
+            && self.public_key == other.public_key
+            && self.poll_interval == other.poll_interval
+            && self.registry_query_timeout == other.registry_query_timeout
+            && self.boundary_nodes == other.boundary_nodes
     }
 }
 
@@ -632,7 +632,7 @@ impl DefinitionsSupervisor {
         metrics: RunningDefinitionsMetrics,
     ) -> Result<(), StartDefinitionsError> {
         let mut existing = self.definitions.lock().await;
-                self.start_inner(&mut existing, definitions, start_mode, metrics).await
+        self.start_inner(&mut existing, definitions, start_mode, metrics).await
     }
 
     /// Stop all definitions and end.
@@ -811,14 +811,13 @@ pub fn boundary_nodes_from_definitions(definitions: &BTreeMap<String, RunningDef
         .collect()
 }
 
-
 #[cfg(test)]
 mod tests {
-    use std::{collections::BTreeMap, str::FromStr, time::Duration};
-    use ic_management_types::Network;
-    use tempfile::tempdir;
-    use crate::{definition::DefinitionsSupervisor, make_logger, metrics::RunningDefinitionsMetrics};
     use super::{Definition, TestDefinition};
+    use crate::{definition::DefinitionsSupervisor, make_logger, metrics::RunningDefinitionsMetrics};
+    use ic_management_types::Network;
+    use std::{collections::BTreeMap, str::FromStr, time::Duration};
+    use tempfile::tempdir;
 
     #[tokio::test]
     async fn persist_defs() {
@@ -826,12 +825,7 @@ mod tests {
         let definitions_dir = tempdir().unwrap();
         let definitions_path = definitions_dir.path().join(String::from("definitions.json"));
         let log = make_logger();
-        let supervisor = DefinitionsSupervisor::new(
-            handle.clone(),
-            false,
-            Some(definitions_path.clone()),
-            log.clone(),
-        );
+        let supervisor = DefinitionsSupervisor::new(handle.clone(), false, Some(definitions_path.clone()), log.clone());
 
         let mocked_definition = Definition::new(
             vec![url::Url::from_str("http://[2a00:fb01:400:42:5000:3cff:fe45:6c61]:8080").unwrap()],
@@ -842,13 +836,19 @@ mod tests {
             Duration::from_secs(0),
             Duration::from_secs(0),
         );
-        supervisor.persist_defs(&mut BTreeMap::from([
-            (String::from("test"), TestDefinition::new(mocked_definition.clone(), RunningDefinitionsMetrics::new()).running_def)
-        ])
-        ).await.unwrap();
+        supervisor
+            .persist_defs(&mut BTreeMap::from([(
+                String::from("test"),
+                TestDefinition::new(mocked_definition.clone(), RunningDefinitionsMetrics::new()).running_def,
+            )]))
+            .await
+            .unwrap();
         supervisor.definitions.lock().await.clear();
         supervisor.load_or_create_defs(RunningDefinitionsMetrics::new()).await.unwrap();
-        let loaded_definition = supervisor.definitions.lock().await
+        let loaded_definition = supervisor
+            .definitions
+            .lock()
+            .await
             .values()
             .cloned()
             .map(|def| def.definition)
