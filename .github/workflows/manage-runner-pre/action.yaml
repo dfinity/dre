@@ -13,7 +13,10 @@ runs:
         RUNNERS_AVAILABLE=4
         CURRENT_CACHE_FILE="/home/runner/.cache_pool/current_cache.txt"
         RUNNER_CACHE="/home/runner/.cache"
-        
+
+        while ! lockfile -r 0 "$CURRENT_CACHE_FILE"; do
+          sleep 1
+        done
         if [ ! -f "$CURRENT_CACHE_FILE" ]; then
           runner_cache=0
         else
@@ -21,6 +24,7 @@ runs:
         fi
 
         echo "$runner_cache" > "$CURRENT_CACHE_FILE"
+        rm -f "$CURRENT_CACHE_FILE".lock
 
         TARGET_DIR="/home/runner/.cache_pool/cache_${runner_cache}"
         [ ! -d "$TARGET_DIR" ] && mkdir -p "$TARGET_DIR"
