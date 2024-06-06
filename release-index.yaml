@@ -35,6 +35,11 @@ rollout:
       wait_for_next_week: true
 
 releases:
+  - rc_name: rc--2024-06-05_23-01
+    versions:
+      - # Successful qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/jobs/7033661917
+        name: base
+        version: d19fa446ab35780b2c6d8b82ea32d808cca558d5
   - rc_name: rc--2024-05-29_23-02
     versions:
       - # Successful qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/pipelines/1311667262
