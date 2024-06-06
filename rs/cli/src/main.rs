@@ -327,6 +327,7 @@ async fn async_main() -> Result<(), anyhow::Error> {
                     }
                 }
             }
+
             cli::Commands::Nodes(nodes) => match &nodes.subcommand {
                 cli::nodes::Commands::Remove {
                     extra_nodes_filter,
@@ -351,6 +352,60 @@ async fn async_main() -> Result<(), anyhow::Error> {
                             simulate,
                         )
                         .await
+                }
+            },
+
+            cli::Commands::ApiBoundaryNodes(api_boundary_nodes) => match &api_boundary_nodes.subcommand {
+                cli::api_boundary_nodes::Commands::Update { nodes, version, motivation } => {
+                    runner_instance
+                        .ic_admin
+                        .propose_run(
+                            ic_admin::ProposeCommand::DeployGuestosToSomeApiBoundaryNodes {
+                                nodes: nodes.to_vec(),
+                                version: version.to_string(),
+                            },
+                            ic_admin::ProposeOptions {
+                                title: Some(format!("Update {} API boundary node(s) to {version}", nodes.clone().len())),
+                                summary: Some(format!("Update {} API boundary node(s) to {version}", nodes.clone().len())),
+                                motivation: motivation.clone(),
+                            },
+                            simulate,
+                        )
+                        .await?;
+                    Ok(())
+                }
+                cli::api_boundary_nodes::Commands::Add { nodes, version, motivation } => {
+                    runner_instance
+                        .ic_admin
+                        .propose_run(
+                            ic_admin::ProposeCommand::AddApiBoundaryNodes {
+                                nodes: nodes.to_vec(),
+                                version: version.to_string(),
+                            },
+                            ic_admin::ProposeOptions {
+                                title: Some(format!("Add {} API boundary node(s)", nodes.clone().len())),
+                                summary: Some(format!("Add {} API boundary node(s)", nodes.clone().len())),
+                                motivation: motivation.clone(),
+                            },
+                            simulate,
+                        )
+                        .await?;
+                    Ok(())
+                }
+                cli::api_boundary_nodes::Commands::Remove { nodes } => {
+                    runner_instance
+                        .ic_admin
+                        .propose_run(
+                            ic_admin::ProposeCommand::RemoveApiBoundaryNodes { nodes: nodes.to_vec() },
+                            ic_admin::ProposeOptions {
+                                title: Some(format!("Remove {} API boundary node(s)", nodes.clone().len())),
+                                summary: Some(format!("Remove {} API boundary node(s)", nodes.clone().len())),
+                                motivation: None,
+                            },
+                            simulate,
+                        )
+                        .await?;
+                    Ok(())
                 }
             },
 

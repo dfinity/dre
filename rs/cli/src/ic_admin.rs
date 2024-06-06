@@ -626,7 +626,7 @@ must be identical, and must match the SHA256 from the payload of the NNS proposa
         }
     }
 
-    pub async fn update_unassigned_nodes(&self, nns_subned_id: &String, network: &Network, simulate: bool) -> Result<(), Error> {
+    pub async fn update_unassigned_nodes(&self, nns_subnet_id: &String, network: &Network, simulate: bool) -> Result<(), Error> {
         let local_registry_path = local_registry_path(network);
         let local_registry = LocalRegistry::new(local_registry_path, Duration::from_secs(10))
             .map_err(|e| anyhow::anyhow!("Error in creating local registry instance: {:?}", e))?;
@@ -638,9 +638,9 @@ must be identical, and must match the SHA256 from the payload of the NNS proposa
 
         let subnets = local_registry.get_family_entries::<SubnetRecord>()?;
 
-        let nns = match subnets.get_key_value(nns_subned_id) {
+        let nns = match subnets.get_key_value(nns_subnet_id) {
             Some((_, value)) => value,
-            None => return Err(anyhow::anyhow!("Couldn't find nns subnet with id '{}'", nns_subned_id)),
+            None => return Err(anyhow::anyhow!("Couldn't find nns subnet with id '{}'", nns_subnet_id)),
         };
 
         let registry_state = RegistryState::new(network, true).await;
@@ -877,6 +877,17 @@ pub enum ProposeCommand {
         node_ids: Vec<PrincipalId>,
         replica_version: String,
     },
+    AddApiBoundaryNodes {
+        nodes: Vec<PrincipalId>,
+        version: String,
+    },
+    RemoveApiBoundaryNodes {
+        nodes: Vec<PrincipalId>,
+    },
+    DeployGuestosToSomeApiBoundaryNodes {
+        nodes: Vec<PrincipalId>,
+        version: String,
+    },
 }
 
 impl ProposeCommand {
@@ -948,6 +959,19 @@ impl ProposeCommand {
             Self::DeployGuestosToAllUnassignedNodes { replica_version } => {
                 vec!["--replica-version-id".to_string(), replica_version.clone()]
             }
+            Self::AddApiBoundaryNodes { nodes, version } => [
+                vec!["--nodes".to_string()],
+                nodes.iter().map(|n| n.to_string()).collect::<Vec<_>>(),
+                vec!["--version".to_string(), version.to_string()],
+            ]
+            .concat(),
+            Self::RemoveApiBoundaryNodes { nodes } => [vec!["--nodes".to_string()], nodes.iter().map(|n| n.to_string()).collect::<Vec<_>>()].concat(),
+            Self::DeployGuestosToSomeApiBoundaryNodes { nodes, version } => [
+                vec!["--nodes".to_string()],
+                nodes.iter().map(|n| n.to_string()).collect::<Vec<_>>(),
+                vec!["--version".to_string(), version.to_string()],
+            ]
+            .concat(),
         }
     }
 }
