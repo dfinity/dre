@@ -403,7 +403,7 @@ def release_notes(first_commit, last_commit, release_name) -> str:
 
         commit_type = conventional["type"].lower()
         commit_type = commit_type if commit_type in TYPE_PRETTY_MAP else "other"
-        if len(teams) >= 3:
+        if len(teams) >= 5:
             # The change seems to be touching many teams, let's mark it as "other" (generic)
             commit_type = "other"
 
