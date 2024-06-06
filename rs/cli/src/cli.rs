@@ -89,6 +89,9 @@ pub enum Commands {
     /// Manage nodes
     Nodes(nodes::Cmd),
 
+    /// Manage API boundary nodes
+    ApiBoundaryNodes(api_boundary_nodes::Cmd),
+
     /// Vote on our proposals
     Vote {
         /// Override default accepted proposers
@@ -245,7 +248,7 @@ pub mod subnet {
             #[clap(long, num_args(1..))]
             include: Vec<PrincipalId>,
 
-            /// Motivation for resing the subnet
+            /// Motivation for resizing the subnet
             #[clap(short, long, aliases = ["summary"])]
             motivation: Option<String>,
         },
@@ -451,6 +454,57 @@ pub mod nodes {
             /// Motivation for removing additional nodes
             #[clap(long, aliases = ["summary"])]
             motivation: Option<String>,
+        },
+    }
+}
+
+pub mod api_boundary_nodes {
+    use super::*;
+
+    #[derive(Parser, Clone)]
+    pub struct Cmd {
+        #[clap(subcommand)]
+        pub subcommand: Commands,
+    }
+
+    #[derive(Subcommand, Clone)]
+    pub enum Commands {
+        /// Update specified set of nodes to the provided version.
+        /// The provided "version" must be already elected.
+        /// The "nodes" list must contain the node IDs where the version should be rolled out.
+        Update {
+            /// Node IDs where to rollout the version
+            #[clap(long, num_args(1..), required = true)]
+            nodes: Vec<PrincipalId>,
+
+            #[clap(long, required = true)]
+            version: String,
+
+            /// Motivation for creating the subnet
+            #[clap(short, long, aliases = ["summary"], required = true)]
+            motivation: Option<String>,
+        },
+
+        /// Turn a set of unassigned nodes into API BNs
+        Add {
+            /// Node IDs to turn into API BNs
+            #[clap(long, num_args(1..), required = true)]
+            nodes: Vec<PrincipalId>,
+
+            /// guestOS version
+            #[clap(long, required = true)]
+            version: String,
+
+            /// Motivation for creating the subnet
+            #[clap(short, long, aliases = ["summary"], required = true)]
+            motivation: Option<String>,
+        },
+
+        /// Decommission a set of API BNs and turn them again in unassigned nodes
+        Remove {
+            /// Node IDs to turn into API BNs
+            #[clap(long, num_args(1..), required = true)]
+            nodes: Vec<PrincipalId>,
         },
     }
 }
