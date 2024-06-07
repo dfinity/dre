@@ -62,6 +62,10 @@ pub enum Commands {
         /// algorithm
         #[clap(short, long)]
         optimize: Option<usize>,
+
+        /// Minimum Nakamoto coefficients after the replacement
+        #[clap(long, num_args(1..))]
+        min_nakamoto_coefficients: Vec<String>,
     },
 
     /// Manage an existing subnet

@@ -436,4 +436,26 @@ impl Runner {
             .await?;
         Ok(())
     }
+
+    pub async fn network_heal(
+        &self,
+        request: ic_management_types::requests::HealRequest,
+        _verbose: bool,
+        simulate: bool,
+    ) -> Result<(), anyhow::Error> {
+        let change = self.dashboard_backend_client.network_heal(request).await?;
+        println!("{}", change);
+
+        let _ = change.subnets_change_response.iter().map(|subnet_change_response| async move {
+            self.run_membership_change(
+                subnet_change_response.clone(),
+                ops_subnet_node_replace::replace_proposal_options(&subnet_change_response).unwrap(),
+                simulate,
+            )
+            .await
+            .unwrap();
+        });
+
+        Ok(())
+    }
 }

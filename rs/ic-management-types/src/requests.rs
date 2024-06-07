@@ -114,3 +114,9 @@ impl NodeRemovalReason {
         }
     }
 }
+
+#[derive(Serialize, Deserialize)]
+pub struct HealRequest {
+    pub optimize: Option<usize>,
+    pub min_nakamoto_coefficients: Option<MinNakamotoCoefficients>,
+}

@@ -1,8 +1,9 @@
 use async_trait::async_trait;
+use decentralization::HealResponse;
 use decentralization::SubnetChangeResponse;
 use ic_base_types::PrincipalId;
 use ic_management_types::{
-    requests::{MembershipReplaceRequest, NodesRemoveRequest, NodesRemoveResponse, SubnetCreateRequest, SubnetResizeRequest},
+    requests::{HealRequest, MembershipReplaceRequest, NodesRemoveRequest, NodesRemoveResponse, SubnetCreateRequest, SubnetResizeRequest},
     Artifact, Network, NetworkError, Release, TopologyProposal,
 };
 use log::error;
@@ -93,6 +94,14 @@ impl DashboardBackendClient {
     pub async fn remove_nodes(&self, request: NodesRemoveRequest) -> anyhow::Result<NodesRemoveResponse> {
         reqwest::Client::new()
             .post(self.url.join("nodes/remove").map_err(|e| anyhow::anyhow!(e))?)
+            .json(&request)
+            .rest_send()
+            .await
+    }
+
+    pub(crate) async fn network_heal(&self, request: HealRequest) -> anyhow::Result<HealResponse> {
+        reqwest::Client::new()
+            .post(self.url.join("network/heal").map_err(|e| anyhow::anyhow!(e))?)
             .json(&request)
             .rest_send()
             .await

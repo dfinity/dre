@@ -104,10 +104,21 @@ async fn async_main() -> Result<(), anyhow::Error> {
                 Ok(())
             }
 
-            cli::Commands::Heal { optimize } => {
-                let principal = ic_base_types::PrincipalId::new_self_authenticating(&std::fs::read(path)?);
-                println!("{}", principal);
-                Ok(())
+            cli::Commands::Heal {
+                optimize,
+                min_nakamoto_coefficients,
+            } => {
+                let min_nakamoto_coefficients = parse_min_nakamoto_coefficients(&mut cmd, min_nakamoto_coefficients);
+                runner_instance
+                    .network_heal(
+                        ic_management_types::requests::HealRequest {
+                            optimize: *optimize,
+                            min_nakamoto_coefficients,
+                        },
+                        cli_opts.verbose,
+                        simulate,
+                    )
+                    .await
             }
 
             cli::Commands::Subnet(subnet) => {
