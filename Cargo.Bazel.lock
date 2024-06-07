@@ -1,5 +1,5 @@
 {
-  "checksum": "582a531639bbb97df204fdb6b1988fe1e94551b0bd30d13d773fb82fb866451b",
+  "checksum": "91e6a6c9b71afdbf7120bcb3c9ead14e12bb92ae59f99b6024eabe319d4696a4",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -1379,7 +1379,7 @@
               "target": "anstyle_parse"
             },
             {
-              "id": "anstyle-query 1.0.3",
+              "id": "anstyle-query 1.1.0",
               "target": "anstyle_query"
             },
             {
@@ -1492,13 +1492,13 @@
       },
       "license": "MIT OR Apache-2.0"
     },
-    "anstyle-query 1.0.3": {
+    "anstyle-query 1.1.0": {
       "name": "anstyle-query",
-      "version": "1.0.3",
+      "version": "1.1.0",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/anstyle-query/1.0.3/download",
-          "sha256": "a64c907d4e79225ac72e2a354c9ce84d50ebb4586dee56c82b3ee73004f537f5"
+          "url": "https://static.crates.io/crates/anstyle-query/1.1.0/download",
+          "sha256": "ad186efb764318d35165f1758e7dcef3b10628e26d41a44bc5550652e6804391"
         }
       },
       "targets": [
@@ -1529,7 +1529,7 @@
           }
         },
         "edition": "2021",
-        "version": "1.0.3"
+        "version": "1.1.0"
       },
       "license": "MIT OR Apache-2.0"
     },
@@ -3151,7 +3151,7 @@
               "target": "http_body"
             },
             {
-              "id": "hyper 0.14.28",
+              "id": "hyper 0.14.29",
               "target": "hyper"
             },
             {
@@ -6148,7 +6148,7 @@
               "target": "anyhow"
             },
             {
-              "id": "clap 4.5.4",
+              "id": "clap 4.5.6",
               "target": "clap"
             },
             {
@@ -6808,13 +6808,13 @@
       },
       "license": "MIT OR Apache-2.0"
     },
-    "clap 4.5.4": {
+    "clap 4.5.6": {
       "name": "clap",
-      "version": "4.5.4",
+      "version": "4.5.6",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/clap/4.5.4/download",
-          "sha256": "90bc066a67923782aa8515dbaea16946c5bcc5addbd668bb80af688e53e548a0"
+          "url": "https://static.crates.io/crates/clap/4.5.6/download",
+          "sha256": "a9689a29b593160de5bc4aacab7b5d54fb52231de70122626c178e6a368994c7"
         }
       },
       "targets": [
@@ -6853,7 +6853,7 @@
         "deps": {
           "common": [
             {
-              "id": "clap_builder 4.5.2",
+              "id": "clap_builder 4.5.6",
               "target": "clap_builder"
             }
           ],
@@ -6863,13 +6863,13 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "clap_derive 4.5.4",
+              "id": "clap_derive 4.5.5",
               "target": "clap_derive"
             }
           ],
           "selects": {}
         },
-        "version": "4.5.4"
+        "version": "4.5.6"
       },
       "license": "MIT OR Apache-2.0"
     },
@@ -6912,13 +6912,13 @@
       },
       "license": "MIT"
     },
-    "clap_builder 4.5.2": {
+    "clap_builder 4.5.6": {
       "name": "clap_builder",
-      "version": "4.5.2",
+      "version": "4.5.6",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/clap_builder/4.5.2/download",
-          "sha256": "ae129e2e766ae0ec03484e609954119f123cc1fe650337e155d03b022f24f7b4"
+          "url": "https://static.crates.io/crates/clap_builder/4.5.6/download",
+          "sha256": "2e5387378c84f6faa26890ebf9f0a92989f8873d4d380467bcd0d8d8620424df"
         }
       },
       "targets": [
@@ -6963,7 +6963,7 @@
               "target": "anstyle"
             },
             {
-              "id": "clap_lex 0.7.0",
+              "id": "clap_lex 0.7.1",
               "target": "clap_lex"
             },
             {
@@ -6978,17 +6978,17 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "4.5.2"
+        "version": "4.5.6"
       },
       "license": "MIT OR Apache-2.0"
     },
-    "clap_complete 4.5.2": {
+    "clap_complete 4.5.4": {
       "name": "clap_complete",
-      "version": "4.5.2",
+      "version": "4.5.4",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/clap_complete/4.5.2/download",
-          "sha256": "dd79504325bf38b10165b02e89b4347300f855f273c4cb30c4a3209e6583275e"
+          "url": "https://static.crates.io/crates/clap_complete/4.5.4/download",
+          "sha256": "84733fe9ab28bdce67389f0300221a5c4cd29f6def6417636d7b7ca5e5f3e3b2"
         }
       },
       "targets": [
@@ -7016,14 +7016,14 @@
         "deps": {
           "common": [
             {
-              "id": "clap 4.5.4",
+              "id": "clap 4.5.6",
               "target": "clap"
             }
           ],
           "selects": {}
         },
         "edition": "2021",
-        "version": "4.5.2"
+        "version": "4.5.4"
       },
       "license": "MIT OR Apache-2.0"
     },
@@ -7088,13 +7088,13 @@
       },
       "license": "MIT OR Apache-2.0"
     },
-    "clap_derive 4.5.4": {
+    "clap_derive 4.5.5": {
       "name": "clap_derive",
-      "version": "4.5.4",
+      "version": "4.5.5",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/clap_derive/4.5.4/download",
-          "sha256": "528131438037fd55894f62d6e9f068b8f45ac57ffa77517819645d10aed04f64"
+          "url": "https://static.crates.io/crates/clap_derive/4.5.5/download",
+          "sha256": "c780290ccf4fb26629baa7a1081e68ced113f1d3ec302fa5948f1c381ebf06c6"
         }
       },
       "targets": [
@@ -7141,7 +7141,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "4.5.4"
+        "version": "4.5.5"
       },
       "license": "MIT OR Apache-2.0"
     },
@@ -7184,13 +7184,13 @@
       },
       "license": "MIT OR Apache-2.0"
     },
-    "clap_lex 0.7.0": {
+    "clap_lex 0.7.1": {
       "name": "clap_lex",
-      "version": "0.7.0",
+      "version": "0.7.1",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/clap_lex/0.7.0/download",
-          "sha256": "98cc8fbded0c607b7ba9dd60cd98df59af97e84d24e49c8557331cfc26d301ce"
+          "url": "https://static.crates.io/crates/clap_lex/0.7.1/download",
+          "sha256": "4b82cf0babdbd58558212896d1a4272303a57bdb245c2bf1147185fb45640e70"
         }
       },
       "targets": [
@@ -7210,7 +7210,7 @@
           "**"
         ],
         "edition": "2021",
-        "version": "0.7.0"
+        "version": "0.7.1"
       },
       "license": "MIT OR Apache-2.0"
     },
@@ -7638,7 +7638,7 @@
               "target": "libc"
             },
             {
-              "id": "unicode-width 0.1.12",
+              "id": "unicode-width 0.1.13",
               "target": "unicode_width"
             }
           ],
@@ -9840,7 +9840,7 @@
               "target": "async_trait"
             },
             {
-              "id": "strum_macros 0.26.3",
+              "id": "strum_macros 0.26.4",
               "target": "strum_macros"
             }
           ],
@@ -11222,7 +11222,7 @@
               "target": "candid"
             },
             {
-              "id": "clap 4.5.4",
+              "id": "clap 4.5.6",
               "target": "clap"
             },
             {
@@ -11456,7 +11456,7 @@
         "deps": {
           "common": [
             {
-              "id": "clap 4.5.4",
+              "id": "clap 4.5.6",
               "target": "clap"
             },
             {
@@ -11464,7 +11464,7 @@
               "target": "clap_num"
             },
             {
-              "id": "clap_complete 4.5.2",
+              "id": "clap_complete 4.5.4",
               "target": "clap_complete"
             },
             {
@@ -11474,6 +11474,10 @@
             {
               "id": "ic-nns-governance 0.9.0",
               "target": "ic_nns_governance"
+            },
+            {
+              "id": "ic-registry-keys 0.9.0",
+              "target": "ic_registry_keys"
             },
             {
               "id": "url 2.5.0",
@@ -15807,7 +15811,7 @@
               "target": "http"
             },
             {
-              "id": "hyper 0.14.28",
+              "id": "hyper 0.14.29",
               "target": "hyper"
             },
             {
@@ -15919,13 +15923,13 @@
       },
       "license": "MIT OR Apache-2.0"
     },
-    "hyper 0.14.28": {
+    "hyper 0.14.29": {
       "name": "hyper",
-      "version": "0.14.28",
+      "version": "0.14.29",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/hyper/0.14.28/download",
-          "sha256": "bf96e135eb83a2a8ddf766e426a841d8ddd7449d5f00d34ea02b41d2f19eef80"
+          "url": "https://static.crates.io/crates/hyper/0.14.29/download",
+          "sha256": "f361cde2f109281a220d4307746cdfd5ee3f410da58a70377762396775634b33"
         }
       },
       "targets": [
@@ -16030,7 +16034,7 @@
           "selects": {}
         },
         "edition": "2018",
-        "version": "0.14.28"
+        "version": "0.14.29"
       },
       "license": "MIT"
     },
@@ -16183,7 +16187,7 @@
               "target": "http"
             },
             {
-              "id": "hyper 0.14.28",
+              "id": "hyper 0.14.29",
               "target": "hyper"
             },
             {
@@ -16335,7 +16339,7 @@
         "deps": {
           "common": [
             {
-              "id": "hyper 0.14.28",
+              "id": "hyper 0.14.29",
               "target": "hyper"
             },
             {
@@ -16445,7 +16449,7 @@
               "target": "bytes"
             },
             {
-              "id": "hyper 0.14.28",
+              "id": "hyper 0.14.29",
               "target": "hyper"
             },
             {
@@ -17166,7 +17170,7 @@
               "target": "futures_util"
             },
             {
-              "id": "hyper 0.14.28",
+              "id": "hyper 0.14.29",
               "target": "hyper"
             },
             {
@@ -17418,7 +17422,7 @@
               "target": "futures_util"
             },
             {
-              "id": "hyper 0.14.28",
+              "id": "hyper 0.14.29",
               "target": "hyper"
             },
             {
@@ -17726,6 +17730,10 @@
               "target": "ic_registry_transport"
             },
             {
+              "id": "ic-sns-wasm 1.0.0",
+              "target": "ic_sns_wasm"
+            },
+            {
               "id": "ic-sys 0.9.0",
               "target": "ic_sys"
             },
@@ -17928,7 +17936,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "strum_macros 0.26.3",
+              "id": "strum_macros 0.26.4",
               "target": "strum_macros"
             }
           ],
@@ -18403,7 +18411,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "strum_macros 0.26.3",
+              "id": "strum_macros 0.26.4",
               "target": "strum_macros"
             }
           ],
@@ -19413,7 +19421,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "strum_macros 0.26.3",
+              "id": "strum_macros 0.26.4",
               "target": "strum_macros"
             }
           ],
@@ -19548,7 +19556,7 @@
               "target": "paste"
             },
             {
-              "id": "strum_macros 0.26.3",
+              "id": "strum_macros 0.26.4",
               "target": "strum_macros"
             }
           ],
@@ -19631,7 +19639,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "strum_macros 0.26.3",
+              "id": "strum_macros 0.26.4",
               "target": "strum_macros"
             }
           ],
@@ -20300,7 +20308,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "strum_macros 0.26.3",
+              "id": "strum_macros 0.26.4",
               "target": "strum_macros"
             }
           ],
@@ -20341,7 +20349,7 @@
         "deps": {
           "common": [
             {
-              "id": "hyper 0.14.28",
+              "id": "hyper 0.14.29",
               "target": "hyper"
             },
             {
@@ -21374,7 +21382,7 @@
               "target": "chrono"
             },
             {
-              "id": "clap 4.5.4",
+              "id": "clap 4.5.6",
               "target": "clap"
             },
             {
@@ -21565,7 +21573,7 @@
               "target": "async_trait"
             },
             {
-              "id": "strum_macros 0.26.3",
+              "id": "strum_macros 0.26.4",
               "target": "strum_macros"
             }
           ],
@@ -21656,7 +21664,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "strum_macros 0.26.3",
+              "id": "strum_macros 0.26.4",
               "target": "strum_macros"
             }
           ],
@@ -21768,7 +21776,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "strum_macros 0.26.3",
+              "id": "strum_macros 0.26.4",
               "target": "strum_macros"
             }
           ],
@@ -23147,7 +23155,7 @@
               "target": "rust_decimal_macros"
             },
             {
-              "id": "strum_macros 0.26.3",
+              "id": "strum_macros 0.26.4",
               "target": "strum_macros"
             }
           ],
@@ -24121,7 +24129,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "strum_macros 0.26.3",
+              "id": "strum_macros 0.26.4",
               "target": "strum_macros"
             }
           ],
@@ -24374,7 +24382,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "strum_macros 0.26.3",
+              "id": "strum_macros 0.26.4",
               "target": "strum_macros"
             }
           ],
@@ -24622,7 +24630,7 @@
               "target": "rust_decimal_macros"
             },
             {
-              "id": "strum_macros 0.26.3",
+              "id": "strum_macros 0.26.4",
               "target": "strum_macros"
             }
           ],
@@ -25907,7 +25915,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "strum_macros 0.26.3",
+              "id": "strum_macros 0.26.4",
               "target": "strum_macros"
             }
           ],
@@ -26200,7 +26208,7 @@
               "target": "candid"
             },
             {
-              "id": "clap 4.5.4",
+              "id": "clap 4.5.6",
               "target": "clap"
             },
             {
@@ -26661,7 +26669,7 @@
               "target": "prost_derive"
             },
             {
-              "id": "strum_macros 0.26.3",
+              "id": "strum_macros 0.26.4",
               "target": "strum_macros"
             }
           ],
@@ -27179,7 +27187,7 @@
               "target": "portable_atomic"
             },
             {
-              "id": "unicode-width 0.1.12",
+              "id": "unicode-width 0.1.13",
               "target": "unicode_width"
             }
           ],
@@ -29168,7 +29176,7 @@
               "target": "anyhow"
             },
             {
-              "id": "clap 4.5.4",
+              "id": "clap 4.5.6",
               "target": "clap"
             },
             {
@@ -30027,7 +30035,7 @@
               "target": "base64"
             },
             {
-              "id": "clap 4.5.4",
+              "id": "clap 4.5.6",
               "target": "clap"
             },
             {
@@ -30128,7 +30136,7 @@
               "target": "reqwest"
             },
             {
-              "id": "tar 0.4.40",
+              "id": "tar 0.4.41",
               "target": "tar"
             },
             {
@@ -30160,7 +30168,7 @@
         "deps": {
           "common": [
             {
-              "id": "clap 4.5.4",
+              "id": "clap 4.5.6",
               "target": "clap"
             },
             {
@@ -30244,6 +30252,10 @@
             {
               "id": "erased-serde 0.4.5",
               "target": "erased_serde"
+            },
+            {
+              "id": "ic-sns-wasm 1.0.0",
+              "target": "ic_sns_wasm"
             },
             {
               "id": "ic-types 0.9.0",
@@ -30552,7 +30564,7 @@
               "target": "anyhow"
             },
             {
-              "id": "clap 4.5.4",
+              "id": "clap 4.5.6",
               "target": "clap"
             },
             {
@@ -30717,7 +30729,7 @@
               "target": "anyhow"
             },
             {
-              "id": "clap 4.5.4",
+              "id": "clap 4.5.6",
               "target": "clap"
             },
             {
@@ -32973,7 +32985,7 @@
               "target": "fnv"
             },
             {
-              "id": "unicode-width 0.1.12",
+              "id": "unicode-width 0.1.13",
               "target": "unicode_width"
             }
           ],
@@ -34724,7 +34736,7 @@
               "target": "typed_arena"
             },
             {
-              "id": "unicode-width 0.1.12",
+              "id": "unicode-width 0.1.13",
               "target": "unicode_width"
             }
           ],
@@ -35653,7 +35665,7 @@
               "target": "base64"
             },
             {
-              "id": "clap 4.5.4",
+              "id": "clap 4.5.6",
               "target": "clap"
             },
             {
@@ -37463,7 +37475,7 @@
                 "target": "http_body"
               },
               {
-                "id": "hyper 0.14.28",
+                "id": "hyper 0.14.29",
                 "target": "hyper"
               },
               {
@@ -37827,7 +37839,7 @@
                 "target": "tokio_util"
               },
               {
-                "id": "webpki-roots 0.26.1",
+                "id": "webpki-roots 0.26.2",
                 "target": "webpki_roots"
               }
             ],
@@ -38248,7 +38260,7 @@
               "target": "chrono"
             },
             {
-              "id": "clap 4.5.4",
+              "id": "clap 4.5.6",
               "target": "clap"
             },
             {
@@ -40327,7 +40339,7 @@
               "target": "serde_json"
             },
             {
-              "id": "tar 0.4.40",
+              "id": "tar 0.4.41",
               "target": "tar"
             },
             {
@@ -41725,7 +41737,7 @@
               "target": "candid"
             },
             {
-              "id": "clap 4.5.4",
+              "id": "clap 4.5.6",
               "target": "clap"
             },
             {
@@ -42343,7 +42355,7 @@
         "deps": {
           "common": [
             {
-              "id": "clap 4.5.4",
+              "id": "clap 4.5.6",
               "target": "clap"
             },
             {
@@ -42966,7 +42978,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "strum_macros 0.26.3",
+              "id": "strum_macros 0.26.4",
               "target": "strum_macros"
             }
           ],
@@ -43036,13 +43048,13 @@
       },
       "license": "MIT"
     },
-    "strum_macros 0.26.3": {
+    "strum_macros 0.26.4": {
       "name": "strum_macros",
-      "version": "0.26.3",
+      "version": "0.26.4",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/strum_macros/0.26.3/download",
-          "sha256": "f7993a8e3a9e88a00351486baae9522c91b123a088f76469e5bd5cc17198ea87"
+          "url": "https://static.crates.io/crates/strum_macros/0.26.4/download",
+          "sha256": "4c6bee85a5a24955dc440386795aa378cd9cf82acd5f764469152d2270e581be"
         }
       },
       "targets": [
@@ -43092,7 +43104,7 @@
           ],
           "selects": {}
         },
-        "version": "0.26.3"
+        "version": "0.26.4"
       },
       "license": "MIT"
     },
@@ -43626,7 +43638,7 @@
               "target": "papergrid"
             },
             {
-              "id": "unicode-width 0.1.12",
+              "id": "unicode-width 0.1.13",
               "target": "unicode_width"
             }
           ],
@@ -43736,7 +43748,7 @@
         "deps": {
           "common": [
             {
-              "id": "unicode-width 0.1.12",
+              "id": "unicode-width 0.1.13",
               "target": "unicode_width"
             }
           ],
@@ -43807,13 +43819,13 @@
       },
       "license": "MIT"
     },
-    "tar 0.4.40": {
+    "tar 0.4.41": {
       "name": "tar",
-      "version": "0.4.40",
+      "version": "0.4.41",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/tar/0.4.40/download",
-          "sha256": "b16afcea1f22891c49a00c751c7b63b2233284064f11a200fc624137c51e2ddb"
+          "url": "https://static.crates.io/crates/tar/0.4.41/download",
+          "sha256": "cb797dad5fb5b76fcf519e702f4a589483b5ef06567f160c392832c1f5e44909"
         }
       },
       "targets": [
@@ -43859,10 +43871,10 @@
             ]
           }
         },
-        "edition": "2018",
-        "version": "0.4.40"
+        "edition": "2021",
+        "version": "0.4.41"
       },
-      "license": "MIT/Apache-2.0"
+      "license": "MIT OR Apache-2.0"
     },
     "tempfile 3.10.1": {
       "name": "tempfile",
@@ -45514,7 +45526,7 @@
               "target": "http_body"
             },
             {
-              "id": "hyper 0.14.28",
+              "id": "hyper 0.14.29",
               "target": "hyper"
             },
             {
@@ -46663,13 +46675,13 @@
       },
       "license": "MIT/Apache-2.0"
     },
-    "unicode-width 0.1.12": {
+    "unicode-width 0.1.13": {
       "name": "unicode-width",
-      "version": "0.1.12",
+      "version": "0.1.13",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/unicode-width/0.1.12/download",
-          "sha256": "68f5e5f3158ecfd4b8ff6fe086db7c8467a2dfdac97fe420f2b7c4aa97af66d6"
+          "url": "https://static.crates.io/crates/unicode-width/0.1.13/download",
+          "sha256": "0336d538f7abc86d282a4189614dfaa90810dfc2c6f6427eaf88e16311dd225d"
         }
       },
       "targets": [
@@ -46695,7 +46707,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.1.12"
+        "version": "0.1.13"
       },
       "license": "MIT OR Apache-2.0"
     },
@@ -47955,13 +47967,13 @@
       },
       "license": "MIT OR Apache-2.0"
     },
-    "webpki-roots 0.26.1": {
+    "webpki-roots 0.26.2": {
       "name": "webpki-roots",
-      "version": "0.26.1",
+      "version": "0.26.2",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/webpki-roots/0.26.1/download",
-          "sha256": "b3de34ae270483955a94f4b21bdaaeb83d508bb84a01435f393818edb0012009"
+          "url": "https://static.crates.io/crates/webpki-roots/0.26.2/download",
+          "sha256": "3c452ad30530b54a4d8e71952716a212b08efd0f3562baa66c29a618b07da7c3"
         }
       },
       "targets": [
@@ -47991,7 +48003,7 @@
           "selects": {}
         },
         "edition": "2018",
-        "version": "0.26.1"
+        "version": "0.26.2"
       },
       "license": "MPL-2.0"
     },

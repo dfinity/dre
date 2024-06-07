@@ -4,7 +4,8 @@ load("@//rs:oci_images.bzl", "rust_binary_oci_image_rules")
 
 DEPS = [
     "//rs/ic-observability/service-discovery",
-    "//rs/ic-observability/multiservice-discovery-shared"
+    "//rs/ic-observability/multiservice-discovery-shared",
+    "//rs/ic-canisters"
 ]
 
 rust_binary(

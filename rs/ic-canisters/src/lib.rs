@@ -22,6 +22,7 @@ pub mod governance;
 pub mod management;
 pub mod parallel_hardware_identity;
 pub mod registry;
+pub mod sns_wasm;
 
 pub struct CanisterClient {
     pub agent: CanisterClientAgent,

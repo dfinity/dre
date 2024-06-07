@@ -4,13 +4,14 @@ use clap::{Parser, Subcommand};
 use clap_num::maybe_hex;
 use ic_base_types::PrincipalId;
 use ic_management_types::Artifact;
+use ic_registry_keys::FirewallRulesScope;
 use url::Url;
 
 // For more info about the version setup, look at https://docs.rs/clap/latest/clap/struct.Command.html#method.version
 #[derive(Parser, Clone, Default)]
 #[clap(about, version = env!("CARGO_PKG_VERSION"), author)]
 pub struct Opts {
-    #[clap(long, env = "HSM_PIN", global = true)]
+    #[clap(long, env = "HSM_PIN", global = true, hide_env_values = true)]
     pub hsm_pin: Option<String>,
     #[clap(long, value_parser=maybe_hex::<u64>, env = "HSM_SLOT", global = true)]
     pub hsm_slot: Option<u64>,
@@ -100,6 +101,9 @@ pub enum Commands {
     /// Manage nodes
     Nodes(nodes::Cmd),
 
+    /// Manage API boundary nodes
+    ApiBoundaryNodes(api_boundary_nodes::Cmd),
+
     /// Vote on our proposals
     Vote {
         /// Override default accepted proposers
@@ -165,6 +169,9 @@ pub enum Commands {
         title: Option<String>,
         #[clap(long, default_value = None, required = true)]
         summary: Option<String>,
+        /// Ruleset scope: "global", "replica_nodes", "api_boundary_nodes", "subnet(SUBNET_ID)", "node(NODE_ID)"
+        #[clap(long, default_value = None, required = true)]
+        rules_scope: FirewallRulesScope,
     },
 
     /// Proposal Listing
@@ -253,7 +260,7 @@ pub mod subnet {
             #[clap(long, num_args(1..))]
             include: Vec<PrincipalId>,
 
-            /// Motivation for resing the subnet
+            /// Motivation for resizing the subnet
             #[clap(short, long, aliases = ["summary"])]
             motivation: Option<String>,
         },
@@ -459,6 +466,57 @@ pub mod nodes {
             /// Motivation for removing additional nodes
             #[clap(long, aliases = ["summary"])]
             motivation: Option<String>,
+        },
+    }
+}
+
+pub mod api_boundary_nodes {
+    use super::*;
+
+    #[derive(Parser, Clone)]
+    pub struct Cmd {
+        #[clap(subcommand)]
+        pub subcommand: Commands,
+    }
+
+    #[derive(Subcommand, Clone)]
+    pub enum Commands {
+        /// Update specified set of nodes to the provided version.
+        /// The provided "version" must be already elected.
+        /// The "nodes" list must contain the node IDs where the version should be rolled out.
+        Update {
+            /// Node IDs where to rollout the version
+            #[clap(long, num_args(1..), required = true)]
+            nodes: Vec<PrincipalId>,
+
+            #[clap(long, required = true)]
+            version: String,
+
+            /// Motivation for creating the subnet
+            #[clap(short, long, aliases = ["summary"], required = true)]
+            motivation: Option<String>,
+        },
+
+        /// Turn a set of unassigned nodes into API BNs
+        Add {
+            /// Node IDs to turn into API BNs
+            #[clap(long, num_args(1..), required = true)]
+            nodes: Vec<PrincipalId>,
+
+            /// guestOS version
+            #[clap(long, required = true)]
+            version: String,
+
+            /// Motivation for creating the subnet
+            #[clap(short, long, aliases = ["summary"], required = true)]
+            motivation: Option<String>,
+        },
+
+        /// Decommission a set of API BNs and turn them again in unassigned nodes
+        Remove {
+            /// Node IDs to turn into API BNs
+            #[clap(long, num_args(1..), required = true)]
+            nodes: Vec<PrincipalId>,
         },
     }
 }
