@@ -9,7 +9,6 @@ use std::collections::{BTreeMap, HashSet};
 #[post("/network/heal")]
 async fn heal(request: web::Json<HealRequest>, registry: web::Data<Arc<RwLock<RegistryState>>>) -> Result<HttpResponse, Error> {
     let registry = registry.read().await;
-    let all_nodes = registry.nodes();
     let health_client = health::HealthClient::new(registry.network());
     let healths = health_client
         .nodes()
