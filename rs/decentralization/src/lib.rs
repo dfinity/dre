@@ -192,7 +192,7 @@ pub struct HealResponse {
 impl Display for HealResponse {
     fn fmt(&self, _: &mut Formatter<'_>) -> std::fmt::Result {
         self.subnets_change_response.iter().for_each(|subnet_change_response| {
-            println!("{}", subnet_change_response);
+            writeln!("{}", subnet_change_response);
         });
 
         Ok(())
