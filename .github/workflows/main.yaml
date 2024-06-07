@@ -93,6 +93,7 @@ jobs:
             bases/apps/mainnet-dashboard/backend/base/deployment.yaml
             bases/apps/mainnet-dashboard/statefulset-slack.yaml
             bases/apps/service-discovery/service-discovery.yaml
+            gitlab-ci/vector-configs.yaml
           )
           if [[ $changed == "true" ]]; then
             echo "Adding frontend to list of files"
