@@ -67,7 +67,7 @@ async fn main() -> Result<(), anyhow::Error> {
             cursor,
             match cursor.is_empty() {
                 false => 1,
-                true => -1,
+                true => 0,
             },
             30
         );
