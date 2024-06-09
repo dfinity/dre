@@ -117,6 +117,6 @@ impl NodeRemovalReason {
 
 #[derive(Serialize, Deserialize)]
 pub struct HealRequest {
-    pub optimize: Option<usize>,
     pub min_nakamoto_coefficients: Option<MinNakamotoCoefficients>,
+    pub max_replacable_nodes_per_sub: Option<usize>,
 }

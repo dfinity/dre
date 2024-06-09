@@ -192,7 +192,7 @@ pub struct HealResponse {
 impl Display for HealResponse {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         for change in &self.subnets_change_response {
-            writeln!(f,"{}", change)?;
+            writeln!(f, "{}", change)?;
         }
         Ok(())
     }

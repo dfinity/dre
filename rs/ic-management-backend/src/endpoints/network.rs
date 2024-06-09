@@ -40,9 +40,21 @@ async fn heal(request: web::Json<HealRequest>, registry: web::Data<Arc<RwLock<Re
                 .collect::<Vec<_>>();
 
             if !unhealthy.is_empty() {
+                if let Some(x) = request.max_replacable_nodes_per_sub {
+                    if unhealthy.len() > x {
+                        warn!(
+                            "Subnet {} has {} unhealthy nodes\nMax replacable nodes is {} skipping...",
+                            subnet.principal,
+                            unhealthy.len(),
+                            x
+                        );
+                        return None;
+                    }
+                }
                 return Some((subnet.principal, unhealthy));
+            } else {
+                None
             }
-            None
         })
         .collect::<BTreeMap<_, _>>();
 
@@ -53,12 +65,19 @@ async fn heal(request: web::Json<HealRequest>, registry: web::Data<Arc<RwLock<Re
         let change = registry
             .modify_subnet_nodes(SubnetQueryBy::SubnetId(id))
             .await?
-            .with_exclude_nodes(already_added.iter().map(|n: &decentralization::network::Node| n.id.to_string()).collect())
-            .optimize(request.optimize.unwrap_or(0), &unhealthy_nodes)
-            .unwrap();
+            .with_exclude_nodes(already_added.iter().map(|n: &PrincipalId| n.to_string()).collect());
 
-        already_added.extend(change.added());
-        subnets_changed.push(decentralization::SubnetChangeResponse::from(&change));
+        let subnet_change = if let Some(max_replacable_nodes_per_sub) = request.max_replacable_nodes_per_sub {
+            let optimize_buffer = max_replacable_nodes_per_sub - unhealthy_nodes.len();
+
+            change.optimize_with_buffer(optimize_buffer, &unhealthy_nodes)?
+        } else {
+            let not_optimized = change.optimize(0, &unhealthy_nodes)?;
+            decentralization::SubnetChangeResponse::from(&not_optimized)
+        };
+
+        already_added.extend(subnet_change.added.clone());
+        subnets_changed.push(subnet_change);
     }
 
     let heal_response = decentralization::HealResponse {
