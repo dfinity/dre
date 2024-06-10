@@ -3,7 +3,7 @@ use decentralization::HealResponse;
 use decentralization::SubnetChangeResponse;
 use ic_base_types::PrincipalId;
 use ic_management_types::{
-    requests::{MembershipReplaceRequest, NodesRemoveRequest, NodesRemoveResponse, SubnetCreateRequest, SubnetResizeRequest},
+    requests::{HealRequest, MembershipReplaceRequest, NodesRemoveRequest, NodesRemoveResponse, SubnetCreateRequest, SubnetResizeRequest},
     Artifact, Network, NetworkError, Release, TopologyChangeProposal,
 };
 use log::error;

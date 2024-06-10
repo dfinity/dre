@@ -67,8 +67,7 @@ async fn heal(request: web::Json<HealRequest>, registry: web::Data<Arc<RwLock<Re
             .await?
             .with_exclude_nodes(already_added.iter().map(|n: &PrincipalId| n.to_string()).collect());
 
-        let subnet_change = if let Some(max_replacable_nodes_per_sub) = 
-        request.max_replacable_nodes_per_sub {
+        let subnet_change = if let Some(max_replacable_nodes_per_sub) = request.max_replacable_nodes_per_sub {
             let optimize_buffer = max_replacable_nodes_per_sub - unhealthy_nodes.len();
 
             change.optimize_with_buffer(optimize_buffer, &unhealthy_nodes)?
