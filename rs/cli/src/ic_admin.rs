@@ -20,6 +20,7 @@ use regex::Regex;
 use reqwest::StatusCode;
 use serde::Serialize;
 use sha2::{Digest, Sha256};
+use shlex::try_quote;
 use std::collections::BTreeMap;
 use std::fmt;
 use std::fs::File;
@@ -180,16 +181,25 @@ impl IcAdminWrapper {
             cmd.get_args()
                 .map(|s| s.to_str().unwrap().to_string())
                 .fold("".to_string(), |acc, s| {
-                    let s = if s.contains('\n') { format!(r#""{}""#, s) } else { s };
                     let hsm_pin = if let Auth::Hsm { pin, .. } = &auth { pin } else { "" };
                     if hsm_pin == s {
                         format!("{acc} <redacted>")
-                    } else if s.starts_with("--") {
-                        format!("{acc} \\\n    {s}")
-                    } else if !acc.split(' ').last().unwrap_or_default().starts_with("--") {
-                        format!("{acc} \\\n  {s}")
                     } else {
-                        format!("{acc} {s}")
+                        let s = if s.contains('\n') {
+                            format!("'{}'", s.replace('\'', "'\\''"))
+                        } else {
+                            match try_quote(s.as_str()) {
+                                Ok(sss) => sss.to_string(),
+                                Err(_e) => s,
+                            }
+                        };
+                        if s.starts_with("--") {
+                            format!("{acc} \\\n    {s}")
+                        } else if !acc.split(' ').last().unwrap_or_default().starts_with("--") {
+                            format!("{acc} \\\n  {s}")
+                        } else {
+                            format!("{acc} {s}")
+                        }
                     }
                 })
                 .yellow(),
