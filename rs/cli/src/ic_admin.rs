@@ -970,14 +970,13 @@ impl ProposeCommand {
                 vec!["--replica-version-id".to_string(), replica_version.clone()]
             }
             Self::AddApiBoundaryNodes { nodes, version } => [
-                vec!["--nodes".to_string()],
-                nodes.iter().map(|n| n.to_string()).collect::<Vec<_>>(),
+                nodes.iter().flat_map(|n| ["--nodes".to_string(), n.to_string()]).collect::<Vec<_>>(),
                 vec!["--version".to_string(), version.to_string()],
             ]
             .concat(),
-            Self::RemoveApiBoundaryNodes { nodes } => [vec!["--nodes".to_string()], nodes.iter().map(|n| n.to_string()).collect::<Vec<_>>()].concat(),
+            Self::RemoveApiBoundaryNodes { nodes } => nodes.iter().flat_map(|n| ["--nodes".to_string(), n.to_string()]).collect::<Vec<_>>(),
             Self::DeployGuestosToSomeApiBoundaryNodes { nodes, version } => [
-                vec!["--nodes".to_string()],
+                nodes.iter().flat_map(|n| ["--nodes".to_string(), n.to_string()]).collect::<Vec<_>>(),
                 nodes.iter().map(|n| n.to_string()).collect::<Vec<_>>(),
                 vec!["--version".to_string(), version.to_string()],
             ]

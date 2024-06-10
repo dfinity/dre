@@ -13,7 +13,8 @@ concurrency:
 
 jobs:
   msd-diff:
-    runs-on: ubuntu-20.04
+    runs-on:
+      labels: dre-runner-custom
     steps:
       - uses: actions/checkout@v4
         with:
