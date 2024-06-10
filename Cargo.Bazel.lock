@@ -1,5 +1,5 @@
 {
-  "checksum": "91e6a6c9b71afdbf7120bcb3c9ead14e12bb92ae59f99b6024eabe319d4696a4",
+  "checksum": "e5c2553cb5e7ef216889a9b6b25bac1b4c50ba484e36a2f4359ca5d9a82b9a70",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -11278,6 +11278,10 @@
               "target": "futures_util"
             },
             {
+              "id": "humantime 2.1.0",
+              "target": "humantime"
+            },
+            {
               "id": "ic-base-types 0.9.0",
               "target": "ic_base_types"
             },
@@ -11466,6 +11470,10 @@
             {
               "id": "clap_complete 4.5.4",
               "target": "clap_complete"
+            },
+            {
+              "id": "humantime 2.1.0",
+              "target": "humantime"
             },
             {
               "id": "ic-base-types 0.9.0",
