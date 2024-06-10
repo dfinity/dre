@@ -3,7 +3,7 @@ use decentralization::SubnetChangeResponse;
 use ic_base_types::PrincipalId;
 use ic_management_types::{
     requests::{MembershipReplaceRequest, NodesRemoveRequest, NodesRemoveResponse, SubnetCreateRequest, SubnetResizeRequest},
-    Artifact, Network, NetworkError, Release, TopologyProposal,
+    Artifact, Network, NetworkError, Release, TopologyChangeProposal,
 };
 use log::error;
 use serde::de::DeserializeOwned;
@@ -37,7 +37,7 @@ impl DashboardBackendClient {
         }
     }
 
-    pub async fn subnet_pending_action(&self, subnet: PrincipalId) -> anyhow::Result<Option<TopologyProposal>> {
+    pub async fn subnet_pending_action(&self, subnet: PrincipalId) -> anyhow::Result<Option<TopologyChangeProposal>> {
         reqwest::Client::new()
             .get(
                 self.url
