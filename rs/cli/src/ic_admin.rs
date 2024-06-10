@@ -186,7 +186,7 @@ impl IcAdminWrapper {
                         format!("{acc} <redacted>")
                     } else {
                         let s = if s.contains('\n') {
-                            format!("'{}'", s.replace("'", "'\\''"))
+                            format!("'{}'", s.replace('\'', "'\\''"))
                         } else {
                             match try_quote(s.as_str()) {
                                 Ok(sss) => sss.to_string(),
