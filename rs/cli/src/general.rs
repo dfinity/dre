@@ -1,5 +1,6 @@
 use candid::Decode;
 use cycles_minting_canister::SetAuthorizedSubnetworkListArgs;
+use humantime::format_duration;
 use ic_base_types::{CanisterId, PrincipalId};
 use ic_management_types::Network;
 use ic_nervous_system_clients::canister_id_record::CanisterIdRecord;
@@ -68,6 +69,7 @@ pub async fn vote_on_proposals(
     accepted_proposers: &[u64],
     accepted_topics: &[i32],
     simulate: bool,
+    sleep: Duration,
 ) -> anyhow::Result<()> {
     let client: GovernanceCanisterWrapper = match &neuron.get_auth().await? {
         Auth::Hsm { pin, slot, key_id } => CanisterClient::from_hsm(pin.to_string(), *slot, key_id.to_string(), &nns_urls[0])?.into(),
@@ -111,15 +113,18 @@ pub async fn vote_on_proposals(
             voted_proposals.insert(proposal.id.unwrap().id);
         }
 
-        let mut sp = Spinner::with_timer(Spinners::Dots12, "Sleeping 15s before another check for pending proposals...".into());
-        let sleep = tokio::time::sleep(Duration::from_secs(15));
+        let mut sp = Spinner::with_timer(
+            Spinners::Dots12,
+            format!("Sleeping {} before another check for pending proposals...", format_duration(sleep)),
+        );
+        let sleep_func = tokio::time::sleep(sleep);
         tokio::select! {
             _ = tokio::signal::ctrl_c() => {
                 info!("Received Ctrl-C, exiting...");
                 sp.stop();
                 break;
             }
-            _ = sleep => {
+            _ = sleep_func => {
                 sp.stop_with_message("Done sleeping, checking for pending proposals...".into());
                 continue
             }
