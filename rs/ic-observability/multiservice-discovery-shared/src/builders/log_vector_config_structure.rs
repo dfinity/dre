@@ -215,6 +215,7 @@ mod tests {
             operator_id: PrincipalId::new_anonymous(),
             custom_labels: custom_labels.clone(),
             is_api_bn: false,
+            domain: None,
         });
         target_dto.insert(TargetDto {
             node_id: PrincipalId::new_anonymous().into(),
@@ -228,6 +229,7 @@ mod tests {
             operator_id: PrincipalId::new_anonymous(),
             custom_labels: custom_labels.clone(),
             is_api_bn: false,
+            domain: None,
         });
 
         let config = builder.build(target_dto);
