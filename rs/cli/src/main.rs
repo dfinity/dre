@@ -105,14 +105,11 @@ async fn async_main() -> Result<(), anyhow::Error> {
             }
 
             cli::Commands::Heal {
-                min_nakamoto_coefficients,
                 max_replacable_nodes_per_sub,
             } => {
-                let min_nakamoto_coefficients = parse_min_nakamoto_coefficients(&mut cmd, min_nakamoto_coefficients);
                 runner_instance
                     .network_heal(
                         ic_management_types::requests::HealRequest {
-                            min_nakamoto_coefficients,
                             max_replacable_nodes_per_sub: *max_replacable_nodes_per_sub,
                         },
                         cli_opts.verbose,

@@ -3,6 +3,54 @@ use std::collections::BTreeMap;
 use decentralization::{network::SubnetChange, SubnetChangeResponse};
 use ic_base_types::PrincipalId;
 use ic_management_types::{Node, TopologyChangeProposal};
+use crate::health;
+use crate::health::HealthStatusQuerier;
+use tokio::sync::RwLockReadGuard;
+use log::{warn, info};
+use crate::registry::RegistryState;
+
+pub async fn get_unhealthy(
+    registry: &RwLockReadGuard<'_, RegistryState>
+) -> anyhow::Result<BTreeMap<PrincipalId, Vec<decentralization::network::Node>>> {
+    let health_client = health::HealthClient::new(registry.network());
+    let healths = health_client
+        .nodes()
+        .await?;
+
+    let unhealthy_subnets = registry
+        .subnets()
+        .into_iter()
+        .filter_map(|(_, subnet)| {
+            let unhealthy = subnet
+                .nodes
+                .into_iter()
+                .filter_map(|n| match healths.get(&n.principal) {
+                    Some(health) => {
+                        if *health == ic_management_types::Status::Healthy {
+                            None
+                        } else {
+                            info!("Node {} is {:?}", n.principal, health);
+                            Some(n)
+                        }
+                    }
+                    None => {
+                        warn!("Node {} has no known health, assuming unhealthy", n.principal);
+                        Some(n)
+                    }
+                })
+                .map(|n| decentralization::network::Node::from(&n))
+                .collect::<Vec<_>>();
+
+            if !unhealthy.is_empty() {
+                return Some((subnet.principal, unhealthy));
+            } else {
+                None
+            }
+        })
+        .collect::<BTreeMap<_, _>>();
+    
+    Ok(unhealthy_subnets)
+}
 
 pub fn get_proposed_subnet_changes(
     all_nodes: &BTreeMap<PrincipalId, Node>,

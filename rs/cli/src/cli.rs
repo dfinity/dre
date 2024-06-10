@@ -60,12 +60,9 @@ pub enum Commands {
     },
 
     Heal {
-        /// Minimum Nakamoto coefficients after the replacement
-        #[clap(long, num_args(1..))]
-        min_nakamoto_coefficients: Vec<String>,
-
-        /// Max number of nodes to be replaced per subnet
-        /// Optimization will be performed automatically at the best level if possible
+        /// Max number of nodes to be replaced per subnet.
+        /// Optimization will be performed automatically maximizing the decentralization
+        /// and minimizing the number of replaced nodes per subnet
         #[clap(short, long)]
         max_replacable_nodes_per_sub: Option<usize>,
     },
