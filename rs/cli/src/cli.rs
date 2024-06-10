@@ -119,8 +119,6 @@ pub enum Commands {
         accepted_topics: Vec<i32>,
 
         /// Override default sleep time
-        ///
-        /// By default: 60 seconds
         #[clap(long, default_value = "60s", value_parser = parse_duration)]
         sleep_time: Duration,
     },
