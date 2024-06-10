@@ -25,7 +25,8 @@
     "hostname": "br1-dll17",
     "labels": [],
     "version": 19819,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "jqo7y-3eym3-svsv4-pyav3-3ivql-v6ldx-hrri7-5gpnc-lia3e-gta65-xae",
@@ -57,7 +58,8 @@
       }
     ],
     "version": 29140,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "72y3g-ywjin-xysrf-mfn4s-pxv6s-cvorm-shwcz-wqzfk-ps7kn-l4zld-eqe",
@@ -85,7 +87,8 @@
     "hostname": "zh4-72y3g",
     "labels": [],
     "version": 30232,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "5xbjm-5svm7-xhh3g-lce3c-4twof-ml4v6-qsgd7-rmlzq-o37px-bpktw-cqe",
@@ -117,7 +120,8 @@
       }
     ],
     "version": 29154,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "6r4ku-jnjdv-uown7-mn4hb-ietcj-ul75b-syb7l-jebe7-uvwtl-gn4jx-mae",
@@ -145,7 +149,8 @@
     "hostname": "fr2-dll20",
     "labels": [],
     "version": 30076,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "reka2-ejczw-64gz4-2yens-t23p5-pintz-m4nmb-cyt4h-623dw-arkih-5ae",
@@ -173,7 +178,8 @@
     "hostname": "ty3-dll05",
     "labels": [],
     "version": 29065,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "oiuxw-hnhxu-44fwd-xunly-zqk2v-aa7xk-2yvhn-ur2vg-v7r4p-g5onw-4ae",
@@ -200,7 +206,8 @@
     "hostname": "ch2-dll24",
     "labels": [],
     "version": 28631,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "wz2il-qzec7-nd6w6-kztda-2cgyk-4vx3c-okwxe-encty-wkwgt-bb5xm-dqe",
@@ -227,7 +234,8 @@
     "hostname": "tp1-wz2il",
     "labels": [],
     "version": 30109,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "3wrow-olmb5-sztfx-ndg2a-esdn4-ztbqa-35a2y-3lazp-csibs-krua2-wae",
@@ -255,7 +263,8 @@
     "hostname": "lj1-dll21",
     "labels": [],
     "version": 28994,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "qrbce-ycfqr-dbqsy-obdvk-imk3e-5glpw-fifbs-ztxs7-ux57w-pdp6l-7qe",
@@ -282,7 +291,8 @@
     "hostname": "ny1-dll06",
     "labels": [],
     "version": 19949,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "z7xxn-ocenr-7kv3o-vahcd-vbjs5-tzlrl-cm4e4-4pywj-l2mji-2hzsh-pqe",
@@ -309,7 +319,8 @@
     "hostname": "bo1-z7xxn",
     "labels": [],
     "version": 30149,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "3yxxq-b2crw-geimw-4viek-afse5-kqgav-27ogo-rx6nn-37ppb-rspen-iae",
@@ -336,7 +347,8 @@
     "hostname": "bo1-3yxxq",
     "labels": [],
     "version": 30169,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "qk6vy-dep7n-pqlc3-iqr7f-dmkus-six44-oywuc-4oj2s-hh4ap-h6klx-qqe",
@@ -364,7 +376,8 @@
     "hostname": "lj1-dll08",
     "labels": [],
     "version": 29011,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "j4pgm-pu3db-jqdbw-ohdar-gyi4n-fekli-lzb6s-jcqnk-r4oxd-ekeww-lqe",
@@ -391,7 +404,8 @@
     "hostname": "pl1-dll16",
     "labels": [],
     "version": 4500,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "rpfoo-puw5y-a5kch-5zkh7-pdko5-um2fe-dcgf3-c2jrb-sdr7y-x45du-xae",
@@ -423,7 +437,8 @@
       }
     ],
     "version": 29103,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "q6v63-u6qub-iocmw-2fbge-32xwg-ej2yv-efb2h-xcnxm-xunim-3dfl4-tae",
@@ -451,7 +466,8 @@
     "hostname": "aw1-dll14",
     "labels": [],
     "version": 29081,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "c2c2x-ivc7h-w5s32-ozxej-rvg35-6bv7z-wglng-rimrm-jd7tt-jemf4-qae",
@@ -479,7 +495,8 @@
     "hostname": "mb1-dll03",
     "labels": [],
     "version": 28976,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "pvtxy-cub4n-eckib-5emht-rvwez-wkpvz-cuoi2-bph3d-lyrpw-uhy6z-uae",
@@ -507,7 +524,8 @@
     "hostname": "lj1-dll22",
     "labels": [],
     "version": 28995,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "bojmd-363ps-bpdo5-bf34y-pfd7j-zrwez-n2j5r-zfhry-q5sbd-asu4a-fae",
@@ -535,7 +553,8 @@
     "hostname": "fr2-dll16",
     "labels": [],
     "version": 30072,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "r2cll-2ne3n-xkv7y-pa6lg-uwl3w-4hzik-rkv6y-us2ap-kvwjx-veixr-7qe",
@@ -563,7 +582,8 @@
     "hostname": "fr2-dll19",
     "labels": [],
     "version": 30075,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "4ofds-rzlam-d623t-j4b2r-vtjnc-zbtt6-zlcbl-yb5uh-hd5bw-exnsq-bqe",
@@ -591,7 +611,8 @@
     "hostname": "mb1-dll05",
     "labels": [],
     "version": 28978,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "m4qq3-r4ckk-g3oej-ujb66-ww7t7-u7z7q-s5xdg-2hy6j-kwz7w-hdxfl-kae",
@@ -619,7 +640,8 @@
     "hostname": "mb1-dll15",
     "labels": [],
     "version": 28973,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "k4xpo-wtrkf-d2t55-36pht-wzyfu-w6u5y-xab3y-6mb4l-ne7w4-aqxxl-jqe",
@@ -647,7 +669,8 @@
     "hostname": "aw1-dll02",
     "labels": [],
     "version": 29075,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "dr7bu-7nepq-kis6r-7iqk2-7na3m-wrgv3-5neic-o77d3-4xlak-5jowj-tae",
@@ -674,7 +697,8 @@
     "hostname": "bo1-dr7bu",
     "labels": [],
     "version": 30171,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "6gitt-iw3yg-xqld3-bsue5-ett4q-vk2z4-ppjk5-3w4nw-tavjg-tjkmj-xae",
@@ -702,7 +726,8 @@
     "hostname": "fr2-dll13",
     "labels": [],
     "version": 30069,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "r2h7s-fujcc-6ujll-vfuoo-ntwvt-q2pba-byman-aq5ap-nlbxq-d7y53-fqe",
@@ -730,7 +755,8 @@
     "hostname": "zh5-dll09",
     "labels": [],
     "version": 28222,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "5zctz-l3vuz-kr6ri-d6g3h-n5mm6-hshfe-hbooy-e4gbs-2mfmp-6peso-sae",
@@ -758,7 +784,8 @@
     "hostname": "zh5-dll10",
     "labels": [],
     "version": 28223,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "b7ldm-xgdir-7eraz-sws5m-tzstj-clkrl-hs444-ty5nj-qnkrx-nofhs-hae",
@@ -786,7 +813,8 @@
     "hostname": "tp1-b7ldm",
     "labels": [],
     "version": 30210,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "vsra4-xeixj-fpwtj-qs4m6-hijj4-zlopd-wcrgb-gyyhx-eu5gy-fbsea-fae",
@@ -814,7 +842,8 @@
     "hostname": "tp1-vsra4",
     "labels": [],
     "version": 30213,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "j63ts-vgq4q-ey6qr-liocb-4c5oy-lk4q5-4hcez-ljzox-otipm-oqbbz-rae",
@@ -842,7 +871,8 @@
     "hostname": "mb1-dll14",
     "labels": [],
     "version": 28987,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "cyygy-pjktz-er6di-dhaal-dvzjt-g2n2b-7yr2b-qqgwy-dvhxf-7gavz-5ae",
@@ -869,7 +899,8 @@
     "hostname": "lv1-dll11",
     "labels": [],
     "version": 18676,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "q2ddd-5rt3s-e74uc-bmg2y-bhnez-3dmtq-dulsw-3ruuq-zthhs-uinys-kae",
@@ -897,7 +928,8 @@
     "hostname": "sj1-dll14",
     "labels": [],
     "version": 20032,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "jlaro-trdid-iy4mr-ad6y6-wfip5-sr2vy-y42ga-mrkm4-mpb2v-ntokg-3ae",
@@ -925,7 +957,8 @@
     "hostname": "aw1-dll26",
     "labels": [],
     "version": 29123,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "zmn2a-uzq7f-te3cg-6xejo-twgcs-dwlbg-wpo2g-p7a54-3vmg5-blj72-pae",
@@ -952,7 +985,8 @@
     "hostname": "bo1-zmn2a",
     "labels": [],
     "version": 30150,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "gnqsr-ybfew-meuv2-jexr3-36uwj-swzf2-nwqpv-vvscp-j547i-vwcvb-oqe",
@@ -980,7 +1014,8 @@
     "hostname": "lj1-dll04",
     "labels": [],
     "version": 29007,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "cn4cr-umbnu-h6zrp-intcx-s3ci3-ndz5x-xwuta-mjmhw-lnw2z-5otqe-4qe",
@@ -1008,7 +1043,8 @@
     "hostname": "zh4-cn4cr",
     "labels": [],
     "version": 30220,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "mcuif-gsq23-uz6rg-orv2c-e2bks-4jf5n-st7fx-snwak-25u6d-gvhjl-mae",
@@ -1036,7 +1072,8 @@
     "hostname": "mb1-dll09",
     "labels": [],
     "version": 28982,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "mntgx-pz7b3-jhycf-txj4i-4jxsd-ptoql-uj4ce-mz7ax-asqex-isyz2-lqe",
@@ -1069,7 +1106,8 @@
       }
     ],
     "version": 30078,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "j3yvw-c7r2f-7yzif-mkj2v-bbnnh-fovgj-fsekv-jtpee-gz37t-diejc-qae",
@@ -1101,7 +1139,8 @@
       }
     ],
     "version": 29152,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "lo4ax-2b2fx-3l3qa-znidr-enalq-pwoep-b56jl-cxtif-dahfa-tgxdn-2qe",
@@ -1128,7 +1167,8 @@
     "hostname": "dl1-dll01",
     "labels": [],
     "version": 22,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "bwzs3-j4ubm-txjfj-zw6nu-2rjxo-he6wc-7jeoi-3mljg-itit2-slgq7-2ae",
@@ -1155,7 +1195,8 @@
     "hostname": "ch2-dll03",
     "labels": [],
     "version": 28077,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "poffs-zghwl-dqlut-o2hnr-x2amw-hqax6-wvorb-ckl2g-wi2ea-hdkk4-fqe",
@@ -1183,7 +1224,8 @@
     "hostname": "mb1-dll19",
     "labels": [],
     "version": 28969,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "4pfsf-b6hks-5bvpb-ezgwd-4fx3n-zmnd6-w5v6n-p2mht-ewn4s-yjfwj-xae",
@@ -1210,7 +1252,8 @@
     "hostname": "bo1-4pfsf",
     "labels": [],
     "version": 30152,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "zrl6x-yjetl-ttdnl-xnfox-5mbg5-lhqmi-nr6k5-qdrew-eog6p-napdd-qqe",
@@ -1238,7 +1281,8 @@
     "hostname": "fr2-dll17",
     "labels": [],
     "version": 30073,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "c7rng-wfzhg-fgfvc-rcehf-7viuc-5unqx-ljrvt-3b6ru-efstk-reqyn-6qe",
@@ -1266,7 +1310,8 @@
     "hostname": "mb1-dll26",
     "labels": [],
     "version": 28961,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "aojzp-k5xnm-hai4z-7s2vz-nad6g-4pens-ivn7s-32rj7-rjzqd-rdj6f-mae",
@@ -1294,7 +1339,8 @@
     "hostname": "lj1-dll26",
     "labels": [],
     "version": 29000,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "2ti3w-j3mu2-g6dxb-nft73-nne4d-xag55-q4ab5-qssyz-57pvy-k3nnw-3qe",
@@ -1322,7 +1368,8 @@
     "hostname": "at1-spm02",
     "labels": [],
     "version": 28260,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "omcox-242ba-emlnd-7q3th-f7qh6-jlhw7-vkjvg-fzvbf-splbv-kvw6g-7ae",
@@ -1350,7 +1397,8 @@
     "hostname": "ty3-dll07",
     "labels": [],
     "version": 29063,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "4h7sv-6zddv-mymws-zgsk3-we4lx-mdxgg-qenoi-ojj4o-dvlwe-j3o3q-5qe",
@@ -1378,7 +1426,8 @@
     "hostname": "zh5-dll26",
     "labels": [],
     "version": 28241,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "hbq5x-ekn6c-bpmf3-22o73-2c7mf-2usjm-nfmva-auaxt-2lftt-ymj2i-2ae",
@@ -1406,7 +1455,8 @@
     "hostname": "tp1-hbq5x",
     "labels": [],
     "version": 30212,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "m3spr-23znw-fz7dn-hc63a-vj4j4-trxfw-myz4l-6ebuh-bngbn-tsqpo-rae",
@@ -1434,7 +1484,8 @@
     "hostname": "aw1-dll08",
     "labels": [],
     "version": 29082,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "lgpoe-kyrtu-ksjxp-2svql-2dgsd-xwitl-z2dri-z7q4x-qi6kn-c7gr5-yqe",
@@ -1462,7 +1513,8 @@
     "hostname": "fr2-dll02",
     "labels": [],
     "version": 30059,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "xajwe-ixnxz-buasu-pge3d-w6sac-zlp4o-5ejoh-qovlr-n25mc-r7axf-fae",
@@ -1494,7 +1546,8 @@
       }
     ],
     "version": 29143,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "kub3n-n4nyj-igqjo-xjyj3-l6xo3-7lfrf-f3w5z-fdg3l-hhlqv-erfkp-3qe",
@@ -1522,7 +1575,8 @@
     "hostname": "mb1-dll16",
     "labels": [],
     "version": 28972,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "g4ws6-2l3vg-wtkwb-oztb6-xicii-jiii6-7ovxu-6qgds-7zag7-atpam-nqe",
@@ -1554,7 +1608,8 @@
       }
     ],
     "version": 29158,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "jv5oz-w37mr-glesk-q6znb-xa5bv-egwhd-qhgpx-kdy5v-4ttea-ocx5v-zae",
@@ -1582,7 +1637,8 @@
     "hostname": "lj1-dll20",
     "labels": [],
     "version": 28993,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "stooc-eub2v-4hldg-5kwjo-6zoti-4jgrg-4ejru-urnk5-7wkh6-e6rdl-sqe",
@@ -1609,7 +1665,8 @@
     "hostname": "ch2-dll18",
     "labels": [],
     "version": 28079,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "vipr5-65kvt-fe67g-uo753-u76xv-4ggmf-jzcrx-k7gjs-4dpt3-pny62-3qe",
@@ -1637,7 +1694,8 @@
     "hostname": "at2-dll23",
     "labels": [],
     "version": 28130,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "mvwcl-mamq7-rinul-kqy2x-4jrhu-5aggi-zjjxz-efcgo-u6mda-nytzw-uae",
@@ -1665,7 +1723,8 @@
     "hostname": "fr2-dll05",
     "labels": [],
     "version": 30062,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "2c36x-hcygl-optie-4vcc7-cap2w-ijuvr-lmbij-u5lh3-bydgj-vnqgg-sae",
@@ -1692,7 +1751,8 @@
     "hostname": "bo1-2c36x",
     "labels": [],
     "version": 30170,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "5jpnm-grple-2o7ci-icnoc-iy2fe-zonzg-3vink-aldbp-s2nys-wtptf-uae",
@@ -1720,7 +1780,8 @@
     "hostname": "fr2-dll06",
     "labels": [],
     "version": 30063,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "e5ayq-yje6w-isuip-gzdzx-nnivk-3in6x-ham7f-fqvfq-nmcz5-ex4y4-aqe",
@@ -1748,7 +1809,8 @@
     "hostname": "mb1-dll24",
     "labels": [],
     "version": 28959,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "ytcq7-sobyk-3qt4m-s2v3k-u6vts-u3cfw-5fcvc-3fswc-zmigs-qyv3w-pae",
@@ -1776,7 +1838,8 @@
     "hostname": "fr2-dll07",
     "labels": [],
     "version": 30064,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "rmodl-3w7fg-66wug-kmigc-hwvg2-gmyyb-zglpv-m5vql-6t3iw-5qkx5-rqe",
@@ -1804,7 +1867,8 @@
     "hostname": "fr2-dll01",
     "labels": [],
     "version": 30058,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "fg2f4-y2fwu-of6ax-n5nuf-o7p3v-inetr-due5f-ktzve-dqofp-vhhsa-rqe",
@@ -1836,7 +1900,8 @@
       }
     ],
     "version": 29141,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "slrcv-jbees-xense-funsd-2c2yj-jahgk-gy3bg-55ctd-equud-m2e6i-yae",
@@ -1868,7 +1933,8 @@
       }
     ],
     "version": 29101,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "wn6mg-vgo3q-kj44j-7d7yw-warp2-zgouk-adqt3-tacbm-enms7-ahtmx-zqe",
@@ -1896,7 +1962,8 @@
     "hostname": "fr2-dll14",
     "labels": [],
     "version": 30070,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "arizm-7m2c5-weboj-gfxj5-ruyxk-ns4pn-zdw3i-oszdi-25ynb-ivraf-wqe",
@@ -1924,7 +1991,8 @@
     "hostname": "tp1-arizm",
     "labels": [],
     "version": 30193,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "vno7e-jotp2-rw6ji-rebnm-e6h4x-r3quy-g7kjf-rdm56-ifrq3-vyrnj-mqe",
@@ -1952,7 +2020,8 @@
     "hostname": "tp1-vno7e",
     "labels": [],
     "version": 30211,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "al7bn-4f5wo-lnaie-i7vqw-ehl57-rzpzb-3mids-bdgzy-nydnc-cr2r7-5ae",
@@ -1979,7 +2048,8 @@
     "hostname": "dl1-dll21",
     "labels": [],
     "version": 18690,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "lu5yp-yv65t-ot3qm-x6sb5-oxzzh-q6mav-l4buj-hf4je-qa6df-4bhcm-5qe",
@@ -2011,7 +2081,8 @@
       }
     ],
     "version": 29138,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "dxcry-2t7eb-h6cbp-d4jme-icjux-etytd-5tpxl-243ph-cgz3s-qx65z-sae",
@@ -2039,7 +2110,8 @@
     "hostname": "br1-dll15",
     "labels": [],
     "version": 29395,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "luddp-dao2e-4zdg4-bjjra-p34gm-gxept-y3uzf-li6ks-p2br7-gywxz-nae",
@@ -2067,7 +2139,8 @@
     "hostname": "mb1-dll06",
     "labels": [],
     "version": 28979,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "emcsp-moban-gcuta-pz5ms-tsrkh-ltbye-vhnsv-cbd3g-v6ckn-hdgc2-vae",
@@ -2095,7 +2168,8 @@
     "hostname": "lj1-dll17",
     "labels": [],
     "version": 28990,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "a3f3e-t5m3h-v76pl-vlrur-eb3xn-gwmoc-5kto4-xtlyy-3uiw2-ljfpm-xqe",
@@ -2127,7 +2201,8 @@
       }
     ],
     "version": 29104,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "xrf43-2m2z7-oxfz7-ewlmw-jagnj-5hsnd-wnxw4-yq3vk-wqs2e-dlqh3-cae",
@@ -2154,7 +2229,8 @@
     "hostname": "bo1-xrf43",
     "labels": [],
     "version": 30172,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "lkdtm-rg4qm-z4sqx-3s6ai-f2pgl-tlobg-t3tgz-axpdx-fodbb-bk5l3-6ae",
@@ -2181,7 +2257,8 @@
     "hostname": "ch2-dll02",
     "labels": [],
     "version": 28161,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "futgi-luzdl-ouofl-6djwf-qzvan-lmfiv-anipe-ujak7-owdii-l63c2-qae",
@@ -2213,7 +2290,8 @@
       }
     ],
     "version": 29155,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "sgenk-5e6qe-jrlfb-phzzi-5f6jj-5saw2-5jbcl-2kjyr-zxh3k-dqnrh-qqe",
@@ -2245,7 +2323,8 @@
       }
     ],
     "version": 29160,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "ftwbu-atcs2-fgmyz-ptgvf-z5pnh-va2vd-bz3rw-jxo2g-gie6h-7qikt-wae",
@@ -2273,7 +2352,8 @@
     "hostname": "aw1-dll04",
     "labels": [],
     "version": 29077,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "wzjqy-va7bo-wy4iy-6cyw3-wt2eu-7oxk3-c6hak-bwx6u-gfcxh-fmtvo-sqe",
@@ -2301,7 +2381,8 @@
     "hostname": "ge1-dll11",
     "labels": [],
     "version": 21820,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "5mjgn-venf6-zgg4l-6dzgn-l72eg-nqeej-q4g5h-yllze-g4esa-6dbbh-uae",
@@ -2329,7 +2410,8 @@
     "hostname": "aw1-dll22",
     "labels": [],
     "version": 29119,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "f7e37-eitsj-vncbg-bv3q7-eiyjj-3bnfc-ukwbd-nu7pc-36tnk-duayp-7ae",
@@ -2356,7 +2438,8 @@
     "hostname": "lv1-dll10",
     "labels": [],
     "version": 28716,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "hk643-7njzd-saa2h-ee66h-bjukh-ba4aa-c5ptf-3pv6r-f4rpj-til3s-vqe",
@@ -2384,7 +2467,8 @@
     "hostname": "lj1-dll16",
     "labels": [],
     "version": 28989,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "25p5a-3yzir-ifqqt-5lggj-g4nxg-v2qe2-vxw57-qkxtd-wjohn-kfbfp-bqe",
@@ -2416,7 +2500,8 @@
       }
     ],
     "version": 29109,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "xh47h-jylvs-5w5wp-6tiuv-5a6wp-wmrtm-auic6-5ktb2-aagfy-54554-yae",
@@ -2443,7 +2528,8 @@
     "hostname": "lv1-dll03",
     "labels": [],
     "version": 5086,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "vfkbe-vxsle-4yrym-zmjit-igwdk-jzn3k-ojd7y-ueddh-dzruv-hodt7-4qe",
@@ -2471,7 +2557,8 @@
     "hostname": "zh7-dll10",
     "labels": [],
     "version": 28209,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "r7gj6-ygehu-ftl65-43zzu-q6637-h4lc2-3zg4y-tngr6-dzg3n-ksr5x-wqe",
@@ -2504,7 +2591,8 @@
       }
     ],
     "version": 30077,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "skill-oufks-5al74-s2p6j-52mem-ahpqn-famkt-4aqnw-qfvur-nw4sv-aae",
@@ -2536,7 +2624,8 @@
       }
     ],
     "version": 29137,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "o273k-3o4lq-4nh4q-ofhol-bwrzn-or2oe-gjqqf-s7buc-d4aar-trpuq-3ae",
@@ -2563,7 +2652,8 @@
     "hostname": "ny1-dll12",
     "labels": [],
     "version": 7297,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "enmqj-alzc2-az4rv-d5bux-sdd5s-ahqxz-ckldd-umprd-f3ku6-md7yq-oae",
@@ -2590,7 +2680,8 @@
     "hostname": "jv1-dll09",
     "labels": [],
     "version": 28271,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "j5w2q-6t3xo-hqqms-fhm2x-fsovk-dueje-gnopo-tc575-pikqv-sovqa-7ae",
@@ -2618,7 +2709,8 @@
     "hostname": "ty3-dll11",
     "labels": [],
     "version": 29059,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "snz3p-zca6k-d4v2b-ezfsw-g77pi-fahae-xfjc4-5lezl-woyek-n43s2-zae",
@@ -2646,7 +2738,8 @@
     "hostname": "or1-dll08",
     "labels": [],
     "version": 14678,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "3likf-ymftb-azbr6-6mi3x-wrs3b-h2fuq-wi3xz-27y5c-yejed-6cz7s-gqe",
@@ -2673,7 +2766,8 @@
     "hostname": "ch2-dll16",
     "labels": [],
     "version": 19954,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "4ssyd-l6gfl-63ofo-nusym-7senw-2w7tt-5kuw2-6k4ry-2b7re-6jw76-wae",
@@ -2701,7 +2795,8 @@
     "hostname": "aw1-dll16",
     "labels": [],
     "version": 29113,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "mhl7x-zwcgd-bm7ft-5r35x-euw6d-ea5kt-urkma-656z5-yfdma-pweri-iae",
@@ -2733,7 +2828,8 @@
       }
     ],
     "version": 29089,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "fkr5f-bgjtr-wjrjp-xfbvq-zosc4-6a5f5-kz6id-isc7j-4ewkb-hn6hp-wae",
@@ -2761,7 +2857,8 @@
     "hostname": "aw1-dll10",
     "labels": [],
     "version": 29099,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "dojdl-hcvkt-36oxk-mggms-5efwp-5y4xs-mgewa-h4jce-szv36-w4gfm-uqe",
@@ -2789,7 +2886,8 @@
     "hostname": "zh5-dll12",
     "labels": [],
     "version": 28225,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "emyjf-4y2iw-7wlki-56hok-77lmz-r6oes-cobpy-uceel-yohqd-h4zyj-hae",
@@ -2821,7 +2919,8 @@
       }
     ],
     "version": 29157,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "hklnm-qfwad-56fg3-dt2ej-rd57u-fuljj-o5ytf-zqcpi-by6du-4gjpq-4qe",
@@ -2849,7 +2948,8 @@
     "hostname": "aw1-dll21",
     "labels": [],
     "version": 29118,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "5ki4e-zhle5-nz6uq-7h636-ai4ae-662zz-qzqxm-nuxxk-3kbs3-aufqj-yae",
@@ -2877,7 +2977,8 @@
     "hostname": "an1-dll21",
     "labels": [],
     "version": 30017,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "ygyfp-sn75j-4fr6n-xbrmq-45g2s-yjpxf-3toyk-e7nmc-bm6vj-iqb42-mqe",
@@ -2909,7 +3010,8 @@
       }
     ],
     "version": 29156,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "gah4b-ofdwj-u4p4k-qjwav-l2gbi-6ocoo-ue5xa-w6hs3-6gxuf-oarca-sqe",
@@ -2937,7 +3039,8 @@
     "hostname": "lj1-dll27",
     "labels": [],
     "version": 29001,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "ba3is-sedlo-u5jpy-ds5zf-vqtt4-yfy5s-axa3k-c2bdv-gs353-i62s5-eae",
@@ -2965,7 +3068,8 @@
     "hostname": "lj1-dll10",
     "labels": [],
     "version": 29013,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "275pf-b5q7e-rwldr-yhw3h-wy6yn-y3wxa-n3sq3-u3w6g-ssaod-c727r-tqe",
@@ -2992,7 +3096,8 @@
     "hostname": "zh2-275pf",
     "labels": [],
     "version": 30016,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "jqvwb-7qvwp-cvheb-zadda-ph5a2-uyzhc-j6aiv-htlan-sg3pz-k3cgk-lqe",
@@ -3020,7 +3125,8 @@
     "hostname": "fr2-dll09",
     "labels": [],
     "version": 30066,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "tbrqy-hvi5g-qvuuk-nvmti-n7kvw-stfog-7zxgr-oyils-4xdvd-vsmra-wae",
@@ -3048,7 +3154,8 @@
     "hostname": "zh5-dll13",
     "labels": [],
     "version": 28226,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "ljwwj-hlurh-ftgpu-monl4-n3kuo-tvafx-uo5b5-cnrel-74zmv-tkr73-cqe",
@@ -3075,7 +3182,8 @@
     "hostname": "dl1-dll07",
     "labels": [],
     "version": 18689,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "vrzl5-vk76s-g7irn-aicc6-ndvlp-34qly-sool3-ufkqv-j7z7b-2o6ge-dae",
@@ -3103,7 +3211,8 @@
     "hostname": "aw1-dll18",
     "labels": [],
     "version": 29115,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "4oio7-zc6oe-pyzzr-i5yt6-kga2l-gbqkh-qasag-ngaog-i2uhm-q35em-yqe",
@@ -3131,7 +3240,8 @@
     "hostname": "mu1-dll23",
     "labels": [],
     "version": 10635,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "wrpv4-hicpc-3qpm5-ud66l-xpvws-s3b7g-2ku7h-kpdko-bpl2u-yurkw-wae",
@@ -3159,7 +3269,8 @@
     "hostname": "aw1-dll13",
     "labels": [],
     "version": 29111,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "uh36g-chhei-ecn54-h5noz-nobfy-qznqb-cxmsu-6l7z3-zn4nb-sh375-7ae",
@@ -3186,7 +3297,8 @@
     "hostname": "bo1-uh36g",
     "labels": [],
     "version": 30153,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "cvvhf-rzxqx-empau-vvlsc-7ijj6-5ma53-xzi25-kbart-rektf-fkemg-rqe",
@@ -3214,7 +3326,8 @@
     "hostname": "zh5-dll16",
     "labels": [],
     "version": 28229,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "o5mpn-b5fir-yuc55-gw6ei-4ukvn-3vlv2-ho6lf-qcuw5-ugjya-xyrdp-6qe",
@@ -3242,7 +3355,8 @@
     "hostname": "zh5-dll06",
     "labels": [],
     "version": 28219,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "m3ht5-pfbhe-hx5pq-tnk6m-l4h2w-wk7ko-xq7ud-4pzli-v27bd-tvsgr-gae",
@@ -3274,7 +3388,8 @@
       }
     ],
     "version": 29139,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "lwyfm-kka4f-olslz-qbc4d-mxxmb-2hyg5-kl62s-ds3kz-pvcrq-z6adg-yae",
@@ -3302,7 +3417,8 @@
     "hostname": "zh5-dll28",
     "labels": [],
     "version": 28243,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "m4euo-uywfw-wipca-fjtlx-bh4td-hkxaf-5v7fe-y2zor-vdg5j-k2oxd-qae",
@@ -3330,7 +3446,8 @@
     "hostname": "aw1-dll24",
     "labels": [],
     "version": 29121,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "cyi62-qnxh4-ttmtt-d7bqr-arumw-qukbq-vwe7i-gvi3s-24ihq-c5yks-kae",
@@ -3358,7 +3475,8 @@
     "hostname": "mb1-dll12",
     "labels": [],
     "version": 28985,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "tbiyf-drfgw-sgsfi-j7pp3-4gg5m-rhgqt-zex2f-zrbey-kwkph-b37or-5ae",
@@ -3385,7 +3503,8 @@
     "hostname": "pl1-dll15",
     "labels": [],
     "version": 4479,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "zv2ai-5fcfm-kcz6b-jgvnl-d5mc3-27ckx-zjlqo-gbbpz-i53tn-iojdd-2qe",
@@ -3413,7 +3532,8 @@
     "hostname": "at2-dll19",
     "labels": [],
     "version": 28126,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "2ub67-fqpex-w6x7n-m5f7e-c73ma-esl6j-mbeb2-eil3a-waswj-oiddt-fqe",
@@ -3441,7 +3561,8 @@
     "hostname": "fr2-dll04",
     "labels": [],
     "version": 30061,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "irghu-x4cc5-5fzeg-svtny-5gkm5-vbcuo-cx5hd-35m5n-exwxp-7hrko-2ae",
@@ -3469,7 +3590,8 @@
     "hostname": "zh3-dll07",
     "labels": [],
     "version": 28188,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "vpt2o-2svyb-oftdp-epytk-uia7s-sh65m-kjffh-nn67e-4cxij-upgnc-6qe",
@@ -3501,7 +3623,8 @@
       }
     ],
     "version": 29102,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "dr2hr-pu4y2-mucxc-ihwbx-a2v4o-jxybs-npgr7-kqt3q-2xbcm-tvoyf-7qe",
@@ -3529,7 +3652,8 @@
     "hostname": "mb1-dll18",
     "labels": [],
     "version": 28970,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "6tsik-idt33-u5tg5-tuux3-2t5vf-id3fb-ander-stb4e-rqlts-ctfbz-5ae",
@@ -3557,7 +3681,8 @@
     "hostname": "zh5-dll22",
     "labels": [],
     "version": 28237,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "67anm-2rvoy-hqt74-iug6o-fgqfq-ze4mw-2gp6w-64cv7-lpr5v-6jp5h-yae",
@@ -3585,7 +3710,8 @@
     "hostname": "mb1-dll04",
     "labels": [],
     "version": 28977,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "ik2xz-22oxs-cglh5-5ehp4-fyqsl-hcvyt-a3aqy-juqtf-7gg5b-fqjst-zqe",
@@ -3613,7 +3739,8 @@
     "hostname": "aw1-dll19",
     "labels": [],
     "version": 29116,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "dobfl-rqbzm-fvi4t-vjsbt-ywmj2-zzjrf-eqvif-m5uki-luut2-362l3-6ae",
@@ -3640,7 +3767,8 @@
     "hostname": "jv1-dll14",
     "labels": [],
     "version": 19947,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "se2rs-vutn6-iaeyv-sgep3-vnrkc-wtcwu-2oqa2-5ccoq-nasa4-vs2rs-dae",
@@ -3668,7 +3796,8 @@
     "hostname": "aw1-dll27",
     "labels": [],
     "version": 29124,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "f3bbt-7mc66-h7rk4-3vbir-5uash-xqhff-tdwuo-mi2mr-57chl-nw2hl-aae",
@@ -3696,7 +3825,8 @@
     "hostname": "lj1-dll12",
     "labels": [],
     "version": 29015,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "yfuxg-b5fwu-amxny-gtjuu-3dyuc-rtlct-zduom-2z3j7-qn6zu-m26ld-nqe",
@@ -3724,7 +3854,8 @@
     "hostname": "aw1-dll28",
     "labels": [],
     "version": 29125,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "xbxb5-asqfe-75x4l-6urlm-2u7p2-lbhjp-ie2s3-iys6h-7zw4t-2hzuo-rqe",
@@ -3751,7 +3882,8 @@
     "hostname": "bo1-xbxb5",
     "labels": [],
     "version": 30174,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "it3jb-gmmvk-za75m-2aenf-zwzz5-6brnd-rkibn-b5w3f-nkjc5-ijcts-uae",
@@ -3779,7 +3911,8 @@
     "hostname": "zh5-dll07",
     "labels": [],
     "version": 28220,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "4mikk-zikes-xw75y-odnkq-3uuh6-hqk33-thxji-znx52-hnyzv-55pk2-iae",
@@ -3807,7 +3940,8 @@
     "hostname": "zh3-dll06",
     "labels": [],
     "version": 28187,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "3djnb-oh7zn-qrpij-apfjc-oi6kx-se4kg-tv2sh-jrwmg-qvqt7-eldtj-xae",
@@ -3834,7 +3968,8 @@
     "hostname": "bo1-3djnb",
     "labels": [],
     "version": 30151,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "l4pj5-fvrpe-ld7bl-rki6r-zpwhg-jaual-tmcib-5fhbq-vvius-cdxzo-7qe",
@@ -3861,7 +3996,8 @@
     "hostname": "pl1-dll05",
     "labels": [],
     "version": 26978,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "eaxcc-kjyo6-x5up4-4rifb-ylmdv-m655i-jbl2r-sjk4k-k6vtw-yksvt-dae",
@@ -3888,7 +4024,8 @@
     "hostname": "jv1-dll08",
     "labels": [],
     "version": 4458,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "2cdp4-vnes7-h3luw-mmiz5-p37op-a5hti-lb2om-3ttdc-lqlu7-cinvr-4ae",
@@ -3920,7 +4057,8 @@
       }
     ],
     "version": 29108,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "36mz5-kkuj7-wddxm-df6gw-iezwz-nkuxk-lzlkt-bvigr-xpuxl-n7fez-bae",
@@ -3948,7 +4086,8 @@
     "hostname": "fr2-dll08",
     "labels": [],
     "version": 30065,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "fldsn-4zln3-yho6j-xpjqe-w5rz6-gv6t7-h2wx3-jjgxn-zuqn6-dtnlm-vqe",
@@ -3976,7 +4115,8 @@
     "hostname": "aw1-dll05",
     "labels": [],
     "version": 29078,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "vcofu-mipg6-ogayn-wh6f3-sfubm-mnvlu-2qtdi-nwg7v-262qp-3dlwq-6ae",
@@ -4004,7 +4144,8 @@
     "hostname": "mb1-dll21",
     "labels": [],
     "version": 28967,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "4ku5v-fkar5-pgsn4-5ueex-lsymu-kgdqm-fw6dn-2z63c-epjqf-7t4qx-nqe",
@@ -4032,7 +4173,8 @@
     "hostname": "zh5-dll05",
     "labels": [],
     "version": 28218,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "z7xpr-a4vyb-xmct4-shn7h-uugdt-gpj7m-czu53-v5j4m-zanci-uswpu-4qe",
@@ -4060,7 +4202,8 @@
     "hostname": "zh5-dll20",
     "labels": [],
     "version": 28235,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "uhwmj-pi346-onryp-4627j-6me7w-cxo5w-xwubu-y5w5c-6xgdk-jizlf-hae",
@@ -4092,7 +4235,8 @@
       }
     ],
     "version": 29153,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "w3rn2-ke5dt-clo3k-o4jox-hy6oi-i56dk-uuhov-olbuo-lt2pn-gjhhk-3qe",
@@ -4120,7 +4264,8 @@
     "hostname": "ty3-dll08",
     "labels": [],
     "version": 29062,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "u2vk2-auwge-cefnj-i5qcg-ynoad-hya43-32z4y-ehkbl-pb3on-4yqyw-4qe",
@@ -4148,7 +4293,8 @@
     "hostname": "aw1-dll20",
     "labels": [],
     "version": 29117,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "vta6j-oklqt-ts3t6-7ezvx-wicbc-khh63-ujzvf-m5oqf-bprx4-q3gdl-iqe",
@@ -4180,7 +4326,8 @@
       }
     ],
     "version": 29136,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "dquv2-un7ay-ivsnd-fomd3-drtgo-o7pbz-kzavx-dsz52-ikrfi-4tfk7-kae",
@@ -4207,7 +4354,8 @@
     "hostname": "jv1-dll06",
     "labels": [],
     "version": 19945,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "4kv7b-ieoae-v2wna-3rsf7-azqn4-svuk6-iw7qx-b3wqb-vsdix-azfzp-aae",
@@ -4235,7 +4383,8 @@
     "hostname": "fr2-dll03",
     "labels": [],
     "version": 30060,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "4kb52-ac75q-rqhiz-3sc4f-eyfzi-jxr6r-b6zan-d5eln-y5hl4-p7aom-tqe",
@@ -4263,7 +4412,8 @@
     "hostname": "aw1-dll11",
     "labels": [],
     "version": 29100,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "lm5jc-gbsqr-poh23-m6bqa-6choz-pn7tk-pjkdb-5uqo5-ckhe7-izl3t-aqe",
@@ -4291,7 +4441,8 @@
     "hostname": "aw1-dll23",
     "labels": [],
     "version": 29120,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "zqzju-76axr-77sap-iuszc-lddnu-dy4zw-khe4g-fxue6-krlxa-ec2gd-cqe",
@@ -4318,7 +4469,8 @@
     "hostname": "bo1-zqzju",
     "labels": [],
     "version": 30173,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "xcmib-stby7-cpgfu-2y2l4-6t266-6iiqz-yvtee-j3o2z-4up2y-csqp5-7qe",
@@ -4346,7 +4498,8 @@
     "hostname": "an1-dll04",
     "labels": [],
     "version": 5072,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "prqw5-fv33q-kfpus-ano2k-eiqei-y2reh-hn7c3-gisdi-r3se4-iw5ks-3ae",
@@ -4374,7 +4527,8 @@
     "hostname": "mb1-dll11",
     "labels": [],
     "version": 28984,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "yhlrd-2oa4s-mtbtk-u5fva-szsyt-iptiu-a36sq-dy3qn-zdlcy-6i4d7-cqe",
@@ -4402,7 +4556,8 @@
     "hostname": "lj1-dll06",
     "labels": [],
     "version": 29009,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "dmftb-xzino-6yh7c-tfcne-hhzfl-xsjpk-ktcxi-kn4hj-loqn6-4ktyx-4qe",
@@ -4430,7 +4585,8 @@
     "hostname": "zh5-dll17",
     "labels": [],
     "version": 28230,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "rs3iq-4n2yp-nfpi4-qvpde-7zaxw-u2bmm-x6oxq-etkbf-2d6li-ij7zf-qae",
@@ -4457,7 +4613,8 @@
     "hostname": "pl1-dll02",
     "labels": [],
     "version": 26974,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "ddfrl-tl32f-kcced-zgo5a-nfx76-ymrao-6mnpg-ufs3h-ehaff-yrydk-4ae",
@@ -4485,7 +4642,8 @@
     "hostname": "aw1-dll25",
     "labels": [],
     "version": 29122,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "nflkw-lo5to-wx67m-zmqhm-mnsfn-zqinu-3xl7h-jhrua-xfc35-d56y4-iae",
@@ -4513,7 +4671,8 @@
     "hostname": "fr2-dll18",
     "labels": [],
     "version": 30074,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "kwmia-njq7d-rovm3-s4ih6-d24rn-h3oap-gqfjl-oe5bx-gywk4-hrdjq-cae",
@@ -4541,7 +4700,8 @@
     "hostname": "mb1-dll27",
     "labels": [],
     "version": 28962,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "bkx5e-3yvru-5julf-vs6iy-ttxxs-mgwpa-odqim-4hkay-um4c3-cda7u-iqe",
@@ -4569,7 +4729,8 @@
     "hostname": "br1-dll16",
     "labels": [],
     "version": 19818,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "rvnib-y6jir-4fjpw-rvylc-wrxm3-fbrku-gy5bs-thte2-n7eba-vflnl-oqe",
@@ -4597,7 +4758,8 @@
     "hostname": "lj1-dll03",
     "labels": [],
     "version": 29006,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "zknzd-u3ugx-txbjm-7f64i-y5n5v-3d54w-cymvr-yzwcn-s6qmg-a4od6-mae",
@@ -4625,7 +4787,8 @@
     "hostname": "mb1-dll13",
     "labels": [],
     "version": 28986,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "m6km3-stwyt-pgjxv-y6xmv-ffcwa-tpypn-jn3qv-5ianv-fkep7-udvul-xae",
@@ -4653,7 +4816,8 @@
     "hostname": "zh5-dll18",
     "labels": [],
     "version": 28231,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "3jyrb-gnysa-eo3pl-j56ic-r2nno-cadq6-ojhwx-wnqzr-u3hgu-w4rpi-zqe",
@@ -4680,7 +4844,8 @@
     "hostname": "jv1-dll19",
     "labels": [],
     "version": 28715,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "yi22c-lvhtg-3bphg-k3xnv-p5gad-chfjv-safxg-nfw5a-mgsq2-njgmu-yae",
@@ -4708,7 +4873,8 @@
     "hostname": "mb1-dll10",
     "labels": [],
     "version": 28983,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "rl5bt-a3dmi-d2jaq-p5avz-2xo46-chpuf-nnnz4-e2p2o-2guoi-jkv5j-sqe",
@@ -4735,7 +4901,8 @@
     "hostname": "jv1-dll10",
     "labels": [],
     "version": 28272,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "l2qbv-36xvu-hutxl-ho7bi-qoejd-roi5s-fpdn4-dzfym-a4jem-mpvmu-fae",
@@ -4762,7 +4929,8 @@
     "hostname": "jv1-dll03",
     "labels": [],
     "version": 14663,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "zb3hr-qg3uq-vxqw4-ukmf2-ad5n3-isz2i-caudm-yy77w-shlk7-kgqqn-tqe",
@@ -4790,7 +4958,8 @@
     "hostname": "lj1-dll13",
     "labels": [],
     "version": 29016,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "4uvtj-n4rgx-m6qqi-nx3ch-zuqyy-gxjdv-6bxbf-ha5ul-pxdma-k7zmr-iae",
@@ -4817,7 +4986,8 @@
     "hostname": "bo1-4uvtj",
     "labels": [],
     "version": 30148,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "acegc-bdccg-a7uww-c3y5i-eakw5-h7x2k-3gce6-7bao2-ifmu7-buh3o-gqe",
@@ -4845,7 +5015,8 @@
     "hostname": "aw1-dll15",
     "labels": [],
     "version": 29112,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "domp4-bt6q6-fzhza-g524a-c3qfk-rzk5e-sva7i-6sjuu-rzro5-h4aqh-lqe",
@@ -4873,7 +5044,8 @@
     "hostname": "aw1-dll06",
     "labels": [],
     "version": 29079,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "c7n7r-bgjk7-s7rhc-nfzon-nbdez-rf3wr-q54pq-6zkxh-h22gs-w2gt7-nae",
@@ -4905,7 +5077,8 @@
       }
     ],
     "version": 29105,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "6leqw-regbh-ljylo-jdl5p-we7uk-rlqum-ehhd4-ix37a-we4bu-fzske-7ae",
@@ -4933,7 +5106,8 @@
     "hostname": "aw1-dll12",
     "labels": [],
     "version": 29110,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "fdqhr-5rcho-gvht6-tqwas-rdttm-wig4v-tusj5-qz3ts-3itci-56oyd-dqe",
@@ -4961,7 +5135,8 @@
     "hostname": "mb1-dll20",
     "labels": [],
     "version": 28968,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "7ksjv-v3xnf-5tdsj-iveab-jy57d-jgoav-wmpur-3gsx2-jsqgt-qjfum-qae",
@@ -4989,7 +5164,8 @@
     "hostname": "zh5-dll23",
     "labels": [],
     "version": 28238,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "rvpk4-a5olq-5c4po-4qgzv-obw6h-nlxqy-75ug7-sujo6-6di52-im5t2-yqe",
@@ -5017,7 +5193,8 @@
     "hostname": "zh5-dll15",
     "labels": [],
     "version": 28228,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "pj6ma-qvezw-srdkt-dzgcq-onckx-2reeb-epjrd-o6qzx-4ecfv-gjxij-dae",
@@ -5045,7 +5222,8 @@
     "hostname": "fr2-dll15",
     "labels": [],
     "version": 30071,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "72met-tfr6q-f42ni-2qll5-coi6n-4mx5v-h7jmn-h6d6a-cbuta-2evum-kqe",
@@ -5073,7 +5251,8 @@
     "hostname": "zh5-dll25",
     "labels": [],
     "version": 28240,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "wtbvu-nz6va-vesxn-ihxrz-e5qmi-4alqf-vhtjk-oin6d-7l5th-w7n6d-xae",
@@ -5105,7 +5284,8 @@
       }
     ],
     "version": 29107,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   },
   {
     "principal": "jroew-r5o7b-76cs4-hrfw3-q3cex-m77mj-nju7e-qc46t-ing64-4h5sy-5ae",
@@ -5133,6 +5313,7 @@
     "hostname": "lj1-dll05",
     "labels": [],
     "version": 29008,
-    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+    "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+    "is_api_boundary_node": false
   }
 ]

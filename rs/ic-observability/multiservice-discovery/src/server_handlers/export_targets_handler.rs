@@ -36,6 +36,7 @@ pub(super) async fn export_targets(
             // These are old boundary nodes which are not the same as API boundary nodes
             // with time these should become api boundary nodes
             is_api_bn: false,
+            domain: None,
         })
         .collect();
 

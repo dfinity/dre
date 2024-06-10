@@ -2233,6 +2233,7 @@ dependencies = [
  "fs-err",
  "futures",
  "futures-util",
+ "humantime",
  "ic-base-types",
  "ic-canister-client",
  "ic-canister-client-sender",

@@ -241,6 +241,7 @@ pub struct Node {
     #[serde(default)]
     pub decentralized: bool,
     pub duplicates: Option<PrincipalId>,
+    pub is_api_boundary_node: bool,
 }
 
 #[derive(strum_macros::Display, EnumString, VariantNames, Hash, Eq, PartialEq, Ord, PartialOrd, Clone, Serialize, Deserialize, Debug)]

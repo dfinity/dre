@@ -69,6 +69,7 @@ mod tests {
             operator_id: PrincipalId::new_anonymous(),
             node_provider_id: PrincipalId::new_anonymous(),
             is_api_bn: false,
+            domain: None,
         }
     }
 
@@ -85,6 +86,7 @@ mod tests {
             operator_id: PrincipalId::new_anonymous(),
             node_provider_id: PrincipalId::new_anonymous(),
             is_api_bn: false,
+            domain: None,
         };
         assert!(filter.filter(accepted_tg));
 
@@ -97,6 +99,7 @@ mod tests {
             operator_id: PrincipalId::new_anonymous(),
             node_provider_id: PrincipalId::new_anonymous(),
             is_api_bn: false,
+            domain: None,
         };
         assert!(!filter.filter(rejected_tg));
     }
@@ -115,6 +118,7 @@ mod tests {
             operator_id: PrincipalId::new_anonymous(),
             node_provider_id: PrincipalId::new_anonymous(),
             is_api_bn: false,
+            domain: None,
         };
         assert!(filterlist.filter(accepted_tg));
 
@@ -127,6 +131,7 @@ mod tests {
             operator_id: PrincipalId::new_anonymous(),
             node_provider_id: PrincipalId::new_anonymous(),
             is_api_bn: false,
+            domain: None,
         };
         assert!(!filterlist.filter(rejected_tg_1));
 

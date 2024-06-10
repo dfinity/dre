@@ -148,6 +148,7 @@ mod tests {
                 duplicates: None,
                 label: None,
                 hostos_version: "".to_string(),
+                is_api_boundary_node: false,
             };
             nodes.insert(node.principal, node);
         }
