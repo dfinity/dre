@@ -39,6 +39,7 @@ mod tests {
             operator_id: PrincipalId::new_anonymous(),
             node_provider_id: PrincipalId::new_anonymous(),
             is_api_bn: false,
+            domain: None,
         }
     }
 
