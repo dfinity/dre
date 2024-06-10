@@ -430,6 +430,8 @@ impl RegistryState {
     fn update_nodes(&mut self) -> Result<()> {
         let node_entries = self.local_registry.get_family_entries_versioned::<NodeRecord>()?;
         let dfinity_dcs = DFINITY_DCS.split(' ').map(|dc| dc.to_string().to_lowercase()).collect::<HashSet<_>>();
+        let api_boundary_nodes: BTreeMap<String, ApiBoundaryNodeRecord> = self.local_registry.get_family_entries()?;
+
         self.nodes = node_entries
             .iter()
             // Skipping nodes without operator. This should only occur at version 1
@@ -492,6 +494,7 @@ impl RegistryState {
                                     Some(PrincipalId::from_str(p2).expect("invalid node principal id"))
                                 }
                             }),
+                        is_api_boundary_node: api_boundary_nodes.contains_key(p),
                     },
                 )
             })
@@ -837,7 +840,7 @@ impl AvailableNodesQuerier for RegistryState {
             .await
             .map_err(|err| NetworkError::DataRequestError(err.to_string()))?
             .into_values()
-            .filter(|n| n.subnet_id.is_none() && n.proposal.is_none() && n.duplicates.is_none())
+            .filter(|n| n.subnet_id.is_none() && n.proposal.is_none() && n.duplicates.is_none() && !n.is_api_boundary_node)
             .collect::<Vec<_>>();
 
         let health_client = crate::health::HealthClient::new(self.network());
