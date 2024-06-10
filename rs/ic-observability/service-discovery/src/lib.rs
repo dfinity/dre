@@ -64,6 +64,7 @@ pub struct TargetGroup {
     pub operator_id: PrincipalId,
     pub node_provider_id: PrincipalId,
     pub is_api_bn: bool,
+    pub domain: Option<String>,
 }
 
 impl TargetGroup {
@@ -286,6 +287,7 @@ impl IcServiceDiscoveryImpl {
             operator_id,
             node_provider_id: PrincipalId::try_from(node_operator.node_provider_principal_id).unwrap_or_default(),
             is_api_bn,
+            domain: node_record.domain,
         });
 
         Ok(())
