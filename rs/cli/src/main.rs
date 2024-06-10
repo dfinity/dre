@@ -412,6 +412,7 @@ async fn async_main() -> Result<(), anyhow::Error> {
             cli::Commands::Vote {
                 accepted_neurons,
                 accepted_topics,
+                sleep_time,
             } => {
                 let cli = dre::parsed_cli::ParsedCli::from_opts(&cli_opts).await?;
                 vote_on_proposals(
@@ -420,6 +421,7 @@ async fn async_main() -> Result<(), anyhow::Error> {
                     accepted_neurons,
                     accepted_topics,
                     simulate,
+                    *sleep_time,
                 )
                 .await
             }

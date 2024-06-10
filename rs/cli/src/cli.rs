@@ -1,7 +1,8 @@
-use std::path::PathBuf;
+use std::{path::PathBuf, time::Duration};
 
 use clap::{Parser, Subcommand};
 use clap_num::maybe_hex;
+use humantime::parse_duration;
 use ic_base_types::PrincipalId;
 use ic_management_types::Artifact;
 use ic_registry_keys::FirewallRulesScope;
@@ -116,6 +117,10 @@ pub enum Commands {
         /// By default: SubnetReplicaVersionManagement
         #[clap(long, use_value_delimiter = true, value_delimiter = ',', value_name = "PROPOSER_ID", default_value = "12")]
         accepted_topics: Vec<i32>,
+
+        /// Override default sleep time
+        #[clap(long, default_value = "60s", value_parser = parse_duration)]
+        sleep_time: Duration,
     },
 
     /// Trustworthy Metrics
