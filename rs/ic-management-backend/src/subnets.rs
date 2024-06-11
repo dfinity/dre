@@ -40,7 +40,7 @@ pub async fn get_unhealthy(
                 .collect::<Vec<_>>();
 
             if !unhealthy.is_empty() {
-                return Some((subnet.principal, unhealthy));
+                Some((subnet.principal, unhealthy))
             } else {
                 None
             }

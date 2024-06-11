@@ -24,7 +24,7 @@ async fn heal(request: web::Json<HealRequest>, registry: web::Data<Arc<RwLock<Re
                     return None;
                 }
             }
-            return Some((subnet_id, n));
+            Some((subnet_id, n))
         })
         .collect::<BTreeMap<_, _>>();
 
