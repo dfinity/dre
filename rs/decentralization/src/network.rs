@@ -2,15 +2,15 @@ use crate::nakamoto::{self, NakamotoScore};
 use crate::SubnetChangeResponse;
 use actix_web::http::StatusCode;
 use actix_web::{HttpResponse, ResponseError};
-use anyhow::anyhow;
 use async_trait::async_trait;
 use ic_base_types::PrincipalId;
 use ic_management_types::{MinNakamotoCoefficients, NetworkError, NodeFeature};
 use itertools::Itertools;
-use log::{debug, info};
+use log::{debug, info, warn};
 use rand::{seq::SliceRandom, SeedableRng};
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
+use std::collections::{BTreeMap, HashSet};
 use std::fmt::{Debug, Display, Formatter};
 use std::hash::Hash;
 
@@ -983,5 +983,63 @@ impl SubnetChange {
 impl Display for SubnetChange {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", SubnetChangeResponse::from(self))
+    }
+}
+
+#[derive(Default, Clone, Debug)]
+pub struct NetworkHealRequest {
+    pub subnets_with_unhealthy_nodes: Vec<(DecentralizedSubnet, Vec<Node>)>,
+}
+
+impl NetworkHealRequest {
+    pub fn new(
+        subnets: BTreeMap<PrincipalId, ic_management_types::Subnet>,
+        unhealthy_subnets: BTreeMap<PrincipalId, Vec<ic_management_types::Node>>,
+    ) -> Self {
+        Self {
+            subnets_with_unhealthy_nodes: unhealthy_subnets
+                .into_iter()
+                .map(|(id, unhealthy_nodes)| {
+                    let subnet = subnets.get(&id).unwrap().clone();
+
+                    (
+                        DecentralizedSubnet::from(subnet),
+                        unhealthy_nodes.iter().map(Node::from).collect::<Vec<_>>(),
+                    )
+                })
+                .collect::<Vec<_>>(),
+        }
+    }
+
+    pub fn heal(&self, available_nodes: Vec<Node>, max_replacable_nodes: Option<usize>) -> Result<Vec<SubnetChangeResponse>, NetworkError> {
+        let mut already_added = HashSet::new();
+        let mut subnets_changed = Vec::new();
+
+        for (subnet, unhealthy_nodes) in &self.subnets_with_unhealthy_nodes {
+            let unhealthy_nodes_len = unhealthy_nodes.len();
+            if let Some(max_replacable_nodes) = max_replacable_nodes {
+                if unhealthy_nodes_len > max_replacable_nodes {
+                    warn!(
+                        "Subnet {} has {} unhealthy nodes\nMax replacable nodes is {} skipping...",
+                        subnet.id, unhealthy_nodes_len, max_replacable_nodes
+                    );
+                    continue;
+                }
+            }
+            let optimize_limit = max_replacable_nodes.unwrap_or(unhealthy_nodes_len) - unhealthy_nodes_len;
+
+            let optimized = SubnetChangeRequest {
+                subnet: subnet.clone(),
+                available_nodes: available_nodes.clone(),
+                ..Default::default()
+            }
+            .with_exclude_nodes(already_added.iter().cloned().collect::<Vec<_>>())
+            .optimize(optimize_limit, &unhealthy_nodes)?;
+
+            already_added.extend(optimized.added().iter().map(|n| n.id.to_string()).collect::<Vec<_>>());
+            subnets_changed.push(SubnetChangeResponse::from(&optimized));
+        }
+
+        Ok(subnets_changed)
     }
 }
