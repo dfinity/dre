@@ -35,18 +35,13 @@ async fn heal(request: web::Json<HealRequest>, registry: web::Data<Arc<RwLock<Re
         let change = registry
             .modify_subnet_nodes(SubnetQueryBy::SubnetId(id))
             .await?
-            .with_exclude_nodes(already_added.iter().map(|n: &PrincipalId| n.to_string()).collect());
+            .with_exclude_nodes(already_added.iter().cloned().collect::<Vec<_>>());
 
-        let subnet_change = if let Some(max_replacable_nodes_per_sub) = request.max_replacable_nodes_per_sub {
-            let optimize_limit = max_replacable_nodes_per_sub - unhealthy_nodes.len();
-            change.optimize_with_limit(optimize_limit, &unhealthy_nodes)?
-        } else {
-            let not_optimized = change.optimize(0, &unhealthy_nodes)?;
-            decentralization::SubnetChangeResponse::from(&not_optimized)
-        };
+        let optimize_limit = request.max_replacable_nodes_per_sub.unwrap_or(unhealthy_nodes.len()) - unhealthy_nodes.len();
+        let optimized = change.optimize(optimize_limit, &unhealthy_nodes)?;
 
-        already_added.extend(subnet_change.added.clone());
-        subnets_changed.push(subnet_change);
+        already_added.extend(optimized.added().iter().map(|n| n.id.to_string()).collect::<Vec<_>>());
+        subnets_changed.push(decentralization::SubnetChangeResponse::from(&optimized));
     }
 
     let heal_response = decentralization::HealResponse {

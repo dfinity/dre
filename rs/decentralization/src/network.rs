@@ -861,22 +861,6 @@ impl SubnetChangeRequest {
         Ok(SubnetChange { old_nodes, ..result })
     }
 
-    /// Optimize the number of nodes which maximize decentralization up to limit
-    pub fn optimize_with_limit(self, optimize_limit: usize, replacements_unhealthy: &Vec<Node>) -> Result<SubnetChangeResponse, NetworkError> {
-        let mut optimize_num = 0;
-        let mut change_current = SubnetChangeResponse::from(&self.clone().optimize(optimize_num, replacements_unhealthy)?);
-
-        loop {
-            let change_next = SubnetChangeResponse::from(&self.clone().optimize(optimize_num + 1, replacements_unhealthy)?);
-            if optimize_num >= optimize_limit || change_current.score_after >= change_next.score_after {
-                return Ok(change_current);
-            } else {
-                change_current = change_next.clone();
-                optimize_num += 1;
-            }
-        }
-    }
-
     /// Add or remove nodes from the subnet.
     pub fn resize(&self, how_many_nodes_to_add: usize, how_many_nodes_to_remove: usize) -> Result<SubnetChange, NetworkError> {
         println!(
