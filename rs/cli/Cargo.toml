@@ -29,6 +29,7 @@ flate2 = { workspace = true }
 fs-err = { workspace = true }
 futures = { workspace = true }
 futures-util = { workspace = true }
+shlex = { workspace = true }
 ic-base-types = { workspace = true }
 ic-canister-client = { workspace = true }
 ic-canister-client-sender = { workspace = true }

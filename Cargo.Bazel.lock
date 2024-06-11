@@ -1,5 +1,5 @@
 {
-  "checksum": "e5c2553cb5e7ef216889a9b6b25bac1b4c50ba484e36a2f4359ca5d9a82b9a70",
+  "checksum": "4bbd989bbf5c42e742aa858a262040efe99e2a94f7211a585016f04055bd73bb",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -11392,6 +11392,10 @@
             {
               "id": "sha2 0.10.8",
               "target": "sha2"
+            },
+            {
+              "id": "shlex 1.3.0",
+              "target": "shlex"
             },
             {
               "id": "socket2 0.5.7",
@@ -41482,6 +41486,43 @@
         "version": "1.1.0"
       },
       "license": "MIT/Apache-2.0"
+    },
+    "shlex 1.3.0": {
+      "name": "shlex",
+      "version": "1.3.0",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/shlex/1.3.0/download",
+          "sha256": "0fda2ff0d084019ba4d7c6f371c95d8fd75ce3524c3cb8fb653a3023f6323e64"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "shlex",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "shlex",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "crate_features": {
+          "common": [
+            "default",
+            "std"
+          ],
+          "selects": {}
+        },
+        "edition": "2015",
+        "version": "1.3.0"
+      },
+      "license": "MIT OR Apache-2.0"
     },
     "signal-hook-registry 1.4.2": {
       "name": "signal-hook-registry",
