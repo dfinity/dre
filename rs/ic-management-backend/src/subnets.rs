@@ -1,28 +1,22 @@
 use std::collections::BTreeMap;
 
-use crate::health;
-use crate::health::HealthStatusQuerier;
-use crate::registry::RegistryState;
 use decentralization::{network::SubnetChange, SubnetChangeResponse};
 use ic_base_types::PrincipalId;
-use ic_management_types::{Node, TopologyChangeProposal};
+use ic_management_types::{Node, Status, Subnet, TopologyChangeProposal};
 use log::{info, warn};
-use tokio::sync::RwLockReadGuard;
 
-pub async fn get_unhealthy(
-    registry: &RwLockReadGuard<'_, RegistryState>,
-) -> anyhow::Result<BTreeMap<PrincipalId, Vec<decentralization::network::Node>>> {
-    let health_client = health::HealthClient::new(registry.network());
-    let healths = health_client.nodes().await?;
-
-    let unhealthy_subnets = registry
-        .subnets()
+pub async fn unhealthy_with_nodes(
+    subnets: &BTreeMap<PrincipalId, Subnet>,
+    nodes_health: BTreeMap<PrincipalId, Status>,
+) -> BTreeMap<PrincipalId, Vec<Node>> {
+    subnets
+        .clone()
         .into_iter()
-        .filter_map(|(_, subnet)| {
+        .filter_map(|(id, subnet)| {
             let unhealthy = subnet
                 .nodes
                 .into_iter()
-                .filter_map(|n| match healths.get(&n.principal) {
+                .filter_map(|n| match nodes_health.get(&n.principal) {
                     Some(health) => {
                         if *health == ic_management_types::Status::Healthy {
                             None
@@ -36,18 +30,15 @@ pub async fn get_unhealthy(
                         Some(n)
                     }
                 })
-                .map(|n| decentralization::network::Node::from(&n))
                 .collect::<Vec<_>>();
 
             if !unhealthy.is_empty() {
-                Some((subnet.principal, unhealthy))
+                Some((id, unhealthy))
             } else {
                 None
             }
         })
-        .collect::<BTreeMap<_, _>>();
-
-    Ok(unhealthy_subnets)
+        .collect::<BTreeMap<_, _>>()
 }
 
 pub fn get_proposed_subnet_changes(
