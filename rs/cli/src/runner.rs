@@ -450,7 +450,7 @@ impl Runner {
         join_all(change.subnets_change_response.iter().map(|subnet_change_response| async move {
             self.run_membership_change(
                 subnet_change_response.clone(),
-                ops_subnet_node_replace::replace_proposal_options(&subnet_change_response)?,
+                ops_subnet_node_replace::replace_proposal_options(subnet_change_response)?,
                 simulate,
             )
             .await
