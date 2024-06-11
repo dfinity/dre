@@ -9,7 +9,7 @@ use std::collections::HashSet;
 async fn heal(request: web::Json<HealRequest>, registry: web::Data<Arc<RwLock<RegistryState>>>) -> Result<HttpResponse, Error> {
     let mut already_added = HashSet::new();
     let mut subnets_changed = Vec::new();
-    
+
     let registry = registry.read().await;
     let health_client = health::HealthClient::new(registry.network());
     let nodes_health = health_client
