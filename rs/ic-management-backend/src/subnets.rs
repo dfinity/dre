@@ -1,21 +1,19 @@
 use std::collections::BTreeMap;
 
+use crate::health;
+use crate::health::HealthStatusQuerier;
+use crate::registry::RegistryState;
 use decentralization::{network::SubnetChange, SubnetChangeResponse};
 use ic_base_types::PrincipalId;
 use ic_management_types::{Node, TopologyChangeProposal};
-use crate::health;
-use crate::health::HealthStatusQuerier;
+use log::{info, warn};
 use tokio::sync::RwLockReadGuard;
-use log::{warn, info};
-use crate::registry::RegistryState;
 
 pub async fn get_unhealthy(
-    registry: &RwLockReadGuard<'_, RegistryState>
+    registry: &RwLockReadGuard<'_, RegistryState>,
 ) -> anyhow::Result<BTreeMap<PrincipalId, Vec<decentralization::network::Node>>> {
     let health_client = health::HealthClient::new(registry.network());
-    let healths = health_client
-        .nodes()
-        .await?;
+    let healths = health_client.nodes().await?;
 
     let unhealthy_subnets = registry
         .subnets()
@@ -48,7 +46,7 @@ pub async fn get_unhealthy(
             }
         })
         .collect::<BTreeMap<_, _>>();
-    
+
     Ok(unhealthy_subnets)
 }
 

@@ -9,7 +9,7 @@ use std::collections::HashSet;
 async fn heal(request: web::Json<HealRequest>, registry: web::Data<Arc<RwLock<RegistryState>>>) -> Result<HttpResponse, Error> {
     let registry = registry.read().await;
     let unhealthy_subnets = subnets::get_unhealthy(&registry)
-        .await        
+        .await
         .map_err(|_| actix_web::error::ErrorInternalServerError("failed to fetch subnet health".to_string()))?
         .into_iter()
         .filter_map(|(subnet_id, n)| {
