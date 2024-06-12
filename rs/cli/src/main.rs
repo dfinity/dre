@@ -15,6 +15,7 @@ use ic_management_types::{Artifact, MinNakamotoCoefficients, NodeFeature};
 use ic_nns_common::pb::v1::ProposalId;
 use ic_nns_governance::pb::v1::ListProposalInfo;
 use log::{info, warn};
+use regex::Regex;
 use serde_json::Value;
 use std::collections::BTreeMap;
 use std::str::FromStr;
@@ -610,9 +611,14 @@ fn init_logger() {
 }
 
 fn check_latest_release(curr_version: &str) -> anyhow::Result<UpdateStatus> {
-    let current_version = match curr_version.split_once('-') {
-        None => return Err(anyhow::anyhow!("Version '{}' doesn't follow expected naming", curr_version)),
-        Some((ver, _)) => ver,
+    let re_version = Regex::new(r"^v?(\d+)\.(\d+)\.(\d+)(-([0-9a-f])+)?$").unwrap();
+    let current_version = if re_version.is_match(curr_version) {
+        match curr_version.split_once('-') {
+            Some((ver, _)) => ver,
+            None => curr_version,
+        }
+    } else {
+        return Err(anyhow::anyhow!("Version '{}' doesn't follow expected naming", curr_version));
     };
 
     let maybe_configured_backend = self_update::backends::github::ReleaseList::configure()
