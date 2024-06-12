@@ -1012,29 +1012,10 @@ impl NetworkHealRequest {
         }
     }
 
-    fn next_sub_change(&self, subnet: &DecentralizedSubnet, available_nodes: &Vec<Node>) -> Result<SubnetChange, NetworkError> {
-
-        let subnet_after = subnet
-            .clone()
-            .subnet_with_more_nodes(1, &available_nodes)
-            .map_err(|e| NetworkError::ResizeFailed(e.to_string()))?;
-
-        let change = SubnetChange {
-            id: subnet.id,
-            old_nodes: subnet.nodes.clone(),
-            new_nodes: subnet_after.nodes,
-            min_nakamoto_coefficients: subnet.min_nakamoto_coefficients.clone(),
-            comment: subnet.comment.clone(),
-            run_log: subnet.run_log.clone(),
-        };
-
-        Ok(change)
-    }
-
     pub fn heal(&self, mut available_nodes: Vec<Node>, max_replacable_nodes: Option<usize>) -> Result<Vec<SubnetChangeResponse>, NetworkError> {
         let mut subnets_changed = BTreeMap::new();
 
-        let replacable_subnets = self.subnets_with_unhealthy_nodes.clone()
+        let mut replacable_subnets = self.subnets_with_unhealthy_nodes.clone()
             .into_iter()
             .filter_map(|(subnet, unhealthy_nodes)|{
                 if let Some(max_replacable_nodes) = max_replacable_nodes {
@@ -1050,32 +1031,42 @@ impl NetworkHealRequest {
             })
             .collect::<Vec<_>>();
 
-
-        for i in 0..max_replacable_nodes.unwrap() {
+        for i in 0..3 {
             let mut nodes_added: Vec<Node> = vec![];
 
-            for subnet in &replacable_subnets {
+            for subnet in &mut replacable_subnets {
 
-                let tmp_change = self.next_sub_change(subnet, &available_nodes)?;
+                println!("Subnet: {}", subnet.id);
+                println!("Nakamoto score before {}", subnet.nakamoto_score());
 
-                println!("OLD: {} NEW:{}", &tmp_change.old_nodes.len(), &tmp_change.new_nodes.len());
+                let subnet_after = subnet
+                    .clone()
+                    .subnet_with_more_nodes(1, &available_nodes)
+                    .map_err(|e| NetworkError::ResizeFailed(e.to_string()))?;
+        
+                println!("Nakamoto score after {}", subnet_after.nakamoto_score());
 
-                let score_before =  nakamoto::NakamotoScore::new_from_nodes(&tmp_change.old_nodes);
-                let score_after= nakamoto::NakamotoScore::new_from_nodes(&tmp_change.new_nodes);
+        
+                let tmp_change = SubnetChange {
+                    id: subnet.id,
+                    old_nodes: [subnet.nodes.clone(), subnet.removed_nodes.clone()].concat(),
+                    new_nodes: subnet_after.nodes.clone(),
+                    min_nakamoto_coefficients: subnet.min_nakamoto_coefficients.clone(),
+                    comment: subnet.comment.clone(),
+                    run_log: subnet.run_log.clone(),
+                };
+        
 
                 nodes_added.extend(tmp_change.added());
                 
                 subnets_changed
-                    .entry(&subnet.id)
+                    .entry(subnet.id.clone())
                     .and_modify(|change: &mut SubnetChange| {
                         *change = change.clone().with_nodes(tmp_change.added().clone());
                     })
                     .or_insert(tmp_change.clone());
 
-                
-
-                println!("decentralization {}\n{}: node-added: {:?}\n Nakamoto before: {} \n Nakamoto after: {}", subnet.id, i, tmp_change.added().clone(), score_before, score_after);
-
+                *subnet = subnet_after;
             }
             available_nodes.retain(|elem| !nodes_added.contains(elem));
         }
