@@ -905,6 +905,7 @@ pub enum ProposeCommand {
     CreateSubnet {
         node_ids: Vec<PrincipalId>,
         replica_version: String,
+        other_args: Vec<String>,
     },
     AddApiBoundaryNodes {
         nodes: Vec<PrincipalId>,
@@ -974,7 +975,11 @@ impl ProposeCommand {
             .concat(),
             Self::RemoveNodes { nodes } => nodes.iter().map(|n| n.to_string()).collect(),
             Self::ReviseElectedVersions { release_artifact: _, args } => args.clone(),
-            Self::CreateSubnet { node_ids, replica_version } => {
+            Self::CreateSubnet {
+                node_ids,
+                replica_version,
+                other_args,
+            } => {
                 let mut args = vec!["--subnet-type".to_string(), "application".to_string()];
 
                 args.push("--replica-version-id".to_string());
@@ -983,6 +988,7 @@ impl ProposeCommand {
                 for id in node_ids {
                     args.push(id.to_string())
                 }
+                args.extend(other_args.to_vec());
                 args
             }
             Self::DeployGuestosToAllUnassignedNodes { replica_version } => {
