@@ -173,8 +173,17 @@ impl IcAdminWrapper {
         }
     }
 
-    async fn print_ic_admin_command_line(&self, cmd: &Command, with_auth: bool) {
-        let auth = if with_auth { self.neuron.get_auth().await.unwrap() } else { Auth::None };
+    async fn print_ic_admin_command_line(&self, cmd: &Command, require_auth: bool) {
+        let auth = match self.neuron.get_auth().await {
+            Ok(auth) => auth,
+            Err(e) => {
+                if require_auth {
+                    panic!("Error getting auth: {:?}", e);
+                } else {
+                    Auth::None
+                }
+            }
+        };
         info!(
             "running ic-admin: \n$ {}{}",
             cmd.get_program().to_str().unwrap().yellow(),
@@ -271,7 +280,7 @@ impl IcAdminWrapper {
     async fn _run_ic_admin_with_args(&self, ic_admin_args: &[String], with_auth: bool, silent: bool) -> anyhow::Result<String> {
         let ic_admin_path = self.ic_admin_bin_path.clone().unwrap_or_else(|| "ic-admin".to_string());
         let mut cmd = Command::new(ic_admin_path);
-        let auth_options = if with_auth { self.neuron.get_auth().await?.as_arg_vec() } else { vec![] };
+        let auth_options = self.neuron.get_auth().await?.as_arg_vec(with_auth);
         let root_options = [auth_options, vec!["--nns-urls".to_string(), self.network.get_nns_urls_string()]].concat();
         let cmd = cmd.args([&root_options, ic_admin_args].concat());
 
@@ -1129,7 +1138,7 @@ oSMDIQBa2NLmSmaqjDXej4rrJEuEhKIz7/pGXpxztViWhB+X9Q==
                         ]
                     })
                     .unwrap_or_default(),
-                cli.neuron.get_auth().await?.as_arg_vec(),
+                cli.neuron.get_auth().await?.as_arg_vec(true),
                 cmd.args(),
             ]
             .concat()
