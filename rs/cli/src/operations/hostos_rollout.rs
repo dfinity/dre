@@ -514,9 +514,9 @@ pub mod test {
         let version_two = "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a".to_string();
 
         let subnet_id = PrincipalId::new_subnet_test_id(0);
-        let assigned_dfinity = gen_test_nodes(Some(subnet_id), 10, 0, version_one.clone(), true);
-        let unassigned_dfinity_nodes = gen_test_nodes(None, 10, 10, version_one.clone(), true);
-        let assigned_others_nodes = gen_test_nodes(Some(subnet_id), 10, 20, version_two.clone(), false);
+        let assigned_dfinity = gen_test_nodes(Some(subnet_id), 10, 0, version_one.clone(), true, false);
+        let unassigned_dfinity_nodes = gen_test_nodes(None, 10, 10, version_one.clone(), true, false);
+        let assigned_others_nodes = gen_test_nodes(Some(subnet_id), 10, 20, version_two.clone(), false, false);
         let union: BTreeMap<PrincipalId, Node> = {
             assigned_dfinity
                 .clone()
@@ -631,6 +631,7 @@ pub mod test {
         start_at_number: u64,
         hostos_version: String,
         dfinity_owned: bool,
+        is_api_boundary_node: bool,
     ) -> BTreeMap<PrincipalId, Node> {
         let mut n = BTreeMap::new();
         for i in start_at_number..start_at_number + num_nodes {
@@ -656,6 +657,7 @@ pub mod test {
                 subnet_id,
                 hostos_version: hostos_version.clone(),
                 dfinity_owned: Some(dfinity_owned),
+                is_api_boundary_node,
             };
             n.insert(node.principal, node);
         }
