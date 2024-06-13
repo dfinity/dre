@@ -353,6 +353,25 @@ impl IcAdminWrapper {
         }
     }
 
+    pub(crate) fn grep_subcommand_arguments(&self, subcommand: &str) -> String {
+        let ic_admin_path = self.ic_admin_bin_path.clone().unwrap_or_else(|| "ic-admin".to_string());
+        let cmd_result = Command::new(ic_admin_path).args([subcommand, "--help"]).output();
+        match cmd_result.map_err(|e| e.to_string()) {
+            Ok(output) => {
+                if output.status.success() {
+                    String::from_utf8_lossy(output.stdout.as_ref()).to_string()
+                } else {
+                    error!("Execution of ic-admin failed: {}", String::from_utf8_lossy(output.stderr.as_ref()));
+                    String::new()
+                }
+            }
+            Err(err) => {
+                error!("Error starting ic-admin process: {}", err);
+                String::new()
+            }
+        }
+    }
+
     /// Run an `ic-admin get-*` command directly, and without an HSM
     pub async fn run_passthrough_get(&self, args: &[String], silent: bool) -> anyhow::Result<String> {
         if args.is_empty() {
@@ -887,6 +906,7 @@ pub enum ProposeCommand {
     CreateSubnet {
         node_ids: Vec<PrincipalId>,
         replica_version: String,
+        other_args: Vec<String>,
     },
     AddApiBoundaryNodes {
         nodes: Vec<PrincipalId>,
@@ -956,7 +976,11 @@ impl ProposeCommand {
             .concat(),
             Self::RemoveNodes { nodes } => nodes.iter().map(|n| n.to_string()).collect(),
             Self::ReviseElectedVersions { release_artifact: _, args } => args.clone(),
-            Self::CreateSubnet { node_ids, replica_version } => {
+            Self::CreateSubnet {
+                node_ids,
+                replica_version,
+                other_args,
+            } => {
                 let mut args = vec!["--subnet-type".to_string(), "application".to_string()];
 
                 args.push("--replica-version-id".to_string());
@@ -965,6 +989,7 @@ impl ProposeCommand {
                 for id in node_ids {
                     args.push(id.to_string())
                 }
+                args.extend(other_args.to_vec());
                 args
             }
             Self::DeployGuestosToAllUnassignedNodes { replica_version } => {
