@@ -987,86 +987,93 @@ impl Display for SubnetChange {
     }
 }
 
-#[derive(Default, Clone, Debug)]
+#[derive(Default, Clone)]
 pub struct NetworkHealRequest {
-    pub subnets_with_unhealthy_nodes: Vec<(DecentralizedSubnet, Vec<Node>)>,
+    subnets_to_heal: Vec<DecentralizedSubnet>,
+    max_replacable_nodes: Option<usize>,
 }
 
 impl NetworkHealRequest {
     pub fn new(
         subnets: BTreeMap<PrincipalId, ic_management_types::Subnet>,
         unhealthy_subnets: BTreeMap<PrincipalId, Vec<ic_management_types::Node>>,
-    ) -> Self {
-        Self {
-            subnets_with_unhealthy_nodes: unhealthy_subnets
-                .into_iter()
-                .map(|(id, unhealthy_nodes)| {
-                    let subnet = subnets.get(&id).unwrap().clone();
+        max_replacable_nodes: Option<usize>,
+    ) -> Result<Self, NetworkError> {
 
-                    (
-                        DecentralizedSubnet::from(subnet),
-                        unhealthy_nodes.iter().map(Node::from).collect::<Vec<_>>(),
-                    )
-                })
-                .collect::<Vec<_>>(),
-        }
-    }
-
-    pub fn heal(&self, mut available_nodes: Vec<Node>, max_replacable_nodes: Option<usize>) -> Result<Vec<SubnetChangeResponse>, NetworkError> {
-        let mut subnets_changed = BTreeMap::new();
-
-        let mut replacable_subnets = self.subnets_with_unhealthy_nodes.clone()
+        let subnets_to_heal = unhealthy_subnets
             .into_iter()
-            .filter_map(|(subnet, unhealthy_nodes)|{
-                if let Some(max_replacable_nodes) = max_replacable_nodes {
-                    if unhealthy_nodes.len() > max_replacable_nodes {
-                        warn!(
-                            "Subnet {} has {} unhealthy nodes\nMax replacable nodes is {} skipping...",
-                            subnet.id, unhealthy_nodes.len(), max_replacable_nodes
-                        );
-                        return None
-                    }
-                }
-                Some(subnet.without_nodes(unhealthy_nodes.clone()).unwrap())
+            .flat_map(|(id, unhealthy_nodes)| {
+                let subnet = subnets.get(&id).unwrap().clone();
+                let subnet_decentralized = DecentralizedSubnet::from(subnet);
+                let unhealthy_nodes_decentralized = unhealthy_nodes.iter().map(Node::from).collect::<Vec<_>>();
+
+                // Remove from subnets the nodes that will be later replaced
+                subnet_decentralized.without_nodes(unhealthy_nodes_decentralized)
             })
             .collect::<Vec<_>>();
 
-        for i in 0..3 {
-            let mut nodes_added: Vec<Node> = vec![];
+        Ok(Self {
+            subnets_to_heal,
+            max_replacable_nodes
+        })
+    }
 
-            for subnet in &mut replacable_subnets {
+    pub fn heal(&self, mut available_nodes: Vec<Node>) -> Result<Vec<SubnetChangeResponse>, NetworkError> {
 
-                println!("Subnet: {}", subnet.id);
-                println!("Nakamoto score before {}", subnet.nakamoto_score());
+        if let Some(max_replacable_nodes) = self.max_replacable_nodes {
+            self.subnets_to_heal = self.subnets_to_heal
+                .into_iter()
+                .filter(|s| {
+                    let unhealthy_nodes_len = s.removed_nodes.len();
+                    if unhealthy_nodes_len > max_replacable_nodes {
+                        warn!(
+                            "Subnet {} has {} unhealthy nodes\nMax replacable nodes is {} skipping...",
+                            s.id, unhealthy_nodes_len, max_replacable_nodes
+                        );
+                        return false;
+                    }
+                    true
+                })
+                .collect();
+        }
 
+        let max_iterations = self.max_replacable_nodes.unwrap_or_else(|| {
+            self.subnets_to_heal
+                .into_iter()
+                .map(|s| s.removed_nodes.len())
+                .max()
+                .unwrap()
+        });
+
+        let mut subnets_pool = self.subnets_to_heal.clone();
+
+
+        for _i in 0..max_iterations {
+
+            let nodes_added = BTreeMap::new();
+
+            for subnet in subnets_pool.iter_mut() {
                 let subnet_after = subnet
-                    .clone()
                     .subnet_with_more_nodes(1, &available_nodes)
                     .map_err(|e| NetworkError::ResizeFailed(e.to_string()))?;
-        
-                println!("Nakamoto score after {}", subnet_after.nakamoto_score());
 
-        
-                let tmp_change = SubnetChange {
-                    id: subnet.id,
-                    old_nodes: [subnet.nodes.clone(), subnet.removed_nodes.clone()].concat(),
-                    new_nodes: subnet_after.nodes.clone(),
-                    min_nakamoto_coefficients: subnet.min_nakamoto_coefficients.clone(),
-                    comment: subnet.comment.clone(),
-                    run_log: subnet.run_log.clone(),
-                };
-        
+                let score_before = subnet.nakamoto_score().score_avg_linear();
+                let score_after = subnet_after.nakamoto_score().score_avg_linear();
+                let nakamoto_score_diff = score_after - score_before;
+                let added = subnet_after.nodes.clone().into_iter().filter(|n| !subnet.nodes.contains(n)).collect::<Vec<_>>().pop().unwrap();
 
-                nodes_added.extend(tmp_change.added());
-                
-                subnets_changed
-                    .entry(subnet.id.clone())
-                    .and_modify(|change: &mut SubnetChange| {
-                        *change = change.clone().with_nodes(tmp_change.added().clone());
-                    })
-                    .or_insert(tmp_change.clone());
+                if nodes_added.contains_key(&added.id) {
+                    let (subnet_with_added, score) = nodes_added.get(&added.id).unwrap();
 
-                *subnet = subnet_after;
+                    if score >= &nakamoto_score_diff {
+
+
+
+                    }
+
+                } else {
+                    nodes_added.insert(&added.id, (subnet.id, nakamoto_score_diff));
+                }
             }
             available_nodes.retain(|elem| !nodes_added.contains(elem));
         }
