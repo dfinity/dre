@@ -98,7 +98,14 @@ impl Runner {
         verbose: bool,
         simulate: bool,
         replica_version: Option<String>,
+        other_args: Vec<String>,
+        help_other_args: bool,
     ) -> anyhow::Result<()> {
+        if help_other_args {
+            println!("The following additional arguments are available for the `subnet create` command:");
+            println!("{}", self.ic_admin.grep_subcommand_arguments("propose-to-create-subnet"));
+            return Ok(());
+        }
         let subnet_creation_data = self.dashboard_backend_client.subnet_create(request).await?;
         if verbose {
             if let Some(run_log) = &subnet_creation_data.run_log {
@@ -119,6 +126,7 @@ impl Runner {
                 ic_admin::ProposeCommand::CreateSubnet {
                     node_ids: subnet_creation_data.added,
                     replica_version,
+                    other_args,
                 },
                 ic_admin::ProposeOptions {
                     title: Some("Creating new subnet".into()),

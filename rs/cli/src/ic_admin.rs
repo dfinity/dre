@@ -352,6 +352,25 @@ impl IcAdminWrapper {
         }
     }
 
+    pub(crate) fn grep_subcommand_arguments(&self, subcommand: &str) -> String {
+        let ic_admin_path = self.ic_admin_bin_path.clone().unwrap_or_else(|| "ic-admin".to_string());
+        let cmd_result = Command::new(ic_admin_path).args([subcommand, "--help"]).output();
+        match cmd_result.map_err(|e| e.to_string()) {
+            Ok(output) => {
+                if output.status.success() {
+                    String::from_utf8_lossy(output.stdout.as_ref()).to_string()
+                } else {
+                    error!("Execution of ic-admin failed: {}", String::from_utf8_lossy(output.stderr.as_ref()));
+                    String::new()
+                }
+            }
+            Err(err) => {
+                error!("Error starting ic-admin process: {}", err);
+                String::new()
+            }
+        }
+    }
+
     /// Run an `ic-admin get-*` command directly, and without an HSM
     pub async fn run_passthrough_get(&self, args: &[String], silent: bool) -> anyhow::Result<String> {
         if args.is_empty() {

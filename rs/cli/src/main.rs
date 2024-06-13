@@ -106,6 +106,7 @@ async fn async_main() -> Result<(), anyhow::Error> {
             }
 
             cli::Commands::Subnet(subnet) => {
+                // Check if required arguments are provided
                 match &subnet.subcommand {
                     cli::subnet::Commands::Deploy { .. } | cli::subnet::Commands::Resize { .. } => {
                         if subnet.id.is_none() {
@@ -130,6 +131,7 @@ async fn async_main() -> Result<(), anyhow::Error> {
                     cli::subnet::Commands::Create { .. } => {}
                 }
 
+                // Execute the command
                 match &subnet.subcommand {
                     cli::subnet::Commands::Deploy { version } => runner_instance.deploy(&subnet.id.unwrap(), version, simulate).await,
                     cli::subnet::Commands::Replace {
@@ -209,6 +211,8 @@ async fn async_main() -> Result<(), anyhow::Error> {
                         include,
                         motivation,
                         replica_version,
+                        other_args,
+                        help_other_args,
                     } => {
                         let min_nakamoto_coefficients = parse_min_nakamoto_coefficients(&mut cmd, min_nakamoto_coefficients);
                         if let Some(motivation) = motivation.clone() {
@@ -225,6 +229,8 @@ async fn async_main() -> Result<(), anyhow::Error> {
                                     cli_opts.verbose,
                                     simulate,
                                     replica_version.clone(),
+                                    other_args.to_vec(),
+                                    *help_other_args,
                                 )
                                 .await
                         } else {
