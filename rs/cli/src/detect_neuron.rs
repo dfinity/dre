@@ -94,15 +94,29 @@ impl Neuron {
         Ok(neuron_id)
     }
 
-    pub async fn as_arg_vec(&self, with_auth: bool) -> anyhow::Result<Vec<String>> {
-        if !with_auth {
-            return Ok(vec![]);
-        };
-
+    pub async fn as_arg_vec(&self, require_auth: bool) -> anyhow::Result<Vec<String>> {
         // Auth required, try to find valid neuron id using HSM or with the private key
         // If private key is provided, use it without checking
-        let auth = self.get_auth().await?;
-        let neuron_id = auto_detect_neuron_id(self.network.get_nns_urls(), auth).await?;
+        let auth = match self.get_auth().await {
+            Ok(auth) => auth,
+            Err(e) => {
+                if require_auth {
+                    return Err(anyhow::anyhow!(e));
+                } else {
+                    return Ok(vec![]);
+                }
+            }
+        };
+        let neuron_id = match auto_detect_neuron_id(self.network.get_nns_urls(), auth).await {
+            Ok(neuron_id) => neuron_id,
+            Err(e) => {
+                if require_auth {
+                    return Err(anyhow::anyhow!(e));
+                } else {
+                    return Ok(vec![]);
+                }
+            }
+        };
         Ok(vec!["--proposer".to_string(), neuron_id.to_string()])
     }
 
@@ -126,6 +140,7 @@ impl Neuron {
 pub enum Auth {
     Hsm { pin: String, slot: u64, key_id: String },
     Keyfile { path: PathBuf },
+    None,
 }
 
 fn pkcs11_lib_path() -> anyhow::Result<PathBuf> {
@@ -159,6 +174,7 @@ impl Auth {
                 key_id.clone(),
             ],
             Auth::Keyfile { path } => vec!["--secret-key-pem".to_string(), path.to_string_lossy().to_string()],
+            Auth::None => vec![],
         }
     }
 
@@ -220,6 +236,7 @@ pub async fn auto_detect_neuron_id(nns_urls: &[url::Url], auth: Auth) -> anyhow:
             let sig_keys = SigKeys::from_pem(&contents).expect("Failed to parse pem file");
             Sender::SigKeys(sig_keys)
         }
+        Auth::None => return Err(anyhow::anyhow!("No auth provided")),
     };
     let agent = Agent::new(nns_urls[0].clone(), sender);
     if let Some(response) = agent

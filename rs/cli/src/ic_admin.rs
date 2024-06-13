@@ -173,8 +173,8 @@ impl IcAdminWrapper {
         }
     }
 
-    async fn print_ic_admin_command_line(&self, cmd: &Command) {
-        let auth = self.neuron.get_auth().await.unwrap();
+    async fn print_ic_admin_command_line(&self, cmd: &Command, with_auth: bool) {
+        let auth = if with_auth { self.neuron.get_auth().await.unwrap() } else { Auth::None };
         info!(
             "running ic-admin: \n$ {}{}",
             cmd.get_program().to_str().unwrap().yellow(),
@@ -218,6 +218,7 @@ impl IcAdminWrapper {
             }
         }
 
+        let with_auth = !as_simulation && !cmd.args().contains(&String::from("--dry-run"));
         self.run(
             &cmd.get_command_name(),
             [
@@ -236,12 +237,12 @@ impl IcAdminWrapper {
                         ]
                     })
                     .unwrap_or_default(),
-                self.neuron.as_arg_vec(true).await?,
+                self.neuron.as_arg_vec(with_auth).await?,
                 cmd.args(),
             ]
             .concat()
             .as_slice(),
-            true,
+            with_auth,
             false,
         )
         .await
@@ -250,7 +251,7 @@ impl IcAdminWrapper {
     pub async fn propose_run(&self, cmd: ProposeCommand, opts: ProposeOptions, simulate: bool) -> anyhow::Result<String> {
         // Simulated, or --help executions run immediately and do not proceed.
         if simulate || cmd.args().contains(&String::from("--help")) || cmd.args().contains(&String::from("--dry-run")) {
-            return self._exec(cmd, opts, simulate).await;
+            return self._exec(cmd, opts, true).await;
         }
 
         // If --yes was not specified, ask the user if they want to proceed
@@ -277,7 +278,7 @@ impl IcAdminWrapper {
         if silent {
             cmd.stderr(Stdio::piped());
         } else {
-            self.print_ic_admin_command_line(cmd).await;
+            self.print_ic_admin_command_line(cmd, with_auth).await;
         }
         cmd.stdout(Stdio::piped());
 
