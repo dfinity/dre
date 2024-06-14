@@ -509,7 +509,7 @@ impl DecentralizedSubnet {
                 .iter()
                 .filter_map(|node| {
                     let subnet_nodes: Vec<Node> = nodes_initial.iter().chain([node]).cloned().collect();
-                    self._node_to_replacement_candidate(&subnet_nodes, node, &mut run_log)
+                    self.node_to_replacement_candidate(&subnet_nodes, node, &mut run_log)
                 })
                 .collect();
 
@@ -588,7 +588,7 @@ impl DecentralizedSubnet {
                 .iter()
                 .filter_map(|node| {
                     let candidate_subnet_nodes: Vec<Node> = self.nodes.iter().filter(|n| n.id != node.id).cloned().collect();
-                    self._node_to_replacement_candidate(&candidate_subnet_nodes, node, &mut run_log)
+                    self.node_to_replacement_candidate(&candidate_subnet_nodes, node, &mut run_log)
                 })
                 .collect();
 
@@ -646,7 +646,7 @@ impl DecentralizedSubnet {
         })
     }
 
-    fn _node_to_replacement_candidate(&self, subnet_nodes: &[Node], touched_node: &Node, err_log: &mut Vec<String>) -> Option<ReplacementCandidate> {
+    fn node_to_replacement_candidate(&self, subnet_nodes: &[Node], touched_node: &Node, err_log: &mut Vec<String>) -> Option<ReplacementCandidate> {
         match Self::_check_business_rules_for_nodes(&self.id, subnet_nodes, &self.min_nakamoto_coefficients) {
             Ok((penalty, business_rules_log)) => {
                 let new_score = Self::_calc_nakamoto_score(subnet_nodes);
@@ -987,6 +987,53 @@ impl Display for SubnetChange {
     }
 }
 
+#[derive(Clone, Debug)]
+struct BestReplacementCandidate {
+    pub subnet: DecentralizedSubnet,
+    pub current_best: ReplacementCandidate,
+    candidates: Vec<ReplacementCandidate>
+}
+
+impl BestReplacementCandidate {
+    pub fn new(available_nodes: &Vec<Node>, subnet: &DecentralizedSubnet) -> Self {
+        let mut candidates = available_nodes
+                    .iter()
+                    .filter_map(|node| {
+                        let subnet_nodes: Vec<Node> = subnet.nodes.iter().chain([node]).cloned().collect();
+                        subnet.node_to_replacement_candidate(&subnet_nodes, node, &mut vec![])
+                    })
+                    .collect::<Vec<_>>();
+                
+        let current_best = subnet.choose_best_candidate(candidates.clone(), &mut vec![]).unwrap();
+        candidates.retain(|c| c.node.id != current_best.node.id);
+
+        Self {
+            subnet: subnet.clone(),
+            current_best,
+            candidates
+        }
+    }
+
+    pub fn score_increment(&self) -> f64 {
+        self.current_best.score.score_avg_linear() - self.subnet.nakamoto_score().score_avg_linear()
+    }
+
+    pub fn next_best(&self) -> Self {
+        let next_best = self.subnet.choose_best_candidate(self.candidates.clone(), &mut vec![]).unwrap();
+        let mut candidates = self.candidates.clone();
+        candidates.retain(|c| c.node.id != next_best.node.id);
+        Self {
+            subnet: self.subnet.clone(),
+            current_best: next_best,
+            candidates
+        }
+    }
+    
+    fn is_better_than(&self, other: &BestReplacementCandidate) -> bool {
+        false
+    }
+}
+
 #[derive(Default, Clone)]
 pub struct NetworkHealRequest {
     subnets_to_heal: Vec<DecentralizedSubnet>,
@@ -1018,11 +1065,50 @@ impl NetworkHealRequest {
         })
     }
 
-    pub fn heal(&self, mut available_nodes: Vec<Node>) -> Result<Vec<SubnetChangeResponse>, NetworkError> {
+    fn compute_best_candidates(&self, available_nodes: &Vec<Node>, subnets_pool: &Vec<DecentralizedSubnet>) -> BTreeMap<PrincipalId, ReplacementCandidate> {
+        let mut best_candidates: BTreeMap<PrincipalId, BestReplacementCandidate> = BTreeMap::new();
 
-        if let Some(max_replacable_nodes) = self.max_replacable_nodes {
-            self.subnets_to_heal = self.subnets_to_heal
-                .into_iter()
+        for subnet in subnets_pool {
+            let mut candidate = BestReplacementCandidate::new(available_nodes, &subnet);
+            let mut node_id = candidate.current_best.node.id;
+
+            loop {
+                let existing_candidate = best_candidates.get(&node_id).cloned();
+                match existing_candidate {
+                    Some(existing_candidate) => {
+                        if candidate.is_better_than(&existing_candidate) {
+                            // Replace the existing candidate with the current one
+                            best_candidates.insert(node_id, candidate);
+
+                            // Update the candidate with the existing one for the next iteration
+                            candidate = existing_candidate.next_best();
+                            node_id = candidate.current_best.node.id;
+                        } else {
+                            // Existing candidate is better, break the loop
+                            break;
+                        }
+                    }
+                    None => {
+                        // No existing candidate, insert the current one
+                        best_candidates.insert(node_id, candidate);
+                        break;
+                    }
+                }
+            }
+        }
+
+        best_candidates
+        .values()
+        .into_iter()
+        .map(|candidate|{ (candidate.subnet.id, candidate.current_best.clone())})
+        .collect::<BTreeMap<_,_>>()
+    }
+
+    pub fn heal(&self, mut available_nodes: Vec<Node>) -> Result<Vec<SubnetChangeResponse>, NetworkError> {
+        let mut subnets_pool = if let Some(max_replacable_nodes) = self.max_replacable_nodes {
+            self.subnets_to_heal
+                .iter()
+                .cloned()
                 .filter(|s| {
                     let unhealthy_nodes_len = s.removed_nodes.len();
                     if unhealthy_nodes_len > max_replacable_nodes {
@@ -1034,50 +1120,25 @@ impl NetworkHealRequest {
                     }
                     true
                 })
-                .collect();
-        }
+                .collect_vec()
+        } else {
+            self.subnets_to_heal.clone()
+        };
 
         let max_iterations = self.max_replacable_nodes.unwrap_or_else(|| {
-            self.subnets_to_heal
-                .into_iter()
+            subnets_pool
+                .iter()
                 .map(|s| s.removed_nodes.len())
                 .max()
                 .unwrap()
         });
 
-        let mut subnets_pool = self.subnets_to_heal.clone();
+        for _i in 0..1 {
+            let best_candidates = self.compute_best_candidates(&available_nodes, &subnets_pool);
 
-
-        for _i in 0..max_iterations {
-
-            let nodes_added = BTreeMap::new();
-
-            for subnet in subnets_pool.iter_mut() {
-                let subnet_after = subnet
-                    .subnet_with_more_nodes(1, &available_nodes)
-                    .map_err(|e| NetworkError::ResizeFailed(e.to_string()))?;
-
-                let score_before = subnet.nakamoto_score().score_avg_linear();
-                let score_after = subnet_after.nakamoto_score().score_avg_linear();
-                let nakamoto_score_diff = score_after - score_before;
-                let added = subnet_after.nodes.clone().into_iter().filter(|n| !subnet.nodes.contains(n)).collect::<Vec<_>>().pop().unwrap();
-
-                if nodes_added.contains_key(&added.id) {
-                    let (subnet_with_added, score) = nodes_added.get(&added.id).unwrap();
-
-                    if score >= &nakamoto_score_diff {
-
-
-
-                    }
-
-                } else {
-                    nodes_added.insert(&added.id, (subnet.id, nakamoto_score_diff));
-                }
-            }
-            available_nodes.retain(|elem| !nodes_added.contains(elem));
+            best_candidates.iter().for_each(|(id, candidate)| println!("Subnet: {} \n Candidate: {}", id, candidate.node.id));
+        
         }
-
-        Ok(subnets_changed.values().into_iter().map(SubnetChangeResponse::from).collect::<Vec<_>>())
+        Ok(vec![])
     }
 }
