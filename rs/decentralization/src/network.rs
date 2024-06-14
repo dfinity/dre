@@ -1030,7 +1030,7 @@ impl BestReplacementCandidate {
     }
     
     fn is_better_than(&self, other: &BestReplacementCandidate) -> bool {
-        false
+        self.score_increment() > other.score_increment()
     }
 }
 
@@ -1077,15 +1077,17 @@ impl NetworkHealRequest {
                 match existing_candidate {
                     Some(existing_candidate) => {
                         if candidate.is_better_than(&existing_candidate) {
+                            
                             // Replace the existing candidate with the current one
                             best_candidates.insert(node_id, candidate);
 
-                            // Update the candidate with the existing one for the next iteration
+                            // Update the candidate with the existing_candidate next best
                             candidate = existing_candidate.next_best();
                             node_id = candidate.current_best.node.id;
                         } else {
-                            // Existing candidate is better, break the loop
-                            break;
+                            // Update the candidate with the current candidate next best
+                            candidate = candidate.next_best();
+                            node_id = candidate.current_best.node.id;
                         }
                     }
                     None => {
@@ -1105,6 +1107,14 @@ impl NetworkHealRequest {
     }
 
     pub fn heal(&self, mut available_nodes: Vec<Node>) -> Result<Vec<SubnetChangeResponse>, NetworkError> {
+        let max_iterations = self.max_replacable_nodes.unwrap_or_else(|| {
+            self.subnets_to_heal
+                .iter()
+                .map(|s| s.removed_nodes.len())
+                .max()
+                .unwrap()
+        });
+
         let mut subnets_pool = if let Some(max_replacable_nodes) = self.max_replacable_nodes {
             self.subnets_to_heal
                 .iter()
@@ -1125,20 +1135,56 @@ impl NetworkHealRequest {
             self.subnets_to_heal.clone()
         };
 
-        let max_iterations = self.max_replacable_nodes.unwrap_or_else(|| {
-            subnets_pool
-                .iter()
-                .map(|s| s.removed_nodes.len())
-                .max()
-                .unwrap()
-        });
-
-        for _i in 0..1 {
+        for i in 0..max_iterations {
             let best_candidates = self.compute_best_candidates(&available_nodes, &subnets_pool);
 
-            best_candidates.iter().for_each(|(id, candidate)| println!("Subnet: {} \n Candidate: {}", id, candidate.node.id));
-        
+            for subnet in &mut subnets_pool {
+
+                
+                let replacement_node = best_candidates.get(&subnet.id).unwrap().node.clone();
+
+                let resized_subnet = subnet
+                    .clone()
+                    .subnet_with_more_nodes(1, &[replacement_node])
+                    .map_err(|e| NetworkError::ResizeFailed(e.to_string()))?;
+
+                let resized_subnet = if i >= subnet.removed_nodes.len() {
+                    // This is the case where I need to optimize
+                    resized_subnet
+                        .subnet_with_fewer_nodes(1)
+                        .map_err(|e| NetworkError::ResizeFailed(e.to_string()))?
+                } else {
+                    resized_subnet
+                };
+
+                println!("Subnet: {}", resized_subnet.id);
+                println!("Nodes Present: {:?}", resized_subnet.nodes.iter().map(|n| n.id.to_string().split('-').next().unwrap().to_string()).collect_vec());
+                println!("Nodes Removed: {:?}", resized_subnet.removed_nodes.iter().map(|n| n.id.to_string().split('-').next().unwrap().to_string()).collect_vec());
+
+                *subnet = resized_subnet
+                
+            }
+
+            let added = best_candidates.values().map(|candidate| candidate.node.id).collect_vec();
+
+            available_nodes.retain(|node|  !added.contains(&node.id));      
         }
-        Ok(vec![])
+
+
+        Ok(subnets_pool
+            .into_iter()
+            .map(|resulting_subnet| {
+                let original = self.subnets_to_heal
+                .iter()
+                .find(|original_sub| original_sub.id == resulting_subnet.id)
+                .unwrap();
+                
+                let old_nodes = original.nodes.clone().into_iter().chain(original.removed_nodes.clone()).collect_vec();
+                let new_nodes = resulting_subnet.nodes;
+
+                let change = SubnetChange{ id: resulting_subnet.id, old_nodes, new_nodes, min_nakamoto_coefficients: None, comment: None, run_log: vec![]};
+
+                SubnetChangeResponse::from(&change)
+            }).collect_vec())
     }
 }
