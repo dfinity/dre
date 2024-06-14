@@ -1150,12 +1150,17 @@ impl NetworkHealRequest {
 
                 let resized_subnet = if i >= subnet.removed_nodes.len() {
                     // This is the case where I need to optimize
-                    resized_subnet
+                    let resized_subnet = resized_subnet
                         .subnet_with_fewer_nodes(1)
-                        .map_err(|e| NetworkError::ResizeFailed(e.to_string()))?
+                        .map_err(|e| NetworkError::ResizeFailed(e.to_string()))?;
+
+                    // Add removed node to the available nodes for the next iteration
+                    available_nodes.push(resized_subnet.clone().nodes.pop().unwrap());
+                    resized_subnet
                 } else {
                     resized_subnet
                 };
+                
 
                 println!("Subnet: {}", resized_subnet.id);
                 println!("Nodes Present: {:?}", resized_subnet.nodes.iter().map(|n| n.id.to_string().split('-').next().unwrap().to_string()).collect_vec());
