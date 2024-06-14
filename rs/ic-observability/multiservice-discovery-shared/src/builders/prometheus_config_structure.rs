@@ -33,6 +33,7 @@ pub const IC_NAME: &str = "ic";
 pub const IC_NODE: &str = "ic_node";
 pub const IC_SUBNET: &str = "ic_subnet";
 pub const JOB: &str = "job";
+pub const API_BOUNDARY_NODE: &str = "api_boundary_node";
 // TODO: Re-add the labels below once we resolve the issues with the public dashboard queries
 // https://dfinity.atlassian.net/browse/OB-442
 // const DC: &str = "dc";
@@ -64,6 +65,10 @@ pub fn map_target_group(target_groups: Vec<TargetDto>) -> Vec<PrometheusStaticCo
                         .chain(match tg.subnet_id {
                             Some(subnet_id) => vec![(IC_SUBNET.into(), subnet_id.to_string())],
                             None => vec![],
+                        })
+                        .chain(match tg.is_api_bn {
+                            true => vec![(API_BOUNDARY_NODE.into(), "1".into())],
+                            false => vec![],
                         })
                         .chain(tg.custom_labels.clone().into_iter())
                         .collect()
