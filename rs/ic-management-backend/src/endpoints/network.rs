@@ -19,7 +19,7 @@ async fn heal(request: web::Json<HealRequest>, registry: web::Data<Arc<RwLock<Re
         .iter()
         .flat_map(|(id, unhealthy_nodes)| {
             let unhealthy_nodes = unhealthy_nodes.iter().map(Node::from).collect::<Vec<_>>();
-            let unhealthy_subnet = subnets.get(id).ok_or(NetworkError::SubnetNotFound(id.clone()))?;
+            let unhealthy_subnet = subnets.get(id).ok_or(NetworkError::SubnetNotFound(*id))?;
 
             Ok::<NetworkHealSubnets, NetworkError>(NetworkHealSubnets {
                 name: unhealthy_subnet.metadata.name.clone(),
