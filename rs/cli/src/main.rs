@@ -111,7 +111,7 @@ async fn async_main() -> Result<(), anyhow::Error> {
                 runner_instance
                     .network_heal(
                         ic_management_types::requests::HealRequest {
-                            max_replacable_nodes_per_sub: *max_replacable_nodes_per_sub,
+                            max_replaceable_nodes_per_sub: *max_replaceable_nodes_per_sub,
                         },
                         cli_opts.verbose,
                         simulate,
