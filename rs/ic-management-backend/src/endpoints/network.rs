@@ -30,7 +30,7 @@ async fn heal(request: web::Json<HealRequest>, registry: web::Data<Arc<RwLock<Re
         .collect_vec();
 
     let subnets_change_response =
-        NetworkHealRequest::new(subnets_to_heal).heal_and_optimize(registry.available_nodes().await?, request.max_replacable_nodes_per_sub)?;
+        NetworkHealRequest::new(subnets_to_heal).heal_and_optimize(registry.available_nodes().await?, request.max_replaceable_nodes_per_sub)?;
 
     Ok(HttpResponse::Ok().json(decentralization::HealResponse { subnets_change_response }))
 }
