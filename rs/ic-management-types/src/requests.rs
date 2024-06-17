@@ -117,5 +117,5 @@ impl NodeRemovalReason {
 
 #[derive(Serialize, Deserialize)]
 pub struct HealRequest {
-    pub max_replacable_nodes_per_sub: Option<usize>,
+    pub max_replaceable_nodes_per_sub: Option<usize>,
 }
