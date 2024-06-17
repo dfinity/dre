@@ -68,7 +68,6 @@ EXCLUDE_PACKAGES_FILTERS = [
     r".+\/sns\/.+",
     r".+\/ckbtc\/.+",
     r".+\/cketh\/.+",
-    r".+canister.+",
     r"rs\/nns.+",
     r".+test.+",
     r"^bazel$",
