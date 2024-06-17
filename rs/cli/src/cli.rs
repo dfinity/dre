@@ -63,7 +63,7 @@ pub enum Commands {
         /// Optimization will be performed automatically maximizing the decentralization
         /// and minimizing the number of replaced nodes per subnet
         #[clap(short, long)]
-        max_replacable_nodes_per_sub: Option<usize>,
+        max_replaceable_nodes_per_sub: Option<usize>,
     },
 
     /// Manage an existing subnet
