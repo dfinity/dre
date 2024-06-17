@@ -106,7 +106,7 @@ async fn async_main() -> Result<(), anyhow::Error> {
             }
 
             cli::Commands::Heal {
-                max_replacable_nodes_per_sub,
+                max_replaceable_nodes_per_sub,
             } => {
                 runner_instance
                     .network_heal(
