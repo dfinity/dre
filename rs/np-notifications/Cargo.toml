@@ -30,7 +30,7 @@ url = { workspace = true }
 [dev-dependencies]
 tempfile = { workspace = true }
 pretty_assertions = "1.4.0"
-httptest = "0.15.4"
+httptest = "0.16.1"
 # Default features disabled because it would require env_logger, and we are not using it
 test-log = { version = "0.2.12", default-features = false, features = [
     "trace",
