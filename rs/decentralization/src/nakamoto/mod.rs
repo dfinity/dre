@@ -932,7 +932,7 @@ mod tests {
             .heal_and_optimize(nodes_available.clone(), None)
             .unwrap();
 
-        let result = network_heal_response.get(0).unwrap().clone();
+        let result = network_heal_response.first().unwrap().clone();
 
         assert_eq!(important_unhealthy_principals, result.removed.clone());
 
