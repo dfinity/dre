@@ -2,8 +2,8 @@ use crate::nakamoto::{self, NakamotoScore};
 use crate::SubnetChangeResponse;
 use actix_web::http::StatusCode;
 use actix_web::{HttpResponse, ResponseError};
-use async_trait::async_trait;
 use anyhow::anyhow;
+use async_trait::async_trait;
 use ic_base_types::PrincipalId;
 use ic_management_types::{MinNakamotoCoefficients, NetworkError, NodeFeature};
 use itertools::Itertools;
@@ -990,17 +990,11 @@ impl Display for SubnetChange {
 pub struct NetworkHealSubnets {
     pub name: String,
     pub decentralized_subnet: DecentralizedSubnet,
-    pub unhealthy_nodes: Vec<Node>
+    pub unhealthy_nodes: Vec<Node>,
 }
 
 impl NetworkHealSubnets {
-    const IMPORTANT_SUBNETS: &'static [&'static str] = &[
-        "NNS", 
-        "SNS", 
-        "Bitcoin", 
-        "Internet Identity", 
-        "tECDSA signing"
-        ];
+    const IMPORTANT_SUBNETS: &'static [&'static str] = &["NNS", "SNS", "Bitcoin", "Internet Identity", "tECDSA signing"];
 }
 
 impl PartialOrd for NetworkHealSubnets {
@@ -1011,22 +1005,20 @@ impl PartialOrd for NetworkHealSubnets {
 
 impl Ord for NetworkHealSubnets {
     fn cmp(&self, other: &Self) -> Ordering {
-
         let self_is_important = NetworkHealSubnets::IMPORTANT_SUBNETS.contains(&self.name.as_str());
         let other_is_important = NetworkHealSubnets::IMPORTANT_SUBNETS.contains(&other.name.as_str());
 
         match (self_is_important, other_is_important) {
             (true, false) => Ordering::Greater,
             (false, true) => Ordering::Less,
-            _ => self.decentralized_subnet.nodes.len().cmp(&other.decentralized_subnet.nodes.len())
+            _ => self.decentralized_subnet.nodes.len().cmp(&other.decentralized_subnet.nodes.len()),
         }
-        
     }
 }
 
 #[derive(Default, Clone)]
 pub struct NetworkHealRequest {
-    pub subnets: Vec<NetworkHealSubnets>
+    pub subnets: Vec<NetworkHealSubnets>,
 }
 
 impl NetworkHealRequest {
@@ -1034,12 +1026,13 @@ impl NetworkHealRequest {
         Self { subnets }
     }
 
-    pub fn heal_and_optimize(&self, mut available_nodes: Vec<Node>, max_replacable_nodes: Option<usize>) -> Result<Vec<SubnetChangeResponse>, NetworkError> {
+    pub fn heal_and_optimize(
+        &self,
+        mut available_nodes: Vec<Node>,
+        max_replacable_nodes: Option<usize>,
+    ) -> Result<Vec<SubnetChangeResponse>, NetworkError> {
         let mut subnets_changed = Vec::new();
-        let subnets_to_heal = self.subnets
-            .iter()
-            .sorted_by(|a, b| a.cmp(b).reverse())
-            .collect_vec();
+        let subnets_to_heal = self.subnets.iter().sorted_by(|a, b| a.cmp(b).reverse()).collect_vec();
 
         for subnet in subnets_to_heal {
             let unhealthy_nodes_len = subnet.unhealthy_nodes.len();
@@ -1054,7 +1047,7 @@ impl NetworkHealRequest {
             }
             let optimize_limit = max_replacable_nodes.unwrap_or(unhealthy_nodes_len) - unhealthy_nodes_len;
 
-            let change = SubnetChangeRequest{
+            let change = SubnetChangeRequest {
                 subnet: subnet.decentralized_subnet.clone(),
                 available_nodes: available_nodes.clone(),
                 ..Default::default()

@@ -873,34 +873,26 @@ mod tests {
     }
 
     #[test]
-    fn test_network_heal_subnets_ord() {        
-        let not_important_small = new_test_subnet(
-            0,
-            13,
-            0
-        )
-        .with_subnet_id(PrincipalId::from_str("k44fs-gm4pv-afozh-rs7zw-cg32n-u7xov-xqyx3-2pw5q-eucnu-cosd4-uqe").unwrap());
-        let not_important_small = NetworkHealSubnets{
+    fn test_network_heal_subnets_ord() {
+        let not_important_small = new_test_subnet(0, 13, 0)
+            .with_subnet_id(PrincipalId::from_str("k44fs-gm4pv-afozh-rs7zw-cg32n-u7xov-xqyx3-2pw5q-eucnu-cosd4-uqe").unwrap());
+        let not_important_small = NetworkHealSubnets {
             name: String::from("App 20"),
             decentralized_subnet: not_important_small,
             unhealthy_nodes: vec![],
         };
 
-        let not_important_large = new_test_subnet(
-            0,
-            28,
-            0
-        )
-        .with_subnet_id(PrincipalId::from_str("bkfrj-6k62g-dycql-7h53p-atvkj-zg4to-gaogh-netha-ptybj-ntsgw-rqe").unwrap());
-        let not_important_large = NetworkHealSubnets{
+        let not_important_large = new_test_subnet(0, 28, 0)
+            .with_subnet_id(PrincipalId::from_str("bkfrj-6k62g-dycql-7h53p-atvkj-zg4to-gaogh-netha-ptybj-ntsgw-rqe").unwrap());
+        let not_important_large = NetworkHealSubnets {
             name: String::from("European"),
             decentralized_subnet: not_important_large,
             unhealthy_nodes: vec![],
         };
 
         let important =
-        serde_json::from_str::<ic_management_types::Subnet>(include_str!("../../test_data/subnet-uzr34.json")).expect("failed to read test data");
-        let important = NetworkHealSubnets{
+            serde_json::from_str::<ic_management_types::Subnet>(include_str!("../../test_data/subnet-uzr34.json")).expect("failed to read test data");
+        let important = NetworkHealSubnets {
             name: important.metadata.name.clone(),
             decentralized_subnet: DecentralizedSubnet::from(important),
             unhealthy_nodes: vec![],
@@ -909,10 +901,6 @@ mod tests {
         let unordered = vec![not_important_small.clone(), important.clone(), not_important_large.clone()];
         let healing_order = unordered.clone().into_iter().sorted_by(|a, b| a.cmp(b).reverse()).collect_vec();
 
-        assert_eq!(
-            vec![important, not_important_large, not_important_small],
-            healing_order
-        );
+        assert_eq!(vec![important, not_important_large, not_important_small], healing_order);
     }
-
 }

@@ -21,16 +21,16 @@ async fn heal(request: web::Json<HealRequest>, registry: web::Data<Arc<RwLock<Re
             let unhealthy_nodes = unhealthy_nodes.iter().map(Node::from).collect::<Vec<_>>();
             let unhealthy_subnet = subnets.get(id).ok_or(NetworkError::SubnetNotFound(id.clone()))?;
 
-            Ok::<NetworkHealSubnets, NetworkError>(NetworkHealSubnets{ 
+            Ok::<NetworkHealSubnets, NetworkError>(NetworkHealSubnets {
                 name: unhealthy_subnet.metadata.name.clone(),
                 decentralized_subnet: DecentralizedSubnet::from(unhealthy_subnet),
-                unhealthy_nodes}
-            )
+                unhealthy_nodes,
+            })
         })
         .collect_vec();
 
-    let subnets_change_response = NetworkHealRequest::new(subnets_to_heal)
-        .heal_and_optimize(registry.available_nodes().await?, request.max_replacable_nodes_per_sub)?;
+    let subnets_change_response =
+        NetworkHealRequest::new(subnets_to_heal).heal_and_optimize(registry.available_nodes().await?, request.max_replacable_nodes_per_sub)?;
 
     Ok(HttpResponse::Ok().json(decentralization::HealResponse { subnets_change_response }))
 }
