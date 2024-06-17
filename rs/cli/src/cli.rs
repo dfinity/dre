@@ -1,11 +1,10 @@
-use std::{path::PathBuf, time::Duration};
-
 use clap::{Parser, Subcommand};
 use clap_num::maybe_hex;
 use humantime::parse_duration;
 use ic_base_types::PrincipalId;
 use ic_management_types::Artifact;
 use ic_registry_keys::FirewallRulesScope;
+use std::{path::PathBuf, time::Duration};
 use url::Url;
 
 // For more info about the version setup, look at https://docs.rs/clap/latest/clap/struct.Command.html#method.version
@@ -296,6 +295,14 @@ pub mod subnet {
 
             #[clap(long)]
             replica_version: Option<String>,
+
+            /// Arbitrary other ic-admin args
+            #[clap(allow_hyphen_values = true)]
+            other_args: Vec<String>,
+
+            /// Provide the list of all arguments that ic-admin accepts for subnet creation
+            #[clap(long)]
+            help_other_args: bool,
         },
     }
 }

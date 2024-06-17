@@ -1,5 +1,3 @@
-use std::{cell::RefCell, fs::read_to_string, path::PathBuf, str::FromStr};
-
 use candid::{Decode, Encode};
 use cryptoki::{
     context::{CInitializeArgs, Pkcs11},
@@ -13,6 +11,7 @@ use ic_nns_governance::pb::v1::{ListNeurons, ListNeuronsResponse};
 use ic_sys::utility_command::UtilityCommand;
 use keyring::{Entry, Error};
 use log::{info, warn};
+use std::{cell::RefCell, fs::read_to_string, path::PathBuf, str::FromStr};
 
 static RELEASE_AUTOMATION_DEFAULT_PRIVATE_KEY_PEM: &str = ".config/dfx/identity/release-automation/identity.pem"; // Relative to the home directory
 const RELEASE_AUTOMATION_NEURON_ID: u64 = 80;
@@ -75,9 +74,13 @@ impl Neuron {
                 }
             } else {
                 // Fully automatic detection of the neuron id using HSM
-                match detect_hsm_auth()? {
-                    Some(auth) => auth,
-                    None => return Err(anyhow::anyhow!("No HSM detected")),
+                match detect_hsm_auth() {
+                    Ok(Some(auth)) => auth,
+                    Ok(None) => Auth::None,
+                    Err(e) => {
+                        warn!("Failed to detect HSM: {}", e);
+                        Auth::None
+                    }
                 }
             }
         };
@@ -94,15 +97,33 @@ impl Neuron {
         Ok(neuron_id)
     }
 
-    pub async fn as_arg_vec(&self, with_auth: bool) -> anyhow::Result<Vec<String>> {
-        if !with_auth {
-            return Ok(vec![]);
-        };
-
+    /// Returns the arguments to pass to the ic-admin CLI for this neuron
+    /// If require_auth is true, it will panic if the auth method could not be detected
+    /// This is useful to check if the auth detection work correctly even without
+    /// submitting a proposal.
+    pub async fn as_arg_vec(&self, require_auth: bool) -> anyhow::Result<Vec<String>> {
         // Auth required, try to find valid neuron id using HSM or with the private key
         // If private key is provided, use it without checking
-        let auth = self.get_auth().await?;
-        let neuron_id = auto_detect_neuron_id(self.network.get_nns_urls(), auth).await?;
+        let auth = match self.get_auth().await {
+            Ok(auth) => auth,
+            Err(e) => {
+                if require_auth {
+                    return Err(anyhow::anyhow!(e));
+                } else {
+                    return Ok(vec![]);
+                }
+            }
+        };
+        let neuron_id = match auto_detect_neuron_id(self.network.get_nns_urls(), auth).await {
+            Ok(neuron_id) => neuron_id,
+            Err(e) => {
+                if require_auth {
+                    return Err(anyhow::anyhow!(e));
+                } else {
+                    return Ok(vec![]);
+                }
+            }
+        };
         Ok(vec!["--proposer".to_string(), neuron_id.to_string()])
     }
 
@@ -126,6 +147,7 @@ impl Neuron {
 pub enum Auth {
     Hsm { pin: String, slot: u64, key_id: String },
     Keyfile { path: PathBuf },
+    None,
 }
 
 fn pkcs11_lib_path() -> anyhow::Result<PathBuf> {
@@ -147,7 +169,12 @@ pub fn get_pkcs11_ctx() -> anyhow::Result<Pkcs11> {
 }
 
 impl Auth {
-    pub fn as_arg_vec(&self) -> Vec<String> {
+    /// Returns the arguments to pass to the ic-admin CLI for the given auth method
+    /// If require_auth is true, it will panic if the auth method is Auth::None
+    /// Otherwise, it will return an empty vector if the auth method is Auth::None
+    /// This is useful to check if the auth detection work correctly even without
+    /// submitting a proposal
+    pub fn as_arg_vec(&self, require_auth: bool) -> Vec<String> {
         match self {
             Auth::Hsm { pin, slot, key_id } => vec![
                 "--use-hsm".to_string(),
@@ -159,6 +186,13 @@ impl Auth {
                 key_id.clone(),
             ],
             Auth::Keyfile { path } => vec!["--secret-key-pem".to_string(), path.to_string_lossy().to_string()],
+            Auth::None => {
+                if require_auth {
+                    panic!("Auth required")
+                } else {
+                    vec![]
+                }
+            }
         }
     }
 
@@ -184,9 +218,14 @@ pub fn detect_hsm_auth() -> anyhow::Result<Option<Auth>> {
         let info = ctx.get_slot_info(slot)?;
         if info.slot_description().starts_with("Nitrokey Nitrokey HSM") {
             let key_id = format!("hsm-{}-{}", info.slot_description(), info.manufacturer_id());
-            let pin_entry = Entry::new("release-cli", &key_id)?;
+            let pin_entry = Entry::new("dre-tool-hsm-pin", &key_id)?;
             let pin = match pin_entry.get_password() {
-                Err(Error::NoEntry) => Password::new().with_prompt("Please enter the HSM PIN: ").interact()?,
+                // TODO: Remove the old keyring entry search ("release-cli") after August 1st, 2024
+                Err(Error::NoEntry) => match Entry::new("release-cli", &key_id) {
+                    Err(Error::NoEntry) => Password::new().with_prompt("Please enter the HSM PIN: ").interact()?,
+                    Ok(pin_entry) => pin_entry.get_password()?,
+                    Err(e) => return Err(anyhow::anyhow!("Failed to get pin from keyring: {}", e)),
+                },
                 Ok(pin) => pin,
                 Err(e) => return Err(anyhow::anyhow!("Failed to get pin from keyring: {}", e)),
             };
@@ -220,6 +259,7 @@ pub async fn auto_detect_neuron_id(nns_urls: &[url::Url], auth: Auth) -> anyhow:
             let sig_keys = SigKeys::from_pem(&contents).expect("Failed to parse pem file");
             Sender::SigKeys(sig_keys)
         }
+        Auth::None => return Err(anyhow::anyhow!("No auth provided")),
     };
     let agent = Agent::new(nns_urls[0].clone(), sender);
     if let Some(response) = agent

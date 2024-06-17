@@ -35,6 +35,11 @@ rollout:
       wait_for_next_week: true
 
 releases:
+  - rc_name: rc--2024-06-12_23-01
+    versions:
+      - # Successful qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/jobs/7098651594
+        name: base
+        version: 246d0ce0784d9990c06904809722ce5c2c816269
   - rc_name: rc--2024-06-05_23-01
     versions:
       - # Successful qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/jobs/7033661917
@@ -45,6 +50,8 @@ releases:
       - # Successful qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/pipelines/1311667262
         name: base
         version: b9a0f18dd5d6019e3241f205de797bca0d9cc3f8
+      - name: hotfix-nns
+        version: 42284da596a2596361f305b8d6d6097b0f40e6d6
   - rc_name: rc--2024-05-22_23-01
     versions:
       - # Successful qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/pipelines/1302061674

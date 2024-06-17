@@ -15,6 +15,7 @@ use ic_management_types::{Artifact, MinNakamotoCoefficients, NodeFeature};
 use ic_nns_common::pb::v1::ProposalId;
 use ic_nns_governance::pb::v1::ListProposalInfo;
 use log::{info, warn};
+use regex::Regex;
 use serde_json::Value;
 use std::collections::BTreeMap;
 use std::str::FromStr;
@@ -119,6 +120,7 @@ async fn async_main() -> Result<(), anyhow::Error> {
             }
 
             cli::Commands::Subnet(subnet) => {
+                // Check if required arguments are provided
                 match &subnet.subcommand {
                     cli::subnet::Commands::Deploy { .. } | cli::subnet::Commands::Resize { .. } => {
                         if subnet.id.is_none() {
@@ -143,6 +145,7 @@ async fn async_main() -> Result<(), anyhow::Error> {
                     cli::subnet::Commands::Create { .. } => {}
                 }
 
+                // Execute the command
                 match &subnet.subcommand {
                     cli::subnet::Commands::Deploy { version } => runner_instance.deploy(&subnet.id.unwrap(), version, simulate).await,
                     cli::subnet::Commands::Replace {
@@ -222,6 +225,8 @@ async fn async_main() -> Result<(), anyhow::Error> {
                         include,
                         motivation,
                         replica_version,
+                        other_args,
+                        help_other_args,
                     } => {
                         let min_nakamoto_coefficients = parse_min_nakamoto_coefficients(&mut cmd, min_nakamoto_coefficients);
                         if let Some(motivation) = motivation.clone() {
@@ -238,6 +243,8 @@ async fn async_main() -> Result<(), anyhow::Error> {
                                     cli_opts.verbose,
                                     simulate,
                                     replica_version.clone(),
+                                    other_args.to_vec(),
+                                    *help_other_args,
                                 )
                                 .await
                         } else {
@@ -624,9 +631,14 @@ fn init_logger() {
 }
 
 fn check_latest_release(curr_version: &str) -> anyhow::Result<UpdateStatus> {
-    let current_version = match curr_version.split_once('-') {
+    // ^                --> start of line
+    // v?               --> optional 'v' char
+    // (\d+\.\d+\.\d+)  --> string in format '1.22.33'
+    // (-([0-9a-f])+)   --> string in format '-12345af' (optional)
+    let re_version = Regex::new(r"^v?(\d+\.\d+\.\d+)(-([0-9a-f])+(\-dirty)?)?$").unwrap();
+    let current_version = match re_version.captures(curr_version) {
+        Some(cap) => cap.get(1).unwrap().as_str(),
         None => return Err(anyhow::anyhow!("Version '{}' doesn't follow expected naming", curr_version)),
-        Some((ver, _)) => ver,
     };
 
     let maybe_configured_backend = self_update::backends::github::ReleaseList::configure()

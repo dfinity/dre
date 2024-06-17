@@ -173,8 +173,17 @@ impl IcAdminWrapper {
         }
     }
 
-    async fn print_ic_admin_command_line(&self, cmd: &Command) {
-        let auth = self.neuron.get_auth().await.unwrap();
+    async fn print_ic_admin_command_line(&self, cmd: &Command, require_auth: bool) {
+        let auth = match self.neuron.get_auth().await {
+            Ok(auth) => auth,
+            Err(e) => {
+                if require_auth {
+                    panic!("Error getting auth: {:?}", e);
+                } else {
+                    Auth::None
+                }
+            }
+        };
         info!(
             "running ic-admin: \n$ {}{}",
             cmd.get_program().to_str().unwrap().yellow(),
@@ -218,6 +227,7 @@ impl IcAdminWrapper {
             }
         }
 
+        let with_auth = !as_simulation && !cmd.args().contains(&String::from("--dry-run"));
         self.run(
             &cmd.get_command_name(),
             [
@@ -236,12 +246,12 @@ impl IcAdminWrapper {
                         ]
                     })
                     .unwrap_or_default(),
-                self.neuron.as_arg_vec(true).await?,
+                self.neuron.as_arg_vec(with_auth).await?,
                 cmd.args(),
             ]
             .concat()
             .as_slice(),
-            true,
+            with_auth,
             false,
         )
         .await
@@ -250,7 +260,7 @@ impl IcAdminWrapper {
     pub async fn propose_run(&self, cmd: ProposeCommand, opts: ProposeOptions, simulate: bool) -> anyhow::Result<String> {
         // Simulated, or --help executions run immediately and do not proceed.
         if simulate || cmd.args().contains(&String::from("--help")) || cmd.args().contains(&String::from("--dry-run")) {
-            return self._exec(cmd, opts, simulate).await;
+            return self._exec(cmd, opts, true).await;
         }
 
         // If --yes was not specified, ask the user if they want to proceed
@@ -270,14 +280,14 @@ impl IcAdminWrapper {
     async fn _run_ic_admin_with_args(&self, ic_admin_args: &[String], with_auth: bool, silent: bool) -> anyhow::Result<String> {
         let ic_admin_path = self.ic_admin_bin_path.clone().unwrap_or_else(|| "ic-admin".to_string());
         let mut cmd = Command::new(ic_admin_path);
-        let auth_options = if with_auth { self.neuron.get_auth().await?.as_arg_vec() } else { vec![] };
+        let auth_options = self.neuron.get_auth().await?.as_arg_vec(with_auth);
         let root_options = [auth_options, vec!["--nns-urls".to_string(), self.network.get_nns_urls_string()]].concat();
         let cmd = cmd.args([&root_options, ic_admin_args].concat());
 
         if silent {
             cmd.stderr(Stdio::piped());
         } else {
-            self.print_ic_admin_command_line(cmd).await;
+            self.print_ic_admin_command_line(cmd, with_auth).await;
         }
         cmd.stdout(Stdio::piped());
 
@@ -348,6 +358,25 @@ impl IcAdminWrapper {
             Err(err) => {
                 error!("Error starting ic-admin process: {}", err);
                 vec![]
+            }
+        }
+    }
+
+    pub(crate) fn grep_subcommand_arguments(&self, subcommand: &str) -> String {
+        let ic_admin_path = self.ic_admin_bin_path.clone().unwrap_or_else(|| "ic-admin".to_string());
+        let cmd_result = Command::new(ic_admin_path).args([subcommand, "--help"]).output();
+        match cmd_result.map_err(|e| e.to_string()) {
+            Ok(output) => {
+                if output.status.success() {
+                    String::from_utf8_lossy(output.stdout.as_ref()).to_string()
+                } else {
+                    error!("Execution of ic-admin failed: {}", String::from_utf8_lossy(output.stderr.as_ref()));
+                    String::new()
+                }
+            }
+            Err(err) => {
+                error!("Error starting ic-admin process: {}", err);
+                String::new()
             }
         }
     }
@@ -886,6 +915,7 @@ pub enum ProposeCommand {
     CreateSubnet {
         node_ids: Vec<PrincipalId>,
         replica_version: String,
+        other_args: Vec<String>,
     },
     AddApiBoundaryNodes {
         nodes: Vec<PrincipalId>,
@@ -955,7 +985,11 @@ impl ProposeCommand {
             .concat(),
             Self::RemoveNodes { nodes } => nodes.iter().map(|n| n.to_string()).collect(),
             Self::ReviseElectedVersions { release_artifact: _, args } => args.clone(),
-            Self::CreateSubnet { node_ids, replica_version } => {
+            Self::CreateSubnet {
+                node_ids,
+                replica_version,
+                other_args,
+            } => {
                 let mut args = vec!["--subnet-type".to_string(), "application".to_string()];
 
                 args.push("--replica-version-id".to_string());
@@ -964,6 +998,7 @@ impl ProposeCommand {
                 for id in node_ids {
                     args.push(id.to_string())
                 }
+                args.extend(other_args.to_vec());
                 args
             }
             Self::DeployGuestosToAllUnassignedNodes { replica_version } => {
@@ -1103,7 +1138,7 @@ oSMDIQBa2NLmSmaqjDXej4rrJEuEhKIz7/pGXpxztViWhB+X9Q==
                         ]
                     })
                     .unwrap_or_default(),
-                cli.neuron.get_auth().await?.as_arg_vec(),
+                cli.neuron.get_auth().await?.as_arg_vec(true),
                 cmd.args(),
             ]
             .concat()
