@@ -40,7 +40,7 @@ releases:
       - # Successful qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/jobs/7098651594
         name: base
         version: 246d0ce0784d9990c06904809722ce5c2c816269
-      - # Successful qualification pipeline: TODO
+      - # Successful qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/jobs/7114764016
         name: storage-layer-disabled
         version: 2dfe3a1864d1b9a6df462e9503adf351036e7965
   - rc_name: rc--2024-06-05_23-01
