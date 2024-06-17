@@ -1044,7 +1044,7 @@ impl NetworkHealRequest {
                     continue;
                 }
             }
-            let optimize_limit = max_replacable_nodes.unwrap_or(unhealthy_nodes_len) - unhealthy_nodes_len;
+            let optimize_limit = max_replaceable_nodes.unwrap_or(unhealthy_nodes_len) - unhealthy_nodes_len;
 
             let change = SubnetChangeRequest {
                 subnet: subnet.decentralized_subnet.clone(),
