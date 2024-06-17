@@ -16,7 +16,11 @@ pub async fn run_downloader_loop(logger: Logger, cli: CliArgs, stop_signal: Rece
     let interval = crossbeam::channel::tick(cli.poll_interval);
 
     let sns_canister: SnsWasmCanister = IcAgentCanisterClient::from_anonymous(cli.nns_urls[0].clone()).unwrap().into();
-    let client = Client::builder().timeout(cli.registry_query_timeout).build().unwrap();
+    let client = Client::builder()
+        .timeout(cli.registry_query_timeout)
+        .danger_accept_invalid_certs(true)
+        .build()
+        .unwrap();
 
     let mut current_hash: u64 = 0;
     let limit: u64 = 100;
