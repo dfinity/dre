@@ -903,4 +903,41 @@ mod tests {
 
         assert_eq!(vec![important, not_important_large, not_important_small], healing_order);
     }
+
+    #[test]
+    fn test_network_heal() {
+        let nodes_available = new_test_nodes("spare", 10, 2);
+        let nodes_available_principals = nodes_available.iter().map(|n| n.id).collect_vec();
+
+        let important =
+            serde_json::from_str::<ic_management_types::Subnet>(include_str!("../../test_data/subnet-uzr34.json")).expect("failed to read test data");
+        let important_decentralized = DecentralizedSubnet::from(important.clone());
+        let important_unhealthy_principals = vec![
+            PrincipalId::from_str("e4ysi-xp4fs-5ckcv-7e76q-edydw-ak6le-2acyt-k7udb-lj2vo-fqhhx-vqe").unwrap(),
+            PrincipalId::from_str("aefqq-d7ldg-ljk5s-cmnxk-qqu7c-tw52l-74g3m-xxl5d-ag4ia-dxubz-wae").unwrap(),
+        ];
+        let unhealthy_nodes = important_decentralized
+            .nodes
+            .clone()
+            .into_iter()
+            .filter(|n| important_unhealthy_principals.contains(&n.id))
+            .collect_vec();
+        let important = NetworkHealSubnets {
+            name: important.metadata.name.clone(),
+            decentralized_subnet: important_decentralized,
+            unhealthy_nodes: unhealthy_nodes.clone(),
+        };
+
+        let network_heal_response = NetworkHealRequest::new(vec![important])
+            .heal_and_optimize(nodes_available.clone(), None)
+            .unwrap();
+
+        let result = network_heal_response.get(0).unwrap().clone();
+
+        assert_eq!(important_unhealthy_principals, result.removed.clone());
+
+        assert_eq!(important_unhealthy_principals.len(), result.added.len());
+
+        result.added.iter().for_each(|n| assert!(nodes_available_principals.contains(n)));
+    }
 }
