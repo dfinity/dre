@@ -1016,7 +1016,6 @@ impl Ord for NetworkHealSubnets {
     }
 }
 
-#[derive(Default, Clone)]
 pub struct NetworkHealRequest {
     pub subnets: Vec<NetworkHealSubnets>,
 }
