@@ -1028,7 +1028,7 @@ impl NetworkHealRequest {
     pub fn heal_and_optimize(
         &self,
         mut available_nodes: Vec<Node>,
-        max_replacable_nodes: Option<usize>,
+        max_replaceable_nodes: Option<usize>,
     ) -> Result<Vec<SubnetChangeResponse>, NetworkError> {
         let mut subnets_changed = Vec::new();
         let subnets_to_heal = self.subnets.iter().sorted_by(|a, b| a.cmp(b).reverse()).collect_vec();
