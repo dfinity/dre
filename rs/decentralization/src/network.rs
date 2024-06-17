@@ -857,8 +857,19 @@ impl SubnetChangeRequest {
     pub fn optimize(mut self, optimize_count: usize, replacements_unhealthy: &Vec<Node>) -> Result<SubnetChange, NetworkError> {
         let old_nodes = self.subnet.nodes.clone();
         self.subnet = self.subnet.without_nodes(replacements_unhealthy.clone())?;
-        let result = self.resize(optimize_count + replacements_unhealthy.len(), optimize_count)?;
-        Ok(SubnetChange { old_nodes, ..result })
+        let healed = self.resize(replacements_unhealthy.len(), 0)?;
+        let optimized = self.resize(optimize_count + replacements_unhealthy.len(), optimize_count)?;
+
+        let score_healed = NakamotoScore::new_from_nodes(&healed.new_nodes);
+        let score_optimized = NakamotoScore::new_from_nodes(&optimized.new_nodes);
+
+        let result = if score_healed.score_avg_linear() >= score_optimized.score_avg_linear() {
+            SubnetChange { old_nodes, ..healed }
+        } else {
+            SubnetChange { old_nodes, ..optimized }
+        };
+
+        Ok(result)
     }
 
     /// Add or remove nodes from the subnet.
