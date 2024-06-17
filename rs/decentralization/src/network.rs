@@ -1036,7 +1036,7 @@ impl NetworkHealRequest {
         for subnet in subnets_to_heal {
             let unhealthy_nodes_len = subnet.unhealthy_nodes.len();
             if let Some(max_replacable_nodes) = max_replacable_nodes {
-                if unhealthy_nodes_len > max_replacable_nodes {
+                if unhealthy_nodes_len > max_replaceable_nodes {
                     warn!(
                         "Subnet {} has {} unhealthy nodes\nMax replacable nodes is {} skipping...",
                         subnet.decentralized_subnet.id, unhealthy_nodes_len, max_replacable_nodes
