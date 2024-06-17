@@ -1,5 +1,5 @@
 {
-  "checksum": "4bbd989bbf5c42e742aa858a262040efe99e2a94f7211a585016f04055bd73bb",
+  "checksum": "87e2c8f3dba5c353695777f770c5dd8e59ed40002ef4a441217e73677175c77b",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -30087,7 +30087,7 @@
               "target": "ic_types"
             },
             {
-              "id": "opentelemetry 0.21.0",
+              "id": "opentelemetry 0.22.0",
               "target": "opentelemetry"
             },
             {
@@ -32305,85 +32305,6 @@
         "links": "openssl"
       },
       "license": "MIT"
-    },
-    "opentelemetry 0.21.0": {
-      "name": "opentelemetry",
-      "version": "0.21.0",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/opentelemetry/0.21.0/download",
-          "sha256": "1e32339a5dc40459130b3bd269e9892439f55b33e772d2a9d402a789baaf4e8a"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "opentelemetry",
-            "crate_root": "src/lib.rs",
-            "srcs": [
-              "**/*.rs"
-            ]
-          }
-        }
-      ],
-      "library_target_name": "opentelemetry",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "crate_features": {
-          "common": [
-            "default",
-            "metrics",
-            "pin-project-lite",
-            "trace"
-          ],
-          "selects": {}
-        },
-        "deps": {
-          "common": [
-            {
-              "id": "futures-core 0.3.30",
-              "target": "futures_core"
-            },
-            {
-              "id": "futures-sink 0.3.30",
-              "target": "futures_sink"
-            },
-            {
-              "id": "indexmap 2.2.6",
-              "target": "indexmap"
-            },
-            {
-              "id": "once_cell 1.19.0",
-              "target": "once_cell"
-            },
-            {
-              "id": "pin-project-lite 0.2.14",
-              "target": "pin_project_lite"
-            },
-            {
-              "id": "thiserror 1.0.61",
-              "target": "thiserror"
-            },
-            {
-              "id": "urlencoding 2.1.3",
-              "target": "urlencoding"
-            }
-          ],
-          "selects": {
-            "cfg(all(target_arch = \"wasm32\", not(target_os = \"wasi\")))": [
-              {
-                "id": "js-sys 0.3.69",
-                "target": "js_sys"
-              }
-            ]
-          }
-        },
-        "edition": "2021",
-        "version": "0.21.0"
-      },
-      "license": "Apache-2.0"
     },
     "opentelemetry 0.22.0": {
       "name": "opentelemetry",
