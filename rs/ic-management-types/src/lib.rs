@@ -268,6 +268,8 @@ pub struct MinNakamotoCoefficients {
     pub average: f64,
 }
 
+impl Eq for MinNakamotoCoefficients {}
+
 #[derive(Clone, Serialize, Debug, Deserialize)]
 pub struct TopologyProposal {
     pub id: u64,

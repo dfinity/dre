@@ -11,7 +11,7 @@ use log::{debug, info, warn};
 use rand::{seq::SliceRandom, SeedableRng};
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
-use std::collections::{BTreeMap, HashSet};
+use std::collections::BTreeMap;
 use std::fmt::{Debug, Display, Formatter};
 use std::hash::Hash;
 
@@ -123,7 +123,7 @@ impl From<&ic_management_types::Node> for Node {
     }
 }
 
-#[derive(Clone, Default, Debug, Serialize, Deserialize)]
+#[derive(Clone, Default, Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct DecentralizedSubnet {
     pub id: PrincipalId,
     pub nodes: Vec<Node>,
@@ -987,58 +987,98 @@ impl Display for SubnetChange {
     }
 }
 
-#[derive(Default, Clone, Debug)]
+#[derive(PartialEq, Eq)]
+pub struct NetworkHealSubnets {
+    pub name: String,
+    pub decentralized_subnet: DecentralizedSubnet,
+    pub unhealthy_nodes: Vec<Node>
+}
+
+impl NetworkHealSubnets {
+    const IMPORTANT_SUBNETS: &'static [&'static str] = &[
+        "NNS", 
+        "SNS", 
+        "Bitcoin", 
+        "Internet Identity, tECDSA backup", 
+        "tECDSA signing"
+        ];
+}
+
+impl PartialOrd for NetworkHealSubnets {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for NetworkHealSubnets {
+    fn cmp(&self, other: &Self) -> Ordering {
+
+        let self_is_important = NetworkHealSubnets::IMPORTANT_SUBNETS.contains(&self.name.as_str());
+        let other_is_important = NetworkHealSubnets::IMPORTANT_SUBNETS.contains(&other.name.as_str());
+
+        match (self_is_important, other_is_important) {
+            (true, false) => Ordering::Greater,
+            (false, true) => Ordering::Less,
+            _ => match self.decentralized_subnet.nodes.len().cmp(&other.decentralized_subnet.nodes.len()) {
+                Ordering::Equal => self.unhealthy_nodes.len().cmp(&other.unhealthy_nodes.len()),
+                other => other,
+            }
+        }
+        
+    }
+}
+
+#[derive(Default, Clone)]
 pub struct NetworkHealRequest {
-    pub subnets_with_unhealthy_nodes: Vec<(DecentralizedSubnet, Vec<Node>)>,
+    pub subnets: BTreeMap<PrincipalId, ic_management_types::Subnet>,
+    pub unhealthy_subnets: BTreeMap<PrincipalId, Vec<ic_management_types::Node>>,
 }
 
 impl NetworkHealRequest {
-    pub fn new(
-        subnets: BTreeMap<PrincipalId, ic_management_types::Subnet>,
-        unhealthy_subnets: BTreeMap<PrincipalId, Vec<ic_management_types::Node>>,
-    ) -> Self {
-        Self {
-            subnets_with_unhealthy_nodes: unhealthy_subnets
-                .into_iter()
-                .map(|(id, unhealthy_nodes)| {
-                    let subnet = subnets.get(&id).unwrap().clone();
+    fn network_heal_subnets(&self) -> Result<Vec<NetworkHealSubnets>, NetworkError> {
+        Ok(self.unhealthy_subnets
+            .iter()
+            .flat_map(|(id, unhealthy_nodes)| {
+                let unhealthy_nodes = unhealthy_nodes.iter().map(Node::from).collect::<Vec<_>>();
+                let unhealthy_subnet = self.subnets.get(id).ok_or(NetworkError::SubnetNotFound(id.clone()))?;
 
-                    (
-                        DecentralizedSubnet::from(subnet),
-                        unhealthy_nodes.iter().map(Node::from).collect::<Vec<_>>(),
-                    )
-                })
-                .collect::<Vec<_>>(),
-        }
+                Ok::<NetworkHealSubnets, NetworkError>(NetworkHealSubnets{ 
+                    name: unhealthy_subnet.metadata.name.clone(),
+                    decentralized_subnet: DecentralizedSubnet::from(unhealthy_subnet),
+                    unhealthy_nodes}
+                )
+            })
+            .sorted_by(|a, b| a.cmp(b).reverse())
+            .collect_vec())
     }
 
-    pub fn heal(&self, available_nodes: Vec<Node>, max_replacable_nodes: Option<usize>) -> Result<Vec<SubnetChangeResponse>, NetworkError> {
-        let mut already_added = HashSet::new();
+    pub fn heal(&self, mut available_nodes: Vec<Node>, max_replacable_nodes: Option<usize>) -> Result<Vec<SubnetChangeResponse>, NetworkError> {
         let mut subnets_changed = Vec::new();
+        let subnets = self.network_heal_subnets()?;
 
-        for (subnet, unhealthy_nodes) in &self.subnets_with_unhealthy_nodes {
-            let unhealthy_nodes_len = unhealthy_nodes.len();
+        for subnet in subnets {
+            let unhealthy_nodes_len = subnet.unhealthy_nodes.len();
             if let Some(max_replacable_nodes) = max_replacable_nodes {
                 if unhealthy_nodes_len > max_replacable_nodes {
                     warn!(
                         "Subnet {} has {} unhealthy nodes\nMax replacable nodes is {} skipping...",
-                        subnet.id, unhealthy_nodes_len, max_replacable_nodes
+                        subnet.decentralized_subnet.id, unhealthy_nodes_len, max_replacable_nodes
                     );
                     continue;
                 }
             }
             let optimize_limit = max_replacable_nodes.unwrap_or(unhealthy_nodes_len) - unhealthy_nodes_len;
 
-            let optimized = SubnetChangeRequest {
-                subnet: subnet.clone(),
+            let change = SubnetChangeRequest{
+                subnet: subnet.decentralized_subnet.clone(),
                 available_nodes: available_nodes.clone(),
                 ..Default::default()
-            }
-            .with_exclude_nodes(already_added.iter().cloned().collect::<Vec<_>>())
-            .optimize(optimize_limit, &unhealthy_nodes)?;
+            };
+            let change = change.optimize(optimize_limit, &subnet.unhealthy_nodes)?;
 
-            already_added.extend(optimized.added().iter().map(|n| n.id.to_string()).collect::<Vec<_>>());
-            subnets_changed.push(SubnetChangeResponse::from(&optimized));
+            // Remove from the available nodes the nodes we added
+            available_nodes.retain(|node| !change.added().contains(node));
+            subnets_changed.push(SubnetChangeResponse::from(&change));
         }
 
         Ok(subnets_changed)

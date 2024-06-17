@@ -15,7 +15,7 @@ async fn heal(request: web::Json<HealRequest>, registry: web::Data<Arc<RwLock<Re
     let unhealthy_subnets: BTreeMap<PrincipalId, Vec<ic_management_types::Node>> = subnets::unhealthy_with_nodes(&subnets, nodes_health).await;
 
     let subnets_change_response =
-        NetworkHealRequest::new(subnets, unhealthy_subnets).heal(registry.available_nodes().await?, request.max_replacable_nodes_per_sub)?;
+        NetworkHealRequest{ subnets, unhealthy_subnets}.heal(registry.available_nodes().await?, request.max_replacable_nodes_per_sub)?;
 
     Ok(HttpResponse::Ok().json(decentralization::HealResponse { subnets_change_response }))
 }
