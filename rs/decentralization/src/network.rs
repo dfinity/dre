@@ -1034,16 +1034,23 @@ impl NetworkHealRequest {
         let subnets_to_heal = self.subnets.iter().sorted_by(|a, b| a.cmp(b).reverse()).collect_vec();
 
         for subnet in subnets_to_heal {
-            let unhealthy_nodes_len = subnet.unhealthy_nodes.len();
-            if let Some(max_replacable_nodes) = max_replacable_nodes {
+            let mut unhealthy_nodes = subnet.unhealthy_nodes.clone();
+            let unhealthy_nodes_len = unhealthy_nodes.len();
+
+            if let Some(max_replaceable_nodes) = max_replaceable_nodes {
                 if unhealthy_nodes_len > max_replaceable_nodes {
+                    unhealthy_nodes = subnet.unhealthy_nodes.clone().into_iter().take(max_replaceable_nodes).collect_vec();
+
                     warn!(
-                        "Subnet {} has {} unhealthy nodes\nMax replacable nodes is {} skipping...",
-                        subnet.decentralized_subnet.id, unhealthy_nodes_len, max_replaceable_nodes
+                        "Subnet {} has {} unhealthy nodes\nMax replacable nodes is {}\nNodes considered for replacement: {:?}",
+                        subnet.decentralized_subnet.id,
+                        unhealthy_nodes_len,
+                        max_replaceable_nodes,
+                        unhealthy_nodes.iter().map(|node| node.id).collect_vec()
                     );
-                    continue;
                 }
             }
+            let unhealthy_nodes_len = unhealthy_nodes.len();
             let optimize_limit = max_replaceable_nodes.unwrap_or(unhealthy_nodes_len) - unhealthy_nodes_len;
 
             let change = SubnetChangeRequest {
@@ -1051,7 +1058,7 @@ impl NetworkHealRequest {
                 available_nodes: available_nodes.clone(),
                 ..Default::default()
             };
-            let change = change.optimize(optimize_limit, &subnet.unhealthy_nodes)?;
+            let change = change.optimize(optimize_limit, &unhealthy_nodes)?;
 
             available_nodes.retain(|node| !change.added().contains(node));
             subnets_changed.push(SubnetChangeResponse::from(&change));

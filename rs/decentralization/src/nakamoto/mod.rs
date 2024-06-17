@@ -928,15 +928,25 @@ mod tests {
             unhealthy_nodes: unhealthy_nodes.clone(),
         };
 
-        let network_heal_response = NetworkHealRequest::new(vec![important])
-            .heal_and_optimize(nodes_available.clone(), None)
+        let max_replaceable_nodes = None;
+        let network_heal_response = NetworkHealRequest::new(vec![important.clone()])
+            .heal_and_optimize(nodes_available.clone(), max_replaceable_nodes)
             .unwrap();
-
         let result = network_heal_response.first().unwrap().clone();
 
         assert_eq!(important_unhealthy_principals, result.removed.clone());
 
         assert_eq!(important_unhealthy_principals.len(), result.added.len());
+
+        let max_replaceable_nodes = Some(1);
+        let network_heal_response = NetworkHealRequest::new(vec![important.clone()])
+            .heal_and_optimize(nodes_available.clone(), max_replaceable_nodes)
+            .unwrap();
+        let result = network_heal_response.first().unwrap().clone();
+
+        assert_eq!(important_unhealthy_principals.into_iter().take(1).collect_vec(), result.removed.clone());
+
+        assert_eq!(1, result.added.len());
 
         result.added.iter().for_each(|n| assert!(nodes_available_principals.contains(n)));
     }
