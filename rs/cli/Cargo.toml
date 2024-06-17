@@ -75,7 +75,7 @@ humantime = { workspace = true }
 wiremock = { workspace = true }
 
 [build-dependencies]
-clap_complete = "4.5.2"
+clap_complete = "4.5.5"
 clap = { workspace = true }
 clap-num = { workspace = true }
 ic-base-types = { workspace = true }
