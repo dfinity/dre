@@ -28,10 +28,7 @@ async fn main() {
 fn make_logger(level: Level) -> Logger {
     let decorator = slog_term::TermDecorator::new().build();
     let full_format = slog_term::FullFormat::new(decorator).build().fuse();
-    let drain = slog::Filter::new(full_format, move |record: &slog::Record| {
-        record.level().is_at_least(level)
-    })
-    .fuse();
+    let drain = slog::Filter::new(full_format, move |record: &slog::Record| record.level().is_at_least(level)).fuse();
     let drain = slog_async::Async::new(drain).chan_size(8192).build();
     Logger::root(drain.fuse(), o!())
 }
@@ -52,10 +49,7 @@ Log level to use for running. You can use standard log levels 'info',
     #[clap(long, default_value = "8080", help = "Port to use for running the api")]
     port: u16,
 
-    #[clap(
-        long,
-        help = "File path to the vector config in toml used for the routing configuration"
-    )]
+    #[clap(long, help = "File path to the vector config in toml used for the routing configuration")]
     file_path: PathBuf,
 
     #[clap(

@@ -3,9 +3,7 @@ use axum::{extract::State, Json};
 
 use super::{Server, TopLevelVectorTransform, SEPARATOR};
 
-pub(crate) async fn content(
-    State(state): State<Server>,
-) -> Result<Json<TopLevelVectorTransform>, (StatusCode, String)> {
+pub(crate) async fn content(State(state): State<Server>) -> Result<Json<TopLevelVectorTransform>, (StatusCode, String)> {
     Ok(Json(state.read_file().await))
 }
 

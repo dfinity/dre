@@ -55,23 +55,20 @@ impl Server {
                 let _ = self.read_file().await;
                 info!(self.logger, "Validated initial toml content");
             }
-            Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
-                match tokio::fs::File::create(&self.file_path).await {
-                    Ok(_) => {
-                        if inputs.is_empty() {
-                            error!(self.logger, "Vector needs at least one input.");
-                            panic!()
-                        }
-                        self.write_structure(&Self::get_initial(reroute_unmatched, inputs))
-                            .await;
-                        info!(self.logger, "Serialized initial structure")
+            Err(e) if e.kind() == std::io::ErrorKind::NotFound => match tokio::fs::File::create(&self.file_path).await {
+                Ok(_) => {
+                    if inputs.is_empty() {
+                        error!(self.logger, "Vector needs at least one input.");
+                        panic!()
                     }
-                    Err(e) => {
-                        error!(self.logger, "Received an error while creating the file: {:?}", e);
-                        panic!();
-                    }
+                    self.write_structure(&Self::get_initial(reroute_unmatched, inputs)).await;
+                    info!(self.logger, "Serialized initial structure")
                 }
-            }
+                Err(e) => {
+                    error!(self.logger, "Received an error while creating the file: {:?}", e);
+                    panic!();
+                }
+            },
             Err(e) => {
                 error!(self.logger, "Received unexpected error: {:?}", e);
                 panic!();
@@ -86,9 +83,7 @@ impl Server {
                     type_: "route".to_string(),
                     inputs,
                     reroute_unmatched,
-                    route: Route {
-                        noisy: "false".to_string(),
-                    },
+                    route: Route { noisy: "false".to_string() },
                 },
             },
         }
