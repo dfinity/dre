@@ -29,6 +29,10 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 2
+      - name: "🔒 Ensure singular opentelemetry version in Cargo.lock"
+        shell: bash
+        run: test "$(grep -n 'name = "opentelemetry"' Cargo.lock | wc -l)" -le 1
+
       - name: "☁️ Setup runner"
         uses: ./.github/workflows/manage-runner-pre
 
