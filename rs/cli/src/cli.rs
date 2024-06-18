@@ -57,6 +57,15 @@ pub enum Commands {
         /// Path to the DER file
         path: String,
     },
+
+    Heal {
+        /// Max number of nodes to be replaced per subnet.
+        /// Optimization will be performed automatically maximizing the decentralization
+        /// and minimizing the number of replaced nodes per subnet
+        #[clap(short, long)]
+        max_replaceable_nodes_per_sub: Option<usize>,
+    },
+
     /// Manage an existing subnet
     Subnet(subnet::Cmd),
     /// Get a value using ic-admin CLI

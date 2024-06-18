@@ -2,7 +2,33 @@ use std::collections::BTreeMap;
 
 use decentralization::{network::SubnetChange, SubnetChangeResponse};
 use ic_base_types::PrincipalId;
-use ic_management_types::{Node, TopologyChangeProposal};
+use ic_management_types::{Node, Status, Subnet, TopologyChangeProposal};
+
+pub async fn unhealthy_with_nodes(
+    subnets: &BTreeMap<PrincipalId, Subnet>,
+    nodes_health: BTreeMap<PrincipalId, Status>,
+) -> BTreeMap<PrincipalId, Vec<Node>> {
+    subnets
+        .clone()
+        .into_iter()
+        .filter_map(|(id, subnet)| {
+            let unhealthy = subnet
+                .nodes
+                .into_iter()
+                .filter_map(|n| match nodes_health.get(&n.principal) {
+                    Some(health) if *health == ic_management_types::Status::Healthy => None,
+                    _ => Some(n),
+                })
+                .collect::<Vec<_>>();
+
+            if !unhealthy.is_empty() {
+                Some((id, unhealthy))
+            } else {
+                None
+            }
+        })
+        .collect::<BTreeMap<_, _>>()
+}
 
 pub fn get_proposed_subnet_changes(
     all_nodes: &BTreeMap<PrincipalId, Node>,

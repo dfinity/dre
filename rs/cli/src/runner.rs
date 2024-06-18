@@ -4,6 +4,7 @@ use crate::operations::hostos_rollout::{HostosRollout, HostosRolloutResponse, No
 use crate::ops_subnet_node_replace;
 use crate::{ic_admin, local_unused_port};
 use decentralization::SubnetChangeResponse;
+use futures::future::join_all;
 use ic_base_types::PrincipalId;
 use ic_management_backend::proposal::ProposalAgent;
 use ic_management_backend::public_dashboard::query_ic_dashboard_list;
@@ -442,6 +443,39 @@ impl Runner {
                 simulate,
             )
             .await?;
+        Ok(())
+    }
+
+    pub async fn network_heal(
+        &self,
+        request: ic_management_types::requests::HealRequest,
+        _verbose: bool,
+        simulate: bool,
+    ) -> Result<(), anyhow::Error> {
+        let change = self.dashboard_backend_client.network_heal(request).await?;
+        println!("{}", change);
+
+        let errors = join_all(change.subnets_change_response.iter().map(|subnet_change_response| async move {
+            self.run_membership_change(
+                subnet_change_response.clone(),
+                ops_subnet_node_replace::replace_proposal_options(subnet_change_response)?,
+                simulate,
+            )
+            .await
+            .map_err(|e| {
+                println!("{}", e);
+                e
+            })
+        }))
+        .await
+        .into_iter()
+        .filter_map(|f| f.err())
+        .collect::<Vec<_>>();
+
+        if !errors.is_empty() {
+            anyhow::bail!("Errors: {:?}", errors);
+        }
+
         Ok(())
     }
 }
