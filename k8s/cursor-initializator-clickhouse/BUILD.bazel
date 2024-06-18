@@ -13,4 +13,5 @@ py_binary(
 python_oci_image_rules(
     name = "oci_image",
     src = ":cursor-initializator-clickhouse",
+    base_image = "@python3"
 )

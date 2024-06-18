@@ -9,7 +9,6 @@ py_library(
         requirement("tenacity"),
         requirement("paramiko"),
         requirement("requests"),
-        requirement("ansible"),
         requirement("GitPython"),
     ],
 )

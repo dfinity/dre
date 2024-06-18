@@ -13,11 +13,11 @@ use ic_types::PrincipalId;
 use registry_canister::mutations::do_add_nodes_to_subnet::AddNodesToSubnetPayload;
 use registry_canister::mutations::do_change_subnet_membership::ChangeSubnetMembershipPayload;
 use registry_canister::mutations::do_create_subnet::CreateSubnetPayload;
+use registry_canister::mutations::do_deploy_guestos_to_all_subnet_nodes::DeployGuestosToAllSubnetNodesPayload;
 use registry_canister::mutations::do_remove_nodes_from_subnet::RemoveNodesFromSubnetPayload;
+use registry_canister::mutations::do_revise_elected_replica_versions::ReviseElectedGuestosVersionsPayload;
 use registry_canister::mutations::do_update_elected_hostos_versions::UpdateElectedHostosVersionsPayload;
-use registry_canister::mutations::do_update_elected_replica_versions::UpdateElectedReplicaVersionsPayload;
 use registry_canister::mutations::do_update_nodes_hostos_version::UpdateNodesHostosVersionPayload;
-use registry_canister::mutations::do_update_subnet_replica::UpdateSubnetReplicaVersionPayload;
 use registry_canister::mutations::do_update_unassigned_nodes_config::UpdateUnassignedNodesConfigPayload;
 use registry_canister::mutations::node_management::do_remove_nodes::RemoveNodesPayload;
 use serde::{Deserialize, Serialize};
@@ -59,8 +59,8 @@ impl NnsFunctionProposal for CreateSubnetPayload {
     const TYPE: NnsFunction = NnsFunction::CreateSubnet;
 }
 
-impl NnsFunctionProposal for UpdateSubnetReplicaVersionPayload {
-    const TYPE: NnsFunction = NnsFunction::UpdateSubnetReplicaVersion;
+impl NnsFunctionProposal for DeployGuestosToAllSubnetNodesPayload {
+    const TYPE: NnsFunction = NnsFunction::DeployGuestosToAllSubnetNodes;
 }
 
 impl NnsFunctionProposal for UpdateElectedHostosVersionsPayload {
@@ -79,8 +79,8 @@ impl NnsFunctionProposal for RemoveNodesPayload {
     const TYPE: NnsFunction = NnsFunction::RemoveNodes;
 }
 
-impl NnsFunctionProposal for UpdateElectedReplicaVersionsPayload {
-    const TYPE: NnsFunction = NnsFunction::UpdateElectedReplicaVersions;
+impl NnsFunctionProposal for ReviseElectedGuestosVersionsPayload {
+    const TYPE: NnsFunction = NnsFunction::ReviseElectedGuestosVersions;
 }
 
 pub trait TopologyChangePayload: NnsFunctionProposal {
@@ -241,22 +241,10 @@ pub struct Node {
     #[serde(default)]
     pub decentralized: bool,
     pub duplicates: Option<PrincipalId>,
+    pub is_api_boundary_node: bool,
 }
 
-#[derive(
-    strum_macros::Display,
-    EnumString,
-    VariantNames,
-    Hash,
-    Eq,
-    PartialEq,
-    Ord,
-    PartialOrd,
-    Clone,
-    Serialize,
-    Deserialize,
-    Debug,
-)]
+#[derive(strum_macros::Display, EnumString, VariantNames, Hash, Eq, PartialEq, Ord, PartialOrd, Clone, Serialize, Deserialize, Debug)]
 #[strum(serialize_all = "snake_case")]
 #[serde(rename_all = "snake_case")]
 pub enum NodeFeature {
@@ -270,10 +258,7 @@ pub enum NodeFeature {
 
 impl NodeFeature {
     pub fn variants() -> Vec<Self> {
-        NodeFeature::VARIANTS
-            .iter()
-            .map(|f| NodeFeature::from_str(f).unwrap())
-            .collect()
+        NodeFeature::VARIANTS.iter().map(|f| NodeFeature::from_str(f).unwrap()).collect()
     }
 }
 
@@ -282,6 +267,8 @@ pub struct MinNakamotoCoefficients {
     pub coefficients: BTreeMap<NodeFeature, f64>,
     pub average: f64,
 }
+
+impl Eq for MinNakamotoCoefficients {}
 
 #[derive(Clone, Serialize, Debug, Deserialize)]
 pub struct TopologyProposal {
@@ -385,19 +372,9 @@ pub struct FactsDBGuest {
 impl From<FactsDBGuest> for Guest {
     fn from(g: FactsDBGuest) -> Self {
         Guest {
-            datacenter: g
-                .physical_system
-                .split('.')
-                .nth(1)
-                .expect("invalid physical system name")
-                .to_string(),
+            datacenter: g.physical_system.split('.').nth(1).expect("invalid physical system name").to_string(),
             ipv6: g.ipv6,
-            name: g
-                .physical_system
-                .split('.')
-                .next()
-                .expect("invalid physical system name")
-                .to_string(),
+            name: g.physical_system.split('.').next().expect("invalid physical system name").to_string(),
             dfinity_owned: g.node_type.contains("dfinity"),
             decentralized: g.ipv6.segments()[4] == 0x6801,
         }
@@ -441,14 +418,24 @@ pub enum Health {
     Unknown,
 }
 
-#[derive(
-    PartialOrd, Ord, Eq, PartialEq, EnumString, Serialize, strum_macros::Display, Deserialize, Debug, Clone, Hash,
-)]
+#[derive(PartialOrd, Ord, Eq, PartialEq, EnumString, Serialize, strum_macros::Display, Deserialize, Debug, Clone, Hash)]
 pub enum Status {
     Healthy,
     Degraded,
     Dead,
     Unknown,
+}
+
+/// Even if `from_str` is implemented by `EnumString` in derive, public api returns them capitalized and this is the implementation for that convertion
+impl Status {
+    pub fn from_str_from_dashboard(s: &str) -> Self {
+        match s {
+            "UP" | "UNASSIGNED" => Self::Healthy,
+            "DEGRADED" => Self::Degraded,
+            "DOWN" => Self::Dead,
+            _ => Self::Unknown,
+        }
+    }
 }
 
 impl From<i64> for Health {
@@ -555,20 +542,20 @@ impl ArtifactReleases {
 #[strum(serialize_all = "lowercase")]
 #[serde(rename_all = "lowercase")]
 pub enum Artifact {
-    Replica,
+    GuestOs,
     HostOs,
 }
 
 impl Artifact {
     pub fn s3_folder(&self) -> String {
         match self {
-            Artifact::Replica => String::from("guest-os"),
+            Artifact::GuestOs => String::from("guest-os"),
             Artifact::HostOs => String::from("host-os"),
         }
     }
     pub fn capitalized(&self) -> String {
         match self {
-            Artifact::Replica => String::from("Replica"),
+            Artifact::GuestOs => String::from("Guestos"),
             Artifact::HostOs => String::from("Hostos"),
         }
     }
@@ -594,7 +581,17 @@ impl Network {
             "staging" => (
                 "staging".to_string(),
                 if nns_urls.is_empty() {
-                    vec![Url::from_str("http://[2600:3000:6100:200:5000:b0ff:fe8e:6b7b]:8080").unwrap()]
+                    [
+                        "http://[2600:2c01:21:0:5000:d7ff:fe63:6512]:8080/",
+                        "http://[2600:2c01:21:0:5000:beff:fecb:ff53]:8080/",
+                        "http://[2600:3000:6100:200:5000:14ff:fecd:3307]:8080/",
+                        "http://[2600:3000:6100:200:5000:47ff:fee3:1779]:8080/",
+                        "http://[2604:7e00:50:0:5000:a2ff:fed7:e98c]:8080/",
+                        "http://[2600:3000:6100:200:5000:b0ff:fe8e:6b7b]:8080/",
+                    ]
+                    .iter()
+                    .map(|s| Url::from_str(s).unwrap())
+                    .collect()
                 } else {
                     nns_urls.clone()
                 },
@@ -620,11 +617,7 @@ impl Network {
     }
 
     pub fn get_nns_urls_string(&self) -> String {
-        self.nns_urls
-            .iter()
-            .map(|url| url.to_string())
-            .collect::<Vec<String>>()
-            .join(",")
+        self.nns_urls.iter().map(|url| url.to_string()).collect::<Vec<String>>().join(",")
     }
 
     pub fn get_prometheus_endpoint(&self) -> Url {
@@ -641,6 +634,10 @@ impl Network {
             "mainnet" => "mercury".to_string(),
             _ => self.name.clone(),
         }
+    }
+
+    pub fn is_mainnet(&self) -> bool {
+        self.name == "mainnet"
     }
 }
 
@@ -811,10 +808,7 @@ mod tests {
 
     #[test]
     fn test_network_get_nns_urls_string() {
-        let nns_urls = vec![
-            Url::from_str("https://ic0.app").unwrap(),
-            Url::from_str("https://custom.nns").unwrap(),
-        ];
+        let nns_urls = vec![Url::from_str("https://ic0.app").unwrap(), Url::from_str("https://custom.nns").unwrap()];
         let network = Network {
             name: "mainnet".to_string(),
             nns_urls,

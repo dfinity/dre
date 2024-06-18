@@ -131,10 +131,7 @@ impl NakamotoScore {
             let only_counter = counters.iter().map(|(_feat, cnt)| *cnt).collect::<Vec<_>>();
             // But for deeper understanding (logging and debugging) we also keep track of
             // all strings and their counts
-            let value_counts = counters
-                .into_iter()
-                .sorted_by_key(|(_feat, cnt)| -(*cnt as isize))
-                .collect::<Vec<_>>();
+            let value_counts = counters.into_iter().sorted_by_key(|(_feat, cnt)| -(*cnt as isize)).collect::<Vec<_>>();
 
             (value.0.clone(), Self::nakamoto(&only_counter), value_counts)
         });
@@ -144,10 +141,7 @@ impl NakamotoScore {
             .map(|(f, n, _)| (f, n.0 as f64))
             .collect::<BTreeMap<NodeFeature, f64>>();
 
-        let controlled_nodes = nakamoto_calc
-            .clone()
-            .map(|(f, n, _)| (f, n.1))
-            .collect::<BTreeMap<NodeFeature, usize>>();
+        let controlled_nodes = nakamoto_calc.clone().map(|(f, n, _)| (f, n.1)).collect::<BTreeMap<NodeFeature, usize>>();
 
         let value_counts = nakamoto_calc.map(|(f, _, value_counts)| (f, value_counts)).collect();
 
@@ -206,9 +200,7 @@ impl NakamotoScore {
                                 score.clone()
                             }
                             None => {
-                                let score = Self::new_from_slice_node_features(
-                                    &nodes.iter().map(|n| n.features.clone()).collect::<Vec<_>>(),
-                                );
+                                let score = Self::new_from_slice_node_features(&nodes.iter().map(|n| n.features.clone()).collect::<Vec<_>>());
                                 memoize_cache.insert(memoize_key, score.clone());
                                 score
                             }
@@ -355,9 +347,7 @@ impl PartialOrd for NakamotoScore {
 
         // Try to pick the candidate that *reduces* the number of nodes
         // controlled by the top actors
-        cmp = other
-            .critical_features_num_nodes()
-            .partial_cmp(&self.critical_features_num_nodes());
+        cmp = other.critical_features_num_nodes().partial_cmp(&self.critical_features_num_nodes());
 
         if cmp != Some(Ordering::Equal) {
             return cmp;
@@ -435,7 +425,7 @@ impl Display for NakamotoScore {
 mod tests {
     use std::str::FromStr;
 
-    use crate::network::{DecentralizedSubnet, SubnetChangeRequest};
+    use crate::network::{DecentralizedSubnet, NetworkHealRequest, NetworkHealSubnets, SubnetChangeRequest};
     use ic_base_types::PrincipalId;
     use itertools::Itertools;
     use regex::Regex;
@@ -458,10 +448,7 @@ mod tests {
         }
         // Included above as well, but more explicit for readability: 5/13 nodes need to
         // be malicious
-        assert_eq!(
-            (5, 5),
-            NakamotoScore::nakamoto(&std::iter::repeat(1).take(13).collect::<Vec<usize>>())
-        );
+        assert_eq!((5, 5), NakamotoScore::nakamoto(&std::iter::repeat(1).take(13).collect::<Vec<usize>>()));
         assert_eq!((1, 3), NakamotoScore::nakamoto(&[1, 2, 3])); // one actor controls 3/6 nodes
         assert_eq!((1, 3), NakamotoScore::nakamoto(&[2, 3, 1])); // one actor controls 3/6 nodes
         assert_eq!((1, 3), NakamotoScore::nakamoto(&[3, 2, 1])); // one actor controls 3/6 nodes
@@ -526,8 +513,9 @@ mod tests {
             let dfinity_owned = i < num_dfinity_nodes;
             let (override_feature, override_val) = feature_to_override;
             let node_features = match override_val.get(i) {
-                Some(override_val) => NodeFeatures::new_test_feature_set(&format!("{} {}", feat_prefix, i))
-                    .with_feature_value(override_feature, override_val),
+                Some(override_val) => {
+                    NodeFeatures::new_test_feature_set(&format!("{} {}", feat_prefix, i)).with_feature_value(override_feature, override_val)
+                }
                 None => NodeFeatures::new_test_feature_set(&format!("feat {}", i)),
             };
             let node = Node::new_test_node((node_number_start + i) as u64, node_features, dfinity_owned, true);
@@ -559,13 +547,7 @@ mod tests {
     ) -> DecentralizedSubnet {
         DecentralizedSubnet {
             id: PrincipalId::new_subnet_test_id(subnet_num),
-            nodes: new_test_nodes_with_overrides(
-                "feat",
-                node_number_start,
-                num_nodes,
-                num_dfinity_nodes,
-                feature_to_override,
-            ),
+            nodes: new_test_nodes_with_overrides("feat", node_number_start, num_nodes, num_dfinity_nodes, feature_to_override),
             removed_nodes: Vec::new(),
             min_nakamoto_coefficients: None,
             comment: None,
@@ -602,10 +584,7 @@ mod tests {
         // expected error message
         assert_eq!(
             new_test_subnet(0, 2, 0).check_business_rules().unwrap(),
-            (
-                1000,
-                vec!["Subnet should have 1 DFINITY-owned nodes, got 0".to_string()]
-            )
+            (1000, vec!["Subnet should have 1 DFINITY-owned nodes, got 0".to_string()])
         );
     }
 
@@ -618,11 +597,7 @@ mod tests {
         let extended_subnet = subnet_initial.subnet_with_more_nodes(1, &nodes_available).unwrap();
         assert_eq!(
             extended_subnet.nodes,
-            nodes_initial
-                .iter()
-                .chain(nodes_available.iter())
-                .cloned()
-                .collect::<Vec<_>>()
+            nodes_initial.iter().chain(nodes_available.iter()).cloned().collect::<Vec<_>>()
         );
     }
 
@@ -635,9 +610,7 @@ mod tests {
             1,
             (
                 &NodeFeature::Country,
-                &[
-                    "US", "US", "US", "US", "US", "US", "US", "US", "US", "CH", "BE", "SG", "SI",
-                ],
+                &["US", "US", "US", "US", "US", "US", "US", "US", "US", "CH", "BE", "SG", "SI"],
             ),
         );
         assert_eq!(
@@ -647,8 +620,7 @@ mod tests {
                 vec!["NodeFeature 'country' controls 9 of nodes, which is > 8 (2/3 of all) nodes".to_string()]
             )
         );
-        let nodes_available =
-            new_test_nodes_with_overrides("spare", 13, 3, 0, (&NodeFeature::Country, &["US", "RO", "JP"]));
+        let nodes_available = new_test_nodes_with_overrides("spare", 13, 3, 0, (&NodeFeature::Country, &["US", "RO", "JP"]));
 
         println!(
             "initial {} Countries {:?}",
@@ -692,17 +664,13 @@ mod tests {
             0,
             7,
             1,
-            (
-                &NodeFeature::NodeProvider,
-                &["NP1", "NP2", "NP2", "NP2", "NP3", "NP4", "NP5"],
-            ),
+            (&NodeFeature::NodeProvider, &["NP1", "NP2", "NP2", "NP2", "NP3", "NP4", "NP5"]),
         );
         assert_eq!(
             subnet_initial.check_business_rules().unwrap(),
             (10000, vec!["A single Node Provider can halt the subnet".to_string()])
         );
-        let nodes_available =
-            new_test_nodes_with_overrides("spare", 7, 2, 0, (&NodeFeature::NodeProvider, &["NP6", "NP7"]));
+        let nodes_available = new_test_nodes_with_overrides("spare", 7, 2, 0, (&NodeFeature::NodeProvider, &["NP6", "NP7"]));
 
         println!(
             "initial {} NPs {:?}",
@@ -744,16 +712,12 @@ mod tests {
             0,
             7,
             1,
-            (
-                &NodeFeature::NodeProvider,
-                &["NP1", "NP2", "NP2", "NP3", "NP4", "NP4", "NP5"],
-            ),
+            (&NodeFeature::NodeProvider, &["NP1", "NP2", "NP2", "NP3", "NP4", "NP4", "NP5"]),
         );
         assert_eq!(subnet_initial.check_business_rules().unwrap(), (0, vec![]));
 
         // There are 2 spare nodes, but both are DFINITY
-        let nodes_available =
-            new_test_nodes_with_overrides("spare", 7, 2, 2, (&NodeFeature::NodeProvider, &["NP6", "NP7"]));
+        let nodes_available = new_test_nodes_with_overrides("spare", 7, 2, 2, (&NodeFeature::NodeProvider, &["NP6", "NP7"]));
 
         println!(
             "initial {} NPs {:?}",
@@ -785,22 +749,14 @@ mod tests {
         println!("optimized {} NPs {:?}", optimized_subnet, nps_after);
         assert_eq!(optimized_subnet.nakamoto_score().score_min(), 2.);
         // There is still only one DFINITY-owned node in the subnet
-        assert_eq!(
-            1,
-            optimized_subnet
-                .nodes
-                .iter()
-                .map(|n| n.dfinity_owned as u32)
-                .sum::<u32>()
-        );
+        assert_eq!(1, optimized_subnet.nodes.iter().map(|n| n.dfinity_owned as u32).sum::<u32>());
     }
 
     #[test]
     fn subnet_uzr34_extend() {
         // Read the subnet snapshot from a file
         let subnet_all =
-            serde_json::from_str::<ic_management_types::Subnet>(include_str!("../../test_data/subnet-uzr34.json"))
-                .expect("failed to read test data");
+            serde_json::from_str::<ic_management_types::Subnet>(include_str!("../../test_data/subnet-uzr34.json")).expect("failed to read test data");
         // Convert the subnet snapshot to the "Subnet" struct
         let subnet_all: DecentralizedSubnet = DecentralizedSubnet::from(subnet_all);
         let re_unhealthy_nodes = Regex::new(r"^(gp7wd|e4ysi|qhz4y|2fbvp)-.+$").unwrap();
@@ -818,25 +774,18 @@ mod tests {
             run_log: Vec::new(),
         };
 
-        let available_nodes = serde_json::from_str::<Vec<ic_management_types::Node>>(include_str!(
-            "../../test_data/available-nodes.json"
-        ))
-        .expect("failed to read test data");
+        let available_nodes = serde_json::from_str::<Vec<ic_management_types::Node>>(include_str!("../../test_data/available-nodes.json"))
+            .expect("failed to read test data");
 
         let available_nodes = available_nodes
             .iter()
             .sorted_by(|a, b| a.principal.cmp(&b.principal))
             .filter(|n| n.subnet_id.is_none() && n.proposal.is_none())
             .map(Node::from)
-            .map(|n| Node {
-                decentralized: true,
-                ..n
-            })
+            .map(|n| Node { decentralized: true, ..n })
             .collect::<Vec<_>>();
 
-        subnet_healthy
-            .check_business_rules()
-            .expect("Check business rules failed");
+        subnet_healthy.check_business_rules().expect("Check business rules failed");
 
         println!("Initial subnet {}", subnet_healthy);
         println!("Check business rules: {:?}", subnet_healthy.check_business_rules());
@@ -858,14 +807,7 @@ mod tests {
     #[test]
     fn test_extend_empty_subnet() {
         let available_nodes = (0..20)
-            .map(|i| {
-                Node::new_test_node(
-                    i,
-                    NodeFeatures::new_test_feature_set(&format!("foo{i}")),
-                    i % 10 == 0,
-                    true,
-                )
-            })
+            .map(|i| Node::new_test_node(i, NodeFeatures::new_test_feature_set(&format!("foo{i}")), i % 10 == 0, true))
             .collect::<Vec<_>>();
         let empty_subnet = DecentralizedSubnet::default();
 
@@ -889,9 +831,7 @@ mod tests {
                 &["Europe", "Europe", "Europe", "Europe", "Europe", "Europe", "Europe"],
             ),
         )
-        .with_subnet_id(
-            PrincipalId::from_str("bkfrj-6k62g-dycql-7h53p-atvkj-zg4to-gaogh-netha-ptybj-ntsgw-rqe").unwrap(),
-        );
+        .with_subnet_id(PrincipalId::from_str("bkfrj-6k62g-dycql-7h53p-atvkj-zg4to-gaogh-netha-ptybj-ntsgw-rqe").unwrap());
         assert_eq!(subnet_initial.check_business_rules().unwrap(), (0, vec![]));
     }
 
@@ -907,9 +847,7 @@ mod tests {
                 &["Europe", "Asia", "Europe", "Europe", "Europe", "Europe", "Europe"],
             ),
         )
-        .with_subnet_id(
-            PrincipalId::from_str("bkfrj-6k62g-dycql-7h53p-atvkj-zg4to-gaogh-netha-ptybj-ntsgw-rqe").unwrap(),
-        );
+        .with_subnet_id(PrincipalId::from_str("bkfrj-6k62g-dycql-7h53p-atvkj-zg4to-gaogh-netha-ptybj-ntsgw-rqe").unwrap());
         assert_eq!(
             subnet_mix.check_business_rules().unwrap(),
             (1000, vec!["European subnet has 1 non-European node(s)".to_string()])
@@ -924,23 +862,92 @@ mod tests {
             1,
             (
                 &NodeFeature::Continent,
-                &[
-                    "Europe",
-                    "Asia",
-                    "America",
-                    "Australia",
-                    "Europe",
-                    "Africa",
-                    "South America",
-                ],
+                &["Europe", "Asia", "America", "Australia", "Europe", "Africa", "South America"],
             ),
         )
-        .with_subnet_id(
-            PrincipalId::from_str("bkfrj-6k62g-dycql-7h53p-atvkj-zg4to-gaogh-netha-ptybj-ntsgw-rqe").unwrap(),
-        );
+        .with_subnet_id(PrincipalId::from_str("bkfrj-6k62g-dycql-7h53p-atvkj-zg4to-gaogh-netha-ptybj-ntsgw-rqe").unwrap());
         assert_eq!(
             subnet_mix.check_business_rules().unwrap(),
             (5000, vec!["European subnet has 5 non-European node(s)".to_string()])
         );
+    }
+
+    #[test]
+    fn test_network_heal_subnets_ord() {
+        let not_important_small = new_test_subnet(0, 13, 0)
+            .with_subnet_id(PrincipalId::from_str("k44fs-gm4pv-afozh-rs7zw-cg32n-u7xov-xqyx3-2pw5q-eucnu-cosd4-uqe").unwrap());
+        let not_important_small = NetworkHealSubnets {
+            name: String::from("App 20"),
+            decentralized_subnet: not_important_small,
+            unhealthy_nodes: vec![],
+        };
+
+        let not_important_large = new_test_subnet(0, 28, 0)
+            .with_subnet_id(PrincipalId::from_str("bkfrj-6k62g-dycql-7h53p-atvkj-zg4to-gaogh-netha-ptybj-ntsgw-rqe").unwrap());
+        let not_important_large = NetworkHealSubnets {
+            name: String::from("European"),
+            decentralized_subnet: not_important_large,
+            unhealthy_nodes: vec![],
+        };
+
+        let important =
+            serde_json::from_str::<ic_management_types::Subnet>(include_str!("../../test_data/subnet-uzr34.json")).expect("failed to read test data");
+        let important = NetworkHealSubnets {
+            name: important.metadata.name.clone(),
+            decentralized_subnet: DecentralizedSubnet::from(important),
+            unhealthy_nodes: vec![],
+        };
+
+        let unordered = vec![not_important_small.clone(), important.clone(), not_important_large.clone()];
+        let healing_order = unordered.clone().into_iter().sorted_by(|a, b| a.cmp(b).reverse()).collect_vec();
+
+        assert_eq!(vec![important, not_important_large, not_important_small], healing_order);
+    }
+
+    #[test]
+    fn test_network_heal() {
+        let nodes_available = new_test_nodes("spare", 10, 2);
+        let nodes_available_principals = nodes_available.iter().map(|n| n.id).collect_vec();
+
+        let important =
+            serde_json::from_str::<ic_management_types::Subnet>(include_str!("../../test_data/subnet-uzr34.json")).expect("failed to read test data");
+        let important_decentralized = DecentralizedSubnet::from(important.clone());
+        let important_unhealthy_principals = vec![
+            PrincipalId::from_str("e4ysi-xp4fs-5ckcv-7e76q-edydw-ak6le-2acyt-k7udb-lj2vo-fqhhx-vqe").unwrap(),
+            PrincipalId::from_str("aefqq-d7ldg-ljk5s-cmnxk-qqu7c-tw52l-74g3m-xxl5d-ag4ia-dxubz-wae").unwrap(),
+        ];
+        let unhealthy_nodes = important_decentralized
+            .nodes
+            .clone()
+            .into_iter()
+            .filter(|n| important_unhealthy_principals.contains(&n.id))
+            .collect_vec();
+        let important = NetworkHealSubnets {
+            name: important.metadata.name.clone(),
+            decentralized_subnet: important_decentralized,
+            unhealthy_nodes: unhealthy_nodes.clone(),
+        };
+
+        let max_replaceable_nodes = None;
+        let network_heal_response = NetworkHealRequest::new(vec![important.clone()])
+            .heal_and_optimize(nodes_available.clone(), max_replaceable_nodes)
+            .unwrap();
+        let result = network_heal_response.first().unwrap().clone();
+
+        assert_eq!(important_unhealthy_principals, result.removed.clone());
+
+        assert_eq!(important_unhealthy_principals.len(), result.added.len());
+
+        let max_replaceable_nodes = Some(1);
+        let network_heal_response = NetworkHealRequest::new(vec![important.clone()])
+            .heal_and_optimize(nodes_available.clone(), max_replaceable_nodes)
+            .unwrap();
+        let result = network_heal_response.first().unwrap().clone();
+
+        assert_eq!(important_unhealthy_principals.into_iter().take(1).collect_vec(), result.removed.clone());
+
+        assert_eq!(1, result.added.len());
+
+        result.added.iter().for_each(|n| assert!(nodes_available_principals.contains(n)));
     }
 }

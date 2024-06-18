@@ -1,11 +1,10 @@
 use async_trait::async_trait;
+use decentralization::HealResponse;
 use decentralization::SubnetChangeResponse;
 use ic_base_types::PrincipalId;
 use ic_management_types::{
-    requests::{
-        MembershipReplaceRequest, NodesRemoveRequest, NodesRemoveResponse, SubnetCreateRequest, SubnetResizeRequest,
-    },
-    Artifact, Network, NetworkError, Release, TopologyProposal,
+    requests::{HealRequest, MembershipReplaceRequest, NodesRemoveRequest, NodesRemoveResponse, SubnetCreateRequest, SubnetResizeRequest},
+    Artifact, Network, NetworkError, Release, TopologyChangeProposal,
 };
 use log::error;
 use serde::de::DeserializeOwned;
@@ -39,7 +38,7 @@ impl DashboardBackendClient {
         }
     }
 
-    pub async fn subnet_pending_action(&self, subnet: PrincipalId) -> anyhow::Result<Option<TopologyProposal>> {
+    pub async fn subnet_pending_action(&self, subnet: PrincipalId) -> anyhow::Result<Option<TopologyChangeProposal>> {
         reqwest::Client::new()
             .get(
                 self.url
@@ -52,11 +51,7 @@ impl DashboardBackendClient {
 
     pub async fn membership_replace(&self, request: MembershipReplaceRequest) -> anyhow::Result<SubnetChangeResponse> {
         reqwest::Client::new()
-            .post(
-                self.url
-                    .join("subnet/membership/replace")
-                    .map_err(|e| anyhow::anyhow!(e))?,
-            )
+            .post(self.url.join("subnet/membership/replace").map_err(|e| anyhow::anyhow!(e))?)
             .json(&request)
             .rest_send()
             .await
@@ -64,11 +59,7 @@ impl DashboardBackendClient {
 
     pub async fn subnet_resize(&self, request: SubnetResizeRequest) -> anyhow::Result<SubnetChangeResponse> {
         reqwest::Client::new()
-            .post(
-                self.url
-                    .join("subnet/membership/resize")
-                    .map_err(|e| anyhow::anyhow!(e))?,
-            )
+            .post(self.url.join("subnet/membership/resize").map_err(|e| anyhow::anyhow!(e))?)
             .json(&request)
             .rest_send()
             .await
@@ -107,6 +98,14 @@ impl DashboardBackendClient {
             .rest_send()
             .await
     }
+
+    pub(crate) async fn network_heal(&self, request: HealRequest) -> anyhow::Result<HealResponse> {
+        reqwest::Client::new()
+            .post(self.url.join("network/heal").map_err(|e| anyhow::anyhow!(e))?)
+            .json(&request)
+            .rest_send()
+            .await
+    }
 }
 
 #[async_trait]
@@ -128,20 +127,10 @@ impl RESTRequestBuilder for reqwest::RequestBuilder {
                 _ => Err(anyhow::anyhow!("failed request (error: {}, response: {})", e, response)),
             }
         } else {
-            response_result
-                .text()
-                .await
-                .map_err(|e| anyhow::anyhow!(e))
-                .and_then(|body| {
-                    serde_json::from_str::<T>(&body).map_err(|e| {
-                        anyhow::anyhow!(
-                            "Error decoding {} from backend output: {}\n{}",
-                            std::any::type_name::<T>(),
-                            body,
-                            e
-                        )
-                    })
-                })
+            response_result.text().await.map_err(|e| anyhow::anyhow!(e)).and_then(|body| {
+                serde_json::from_str::<T>(&body)
+                    .map_err(|e| anyhow::anyhow!("Error decoding {} from backend output: {}\n{}", std::any::type_name::<T>(), body, e))
+            })
         }
     }
 }
@@ -152,12 +141,8 @@ mod tests {
 
     #[tokio::test]
     async fn dashboard_backend_client_url() {
-        let mainnet = Network::new("mainnet", &vec![])
-            .await
-            .expect("failed to create mainnet network");
-        let staging = Network::new("staging", &vec![])
-            .await
-            .expect("failed to create staging network");
+        let mainnet = Network::new("mainnet", &vec![]).await.expect("failed to create mainnet network");
+        let staging = Network::new("staging", &vec![]).await.expect("failed to create staging network");
         assert_eq!(
             DashboardBackendClient::new(&mainnet, false).url.to_string(),
             "https://dashboard.internal.dfinity.network/api/proxy/registry/mainnet"

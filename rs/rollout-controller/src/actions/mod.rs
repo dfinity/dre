@@ -35,17 +35,11 @@ impl SubnetAction {
     fn print(&self) -> String {
         match self {
             SubnetAction::Noop { subnet_short } => format!("Noop for subnet '{}'", subnet_short),
-            SubnetAction::Baking {
-                subnet_short,
-                remaining,
-            } => {
+            SubnetAction::Baking { subnet_short, remaining } => {
                 let humantime = humantime::format_duration(*remaining);
                 format!("Subnet '{}' is pending to bake for {}", subnet_short, humantime)
             }
-            SubnetAction::PendingProposal {
-                subnet_short,
-                proposal_id,
-            } => format!(
+            SubnetAction::PendingProposal { subnet_short, proposal_id } => format!(
                 "Subnet '{}' has a pending proposal with id '{}' that has to be voted on",
                 subnet_short, proposal_id
             ),
@@ -69,7 +63,7 @@ impl SubnetAction {
 }
 
 impl<'a> SubnetAction {
-    fn execute(&self, executor: &'a ActionExecutor, blessed_replica_versions: &'a [String]) -> anyhow::Result<()> {
+    async fn execute(&self, executor: &'a ActionExecutor<'_>, blessed_replica_versions: &'a [String]) -> anyhow::Result<()> {
         if let Some(logger) = executor.logger {
             info!(logger, "Subnet action: {}", self.print())
         }
@@ -80,15 +74,15 @@ impl<'a> SubnetAction {
         } = self
         {
             if !blessed_replica_versions.contains(version) {
-                return Err(anyhow::anyhow!("Replica version '{}' is not blessed.", version));
+                return Err(anyhow::anyhow!("GuestOS version '{}' is not elected.", version));
             }
             let principal_string = subnet_principal.to_string();
 
             let proposal = match is_unassigned {
-                true => ProposeCommand::UpdateUnassignedNodes {
+                true => ProposeCommand::DeployGuestosToAllUnassignedNodes {
                     replica_version: version.to_string(),
                 },
-                false => ProposeCommand::UpdateSubnetReplicaVersion {
+                false => ProposeCommand::DeployGuestosToAllSubnetNodes {
                     subnet: *subnet_principal,
                     version: version.to_string(),
                 },
@@ -96,20 +90,15 @@ impl<'a> SubnetAction {
 
             let opts = ProposeOptions {
                 title: Some(format!(
-                    "Update subnet {} to replica version {}",
+                    "Update subnet {} to GuestOS version {}",
                     principal_string.split_once('-').expect("Should contain '-'").0,
                     version.split_at(8).0
                 )),
-                summary: Some(format!(
-                    "Update subnet {} to replica version {}",
-                    principal_string, version
-                )),
+                summary: Some(format!("Update subnet {} to GuestOS version {}", principal_string, version)),
                 ..Default::default()
             };
 
-            executor
-                .ic_admin_wrapper
-                .propose_run(proposal, opts, executor.simulate)?;
+            executor.ic_admin_wrapper.propose_run(proposal, opts, executor.simulate).await?;
         }
 
         Ok(())
@@ -123,14 +112,8 @@ pub struct ActionExecutor<'a> {
 }
 
 impl<'a> ActionExecutor<'a> {
-    pub async fn new(
-        neuron_id: u64,
-        private_key_pem: String,
-        network: Network,
-        simulate: bool,
-        logger: Option<&'a Logger>,
-    ) -> anyhow::Result<Self> {
-        let neuron = Neuron::new(&network, true, Some(neuron_id), Some(private_key_pem), None, None, None).await?;
+    pub async fn new(neuron_id: u64, private_key_pem: String, network: Network, simulate: bool, logger: Option<&'a Logger>) -> anyhow::Result<Self> {
+        let neuron = Neuron::new(&network, Some(neuron_id), Some(private_key_pem), None, None, None).await;
         Ok(Self {
             ic_admin_wrapper: IcAdminWrapper::new(network, None, true, neuron),
             simulate,
@@ -139,7 +122,7 @@ impl<'a> ActionExecutor<'a> {
     }
 
     pub async fn test(network: Network, logger: Option<&'a Logger>) -> anyhow::Result<Self> {
-        let neuron = Neuron::new(&network, false, None, None, None, None, None).await?;
+        let neuron = Neuron::new(&network, None, None, None, None, None).await;
         Ok(Self {
             ic_admin_wrapper: IcAdminWrapper::new(network, None, true, neuron),
             simulate: true,
@@ -147,7 +130,7 @@ impl<'a> ActionExecutor<'a> {
         })
     }
 
-    pub fn execute(&self, actions: &[SubnetAction], blessed_replica_versions: &[String]) -> anyhow::Result<()> {
+    pub async fn execute(&self, actions: &[SubnetAction], blessed_replica_versions: &[String]) -> anyhow::Result<()> {
         if let Some(logger) = self.logger {
             info!(logger, "Executing following actions: {:?}", actions)
         }
@@ -156,7 +139,7 @@ impl<'a> ActionExecutor<'a> {
             if let Some(logger) = self.logger {
                 info!(logger, "Executing action {}: {:?}", i, action)
             }
-            action.execute(self, blessed_replica_versions)?;
+            action.execute(self, blessed_replica_versions).await?;
         }
 
         Ok(())

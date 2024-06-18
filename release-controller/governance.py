@@ -1,22 +1,29 @@
 import json
 import pathlib
 import tempfile
+
+import requests
 from ic import Canister
 from ic.agent import Agent
+from ic.candid import decode
+from ic.candid import Types
 from ic.certificate import lookup
 from ic.client import Client
 from ic.identity import Identity
 from ic.principal import Principal
-import urllib.request
-from ic.candid import encode, decode, Types
 
 
 class GovernanceCanister:
+    """A simple client for querying the IC Mainnet Governance canister."""
+
     def __init__(self):
+        """Create a new GovernanceCanister client."""
         self.agent = Agent(Identity(), Client("https://ic0.app"))
         self.principal = "rrkah-fqaaa-aaaaa-aaaaq-cai"
+        self.canister = None
 
     def version(self):
+        """Return the current git version of the Governance canister."""
         paths = [
             "canister".encode(),
             Principal.from_str(self.principal).bytes,
@@ -29,14 +36,19 @@ class GovernanceCanister:
         return version
 
     def replica_version_proposals(self) -> dict[str, int]:
+        """Return a dictionary of replica versions to proposal IDs."""
         with tempfile.TemporaryDirectory() as tmpdirname:
             version = self.version()
             governance_did = pathlib.Path(tmpdirname) / "governance.did"
-            urllib.request.urlretrieve(
+            contents = requests.get(
                 f"https://raw.githubusercontent.com/dfinity/ic/{version}/rs/nns/governance/canister/governance.did",
-                governance_did,
+                timeout=10,
+            ).text
+            with open(governance_did, "w", encoding="utf8") as f:
+                f.write(contents)
+            self.canister = Canister(
+                agent=self.agent, canister_id=self.principal, candid=open(governance_did, encoding="utf8").read()
             )
-            self.canister = Canister(agent=self.agent, canister_id=self.principal, candid=open(governance_did).read())
             proposals = self.canister.list_proposals(
                 {
                     "include_reward_status": [],

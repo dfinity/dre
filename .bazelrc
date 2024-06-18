@@ -36,9 +36,15 @@ build --@rules_rust//:extra_rustc_flag=-Dbindings_with_variant_name
 build --strip=never
 
 # build:dfinity --remote_cache=bazel-remote.idx.dfinity.network
-build --experimental_remote_cache_async
+# build --remote_cache=grpc://localhost:9092
+build --remote_instance_name=default
+build --google_default_credentials=false
+build --remote_upload_local_results=false
+# build --experimental_remote_cache_async
+build --experimental_remote_cache_compression # compress/decompress cache blobs with zstd
 build --remote_timeout=30s # Default is 60s.
 build:ci --remote_timeout=5m # Default is 60s.
+build:ci --remote_upload_local_results=true
 
 # build:dfinity --experimental_remote_downloader=bazel-remote.idx.dfinity.network --experimental_remote_downloader_local_fallback
 build:local --experimental_remote_downloader=
@@ -73,7 +79,7 @@ test:precommit --build_tests_only
 # Run all tests once by default, run flaky tests up to 3 times in CI.
 test    --flaky_test_attempts=1
 test:ci --flaky_test_attempts=default
-build:ci --noremote_local_fallback
+build:ci --remote_local_fallback
 # So that developers can build in debug mode.
 build:dev --compilation_mode=fastbuild
 build:macos_ci --compilation_mode=fastbuild

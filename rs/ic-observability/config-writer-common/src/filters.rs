@@ -40,10 +40,7 @@ impl TargetGroupFilter for TargetGroupFilterList {
         if self.filters.is_empty() {
             true
         } else {
-            self.filters
-                .iter()
-                .map(|f| f.filter(target_group.clone()))
-                .all(|status| status)
+            self.filters.iter().map(|f| f.filter(target_group.clone())).all(|status| status)
         }
     }
 }
@@ -71,6 +68,8 @@ mod tests {
             dc_id: "test".to_string(),
             operator_id: PrincipalId::new_anonymous(),
             node_provider_id: PrincipalId::new_anonymous(),
+            is_api_bn: false,
+            domain: None,
         }
     }
 
@@ -79,61 +78,60 @@ mod tests {
         let filter = NodeIDRegexFilter::new(Regex::new("^i").unwrap());
 
         let accepted_tg = TargetGroup {
-            node_id: NodeId::from(
-                PrincipalId::from_str("iylgr-zpxwq-kqgmf-4srtx-o4eey-d6bln-smmq6-we7px-ibdea-nondy-eae").unwrap(),
-            ),
+            node_id: NodeId::from(PrincipalId::from_str("iylgr-zpxwq-kqgmf-4srtx-o4eey-d6bln-smmq6-we7px-ibdea-nondy-eae").unwrap()),
             ic_name: "mercury".into(),
             targets: BTreeSet::new(),
             subnet_id: Some(SubnetId::from(PrincipalId::new_anonymous())),
             dc_id: "test".to_string(),
             operator_id: PrincipalId::new_anonymous(),
             node_provider_id: PrincipalId::new_anonymous(),
+            is_api_bn: false,
+            domain: None,
         };
         assert!(filter.filter(accepted_tg));
 
         let rejected_tg = TargetGroup {
-            node_id: NodeId::from(
-                PrincipalId::from_str("x33ed-h457x-bsgyx-oqxqf-6pzwv-wkhzr-rm2j3-npodi-purzm-n66cg-gae").unwrap(),
-            ),
+            node_id: NodeId::from(PrincipalId::from_str("x33ed-h457x-bsgyx-oqxqf-6pzwv-wkhzr-rm2j3-npodi-purzm-n66cg-gae").unwrap()),
             ic_name: "mercury".into(),
             targets: BTreeSet::new(),
             subnet_id: Some(SubnetId::from(PrincipalId::new_anonymous())),
             dc_id: "test".to_string(),
             operator_id: PrincipalId::new_anonymous(),
             node_provider_id: PrincipalId::new_anonymous(),
+            is_api_bn: false,
+            domain: None,
         };
         assert!(!filter.filter(rejected_tg));
     }
 
     #[test]
     fn filter_list_test() {
-        let filter_vec: Vec<Box<dyn TargetGroupFilter>> =
-            vec![Box::new(NodeIDRegexFilter::new(Regex::new("^i").unwrap()))];
+        let filter_vec: Vec<Box<dyn TargetGroupFilter>> = vec![Box::new(NodeIDRegexFilter::new(Regex::new("^i").unwrap()))];
         let filterlist = TargetGroupFilterList::new(filter_vec);
 
         let accepted_tg = TargetGroup {
-            node_id: NodeId::from(
-                PrincipalId::from_str("iylgr-zpxwq-kqgmf-4srtx-o4eey-d6bln-smmq6-we7px-ibdea-nondy-eae").unwrap(),
-            ),
+            node_id: NodeId::from(PrincipalId::from_str("iylgr-zpxwq-kqgmf-4srtx-o4eey-d6bln-smmq6-we7px-ibdea-nondy-eae").unwrap()),
             ic_name: "mercury".into(),
             targets: BTreeSet::new(),
             subnet_id: Some(SubnetId::from(PrincipalId::new_anonymous())),
             dc_id: "test".to_string(),
             operator_id: PrincipalId::new_anonymous(),
             node_provider_id: PrincipalId::new_anonymous(),
+            is_api_bn: false,
+            domain: None,
         };
         assert!(filterlist.filter(accepted_tg));
 
         let rejected_tg_1 = TargetGroup {
-            node_id: NodeId::from(
-                PrincipalId::from_str("x33ed-h457x-bsgyx-oqxqf-6pzwv-wkhzr-rm2j3-npodi-purzm-n66cg-gae").unwrap(),
-            ),
+            node_id: NodeId::from(PrincipalId::from_str("x33ed-h457x-bsgyx-oqxqf-6pzwv-wkhzr-rm2j3-npodi-purzm-n66cg-gae").unwrap()),
             ic_name: "mercury".into(),
             targets: BTreeSet::new(),
             subnet_id: Some(SubnetId::from(PrincipalId::new_anonymous())),
             dc_id: "test".to_string(),
             operator_id: PrincipalId::new_anonymous(),
             node_provider_id: PrincipalId::new_anonymous(),
+            is_api_bn: false,
+            domain: None,
         };
         assert!(!filterlist.filter(rejected_tg_1));
 

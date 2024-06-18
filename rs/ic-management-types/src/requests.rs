@@ -55,10 +55,7 @@ pub enum ReplaceTarget {
     /// Subnet targeted for replacements
     Subnet(PrincipalId),
     /// Nodes on the same subnet that need to be replaced for other reasons
-    Nodes {
-        nodes: Vec<PrincipalId>,
-        motivation: String,
-    },
+    Nodes { nodes: Vec<PrincipalId>, motivation: String },
 }
 
 #[derive(Serialize, Deserialize)]
@@ -116,4 +113,9 @@ impl NodeRemovalReason {
             NodeRemovalReason::MatchedFilter(f) => format!("Matched filter {f}"),
         }
     }
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct HealRequest {
+    pub max_replaceable_nodes_per_sub: Option<usize>,
 }

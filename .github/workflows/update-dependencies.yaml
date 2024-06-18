@@ -29,9 +29,11 @@ jobs:
           #
           # Update dependencies and export files that bazel can consume
           #
+          git fetch
+          git reset --hard origin/main
           cargo update
           poetry update
-          CARGO_BAZEL_REPIN=true bazel query
+          CARGO_BAZEL_REPIN=true bazel query >/dev/null
           ./bin/poetry.sh
           #
           # Completely delete the bazel cache and then recreate it
@@ -39,12 +41,15 @@ jobs:
           #
           sudo rm -rf ~/.cache/bazel/*
           CARGO_BAZEL_REPIN=true bazel build ...
+          bazel test
 
       - name: "🆕 Create a new Pull Request with the changes"
         uses: peter-evans/create-pull-request@v6
         with:
           commit-message: "chore: Update dependencies"
           branch: bot-update-deps
+          title: "chore: Update dependencies"
+          body: "This PR updates poetry (Python) and cargo (Rust) dependencies and recreates the bazel cache."
           token: ${{ secrets.GIX_CREATE_PR_PAT }}
 
       - name: "🪓 Tear down runner"

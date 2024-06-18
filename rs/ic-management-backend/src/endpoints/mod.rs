@@ -1,31 +1,26 @@
 pub mod governance_canister;
+pub mod network;
 pub mod nodes_ops;
 pub mod query_decentralization;
 pub mod release;
 pub mod subnet;
 
-use crate::{
-    gitlab_dfinity, health, prometheus, proposal, registry, registry::RegistryState,
-    release::list_subnets_release_statuses, release::RolloutBuilder,
-};
+use crate::health::HealthStatusQuerier;
+use crate::{health, prometheus, proposal, registry, registry::RegistryState, release::list_subnets_release_statuses, release::RolloutBuilder};
 use actix_web::dev::Service;
 use actix_web::{get, post, web, App, Error, HttpResponse, HttpServer, Responder, Result};
 use decentralization::network::AvailableNodesQuerier;
 use ic_management_types::Network;
 use ic_registry_nns_data_provider::registry::RegistryCanister;
 use ic_types::PrincipalId;
-use log::{debug, error, info};
+use log::{debug, info};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::ops::Deref;
-use std::process;
 use std::str::FromStr;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::RwLock;
-
-const GITLAB_TOKEN_RELEASE_ENV: &str = "GITLAB_API_TOKEN_RELEASE";
-const GITLAB_API_TOKEN_FALLBACK: &str = "GITLAB_API_TOKEN";
 
 pub async fn run_backend(
     target_network: &Network,
@@ -35,30 +30,14 @@ pub async fn run_backend(
     mpsc_tx: Option<std::sync::mpsc::Sender<actix_web::dev::ServerHandle>>,
 ) -> std::io::Result<()> {
     debug!("Starting backend");
-    let registry_state = Arc::new(RwLock::new(
-        registry::RegistryState::new(target_network, run_from_cli).await,
-    ));
+    let registry_state = Arc::new(RwLock::new(registry::RegistryState::new(target_network, run_from_cli).await));
 
     if run_from_cli {
         registry::update_node_details(&registry_state).await;
     } else {
-        if std::env::var(GITLAB_TOKEN_RELEASE_ENV).is_err() {
-            let fallback_token = std::env::var(GITLAB_API_TOKEN_FALLBACK);
-            if fallback_token.is_err() {
-                error!(
-                    "Could not lead the Gitlab token from variable {} or {}",
-                    GITLAB_TOKEN_RELEASE_ENV, GITLAB_API_TOKEN_FALLBACK
-                );
-                process::exit(exitcode::CONFIG);
-            }
-            std::env::set_var(GITLAB_TOKEN_RELEASE_ENV, fallback_token.unwrap());
-        }
-        let gitlab_client_release_repo = gitlab_dfinity::authenticated_client(GITLAB_TOKEN_RELEASE_ENV).await;
         let closure_target_network = target_network.clone();
         let registry_state_poll = registry_state.clone();
-        tokio::spawn(async {
-            registry::poll(gitlab_client_release_repo, registry_state_poll, closure_target_network).await
-        });
+        tokio::spawn(async { registry::poll(registry_state_poll, closure_target_network).await });
     }
 
     let num_workers = if run_from_cli { 1 } else { 8 };
@@ -108,6 +87,7 @@ pub async fn run_backend(
             .service(self::subnet::create_subnet)
             .service(self::subnet::resize)
             .service(self::subnet::change_preview)
+            .service(self::network::heal)
             .service(self::nodes_ops::remove)
             .service(self::query_decentralization::decentralization_subnet_query)
             .service(self::query_decentralization::decentralization_whatif_query)
@@ -243,14 +223,7 @@ async fn nodes_healths(registry: web::Data<Arc<RwLock<registry::RegistryState>>>
         registry
             .nodes()
             .values()
-            .map(|n| {
-                (
-                    n.principal,
-                    healths
-                        .remove(&n.principal)
-                        .unwrap_or(ic_management_types::Status::Unknown),
-                )
-            })
+            .map(|n| (n.principal, healths.remove(&n.principal).unwrap_or(ic_management_types::Status::Unknown)))
             .collect::<BTreeMap<_, _>>()
     }))
 }
@@ -270,9 +243,7 @@ async fn operators(registry: web::Data<Arc<RwLock<registry::RegistryState>>>) ->
     query_registry(registry, |r| r.operators()).await
 }
 
-fn response_from_result<T: Serialize, E: std::fmt::Debug + std::fmt::Display + 'static>(
-    result: Result<T, E>,
-) -> Result<HttpResponse, Error> {
+fn response_from_result<T: Serialize, E: std::fmt::Debug + std::fmt::Display + 'static>(result: Result<T, E>) -> Result<HttpResponse, Error> {
     match result {
         Ok(data) => Ok(HttpResponse::Ok().json(data)),
         Err(e) => Err(actix_web::error::ErrorInternalServerError(e)),

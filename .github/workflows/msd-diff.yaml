@@ -7,13 +7,16 @@ on:
     paths:
       - 'rs/ic-observability/multiservice-discovery*/src/**'
 
-concurrency: 
+concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   msd-diff:
-    runs-on: ubuntu-20.04
+    runs-on:
+      labels: dre-runner-custom
+    # This image is based on ubuntu:20.04
+    container: ghcr.io/dfinity/dre/actions-runner:0.2.1
     steps:
       - uses: actions/checkout@v4
         with:
@@ -31,6 +34,7 @@ jobs:
 
       - name: "🔭 Compute MSD"
         id: msd-diff
+        shell: bash
         run: |
           set -exuo pipefail
           REGISTRY_DIR_MAIN="$HOME/tmp/main-registry"

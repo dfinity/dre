@@ -83,9 +83,7 @@ impl ConfigBuilder for PrometheusConfigBuilder {
                     .into_iter()
                     .map(|k| (k.0.to_string(), k.1))
                     .chain(match tg.subnet_id {
-                        Some(subnet_id) => {
-                            BTreeMap::from([(labels_keys::IC_SUBNET.to_string(), subnet_id.to_string())])
-                        }
+                        Some(subnet_id) => BTreeMap::from([(labels_keys::IC_SUBNET.to_string(), subnet_id.to_string())]),
                         None => BTreeMap::new(),
                     })
                     .collect::<BTreeMap<_, _>>()
@@ -142,6 +140,8 @@ mod prometheus_serialize {
             dc_id: "test".to_string(),
             operator_id: PrincipalId::new_anonymous(),
             node_provider_id: PrincipalId::new_anonymous(),
+            is_api_bn: false,
+            domain: None,
         }
     }
 

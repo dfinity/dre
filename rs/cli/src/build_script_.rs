@@ -10,20 +10,14 @@ fn main() {
     let git_rev = option_env!("GIT_REV").map(String::from).unwrap_or_else(|| {
         String::from_utf8(
             // https://stackoverflow.com/questions/21017300/git-command-to-get-head-sha1-with-dirty-suffix-if-workspace-is-not-clean
-            Command::new("git")
-                .args(["describe", "--always", "--dirty"])
-                .output()
-                .unwrap()
-                .stdout,
+            Command::new("git").args(["describe", "--always", "--dirty"]).output().unwrap().stdout,
         )
         .unwrap()
     });
     if !git_rev.is_empty() {
         println!(
             "cargo:rustc-env=CARGO_PKG_VERSION={}",
-            option_env!("CARGO_PKG_VERSION")
-                .map(|v| format!("{}-{}", v, git_rev))
-                .unwrap_or_default()
+            option_env!("CARGO_PKG_VERSION").map(|v| format!("{}-{}", v, git_rev)).unwrap_or_default()
         );
     }
 
@@ -40,11 +34,7 @@ fn generate_completions() {
     };
     let completions_dir = PathBuf::from(outdir).join("completions");
     if let Err(e) = fs::create_dir_all(&completions_dir) {
-        println!(
-            "cargo:warning=Couldn't create '{}' dir: {:?}",
-            completions_dir.display(),
-            e
-        );
+        println!("cargo:warning=Couldn't create '{}' dir: {:?}", completions_dir.display(), e);
         return;
     }
 
@@ -59,22 +49,14 @@ fn generate_completions() {
 
     if let Some(val) = env::var_os("COMPLETIONS_OUT_DIR") {
         if let Err(e) = fs::create_dir_all(&val) {
-            println!(
-                "cargo:warning=Couldn't create '{}' due to: {:?}",
-                val.into_string().unwrap(),
-                e
-            );
+            println!("cargo:warning=Couldn't create '{}' due to: {:?}", val.into_string().unwrap(), e);
             return;
         }
         for entry in fs::read_dir(completions_dir).unwrap() {
             let entry = entry.unwrap();
             let val = PathBuf::from(&val).join(entry.file_name());
             if let Err(e) = fs::copy(entry.path(), &val) {
-                println!(
-                    "cargo:warning=Couldn't copy completions to '{}' due to: {:?}",
-                    val.display(),
-                    e
-                );
+                println!("cargo:warning=Couldn't copy completions to '{}' due to: {:?}", val.display(), e);
             }
         }
     }

@@ -69,7 +69,7 @@ aspect_bazel_lib_dependencies()
 
 aspect_bazel_lib_register_toolchains()
 
-IC_REPO_VERSION = "778d2bb870f858952ca9fbe69324f9864e3cf5e7"
+IC_REPO_VERSION = "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d"
 
 http_archive(
     name = "ic_repo",
@@ -194,9 +194,9 @@ oci_pull(
 )
 
 oci_pull(
-    # tag = 0.34.1-debian
+    # tag = 0.38.0-debian
     name = "vector-debian",
-    digest = "sha256:6d8cf7cbafe8591d3e04d9f4aa9889c720ab36bb8712cad04979261d35b501cf",
+    digest = "sha256:f33f11c554d522fb9a3d1725c9212725da8f1eee70a3971e587e78d46e72a779",
     image = "index.docker.io/timberio/vector",
 )
 

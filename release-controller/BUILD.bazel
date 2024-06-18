@@ -20,6 +20,10 @@ deps = [
     "//pylib",
 ]
 
+dev_deps = [
+    requirement("httpretty"),
+]
+
 env = {
     "BAZEL": "true",
 }
@@ -42,7 +46,7 @@ py_test(
     srcs = ["pytest.py"],
     data = glob(["*.py"]),
     env = env,
-    deps = deps,
+    deps = deps + dev_deps,
 )
 
 py_oci_image(

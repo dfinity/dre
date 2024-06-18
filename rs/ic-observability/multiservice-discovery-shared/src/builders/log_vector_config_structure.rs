@@ -21,11 +21,7 @@ pub struct VectorConfigBuilderImpl {
 
 impl VectorConfigBuilderImpl {
     pub fn new(batch_size: u64, port: u64, bn_port: u64) -> Self {
-        Self {
-            batch_size,
-            port,
-            bn_port,
-        }
+        Self { batch_size, port, bn_port }
     }
 }
 
@@ -35,10 +31,7 @@ impl ConfigBuilder for VectorConfigBuilderImpl {
     }
 }
 
-pub(crate) fn from_targets_into_vector_config(
-    builder: &VectorConfigBuilderImpl,
-    records: BTreeSet<TargetDto>,
-) -> String {
+pub(crate) fn from_targets_into_vector_config(builder: &VectorConfigBuilderImpl, records: BTreeSet<TargetDto>) -> String {
     let mut config = VectorConfigEnriched::new();
     let mut edited_records: Vec<TargetDto> = vec![];
 
@@ -81,10 +74,7 @@ pub(crate) fn from_targets_into_vector_config(
             sources_map.insert(source_key, Box::new(source) as Box<dyn VectorSource>);
 
             let mut transforms_map = HashMap::new();
-            transforms_map.insert(
-                format!("{}-transform", key),
-                Box::new(transform) as Box<dyn VectorTransform>,
-            );
+            transforms_map.insert(format!("{}-transform", key), Box::new(transform) as Box<dyn VectorTransform>);
             config.add_target_group(sources_map, transforms_map);
         }
     }
@@ -127,6 +117,8 @@ const IC_SUBNET: &str = "ic_subnet";
 const DC: &str = "dc";
 const ADDRESS: &str = "address";
 const NODE_PROVIDER_ID: &str = "node_provider_id";
+const IS_API_BN: &str = "is_api_bn";
+const DOMAIN: &str = "domain";
 
 impl VectorRemapTransform {
     pub fn from(target: TargetDto, job: JobType, input: String, is_bn: bool) -> Self {
@@ -145,12 +137,17 @@ impl VectorRemapTransform {
             (ADDRESS.into(), ip),
             (NODE_PROVIDER_ID.into(), target_group.node_provider_id.to_string()),
             (DC.into(), target_group.dc_id),
+            (IS_API_BN.into(), target.is_api_bn.to_string()),
         ])
         .into_iter()
         .chain(target.custom_labels)
         .chain(match target_group.subnet_id {
             Some(subnet_id) => vec![(IC_SUBNET.into(), subnet_id.to_string())],
             None => vec![],
+        })
+        .chain(match target.domain {
+            None => vec![],
+            Some(d) => vec![(DOMAIN.into(), d)],
         })
         .collect::<HashMap<_, _>>();
 
@@ -217,6 +214,8 @@ mod tests {
             jobs: jobs.clone(),
             operator_id: PrincipalId::new_anonymous(),
             custom_labels: custom_labels.clone(),
+            is_api_bn: false,
+            domain: None,
         });
         target_dto.insert(TargetDto {
             node_id: PrincipalId::new_anonymous().into(),
@@ -229,6 +228,8 @@ mod tests {
             jobs: jobs.clone(),
             operator_id: PrincipalId::new_anonymous(),
             custom_labels: custom_labels.clone(),
+            is_api_bn: false,
+            domain: None,
         });
 
         let config = builder.build(target_dto);

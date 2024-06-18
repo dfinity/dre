@@ -1,17 +1,20 @@
 #!/usr/bin/env python3
 import fnmatch
-import os
 import pathlib
 import re
 import subprocess
 import sys
 import time
+import typing
+
+from dataclasses import dataclass
 
 
 REPLICA_TEAMS = set(
     [
         "consensus-owners",
         "crypto-owners",
+        "interface-owners",
         "Orchestrator",
         "message-routing-owners",
         "networking-team",
@@ -20,6 +23,35 @@ REPLICA_TEAMS = set(
         "runtime-owners",
     ]
 )
+
+
+class Change(typing.TypedDict):
+    commit: str
+    team: str
+    type: str
+    scope: str
+    message: str
+    commiter: str
+    included: bool
+
+
+@dataclass
+class Team:
+    name: str
+    google_docs_handle: str
+    slack_id: str
+    send_announcement: bool
+
+
+RELEASE_NOTES_REVIEWERS = [
+    Team("consensus", "@team-consensus", "SRJ3R849E", False),
+    Team("crypto", "@team-crypto", "SU7BZQ78E", False),
+    Team("execution", "@team-execution", "S01A577UL56", True),
+    Team("messaging", "@team-messaging", "S01SVC713PS", True),
+    Team("networking", "@team-networking", "SR6KC1DMZ", False),
+    Team("node", "@node-team", "S027838EY30", False),
+    Team("runtime", "@team-runtime", "S03BM6C0CJY", False),
+]
 
 TYPE_PRETTY_MAP = {
     "feat": ("Features", 0),
@@ -58,6 +90,8 @@ TEAM_PRETTY_MAP = {
     "prodsec": "Prodsec",
     "runtime-owners": "Runtime",
     "trust-team": "Trust",
+    "sdk-team": "SDK",
+    "utopia": "Utopia"
 }
 
 
@@ -65,7 +99,6 @@ EXCLUDE_PACKAGES_FILTERS = [
     r".+\/sns\/.+",
     r".+\/ckbtc\/.+",
     r".+\/cketh\/.+",
-    r".+canister.+",
     r"rs\/nns.+",
     r".+test.+",
     r"^bazel$",
@@ -247,7 +280,7 @@ def release_notes(first_commit, last_commit, release_name) -> str:
     jira_ticket_regex = r" *\b[A-Z]{2,}\d?-\d+\b:?"  # <whitespace?><word boundary><uppercase letters><digit?><hyphen><digits><word boundary><colon?>
     empty_brackets_regex = r" *\[ *\]:?"  # Sometimes Jira tickets are in square brackets
 
-    change_infos = {}
+    change_infos: dict[str, list[Change]] = {}
 
     ci_patterns = ["/**/*.lock", "/**/*.bzl"]
 
@@ -369,9 +402,6 @@ def release_notes(first_commit, last_commit, release_name) -> str:
 
         commit_type = conventional["type"].lower()
         commit_type = commit_type if commit_type in TYPE_PRETTY_MAP else "other"
-        if len(teams) >= 3:
-            # The change seems to be touching many teams, let's mark it as "other" (generic)
-            commit_type = "other"
 
         if ["ic-testing-verification"] == teams or all([team in EXCLUDED_TEAMS for team in teams]):
             included = False
@@ -397,18 +427,14 @@ def release_notes(first_commit, last_commit, release_name) -> str:
             }
         )
 
+    reviewers_text = "\n".join([f"- {t.google_docs_handle}" for t in RELEASE_NOTES_REVIEWERS if t.send_announcement])
+
     notes = """\
 # Review checklist
 
 <span style="color: red">Please cross-out your team once you finished the review</span>
 
-- @team-consensus
-- @team-crypto
-- @team-execution
-- @team-messaging
-- @team-networking
-- @node-team
-- @team-runtime
+{reviewers_text}
 
 # Release Notes for [{rc_name}](https://github.com/dfinity/ic/tree/{rc_name}) ({last_commit})
 Changelog since git revision [{first_commit}](https://dashboard.internetcomputer.org/release/{first_commit})
@@ -416,6 +442,7 @@ Changelog since git revision [{first_commit}](https://dashboard.internetcomputer
         rc_name=release_name,
         last_commit=last_commit,
         first_commit=first_commit,
+        reviewers_text=reviewers_text,
     )
 
     for current_type in sorted(TYPE_PRETTY_MAP, key=lambda x: TYPE_PRETTY_MAP[x][1]):
@@ -425,7 +452,7 @@ Changelog since git revision [{first_commit}](https://dashboard.internetcomputer
 
         for change in sorted(change_infos[current_type], key=lambda x: ",".join(x["team"])):
             commit_part = "[`{0}`](https://github.com/dfinity/ic/commit/{0})".format(change["commit"][:9])
-            team_part = ",".join([TEAM_PRETTY_MAP[team] for team in change["team"]])
+            team_part = ",".join([TEAM_PRETTY_MAP.get(team, team) for team in change["team"]])
             team_part = team_part if team_part else "General"
             scope_part = (
                 ":"

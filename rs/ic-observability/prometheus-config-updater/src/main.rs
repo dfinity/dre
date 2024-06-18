@@ -42,11 +42,7 @@ fn main() -> Result<()> {
             .map_err(|e| anyhow::format_err!("Failed to get nns_public_key: {}", e))
             .unwrap()
     });
-    let nns_urls = cli_args
-        .nns_urls
-        .split(',')
-        .map(Url::parse)
-        .collect::<Result<Vec<Url>, _>>()?;
+    let nns_urls = cli_args.nns_urls.split(',').map(Url::parse).collect::<Result<Vec<Url>, _>>()?;
     let rt = tokio::runtime::Runtime::new()?;
     let log = make_logger();
     let metrics_registry = MetricsRegistry::new();
@@ -85,8 +81,7 @@ fn main() -> Result<()> {
         exporter: Exporter::Http(cli_args.metrics_listen_addr),
         ..Default::default()
     };
-    let _metrics_endpoint =
-        MetricsHttpEndpoint::new_insecure(rt.handle().clone(), exporter_config, metrics_registry, &log);
+    let _metrics_endpoint = MetricsHttpEndpoint::new(rt.handle().clone(), exporter_config, metrics_registry, &log);
 
     let (update_signal_sender, update_signal_rcv) = crossbeam::channel::bounded::<()>(0);
     let loop_fn = make_poll_loop(
@@ -110,11 +105,7 @@ fn main() -> Result<()> {
 
     // We need to filter old nodes for host node exporters, but not for everything else
     // To do that, we will create 2 separate updated nodes, with different filters for them
-    let jobs = vec![
-        JobType::NodeExporter(NodeOS::Guest),
-        JobType::Orchestrator,
-        JobType::Replica,
-    ];
+    let jobs = vec![JobType::NodeExporter(NodeOS::Guest), JobType::Orchestrator, JobType::Replica];
 
     let filters = Arc::new(TargetGroupFilterList::new(filters_vec));
     let config_updater_loop = config_writer_common::config_updater_loop::config_updater_loop(

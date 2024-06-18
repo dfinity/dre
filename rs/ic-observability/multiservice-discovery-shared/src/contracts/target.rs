@@ -26,6 +26,8 @@ pub struct TargetDto {
     pub jobs: Vec<JobType>,
     pub custom_labels: BTreeMap<String, String>,
     pub name: String,
+    pub is_api_bn: bool,
+    pub domain: Option<String>,
 }
 
 impl DataContract for TargetDto {
@@ -60,6 +62,8 @@ pub fn map_to_target_dto(
         node_provider_id: value.node_provider_id,
         jobs: vec![job_type],
         custom_labels,
+        is_api_bn: value.is_api_bn,
+        domain: value.domain.clone(),
     }
 }
 
@@ -73,6 +77,8 @@ impl From<&TargetDto> for TargetGroup {
             operator_id: value.operator_id,
             subnet_id: value.subnet_id,
             targets: value.targets.clone(),
+            is_api_bn: value.is_api_bn,
+            domain: value.domain.clone(),
         }
     }
 }
@@ -90,6 +96,8 @@ impl From<&TargetGroup> for TargetDto {
             dc_id: value.dc_id.clone(),
             operator_id: value.operator_id,
             node_provider_id: value.node_provider_id,
+            is_api_bn: value.is_api_bn,
+            domain: value.domain.clone(),
         }
     }
 }

@@ -21,9 +21,7 @@ impl TryFrom<&serde_json::Value> for Entry {
                 .as_str()
                 .ok_or(format!("Couldn't parse 'file' from the value {:?}", value))?
                 .to_string(),
-            line: value["line"]
-                .as_u64()
-                .ok_or(format!("Couldn't parse 'line' for entry {:?}", value))?,
+            line: value["line"].as_u64().ok_or(format!("Couldn't parse 'line' for entry {:?}", value))?,
             message: value["message"]
                 .as_str()
                 .ok_or(format!("Couldn't parse 'message' from value {:?}", value))?

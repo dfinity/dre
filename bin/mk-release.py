@@ -68,6 +68,8 @@ def update_change_log(current_version, new_version):
             "git-changelog",
             "--filter-commits",
             f"v{current_version}..",
+            "--convention",
+            "conventional",
             "--in-place",
             "--output",
             "CHANGELOG.md",
@@ -86,8 +88,8 @@ def main():
     if new_version.startswith("v"):
         new_version = new_version[1:]
     if args.tag:
-        subprocess.check_call(["git", "checkout", "main"])
         new_git_tag = f"v{new_version}"
+        subprocess.check_call(["git", "checkout", "main"])
         add_git_tag(new_git_tag)
         subprocess.check_call(["git", "push", "origin", "--force", new_git_tag])
         sys.exit(0)
@@ -99,6 +101,7 @@ def main():
         raise SystemExit(f"New version {new_version} needs to be greater than the current version {current_version}")
     log.info("Updating version from %s to %s", current_version, new_version)
     subprocess.check_call(["git", "pull"])
+    patch_file("pyproject.toml", r'^version = "[\d\.]+"', f'version = "{new_version}"')
     patch_file("Cargo.toml", r'^version = "[\d\.]+"', f'version = "{new_version}"')
     patch_file("VERSION", f"^{current_version}$", new_version)
     # Create a new branch for the release

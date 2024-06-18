@@ -6,7 +6,7 @@ use std::vec;
 use axum_otel_metrics::HttpMetricsLayerBuilder;
 use clap::Parser;
 use humantime::parse_duration;
-use slog::{info, o, Drain, Logger};
+use slog::{error, info, o, Drain, Logger};
 use tokio::runtime::Runtime;
 use tokio::sync::oneshot::{self};
 use url::Url;
@@ -42,11 +42,7 @@ fn main() {
     }
 
     if cli_args.render_prom_targets_to_stdout {
-        async fn sync(
-            cli_args: &CliArgs,
-            log: &Logger,
-            shutdown_signal: impl futures_util::Future<Output = ()>,
-        ) -> Option<RunningDefinition> {
+        async fn sync(cli_args: &CliArgs, log: &Logger, shutdown_signal: impl futures_util::Future<Output = ()>) -> Option<RunningDefinition> {
             let def = get_mainnet_definition(cli_args, log.clone());
             let test_def = TestDefinition::new(def, RunningDefinitionsMetrics::new());
             let sync_fut = test_def.sync_and_stop(cli_args.skip_update_local_registry);
@@ -81,8 +77,18 @@ fn main() {
         let metrics_layer = HttpMetricsLayerBuilder::new().build();
         let metrics = MSDMetrics::new();
 
-        rt.block_on(supervisor.load_or_create_defs(metrics.running_definition_metrics.clone()))
-            .unwrap();
+        match rt.block_on(supervisor.load_or_create_defs(metrics.running_definition_metrics.clone())) {
+            Ok(_) => {}
+            Err(e) => {
+                error!(log, "Failed to load or create definitions, deleting the state file.");
+                if let Some(file) = &cli_args.networks_state_file {
+                    if let Err(e) = std::fs::remove_file(file) {
+                        error!(log, "Failed to delete the state file"; "error" => format!("{:?}", e));
+                    }
+                }
+                panic!("{}", e);
+            }
+        }
 
         // First check if we should start the mainnet definition so we can
         // serve it right after the server starts.

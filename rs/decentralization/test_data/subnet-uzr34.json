@@ -27,7 +27,8 @@
       "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
       "labels": [],
       "version": 18677,
-      "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+      "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+      "is_api_boundary_node": false
     },
     {
       "principal": "aefqq-d7ldg-ljk5s-cmnxk-qqu7c-tw52l-74g3m-xxl5d-ag4ia-dxubz-wae",
@@ -55,7 +56,8 @@
       "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
       "dfinity_owned": true,
       "version": 29106,
-      "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+      "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+      "is_api_boundary_node": false
     },
     {
       "principal": "gp7wd-ahcms-jadi7-vwodk-3w4my-tuebm-v5qx4-vqbr6-tu56x-ybrj7-5qe",
@@ -84,7 +86,8 @@
       "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
       "labels": [],
       "version": 29056,
-      "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+      "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+      "is_api_boundary_node": false
     },
     {
       "principal": "ydslj-rlf32-vj4lb-lrcgz-cws3q-l7h74-alxv4-rh7et-64ms3-xaour-uqe",
@@ -113,7 +116,8 @@
       "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
       "labels": [],
       "version": 28913,
-      "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+      "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+      "is_api_boundary_node": false
     },
     {
       "principal": "qzklk-w24ay-zgidz-3fc2z-4xfru-ximbt-ullbw-eyr3u-ehuhr-up4ia-mae",
@@ -142,7 +146,8 @@
       "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
       "labels": [],
       "version": 28160,
-      "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+      "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+      "is_api_boundary_node": false
     },
     {
       "principal": "eb5nj-rh7pb-xvyuk-ohcse-otjy2-6tnuv-6hobf-c4heb-cx3mc-4pmwz-fae",
@@ -171,7 +176,8 @@
       "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
       "labels": [],
       "version": 28242,
-      "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+      "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+      "is_api_boundary_node": false
     },
     {
       "principal": "cgxrc-mp34v-t6lbz-mavnv-no62m-aukem-x3zqu-omgbc-k37hq-r7lnl-zae",
@@ -200,7 +206,8 @@
       "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
       "labels": [],
       "version": 28186,
-      "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+      "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+      "is_api_boundary_node": false
     },
     {
       "principal": "dxbmw-dpnje-dqjsy-tg6mb-4gyf3-lznvu-sarsi-yrtnq-dvjyh-mxgjv-xqe",
@@ -229,7 +236,8 @@
       "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
       "labels": [],
       "version": 28981,
-      "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+      "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+      "is_api_boundary_node": false
     },
     {
       "principal": "luot4-ahrkr-4z4vw-wwubq-wxhqn-a642n-txlyu-mk6j5-4mps4-zwbdw-uae",
@@ -258,7 +266,8 @@
       "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
       "labels": [],
       "version": 29114,
-      "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+      "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+      "is_api_boundary_node": false
     },
     {
       "principal": "yiebh-opvdk-kbzjq-s5wu3-hkmww-vtsf2-otbmc-igkdc-lsbag-eqjdd-yqe",
@@ -287,7 +296,8 @@
       "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
       "labels": [],
       "version": 28236,
-      "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+      "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+      "is_api_boundary_node": false
     },
     {
       "principal": "llshj-sxluv-xmt62-s2jsz-q42hh-tewjl-3sd5b-pw5vu-2nnzl-57pfs-zae",
@@ -316,7 +326,8 @@
       "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
       "labels": [],
       "version": 29057,
-      "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+      "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+      "is_api_boundary_node": false
     },
     {
       "principal": "pl37i-wxjd2-kozu6-o46lf-hbi62-lyi3x-s4r22-4si5f-7wcuu-3wfp6-gqe",
@@ -345,7 +356,8 @@
       "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
       "labels": [],
       "version": 28575,
-      "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+      "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+      "is_api_boundary_node": false
     },
     {
       "principal": "3l2cg-gewhq-ytksl-kqrj5-65263-zvrer-o5akm-zx5o3-zcgzv-mykzq-bqe",
@@ -374,7 +386,8 @@
       "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
       "labels": [],
       "version": 28915,
-      "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+      "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+      "is_api_boundary_node": false
     },
     {
       "principal": "xgzc4-6xtsp-yux4h-ejpqs-pchty-6o4fj-x3gfq-j2xs4-vq4dc-biyso-hae",
@@ -402,7 +415,8 @@
       "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
       "labels": [],
       "version": 26977,
-      "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+      "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+      "is_api_boundary_node": false
     },
     {
       "principal": "qw6qq-rc4gp-h2dcz-dtuix-74hta-xsolr-up4kw-wopxf-v26mr-chvl2-7ae",
@@ -431,7 +445,8 @@
       "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
       "labels": [],
       "version": 28133,
-      "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+      "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+      "is_api_boundary_node": false
     },
     {
       "principal": "qhz4y-4dgn5-nlqtq-5b7mj-aaurb-z5763-xjdqz-nunrd-yo74e-fm723-kae",
@@ -460,7 +475,8 @@
       "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
       "labels": [],
       "version": 26088,
-      "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+      "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+      "is_api_boundary_node": false
     },
     {
       "principal": "nlvel-yx7m2-cwrjs-6lkug-nso3r-lloy7-cyzdb-sgqcx-4n7ll-hj7y6-xqe",
@@ -489,7 +505,8 @@
       "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
       "labels": [],
       "version": 4509,
-      "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+      "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+      "is_api_boundary_node": false
     },
     {
       "principal": "sq6zd-3h76t-gef67-5bp2d-rhhgt-mqn47-3pt2b-ueaa5-kcf2f-rigqy-vae",
@@ -518,7 +535,8 @@
       "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
       "labels": [],
       "version": 19835,
-      "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+      "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+      "is_api_boundary_node": false
     },
     {
       "principal": "iylgr-zpxwq-kqgmf-4srtx-o4eey-d6bln-smmq6-we7px-ibdea-nondy-eae",
@@ -547,7 +565,8 @@
       "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
       "labels": [],
       "version": 29005,
-      "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+      "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+      "is_api_boundary_node": false
     },
     {
       "principal": "rvwon-5yfm2-lnvh5-54own-a5dmy-os5mf-4r5uz-ztv2a-ibz5p-hfdzk-hae",
@@ -576,7 +595,8 @@
       "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
       "labels": [],
       "version": 6043,
-      "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+      "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+      "is_api_boundary_node": false
     },
     {
       "principal": "os3lb-ig2wl-pohqy-ujkgp-2jgkz-kl5qu-6ie4y-ajylb-drbld-2ep3s-lae",
@@ -604,7 +624,8 @@
       "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
       "labels": [],
       "version": 1060,
-      "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+      "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+      "is_api_boundary_node": false
     },
     {
       "principal": "rdzbq-g7zf4-kbj5b-7bb3d-ixyfq-thwci-evni7-o4omc-tzll7-mmc2c-mqe",
@@ -633,7 +654,8 @@
       "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
       "labels": [],
       "version": 29083,
-      "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+      "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+      "is_api_boundary_node": false
     },
     {
       "principal": "2fbvp-54upn-oaayl-ixqfb-ytsm5-jxevu-76ono-243lr-jutky-sbzt2-mae",
@@ -662,7 +684,8 @@
       "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
       "labels": [],
       "version": 28827,
-      "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+      "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+      "is_api_boundary_node": false
     },
     {
       "principal": "qwco4-yxxjx-7dpgv-4fr4f-obdwj-nrtfw-ses5t-phwz5-ned26-qij5l-pqe",
@@ -691,7 +714,8 @@
       "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
       "labels": [],
       "version": 28991,
-      "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+      "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+      "is_api_boundary_node": false
     },
     {
       "principal": "xhagc-jwrkv-4idps-wl76z-dx7g4-5cpzv-p5rg2-6uoee-2gl74-ifwh3-sae",
@@ -720,7 +744,8 @@
       "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
       "labels": [],
       "version": 26120,
-      "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+      "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+      "is_api_boundary_node": false
     },
     {
       "principal": "tdzrz-kktgi-77woo-awir4-k5xg7-zpout-aqtgf-ywvkz-gqkml-544rc-mae",
@@ -749,7 +774,8 @@
       "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
       "labels": [],
       "version": 21857,
-      "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+      "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+      "is_api_boundary_node": false
     },
     {
       "principal": "4utyh-gpgts-a7kzj-77tog-pzziz-7khu4-m45hz-clqgl-u74lr-np6vw-nae",
@@ -778,7 +804,8 @@
       "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
       "labels": [],
       "version": 29076,
-      "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+      "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+      "is_api_boundary_node": false
     },
     {
       "principal": "woutk-44a2i-zxvk2-es7tn-ihx6n-vm7ne-xs6n7-x42wx-twj4g-njwd6-oqe",
@@ -807,7 +834,8 @@
       "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
       "labels": [],
       "version": 21821,
-      "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a"
+      "hostos_version": "e268b9807f1ab4ae65d7b29fe70a3b358d014d6a",
+      "is_api_boundary_node": false
     }
   ],
   "subnet_type": "system",

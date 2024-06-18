@@ -1,6 +1,7 @@
 use std::{
     collections::HashMap,
     sync::{Arc, RwLock},
+    time::{SystemTime, UNIX_EPOCH},
 };
 
 use opentelemetry::{global, metrics::Observer, KeyValue};
@@ -32,6 +33,7 @@ struct LatestValues {
     sync_registry_error: u64,
     definitions_load_successful: u64,
     definitions_sync_successful: u64,
+    successful_sync_ts: u64,
 }
 
 impl LatestValues {
@@ -41,6 +43,7 @@ impl LatestValues {
             sync_registry_error: 0,
             definitions_load_successful: 0,
             definitions_sync_successful: 0,
+            successful_sync_ts: 0,
         }
     }
 }
@@ -76,11 +79,17 @@ impl RunningDefinitionsMetrics {
             .u64_observable_gauge("msd.definitions.sync.successful")
             .with_description("Status of last sync of the registry with NNS of definition")
             .init();
+        let successful_sync_ts = meter
+            .clone()
+            .u64_observable_gauge("msd.definitions.sync.ts")
+            .with_description("Timestamp of last successful sync")
+            .init();
         let instruments = [
             load_new_targets_error.as_any(),
             sync_registry_error.as_any(),
             definitions_load_successful.as_any(),
             definitions_sync_successful.as_any(),
+            successful_sync_ts.as_any(),
         ];
         let s = latest_values_by_network.clone();
         let update_instruments = move |observer: &dyn Observer| {
@@ -95,6 +104,7 @@ impl RunningDefinitionsMetrics {
                     (&sync_registry_error, latest_values.sync_registry_error),
                     (&definitions_load_successful, latest_values.definitions_load_successful),
                     (&definitions_sync_successful, latest_values.definitions_sync_successful),
+                    (&successful_sync_ts, latest_values.successful_sync_ts),
                 ]
                 .into_iter()
                 {
@@ -104,16 +114,19 @@ impl RunningDefinitionsMetrics {
         };
         meter.register_callback(&instruments, update_instruments).unwrap();
 
-        Self {
-            latest_values_by_network,
-        }
+        Self { latest_values_by_network }
     }
 
     pub fn observe_sync(&self, network: String, success: bool) {
         let mut s = self.latest_values_by_network.write().unwrap();
         let latest_values = s.entry(network).or_insert(LatestValues::new());
         latest_values.definitions_sync_successful = match success {
-            true => 1,
+            true => {
+                let now = SystemTime::now();
+                let since_epoch = now.duration_since(UNIX_EPOCH).unwrap();
+                latest_values.successful_sync_ts = since_epoch.as_secs();
+                1
+            }
             false => {
                 latest_values.sync_registry_error += 1;
                 0

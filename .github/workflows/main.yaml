@@ -8,10 +8,12 @@ on:
     paths-ignore:
       - "release-index.yaml"
       - "replica-releases/**"
+      - "node-labels/**"
   pull_request:
     paths-ignore:
       - "release-index.yaml"
       - "replica-releases/**"
+      - "node-labels/**"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -19,11 +21,18 @@ concurrency:
 
 jobs:
   bazel:
-    runs-on: ubuntu-20.04
+    runs-on:
+      labels: dre-runner-custom
+    # This image is based on ubuntu:20.04
+    container: ghcr.io/dfinity/dre/actions-runner:0.2.1
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 2
+      - name: "🔒 Ensure singular opentelemetry version in Cargo.lock"
+        shell: bash
+        run: test "$(grep -n 'name = "opentelemetry"' Cargo.lock | wc -l)" -le 1
+
       - name: "☁️ Setup runner"
         uses: ./.github/workflows/manage-runner-pre
 
@@ -84,8 +93,11 @@ jobs:
         shell: bash
         run: |
           files=(
-            bases/apps/mainnet-dashboard/statefulset-slack.yaml
+            bases/apps/ic-release-controller/sts.yaml
             bases/apps/mainnet-dashboard/backend/base/deployment.yaml
+            bases/apps/mainnet-dashboard/statefulset-slack.yaml
+            bases/apps/service-discovery/service-discovery.yaml
+            gitlab-ci/vector-configs.yml
           )
           if [[ $changed == "true" ]]; then
             echo "Adding frontend to list of files"
@@ -122,5 +134,6 @@ jobs:
       ########################################
       - uses: ./.github/workflows/manage-runner-post
         name: "🪓 Tear down runner"
+        if: ${{ !startsWith(runner.name, 'dre-runner-custom') }}
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

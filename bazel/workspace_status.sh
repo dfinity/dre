@@ -4,8 +4,12 @@ set -euo pipefail
 
 echo "BUILD_TIME \"$(TZ=UTC date --rfc-3339=seconds)\""
 
-GIT_REV=$(git tag --points-at HEAD)
-if [[ -z "${GITREV:-}" ]]; then GIT_REV=$(git describe --always --dirty); fi
+if [[ -n "${GITHUB_SHA:-}" ]]; then
+  GIT_REV="$GITHUB_SHA"
+else
+  GIT_REV=$(git tag --points-at HEAD)
+  if [[ -z "${GIT_REV:-}" ]]; then GIT_REV=$(git describe --always --dirty); fi
+fi
 
 echo "GIT_REV ${GIT_REV:-unset}"
 

@@ -1,8 +1,7 @@
 mod endpoints;
-mod factsdb;
 mod git_ic_repo;
-mod gitlab_dfinity;
 mod health;
+mod node_labels;
 mod prometheus;
 mod proposal;
 mod public_dashboard;
@@ -25,10 +24,7 @@ async fn main() -> std::io::Result<()> {
         .expect("Failed to create network");
 
     let listen_port = std::env::var("BACKEND_PORT")
-        .map(|p| {
-            p.parse()
-                .expect("Unable to parse BACKEND_PORT environment variable as a valid port")
-        })
+        .map(|p| p.parse().expect("Unable to parse BACKEND_PORT environment variable as a valid port"))
         .unwrap_or(8080);
     endpoints::run_backend(&target_network, "0.0.0.0", listen_port, false, None).await
 }

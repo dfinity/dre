@@ -1,6 +1,6 @@
 use super::Server;
 use crate::{
-    definition::{boundary_nodes_from_definitions, ic_node_target_dtos_from_definitions},
+    definition::{api_boundary_nodes_target_dtos_from_definitions, boundary_nodes_from_definitions, ic_node_target_dtos_from_definitions},
     TargetFilterSpec,
 };
 use axum::{
@@ -33,10 +33,16 @@ pub(super) async fn export_targets(
             node_provider_id: PrincipalId::new_anonymous(),
             operator_id: PrincipalId::new_anonymous(),
             subnet_id: None,
+            // These are old boundary nodes which are not the same as API boundary nodes
+            // with time these should become api boundary nodes
+            is_api_bn: false,
+            domain: None,
         })
         .collect();
 
-    let total_targets = [ic_node_targets, boundary_nodes_targets].concat();
+    let api_boundary_nodes: Vec<TargetDto> = api_boundary_nodes_target_dtos_from_definitions(&definitions, &filters);
+
+    let total_targets = [ic_node_targets, boundary_nodes_targets, api_boundary_nodes].concat();
 
     if !total_targets.is_empty() {
         Ok(Json(total_targets))

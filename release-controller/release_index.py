@@ -15,6 +15,7 @@ class Version(BaseModel):
     )
     version: str
     name: str
+    release_notes_ready: Optional[bool] = None
     subnets: Optional[List[str]] = None
 
 

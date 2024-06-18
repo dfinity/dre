@@ -19,6 +19,7 @@ use ic_interfaces_registry::{RegistryClient, RegistryClientResult};
 use ic_protobuf::registry::node::v1::NodeRecord;
 use ic_registry_client::client::{RegistryClientError, RegistryVersion};
 use ic_registry_client_helpers::{
+    api_boundary_node::ApiBoundaryNodeRegistry,
     node::{NodeId, NodeRegistry, SubnetId},
     node_operator::{NodeOperatorRegistry, PrincipalId},
     subnet::{SubnetListRegistry, SubnetTransportRegistry},
@@ -36,7 +37,6 @@ pub mod mainnet_registry;
 pub mod metrics;
 pub mod poll_loop;
 pub mod registry_sync;
-pub mod rest_api;
 pub mod service_discovery_record;
 
 /// Provide service discovery for a set of Internet Computers.
@@ -46,11 +46,7 @@ pub trait IcServiceDiscovery: Send + Sync {
     ///
     /// The job name must be one of `replica`, `orchestrator`, `node_exporter`,
     /// or `host_node_exporter`.
-    fn get_target_groups(
-        &self,
-        job_name: JobType,
-        log: Logger,
-    ) -> Result<BTreeSet<TargetGroup>, IcServiceDiscoveryError>;
+    fn get_target_groups(&self, job_name: JobType, log: Logger) -> Result<BTreeSet<TargetGroup>, IcServiceDiscoveryError>;
 }
 
 /// A [TargetGroup] associates a set of scrape targets with
@@ -67,6 +63,8 @@ pub struct TargetGroup {
     pub dc_id: String,
     pub operator_id: PrincipalId,
     pub node_provider_id: PrincipalId,
+    pub is_api_bn: bool,
+    pub domain: Option<String>,
 }
 
 impl TargetGroup {
@@ -108,11 +106,7 @@ impl IcServiceDiscoveryImpl {
     /// Create new instance of [IcServiceDiscoveryImpl]. The
     /// `ic_scraping_targets_dir` must point to a directory that contains the
     /// local stores of the Internet Computer instances to be scraped.
-    pub fn new<P: AsRef<Path>>(
-        log: Logger,
-        ic_scraping_targets_dir: P,
-        registry_query_timeout: Duration,
-    ) -> Result<Self, IcServiceDiscoveryError> {
+    pub fn new<P: AsRef<Path>>(log: Logger, ic_scraping_targets_dir: P, registry_query_timeout: Duration) -> Result<Self, IcServiceDiscoveryError> {
         let ic_scraping_targets_dir = PathBuf::from(ic_scraping_targets_dir.as_ref());
         if !ic_scraping_targets_dir.is_dir() {
             return Err(IcServiceDiscoveryError::NotADirectory {
@@ -191,22 +185,23 @@ impl IcServiceDiscoveryImpl {
         Ok(())
     }
 
-    fn get_targets(
-        reg_client: &dyn RegistryClient,
-        ic_name: &str,
-        log: Logger,
-    ) -> Result<BTreeSet<TargetGroup>, IcServiceDiscoveryError> {
+    fn get_targets(reg_client: &dyn RegistryClient, ic_name: &str, log: Logger) -> Result<BTreeSet<TargetGroup>, IcServiceDiscoveryError> {
         let latest_version = reg_client.get_latest_version();
 
-        let mut unassigned_node_ids = reg_client
-            .get_node_ids(latest_version)?
-            .into_iter()
-            .collect::<BTreeSet<_>>();
+        let mut unassigned_node_ids = reg_client.get_node_ids(latest_version)?.into_iter().collect::<BTreeSet<_>>();
 
         let mut node_targets = BTreeSet::new();
         let subnet_ids = reg_client
             .get_subnet_ids(latest_version)
             .map_registry_err(latest_version, "get_subnet_ids")?;
+
+        let api_bns = match reg_client.get_api_boundary_node_ids(latest_version) {
+            Ok(abn) => abn,
+            Err(e) => {
+                warn!(log, "Error while fetching api boundary node ids: {:?}", e);
+                vec![]
+            }
+        };
 
         for subnet_id in subnet_ids {
             let t_infos = reg_client
@@ -216,10 +211,7 @@ impl IcServiceDiscoveryImpl {
             let t_infos = match t_infos {
                 Ok(t) => t,
                 Err(e) => {
-                    warn!(
-                        log,
-                        "Error while fetching get_subnet_transport_info for node id {}: {:?}", subnet_id, e
-                    );
+                    warn!(log, "Error while fetching get_subnet_transport_info for node id {}: {:?}", subnet_id, e);
                     continue;
                 }
             };
@@ -233,6 +225,7 @@ impl IcServiceDiscoveryImpl {
                     &mut node_targets,
                     Some(subnet_id),
                     ic_name,
+                    api_bns.contains(&node_id),
                 )?;
                 unassigned_node_ids.remove(&node_id);
             }
@@ -247,10 +240,7 @@ impl IcServiceDiscoveryImpl {
             let node_record = match node_record {
                 Ok(nr) => nr,
                 Err(e) => {
-                    warn!(
-                        log,
-                        "Error while fetching transport_info for node id {}: {:?}", node_id, e
-                    );
+                    warn!(log, "Error while fetching transport_info for node id {}: {:?}", node_id, e);
                     continue;
                 }
             };
@@ -263,6 +253,7 @@ impl IcServiceDiscoveryImpl {
                 &mut node_targets,
                 None,
                 ic_name,
+                api_bns.contains(&node_id),
             )?;
         }
         Ok(node_targets)
@@ -276,6 +267,7 @@ impl IcServiceDiscoveryImpl {
         node_targets: &mut BTreeSet<TargetGroup>,
         subnet_id: Option<SubnetId>,
         ic_name: &str,
+        is_api_bn: bool,
     ) -> Result<(), IcServiceDiscoveryError> {
         let socket_addr = Self::node_record_to_target_addr(node_id, latest_version, node_record.clone())?;
 
@@ -294,6 +286,8 @@ impl IcServiceDiscoveryImpl {
             dc_id: node_operator.dc_id,
             operator_id,
             node_provider_id: PrincipalId::try_from(node_operator.node_provider_principal_id).unwrap_or_default(),
+            is_api_bn,
+            domain: node_record.domain,
         });
 
         Ok(())
@@ -309,10 +303,7 @@ impl IcServiceDiscoveryImpl {
         // Seen bogus registry entries where the connection endpoint exists
         // but is 0.0.0.0
         if addr.ip().is_unspecified() {
-            return Err(ConnectionEndpointIsAllBalls {
-                node_id,
-                registry_version,
-            });
+            return Err(ConnectionEndpointIsAllBalls { node_id, registry_version });
         }
 
         Ok(addr)
@@ -320,19 +311,13 @@ impl IcServiceDiscoveryImpl {
 }
 
 impl IcServiceDiscovery for IcServiceDiscoveryImpl {
-    fn get_target_groups(
-        &self,
-        job_type: JobType,
-        log: Logger,
-    ) -> Result<BTreeSet<TargetGroup>, IcServiceDiscoveryError> {
+    fn get_target_groups(&self, job_type: JobType, log: Logger) -> Result<BTreeSet<TargetGroup>, IcServiceDiscoveryError> {
         let mapping = Box::new(|sockaddr: SocketAddr| job_type.sockaddr(sockaddr, false));
         let registries_lock_guard = self.registries.read().unwrap();
-        let target_list = registries_lock_guard
-            .iter()
-            .try_fold(BTreeSet::new(), |mut a, (ic_name, registry)| {
-                a.append(&mut Self::get_targets(registry, ic_name, log.clone())?);
-                Ok::<_, IcServiceDiscoveryError>(a)
-            })?;
+        let target_list = registries_lock_guard.iter().try_fold(BTreeSet::new(), |mut a, (ic_name, registry)| {
+            a.append(&mut Self::get_targets(registry, ic_name, log.clone())?);
+            Ok::<_, IcServiceDiscoveryError>(a)
+        })?;
 
         Ok(target_list
             .into_iter()
@@ -342,10 +327,7 @@ impl IcServiceDiscovery for IcServiceDiscoveryImpl {
                 if job_type != JobType::Replica || target_group.subnet_id.is_some() {
                     let targets: BTreeSet<_> = target_group.targets.into_iter().map(&mapping).collect();
                     if !targets.is_empty() {
-                        return Some(TargetGroup {
-                            targets,
-                            ..target_group
-                        });
+                        return Some(TargetGroup { targets, ..target_group });
                     }
                 }
                 None
@@ -394,19 +376,11 @@ pub enum IcServiceDiscoveryError {
         source: RegistryClientError,
     },
     #[error("failed to get endpoint for node {node_id}")]
-    NoConnectionEndpoint {
-        node_id: NodeId,
-        registry_version: RegistryVersion,
-    },
+    NoConnectionEndpoint { node_id: NodeId, registry_version: RegistryVersion },
     #[error("metrics connection endpoint for {node_id} has 0.0.0.0 addr at {registry_version}")]
-    ConnectionEndpointIsAllBalls {
-        node_id: NodeId,
-        registry_version: RegistryVersion,
-    },
+    ConnectionEndpointIsAllBalls { node_id: NodeId, registry_version: RegistryVersion },
     #[error("updating the local store from the NNS failed")]
-    SyncWithNnsFailed {
-        failures: Vec<(String, LocalRegistryError)>,
-    },
+    SyncWithNnsFailed { failures: Vec<(String, LocalRegistryError)> },
     #[error("job name not found: {job_name}")]
     JobNameNotFound { job_name: String },
 
@@ -442,11 +416,7 @@ mod tests {
         let nns_targets: HashSet<_> = target_groups
             .iter()
             .filter(|g| {
-                g.subnet_id
-                    .map(|s| s.to_string().starts_with(mainnet_prefix))
-                    .unwrap_or(false)
-                    && g.ic_name == "mainnet"
-                    && g.targets.len() == 1
+                g.subnet_id.map(|s| s.to_string().starts_with(mainnet_prefix)).unwrap_or(false) && g.ic_name == "mainnet" && g.targets.len() == 1
             })
             .unique_by(|g| g.node_id)
             .unique_by(|g| &g.targets)

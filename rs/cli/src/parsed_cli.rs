@@ -40,18 +40,14 @@ impl ParsedCli {
             ]
             .concat(),
             match update_version.versions_to_retire.clone() {
-                Some(versions) => [
-                    vec![format!("--{}-versions-to-unelect", update_version.release_artifact)],
-                    versions,
-                ]
-                .concat(),
+                Some(versions) => [vec![format!("--{}-versions-to-unelect", update_version.release_artifact)], versions].concat(),
                 None => vec![],
             },
         ]
         .concat()
     }
 
-    pub async fn from_opts(opts: &Opts, require_authentication: bool) -> anyhow::Result<Self> {
+    pub async fn from_opts(opts: &Opts) -> anyhow::Result<Self> {
         let network = Network::new(&opts.network, &opts.nns_urls).await.map_err(|e| {
             anyhow::anyhow!(
                 "Failed to parse network from name {} and NNS urls {:?}. Error: {}",
@@ -62,14 +58,13 @@ impl ParsedCli {
         })?;
         let neuron = Neuron::new(
             &network,
-            require_authentication,
             opts.neuron_id,
             opts.private_key_pem.clone(),
             opts.hsm_slot,
             opts.hsm_pin.clone(),
             opts.hsm_key_id.clone(),
         )
-        .await?;
+        .await;
         Ok(ParsedCli {
             network,
             yes: opts.yes,

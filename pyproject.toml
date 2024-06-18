@@ -1,13 +1,12 @@
 [tool.poetry]
 name = "dre-repo"
-version = "0.2.0"
+version = "0.4.0"
 description = ""
 authors = ["DRE Team <dept-DRE@dfinity.org>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
 python = ">=3.10.0,<4"
-ansible = ">=7.0.0,<10.0.0"
 colorama = "*"
 elasticsearch = "<8.0,>=7.16"
 elasticsearch-dsl = "*"
@@ -52,10 +51,12 @@ mammoth = "^1.7.0"
 slack-sdk = "^3.27.1"
 git-changelog = "^2.5.1"
 wrapt = "1.16.0"
+poetry-plugin-export = "^1.8.0"
 
 
 [tool.poetry.group.dev.dependencies]
 black = "^24"
+httpretty = "^1.1.4"
 
 [build-system]
 requires = ["poetry-core"]
@@ -63,3 +64,12 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.black]
 line-length = 120
+# 'extend-exclude' excludes files or directories in addition to the defaults
+extend-exclude = '''
+# A regex preceded with ^/ will apply only to files and directories
+# in the root of the project.
+# https://black.readthedocs.io/en/stable/usage_and_configuration/the_basics.html#configuration-format
+(
+  ^/release-controller/release_index.py    # This file is generated from /bin/poetry.sh
+)
+'''

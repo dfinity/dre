@@ -16,16 +16,13 @@ impl From<TargetGroup> for ServiceDiscoveryRecord {
     fn from(group: TargetGroup) -> Self {
         Self {
             targets: group.targets.into_iter().map(|x| x.to_string()).collect(),
-            labels: BTreeMap::from([
-                (IC_NAME.into(), group.ic_name),
-                (IC_NODE.into(), group.node_id.to_string()),
-            ])
-            .into_iter()
-            .chain(match group.subnet_id {
-                Some(subnet_id) => vec![(IC_SUBNET.into(), subnet_id.to_string())],
-                None => vec![],
-            })
-            .collect(),
+            labels: BTreeMap::from([(IC_NAME.into(), group.ic_name), (IC_NODE.into(), group.node_id.to_string())])
+                .into_iter()
+                .chain(match group.subnet_id {
+                    Some(subnet_id) => vec![(IC_SUBNET.into(), subnet_id.to_string())],
+                    None => vec![],
+                })
+                .collect(),
         }
     }
 }

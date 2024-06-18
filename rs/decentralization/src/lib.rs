@@ -40,11 +40,7 @@ impl From<&network::SubnetChange> for SubnetChangeResponse {
         Self {
             added: change.added().iter().map(|n| n.id).collect(),
             removed: change.removed().iter().map(|n| n.id).collect(),
-            subnet_id: if change.id == Default::default() {
-                None
-            } else {
-                Some(change.id)
-            },
+            subnet_id: if change.id == Default::default() { None } else { Some(change.id) },
             score_before: nakamoto::NakamotoScore::new_from_nodes(&change.old_nodes),
             score_after: nakamoto::NakamotoScore::new_from_nodes(&change.new_nodes),
             motivation: None,
@@ -77,7 +73,7 @@ impl From<&network::SubnetChange> for SubnetChangeResponse {
 
 impl Display for SubnetChangeResponse {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        writeln!(f, "Decentralization score changes:\n")?;
+        writeln!(f, "Decentralization score changes for subnet {}:\n", self.subnet_id.unwrap_or_default())?;
         let before_individual = self.score_before.scores_individual();
         let after_individual = self.score_after.scores_individual();
         self.score_before
@@ -127,22 +123,17 @@ impl Display for SubnetChangeResponse {
         )?;
 
         let rows = self.feature_diff.values().map(|diff| diff.len()).max().unwrap_or(0);
-        let mut table = tabular::Table::new(
-            &self
-                .feature_diff
-                .keys()
-                .map(|_| "    {:<}  {:>}")
-                .collect::<Vec<_>>()
-                .join(""),
-        );
+        let mut table = tabular::Table::new(&self.feature_diff.keys().map(|_| "    {:<}  {:>}").collect::<Vec<_>>().join(""));
         table.add_row(
             self.feature_diff
                 .keys()
                 .fold(tabular::Row::new(), |acc, k| acc.with_cell(k.to_string()).with_cell("")),
         );
-        table.add_row(self.feature_diff.keys().fold(tabular::Row::new(), |acc, k| {
-            acc.with_cell("-".repeat(k.to_string().len())).with_cell("")
-        }));
+        table.add_row(
+            self.feature_diff
+                .keys()
+                .fold(tabular::Row::new(), |acc, k| acc.with_cell("-".repeat(k.to_string().len())).with_cell("")),
+        );
         for i in 0..rows {
             table.add_row(self.feature_diff.values().fold(tabular::Row::new(), |acc, v| {
                 let (value, change) = v
@@ -168,8 +159,7 @@ impl Display for SubnetChangeResponse {
         for pair in self.added.iter().zip_longest(self.removed.iter()) {
             match pair {
                 Both(a, r) => {
-                    writeln!(f, "{}{}", format!("  - {}", r).red(), format!("    + {}", a).green())
-                        .expect("write failed");
+                    writeln!(f, "{}{}", format!("  - {}", r).red(), format!("    + {}", a).green()).expect("write failed");
                 }
                 Left(a) => {
                     writeln!(
@@ -190,6 +180,20 @@ impl Display for SubnetChangeResponse {
             writeln!(f, "{}", format!("*** Note ***\n{}", comment).red())?;
         }
 
+        Ok(())
+    }
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct HealResponse {
+    pub subnets_change_response: Vec<SubnetChangeResponse>,
+}
+
+impl Display for HealResponse {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        for change in &self.subnets_change_response {
+            writeln!(f, "{}", change)?;
+        }
         Ok(())
     }
 }

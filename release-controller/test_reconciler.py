@@ -1,40 +1,42 @@
-import subprocess
-from unittest.mock import Mock, call
-import pytest
-import tempfile
 import pathlib
+import tempfile
+from types import SimpleNamespace
+from unittest.mock import Mock
 
+import git_repo
+import pytest
+import release_index
 import requests
-from reconciler import Reconciler, ReconcilerState, oldest_active_release, versions_to_unelect, version_package_checksum
+from forum import ReleaseCandidateForumClient
+from github import Github
 from mock_discourse import DiscourseClientMock
 from mock_google_docs import ReleaseNotesClientMock
-from forum import ReleaseCandidateForumClient
-from release_index_loader import StaticReleaseLoader
 from publish_notes import PublishNotesClient
-from github import Github
 from pydantic_yaml import parse_yaml_raw_as
-import release_index
-import urllib.request
-from git_repo import GitRepo
-import git_repo
-from types import SimpleNamespace
+from reconciler import oldest_active_release
+from reconciler import Reconciler
+from reconciler import ReconcilerState
+from reconciler import version_package_checksum
+from reconciler import versions_to_unelect
+from release_index_loader import StaticReleaseLoader
 
 
 class TestReconcilerState(ReconcilerState):
+    """Reconciler state that uses a temporary directory for storage."""
+
     def __init__(self):
+        """Create a new TestReconcilerState."""
         self.tempdir = tempfile.TemporaryDirectory()
         super().__init__(pathlib.Path(self.tempdir.name))
 
     def __del__(self):
+        """Clean up the temporary directory."""
         self.tempdir.cleanup()
 
 
 @pytest.mark.skip(reason="not finished")
 def test_e2e_mock_new_release(mocker):
-    """
-    Test the workflow when a new release is added to the index
-    """
-
+    """Test the workflow when a new release is added to the index."""
     discourse_client = DiscourseClientMock()
     forum_client = ReleaseCandidateForumClient(discourse_client)
     notes_client = ReleaseNotesClientMock()
@@ -73,7 +75,7 @@ releases:
     assert discourse_client.created_posts == []
     assert discourse_client.created_topics == []
     assert reconciler.publish_client.ensure_published.call_count == 0
-    assert git_repo.push_release_tags.call_count == 0
+    assert git_repo.push_release_tags.call_count == 0  # pylint: disable=no-member
 
     reconciler.reconcile()
 
@@ -82,7 +84,7 @@ releases:
     assert discourse_client.created_posts == []
     assert discourse_client.created_topics == []
     assert reconciler.publish_client.ensure_published.call_count == 0
-    git_repo.push_release_tags.assert_called_once_with(
+    git_repo.push_release_tags.assert_called_once_with(  # pylint: disable=no-member
         ic_repo_mock,
         release_index.Release(
             rc_name="rc--2024-02-21_23-01",
@@ -258,7 +260,7 @@ releases:
 
 
 def test_version_package_checksum(mocker):
-    def mock_download_files(url: str):
+    def mock_download_files(url: str, timeout: int = 10):  # pylint: disable=unused-argument
         content = ""
         if url.endswith("SHA256SUMS"):
             content = """\
@@ -274,11 +276,11 @@ dff2072e34071110234b0cb169705efc13284e4a99b7795ef1951af1fe7b41ac *update-img.tar
 
     mocker.patch("requests.get", new=Mock(side_effect=mock_download_files))
     assert version_package_checksum("notimporant") == "9ca7002a723b932c3fb25293fc541e0b156170ec1e9a2c6a83c9733995051187"
-    assert requests.get.call_count == 3
+    assert requests.get.call_count == 3  # pylint: disable=no-member
 
 
 def test_version_package_checksum_mismatch(mocker):
-    def mock_download_files(url: str):
+    def mock_download_files(url: str, timeout: int = 10):  # pylint: disable=unused-argument
         content = ""
         if url.endswith("SHA256SUMS"):
             content = """\
@@ -298,6 +300,6 @@ dff2072e34071110234b0cb169705efc13284e4a99b7795ef1951af1fe7b41ac *update-img.tar
 
     with pytest.raises(Exception) as e:
         version_package_checksum("notimporant")
-        assert requests.get.call_count == 3
+        assert requests.get.call_count == 3  # pylint: disable=no-member
 
     assert repr(e.value) == repr(RuntimeError("checksums do not match"))

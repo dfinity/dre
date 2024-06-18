@@ -72,6 +72,18 @@ pub struct Definition {
     pub boundary_nodes: Vec<BoundaryNode>,
 }
 
+impl PartialEq for Definition {
+    fn eq(&self, other: &Self) -> bool {
+        self.nns_urls == other.nns_urls
+            && self.registry_path == other.registry_path
+            && self.name == other.name
+            && self.public_key == other.public_key
+            && self.poll_interval == other.poll_interval
+            && self.registry_query_timeout == other.registry_query_timeout
+            && self.boundary_nodes == other.boundary_nodes
+    }
+}
+
 impl From<FSDefinition> for Definition {
     fn from(fs_definition: FSDefinition) -> Self {
         if std::fs::metadata(&fs_definition.registry_path).is_err() {
@@ -86,11 +98,8 @@ impl From<FSDefinition> for Definition {
             public_key: fs_definition.public_key,
             poll_interval: fs_definition.poll_interval,
             registry_query_timeout: fs_definition.registry_query_timeout,
-            ic_discovery: Arc::new(
-                IcServiceDiscoveryImpl::new(log, fs_definition.registry_path, fs_definition.registry_query_timeout)
-                    .unwrap(),
-            ),
-            boundary_nodes: vec![],
+            ic_discovery: Arc::new(IcServiceDiscoveryImpl::new(log, fs_definition.registry_path, fs_definition.registry_query_timeout).unwrap()),
+            boundary_nodes: fs_definition.boundary_nodes,
         }
     }
 }
@@ -162,9 +171,7 @@ impl TestDefinition {
                 Err(e) => {
                     error!(
                         self.running_def.definition.log,
-                        "Error while running initial sync with the registry for definition named '{}': {:?}",
-                        self.running_def.definition.name,
-                        e
+                        "Error while running initial sync with the registry for definition named '{}': {:?}", self.running_def.definition.name, e
                     );
                     self.running_def.metrics.observe_sync(self.running_def.name(), false);
                 }
@@ -174,9 +181,7 @@ impl TestDefinition {
         if let Err(e) = self.running_def.initial_registry_sync(false).await {
             error!(
                 self.running_def.definition.log,
-                "Error while running full initial sync with the registry for definition named '{}': {:?}",
-                self.running_def.definition.name,
-                e
+                "Error while running full initial sync with the registry for definition named '{}': {:?}", self.running_def.definition.name, e
             );
             self.running_def.metrics.observe_sync(self.running_def.name(), false);
         }
@@ -250,26 +255,15 @@ impl RunningDefinition {
             // We have pulled out the channel from its container.  After this,
             // all senders will have been dropped, and no more messages can be sent.
             // https://docs.rs/crossbeam/latest/crossbeam/channel/index.html#disconnection
-            info!(
-                self.definition.log,
-                "Sending termination signal to definition {}", self.definition.name
-            );
+            info!(self.definition.log, "Sending termination signal to definition {}", self.definition.name);
             s.stop_signal_sender.send(()).unwrap();
-            info!(
-                self.definition.log,
-                "Joining definition {} thread", self.definition.name
-            );
+            info!(self.definition.log, "Joining definition {} thread", self.definition.name);
             s.join_handle.join().unwrap();
         }
     }
 
-    pub(crate) fn get_target_groups(
-        &self,
-        job_type: JobType,
-    ) -> Result<BTreeSet<TargetGroup>, IcServiceDiscoveryError> {
-        self.definition
-            .ic_discovery
-            .get_target_groups(job_type, self.definition.log.clone())
+    pub(crate) fn get_target_groups(&self, job_type: JobType) -> Result<BTreeSet<TargetGroup>, IcServiceDiscoveryError> {
+        self.definition.ic_discovery.get_target_groups(job_type, self.definition.log.clone())
     }
 
     async fn initial_registry_sync(&self, use_current_version: bool) -> Result<(), SyncError> {
@@ -291,29 +285,20 @@ impl RunningDefinition {
         .await;
         match r {
             Ok(_) => {
-                info!(
-                    self.definition.log,
-                    "Syncing local registry for {} completed", self.definition.name,
-                );
+                info!(self.definition.log, "Syncing local registry for {} completed", self.definition.name,);
                 self.metrics.observe_sync(self.name(), true);
                 Ok(())
             }
             Err(e) => {
                 match e {
                     SyncError::PublicKey(ref pkey) => {
-                        error!(
-                            self.definition.log,
-                            "Failure in initial sync of {}: {}", self.definition.name, pkey,
-                        );
+                        error!(self.definition.log, "Failure in initial sync of {}: {}", self.definition.name, pkey,);
                         // Note failure in metrics.  On the other leg of the match
                         // we do not note either success or failure, since we don't
                         // know yet whether it was successful or not.
                         self.metrics.observe_sync(self.name(), false);
                     }
-                    SyncError::Interrupted => info!(
-                        self.definition.log,
-                        "Interrupted initial sync of {}", self.definition.name
-                    ),
+                    SyncError::Interrupted => info!(self.definition.log, "Interrupted initial sync of {}", self.definition.name),
                 };
                 Err(e)
             }
@@ -376,9 +361,7 @@ impl RunningDefinition {
                     // Initial sync failed.
                     error!(
                         self.definition.log,
-                        "Will retry sync of {} until successful after {:#?}",
-                        self.definition.name,
-                        self.definition.poll_interval,
+                        "Will retry sync of {} until successful after {:#?}", self.definition.name, self.definition.poll_interval,
                     );
                     // Wait a prudent interval before retrying, but watch for
                     // termination during that wait.
@@ -427,7 +410,7 @@ impl RunningDefinition {
     }
 }
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize, PartialEq)]
 pub struct BoundaryNode {
     pub name: String,
     pub targets: BTreeSet<SocketAddr>,
@@ -515,12 +498,7 @@ pub(super) struct DefinitionsSupervisor {
 }
 
 impl DefinitionsSupervisor {
-    pub(crate) fn new(
-        rt: tokio::runtime::Handle,
-        allow_mercury_deletion: bool,
-        networks_state_file: Option<PathBuf>,
-        log: Logger,
-    ) -> Self {
+    pub(crate) fn new(rt: tokio::runtime::Handle, allow_mercury_deletion: bool, networks_state_file: Option<PathBuf>, log: Logger) -> Self {
         DefinitionsSupervisor {
             rt,
             definitions: Arc::new(Mutex::new(BTreeMap::new())),
@@ -535,16 +513,8 @@ impl DefinitionsSupervisor {
             if networks_state_file.exists() {
                 let file_content = fs::read_to_string(networks_state_file.clone())?;
                 let initial_definitions: Vec<FSDefinition> = serde_json::from_str(&file_content)?;
-                let names = initial_definitions
-                    .iter()
-                    .map(|def| def.name.clone())
-                    .collect::<Vec<_>>();
-                info!(
-                    self.log,
-                    "Definitions loaded from {:?}:\n{:?}",
-                    networks_state_file.as_path(),
-                    names
-                );
+                let names = initial_definitions.iter().map(|def| def.name.clone()).collect::<Vec<_>>();
+                info!(self.log, "Definitions loaded from {:?}:\n{:?}", networks_state_file.as_path(), names);
                 self.start(
                     initial_definitions.into_iter().map(|def| def.into()).collect(),
                     StartMode::AddToDefinitions,
@@ -559,10 +529,7 @@ impl DefinitionsSupervisor {
     // FIXME: if the file contents on disk are the same as the contents about to
     // be persisted, then the file should not be overwritten because it was
     // already updated by another MSD sharing the same directory.
-    pub(crate) async fn persist_defs(
-        &self,
-        existing: &mut BTreeMap<String, RunningDefinition>,
-    ) -> Result<(), Box<dyn Error>> {
+    pub(crate) async fn persist_defs(&self, existing: &mut BTreeMap<String, RunningDefinition>) -> Result<(), Box<dyn Error>> {
         if let Some(networks_state_file) = self.networks_state_file.clone() {
             retry::retry(retry::delay::Exponential::from_millis(10).take(5), || {
                 std::fs::OpenOptions::new()
@@ -611,13 +578,8 @@ impl DefinitionsSupervisor {
             ic_names_to_add.insert(ic_name);
         }
 
-        if !self.allow_mercury_deletion
-            && !ic_names_to_add.contains("mercury")
-            && start_mode == StartMode::ReplaceExistingDefinitions
-        {
-            error
-                .errors
-                .push(StartDefinitionError::DeletionDisallowed("mercury".to_string()))
+        if !self.allow_mercury_deletion && !ic_names_to_add.contains("mercury") && start_mode == StartMode::ReplaceExistingDefinitions {
+            error.errors.push(StartDefinitionError::DeletionDisallowed("mercury".to_string()))
         }
 
         if !error.errors.is_empty() {
@@ -648,10 +610,7 @@ impl DefinitionsSupervisor {
         drop(ic_names_to_end);
         // Now we add the incoming definitions.
         for definition in definitions.into_iter() {
-            existing.insert(
-                definition.name.clone(),
-                definition.run(self.rt.clone(), metrics.clone()).await,
-            );
+            existing.insert(definition.name.clone(), definition.run(self.rt.clone(), metrics.clone()).await);
         }
         // Now we rewrite definitions to disk.
         if let Err(e) = self.persist_defs(existing).await {
@@ -779,33 +738,43 @@ impl TargetFilterSpec {
     }
 }
 
-pub fn ic_node_target_dtos_from_definitions(
+pub fn ic_node_target_dtos_from_definitions(definitions: &BTreeMap<String, RunningDefinition>, filters: &TargetFilterSpec) -> Vec<TargetDto> {
+    from_definitions_into_targets(definitions, filters, JobType::all_for_ic_nodes(), |target| target.is_api_bn)
+}
+
+pub fn api_boundary_nodes_target_dtos_from_definitions(
     definitions: &BTreeMap<String, RunningDefinition>,
     filters: &TargetFilterSpec,
 ) -> Vec<TargetDto> {
-    let mut ic_node_targets: Vec<TargetDto> = vec![];
+    from_definitions_into_targets(definitions, filters, JobType::all_for_api_boundary_nodes(), |target| !target.is_api_bn)
+}
+
+fn from_definitions_into_targets(
+    definitions: &BTreeMap<String, RunningDefinition>,
+    filters: &TargetFilterSpec,
+    jobs: Vec<JobType>,
+    skip_filter: impl Fn(&TargetGroup) -> bool,
+) -> Vec<TargetDto> {
+    let mut result: Vec<TargetDto> = vec![];
 
     for (_, def) in definitions.iter() {
         if filters.matches_ic(&def.name()) {
-            for job_type in JobType::all_for_ic_nodes() {
-                let target_groups = match def.get_target_groups(job_type) {
+            for job_type in &jobs {
+                let target_groups = match def.get_target_groups(*job_type) {
                     Ok(target_groups) => target_groups,
                     Err(_) => continue,
                 };
 
                 target_groups.iter().for_each(|target_group| {
-                    if let Some(target) = ic_node_targets.iter_mut().find(|t| t.node_id == target_group.node_id) {
-                        target.jobs.push(job_type);
+                    if skip_filter(target_group) {
+                        return;
+                    }
+                    if let Some(target) = result.iter_mut().find(|t| t.node_id == target_group.node_id) {
+                        target.jobs.push(*job_type);
                     } else {
-                        let target = map_to_target_dto(
-                            target_group,
-                            job_type,
-                            BTreeMap::new(),
-                            target_group.node_id.to_string(),
-                            def.name(),
-                        );
+                        let target = map_to_target_dto(target_group, *job_type, BTreeMap::new(), target_group.node_id.to_string(), def.name());
                         if filters.matches_ic_node(&target) {
-                            ic_node_targets.push(target)
+                            result.push(target)
                         };
                     }
                 });
@@ -813,13 +782,10 @@ pub fn ic_node_target_dtos_from_definitions(
         }
     }
 
-    ic_node_targets
+    result
 }
 
-pub fn boundary_nodes_from_definitions(
-    definitions: &BTreeMap<String, RunningDefinition>,
-    filters: &TargetFilterSpec,
-) -> Vec<(String, BoundaryNode)> {
+pub fn boundary_nodes_from_definitions(definitions: &BTreeMap<String, RunningDefinition>, filters: &TargetFilterSpec) -> Vec<(String, BoundaryNode)> {
     definitions
         .iter()
         .filter(|(_, def)| filters.matches_ic(&def.name()))
@@ -831,10 +797,7 @@ pub fn boundary_nodes_from_definitions(
                 // If, however, this boundary node is under the test environment,
                 // and the job is Node Exporter, then skip adding this
                 // target altogether.
-                if bn
-                    .custom_labels
-                    .iter()
-                    .any(|(k, v)| k.as_str() == "env" && v.as_str() == "test")
+                if bn.custom_labels.iter().any(|(k, v)| k.as_str() == "env" && v.as_str() == "test")
                     && bn.job_type == JobType::NodeExporter(NodeOS::Host)
                 {
                     return None;
@@ -846,4 +809,52 @@ pub fn boundary_nodes_from_definitions(
             })
         })
         .collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{Definition, TestDefinition};
+    use crate::{definition::DefinitionsSupervisor, make_logger, metrics::RunningDefinitionsMetrics};
+    use ic_management_types::Network;
+    use std::{collections::BTreeMap, str::FromStr, time::Duration};
+    use tempfile::tempdir;
+
+    #[tokio::test]
+    async fn persist_defs() {
+        let handle = tokio::runtime::Handle::current();
+        let definitions_dir = tempdir().unwrap();
+        let definitions_path = definitions_dir.path().join(String::from("definitions.json"));
+        let log = make_logger();
+        let supervisor = DefinitionsSupervisor::new(handle.clone(), false, Some(definitions_path.clone()), log.clone());
+
+        let mocked_definition = Definition::new(
+            vec![url::Url::from_str("http://[2a00:fb01:400:42:5000:3cff:fe45:6c61]:8080").unwrap()],
+            definitions_dir.as_ref().to_path_buf(),
+            Network::new("mainnet", &vec![]).await.unwrap().legacy_name(),
+            log,
+            None,
+            Duration::from_secs(0),
+            Duration::from_secs(0),
+        );
+        supervisor
+            .persist_defs(&mut BTreeMap::from([(
+                String::from("test"),
+                TestDefinition::new(mocked_definition.clone(), RunningDefinitionsMetrics::new()).running_def,
+            )]))
+            .await
+            .unwrap();
+        supervisor.definitions.lock().await.clear();
+        supervisor.load_or_create_defs(RunningDefinitionsMetrics::new()).await.unwrap();
+        let loaded_definition = supervisor
+            .definitions
+            .lock()
+            .await
+            .values()
+            .cloned()
+            .map(|def| def.definition)
+            .next()
+            .unwrap();
+
+        assert_eq!(mocked_definition, loaded_definition);
+    }
 }
