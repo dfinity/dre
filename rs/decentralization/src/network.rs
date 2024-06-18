@@ -1042,10 +1042,10 @@ impl NetworkHealRequest {
                     unhealthy_nodes = subnet.unhealthy_nodes.clone().into_iter().take(max_replaceable_nodes).collect_vec();
 
                     warn!(
-                        "Subnet {} has {} unhealthy nodes\nMax replacable nodes is {}\nNodes considered for replacement: {:?}",
+                        "Subnet {}: replacing {} of {} unhealthy nodes: {:?}",
                         subnet.decentralized_subnet.id,
-                        unhealthy_nodes_len,
                         max_replaceable_nodes,
+                        unhealthy_nodes_len,
                         unhealthy_nodes.iter().map(|node| node.id).collect_vec()
                     );
                 }

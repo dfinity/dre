@@ -17,18 +17,8 @@ pub async fn unhealthy_with_nodes(
                 .nodes
                 .into_iter()
                 .filter_map(|n| match nodes_health.get(&n.principal) {
-                    Some(health) => {
-                        if *health == ic_management_types::Status::Healthy {
-                            None
-                        } else {
-                            info!("Node {} is {:?}", n.principal, health);
-                            Some(n)
-                        }
-                    }
-                    None => {
-                        warn!("Node {} has no known health, assuming unhealthy", n.principal);
-                        Some(n)
-                    }
+                    Some(health) if *health == ic_management_types::Status::Healthy => None,
+                    _ => Some(n) 
                 })
                 .collect::<Vec<_>>();
 
