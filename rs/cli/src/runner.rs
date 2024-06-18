@@ -455,7 +455,7 @@ impl Runner {
         let change = self.dashboard_backend_client.network_heal(request).await?;
         println!("{}", change);
 
-       let errors = join_all(change.subnets_change_response.iter().map(|subnet_change_response| async move {
+        let errors = join_all(change.subnets_change_response.iter().map(|subnet_change_response| async move {
             self.run_membership_change(
                 subnet_change_response.clone(),
                 ops_subnet_node_replace::replace_proposal_options(subnet_change_response)?,

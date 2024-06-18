@@ -3,7 +3,6 @@ use std::collections::BTreeMap;
 use decentralization::{network::SubnetChange, SubnetChangeResponse};
 use ic_base_types::PrincipalId;
 use ic_management_types::{Node, Status, Subnet, TopologyChangeProposal};
-use log::{info, warn};
 
 pub async fn unhealthy_with_nodes(
     subnets: &BTreeMap<PrincipalId, Subnet>,
@@ -18,7 +17,7 @@ pub async fn unhealthy_with_nodes(
                 .into_iter()
                 .filter_map(|n| match nodes_health.get(&n.principal) {
                     Some(health) if *health == ic_management_types::Status::Healthy => None,
-                    _ => Some(n) 
+                    _ => Some(n),
                 })
                 .collect::<Vec<_>>();
 
