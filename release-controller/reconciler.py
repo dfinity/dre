@@ -27,6 +27,7 @@ from release_index_loader import GitReleaseLoader
 from release_index_loader import ReleaseLoader
 from release_notes import release_notes
 from util import version_name
+from watchdog import Watchdog
 
 from pylib.ic_admin import IcAdmin
 
@@ -260,6 +261,9 @@ def main():
     else:
         load_dotenv()
 
+    watchdog = Watchdog(timeout_seconds=600)  # Reconciler should report healthy every 10 minutes
+    watchdog.start()
+
     discourse_client = DiscourseClient(
         host=os.environ["DISCOURSE_URL"],
         api_username=os.environ["DISCOURSE_USER"],
@@ -297,6 +301,7 @@ def main():
     while True:
         try:
             reconciler.reconcile()
+            watchdog.report_healthy()
         except Exception as e:
             logging.error(traceback.format_exc())
             logging.error("failed to reconcile: %s", e)
