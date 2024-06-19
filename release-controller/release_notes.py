@@ -6,9 +6,9 @@ import subprocess
 import sys
 import time
 import typing
-
 from dataclasses import dataclass
 
+COMMIT_HASH_LENGTH = 9
 
 REPLICA_TEAMS = set(
     [
@@ -26,6 +26,8 @@ REPLICA_TEAMS = set(
 
 
 class Change(typing.TypedDict):
+    """Change dataclass."""
+
     commit: str
     team: str
     type: str
@@ -37,6 +39,8 @@ class Change(typing.TypedDict):
 
 @dataclass
 class Team:
+    """Team dataclass."""
+
     name: str
     google_docs_handle: str
     slack_id: str
@@ -91,7 +95,7 @@ TEAM_PRETTY_MAP = {
     "runtime-owners": "Runtime",
     "trust-team": "Trust",
     "sdk-team": "SDK",
-    "utopia": "Utopia"
+    "utopia": "Utopia",
 }
 
 
@@ -139,7 +143,7 @@ def progressbar(it, prefix="", size=60, out=sys.stdout):  # Python3.6+
     print("\n", flush=True, file=out)
 
 
-def get_ancestry_path(repo_dir, commit_hash, branch):
+def get_ancestry_path(repo_dir, commit_hash, branch_name):
     return (
         subprocess.check_output(
             [
@@ -147,7 +151,7 @@ def get_ancestry_path(repo_dir, commit_hash, branch):
                 "--git-dir",
                 "{}/.git".format(repo_dir),
                 "rev-list",
-                "{}..{}".format(commit_hash, branch),
+                "{}..{}".format(commit_hash, branch_name),
                 "--ancestry-path",
             ]
         )
@@ -157,7 +161,7 @@ def get_ancestry_path(repo_dir, commit_hash, branch):
     )
 
 
-def get_first_parent(repo_dir, commit_hash, branch):
+def get_first_parent(repo_dir, commit_hash, branch_name):
     return (
         subprocess.check_output(
             [
@@ -165,14 +169,58 @@ def get_first_parent(repo_dir, commit_hash, branch):
                 "--git-dir",
                 "{}/.git".format(repo_dir),
                 "rev-list",
-                "{}..{}".format(commit_hash, branch),
-                "--ancestry-path",
+                "{}..{}".format(commit_hash, branch_name),
+                "--first-parent",
             ]
         )
         .decode("utf-8")
         .strip()
         .split("\n")
     )
+
+
+def get_rc_branch(repo_dir, commit_hash):
+    """Get the branch name for a commit hash."""
+    all_branches = (
+        subprocess.check_output(
+            [
+                "git",
+                "--git-dir",
+                "{}/.git".format(repo_dir),
+                "branch",
+                "--contains",
+                commit_hash,
+                "--remote",
+            ]
+        )
+        .decode("utf-8")
+        .strip()
+        .splitlines()
+    )
+    all_branches = [branch.strip() for branch in all_branches]
+    rc_branches = [branch for branch in all_branches if branch.startswith("origin/rc--20")]
+    if rc_branches:
+        return rc_branches[0]
+    return ""
+
+
+def get_merge_commit(repo_dir, commit_hash):
+    # Reference: https://www.30secondsofcode.org/git/s/find-merge-commit/
+    rc_branch = get_rc_branch(repo_dir, commit_hash)
+    relevant_commits = list(enumerate(get_ancestry_path(repo_dir, commit_hash, rc_branch))) + list(
+        enumerate(get_first_parent(repo_dir, commit_hash, rc_branch))
+    )
+    relevant_commits = sorted(relevant_commits, key=lambda index_commit: index_commit[1])
+    checked_commits = set()
+    commits = []
+    for index, commit in relevant_commits:
+        if commit not in checked_commits:
+            checked_commits.add(commit)
+            commits.append((index, commit))
+
+    relevant_commits = sorted(commits, key=lambda index_commit: index_commit[0])
+
+    return relevant_commits[-1][1]
 
 
 def get_commits(repo_dir, first_commit, last_commit):
@@ -317,7 +365,11 @@ def release_notes(first_commit, last_commit, release_name) -> str:
 
     commits = get_commits(ic_repo_path, first_commit, last_commit)
     for i in range(len(commits)):
-        commits[i] = commits[i] + (str(commits[i][0]),)
+        commit_hash = str(commits[i][0])
+        merge_commit = get_merge_commit(ic_repo_path, commit_hash)
+        used_commit = (merge_commit or commit_hash)[:COMMIT_HASH_LENGTH]
+        print("Commit: {} ==> using commit: {}".format(commit_hash, used_commit))
+        commits[i] = commits[i] + (used_commit,)
 
     if len(commits) == max_commits:
         print("WARNING: max commits limit reached, increase depth")
@@ -464,7 +516,7 @@ Changelog since git revision [{first_commit}](https://dashboard.internetcomputer
 
             text = "{4} | {0} {1}{2} {3}".format(commit_part, team_part, scope_part, message_part, commiter_part)
             if not change["included"]:
-                text = "~~{}~~".format(text)
+                text = "~~[AUTO-EXCLUDED]{}~~".format(text)
             notes += "* " + text + "\n"
 
     return notes
