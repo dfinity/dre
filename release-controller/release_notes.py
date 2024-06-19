@@ -516,7 +516,7 @@ Changelog since git revision [{first_commit}](https://dashboard.internetcomputer
 
             text = "{4} | {0} {1}{2} {3}".format(commit_part, team_part, scope_part, message_part, commiter_part)
             if not change["included"]:
-                text = "~~[AUTO-EXCLUDED]{}~~".format(text)
+                text = "~~{} [AUTO-EXCLUDED]~~".format(text)
             notes += "* " + text + "\n"
 
     return notes

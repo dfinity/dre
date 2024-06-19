@@ -518,7 +518,7 @@ def main():
                     commit_part, team_part, scope_part, message_part, commiter_part
                 )
                 if not change["included"]:
-                    text = "<s>[AUTO-EXCLUDED]{}</s>".format(text)
+                    text = "<s>{} [AUTO-EXCLUDED]</s>".format(text)
                 output.write("<p style='font-size: 8pt; padding: 0; margin: 0; white-space: pre;'>{}</p>".format(text))
 
         output.write("</div>")
