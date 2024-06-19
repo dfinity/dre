@@ -514,11 +514,16 @@ def main():
                 message_part = change["message"]
                 commiter_part = f"&lt!-- {change['commiter']} --&gt"
 
-                text = "* {0} {4} {1}{2} {3}<br>".format(
-                    commit_part, team_part, scope_part, message_part, commiter_part
+                text = "* {0} {4} {1}{2} {3} {5}<br>".format(
+                    commit_part,
+                    team_part,
+                    scope_part,
+                    message_part,
+                    commiter_part,
+                    "" if change["included"] else "[AUTO-EXCLUDED]",
                 )
                 if not change["included"]:
-                    text = "<s>{} [AUTO-EXCLUDED]</s>".format(text)
+                    text = "<s>{}</s>".format(text)
                 output.write("<p style='font-size: 8pt; padding: 0; margin: 0; white-space: pre;'>{}</p>".format(text))
 
         output.write("</div>")
