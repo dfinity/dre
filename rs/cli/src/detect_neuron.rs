@@ -57,7 +57,12 @@ impl Neuron {
         }
     }
 
-    pub async fn get_auth(&self) -> anyhow::Result<Auth> {
+    pub async fn get_auth(&self, allow_auth: bool) -> anyhow::Result<Auth> {
+        if !allow_auth {
+            // This is used for the `get-*` commands, which don't accept authentification parameters
+            return Ok(Auth::None);
+        }
+
         if let Some(auth) = &*self.auth_cache.borrow() {
             return Ok(auth.clone());
         };
@@ -92,27 +97,34 @@ impl Neuron {
         if let Some(neuron_id) = *self.neuron_id.borrow() {
             return Ok(neuron_id);
         };
-        let neuron_id = auto_detect_neuron_id(self.network.get_nns_urls(), self.get_auth().await?).await?;
+        let neuron_id = auto_detect_neuron_id(self.network.get_nns_urls(), self.get_auth(true).await?).await?;
         self.neuron_id.replace(Some(neuron_id));
         Ok(neuron_id)
     }
 
-    /// Returns the arguments to pass to the ic-admin CLI for this neuron
-    /// If require_auth is true, it will panic if the auth method could not be detected
-    /// This is useful to check if the auth detection work correctly even without
-    /// submitting a proposal.
-    pub async fn as_arg_vec(&self, require_auth: bool) -> anyhow::Result<Vec<String>> {
-        // Auth required, try to find valid neuron id using HSM or with the private key
+    /// Returns the arguments to pass to the ic-admin CLI for this neuron.
+    /// If require_auth is true, it will panic if the auth method could not be detected.
+    /// if allow_auth is false, it will return an empty vector in any case.
+    /// if allow_auth is true, it will try to detect the auth parameters: method and neuron id.
+    /// Detection of the auth parameters is useful to check if the auth detection works correctly without
+    /// actually submitting a proposal.
+    pub async fn as_arg_vec(&self, require_auth: bool, allow_auth: bool) -> anyhow::Result<Vec<String>> {
+        // If auth may be provided (allow_auth), search for valid neuron id using HSM or with the private key
+        // `allow_auth` is set to false for ic-admin `get-*` commands, since they don't accept auth
         // If private key is provided, use it without checking
-        let auth = match self.get_auth().await {
-            Ok(auth) => auth,
-            Err(e) => {
-                if require_auth {
-                    return Err(anyhow::anyhow!(e));
-                } else {
-                    return Ok(vec![]);
+        let auth = if allow_auth {
+            match self.get_auth(allow_auth).await {
+                Ok(auth) => auth,
+                Err(e) => {
+                    if require_auth {
+                        return Err(anyhow::anyhow!(e));
+                    } else {
+                        return Ok(vec![]);
+                    }
                 }
             }
+        } else {
+            Auth::None
         };
         let neuron_id = match auto_detect_neuron_id(self.network.get_nns_urls(), auth).await {
             Ok(neuron_id) => neuron_id,
@@ -171,10 +183,13 @@ pub fn get_pkcs11_ctx() -> anyhow::Result<Pkcs11> {
 impl Auth {
     /// Returns the arguments to pass to the ic-admin CLI for the given auth method
     /// If require_auth is true, it will panic if the auth method is Auth::None
-    /// Otherwise, it will return an empty vector if the auth method is Auth::None
-    /// This is useful to check if the auth detection work correctly even without
-    /// submitting a proposal
-    pub fn as_arg_vec(&self, require_auth: bool) -> Vec<String> {
+    /// If allow_auth is false, it will return an empty vector in any case.
+    /// If allow_auth is true, it will return the arguments for the set auth method.
+    /// Checking the auth parameters is useful to validate working auth detection.
+    pub fn as_arg_vec(&self, require_auth: bool, allow_auth: bool) -> Vec<String> {
+        if !allow_auth {
+            return vec![];
+        }
         match self {
             Auth::Hsm { pin, slot, key_id } => vec![
                 "--use-hsm".to_string(),
