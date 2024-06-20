@@ -9,11 +9,13 @@ import sys
 import time
 import webbrowser
 
+COMMIT_HASH_LENGTH = 9
 
 REPLICA_TEAMS = set(
     [
         "consensus-owners",
         "crypto-owners",
+        "interface-owners",
         "Orchestrator",
         "message-routing-owners",
         "networking-team",
@@ -60,7 +62,7 @@ TEAM_PRETTY_MAP = {
     "prodsec": "Prodsec",
     "runtime-owners": "Runtime",
     "trust-team": "Trust",
-    "utopia": "Utopia"
+    "utopia": "Utopia",
 }
 
 
@@ -128,7 +130,7 @@ def progressbar(it, prefix="", size=60, out=sys.stdout):  # Python3.6+
     print("\n", flush=True, file=out)
 
 
-def get_ancestry_path(repo_dir, commit_hash, branch):
+def get_ancestry_path(repo_dir, commit_hash, branch_name):
     return (
         subprocess.check_output(
             [
@@ -136,7 +138,7 @@ def get_ancestry_path(repo_dir, commit_hash, branch):
                 "--git-dir",
                 "{}/.git".format(repo_dir),
                 "rev-list",
-                "{}..{}".format(commit_hash, branch),
+                "{}..{}".format(commit_hash, branch_name),
                 "--ancestry-path",
             ]
         )
@@ -146,7 +148,7 @@ def get_ancestry_path(repo_dir, commit_hash, branch):
     )
 
 
-def get_first_parent(repo_dir, commit_hash, branch):
+def get_first_parent(repo_dir, commit_hash, branch_name):
     return (
         subprocess.check_output(
             [
@@ -154,14 +156,58 @@ def get_first_parent(repo_dir, commit_hash, branch):
                 "--git-dir",
                 "{}/.git".format(repo_dir),
                 "rev-list",
-                "{}..{}".format(commit_hash, branch),
-                "--ancestry-path",
+                "{}..{}".format(commit_hash, branch_name),
+                "--first-parent",
             ]
         )
         .decode("utf-8")
         .strip()
         .split("\n")
     )
+
+
+def get_rc_branch(repo_dir, commit_hash):
+    """Get the branch name for a commit hash."""
+    all_branches = (
+        subprocess.check_output(
+            [
+                "git",
+                "--git-dir",
+                "{}/.git".format(repo_dir),
+                "branch",
+                "--contains",
+                commit_hash,
+                "--remote",
+            ]
+        )
+        .decode("utf-8")
+        .strip()
+        .splitlines()
+    )
+    all_branches = [branch.strip() for branch in all_branches]
+    rc_branches = [branch for branch in all_branches if branch.startswith("origin/rc--20")]
+    if rc_branches:
+        return rc_branches[0]
+    return ""
+
+
+def get_merge_commit(repo_dir, commit_hash):
+    # Reference: https://www.30secondsofcode.org/git/s/find-merge-commit/
+    rc_branch = get_rc_branch(repo_dir, commit_hash)
+    relevant_commits = list(enumerate(get_ancestry_path(repo_dir, commit_hash, rc_branch))) + list(
+        enumerate(get_first_parent(repo_dir, commit_hash, rc_branch))
+    )
+    relevant_commits = sorted(relevant_commits, key=lambda index_commit: index_commit[1])
+    checked_commits = set()
+    commits = []
+    for index, commit in relevant_commits:
+        if commit not in checked_commits:
+            checked_commits.add(commit)
+            commits.append((index, commit))
+
+    relevant_commits = sorted(commits, key=lambda index_commit: index_commit[0])
+
+    return relevant_commits[-1][1]
 
 
 def get_commits(repo_dir, first_commit, last_commit):
@@ -311,7 +357,11 @@ def main():
 
     commits = get_commits(ic_repo_path, first_commit, last_commit)
     for i in range(len(commits)):
-        commits[i] = commits[i] + (str(commits[i][0]),)
+        commit_hash = str(commits[i][0])
+        merge_commit = get_merge_commit(ic_repo_path, commit_hash)
+        used_commit = (merge_commit or commit_hash)[:COMMIT_HASH_LENGTH]
+        print("Commit: {} ==> using commit: {}".format(commit_hash, used_commit))
+        commits[i] = commits[i] + (used_commit,)
 
     if len(commits) == max_commits:
         print("WARNING: max commits limit reached, increase depth")
@@ -396,9 +446,6 @@ def main():
 
         commit_type = conventional["type"].lower()
         commit_type = commit_type if commit_type in TYPE_PRETTY_MAP else "other"
-        if len(teams) >= 3:
-            # The change seems to be touching many teams, let's mark it as "other" (generic)
-            commit_type = "other"
 
         if ["ic-testing-verification"] == teams or all([team in EXCLUDED_TEAMS for team in teams]):
             included = False
@@ -455,7 +502,7 @@ def main():
 
             for change in sorted(change_infos[current_type], key=lambda x: ",".join(x["team"])):
                 commit_part = '[<a href="https://github.com/dfinity/ic/commit/{0}">{0}</a>]'.format(
-                    change["commit"][:9]
+                    change["commit"][:COMMIT_HASH_LENGTH]
                 )
                 team_part = ",".join([TEAM_PRETTY_MAP.get(team, team) for team in change["team"]])
                 team_part = team_part if team_part else "General"
@@ -467,8 +514,13 @@ def main():
                 message_part = change["message"]
                 commiter_part = f"&lt!-- {change['commiter']} --&gt"
 
-                text = "* {0} {4} {1}{2} {3}<br>".format(
-                    commit_part, team_part, scope_part, message_part, commiter_part
+                text = "* {0} {4} {1}{2} {3} {5}<br>".format(
+                    commit_part,
+                    team_part,
+                    scope_part,
+                    message_part,
+                    commiter_part,
+                    "" if change["included"] else "[AUTO-EXCLUDED]",
                 )
                 if not change["included"]:
                     text = "<s>{}</s>".format(text)
