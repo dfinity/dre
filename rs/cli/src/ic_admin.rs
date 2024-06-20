@@ -257,9 +257,9 @@ impl IcAdminWrapper {
         .await
     }
 
-    pub async fn propose_run(&self, cmd: ProposeCommand, opts: ProposeOptions, simulate: bool) -> anyhow::Result<String> {
-        // Simulated, or --help executions run immediately and do not proceed.
-        if simulate || cmd.args().contains(&String::from("--help")) || cmd.args().contains(&String::from("--dry-run")) {
+    pub async fn propose_run(&self, cmd: ProposeCommand, opts: ProposeOptions, dry_run: bool) -> anyhow::Result<String> {
+        // Dry run, or --help executions run immediately and do not proceed.
+        if dry_run || cmd.args().contains(&String::from("--help")) || cmd.args().contains(&String::from("--dry-run")) {
             return self._exec(cmd, opts, true).await;
         }
 
@@ -416,7 +416,7 @@ impl IcAdminWrapper {
     }
 
     /// Run an `ic-admin propose-to-*` command directly
-    pub async fn run_passthrough_propose(&self, args: &[String], simulate: bool) -> anyhow::Result<()> {
+    pub async fn run_passthrough_propose(&self, args: &[String], dry_run: bool) -> anyhow::Result<()> {
         if args.is_empty() {
             println!("List of available ic-admin 'propose' sub-commands:\n");
             for subcmd in self.grep_subcommands(r"\s+propose-to-(.+?)\s") {
@@ -453,8 +453,8 @@ impl IcAdminWrapper {
             command: args[0].clone(),
             args: args.iter().skip(1).cloned().collect::<Vec<_>>(),
         };
-        let simulate = simulate || cmd.args().contains(&String::from("--dry-run"));
-        self.propose_run(cmd, Default::default(), simulate).await?;
+        let dry_run = dry_run || cmd.args().contains(&String::from("--dry-run"));
+        self.propose_run(cmd, Default::default(), dry_run).await?;
         Ok(())
     }
 
@@ -665,7 +665,7 @@ must be identical, and must match the SHA256 from the payload of the NNS proposa
         }
     }
 
-    pub async fn update_unassigned_nodes(&self, nns_subnet_id: &String, network: &Network, simulate: bool) -> Result<(), Error> {
+    pub async fn update_unassigned_nodes(&self, nns_subnet_id: &String, network: &Network, dry_run: bool) -> Result<(), Error> {
         let local_registry_path = local_registry_path(network);
         let local_registry = LocalRegistry::new(local_registry_path, Duration::from_secs(10))
             .map_err(|e| anyhow::anyhow!("Error in creating local registry instance: {:?}", e))?;
@@ -707,7 +707,7 @@ must be identical, and must match the SHA256 from the payload of the NNS proposa
             title: Some("Update all unassigned nodes".to_string()),
         };
 
-        self.propose_run(command, options, simulate).await?;
+        self.propose_run(command, options, dry_run).await?;
         Ok(())
     }
 
@@ -716,7 +716,7 @@ must be identical, and must match the SHA256 from the payload of the NNS proposa
         network: &Network,
         propose_options: ProposeOptions,
         firewall_rules_scope: &FirewallRulesScope,
-        simulate: bool,
+        dry_run: bool,
     ) -> Result<(), Error> {
         let local_registry_path = local_registry_path(network);
         let local_registry = LocalRegistry::new(local_registry_path, Duration::from_secs(10))
@@ -805,7 +805,7 @@ must be identical, and must match the SHA256 from the payload of the NNS proposa
             modifications: Vec<FirewallRuleModification>,
             propose_options: ProposeOptions,
             firewall_rules_scope: &FirewallRulesScope,
-            simulate: bool,
+            dry_run: bool,
         ) -> anyhow::Result<()> {
             let positions = modifications.iter().map(|modif| modif.position).join(",");
             let change_type = modifications[0].clone().change_type;
@@ -869,14 +869,14 @@ must be identical, and must match the SHA256 from the payload of the NNS proposa
                 args: final_args,
             };
 
-            admin_wrapper.propose_run(cmd, propose_options.clone(), simulate).await?;
+            admin_wrapper.propose_run(cmd, propose_options.clone(), dry_run).await?;
 
             Ok(())
         }
 
         // no more than one rule mod implemented currenty -- FIXME
         match reverse_sorted.into_iter().last() {
-            Some((_, mods)) => submit_proposal(self, mods, propose_options.clone(), firewall_rules_scope, simulate).await,
+            Some((_, mods)) => submit_proposal(self, mods, propose_options.clone(), firewall_rules_scope, dry_run).await,
             None => Err(anyhow::anyhow!("Expected to have one item for firewall rule modification")),
         }
     }
