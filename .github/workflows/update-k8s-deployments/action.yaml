@@ -51,6 +51,6 @@ runs:
         git push \
           -o merge_request.create \
           -o merge_request.title="[nomrbot] - Updating DRE container images" \
-          -o merge_request.description="Updating the DRE container images based on the latest changes in the DRE repository - [here](https://github.com/dfinity/dre/commits/$DRE_REPO_BRANCH" \
+          -o merge_request.description="Updating the DRE container images based on the latest changes in the DRE repository - [here](https://github.com/dfinity/dre/commits/$DRE_REPO_BRANCH)" \
           --force --set-upstream origin "${K8S_REPO_BRANCH}" || \
           git push --force --set-upstream origin "${K8S_REPO_BRANCH}"
