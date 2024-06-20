@@ -65,7 +65,7 @@ async fn get_registry(path: &Option<PathBuf>, network: &Network, version: &i64) 
     let elected_host_os_versions = get_elected_host_os_versions(&local_registry, version)?;
 
     let node_provider_names: HashMap<PrincipalId, String> = HashMap::from_iter(
-        query_ic_dashboard_list::<NodeProvidersResponse>("v3/node-providers")
+        query_ic_dashboard_list::<NodeProvidersResponse>(network, "v3/node-providers")
             .await?
             .node_providers
             .iter()

@@ -191,7 +191,7 @@ impl Runner {
 
         let dashboard_backend_client = DashboardBackendClient::new_with_backend_url(backend_url);
         let mut registry = registry::RegistryState::new(network, true).await;
-        let node_providers = query_ic_dashboard_list::<NodeProvidersResponse>("v3/node-providers")
+        let node_providers = query_ic_dashboard_list::<NodeProvidersResponse>(network, "v3/node-providers")
             .await?
             .node_providers;
         registry.update_node_details(&node_providers).await?;
@@ -211,7 +211,7 @@ impl Runner {
         let dashboard_backend_client = DashboardBackendClient::new_with_backend_url(backend_url);
 
         let mut registry = registry::RegistryState::new(network, true).await;
-        let node_providers = query_ic_dashboard_list::<NodeProvidersResponse>("v3/node-providers")
+        let node_providers = query_ic_dashboard_list::<NodeProvidersResponse>(network, "v3/node-providers")
             .await?
             .node_providers;
         registry.update_node_details(&node_providers).await?;
