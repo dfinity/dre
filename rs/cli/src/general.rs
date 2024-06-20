@@ -68,7 +68,7 @@ pub async fn vote_on_proposals(
     nns_urls: &[Url],
     accepted_proposers: &[u64],
     accepted_topics: &[i32],
-    simulate: bool,
+    dry_run: bool,
     sleep: Duration,
 ) -> anyhow::Result<()> {
     let client: GovernanceCanisterWrapper = match &neuron.get_auth().await? {
@@ -105,7 +105,7 @@ pub async fn vote_on_proposals(
                 proposal.proposal.clone().unwrap().title.unwrap()
             );
 
-            if !simulate {
+            if !dry_run {
                 let response = client.register_vote(neuron.get_neuron_id().await?, proposal.id.unwrap().id).await?;
                 info!("{}", response);
             } else {

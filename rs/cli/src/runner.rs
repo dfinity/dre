@@ -24,7 +24,7 @@ pub struct Runner {
 }
 
 impl Runner {
-    pub async fn deploy(&self, subnet: &PrincipalId, version: &str, simulate: bool) -> anyhow::Result<()> {
+    pub async fn deploy(&self, subnet: &PrincipalId, version: &str, dry_run: bool) -> anyhow::Result<()> {
         self.ic_admin
             .propose_run(
                 ic_admin::ProposeCommand::DeployGuestosToAllSubnetNodes {
@@ -36,7 +36,7 @@ impl Runner {
                     summary: format!("Update subnet {subnet} to GuestOS version {version}").into(),
                     motivation: None,
                 },
-                simulate,
+                dry_run,
             )
             .await
             .map_err(|e| anyhow::anyhow!(e))?;
@@ -56,7 +56,7 @@ impl Runner {
         request: ic_management_types::requests::SubnetResizeRequest,
         motivation: String,
         verbose: bool,
-        simulate: bool,
+        dry_run: bool,
     ) -> anyhow::Result<()> {
         let subnet = request.subnet;
         let change = self.dashboard_backend_client.subnet_resize(request).await?;
@@ -71,7 +71,7 @@ impl Runner {
             return Ok(());
         }
         if change.added.len() == change.removed.len() {
-            self.run_membership_change(change.clone(), ops_subnet_node_replace::replace_proposal_options(&change)?, simulate)
+            self.run_membership_change(change.clone(), ops_subnet_node_replace::replace_proposal_options(&change)?, dry_run)
                 .await
         } else {
             let action = if change.added.len() < change.removed.len() {
@@ -86,7 +86,7 @@ impl Runner {
                     summary: format!("{action} subnet {subnet}").into(),
                     motivation: motivation.clone().into(),
                 },
-                simulate,
+                dry_run,
             )
             .await
         }
@@ -97,7 +97,7 @@ impl Runner {
         request: ic_management_types::requests::SubnetCreateRequest,
         motivation: String,
         verbose: bool,
-        simulate: bool,
+        dry_run: bool,
         replica_version: Option<String>,
         other_args: Vec<String>,
         help_other_args: bool,
@@ -134,7 +134,7 @@ impl Runner {
                     summary: Some("# Creating new subnet with nodes: ".into()),
                     motivation: Some(motivation.clone()),
                 },
-                simulate,
+                dry_run,
             )
             .await?;
         Ok(())
@@ -144,7 +144,7 @@ impl Runner {
         &self,
         request: ic_management_types::requests::MembershipReplaceRequest,
         verbose: bool,
-        simulate: bool,
+        dry_run: bool,
     ) -> anyhow::Result<()> {
         let change = self.dashboard_backend_client.membership_replace(request).await?;
         if verbose {
@@ -157,11 +157,11 @@ impl Runner {
         if change.added.is_empty() && change.removed.is_empty() {
             return Ok(());
         }
-        self.run_membership_change(change.clone(), ops_subnet_node_replace::replace_proposal_options(&change)?, simulate)
+        self.run_membership_change(change.clone(), ops_subnet_node_replace::replace_proposal_options(&change)?, dry_run)
             .await
     }
 
-    async fn run_membership_change(&self, change: SubnetChangeResponse, options: ProposeOptions, simulate: bool) -> anyhow::Result<()> {
+    async fn run_membership_change(&self, change: SubnetChangeResponse, options: ProposeOptions, dry_run: bool) -> anyhow::Result<()> {
         let subnet_id = change.subnet_id.ok_or_else(|| anyhow::anyhow!("subnet_id is required"))?;
         let pending_action = self.dashboard_backend_client.subnet_pending_action(subnet_id).await?;
         if let Some(proposal) = pending_action {
@@ -179,7 +179,7 @@ impl Runner {
                     node_ids_remove: change.removed.clone(),
                 },
                 options,
-                simulate,
+                dry_run,
             )
             .await
             .map_err(|e| anyhow::anyhow!(e))?;
@@ -191,7 +191,7 @@ impl Runner {
 
         let dashboard_backend_client = DashboardBackendClient::new_with_backend_url(backend_url);
         let mut registry = registry::RegistryState::new(network, true).await;
-        let node_providers = query_ic_dashboard_list::<NodeProvidersResponse>("v3/node-providers")
+        let node_providers = query_ic_dashboard_list::<NodeProvidersResponse>(network, "v3/node-providers")
             .await?
             .node_providers;
         registry.update_node_details(&node_providers).await?;
@@ -211,7 +211,7 @@ impl Runner {
         let dashboard_backend_client = DashboardBackendClient::new_with_backend_url(backend_url);
 
         let mut registry = registry::RegistryState::new(network, true).await;
-        let node_providers = query_ic_dashboard_list::<NodeProvidersResponse>("v3/node-providers")
+        let node_providers = query_ic_dashboard_list::<NodeProvidersResponse>(network, "v3/node-providers")
             .await?
             .node_providers;
         registry.update_node_details(&node_providers).await?;
@@ -374,7 +374,7 @@ impl Runner {
             }
         }
     }
-    pub async fn hostos_rollout(&self, nodes: Vec<PrincipalId>, version: &str, simulate: bool, maybe_summary: Option<String>) -> anyhow::Result<()> {
+    pub async fn hostos_rollout(&self, nodes: Vec<PrincipalId>, version: &str, dry_run: bool, maybe_summary: Option<String>) -> anyhow::Result<()> {
         let title = format!("Set HostOS version: {version} on {} nodes", nodes.clone().len());
         self.ic_admin
             .propose_run(
@@ -387,7 +387,7 @@ impl Runner {
                     summary: maybe_summary.unwrap_or(title).into(),
                     motivation: None,
                 },
-                simulate,
+                dry_run,
             )
             .await
             .map_err(|e| anyhow::anyhow!(e))?;
@@ -397,7 +397,7 @@ impl Runner {
         Ok(())
     }
 
-    pub async fn remove_nodes(&self, request: NodesRemoveRequest, simulate: bool) -> anyhow::Result<()> {
+    pub async fn remove_nodes(&self, request: NodesRemoveRequest, dry_run: bool) -> anyhow::Result<()> {
         let node_remove_response = self.dashboard_backend_client.remove_nodes(request).await?;
         let mut node_removals = node_remove_response.removals;
         node_removals.sort_by_key(|nr| nr.reason.message());
@@ -440,7 +440,7 @@ impl Runner {
                     summary: "Remove nodes from the network".to_string().into(),
                     motivation: node_remove_response.motivation.into(),
                 },
-                simulate,
+                dry_run,
             )
             .await?;
         Ok(())

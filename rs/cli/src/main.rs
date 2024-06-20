@@ -86,7 +86,7 @@ async fn async_main() -> Result<(), anyhow::Error> {
     let srv = rx.recv().unwrap();
 
     let r = ic_admin::with_ic_admin(governance_canister_version.into(), async {
-        let simulate = cli_opts.simulate;
+        let dry_run = cli_opts.dry_run;
 
         let runner_instance = {
             let cli = dre::parsed_cli::ParsedCli::from_opts(&cli_opts)
@@ -114,7 +114,7 @@ async fn async_main() -> Result<(), anyhow::Error> {
                             max_replaceable_nodes_per_sub: *max_replaceable_nodes_per_sub,
                         },
                         cli_opts.verbose,
-                        simulate,
+                        dry_run,
                     )
                     .await
             }
@@ -147,7 +147,7 @@ async fn async_main() -> Result<(), anyhow::Error> {
 
                 // Execute the command
                 match &subnet.subcommand {
-                    cli::subnet::Commands::Deploy { version } => runner_instance.deploy(&subnet.id.unwrap(), version, simulate).await,
+                    cli::subnet::Commands::Deploy { version } => runner_instance.deploy(&subnet.id.unwrap(), version, dry_run).await,
                     cli::subnet::Commands::Replace {
                         nodes,
                         no_heal,
@@ -184,7 +184,7 @@ async fn async_main() -> Result<(), anyhow::Error> {
                                     min_nakamoto_coefficients,
                                 },
                                 cli_opts.verbose,
-                                simulate,
+                                dry_run,
                             )
                             .await
                     }
@@ -209,7 +209,7 @@ async fn async_main() -> Result<(), anyhow::Error> {
                                     },
                                     motivation,
                                     cli_opts.verbose,
-                                    simulate,
+                                    dry_run,
                                 )
                                 .await
                         } else {
@@ -229,7 +229,12 @@ async fn async_main() -> Result<(), anyhow::Error> {
                         help_other_args,
                     } => {
                         let min_nakamoto_coefficients = parse_min_nakamoto_coefficients(&mut cmd, min_nakamoto_coefficients);
-                        if let Some(motivation) = motivation.clone() {
+                        let motivation = if motivation.is_none() && *help_other_args {
+                            Some("help for options".to_string())
+                        } else {
+                            motivation.clone()
+                        };
+                        if let Some(motivation) = motivation {
                             runner_instance
                                 .subnet_create(
                                     ic_management_types::requests::SubnetCreateRequest {
@@ -241,7 +246,7 @@ async fn async_main() -> Result<(), anyhow::Error> {
                                     },
                                     motivation,
                                     cli_opts.verbose,
-                                    simulate,
+                                    dry_run,
                                     replica_version.clone(),
                                     other_args.to_vec(),
                                     *help_other_args,
@@ -260,7 +265,7 @@ async fn async_main() -> Result<(), anyhow::Error> {
                 Ok(())
             }
 
-            cli::Commands::Propose { args } => runner_instance.ic_admin.run_passthrough_propose(args, simulate).await,
+            cli::Commands::Propose { args } => runner_instance.ic_admin.run_passthrough_propose(args, dry_run).await,
 
             cli::Commands::UpdateUnassignedNodes { nns_subnet_id } => {
                 let runner_instance = if target_network.is_mainnet() {
@@ -281,7 +286,7 @@ async fn async_main() -> Result<(), anyhow::Error> {
                 };
                 runner_instance
                     .ic_admin
-                    .update_unassigned_nodes(&nns_subnet_id, &target_network, simulate)
+                    .update_unassigned_nodes(&nns_subnet_id, &target_network, dry_run)
                     .await
             }
 
@@ -318,7 +323,7 @@ async fn async_main() -> Result<(), anyhow::Error> {
                                 summary: Some(update_version.summary.clone()),
                                 motivation: None,
                             },
-                            simulate,
+                            dry_run,
                         )
                         .await?;
                     Ok(())
@@ -332,7 +337,7 @@ async fn async_main() -> Result<(), anyhow::Error> {
                     runner_instance
                 };
                 match &nodes.subcommand {
-                    cli::hostos::Commands::Rollout { version, nodes } => runner_instance.hostos_rollout(nodes.clone(), version, simulate, None).await,
+                    cli::hostos::Commands::Rollout { version, nodes } => runner_instance.hostos_rollout(nodes.clone(), version, dry_run, None).await,
                     cli::hostos::Commands::RolloutFromNodeGroup {
                         version,
                         assignment,
@@ -342,7 +347,7 @@ async fn async_main() -> Result<(), anyhow::Error> {
                     } => {
                         let update_group = NodeGroupUpdate::new(*assignment, *owner, NumberOfNodes::from_str(nodes_in_group)?);
                         if let Some((nodes_to_update, summary)) = runner_instance.hostos_rollout_nodes(update_group, version, exclude).await? {
-                            return runner_instance.hostos_rollout(nodes_to_update, version, simulate, Some(summary)).await;
+                            return runner_instance.hostos_rollout(nodes_to_update, version, dry_run, Some(summary)).await;
                         }
                         Ok(())
                     }
@@ -370,7 +375,7 @@ async fn async_main() -> Result<(), anyhow::Error> {
                                 exclude: Some(exclude.clone()),
                                 motivation: motivation.clone().unwrap_or_default(),
                             },
-                            simulate,
+                            dry_run,
                         )
                         .await
                 }
@@ -390,7 +395,7 @@ async fn async_main() -> Result<(), anyhow::Error> {
                                 summary: Some(format!("Update {} API boundary node(s) to {version}", nodes.clone().len())),
                                 motivation: motivation.clone(),
                             },
-                            simulate,
+                            dry_run,
                         )
                         .await?;
                     Ok(())
@@ -408,7 +413,7 @@ async fn async_main() -> Result<(), anyhow::Error> {
                                 summary: Some(format!("Add {} API boundary node(s)", nodes.clone().len())),
                                 motivation: motivation.clone(),
                             },
-                            simulate,
+                            dry_run,
                         )
                         .await?;
                     Ok(())
@@ -423,7 +428,7 @@ async fn async_main() -> Result<(), anyhow::Error> {
                                 summary: Some(format!("Remove {} API boundary node(s)", nodes.clone().len())),
                                 motivation: None,
                             },
-                            simulate,
+                            dry_run,
                         )
                         .await?;
                     Ok(())
@@ -441,7 +446,7 @@ async fn async_main() -> Result<(), anyhow::Error> {
                     target_network.get_nns_urls(),
                     accepted_neurons,
                     accepted_topics,
-                    simulate,
+                    dry_run,
                     *sleep_time,
                 )
                 .await
@@ -481,7 +486,7 @@ async fn async_main() -> Result<(), anyhow::Error> {
                             ..Default::default()
                         },
                         rules_scope,
-                        cli_opts.simulate,
+                        cli_opts.dry_run,
                     )
                     .await
             }
