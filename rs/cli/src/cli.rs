@@ -27,12 +27,13 @@ pub struct Opts {
     pub dev: bool,
 
     // Skip the confirmation prompt
-    #[clap(short, long, env = "YES", global = true, conflicts_with = "simulate")]
+    #[clap(short, long, env = "YES", global = true, conflicts_with = "dry_run")]
     pub yes: bool,
 
-    // Simulate submission of the proposal, but do not actually submit it.
-    #[clap(long, aliases = ["dry-run", "dryrun", "no"], global = true, conflicts_with = "yes")]
-    pub simulate: bool,
+    // Dry-run or simulate proposal submission, but do not actually submit it.
+    // Will show the ic-admin command and the proposal Payload
+    #[clap(long, aliases = ["dry-run", "dryrun", "simulate", "no"], global = true, conflicts_with = "yes")]
+    pub dry_run: bool,
 
     #[clap(long, env = "VERBOSE", global = true)]
     pub verbose: bool,
