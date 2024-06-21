@@ -210,7 +210,12 @@ async fn async_main() -> Result<(), anyhow::Error> {
                         help_other_args,
                     } => {
                         let min_nakamoto_coefficients = parse_min_nakamoto_coefficients(&mut cmd, min_nakamoto_coefficients);
-                        if let Some(motivation) = motivation.clone() {
+                        let motivation = if motivation.is_none() && *help_other_args {
+                            Some("help for options".to_string())
+                        } else {
+                            motivation.clone()
+                        };
+                        if let Some(motivation) = motivation {
                             runner_instance
                                 .subnet_create(
                                     ic_management_types::requests::SubnetCreateRequest {
@@ -388,7 +393,7 @@ async fn async_main() -> Result<(), anyhow::Error> {
                         .await?;
                     Ok(())
                 }
-                cli::api_boundary_nodes::Commands::Remove { nodes } => {
+                cli::api_boundary_nodes::Commands::Remove { nodes, motivation } => {
                     runner_instance
                         .ic_admin
                         .propose_run(
@@ -396,7 +401,7 @@ async fn async_main() -> Result<(), anyhow::Error> {
                             ic_admin::ProposeOptions {
                                 title: Some(format!("Remove {} API boundary node(s)", nodes.clone().len())),
                                 summary: Some(format!("Remove {} API boundary node(s)", nodes.clone().len())),
-                                motivation: None,
+                                motivation: motivation.clone(),
                             },
                             dry_run,
                         )

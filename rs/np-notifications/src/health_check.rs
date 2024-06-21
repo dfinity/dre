@@ -34,7 +34,7 @@ pub async fn start_health_check_loop(config: HealthCheckLoopConfig) {
     let network = ic_management_types::Network::new("mainnet", &vec![])
         .await
         .expect("failed to create mainnet network");
-    let hc = HealthClient::new(network);
+    let hc = HealthClient::new(network.clone());
     let mut nodes_status = NodesStatus::from(hc.nodes().await.unwrap());
 
     let mut rs = config.registry_state;
@@ -47,7 +47,7 @@ pub async fn start_health_check_loop(config: HealthCheckLoopConfig) {
     // reboots. In the worst case, if a provider is not up to date in the list,
     // the program will crash, then restart and update the list, which should
     // fix the issue.
-    let node_providers = query_ic_dashboard_list::<NodeProvidersResponse>("v3/node-providers")
+    let node_providers = query_ic_dashboard_list::<NodeProvidersResponse>(&network, "v3/node-providers")
         .await
         .unwrap()
         .node_providers;
