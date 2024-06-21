@@ -1,27 +1,28 @@
-import mimetypes
 import os
+import pathlib
 import tempfile
-import time
+
 import mammoth
-from pydrive2.auth import GoogleAuth
-from pydrive2.drive import GoogleDrive
-from pydrive2.files import GoogleDriveFile
-from markdownify import markdownify
-from release_notes import release_notes
 import markdown
 import slack_announce
+from markdownify import markdownify
+from pydrive2.auth import GoogleAuth
+from pydrive2.drive import GoogleDrive
+from release_notes import release_notes
 
 md = markdown.Markdown(
     extensions=["pymdownx.tilde"],
 )
 
-import pathlib
 
 pathlib.Path(__file__).parent.resolve()
 
 
 class ReleaseNotesClient:
+    """Client for managing release notes in Google Drive."""
+
     def __init__(self, credentials_file: pathlib.Path, release_notes_folder="1y-nuH29Gd5Err3pazYH6-LzcDShcOIFf"):
+        """Create a new ReleaseNotesClient."""
         settings = {
             "client_config_backend": "service",
             "service_config": {
@@ -34,14 +35,20 @@ class ReleaseNotesClient:
         gauth.ServiceAuth()
         self.drive = GoogleDrive(gauth)
 
-    def ensure(self, version_name: str, version: str, content: str, tag_teams_on_create: bool):
-        existing_file = self.file(version)
+    def ensure(self, since_commit: str, version_name: str, git_revision: str, tag_teams_on_create: bool):
+        """Ensure that a release notes document exists for the given version."""
+        existing_file = self.file(git_revision)
         if existing_file:
             return existing_file
+        content = release_notes(
+            first_commit=since_commit,
+            last_commit=git_revision,
+            release_name=version_name,
+        )
         htmldoc = md.convert(content)
         gdoc = self.drive.CreateFile(
             {
-                "title": f"Release Notes - {version_name} ({version})",
+                "title": f"Release Notes - {version_name} ({git_revision})",
                 "mimeType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                 "parents": [{"kind": "drive#fileLink", "id": self.release_notes_folder}],
             }
@@ -58,6 +65,7 @@ class ReleaseNotesClient:
         return gdoc
 
     def file(self, version: str):
+        """Get the file for the given version."""
         release_notes = self.drive.ListFile({"q": "'{}' in parents".format(self.release_notes_folder)}).GetList()
         for file in release_notes:
             if version in file["title"]:
@@ -65,6 +73,7 @@ class ReleaseNotesClient:
         return None
 
     def markdown_file(self, version):
+        """Get the markdown content of the release notes for the given version."""
         f = self.file(version)
         if not f:
             return None
@@ -74,16 +83,13 @@ class ReleaseNotesClient:
             # google docs will convert the document to docx format first time it's saved
             # before that, it should be in html
             try:
-                with open(release_docx, "tr") as f:  # try open file in text mode
+                with open(release_docx, "tr", encoding="utf8") as f:  # try open file in text mode
                     release_html = f.read()
-            except:  # if fail then file is non-text (binary)
+            except:  # if fail then file is non-text (binary)  # noqa: E722  # pylint: disable=bare-except
                 release_html = mammoth.convert_to_html(open(release_docx, "rb")).value
 
             release_md = markdownify(release_html)
             return release_md
-
-    def archive_inactive(self, active_versions: list[str]):
-        pass
 
 
 def main():
@@ -91,11 +97,13 @@ def main():
         credentials_file=pathlib.Path(__file__).parent.resolve() / "credentials.json",
         release_notes_folder="1zOPwbYdOREhhLv-spRIRRMaFaAQlOVvF",
     )
-    release = "rc--2024-02-21_23-01"
     version = "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f"
-    notes = release_notes("8d4b6898d878fa3db4028b316b78b469ed29f293", version, release)
-    print(notes)
-    gdoc = client.ensure(version_name=release, version=version, content=notes, tag_teams_on_create=False)
+    gdoc = client.ensure(
+        version_name="rc--2024-02-21_23-01",
+        git_revision=version,
+        since_commit="8d4b6898d878fa3db4028b316b78b469ed29f293",
+        tag_teams_on_create=False,
+    )
     print(client.markdown_file(version))
     print(gdoc["alternateLink"])
 
