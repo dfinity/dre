@@ -62,7 +62,7 @@ impl Runner {
 
     pub async fn stop_backend(&self) -> anyhow::Result<()> {
         if let Some(backend_srv) = &*self.backend_srv.borrow() {
-            backend_srv.stop(false).await;
+            let _ = backend_srv.stop(false).await;
         };
         Ok(())
     }
