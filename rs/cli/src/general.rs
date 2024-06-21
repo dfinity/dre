@@ -71,7 +71,7 @@ pub async fn vote_on_proposals(
     dry_run: bool,
     sleep: Duration,
 ) -> anyhow::Result<()> {
-    let client: GovernanceCanisterWrapper = match &neuron.get_auth().await? {
+    let client: GovernanceCanisterWrapper = match &neuron.get_auth(true).await? {
         Auth::Hsm { pin, slot, key_id } => CanisterClient::from_hsm(pin.to_string(), *slot, key_id.to_string(), &nns_urls[0])?.into(),
         Auth::Keyfile { path } => CanisterClient::from_key_file(path.into(), &nns_urls[0])?.into(),
         Auth::None => CanisterClient::from_anonymous(&nns_urls[0])?.into(),
