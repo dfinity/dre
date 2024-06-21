@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
+import argparse
 import fnmatch
+import os
 import pathlib
 import re
 import subprocess
@@ -509,3 +511,30 @@ Changelog since git revision [{first_commit}](https://dashboard.internetcomputer
             notes += "* " + text + "\n"
 
     return notes
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Generate release notes")
+    parser.add_argument("first_commit", type=str, help="first commit")
+    parser.add_argument("last_commit", type=str, help="last commit")
+    parser.add_argument(
+        "--max-commits",
+        dest="max_commits",
+        default=os.environ.get("MAX_COMMITS", 1000),
+        help="maximum number of commits to fetch",
+    )
+    parser.add_argument(
+        "--html",
+        type=str,
+        dest="html_path",
+        default="$HOME/Downloads/release-notes.html",
+        help="path to where the output should be generated",
+    )
+    parser.add_argument("rc_name", type=str, help="name of the release i.e. 'rc--2023-01-12_18-31'")
+    args = parser.parse_args()
+
+    print(release_notes(args.first_commit, args.last_commit, args.rc_name))
+
+
+if __name__ == "__main__":
+    main()
