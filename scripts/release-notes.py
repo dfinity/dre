@@ -87,10 +87,9 @@ parser.add_argument("last_commit", type=str, help="last commit")
 parser.add_argument(
     "--max-commits",
     dest="max_commits",
-    default=1000,
+    default=os.environ.get("MAX_COMMITS", 1000),
     help="maximum number of commits to fetch",
 )
-parser.add_argument("--branch", dest="branch", default="master", help="branch to fetch commits from")
 parser.add_argument(
     "--html",
     type=str,
@@ -100,9 +99,6 @@ parser.add_argument(
 )
 parser.add_argument("rc_name", type=str, help="name of the release i.e. 'rc--2023-01-12_18-31'")
 args = parser.parse_args()
-
-max_commits = os.environ.get("MAX_COMMITS", args.max_commits)
-branch = os.environ.get("BRANCH", args.branch)
 
 
 # https://stackoverflow.com/a/34482761
@@ -352,7 +348,7 @@ def main():
         print("Commit: {} ==> using commit: {}".format(commit_hash, used_commit))
         commits[i] = commits[i] + (used_commit,)
 
-    if len(commits) == max_commits:
+    if len(commits) == args.max_commits:
         print("WARNING: max commits limit reached, increase depth")
         exit(1)
 
