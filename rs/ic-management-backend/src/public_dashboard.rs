@@ -5,7 +5,7 @@ use std::path::PathBuf;
 use tokio::io::{AsyncReadExt, BufReader};
 use tokio::{fs::File, io::AsyncWriteExt};
 
-const IC_DASHBOARD_API: &str = "https://ic-api.internetcomputer.org/api/";
+const IC_DASHBOARD_API: &str = "https://ic-api.internetcomputer.org/api";
 const IC_API_REFRESH_INTERVAL_SECONDS: u64 = 60 * 60; // 1h
 
 pub async fn query_ic_dashboard_list<T: DeserializeOwned>(network: &Network, query_what: &str) -> anyhow::Result<T> {
