@@ -615,12 +615,6 @@ pub mod proposals {
             /// Proposal ID
             proposal_id: u64,
         },
-
-        /// Print decentralization for a subnet-change proposal gived ID
-        Analyze {
-            /// Proposal ID
-            proposal_id: u64,
-        },
     }
 
     #[derive(ValueEnum, Clone, Debug)]

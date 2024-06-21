@@ -1,20 +1,16 @@
 use crate::ic_admin::IcAdminWrapper;
 use clap::{error::ErrorKind, CommandFactory, Parser};
-use decentralization::network::SubnetChange;
 use dialoguer::Confirm;
 use dotenv::dotenv;
 use dre::detect_neuron::Auth;
 use dre::general::{filter_proposals, get_node_metrics_history, vote_on_proposals};
 use dre::operations::hostos_rollout::{NodeGroupUpdate, NumberOfNodes};
-use dre::{cli, ic_admin, local_unused_port, registry_dump, runner};
+use dre::{cli, ic_admin, registry_dump, runner};
 use ic_base_types::CanisterId;
 use ic_canisters::governance::{governance_canister_version, GovernanceCanisterWrapper};
 use ic_canisters::CanisterClient;
-use ic_management_backend::endpoints;
-use ic_management_types::filter_map_nns_function_proposals;
 use ic_management_types::requests::NodesRemoveRequest;
-use ic_management_types::{Artifact, MinNakamotoCoefficients, NnsFunctionProposal, NodeFeature};
-use registry_canister::mutations::do_change_subnet_membership::ChangeSubnetMembershipPayload;
+use ic_management_types::{Artifact, MinNakamotoCoefficients, NodeFeature};
 
 use ic_nns_common::pb::v1::ProposalId;
 use ic_nns_governance::pb::v1::ListProposalInfo;
@@ -23,8 +19,6 @@ use regex::Regex;
 use serde_json::Value;
 use std::collections::BTreeMap;
 use std::str::FromStr;
-use std::sync::mpsc;
-use std::thread;
 use tokio::runtime::Runtime;
 
 const STAGING_NEURON_ID: u64 = 49;
