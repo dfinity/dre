@@ -524,9 +524,13 @@ pub mod api_boundary_nodes {
 
         /// Decommission a set of API BNs and turn them again in unassigned nodes
         Remove {
-            /// Node IDs to turn into API BNs
+            /// Node IDs of API BNs that should be turned into unassigned nodes again
             #[clap(long, num_args(1..), required = true)]
             nodes: Vec<PrincipalId>,
+
+            /// Motivation for removing the API BNs
+            #[clap(short, long, aliases = ["summary"], required = true)]
+            motivation: Option<String>,
         },
     }
 }
