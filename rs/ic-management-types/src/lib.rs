@@ -5,7 +5,6 @@ pub use crate::errors::*;
 use candid::{CandidType, Decode};
 use core::hash::Hash;
 use ic_base_types::NodeId;
-use ic_nns_governance::pb::v1::proposal::Action;
 use ic_nns_governance::pb::v1::NnsFunction;
 use ic_nns_governance::pb::v1::ProposalInfo;
 use ic_nns_governance::pb::v1::ProposalStatus;
@@ -32,35 +31,6 @@ use std::str::FromStr;
 use strum::VariantNames;
 use strum_macros::EnumString;
 use url::Url;
-
-pub fn filter_map_nns_function_proposals<T: NnsFunctionProposal + candid::CandidType>(proposals: &[ProposalInfo]) -> Vec<(ProposalInfo, T)> {
-    proposals
-        .iter()
-        .filter(|p| ProposalStatus::try_from(p.status).expect("unknown proposal status") != ProposalStatus::Rejected)
-        .filter_map(|p| {
-            p.proposal
-                .as_ref()
-                .and_then(|p| p.action.as_ref())
-                .ok_or_else(|| anyhow::format_err!("no action"))
-                .and_then(|a| match a {
-                    Action::ExecuteNnsFunction(function) => {
-                        let func = NnsFunction::try_from(function.nns_function)?;
-                        Ok((func, function.payload.as_slice()))
-                    }
-                    _ => Err(anyhow::format_err!("not an NNS function")),
-                })
-                .and_then(|(function_type, function_payload)| {
-                    if function_type == T::TYPE {
-                        Decode!(function_payload, T).map_err(|e| anyhow::format_err!("failed decoding candid: {}", e))
-                    } else {
-                        Err(anyhow::format_err!("unsupported NNS function"))
-                    }
-                })
-                .ok()
-                .map(|payload| (p.clone(), payload))
-        })
-        .collect()
-}
 
 pub trait NnsFunctionProposal: CandidType + serde::de::DeserializeOwned {
     const TYPE: NnsFunction;

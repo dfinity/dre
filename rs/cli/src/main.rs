@@ -525,16 +525,6 @@ async fn async_main() -> Result<(), anyhow::Error> {
                     println!("{}", proposal);
                     Ok(())
                 }
-                cli::proposals::Commands::Analyze { proposal_id } => {
-                    let nns_url = target_network.get_nns_urls().first().expect("Should have at least one NNS URL");
-                    let client = GovernanceCanisterWrapper::from(CanisterClient::from_anonymous(nns_url)?);
-                    let proposal = client.get_proposal(*proposal_id).await?;
-                    if let Some((info, change_membership)) = filter_map_nns_function_proposals::<ChangeSubnetMembershipPayload>(&vec![proposal]).first()
-                    {
-                        runner_instance.decentralization_change(change_membership).await?
-                    }
-                    Ok(())
-                }
             },
         };
         let _ = runner_instance.stop_backend().await;
