@@ -143,42 +143,6 @@ def progressbar(it, prefix="", size=60, out=sys.stdout):  # Python3.6+
     print("\n", flush=True, file=out)
 
 
-def get_ancestry_path(repo_dir, commit_hash, branch_name):
-    return (
-        subprocess.check_output(
-            [
-                "git",
-                "--git-dir",
-                "{}/.git".format(repo_dir),
-                "rev-list",
-                "{}..{}".format(commit_hash, branch_name),
-                "--ancestry-path",
-            ]
-        )
-        .decode("utf-8")
-        .strip()
-        .split("\n")
-    )
-
-
-def get_first_parent(repo_dir, commit_hash, branch_name):
-    return (
-        subprocess.check_output(
-            [
-                "git",
-                "--git-dir",
-                "{}/.git".format(repo_dir),
-                "rev-list",
-                "{}..{}".format(commit_hash, branch_name),
-                "--first-parent",
-            ]
-        )
-        .decode("utf-8")
-        .strip()
-        .split("\n")
-    )
-
-
 def get_rc_branch(repo_dir, commit_hash):
     """Get the branch name for a commit hash."""
     all_branches = (
@@ -205,22 +169,47 @@ def get_rc_branch(repo_dir, commit_hash):
 
 
 def get_merge_commit(repo_dir, commit_hash):
-    # Reference: https://www.30secondsofcode.org/git/s/find-merge-commit/
+    # Reference: https://stackoverflow.com/questions/8475448/find-merge-commit-which-includes-a-specific-commit
     rc_branch = get_rc_branch(repo_dir, commit_hash)
-    relevant_commits = list(enumerate(get_ancestry_path(repo_dir, commit_hash, rc_branch))) + list(
-        enumerate(get_first_parent(repo_dir, commit_hash, rc_branch))
-    )
-    relevant_commits = sorted(relevant_commits, key=lambda index_commit: index_commit[1])
-    checked_commits = set()
-    commits = []
-    for index, commit in relevant_commits:
-        if commit not in checked_commits:
-            checked_commits.add(commit)
-            commits.append((index, commit))
 
-    relevant_commits = sorted(commits, key=lambda index_commit: index_commit[0])
+    try:
+        # Run the Git commands and capture their output
+        git_cmd = ["git", "--git-dir", f"{repo_dir}/.git", "rev-list", f"{commit_hash}..{rc_branch}"]
+        ancestry_path = subprocess.run(
+            git_cmd + ["--ancestry-path"],
+            capture_output=True,
+            text=True,
+            check=True,
+        ).stdout.splitlines()
+        first_parent = subprocess.run(
+            git_cmd + ["--first-parent"],
+            capture_output=True,
+            text=True,
+            check=True,
+        ).stdout.splitlines()
 
-    return relevant_commits[-1][1]
+        # Combine and process the outputs
+        combined_output = [(i + 1, line) for i, line in enumerate(ancestry_path + first_parent)]
+        combined_output.sort(key=lambda x: x[1])
+
+        # Find duplicates
+        seen = {}
+        duplicates = []
+        for number, commit_hash in combined_output:
+            if commit_hash in seen:
+                duplicates.append((seen[commit_hash], number, commit_hash))
+            seen[commit_hash] = number
+
+        # Sort by the original line number and get the last one
+        if duplicates:
+            duplicates.sort()
+            _, _, merge_commit = duplicates[-1]
+            return merge_commit
+        return None
+
+    except subprocess.CalledProcessError as e:
+        print(f"Error: {e}")
+        return None
 
 
 def get_commits(repo_dir, first_commit, last_commit):
