@@ -1013,7 +1013,6 @@ impl ProposeCommand {
             Self::RemoveApiBoundaryNodes { nodes } => nodes.iter().flat_map(|n| ["--nodes".to_string(), n.to_string()]).collect::<Vec<_>>(),
             Self::DeployGuestosToSomeApiBoundaryNodes { nodes, version } => [
                 nodes.iter().flat_map(|n| ["--nodes".to_string(), n.to_string()]).collect::<Vec<_>>(),
-                nodes.iter().map(|n| n.to_string()).collect::<Vec<_>>(),
                 vec!["--version".to_string(), version.to_string()],
             ]
             .concat(),
