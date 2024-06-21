@@ -478,4 +478,45 @@ impl Runner {
 
         Ok(())
     }
+
+
+
+    pub async fn decentralization_change(&self, change: &ChangeSubnetMembershipPayload) -> Result<(), anyhow::Error> {
+        if let Some(id) = change.get_subnet() {
+            let subnet_before = self.registry.subnet(SubnetQueryBy::SubnetId(id)).await.map_err(|e| anyhow::anyhow!(e))?;
+            let added_nodes = self
+                .registry
+                .nodes()
+                .values()
+                .filter(|n| change.get_added_node_ids().contains(&n.principal))
+                .map(decentralization::network::Node::from)
+                .collect_vec();
+            let removed_nodes = self
+                .registry
+                .nodes()
+                .values()
+                .filter(|n| change.get_removed_node_ids().contains(&n.principal))
+                .map(decentralization::network::Node::from)
+                .collect_vec();
+
+            let subnet_after = subnet_before
+                .clone()
+                .with_nodes(added_nodes)
+                .without_nodes(removed_nodes)
+                .map_err(|e| anyhow::anyhow!(e))?;
+
+            let subnet_change: SubnetChangeResponse = SubnetChangeResponse {
+                added: change.get_added_node_ids(),
+                removed: change.get_removed_node_ids(),
+                subnet_id: Some(id),
+                score_before: subnet_before.nakamoto_score(),
+                score_after: subnet_after.nakamoto_score(),
+                ..Default::default()
+            };
+
+            println!("{}", subnet_change)
+        }
+
+        Ok(())
+    }
 }
