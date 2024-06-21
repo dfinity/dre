@@ -3,6 +3,7 @@ use crate::ic_admin::ProposeOptions;
 use crate::operations::hostos_rollout::{HostosRollout, HostosRolloutResponse, NodeGroupUpdate};
 use crate::ops_subnet_node_replace;
 use crate::{ic_admin, local_unused_port};
+use actix_web::dev::ServerHandle;
 use decentralization::SubnetChangeResponse;
 use futures::future::join_all;
 use ic_base_types::PrincipalId;
@@ -16,12 +17,10 @@ use itertools::Itertools;
 use log::{info, warn};
 use std::cell::RefCell;
 use std::collections::BTreeMap;
+use std::sync::mpsc;
 use std::thread;
 use tabled::builder::Builder;
 use tabled::settings::Style;
-use std::sync::mpsc;
-use actix_web::dev::ServerHandle;
-
 
 pub struct Runner {
     pub ic_admin: ic_admin::IcAdminWrapper,
@@ -53,7 +52,9 @@ impl Runner {
         let srv = rx.recv().unwrap();
         let dashboard_backend_client = DashboardBackendClient::new_with_backend_url(backend_url);
 
-        self.dashboard_backend_client.borrow_mut().get_or_insert_with(|| dashboard_backend_client.clone());
+        self.dashboard_backend_client
+            .borrow_mut()
+            .get_or_insert_with(|| dashboard_backend_client.clone());
         self.backend_srv.borrow_mut().get_or_insert_with(|| srv.clone());
 
         Ok(dashboard_backend_client)
@@ -173,7 +174,8 @@ impl Runner {
         println!("{}", subnet_creation_data);
 
         let replica_version = replica_version.unwrap_or(
-            self.get_backend_client().await?
+            self.get_backend_client()
+                .await?
                 .get_nns_replica_version()
                 .await
                 .expect("Failed to get a GuestOS version of the NNS subnet"),
@@ -395,7 +397,14 @@ impl Runner {
             }
         }
     }
-    pub async fn hostos_rollout(&self, nodes: Vec<PrincipalId>, version: &str, dry_run: bool, maybe_summary: Option<String>, as_automation: bool) -> anyhow::Result<()> {
+    pub async fn hostos_rollout(
+        &self,
+        nodes: Vec<PrincipalId>,
+        version: &str,
+        dry_run: bool,
+        maybe_summary: Option<String>,
+        as_automation: bool,
+    ) -> anyhow::Result<()> {
         let ic_admin = if as_automation {
             self.ic_admin.clone().as_automation()
         } else {
@@ -505,5 +514,4 @@ impl Runner {
 
         Ok(())
     }
-
 }

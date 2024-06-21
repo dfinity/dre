@@ -74,10 +74,10 @@ async fn async_main() -> Result<(), anyhow::Error> {
             .await
             .expect("Failed to create authenticated CLI");
         let ic_admin_wrapper = IcAdminWrapper::from_cli(cli);
-        
+
         let runner_instance = runner::Runner::new(ic_admin_wrapper, &target_network)
-                .await
-                .expect("Failed to create a runner");
+            .await
+            .expect("Failed to create a runner");
 
         let r = match &cli_opts.subcommand {
             cli::Commands::DerToPrincipal { path } => {
@@ -257,16 +257,12 @@ async fn async_main() -> Result<(), anyhow::Error> {
                 let nns_subnet_id = match nns_subnet_id {
                     Some(subnet_id) => subnet_id.to_owned(),
                     None => {
-                        let res = ic_admin
-                            .run_passthrough_get(&["get-subnet-list".to_string()], true)
-                            .await?;
+                        let res = ic_admin.run_passthrough_get(&["get-subnet-list".to_string()], true).await?;
                         let subnet_list: Vec<String> = serde_json::from_str(&res)?;
                         subnet_list.first().ok_or_else(|| anyhow::anyhow!("No subnet found"))?.clone()
                     }
                 };
-                ic_admin
-                    .update_unassigned_nodes(&nns_subnet_id, &target_network, dry_run)
-                    .await
+                ic_admin.update_unassigned_nodes(&nns_subnet_id, &target_network, dry_run).await
             }
 
             cli::Commands::Version(version_command) => match &version_command {
@@ -312,7 +308,9 @@ async fn async_main() -> Result<(), anyhow::Error> {
             cli::Commands::Hostos(nodes) => {
                 let as_automation = target_network.is_mainnet();
                 match &nodes.subcommand {
-                    cli::hostos::Commands::Rollout { version, nodes } => runner_instance.hostos_rollout(nodes.clone(), version, dry_run, None, as_automation).await,
+                    cli::hostos::Commands::Rollout { version, nodes } => {
+                        runner_instance.hostos_rollout(nodes.clone(), version, dry_run, None, as_automation).await
+                    }
                     cli::hostos::Commands::RolloutFromNodeGroup {
                         version,
                         assignment,
@@ -322,7 +320,9 @@ async fn async_main() -> Result<(), anyhow::Error> {
                     } => {
                         let update_group = NodeGroupUpdate::new(*assignment, *owner, NumberOfNodes::from_str(nodes_in_group)?);
                         if let Some((nodes_to_update, summary)) = runner_instance.hostos_rollout_nodes(update_group, version, exclude).await? {
-                            return runner_instance.hostos_rollout(nodes_to_update, version, dry_run, Some(summary), as_automation).await;
+                            return runner_instance
+                                .hostos_rollout(nodes_to_update, version, dry_run, Some(summary), as_automation)
+                                .await;
                         }
                         Ok(())
                     }
