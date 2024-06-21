@@ -250,19 +250,22 @@ async fn async_main() -> Result<(), anyhow::Error> {
             cli::Commands::Propose { args } => runner_instance.ic_admin.run_passthrough_propose(args, dry_run).await,
 
             cli::Commands::UpdateUnassignedNodes { nns_subnet_id } => {
+                let ic_admin = if target_network.is_mainnet() {
+                    runner_instance.ic_admin.clone().as_automation()
+                } else {
+                    runner_instance.ic_admin.clone()
+                };
                 let nns_subnet_id = match nns_subnet_id {
                     Some(subnet_id) => subnet_id.to_owned(),
                     None => {
-                        let res = runner_instance
-                            .ic_admin
+                        let res = ic_admin
                             .run_passthrough_get(&["get-subnet-list".to_string()], true)
                             .await?;
                         let subnet_list: Vec<String> = serde_json::from_str(&res)?;
                         subnet_list.first().ok_or_else(|| anyhow::anyhow!("No subnet found"))?.clone()
                     }
                 };
-                runner_instance
-                    .ic_admin
+                ic_admin
                     .update_unassigned_nodes(&nns_subnet_id, &target_network, dry_run)
                     .await
             }
@@ -308,8 +311,9 @@ async fn async_main() -> Result<(), anyhow::Error> {
             },
 
             cli::Commands::Hostos(nodes) => {
+                let as_automation = target_network.is_mainnet();
                 match &nodes.subcommand {
-                    cli::hostos::Commands::Rollout { version, nodes } => runner_instance.hostos_rollout(nodes.clone(), version, dry_run, None).await,
+                    cli::hostos::Commands::Rollout { version, nodes } => runner_instance.hostos_rollout(nodes.clone(), version, dry_run, None, as_automation).await,
                     cli::hostos::Commands::RolloutFromNodeGroup {
                         version,
                         assignment,
@@ -319,7 +323,7 @@ async fn async_main() -> Result<(), anyhow::Error> {
                     } => {
                         let update_group = NodeGroupUpdate::new(*assignment, *owner, NumberOfNodes::from_str(nodes_in_group)?);
                         if let Some((nodes_to_update, summary)) = runner_instance.hostos_rollout_nodes(update_group, version, exclude).await? {
-                            return runner_instance.hostos_rollout(nodes_to_update, version, dry_run, Some(summary)).await;
+                            return runner_instance.hostos_rollout(nodes_to_update, version, dry_run, Some(summary), as_automation).await;
                         }
                         Ok(())
                     }
@@ -533,7 +537,7 @@ async fn async_main() -> Result<(), anyhow::Error> {
                 }
             },
         };
-        runner_instance.stop_backend();
+        let _ = runner_instance.stop_backend().await;
         r
     })
     .await

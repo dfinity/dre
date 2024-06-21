@@ -1,5 +1,5 @@
 use crate::clients::DashboardBackendClient;
-use crate::ic_admin::ProposeOptions;
+use crate::ic_admin::{IcAdminWrapper, ProposeOptions};
 use crate::operations::hostos_rollout::{HostosRollout, HostosRolloutResponse, NodeGroupUpdate};
 use crate::ops_subnet_node_replace;
 use crate::{ic_admin, local_unused_port};
@@ -38,6 +38,7 @@ impl Runner {
             return Ok(dashboard_backend_client.clone());
         };
 
+        // This will be executed just once creating the backend
         let backend_port = local_unused_port();
         let backend_url = format!("http://localhost:{}/", backend_port);
         let (tx, rx) = mpsc::channel();
@@ -396,9 +397,15 @@ impl Runner {
             }
         }
     }
-    pub async fn hostos_rollout(&self, nodes: Vec<PrincipalId>, version: &str, dry_run: bool, maybe_summary: Option<String>) -> anyhow::Result<()> {
+    pub async fn hostos_rollout(&self, nodes: Vec<PrincipalId>, version: &str, dry_run: bool, maybe_summary: Option<String>, as_automation: bool) -> anyhow::Result<()> {
+        let ic_admin = if as_automation {
+            self.ic_admin.clone().as_automation()
+        } else {
+            self.ic_admin.clone()
+        };
+
         let title = format!("Set HostOS version: {version} on {} nodes", nodes.clone().len());
-        self.ic_admin
+        ic_admin
             .propose_run(
                 ic_admin::ProposeCommand::DeployHostosToSomeNodes {
                     nodes: nodes.clone(),
