@@ -418,7 +418,7 @@ async fn async_main() -> Result<(), anyhow::Error> {
                         .await?;
                     Ok(())
                 }
-                cli::api_boundary_nodes::Commands::Remove { nodes } => {
+                cli::api_boundary_nodes::Commands::Remove { nodes, motivation } => {
                     runner_instance
                         .ic_admin
                         .propose_run(
@@ -426,7 +426,7 @@ async fn async_main() -> Result<(), anyhow::Error> {
                             ic_admin::ProposeOptions {
                                 title: Some(format!("Remove {} API boundary node(s)", nodes.clone().len())),
                                 summary: Some(format!("Remove {} API boundary node(s)", nodes.clone().len())),
-                                motivation: None,
+                                motivation: motivation.clone(),
                             },
                             dry_run,
                         )
