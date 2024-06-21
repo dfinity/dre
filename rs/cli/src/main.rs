@@ -1,5 +1,6 @@
 use crate::ic_admin::IcAdminWrapper;
 use clap::{error::ErrorKind, CommandFactory, Parser};
+use decentralization::network::SubnetChange;
 use dialoguer::Confirm;
 use dotenv::dotenv;
 use dre::detect_neuron::Auth;
@@ -10,8 +11,11 @@ use ic_base_types::CanisterId;
 use ic_canisters::governance::{governance_canister_version, GovernanceCanisterWrapper};
 use ic_canisters::CanisterClient;
 use ic_management_backend::endpoints;
+use ic_management_types::filter_map_nns_function_proposals;
 use ic_management_types::requests::NodesRemoveRequest;
-use ic_management_types::{Artifact, MinNakamotoCoefficients, NodeFeature};
+use ic_management_types::{Artifact, MinNakamotoCoefficients, NnsFunctionProposal, NodeFeature};
+use registry_canister::mutations::do_change_subnet_membership::ChangeSubnetMembershipPayload;
+
 use ic_nns_common::pb::v1::ProposalId;
 use ic_nns_governance::pb::v1::ListProposalInfo;
 use log::{info, warn};
@@ -70,35 +74,18 @@ async fn async_main() -> Result<(), anyhow::Error> {
 
     let governance_canister_version = governance_canister_v.stringified_hash;
 
-    let (tx, rx) = mpsc::channel();
-
-    let backend_port = local_unused_port();
-    let target_network_backend = target_network.clone();
-    thread::spawn(move || {
-        let rt = tokio::runtime::Runtime::new().unwrap();
-        rt.block_on(async move {
-            endpoints::run_backend(&target_network_backend, "127.0.0.1", backend_port, true, Some(tx))
-                .await
-                .expect("failed")
-        });
-    });
-
-    let srv = rx.recv().unwrap();
-
-    let r = ic_admin::with_ic_admin(governance_canister_version.into(), async {
+    ic_admin::with_ic_admin(governance_canister_version.into(), async {
         let dry_run = cli_opts.dry_run;
-
-        let runner_instance = {
-            let cli = dre::parsed_cli::ParsedCli::from_opts(&cli_opts)
+        let cli = dre::parsed_cli::ParsedCli::from_opts(&cli_opts)
+            .await
+            .expect("Failed to create authenticated CLI");
+        let ic_admin_wrapper = IcAdminWrapper::from_cli(cli);
+        
+        let runner_instance = runner::Runner::new(ic_admin_wrapper, &target_network)
                 .await
-                .expect("Failed to create authenticated CLI");
-            let ic_admin_wrapper = IcAdminWrapper::from_cli(cli);
-            runner::Runner::new_with_network_and_backend_port(ic_admin_wrapper, &target_network, backend_port)
-                .await
-                .expect("Failed to create a runner")
-        };
+                .expect("Failed to create a runner");
 
-        match &cli_opts.subcommand {
+        let r = match &cli_opts.subcommand {
             cli::Commands::DerToPrincipal { path } => {
                 let principal = ic_base_types::PrincipalId::new_self_authenticating(&std::fs::read(path)?);
                 println!("{}", principal);
@@ -263,11 +250,6 @@ async fn async_main() -> Result<(), anyhow::Error> {
             cli::Commands::Propose { args } => runner_instance.ic_admin.run_passthrough_propose(args, dry_run).await,
 
             cli::Commands::UpdateUnassignedNodes { nns_subnet_id } => {
-                let runner_instance = if target_network.is_mainnet() {
-                    runner_instance.as_automation()
-                } else {
-                    runner_instance
-                };
                 let nns_subnet_id = match nns_subnet_id {
                     Some(subnet_id) => subnet_id.to_owned(),
                     None => {
@@ -326,11 +308,6 @@ async fn async_main() -> Result<(), anyhow::Error> {
             },
 
             cli::Commands::Hostos(nodes) => {
-                let runner_instance = if target_network.is_mainnet() {
-                    runner_instance.as_automation()
-                } else {
-                    runner_instance
-                };
                 match &nodes.subcommand {
                     cli::hostos::Commands::Rollout { version, nodes } => runner_instance.hostos_rollout(nodes.clone(), version, dry_run, None).await,
                     cli::hostos::Commands::RolloutFromNodeGroup {
@@ -544,14 +521,22 @@ async fn async_main() -> Result<(), anyhow::Error> {
                     println!("{}", proposal);
                     Ok(())
                 }
+                cli::proposals::Commands::Analyze { proposal_id } => {
+                    let nns_url = target_network.get_nns_urls().first().expect("Should have at least one NNS URL");
+                    let client = GovernanceCanisterWrapper::from(CanisterClient::from_anonymous(nns_url)?);
+                    let proposal = client.get_proposal(*proposal_id).await?;
+                    if let Some((info, change_membership)) = filter_map_nns_function_proposals::<ChangeSubnetMembershipPayload>(&vec![proposal]).first()
+                    {
+                        runner_instance.decentralization_change(change_membership).await?
+                    }
+                    Ok(())
+                }
             },
-        }
+        };
+        runner_instance.stop_backend();
+        r
     })
-    .await;
-
-    srv.stop(false).await;
-
-    r
+    .await
 }
 
 // Construct MinNakamotoCoefficients from an array (slice) of ["key=value"], and

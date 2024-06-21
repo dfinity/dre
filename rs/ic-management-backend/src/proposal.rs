@@ -8,11 +8,12 @@ use candid::{Decode, Encode};
 use futures_util::future::try_join_all;
 use ic_agent::agent::http_transport::ReqwestTransport;
 use ic_agent::Agent;
+use ic_management_types::filter_map_nns_function_proposals;
 use ic_management_types::UpdateElectedHostosVersionsProposal;
 use ic_management_types::UpdateElectedReplicaVersionsProposal;
 use ic_management_types::UpdateNodesHostosVersionsProposal;
-use ic_management_types::{NnsFunctionProposal, TopologyChangePayload, TopologyChangeProposal};
-use ic_nns_governance::pb::v1::{proposal::Action, ListProposalInfo, ListProposalInfoResponse, NnsFunction};
+use ic_management_types::{TopologyChangePayload, TopologyChangeProposal};
+use ic_nns_governance::pb::v1::{proposal::Action, ListProposalInfo, ListProposalInfoResponse};
 use ic_nns_governance::pb::v1::{ProposalInfo, ProposalStatus, Topic};
 use itertools::Itertools;
 use registry_canister::mutations::do_add_nodes_to_subnet::AddNodesToSubnetPayload;
@@ -285,32 +286,4 @@ impl ProposalAgent {
         })
     }
 }
-
-fn filter_map_nns_function_proposals<T: NnsFunctionProposal + candid::CandidType>(proposals: &[ProposalInfo]) -> Vec<(ProposalInfo, T)> {
-    proposals
-        .iter()
-        .filter(|p| ProposalStatus::try_from(p.status).expect("unknown proposal status") != ProposalStatus::Rejected)
-        .filter_map(|p| {
-            p.proposal
-                .as_ref()
-                .and_then(|p| p.action.as_ref())
-                .ok_or_else(|| anyhow::format_err!("no action"))
-                .and_then(|a| match a {
-                    Action::ExecuteNnsFunction(function) => {
-                        let func = NnsFunction::try_from(function.nns_function)?;
-                        Ok((func, function.payload.as_slice()))
-                    }
-                    _ => Err(anyhow::format_err!("not an NNS function")),
-                })
-                .and_then(|(function_type, function_payload)| {
-                    if function_type == T::TYPE {
-                        Decode!(function_payload, T).map_err(|e| anyhow::format_err!("failed decoding candid: {}", e))
-                    } else {
-                        Err(anyhow::format_err!("unsupported NNS function"))
-                    }
-                })
-                .ok()
-                .map(|payload| (p.clone(), payload))
-        })
-        .collect()
-}
+ 
