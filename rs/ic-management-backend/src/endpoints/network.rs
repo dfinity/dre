@@ -5,7 +5,7 @@ use ic_management_types::{requests::HealRequest, NetworkError};
 use itertools::Itertools;
 
 #[post("/network/heal")]
-async fn heal(request: web::Json<HealRequest>, registry: web::Data<Arc<RwLock<RegistryState>>>) -> Result<HttpResponse, Error> {
+pub(crate) async fn heal(request: web::Json<HealRequest>, registry: web::Data<Arc<RwLock<RegistryState>>>) -> Result<HttpResponse, Error> {
     let registry = registry.read().await;
     let health_client = health::HealthClient::new(registry.network());
     let nodes_health = health_client

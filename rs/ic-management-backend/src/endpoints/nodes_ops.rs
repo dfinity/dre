@@ -9,7 +9,7 @@ use decentralization::network::Node as DecentralizationNode;
 /// Finds all nodes that need to be removed from the network either because
 /// they're offline or duplicated
 #[post("/nodes/remove")]
-async fn remove(request: web::Json<NodesRemoveRequest>, registry: web::Data<Arc<RwLock<RegistryState>>>) -> Result<HttpResponse, Error> {
+pub(crate) async fn remove(request: web::Json<NodesRemoveRequest>, registry: web::Data<Arc<RwLock<RegistryState>>>) -> Result<HttpResponse, Error> {
     let registry = registry.read().await;
     let health_client = health::HealthClient::new(registry.network());
     let nodes_with_proposals = registry.nodes_with_proposals();
