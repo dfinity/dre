@@ -73,7 +73,7 @@ impl From<&network::SubnetChange> for SubnetChangeResponse {
 
 impl Display for SubnetChangeResponse {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        writeln!(f, "Decentralization score changes:\n")?;
+        writeln!(f, "Decentralization score changes for subnet {}:\n", self.subnet_id.unwrap_or_default())?;
         let before_individual = self.score_before.scores_individual();
         let after_individual = self.score_after.scores_individual();
         self.score_before
@@ -180,6 +180,20 @@ impl Display for SubnetChangeResponse {
             writeln!(f, "{}", format!("*** Note ***\n{}", comment).red())?;
         }
 
+        Ok(())
+    }
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct HealResponse {
+    pub subnets_change_response: Vec<SubnetChangeResponse>,
+}
+
+impl Display for HealResponse {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        for change in &self.subnets_change_response {
+            writeln!(f, "{}", change)?;
+        }
         Ok(())
     }
 }

@@ -752,6 +752,14 @@ impl RegistryState {
         self.network.get_nns_urls()
     }
 
+    pub fn get_decentralized_nodes(&self, principals: &[PrincipalId]) -> Vec<decentralization::network::Node> {
+        self.nodes()
+            .values()
+            .filter(|node| principals.contains(&node.principal))
+            .map(decentralization::network::Node::from)
+            .collect_vec()
+    }
+
     pub async fn get_unassigned_nodes_replica_version(&self) -> Result<String, anyhow::Error> {
         let unassigned_config_key = ic_registry_keys::make_unassigned_nodes_config_record_key();
 
@@ -871,7 +879,7 @@ fn node_ip_addr(nr: &NodeRecord) -> Ipv6Addr {
     Ipv6Addr::from_str(&nr.http.clone().expect("missing ipv6 address").ip_addr).expect("invalid ipv6 address")
 }
 
-pub fn local_registry_path(network: &Network) -> PathBuf {
+pub fn local_cache_path() -> PathBuf {
     match std::env::var("LOCAL_REGISTRY_PATH") {
         Ok(path) => PathBuf::from(path),
         Err(_) => match dirs::cache_dir() {
@@ -880,8 +888,10 @@ pub fn local_registry_path(network: &Network) -> PathBuf {
         },
     }
     .join("ic-registry-cache")
-    .join(Path::new(network.name.as_str()))
-    .join("local_registry")
+}
+
+pub fn local_registry_path(network: &Network) -> PathBuf {
+    local_cache_path().join(Path::new(network.name.as_str())).join("local_registry")
 }
 
 pub async fn nns_public_key(registry_canister: &RegistryCanister) -> anyhow::Result<ThresholdSigPublicKey> {
@@ -1061,7 +1071,8 @@ async fn fetch_and_add_node_labels_guests_to_registry(target_network: &Network, 
 }
 
 pub async fn update_node_details(registry_state: &Arc<RwLock<RegistryState>>) {
-    match query_ic_dashboard_list::<NodeProvidersResponse>("v3/node-providers").await {
+    let network = registry_state.read().await.network();
+    match query_ic_dashboard_list::<NodeProvidersResponse>(&network, "v3/node-providers").await {
         Ok(node_providers_response) => {
             let mut registry_state = registry_state.write().await;
             let update = registry_state.update_node_details(&node_providers_response.node_providers).await;

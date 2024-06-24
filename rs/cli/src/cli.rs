@@ -27,12 +27,13 @@ pub struct Opts {
     pub dev: bool,
 
     // Skip the confirmation prompt
-    #[clap(short, long, env = "YES", global = true, conflicts_with = "simulate")]
+    #[clap(short, long, env = "YES", global = true, conflicts_with = "dry_run")]
     pub yes: bool,
 
-    // Simulate submission of the proposal, but do not actually submit it.
-    #[clap(long, aliases = ["dry-run", "dryrun", "no"], global = true, conflicts_with = "yes")]
-    pub simulate: bool,
+    // Dry-run or simulate proposal submission, but do not actually submit it.
+    // Will show the ic-admin command and the proposal Payload
+    #[clap(long, aliases = ["dry-run", "dryrun", "simulate", "no"], global = true, conflicts_with = "yes")]
+    pub dry_run: bool,
 
     #[clap(long, env = "VERBOSE", global = true)]
     pub verbose: bool,
@@ -57,6 +58,15 @@ pub enum Commands {
         /// Path to the DER file
         path: String,
     },
+
+    Heal {
+        /// Max number of nodes to be replaced per subnet.
+        /// Optimization will be performed automatically maximizing the decentralization
+        /// and minimizing the number of replaced nodes per subnet
+        #[clap(short, long)]
+        max_replaceable_nodes_per_sub: Option<usize>,
+    },
+
     /// Manage an existing subnet
     Subnet(subnet::Cmd),
     /// Get a value using ic-admin CLI
@@ -514,14 +524,20 @@ pub mod api_boundary_nodes {
 
         /// Decommission a set of API BNs and turn them again in unassigned nodes
         Remove {
-            /// Node IDs to turn into API BNs
+            /// Node IDs of API BNs that should be turned into unassigned nodes again
             #[clap(long, num_args(1..), required = true)]
             nodes: Vec<PrincipalId>,
+
+            /// Motivation for removing the API BNs
+            #[clap(short, long, aliases = ["summary"], required = true)]
+            motivation: Option<String>,
         },
     }
 }
 
 pub mod proposals {
+    use std::fmt::Display;
+
     use clap::ValueEnum;
     use ic_nns_governance::pb::v1::{ProposalStatus as ProposalStatusUpstream, Topic as TopicUpstream};
 
@@ -605,6 +621,12 @@ pub mod proposals {
             /// Proposal ID
             proposal_id: u64,
         },
+
+        /// Print decentralization change for a CHANGE_SUBNET_MEMBERSHIP proposal gived its ID
+        Analyze {
+            /// Proposal ID
+            proposal_id: u64,
+        },
     }
 
     #[derive(ValueEnum, Clone, Debug)]
@@ -622,6 +644,12 @@ pub mod proposals {
         Executed = 4,
         /// The proposal was adopted, but execution failed.
         Failed = 5,
+    }
+
+    impl Display for ProposalStatus {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            write!(f, "{}", ProposalStatusUpstream::from(self.clone()).as_str_name())
+        }
     }
 
     impl From<ProposalStatus> for ProposalStatusUpstream {

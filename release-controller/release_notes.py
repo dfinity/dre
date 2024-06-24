@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
+import argparse
 import fnmatch
+import os
 import pathlib
 import re
 import subprocess
 import sys
 import time
 import typing
-
 from dataclasses import dataclass
 
+COMMIT_HASH_LENGTH = 9
 
 REPLICA_TEAMS = set(
     [
@@ -26,6 +28,8 @@ REPLICA_TEAMS = set(
 
 
 class Change(typing.TypedDict):
+    """Change dataclass."""
+
     commit: str
     team: str
     type: str
@@ -37,6 +41,8 @@ class Change(typing.TypedDict):
 
 @dataclass
 class Team:
+    """Team dataclass."""
+
     name: str
     google_docs_handle: str
     slack_id: str
@@ -91,7 +97,7 @@ TEAM_PRETTY_MAP = {
     "runtime-owners": "Runtime",
     "trust-team": "Trust",
     "sdk-team": "SDK",
-    "utopia": "Utopia"
+    "utopia": "Utopia",
 }
 
 
@@ -139,40 +145,73 @@ def progressbar(it, prefix="", size=60, out=sys.stdout):  # Python3.6+
     print("\n", flush=True, file=out)
 
 
-def get_ancestry_path(repo_dir, commit_hash, branch):
-    return (
+def get_rc_branch(repo_dir, commit_hash):
+    """Get the branch name for a commit hash."""
+    all_branches = (
         subprocess.check_output(
             [
                 "git",
                 "--git-dir",
                 "{}/.git".format(repo_dir),
-                "rev-list",
-                "{}..{}".format(commit_hash, branch),
-                "--ancestry-path",
+                "branch",
+                "--contains",
+                commit_hash,
+                "--remote",
             ]
         )
         .decode("utf-8")
         .strip()
-        .split("\n")
+        .splitlines()
     )
+    all_branches = [branch.strip() for branch in all_branches]
+    rc_branches = [branch for branch in all_branches if branch.startswith("origin/rc--20")]
+    if rc_branches:
+        return rc_branches[0]
+    return ""
 
 
-def get_first_parent(repo_dir, commit_hash, branch):
-    return (
-        subprocess.check_output(
-            [
-                "git",
-                "--git-dir",
-                "{}/.git".format(repo_dir),
-                "rev-list",
-                "{}..{}".format(commit_hash, branch),
-                "--ancestry-path",
-            ]
-        )
-        .decode("utf-8")
-        .strip()
-        .split("\n")
-    )
+def get_merge_commit(repo_dir, commit_hash):
+    # Reference: https://stackoverflow.com/questions/8475448/find-merge-commit-which-includes-a-specific-commit
+    rc_branch = get_rc_branch(repo_dir, commit_hash)
+
+    try:
+        # Run the Git commands and capture their output
+        git_cmd = ["git", "--git-dir", f"{repo_dir}/.git", "rev-list", f"{commit_hash}..{rc_branch}"]
+        ancestry_path = subprocess.run(
+            git_cmd + ["--ancestry-path"],
+            capture_output=True,
+            text=True,
+            check=True,
+        ).stdout.splitlines()
+        first_parent = subprocess.run(
+            git_cmd + ["--first-parent"],
+            capture_output=True,
+            text=True,
+            check=True,
+        ).stdout.splitlines()
+
+        # Combine and process the outputs
+        combined_output = [(i + 1, line) for i, line in enumerate(ancestry_path + first_parent)]
+        combined_output.sort(key=lambda x: x[1])
+
+        # Find duplicates
+        seen = {}
+        duplicates = []
+        for number, commit_hash in combined_output:
+            if commit_hash in seen:
+                duplicates.append((seen[commit_hash], number, commit_hash))
+            seen[commit_hash] = number
+
+        # Sort by the original line number and get the last one
+        if duplicates:
+            duplicates.sort()
+            _, _, merge_commit = duplicates[-1]
+            return merge_commit
+        return None
+
+    except subprocess.CalledProcessError as e:
+        print(f"Error: {e}")
+        return None
 
 
 def get_commits(repo_dir, first_commit, last_commit):
@@ -317,7 +356,11 @@ def release_notes(first_commit, last_commit, release_name) -> str:
 
     commits = get_commits(ic_repo_path, first_commit, last_commit)
     for i in range(len(commits)):
-        commits[i] = commits[i] + (str(commits[i][0]),)
+        commit_hash = str(commits[i][0])
+        merge_commit = get_merge_commit(ic_repo_path, commit_hash)
+        used_commit = (merge_commit or commit_hash)[:COMMIT_HASH_LENGTH]
+        print("Commit: {} ==> using commit: {}".format(commit_hash, used_commit))
+        commits[i] = commits[i] + (used_commit,)
 
     if len(commits) == max_commits:
         print("WARNING: max commits limit reached, increase depth")
@@ -464,7 +507,34 @@ Changelog since git revision [{first_commit}](https://dashboard.internetcomputer
 
             text = "{4} | {0} {1}{2} {3}".format(commit_part, team_part, scope_part, message_part, commiter_part)
             if not change["included"]:
-                text = "~~{}~~".format(text)
+                text = "~~{} [AUTO-EXCLUDED]~~".format(text)
             notes += "* " + text + "\n"
 
     return notes
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Generate release notes")
+    parser.add_argument("first_commit", type=str, help="first commit")
+    parser.add_argument("last_commit", type=str, help="last commit")
+    parser.add_argument(
+        "--max-commits",
+        dest="max_commits",
+        default=os.environ.get("MAX_COMMITS", 1000),
+        help="maximum number of commits to fetch",
+    )
+    parser.add_argument(
+        "--html",
+        type=str,
+        dest="html_path",
+        default="$HOME/Downloads/release-notes.html",
+        help="path to where the output should be generated",
+    )
+    parser.add_argument("rc_name", type=str, help="name of the release i.e. 'rc--2023-01-12_18-31'")
+    args = parser.parse_args()
+
+    print(release_notes(args.first_commit, args.last_commit, args.rc_name))
+
+
+if __name__ == "__main__":
+    main()

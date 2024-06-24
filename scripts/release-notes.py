@@ -9,11 +9,13 @@ import sys
 import time
 import webbrowser
 
+COMMIT_HASH_LENGTH = 9
 
 REPLICA_TEAMS = set(
     [
         "consensus-owners",
         "crypto-owners",
+        "interface-owners",
         "Orchestrator",
         "message-routing-owners",
         "networking-team",
@@ -60,7 +62,7 @@ TEAM_PRETTY_MAP = {
     "prodsec": "Prodsec",
     "runtime-owners": "Runtime",
     "trust-team": "Trust",
-    "utopia": "Utopia"
+    "utopia": "Utopia",
 }
 
 
@@ -85,10 +87,9 @@ parser.add_argument("last_commit", type=str, help="last commit")
 parser.add_argument(
     "--max-commits",
     dest="max_commits",
-    default=1000,
+    default=os.environ.get("MAX_COMMITS", 1000),
     help="maximum number of commits to fetch",
 )
-parser.add_argument("--branch", dest="branch", default="master", help="branch to fetch commits from")
 parser.add_argument(
     "--html",
     type=str,
@@ -98,9 +99,6 @@ parser.add_argument(
 )
 parser.add_argument("rc_name", type=str, help="name of the release i.e. 'rc--2023-01-12_18-31'")
 args = parser.parse_args()
-
-max_commits = os.environ.get("MAX_COMMITS", args.max_commits)
-branch = os.environ.get("BRANCH", args.branch)
 
 
 # https://stackoverflow.com/a/34482761
@@ -128,40 +126,73 @@ def progressbar(it, prefix="", size=60, out=sys.stdout):  # Python3.6+
     print("\n", flush=True, file=out)
 
 
-def get_ancestry_path(repo_dir, commit_hash, branch):
-    return (
+def get_rc_branch(repo_dir, commit_hash):
+    """Get the branch name for a commit hash."""
+    all_branches = (
         subprocess.check_output(
             [
                 "git",
                 "--git-dir",
                 "{}/.git".format(repo_dir),
-                "rev-list",
-                "{}..{}".format(commit_hash, branch),
-                "--ancestry-path",
+                "branch",
+                "--contains",
+                commit_hash,
+                "--remote",
             ]
         )
         .decode("utf-8")
         .strip()
-        .split("\n")
+        .splitlines()
     )
+    all_branches = [branch.strip() for branch in all_branches]
+    rc_branches = [branch for branch in all_branches if branch.startswith("origin/rc--20")]
+    if rc_branches:
+        return rc_branches[0]
+    return ""
 
 
-def get_first_parent(repo_dir, commit_hash, branch):
-    return (
-        subprocess.check_output(
-            [
-                "git",
-                "--git-dir",
-                "{}/.git".format(repo_dir),
-                "rev-list",
-                "{}..{}".format(commit_hash, branch),
-                "--ancestry-path",
-            ]
-        )
-        .decode("utf-8")
-        .strip()
-        .split("\n")
-    )
+def get_merge_commit(repo_dir, commit_hash):
+    # Reference: https://stackoverflow.com/questions/8475448/find-merge-commit-which-includes-a-specific-commit
+    rc_branch = get_rc_branch(repo_dir, commit_hash)
+
+    try:
+        # Run the Git commands and capture their output
+        git_cmd = ["git", "--git-dir", f"{repo_dir}/.git", "rev-list", f"{commit_hash}..{rc_branch}"]
+        ancestry_path = subprocess.run(
+            git_cmd + ["--ancestry-path"],
+            capture_output=True,
+            text=True,
+            check=True,
+        ).stdout.splitlines()
+        first_parent = subprocess.run(
+            git_cmd + ["--first-parent"],
+            capture_output=True,
+            text=True,
+            check=True,
+        ).stdout.splitlines()
+
+        # Combine and process the outputs
+        combined_output = [(i + 1, line) for i, line in enumerate(ancestry_path + first_parent)]
+        combined_output.sort(key=lambda x: x[1])
+
+        # Find duplicates
+        seen = {}
+        duplicates = []
+        for number, commit_hash in combined_output:
+            if commit_hash in seen:
+                duplicates.append((seen[commit_hash], number, commit_hash))
+            seen[commit_hash] = number
+
+        # Sort by the original line number and get the last one
+        if duplicates:
+            duplicates.sort()
+            _, _, merge_commit = duplicates[-1]
+            return merge_commit
+        return None
+
+    except subprocess.CalledProcessError as e:
+        print(f"Error: {e}")
+        return None
 
 
 def get_commits(repo_dir, first_commit, last_commit):
@@ -311,9 +342,13 @@ def main():
 
     commits = get_commits(ic_repo_path, first_commit, last_commit)
     for i in range(len(commits)):
-        commits[i] = commits[i] + (str(commits[i][0]),)
+        commit_hash = str(commits[i][0])
+        merge_commit = get_merge_commit(ic_repo_path, commit_hash)
+        used_commit = (merge_commit or commit_hash)[:COMMIT_HASH_LENGTH]
+        print("Commit: {} ==> using commit: {}".format(commit_hash, used_commit))
+        commits[i] = commits[i] + (used_commit,)
 
-    if len(commits) == max_commits:
+    if len(commits) == args.max_commits:
         print("WARNING: max commits limit reached, increase depth")
         exit(1)
 
@@ -396,9 +431,6 @@ def main():
 
         commit_type = conventional["type"].lower()
         commit_type = commit_type if commit_type in TYPE_PRETTY_MAP else "other"
-        if len(teams) >= 3:
-            # The change seems to be touching many teams, let's mark it as "other" (generic)
-            commit_type = "other"
 
         if ["ic-testing-verification"] == teams or all([team in EXCLUDED_TEAMS for team in teams]):
             included = False
@@ -455,7 +487,7 @@ def main():
 
             for change in sorted(change_infos[current_type], key=lambda x: ",".join(x["team"])):
                 commit_part = '[<a href="https://github.com/dfinity/ic/commit/{0}">{0}</a>]'.format(
-                    change["commit"][:9]
+                    change["commit"][:COMMIT_HASH_LENGTH]
                 )
                 team_part = ",".join([TEAM_PRETTY_MAP.get(team, team) for team in change["team"]])
                 team_part = team_part if team_part else "General"
@@ -467,8 +499,13 @@ def main():
                 message_part = change["message"]
                 commiter_part = f"&lt!-- {change['commiter']} --&gt"
 
-                text = "* {0} {4} {1}{2} {3}<br>".format(
-                    commit_part, team_part, scope_part, message_part, commiter_part
+                text = "* {0} {4} {1}{2} {3} {5}<br>".format(
+                    commit_part,
+                    team_part,
+                    scope_part,
+                    message_part,
+                    commiter_part,
+                    "" if change["included"] else "[AUTO-EXCLUDED]",
                 )
                 if not change["included"]:
                     text = "<s>{}</s>".format(text)

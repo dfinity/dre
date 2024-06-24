@@ -25,8 +25,8 @@ from pydiscourse import DiscourseClient
 from release_index_loader import DevReleaseLoader
 from release_index_loader import GitReleaseLoader
 from release_index_loader import ReleaseLoader
-from release_notes import release_notes
 from util import version_name
+from watchdog import Watchdog
 
 from pylib.ic_admin import IcAdmin
 
@@ -172,18 +172,13 @@ class Reconciler:
                 logging.info("Updating version %s", v)
                 push_release_tags(self.ic_repo, rc)
                 self.notes_client.ensure(
-                    version=v.version,
                     version_name=version_name(rc_name=rc.rc_name, name=v.name),
-                    # TODO: might be good to run this inside the notes_client so that it's not called every loop
-                    content=release_notes(
-                        first_commit=(
-                            config.root.releases[rc_idx + 1].versions[0].version  # take first version in previous rc
-                            if v_idx == 0
-                            else rc.versions[v_idx - 1].version  # take previous version from same rc
-                        ),
-                        last_commit=v.version,
-                        release_name=version_name(rc_name=rc.rc_name, name=v.name),
+                    since_commit=(
+                        config.root.releases[rc_idx + 1].versions[0].version  # take first version from the previous rc
+                        if v_idx == 0
+                        else rc.versions[v_idx - 1].version  # take previous version from the same rc
                     ),
+                    git_revision=v.version,
                     tag_teams_on_create=v_idx == 0,
                 )
 
@@ -260,6 +255,9 @@ def main():
     else:
         load_dotenv()
 
+    watchdog = Watchdog(timeout_seconds=600)  # Reconciler should report healthy every 10 minutes
+    watchdog.start()
+
     discourse_client = DiscourseClient(
         host=os.environ["DISCOURSE_URL"],
         api_username=os.environ["DISCOURSE_USER"],
@@ -297,6 +295,7 @@ def main():
     while True:
         try:
             reconciler.reconcile()
+            watchdog.report_healthy()
         except Exception as e:
             logging.error(traceback.format_exc())
             logging.error("failed to reconcile: %s", e)
