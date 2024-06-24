@@ -43,6 +43,10 @@ releases:
       - # Successful qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/jobs/7147621252
         name: storage-layer-disabled
         version: ae3c4f30f198eba9c5b113ec32fdec90713c24a0
+      - # Ongoing qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/pipelines/1345332930
+        # This cut will only be rolled out to lhg73.
+        name: cycle-hotfix
+        version: 9c006a50d364edf1403ef50b24c3be39dba8a5f6
   - rc_name: rc--2024-06-12_23-01
     versions:
       - # Successful qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/jobs/7098651594
@@ -51,6 +55,10 @@ releases:
       - # Successful qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/jobs/7114764016
         name: storage-layer-disabled
         version: 2dfe3a1864d1b9a6df462e9503adf351036e7965
+      - # Ongoing qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/pipelines/1345332852
+        # This cut will only be rolled out to lhg73.
+        name: cycle-hotfix
+        version: 48c500d1501e4165fc183e508872a2ef13fd0bef
   - rc_name: rc--2024-06-05_23-01
     versions:
       - # Successful qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/jobs/7033661917
