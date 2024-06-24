@@ -3,9 +3,11 @@ use crate::ic_admin::ProposeOptions;
 use crate::operations::hostos_rollout::{HostosRollout, HostosRolloutResponse, NodeGroupUpdate};
 use crate::ops_subnet_node_replace;
 use crate::{ic_admin, local_unused_port};
+use actix_web::dev::ServerHandle;
 use decentralization::SubnetChangeResponse;
 use futures::future::join_all;
 use ic_base_types::PrincipalId;
+use ic_management_backend::endpoints;
 use ic_management_backend::proposal::ProposalAgent;
 use ic_management_backend::public_dashboard::query_ic_dashboard_list;
 use ic_management_backend::registry::{self, RegistryState};
@@ -13,17 +15,74 @@ use ic_management_types::requests::NodesRemoveRequest;
 use ic_management_types::{Artifact, Network, Node, NodeFeature, NodeProvidersResponse};
 use itertools::Itertools;
 use log::{info, warn};
+use std::cell::RefCell;
 use std::collections::BTreeMap;
+use std::sync::mpsc;
+use std::thread;
 use tabled::builder::Builder;
 use tabled::settings::Style;
 
 pub struct Runner {
     pub ic_admin: ic_admin::IcAdminWrapper,
-    dashboard_backend_client: DashboardBackendClient,
     registry: RegistryState,
+    dashboard_backend_client: RefCell<Option<DashboardBackendClient>>,
+    backend_srv: RefCell<Option<ServerHandle>>,
 }
 
 impl Runner {
+    pub async fn get_backend_client(&self) -> anyhow::Result<DashboardBackendClient> {
+        if let Some(dashboard_backend_client) = &*self.dashboard_backend_client.borrow() {
+            return Ok(dashboard_backend_client.clone());
+        };
+
+        // This will be executed just once creating the backend
+        let backend_port = local_unused_port();
+        let backend_url = format!("http://localhost:{}/", backend_port);
+        let (tx, rx) = mpsc::channel();
+
+        let target_network_backend = self.registry.network();
+        thread::spawn(move || {
+            let rt = tokio::runtime::Runtime::new().unwrap();
+            rt.block_on(async move {
+                endpoints::run_backend(&target_network_backend, "127.0.0.1", backend_port, true, Some(tx))
+                    .await
+                    .expect("failed")
+            });
+        });
+        let srv = rx.recv().unwrap();
+        let dashboard_backend_client = DashboardBackendClient::new_with_backend_url(backend_url);
+
+        self.dashboard_backend_client
+            .borrow_mut()
+            .get_or_insert_with(|| dashboard_backend_client.clone());
+        self.backend_srv.borrow_mut().get_or_insert_with(|| srv.clone());
+
+        Ok(dashboard_backend_client)
+    }
+
+    pub async fn stop_backend(&self) -> anyhow::Result<()> {
+        let backend_srv_opt = self.backend_srv.borrow().clone();
+        if let Some(backend_srv) = backend_srv_opt {
+            backend_srv.stop(false).await;
+        }
+        Ok(())
+    }
+
+    pub async fn new(ic_admin: ic_admin::IcAdminWrapper, network: &Network) -> anyhow::Result<Self> {
+        let mut registry = registry::RegistryState::new(network, true).await;
+        let node_providers = query_ic_dashboard_list::<NodeProvidersResponse>(network, "v3/node-providers")
+            .await?
+            .node_providers;
+        registry.update_node_details(&node_providers).await?;
+
+        Ok(Self {
+            ic_admin,
+            registry,
+            dashboard_backend_client: RefCell::new(None),
+            backend_srv: RefCell::new(None),
+        })
+    }
+
     pub async fn deploy(&self, subnet: &PrincipalId, version: &str, dry_run: bool) -> anyhow::Result<()> {
         self.ic_admin
             .propose_run(
@@ -59,7 +118,7 @@ impl Runner {
         dry_run: bool,
     ) -> anyhow::Result<()> {
         let subnet = request.subnet;
-        let change = self.dashboard_backend_client.subnet_resize(request).await?;
+        let change = self.get_backend_client().await?.subnet_resize(request).await?;
         if verbose {
             if let Some(run_log) = &change.run_log {
                 println!("{}\n", run_log.join("\n"));
@@ -107,7 +166,7 @@ impl Runner {
             println!("{}", self.ic_admin.grep_subcommand_arguments("propose-to-create-subnet"));
             return Ok(());
         }
-        let subnet_creation_data = self.dashboard_backend_client.subnet_create(request).await?;
+        let subnet_creation_data = self.get_backend_client().await?.subnet_create(request).await?;
         if verbose {
             if let Some(run_log) = &subnet_creation_data.run_log {
                 println!("{}\n", run_log.join("\n"));
@@ -116,7 +175,8 @@ impl Runner {
         println!("{}", subnet_creation_data);
 
         let replica_version = replica_version.unwrap_or(
-            self.dashboard_backend_client
+            self.get_backend_client()
+                .await?
                 .get_nns_replica_version()
                 .await
                 .expect("Failed to get a GuestOS version of the NNS subnet"),
@@ -146,7 +206,7 @@ impl Runner {
         verbose: bool,
         dry_run: bool,
     ) -> anyhow::Result<()> {
-        let change = self.dashboard_backend_client.membership_replace(request).await?;
+        let change = self.get_backend_client().await?.membership_replace(request).await?;
         if verbose {
             if let Some(run_log) = &change.run_log {
                 println!("{}\n", run_log.join("\n"));
@@ -163,7 +223,7 @@ impl Runner {
 
     async fn run_membership_change(&self, change: SubnetChangeResponse, options: ProposeOptions, dry_run: bool) -> anyhow::Result<()> {
         let subnet_id = change.subnet_id.ok_or_else(|| anyhow::anyhow!("subnet_id is required"))?;
-        let pending_action = self.dashboard_backend_client.subnet_pending_action(subnet_id).await?;
+        let pending_action = self.get_backend_client().await?.subnet_pending_action(subnet_id).await?;
         if let Some(proposal) = pending_action {
             return Err(anyhow::anyhow!(format!(
                 "There is a pending proposal for this subnet: https://dashboard.internetcomputer.org/proposal/{}",
@@ -186,44 +246,8 @@ impl Runner {
         Ok(())
     }
 
-    pub async fn new_with_network_and_backend_port(ic_admin: ic_admin::IcAdminWrapper, network: &Network, backend_port: u16) -> anyhow::Result<Self> {
-        let backend_url = format!("http://localhost:{}/", backend_port);
-
-        let dashboard_backend_client = DashboardBackendClient::new_with_backend_url(backend_url);
-        let mut registry = registry::RegistryState::new(network, true).await;
-        let node_providers = query_ic_dashboard_list::<NodeProvidersResponse>(network, "v3/node-providers")
-            .await?
-            .node_providers;
-        registry.update_node_details(&node_providers).await?;
-
-        Ok(Self {
-            ic_admin,
-            dashboard_backend_client,
-            // TODO: Remove once DREL-118 completed.
-            registry,
-        })
-    }
-
-    pub async fn new(ic_admin: ic_admin::IcAdminWrapper, network: &Network) -> anyhow::Result<Self> {
-        // TODO: Remove once DREL-118 completed.
-        let backend_port = local_unused_port();
-        let backend_url = format!("http://localhost:{}/", backend_port);
-        let dashboard_backend_client = DashboardBackendClient::new_with_backend_url(backend_url);
-
-        let mut registry = registry::RegistryState::new(network, true).await;
-        let node_providers = query_ic_dashboard_list::<NodeProvidersResponse>(network, "v3/node-providers")
-            .await?
-            .node_providers;
-        registry.update_node_details(&node_providers).await?;
-        Ok(Self {
-            ic_admin,
-            dashboard_backend_client,
-            registry,
-        })
-    }
-
     pub async fn prepare_versions_to_retire(&self, release_artifact: &Artifact, edit_summary: bool) -> anyhow::Result<(String, Option<Vec<String>>)> {
-        let retireable_versions = self.dashboard_backend_client.get_retireable_versions(release_artifact).await?;
+        let retireable_versions = self.get_backend_client().await?.get_retireable_versions(release_artifact).await?;
 
         let versions = if retireable_versions.is_empty() {
             Vec::new()
@@ -374,9 +398,22 @@ impl Runner {
             }
         }
     }
-    pub async fn hostos_rollout(&self, nodes: Vec<PrincipalId>, version: &str, dry_run: bool, maybe_summary: Option<String>) -> anyhow::Result<()> {
+    pub async fn hostos_rollout(
+        &self,
+        nodes: Vec<PrincipalId>,
+        version: &str,
+        dry_run: bool,
+        maybe_summary: Option<String>,
+        as_automation: bool,
+    ) -> anyhow::Result<()> {
+        let ic_admin = if as_automation {
+            self.ic_admin.clone().as_automation()
+        } else {
+            self.ic_admin.clone()
+        };
+
         let title = format!("Set HostOS version: {version} on {} nodes", nodes.clone().len());
-        self.ic_admin
+        ic_admin
             .propose_run(
                 ic_admin::ProposeCommand::DeployHostosToSomeNodes {
                     nodes: nodes.clone(),
@@ -398,7 +435,7 @@ impl Runner {
     }
 
     pub async fn remove_nodes(&self, request: NodesRemoveRequest, dry_run: bool) -> anyhow::Result<()> {
-        let node_remove_response = self.dashboard_backend_client.remove_nodes(request).await?;
+        let node_remove_response = self.get_backend_client().await?.remove_nodes(request).await?;
         let mut node_removals = node_remove_response.removals;
         node_removals.sort_by_key(|nr| nr.reason.message());
 
@@ -452,7 +489,7 @@ impl Runner {
         _verbose: bool,
         simulate: bool,
     ) -> Result<(), anyhow::Error> {
-        let change = self.dashboard_backend_client.network_heal(request).await?;
+        let change = self.get_backend_client().await?.network_heal(request).await?;
         println!("{}", change);
 
         let errors = join_all(change.subnets_change_response.iter().map(|subnet_change_response| async move {
