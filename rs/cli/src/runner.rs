@@ -4,6 +4,7 @@ use crate::operations::hostos_rollout::{HostosRollout, HostosRolloutResponse, No
 use crate::ops_subnet_node_replace;
 use crate::{ic_admin, local_unused_port};
 use actix_web::dev::ServerHandle;
+use decentralization::network::{SubnetChange, SubnetQuerier, SubnetQueryBy};
 use decentralization::SubnetChangeResponse;
 use futures::future::join_all;
 use ic_base_types::PrincipalId;
@@ -12,9 +13,10 @@ use ic_management_backend::proposal::ProposalAgent;
 use ic_management_backend::public_dashboard::query_ic_dashboard_list;
 use ic_management_backend::registry::{self, RegistryState};
 use ic_management_types::requests::NodesRemoveRequest;
-use ic_management_types::{Artifact, Network, Node, NodeFeature, NodeProvidersResponse};
+use ic_management_types::{Artifact, Network, Node, NodeFeature, NodeProvidersResponse, TopologyChangePayload};
 use itertools::Itertools;
 use log::{info, warn};
+use registry_canister::mutations::do_change_subnet_membership::ChangeSubnetMembershipPayload;
 use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::sync::mpsc;
@@ -516,44 +518,27 @@ impl Runner {
         Ok(())
     }
 
-
-
     pub async fn decentralization_change(&self, change: &ChangeSubnetMembershipPayload) -> Result<(), anyhow::Error> {
         if let Some(id) = change.get_subnet() {
             let subnet_before = self.registry.subnet(SubnetQueryBy::SubnetId(id)).await.map_err(|e| anyhow::anyhow!(e))?;
-            let added_nodes = self
-                .registry
-                .nodes()
-                .values()
-                .filter(|n| change.get_added_node_ids().contains(&n.principal))
-                .map(decentralization::network::Node::from)
-                .collect_vec();
-            let removed_nodes = self
-                .registry
-                .nodes()
-                .values()
-                .filter(|n| change.get_removed_node_ids().contains(&n.principal))
-                .map(decentralization::network::Node::from)
-                .collect_vec();
+            let nodes_before = subnet_before.nodes.clone();
+
+            let added_nodes = self.registry.get_decentralized_nodes(&change.get_added_node_ids());
+            let removed_nodes = self.registry.get_decentralized_nodes(&change.get_added_node_ids());
 
             let subnet_after = subnet_before
-                .clone()
                 .with_nodes(added_nodes)
                 .without_nodes(removed_nodes)
                 .map_err(|e| anyhow::anyhow!(e))?;
 
-            let subnet_change: SubnetChangeResponse = SubnetChangeResponse {
-                added: change.get_added_node_ids(),
-                removed: change.get_removed_node_ids(),
-                subnet_id: Some(id),
-                score_before: subnet_before.nakamoto_score(),
-                score_after: subnet_after.nakamoto_score(),
+            let subnet_change = SubnetChange {
+                id: subnet_after.id,
+                old_nodes: nodes_before,
+                new_nodes: subnet_after.nodes,
                 ..Default::default()
             };
-
-            println!("{}", subnet_change)
+            println!("{}", SubnetChangeResponse::from(&subnet_change))
         }
-
         Ok(())
     }
 }

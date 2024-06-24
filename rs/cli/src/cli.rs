@@ -536,6 +536,8 @@ pub mod api_boundary_nodes {
 }
 
 pub mod proposals {
+    use std::fmt::Display;
+
     use clap::ValueEnum;
     use ic_nns_governance::pb::v1::{ProposalStatus as ProposalStatusUpstream, Topic as TopicUpstream};
 
@@ -620,8 +622,7 @@ pub mod proposals {
             proposal_id: u64,
         },
 
-
-        /// Print decentralization for a subnet-change proposal gived ID
+        /// Print decentralization change for a CHANGE_SUBNET_MEMBERSHIP proposal gived its ID
         Analyze {
             /// Proposal ID
             proposal_id: u64,
@@ -643,6 +644,12 @@ pub mod proposals {
         Executed = 4,
         /// The proposal was adopted, but execution failed.
         Failed = 5,
+    }
+
+    impl Display for ProposalStatus {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            write!(f, "{}", ProposalStatusUpstream::from(self.clone()).as_str_name())
+        }
     }
 
     impl From<ProposalStatus> for ProposalStatusUpstream {
