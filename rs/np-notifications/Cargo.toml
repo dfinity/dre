@@ -21,10 +21,10 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 serde_yaml = { workspace = true }
 tokio = { workspace = true }
-tokio-util = "0.7.8"
-tracing = { version = "0.1.37", features = ["log"] }
+tokio-util = "0.7.11"
+tracing = { version = "0.1.40", features = ["log"] }
 tracing-log = { version = "0.2.0", features = ["log-tracer"] }
-tracing-subscriber = "0.3.17"
+tracing-subscriber = "0.3.18"
 url = { workspace = true }
 
 [dev-dependencies]
@@ -32,7 +32,7 @@ tempfile = { workspace = true }
 pretty_assertions = "1.4.0"
 httptest = "0.16.1"
 # Default features disabled because it would require env_logger, and we are not using it
-test-log = { version = "0.2.12", default-features = false, features = [
+test-log = { version = "0.2.16", default-features = false, features = [
     "trace",
 ] }
 # Necessary for test-log

@@ -20,7 +20,7 @@ struct DecentralizedSubnetResponse {
 
 /// Get the decentralization coefficients for a subnet
 #[get("/decentralization/subnet/{subnet}")]
-async fn decentralization_subnet_query(
+pub(crate) async fn decentralization_subnet_query(
     request: web::Path<SubnetRequest>,
     registry: web::Data<Arc<RwLock<RegistryState>>>,
 ) -> Result<HttpResponse, Error> {
@@ -37,7 +37,7 @@ struct SubnetWhatIfRequest {
 
 /// Get the decentralization coefficients for a subnet
 #[get("/decentralization/whatif")]
-async fn decentralization_whatif_query(
+pub(crate) async fn decentralization_whatif_query(
     request: web::Json<SubnetWhatIfRequest>,
     registry: web::Data<Arc<RwLock<RegistryState>>>,
 ) -> Result<HttpResponse, Error> {
