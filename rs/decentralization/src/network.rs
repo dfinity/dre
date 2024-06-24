@@ -758,10 +758,26 @@ pub trait TopologyManager: SubnetQuerier + AvailableNodesQuerier {
             min_nakamoto_coefficients,
             ..Default::default()
         }
-        .with_include_nodes(include_nodes.clone())
-        .with_exclude_nodes(exclude_nodes.clone())
-        .with_only_nodes_that_have_features(only_nodes.clone())
+        .including_from_available(NodeSelector::PrincipalIdList(include_nodes.clone()))
+        .excluding_from_available(NodeSelector::FeatureList(exclude_nodes.clone()))
+        .including_from_available(NodeSelector::FeatureList(only_nodes.clone()))
         .resize(size, 0)
+    }
+}
+
+pub enum NodeSelector {
+    PrincipalIdList(Vec<PrincipalId>),
+    NodeList(Vec<Node>),
+    FeatureList(Vec<String>)
+}
+
+impl NodeSelector {
+    pub fn contains(&self, node: &Node) -> bool {
+        match &self {
+            NodeSelector::PrincipalIdList(list) => list.contains(&node.id),
+            NodeSelector::NodeList(list) => list.contains(node),
+            NodeSelector::FeatureList(list) => list.iter().any(|v| node.matches_feature_value(v)),
+        }
     }
 }
 
@@ -769,7 +785,7 @@ pub trait TopologyManager: SubnetQuerier + AvailableNodesQuerier {
 pub struct SubnetChangeRequest {
     subnet: DecentralizedSubnet,
     available_nodes: Vec<Node>,
-    include_nodes: Vec<PrincipalId>,
+    include_nodes: Vec<Node>,
     removed_nodes: Vec<Node>,
     min_nakamoto_coefficients: Option<MinNakamotoCoefficients>,
 }
@@ -778,7 +794,7 @@ impl SubnetChangeRequest {
     pub fn new(
         subnet: DecentralizedSubnet,
         available_nodes: Vec<Node>,
-        include_nodes: Vec<PrincipalId>,
+        include_nodes: Vec<Node>,
         removed_nodes: Vec<Node>,
         min_nakamoto_coefficients: Option<MinNakamotoCoefficients>,
     ) -> Self {
@@ -795,54 +811,63 @@ impl SubnetChangeRequest {
         self.subnet.clone()
     }
 
-    pub fn with_include_nodes(self, nodes: Vec<PrincipalId>) -> Self {
-        Self {
-            include_nodes: self.include_nodes.into_iter().chain(nodes).collect(),
-            ..self
-        }
-    }
-
-    /// Subnet without the listed nodes. The nodes are not added back into the
-    /// available nodes.
-    pub fn without_nodes(&self, nodes: Vec<Node>) -> Self {
-        let mut s = self.clone();
-        for node in nodes {
-            for node in s.subnet.nodes.clone().iter().filter(|n| n.id == node.id) {
-                s.removed_nodes.push(node.clone());
-                s.subnet.nodes.retain(|n| n.id != node.id);
-            }
-        }
-        s
-    }
-
-    pub fn with_exclude_nodes(self, exclude_nodes_or_features: Vec<String>) -> Self {
-        Self {
-            available_nodes: self
-                .available_nodes
-                .into_iter()
-                .filter(|n| !exclude_nodes_or_features.iter().any(|v| n.matches_feature_value(v)))
-                .collect(),
-            ..self
-        }
-    }
-
-    pub fn with_only_nodes_that_have_features(self, only_nodes_or_features: Vec<String>) -> Self {
-        let available_nodes = if only_nodes_or_features.is_empty() {
-            self.available_nodes.into_iter().collect()
-        } else {
-            self.available_nodes
-                .into_iter()
-                .filter(|n| only_nodes_or_features.iter().any(|v| n.matches_feature_value(v)))
-                .collect()
-        };
-        Self { available_nodes, ..self }
-    }
-
     pub fn with_custom_available_nodes(self, nodes: Vec<Node>) -> Self {
         Self {
             available_nodes: nodes,
             ..self
         }
+    }
+
+    pub fn including_from_available(self, selector: NodeSelector) -> Self {
+        Self {
+            include_nodes: self.available_nodes
+                .iter()
+                .filter(|n| selector.contains(&n))
+                .cloned()
+                .collect::<Vec<_>>(),
+            ..self
+        }
+    }
+
+    pub fn excluding_from_available(self, selector: NodeSelector) -> Self {
+        Self {
+            available_nodes: self.available_nodes
+                .iter()
+                .filter(|n| !selector.contains(&n))
+                .cloned()
+                .collect::<Vec<_>>(),
+            ..self
+        }
+    }
+
+    pub fn keeping_from_used(self, selector: NodeSelector) -> Self {
+        let mut change_new = self.clone();
+
+        change_new.subnet.nodes.retain(|n: &Node| {
+            if selector.contains(n) {
+                true
+            } else {
+                change_new.removed_nodes.push(n.clone());
+                false
+            }
+        });
+
+        return change_new;
+    }
+
+    pub fn removing_from_used(self, selector: NodeSelector) -> Self {
+        let mut change_new = self.clone();
+
+        change_new.subnet.nodes.retain(|n: &Node| {
+            if selector.contains(n) {
+                change_new.removed_nodes.push(n.clone());
+                false
+            } else {
+                true
+            }
+        });
+
+        return change_new;
     }
 
     pub fn with_min_nakamoto_coefficients(self, min_nakamoto_coefficients: Option<MinNakamotoCoefficients>) -> Self {
@@ -861,6 +886,12 @@ impl SubnetChangeRequest {
         Ok(SubnetChange { old_nodes, ..result })
     }
 
+    pub fn rescue(&self) -> Result<SubnetChange, NetworkError> {
+        let old_nodes = self.subnet.nodes.iter().chain(self.removed_nodes.iter()).cloned().collect_vec();
+        let result = self.resize(self.removed_nodes.len(), 0)?;
+        Ok(SubnetChange { old_nodes, ..result })
+    }
+
     /// Add or remove nodes from the subnet.
     pub fn resize(&self, how_many_nodes_to_add: usize, how_many_nodes_to_remove: usize) -> Result<SubnetChange, NetworkError> {
         println!(
@@ -869,27 +900,19 @@ impl SubnetChangeRequest {
         );
         let old_nodes = self.subnet.nodes.clone();
 
-        let included_nodes = if self.include_nodes.is_empty() {
-            Vec::new()
-        } else {
-            self.available_nodes
-                .iter()
-                .filter(|n| self.include_nodes.contains(&n.id))
-                .cloned()
-                .collect::<Vec<_>>()
-        };
-
         let available_nodes = self
             .available_nodes
             .clone()
             .into_iter()
-            .filter(|n| !included_nodes.contains(n))
+            .filter(|n| !self.include_nodes.contains(n))
             .collect::<Vec<_>>();
+
+        println!("available {}", available_nodes.len());
 
         let resized_subnet = self
             .subnet
             .clone()
-            .with_nodes(included_nodes)
+            .with_nodes(self.include_nodes.clone())
             .with_min_nakamoto_coefficients(&self.min_nakamoto_coefficients)
             .subnet_with_more_nodes(how_many_nodes_to_add, &available_nodes)
             .map_err(|e| NetworkError::ResizeFailed(e.to_string()))?;

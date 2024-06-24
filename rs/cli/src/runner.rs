@@ -4,8 +4,9 @@ use crate::operations::hostos_rollout::{HostosRollout, HostosRolloutResponse, No
 use crate::ops_subnet_node_replace;
 use crate::{ic_admin, local_unused_port};
 use actix_web::dev::ServerHandle;
-use decentralization::network::{SubnetChange, SubnetQuerier, SubnetQueryBy};
+use decentralization::network::{NodeSelector, SubnetChange, SubnetQuerier, SubnetQueryBy};
 use decentralization::SubnetChangeResponse;
+use decentralization::network::TopologyManager;
 use futures::future::join_all;
 use ic_base_types::PrincipalId;
 use ic_management_backend::endpoints;
@@ -540,5 +541,43 @@ impl Runner {
             println!("{}", SubnetChangeResponse::from(&subnet_change))
         }
         Ok(())
+    }
+    
+    pub async fn subnet_rescue(&self, subnet: &PrincipalId, keep_nodes: &[String], dry_run: bool) -> anyhow::Result<()> {
+        let change = SubnetChangeResponse::from(
+            &self.registry
+                .modify_subnet_nodes(SubnetQueryBy::SubnetId(*subnet))
+                .await
+                .map_err(|e| anyhow::anyhow!(e))?
+                .keeping_from_used(NodeSelector::FeatureList(keep_nodes.to_vec()))
+                .rescue()
+                .map_err(|e| anyhow::anyhow!(e))?
+        );
+
+        println!("{}", change);
+
+        if change.added.is_empty() && change.removed.is_empty() {
+            return Ok(());
+        }
+        if change.added.len() == change.removed.len() {
+            self.run_membership_change(change.clone(), ops_subnet_node_replace::replace_proposal_options(&change)?, dry_run)
+                .await
+        } else {
+            let action = if change.added.len() < change.removed.len() {
+                "Removing nodes from"
+            } else {
+                "Adding nodes to"
+            };
+            self.run_membership_change(
+                change,
+                ProposeOptions {
+                    title: format!("{action} subnet {subnet}").into(),
+                    summary: format!("{action} subnet {subnet}").into(),
+                    motivation: None,
+                },
+                dry_run,
+            )
+            .await
+        }
     }
 }

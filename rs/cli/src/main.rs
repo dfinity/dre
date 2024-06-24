@@ -106,7 +106,7 @@ async fn async_main() -> Result<(), anyhow::Error> {
             cli::Commands::Subnet(subnet) => {
                 // Check if required arguments are provided
                 match &subnet.subcommand {
-                    cli::subnet::Commands::Deploy { .. } | cli::subnet::Commands::Resize { .. } => {
+                    cli::subnet::Commands::Deploy { .. } | cli::subnet::Commands::Resize { .. } | cli::subnet::Commands::Rescue { .. } => {
                         if subnet.id.is_none() {
                             cmd.error(ErrorKind::MissingRequiredArgument, "Required argument `id` not found").exit();
                         }
@@ -241,6 +241,9 @@ async fn async_main() -> Result<(), anyhow::Error> {
                                 .exit();
                         }
                     }
+                    cli::subnet::Commands::Rescue { 
+                        keep_nodes 
+                    } => runner_instance.subnet_rescue(&subnet.id.unwrap(), keep_nodes, dry_run).await,
                 }
             }
 
