@@ -927,7 +927,7 @@ impl SubnetChangeRequest {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct SubnetChange {
     pub id: PrincipalId,
     pub old_nodes: Vec<Node>,

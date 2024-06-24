@@ -2202,6 +2202,8 @@ checksum = "1435fa1053d8b2fbbe9be7e97eca7f33d37b28409959813daefc1446a14247f1"
 name = "dre"
 version = "0.4.0"
 dependencies = [
+ "actix-rt",
+ "actix-web",
  "anyhow",
  "async-recursion",
  "async-trait",

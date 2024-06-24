@@ -1,5 +1,5 @@
 {
-  "checksum": "24026e3f2be07af673b67f53e57f32ce0b69a3394236f610a66afbdf9ac23048",
+  "checksum": "c3dcea9e1d5b4d6c8e5e6f9ece05a77fcd0901359c76444219a2d1904e54e8c2",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -11149,6 +11149,10 @@
         "deps": {
           "common": [
             {
+              "id": "actix-web 4.6.0",
+              "target": "actix_web"
+            },
+            {
               "id": "anyhow 1.0.86",
               "target": "anyhow"
             },
@@ -11369,6 +11373,10 @@
         },
         "deps_dev": {
           "common": [
+            {
+              "id": "actix-rt 2.9.0",
+              "target": "actix_rt"
+            },
             {
               "id": "wiremock 0.6.0",
               "target": "wiremock"
@@ -28881,29 +28889,35 @@
         ],
         "crate_features": {
           "common": [
-            "elf",
-            "errno",
             "general",
             "ioctl",
             "no_std"
           ],
           "selects": {
             "aarch64-unknown-linux-gnu": [
+              "elf",
+              "errno",
               "prctl",
               "std",
               "system"
             ],
             "arm-unknown-linux-gnueabi": [
+              "elf",
+              "errno",
               "prctl",
               "std",
               "system"
             ],
             "armv7-unknown-linux-gnueabi": [
+              "elf",
+              "errno",
               "prctl",
               "std",
               "system"
             ],
             "i686-unknown-linux-gnu": [
+              "elf",
+              "errno",
               "prctl",
               "std",
               "system"
@@ -28919,6 +28933,8 @@
               "system"
             ],
             "x86_64-unknown-linux-gnu": [
+              "elf",
+              "errno",
               "prctl",
               "std",
               "system"
