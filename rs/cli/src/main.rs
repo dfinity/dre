@@ -10,8 +10,8 @@ use dre::{cli, ic_admin, registry_dump, runner};
 use ic_base_types::CanisterId;
 use ic_canisters::governance::{governance_canister_version, GovernanceCanisterWrapper};
 use ic_canisters::CanisterClient;
-use ic_management_types::requests::NodesRemoveRequest;
 use ic_management_types::filter_map_nns_function_proposals;
+use ic_management_types::requests::NodesRemoveRequest;
 use ic_management_types::{Artifact, MinNakamotoCoefficients, NodeFeature};
 
 use ic_nns_common::pb::v1::ProposalId;
@@ -538,10 +538,11 @@ async fn async_main() -> Result<(), anyhow::Error> {
                         {
                             runner_instance.decentralization_change(change_membership).await
                         } else {
-                            Err(anyhow::anyhow!("Proposal {} must have {} type", 
+                            Err(anyhow::anyhow!(
+                                "Proposal {} must have {} type",
                                 proposal_id,
-                                ic_nns_governance::pb::v1::NnsFunction::ChangeSubnetMembership.as_str_name())
-                            )
+                                ic_nns_governance::pb::v1::NnsFunction::ChangeSubnetMembership.as_str_name()
+                            ))
                         }
                     } else {
                         Err(anyhow::anyhow!(
