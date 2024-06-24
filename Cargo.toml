@@ -32,11 +32,11 @@ documentation = "https://github.com/dfinity/dre/"
 
 [workspace.dependencies]
 actix = "0.13.3"
-actix-web = { version = "4.5.1", default-features = false, features = [
+actix-web = { version = "4.8.0", default-features = false, features = [
   "compress-gzip",
   "macros",
 ] }
-actix-rt = "2.9.0"
+actix-rt = "2.10.0"
 ahash = "0.8.11"
 anyhow = "1.0.81"
 assert_matches = "1.5.0"
@@ -45,7 +45,7 @@ async-timer = "0.7.4"
 async-trait = "0.1.79"
 backoff = { version = "0.4.0", features = ["tokio"] }
 backon = "0.4.3"
-candid = "0.10.6"
+candid = "0.10.9"
 chrono = { version = "0.4.37", features = ["serde"] }
 clap-num = "1.1"
 clap = { version = "4.5", features = [
@@ -69,7 +69,7 @@ csv = "1.3.0"
 custom_error = "1.9.2"
 decentralization = { path = "rs/decentralization" }
 derive_builder = "0.20.0"
-derive_more = "0.99.17"
+derive_more = "0.99.18"
 dialoguer = "0.11.0"
 dirs = "5.0.1"
 dotenv = "0.15.0"
@@ -133,10 +133,10 @@ ic-nervous-system-clients = { git = "https://github.com/dfinity/ic.git", rev = "
 ic-sns-wasm = { git = "https://github.com/dfinity/ic.git", rev = "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d" }
 cycles-minting-canister = { git = "https://github.com/dfinity/ic.git", rev = "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d" }
 ic-utils = "0.35.0"
-include_dir = "0.7.3"
+include_dir = "0.7.4"
 itertools = "0.13.0"
 keyring = "2.0.2"
-lazy_static = "1.4.0"
+lazy_static = "1.5.0"
 log = "0.4.21"
 lru = "0.12.3"
 phantom_newtype = { git = "https://github.com/dfinity/ic.git", rev = "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d" }
@@ -149,9 +149,9 @@ prost = "0.12.3"
 rand = { version = "0.8.5", features = ["std_rng"] }
 rand_seeder = "0.2.3"
 rayon = "1.10.0"
-regex = "1.10.4"
+regex = "1.10.5"
 registry-canister = { git = "https://github.com/dfinity/ic.git", rev = "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d" }
-reqwest = { version = "0.12.2", features = ["json"] }
+reqwest = { version = "0.12.4", features = ["json"] }
 retry = "2.0.0"
 reverse_geocoder = "4.1.1"
 ring = "0.17.8"
@@ -172,7 +172,7 @@ slog = { version = "2.7.0", features = [
 ] }
 socket2 = "0.5.5"
 spinners = "4.1.1"
-strum = { version = "0.26.2", features = ["derive"] }
+strum = { version = "0.26.3", features = ["derive"] }
 strum_macros = "0.26.2"
 tabled = "0.15.0"
 tabular = "0.2"
@@ -180,7 +180,7 @@ tempfile = "3.10.0"
 thiserror = "1.0.57"
 tokio = { version = "1.37.0", features = ["full"] }
 tokio-util = "0.7.10"
-url = "2.5.0"
+url = "2.5.2"
 urlencoding = "2.1.0"
 warp = "0.3"
 wiremock = "0.6.0"
