@@ -5,7 +5,10 @@ on:
 
 jobs:
   changed_files:
-    runs-on: ubuntu-latest
+    runs-on:
+      labels: dre-runner-custom
+    # This image is based on ubuntu:20.04
+    container: ghcr.io/dfinity/dre/actions-runner:0.2.1
     name: Test changed-files
     steps:
       - uses: actions/checkout@v4
@@ -27,3 +30,8 @@ jobs:
           description: 'Passed'
           state: 'success'
           sha: ${{github.event.pull_request.head.sha || github.sha}}
+
+      - name: Run checks for release index
+        if: ${{ steps.changed-files.outputs.all_changed_files_count > 0 && steps.changed-files.outputs.other_changed_files_count == 0  }}
+        run: |
+          python3 release-controller/ci_check.py --repo-path /home/runner/.cache
