@@ -2,6 +2,7 @@ use crate::ic_admin::IcAdminWrapper;
 use clap::{error::ErrorKind, CommandFactory, Parser};
 use dialoguer::Confirm;
 use dotenv::dotenv;
+use dre::cli::proposals::ProposalStatus;
 use dre::detect_neuron::Auth;
 use dre::general::{filter_proposals, get_node_metrics_history, vote_on_proposals};
 use dre::operations::hostos_rollout::{NodeGroupUpdate, NumberOfNodes};
@@ -9,6 +10,7 @@ use dre::{cli, ic_admin, registry_dump, runner};
 use ic_base_types::CanisterId;
 use ic_canisters::governance::{governance_canister_version, GovernanceCanisterWrapper};
 use ic_canisters::CanisterClient;
+use ic_management_types::filter_map_nns_function_proposals;
 use ic_management_types::requests::NodesRemoveRequest;
 use ic_management_types::{Artifact, MinNakamotoCoefficients, NodeFeature};
 
@@ -16,6 +18,7 @@ use ic_nns_common::pb::v1::ProposalId;
 use ic_nns_governance::pb::v1::ListProposalInfo;
 use log::{info, warn};
 use regex::Regex;
+use registry_canister::mutations::do_change_subnet_membership::ChangeSubnetMembershipPayload;
 use serde_json::Value;
 use std::collections::BTreeMap;
 use std::str::FromStr;
@@ -523,6 +526,32 @@ async fn async_main() -> Result<(), anyhow::Error> {
                     let proposal = serde_json::to_string_pretty(&proposal).map_err(|e| anyhow::anyhow!("Couldn't serialize to string: {:?}", e))?;
                     println!("{}", proposal);
                     Ok(())
+                }
+                cli::proposals::Commands::Analyze { proposal_id } => {
+                    let nns_url = target_network.get_nns_urls().first().expect("Should have at least one NNS URL");
+                    let client = GovernanceCanisterWrapper::from(CanisterClient::from_anonymous(nns_url)?);
+                    let proposal = client.get_proposal(*proposal_id).await?;
+
+                    return if proposal.status() == ProposalStatus::Open.into() {
+                        if let Some((_, change_membership)) =
+                            filter_map_nns_function_proposals::<ChangeSubnetMembershipPayload>(&vec![proposal]).first()
+                        {
+                            runner_instance.decentralization_change(change_membership).await
+                        } else {
+                            Err(anyhow::anyhow!(
+                                "Proposal {} must have {} type",
+                                proposal_id,
+                                ic_nns_governance::pb::v1::NnsFunction::ChangeSubnetMembership.as_str_name()
+                            ))
+                        }
+                    } else {
+                        Err(anyhow::anyhow!(
+                            "Proposal {} has status {}\nProposal must have status: {}",
+                            proposal_id,
+                            proposal.status().as_str_name(),
+                            ProposalStatus::Open
+                        ))
+                    };
                 }
             },
         };
