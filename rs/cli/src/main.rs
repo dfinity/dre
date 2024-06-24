@@ -13,6 +13,7 @@ use ic_canisters::CanisterClient;
 use ic_management_types::requests::NodesRemoveRequest;
 use ic_management_types::filter_map_nns_function_proposals;
 use ic_management_types::{Artifact, MinNakamotoCoefficients, NodeFeature};
+
 use ic_nns_common::pb::v1::ProposalId;
 use ic_nns_governance::pb::v1::ListProposalInfo;
 use log::{info, warn};
