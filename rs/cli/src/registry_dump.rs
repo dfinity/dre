@@ -194,19 +194,18 @@ async fn get_nodes(
                 chip_id: record.chip_id,
                 hostos_version_id: record.hostos_version_id,
                 public_ipv4_config: record.public_ipv4_config,
-                node_provider_id: node_operators
-                    .get(&node_operator_id)
-                    .expect("Couldn't find node provider for node operator")
-                    .node_provider_principal_id,
+                node_provider_id: match node_operators.get(&node_operator_id) {
+                    Some(no) => no.node_provider_principal_id,
+                    None => PrincipalId::new_anonymous(),
+                },
                 subnet_id: subnets
                     .iter()
                     .find(|subnet| subnet.membership.contains(&k))
                     .map(|subnet| subnet.subnet_id),
-                dc_id: node_operators
-                    .get(&node_operator_id)
-                    .expect("Couldn't find node provider for node operator")
-                    .dc_id
-                    .clone(),
+                dc_id: match node_operators.get(&node_operator_id) {
+                    Some(no) => no.dc_id.clone(),
+                    None => "".to_string(),
+                },
                 status: nodes_health.get(&node_id).unwrap_or(&ic_management_types::Status::Unknown).clone(),
             }
         })
