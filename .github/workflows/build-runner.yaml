@@ -7,6 +7,7 @@ on:
     paths:
       - "docker/runner.Dockerfile"
       - "docker/runner.Dockerfile.dockerignore"
+      - ".github/workflows/build-runner.yaml"
   pull_request:
     paths:
       - "docker/runner.Dockerfile"
