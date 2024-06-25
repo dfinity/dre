@@ -1,6 +1,54 @@
 # dre Changelog
 
 <!-- insertion marker -->
+## [0.4.1](https://github.com/dfinity/dre/releases/tag/0.4.1) - 2024-06-25
+
+<small>[Compare with first commit](https://github.com/dfinity/dre/compare/ab104f2acb360ad9ea850b2d4e9ffb7b611e8cc9...0.4.1)</small>
+
+### Features
+
+- adding building runner (#529) ([2864b49](https://github.com/dfinity/dre/commit/2864b49b24203b5842420ca31f7a4eb33e4076ce) by Nikola Milosavljevic).
+- ci check for release index  (#526) ([63690eb](https://github.com/dfinity/dre/commit/63690eb89adf6fb9324c9ed083324b1a38b2795e) by Nikola Milosavljevic).
+- Improve cli operations for generating release notes (#514) ([e00f95d](https://github.com/dfinity/dre/commit/e00f95d876050cbb08f0f320ad6ba1ca0cf6442b) by Saša Tomić).
+- Cache public dashboard API response for 1h (#506) ([61bec27](https://github.com/dfinity/dre/commit/61bec279163dda2a31726483df1cefa19282034a) by Saša Tomić).
+- Use merge commits if available, and fall back to the non-merge (#502) ([1a78e5a](https://github.com/dfinity/dre/commit/1a78e5a391ad5864f7f9f2461f6b32de4f9adb08) by Saša Tomić).
+- Kill the release controller if it gets stuck (#499) ([9baa876](https://github.com/dfinity/dre/commit/9baa876b4c309b1f97c9894b5935ccdae1f45bf9) by Saša Tomić).
+- adding job to ensure opentelemetry version (#501) ([a92e88e](https://github.com/dfinity/dre/commit/a92e88eaaa48a24a28f347a512340652d4bc54b9) by Nikola Milosavljevic).
+- adding timestamp of last successful sync (#496) ([f029720](https://github.com/dfinity/dre/commit/f029720988584e4a24450be4f83c439c3bf4738e) by Nikola Milosavljevic).
+- adding label for api boundary nodes (#483) ([9706b01](https://github.com/dfinity/dre/commit/9706b01b16f0087d3c45230f8eee92aa9a9e13b6) by Nikola Milosavljevic).
+- [DRE-178] Accept additional parameters for subnet creation (#478) ([4a4bcd9](https://github.com/dfinity/dre/commit/4a4bcd95ad3d01814a74c05016e2dc11ddb25f16) by Saša Tomić).
+- Support dre binary compiled without .git (#477) ([89598dc](https://github.com/dfinity/dre/commit/89598dc7f1a345ca87461663eac93477180c88d2) by Saša Tomić).
+- adding mapping of domain from registry (#473) ([303bde2](https://github.com/dfinity/dre/commit/303bde213eff9e343d026f99aa07cf49ffb9a18d) by Nikola Milosavljevic).
+- excluding api boundary nodes from available nodes for replacement (#472) ([be7bfb4](https://github.com/dfinity/dre/commit/be7bfb456e908f2f4038825a2d8475b20ad4087c) by Nikola Milosavljevic).
+- vote sleep duration (#471) ([a0b48ff](https://github.com/dfinity/dre/commit/a0b48ffc8d92f9efdb3ed9fdb4bfc23fb90ba995) by Nikola Milosavljevic).
+- Migrating sns downloader to canister calls (#451) ([9f8fa09](https://github.com/dfinity/dre/commit/9f8fa0929a6040f9380fd9aa44e42d9dd8c8498d) by Nikola Milosavljevic).
+- Convenience function for dumping registry records for incorrect rewards (#442) ([00f2e85](https://github.com/dfinity/dre/commit/00f2e857c9e58b2674f5d7a02bd2ab860198d9ea) by Saša Tomić).
+- Provide more reward-related information in the registry dump (#440) ([d87334d](https://github.com/dfinity/dre/commit/d87334d106c52cdf1959c2c08b85b3206733f42e) by Saša Tomić).
+- implementing checks for correct node rewards set for node operators (#436) ([04c7ba8](https://github.com/dfinity/dre/commit/04c7ba8cae95ba2814df2a9a3bb65856d12f218e) by Nikola Milosavljevic).
+- cursors from clickhouse (#433) ([dbd482b](https://github.com/dfinity/dre/commit/dbd482b6fdd8c69573114630313c2b378c522763) by Igor Novgorodov).
+- enabling showing progress during self update (#423) ([cd4ef30](https://github.com/dfinity/dre/commit/cd4ef30e995b667eefd84a51c7a804c0eab3937f) by Nikola Milosavljevic).
+- adding all known staging nns nodes as defaults (#420) ([ab104f2](https://github.com/dfinity/dre/commit/ab104f2acb360ad9ea850b2d4e9ffb7b611e8cc9) by Nikola Milosavljevic).
+
+### Bug Fixes
+
+- add motivation argument to remove API BN command (#513) ([c833710](https://github.com/dfinity/dre/commit/c833710204fcd54eed4b8410fd087af6ee1d07c5) by r-birkner).
+- Remove the double dash in the public dashboard api requests (#511) ([b48ce72](https://github.com/dfinity/dre/commit/b48ce72e8efb1a67f9c75275e78ba8c8bf55d6c0) by Saša Tomić).
+- remove duplication of nodes for DeployGuestosToSomeApiBoundaryNodes (#510) ([11a3454](https://github.com/dfinity/dre/commit/11a3454de5fd6f85dc91728dd66184a004081600) by r-birkner).
+- Do not try to get auth parameters for ic-admin get-* commands (#508) ([3087304](https://github.com/dfinity/dre/commit/3087304c0a02960209b5e50062f385f1ff8d2509) by Saša Tomić).
+- fix typo (#503) ([48855c1](https://github.com/dfinity/dre/commit/48855c13d3fce6136bbfde96a688076c43c9b01b) by Saša Tomić).
+- Do not exclude "canister" changes in release notes (#498) ([8dea0aa](https://github.com/dfinity/dre/commit/8dea0aadbfb87c05a669467ac8b4a5d3ea2cb351) by Saša Tomić).
+- adding accepting of invalid certs (#491) ([792748e](https://github.com/dfinity/dre/commit/792748e9b42e7db2028e099db8cfab73e24748fa) by Nikola Milosavljevic).
+- Do not require an HSM for dry runs (#480) ([30051dd](https://github.com/dfinity/dre/commit/30051dd22d9cc1aabb0c35132ce5c5e6c54ad233) by Saša Tomić).
+- fixing tests that didn't run (#481) ([1d38e8e](https://github.com/dfinity/dre/commit/1d38e8eaf8a32ee54733df0898aa60771205bc34) by Nikola Milosavljevic).
+- Fix the test for the hostos rollout, add api-boundary-nodes (#479) ([5018651](https://github.com/dfinity/dre/commit/5018651ce42310480655aa0077b8eb752782a6db) by Saša Tomić).
+- Add more flexibility to the version regex ([1844452](https://github.com/dfinity/dre/commit/1844452173c713ee6fe05d6ac36176db4288caec) by Saša Tomić).
+- fixing typo (#467) ([50e1573](https://github.com/dfinity/dre/commit/50e1573a9373c3bb02486534067d75cd9913b344) by Nikola Milosavljevic).
+- Drop the re-classification of commits to "other" in some cases (#463) ([075bde7](https://github.com/dfinity/dre/commit/075bde737fcc9f616b4b07115a49200c1d921a96) by Saša Tomić).
+- Delete persisted state file if loading previous contents fails (#459) ([ca08e6a](https://github.com/dfinity/dre/commit/ca08e6af38cad0872dcc394bc44694a269e38bbf) by Saša Tomić).
+- not displaying sensitive pin when running help command (#453) ([e16b578](https://github.com/dfinity/dre/commit/e16b57868c210a7b7ee2832119d79fb127cd8c96) by Nikola Milosavljevic).
+- Add a time for all agent-rs (canister) clients (#435) ([0c4fa3e](https://github.com/dfinity/dre/commit/0c4fa3e3dbc46037bdd54b848c6357ec2ade2801) by Saša Tomić).
+- Fix for the HostOS rollout in groups (#432) ([cd61ab0](https://github.com/dfinity/dre/commit/cd61ab03c7b083da37a2fb6bf4599e7ea3517bb3) by Saša Tomić).
+
 ## [0.4.0](https://github.com/dfinity/dre/releases/tag/0.4.0) - 2024-05-24
 
 <small>[Compare with first commit](https://github.com/dfinity/dre/compare/d9dd38cf5b5018a2108bb6ab28d0fff965dbb5ee...0.4.0)</small>
