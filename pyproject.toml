@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "dre-repo"
-version = "0.4.0"
+version = "0.4.1"
 description = ""
 authors = ["DRE Team <dept-DRE@dfinity.org>"]
 readme = "README.md"
