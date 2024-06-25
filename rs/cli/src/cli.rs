@@ -306,7 +306,7 @@ pub mod subnet {
             help_other_args: bool,
         },
 
-        /// Replace all nodes in a subnet
+        /// Replace all nodes in a subnet except those provided under "--keep-nodes"
         Rescue {
             /// Node features or Node IDs to exclude from the replacement
             #[clap(long, num_args(1..))]
