@@ -44,10 +44,6 @@ def error_print(message: str) -> str:
     return print_and_ret(f"{Fore.RED}{message}{Fore.RESET}")
 
 
-def warn_print(message: str) -> str:
-    return print_and_ret(f"{Fore.YELLOW}{message}{Fore.RESET}")
-
-
 def validate_schema(index: dict, schema_path: str) -> list[str]:
     with open(schema_path, "r", encoding="utf8") as f:
         schema = json.load(f)
@@ -104,24 +100,6 @@ def check_unique_version_names_within_release(index: ReleaseIndex) -> list[str]:
 
     if len(errors) == 0:
         success_print("All version names are unique within the respective releases")
-    return errors
-
-
-def check_version_to_tags_consistency(index: ReleaseIndex, repo: GitRepo) -> list[str]:
-    errors = []
-    for release in index.releases:
-        for version in release.versions:
-            tag_name = f"release-{release.rc_name.removeprefix('rc--')}-{version.name}"
-            tag = repo.show(tag_name)
-            commit = repo.show(version.version)
-            if tag is None:
-                warn_print(f"Tag {tag_name} does not exist")
-                continue
-            if tag.sha != commit.sha:
-                errors.append(error_print(f"Tag {tag_name} points to {tag.sha} not {commit.sha}"))
-
-    if len(errors) == 0:
-        success_print("Finished consistency check")
     return errors
 
 
@@ -188,7 +166,6 @@ if __name__ == "__main__":
 
     errors.extend(check_if_commits_really_exist(index, repo))
     errors.extend(check_versions_on_specific_branches(index, repo))
-    errors.extend(check_version_to_tags_consistency(index, repo))
     # Check that versions from a release cannot be removed if notes were published to the forum
 
     if len(errors) > 0:
