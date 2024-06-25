@@ -768,26 +768,60 @@ pub trait TopologyManager: SubnetQuerier + AvailableNodesQuerier {
             min_nakamoto_coefficients,
             ..Default::default()
         }
-        .including_from_available(NodeSelector::PrincipalIdList(include_nodes.clone()))
-        .excluding_from_available(NodeSelector::FeatureList(exclude_nodes.clone()))
-        .including_from_available(NodeSelector::FeatureList(only_nodes.clone()))
+        .including_from_available(NodeSelector::FromPrincipals(include_nodes.clone()))
+        .excluding_from_available(NodeSelector::FromFeatures(exclude_nodes.clone()))
+        .including_from_available(NodeSelector::FromFeatures(only_nodes.clone()))
         .resize(size, 0)
     }
 }
 
+/// A `NodeSelector` is used to select from a list of nodes the ones that satisfy/unsatisfy certain criteria.
+///
+///
+/// # Examples
+///
+/// Basic usage:
+///
+/// ```
+///
+/// let nodes: Vec<Node> = vec![
+///     Node::new_test_node(0, NodeFeatures::new_test_feature_set("feat-0"), false, true),
+///     Node::new_test_node(1, NodeFeatures::new_test_feature_set("feat-1"), false, true),
+///     Node::new_test_node(2, NodeFeatures::new_test_feature_set("feat-2"), false, true),
+///     Node::new_test_node(3, NodeFeatures::new_test_feature_set("feat-3"), false, true),
+/// ];
+///
+/// let (selected, unselected): (Vec<Node>, Vec<Node>) = NodeSelector::FromPrincipals(vec![PrincipalId::new_node_test_id(0), PrincipalId::new_node_test_id(1)])
+///     .partition(nodes.clone());
+///
+/// assert_eq!(selected, nodes[..2]);
+/// assert_eq!(unselected, nodes[2..]);
+///
+/// let (selected, unselected): (Vec<Node>, Vec<Node>) = NodeSelector::FromFeatures(vec![String::from("feat-3")])
+///     .partition(nodes.clone());
+///
+/// assert_eq!(selected, nodes[3..4]);
+/// assert_eq!(unselected, nodes[..3]);
+/// ```
 pub enum NodeSelector {
-    PrincipalIdList(Vec<PrincipalId>),
-    NodeList(Vec<Node>),
-    FeatureList(Vec<String>),
+    FromPrincipals(Vec<PrincipalId>),
+    FromNodes(Vec<Node>),
+    FromFeatures(Vec<String>),
 }
 
 impl NodeSelector {
+    /// Check if a node is included based on the selection criteria.
+    fn includes(&self, node: &Node) -> bool {
+        match &self {
+            NodeSelector::FromPrincipals(list) => list.contains(&node.id),
+            NodeSelector::FromNodes(list) => list.contains(node),
+            NodeSelector::FromFeatures(list) => list.iter().any(|v| node.matches_feature_value(v)),
+        }
+    }
+
+    /// Partition a vector of nodes into selected and unselected based on the selection criteria.
     pub fn partition(&self, nodes: Vec<Node>) -> (Vec<Node>, Vec<Node>) {
-        nodes.into_iter().partition(|node: &Node| match &self {
-            NodeSelector::PrincipalIdList(list) => list.contains(&node.id),
-            NodeSelector::NodeList(list) => list.contains(node),
-            NodeSelector::FeatureList(list) => list.iter().any(|v| node.matches_feature_value(v)),
-        })
+        nodes.into_iter().partition(|node: &Node| self.includes(node))
     }
 }
 

@@ -550,7 +550,7 @@ impl Runner {
                 .modify_subnet_nodes(SubnetQueryBy::SubnetId(*subnet))
                 .await
                 .map_err(|e| anyhow::anyhow!(e))?
-                .rescue(keep_nodes.map(NodeSelector::FeatureList))
+                .rescue(keep_nodes.map(NodeSelector::FromFeatures))
                 .map_err(|e| anyhow::anyhow!(e))?,
         );
 
