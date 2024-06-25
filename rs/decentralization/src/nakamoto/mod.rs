@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use std::cell::RefCell;
 use std::cmp::Ordering;
 use std::collections::{BTreeMap, VecDeque};
-use std::fmt::{Debug, Display, Formatter};
+use std::fmt::{self, Debug, Display, Formatter};
 use std::hash::Hasher;
 use std::iter::{FromIterator, IntoIterator};
 
@@ -14,6 +14,15 @@ use ic_management_types::NodeFeature;
 #[derive(Eq, PartialEq, Clone, Serialize, Deserialize, Debug)]
 pub struct NodeFeatures {
     pub feature_map: BTreeMap<NodeFeature, String>,
+}
+
+impl fmt::Display for NodeFeatures {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        for (feature, value) in &self.feature_map {
+            writeln!(f, "{}: {}", feature, value)?;
+        }
+        Ok(())
+    }
 }
 
 impl NodeFeatures {
@@ -425,7 +434,7 @@ impl Display for NakamotoScore {
 mod tests {
     use std::str::FromStr;
 
-    use crate::network::{DecentralizedSubnet, NetworkHealRequest, NetworkHealSubnets, SubnetChangeRequest};
+    use crate::network::{DecentralizedSubnet, NetworkHealRequest, NetworkHealSubnets, NodeSelector, SubnetChangeRequest};
     use ic_base_types::PrincipalId;
     use itertools::Itertools;
     use regex::Regex;
@@ -949,5 +958,48 @@ mod tests {
         assert_eq!(1, result.added.len());
 
         result.added.iter().for_each(|n| assert!(nodes_available_principals.contains(n)));
+    }
+
+    #[test]
+    fn test_subnet_rescue() {
+        let nodes_available = new_test_nodes("spare", 10, 1);
+        let subnet_initial = new_test_subnet_with_overrides(
+            0,
+            11,
+            7,
+            1,
+            (
+                &NodeFeature::Country,
+                &["CH", "CA", "CA", "CA", "CA", "CA", "BE"],
+            ),
+        );
+
+        let change_initial = SubnetChangeRequest::new(subnet_initial.clone(), nodes_available, Vec::new(), Vec::new(), None);
+
+        let with_keeping_features = change_initial.clone()
+            .keeping_from_used(NodeSelector::FeatureList(vec!["CH".to_string()]))
+            .rescue()
+            .unwrap();
+
+        assert_eq!(with_keeping_features.added().len(), 6);
+        assert_eq!(with_keeping_features.new_nodes.iter().filter(|n| n.features.get(&NodeFeature::Country).unwrap() == *"CH").collect_vec().len(), 1);
+
+        let node_to_keep = subnet_initial.nodes.first().unwrap();
+        let with_keeping_principals = change_initial.clone()
+        .keeping_from_used(NodeSelector::PrincipalIdList(vec![node_to_keep.id]))
+        .rescue()
+        .unwrap();
+
+        assert_eq!(with_keeping_principals.added().len(), 6);
+        assert_eq!(with_keeping_principals.new_nodes.iter().filter(|n| n.id == node_to_keep.id).collect_vec().len(), 1);
+
+        let rescue_all = change_initial.clone()
+            .keeping_from_used(NodeSelector::FeatureList(vec![]))
+            .rescue()
+            .unwrap();
+
+        assert_eq!(rescue_all.added().len(), 7);
+        assert_eq!(rescue_all.removed().len(), 7);
+
     }
 }
