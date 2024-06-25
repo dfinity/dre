@@ -1,6 +1,6 @@
 {
     "yaml.schemas": {
-        "release-index-shema.json": "release-index.yaml"
+        "release-index-schema.json": "release-index.yaml"
     },
     "rust-analyzer.showUnlinkedFileNotification": false,
     "python.testing.pytestArgs": [
