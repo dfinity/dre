@@ -8,6 +8,20 @@ from release_index import Release
 from release_index import Version
 
 
+class Commit:
+    """Class for representing a git commit."""
+
+    def __init__(
+        self, sha: str, message: str, author: str, date: str, branches: list[str] = []
+    ):  # pylint: disable=dangerous-default-value
+        """Create a new Commit object."""
+        self.sha = sha
+        self.message = message
+        self.author = author
+        self.date = date
+        self.branches = branches
+
+
 class GitRepo:
     """Class for interacting with a git repository."""
 
@@ -24,11 +38,88 @@ class GitRepo:
             repo_cache_dir = pathlib.Path(self.cache_temp_dir.name)
 
         self.dir = repo_cache_dir / (repo.split("@", 1)[1] if "@" in repo else repo.removeprefix("https://"))
+        self.cache = {}
 
     def __del__(self):
         """Clean up the temporary directory."""
         if hasattr(self, "cache_temp_dir"):
             self.cache_temp_dir.cleanup()
+
+    def ensure_branches(self, branches: list[str]):
+        """Ensure that the given branches exist."""
+        for branch in branches:
+            try:
+                subprocess.check_call(
+                    ["git", "checkout", branch],
+                    cwd=self.dir,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                )
+            except subprocess.CalledProcessError:
+                print("Branch {} does not exist".format(branch))
+
+        subprocess.check_call(
+            ["git", "checkout", self.main_branch],
+            cwd=self.dir,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+
+    def show(self, obj: str) -> Commit | None:
+        """Show the commit for the given object."""
+        if obj in self.cache:
+            return self.cache[obj]
+
+        try:
+            result = subprocess.run(
+                [
+                    "git",
+                    "show",
+                    "--no-patch",
+                    "--format=%H%n%B%n%an%n%ad",
+                    obj,
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                check=True,
+                cwd=self.dir,
+            )
+
+            output = result.stdout.strip().splitlines()
+
+            commit = Commit(output[0], output[1], output[2], output[3])
+        except subprocess.CalledProcessError:
+            return None
+
+        try:
+            branch_result = subprocess.run(
+                ["git", "branch", "--contains", commit.sha],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                check=True,
+                cwd=self.dir,
+            )
+
+            # Parse the result of the git branch command
+            branches = branch_result.stdout.strip().splitlines()
+            for branch in branches:
+                branch = branch.strip()
+                if branch.startswith("* "):
+                    branch = branch[2:]
+                if "remotes/origin/HEAD" in branch:
+                    continue
+                if branch.startswith("remotes/origin/"):
+                    branch = branch[len("remotes/origin/") :]
+                commit.branches.append(branch)
+
+        except subprocess.CalledProcessError:
+            return None
+
+        self.cache[obj] = commit
+
+        return commit
 
     def fetch(self):
         """Fetch the repository."""
