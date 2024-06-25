@@ -12,6 +12,10 @@ on:
       - "docker/runner.Dockerfile"
       - "docker/runner.Dockerfile.dockerignore"
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   push_to_registry:
     name: Push Docker image to Docker Hub
