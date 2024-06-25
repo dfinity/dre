@@ -32,7 +32,6 @@ jobs:
           sha: ${{github.event.pull_request.head.sha || github.sha}}
 
       - name: Run checks for release index
-        # Uncomment once the testing is finished
-        # if: ${{ steps.changed-files.outputs.all_changed_files_count > 0 && steps.changed-files.outputs.other_changed_files_count == 0  }}
+        if: ${{ steps.changed-files.outputs.all_changed_files_count > 0 && steps.changed-files.outputs.other_changed_files_count == 0  }}
         run: |
           python release-controller/ci_check.py --repo-path /home/runner/.cache
