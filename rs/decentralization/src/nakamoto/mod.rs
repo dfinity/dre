@@ -1000,10 +1000,7 @@ mod tests {
             1
         );
 
-        let rescue_all = change_initial
-            .clone()
-            .rescue(None)
-            .unwrap();
+        let rescue_all = change_initial.clone().rescue(None).unwrap();
 
         assert_eq!(rescue_all.added().len(), 7);
         assert_eq!(rescue_all.removed().len(), 7);

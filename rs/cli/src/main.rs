@@ -241,7 +241,9 @@ async fn async_main() -> Result<(), anyhow::Error> {
                                 .exit();
                         }
                     }
-                    cli::subnet::Commands::Rescue { keep_nodes } => runner_instance.subnet_rescue(&subnet.id.unwrap(), keep_nodes.clone(), dry_run).await,
+                    cli::subnet::Commands::Rescue { keep_nodes } => {
+                        runner_instance.subnet_rescue(&subnet.id.unwrap(), keep_nodes.clone(), dry_run).await
+                    }
                 }
             }
 
