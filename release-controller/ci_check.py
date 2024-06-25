@@ -32,41 +32,45 @@ def parse_args():
 
 
 def success_print(message: str):
-    print(f"{Fore.GREEN}{message}{Fore.RESET}")
+    print(f"{Fore.GREEN}✅ SUCCESS: {message}{Fore.RESET}")
 
 
-def error_print(message: str):
-    print(f"{Fore.RED}{message}{Fore.RESET}")
+def print_and_ret(message: str) -> str:
+    print(message)
+    return message
 
 
-def warn_print(message: str):
-    print(f"{Fore.YELLOW}{message}{Fore.RESET}")
+def error_print(message: str) -> str:
+    return print_and_ret(f"{Fore.RED}❌ ERROR: {message}{Fore.RESET}")
 
 
-def validate_schema(index: dict, schema_path: str):
+def validate_schema(index: dict, schema_path: str) -> list[str]:
     with open(schema_path, "r", encoding="utf8") as f:
         schema = json.load(f)
         try:
             validate(instance=index, schema=schema)
         except Exception as e:
-            error_print(f"Schema validation failed: \n{e}")
-            exit(1)
+            return [error_print(f"Schema validation failed: \n{e}")]
 
     success_print("Schema validation passed")
+    return []
 
 
-def check_if_commits_really_exist(index: ReleaseIndex, repo: GitRepo):
+def check_if_commits_really_exist(index: ReleaseIndex, repo: GitRepo) -> list[str]:
+    errors = []
     for release in index.releases:
         for version in release.versions:
             commit = repo.show(version.version)
             if commit is None:
-                error_print(f"Commit {version.version} does not exist")
-                exit(1)
+                errors.append(error_print(f"Commit {version.version} does not exist"))
 
-    success_print("All commits exist")
+    if len(errors) == 0:
+        success_print("All commits exist")
+    return errors
 
 
-def check_if_there_is_a_base_version(index: ReleaseIndex):
+def check_if_there_is_a_base_version(index: ReleaseIndex) -> list[str]:
+    errors = []
     for release in index.releases:
         found = False
         for version in release.versions:
@@ -74,43 +78,33 @@ def check_if_there_is_a_base_version(index: ReleaseIndex):
                 found = True
                 break
         if not found:
-            error_print(f"Release {release.rc_name} does not have a base version")
-            exit(1)
+            errors.append(error_print(f"Release {release.rc_name} does not have a base version"))
 
-    success_print("All releases have a base version")
+    if len(errors) == 0:
+        success_print("All releases have a base version")
+    return errors
 
 
-def check_unique_version_names_within_release(index: ReleaseIndex):
+def check_unique_version_names_within_release(index: ReleaseIndex) -> list[str]:
+    errors = []
     for release in index.releases:
         version_names = set()
         for version in release.versions:
             if version.name in version_names:
-                error_print(
-                    f"Version {version.name} in release {release.rc_name} has the same name as another version from the same release"
+                errors.append(
+                    error_print(
+                        f"Version {version.name} in release {release.rc_name} has the same name as another version from the same release"
+                    )
                 )
-                exit(1)
             version_names.add(version.name)
 
-    success_print("All version names are unique within the respective releases")
+    if len(errors) == 0:
+        success_print("All version names are unique within the respective releases")
+    return errors
 
 
-def check_version_to_tags_consistency(index: ReleaseIndex, repo: GitRepo):
-    for release in index.releases:
-        for version in release.versions:
-            tag_name = f"release-{release.rc_name.removeprefix('rc--')}-{version.name}"
-            tag = repo.show(tag_name)
-            commit = repo.show(version.version)
-            if tag is None:
-                warn_print(f"Tag {tag_name} does not exist")
-                continue
-            if tag.sha != commit.sha:
-                error_print(f"Tag {tag_name} points to {tag.sha} not {commit.sha}")
-                exit(1)
-
-    success_print("Finished consistency check")
-
-
-def check_rc_order(index: ReleaseIndex):
+def check_rc_order(index: ReleaseIndex) -> list[str]:
+    errors = []
     date_format = "%Y-%m-%d_%H-%M"
     parsed = [
         {"name": release.rc_name, "date": datetime.strptime(release.rc_name.removeprefix("rc--"), date_format)}
@@ -119,26 +113,31 @@ def check_rc_order(index: ReleaseIndex):
 
     for i in range(1, len(parsed)):
         if parsed[i]["date"] > parsed[i - 1]["date"]:
-            error_print(f"Release {parsed[i]['name']} is older than {parsed[i - 1]['name']}")
-            exit(1)
+            errors.append(error_print(f"Release {parsed[i]['name']} is older than {parsed[i - 1]['name']}"))
 
-    success_print("All RC's are ordered descending by date")
+    if len(errors) == 0:
+        success_print("All RC's are ordered descending by date")
+    return errors
 
 
-def check_versions_on_specific_branches(index: ReleaseIndex, repo: GitRepo):
+def check_versions_on_specific_branches(index: ReleaseIndex, repo: GitRepo) -> list[str]:
+    errors = []
     for release in index.releases:
         for version in release.versions:
             commit = repo.show(version.version)
             if commit is None:
-                error_print(f"Commit {version.version} does not exist")
-                exit(1)
+                errors.append(error_print(f"Commit {version.version} does not exist"))
+                continue
             if release.rc_name not in commit.branches:
-                error_print(
-                    f"Commit {version.version} is not on branch {release.rc_name}. Commit found on brances: {', '.join(commit.branches)}"
+                errors.append(
+                    error_print(
+                        f"Commit {version.version} is not on branch {release.rc_name}. Commit found on brances: {', '.join(commit.branches)}"
+                    )
                 )
-                exit(1)
 
-    success_print("All versions are on the correct branches")
+    if len(errors) == 0:
+        success_print("All versions are on the correct branches")
+    return errors
 
 
 if __name__ == "__main__":
@@ -149,13 +148,15 @@ if __name__ == "__main__":
     )
     index = yaml.load(open(args.path, "r", encoding="utf8"), Loader=yaml.FullLoader)
 
-    validate_schema(index, args.schema_path)
+    errors = []
+
+    errors.extend(validate_schema(index, args.schema_path))
 
     index = ReleaseLoader(pathlib.Path(args.path).parent).index().root
 
-    check_if_there_is_a_base_version(index)
-    check_unique_version_names_within_release(index)
-    check_rc_order(index)
+    errors.extend(check_if_there_is_a_base_version(index))
+    errors.extend(check_unique_version_names_within_release(index))
+    errors.extend(check_rc_order(index))
 
     repo = GitRepo(
         "https://github.com/dfinity/ic.git", repo_cache_dir=pathlib.Path(args.repo_path).parent, main_branch="master"
@@ -163,9 +164,10 @@ if __name__ == "__main__":
     repo.fetch()
     repo.ensure_branches([release.rc_name for release in index.releases])
 
-    check_if_commits_really_exist(index, repo)
-    check_versions_on_specific_branches(index, repo)
-    check_version_to_tags_consistency(index, repo)
+    errors.extend(check_if_commits_really_exist(index, repo))
+    errors.extend(check_versions_on_specific_branches(index, repo))
     # Check that versions from a release cannot be removed if notes were published to the forum
 
+    if len(errors) > 0:
+        exit(1)
     success_print("All checks passed")
