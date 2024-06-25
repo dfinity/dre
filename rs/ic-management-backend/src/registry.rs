@@ -752,6 +752,14 @@ impl RegistryState {
         self.network.get_nns_urls()
     }
 
+    pub fn get_decentralized_nodes(&self, principals: &[PrincipalId]) -> Vec<decentralization::network::Node> {
+        self.nodes()
+            .values()
+            .filter(|node| principals.contains(&node.principal))
+            .map(decentralization::network::Node::from)
+            .collect_vec()
+    }
+
     pub async fn get_unassigned_nodes_replica_version(&self) -> Result<String, anyhow::Error> {
         let unassigned_config_key = ic_registry_keys::make_unassigned_nodes_config_record_key();
 

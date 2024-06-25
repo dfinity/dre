@@ -15,7 +15,10 @@ struct SubnetRequest {
 }
 
 #[get("/subnet/{subnet}/pending_action")]
-async fn pending_action(request: web::Path<SubnetRequest>, registry: web::Data<Arc<RwLock<RegistryState>>>) -> Result<HttpResponse, Error> {
+pub(crate) async fn pending_action(
+    request: web::Path<SubnetRequest>,
+    registry: web::Data<Arc<RwLock<RegistryState>>>,
+) -> Result<HttpResponse, Error> {
     match registry.read().await.subnets_with_proposals().await {
         Ok(subnets) => {
             if let Some(subnet) = subnets.get(&request.subnet) {
@@ -32,7 +35,10 @@ async fn pending_action(request: web::Path<SubnetRequest>, registry: web::Data<A
 }
 
 #[get("/subnet/{subnet}/change_preview")]
-async fn change_preview(request: web::Path<SubnetRequest>, registry: web::Data<Arc<RwLock<RegistryState>>>) -> Result<HttpResponse, Error> {
+pub(crate) async fn change_preview(
+    request: web::Path<SubnetRequest>,
+    registry: web::Data<Arc<RwLock<RegistryState>>>,
+) -> Result<HttpResponse, Error> {
     match registry.read().await.subnets_with_proposals().await {
         Ok(subnets) => {
             let subnet = subnets
@@ -57,7 +63,10 @@ async fn change_preview(request: web::Path<SubnetRequest>, registry: web::Data<A
 ///
 /// All nodes in the request must belong to exactly one subnet.
 #[post("/subnet/membership/replace")]
-async fn replace(request: web::Json<MembershipReplaceRequest>, registry: web::Data<Arc<RwLock<RegistryState>>>) -> Result<HttpResponse, Error> {
+pub(crate) async fn replace(
+    request: web::Json<MembershipReplaceRequest>,
+    registry: web::Data<Arc<RwLock<RegistryState>>>,
+) -> Result<HttpResponse, Error> {
     let registry = registry.read().await;
     let all_nodes = registry.nodes();
 
@@ -157,7 +166,10 @@ async fn replace(request: web::Json<MembershipReplaceRequest>, registry: web::Da
 
 /// Simulates creation of a new subnet
 #[post("/subnet/create")]
-async fn create_subnet(registry: web::Data<Arc<RwLock<RegistryState>>>, request: web::Json<SubnetCreateRequest>) -> Result<HttpResponse, Error> {
+pub(crate) async fn create_subnet(
+    registry: web::Data<Arc<RwLock<RegistryState>>>,
+    request: web::Json<SubnetCreateRequest>,
+) -> Result<HttpResponse, Error> {
     let registry = registry.read().await;
     println!(
         "Received a request to create a subnet of size {:?} and MinNakamotoCoefficients {}",
@@ -180,7 +192,7 @@ async fn create_subnet(registry: web::Data<Arc<RwLock<RegistryState>>>, request:
 
 /// Simulates resizing the subnet, i.e. adding or removing nodes to a subnet.
 #[post("/subnet/membership/resize")]
-async fn resize(request: web::Json<SubnetResizeRequest>, registry: web::Data<Arc<RwLock<RegistryState>>>) -> Result<HttpResponse, Error> {
+pub(crate) async fn resize(request: web::Json<SubnetResizeRequest>, registry: web::Data<Arc<RwLock<RegistryState>>>) -> Result<HttpResponse, Error> {
     let registry = registry.read().await;
 
     let change = registry

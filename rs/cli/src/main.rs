@@ -2,25 +2,26 @@ use crate::ic_admin::IcAdminWrapper;
 use clap::{error::ErrorKind, CommandFactory, Parser};
 use dialoguer::Confirm;
 use dotenv::dotenv;
+use dre::cli::proposals::ProposalStatus;
 use dre::detect_neuron::Auth;
 use dre::general::{filter_proposals, get_node_metrics_history, vote_on_proposals};
 use dre::operations::hostos_rollout::{NodeGroupUpdate, NumberOfNodes};
-use dre::{cli, ic_admin, local_unused_port, registry_dump, runner};
+use dre::{cli, ic_admin, registry_dump, runner};
 use ic_base_types::CanisterId;
 use ic_canisters::governance::{governance_canister_version, GovernanceCanisterWrapper};
 use ic_canisters::CanisterClient;
-use ic_management_backend::endpoints;
+use ic_management_types::filter_map_nns_function_proposals;
 use ic_management_types::requests::NodesRemoveRequest;
 use ic_management_types::{Artifact, MinNakamotoCoefficients, NodeFeature};
+
 use ic_nns_common::pb::v1::ProposalId;
 use ic_nns_governance::pb::v1::ListProposalInfo;
 use log::{info, warn};
 use regex::Regex;
+use registry_canister::mutations::do_change_subnet_membership::ChangeSubnetMembershipPayload;
 use serde_json::Value;
 use std::collections::BTreeMap;
 use std::str::FromStr;
-use std::sync::mpsc;
-use std::thread;
 use tokio::runtime::Runtime;
 
 const STAGING_NEURON_ID: u64 = 49;
@@ -70,35 +71,18 @@ async fn async_main() -> Result<(), anyhow::Error> {
 
     let governance_canister_version = governance_canister_v.stringified_hash;
 
-    let (tx, rx) = mpsc::channel();
-
-    let backend_port = local_unused_port();
-    let target_network_backend = target_network.clone();
-    thread::spawn(move || {
-        let rt = tokio::runtime::Runtime::new().unwrap();
-        rt.block_on(async move {
-            endpoints::run_backend(&target_network_backend, "127.0.0.1", backend_port, true, Some(tx))
-                .await
-                .expect("failed")
-        });
-    });
-
-    let srv = rx.recv().unwrap();
-
-    let r = ic_admin::with_ic_admin(governance_canister_version.into(), async {
+    ic_admin::with_ic_admin(governance_canister_version.into(), async {
         let dry_run = cli_opts.dry_run;
+        let cli = dre::parsed_cli::ParsedCli::from_opts(&cli_opts)
+            .await
+            .expect("Failed to create authenticated CLI");
+        let ic_admin_wrapper = IcAdminWrapper::from_cli(cli);
 
-        let runner_instance = {
-            let cli = dre::parsed_cli::ParsedCli::from_opts(&cli_opts)
-                .await
-                .expect("Failed to create authenticated CLI");
-            let ic_admin_wrapper = IcAdminWrapper::from_cli(cli);
-            runner::Runner::new_with_network_and_backend_port(ic_admin_wrapper, &target_network, backend_port)
-                .await
-                .expect("Failed to create a runner")
-        };
+        let runner_instance = runner::Runner::new(ic_admin_wrapper, &target_network)
+            .await
+            .expect("Failed to create a runner");
 
-        match &cli_opts.subcommand {
+        let r = match &cli_opts.subcommand {
             cli::Commands::DerToPrincipal { path } => {
                 let principal = ic_base_types::PrincipalId::new_self_authenticating(&std::fs::read(path)?);
                 println!("{}", principal);
@@ -268,26 +252,20 @@ async fn async_main() -> Result<(), anyhow::Error> {
             cli::Commands::Propose { args } => runner_instance.ic_admin.run_passthrough_propose(args, dry_run).await,
 
             cli::Commands::UpdateUnassignedNodes { nns_subnet_id } => {
-                let runner_instance = if target_network.is_mainnet() {
-                    runner_instance.as_automation()
+                let ic_admin = if target_network.is_mainnet() {
+                    runner_instance.ic_admin.clone().as_automation()
                 } else {
-                    runner_instance
+                    runner_instance.ic_admin.clone()
                 };
                 let nns_subnet_id = match nns_subnet_id {
                     Some(subnet_id) => subnet_id.to_owned(),
                     None => {
-                        let res = runner_instance
-                            .ic_admin
-                            .run_passthrough_get(&["get-subnet-list".to_string()], true)
-                            .await?;
+                        let res = ic_admin.run_passthrough_get(&["get-subnet-list".to_string()], true).await?;
                         let subnet_list: Vec<String> = serde_json::from_str(&res)?;
                         subnet_list.first().ok_or_else(|| anyhow::anyhow!("No subnet found"))?.clone()
                     }
                 };
-                runner_instance
-                    .ic_admin
-                    .update_unassigned_nodes(&nns_subnet_id, &target_network, dry_run)
-                    .await
+                ic_admin.update_unassigned_nodes(&nns_subnet_id, &target_network, dry_run).await
             }
 
             cli::Commands::Version(version_command) => match &version_command {
@@ -331,13 +309,11 @@ async fn async_main() -> Result<(), anyhow::Error> {
             },
 
             cli::Commands::Hostos(nodes) => {
-                let runner_instance = if target_network.is_mainnet() {
-                    runner_instance.as_automation()
-                } else {
-                    runner_instance
-                };
+                let as_automation = target_network.is_mainnet();
                 match &nodes.subcommand {
-                    cli::hostos::Commands::Rollout { version, nodes } => runner_instance.hostos_rollout(nodes.clone(), version, dry_run, None).await,
+                    cli::hostos::Commands::Rollout { version, nodes } => {
+                        runner_instance.hostos_rollout(nodes.clone(), version, dry_run, None, as_automation).await
+                    }
                     cli::hostos::Commands::RolloutFromNodeGroup {
                         version,
                         assignment,
@@ -347,7 +323,9 @@ async fn async_main() -> Result<(), anyhow::Error> {
                     } => {
                         let update_group = NodeGroupUpdate::new(*assignment, *owner, NumberOfNodes::from_str(nodes_in_group)?);
                         if let Some((nodes_to_update, summary)) = runner_instance.hostos_rollout_nodes(update_group, version, exclude).await? {
-                            return runner_instance.hostos_rollout(nodes_to_update, version, dry_run, Some(summary)).await;
+                            return runner_instance
+                                .hostos_rollout(nodes_to_update, version, dry_run, Some(summary), as_automation)
+                                .await;
                         }
                         Ok(())
                     }
@@ -549,14 +527,38 @@ async fn async_main() -> Result<(), anyhow::Error> {
                     println!("{}", proposal);
                     Ok(())
                 }
+                cli::proposals::Commands::Analyze { proposal_id } => {
+                    let nns_url = target_network.get_nns_urls().first().expect("Should have at least one NNS URL");
+                    let client = GovernanceCanisterWrapper::from(CanisterClient::from_anonymous(nns_url)?);
+                    let proposal = client.get_proposal(*proposal_id).await?;
+
+                    return if proposal.status() == ProposalStatus::Open.into() {
+                        if let Some((_, change_membership)) =
+                            filter_map_nns_function_proposals::<ChangeSubnetMembershipPayload>(&vec![proposal]).first()
+                        {
+                            runner_instance.decentralization_change(change_membership).await
+                        } else {
+                            Err(anyhow::anyhow!(
+                                "Proposal {} must have {} type",
+                                proposal_id,
+                                ic_nns_governance::pb::v1::NnsFunction::ChangeSubnetMembership.as_str_name()
+                            ))
+                        }
+                    } else {
+                        Err(anyhow::anyhow!(
+                            "Proposal {} has status {}\nProposal must have status: {}",
+                            proposal_id,
+                            proposal.status().as_str_name(),
+                            ProposalStatus::Open
+                        ))
+                    };
+                }
             },
-        }
+        };
+        let _ = runner_instance.stop_backend().await;
+        r
     })
-    .await;
-
-    srv.stop(false).await;
-
-    r
+    .await
 }
 
 // Construct MinNakamotoCoefficients from an array (slice) of ["key=value"], and

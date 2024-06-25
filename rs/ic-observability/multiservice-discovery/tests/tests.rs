@@ -2,14 +2,10 @@
 mod tests {
     use anyhow::anyhow;
     use assert_cmd::cargo::CommandCargoExt;
-    use multiservice_discovery_shared::builders::prometheus_config_structure::{
-        PrometheusStaticConfig, IC_NAME, IC_NODE, IC_SUBNET, JOB,
-    };
+    use multiservice_discovery_shared::builders::prometheus_config_structure::{PrometheusStaticConfig, IC_NAME, IC_NODE, IC_SUBNET, JOB};
     use reqwest::IntoUrl;
     use serde_json::Value;
     use std::collections::{BTreeMap, BTreeSet};
-    use std::io::Cursor;
-    use std::path::Path;
     use std::process::Command;
     use std::thread;
     use std::time::Duration;
@@ -19,10 +15,7 @@ mod tests {
     const CARGO_SD_BIN: &str = "multiservice-discovery";
     const API_NODES_URL: &str = "https://ic-api.internetcomputer.org/api/v3/nodes";
 
-    async fn reqwest_retry<T: IntoUrl + std::marker::Copy>(
-        url: T,
-        timeout: Duration,
-    ) -> anyhow::Result<reqwest::Response> {
+    async fn reqwest_retry<T: IntoUrl + std::marker::Copy>(url: T, timeout: Duration) -> anyhow::Result<reqwest::Response> {
         let client = reqwest::Client::builder()
             .timeout(Duration::from_secs(15))
             .build()
@@ -42,12 +35,6 @@ mod tests {
         }
     }
 
-    async fn download_and_extract(url: &str, output_target_path: &Path) -> anyhow::Result<()> {
-        let response = reqwest::get(url).await?.bytes().await?;
-        zip_extract::extract(Cursor::new(response), output_target_path, false)?;
-        Ok(())
-    }
-
     #[derive(Debug, PartialEq)]
     pub struct TestData {
         keys: Vec<String>,
@@ -58,22 +45,21 @@ mod tests {
     }
     impl TestData {
         fn from_prom(targets: Vec<PrometheusStaticConfig>) -> Self {
-            let labels_set =
-                targets
-                    .iter()
-                    .cloned()
-                    .fold(BTreeMap::new(), |mut acc: BTreeMap<String, BTreeSet<String>>, v| {
-                        for (key, value) in v.labels {
-                            if let Some(grouped_set) = acc.get_mut(&key) {
-                                grouped_set.insert(value);
-                            } else {
-                                let mut new_set = BTreeSet::new();
-                                new_set.insert(value);
-                                acc.insert(key, new_set);
-                            }
+            let labels_set = targets
+                .iter()
+                .cloned()
+                .fold(BTreeMap::new(), |mut acc: BTreeMap<String, BTreeSet<String>>, v| {
+                    for (key, value) in v.labels {
+                        if let Some(grouped_set) = acc.get_mut(&key) {
+                            grouped_set.insert(value);
+                        } else {
+                            let mut new_set = BTreeSet::new();
+                            new_set.insert(value);
+                            acc.insert(key, new_set);
                         }
-                        acc
-                    });
+                    }
+                    acc
+                });
 
             Self {
                 keys: labels_set.keys().cloned().collect::<Vec<_>>(),
@@ -88,10 +74,7 @@ mod tests {
             Self {
                 nodes,
                 subnets,
-                keys: vec!["ic", "ic_node", "ic_subnet", "job"]
-                    .into_iter()
-                    .map(String::from)
-                    .collect(),
+                keys: vec!["ic", "ic_node", "ic_subnet", "job"].into_iter().map(String::from).collect(),
                 ic_name: vec!["mercury"].into_iter().map(String::from).collect(),
                 jobs: vec![
                     "guest_metrics_proxy",
@@ -119,10 +102,9 @@ mod tests {
 
             let args = vec!["--targets-dir", registry_dir.path().to_str().unwrap()];
             let mut sd_server = self.command.args(args).spawn().unwrap();
-            let targets: Vec<PrometheusStaticConfig> =
-                reqwest_retry(TARGETS_URL, REQWEST_TIMEOUT).await?.json().await?;
+            let targets: Vec<PrometheusStaticConfig> = reqwest_retry(TARGETS_URL, REQWEST_TIMEOUT).await?.json().await?;
             sd_server.kill().unwrap();
-            return Ok(targets);
+            Ok(targets)
         }
 
         pub fn from_local_bin() -> Self {
@@ -130,20 +112,11 @@ mod tests {
                 command: Command::cargo_bin(CARGO_SD_BIN).unwrap_or(Command::new(BAZEL_SD_BIN)),
             }
         }
-
-        pub async fn from_remote_bin(sd_url: &str) -> Self {
-            let sd_dir = tempdir().unwrap();
-            let sd_bin_path = sd_dir.path().join("multiservice-discovery");
-            download_and_extract(sd_url, sd_bin_path.as_path()).await.unwrap();
-            Self {
-                command: Command::new(sd_bin_path),
-            }
-        }
     }
 
     pub struct ExpectedDataFetcher;
     impl ExpectedDataFetcher {
-        async fn from_public_dashboard_api(&self) -> anyhow::Result<TestData> {
+        async fn with_public_dashboard_api_data(&self) -> anyhow::Result<TestData> {
             const REQWEST_TIMEOUT: Duration = Duration::from_secs(15);
             let response: Value = reqwest_retry(API_NODES_URL, REQWEST_TIMEOUT).await?.json().await?;
             let mut subnets = BTreeSet::new();
@@ -161,25 +134,12 @@ mod tests {
                 })
                 .collect::<Vec<_>>();
 
-            Ok(TestData::from_expected(
-                nodes,
-                subnets.iter().cloned().collect::<Vec<_>>(),
-            ))
-        }
-
-        async fn from_main_sd(&self) -> anyhow::Result<TestData> {
-            const MAIN_SD_URL: &str = "";
-            let targets: Vec<PrometheusStaticConfig> =
-                SDRunner::from_remote_bin(MAIN_SD_URL).await.fetch_targets().await?;
-
-            Ok(TestData::from_prom(targets))
+            Ok(TestData::from_expected(nodes, subnets.iter().cloned().collect::<Vec<_>>()))
         }
 
         pub async fn get_expected_data(&self) -> anyhow::Result<TestData> {
             // TODO: Add support for getting TestData from main MSD bin
-            self.from_public_dashboard_api()
-                .await
-                .or(Err(anyhow!("Expected data not found")))
+            self.with_public_dashboard_api_data().await.or(Err(anyhow!("Expected data not found")))
         }
     }
 
