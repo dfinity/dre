@@ -77,7 +77,7 @@ class GitRepo:
                     "show",
                     "--no-patch",
                     "--format=%H%n%B%n%an%n%ad",
-                    object,
+                    obj,
                 ],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,

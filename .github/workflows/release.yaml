@@ -35,5 +35,4 @@ jobs:
         # Uncomment once the testing is finished
         # if: ${{ steps.changed-files.outputs.all_changed_files_count > 0 && steps.changed-files.outputs.other_changed_files_count == 0  }}
         run: |
-          python3 -m pip install -r requirements.txt
           python3 release-controller/ci_check.py --repo-path /home/runner/.cache
