@@ -4,9 +4,9 @@ use crate::operations::hostos_rollout::{HostosRollout, HostosRolloutResponse, No
 use crate::ops_subnet_node_replace;
 use crate::{ic_admin, local_unused_port};
 use actix_web::dev::ServerHandle;
+use decentralization::network::TopologyManager;
 use decentralization::network::{NodeSelector, SubnetChange, SubnetQuerier, SubnetQueryBy};
 use decentralization::SubnetChangeResponse;
-use decentralization::network::TopologyManager;
 use futures::future::join_all;
 use ic_base_types::PrincipalId;
 use ic_management_backend::endpoints;
@@ -542,16 +542,17 @@ impl Runner {
         }
         Ok(())
     }
-    
+
     pub async fn subnet_rescue(&self, subnet: &PrincipalId, keep_nodes: &[String], dry_run: bool) -> anyhow::Result<()> {
         let change = SubnetChangeResponse::from(
-            &self.registry
+            &self
+                .registry
                 .modify_subnet_nodes(SubnetQueryBy::SubnetId(*subnet))
                 .await
                 .map_err(|e| anyhow::anyhow!(e))?
                 .keeping_from_used(NodeSelector::FeatureList(keep_nodes.to_vec()))
                 .rescue()
-                .map_err(|e| anyhow::anyhow!(e))?
+                .map_err(|e| anyhow::anyhow!(e))?,
         );
 
         println!("{}", change);

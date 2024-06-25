@@ -308,11 +308,10 @@ pub mod subnet {
 
         /// Replace all nodes in a subnet
         Rescue {
-            /// Node features or Node IDs to exclude from the replacement 
+            /// Node features or Node IDs to exclude from the replacement
             #[clap(long, num_args(1..))]
             keep_nodes: Vec<String>,
         },
-        
     }
 }
 

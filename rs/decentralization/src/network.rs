@@ -768,16 +768,16 @@ pub trait TopologyManager: SubnetQuerier + AvailableNodesQuerier {
 pub enum NodeSelector {
     PrincipalIdList(Vec<PrincipalId>),
     NodeList(Vec<Node>),
-    FeatureList(Vec<String>)
+    FeatureList(Vec<String>),
 }
 
 impl NodeSelector {
-    pub fn contains(&self, node: &Node) -> bool {
-        match &self {
+    pub fn partition(&self, nodes: Vec<Node>) -> (Vec<Node>, Vec<Node>) {
+        nodes.into_iter().partition(|node: &Node| match &self {
             NodeSelector::PrincipalIdList(list) => list.contains(&node.id),
             NodeSelector::NodeList(list) => list.contains(node),
             NodeSelector::FeatureList(list) => list.iter().any(|v| node.matches_feature_value(v)),
-        }
+        })
     }
 }
 
@@ -819,55 +819,37 @@ impl SubnetChangeRequest {
     }
 
     pub fn including_from_available(self, selector: NodeSelector) -> Self {
+        let (selected, _) = selector.partition(self.available_nodes.clone());
         Self {
-            include_nodes: self.available_nodes
-                .iter()
-                .filter(|n| selector.contains(&n))
-                .cloned()
-                .collect::<Vec<_>>(),
+            include_nodes: selected,
             ..self
         }
     }
 
     pub fn excluding_from_available(self, selector: NodeSelector) -> Self {
+        let (_, unselected) = selector.partition(self.available_nodes.clone());
         Self {
-            available_nodes: self.available_nodes
-                .iter()
-                .filter(|n| !selector.contains(&n))
-                .cloned()
-                .collect::<Vec<_>>(),
+            available_nodes: unselected,
             ..self
         }
     }
 
     pub fn keeping_from_used(self, selector: NodeSelector) -> Self {
         let mut change_new = self.clone();
+        let (selected, unselected) = selector.partition(self.subnet.nodes);
+        change_new.subnet.nodes = selected;
+        change_new.removed_nodes.extend(unselected);
 
-        change_new.subnet.nodes.retain(|n: &Node| {
-            if selector.contains(n) {
-                true
-            } else {
-                change_new.removed_nodes.push(n.clone());
-                false
-            }
-        });
-
-        return change_new;
+        change_new
     }
 
     pub fn removing_from_used(self, selector: NodeSelector) -> Self {
         let mut change_new = self.clone();
+        let (selected, unselected) = selector.partition(self.subnet.nodes);
+        change_new.subnet.nodes = unselected;
+        change_new.removed_nodes.extend(selected);
 
-        change_new.subnet.nodes.retain(|n: &Node| {
-            if selector.contains(n) {
-                change_new.removed_nodes.push(n.clone());
-                false
-            } else {
-                true
-            }
-        });
-
-        return change_new;
+        change_new
     }
 
     pub fn with_min_nakamoto_coefficients(self, min_nakamoto_coefficients: Option<MinNakamotoCoefficients>) -> Self {
