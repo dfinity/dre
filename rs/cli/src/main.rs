@@ -256,7 +256,7 @@ async fn async_main() -> Result<(), anyhow::Error> {
             }
 
             cli::Commands::Get { args } => {
-                runner_instance.ic_admin.run_passthrough_get(args, false).await?;
+                runner_instance.ic_admin.run_passthrough_get(args, false, false).await?;
                 Ok(())
             }
 
@@ -273,7 +273,7 @@ async fn async_main() -> Result<(), anyhow::Error> {
                     None => {
                         let res = runner_instance
                             .ic_admin
-                            .run_passthrough_get(&["get-subnet-list".to_string()], true)
+                            .run_passthrough_get(&["get-subnet-list".to_string()], true, false)
                             .await?;
                         let subnet_list: Vec<String> = serde_json::from_str(&res)?;
                         subnet_list.first().ok_or_else(|| anyhow::anyhow!("No subnet found"))?.clone()

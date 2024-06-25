@@ -280,10 +280,13 @@ impl IcAdminWrapper {
     async fn _run_ic_admin_with_args(&self, ic_admin_args: &[String], with_auth: bool, silent: bool) -> anyhow::Result<String> {
         let ic_admin_path = self.ic_admin_bin_path.clone().unwrap_or_else(|| "ic-admin".to_string());
         let mut cmd = Command::new(ic_admin_path);
-        let auth_options = self.neuron.get_auth().await?.as_arg_vec(with_auth);
+        let auth_options = if with_auth {
+            self.neuron.get_auth().await?.as_arg_vec(with_auth)
+        } else {
+            [].to_vec()
+        };
         let root_options = [auth_options, vec!["--nns-urls".to_string(), self.network.get_nns_urls_string()]].concat();
         let cmd = cmd.args([&root_options, ic_admin_args].concat());
-
         if silent {
             cmd.stderr(Stdio::piped());
         } else {
@@ -331,7 +334,7 @@ impl IcAdminWrapper {
         }
     }
 
-    pub async fn run(&self, command: &str, args: &[String], with_auth: bool, silent: bool) -> anyhow::Result<String> {
+    pub async fn run(&self, command: &str, args: &[String], silent: bool, with_auth: bool) -> anyhow::Result<String> {
         let ic_admin_args = [&[command.to_string()], args].concat();
         self._run_ic_admin_with_args(&ic_admin_args, with_auth, silent).await
     }
@@ -382,7 +385,7 @@ impl IcAdminWrapper {
     }
 
     /// Run an `ic-admin get-*` command directly, and without an HSM
-    pub async fn run_passthrough_get(&self, args: &[String], silent: bool) -> anyhow::Result<String> {
+    pub async fn run_passthrough_get(&self, args: &[String], silent: bool, with_auth: bool) -> anyhow::Result<String> {
         if args.is_empty() {
             println!("List of available ic-admin 'get' sub-commands:\n");
             for subcmd in self.grep_subcommands(r"\s+get-(.+?)\s") {
@@ -410,7 +413,7 @@ impl IcAdminWrapper {
         };
 
         let stdout = self
-            .run(&args[0], &args.iter().skip(1).cloned().collect::<Vec<_>>(), false, silent)
+            .run(&args[0], &args.iter().skip(1).cloned().collect::<Vec<_>>(), silent, with_auth)
             .await?;
         Ok(stdout)
     }
