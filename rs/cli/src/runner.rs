@@ -543,15 +543,14 @@ impl Runner {
         Ok(())
     }
 
-    pub async fn subnet_rescue(&self, subnet: &PrincipalId, keep_nodes: &[String], dry_run: bool) -> anyhow::Result<()> {
+    pub async fn subnet_rescue(&self, subnet: &PrincipalId, keep_nodes: Option<Vec<String>>, dry_run: bool) -> anyhow::Result<()> {
         let change = SubnetChangeResponse::from(
             &self
                 .registry
                 .modify_subnet_nodes(SubnetQueryBy::SubnetId(*subnet))
                 .await
                 .map_err(|e| anyhow::anyhow!(e))?
-                .keeping_from_used(NodeSelector::FeatureList(keep_nodes.to_vec()))
-                .rescue()
+                .rescue(keep_nodes.map(NodeSelector::FeatureList))
                 .map_err(|e| anyhow::anyhow!(e))?,
         );
 
@@ -560,25 +559,8 @@ impl Runner {
         if change.added.is_empty() && change.removed.is_empty() {
             return Ok(());
         }
-        if change.added.len() == change.removed.len() {
-            self.run_membership_change(change.clone(), ops_subnet_node_replace::replace_proposal_options(&change)?, dry_run)
-                .await
-        } else {
-            let action = if change.added.len() < change.removed.len() {
-                "Removing nodes from"
-            } else {
-                "Adding nodes to"
-            };
-            self.run_membership_change(
-                change,
-                ProposeOptions {
-                    title: format!("{action} subnet {subnet}").into(),
-                    summary: format!("{action} subnet {subnet}").into(),
-                    motivation: None,
-                },
-                dry_run,
-            )
+
+        self.run_membership_change(change.clone(), ops_subnet_node_replace::replace_proposal_options(&change)?, dry_run)
             .await
-        }
     }
 }

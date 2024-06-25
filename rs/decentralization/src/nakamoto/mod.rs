@@ -969,8 +969,7 @@ mod tests {
 
         let with_keeping_features = change_initial
             .clone()
-            .keeping_from_used(NodeSelector::FeatureList(vec!["CH".to_string()]))
-            .rescue()
+            .rescue(Some(NodeSelector::FeatureList(vec!["CH".to_string()])))
             .unwrap();
 
         assert_eq!(with_keeping_features.added().len(), 6);
@@ -987,8 +986,7 @@ mod tests {
         let node_to_keep = subnet_initial.nodes.first().unwrap();
         let with_keeping_principals = change_initial
             .clone()
-            .keeping_from_used(NodeSelector::PrincipalIdList(vec![node_to_keep.id]))
-            .rescue()
+            .rescue(Some(NodeSelector::PrincipalIdList(vec![node_to_keep.id])))
             .unwrap();
 
         assert_eq!(with_keeping_principals.added().len(), 6);
@@ -1004,8 +1002,7 @@ mod tests {
 
         let rescue_all = change_initial
             .clone()
-            .keeping_from_used(NodeSelector::FeatureList(vec![]))
-            .rescue()
+            .rescue(None)
             .unwrap();
 
         assert_eq!(rescue_all.added().len(), 7);

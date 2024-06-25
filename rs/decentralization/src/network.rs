@@ -823,6 +823,13 @@ impl SubnetChangeRequest {
         change_new
     }
 
+    fn keeping_from_used(self, selector: NodeSelector) -> Self {
+        let mut change_new = self.clone();
+        let (_, unselected) = selector.partition(self.subnet.nodes);
+        change_new.removed_nodes.extend(unselected);
+        change_new
+    }
+
     pub fn subnet(&self) -> DecentralizedSubnet {
         self.subnet.clone()
     }
@@ -850,21 +857,6 @@ impl SubnetChangeRequest {
         }
     }
 
-    pub fn keeping_from_used(self, selector: NodeSelector) -> Self {
-        let mut change_new = self.clone();
-        let (_, unselected) = selector.partition(self.subnet.nodes);
-        change_new.removed_nodes.extend(unselected);
-        change_new
-    }
-
-    pub fn removing_from_used(self, selector: NodeSelector) -> Self {
-        let mut change_new = self.clone();
-        let (selected, _) = selector.partition(self.subnet.nodes);
-        change_new.removed_nodes.extend(selected);
-
-        change_new
-    }
-
     pub fn with_min_nakamoto_coefficients(self, min_nakamoto_coefficients: Option<MinNakamotoCoefficients>) -> Self {
         Self {
             min_nakamoto_coefficients,
@@ -876,18 +868,19 @@ impl SubnetChangeRequest {
     /// adding the same number back.
     pub fn optimize(mut self, optimize_count: usize, replacements_unhealthy: &Vec<Node>) -> Result<SubnetChange, NetworkError> {
         let old_nodes = self.subnet.nodes.clone();
-        self.subnet = self
-            .subnet
-            .without_nodes(replacements_unhealthy.clone())?
-            .without_nodes(self.removed_nodes.clone())?;
+        self.subnet = self.subnet.without_nodes(replacements_unhealthy.clone())?;
         let result = self.resize(optimize_count + replacements_unhealthy.len(), optimize_count)?;
         Ok(SubnetChange { old_nodes, ..result })
     }
 
-    pub fn rescue(self) -> Result<SubnetChange, NetworkError> {
+    pub fn rescue(self, nodes_to_keep: Option<NodeSelector>) -> Result<SubnetChange, NetworkError> {
         let old_nodes = self.subnet.nodes.clone();
+        let mut change = if let Some(nodes_to_keep) = nodes_to_keep {
+            self.keeping_from_used(nodes_to_keep)
+        } else {
+            self.all_nodes_removed()
+        };
 
-        let mut change = if self.removed_nodes.is_empty() { self.all_nodes_removed() } else { self };
         change.subnet = change.subnet.without_nodes(change.removed_nodes.clone())?;
         info!("Nodes left in the subnet:\n{:#?}", &change.subnet.nodes);
         let result = change.resize(change.removed_nodes.len(), 0)?;
