@@ -143,9 +143,6 @@ def test_versions_to_unelect():
     index = parse_yaml_raw_as(
         release_index.Model,
         """
-rollout:
-  stages: []
-
 releases:
   - rc_name: rc--2024-02-21_23-01
     versions:
@@ -223,9 +220,6 @@ def test_oldest_active_release():
     index = parse_yaml_raw_as(
         release_index.Model,
         """
-rollout:
-  stages: []
-
 releases:
   - rc_name: rc--2024-02-21_23-01
     versions:
