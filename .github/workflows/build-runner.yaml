@@ -42,4 +42,3 @@ jobs:
           file: ./docker/runner.Dockerfile
           push: ${{ github.ref == 'refs/heads/main' }}
           tags: ghcr.io/dfinity/dre/actions-runner:${{ github.sha }}
-      
