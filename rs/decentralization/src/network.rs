@@ -29,16 +29,12 @@ pub struct Node {
     pub decentralized: bool,
 }
 
-
 impl std::fmt::Display for Node {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
             "Node ID: {}\nFeatures:\n{}\nDfinity Owned: {}\nDecentralized: {}",
-            self.id,
-            self.features,
-            self.dfinity_owned,
-            self.decentralized
+            self.id, self.features, self.dfinity_owned, self.decentralized
         )
     }
 }
@@ -880,7 +876,8 @@ impl SubnetChangeRequest {
     /// adding the same number back.
     pub fn optimize(mut self, optimize_count: usize, replacements_unhealthy: &Vec<Node>) -> Result<SubnetChange, NetworkError> {
         let old_nodes = self.subnet.nodes.clone();
-        self.subnet = self.subnet
+        self.subnet = self
+            .subnet
             .without_nodes(replacements_unhealthy.clone())?
             .without_nodes(self.removed_nodes.clone())?;
         let result = self.resize(optimize_count + replacements_unhealthy.len(), optimize_count)?;
@@ -889,12 +886,8 @@ impl SubnetChangeRequest {
 
     pub fn rescue(self) -> Result<SubnetChange, NetworkError> {
         let old_nodes = self.subnet.nodes.clone();
-    
-        let mut change = if self.removed_nodes.is_empty() {
-            self.all_nodes_removed()
-        } else {
-            self
-        };
+
+        let mut change = if self.removed_nodes.is_empty() { self.all_nodes_removed() } else { self };
         change.subnet = change.subnet.without_nodes(change.removed_nodes.clone())?;
         info!("Nodes left in the subnet:\n{:#?}", &change.subnet.nodes);
         let result = change.resize(change.removed_nodes.len(), 0)?;

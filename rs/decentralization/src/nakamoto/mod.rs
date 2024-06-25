@@ -963,43 +963,52 @@ mod tests {
     #[test]
     fn test_subnet_rescue() {
         let nodes_available = new_test_nodes("spare", 10, 1);
-        let subnet_initial = new_test_subnet_with_overrides(
-            0,
-            11,
-            7,
-            1,
-            (
-                &NodeFeature::Country,
-                &["CH", "CA", "CA", "CA", "CA", "CA", "BE"],
-            ),
-        );
+        let subnet_initial = new_test_subnet_with_overrides(0, 11, 7, 1, (&NodeFeature::Country, &["CH", "CA", "CA", "CA", "CA", "CA", "BE"]));
 
         let change_initial = SubnetChangeRequest::new(subnet_initial.clone(), nodes_available, Vec::new(), Vec::new(), None);
 
-        let with_keeping_features = change_initial.clone()
+        let with_keeping_features = change_initial
+            .clone()
             .keeping_from_used(NodeSelector::FeatureList(vec!["CH".to_string()]))
             .rescue()
             .unwrap();
 
         assert_eq!(with_keeping_features.added().len(), 6);
-        assert_eq!(with_keeping_features.new_nodes.iter().filter(|n| n.features.get(&NodeFeature::Country).unwrap() == *"CH").collect_vec().len(), 1);
+        assert_eq!(
+            with_keeping_features
+                .new_nodes
+                .iter()
+                .filter(|n| n.features.get(&NodeFeature::Country).unwrap() == *"CH")
+                .collect_vec()
+                .len(),
+            1
+        );
 
         let node_to_keep = subnet_initial.nodes.first().unwrap();
-        let with_keeping_principals = change_initial.clone()
-        .keeping_from_used(NodeSelector::PrincipalIdList(vec![node_to_keep.id]))
-        .rescue()
-        .unwrap();
+        let with_keeping_principals = change_initial
+            .clone()
+            .keeping_from_used(NodeSelector::PrincipalIdList(vec![node_to_keep.id]))
+            .rescue()
+            .unwrap();
 
         assert_eq!(with_keeping_principals.added().len(), 6);
-        assert_eq!(with_keeping_principals.new_nodes.iter().filter(|n| n.id == node_to_keep.id).collect_vec().len(), 1);
+        assert_eq!(
+            with_keeping_principals
+                .new_nodes
+                .iter()
+                .filter(|n| n.id == node_to_keep.id)
+                .collect_vec()
+                .len(),
+            1
+        );
 
-        let rescue_all = change_initial.clone()
+        let rescue_all = change_initial
+            .clone()
             .keeping_from_used(NodeSelector::FeatureList(vec![]))
             .rescue()
             .unwrap();
 
         assert_eq!(rescue_all.added().len(), 7);
         assert_eq!(rescue_all.removed().len(), 7);
-
     }
 }
