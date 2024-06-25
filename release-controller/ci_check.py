@@ -32,7 +32,7 @@ def parse_args():
 
 
 def success_print(message: str):
-    print(f"{Fore.GREEN}{message}{Fore.RESET}")
+    print(f"{Fore.GREEN}✅ SUCCESS: {message}{Fore.RESET}")
 
 
 def print_and_ret(message: str) -> str:
@@ -41,7 +41,7 @@ def print_and_ret(message: str) -> str:
 
 
 def error_print(message: str) -> str:
-    return print_and_ret(f"{Fore.RED}{message}{Fore.RESET}")
+    return print_and_ret(f"{Fore.RED}❌ ERROR: {message}{Fore.RESET}")
 
 
 def validate_schema(index: dict, schema_path: str) -> list[str]:
