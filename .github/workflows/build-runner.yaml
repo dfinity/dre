@@ -12,6 +12,7 @@ on:
     paths:
       - "docker/runner.Dockerfile"
       - "docker/runner.Dockerfile.dockerignore"
+      - ".github/workflows/build-runner.yaml"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
