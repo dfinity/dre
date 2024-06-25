@@ -4,7 +4,8 @@ use crate::operations::hostos_rollout::{HostosRollout, HostosRolloutResponse, No
 use crate::ops_subnet_node_replace;
 use crate::{ic_admin, local_unused_port};
 use actix_web::dev::ServerHandle;
-use decentralization::network::{SubnetChange, SubnetQuerier, SubnetQueryBy};
+use decentralization::network::TopologyManager;
+use decentralization::network::{NodeSelector, SubnetChange, SubnetQuerier, SubnetQueryBy};
 use decentralization::SubnetChangeResponse;
 use futures::future::join_all;
 use ic_base_types::PrincipalId;
@@ -540,5 +541,26 @@ impl Runner {
             println!("{}", SubnetChangeResponse::from(&subnet_change))
         }
         Ok(())
+    }
+
+    pub async fn subnet_rescue(&self, subnet: &PrincipalId, keep_nodes: Option<Vec<String>>, dry_run: bool) -> anyhow::Result<()> {
+        let change = SubnetChangeResponse::from(
+            &self
+                .registry
+                .modify_subnet_nodes(SubnetQueryBy::SubnetId(*subnet))
+                .await
+                .map_err(|e| anyhow::anyhow!(e))?
+                .rescue(keep_nodes.map(NodeSelector::FromFeatures))
+                .map_err(|e| anyhow::anyhow!(e))?,
+        );
+
+        println!("{}", change);
+
+        if change.added.is_empty() && change.removed.is_empty() {
+            return Ok(());
+        }
+
+        self.run_membership_change(change.clone(), ops_subnet_node_replace::replace_proposal_options(&change)?, dry_run)
+            .await
     }
 }
