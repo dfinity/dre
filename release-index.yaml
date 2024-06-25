@@ -1,39 +1,3 @@
-rollout:
-  pause: false
-  skip_days:
-    - 2024-02-26
-  stages:
-    - subnets: [io67a]
-      bake_time: 8h
-    - subnets: [shefu, uzr34]
-      bake_time: 4h
-    - subnets: [pjljw, qdvhd, bkfrj]
-      bake_time: 4h
-    - subnets: [snjp4, w4asl, qxesv]
-      bake_time: 2h
-    - subnets: [4zbus, ejbmu, 2fq7c]
-      bake_time: 2h
-    - subnets: [pae4o, 5kdm2, csyj4]
-      bake_time: 2h
-    - subnets: [eq6en, lhg73, brlsh]
-      bake_time: 2h
-    - subnets: [k44fs, cv73p, 4ecnw]
-      bake_time: 1h
-    - subnets: [opn46, lspz2, o3ow2]
-      bake_time: 1h
-    - subnets: [w4rem, 6pbhf, e66qm]
-      bake_time: 1h
-    - subnets: [yinp6, fuqsr, jtdsg]
-      bake_time: 30m
-    - subnets: [mpubz, x33ed, pzp6e]
-      bake_time: 30m
-    - subnets: [3hhby, nl6hn, gmq5v]
-      bake_time: 30m
-    - update_unassigned_nodes: true
-    - subnets: [tdb26]
-      bake_time: 2h
-      wait_for_next_week: true
-
 releases:
   - rc_name: rc--2024-06-19_23-01
     versions:
@@ -43,6 +7,10 @@ releases:
       - # Successful qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/jobs/7147621252
         name: storage-layer-disabled
         version: ae3c4f30f198eba9c5b113ec32fdec90713c24a0
+      - # Ongoing qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/pipelines/1345332930
+        # This cut will only be rolled out to lhg73.
+        name: cycle-hotfix
+        version: 9c006a50d364edf1403ef50b24c3be39dba8a5f6
   - rc_name: rc--2024-06-12_23-01
     versions:
       - # Successful qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/jobs/7098651594
@@ -51,6 +19,10 @@ releases:
       - # Successful qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/jobs/7114764016
         name: storage-layer-disabled
         version: 2dfe3a1864d1b9a6df462e9503adf351036e7965
+      - # Ongoing qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/pipelines/1345332852
+        # This cut will only be rolled out to lhg73.
+        name: cycle-hotfix
+        version: 48c500d1501e4165fc183e508872a2ef13fd0bef
   - rc_name: rc--2024-06-05_23-01
     versions:
       - # Successful qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/jobs/7033661917
@@ -150,7 +122,7 @@ releases:
         version: 425a0012aeb40008e2e72d913318bc9dbdf3b4f4
   - rc_name: rc--2024-03-06_23-01
     versions:
-      - name: default
+      - name: base
         version: 778d2bb870f858952ca9fbe69324f9864e3cf5e7
       - name: p2p
         version: fff20526e154f8b8d24373efd9b50f588d147e91
