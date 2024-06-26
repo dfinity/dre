@@ -775,25 +775,35 @@ pub trait TopologyManager: SubnetQuerier + AvailableNodesQuerier {
     }
 }
 
-impl PartialEq<Node> for PrincipalId {
+pub trait Identifies<Node> {
+    fn eq(&self, other: &Node) -> bool;
+}
+
+impl Identifies<Node> for PrincipalId {
     fn eq(&self, other: &Node) -> bool {
         &other.id == self
     }
 }
 
-impl PartialEq<Node> for String {
+impl Identifies<Node> for String {
     fn eq(&self, other: &Node) -> bool {
         other.matches_feature_value(self)
     }
 }
 
-trait MatchAnyNode<T: PartialEq<Node>> {
+impl Identifies<Node> for Node {
+    fn eq(&self, other: &Node) -> bool {
+        self == other
+    }
+}
+
+trait MatchAnyNode<T: Identifies<Node>> {
     fn match_any(self, node: &Node) -> bool;
 }
 
-impl<T: PartialEq<Node>> MatchAnyNode<T> for std::slice::Iter<'_, T> {
+impl<T: Identifies<Node>> MatchAnyNode<T> for std::slice::Iter<'_, T> {
     fn match_any(mut self, node: &Node) -> bool {
-        self.any(|n| n == node)
+        self.any(|n| n.eq(node))
     }
 }
 
@@ -826,7 +836,7 @@ impl SubnetChangeRequest {
         }
     }
 
-    pub fn keeping_from_used<T: PartialEq<Node>>(self, nodes: Vec<T>) -> Self {
+    pub fn keeping_from_used<T: Identifies<Node>>(self, nodes: Vec<T>) -> Self {
         let mut change_new = self.clone();
         let nodes_to_keep = self
             .subnet
@@ -838,7 +848,7 @@ impl SubnetChangeRequest {
         change_new
     }
 
-    pub fn removing_from_used<T: PartialEq<Node>>(self, nodes: Vec<T>) -> Self {
+    pub fn removing_from_used<T: Identifies<Node>>(self, nodes: Vec<T>) -> Self {
         let mut change_new = self.clone();
         let nodes_to_remove = self
             .subnet
@@ -850,7 +860,7 @@ impl SubnetChangeRequest {
         change_new
     }
 
-    pub fn including_from_available<T: PartialEq<Node>>(self, nodes: Vec<T>) -> Self {
+    pub fn including_from_available<T: Identifies<Node>>(self, nodes: Vec<T>) -> Self {
         Self {
             include_nodes: self
                 .available_nodes
@@ -862,7 +872,7 @@ impl SubnetChangeRequest {
         }
     }
 
-    pub fn excluding_from_available<T: PartialEq<Node>>(self, nodes: Vec<T>) -> Self {
+    pub fn excluding_from_available<T: Identifies<Node>>(self, nodes: Vec<T>) -> Self {
         Self {
             available_nodes: self
                 .available_nodes
