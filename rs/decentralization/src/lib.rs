@@ -183,17 +183,3 @@ impl Display for SubnetChangeResponse {
         Ok(())
     }
 }
-
-#[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct HealResponse {
-    pub subnets_change_response: Vec<SubnetChangeResponse>,
-}
-
-impl Display for HealResponse {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        for change in &self.subnets_change_response {
-            writeln!(f, "{}", change)?;
-        }
-        Ok(())
-    }
-}

@@ -1,9 +1,8 @@
 use async_trait::async_trait;
-use decentralization::HealResponse;
 use decentralization::SubnetChangeResponse;
 use ic_base_types::PrincipalId;
 use ic_management_types::{
-    requests::{HealRequest, MembershipReplaceRequest, NodesRemoveRequest, NodesRemoveResponse, SubnetCreateRequest, SubnetResizeRequest},
+    requests::{MembershipReplaceRequest, NodesRemoveRequest, NodesRemoveResponse, SubnetCreateRequest, SubnetResizeRequest},
     Artifact, Network, NetworkError, Release, TopologyChangeProposal,
 };
 use log::error;
@@ -99,13 +98,6 @@ impl DashboardBackendClient {
             .await
     }
 
-    pub(crate) async fn network_heal(&self, request: HealRequest) -> anyhow::Result<HealResponse> {
-        reqwest::Client::new()
-            .post(self.url.join("network/heal").map_err(|e| anyhow::anyhow!(e))?)
-            .json(&request)
-            .rest_send()
-            .await
-    }
 }
 
 #[async_trait]
