@@ -40,7 +40,11 @@ impl From<&network::SubnetChange> for SubnetChangeResponse {
         Self {
             added: change.added().iter().map(|n| n.id).collect(),
             removed: change.removed().iter().map(|n| n.id).collect(),
-            subnet_id: if change.id == Default::default() { None } else { Some(change.id) },
+            subnet_id: if change.id == <ic_base_types::PrincipalId as Default>::default() {
+                None
+            } else {
+                Some(change.id)
+            },
             score_before: nakamoto::NakamotoScore::new_from_nodes(&change.old_nodes),
             score_after: nakamoto::NakamotoScore::new_from_nodes(&change.new_nodes),
             motivation: None,

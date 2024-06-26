@@ -1,7 +1,7 @@
 use super::*;
 use crate::health::HealthStatusQuerier;
 use crate::{health, subnets::get_proposed_subnet_changes};
-use decentralization::network::{NodeSelector, SubnetQueryBy, TopologyManager};
+use decentralization::network::{SubnetQueryBy, TopologyManager};
 use ic_base_types::PrincipalId;
 use ic_management_types::requests::{MembershipReplaceRequest, ReplaceTarget, SubnetCreateRequest, SubnetResizeRequest};
 use ic_management_types::Node;
@@ -89,9 +89,9 @@ pub(crate) async fn replace(
             registry.modify_subnet_nodes(SubnetQueryBy::NodeList(nodes_to_replace)).await?
         }
     }
-    .excluding_from_available(NodeSelector::FromFeatures(request.exclude.clone().unwrap_or_default()))
-    .including_from_available(NodeSelector::FromFeatures(request.only.clone()))
-    .including_from_available(NodeSelector::FromPrincipals(request.include.clone().unwrap_or_default()))
+    .excluding_from_available(request.exclude.clone().unwrap_or_default())
+    .including_from_available(request.only.clone())
+    .including_from_available(request.include.clone().unwrap_or_default())
     .with_min_nakamoto_coefficients(request.min_nakamoto_coefficients.clone());
 
     let mut replacements_unhealthy: Vec<decentralization::network::Node> = Vec::new();
@@ -198,9 +198,9 @@ pub(crate) async fn resize(request: web::Json<SubnetResizeRequest>, registry: we
     let change = registry
         .modify_subnet_nodes(SubnetQueryBy::SubnetId(request.subnet))
         .await?
-        .excluding_from_available(NodeSelector::FromFeatures(request.exclude.clone().unwrap_or_default()))
-        .including_from_available(NodeSelector::FromFeatures(request.only.clone().unwrap_or_default()))
-        .including_from_available(NodeSelector::FromPrincipals(request.include.clone().unwrap_or_default()))
+        .excluding_from_available(request.exclude.clone().unwrap_or_default())
+        .including_from_available(request.only.clone().unwrap_or_default())
+        .including_from_available(request.include.clone().unwrap_or_default())
         .resize(request.add, request.remove)?;
 
     Ok(HttpResponse::Ok().json(decentralization::SubnetChangeResponse::from(&change)))
