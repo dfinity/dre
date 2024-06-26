@@ -16,7 +16,7 @@ jobs:
     runs-on:
       labels: dre-runner-custom
     # This image is based on ubuntu:20.04
-    container: ghcr.io/dfinity/dre/actions-runner:0.2.1
+    container: ghcr.io/dfinity/dre/actions-runner:2864b49b24203b5842420ca31f7a4eb33e4076ce
     steps:
       - uses: actions/checkout@v4
         with:
@@ -26,7 +26,7 @@ jobs:
         uses: ./.github/workflows/manage-runner-pre
 
       - name: "📥 Download main test artifact"
-        uses: dawidd6/action-download-artifact@v3.1.4
+        uses: dawidd6/action-download-artifact@v6
         with:
           name: test-artifacts
           branch: main

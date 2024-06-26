@@ -67,7 +67,7 @@ repos:
           - --match=.*
 
   - repo: https://github.com/PyCQA/pylint
-    rev: v2.12.2
+    rev: v2.17.7
     hooks:
       - id: pylint
         name: pylint
@@ -90,3 +90,27 @@ repos:
             "requests",
             "tabulate",
           ]
+  - repo: local
+    hooks:
+      - id: release-index-checks
+        language: system
+        name: release-index-checks
+        verbose: true
+        entry: |
+          bash -c '
+          files=("release-index-schema.json" "release-index.yaml" "release-controller/ci_check.py")
+
+          found=false
+
+          for file in "$@"; do
+            if [[ "${files[@]}" =~ "$file" ]]; then
+              found=true
+              break
+            fi
+          done
+
+          if [[ "$found" == false ]]; then
+              exit 0
+          fi
+          poetry run python release-controller/ci_check.py --repo-path ~/.cache/git/ic
+          '

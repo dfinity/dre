@@ -1,7 +1,7 @@
 use super::*;
 use crate::health::HealthStatusQuerier;
 use crate::{health, subnets::get_proposed_subnet_changes};
-use decentralization::network::{SubnetQueryBy, TopologyManager};
+use decentralization::network::{NodeSelector, SubnetQueryBy, TopologyManager};
 use ic_base_types::PrincipalId;
 use ic_management_types::requests::{MembershipReplaceRequest, ReplaceTarget, SubnetCreateRequest, SubnetResizeRequest};
 use ic_management_types::Node;
@@ -15,7 +15,10 @@ struct SubnetRequest {
 }
 
 #[get("/subnet/{subnet}/pending_action")]
-async fn pending_action(request: web::Path<SubnetRequest>, registry: web::Data<Arc<RwLock<RegistryState>>>) -> Result<HttpResponse, Error> {
+pub(crate) async fn pending_action(
+    request: web::Path<SubnetRequest>,
+    registry: web::Data<Arc<RwLock<RegistryState>>>,
+) -> Result<HttpResponse, Error> {
     match registry.read().await.subnets_with_proposals().await {
         Ok(subnets) => {
             if let Some(subnet) = subnets.get(&request.subnet) {
@@ -32,7 +35,10 @@ async fn pending_action(request: web::Path<SubnetRequest>, registry: web::Data<A
 }
 
 #[get("/subnet/{subnet}/change_preview")]
-async fn change_preview(request: web::Path<SubnetRequest>, registry: web::Data<Arc<RwLock<RegistryState>>>) -> Result<HttpResponse, Error> {
+pub(crate) async fn change_preview(
+    request: web::Path<SubnetRequest>,
+    registry: web::Data<Arc<RwLock<RegistryState>>>,
+) -> Result<HttpResponse, Error> {
     match registry.read().await.subnets_with_proposals().await {
         Ok(subnets) => {
             let subnet = subnets
@@ -57,7 +63,10 @@ async fn change_preview(request: web::Path<SubnetRequest>, registry: web::Data<A
 ///
 /// All nodes in the request must belong to exactly one subnet.
 #[post("/subnet/membership/replace")]
-async fn replace(request: web::Json<MembershipReplaceRequest>, registry: web::Data<Arc<RwLock<RegistryState>>>) -> Result<HttpResponse, Error> {
+pub(crate) async fn replace(
+    request: web::Json<MembershipReplaceRequest>,
+    registry: web::Data<Arc<RwLock<RegistryState>>>,
+) -> Result<HttpResponse, Error> {
     let registry = registry.read().await;
     let all_nodes = registry.nodes();
 
@@ -80,9 +89,9 @@ async fn replace(request: web::Json<MembershipReplaceRequest>, registry: web::Da
             registry.modify_subnet_nodes(SubnetQueryBy::NodeList(nodes_to_replace)).await?
         }
     }
-    .with_exclude_nodes(request.exclude.clone().unwrap_or_default())
-    .with_only_nodes_that_have_features(request.only.clone())
-    .with_include_nodes(request.include.clone().unwrap_or_default())
+    .excluding_from_available(NodeSelector::FromFeatures(request.exclude.clone().unwrap_or_default()))
+    .including_from_available(NodeSelector::FromFeatures(request.only.clone()))
+    .including_from_available(NodeSelector::FromPrincipals(request.include.clone().unwrap_or_default()))
     .with_min_nakamoto_coefficients(request.min_nakamoto_coefficients.clone());
 
     let mut replacements_unhealthy: Vec<decentralization::network::Node> = Vec::new();
@@ -157,7 +166,10 @@ async fn replace(request: web::Json<MembershipReplaceRequest>, registry: web::Da
 
 /// Simulates creation of a new subnet
 #[post("/subnet/create")]
-async fn create_subnet(registry: web::Data<Arc<RwLock<RegistryState>>>, request: web::Json<SubnetCreateRequest>) -> Result<HttpResponse, Error> {
+pub(crate) async fn create_subnet(
+    registry: web::Data<Arc<RwLock<RegistryState>>>,
+    request: web::Json<SubnetCreateRequest>,
+) -> Result<HttpResponse, Error> {
     let registry = registry.read().await;
     println!(
         "Received a request to create a subnet of size {:?} and MinNakamotoCoefficients {}",
@@ -180,15 +192,15 @@ async fn create_subnet(registry: web::Data<Arc<RwLock<RegistryState>>>, request:
 
 /// Simulates resizing the subnet, i.e. adding or removing nodes to a subnet.
 #[post("/subnet/membership/resize")]
-async fn resize(request: web::Json<SubnetResizeRequest>, registry: web::Data<Arc<RwLock<RegistryState>>>) -> Result<HttpResponse, Error> {
+pub(crate) async fn resize(request: web::Json<SubnetResizeRequest>, registry: web::Data<Arc<RwLock<RegistryState>>>) -> Result<HttpResponse, Error> {
     let registry = registry.read().await;
 
     let change = registry
         .modify_subnet_nodes(SubnetQueryBy::SubnetId(request.subnet))
         .await?
-        .with_exclude_nodes(request.exclude.clone().unwrap_or_default())
-        .with_include_nodes(request.include.clone().unwrap_or_default())
-        .with_only_nodes_that_have_features(request.only.clone().unwrap_or_default())
+        .excluding_from_available(NodeSelector::FromFeatures(request.exclude.clone().unwrap_or_default()))
+        .including_from_available(NodeSelector::FromFeatures(request.only.clone().unwrap_or_default()))
+        .including_from_available(NodeSelector::FromPrincipals(request.include.clone().unwrap_or_default()))
         .resize(request.add, request.remove)?;
 
     Ok(HttpResponse::Ok().json(decentralization::SubnetChangeResponse::from(&change)))

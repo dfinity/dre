@@ -1,14 +1,11 @@
 {
     "$schema": "http://json-schema.org/draft-06/schema#",
-    "$ref": "#/definitions/ReleaseIndex",
+    "$ref": "#/definitions/Welcome4",
     "definitions": {
-        "ReleaseIndex": {
+        "Welcome4": {
             "type": "object",
             "additionalProperties": false,
             "properties": {
-                "rollout": {
-                    "$ref": "#/definitions/Rollout"
-                },
                 "releases": {
                     "type": "array",
                     "items": {
@@ -17,10 +14,9 @@
                 }
             },
             "required": [
-                "releases",
-                "rollout"
+                "releases"
             ],
-            "title": "ReleaseIndex"
+            "title": "Welcome4"
         },
         "Release": {
             "type": "object",
@@ -46,20 +42,11 @@
             "type": "object",
             "additionalProperties": false,
             "properties": {
-                "version": {
-                    "type": "string"
-                },
                 "name": {
                     "type": "string"
                 },
-                "release_notes_ready": {
-                    "type": "boolean"
-                },
-                "subnets": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
+                "version": {
+                    "type": "string"
                 }
             },
             "required": [
@@ -67,55 +54,6 @@
                 "version"
             ],
             "title": "Version"
-        },
-        "Rollout": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-                "pause": {
-                    "type": "boolean"
-                },
-                "skip_days": {
-                    "type": "array",
-                    "items": {
-                        "type": "string",
-                        "format": "date"
-                    }
-                },
-                "stages": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/Stage"
-                    }
-                }
-            },
-            "required": [
-                "stages"
-            ],
-            "title": "Rollout"
-        },
-        "Stage": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-                "subnets": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "bake_time": {
-                    "type": "string"
-                },
-                "update_unassigned_nodes": {
-                    "type": "boolean"
-                },
-                "wait_for_next_week": {
-                    "type": "boolean"
-                }
-            },
-            "required": [],
-            "title": "Stage"
         }
     }
 }
