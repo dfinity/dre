@@ -1,7 +1,5 @@
 use crate::ic_admin::IcAdminWrapper;
-use atty::Stream;
 use clap::{error::ErrorKind, CommandFactory, Parser};
-use dialoguer::Confirm;
 use dotenv::dotenv;
 use dre::cli::proposals::ProposalStatus;
 use dre::detect_neuron::Auth;
@@ -23,32 +21,31 @@ use registry_canister::mutations::do_change_subnet_membership::ChangeSubnetMembe
 use serde_json::Value;
 use std::collections::BTreeMap;
 use std::str::FromStr;
-use tokio::runtime::Runtime;
 
 const STAGING_NEURON_ID: u64 = 49;
 
-fn main() -> Result<(), anyhow::Error> {
+#[tokio::main]
+async fn main() -> Result<(), anyhow::Error> {
     init_logger();
     let version = env!("CARGO_PKG_VERSION");
     info!("Running version {}", version);
 
-    match check_latest_release(version)? {
-        UpdateStatus::RefusedUpdate | UpdateStatus::UpToDate => {}
-        UpdateStatus::Updated => {
-            info!("Rerun the binary to use the newest version");
-            return Ok(());
-        }
-    };
-
-    let runtime = Runtime::new()?;
-    runtime.block_on(async_main())
-}
-
-async fn async_main() -> Result<(), anyhow::Error> {
     dotenv().ok();
 
     let mut cmd = cli::Opts::command();
     let mut cli_opts = cli::Opts::parse();
+
+    if let cli::Commands::Upgrade = &cli_opts.subcommand {
+        let response = tokio::task::spawn_blocking(move || check_latest_release(&version, true)).await??;
+        match response {
+            UpdateStatus::NoUpdate => info!("Running the latest version"),
+            UpdateStatus::NewVersion(_) => unreachable!("Shouldn't happen"),
+            UpdateStatus::Updated(v) => info!("Upgraded: {} -> {}", version, v),
+        }
+        return Ok(());
+    }
+
+    let handle = tokio::task::spawn_blocking(move || check_latest_release(&version, false));
 
     let target_network = ic_management_types::Network::new(cli_opts.network.clone(), &cli_opts.nns_urls)
         .await
@@ -72,7 +69,7 @@ async fn async_main() -> Result<(), anyhow::Error> {
 
     let governance_canister_version = governance_canister_v.stringified_hash;
 
-    ic_admin::with_ic_admin(governance_canister_version.into(), async {
+    let r = ic_admin::with_ic_admin(governance_canister_version.into(), async {
         let dry_run = cli_opts.dry_run;
         let cli = dre::parsed_cli::ParsedCli::from_opts(&cli_opts)
             .await
@@ -84,6 +81,8 @@ async fn async_main() -> Result<(), anyhow::Error> {
             .expect("Failed to create a runner");
 
         let r = match &cli_opts.subcommand {
+            // Covered above
+            cli::Commands::Upgrade => Ok(()),
             cli::Commands::DerToPrincipal { path } => {
                 let principal = ic_base_types::PrincipalId::new_self_authenticating(&std::fs::read(path)?);
                 println!("{}", principal);
@@ -562,7 +561,19 @@ async fn async_main() -> Result<(), anyhow::Error> {
         let _ = runner_instance.stop_backend().await;
         r
     })
-    .await
+    .await;
+
+    let maybe_update_status = handle.await?;
+    match maybe_update_status {
+        Ok(s) => match s {
+            UpdateStatus::NoUpdate => {}
+            UpdateStatus::NewVersion(v) => info!("There is a new version '{}' available. Run 'dre upgrade' to upgrade", v),
+            UpdateStatus::Updated(_) => unreachable!("Shouldn't happen"),
+        },
+        Err(e) => warn!("There was an error while checking for new updates: {:?}", e),
+    }
+
+    r
 }
 
 // Construct MinNakamotoCoefficients from an array (slice) of ["key=value"], and
@@ -641,11 +652,7 @@ fn init_logger() {
     pretty_env_logger::init_custom_env("LOG_LEVEL");
 }
 
-fn check_latest_release(curr_version: &str) -> anyhow::Result<UpdateStatus> {
-    if atty::isnt(Stream::Stdin) || std::env::var("DRE_REFUSE_UPDATE").is_ok() {
-        return Ok(UpdateStatus::RefusedUpdate);
-    }
-
+fn check_latest_release(curr_version: &str, proceed_with_upgrade: bool) -> anyhow::Result<UpdateStatus> {
     // ^                --> start of line
     // v?               --> optional 'v' char
     // (\d+\.\d+\.\d+)  --> string in format '1.22.33'
@@ -672,20 +679,11 @@ fn check_latest_release(curr_version: &str) -> anyhow::Result<UpdateStatus> {
     };
 
     if latest_release.version.eq(current_version) {
-        info!("Binary up to date.");
-        return Ok(UpdateStatus::UpToDate);
+        return Ok(UpdateStatus::NoUpdate);
     }
 
-    if !Confirm::new()
-        .with_prompt(format!(
-            "There is a newer version available.\nUpdate {} -> {}?",
-            current_version, latest_release.version
-        ))
-        .default(true)
-        .interact()?
-    {
-        warn!("Running with non-latest version may have incompatibilies!");
-        return Ok(UpdateStatus::RefusedUpdate);
+    if !proceed_with_upgrade {
+        return Ok(UpdateStatus::NewVersion(latest_release.version.clone()));
     }
 
     info!("Binary not up to date. Updating to {}", latest_release.version);
@@ -728,11 +726,11 @@ fn check_latest_release(curr_version: &str) -> anyhow::Result<UpdateStatus> {
 
     self_update::self_replace::self_replace(new_dre_path).map_err(|e| anyhow::anyhow!("Couldn't upgrade to the newest version: {:?}", e))?;
 
-    Ok(UpdateStatus::Updated)
+    Ok(UpdateStatus::Updated(latest_release.version.clone()))
 }
 
 enum UpdateStatus {
-    RefusedUpdate,
-    Updated,
-    UpToDate,
+    NoUpdate,
+    NewVersion(String),
+    Updated(String),
 }

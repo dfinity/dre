@@ -1,5 +1,5 @@
 {
-  "checksum": "a619b6c7f65f05372f7e5dddd4e9a299c95a31a112847e34a992b0dbd1806ec3",
+  "checksum": "891d21c460f45215d3826177f5450ce89dc2a0e8774dc85b7f7a84613185094b",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -11155,10 +11155,6 @@
             {
               "id": "anyhow 1.0.86",
               "target": "anyhow"
-            },
-            {
-              "id": "atty 0.2.14",
-              "target": "atty"
             },
             {
               "id": "candid 0.10.9",

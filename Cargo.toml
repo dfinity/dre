@@ -43,7 +43,6 @@ assert_matches = "1.5.0"
 async-recursion = "1.1.1"
 async-timer = "0.7.4"
 async-trait = "0.1.80"
-atty = "0.2.14"
 axum-otel-metrics = "0.8.1"
 backoff = { version = "0.4.0", features = ["tokio"] }
 backon = "0.4.4"
