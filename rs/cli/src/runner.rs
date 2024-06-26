@@ -4,16 +4,16 @@ use crate::operations::hostos_rollout::{HostosRollout, HostosRolloutResponse, No
 use crate::ops_subnet_node_replace;
 use crate::{ic_admin, local_unused_port};
 use actix_web::dev::ServerHandle;
+use decentralization::network::{AvailableNodesQuerier, SubnetChange, SubnetQuerier, SubnetQueryBy};
 use decentralization::network::{DecentralizedSubnet, NetworkHealRequest, NetworkHealSubnets, Node as DecentralizedNode, TopologyManager};
-use decentralization::network::{SubnetChange, SubnetQuerier, SubnetQueryBy, AvailableNodesQuerier};
 use decentralization::SubnetChangeResponse;
 use futures::future::join_all;
 use ic_base_types::PrincipalId;
-use ic_management_backend::subnets::unhealthy_with_nodes;
-use ic_management_backend::{endpoints, health, health::HealthStatusQuerier};
 use ic_management_backend::proposal::ProposalAgent;
 use ic_management_backend::public_dashboard::query_ic_dashboard_list;
 use ic_management_backend::registry::{self, RegistryState};
+use ic_management_backend::subnets::unhealthy_with_nodes;
+use ic_management_backend::{endpoints, health, health::HealthStatusQuerier};
 use ic_management_types::requests::NodesRemoveRequest;
 use ic_management_types::{Artifact, Network, NetworkError, Node, NodeFeature, NodeProvidersResponse, TopologyChangePayload};
 use itertools::Itertools;
@@ -501,7 +501,7 @@ impl Runner {
             .flat_map(|(id, unhealthy_nodes)| {
                 let unhealthy_nodes = unhealthy_nodes.iter().map(DecentralizedNode::from).collect::<Vec<_>>();
                 let unhealthy_subnet = subnets.get(id).ok_or(NetworkError::SubnetNotFound(*id))?;
-    
+
                 Ok::<NetworkHealSubnets, NetworkError>(decentralization::network::NetworkHealSubnets {
                     name: unhealthy_subnet.metadata.name.clone(),
                     decentralized_subnet: DecentralizedSubnet::from(unhealthy_subnet),
@@ -509,7 +509,7 @@ impl Runner {
                 })
             })
             .collect_vec();
-    
+
         let subnets_change_response: Vec<SubnetChangeResponse> = NetworkHealRequest::new(subnets_to_heal)
             .heal_and_optimize(self.registry.available_nodes().await?, request.max_replaceable_nodes_per_sub)?;
 

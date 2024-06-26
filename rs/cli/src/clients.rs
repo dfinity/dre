@@ -97,7 +97,6 @@ impl DashboardBackendClient {
             .rest_send()
             .await
     }
-
 }
 
 #[async_trait]

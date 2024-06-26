@@ -52,7 +52,7 @@ impl From<NetworkError> for anyhow::Error {
             NetworkError::SubnetNotFound(id) => anyhow::anyhow!("Subnet not found: {:?}", id),
             NetworkError::ResizeFailed(msg) => anyhow::anyhow!("Resize Failed: {:?}", msg),
             NetworkError::DataRequestError(msg) => anyhow::anyhow!("Data request error: {:?}", msg),
-            NetworkError::IllegalRequest(msg) => anyhow::anyhow!("Illegal request: {:?}", msg)
+            NetworkError::IllegalRequest(msg) => anyhow::anyhow!("Illegal request: {:?}", msg),
         }
     }
 }
