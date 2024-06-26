@@ -1,7 +1,7 @@
 use super::*;
 use crate::health::HealthStatusQuerier;
 use crate::{health, subnets::get_proposed_subnet_changes};
-use decentralization::network::{NodeSelector, SubnetQueryBy, TopologyManager};
+use decentralization::network::{SubnetQueryBy, TopologyManager};
 use ic_base_types::PrincipalId;
 use ic_management_types::requests::{MembershipReplaceRequest, ReplaceTarget, SubnetCreateRequest, SubnetResizeRequest};
 use ic_management_types::Node;

@@ -885,22 +885,6 @@ impl SubnetChangeRequest {
         }
     }
 
-    pub fn including_from_available(self, selector: NodeSelector) -> Self {
-        let (selected, _) = selector.partition(self.available_nodes.clone());
-        Self {
-            include_nodes: selected,
-            ..self
-        }
-    }
-
-    pub fn excluding_from_available(self, selector: NodeSelector) -> Self {
-        let (_, unselected) = selector.partition(self.available_nodes.clone());
-        Self {
-            available_nodes: unselected,
-            ..self
-        }
-    }
-
     pub fn with_min_nakamoto_coefficients(self, min_nakamoto_coefficients: Option<MinNakamotoCoefficients>) -> Self {
         Self {
             min_nakamoto_coefficients,
