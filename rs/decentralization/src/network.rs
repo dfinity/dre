@@ -877,7 +877,7 @@ impl SubnetChangeRequest {
             available_nodes: self
                 .available_nodes
                 .iter()
-                .filter(|node| nodes.iter().match_any(node))
+                .filter(|node| !nodes.iter().match_any(node))
                 .cloned()
                 .collect_vec(),
             ..self
