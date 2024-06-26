@@ -1,6 +1,22 @@
 # dre Changelog
 
 <!-- insertion marker -->
+## [v0.4.2](https://github.com/dfinity/dre/releases/tag/v0.4.2) - 2024-06-26
+
+<small>[Compare with first commit](https://github.com/dfinity/dre/compare/cf40b02935e7954871b91a9ac64501fa8a2cbc8d...v0.4.2)</small>
+
+### Features
+
+- enabling ci checks for release-index.yaml (#534) ([56cd429](https://github.com/dfinity/dre/commit/56cd429eed8b28b27689aecaef58617e7df8d263) by Nikola Milosavljevic).
+
+### Bug Fixes
+
+- asking for update everywhere (#535) ([2faf0cb](https://github.com/dfinity/dre/commit/2faf0cbed0cc8ceba5d2cfc008341ba614a503de) by Nikola Milosavljevic).
+
+### Code Refactoring
+
+- implementing background checks for upgrading (#536) ([3e71733](https://github.com/dfinity/dre/commit/3e71733189f54b42c3afe18acda2f7b469fe96ef) by Nikola Milosavljevic).
+
 ## [0.4.1](https://github.com/dfinity/dre/releases/tag/0.4.1) - 2024-06-25
 
 <small>[Compare with first commit](https://github.com/dfinity/dre/compare/ab104f2acb360ad9ea850b2d4e9ffb7b611e8cc9...0.4.1)</small>
