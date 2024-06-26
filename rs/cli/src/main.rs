@@ -36,7 +36,7 @@ async fn main() -> Result<(), anyhow::Error> {
     let mut cli_opts = cli::Opts::parse();
 
     if let cli::Commands::Upgrade = &cli_opts.subcommand {
-        let response = tokio::task::spawn_blocking(move || check_latest_release(&version, true)).await??;
+        let response = tokio::task::spawn_blocking(move || check_latest_release(version, true)).await??;
         match response {
             UpdateStatus::NoUpdate => info!("Running the latest version"),
             UpdateStatus::NewVersion(_) => unreachable!("Shouldn't happen"),
@@ -45,7 +45,7 @@ async fn main() -> Result<(), anyhow::Error> {
         return Ok(());
     }
 
-    let handle = tokio::task::spawn_blocking(move || check_latest_release(&version, false));
+    let handle = tokio::task::spawn_blocking(move || check_latest_release(version, false));
 
     let target_network = ic_management_types::Network::new(cli_opts.network.clone(), &cli_opts.nns_urls)
         .await
