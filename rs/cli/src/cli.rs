@@ -178,6 +178,9 @@ pub enum Commands {
 
     /// Proposal Listing
     Proposals(proposals::Cmd),
+
+    /// Self upgrade
+    Upgrade,
 }
 
 impl Default for Commands {
