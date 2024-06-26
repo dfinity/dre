@@ -434,7 +434,7 @@ impl Display for NakamotoScore {
 mod tests {
     use std::str::FromStr;
 
-    use crate::network::{DecentralizedSubnet, NetworkHealRequest, NetworkHealSubnets, NodeSelector, SubnetChangeRequest};
+    use crate::network::{DecentralizedSubnet, NetworkHealRequest, NetworkHealSubnets, SubnetChangeRequest};
     use ic_base_types::PrincipalId;
     use itertools::Itertools;
     use regex::Regex;
