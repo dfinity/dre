@@ -768,60 +768,32 @@ pub trait TopologyManager: SubnetQuerier + AvailableNodesQuerier {
             min_nakamoto_coefficients,
             ..Default::default()
         }
-        .including_from_available(NodeSelector::FromPrincipals(include_nodes.clone()))
-        .excluding_from_available(NodeSelector::FromFeatures(exclude_nodes.clone()))
-        .including_from_available(NodeSelector::FromFeatures(only_nodes.clone()))
+        .including_from_available(include_nodes.clone())
+        .excluding_from_available(exclude_nodes.clone())
+        .including_from_available(only_nodes.clone())
         .resize(size, 0)
     }
 }
 
-/// A `NodeSelector` is used to select from a list of nodes the ones that satisfy/unsatisfy certain criteria.
-///
-///
-/// # Examples
-///
-/// Basic usage:
-///
-/// ```
-///
-/// let nodes: Vec<Node> = vec![
-///     Node::new_test_node(0, NodeFeatures::new_test_feature_set("feat-0"), false, true),
-///     Node::new_test_node(1, NodeFeatures::new_test_feature_set("feat-1"), false, true),
-///     Node::new_test_node(2, NodeFeatures::new_test_feature_set("feat-2"), false, true),
-///     Node::new_test_node(3, NodeFeatures::new_test_feature_set("feat-3"), false, true),
-/// ];
-///
-/// let (selected, unselected): (Vec<Node>, Vec<Node>) = NodeSelector::FromPrincipals(vec![PrincipalId::new_node_test_id(0), PrincipalId::new_node_test_id(1)])
-///     .partition(nodes.clone());
-///
-/// assert_eq!(selected, nodes[..2]);
-/// assert_eq!(unselected, nodes[2..]);
-///
-/// let (selected, unselected): (Vec<Node>, Vec<Node>) = NodeSelector::FromFeatures(vec![String::from("feat-3")])
-///     .partition(nodes.clone());
-///
-/// assert_eq!(selected, nodes[3..4]);
-/// assert_eq!(unselected, nodes[..3]);
-/// ```
-pub enum NodeSelector {
-    FromPrincipals(Vec<PrincipalId>),
-    FromNodes(Vec<Node>),
-    FromFeatures(Vec<String>),
+impl PartialEq<Node> for PrincipalId {
+    fn eq(&self, other: &Node) -> bool {
+        &other.id == self
+    }
 }
 
-impl NodeSelector {
-    /// Check if a node is included based on the selection criteria.
-    fn includes(&self, node: &Node) -> bool {
-        match &self {
-            NodeSelector::FromPrincipals(list) => list.contains(&node.id),
-            NodeSelector::FromNodes(list) => list.contains(node),
-            NodeSelector::FromFeatures(list) => list.iter().any(|v| node.matches_feature_value(v)),
-        }
+impl PartialEq<Node> for String {
+    fn eq(&self, other: &Node) -> bool {
+        other.matches_feature_value(self)
     }
+}
 
-    /// Partition a vector of nodes into selected and unselected based on the selection criteria.
-    pub fn partition(&self, nodes: Vec<Node>) -> (Vec<Node>, Vec<Node>) {
-        nodes.into_iter().partition(|node: &Node| self.includes(node))
+trait MatchAnyNode<T: PartialEq<Node>> {
+    fn match_any(self, node: &Node) -> bool;
+}
+
+impl<T: PartialEq<Node>> MatchAnyNode<T> for std::slice::Iter<'_, T> {
+    fn match_any(mut self, node: &Node) -> bool {
+        self.any(|n| n == node)
     }
 }
 
@@ -830,7 +802,8 @@ pub struct SubnetChangeRequest {
     subnet: DecentralizedSubnet,
     available_nodes: Vec<Node>,
     include_nodes: Vec<Node>,
-    removed_nodes: Vec<Node>,
+    nodes_to_remove: Vec<Node>,
+    nodes_to_keep: Vec<Node>,
     min_nakamoto_coefficients: Option<MinNakamotoCoefficients>,
 }
 
@@ -839,29 +812,66 @@ impl SubnetChangeRequest {
         subnet: DecentralizedSubnet,
         available_nodes: Vec<Node>,
         include_nodes: Vec<Node>,
-        removed_nodes: Vec<Node>,
+        nodes_to_remove: Vec<Node>,
+        nodes_to_keep: Vec<Node>,
         min_nakamoto_coefficients: Option<MinNakamotoCoefficients>,
     ) -> Self {
         SubnetChangeRequest {
             subnet,
             available_nodes,
             include_nodes,
-            removed_nodes,
+            nodes_to_remove,
+            nodes_to_keep,
             min_nakamoto_coefficients,
         }
     }
 
-    fn all_nodes_removed(self) -> Self {
+    pub fn keeping_from_used<T: PartialEq<Node>>(self, nodes: Vec<T>) -> Self {
         let mut change_new = self.clone();
-        change_new.removed_nodes.extend(self.subnet.nodes);
+        let nodes_to_keep = self
+            .subnet
+            .nodes
+            .into_iter()
+            .filter(|node: &Node| nodes.iter().match_any(node))
+            .collect_vec();
+        change_new.nodes_to_keep.extend(nodes_to_keep);
         change_new
     }
 
-    fn keeping_from_used(self, selector: NodeSelector) -> Self {
+    pub fn removing_from_used<T: PartialEq<Node>>(self, nodes: Vec<T>) -> Self {
         let mut change_new = self.clone();
-        let (_, unselected) = selector.partition(self.subnet.nodes);
-        change_new.removed_nodes.extend(unselected);
+        let nodes_to_remove = self
+            .subnet
+            .nodes
+            .into_iter()
+            .filter(|node: &Node| nodes.iter().match_any(node))
+            .collect_vec();
+        change_new.nodes_to_remove.extend(nodes_to_remove);
         change_new
+    }
+
+    pub fn including_from_available<T: PartialEq<Node>>(self, nodes: Vec<T>) -> Self {
+        Self {
+            include_nodes: self
+                .available_nodes
+                .iter()
+                .filter(|node| nodes.iter().match_any(node))
+                .cloned()
+                .collect_vec(),
+            ..self
+        }
+    }
+
+    pub fn excluding_from_available<T: PartialEq<Node>>(self, nodes: Vec<T>) -> Self {
+        Self {
+            available_nodes: self
+                .available_nodes
+                .iter()
+                .filter(|node| nodes.iter().match_any(node))
+                .cloned()
+                .collect_vec(),
+            ..self
+        }
     }
 
     pub fn subnet(&self) -> DecentralizedSubnet {
@@ -871,22 +881,6 @@ impl SubnetChangeRequest {
     pub fn with_custom_available_nodes(self, nodes: Vec<Node>) -> Self {
         Self {
             available_nodes: nodes,
-            ..self
-        }
-    }
-
-    pub fn including_from_available(self, selector: NodeSelector) -> Self {
-        let (selected, _) = selector.partition(self.available_nodes.clone());
-        Self {
-            include_nodes: selected,
-            ..self
-        }
-    }
-
-    pub fn excluding_from_available(self, selector: NodeSelector) -> Self {
-        let (_, unselected) = selector.partition(self.available_nodes.clone());
-        Self {
-            available_nodes: unselected,
             ..self
         }
     }
@@ -907,17 +901,19 @@ impl SubnetChangeRequest {
         Ok(SubnetChange { old_nodes, ..result })
     }
 
-    pub fn rescue(self, nodes_to_keep: Option<NodeSelector>) -> Result<SubnetChange, NetworkError> {
+    pub fn rescue(mut self) -> Result<SubnetChange, NetworkError> {
         let old_nodes = self.subnet.nodes.clone();
-        let mut change = if let Some(nodes_to_keep) = nodes_to_keep {
-            self.keeping_from_used(nodes_to_keep)
-        } else {
-            self.all_nodes_removed()
-        };
+        let nodes_to_remove = self
+            .subnet
+            .nodes
+            .iter()
+            .filter(|n| !self.nodes_to_keep.contains(n))
+            .cloned()
+            .collect_vec();
+        self.subnet = self.subnet.without_nodes(nodes_to_remove)?;
 
-        change.subnet = change.subnet.without_nodes(change.removed_nodes.clone())?;
-        info!("Nodes left in the subnet:\n{:#?}", &change.subnet.nodes);
-        let result = change.resize(change.removed_nodes.len(), 0)?;
+        info!("Nodes left in the subnet:\n{:#?}", &self.subnet.nodes);
+        let result = self.resize(self.subnet.removed_nodes.len(), 0)?;
         Ok(SubnetChange { old_nodes, ..result })
     }
 

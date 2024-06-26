@@ -5,7 +5,7 @@ use crate::ops_subnet_node_replace;
 use crate::{ic_admin, local_unused_port};
 use actix_web::dev::ServerHandle;
 use decentralization::network::TopologyManager;
-use decentralization::network::{NodeSelector, SubnetChange, SubnetQuerier, SubnetQueryBy};
+use decentralization::network::{SubnetChange, SubnetQuerier, SubnetQueryBy};
 use decentralization::SubnetChangeResponse;
 use futures::future::join_all;
 use ic_base_types::PrincipalId;
@@ -544,16 +544,19 @@ impl Runner {
     }
 
     pub async fn subnet_rescue(&self, subnet: &PrincipalId, keep_nodes: Option<Vec<String>>, dry_run: bool) -> anyhow::Result<()> {
-        let change = SubnetChangeResponse::from(
-            &self
-                .registry
-                .modify_subnet_nodes(SubnetQueryBy::SubnetId(*subnet))
-                .await
-                .map_err(|e| anyhow::anyhow!(e))?
-                .rescue(keep_nodes.map(NodeSelector::FromFeatures))
-                .map_err(|e| anyhow::anyhow!(e))?,
-        );
+        let change_request = self
+            .registry
+            .modify_subnet_nodes(SubnetQueryBy::SubnetId(*subnet))
+            .await
+            .map_err(|e| anyhow::anyhow!(e))?;
 
+        let change_request = if let Some(keep_nodes) = keep_nodes {
+            change_request.keeping_from_used(keep_nodes)
+        } else {
+            change_request
+        };
+
+        let change = SubnetChangeResponse::from(&change_request.rescue().map_err(|e| anyhow::anyhow!(e))?);
         println!("{}", change);
 
         if change.added.is_empty() && change.removed.is_empty() {
