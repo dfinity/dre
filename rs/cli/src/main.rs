@@ -1,4 +1,5 @@
 use crate::ic_admin::IcAdminWrapper;
+use atty::Stream;
 use clap::{error::ErrorKind, CommandFactory, Parser};
 use dialoguer::Confirm;
 use dotenv::dotenv;
@@ -641,6 +642,10 @@ fn init_logger() {
 }
 
 fn check_latest_release(curr_version: &str) -> anyhow::Result<UpdateStatus> {
+    if atty::isnt(Stream::Stdin) || std::env::var("DRE_REFUSE_UPDATE").is_ok() {
+        return Ok(UpdateStatus::RefusedUpdate);
+    }
+
     // ^                --> start of line
     // v?               --> optional 'v' char
     // (\d+\.\d+\.\d+)  --> string in format '1.22.33'
