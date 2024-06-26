@@ -4,6 +4,7 @@ use decentralization::{network::SubnetChange, SubnetChangeResponse};
 use ic_base_types::PrincipalId;
 use ic_management_types::{Node, Status, Subnet, TopologyChangeProposal};
 
+#[allow(dead_code)]
 pub async fn unhealthy_with_nodes(
     subnets: &BTreeMap<PrincipalId, Subnet>,
     nodes_health: BTreeMap<PrincipalId, Status>,
