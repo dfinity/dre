@@ -1,7 +1,4 @@
-use std::{
-    net::{Ipv4Addr, SocketAddr},
-    path::PathBuf,
-};
+use std::net::{Ipv4Addr, SocketAddr};
 
 use clap::Parser;
 use slog::{info, o, Drain, Level, Logger};
@@ -19,8 +16,8 @@ async fn main() {
     let socket = SocketAddr::new(std::net::IpAddr::V4(Ipv4Addr::UNSPECIFIED), cli.port);
     info!(logger, "Running noise filter manager {}", socket);
 
-    let server = Server::new(logger.clone(), cli.file_path);
-    server.run(socket, cli.reroute_unmatched, cli.inputs).await;
+    let server = Server::new(logger.clone());
+    server.run(socket).await;
 
     info!(logger, "Noise filter manager stopped");
 }
@@ -48,18 +45,6 @@ Log level to use for running. You can use standard log levels 'info',
 
     #[clap(long, default_value = "8080", help = "Port to use for running the api")]
     port: u16,
-
-    #[clap(long, help = "File path to the vector config in toml used for the routing configuration")]
-    file_path: PathBuf,
-
-    #[clap(
-        long,
-        help = "Explained: https://vector.dev/docs/reference/configuration/transforms/route/#reroute_unmatched"
-    )]
-    reroute_unmatched: String,
-
-    #[clap(long, help = "All inputs that should be linked to this transform")]
-    inputs: Vec<String>,
 }
 
 fn from_str_to_log(value: &str) -> Level {

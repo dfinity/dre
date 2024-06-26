@@ -15,11 +15,11 @@ members = [
   "rs/ic-observability/service-discovery",
   "rs/ic-observability/sns-downloader",
   "rs/log-fetcher",
+  "rs/log-noise-filter-backend",
   "rs/canister-log-fetcher",
   "rs/np-notifications",
   "rs/rollout-controller",
   "rs/slack-notifications",
-  "rs/log-noise-filter-manager",
 ]
 
 resolver = "2"

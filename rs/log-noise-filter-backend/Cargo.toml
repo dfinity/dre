@@ -1,5 +1,5 @@
 [package]
-name = "log-noise-filter-manager"
+name = "log-noise-filter-backend"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true

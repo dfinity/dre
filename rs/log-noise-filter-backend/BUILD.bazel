@@ -5,7 +5,7 @@ load("@//rs:oci_images.bzl", "rust_binary_oci_image_rules")
 DEPS = []
 
 rust_binary(
-    name = "log-noise-filter-manager",
+    name = "log-noise-filter-backend",
     srcs = glob(["src/**/*.rs"]),
     aliases = aliases(),
     proc_macro_deps = all_crate_deps(
@@ -19,7 +19,7 @@ rust_binary(
 
 rust_binary_oci_image_rules(
     name = "oci_image",
-    src = ":log-noise-filter-manager",
+    src = ":log-noise-filter-backend",
     base_image = "@debian-slim"
 )
 

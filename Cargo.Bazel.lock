@@ -1,5 +1,5 @@
 {
-  "checksum": "57018fa2234f578824c1c81bebdd725c3bca052a4210cc4f8ead192c8d153972",
+  "checksum": "077a6edeb56f425cff5d5be0fa78051775b205b6764662613cbb2b00b09f40c1",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -29180,8 +29180,8 @@
       },
       "license": null
     },
-    "log-noise-filter-manager 0.4.1": {
-      "name": "log-noise-filter-manager",
+    "log-noise-filter-backend 0.4.1": {
+      "name": "log-noise-filter-backend",
       "version": "0.4.1",
       "repository": null,
       "targets": [],
@@ -51058,7 +51058,7 @@
     "ic-management-backend 0.4.1": "rs/ic-management-backend",
     "ic-management-types 0.4.1": "rs/ic-management-types",
     "log-fetcher 0.4.1": "rs/log-fetcher",
-    "log-noise-filter-manager 0.4.1": "rs/log-noise-filter-manager",
+    "log-noise-filter-backend 0.4.1": "rs/log-noise-filter-backend",
     "multiservice-discovery 0.4.1": "rs/ic-observability/multiservice-discovery",
     "multiservice-discovery-downloader 0.4.1": "rs/ic-observability/multiservice-discovery-downloader",
     "multiservice-discovery-shared 0.4.1": "rs/ic-observability/multiservice-discovery-shared",
