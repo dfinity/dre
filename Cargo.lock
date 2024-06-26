@@ -2207,6 +2207,7 @@ dependencies = [
  "anyhow",
  "async-recursion",
  "async-trait",
+ "atty",
  "candid",
  "clap 4.5.7",
  "clap-num",
