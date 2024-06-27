@@ -93,11 +93,7 @@ async fn main() -> Result<(), anyhow::Error> {
                 max_replaceable_nodes_per_sub,
             } => {
                 runner_instance
-                    .network_heal(
-                        *max_replaceable_nodes_per_sub,
-                        cli_opts.verbose,
-                        dry_run,
-                    )
+                    .network_heal(*max_replaceable_nodes_per_sub, cli_opts.verbose, dry_run)
                     .await
             }
 

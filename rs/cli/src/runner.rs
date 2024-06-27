@@ -10,11 +10,11 @@ use decentralization::subnets::NodesRemover;
 use decentralization::SubnetChangeResponse;
 use futures::future::join_all;
 use futures::TryFutureExt;
+use futures_util::future::try_join;
 use ic_base_types::PrincipalId;
 use ic_management_backend::proposal::ProposalAgent;
 use ic_management_backend::public_dashboard::query_ic_dashboard_list;
 use ic_management_backend::registry::{self, RegistryState};
-use futures_util::future::try_join;
 use ic_management_backend::{endpoints, health, health::HealthStatusQuerier};
 use ic_management_types::{Artifact, Network, Node, NodeFeature, NodeProvidersResponse, TopologyChangePayload};
 use itertools::Itertools;
@@ -489,18 +489,14 @@ impl Runner {
         Ok(())
     }
 
-    pub async fn network_heal(
-        &self,
-        max_replaceable_nodes_per_sub: Option<usize>,
-        _verbose: bool,
-        simulate: bool,
-    ) -> Result<(), anyhow::Error> {
+    pub async fn network_heal(&self, max_replaceable_nodes_per_sub: Option<usize>, _verbose: bool, simulate: bool) -> Result<(), anyhow::Error> {
         let health_client = health::HealthClient::new(self.registry.network());
         let subnets: BTreeMap<PrincipalId, ic_management_types::Subnet> = self.registry.subnets();
         let (available_nodes, healths) = try_join(self.registry.available_nodes().map_err(anyhow::Error::from), health_client.nodes()).await?;
 
         let subnets_change_response: Vec<SubnetChangeResponse> = NetworkHealRequest::new(subnets, max_replaceable_nodes_per_sub)
-            .heal_and_optimize(available_nodes, healths).await?;
+            .heal_and_optimize(available_nodes, healths)
+            .await?;
         subnets_change_response.iter().for_each(|change| println!("{}", change));
 
         let errors = join_all(subnets_change_response.iter().map(|subnet_change_response| async move {

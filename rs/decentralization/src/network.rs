@@ -1083,10 +1083,10 @@ pub struct NetworkHealRequest {
 
 impl NetworkHealRequest {
     pub fn new(subnets: BTreeMap<PrincipalId, ic_management_types::Subnet>, max_replaceable_nodes_per_sub: Option<usize>) -> Self {
-        Self { 
+        Self {
             subnets,
-            max_replaceable_nodes_per_sub
-         }
+            max_replaceable_nodes_per_sub,
+        }
     }
 
     pub async fn heal_and_optimize(
