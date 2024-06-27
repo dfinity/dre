@@ -80,7 +80,7 @@ impl Runner {
         }
 
         // Create a new registry state
-        let new_registry = Arc::new(registry::RegistryState::new(&self.network, true).await);
+        let mut new_registry = Arc::new(registry::RegistryState::new(&self.network, true).await);
 
         // Fetch node providers
         let node_providers = query_ic_dashboard_list::<NodeProvidersResponse>(&self.network, "v3/node-providers")
@@ -89,8 +89,8 @@ impl Runner {
             .node_providers;
 
         // Update node details
-        Arc::get_mut(&mut Arc::clone(&new_registry))
-            .expect("Failed to get mutable reference")
+        Arc::get_mut(&mut new_registry)
+            .expect("Failed to get mutable reference to new registry")
             .update_node_details(&node_providers)
             .await
             .expect("Failed to update node details");
