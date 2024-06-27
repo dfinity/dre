@@ -4,17 +4,18 @@ use crate::operations::hostos_rollout::{HostosRollout, HostosRolloutResponse, No
 use crate::ops_subnet_node_replace;
 use crate::{ic_admin, local_unused_port};
 use actix_web::dev::ServerHandle;
-use decentralization::network::TopologyManager;
-use decentralization::network::{SubnetChange, SubnetQuerier, SubnetQueryBy};
+use decentralization::network::{AvailableNodesQuerier, SubnetChange, SubnetQuerier, SubnetQueryBy};
+use decentralization::network::{DecentralizedSubnet, NetworkHealRequest, NetworkHealSubnets, Node as DecentralizedNode, TopologyManager};
 use decentralization::SubnetChangeResponse;
 use futures::future::join_all;
 use ic_base_types::PrincipalId;
-use ic_management_backend::endpoints;
 use ic_management_backend::proposal::ProposalAgent;
 use ic_management_backend::public_dashboard::query_ic_dashboard_list;
 use ic_management_backend::registry::{self, RegistryState};
+use ic_management_backend::subnets::unhealthy_with_nodes;
+use ic_management_backend::{endpoints, health, health::HealthStatusQuerier};
 use ic_management_types::requests::NodesRemoveRequest;
-use ic_management_types::{Artifact, Network, Node, NodeFeature, NodeProvidersResponse, TopologyChangePayload};
+use ic_management_types::{Artifact, Network, NetworkError, Node, NodeFeature, NodeProvidersResponse, TopologyChangePayload};
 use itertools::Itertools;
 use log::{info, warn};
 use registry_canister::mutations::do_change_subnet_membership::ChangeSubnetMembershipPayload;
@@ -518,10 +519,28 @@ impl Runner {
         _verbose: bool,
         simulate: bool,
     ) -> Result<(), anyhow::Error> {
-        let change = self.get_backend_client().await?.network_heal(request).await?;
-        println!("{}", change);
+        let nodes_health = health::HealthClient::new(self.registry().await.network()).nodes().await?;
+        let subnets = self.registry().await.subnets();
+        let subnets_to_heal = unhealthy_with_nodes(&subnets, nodes_health)
+            .await
+            .iter()
+            .flat_map(|(id, unhealthy_nodes)| {
+                let unhealthy_nodes = unhealthy_nodes.iter().map(DecentralizedNode::from).collect::<Vec<_>>();
+                let unhealthy_subnet = subnets.get(id).ok_or(NetworkError::SubnetNotFound(*id))?;
 
-        let errors = join_all(change.subnets_change_response.iter().map(|subnet_change_response| async move {
+                Ok::<NetworkHealSubnets, NetworkError>(decentralization::network::NetworkHealSubnets {
+                    name: unhealthy_subnet.metadata.name.clone(),
+                    decentralized_subnet: DecentralizedSubnet::from(unhealthy_subnet),
+                    unhealthy_nodes,
+                })
+            })
+            .collect_vec();
+
+        let subnets_change_response: Vec<SubnetChangeResponse> = NetworkHealRequest::new(subnets_to_heal)
+            .heal_and_optimize(self.registry().await.available_nodes().await?, request.max_replaceable_nodes_per_sub)?;
+
+        subnets_change_response.iter().for_each(|change| println!("{}", change));
+        let errors = join_all(subnets_change_response.iter().map(|subnet_change_response| async move {
             self.run_membership_change(
                 subnet_change_response.clone(),
                 ops_subnet_node_replace::replace_proposal_options(subnet_change_response)?,
@@ -537,7 +556,6 @@ impl Runner {
         .into_iter()
         .filter_map(|f| f.err())
         .collect::<Vec<_>>();
-
         if !errors.is_empty() {
             anyhow::bail!("Errors: {:?}", errors);
         }
