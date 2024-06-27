@@ -28,4 +28,5 @@ tabular = { workspace = true }
 
 [dev-dependencies]
 include_dir = { workspace = true }
+tokio = { workspace = true }
 regex = { workspace = true }

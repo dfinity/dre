@@ -1,5 +1,6 @@
 use crate::ic_admin::IcAdminWrapper;
 use clap::{error::ErrorKind, CommandFactory, Parser};
+use decentralization::subnets::NodesRemover;
 use dotenv::dotenv;
 use dre::cli::proposals::ProposalStatus;
 use dre::detect_neuron::Auth;
@@ -10,7 +11,6 @@ use ic_base_types::CanisterId;
 use ic_canisters::governance::{governance_canister_version, GovernanceCanisterWrapper};
 use ic_canisters::CanisterClient;
 use ic_management_types::filter_map_nns_function_proposals;
-use ic_management_types::requests::NodesRemoveRequest;
 use ic_management_types::{Artifact, MinNakamotoCoefficients, NodeFeature};
 
 use ic_nns_common::pb::v1::ProposalId;
@@ -93,13 +93,7 @@ async fn main() -> Result<(), anyhow::Error> {
                 max_replaceable_nodes_per_sub,
             } => {
                 runner_instance
-                    .network_heal(
-                        ic_management_types::requests::HealRequest {
-                            max_replaceable_nodes_per_sub: *max_replaceable_nodes_per_sub,
-                        },
-                        cli_opts.verbose,
-                        dry_run,
-                    )
+                    .network_heal(*max_replaceable_nodes_per_sub, cli_opts.verbose, dry_run)
                     .await
             }
 
@@ -349,7 +343,7 @@ async fn main() -> Result<(), anyhow::Error> {
                     }
                     runner_instance
                         .remove_nodes(
-                            NodesRemoveRequest {
+                            NodesRemover {
                                 extra_nodes_filter: extra_nodes_filter.clone(),
                                 no_auto: *no_auto,
                                 remove_degraded: *remove_degraded,

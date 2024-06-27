@@ -1,16 +1,18 @@
 use crate::nakamoto::{self, NakamotoScore};
+use crate::subnets::unhealthy_with_nodes;
 use crate::SubnetChangeResponse;
 use actix_web::http::StatusCode;
 use actix_web::{HttpResponse, ResponseError};
 use anyhow::anyhow;
 use async_trait::async_trait;
 use ic_base_types::PrincipalId;
-use ic_management_types::{MinNakamotoCoefficients, NetworkError, NodeFeature};
+use ic_management_types::{MinNakamotoCoefficients, NetworkError, NodeFeature, Status};
 use itertools::Itertools;
 use log::{debug, info, warn};
 use rand::{seq::SliceRandom, SeedableRng};
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
+use std::collections::BTreeMap;
 use std::fmt::{Debug, Display, Formatter};
 use std::hash::Hash;
 
@@ -1075,41 +1077,61 @@ impl Ord for NetworkHealSubnets {
 }
 
 pub struct NetworkHealRequest {
-    pub subnets: Vec<NetworkHealSubnets>,
+    pub subnets: BTreeMap<PrincipalId, ic_management_types::Subnet>,
+    pub max_replaceable_nodes_per_sub: Option<usize>,
 }
 
 impl NetworkHealRequest {
-    pub fn new(subnets: Vec<NetworkHealSubnets>) -> Self {
-        Self { subnets }
+    pub fn new(subnets: BTreeMap<PrincipalId, ic_management_types::Subnet>, max_replaceable_nodes_per_sub: Option<usize>) -> Self {
+        Self {
+            subnets,
+            max_replaceable_nodes_per_sub,
+        }
     }
 
-    pub fn heal_and_optimize(
+    pub async fn heal_and_optimize(
         &self,
         mut available_nodes: Vec<Node>,
-        max_replaceable_nodes: Option<usize>,
+        healths: BTreeMap<PrincipalId, Status>,
     ) -> Result<Vec<SubnetChangeResponse>, NetworkError> {
         let mut subnets_changed = Vec::new();
-        let subnets_to_heal = self.subnets.iter().sorted_by(|a, b| a.cmp(b).reverse()).collect_vec();
+        let subnets_to_heal = unhealthy_with_nodes(&self.subnets, healths)
+            .await
+            .iter()
+            .flat_map(|(id, unhealthy_nodes)| {
+                let unhealthy_nodes = unhealthy_nodes.iter().map(Node::from).collect::<Vec<_>>();
+                let unhealthy_subnet = self.subnets.get(id).ok_or(NetworkError::SubnetNotFound(*id))?;
+
+                Ok::<NetworkHealSubnets, NetworkError>(NetworkHealSubnets {
+                    name: unhealthy_subnet.metadata.name.clone(),
+                    decentralized_subnet: DecentralizedSubnet::from(unhealthy_subnet),
+                    unhealthy_nodes,
+                })
+            })
+            .sorted_by(|a, b| a.cmp(b).reverse())
+            .collect_vec();
 
         for subnet in subnets_to_heal {
             let mut unhealthy_nodes = subnet.unhealthy_nodes.clone();
             let unhealthy_nodes_len = unhealthy_nodes.len();
 
-            if let Some(max_replaceable_nodes) = max_replaceable_nodes {
-                if unhealthy_nodes_len > max_replaceable_nodes {
-                    unhealthy_nodes = subnet.unhealthy_nodes.clone().into_iter().take(max_replaceable_nodes).collect_vec();
+            if let Some(max) = self.max_replaceable_nodes_per_sub {
+                if unhealthy_nodes_len > max {
+                    unhealthy_nodes = subnet.unhealthy_nodes.clone().into_iter().take(max).collect_vec();
 
                     warn!(
                         "Subnet {}: replacing {} of {} unhealthy nodes: {:?}",
                         subnet.decentralized_subnet.id,
-                        max_replaceable_nodes,
+                        max,
                         unhealthy_nodes_len,
                         unhealthy_nodes.iter().map(|node| node.id).collect_vec()
                     );
                 }
             }
+
             let unhealthy_nodes_len = unhealthy_nodes.len();
-            let optimize_limit = max_replaceable_nodes.unwrap_or(unhealthy_nodes_len) - unhealthy_nodes_len;
+            println!("unhealthy size: {}", unhealthy_nodes_len);
+            let optimize_limit = self.max_replaceable_nodes_per_sub.unwrap_or(unhealthy_nodes_len) - unhealthy_nodes_len;
 
             let change = SubnetChangeRequest {
                 subnet: subnet.decentralized_subnet.clone(),

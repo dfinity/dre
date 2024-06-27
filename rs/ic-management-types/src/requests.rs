@@ -78,15 +78,6 @@ pub struct SubnetResizeRequest {
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct NodesRemoveRequest {
-    pub no_auto: bool,
-    pub remove_degraded: bool,
-    pub extra_nodes_filter: Vec<String>,
-    pub exclude: Option<Vec<String>>,
-    pub motivation: String,
-}
-
-#[derive(Serialize, Deserialize)]
 pub struct NodesRemoveResponse {
     pub removals: Vec<NodeRemoval>,
     pub motivation: String,
@@ -113,9 +104,4 @@ impl NodeRemovalReason {
             NodeRemovalReason::MatchedFilter(f) => format!("Matched filter {f}"),
         }
     }
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct HealRequest {
-    pub max_replaceable_nodes_per_sub: Option<usize>,
 }
