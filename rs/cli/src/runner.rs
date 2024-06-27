@@ -5,17 +5,18 @@ use crate::ops_subnet_node_replace;
 use crate::{ic_admin, local_unused_port};
 use actix_web::dev::ServerHandle;
 use decentralization::network::{AvailableNodesQuerier, SubnetChange, SubnetQuerier, SubnetQueryBy};
-use decentralization::network::{DecentralizedSubnet, NetworkHealRequest, NetworkHealSubnets, Node as DecentralizedNode, TopologyManager};
+use decentralization::network::{NetworkHealRequest, TopologyManager};
+use decentralization::subnets::NodesRemover;
 use decentralization::SubnetChangeResponse;
 use futures::future::join_all;
+use futures::TryFutureExt;
 use ic_base_types::PrincipalId;
 use ic_management_backend::proposal::ProposalAgent;
 use ic_management_backend::public_dashboard::query_ic_dashboard_list;
 use ic_management_backend::registry::{self, RegistryState};
-use ic_management_backend::subnets::unhealthy_with_nodes;
+use futures_util::future::try_join;
 use ic_management_backend::{endpoints, health, health::HealthStatusQuerier};
-use ic_management_types::requests::NodesRemoveRequest;
-use ic_management_types::{Artifact, Network, NetworkError, Node, NodeFeature, NodeProvidersResponse, TopologyChangePayload};
+use ic_management_types::{Artifact, Network, Node, NodeFeature, NodeProvidersResponse, TopologyChangePayload};
 use itertools::Itertools;
 use log::{info, warn};
 use registry_canister::mutations::do_change_subnet_membership::ChangeSubnetMembershipPayload;
@@ -438,9 +439,10 @@ impl Runner {
         Ok(())
     }
 
-    pub async fn remove_nodes(&self, request: NodesRemoveRequest, dry_run: bool) -> anyhow::Result<()> {
-        let node_remove_response = self.get_backend_client().await?.remove_nodes(request).await?;
-        let mut node_removals = node_remove_response.removals;
+    pub async fn remove_nodes(&self, nodes_remover: NodesRemover, dry_run: bool) -> anyhow::Result<()> {
+        let health_client = health::HealthClient::new(self.registry.network());
+        let (healths, nodes_with_proposals) = try_join(health_client.nodes(), self.registry.nodes_with_proposals()).await?;
+        let (mut node_removals, motivation) = nodes_remover.remove_nodes(healths, nodes_with_proposals);
         node_removals.sort_by_key(|nr| nr.reason.message());
 
         let headers = vec!["Principal".to_string()]
@@ -479,7 +481,7 @@ impl Runner {
                 ProposeOptions {
                     title: "Remove nodes from the network".to_string().into(),
                     summary: "Remove nodes from the network".to_string().into(),
-                    motivation: node_remove_response.motivation.into(),
+                    motivation: motivation.into(),
                 },
                 dry_run,
             )
@@ -489,31 +491,18 @@ impl Runner {
 
     pub async fn network_heal(
         &self,
-        request: ic_management_types::requests::HealRequest,
+        max_replaceable_nodes_per_sub: Option<usize>,
         _verbose: bool,
         simulate: bool,
     ) -> Result<(), anyhow::Error> {
-        let nodes_health = health::HealthClient::new(self.registry.network()).nodes().await?;
-        let subnets = self.registry.subnets();
-        let subnets_to_heal = unhealthy_with_nodes(&subnets, nodes_health)
-            .await
-            .iter()
-            .flat_map(|(id, unhealthy_nodes)| {
-                let unhealthy_nodes = unhealthy_nodes.iter().map(DecentralizedNode::from).collect::<Vec<_>>();
-                let unhealthy_subnet = subnets.get(id).ok_or(NetworkError::SubnetNotFound(*id))?;
+        let health_client = health::HealthClient::new(self.registry.network());
+        let subnets: BTreeMap<PrincipalId, ic_management_types::Subnet> = self.registry.subnets();
+        let (available_nodes, healths) = try_join(self.registry.available_nodes().map_err(anyhow::Error::from), health_client.nodes()).await?;
 
-                Ok::<NetworkHealSubnets, NetworkError>(decentralization::network::NetworkHealSubnets {
-                    name: unhealthy_subnet.metadata.name.clone(),
-                    decentralized_subnet: DecentralizedSubnet::from(unhealthy_subnet),
-                    unhealthy_nodes,
-                })
-            })
-            .collect_vec();
-
-        let subnets_change_response: Vec<SubnetChangeResponse> = NetworkHealRequest::new(subnets_to_heal)
-            .heal_and_optimize(self.registry.available_nodes().await?, request.max_replaceable_nodes_per_sub)?;
-
+        let subnets_change_response: Vec<SubnetChangeResponse> = NetworkHealRequest::new(subnets, max_replaceable_nodes_per_sub)
+            .heal_and_optimize(available_nodes, healths).await?;
         subnets_change_response.iter().for_each(|change| println!("{}", change));
+
         let errors = join_all(subnets_change_response.iter().map(|subnet_change_response| async move {
             self.run_membership_change(
                 subnet_change_response.clone(),

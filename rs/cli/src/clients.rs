@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use decentralization::SubnetChangeResponse;
 use ic_base_types::PrincipalId;
 use ic_management_types::{
-    requests::{MembershipReplaceRequest, NodesRemoveRequest, NodesRemoveResponse, SubnetCreateRequest, SubnetResizeRequest},
+    requests::{MembershipReplaceRequest, SubnetCreateRequest, SubnetResizeRequest},
     Artifact, Network, NetworkError, Release, TopologyChangeProposal,
 };
 use log::error;
@@ -90,13 +90,6 @@ impl DashboardBackendClient {
             .await
     }
 
-    pub async fn remove_nodes(&self, request: NodesRemoveRequest) -> anyhow::Result<NodesRemoveResponse> {
-        reqwest::Client::new()
-            .post(self.url.join("nodes/remove").map_err(|e| anyhow::anyhow!(e))?)
-            .json(&request)
-            .rest_send()
-            .await
-    }
 }
 
 #[async_trait]

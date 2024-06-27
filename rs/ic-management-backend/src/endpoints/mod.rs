@@ -1,5 +1,4 @@
 pub mod governance_canister;
-pub mod nodes_ops;
 pub mod query_decentralization;
 pub mod release;
 pub mod subnet;
@@ -86,7 +85,6 @@ pub async fn run_backend(
             .service(self::subnet::create_subnet)
             .service(self::subnet::resize)
             .service(self::subnet::change_preview)
-            .service(self::nodes_ops::remove)
             .service(self::query_decentralization::decentralization_subnet_query)
             .service(self::query_decentralization::decentralization_whatif_query)
             .service(self::release::releases_list_all)
