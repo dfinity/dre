@@ -30,9 +30,9 @@
 - neuron_id: 45
   slack_id: UJU6XENEQ    # Mamiko Inoue
 # - neuron_id: 46
-#   slack_id: 
+#   slack_id:
 # - neuron_id: 47
-#   slack_id: 
+#   slack_id:
 - neuron_id: 48
   slack_id: UCJCD32MQ    # Manu Drijvers
 - neuron_id: 49
@@ -102,4 +102,6 @@
 - neuron_id: 9593925519518438069
   slack_id: U03T4M2EQ6L  # Nikolas Haimerl
 - neuron_id: 17212304975669116357
-  slack_id: U03LSTP0YB1  # Grégory Demay 
+  slack_id: U03LSTP0YB1  # Grégory Demay
+- neuron_id: 17511507705568200227
+  slack_id: U032U709D6J  # Rüdiger Birkner
