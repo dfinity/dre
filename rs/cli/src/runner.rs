@@ -17,10 +17,8 @@ use ic_management_backend::public_dashboard::query_ic_dashboard_list;
 use ic_management_backend::registry::{self, RegistryState};
 use ic_management_backend::{endpoints, health, health::HealthStatusQuerier};
 use ic_management_types::{Artifact, Network, Node, NodeFeature, NodeProvidersResponse, TopologyChangePayload};
-use itertools::Itertools;
-use log::{info, warn};
-use registry_canister::mutations::do_change_subnet_membership::ChangeSubnetMembershipPayload;
-use std::cell::RefCell;
+use ic_management_backend::{endpoints, health, health::HealthStatusQuerier};
+use ic_management_types::requests::NodesRemoveRequest;
 use std::collections::BTreeMap;
 use std::sync::{mpsc, Arc};
 use std::thread;
@@ -466,7 +464,7 @@ impl Runner {
     }
 
     pub async fn remove_nodes(&self, nodes_remover: NodesRemover, dry_run: bool) -> anyhow::Result<()> {
-        let health_client = health::HealthClient::new(self.network.clone());
+        let health_client = health::HealthClient::new(self.registry().await.network());
         let (healths, nodes_with_proposals) = try_join(health_client.nodes(), self.registry().await.nodes_with_proposals()).await?;
         let (mut node_removals, motivation) = nodes_remover.remove_nodes(healths, nodes_with_proposals);
         node_removals.sort_by_key(|nr| nr.reason.message());

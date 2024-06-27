@@ -647,6 +647,16 @@ fn init_logger() {
 }
 
 fn check_latest_release(curr_version: &str, proceed_with_upgrade: bool) -> anyhow::Result<UpdateStatus> {
+    // Check for a new release once per day
+    let update_check_path = dirs::cache_dir().expect("Failed to find a cache dir").join("dre_update_check");
+    if let Ok(metadata) = std::fs::metadata(&update_check_path) {
+        let last_check = metadata.modified().unwrap();
+        let now = std::time::SystemTime::now();
+        if now.duration_since(last_check).unwrap().as_secs() < 60 * 60 * 24 {
+            return Ok(UpdateStatus::NoUpdate);
+        }
+    }
+
     // ^                --> start of line
     // v?               --> optional 'v' char
     // (\d+\.\d+\.\d+)  --> string in format '1.22.33'
@@ -662,6 +672,9 @@ fn check_latest_release(curr_version: &str, proceed_with_upgrade: bool) -> anyho
         .repo_name("dre")
         .build()
         .map_err(|e| anyhow::anyhow!("Configuring backend failed: {:?}", e))?;
+
+    // Touch update check file
+    std::fs::write(&update_check_path, "").map_err(|e| anyhow::anyhow!("Couldn't touch update check file: {:?}", e))?;
 
     let releases = maybe_configured_backend
         .fetch()
