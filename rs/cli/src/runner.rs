@@ -21,14 +21,15 @@ use log::{info, warn};
 use registry_canister::mutations::do_change_subnet_membership::ChangeSubnetMembershipPayload;
 use std::cell::RefCell;
 use std::collections::BTreeMap;
-use std::sync::mpsc;
+use std::sync::{mpsc, Arc};
 use std::thread;
 use tabled::builder::Builder;
 use tabled::settings::Style;
 
 pub struct Runner {
     pub ic_admin: ic_admin::IcAdminWrapper,
-    registry: RegistryState,
+    registry: RefCell<Option<Arc<RegistryState>>>,
+    network: Network,
     dashboard_backend_client: RefCell<Option<DashboardBackendClient>>,
     backend_srv: RefCell<Option<ServerHandle>>,
 }
@@ -44,7 +45,7 @@ impl Runner {
         let backend_url = format!("http://localhost:{}/", backend_port);
         let (tx, rx) = mpsc::channel();
 
-        let target_network_backend = self.registry.network();
+        let target_network_backend = self.registry().await.network();
         thread::spawn(move || {
             let rt = tokio::runtime::Runtime::new().unwrap();
             rt.block_on(async move {
@@ -72,16 +73,41 @@ impl Runner {
         Ok(())
     }
 
-    pub async fn new(ic_admin: ic_admin::IcAdminWrapper, network: &Network) -> anyhow::Result<Self> {
-        let mut registry = registry::RegistryState::new(network, true).await;
-        let node_providers = query_ic_dashboard_list::<NodeProvidersResponse>(network, "v3/node-providers")
-            .await?
-            .node_providers;
-        registry.update_node_details(&node_providers).await?;
+    pub async fn registry(&self) -> Arc<RegistryState> {
+        {
+            if let Some(ref registry) = *self.registry.borrow() {
+                return Arc::clone(registry);
+            }
+        }
 
+        // Create a new registry state
+        let new_registry = Arc::new(registry::RegistryState::new(&self.network, true).await);
+
+        // Fetch node providers
+        let node_providers = query_ic_dashboard_list::<NodeProvidersResponse>(&self.network, "v3/node-providers")
+            .await
+            .expect("Failed to get node providers")
+            .node_providers;
+
+        // Update node details
+        Arc::get_mut(&mut Arc::clone(&new_registry))
+            .expect("Failed to get mutable reference")
+            .update_node_details(&node_providers)
+            .await
+            .expect("Failed to update node details");
+
+        // Replace the registry in self with the new registry state
+        self.registry.replace(Some(Arc::clone(&new_registry)));
+
+        // Return the Arc to the new registry state
+        new_registry
+    }
+
+    pub async fn new(ic_admin: ic_admin::IcAdminWrapper, network: &Network) -> anyhow::Result<Self> {
         Ok(Self {
             ic_admin,
-            registry,
+            registry: RefCell::new(None),
+            network: network.clone(),
             dashboard_backend_client: RefCell::new(None),
             backend_srv: RefCell::new(None),
         })
@@ -318,7 +344,7 @@ impl Runner {
         version: &String,
         exclude: &Option<Vec<PrincipalId>>,
     ) -> anyhow::Result<Option<(Vec<PrincipalId>, String)>> {
-        let elected_versions = self.registry.blessed_versions(&Artifact::HostOs).await.unwrap();
+        let elected_versions = self.registry().await.blessed_versions(&Artifact::HostOs).await.unwrap();
         if !elected_versions.contains(&version.to_string()) {
             return Err(anyhow::anyhow!(format!(
                 "The version {} has not being elected.\nVersions elected are: {:?}",
@@ -326,10 +352,10 @@ impl Runner {
             )));
         }
         let hostos_rollout = HostosRollout::new(
-            self.registry.nodes(),
-            self.registry.subnets(),
-            &self.registry.network(),
-            ProposalAgent::new(self.registry.get_nns_urls()),
+            self.registry().await.nodes(),
+            self.registry().await.subnets(),
+            &self.registry().await.network(),
+            ProposalAgent::new(self.registry().await.get_nns_urls()),
             version,
             exclude,
         );
@@ -539,11 +565,16 @@ impl Runner {
 
     pub async fn decentralization_change(&self, change: &ChangeSubnetMembershipPayload) -> Result<(), anyhow::Error> {
         if let Some(id) = change.get_subnet() {
-            let subnet_before = self.registry.subnet(SubnetQueryBy::SubnetId(id)).await.map_err(|e| anyhow::anyhow!(e))?;
+            let subnet_before = self
+                .registry()
+                .await
+                .subnet(SubnetQueryBy::SubnetId(id))
+                .await
+                .map_err(|e| anyhow::anyhow!(e))?;
             let nodes_before = subnet_before.nodes.clone();
 
-            let added_nodes = self.registry.get_decentralized_nodes(&change.get_added_node_ids());
-            let removed_nodes = self.registry.get_decentralized_nodes(&change.get_added_node_ids());
+            let added_nodes = self.registry().await.get_decentralized_nodes(&change.get_added_node_ids());
+            let removed_nodes = self.registry().await.get_decentralized_nodes(&change.get_added_node_ids());
 
             let subnet_after = subnet_before
                 .with_nodes(added_nodes)
@@ -563,7 +594,8 @@ impl Runner {
 
     pub async fn subnet_rescue(&self, subnet: &PrincipalId, keep_nodes: Option<Vec<String>>, dry_run: bool) -> anyhow::Result<()> {
         let change_request = self
-            .registry
+            .registry()
+            .await
             .modify_subnet_nodes(SubnetQueryBy::SubnetId(*subnet))
             .await
             .map_err(|e| anyhow::anyhow!(e))?;
