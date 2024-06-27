@@ -31,8 +31,8 @@
   slack_id: UJU6XENEQ    # Mamiko Inoue
 # - neuron_id: 46
 #   slack_id:
-# - neuron_id: 47
-#   slack_id:
+- neuron_id: 47
+  slack_id: U033DN6T2PL  # Mathias Björkqvist
 - neuron_id: 48
   slack_id: UCJCD32MQ    # Manu Drijvers
 - neuron_id: 49
