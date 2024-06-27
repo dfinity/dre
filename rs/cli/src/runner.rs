@@ -519,8 +519,8 @@ impl Runner {
         _verbose: bool,
         simulate: bool,
     ) -> Result<(), anyhow::Error> {
-        let nodes_health = health::HealthClient::new(self.registry.network()).nodes().await?;
-        let subnets = self.registry.subnets();
+        let nodes_health = health::HealthClient::new(self.registry().await.network()).nodes().await?;
+        let subnets = self.registry().await.subnets();
         let subnets_to_heal = unhealthy_with_nodes(&subnets, nodes_health)
             .await
             .iter()
@@ -537,7 +537,7 @@ impl Runner {
             .collect_vec();
 
         let subnets_change_response: Vec<SubnetChangeResponse> = NetworkHealRequest::new(subnets_to_heal)
-            .heal_and_optimize(self.registry.available_nodes().await?, request.max_replaceable_nodes_per_sub)?;
+            .heal_and_optimize(self.registry().await.available_nodes().await?, request.max_replaceable_nodes_per_sub)?;
 
         subnets_change_response.iter().for_each(|change| println!("{}", change));
         let errors = join_all(subnets_change_response.iter().map(|subnet_change_response| async move {
