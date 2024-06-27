@@ -1128,7 +1128,9 @@ impl NetworkHealRequest {
                     );
                 }
             }
+
             let unhealthy_nodes_len = unhealthy_nodes.len();
+            println!("unhealthy size: {}", unhealthy_nodes_len);
             let optimize_limit = self.max_replaceable_nodes_per_sub.unwrap_or(unhealthy_nodes_len) - unhealthy_nodes_len;
 
             let change = SubnetChangeRequest {

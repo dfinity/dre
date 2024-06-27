@@ -466,8 +466,8 @@ impl Runner {
     }
 
     pub async fn remove_nodes(&self, nodes_remover: NodesRemover, dry_run: bool) -> anyhow::Result<()> {
-        let health_client = health::HealthClient::new(self.registry.network());
-        let (healths, nodes_with_proposals) = try_join(health_client.nodes(), self.registry.nodes_with_proposals()).await?;
+        let health_client = health::HealthClient::new(self.network.clone());
+        let (healths, nodes_with_proposals) = try_join(health_client.nodes(), self.registry().await.nodes_with_proposals()).await?;
         let (mut node_removals, motivation) = nodes_remover.remove_nodes(healths, nodes_with_proposals);
         node_removals.sort_by_key(|nr| nr.reason.message());
 
@@ -516,9 +516,13 @@ impl Runner {
     }
 
     pub async fn network_heal(&self, max_replaceable_nodes_per_sub: Option<usize>, _verbose: bool, simulate: bool) -> Result<(), anyhow::Error> {
-        let health_client = health::HealthClient::new(self.registry.network());
-        let subnets: BTreeMap<PrincipalId, ic_management_types::Subnet> = self.registry.subnets();
-        let (available_nodes, healths) = try_join(self.registry.available_nodes().map_err(anyhow::Error::from), health_client.nodes()).await?;
+        let health_client = health::HealthClient::new(self.registry().await.network());
+        let subnets = self.registry().await.subnets();
+        let (available_nodes, healths) = try_join(
+            self.registry().await.available_nodes().map_err(anyhow::Error::from),
+            health_client.nodes(),
+        )
+        .await?;
 
         let subnets_change_response: Vec<SubnetChangeResponse> = NetworkHealRequest::new(subnets, max_replaceable_nodes_per_sub)
             .heal_and_optimize(available_nodes, healths)
