@@ -5865,6 +5865,7 @@ version = "0.4.1"
 dependencies = [
  "axum 0.7.5",
  "clap 4.5.7",
+ "regex",
  "serde",
  "serde_json",
  "slog",

@@ -3,6 +3,7 @@ use std::{collections::BTreeMap, net::SocketAddr, sync::Arc};
 use axum::{routing::delete, Router};
 use delete::delete_criteria;
 use get::get_criteria;
+use regex::Regex;
 use slog::Logger;
 use tokio::sync::Mutex;
 
@@ -47,11 +48,22 @@ impl Server {
         criteria.iter().enumerate().map(|(i, s)| (i as u32, s.clone())).collect()
     }
 
-    pub async fn update_criteria(&self, criteria: Vec<String>) {
+    pub async fn update_criteria(&self, mut criteria: Vec<String>) -> Result<(), Vec<String>> {
         let mut server_criteria = self.criteria.lock().await;
-        criteria.iter().for_each(|c| {
-            server_criteria.push(c.to_string());
-        });
+        let mut errors = vec![];
+        for c in criteria.iter_mut() {
+            *c = c.replace("\\", "\\\\");
+            *c = c.replace("'", "\\'");
+            if let Err(e) = Regex::new(c) {
+                errors.push(e.to_string());
+            }
+        }
+
+        if !errors.is_empty() {
+            return Err(errors);
+        }
+        criteria.into_iter().for_each(|c| server_criteria.push(c));
+        Ok(())
     }
 
     pub async fn delete_criteria(&self, mut indexes: Vec<u32>) -> Result<(), Vec<u32>> {

@@ -1,5 +1,5 @@
 {
-  "checksum": "850fa358597486f8fa325b70c5deea34b28c57fac48c40e87516719e2363d05a",
+  "checksum": "5180c9e3a4b69b259750b2b60f1b56d3667a0545409170e914da734999599b2e",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -29199,6 +29199,10 @@
             {
               "id": "clap 4.5.7",
               "target": "clap"
+            },
+            {
+              "id": "regex 1.10.5",
+              "target": "regex"
             },
             {
               "id": "serde 1.0.203",
