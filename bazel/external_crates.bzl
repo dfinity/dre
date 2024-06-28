@@ -51,6 +51,8 @@ def external_crates_repository():
             "//rs/ic-management-backend:Cargo.toml",
             "//rs/ic-management-types:Cargo.toml",
             "//rs/ic-observability/config-writer-common:Cargo.toml",
+            "//rs/ic-observability/log-noise-filter-backend:Cargo.toml",
+            "//rs/ic-observability/log-noise-filter-downloader:Cargo.toml",
             "//rs/ic-observability/multiservice-discovery:Cargo.toml",
             "//rs/ic-observability/multiservice-discovery-downloader:Cargo.toml",
             "//rs/ic-observability/multiservice-discovery-shared:Cargo.toml",
@@ -63,7 +65,6 @@ def external_crates_repository():
             "//rs/np-notifications:Cargo.toml",
             "//rs/slack-notifications:Cargo.toml",
             "//rs/rollout-controller:Cargo.toml",
-            "//rs/log-noise-filter-backend:Cargo.toml"
         ],
         splicing_config = splicing_config(
             resolver_version = "2",

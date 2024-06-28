@@ -6,6 +6,8 @@ members = [
   "rs/ic-management-backend",
   "rs/ic-management-types",
   "rs/ic-observability/config-writer-common",
+  "rs/ic-observability/log-noise-filter-backend",
+  "rs/ic-observability/log-noise-filter-downloader",
   "rs/ic-observability/multiservice-discovery",
   "rs/ic-observability/multiservice-discovery-downloader",
   "rs/ic-observability/multiservice-discovery-shared",
@@ -15,11 +17,10 @@ members = [
   "rs/ic-observability/service-discovery",
   "rs/ic-observability/sns-downloader",
   "rs/log-fetcher",
-  "rs/log-noise-filter-backend",
   "rs/canister-log-fetcher",
   "rs/np-notifications",
   "rs/rollout-controller",
-  "rs/slack-notifications",
+  "rs/slack-notifications", 
 ]
 
 resolver = "2"
