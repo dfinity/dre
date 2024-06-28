@@ -5878,6 +5878,7 @@ dependencies = [
 name = "log-noise-filter-downloader"
 version = "0.4.1"
 dependencies = [
+ "anyhow",
  "clap 4.5.7",
  "reqwest",
  "serde",

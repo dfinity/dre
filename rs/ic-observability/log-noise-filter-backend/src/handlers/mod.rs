@@ -52,8 +52,8 @@ impl Server {
         let mut server_criteria = self.criteria.lock().await;
         let mut errors = vec![];
         for c in criteria.iter_mut() {
-            *c = c.replace("\\", "\\\\");
-            *c = c.replace("'", "\\'");
+            *c = c.replace('\\', "\\\\");
+            *c = c.replace('\'', "\\'");
             if let Err(e) = Regex::new(c) {
                 errors.push(e.to_string());
             }
