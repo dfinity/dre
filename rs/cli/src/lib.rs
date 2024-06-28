@@ -1,5 +1,4 @@
 pub mod cli;
-pub mod clients;
 pub(crate) mod defaults;
 pub mod detect_neuron;
 pub mod general;
