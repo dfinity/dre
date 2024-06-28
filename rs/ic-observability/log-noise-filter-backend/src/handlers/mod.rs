@@ -54,8 +54,9 @@ impl Server {
         });
     }
 
-    pub async fn delete_criteria(&self, indexes: Vec<u32>) -> Result<(), Vec<u32>> {
+    pub async fn delete_criteria(&self, mut indexes: Vec<u32>) -> Result<(), Vec<u32>> {
         let mut server_criteria = self.criteria.lock().await;
+        indexes.sort_by(|a, b| b.cmp(a));
         let missing = indexes
             .iter()
             .filter_map(|c| match server_criteria.get(*c as usize) {

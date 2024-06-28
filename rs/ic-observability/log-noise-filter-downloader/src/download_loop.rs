@@ -66,17 +66,16 @@ pub async fn download_loop(url: Url, logger: Logger, path: PathBuf, inputs: Vec<
         info!(logger, "Hash changed: {} -> {}", current_hash, new_hash);
         current_hash = new_hash;
 
-        let response = match response.is_empty() {
-            true => "r'.*'".to_string(),
-            false => response.values().map(|s| format!("r'{}'", s)).collect::<Vec<String>>().join(","),
+        let (prefix, criteria) = match response.is_empty() {
+            true => ("", "r'.*'".to_string()),
+            false => ("!", response.values().map(|s| format!("r'{}'", s)).collect::<Vec<String>>().join(",")),
         };
 
         let transform = VectorSampleTransform {
             _type: "sample".to_string(),
             inputs: inputs.clone(),
-            key_field: "MESSAGE".to_string(),
             rate,
-            exclude: format!("!match_any(.MESSAGE, [{}])", response),
+            exclude: format!("{}match_any(to_string(.MESSAGE) ?? \"\", [{}])", prefix, criteria),
         };
 
         let mut transforms = BTreeMap::new();
@@ -95,7 +94,6 @@ struct VectorSampleTransform {
     #[serde(rename = "type")]
     _type: String,
     inputs: Vec<String>,
-    key_field: String,
     rate: u64,
     exclude: String,
 }
