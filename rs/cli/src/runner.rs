@@ -1,12 +1,10 @@
-use crate::clients::DashboardBackendClient;
+use crate::ic_admin;
 use crate::ic_admin::ProposeOptions;
 use crate::operations::hostos_rollout::{HostosRollout, HostosRolloutResponse, NodeGroupUpdate};
 use crate::ops_subnet_node_replace;
-use crate::{ic_admin, local_unused_port};
-use actix_web::dev::ServerHandle;
 use decentralization::network::{AvailableNodesQuerier, SubnetChange, SubnetQuerier, SubnetQueryBy};
 use decentralization::network::{NetworkHealRequest, TopologyManager};
-use decentralization::subnets::NodesRemover;
+use decentralization::subnets::{MembershipReplace, NodesRemover, ReplaceTarget};
 use decentralization::SubnetChangeResponse;
 use futures::future::join_all;
 use futures::TryFutureExt;
@@ -15,7 +13,7 @@ use ic_base_types::PrincipalId;
 use ic_management_backend::proposal::ProposalAgent;
 use ic_management_backend::public_dashboard::query_ic_dashboard_list;
 use ic_management_backend::registry::{self, RegistryState};
-use ic_management_backend::{endpoints, health, health::HealthStatusQuerier};
+use ic_management_backend::{health, health::HealthStatusQuerier};
 use ic_management_types::{Artifact, Network, Node, NodeFeature, NodeProvidersResponse};
 use ic_management_types::{NetworkError, TopologyChangePayload};
 use itertools::Itertools;
@@ -23,8 +21,7 @@ use log::{info, warn};
 use registry_canister::mutations::do_change_subnet_membership::ChangeSubnetMembershipPayload;
 use std::cell::RefCell;
 use std::collections::BTreeMap;
-use std::sync::{mpsc, Arc};
-use std::thread;
+use std::sync::Arc;
 use tabled::builder::Builder;
 use tabled::settings::Style;
 
@@ -32,49 +29,9 @@ pub struct Runner {
     pub ic_admin: ic_admin::IcAdminWrapper,
     registry: RefCell<Option<Arc<RegistryState>>>,
     network: Network,
-    dashboard_backend_client: RefCell<Option<DashboardBackendClient>>,
-    backend_srv: RefCell<Option<ServerHandle>>,
 }
 
 impl Runner {
-    pub async fn get_backend_client(&self) -> anyhow::Result<DashboardBackendClient> {
-        if let Some(dashboard_backend_client) = &*self.dashboard_backend_client.borrow() {
-            return Ok(dashboard_backend_client.clone());
-        };
-
-        // This will be executed just once creating the backend
-        let backend_port = local_unused_port();
-        let backend_url = format!("http://localhost:{}/", backend_port);
-        let (tx, rx) = mpsc::channel();
-
-        let target_network_backend = self.registry().await.network();
-        thread::spawn(move || {
-            let rt = tokio::runtime::Runtime::new().unwrap();
-            rt.block_on(async move {
-                endpoints::run_backend(&target_network_backend, "127.0.0.1", backend_port, true, Some(tx))
-                    .await
-                    .expect("failed")
-            });
-        });
-        let srv = rx.recv().unwrap();
-        let dashboard_backend_client = DashboardBackendClient::new_with_backend_url(backend_url);
-
-        self.dashboard_backend_client
-            .borrow_mut()
-            .get_or_insert_with(|| dashboard_backend_client.clone());
-        self.backend_srv.borrow_mut().get_or_insert_with(|| srv.clone());
-
-        Ok(dashboard_backend_client)
-    }
-
-    pub async fn stop_backend(&self) -> anyhow::Result<()> {
-        let backend_srv_opt = self.backend_srv.borrow().clone();
-        if let Some(backend_srv) = backend_srv_opt {
-            backend_srv.stop(false).await;
-        }
-        Ok(())
-    }
-
     pub async fn registry(&self) -> Arc<RegistryState> {
         {
             if let Some(ref registry) = *self.registry.borrow() {
@@ -110,8 +67,6 @@ impl Runner {
             ic_admin,
             registry: RefCell::new(None),
             network: network.clone(),
-            dashboard_backend_client: RefCell::new(None),
-            backend_srv: RefCell::new(None),
         })
     }
 
@@ -150,7 +105,17 @@ impl Runner {
         dry_run: bool,
     ) -> anyhow::Result<()> {
         let subnet = request.subnet;
-        let change = self.get_backend_client().await?.subnet_resize(request).await?;
+        let change = self
+            .registry()
+            .await
+            .modify_subnet_nodes(SubnetQueryBy::SubnetId(request.subnet))
+            .await?
+            .excluding_from_available(request.exclude.clone().unwrap_or_default())
+            .including_from_available(request.only.clone().unwrap_or_default())
+            .including_from_available(request.include.clone().unwrap_or_default())
+            .resize(request.add, request.remove)?;
+        let change = SubnetChangeResponse::from(&change);
+
         if verbose {
             if let Some(run_log) = &change.run_log {
                 println!("{}\n", run_log.join("\n"));
@@ -198,21 +163,27 @@ impl Runner {
             println!("{}", self.ic_admin.grep_subcommand_arguments("propose-to-create-subnet"));
             return Ok(());
         }
-        let subnet_creation_data = self.get_backend_client().await?.subnet_create(request).await?;
+
+        let subnet_creation_data = self
+            .registry()
+            .await
+            .create_subnet(
+                request.size,
+                request.min_nakamoto_coefficients.clone(),
+                request.include.clone().unwrap_or_default(),
+                request.exclude.clone().unwrap_or_default(),
+                request.only.clone().unwrap_or_default(),
+            )
+            .await?;
+        let subnet_creation_data = SubnetChangeResponse::from(&subnet_creation_data);
+
         if verbose {
             if let Some(run_log) = &subnet_creation_data.run_log {
                 println!("{}\n", run_log.join("\n"));
             }
         }
         println!("{}", subnet_creation_data);
-
-        let replica_version = replica_version.unwrap_or(
-            self.get_backend_client()
-                .await?
-                .get_nns_replica_version()
-                .await
-                .expect("Failed to get a GuestOS version of the NNS subnet"),
-        );
+        let replica_version = replica_version.unwrap_or(self.registry().await.nns_replica_version().await?);
 
         self.ic_admin
             .propose_run(
@@ -232,13 +203,44 @@ impl Runner {
         Ok(())
     }
 
-    pub async fn membership_replace(
-        &self,
-        request: ic_management_types::requests::MembershipReplaceRequest,
-        verbose: bool,
-        dry_run: bool,
-    ) -> anyhow::Result<()> {
-        let change = self.get_backend_client().await?.membership_replace(request).await?;
+    /// Simulates replacement of nodes in a subnet.
+    /// There are multiple ways to replace nodes. For instance:
+    ///    1. Setting `heal` to `true` in the request to replace unhealthy nodes
+    ///    2. Replace `optimize` nodes to optimize subnet decentralization.
+    ///    3. Explicitly add or remove nodes from the subnet specifying their
+    /// Principals.
+    ///
+    /// All nodes in the request must belong to exactly one subnet.
+    pub async fn membership_replace(&self, request: MembershipReplace, verbose: bool, dry_run: bool) -> anyhow::Result<()> {
+        let mut motivations: Vec<String> = vec![];
+        let health_client = health::HealthClient::new(self.registry().await.network());
+        let registry_nodes = self.registry().await.nodes();
+        let change_request = match &request.target {
+            ReplaceTarget::Subnet(subnet) => self.registry().await.modify_subnet_nodes(SubnetQueryBy::SubnetId(*subnet)).await?,
+            ReplaceTarget::Nodes {
+                nodes: nodes_to_replace,
+                motivation,
+            } => {
+                motivations.push(motivation.clone());
+                let nodes_to_replace = nodes_to_replace
+                    .iter()
+                    .filter_map(|n| registry_nodes.get(n))
+                    .map(decentralization::network::Node::from)
+                    .collect::<Vec<_>>();
+                self.registry()
+                    .await
+                    .modify_subnet_nodes(SubnetQueryBy::NodeList(nodes_to_replace))
+                    .await?
+            }
+        }
+        .excluding_from_available(request.exclude.clone().unwrap_or_default())
+        .including_from_available(request.only.clone())
+        .including_from_available(request.include.clone().unwrap_or_default())
+        .with_min_nakamoto_coefficients(request.min_nakamoto_coefficients.clone());
+        let subnet_health: BTreeMap<PrincipalId, ic_management_types::Status> = health_client.subnet(change_request.subnet().id).await?;
+
+        let change = request.replace(subnet_health, registry_nodes, change_request).await?;
+
         if verbose {
             if let Some(run_log) = &change.run_log {
                 println!("{}\n", run_log.join("\n"));

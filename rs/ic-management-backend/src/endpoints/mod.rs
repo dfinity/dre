@@ -6,7 +6,7 @@ pub mod subnet;
 use crate::health::HealthStatusQuerier;
 use crate::{health, prometheus, proposal, registry, registry::RegistryState, release::list_subnets_release_statuses, release::RolloutBuilder};
 use actix_web::dev::Service;
-use actix_web::{get, post, web, App, Error, HttpResponse, HttpServer, Responder, Result};
+use actix_web::{get, web, App, Error, HttpResponse, HttpServer, Responder, Result};
 use decentralization::network::AvailableNodesQuerier;
 use ic_management_types::Network;
 use ic_registry_nns_data_provider::registry::RegistryCanister;
@@ -80,15 +80,11 @@ pub async fn run_backend(
             .service(operators)
             .service(nodes_healths)
             .service(get_subnet)
-            .service(self::subnet::replace)
-            .service(self::subnet::create_subnet)
-            .service(self::subnet::resize)
             .service(self::subnet::change_preview)
             .service(self::query_decentralization::decentralization_subnet_query)
             .service(self::query_decentralization::decentralization_whatif_query)
             .service(self::release::releases_list_all)
             .service(self::release::blessed)
-            .service(self::release::get_nns_replica_version)
             .service(self::governance_canister::governance_canister_version_endpoint)
     })
     .shutdown_timeout(10)

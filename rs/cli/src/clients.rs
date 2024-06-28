@@ -1,9 +1,6 @@
 use async_trait::async_trait;
 use decentralization::SubnetChangeResponse;
-use ic_management_types::{
-    requests::{MembershipReplaceRequest, SubnetCreateRequest, SubnetResizeRequest},
-    Network, NetworkError,
-};
+use ic_management_types::{requests::SubnetCreateRequest, Network, NetworkError};
 use log::error;
 use serde::de::DeserializeOwned;
 
@@ -36,33 +33,10 @@ impl DashboardBackendClient {
         }
     }
 
-    pub async fn membership_replace(&self, request: MembershipReplaceRequest) -> anyhow::Result<SubnetChangeResponse> {
-        reqwest::Client::new()
-            .post(self.url.join("subnet/membership/replace").map_err(|e| anyhow::anyhow!(e))?)
-            .json(&request)
-            .rest_send()
-            .await
-    }
-
-    pub async fn subnet_resize(&self, request: SubnetResizeRequest) -> anyhow::Result<SubnetChangeResponse> {
-        reqwest::Client::new()
-            .post(self.url.join("subnet/membership/resize").map_err(|e| anyhow::anyhow!(e))?)
-            .json(&request)
-            .rest_send()
-            .await
-    }
-
     pub async fn subnet_create(&self, request: SubnetCreateRequest) -> anyhow::Result<SubnetChangeResponse> {
         reqwest::Client::new()
             .post(self.url.join("subnet/create").map_err(|e| anyhow::anyhow!(e))?)
             .json(&request)
-            .rest_send()
-            .await
-    }
-
-    pub async fn get_nns_replica_version(&self) -> anyhow::Result<String> {
-        reqwest::Client::new()
-            .get(self.url.join("release/versions/nns").map_err(|e| anyhow::anyhow!(e))?)
             .rest_send()
             .await
     }

@@ -1,6 +1,6 @@
 use crate::ic_admin::IcAdminWrapper;
 use clap::{error::ErrorKind, CommandFactory, Parser};
-use decentralization::subnets::NodesRemover;
+use decentralization::subnets::{MembershipReplace, NodesRemover, ReplaceTarget};
 use dotenv::dotenv;
 use dre::cli::proposals::ProposalStatus;
 use dre::detect_neuron::Auth;
@@ -139,12 +139,12 @@ async fn main() -> Result<(), anyhow::Error> {
                         let min_nakamoto_coefficients = parse_min_nakamoto_coefficients(&mut cmd, min_nakamoto_coefficients);
                         runner_instance
                             .membership_replace(
-                                ic_management_types::requests::MembershipReplaceRequest {
+                                MembershipReplace {
                                     target: match &subnet.id {
-                                        Some(subnet) => ic_management_types::requests::ReplaceTarget::Subnet(*subnet),
+                                        Some(subnet) => ReplaceTarget::Subnet(*subnet),
                                         None => {
                                             if let Some(motivation) = motivation.clone() {
-                                                ic_management_types::requests::ReplaceTarget::Nodes {
+                                                ReplaceTarget::Nodes {
                                                     nodes: nodes.clone(),
                                                     motivation,
                                                 }
