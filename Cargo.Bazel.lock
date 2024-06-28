@@ -1,5 +1,5 @@
 {
-  "checksum": "077a6edeb56f425cff5d5be0fa78051775b205b6764662613cbb2b00b09f40c1",
+  "checksum": "850fa358597486f8fa325b70c5deea34b28c57fac48c40e87516719e2363d05a",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -29223,10 +29223,62 @@
             {
               "id": "tokio 1.38.0",
               "target": "tokio"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "0.4.1"
+      },
+      "license": null
+    },
+    "log-noise-filter-downloader 0.4.1": {
+      "name": "log-noise-filter-downloader",
+      "version": "0.4.1",
+      "repository": null,
+      "targets": [],
+      "library_target_name": null,
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "clap 4.5.7",
+              "target": "clap"
             },
             {
-              "id": "toml 0.8.12",
-              "target": "toml"
+              "id": "reqwest 0.12.5",
+              "target": "reqwest"
+            },
+            {
+              "id": "serde 1.0.203",
+              "target": "serde"
+            },
+            {
+              "id": "serde_json 1.0.117",
+              "target": "serde_json"
+            },
+            {
+              "id": "slog 2.7.0",
+              "target": "slog"
+            },
+            {
+              "id": "slog-async 2.8.0",
+              "target": "slog_async"
+            },
+            {
+              "id": "slog-term 2.9.1",
+              "target": "slog_term"
+            },
+            {
+              "id": "tokio 1.38.0",
+              "target": "tokio"
+            },
+            {
+              "id": "url 2.5.2",
+              "target": "url"
             }
           ],
           "selects": {}
@@ -40695,51 +40747,6 @@
       },
       "license": "MIT OR Apache-2.0"
     },
-    "serde_spanned 0.6.6": {
-      "name": "serde_spanned",
-      "version": "0.6.6",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/serde_spanned/0.6.6/download",
-          "sha256": "79e674e01f999af37c49f70a6ede167a8a60b2503e56c5599532a65baa5969a0"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "serde_spanned",
-            "crate_root": "src/lib.rs",
-            "srcs": [
-              "**/*.rs"
-            ]
-          }
-        }
-      ],
-      "library_target_name": "serde_spanned",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "crate_features": {
-          "common": [
-            "serde"
-          ],
-          "selects": {}
-        },
-        "deps": {
-          "common": [
-            {
-              "id": "serde 1.0.203",
-              "target": "serde"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2021",
-        "version": "0.6.6"
-      },
-      "license": "MIT OR Apache-2.0"
-    },
     "serde_tokenstream 0.1.7": {
       "name": "serde_tokenstream",
       "version": "0.1.7",
@@ -45202,65 +45209,6 @@
       },
       "license": "MIT"
     },
-    "toml 0.8.12": {
-      "name": "toml",
-      "version": "0.8.12",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/toml/0.8.12/download",
-          "sha256": "e9dd1545e8208b4a5af1aa9bbd0b4cf7e9ea08fabc5d0a5c67fcaafa17433aa3"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "toml",
-            "crate_root": "src/lib.rs",
-            "srcs": [
-              "**/*.rs"
-            ]
-          }
-        }
-      ],
-      "library_target_name": "toml",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "crate_features": {
-          "common": [
-            "default",
-            "display",
-            "parse"
-          ],
-          "selects": {}
-        },
-        "deps": {
-          "common": [
-            {
-              "id": "serde 1.0.203",
-              "target": "serde"
-            },
-            {
-              "id": "serde_spanned 0.6.6",
-              "target": "serde_spanned"
-            },
-            {
-              "id": "toml_datetime 0.6.6",
-              "target": "toml_datetime"
-            },
-            {
-              "id": "toml_edit 0.22.12",
-              "target": "toml_edit"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2021",
-        "version": "0.8.12"
-      },
-      "license": "MIT OR Apache-2.0"
-    },
     "toml_datetime 0.6.6": {
       "name": "toml_datetime",
       "version": "0.6.6",
@@ -45286,21 +45234,6 @@
         "compile_data_glob": [
           "**"
         ],
-        "crate_features": {
-          "common": [
-            "serde"
-          ],
-          "selects": {}
-        },
-        "deps": {
-          "common": [
-            {
-              "id": "serde 1.0.203",
-              "target": "serde"
-            }
-          ],
-          "selects": {}
-        },
         "edition": "2021",
         "version": "0.6.6"
       },
@@ -45403,69 +45336,6 @@
         },
         "edition": "2021",
         "version": "0.21.1"
-      },
-      "license": "MIT OR Apache-2.0"
-    },
-    "toml_edit 0.22.12": {
-      "name": "toml_edit",
-      "version": "0.22.12",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/toml_edit/0.22.12/download",
-          "sha256": "d3328d4f68a705b2a4498da1d580585d39a6510f98318a2cec3018a7ec61ddef"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "toml_edit",
-            "crate_root": "src/lib.rs",
-            "srcs": [
-              "**/*.rs"
-            ]
-          }
-        }
-      ],
-      "library_target_name": "toml_edit",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "crate_features": {
-          "common": [
-            "display",
-            "parse",
-            "serde"
-          ],
-          "selects": {}
-        },
-        "deps": {
-          "common": [
-            {
-              "id": "indexmap 2.2.6",
-              "target": "indexmap"
-            },
-            {
-              "id": "serde 1.0.203",
-              "target": "serde"
-            },
-            {
-              "id": "serde_spanned 0.6.6",
-              "target": "serde_spanned"
-            },
-            {
-              "id": "toml_datetime 0.6.6",
-              "target": "toml_datetime"
-            },
-            {
-              "id": "winnow 0.6.6",
-              "target": "winnow"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2021",
-        "version": "0.22.12"
       },
       "license": "MIT OR Apache-2.0"
     },
@@ -49482,44 +49352,6 @@
       },
       "license": "MIT"
     },
-    "winnow 0.6.6": {
-      "name": "winnow",
-      "version": "0.6.6",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/winnow/0.6.6/download",
-          "sha256": "f0c976aaaa0e1f90dbb21e9587cdaf1d9679a1cde8875c0d6bd83ab96a208352"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "winnow",
-            "crate_root": "src/lib.rs",
-            "srcs": [
-              "**/*.rs"
-            ]
-          }
-        }
-      ],
-      "library_target_name": "winnow",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "crate_features": {
-          "common": [
-            "alloc",
-            "default",
-            "std"
-          ],
-          "selects": {}
-        },
-        "edition": "2021",
-        "version": "0.6.6"
-      },
-      "license": "MIT"
-    },
     "winreg 0.52.0": {
       "name": "winreg",
       "version": "0.52.0",
@@ -51058,7 +50890,8 @@
     "ic-management-backend 0.4.1": "rs/ic-management-backend",
     "ic-management-types 0.4.1": "rs/ic-management-types",
     "log-fetcher 0.4.1": "rs/log-fetcher",
-    "log-noise-filter-backend 0.4.1": "rs/log-noise-filter-backend",
+    "log-noise-filter-backend 0.4.1": "rs/ic-observability/log-noise-filter-backend",
+    "log-noise-filter-downloader 0.4.1": "rs/ic-observability/log-noise-filter-downloader",
     "multiservice-discovery 0.4.1": "rs/ic-observability/multiservice-discovery",
     "multiservice-discovery-downloader 0.4.1": "rs/ic-observability/multiservice-discovery-downloader",
     "multiservice-discovery-shared 0.4.1": "rs/ic-observability/multiservice-discovery-shared",
