@@ -80,7 +80,7 @@ async fn main() -> Result<(), anyhow::Error> {
             .await
             .expect("Failed to create a runner");
 
-        let r = match &cli_opts.subcommand {
+        match &cli_opts.subcommand {
             // Covered above
             cli::Commands::Upgrade => Ok(()),
             cli::Commands::DerToPrincipal { path } => {
@@ -551,9 +551,7 @@ async fn main() -> Result<(), anyhow::Error> {
                     };
                 }
             },
-        };
-        let _ = runner_instance.stop_backend().await;
-        r
+        }
     })
     .await;
 

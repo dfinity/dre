@@ -183,7 +183,13 @@ impl Runner {
             }
         }
         println!("{}", subnet_creation_data);
-        let replica_version = replica_version.unwrap_or(self.registry().await.nns_replica_version().await?);
+        let replica_version = replica_version.unwrap_or(
+            self.registry()
+                .await
+                .nns_replica_version()
+                .await
+                .expect("Failed to get a GuestOS version of the NNS subnet"),
+        );
 
         self.ic_admin
             .propose_run(
