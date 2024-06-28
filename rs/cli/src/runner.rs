@@ -16,8 +16,8 @@ use ic_management_backend::proposal::ProposalAgent;
 use ic_management_backend::public_dashboard::query_ic_dashboard_list;
 use ic_management_backend::registry::{self, RegistryState};
 use ic_management_backend::{endpoints, health, health::HealthStatusQuerier};
-use ic_management_types::TopologyChangePayload;
 use ic_management_types::{Artifact, Network, Node, NodeFeature, NodeProvidersResponse};
+use ic_management_types::{NetworkError, TopologyChangePayload};
 use itertools::Itertools;
 use log::{info, warn};
 use registry_canister::mutations::do_change_subnet_membership::ChangeSubnetMembershipPayload;
@@ -255,7 +255,15 @@ impl Runner {
 
     async fn run_membership_change(&self, change: SubnetChangeResponse, options: ProposeOptions, dry_run: bool) -> anyhow::Result<()> {
         let subnet_id = change.subnet_id.ok_or_else(|| anyhow::anyhow!("subnet_id is required"))?;
-        let pending_action = self.get_backend_client().await?.subnet_pending_action(subnet_id).await?;
+        let pending_action = self
+            .registry()
+            .await
+            .subnets_with_proposals()
+            .await?
+            .get(&subnet_id)
+            .map(|s| s.proposal.clone())
+            .ok_or(NetworkError::SubnetNotFound(subnet_id))?;
+
         if let Some(proposal) = pending_action {
             return Err(anyhow::anyhow!(format!(
                 "There is a pending proposal for this subnet: https://dashboard.internetcomputer.org/proposal/{}",
@@ -279,8 +287,7 @@ impl Runner {
     }
 
     pub async fn prepare_versions_to_retire(&self, release_artifact: &Artifact, edit_summary: bool) -> anyhow::Result<(String, Option<Vec<String>>)> {
-        let retireable_versions = self.get_backend_client().await?.get_retireable_versions(release_artifact).await?;
-
+        let retireable_versions = self.registry().await.retireable_versions(release_artifact).await?;
         let versions = if retireable_versions.is_empty() {
             Vec::new()
         } else {

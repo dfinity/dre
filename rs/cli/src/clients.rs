@@ -1,9 +1,8 @@
 use async_trait::async_trait;
 use decentralization::SubnetChangeResponse;
-use ic_base_types::PrincipalId;
 use ic_management_types::{
     requests::{MembershipReplaceRequest, SubnetCreateRequest, SubnetResizeRequest},
-    Artifact, Network, NetworkError, Release, TopologyChangeProposal,
+    Network, NetworkError,
 };
 use log::error;
 use serde::de::DeserializeOwned;
@@ -37,17 +36,6 @@ impl DashboardBackendClient {
         }
     }
 
-    pub async fn subnet_pending_action(&self, subnet: PrincipalId) -> anyhow::Result<Option<TopologyChangeProposal>> {
-        reqwest::Client::new()
-            .get(
-                self.url
-                    .join(&format!("subnet/{subnet}/pending_action"))
-                    .map_err(|e| anyhow::anyhow!(e))?,
-            )
-            .rest_send()
-            .await
-    }
-
     pub async fn membership_replace(&self, request: MembershipReplaceRequest) -> anyhow::Result<SubnetChangeResponse> {
         reqwest::Client::new()
             .post(self.url.join("subnet/membership/replace").map_err(|e| anyhow::anyhow!(e))?)
@@ -68,17 +56,6 @@ impl DashboardBackendClient {
         reqwest::Client::new()
             .post(self.url.join("subnet/create").map_err(|e| anyhow::anyhow!(e))?)
             .json(&request)
-            .rest_send()
-            .await
-    }
-
-    pub async fn get_retireable_versions(&self, release_artifact: &Artifact) -> anyhow::Result<Vec<Release>> {
-        reqwest::Client::new()
-            .get(
-                self.url
-                    .join(&format!("release/retireable/{}", release_artifact))
-                    .map_err(|e| anyhow::anyhow!(e))?,
-            )
             .rest_send()
             .await
     }

@@ -14,26 +14,6 @@ struct SubnetRequest {
     subnet: PrincipalId,
 }
 
-#[get("/subnet/{subnet}/pending_action")]
-pub(crate) async fn pending_action(
-    request: web::Path<SubnetRequest>,
-    registry: web::Data<Arc<RwLock<RegistryState>>>,
-) -> Result<HttpResponse, Error> {
-    match registry.read().await.subnets_with_proposals().await {
-        Ok(subnets) => {
-            if let Some(subnet) = subnets.get(&request.subnet) {
-                Ok(HttpResponse::Ok().json(&subnet.proposal))
-            } else {
-                Err(actix_web::error::ErrorNotFound(anyhow::format_err!(
-                    "subnet {} not found",
-                    request.subnet
-                )))
-            }
-        }
-        Err(e) => Err(actix_web::error::ErrorInternalServerError(format!("failed to fetch subnets: {}", e))),
-    }
-}
-
 #[get("/subnet/{subnet}/change_preview")]
 pub(crate) async fn change_preview(
     request: web::Path<SubnetRequest>,
