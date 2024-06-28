@@ -44,3 +44,15 @@ impl From<serde_json::Error> for NetworkError {
         NetworkError::DataRequestError(err.to_string())
     }
 }
+
+impl From<NetworkError> for anyhow::Error {
+    fn from(e: NetworkError) -> Self {
+        match e {
+            NetworkError::NodeNotFound(id) => anyhow::anyhow!("Node not found: {:?}", id),
+            NetworkError::SubnetNotFound(id) => anyhow::anyhow!("Subnet not found: {:?}", id),
+            NetworkError::ResizeFailed(msg) => anyhow::anyhow!("Resize Failed: {:?}", msg),
+            NetworkError::DataRequestError(msg) => anyhow::anyhow!("Data request error: {:?}", msg),
+            NetworkError::IllegalRequest(msg) => anyhow::anyhow!("Illegal request: {:?}", msg),
+        }
+    }
+}

@@ -1,5 +1,6 @@
 pub mod nakamoto;
 pub mod network;
+pub mod subnets;
 use colored::Colorize;
 use itertools::{EitherOrBoth::*, Itertools};
 use std::collections::BTreeMap;
@@ -180,20 +181,6 @@ impl Display for SubnetChangeResponse {
             writeln!(f, "{}", format!("*** Note ***\n{}", comment).red())?;
         }
 
-        Ok(())
-    }
-}
-
-#[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct HealResponse {
-    pub subnets_change_response: Vec<SubnetChangeResponse>,
-}
-
-impl Display for HealResponse {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        for change in &self.subnets_change_response {
-            writeln!(f, "{}", change)?;
-        }
         Ok(())
     }
 }

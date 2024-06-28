@@ -434,8 +434,9 @@ impl Display for NakamotoScore {
 mod tests {
     use std::str::FromStr;
 
-    use crate::network::{DecentralizedSubnet, NetworkHealRequest, NetworkHealSubnets, NodeSelector, SubnetChangeRequest};
+    use crate::network::{DecentralizedSubnet, NetworkHealRequest, NetworkHealSubnets, SubnetChangeRequest};
     use ic_base_types::PrincipalId;
+    use ic_management_types::Status;
     use itertools::Itertools;
     use regex::Regex;
 
@@ -641,7 +642,7 @@ mod tests {
                 .collect::<Vec<_>>()
         );
 
-        let subnet_change_req = SubnetChangeRequest::new(subnet_initial, nodes_available, Vec::new(), Vec::new(), None);
+        let subnet_change_req = SubnetChangeRequest::new(subnet_initial, nodes_available, Vec::new(), Vec::new(), Vec::new(), None);
         let subnet_change = subnet_change_req.optimize(2, &vec![]).unwrap();
         for log in subnet_change.after().run_log.iter() {
             println!("{}", log);
@@ -691,7 +692,7 @@ mod tests {
                 .collect::<Vec<_>>()
         );
 
-        let subnet_change_req = SubnetChangeRequest::new(subnet_initial, nodes_available, Vec::new(), Vec::new(), None);
+        let subnet_change_req = SubnetChangeRequest::new(subnet_initial, nodes_available, Vec::new(), Vec::new(), Vec::new(), None);
         let subnet_change = subnet_change_req.optimize(2, &vec![]).unwrap();
         println!("Replacement run log:");
         for line in subnet_change.after().run_log.iter() {
@@ -738,7 +739,7 @@ mod tests {
                 .collect::<Vec<_>>()
         );
 
-        let subnet_change_req = SubnetChangeRequest::new(subnet_initial, nodes_available, Vec::new(), Vec::new(), None);
+        let subnet_change_req = SubnetChangeRequest::new(subnet_initial, nodes_available, Vec::new(), Vec::new(), Vec::new(), None);
         let subnet_change = subnet_change_req.optimize(2, &vec![]).unwrap();
 
         println!("Replacement run log:");
@@ -913,47 +914,52 @@ mod tests {
         assert_eq!(vec![important, not_important_large, not_important_small], healing_order);
     }
 
-    #[test]
-    fn test_network_heal() {
+    #[tokio::test]
+    async fn test_network_heal() {
         let nodes_available = new_test_nodes("spare", 10, 2);
         let nodes_available_principals = nodes_available.iter().map(|n| n.id).collect_vec();
 
-        let important =
+        let subnet =
             serde_json::from_str::<ic_management_types::Subnet>(include_str!("../../test_data/subnet-uzr34.json")).expect("failed to read test data");
-        let important_decentralized = DecentralizedSubnet::from(important.clone());
-        let important_unhealthy_principals = vec![
-            PrincipalId::from_str("e4ysi-xp4fs-5ckcv-7e76q-edydw-ak6le-2acyt-k7udb-lj2vo-fqhhx-vqe").unwrap(),
-            PrincipalId::from_str("aefqq-d7ldg-ljk5s-cmnxk-qqu7c-tw52l-74g3m-xxl5d-ag4ia-dxubz-wae").unwrap(),
-        ];
-        let unhealthy_nodes = important_decentralized
+        let unhealthy_principals = [
+            "e4ysi-xp4fs-5ckcv-7e76q-edydw-ak6le-2acyt-k7udb-lj2vo-fqhhx-vqe",
+            "aefqq-d7ldg-ljk5s-cmnxk-qqu7c-tw52l-74g3m-xxl5d-ag4ia-dxubz-wae",
+        ]
+        .into_iter()
+        .flat_map(PrincipalId::from_str)
+        .collect_vec();
+
+        let healths = subnet
             .nodes
-            .clone()
-            .into_iter()
-            .filter(|n| important_unhealthy_principals.contains(&n.id))
-            .collect_vec();
-        let important = NetworkHealSubnets {
-            name: important.metadata.name.clone(),
-            decentralized_subnet: important_decentralized,
-            unhealthy_nodes: unhealthy_nodes.clone(),
-        };
+            .iter()
+            .cloned()
+            .map(|n| {
+                if unhealthy_principals.contains(&n.principal) {
+                    (n.principal, Status::Dead)
+                } else {
+                    (n.principal, Status::Healthy)
+                }
+            })
+            .collect::<BTreeMap<_, _>>();
+        let mut important = BTreeMap::new();
 
-        let max_replaceable_nodes = None;
-        let network_heal_response = NetworkHealRequest::new(vec![important.clone()])
-            .heal_and_optimize(nodes_available.clone(), max_replaceable_nodes)
+        important.insert(subnet.principal, subnet);
+
+        let network_heal_response = NetworkHealRequest::new(important.clone(), None)
+            .heal_and_optimize(nodes_available.clone(), healths.clone())
+            .await
             .unwrap();
         let result = network_heal_response.first().unwrap().clone();
 
-        assert_eq!(important_unhealthy_principals, result.removed.clone());
+        assert_eq!(unhealthy_principals.to_vec(), result.removed.clone());
 
-        assert_eq!(important_unhealthy_principals.len(), result.added.len());
+        assert_eq!(unhealthy_principals.len(), result.added.len());
 
-        let max_replaceable_nodes = Some(1);
-        let network_heal_response = NetworkHealRequest::new(vec![important.clone()])
-            .heal_and_optimize(nodes_available.clone(), max_replaceable_nodes)
+        let network_heal_response = NetworkHealRequest::new(important, Some(1))
+            .heal_and_optimize(nodes_available.clone(), healths)
+            .await
             .unwrap();
         let result = network_heal_response.first().unwrap().clone();
-
-        assert_eq!(important_unhealthy_principals.into_iter().take(1).collect_vec(), result.removed.clone());
 
         assert_eq!(1, result.added.len());
 
@@ -965,12 +971,9 @@ mod tests {
         let nodes_available = new_test_nodes("spare", 10, 1);
         let subnet_initial = new_test_subnet_with_overrides(0, 11, 7, 1, (&NodeFeature::Country, &["CH", "CA", "CA", "CA", "CA", "CA", "BE"]));
 
-        let change_initial = SubnetChangeRequest::new(subnet_initial.clone(), nodes_available, Vec::new(), Vec::new(), None);
+        let change_initial = SubnetChangeRequest::new(subnet_initial.clone(), nodes_available, Vec::new(), Vec::new(), Vec::new(), None);
 
-        let with_keeping_features = change_initial
-            .clone()
-            .rescue(Some(NodeSelector::FromFeatures(vec!["CH".to_string()])))
-            .unwrap();
+        let with_keeping_features = change_initial.clone().keeping_from_used(vec!["CH".to_string()]).rescue().unwrap();
 
         assert_eq!(with_keeping_features.added().len(), 6);
         assert_eq!(
@@ -984,10 +987,7 @@ mod tests {
         );
 
         let node_to_keep = subnet_initial.nodes.first().unwrap();
-        let with_keeping_principals = change_initial
-            .clone()
-            .rescue(Some(NodeSelector::FromPrincipals(vec![node_to_keep.id])))
-            .unwrap();
+        let with_keeping_principals = change_initial.clone().keeping_from_used(vec!["CH".to_string()]).rescue().unwrap();
 
         assert_eq!(with_keeping_principals.added().len(), 6);
         assert_eq!(
@@ -1000,7 +1000,7 @@ mod tests {
             1
         );
 
-        let rescue_all = change_initial.clone().rescue(None).unwrap();
+        let rescue_all = change_initial.clone().rescue().unwrap();
 
         assert_eq!(rescue_all.added().len(), 7);
         assert_eq!(rescue_all.removed().len(), 7);

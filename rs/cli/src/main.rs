@@ -1,5 +1,6 @@
 use crate::ic_admin::IcAdminWrapper;
 use clap::{error::ErrorKind, CommandFactory, Parser};
+use decentralization::subnets::{MembershipReplace, NodesRemover, ReplaceTarget};
 use dotenv::dotenv;
 use dre::cli::proposals::ProposalStatus;
 use dre::detect_neuron::Auth;
@@ -10,7 +11,6 @@ use ic_base_types::CanisterId;
 use ic_canisters::governance::{governance_canister_version, GovernanceCanisterWrapper};
 use ic_canisters::CanisterClient;
 use ic_management_types::filter_map_nns_function_proposals;
-use ic_management_types::requests::NodesRemoveRequest;
 use ic_management_types::{Artifact, MinNakamotoCoefficients, NodeFeature};
 
 use ic_nns_common::pb::v1::ProposalId;
@@ -80,7 +80,7 @@ async fn main() -> Result<(), anyhow::Error> {
             .await
             .expect("Failed to create a runner");
 
-        let r = match &cli_opts.subcommand {
+        match &cli_opts.subcommand {
             // Covered above
             cli::Commands::Upgrade => Ok(()),
             cli::Commands::DerToPrincipal { path } => {
@@ -93,13 +93,7 @@ async fn main() -> Result<(), anyhow::Error> {
                 max_replaceable_nodes_per_sub,
             } => {
                 runner_instance
-                    .network_heal(
-                        ic_management_types::requests::HealRequest {
-                            max_replaceable_nodes_per_sub: *max_replaceable_nodes_per_sub,
-                        },
-                        cli_opts.verbose,
-                        dry_run,
-                    )
+                    .network_heal(*max_replaceable_nodes_per_sub, cli_opts.verbose, dry_run)
                     .await
             }
 
@@ -145,12 +139,12 @@ async fn main() -> Result<(), anyhow::Error> {
                         let min_nakamoto_coefficients = parse_min_nakamoto_coefficients(&mut cmd, min_nakamoto_coefficients);
                         runner_instance
                             .membership_replace(
-                                ic_management_types::requests::MembershipReplaceRequest {
+                                MembershipReplace {
                                     target: match &subnet.id {
-                                        Some(subnet) => ic_management_types::requests::ReplaceTarget::Subnet(*subnet),
+                                        Some(subnet) => ReplaceTarget::Subnet(*subnet),
                                         None => {
                                             if let Some(motivation) = motivation.clone() {
-                                                ic_management_types::requests::ReplaceTarget::Nodes {
+                                                ReplaceTarget::Nodes {
                                                     nodes: nodes.clone(),
                                                     motivation,
                                                 }
@@ -349,7 +343,7 @@ async fn main() -> Result<(), anyhow::Error> {
                     }
                     runner_instance
                         .remove_nodes(
-                            NodesRemoveRequest {
+                            NodesRemover {
                                 extra_nodes_filter: extra_nodes_filter.clone(),
                                 no_auto: *no_auto,
                                 remove_degraded: *remove_degraded,
@@ -557,9 +551,7 @@ async fn main() -> Result<(), anyhow::Error> {
                     };
                 }
             },
-        };
-        let _ = runner_instance.stop_backend().await;
-        r
+        }
     })
     .await;
 
@@ -653,6 +645,16 @@ fn init_logger() {
 }
 
 fn check_latest_release(curr_version: &str, proceed_with_upgrade: bool) -> anyhow::Result<UpdateStatus> {
+    // Check for a new release once per day
+    let update_check_path = dirs::cache_dir().expect("Failed to find a cache dir").join("dre_update_check");
+    if let Ok(metadata) = std::fs::metadata(&update_check_path) {
+        let last_check = metadata.modified().unwrap();
+        let now = std::time::SystemTime::now();
+        if now.duration_since(last_check).unwrap().as_secs() < 60 * 60 * 24 {
+            return Ok(UpdateStatus::NoUpdate);
+        }
+    }
+
     // ^                --> start of line
     // v?               --> optional 'v' char
     // (\d+\.\d+\.\d+)  --> string in format '1.22.33'
@@ -668,6 +670,9 @@ fn check_latest_release(curr_version: &str, proceed_with_upgrade: bool) -> anyho
         .repo_name("dre")
         .build()
         .map_err(|e| anyhow::anyhow!("Configuring backend failed: {:?}", e))?;
+
+    // Touch update check file
+    std::fs::write(&update_check_path, "").map_err(|e| anyhow::anyhow!("Couldn't touch update check file: {:?}", e))?;
 
     let releases = maybe_configured_backend
         .fetch()

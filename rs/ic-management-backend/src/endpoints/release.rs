@@ -13,20 +13,8 @@ pub(crate) async fn releases_list_all(registry: web::Data<Arc<RwLock<RegistrySta
     Ok(HttpResponse::Ok().json(registry.replica_releases()))
 }
 
-#[get("/release/retireable/{release_artifact}")]
-pub(crate) async fn retireable(request: web::Path<ReleaseRequest>, registry: web::Data<Arc<RwLock<RegistryState>>>) -> Result<HttpResponse, Error> {
-    let registry = registry.read().await;
-    response_from_result(registry.retireable_versions(&request.release_artifact).await)
-}
-
 #[get("release/versions/blessed/{release_artifact}")]
 pub(crate) async fn blessed(request: web::Path<ReleaseRequest>, registry: web::Data<Arc<RwLock<RegistryState>>>) -> Result<HttpResponse, Error> {
     let registry = registry.read().await;
     response_from_result(registry.blessed_versions(&request.release_artifact).await)
-}
-
-#[get("/release/versions/nns")]
-pub(crate) async fn get_nns_replica_version(registry: web::Data<Arc<RwLock<RegistryState>>>) -> Result<HttpResponse, Error> {
-    let registry = registry.read().await;
-    Ok(HttpResponse::Ok().json(registry.nns_replica_version().await))
 }

@@ -1,88 +1,72 @@
-use crate::clients::DashboardBackendClient;
+use crate::ic_admin;
 use crate::ic_admin::ProposeOptions;
 use crate::operations::hostos_rollout::{HostosRollout, HostosRolloutResponse, NodeGroupUpdate};
 use crate::ops_subnet_node_replace;
-use crate::{ic_admin, local_unused_port};
-use actix_web::dev::ServerHandle;
-use decentralization::network::TopologyManager;
-use decentralization::network::{NodeSelector, SubnetChange, SubnetQuerier, SubnetQueryBy};
+use decentralization::network::{AvailableNodesQuerier, SubnetChange, SubnetQuerier, SubnetQueryBy};
+use decentralization::network::{NetworkHealRequest, TopologyManager};
+use decentralization::subnets::{MembershipReplace, NodesRemover, ReplaceTarget};
 use decentralization::SubnetChangeResponse;
 use futures::future::join_all;
+use futures::TryFutureExt;
+use futures_util::future::try_join;
 use ic_base_types::PrincipalId;
-use ic_management_backend::endpoints;
 use ic_management_backend::proposal::ProposalAgent;
 use ic_management_backend::public_dashboard::query_ic_dashboard_list;
 use ic_management_backend::registry::{self, RegistryState};
-use ic_management_types::requests::NodesRemoveRequest;
-use ic_management_types::{Artifact, Network, Node, NodeFeature, NodeProvidersResponse, TopologyChangePayload};
+use ic_management_backend::{health, health::HealthStatusQuerier};
+use ic_management_types::{Artifact, Network, Node, NodeFeature, NodeProvidersResponse};
+use ic_management_types::{NetworkError, TopologyChangePayload};
 use itertools::Itertools;
 use log::{info, warn};
 use registry_canister::mutations::do_change_subnet_membership::ChangeSubnetMembershipPayload;
 use std::cell::RefCell;
 use std::collections::BTreeMap;
-use std::sync::mpsc;
-use std::thread;
+use std::sync::Arc;
 use tabled::builder::Builder;
 use tabled::settings::Style;
 
 pub struct Runner {
     pub ic_admin: ic_admin::IcAdminWrapper,
-    registry: RegistryState,
-    dashboard_backend_client: RefCell<Option<DashboardBackendClient>>,
-    backend_srv: RefCell<Option<ServerHandle>>,
+    registry: RefCell<Option<Arc<RegistryState>>>,
+    network: Network,
 }
 
 impl Runner {
-    pub async fn get_backend_client(&self) -> anyhow::Result<DashboardBackendClient> {
-        if let Some(dashboard_backend_client) = &*self.dashboard_backend_client.borrow() {
-            return Ok(dashboard_backend_client.clone());
-        };
-
-        // This will be executed just once creating the backend
-        let backend_port = local_unused_port();
-        let backend_url = format!("http://localhost:{}/", backend_port);
-        let (tx, rx) = mpsc::channel();
-
-        let target_network_backend = self.registry.network();
-        thread::spawn(move || {
-            let rt = tokio::runtime::Runtime::new().unwrap();
-            rt.block_on(async move {
-                endpoints::run_backend(&target_network_backend, "127.0.0.1", backend_port, true, Some(tx))
-                    .await
-                    .expect("failed")
-            });
-        });
-        let srv = rx.recv().unwrap();
-        let dashboard_backend_client = DashboardBackendClient::new_with_backend_url(backend_url);
-
-        self.dashboard_backend_client
-            .borrow_mut()
-            .get_or_insert_with(|| dashboard_backend_client.clone());
-        self.backend_srv.borrow_mut().get_or_insert_with(|| srv.clone());
-
-        Ok(dashboard_backend_client)
-    }
-
-    pub async fn stop_backend(&self) -> anyhow::Result<()> {
-        let backend_srv_opt = self.backend_srv.borrow().clone();
-        if let Some(backend_srv) = backend_srv_opt {
-            backend_srv.stop(false).await;
+    pub async fn registry(&self) -> Arc<RegistryState> {
+        {
+            if let Some(ref registry) = *self.registry.borrow() {
+                return Arc::clone(registry);
+            }
         }
-        Ok(())
+
+        // Create a new registry state
+        let mut new_registry = Arc::new(registry::RegistryState::new(&self.network, true).await);
+
+        // Fetch node providers
+        let node_providers = query_ic_dashboard_list::<NodeProvidersResponse>(&self.network, "v3/node-providers")
+            .await
+            .expect("Failed to get node providers")
+            .node_providers;
+
+        // Update node details
+        Arc::get_mut(&mut new_registry)
+            .expect("Failed to get mutable reference to new registry")
+            .update_node_details(&node_providers)
+            .await
+            .expect("Failed to update node details");
+
+        // Replace the registry in self with the new registry state
+        self.registry.replace(Some(Arc::clone(&new_registry)));
+
+        // Return the Arc to the new registry state
+        new_registry
     }
 
     pub async fn new(ic_admin: ic_admin::IcAdminWrapper, network: &Network) -> anyhow::Result<Self> {
-        let mut registry = registry::RegistryState::new(network, true).await;
-        let node_providers = query_ic_dashboard_list::<NodeProvidersResponse>(network, "v3/node-providers")
-            .await?
-            .node_providers;
-        registry.update_node_details(&node_providers).await?;
-
         Ok(Self {
             ic_admin,
-            registry,
-            dashboard_backend_client: RefCell::new(None),
-            backend_srv: RefCell::new(None),
+            registry: RefCell::new(None),
+            network: network.clone(),
         })
     }
 
@@ -121,7 +105,17 @@ impl Runner {
         dry_run: bool,
     ) -> anyhow::Result<()> {
         let subnet = request.subnet;
-        let change = self.get_backend_client().await?.subnet_resize(request).await?;
+        let change = self
+            .registry()
+            .await
+            .modify_subnet_nodes(SubnetQueryBy::SubnetId(request.subnet))
+            .await?
+            .excluding_from_available(request.exclude.clone().unwrap_or_default())
+            .including_from_available(request.only.clone().unwrap_or_default())
+            .including_from_available(request.include.clone().unwrap_or_default())
+            .resize(request.add, request.remove)?;
+        let change = SubnetChangeResponse::from(&change);
+
         if verbose {
             if let Some(run_log) = &change.run_log {
                 println!("{}\n", run_log.join("\n"));
@@ -169,18 +163,30 @@ impl Runner {
             println!("{}", self.ic_admin.grep_subcommand_arguments("propose-to-create-subnet"));
             return Ok(());
         }
-        let subnet_creation_data = self.get_backend_client().await?.subnet_create(request).await?;
+
+        let subnet_creation_data = self
+            .registry()
+            .await
+            .create_subnet(
+                request.size,
+                request.min_nakamoto_coefficients.clone(),
+                request.include.clone().unwrap_or_default(),
+                request.exclude.clone().unwrap_or_default(),
+                request.only.clone().unwrap_or_default(),
+            )
+            .await?;
+        let subnet_creation_data = SubnetChangeResponse::from(&subnet_creation_data);
+
         if verbose {
             if let Some(run_log) = &subnet_creation_data.run_log {
                 println!("{}\n", run_log.join("\n"));
             }
         }
         println!("{}", subnet_creation_data);
-
         let replica_version = replica_version.unwrap_or(
-            self.get_backend_client()
-                .await?
-                .get_nns_replica_version()
+            self.registry()
+                .await
+                .nns_replica_version()
                 .await
                 .expect("Failed to get a GuestOS version of the NNS subnet"),
         );
@@ -203,13 +209,44 @@ impl Runner {
         Ok(())
     }
 
-    pub async fn membership_replace(
-        &self,
-        request: ic_management_types::requests::MembershipReplaceRequest,
-        verbose: bool,
-        dry_run: bool,
-    ) -> anyhow::Result<()> {
-        let change = self.get_backend_client().await?.membership_replace(request).await?;
+    /// Simulates replacement of nodes in a subnet.
+    /// There are multiple ways to replace nodes. For instance:
+    ///    1. Setting `heal` to `true` in the request to replace unhealthy nodes
+    ///    2. Replace `optimize` nodes to optimize subnet decentralization.
+    ///    3. Explicitly add or remove nodes from the subnet specifying their
+    /// Principals.
+    ///
+    /// All nodes in the request must belong to exactly one subnet.
+    pub async fn membership_replace(&self, request: MembershipReplace, verbose: bool, dry_run: bool) -> anyhow::Result<()> {
+        let mut motivations: Vec<String> = vec![];
+        let health_client = health::HealthClient::new(self.registry().await.network());
+        let registry_nodes = self.registry().await.nodes();
+        let change_request = match &request.target {
+            ReplaceTarget::Subnet(subnet) => self.registry().await.modify_subnet_nodes(SubnetQueryBy::SubnetId(*subnet)).await?,
+            ReplaceTarget::Nodes {
+                nodes: nodes_to_replace,
+                motivation,
+            } => {
+                motivations.push(motivation.clone());
+                let nodes_to_replace = nodes_to_replace
+                    .iter()
+                    .filter_map(|n| registry_nodes.get(n))
+                    .map(decentralization::network::Node::from)
+                    .collect::<Vec<_>>();
+                self.registry()
+                    .await
+                    .modify_subnet_nodes(SubnetQueryBy::NodeList(nodes_to_replace))
+                    .await?
+            }
+        }
+        .excluding_from_available(request.exclude.clone().unwrap_or_default())
+        .including_from_available(request.only.clone())
+        .including_from_available(request.include.clone().unwrap_or_default())
+        .with_min_nakamoto_coefficients(request.min_nakamoto_coefficients.clone());
+        let subnet_health: BTreeMap<PrincipalId, ic_management_types::Status> = health_client.subnet(change_request.subnet().id).await?;
+
+        let change = request.replace(subnet_health, registry_nodes, change_request).await?;
+
         if verbose {
             if let Some(run_log) = &change.run_log {
                 println!("{}\n", run_log.join("\n"));
@@ -226,7 +263,15 @@ impl Runner {
 
     async fn run_membership_change(&self, change: SubnetChangeResponse, options: ProposeOptions, dry_run: bool) -> anyhow::Result<()> {
         let subnet_id = change.subnet_id.ok_or_else(|| anyhow::anyhow!("subnet_id is required"))?;
-        let pending_action = self.get_backend_client().await?.subnet_pending_action(subnet_id).await?;
+        let pending_action = self
+            .registry()
+            .await
+            .subnets_with_proposals()
+            .await?
+            .get(&subnet_id)
+            .map(|s| s.proposal.clone())
+            .ok_or(NetworkError::SubnetNotFound(subnet_id))?;
+
         if let Some(proposal) = pending_action {
             return Err(anyhow::anyhow!(format!(
                 "There is a pending proposal for this subnet: https://dashboard.internetcomputer.org/proposal/{}",
@@ -250,8 +295,7 @@ impl Runner {
     }
 
     pub async fn prepare_versions_to_retire(&self, release_artifact: &Artifact, edit_summary: bool) -> anyhow::Result<(String, Option<Vec<String>>)> {
-        let retireable_versions = self.get_backend_client().await?.get_retireable_versions(release_artifact).await?;
-
+        let retireable_versions = self.registry().await.retireable_versions(release_artifact).await?;
         let versions = if retireable_versions.is_empty() {
             Vec::new()
         } else {
@@ -317,7 +361,7 @@ impl Runner {
         version: &String,
         exclude: &Option<Vec<PrincipalId>>,
     ) -> anyhow::Result<Option<(Vec<PrincipalId>, String)>> {
-        let elected_versions = self.registry.blessed_versions(&Artifact::HostOs).await.unwrap();
+        let elected_versions = self.registry().await.blessed_versions(&Artifact::HostOs).await.unwrap();
         if !elected_versions.contains(&version.to_string()) {
             return Err(anyhow::anyhow!(format!(
                 "The version {} has not being elected.\nVersions elected are: {:?}",
@@ -325,10 +369,10 @@ impl Runner {
             )));
         }
         let hostos_rollout = HostosRollout::new(
-            self.registry.nodes(),
-            self.registry.subnets(),
-            &self.registry.network(),
-            ProposalAgent::new(self.registry.get_nns_urls()),
+            self.registry().await.nodes(),
+            self.registry().await.subnets(),
+            &self.registry().await.network(),
+            ProposalAgent::new(self.registry().await.get_nns_urls()),
             version,
             exclude,
         );
@@ -437,9 +481,10 @@ impl Runner {
         Ok(())
     }
 
-    pub async fn remove_nodes(&self, request: NodesRemoveRequest, dry_run: bool) -> anyhow::Result<()> {
-        let node_remove_response = self.get_backend_client().await?.remove_nodes(request).await?;
-        let mut node_removals = node_remove_response.removals;
+    pub async fn remove_nodes(&self, nodes_remover: NodesRemover, dry_run: bool) -> anyhow::Result<()> {
+        let health_client = health::HealthClient::new(self.registry().await.network());
+        let (healths, nodes_with_proposals) = try_join(health_client.nodes(), self.registry().await.nodes_with_proposals()).await?;
+        let (mut node_removals, motivation) = nodes_remover.remove_nodes(healths, nodes_with_proposals);
         node_removals.sort_by_key(|nr| nr.reason.message());
 
         let headers = vec!["Principal".to_string()]
@@ -478,7 +523,7 @@ impl Runner {
                 ProposeOptions {
                     title: "Remove nodes from the network".to_string().into(),
                     summary: "Remove nodes from the network".to_string().into(),
-                    motivation: node_remove_response.motivation.into(),
+                    motivation: motivation.into(),
                 },
                 dry_run,
             )
@@ -486,16 +531,21 @@ impl Runner {
         Ok(())
     }
 
-    pub async fn network_heal(
-        &self,
-        request: ic_management_types::requests::HealRequest,
-        _verbose: bool,
-        simulate: bool,
-    ) -> Result<(), anyhow::Error> {
-        let change = self.get_backend_client().await?.network_heal(request).await?;
-        println!("{}", change);
+    pub async fn network_heal(&self, max_replaceable_nodes_per_sub: Option<usize>, _verbose: bool, simulate: bool) -> Result<(), anyhow::Error> {
+        let health_client = health::HealthClient::new(self.registry().await.network());
+        let subnets = self.registry().await.subnets();
+        let (available_nodes, healths) = try_join(
+            self.registry().await.available_nodes().map_err(anyhow::Error::from),
+            health_client.nodes(),
+        )
+        .await?;
 
-        let errors = join_all(change.subnets_change_response.iter().map(|subnet_change_response| async move {
+        let subnets_change_response: Vec<SubnetChangeResponse> = NetworkHealRequest::new(subnets, max_replaceable_nodes_per_sub)
+            .heal_and_optimize(available_nodes, healths)
+            .await?;
+        subnets_change_response.iter().for_each(|change| println!("{}", change));
+
+        let errors = join_all(subnets_change_response.iter().map(|subnet_change_response| async move {
             self.run_membership_change(
                 subnet_change_response.clone(),
                 ops_subnet_node_replace::replace_proposal_options(subnet_change_response)?,
@@ -511,7 +561,6 @@ impl Runner {
         .into_iter()
         .filter_map(|f| f.err())
         .collect::<Vec<_>>();
-
         if !errors.is_empty() {
             anyhow::bail!("Errors: {:?}", errors);
         }
@@ -521,11 +570,16 @@ impl Runner {
 
     pub async fn decentralization_change(&self, change: &ChangeSubnetMembershipPayload) -> Result<(), anyhow::Error> {
         if let Some(id) = change.get_subnet() {
-            let subnet_before = self.registry.subnet(SubnetQueryBy::SubnetId(id)).await.map_err(|e| anyhow::anyhow!(e))?;
+            let subnet_before = self
+                .registry()
+                .await
+                .subnet(SubnetQueryBy::SubnetId(id))
+                .await
+                .map_err(|e| anyhow::anyhow!(e))?;
             let nodes_before = subnet_before.nodes.clone();
 
-            let added_nodes = self.registry.get_decentralized_nodes(&change.get_added_node_ids());
-            let removed_nodes = self.registry.get_decentralized_nodes(&change.get_added_node_ids());
+            let added_nodes = self.registry().await.get_decentralized_nodes(&change.get_added_node_ids());
+            let removed_nodes = self.registry().await.get_decentralized_nodes(&change.get_added_node_ids());
 
             let subnet_after = subnet_before
                 .with_nodes(added_nodes)
@@ -544,16 +598,20 @@ impl Runner {
     }
 
     pub async fn subnet_rescue(&self, subnet: &PrincipalId, keep_nodes: Option<Vec<String>>, dry_run: bool) -> anyhow::Result<()> {
-        let change = SubnetChangeResponse::from(
-            &self
-                .registry
-                .modify_subnet_nodes(SubnetQueryBy::SubnetId(*subnet))
-                .await
-                .map_err(|e| anyhow::anyhow!(e))?
-                .rescue(keep_nodes.map(NodeSelector::FromFeatures))
-                .map_err(|e| anyhow::anyhow!(e))?,
-        );
+        let change_request = self
+            .registry()
+            .await
+            .modify_subnet_nodes(SubnetQueryBy::SubnetId(*subnet))
+            .await
+            .map_err(|e| anyhow::anyhow!(e))?;
 
+        let change_request = if let Some(keep_nodes) = keep_nodes {
+            change_request.keeping_from_used(keep_nodes)
+        } else {
+            change_request
+        };
+
+        let change = SubnetChangeResponse::from(&change_request.rescue().map_err(|e| anyhow::anyhow!(e))?);
         println!("{}", change);
 
         if change.added.is_empty() && change.removed.is_empty() {
