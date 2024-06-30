@@ -78,8 +78,8 @@ async fn main() -> Result<(), anyhow::Error> {
             .expect("Failed to create authenticated CLI");
         let ic_admin_wrapper = IcAdminWrapper::from_cli(cli);
 
-        let registry_instance = &RegistryShared::new(&target_network);
-        let runner_instance = runner::Runner::new(ic_admin_wrapper, registry_instance);
+        let registry_instance = RegistryShared::new(&target_network);
+        let runner_instance = runner::Runner::new(ic_admin_wrapper, registry_instance.clone());
 
         match &cli_opts.subcommand {
             // Covered above
@@ -123,7 +123,7 @@ async fn main() -> Result<(), anyhow::Error> {
                     }
                     cli::subnet::Commands::Create { .. } => {}
                 }
-                let subnet_manager = SubnetManager::new(registry_instance);
+                let subnet_manager = SubnetManager::new(registry_instance.clone());
                 // Execute the command
                 match &subnet.subcommand {
                     cli::subnet::Commands::Deploy { version } => runner_instance.deploy(&subnet.id.unwrap(), version, dry_run).await,

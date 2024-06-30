@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::rc::Rc;
 
 use anyhow::Ok;
 use decentralization::{network::{DecentralizedSubnet, Node as DecentralizedNode, NodesConverter, SubnetQueryBy, TopologyManager}, SubnetChangeResponse};
@@ -8,25 +8,24 @@ use ic_types::PrincipalId;
 use itertools::Itertools;
 use log::{info, warn};
 
-use crate::registry_shared::{RegistryGetter, RegistryShared};
-
-impl RegistryGetter for SubnetManager<'_> {
-    async fn registry(&self) -> Arc<RegistryState> {
-        self.registry_instance.registry().await
-    }
-}
+use crate::registry_shared::RegistryShared;
 
 pub enum SubnetTarget {
     FromId(PrincipalId),
     FromNodesIds(Vec<PrincipalId>)
 }
 
-pub struct SubnetManager<'a> {
-    registry_instance: &'a RegistryShared
+pub struct SubnetManager{
+    registry_instance: Rc<RegistryShared>
 }
 
-impl<'a> SubnetManager<'a> {
-    pub fn new(registry_instance: &'a RegistryShared) -> Self {
+impl SubnetManager {
+
+    async fn registry(&self) -> Rc<RegistryState> {
+        self.registry_instance.registry().await
+    }
+
+    pub fn new(registry_instance: Rc<RegistryShared>) -> Self {
         Self {
             registry_instance
         }

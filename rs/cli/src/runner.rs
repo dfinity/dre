@@ -2,7 +2,7 @@ use crate::ic_admin;
 use crate::ic_admin::ProposeOptions;
 use crate::operations::hostos_rollout::{HostosRollout, HostosRolloutResponse, NodeGroupUpdate};
 use crate::ops_subnet_node_replace;
-use crate::registry_shared::{RegistryGetter, RegistryShared};
+use crate::registry_shared::RegistryShared;
 use decentralization::network::{AvailableNodesQuerier, SubnetChange, SubnetQuerier, SubnetQueryBy};
 use decentralization::network::{NetworkHealRequest, TopologyManager};
 use decentralization::subnets::NodesRemover;
@@ -20,22 +20,22 @@ use itertools::Itertools;
 use log::{info, warn};
 use registry_canister::mutations::do_change_subnet_membership::ChangeSubnetMembershipPayload;
 use std::collections::BTreeMap;
-use std::sync::Arc;
+use std::rc::Rc;
 use tabled::builder::Builder;
 use tabled::settings::Style;
 
-impl RegistryGetter for Runner<'_> {
-    async fn registry(&self) -> Arc<RegistryState> {
-        self.registry_instance.registry().await
-    }
-}
-pub struct Runner<'a> {
+pub struct Runner {
     pub ic_admin: ic_admin::IcAdminWrapper,
-    registry_instance: &'a RegistryShared
+    registry_instance: Rc<RegistryShared>
 }
 
-impl<'a> Runner<'a> {
-    pub fn new(ic_admin: ic_admin::IcAdminWrapper, registry_instance: &'a RegistryShared) -> Self {
+impl Runner {
+
+    async fn registry(&self) -> Rc<RegistryState> {
+        self.registry_instance.registry().await
+    }
+
+    pub fn new(ic_admin: ic_admin::IcAdminWrapper, registry_instance: Rc<RegistryShared>) -> Self {
         Self {
             ic_admin,
             registry_instance,
