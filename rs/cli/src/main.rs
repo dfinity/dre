@@ -1,11 +1,13 @@
 use crate::ic_admin::IcAdminWrapper;
 use clap::{error::ErrorKind, CommandFactory, Parser};
-use decentralization::subnets::{MembershipReplace, NodesRemover, ReplaceTarget};
+use decentralization::subnets::NodesRemover;
 use dotenv::dotenv;
 use dre::cli::proposals::ProposalStatus;
 use dre::detect_neuron::Auth;
 use dre::general::{filter_proposals, get_node_metrics_history, vote_on_proposals};
 use dre::operations::hostos_rollout::{NodeGroupUpdate, NumberOfNodes};
+use dre::registry_shared::RegistryShared;
+use dre::subnet_manager::{SubnetManager, SubnetTarget};
 use dre::{cli, ic_admin, registry_dump, runner};
 use ic_base_types::CanisterId;
 use ic_canisters::governance::{governance_canister_version, GovernanceCanisterWrapper};
@@ -76,9 +78,8 @@ async fn main() -> Result<(), anyhow::Error> {
             .expect("Failed to create authenticated CLI");
         let ic_admin_wrapper = IcAdminWrapper::from_cli(cli);
 
-        let runner_instance = runner::Runner::new(ic_admin_wrapper, &target_network)
-            .await
-            .expect("Failed to create a runner");
+        let registry_instance = &RegistryShared::new(&target_network);
+        let runner_instance = runner::Runner::new(ic_admin_wrapper, registry_instance);
 
         match &cli_opts.subcommand {
             // Covered above
@@ -122,7 +123,7 @@ async fn main() -> Result<(), anyhow::Error> {
                     }
                     cli::subnet::Commands::Create { .. } => {}
                 }
-
+                let subnet_manager = SubnetManager::new(registry_instance);
                 // Execute the command
                 match &subnet.subcommand {
                     cli::subnet::Commands::Deploy { version } => runner_instance.deploy(&subnet.id.unwrap(), version, dry_run).await,
@@ -136,35 +137,24 @@ async fn main() -> Result<(), anyhow::Error> {
                         include,
                         min_nakamoto_coefficients,
                     } => {
-                        let min_nakamoto_coefficients = parse_min_nakamoto_coefficients(&mut cmd, min_nakamoto_coefficients);
-                        runner_instance
-                            .membership_replace(
-                                MembershipReplace {
-                                    target: match &subnet.id {
-                                        Some(subnet) => ReplaceTarget::Subnet(*subnet),
-                                        None => {
-                                            if let Some(motivation) = motivation.clone() {
-                                                ReplaceTarget::Nodes {
-                                                    nodes: nodes.clone(),
-                                                    motivation,
-                                                }
-                                            } else {
-                                                cmd.error(ErrorKind::MissingRequiredArgument, "Required argument `motivation` not found")
-                                                    .exit();
-                                            }
-                                        }
-                                    },
-                                    heal: !no_heal,
-                                    optimize: *optimize,
-                                    exclude: exclude.clone().into(),
-                                    only: only.clone(),
-                                    include: include.clone().into(),
-                                    min_nakamoto_coefficients,
-                                },
-                                cli_opts.verbose,
-                                dry_run,
-                            )
-                            .await
+                        let subnet_target =  match &subnet.id {
+                            Some(subnet_id) => SubnetTarget::FromId(*subnet_id),
+                            _ => SubnetTarget::FromNodesIds(nodes.clone())
+                        };
+
+                        let subnet_change = subnet_manager
+                        .membership_replace(
+                            subnet_target,
+                            !no_heal,
+                            *optimize,
+                            exclude.clone().into(),
+                            only.clone(),
+                            include.clone().into(),
+                            parse_min_nakamoto_coefficients(&mut cmd, min_nakamoto_coefficients),
+                            cli_opts.verbose,
+                        ).await?;
+
+                        runner_instance.run_membership_change(subnet_change, dry_run).await
                     }
                     cli::subnet::Commands::Resize {
                         add,

@@ -8,3 +8,5 @@ pub mod ops_subnet_node_replace;
 pub mod parsed_cli;
 pub mod registry_dump;
 pub mod runner;
+pub mod subnet_manager;
+pub mod registry_shared;
