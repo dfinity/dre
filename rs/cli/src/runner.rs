@@ -2,72 +2,40 @@ use crate::ic_admin;
 use crate::ic_admin::ProposeOptions;
 use crate::operations::hostos_rollout::{HostosRollout, HostosRolloutResponse, NodeGroupUpdate};
 use crate::ops_subnet_node_replace;
+use crate::registry_shared::Registry;
 use decentralization::network::{AvailableNodesQuerier, SubnetChange, SubnetQuerier, SubnetQueryBy};
 use decentralization::network::{NetworkHealRequest, TopologyManager};
-use decentralization::subnets::{MembershipReplace, NodesRemover, ReplaceTarget};
+use decentralization::subnets::NodesRemover;
 use decentralization::SubnetChangeResponse;
 use futures::future::join_all;
 use futures::TryFutureExt;
 use futures_util::future::try_join;
 use ic_base_types::PrincipalId;
 use ic_management_backend::proposal::ProposalAgent;
-use ic_management_backend::public_dashboard::query_ic_dashboard_list;
-use ic_management_backend::registry::{self, RegistryState};
+use ic_management_backend::registry::RegistryState;
 use ic_management_backend::{health, health::HealthStatusQuerier};
-use ic_management_types::{Artifact, Network, Node, NodeFeature, NodeProvidersResponse};
+use ic_management_types::{Artifact, Node, NodeFeature};
 use ic_management_types::{NetworkError, TopologyChangePayload};
 use itertools::Itertools;
 use log::{info, warn};
 use registry_canister::mutations::do_change_subnet_membership::ChangeSubnetMembershipPayload;
-use std::cell::RefCell;
 use std::collections::BTreeMap;
-use std::sync::Arc;
+use std::rc::Rc;
 use tabled::builder::Builder;
 use tabled::settings::Style;
 
 pub struct Runner {
     pub ic_admin: ic_admin::IcAdminWrapper,
-    registry: RefCell<Option<Arc<RegistryState>>>,
-    network: Network,
+    registry_instance: Rc<Registry>,
 }
 
 impl Runner {
-    pub async fn registry(&self) -> Arc<RegistryState> {
-        {
-            if let Some(ref registry) = *self.registry.borrow() {
-                return Arc::clone(registry);
-            }
-        }
-
-        // Create a new registry state
-        let mut new_registry = Arc::new(registry::RegistryState::new(&self.network, true).await);
-
-        // Fetch node providers
-        let node_providers = query_ic_dashboard_list::<NodeProvidersResponse>(&self.network, "v3/node-providers")
-            .await
-            .expect("Failed to get node providers")
-            .node_providers;
-
-        // Update node details
-        Arc::get_mut(&mut new_registry)
-            .expect("Failed to get mutable reference to new registry")
-            .update_node_details(&node_providers)
-            .await
-            .expect("Failed to update node details");
-
-        // Replace the registry in self with the new registry state
-        self.registry.replace(Some(Arc::clone(&new_registry)));
-
-        // Return the Arc to the new registry state
-        new_registry
+    async fn registry(&self) -> Rc<RegistryState> {
+        self.registry_instance.get().await
     }
 
-    pub async fn new(ic_admin: ic_admin::IcAdminWrapper, network: &Network) -> anyhow::Result<Self> {
-        Ok(Self {
-            ic_admin,
-            registry: RefCell::new(None),
-            network: network.clone(),
-        })
+    pub fn new(ic_admin: ic_admin::IcAdminWrapper, registry_instance: Rc<Registry>) -> Self {
+        Self { ic_admin, registry_instance }
     }
 
     pub async fn deploy(&self, subnet: &PrincipalId, version: &str, dry_run: bool) -> anyhow::Result<()> {
@@ -209,44 +177,7 @@ impl Runner {
         Ok(())
     }
 
-    /// Simulates replacement of nodes in a subnet.
-    /// There are multiple ways to replace nodes. For instance:
-    ///    1. Setting `heal` to `true` in the request to replace unhealthy nodes
-    ///    2. Replace `optimize` nodes to optimize subnet decentralization.
-    ///    3. Explicitly add or remove nodes from the subnet specifying their
-    /// Principals.
-    ///
-    /// All nodes in the request must belong to exactly one subnet.
-    pub async fn membership_replace(&self, request: MembershipReplace, verbose: bool, dry_run: bool) -> anyhow::Result<()> {
-        let mut motivations: Vec<String> = vec![];
-        let health_client = health::HealthClient::new(self.registry().await.network());
-        let registry_nodes = self.registry().await.nodes();
-        let change_request = match &request.target {
-            ReplaceTarget::Subnet(subnet) => self.registry().await.modify_subnet_nodes(SubnetQueryBy::SubnetId(*subnet)).await?,
-            ReplaceTarget::Nodes {
-                nodes: nodes_to_replace,
-                motivation,
-            } => {
-                motivations.push(motivation.clone());
-                let nodes_to_replace = nodes_to_replace
-                    .iter()
-                    .filter_map(|n| registry_nodes.get(n))
-                    .map(decentralization::network::Node::from)
-                    .collect::<Vec<_>>();
-                self.registry()
-                    .await
-                    .modify_subnet_nodes(SubnetQueryBy::NodeList(nodes_to_replace))
-                    .await?
-            }
-        }
-        .excluding_from_available(request.exclude.clone().unwrap_or_default())
-        .including_from_available(request.only.clone())
-        .including_from_available(request.include.clone().unwrap_or_default())
-        .with_min_nakamoto_coefficients(request.min_nakamoto_coefficients.clone());
-        let subnet_health: BTreeMap<PrincipalId, ic_management_types::Status> = health_client.subnet(change_request.subnet().id).await?;
-
-        let change = request.replace(subnet_health, registry_nodes, change_request).await?;
-
+    pub async fn propose_subnet_change(&self, change: SubnetChangeResponse, verbose: bool, dry_run: bool) -> anyhow::Result<()> {
         if verbose {
             if let Some(run_log) = &change.run_log {
                 println!("{}\n", run_log.join("\n"));
