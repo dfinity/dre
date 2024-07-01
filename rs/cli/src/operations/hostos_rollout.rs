@@ -530,7 +530,7 @@ impl HostosRollout {
         );
         if !unhealthy_nodes_on_the_new_version.is_empty() {
             warn!(
-                "\n\n ***** Unhealthy nodes on the new version: *****\n{}\n\n",
+                "\n\n ***** WARNING: Unhealthy nodes found with the new version: *****\n{}\n\n",
                 unhealthy_nodes_on_the_new_version
                     .iter()
                     .map(|node| format!(
