@@ -1,5 +1,7 @@
+use core::fmt;
 use std::rc::Rc;
 
+use anyhow::anyhow;
 use anyhow::Ok;
 use decentralization::{
     network::{DecentralizedSubnet, Node as DecentralizedNode, NodesConverter, SubnetQueryBy, TopologyManager},
@@ -16,22 +18,54 @@ use log::{info, warn};
 
 use crate::registry_shared::Registry;
 
+#[derive(Clone)]
 pub enum SubnetTarget {
     FromId(PrincipalId),
     FromNodesIds(Vec<PrincipalId>),
 }
 
+#[derive(Debug)]
+pub enum SubnetManagerError {
+    SubnetTargetNotProvided,
+}
+impl std::error::Error for SubnetManagerError {}
+
+impl fmt::Display for SubnetManagerError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            SubnetManagerError::SubnetTargetNotProvided => write!(f, "Subnet target is None"),
+        }
+    }
+}
+
 pub struct SubnetManager {
+    subnet_target: Option<SubnetTarget>,
     registry_instance: Rc<Registry>,
 }
 
 impl SubnetManager {
-    async fn registry(&self) -> Rc<RegistryState> {
-        self.registry_instance.get().await
+    pub fn new(registry_instance: Rc<Registry>) -> Self {
+        Self {
+            subnet_target: None,
+            registry_instance,
+        }
     }
 
-    pub fn new(registry_instance: Rc<Registry>) -> Self {
-        Self { registry_instance }
+    pub fn with_target(self, target: SubnetTarget) -> Self {
+        Self {
+            subnet_target: Some(target),
+            ..self
+        }
+    }
+
+    fn target(&self) -> anyhow::Result<SubnetTarget> {
+        self.subnet_target
+            .clone()
+            .ok_or_else(|| anyhow!(SubnetManagerError::SubnetTargetNotProvided))
+    }
+
+    async fn registry(&self) -> Rc<RegistryState> {
+        self.registry_instance.get().await
     }
 
     async fn unhealthy_nodes(&self, subnet: DecentralizedSubnet) -> anyhow::Result<Vec<DecentralizedNode>> {
@@ -80,16 +114,16 @@ impl SubnetManager {
     /// All nodes in the request must belong to exactly one subnet.
     pub async fn membership_replace(
         &self,
-        target: SubnetTarget,
         heal: bool,
+        motivation: String,
         optimize: Option<usize>,
         exclude: Option<Vec<String>>,
         only: Vec<String>,
         include: Option<Vec<PrincipalId>>,
         min_nakamoto_coefficients: Option<MinNakamotoCoefficients>,
     ) -> anyhow::Result<SubnetChangeResponse> {
-        let subnet_query_by = self.get_subnet_query_by(target).await?;
-        let mut motivations: Vec<String> = vec![];
+        let subnet_query_by = self.get_subnet_query_by(self.target()?).await?;
+        let mut motivations: Vec<String> = vec![motivation];
         let mut to_be_replaced: Vec<DecentralizedNode> = vec![];
 
         let subnet_change_request = self

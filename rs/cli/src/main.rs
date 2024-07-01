@@ -141,11 +141,15 @@ async fn main() -> Result<(), anyhow::Error> {
                             Some(subnet_id) => SubnetTarget::FromId(*subnet_id),
                             _ => SubnetTarget::FromNodesIds(nodes.clone()),
                         };
+                        if matches!(subnet_target, SubnetTarget::FromNodesIds(_)) && motivation.is_none() {
+                            cmd.error(ErrorKind::MissingRequiredArgument, "Required argument `motivation` not found");
+                        }
 
                         let subnet_change_response = subnet_manager
+                            .with_target(subnet_target)
                             .membership_replace(
-                                subnet_target,
                                 !no_heal,
+                                motivation.clone().unwrap_or_default(),
                                 *optimize,
                                 exclude.clone().into(),
                                 only.clone(),
