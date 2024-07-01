@@ -19,3 +19,4 @@ tokio = { workspace = true }
 url = { workspace = true }
 reqwest = { workspace = true }
 anyhow = { workspace = true }
+log-noise-filter-backend = { path = "../log-noise-filter-backend" }

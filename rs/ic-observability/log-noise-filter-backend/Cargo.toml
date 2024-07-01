@@ -18,3 +18,11 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 tokio = { workspace = true }
 regex = { workspace = true }
+
+[[bin]]
+name = "log-noise-filter-backend"
+path = "src/main.rs"
+
+[lib]
+name = "log_noise_filter_backend"
+path = "src/lib.rs"

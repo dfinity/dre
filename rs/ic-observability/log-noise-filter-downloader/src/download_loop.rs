@@ -5,13 +5,14 @@ use std::{
     time::Duration,
 };
 
+use log_noise_filter_backend::handlers::get_all::WholeState;
 use reqwest::Client;
 use serde::Serialize;
 use slog::{info, warn, Logger};
 use tokio::{io::AsyncWriteExt, select};
 use url::Url;
 
-pub async fn download_loop(url: Url, logger: Logger, path: PathBuf, inputs: Vec<String>, rate: u64, transform_id: String) {
+pub async fn download_loop(url: Url, logger: Logger, path: PathBuf, inputs: Vec<String>, transform_id: String) {
     let client = reqwest::Client::builder()
         .connect_timeout(Duration::from_secs(30))
         .build()
@@ -39,11 +40,11 @@ pub async fn download_loop(url: Url, logger: Logger, path: PathBuf, inputs: Vec<
             continue;
         }
 
-        write_to_file(&response, &inputs, rate, &transform_id, &path).await
+        write_to_file(&response, &inputs, &transform_id, &path).await
     }
 }
 
-async fn fetch_criteria(client: &Client, url: Url, logger: &Logger) -> anyhow::Result<BTreeMap<u32, String>> {
+async fn fetch_criteria(client: &Client, url: Url, logger: &Logger) -> anyhow::Result<WholeState> {
     let response = client.get(url.clone()).send().await;
     let response = match response {
         Ok(r) if r.status().is_success() => r,
@@ -62,7 +63,7 @@ async fn fetch_criteria(client: &Client, url: Url, logger: &Logger) -> anyhow::R
         }
     };
 
-    match response.json::<BTreeMap<u32, String>>().await {
+    match response.json().await {
         Ok(r) => Ok(r),
         Err(e) => {
             warn!(logger, "Failed to parse response: {:?}", e);
@@ -71,7 +72,7 @@ async fn fetch_criteria(client: &Client, url: Url, logger: &Logger) -> anyhow::R
     }
 }
 
-fn content_changed(current_hash: &mut u64, new_criteria: &BTreeMap<u32, String>, logger: &Logger) -> bool {
+fn content_changed(current_hash: &mut u64, new_criteria: &WholeState, logger: &Logger) -> bool {
     let mut hasher = DefaultHasher::new();
     new_criteria.hash(&mut hasher);
     let new_hash = hasher.finish();
@@ -85,18 +86,21 @@ fn content_changed(current_hash: &mut u64, new_criteria: &BTreeMap<u32, String>,
     true
 }
 
-async fn write_to_file(criteria: &BTreeMap<u32, String>, inputs: &[String], rate: u64, transform_id: &String, path: &PathBuf) {
-    let (prefix, criteria) = match criteria.is_empty() {
+async fn write_to_file(state: &WholeState, inputs: &[String], transform_id: &String, path: &PathBuf) {
+    let (prefix, criteria) = match state.criteria.is_empty() {
         // If the list is empty we should not sample anything.
         // In other words we should exclude everything.
         true => ("", "r'.*'".to_string()),
-        false => ("!", criteria.values().map(|s| format!("r'{}'", s)).collect::<Vec<String>>().join(",")),
+        false => (
+            "!",
+            state.criteria.values().map(|s| format!("r'{}'", s)).collect::<Vec<String>>().join(","),
+        ),
     };
 
     let transform = VectorSampleTransform {
         _type: "sample".to_string(),
         inputs: inputs.to_owned(),
-        rate,
+        rate: state.rate,
         exclude: format!("{}match_any(to_string(.MESSAGE) ?? \"\", [{}])", prefix, criteria),
     };
 

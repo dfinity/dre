@@ -2,7 +2,7 @@ use std::collections::BTreeMap;
 
 use axum::{extract::State, http::StatusCode, Json};
 
-use super::Server;
+use crate::handlers::Server;
 
 pub async fn update(State(state): State<Server>, Json(criteria): Json<Vec<String>>) -> Result<Json<BTreeMap<u32, String>>, (StatusCode, String)> {
     match state.update_criteria(criteria).await {

@@ -3,7 +3,7 @@ use std::collections::BTreeMap;
 use axum::{extract::State, http::StatusCode, Json};
 use slog::{info, warn};
 
-use super::Server;
+use crate::handlers::Server;
 
 pub async fn delete_criteria(
     State(state): State<Server>,

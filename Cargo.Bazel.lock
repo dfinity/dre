@@ -1,5 +1,5 @@
 {
-  "checksum": "593d35dcf7fdec142a6998ac7c522505e1712c654c56e965c17926bf55375f58",
+  "checksum": "373e54054840c62d3438f63f1494707a66f3be25365a3abb2d53c837a692be7b",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -29188,8 +29188,18 @@
       "name": "log-noise-filter-backend",
       "version": "0.4.2",
       "repository": null,
-      "targets": [],
-      "library_target_name": null,
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "log_noise_filter_backend",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "log_noise_filter_backend",
       "common_attrs": {
         "compile_data_glob": [
           "**"

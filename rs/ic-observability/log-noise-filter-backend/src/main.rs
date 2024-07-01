@@ -16,7 +16,7 @@ async fn main() {
     let socket = SocketAddr::new(std::net::IpAddr::V4(Ipv4Addr::UNSPECIFIED), cli.port);
     info!(logger, "Running noise filter manager {}", socket);
 
-    let server = Server::new(logger.clone());
+    let server = Server::new(logger.clone(), cli.global_rate);
     server.run(socket).await;
 
     info!(logger, "Noise filter manager stopped");
@@ -45,6 +45,9 @@ Log level to use for running. You can use standard log levels 'info',
 
     #[clap(long, default_value = "8080", help = "Port to use for running the api")]
     port: u16,
+
+    #[clap(long, default_value = "1500", help = "Global rate")]
+    global_rate: u64,
 }
 
 fn from_str_to_log(value: &str) -> Level {

@@ -13,7 +13,7 @@ async fn main() {
     let logger = make_logger(from_str_to_log(&cli.log_level));
     info!(logger, "Running with following args: {:?}", cli);
 
-    download_loop(cli.url, logger, cli.path, cli.inputs, cli.rate, cli.transform_id).await
+    download_loop(cli.url, logger, cli.path, cli.inputs, cli.transform_id).await
 }
 
 fn make_logger(level: Level) -> Logger {
@@ -42,13 +42,6 @@ Log level to use for running. You can use standard log levels 'info',
 
     #[clap(long, help = "Path to where the output should be generated")]
     path: PathBuf,
-
-    #[clap(
-        long,
-        help = "Rate of the matched messages that should be let through. It will be 1/rate",
-        default_value = "100"
-    )]
-    rate: u64,
 
     #[clap(long, help = "Inputs that will be linked to this transform")]
     inputs: Vec<String>,
