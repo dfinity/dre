@@ -797,7 +797,7 @@ impl NodesConverter for RegistryState {
             .map(|n| {
                 self.nodes()
                     .get(n)
-                    .ok_or_else(|| NetworkError::NodeNotFound(*n))
+                    .ok_or(NetworkError::NodeNotFound(*n))
                     .map(decentralization::network::Node::from)
             })
             .collect()
