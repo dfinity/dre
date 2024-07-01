@@ -725,7 +725,7 @@ pub enum SubnetQueryBy {
 }
 
 pub trait NodesConverter {
-    fn get_nodes(&self, from: &Vec<PrincipalId>) -> Result<Vec<Node>, NetworkError>;
+    fn get_nodes(&self, from: &[PrincipalId]) -> Result<Vec<Node>, NetworkError>;
 }
 
 #[async_trait]

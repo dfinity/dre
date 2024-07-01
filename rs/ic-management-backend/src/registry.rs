@@ -792,7 +792,7 @@ impl RegistryState {
 impl decentralization::network::TopologyManager for RegistryState {}
 
 impl NodesConverter for RegistryState {
-    fn get_nodes(&self, from: &Vec<PrincipalId>) -> std::result::Result<Vec<decentralization::network::Node>, NetworkError> {
+    fn get_nodes(&self, from: &[PrincipalId]) -> std::result::Result<Vec<decentralization::network::Node>, NetworkError> {
         from.iter()
             .map(|n| {
                 self.nodes()
