@@ -315,13 +315,10 @@ impl HostosRollout {
             .iter()
             .filter(|n| {
                 let node = decentralization::network::Node::from(n.to_owned());
-                for filt in self.exclude_filter.iter() {
+                for filt in self.only_filter.iter() {
                     if node.matches_feature_value(filt) {
                         return true;
                     }
-                }
-                if filter_in_features.contains(&n.principal.to_string()) {
-                    return true;
                 }
                 false
             })
@@ -341,9 +338,6 @@ impl HostosRollout {
                     if node.matches_feature_value(filt) {
                         return false;
                     }
-                }
-                if excluded.contains(&n.principal.to_string()) {
-                    return false;
                 }
                 true
             })
