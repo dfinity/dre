@@ -15,13 +15,13 @@ def rust_binary_oci_image_rules(name, src, base_image = "@distroless_cc_debian12
         other_layers: optional of other layers to be added, e.g. deb packages
     """
     binary = native.package_relative_label(src)
-    tar_rule_name = "{}_layer".format(binary.name)
+    tar_rule_name = "tar"
     pkg_tar(
         name = tar_rule_name,
         srcs = [binary],
     )
 
-    image_rule_name = "{}-image".format(binary.name)
+    image_rule_name = "image"
     oci_image(
         name = image_rule_name,
         # Consider using even more minimalistic docker image since we're using static compile
@@ -30,7 +30,7 @@ def rust_binary_oci_image_rules(name, src, base_image = "@distroless_cc_debian12
         tars = [tar_rule_name] + other_layers,
     )
 
-    tarball_name = "{}-tarball".format(binary.name)
+    tarball_name = "tarball"
     oci_tarball(
         name = tarball_name,
         image = image_rule_name,
