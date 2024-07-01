@@ -62,6 +62,7 @@ TEAM_PRETTY_MAP = {
     "prodsec": "Prodsec",
     "runtime-owners": "Runtime",
     "trust-team": "Trust",
+    "sdk-team": "SDK",
     "utopia": "Utopia",
 }
 
