@@ -67,7 +67,7 @@ repos:
           - --match=.*
 
   - repo: https://github.com/PyCQA/pylint
-    rev: v3.2.5
+    rev: v2.17.7
     hooks:
       - id: pylint
         name: pylint
