@@ -605,8 +605,8 @@ pub mod test {
             &network,
             ProposalAgent::new(nns_urls),
             version_one.clone().as_str(),
-            &vec![],
-            &vec![],
+            &[],
+            &[],
         );
 
         let results = hostos_rollout
@@ -634,7 +634,7 @@ pub mod test {
             &network,
             ProposalAgent::new(nns_urls),
             version_one.clone().as_str(),
-            &vec![],
+            &[],
             &nodes_to_exclude,
         );
 
@@ -655,8 +655,8 @@ pub mod test {
             &network,
             ProposalAgent::new(nns_urls),
             version_two.clone().as_str(),
-            &vec![],
-            &vec![],
+            &[],
+            &[],
         );
 
         let results = hostos_rollout
