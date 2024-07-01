@@ -530,7 +530,7 @@ impl HostosRollout {
         );
         if !unhealthy_nodes_on_the_new_version.is_empty() {
             warn!(
-                "Unhealthy nodes on the new version:\n{}",
+                "\n\n ***** Unhealthy nodes on the new version: *****\n{}\n\n",
                 unhealthy_nodes_on_the_new_version
                     .iter()
                     .map(|node| format!(
@@ -541,7 +541,6 @@ impl HostosRollout {
                     .collect::<Vec<_>>()
                     .join("\n")
             );
-            return Ok(HostosRolloutResponse::Ok(vec![], None));
         }
 
         self.with_nodes_health_and_open_proposals(nodes_health, nodes_with_open_proposals, update_group)
