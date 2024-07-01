@@ -14,7 +14,7 @@ async fn delete_criteria_test() {
 
     assert!(resp.is_ok());
     let resp = resp.unwrap();
-    assert_eq!(resp.is_empty(), false);
+    assert!(!resp.is_empty());
     assert!(resp.first_key_value().is_some());
     let (key, value) = resp.first_key_value().unwrap();
     assert_eq!(key, &0);
