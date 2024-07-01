@@ -1,7 +1,12 @@
-use std::net::{Ipv4Addr, SocketAddr};
+use std::{
+    collections::BTreeMap,
+    net::{Ipv4Addr, SocketAddr},
+    path::PathBuf,
+};
 
 use clap::Parser;
-use slog::{info, o, Drain, Level, Logger};
+use handlers::WholeState;
+use slog::{info, o, warn, Drain, Level, Logger};
 
 use crate::handlers::Server;
 
@@ -16,10 +21,32 @@ async fn main() {
     let socket = SocketAddr::new(std::net::IpAddr::V4(Ipv4Addr::UNSPECIFIED), cli.port);
     info!(logger, "Running noise filter manager {}", socket);
 
-    let server = Server::new(logger.clone(), cli.global_rate, vec![]);
+    let (global_rate, criteria) = load_state(&cli.state_file, &logger).await;
+
+    let server = Server::new(logger.clone(), global_rate, criteria.into_iter().map(|(_, c)| c).collect());
     server.run(socket).await;
 
     info!(logger, "Noise filter manager stopped");
+}
+
+async fn load_state(path: &PathBuf, logger: &Logger) -> (u64, BTreeMap<u32, String>) {
+    if path.exists() {
+        let content = tokio::fs::read_to_string(path).await.unwrap();
+        let maybe_state = serde_json::from_str::<WholeState>(&content);
+        match maybe_state {
+            Ok(state) => return (state.rate, state.criteria),
+            Err(e) => warn!(
+                logger,
+                "Failed to deserialize state file {}, will remove it and recreate. The error was: {:?}",
+                path.display(),
+                e
+            ),
+        }
+    }
+
+    let default = WholeState::default();
+    tokio::fs::write(path, serde_json::to_string_pretty(&default).unwrap()).await.unwrap();
+    (default.rate, default.criteria)
 }
 
 fn make_logger(level: Level) -> Logger {
@@ -46,8 +73,8 @@ Log level to use for running. You can use standard log levels 'info',
     #[clap(long, default_value = "8080", help = "Port to use for running the api")]
     port: u16,
 
-    #[clap(long, default_value = "1500", help = "Global rate")]
-    global_rate: u64,
+    #[clap(long, help = "State file used to sync across restarts")]
+    state_file: PathBuf,
 }
 
 fn from_str_to_log(value: &str) -> Level {

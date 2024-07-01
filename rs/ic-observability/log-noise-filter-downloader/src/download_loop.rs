@@ -5,7 +5,7 @@ use std::{
     time::Duration,
 };
 
-use log_noise_filter_backend::handlers::get_all::WholeState;
+use log_noise_filter_backend::handlers::WholeState;
 use reqwest::Client;
 use serde::Serialize;
 use slog::{info, warn, Logger};
