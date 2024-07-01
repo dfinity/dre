@@ -523,6 +523,11 @@ impl HostosRollout {
             .cloned()
             .collect::<Vec<_>>();
 
+        info!(
+            "{} nodes are already on the new version, out of those {} unhealthy",
+            nodes_on_the_new_version.len(),
+            unhealthy_nodes_on_the_new_version.len()
+        );
         if !unhealthy_nodes_on_the_new_version.is_empty() {
             warn!(
                 "Unhealthy nodes on the new version:\n{}",
