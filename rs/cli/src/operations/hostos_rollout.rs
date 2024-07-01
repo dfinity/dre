@@ -166,8 +166,8 @@ impl HostosRollout {
         network: &Network,
         proposal_agent: ProposalAgent,
         rollout_version: &str,
-        only_filter: &Vec<String>,
-        exclude_filter: &Vec<String>,
+        only_filter: &[String],
+        exclude_filter: &[String],
     ) -> Self {
         let grouped_nodes: BTreeMap<NodeGroup, Vec<Node>> = nodes
             .values()
@@ -202,8 +202,8 @@ impl HostosRollout {
             subnets,
             network: network.clone(),
             proposal_agent,
-            only_filter: only_filter.clone(),
-            exclude_filter: exclude_filter.clone(),
+            only_filter: only_filter.to_vec(),
+            exclude_filter: exclude_filter.to_vec(),
             version: rollout_version.to_string(),
         }
     }
@@ -313,17 +313,17 @@ impl HostosRollout {
         }
         nodes
             .iter()
-            .filter_map(|n| {
-                let node = decentralization::network::Node::from(n);
+            .filter(|n| {
+                let node = decentralization::network::Node::from(n.to_owned());
                 for filt in self.exclude_filter.iter() {
                     if node.matches_feature_value(filt) {
-                        return Some(n);
+                        return true;
                     }
                 }
                 if filter_in_features.contains(&n.principal.to_string()) {
-                    return Some(n);
+                    return true;
                 }
-                None
+                false
             })
             .cloned()
             .collect::<Vec<_>>()
@@ -335,17 +335,17 @@ impl HostosRollout {
         }
         nodes
             .iter()
-            .filter_map(|n| {
-                let node = decentralization::network::Node::from(n);
+            .filter(|n| {
+                let node = decentralization::network::Node::from(n.to_owned());
                 for filt in self.exclude_filter.iter() {
                     if node.matches_feature_value(filt) {
-                        return None;
+                        return false;
                     }
                 }
                 if excluded.contains(&n.principal.to_string()) {
-                    return None;
+                    return false;
                 }
-                Some(n)
+                true
             })
             .cloned()
             .collect::<Vec<_>>()

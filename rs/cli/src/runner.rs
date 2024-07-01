@@ -290,8 +290,8 @@ impl Runner {
         &self,
         node_group: NodeGroupUpdate,
         version: &String,
-        only: &Vec<String>,
-        exclude: &Vec<String>,
+        only: &[String],
+        exclude: &[String],
     ) -> anyhow::Result<Option<(Vec<PrincipalId>, String)>> {
         let elected_versions = self.registry().await.blessed_versions(&Artifact::HostOs).await.unwrap();
         if !elected_versions.contains(&version.to_string()) {
