@@ -312,10 +312,11 @@ async fn main() -> Result<(), anyhow::Error> {
                         assignment,
                         owner,
                         nodes_in_group,
+                        only,
                         exclude,
                     } => {
                         let update_group = NodeGroupUpdate::new(*assignment, *owner, NumberOfNodes::from_str(nodes_in_group)?);
-                        if let Some((nodes_to_update, summary)) = runner_instance.hostos_rollout_nodes(update_group, version, exclude).await? {
+                        if let Some((nodes_to_update, summary)) = runner_instance.hostos_rollout_nodes(update_group, version, only, exclude).await? {
                             return runner_instance
                                 .hostos_rollout(nodes_to_update, version, dry_run, Some(summary), as_automation)
                                 .await;
