@@ -1100,6 +1100,7 @@ impl NetworkHealRequest {
         healths: BTreeMap<PrincipalId, Status>,
     ) -> Result<Vec<SubnetChangeResponse>, NetworkError> {
         let mut subnets_changed = Vec::new();
+        let mut motivations = Vec::new();
         let subnets_to_heal = unhealthy_with_nodes(&self.subnets, healths)
             .await
             .iter()
@@ -1137,7 +1138,6 @@ impl NetworkHealRequest {
             let unhealthy_nodes_len = unhealthy_nodes.len();
             println!("unhealthy size: {}", unhealthy_nodes_len);
             let optimize_limit = self.max_replaceable_nodes_per_sub.unwrap_or(unhealthy_nodes_len) - unhealthy_nodes_len;
-
             let change = SubnetChangeRequest {
                 subnet: subnet.decentralized_subnet.clone(),
                 available_nodes: available_nodes.clone(),
@@ -1145,8 +1145,17 @@ impl NetworkHealRequest {
             };
             let change = change.optimize(optimize_limit, &unhealthy_nodes)?;
 
+
+            let replace_target = if unhealthy_nodes_len == 1 { "node" } else { "nodes" };
+            motivations.push(format!("replacing {unhealthy_nodes_len} unhealthy {replace_target}"));
+            let num_optimized = change.removed().len() - unhealthy_nodes_len;
+            if num_optimized > 0 {
+                let replace_target = if num_optimized == 1 { "node" } else { "nodes" };
+                motivations.push(format!("replacing {num_optimized} {replace_target} to improve subnet decentralization"));
+            }
+
             available_nodes.retain(|node| !change.added().contains(node));
-            subnets_changed.push(SubnetChangeResponse::from(&change));
+            subnets_changed.push(SubnetChangeResponse::from(&change).with_motivation(motivations.join("; ")));
         }
 
         Ok(subnets_changed)
