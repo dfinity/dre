@@ -1145,7 +1145,6 @@ impl NetworkHealRequest {
             };
             let change = change.optimize(optimize_limit, &unhealthy_nodes)?;
 
-
             let replace_target = if unhealthy_nodes_len == 1 { "node" } else { "nodes" };
             motivations.push(format!("replacing {unhealthy_nodes_len} unhealthy {replace_target}"));
             let num_optimized = change.removed().len() - unhealthy_nodes_len;
