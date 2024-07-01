@@ -1,4 +1,4 @@
-use std::{collections::BTreeMap, hash::Hash, net::SocketAddr, sync::Arc};
+use std::{collections::BTreeMap, hash::Hash, net::SocketAddr, path::PathBuf, sync::Arc};
 
 use axum::{
     routing::{delete, get, post, put},
@@ -10,7 +10,7 @@ use get_all::get_all;
 use rate::{get_rate::get_rate, put_rate::put_rate};
 use regex::Regex;
 use serde::{Deserialize, Serialize};
-use slog::Logger;
+use slog::{warn, Logger};
 use tokio::sync::Mutex;
 
 pub(crate) mod criteria;
@@ -44,14 +44,16 @@ pub struct Server {
     pub logger: Logger,
     criteria: Arc<Mutex<Vec<String>>>,
     rate: Arc<Mutex<u64>>,
+    path: Option<PathBuf>,
 }
 
 impl Server {
-    pub fn new(logger: Logger, rate: u64, criteria: Vec<String>) -> Self {
+    pub fn new(logger: Logger, rate: u64, criteria: Vec<String>, path: Option<PathBuf>) -> Self {
         Self {
             logger,
             criteria: Arc::new(Mutex::new(criteria)),
             rate: Arc::new(Mutex::new(rate)),
+            path,
         }
     }
 
@@ -97,6 +99,8 @@ impl Server {
             return Err(errors);
         }
         criteria.into_iter().for_each(|c| server_criteria.push(c));
+        drop(server_criteria);
+        self.save_whole_state().await;
         Ok(())
     }
 
@@ -123,7 +127,22 @@ impl Server {
         indexes.iter().for_each(|c| {
             server_criteria.remove(*c as usize);
         });
-
+        drop(server_criteria);
+        self.save_whole_state().await;
         Ok(())
+    }
+
+    async fn save_whole_state(&self) {
+        let state = WholeState {
+            rate: *self.rate.lock().await,
+            criteria: self.get_criteria_mapped().await,
+        };
+
+        if let Some(path) = &self.path {
+            match tokio::fs::write(path, serde_json::to_string_pretty(&state).unwrap()).await {
+                Ok(_) => (),
+                Err(e) => warn!(self.logger, "Failed to serialize state file {}, the error was: {:?}", path.display(), e),
+            };
+        }
     }
 }

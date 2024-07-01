@@ -23,7 +23,12 @@ async fn main() {
 
     let (global_rate, criteria) = load_state(&cli.state_file, &logger).await;
 
-    let server = Server::new(logger.clone(), global_rate, criteria.into_iter().map(|(_, c)| c).collect());
+    let server = Server::new(
+        logger.clone(),
+        global_rate,
+        criteria.into_iter().map(|(_, c)| c).collect(),
+        Some(cli.state_file),
+    );
     server.run(socket).await;
 
     info!(logger, "Noise filter manager stopped");

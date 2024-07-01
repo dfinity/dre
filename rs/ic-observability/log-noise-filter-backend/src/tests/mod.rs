@@ -17,11 +17,7 @@ fn server() -> State<Server> {
 }
 
 fn server_with_rate_and_criteria(rate: u64, criteria: Vec<String>) -> State<Server> {
-    State(Server::new(slog::Logger::root(slog::Discard, slog::o!()), rate, criteria))
-}
-
-fn server_with_rate(rate: u64) -> State<Server> {
-    server_with_rate_and_criteria(rate, vec![])
+    State(Server::new(slog::Logger::root(slog::Discard, slog::o!()), rate, criteria, None))
 }
 
 fn server_with_criteria(criteria: Vec<String>) -> State<Server> {

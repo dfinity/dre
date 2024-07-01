@@ -7,7 +7,7 @@ use crate::{
 
 #[tokio::test]
 async fn delete_criteria_test() {
-    let server = server_with_criteria(vec!["test", "another", "one more"].iter().map(|f| f.to_string()).collect());
+    let server = server_with_criteria(["test", "another", "one more"].iter().map(|f| f.to_string()).collect());
     let payload = Json(vec![2, 0]);
 
     let resp = delete_criteria(server, payload).await;
@@ -33,7 +33,7 @@ async fn delete_criteria_error_test() {
 
 #[tokio::test]
 async fn get_criteria_test() {
-    let posted_criteria: Vec<String> = vec!["test", "another", "one more"].iter().map(|f| f.to_string()).collect();
+    let posted_criteria: Vec<String> = ["test", "another", "one more"].iter().map(|f| f.to_string()).collect();
     let server = server_with_criteria(posted_criteria.clone());
     let resp = get_criteria(server).await;
 
@@ -48,13 +48,13 @@ async fn get_criteria_test() {
 #[tokio::test]
 async fn post_criteria_test() {
     let server = server_with_criteria(vec![]);
-    let payload = Json(vec!["test", "another", "one more"].iter().map(|f| f.to_string()).collect::<Vec<String>>());
+    let payload = Json(["test", "another", "one more"].iter().map(|f| f.to_string()).collect::<Vec<String>>());
 
     let resp = update(server, payload).await;
 
     assert!(resp.is_ok());
     let resp = resp.unwrap();
-    assert_eq!(resp.is_empty(), false);
+    assert!(!resp.is_empty());
     assert!(resp.first_key_value().is_some());
     let (key, value) = resp.first_key_value().unwrap();
     assert_eq!(key, &0);
