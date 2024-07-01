@@ -1,13 +1,12 @@
 use std::collections::BTreeMap;
 
+use crate::network::Node;
 use ic_base_types::PrincipalId;
 use ic_management_types::{
-    requests::{NodeRemoval, NodeRemovalReason}, Status, Subnet,
+    requests::{NodeRemoval, NodeRemovalReason},
+    Status, Subnet,
 };
 use itertools::Itertools;
-use crate::
-    network::Node
-;
 
 pub async fn unhealthy_with_nodes(
     subnets: &BTreeMap<PrincipalId, Subnet>,

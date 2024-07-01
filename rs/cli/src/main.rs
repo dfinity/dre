@@ -6,7 +6,7 @@ use dre::cli::proposals::ProposalStatus;
 use dre::detect_neuron::Auth;
 use dre::general::{filter_proposals, get_node_metrics_history, vote_on_proposals};
 use dre::operations::hostos_rollout::{NodeGroupUpdate, NumberOfNodes};
-use dre::registry_shared::RegistryShared;
+use dre::registry_shared::Registry;
 use dre::subnet_manager::{SubnetManager, SubnetTarget};
 use dre::{cli, ic_admin, registry_dump, runner};
 use ic_base_types::CanisterId;
@@ -78,7 +78,7 @@ async fn main() -> Result<(), anyhow::Error> {
             .expect("Failed to create authenticated CLI");
         let ic_admin_wrapper = IcAdminWrapper::from_cli(cli);
 
-        let registry_instance = RegistryShared::new(&target_network);
+        let registry_instance = Registry::new(&target_network);
         let runner_instance = runner::Runner::new(ic_admin_wrapper, registry_instance.clone());
 
         match &cli_opts.subcommand {
@@ -137,22 +137,23 @@ async fn main() -> Result<(), anyhow::Error> {
                         include,
                         min_nakamoto_coefficients,
                     } => {
-                        let subnet_target =  match &subnet.id {
+                        let subnet_target = match &subnet.id {
                             Some(subnet_id) => SubnetTarget::FromId(*subnet_id),
-                            _ => SubnetTarget::FromNodesIds(nodes.clone())
+                            _ => SubnetTarget::FromNodesIds(nodes.clone()),
                         };
 
                         let subnet_change = subnet_manager
-                        .membership_replace(
-                            subnet_target,
-                            !no_heal,
-                            *optimize,
-                            exclude.clone().into(),
-                            only.clone(),
-                            include.clone().into(),
-                            parse_min_nakamoto_coefficients(&mut cmd, min_nakamoto_coefficients),
-                            cli_opts.verbose,
-                        ).await?;
+                            .membership_replace(
+                                subnet_target,
+                                !no_heal,
+                                *optimize,
+                                exclude.clone().into(),
+                                only.clone(),
+                                include.clone().into(),
+                                parse_min_nakamoto_coefficients(&mut cmd, min_nakamoto_coefficients),
+                                cli_opts.verbose,
+                            )
+                            .await?;
 
                         runner_instance.run_membership_change(subnet_change, dry_run).await
                     }

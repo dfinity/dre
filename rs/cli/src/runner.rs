@@ -2,7 +2,7 @@ use crate::ic_admin;
 use crate::ic_admin::ProposeOptions;
 use crate::operations::hostos_rollout::{HostosRollout, HostosRolloutResponse, NodeGroupUpdate};
 use crate::ops_subnet_node_replace;
-use crate::registry_shared::RegistryShared;
+use crate::registry_shared::Registry;
 use decentralization::network::{AvailableNodesQuerier, SubnetChange, SubnetQuerier, SubnetQueryBy};
 use decentralization::network::{NetworkHealRequest, TopologyManager};
 use decentralization::subnets::NodesRemover;
@@ -26,20 +26,16 @@ use tabled::settings::Style;
 
 pub struct Runner {
     pub ic_admin: ic_admin::IcAdminWrapper,
-    registry_instance: Rc<RegistryShared>
+    registry_instance: Rc<Registry>,
 }
 
 impl Runner {
-
     async fn registry(&self) -> Rc<RegistryState> {
-        self.registry_instance.registry().await
+        self.registry_instance.get().await
     }
 
-    pub fn new(ic_admin: ic_admin::IcAdminWrapper, registry_instance: Rc<RegistryShared>) -> Self {
-        Self {
-            ic_admin,
-            registry_instance,
-        }
+    pub fn new(ic_admin: ic_admin::IcAdminWrapper, registry_instance: Rc<Registry>) -> Self {
+        Self { ic_admin, registry_instance }
     }
 
     pub async fn deploy(&self, subnet: &PrincipalId, version: &str, dry_run: bool) -> anyhow::Result<()> {
@@ -99,19 +95,14 @@ impl Runner {
             return Ok(());
         }
         if change.added.len() == change.removed.len() {
-            self.run_membership_change(change.clone(), dry_run)
-                .await
+            self.run_membership_change(change.clone(), dry_run).await
         } else {
             let action = if change.added.len() < change.removed.len() {
                 "Removing nodes from"
             } else {
                 "Adding nodes to"
             };
-            self.run_membership_change(
-                change,
-                dry_run,
-            )
-            .await
+            self.run_membership_change(change, dry_run).await
         }
     }
 
@@ -465,12 +456,7 @@ impl Runner {
         subnets_change_response.iter().for_each(|change| println!("{}", change));
 
         let errors = join_all(subnets_change_response.iter().map(|subnet_change_response| async move {
-            self.run_membership_change(
-                subnet_change_response.clone(),
-                simulate,
-            )
-            .await
-            .map_err(|e| {
+            self.run_membership_change(subnet_change_response.clone(), simulate).await.map_err(|e| {
                 println!("{}", e);
                 e
             })
@@ -536,7 +522,6 @@ impl Runner {
             return Ok(());
         }
 
-        self.run_membership_change(change, dry_run)
-            .await
+        self.run_membership_change(change, dry_run).await
     }
 }

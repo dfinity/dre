@@ -721,7 +721,7 @@ pub trait AvailableNodesQuerier {
 #[derive(Clone)]
 pub enum SubnetQueryBy {
     SubnetId(PrincipalId),
-    NodeList(Vec<Node>)
+    NodeList(Vec<Node>),
 }
 
 pub trait NodesConverter {
@@ -754,36 +754,6 @@ impl ResponseError for DecentralizationError {
 
 #[async_trait]
 pub trait TopologyManager: SubnetQuerier + AvailableNodesQuerier {
-    async fn modify_subnet_nodes(&self, by: SubnetQueryBy) -> Result<SubnetChangeRequest, NetworkError> {
-        Ok(SubnetChangeRequest {
-            available_nodes: self.available_nodes().await?,
-            subnet: self.subnet(by).await?,
-            ..Default::default()
-        })
-    }
-
-    async fn create_subnet(
-        &self,
-        size: usize,
-        min_nakamoto_coefficients: Option<MinNakamotoCoefficients>,
-        include_nodes: Vec<PrincipalId>,
-        exclude_nodes: Vec<String>,
-        only_nodes: Vec<String>,
-    ) -> Result<SubnetChange, NetworkError> {
-        SubnetChangeRequest {
-            available_nodes: self.available_nodes().await?,
-            min_nakamoto_coefficients,
-            ..Default::default()
-        }
-        .including_from_available(include_nodes.clone())
-        .excluding_from_available(exclude_nodes.clone())
-        .including_from_available(only_nodes.clone())
-        .resize(size, 0)
-    }
-}
-
-#[async_trait]
-pub trait SubnetChangeFromTarget: SubnetQuerier + AvailableNodesQuerier {
     async fn modify_subnet_nodes(&self, by: SubnetQueryBy) -> Result<SubnetChangeRequest, NetworkError> {
         Ok(SubnetChangeRequest {
             available_nodes: self.available_nodes().await?,

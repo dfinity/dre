@@ -3,12 +3,12 @@ use std::{cell::RefCell, rc::Rc};
 use ic_management_backend::{public_dashboard::query_ic_dashboard_list, registry::RegistryState};
 use ic_management_types::{Network, NodeProvidersResponse};
 
-pub struct RegistryShared {
+pub struct Registry {
     registry: RefCell<Option<Rc<RegistryState>>>,
     network: Network,
 }
 
-impl RegistryShared {
+impl Registry {
     pub fn new(network: &Network) -> Rc<Self> {
         Rc::from(Self {
             registry: RefCell::new(None),
@@ -16,10 +16,10 @@ impl RegistryShared {
         })
     }
 
-    pub async fn registry(&self) -> Rc<RegistryState> {
+    pub async fn get(&self) -> Rc<RegistryState> {
         {
             if let Some(ref registry) = *self.registry.borrow() {
-                return registry.clone()
+                return registry.clone();
             }
         }
 

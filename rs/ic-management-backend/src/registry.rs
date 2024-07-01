@@ -4,9 +4,7 @@ use crate::node_labels;
 use crate::proposal::{self, SubnetUpdateProposal, UpdateUnassignedNodesProposal};
 use crate::public_dashboard::query_ic_dashboard_list;
 use async_trait::async_trait;
-use decentralization::network::{
-    AvailableNodesQuerier, NodesConverter, SubnetQuerier, SubnetQueryBy
-};
+use decentralization::network::{AvailableNodesQuerier, NodesConverter, SubnetQuerier, SubnetQueryBy};
 use futures::TryFutureExt;
 use ic_base_types::NodeId;
 use ic_base_types::{RegistryVersion, SubnetId};
@@ -795,8 +793,7 @@ impl decentralization::network::TopologyManager for RegistryState {}
 
 impl NodesConverter for RegistryState {
     fn get_nodes(&self, from: &Vec<PrincipalId>) -> std::result::Result<Vec<decentralization::network::Node>, NetworkError> {
-        from
-            .iter()
+        from.iter()
             .map(|n| {
                 self.nodes()
                     .get(n)

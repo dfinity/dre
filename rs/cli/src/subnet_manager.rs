@@ -1,41 +1,44 @@
 use std::rc::Rc;
 
 use anyhow::Ok;
-use decentralization::{network::{DecentralizedSubnet, Node as DecentralizedNode, NodesConverter, SubnetQueryBy, TopologyManager}, SubnetChangeResponse};
-use ic_management_backend::{health::{self, HealthStatusQuerier}, registry::RegistryState};
+use decentralization::{
+    network::{DecentralizedSubnet, Node as DecentralizedNode, NodesConverter, SubnetQueryBy, TopologyManager},
+    SubnetChangeResponse,
+};
+use ic_management_backend::{
+    health::{self, HealthStatusQuerier},
+    registry::RegistryState,
+};
 use ic_management_types::MinNakamotoCoefficients;
 use ic_types::PrincipalId;
 use itertools::Itertools;
 use log::{info, warn};
 
-use crate::registry_shared::RegistryShared;
+use crate::registry_shared::Registry;
 
 pub enum SubnetTarget {
     FromId(PrincipalId),
-    FromNodesIds(Vec<PrincipalId>)
+    FromNodesIds(Vec<PrincipalId>),
 }
 
-pub struct SubnetManager{
-    registry_instance: Rc<RegistryShared>
+pub struct SubnetManager {
+    registry_instance: Rc<Registry>,
 }
 
 impl SubnetManager {
-
     async fn registry(&self) -> Rc<RegistryState> {
-        self.registry_instance.registry().await
+        self.registry_instance.get().await
     }
 
-    pub fn new(registry_instance: Rc<RegistryShared>) -> Self {
-        Self {
-            registry_instance
-        }
+    pub fn new(registry_instance: Rc<Registry>) -> Self {
+        Self { registry_instance }
     }
 
     async fn unhealthy_nodes(&self, subnet: DecentralizedSubnet) -> anyhow::Result<Vec<DecentralizedNode>> {
         let health_client = health::HealthClient::new(self.registry().await.network());
         let subnet_health = health_client.subnet(subnet.id).await?;
 
-        let unhealthy_nodes = subnet
+        let unhealthy = subnet
             .nodes
             .into_iter()
             .filter_map(|n| match subnet_health.get(&n.id) {
@@ -53,7 +56,7 @@ impl SubnetManager {
                 }
             })
             .collect::<Vec<_>>();
-        Ok(unhealthy_nodes)
+        Ok(unhealthy)
     }
 
     async fn from_subnet_target(&self, target: SubnetTarget) -> anyhow::Result<SubnetQueryBy> {
@@ -76,19 +79,20 @@ impl SubnetManager {
     ///
     /// All nodes in the request must belong to exactly one subnet.
     pub async fn membership_replace(
-                                &self,
-                                target: SubnetTarget,
-                                heal: bool,
-                                optimize: Option<usize>,
-                                exclude: Option<Vec<String>>,
-                                only: Vec<String>,
-                                include: Option<Vec<PrincipalId>>,
-                                min_nakamoto_coefficients: Option<MinNakamotoCoefficients>,
-                                verbose: bool) -> anyhow::Result<SubnetChangeResponse> {   
+        &self,
+        target: SubnetTarget,
+        heal: bool,
+        optimize: Option<usize>,
+        exclude: Option<Vec<String>>,
+        only: Vec<String>,
+        include: Option<Vec<PrincipalId>>,
+        min_nakamoto_coefficients: Option<MinNakamotoCoefficients>,
+        verbose: bool,
+    ) -> anyhow::Result<SubnetChangeResponse> {
         let subnet = self.from_subnet_target(target).await?;
         let mut motivations: Vec<String> = vec![];
         let mut to_be_replaced: Vec<DecentralizedNode> = vec![];
-        
+
         let subnet_change_request = self
             .registry()
             .await
@@ -108,12 +112,13 @@ impl SubnetManager {
 
             to_be_replaced.extend(subnet_unhealthy_without_included);
 
-            let without_specified = to_be_replaced.iter().filter(|n| {
-                match &subnet {
+            let without_specified = to_be_replaced
+                .iter()
+                .filter(|n| match &subnet {
                     SubnetQueryBy::NodeList(nodes) => !nodes.contains(n),
-                    _ => true
-                }
-            }).collect_vec();
+                    _ => true,
+                })
+                .collect_vec();
 
             if !without_specified.is_empty() {
                 let num_unhealthy = without_specified.len();
