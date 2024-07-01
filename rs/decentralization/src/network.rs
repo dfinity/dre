@@ -718,9 +718,14 @@ pub trait AvailableNodesQuerier {
     async fn available_nodes(&self) -> Result<Vec<Node>, NetworkError>;
 }
 
+#[derive(Clone)]
 pub enum SubnetQueryBy {
     SubnetId(PrincipalId),
     NodeList(Vec<Node>),
+}
+
+pub trait NodesConverter {
+    fn get_nodes(&self, from: &[PrincipalId]) -> Result<Vec<Node>, NetworkError>;
 }
 
 #[async_trait]
