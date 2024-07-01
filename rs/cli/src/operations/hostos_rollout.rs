@@ -5,7 +5,7 @@ use ic_base_types::{NodeId, PrincipalId};
 use ic_management_backend::health::{self, HealthStatusQuerier};
 use ic_management_backend::proposal::ProposalAgent;
 use ic_management_types::{Network, Node, Status, Subnet, UpdateNodesHostosVersionsProposal};
-use log::{debug, info};
+use log::{debug, info, warn};
 use std::{collections::BTreeMap, fmt::Display, str::FromStr};
 
 use crate::cli::hostos::{NodeAssignment, NodeOwner};
@@ -150,6 +150,7 @@ enum CandidatesSelection {
 
 #[derive(Clone)]
 pub struct HostosRollout {
+    nodes_all: Vec<Node>,
     pub grouped_nodes: BTreeMap<NodeGroup, Vec<Node>>,
     pub subnets: BTreeMap<PrincipalId, Subnet>,
     pub network: Network,
@@ -194,6 +195,7 @@ impl HostosRollout {
             });
 
         HostosRollout {
+            nodes_all: nodes.values().cloned().collect(),
             grouped_nodes,
             subnets,
             network: network.clone(),
@@ -202,14 +204,22 @@ impl HostosRollout {
             version: rollout_version.to_string(),
         }
     }
-    async fn nodes_different_version(&self, nodes: Vec<Node>) -> Option<Vec<Node>> {
-        let nodes_different_version = nodes.iter().filter(|n| n.hostos_version != self.version).cloned().collect::<Vec<_>>();
 
-        if !nodes_different_version.is_empty() {
-            return Some(nodes_different_version);
+    async fn nodes_different_version(&self, nodes: Vec<Node>) -> Option<Vec<Node>> {
+        match nodes.into_iter().filter(|n| n.hostos_version != self.version).collect::<Vec<_>>() {
+            nodes if nodes.is_empty() => None,
+            nodes => Some(nodes),
         }
-        None
     }
+
+    pub async fn nodes_updated_to_the_new_version(&self) -> Vec<Node> {
+        self.nodes_all
+            .iter()
+            .filter(|n| n.hostos_version == self.version)
+            .cloned()
+            .collect::<Vec<_>>()
+    }
+
     async fn nodes_without_proposals(
         &self,
         nodes: Vec<Node>,
@@ -362,6 +372,7 @@ impl HostosRollout {
 
         Ok(CandidatesSelection::Ok(candidate_nodes))
     }
+
     #[async_recursion]
     async fn with_nodes_health_and_open_proposals(
         &self,
@@ -487,12 +498,37 @@ impl HostosRollout {
             }
         }
     }
+
+    /// Execute the host-os rollout operation, on the provided group of nodes.
     pub async fn execute(&self, update_group: NodeGroupUpdate) -> anyhow::Result<HostosRolloutResponse> {
         let (nodes_health, nodes_with_open_proposals) = try_join(
             health::HealthClient::new(self.network.clone()).nodes(),
             self.proposal_agent.list_open_update_nodes_hostos_versions_proposals(),
         )
         .await?;
+
+        let nodes_on_the_new_version = self.nodes_updated_to_the_new_version().await;
+        let unhealthy_nodes_on_the_new_version = nodes_on_the_new_version
+            .iter()
+            .filter(|n| nodes_health.get(&n.principal).cloned().unwrap_or(Status::Unknown) != Status::Healthy)
+            .cloned()
+            .collect::<Vec<_>>();
+
+        if !unhealthy_nodes_on_the_new_version.is_empty() {
+            warn!(
+                "Unhealthy nodes on the new version:\n{}",
+                unhealthy_nodes_on_the_new_version
+                    .iter()
+                    .map(|node| format!(
+                        "{}: {:?}",
+                        node.principal,
+                        nodes_health.get(&node.principal).cloned().unwrap_or(Status::Unknown)
+                    ))
+                    .collect::<Vec<_>>()
+                    .join("\n")
+            );
+            return Ok(HostosRolloutResponse::Ok(vec![], None));
+        }
 
         self.with_nodes_health_and_open_proposals(nodes_health, nodes_with_open_proposals, update_group)
             .await
