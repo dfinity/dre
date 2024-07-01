@@ -373,7 +373,7 @@ impl HostosRollout {
         }
 
         let nodes = self.nodes_different_version(nodes).await;
-        info!("Found {} nodes with different version", nodes.len());
+        info!("Found {} nodes with a different version", nodes.len());
 
         if nodes.is_empty() {
             Ok(CandidatesSelection::None(HostosRolloutReason::AllAlreadyUpdated))
