@@ -14,7 +14,7 @@ def python_oci_image_rules(name, src, base_image = "@distroless_python3"):
         base_image: base image for building py binaries
     """
     binary = native.package_relative_label(src)
-    tar_rule_name = "{}_layer".format(binary.name)
+    tar_rule_name = "tar"
     pkg_tar(
         name = tar_rule_name,
         srcs = [binary],
@@ -27,7 +27,7 @@ def python_oci_image_rules(name, src, base_image = "@distroless_python3"):
         }
     )
 
-    image_rule_name = "{}-image".format(binary.name)
+    image_rule_name = "image"
     oci_image(
         name = image_rule_name,
         # Consider using even more minimalistic docker image since we're using static compile
@@ -39,7 +39,7 @@ def python_oci_image_rules(name, src, base_image = "@distroless_python3"):
         }
     )
 
-    tarball_name = "{}-tarball".format(binary.name)
+    tarball_name = "tarball"
     oci_tarball(
         name = tarball_name,
         image = image_rule_name,
