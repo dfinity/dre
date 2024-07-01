@@ -30,7 +30,7 @@ def rust_binary_oci_image_rules(name, src, base_image = "@distroless_cc_debian12
         tars = [tar_rule_name] + other_layers,
     )
 
-    tarball_name = "tarball".format(binary.name)
+    tarball_name = "{}-tarball".format(binary.name)
     oci_tarball(
         name = tarball_name,
         image = image_rule_name,
