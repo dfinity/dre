@@ -6,6 +6,8 @@ use slog::{info, o, Drain, Level, Logger};
 use crate::handlers::Server;
 
 mod handlers;
+#[cfg(test)]
+mod tests;
 
 #[tokio::main]
 async fn main() {
@@ -16,7 +18,7 @@ async fn main() {
     let socket = SocketAddr::new(std::net::IpAddr::V4(Ipv4Addr::UNSPECIFIED), cli.port);
     info!(logger, "Running noise filter manager {}", socket);
 
-    let server = Server::new(logger.clone(), cli.global_rate);
+    let server = Server::new(logger.clone(), cli.global_rate, vec![]);
     server.run(socket).await;
 
     info!(logger, "Noise filter manager stopped");

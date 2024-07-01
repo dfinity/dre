@@ -12,9 +12,9 @@ use regex::Regex;
 use slog::Logger;
 use tokio::sync::Mutex;
 
-mod criteria;
+pub(crate) mod criteria;
 pub mod get_all;
-mod rate;
+pub(crate) mod rate;
 
 #[derive(Clone)]
 pub struct Server {
@@ -24,10 +24,10 @@ pub struct Server {
 }
 
 impl Server {
-    pub fn new(logger: Logger, rate: u64) -> Self {
+    pub fn new(logger: Logger, rate: u64, criteria: Vec<String>) -> Self {
         Self {
             logger,
-            criteria: Arc::new(Mutex::new(vec![])),
+            criteria: Arc::new(Mutex::new(criteria)),
             rate: Arc::new(Mutex::new(rate)),
         }
     }
