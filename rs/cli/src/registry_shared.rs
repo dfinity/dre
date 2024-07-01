@@ -42,7 +42,7 @@ impl Registry {
         // Replace the registry in self with the new registry state
         self.registry.replace(Some(new_registry_rc.clone()));
 
-        // Return the Arc to the new registry state
+        // Return the Rc to the new registry state
         new_registry_rc
     }
 }

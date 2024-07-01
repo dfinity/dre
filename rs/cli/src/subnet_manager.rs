@@ -59,7 +59,7 @@ impl SubnetManager {
         Ok(unhealthy)
     }
 
-    async fn from_subnet_target(&self, target: SubnetTarget) -> anyhow::Result<SubnetQueryBy> {
+    async fn get_subnet_query_by(&self, target: SubnetTarget) -> anyhow::Result<SubnetQueryBy> {
         let converted = match target {
             SubnetTarget::FromId(id) => SubnetQueryBy::SubnetId(id),
             SubnetTarget::FromNodesIds(nodes) => {
@@ -87,16 +87,15 @@ impl SubnetManager {
         only: Vec<String>,
         include: Option<Vec<PrincipalId>>,
         min_nakamoto_coefficients: Option<MinNakamotoCoefficients>,
-        verbose: bool,
     ) -> anyhow::Result<SubnetChangeResponse> {
-        let subnet = self.from_subnet_target(target).await?;
+        let subnet_query_by = self.get_subnet_query_by(target).await?;
         let mut motivations: Vec<String> = vec![];
         let mut to_be_replaced: Vec<DecentralizedNode> = vec![];
 
         let subnet_change_request = self
             .registry()
             .await
-            .modify_subnet_nodes(subnet.clone())
+            .modify_subnet_nodes(subnet_query_by.clone())
             .await?
             .excluding_from_available(exclude.clone().unwrap_or_default())
             .including_from_available(only.clone())
@@ -114,7 +113,7 @@ impl SubnetManager {
 
             let without_specified = to_be_replaced
                 .iter()
-                .filter(|n| match &subnet {
+                .filter(|n| match &subnet_query_by {
                     SubnetQueryBy::NodeList(nodes) => !nodes.contains(n),
                     _ => true,
                 })
@@ -136,13 +135,6 @@ impl SubnetManager {
         }
 
         let change = SubnetChangeResponse::from(&change).with_motivation(motivations.join("; "));
-
-        if verbose {
-            if let Some(run_log) = &change.run_log {
-                println!("{}\n", run_log.join("\n"));
-            }
-        }
-        println!("{}", change);
 
         Ok(change)
     }

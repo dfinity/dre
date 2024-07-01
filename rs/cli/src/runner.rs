@@ -95,14 +95,24 @@ impl Runner {
             return Ok(());
         }
         if change.added.len() == change.removed.len() {
-            self.run_membership_change(change.clone(), dry_run).await
+            self.run_membership_change(change.clone(), ops_subnet_node_replace::replace_proposal_options(&change)?, dry_run)
+                .await
         } else {
             let action = if change.added.len() < change.removed.len() {
                 "Removing nodes from"
             } else {
                 "Adding nodes to"
             };
-            self.run_membership_change(change, dry_run).await
+            self.run_membership_change(
+                change,
+                ProposeOptions {
+                    title: format!("{action} subnet {subnet}").into(),
+                    summary: format!("{action} subnet {subnet}").into(),
+                    motivation: motivation.clone().into(),
+                },
+                dry_run,
+            )
+            .await
         }
     }
 
@@ -167,11 +177,22 @@ impl Runner {
         Ok(())
     }
 
-    pub async fn run_membership_change(&self, change: SubnetChangeResponse, dry_run: bool) -> anyhow::Result<()> {
+    pub async fn propose_subnet_change(&self, change: SubnetChangeResponse, verbose: bool, dry_run: bool) -> anyhow::Result<()> {
+        if verbose {
+            if let Some(run_log) = &change.run_log {
+                println!("{}\n", run_log.join("\n"));
+            }
+        }
+        println!("{}", change);
+
         if change.added.is_empty() && change.removed.is_empty() {
             return Ok(());
         }
-        let options = ops_subnet_node_replace::replace_proposal_options(&change)?;
+        self.run_membership_change(change.clone(), ops_subnet_node_replace::replace_proposal_options(&change)?, dry_run)
+            .await
+    }
+
+    async fn run_membership_change(&self, change: SubnetChangeResponse, options: ProposeOptions, dry_run: bool) -> anyhow::Result<()> {
         let subnet_id = change.subnet_id.ok_or_else(|| anyhow::anyhow!("subnet_id is required"))?;
         let pending_action = self
             .registry()
@@ -456,7 +477,13 @@ impl Runner {
         subnets_change_response.iter().for_each(|change| println!("{}", change));
 
         let errors = join_all(subnets_change_response.iter().map(|subnet_change_response| async move {
-            self.run_membership_change(subnet_change_response.clone(), simulate).await.map_err(|e| {
+            self.run_membership_change(
+                subnet_change_response.clone(),
+                ops_subnet_node_replace::replace_proposal_options(subnet_change_response)?,
+                simulate,
+            )
+            .await
+            .map_err(|e| {
                 println!("{}", e);
                 e
             })
@@ -522,6 +549,7 @@ impl Runner {
             return Ok(());
         }
 
-        self.run_membership_change(change, dry_run).await
+        self.run_membership_change(change.clone(), ops_subnet_node_replace::replace_proposal_options(&change)?, dry_run)
+            .await
     }
 }

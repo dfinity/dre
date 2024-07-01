@@ -142,7 +142,7 @@ async fn main() -> Result<(), anyhow::Error> {
                             _ => SubnetTarget::FromNodesIds(nodes.clone()),
                         };
 
-                        let subnet_change = subnet_manager
+                        let subnet_change_response = subnet_manager
                             .membership_replace(
                                 subnet_target,
                                 !no_heal,
@@ -151,11 +151,12 @@ async fn main() -> Result<(), anyhow::Error> {
                                 only.clone(),
                                 include.clone().into(),
                                 parse_min_nakamoto_coefficients(&mut cmd, min_nakamoto_coefficients),
-                                cli_opts.verbose,
                             )
                             .await?;
 
-                        runner_instance.run_membership_change(subnet_change, dry_run).await
+                        runner_instance
+                            .propose_subnet_change(subnet_change_response, cli_opts.verbose, dry_run)
+                            .await
                     }
                     cli::subnet::Commands::Resize {
                         add,
