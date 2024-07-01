@@ -36,6 +36,21 @@ rust_binary(
     ) + DEPS + BINARY_DEPS,
 )
 
+rust_test(
+    name = "unit_test",
+    aliases = aliases(
+        normal_dev = True,
+        proc_macro_dev = True,
+    ),
+    crate = ":log-noise-filter-backend-lib",
+    proc_macro_deps = all_crate_deps(
+        proc_macro_dev = True,
+    ),
+    deps = all_crate_deps(
+        normal_dev = True,
+    ) + DEPS,
+)
+
 rust_binary_oci_image_rules(
     name = "oci_image",
     src = ":log-noise-filter-backend",

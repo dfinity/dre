@@ -6,8 +6,6 @@ use slog::{info, o, Drain, Level, Logger};
 use crate::handlers::Server;
 
 mod handlers;
-#[cfg(test)]
-mod tests;
 
 #[tokio::main]
 async fn main() {
