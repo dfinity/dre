@@ -1,0 +1,59 @@
+load("@crate_index_dre//:defs.bzl", "aliases", "all_crate_deps")
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_test", "rust_library")
+load("@//rs:oci_images.bzl", "rust_binary_oci_image_rules")
+
+package(default_visibility = ["//visibility:public"])
+
+DEPS = []
+
+rust_library(
+    name = "log-noise-filter-backend-lib",
+    srcs = glob(["src/**/*.rs"]),
+    aliases = aliases(),
+    crate_name = "log_noise_filter_backend",
+    proc_macro_deps = all_crate_deps(
+        proc_macro = True,
+    ),
+    deps = all_crate_deps(
+        normal = True,
+    ) + DEPS,
+)
+
+BINARY_DEPS = [
+    ":log-noise-filter-backend-lib",
+]
+
+rust_binary(
+    name = "log-noise-filter-backend",
+    srcs = glob(["src/**/*.rs"]),
+    aliases = aliases(),
+    proc_macro_deps = all_crate_deps(
+        proc_macro = True,
+    ),
+    stamp = 1,
+    deps = all_crate_deps(
+        normal = True,
+    ) + DEPS + BINARY_DEPS,
+)
+
+rust_test(
+    name = "unit_test",
+    aliases = aliases(
+        normal_dev = True,
+        proc_macro_dev = True,
+    ),
+    crate = ":log-noise-filter-backend-lib",
+    proc_macro_deps = all_crate_deps(
+        proc_macro_dev = True,
+    ),
+    deps = all_crate_deps(
+        normal_dev = True,
+    ) + DEPS,
+)
+
+rust_binary_oci_image_rules(
+    name = "oci_image",
+    src = ":log-noise-filter-backend",
+    base_image = "@debian-slim"
+)
+
