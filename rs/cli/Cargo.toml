@@ -16,6 +16,7 @@ anyhow = { workspace = true }
 async-recursion = { workspace = true }
 async-trait = { workspace = true }
 candid = { workspace = true }
+chrono = { workspace = true }
 clap = { workspace = true }
 clap-num = { workspace = true }
 colored = { workspace = true }
