@@ -54,6 +54,7 @@ wrapt = "1.16.0"
 poetry-plugin-export = "^1.8.0"
 Flask = "^3.0.3"
 slack_bolt = "^1.19.0"
+slackblocks = "^1.0.9"
 
 
 [tool.poetry.group.dev.dependencies]

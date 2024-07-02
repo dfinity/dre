@@ -7,11 +7,12 @@ deps = [
     requirement("requests"),
     requirement("Flask"),
     requirement("pytest"),
+    requirement("slackblocks"),
     "//pylib",
 ]
 
 py_binary(
-    name = "tn_slack_app",
+    name = "alerts_receiver",
     srcs = glob(
         ["*.py"]
     ),
