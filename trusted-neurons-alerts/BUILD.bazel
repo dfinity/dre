@@ -1,0 +1,25 @@
+load("@python_deps//:requirements.bzl", "requirement")
+load("@rules_python//python:defs.bzl", "py_binary")
+load("@//tools/python:py_oci_image.bzl", "py_oci_image")
+
+deps = [
+    requirement("slack_bolt"),
+    requirement("requests"),
+    requirement("Flask"),
+    requirement("pytest"),
+    "//pylib",
+]
+
+py_binary(
+    name = "tn_slack_app",
+    srcs = glob(
+        ["*.py"]
+    ),
+    deps = deps,
+)
+
+py_oci_image(
+    name = "oci_image",
+    base = "@bazel_image_6_5_0",
+    binary = ":tn_slack_app",
+)

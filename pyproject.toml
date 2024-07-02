@@ -52,6 +52,8 @@ slack-sdk = "^3.30.0"
 git-changelog = "^2.5.1"
 wrapt = "1.16.0"
 poetry-plugin-export = "^1.8.0"
+Flask = "^3.0.3"
+slack_bolt = "^1.19.0"
 
 
 [tool.poetry.group.dev.dependencies]
