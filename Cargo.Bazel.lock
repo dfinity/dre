@@ -1,5 +1,5 @@
 {
-  "checksum": "d5d33d6454b8f860b5027bd8ef2ec6082f348be768b504ee6f55c78dd00704bc",
+  "checksum": "373e54054840c62d3438f63f1494707a66f3be25365a3abb2d53c837a692be7b",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -29184,6 +29184,132 @@
       },
       "license": null
     },
+    "log-noise-filter-backend 0.4.2": {
+      "name": "log-noise-filter-backend",
+      "version": "0.4.2",
+      "repository": null,
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "log_noise_filter_backend",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "log_noise_filter_backend",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "axum 0.7.5",
+              "target": "axum"
+            },
+            {
+              "id": "clap 4.5.7",
+              "target": "clap"
+            },
+            {
+              "id": "regex 1.10.5",
+              "target": "regex"
+            },
+            {
+              "id": "serde 1.0.203",
+              "target": "serde"
+            },
+            {
+              "id": "serde_json 1.0.117",
+              "target": "serde_json"
+            },
+            {
+              "id": "slog 2.7.0",
+              "target": "slog"
+            },
+            {
+              "id": "slog-async 2.8.0",
+              "target": "slog_async"
+            },
+            {
+              "id": "slog-term 2.9.1",
+              "target": "slog_term"
+            },
+            {
+              "id": "tokio 1.38.0",
+              "target": "tokio"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "0.4.2"
+      },
+      "license": null
+    },
+    "log-noise-filter-downloader 0.4.2": {
+      "name": "log-noise-filter-downloader",
+      "version": "0.4.2",
+      "repository": null,
+      "targets": [],
+      "library_target_name": null,
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "anyhow 1.0.86",
+              "target": "anyhow"
+            },
+            {
+              "id": "clap 4.5.7",
+              "target": "clap"
+            },
+            {
+              "id": "reqwest 0.12.5",
+              "target": "reqwest"
+            },
+            {
+              "id": "serde 1.0.203",
+              "target": "serde"
+            },
+            {
+              "id": "serde_json 1.0.117",
+              "target": "serde_json"
+            },
+            {
+              "id": "slog 2.7.0",
+              "target": "slog"
+            },
+            {
+              "id": "slog-async 2.8.0",
+              "target": "slog_async"
+            },
+            {
+              "id": "slog-term 2.9.1",
+              "target": "slog_term"
+            },
+            {
+              "id": "tokio 1.38.0",
+              "target": "tokio"
+            },
+            {
+              "id": "url 2.5.2",
+              "target": "url"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "0.4.2"
+      },
+      "license": null
+    },
     "lzma-sys 0.1.20": {
       "name": "lzma-sys",
       "version": "0.1.20",
@@ -50786,6 +50912,8 @@
     "ic-management-backend 0.4.2": "rs/ic-management-backend",
     "ic-management-types 0.4.2": "rs/ic-management-types",
     "log-fetcher 0.4.2": "rs/log-fetcher",
+    "log-noise-filter-backend 0.4.2": "rs/ic-observability/log-noise-filter-backend",
+    "log-noise-filter-downloader 0.4.2": "rs/ic-observability/log-noise-filter-downloader",
     "multiservice-discovery 0.4.2": "rs/ic-observability/multiservice-discovery",
     "multiservice-discovery-downloader 0.4.2": "rs/ic-observability/multiservice-discovery-downloader",
     "multiservice-discovery-shared 0.4.2": "rs/ic-observability/multiservice-discovery-shared",
