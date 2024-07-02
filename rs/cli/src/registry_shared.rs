@@ -1,6 +1,9 @@
 use std::{cell::RefCell, rc::Rc};
 
-use ic_management_backend::{public_dashboard::query_ic_dashboard_list, registry::RegistryState};
+use ic_management_backend::{
+    public_dashboard::query_ic_dashboard_list,
+    registry::{fetch_and_add_node_labels_guests_to_registry, RegistryState},
+};
 use ic_management_types::{Network, NodeProvidersResponse};
 
 pub struct Registry {
@@ -31,6 +34,8 @@ impl Registry {
             .await
             .expect("Failed to get node providers")
             .node_providers;
+
+        fetch_and_add_node_labels_guests_to_registry(&self.network, &mut new_registry).await;
 
         // Update node details
         new_registry
