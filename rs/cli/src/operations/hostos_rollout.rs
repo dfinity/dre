@@ -534,10 +534,11 @@ impl HostosRollout {
                 unhealthy_nodes_on_the_new_version
                     .iter()
                     .map(|node| format!(
-                        "{}: {:?} DC {} Node Provider {}",
+                        "{}: {:?} DC {} ({}) Node Provider {}",
                         node.principal,
                         nodes_health.get(&node.principal).cloned().unwrap_or(Status::Unknown),
                         node.operator.datacenter.as_ref().map(|dc| dc.name.as_str()).unwrap_or("-"),
+                        node.label.as_ref().map(|label| label.as_str()).unwrap_or("-"),
                         node.operator.provider.name.as_deref().unwrap_or("-"),
                     ))
                     .collect::<Vec<_>>()
