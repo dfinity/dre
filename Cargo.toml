@@ -6,6 +6,8 @@ members = [
   "rs/ic-management-backend",
   "rs/ic-management-types",
   "rs/ic-observability/config-writer-common",
+  "rs/ic-observability/log-noise-filter-backend",
+  "rs/ic-observability/log-noise-filter-downloader",
   "rs/ic-observability/multiservice-discovery",
   "rs/ic-observability/multiservice-discovery-downloader",
   "rs/ic-observability/multiservice-discovery-shared",
@@ -18,7 +20,7 @@ members = [
   "rs/canister-log-fetcher",
   "rs/np-notifications",
   "rs/rollout-controller",
-  "rs/slack-notifications",
+  "rs/slack-notifications", 
 ]
 
 resolver = "2"
@@ -44,6 +46,7 @@ async-recursion = "1.1.1"
 async-timer = "0.7.4"
 async-trait = "0.1.80"
 axum-otel-metrics = "0.8.1"
+axum = "0.7.5"
 backoff = { version = "0.4.0", features = ["tokio"] }
 backon = "0.4.4"
 candid = "0.10.9"
