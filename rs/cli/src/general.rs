@@ -50,6 +50,7 @@ use std::{
 };
 use strum::IntoEnumIterator;
 
+use chrono::Local;
 use ic_canisters::{
     governance::GovernanceCanisterWrapper, management::WalletCanisterWrapper, registry::RegistryCanisterWrapper, CanisterClient,
     IcAgentCanisterClient,
@@ -82,6 +83,7 @@ pub async fn vote_on_proposals(
     // in-memory set of proposals that we already voted on.
     let mut voted_proposals = HashSet::new();
 
+    info!("Starting the voting loop...");
     loop {
         let proposals = client.get_pending_proposals().await?;
         let proposals: Vec<&ProposalInfo> = proposals
@@ -97,8 +99,11 @@ pub async fn vote_on_proposals(
         print!("\x1B[1A\x1B[K");
         std::io::stdout().flush().unwrap();
         for proposal in proposals_to_vote.into_iter() {
+            let datetime = Local::now();
+
             info!(
-                "Voting on proposal {} (topic {:?}, proposer {}) -> {}",
+                "{} Voting on proposal {} (topic {:?}, proposer {}) -> {}\n",
+                datetime,
                 proposal.id.unwrap().id,
                 proposal.topic(),
                 proposal.proposer.unwrap_or_default().id,
