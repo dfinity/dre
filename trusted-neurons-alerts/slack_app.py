@@ -17,72 +17,79 @@ class SlackApp:
         vote_button = Button(
             text=Text("Vote :judge:", emoji=True),
             value=proposal_id,
-            action_id="blackhole",
+            action_id="vote_blackhole",
             url=f"https://nns.ic0.app/proposal/?u=qoctq-giaaa-aaaaa-aaaea-cai&proposal={proposal_id}"
         )
         silence_button = Button(
             text=Text("Silence :no_bell:", emoji=True),
             value=proposal_id,
-            action_id="silence_alert"
+            action_id="silence_pressed"
         )
 
         actions = ActionsBlock(elements=[vote_button, silence_button])
         blocks = [divider, section, actions]
 
         return text, blocks
+    
+    def create_silence(self, proposal_id):
+        now = datetime.now()
+        ends_at = now + timedelta(weeks=1)
 
-    def vote_blackhole(ack):
+        silence = {
+            "matchers": [
+                {
+                    "name": "proposal_id",
+                    "value": proposal_id,
+                    "isRegex": False
+                }
+            ],
+            "startsAt": now.isoformat() + "Z",
+            "endsAt": ends_at.isoformat() + "Z",
+            "createdBy": "slack-bot",
+            "comment": "Silenced via Slack"
+        }
+
+        headers = {'Content-Type': 'application/json'}
+        response = requests.post(f"https://alertmanager.mainnet.dfinity.network/api/v2/silences", data=json.dumps(silence), headers=headers)
+        if response.status_code != 200:
+            print(f"Error creating silence: {response.content}")
+
+            
+    def vote_blackhole(self, ack):
         ack()
 
-    def handle_message_events(body, logger):
+    def handle_message_events(self, body, logger):
         logger.info(body)
 
-    def silence_blackhole(ack):
+    def silence_blackhole(self, ack):
         ack()
         
-    def silence_pressed(ack, body, client):
+    def silence_pressed(self, ack, body, client):
         ack()
+
         proposal_id = body['actions'][0]['value']
         channel = body['channel']['id']
         message_ts = body['message']['ts']
         blocks = body['message']['blocks']
-
-        def create_silence(proposal_id):
-            now = datetime.now()
-            ends_at = now + timedelta(weeks=1)
-
-            silence = {
-                "matchers": [
-                    {
-                        "name": "proposal_id",
-                        "value": proposal_id,
-                        "isRegex": False
-                    }
-                ],
-                "startsAt": now.isoformat() + "Z",
-                "endsAt": ends_at.isoformat() + "Z",
-                "createdBy": "slack-bot",
-                "comment": "Silenced via Slack"
-            }
-
-            headers = {'Content-Type': 'application/json'}
-            response = requests.post(f"https://alertmanager.mainnet.dfinity.network/api/v2/silences", data=json.dumps(silence), headers=headers)
-            if response.status_code != 200:
-                print(f"Error creating silence: {response.content}")
         
         for block in blocks:
             if block.get('type') == 'actions':
                 elements = block.get('elements', [])
                 for i, element in enumerate(elements):
-                    if element.get('action_id') == 'silence_alert' and element.get('value') == proposal_id:
-                        elements[i] = Button(
-                                        text=Text("Silenced :no_bell:", emoji=True),
-                                        action_id="silence_blackhole",
-                                        url="https://alertmanager.mainnet.dfinity.network/#/silences",
-                                        style="primary"
-                                    )
-                        break
-        create_silence(proposal_id)
+                    if element.get('action_id') == 'silence_pressed' and element.get('value') == proposal_id:
+                        elements[i] = {
+                                        "type": "button",
+                                        "text": {
+                                            "type": "plain_text",
+                                            "text": f"Silenced :no_bell:",
+                                            "emoji": True
+                                        },
+                                        "action_id": "silence_blackhole",
+                                        "url": f"https://alertmanager.mainnet.dfinity.network/#/silences",
+                                        "style": "primary"
+                                    }
+
+        self.create_silence(proposal_id)
         update_message = f"The alert with Proposal ID {proposal_id} has been silenced."
 
         client.chat_update(
@@ -102,7 +109,7 @@ class SlackApp:
                   
         self.slack_app.action("vote_blackhole")(self.vote_blackhole)
         self.slack_app.event("message")(self.handle_message_events)
-        self.slack_app.action("silence_alert")(self.silence_pressed)
+        self.slack_app.action("silence_pressed")(self.silence_pressed)
         self.slack_app.action("silence_blackhole")(self.silence_blackhole)
 
         self.handler = SocketModeHandler(self.slack_app, slack_app_token)
