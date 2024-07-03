@@ -20,8 +20,8 @@ class Version(BaseModel):
 
 class Release(BaseModel):
     model_config = ConfigDict(
-        extra='forbid',	
-    )	
+        extra='forbid',
+    )
     rc_name: str
     versions: List[Version]
 
