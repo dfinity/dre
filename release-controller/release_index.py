@@ -3,33 +3,31 @@
 
 from __future__ import annotations
 
-from typing import List
+from typing import List, Optional
 
 from pydantic import BaseModel, ConfigDict, RootModel
-
 
 class Version(BaseModel):
     model_config = ConfigDict(
         extra='forbid',
     )
-    name: str
     version: str
+    name: str
+    release_notes_ready: Optional[bool] = None
+    subnets: Optional[List[str]] = None
 
 
 class Release(BaseModel):
-    model_config = ConfigDict(
-        extra='forbid',
-    )
-    rc_name: str
+	@@ -26,12 +24,12 @@ class Release(BaseModel):
     versions: List[Version]
 
 
-class Welcome4(BaseModel):
+class ReleaseIndex(BaseModel):
     model_config = ConfigDict(
         extra='forbid',
     )
     releases: List[Release]
 
 
-class Model(RootModel[Welcome4]):
-    root: Welcome4
+class Model(RootModel[ReleaseIndex]):
+    root: ReleaseIndex

@@ -8,6 +8,7 @@ import tempfile
 import time
 import traceback
 
+import __fix_import_paths  # isort:skip  # noqa: F401 # pylint: disable=W0611
 import release_index
 import requests
 from dotenv import load_dotenv
