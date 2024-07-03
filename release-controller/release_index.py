@@ -7,6 +7,7 @@ from typing import List, Optional
 
 from pydantic import BaseModel, ConfigDict, RootModel
 
+
 class Version(BaseModel):
     model_config = ConfigDict(
         extra='forbid',
@@ -18,7 +19,10 @@ class Version(BaseModel):
 
 
 class Release(BaseModel):
-	@@ -26,12 +24,12 @@ class Release(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',	
+    )	
+    rc_name: str
     versions: List[Version]
 
 
