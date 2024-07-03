@@ -159,6 +159,21 @@ class GitRepo:
             cwd=self.dir,
         )
 
+    def is_ancestor(self, maybe_ancestor_commit: str, descendant_commit: str) -> bool:
+        try:
+            return 0 == subprocess.check_call(
+                [
+                    "git",
+                    "merge-base",
+                    "--is-ancestor",
+                    maybe_ancestor_commit,
+                    descendant_commit,
+                ],
+                cwd=self.dir,
+            )
+        except subprocess.CalledProcessError as e:
+            return e.returncode == 0
+
 
 # TODO: test
 def push_release_tags(repo: GitRepo, release: Release):
