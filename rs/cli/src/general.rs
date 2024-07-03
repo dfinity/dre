@@ -102,7 +102,7 @@ pub async fn vote_on_proposals(
             let datetime = Local::now();
 
             info!(
-                "{} Voting on proposal {} (topic {:?}, proposer {}) -> {}\n",
+                "{} Voting on proposal {} (topic {:?}, proposer {}) -> {}",
                 datetime,
                 proposal.id.unwrap().id,
                 proposal.topic(),
