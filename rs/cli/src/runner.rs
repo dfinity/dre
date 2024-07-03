@@ -290,7 +290,8 @@ impl Runner {
         &self,
         node_group: NodeGroupUpdate,
         version: &String,
-        exclude: &Option<Vec<PrincipalId>>,
+        only: &[String],
+        exclude: &[String],
     ) -> anyhow::Result<Option<(Vec<PrincipalId>, String)>> {
         let elected_versions = self.registry().await.blessed_versions(&Artifact::HostOs).await.unwrap();
         if !elected_versions.contains(&version.to_string()) {
@@ -305,6 +306,7 @@ impl Runner {
             &self.registry().await.network(),
             ProposalAgent::new(self.registry().await.get_nns_urls()),
             version,
+            only,
             exclude,
         );
 
@@ -407,7 +409,12 @@ impl Runner {
             .await
             .map_err(|e| anyhow::anyhow!(e))?;
 
-        println!("Submitted proposal to updated the following nodes:\n{:?}", nodes);
+        let nodes_short = nodes
+            .iter()
+            .map(|p| p.to_string().split('-').next().unwrap().to_string())
+            .collect::<Vec<_>>();
+        println!("Submitted proposal to update the following nodes: {:?}", nodes_short);
+        println!("You can follow the upgrade progress at https://grafana.mainnet.dfinity.network/explore?orgId=1&left=%7B%22datasource%22:%22PE62C54679EC3C073%22,%22queries%22:%5B%7B%22refId%22:%22A%22,%22datasource%22:%7B%22type%22:%22prometheus%22,%22uid%22:%22PE62C54679EC3C073%22%7D,%22editorMode%22:%22code%22,%22expr%22:%22hostos_version%7Bic_node%3D~%5C%22{}%5C%22%7D%5Cn%22,%22legendFormat%22:%22__auto%22,%22range%22:true,%22instant%22:true%7D%5D,%22range%22:%7B%22from%22:%22now-1h%22,%22to%22:%22now%22%7D%7D", nodes_short.iter().map(|n| n.to_string() + ".%2B").join("%7C"));
 
         Ok(())
     }

@@ -5,7 +5,7 @@ use ic_base_types::{NodeId, PrincipalId};
 use ic_management_backend::health::{self, HealthStatusQuerier};
 use ic_management_backend::proposal::ProposalAgent;
 use ic_management_types::{Network, Node, Status, Subnet, UpdateNodesHostosVersionsProposal};
-use log::{debug, info};
+use log::{debug, info, warn};
 use std::{collections::BTreeMap, fmt::Display, str::FromStr};
 
 use crate::cli::hostos::{NodeAssignment, NodeOwner};
@@ -150,11 +150,13 @@ enum CandidatesSelection {
 
 #[derive(Clone)]
 pub struct HostosRollout {
+    nodes_all: Vec<Node>,
     pub grouped_nodes: BTreeMap<NodeGroup, Vec<Node>>,
     pub subnets: BTreeMap<PrincipalId, Subnet>,
     pub network: Network,
     pub proposal_agent: ProposalAgent,
-    pub exclude: Option<Vec<PrincipalId>>,
+    pub only_filter: Vec<String>,
+    pub exclude_filter: Vec<String>,
     pub version: String,
 }
 impl HostosRollout {
@@ -164,7 +166,8 @@ impl HostosRollout {
         network: &Network,
         proposal_agent: ProposalAgent,
         rollout_version: &str,
-        nodes_filter: &Option<Vec<PrincipalId>>,
+        only_filter: &[String],
+        exclude_filter: &[String],
     ) -> Self {
         let grouped_nodes: BTreeMap<NodeGroup, Vec<Node>> = nodes
             .values()
@@ -194,33 +197,36 @@ impl HostosRollout {
             });
 
         HostosRollout {
+            nodes_all: nodes.values().cloned().collect(),
             grouped_nodes,
             subnets,
             network: network.clone(),
             proposal_agent,
-            exclude: nodes_filter.clone(),
+            only_filter: only_filter.to_vec(),
+            exclude_filter: exclude_filter.to_vec(),
             version: rollout_version.to_string(),
         }
     }
-    async fn nodes_different_version(&self, nodes: Vec<Node>) -> Option<Vec<Node>> {
-        let nodes_different_version = nodes.iter().filter(|n| n.hostos_version != self.version).cloned().collect::<Vec<_>>();
 
-        if !nodes_different_version.is_empty() {
-            return Some(nodes_different_version);
-        }
-        None
+    async fn nodes_different_version(&self, nodes: Vec<Node>) -> Vec<Node> {
+        nodes.into_iter().filter(|n| n.hostos_version != self.version).collect::<Vec<_>>()
     }
-    async fn nodes_without_proposals(
-        &self,
-        nodes: Vec<Node>,
-        nodes_with_open_proposals: Vec<UpdateNodesHostosVersionsProposal>,
-    ) -> Option<Vec<Node>> {
+
+    pub async fn nodes_updated_to_the_new_version(&self) -> Vec<Node> {
+        self.nodes_all
+            .iter()
+            .filter(|n| n.hostos_version == self.version)
+            .cloned()
+            .collect::<Vec<_>>()
+    }
+
+    async fn nodes_without_proposals(&self, nodes: Vec<Node>, nodes_with_open_proposals: Vec<UpdateNodesHostosVersionsProposal>) -> Vec<Node> {
         let nodes_with_open_proposals_ids = nodes_with_open_proposals
             .into_iter()
             .flat_map(|proposal| proposal.node_ids)
             .collect::<Vec<_>>();
 
-        let nodes_filtered: Vec<Node> = nodes
+        nodes
             .iter()
             .cloned()
             .filter_map(|n| {
@@ -232,12 +238,7 @@ impl HostosRollout {
                     Some(n)
                 }
             })
-            .collect();
-
-        if !nodes_filtered.is_empty() {
-            return Some(nodes_filtered);
-        }
-        None
+            .collect()
     }
 
     async fn nodes_by_status(&self, nodes: Vec<Node>, nodes_health: BTreeMap<PrincipalId, Status>) -> BTreeMap<Status, Vec<Node>> {
@@ -306,13 +307,42 @@ impl HostosRollout {
         }
     }
 
-    async fn nodes_not_excluded(&self, nodes: Vec<Node>, excluded: &[PrincipalId]) -> Option<Vec<Node>> {
-        let nodes_not_excluded = nodes.iter().filter(|n| !excluded.contains(&n.principal)).cloned().collect::<Vec<_>>();
-
-        if !nodes_not_excluded.is_empty() {
-            return Some(nodes_not_excluded);
+    async fn nodes_filter_in_only(&self, nodes: Vec<Node>, filter_in_features: &[String]) -> Vec<Node> {
+        if filter_in_features.is_empty() {
+            return nodes;
         }
-        None
+        nodes
+            .iter()
+            .filter(|n| {
+                let node = decentralization::network::Node::from(n.to_owned());
+                for filt in self.only_filter.iter() {
+                    if node.matches_feature_value(filt) {
+                        return true;
+                    }
+                }
+                false
+            })
+            .cloned()
+            .collect::<Vec<_>>()
+    }
+
+    async fn nodes_filter_out_excluded(&self, nodes: Vec<Node>, excluded: &[String]) -> Vec<Node> {
+        if excluded.is_empty() {
+            return nodes;
+        }
+        nodes
+            .iter()
+            .filter(|n| {
+                let node = decentralization::network::Node::from(n.to_owned());
+                for filt in self.exclude_filter.iter() {
+                    if node.matches_feature_value(filt) {
+                        return false;
+                    }
+                }
+                true
+            })
+            .cloned()
+            .collect::<Vec<_>>()
     }
 
     async fn candidates_selection(
@@ -321,47 +351,37 @@ impl HostosRollout {
         nodes_with_open_proposals: Vec<UpdateNodesHostosVersionsProposal>,
         nodes_in_group: Vec<Node>,
     ) -> anyhow::Result<CandidatesSelection> {
-        info!("Fetching candidate nodes health status");
         let nodes_by_status = self.nodes_by_status(nodes_in_group.clone(), nodes_health).await;
+        info!("Fetched {} nodes by status", nodes_by_status.values().flatten().count());
 
-        info!("Selecting healthy candidate nodes");
-        let nodes_healthy = match nodes_by_status.get(&Status::Healthy) {
-            Some(nodes_by_status) => nodes_by_status.clone(),
-            None => {
-                return Ok(CandidatesSelection::None(HostosRolloutReason::NoNodeHealthy));
-            }
-        };
+        let nodes = nodes_by_status.get(&Status::Healthy).cloned().unwrap_or_default();
+        info!("Found {} healthy nodes", nodes.len());
+        if nodes.is_empty() {
+            return Ok(CandidatesSelection::None(HostosRolloutReason::NoNodeHealthy));
+        }
 
-        info!("Filtering out candidate nodes with an open proposal");
-        let nodes_without_proposals = match self.nodes_without_proposals(nodes_healthy, nodes_with_open_proposals).await {
-            Some(nodes_without_proposals) => nodes_without_proposals,
-            None => {
-                return Ok(CandidatesSelection::None(HostosRolloutReason::NoNodeWithoutProposal));
-            }
-        };
+        let nodes = self.nodes_filter_in_only(nodes, &self.only_filter).await;
+        info!("Found {} nodes that match the provided 'only' filter", nodes.len());
 
-        info!("Filtering out candidate nodes already updated");
-        let nodes_already_updated = match self.nodes_different_version(nodes_without_proposals).await {
-            Some(nodes_different_version) => nodes_different_version,
-            None => {
-                return Ok(CandidatesSelection::None(HostosRolloutReason::AllAlreadyUpdated));
-            }
-        };
+        let nodes = self.nodes_filter_out_excluded(nodes, &self.exclude_filter).await;
+        info!("Found {} nodes that match the provided 'exclude' filter", nodes.len());
 
-        info!("Finding not-excluded candidate nodes");
-        let candidate_nodes = if let Some(excluded) = &self.exclude {
-            match self.nodes_not_excluded(nodes_already_updated, excluded).await {
-                Some(nodes_not_filtered) => nodes_not_filtered,
-                None => {
-                    return Ok(CandidatesSelection::None(HostosRolloutReason::AllAlreadyUpdated));
-                }
-            }
+        let nodes = self.nodes_without_proposals(nodes, nodes_with_open_proposals).await;
+        info!("Found {} nodes without open proposals", nodes.len());
+        if nodes.is_empty() {
+            return Ok(CandidatesSelection::None(HostosRolloutReason::NoNodeWithoutProposal));
+        }
+
+        let nodes = self.nodes_different_version(nodes).await;
+        info!("Found {} nodes with a different version", nodes.len());
+
+        if nodes.is_empty() {
+            Ok(CandidatesSelection::None(HostosRolloutReason::AllAlreadyUpdated))
         } else {
-            nodes_already_updated
-        };
-
-        Ok(CandidatesSelection::Ok(candidate_nodes))
+            Ok(CandidatesSelection::Ok(nodes))
+        }
     }
+
     #[async_recursion]
     async fn with_nodes_health_and_open_proposals(
         &self,
@@ -487,12 +507,44 @@ impl HostosRollout {
             }
         }
     }
+
+    /// Execute the host-os rollout operation, on the provided group of nodes.
     pub async fn execute(&self, update_group: NodeGroupUpdate) -> anyhow::Result<HostosRolloutResponse> {
         let (nodes_health, nodes_with_open_proposals) = try_join(
             health::HealthClient::new(self.network.clone()).nodes(),
             self.proposal_agent.list_open_update_nodes_hostos_versions_proposals(),
         )
         .await?;
+
+        let nodes_on_the_new_version = self.nodes_updated_to_the_new_version().await;
+        let unhealthy_nodes_on_the_new_version = nodes_on_the_new_version
+            .iter()
+            .filter(|n| nodes_health.get(&n.principal).cloned().unwrap_or(Status::Unknown) != Status::Healthy)
+            .cloned()
+            .collect::<Vec<_>>();
+
+        info!(
+            "{} nodes are already on the new version, out of those {} unhealthy",
+            nodes_on_the_new_version.len(),
+            unhealthy_nodes_on_the_new_version.len()
+        );
+        if !unhealthy_nodes_on_the_new_version.is_empty() {
+            warn!(
+                "\n\n ***** WARNING: Unhealthy nodes found with the new version: *****\n{}\n\n",
+                unhealthy_nodes_on_the_new_version
+                    .iter()
+                    .map(|node| format!(
+                        "{}: {:?} DC {} ({}) Node Provider {}",
+                        node.principal,
+                        nodes_health.get(&node.principal).cloned().unwrap_or(Status::Unknown),
+                        node.operator.datacenter.as_ref().map(|dc| dc.name.as_str()).unwrap_or("-"),
+                        node.label.as_deref().unwrap_or("-"),
+                        node.operator.provider.name.as_deref().unwrap_or("-"),
+                    ))
+                    .collect::<Vec<_>>()
+                    .join("\n")
+            );
+        }
 
         self.with_nodes_health_and_open_proposals(nodes_health, nodes_with_open_proposals, update_group)
             .await
@@ -556,7 +608,8 @@ pub mod test {
             &network,
             ProposalAgent::new(nns_urls),
             version_one.clone().as_str(),
-            &None,
+            &[],
+            &[],
         );
 
         let results = hostos_rollout
@@ -576,7 +629,7 @@ pub mod test {
 
         assert_eq!(results.len(), want, "2 nodes should be updated");
 
-        let nodes_to_exclude = assigned_others_nodes.values().map(|n| n.principal).collect::<Vec<_>>();
+        let nodes_to_exclude = assigned_others_nodes.values().map(|n| n.principal.to_string()).collect::<Vec<_>>();
 
         let hostos_rollout = HostosRollout::new(
             union.clone(),
@@ -584,7 +637,8 @@ pub mod test {
             &network,
             ProposalAgent::new(nns_urls),
             version_one.clone().as_str(),
-            &Some(nodes_to_exclude),
+            &[],
+            &nodes_to_exclude,
         );
 
         let results = hostos_rollout
@@ -604,7 +658,8 @@ pub mod test {
             &network,
             ProposalAgent::new(nns_urls),
             version_two.clone().as_str(),
-            &None,
+            &[],
+            &[],
         );
 
         let results = hostos_rollout
