@@ -5,7 +5,8 @@ load("@//tools/python:py_oci_image.bzl", "py_oci_image")
 deps = [
     requirement("slack_bolt"),
     requirement("requests"),
-    requirement("Flask"),
+    requirement("quart"),
+    requirement("aiohttp"),
     requirement("pytest"),
     requirement("slackblocks"),
     "//pylib",
