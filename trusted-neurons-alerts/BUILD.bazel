@@ -13,7 +13,7 @@ deps = [
 ]
 
 py_binary(
-    name = "alerts_receiver",
+    name = "tn_alerts_app",
     srcs = glob(
         ["*.py"]
     ),
