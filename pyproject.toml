@@ -52,7 +52,6 @@ slack-sdk = "^3.30.0"
 git-changelog = "^2.5.1"
 wrapt = "1.16.0"
 poetry-plugin-export = "^1.8.0"
-flask = { version = "^3.0.3", extras = ["async"] }
 slack_bolt = "^1.19.0"
 slackblocks = "^1.0.9"
 aiohttp = "^3.9.5"
