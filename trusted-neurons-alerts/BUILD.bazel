@@ -23,5 +23,5 @@ py_binary(
 py_oci_image(
     name = "oci_image",
     base = "@bazel_image_6_5_0",
-    binary = ":alerts_receiver",
+    binary = ":tn_alerts_app",
 )
