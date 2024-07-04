@@ -43,8 +43,18 @@ jobs:
         uses: ./.github/workflows/build
         with:
           ssh_pk_workflow: ${{ secrets.SSH_PK_WORKFLOW }}
-      - run: bazel test ...
-        name: "🚀 Testing"
+      - name: "🚀 Testing"
+        run: bazel test ...
+
+      # We don't need the linear-jira build and test step for now
+      # - name: "🚀 Build and Test Linear-Jira with Bazel"
+      #   shell: bash
+      #   run: |
+      #     set -euxo pipefail
+      #     cd linear-jira
+      #     bazel build --config=ci ...
+      #     bazel test --config=ci ... || true
+      #     bazel query --noshow_progress 'kind("oci_push", ...)' | xargs -P $(nproc) -I_target bazel run _target -- --tag ${{ github.sha }}
 
       ########################################
       # Upload test artifacts
