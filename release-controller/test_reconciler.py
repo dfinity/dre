@@ -300,7 +300,9 @@ dff2072e34071110234b0cb169705efc13284e4a99b7795ef1951af1fe7b41ac *update-img.tar
 
 
 def test_find_parent_release_commit():
-    ic_repo = git_repo.GitRepo(f"https://github.com/dfinity/ic.git", main_branch="master")
+    ic_repo = git_repo.GitRepo(
+        f"https://github.com/dfinity/ic.git", main_branch="master", repo_cache_dir=pathlib.Path("/tmp/reconciler-cache")
+    )
     index = parse_yaml_raw_as(
         release_index.Model,
         """
