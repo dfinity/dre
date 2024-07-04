@@ -1,0 +1,5 @@
+build:ci --progress_report_interval=30
+build:ci --remote_timeout=5m # Default is 60s.
+build:ci --build_event_binary_file=bazel-bep.pb
+build:ci --bes_timeout=180s # Default is no timeout.
+build:ci --noremote_local_fallback
