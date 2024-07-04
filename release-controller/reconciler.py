@@ -8,6 +8,8 @@ import tempfile
 import time
 import traceback
 
+
+sys.path.append(os.path.join(os.path.dirname(__file__)))
 import __fix_import_paths  # isort:skip  # noqa: F401 # pylint: disable=W0611
 import release_index
 import requests
@@ -87,6 +89,23 @@ def versions_to_unelect(
             active_releases_versions.append(v.version)
 
     return [v for v in elected_versions if v not in active_releases_versions and v not in active_versions]
+
+
+def find_parent_release_commit(ic_repo: GitRepo, config: release_index.Model, commit: str) -> str:
+    ic_repo.fetch()
+    rc, rc_idx = next(
+        (rc, i) for i, rc in enumerate(config.root.releases) if any(v.version == commit for v in rc.versions)
+    )
+    v_idx = next(i for i, v in enumerate(config.root.releases[rc_idx].versions) if v.version == commit)
+    return (
+        config.root.releases[rc_idx + 1].versions[0].version  # take first version from the previous rc
+        if v_idx == 0
+        else next(
+            v.version
+            for i, v in reversed(list(enumerate(rc.versions[:v_idx])))
+            if i == 0 or ic_repo.is_ancestor(v.version, commit)
+        )
+    )
 
 
 # https://stackoverflow.com/a/44873382
@@ -173,11 +192,7 @@ class Reconciler:
                 push_release_tags(self.ic_repo, rc)
                 self.notes_client.ensure(
                     version_name=version_name(rc_name=rc.rc_name, name=v.name),
-                    since_commit=(
-                        config.root.releases[rc_idx + 1].versions[0].version  # take first version from the previous rc
-                        if v_idx == 0
-                        else rc.versions[v_idx - 1].version  # take previous version from the same rc
-                    ),
+                    since_commit=find_parent_release_commit(self.ic_repo, config, v.version),
                     git_revision=v.version,
                     tag_teams_on_create=v_idx == 0,
                 )
