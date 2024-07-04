@@ -1,4 +1,12 @@
 releases:
+  - rc_name: rc--2024-07-03_23-01
+    versions:
+      - # Successful qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/pipelines/1360352158
+        name: base
+        version: e4eeb331f874576126ef1196b9cdfbc520766fbd
+      - # Successful qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/pipelines/1360514977
+        name: storage-layer-disabled
+        version: 5849c6daf2037349bd36dcb6e26ce61c2c6570d0
   - rc_name: rc--2024-06-26_23-01
     versions:
       - # Successful qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/pipelines/1350685950
