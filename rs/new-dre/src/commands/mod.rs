@@ -7,6 +7,7 @@ use heal::Heal;
 use hostos::HostOsCmd;
 use nodes::Nodes;
 use propose::Propose;
+use registry::Registry;
 use trustworthy_metrics::TrustworthyMetrics;
 use update_unassigned_nodes::UpdateUnassignedNodes;
 use url::Url;
@@ -20,6 +21,7 @@ mod heal;
 mod hostos;
 mod nodes;
 mod propose;
+mod registry;
 mod subnet;
 mod trustworthy_metrics;
 mod update_unassigned_nodes;
@@ -118,4 +120,7 @@ pub enum Subcommands {
 
     /// Trustworthy Metrics
     TrustworthyMetrics(TrustworthyMetrics),
+
+    /// Registry inspection (dump) operations
+    Registry(Registry),
 }
