@@ -1155,6 +1155,7 @@ impl NetworkHealRequest {
 
             available_nodes.retain(|node| !change.added().contains(node));
             subnets_changed.push(SubnetChangeResponse::from(&change).with_motivation(motivations.join("; ")));
+            motivations.clear();
         }
 
         Ok(subnets_changed)
