@@ -90,13 +90,7 @@ async fn main() -> Result<(), anyhow::Error> {
                 Ok(())
             }
 
-            cli::Commands::Heal {
-                max_replaceable_nodes_per_sub,
-            } => {
-                runner_instance
-                    .network_heal(*max_replaceable_nodes_per_sub, cli_opts.verbose, dry_run)
-                    .await
-            }
+            cli::Commands::Heal => runner_instance.network_heal(cli_opts.verbose, dry_run).await,
 
             cli::Commands::Subnet(subnet) => {
                 // Check if required arguments are provided
