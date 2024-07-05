@@ -1,6 +1,8 @@
 use clap::Args;
 use ic_types::PrincipalId;
 
+use crate::commands::ExecutableCommand;
+
 #[derive(Args, Debug)]
 pub struct Replace {
     /// Set of custom nodes to be replaced
@@ -38,4 +40,18 @@ algorithm"#
     #[clap(long, num_args(1..), help = r#"Force t he inclusion of the provided nodes for replacement,
 regardless of the decentralization score"#)]
     pub include: Vec<PrincipalId>,
+}
+
+impl ExecutableCommand for Replace {
+    fn require_neuron(&self) -> bool {
+        true
+    }
+
+    fn require_registry(&self) -> bool {
+        true
+    }
+
+    async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
+        Ok(())
+    }
 }

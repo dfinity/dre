@@ -10,11 +10,11 @@ pub struct UpdateUnassignedNodes {
 }
 
 impl ExecutableCommand for UpdateUnassignedNodes {
-    fn require_neuron() -> bool {
+    fn require_neuron(&self) -> bool {
         true
     }
 
-    fn require_registry() -> bool {
+    fn require_registry(&self) -> bool {
         false
     }
 

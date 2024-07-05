@@ -1,6 +1,8 @@
 use clap::Args;
 use ic_types::PrincipalId;
 
+use crate::commands::ExecutableCommand;
+
 #[derive(Args, Debug)]
 pub struct Resize {
     /// Number of nodes to be added
@@ -26,4 +28,18 @@ regardless of the decentralization score"#)]
     /// Motivation for replacing custom nodes
     #[clap(long, short, aliases = [ "summary" ])]
     pub motivation: Option<String>,
+}
+
+impl ExecutableCommand for Resize {
+    fn require_neuron(&self) -> bool {
+        true
+    }
+
+    fn require_registry(&self) -> bool {
+        true
+    }
+
+    async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
+        Ok(())
+    }
 }

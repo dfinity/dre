@@ -1,5 +1,7 @@
 use clap::Args;
 
+use crate::commands::ExecutableCommand;
+
 #[derive(Args, Debug)]
 pub struct Remove {
     /// Skip removal of duplicate or dead nodes
@@ -20,4 +22,18 @@ pub struct Remove {
     /// Motivation for removing additional nodes
     #[clap(long, aliases = ["summary"])]
     pub motivation: Option<String>,
+}
+
+impl ExecutableCommand for Remove {
+    fn require_neuron(&self) -> bool {
+        true
+    }
+
+    fn require_registry(&self) -> bool {
+        true
+    }
+
+    async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
+        Ok(())
+    }
 }

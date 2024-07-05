@@ -1,6 +1,8 @@
 use clap::Args;
 use ic_types::PrincipalId;
 
+use crate::commands::ExecutableCommand;
+
 #[derive(Args, Debug)]
 pub struct Update {
     /// Node IDs where to rollout the version
@@ -13,4 +15,18 @@ pub struct Update {
     /// Motivation for creating the subnet
     #[clap(short, long, aliases = ["summary"], required = true)]
     pub motivation: Option<String>,
+}
+
+impl ExecutableCommand for Update {
+    fn require_neuron(&self) -> bool {
+        true
+    }
+
+    fn require_registry(&self) -> bool {
+        false
+    }
+
+    async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
+        Ok(())
+    }
 }

@@ -1,8 +1,9 @@
 use clap::Parser;
 use commands::{
     upgrade::{UpdateStatus, Upgrade},
-    Args,
+    Args, ExecutableCommand,
 };
+use ctx::DreContext;
 use dotenv::dotenv;
 use log::{info, warn};
 
@@ -31,6 +32,10 @@ async fn main() -> anyhow::Result<()> {
         return Ok(());
     }
 
+    let ctx = DreContext::from_args(&args).await?;
+
+    let r = args.execute(ctx).await;
+
     let handle = Upgrade {}.check();
     let maybe_update_status = handle.await?;
     match maybe_update_status {
@@ -42,7 +47,7 @@ async fn main() -> anyhow::Result<()> {
         Err(e) => warn!("There was an error while checking for new updates: {:?}", e),
     }
 
-    Ok(())
+    r
 }
 
 fn init_logger() {

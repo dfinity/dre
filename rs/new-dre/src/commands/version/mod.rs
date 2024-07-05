@@ -3,6 +3,8 @@ use guest_os::GuestOs;
 use host_os::HostOs;
 use ic_management_types::Artifact;
 
+use super::ExecutableCommand;
+
 mod guest_os;
 mod host_os;
 
@@ -15,6 +17,26 @@ pub struct VersionCmd {
 #[derive(Subcommand, Debug)]
 pub enum VersionCommands {
     ReviseElectedVersions(ReviseElectedVersionsCmd),
+}
+
+impl ExecutableCommand for VersionCmd {
+    fn require_neuron(&self) -> bool {
+        match &self.subcommand {
+            VersionCommands::ReviseElectedVersions(c) => c.require_neuron(),
+        }
+    }
+
+    fn require_registry(&self) -> bool {
+        match &self.subcommand {
+            VersionCommands::ReviseElectedVersions(c) => c.require_registry(),
+        }
+    }
+
+    async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
+        match &self.subcommand {
+            VersionCommands::ReviseElectedVersions(c) => c.execute(ctx).await,
+        }
+    }
 }
 
 #[derive(Args, Debug)]
@@ -40,6 +62,29 @@ impl From<ReviseElectedVersionsCommands> for Artifact {
         match value {
             ReviseElectedVersionsCommands::GuestOs { .. } => Artifact::GuestOs,
             ReviseElectedVersionsCommands::HostOs { .. } => Artifact::HostOs,
+        }
+    }
+}
+
+impl ExecutableCommand for ReviseElectedVersionsCmd {
+    fn require_neuron(&self) -> bool {
+        match &self.subcommand {
+            ReviseElectedVersionsCommands::GuestOs(g) => g.require_neuron(),
+            ReviseElectedVersionsCommands::HostOs(h) => h.require_neuron(),
+        }
+    }
+
+    fn require_registry(&self) -> bool {
+        match &self.subcommand {
+            ReviseElectedVersionsCommands::GuestOs(g) => g.require_registry(),
+            ReviseElectedVersionsCommands::HostOs(h) => h.require_registry(),
+        }
+    }
+
+    async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
+        match &self.subcommand {
+            ReviseElectedVersionsCommands::GuestOs(g) => g.execute(ctx).await,
+            ReviseElectedVersionsCommands::HostOs(h) => h.execute(ctx).await,
         }
     }
 }

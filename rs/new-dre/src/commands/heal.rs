@@ -15,11 +15,11 @@ minimizing the number of replaced nodes per subnet"#
 }
 
 impl ExecutableCommand for Heal {
-    fn require_neuron() -> bool {
+    fn require_neuron(&self) -> bool {
         true
     }
 
-    fn require_registry() -> bool {
+    fn require_registry(&self) -> bool {
         true
     }
 

@@ -1,6 +1,8 @@
 use clap::Args;
 use ic_types::PrincipalId;
 
+use crate::commands::ExecutableCommand;
+
 #[derive(Args, Debug)]
 pub struct Create {
     /// Number of nodes in the subnet
@@ -38,4 +40,18 @@ regardless of the decentralization score"#)]
     /// Provide the list of all arguments that ic-admin accepts for subnet creation
     #[clap(long)]
     pub help_other_args: bool,
+}
+
+impl ExecutableCommand for Create {
+    fn require_neuron(&self) -> bool {
+        true
+    }
+
+    fn require_registry(&self) -> bool {
+        false
+    }
+
+    async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
+        Ok(())
+    }
 }

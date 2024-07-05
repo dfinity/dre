@@ -7,7 +7,10 @@ use ic_management_backend::{
 };
 use ic_management_types::{Network, NodeProvidersResponse};
 
-use crate::{auth::Neuron, commands::Args};
+use crate::{
+    auth::Neuron,
+    commands::{Args, ExecutableCommand},
+};
 
 const STAGING_NEURON_ID: u64 = 49;
 pub struct DreContext {
@@ -18,7 +21,7 @@ pub struct DreContext {
 }
 
 impl DreContext {
-    pub async fn from_args(args: Args, require_neuron: bool, require_registry: bool) -> anyhow::Result<Self> {
+    pub async fn from_args(args: &Args) -> anyhow::Result<Self> {
         let network = ic_management_types::Network::new(args.network.clone(), &args.nns_urls)
             .await
             .map_err(|e| anyhow::anyhow!(e))?;
@@ -28,17 +31,27 @@ impl DreContext {
             let path = PathBuf::from_str(&std::env::var("HOME")?)?.join("/.config/dfx/identity/bootstrap-super-leader/identity.pem");
             match network.name.as_str() {
                 "staging" if path.exists() => (Some(STAGING_NEURON_ID), Some(path)),
-                "staging" => (Some(STAGING_NEURON_ID), args.private_key_pem),
-                _ => (args.neuron_id, args.private_key_pem),
+                "staging" => (Some(STAGING_NEURON_ID), args.private_key_pem.clone()),
+                _ => (args.neuron_id.clone(), args.private_key_pem.clone()),
             }
         };
 
-        let neuron = match require_neuron {
-            true => Some(Neuron::new(private_key_pem, args.hsm_slot, args.hsm_pin, args.hsm_key_id, neuron_id, &network).await?),
+        let neuron = match args.require_neuron() {
+            true => Some(
+                Neuron::new(
+                    private_key_pem,
+                    args.hsm_slot,
+                    args.hsm_pin.clone(),
+                    args.hsm_key_id.clone(),
+                    neuron_id,
+                    &network,
+                )
+                .await?,
+            ),
             false => None,
         };
 
-        let registry = match require_registry {
+        let registry = match args.require_registry() {
             true => Some(Self::init_registry(&network).await?),
             false => None,
         };

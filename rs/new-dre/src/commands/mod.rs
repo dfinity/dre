@@ -147,9 +147,74 @@ pub enum Subcommands {
 }
 
 pub trait ExecutableCommand {
-    fn require_neuron() -> bool;
+    fn require_neuron(&self) -> bool;
 
-    fn require_registry() -> bool;
+    fn require_registry(&self) -> bool;
 
     async fn execute(&self, ctx: DreContext) -> anyhow::Result<()>;
+}
+
+impl ExecutableCommand for Args {
+    fn require_neuron(&self) -> bool {
+        match &self.subcommands {
+            Subcommands::DerToPrincipal(c) => c.require_neuron(),
+            Subcommands::Heal(c) => c.require_neuron(),
+            Subcommands::Subnet(c) => c.require_neuron(),
+            Subcommands::Get(c) => c.require_neuron(),
+            Subcommands::Propose(c) => c.require_neuron(),
+            Subcommands::UpdateUnassignedNodes(c) => c.require_neuron(),
+            Subcommands::Version(c) => c.require_neuron(),
+            Subcommands::HostOs(c) => c.require_neuron(),
+            Subcommands::Nodes(c) => c.require_neuron(),
+            Subcommands::ApiBoundaryNodes(c) => c.require_neuron(),
+            Subcommands::Vote(c) => c.require_neuron(),
+            Subcommands::TrustworthyMetrics(c) => c.require_neuron(),
+            Subcommands::Registry(c) => c.require_neuron(),
+            Subcommands::Firewall(c) => c.require_neuron(),
+            Subcommands::Upgrade(c) => c.require_neuron(),
+            Subcommands::Proposals(c) => c.require_neuron(),
+        }
+    }
+
+    fn require_registry(&self) -> bool {
+        match &self.subcommands {
+            Subcommands::DerToPrincipal(c) => c.require_registry(),
+            Subcommands::Heal(c) => c.require_registry(),
+            Subcommands::Subnet(c) => c.require_registry(),
+            Subcommands::Get(c) => c.require_registry(),
+            Subcommands::Propose(c) => c.require_registry(),
+            Subcommands::UpdateUnassignedNodes(c) => c.require_registry(),
+            Subcommands::Version(c) => c.require_registry(),
+            Subcommands::HostOs(c) => c.require_registry(),
+            Subcommands::Nodes(c) => c.require_registry(),
+            Subcommands::ApiBoundaryNodes(c) => c.require_registry(),
+            Subcommands::Vote(c) => c.require_registry(),
+            Subcommands::TrustworthyMetrics(c) => c.require_registry(),
+            Subcommands::Registry(c) => c.require_registry(),
+            Subcommands::Firewall(c) => c.require_registry(),
+            Subcommands::Upgrade(c) => c.require_registry(),
+            Subcommands::Proposals(c) => c.require_registry(),
+        }
+    }
+
+    async fn execute(&self, ctx: DreContext) -> anyhow::Result<()> {
+        match &self.subcommands {
+            Subcommands::DerToPrincipal(c) => c.execute(ctx).await,
+            Subcommands::Heal(c) => c.execute(ctx).await,
+            Subcommands::Subnet(c) => c.execute(ctx).await,
+            Subcommands::Get(c) => c.execute(ctx).await,
+            Subcommands::Propose(c) => c.execute(ctx).await,
+            Subcommands::UpdateUnassignedNodes(c) => c.execute(ctx).await,
+            Subcommands::Version(c) => c.execute(ctx).await,
+            Subcommands::HostOs(c) => c.execute(ctx).await,
+            Subcommands::Nodes(c) => c.execute(ctx).await,
+            Subcommands::ApiBoundaryNodes(c) => c.execute(ctx).await,
+            Subcommands::Vote(c) => c.execute(ctx).await,
+            Subcommands::TrustworthyMetrics(c) => c.execute(ctx).await,
+            Subcommands::Registry(c) => c.execute(ctx).await,
+            Subcommands::Firewall(c) => c.execute(ctx).await,
+            Subcommands::Upgrade(c) => c.execute(ctx).await,
+            Subcommands::Proposals(c) => c.execute(ctx).await,
+        }
+    }
 }

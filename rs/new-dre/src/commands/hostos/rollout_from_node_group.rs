@@ -1,5 +1,7 @@
 use clap::{Args, ValueEnum};
 
+use crate::commands::ExecutableCommand;
+
 #[derive(ValueEnum, Copy, Clone, Debug, Ord, Eq, PartialEq, PartialOrd, Default)]
 pub enum NodeOwner {
     Dfinity,
@@ -66,4 +68,18 @@ pub struct RolloutFromNodeGroup {
 supported values are absolute numbers (10) or percentage (10%)"#
     )]
     pub nodes_in_group: String,
+}
+
+impl ExecutableCommand for RolloutFromNodeGroup {
+    fn require_neuron(&self) -> bool {
+        true
+    }
+
+    fn require_registry(&self) -> bool {
+        true
+    }
+
+    async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
+        Ok(())
+    }
 }

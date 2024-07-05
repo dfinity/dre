@@ -1,5 +1,7 @@
 use clap::Args;
 
+use crate::commands::ExecutableCommand;
+
 #[derive(Args, Debug)]
 pub struct List {
     /// Limit on the number of \[ProposalInfo\] to return. If no value is
@@ -48,4 +50,18 @@ pub struct List {
     /// request doesn't exceed the message size limit.
     #[clap(long)]
     pub omit_large_fields: Option<bool>,
+}
+
+impl ExecutableCommand for List {
+    fn require_neuron(&self) -> bool {
+        false
+    }
+
+    fn require_registry(&self) -> bool {
+        false
+    }
+
+    async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
+        Ok(())
+    }
 }

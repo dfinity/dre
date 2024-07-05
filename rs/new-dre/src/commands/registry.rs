@@ -24,11 +24,11 @@ pub struct Registry {
 }
 
 impl ExecutableCommand for Registry {
-    fn require_neuron() -> bool {
+    fn require_neuron(&self) -> bool {
         false
     }
 
-    fn require_registry() -> bool {
+    fn require_registry(&self) -> bool {
         true
     }
 

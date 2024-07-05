@@ -6,6 +6,8 @@ use replace::Replace;
 use rescue::Rescue;
 use resize::Resize;
 
+use super::ExecutableCommand;
+
 mod create;
 mod deploy;
 mod replace;
@@ -38,4 +40,36 @@ pub enum SubnetSubcommand {
 
     /// Replace all nodes in a subnet except some nodes
     Rescue(Rescue),
+}
+
+impl ExecutableCommand for SubnetCommand {
+    fn require_neuron(&self) -> bool {
+        match &self.subcommand {
+            SubnetSubcommand::Deploy(d) => d.require_neuron(),
+            SubnetSubcommand::Replace(r) => r.require_neuron(),
+            SubnetSubcommand::Resize(r) => r.require_neuron(),
+            SubnetSubcommand::Create(c) => c.require_neuron(),
+            SubnetSubcommand::Rescue(r) => r.require_neuron(),
+        }
+    }
+
+    fn require_registry(&self) -> bool {
+        match &self.subcommand {
+            SubnetSubcommand::Deploy(d) => d.require_registry(),
+            SubnetSubcommand::Replace(r) => r.require_registry(),
+            SubnetSubcommand::Resize(r) => r.require_registry(),
+            SubnetSubcommand::Create(c) => c.require_registry(),
+            SubnetSubcommand::Rescue(r) => r.require_registry(),
+        }
+    }
+
+    async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
+        match &self.subcommand {
+            SubnetSubcommand::Deploy(d) => d.execute(ctx).await,
+            SubnetSubcommand::Replace(r) => r.execute(ctx).await,
+            SubnetSubcommand::Resize(r) => r.execute(ctx).await,
+            SubnetSubcommand::Create(c) => c.execute(ctx).await,
+            SubnetSubcommand::Rescue(r) => r.execute(ctx).await,
+        }
+    }
 }

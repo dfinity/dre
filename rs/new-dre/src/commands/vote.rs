@@ -3,6 +3,8 @@ use std::time::Duration;
 use clap::Args;
 use humantime::parse_duration;
 
+use super::ExecutableCommand;
+
 #[derive(Args, Debug)]
 pub struct Vote {
     /// Override default accepted proposers
@@ -31,4 +33,18 @@ pub struct Vote {
     /// Override default sleep time
     #[clap(long, default_value = "60s", value_parser = parse_duration)]
     pub sleep_time: Duration,
+}
+
+impl ExecutableCommand for Vote {
+    fn require_neuron(&self) -> bool {
+        true
+    }
+
+    fn require_registry(&self) -> bool {
+        false
+    }
+
+    async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
+        Ok(())
+    }
 }

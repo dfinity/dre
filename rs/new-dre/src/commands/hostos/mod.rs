@@ -2,6 +2,8 @@ use clap::{Args, Subcommand};
 use rollout::Rollout;
 use rollout_from_node_group::RolloutFromNodeGroup;
 
+use super::ExecutableCommand;
+
 mod rollout;
 pub mod rollout_from_node_group;
 
@@ -23,4 +25,27 @@ The groups of nodes are created based on assignment to subnets, and on
 the owner of the nodes: DFINITY/other. The provided "version" must be 
 already elected."#)]
     RolloutFromNodeGroup(RolloutFromNodeGroup),
+}
+
+impl ExecutableCommand for HostOsCmd {
+    fn require_neuron(&self) -> bool {
+        match &self.subcommand {
+            HostOsSubcommands::Rollout(r) => r.require_neuron(),
+            HostOsSubcommands::RolloutFromNodeGroup(r) => r.require_neuron(),
+        }
+    }
+
+    fn require_registry(&self) -> bool {
+        match &self.subcommand {
+            HostOsSubcommands::Rollout(r) => r.require_registry(),
+            HostOsSubcommands::RolloutFromNodeGroup(r) => r.require_registry(),
+        }
+    }
+
+    async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
+        match &self.subcommand {
+            HostOsSubcommands::Rollout(r) => r.execute(ctx).await,
+            HostOsSubcommands::RolloutFromNodeGroup(r) => r.execute(ctx).await,
+        }
+    }
 }

@@ -10,11 +10,11 @@ pub struct Get {
 }
 
 impl ExecutableCommand for Get {
-    fn require_neuron() -> bool {
+    fn require_neuron(&self) -> bool {
         false
     }
 
-    fn require_registry() -> bool {
+    fn require_registry(&self) -> bool {
         false
     }
 
