@@ -30,12 +30,12 @@ mod registry;
 mod subnet;
 mod trustworthy_metrics;
 mod update_unassigned_nodes;
-mod upgrade;
+pub mod upgrade;
 mod version;
 mod vote;
 
 #[derive(Parser, Debug)]
-#[clap(version, about, author)]
+#[clap(version = env!("CARGO_PKG_VERSION"), about, author)]
 pub struct Args {
     /// Pin for the HSM key used for submitting proposals
     #[clap(long, global = true, hide_env_values = true, env = "HSM_PIN")]
