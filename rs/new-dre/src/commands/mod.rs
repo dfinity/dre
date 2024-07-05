@@ -6,6 +6,7 @@ use heal::Heal;
 use propose::Propose;
 use update_unassigned_nodes::UpdateUnassignedNodes;
 use url::Url;
+use version::VersionCmd;
 
 mod der_to_principal;
 mod get;
@@ -13,6 +14,7 @@ mod heal;
 mod propose;
 mod subnet;
 mod update_unassigned_nodes;
+mod version;
 
 #[derive(Parser, Debug)]
 #[clap(version, about, author)]
@@ -88,4 +90,7 @@ pub enum Subcommands {
 
     /// Place a proposal for updating unassigned nodes
     UpdateUnassignedNodes(UpdateUnassignedNodes),
+
+    /// Manage versions
+    Version(VersionCmd),
 }
