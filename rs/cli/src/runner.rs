@@ -7,7 +7,6 @@ use decentralization::network::{AvailableNodesQuerier, SubnetChange, SubnetQueri
 use decentralization::network::{NetworkHealRequest, TopologyManager};
 use decentralization::subnets::NodesRemover;
 use decentralization::SubnetChangeResponse;
-use futures::future::join_all;
 use futures::TryFutureExt;
 use futures_util::future::try_join;
 use ic_base_types::PrincipalId;
@@ -471,6 +470,7 @@ impl Runner {
 
     pub async fn network_heal(&self, max_replaceable_nodes_per_sub: Option<usize>, _verbose: bool, simulate: bool) -> Result<(), anyhow::Error> {
         let health_client = health::HealthClient::new(self.registry().await.network());
+        let mut errors = Vec::new();
         let subnets = self.registry().await.subnets();
         let (available_nodes, healths) = try_join(
             self.registry().await.available_nodes().map_err(anyhow::Error::from),
@@ -483,22 +483,20 @@ impl Runner {
             .await?;
         subnets_change_response.iter().for_each(|change| println!("{}", change));
 
-        let errors = join_all(subnets_change_response.iter().map(|subnet_change_response| async move {
-            self.run_membership_change(
-                subnet_change_response.clone(),
-                ops_subnet_node_replace::replace_proposal_options(subnet_change_response)?,
-                simulate,
-            )
-            .await
-            .map_err(|e| {
-                println!("{}", e);
-                e
-            })
-        }))
-        .await
-        .into_iter()
-        .filter_map(|f| f.err())
-        .collect::<Vec<_>>();
+        for change in subnets_change_response.iter() {
+            let change_result = self
+                .run_membership_change(change.clone(), ops_subnet_node_replace::replace_proposal_options(change)?, simulate)
+                .await
+                .map_err(|e| {
+                    println!("{}", e);
+                    e
+                });
+
+            if change_result.is_err() {
+                errors.push(change_result)
+            }
+        }
+
         if !errors.is_empty() {
             anyhow::bail!("Errors: {:?}", errors);
         }
