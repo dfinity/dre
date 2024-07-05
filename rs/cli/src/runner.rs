@@ -484,21 +484,18 @@ impl Runner {
         subnets_change_response.iter().for_each(|change| println!("{}", change));
 
         for change in subnets_change_response.iter() {
-            let change_result = self.run_membership_change(
-                change.clone(),
-                ops_subnet_node_replace::replace_proposal_options(change)?,
-                simulate,
-            )
-            .await
-            .map_err(|e| {
-                println!("{}", e);
-                e
-            });
+            let change_result = self
+                .run_membership_change(change.clone(), ops_subnet_node_replace::replace_proposal_options(change)?, simulate)
+                .await
+                .map_err(|e| {
+                    println!("{}", e);
+                    e
+                });
 
             if change_result.is_err() {
                 errors.push(change_result)
-            } 
-        };
+            }
+        }
 
         if !errors.is_empty() {
             anyhow::bail!("Errors: {:?}", errors);
