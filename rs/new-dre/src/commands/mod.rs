@@ -3,6 +3,8 @@ use clap_num::maybe_hex;
 use der_to_principal::DerToPrincipal;
 use get::Get;
 use heal::Heal;
+use hostos::HostOsCmd;
+use nodes::Nodes;
 use propose::Propose;
 use update_unassigned_nodes::UpdateUnassignedNodes;
 use url::Url;
@@ -12,6 +14,7 @@ mod der_to_principal;
 mod get;
 mod heal;
 mod hostos;
+mod nodes;
 mod propose;
 mod subnet;
 mod update_unassigned_nodes;
@@ -94,4 +97,10 @@ pub enum Subcommands {
 
     /// Manage versions
     Version(VersionCmd),
+
+    /// Manage hostos versions
+    HostOs(HostOsCmd),
+
+    /// Manage nodes
+    Nodes(Nodes),
 }
