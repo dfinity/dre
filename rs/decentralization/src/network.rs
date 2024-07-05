@@ -1114,6 +1114,8 @@ impl NetworkHealRequest {
             .collect_vec();
 
         for subnet in subnets_to_heal {
+            // If more than 1/3 nodes do not have the latest subnet state, subnet will stall.
+            // From those 1/2 are added and 1/2 removed -> nodes_in_subnet/3 * 1/2 = nodes_in_subnet/6
             let max_replaceable_nodes = subnet.decentralized_subnet.nodes.len() / 6;
 
             println!("optimize: {}", max_replaceable_nodes);
