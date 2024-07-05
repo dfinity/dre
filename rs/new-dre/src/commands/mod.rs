@@ -10,6 +10,7 @@ use propose::Propose;
 use update_unassigned_nodes::UpdateUnassignedNodes;
 use url::Url;
 use version::VersionCmd;
+use vote::Vote;
 
 mod api_boundary_nodes;
 mod der_to_principal;
@@ -21,6 +22,7 @@ mod propose;
 mod subnet;
 mod update_unassigned_nodes;
 mod version;
+mod vote;
 
 #[derive(Parser, Debug)]
 #[clap(version, about, author)]
@@ -108,4 +110,7 @@ pub enum Subcommands {
 
     /// Manage api boundary nodes
     ApiBoundaryNodes(ApiBoundaryNodes),
+
+    /// Vote on our proposals
+    Vote(Vote),
 }
