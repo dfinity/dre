@@ -12,18 +12,18 @@ pub struct VersionCmd {
     pub subcommand: VersionCommands,
 }
 
-#[derive(Subcommand, Debug, Clone)]
+#[derive(Subcommand, Debug)]
 pub enum VersionCommands {
     ReviseElectedVersions(ReviseElectedVersionsCmd),
 }
 
-#[derive(Args, Debug, Clone)]
+#[derive(Args, Debug)]
 pub struct ReviseElectedVersionsCmd {
     #[clap(subcommand)]
     pub subcommand: ReviseElectedVersionsCommands,
 }
 
-#[derive(Subcommand, Debug, Clone)]
+#[derive(Subcommand, Debug)]
 pub enum ReviseElectedVersionsCommands {
     #[clap(about = r#"Update the elected/blessed GuestOS versions in the registry
 by adding a new version and potentially removing obsolete

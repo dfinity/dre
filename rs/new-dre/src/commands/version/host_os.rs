@@ -1,6 +1,6 @@
 use clap::Args;
 
-#[derive(Clone, Debug, Args)]
+#[derive(Debug, Args)]
 pub struct HostOs {
     /// Specify the commit hash of the version that is being elected
     #[clap(long)]

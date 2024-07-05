@@ -11,6 +11,7 @@ use version::VersionCmd;
 mod der_to_principal;
 mod get;
 mod heal;
+mod hostos;
 mod propose;
 mod subnet;
 mod update_unassigned_nodes;
