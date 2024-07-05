@@ -146,6 +146,10 @@ pub enum Subcommands {
     Proposals(Proposals),
 }
 
-pub trait Execute {
-    fn execute(&self, ctx: DreContext) -> anyhow::Result<()>;
+pub trait ExecutableCommand {
+    fn require_neuron() -> bool;
+
+    fn require_registry() -> bool;
+
+    async fn execute(&self, ctx: DreContext) -> anyhow::Result<()>;
 }

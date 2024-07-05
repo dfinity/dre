@@ -1,6 +1,8 @@
 use clap::Args;
 use ic_types::PrincipalId;
 
+use super::ExecutableCommand;
+
 #[derive(Args, Debug)]
 pub struct TrustworthyMetrics {
     /// Wallet that should be used to query node metrics history
@@ -13,4 +15,18 @@ pub struct TrustworthyMetrics {
     /// Vector of subnets to query, if empty will dump metrics for
     /// all subnets
     pub subnet_ids: Vec<PrincipalId>,
+}
+
+impl ExecutableCommand for TrustworthyMetrics {
+    fn require_neuron() -> bool {
+        true
+    }
+
+    fn require_registry() -> bool {
+        false
+    }
+
+    async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
+        Ok(())
+    }
 }

@@ -4,6 +4,8 @@ use regex::Regex;
 use serde_json::Value;
 use tokio::task::JoinHandle;
 
+use super::ExecutableCommand;
+
 #[derive(Args, Debug)]
 pub struct Upgrade {}
 
@@ -113,4 +115,18 @@ pub enum UpdateStatus {
     NoUpdate,
     NewVersion(String),
     Updated(String),
+}
+
+impl ExecutableCommand for Upgrade {
+    fn require_neuron() -> bool {
+        false
+    }
+
+    fn require_registry() -> bool {
+        false
+    }
+
+    async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
+        Ok(())
+    }
 }
