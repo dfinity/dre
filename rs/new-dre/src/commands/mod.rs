@@ -1,3 +1,5 @@
+use std::{cell::RefCell, path::PathBuf, rc::Rc, str::FromStr};
+
 use api_boundary_nodes::ApiBoundaryNodes;
 use clap::{Parser, Subcommand};
 use clap_num::maybe_hex;
@@ -6,6 +8,8 @@ use firewall::Firewall;
 use get::Get;
 use heal::Heal;
 use hostos::HostOsCmd;
+use ic_canisters::governance::governance_canister_version;
+use ic_management_types::Network;
 use nodes::Nodes;
 use proposals::Proposals;
 use propose::Propose;
@@ -87,6 +91,20 @@ The argument is mandatory for testnets, and is optional for mainnet and staging"
 
     #[clap(subcommand)]
     pub subcommands: Subcommands,
+
+    /// Bellow options are used for caching
+
+    #[clap(skip)]
+    network_cache: Rc<RefCell<Option<Network>>>,
+
+    #[clap(skip)]
+    private_key_pem_cache: Rc<RefCell<Option<PathBuf>>>,
+
+    #[clap(skip)]
+    neuron_cache: Rc<RefCell<Option<u64>>>,
+
+    #[clap(skip)]
+    governance_canister_version_hash_cache: Rc<RefCell<Option<String>>>,
 }
 
 #[derive(Subcommand, Debug)]
@@ -138,4 +156,44 @@ pub enum Subcommands {
 
     /// Proposals
     Proposals(Proposals),
+}
+
+const STAGING_NEURON_ID: u64 = 49;
+impl Args {
+    pub async fn get_network(&self) -> anyhow::Result<Network> {
+        if let Some(ref network) = *self.network_cache.borrow() {
+            return Ok(network.clone());
+        }
+
+        let target_network = ic_management_types::Network::new(self.network.clone(), &self.nns_urls)
+            .await
+            .map_err(|e| anyhow::anyhow!(e))?;
+
+        if target_network.name == "staging" {
+            if self.private_key_pem.is_none() {
+                let path = PathBuf::from_str(&std::env::var("HOME")?)?.join("/.config/dfx/identity/bootstrap-super-leader/identity.pem");
+                if path.exists() {
+                    *self.private_key_pem_cache.borrow_mut() = Some(path)
+                }
+            }
+            if self.neuron_id.is_none() {
+                *self.neuron_cache.borrow_mut() = Some(STAGING_NEURON_ID);
+            }
+        }
+
+        *self.network_cache.borrow_mut() = Some(target_network.clone());
+        Ok(target_network)
+    }
+
+    pub async fn get_governance_canister_version_hash(&self) -> anyhow::Result<String> {
+        if let Some(ref hash) = *self.governance_canister_version_hash_cache.borrow() {
+            return Ok(hash.clone());
+        }
+
+        let target_network = self.get_network().await?;
+        let governance_canister_version = governance_canister_version(target_network.get_nns_urls()).await?;
+
+        *self.governance_canister_version_hash_cache.borrow_mut() = Some(governance_canister_version.stringified_hash.clone());
+        Ok(governance_canister_version.stringified_hash)
+    }
 }

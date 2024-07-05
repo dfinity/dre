@@ -30,7 +30,6 @@ async fn main() -> anyhow::Result<()> {
     }
 
     let handle = Upgrade {}.check();
-    println!("Done.");
     let maybe_update_status = handle.await?;
     match maybe_update_status {
         Ok(s) => match s {
