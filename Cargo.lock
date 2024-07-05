@@ -2209,6 +2209,7 @@ dependencies = [
  "async-recursion",
  "async-trait",
  "candid",
+ "chrono",
  "clap 4.5.7",
  "clap-num",
  "clap_complete",
@@ -5856,6 +5857,38 @@ dependencies = [
  "reqwest",
  "serde",
  "serde_json",
+ "tokio",
+ "url",
+]
+
+[[package]]
+name = "log-noise-filter-backend"
+version = "0.4.2"
+dependencies = [
+ "axum 0.7.5",
+ "clap 4.5.7",
+ "regex",
+ "serde",
+ "serde_json",
+ "slog",
+ "slog-async",
+ "slog-term",
+ "tokio",
+]
+
+[[package]]
+name = "log-noise-filter-downloader"
+version = "0.4.2"
+dependencies = [
+ "anyhow",
+ "clap 4.5.7",
+ "log-noise-filter-backend",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "slog",
+ "slog-async",
+ "slog-term",
  "tokio",
  "url",
 ]

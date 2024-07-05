@@ -435,18 +435,25 @@ pub mod hostos {
         RolloutFromNodeGroup {
             #[clap(long, required = true)]
             version: String,
-            /// Specify if the group of nodes considered for the rollout should be assigned on
-            /// a subnet or not
+
+            /// Filter in for rollout the nodes assigned to a subnet, or unassigned
             #[arg(value_enum)]
             #[clap(long)]
             assignment: Option<NodeAssignment>,
-            /// Owner of the group of nodes considered for the rollout
+
+            /// Filter in for rollout the DFINITY-owned nodes, or the external-owned (others) nodes
             #[arg(value_enum)]
             #[clap(long)]
             owner: Option<NodeOwner>,
-            /// Specifies the filter used to exclude from the update a set of nodes
+
+            /// Filter in for rollout only the nodes that match the provided list of features
             #[clap(long, num_args(1..))]
-            exclude: Option<Vec<PrincipalId>>,
+            only: Vec<String>,
+
+            /// Filter out (exclude) nodes that match the provided list of features
+            #[clap(long, num_args(1..))]
+            exclude: Vec<String>,
+
             /// How many nodes in the group to update with the version specified
             /// supported values are absolute numbers (10) or percentage (10%)
             #[clap(long)]

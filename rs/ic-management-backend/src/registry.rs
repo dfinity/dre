@@ -4,7 +4,7 @@ use crate::node_labels;
 use crate::proposal::{self, SubnetUpdateProposal, UpdateUnassignedNodesProposal};
 use crate::public_dashboard::query_ic_dashboard_list;
 use async_trait::async_trait;
-use decentralization::network::{AvailableNodesQuerier, SubnetQuerier, SubnetQueryBy};
+use decentralization::network::{AvailableNodesQuerier, NodesConverter, SubnetQuerier, SubnetQueryBy};
 use futures::TryFutureExt;
 use ic_base_types::NodeId;
 use ic_base_types::{RegistryVersion, SubnetId};
@@ -791,6 +791,19 @@ impl RegistryState {
 
 impl decentralization::network::TopologyManager for RegistryState {}
 
+impl NodesConverter for RegistryState {
+    fn get_nodes(&self, from: &[PrincipalId]) -> std::result::Result<Vec<decentralization::network::Node>, NetworkError> {
+        from.iter()
+            .map(|n| {
+                self.nodes()
+                    .get(n)
+                    .ok_or(NetworkError::NodeNotFound(*n))
+                    .map(decentralization::network::Node::from)
+            })
+            .collect()
+    }
+}
+
 #[async_trait]
 impl SubnetQuerier for RegistryState {
     async fn subnet(&self, by: SubnetQueryBy) -> Result<decentralization::network::DecentralizedSubnet, NetworkError> {
@@ -1044,7 +1057,7 @@ pub async fn poll(registry_state: Arc<RwLock<RegistryState>>, target_network: Ne
             continue;
         };
         if latest_version != registry_state.read().await.version() {
-            fetch_and_add_node_labels_guests_to_registry(&target_network, &registry_state).await;
+            fetch_and_add_node_labels_guests_to_registry(&target_network, &mut *registry_state.write().await).await;
             update_node_details(&registry_state).await;
         } else {
             debug!(
@@ -1056,16 +1069,15 @@ pub async fn poll(registry_state: Arc<RwLock<RegistryState>>, target_network: Ne
 }
 
 // TODO: try to get rid of node_labels data source
-async fn fetch_and_add_node_labels_guests_to_registry(target_network: &Network, registry_state: &Arc<RwLock<RegistryState>>) {
+pub async fn fetch_and_add_node_labels_guests_to_registry(target_network: &Network, registry_state: &mut RegistryState) {
     let guests_result = node_labels::query_guests(&target_network.name).await;
 
     match guests_result {
         Ok(node_labels_guests) => {
-            let mut registry_state = registry_state.write().await;
             registry_state.update_node_labels_guests(node_labels_guests);
         }
         Err(e) => {
-            warn!("Failed querying guests file: {}", e);
+            warn!("Failed to query the node labels: {}", e);
         }
     }
 }

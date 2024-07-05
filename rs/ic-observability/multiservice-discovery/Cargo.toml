@@ -27,7 +27,7 @@ slog-term = { workspace = true }
 tokio = { workspace = true }
 url = { workspace = true }
 futures.workspace = true
-axum = "0.7.5"
+axum = { workspace = true }
 axum-otel-metrics.workspace = true
 opentelemetry.workspace = true
 retry = { workspace = true }
