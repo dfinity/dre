@@ -11,6 +11,7 @@ use propose::Propose;
 use registry::Registry;
 use trustworthy_metrics::TrustworthyMetrics;
 use update_unassigned_nodes::UpdateUnassignedNodes;
+use upgrade::Upgrade;
 use url::Url;
 use version::VersionCmd;
 use vote::Vote;
@@ -27,6 +28,7 @@ mod registry;
 mod subnet;
 mod trustworthy_metrics;
 mod update_unassigned_nodes;
+mod upgrade;
 mod version;
 mod vote;
 
@@ -128,4 +130,7 @@ pub enum Subcommands {
 
     /// Firewall rules
     Firewall(Firewall),
+
+    /// Upgrade
+    Upgrade(Upgrade),
 }
