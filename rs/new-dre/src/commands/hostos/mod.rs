@@ -3,7 +3,7 @@ use rollout::Rollout;
 use rollout_from_node_group::RolloutFromNodeGroup;
 
 mod rollout;
-mod rollout_from_node_group;
+pub mod rollout_from_node_group;
 
 #[derive(Args, Debug)]
 pub struct HostOsCmd {

@@ -21,12 +21,14 @@ use url::Url;
 use version::VersionCmd;
 use vote::Vote;
 
+use crate::ctx::DreContext;
+
 mod api_boundary_nodes;
 mod der_to_principal;
 mod firewall;
 mod get;
 mod heal;
-mod hostos;
+pub mod hostos;
 mod nodes;
 mod proposals;
 mod propose;
@@ -142,4 +144,8 @@ pub enum Subcommands {
 
     /// Proposals
     Proposals(Proposals),
+}
+
+pub trait Execute {
+    fn execute(&self, ctx: DreContext) -> anyhow::Result<()>;
 }
