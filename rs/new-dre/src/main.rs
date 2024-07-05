@@ -7,6 +7,7 @@ use dotenv::dotenv;
 use log::{info, warn};
 
 mod commands;
+mod ctx;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -28,6 +29,8 @@ async fn main() -> anyhow::Result<()> {
         }
         return Ok(());
     }
+
+    let ctx = ctx::DreContext::from_args(args).await?;
 
     let handle = Upgrade {}.check();
     let maybe_update_status = handle.await?;
