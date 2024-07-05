@@ -7,6 +7,7 @@ use get::Get;
 use heal::Heal;
 use hostos::HostOsCmd;
 use nodes::Nodes;
+use proposals::Proposals;
 use propose::Propose;
 use registry::Registry;
 use trustworthy_metrics::TrustworthyMetrics;
@@ -23,6 +24,7 @@ mod get;
 mod heal;
 mod hostos;
 mod nodes;
+mod proposals;
 mod propose;
 mod registry;
 mod subnet;
@@ -133,4 +135,7 @@ pub enum Subcommands {
 
     /// Upgrade
     Upgrade(Upgrade),
+
+    /// Proposals
+    Proposals(Proposals),
 }
