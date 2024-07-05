@@ -13,7 +13,7 @@ from mock_discourse import DiscourseClientMock
 from mock_google_docs import ReleaseNotesClientMock
 from publish_notes import PublishNotesClient
 from pydantic_yaml import parse_yaml_raw_as
-from reconciler import oldest_active_release
+from reconciler import find_parent_release_commit, oldest_active_release
 from reconciler import Reconciler
 from reconciler import ReconcilerState
 from reconciler import version_package_checksum
@@ -297,3 +297,110 @@ dff2072e34071110234b0cb169705efc13284e4a99b7795ef1951af1fe7b41ac *update-img.tar
         assert requests.get.call_count == 3  # pylint: disable=no-member
 
     assert repr(e.value) == repr(RuntimeError("checksums do not match"))
+
+
+def test_find_parent_release_commit():
+    ic_repo = git_repo.GitRepo(
+        f"https://github.com/dfinity/ic.git", main_branch="master", repo_cache_dir=pathlib.Path("/tmp/reconciler-cache")
+    )
+    index = parse_yaml_raw_as(
+        release_index.Model,
+        """
+releases:
+  - rc_name: rc--2024-06-19_23-01
+    versions:
+      - name: base
+        version: e3fca54d11e19dc7134e374d9f472c5929f755f9
+      - name: storage-layer-disabled
+        version: ae3c4f30f198eba9c5b113ec32fdec90713c24a0
+      - name: cycle-hotfix
+        version: 9c006a50d364edf1403ef50b24c3be39dba8a5f6
+  - rc_name: rc--2024-06-12_23-01
+    versions:
+      - name: base
+        version: 246d0ce0784d9990c06904809722ce5c2c816269
+      - name: storage-layer-disabled
+        version: 2dfe3a1864d1b9a6df462e9503adf351036e7965
+      - name: cycle-hotfix
+        version: 48c500d1501e4165fc183e508872a2ef13fd0bef
+  - rc_name: rc--2024-06-05_23-01
+    versions:
+      - name: base
+        version: d19fa446ab35780b2c6d8b82ea32d808cca558d5
+      - name: storage-layer-disabled
+        version: 08f32722df2f56f1e5c1e603fee0c87c40b77cba
+  - rc_name: rc--2024-05-29_23-02
+    versions:
+      - name: base
+        version: b9a0f18dd5d6019e3241f205de797bca0d9cc3f8
+      - name: hotfix-nns
+        version: 42284da596a2596361f305b8d6d6097b0f40e6d6
+  - rc_name: rc--2024-05-22_23-01
+    versions:
+      - name: base
+        version: ec35ebd252d4ffb151d2cfceba3a86c4fb87c6d6
+  - rc_name: rc--2024-05-15_23-02
+    versions:
+      - name: base
+        version: 5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d
+      - name: storage-layer
+        version: b6b2ef469bb00d38b48b789cae91251f27011b82
+  - rc_name: rc--2024-05-09_23-02
+    versions:
+      - name: base
+        version: 2c4566b7b7af453167785504ba3c563e09f38504
+      - name: storage-layer
+        version: 9866a6f5cb43c54e3d87fa02a4eb80d0f159dddb
+      - name: hotfix-tecdsa
+        version: 30bf45e80e6b5c1660cd12c6b554d4f1e85a2d11
+  - rc_name: rc--2024-05-01_23-01
+    versions:
+      - name: base
+        version: bb76748d1d225c08d88037e99ca9a066f97de496
+      - name: storage-layer
+        version: f58424c4ba894ab8a12c8e223655d5d378fb1010
+  - rc_name: rc--2024-04-24_23-01
+    versions:
+      - name: base
+        version: 80e0363393ea26a36b77e8c75f7f183cb521f67f
+      - name: storage-layer
+        version: 5e285dcaf77db014ac85d6f96ff392fe461945f5
+  - rc_name: rc--2024-04-17_23-01
+    versions:
+      - name: base
+        version: abcea3eff0be52dc5328e71de98288991de854bf
+      - name: query-stats
+        version: 0a51fd74f08b2e6f23d6e1d60f1f52eb73b40ccc
+      - name: hotfix-bitcoin
+        version: 687de34189de20c5346e6b6167d22bcdd11e7ae5
+      - name: hotfix-bitcoin-query-stats
+        version: 63acf4f88b20ec0c6384f4e18f0f6f69fc5d9b9f
+  - rc_name: rc--2024-04-10_23-01
+    versions:
+      - name: base
+        version: 19dbb5cc6e3dc85c0ccd899b3182552612f1607d
+      - name: query-stats
+        version: 02dcaf3ccdfe46bd959d683d43c5513d37a1420d
+      - name: hotfix-bitcoin
+        version: 33dd2ef2184a64c00e64ff0412e7378d46507005
+      - name: hotfix-bitcoin-query-stats
+        version: 4e9b02fc3c0fa377b2fba44b15841d6ef73593a3
+""",
+    )
+
+    assert (
+        find_parent_release_commit(ic_repo, index, "48c500d1501e4165fc183e508872a2ef13fd0bef")
+        == "246d0ce0784d9990c06904809722ce5c2c816269"
+    )
+    assert (
+        find_parent_release_commit(ic_repo, index, "246d0ce0784d9990c06904809722ce5c2c816269")
+        == "d19fa446ab35780b2c6d8b82ea32d808cca558d5"
+    )
+    assert (
+        find_parent_release_commit(ic_repo, index, "9866a6f5cb43c54e3d87fa02a4eb80d0f159dddb")
+        == "2c4566b7b7af453167785504ba3c563e09f38504"
+    )
+    assert (
+        find_parent_release_commit(ic_repo, index, "63acf4f88b20ec0c6384f4e18f0f6f69fc5d9b9f")
+        == "0a51fd74f08b2e6f23d6e1d60f1f52eb73b40ccc"
+    )
