@@ -1,14 +1,22 @@
 import os
 import sys
+from typing import Optional
 sys.path.append(os.path.join(os.path.dirname(__file__)))
 from slack_app import SlackApp
 from alerts_receiver import AlertsReceiver
 import asyncio, logging
 
-async def main():
+def set_logging_level(level: Optional[str] = None):
     FORMAT = "[%(asctime)s] %(levelname)-8s %(message)s"
-    logging.basicConfig(format=FORMAT, level=logging.INFO)
+    log_levels = {
+        'DEBUG': logging.DEBUG,
+        'INFO': logging.INFO,
+        'WARNING': logging.WARNING,
+        'ERROR': logging.ERROR,
+    }
+    logging.basicConfig(format=FORMAT, level=log_levels.get(level, "INFO"))
 
+async def main():
     try:
         alertmanager_url = os.environ["ALERTMANAGER_URL"]
         slack_bot_token = os.environ["SLACK_BOT_TOKEN"]
@@ -18,6 +26,7 @@ async def main():
         logging.error(f"Missing required environment variable: {e.args[0]}")
         return
     
+    set_logging_level(os.getenv('LOG_LEVEL'))
     slack_app = SlackApp(alertmanager_url, slack_bot_token, slack_app_token, slack_app_channel)
 
     await slack_app.handler.connect_async()
