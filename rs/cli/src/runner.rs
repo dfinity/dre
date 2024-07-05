@@ -468,7 +468,7 @@ impl Runner {
         Ok(())
     }
 
-    pub async fn network_heal(&self, max_replaceable_nodes_per_sub: Option<usize>, _verbose: bool, simulate: bool) -> Result<(), anyhow::Error> {
+    pub async fn network_heal(&self, _verbose: bool, simulate: bool) -> Result<(), anyhow::Error> {
         let health_client = health::HealthClient::new(self.registry().await.network());
         let mut errors = Vec::new();
         let subnets = self.registry().await.subnets();
@@ -478,9 +478,7 @@ impl Runner {
         )
         .await?;
 
-        let subnets_change_response: Vec<SubnetChangeResponse> = NetworkHealRequest::new(subnets, max_replaceable_nodes_per_sub)
-            .heal_and_optimize(available_nodes, healths)
-            .await?;
+        let subnets_change_response: Vec<SubnetChangeResponse> = NetworkHealRequest::new(subnets).heal_and_optimize(available_nodes, healths).await?;
         subnets_change_response.iter().for_each(|change| println!("{}", change));
 
         for change in subnets_change_response.iter() {

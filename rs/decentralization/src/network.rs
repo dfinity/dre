@@ -1083,15 +1083,11 @@ impl Ord for NetworkHealSubnets {
 
 pub struct NetworkHealRequest {
     pub subnets: BTreeMap<PrincipalId, ic_management_types::Subnet>,
-    pub max_replaceable_nodes_per_sub: Option<usize>,
 }
 
 impl NetworkHealRequest {
-    pub fn new(subnets: BTreeMap<PrincipalId, ic_management_types::Subnet>, max_replaceable_nodes_per_sub: Option<usize>) -> Self {
-        Self {
-            subnets,
-            max_replaceable_nodes_per_sub,
-        }
+    pub fn new(subnets: BTreeMap<PrincipalId, ic_management_types::Subnet>) -> Self {
+        Self { subnets }
     }
 
     pub async fn heal_and_optimize(
@@ -1118,26 +1114,34 @@ impl NetworkHealRequest {
             .collect_vec();
 
         for subnet in subnets_to_heal {
-            let mut unhealthy_nodes = subnet.unhealthy_nodes.clone();
+            // If more than 1/3 nodes do not have the latest subnet state, subnet will stall.
+            // From those 1/2 are added and 1/2 removed -> nodes_in_subnet/3 * 1/2 = nodes_in_subnet/6
+            let max_replaceable_nodes = subnet.decentralized_subnet.nodes.len() / 6;
+
+            println!("optimize: {}", max_replaceable_nodes);
+
+            let unhealthy_nodes = if subnet.unhealthy_nodes.len() > max_replaceable_nodes {
+                let unhealthy_nodes = subnet.unhealthy_nodes.into_iter().take(max_replaceable_nodes).collect_vec();
+                warn!(
+                    "Subnet {}: replacing {} of {} unhealthy nodes: {:?}",
+                    subnet.decentralized_subnet.id,
+                    max_replaceable_nodes,
+                    unhealthy_nodes.len(),
+                    unhealthy_nodes.iter().map(|node| node.id).collect_vec()
+                );
+                unhealthy_nodes
+            } else {
+                info!(
+                    "Subnet {}: replacing {} unhealthy nodes: {:?}\nOptimizing {} nodes",
+                    subnet.decentralized_subnet.id,
+                    subnet.unhealthy_nodes.len(),
+                    subnet.unhealthy_nodes.iter().map(|node| node.id).collect_vec(),
+                    max_replaceable_nodes - subnet.unhealthy_nodes.len()
+                );
+                subnet.unhealthy_nodes
+            };
             let unhealthy_nodes_len = unhealthy_nodes.len();
-
-            if let Some(max) = self.max_replaceable_nodes_per_sub {
-                if unhealthy_nodes_len > max {
-                    unhealthy_nodes = subnet.unhealthy_nodes.clone().into_iter().take(max).collect_vec();
-
-                    warn!(
-                        "Subnet {}: replacing {} of {} unhealthy nodes: {:?}",
-                        subnet.decentralized_subnet.id,
-                        max,
-                        unhealthy_nodes_len,
-                        unhealthy_nodes.iter().map(|node| node.id).collect_vec()
-                    );
-                }
-            }
-
-            let unhealthy_nodes_len = unhealthy_nodes.len();
-            println!("unhealthy size: {}", unhealthy_nodes_len);
-            let optimize_limit = self.max_replaceable_nodes_per_sub.unwrap_or(unhealthy_nodes_len) - unhealthy_nodes_len;
+            let optimize_limit = max_replaceable_nodes - unhealthy_nodes_len;
             let change = SubnetChangeRequest {
                 subnet: subnet.decentralized_subnet.clone(),
                 available_nodes: available_nodes.clone(),

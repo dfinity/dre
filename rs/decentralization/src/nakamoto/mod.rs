@@ -917,7 +917,6 @@ mod tests {
     #[tokio::test]
     async fn test_network_heal() {
         let nodes_available = new_test_nodes("spare", 10, 2);
-        let nodes_available_principals = nodes_available.iter().map(|n| n.id).collect_vec();
 
         let subnet =
             serde_json::from_str::<ic_management_types::Subnet>(include_str!("../../test_data/subnet-uzr34.json")).expect("failed to read test data");
@@ -945,25 +944,15 @@ mod tests {
 
         important.insert(subnet.principal, subnet);
 
-        let network_heal_response = NetworkHealRequest::new(important.clone(), None)
+        let network_heal_response = NetworkHealRequest::new(important.clone())
             .heal_and_optimize(nodes_available.clone(), healths.clone())
             .await
             .unwrap();
         let result = network_heal_response.first().unwrap().clone();
 
-        assert_eq!(unhealthy_principals.to_vec(), result.removed.clone());
-
-        assert_eq!(unhealthy_principals.len(), result.added.len());
-
-        let network_heal_response = NetworkHealRequest::new(important, Some(1))
-            .heal_and_optimize(nodes_available.clone(), healths)
-            .await
-            .unwrap();
-        let result = network_heal_response.first().unwrap().clone();
-
-        assert_eq!(1, result.added.len());
-
-        result.added.iter().for_each(|n| assert!(nodes_available_principals.contains(n)));
+        for unhealthy in unhealthy_principals.to_vec().iter() {
+            assert!(result.removed.contains(unhealthy));
+        }
     }
 
     #[test]
