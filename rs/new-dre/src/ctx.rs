@@ -76,4 +76,22 @@ impl DreContext {
 
         Ok(new_registry)
     }
+
+    pub fn registry(&self) -> &RegistryState {
+        match &self.registry {
+            Some(r) => r,
+            None => panic!("This command is configured to not require a registry"),
+        }
+    }
+
+    pub fn neuron(&self) -> &Neuron {
+        match &self.neuron {
+            Some(n) => n,
+            None => panic!("This command is configured to not require a neuron"),
+        }
+    }
+
+    pub fn network(&self) -> &Network {
+        &self.network
+    }
 }

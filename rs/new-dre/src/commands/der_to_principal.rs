@@ -20,6 +20,8 @@ impl ExecutableCommand for DerToPrincipal {
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
+        let principal = ic_base_types::PrincipalId::new_self_authenticating(&std::fs::read(&self.path)?);
+        println!("{}", principal);
         Ok(())
     }
 }

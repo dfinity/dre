@@ -64,7 +64,7 @@ pub const DFINITY_DCS: &str = "zh2 mr1 bo1 sh1";
 
 pub struct RegistryState {
     network: Network,
-    local_registry: Arc<LocalRegistry>,
+    pub local_registry: Arc<LocalRegistry>,
 
     version: u64,
     subnets: BTreeMap<PrincipalId, Subnet>,
