@@ -2,6 +2,7 @@ use api_boundary_nodes::ApiBoundaryNodes;
 use clap::{Parser, Subcommand};
 use clap_num::maybe_hex;
 use der_to_principal::DerToPrincipal;
+use firewall::Firewall;
 use get::Get;
 use heal::Heal;
 use hostos::HostOsCmd;
@@ -16,6 +17,7 @@ use vote::Vote;
 
 mod api_boundary_nodes;
 mod der_to_principal;
+mod firewall;
 mod get;
 mod heal;
 mod hostos;
@@ -123,4 +125,7 @@ pub enum Subcommands {
 
     /// Registry inspection (dump) operations
     Registry(Registry),
+
+    /// Firewall rules
+    Firewall(Firewall),
 }
