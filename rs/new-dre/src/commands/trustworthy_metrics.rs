@@ -1,0 +1,16 @@
+use clap::Args;
+use ic_types::PrincipalId;
+
+#[derive(Args, Debug)]
+pub struct TrustworthyMetrics {
+    /// Wallet that should be used to query node metrics history
+    /// in form of canister id
+    pub wallet: String,
+
+    /// Start at timestamp in nanoseconds
+    pub start_at_timestamp: u64,
+
+    /// Vector of subnets to query, if empty will dump metrics for
+    /// all subnets
+    pub subnet_ids: Vec<PrincipalId>,
+}

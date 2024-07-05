@@ -7,6 +7,7 @@ use heal::Heal;
 use hostos::HostOsCmd;
 use nodes::Nodes;
 use propose::Propose;
+use trustworthy_metrics::TrustworthyMetrics;
 use update_unassigned_nodes::UpdateUnassignedNodes;
 use url::Url;
 use version::VersionCmd;
@@ -20,6 +21,7 @@ mod hostos;
 mod nodes;
 mod propose;
 mod subnet;
+mod trustworthy_metrics;
 mod update_unassigned_nodes;
 mod version;
 mod vote;
@@ -113,4 +115,7 @@ pub enum Subcommands {
 
     /// Vote on our proposals
     Vote(Vote),
+
+    /// Trustworthy Metrics
+    TrustworthyMetrics(TrustworthyMetrics),
 }
