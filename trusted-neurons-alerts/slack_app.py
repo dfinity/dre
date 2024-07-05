@@ -91,13 +91,6 @@ class SlackApp:
         delete_response.raise_for_status()
         logging.info(f"Silence removed for {silence_id}")
 
-        if delete_response.status_code != 200:
-            error = (f"*Failed deleting silence {silence_id}*\n")
-            logging.error(error)
-            raise Exception(error)
-        else:
-            logging.info(f"Silence removed for {silence_id}")
-
     async def send_message(self, text, blocks):
         message = Message(channel=self.slack_app_channel, text=text, blocks=blocks)
         await self.slack_app.client.chat_postMessage(**message)
