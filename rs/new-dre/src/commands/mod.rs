@@ -1,4 +1,4 @@
-use std::str::FromStr;
+use std::{path::PathBuf, str::FromStr};
 
 use api_boundary_nodes::ApiBoundaryNodes;
 use clap::{Parser, Subcommand};
@@ -57,7 +57,7 @@ pub struct Args {
 
     /// Path to key pem file
     #[clap(long, global = true, env = "PRIVATE_KEY_PEM")]
-    pub private_key_pem: Option<String>,
+    pub private_key_pem: Option<PathBuf>,
 
     /// Neuron ID
     #[clap(long, global = true, env = "NEURON_ID")]

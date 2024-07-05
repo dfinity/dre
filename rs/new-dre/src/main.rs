@@ -6,6 +6,7 @@ use commands::{
 use dotenv::dotenv;
 use log::{info, warn};
 
+mod auth;
 mod commands;
 mod ctx;
 
@@ -29,8 +30,6 @@ async fn main() -> anyhow::Result<()> {
         }
         return Ok(());
     }
-
-    let ctx = ctx::DreContext::from_args(args).await?;
 
     let handle = Upgrade {}.check();
     let maybe_update_status = handle.await?;
