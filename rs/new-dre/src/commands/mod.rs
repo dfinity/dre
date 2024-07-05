@@ -1,3 +1,4 @@
+use api_boundary_nodes::ApiBoundaryNodes;
 use clap::{Parser, Subcommand};
 use clap_num::maybe_hex;
 use der_to_principal::DerToPrincipal;
@@ -10,6 +11,7 @@ use update_unassigned_nodes::UpdateUnassignedNodes;
 use url::Url;
 use version::VersionCmd;
 
+mod api_boundary_nodes;
 mod der_to_principal;
 mod get;
 mod heal;
@@ -103,4 +105,7 @@ pub enum Subcommands {
 
     /// Manage nodes
     Nodes(Nodes),
+
+    /// Manage api boundary nodes
+    ApiBoundaryNodes(ApiBoundaryNodes),
 }
