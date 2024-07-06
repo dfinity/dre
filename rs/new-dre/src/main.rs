@@ -11,6 +11,8 @@ mod auth;
 mod commands;
 mod ctx;
 mod ic_admin;
+mod operations;
+mod runner;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
