@@ -36,6 +36,12 @@ impl Neuron {
         };
         Ok(Self { auth, neuron_id })
     }
+
+    pub fn as_arg_vec(&self) -> Vec<String> {
+        let mut args = self.auth.as_arg_vec();
+        args.extend(["--proposer".to_string(), self.neuron_id.to_string()]);
+        args
+    }
 }
 
 #[derive(Clone, Debug)]

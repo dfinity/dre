@@ -10,6 +10,7 @@ use log::{info, warn};
 mod auth;
 mod commands;
 mod ctx;
+mod ic_admin;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
