@@ -9,7 +9,7 @@ use ic_interfaces_registry::RegistryClient;
 use ic_management_backend::{
     health::{HealthClient, HealthStatusQuerier},
     public_dashboard::query_ic_dashboard_list,
-    registry::{RegistryFamilyEntries, RegistryState},
+    registry::RegistryFamilyEntries,
 };
 use ic_management_types::{Network, NodeProvidersResponse, Status};
 use ic_protobuf::registry::{
@@ -37,10 +37,6 @@ use super::ExecutableCommand;
 
 #[derive(Args, Debug)]
 pub struct Registry {
-    /// Version to dump. If value is less than 0 will dump the latest version
-    #[clap(long, default_value = "-1")]
-    pub version: i64,
-
     /// Output file (default is stdout)
     #[clap(short = 'o', long)]
     pub output: Option<PathBuf>,
@@ -48,10 +44,6 @@ pub struct Registry {
     /// Output only information related to the node operator records with incorrect rewards
     #[clap(long)]
     pub incorrect_rewards: bool,
-
-    /// Optional path to cached registry, can be used to inspect an arbitrary path
-    #[clap(long, env = "LOCAL_REGISTRY_PATH")]
-    pub local_registry_path: Option<PathBuf>,
 }
 
 impl ExecutableCommand for Registry {
@@ -73,12 +65,20 @@ impl ExecutableCommand for Registry {
             None => Box::new(std::io::stdout()),
         };
 
+        if self.incorrect_rewards {
+            let node_operators = Self::get_registry(ctx).await?;
+            let node_operators = node_operators.node_operators.iter().filter(|rec| !rec.rewards_correct).collect_vec();
+            serde_json::to_writer_pretty(writer, &node_operators)?;
+        } else {
+            serde_json::to_writer_pretty(writer, &Self::get_registry(ctx).await?)?;
+        }
+
         Ok(())
     }
 }
 
 impl Registry {
-    async fn get_registry(ctx: DreContext) -> Result<RegistryDump, anyhow::Error> {
+    async fn get_registry(ctx: DreContext) -> anyhow::Result<RegistryDump> {
         let registry = ctx.registry();
         let local_registry = registry.local_registry.as_ref();
 
@@ -103,11 +103,7 @@ impl Registry {
 
         let subnets = get_subnets(local_registry)?;
 
-        let unassigned_nodes_config = match get_unassigned_nodes(local_registry) {
-            Ok(config) => Some(config),
-            Err(RegistryDumpError::RecordNotFound) => None,
-            Err(e) => return Err(e.into()),
-        };
+        let unassigned_nodes_config = get_unassigned_nodes(local_registry)?;
 
         let nodes = get_nodes(local_registry, &node_operators, &subnets, ctx.network()).await?;
 
@@ -150,7 +146,7 @@ impl Registry {
     }
 }
 
-fn get_elected_guest_os_versions(local_registry: &LocalRegistry) -> Result<Vec<ReplicaVersionRecord>, RegistryDumpError> {
+fn get_elected_guest_os_versions(local_registry: &LocalRegistry) -> anyhow::Result<Vec<ReplicaVersionRecord>> {
     let elected_versions = local_registry
         .get_family_entries_versioned::<ReplicaVersionRecord>()
         .map_err(|e| anyhow::anyhow!("Couldn't get elected versions: {:?}", e))?
@@ -160,7 +156,7 @@ fn get_elected_guest_os_versions(local_registry: &LocalRegistry) -> Result<Vec<R
     Ok(elected_versions)
 }
 
-fn get_elected_host_os_versions(local_registry: &LocalRegistry) -> Result<Vec<HostosVersionRecord>, RegistryDumpError> {
+fn get_elected_host_os_versions(local_registry: &LocalRegistry) -> anyhow::Result<Vec<HostosVersionRecord>> {
     let elected_versions = local_registry
         .get_family_entries_versioned::<HostosVersionRecord>()
         .map_err(|e| anyhow::anyhow!("Couldn't get elected versions: {:?}", e))?
@@ -173,7 +169,7 @@ fn get_elected_host_os_versions(local_registry: &LocalRegistry) -> Result<Vec<Ho
 fn get_node_operators(
     local_registry: &LocalRegistry,
     node_provider_names: &HashMap<PrincipalId, String>,
-) -> Result<BTreeMap<PrincipalId, NodeOperator>, RegistryDumpError> {
+) -> anyhow::Result<BTreeMap<PrincipalId, NodeOperator>> {
     let all_nodes = local_registry
         .get_family_entries_versioned::<NodeRecord>()
         .map_err(|e| anyhow::anyhow!("Couldn't get nodes: {:?}", e))?
@@ -257,14 +253,13 @@ fn get_subnets(local_registry: &LocalRegistry) -> anyhow::Result<Vec<SubnetRecor
         .collect::<Vec<_>>())
 }
 
-fn get_unassigned_nodes(local_registry: &LocalRegistry) -> Result<UnassignedNodesConfigRecord, RegistryDumpError> {
+fn get_unassigned_nodes(local_registry: &LocalRegistry) -> anyhow::Result<Option<UnassignedNodesConfigRecord>> {
     let unassigned_nodes_config = local_registry
         .get_family_entries_versioned::<UnassignedNodesConfigRecord>()
         .map_err(|e| anyhow::anyhow!("Couldn't get unassigned nodes config: {:?}", e))?
         .into_iter()
         .map(|(_, (_, record))| record)
-        .next()
-        .ok_or(RegistryDumpError::RecordNotFound)?;
+        .next();
     Ok(unassigned_nodes_config)
 }
 
@@ -273,7 +268,7 @@ async fn get_nodes(
     node_operators: &BTreeMap<PrincipalId, NodeOperator>,
     subnets: &[SubnetRecord],
     network: &Network,
-) -> Result<Vec<NodeDetails>, RegistryDumpError> {
+) -> anyhow::Result<Vec<NodeDetails>> {
     let health_client = HealthClient::new(network.clone());
     let nodes_health = health_client.nodes().await?;
 
@@ -339,7 +334,7 @@ fn get_node_rewards_table(local_registry: &LocalRegistry, network: &Network) -> 
     decode_registry_value::<NodeRewardsTableFlattened>(rewards_table_bytes)
 }
 
-fn get_api_boundary_nodes(local_registry: &LocalRegistry) -> Result<Vec<ApiBoundaryNodeDetails>, RegistryDumpError> {
+fn get_api_boundary_nodes(local_registry: &LocalRegistry) -> anyhow::Result<Vec<ApiBoundaryNodeDetails>> {
     let api_bns = local_registry
         .get_family_entries_versioned::<ApiBoundaryNodeRecord>()
         .map_err(|e| anyhow::anyhow!("Couldn't get api boundary nodes: {:?}", e))?
@@ -459,62 +454,4 @@ pub struct NodeRewardsTableFlattened {
     #[prost(btree_map = "string, message", tag = "1")]
     #[serde(flatten)]
     pub table: BTreeMap<String, NodeRewardRatesFlattened>,
-}
-
-enum RegistryDumpError {
-    RegistryClientError(ic_types::registry::RegistryClientError),
-    LocalRegistryError(ic_registry_local_registry::LocalRegistryError),
-    IoError(std::io::Error),
-    SerdeError(serde_json::Error),
-    GenericError(String),
-    RecordNotFound,
-}
-
-impl From<ic_types::registry::RegistryClientError> for RegistryDumpError {
-    fn from(e: ic_types::registry::RegistryClientError) -> Self {
-        RegistryDumpError::RegistryClientError(e)
-    }
-}
-
-impl From<ic_registry_local_registry::LocalRegistryError> for RegistryDumpError {
-    fn from(e: ic_registry_local_registry::LocalRegistryError) -> Self {
-        RegistryDumpError::LocalRegistryError(e)
-    }
-}
-
-impl From<std::io::Error> for RegistryDumpError {
-    fn from(e: std::io::Error) -> Self {
-        RegistryDumpError::IoError(e)
-    }
-}
-
-impl From<serde_json::Error> for RegistryDumpError {
-    fn from(e: serde_json::Error) -> Self {
-        RegistryDumpError::SerdeError(e)
-    }
-}
-
-impl From<String> for RegistryDumpError {
-    fn from(e: String) -> Self {
-        RegistryDumpError::GenericError(e)
-    }
-}
-
-impl From<anyhow::Error> for RegistryDumpError {
-    fn from(e: anyhow::Error) -> Self {
-        RegistryDumpError::GenericError(e.to_string())
-    }
-}
-
-impl From<RegistryDumpError> for anyhow::Error {
-    fn from(e: RegistryDumpError) -> Self {
-        match e {
-            RegistryDumpError::RegistryClientError(e) => anyhow::anyhow!("Registry client error: {:?}", e),
-            RegistryDumpError::LocalRegistryError(e) => anyhow::anyhow!("Registry error: {:?}", e),
-            RegistryDumpError::IoError(e) => anyhow::anyhow!("IO error: {:?}", e),
-            RegistryDumpError::SerdeError(e) => anyhow::anyhow!("Serde error: {:?}", e),
-            RegistryDumpError::GenericError(e) => anyhow::anyhow!("Generic error: {:?}", e),
-            RegistryDumpError::RecordNotFound => anyhow::anyhow!("Record not found"),
-        }
-    }
 }

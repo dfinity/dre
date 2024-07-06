@@ -1,4 +1,3 @@
-use std::cell::RefCell;
 use std::fs::read_to_string;
 use std::{path::PathBuf, str::FromStr};
 
@@ -15,8 +14,6 @@ use ic_nns_governance::pb::v1::{ListNeurons, ListNeuronsResponse};
 use ic_sys::utility_command::UtilityCommand;
 use keyring::{Entry, Error};
 use log::info;
-
-use crate::ctx::DreContext;
 
 pub struct Neuron {
     pub auth: Auth,

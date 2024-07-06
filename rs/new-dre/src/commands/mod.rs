@@ -1,4 +1,4 @@
-use std::{path::PathBuf, str::FromStr};
+use std::path::PathBuf;
 
 use api_boundary_nodes::ApiBoundaryNodes;
 use clap::{Parser, Subcommand};
@@ -8,8 +8,6 @@ use firewall::Firewall;
 use get::Get;
 use heal::Heal;
 use hostos::HostOsCmd;
-use ic_canisters::governance::governance_canister_version;
-use ic_management_types::Network;
 use nodes::Nodes;
 use proposals::Proposals;
 use propose::Propose;
@@ -156,6 +154,10 @@ pub trait ExecutableCommand {
 
 impl ExecutableCommand for Args {
     fn require_neuron(&self) -> bool {
+        if self.dry_run {
+            return false;
+        }
+
         match &self.subcommands {
             Subcommands::DerToPrincipal(c) => c.require_neuron(),
             Subcommands::Heal(c) => c.require_neuron(),

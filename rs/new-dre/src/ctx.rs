@@ -1,4 +1,4 @@
-use std::{cell::RefCell, path::PathBuf, rc::Rc, str::FromStr};
+use std::{path::PathBuf, str::FromStr};
 
 use ic_canisters::governance::governance_canister_version;
 use ic_management_backend::{
@@ -56,7 +56,6 @@ impl DreContext {
             false => None,
         };
 
-        let govn_canister_version = governance_canister_version(nns_urls).await.map_err(|e| anyhow::anyhow!(e))?;
         Ok(Self { network, registry, neuron })
     }
 
