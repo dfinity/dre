@@ -1,11 +1,16 @@
 use clap::Args;
+use ic_canisters::governance::GovernanceCanisterWrapper;
+use ic_nns_common::pb::v1::ProposalId;
+use itertools::Itertools;
+use log::{error, info, warn};
+use strum::IntoEnumIterator;
 
 use std::fmt::Display;
 
 use clap::ValueEnum;
-use ic_nns_governance::pb::v1::{ProposalStatus as ProposalStatusUpstream, Topic as TopicUpstream};
+use ic_nns_governance::pb::v1::{ListProposalInfo, ProposalStatus as ProposalStatusUpstream, Topic as TopicUpstream};
 
-use crate::commands::ExecutableCommand;
+use crate::commands::{proposals::Proposal, ExecutableCommand};
 #[derive(Args, Debug)]
 pub struct Filter {
     /// Limit on the number of \[ProposalInfo\] to return. If value greater than
@@ -215,6 +220,86 @@ impl ExecutableCommand for Filter {
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
+        let client = GovernanceCanisterWrapper::from(ctx.create_canister_client()?);
+
+        let exclude_topic = match self.topics.is_empty() {
+            true => vec![],
+            false => {
+                let mut all_topics = TopicUpstream::iter().collect_vec();
+                for topic in self.topics.iter().map(|f| f.clone().into()).collect::<Vec<TopicUpstream>>() {
+                    all_topics.retain(|t| *t != topic);
+                }
+                all_topics
+            }
+        };
+        let statuses = self.statuses.iter().map(|f| f.clone().into()).collect::<Vec<ProposalStatusUpstream>>();
+
+        let mut remaining = self.limit;
+        let mut proposals: Vec<Proposal> = vec![];
+        let mut payload = ListProposalInfo {
+            before_proposal: None,
+            exclude_topic: exclude_topic.clone().into_iter().map(|t| t.into()).collect_vec(),
+            include_status: statuses.clone().into_iter().map(|s| s.into()).collect_vec(),
+            include_all_manage_neuron_proposals: Some(true),
+            ..Default::default()
+        };
+        info!(
+            "Querying {} proposals where status is {} and topic is {}",
+            self.limit,
+            match statuses.is_empty() {
+                true => "any".to_string(),
+                false => format!("{:?}", statuses),
+            },
+            match exclude_topic.is_empty() {
+                true => "any".to_string(),
+                false => format!("not in {:?}", exclude_topic),
+            }
+        );
+
+        loop {
+            let current_batch = client
+                .list_proposals(payload)
+                .await?
+                .into_iter()
+                .filter_map(|p| match p.clone().try_into() {
+                    Ok(p) => Some(p),
+                    Err(e) => {
+                        error!("Error converting proposal info {:?}: {:?}", p, e);
+                        None
+                    }
+                })
+                .sorted_by(|a: &Proposal, b: &Proposal| b.id.cmp(&a.id))
+                .collect_vec();
+            payload = ListProposalInfo {
+                before_proposal: current_batch.clone().last().map(|p| ProposalId { id: p.id }),
+                exclude_topic: exclude_topic.clone().into_iter().map(|t| t.into()).collect_vec(),
+                include_status: statuses.clone().into_iter().map(|s| s.into()).collect_vec(),
+                include_all_manage_neuron_proposals: Some(true),
+                ..Default::default()
+            };
+
+            if current_batch.len() > remaining as usize {
+                let current_batch = current_batch.into_iter().take(remaining as usize).collect_vec();
+                remaining = 0;
+                proposals.extend(current_batch)
+            } else {
+                remaining -= current_batch.len() as u32;
+                proposals.extend(current_batch)
+            }
+
+            info!("Remaining after iteration: {}", remaining);
+
+            if remaining == 0 {
+                break;
+            }
+
+            if payload.before_proposal.is_none() {
+                warn!("No more proposals available and there is {} remaining to find", remaining);
+                break;
+            }
+        }
+
+        println!("{}", serde_json::to_string_pretty(&proposals)?);
         Ok(())
     }
 }
