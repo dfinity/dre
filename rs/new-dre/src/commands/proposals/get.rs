@@ -1,4 +1,5 @@
 use clap::Args;
+use ic_canisters::governance::GovernanceCanisterWrapper;
 
 use crate::commands::ExecutableCommand;
 
@@ -18,6 +19,9 @@ impl ExecutableCommand for Get {
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
+        let client = GovernanceCanisterWrapper::from(ctx.create_canister_client()?);
+        let proposal = client.get_proposal(self.proposal_id).await?;
+        println!("{}", serde_json::to_string_pretty(&proposal)?);
         Ok(())
     }
 }
