@@ -15,6 +15,7 @@ use ic_sys::utility_command::UtilityCommand;
 use keyring::{Entry, Error};
 use log::info;
 
+#[derive(Clone)]
 pub struct Neuron {
     pub auth: Auth,
     pub neuron_id: u64,

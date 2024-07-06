@@ -18,16 +18,17 @@ use itertools::Itertools;
 use log::{info, warn};
 use registry_canister::mutations::do_change_subnet_membership::ChangeSubnetMembershipPayload;
 use std::collections::BTreeMap;
+use std::rc::Rc;
 use tabled::builder::Builder;
 use tabled::settings::Style;
 
 pub struct Runner {
-    pub ic_admin: ic_admin::IcAdminWrapper,
-    registry_instance: RegistryState,
+    pub ic_admin: Rc<ic_admin::IcAdminWrapper>,
+    registry_instance: Rc<RegistryState>,
 }
 
 impl Runner {
-    pub fn new(ic_admin: ic_admin::IcAdminWrapper, registry_instance: RegistryState) -> Self {
+    pub fn new(ic_admin: Rc<ic_admin::IcAdminWrapper>, registry_instance: Rc<RegistryState>) -> Self {
         Self { ic_admin, registry_instance }
     }
 

@@ -26,6 +26,7 @@ use std::fmt;
 use std::fs::File;
 use std::io::{Read, Write};
 use std::os::unix::fs::PermissionsExt;
+use std::path::PathBuf;
 use std::process::Stdio;
 use std::time::Duration;
 use std::{fmt::Display, path::Path, process::Command};
@@ -144,11 +145,12 @@ pub struct UpdateVersion {
     pub versions_to_retire: Option<Vec<String>>,
 }
 
+#[derive(Clone)]
 pub struct IcAdminWrapper {
     network: Network,
     ic_admin_bin_path: Option<String>,
     proceed_without_confirmation: bool,
-    neuron: Neuron,
+    pub neuron: Neuron,
 }
 
 impl IcAdminWrapper {
@@ -1002,7 +1004,7 @@ pub struct ProposeOptions {
 const DEFAULT_IC_ADMIN_VERSION: &str = "778d2bb870f858952ca9fbe69324f9864e3cf5e7";
 
 /// Returns a path to downloaded ic-admin binary
-async fn download_ic_admin(version: Option<String>) -> Result<String> {
+pub async fn download_ic_admin(version: Option<String>) -> Result<String> {
     let version = version.unwrap_or_else(|| DEFAULT_IC_ADMIN_VERSION.to_string()).trim().to_string();
     let home_dir = dirs::home_dir()
         .and_then(|d| d.to_str().map(|s| s.to_string()))
