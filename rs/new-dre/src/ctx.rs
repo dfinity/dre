@@ -1,6 +1,6 @@
 use std::{path::PathBuf, str::FromStr};
 
-use ic_canisters::{governance::governance_canister_version, CanisterClient};
+use ic_canisters::CanisterClient;
 use ic_management_backend::{
     public_dashboard::query_ic_dashboard_list,
     registry::{fetch_and_add_node_labels_guests_to_registry, RegistryState},

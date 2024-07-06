@@ -5,12 +5,12 @@ use filter::Filter;
 use get::Get;
 use ic_nervous_system_clients::canister_id_record::CanisterIdRecord;
 use ic_nervous_system_root::change_canister::{AddCanisterRequest, ChangeCanisterRequest, StopOrStartCanisterRequest};
-use ic_nns_common::{pb::v1::ProposalId, types::UpdateIcpXdrConversionRatePayload};
+use ic_nns_common::types::UpdateIcpXdrConversionRatePayload;
 
 use cycles_minting_canister::SetAuthorizedSubnetworkListArgs;
 use ic_nns_governance::{
     governance::{BitcoinSetConfigProposal, SubnetRentalRequest},
-    pb::v1::{proposal::Action, ListProposalInfo, ProposalInfo, ProposalStatus, Topic},
+    pb::v1::{proposal::Action, ProposalInfo, ProposalStatus, Topic},
 };
 use ic_protobuf::registry::{
     dc::v1::AddOrRemoveDataCentersProposalPayload, node_operator::v1::RemoveNodeOperatorsPayload,
