@@ -154,10 +154,6 @@ pub trait ExecutableCommand {
 
 impl ExecutableCommand for Args {
     fn require_neuron(&self) -> bool {
-        if self.dry_run {
-            return false;
-        }
-
         match &self.subcommands {
             Subcommands::DerToPrincipal(c) => c.require_neuron(),
             Subcommands::Heal(c) => c.require_neuron(),
