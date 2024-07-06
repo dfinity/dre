@@ -2,7 +2,7 @@ use clap::Args;
 use ic_types::PrincipalId;
 
 use crate::{
-    commands::{ExecutableCommand, RegistryRequirement},
+    commands::{ExecutableCommand, NeuronRequirement, RegistryRequirement},
     ic_admin,
 };
 
@@ -18,8 +18,8 @@ pub struct Remove {
 }
 
 impl ExecutableCommand for Remove {
-    fn require_neuron(&self) -> bool {
-        true
+    fn require_neuron(&self) -> NeuronRequirement {
+        NeuronRequirement::Detect
     }
 
     fn require_registry(&self) -> RegistryRequirement {

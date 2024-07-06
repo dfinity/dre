@@ -11,7 +11,7 @@ use ic_registry_local_registry::LocalRegistry;
 
 use crate::{
     auth::Neuron,
-    commands::{Args, ExecutableCommand, RegistryRequirement},
+    commands::{Args, ExecutableCommand, NeuronRequirement, RegistryRequirement},
     ic_admin::{download_ic_admin, IcAdminWrapper},
     runner::Runner,
 };
@@ -20,7 +20,7 @@ const STAGING_NEURON_ID: u64 = 49;
 pub struct DreContext {
     network: Network,
     registry: Option<Rc<Registry>>,
-    ic_admin: Option<Rc<IcAdminWrapper>>,
+    ic_admin: IcAdminWrapper,
 }
 
 pub enum Registry {
@@ -53,22 +53,18 @@ impl DreContext {
             }
         };
 
-        let ic_admin = match args.require_neuron() {
-            true => Some(Rc::new(
-                Self::init_ic_admin(
-                    &network,
-                    neuron_id,
-                    private_key_pem,
-                    args.hsm_slot,
-                    args.hsm_key_id.clone(),
-                    args.hsm_pin.clone(),
-                    args.yes,
-                    args.dry_run,
-                )
-                .await?,
-            )),
-            false => None,
-        };
+        let ic_admin = Self::init_ic_admin(
+            &network,
+            neuron_id,
+            private_key_pem,
+            args.hsm_slot,
+            args.hsm_key_id.clone(),
+            args.hsm_pin.clone(),
+            args.yes,
+            args.dry_run,
+            args.require_neuron(),
+        )
+        .await?;
 
         let registry = Self::init_registry(&network, args.require_registry()).await?;
 
@@ -84,8 +80,16 @@ impl DreContext {
         hsm_pin: Option<String>,
         proceed_without_confirmation: bool,
         dry_run: bool,
+        requirement: NeuronRequirement,
     ) -> anyhow::Result<IcAdminWrapper> {
-        let neuron = Neuron::new(private_key_pem, hsm_slot, hsm_pin.clone(), hsm_key_id.clone(), neuron_id, &network).await?;
+        let neuron = match requirement {
+            NeuronRequirement::Anonymous => Neuron {
+                auth: crate::auth::Auth::Anonymous,
+                neuron_id: 0,
+            },
+            NeuronRequirement::Detect => Neuron::new(private_key_pem, hsm_slot, hsm_pin.clone(), hsm_key_id.clone(), neuron_id, &network).await?,
+            NeuronRequirement::Hardcoded => Neuron::new(private_key_pem, hsm_slot, hsm_pin.clone(), hsm_key_id.clone(), neuron_id, &network).await?,
+        };
 
         let govn_canister_version = governance_canister_version(network.get_nns_urls()).await?;
         let ic_admin_path = download_ic_admin(Some(govn_canister_version.stringified_hash)).await?;
@@ -154,20 +158,15 @@ impl DreContext {
     pub fn create_canister_client(&self) -> anyhow::Result<CanisterClient> {
         let nns_url = self.network.get_nns_urls().first().expect("Should have at least one NNS url");
 
-        match &self.ic_admin {
-            Some(a) => match &a.neuron.auth {
-                crate::auth::Auth::Hsm { pin, slot, key_id } => CanisterClient::from_hsm(pin.clone(), *slot, key_id.clone(), nns_url),
-                crate::auth::Auth::Keyfile { path } => CanisterClient::from_key_file(path.clone(), nns_url),
-            },
-            None => CanisterClient::from_anonymous(nns_url),
+        match &self.ic_admin.neuron.auth {
+            crate::auth::Auth::Hsm { pin, slot, key_id } => CanisterClient::from_hsm(pin.clone(), *slot, key_id.clone(), nns_url),
+            crate::auth::Auth::Keyfile { path } => CanisterClient::from_key_file(path.clone(), nns_url),
+            crate::auth::Auth::Anonymous => CanisterClient::from_anonymous(nns_url),
         }
     }
 
-    pub fn ic_admin(&self) -> Rc<IcAdminWrapper> {
-        match &self.ic_admin {
-            Some(a) => a.clone(),
-            None => panic!("This command is configured to not require ic-admin"),
-        }
+    pub fn ic_admin(&self) -> IcAdminWrapper {
+        self.ic_admin.clone()
     }
 
     pub fn runner(&self) -> Runner {

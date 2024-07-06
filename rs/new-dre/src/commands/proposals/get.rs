@@ -1,7 +1,7 @@
 use clap::Args;
 use ic_canisters::governance::GovernanceCanisterWrapper;
 
-use crate::commands::{ExecutableCommand, RegistryRequirement};
+use crate::commands::{ExecutableCommand, NeuronRequirement, RegistryRequirement};
 
 #[derive(Args, Debug)]
 pub struct Get {
@@ -10,8 +10,8 @@ pub struct Get {
 }
 
 impl ExecutableCommand for Get {
-    fn require_neuron(&self) -> bool {
-        false
+    fn require_neuron(&self) -> NeuronRequirement {
+        NeuronRequirement::Anonymous
     }
 
     fn require_registry(&self) -> RegistryRequirement {

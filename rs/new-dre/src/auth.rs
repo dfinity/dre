@@ -49,6 +49,7 @@ impl Neuron {
 pub enum Auth {
     Hsm { pin: String, slot: u64, key_id: String },
     Keyfile { path: PathBuf },
+    Anonymous,
 }
 
 fn pkcs11_lib_path() -> anyhow::Result<PathBuf> {
@@ -76,6 +77,7 @@ impl Auth {
                 key_id.clone(),
             ],
             Auth::Keyfile { path } => vec!["--secret-key-pem".to_string(), path.to_string_lossy().to_string()],
+            Auth::Anonymous => vec![],
         }
     }
 
@@ -155,6 +157,7 @@ impl Auth {
                 let sig_keys = SigKeys::from_pem(&contents).expect("Failed to parse pem file");
                 Sender::SigKeys(sig_keys)
             }
+            Auth::Anonymous => Sender::Anonymous,
         };
         let agent = Agent::new(nns_urls[0].clone(), sender);
         if let Some(response) = agent

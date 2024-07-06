@@ -3,7 +3,7 @@ use std::time::Duration;
 use clap::Args;
 use humantime::parse_duration;
 
-use super::{ExecutableCommand, RegistryRequirement};
+use super::{ExecutableCommand, NeuronRequirement, RegistryRequirement};
 
 #[derive(Args, Debug)]
 pub struct Vote {
@@ -36,8 +36,8 @@ pub struct Vote {
 }
 
 impl ExecutableCommand for Vote {
-    fn require_neuron(&self) -> bool {
-        true
+    fn require_neuron(&self) -> NeuronRequirement {
+        NeuronRequirement::Detect
     }
 
     fn require_registry(&self) -> RegistryRequirement {

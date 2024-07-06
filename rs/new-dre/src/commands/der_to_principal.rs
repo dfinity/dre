@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use clap::Args;
 
-use super::{ExecutableCommand, RegistryRequirement};
+use super::{ExecutableCommand, NeuronRequirement, RegistryRequirement};
 
 #[derive(Args, Debug)]
 pub struct DerToPrincipal {
@@ -11,8 +11,8 @@ pub struct DerToPrincipal {
 }
 
 impl ExecutableCommand for DerToPrincipal {
-    fn require_neuron(&self) -> bool {
-        false
+    fn require_neuron(&self) -> NeuronRequirement {
+        NeuronRequirement::Anonymous
     }
 
     fn require_registry(&self) -> RegistryRequirement {

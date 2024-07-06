@@ -1,6 +1,6 @@
 use clap::Args;
 
-use super::{ExecutableCommand, RegistryRequirement};
+use super::{ExecutableCommand, NeuronRequirement, RegistryRequirement};
 
 #[derive(Args, Debug)]
 pub struct UpdateUnassignedNodes {
@@ -10,8 +10,8 @@ pub struct UpdateUnassignedNodes {
 }
 
 impl ExecutableCommand for UpdateUnassignedNodes {
-    fn require_neuron(&self) -> bool {
-        true
+    fn require_neuron(&self) -> NeuronRequirement {
+        NeuronRequirement::Hardcoded
     }
 
     fn require_registry(&self) -> RegistryRequirement {

@@ -1,6 +1,6 @@
 use clap::{Args, ValueEnum};
 
-use crate::commands::{ExecutableCommand, RegistryRequirement};
+use crate::commands::{ExecutableCommand, NeuronRequirement, RegistryRequirement};
 
 #[derive(ValueEnum, Copy, Clone, Debug, Ord, Eq, PartialEq, PartialOrd, Default)]
 pub enum NodeOwner {
@@ -71,8 +71,8 @@ supported values are absolute numbers (10) or percentage (10%)"#
 }
 
 impl ExecutableCommand for RolloutFromNodeGroup {
-    fn require_neuron(&self) -> bool {
-        true
+    fn require_neuron(&self) -> NeuronRequirement {
+        NeuronRequirement::Detect
     }
 
     fn require_registry(&self) -> RegistryRequirement {

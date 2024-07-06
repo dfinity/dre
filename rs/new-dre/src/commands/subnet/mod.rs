@@ -6,7 +6,7 @@ use replace::Replace;
 use rescue::Rescue;
 use resize::Resize;
 
-use super::{ExecutableCommand, RegistryRequirement};
+use super::{ExecutableCommand, NeuronRequirement, RegistryRequirement};
 
 mod create;
 mod deploy;
@@ -43,7 +43,7 @@ pub enum SubnetSubcommand {
 }
 
 impl ExecutableCommand for SubnetCommand {
-    fn require_neuron(&self) -> bool {
+    fn require_neuron(&self) -> NeuronRequirement {
         match &self.subcommand {
             SubnetSubcommand::Deploy(d) => d.require_neuron(),
             SubnetSubcommand::Replace(r) => r.require_neuron(),

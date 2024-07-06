@@ -2,7 +2,7 @@ use clap::{Args, Subcommand};
 use rollout::Rollout;
 use rollout_from_node_group::RolloutFromNodeGroup;
 
-use super::{ExecutableCommand, RegistryRequirement};
+use super::{ExecutableCommand, NeuronRequirement, RegistryRequirement};
 
 mod rollout;
 pub mod rollout_from_node_group;
@@ -28,7 +28,7 @@ already elected."#)]
 }
 
 impl ExecutableCommand for HostOsCmd {
-    fn require_neuron(&self) -> bool {
+    fn require_neuron(&self) -> NeuronRequirement {
         match &self.subcommand {
             HostOsSubcommands::Rollout(r) => r.require_neuron(),
             HostOsSubcommands::RolloutFromNodeGroup(r) => r.require_neuron(),

@@ -1,7 +1,7 @@
 use clap::Args;
 use ic_types::PrincipalId;
 
-use super::{ExecutableCommand, RegistryRequirement};
+use super::{ExecutableCommand, NeuronRequirement, RegistryRequirement};
 
 #[derive(Args, Debug)]
 pub struct TrustworthyMetrics {
@@ -18,8 +18,8 @@ pub struct TrustworthyMetrics {
 }
 
 impl ExecutableCommand for TrustworthyMetrics {
-    fn require_neuron(&self) -> bool {
-        true
+    fn require_neuron(&self) -> NeuronRequirement {
+        NeuronRequirement::Detect
     }
 
     fn require_registry(&self) -> RegistryRequirement {
