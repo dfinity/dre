@@ -1,6 +1,6 @@
 use std::{path::PathBuf, str::FromStr};
 
-use ic_canisters::governance::governance_canister_version;
+use ic_canisters::{governance::governance_canister_version, CanisterClient};
 use ic_management_backend::{
     public_dashboard::query_ic_dashboard_list,
     registry::{fetch_and_add_node_labels_guests_to_registry, RegistryState},
@@ -92,5 +92,17 @@ impl DreContext {
 
     pub fn network(&self) -> &Network {
         &self.network
+    }
+
+    pub fn create_canister_client(&self) -> anyhow::Result<CanisterClient> {
+        let nns_url = self.network.get_nns_urls().first().expect("Should have at least one NNS url");
+
+        match &self.neuron {
+            Some(n) => match &n.auth {
+                crate::auth::Auth::Hsm { pin, slot, key_id } => CanisterClient::from_hsm(pin.clone(), *slot, key_id.clone(), nns_url),
+                crate::auth::Auth::Keyfile { path } => CanisterClient::from_key_file(path.clone(), nns_url),
+            },
+            None => CanisterClient::from_anonymous(nns_url),
+        }
     }
 }
