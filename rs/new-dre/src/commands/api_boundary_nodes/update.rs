@@ -1,7 +1,10 @@
 use clap::Args;
 use ic_types::PrincipalId;
 
-use crate::commands::{ExecutableCommand, RegistryRequirement};
+use crate::{
+    commands::{ExecutableCommand, RegistryRequirement},
+    ic_admin,
+};
 
 #[derive(Args, Debug)]
 pub struct Update {
@@ -27,6 +30,22 @@ impl ExecutableCommand for Update {
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
+        let ic_admin = ctx.ic_admin();
+
+        ic_admin
+            .propose_run(
+                ic_admin::ProposeCommand::DeployGuestosToSomeApiBoundaryNodes {
+                    nodes: self.nodes.to_vec(),
+                    version: self.version.to_string(),
+                },
+                ic_admin::ProposeOptions {
+                    title: Some(format!("Update {} API boundary node(s) to {}", self.nodes.len(), &self.version)),
+                    summary: Some(format!("Update {} API boundary node(s) to {}", self.nodes.len(), &self.version)),
+                    motivation: self.motivation.clone(),
+                },
+            )
+            .await?;
+
         Ok(())
     }
 }

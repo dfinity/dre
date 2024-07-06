@@ -63,6 +63,7 @@ impl DreContext {
                     args.hsm_key_id.clone(),
                     args.hsm_pin.clone(),
                     args.yes,
+                    args.dry_run,
                 )
                 .await?,
             )),
@@ -82,13 +83,14 @@ impl DreContext {
         hsm_key_id: Option<String>,
         hsm_pin: Option<String>,
         proceed_without_confirmation: bool,
+        dry_run: bool,
     ) -> anyhow::Result<IcAdminWrapper> {
         let neuron = Neuron::new(private_key_pem, hsm_slot, hsm_pin.clone(), hsm_key_id.clone(), neuron_id, &network).await?;
 
         let govn_canister_version = governance_canister_version(network.get_nns_urls()).await?;
         let ic_admin_path = download_ic_admin(Some(govn_canister_version.stringified_hash)).await?;
 
-        let ic_admin = IcAdminWrapper::new(network.clone(), Some(ic_admin_path), proceed_without_confirmation, neuron);
+        let ic_admin = IcAdminWrapper::new(network.clone(), Some(ic_admin_path), proceed_without_confirmation, neuron, dry_run);
 
         Ok(ic_admin)
     }

@@ -32,7 +32,7 @@ impl Runner {
         Self { ic_admin, registry_instance }
     }
 
-    pub async fn deploy(&self, subnet: &PrincipalId, version: &str, dry_run: bool) -> anyhow::Result<()> {
+    pub async fn deploy(&self, subnet: &PrincipalId, version: &str) -> anyhow::Result<()> {
         self.ic_admin
             .propose_run(
                 ic_admin::ProposeCommand::DeployGuestosToAllSubnetNodes {
@@ -44,7 +44,6 @@ impl Runner {
                     summary: format!("Update subnet {subnet} to GuestOS version {version}").into(),
                     motivation: None,
                 },
-                dry_run,
             )
             .await
             .map_err(|e| anyhow::anyhow!(e))?;
@@ -57,7 +56,6 @@ impl Runner {
         request: ic_management_types::requests::SubnetResizeRequest,
         motivation: String,
         verbose: bool,
-        dry_run: bool,
     ) -> anyhow::Result<()> {
         let subnet = request.subnet;
         let change = self
@@ -81,8 +79,7 @@ impl Runner {
             return Ok(());
         }
         if change.added.len() == change.removed.len() {
-            self.run_membership_change(change.clone(), replace_proposal_options(&change)?, dry_run)
-                .await
+            self.run_membership_change(change.clone(), replace_proposal_options(&change)?).await
         } else {
             let action = if change.added.len() < change.removed.len() {
                 "Removing nodes from"
@@ -96,7 +93,6 @@ impl Runner {
                     summary: format!("{action} subnet {subnet}").into(),
                     motivation: motivation.clone().into(),
                 },
-                dry_run,
             )
             .await
         }
@@ -107,7 +103,6 @@ impl Runner {
         request: ic_management_types::requests::SubnetCreateRequest,
         motivation: String,
         verbose: bool,
-        dry_run: bool,
         replica_version: Option<String>,
         other_args: Vec<String>,
         help_other_args: bool,
@@ -155,13 +150,12 @@ impl Runner {
                     summary: Some("# Creating new subnet with nodes: ".into()),
                     motivation: Some(motivation.clone()),
                 },
-                dry_run,
             )
             .await?;
         Ok(())
     }
 
-    pub async fn propose_subnet_change(&self, change: SubnetChangeResponse, verbose: bool, dry_run: bool) -> anyhow::Result<()> {
+    pub async fn propose_subnet_change(&self, change: SubnetChangeResponse, verbose: bool) -> anyhow::Result<()> {
         if verbose {
             if let Some(run_log) = &change.run_log {
                 println!("{}\n", run_log.join("\n"));
@@ -172,11 +166,10 @@ impl Runner {
         if change.added.is_empty() && change.removed.is_empty() {
             return Ok(());
         }
-        self.run_membership_change(change.clone(), replace_proposal_options(&change)?, dry_run)
-            .await
+        self.run_membership_change(change.clone(), replace_proposal_options(&change)?).await
     }
 
-    async fn run_membership_change(&self, change: SubnetChangeResponse, options: ProposeOptions, dry_run: bool) -> anyhow::Result<()> {
+    async fn run_membership_change(&self, change: SubnetChangeResponse, options: ProposeOptions) -> anyhow::Result<()> {
         let subnet_id = change.subnet_id.ok_or_else(|| anyhow::anyhow!("subnet_id is required"))?;
         let pending_action = self
             .registry_instance
@@ -201,7 +194,6 @@ impl Runner {
                     node_ids_remove: change.removed.clone(),
                 },
                 options,
-                dry_run,
             )
             .await
             .map_err(|e| anyhow::anyhow!(e))?;
@@ -361,7 +353,7 @@ impl Runner {
             }
         }
     }
-    pub async fn hostos_rollout(&self, nodes: Vec<PrincipalId>, version: &str, dry_run: bool, maybe_summary: Option<String>) -> anyhow::Result<()> {
+    pub async fn hostos_rollout(&self, nodes: Vec<PrincipalId>, version: &str, maybe_summary: Option<String>) -> anyhow::Result<()> {
         let title = format!("Set HostOS version: {version} on {} nodes", nodes.clone().len());
         self.ic_admin
             .propose_run(
@@ -374,7 +366,6 @@ impl Runner {
                     summary: maybe_summary.unwrap_or(title).into(),
                     motivation: None,
                 },
-                dry_run,
             )
             .await
             .map_err(|e| anyhow::anyhow!(e))?;
@@ -389,7 +380,7 @@ impl Runner {
         Ok(())
     }
 
-    pub async fn remove_nodes(&self, nodes_remover: NodesRemover, dry_run: bool) -> anyhow::Result<()> {
+    pub async fn remove_nodes(&self, nodes_remover: NodesRemover) -> anyhow::Result<()> {
         let health_client = health::HealthClient::new(self.registry_instance.network());
         let (healths, nodes_with_proposals) = try_join(health_client.nodes(), self.registry_instance.nodes_with_proposals()).await?;
         let (mut node_removals, motivation) = nodes_remover.remove_nodes(healths, nodes_with_proposals);
@@ -433,13 +424,12 @@ impl Runner {
                     summary: "Remove nodes from the network".to_string().into(),
                     motivation: motivation.into(),
                 },
-                dry_run,
             )
             .await?;
         Ok(())
     }
 
-    pub async fn network_heal(&self, max_replaceable_nodes_per_sub: Option<usize>, _verbose: bool, simulate: bool) -> Result<(), anyhow::Error> {
+    pub async fn network_heal(&self, max_replaceable_nodes_per_sub: Option<usize>, _verbose: bool) -> Result<(), anyhow::Error> {
         let health_client = health::HealthClient::new(self.registry_instance.network());
         let subnets = self.registry_instance.subnets();
         let (available_nodes, healths) = try_join(
@@ -454,16 +444,12 @@ impl Runner {
         subnets_change_response.iter().for_each(|change| println!("{}", change));
 
         let errors = join_all(subnets_change_response.iter().map(|subnet_change_response| async move {
-            self.run_membership_change(
-                subnet_change_response.clone(),
-                replace_proposal_options(subnet_change_response)?,
-                simulate,
-            )
-            .await
-            .map_err(|e| {
-                println!("{}", e);
-                e
-            })
+            self.run_membership_change(subnet_change_response.clone(), replace_proposal_options(subnet_change_response)?)
+                .await
+                .map_err(|e| {
+                    println!("{}", e);
+                    e
+                })
         }))
         .await
         .into_iter()
@@ -504,7 +490,7 @@ impl Runner {
         Ok(())
     }
 
-    pub async fn subnet_rescue(&self, subnet: &PrincipalId, keep_nodes: Option<Vec<String>>, dry_run: bool) -> anyhow::Result<()> {
+    pub async fn subnet_rescue(&self, subnet: &PrincipalId, keep_nodes: Option<Vec<String>>) -> anyhow::Result<()> {
         let change_request = self
             .registry_instance
             .modify_subnet_nodes(SubnetQueryBy::SubnetId(*subnet))
@@ -524,8 +510,7 @@ impl Runner {
             return Ok(());
         }
 
-        self.run_membership_change(change.clone(), replace_proposal_options(&change)?, dry_run)
-            .await
+        self.run_membership_change(change.clone(), replace_proposal_options(&change)?).await
     }
 }
 

@@ -1,7 +1,10 @@
 use clap::Args;
 use ic_types::PrincipalId;
 
-use crate::commands::{ExecutableCommand, RegistryRequirement};
+use crate::{
+    commands::{ExecutableCommand, RegistryRequirement},
+    ic_admin,
+};
 
 #[derive(Args, Debug)]
 pub struct Add {
@@ -28,6 +31,22 @@ impl ExecutableCommand for Add {
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
+        let ic_admin = ctx.ic_admin();
+
+        ic_admin
+            .propose_run(
+                ic_admin::ProposeCommand::AddApiBoundaryNodes {
+                    nodes: self.nodes.to_vec(),
+                    version: self.version.clone(),
+                },
+                ic_admin::ProposeOptions {
+                    title: Some(format!("Add {} API boundary node(s)", self.nodes.len())),
+                    summary: Some(format!("Add {} API boundary node(s)", self.nodes.len())),
+                    motivation: self.motivation.clone(),
+                },
+            )
+            .await?;
+
         Ok(())
     }
 }
