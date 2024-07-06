@@ -223,7 +223,7 @@ impl RegistryState {
             node_labels_guests: Vec::new(),
             guestos_releases: ArtifactReleases::new(Artifact::GuestOs),
             hostos_releases: ArtifactReleases::new(Artifact::HostOs),
-            ic_repo: Some(IcRepo::new().expect("failed to init ic repo")),
+            ic_repo: Some(IcRepo::new().expect("failed to init ic repo")), // Pain point if ic_repo is not needed
             known_subnets: [
                 (
                     "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
@@ -251,6 +251,7 @@ impl RegistryState {
         }
     }
 
+    /// This function could be split to add to the startup speed
     pub async fn update_node_details(&mut self, providers: &[NodeProviderDetails]) -> anyhow::Result<()> {
         self.local_registry.sync_with_local_store().await.map_err(|e| anyhow::anyhow!(e))?;
         self.update_releases().await?;

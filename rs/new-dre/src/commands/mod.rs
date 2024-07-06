@@ -145,9 +145,9 @@ pub enum Subcommands {
 }
 
 pub trait ExecutableCommand {
-    fn require_neuron(&self) -> bool;
+    fn require_neuron(&self) -> bool; // We could change this to return specific neurons if needed (Like automation or something else)
 
-    fn require_registry(&self) -> bool;
+    fn require_registry(&self) -> bool; // Change to: Synced, WithNodeDetails, WithGitInfo
 
     async fn execute(&self, ctx: DreContext) -> anyhow::Result<()>;
 }

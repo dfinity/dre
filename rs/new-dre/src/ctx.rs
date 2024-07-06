@@ -79,6 +79,12 @@ impl DreContext {
         Ok(ic_admin)
     }
 
+    /// Here we can gain more startup speed if we find a way to optimize RegistryState struct
+    ///
+    /// We could refactor the RegistryState struct to have certain levels of information eg:
+    /// 1. Raw (cotains just the LocalRegistry and one can only use that) - useful for registry command
+    /// 2. Node details (contains the node_providers + the call to update_node_details) - most of the commands
+    /// 3. Artifacts (contains the information obtained through git about the branches) - very few commands
     async fn init_registry(network: &Network) -> anyhow::Result<RegistryState> {
         // Create a new registry state
         let mut new_registry = RegistryState::new(network, true).await;
