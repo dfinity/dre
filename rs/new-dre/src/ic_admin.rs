@@ -658,7 +658,7 @@ must be identical, and must match the SHA256 from the payload of the NNS proposa
             None => return Err(anyhow::anyhow!("Couldn't find nns subnet with id '{}'", nns_subnet_id)),
         };
 
-        let registry_state = RegistryState::new(network, true).await;
+        let registry_state = RegistryState::new(network, true, None).await;
         let unassigned_version = registry_state.get_unassigned_nodes_replica_version().await?;
 
         if nns.replica_version_id.eq(&unassigned_version) {

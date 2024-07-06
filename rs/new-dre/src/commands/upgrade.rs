@@ -4,7 +4,7 @@ use regex::Regex;
 use serde_json::Value;
 use tokio::task::JoinHandle;
 
-use super::ExecutableCommand;
+use super::{ExecutableCommand, RegistryRequirement};
 
 #[derive(Args, Debug)]
 pub struct Upgrade {}
@@ -122,8 +122,8 @@ impl ExecutableCommand for Upgrade {
         false
     }
 
-    fn require_registry(&self) -> bool {
-        false
+    fn require_registry(&self) -> RegistryRequirement {
+        RegistryRequirement::None
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {

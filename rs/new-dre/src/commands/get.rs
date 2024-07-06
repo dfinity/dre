@@ -1,6 +1,6 @@
 use clap::Args;
 
-use super::ExecutableCommand;
+use super::{ExecutableCommand, RegistryRequirement};
 
 #[derive(Args, Debug)]
 pub struct Get {
@@ -14,8 +14,8 @@ impl ExecutableCommand for Get {
         false
     }
 
-    fn require_registry(&self) -> bool {
-        false
+    fn require_registry(&self) -> RegistryRequirement {
+        RegistryRequirement::None
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {

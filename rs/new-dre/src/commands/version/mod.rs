@@ -3,7 +3,7 @@ use guest_os::GuestOs;
 use host_os::HostOs;
 use ic_management_types::Artifact;
 
-use super::ExecutableCommand;
+use super::{ExecutableCommand, RegistryRequirement};
 
 mod guest_os;
 mod host_os;
@@ -26,7 +26,7 @@ impl ExecutableCommand for VersionCmd {
         }
     }
 
-    fn require_registry(&self) -> bool {
+    fn require_registry(&self) -> RegistryRequirement {
         match &self.subcommand {
             VersionCommands::ReviseElectedVersions(c) => c.require_registry(),
         }
@@ -74,7 +74,7 @@ impl ExecutableCommand for ReviseElectedVersionsCmd {
         }
     }
 
-    fn require_registry(&self) -> bool {
+    fn require_registry(&self) -> RegistryRequirement {
         match &self.subcommand {
             ReviseElectedVersionsCommands::GuestOs(g) => g.require_registry(),
             ReviseElectedVersionsCommands::HostOs(h) => h.require_registry(),

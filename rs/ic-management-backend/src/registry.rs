@@ -189,7 +189,7 @@ impl ReleasesOps for ArtifactReleases {
 
 #[allow(dead_code)]
 impl RegistryState {
-    pub async fn new(network: &Network, without_update_loop: bool) -> Self {
+    pub async fn new(network: &Network, without_update_loop: bool, ic_repo: Option<IcRepo>) -> Self {
         sync_local_store(network).await.expect("failed to init local store");
 
         if !without_update_loop {
@@ -223,7 +223,7 @@ impl RegistryState {
             node_labels_guests: Vec::new(),
             guestos_releases: ArtifactReleases::new(Artifact::GuestOs),
             hostos_releases: ArtifactReleases::new(Artifact::HostOs),
-            ic_repo: Some(IcRepo::new().expect("failed to init ic repo")), // Pain point if ic_repo is not needed
+            ic_repo,
             known_subnets: [
                 (
                     "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
@@ -263,6 +263,15 @@ impl RegistryState {
         Ok(())
     }
 
+    pub async fn update_only_node_details(&mut self, providers: &[NodeProviderDetails]) -> anyhow::Result<()> {
+        self.update_operators(providers)?;
+        self.update_nodes()?;
+        self.update_subnets()?;
+        self.version = self.local_registry.get_latest_version().get();
+
+        Ok(())
+    }
+
     pub async fn get_elected_guestos_versions(&self) -> Result<Vec<String>, anyhow::Error> {
         match self
             .local_registry
@@ -290,7 +299,7 @@ impl RegistryState {
         Ok(records)
     }
 
-    async fn update_releases(&mut self) -> Result<()> {
+    pub async fn update_releases(&mut self) -> Result<()> {
         // If the network isn't mainnet we don't need to check git branches
         if !self.network.eq(&Network::new("mainnet", &vec![]).await.unwrap()) {
             return Ok(());

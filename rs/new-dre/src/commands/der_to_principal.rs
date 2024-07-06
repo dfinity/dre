@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use clap::Args;
 
-use super::ExecutableCommand;
+use super::{ExecutableCommand, RegistryRequirement};
 
 #[derive(Args, Debug)]
 pub struct DerToPrincipal {
@@ -15,8 +15,8 @@ impl ExecutableCommand for DerToPrincipal {
         false
     }
 
-    fn require_registry(&self) -> bool {
-        false
+    fn require_registry(&self) -> RegistryRequirement {
+        RegistryRequirement::None
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {

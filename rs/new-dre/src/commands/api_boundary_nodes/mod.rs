@@ -3,7 +3,7 @@ use clap::{Args, Subcommand};
 use remove::Remove;
 use update::Update;
 
-use super::ExecutableCommand;
+use super::{ExecutableCommand, RegistryRequirement};
 
 mod add;
 mod remove;
@@ -39,7 +39,7 @@ impl ExecutableCommand for ApiBoundaryNodes {
         }
     }
 
-    fn require_registry(&self) -> bool {
+    fn require_registry(&self) -> RegistryRequirement {
         match &self.subcommand {
             ApiBoundaryNodesSubcommands::Add(a) => a.require_registry(),
             ApiBoundaryNodesSubcommands::Update(u) => u.require_registry(),

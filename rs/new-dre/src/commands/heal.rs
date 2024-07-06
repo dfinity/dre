@@ -1,6 +1,6 @@
 use clap::Args;
 
-use super::ExecutableCommand;
+use super::{ExecutableCommand, RegistryRequirement};
 
 #[derive(Args, Debug)]
 pub struct Heal {
@@ -19,8 +19,8 @@ impl ExecutableCommand for Heal {
         true
     }
 
-    fn require_registry(&self) -> bool {
-        true
+    fn require_registry(&self) -> RegistryRequirement {
+        RegistryRequirement::WithNodeDetails
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {

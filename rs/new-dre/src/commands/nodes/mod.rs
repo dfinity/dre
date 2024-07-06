@@ -1,7 +1,7 @@
 use clap::{Args, Subcommand};
 use remove::Remove;
 
-use super::ExecutableCommand;
+use super::{ExecutableCommand, RegistryRequirement};
 
 mod remove;
 
@@ -24,7 +24,7 @@ impl ExecutableCommand for Nodes {
         }
     }
 
-    fn require_registry(&self) -> bool {
+    fn require_registry(&self) -> RegistryRequirement {
         match &self.subcommand {
             NodesSubcommands::Remove(r) => r.require_registry(),
         }

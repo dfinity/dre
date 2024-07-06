@@ -1,6 +1,6 @@
 use clap::{Args, ValueEnum};
 
-use crate::commands::ExecutableCommand;
+use crate::commands::{ExecutableCommand, RegistryRequirement};
 
 #[derive(ValueEnum, Copy, Clone, Debug, Ord, Eq, PartialEq, PartialOrd, Default)]
 pub enum NodeOwner {
@@ -75,8 +75,8 @@ impl ExecutableCommand for RolloutFromNodeGroup {
         true
     }
 
-    fn require_registry(&self) -> bool {
-        true
+    fn require_registry(&self) -> RegistryRequirement {
+        RegistryRequirement::WithNodeDetails
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {

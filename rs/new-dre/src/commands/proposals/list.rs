@@ -4,7 +4,7 @@ use ic_nns_common::pb::v1::ProposalId;
 use ic_nns_governance::pb::v1::ListProposalInfo;
 use itertools::Itertools;
 
-use crate::commands::ExecutableCommand;
+use crate::commands::{ExecutableCommand, RegistryRequirement};
 
 use super::Proposal;
 
@@ -63,8 +63,8 @@ impl ExecutableCommand for List {
         false
     }
 
-    fn require_registry(&self) -> bool {
-        false
+    fn require_registry(&self) -> RegistryRequirement {
+        RegistryRequirement::None
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {

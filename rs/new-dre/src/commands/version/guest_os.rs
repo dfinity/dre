@@ -1,6 +1,6 @@
 use clap::Args;
 
-use crate::commands::ExecutableCommand;
+use crate::commands::{ExecutableCommand, RegistryRequirement};
 
 #[derive(Debug, Args)]
 pub struct GuestOs {
@@ -22,8 +22,8 @@ impl ExecutableCommand for GuestOs {
         true
     }
 
-    fn require_registry(&self) -> bool {
-        false
+    fn require_registry(&self) -> RegistryRequirement {
+        RegistryRequirement::WithGitInfo
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {

@@ -49,7 +49,7 @@ use registry_canister::mutations::{
 };
 use serde::{Deserialize, Serialize};
 
-use super::ExecutableCommand;
+use super::{ExecutableCommand, RegistryRequirement};
 
 mod analyze;
 mod filter;
@@ -92,7 +92,7 @@ impl ExecutableCommand for Proposals {
         }
     }
 
-    fn require_registry(&self) -> bool {
+    fn require_registry(&self) -> RegistryRequirement {
         match &self.subcommand {
             ProposalsSubcommands::Pending(p) => p.require_registry(),
             ProposalsSubcommands::Get(g) => g.require_registry(),

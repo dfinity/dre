@@ -6,7 +6,7 @@ use replace::Replace;
 use rescue::Rescue;
 use resize::Resize;
 
-use super::ExecutableCommand;
+use super::{ExecutableCommand, RegistryRequirement};
 
 mod create;
 mod deploy;
@@ -53,7 +53,7 @@ impl ExecutableCommand for SubnetCommand {
         }
     }
 
-    fn require_registry(&self) -> bool {
+    fn require_registry(&self) -> RegistryRequirement {
         match &self.subcommand {
             SubnetSubcommand::Deploy(d) => d.require_registry(),
             SubnetSubcommand::Replace(r) => r.require_registry(),

@@ -1,6 +1,6 @@
 use clap::Args;
 
-use crate::commands::ExecutableCommand;
+use crate::commands::{ExecutableCommand, RegistryRequirement};
 
 #[derive(Args, Debug)]
 pub struct Remove {
@@ -29,8 +29,8 @@ impl ExecutableCommand for Remove {
         true
     }
 
-    fn require_registry(&self) -> bool {
-        true
+    fn require_registry(&self) -> RegistryRequirement {
+        RegistryRequirement::WithNodeDetails
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {

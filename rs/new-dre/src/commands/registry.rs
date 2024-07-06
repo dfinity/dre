@@ -33,7 +33,7 @@ use serde::Serialize;
 
 use crate::ctx::DreContext;
 
-use super::ExecutableCommand;
+use super::{ExecutableCommand, RegistryRequirement};
 
 #[derive(Args, Debug)]
 pub struct Registry {
@@ -51,8 +51,8 @@ impl ExecutableCommand for Registry {
         false
     }
 
-    fn require_registry(&self) -> bool {
-        true
+    fn require_registry(&self) -> RegistryRequirement {
+        RegistryRequirement::Synced
     }
 
     async fn execute(&self, ctx: DreContext) -> anyhow::Result<()> {
@@ -80,7 +80,7 @@ impl ExecutableCommand for Registry {
 impl Registry {
     async fn get_registry(ctx: DreContext) -> anyhow::Result<RegistryDump> {
         let registry = ctx.registry();
-        let local_registry = registry.local_registry.as_ref();
+        let local_registry = registry.as_synced();
 
         let elected_guest_os_versions = get_elected_guest_os_versions(local_registry)?;
         let elected_host_os_versions = get_elected_host_os_versions(local_registry)?;

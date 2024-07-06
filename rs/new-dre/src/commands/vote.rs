@@ -3,7 +3,7 @@ use std::time::Duration;
 use clap::Args;
 use humantime::parse_duration;
 
-use super::ExecutableCommand;
+use super::{ExecutableCommand, RegistryRequirement};
 
 #[derive(Args, Debug)]
 pub struct Vote {
@@ -40,8 +40,8 @@ impl ExecutableCommand for Vote {
         true
     }
 
-    fn require_registry(&self) -> bool {
-        false
+    fn require_registry(&self) -> RegistryRequirement {
+        RegistryRequirement::None
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {

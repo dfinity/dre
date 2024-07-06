@@ -1,7 +1,7 @@
 use clap::Args;
 use ic_types::PrincipalId;
 
-use crate::commands::ExecutableCommand;
+use crate::commands::{ExecutableCommand, RegistryRequirement};
 
 #[derive(Args, Debug)]
 pub struct Resize {
@@ -35,8 +35,8 @@ impl ExecutableCommand for Resize {
         true
     }
 
-    fn require_registry(&self) -> bool {
-        true
+    fn require_registry(&self) -> RegistryRequirement {
+        RegistryRequirement::WithNodeDetails
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
