@@ -24,4 +24,8 @@ impl ExecutableCommand for Propose {
         let _ = ic_admin.run_passthrough_propose(&self.args).await?;
         Ok(())
     }
+
+    fn validate(&self, cmd: &mut clap::Command) {
+        ()
+    }
 }

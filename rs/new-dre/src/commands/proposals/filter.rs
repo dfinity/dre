@@ -302,4 +302,8 @@ impl ExecutableCommand for Filter {
         println!("{}", serde_json::to_string_pretty(&proposals)?);
         Ok(())
     }
+
+    fn validate(&self, cmd: &mut clap::Command) {
+        ()
+    }
 }

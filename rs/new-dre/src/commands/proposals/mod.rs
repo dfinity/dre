@@ -111,6 +111,16 @@ impl ExecutableCommand for Proposals {
             ProposalsSubcommands::List(l) => l.execute(ctx).await,
         }
     }
+
+    fn validate(&self, cmd: &mut clap::Command) {
+        match &self.subcommand {
+            ProposalsSubcommands::Pending(p) => p.validate(cmd),
+            ProposalsSubcommands::Get(g) => g.validate(cmd),
+            ProposalsSubcommands::Analyze(a) => a.validate(cmd),
+            ProposalsSubcommands::Filter(f) => f.validate(cmd),
+            ProposalsSubcommands::List(l) => l.validate(cmd),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

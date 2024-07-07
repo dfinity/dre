@@ -27,4 +27,8 @@ impl ExecutableCommand for Heal {
         let runner = ctx.runner();
         runner.network_heal(self.max_replaceable_nodes_per_sub, true).await
     }
+
+    fn validate(&self, cmd: &mut clap::Command) {
+        ()
+    }
 }

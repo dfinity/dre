@@ -24,4 +24,8 @@ impl ExecutableCommand for Get {
         println!("{}", serde_json::to_string_pretty(&proposal)?);
         Ok(())
     }
+
+    fn validate(&self, cmd: &mut clap::Command) {
+        ()
+    }
 }

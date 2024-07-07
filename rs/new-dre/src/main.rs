@@ -1,4 +1,4 @@
-use clap::Parser;
+use clap::{CommandFactory, Parser};
 use commands::{
     upgrade::{UpdateStatus, Upgrade},
     Args, ExecutableCommand,
@@ -24,6 +24,8 @@ async fn main() -> anyhow::Result<()> {
     dotenv().ok();
 
     let args = Args::parse();
+    let mut cmd = Args::command();
+    args.validate(&mut cmd);
 
     if let commands::Subcommands::Upgrade(upgrade) = args.subcommands {
         let response = upgrade.run().await?;

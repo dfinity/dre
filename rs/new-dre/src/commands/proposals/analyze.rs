@@ -45,4 +45,8 @@ impl ExecutableCommand for Analyze {
             )),
         }
     }
+
+    fn validate(&self, cmd: &mut clap::Command) {
+        ()
+    }
 }

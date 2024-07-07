@@ -92,4 +92,8 @@ impl ExecutableCommand for List {
         println!("{}", proposals);
         Ok(())
     }
+
+    fn validate(&self, cmd: &mut clap::Command) {
+        ()
+    }
 }

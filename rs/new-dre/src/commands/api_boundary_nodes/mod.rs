@@ -54,4 +54,12 @@ impl ExecutableCommand for ApiBoundaryNodes {
             ApiBoundaryNodesSubcommands::Remove(r) => r.execute(ctx).await,
         }
     }
+
+    fn validate(&self, cmd: &mut clap::Command) {
+        match &self.subcommand {
+            ApiBoundaryNodesSubcommands::Add(a) => a.validate(cmd),
+            ApiBoundaryNodesSubcommands::Update(u) => u.validate(cmd),
+            ApiBoundaryNodesSubcommands::Remove(r) => r.validate(cmd),
+        }
+    }
 }

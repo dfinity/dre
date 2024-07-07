@@ -24,4 +24,8 @@ impl ExecutableCommand for DerToPrincipal {
         println!("{}", principal);
         Ok(())
     }
+
+    fn validate(&self, cmd: &mut clap::Command) {
+        ()
+    }
 }

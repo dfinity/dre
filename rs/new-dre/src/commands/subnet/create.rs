@@ -54,4 +54,8 @@ impl ExecutableCommand for Create {
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
         Ok(())
     }
+
+    fn validate(&self, cmd: &mut clap::Command) {
+        ()
+    }
 }

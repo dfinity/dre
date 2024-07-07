@@ -41,4 +41,8 @@ impl ExecutableCommand for Remove {
 
         Ok(())
     }
+
+    fn validate(&self, cmd: &mut clap::Command) {
+        ()
+    }
 }

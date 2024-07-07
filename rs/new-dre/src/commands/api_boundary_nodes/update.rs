@@ -48,4 +48,8 @@ impl ExecutableCommand for Update {
 
         Ok(())
     }
+
+    fn validate(&self, cmd: &mut clap::Command) {
+        ()
+    }
 }

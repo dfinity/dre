@@ -75,6 +75,10 @@ impl ExecutableCommand for Registry {
 
         Ok(())
     }
+
+    fn validate(&self, cmd: &mut clap::Command) {
+        ()
+    }
 }
 
 impl Registry {

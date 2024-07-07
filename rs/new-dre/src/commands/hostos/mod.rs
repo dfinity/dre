@@ -48,4 +48,8 @@ impl ExecutableCommand for HostOsCmd {
             HostOsSubcommands::RolloutFromNodeGroup(r) => r.execute(ctx).await,
         }
     }
+
+    fn validate(&self, cmd: &mut clap::Command) {
+        ()
+    }
 }

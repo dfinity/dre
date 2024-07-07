@@ -24,4 +24,8 @@ impl ExecutableCommand for Get {
 
         Ok(())
     }
+
+    fn validate(&self, cmd: &mut clap::Command) {
+        ()
+    }
 }

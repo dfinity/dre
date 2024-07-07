@@ -67,4 +67,14 @@ impl ExecutableCommand for SubnetCommand {
             SubnetSubcommand::Rescue(r) => r.execute(ctx).await,
         }
     }
+
+    fn validate(&self, cmd: &mut clap::Command) {
+        match &self.subcommand {
+            SubnetSubcommand::Deploy(d) => d.validate(cmd),
+            SubnetSubcommand::Replace(r) => r.validate(cmd),
+            SubnetSubcommand::Resize(r) => r.validate(cmd),
+            SubnetSubcommand::Create(c) => c.validate(cmd),
+            SubnetSubcommand::Rescue(r) => r.validate(cmd),
+        }
+    }
 }

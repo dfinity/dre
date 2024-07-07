@@ -27,4 +27,8 @@ impl ExecutableCommand for Deploy {
         let runner = ctx.runner();
         runner.deploy(&self.id, &self.version).await
     }
+
+    fn validate(&self, cmd: &mut clap::Command) {
+        ()
+    }
 }

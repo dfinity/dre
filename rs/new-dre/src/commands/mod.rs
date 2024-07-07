@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use api_boundary_nodes::ApiBoundaryNodes;
-use clap::{Parser, Subcommand};
+use clap::{Command, Parser, Subcommand};
 use clap_num::maybe_hex;
 use der_to_principal::DerToPrincipal;
 use firewall::Firewall;
@@ -149,6 +149,8 @@ pub trait ExecutableCommand {
 
     fn require_registry(&self) -> RegistryRequirement;
 
+    fn validate(&self, cmd: &mut Command);
+
     async fn execute(&self, ctx: DreContext) -> anyhow::Result<()>;
 }
 
@@ -227,6 +229,27 @@ impl ExecutableCommand for Args {
             Subcommands::Firewall(c) => c.execute(ctx).await,
             Subcommands::Upgrade(c) => c.execute(ctx).await,
             Subcommands::Proposals(c) => c.execute(ctx).await,
+        }
+    }
+
+    fn validate(&self, cmd: &mut Command) {
+        match &self.subcommands {
+            Subcommands::DerToPrincipal(c) => c.validate(cmd),
+            Subcommands::Heal(c) => c.validate(cmd),
+            Subcommands::Subnet(c) => c.validate(cmd),
+            Subcommands::Get(c) => c.validate(cmd),
+            Subcommands::Propose(c) => c.validate(cmd),
+            Subcommands::UpdateUnassignedNodes(c) => c.validate(cmd),
+            Subcommands::Version(c) => c.validate(cmd),
+            Subcommands::HostOs(c) => c.validate(cmd),
+            Subcommands::Nodes(c) => c.validate(cmd),
+            Subcommands::ApiBoundaryNodes(c) => c.validate(cmd),
+            Subcommands::Vote(c) => c.validate(cmd),
+            Subcommands::TrustworthyMetrics(c) => c.validate(cmd),
+            Subcommands::Registry(c) => c.validate(cmd),
+            Subcommands::Firewall(c) => c.validate(cmd),
+            Subcommands::Upgrade(c) => c.validate(cmd),
+            Subcommands::Proposals(c) => c.validate(cmd),
         }
     }
 }

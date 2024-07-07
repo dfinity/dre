@@ -37,6 +37,12 @@ impl ExecutableCommand for VersionCmd {
             VersionCommands::ReviseElectedVersions(c) => c.execute(ctx).await,
         }
     }
+
+    fn validate(&self, cmd: &mut clap::Command) {
+        match &self.subcommand {
+            VersionCommands::ReviseElectedVersions(c) => c.validate(cmd),
+        }
+    }
 }
 
 #[derive(Args, Debug)]
@@ -85,6 +91,13 @@ impl ExecutableCommand for ReviseElectedVersionsCmd {
         match &self.subcommand {
             ReviseElectedVersionsCommands::GuestOs(g) => g.execute(ctx).await,
             ReviseElectedVersionsCommands::HostOs(h) => h.execute(ctx).await,
+        }
+    }
+
+    fn validate(&self, cmd: &mut clap::Command) {
+        match &self.subcommand {
+            ReviseElectedVersionsCommands::GuestOs(g) => g.validate(cmd),
+            ReviseElectedVersionsCommands::HostOs(h) => h.validate(cmd),
         }
     }
 }

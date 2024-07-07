@@ -35,4 +35,10 @@ impl ExecutableCommand for Nodes {
             NodesSubcommands::Remove(r) => r.execute(ctx).await,
         }
     }
+
+    fn validate(&self, cmd: &mut clap::Command) {
+        match &self.subcommand {
+            NodesSubcommands::Remove(r) => r.validate(cmd),
+        }
+    }
 }
