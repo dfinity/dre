@@ -168,10 +168,13 @@ impl DreContext {
     pub fn create_canister_client(&self) -> anyhow::Result<CanisterClient> {
         let nns_url = self.network.get_nns_urls().first().expect("Should have at least one NNS url");
 
-        match &self.ic_admin().neuron.auth {
-            crate::auth::Auth::Hsm { pin, slot, key_id } => CanisterClient::from_hsm(pin.clone(), *slot, key_id.clone(), nns_url),
-            crate::auth::Auth::Keyfile { path } => CanisterClient::from_key_file(path.clone(), nns_url),
-            crate::auth::Auth::Anonymous => CanisterClient::from_anonymous(nns_url),
+        match &self.ic_admin {
+            Some(a) => match &a.neuron.auth {
+                crate::auth::Auth::Hsm { pin, slot, key_id } => CanisterClient::from_hsm(pin.clone(), *slot, key_id.clone(), nns_url),
+                crate::auth::Auth::Keyfile { path } => CanisterClient::from_key_file(path.clone(), nns_url),
+                crate::auth::Auth::Anonymous => CanisterClient::from_anonymous(nns_url),
+            },
+            None => CanisterClient::from_anonymous(nns_url),
         }
     }
 
