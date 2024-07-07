@@ -13,6 +13,7 @@ mod ctx;
 mod ic_admin;
 mod operations;
 mod runner;
+mod subnet_manager;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {

@@ -28,6 +28,10 @@ regardless of the decentralization score"#)]
     /// Motivation for replacing custom nodes
     #[clap(long, short, aliases = [ "summary" ])]
     pub motivation: Option<String>,
+
+    /// The ID of the subnet.
+    #[clap(long, short)]
+    pub id: PrincipalId,
 }
 
 impl ExecutableCommand for Resize {

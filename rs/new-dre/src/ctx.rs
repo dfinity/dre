@@ -14,6 +14,7 @@ use crate::{
     commands::{Args, ExecutableCommand, IcAdminRequirement, RegistryRequirement},
     ic_admin::{download_ic_admin, IcAdminWrapper},
     runner::Runner,
+    subnet_manager::SubnetManager,
 };
 
 const STAGING_NEURON_ID: u64 = 49;
@@ -197,10 +198,20 @@ impl DreContext {
         Runner::new(
             ic_admin,
             match registry.as_ref() {
-                Registry::Synced(_) => unreachable!("Shouldn't happen"),
+                Registry::Synced(_) => panic!("This command doesn't have a high enough registry requirement"),
                 Registry::WithNodeDetails(r) => r.to_owned(),
                 Registry::WithGitInfo(r) => r.to_owned(),
             },
         )
+    }
+
+    pub fn subnet_manager(&self) -> SubnetManager {
+        let registry = self.registry();
+
+        SubnetManager::new(match registry.as_ref() {
+            Registry::Synced(_) => panic!("This command doesn't have a high enough registry requirement"),
+            Registry::WithNodeDetails(r) => r.to_owned(),
+            Registry::WithGitInfo(r) => r.to_owned(),
+        })
     }
 }

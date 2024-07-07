@@ -1,7 +1,10 @@
-use clap::Args;
+use clap::{error::ErrorKind, Args};
 use ic_types::PrincipalId;
 
-use crate::commands::{ExecutableCommand, IcAdminRequirement, RegistryRequirement};
+use crate::{
+    commands::{ExecutableCommand, IcAdminRequirement, RegistryRequirement},
+    subnet_manager::SubnetTarget,
+};
 
 #[derive(Args, Debug)]
 pub struct Replace {
@@ -44,6 +47,9 @@ regardless of the decentralization score"#)]
     /// The ID of the subnet.
     #[clap(long, short)]
     pub id: Option<PrincipalId>,
+
+    #[clap(long, env = "VERBOSE")]
+    pub verbose: bool,
 }
 
 impl ExecutableCommand for Replace {
@@ -56,10 +62,48 @@ impl ExecutableCommand for Replace {
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        Ok(())
+        let subnet_target = match &self.id {
+            Some(id) => SubnetTarget::FromId(*id),
+            _ => SubnetTarget::FromNodesIds(self.nodes.clone()),
+        };
+
+        let subnet_manager = ctx.subnet_manager();
+        let subnet_change_response = subnet_manager
+            .with_target(subnet_target)
+            .membership_replace(
+                !self.no_heal,
+                self.motivation.clone().unwrap_or_default(),
+                self.optimize,
+                self.exclude.clone().into(),
+                self.only.clone(),
+                self.include.clone().into(),
+                Self::parse_min_nakamoto_coefficients(&self.min_nakamoto_coefficients),
+            )
+            .await?;
+
+        let runner = ctx.runner();
+
+        runner.propose_subnet_change(subnet_change_response, self.verbose).await
     }
 
     fn validate(&self, cmd: &mut clap::Command) {
-        ()
+        if !self.nodes.is_empty() && self.id.is_some() {
+            cmd.error(
+                ErrorKind::ArgumentConflict,
+                "Both subnet id and a list of nodes to replace are provided. Only one of the two is allowed.",
+            )
+            .exit();
+        } else if self.nodes.is_empty() && self.id.is_none() {
+            cmd.error(
+                ErrorKind::MissingRequiredArgument,
+                "Specify either a subnet id or a list of nodes to replace",
+            )
+            .exit();
+        } else if !self.nodes.is_empty() && self.motivation.is_none() {
+            cmd.error(ErrorKind::MissingRequiredArgument, "Required argument motivation not found")
+                .exit();
+        }
+
+        Self::validate_min_nakamoto_coefficients(cmd, &self.min_nakamoto_coefficients);
     }
 }
