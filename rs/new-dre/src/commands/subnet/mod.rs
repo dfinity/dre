@@ -1,7 +1,6 @@
 use clap::{Parser, Subcommand};
 use create::Create;
 use deploy::Deploy;
-use ic_types::PrincipalId;
 use replace::Replace;
 use rescue::Rescue;
 use resize::Resize;
@@ -16,10 +15,6 @@ mod resize;
 
 #[derive(Parser, Debug)]
 pub struct SubnetCommand {
-    /// The ID of the subnet.
-    #[clap(long, short)]
-    pub id: Option<PrincipalId>,
-
     #[clap(subcommand)]
     pub subcommand: SubnetSubcommand,
 }

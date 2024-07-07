@@ -24,6 +24,7 @@ impl ExecutableCommand for Heal {
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        Ok(())
+        let runner = ctx.runner();
+        runner.network_heal(self.max_replaceable_nodes_per_sub, true).await
     }
 }

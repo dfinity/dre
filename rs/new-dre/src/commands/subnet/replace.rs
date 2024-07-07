@@ -40,6 +40,10 @@ algorithm"#
     #[clap(long, num_args(1..), help = r#"Force t he inclusion of the provided nodes for replacement,
 regardless of the decentralization score"#)]
     pub include: Vec<PrincipalId>,
+
+    /// The ID of the subnet.
+    #[clap(long, short)]
+    pub id: Option<PrincipalId>,
 }
 
 impl ExecutableCommand for Replace {

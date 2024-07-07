@@ -147,7 +147,7 @@ pub enum Subcommands {
 pub trait ExecutableCommand {
     fn require_neuron(&self) -> IcAdminRequirement;
 
-    fn require_registry(&self) -> RegistryRequirement; // Change to: Synced, WithNodeDetails, WithGitInfo
+    fn require_registry(&self) -> RegistryRequirement;
 
     async fn execute(&self, ctx: DreContext) -> anyhow::Result<()>;
 }
