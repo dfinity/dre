@@ -23,12 +23,12 @@ use tabled::builder::Builder;
 use tabled::settings::Style;
 
 pub struct Runner {
-    pub ic_admin: ic_admin::IcAdminWrapper,
+    pub ic_admin: Rc<ic_admin::IcAdminWrapper>,
     registry_instance: Rc<RegistryState>,
 }
 
 impl Runner {
-    pub fn new(ic_admin: ic_admin::IcAdminWrapper, registry_instance: Rc<RegistryState>) -> Self {
+    pub fn new(ic_admin: Rc<ic_admin::IcAdminWrapper>, registry_instance: Rc<RegistryState>) -> Self {
         Self { ic_admin, registry_instance }
     }
 

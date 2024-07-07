@@ -145,7 +145,7 @@ pub enum Subcommands {
 }
 
 pub trait ExecutableCommand {
-    fn require_neuron(&self) -> NeuronRequirement;
+    fn require_neuron(&self) -> IcAdminRequirement;
 
     fn require_registry(&self) -> RegistryRequirement; // Change to: Synced, WithNodeDetails, WithGitInfo
 
@@ -159,14 +159,15 @@ pub enum RegistryRequirement {
     WithGitInfo,
 }
 
-pub enum NeuronRequirement {
-    Anonymous,
-    Detect,
+pub enum IcAdminRequirement {
+    None,
+    Anonymous, // for get commands
+    Detect,    // detect the neuron
     Hardcoded, // eg automation which we know where is placed
 }
 
 impl ExecutableCommand for Args {
-    fn require_neuron(&self) -> NeuronRequirement {
+    fn require_neuron(&self) -> IcAdminRequirement {
         match &self.subcommands {
             Subcommands::DerToPrincipal(c) => c.require_neuron(),
             Subcommands::Heal(c) => c.require_neuron(),

@@ -10,7 +10,7 @@ use std::fmt::Display;
 use clap::ValueEnum;
 use ic_nns_governance::pb::v1::{ListProposalInfo, ProposalStatus as ProposalStatusUpstream, Topic as TopicUpstream};
 
-use crate::commands::{proposals::Proposal, ExecutableCommand, NeuronRequirement, RegistryRequirement};
+use crate::commands::{proposals::Proposal, ExecutableCommand, IcAdminRequirement, RegistryRequirement};
 #[derive(Args, Debug)]
 pub struct Filter {
     /// Limit on the number of \[ProposalInfo\] to return. If value greater than
@@ -211,8 +211,8 @@ impl From<TopicUpstream> for Topic {
 }
 
 impl ExecutableCommand for Filter {
-    fn require_neuron(&self) -> NeuronRequirement {
-        NeuronRequirement::Anonymous
+    fn require_neuron(&self) -> IcAdminRequirement {
+        IcAdminRequirement::None
     }
 
     fn require_registry(&self) -> RegistryRequirement {

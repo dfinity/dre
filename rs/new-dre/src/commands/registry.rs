@@ -33,7 +33,7 @@ use serde::Serialize;
 
 use crate::ctx::DreContext;
 
-use super::{ExecutableCommand, NeuronRequirement, RegistryRequirement};
+use super::{ExecutableCommand, IcAdminRequirement, RegistryRequirement};
 
 #[derive(Args, Debug)]
 pub struct Registry {
@@ -47,8 +47,8 @@ pub struct Registry {
 }
 
 impl ExecutableCommand for Registry {
-    fn require_neuron(&self) -> NeuronRequirement {
-        NeuronRequirement::Anonymous
+    fn require_neuron(&self) -> IcAdminRequirement {
+        IcAdminRequirement::None
     }
 
     fn require_registry(&self) -> RegistryRequirement {

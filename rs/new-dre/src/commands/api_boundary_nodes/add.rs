@@ -2,7 +2,7 @@ use clap::Args;
 use ic_types::PrincipalId;
 
 use crate::{
-    commands::{ExecutableCommand, NeuronRequirement, RegistryRequirement},
+    commands::{ExecutableCommand, IcAdminRequirement, RegistryRequirement},
     ic_admin,
 };
 
@@ -22,8 +22,8 @@ pub struct Add {
 }
 
 impl ExecutableCommand for Add {
-    fn require_neuron(&self) -> NeuronRequirement {
-        NeuronRequirement::Detect
+    fn require_neuron(&self) -> IcAdminRequirement {
+        IcAdminRequirement::Detect
     }
 
     fn require_registry(&self) -> RegistryRequirement {

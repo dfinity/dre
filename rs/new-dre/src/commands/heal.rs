@@ -1,6 +1,6 @@
 use clap::Args;
 
-use super::{ExecutableCommand, NeuronRequirement, RegistryRequirement};
+use super::{ExecutableCommand, IcAdminRequirement, RegistryRequirement};
 
 #[derive(Args, Debug)]
 pub struct Heal {
@@ -15,8 +15,8 @@ minimizing the number of replaced nodes per subnet"#
 }
 
 impl ExecutableCommand for Heal {
-    fn require_neuron(&self) -> NeuronRequirement {
-        NeuronRequirement::Detect
+    fn require_neuron(&self) -> IcAdminRequirement {
+        IcAdminRequirement::Detect
     }
 
     fn require_registry(&self) -> RegistryRequirement {

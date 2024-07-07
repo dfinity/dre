@@ -1,14 +1,14 @@
 use clap::Args;
 use ic_canisters::governance::GovernanceCanisterWrapper;
 
-use crate::commands::{ExecutableCommand, NeuronRequirement, RegistryRequirement};
+use crate::commands::{ExecutableCommand, IcAdminRequirement, RegistryRequirement};
 
 #[derive(Args, Debug)]
 pub struct Pending {}
 
 impl ExecutableCommand for Pending {
-    fn require_neuron(&self) -> NeuronRequirement {
-        NeuronRequirement::Anonymous
+    fn require_neuron(&self) -> IcAdminRequirement {
+        IcAdminRequirement::None
     }
 
     fn require_registry(&self) -> RegistryRequirement {

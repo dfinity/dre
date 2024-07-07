@@ -1,7 +1,7 @@
 use clap::{Args, Subcommand};
 use remove::Remove;
 
-use super::{ExecutableCommand, NeuronRequirement, RegistryRequirement};
+use super::{ExecutableCommand, IcAdminRequirement, RegistryRequirement};
 
 mod remove;
 
@@ -18,7 +18,7 @@ pub enum NodesSubcommands {
 }
 
 impl ExecutableCommand for Nodes {
-    fn require_neuron(&self) -> NeuronRequirement {
+    fn require_neuron(&self) -> IcAdminRequirement {
         match &self.subcommand {
             NodesSubcommands::Remove(r) => r.require_neuron(),
         }

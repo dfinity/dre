@@ -49,7 +49,7 @@ use registry_canister::mutations::{
 };
 use serde::{Deserialize, Serialize};
 
-use super::{ExecutableCommand, NeuronRequirement, RegistryRequirement};
+use super::{ExecutableCommand, IcAdminRequirement, RegistryRequirement};
 
 mod analyze;
 mod filter;
@@ -82,7 +82,7 @@ pub enum ProposalsSubcommands {
 }
 
 impl ExecutableCommand for Proposals {
-    fn require_neuron(&self) -> NeuronRequirement {
+    fn require_neuron(&self) -> IcAdminRequirement {
         match &self.subcommand {
             ProposalsSubcommands::Pending(p) => p.require_neuron(),
             ProposalsSubcommands::Get(g) => g.require_neuron(),

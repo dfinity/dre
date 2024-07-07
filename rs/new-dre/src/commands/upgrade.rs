@@ -4,7 +4,7 @@ use regex::Regex;
 use serde_json::Value;
 use tokio::task::JoinHandle;
 
-use super::{ExecutableCommand, NeuronRequirement, RegistryRequirement};
+use super::{ExecutableCommand, IcAdminRequirement, RegistryRequirement};
 
 #[derive(Args, Debug)]
 pub struct Upgrade {}
@@ -118,8 +118,8 @@ pub enum UpdateStatus {
 }
 
 impl ExecutableCommand for Upgrade {
-    fn require_neuron(&self) -> NeuronRequirement {
-        NeuronRequirement::Anonymous
+    fn require_neuron(&self) -> IcAdminRequirement {
+        IcAdminRequirement::None
     }
 
     fn require_registry(&self) -> RegistryRequirement {

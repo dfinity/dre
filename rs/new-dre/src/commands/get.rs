@@ -1,6 +1,6 @@
 use clap::Args;
 
-use super::{ExecutableCommand, NeuronRequirement, RegistryRequirement};
+use super::{ExecutableCommand, IcAdminRequirement, RegistryRequirement};
 
 #[derive(Args, Debug)]
 pub struct Get {
@@ -10,8 +10,8 @@ pub struct Get {
 }
 
 impl ExecutableCommand for Get {
-    fn require_neuron(&self) -> NeuronRequirement {
-        NeuronRequirement::Detect
+    fn require_neuron(&self) -> IcAdminRequirement {
+        IcAdminRequirement::Anonymous
     }
 
     fn require_registry(&self) -> RegistryRequirement {

@@ -4,7 +4,7 @@ use ic_nns_common::pb::v1::ProposalId;
 use ic_nns_governance::pb::v1::ListProposalInfo;
 use itertools::Itertools;
 
-use crate::commands::{ExecutableCommand, NeuronRequirement, RegistryRequirement};
+use crate::commands::{ExecutableCommand, IcAdminRequirement, RegistryRequirement};
 
 use super::Proposal;
 
@@ -59,8 +59,8 @@ pub struct List {
 }
 
 impl ExecutableCommand for List {
-    fn require_neuron(&self) -> NeuronRequirement {
-        NeuronRequirement::Anonymous
+    fn require_neuron(&self) -> IcAdminRequirement {
+        IcAdminRequirement::None
     }
 
     fn require_registry(&self) -> RegistryRequirement {

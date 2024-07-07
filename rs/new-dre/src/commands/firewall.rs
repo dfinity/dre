@@ -1,7 +1,7 @@
 use clap::Args;
 use ic_registry_keys::FirewallRulesScope;
 
-use super::{ExecutableCommand, NeuronRequirement, RegistryRequirement};
+use super::{ExecutableCommand, IcAdminRequirement, RegistryRequirement};
 
 #[derive(Args, Debug)]
 pub struct Firewall {
@@ -17,8 +17,8 @@ pub struct Firewall {
 }
 
 impl ExecutableCommand for Firewall {
-    fn require_neuron(&self) -> NeuronRequirement {
-        NeuronRequirement::Detect
+    fn require_neuron(&self) -> IcAdminRequirement {
+        IcAdminRequirement::Detect
     }
 
     fn require_registry(&self) -> RegistryRequirement {

@@ -1,6 +1,6 @@
 use clap::Args;
 
-use crate::commands::{ExecutableCommand, NeuronRequirement, RegistryRequirement};
+use crate::commands::{ExecutableCommand, IcAdminRequirement, RegistryRequirement};
 
 #[derive(Debug, Args)]
 pub struct GuestOs {
@@ -18,8 +18,8 @@ pub struct GuestOs {
 }
 
 impl ExecutableCommand for GuestOs {
-    fn require_neuron(&self) -> NeuronRequirement {
-        NeuronRequirement::Detect
+    fn require_neuron(&self) -> IcAdminRequirement {
+        IcAdminRequirement::Detect
     }
 
     fn require_registry(&self) -> RegistryRequirement {

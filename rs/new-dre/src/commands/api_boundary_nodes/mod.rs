@@ -3,7 +3,7 @@ use clap::{Args, Subcommand};
 use remove::Remove;
 use update::Update;
 
-use super::{ExecutableCommand, NeuronRequirement, RegistryRequirement};
+use super::{ExecutableCommand, IcAdminRequirement, RegistryRequirement};
 
 mod add;
 mod remove;
@@ -31,7 +31,7 @@ should be rolled out."#)]
 }
 
 impl ExecutableCommand for ApiBoundaryNodes {
-    fn require_neuron(&self) -> NeuronRequirement {
+    fn require_neuron(&self) -> IcAdminRequirement {
         match &self.subcommand {
             ApiBoundaryNodesSubcommands::Add(a) => a.require_neuron(),
             ApiBoundaryNodesSubcommands::Update(u) => u.require_neuron(),

@@ -3,7 +3,7 @@ use guest_os::GuestOs;
 use host_os::HostOs;
 use ic_management_types::Artifact;
 
-use super::{ExecutableCommand, NeuronRequirement, RegistryRequirement};
+use super::{ExecutableCommand, IcAdminRequirement, RegistryRequirement};
 
 mod guest_os;
 mod host_os;
@@ -20,7 +20,7 @@ pub enum VersionCommands {
 }
 
 impl ExecutableCommand for VersionCmd {
-    fn require_neuron(&self) -> NeuronRequirement {
+    fn require_neuron(&self) -> IcAdminRequirement {
         match &self.subcommand {
             VersionCommands::ReviseElectedVersions(c) => c.require_neuron(),
         }
@@ -67,7 +67,7 @@ impl From<ReviseElectedVersionsCommands> for Artifact {
 }
 
 impl ExecutableCommand for ReviseElectedVersionsCmd {
-    fn require_neuron(&self) -> NeuronRequirement {
+    fn require_neuron(&self) -> IcAdminRequirement {
         match &self.subcommand {
             ReviseElectedVersionsCommands::GuestOs(g) => g.require_neuron(),
             ReviseElectedVersionsCommands::HostOs(h) => h.require_neuron(),

@@ -1,7 +1,7 @@
 use clap::Args;
 use ic_types::PrincipalId;
 
-use crate::commands::{ExecutableCommand, NeuronRequirement, RegistryRequirement};
+use crate::commands::{ExecutableCommand, IcAdminRequirement, RegistryRequirement};
 
 #[derive(Args, Debug)]
 pub struct Rollout {
@@ -15,8 +15,8 @@ pub struct Rollout {
 }
 
 impl ExecutableCommand for Rollout {
-    fn require_neuron(&self) -> NeuronRequirement {
-        NeuronRequirement::Detect
+    fn require_neuron(&self) -> IcAdminRequirement {
+        IcAdminRequirement::Detect
     }
 
     fn require_registry(&self) -> RegistryRequirement {

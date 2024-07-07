@@ -1,6 +1,6 @@
 use clap::Args;
 
-use crate::commands::{ExecutableCommand, NeuronRequirement, RegistryRequirement};
+use crate::commands::{ExecutableCommand, IcAdminRequirement, RegistryRequirement};
 
 #[derive(Args, Debug)]
 pub struct Deploy {
@@ -10,8 +10,8 @@ pub struct Deploy {
 }
 
 impl ExecutableCommand for Deploy {
-    fn require_neuron(&self) -> NeuronRequirement {
-        NeuronRequirement::Detect
+    fn require_neuron(&self) -> IcAdminRequirement {
+        IcAdminRequirement::Detect
     }
 
     fn require_registry(&self) -> RegistryRequirement {
