@@ -19,6 +19,9 @@ impl ExecutableCommand for Get {
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
+        let ic_admin = ctx.ic_admin();
+        let _ = ic_admin.run_passthrough_get(&self.args, false).await?;
+
         Ok(())
     }
 }

@@ -90,9 +90,14 @@ impl DreContext {
             IcAdminRequirement::Anonymous | IcAdminRequirement::None => Neuron {
                 auth: crate::auth::Auth::Anonymous,
                 neuron_id: 0,
+                include_proposer: false,
             },
-            IcAdminRequirement::Detect => Neuron::new(private_key_pem, hsm_slot, hsm_pin.clone(), hsm_key_id.clone(), neuron_id, &network).await?,
-            IcAdminRequirement::Hardcoded => Neuron::new(private_key_pem, hsm_slot, hsm_pin.clone(), hsm_key_id.clone(), neuron_id, &network).await?,
+            IcAdminRequirement::Detect => {
+                Neuron::new(private_key_pem, hsm_slot, hsm_pin.clone(), hsm_key_id.clone(), neuron_id, &network, true).await?
+            }
+            IcAdminRequirement::Hardcoded => {
+                Neuron::new(private_key_pem, hsm_slot, hsm_pin.clone(), hsm_key_id.clone(), neuron_id, &network, true).await?
+            }
         };
 
         let govn_canister_version = governance_canister_version(network.get_nns_urls()).await?;
