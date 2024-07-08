@@ -96,8 +96,19 @@ impl DreContext {
             IcAdminRequirement::Detect => {
                 Neuron::new(private_key_pem, hsm_slot, hsm_pin.clone(), hsm_key_id.clone(), neuron_id, &network, true).await?
             }
-            IcAdminRequirement::OverridableBy => {
-                Neuron::new(private_key_pem, hsm_slot, hsm_pin.clone(), hsm_key_id.clone(), neuron_id, &network, true).await?
+            IcAdminRequirement::OverridableBy {
+                network: accepted_network,
+                neuron,
+            } => {
+                let maybe_neuron = Neuron::new(private_key_pem, hsm_slot, hsm_pin.clone(), hsm_key_id.clone(), neuron_id, &network, true).await;
+
+                let neuron = match maybe_neuron {
+                    Ok(n) => n,
+                    Err(_) if accepted_network == *network => neuron,
+                    Err(e) => return Err(e),
+                };
+
+                neuron
             }
         };
 

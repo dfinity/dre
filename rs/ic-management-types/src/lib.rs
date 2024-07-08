@@ -598,7 +598,7 @@ pub struct Network {
 }
 
 impl Network {
-    pub async fn new<S: AsRef<str>>(name: S, nns_urls: &[url::Url]) -> Result<Self, String> {
+    pub fn new_unchecked<S: AsRef<str>>(name: S, nns_urls: &[url::Url]) -> anyhow::Result<Self> {
         let (name, nns_urls) = match name.as_ref() {
             "mainnet" => (
                 "mainnet".to_string(),
@@ -629,17 +629,31 @@ impl Network {
             _ => (
                 name.as_ref().to_string(),
                 if nns_urls.is_empty() {
-                    return Err("No NNS URLs provided".to_string());
+                    return Err(anyhow::anyhow!("No NNS URLs provided"));
                 } else {
                     nns_urls.to_owned()
                 },
             ),
         };
-        let nns_urls = find_reachable_nns_urls(nns_urls).await;
+
+        Ok(Self { name, nns_urls })
+    }
+
+    pub async fn new<S: AsRef<str>>(name: S, nns_urls: &[url::Url]) -> anyhow::Result<Self> {
+        let network = Self::new_unchecked(name, nns_urls)?;
+        let nns_urls = find_reachable_nns_urls(network.nns_urls).await;
         if nns_urls.is_empty() {
-            return Err("No reachable NNS URLs provided".to_string());
+            return Err(anyhow::anyhow!("No reachable NNS URLs provided"));
         }
-        Ok(Network { name, nns_urls })
+        Ok(Network { nns_urls, ..network })
+    }
+
+    pub fn mainnet_unchecked() -> anyhow::Result<Self> {
+        Network::new_unchecked("mainnet", &[])
+    }
+
+    pub fn staging_unchecked() -> anyhow::Result<Self> {
+        Network::new_unchecked("staging", &[])
     }
 
     pub fn get_nns_urls(&self) -> &Vec<Url> {

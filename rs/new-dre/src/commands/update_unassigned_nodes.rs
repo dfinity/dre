@@ -1,4 +1,7 @@
 use clap::Args;
+use ic_management_types::Network;
+
+use crate::auth::Neuron;
 
 use super::{ExecutableCommand, IcAdminRequirement, RegistryRequirement};
 
@@ -11,7 +14,10 @@ pub struct UpdateUnassignedNodes {
 
 impl ExecutableCommand for UpdateUnassignedNodes {
     fn require_ic_admin(&self) -> IcAdminRequirement {
-        IcAdminRequirement::OverridableBy
+        IcAdminRequirement::OverridableBy {
+            network: Network::mainnet_unchecked().unwrap(),
+            neuron: Neuron::automation_neuron_unchecked(),
+        }
     }
 
     fn require_registry(&self) -> RegistryRequirement {

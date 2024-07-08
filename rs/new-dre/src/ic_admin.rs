@@ -28,7 +28,6 @@ use std::io::{Read, Write};
 use std::os::unix::fs::PermissionsExt;
 use std::path::PathBuf;
 use std::process::Stdio;
-use std::str::FromStr;
 use std::time::Duration;
 use std::{fmt::Display, path::Path, process::Command};
 use strum::Display;

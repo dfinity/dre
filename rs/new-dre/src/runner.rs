@@ -429,7 +429,7 @@ impl Runner {
         Ok(())
     }
 
-    pub async fn network_heal(&self, max_replaceable_nodes_per_sub: Option<usize>, _verbose: bool) -> Result<(), anyhow::Error> {
+    pub async fn network_heal(&self, _verbose: bool) -> Result<(), anyhow::Error> {
         let health_client = health::HealthClient::new(self.registry_instance.network());
         let subnets = self.registry_instance.subnets();
         let (available_nodes, healths) = try_join(
@@ -438,9 +438,7 @@ impl Runner {
         )
         .await?;
 
-        let subnets_change_response: Vec<SubnetChangeResponse> = NetworkHealRequest::new(subnets, max_replaceable_nodes_per_sub)
-            .heal_and_optimize(available_nodes, healths)
-            .await?;
+        let subnets_change_response: Vec<SubnetChangeResponse> = NetworkHealRequest::new(subnets).heal_and_optimize(available_nodes, healths).await?;
         subnets_change_response.iter().for_each(|change| println!("{}", change));
 
         let errors = join_all(subnets_change_response.iter().map(|subnet_change_response| async move {

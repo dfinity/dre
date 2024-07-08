@@ -1,4 +1,4 @@
-use std::{cell::RefCell, collections::BTreeMap, path::PathBuf, rc::Rc, str::FromStr};
+use std::{collections::BTreeMap, path::PathBuf, str::FromStr};
 
 use api_boundary_nodes::ApiBoundaryNodes;
 use clap::{error::ErrorKind, Command, Parser, Subcommand};
@@ -8,7 +8,7 @@ use firewall::Firewall;
 use get::Get;
 use heal::Heal;
 use hostos::HostOsCmd;
-use ic_management_types::{MinNakamotoCoefficients, NodeFeature};
+use ic_management_types::{MinNakamotoCoefficients, Network, NodeFeature};
 use nodes::Nodes;
 use proposals::Proposals;
 use propose::Propose;
@@ -20,7 +20,7 @@ use url::Url;
 use version::VersionCmd;
 use vote::Vote;
 
-use crate::ctx::DreContext;
+use crate::{auth::Neuron, ctx::DreContext};
 
 mod api_boundary_nodes;
 mod der_to_principal;
@@ -232,9 +232,9 @@ pub enum RegistryRequirement {
 
 pub enum IcAdminRequirement {
     None,
-    Anonymous,     // for get commands
-    Detect,        // detect the neuron
-    OverridableBy, // eg automation which we know where is placed
+    Anonymous,                                          // for get commands
+    Detect,                                             // detect the neuron
+    OverridableBy { network: Network, neuron: Neuron }, // eg automation which we know where is placed
 }
 
 impl ExecutableCommand for Args {

@@ -17,6 +17,9 @@ pub struct Neuron {
     pub include_proposer: bool,
 }
 
+static RELEASE_AUTOMATION_DEFAULT_PRIVATE_KEY_PEM: &str = ".config/dfx/identity/release-automation/identity.pem"; // Relative to the home directory
+const RELEASE_AUTOMATION_NEURON_ID: u64 = 80;
+
 impl Neuron {
     pub async fn new(
         private_key_pem: Option<PathBuf>,
@@ -45,6 +48,16 @@ impl Neuron {
             args.extend(["--proposer".to_string(), self.neuron_id.to_string()]);
         }
         args
+    }
+
+    pub fn automation_neuron_unchecked() -> Self {
+        Self {
+            auth: Auth::Keyfile {
+                path: dirs::home_dir().unwrap().join(RELEASE_AUTOMATION_DEFAULT_PRIVATE_KEY_PEM),
+            },
+            neuron_id: RELEASE_AUTOMATION_NEURON_ID,
+            include_proposer: true,
+        }
     }
 }
 
