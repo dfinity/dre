@@ -643,7 +643,7 @@ mod tests {
         );
 
         let subnet_change_req = SubnetChangeRequest::new(subnet_initial, nodes_available, Vec::new(), Vec::new(), Vec::new(), None);
-        let subnet_change = subnet_change_req.optimize(2, &vec![]).unwrap();
+        let subnet_change = subnet_change_req.optimize(2, &[]).unwrap();
         for log in subnet_change.after().run_log.iter() {
             println!("{}", log);
         }
@@ -693,7 +693,7 @@ mod tests {
         );
 
         let subnet_change_req = SubnetChangeRequest::new(subnet_initial, nodes_available, Vec::new(), Vec::new(), Vec::new(), None);
-        let subnet_change = subnet_change_req.optimize(2, &vec![]).unwrap();
+        let subnet_change = subnet_change_req.optimize(2, &[]).unwrap();
         println!("Replacement run log:");
         for line in subnet_change.after().run_log.iter() {
             println!("{}", line);
@@ -740,7 +740,7 @@ mod tests {
         );
 
         let subnet_change_req = SubnetChangeRequest::new(subnet_initial, nodes_available, Vec::new(), Vec::new(), Vec::new(), None);
-        let subnet_change = subnet_change_req.optimize(2, &vec![]).unwrap();
+        let subnet_change = subnet_change_req.optimize(2, &[]).unwrap();
 
         println!("Replacement run log:");
         for line in subnet_change.after().run_log.iter() {
