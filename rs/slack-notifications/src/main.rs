@@ -92,6 +92,7 @@ impl ProposalCheckpointStore {
         retry::retry(retry::delay::Exponential::from_millis(10).take(5), || {
             std::fs::OpenOptions::new()
                 .create(true)
+                .truncate(true)
                 .write(true)
                 .open(&self.file_path)
                 .and_then(|mut file| file.write_all(serde_json::to_string(&self.checkpoint)?.as_bytes()).map(|_| file))

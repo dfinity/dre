@@ -175,7 +175,7 @@ fn get_slot_id(ctx: &Ctx, slot_index: usize) -> Result<CK_SLOT_ID, HardwareIdent
     ctx.get_slot_list(true)?
         .get(slot_index)
         .ok_or(HardwareIdentityError::NoSuchSlotIndex(slot_index))
-        .map(|x| *x)
+        .copied()
 }
 
 // We open a session for the duration of the lifetime of the HardwareIdentity.
