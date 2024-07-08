@@ -831,7 +831,7 @@ mod tests {
         let mocked_definition = Definition::new(
             vec![url::Url::from_str("http://[2a00:fb01:400:42:5000:3cff:fe45:6c61]:8080").unwrap()],
             definitions_dir.as_ref().to_path_buf(),
-            Network::new("mainnet", &vec![]).await.unwrap().legacy_name(),
+            Network::new("mainnet", &[]).await.unwrap().legacy_name(),
             log,
             None,
             Duration::from_secs(0),
