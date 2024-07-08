@@ -66,9 +66,9 @@ impl FromIterator<(NodeFeature, std::string::String)> for NodeFeatures {
 // A thread-local memoization cache of NakamotoScores
 thread_local! {
     pub static NAKAMOTOSCORE_CACHE: RefCell<AHashMap<u64, NakamotoScore>> = RefCell::new(AHashMap::new());
-    pub static MEMOIZE_REQ: RefCell<u32> = RefCell::new(0);
-    pub static MEMOIZE_HIT: RefCell<u32> = RefCell::new(0);
-    pub static MEMOIZE_HIT_RATES: RefCell<VecDeque<u32>> = RefCell::new(VecDeque::new());
+    pub static MEMOIZE_REQ: RefCell<u32> = const { RefCell::new(0) };
+    pub static MEMOIZE_HIT: RefCell<u32> = const { RefCell::new(0) };
+    pub static MEMOIZE_HIT_RATES: RefCell<VecDeque<u32>> = const { RefCell::new(VecDeque::new()) };
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, Default)]

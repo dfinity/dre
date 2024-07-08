@@ -75,7 +75,7 @@ impl RouterConfig {
                 matcher: Matcher {
                     node_provider_id: Some(np.principal_id),
                 },
-                sinks: vec![Sink::Webhook(WebhookSink { url: np.url, auth: None })],
+                sinks: vec![Sink::Webhook(WebhookSink { url: np.url, _auth: None })],
             })
             .collect()
     }

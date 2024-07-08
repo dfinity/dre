@@ -43,7 +43,7 @@ impl LogSink {
 #[derive(Debug)]
 pub struct WebhookSink {
     pub url: url::Url,
-    pub auth: Option<(String, String)>,
+    pub _auth: Option<(String, String)>,
 }
 
 impl WebhookSink {

@@ -598,14 +598,14 @@ pub struct Network {
 }
 
 impl Network {
-    pub async fn new<S: AsRef<str>>(name: S, nns_urls: &Vec<url::Url>) -> Result<Self, String> {
+    pub async fn new<S: AsRef<str>>(name: S, nns_urls: &[url::Url]) -> Result<Self, String> {
         let (name, nns_urls) = match name.as_ref() {
             "mainnet" => (
                 "mainnet".to_string(),
                 if nns_urls.is_empty() {
                     vec![Url::from_str("https://ic0.app").unwrap()]
                 } else {
-                    nns_urls.clone()
+                    nns_urls.to_owned()
                 },
             ),
             "staging" => (
@@ -623,7 +623,7 @@ impl Network {
                     .map(|s| Url::from_str(s).unwrap())
                     .collect()
                 } else {
-                    nns_urls.clone()
+                    nns_urls.to_owned()
                 },
             ),
             _ => (
@@ -631,7 +631,7 @@ impl Network {
                 if nns_urls.is_empty() {
                     return Err("No NNS URLs provided".to_string());
                 } else {
-                    nns_urls.clone()
+                    nns_urls.to_owned()
                 },
             ),
         };
