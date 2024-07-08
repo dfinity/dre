@@ -22,6 +22,7 @@ use regex::Regex;
 use registry_canister::mutations::do_change_subnet_membership::ChangeSubnetMembershipPayload;
 use serde_json::Value;
 use std::collections::BTreeMap;
+use std::env;
 use std::str::FromStr;
 
 const STAGING_NEURON_ID: u64 = 49;
@@ -680,6 +681,11 @@ fn check_latest_release(curr_version: &str, proceed_with_upgrade: bool) -> anyho
 
     if !proceed_with_upgrade {
         return Ok(UpdateStatus::NewVersion(latest_release.version.clone()));
+    }
+
+    // Complete list can be found: https://doc.rust-lang.org/std/env/consts/constant.OS.html
+    if env::consts::OS != "linux" {
+        return Err(anyhow::anyhow!("Only linux is supported for automatic updates"));
     }
 
     info!("Binary not up to date. Updating to {}", latest_release.version);

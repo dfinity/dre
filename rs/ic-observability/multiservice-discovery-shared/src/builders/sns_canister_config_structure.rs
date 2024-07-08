@@ -95,17 +95,3 @@ impl VectorSource for VectorScriptSource {
 struct SourceStreamingWrapper {
     respawn_on_exit: bool,
 }
-
-#[derive(Debug, Clone, Serialize)]
-struct VectorJournaldSource {
-    #[serde(rename = "type")]
-    _type: String,
-    data_dir: String,
-    journal_directory: String,
-}
-
-impl VectorSource for VectorJournaldSource {
-    fn clone_dyn(&self) -> Box<dyn VectorSource> {
-        Box::new(self.clone())
-    }
-}

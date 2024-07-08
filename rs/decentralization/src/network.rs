@@ -399,7 +399,7 @@ impl DecentralizedSubnet {
     /// of current nodes.  Since the node IDs are unique, we seed a PRNG
     /// with the sorted joined node IDs. We then choose a result
     /// randomly but deterministically using this seed.
-    fn choose_deterministic_random(best_results: &Vec<ReplacementCandidate>, current_nodes: &[Node]) -> Option<ReplacementCandidate> {
+    fn choose_deterministic_random(best_results: &[ReplacementCandidate], current_nodes: &[Node]) -> Option<ReplacementCandidate> {
         if best_results.is_empty() {
             None
         } else {
@@ -421,7 +421,7 @@ impl DecentralizedSubnet {
             // We sort the best results the same way to ensure that for
             // the same set of machines with the best score, we always
             // get the same one.
-            let mut id_sorted_best_results = best_results.clone();
+            let mut id_sorted_best_results = best_results.to_owned();
             id_sorted_best_results.sort_by(|r1, r2| std::cmp::Ord::cmp(&r1.node.id.to_string(), &r2.node.id.to_string()));
             id_sorted_best_results.choose(&mut rng).cloned()
         }
@@ -911,9 +911,9 @@ impl SubnetChangeRequest {
 
     /// Optimize is implemented by removing a certain number of nodes and then
     /// adding the same number back.
-    pub fn optimize(mut self, optimize_count: usize, replacements_unhealthy: &Vec<Node>) -> Result<SubnetChange, NetworkError> {
+    pub fn optimize(mut self, optimize_count: usize, replacements_unhealthy: &[Node]) -> Result<SubnetChange, NetworkError> {
         let old_nodes = self.subnet.nodes.clone();
-        self.subnet = self.subnet.without_nodes(replacements_unhealthy.clone())?;
+        self.subnet = self.subnet.without_nodes(replacements_unhealthy.to_owned())?;
         let result = self.resize(optimize_count + replacements_unhealthy.len(), optimize_count)?;
         Ok(SubnetChange { old_nodes, ..result })
     }
