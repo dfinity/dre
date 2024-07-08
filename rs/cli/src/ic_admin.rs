@@ -1105,7 +1105,7 @@ oSMDIQBa2NLmSmaqjDXej4rrJEuEhKIz7/pGXpxztViWhB+X9Q==
 
         // Start a background HTTP server on a random local port
         let mock_server = MockServer::start().await;
-        let network = Network::new("testnet", &vec![url::Url::from_str(&mock_server.uri()).unwrap()])
+        let network = Network::new("testnet", &[url::Url::from_str(&mock_server.uri()).unwrap()])
             .await
             .expect("Failed to create network");
 

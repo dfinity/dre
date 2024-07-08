@@ -301,7 +301,7 @@ impl RegistryState {
 
     pub async fn update_releases(&mut self) -> Result<()> {
         // If the network isn't mainnet we don't need to check git branches
-        if !self.network.eq(&Network::new("mainnet", &vec![]).await.unwrap()) {
+        if !self.network.eq(&Network::new("mainnet", &[]).await.unwrap()) {
             return Ok(());
         }
         if self.ic_repo.is_some() {
