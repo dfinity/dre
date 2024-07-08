@@ -28,6 +28,7 @@ use std::io::{Read, Write};
 use std::os::unix::fs::PermissionsExt;
 use std::path::PathBuf;
 use std::process::Stdio;
+use std::str::FromStr;
 use std::time::Duration;
 use std::{fmt::Display, path::Path, process::Command};
 use strum::Display;
@@ -1007,13 +1008,45 @@ pub struct ProposeOptions {
 }
 const DEFAULT_IC_ADMIN_VERSION: &str = "778d2bb870f858952ca9fbe69324f9864e3cf5e7";
 
+fn get_ic_admin_revisions_dir() -> anyhow::Result<PathBuf> {
+    let dir = dirs::home_dir()
+        .and_then(|d| Some(d.join("bin").join("ic-admin.revisions")))
+        .ok_or_else(|| anyhow::format_err!("Cannot find home directory"))?;
+
+    if !dir.exists() {
+        std::fs::create_dir_all(&dir)?;
+    }
+
+    Ok(dir)
+}
+const DURATION_BETWEEN_CHECKS: Duration = Duration::from_secs(60 * 60 * 24);
+pub fn should_update_ic_admin() -> Result<(bool, String)> {
+    let ic_admin_bin_dir = get_ic_admin_revisions_dir()?;
+    let file = ic_admin_bin_dir.join("ic-admin.status");
+
+    if !file.exists() {
+        return Ok((true, "".to_string()));
+    }
+
+    let mut status_file = std::fs::File::open(&file)?;
+    let elapsed = status_file.metadata()?.modified()?.elapsed().unwrap_or_default();
+    if elapsed > DURATION_BETWEEN_CHECKS {
+        info!("Checking if there is a new version of ic-admin");
+
+        return Ok((true, "".to_string()));
+    }
+    let mut version = "".to_string();
+    status_file.read_to_string(&mut version)?;
+    info!("Using ic-admin {version} because lock file was created less than 24 hours ago");
+    let path = ic_admin_bin_dir.join(&version).join("ic-admin");
+    Ok((false, path.display().to_string()))
+}
+
 /// Returns a path to downloaded ic-admin binary
 pub async fn download_ic_admin(version: Option<String>) -> Result<String> {
     let version = version.unwrap_or_else(|| DEFAULT_IC_ADMIN_VERSION.to_string()).trim().to_string();
-    let home_dir = dirs::home_dir()
-        .and_then(|d| d.to_str().map(|s| s.to_string()))
-        .ok_or_else(|| anyhow::format_err!("Cannot find home directory"))?;
-    let path = format!("{home_dir}/bin/ic-admin.revisions/{version}/ic-admin");
+    let ic_admin_bin_dir = get_ic_admin_revisions_dir()?;
+    let path = ic_admin_bin_dir.join(&version).join("ic-admin");
     let path = Path::new(&path);
 
     if !path.exists() {
@@ -1032,6 +1065,7 @@ pub async fn download_ic_admin(version: Option<String>) -> Result<String> {
         std::io::copy(&mut decoded, &mut out)?;
         std::fs::set_permissions(path, std::fs::Permissions::from_mode(0o755))?;
     }
+    std::fs::write(ic_admin_bin_dir.join("ic-admin.status"), version)?;
     info!("Using ic-admin: {}", path.display());
 
     Ok(path.to_string_lossy().to_string())

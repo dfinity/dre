@@ -12,7 +12,7 @@ use ic_registry_local_registry::LocalRegistry;
 use crate::{
     auth::Neuron,
     commands::{Args, ExecutableCommand, IcAdminRequirement, RegistryRequirement},
-    ic_admin::{download_ic_admin, IcAdminWrapper},
+    ic_admin::{download_ic_admin, should_update_ic_admin, IcAdminWrapper},
     runner::Runner,
     subnet_manager::SubnetManager,
 };
@@ -101,8 +101,13 @@ impl DreContext {
             }
         };
 
-        let govn_canister_version = governance_canister_version(network.get_nns_urls()).await?;
-        let ic_admin_path = download_ic_admin(Some(govn_canister_version.stringified_hash)).await?;
+        let ic_admin_path = match should_update_ic_admin()? {
+            (true, _) => {
+                let govn_canister_version = governance_canister_version(network.get_nns_urls()).await?;
+                download_ic_admin(Some(govn_canister_version.stringified_hash)).await?
+            }
+            (false, s) => s,
+        };
 
         let ic_admin = Some(Rc::new(IcAdminWrapper::new(
             network.clone(),
