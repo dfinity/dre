@@ -28,10 +28,10 @@ already elected."#)]
 }
 
 impl ExecutableCommand for HostOsCmd {
-    fn require_neuron(&self) -> IcAdminRequirement {
+    fn require_ic_admin(&self) -> IcAdminRequirement {
         match &self.subcommand {
-            HostOsSubcommands::Rollout(r) => r.require_neuron(),
-            HostOsSubcommands::RolloutFromNodeGroup(r) => r.require_neuron(),
+            HostOsSubcommands::Rollout(r) => r.require_ic_admin(),
+            HostOsSubcommands::RolloutFromNodeGroup(r) => r.require_ic_admin(),
         }
     }
 

@@ -25,7 +25,7 @@ pub struct Remove {
 }
 
 impl ExecutableCommand for Remove {
-    fn require_neuron(&self) -> IcAdminRequirement {
+    fn require_ic_admin(&self) -> IcAdminRequirement {
         IcAdminRequirement::Detect
     }
 

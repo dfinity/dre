@@ -18,9 +18,9 @@ pub enum NodesSubcommands {
 }
 
 impl ExecutableCommand for Nodes {
-    fn require_neuron(&self) -> IcAdminRequirement {
+    fn require_ic_admin(&self) -> IcAdminRequirement {
         match &self.subcommand {
-            NodesSubcommands::Remove(r) => r.require_neuron(),
+            NodesSubcommands::Remove(r) => r.require_ic_admin(),
         }
     }
 

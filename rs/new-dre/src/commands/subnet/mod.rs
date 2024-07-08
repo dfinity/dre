@@ -38,13 +38,13 @@ pub enum SubnetSubcommand {
 }
 
 impl ExecutableCommand for SubnetCommand {
-    fn require_neuron(&self) -> IcAdminRequirement {
+    fn require_ic_admin(&self) -> IcAdminRequirement {
         match &self.subcommand {
-            SubnetSubcommand::Deploy(d) => d.require_neuron(),
-            SubnetSubcommand::Replace(r) => r.require_neuron(),
-            SubnetSubcommand::Resize(r) => r.require_neuron(),
-            SubnetSubcommand::Create(c) => c.require_neuron(),
-            SubnetSubcommand::Rescue(r) => r.require_neuron(),
+            SubnetSubcommand::Deploy(d) => d.require_ic_admin(),
+            SubnetSubcommand::Replace(r) => r.require_ic_admin(),
+            SubnetSubcommand::Resize(r) => r.require_ic_admin(),
+            SubnetSubcommand::Create(c) => c.require_ic_admin(),
+            SubnetSubcommand::Rescue(r) => r.require_ic_admin(),
         }
     }
 

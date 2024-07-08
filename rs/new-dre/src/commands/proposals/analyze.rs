@@ -13,7 +13,7 @@ pub struct Analyze {
 }
 
 impl ExecutableCommand for Analyze {
-    fn require_neuron(&self) -> IcAdminRequirement {
+    fn require_ic_admin(&self) -> IcAdminRequirement {
         IcAdminRequirement::Anonymous
     }
 

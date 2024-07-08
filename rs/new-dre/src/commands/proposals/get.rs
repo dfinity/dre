@@ -10,7 +10,7 @@ pub struct Get {
 }
 
 impl ExecutableCommand for Get {
-    fn require_neuron(&self) -> IcAdminRequirement {
+    fn require_ic_admin(&self) -> IcAdminRequirement {
         IcAdminRequirement::None
     }
 

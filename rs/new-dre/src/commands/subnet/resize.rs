@@ -35,7 +35,7 @@ regardless of the decentralization score"#)]
 }
 
 impl ExecutableCommand for Resize {
-    fn require_neuron(&self) -> IcAdminRequirement {
+    fn require_ic_admin(&self) -> IcAdminRequirement {
         IcAdminRequirement::Detect
     }
 

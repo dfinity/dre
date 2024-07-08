@@ -18,7 +18,7 @@ pub struct GuestOs {
 }
 
 impl ExecutableCommand for GuestOs {
-    fn require_neuron(&self) -> IcAdminRequirement {
+    fn require_ic_admin(&self) -> IcAdminRequirement {
         IcAdminRequirement::Detect
     }
 

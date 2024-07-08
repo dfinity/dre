@@ -63,7 +63,7 @@ impl DreContext {
             args.hsm_pin.clone(),
             args.yes,
             args.dry_run,
-            args.require_neuron(),
+            args.require_ic_admin(),
         )
         .await?;
 

@@ -10,7 +10,7 @@ pub struct Propose {
 }
 
 impl ExecutableCommand for Propose {
-    fn require_neuron(&self) -> IcAdminRequirement {
+    fn require_ic_admin(&self) -> IcAdminRequirement {
         IcAdminRequirement::Detect
     }
 

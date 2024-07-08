@@ -20,9 +20,9 @@ pub enum VersionCommands {
 }
 
 impl ExecutableCommand for VersionCmd {
-    fn require_neuron(&self) -> IcAdminRequirement {
+    fn require_ic_admin(&self) -> IcAdminRequirement {
         match &self.subcommand {
-            VersionCommands::ReviseElectedVersions(c) => c.require_neuron(),
+            VersionCommands::ReviseElectedVersions(c) => c.require_ic_admin(),
         }
     }
 
@@ -73,10 +73,10 @@ impl From<ReviseElectedVersionsCommands> for Artifact {
 }
 
 impl ExecutableCommand for ReviseElectedVersionsCmd {
-    fn require_neuron(&self) -> IcAdminRequirement {
+    fn require_ic_admin(&self) -> IcAdminRequirement {
         match &self.subcommand {
-            ReviseElectedVersionsCommands::GuestOs(g) => g.require_neuron(),
-            ReviseElectedVersionsCommands::HostOs(h) => h.require_neuron(),
+            ReviseElectedVersionsCommands::GuestOs(g) => g.require_ic_admin(),
+            ReviseElectedVersionsCommands::HostOs(h) => h.require_ic_admin(),
         }
     }
 

@@ -15,7 +15,7 @@ pub struct Deploy {
 }
 
 impl ExecutableCommand for Deploy {
-    fn require_neuron(&self) -> IcAdminRequirement {
+    fn require_ic_admin(&self) -> IcAdminRequirement {
         IcAdminRequirement::Detect
     }
 

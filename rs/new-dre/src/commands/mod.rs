@@ -146,7 +146,7 @@ pub enum Subcommands {
 }
 
 pub trait ExecutableCommand {
-    fn require_neuron(&self) -> IcAdminRequirement;
+    fn require_ic_admin(&self) -> IcAdminRequirement;
 
     fn require_registry(&self) -> RegistryRequirement;
 
@@ -238,24 +238,24 @@ pub enum IcAdminRequirement {
 }
 
 impl ExecutableCommand for Args {
-    fn require_neuron(&self) -> IcAdminRequirement {
+    fn require_ic_admin(&self) -> IcAdminRequirement {
         match &self.subcommands {
-            Subcommands::DerToPrincipal(c) => c.require_neuron(),
-            Subcommands::Heal(c) => c.require_neuron(),
-            Subcommands::Subnet(c) => c.require_neuron(),
-            Subcommands::Get(c) => c.require_neuron(),
-            Subcommands::Propose(c) => c.require_neuron(),
-            Subcommands::UpdateUnassignedNodes(c) => c.require_neuron(),
-            Subcommands::Version(c) => c.require_neuron(),
-            Subcommands::HostOs(c) => c.require_neuron(),
-            Subcommands::Nodes(c) => c.require_neuron(),
-            Subcommands::ApiBoundaryNodes(c) => c.require_neuron(),
-            Subcommands::Vote(c) => c.require_neuron(),
-            Subcommands::TrustworthyMetrics(c) => c.require_neuron(),
-            Subcommands::Registry(c) => c.require_neuron(),
-            Subcommands::Firewall(c) => c.require_neuron(),
-            Subcommands::Upgrade(c) => c.require_neuron(),
-            Subcommands::Proposals(c) => c.require_neuron(),
+            Subcommands::DerToPrincipal(c) => c.require_ic_admin(),
+            Subcommands::Heal(c) => c.require_ic_admin(),
+            Subcommands::Subnet(c) => c.require_ic_admin(),
+            Subcommands::Get(c) => c.require_ic_admin(),
+            Subcommands::Propose(c) => c.require_ic_admin(),
+            Subcommands::UpdateUnassignedNodes(c) => c.require_ic_admin(),
+            Subcommands::Version(c) => c.require_ic_admin(),
+            Subcommands::HostOs(c) => c.require_ic_admin(),
+            Subcommands::Nodes(c) => c.require_ic_admin(),
+            Subcommands::ApiBoundaryNodes(c) => c.require_ic_admin(),
+            Subcommands::Vote(c) => c.require_ic_admin(),
+            Subcommands::TrustworthyMetrics(c) => c.require_ic_admin(),
+            Subcommands::Registry(c) => c.require_ic_admin(),
+            Subcommands::Firewall(c) => c.require_ic_admin(),
+            Subcommands::Upgrade(c) => c.require_ic_admin(),
+            Subcommands::Proposals(c) => c.require_ic_admin(),
         }
     }
 

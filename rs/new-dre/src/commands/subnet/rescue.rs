@@ -15,7 +15,7 @@ pub struct Rescue {
 }
 
 impl ExecutableCommand for Rescue {
-    fn require_neuron(&self) -> IcAdminRequirement {
+    fn require_ic_admin(&self) -> IcAdminRequirement {
         IcAdminRequirement::Detect
     }
 

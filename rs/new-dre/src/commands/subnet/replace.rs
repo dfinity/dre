@@ -53,7 +53,7 @@ regardless of the decentralization score"#)]
 }
 
 impl ExecutableCommand for Replace {
-    fn require_neuron(&self) -> IcAdminRequirement {
+    fn require_ic_admin(&self) -> IcAdminRequirement {
         IcAdminRequirement::Detect
     }
 

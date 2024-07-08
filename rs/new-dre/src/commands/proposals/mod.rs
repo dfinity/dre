@@ -82,13 +82,13 @@ pub enum ProposalsSubcommands {
 }
 
 impl ExecutableCommand for Proposals {
-    fn require_neuron(&self) -> IcAdminRequirement {
+    fn require_ic_admin(&self) -> IcAdminRequirement {
         match &self.subcommand {
-            ProposalsSubcommands::Pending(p) => p.require_neuron(),
-            ProposalsSubcommands::Get(g) => g.require_neuron(),
-            ProposalsSubcommands::Analyze(a) => a.require_neuron(),
-            ProposalsSubcommands::Filter(f) => f.require_neuron(),
-            ProposalsSubcommands::List(l) => l.require_neuron(),
+            ProposalsSubcommands::Pending(p) => p.require_ic_admin(),
+            ProposalsSubcommands::Get(g) => g.require_ic_admin(),
+            ProposalsSubcommands::Analyze(a) => a.require_ic_admin(),
+            ProposalsSubcommands::Filter(f) => f.require_ic_admin(),
+            ProposalsSubcommands::List(l) => l.require_ic_admin(),
         }
     }
 

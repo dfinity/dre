@@ -7,7 +7,7 @@ use crate::commands::{ExecutableCommand, IcAdminRequirement, RegistryRequirement
 pub struct Pending {}
 
 impl ExecutableCommand for Pending {
-    fn require_neuron(&self) -> IcAdminRequirement {
+    fn require_ic_admin(&self) -> IcAdminRequirement {
         IcAdminRequirement::None
     }
 

@@ -71,7 +71,7 @@ supported values are absolute numbers (10) or percentage (10%)"#
 }
 
 impl ExecutableCommand for RolloutFromNodeGroup {
-    fn require_neuron(&self) -> IcAdminRequirement {
+    fn require_ic_admin(&self) -> IcAdminRequirement {
         IcAdminRequirement::Detect
     }
 

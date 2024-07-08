@@ -15,7 +15,7 @@ minimizing the number of replaced nodes per subnet"#
 }
 
 impl ExecutableCommand for Heal {
-    fn require_neuron(&self) -> IcAdminRequirement {
+    fn require_ic_admin(&self) -> IcAdminRequirement {
         IcAdminRequirement::Detect
     }
 

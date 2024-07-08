@@ -17,7 +17,6 @@ mod subnet_manager;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    let _args = Args::parse();
     init_logger();
     let version = env!("CARGO_PKG_VERSION");
     info!("Running version {}", version);

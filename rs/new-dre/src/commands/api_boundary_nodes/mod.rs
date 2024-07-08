@@ -31,11 +31,11 @@ should be rolled out."#)]
 }
 
 impl ExecutableCommand for ApiBoundaryNodes {
-    fn require_neuron(&self) -> IcAdminRequirement {
+    fn require_ic_admin(&self) -> IcAdminRequirement {
         match &self.subcommand {
-            ApiBoundaryNodesSubcommands::Add(a) => a.require_neuron(),
-            ApiBoundaryNodesSubcommands::Update(u) => u.require_neuron(),
-            ApiBoundaryNodesSubcommands::Remove(r) => r.require_neuron(),
+            ApiBoundaryNodesSubcommands::Add(a) => a.require_ic_admin(),
+            ApiBoundaryNodesSubcommands::Update(u) => u.require_ic_admin(),
+            ApiBoundaryNodesSubcommands::Remove(r) => r.require_ic_admin(),
         }
     }
 

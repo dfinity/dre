@@ -11,7 +11,7 @@ pub struct DerToPrincipal {
 }
 
 impl ExecutableCommand for DerToPrincipal {
-    fn require_neuron(&self) -> IcAdminRequirement {
+    fn require_ic_admin(&self) -> IcAdminRequirement {
         IcAdminRequirement::None
     }
 

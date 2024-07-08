@@ -211,7 +211,7 @@ impl From<TopicUpstream> for Topic {
 }
 
 impl ExecutableCommand for Filter {
-    fn require_neuron(&self) -> IcAdminRequirement {
+    fn require_ic_admin(&self) -> IcAdminRequirement {
         IcAdminRequirement::None
     }
 
