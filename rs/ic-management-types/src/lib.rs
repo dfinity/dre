@@ -765,20 +765,20 @@ mod tests {
 
     #[tokio::test]
     async fn test_network_new_mainnet() {
-        let network = Network::new("mainnet", &vec![]).await.unwrap();
+        let network = Network::new("mainnet", &[]).await.unwrap();
 
         assert_eq!(network.name, "mainnet");
-        assert_eq!(network.get_nns_urls(), &vec![Url::from_str("https://ic0.app").unwrap()]);
+        assert_eq!(network.get_nns_urls(), &[Url::from_str("https://ic0.app").unwrap()]);
     }
 
     #[tokio::test]
     async fn test_network_new_mainnet_custom_url() {
         let mock_server = MockServer::start().await;
         let mock_server_url: Url = mock_server.uri().parse().unwrap();
-        let network = Network::new("mainnet", &vec![mock_server_url.clone()]).await.unwrap();
+        let network = Network::new("mainnet", &[mock_server_url.clone()]).await.unwrap();
 
         assert_eq!(network.name, "mainnet");
-        assert_eq!(network.get_nns_urls(), &vec![mock_server_url]);
+        assert_eq!(network.get_nns_urls(), &[mock_server_url]);
     }
 
     #[tokio::test]
@@ -791,23 +791,19 @@ mod tests {
         let expected_nns_urls = vec![mock_server_url.clone()];
 
         // Test with the invalid URL last
-        let network = Network::new("mainnet", &vec![mock_server_url.clone(), invalid_url1.clone()])
-            .await
-            .unwrap();
+        let network = Network::new("mainnet", &[mock_server_url.clone(), invalid_url1.clone()]).await.unwrap();
 
         assert_eq!(network.name, "mainnet");
         assert_eq!(network.get_nns_urls(), &expected_nns_urls);
 
         // Test with the invalid URL first
-        let network = Network::new("mainnet", &vec![invalid_url1.clone(), mock_server_url.clone()])
-            .await
-            .unwrap();
+        let network = Network::new("mainnet", &[invalid_url1.clone(), mock_server_url.clone()]).await.unwrap();
 
         assert_eq!(network.name, "mainnet");
         assert_eq!(network.get_nns_urls(), &expected_nns_urls);
 
         // Test with the valid URL in the middle
-        let network = Network::new("mainnet", &vec![invalid_url1, mock_server_url.clone(), invalid_url2])
+        let network = Network::new("mainnet", &[invalid_url1, mock_server_url.clone(), invalid_url2])
             .await
             .unwrap();
 
@@ -818,7 +814,7 @@ mod tests {
     #[ignore] // Ignore failures since staging IC is not accessible from GitHub actions
     #[tokio::test]
     async fn test_network_new_staging() {
-        let network = Network::new("staging", &vec![]).await.unwrap();
+        let network = Network::new("staging", &[]).await.unwrap();
 
         assert_eq!(network.name, "staging");
         assert_eq!(
@@ -830,7 +826,7 @@ mod tests {
     #[tokio::test]
     async fn test_network_new_all_unreachable() {
         let name = "custom";
-        let nns_urls = vec![Url::from_str("https://unreachable.url").unwrap()];
+        let nns_urls = &[Url::from_str("https://unreachable.url").unwrap()];
         let network = Network::new(name, &nns_urls).await;
 
         assert_eq!(network, Err("No reachable NNS URLs provided".to_string()));

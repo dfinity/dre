@@ -534,7 +534,7 @@ impl DefinitionsSupervisor {
             retry::retry(retry::delay::Exponential::from_millis(10).take(5), || {
                 std::fs::OpenOptions::new()
                     .create(true)
-                    .truncate(false)
+                    .truncate(true)
                     .write(true)
                     .open(networks_state_file.as_path())
                     .and_then(|mut file| {
