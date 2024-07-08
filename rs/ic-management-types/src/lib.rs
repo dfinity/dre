@@ -827,7 +827,7 @@ mod tests {
     async fn test_network_new_all_unreachable() {
         let name = "custom";
         let nns_urls = &[Url::from_str("https://unreachable.url").unwrap()];
-        let network = Network::new(name, &nns_urls).await;
+        let network = Network::new(name, nns_urls).await;
 
         assert_eq!(network, Err("No reachable NNS URLs provided".to_string()));
     }

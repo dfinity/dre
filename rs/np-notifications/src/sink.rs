@@ -125,7 +125,7 @@ mod test {
         );
         let wh = WebhookSink {
             url: url::Url::parse(&server.url("/success").to_string()).unwrap(),
-            auth: None,
+            _auth: None,
         };
         let result = wh.send(notification.clone()).await;
         assert!(result.is_ok());
@@ -139,7 +139,7 @@ mod test {
         );
         let wh = WebhookSink {
             url: url::Url::parse(&server.url("/failure").to_string()).unwrap(),
-            auth: None,
+            _auth: None,
         };
         let result = wh.send(notification).await;
         assert!(result.is_err());
