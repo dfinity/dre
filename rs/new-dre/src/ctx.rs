@@ -27,7 +27,7 @@ pub struct DreContext {
 pub enum Registry {
     Synced(LocalRegistry),
     WithNodeDetails(Rc<RegistryState>),
-    WithGitInfo(Rc<RegistryState>),
+    Full(Rc<RegistryState>),
 }
 
 impl Registry {
@@ -96,7 +96,7 @@ impl DreContext {
             IcAdminRequirement::Detect => {
                 Neuron::new(private_key_pem, hsm_slot, hsm_pin.clone(), hsm_key_id.clone(), neuron_id, &network, true).await?
             }
-            IcAdminRequirement::Hardcoded => {
+            IcAdminRequirement::OverridableBy => {
                 Neuron::new(private_key_pem, hsm_slot, hsm_pin.clone(), hsm_key_id.clone(), neuron_id, &network, true).await?
             }
         };
@@ -133,9 +133,7 @@ impl DreContext {
                 )?))));
             }
             RegistryRequirement::WithNodeDetails => RegistryState::new(network, true, None).await,
-            RegistryRequirement::WithGitInfo => {
-                RegistryState::new(network, true, Some(IcRepo::new().expect("Should be able to create IC repo"))).await
-            }
+            RegistryRequirement::Full => RegistryState::new(network, true, Some(IcRepo::new().expect("Should be able to create IC repo"))).await,
         };
 
         // Fetch node providers
@@ -148,7 +146,7 @@ impl DreContext {
         // Update node details
         registry.update_only_node_details(&node_providers).await?;
 
-        if let RegistryRequirement::WithGitInfo = requirement {
+        if let RegistryRequirement::Full = requirement {
             registry.update_releases().await?;
         }
 
@@ -156,7 +154,7 @@ impl DreContext {
         Ok(Some(Rc::new(match requirement {
             RegistryRequirement::None | RegistryRequirement::Synced => unreachable!("Shouldn't happen"),
             RegistryRequirement::WithNodeDetails => Registry::WithNodeDetails(registry),
-            RegistryRequirement::WithGitInfo => Registry::WithGitInfo(registry),
+            RegistryRequirement::Full => Registry::Full(registry),
         })))
     }
 
@@ -200,7 +198,7 @@ impl DreContext {
             match registry.as_ref() {
                 Registry::Synced(_) => panic!("This command doesn't have a high enough registry requirement"),
                 Registry::WithNodeDetails(r) => r.to_owned(),
-                Registry::WithGitInfo(r) => r.to_owned(),
+                Registry::Full(r) => r.to_owned(),
             },
         )
     }
@@ -211,7 +209,7 @@ impl DreContext {
         SubnetManager::new(match registry.as_ref() {
             Registry::Synced(_) => panic!("This command doesn't have a high enough registry requirement"),
             Registry::WithNodeDetails(r) => r.to_owned(),
-            Registry::WithGitInfo(r) => r.to_owned(),
+            Registry::Full(r) => r.to_owned(),
         })
     }
 }

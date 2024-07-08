@@ -23,7 +23,7 @@ impl ExecutableCommand for HostOs {
     }
 
     fn require_registry(&self) -> RegistryRequirement {
-        RegistryRequirement::WithGitInfo
+        RegistryRequirement::Full
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {

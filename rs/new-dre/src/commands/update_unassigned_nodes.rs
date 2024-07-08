@@ -11,7 +11,7 @@ pub struct UpdateUnassignedNodes {
 
 impl ExecutableCommand for UpdateUnassignedNodes {
     fn require_ic_admin(&self) -> IcAdminRequirement {
-        IcAdminRequirement::Hardcoded
+        IcAdminRequirement::OverridableBy
     }
 
     fn require_registry(&self) -> RegistryRequirement {

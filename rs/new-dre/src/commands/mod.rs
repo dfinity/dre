@@ -227,14 +227,14 @@ pub enum RegistryRequirement {
     None,
     Synced,
     WithNodeDetails,
-    WithGitInfo,
+    Full,
 }
 
 pub enum IcAdminRequirement {
     None,
-    Anonymous, // for get commands
-    Detect,    // detect the neuron
-    Hardcoded, // eg automation which we know where is placed
+    Anonymous,     // for get commands
+    Detect,        // detect the neuron
+    OverridableBy, // eg automation which we know where is placed
 }
 
 impl ExecutableCommand for Args {
