@@ -1,9 +1,13 @@
+use std::cell::RefCell;
 use std::rc::Rc;
 
 use decentralization::network::SubnetQueryBy;
 use decentralization::network::TopologyManager;
 use decentralization::SubnetChangeResponse;
+use ic_management_backend::git_ic_repo::IcRepo;
+use ic_management_backend::lazy_git::LazyGit;
 use ic_management_backend::lazy_registry::LazyRegistry;
+use ic_management_types::Network;
 use ic_management_types::NetworkError;
 use ic_types::PrincipalId;
 
@@ -11,13 +15,43 @@ use crate::ic_admin::{self, IcAdminWrapper};
 use crate::ic_admin::{ProposeCommand, ProposeOptions};
 
 pub struct Runner {
-    ic_admin: IcAdminWrapper,
+    ic_admin: Rc<IcAdminWrapper>,
     registry: Rc<LazyRegistry>,
+    ic_repo: RefCell<Option<Rc<LazyGit>>>,
+    network: Network,
 }
 
 impl Runner {
-    pub fn new(ic_admin: IcAdminWrapper, registry: Rc<LazyRegistry>) -> Self {
-        Self { ic_admin, registry }
+    pub fn new(ic_admin: Rc<IcAdminWrapper>, registry: Rc<LazyRegistry>, network: Network) -> Self {
+        Self {
+            ic_admin,
+            registry,
+            ic_repo: RefCell::new(None),
+            network,
+        }
+    }
+
+    fn ic_repo(&self) -> Rc<LazyGit> {
+        if let Some(ic_repo) = self.ic_repo.borrow().as_ref() {
+            return ic_repo.clone();
+        }
+
+        let ic_repo = Rc::new(
+            LazyGit::new(
+                self.network.clone(),
+                self.registry
+                    .elected_guestos()
+                    .expect("Should be able to fetch elected guestos versions")
+                    .to_vec(),
+                self.registry
+                    .elected_hostos()
+                    .expect("Should be able to fetch elected hostos versions")
+                    .to_vec(),
+            )
+            .expect("Should be able to create IC repo"),
+        );
+        *self.ic_repo.borrow_mut() = Some(ic_repo.clone());
+        ic_repo
     }
 
     pub async fn deploy(&self, subnet: &PrincipalId, version: &str) -> anyhow::Result<()> {

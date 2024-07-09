@@ -1,6 +1,7 @@
 pub mod endpoints;
 pub mod git_ic_repo;
 pub mod health;
+pub mod lazy_git;
 pub mod lazy_registry;
 pub mod node_labels;
 pub mod prometheus;

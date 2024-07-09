@@ -2,7 +2,6 @@ use std::{cell::RefCell, path::PathBuf, rc::Rc, str::FromStr, time::Duration};
 
 use ic_canisters::{governance::governance_canister_version, CanisterClient};
 use ic_management_backend::{
-    git_ic_repo::IcRepo,
     lazy_registry::LazyRegistry,
     proposal::ProposalAgent,
     public_dashboard::query_ic_dashboard_list,
@@ -16,6 +15,7 @@ use crate::{
     auth::Neuron,
     commands::{Args, ExecutableCommand, IcAdminRequirement},
     ic_admin::{download_ic_admin, should_update_ic_admin, IcAdminWrapper},
+    runner::Runner,
     subnet_manager::SubnetManager,
 };
 
@@ -24,6 +24,7 @@ pub struct DreContext {
     network: Network,
     registry: RefCell<Option<Rc<LazyRegistry>>>,
     ic_admin: Option<Rc<IcAdminWrapper>>,
+    runner: RefCell<Option<Rc<Runner>>>,
 }
 
 impl DreContext {
@@ -58,6 +59,7 @@ impl DreContext {
             network,
             registry: RefCell::new(None),
             ic_admin,
+            runner: RefCell::new(None),
         })
     }
 
@@ -168,5 +170,15 @@ impl DreContext {
 
     pub fn proposals_agent(&self) -> ProposalAgent {
         ProposalAgent::new(self.network().get_nns_urls())
+    }
+
+    pub async fn runner(&self) -> Rc<Runner> {
+        if let Some(r) = self.runner.borrow().as_ref() {
+            return r.clone();
+        }
+
+        let runner = Rc::new(Runner::new(self.ic_admin(), self.registry().await, self.network().clone()));
+        *self.runner.borrow_mut() = Some(runner.clone());
+        runner
     }
 }
