@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+use std::net::Ipv6Addr;
 use std::str::FromStr;
 use std::{cell::RefCell, collections::BTreeMap, rc::Rc};
 
@@ -9,19 +11,20 @@ use ic_protobuf::registry::{
     api_boundary_node::v1::ApiBoundaryNodeRecord, dc::v1::DataCenterRecord, hostos_version::v1::HostosVersionRecord,
     replica_version::v1::ReplicaVersionRecord, subnet::v1::SubnetRecord, unassigned_nodes_config::v1::UnassignedNodesConfigRecord,
 };
+use ic_registry_client_helpers::node::NodeRegistry;
 use ic_registry_client_helpers::{node::NodeRecord, node_operator::NodeOperatorRecord};
 use ic_registry_keys::{
     API_BOUNDARY_NODE_RECORD_KEY_PREFIX, DATA_CENTER_KEY_PREFIX, HOSTOS_VERSION_KEY_PREFIX, NODE_OPERATOR_RECORD_KEY_PREFIX, NODE_RECORD_KEY_PREFIX,
     REPLICA_VERSION_KEY_PREFIX, SUBNET_RECORD_KEY_PREFIX,
 };
 use ic_registry_local_registry::LocalRegistry;
-use ic_types::{PrincipalId, RegistryVersion};
+use ic_types::{NodeId, PrincipalId, RegistryVersion};
 use itertools::Itertools;
 use log::warn;
 
 use crate::node_labels;
 use crate::public_dashboard::query_ic_dashboard_list;
-use crate::registry::RegistryFamilyEntries;
+use crate::registry::{RegistryFamilyEntries, DFINITY_DCS};
 
 pub struct LazyRegistry {
     local_registry: LocalRegistry,
@@ -248,5 +251,100 @@ impl LazyRegistry {
         let records = Rc::new(records);
         *self.operators.borrow_mut() = Some(records.clone());
         Ok(records)
+    }
+
+    pub fn nodes(&self) -> anyhow::Result<Rc<BTreeMap<PrincipalId, Node>>> {
+        if let Some(nodes) = self.nodes.borrow().as_ref() {
+            return Ok(nodes.to_owned());
+        }
+
+        let node_entries = self.get_family_entries::<NodeRecord>()?;
+        let versioned_node_entries = self.get_family_entries_versioned::<NodeRecord>()?;
+        let dfinity_dcs = DFINITY_DCS.split(' ').map(|dc| dc.to_string().to_lowercase()).collect::<HashSet<_>>();
+        let api_boundary_nodes = self.get_family_entries::<ApiBoundaryNodeRecord>()?;
+
+        let nodes: BTreeMap<_, _> = node_entries
+            .iter()
+            // Skipping nodes without operator. This should only occur at version 1
+            .filter(|(_, nr)| !nr.node_operator_id.is_empty())
+            .map(|(p, nr)| {
+                let guest = self.node_record_guest(nr);
+                let operator = self
+                    .operators()
+                    .expect("Should be able to fetch operators")
+                    .iter()
+                    .find(|(op, _)| op.to_vec() == nr.node_operator_id)
+                    .map(|(_, o)| o.to_owned())
+                    .expect("Missing operator referenced by a node");
+
+                let principal = PrincipalId::from_str(p).expect("Invalid node principal id");
+                let ip_addr = Self::node_ip_addr(nr);
+                let dc_name = match &operator.datacenter {
+                    Some(dc) => dc.name.to_lowercase(),
+                    None => "".to_string(),
+                };
+                (
+                    principal,
+                    Node {
+                        principal,
+                        dfinity_owned: Some(dfinity_dcs.contains(&dc_name) || guest.as_ref().map(|g| g.dfinity_owned).unwrap_or_default()),
+                        ip_addr,
+                        hostname: guest
+                            .as_ref()
+                            .map(|g| g.name.clone())
+                            .unwrap_or_else(|| {
+                                format!(
+                                    "{}-{}",
+                                    operator.datacenter.as_ref().map(|d| d.name.clone()).unwrap_or_else(|| "??".to_string()),
+                                    p.to_string().split_once('-').map(|(first, _)| first).unwrap_or("?????")
+                                )
+                            })
+                            .into(),
+                        subnet_id: self
+                            .local_registry
+                            .get_subnet_id_from_node_id(NodeId::new(principal), self.local_registry.get_latest_version())
+                            .expect("failed to get subnet id")
+                            .map(|s| s.get()),
+                        hostos_version: nr.hostos_version_id.clone().unwrap_or_default(),
+                        // TODO: map hostos release
+                        hostos_release: None,
+                        operator,
+                        proposal: None,
+                        label: guest.map(|g| g.name),
+                        decentralized: ip_addr.segments()[4] == 0x6801,
+                        duplicates: versioned_node_entries
+                            .iter()
+                            .filter(|(_, (_, nr2))| Self::node_ip_addr(nr2) == Self::node_ip_addr(nr))
+                            .max_by_key(|(_, (version, _))| version)
+                            .and_then(|(p2, _)| {
+                                if p2 == p {
+                                    None
+                                } else {
+                                    Some(PrincipalId::from_str(p2).expect("invalid node principal id"))
+                                }
+                            }),
+                        is_api_boundary_node: api_boundary_nodes.contains_key(p),
+                    },
+                )
+            })
+            .collect();
+
+        let nodes = Rc::new(nodes);
+        *self.nodes.borrow_mut() = Some(nodes.clone());
+        Ok(nodes)
+    }
+
+    fn node_record_guest(&self, nr: &NodeRecord) -> Option<Guest> {
+        match self.node_labels() {
+            Ok(guests) => guests,
+            Err(_) => Rc::new(vec![]),
+        }
+        .iter()
+        .find(|g| g.ipv6 == Ipv6Addr::from_str(&nr.http.clone().unwrap().ip_addr).unwrap())
+        .cloned()
+    }
+
+    fn node_ip_addr(nr: &NodeRecord) -> Ipv6Addr {
+        Ipv6Addr::from_str(&nr.http.clone().expect("missing ipv6 address").ip_addr).expect("invalid ipv6 address")
     }
 }
