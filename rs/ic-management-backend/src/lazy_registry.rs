@@ -486,4 +486,35 @@ impl LazyRegistry {
 
         Ok(())
     }
+
+    pub fn nns_replica_version(&self) -> anyhow::Result<Option<String>> {
+        Ok(self
+            .subnets()?
+            .get(&PrincipalId::from_str("tdb26-jop6k-aogll-7ltgs-eruif-6kk7m-qpktf-gdiqx-mxtrf-vb5e6-eqe").unwrap())
+            .map(|s| s.replica_version.clone()))
+    }
+
+    pub fn missing_guests(&self) -> anyhow::Result<Vec<Guest>> {
+        let nodes = self.nodes()?;
+        let mut missing_guests = self
+            .node_labels()?
+            .iter()
+            .filter(|g| !nodes.iter().any(|(_, n)| n.label.clone().unwrap_or_default() == g.name))
+            .cloned()
+            .collect_vec();
+
+        missing_guests.sort_by_key(|g| g.name.to_owned());
+        missing_guests.dedup_by_key(|g| g.name.to_owned());
+
+        Ok(missing_guests)
+    }
+
+    pub fn get_decentralized_nodes(&self, principals: &[PrincipalId]) -> anyhow::Result<Vec<decentralization::network::Node>> {
+        Ok(self
+            .nodes()?
+            .values()
+            .filter(|n| principals.contains(&n.principal))
+            .map(decentralization::network::Node::from)
+            .collect_vec())
+    }
 }
