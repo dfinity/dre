@@ -319,10 +319,7 @@ impl Runner {
                     builder_dc.push_record([
                         dc,
                         nodes_with_sub.iter().map(|(p, _)| p.to_string()).join("\n"),
-                        nodes_with_sub
-                            .iter()
-                            .map(|(_, s)| s.to_string().split('-').next().unwrap().to_string())
-                            .join("\n"),
+                        nodes_with_sub.iter().map(|(_, s)| s.split('-').next().unwrap().to_string()).join("\n"),
                     ]);
                 });
 
