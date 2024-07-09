@@ -177,7 +177,12 @@ impl DreContext {
             return r.clone();
         }
 
-        let runner = Rc::new(Runner::new(self.ic_admin(), self.registry().await, self.network().clone()));
+        let runner = Rc::new(Runner::new(
+            self.ic_admin(),
+            self.registry().await,
+            self.network().clone(),
+            self.proposals_agent(),
+        ));
         *self.runner.borrow_mut() = Some(runner.clone());
         runner
     }

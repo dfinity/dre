@@ -1,4 +1,5 @@
 use std::cell::RefCell;
+use std::collections::BTreeSet;
 use std::rc::Rc;
 
 use decentralization::network::SubnetQueryBy;
@@ -7,9 +8,15 @@ use decentralization::SubnetChangeResponse;
 use ic_management_backend::git_ic_repo::IcRepo;
 use ic_management_backend::lazy_git::LazyGit;
 use ic_management_backend::lazy_registry::LazyRegistry;
+use ic_management_backend::proposal::ProposalAgent;
+use ic_management_backend::registry::ReleasesOps;
+use ic_management_types::Artifact;
 use ic_management_types::Network;
 use ic_management_types::NetworkError;
+use ic_management_types::Release;
 use ic_types::PrincipalId;
+use itertools::Itertools;
+use log::info;
 
 use crate::ic_admin::{self, IcAdminWrapper};
 use crate::ic_admin::{ProposeCommand, ProposeOptions};
@@ -19,15 +26,17 @@ pub struct Runner {
     registry: Rc<LazyRegistry>,
     ic_repo: RefCell<Option<Rc<LazyGit>>>,
     network: Network,
+    proposal_agent: ProposalAgent,
 }
 
 impl Runner {
-    pub fn new(ic_admin: Rc<IcAdminWrapper>, registry: Rc<LazyRegistry>, network: Network) -> Self {
+    pub fn new(ic_admin: Rc<IcAdminWrapper>, registry: Rc<LazyRegistry>, network: Network, agent: ProposalAgent) -> Self {
         Self {
             ic_admin,
             registry,
             ic_repo: RefCell::new(None),
             network,
+            proposal_agent: agent,
         }
     }
 
@@ -190,6 +199,69 @@ impl Runner {
         self.run_membership_change(change.clone(), replace_proposal_options(&change)?).await
     }
 
+    pub async fn retireable_versions(&self, artifact: &Artifact) -> anyhow::Result<Vec<Release>> {
+        match artifact {
+            Artifact::GuestOs => self.retireable_guestos_versions().await,
+            Artifact::HostOs => self.retireable_hostos_versions().await,
+        }
+    }
+
+    async fn retireable_hostos_versions(&self) -> anyhow::Result<Vec<Release>> {
+        let ic_repo = self.ic_repo();
+        let hosts = ic_repo.hostos_releases().await?;
+        let active_releases = hosts.get_active_branches();
+        let hostos_versions: BTreeSet<String> = self.registry.nodes()?.values().map(|s| s.hostos_version.clone()).collect();
+        let versions_in_proposals: BTreeSet<String> = self
+            .proposal_agent
+            .list_open_elect_hostos_proposals()
+            .await?
+            .iter()
+            .flat_map(|p| p.versions_unelect.iter())
+            .cloned()
+            .collect();
+        info!("Active releases: {}", active_releases.iter().join(", "));
+        info!("HostOS versions in use on nodes: {}", hostos_versions.iter().join(", "));
+        info!("HostOS versions in open proposals: {}", versions_in_proposals.iter().join(", "));
+        let hostos_releases = ic_repo.hostos_releases().await?;
+        Ok(hostos_releases
+            .releases
+            .clone()
+            .into_iter()
+            .filter(|rr| !active_releases.contains(&rr.branch))
+            .filter(|rr| !hostos_versions.contains(&rr.commit_hash))
+            .filter(|rr| !versions_in_proposals.contains(&rr.commit_hash))
+            .collect())
+    }
+
+    async fn retireable_guestos_versions(&self) -> anyhow::Result<Vec<Release>> {
+        let ic_repo = self.ic_repo();
+        let guests = ic_repo.guestos_releases().await?;
+        let active_releases = guests.get_active_branches();
+        let subnet_versions: BTreeSet<String> = self.registry.subnets()?.values().map(|s| s.replica_version.clone()).collect();
+        let version_on_unassigned_nodes = self.registry.unassigned_nodes_replica_version()?;
+        let versions_in_proposals: BTreeSet<String> = self
+            .proposal_agent
+            .list_open_elect_replica_proposals()
+            .await?
+            .iter()
+            .flat_map(|p| p.versions_unelect.iter())
+            .cloned()
+            .collect();
+        info!("Active releases: {}", active_releases.iter().join(", "));
+        info!("GuestOS versions in use on subnets: {}", subnet_versions.iter().join(", "));
+        info!("GuestOS version on unassigned nodes: {}", version_on_unassigned_nodes);
+        info!("GuestOS versions in open proposals: {}", versions_in_proposals.iter().join(", "));
+        let guestos_releases = ic_repo.guestos_releases().await?;
+        Ok(guestos_releases
+            .releases
+            .clone()
+            .into_iter()
+            .filter(|rr| !active_releases.contains(&rr.branch))
+            .filter(|rr| !subnet_versions.contains(&rr.commit_hash) && rr.commit_hash != *version_on_unassigned_nodes)
+            .filter(|rr| !versions_in_proposals.contains(&rr.commit_hash))
+            .collect())
+    }
+
     async fn run_membership_change(&self, change: SubnetChangeResponse, options: ProposeOptions) -> anyhow::Result<()> {
         let subnet_id = change.subnet_id.ok_or_else(|| anyhow::anyhow!("subnet_id is required"))?;
         let pending_action = self
@@ -220,8 +292,6 @@ impl Runner {
             .map_err(|e| anyhow::anyhow!(e))?;
         Ok(())
     }
-
-    //TODO: add lazy git registry to the runner
 }
 
 pub fn replace_proposal_options(change: &SubnetChangeResponse) -> anyhow::Result<ic_admin::ProposeOptions> {

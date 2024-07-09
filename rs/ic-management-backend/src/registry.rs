@@ -158,7 +158,7 @@ impl RegistryFamilyEntries for LocalRegistry {
     }
 }
 
-trait ReleasesOps {
+pub trait ReleasesOps {
     fn get_active_branches(&self) -> Vec<String>;
 }
 impl ReleasesOps for ArtifactReleases {
