@@ -814,7 +814,6 @@ impl NodesConverter for RegistryState {
     }
 }
 
-#[async_trait]
 impl SubnetQuerier for RegistryState {
     async fn subnet(&self, by: SubnetQueryBy) -> Result<decentralization::network::DecentralizedSubnet, NetworkError> {
         match by {
@@ -863,7 +862,6 @@ impl SubnetQuerier for RegistryState {
     }
 }
 
-#[async_trait]
 impl AvailableNodesQuerier for RegistryState {
     async fn available_nodes(&self) -> Result<Vec<decentralization::network::Node>, NetworkError> {
         let nodes = self

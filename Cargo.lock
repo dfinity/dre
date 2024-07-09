@@ -1920,7 +1920,6 @@ dependencies = [
  "actix-web",
  "ahash 0.8.11",
  "anyhow",
- "async-trait",
  "colored",
  "ic-base-types",
  "ic-management-types",

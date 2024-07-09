@@ -4,7 +4,6 @@ use crate::SubnetChangeResponse;
 use actix_web::http::StatusCode;
 use actix_web::{HttpResponse, ResponseError};
 use anyhow::anyhow;
-use async_trait::async_trait;
 use ic_base_types::PrincipalId;
 use ic_management_types::{MinNakamotoCoefficients, NetworkError, NodeFeature, Status};
 use itertools::Itertools;
@@ -713,7 +712,7 @@ impl From<ic_management_types::Subnet> for DecentralizedSubnet {
     }
 }
 
-#[async_trait]
+#[allow(async_fn_in_trait)]
 pub trait AvailableNodesQuerier {
     async fn available_nodes(&self) -> Result<Vec<Node>, NetworkError>;
 }
@@ -728,7 +727,7 @@ pub trait NodesConverter {
     fn get_nodes(&self, from: &[PrincipalId]) -> Result<Vec<Node>, NetworkError>;
 }
 
-#[async_trait]
+#[allow(async_fn_in_trait)]
 pub trait SubnetQuerier {
     async fn subnet(&self, by: SubnetQueryBy) -> Result<DecentralizedSubnet, NetworkError>;
 }
@@ -752,7 +751,7 @@ impl ResponseError for DecentralizationError {
     }
 }
 
-#[async_trait]
+#[allow(async_fn_in_trait)]
 pub trait TopologyManager: SubnetQuerier + AvailableNodesQuerier {
     async fn modify_subnet_nodes(&self, by: SubnetQueryBy) -> Result<SubnetChangeRequest, NetworkError> {
         Ok(SubnetChangeRequest {

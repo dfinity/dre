@@ -3,12 +3,11 @@ use std::net::Ipv6Addr;
 use std::str::FromStr;
 use std::{cell::RefCell, collections::BTreeMap, rc::Rc};
 
+use decentralization::network::{DecentralizedSubnet, NodesConverter, SubnetQuerier, SubnetQueryBy};
 use ic_interfaces_registry::RegistryClient;
 use ic_interfaces_registry::{RegistryClientVersionedResult, RegistryValue};
 use ic_management_types::{Datacenter, DatacenterOwner, Guest, Network, Node, NodeProvidersResponse, Operator, Provider, Subnet, SubnetMetadata};
-use ic_nns_constants::SUBNET_RENTAL_CANISTER_ID;
 use ic_protobuf::registry::replica_version::v1::BlessedReplicaVersions;
-use ic_protobuf::registry::subnet;
 use ic_protobuf::registry::{
     api_boundary_node::v1::ApiBoundaryNodeRecord, dc::v1::DataCenterRecord, hostos_version::v1::HostosVersionRecord,
     replica_version::v1::ReplicaVersionRecord, subnet::v1::SubnetRecord, unassigned_nodes_config::v1::UnassignedNodesConfigRecord,
@@ -54,6 +53,7 @@ pub struct LazyRegistry {
     known_subnets: RefCell<Option<Rc<BTreeMap<PrincipalId, String>>>>,
     elected_guestos: RefCell<Option<Rc<Vec<String>>>>,
     elected_hostos: RefCell<Option<Rc<Vec<String>>>>,
+    unassigned_nodes_replica_version: RefCell<Option<Rc<String>>>,
 }
 
 pub trait LazyRegistryEntry: RegistryValue {
@@ -154,6 +154,7 @@ impl LazyRegistry {
             known_subnets: RefCell::new(None),
             elected_guestos: RefCell::new(None),
             elected_hostos: RefCell::new(None),
+            unassigned_nodes_replica_version: RefCell::new(None),
         }
     }
 
@@ -516,5 +517,58 @@ impl LazyRegistry {
             .filter(|n| principals.contains(&n.principal))
             .map(decentralization::network::Node::from)
             .collect_vec())
+    }
+
+    pub fn unassigned_nodes_replica_version(&self) -> anyhow::Result<Rc<String>> {
+        if let Some(v) = self.unassigned_nodes_replica_version.borrow().as_ref() {
+            return Ok(v.to_owned());
+        }
+
+        let version = self
+            .get_family_entries::<UnassignedNodesConfigRecord>()?
+            .first_entry()
+            .map(|v| v.get().to_owned())
+            .ok_or(anyhow::anyhow!("No unassigned nodes version"))?;
+
+        let version = Rc::new(version.replica_version);
+        *self.unassigned_nodes_replica_version.borrow_mut() = Some(version.clone());
+        Ok(version)
+    }
+}
+
+impl NodesConverter for LazyRegistry {
+    fn get_nodes(&self, from: &[PrincipalId]) -> Result<Vec<decentralization::network::Node>, ic_management_types::NetworkError> {
+        let nodes = self
+            .nodes()
+            .map_err(|e| ic_management_types::NetworkError::DataRequestError(e.to_string()))?;
+        from.iter()
+            .map(|n| {
+                nodes
+                    .get(n)
+                    .ok_or(ic_management_types::NetworkError::NodeNotFound(*n))
+                    .map(decentralization::network::Node::from)
+            })
+            .collect()
+    }
+}
+
+impl SubnetQuerier for LazyRegistry {
+    async fn subnet(&self, by: SubnetQueryBy) -> Result<DecentralizedSubnet, ic_management_types::NetworkError> {
+        match by {
+            SubnetQueryBy::SubnetId(id) => self
+                .subnets()
+                .map_err(|e| ic_management_types::NetworkError::DataRequestError(e.to_string()))?
+                .get(&id)
+                .map(|s| DecentralizedSubnet {
+                    id: s.principal,
+                    nodes: s.nodes.iter().map(decentralization::network::Node::from).collect(),
+                    removed_nodes: vec![],
+                    min_nakamoto_coefficients: None,
+                    comment: None,
+                    run_log: vec![],
+                })
+                .ok_or(ic_management_types::NetworkError::SubnetNotFound(id)),
+            SubnetQueryBy::NodeList(_) => todo!(),
+        }
     }
 }

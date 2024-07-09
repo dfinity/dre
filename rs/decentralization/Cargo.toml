@@ -12,7 +12,6 @@ documentation.workspace = true
 actix-web = { workspace = true }
 ahash = { workspace = true }
 anyhow = { workspace = true }
-async-trait = { workspace = true }
 colored = { workspace = true }
 ic-base-types = { workspace = true }
 ic-management-types = { workspace = true }
