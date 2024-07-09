@@ -5,26 +5,43 @@ use std::{cell::RefCell, collections::BTreeMap, rc::Rc};
 
 use ic_interfaces_registry::RegistryClient;
 use ic_interfaces_registry::{RegistryClientVersionedResult, RegistryValue};
-use ic_management_types::{Datacenter, DatacenterOwner, Guest, Network, Node, NodeProvidersResponse, Operator, Provider, Subnet};
+use ic_management_types::{Datacenter, DatacenterOwner, Guest, Network, Node, NodeProvidersResponse, Operator, Provider, Subnet, SubnetMetadata};
+use ic_nns_constants::SUBNET_RENTAL_CANISTER_ID;
 use ic_protobuf::registry::replica_version::v1::BlessedReplicaVersions;
+use ic_protobuf::registry::subnet;
 use ic_protobuf::registry::{
     api_boundary_node::v1::ApiBoundaryNodeRecord, dc::v1::DataCenterRecord, hostos_version::v1::HostosVersionRecord,
     replica_version::v1::ReplicaVersionRecord, subnet::v1::SubnetRecord, unassigned_nodes_config::v1::UnassignedNodesConfigRecord,
 };
 use ic_registry_client_helpers::node::NodeRegistry;
+use ic_registry_client_helpers::subnet::SubnetListRegistry;
 use ic_registry_client_helpers::{node::NodeRecord, node_operator::NodeOperatorRecord};
 use ic_registry_keys::{
     API_BOUNDARY_NODE_RECORD_KEY_PREFIX, DATA_CENTER_KEY_PREFIX, HOSTOS_VERSION_KEY_PREFIX, NODE_OPERATOR_RECORD_KEY_PREFIX, NODE_RECORD_KEY_PREFIX,
     REPLICA_VERSION_KEY_PREFIX, SUBNET_RECORD_KEY_PREFIX,
 };
 use ic_registry_local_registry::LocalRegistry;
+use ic_registry_subnet_type::SubnetType;
 use ic_types::{NodeId, PrincipalId, RegistryVersion};
 use itertools::Itertools;
 use log::warn;
 
 use crate::node_labels;
 use crate::public_dashboard::query_ic_dashboard_list;
-use crate::registry::{RegistryFamilyEntries, DFINITY_DCS};
+use crate::registry::{RegistryFamilyEntries, DFINITY_DCS, NNS_SUBNET_NAME};
+
+const KNOWN_SUBNETS: &[(&str, &str)] = &[
+    (
+        "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
+        "Internet Identity, tECDSA backup",
+    ),
+    ("w4rem-dv5e3-widiz-wbpea-kbttk-mnzfm-tzrc7-svcj3-kbxyb-zamch-hqe", "Bitcoin"),
+    ("eq6en-6jqla-fbu5s-daskr-h6hx2-376n5-iqabl-qgrng-gfqmv-n3yjr-mqe", "Open Chat 1"),
+    ("2fq7c-slacv-26cgz-vzbx2-2jrcs-5edph-i5s2j-tck77-c3rlz-iobzx-mqe", "Open Chat 2"),
+    ("pzp6e-ekpqk-3c5x7-2h6so-njoeq-mt45d-h3h6c-q3mxf-vpeq5-fk5o7-yae", "tECDSA signing"),
+    ("x33ed-h457x-bsgyx-oqxqf-6pzwv-wkhzr-rm2j3-npodi-purzm-n66cg-gae", "SNS"),
+    ("bkfrj-6k62g-dycql-7h53p-atvkj-zg4to-gaogh-netha-ptybj-ntsgw-rqe", "European"),
+];
 
 pub struct LazyRegistry {
     local_registry: LocalRegistry,
@@ -346,5 +363,64 @@ impl LazyRegistry {
 
     fn node_ip_addr(nr: &NodeRecord) -> Ipv6Addr {
         Ipv6Addr::from_str(&nr.http.clone().expect("missing ipv6 address").ip_addr).expect("invalid ipv6 address")
+    }
+
+    pub fn subnets(&self) -> anyhow::Result<Rc<BTreeMap<PrincipalId, Subnet>>> {
+        if let Some(subnets) = self.subnets.borrow().as_ref() {
+            return Ok(subnets.to_owned());
+        }
+
+        let all_nodes = self.nodes()?;
+
+        let subnets: BTreeMap<_, _> = self
+            .get_family_entries::<SubnetRecord>()?
+            .iter()
+            .enumerate()
+            .map(|(i, (p, sr))| {
+                let principal = PrincipalId::from_str(p).expect("Invalid subnet principal id");
+                let subnet_nodes = all_nodes
+                    .iter()
+                    .filter(|(_, n)| n.subnet_id.map_or(false, |s| s == principal))
+                    .map(|(_, n)| n)
+                    .cloned()
+                    .collect_vec();
+
+                let subnet_type = SubnetType::try_from(sr.subnet_type).unwrap();
+                (
+                    principal,
+                    Subnet {
+                        nodes: subnet_nodes,
+                        principal,
+                        subnet_type,
+                        metadata: SubnetMetadata {
+                            name: if let Some((_, val)) = KNOWN_SUBNETS.iter().find(|(key, _)| key == p) {
+                                val.to_string()
+                            } else if i == 0 {
+                                NNS_SUBNET_NAME.to_string()
+                            } else {
+                                format!(
+                                    "{} {}",
+                                    match subnet_type {
+                                        SubnetType::System => "System",
+                                        SubnetType::Application | SubnetType::VerifiedApplication => "App",
+                                    },
+                                    i
+                                )
+                            },
+                            ..Default::default()
+                        },
+                        replica_version: sr.replica_version_id.to_owned(),
+                        // TODO: map replica release
+                        replica_release: None,
+                        proposal: None,
+                    },
+                )
+            })
+            .filter(|(_, s)| !s.nodes.is_empty())
+            .collect();
+
+        let subnets = Rc::new(subnets);
+        *self.subnets.borrow_mut() = Some(subnets.clone());
+        Ok(subnets)
     }
 }
