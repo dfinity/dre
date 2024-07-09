@@ -3,6 +3,7 @@ use std::{path::PathBuf, rc::Rc, str::FromStr, time::Duration};
 use ic_canisters::{governance::governance_canister_version, CanisterClient};
 use ic_management_backend::{
     git_ic_repo::IcRepo,
+    proposal::ProposalAgent,
     public_dashboard::query_ic_dashboard_list,
     registry::{fetch_and_add_node_labels_guests_to_registry, local_registry_path, sync_local_store, RegistryState},
 };
@@ -227,5 +228,9 @@ impl DreContext {
             Registry::WithNodeDetails(r) => r.to_owned(),
             Registry::Full(r) => r.to_owned(),
         })
+    }
+
+    pub fn proposals_agent(&self) -> ProposalAgent {
+        ProposalAgent::new(self.network().get_nns_urls())
     }
 }
