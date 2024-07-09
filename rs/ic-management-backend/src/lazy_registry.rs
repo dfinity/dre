@@ -430,9 +430,28 @@ impl LazyRegistry {
             return Ok(nodes);
         }
 
+        self.update_proposal_data()?;
+        self.nodes()
+    }
+
+    pub fn subnets_with_proposals(&self) -> anyhow::Result<Rc<BTreeMap<PrincipalId, Subnet>>> {
+        let subnets = self.subnets()?;
+
+        if subnets.iter().any(|(_, s)| s.proposal.is_some()) {
+            return Ok(subnets);
+        }
+
+        self.update_proposal_data()?;
+        self.subnets()
+    }
+
+    fn update_proposal_data(&self) -> anyhow::Result<()> {
         let proposal_agent = proposal::ProposalAgent::new(self.network.get_nns_urls());
+        let nodes = self.nodes()?;
+        let subnets = self.subnets()?;
 
         let topology_proposals = tokio::runtime::Handle::current().block_on(proposal_agent.list_open_topology_proposals())?;
+
         let nodes: BTreeMap<_, _> = nodes
             .iter()
             .map(|(p, n)| {
@@ -445,8 +464,26 @@ impl LazyRegistry {
             })
             .collect();
 
-        let nodes = Rc::new(nodes);
-        *self.nodes.borrow_mut() = Some(nodes.clone());
-        Ok(nodes)
+        let subnets: BTreeMap<_, _> = subnets
+            .iter()
+            .map(|(p, s)| {
+                let proposal = topology_proposals
+                    .iter()
+                    .find(|pr| {
+                        pr.subnet_id.unwrap_or_default() == *p
+                            || s.nodes
+                                .iter()
+                                .any(|n| pr.node_ids_added.contains(&n.principal) || pr.node_ids_removed.contains(&n.principal))
+                    })
+                    .cloned();
+
+                (p.clone(), Subnet { proposal, ..s.clone() })
+            })
+            .collect();
+
+        *self.nodes.borrow_mut() = Some(Rc::new(nodes));
+        *self.subnets.borrow_mut() = Some(Rc::new(subnets));
+
+        Ok(())
     }
 }
