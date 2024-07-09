@@ -67,7 +67,7 @@ impl ExecutableCommand for Replace {
             _ => SubnetTarget::FromNodesIds(self.nodes.clone()),
         };
 
-        let subnet_manager = ctx.subnet_manager();
+        let subnet_manager = ctx.subnet_manager().await;
         let subnet_change_response = subnet_manager
             .with_target(subnet_target)
             .membership_replace(
@@ -81,9 +81,10 @@ impl ExecutableCommand for Replace {
             )
             .await?;
 
-        let runner = ctx.runner();
+        todo!("Finish once the runner is replaced")
+        // let runner = ctx.runner();
 
-        runner.propose_subnet_change(subnet_change_response, self.verbose).await
+        // runner.propose_subnet_change(subnet_change_response, self.verbose).await
     }
 
     fn validate(&self, cmd: &mut clap::Command) {

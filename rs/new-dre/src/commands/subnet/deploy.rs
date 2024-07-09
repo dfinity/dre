@@ -24,8 +24,9 @@ impl ExecutableCommand for Deploy {
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        let runner = ctx.runner();
-        runner.deploy(&self.id, &self.version).await
+        todo!("Finish once runner is replaced")
+        // let runner = ctx.runner();
+        // runner.deploy(&self.id, &self.version).await
     }
 
     fn validate(&self, cmd: &mut clap::Command) {

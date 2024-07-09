@@ -7,6 +7,7 @@ use decentralization::network::{AvailableNodesQuerier, DecentralizedSubnet, Node
 use ic_interfaces_registry::RegistryClient;
 use ic_interfaces_registry::{RegistryClientVersionedResult, RegistryValue};
 use ic_management_types::{Datacenter, DatacenterOwner, Guest, Network, Node, NodeProvidersResponse, Operator, Provider, Subnet, SubnetMetadata};
+use ic_protobuf::registry::node_rewards::v2::NodeRewardsTable;
 use ic_protobuf::registry::replica_version::v1::BlessedReplicaVersions;
 use ic_protobuf::registry::{
     api_boundary_node::v1::ApiBoundaryNodeRecord, dc::v1::DataCenterRecord, hostos_version::v1::HostosVersionRecord,
@@ -17,13 +18,14 @@ use ic_registry_client_helpers::subnet::SubnetListRegistry;
 use ic_registry_client_helpers::{node::NodeRecord, node_operator::NodeOperatorRecord};
 use ic_registry_keys::{
     API_BOUNDARY_NODE_RECORD_KEY_PREFIX, DATA_CENTER_KEY_PREFIX, HOSTOS_VERSION_KEY_PREFIX, NODE_OPERATOR_RECORD_KEY_PREFIX, NODE_RECORD_KEY_PREFIX,
-    REPLICA_VERSION_KEY_PREFIX, SUBNET_RECORD_KEY_PREFIX,
+    NODE_REWARDS_TABLE_KEY, REPLICA_VERSION_KEY_PREFIX, SUBNET_RECORD_KEY_PREFIX,
 };
 use ic_registry_local_registry::LocalRegistry;
 use ic_registry_subnet_type::SubnetType;
 use ic_types::{NodeId, PrincipalId, RegistryVersion};
 use itertools::Itertools;
 use log::warn;
+use tokio::try_join;
 
 use crate::health::HealthStatusQuerier;
 use crate::public_dashboard::query_ic_dashboard_list;
@@ -95,6 +97,10 @@ impl LazyRegistryEntry for ApiBoundaryNodeRecord {
 
 impl LazyRegistryEntry for BlessedReplicaVersions {
     const KEY_PREFIX: &'static str = "blessed_replica_versions";
+}
+
+impl LazyRegistryEntry for NodeRewardsTable {
+    const KEY_PREFIX: &'static str = NODE_REWARDS_TABLE_KEY;
 }
 
 pub trait LazyRegistryFamilyEntries {
@@ -426,34 +432,33 @@ impl LazyRegistry {
         Ok(subnets)
     }
 
-    pub fn nodes_with_proposals(&self) -> anyhow::Result<Rc<BTreeMap<PrincipalId, Node>>> {
+    pub async fn nodes_with_proposals(&self) -> anyhow::Result<Rc<BTreeMap<PrincipalId, Node>>> {
         let nodes = self.nodes()?;
         if nodes.iter().any(|(_, n)| n.proposal.is_some()) {
             return Ok(nodes);
         }
 
-        self.update_proposal_data()?;
+        self.update_proposal_data().await?;
         self.nodes()
     }
 
-    pub fn subnets_with_proposals(&self) -> anyhow::Result<Rc<BTreeMap<PrincipalId, Subnet>>> {
+    pub async fn subnets_with_proposals(&self) -> anyhow::Result<Rc<BTreeMap<PrincipalId, Subnet>>> {
         let subnets = self.subnets()?;
 
         if subnets.iter().any(|(_, s)| s.proposal.is_some()) {
             return Ok(subnets);
         }
 
-        self.update_proposal_data()?;
+        self.update_proposal_data().await?;
         self.subnets()
     }
 
-    fn update_proposal_data(&self) -> anyhow::Result<()> {
+    async fn update_proposal_data(&self) -> anyhow::Result<()> {
         let proposal_agent = proposal::ProposalAgent::new(self.network.get_nns_urls());
         let nodes = self.nodes()?;
         let subnets = self.subnets()?;
 
-        let topology_proposals = tokio::runtime::Handle::current().block_on(proposal_agent.list_open_topology_proposals())?;
-
+        let topology_proposals = proposal_agent.list_open_topology_proposals().await?;
         let nodes: BTreeMap<_, _> = nodes
             .iter()
             .map(|(p, n)| {
@@ -573,22 +578,18 @@ impl SubnetQuerier for LazyRegistry {
         }
     }
 }
+impl decentralization::network::TopologyManager for LazyRegistry {}
 
 impl AvailableNodesQuerier for LazyRegistry {
     async fn available_nodes(&self) -> Result<Vec<decentralization::network::Node>, ic_management_types::NetworkError> {
-        let nodes = self
-            .nodes_with_proposals()
-            .map_err(|e| ic_management_types::NetworkError::DataRequestError(e.to_string()))?
+        let health_client = crate::health::HealthClient::new(self.network.clone());
+        let (nodes, healths) = try_join!(self.nodes_with_proposals(), health_client.nodes())
+            .map_err(|e| ic_management_types::NetworkError::DataRequestError(e.to_string()))?;
+        let nodes = nodes
             .values()
             .filter(|n| n.subnet_id.is_none() && n.proposal.is_none() && n.duplicates.is_none() && !n.is_api_boundary_node)
             .cloned()
             .collect_vec();
-
-        let health_client = crate::health::HealthClient::new(self.network.clone());
-        let healths = health_client
-            .nodes()
-            .await
-            .map_err(|err| ic_management_types::NetworkError::DataRequestError(err.to_string()))?;
 
         Ok(nodes
             .iter()

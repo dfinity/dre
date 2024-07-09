@@ -1,6 +1,7 @@
 use std::{
-    collections::{BTreeMap, HashMap},
+    collections::{btree_map::OccupiedEntry, BTreeMap, HashMap},
     path::PathBuf,
+    rc::Rc,
     str::FromStr,
 };
 
@@ -8,6 +9,7 @@ use clap::Args;
 use ic_interfaces_registry::RegistryClient;
 use ic_management_backend::{
     health::{HealthClient, HealthStatusQuerier},
+    lazy_registry::{LazyRegistry, LazyRegistryFamilyEntries},
     public_dashboard::query_ic_dashboard_list,
     registry::RegistryFamilyEntries,
 };
@@ -18,6 +20,7 @@ use ic_protobuf::registry::{
     hostos_version::v1::HostosVersionRecord,
     node::v1::{ConnectionEndpoint, IPv4InterfaceConfig, NodeRecord},
     node_operator::v1::NodeOperatorRecord,
+    node_rewards::v2::{NodeRewardRate, NodeRewardsTable},
     replica_version::v1::ReplicaVersionRecord,
     subnet::v1::{EcdsaConfig, GossipConfig as GossipConfigProto, SubnetFeatures, SubnetRecord as SubnetRecordProto},
     unassigned_nodes_config::v1::UnassignedNodesConfigRecord,
@@ -83,11 +86,10 @@ impl ExecutableCommand for Registry {
 
 impl Registry {
     async fn get_registry(ctx: DreContext) -> anyhow::Result<RegistryDump> {
-        let registry = ctx.registry();
-        let local_registry = registry.as_synced();
+        let local_registry = ctx.registry().await;
 
-        let elected_guest_os_versions = get_elected_guest_os_versions(local_registry)?;
-        let elected_host_os_versions = get_elected_host_os_versions(local_registry)?;
+        let elected_guest_os_versions = get_elected_guest_os_versions(&local_registry)?;
+        let elected_host_os_versions = get_elected_host_os_versions(&local_registry)?;
 
         let node_provider_names: HashMap<PrincipalId, String> = HashMap::from_iter(
             query_ic_dashboard_list::<NodeProvidersResponse>(ctx.network(), "v3/node-providers")
@@ -96,7 +98,7 @@ impl Registry {
                 .iter()
                 .map(|np| (np.principal_id, np.display_name.clone())),
         );
-        let mut node_operators = get_node_operators(local_registry, &node_provider_names)?;
+        let mut node_operators = get_node_operators(&local_registry, &node_provider_names)?;
 
         let dcs = local_registry
             .get_family_entries_versioned::<DataCenterRecord>()
@@ -105,11 +107,11 @@ impl Registry {
             .map(|(_, (_, record))| record)
             .collect();
 
-        let subnets = get_subnets(local_registry)?;
+        let subnets = get_subnets(&local_registry)?;
 
-        let unassigned_nodes_config = get_unassigned_nodes(local_registry)?;
+        let unassigned_nodes_config = get_unassigned_nodes(&local_registry)?;
 
-        let nodes = get_nodes(local_registry, &node_operators, &subnets, ctx.network()).await?;
+        let nodes = get_nodes(&local_registry, &node_operators, &subnets, ctx.network()).await?;
 
         // Calculate number of rewardable nodes for node operators
         for node_operator in node_operators.values_mut() {
@@ -132,9 +134,9 @@ impl Registry {
                 node_operator.rewards_correct = true;
             }
         }
-        let node_rewards_table = get_node_rewards_table(local_registry, ctx.network());
+        let node_rewards_table = get_node_rewards_table(&local_registry, ctx.network());
 
-        let api_bns = get_api_boundary_nodes(local_registry)?;
+        let api_bns = get_api_boundary_nodes(&local_registry)?;
 
         Ok(RegistryDump {
             elected_guest_os_versions,
@@ -150,7 +152,7 @@ impl Registry {
     }
 }
 
-fn get_elected_guest_os_versions(local_registry: &LocalRegistry) -> anyhow::Result<Vec<ReplicaVersionRecord>> {
+fn get_elected_guest_os_versions(local_registry: &Rc<LazyRegistry>) -> anyhow::Result<Vec<ReplicaVersionRecord>> {
     let elected_versions = local_registry
         .get_family_entries_versioned::<ReplicaVersionRecord>()
         .map_err(|e| anyhow::anyhow!("Couldn't get elected versions: {:?}", e))?
@@ -160,7 +162,7 @@ fn get_elected_guest_os_versions(local_registry: &LocalRegistry) -> anyhow::Resu
     Ok(elected_versions)
 }
 
-fn get_elected_host_os_versions(local_registry: &LocalRegistry) -> anyhow::Result<Vec<HostosVersionRecord>> {
+fn get_elected_host_os_versions(local_registry: &Rc<LazyRegistry>) -> anyhow::Result<Vec<HostosVersionRecord>> {
     let elected_versions = local_registry
         .get_family_entries_versioned::<HostosVersionRecord>()
         .map_err(|e| anyhow::anyhow!("Couldn't get elected versions: {:?}", e))?
@@ -171,7 +173,7 @@ fn get_elected_host_os_versions(local_registry: &LocalRegistry) -> anyhow::Resul
 }
 
 fn get_node_operators(
-    local_registry: &LocalRegistry,
+    local_registry: &Rc<LazyRegistry>,
     node_provider_names: &HashMap<PrincipalId, String>,
 ) -> anyhow::Result<BTreeMap<PrincipalId, NodeOperator>> {
     let all_nodes = local_registry
@@ -218,12 +220,11 @@ fn get_node_operators(
     Ok(node_operators)
 }
 
-fn get_subnets(local_registry: &LocalRegistry) -> anyhow::Result<Vec<SubnetRecord>> {
+fn get_subnets(local_registry: &Rc<LazyRegistry>) -> anyhow::Result<Vec<SubnetRecord>> {
     Ok(local_registry
-        .get_family_entries_versioned::<SubnetRecordProto>()
-        .map_err(|e| anyhow::anyhow!("Couldn't get subnets: {:?}", e))?
+        .get_family_entries::<SubnetRecordProto>()?
         .into_iter()
-        .map(|(subnet_id, (_, record))| SubnetRecord {
+        .map(|(subnet_id, record)| SubnetRecord {
             subnet_id: PrincipalId::from_str(&subnet_id).expect("Couldn't parse principal id"),
             membership: record
                 .membership
@@ -257,7 +258,7 @@ fn get_subnets(local_registry: &LocalRegistry) -> anyhow::Result<Vec<SubnetRecor
         .collect::<Vec<_>>())
 }
 
-fn get_unassigned_nodes(local_registry: &LocalRegistry) -> anyhow::Result<Option<UnassignedNodesConfigRecord>> {
+fn get_unassigned_nodes(local_registry: &Rc<LazyRegistry>) -> anyhow::Result<Option<UnassignedNodesConfigRecord>> {
     let unassigned_nodes_config = local_registry
         .get_family_entries_versioned::<UnassignedNodesConfigRecord>()
         .map_err(|e| anyhow::anyhow!("Couldn't get unassigned nodes config: {:?}", e))?
@@ -268,7 +269,7 @@ fn get_unassigned_nodes(local_registry: &LocalRegistry) -> anyhow::Result<Option
 }
 
 async fn get_nodes(
-    local_registry: &LocalRegistry,
+    local_registry: &Rc<LazyRegistry>,
     node_operators: &BTreeMap<PrincipalId, NodeOperator>,
     subnets: &[SubnetRecord],
     network: &Network,
@@ -310,35 +311,61 @@ async fn get_nodes(
     Ok(nodes)
 }
 
-fn get_node_rewards_table(local_registry: &LocalRegistry, network: &Network) -> NodeRewardsTableFlattened {
-    let rewards_table_bytes = local_registry.get_value(NODE_REWARDS_TABLE_KEY, local_registry.get_latest_version());
+fn get_node_rewards_table(local_registry: &Rc<LazyRegistry>, network: &Network) -> NodeRewardsTableFlattened {
+    let rewards_table_bytes = local_registry.get_family_entries::<NodeRewardsTable>();
 
-    let rewards_table_bytes = match rewards_table_bytes {
-        Ok(r) => match r {
-            Some(r) => r,
-            None => {
-                if network.is_mainnet() {
-                    panic!("Failed to get Node Rewards Table")
-                } else {
-                    warn!("Didn't find any node rewards details for network: {}", network.name);
-                    vec![]
-                }
-            }
-        },
+    let mut rewards_table = match rewards_table_bytes {
+        Ok(r) => r,
         Err(_) => {
             if network.is_mainnet() {
                 panic!("Failed to get Node Rewards Table for mainnet")
             } else {
                 warn!("Failed to get Node Rewards Table for {}", network.name);
-                vec![]
+                BTreeMap::new()
             }
         }
     };
 
-    decode_registry_value::<NodeRewardsTableFlattened>(rewards_table_bytes)
+    let table = match rewards_table.first_entry() {
+        Some(f) => f.get().table.clone(),
+        None => {
+            if network.is_mainnet() {
+                panic!("Failed to get Node Rewards Table for mainnet")
+            } else {
+                warn!("Failed to get Node Rewards Table for {}", network.name);
+                BTreeMap::new()
+            }
+        }
+    };
+
+    NodeRewardsTableFlattened {
+        table: table
+            .iter()
+            .map(|(k, v)| {
+                (
+                    k.clone(),
+                    NodeRewardRatesFlattened {
+                        rates: v
+                            .rates
+                            .iter()
+                            .map(|(rate_key, rate_val)| {
+                                (
+                                    rate_key.clone(),
+                                    NodeRewardRateFlattened {
+                                        xdr_permyriad_per_node_per_month: rate_val.xdr_permyriad_per_node_per_month,
+                                        reward_coefficient_percent: rate_val.reward_coefficient_percent,
+                                    },
+                                )
+                            })
+                            .collect(),
+                    },
+                )
+            })
+            .collect(),
+    }
 }
 
-fn get_api_boundary_nodes(local_registry: &LocalRegistry) -> anyhow::Result<Vec<ApiBoundaryNodeDetails>> {
+fn get_api_boundary_nodes(local_registry: &Rc<LazyRegistry>) -> anyhow::Result<Vec<ApiBoundaryNodeDetails>> {
     let api_bns = local_registry
         .get_family_entries_versioned::<ApiBoundaryNodeRecord>()
         .map_err(|e| anyhow::anyhow!("Couldn't get api boundary nodes: {:?}", e))?

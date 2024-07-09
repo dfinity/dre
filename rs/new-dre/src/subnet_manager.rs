@@ -7,11 +7,13 @@ use decentralization::{
     network::{DecentralizedSubnet, Node as DecentralizedNode, NodesConverter, SubnetQueryBy, TopologyManager},
     SubnetChangeResponse,
 };
+use ic_management_backend::lazy_registry::LazyRegistry;
 use ic_management_backend::{
     health::{self, HealthStatusQuerier},
     registry::RegistryState,
 };
 use ic_management_types::MinNakamotoCoefficients;
+use ic_management_types::Network;
 use ic_types::PrincipalId;
 use itertools::Itertools;
 use log::{info, warn};
@@ -38,14 +40,16 @@ impl fmt::Display for SubnetManagerError {
 
 pub struct SubnetManager {
     subnet_target: Option<SubnetTarget>,
-    registry_instance: Rc<RegistryState>,
+    registry_instance: Rc<LazyRegistry>,
+    network: Network,
 }
 
 impl SubnetManager {
-    pub fn new(registry_instance: Rc<RegistryState>) -> Self {
+    pub fn new(registry_instance: Rc<LazyRegistry>, network: Network) -> Self {
         Self {
             subnet_target: None,
             registry_instance,
+            network,
         }
     }
 
@@ -63,7 +67,7 @@ impl SubnetManager {
     }
 
     async fn unhealthy_nodes(&self, subnet: DecentralizedSubnet) -> anyhow::Result<Vec<DecentralizedNode>> {
-        let health_client = health::HealthClient::new(self.registry_instance.network());
+        let health_client = health::HealthClient::new(self.network.clone());
         let subnet_health = health_client.subnet(subnet.id).await?;
 
         let unhealthy = subnet

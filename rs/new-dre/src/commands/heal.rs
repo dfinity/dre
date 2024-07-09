@@ -15,8 +15,9 @@ impl ExecutableCommand for Heal {
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        let runner = ctx.runner();
-        runner.network_heal(true).await
+        todo!("Implement once runner is migrated")
+        // let runner = ctx.runner();
+        // runner.network_heal(true).await
     }
 
     fn validate(&self, cmd: &mut clap::Command) {

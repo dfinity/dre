@@ -34,16 +34,17 @@ impl ExecutableCommand for Analyze {
             ));
         }
 
-        let runner = ctx.runner();
+        todo!("Implement once runner is migrated")
+        // let runner = ctx.runner();
 
-        match filter_map_nns_function_proposals::<ChangeSubnetMembershipPayload>(&[proposal]).first() {
-            Some((_, change_membership)) => runner.decentralization_change(change_membership).await,
-            _ => Err(anyhow::anyhow!(
-                "Proposal {} must have {} type",
-                self.proposal_id,
-                ic_nns_governance::pb::v1::NnsFunction::ChangeSubnetMembership.as_str_name()
-            )),
-        }
+        // match filter_map_nns_function_proposals::<ChangeSubnetMembershipPayload>(&[proposal]).first() {
+        //     Some((_, change_membership)) => runner.decentralization_change(change_membership).await,
+        //     _ => Err(anyhow::anyhow!(
+        //         "Proposal {} must have {} type",
+        //         self.proposal_id,
+        //         ic_nns_governance::pb::v1::NnsFunction::ChangeSubnetMembership.as_str_name()
+        //     )),
+        // }
     }
 
     fn validate(&self, cmd: &mut clap::Command) {

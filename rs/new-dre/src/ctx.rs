@@ -1,43 +1,29 @@
-use std::{path::PathBuf, rc::Rc, str::FromStr, time::Duration};
+use std::{cell::RefCell, path::PathBuf, rc::Rc, str::FromStr, time::Duration};
 
 use ic_canisters::{governance::governance_canister_version, CanisterClient};
 use ic_management_backend::{
     git_ic_repo::IcRepo,
+    lazy_registry::LazyRegistry,
     proposal::ProposalAgent,
     public_dashboard::query_ic_dashboard_list,
     registry::{fetch_and_add_node_labels_guests_to_registry, local_registry_path, sync_local_store, RegistryState},
 };
 use ic_management_types::{Network, NodeProvidersResponse};
 use ic_registry_local_registry::LocalRegistry;
+use log::info;
 
 use crate::{
     auth::Neuron,
     commands::{Args, ExecutableCommand, IcAdminRequirement, RegistryRequirement},
     ic_admin::{download_ic_admin, should_update_ic_admin, IcAdminWrapper},
-    runner::Runner,
     subnet_manager::SubnetManager,
 };
 
 const STAGING_NEURON_ID: u64 = 49;
 pub struct DreContext {
     network: Network,
-    registry: Option<Rc<Registry>>,
+    registry: RefCell<Option<Rc<LazyRegistry>>>,
     ic_admin: Option<Rc<IcAdminWrapper>>,
-}
-
-pub enum Registry {
-    Synced(LocalRegistry),
-    WithNodeDetails(Rc<RegistryState>),
-    Full(Rc<RegistryState>),
-}
-
-impl Registry {
-    pub fn as_synced(&self) -> &LocalRegistry {
-        match &self {
-            Registry::Synced(r) => r,
-            _ => panic!("This registry is configured to be of type Synced"),
-        }
-    }
 }
 
 impl DreContext {
@@ -68,9 +54,11 @@ impl DreContext {
         )
         .await?;
 
-        let registry = Self::init_registry(&network, args.require_registry()).await?;
-
-        Ok(Self { network, registry, ic_admin })
+        Ok(Self {
+            network,
+            registry: RefCell::new(None),
+            ic_admin,
+        })
     }
 
     async fn init_ic_admin(
@@ -132,54 +120,20 @@ impl DreContext {
         Ok(ic_admin)
     }
 
-    /// Here we can gain more startup speed if we find a way to optimize RegistryState struct
-    ///
-    /// We could refactor the RegistryState struct to have certain levels of information eg:
-    /// 1. Raw (cotains just the LocalRegistry and one can only use that) - useful for registry command
-    /// 2. Node details (contains the node_providers + the call to update_node_details) - most of the commands
-    /// 3. Artifacts (contains the information obtained through git about the branches) - very few commands
-    async fn init_registry(network: &Network, requirement: RegistryRequirement) -> anyhow::Result<Option<Rc<Registry>>> {
-        let mut registry = match requirement {
-            RegistryRequirement::None => return Ok(None),
-            RegistryRequirement::Synced => {
-                sync_local_store(&network).await?;
-                let local_registry_path = local_registry_path(&network.clone());
-                return Ok(Some(Rc::new(Registry::Synced(LocalRegistry::new(
-                    local_registry_path,
-                    Duration::from_millis(1000),
-                )?))));
-            }
-            RegistryRequirement::WithNodeDetails => RegistryState::new(network, true, None).await,
-            RegistryRequirement::Full => RegistryState::new(network, true, Some(IcRepo::new().expect("Should be able to create IC repo"))).await,
-        };
-
-        // Fetch node providers
-        let node_providers = query_ic_dashboard_list::<NodeProvidersResponse>(network, "v3/node-providers")
-            .await?
-            .node_providers;
-
-        fetch_and_add_node_labels_guests_to_registry(network, &mut registry).await;
-
-        // Update node details
-        registry.update_only_node_details(&node_providers).await?;
-
-        if let RegistryRequirement::Full = requirement {
-            registry.update_releases().await?;
+    pub async fn registry(&self) -> Rc<LazyRegistry> {
+        if let Some(reg) = self.registry.borrow().as_ref() {
+            return reg.clone();
         }
+        let network = self.network();
 
-        let registry = Rc::new(registry);
-        Ok(Some(Rc::new(match requirement {
-            RegistryRequirement::None | RegistryRequirement::Synced => unreachable!("Shouldn't happen"),
-            RegistryRequirement::WithNodeDetails => Registry::WithNodeDetails(registry),
-            RegistryRequirement::Full => Registry::Full(registry),
-        })))
-    }
+        sync_local_store(network).await.expect("Should be able to sync registry");
+        let local_path = local_registry_path(network);
+        info!("Using local registry path for network {}: {}", network.name, local_path.display());
+        let local_registry = LocalRegistry::new(local_path, Duration::from_millis(1000)).expect("Failed to create local registry");
 
-    pub fn registry(&self) -> Rc<Registry> {
-        match &self.registry {
-            Some(r) => r.clone(),
-            None => panic!("This command is configured to not require a registry"),
-        }
+        let registry = Rc::new(LazyRegistry::new(local_registry, network.clone()));
+        *self.registry.borrow_mut() = Some(registry.clone());
+        registry
     }
 
     pub fn network(&self) -> &Network {
@@ -206,28 +160,10 @@ impl DreContext {
         }
     }
 
-    pub fn runner(&self) -> Runner {
-        let ic_admin = self.ic_admin();
-        let registry = self.registry();
+    pub async fn subnet_manager(&self) -> SubnetManager {
+        let registry = self.registry().await;
 
-        Runner::new(
-            ic_admin,
-            match registry.as_ref() {
-                Registry::Synced(_) => panic!("This command doesn't have a high enough registry requirement"),
-                Registry::WithNodeDetails(r) => r.to_owned(),
-                Registry::Full(r) => r.to_owned(),
-            },
-        )
-    }
-
-    pub fn subnet_manager(&self) -> SubnetManager {
-        let registry = self.registry();
-
-        SubnetManager::new(match registry.as_ref() {
-            Registry::Synced(_) => panic!("This command doesn't have a high enough registry requirement"),
-            Registry::WithNodeDetails(r) => r.to_owned(),
-            Registry::Full(r) => r.to_owned(),
-        })
+        SubnetManager::new(registry, self.network().clone())
     }
 
     pub fn proposals_agent(&self) -> ProposalAgent {
