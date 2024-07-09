@@ -66,9 +66,9 @@ impl FromIterator<(NodeFeature, std::string::String)> for NodeFeatures {
 // A thread-local memoization cache of NakamotoScores
 thread_local! {
     pub static NAKAMOTOSCORE_CACHE: RefCell<AHashMap<u64, NakamotoScore>> = RefCell::new(AHashMap::new());
-    pub static MEMOIZE_REQ: RefCell<u32> = RefCell::new(0);
-    pub static MEMOIZE_HIT: RefCell<u32> = RefCell::new(0);
-    pub static MEMOIZE_HIT_RATES: RefCell<VecDeque<u32>> = RefCell::new(VecDeque::new());
+    pub static MEMOIZE_REQ: RefCell<u32> = const { RefCell::new(0) };
+    pub static MEMOIZE_HIT: RefCell<u32> = const { RefCell::new(0) };
+    pub static MEMOIZE_HIT_RATES: RefCell<VecDeque<u32>> = const { RefCell::new(VecDeque::new()) };
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, Default)]
@@ -643,7 +643,7 @@ mod tests {
         );
 
         let subnet_change_req = SubnetChangeRequest::new(subnet_initial, nodes_available, Vec::new(), Vec::new(), Vec::new(), None);
-        let subnet_change = subnet_change_req.optimize(2, &vec![]).unwrap();
+        let subnet_change = subnet_change_req.optimize(2, &[]).unwrap();
         for log in subnet_change.after().run_log.iter() {
             println!("{}", log);
         }
@@ -693,7 +693,7 @@ mod tests {
         );
 
         let subnet_change_req = SubnetChangeRequest::new(subnet_initial, nodes_available, Vec::new(), Vec::new(), Vec::new(), None);
-        let subnet_change = subnet_change_req.optimize(2, &vec![]).unwrap();
+        let subnet_change = subnet_change_req.optimize(2, &[]).unwrap();
         println!("Replacement run log:");
         for line in subnet_change.after().run_log.iter() {
             println!("{}", line);
@@ -740,7 +740,7 @@ mod tests {
         );
 
         let subnet_change_req = SubnetChangeRequest::new(subnet_initial, nodes_available, Vec::new(), Vec::new(), Vec::new(), None);
-        let subnet_change = subnet_change_req.optimize(2, &vec![]).unwrap();
+        let subnet_change = subnet_change_req.optimize(2, &[]).unwrap();
 
         println!("Replacement run log:");
         for line in subnet_change.after().run_log.iter() {
