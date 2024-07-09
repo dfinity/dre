@@ -1,0 +1,22 @@
+{
+  "scripts": {
+    "dev": "export $(cat .env | xargs) && yarn start",
+    "start": "NODE_OPTIONS='--unhandled-rejections=strict' ts-node main.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^18.17.1",
+    "ts-node": "^10.9.1",
+    "typescript": "4.9.4"
+  },
+  "dependencies": {
+    "@types/react": "*",
+    "@atlaskit/adf-schema": "^25.1.1",
+    "@atlaskit/editor-json-transformer": "^8.8.3",
+    "@atlaskit/editor-markdown-transformer": "^5.0.0",
+    "@linear/sdk": "^2.4.0",
+    "@types/lodash": "^4.14.191",
+    "adf-to-md": "^2.0.0",
+    "jira.js": "^2.16.0",
+    "lodash": "^4.17.21"
+  }
+}
