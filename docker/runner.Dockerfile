@@ -46,8 +46,9 @@ RUN adduser --disabled-password --gecos "" --uid $RUNNER_UID runner \
     && echo "Defaults env_keep += \"DEBIAN_FRONTEND\"" >> /etc/sudoers
 
 # GitHub ssh keys
-RUN mkdir -p /home/runner/.ssh && \
-    ssh-keyscan github.com >> /home/runner/.ssh/known_hosts
+RUN mkdir -p /home/runner/.ssh \
+    && chmod 700 /home/runner/.ssh \
+    && ssh-keyscan github.com >> /home/runner/.ssh/known_hosts
 
 # Adjust permissions
 RUN chown -R runner:runner /home/runner
