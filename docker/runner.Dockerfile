@@ -44,6 +44,14 @@ RUN adduser --disabled-password --gecos "" --uid $RUNNER_UID runner \
     && usermod -aG docker runner \
     && echo "%sudo   ALL=(ALL:ALL) NOPASSWD:ALL" > /etc/sudoers \
     && echo "Defaults env_keep += \"DEBIAN_FRONTEND\"" >> /etc/sudoers
+
+# GitHub ssh keys
+RUN mkdir -p /home/runner/.ssh && \
+    ssh-keyscan github.com >> /home/runner/.ssh/known_hosts
+
+# Adjust permissions
+RUN chown -R runner:runner /home/runner
+
 ENV HOME=/home/runner
 USER runner
 WORKDIR /home/runner
