@@ -26,9 +26,9 @@ use ic_types::{NodeId, PrincipalId, RegistryVersion};
 use itertools::Itertools;
 use log::warn;
 
-use crate::node_labels;
 use crate::public_dashboard::query_ic_dashboard_list;
 use crate::registry::{RegistryFamilyEntries, DFINITY_DCS, NNS_SUBNET_NAME};
+use crate::{node_labels, proposal};
 
 const KNOWN_SUBNETS: &[(&str, &str)] = &[
     (
@@ -422,5 +422,31 @@ impl LazyRegistry {
         let subnets = Rc::new(subnets);
         *self.subnets.borrow_mut() = Some(subnets.clone());
         Ok(subnets)
+    }
+
+    pub fn nodes_with_proposals(&self) -> anyhow::Result<Rc<BTreeMap<PrincipalId, Node>>> {
+        let nodes = self.nodes()?;
+        if nodes.iter().any(|(_, n)| n.proposal.is_some()) {
+            return Ok(nodes);
+        }
+
+        let proposal_agent = proposal::ProposalAgent::new(self.network.get_nns_urls());
+
+        let topology_proposals = tokio::runtime::Handle::current().block_on(proposal_agent.list_open_topology_proposals())?;
+        let nodes: BTreeMap<_, _> = nodes
+            .iter()
+            .map(|(p, n)| {
+                let proposal = topology_proposals
+                    .iter()
+                    .find(|p| p.node_ids_added.contains(&n.principal) || p.node_ids_removed.contains(&n.principal))
+                    .cloned();
+
+                (p.clone(), Node { proposal, ..n.clone() })
+            })
+            .collect();
+
+        let nodes = Rc::new(nodes);
+        *self.nodes.borrow_mut() = Some(nodes.clone());
+        Ok(nodes)
     }
 }
