@@ -3,7 +3,7 @@ use std::net::Ipv6Addr;
 use std::str::FromStr;
 use std::{cell::RefCell, collections::BTreeMap, rc::Rc};
 
-use decentralization::network::{DecentralizedSubnet, NodesConverter, SubnetQuerier, SubnetQueryBy};
+use decentralization::network::{AvailableNodesQuerier, DecentralizedSubnet, NodesConverter, SubnetQuerier, SubnetQueryBy};
 use ic_interfaces_registry::RegistryClient;
 use ic_interfaces_registry::{RegistryClientVersionedResult, RegistryValue};
 use ic_management_types::{Datacenter, DatacenterOwner, Guest, Network, Node, NodeProvidersResponse, Operator, Provider, Subnet, SubnetMetadata};
@@ -25,6 +25,7 @@ use ic_types::{NodeId, PrincipalId, RegistryVersion};
 use itertools::Itertools;
 use log::warn;
 
+use crate::health::HealthStatusQuerier;
 use crate::public_dashboard::query_ic_dashboard_list;
 use crate::registry::{RegistryFamilyEntries, DFINITY_DCS, NNS_SUBNET_NAME};
 use crate::{node_labels, proposal};
@@ -570,5 +571,40 @@ impl SubnetQuerier for LazyRegistry {
                 .ok_or(ic_management_types::NetworkError::SubnetNotFound(id)),
             SubnetQueryBy::NodeList(_) => todo!(),
         }
+    }
+}
+
+impl AvailableNodesQuerier for LazyRegistry {
+    async fn available_nodes(&self) -> Result<Vec<decentralization::network::Node>, ic_management_types::NetworkError> {
+        let nodes = self
+            .nodes_with_proposals()
+            .map_err(|e| ic_management_types::NetworkError::DataRequestError(e.to_string()))?
+            .values()
+            .filter(|n| n.subnet_id.is_none() && n.proposal.is_none() && n.duplicates.is_none() && !n.is_api_boundary_node)
+            .cloned()
+            .collect_vec();
+
+        let health_client = crate::health::HealthClient::new(self.network.clone());
+        let healths = health_client
+            .nodes()
+            .await
+            .map_err(|err| ic_management_types::NetworkError::DataRequestError(err.to_string()))?;
+
+        Ok(nodes
+            .iter()
+            .filter(|n| {
+                // Keep only healthy nodes.
+                healths
+                    .get(&n.principal)
+                    .map(|s| matches!(*s, ic_management_types::Status::Healthy))
+                    .unwrap_or(false)
+            })
+            .filter(|n| {
+                // Keep only the decentralized or DFINITY-owned nodes.
+                n.decentralized || n.dfinity_owned.unwrap_or(false)
+            })
+            .map(decentralization::network::Node::from)
+            .sorted_by(|n1, n2| n1.id.cmp(&n2.id))
+            .collect())
     }
 }
