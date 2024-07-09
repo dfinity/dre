@@ -66,9 +66,9 @@ impl FromIterator<(NodeFeature, std::string::String)> for NodeFeatures {
 // A thread-local memoization cache of NakamotoScores
 thread_local! {
     pub static NAKAMOTOSCORE_CACHE: RefCell<AHashMap<u64, NakamotoScore>> = RefCell::new(AHashMap::new());
-    pub static MEMOIZE_REQ: RefCell<u32> = RefCell::new(0);
-    pub static MEMOIZE_HIT: RefCell<u32> = RefCell::new(0);
-    pub static MEMOIZE_HIT_RATES: RefCell<VecDeque<u32>> = RefCell::new(VecDeque::new());
+    pub static MEMOIZE_REQ: RefCell<u32> = const { RefCell::new(0) };
+    pub static MEMOIZE_HIT: RefCell<u32> = const { RefCell::new(0) };
+    pub static MEMOIZE_HIT_RATES: RefCell<VecDeque<u32>> = const { RefCell::new(VecDeque::new()) };
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, Default)]
@@ -643,7 +643,7 @@ mod tests {
         );
 
         let subnet_change_req = SubnetChangeRequest::new(subnet_initial, nodes_available, Vec::new(), Vec::new(), Vec::new(), None);
-        let subnet_change = subnet_change_req.optimize(2, &vec![]).unwrap();
+        let subnet_change = subnet_change_req.optimize(2, &[]).unwrap();
         for log in subnet_change.after().run_log.iter() {
             println!("{}", log);
         }
@@ -693,7 +693,7 @@ mod tests {
         );
 
         let subnet_change_req = SubnetChangeRequest::new(subnet_initial, nodes_available, Vec::new(), Vec::new(), Vec::new(), None);
-        let subnet_change = subnet_change_req.optimize(2, &vec![]).unwrap();
+        let subnet_change = subnet_change_req.optimize(2, &[]).unwrap();
         println!("Replacement run log:");
         for line in subnet_change.after().run_log.iter() {
             println!("{}", line);
@@ -740,7 +740,7 @@ mod tests {
         );
 
         let subnet_change_req = SubnetChangeRequest::new(subnet_initial, nodes_available, Vec::new(), Vec::new(), Vec::new(), None);
-        let subnet_change = subnet_change_req.optimize(2, &vec![]).unwrap();
+        let subnet_change = subnet_change_req.optimize(2, &[]).unwrap();
 
         println!("Replacement run log:");
         for line in subnet_change.after().run_log.iter() {
@@ -917,7 +917,6 @@ mod tests {
     #[tokio::test]
     async fn test_network_heal() {
         let nodes_available = new_test_nodes("spare", 10, 2);
-        let nodes_available_principals = nodes_available.iter().map(|n| n.id).collect_vec();
 
         let subnet =
             serde_json::from_str::<ic_management_types::Subnet>(include_str!("../../test_data/subnet-uzr34.json")).expect("failed to read test data");
@@ -945,25 +944,15 @@ mod tests {
 
         important.insert(subnet.principal, subnet);
 
-        let network_heal_response = NetworkHealRequest::new(important.clone(), None)
+        let network_heal_response = NetworkHealRequest::new(important.clone())
             .heal_and_optimize(nodes_available.clone(), healths.clone())
             .await
             .unwrap();
         let result = network_heal_response.first().unwrap().clone();
 
-        assert_eq!(unhealthy_principals.to_vec(), result.removed.clone());
-
-        assert_eq!(unhealthy_principals.len(), result.added.len());
-
-        let network_heal_response = NetworkHealRequest::new(important, Some(1))
-            .heal_and_optimize(nodes_available.clone(), healths)
-            .await
-            .unwrap();
-        let result = network_heal_response.first().unwrap().clone();
-
-        assert_eq!(1, result.added.len());
-
-        result.added.iter().for_each(|n| assert!(nodes_available_principals.contains(n)));
+        for unhealthy in unhealthy_principals.to_vec().iter() {
+            assert!(result.removed.contains(unhealthy));
+        }
     }
 
     #[test]

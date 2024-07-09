@@ -22,6 +22,7 @@ use regex::Regex;
 use registry_canister::mutations::do_change_subnet_membership::ChangeSubnetMembershipPayload;
 use serde_json::Value;
 use std::collections::BTreeMap;
+use std::env;
 use std::str::FromStr;
 
 const STAGING_NEURON_ID: u64 = 49;
@@ -90,13 +91,7 @@ async fn main() -> Result<(), anyhow::Error> {
                 Ok(())
             }
 
-            cli::Commands::Heal {
-                max_replaceable_nodes_per_sub,
-            } => {
-                runner_instance
-                    .network_heal(*max_replaceable_nodes_per_sub, cli_opts.verbose, dry_run)
-                    .await
-            }
+            cli::Commands::Heal => runner_instance.network_heal(cli_opts.verbose, dry_run).await,
 
             cli::Commands::Subnet(subnet) => {
                 // Check if required arguments are provided
@@ -142,7 +137,8 @@ async fn main() -> Result<(), anyhow::Error> {
                             _ => SubnetTarget::FromNodesIds(nodes.clone()),
                         };
                         if matches!(subnet_target, SubnetTarget::FromNodesIds(_)) && motivation.is_none() {
-                            cmd.error(ErrorKind::MissingRequiredArgument, "Required argument `motivation` not found");
+                            cmd.error(ErrorKind::MissingRequiredArgument, "Required argument `motivation` not found")
+                                .exit();
                         }
 
                         let subnet_change_response = subnet_manager
@@ -686,6 +682,11 @@ fn check_latest_release(curr_version: &str, proceed_with_upgrade: bool) -> anyho
 
     if !proceed_with_upgrade {
         return Ok(UpdateStatus::NewVersion(latest_release.version.clone()));
+    }
+
+    // Complete list can be found: https://doc.rust-lang.org/std/env/consts/constant.OS.html
+    if env::consts::OS != "linux" {
+        return Err(anyhow::anyhow!("Only linux is supported for automatic updates"));
     }
 
     info!("Binary not up to date. Updating to {}", latest_release.version);

@@ -534,6 +534,7 @@ impl DefinitionsSupervisor {
             retry::retry(retry::delay::Exponential::from_millis(10).take(5), || {
                 std::fs::OpenOptions::new()
                     .create(true)
+                    .truncate(true)
                     .write(true)
                     .open(networks_state_file.as_path())
                     .and_then(|mut file| {
@@ -830,7 +831,7 @@ mod tests {
         let mocked_definition = Definition::new(
             vec![url::Url::from_str("http://[2a00:fb01:400:42:5000:3cff:fe45:6c61]:8080").unwrap()],
             definitions_dir.as_ref().to_path_buf(),
-            Network::new("mainnet", &vec![]).await.unwrap().legacy_name(),
+            Network::new("mainnet", &[]).await.unwrap().legacy_name(),
             log,
             None,
             Duration::from_secs(0),
