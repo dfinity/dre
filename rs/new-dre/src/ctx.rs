@@ -1,4 +1,4 @@
-use std::{cell::RefCell, path::PathBuf, rc::Rc, str::FromStr, time::Duration};
+use std::{cell::RefCell, path::PathBuf, rc::Rc, str::FromStr, sync::Arc, time::Duration};
 
 use ic_canisters::{governance::governance_canister_version, CanisterClient};
 use ic_management_backend::{
@@ -22,9 +22,9 @@ use crate::{
 const STAGING_NEURON_ID: u64 = 49;
 pub struct DreContext {
     network: Network,
-    registry: RefCell<Option<Rc<LazyRegistry>>>,
-    ic_admin: Option<Rc<IcAdminWrapper>>,
-    runner: RefCell<Option<Rc<Runner>>>,
+    registry: RefCell<Option<Arc<LazyRegistry>>>,
+    ic_admin: Option<Arc<IcAdminWrapper>>,
+    runner: RefCell<Option<Arc<Runner>>>,
 }
 
 impl DreContext {
@@ -73,7 +73,7 @@ impl DreContext {
         proceed_without_confirmation: bool,
         dry_run: bool,
         requirement: IcAdminRequirement,
-    ) -> anyhow::Result<Option<Rc<IcAdminWrapper>>> {
+    ) -> anyhow::Result<Option<Arc<IcAdminWrapper>>> {
         if let IcAdminRequirement::None = requirement {
             return Ok(None);
         }
@@ -111,7 +111,7 @@ impl DreContext {
             (false, s) => s,
         };
 
-        let ic_admin = Some(Rc::new(IcAdminWrapper::new(
+        let ic_admin = Some(Arc::new(IcAdminWrapper::new(
             network.clone(),
             Some(ic_admin_path),
             proceed_without_confirmation,
@@ -122,7 +122,7 @@ impl DreContext {
         Ok(ic_admin)
     }
 
-    pub async fn registry(&self) -> Rc<LazyRegistry> {
+    pub async fn registry(&self) -> Arc<LazyRegistry> {
         if let Some(reg) = self.registry.borrow().as_ref() {
             return reg.clone();
         }
@@ -133,7 +133,7 @@ impl DreContext {
         info!("Using local registry path for network {}: {}", network.name, local_path.display());
         let local_registry = LocalRegistry::new(local_path, Duration::from_millis(1000)).expect("Failed to create local registry");
 
-        let registry = Rc::new(LazyRegistry::new(local_registry, network.clone()));
+        let registry = Arc::new(LazyRegistry::new(local_registry, network.clone()));
         *self.registry.borrow_mut() = Some(registry.clone());
         registry
     }
@@ -155,7 +155,7 @@ impl DreContext {
         }
     }
 
-    pub fn ic_admin(&self) -> Rc<IcAdminWrapper> {
+    pub fn ic_admin(&self) -> Arc<IcAdminWrapper> {
         match &self.ic_admin {
             Some(a) => a.clone(),
             None => panic!("This command is not configured to use ic admin"),
@@ -172,12 +172,12 @@ impl DreContext {
         ProposalAgent::new(self.network().get_nns_urls())
     }
 
-    pub async fn runner(&self) -> Rc<Runner> {
+    pub async fn runner(&self) -> Arc<Runner> {
         if let Some(r) = self.runner.borrow().as_ref() {
             return r.clone();
         }
 
-        let runner = Rc::new(Runner::new(
+        let runner = Arc::new(Runner::new(
             self.ic_admin(),
             self.registry().await,
             self.network().clone(),

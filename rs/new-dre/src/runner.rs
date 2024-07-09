@@ -1,6 +1,8 @@
 use std::cell::RefCell;
+use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use std::rc::Rc;
+use std::sync::Arc;
 
 use decentralization::network::SubnetQueryBy;
 use decentralization::network::TopologyManager;
@@ -13,24 +15,32 @@ use ic_management_backend::registry::ReleasesOps;
 use ic_management_types::Artifact;
 use ic_management_types::Network;
 use ic_management_types::NetworkError;
+use ic_management_types::Node;
 use ic_management_types::Release;
 use ic_types::PrincipalId;
 use itertools::Itertools;
 use log::info;
+use log::warn;
+
+use tabled::builder::Builder;
+use tabled::settings::Style;
 
 use crate::ic_admin::{self, IcAdminWrapper};
 use crate::ic_admin::{ProposeCommand, ProposeOptions};
+use crate::operations::hostos_rollout::HostosRollout;
+use crate::operations::hostos_rollout::HostosRolloutResponse;
+use crate::operations::hostos_rollout::NodeGroupUpdate;
 
 pub struct Runner {
-    ic_admin: Rc<IcAdminWrapper>,
-    registry: Rc<LazyRegistry>,
-    ic_repo: RefCell<Option<Rc<LazyGit>>>,
+    ic_admin: Arc<IcAdminWrapper>,
+    registry: Arc<LazyRegistry>,
+    ic_repo: RefCell<Option<Arc<LazyGit>>>,
     network: Network,
     proposal_agent: ProposalAgent,
 }
 
 impl Runner {
-    pub fn new(ic_admin: Rc<IcAdminWrapper>, registry: Rc<LazyRegistry>, network: Network, agent: ProposalAgent) -> Self {
+    pub fn new(ic_admin: Arc<IcAdminWrapper>, registry: Arc<LazyRegistry>, network: Network, agent: ProposalAgent) -> Self {
         Self {
             ic_admin,
             registry,
@@ -40,12 +50,12 @@ impl Runner {
         }
     }
 
-    fn ic_repo(&self) -> Rc<LazyGit> {
+    fn ic_repo(&self) -> Arc<LazyGit> {
         if let Some(ic_repo) = self.ic_repo.borrow().as_ref() {
             return ic_repo.clone();
         }
 
-        let ic_repo = Rc::new(
+        let ic_repo = Arc::new(
             LazyGit::new(
                 self.network.clone(),
                 self.registry
@@ -199,6 +209,136 @@ impl Runner {
         self.run_membership_change(change.clone(), replace_proposal_options(&change)?).await
     }
 
+    pub async fn prepare_versions_to_retire(&self, release_artifact: &Artifact, edit_summary: bool) -> anyhow::Result<(String, Option<Vec<String>>)> {
+        let retireable_versions = self.retireable_versions(release_artifact).await?;
+        let versions = if retireable_versions.is_empty() {
+            Vec::new()
+        } else {
+            info!("Waiting for you to pick the versions to retire in your editor");
+            let template = "# In the below lines, comment out the versions that you DO NOT want to retire".to_string();
+            let versions = edit::edit(format!(
+                "{}\n{}",
+                template,
+                retireable_versions
+                    .into_iter()
+                    .map(|r| format!("{} # {}", r.commit_hash, r.branch))
+                    .join("\n"),
+            ))?
+            .trim()
+            .replace("\r(\n)?", "\n")
+            .split('\n')
+            .map(|s| regex::Regex::new("#.+$").unwrap().replace_all(s, "").to_string())
+            .map(|s| s.trim().to_string())
+            .filter(|s| !s.is_empty())
+            .collect::<Vec<_>>();
+
+            if versions.is_empty() {
+                warn!("Empty list of GuestOS versions to unelect");
+            }
+            versions
+        };
+
+        let mut template =
+            "Removing the obsolete GuestOS versions from the registry, to prevent unintended version downgrades in the future".to_string();
+        if edit_summary {
+            info!("Edit summary");
+            template = edit::edit(template)?.trim().replace("\r(\n)?", "\n");
+        }
+
+        Ok((template, (!versions.is_empty()).then_some(versions)))
+    }
+
+    pub async fn hostos_rollout_nodes(
+        &self,
+        node_group: NodeGroupUpdate,
+        version: &String,
+        only: &[String],
+        exclude: &[String],
+    ) -> anyhow::Result<Option<(Vec<PrincipalId>, String)>> {
+        let elected_versions = self.registry.elected_hostos().unwrap();
+        if !elected_versions.contains(&version.to_string()) {
+            return Err(anyhow::anyhow!(format!(
+                "The version {} has not being elected.\nVersions elected are: {:?}",
+                version, elected_versions,
+            )));
+        }
+
+        let hostos_rollout = HostosRollout::new(
+            self.registry.nodes()?,
+            self.registry.subnets()?,
+            &self.network,
+            self.proposal_agent.clone(),
+            version,
+            only,
+            exclude,
+        );
+
+        match hostos_rollout.execute(node_group).await? {
+            HostosRolloutResponse::Ok(nodes_to_update, maybe_subnets_affected) => {
+                let mut summary = "## List of nodes\n".to_string();
+                let mut builder_dc = Builder::default();
+                let nodes_by_dc = nodes_by_dc(nodes_to_update.clone());
+                builder_dc.push_record(["dc", "node_id", "subnet"]);
+                nodes_by_dc.into_iter().for_each(|(dc, nodes_with_sub)| {
+                    builder_dc.push_record([
+                        dc,
+                        nodes_with_sub.iter().map(|(p, _)| p.to_string()).join("\n"),
+                        nodes_with_sub.iter().map(|(_, s)| s.split('-').next().unwrap().to_string()).join("\n"),
+                    ]);
+                });
+
+                let mut table_dc = builder_dc.build();
+                table_dc.with(Style::markdown());
+                summary.push_str(table_dc.to_string().as_str());
+                summary.push_str("\n\n");
+
+                if let Some(subnets_affected) = maybe_subnets_affected {
+                    summary.push_str("## Updated nodes per subnet\n");
+                    let mut builder_subnets = Builder::default();
+                    builder_subnets.push_record(["subnet_id", "updated_nodes", "count", "subnet_size", "percent_subnet"]);
+
+                    subnets_affected
+                        .into_iter()
+                        .map(|subnet| {
+                            let nodes_id = nodes_to_update
+                                .iter()
+                                .cloned()
+                                .filter_map(|n| {
+                                    if n.subnet_id.unwrap_or_default() == subnet.subnet_id {
+                                        Some(n.principal)
+                                    } else {
+                                        None
+                                    }
+                                })
+                                .collect::<Vec<PrincipalId>>();
+                            let subnet_id = subnet.subnet_id.to_string().split('-').next().unwrap().to_string();
+                            let updated_nodes = nodes_id.iter().map(|p| p.to_string().split('-').next().unwrap().to_string()).join("\n");
+                            let updates_nodes_count = nodes_id.len().to_string();
+                            let subnet_size = subnet.subnet_size.to_string();
+                            let percent_of_subnet_size = format!("{}%", (nodes_id.len() as f32 / subnet.subnet_size as f32 * 100.0).round());
+
+                            [subnet_id, updated_nodes, updates_nodes_count, subnet_size.clone(), percent_of_subnet_size]
+                        })
+                        .sorted_by(|a, b| a[3].cmp(&b[3]))
+                        .for_each(|row| {
+                            builder_subnets.push_record(row);
+                        });
+
+                    let mut table_subnets = builder_subnets.build();
+                    table_subnets.with(Style::markdown());
+                    summary.push_str(table_subnets.to_string().as_str());
+                };
+                Ok(Some((nodes_to_update.into_iter().map(|n| n.principal).collect::<Vec<_>>(), summary)))
+            }
+            HostosRolloutResponse::None(reason) => {
+                reason
+                    .iter()
+                    .for_each(|(group, reason)| println!("No nodes to update in group: {} because: {}", group, reason));
+                Ok(None)
+            }
+        }
+    }
+
     pub async fn retireable_versions(&self, artifact: &Artifact) -> anyhow::Result<Vec<Release>> {
         match artifact {
             Artifact::GuestOs => self.retireable_guestos_versions().await,
@@ -309,4 +449,26 @@ pub fn replace_proposal_options(change: &SubnetChangeResponse) -> anyhow::Result
         summary: format!("# Replace {replace_target} in subnet {subnet_id_short}",).into(),
         motivation: change.motivation.clone(),
     })
+}
+
+fn nodes_by_dc(nodes: Vec<Node>) -> BTreeMap<String, Vec<(String, String)>> {
+    nodes
+        .iter()
+        .cloned()
+        .map(|n| {
+            let subnet_name = if n.subnet_id.is_some() {
+                n.subnet_id.unwrap_or_default().0.to_string()
+            } else {
+                String::from("<unassigned>")
+            };
+            (
+                n.principal.to_string().split('-').next().unwrap().to_string(),
+                subnet_name,
+                n.operator.datacenter,
+            )
+        })
+        .fold(BTreeMap::new(), |mut acc, (node_id, subnet, dc)| {
+            acc.entry(dc.unwrap_or_default().name).or_default().push((node_id, subnet));
+            acc
+        })
 }

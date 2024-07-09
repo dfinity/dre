@@ -2,6 +2,7 @@ use std::{
     cell::RefCell,
     collections::{HashMap, HashSet},
     rc::Rc,
+    sync::Arc,
 };
 
 use ic_management_types::{Artifact, ArtifactReleases, Network, Release};
@@ -13,8 +14,8 @@ use regex::Regex;
 use crate::git_ic_repo::IcRepo;
 
 pub struct LazyGit {
-    guestos_releases: RefCell<Option<Rc<ArtifactReleases>>>,
-    hostos_releases: RefCell<Option<Rc<ArtifactReleases>>>,
+    guestos_releases: RefCell<Option<Arc<ArtifactReleases>>>,
+    hostos_releases: RefCell<Option<Arc<ArtifactReleases>>>,
     ic_repo: RefCell<IcRepo>,
     network: Network,
     blessed_replica_versions: Vec<String>,
@@ -33,7 +34,7 @@ impl LazyGit {
         })
     }
 
-    pub async fn guestos_releases(&self) -> anyhow::Result<Rc<ArtifactReleases>> {
+    pub async fn guestos_releases(&self) -> anyhow::Result<Arc<ArtifactReleases>> {
         if let Some(releases) = self.guestos_releases.borrow().as_ref() {
             return Ok(releases.to_owned());
         }
@@ -46,7 +47,7 @@ impl LazyGit {
             .ok_or(anyhow::anyhow!("Failed to update releases"))
     }
 
-    pub async fn hostos_releases(&self) -> anyhow::Result<Rc<ArtifactReleases>> {
+    pub async fn hostos_releases(&self) -> anyhow::Result<Arc<ArtifactReleases>> {
         if let Some(releases) = self.hostos_releases.borrow().as_ref() {
             return Ok(releases.to_owned());
         }
@@ -61,8 +62,8 @@ impl LazyGit {
 
     async fn update_releases(&self) -> anyhow::Result<()> {
         if !self.network.eq(&Network::mainnet_unchecked()?) {
-            *self.guestos_releases.borrow_mut() = Some(Rc::new(ArtifactReleases::new(Artifact::GuestOs)));
-            *self.hostos_releases.borrow_mut() = Some(Rc::new(ArtifactReleases::new(Artifact::HostOs)));
+            *self.guestos_releases.borrow_mut() = Some(Arc::new(ArtifactReleases::new(Artifact::GuestOs)));
+            *self.hostos_releases.borrow_mut() = Some(Arc::new(ArtifactReleases::new(Artifact::HostOs)));
             return Ok(());
         }
 
@@ -135,7 +136,7 @@ impl LazyGit {
                 .sorted_by_key(|rr| rr.time)
                 .collect::<Vec<Release>>();
             debug!("Updated {} releases to {:?}", artifact_type, releases);
-            *to_update = Some(Rc::new(ArtifactReleases {
+            *to_update = Some(Arc::new(ArtifactReleases {
                 artifact: artifact_type,
                 releases,
             }));

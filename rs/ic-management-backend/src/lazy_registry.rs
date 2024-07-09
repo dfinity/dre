@@ -1,7 +1,8 @@
 use std::collections::HashSet;
 use std::net::Ipv6Addr;
 use std::str::FromStr;
-use std::{cell::RefCell, collections::BTreeMap, rc::Rc};
+use std::sync::Arc;
+use std::{cell::RefCell, collections::BTreeMap};
 
 use decentralization::network::{AvailableNodesQuerier, DecentralizedSubnet, NodesConverter, SubnetQuerier, SubnetQueryBy};
 use ic_interfaces_registry::RegistryClient;
@@ -49,14 +50,14 @@ pub struct LazyRegistry {
     local_registry: LocalRegistry,
     network: Network,
 
-    subnets: RefCell<Option<Rc<BTreeMap<PrincipalId, Subnet>>>>,
-    nodes: RefCell<Option<Rc<BTreeMap<PrincipalId, Node>>>>,
-    operators: RefCell<Option<Rc<BTreeMap<PrincipalId, Operator>>>>,
-    node_labels_guests: RefCell<Option<Rc<Vec<Guest>>>>,
-    known_subnets: RefCell<Option<Rc<BTreeMap<PrincipalId, String>>>>,
-    elected_guestos: RefCell<Option<Rc<Vec<String>>>>,
-    elected_hostos: RefCell<Option<Rc<Vec<String>>>>,
-    unassigned_nodes_replica_version: RefCell<Option<Rc<String>>>,
+    subnets: RefCell<Option<Arc<BTreeMap<PrincipalId, Subnet>>>>,
+    nodes: RefCell<Option<Arc<BTreeMap<PrincipalId, Node>>>>,
+    operators: RefCell<Option<Arc<BTreeMap<PrincipalId, Operator>>>>,
+    node_labels_guests: RefCell<Option<Arc<Vec<Guest>>>>,
+    known_subnets: RefCell<Option<Arc<BTreeMap<PrincipalId, String>>>>,
+    elected_guestos: RefCell<Option<Arc<Vec<String>>>>,
+    elected_hostos: RefCell<Option<Arc<Vec<String>>>>,
+    unassigned_nodes_replica_version: RefCell<Option<Arc<String>>>,
 }
 
 pub trait LazyRegistryEntry: RegistryValue {
@@ -166,7 +167,7 @@ impl LazyRegistry {
     }
 
     // See if making it async would change anything
-    pub fn node_labels(&self) -> anyhow::Result<Rc<Vec<Guest>>> {
+    pub fn node_labels(&self) -> anyhow::Result<Arc<Vec<Guest>>> {
         if let Some(guests) = self.node_labels_guests.borrow().as_ref() {
             return Ok(guests.to_owned());
         }
@@ -179,12 +180,12 @@ impl LazyRegistry {
             }
         };
 
-        let guests = Rc::new(guests);
+        let guests = Arc::new(guests);
         *self.node_labels_guests.borrow_mut() = Some(guests.clone());
         Ok(guests)
     }
 
-    pub fn elected_guestos(&self) -> anyhow::Result<Rc<Vec<String>>> {
+    pub fn elected_guestos(&self) -> anyhow::Result<Arc<Vec<String>>> {
         if let Some(elected) = self.elected_guestos.borrow().as_ref() {
             return Ok(elected.to_owned());
         }
@@ -196,12 +197,12 @@ impl LazyRegistry {
             .get()
             .to_owned();
 
-        let record = Rc::new(record.blessed_version_ids);
+        let record = Arc::new(record.blessed_version_ids);
         *self.elected_guestos.borrow_mut() = Some(record.clone());
         Ok(record)
     }
 
-    pub fn elected_hostos(&self) -> anyhow::Result<Rc<Vec<String>>> {
+    pub fn elected_hostos(&self) -> anyhow::Result<Arc<Vec<String>>> {
         if let Some(elected) = self.elected_hostos.borrow().as_ref() {
             return Ok(elected.to_owned());
         }
@@ -212,12 +213,12 @@ impl LazyRegistry {
             .map(|(_, v)| v.hostos_version_id.to_owned())
             .collect_vec();
 
-        let record = Rc::new(record);
+        let record = Arc::new(record);
         *self.elected_hostos.borrow_mut() = Some(record.clone());
         Ok(record)
     }
 
-    pub fn operators(&self) -> anyhow::Result<Rc<BTreeMap<PrincipalId, Operator>>> {
+    pub fn operators(&self) -> anyhow::Result<Arc<BTreeMap<PrincipalId, Operator>>> {
         if let Some(operators) = self.operators.borrow().as_ref() {
             return Ok(operators.to_owned());
         }
@@ -273,12 +274,12 @@ impl LazyRegistry {
             })
             .collect();
 
-        let records = Rc::new(records);
+        let records = Arc::new(records);
         *self.operators.borrow_mut() = Some(records.clone());
         Ok(records)
     }
 
-    pub fn nodes(&self) -> anyhow::Result<Rc<BTreeMap<PrincipalId, Node>>> {
+    pub fn nodes(&self) -> anyhow::Result<Arc<BTreeMap<PrincipalId, Node>>> {
         if let Some(nodes) = self.nodes.borrow().as_ref() {
             return Ok(nodes.to_owned());
         }
@@ -354,7 +355,7 @@ impl LazyRegistry {
             })
             .collect();
 
-        let nodes = Rc::new(nodes);
+        let nodes = Arc::new(nodes);
         *self.nodes.borrow_mut() = Some(nodes.clone());
         Ok(nodes)
     }
@@ -362,7 +363,7 @@ impl LazyRegistry {
     fn node_record_guest(&self, nr: &NodeRecord) -> Option<Guest> {
         match self.node_labels() {
             Ok(guests) => guests,
-            Err(_) => Rc::new(vec![]),
+            Err(_) => Arc::new(vec![]),
         }
         .iter()
         .find(|g| g.ipv6 == Ipv6Addr::from_str(&nr.http.clone().unwrap().ip_addr).unwrap())
@@ -373,7 +374,7 @@ impl LazyRegistry {
         Ipv6Addr::from_str(&nr.http.clone().expect("missing ipv6 address").ip_addr).expect("invalid ipv6 address")
     }
 
-    pub fn subnets(&self) -> anyhow::Result<Rc<BTreeMap<PrincipalId, Subnet>>> {
+    pub fn subnets(&self) -> anyhow::Result<Arc<BTreeMap<PrincipalId, Subnet>>> {
         if let Some(subnets) = self.subnets.borrow().as_ref() {
             return Ok(subnets.to_owned());
         }
@@ -427,12 +428,12 @@ impl LazyRegistry {
             .filter(|(_, s)| !s.nodes.is_empty())
             .collect();
 
-        let subnets = Rc::new(subnets);
+        let subnets = Arc::new(subnets);
         *self.subnets.borrow_mut() = Some(subnets.clone());
         Ok(subnets)
     }
 
-    pub async fn nodes_with_proposals(&self) -> anyhow::Result<Rc<BTreeMap<PrincipalId, Node>>> {
+    pub async fn nodes_with_proposals(&self) -> anyhow::Result<Arc<BTreeMap<PrincipalId, Node>>> {
         let nodes = self.nodes()?;
         if nodes.iter().any(|(_, n)| n.proposal.is_some()) {
             return Ok(nodes);
@@ -442,7 +443,7 @@ impl LazyRegistry {
         self.nodes()
     }
 
-    pub async fn subnets_with_proposals(&self) -> anyhow::Result<Rc<BTreeMap<PrincipalId, Subnet>>> {
+    pub async fn subnets_with_proposals(&self) -> anyhow::Result<Arc<BTreeMap<PrincipalId, Subnet>>> {
         let subnets = self.subnets()?;
 
         if subnets.iter().any(|(_, s)| s.proposal.is_some()) {
@@ -488,8 +489,8 @@ impl LazyRegistry {
             })
             .collect();
 
-        *self.nodes.borrow_mut() = Some(Rc::new(nodes));
-        *self.subnets.borrow_mut() = Some(Rc::new(subnets));
+        *self.nodes.borrow_mut() = Some(Arc::new(nodes));
+        *self.subnets.borrow_mut() = Some(Arc::new(subnets));
 
         Ok(())
     }
@@ -525,7 +526,7 @@ impl LazyRegistry {
             .collect_vec())
     }
 
-    pub fn unassigned_nodes_replica_version(&self) -> anyhow::Result<Rc<String>> {
+    pub fn unassigned_nodes_replica_version(&self) -> anyhow::Result<Arc<String>> {
         if let Some(v) = self.unassigned_nodes_replica_version.borrow().as_ref() {
             return Ok(v.to_owned());
         }
@@ -536,7 +537,7 @@ impl LazyRegistry {
             .map(|v| v.get().to_owned())
             .ok_or(anyhow::anyhow!("No unassigned nodes version"))?;
 
-        let version = Rc::new(version.replica_version);
+        let version = Arc::new(version.replica_version);
         *self.unassigned_nodes_replica_version.borrow_mut() = Some(version.clone());
         Ok(version)
     }

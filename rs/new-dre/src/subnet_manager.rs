@@ -1,5 +1,6 @@
 use core::fmt;
 use std::rc::Rc;
+use std::sync::Arc;
 
 use anyhow::anyhow;
 use anyhow::Ok;
@@ -40,12 +41,12 @@ impl fmt::Display for SubnetManagerError {
 
 pub struct SubnetManager {
     subnet_target: Option<SubnetTarget>,
-    registry_instance: Rc<LazyRegistry>,
+    registry_instance: Arc<LazyRegistry>,
     network: Network,
 }
 
 impl SubnetManager {
-    pub fn new(registry_instance: Rc<LazyRegistry>, network: Network) -> Self {
+    pub fn new(registry_instance: Arc<LazyRegistry>, network: Network) -> Self {
         Self {
             subnet_target: None,
             registry_instance,

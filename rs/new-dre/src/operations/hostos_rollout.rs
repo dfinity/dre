@@ -6,6 +6,7 @@ use ic_management_backend::health::{self, HealthStatusQuerier};
 use ic_management_backend::proposal::ProposalAgent;
 use ic_management_types::{Network, Node, Status, Subnet, UpdateNodesHostosVersionsProposal};
 use log::{debug, info, warn};
+use std::sync::Arc;
 use std::{collections::BTreeMap, fmt::Display, str::FromStr};
 
 use crate::commands::hostos::rollout_from_node_group::{NodeAssignment, NodeOwner};
@@ -152,7 +153,7 @@ enum CandidatesSelection {
 pub struct HostosRollout {
     nodes_all: Vec<Node>,
     pub grouped_nodes: BTreeMap<NodeGroup, Vec<Node>>,
-    pub subnets: BTreeMap<PrincipalId, Subnet>,
+    pub subnets: Arc<BTreeMap<PrincipalId, Subnet>>,
     pub network: Network,
     pub proposal_agent: ProposalAgent,
     pub only_filter: Vec<String>,
@@ -161,8 +162,8 @@ pub struct HostosRollout {
 }
 impl HostosRollout {
     pub fn new(
-        nodes: BTreeMap<PrincipalId, Node>,
-        subnets: BTreeMap<PrincipalId, Subnet>,
+        nodes: Arc<BTreeMap<PrincipalId, Node>>,
+        subnets: Arc<BTreeMap<PrincipalId, Subnet>>,
         network: &Network,
         proposal_agent: ProposalAgent,
         rollout_version: &str,
