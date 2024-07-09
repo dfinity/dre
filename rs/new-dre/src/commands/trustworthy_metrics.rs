@@ -1,7 +1,7 @@
 use clap::Args;
 use ic_types::PrincipalId;
 
-use super::{ExecutableCommand, IcAdminRequirement, RegistryRequirement};
+use super::{ExecutableCommand, IcAdminRequirement};
 
 #[derive(Args, Debug)]
 pub struct TrustworthyMetrics {
@@ -20,10 +20,6 @@ pub struct TrustworthyMetrics {
 impl ExecutableCommand for TrustworthyMetrics {
     fn require_ic_admin(&self) -> IcAdminRequirement {
         IcAdminRequirement::Detect
-    }
-
-    fn require_registry(&self) -> RegistryRequirement {
-        RegistryRequirement::None
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {

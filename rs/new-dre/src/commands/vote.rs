@@ -8,7 +8,7 @@ use ic_nns_governance::pb::v1::ProposalInfo;
 use log::info;
 use spinners::{Spinner, Spinners};
 
-use super::{ExecutableCommand, IcAdminRequirement, RegistryRequirement};
+use super::{ExecutableCommand, IcAdminRequirement};
 
 #[derive(Args, Debug)]
 pub struct Vote {
@@ -43,10 +43,6 @@ pub struct Vote {
 impl ExecutableCommand for Vote {
     fn require_ic_admin(&self) -> IcAdminRequirement {
         IcAdminRequirement::Detect
-    }
-
-    fn require_registry(&self) -> RegistryRequirement {
-        RegistryRequirement::None
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {

@@ -49,7 +49,7 @@ use registry_canister::mutations::{
 };
 use serde::{Deserialize, Serialize};
 
-use super::{ExecutableCommand, IcAdminRequirement, RegistryRequirement};
+use super::{ExecutableCommand, IcAdminRequirement};
 
 mod analyze;
 mod filter;
@@ -89,16 +89,6 @@ impl ExecutableCommand for Proposals {
             ProposalsSubcommands::Analyze(a) => a.require_ic_admin(),
             ProposalsSubcommands::Filter(f) => f.require_ic_admin(),
             ProposalsSubcommands::List(l) => l.require_ic_admin(),
-        }
-    }
-
-    fn require_registry(&self) -> RegistryRequirement {
-        match &self.subcommand {
-            ProposalsSubcommands::Pending(p) => p.require_registry(),
-            ProposalsSubcommands::Get(g) => g.require_registry(),
-            ProposalsSubcommands::Analyze(a) => a.require_registry(),
-            ProposalsSubcommands::Filter(f) => f.require_registry(),
-            ProposalsSubcommands::List(l) => l.require_registry(),
         }
     }
 

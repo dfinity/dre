@@ -1,7 +1,7 @@
 use clap::Args;
 use ic_registry_keys::FirewallRulesScope;
 
-use super::{ExecutableCommand, IcAdminRequirement, RegistryRequirement};
+use super::{ExecutableCommand, IcAdminRequirement};
 
 #[derive(Args, Debug)]
 pub struct Firewall {
@@ -19,10 +19,6 @@ pub struct Firewall {
 impl ExecutableCommand for Firewall {
     fn require_ic_admin(&self) -> IcAdminRequirement {
         IcAdminRequirement::Detect
-    }
-
-    fn require_registry(&self) -> RegistryRequirement {
-        RegistryRequirement::None
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {

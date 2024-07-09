@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use clap::Args;
 
-use super::{ExecutableCommand, IcAdminRequirement, RegistryRequirement};
+use super::{ExecutableCommand, IcAdminRequirement};
 
 #[derive(Args, Debug)]
 pub struct DerToPrincipal {
@@ -13,10 +13,6 @@ pub struct DerToPrincipal {
 impl ExecutableCommand for DerToPrincipal {
     fn require_ic_admin(&self) -> IcAdminRequirement {
         IcAdminRequirement::None
-    }
-
-    fn require_registry(&self) -> RegistryRequirement {
-        RegistryRequirement::None
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {

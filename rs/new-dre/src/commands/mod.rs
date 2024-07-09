@@ -148,8 +148,6 @@ pub enum Subcommands {
 pub trait ExecutableCommand {
     fn require_ic_admin(&self) -> IcAdminRequirement;
 
-    fn require_registry(&self) -> RegistryRequirement;
-
     fn validate(&self, cmd: &mut Command);
 
     async fn execute(&self, ctx: DreContext) -> anyhow::Result<()>;
@@ -223,13 +221,6 @@ pub trait ExecutableCommand {
     }
 }
 
-pub enum RegistryRequirement {
-    None,
-    Synced,
-    WithNodeDetails,
-    Full,
-}
-
 pub enum IcAdminRequirement {
     None,
     Anonymous,                                          // for get commands
@@ -256,27 +247,6 @@ impl ExecutableCommand for Args {
             Subcommands::Firewall(c) => c.require_ic_admin(),
             Subcommands::Upgrade(c) => c.require_ic_admin(),
             Subcommands::Proposals(c) => c.require_ic_admin(),
-        }
-    }
-
-    fn require_registry(&self) -> RegistryRequirement {
-        match &self.subcommands {
-            Subcommands::DerToPrincipal(c) => c.require_registry(),
-            Subcommands::Heal(c) => c.require_registry(),
-            Subcommands::Subnet(c) => c.require_registry(),
-            Subcommands::Get(c) => c.require_registry(),
-            Subcommands::Propose(c) => c.require_registry(),
-            Subcommands::UpdateUnassignedNodes(c) => c.require_registry(),
-            Subcommands::Version(c) => c.require_registry(),
-            Subcommands::HostOs(c) => c.require_registry(),
-            Subcommands::Nodes(c) => c.require_registry(),
-            Subcommands::ApiBoundaryNodes(c) => c.require_registry(),
-            Subcommands::Vote(c) => c.require_registry(),
-            Subcommands::TrustworthyMetrics(c) => c.require_registry(),
-            Subcommands::Registry(c) => c.require_registry(),
-            Subcommands::Firewall(c) => c.require_registry(),
-            Subcommands::Upgrade(c) => c.require_registry(),
-            Subcommands::Proposals(c) => c.require_registry(),
         }
     }
 

@@ -2,7 +2,7 @@ use clap::{Args, Subcommand};
 use rollout::Rollout;
 use rollout_from_node_group::RolloutFromNodeGroup;
 
-use super::{ExecutableCommand, IcAdminRequirement, RegistryRequirement};
+use super::{ExecutableCommand, IcAdminRequirement};
 
 mod rollout;
 pub mod rollout_from_node_group;
@@ -32,13 +32,6 @@ impl ExecutableCommand for HostOsCmd {
         match &self.subcommand {
             HostOsSubcommands::Rollout(r) => r.require_ic_admin(),
             HostOsSubcommands::RolloutFromNodeGroup(r) => r.require_ic_admin(),
-        }
-    }
-
-    fn require_registry(&self) -> RegistryRequirement {
-        match &self.subcommand {
-            HostOsSubcommands::Rollout(r) => r.require_registry(),
-            HostOsSubcommands::RolloutFromNodeGroup(r) => r.require_registry(),
         }
     }
 

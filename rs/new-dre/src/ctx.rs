@@ -14,7 +14,7 @@ use log::info;
 
 use crate::{
     auth::Neuron,
-    commands::{Args, ExecutableCommand, IcAdminRequirement, RegistryRequirement},
+    commands::{Args, ExecutableCommand, IcAdminRequirement},
     ic_admin::{download_ic_admin, should_update_ic_admin, IcAdminWrapper},
     subnet_manager::SubnetManager,
 };

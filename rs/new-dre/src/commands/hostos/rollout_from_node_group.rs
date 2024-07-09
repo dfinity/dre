@@ -1,6 +1,6 @@
 use clap::{Args, ValueEnum};
 
-use crate::commands::{ExecutableCommand, IcAdminRequirement, RegistryRequirement};
+use crate::commands::{ExecutableCommand, IcAdminRequirement};
 
 #[derive(ValueEnum, Copy, Clone, Debug, Ord, Eq, PartialEq, PartialOrd, Default)]
 pub enum NodeOwner {
@@ -73,10 +73,6 @@ supported values are absolute numbers (10) or percentage (10%)"#
 impl ExecutableCommand for RolloutFromNodeGroup {
     fn require_ic_admin(&self) -> IcAdminRequirement {
         IcAdminRequirement::Detect
-    }
-
-    fn require_registry(&self) -> RegistryRequirement {
-        RegistryRequirement::WithNodeDetails
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {

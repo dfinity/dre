@@ -3,7 +3,7 @@ use guest_os::GuestOs;
 use host_os::HostOs;
 use ic_management_types::Artifact;
 
-use super::{ExecutableCommand, IcAdminRequirement, RegistryRequirement};
+use super::{ExecutableCommand, IcAdminRequirement};
 
 mod guest_os;
 mod host_os;
@@ -23,12 +23,6 @@ impl ExecutableCommand for VersionCmd {
     fn require_ic_admin(&self) -> IcAdminRequirement {
         match &self.subcommand {
             VersionCommands::ReviseElectedVersions(c) => c.require_ic_admin(),
-        }
-    }
-
-    fn require_registry(&self) -> RegistryRequirement {
-        match &self.subcommand {
-            VersionCommands::ReviseElectedVersions(c) => c.require_registry(),
         }
     }
 
@@ -77,13 +71,6 @@ impl ExecutableCommand for ReviseElectedVersionsCmd {
         match &self.subcommand {
             ReviseElectedVersionsCommands::GuestOs(g) => g.require_ic_admin(),
             ReviseElectedVersionsCommands::HostOs(h) => h.require_ic_admin(),
-        }
-    }
-
-    fn require_registry(&self) -> RegistryRequirement {
-        match &self.subcommand {
-            ReviseElectedVersionsCommands::GuestOs(g) => g.require_registry(),
-            ReviseElectedVersionsCommands::HostOs(h) => h.require_registry(),
         }
     }
 

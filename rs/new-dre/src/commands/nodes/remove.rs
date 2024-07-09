@@ -1,6 +1,6 @@
 use clap::Args;
 
-use crate::commands::{ExecutableCommand, IcAdminRequirement, RegistryRequirement};
+use crate::commands::{ExecutableCommand, IcAdminRequirement};
 
 #[derive(Args, Debug)]
 pub struct Remove {
@@ -27,10 +27,6 @@ pub struct Remove {
 impl ExecutableCommand for Remove {
     fn require_ic_admin(&self) -> IcAdminRequirement {
         IcAdminRequirement::Detect
-    }
-
-    fn require_registry(&self) -> RegistryRequirement {
-        RegistryRequirement::WithNodeDetails
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {

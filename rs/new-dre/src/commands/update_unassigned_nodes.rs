@@ -3,7 +3,7 @@ use ic_management_types::Network;
 
 use crate::auth::Neuron;
 
-use super::{ExecutableCommand, IcAdminRequirement, RegistryRequirement};
+use super::{ExecutableCommand, IcAdminRequirement};
 
 #[derive(Args, Debug)]
 pub struct UpdateUnassignedNodes {
@@ -18,10 +18,6 @@ impl ExecutableCommand for UpdateUnassignedNodes {
             network: Network::mainnet_unchecked().unwrap(),
             neuron: Neuron::automation_neuron_unchecked(),
         }
-    }
-
-    fn require_registry(&self) -> RegistryRequirement {
-        RegistryRequirement::None
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {

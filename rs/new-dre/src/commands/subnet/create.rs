@@ -1,7 +1,7 @@
 use clap::Args;
 use ic_types::PrincipalId;
 
-use crate::commands::{ExecutableCommand, IcAdminRequirement, RegistryRequirement};
+use crate::commands::{ExecutableCommand, IcAdminRequirement};
 
 #[derive(Args, Debug)]
 pub struct Create {
@@ -45,10 +45,6 @@ regardless of the decentralization score"#)]
 impl ExecutableCommand for Create {
     fn require_ic_admin(&self) -> IcAdminRequirement {
         IcAdminRequirement::Detect
-    }
-
-    fn require_registry(&self) -> RegistryRequirement {
-        RegistryRequirement::None
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {

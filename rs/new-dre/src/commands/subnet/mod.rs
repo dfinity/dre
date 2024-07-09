@@ -5,7 +5,7 @@ use replace::Replace;
 use rescue::Rescue;
 use resize::Resize;
 
-use super::{ExecutableCommand, IcAdminRequirement, RegistryRequirement};
+use super::{ExecutableCommand, IcAdminRequirement};
 
 mod create;
 mod deploy;
@@ -45,16 +45,6 @@ impl ExecutableCommand for SubnetCommand {
             SubnetSubcommand::Resize(r) => r.require_ic_admin(),
             SubnetSubcommand::Create(c) => c.require_ic_admin(),
             SubnetSubcommand::Rescue(r) => r.require_ic_admin(),
-        }
-    }
-
-    fn require_registry(&self) -> RegistryRequirement {
-        match &self.subcommand {
-            SubnetSubcommand::Deploy(d) => d.require_registry(),
-            SubnetSubcommand::Replace(r) => r.require_registry(),
-            SubnetSubcommand::Resize(r) => r.require_registry(),
-            SubnetSubcommand::Create(c) => c.require_registry(),
-            SubnetSubcommand::Rescue(r) => r.require_registry(),
         }
     }
 

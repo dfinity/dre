@@ -1,6 +1,6 @@
 use clap::Args;
 
-use crate::commands::{ExecutableCommand, IcAdminRequirement, RegistryRequirement};
+use crate::commands::{ExecutableCommand, IcAdminRequirement};
 
 #[derive(Debug, Args)]
 pub struct HostOs {
@@ -20,10 +20,6 @@ pub struct HostOs {
 impl ExecutableCommand for HostOs {
     fn require_ic_admin(&self) -> IcAdminRequirement {
         IcAdminRequirement::Detect
-    }
-
-    fn require_registry(&self) -> RegistryRequirement {
-        RegistryRequirement::Full
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {

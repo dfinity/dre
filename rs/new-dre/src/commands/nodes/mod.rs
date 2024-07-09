@@ -1,7 +1,7 @@
 use clap::{Args, Subcommand};
 use remove::Remove;
 
-use super::{ExecutableCommand, IcAdminRequirement, RegistryRequirement};
+use super::{ExecutableCommand, IcAdminRequirement};
 
 mod remove;
 
@@ -21,12 +21,6 @@ impl ExecutableCommand for Nodes {
     fn require_ic_admin(&self) -> IcAdminRequirement {
         match &self.subcommand {
             NodesSubcommands::Remove(r) => r.require_ic_admin(),
-        }
-    }
-
-    fn require_registry(&self) -> RegistryRequirement {
-        match &self.subcommand {
-            NodesSubcommands::Remove(r) => r.require_registry(),
         }
     }
 

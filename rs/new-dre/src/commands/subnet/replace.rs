@@ -2,7 +2,7 @@ use clap::{error::ErrorKind, Args};
 use ic_types::PrincipalId;
 
 use crate::{
-    commands::{ExecutableCommand, IcAdminRequirement, RegistryRequirement},
+    commands::{ExecutableCommand, IcAdminRequirement},
     subnet_manager::SubnetTarget,
 };
 
@@ -55,10 +55,6 @@ regardless of the decentralization score"#)]
 impl ExecutableCommand for Replace {
     fn require_ic_admin(&self) -> IcAdminRequirement {
         IcAdminRequirement::Detect
-    }
-
-    fn require_registry(&self) -> RegistryRequirement {
-        RegistryRequirement::WithNodeDetails
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {

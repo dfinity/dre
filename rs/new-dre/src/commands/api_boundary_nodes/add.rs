@@ -2,7 +2,7 @@ use clap::Args;
 use ic_types::PrincipalId;
 
 use crate::{
-    commands::{ExecutableCommand, IcAdminRequirement, RegistryRequirement},
+    commands::{ExecutableCommand, IcAdminRequirement},
     ic_admin,
 };
 
@@ -24,10 +24,6 @@ pub struct Add {
 impl ExecutableCommand for Add {
     fn require_ic_admin(&self) -> IcAdminRequirement {
         IcAdminRequirement::Detect
-    }
-
-    fn require_registry(&self) -> RegistryRequirement {
-        RegistryRequirement::None
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {

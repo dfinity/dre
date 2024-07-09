@@ -4,7 +4,7 @@ use regex::Regex;
 use serde_json::Value;
 use tokio::task::JoinHandle;
 
-use super::{ExecutableCommand, IcAdminRequirement, RegistryRequirement};
+use super::{ExecutableCommand, IcAdminRequirement};
 
 #[derive(Args, Debug)]
 pub struct Upgrade {}
@@ -125,10 +125,6 @@ pub enum UpdateStatus {
 impl ExecutableCommand for Upgrade {
     fn require_ic_admin(&self) -> IcAdminRequirement {
         IcAdminRequirement::None
-    }
-
-    fn require_registry(&self) -> RegistryRequirement {
-        RegistryRequirement::None
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {

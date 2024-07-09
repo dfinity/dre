@@ -1,7 +1,7 @@
 use clap::Args;
 use ic_canisters::governance::GovernanceCanisterWrapper;
 
-use crate::commands::{ExecutableCommand, IcAdminRequirement, RegistryRequirement};
+use crate::commands::{ExecutableCommand, IcAdminRequirement};
 
 #[derive(Args, Debug)]
 pub struct Pending {}
@@ -9,10 +9,6 @@ pub struct Pending {}
 impl ExecutableCommand for Pending {
     fn require_ic_admin(&self) -> IcAdminRequirement {
         IcAdminRequirement::None
-    }
-
-    fn require_registry(&self) -> RegistryRequirement {
-        RegistryRequirement::None
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
