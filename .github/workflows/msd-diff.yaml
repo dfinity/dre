@@ -6,6 +6,7 @@ on:
       - "main"
     paths:
       - 'rs/ic-observability/multiservice-discovery*/src/**'
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
