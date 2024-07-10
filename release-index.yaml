@@ -7,6 +7,9 @@ releases:
       - # Successful qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/pipelines/1360514977
         name: storage-layer-disabled
         version: 5849c6daf2037349bd36dcb6e26ce61c2c6570d0
+      - # Successful qualification pipeline:
+        name: hotfix-https-outcalls
+        version: 16fabfd24617be66e08e00abc7ba3136bbd80010
   - rc_name: rc--2024-06-26_23-01
     versions:
       - # Successful qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/pipelines/1350685950
