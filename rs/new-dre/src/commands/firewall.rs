@@ -114,7 +114,7 @@ impl ExecutableCommand for Firewall {
         }
     }
 
-    fn validate(&self, cmd: &mut clap::Command) {}
+    fn validate(&self, _cmd: &mut clap::Command) {}
 }
 
 impl Firewall {

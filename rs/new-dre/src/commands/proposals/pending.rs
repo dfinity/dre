@@ -21,5 +21,5 @@ impl ExecutableCommand for Pending {
         Ok(())
     }
 
-    fn validate(&self, cmd: &mut clap::Command) {}
+    fn validate(&self, _cmd: &mut clap::Command) {}
 }

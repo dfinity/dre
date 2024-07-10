@@ -29,5 +29,5 @@ impl ExecutableCommand for HostOs {
             .await
     }
 
-    fn validate(&self, cmd: &mut clap::Command) {}
+    fn validate(&self, _cmd: &mut clap::Command) {}
 }

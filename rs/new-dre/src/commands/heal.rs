@@ -15,5 +15,5 @@ impl ExecutableCommand for Heal {
         runner.network_heal().await
     }
 
-    fn validate(&self, cmd: &mut clap::Command) {}
+    fn validate(&self, _cmd: &mut clap::Command) {}
 }

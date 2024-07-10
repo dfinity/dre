@@ -42,5 +42,10 @@ impl ExecutableCommand for HostOsCmd {
         }
     }
 
-    fn validate(&self, cmd: &mut clap::Command) {}
+    fn validate(&self, cmd: &mut clap::Command) {
+        match &self.subcommand {
+            HostOsSubcommands::Rollout(r) => r.validate(cmd),
+            HostOsSubcommands::RolloutFromNodeGroup(r) => r.validate(cmd),
+        }
+    }
 }
