@@ -1,6 +1,11 @@
+use std::str::FromStr;
+
 use clap::{Args, ValueEnum};
 
-use crate::commands::{ExecutableCommand, IcAdminRequirement};
+use crate::{
+    commands::{ExecutableCommand, IcAdminRequirement},
+    operations::hostos_rollout::{NodeGroupUpdate, NumberOfNodes},
+};
 
 #[derive(ValueEnum, Copy, Clone, Debug, Ord, Eq, PartialEq, PartialOrd, Default)]
 pub enum NodeOwner {
@@ -76,6 +81,15 @@ impl ExecutableCommand for RolloutFromNodeGroup {
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
+        let update_group = NodeGroupUpdate::new(self.assignment, self.owner, NumberOfNodes::from_str(&self.nodes_in_group)?);
+        let runner = ctx.runner().await;
+        if let Some((nodes_to_update, summary)) = runner
+            .hostos_rollout_nodes(update_group, &self.version, &self.only, &self.exclude)
+            .await?
+        {
+            return runner.hostos_rollout(nodes_to_update, &self.version, Some(summary)).await;
+        }
+
         Ok(())
     }
 
