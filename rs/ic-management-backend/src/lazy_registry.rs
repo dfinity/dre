@@ -240,14 +240,16 @@ impl LazyRegistry {
                         principal,
                         provider: PrincipalId::try_from(or.node_provider_principal_id.as_slice())
                             .map(|p| {
-                                node_providers
-                                    .get(&p)
-                                    .map(|node_provider| Provider {
-                                        name: Some(node_provider.display_name.to_owned()),
-                                        website: node_provider.website.to_owned(),
-                                        principal: p,
-                                    })
-                                    .expect("Provider missing for operator record")
+                                let maybe_provider = node_providers.get(&p).map(|node_provider| Provider {
+                                    name: Some(node_provider.display_name.to_owned()),
+                                    website: node_provider.website.to_owned(),
+                                    principal: p,
+                                });
+
+                                if maybe_provider.is_none() && self.network.is_mainnet() {
+                                    panic!("Node provider not found for operator: {}", principal);
+                                }
+                                maybe_provider.unwrap_or_default()
                             })
                             .unwrap(),
                         allowance: or.node_allowance,
