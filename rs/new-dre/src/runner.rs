@@ -427,6 +427,9 @@ impl Runner {
         }
         table.add_row(header_row);
 
+        if node_removals.is_empty() {
+            anyhow::bail!("Calculated 0 node removals");
+        }
         // Values
         for nr in &node_removals {
             let mut row = tabular::Row::new();
