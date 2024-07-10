@@ -724,6 +724,7 @@ pub enum SubnetQueryBy {
     NodeList(Vec<Node>),
 }
 
+#[allow(async_fn_in_trait)]
 pub trait NodesConverter {
     async fn get_nodes(&self, from: &[PrincipalId]) -> Result<Vec<Node>, NetworkError>;
 }

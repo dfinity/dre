@@ -180,15 +180,12 @@ fn get_node_operators(
             let node_operator_principal_id = PrincipalId::from_str(k.as_str()).expect("Couldn't parse principal id");
             let node_provider_name = node_provider_names
                 .get(&PrincipalId::try_from(&record.node_provider_principal_id).expect("Couldn't parse principal id"))
-                .map_or_else(
-                    || String::default(),
-                    |v| {
-                        if network.is_mainnet() && v.is_empty() {
-                            panic!("Node provider name should not be empty for mainnet")
-                        }
-                        v.to_string()
-                    },
-                );
+                .map_or_else(String::default, |v| {
+                    if network.is_mainnet() && v.is_empty() {
+                        panic!("Node provider name should not be empty for mainnet")
+                    }
+                    v.to_string()
+                });
             // Find the number of nodes registered by this operator
             let operator_registered_nodes_num = all_nodes
                 .iter()
