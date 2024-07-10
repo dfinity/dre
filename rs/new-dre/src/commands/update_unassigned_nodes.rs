@@ -1,4 +1,5 @@
 use clap::Args;
+use ic_canisters::registry::RegistryCanisterWrapper;
 use ic_management_types::Network;
 
 use crate::auth::Neuron;
@@ -22,13 +23,18 @@ impl ExecutableCommand for UpdateUnassignedNodes {
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
         let ic_admin = ctx.ic_admin();
+        let canister_agent = ctx.create_ic_agent_canister_client(None)?;
 
-        let nns_subnet_id = match self.nns_subnet_id {
+        let nns_subnet_id = match &self.nns_subnet_id {
             Some(n) => n.to_owned(),
             None => {
-                let res = ic_admin.run_passthrough_get(&["get-subnet-list".to_string()], true).await?;
-                let subnet_list = serde_json::from_str::<Vec<String>>(&res)?;
-                subnet_list.first().ok_or_else(|| anyhow::anyhow!("No subnet found"))?.clone()
+                let registry_client = RegistryCanisterWrapper::new(canister_agent.agent);
+                let subnet_list = registry_client.get_subnets().await?;
+                subnet_list
+                    .first()
+                    .map(|s| s.to_string())
+                    .ok_or_else(|| anyhow::anyhow!("No subnet found"))?
+                    .clone()
             }
         };
 

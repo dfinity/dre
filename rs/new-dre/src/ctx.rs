@@ -1,6 +1,13 @@
-use std::{cell::RefCell, path::PathBuf, rc::Rc, str::FromStr, sync::Arc, time::Duration};
+use std::{
+    cell::RefCell,
+    path::PathBuf,
+    rc::Rc,
+    str::FromStr,
+    sync::{Arc, Mutex},
+    time::Duration,
+};
 
-use ic_canisters::{governance::governance_canister_version, CanisterClient};
+use ic_canisters::{governance::governance_canister_version, CanisterClient, IcAgentCanisterClient};
 use ic_management_backend::{
     lazy_registry::LazyRegistry,
     proposal::ProposalAgent,
@@ -142,6 +149,7 @@ impl DreContext {
         &self.network
     }
 
+    /// Uses `ic_canister_client::Agent`
     pub fn create_canister_client(&self) -> anyhow::Result<CanisterClient> {
         let nns_url = self.network.get_nns_urls().first().expect("Should have at least one NNS url");
 
@@ -152,6 +160,21 @@ impl DreContext {
                 crate::auth::Auth::Anonymous => CanisterClient::from_anonymous(nns_url),
             },
             None => CanisterClient::from_anonymous(nns_url),
+        }
+    }
+
+    /// Uses `ic_agent::Agent`
+    pub fn create_ic_agent_canister_client(&self, lock: Option<Mutex<()>>) -> anyhow::Result<IcAgentCanisterClient> {
+        let nns_url = self.network.get_nns_urls().first().expect("Should have at least one NNS url");
+        match &self.ic_admin {
+            Some(a) => match &a.neuron.auth {
+                crate::auth::Auth::Hsm { pin, slot, key_id } => {
+                    IcAgentCanisterClient::from_hsm(pin.to_string(), *slot, key_id.to_string(), nns_url.to_owned(), lock)
+                }
+                crate::auth::Auth::Keyfile { path } => IcAgentCanisterClient::from_key_file(path.into(), nns_url.to_owned()),
+                crate::auth::Auth::Anonymous => IcAgentCanisterClient::from_anonymous(nns_url.to_owned()),
+            },
+            None => IcAgentCanisterClient::from_anonymous(nns_url.to_owned()),
         }
     }
 
