@@ -3,13 +3,27 @@ use ic_management_canister_types::{NodeMetrics, NodeMetricsHistoryArgs, NodeMetr
 use ic_protobuf::registry::subnet::v1::SubnetListRecord;
 use itertools::Itertools;
 
-
-
-pub struct InterCanisterCaller {}
-impl InterCanisterCaller {
+pub struct NodeMetricsManager {}
+impl NodeMetricsManager {
     pub  fn new() -> Self {
         Self{}
     }
+
+    pub async fn refresh(&self) -> anyhow::Result<()> {
+        let subnets = self.get_subnets().await?;
+        let subnets_metrics = subnets
+            .into_iter()
+            .map(|subnet_id: PrincipalId| self.get_node_metrics_history(subnet_id))
+            .collect_vec(); 
+
+        let subnet_with_node_metrics = futures::future::try_join_all(subnets_metrics).await?;
+        let node_metrics = subnet_with_node_metrics.into_iter().flat_map(|(_, metrics)| metrics).collect_vec();
+
+        ic_cdk::println!("Collected {:?} metrics", node_metrics.len());
+
+        anyhow::Ok(())
+    }
+    
     async fn get_subnets(&self) -> anyhow::Result<Vec<PrincipalId>> {
 
         let (registry_subnets, _): (SubnetListRecord, _) = ic_nns_common::registry::get_value("subnet_list".as_bytes(), None).await?;
@@ -51,21 +65,6 @@ impl InterCanisterCaller {
             "Error when calling management canister:\n Code:{:?}\nMsg:{}",
             code, msg
         ))
-    }
-
-    pub async fn refresh(&self) -> anyhow::Result<()> {
-        let subnets = self.get_subnets().await?;
-        let subnets_metrics = subnets
-            .into_iter()
-            .map(|subnet_id: PrincipalId| self.get_node_metrics_history(subnet_id))
-            .collect_vec(); 
-
-        let subnet_with_node_metrics = futures::future::try_join_all(subnets_metrics).await?;
-        let node_metrics = subnet_with_node_metrics.into_iter().flat_map(|(_, metrics)| metrics).collect_vec();
-
-        ic_cdk::println!("Collected {:?} metrics", node_metrics.len());
-
-        anyhow::Ok(())
     }
 }
 
