@@ -10,7 +10,7 @@ use ic_nns_constants::GOVERNANCE_CANISTER_ID;
 use ic_nns_governance::pb::v1::{ListNeurons, ListNeuronsResponse};
 use ic_sys::utility_command::UtilityCommand;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Neuron {
     pub auth: Auth,
     pub neuron_id: u64,
@@ -43,11 +43,14 @@ impl Neuron {
     }
 
     pub fn as_arg_vec(&self) -> Vec<String> {
-        let mut args = self.auth.as_arg_vec();
+        self.auth.as_arg_vec()
+    }
+
+    pub fn proposer_as_arg_vec(&self) -> Vec<String> {
         if self.include_proposer {
-            args.extend(["--proposer".to_string(), self.neuron_id.to_string()]);
+            return vec!["--proposer".to_string(), self.neuron_id.to_string()];
         }
-        args
+        vec![]
     }
 
     pub fn automation_neuron_unchecked() -> Self {

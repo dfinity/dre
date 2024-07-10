@@ -41,12 +41,19 @@ impl DreContext {
             .map_err(|e| anyhow::anyhow!(e))?;
 
         let (neuron_id, private_key_pem) = {
+            let neuron_id = match args.neuron_id {
+                Some(n) => Some(n),
+                None if network.name == "staging" => Some(STAGING_NEURON_ID),
+                None => None,
+            };
+
             let path = PathBuf::from_str(&std::env::var("HOME")?)?.join(".config/dfx/identity/bootstrap-super-leader/identity.pem");
-            match network.name.as_str() {
-                "staging" if path.exists() => (Some(STAGING_NEURON_ID), Some(path)),
-                "staging" => (Some(STAGING_NEURON_ID), args.private_key_pem.clone()),
-                _ => (args.neuron_id, args.private_key_pem.clone()),
-            }
+            let private_key_pem = match args.private_key_pem.as_ref() {
+                Some(p) => Some(p.clone()),
+                None if network.name == "staging" && path.exists() => Some(path),
+                None => None,
+            };
+            (neuron_id, private_key_pem)
         };
 
         let ic_admin = Self::init_ic_admin(
@@ -85,7 +92,6 @@ impl DreContext {
         if let IcAdminRequirement::None = requirement {
             return Ok(None);
         }
-
         let neuron = match requirement {
             IcAdminRequirement::Anonymous | IcAdminRequirement::None => Neuron {
                 auth: crate::auth::Auth::Anonymous,
@@ -108,7 +114,6 @@ impl DreContext {
                 }
             }
         };
-
         let ic_admin_path = match should_update_ic_admin()? {
             (true, _) => {
                 let govn_canister_version = governance_canister_version(network.get_nns_urls()).await?;

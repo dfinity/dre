@@ -142,8 +142,8 @@ impl IcAdminWrapper {
                         ]
                     })
                     .unwrap_or_default(),
-                self.neuron.as_arg_vec(),
                 cmd.args(),
+                self.neuron.proposer_as_arg_vec(),
             ]
             .concat()
             .as_slice(),
