@@ -6,8 +6,12 @@ use std::sync::Arc;
 
 use decentralization::network::SubnetQueryBy;
 use decentralization::network::TopologyManager;
+use decentralization::subnets::NodesRemover;
 use decentralization::SubnetChangeResponse;
+use futures_util::future::try_join;
 use ic_management_backend::git_ic_repo::IcRepo;
+use ic_management_backend::health;
+use ic_management_backend::health::HealthStatusQuerier;
 use ic_management_backend::lazy_git::LazyGit;
 use ic_management_backend::lazy_registry::LazyRegistry;
 use ic_management_backend::proposal::ProposalAgent;
@@ -16,6 +20,7 @@ use ic_management_types::Artifact;
 use ic_management_types::Network;
 use ic_management_types::NetworkError;
 use ic_management_types::Node;
+use ic_management_types::NodeFeature;
 use ic_management_types::Release;
 use ic_types::PrincipalId;
 use itertools::Itertools;
@@ -337,6 +342,83 @@ impl Runner {
                 Ok(None)
             }
         }
+    }
+
+    pub async fn hostos_rollout(&self, nodes: Vec<PrincipalId>, version: &str, maybe_summary: Option<String>) -> anyhow::Result<()> {
+        let title = format!("Set HostOS version: {version} on {} nodes", nodes.clone().len());
+
+        self.ic_admin
+            .propose_run(
+                ProposeCommand::DeployHostosToSomeNodes {
+                    nodes: nodes.clone(),
+                    version: version.to_string(),
+                },
+                ProposeOptions {
+                    title: title.clone().into(),
+                    summary: maybe_summary.unwrap_or(title).into(),
+                    motivation: None,
+                },
+            )
+            .await
+            .map_err(|e| anyhow::anyhow!(e))?;
+
+        let nodes_short = nodes
+            .iter()
+            .map(|p| p.to_string().split('-').next().unwrap().to_string())
+            .collect::<Vec<_>>();
+        println!("Submitted proposal to update the following nodes: {:?}", nodes_short);
+        println!("You can follow the upgrade progress at https://grafana.mainnet.dfinity.network/explore?orgId=1&left=%7B%22datasource%22:%22PE62C54679EC3C073%22,%22queries%22:%5B%7B%22refId%22:%22A%22,%22datasource%22:%7B%22type%22:%22prometheus%22,%22uid%22:%22PE62C54679EC3C073%22%7D,%22editorMode%22:%22code%22,%22expr%22:%22hostos_version%7Bic_node%3D~%5C%22{}%5C%22%7D%5Cn%22,%22legendFormat%22:%22__auto%22,%22range%22:true,%22instant%22:true%7D%5D,%22range%22:%7B%22from%22:%22now-1h%22,%22to%22:%22now%22%7D%7D", nodes_short.iter().map(|n| n.to_string() + ".%2B").join("%7C"));
+
+        Ok(())
+    }
+
+    pub async fn remove_nodes(&self, nodes_remover: NodesRemover) -> anyhow::Result<()> {
+        let health_client = health::HealthClient::new(self.network.clone());
+        let (healths, nodes_with_proposals) = try_join(health_client.nodes(), self.registry.nodes_with_proposals()).await?;
+        let (mut node_removals, motivation) = nodes_remover.remove_nodes(healths, nodes_with_proposals);
+        node_removals.sort_by_key(|nr| nr.reason.message());
+
+        let headers = vec!["Principal".to_string()]
+            .into_iter()
+            .chain(NodeFeature::variants().iter().map(|nf| nf.to_string()))
+            .chain(vec!["Hostname".to_string()].into_iter())
+            .chain(vec!["Reason".to_string()].into_iter())
+            .collect::<Vec<_>>();
+        let mut table = tabular::Table::new(&headers.iter().map(|_| "    {:<}").collect::<Vec<_>>().join(""));
+        // Headers
+        let mut header_row = tabular::Row::new();
+        for h in headers {
+            header_row.add_cell(h);
+        }
+        table.add_row(header_row);
+
+        // Values
+        for nr in &node_removals {
+            let mut row = tabular::Row::new();
+            let decentralization_node = decentralization::network::Node::from(&nr.node);
+            row.add_cell(nr.node.principal);
+            for nf in NodeFeature::variants() {
+                row.add_cell(decentralization_node.get_feature(&nf));
+            }
+            row.add_cell(nr.node.hostname.clone().unwrap_or_else(|| "N/A".to_string()));
+            row.add_cell(nr.reason.message());
+            table.add_row(row);
+        }
+        println!("{}", table);
+
+        self.ic_admin
+            .propose_run(
+                ic_admin::ProposeCommand::RemoveNodes {
+                    nodes: node_removals.iter().map(|n| n.node.principal).collect(),
+                },
+                ProposeOptions {
+                    title: "Remove nodes from the network".to_string().into(),
+                    summary: "Remove nodes from the network".to_string().into(),
+                    motivation: motivation.into(),
+                },
+            )
+            .await?;
+        Ok(())
     }
 
     pub async fn retireable_versions(&self, artifact: &Artifact) -> anyhow::Result<Vec<Release>> {
