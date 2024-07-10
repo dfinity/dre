@@ -8,6 +8,7 @@ use decentralization::network::{AvailableNodesQuerier, DecentralizedSubnet, Node
 use ic_interfaces_registry::RegistryClient;
 use ic_interfaces_registry::{RegistryClientVersionedResult, RegistryValue};
 use ic_management_types::{Datacenter, DatacenterOwner, Guest, Network, Node, NodeProvidersResponse, Operator, Provider, Subnet, SubnetMetadata};
+use ic_protobuf::registry::firewall::v1::FirewallRuleSet;
 use ic_protobuf::registry::node_rewards::v2::NodeRewardsTable;
 use ic_protobuf::registry::replica_version::v1::BlessedReplicaVersions;
 use ic_protobuf::registry::{
@@ -18,8 +19,8 @@ use ic_registry_client_helpers::node::NodeRegistry;
 use ic_registry_client_helpers::subnet::SubnetListRegistry;
 use ic_registry_client_helpers::{node::NodeRecord, node_operator::NodeOperatorRecord};
 use ic_registry_keys::{
-    API_BOUNDARY_NODE_RECORD_KEY_PREFIX, DATA_CENTER_KEY_PREFIX, HOSTOS_VERSION_KEY_PREFIX, NODE_OPERATOR_RECORD_KEY_PREFIX, NODE_RECORD_KEY_PREFIX,
-    NODE_REWARDS_TABLE_KEY, REPLICA_VERSION_KEY_PREFIX, SUBNET_RECORD_KEY_PREFIX,
+    make_firewall_rules_record_key, FirewallRulesScope, API_BOUNDARY_NODE_RECORD_KEY_PREFIX, DATA_CENTER_KEY_PREFIX, HOSTOS_VERSION_KEY_PREFIX,
+    NODE_OPERATOR_RECORD_KEY_PREFIX, NODE_RECORD_KEY_PREFIX, NODE_REWARDS_TABLE_KEY, REPLICA_VERSION_KEY_PREFIX, SUBNET_RECORD_KEY_PREFIX,
 };
 use ic_registry_local_registry::LocalRegistry;
 use ic_registry_subnet_type::SubnetType;
@@ -58,6 +59,7 @@ pub struct LazyRegistry {
     elected_guestos: RefCell<Option<Arc<Vec<String>>>>,
     elected_hostos: RefCell<Option<Arc<Vec<String>>>>,
     unassigned_nodes_replica_version: RefCell<Option<Arc<String>>>,
+    firewall_rule_set: RefCell<Option<Arc<BTreeMap<String, FirewallRuleSet>>>>,
 }
 
 pub trait LazyRegistryEntry: RegistryValue {
@@ -163,6 +165,7 @@ impl LazyRegistry {
             elected_guestos: RefCell::new(None),
             elected_hostos: RefCell::new(None),
             unassigned_nodes_replica_version: RefCell::new(None),
+            firewall_rule_set: RefCell::new(None),
         }
     }
 
@@ -358,6 +361,36 @@ impl LazyRegistry {
         let nodes = Arc::new(nodes);
         *self.nodes.borrow_mut() = Some(nodes.clone());
         Ok(nodes)
+    }
+
+    pub fn firewall_rule_set(&self, firewall_rule_scope: FirewallRulesScope) -> anyhow::Result<FirewallRuleSet> {
+        let key = make_firewall_rules_record_key(&firewall_rule_scope);
+        if let Some(firewall_rule_set) = self.firewall_rule_set.borrow().as_ref() {
+            if let Some(entry) = firewall_rule_set.get(&key) {
+                return Ok(entry.to_owned());
+            }
+        }
+
+        let value = match self
+            .local_registry
+            .get_value(&key, self.get_latest_version())
+            .map_err(|e| anyhow::anyhow!(e))?
+        {
+            Some(v) => FirewallRuleSet::decode(v.as_slice())?,
+            None => FirewallRuleSet::default(),
+        };
+
+        let mut opt_arc_map = self.firewall_rule_set.borrow_mut();
+        if let Some(arc_map) = opt_arc_map.as_mut() {
+            let mut bag = Arc::make_mut(arc_map);
+            bag.insert(key.to_owned(), value.clone());
+        } else {
+            let mut all = BTreeMap::new();
+            all.insert(key.to_owned(), value.clone());
+            *opt_arc_map = Some(Arc::new(all));
+        }
+
+        Ok(value)
     }
 
     fn node_record_guest(&self, nr: &NodeRecord) -> Option<Guest> {
