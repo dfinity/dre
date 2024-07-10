@@ -17,7 +17,7 @@ impl ExecutableCommand for Propose {
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
         let ic_admin = ctx.ic_admin();
 
-        let _ = ic_admin.run_passthrough_propose(&self.args).await?;
+        ic_admin.run_passthrough_propose(&self.args).await?;
         Ok(())
     }
 

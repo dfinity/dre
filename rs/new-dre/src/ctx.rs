@@ -41,11 +41,11 @@ impl DreContext {
             .map_err(|e| anyhow::anyhow!(e))?;
 
         let (neuron_id, private_key_pem) = {
-            let path = PathBuf::from_str(&std::env::var("HOME")?)?.join("/.config/dfx/identity/bootstrap-super-leader/identity.pem");
+            let path = PathBuf::from_str(&std::env::var("HOME")?)?.join(".config/dfx/identity/bootstrap-super-leader/identity.pem");
             match network.name.as_str() {
                 "staging" if path.exists() => (Some(STAGING_NEURON_ID), Some(path)),
                 "staging" => (Some(STAGING_NEURON_ID), args.private_key_pem.clone()),
-                _ => (args.neuron_id.clone(), args.private_key_pem.clone()),
+                _ => (args.neuron_id, args.private_key_pem.clone()),
             }
         };
 
@@ -92,21 +92,19 @@ impl DreContext {
                 include_proposer: false,
             },
             IcAdminRequirement::Detect => {
-                Neuron::new(private_key_pem, hsm_slot, hsm_pin.clone(), hsm_key_id.clone(), neuron_id, &network, true).await?
+                Neuron::new(private_key_pem, hsm_slot, hsm_pin.clone(), hsm_key_id.clone(), neuron_id, network, true).await?
             }
             IcAdminRequirement::OverridableBy {
                 network: accepted_network,
                 neuron,
             } => {
-                let maybe_neuron = Neuron::new(private_key_pem, hsm_slot, hsm_pin.clone(), hsm_key_id.clone(), neuron_id, &network, true).await;
+                let maybe_neuron = Neuron::new(private_key_pem, hsm_slot, hsm_pin.clone(), hsm_key_id.clone(), neuron_id, network, true).await;
 
-                let neuron = match maybe_neuron {
+                match maybe_neuron {
                     Ok(n) => n,
                     Err(_) if accepted_network == *network => neuron,
                     Err(e) => return Err(e),
-                };
-
-                neuron
+                }
             }
         };
 

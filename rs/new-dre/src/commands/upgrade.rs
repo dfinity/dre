@@ -12,12 +12,12 @@ pub struct Upgrade {}
 impl Upgrade {
     pub async fn run(&self) -> anyhow::Result<UpdateStatus> {
         let version = env!("CARGO_PKG_VERSION");
-        tokio::task::spawn_blocking(move || Self::check_latest_release(&version, true)).await?
+        tokio::task::spawn_blocking(move || Self::check_latest_release(version, true)).await?
     }
 
     pub fn check(&self) -> JoinHandle<anyhow::Result<UpdateStatus>> {
         let version = env!("CARGO_PKG_VERSION");
-        tokio::task::spawn_blocking(move || Self::check_latest_release(&version, false))
+        tokio::task::spawn_blocking(move || Self::check_latest_release(version, false))
     }
 
     fn check_latest_release(curr_version: &str, proceed_with_upgrade: bool) -> anyhow::Result<UpdateStatus> {

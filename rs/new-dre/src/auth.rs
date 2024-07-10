@@ -103,15 +103,12 @@ impl Auth {
         let sender = match self {
             Auth::Hsm { pin, slot, key_id } => {
                 let pin_clone = pin.clone();
-                let slot_clone = slot.clone();
+                let slot = *slot;
                 let key_id_clone = key_id.clone();
                 Sender::from_external_hsm(
-                    UtilityCommand::read_public_key(Some(&slot_clone.to_string()), Some(&key_id_clone)).execute()?,
+                    UtilityCommand::read_public_key(Some(&slot.to_string()), Some(&key_id_clone)).execute()?,
                     std::sync::Arc::new(move |input| {
-                        Ok(
-                            UtilityCommand::sign_message(input.to_vec(), Some(&slot_clone.to_string()), Some(&pin_clone), Some(&key_id_clone))
-                                .execute()?,
-                        )
+                        Ok(UtilityCommand::sign_message(input.to_vec(), Some(&slot.to_string()), Some(&pin_clone), Some(&key_id_clone)).execute()?)
                     }),
                 )
             }

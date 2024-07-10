@@ -72,7 +72,7 @@ impl ExecutableCommand for List {
                 exclude_topic: self.exclude_topic.clone(),
                 include_reward_status: self.include_reward_status.clone(),
                 include_status: self.include_status.clone(),
-                include_all_manage_neuron_proposals: self.include_all_manage_neuron_proposals.clone(),
+                include_all_manage_neuron_proposals: self.include_all_manage_neuron_proposals,
                 omit_large_fields: self.omit_large_fields,
             })
             .await?
