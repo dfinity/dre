@@ -48,16 +48,18 @@ pub struct Runner {
     ic_repo: RefCell<Option<Rc<LazyGit>>>,
     network: Network,
     proposal_agent: ProposalAgent,
+    verbose: bool,
 }
 
 impl Runner {
-    pub fn new(ic_admin: Arc<IcAdminWrapper>, registry: Rc<LazyRegistry>, network: Network, agent: ProposalAgent) -> Self {
+    pub fn new(ic_admin: Arc<IcAdminWrapper>, registry: Rc<LazyRegistry>, network: Network, agent: ProposalAgent, verbose: bool) -> Self {
         Self {
             ic_admin,
             registry,
             ic_repo: RefCell::new(None),
             network,
             proposal_agent: agent,
+            verbose,
         }
     }
 
@@ -103,12 +105,7 @@ impl Runner {
         Ok(())
     }
 
-    pub async fn subnet_resize(
-        &self,
-        request: ic_management_types::requests::SubnetResizeRequest,
-        motivation: String,
-        verbose: bool,
-    ) -> anyhow::Result<()> {
+    pub async fn subnet_resize(&self, request: ic_management_types::requests::SubnetResizeRequest, motivation: String) -> anyhow::Result<()> {
         let change = self
             .registry
             .modify_subnet_nodes(SubnetQueryBy::SubnetId(request.subnet))
@@ -120,7 +117,7 @@ impl Runner {
 
         let change = SubnetChangeResponse::from(&change);
 
-        if verbose {
+        if self.verbose {
             if let Some(run_log) = &change.run_log {
                 println!("{}\n", run_log.join("\n"));
             }
@@ -153,7 +150,6 @@ impl Runner {
         &self,
         request: ic_management_types::requests::SubnetCreateRequest,
         motivation: String,
-        verbose: bool,
         replica_version: Option<String>,
         other_args: Vec<String>,
         help_other_args: bool,
@@ -176,7 +172,7 @@ impl Runner {
             .await?;
         let subnet_creation_data = SubnetChangeResponse::from(&subnet_creation_data);
 
-        if verbose {
+        if self.verbose {
             if let Some(run_log) = &subnet_creation_data.run_log {
                 println!("{}\n", run_log.join("\n"));
             }
@@ -206,8 +202,8 @@ impl Runner {
         Ok(())
     }
 
-    pub async fn propose_subnet_change(&self, change: SubnetChangeResponse, verbose: bool) -> anyhow::Result<()> {
-        if verbose {
+    pub async fn propose_subnet_change(&self, change: SubnetChangeResponse) -> anyhow::Result<()> {
+        if self.verbose {
             if let Some(run_log) = &change.run_log {
                 println!("{}\n", run_log.join("\n"));
             }

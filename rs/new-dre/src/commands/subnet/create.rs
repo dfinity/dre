@@ -66,8 +66,7 @@ impl ExecutableCommand for Create {
                     include: self.include.clone().into(),
                 },
                 motivation.to_string(),
-                todo!("Add support for global verbose"),
-                self.replica_version,
+                self.replica_version.clone(),
                 self.other_args.to_owned(),
                 self.help_other_args,
             )

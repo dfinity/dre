@@ -31,6 +31,7 @@ pub struct DreContext {
     registry: RefCell<Option<Rc<LazyRegistry>>>,
     ic_admin: Option<Arc<IcAdminWrapper>>,
     runner: RefCell<Option<Rc<Runner>>>,
+    verbose_runner: bool,
 }
 
 impl DreContext {
@@ -66,6 +67,7 @@ impl DreContext {
             registry: RefCell::new(None),
             ic_admin,
             runner: RefCell::new(None),
+            verbose_runner: args.verbose,
         })
     }
 
@@ -202,6 +204,7 @@ impl DreContext {
             self.registry().await,
             self.network().clone(),
             self.proposals_agent(),
+            self.verbose_runner,
         ));
         *self.runner.borrow_mut() = Some(runner.clone());
         runner

@@ -92,6 +92,10 @@ The argument is mandatory for testnets, and is optional for mainnet and staging"
 
     #[clap(subcommand)]
     pub subcommands: Subcommands,
+
+    /// To print as much information as possible
+    #[clap(long, env = "VERBOSE", global = true)]
+    pub verbose: bool,
 }
 
 #[derive(Subcommand, Debug)]

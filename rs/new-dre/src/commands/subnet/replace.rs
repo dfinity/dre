@@ -76,9 +76,7 @@ impl ExecutableCommand for Replace {
 
         let runner = ctx.runner().await;
 
-        runner
-            .propose_subnet_change(subnet_change_response, todo!("Add support for global verbose"))
-            .await
+        runner.propose_subnet_change(subnet_change_response).await
     }
 
     fn validate(&self, cmd: &mut clap::Command) {

@@ -53,7 +53,6 @@ impl ExecutableCommand for Resize {
                     include: self.include.clone().into(),
                 },
                 self.motivation.clone(),
-                todo!("Add support for global verbose flag"),
             )
             .await
     }
