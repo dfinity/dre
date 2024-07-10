@@ -1,0 +1,10 @@
+type NodeMetricsHistoryResult = variant {
+  Ok : blob;
+  Err : text;
+};
+
+type PrincipalId = text;
+
+service : {
+    "subnet_node_metrics_history" : (PrincipalId) -> (NodeMetricsHistoryResult) query;
+}

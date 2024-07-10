@@ -1,7 +1,8 @@
 [workspace]
 
 members = [
-    "node_status_canister/src/node_status_canister_backend",
+  "node_status_canister/src/node_status_canister_backend",
+  "trustworthy-metrics-canister/src/trustworthy-metrics-canister-backend",
 ]
 
 resolver = "2"

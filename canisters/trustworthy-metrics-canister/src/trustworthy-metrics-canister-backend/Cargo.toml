@@ -1,0 +1,28 @@
+[package]
+name = "trustworthy-metrics-canister-backend"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+candid = "0.10.6"
+ic-cdk = "0.15"
+ic-cdk-timers = "0.9" # Feel free to remove this dependency if you don't need timers
+ic-cdk-macros = "0.15.0"
+ic-stable-structures = "*"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+ic-management-canister-types = { git = "https://github.com/dfinity/ic.git", rev = "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d" }
+ic-protobuf = { git = "https://github.com/dfinity/ic.git", rev = "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d" }
+ic-nns-constants = { git = "https://github.com/dfinity/ic.git", rev = "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d" }
+ic-registry-transport = { git = "https://github.com/dfinity/ic.git", rev = "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d" }
+dfn_core = { git = "https://github.com/dfinity/ic.git", rev = "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d" }
+prost = "0.12.6"
+itertools = "0.13.0"
+futures = "0.3"
+anyhow = "1.0.86"
+ic-nns-common = { git = "https://github.com/dfinity/ic.git", rev = "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d" }
