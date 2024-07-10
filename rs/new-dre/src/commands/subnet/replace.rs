@@ -47,9 +47,6 @@ regardless of the decentralization score"#)]
     /// The ID of the subnet.
     #[clap(long, short)]
     pub id: Option<PrincipalId>,
-
-    #[clap(long, env = "VERBOSE")]
-    pub verbose: bool,
 }
 
 impl ExecutableCommand for Replace {
@@ -77,10 +74,11 @@ impl ExecutableCommand for Replace {
             )
             .await?;
 
-        todo!("Finish once the runner is replaced")
-        // let runner = ctx.runner();
+        let runner = ctx.runner().await;
 
-        // runner.propose_subnet_change(subnet_change_response, self.verbose).await
+        runner
+            .propose_subnet_change(subnet_change_response, todo!("Add support for global verbose"))
+            .await
     }
 
     fn validate(&self, cmd: &mut clap::Command) {

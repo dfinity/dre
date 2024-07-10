@@ -1,4 +1,5 @@
 use clap::Args;
+use ic_management_types::requests::SubnetResizeRequest;
 use ic_types::PrincipalId;
 
 use crate::commands::{ExecutableCommand, IcAdminRequirement};
@@ -27,7 +28,7 @@ regardless of the decentralization score"#)]
 
     /// Motivation for replacing custom nodes
     #[clap(long, short, aliases = [ "summary" ])]
-    pub motivation: Option<String>,
+    pub motivation: String,
 
     /// The ID of the subnet.
     #[clap(long, short)]
@@ -40,7 +41,21 @@ impl ExecutableCommand for Resize {
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        Ok(())
+        let runner = ctx.runner().await;
+        runner
+            .subnet_resize(
+                SubnetResizeRequest {
+                    subnet: self.id,
+                    add: self.add,
+                    remove: self.remove,
+                    exclude: self.exclude.clone().into(),
+                    only: self.only.clone().into(),
+                    include: self.include.clone().into(),
+                },
+                self.motivation.clone(),
+                todo!("Add support for global verbose flag"),
+            )
+            .await
     }
 
     fn validate(&self, cmd: &mut clap::Command) {
