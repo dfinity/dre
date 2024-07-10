@@ -1,5 +1,4 @@
 use dfn_core::api::PrincipalId;
-use futures::FutureExt;
 use ic_management_canister_types::{NodeMetrics, NodeMetricsHistoryArgs, NodeMetricsHistoryResponse};
 use ic_protobuf::registry::subnet::v1::SubnetListRecord;
 use itertools::Itertools;
@@ -32,17 +31,13 @@ impl InterCanisterCaller {
             start_at_timestamp_nanos: 0
         };
         
-        ic_cdk::api::call::call_with_payment128::<_, (Vec<NodeMetricsHistoryResponse>,)>(
+        let node_metrics_result = ic_cdk::api::call::call_with_payment128::<_, (Vec<NodeMetricsHistoryResponse>,)>(
             candid::Principal::management_canister(),
             "node_metrics_history",
             (contract,),
             0_u128
         )
         .await
-        .map_err(|(code, msg)| anyhow::anyhow!(
-            "Error when calling management canister:\n Code:{:?}\nMsg:{}",
-            code, msg
-        ))
         .map(|(result_ok,)| {
             let node_metrics = result_ok
                 .into_iter()
@@ -50,7 +45,12 @@ impl InterCanisterCaller {
                 .collect_vec();
 
             (subnet_id, node_metrics)
-        })
+        });
+
+        node_metrics_result.map_err(|(code, msg)| anyhow::anyhow!(
+            "Error when calling management canister:\n Code:{:?}\nMsg:{}",
+            code, msg
+        ))
     }
 
     pub async fn refresh(&self) -> anyhow::Result<()> {
@@ -60,9 +60,8 @@ impl InterCanisterCaller {
             .map(|subnet_id: PrincipalId| self.get_node_metrics_history(subnet_id))
             .collect_vec(); 
 
-        let subnet_with_metrics = futures::future::try_join_all(subnets_metrics).await?;
-
-        let node_metrics = subnet_with_metrics.into_iter().flat_map(|(_, metrics)| metrics).collect_vec();
+        let subnet_with_node_metrics = futures::future::try_join_all(subnets_metrics).await?;
+        let node_metrics = subnet_with_node_metrics.into_iter().flat_map(|(_, metrics)| metrics).collect_vec();
 
         ic_cdk::println!("Collected {:?} metrics", node_metrics.len());
 
