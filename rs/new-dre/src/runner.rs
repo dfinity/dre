@@ -4,10 +4,13 @@ use std::collections::BTreeSet;
 use std::rc::Rc;
 use std::sync::Arc;
 
+use decentralization::network::AvailableNodesQuerier;
+use decentralization::network::NetworkHealRequest;
 use decentralization::network::SubnetQueryBy;
 use decentralization::network::TopologyManager;
 use decentralization::subnets::NodesRemover;
 use decentralization::SubnetChangeResponse;
+use futures::TryFutureExt;
 use futures_util::future::try_join;
 use ic_management_backend::git_ic_repo::IcRepo;
 use ic_management_backend::health;
@@ -418,6 +421,32 @@ impl Runner {
                 },
             )
             .await?;
+        Ok(())
+    }
+
+    pub async fn network_heal(&self) -> anyhow::Result<()> {
+        let health_client = health::HealthClient::new(self.network.clone());
+        let mut errors = vec![];
+
+        let subnets = self.registry.subnets()?;
+        let (available_nodes, healths) = try_join(self.registry.available_nodes().map_err(anyhow::Error::from), health_client.nodes()).await?;
+
+        let subnets_change_response = NetworkHealRequest::new(subnets).heal_and_optimize(available_nodes, healths).await?;
+        subnets_change_response.iter().for_each(|change| println!("{}", change));
+
+        for change in &subnets_change_response {
+            let _ = self
+                .run_membership_change(change.clone(), replace_proposal_options(change)?)
+                .await
+                .map_err(|e| {
+                    println!("{}", e);
+                    errors.push(e);
+                });
+        }
+        if !errors.is_empty() {
+            anyhow::bail!("Errors: {:?}", errors);
+        }
+
         Ok(())
     }
 

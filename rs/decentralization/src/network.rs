@@ -15,6 +15,7 @@ use std::collections::BTreeMap;
 use std::fmt::{Debug, Display, Formatter};
 use std::hash::Hash;
 use std::rc::Rc;
+use std::sync::Arc;
 
 #[derive(Clone, Serialize, Deserialize, Default)]
 pub struct DataCenterInfo {
@@ -1082,11 +1083,11 @@ impl Ord for NetworkHealSubnets {
 }
 
 pub struct NetworkHealRequest {
-    pub subnets: BTreeMap<PrincipalId, ic_management_types::Subnet>,
+    pub subnets: Arc<BTreeMap<PrincipalId, ic_management_types::Subnet>>,
 }
 
 impl NetworkHealRequest {
-    pub fn new(subnets: BTreeMap<PrincipalId, ic_management_types::Subnet>) -> Self {
+    pub fn new(subnets: Arc<BTreeMap<PrincipalId, ic_management_types::Subnet>>) -> Self {
         Self { subnets }
     }
 

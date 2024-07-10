@@ -476,7 +476,9 @@ impl Runner {
         )
         .await?;
 
-        let subnets_change_response: Vec<SubnetChangeResponse> = NetworkHealRequest::new(subnets).heal_and_optimize(available_nodes, healths).await?;
+        let subnets_change_response: Vec<SubnetChangeResponse> = NetworkHealRequest::new(Arc::new(subnets))
+            .heal_and_optimize(available_nodes, healths)
+            .await?;
         subnets_change_response.iter().for_each(|change| println!("{}", change));
 
         for change in subnets_change_response.iter() {
