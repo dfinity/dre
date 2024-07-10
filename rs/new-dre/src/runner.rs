@@ -6,6 +6,8 @@ use std::sync::Arc;
 
 use decentralization::network::AvailableNodesQuerier;
 use decentralization::network::NetworkHealRequest;
+use decentralization::network::SubnetChange;
+use decentralization::network::SubnetQuerier;
 use decentralization::network::SubnetQueryBy;
 use decentralization::network::TopologyManager;
 use decentralization::subnets::NodesRemover;
@@ -25,11 +27,13 @@ use ic_management_types::NetworkError;
 use ic_management_types::Node;
 use ic_management_types::NodeFeature;
 use ic_management_types::Release;
+use ic_management_types::TopologyChangePayload;
 use ic_types::PrincipalId;
 use itertools::Itertools;
 use log::info;
 use log::warn;
 
+use registry_canister::mutations::do_change_subnet_membership::ChangeSubnetMembershipPayload;
 use tabled::builder::Builder;
 use tabled::settings::Style;
 
@@ -448,6 +452,52 @@ impl Runner {
         }
 
         Ok(())
+    }
+
+    pub async fn decentralization_change(&self, change: &ChangeSubnetMembershipPayload) -> anyhow::Result<()> {
+        if let Some(id) = change.get_subnet() {
+            let subnet_before = self.registry.subnet(SubnetQueryBy::SubnetId(id)).await.map_err(|e| anyhow::anyhow!(e))?;
+            let nodes_before = subnet_before.nodes.clone();
+
+            let added_nodes = self.registry.get_decentralized_nodes(&change.get_added_node_ids())?;
+            let removed_nodes = self.registry.get_decentralized_nodes(&change.get_added_node_ids())?;
+
+            let subnet_after = subnet_before
+                .with_nodes(added_nodes)
+                .without_nodes(removed_nodes)
+                .map_err(|e| anyhow::anyhow!(e))?;
+
+            let subnet_change = SubnetChange {
+                id: subnet_after.id,
+                old_nodes: nodes_before,
+                new_nodes: subnet_after.nodes,
+                ..Default::default()
+            };
+            println!("{}", SubnetChangeResponse::from(&subnet_change))
+        }
+        Ok(())
+    }
+
+    pub async fn subnet_rescue(&self, subnet: &PrincipalId, keep_nodes: Option<Vec<String>>) -> anyhow::Result<()> {
+        let change_request = self
+            .registry
+            .modify_subnet_nodes(SubnetQueryBy::SubnetId(*subnet))
+            .await
+            .map_err(|e| anyhow::anyhow!(e))?;
+
+        let change_request = match keep_nodes {
+            Some(n) => change_request.keeping_from_used(n),
+            None => change_request,
+        };
+
+        let change = SubnetChangeResponse::from(&change_request.rescue()?);
+        println!("{}", change);
+
+        if change.added.is_empty() && change.removed.is_empty() {
+            return Ok(());
+        }
+
+        self.run_membership_change(change.clone(), replace_proposal_options(&change)?).await
     }
 
     pub async fn retireable_versions(&self, artifact: &Artifact) -> anyhow::Result<Vec<Release>> {
