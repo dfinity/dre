@@ -46,6 +46,29 @@ pub struct UpdateVersion {
     pub versions_to_retire: Option<Vec<String>>,
 }
 
+impl UpdateVersion {
+    pub fn get_update_cmd_args(&self) -> Vec<String> {
+        [
+            [
+                vec![
+                    format!("--{}-version-to-elect", self.release_artifact),
+                    self.version.to_string(),
+                    "--release-package-sha256-hex".to_string(),
+                    self.stringified_hash.to_string(),
+                    "--release-package-urls".to_string(),
+                ],
+                self.update_urls.clone(),
+            ]
+            .concat(),
+            match self.versions_to_retire.clone() {
+                Some(versions) => [vec![format!("--{}-versions-to-unelect", &self.release_artifact)], versions].concat(),
+                None => vec![],
+            },
+        ]
+        .concat()
+    }
+}
+
 #[derive(Clone)]
 pub struct IcAdminWrapper {
     network: Network,

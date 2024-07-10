@@ -260,6 +260,38 @@ impl Runner {
         Ok((template, (!versions.is_empty()).then_some(versions)))
     }
 
+    pub async fn do_revise_elected_replica_versions(
+        &self,
+        release_artifact: &Artifact,
+        version: &String,
+        release_tag: &String,
+        force: bool,
+    ) -> anyhow::Result<()> {
+        let update_version = IcAdminWrapper::prepare_to_propose_to_revise_elected_versions(
+            release_artifact,
+            version,
+            release_tag,
+            force,
+            self.prepare_versions_to_retire(release_artifact, false).await.map(|r| r.1)?,
+        )
+        .await?;
+
+        self.ic_admin
+            .propose_run(
+                ProposeCommand::ReviseElectedVersions {
+                    release_artifact: update_version.release_artifact.clone(),
+                    args: update_version.get_update_cmd_args(),
+                },
+                ProposeOptions {
+                    title: Some(update_version.title),
+                    summary: Some(update_version.summary.clone()),
+                    motivation: None,
+                },
+            )
+            .await?;
+        Ok(())
+    }
+
     pub async fn hostos_rollout_nodes(
         &self,
         node_group: NodeGroupUpdate,
