@@ -7,9 +7,7 @@ use std::{
 use clap::Args;
 use ic_canisters::{management::WalletCanisterWrapper, registry::RegistryCanisterWrapper};
 use ic_types::{CanisterId, PrincipalId};
-use itertools::Itertools;
 use log::{info, warn};
-use tokio::try_join;
 
 use super::{ExecutableCommand, IcAdminRequirement};
 
@@ -77,7 +75,5 @@ impl ExecutableCommand for TrustworthyMetrics {
         Ok(())
     }
 
-    fn validate(&self, cmd: &mut clap::Command) {
-        ()
-    }
+    fn validate(&self, cmd: &mut clap::Command) {}
 }

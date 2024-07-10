@@ -6,7 +6,7 @@ use std::{
 };
 
 use clap::Args;
-use ic_protobuf::registry::firewall::v1::{FirewallRule, FirewallRuleSet};
+use ic_protobuf::registry::firewall::v1::FirewallRule;
 use ic_registry_keys::FirewallRulesScope;
 use itertools::Itertools;
 use log::{info, warn};
@@ -14,7 +14,6 @@ use serde::Serialize;
 use tempfile::NamedTempFile;
 
 use crate::ic_admin::{IcAdminWrapper, ProposeCommand, ProposeOptions};
-use ic_management_backend::lazy_registry::LazyRegistryFamilyEntries;
 
 use super::{ExecutableCommand, IcAdminRequirement};
 
@@ -115,9 +114,7 @@ impl ExecutableCommand for Firewall {
         }
     }
 
-    fn validate(&self, cmd: &mut clap::Command) {
-        ()
-    }
+    fn validate(&self, cmd: &mut clap::Command) {}
 }
 
 impl Firewall {

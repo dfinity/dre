@@ -41,7 +41,5 @@ impl ExecutableCommand for UpdateUnassignedNodes {
         ic_admin.update_unassigned_nodes(&nns_subnet_id, ctx.network()).await
     }
 
-    fn validate(&self, cmd: &mut clap::Command) {
-        ()
-    }
+    fn validate(&self, cmd: &mut clap::Command) {}
 }

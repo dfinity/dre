@@ -89,7 +89,5 @@ impl ExecutableCommand for List {
         Ok(())
     }
 
-    fn validate(&self, cmd: &mut clap::Command) {
-        ()
-    }
+    fn validate(&self, cmd: &mut clap::Command) {}
 }

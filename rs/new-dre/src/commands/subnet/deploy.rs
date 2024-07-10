@@ -24,7 +24,5 @@ impl ExecutableCommand for Deploy {
         runner.deploy(&self.id, &self.version).await
     }
 
-    fn validate(&self, cmd: &mut clap::Command) {
-        ()
-    }
+    fn validate(&self, cmd: &mut clap::Command) {}
 }

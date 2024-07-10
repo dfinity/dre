@@ -46,7 +46,5 @@ impl ExecutableCommand for Add {
         Ok(())
     }
 
-    fn validate(&self, cmd: &mut clap::Command) {
-        ()
-    }
+    fn validate(&self, cmd: &mut clap::Command) {}
 }

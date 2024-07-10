@@ -1,9 +1,6 @@
 use clap::Args;
 
-use crate::{
-    commands::{ExecutableCommand, IcAdminRequirement},
-    ic_admin::{IcAdminWrapper, ProposeCommand, ProposeOptions},
-};
+use crate::commands::{ExecutableCommand, IcAdminRequirement};
 
 #[derive(Debug, Args)]
 pub struct HostOs {
@@ -32,7 +29,5 @@ impl ExecutableCommand for HostOs {
             .await
     }
 
-    fn validate(&self, cmd: &mut clap::Command) {
-        ()
-    }
+    fn validate(&self, cmd: &mut clap::Command) {}
 }

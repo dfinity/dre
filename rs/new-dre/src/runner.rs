@@ -14,7 +14,6 @@ use decentralization::subnets::NodesRemover;
 use decentralization::SubnetChangeResponse;
 use futures::TryFutureExt;
 use futures_util::future::try_join;
-use ic_management_backend::git_ic_repo::IcRepo;
 use ic_management_backend::health;
 use ic_management_backend::health::HealthStatusQuerier;
 use ic_management_backend::lazy_git::LazyGit;

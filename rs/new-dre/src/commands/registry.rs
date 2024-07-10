@@ -1,13 +1,11 @@
 use std::{
-    collections::{btree_map::OccupiedEntry, BTreeMap, HashMap},
+    collections::{BTreeMap, HashMap},
     path::PathBuf,
     rc::Rc,
     str::FromStr,
-    sync::Arc,
 };
 
 use clap::Args;
-use ic_interfaces_registry::RegistryClient;
 use ic_management_backend::{
     health::{HealthClient, HealthStatusQuerier},
     lazy_registry::{LazyRegistry, LazyRegistryFamilyEntries},
@@ -21,18 +19,15 @@ use ic_protobuf::registry::{
     hostos_version::v1::HostosVersionRecord,
     node::v1::{ConnectionEndpoint, IPv4InterfaceConfig, NodeRecord},
     node_operator::v1::NodeOperatorRecord,
-    node_rewards::v2::{NodeRewardRate, NodeRewardsTable},
+    node_rewards::v2::NodeRewardsTable,
     replica_version::v1::ReplicaVersionRecord,
     subnet::v1::{EcdsaConfig, GossipConfig as GossipConfigProto, SubnetFeatures, SubnetRecord as SubnetRecordProto},
     unassigned_nodes_config::v1::UnassignedNodesConfigRecord,
 };
-use ic_registry_keys::NODE_REWARDS_TABLE_KEY;
-use ic_registry_local_registry::LocalRegistry;
 use ic_registry_subnet_type::SubnetType;
 use ic_types::PrincipalId;
 use itertools::Itertools;
 use log::{info, warn};
-use registry_canister::mutations::common::decode_registry_value;
 use serde::Serialize;
 
 use crate::ctx::DreContext;
@@ -76,9 +71,7 @@ impl ExecutableCommand for Registry {
         Ok(())
     }
 
-    fn validate(&self, cmd: &mut clap::Command) {
-        ()
-    }
+    fn validate(&self, cmd: &mut clap::Command) {}
 }
 
 impl Registry {

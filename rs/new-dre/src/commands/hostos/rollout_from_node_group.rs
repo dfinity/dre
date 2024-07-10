@@ -93,7 +93,5 @@ impl ExecutableCommand for RolloutFromNodeGroup {
         Ok(())
     }
 
-    fn validate(&self, cmd: &mut clap::Command) {
-        ()
-    }
+    fn validate(&self, cmd: &mut clap::Command) {}
 }

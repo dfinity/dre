@@ -11,10 +11,9 @@ use ic_canisters::{governance::governance_canister_version, CanisterClient, IcAg
 use ic_management_backend::{
     lazy_registry::LazyRegistry,
     proposal::ProposalAgent,
-    public_dashboard::query_ic_dashboard_list,
-    registry::{fetch_and_add_node_labels_guests_to_registry, local_registry_path, sync_local_store, RegistryState},
+    registry::{local_registry_path, sync_local_store},
 };
-use ic_management_types::{Network, NodeProvidersResponse};
+use ic_management_types::Network;
 use ic_registry_local_registry::LocalRegistry;
 use log::info;
 

@@ -58,7 +58,5 @@ impl ExecutableCommand for Resize {
             .await
     }
 
-    fn validate(&self, cmd: &mut clap::Command) {
-        ()
-    }
+    fn validate(&self, cmd: &mut clap::Command) {}
 }

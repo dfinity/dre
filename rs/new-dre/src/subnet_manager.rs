@@ -1,6 +1,5 @@
 use core::fmt;
 use std::rc::Rc;
-use std::sync::Arc;
 
 use anyhow::anyhow;
 use anyhow::Ok;
@@ -8,11 +7,8 @@ use decentralization::{
     network::{DecentralizedSubnet, Node as DecentralizedNode, NodesConverter, SubnetQueryBy, TopologyManager},
     SubnetChangeResponse,
 };
+use ic_management_backend::health::{self, HealthStatusQuerier};
 use ic_management_backend::lazy_registry::LazyRegistry;
-use ic_management_backend::{
-    health::{self, HealthStatusQuerier},
-    registry::RegistryState,
-};
 use ic_management_types::MinNakamotoCoefficients;
 use ic_management_types::Network;
 use ic_types::PrincipalId;
