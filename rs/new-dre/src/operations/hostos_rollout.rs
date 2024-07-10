@@ -16,15 +16,6 @@ pub enum HostosRolloutResponse {
     None(Vec<(NodeGroup, HostosRolloutReason)>),
 }
 
-impl HostosRolloutResponse {
-    pub fn unwrap(self) -> Vec<Node> {
-        match self {
-            HostosRolloutResponse::Ok(val, _) => val,
-            _ => panic!("called `Option::unwrap()` on a `None` value"),
-        }
-    }
-}
-
 #[derive(Clone, Eq, PartialEq)]
 pub struct HostosRolloutSubnetAffected {
     pub subnet_id: PrincipalId,
@@ -36,7 +27,6 @@ pub enum HostosRolloutReason {
     NoNodeHealthy,
     NoNodeWithoutProposal,
     AllAlreadyUpdated,
-    NoNodeSelected,
 }
 
 impl Display for HostosRolloutReason {
@@ -92,13 +82,7 @@ impl Default for NumberOfNodes {
         NumberOfNodes::Percentage(100)
     }
 }
-impl NumberOfNodes {
-    pub fn get_value(&self) -> i32 {
-        match self {
-            NumberOfNodes::Percentage(value) | NumberOfNodes::Absolute(value) => *value,
-        }
-    }
-}
+
 impl std::fmt::Display for NumberOfNodes {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -118,12 +102,6 @@ impl NodeGroupUpdate {
         NodeGroupUpdate {
             node_group: NodeGroup::new(assignment.unwrap_or_default(), owner.unwrap_or_default()),
             maybe_number_nodes: Some(nodes_per_subnet),
-        }
-    }
-    pub fn new_all(assignment: NodeAssignment, owner: NodeOwner) -> Self {
-        NodeGroupUpdate {
-            node_group: NodeGroup::new(assignment, owner),
-            maybe_number_nodes: None,
         }
     }
 
