@@ -87,7 +87,7 @@ impl Registry {
                 .iter()
                 .map(|np| (np.principal_id, np.display_name.clone())),
         );
-        let mut node_operators = get_node_operators(&local_registry, &node_provider_names)?;
+        let mut node_operators = get_node_operators(&local_registry, &node_provider_names, ctx.network())?;
 
         let dcs = local_registry
             .get_family_entries_versioned::<DataCenterRecord>()
@@ -164,6 +164,7 @@ fn get_elected_host_os_versions(local_registry: &Rc<LazyRegistry>) -> anyhow::Re
 fn get_node_operators(
     local_registry: &Rc<LazyRegistry>,
     node_provider_names: &HashMap<PrincipalId, String>,
+    network: &Network,
 ) -> anyhow::Result<BTreeMap<PrincipalId, NodeOperator>> {
     let all_nodes = local_registry
         .get_family_entries_versioned::<NodeRecord>()
@@ -179,8 +180,15 @@ fn get_node_operators(
             let node_operator_principal_id = PrincipalId::from_str(k.as_str()).expect("Couldn't parse principal id");
             let node_provider_name = node_provider_names
                 .get(&PrincipalId::try_from(&record.node_provider_principal_id).expect("Couldn't parse principal id"))
-                .expect("Couldn't find node provider name")
-                .clone();
+                .map_or_else(
+                    || String::default(),
+                    |v| {
+                        if network.is_mainnet() && v.is_empty() {
+                            panic!("Node provider name should not be empty for mainnet")
+                        }
+                        v.to_string()
+                    },
+                );
             // Find the number of nodes registered by this operator
             let operator_registered_nodes_num = all_nodes
                 .iter()
