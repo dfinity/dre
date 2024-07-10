@@ -181,6 +181,7 @@ impl Runner {
         let replica_version = replica_version.unwrap_or(
             self.registry
                 .nns_replica_version()
+                .await
                 .expect("Failed to get a GuestOS version of the NNS subnet")
                 .expect("Failed to get a GuestOS version of the NNS subnet"),
         );
@@ -303,8 +304,8 @@ impl Runner {
         }
 
         let hostos_rollout = HostosRollout::new(
-            self.registry.nodes()?,
-            self.registry.subnets()?,
+            self.registry.nodes().await?,
+            self.registry.subnets().await?,
             &self.network,
             self.proposal_agent.clone(),
             version,
@@ -459,7 +460,7 @@ impl Runner {
         let health_client = health::HealthClient::new(self.network.clone());
         let mut errors = vec![];
 
-        let subnets = self.registry.subnets()?;
+        let subnets = self.registry.subnets().await?;
         let (available_nodes, healths) = try_join(self.registry.available_nodes().map_err(anyhow::Error::from), health_client.nodes()).await?;
 
         let subnets_change_response = NetworkHealRequest::new(subnets).heal_and_optimize(available_nodes, healths).await?;
@@ -486,8 +487,8 @@ impl Runner {
             let subnet_before = self.registry.subnet(SubnetQueryBy::SubnetId(id)).await.map_err(|e| anyhow::anyhow!(e))?;
             let nodes_before = subnet_before.nodes.clone();
 
-            let added_nodes = self.registry.get_decentralized_nodes(&change.get_added_node_ids())?;
-            let removed_nodes = self.registry.get_decentralized_nodes(&change.get_added_node_ids())?;
+            let added_nodes = self.registry.get_decentralized_nodes(&change.get_added_node_ids()).await?;
+            let removed_nodes = self.registry.get_decentralized_nodes(&change.get_added_node_ids()).await?;
 
             let subnet_after = subnet_before
                 .with_nodes(added_nodes)
@@ -538,7 +539,7 @@ impl Runner {
         let ic_repo = self.ic_repo();
         let hosts = ic_repo.hostos_releases().await?;
         let active_releases = hosts.get_active_branches();
-        let hostos_versions: BTreeSet<String> = self.registry.nodes()?.values().map(|s| s.hostos_version.clone()).collect();
+        let hostos_versions: BTreeSet<String> = self.registry.nodes().await?.values().map(|s| s.hostos_version.clone()).collect();
         let versions_in_proposals: BTreeSet<String> = self
             .proposal_agent
             .list_open_elect_hostos_proposals()
@@ -565,7 +566,7 @@ impl Runner {
         let ic_repo = self.ic_repo();
         let guests = ic_repo.guestos_releases().await?;
         let active_releases = guests.get_active_branches();
-        let subnet_versions: BTreeSet<String> = self.registry.subnets()?.values().map(|s| s.replica_version.clone()).collect();
+        let subnet_versions: BTreeSet<String> = self.registry.subnets().await?.values().map(|s| s.replica_version.clone()).collect();
         let version_on_unassigned_nodes = self.registry.unassigned_nodes_replica_version()?;
         let versions_in_proposals: BTreeSet<String> = self
             .proposal_agent

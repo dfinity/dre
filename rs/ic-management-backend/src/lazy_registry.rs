@@ -167,12 +167,12 @@ impl LazyRegistry {
     }
 
     // See if making it async would change anything
-    pub fn node_labels(&self) -> anyhow::Result<Arc<Vec<Guest>>> {
+    pub async fn node_labels(&self) -> anyhow::Result<Arc<Vec<Guest>>> {
         if let Some(guests) = self.node_labels_guests.borrow().as_ref() {
             return Ok(guests.to_owned());
         }
 
-        let guests = match tokio::runtime::Handle::current().block_on(node_labels::query_guests(&self.network.name)) {
+        let guests = match node_labels::query_guests(&self.network.name).await {
             Ok(g) => g,
             Err(e) => {
                 warn!("Failed to query node labels: {}", e);
@@ -218,15 +218,14 @@ impl LazyRegistry {
         Ok(record)
     }
 
-    pub fn operators(&self) -> anyhow::Result<Arc<BTreeMap<PrincipalId, Operator>>> {
+    pub async fn operators(&self) -> anyhow::Result<Arc<BTreeMap<PrincipalId, Operator>>> {
         if let Some(operators) = self.operators.borrow().as_ref() {
             return Ok(operators.to_owned());
         }
 
         // Fetch node providers
 
-        let node_providers =
-            tokio::runtime::Handle::current().block_on(query_ic_dashboard_list::<NodeProvidersResponse>(&self.network, "v3/node-providers"))?;
+        let node_providers = query_ic_dashboard_list::<NodeProvidersResponse>(&self.network, "v3/node-providers").await?;
         let node_providers: BTreeMap<_, _> = node_providers.node_providers.iter().map(|p| (p.principal_id, p)).collect();
         let data_centers = self.get_family_entries::<DataCenterRecord>()?;
         let operators = self.get_family_entries::<NodeOperatorRecord>()?;
@@ -279,7 +278,7 @@ impl LazyRegistry {
         Ok(records)
     }
 
-    pub fn nodes(&self) -> anyhow::Result<Arc<BTreeMap<PrincipalId, Node>>> {
+    pub async fn nodes(&self) -> anyhow::Result<Arc<BTreeMap<PrincipalId, Node>>> {
         if let Some(nodes) = self.nodes.borrow().as_ref() {
             return Ok(nodes.to_owned());
         }
@@ -288,16 +287,15 @@ impl LazyRegistry {
         let versioned_node_entries = self.get_family_entries_versioned::<NodeRecord>()?;
         let dfinity_dcs = DFINITY_DCS.split(' ').map(|dc| dc.to_string().to_lowercase()).collect::<HashSet<_>>();
         let api_boundary_nodes = self.get_family_entries::<ApiBoundaryNodeRecord>()?;
-
+        let guests = self.node_labels().await?;
+        let operators = self.operators().await?;
         let nodes: BTreeMap<_, _> = node_entries
             .iter()
             // Skipping nodes without operator. This should only occur at version 1
             .filter(|(_, nr)| !nr.node_operator_id.is_empty())
             .map(|(p, nr)| {
-                let guest = self.node_record_guest(nr);
-                let operator = self
-                    .operators()
-                    .expect("Should be able to fetch operators")
+                let guest = Self::node_record_guest(guests.clone(), nr);
+                let operator = operators
                     .iter()
                     .find(|(op, _)| op.to_vec() == nr.node_operator_id)
                     .map(|(_, o)| o.to_owned())
@@ -390,26 +388,23 @@ impl LazyRegistry {
         Ok(value)
     }
 
-    fn node_record_guest(&self, nr: &NodeRecord) -> Option<Guest> {
-        match self.node_labels() {
-            Ok(guests) => guests,
-            Err(_) => Arc::new(vec![]),
-        }
-        .iter()
-        .find(|g| g.ipv6 == Ipv6Addr::from_str(&nr.http.clone().unwrap().ip_addr).unwrap())
-        .cloned()
+    fn node_record_guest(guests: Arc<Vec<Guest>>, nr: &NodeRecord) -> Option<Guest> {
+        guests
+            .iter()
+            .find(|g| g.ipv6 == Ipv6Addr::from_str(&nr.http.clone().unwrap().ip_addr).unwrap())
+            .cloned()
     }
 
     fn node_ip_addr(nr: &NodeRecord) -> Ipv6Addr {
         Ipv6Addr::from_str(&nr.http.clone().expect("missing ipv6 address").ip_addr).expect("invalid ipv6 address")
     }
 
-    pub fn subnets(&self) -> anyhow::Result<Arc<BTreeMap<PrincipalId, Subnet>>> {
+    pub async fn subnets(&self) -> anyhow::Result<Arc<BTreeMap<PrincipalId, Subnet>>> {
         if let Some(subnets) = self.subnets.borrow().as_ref() {
             return Ok(subnets.to_owned());
         }
 
-        let all_nodes = self.nodes()?;
+        let all_nodes = self.nodes().await?;
 
         let subnets: BTreeMap<_, _> = self
             .get_family_entries::<SubnetRecord>()?
@@ -464,30 +459,30 @@ impl LazyRegistry {
     }
 
     pub async fn nodes_with_proposals(&self) -> anyhow::Result<Arc<BTreeMap<PrincipalId, Node>>> {
-        let nodes = self.nodes()?;
+        let nodes = self.nodes().await?;
         if nodes.iter().any(|(_, n)| n.proposal.is_some()) {
             return Ok(nodes);
         }
 
         self.update_proposal_data().await?;
-        self.nodes()
+        self.nodes().await
     }
 
     pub async fn subnets_with_proposals(&self) -> anyhow::Result<Arc<BTreeMap<PrincipalId, Subnet>>> {
-        let subnets = self.subnets()?;
+        let subnets = self.subnets().await?;
 
         if subnets.iter().any(|(_, s)| s.proposal.is_some()) {
             return Ok(subnets);
         }
 
         self.update_proposal_data().await?;
-        self.subnets()
+        self.subnets().await
     }
 
     async fn update_proposal_data(&self) -> anyhow::Result<()> {
         let proposal_agent = proposal::ProposalAgent::new(self.network.get_nns_urls());
-        let nodes = self.nodes()?;
-        let subnets = self.subnets()?;
+        let nodes = self.nodes().await?;
+        let subnets = self.subnets().await?;
 
         let topology_proposals = proposal_agent.list_open_topology_proposals().await?;
         let nodes: BTreeMap<_, _> = nodes
@@ -525,17 +520,19 @@ impl LazyRegistry {
         Ok(())
     }
 
-    pub fn nns_replica_version(&self) -> anyhow::Result<Option<String>> {
+    pub async fn nns_replica_version(&self) -> anyhow::Result<Option<String>> {
         Ok(self
-            .subnets()?
+            .subnets()
+            .await?
             .get(&PrincipalId::from_str("tdb26-jop6k-aogll-7ltgs-eruif-6kk7m-qpktf-gdiqx-mxtrf-vb5e6-eqe").unwrap())
             .map(|s| s.replica_version.clone()))
     }
 
-    pub fn missing_guests(&self) -> anyhow::Result<Vec<Guest>> {
-        let nodes = self.nodes()?;
+    pub async fn missing_guests(&self) -> anyhow::Result<Vec<Guest>> {
+        let nodes = self.nodes().await?;
         let mut missing_guests = self
-            .node_labels()?
+            .node_labels()
+            .await?
             .iter()
             .filter(|g| !nodes.iter().any(|(_, n)| n.label.clone().unwrap_or_default() == g.name))
             .cloned()
@@ -547,9 +544,10 @@ impl LazyRegistry {
         Ok(missing_guests)
     }
 
-    pub fn get_decentralized_nodes(&self, principals: &[PrincipalId]) -> anyhow::Result<Vec<decentralization::network::Node>> {
+    pub async fn get_decentralized_nodes(&self, principals: &[PrincipalId]) -> anyhow::Result<Vec<decentralization::network::Node>> {
         Ok(self
-            .nodes()?
+            .nodes()
+            .await?
             .values()
             .filter(|n| principals.contains(&n.principal))
             .map(decentralization::network::Node::from)
@@ -574,9 +572,10 @@ impl LazyRegistry {
 }
 
 impl NodesConverter for LazyRegistry {
-    fn get_nodes(&self, from: &[PrincipalId]) -> Result<Vec<decentralization::network::Node>, ic_management_types::NetworkError> {
+    async fn get_nodes(&self, from: &[PrincipalId]) -> Result<Vec<decentralization::network::Node>, ic_management_types::NetworkError> {
         let nodes = self
             .nodes()
+            .await
             .map_err(|e| ic_management_types::NetworkError::DataRequestError(e.to_string()))?;
         from.iter()
             .map(|n| {
@@ -594,6 +593,7 @@ impl SubnetQuerier for LazyRegistry {
         match by {
             SubnetQueryBy::SubnetId(id) => self
                 .subnets()
+                .await
                 .map_err(|e| ic_management_types::NetworkError::DataRequestError(e.to_string()))?
                 .get(&id)
                 .map(|s| DecentralizedSubnet {
