@@ -10,6 +10,9 @@ releases:
       - # Successful qualification pipeline: https://github.com/dfinity-ops/release/actions/runs/9877005239/job/27277530675
         name: hotfix-https-outcalls
         version: 16fabfd24617be66e08e00abc7ba3136bbd80010
+      - # Successful qualification pipeline:
+        name: hotfix-https-outcalls-with-lsmt
+        version: 7dee90107a88b836fc72e78993913988f4f73ca2
   - rc_name: rc--2024-06-26_23-01
     versions:
       - # Successful qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/pipelines/1350685950
