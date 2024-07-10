@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::{BTreeSet, HashSet};
 use std::net::Ipv6Addr;
 use std::str::FromStr;
 use std::sync::Arc;
@@ -7,7 +7,9 @@ use std::{cell::RefCell, collections::BTreeMap};
 use decentralization::network::{AvailableNodesQuerier, DecentralizedSubnet, NodesConverter, SubnetQuerier, SubnetQueryBy};
 use ic_interfaces_registry::RegistryClient;
 use ic_interfaces_registry::{RegistryClientVersionedResult, RegistryValue};
-use ic_management_types::{Datacenter, DatacenterOwner, Guest, Network, Node, NodeProvidersResponse, Operator, Provider, Subnet, SubnetMetadata};
+use ic_management_types::{
+    Datacenter, DatacenterOwner, Guest, Network, NetworkError, Node, NodeProvidersResponse, Operator, Provider, Subnet, SubnetMetadata,
+};
 use ic_protobuf::registry::firewall::v1::FirewallRuleSet;
 use ic_protobuf::registry::node_rewards::v2::NodeRewardsTable;
 use ic_protobuf::registry::replica_version::v1::BlessedReplicaVersions;
@@ -607,7 +609,37 @@ impl SubnetQuerier for LazyRegistry {
                     run_log: vec![],
                 })
                 .ok_or(ic_management_types::NetworkError::SubnetNotFound(id)),
-            SubnetQueryBy::NodeList(_) => todo!(),
+            SubnetQueryBy::NodeList(nodes) => {
+                let reg_nodes = self.nodes().await.map_err(|e| NetworkError::DataRequestError(e.to_string()))?;
+                let subnets = nodes
+                    .iter()
+                    .map(|n| reg_nodes.get(&n.id).and_then(|n| n.subnet_id))
+                    .collect::<BTreeSet<_>>();
+                if subnets.len() > 1 {
+                    return Err(NetworkError::IllegalRequest("Nodes don't belong to the same subnet".to_owned()));
+                }
+                if let Some(Some(subnet)) = subnets.first() {
+                    Ok(decentralization::network::DecentralizedSubnet {
+                        id: *subnet,
+                        nodes: self
+                            .subnets()
+                            .await
+                            .map_err(|e| NetworkError::IllegalRequest(e.to_string()))?
+                            .get(&subnet)
+                            .ok_or(NetworkError::SubnetNotFound(*subnet))?
+                            .nodes
+                            .iter()
+                            .map(decentralization::network::Node::from)
+                            .collect(),
+                        removed_nodes: vec![],
+                        min_nakamoto_coefficients: None,
+                        comment: None,
+                        run_log: vec![],
+                    })
+                } else {
+                    Err(NetworkError::IllegalRequest("no subnets found".to_string()))
+                }
+            }
         }
     }
 }
