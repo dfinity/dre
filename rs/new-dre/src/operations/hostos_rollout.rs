@@ -35,7 +35,6 @@ impl Display for HostosRolloutReason {
             Self::NoNodeHealthy => write!(f, "No healthy node found in the group"),
             Self::NoNodeWithoutProposal => write!(f, "No node without open proposals found in the group"),
             Self::AllAlreadyUpdated => write!(f, "All candidate nodes have been already updated"),
-            Self::NoNodeSelected => write!(f, "No candidate nodes have been selected"),
         }
     }
 }

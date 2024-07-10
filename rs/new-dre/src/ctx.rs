@@ -29,9 +29,9 @@ use crate::{
 const STAGING_NEURON_ID: u64 = 49;
 pub struct DreContext {
     network: Network,
-    registry: RefCell<Option<Arc<LazyRegistry>>>,
+    registry: RefCell<Option<Rc<LazyRegistry>>>,
     ic_admin: Option<Arc<IcAdminWrapper>>,
-    runner: RefCell<Option<Arc<Runner>>>,
+    runner: RefCell<Option<Rc<Runner>>>,
 }
 
 impl DreContext {
@@ -129,7 +129,7 @@ impl DreContext {
         Ok(ic_admin)
     }
 
-    pub async fn registry(&self) -> Arc<LazyRegistry> {
+    pub async fn registry(&self) -> Rc<LazyRegistry> {
         if let Some(reg) = self.registry.borrow().as_ref() {
             return reg.clone();
         }
@@ -140,7 +140,7 @@ impl DreContext {
         info!("Using local registry path for network {}: {}", network.name, local_path.display());
         let local_registry = LocalRegistry::new(local_path, Duration::from_millis(1000)).expect("Failed to create local registry");
 
-        let registry = Arc::new(LazyRegistry::new(local_registry, network.clone()));
+        let registry = Rc::new(LazyRegistry::new(local_registry, network.clone()));
         *self.registry.borrow_mut() = Some(registry.clone());
         registry
     }
@@ -195,12 +195,12 @@ impl DreContext {
         ProposalAgent::new(self.network().get_nns_urls())
     }
 
-    pub async fn runner(&self) -> Arc<Runner> {
+    pub async fn runner(&self) -> Rc<Runner> {
         if let Some(r) = self.runner.borrow().as_ref() {
             return r.clone();
         }
 
-        let runner = Arc::new(Runner::new(
+        let runner = Rc::new(Runner::new(
             self.ic_admin(),
             self.registry().await,
             self.network().clone(),

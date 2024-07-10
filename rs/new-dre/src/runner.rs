@@ -45,14 +45,14 @@ use crate::operations::hostos_rollout::NodeGroupUpdate;
 
 pub struct Runner {
     ic_admin: Arc<IcAdminWrapper>,
-    registry: Arc<LazyRegistry>,
-    ic_repo: RefCell<Option<Arc<LazyGit>>>,
+    registry: Rc<LazyRegistry>,
+    ic_repo: RefCell<Option<Rc<LazyGit>>>,
     network: Network,
     proposal_agent: ProposalAgent,
 }
 
 impl Runner {
-    pub fn new(ic_admin: Arc<IcAdminWrapper>, registry: Arc<LazyRegistry>, network: Network, agent: ProposalAgent) -> Self {
+    pub fn new(ic_admin: Arc<IcAdminWrapper>, registry: Rc<LazyRegistry>, network: Network, agent: ProposalAgent) -> Self {
         Self {
             ic_admin,
             registry,
@@ -62,12 +62,12 @@ impl Runner {
         }
     }
 
-    fn ic_repo(&self) -> Arc<LazyGit> {
+    fn ic_repo(&self) -> Rc<LazyGit> {
         if let Some(ic_repo) = self.ic_repo.borrow().as_ref() {
             return ic_repo.clone();
         }
 
-        let ic_repo = Arc::new(
+        let ic_repo = Rc::new(
             LazyGit::new(
                 self.network.clone(),
                 self.registry

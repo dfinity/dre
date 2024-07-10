@@ -765,7 +765,7 @@ const DEFAULT_IC_ADMIN_VERSION: &str = "778d2bb870f858952ca9fbe69324f9864e3cf5e7
 
 fn get_ic_admin_revisions_dir() -> anyhow::Result<PathBuf> {
     let dir = dirs::home_dir()
-        .and_then(|d| Some(d.join("bin").join("ic-admin.revisions")))
+        .map(|d| d.join("bin").join("ic-admin.revisions"))
         .ok_or_else(|| anyhow::format_err!("Cannot find home directory"))?;
 
     if !dir.exists() {
