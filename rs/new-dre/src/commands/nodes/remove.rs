@@ -1,4 +1,5 @@
-use clap::Args;
+use clap::{error::ErrorKind, Args};
+use decentralization::subnets::NodesRemover;
 
 use crate::commands::{ExecutableCommand, IcAdminRequirement};
 
@@ -30,10 +31,22 @@ impl ExecutableCommand for Remove {
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        Ok(())
+        let runner = ctx.runner().await;
+        runner
+            .remove_nodes(NodesRemover {
+                no_auto: self.no_auto,
+                remove_degraded: self.remove_degraded,
+                extra_nodes_filter: self.extra_nodes_filter.clone(),
+                exclude: Some(self.exclude.clone()),
+                motivation: self.motivation.clone().unwrap_or_default(),
+            })
+            .await
     }
 
     fn validate(&self, cmd: &mut clap::Command) {
-        ()
+        if self.motivation.is_none() && !self.extra_nodes_filter.is_empty() {
+            cmd.error(ErrorKind::MissingRequiredArgument, "Required argument motivation not found")
+                .exit();
+        }
     }
 }
