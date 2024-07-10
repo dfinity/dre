@@ -21,7 +21,18 @@ impl ExecutableCommand for UpdateUnassignedNodes {
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        Ok(())
+        let ic_admin = ctx.ic_admin();
+
+        let nns_subnet_id = match self.nns_subnet_id {
+            Some(n) => n.to_owned(),
+            None => {
+                let res = ic_admin.run_passthrough_get(&["get-subnet-list".to_string()], true).await?;
+                let subnet_list = serde_json::from_str::<Vec<String>>(&res)?;
+                subnet_list.first().ok_or_else(|| anyhow::anyhow!("No subnet found"))?.clone()
+            }
+        };
+
+        ic_admin.update_unassigned_nodes(&nns_subnet_id, &ctx.network()).await
     }
 
     fn validate(&self, cmd: &mut clap::Command) {
