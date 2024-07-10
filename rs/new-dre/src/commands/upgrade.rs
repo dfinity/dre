@@ -127,7 +127,7 @@ impl ExecutableCommand for Upgrade {
         IcAdminRequirement::None
     }
 
-    async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
+    async fn execute(&self, _ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
         Ok(())
     }
 

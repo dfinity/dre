@@ -16,7 +16,6 @@ use ic_protobuf::registry::{
     replica_version::v1::ReplicaVersionRecord, subnet::v1::SubnetRecord, unassigned_nodes_config::v1::UnassignedNodesConfigRecord,
 };
 use ic_registry_client_helpers::node::NodeRegistry;
-use ic_registry_client_helpers::subnet::SubnetListRegistry;
 use ic_registry_client_helpers::{node::NodeRecord, node_operator::NodeOperatorRecord};
 use ic_registry_keys::{
     make_firewall_rules_record_key, FirewallRulesScope, API_BOUNDARY_NODE_RECORD_KEY_PREFIX, DATA_CENTER_KEY_PREFIX, HOSTOS_VERSION_KEY_PREFIX,
@@ -31,7 +30,7 @@ use tokio::try_join;
 
 use crate::health::HealthStatusQuerier;
 use crate::public_dashboard::query_ic_dashboard_list;
-use crate::registry::{RegistryFamilyEntries, DFINITY_DCS, NNS_SUBNET_NAME};
+use crate::registry::{DFINITY_DCS, NNS_SUBNET_NAME};
 use crate::{node_labels, proposal};
 
 const KNOWN_SUBNETS: &[(&str, &str)] = &[
@@ -55,7 +54,6 @@ pub struct LazyRegistry {
     nodes: RefCell<Option<Arc<BTreeMap<PrincipalId, Node>>>>,
     operators: RefCell<Option<Arc<BTreeMap<PrincipalId, Operator>>>>,
     node_labels_guests: RefCell<Option<Arc<Vec<Guest>>>>,
-    known_subnets: RefCell<Option<Arc<BTreeMap<PrincipalId, String>>>>,
     elected_guestos: RefCell<Option<Arc<Vec<String>>>>,
     elected_hostos: RefCell<Option<Arc<Vec<String>>>>,
     unassigned_nodes_replica_version: RefCell<Option<Arc<String>>>,
@@ -161,7 +159,6 @@ impl LazyRegistry {
             nodes: RefCell::new(None),
             operators: RefCell::new(None),
             node_labels_guests: RefCell::new(None),
-            known_subnets: RefCell::new(None),
             elected_guestos: RefCell::new(None),
             elected_hostos: RefCell::new(None),
             unassigned_nodes_replica_version: RefCell::new(None),
@@ -212,8 +209,8 @@ impl LazyRegistry {
 
         let record = self
             .get_family_entries::<HostosVersionRecord>()?
-            .iter()
-            .map(|(_, v)| v.hostos_version_id.to_owned())
+            .values()
+            .map(|v| v.hostos_version_id.to_owned())
             .collect_vec();
 
         let record = Arc::new(record);
@@ -382,7 +379,7 @@ impl LazyRegistry {
 
         let mut opt_arc_map = self.firewall_rule_set.borrow_mut();
         if let Some(arc_map) = opt_arc_map.as_mut() {
-            let mut bag = Arc::make_mut(arc_map);
+            let bag = Arc::make_mut(arc_map);
             bag.insert(key.to_owned(), value.clone());
         } else {
             let mut all = BTreeMap::new();
@@ -501,7 +498,7 @@ impl LazyRegistry {
                     .find(|p| p.node_ids_added.contains(&n.principal) || p.node_ids_removed.contains(&n.principal))
                     .cloned();
 
-                (p.clone(), Node { proposal, ..n.clone() })
+                (*p, Node { proposal, ..n.clone() })
             })
             .collect();
 
@@ -518,7 +515,7 @@ impl LazyRegistry {
                     })
                     .cloned();
 
-                (p.clone(), Subnet { proposal, ..s.clone() })
+                (*p, Subnet { proposal, ..s.clone() })
             })
             .collect();
 

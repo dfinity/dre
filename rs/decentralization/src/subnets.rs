@@ -1,4 +1,4 @@
-use std::{collections::BTreeMap, rc::Rc, sync::Arc};
+use std::{collections::BTreeMap, sync::Arc};
 
 use crate::network::Node;
 use ic_base_types::PrincipalId;

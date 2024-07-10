@@ -15,7 +15,7 @@ impl ExecutableCommand for DerToPrincipal {
         IcAdminRequirement::None
     }
 
-    async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
+    async fn execute(&self, _ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
         let principal = ic_base_types::PrincipalId::new_self_authenticating(&std::fs::read(&self.path)?);
         println!("{}", principal);
         Ok(())

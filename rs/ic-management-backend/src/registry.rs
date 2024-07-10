@@ -3,7 +3,6 @@ use crate::health::HealthStatusQuerier;
 use crate::node_labels;
 use crate::proposal::{self, SubnetUpdateProposal, UpdateUnassignedNodesProposal};
 use crate::public_dashboard::query_ic_dashboard_list;
-use async_trait::async_trait;
 use decentralization::network::{AvailableNodesQuerier, NodesConverter, SubnetQuerier, SubnetQueryBy};
 use futures::TryFutureExt;
 use ic_base_types::NodeId;

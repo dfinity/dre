@@ -10,7 +10,6 @@ use ic_management_backend::{
     health::{HealthClient, HealthStatusQuerier},
     lazy_registry::{LazyRegistry, LazyRegistryFamilyEntries},
     public_dashboard::query_ic_dashboard_list,
-    registry::RegistryFamilyEntries,
 };
 use ic_management_types::{Network, NodeProvidersResponse, Status};
 use ic_protobuf::registry::{
