@@ -843,7 +843,9 @@ mod tests {
         let nns_urls = &[Url::from_str("https://unreachable.url").unwrap()];
         let network = Network::new(name, nns_urls).await;
 
-        assert_eq!(network, Err("No reachable NNS URLs provided".to_string()));
+        assert!(network.is_err());
+        let err = network.err().unwrap().to_string();
+        assert_eq!(err, "No reachable NNS URLs provided".to_string())
     }
 
     #[test]
