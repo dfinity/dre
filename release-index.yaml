@@ -3,12 +3,12 @@ releases:
     versions:
       - name: base
         # Qualification pipeline on IC staging:
-        # https://github.com/dfinity-ops/release/actions/runs/9893222861/job/27327808015
-        version: 6135fdcf35e8226a0ff11342d608e5a5abd24129
+        # https://github.com/dfinity-ops/release/actions/runs/9895562073/job/27335759087
+        version: a3831c87440df4821b435050c8a8fcb3745d86f6
       - name: storage-layer-disabled
         # Qualification pipeline on IC staging:
-        # https://github.com/dfinity-ops/release/actions/runs/9892180741/job/27324242003
-        version: a1ce68f2c1e04514449654e9b60ae290ae0dc93f
+        #
+        version: 0d2b3965c813cd3a39ceedacd97fa2eee8760074
   - rc_name: rc--2024-07-03_23-01
     versions:
       - # Successful qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/pipelines/1360352158
