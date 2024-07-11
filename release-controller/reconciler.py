@@ -287,8 +287,8 @@ def main():
     forum_client = ReleaseCandidateForumClient(
         discourse_client,
     )
-    github_client = Github(auth=Auth.Token(os.environ["GITHUB_TOKEN"]))
-    token = os.environ["GITLAB_TOKEN"]
+    github_token = os.environ["GITHUB_TOKEN"]
+    github_client = Github(auth=Auth.Token(github_token))
     reconciler = Reconciler(
         forum_client=forum_client,
         loader=config_loader,
@@ -304,7 +304,7 @@ def main():
             "rc--2024-03-06_23-01",
             "rc--2024-03-20_23-01",
         ],
-        ic_repo=GitRepo(f"https://oauth2:{token}@gitlab.com/dfinity-lab/public/ic.git", main_branch="master"),
+        ic_repo=GitRepo(f"https://oauth2:{github_token}@github.com/dfinity/ic.git", main_branch="master"),
     )
 
     while True:
