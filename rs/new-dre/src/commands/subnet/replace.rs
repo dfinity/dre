@@ -19,7 +19,7 @@ pub struct Replace {
     #[clap(
         long,
         short,
-        help = r#"Amount of nodes to be replaced by decentralization optimization 
+        help = r#"Amount of nodes to be replaced by decentralization optimization
 algorithm"#
     )]
     pub optimize: Option<usize>,
@@ -40,8 +40,9 @@ algorithm"#
     #[clap(long, num_args(1..))]
     pub only: Vec<String>,
 
-    #[clap(long, num_args(1..), help = r#"Force t he inclusion of the provided nodes for replacement,
-regardless of the decentralization score"#)]
+    /// Force the inclusion of the provided nodes for replacement, regardless
+    /// of the decentralization score
+    #[clap(long, num_args(1..))]
     pub include: Vec<PrincipalId>,
 
     /// The ID of the subnet.
