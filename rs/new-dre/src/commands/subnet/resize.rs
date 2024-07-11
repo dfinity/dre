@@ -22,8 +22,9 @@ pub struct Resize {
     #[clap(long, num_args(1..))]
     pub only: Vec<String>,
 
-    #[clap(long, num_args(1..), help = r#"Force t he inclusion of the provided nodes for replacement,
-regardless of the decentralization score"#)]
+    /// Force the inclusion of the provided nodes for replacement,
+    /// regardless of the decentralization
+    #[clap(long, num_args(1..))]
     pub include: Vec<PrincipalId>,
 
     /// Motivation for replacing custom nodes

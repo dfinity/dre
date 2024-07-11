@@ -3,6 +3,7 @@ use std::{collections::BTreeMap, path::PathBuf, str::FromStr};
 use api_boundary_nodes::ApiBoundaryNodes;
 use clap::{error::ErrorKind, Command, Parser, Subcommand};
 use clap_num::maybe_hex;
+use completions::Completions;
 use der_to_principal::DerToPrincipal;
 use firewall::Firewall;
 use get::Get;
@@ -23,6 +24,7 @@ use vote::Vote;
 use crate::{auth::Neuron, ctx::DreContext};
 
 mod api_boundary_nodes;
+mod completions;
 mod der_to_principal;
 mod firewall;
 mod get;
@@ -147,6 +149,9 @@ pub enum Subcommands {
 
     /// Proposals
     Proposals(Proposals),
+
+    /// Completions
+    Completions(Completions),
 }
 
 pub trait ExecutableCommand {
@@ -251,6 +256,7 @@ impl ExecutableCommand for Args {
             Subcommands::Firewall(c) => c.require_ic_admin(),
             Subcommands::Upgrade(c) => c.require_ic_admin(),
             Subcommands::Proposals(c) => c.require_ic_admin(),
+            Subcommands::Completions(c) => c.require_ic_admin(),
         }
     }
 
@@ -272,6 +278,7 @@ impl ExecutableCommand for Args {
             Subcommands::Firewall(c) => c.execute(ctx).await,
             Subcommands::Upgrade(c) => c.execute(ctx).await,
             Subcommands::Proposals(c) => c.execute(ctx).await,
+            Subcommands::Completions(c) => c.execute(ctx).await,
         }
     }
 
@@ -293,6 +300,7 @@ impl ExecutableCommand for Args {
             Subcommands::Firewall(c) => c.validate(cmd),
             Subcommands::Upgrade(c) => c.validate(cmd),
             Subcommands::Proposals(c) => c.validate(cmd),
+            Subcommands::Completions(c) => c.validate(cmd),
         }
     }
 }
