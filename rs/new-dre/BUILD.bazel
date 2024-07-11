@@ -1,0 +1,69 @@
+load("@crate_index_dre//:defs.bzl", "aliases", "all_crate_deps")
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_test", "rust_library")
+load("@rules_rust//cargo:defs.bzl", "cargo_build_script")
+
+DEPS = [
+    "//rs/ic-canisters",
+    "//rs/decentralization",
+    "//rs/ic-management-types",
+    "//rs/ic-management-backend:ic-management-backend-lib",
+]
+
+package(default_visibility = ["//visibility:public"])
+
+cargo_build_script(
+    name = "build_script",
+    srcs = ["src/build.rs"],
+    deps = all_crate_deps(
+        build = True
+    )
+)
+
+rust_binary(
+    name = "new_dre",
+    srcs = glob(["src/**/*.rs"]),
+    aliases = aliases(),
+    rustc_env_files = [":generate_rustc_env_file"],
+    proc_macro_deps = all_crate_deps(
+        proc_macro = True,
+    ),
+    deps = all_crate_deps(
+        normal = True,
+    ) + DEPS + ["//rs/cli:dre-lib", ":build_script"],
+)
+
+rust_library(
+    name = "new-dre-lib",
+    srcs = glob(["src/**/*.rs"]),
+    aliases = aliases(),
+    compile_data = glob(["config/**/*"]),
+    crate_name = "new-dre",
+    proc_macro_deps = all_crate_deps(
+        proc_macro = True,
+    ),
+    deps = all_crate_deps(
+        normal = True,
+    ) + DEPS,
+)
+
+rust_test(
+    name = "unit_test",
+    aliases = aliases(
+        normal_dev = True,
+        proc_macro_dev = True,
+    ),
+    crate = ":new-dre-lib",
+    proc_macro_deps = all_crate_deps(
+        proc_macro_dev = True,
+    ),
+    deps = all_crate_deps(
+        normal_dev = True,
+    ) + DEPS,
+)
+
+genrule(
+    name = "generate_rustc_env_file",
+    outs = ["rustc_env_file"],
+    cmd = "echo \"CARGO_PKG_VERSION=$$(awk '$$1 == \"RELEASE_VERSION\" {print $$2}' bazel-out/volatile-status.txt)-$$(awk '$$1 == \"GIT_REV\" {print $$2}' bazel-out/volatile-status.txt)\" > $@",
+    stamp = True,
+)

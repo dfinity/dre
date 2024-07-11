@@ -46,6 +46,7 @@ def external_crates_repository():
             "//:Cargo.toml",
             "//rs/canister-log-fetcher:Cargo.toml",
             "//rs/cli:Cargo.toml",
+            "//rs/new-dre:Cargo.toml",
             "//rs/decentralization:Cargo.toml",
             "//rs/ic-canisters:Cargo.toml",
             "//rs/ic-management-backend:Cargo.toml",
