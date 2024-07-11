@@ -266,7 +266,7 @@ def parse_codeowners(codeowners_path):
         parsed = {}
         for line in filtered:
             result = line.split()
-            teams = [team.split("@dfinity-lab/teams/")[1] for team in result[1:]]
+            teams = [team.split("@dfinity/")[1] for team in result[1:]]
             pattern = result[0]
             pattern = pattern if pattern.startswith("/") else "/" + pattern
             pattern = pattern if not pattern.endswith("/") else pattern + "*"
@@ -339,7 +339,7 @@ def main():
             stderr=subprocess.DEVNULL,
         )
 
-    codeowners = parse_codeowners(ic_repo_path / ".gitlab" / "CODEOWNERS")
+    codeowners = parse_codeowners(ic_repo_path / ".github" / "CODEOWNERS")
 
     commits = get_commits(ic_repo_path, first_commit, last_commit)
     for i in range(len(commits)):
