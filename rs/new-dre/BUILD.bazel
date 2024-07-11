@@ -20,7 +20,7 @@ cargo_build_script(
 )
 
 rust_binary(
-    name = "new_dre",
+    name = "new-dre",
     srcs = glob(["src/**/*.rs"]),
     aliases = aliases(),
     rustc_env_files = [":generate_rustc_env_file"],
