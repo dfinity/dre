@@ -713,9 +713,8 @@ impl From<ic_management_types::Subnet> for DecentralizedSubnet {
     }
 }
 
-#[allow(async_fn_in_trait)]
 pub trait AvailableNodesQuerier {
-    async fn available_nodes(&self) -> Result<Vec<Node>, NetworkError>;
+    fn available_nodes(&self) -> impl std::future::Future<Output = Result<Vec<Node>, NetworkError>>;
 }
 
 #[derive(Clone)]
@@ -724,14 +723,12 @@ pub enum SubnetQueryBy {
     NodeList(Vec<Node>),
 }
 
-#[allow(async_fn_in_trait)]
 pub trait NodesConverter {
-    async fn get_nodes(&self, from: &[PrincipalId]) -> Result<Vec<Node>, NetworkError>;
+    fn get_nodes(&self, from: &[PrincipalId]) -> impl std::future::Future<Output = Result<Vec<Node>, NetworkError>>;
 }
 
-#[allow(async_fn_in_trait)]
 pub trait SubnetQuerier {
-    async fn subnet(&self, by: SubnetQueryBy) -> Result<DecentralizedSubnet, NetworkError>;
+    fn subnet(&self, by: SubnetQueryBy) -> impl std::future::Future<Output = Result<DecentralizedSubnet, NetworkError>>;
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug, strum_macros::Display)]

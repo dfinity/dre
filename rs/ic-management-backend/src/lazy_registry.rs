@@ -625,7 +625,7 @@ impl SubnetQuerier for LazyRegistry {
                             .subnets()
                             .await
                             .map_err(|e| NetworkError::IllegalRequest(e.to_string()))?
-                            .get(&subnet)
+                            .get(subnet)
                             .ok_or(NetworkError::SubnetNotFound(*subnet))?
                             .nodes
                             .iter()
