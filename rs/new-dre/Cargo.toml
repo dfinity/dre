@@ -1,7 +1,7 @@
 [package]
 name = "new-dre"
 # Required because of BAZEL
-# build = "src/build_script_.rs"
+build = "src/build_script_.rs"
 version.workspace = true
 authors.workspace = true
 edition.workspace = true
