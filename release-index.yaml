@@ -2,12 +2,12 @@ releases:
   - rc_name: rc--2024-07-10_23-01
     versions:
       - name: base
-        # Qualification pipeline on IC staging:
+        # Successful qualification pipeline on IC staging:
         # https://github.com/dfinity-ops/release/actions/runs/9895562073/job/27335759087
         version: a3831c87440df4821b435050c8a8fcb3745d86f6
       - name: storage-layer-disabled
-        # Qualification pipeline on IC staging:
-        #
+        # Successful qualification pipeline on IC staging:
+        # https://github.com/dfinity-ops/release/actions/runs/9896079762/job/27337433000
         version: 0d2b3965c813cd3a39ceedacd97fa2eee8760074
   - rc_name: rc--2024-07-03_23-01
     versions:
