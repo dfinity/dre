@@ -1,6 +1,7 @@
 use std::{cell::RefCell, rc::Rc};
 
 use ic_management_backend::{
+    git_ic_repo::IcRepo,
     public_dashboard::query_ic_dashboard_list,
     registry::{fetch_and_add_node_labels_guests_to_registry, RegistryState},
 };
@@ -27,7 +28,7 @@ impl Registry {
         }
 
         // Create a new registry state
-        let mut new_registry = RegistryState::new(&self.network, true).await;
+        let mut new_registry = RegistryState::new(&self.network, true, Some(IcRepo::new().expect("Should be able to create IC repo"))).await;
 
         // Fetch node providers
         let node_providers = query_ic_dashboard_list::<NodeProvidersResponse>(&self.network, "v3/node-providers")

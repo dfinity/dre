@@ -97,7 +97,7 @@ impl SubnetManager {
         let converted = match target {
             SubnetTarget::FromId(id) => SubnetQueryBy::SubnetId(id),
             SubnetTarget::FromNodesIds(nodes) => {
-                let nodes = self.registry().await.get_nodes(&nodes)?;
+                let nodes = self.registry().await.get_nodes(&nodes).await?;
                 SubnetQueryBy::NodeList(nodes)
             }
         };

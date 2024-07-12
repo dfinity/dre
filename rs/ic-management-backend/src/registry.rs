@@ -3,7 +3,6 @@ use crate::health::HealthStatusQuerier;
 use crate::node_labels;
 use crate::proposal::{self, SubnetUpdateProposal, UpdateUnassignedNodesProposal};
 use crate::public_dashboard::query_ic_dashboard_list;
-use async_trait::async_trait;
 use decentralization::network::{AvailableNodesQuerier, NodesConverter, SubnetQuerier, SubnetQueryBy};
 use futures::TryFutureExt;
 use ic_base_types::NodeId;
@@ -64,7 +63,7 @@ pub const DFINITY_DCS: &str = "zh2 mr1 bo1 sh1";
 
 pub struct RegistryState {
     network: Network,
-    local_registry: Arc<LocalRegistry>,
+    pub local_registry: Arc<LocalRegistry>,
 
     version: u64,
     subnets: BTreeMap<PrincipalId, Subnet>,
@@ -158,7 +157,7 @@ impl RegistryFamilyEntries for LocalRegistry {
     }
 }
 
-trait ReleasesOps {
+pub trait ReleasesOps {
     fn get_active_branches(&self) -> Vec<String>;
 }
 impl ReleasesOps for ArtifactReleases {
@@ -189,7 +188,7 @@ impl ReleasesOps for ArtifactReleases {
 
 #[allow(dead_code)]
 impl RegistryState {
-    pub async fn new(network: &Network, without_update_loop: bool) -> Self {
+    pub async fn new(network: &Network, without_update_loop: bool, ic_repo: Option<IcRepo>) -> Self {
         sync_local_store(network).await.expect("failed to init local store");
 
         if !without_update_loop {
@@ -223,7 +222,7 @@ impl RegistryState {
             node_labels_guests: Vec::new(),
             guestos_releases: ArtifactReleases::new(Artifact::GuestOs),
             hostos_releases: ArtifactReleases::new(Artifact::HostOs),
-            ic_repo: Some(IcRepo::new().expect("failed to init ic repo")),
+            ic_repo,
             known_subnets: [
                 (
                     "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
@@ -251,9 +250,19 @@ impl RegistryState {
         }
     }
 
+    /// This function could be split to add to the startup speed
     pub async fn update_node_details(&mut self, providers: &[NodeProviderDetails]) -> anyhow::Result<()> {
         self.local_registry.sync_with_local_store().await.map_err(|e| anyhow::anyhow!(e))?;
         self.update_releases().await?;
+        self.update_operators(providers)?;
+        self.update_nodes()?;
+        self.update_subnets()?;
+        self.version = self.local_registry.get_latest_version().get();
+
+        Ok(())
+    }
+
+    pub async fn update_only_node_details(&mut self, providers: &[NodeProviderDetails]) -> anyhow::Result<()> {
         self.update_operators(providers)?;
         self.update_nodes()?;
         self.update_subnets()?;
@@ -289,7 +298,7 @@ impl RegistryState {
         Ok(records)
     }
 
-    async fn update_releases(&mut self) -> Result<()> {
+    pub async fn update_releases(&mut self) -> Result<()> {
         // If the network isn't mainnet we don't need to check git branches
         if !self.network.eq(&Network::new("mainnet", &[]).await.unwrap()) {
             return Ok(());
@@ -792,7 +801,7 @@ impl RegistryState {
 impl decentralization::network::TopologyManager for RegistryState {}
 
 impl NodesConverter for RegistryState {
-    fn get_nodes(&self, from: &[PrincipalId]) -> std::result::Result<Vec<decentralization::network::Node>, NetworkError> {
+    async fn get_nodes(&self, from: &[PrincipalId]) -> std::result::Result<Vec<decentralization::network::Node>, NetworkError> {
         from.iter()
             .map(|n| {
                 self.nodes()
@@ -804,7 +813,6 @@ impl NodesConverter for RegistryState {
     }
 }
 
-#[async_trait]
 impl SubnetQuerier for RegistryState {
     async fn subnet(&self, by: SubnetQueryBy) -> Result<decentralization::network::DecentralizedSubnet, NetworkError> {
         match by {
@@ -853,7 +861,6 @@ impl SubnetQuerier for RegistryState {
     }
 }
 
-#[async_trait]
 impl AvailableNodesQuerier for RegistryState {
     async fn available_nodes(&self) -> Result<Vec<decentralization::network::Node>, NetworkError> {
         let nodes = self
