@@ -1,7 +1,6 @@
 [package]
 name = "dre"
-# Required because of BAZEL
-build = "src/build_script_.rs"
+build = "src/build.rs"
 version.workspace = true
 authors.workspace = true
 edition.workspace = true
@@ -20,7 +19,6 @@ chrono = { workspace = true }
 clap = { workspace = true }
 clap-num = { workspace = true }
 colored = { workspace = true }
-cryptoki = { workspace = true }
 cycles-minting-canister = { workspace = true }
 decentralization = { workspace = true }
 dialoguer = { workspace = true }
@@ -52,14 +50,13 @@ ic-sns-wasm = { workspace = true }
 ic-sys = { workspace = true }
 ic-types = { workspace = true }
 itertools = { workspace = true }
-keyring = { workspace = true }
 log = { workspace = true }
 pretty_env_logger = { workspace = true }
 prost = { workspace = true }
 regex = { workspace = true }
 registry-canister = { workspace = true }
 reqwest = { workspace = true }
-self_update = { version = "0.40.0", features = ["archive-tar"] }
+self_update = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 sha2 = { workspace = true }
@@ -72,13 +69,12 @@ tempfile = "3.10.1"
 tokio = { workspace = true }
 url = { workspace = true }
 humantime = { workspace = true }
+clap_complete = "4.5.6"
 
 [dev-dependencies]
 actix-rt = { workspace = true }
-wiremock = { workspace = true }
 
 [build-dependencies]
-clap_complete = "4.5.6"
 clap = { workspace = true }
 clap-num = { workspace = true }
 ic-base-types = { workspace = true }
