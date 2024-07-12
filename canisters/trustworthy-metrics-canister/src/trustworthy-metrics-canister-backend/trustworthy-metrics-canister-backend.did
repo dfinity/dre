@@ -5,22 +5,23 @@ type NodeMetrics = record {
     num_block_failures_total: nat64;
 };
 
-type SubnetMetrics = record {
+type SubnetNodeMetricsResponse = record {
+    ts: nat64;
     subnet_id: principal;
     node_metrics: vec NodeMetrics;
 };
 
-type MetricsResponse = record {
-    ts: nat64;
-    subnets_metrics: vec SubnetMetrics;
+type SubnetNodeMetricsResult = variant {
+  Ok : vec SubnetNodeMetricsResponse;
+  Err : text;
 };
 
-type SubnetMetricsResponse = record {
-    ts: nat64;
-    node_metrics: vec NodeMetrics;
+type SubnetNodeMetricsArgs = record {
+  subnet_id: opt principal;
+  ts: opt nat64;
 };
+
 
 service : {
-    "get_metrics" : (opt nat64) -> (vec MetricsResponse) query;
-    "get_subnet_metrics" : (principal, opt nat64) -> (vec SubnetMetricsResponse) query;
+    "subnet_node_metrics" : (SubnetNodeMetricsArgs) -> (SubnetNodeMetricsResult) query;
 }

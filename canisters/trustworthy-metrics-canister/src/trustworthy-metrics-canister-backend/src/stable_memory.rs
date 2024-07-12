@@ -4,7 +4,7 @@ use itertools::Itertools;
 use std::borrow::Cow;
 use std::cell::RefCell;
 
-use crate::types::{SubnetMetrics, SubnetsMetricsStorable, TimestampNanos};
+use crate::types::{SubnetNodeMetrics, SubnetsMetricsStorable, TimestampNanos};
 
 impl Storable for SubnetsMetricsStorable {
     fn to_bytes(&self) -> Cow<[u8]> {
@@ -25,7 +25,7 @@ thread_local! {
       RefCell::new(StableBTreeMap::init(DefaultMemoryImpl::default()));
 }
 
-pub fn insert(key: TimestampNanos, value: Vec<SubnetMetrics>) {
+pub fn insert(key: TimestampNanos, value: Vec<SubnetNodeMetrics>) {
     MAP.with(|p| p.borrow_mut().insert(key, SubnetsMetricsStorable(value)));
 }
 
@@ -33,6 +33,10 @@ pub fn latest_key() -> Option<TimestampNanos> {
     MAP.with(|p| p.borrow().last_key_value()).map(|(k, _)| k)
 }
 
-pub fn get_metrics(ts: TimestampNanos) -> Vec<(TimestampNanos, Vec<SubnetMetrics>)> {
-    MAP.with(|p| p.borrow().range(ts..).map(|(ts, storable)| (ts, storable.0)).collect_vec())
+pub fn get_metrics(ts: TimestampNanos) -> Vec<(TimestampNanos, Vec<SubnetNodeMetrics>)> {
+    MAP.with(|p| p.borrow()
+        .range(ts..)
+        .map(|(ts, storable)| (ts, storable.0))
+        .collect_vec()
+    )
 }

@@ -10,16 +10,16 @@ use itertools::Itertools;
 
 use crate::{
     stable_memory,
-    types::{NodeMetrics, PrincipalNodeMetricsHistory, SubnetMetrics, TimestampNanos},
+    types::{NodeMetrics, PrincipalNodeMetricsHistory, SubnetNodeMetrics, TimestampNanos},
 };
 
-impl SubnetMetrics {
+impl SubnetNodeMetrics {
     pub fn new(subnet_id: PrincipalId, subnet_metrics: Vec<ICManagementNodeMetrics>) -> Self {
         let node_metrics = subnet_metrics.into_iter().map(|node_metrics| node_metrics.into()).collect_vec();
 
-        Self { 
-            subnet_id: subnet_id.0, 
-            node_metrics 
+        Self {
+            subnet_id: subnet_id.0,
+            node_metrics,
         }
     }
 }
@@ -34,24 +34,24 @@ impl From<ICManagementNodeMetrics> for NodeMetrics {
     }
 }
 
-fn store_results(results: BTreeMap<u64, Vec<SubnetMetrics>>) {
+fn store_results(results: BTreeMap<u64, Vec<SubnetNodeMetrics>>) {
     for (timestamp, storable) in results {
         stable_memory::insert(timestamp, storable)
     }
 }
 
-fn transform_metrics(subnets_metrics: Vec<PrincipalNodeMetricsHistory>) -> BTreeMap<TimestampNanos, Vec<SubnetMetrics>> {
+fn transform_metrics(subnets_metrics: Vec<PrincipalNodeMetricsHistory>) -> BTreeMap<TimestampNanos, Vec<SubnetNodeMetrics>> {
     let mut results = BTreeMap::new();
 
     for (subnet, subnet_metrics) in subnets_metrics {
         for ts_node_metrics in subnet_metrics {
             let ts: TimestampNanos = ts_node_metrics.timestamp_nanos;
 
-            let subnet_metrics_storable = SubnetMetrics::new(subnet, ts_node_metrics.node_metrics);
+            let subnet_metrics_storable = SubnetNodeMetrics::new(subnet, ts_node_metrics.node_metrics);
 
             match results.entry(ts) {
                 Entry::Occupied(mut entry) => {
-                    let v: &mut Vec<SubnetMetrics> = entry.get_mut();
+                    let v: &mut Vec<SubnetNodeMetrics> = entry.get_mut();
                     v.push(subnet_metrics_storable)
                 }
                 Entry::Vacant(entry) => {
