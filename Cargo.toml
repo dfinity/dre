@@ -1,32 +1,32 @@
 [workspace]
 
 members = [
-  "rs/cli",
-  "rs/decentralization",
-  "rs/ic-management-backend",
-  "rs/ic-management-types",
-  "rs/ic-observability/config-writer-common",
-  "rs/ic-observability/log-noise-filter-backend",
-  "rs/ic-observability/log-noise-filter-downloader",
-  "rs/ic-observability/multiservice-discovery",
-  "rs/ic-observability/multiservice-discovery-downloader",
-  "rs/ic-observability/multiservice-discovery-shared",
-  "rs/ic-observability/node-status-updater",
-  "rs/ic-observability/obs-canister-clients",
-  "rs/ic-observability/prometheus-config-updater",
-  "rs/ic-observability/service-discovery",
-  "rs/ic-observability/sns-downloader",
-  "rs/log-fetcher",
-  "rs/canister-log-fetcher",
-  "rs/np-notifications",
-  "rs/rollout-controller",
-  "rs/slack-notifications", 
+    "rs/cli",
+    "rs/decentralization",
+    "rs/ic-management-backend",
+    "rs/ic-management-types",
+    "rs/ic-observability/config-writer-common",
+    "rs/ic-observability/log-noise-filter-backend",
+    "rs/ic-observability/log-noise-filter-downloader",
+    "rs/ic-observability/multiservice-discovery",
+    "rs/ic-observability/multiservice-discovery-downloader",
+    "rs/ic-observability/multiservice-discovery-shared",
+    "rs/ic-observability/node-status-updater",
+    "rs/ic-observability/obs-canister-clients",
+    "rs/ic-observability/prometheus-config-updater",
+    "rs/ic-observability/service-discovery",
+    "rs/ic-observability/sns-downloader",
+    "rs/log-fetcher",
+    "rs/canister-log-fetcher",
+    "rs/np-notifications",
+    "rs/rollout-controller",
+    "rs/slack-notifications",
 ]
 
 resolver = "2"
 
 [workspace.package]
-version = "0.4.2"
+version = "0.4.3"
 edition = "2021"
 authors = ["IC Decentralized Reliability Engineering (DRE) Team"]
 description = "Tooling for managing the Internet Computer"
@@ -35,8 +35,8 @@ documentation = "https://github.com/dfinity/dre/"
 [workspace.dependencies]
 actix = "0.13.5"
 actix-web = { version = "4.8.0", default-features = false, features = [
-  "compress-gzip",
-  "macros",
+    "compress-gzip",
+    "macros",
 ] }
 actix-rt = "2.10.0"
 ahash = "0.8.11"
@@ -53,16 +53,16 @@ candid = "0.10.9"
 chrono = { version = "0.4.38", features = ["serde"] }
 clap-num = "1.1"
 clap = { version = "4.5", features = [
-  "derive",
-  "env",
-  "usage",
-  "color",
-  "help",
-  "error-context",
-  "suggestions",
-  "wrap_help",
-  "string",
-  "cargo",
+    "derive",
+    "env",
+    "usage",
+    "color",
+    "help",
+    "error-context",
+    "suggestions",
+    "wrap_help",
+    "string",
+    "cargo",
 ] }
 colored = "2.1.0"
 counter = "0.5.7"
@@ -97,6 +97,7 @@ hex = "0.4.3"
 humantime = "2.1.0"
 humantime-serde = "1.1.1"
 hyper = { version = "1.3.1" }
+self_update = { version = "0.40.0", features = ["archive-tar"] }
 hyper-tls = "0.6.0"
 ic-agent = "0.36.0"
 ic-async-utils = { git = "https://github.com/dfinity/ic.git", rev = "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d" }
@@ -171,10 +172,10 @@ simple_asn1 = "0.6.2"
 slog-async = { version = "2.8.0", features = ["nested-values"] }
 slog-term = "2.9.1"
 slog = { version = "2.7.0", features = [
-  "max_level_trace",
-  "nested-values",
-  "release_max_level_debug",
-  "release_max_level_trace",
+    "max_level_trace",
+    "nested-values",
+    "release_max_level_debug",
+    "release_max_level_trace",
 ] }
 socket2 = "0.5.7"
 spinners = "4.1.1"

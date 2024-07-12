@@ -1,7 +1,7 @@
-use std::time::Duration;
+use std::{path::PathBuf, time::Duration};
 
 use dre::{
-    detect_neuron::Neuron,
+    auth::Neuron,
     ic_admin::{IcAdminWrapper, ProposeCommand, ProposeOptions},
 };
 use ic_base_types::PrincipalId;
@@ -98,7 +98,7 @@ impl<'a> SubnetAction {
                 ..Default::default()
             };
 
-            executor.ic_admin_wrapper.propose_run(proposal, opts, executor.simulate).await?;
+            executor.ic_admin_wrapper.propose_run(proposal, opts).await?;
         }
 
         Ok(())
@@ -107,25 +107,22 @@ impl<'a> SubnetAction {
 
 pub struct ActionExecutor<'a> {
     ic_admin_wrapper: IcAdminWrapper,
-    simulate: bool,
     logger: Option<&'a Logger>,
 }
 
 impl<'a> ActionExecutor<'a> {
     pub async fn new(neuron_id: u64, private_key_pem: String, network: Network, simulate: bool, logger: Option<&'a Logger>) -> anyhow::Result<Self> {
-        let neuron = Neuron::new(&network, Some(neuron_id), Some(private_key_pem), None, None, None).await;
+        let neuron = Neuron::new(Some(PathBuf::from(private_key_pem)), None, None, None, Some(neuron_id), &network, true).await?;
         Ok(Self {
-            ic_admin_wrapper: IcAdminWrapper::new(network, None, true, neuron),
-            simulate,
+            ic_admin_wrapper: IcAdminWrapper::new(network, None, true, neuron, simulate),
             logger,
         })
     }
 
     pub async fn test(network: Network, logger: Option<&'a Logger>) -> anyhow::Result<Self> {
-        let neuron = Neuron::new(&network, None, None, None, None, None).await;
+        let neuron = Neuron::new(None, None, None, None, None, &network, true).await?;
         Ok(Self {
-            ic_admin_wrapper: IcAdminWrapper::new(network, None, true, neuron),
-            simulate: true,
+            ic_admin_wrapper: IcAdminWrapper::new(network, None, true, neuron, true),
             logger,
         })
     }

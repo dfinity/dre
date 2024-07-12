@@ -1,5 +1,8 @@
 use actix_web::web;
-use ic_management_backend::registry::{self, RegistryState};
+use ic_management_backend::{
+    git_ic_repo::IcRepo,
+    registry::{self, RegistryState},
+};
 use ic_management_types::Network;
 
 use tokio_util::sync::CancellationToken;
@@ -44,5 +47,5 @@ pub async fn create_registry_state(target_network: Network) -> RegistryState {
         .await
         .expect("failed to init local store");
 
-    RegistryState::new(&target_network, true).await
+    RegistryState::new(&target_network, true, Some(IcRepo::new().expect("Should be able to create IC repo"))).await
 }

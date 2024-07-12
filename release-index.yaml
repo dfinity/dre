@@ -1,4 +1,14 @@
 releases:
+  - rc_name: rc--2024-07-10_23-01
+    versions:
+      - name: base
+        # Successful qualification pipeline on IC staging:
+        # https://github.com/dfinity-ops/release/actions/runs/9895562073/job/27335759087
+        version: a3831c87440df4821b435050c8a8fcb3745d86f6
+      - name: storage-layer-disabled
+        # Successful qualification pipeline on IC staging:
+        # https://github.com/dfinity-ops/release/actions/runs/9896079762/job/27337433000
+        version: 0d2b3965c813cd3a39ceedacd97fa2eee8760074
   - rc_name: rc--2024-07-03_23-01
     versions:
       - # Successful qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/pipelines/1360352158
@@ -7,6 +17,12 @@ releases:
       - # Successful qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/pipelines/1360514977
         name: storage-layer-disabled
         version: 5849c6daf2037349bd36dcb6e26ce61c2c6570d0
+      - # Successful qualification pipeline: https://github.com/dfinity-ops/release/actions/runs/9877005239/job/27277530675
+        name: hotfix-https-outcalls
+        version: 16fabfd24617be66e08e00abc7ba3136bbd80010
+      - # Successful qualification pipeline: https://github.com/dfinity-ops/release/actions/runs/9880530622/job/27289909086
+        name: hotfix-https-outcalls-with-lsmt
+        version: 7dee90107a88b836fc72e78993913988f4f73ca2
   - rc_name: rc--2024-06-26_23-01
     versions:
       - # Successful qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/pipelines/1350685950

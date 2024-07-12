@@ -1,12 +1,3 @@
-pub mod cli;
-pub(crate) mod defaults;
-pub mod detect_neuron;
-pub mod general;
+#![allow(dead_code)]
+pub mod auth;
 pub mod ic_admin;
-pub mod operations;
-pub mod ops_subnet_node_replace;
-pub mod parsed_cli;
-pub mod registry_dump;
-pub mod registry_shared;
-pub mod runner;
-pub mod subnet_manager;
