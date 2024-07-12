@@ -26,3 +26,4 @@ itertools = "0.13.0"
 futures = "0.3"
 anyhow = "1.0.86"
 ic-nns-common = { git = "https://github.com/dfinity/ic.git", rev = "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d" }
+ciborium = "0.2.1"

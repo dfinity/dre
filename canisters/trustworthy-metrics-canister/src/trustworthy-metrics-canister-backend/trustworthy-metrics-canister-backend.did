@@ -1,10 +1,26 @@
-type NodeMetricsHistoryResult = variant {
-  Ok : blob;
-  Err : text;
+
+type NodeMetrics = record {
+    node_id: principal;
+    num_blocks_proposed_total: nat64;
+    num_block_failures_total: nat64;
 };
 
-type PrincipalId = text;
+type SubnetMetrics = record {
+    subnet_id: principal;
+    node_metrics: vec NodeMetrics;
+};
+
+type MetricsResponse = record {
+    ts: nat64;
+    subnets_metrics: vec SubnetMetrics;
+};
+
+type SubnetMetricsResponse = record {
+    ts: nat64;
+    node_metrics: vec NodeMetrics;
+};
 
 service : {
-    "subnet_node_metrics_history" : (PrincipalId) -> (NodeMetricsHistoryResult) query;
+    "get_metrics" : (opt nat64) -> (vec MetricsResponse) query;
+    "get_subnet_metrics" : (principal, opt nat64) -> (vec SubnetMetricsResponse) query;
 }
