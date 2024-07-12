@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use dre::{
-    detect_neuron::Neuron,
+    auth::Neuron,
     ic_admin::{IcAdminWrapper, ProposeCommand, ProposeOptions},
 };
 use ic_base_types::PrincipalId;

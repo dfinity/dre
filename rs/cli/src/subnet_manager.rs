@@ -7,16 +7,13 @@ use decentralization::{
     network::{DecentralizedSubnet, Node as DecentralizedNode, NodesConverter, SubnetQueryBy, TopologyManager},
     SubnetChangeResponse,
 };
-use ic_management_backend::{
-    health::{self, HealthStatusQuerier},
-    registry::RegistryState,
-};
+use ic_management_backend::health::{self, HealthStatusQuerier};
+use ic_management_backend::lazy_registry::LazyRegistry;
 use ic_management_types::MinNakamotoCoefficients;
+use ic_management_types::Network;
 use ic_types::PrincipalId;
 use itertools::Itertools;
 use log::{info, warn};
-
-use crate::registry_shared::Registry;
 
 #[derive(Clone)]
 pub enum SubnetTarget {
@@ -40,14 +37,16 @@ impl fmt::Display for SubnetManagerError {
 
 pub struct SubnetManager {
     subnet_target: Option<SubnetTarget>,
-    registry_instance: Rc<Registry>,
+    registry_instance: Rc<LazyRegistry>,
+    network: Network,
 }
 
 impl SubnetManager {
-    pub fn new(registry_instance: Rc<Registry>) -> Self {
+    pub fn new(registry_instance: Rc<LazyRegistry>, network: Network) -> Self {
         Self {
             subnet_target: None,
             registry_instance,
+            network,
         }
     }
 
@@ -64,12 +63,8 @@ impl SubnetManager {
             .ok_or_else(|| anyhow!(SubnetManagerError::SubnetTargetNotProvided))
     }
 
-    async fn registry(&self) -> Rc<RegistryState> {
-        self.registry_instance.get().await
-    }
-
     async fn unhealthy_nodes(&self, subnet: DecentralizedSubnet) -> anyhow::Result<Vec<DecentralizedNode>> {
-        let health_client = health::HealthClient::new(self.registry().await.network());
+        let health_client = health::HealthClient::new(self.network.clone());
         let subnet_health = health_client.subnet(subnet.id).await?;
 
         let unhealthy = subnet
@@ -97,7 +92,7 @@ impl SubnetManager {
         let converted = match target {
             SubnetTarget::FromId(id) => SubnetQueryBy::SubnetId(id),
             SubnetTarget::FromNodesIds(nodes) => {
-                let nodes = self.registry().await.get_nodes(&nodes).await?;
+                let nodes = self.registry_instance.get_nodes(&nodes).await?;
                 SubnetQueryBy::NodeList(nodes)
             }
         };
@@ -127,8 +122,7 @@ impl SubnetManager {
         let mut to_be_replaced: Vec<DecentralizedNode> = vec![];
 
         let subnet_change_request = self
-            .registry()
-            .await
+            .registry_instance
             .modify_subnet_nodes(subnet_query_by.clone())
             .await?
             .excluding_from_available(exclude.clone().unwrap_or_default())
