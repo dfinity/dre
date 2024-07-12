@@ -14,6 +14,7 @@ on:
       - "release-index.yaml"
       - "replica-releases/**"
       - "node-labels/**"
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -24,7 +25,7 @@ jobs:
     runs-on:
       labels: dre-runner-custom
     # This image is based on ubuntu:20.04
-    container: ghcr.io/dfinity/dre/actions-runner:2864b49b24203b5842420ca31f7a4eb33e4076ce
+    container: ghcr.io/dfinity/dre/actions-runner:9994667f9257350d20c17f8bcbb2d7b3392f39b9
     steps:
       - uses: actions/checkout@v4
         with:
@@ -43,8 +44,18 @@ jobs:
         uses: ./.github/workflows/build
         with:
           ssh_pk_workflow: ${{ secrets.SSH_PK_WORKFLOW }}
-      - run: bazel test ...
-        name: "🚀 Testing"
+      - name: "🚀 Testing"
+        run: bazel test ...
+
+      # We don't need the linear-jira build and test step for now
+      # - name: "🚀 Build and Test Linear-Jira with Bazel"
+      #   shell: bash
+      #   run: |
+      #     set -euxo pipefail
+      #     cd linear-jira
+      #     bazel build --config=ci ...
+      #     bazel test --config=ci ... || true
+      #     bazel query --noshow_progress 'kind("oci_push", ...)' | xargs -P $(nproc) -I_target bazel run _target -- --tag ${{ github.sha }}
 
       ########################################
       # Upload test artifacts

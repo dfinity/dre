@@ -137,7 +137,8 @@ async fn main() -> Result<(), anyhow::Error> {
                             _ => SubnetTarget::FromNodesIds(nodes.clone()),
                         };
                         if matches!(subnet_target, SubnetTarget::FromNodesIds(_)) && motivation.is_none() {
-                            cmd.error(ErrorKind::MissingRequiredArgument, "Required argument `motivation` not found");
+                            cmd.error(ErrorKind::MissingRequiredArgument, "Required argument `motivation` not found")
+                                .exit();
                         }
 
                         let subnet_change_response = subnet_manager
