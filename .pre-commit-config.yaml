@@ -66,30 +66,6 @@ repos:
             # files will be recognized regardless of extension.
           - --match=.*
 
-  - repo: https://github.com/PyCQA/pylint
-    rev: v3.2.5
-    hooks:
-      - id: pylint
-        name: pylint
-        exclude: |
-          (?x)^(
-              release-controller/release_index.py
-          )$
-        entry: python3 -m pylint.__main__
-        types: [python]
-        args: [
-            "-rn", # Only display messages
-            "-sn", # Don't display the score
-            "--disable=R,C,W0621,E0401,W0703,E1123", # Disable: Refactor, Convention, some warnings
-          ]
-        additional_dependencies: # All necessary for successful PyLint in all environments
-          [
-            "pandas==1.5.3",
-            "elasticsearch==7.17.8",
-            "elasticsearch_dsl==7.4.0",
-            "requests",
-            "tabulate",
-          ]
   - repo: local
     hooks:
       - id: release-index-checks
