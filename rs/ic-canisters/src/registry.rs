@@ -31,7 +31,7 @@ impl RegistryCanisterWrapper {
         let mut buf = vec![];
         request.encode(&mut buf)?;
 
-        let response: Vec<u8> = self.agent.query(&REGISTRY_CANISTER_ID.into(), "get_value").with_arg(buf).call().await?;
+        let response = self.agent.query(&REGISTRY_CANISTER_ID.into(), "get_value").with_arg(buf).call().await?;
 
         let decoded_resp = RegistryGetValueResponse::decode(&response[..])?;
         if let Some(error) = decoded_resp.error {
