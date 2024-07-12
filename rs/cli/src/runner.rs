@@ -20,6 +20,7 @@ use log::{info, warn};
 use registry_canister::mutations::do_change_subnet_membership::ChangeSubnetMembershipPayload;
 use std::collections::BTreeMap;
 use std::rc::Rc;
+use std::sync::Arc;
 use tabled::builder::Builder;
 use tabled::settings::Style;
 
@@ -418,7 +419,7 @@ impl Runner {
     pub async fn remove_nodes(&self, nodes_remover: NodesRemover, dry_run: bool) -> anyhow::Result<()> {
         let health_client = health::HealthClient::new(self.registry().await.network());
         let (healths, nodes_with_proposals) = try_join(health_client.nodes(), self.registry().await.nodes_with_proposals()).await?;
-        let (mut node_removals, motivation) = nodes_remover.remove_nodes(healths, nodes_with_proposals);
+        let (mut node_removals, motivation) = nodes_remover.remove_nodes(healths, Arc::new(nodes_with_proposals));
         node_removals.sort_by_key(|nr| nr.reason.message());
 
         let headers = vec!["Principal".to_string()]
@@ -475,7 +476,9 @@ impl Runner {
         )
         .await?;
 
-        let subnets_change_response: Vec<SubnetChangeResponse> = NetworkHealRequest::new(subnets).heal_and_optimize(available_nodes, healths).await?;
+        let subnets_change_response: Vec<SubnetChangeResponse> = NetworkHealRequest::new(Arc::new(subnets))
+            .heal_and_optimize(available_nodes, healths)
+            .await?;
         subnets_change_response.iter().for_each(|change| println!("{}", change));
 
         for change in subnets_change_response.iter() {

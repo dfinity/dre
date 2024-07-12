@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use ic_management_backend::registry::RegistryState;
+use ic_management_backend::{git_ic_repo::IcRepo, registry::RegistryState};
 use ic_management_types::Network;
 use service_discovery::registry_sync::sync_local_registry;
 use slog::{debug, Logger};
@@ -14,7 +14,7 @@ pub async fn sync_wrap(logger: Logger, targets_dir: PathBuf, network: Network) -
 
     // Check if the desired rollout version is elected
     debug!(logger, "Creating registry");
-    let mut registry_state = RegistryState::new(&network, true).await;
+    let mut registry_state = RegistryState::new(&network, true, Some(IcRepo::new().expect("Should be able to create IC repo"))).await;
 
     debug!(logger, "Updating registry with data");
     let node_provider_data = vec![];

@@ -7,6 +7,7 @@ use futures::stream::{self, StreamExt};
 use futures::Future;
 use ic_base_types::PrincipalId;
 use ic_interfaces_registry::RegistryClient;
+use ic_management_backend::git_ic_repo::IcRepo;
 use ic_management_backend::registry::{local_registry_path, RegistryFamilyEntries, RegistryState};
 use ic_management_types::{Artifact, Network};
 use ic_protobuf::registry::firewall::v1::{FirewallRule, FirewallRuleSet};
@@ -683,7 +684,7 @@ must be identical, and must match the SHA256 from the payload of the NNS proposa
             None => return Err(anyhow::anyhow!("Couldn't find nns subnet with id '{}'", nns_subnet_id)),
         };
 
-        let registry_state = RegistryState::new(network, true).await;
+        let registry_state = RegistryState::new(network, true, Some(IcRepo::new().expect("Should be able to create IC repo"))).await;
         let unassigned_version = registry_state.get_unassigned_nodes_replica_version().await?;
 
         if nns.replica_version_id.eq(&unassigned_version) {

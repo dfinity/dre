@@ -1,4 +1,4 @@
-use std::collections::BTreeMap;
+use std::{collections::BTreeMap, sync::Arc};
 
 use crate::network::Node;
 use ic_base_types::PrincipalId;
@@ -45,7 +45,7 @@ impl NodesRemover {
     pub fn remove_nodes(
         &self,
         mut healths: std::collections::BTreeMap<ic_base_types::PrincipalId, ic_management_types::Status>,
-        nodes_with_proposals: std::collections::BTreeMap<ic_base_types::PrincipalId, ic_management_types::Node>,
+        nodes_with_proposals: Arc<std::collections::BTreeMap<ic_base_types::PrincipalId, ic_management_types::Node>>,
     ) -> (Vec<NodeRemoval>, String) {
         let nodes_to_rm = nodes_with_proposals
             .values()

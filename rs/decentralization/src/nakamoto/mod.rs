@@ -433,6 +433,7 @@ impl Display for NakamotoScore {
 #[cfg(test)]
 mod tests {
     use std::str::FromStr;
+    use std::sync::Arc;
 
     use crate::network::{DecentralizedSubnet, NetworkHealRequest, NetworkHealSubnets, SubnetChangeRequest};
     use ic_base_types::PrincipalId;
@@ -944,7 +945,7 @@ mod tests {
 
         important.insert(subnet.principal, subnet);
 
-        let network_heal_response = NetworkHealRequest::new(important.clone())
+        let network_heal_response = NetworkHealRequest::new(Arc::new(important.clone()))
             .heal_and_optimize(nodes_available.clone(), healths.clone())
             .await
             .unwrap();
