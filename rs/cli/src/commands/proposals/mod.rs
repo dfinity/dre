@@ -1,17 +1,24 @@
+use analyze::Analyze;
 use candid::Decode;
-use cycles_minting_canister::SetAuthorizedSubnetworkListArgs;
-use humantime::format_duration;
-use ic_base_types::{CanisterId, PrincipalId};
-use ic_management_types::Network;
+use clap::{Args, Subcommand};
+use filter::Filter;
+use get::Get;
 use ic_nervous_system_clients::canister_id_record::CanisterIdRecord;
 use ic_nervous_system_root::change_canister::{AddCanisterRequest, ChangeCanisterRequest, StopOrStartCanisterRequest};
-use ic_nns_common::{pb::v1::ProposalId, types::UpdateIcpXdrConversionRatePayload};
+use ic_nns_common::types::UpdateIcpXdrConversionRatePayload;
+
+use cycles_minting_canister::SetAuthorizedSubnetworkListArgs;
+use ic_nns_governance::{
+    governance::{BitcoinSetConfigProposal, SubnetRentalRequest},
+    pb::v1::{proposal::Action, ProposalInfo, ProposalStatus, Topic},
+};
 use ic_protobuf::registry::{
     dc::v1::AddOrRemoveDataCentersProposalPayload, node_operator::v1::RemoveNodeOperatorsPayload,
     node_rewards::v2::UpdateNodeRewardsTableProposalPayload,
 };
 use ic_sns_wasm::pb::v1::{AddWasmRequest, InsertUpgradePathEntriesRequest, UpdateAllowedPrincipalsRequest, UpdateSnsSubnetListRequest};
-use itertools::Itertools;
+use list::List;
+use pending::Pending;
 use registry_canister::mutations::{
     complete_canister_migration::CompleteCanisterMigrationPayload,
     do_add_api_boundary_nodes::AddApiBoundaryNodesPayload,
@@ -41,243 +48,69 @@ use registry_canister::mutations::{
     reroute_canister_ranges::RerouteCanisterRangesPayload,
 };
 use serde::{Deserialize, Serialize};
-use spinners::{Spinner, Spinners};
-use std::{
-    collections::{HashMap, HashSet},
-    io::Write,
-    sync::Mutex,
-    time::Duration,
-};
-use strum::IntoEnumIterator;
 
-use chrono::Local;
-use ic_canisters::{
-    governance::GovernanceCanisterWrapper, management::WalletCanisterWrapper, registry::RegistryCanisterWrapper, CanisterClient,
-    IcAgentCanisterClient,
-};
-use ic_nns_governance::{
-    governance::{BitcoinSetConfigProposal, SubnetRentalRequest},
-    pb::v1::{proposal::Action, ListProposalInfo, ProposalInfo, ProposalStatus, Topic},
-};
-use log::{error, info, warn};
-use url::Url;
+use super::{ExecutableCommand, IcAdminRequirement};
 
-use crate::detect_neuron::{Auth, Neuron};
+mod analyze;
+mod filter;
+mod get;
+mod list;
+mod pending;
 
-pub async fn vote_on_proposals(
-    neuron: &Neuron,
-    nns_urls: &[Url],
-    accepted_proposers: &[u64],
-    accepted_topics: &[i32],
-    dry_run: bool,
-    sleep: Duration,
-) -> anyhow::Result<()> {
-    let client: GovernanceCanisterWrapper = match &neuron.get_auth(true).await? {
-        Auth::Hsm { pin, slot, key_id } => CanisterClient::from_hsm(pin.to_string(), *slot, key_id.to_string(), &nns_urls[0])?.into(),
-        Auth::Keyfile { path } => CanisterClient::from_key_file(path.into(), &nns_urls[0])?.into(),
-        Auth::None => CanisterClient::from_anonymous(&nns_urls[0])?.into(),
-    };
-
-    // In case of incorrectly set voting following, or in case of some other errors,
-    // we don't want to vote on the same proposal multiple times. So we keep an
-    // in-memory set of proposals that we already voted on.
-    let mut voted_proposals = HashSet::new();
-
-    info!("Starting the voting loop...");
-    loop {
-        let proposals = client.get_pending_proposals().await?;
-        let proposals: Vec<&ProposalInfo> = proposals
-            .iter()
-            .filter(|p| accepted_topics.contains(&p.topic) && accepted_proposers.contains(&p.proposer.unwrap().id))
-            .collect();
-        let proposals_to_vote = proposals
-            .iter()
-            .filter(|p| !voted_proposals.contains(&p.id.unwrap().id))
-            .collect::<Vec<_>>();
-
-        // Clear last line in terminal
-        print!("\x1B[1A\x1B[K");
-        std::io::stdout().flush().unwrap();
-        for proposal in proposals_to_vote.into_iter() {
-            let datetime = Local::now();
-
-            info!(
-                "{} Voting on proposal {} (topic {:?}, proposer {}) -> {}",
-                datetime,
-                proposal.id.unwrap().id,
-                proposal.topic(),
-                proposal.proposer.unwrap_or_default().id,
-                proposal.proposal.clone().unwrap().title.unwrap()
-            );
-
-            if !dry_run {
-                let response = client.register_vote(neuron.get_neuron_id().await?, proposal.id.unwrap().id).await?;
-                info!("{}", response);
-            } else {
-                info!("Simulating vote");
-            }
-            voted_proposals.insert(proposal.id.unwrap().id);
-        }
-
-        let mut sp = Spinner::with_timer(
-            Spinners::Dots12,
-            format!("Sleeping {} before another check for pending proposals...", format_duration(sleep)),
-        );
-        let sleep_func = tokio::time::sleep(sleep);
-        tokio::select! {
-            _ = tokio::signal::ctrl_c() => {
-                info!("Received Ctrl-C, exiting...");
-                sp.stop();
-                break;
-            }
-            _ = sleep_func => {
-                sp.stop_with_message("Done sleeping, checking for pending proposals...".into());
-                continue
-            }
-        }
-    }
-
-    Ok(())
+#[derive(Args, Debug)]
+pub struct Proposals {
+    #[clap(subcommand)]
+    pub subcommand: ProposalsSubcommands,
 }
 
-pub async fn get_node_metrics_history(
-    wallet: CanisterId,
-    subnets: Vec<PrincipalId>,
-    start_at_nanos: u64,
-    auth: &Auth,
-    nns_urls: &[Url],
-) -> anyhow::Result<()> {
-    let lock = Mutex::new(());
-    let canister_agent = match auth {
-        Auth::Hsm { pin, slot, key_id } => {
-            IcAgentCanisterClient::from_hsm(pin.to_string(), *slot, key_id.to_string(), nns_urls[0].clone(), Some(lock))?
-        }
-        Auth::Keyfile { path } => IcAgentCanisterClient::from_key_file(path.into(), nns_urls[0].clone())?,
-        Auth::None => IcAgentCanisterClient::from_anonymous(nns_urls[0].clone())?,
-    };
-    info!("Started action...");
-    let wallet_client = WalletCanisterWrapper::new(canister_agent.agent.clone());
+#[derive(Subcommand, Debug)]
+pub enum ProposalsSubcommands {
+    /// Get list of pending proposals
+    Pending(Pending),
 
-    let subnets = match subnets.is_empty() {
-        false => subnets,
-        true => {
-            let registry_client = RegistryCanisterWrapper::new(canister_agent.agent);
-            registry_client.get_subnets().await?
-        }
-    };
+    /// Get a proposal by ID
+    Get(Get),
 
-    let mut metrics_by_subnet = HashMap::new();
-    info!("Running in parallel mode");
-    let mut handles = vec![];
-    for subnet in subnets {
-        info!("Spawning thread for subnet: {}", subnet);
-        let current_client = wallet_client.clone();
-        handles.push(tokio::spawn(async move {
-            (subnet, current_client.get_node_metrics_history(wallet, start_at_nanos, subnet).await)
-        }))
-    }
-    for handle in handles {
-        let (subnet, resp) = handle.await?;
-        match resp {
-            Ok(metrics) => {
-                info!("Received response for subnet: {}", subnet);
-                metrics_by_subnet.insert(subnet, metrics);
-            }
-            Err(e) => {
-                warn!("Couldn't fetch trustworthy metrics for subnet {}: {:?}", subnet, e)
-            }
-        }
-    }
+    /// Print decentralization change for a CHANGE_SUBNET_MEMBERSHIP proposal given its ID
+    Analyze(Analyze),
 
-    println!("{}", serde_json::to_string_pretty(&metrics_by_subnet)?);
+    /// Better proposal filtering
+    Filter(Filter),
 
-    Ok(())
+    /// List proposals
+    List(List),
 }
 
-pub async fn filter_proposals(network: Network, limit: &u32, statuses: Vec<ProposalStatus>, topics: Vec<Topic>) -> anyhow::Result<()> {
-    let nns_url = match network.get_nns_urls().first() {
-        Some(url) => url,
-        None => return Err(anyhow::anyhow!("Could not get NNS URL from network config")),
-    };
-    let client = GovernanceCanisterWrapper::from(CanisterClient::from_anonymous(nns_url)?);
-
-    let exclude_topic = match topics.is_empty() {
-        true => vec![],
-        false => {
-            let mut all_topics = Topic::iter().collect_vec();
-            for topic in &topics {
-                all_topics.retain(|t| t != topic);
-            }
-            all_topics
-        }
-    };
-
-    let mut remaining = *limit;
-    let mut proposals: Vec<Proposal> = vec![];
-    let mut payload = ListProposalInfo {
-        before_proposal: None,
-        exclude_topic: exclude_topic.clone().into_iter().map(|t| t.into()).collect_vec(),
-        include_status: statuses.clone().into_iter().map(|s| s.into()).collect_vec(),
-        include_all_manage_neuron_proposals: Some(true),
-        ..Default::default()
-    };
-    info!(
-        "Querying {} proposals where status is {} and topic is {}",
-        limit,
-        match statuses.is_empty() {
-            true => "any".to_string(),
-            false => format!("{:?}", statuses),
-        },
-        match exclude_topic.is_empty() {
-            true => "any".to_string(),
-            false => format!("not in {:?}", exclude_topic),
-        }
-    );
-    loop {
-        let current_batch = client
-            .list_proposals(payload)
-            .await?
-            .into_iter()
-            .filter_map(|p| match p.clone().try_into() {
-                Ok(p) => Some(p),
-                Err(e) => {
-                    error!("Error converting proposal info {:?}: {:?}", p, e);
-                    None
-                }
-            })
-            .sorted_by(|a: &Proposal, b: &Proposal| b.id.cmp(&a.id))
-            .collect_vec();
-        payload = ListProposalInfo {
-            before_proposal: current_batch.clone().last().map(|p| ProposalId { id: p.id }),
-            exclude_topic: exclude_topic.clone().into_iter().map(|t| t.into()).collect_vec(),
-            include_status: statuses.clone().into_iter().map(|s| s.into()).collect_vec(),
-            include_all_manage_neuron_proposals: Some(true),
-            ..Default::default()
-        };
-
-        if current_batch.len() > remaining as usize {
-            let current_batch = current_batch.into_iter().take(remaining as usize).collect_vec();
-            remaining = 0;
-            proposals.extend(current_batch)
-        } else {
-            remaining -= current_batch.len() as u32;
-            proposals.extend(current_batch)
-        }
-
-        info!("Remaining after iteration: {}", remaining);
-
-        if remaining == 0 {
-            break;
-        }
-
-        if payload.before_proposal.is_none() {
-            warn!("No more proposals available and there is {} remaining to find", remaining);
-            break;
+impl ExecutableCommand for Proposals {
+    fn require_ic_admin(&self) -> IcAdminRequirement {
+        match &self.subcommand {
+            ProposalsSubcommands::Pending(p) => p.require_ic_admin(),
+            ProposalsSubcommands::Get(g) => g.require_ic_admin(),
+            ProposalsSubcommands::Analyze(a) => a.require_ic_admin(),
+            ProposalsSubcommands::Filter(f) => f.require_ic_admin(),
+            ProposalsSubcommands::List(l) => l.require_ic_admin(),
         }
     }
-    println!("{}", serde_json::to_string_pretty(&proposals)?);
 
-    Ok(())
+    async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
+        match &self.subcommand {
+            ProposalsSubcommands::Pending(p) => p.execute(ctx).await,
+            ProposalsSubcommands::Get(g) => g.execute(ctx).await,
+            ProposalsSubcommands::Analyze(a) => a.execute(ctx).await,
+            ProposalsSubcommands::Filter(f) => f.execute(ctx).await,
+            ProposalsSubcommands::List(l) => l.execute(ctx).await,
+        }
+    }
+
+    fn validate(&self, cmd: &mut clap::Command) {
+        match &self.subcommand {
+            ProposalsSubcommands::Pending(p) => p.validate(cmd),
+            ProposalsSubcommands::Get(g) => g.validate(cmd),
+            ProposalsSubcommands::Analyze(a) => a.validate(cmd),
+            ProposalsSubcommands::Filter(f) => f.validate(cmd),
+            ProposalsSubcommands::List(l) => l.validate(cmd),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

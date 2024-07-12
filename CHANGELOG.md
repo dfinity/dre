@@ -1,6 +1,35 @@
 # dre Changelog
 
 <!-- insertion marker -->
+## [0.4.3](https://github.com/dfinity/dre/releases/tag/0.4.3) - 2024-07-12
+
+<small>[Compare with first commit](https://github.com/dfinity/dre/compare/e09b98c37ccb4f31dac7b73ba38f40a3fc450d3d...0.4.3)</small>
+
+### Features
+
+- Allow manual workflow dispatch for CI jobs (#594) ([0a4f258](https://github.com/dfinity/dre/commit/0a4f258c3d9b3fd05a18572a0b41f342db6e90a3) by Saša Tomić).
+- Move the linear-jira sync from the private release repo to the open DRE repo (#573) ([f48c69d](https://github.com/dfinity/dre/commit/f48c69d46da2dce79202ebdc76bb6c01df36e77c) by Saša Tomić).
+- Show the metrics URL to follow the HostOS upgrade progress (#565) ([24c6380](https://github.com/dfinity/dre/commit/24c63809cd05fda8755b5117b26595514a5f06ea) by Saša Tomić).
+- Show the date+time when voting, and do not stomp on previous logs (#564) ([5e0866f](https://github.com/dfinity/dre/commit/5e0866f606a871254b0d99132066da121167abec) by Saša Tomić).
+-  HostOS rollout improvements (#559) ([c16e3c9](https://github.com/dfinity/dre/commit/c16e3c9ec07a5c0cb7cbc11a2c92f10aa4a2d26e) by Saša Tomić).
+- Log noise filter (#348) ([68b109e](https://github.com/dfinity/dre/commit/68b109e4fb00857b5dd8cfbba6e44d02aa0a699c) by Nikola Milosavljevic).
+- Update the HostOS release notes to also use merge commits (#550) ([2b5704e](https://github.com/dfinity/dre/commit/2b5704e02e3174a3841b2fdbb9fdc6d85b5e4ff6) by Saša Tomić).
+- Only check for updates once per day (#548) ([ce6206c](https://github.com/dfinity/dre/commit/ce6206c47761c0a80f746c67faf76fa7fffbbcd7) by Saša Tomić).
+- Speed up get operations by not preparing a neuron and the registry (#541) ([e09b98c](https://github.com/dfinity/dre/commit/e09b98c37ccb4f31dac7b73ba38f40a3fc450d3d) by Saša Tomić).
+
+### Bug Fixes
+
+- Adjust the node label for zh5-dll25 (#595) ([d820e6c](https://github.com/dfinity/dre/commit/d820e6c5b0cbe65366cee2af48e77d35b03224d3) by Saša Tomić).
+- Remove duplicate workflow_dispatch ([a6cd1a5](https://github.com/dfinity/dre/commit/a6cd1a559b3f17c54209b223070e3420db04dbcc) by Saša Tomić).
+- Update the github actions-runner image tag (#591) ([8230f24](https://github.com/dfinity/dre/commit/8230f24fed074707881beb258d7753d77b14b2b5) by Saša Tomić).
+- Add the github keys to the ssh known hosts file (#589) ([9994667](https://github.com/dfinity/dre/commit/9994667f9257350d20c17f8bcbb2d7b3392f39b9) by Saša Tomić).
+- self update on non linux machines (#585) ([02283c1](https://github.com/dfinity/dre/commit/02283c10cc62a755e37e9aa9c64413e358fae695) by Nikola Milosavljevic).
+- Remove unnecessary Arc::clone (#547) ([10c6eff](https://github.com/dfinity/dre/commit/10c6efff91680244a7001e4b960ae3650f216e40) by Saša Tomić).
+
+### Code Refactoring
+
+- renaming bazel targets (#557) ([1d1d034](https://github.com/dfinity/dre/commit/1d1d0342e0c9d4190ca838250e99ca9b4833d956) by Nikola Milosavljevic).
+
 ## [v0.4.2](https://github.com/dfinity/dre/releases/tag/v0.4.2) - 2024-06-26
 
 <small>[Compare with first commit](https://github.com/dfinity/dre/compare/cf40b02935e7954871b91a9ac64501fa8a2cbc8d...v0.4.2)</small>

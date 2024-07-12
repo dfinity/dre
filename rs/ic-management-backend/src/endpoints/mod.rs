@@ -3,6 +3,7 @@ pub mod query_decentralization;
 pub mod release;
 pub mod subnet;
 
+use crate::git_ic_repo::IcRepo;
 use crate::health::HealthStatusQuerier;
 use crate::{health, prometheus, proposal, registry, registry::RegistryState, release::list_subnets_release_statuses, release::RolloutBuilder};
 use actix_web::dev::Service;
@@ -28,7 +29,14 @@ pub async fn run_backend(
     mpsc_tx: Option<std::sync::mpsc::Sender<actix_web::dev::ServerHandle>>,
 ) -> std::io::Result<()> {
     debug!("Starting backend");
-    let registry_state = Arc::new(RwLock::new(registry::RegistryState::new(target_network, run_from_cli).await));
+    let registry_state = Arc::new(RwLock::new(
+        registry::RegistryState::new(
+            target_network,
+            run_from_cli,
+            Some(IcRepo::new().expect("Should be able to create IC repo")),
+        )
+        .await,
+    ));
 
     if run_from_cli {
         registry::update_node_details(&registry_state).await;

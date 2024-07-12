@@ -4,7 +4,6 @@ use crate::SubnetChangeResponse;
 use actix_web::http::StatusCode;
 use actix_web::{HttpResponse, ResponseError};
 use anyhow::anyhow;
-use async_trait::async_trait;
 use ic_base_types::PrincipalId;
 use ic_management_types::{MinNakamotoCoefficients, NetworkError, NodeFeature, Status};
 use itertools::Itertools;
@@ -15,6 +14,7 @@ use std::cmp::Ordering;
 use std::collections::BTreeMap;
 use std::fmt::{Debug, Display, Formatter};
 use std::hash::Hash;
+use std::sync::Arc;
 
 #[derive(Clone, Serialize, Deserialize, Default)]
 pub struct DataCenterInfo {
@@ -713,9 +713,8 @@ impl From<ic_management_types::Subnet> for DecentralizedSubnet {
     }
 }
 
-#[async_trait]
 pub trait AvailableNodesQuerier {
-    async fn available_nodes(&self) -> Result<Vec<Node>, NetworkError>;
+    fn available_nodes(&self) -> impl std::future::Future<Output = Result<Vec<Node>, NetworkError>>;
 }
 
 #[derive(Clone)]
@@ -725,12 +724,11 @@ pub enum SubnetQueryBy {
 }
 
 pub trait NodesConverter {
-    fn get_nodes(&self, from: &[PrincipalId]) -> Result<Vec<Node>, NetworkError>;
+    fn get_nodes(&self, from: &[PrincipalId]) -> impl std::future::Future<Output = Result<Vec<Node>, NetworkError>>;
 }
 
-#[async_trait]
 pub trait SubnetQuerier {
-    async fn subnet(&self, by: SubnetQueryBy) -> Result<DecentralizedSubnet, NetworkError>;
+    fn subnet(&self, by: SubnetQueryBy) -> impl std::future::Future<Output = Result<DecentralizedSubnet, NetworkError>>;
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug, strum_macros::Display)]
@@ -752,7 +750,7 @@ impl ResponseError for DecentralizationError {
     }
 }
 
-#[async_trait]
+#[allow(async_fn_in_trait)]
 pub trait TopologyManager: SubnetQuerier + AvailableNodesQuerier {
     async fn modify_subnet_nodes(&self, by: SubnetQueryBy) -> Result<SubnetChangeRequest, NetworkError> {
         Ok(SubnetChangeRequest {
@@ -1082,11 +1080,11 @@ impl Ord for NetworkHealSubnets {
 }
 
 pub struct NetworkHealRequest {
-    pub subnets: BTreeMap<PrincipalId, ic_management_types::Subnet>,
+    pub subnets: Arc<BTreeMap<PrincipalId, ic_management_types::Subnet>>,
 }
 
 impl NetworkHealRequest {
-    pub fn new(subnets: BTreeMap<PrincipalId, ic_management_types::Subnet>) -> Self {
+    pub fn new(subnets: Arc<BTreeMap<PrincipalId, ic_management_types::Subnet>>) -> Self {
         Self { subnets }
     }
 
