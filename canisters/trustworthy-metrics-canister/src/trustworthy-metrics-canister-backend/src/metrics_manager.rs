@@ -40,6 +40,9 @@ fn store_results(results: BTreeMap<u64, Vec<SubnetNodeMetrics>>) {
     }
 }
 
+/// Transform metrics
+///
+/// Aggregates the metrics received by timestamp to fit the "storable" format
 fn transform_metrics(subnets_metrics: Vec<PrincipalNodeMetricsHistory>) -> BTreeMap<TimestampNanos, Vec<SubnetNodeMetrics>> {
     let mut results = BTreeMap::new();
 
@@ -63,6 +66,10 @@ fn transform_metrics(subnets_metrics: Vec<PrincipalNodeMetricsHistory>) -> BTree
     results
 }
 
+/// Fetch metrics
+///
+/// Calls node_metrics_history endpoint of the management canister for the subnet with ID subnet_id
+/// for all the subnet received by registry canister
 async fn fetch_metrics(subnets: Vec<PrincipalId>, refresh_ts: TimestampNanos) -> anyhow::Result<Vec<PrincipalNodeMetricsHistory>> {
     let mut subnets_node_metrics = Vec::new();
 
@@ -96,6 +103,9 @@ async fn fetch_metrics(subnets: Vec<PrincipalId>, refresh_ts: TimestampNanos) ->
     Ok(updated_metrics)
 }
 
+/// Fetch subnets
+///
+/// Fetch subnets from the registry canister
 async fn fetch_subnets() -> anyhow::Result<Vec<PrincipalId>> {
     let (registry_subnets, _): (SubnetListRecord, _) = ic_nns_common::registry::get_value("subnet_list".as_bytes(), None).await?;
     let subnets = registry_subnets
@@ -124,8 +134,6 @@ pub async fn update_metrics() -> anyhow::Result<()> {
     let results = transform_metrics(metrics);
 
     store_results(results);
-
-    ic_cdk::println!("Successfully stored metrics");
 
     Ok(())
 }

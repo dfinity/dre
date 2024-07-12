@@ -11,7 +11,16 @@ const TIMER_INTERVAL_SEC: u64 = 60 * 60 * 6;
 #[init]
 fn init() {
     ic_cdk_timers::set_timer_interval(Duration::from_secs(TIMER_INTERVAL_SEC), || {
-        ic_cdk::spawn(async { metrics_manager::update_metrics().await.unwrap() })
+        ic_cdk::spawn(async {
+            match metrics_manager::update_metrics().await {
+                Ok(_) => {
+                    ic_cdk::println!("Successfully updated metrics");
+                }
+                Err(e) => {
+                    ic_cdk::println!("Error updating metrics: {}", e);
+                }
+            }
+        })
     });
 }
 
@@ -28,24 +37,18 @@ fn subnet_node_metrics(args: SubnetNodeMetricsArgs) -> Result<Vec<SubnetNodeMetr
 
     let metrics_flat = metrics
         .into_iter()
-        .flat_map(|(ts, subnets)| subnets
-            .into_iter()
-            .map(move |subnet_node_metrics| SubnetNodeMetricsResponse{
-                ts, 
-                subnet_id: subnet_node_metrics.subnet_id, 
-                node_metrics: subnet_node_metrics.node_metrics
+        .flat_map(|(ts, subnets)| {
+            subnets.into_iter().map(move |subnet_node_metrics| SubnetNodeMetricsResponse {
+                ts,
+                subnet_id: subnet_node_metrics.subnet_id,
+                node_metrics: subnet_node_metrics.node_metrics,
             })
-        )
+        })
         .collect_vec();
 
     let result = match args.subnet_id {
-        Some(subnet_id) => {
-            metrics_flat
-                .into_iter()
-                .filter(|metrics| metrics.subnet_id == subnet_id)
-                .collect_vec()
-        },
-        None => metrics_flat
+        Some(subnet_id) => metrics_flat.into_iter().filter(|metrics| metrics.subnet_id == subnet_id).collect_vec(),
+        None => metrics_flat,
     };
 
     Ok(result)
