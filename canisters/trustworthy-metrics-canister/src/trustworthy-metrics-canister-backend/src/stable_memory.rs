@@ -4,9 +4,9 @@ use itertools::Itertools;
 use std::borrow::Cow;
 use std::cell::RefCell;
 
-use crate::types::{SubnetNodeMetrics, SubnetsMetricsStorable, TimestampNanos};
+use crate::types::{SubnetNodeMetrics, SubnetNodeMetricsStorable, TimestampNanos};
 
-impl Storable for SubnetsMetricsStorable {
+impl Storable for SubnetNodeMetricsStorable {
     fn to_bytes(&self) -> Cow<[u8]> {
         let mut buf = vec![];
         ciborium::ser::into_writer(self, &mut buf).expect("failed to encode SubnetsMetricsStorable");
@@ -21,12 +21,12 @@ impl Storable for SubnetsMetricsStorable {
 }
 
 thread_local! {
-    pub static MAP: RefCell<StableBTreeMap<TimestampNanos, SubnetsMetricsStorable, DefaultMemoryImpl>> =
+    pub static MAP: RefCell<StableBTreeMap<TimestampNanos, SubnetNodeMetricsStorable, DefaultMemoryImpl>> =
       RefCell::new(StableBTreeMap::init(DefaultMemoryImpl::default()));
 }
 
 pub fn insert(key: TimestampNanos, value: Vec<SubnetNodeMetrics>) {
-    MAP.with(|p| p.borrow_mut().insert(key, SubnetsMetricsStorable(value)));
+    MAP.with(|p| p.borrow_mut().insert(key, SubnetNodeMetricsStorable(value)));
 }
 
 pub fn latest_key() -> Option<TimestampNanos> {
@@ -34,9 +34,5 @@ pub fn latest_key() -> Option<TimestampNanos> {
 }
 
 pub fn get_metrics(ts: TimestampNanos) -> Vec<(TimestampNanos, Vec<SubnetNodeMetrics>)> {
-    MAP.with(|p| p.borrow()
-        .range(ts..)
-        .map(|(ts, storable)| (ts, storable.0))
-        .collect_vec()
-    )
+    MAP.with(|p| p.borrow().range(ts..).map(|(ts, storable)| (ts, storable.0)).collect_vec())
 }

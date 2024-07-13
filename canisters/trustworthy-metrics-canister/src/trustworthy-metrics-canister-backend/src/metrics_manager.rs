@@ -42,7 +42,7 @@ fn store_results(results: BTreeMap<u64, Vec<SubnetNodeMetrics>>) {
 
 /// Transform metrics
 ///
-/// Aggregates the metrics received by timestamp to fit the "storable" format
+/// Groups the metrics received by timestamp to fit the "storable" format
 fn transform_metrics(subnets_metrics: Vec<PrincipalNodeMetricsHistory>) -> BTreeMap<TimestampNanos, Vec<SubnetNodeMetrics>> {
     let mut results = BTreeMap::new();
 
@@ -68,8 +68,8 @@ fn transform_metrics(subnets_metrics: Vec<PrincipalNodeMetricsHistory>) -> BTree
 
 /// Fetch metrics
 ///
-/// Calls node_metrics_history endpoint of the management canister for the subnet with ID subnet_id
-/// for all the subnet received by registry canister
+/// Calls to the node_metrics_history endpoint of the management canister for all the subnets
+/// to get updated metrics since refresh_ts.
 async fn fetch_metrics(subnets: Vec<PrincipalId>, refresh_ts: TimestampNanos) -> anyhow::Result<Vec<PrincipalNodeMetricsHistory>> {
     let mut subnets_node_metrics = Vec::new();
 
@@ -111,8 +111,8 @@ async fn fetch_subnets() -> anyhow::Result<Vec<PrincipalId>> {
     let subnets = registry_subnets
         .subnets
         .into_iter()
-        .map(|subnet_id: Vec<u8>| PrincipalId::try_from(subnet_id).unwrap())
-        .collect_vec();
+        .map(|subnet_id: Vec<u8>| PrincipalId::try_from(subnet_id))
+        .collect::<Result<Vec<_>, _>>()?;
 
     Ok(subnets)
 }

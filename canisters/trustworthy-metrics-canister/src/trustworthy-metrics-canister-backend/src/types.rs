@@ -20,8 +20,7 @@ pub struct SubnetNodeMetrics {
 }
 
 #[derive(Deserialize, Serialize)]
-pub struct SubnetsMetricsStorable(pub Vec<SubnetNodeMetrics>);
-
+pub struct SubnetNodeMetricsStorable(pub Vec<SubnetNodeMetrics>);
 
 #[derive(Deserialize, CandidType)]
 pub struct SubnetNodeMetricsResponse {
