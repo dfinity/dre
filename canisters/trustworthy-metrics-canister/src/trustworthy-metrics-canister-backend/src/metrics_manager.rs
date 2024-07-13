@@ -123,8 +123,8 @@ pub async fn update_metrics() -> anyhow::Result<()> {
     let refresh_ts = latest_ts + 1;
 
     ic_cdk::println!(
-        "Updating metrics for subnets: {:?}\nLatest timestamp persisted: {}\nRefreshing metrics from timestamp {}",
-        subnets,
+        "Updating node metrics for {} subnets:\nLatest timestamp persisted: {}\nRefreshing metrics from timestamp {}",
+        subnets.len(),
         latest_ts,
         refresh_ts
     );
