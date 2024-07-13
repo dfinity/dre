@@ -6,7 +6,7 @@ mod metrics_manager;
 mod stable_memory;
 mod types;
 
-// Update Metrics are every day -> 24hrs
+// Update Metrics every day -> 24hrs
 const TIMER_INTERVAL_SEC: u64 = 60 * 60 * 24;
 
 #[init]
