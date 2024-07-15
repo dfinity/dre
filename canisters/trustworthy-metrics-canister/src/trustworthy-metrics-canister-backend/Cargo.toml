@@ -9,21 +9,22 @@ edition = "2021"
 crate-type = ["cdylib"]
 
 [dependencies]
-candid = "0.10.6"
-ic-cdk = "0.15"
-ic-cdk-timers = "0.9" # Feel free to remove this dependency if you don't need timers
-ic-cdk-macros = "0.15.0"
-ic-stable-structures = "*"
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
-prost = "0.12.6"
-itertools = "0.13.0"
-futures = "0.3"
-anyhow = "1.0.86"
-ciborium = "0.2.1"
-ic-management-canister-types = { git = "https://github.com/dfinity/ic.git", rev = "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d" }
-ic-protobuf = { git = "https://github.com/dfinity/ic.git", rev = "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d" }
-ic-nns-constants = { git = "https://github.com/dfinity/ic.git", rev = "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d" }
-ic-nns-common = { git = "https://github.com/dfinity/ic.git", rev = "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d" }
-ic-registry-transport = { git = "https://github.com/dfinity/ic.git", rev = "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d" }
-dfn_core = { git = "https://github.com/dfinity/ic.git", rev = "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d" }
+candid = { workspace = true }
+ic-cdk = { workspace = true }
+ic-cdk-timers = { workspace = true }
+ic-cdk-macros = { workspace = true }
+ic-stable-structures = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+prost = { workspace = true }
+itertools = { workspace = true }
+futures = { workspace = true }
+anyhow = { workspace = true }
+ciborium = { workspace = true }
+ic-management-canister-types = { workspace = true }
+ic-protobuf = { workspace = true }
+ic-nns-constants = { workspace = true }
+ic-nns-common = { workspace = true }
+ic-registry-transport = { workspace = true }
+dfn_core = { workspace = true }
+canbench-rs = { version = "0.1.4", optional = true }

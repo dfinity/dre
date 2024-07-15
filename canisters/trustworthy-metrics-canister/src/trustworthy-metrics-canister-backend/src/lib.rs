@@ -9,25 +9,30 @@ mod types;
 // Management canisters updates node metrics every day
 const TIMER_INTERVAL_SEC: u64 = 60 * 60 * 24;
 
+async fn update_metrics_task() {
+    match metrics_manager::update_metrics().await {
+        Ok(_) => {
+            ic_cdk::println!("Successfully updated metrics");
+        }
+        Err(e) => {
+            ic_cdk::println!("Error updating metrics: {}", e);
+        }
+    }
+}
+
+fn setup_timers() {
+    ic_cdk_timers::set_timer(Duration::from_secs(0), || ic_cdk::spawn(update_metrics_task()));
+    ic_cdk_timers::set_timer_interval(Duration::from_secs(TIMER_INTERVAL_SEC), || ic_cdk::spawn(update_metrics_task()));
+}
+
 #[init]
 fn init() {
-    ic_cdk_timers::set_timer_interval(Duration::from_secs(TIMER_INTERVAL_SEC), || {
-        ic_cdk::spawn(async {
-            match metrics_manager::update_metrics().await {
-                Ok(_) => {
-                    ic_cdk::println!("Successfully updated metrics");
-                }
-                Err(e) => {
-                    ic_cdk::println!("Error updating metrics: {}", e);
-                }
-            }
-        })
-    });
+    setup_timers();
 }
 
 #[post_upgrade]
 fn post_upgrade() {
-    init();
+    setup_timers();
 }
 
 #[query]
@@ -53,4 +58,22 @@ fn subnet_node_metrics(args: SubnetNodeMetricsArgs) -> Result<Vec<SubnetNodeMetr
     };
 
     Ok(result)
+}
+
+
+#[cfg(feature = "canbench-rs")]
+mod benches {
+    use super::*;
+    use canbench_rs::bench;
+
+    #[bench]
+    fn fibonacci_20() {
+        let args = SubnetNodeMetricsArgs{
+            ts: Some(1720742398550724680),
+            subnet_id: None
+        };
+
+        println!("{:?}", subnet_node_metrics(args));
+    }
+
 }

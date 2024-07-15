@@ -6,7 +6,7 @@ use serde::Serialize;
 pub type TimestampNanos = u64;
 pub type PrincipalNodeMetricsHistory = (PrincipalId, Vec<NodeMetricsHistoryResponse>);
 
-#[derive(Deserialize, Serialize, CandidType)]
+#[derive(Debug, Deserialize, Serialize, CandidType)]
 pub struct NodeMetrics {
     pub node_id: Principal,
     pub num_blocks_proposed_total: u64,
@@ -22,7 +22,7 @@ pub struct SubnetNodeMetrics {
 #[derive(Deserialize, Serialize)]
 pub struct SubnetNodeMetricsStorable(pub Vec<SubnetNodeMetrics>);
 
-#[derive(Deserialize, CandidType)]
+#[derive(Debug, Deserialize, CandidType)]
 pub struct SubnetNodeMetricsResponse {
     pub ts: u64,
     pub subnet_id: Principal,
