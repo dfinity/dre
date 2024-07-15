@@ -7,27 +7,40 @@ use tokio::task::JoinHandle;
 use super::{ExecutableCommand, IcAdminRequirement};
 
 #[derive(Args, Debug)]
-pub struct Upgrade {}
+pub struct Upgrade {
+    /// Version to which the tool should be upgraded, if omitted
+    /// the latest version will be used
+    #[clap(long, short)]
+    version: Option<String>,
+}
 
 impl Upgrade {
+    pub fn new() -> Self {
+        Self { version: None }
+    }
+
     pub async fn run(&self) -> anyhow::Result<UpdateStatus> {
-        let version = env!("CARGO_PKG_VERSION");
-        tokio::task::spawn_blocking(move || Self::check_latest_release(version, true)).await?
+        let version = self.version.clone();
+        tokio::task::spawn_blocking(move || Self::check_latest_release(env!("CARGO_PKG_VERSION"), true, version)).await?
     }
 
     pub fn check(&self) -> JoinHandle<anyhow::Result<UpdateStatus>> {
         let version = env!("CARGO_PKG_VERSION");
-        tokio::task::spawn_blocking(move || Self::check_latest_release(version, false))
+        tokio::task::spawn_blocking(move || Self::check_latest_release(version, false, None))
     }
 
-    fn check_latest_release(curr_version: &str, proceed_with_upgrade: bool) -> anyhow::Result<UpdateStatus> {
-        // Check for a new release once per day
+    fn check_latest_release(curr_version: &str, proceed_with_upgrade: bool, to_version: Option<String>) -> anyhow::Result<UpdateStatus> {
+        // If the user called `Upgrade` don't check the metafile and
+        // try the upgrade
         let update_check_path = dirs::cache_dir().expect("Failed to find a cache dir").join("dre_update_check");
-        if let Ok(metadata) = std::fs::metadata(&update_check_path) {
-            let last_check = metadata.modified().unwrap();
-            let now = std::time::SystemTime::now();
-            if now.duration_since(last_check).unwrap().as_secs() < 60 * 60 * 24 {
-                return Ok(UpdateStatus::NoUpdate);
+        if !proceed_with_upgrade {
+            // Check for a new release once per day
+            if let Ok(metadata) = std::fs::metadata(&update_check_path) {
+                let last_check = metadata.modified().unwrap();
+                let now = std::time::SystemTime::now();
+                if now.duration_since(last_check).unwrap().as_secs() < 60 * 60 * 24 {
+                    return Ok(UpdateStatus::NoUpdate);
+                }
             }
         }
 
@@ -54,17 +67,20 @@ impl Upgrade {
             .fetch()
             .map_err(|e| anyhow::anyhow!("Fetching releases failed: {:?}", e))?;
 
-        let latest_release = match releases.first() {
-            Some(v) => v,
-            None => return Err(anyhow::anyhow!("No releases found")),
+        let release = match to_version {
+            Some(to_v) => releases
+                .iter()
+                .find(|rel| PartialEq::eq(&rel.version, &to_v))
+                .ok_or(anyhow::anyhow!("Release {} not found", to_v))?,
+            None => releases.first().ok_or(anyhow::anyhow!("No releases found"))?,
         };
 
-        if latest_release.version.eq(current_version) {
+        if PartialEq::eq(&release.version, current_version) {
             return Ok(UpdateStatus::NoUpdate);
         }
 
         if !proceed_with_upgrade {
-            return Ok(UpdateStatus::NewVersion(latest_release.version.clone()));
+            return Ok(UpdateStatus::NewVersion(release.version.clone()));
         }
 
         // Complete list can be found: https://doc.rust-lang.org/std/env/consts/constant.OS.html
@@ -72,9 +88,9 @@ impl Upgrade {
             return Err(anyhow::anyhow!("Only linux is supported for automatic updates"));
         }
 
-        info!("Binary not up to date. Updating to {}", latest_release.version);
+        info!("Binary not up to date. Updating to {}", release.version);
 
-        let asset = match latest_release.asset_for("dre", None) {
+        let asset = match release.asset_for("dre", None) {
             Some(asset) => asset,
             None => return Err(anyhow::anyhow!("No assets found for release")),
         };
@@ -112,7 +128,12 @@ impl Upgrade {
 
         self_update::self_replace::self_replace(new_dre_path).map_err(|e| anyhow::anyhow!("Couldn't upgrade to the newest version: {:?}", e))?;
 
-        Ok(UpdateStatus::Updated(latest_release.version.clone()))
+        // Since its possible to upgrade to an older version
+        // remove the metafile so that the check will be run
+        // with the new version again
+        std::fs::remove_file(&update_check_path)?;
+
+        Ok(UpdateStatus::Updated(release.version.clone()))
     }
 }
 
