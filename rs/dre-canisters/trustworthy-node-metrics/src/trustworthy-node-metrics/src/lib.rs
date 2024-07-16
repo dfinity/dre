@@ -59,21 +59,3 @@ fn subnet_node_metrics(args: SubnetNodeMetricsArgs) -> Result<Vec<SubnetNodeMetr
 
     Ok(result)
 }
-
-
-#[cfg(feature = "canbench-rs")]
-mod benches {
-    use super::*;
-    use canbench_rs::bench;
-
-    #[bench]
-    fn fibonacci_20() {
-        let args = SubnetNodeMetricsArgs{
-            ts: Some(1720742398550724680),
-            subnet_id: None
-        };
-
-        println!("{:?}", subnet_node_metrics(args));
-    }
-
-}
