@@ -83,14 +83,21 @@ impl Upgrade {
             return Ok(UpdateStatus::NewVersion(release.version.clone()));
         }
 
-        // Complete list can be found: https://doc.rust-lang.org/std/env/consts/constant.OS.html
-        if std::env::consts::OS != "linux" {
-            return Err(anyhow::anyhow!("Only linux is supported for automatic updates"));
-        }
+        let triple = match std::env::consts::OS {
+            "linux" => "x86_64-unknown-linux",
+            "macos" => "x86_64-apple-darwin",
+            s => {
+                return Err(anyhow::anyhow!(
+                    "{} is not currently not supported for automatic upgrades. Try building the code from source",
+                    s
+                ))
+            }
+        };
 
         info!("Binary not up to date. Updating to {}", release.version);
+        info!("Release: {:?}", release);
 
-        let asset = match release.asset_for("dre", None) {
+        let asset = match release.asset_for(&format!("dre-{}", triple), None) {
             Some(asset) => asset,
             None => return Err(anyhow::anyhow!("No assets found for release")),
         };
