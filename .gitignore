@@ -64,3 +64,6 @@ checkpoint*
 
 # mkdocs
 .cache
+
+# Created by zigbuild
+.intentionally-empty-file*
