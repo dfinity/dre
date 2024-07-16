@@ -1,0 +1,5 @@
+build_cmd:
+  cargo build --release --package trustworthy-node-metrics --target wasm32-unknown-unknown --features canbench-rs
+
+wasm_path:
+  target/wasm32-unknown-unknown/release/trustworthy_node_metrics.wasm
