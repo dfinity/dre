@@ -14,5 +14,5 @@ jobs:
         uses: castastrophe/actions-pr-auto-update@v1.1.0
         with:
           # defaults to github.token
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GIX_CREATE_PR_PAT }}
           include_drafts: true
