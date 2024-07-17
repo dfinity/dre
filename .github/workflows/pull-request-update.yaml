@@ -1,0 +1,18 @@
+name: Pull request update
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  autoupdate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Update all pull requests
+        uses: castastrophe/actions-pr-auto-update
+        with:
+          # defaults to github.token
+          token: ${{ secrets.USER_TOKEN }}
+          include_drafts: true
