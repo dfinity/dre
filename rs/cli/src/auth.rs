@@ -1,14 +1,20 @@
-use std::fs::read_to_string;
 use std::path::PathBuf;
+use std::{fs::read_to_string, str::FromStr};
 
 use candid::{Decode, Encode};
-use dialoguer::{console::Term, theme::ColorfulTheme, Select};
+use cryptoki::{
+    context::{CInitializeArgs, Pkcs11},
+    session::{SessionFlags, UserType},
+};
+use dialoguer::{console::Term, theme::ColorfulTheme, Password, Select};
 use ic_canister_client::{Agent, Sender};
 use ic_canister_client_sender::SigKeys;
 use ic_management_types::Network;
 use ic_nns_constants::GOVERNANCE_CANISTER_ID;
 use ic_nns_governance::pb::v1::{ListNeurons, ListNeuronsResponse};
 use ic_sys::utility_command::UtilityCommand;
+use keyring::{Entry, Error};
+use log::info;
 
 #[derive(Clone, Debug)]
 pub struct Neuron {
@@ -98,8 +104,57 @@ impl Auth {
             (Some(path), _, _, _) if path.exists() => Ok(Auth::Keyfile { path }),
             (Some(path), _, _, _) => Err(anyhow::anyhow!("Invalid key file path: {}", path.display())),
             (None, Some(slot), Some(pin), Some(key_id)) => Ok(Auth::Hsm { pin, slot, key_id }),
+            (None, None, None, None) => Ok(Self::detect_hsm_auth()?.map_or(Auth::Anonymous, |a| a)),
             _ => Err(anyhow::anyhow!("Invalid auth arguments")),
         }
+    }
+
+    fn pkcs11_lib_path() -> anyhow::Result<PathBuf> {
+        let lib_macos_path = PathBuf::from_str("/Library/OpenSC/lib/opensc-pkcs11.so")?;
+        let lib_linux_path = PathBuf::from_str("/usr/lib/x86_64-linux-gnu/opensc-pkcs11.so")?;
+        if lib_macos_path.exists() {
+            Ok(lib_macos_path)
+        } else if lib_linux_path.exists() {
+            Ok(lib_linux_path)
+        } else {
+            Err(anyhow::anyhow!("no pkcs11 library found"))
+        }
+    }
+
+    fn detect_hsm_auth() -> anyhow::Result<Option<Self>> {
+        info!("Detecting HSM devices");
+        let ctx = Pkcs11::new(Self::pkcs11_lib_path()?)?;
+        ctx.initialize(CInitializeArgs::OsThreads)?;
+        for slot in ctx.get_slots_with_token()? {
+            let info = ctx.get_slot_info(slot)?;
+            if info.slot_description().starts_with("Nitrokey Nitrokey HSM") {
+                let key_id = format!("hsm-{}-{}", info.slot_description(), info.manufacturer_id());
+                let pin_entry = Entry::new("dre-tool-hsm-pin", &key_id)?;
+                let pin = match pin_entry.get_password() {
+                    // TODO: Remove the old keyring entry search ("release-cli") after August 1st, 2024
+                    Err(Error::NoEntry) => match Entry::new("release-cli", &key_id) {
+                        Err(Error::NoEntry) => Password::new().with_prompt("Please enter the HSM PIN: ").interact()?,
+                        Ok(pin_entry) => pin_entry.get_password()?,
+                        Err(e) => return Err(anyhow::anyhow!("Failed to get pin from keyring: {}", e)),
+                    },
+                    Ok(pin) => pin,
+                    Err(e) => return Err(anyhow::anyhow!("Failed to get pin from keyring: {}", e)),
+                };
+
+                let mut flags = SessionFlags::new();
+                flags.set_serial_session(true);
+                let session = ctx.open_session_no_callback(slot, flags).unwrap();
+                session.login(UserType::User, Some(&pin))?;
+                info!("HSM login successful!");
+                pin_entry.set_password(&pin)?;
+                return Ok(Some(Auth::Hsm {
+                    pin,
+                    slot: slot.id(),
+                    key_id: "01".to_string(),
+                }));
+            }
+        }
+        Ok(None)
     }
 
     pub async fn auto_detect_neuron_id(&self, nns_urls: &[url::Url]) -> anyhow::Result<u64> {

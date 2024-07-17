@@ -70,6 +70,8 @@ tokio = { workspace = true }
 url = { workspace = true }
 humantime = { workspace = true }
 clap_complete = "4.5.6"
+cryptoki = { workspace = true }
+keyring = { workspace = true }
 
 [dev-dependencies]
 actix-rt = { workspace = true }

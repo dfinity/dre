@@ -1,0 +1,17 @@
+{
+  "canisters": {
+    "trustworthy-node-metrics": {
+      "candid": "src/trustworthy-node-metrics/trustworthy-node-metrics.did",
+      "package": "trustworthy-node-metrics",
+      "type": "rust"
+    }
+  },
+  "defaults": {
+    "build": {
+      "args": "",
+      "packtool": ""
+    }
+  },
+  "output_env_file": ".env",
+  "version": 1
+}
