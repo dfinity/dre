@@ -1,18 +1,17 @@
-name: Pull request update
-
+name: Auto update PR's
 on:
   push:
     branches:
       - main
-
 jobs:
   autoupdate:
-    runs-on: ubuntu-latest
+    name: autoupdate
+    runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v4
-      - name: Update all pull requests
-        uses: castastrophe/actions-pr-auto-update@v1.1.0
-        with:
-          # defaults to github.token
-          token: ${{ secrets.GIX_CREATE_PR_PAT }}
-          include_drafts: true
+      - uses: chinthakagodawita/autoupdate@v1.7.0
+        env:
+          GITHUB_TOKEN: "${{ secrets.GIX_CREATE_PR_PAT }}"
+          MERGE_MSG: "Branch was auto-updated."
+          RETRY_COUNT: "5"
+          RETRY_SLEEP: "1000"
+          MERGE_CONFLICT_ACTION: "ignore"
