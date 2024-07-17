@@ -63,7 +63,7 @@ impl UpdateVersion {
 #[derive(Clone)]
 pub struct IcAdminWrapper {
     network: Network,
-    ic_admin_bin_path: Option<String>,
+    pub ic_admin_bin_path: Option<String>,
     proceed_without_confirmation: bool,
     pub neuron: Neuron,
     dry_run: bool,

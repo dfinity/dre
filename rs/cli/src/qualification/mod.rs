@@ -15,15 +15,25 @@ pub struct QualificationExecutor {
 
 pub struct QualificationContext {
     dre_ctx: DreContext,
+    from_version: String,
+    to_version: String,
 }
 
 impl QualificationContext {
     pub fn new(dre_ctx: DreContext) -> Self {
-        Self { dre_ctx }
+        Self {
+            dre_ctx,
+            from_version: "".to_string(),
+            to_version: "".to_string(),
+        }
     }
 
-    pub fn dre_ctx(&self) -> &DreContext {
-        &self.dre_ctx
+    pub fn with_from_version(self, from_version: String) -> Self {
+        Self { from_version, ..self }
+    }
+
+    pub fn with_to_version(self, to_version: String) -> Self {
+        Self { to_version, ..self }
     }
 }
 
@@ -44,6 +54,7 @@ impl QualificationExecutor {
     }
 
     pub async fn execute(&self, ctx: QualificationContext) -> anyhow::Result<()> {
+        print_text(format!("Running qualification from version {} to {}", ctx.from_version, ctx.to_version));
         print_text(format!("Starting execution of {} steps:", self.steps.len()));
         for (i, step) in self.steps.iter().enumerate() {
             print_text(format!("Executing step {}: `{}`", i, step.name()));
@@ -71,14 +82,14 @@ pub trait Step {
 }
 
 pub fn print_text(message: String) {
-    print_with_time(message, false)
+    _print_with_time(message, false)
 }
 
 pub fn print_table(table: tabular::Table) {
-    print_with_time(format!("{}", table), true)
+    _print_with_time(format!("{}", table), true)
 }
 
-fn print_with_time(message: String, add_new_line: bool) {
+fn _print_with_time(message: String, add_new_line: bool) {
     let current_time = Utc::now();
 
     println!(

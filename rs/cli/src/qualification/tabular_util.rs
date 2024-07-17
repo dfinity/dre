@@ -57,7 +57,7 @@ impl Table {
             }));
         }
 
-        /// Write the dots
+        // Write the dots
         table.add_row(
             longest_per_column
                 .values()

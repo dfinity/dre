@@ -190,6 +190,11 @@ impl DreContext {
         }
     }
 
+    pub fn readonly_ic_admin_for_other_network(&self, network: Network) -> IcAdminWrapper {
+        let ic_admin = self.ic_admin();
+        IcAdminWrapper::new(network, ic_admin.ic_admin_bin_path.clone(), true, Neuron::anonymous_neuron(), false)
+    }
+
     pub async fn subnet_manager(&self) -> SubnetManager {
         let registry = self.registry().await;
 
