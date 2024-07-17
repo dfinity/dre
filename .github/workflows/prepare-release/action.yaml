@@ -9,10 +9,10 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: "🔨 Build binary for macOS"
+    - name: "🔨 Build binaries for other targets"
       shell: bash
       run: |
-        cargo dremac
+        cargo drecross
     - name: "⚒️ Extract binaries from bazel, so they can be pushed as GitHub artifacts in the next steps"
       shell: bash
       run: |
