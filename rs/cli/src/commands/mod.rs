@@ -13,6 +13,7 @@ use ic_management_types::{MinNakamotoCoefficients, Network, NodeFeature};
 use nodes::Nodes;
 use proposals::Proposals;
 use propose::Propose;
+use qualify::QualifyCmd;
 use registry::Registry;
 use trustworthy_metrics::TrustworthyMetrics;
 use update_unassigned_nodes::UpdateUnassignedNodes;
@@ -33,6 +34,7 @@ pub mod hostos;
 mod nodes;
 mod proposals;
 mod propose;
+mod qualify;
 mod registry;
 mod subnet;
 mod trustworthy_metrics;
@@ -152,6 +154,9 @@ pub enum Subcommands {
 
     /// Completions
     Completions(Completions),
+
+    /// Qualification
+    Qualify(QualifyCmd),
 }
 
 pub trait ExecutableCommand {
@@ -257,6 +262,7 @@ impl ExecutableCommand for Args {
             Subcommands::Upgrade(c) => c.require_ic_admin(),
             Subcommands::Proposals(c) => c.require_ic_admin(),
             Subcommands::Completions(c) => c.require_ic_admin(),
+            Subcommands::Qualify(c) => c.require_ic_admin(),
         }
     }
 
@@ -279,6 +285,7 @@ impl ExecutableCommand for Args {
             Subcommands::Upgrade(c) => c.execute(ctx).await,
             Subcommands::Proposals(c) => c.execute(ctx).await,
             Subcommands::Completions(c) => c.execute(ctx).await,
+            Subcommands::Qualify(c) => c.execute(ctx).await,
         }
     }
 
@@ -301,6 +308,7 @@ impl ExecutableCommand for Args {
             Subcommands::Upgrade(c) => c.validate(cmd),
             Subcommands::Proposals(c) => c.validate(cmd),
             Subcommands::Completions(c) => c.validate(cmd),
+            Subcommands::Qualify(c) => c.validate(cmd),
         }
     }
 }
