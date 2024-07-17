@@ -21,7 +21,7 @@ members = [
     "rs/np-notifications",
     "rs/rollout-controller",
     "rs/slack-notifications",
-    "rs/dre-canisters/trustworthy-node-metrics/src/trustworthy-node-metrics",
+    "rs/dre-canisters/trustworthy-node-metrics/src/trustworthy-node-metrics", "rs/qualifier",
 ]
 
 resolver = "2"
