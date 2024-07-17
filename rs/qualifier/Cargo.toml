@@ -1,0 +1,14 @@
+[package]
+name = "qualifier"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+description.workspace = true
+documentation.workspace = true
+
+[dependencies]
+anyhow = { workspace = true }
+clap = { workspace = true }
+tokio = { workspace = true }
+log = { workspace = true }
+pretty_env_logger = { workspace = true }
