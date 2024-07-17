@@ -1,7 +1,10 @@
 use clap::Args;
 use ic_management_types::Network;
 
-use crate::commands::{ExecutableCommand, IcAdminRequirement};
+use crate::{
+    commands::{ExecutableCommand, IcAdminRequirement},
+    qualification::{QualificationContext, QualificationExecutor},
+};
 
 #[derive(Args, Debug)]
 pub struct Execute {}
@@ -18,6 +21,8 @@ impl ExecutableCommand for Execute {
             anyhow::bail!("Qualification is forbidden on mainnet.")
         }
 
-        Ok(())
+        let qualification_executor = QualificationExecutor::with_steps();
+        let context = QualificationContext::new(ctx);
+        qualification_executor.execute(context).await
     }
 }

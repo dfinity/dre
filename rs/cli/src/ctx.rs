@@ -26,6 +26,7 @@ use crate::{
 };
 
 const STAGING_NEURON_ID: u64 = 49;
+#[derive(Clone)]
 pub struct DreContext {
     network: Network,
     registry: RefCell<Option<Rc<LazyRegistry>>>,

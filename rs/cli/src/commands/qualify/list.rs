@@ -1,6 +1,9 @@
 use clap::Args;
 
-use crate::commands::{ExecutableCommand, IcAdminRequirement};
+use crate::{
+    commands::{ExecutableCommand, IcAdminRequirement},
+    qualification::QualificationExecutor,
+};
 
 #[derive(Args, Debug)]
 pub struct List {}
@@ -13,6 +16,9 @@ impl ExecutableCommand for List {
     fn validate(&self, _cmd: &mut clap::Command) {}
 
     async fn execute(&self, _ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
+        let qualification_executor = QualificationExecutor::with_steps();
+        qualification_executor.list();
+
         Ok(())
     }
 }
