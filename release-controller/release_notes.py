@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 import fnmatch
+import json
 import os
 import pathlib
 import re
@@ -15,14 +16,22 @@ COMMIT_HASH_LENGTH = 9
 REPLICA_TEAMS = set(
     [
         "consensus-owners",
+        "consensus",
         "crypto-owners",
+        "dept-crypto-library",
+        "execution-owners",
+        "execution",
+        "ic-interface-owners",
+        "ic-message-routing-owners",
         "interface-owners",
-        "Orchestrator",
         "message-routing-owners",
         "networking-team",
-        "execution-owners",
+        "networking",
         "node-team",
+        "node",
+        "Orchestrator",
         "runtime-owners",
+        "runtime",
     ]
 )
 
@@ -72,31 +81,44 @@ TYPE_PRETTY_MAP = {
 }
 
 TEAM_PRETTY_MAP = {
-    "DRE": "DRE",
+    "boundary-node": "Boundary Nodes",
     "boundarynode-team": "Boundary Nodes",
-    "chross-chain-team": "Cross Chain",
     "consensus-owners": "Consensus",
+    "consensus": "Consensus",
     "cross-chain-team": "Cross Chain",
     "crypto-owners": "Crypto",
+    "dept-crypto-library": "Crypto",
     "docs-owners": "Docs",
+    "dre": "DRE",
+    "DRE": "DRE",
     "execution-owners": "Execution",
+    "execution": "Execution",
     "financial-integrations": "Financial Integrations",
+    "finint": "Financial Integrations",
     "ghost": "Ghost",
+    "ic-interface-owners": "Interface",
+    "ic-message-routing-owners": "Message Routing",
+    "ic-owners-owners": "Owners",
     "ic-support-eu": "SupportEU",
     "ic-support-na": "SupportNA",
+    "ic-support": "Support",
     "ic-testing-verification": "T&V",
     "idx": "IDX",
     "interface-owners": "Interface",
     "message-routing-owners": "Message Routing",
     "networking-team": "Networking",
+    "networking": "Networking",
     "nns-team": "NNS",
     "node-team": "Node",
+    "node": "Node",
     "owners-owners": "Owners",
-    "platform-operations": "PfOps",
+    "platform-operations": "Platform Ops",
     "prodsec": "Prodsec",
+    "product-security": "Prodsec",
     "runtime-owners": "Runtime",
-    "trust-team": "Trust",
+    "runtime": "Runtime",
     "sdk-team": "SDK",
+    "trust-team": "Trust",
     "utopia": "Utopia",
 }
 
@@ -110,13 +132,15 @@ EXCLUDE_PACKAGES_FILTERS = [
     r"^bazel$",
 ]
 
-EXCLUDED_TEAMS = set(TEAM_PRETTY_MAP.keys()) - REPLICA_TEAMS
+NON_REPLICA_TEAMS = set(TEAM_PRETTY_MAP.keys()) - REPLICA_TEAMS
+
+# Completely remove these teams from mentioning in the release notes
+DROP_TEAMS = {"Utopia", "Financial Integrations", "IDX", "T&V", "Prodsec", "Support", "SupportEU", "SupportNA"}
 
 # Ownership threshold for analyzing which teams were
 # involved in the commit
 MAX_OWNERSHIP_AREA = 0.5
 
-max_commits = 1000
 branch = "master"
 
 
@@ -145,26 +169,29 @@ def progressbar(it, prefix="", size=60, out=sys.stdout):  # Python3.6+
     print("\n", flush=True, file=out)
 
 
+def branch_strip_remote(branch: str):
+    return branch.split("/", 1)[1]
+
+
 def get_rc_branch(repo_dir, commit_hash):
     """Get the branch name for a commit hash."""
     all_branches = (
         subprocess.check_output(
             [
                 "git",
-                "--git-dir",
-                "{}/.git".format(repo_dir),
                 "branch",
                 "--contains",
                 commit_hash,
                 "--remote",
-            ]
+            ],
+            cwd=repo_dir,
         )
         .decode("utf-8")
         .strip()
         .splitlines()
     )
     all_branches = [branch.strip() for branch in all_branches]
-    rc_branches = [branch for branch in all_branches if branch.startswith("origin/rc--20")]
+    rc_branches = [branch for branch in all_branches if branch_strip_remote(branch).startswith("rc--20")]
     if rc_branches:
         return rc_branches[0]
     return ""
@@ -176,15 +203,17 @@ def get_merge_commit(repo_dir, commit_hash):
 
     try:
         # Run the Git commands and capture their output
-        git_cmd = ["git", "--git-dir", f"{repo_dir}/.git", "rev-list", f"{commit_hash}..{rc_branch}"]
+        git_cmd = ["git", "rev-list", f"{commit_hash}..{rc_branch}"]
         ancestry_path = subprocess.run(
             git_cmd + ["--ancestry-path"],
+            cwd=repo_dir,
             capture_output=True,
             text=True,
             check=True,
         ).stdout.splitlines()
         first_parent = subprocess.run(
             git_cmd + ["--first-parent"],
+            cwd=repo_dir,
             capture_output=True,
             text=True,
             check=True,
@@ -220,12 +249,12 @@ def get_commits(repo_dir, first_commit, last_commit):
             subprocess.check_output(
                 [
                     "git",
-                    "--git-dir={}/.git".format(repo_dir),
                     "log",
                     "--format={}".format(git_commit_format),
                     "--no-merges",
                     "{}..{}".format(first_commit, last_commit),
                 ],
+                cwd=repo_dir,
                 stderr=subprocess.DEVNULL,
             )
             .decode("utf-8")
@@ -314,18 +343,156 @@ def best_matching_regex(file_path, regex_list):
     return matches[0]
 
 
-def release_notes(first_commit, last_commit, release_name) -> str:
-    conv_commit_pattern = re.compile(r"^(\w+)(\([^\)]*\))?: (.+)$")
-    jira_ticket_regex = r" *\b[A-Z]{2,}\d?-\d+\b:?"  # <whitespace?><word boundary><uppercase letters><digit?><hyphen><digits><word boundary><colon?>
-    empty_brackets_regex = r" *\[ *\]:?"  # Sometimes Jira tickets are in square brackets
-
+def prepare_release_notes(first_commit, last_commit, release_name, max_commits, write_to_html) -> str:
     change_infos: dict[str, list[Change]] = {}
 
     ci_patterns = ["/**/*.lock", "/**/*.bzl"]
 
     ic_repo_path = pathlib.Path.home() / ".cache/git/ic"
+    codeowners = parse_codeowners(ic_repo_path / ".github" / "CODEOWNERS")
+    commits = get_commits_in_range(ic_repo_path, first_commit, last_commit)
+
+    if len(commits) >= max_commits:
+        print("WARNING: max commits limit reached, increase depth")
+        exit(1)
+
+    guestos_packages_all, guestos_packages_filtered = get_guestos_packages_with_bazel(ic_repo_path)
+
+    for i, _ in progressbar([i[0] for i in commits], "Processing commit: ", 80):
+        change_info = get_change_description_for_commit(
+            commit_info=commits[i],
+            change_infos=change_infos,
+            ci_patterns=ci_patterns,
+            ic_repo_path=ic_repo_path,
+            codeowners=codeowners,
+            guestos_packages_all=guestos_packages_all,
+            guestos_packages_filtered=guestos_packages_filtered,
+        )
+        if change_info is None:
+            continue
+
+        commit_type = change_info["type"]
+        change_infos[commit_type].append(change_info)
+
+    if write_to_html:
+        return release_notes_html(first_commit, last_commit, release_name, change_infos, write_to_html)
+    return release_notes_markdown(first_commit, last_commit, release_name, change_infos)
+
+
+def get_change_description_for_commit(
+    commit_info,
+    change_infos,
+    ci_patterns,
+    ic_repo_path,
+    codeowners,
+    guestos_packages_all,
+    guestos_packages_filtered,
+):
+    # Conventional commit regex pattern
+    conv_commit_pattern = re.compile(r"^(\w+)(\([^\)]*\))?: (.+)$")
+    # Jira ticket: <whitespace?><word boundary><uppercase letters><digit?><hyphen><digits><word boundary><colon?>
+    jira_ticket_regex = r" *\b[A-Z]{2,}\d?-\d+\b:?"
+    # Sometimes Jira tickets are in square brackets
+    empty_brackets_regex = r" *\[ *\]:?"
+
+    commit_hash, commit_message, commiter, merge_commit = commit_info
+
+    file_changes = file_changes_for_commit(commit_hash, ic_repo_path)
+    guestos_change = any(any(c["file_path"][1:].startswith(p) for c in file_changes) for p in guestos_packages_all)
+    if not guestos_change:
+        return None
+
+    included = any(any(c["file_path"][1:].startswith(p) for c in file_changes) for p in guestos_packages_filtered)
+
+    ownership = {}
+    stripped_message = re.sub(jira_ticket_regex, "", commit_message)
+    stripped_message = re.sub(empty_brackets_regex, "", stripped_message)
+    stripped_message = stripped_message.strip()
+
+    conventional = parse_conventional_commit(stripped_message, conv_commit_pattern)
+
+    for change in file_changes:
+        if any([fnmatch.fnmatch(change["file_path"], pattern) for pattern in ci_patterns]):
+            continue
+
+        key = best_matching_regex(change["file_path"], codeowners.keys())
+        teams = ["unknown"] if key is None else codeowners[key]
+
+        for team in teams:
+            if team not in ownership:
+                ownership[team] = change["num_changes"]
+                continue
+            ownership[team] += change["num_changes"]
+
+        # Non reviewed files
+    if "ghost" in ownership:
+        ownership.pop("ghost")
+    if "owners-owners" in ownership:
+        ownership.pop("owners-owners")
+
+    teams = set()
+    if ownership:
+        max_ownership = max(ownership.items(), key=lambda changed_lines_per_team: changed_lines_per_team[1])[1]
+        # Since multiple teams can own a path in CODEOWNERS we have to handle what happens if two teams have max changes
+        for key, value in ownership.items():
+            if value >= max_ownership * MAX_OWNERSHIP_AREA:
+                teams.add(key)
+
+        if "test" in conventional["message"]:
+            conventional["type"] = "test"
+
+    commit_type = conventional["type"].lower()
+    commit_type = commit_type if commit_type in TYPE_PRETTY_MAP else "other"
+
+    teams = teams - DROP_TEAMS
+
+    if not teams or all([team in NON_REPLICA_TEAMS for team in teams]):
+        included = False
+
+    if commit_type not in change_infos:
+        change_infos[commit_type] = []
+
+    commiter_parts = commiter.split()
+    commiter = "{:<4} {:<4}".format(
+        commiter_parts[0][:4],
+        commiter_parts[1][:4] if len(commiter_parts) >= 2 else "",
+    )
+
+    change_info = {
+        "commit": merge_commit,
+        "team": list(teams),
+        "type": commit_type,
+        "scope": conventional["scope"] if conventional["scope"] else "",
+        "message": conventional["message"],
+        "commiter": commiter,
+        "included": included,
+    }
+
+    return change_info
+
+
+def get_commits_in_range(ic_repo_path, first_commit, last_commit):
+    """Get the commits in the range [first_commit, last_commit] from the IC repo."""
+    # Cache merge commits to avoid repeated slow calls to git
+    merge_commits_cache_path = ic_repo_path / ".git/merge_commits.json"
+    merge_commits_cache = {}
+    if merge_commits_cache_path.exists():
+        merge_commits_cache = json.loads(merge_commits_cache_path.read_text())
 
     if ic_repo_path.exists():
+        print("Resetting HEAD to latest origin/master.")
+        subprocess.check_call(
+            ["git", "checkout", "--force", "master"],
+            cwd=ic_repo_path,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        subprocess.check_call(
+            ["git", "reset", "--hard", "origin/master"],
+            cwd=ic_repo_path,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
         print("Fetching new commits in {}".format(ic_repo_path))
         subprocess.check_call(
             ["git", "fetch"],
@@ -333,14 +500,9 @@ def release_notes(first_commit, last_commit, release_name) -> str:
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         )
-        print("Resetting HEAD to latest origin/master.")
-        subprocess.check_call(
-            ["git", "reset", "--hard", "origin/master"],
-            cwd=ic_repo_path,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        )
+
     else:
+        print("Cloning IC repo to {}".format(ic_repo_path))
         subprocess.check_call(
             [
                 "git",
@@ -352,124 +514,92 @@ def release_notes(first_commit, last_commit, release_name) -> str:
             stderr=subprocess.DEVNULL,
         )
 
-    codeowners = parse_codeowners(ic_repo_path / ".github" / "CODEOWNERS")
-
     commits = get_commits(ic_repo_path, first_commit, last_commit)
     for i in range(len(commits)):
         commit_hash = str(commits[i][0])
-        merge_commit = get_merge_commit(ic_repo_path, commit_hash)
+        if commit_hash in merge_commits_cache:
+            merge_commit = merge_commits_cache[commit_hash]
+        else:
+            merge_commit = get_merge_commit(ic_repo_path, commit_hash)
+            merge_commits_cache[commit_hash] = merge_commit
         used_commit = (merge_commit or commit_hash)[:COMMIT_HASH_LENGTH]
         print("Commit: {} ==> using commit: {}".format(commit_hash, used_commit))
         commits[i] = commits[i] + (used_commit,)
 
-    if len(commits) == max_commits:
-        print("WARNING: max commits limit reached, increase depth")
-        exit(1)
+    merge_commits_cache_path.write_text(json.dumps(merge_commits_cache))
 
-    bazel_query = [
-        "bazel",
-        "query",
-        "--universe_scope=//...",
-        "deps(//ic-os/guestos/envs/prod:update-img.tar.gz) union deps(//ic-os/setupos/envs/prod:disk-img.tar.gz)",
-        "--output=package",
-    ]
-    p = subprocess.run(
-        ["gitlab-ci/container/container-run.sh"] + bazel_query,
-        cwd=ic_repo_path,
-        text=True,
-        stdout=subprocess.PIPE,
-        check=False,
-    )
-    if p.returncode != 0:
-        print("Failure running Bazel through container.  Attempting direct run.", file=sys.stderr)
-        p = subprocess.run(
-            bazel_query,
-            cwd=ic_repo_path,
-            text=True,
-            stdout=subprocess.PIPE,
-            check=True,
+    return commits
+
+
+def release_notes_html(first_commit, last_commit, release_name, change_infos, html_path):
+    """Generate release notes in HTML format, typically for local testing."""
+    import webbrowser
+
+    with open(html_path, "w", encoding="utf-8") as output:
+        output.write(
+            """
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap" rel="stylesheet">
+        """
         )
-    replica_packages = p.stdout.strip().splitlines()
+        output.write('<div style="font-family: Courier New; font-size: 8pt">')
+        output.write(
+            '<h1 id="{0}" style="font-size: 14pt; font-family: Roboto">Release Notes for <a style="font-size: 10pt; font-family: Roboto Mono" href="https://github.com/dfinity/ic/tree/{0}">{0}</a> <span style="font-family: Roboto Mono; font-weight: normal; font-size: 10pt">({1})</span></h1>\n'.format(
+                release_name, last_commit
+            )
+        )
+        output.write(
+            "<br><p>Change log since git revision [{0}](https://dashboard.internetcomputer.org/release/{0})</p>\n".format(
+                first_commit
+            )
+        )
 
-    replica_packages_filtered = [
-        p for p in replica_packages if not any(re.match(f, p) for f in EXCLUDE_PACKAGES_FILTERS)
-    ]
-
-    for i, _ in progressbar([i[0] for i in commits], "Processing commit: ", 80):
-        commit_info = commits[i]
-        commit_hash, commit_message, commiter, merge_commit = commit_info
-
-        file_changes = file_changes_for_commit(commit_hash, ic_repo_path)
-        replica_change = any(any(c["file_path"][1:].startswith(p) for c in file_changes) for p in replica_packages)
-        if not replica_change:
-            continue
-
-        included = any(any(c["file_path"][1:].startswith(p) for c in file_changes) for p in replica_packages_filtered)
-
-        ownership = {}
-        stripped_message = re.sub(jira_ticket_regex, "", commit_message)
-        stripped_message = re.sub(empty_brackets_regex, "", stripped_message)
-        stripped_message = stripped_message.strip()
-
-        conventional = parse_conventional_commit(stripped_message, conv_commit_pattern)
-
-        for change in file_changes:
-            if any([fnmatch.fnmatch(change["file_path"], pattern) for pattern in ci_patterns]):
+        for current_type in sorted(TYPE_PRETTY_MAP, key=lambda x: TYPE_PRETTY_MAP[x][1]):
+            if current_type not in change_infos:
                 continue
+            output.write(
+                '<h3 style="font-size: 14pt; font-family: Roboto">## {0}:</h3>\n'.format(
+                    TYPE_PRETTY_MAP[current_type][0]
+                )
+            )
 
-            key = best_matching_regex(change["file_path"], codeowners.keys())
-            teams = ["unknown"] if key is None else codeowners[key]
+            for change in sorted(change_infos[current_type], key=lambda x: ",".join(x["team"])):
+                commit_part = '[<a href="https://github.com/dfinity/ic/commit/{0}">{0}</a>]'.format(
+                    change["commit"][:COMMIT_HASH_LENGTH]
+                )
+                team_part = ",".join([TEAM_PRETTY_MAP.get(team, team) for team in change["team"]])
+                team_part = team_part if team_part else "General"
+                scope_part = (
+                    ":"
+                    if change["scope"] == "" or change["scope"].lower() == team_part.lower()
+                    else "({0}):".format(change["scope"])
+                )
+                message_part = change["message"]
+                commiter_part = f"&lt!-- {change['commiter']} --&gt"
 
-            for team in teams:
-                if team not in ownership:
-                    ownership[team] = change["num_changes"]
-                    continue
-                ownership[team] += change["num_changes"]
+                text = "* {0} {4} {1}{2} {3} {5}<br>".format(
+                    commit_part,
+                    team_part,
+                    scope_part,
+                    message_part,
+                    commiter_part,
+                    "" if change["included"] else "[AUTO-EXCLUDED]",
+                )
+                if not change["included"]:
+                    text = "<s>{}</s>".format(text)
+                output.write("<p style='font-size: 8pt; padding: 0; margin: 0; white-space: pre;'>{}</p>".format(text))
 
-        # Non reviewed files
-        if "ghost" in ownership:
-            ownership.pop("ghost")
-        if "owners-owners" in ownership:
-            ownership.pop("owners-owners")
+        output.write("</div>")
 
-        teams = []
-        if ownership:
-            max_ownership = max(ownership.items(), key=lambda changed_lines_per_team: changed_lines_per_team[1])[1]
-            # Since multiple teams can own a path in CODEOWNERS we have to handle what happens if two teams have max changes
-            for key, value in ownership.items():
-                if value >= max_ownership * MAX_OWNERSHIP_AREA:
-                    teams.append(key)
+    html_path = os.path.abspath(html_path)
 
-            if "test" in conventional["message"]:
-                conventional["type"] = "test"
+    filename = "file://{}".format(html_path)
+    webbrowser.open_new_tab(filename)
 
-        commit_type = conventional["type"].lower()
-        commit_type = commit_type if commit_type in TYPE_PRETTY_MAP else "other"
 
-        if ["ic-testing-verification"] == teams or all([team in EXCLUDED_TEAMS for team in teams]):
-            included = False
-
-        if commit_type not in change_infos:
-            change_infos[commit_type] = []
-
-        commiter_parts = commiter.split()
-        commiter = "{:<4} {:<4}".format(
-            commiter_parts[0][:4],
-            commiter_parts[1][:4] if len(commiter_parts) >= 2 else "",
-        )
-
-        change_infos[commit_type].append(
-            {
-                "commit": merge_commit,
-                "team": teams,
-                "type": commit_type,
-                "scope": conventional["scope"] if conventional["scope"] else "",
-                "message": conventional["message"],
-                "commiter": commiter,
-                "included": included,
-            }
-        )
-
+def release_notes_markdown(first_commit, last_commit, release_name, change_infos):
+    """Generate release notes in markdown format."""
     reviewers_text = "\n".join([f"- {t.google_docs_handle}" for t in RELEASE_NOTES_REVIEWERS if t.send_announcement])
 
     notes = """\
@@ -513,27 +643,59 @@ Changelog since git revision [{first_commit}](https://dashboard.internetcomputer
     return notes
 
 
+def get_guestos_packages_with_bazel(ic_repo_path):
+    """Get the packages that are related to the GuestOS image using Bazel."""
+    bazel_query = [
+        "bazel",
+        "query",
+        "--universe_scope=//...",
+        "deps(//ic-os/guestos/envs/prod:update-img.tar.gz) union deps(//ic-os/setupos/envs/prod:disk-img.tar.gz)",
+        "--output=package",
+    ]
+    p = subprocess.run(
+        ["gitlab-ci/container/container-run.sh"] + bazel_query,
+        cwd=ic_repo_path,
+        text=True,
+        stdout=subprocess.PIPE,
+        check=False,
+    )
+    if p.returncode != 0:
+        print("Failure running Bazel through container.  Attempting direct run.", file=sys.stderr)
+        p = subprocess.run(
+            bazel_query,
+            cwd=ic_repo_path,
+            text=True,
+            stdout=subprocess.PIPE,
+            check=True,
+        )
+    guestos_packages_all = p.stdout.strip().splitlines()
+
+    guestos_packages_filtered = [
+        p for p in guestos_packages_all if not any(re.match(f, p) for f in EXCLUDE_PACKAGES_FILTERS)
+    ]
+
+    return guestos_packages_all, guestos_packages_filtered
+
+
 def main():
     parser = argparse.ArgumentParser(description="Generate release notes")
     parser.add_argument("first_commit", type=str, help="first commit")
     parser.add_argument("last_commit", type=str, help="last commit")
     parser.add_argument(
         "--max-commits",
-        dest="max_commits",
         default=os.environ.get("MAX_COMMITS", 1000),
-        help="maximum number of commits to fetch",
+        help="Maximum number of commits to include in the release notes",
     )
     parser.add_argument(
-        "--html",
+        "--html-path",
         type=str,
-        dest="html_path",
-        default="$HOME/Downloads/release-notes.html",
-        help="path to where the output should be generated",
+        default=None,
+        help="Path of the output HTML file. Default is to generate a markdown file.",
     )
     parser.add_argument("rc_name", type=str, help="name of the release i.e. 'rc--2023-01-12_18-31'")
     args = parser.parse_args()
 
-    print(release_notes(args.first_commit, args.last_commit, args.rc_name))
+    print(prepare_release_notes(args.first_commit, args.last_commit, args.rc_name, args.max_commits, args.html_path))
 
 
 if __name__ == "__main__":

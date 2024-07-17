@@ -17,7 +17,7 @@
   },
   "dependencies": {
     "app": "link:../app",
-    "@backstage/backend-common": "^0.19.10",
+    "@backstage/backend-common": "^0.20.2",
     "@backstage/backend-tasks": "^0.3.1",
     "@backstage/catalog-model": "^1.0.2",
     "@backstage/catalog-client": "^1.0.2",

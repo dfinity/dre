@@ -3,4 +3,4 @@ linker = "clang"
 rustflags = ["-C", "link-arg=-fuse-ld=mold"]
 
 [alias]
-dremac = "zigbuild --bin dre --release --target x86_64-apple-darwin"
+drecross = "zigbuild --bin dre --release --target x86_64-apple-darwin"

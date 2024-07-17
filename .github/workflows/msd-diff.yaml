@@ -5,7 +5,7 @@ on:
     branches:
       - "main"
     paths:
-      - 'rs/ic-observability/multiservice-discovery*/src/**'
+      - "rs/ic-observability/multiservice-discovery*/src/**"
   workflow_dispatch:
 
 concurrency:
@@ -17,7 +17,7 @@ jobs:
     runs-on:
       labels: dre-runner-custom
     # This image is based on ubuntu:20.04
-    container: ghcr.io/dfinity/dre/actions-runner:9994667f9257350d20c17f8bcbb2d7b3392f39b9
+    container: ghcr.io/dfinity/dre/actions-runner:e7053069fd8a084a19b410af4dbcba74048136c4
     steps:
       - uses: actions/checkout@v4
         with:
