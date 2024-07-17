@@ -11,7 +11,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Update all pull requests
-        uses: castastrophe/actions-pr-auto-update
+        uses: castastrophe/actions-pr-auto-update@v1
         with:
           # defaults to github.token
           token: ${{ secrets.USER_TOKEN }}
