@@ -37,7 +37,6 @@ impl ExecutableCommand for NodeMetricsCmd {
     }
 }
 
-
 #[derive(Args, Debug)]
 pub struct FromNodeMetricsCmd {
     #[clap(subcommand)]
