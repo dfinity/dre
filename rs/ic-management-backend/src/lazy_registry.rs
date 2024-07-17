@@ -220,6 +220,10 @@ impl LazyRegistry {
         Ok(record)
     }
 
+    pub async fn sync_with_nns(&self) -> anyhow::Result<()> {
+        self.local_registry.sync_with_nns().await.map_err(|e| anyhow::anyhow!(e))
+    }
+
     pub async fn operators(&self) -> anyhow::Result<Arc<BTreeMap<PrincipalId, Operator>>> {
         if let Some(operators) = self.operators.borrow().as_ref() {
             return Ok(operators.to_owned());

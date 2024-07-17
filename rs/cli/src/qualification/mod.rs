@@ -1,7 +1,7 @@
-use async_trait::async_trait;
 use chrono::Utc;
 use ensure_blessed_versions::EnsureBlessedRevisions;
 use itertools::Itertools;
+use strum::{EnumIter, IntoEnumIterator};
 use tabular_util::{ColumnAlignment, Table};
 
 use crate::ctx::DreContext;
@@ -10,7 +10,7 @@ mod ensure_blessed_versions;
 mod tabular_util;
 
 pub struct QualificationExecutor {
-    steps: Vec<Box<dyn Step>>,
+    steps: Vec<Steps>,
 }
 
 pub struct QualificationContext {
@@ -40,7 +40,7 @@ impl QualificationContext {
 impl QualificationExecutor {
     pub fn with_steps() -> Self {
         Self {
-            steps: vec![Box::new(EnsureBlessedRevisions {})],
+            steps: Steps::iter().collect(),
         }
     }
 
@@ -70,7 +70,11 @@ impl QualificationExecutor {
     }
 }
 
-#[async_trait]
+#[derive(EnumIter)]
+enum Steps {
+    EnsureBlessedVersions(EnsureBlessedRevisions),
+}
+
 pub trait Step {
     fn help(&self) -> &'static str;
 
@@ -79,6 +83,32 @@ pub trait Step {
     async fn execute(&self, ctx: &QualificationContext) -> anyhow::Result<()>;
 
     async fn print_status(&self, ctx: &QualificationContext) -> anyhow::Result<()>;
+}
+
+impl Step for Steps {
+    fn help(&self) -> &'static str {
+        match &self {
+            Steps::EnsureBlessedVersions(c) => c.help(),
+        }
+    }
+
+    fn name(&self) -> &'static str {
+        match &self {
+            Steps::EnsureBlessedVersions(c) => c.name(),
+        }
+    }
+
+    async fn execute(&self, ctx: &QualificationContext) -> anyhow::Result<()> {
+        match &self {
+            Steps::EnsureBlessedVersions(c) => c.execute(ctx).await,
+        }
+    }
+
+    async fn print_status(&self, ctx: &QualificationContext) -> anyhow::Result<()> {
+        match &self {
+            Steps::EnsureBlessedVersions(c) => c.print_status(ctx).await,
+        }
+    }
 }
 
 pub fn print_text(message: String) {
