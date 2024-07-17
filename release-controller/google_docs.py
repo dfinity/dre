@@ -8,7 +8,7 @@ import slack_announce
 from markdownify import markdownify
 from pydrive2.auth import GoogleAuth
 from pydrive2.drive import GoogleDrive
-from release_notes import release_notes
+from release_notes import prepare_release_notes
 
 md = markdown.Markdown(
     extensions=["pymdownx.tilde"],
@@ -40,7 +40,7 @@ class ReleaseNotesClient:
         existing_file = self.file(git_revision)
         if existing_file:
             return existing_file
-        content = release_notes(
+        content = prepare_release_notes(
             first_commit=since_commit,
             last_commit=git_revision,
             release_name=version_name,
