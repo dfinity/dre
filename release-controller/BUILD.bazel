@@ -29,7 +29,8 @@ env = {
 }
 
 py_binary(
-    name = "reconciler",
+    name = "release_controller",
+    main = "reconciler.py",
     srcs = glob(
         ["*.py"],
         exclude = [
@@ -52,7 +53,7 @@ py_test(
 py_oci_image(
     name = "oci_image",
     base = "@bazel_image_6_5_0",
-    binary = ":reconciler",
+    binary = ":release_controller",
 )
 
 exports_files(["README.md"])

@@ -82,14 +82,6 @@ repos:
             "-sn", # Don't display the score
             "--disable=R,C,W0621,E0401,W0703,E1123", # Disable: Refactor, Convention, some warnings
           ]
-        additional_dependencies: # All necessary for successful PyLint in all environments
-          [
-            "pandas==1.5.3",
-            "elasticsearch==7.17.8",
-            "elasticsearch_dsl==7.4.0",
-            "requests",
-            "tabulate",
-          ]
   - repo: local
     hooks:
       - id: release-index-checks

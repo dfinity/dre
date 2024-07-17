@@ -1,0 +1,17 @@
+name: Auto update PR's
+on:
+  push:
+    branches:
+      - main
+jobs:
+  autoupdate:
+    name: autoupdate
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: chinthakagodawita/autoupdate@v1.7.0
+        env:
+          GITHUB_TOKEN: "${{ secrets.GIX_CREATE_PR_PAT }}"
+          MERGE_MSG: "Branch was auto-updated."
+          RETRY_COUNT: "5"
+          RETRY_SLEEP: "1000"
+          MERGE_CONFLICT_ACTION: "ignore"
