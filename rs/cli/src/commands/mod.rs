@@ -10,6 +10,7 @@ use get::Get;
 use heal::Heal;
 use hostos::HostOsCmd;
 use ic_management_types::{MinNakamotoCoefficients, Network, NodeFeature};
+use node_metrics::NodeMetricsCmd;
 use nodes::Nodes;
 use proposals::Proposals;
 use propose::Propose;
@@ -30,6 +31,7 @@ mod firewall;
 mod get;
 mod heal;
 pub mod hostos;
+mod node_metrics;
 mod nodes;
 mod proposals;
 mod propose;
@@ -122,6 +124,9 @@ pub enum Subcommands {
 
     /// Manage versions
     Version(VersionCmd),
+
+    /// Fetch node metrics
+    NodeMetrics(NodeMetricsCmd),
 
     /// Manage hostos versions
     HostOs(HostOsCmd),
@@ -257,6 +262,7 @@ impl ExecutableCommand for Args {
             Subcommands::Upgrade(c) => c.require_ic_admin(),
             Subcommands::Proposals(c) => c.require_ic_admin(),
             Subcommands::Completions(c) => c.require_ic_admin(),
+            Subcommands::NodeMetrics(c) => c.require_ic_admin(),
         }
     }
 
@@ -279,6 +285,7 @@ impl ExecutableCommand for Args {
             Subcommands::Upgrade(c) => c.execute(ctx).await,
             Subcommands::Proposals(c) => c.execute(ctx).await,
             Subcommands::Completions(c) => c.execute(ctx).await,
+            Subcommands::NodeMetrics(c) => c.execute(ctx).await,
         }
     }
 
@@ -301,6 +308,7 @@ impl ExecutableCommand for Args {
             Subcommands::Upgrade(c) => c.validate(cmd),
             Subcommands::Proposals(c) => c.validate(cmd),
             Subcommands::Completions(c) => c.validate(cmd),
+            Subcommands::NodeMetrics(c) => c.validate(cmd),
         }
     }
 }

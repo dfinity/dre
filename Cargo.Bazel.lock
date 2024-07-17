@@ -1,5 +1,5 @@
 {
-  "checksum": "4a6bc91f724363b615928d9a2dba8822b5d9c444065dfa889058897281c98d8c",
+  "checksum": "176efb382cc5a1fbc48ef3cabec774254b046c828d01cf8d169d4ba58ddcc544",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -45731,8 +45731,18 @@
       "name": "trustworthy-node-metrics",
       "version": "0.4.3",
       "repository": null,
-      "targets": [],
-      "library_target_name": null,
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "trustworthy_node_metrics",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "trustworthy_node_metrics",
       "common_attrs": {
         "compile_data_glob": [
           "**"

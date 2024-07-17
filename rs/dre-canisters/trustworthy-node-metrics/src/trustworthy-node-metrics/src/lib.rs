@@ -4,7 +4,7 @@ use std::time::Duration;
 use types::{SubnetNodeMetricsArgs, SubnetNodeMetricsResponse};
 mod metrics_manager;
 mod stable_memory;
-mod types;
+pub mod types;
 
 // Management canisters updates node metrics every day
 const TIMER_INTERVAL_SEC: u64 = 60 * 60 * 24;

@@ -73,6 +73,7 @@ cryptoki = "0.3.1"
 csv = "1.3.0"
 custom_error = "1.9.2"
 decentralization = { path = "rs/decentralization" }
+trustworthy-node-metrics = { path = "rs/dre-canisters/trustworthy-node-metrics/src/trustworthy-node-metrics" }
 derive_builder = "0.20.0"
 derive_more = "0.99.18"
 dialoguer = "0.11.0"
