@@ -46,7 +46,7 @@ You can obtain the DRE tool by following the instructions from [getting started]
 To test out the command you can run the following command
 
 ```bash
-dre node-metrics from-node-metrics-canister <start-at-timestamp> [<subnet-id>...]
+dre node-metrics from metrics-canister <start-at-timestamp> [<subnet-id>...]
 ```
 
 ??? tip "Explanation of the arguments"
@@ -58,5 +58,5 @@ dre node-metrics from-node-metrics-canister <start-at-timestamp> [<subnet-id>...
 Here are some real-world examples of how metrics can be retrieved:
 
 ```bash
-dre node-metrics from-node-metrics-canister 0 > data.json
+dre node-metrics from metrics-canister 0 > data.json
 ```

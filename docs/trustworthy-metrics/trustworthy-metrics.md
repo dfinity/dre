@@ -92,7 +92,7 @@ You can obtain the DRE tool by following the instructions from [getting started]
 To test out the command you can run the following command
 
 ```bash
-dre <auth-params> node-metrics from-subnet-management-canister <wallet-canister-id> <start-at-timestamp> [<subnet-id>...]
+dre <auth-params> node-metrics from management-canister <wallet-canister-id> <start-at-timestamp> [<subnet-id>...]
 ```
 
 ??? tip "Explanation of the arguments"
@@ -149,12 +149,12 @@ Authentication with a private key is recommended, since it allows for more paral
 Here are some real-world examples of how metrics can be retrieved:
 
 ```bash
-dre --private-key-pem identity.pem node-metrics from-subnet-management-canister  nanx4-baaaa-aaaap-qb4sq-cai 0 > data.json
+dre --private-key-pem identity.pem node-metrics from management-canister  nanx4-baaaa-aaaap-qb4sq-cai 0 > data.json
 ```
 
 Or with an HSM:
 ```bash
-dre --hsm-slot 0 --hsm-key-id 0 --hsm-pin "<pin>" node-metrics from-subnet-management-canister nanx4-baaaa-aaaap-qb4sq-cai 0 > data.json
+dre --hsm-slot 0 --hsm-key-id 0 --hsm-pin "<pin>" node-metrics from management-canister nanx4-baaaa-aaaap-qb4sq-cai 0 > data.json
 ```
 
 You can check some examples of the analytics possible with the IC Mainnet data in the following [Jupyter Notebook](./TrustworthyMetricsAnalytics.ipynb)

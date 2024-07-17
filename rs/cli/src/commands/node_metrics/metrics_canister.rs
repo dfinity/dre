@@ -16,7 +16,7 @@ use log::info;
 use super::{ExecutableCommand, IcAdminRequirement};
 
 #[derive(Debug, Args)]
-pub struct FromNodeMetrics {
+pub struct MetricsCanister {
     /// Start at timestamp in nanoseconds, if 0 it will dump daily metrics
     /// since May 18, 2024
     pub start_at_timestamp: u64,
@@ -26,7 +26,7 @@ pub struct FromNodeMetrics {
     pub subnet_ids: Vec<PrincipalId>,
 }
 
-impl ExecutableCommand for FromNodeMetrics {
+impl ExecutableCommand for MetricsCanister {
     fn require_ic_admin(&self) -> IcAdminRequirement {
         IcAdminRequirement::Detect
     }

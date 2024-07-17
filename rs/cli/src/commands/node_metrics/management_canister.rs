@@ -12,7 +12,7 @@ use log::{info, warn};
 use super::{ExecutableCommand, IcAdminRequirement};
 
 #[derive(Debug, Args)]
-pub struct FromSubnetManagement {
+pub struct ManagementCanister {
     /// Wallet that should be used to query node metrics history
     /// in form of canister id
     pub wallet: String,
@@ -25,7 +25,7 @@ pub struct FromSubnetManagement {
     pub subnet_ids: Vec<PrincipalId>,
 }
 
-impl ExecutableCommand for FromSubnetManagement {
+impl ExecutableCommand for ManagementCanister {
     fn require_ic_admin(&self) -> IcAdminRequirement {
         IcAdminRequirement::Detect
     }
