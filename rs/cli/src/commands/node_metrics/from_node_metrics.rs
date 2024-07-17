@@ -17,7 +17,7 @@ use super::{ExecutableCommand, IcAdminRequirement};
 
 #[derive(Debug, Args)]
 pub struct FromNodeMetrics {
-    /// Start at timestamp in nanoseconds, if empty will dump daily metrics
+    /// Start at timestamp in nanoseconds, if 0 it will dump daily metrics
     /// since May 18, 2024
     pub start_at_timestamp: u64,
 
