@@ -1,6 +1,6 @@
 releases:
   - rc_name: rc--2024-07-18_01-30--github
-    version:
+    versions:
       - name: base
         # Successful qualification pipeline on IC staging:
         # https://gitlab.com/dfinity-lab/core/release/-/jobs/7373028872
