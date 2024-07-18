@@ -131,7 +131,10 @@ async fn wait_for_subnet_revision(registry: Rc<LazyRegistry>, subnet: PrincipalI
         tokio::time::sleep(SLEEP).await;
         print_text(format!("- {} - Checking if subnet {} is on {}", i, subnet.to_string(), revision));
 
-        registry.sync_with_nns().await?;
+        if let Err(e) = registry.sync_with_nns().await {
+            print_text(format!("Received error when syncing registry: {}", e.to_string()));
+            continue;
+        }
 
         // Fetch the nodes of the subnet
         let nodes = registry.nodes().await?;
