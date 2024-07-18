@@ -349,8 +349,8 @@ def prepare_release_notes(first_commit, last_commit, release_name, max_commits=1
     ci_patterns = ["/**/*.lock", "/**/*.bzl"]
 
     ic_repo_path = pathlib.Path.home() / ".cache/git/ic"
-    codeowners = parse_codeowners(ic_repo_path / ".github" / "CODEOWNERS")
     commits = get_commits_in_range(ic_repo_path, first_commit, last_commit)
+    codeowners = parse_codeowners(ic_repo_path / ".github" / "CODEOWNERS")
 
     if len(commits) >= max_commits:
         print("WARNING: max commits limit reached, increase depth")
