@@ -21,7 +21,6 @@ type CLINodeMetrics = BTreeMap<PrincipalId, Vec<NodeMetricsHistoryResponse>>;
 
 #[derive(Args, Debug)]
 pub struct NodeMetrics {
-
     /// If specified trustworthy node metrics history will be fetched from the IC.
     /// If not untrusted node metrics will be fetched from node metrics canister
     #[clap(long, global = true)]
@@ -151,11 +150,8 @@ impl ExecutableCommand for NodeMetrics {
 
     fn validate(&self, cmd: &mut clap::Command) {
         if self.trustworthy && self.wallet.is_none() {
-            cmd.error(
-                ErrorKind::MissingRequiredArgument,
-                "Wallet is required for fetching trustworthy metrics.",
-            )
-            .exit();
+            cmd.error(ErrorKind::MissingRequiredArgument, "Wallet is required for fetching trustworthy metrics.")
+                .exit();
         }
     }
 }

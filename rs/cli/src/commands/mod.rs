@@ -30,6 +30,7 @@ mod firewall;
 mod get;
 mod heal;
 pub mod hostos;
+mod node_metrics;
 mod nodes;
 mod proposals;
 mod propose;
@@ -39,7 +40,6 @@ mod update_unassigned_nodes;
 pub mod upgrade;
 mod version;
 mod vote;
-mod node_metrics;
 
 #[derive(Parser, Debug)]
 #[clap(version = env!("CARGO_PKG_VERSION"), about, author)]
