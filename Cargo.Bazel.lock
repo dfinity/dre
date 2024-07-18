@@ -1,5 +1,5 @@
 {
-  "checksum": "f3c6195e6654db56b4c772ec401cc5689f9b0fa6466d7c0fc6543302e0774321",
+  "checksum": "21560a1c6cf60a5df7d6ab8a9c786242587fcc03a6171df0fc1574fc13c8911c",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -28369,29 +28369,35 @@
         ],
         "crate_features": {
           "common": [
-            "elf",
-            "errno",
             "general",
             "ioctl",
             "no_std"
           ],
           "selects": {
             "aarch64-unknown-linux-gnu": [
+              "elf",
+              "errno",
               "prctl",
               "std",
               "system"
             ],
             "arm-unknown-linux-gnueabi": [
+              "elf",
+              "errno",
               "prctl",
               "std",
               "system"
             ],
             "armv7-unknown-linux-gnueabi": [
+              "elf",
+              "errno",
               "prctl",
               "std",
               "system"
             ],
             "i686-unknown-linux-gnu": [
+              "elf",
+              "errno",
               "prctl",
               "std",
               "system"
@@ -28407,6 +28413,8 @@
               "system"
             ],
             "x86_64-unknown-linux-gnu": [
+              "elf",
+              "errno",
               "prctl",
               "std",
               "system"
@@ -45604,8 +45612,18 @@
       "name": "trustworthy-node-metrics",
       "version": "0.4.3",
       "repository": null,
-      "targets": [],
-      "library_target_name": null,
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "trustworthy_node_metrics",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "trustworthy_node_metrics",
       "common_attrs": {
         "compile_data_glob": [
           "**"
