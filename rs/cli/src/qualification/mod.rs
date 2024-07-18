@@ -3,18 +3,18 @@ use std::rc::Rc;
 use chrono::Utc;
 use ensure_blessed_versions::EnsureBlessedRevisions;
 use ic_management_backend::lazy_registry::LazyRegistry;
+use ic_registry_subnet_type::SubnetType;
 use itertools::Itertools;
-use strum::{EnumIter, IntoEnumIterator};
 use tabular_util::{ColumnAlignment, Table};
-use upgrade_app_subnets::UpgradeAppSubnets;
 use upgrade_deployment_canister::UpgradeDeploymentCanisters;
+use upgrade_subnets::{Action, UpgradeSubnets};
 
 use crate::ctx::DreContext;
 
 mod ensure_blessed_versions;
 mod tabular_util;
-mod upgrade_app_subnets;
 mod upgrade_deployment_canister;
+mod upgrade_subnets;
 
 pub struct QualificationExecutor {
     steps: Vec<Steps>,
@@ -45,9 +45,32 @@ impl QualificationContext {
 }
 
 impl QualificationExecutor {
-    pub fn with_steps() -> Self {
+    pub fn new(ctx: &QualificationContext) -> Self {
         Self {
-            steps: Steps::iter().collect(),
+            steps: vec![
+                Steps::EnsureBlessedVersions(EnsureBlessedRevisions {}),
+                Steps::UpgradeDeploymentCanisters(UpgradeDeploymentCanisters {}),
+                Steps::UpgradeSubnets(UpgradeSubnets {
+                    action: Action::Upgrade,
+                    subnet_type: SubnetType::Application,
+                    to_version: ctx.to_version.clone(),
+                }),
+                Steps::UpgradeSubnets(UpgradeSubnets {
+                    action: Action::Upgrade,
+                    subnet_type: SubnetType::System,
+                    to_version: ctx.to_version.clone(),
+                }),
+                Steps::UpgradeSubnets(UpgradeSubnets {
+                    action: Action::Downgrade,
+                    subnet_type: SubnetType::Application,
+                    to_version: ctx.from_version.clone(),
+                }),
+                Steps::UpgradeSubnets(UpgradeSubnets {
+                    action: Action::Downgrade,
+                    subnet_type: SubnetType::System,
+                    to_version: ctx.from_version.clone(),
+                }),
+            ],
         }
     }
 
@@ -81,17 +104,16 @@ impl QualificationExecutor {
     }
 }
 
-#[derive(EnumIter)]
 enum Steps {
     EnsureBlessedVersions(EnsureBlessedRevisions),
     UpgradeDeploymentCanisters(UpgradeDeploymentCanisters),
-    UpgradeAppSubnets(UpgradeAppSubnets),
+    UpgradeSubnets(UpgradeSubnets),
 }
 
 pub trait Step {
-    fn help(&self) -> &'static str;
+    fn help(&self) -> String;
 
-    fn name(&self) -> &'static str;
+    fn name(&self) -> String;
 
     async fn execute(&self, ctx: &QualificationContext) -> anyhow::Result<()>;
 
@@ -99,19 +121,19 @@ pub trait Step {
 }
 
 impl Step for Steps {
-    fn help(&self) -> &'static str {
+    fn help(&self) -> String {
         match &self {
             Steps::EnsureBlessedVersions(c) => c.help(),
             Steps::UpgradeDeploymentCanisters(c) => c.help(),
-            Steps::UpgradeAppSubnets(c) => c.help(),
+            Steps::UpgradeSubnets(c) => c.help(),
         }
     }
 
-    fn name(&self) -> &'static str {
+    fn name(&self) -> String {
         match &self {
             Steps::EnsureBlessedVersions(c) => c.name(),
             Steps::UpgradeDeploymentCanisters(c) => c.name(),
-            Steps::UpgradeAppSubnets(c) => c.name(),
+            Steps::UpgradeSubnets(c) => c.name(),
         }
     }
 
@@ -119,7 +141,7 @@ impl Step for Steps {
         match &self {
             Steps::EnsureBlessedVersions(c) => c.execute(ctx).await,
             Steps::UpgradeDeploymentCanisters(c) => c.execute(ctx).await,
-            Steps::UpgradeAppSubnets(c) => c.execute(ctx).await,
+            Steps::UpgradeSubnets(c) => c.execute(ctx).await,
         }
     }
 
@@ -127,7 +149,7 @@ impl Step for Steps {
         match &self {
             Steps::EnsureBlessedVersions(c) => c.print_status(ctx).await,
             Steps::UpgradeDeploymentCanisters(c) => c.print_status(ctx).await,
-            Steps::UpgradeAppSubnets(c) => c.print_status(ctx).await,
+            Steps::UpgradeSubnets(c) => c.print_status(ctx).await,
         }
     }
 }

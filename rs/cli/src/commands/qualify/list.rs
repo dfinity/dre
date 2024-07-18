@@ -2,7 +2,7 @@ use clap::Args;
 
 use crate::{
     commands::{ExecutableCommand, IcAdminRequirement},
-    qualification::QualificationExecutor,
+    qualification::{QualificationContext, QualificationExecutor},
 };
 
 #[derive(Args, Debug)]
@@ -15,8 +15,11 @@ impl ExecutableCommand for List {
 
     fn validate(&self, _cmd: &mut clap::Command) {}
 
-    async fn execute(&self, _ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        let qualification_executor = QualificationExecutor::with_steps();
+    async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
+        let context = QualificationContext::new(ctx)
+            .with_from_version("".to_string())
+            .with_to_version("".to_string());
+        let qualification_executor = QualificationExecutor::new(&context);
         qualification_executor.list();
 
         Ok(())

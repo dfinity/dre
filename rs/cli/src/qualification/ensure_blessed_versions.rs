@@ -11,16 +11,15 @@ use super::{
     QualificationContext,
 };
 
-#[derive(Default)]
 pub struct EnsureBlessedRevisions {}
 
 impl Step for EnsureBlessedRevisions {
-    fn help(&self) -> &'static str {
-        "This step runs the check to determine if all versions are blessed"
+    fn help(&self) -> String {
+        "This step runs the check to determine if all versions are blessed".to_string()
     }
 
-    fn name(&self) -> &'static str {
-        "1a_ensure_blessed_revision"
+    fn name(&self) -> String {
+        "ensure_blessed_revision".to_string()
     }
 
     async fn execute(&self, ctx: &QualificationContext) -> anyhow::Result<()> {

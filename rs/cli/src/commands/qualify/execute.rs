@@ -51,10 +51,10 @@ impl ExecutableCommand for Execute {
             }
         };
 
-        let qualification_executor = QualificationExecutor::with_steps();
         let context = QualificationContext::new(ctx)
             .with_from_version(from_version)
             .with_to_version(self.version.clone());
+        let qualification_executor = QualificationExecutor::new(&context);
         qualification_executor.execute(context).await
     }
 }

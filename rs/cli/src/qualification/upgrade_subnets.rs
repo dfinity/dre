@@ -16,16 +16,49 @@ use crate::{
 
 use super::{print_subnet_versions, print_text, Step};
 
-#[derive(Default)]
-pub struct UpgradeAppSubnets {}
+pub struct UpgradeSubnets {
+    pub subnet_type: SubnetType,
+    pub to_version: String,
+    pub action: Action,
+}
 
-impl Step for UpgradeAppSubnets {
-    fn help(&self) -> &'static str {
-        "This step upgrades all the application subnets to the desired version"
+pub enum Action {
+    Upgrade,
+    Downgrade,
+}
+
+impl ToString for Action {
+    fn to_string(&self) -> String {
+        match self {
+            Action::Upgrade => "upgrade".to_string(),
+            Action::Downgrade => "downgrade".to_string(),
+        }
+    }
+}
+
+impl Step for UpgradeSubnets {
+    fn help(&self) -> String {
+        format!(
+            "This step {} all the {} subnets to the desired version",
+            self.action.to_string(),
+            match self.subnet_type {
+                SubnetType::Application => "application",
+                SubnetType::System => "system",
+                SubnetType::VerifiedApplication => "verified-application",
+            }
+        )
     }
 
-    fn name(&self) -> &'static str {
-        "4a_upgrade_app_subnets"
+    fn name(&self) -> String {
+        format!(
+            "{}_{}_subnet_version",
+            self.action.to_string(),
+            match self.subnet_type {
+                SubnetType::Application => "application",
+                SubnetType::System => "system",
+                SubnetType::VerifiedApplication => "verified-application",
+            }
+        )
     }
 
     async fn execute(&self, ctx: &super::QualificationContext) -> anyhow::Result<()> {
@@ -36,14 +69,14 @@ impl Step for UpgradeAppSubnets {
 
         for subnet in subnets
             .values()
-            .filter(|s| s.subnet_type.eq(&SubnetType::Application) && !s.replica_version.eq(&ctx.to_version))
+            .filter(|s| s.subnet_type.eq(&self.subnet_type) && !s.replica_version.eq(&self.to_version))
         {
             let registry = ctx.dre_ctx.registry().await;
             print_text(format!(
                 "Upgrading subnet {}: {} -> {}",
                 subnet.principal.to_string(),
                 &subnet.replica_version,
-                &ctx.to_version
+                &self.to_version
             ));
 
             // Place proposal
@@ -52,13 +85,13 @@ impl Step for UpgradeAppSubnets {
                 .propose_run(
                     ProposeCommand::DeployGuestosToAllSubnetNodes {
                         subnet: subnet.principal.clone(),
-                        version: ctx.to_version.clone(),
+                        version: self.to_version.clone(),
                     },
                     ProposeOptions {
                         title: Some(format!(
                             "Propose to upgrade subnet {} to {}",
                             subnet.principal.to_string(),
-                            &ctx.to_version
+                            &self.to_version
                         )),
                         summary: Some("Qualification testing".to_string()),
                         motivation: Some("Qualification testing".to_string()),
@@ -68,12 +101,12 @@ impl Step for UpgradeAppSubnets {
             print_text(format!("Placed proposal for subnet {}", subnet.principal.to_string()));
 
             // Wait for the version to be active on the subnet
-            wait_for_subnet_revision(registry.clone(), subnet.principal.clone(), &ctx.to_version).await?;
+            wait_for_subnet_revision(registry.clone(), subnet.principal.clone(), &self.to_version).await?;
 
             print_text(format!(
                 "Subnet {} successfully upgraded to version {}",
                 subnet.principal.to_string(),
-                &ctx.to_version
+                &self.to_version
             ));
 
             print_subnet_versions(registry.clone()).await?;

@@ -1,15 +1,14 @@
 use super::Step;
 
-#[derive(Default)]
 pub struct UpgradeDeploymentCanisters {}
 
 impl Step for UpgradeDeploymentCanisters {
-    fn help(&self) -> &'static str {
-        "This step ensures that deployment canisters match the version of nns deployment canister"
+    fn help(&self) -> String {
+        "This step ensures that deployment canisters match the version of nns deployment canister".to_string()
     }
 
-    fn name(&self) -> &'static str {
-        "1c_update_deployment_canisters"
+    fn name(&self) -> String {
+        "update_deployment_canisters".to_string()
     }
 
     async fn execute(&self, _ctx: &super::QualificationContext) -> anyhow::Result<()> {
