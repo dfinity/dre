@@ -43,11 +43,10 @@ impl ExecutableCommand for Execute {
                     .await?;
 
                 let output = serde_json::from_str::<Value>(&output)?;
-                let record = output["records"][0]["value"]["replica_version_id"]
+                output["records"][0]["value"]["replica_version_id"]
                     .as_str()
                     .ok_or(anyhow::anyhow!("Failed to get replica version id for nns"))?
-                    .to_string();
-                record
+                    .to_string()
             }
         };
 

@@ -1,4 +1,4 @@
-use std::collections::BTreeMap;
+use std::{collections::BTreeMap, fmt::Display};
 
 use itertools::Itertools;
 
@@ -26,7 +26,7 @@ impl Table {
         Self { rows, ..self }
     }
 
-    pub fn to_table(self) -> tabular::Table {
+    pub fn to_table(&self) -> tabular::Table {
         let mut longest_per_column = BTreeMap::new();
         let mut table = tabular::Table::new(&format!(
             "| {} |",
@@ -44,7 +44,7 @@ impl Table {
         }));
 
         let mut rows = Vec::new();
-        for row in self.rows {
+        for row in &self.rows {
             rows.push(row.iter().enumerate().fold(tabular::Row::new(), |acc, (i, data)| {
                 if let Some(curr_longest) = longest_per_column.get_mut(&i) {
                     if *curr_longest < data.len() {
@@ -80,12 +80,16 @@ pub enum ColumnAlignment {
     Middle,
 }
 
-impl ToString for ColumnAlignment {
-    fn to_string(&self) -> String {
-        match self {
-            ColumnAlignment::Left => "{:<}".to_string(),
-            ColumnAlignment::Right => "{:>}".to_string(),
-            ColumnAlignment::Middle => "{:^}".to_string(),
-        }
+impl Display for ColumnAlignment {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                ColumnAlignment::Left => "{:<}".to_string(),
+                ColumnAlignment::Right => "{:>}".to_string(),
+                ColumnAlignment::Middle => "{:^}".to_string(),
+            }
+        )
     }
 }

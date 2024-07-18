@@ -27,7 +27,7 @@ impl Step for RetireBlessedVersions {
         let blessed_versions = registry.elected_guestos()?;
         let mut to_unelect = vec![];
         for version in &self.versions {
-            if blessed_versions.contains(&version) {
+            if blessed_versions.contains(version) {
                 to_unelect.push(version);
             }
         }

@@ -53,7 +53,7 @@ impl Step for EnsureBlessedRevisions {
                 },
                 ProposeOptions {
                     title: Some(format!("Blessing version: {}", &self.version)),
-                    summary: Some(format!("Some updates")),
+                    summary: Some("Some updates".to_string()),
                     ..Default::default()
                 },
             )

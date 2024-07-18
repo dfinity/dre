@@ -50,34 +50,55 @@ impl QualificationExecutor {
     pub fn new(ctx: &QualificationContext) -> Self {
         Self {
             steps: vec![
+                // Blessing the version which we are qualifying
                 Steps::EnsureBlessedVersions(EnsureBlessedRevisions {
                     version: ctx.to_version.clone(),
                 }),
+                // Upgrading deployment canisters
                 Steps::UpgradeDeploymentCanisters(UpgradeDeploymentCanisters {}),
+                // Upgrading all application subnets
                 Steps::UpgradeSubnets(UpgradeSubnets {
                     action: Action::Upgrade,
-                    subnet_type: SubnetType::Application,
+                    subnet_type: Some(SubnetType::Application),
                     to_version: ctx.to_version.clone(),
                 }),
+                // Upgrading all system subnets
                 Steps::UpgradeSubnets(UpgradeSubnets {
                     action: Action::Upgrade,
-                    subnet_type: SubnetType::System,
+                    subnet_type: Some(SubnetType::System),
                     to_version: ctx.to_version.clone(),
                 }),
+                // Upgrading unassigned nodes
+                Steps::UpgradeSubnets(UpgradeSubnets {
+                    action: Action::Upgrade,
+                    subnet_type: None,
+                    to_version: ctx.to_version.clone(),
+                }),
+                // Since the initial testnet is spunup with disk-img
+                // retire the initial version.
                 Steps::RetireBlessedVersions(RetireBlessedVersions {
                     versions: vec![ctx.from_version.clone()],
                 }),
+                // Bless initial replica version with update-img
                 Steps::EnsureBlessedVersions(EnsureBlessedRevisions {
                     version: ctx.from_version.clone(),
                 }),
+                // Downgrade application subnets
                 Steps::UpgradeSubnets(UpgradeSubnets {
                     action: Action::Downgrade,
-                    subnet_type: SubnetType::Application,
+                    subnet_type: Some(SubnetType::Application),
                     to_version: ctx.from_version.clone(),
                 }),
+                // Downgrade system subnets
                 Steps::UpgradeSubnets(UpgradeSubnets {
                     action: Action::Downgrade,
-                    subnet_type: SubnetType::System,
+                    subnet_type: Some(SubnetType::System),
+                    to_version: ctx.from_version.clone(),
+                }),
+                // Downgrade unassinged nodes
+                Steps::UpgradeSubnets(UpgradeSubnets {
+                    action: Action::Downgrade,
+                    subnet_type: None,
                     to_version: ctx.from_version.clone(),
                 }),
             ],
@@ -109,6 +130,8 @@ impl QualificationExecutor {
 
             step.print_status(&ctx).await?
         }
+
+        print_text(format!("Qualification of {} finished successfully!", ctx.to_version));
 
         Ok(())
     }
@@ -173,6 +196,7 @@ pub async fn print_subnet_versions(registry: Rc<LazyRegistry>) -> anyhow::Result
     let subnets = registry.subnets().await?;
 
     let subnets = subnets.values();
+    let unassigned = registry.unassigned_nodes_replica_version()?;
     let table = Table::new()
         .with_columns(&[
             ("Subnet type", ColumnAlignment::Left),
@@ -192,6 +216,7 @@ pub async fn print_subnet_versions(registry: Rc<LazyRegistry>) -> anyhow::Result
                         s.replica_version.clone(),
                     ]
                 })
+                .chain(vec![vec!["unassigned".to_string(), "unassigned".to_string(), unassigned.to_string()]])
                 .collect_vec(),
         )
         .to_table();
