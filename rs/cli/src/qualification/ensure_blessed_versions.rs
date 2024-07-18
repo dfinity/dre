@@ -1,6 +1,9 @@
 use itertools::Itertools;
 
-use crate::qualification::Step;
+use crate::{
+    ic_admin::{ProposeCommand, ProposeOptions},
+    qualification::Step,
+};
 
 use super::{
     print_table, print_text,
@@ -29,6 +32,18 @@ impl Step for EnsureBlessedRevisions {
         }
 
         // Place proposal
+        let ic_admin = ctx.dre_ctx.ic_admin();
+        ic_admin.propose_run(
+            ProposeCommand::ReviseElectedVersions {
+                release_artifact: ic_management_types::Artifact::GuestOs,
+                args: vec![],
+            },
+            ProposeOptions {
+                title: Some(format!("Blessing version: {}", &ctx.to_version)),
+                summary: Some(format!("Some updates")),
+                ..Default::default()
+            },
+        );
         // Vote
 
         Ok(())
