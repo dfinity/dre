@@ -159,8 +159,26 @@ pub async fn print_subnet_versions(registry: Rc<LazyRegistry>) -> anyhow::Result
 
     let subnets = subnets.values();
     let table = Table::new()
-        .with_columns(&[("Subnet Id", ColumnAlignment::Middle), ("Version", ColumnAlignment::Middle)])
-        .with_rows(subnets.map(|s| vec![s.principal.to_string(), s.replica_version.clone()]).collect_vec())
+        .with_columns(&[
+            ("Subnet type", ColumnAlignment::Left),
+            ("Subnet Id", ColumnAlignment::Middle),
+            ("Version", ColumnAlignment::Middle),
+        ])
+        .with_rows(
+            subnets
+                .map(|s| {
+                    vec![
+                        match s.subnet_type {
+                            SubnetType::Application => "application".to_string(),
+                            SubnetType::System => "system".to_string(),
+                            SubnetType::VerifiedApplication => "verified-app".to_string(),
+                        },
+                        s.principal.to_string(),
+                        s.replica_version.clone(),
+                    ]
+                })
+                .collect_vec(),
+        )
         .to_table();
 
     print_table(table);
