@@ -343,7 +343,7 @@ def best_matching_regex(file_path, regex_list):
     return matches[0]
 
 
-def prepare_release_notes(first_commit, last_commit, release_name, max_commits, write_to_html) -> str:
+def prepare_release_notes(first_commit, last_commit, release_name, max_commits=1000, write_to_html=None) -> str:
     change_infos: dict[str, list[Change]] = {}
 
     ci_patterns = ["/**/*.lock", "/**/*.bzl"]
@@ -375,7 +375,8 @@ def prepare_release_notes(first_commit, last_commit, release_name, max_commits, 
         change_infos[commit_type].append(change_info)
 
     if write_to_html:
-        return release_notes_html(first_commit, last_commit, release_name, change_infos, write_to_html)
+        release_notes_html(first_commit, last_commit, release_name, change_infos, write_to_html)
+        return ""
     return release_notes_markdown(first_commit, last_commit, release_name, change_infos)
 
 
