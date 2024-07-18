@@ -4,6 +4,7 @@ use ic_management_backend::lazy_registry::LazyRegistry;
 use ic_registry_subnet_type::SubnetType;
 use ic_types::PrincipalId;
 use itertools::Itertools;
+use reqwest::ClientBuilder;
 
 use crate::{
     ic_admin::{ProposeCommand, ProposeOptions},
@@ -88,10 +89,13 @@ impl Step for UpgradeAppSubnets {
 
 const MAX_TRIES: usize = 100;
 const SLEEP: Duration = Duration::from_secs(10);
+const TIMEOUT: Duration = Duration::from_secs(60);
 const PLACEHOLDER: &str = "upgrading...";
 
 async fn wait_for_subnet_revision(registry: Rc<LazyRegistry>, subnet: PrincipalId, revision: &str) -> anyhow::Result<()> {
+    let client = ClientBuilder::new().connect_timeout(TIMEOUT).build()?;
     for i in 0..MAX_TRIES {
+        tokio::time::sleep(SLEEP).await;
         print_text(format!("- {} - Checking if subnet {} is on {}", i, subnet.to_string(), revision));
 
         registry.sync_with_nns().await?;
@@ -106,7 +110,25 @@ async fn wait_for_subnet_revision(registry: Rc<LazyRegistry>, subnet: PrincipalI
         for node in nodes {
             let url = format!("http://[{}]:9090/metrics", node.ip_addr.to_string());
 
-            let response = reqwest::get(&url).await?.error_for_status()?.text().await?;
+            let response = match client.get(&url).send().await {
+                Ok(r) => match r.error_for_status() {
+                    Ok(r) => match r.text().await {
+                        Ok(r) => r,
+                        Err(e) => {
+                            print_text(format!("Received error {}, skipping...", e.to_string()));
+                            continue;
+                        }
+                    },
+                    Err(e) => {
+                        print_text(format!("Received error {}, skipping...", e.to_string()));
+                        continue;
+                    }
+                },
+                Err(e) => {
+                    print_text(format!("Received error {}, skipping...", e.to_string()));
+                    continue;
+                }
+            };
             if response.contains(revision) {
                 nodes_with_reivison.push((node.principal.to_string(), revision));
                 continue;
@@ -130,8 +152,6 @@ async fn wait_for_subnet_revision(registry: Rc<LazyRegistry>, subnet: PrincipalI
         if !nodes_with_reivison.iter().any(|(_, r)| *r == PLACEHOLDER) {
             return Ok(());
         }
-
-        tokio::time::sleep(SLEEP).await;
     }
 
     anyhow::bail!(
