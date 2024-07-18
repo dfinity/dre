@@ -11,7 +11,9 @@ use super::{
     QualificationContext,
 };
 
-pub struct EnsureBlessedRevisions {}
+pub struct EnsureBlessedRevisions {
+    pub version: String,
+}
 
 impl Step for EnsureBlessedRevisions {
     fn help(&self) -> String {
@@ -26,10 +28,10 @@ impl Step for EnsureBlessedRevisions {
         let registry = ctx.dre_ctx.registry().await;
         let blessed_versions = registry.elected_guestos()?;
 
-        if blessed_versions.contains(&ctx.to_version) {
+        if blessed_versions.contains(&self.version) {
             return Ok(());
         }
-        let sha = fetch_shasum_for_disk_img(&ctx.to_version).await?;
+        let sha = fetch_shasum_for_disk_img(&self.version).await?;
 
         // Place proposal
         let ic_admin = ctx.dre_ctx.ic_admin();
@@ -39,18 +41,18 @@ impl Step for EnsureBlessedRevisions {
                     release_artifact: ic_management_types::Artifact::GuestOs,
                     args: vec![
                         "--replica-version-to-elect".to_string(),
-                        ctx.to_version.clone(),
+                        self.version.clone(),
                         "--release-package-sha256-hex".to_string(),
                         sha,
                         "--release-package-urls".to_string(),
                         format!(
                             "http://download.proxy-global.dfinity.network:8080/ic/{}/guest-os/update-img/update-img.tar.gz",
-                            &ctx.to_version
+                            &self.version
                         ),
                     ],
                 },
                 ProposeOptions {
-                    title: Some(format!("Blessing version: {}", &ctx.to_version)),
+                    title: Some(format!("Blessing version: {}", &self.version)),
                     summary: Some(format!("Some updates")),
                     ..Default::default()
                 },

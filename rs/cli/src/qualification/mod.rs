@@ -5,6 +5,7 @@ use ensure_blessed_versions::EnsureBlessedRevisions;
 use ic_management_backend::lazy_registry::LazyRegistry;
 use ic_registry_subnet_type::SubnetType;
 use itertools::Itertools;
+use retire_blessed_versions::RetireBlessedVersions;
 use tabular_util::{ColumnAlignment, Table};
 use upgrade_deployment_canister::UpgradeDeploymentCanisters;
 use upgrade_subnets::{Action, UpgradeSubnets};
@@ -12,6 +13,7 @@ use upgrade_subnets::{Action, UpgradeSubnets};
 use crate::ctx::DreContext;
 
 mod ensure_blessed_versions;
+mod retire_blessed_versions;
 mod tabular_util;
 mod upgrade_deployment_canister;
 mod upgrade_subnets;
@@ -48,7 +50,9 @@ impl QualificationExecutor {
     pub fn new(ctx: &QualificationContext) -> Self {
         Self {
             steps: vec![
-                Steps::EnsureBlessedVersions(EnsureBlessedRevisions {}),
+                Steps::EnsureBlessedVersions(EnsureBlessedRevisions {
+                    version: ctx.to_version.clone(),
+                }),
                 Steps::UpgradeDeploymentCanisters(UpgradeDeploymentCanisters {}),
                 Steps::UpgradeSubnets(UpgradeSubnets {
                     action: Action::Upgrade,
@@ -59,6 +63,12 @@ impl QualificationExecutor {
                     action: Action::Upgrade,
                     subnet_type: SubnetType::System,
                     to_version: ctx.to_version.clone(),
+                }),
+                Steps::RetireBlessedVersions(RetireBlessedVersions {
+                    versions: vec![ctx.from_version.clone()],
+                }),
+                Steps::EnsureBlessedVersions(EnsureBlessedRevisions {
+                    version: ctx.from_version.clone(),
                 }),
                 Steps::UpgradeSubnets(UpgradeSubnets {
                     action: Action::Downgrade,
@@ -76,7 +86,7 @@ impl QualificationExecutor {
 
     pub fn list(&self) {
         let table = Table::new()
-            .with_columns(&[("Name", ColumnAlignment::Middle), ("Help", ColumnAlignment::Left)])
+            .with_columns(&[("Name", ColumnAlignment::Left), ("Help", ColumnAlignment::Left)])
             .with_rows(self.steps.iter().map(|s| vec![s.name().to_string(), s.help().to_string()]).collect_vec())
             .to_table();
 
@@ -108,6 +118,7 @@ enum Steps {
     EnsureBlessedVersions(EnsureBlessedRevisions),
     UpgradeDeploymentCanisters(UpgradeDeploymentCanisters),
     UpgradeSubnets(UpgradeSubnets),
+    RetireBlessedVersions(RetireBlessedVersions),
 }
 
 pub trait Step {
@@ -126,6 +137,7 @@ impl Step for Steps {
             Steps::EnsureBlessedVersions(c) => c.help(),
             Steps::UpgradeDeploymentCanisters(c) => c.help(),
             Steps::UpgradeSubnets(c) => c.help(),
+            Steps::RetireBlessedVersions(c) => c.help(),
         }
     }
 
@@ -134,6 +146,7 @@ impl Step for Steps {
             Steps::EnsureBlessedVersions(c) => c.name(),
             Steps::UpgradeDeploymentCanisters(c) => c.name(),
             Steps::UpgradeSubnets(c) => c.name(),
+            Steps::RetireBlessedVersions(c) => c.name(),
         }
     }
 
@@ -142,6 +155,7 @@ impl Step for Steps {
             Steps::EnsureBlessedVersions(c) => c.execute(ctx).await,
             Steps::UpgradeDeploymentCanisters(c) => c.execute(ctx).await,
             Steps::UpgradeSubnets(c) => c.execute(ctx).await,
+            Steps::RetireBlessedVersions(c) => c.execute(ctx).await,
         }
     }
 
@@ -150,6 +164,7 @@ impl Step for Steps {
             Steps::EnsureBlessedVersions(c) => c.print_status(ctx).await,
             Steps::UpgradeDeploymentCanisters(c) => c.print_status(ctx).await,
             Steps::UpgradeSubnets(c) => c.print_status(ctx).await,
+            Steps::RetireBlessedVersions(c) => c.print_status(ctx).await,
         }
     }
 }
