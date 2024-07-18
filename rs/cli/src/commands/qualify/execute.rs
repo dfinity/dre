@@ -30,7 +30,7 @@ impl ExecutableCommand for Execute {
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
         if ctx.network().eq(&Network::mainnet_unchecked().unwrap()) {
-            anyhow::bail!("Qualification is forbidden on mainnet.")
+            anyhow::bail!("Qualification is not allowed on mainnet.")
         }
 
         let from_version = match &self.from_version {
