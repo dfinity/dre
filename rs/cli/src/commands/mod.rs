@@ -15,7 +15,6 @@ use nodes::Nodes;
 use proposals::Proposals;
 use propose::Propose;
 use registry::Registry;
-use trustworthy_metrics::TrustworthyMetrics;
 use update_unassigned_nodes::UpdateUnassignedNodes;
 use upgrade::Upgrade;
 use url::Url;
@@ -36,7 +35,6 @@ mod proposals;
 mod propose;
 mod registry;
 mod subnet;
-mod trustworthy_metrics;
 mod update_unassigned_nodes;
 pub mod upgrade;
 mod version;
@@ -125,7 +123,7 @@ pub enum Subcommands {
     /// Manage versions
     Version(VersionCmd),
 
-    /// Fetch node metrics
+    /// Fetch node metrics stats
     NodeMetrics(NodeMetrics),
 
     /// Manage hostos versions
@@ -139,9 +137,6 @@ pub enum Subcommands {
 
     /// Vote on our proposals
     Vote(Vote),
-
-    /// Trustworthy Metrics
-    TrustworthyMetrics(TrustworthyMetrics),
 
     /// Registry inspection (dump) operations
     Registry(Registry),
@@ -256,7 +251,6 @@ impl ExecutableCommand for Args {
             Subcommands::Nodes(c) => c.require_ic_admin(),
             Subcommands::ApiBoundaryNodes(c) => c.require_ic_admin(),
             Subcommands::Vote(c) => c.require_ic_admin(),
-            Subcommands::TrustworthyMetrics(c) => c.require_ic_admin(),
             Subcommands::Registry(c) => c.require_ic_admin(),
             Subcommands::Firewall(c) => c.require_ic_admin(),
             Subcommands::Upgrade(c) => c.require_ic_admin(),
@@ -279,7 +273,6 @@ impl ExecutableCommand for Args {
             Subcommands::Nodes(c) => c.execute(ctx).await,
             Subcommands::ApiBoundaryNodes(c) => c.execute(ctx).await,
             Subcommands::Vote(c) => c.execute(ctx).await,
-            Subcommands::TrustworthyMetrics(c) => c.execute(ctx).await,
             Subcommands::Registry(c) => c.execute(ctx).await,
             Subcommands::Firewall(c) => c.execute(ctx).await,
             Subcommands::Upgrade(c) => c.execute(ctx).await,
@@ -302,7 +295,6 @@ impl ExecutableCommand for Args {
             Subcommands::Nodes(c) => c.validate(cmd),
             Subcommands::ApiBoundaryNodes(c) => c.validate(cmd),
             Subcommands::Vote(c) => c.validate(cmd),
-            Subcommands::TrustworthyMetrics(c) => c.validate(cmd),
             Subcommands::Registry(c) => c.validate(cmd),
             Subcommands::Firewall(c) => c.validate(cmd),
             Subcommands::Upgrade(c) => c.validate(cmd),
