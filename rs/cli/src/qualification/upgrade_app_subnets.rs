@@ -30,7 +30,7 @@ impl Step for UpgradeAppSubnets {
     async fn execute(&self, ctx: &super::QualificationContext) -> anyhow::Result<()> {
         let registry = ctx.dre_ctx.registry().await;
         let subnets = registry.subnets().await?;
-
+        print_text(format!("Found total of {} nodes", registry.nodes().await?.len()));
         print_subnet_versions(registry.clone()).await?;
 
         for subnet in subnets

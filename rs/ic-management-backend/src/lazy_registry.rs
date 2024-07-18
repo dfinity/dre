@@ -174,6 +174,12 @@ impl LazyRegistry {
             return Ok(guests.to_owned());
         }
 
+        if !self.network.is_mainnet() && !self.network.eq(&Network::staging_unchecked().unwrap()) {
+            let res = Arc::new(vec![]);
+            *self.node_labels_guests.borrow_mut() = Some(res.clone());
+            return Ok(res);
+        }
+
         let guests = match node_labels::query_guests(&self.network.name).await {
             Ok(g) => g,
             Err(e) => {
@@ -227,7 +233,7 @@ impl LazyRegistry {
         *self.subnets.borrow_mut() = None;
         *self.nodes.borrow_mut() = None;
         *self.operators.borrow_mut() = None;
-        *self.node_labels_guests.borrow_mut() = None;
+
         *self.elected_guestos.borrow_mut() = None;
         *self.elected_hostos.borrow_mut() = None;
         *self.unassigned_nodes_replica_version.borrow_mut() = None;
@@ -311,22 +317,25 @@ impl LazyRegistry {
         let operators = self.operators().await?;
         let nodes: BTreeMap<_, _> = node_entries
             .iter()
-            // Skipping nodes without operator. This should only occur at version 1
-            .filter(|(_, nr)| !nr.node_operator_id.is_empty())
             .map(|(p, nr)| {
                 let guest = Self::node_record_guest(guests.clone(), nr);
                 let operator = operators
                     .iter()
                     .find(|(op, _)| op.to_vec() == nr.node_operator_id)
-                    .map(|(_, o)| o.to_owned())
-                    .expect("Missing operator referenced by a node");
+                    .map(|(_, o)| o.to_owned());
+                if operator.is_none() && self.network.is_mainnet() {
+                    panic!("Operator cannot be none on mainnet")
+                }
 
                 let principal = PrincipalId::from_str(p).expect("Invalid node principal id");
                 let ip_addr = Self::node_ip_addr(nr);
-                let dc_name = match &operator.datacenter {
-                    Some(dc) => dc.name.to_lowercase(),
-                    None => "".to_string(),
-                };
+                let dc_name = operator
+                    .clone()
+                    .map(|op| match op.datacenter {
+                        Some(dc) => dc.name.to_lowercase(),
+                        None => "".to_string(),
+                    })
+                    .unwrap_or_default();
                 (
                     principal,
                     Node {
@@ -339,7 +348,10 @@ impl LazyRegistry {
                             .unwrap_or_else(|| {
                                 format!(
                                     "{}-{}",
-                                    operator.datacenter.as_ref().map(|d| d.name.clone()).unwrap_or_else(|| "??".to_string()),
+                                    operator
+                                        .clone()
+                                        .map(|operator| operator.datacenter.as_ref().map(|d| d.name.clone()).unwrap_or_else(|| "??".to_string()))
+                                        .unwrap_or_default(),
                                     p.to_string().split_once('-').map(|(first, _)| first).unwrap_or("?????")
                                 )
                             })
@@ -352,7 +364,7 @@ impl LazyRegistry {
                         hostos_version: nr.hostos_version_id.clone().unwrap_or_default(),
                         // TODO: map hostos release
                         hostos_release: None,
-                        operator,
+                        operator: operator.clone().unwrap_or_default(),
                         proposal: None,
                         label: guest.map(|g| g.name),
                         decentralized: ip_addr.segments()[4] == 0x6801,
