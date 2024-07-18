@@ -63,6 +63,10 @@ impl QualificationExecutor {
 
             print_text(format!("Executed step {}: `{}`", i, step.name()));
 
+            let registry = ctx.dre_ctx.registry().await;
+            registry.sync_with_nns().await?;
+            print_text(format!("Syncing with registry after step {}", i));
+
             step.print_status(&ctx).await?
         }
 

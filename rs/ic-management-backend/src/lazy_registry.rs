@@ -220,8 +220,20 @@ impl LazyRegistry {
         Ok(record)
     }
 
+    // Resets the whole state of after fetching so that targets can be
+    // recalculated
     pub async fn sync_with_nns(&self) -> anyhow::Result<()> {
-        self.local_registry.sync_with_nns().await.map_err(|e| anyhow::anyhow!(e))
+        self.local_registry.sync_with_nns().await.map_err(|e| anyhow::anyhow!(e))?;
+        *self.subnets.borrow_mut() = None;
+        *self.nodes.borrow_mut() = None;
+        *self.operators.borrow_mut() = None;
+        *self.node_labels_guests.borrow_mut() = None;
+        *self.elected_guestos.borrow_mut() = None;
+        *self.elected_hostos.borrow_mut() = None;
+        *self.unassigned_nodes_replica_version.borrow_mut() = None;
+        *self.firewall_rule_set.borrow_mut() = None;
+
+        Ok(())
     }
 
     pub async fn operators(&self) -> anyhow::Result<Arc<BTreeMap<PrincipalId, Operator>>> {
