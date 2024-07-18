@@ -1,6 +1,23 @@
+use std::{env::home_dir, path::PathBuf, str::FromStr};
+
+use ic_nervous_system_common_test_keys::TEST_NEURON_1_OWNER_KEYPAIR;
+
+const TEST_NEURON_1_IDENTITY_PATH: &str = ".config/dfx/identity/test_neuron_1/identity.pem";
+
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     init_logger();
+
+    let key_pair = &TEST_NEURON_1_OWNER_KEYPAIR;
+    let path = home_dir()
+        .ok_or(anyhow::anyhow!("No home dir present"))?
+        .join(PathBuf::from_str(TEST_NEURON_1_IDENTITY_PATH)?);
+    let dir = path.parent().ok_or(anyhow::anyhow!("No parent dir for path: {}", path.display()))?;
+    if !dir.exists() {
+        std::fs::create_dir_all(dir)?;
+    }
+
+    std::fs::write(path, key_pair.to_pem())?;
 
     // Take in one version and figure out what is the base version
     //

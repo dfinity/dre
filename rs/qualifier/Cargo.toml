@@ -12,3 +12,4 @@ clap = { workspace = true }
 tokio = { workspace = true }
 log = { workspace = true }
 pretty_env_logger = { workspace = true }
+ic-nervous-system-common-test-keys = { workspace = true }
