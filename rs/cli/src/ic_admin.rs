@@ -162,9 +162,9 @@ impl IcAdminWrapper {
             return self._exec(cmd, opts, true).await;
         }
 
-        // If --yes was not specified, ask the user if they want to proceed
+        // If --yes was specified, don't ask the user if they want to proceed
         if !self.proceed_without_confirmation {
-            self._exec(cmd.clone(), opts.clone(), true).await?;
+            self._exec(cmd.clone(), opts.clone(), false).await?;
         }
 
         if self.proceed_without_confirmation || Confirm::new().with_prompt("Do you want to continue?").default(false).interact()? {
