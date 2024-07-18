@@ -10,7 +10,7 @@ use get::Get;
 use heal::Heal;
 use hostos::HostOsCmd;
 use ic_management_types::{MinNakamotoCoefficients, Network, NodeFeature};
-use node_metrics::NodeMetricsCmd;
+use node_metrics::NodeMetrics;
 use nodes::Nodes;
 use proposals::Proposals;
 use propose::Propose;
@@ -31,7 +31,6 @@ mod firewall;
 mod get;
 mod heal;
 pub mod hostos;
-mod node_metrics;
 mod nodes;
 mod proposals;
 mod propose;
@@ -42,6 +41,7 @@ mod update_unassigned_nodes;
 pub mod upgrade;
 mod version;
 mod vote;
+mod node_metrics;
 
 #[derive(Parser, Debug)]
 #[clap(version = env!("CARGO_PKG_VERSION"), about, author)]
@@ -126,7 +126,7 @@ pub enum Subcommands {
     Version(VersionCmd),
 
     /// Fetch node metrics
-    NodeMetrics(NodeMetricsCmd),
+    NodeMetrics(NodeMetrics),
 
     /// Manage hostos versions
     HostOs(HostOsCmd),
