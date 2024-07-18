@@ -1,13 +1,20 @@
+use std::rc::Rc;
+
 use chrono::Utc;
 use ensure_blessed_versions::EnsureBlessedRevisions;
+use ic_management_backend::lazy_registry::LazyRegistry;
 use itertools::Itertools;
 use strum::{EnumIter, IntoEnumIterator};
 use tabular_util::{ColumnAlignment, Table};
+use upgrade_app_subnets::UpgradeAppSubnets;
+use upgrade_deployment_canister::UpgradeDeploymentCanisters;
 
 use crate::ctx::DreContext;
 
 mod ensure_blessed_versions;
 mod tabular_util;
+mod upgrade_app_subnets;
+mod upgrade_deployment_canister;
 
 pub struct QualificationExecutor {
     steps: Vec<Steps>,
@@ -64,8 +71,8 @@ impl QualificationExecutor {
             print_text(format!("Executed step {}: `{}`", i, step.name()));
 
             let registry = ctx.dre_ctx.registry().await;
-            registry.sync_with_nns().await?;
             print_text(format!("Syncing with registry after step {}", i));
+            registry.sync_with_nns().await?;
 
             step.print_status(&ctx).await?
         }
@@ -77,6 +84,8 @@ impl QualificationExecutor {
 #[derive(EnumIter)]
 enum Steps {
     EnsureBlessedVersions(EnsureBlessedRevisions),
+    UpgradeDeploymentCanisters(UpgradeDeploymentCanisters),
+    UpgradeAppSubnets(UpgradeAppSubnets),
 }
 
 pub trait Step {
@@ -93,26 +102,48 @@ impl Step for Steps {
     fn help(&self) -> &'static str {
         match &self {
             Steps::EnsureBlessedVersions(c) => c.help(),
+            Steps::UpgradeDeploymentCanisters(c) => c.help(),
+            Steps::UpgradeAppSubnets(c) => c.help(),
         }
     }
 
     fn name(&self) -> &'static str {
         match &self {
             Steps::EnsureBlessedVersions(c) => c.name(),
+            Steps::UpgradeDeploymentCanisters(c) => c.name(),
+            Steps::UpgradeAppSubnets(c) => c.name(),
         }
     }
 
     async fn execute(&self, ctx: &QualificationContext) -> anyhow::Result<()> {
         match &self {
             Steps::EnsureBlessedVersions(c) => c.execute(ctx).await,
+            Steps::UpgradeDeploymentCanisters(c) => c.execute(ctx).await,
+            Steps::UpgradeAppSubnets(c) => c.execute(ctx).await,
         }
     }
 
     async fn print_status(&self, ctx: &QualificationContext) -> anyhow::Result<()> {
         match &self {
             Steps::EnsureBlessedVersions(c) => c.print_status(ctx).await,
+            Steps::UpgradeDeploymentCanisters(c) => c.print_status(ctx).await,
+            Steps::UpgradeAppSubnets(c) => c.print_status(ctx).await,
         }
     }
+}
+
+pub async fn print_subnet_versions(registry: Rc<LazyRegistry>) -> anyhow::Result<()> {
+    let subnets = registry.subnets().await?;
+
+    let subnets = subnets.values();
+    let table = Table::new()
+        .with_columns(&[("Subnet Id", ColumnAlignment::Middle), ("Version", ColumnAlignment::Middle)])
+        .with_rows(subnets.map(|s| vec![s.principal.to_string(), s.replica_version.clone()]).collect_vec())
+        .to_table();
+
+    print_table(table);
+
+    Ok(())
 }
 
 pub fn print_text(message: String) {
