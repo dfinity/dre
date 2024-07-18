@@ -6,7 +6,7 @@ use crate::{
 };
 
 use super::{
-    print_table, print_text,
+    print_table,
     tabular_util::{ColumnAlignment, Table},
     QualificationContext,
 };
@@ -30,20 +30,34 @@ impl Step for EnsureBlessedRevisions {
         if blessed_versions.contains(&ctx.to_version) {
             return Ok(());
         }
+        let sha = fetch_shasum_for_disk_img(&ctx.to_version).await?;
 
         // Place proposal
         let ic_admin = ctx.dre_ctx.ic_admin();
-        ic_admin.propose_run(
-            ProposeCommand::ReviseElectedVersions {
-                release_artifact: ic_management_types::Artifact::GuestOs,
-                args: vec![],
-            },
-            ProposeOptions {
-                title: Some(format!("Blessing version: {}", &ctx.to_version)),
-                summary: Some(format!("Some updates")),
-                ..Default::default()
-            },
-        );
+        let output = ic_admin
+            .propose_run(
+                ProposeCommand::ReviseElectedVersions {
+                    release_artifact: ic_management_types::Artifact::GuestOs,
+                    args: vec![
+                        "--replica-version-to-elect".to_string(),
+                        ctx.to_version.clone(),
+                        "--release-package-sha256-hex".to_string(),
+                        sha,
+                        "--release-package-urls".to_string(),
+                        format!(
+                            "http://download.proxy-global.dfinity.network:8080/ic/{}/guest-os/update-img/update-img.tar.gz",
+                            &ctx.to_version
+                        ),
+                    ],
+                },
+                ProposeOptions {
+                    title: Some(format!("Blessing version: {}", &ctx.to_version)),
+                    summary: Some(format!("Some updates")),
+                    ..Default::default()
+                },
+            )
+            .await?;
+        println!("{}", output);
         // Vote
 
         Ok(())
@@ -62,4 +76,24 @@ impl Step for EnsureBlessedRevisions {
 
         Ok(())
     }
+}
+const TAR_EXTENSION: &str = "update-img.tar.gz";
+async fn fetch_shasum_for_disk_img(version: &str) -> anyhow::Result<String> {
+    let url = format!(
+        "http://download.proxy-global.dfinity.network:8080/ic/{}/guest-os/update-img/SHA256SUMS",
+        version
+    );
+    let response = reqwest::get(&url).await?;
+    if !response.status().is_success() {
+        panic!("Received non-success response status: {:?}", response.status())
+    }
+
+    Ok(String::from_utf8(response.bytes().await?.to_vec())?
+        .lines()
+        .find(|l| l.ends_with(TAR_EXTENSION))
+        .ok_or(anyhow::anyhow!("Failed to find a hash ending with `{}` from: {}", &url, TAR_EXTENSION))?
+        .split_whitespace()
+        .next()
+        .ok_or(anyhow::anyhow!("The format should contain whitespace"))?
+        .to_string())
 }
