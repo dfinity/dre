@@ -34,7 +34,7 @@ impl Step for EnsureBlessedRevisions {
 
         // Place proposal
         let ic_admin = ctx.dre_ctx.ic_admin();
-        let output = ic_admin
+        ic_admin
             .propose_run(
                 ProposeCommand::ReviseElectedVersions {
                     release_artifact: ic_management_types::Artifact::GuestOs,
@@ -57,8 +57,6 @@ impl Step for EnsureBlessedRevisions {
                 },
             )
             .await?;
-        println!("{}", output);
-        // Vote
 
         Ok(())
     }
