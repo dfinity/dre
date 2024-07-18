@@ -151,7 +151,7 @@ impl DreContext {
         info!("Using local registry path for network {}: {}", network.name, local_path.display());
         let local_registry = LocalRegistry::new(local_path, Duration::from_millis(1000)).expect("Failed to create local registry");
 
-        let registry = Rc::new(LazyRegistry::new(local_registry, network.clone()));
+        let registry = Rc::new(LazyRegistry::new(local_registry, network.clone(), self.skip_sync));
         *self.registry.borrow_mut() = Some(registry.clone());
         registry
     }
