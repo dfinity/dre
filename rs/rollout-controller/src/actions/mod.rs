@@ -112,10 +112,12 @@ pub struct ActionExecutor<'a> {
 
 impl<'a> ActionExecutor<'a> {
     pub async fn new(neuron_id: u64, private_key_pem: String, network: Network, simulate: bool, logger: Option<&'a Logger>) -> anyhow::Result<Self> {
-        let auth_type = AuthType::Keyfile { path: PathBuf::from(private_key_pem) };
+        let auth_type = AuthType::Keyfile {
+            path: PathBuf::from(private_key_pem),
+        };
         let neuron = Neuron {
             neuron_id,
-            include_proposer: true
+            include_proposer: true,
         };
         let auth = Auth::new(auth_type).with_neuron(neuron);
         Ok(Self {
