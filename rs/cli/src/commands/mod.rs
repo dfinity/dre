@@ -232,8 +232,9 @@ pub trait ExecutableCommand {
 
 pub enum IcAdminRequirement {
     None,
-    Anonymous,                                          // for get commands
-    Detect,                                             // detect the neuron
+    Anonymous, // for get commands
+    Detect,    // detect the neuron
+    Unchecked,
     OverridableBy { network: Network, neuron: Neuron }, // eg automation which we know where is placed
 }
 

@@ -129,7 +129,7 @@ impl NodeMetrics {
 
 impl ExecutableCommand for NodeMetrics {
     fn require_ic_admin(&self) -> IcAdminRequirement {
-        IcAdminRequirement::Detect
+        IcAdminRequirement::Unchecked
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {

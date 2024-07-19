@@ -194,7 +194,7 @@ impl Auth {
             let neuron_ids = response.neuron_infos.keys().copied().collect::<Vec<_>>();
             match neuron_ids.len() {
                 0 => Err(anyhow::anyhow!(
-                    "HSM doesn't control any neurons. Response fro governance canister: {:?}",
+                    "HSM doesn't control any neurons. Response from governance canister: {:?}",
                     response
                 )),
                 1 => Ok(neuron_ids[0]),

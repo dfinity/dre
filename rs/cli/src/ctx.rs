@@ -98,6 +98,11 @@ impl DreContext {
                 neuron_id: 0,
                 include_proposer: false,
             },
+            IcAdminRequirement::Unchecked => Neuron {
+                auth: crate::auth::Auth::from_cli_args(private_key_pem, hsm_slot, hsm_pin, hsm_key_id)?,
+                neuron_id: 0,
+                include_proposer: false,
+            },
             IcAdminRequirement::Detect => {
                 Neuron::new(private_key_pem, hsm_slot, hsm_pin.clone(), hsm_key_id.clone(), neuron_id, network, true).await?
             }
