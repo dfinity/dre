@@ -88,7 +88,7 @@ TEAM_PRETTY_MAP = {
     "consensus": "Consensus",
     "cross-chain-team": "Cross Chain",
     "crypto-owners": "Crypto",
-    "crypto-team", "Crypto",
+    "crypto-team": "Crypto",
     "dept-crypto-library": "Crypto",
     "docs-owners": "Docs",
     "dre": "DRE",
