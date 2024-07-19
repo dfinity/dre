@@ -237,41 +237,41 @@ pub trait ExecutableCommand {
 }
 
 pub enum NeuronRequirement {
-    None,// for get commands
-    AutoDetect,    // detect the neuron
+    None,       // for get commands
+    AutoDetect, // detect the neuron
     #[allow(unused)]
-    Specified
+    Specified,
 }
 
 pub enum AuthRequirement {
-    None,// for get commands
-    Specified
+    None, // for get commands
+    Specified,
 }
 
 pub struct IcAdminRequirement {
     pub auth_requirement: AuthRequirement,
-    pub neuron_requirement: NeuronRequirement
+    pub neuron_requirement: NeuronRequirement,
 }
 
 impl IcAdminRequirement {
     pub fn new(auth_requirement: AuthRequirement, neuron_requirement: NeuronRequirement) -> Self {
         Self {
             auth_requirement,
-            neuron_requirement
+            neuron_requirement,
         }
     }
     fn none() -> Self {
-        Self{
+        Self {
             auth_requirement: AuthRequirement::None,
-            neuron_requirement: NeuronRequirement::None
+            neuron_requirement: NeuronRequirement::None,
         }
     }
 }
 impl Default for IcAdminRequirement {
     fn default() -> Self {
-        Self{
+        Self {
             auth_requirement: AuthRequirement::Specified,
-            neuron_requirement: NeuronRequirement::AutoDetect
+            neuron_requirement: NeuronRequirement::AutoDetect,
         }
     }
 }

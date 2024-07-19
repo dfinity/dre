@@ -96,7 +96,7 @@ impl DreContext {
     ) -> anyhow::Result<Option<Arc<IcAdminWrapper>>> {
         let auth = match requirement.auth_requirement {
             AuthRequirement::None => crate::auth::Auth::new(crate::auth::AuthType::Anonymous),
-            AuthRequirement::Specified => Auth::new(AuthType::from_cli_args(private_key_pem, hsm_slot, hsm_pin, hsm_key_id)?)
+            AuthRequirement::Specified => Auth::new(AuthType::from_cli_args(private_key_pem, hsm_slot, hsm_pin, hsm_key_id)?),
         };
         let auth = match requirement.neuron_requirement {
             NeuronRequirement::None => auth,
@@ -107,7 +107,7 @@ impl DreContext {
                     include_proposer: true,
                 };
                 auth.with_neuron(neuron)
-            },
+            }
         };
 
         let ic_admin_path = match should_update_ic_admin()? {
