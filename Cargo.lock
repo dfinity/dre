@@ -2112,6 +2112,7 @@ dependencies = [
  "anyhow",
  "async-recursion",
  "async-trait",
+ "backoff",
  "candid",
  "chrono",
  "clap 4.5.9",

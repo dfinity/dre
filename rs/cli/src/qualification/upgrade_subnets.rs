@@ -14,7 +14,7 @@ use crate::{
     },
 };
 
-use super::{print_subnet_versions, print_text, Step};
+use super::{ic_admin_with_retry, print_subnet_versions, print_text, Step};
 
 pub struct UpgradeSubnets {
     pub subnet_type: Option<SubnetType>,
@@ -89,20 +89,20 @@ impl Step for UpgradeSubnets {
                 ));
 
                 // Place proposal
-                let ic_admin = ctx.dre_ctx.ic_admin();
-                ic_admin
-                    .propose_run(
-                        ProposeCommand::DeployGuestosToAllSubnetNodes {
-                            subnet: subnet.principal,
-                            version: self.to_version.clone(),
-                        },
-                        ProposeOptions {
-                            title: Some(format!("Propose to upgrade subnet {} to {}", subnet.principal, &self.to_version)),
-                            summary: Some("Qualification testing".to_string()),
-                            motivation: Some("Qualification testing".to_string()),
-                        },
-                    )
-                    .await?;
+                ic_admin_with_retry(
+                    ctx.dre_ctx.ic_admin(),
+                    ProposeCommand::DeployGuestosToAllSubnetNodes {
+                        subnet: subnet.principal,
+                        version: self.to_version.clone(),
+                    },
+                    ProposeOptions {
+                        title: Some(format!("Propose to upgrade subnet {} to {}", subnet.principal, &self.to_version)),
+                        summary: Some("Qualification testing".to_string()),
+                        motivation: Some("Qualification testing".to_string()),
+                    },
+                )
+                .await?;
+
                 print_text(format!("Placed proposal for subnet {}", subnet.principal));
 
                 // Wait for the version to be active on the subnet
@@ -127,19 +127,18 @@ impl Step for UpgradeSubnets {
                 &unassigned_nodes_version, &self.to_version
             ));
 
-            let ic_admin = ctx.dre_ctx.ic_admin();
-            ic_admin
-                .propose_run(
-                    ProposeCommand::DeployGuestosToAllUnassignedNodes {
-                        replica_version: self.to_version.clone(),
-                    },
-                    ProposeOptions {
-                        title: Some("Upgrading unassigned nodes".to_string()),
-                        summary: Some("Upgrading unassigned nodes".to_string()),
-                        motivation: Some("Upgrading unassigned nodes".to_string()),
-                    },
-                )
-                .await?;
+            ic_admin_with_retry(
+                ctx.dre_ctx.ic_admin(),
+                ProposeCommand::DeployGuestosToAllUnassignedNodes {
+                    replica_version: self.to_version.clone(),
+                },
+                ProposeOptions {
+                    title: Some("Upgrading unassigned nodes".to_string()),
+                    summary: Some("Upgrading unassigned nodes".to_string()),
+                    motivation: Some("Upgrading unassigned nodes".to_string()),
+                },
+            )
+            .await?;
 
             wait_for_subnet_revision(registry.clone(), None, &self.to_version).await?;
 

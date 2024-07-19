@@ -3,7 +3,7 @@ use itertools::Itertools;
 use crate::ic_admin::{ProposeCommand, ProposeOptions};
 
 use super::{
-    print_table, print_text,
+    ic_admin_with_retry, print_table, print_text,
     tabular_util::{ColumnAlignment, Table},
     Step,
 };
@@ -36,25 +36,22 @@ impl Step for RetireBlessedVersions {
             return Ok(());
         }
 
-        let ic_admin = ctx.dre_ctx.ic_admin();
-        ic_admin
-            .propose_run(
-                ProposeCommand::ReviseElectedVersions {
-                    release_artifact: ic_management_types::Artifact::GuestOs,
-                    args: to_unelect
-                        .iter()
-                        .flat_map(|v| vec!["--replica-versions-to-unelect".to_string(), v.to_string()])
-                        .collect(),
-                },
-                ProposeOptions {
-                    title: Some("Retire replica versions".to_string()),
-                    summary: Some("Unelecting a version".to_string()),
-                    motivation: Some("Unelecting a version".to_string()),
-                },
-            )
-            .await?;
-
-        Ok(())
+        ic_admin_with_retry(
+            ctx.dre_ctx.ic_admin(),
+            ProposeCommand::ReviseElectedVersions {
+                release_artifact: ic_management_types::Artifact::GuestOs,
+                args: to_unelect
+                    .iter()
+                    .flat_map(|v| vec!["--replica-versions-to-unelect".to_string(), v.to_string()])
+                    .collect(),
+            },
+            ProposeOptions {
+                title: Some("Retire replica versions".to_string()),
+                summary: Some("Unelecting a version".to_string()),
+                motivation: Some("Unelecting a version".to_string()),
+            },
+        )
+        .await
     }
 
     async fn print_status(&self, ctx: &super::QualificationContext) -> anyhow::Result<()> {
