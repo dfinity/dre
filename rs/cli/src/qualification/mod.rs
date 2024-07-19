@@ -6,6 +6,7 @@ use ic_management_backend::lazy_registry::LazyRegistry;
 use ic_registry_subnet_type::SubnetType;
 use itertools::Itertools;
 use retire_blessed_versions::RetireBlessedVersions;
+use run_xnet_test::XNetTest;
 use tabular_util::{ColumnAlignment, Table};
 use upgrade_deployment_canister::UpgradeDeploymentCanisters;
 use upgrade_subnets::{Action, UpgradeSubnets};
@@ -17,12 +18,13 @@ use crate::{
 
 mod ensure_blessed_versions;
 mod retire_blessed_versions;
+mod run_xnet_test;
 mod tabular_util;
 mod upgrade_deployment_canister;
 mod upgrade_subnets;
 
 pub struct QualificationExecutor {
-    steps: Vec<(usize, Steps)>,
+    steps: Vec<(usize, bool, Steps)>,
 }
 
 pub struct QualificationContext {
@@ -30,6 +32,8 @@ pub struct QualificationContext {
     from_version: String,
     to_version: String,
     step_range: String,
+    deployment_name: String,
+    prometheus_endpoint: String,
 }
 
 impl QualificationContext {
@@ -39,6 +43,8 @@ impl QualificationContext {
             from_version: "".to_string(),
             to_version: "".to_string(),
             step_range,
+            deployment_name: "".to_string(),
+            prometheus_endpoint: "".to_string(),
         }
     }
 
@@ -77,6 +83,12 @@ impl QualificationExecutor {
                 action: Action::Upgrade,
                 subnet_type: None,
                 to_version: ctx.to_version.clone(),
+            }),
+            // Run xnet tests
+            Steps::RunXnetTest(XNetTest {
+                version: ctx.to_version.clone(),
+                deployment_name: ctx.deployment_name.clone(),
+                prometheus_endpoint: ctx.prometheus_endpoint.clone(),
             }),
             // Since the initial testnet is spunup with disk-img
             // retire the initial version.
@@ -132,7 +144,7 @@ impl QualificationExecutor {
             steps: steps
                 .into_iter()
                 .enumerate()
-                .filter(|(i, _)| start_index <= *i && *i <= end_index)
+                .map(|(i, s)| (i, !(start_index <= i && i <= end_index), s))
                 .collect_vec(),
         }
     }
@@ -141,13 +153,14 @@ impl QualificationExecutor {
         let table = Table::new()
             .with_columns(&[
                 ("Index", ColumnAlignment::Middle),
+                ("Will run", ColumnAlignment::Middle),
                 ("Name", ColumnAlignment::Left),
                 ("Help", ColumnAlignment::Left),
             ])
             .with_rows(
                 self.steps
                     .iter()
-                    .map(|(i, s)| vec![(i).to_string(), s.name().to_string(), s.help().to_string()])
+                    .map(|(i, sk, s)| vec![(i).to_string(), (!sk).to_string(), s.name().to_string(), s.help().to_string()])
                     .collect_vec(),
             )
             .to_table();
@@ -161,7 +174,11 @@ impl QualificationExecutor {
 
         print_text(format!("Running qualification from version {} to {}", ctx.from_version, ctx.to_version));
         print_text(format!("Starting execution of {} steps:", self.steps.len()));
-        for (i, step) in self.steps.iter() {
+        for (i, sk, step) in self.steps.iter() {
+            if *sk {
+                print_text(format!("Skipping step {} due to skip-range: `{}`", i, step.name()));
+                continue;
+            }
             print_text(format!("Executing step {}: `{}`", i, step.name()));
 
             step.execute(&ctx).await?;
@@ -186,6 +203,7 @@ enum Steps {
     UpgradeDeploymentCanisters(UpgradeDeploymentCanisters),
     UpgradeSubnets(UpgradeSubnets),
     RetireBlessedVersions(RetireBlessedVersions),
+    RunXnetTest(XNetTest),
 }
 
 pub trait Step {
@@ -205,6 +223,7 @@ impl Step for Steps {
             Steps::UpgradeDeploymentCanisters(c) => c.help(),
             Steps::UpgradeSubnets(c) => c.help(),
             Steps::RetireBlessedVersions(c) => c.help(),
+            Steps::RunXnetTest(c) => c.help(),
         }
     }
 
@@ -214,6 +233,7 @@ impl Step for Steps {
             Steps::UpgradeDeploymentCanisters(c) => c.name(),
             Steps::UpgradeSubnets(c) => c.name(),
             Steps::RetireBlessedVersions(c) => c.name(),
+            Steps::RunXnetTest(c) => c.name(),
         }
     }
 
@@ -223,6 +243,7 @@ impl Step for Steps {
             Steps::UpgradeDeploymentCanisters(c) => c.execute(ctx).await,
             Steps::UpgradeSubnets(c) => c.execute(ctx).await,
             Steps::RetireBlessedVersions(c) => c.execute(ctx).await,
+            Steps::RunXnetTest(c) => c.execute(ctx).await,
         }
     }
 
@@ -232,6 +253,7 @@ impl Step for Steps {
             Steps::UpgradeDeploymentCanisters(c) => c.print_status(ctx).await,
             Steps::UpgradeSubnets(c) => c.print_status(ctx).await,
             Steps::RetireBlessedVersions(c) => c.print_status(ctx).await,
+            Steps::RunXnetTest(c) => c.print_status(ctx).await,
         }
     }
 }
