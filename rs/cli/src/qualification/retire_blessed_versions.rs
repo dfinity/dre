@@ -1,6 +1,9 @@
 use itertools::Itertools;
 
-use crate::ic_admin::{ProposeCommand, ProposeOptions};
+use crate::{
+    ctx::DreContext,
+    ic_admin::{ProposeCommand, ProposeOptions},
+};
 
 use super::{
     ic_admin_with_retry, print_table, print_text,
@@ -21,8 +24,8 @@ impl Step for RetireBlessedVersions {
         "retire_blessed_versions".to_string()
     }
 
-    async fn execute(&self, ctx: &super::QualificationContext) -> anyhow::Result<()> {
-        let registry = ctx.dre_ctx.registry().await;
+    async fn execute(&self, ctx: &DreContext) -> anyhow::Result<()> {
+        let registry = ctx.registry().await;
 
         let blessed_versions = registry.elected_guestos()?;
         let mut to_unelect = vec![];
@@ -37,7 +40,7 @@ impl Step for RetireBlessedVersions {
         }
 
         ic_admin_with_retry(
-            ctx.dre_ctx.ic_admin(),
+            ctx.ic_admin(),
             ProposeCommand::ReviseElectedVersions {
                 release_artifact: ic_management_types::Artifact::GuestOs,
                 args: to_unelect
@@ -51,11 +54,9 @@ impl Step for RetireBlessedVersions {
                 motivation: Some("Unelecting a version".to_string()),
             },
         )
-        .await
-    }
+        .await?;
 
-    async fn print_status(&self, ctx: &super::QualificationContext) -> anyhow::Result<()> {
-        let registry = ctx.dre_ctx.registry().await;
+        registry.sync_with_nns().await?;
         let blessed_versions = registry.elected_guestos()?;
 
         let table = Table::new()

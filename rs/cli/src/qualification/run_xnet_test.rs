@@ -14,6 +14,8 @@ use reqwest::{Client, ClientBuilder};
 use serde_json::Value;
 use tokio::process::Command;
 
+use crate::ctx::DreContext;
+
 use super::{
     print_table, print_text,
     tabular_util::{ColumnAlignment, Table},
@@ -43,7 +45,7 @@ impl Step for XNetTest {
         "xnet_test".to_string()
     }
 
-    async fn execute(&self, ctx: &super::QualificationContext) -> anyhow::Result<()> {
+    async fn execute(&self, ctx: &DreContext) -> anyhow::Result<()> {
         let client = ClientBuilder::new().timeout(Duration::from_secs(30)).build()?;
         for executable in &[IC_WORKLOAD_GENERATOR, E2E_TEST_DRIVER] {
             let exe_path = construct_executable_path(executable, &self.version)?;
@@ -100,7 +102,7 @@ impl Step for XNetTest {
             print_text(format!("Downloaded: {}", url));
         }
 
-        let subnets = ctx.dre_ctx.registry().await.subnets().await?;
+        let subnets = ctx.registry().await.subnets().await?;
         let subnet = subnets
             .values()
             .find(|s| s.subnet_type.eq(&SubnetType::Application))
@@ -145,10 +147,6 @@ impl Step for XNetTest {
             true => Ok(()),
             false => Err(anyhow::anyhow!("Finalization dropped after the test")),
         }
-    }
-
-    async fn print_status(&self, _ctx: &super::QualificationContext) -> anyhow::Result<()> {
-        Ok(())
     }
 }
 

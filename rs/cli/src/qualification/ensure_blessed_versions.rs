@@ -1,6 +1,7 @@
 use itertools::Itertools;
 
 use crate::{
+    ctx::DreContext,
     ic_admin::{ProposeCommand, ProposeOptions},
     qualification::Step,
 };
@@ -8,7 +9,6 @@ use crate::{
 use super::{
     ic_admin_with_retry, print_table,
     tabular_util::{ColumnAlignment, Table},
-    QualificationContext,
 };
 
 pub struct EnsureBlessedRevisions {
@@ -24,8 +24,8 @@ impl Step for EnsureBlessedRevisions {
         "ensure_blessed_revision".to_string()
     }
 
-    async fn execute(&self, ctx: &QualificationContext) -> anyhow::Result<()> {
-        let registry = ctx.dre_ctx.registry().await;
+    async fn execute(&self, ctx: &DreContext) -> anyhow::Result<()> {
+        let registry = ctx.registry().await;
         let blessed_versions = registry.elected_guestos()?;
 
         if blessed_versions.contains(&self.version) {
@@ -35,7 +35,7 @@ impl Step for EnsureBlessedRevisions {
 
         // Place proposal
         ic_admin_with_retry(
-            ctx.dre_ctx.ic_admin(),
+            ctx.ic_admin(),
             ProposeCommand::ReviseElectedVersions {
                 release_artifact: ic_management_types::Artifact::GuestOs,
                 args: vec![
@@ -56,11 +56,9 @@ impl Step for EnsureBlessedRevisions {
                 ..Default::default()
             },
         )
-        .await
-    }
+        .await?;
 
-    async fn print_status(&self, ctx: &QualificationContext) -> anyhow::Result<()> {
-        let registry = ctx.dre_ctx.registry().await;
+        registry.sync_with_nns().await?;
         let blessed_versions = registry.elected_guestos()?;
 
         let table = Table::new()
@@ -69,7 +67,6 @@ impl Step for EnsureBlessedRevisions {
             .to_table();
 
         print_table(table);
-
         Ok(())
     }
 }

@@ -25,9 +25,12 @@ mod upgrade_subnets;
 
 pub struct QualificationExecutor {
     steps: Vec<(usize, bool, Steps)>,
+    dre_ctx: DreContext,
+    from_version: String,
+    to_version: String,
 }
 
-pub struct QualificationContext {
+pub struct QualificationExecutorBuilder {
     dre_ctx: DreContext,
     from_version: String,
     to_version: String,
@@ -36,29 +39,45 @@ pub struct QualificationContext {
     prometheus_endpoint: String,
 }
 
-impl QualificationContext {
-    pub fn new(dre_ctx: DreContext, step_range: String) -> Self {
+impl QualificationExecutorBuilder {
+    pub fn new(dre_ctx: DreContext) -> Self {
         Self {
             dre_ctx,
             from_version: "".to_string(),
             to_version: "".to_string(),
-            step_range,
+            step_range: "".to_string(),
             deployment_name: "".to_string(),
             prometheus_endpoint: "".to_string(),
         }
     }
 
-    pub fn with_from_version(self, from_version: String) -> Self {
+    pub fn from_version(self, from_version: String) -> Self {
         Self { from_version, ..self }
     }
 
-    pub fn with_to_version(self, to_version: String) -> Self {
+    pub fn to_version(self, to_version: String) -> Self {
         Self { to_version, ..self }
+    }
+
+    pub fn with_step_range(self, step_range: String) -> Self {
+        Self { step_range, ..self }
+    }
+
+    pub fn with_deployment_namge(self, deployment_name: String) -> Self {
+        Self { deployment_name, ..self }
+    }
+
+    pub fn with_prometheus_endpoint(self, prometheus_endpoint: String) -> Self {
+        Self { prometheus_endpoint, ..self }
+    }
+
+    pub fn build(self) -> QualificationExecutor {
+        QualificationExecutor::_new(self)
     }
 }
 
 impl QualificationExecutor {
-    pub fn new(ctx: &QualificationContext) -> Self {
+    fn _new(ctx: QualificationExecutorBuilder) -> Self {
         let steps = vec![
             // Blessing the version which we are qualifying
             Steps::EnsureBlessedVersions(EnsureBlessedRevisions {
@@ -146,6 +165,9 @@ impl QualificationExecutor {
                 .enumerate()
                 .map(|(i, s)| (i, !(start_index <= i && i <= end_index), s))
                 .collect_vec(),
+            dre_ctx: ctx.dre_ctx,
+            from_version: ctx.from_version,
+            to_version: ctx.to_version,
         }
     }
 
@@ -168,11 +190,11 @@ impl QualificationExecutor {
         println!("{}", table)
     }
 
-    pub async fn execute(&self, ctx: QualificationContext) -> anyhow::Result<()> {
+    pub async fn execute(&self) -> anyhow::Result<()> {
         print_text("This qualification run will execute the following steps:".to_string());
         self.list();
 
-        print_text(format!("Running qualification from version {} to {}", ctx.from_version, ctx.to_version));
+        print_text(format!("Running qualification from version {} to {}", self.from_version, self.to_version));
         print_text(format!("Starting execution of {} steps:", self.steps.len()));
         for (i, sk, step) in self.steps.iter() {
             if *sk {
@@ -181,18 +203,16 @@ impl QualificationExecutor {
             }
             print_text(format!("Executing step {}: `{}`", i, step.name()));
 
-            step.execute(&ctx).await?;
+            step.execute(&self.dre_ctx).await?;
 
             print_text(format!("Executed step {}: `{}`", i, step.name()));
 
-            let registry = ctx.dre_ctx.registry().await;
+            let registry = self.dre_ctx.registry().await;
             print_text(format!("Syncing with registry after step {}", i));
             registry.sync_with_nns().await?;
-
-            step.print_status(&ctx).await?
         }
 
-        print_text(format!("Qualification of {} finished successfully!", ctx.to_version));
+        print_text(format!("Qualification of {} finished successfully!", self.to_version));
 
         Ok(())
     }
@@ -211,9 +231,7 @@ pub trait Step {
 
     fn name(&self) -> String;
 
-    async fn execute(&self, ctx: &QualificationContext) -> anyhow::Result<()>;
-
-    async fn print_status(&self, ctx: &QualificationContext) -> anyhow::Result<()>;
+    async fn execute(&self, ctx: &DreContext) -> anyhow::Result<()>;
 }
 
 impl Step for Steps {
@@ -237,23 +255,13 @@ impl Step for Steps {
         }
     }
 
-    async fn execute(&self, ctx: &QualificationContext) -> anyhow::Result<()> {
+    async fn execute(&self, ctx: &DreContext) -> anyhow::Result<()> {
         match &self {
             Steps::EnsureBlessedVersions(c) => c.execute(ctx).await,
             Steps::UpgradeDeploymentCanisters(c) => c.execute(ctx).await,
             Steps::UpgradeSubnets(c) => c.execute(ctx).await,
             Steps::RetireBlessedVersions(c) => c.execute(ctx).await,
             Steps::RunXnetTest(c) => c.execute(ctx).await,
-        }
-    }
-
-    async fn print_status(&self, ctx: &QualificationContext) -> anyhow::Result<()> {
-        match &self {
-            Steps::EnsureBlessedVersions(c) => c.print_status(ctx).await,
-            Steps::UpgradeDeploymentCanisters(c) => c.print_status(ctx).await,
-            Steps::UpgradeSubnets(c) => c.print_status(ctx).await,
-            Steps::RetireBlessedVersions(c) => c.print_status(ctx).await,
-            Steps::RunXnetTest(c) => c.print_status(ctx).await,
         }
     }
 }

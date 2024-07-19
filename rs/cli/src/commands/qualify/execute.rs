@@ -5,7 +5,7 @@ use serde_json::Value;
 
 use crate::{
     commands::{ExecutableCommand, IcAdminRequirement},
-    qualification::{QualificationContext, QualificationExecutor},
+    qualification::QualificationExecutorBuilder,
 };
 
 #[derive(Args, Debug)]
@@ -24,6 +24,14 @@ pub struct Execute {
     /// A range can be: `4`, `3..`, `..3, `1..3`
     #[clap(long)]
     step_range: Option<String>,
+
+    /// Name of the deployment used for prometheus querying of `ic` label: `staging`, `from-config`...
+    #[clap(long)]
+    deployment_name: String,
+
+    /// Prometheus compliant endpoint
+    #[clap(long)]
+    prometheus_endpoint: String,
 }
 
 impl ExecutableCommand for Execute {
@@ -55,10 +63,13 @@ impl ExecutableCommand for Execute {
             }
         };
 
-        let context = QualificationContext::new(ctx, self.step_range.clone().unwrap_or_default())
-            .with_from_version(from_version)
-            .with_to_version(self.version.clone());
-        let qualification_executor = QualificationExecutor::new(&context);
-        qualification_executor.execute(context).await
+        let qualification_executor = QualificationExecutorBuilder::new(ctx)
+            .with_step_range(self.step_range.clone().unwrap_or_default())
+            .from_version(from_version)
+            .to_version(self.version.clone())
+            .with_deployment_namge(self.deployment_name.clone())
+            .with_prometheus_endpoint(self.prometheus_endpoint.clone())
+            .build();
+        qualification_executor.execute().await
     }
 }

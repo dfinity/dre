@@ -7,6 +7,7 @@ use itertools::Itertools;
 use reqwest::ClientBuilder;
 
 use crate::{
+    ctx::DreContext,
     ic_admin::{ProposeCommand, ProposeOptions},
     qualification::{
         print_table,
@@ -71,8 +72,8 @@ impl Step for UpgradeSubnets {
         )
     }
 
-    async fn execute(&self, ctx: &super::QualificationContext) -> anyhow::Result<()> {
-        let registry = ctx.dre_ctx.registry().await;
+    async fn execute(&self, ctx: &DreContext) -> anyhow::Result<()> {
+        let registry = ctx.registry().await;
         let subnets = registry.subnets().await?;
         print_text(format!("Found total of {} nodes", registry.nodes().await?.len()));
         print_subnet_versions(registry.clone()).await?;
@@ -82,7 +83,7 @@ impl Step for UpgradeSubnets {
                 .values()
                 .filter(|s| s.subnet_type.eq(subnet_type) && !s.replica_version.eq(&self.to_version))
             {
-                let registry = ctx.dre_ctx.registry().await;
+                let registry = ctx.registry().await;
                 print_text(format!(
                     "Upgrading subnet {}: {} -> {}",
                     subnet.principal, &subnet.replica_version, &self.to_version
@@ -90,7 +91,7 @@ impl Step for UpgradeSubnets {
 
                 // Place proposal
                 ic_admin_with_retry(
-                    ctx.dre_ctx.ic_admin(),
+                    ctx.ic_admin(),
                     ProposeCommand::DeployGuestosToAllSubnetNodes {
                         subnet: subnet.principal,
                         version: self.to_version.clone(),
@@ -116,7 +117,7 @@ impl Step for UpgradeSubnets {
                 print_subnet_versions(registry.clone()).await?;
             }
         } else {
-            let registry = ctx.dre_ctx.registry().await;
+            let registry = ctx.registry().await;
             let unassigned_nodes_version = registry.unassigned_nodes_replica_version()?;
             if unassigned_nodes_version.to_string() == self.to_version {
                 print_text(format!("Unassigned nodes are already on {}, skipping", self.to_version));
@@ -128,7 +129,7 @@ impl Step for UpgradeSubnets {
             ));
 
             ic_admin_with_retry(
-                ctx.dre_ctx.ic_admin(),
+                ctx.ic_admin(),
                 ProposeCommand::DeployGuestosToAllUnassignedNodes {
                     replica_version: self.to_version.clone(),
                 },
@@ -147,10 +148,6 @@ impl Step for UpgradeSubnets {
             print_subnet_versions(registry.clone()).await?;
         }
 
-        Ok(())
-    }
-
-    async fn print_status(&self, _ctx: &super::QualificationContext) -> anyhow::Result<()> {
         Ok(())
     }
 }
