@@ -1,7 +1,7 @@
 use std::{path::PathBuf, time::Duration};
 
 use dre::{
-    auth::Neuron,
+    auth::{Auth, AuthType, Neuron},
     ic_admin::{IcAdminWrapper, ProposeCommand, ProposeOptions},
 };
 use ic_base_types::PrincipalId;
@@ -112,15 +112,20 @@ pub struct ActionExecutor<'a> {
 
 impl<'a> ActionExecutor<'a> {
     pub async fn new(neuron_id: u64, private_key_pem: String, network: Network, simulate: bool, logger: Option<&'a Logger>) -> anyhow::Result<Self> {
-        let neuron = Neuron::new(Some(PathBuf::from(private_key_pem)), None, None, None, Some(neuron_id), &network, true).await?;
+        let auth_type = AuthType::Keyfile { path: PathBuf::from(private_key_pem) };
+        let neuron = Neuron {
+            neuron_id,
+            include_proposer: true
+        };
+        let auth = Auth::new(auth_type).with_neuron(neuron);
         Ok(Self {
-            ic_admin_wrapper: IcAdminWrapper::new(network, None, true, neuron, simulate),
+            ic_admin_wrapper: IcAdminWrapper::new(network, None, true, auth, simulate),
             logger,
         })
     }
 
     pub async fn test(network: Network, logger: Option<&'a Logger>) -> anyhow::Result<Self> {
-        let neuron = Neuron::new(None, None, None, None, None, &network, true).await?;
+        let neuron = Auth::new(AuthType::Anonymous);
         Ok(Self {
             ic_admin_wrapper: IcAdminWrapper::new(network, None, true, neuron, true),
             logger,
