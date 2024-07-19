@@ -12,7 +12,7 @@ pub struct DerToPrincipal {
 
 impl ExecutableCommand for DerToPrincipal {
     fn require_ic_admin(&self) -> IcAdminRequirement {
-        IcAdminRequirement::None
+        IcAdminRequirement::none()
     }
 
     async fn execute(&self, _ctx: crate::ctx::DreContext) -> anyhow::Result<()> {

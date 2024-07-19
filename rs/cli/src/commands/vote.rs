@@ -42,7 +42,7 @@ pub struct Vote {
 
 impl ExecutableCommand for Vote {
     fn require_ic_admin(&self) -> IcAdminRequirement {
-        IcAdminRequirement::Detect
+        IcAdminRequirement::default()
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
@@ -77,7 +77,9 @@ impl ExecutableCommand for Vote {
                     proposal.proposal.clone().unwrap().title.unwrap()
                 );
 
-                let response = client.register_vote(ctx.ic_admin().neuron.neuron_id, proposal.id.unwrap().id).await?;
+                let response = client
+                    .register_vote(ctx.ic_admin().auth.maybe_neuron()?.neuron_id, proposal.id.unwrap().id)
+                    .await?;
                 info!("{}", response);
                 voted_proposals.insert(proposal.id.unwrap().id);
             }

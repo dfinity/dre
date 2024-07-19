@@ -11,7 +11,7 @@ pub struct Get {
 
 impl ExecutableCommand for Get {
     fn require_ic_admin(&self) -> IcAdminRequirement {
-        IcAdminRequirement::Anonymous
+        IcAdminRequirement::none()
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {

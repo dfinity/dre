@@ -18,82 +18,32 @@ use log::info;
 
 #[derive(Clone, Debug)]
 pub struct Neuron {
-    pub auth: Auth,
     pub neuron_id: u64,
     pub include_proposer: bool,
 }
 
+#[allow(unused)]
 static RELEASE_AUTOMATION_DEFAULT_PRIVATE_KEY_PEM: &str = ".config/dfx/identity/release-automation/identity.pem"; // Relative to the home directory
+#[allow(unused)]
 const RELEASE_AUTOMATION_NEURON_ID: u64 = 80;
 
 impl Neuron {
-    pub async fn new(
-        private_key_pem: Option<PathBuf>,
-        hsm_slot: Option<u64>,
-        hsm_pin: Option<String>,
-        hsm_key_id: Option<String>,
-        neuron_id: Option<u64>,
-        network: &Network,
-        include_proposer: bool,
-    ) -> anyhow::Result<Self> {
-        let auth = Auth::from_cli_args(private_key_pem, hsm_slot, hsm_pin, hsm_key_id)?;
-        let neuron_id = match neuron_id {
-            Some(n) => n,
-            None => auth.auto_detect_neuron_id(network.get_nns_urls()).await?,
-        };
-        Ok(Self {
-            auth,
-            neuron_id,
-            include_proposer,
-        })
-    }
-
-    pub fn as_arg_vec(&self) -> Vec<String> {
-        self.auth.as_arg_vec()
-    }
-
     pub fn proposer_as_arg_vec(&self) -> Vec<String> {
         if self.include_proposer {
             return vec!["--proposer".to_string(), self.neuron_id.to_string()];
         }
         vec![]
     }
-
-    pub fn automation_neuron_unchecked() -> Self {
-        Self {
-            auth: Auth::Keyfile {
-                path: dirs::home_dir().unwrap().join(RELEASE_AUTOMATION_DEFAULT_PRIVATE_KEY_PEM),
-            },
-            neuron_id: RELEASE_AUTOMATION_NEURON_ID,
-            include_proposer: true,
-        }
-    }
 }
 
 #[derive(Clone, Debug)]
-pub enum Auth {
+pub enum AuthType {
     Hsm { pin: String, slot: u64, key_id: String },
     Keyfile { path: PathBuf },
     Anonymous,
 }
 
-impl Auth {
-    pub fn as_arg_vec(&self) -> Vec<String> {
-        match self {
-            Auth::Hsm { pin, slot, key_id } => vec![
-                "--use-hsm".to_string(),
-                "--pin".to_string(),
-                pin.clone(),
-                "--slot".to_string(),
-                slot.to_string(),
-                "--key-id".to_string(),
-                key_id.clone(),
-            ],
-            Auth::Keyfile { path } => vec!["--secret-key-pem".to_string(), path.to_string_lossy().to_string()],
-            Auth::Anonymous => vec![],
-        }
-    }
-
+impl AuthType {
     pub fn from_cli_args(
         private_key_pem: Option<PathBuf>,
         hsm_slot: Option<u64>,
@@ -101,10 +51,10 @@ impl Auth {
         hsm_key_id: Option<String>,
     ) -> anyhow::Result<Self> {
         match (private_key_pem, hsm_slot, hsm_pin, hsm_key_id) {
-            (Some(path), _, _, _) if path.exists() => Ok(Auth::Keyfile { path }),
+            (Some(path), _, _, _) if path.exists() => Ok(AuthType::Keyfile { path }),
             (Some(path), _, _, _) => Err(anyhow::anyhow!("Invalid key file path: {}", path.display())),
-            (None, Some(slot), Some(pin), Some(key_id)) => Ok(Auth::Hsm { pin, slot, key_id }),
-            (None, None, None, None) => Ok(Self::detect_hsm_auth()?.map_or(Auth::Anonymous, |a| a)),
+            (None, Some(slot), Some(pin), Some(key_id)) => Ok(AuthType::Hsm { pin, slot, key_id }),
+            (None, None, None, None) => Ok(Self::detect_hsm_auth()?.map_or(AuthType::Anonymous, |a| a)),
             _ => Err(anyhow::anyhow!("Invalid auth arguments")),
         }
     }
@@ -147,7 +97,7 @@ impl Auth {
                 session.login(UserType::User, Some(&pin))?;
                 info!("HSM login successful!");
                 pin_entry.set_password(&pin)?;
-                return Ok(Some(Auth::Hsm {
+                return Ok(Some(AuthType::Hsm {
                     pin,
                     slot: slot.id(),
                     key_id: "01".to_string(),
@@ -156,10 +106,60 @@ impl Auth {
         }
         Ok(None)
     }
+}
 
-    pub async fn auto_detect_neuron_id(&self, nns_urls: &[url::Url]) -> anyhow::Result<u64> {
-        let sender = match self {
-            Auth::Hsm { pin, slot, key_id } => {
+#[derive(Clone, Debug)]
+pub struct Auth {
+    pub auth_type: AuthType,
+    maybe_neuron: Option<Neuron>,
+}
+
+impl Auth {
+    pub fn new(auth_type: AuthType) -> Self {
+        Self {
+            auth_type,
+            maybe_neuron: None,
+        }
+    }
+
+    pub fn with_neuron(self, neuron: Neuron) -> Self {
+        Self {
+            maybe_neuron: Some(neuron),
+            ..self
+        }
+    }
+
+    pub async fn with_autodetect_neuron(self, network: &Network) -> anyhow::Result<Self> {
+        let neuron = Neuron {
+            neuron_id: self.auto_detect_neuron_id(&network.nns_urls).await?,
+            include_proposer: true,
+        };
+
+        Ok(Self {
+            maybe_neuron: Some(neuron),
+            ..self
+        })
+    }
+
+    pub fn as_arg_vec(&self) -> Vec<String> {
+        match &self.auth_type {
+            AuthType::Hsm { pin, slot, key_id } => vec![
+                "--use-hsm".to_string(),
+                "--pin".to_string(),
+                pin.clone(),
+                "--slot".to_string(),
+                slot.to_string(),
+                "--key-id".to_string(),
+                key_id.clone(),
+            ],
+            AuthType::Keyfile { path } => vec!["--secret-key-pem".to_string(), path.to_string_lossy().to_string()],
+            AuthType::Anonymous => vec![],
+        }
+    }
+
+    async fn auto_detect_neuron_id(&self, nns_urls: &[url::Url]) -> anyhow::Result<u64> {
+        let sender = match &self.auth_type {
+            AuthType::Hsm { pin, slot, key_id } => {
                 let pin_clone = pin.clone();
                 let slot = *slot;
                 let key_id_clone = key_id.clone();
@@ -170,12 +170,12 @@ impl Auth {
                     }),
                 )
             }
-            Auth::Keyfile { path } => {
+            AuthType::Keyfile { path } => {
                 let contents = read_to_string(path).expect("Could not read key file");
                 let sig_keys = SigKeys::from_pem(&contents).expect("Failed to parse pem file");
                 Sender::SigKeys(sig_keys)
             }
-            Auth::Anonymous => Sender::Anonymous,
+            AuthType::Anonymous => Sender::Anonymous,
         };
         let agent = Agent::new(nns_urls[0].clone(), sender);
         if let Some(response) = agent
@@ -208,5 +208,9 @@ impl Auth {
         } else {
             Err(anyhow::anyhow!("Empty response when listing controlled neurons"))
         }
+    }
+
+    pub fn maybe_neuron(&self) -> anyhow::Result<&Neuron> {
+        self.maybe_neuron.as_ref().ok_or_else(|| anyhow::anyhow!("Auth has no neuron associated"))
     }
 }

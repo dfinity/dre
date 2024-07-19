@@ -8,7 +8,7 @@ pub struct Pending {}
 
 impl ExecutableCommand for Pending {
     fn require_ic_admin(&self) -> IcAdminRequirement {
-        IcAdminRequirement::None
+        IcAdminRequirement::none()
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {

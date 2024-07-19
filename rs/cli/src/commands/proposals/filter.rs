@@ -212,7 +212,7 @@ impl From<TopicUpstream> for Topic {
 
 impl ExecutableCommand for Filter {
     fn require_ic_admin(&self) -> IcAdminRequirement {
-        IcAdminRequirement::None
+        IcAdminRequirement::none()
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {

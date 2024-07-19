@@ -23,7 +23,7 @@ pub struct Add {
 
 impl ExecutableCommand for Add {
     fn require_ic_admin(&self) -> IcAdminRequirement {
-        IcAdminRequirement::Detect
+        IcAdminRequirement::default()
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {

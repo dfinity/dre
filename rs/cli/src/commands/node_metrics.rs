@@ -15,7 +15,7 @@ use ic_types::{CanisterId, PrincipalId};
 use itertools::Itertools;
 use log::{info, warn};
 
-use super::{ExecutableCommand, IcAdminRequirement};
+use super::{AuthRequirement, ExecutableCommand, IcAdminRequirement, NeuronRequirement};
 
 type CLINodeMetrics = BTreeMap<PrincipalId, Vec<NodeMetricsHistoryResponse>>;
 
@@ -129,7 +129,7 @@ impl NodeMetrics {
 
 impl ExecutableCommand for NodeMetrics {
     fn require_ic_admin(&self) -> IcAdminRequirement {
-        IcAdminRequirement::Unchecked
+        IcAdminRequirement::new(AuthRequirement::Specified, NeuronRequirement::None)
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {

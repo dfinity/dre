@@ -77,7 +77,7 @@ supported values are absolute numbers (10) or percentage (10%)"#
 
 impl ExecutableCommand for RolloutFromNodeGroup {
     fn require_ic_admin(&self) -> IcAdminRequirement {
-        IcAdminRequirement::Detect
+        IcAdminRequirement::default()
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {

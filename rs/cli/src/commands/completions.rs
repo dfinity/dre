@@ -11,7 +11,7 @@ pub struct Completions {
 
 impl ExecutableCommand for Completions {
     fn require_ic_admin(&self) -> super::IcAdminRequirement {
-        super::IcAdminRequirement::None
+        super::IcAdminRequirement::none()
     }
 
     fn validate(&self, _cmd: &mut clap::Command) {}

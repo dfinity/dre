@@ -9,7 +9,7 @@ use firewall::Firewall;
 use get::Get;
 use heal::Heal;
 use hostos::HostOsCmd;
-use ic_management_types::{MinNakamotoCoefficients, Network, NodeFeature};
+use ic_management_types::{MinNakamotoCoefficients, NodeFeature};
 use node_metrics::NodeMetrics;
 use nodes::Nodes;
 use proposals::Proposals;
@@ -21,7 +21,7 @@ use url::Url;
 use version::VersionCmd;
 use vote::Vote;
 
-use crate::{auth::Neuron, ctx::DreContext};
+use crate::ctx::DreContext;
 
 mod api_boundary_nodes;
 mod completions;
@@ -236,12 +236,44 @@ pub trait ExecutableCommand {
     }
 }
 
-pub enum IcAdminRequirement {
-    None,
-    Anonymous, // for get commands
-    Detect,    // detect the neuron
-    Unchecked,
-    OverridableBy { network: Network, neuron: Neuron }, // eg automation which we know where is placed
+pub enum NeuronRequirement {
+    None,// for get commands
+    AutoDetect,    // detect the neuron
+    #[allow(unused)]
+    Specified
+}
+
+pub enum AuthRequirement {
+    None,// for get commands
+    Specified
+}
+
+pub struct IcAdminRequirement {
+    pub auth_requirement: AuthRequirement,
+    pub neuron_requirement: NeuronRequirement
+}
+
+impl IcAdminRequirement {
+    pub fn new(auth_requirement: AuthRequirement, neuron_requirement: NeuronRequirement) -> Self {
+        Self {
+            auth_requirement,
+            neuron_requirement
+        }
+    }
+    fn none() -> Self {
+        Self{
+            auth_requirement: AuthRequirement::None,
+            neuron_requirement: NeuronRequirement::None
+        }
+    }
+}
+impl Default for IcAdminRequirement {
+    fn default() -> Self {
+        Self{
+            auth_requirement: AuthRequirement::Specified,
+            neuron_requirement: NeuronRequirement::AutoDetect
+        }
+    }
 }
 
 impl ExecutableCommand for Args {

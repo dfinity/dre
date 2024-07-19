@@ -60,7 +60,7 @@ pub struct List {
 
 impl ExecutableCommand for List {
     fn require_ic_admin(&self) -> IcAdminRequirement {
-        IcAdminRequirement::None
+        IcAdminRequirement::none()
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {

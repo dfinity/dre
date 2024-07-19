@@ -1,4 +1,4 @@
-use crate::auth::Neuron;
+use crate::auth::Auth;
 use anyhow::{anyhow, Error, Result};
 use colored::Colorize;
 use dialoguer::Confirm;
@@ -65,17 +65,17 @@ pub struct IcAdminWrapper {
     network: Network,
     ic_admin_bin_path: Option<String>,
     proceed_without_confirmation: bool,
-    pub neuron: Neuron,
+    pub auth: Auth,
     dry_run: bool,
 }
 
 impl IcAdminWrapper {
-    pub fn new(network: Network, ic_admin_bin_path: Option<String>, proceed_without_confirmation: bool, neuron: Neuron, dry_run: bool) -> Self {
+    pub fn new(network: Network, ic_admin_bin_path: Option<String>, proceed_without_confirmation: bool, auth: Auth, dry_run: bool) -> Self {
         Self {
             network,
             ic_admin_bin_path,
             proceed_without_confirmation,
-            neuron,
+            auth,
             dry_run,
         }
     }
@@ -143,7 +143,7 @@ impl IcAdminWrapper {
                     })
                     .unwrap_or_default(),
                 cmd.args(),
-                self.neuron.proposer_as_arg_vec(),
+                self.auth.maybe_neuron()?.proposer_as_arg_vec(),
             ]
             .concat()
             .as_slice(),
@@ -179,7 +179,7 @@ impl IcAdminWrapper {
     async fn _run_ic_admin_with_args(&self, ic_admin_args: &[String], silent: bool) -> anyhow::Result<String> {
         let ic_admin_path = self.ic_admin_bin_path.clone().unwrap_or_else(|| "ic-admin".to_string());
         let mut cmd = Command::new(ic_admin_path);
-        let auth_options = self.neuron.as_arg_vec();
+        let auth_options = self.auth.as_arg_vec();
         let root_options = [auth_options, vec!["--nns-urls".to_string(), self.network.get_nns_urls_string()]].concat();
         let cmd = cmd.args([&root_options, ic_admin_args].concat());
 

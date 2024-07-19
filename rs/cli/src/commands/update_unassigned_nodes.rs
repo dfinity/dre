@@ -1,10 +1,7 @@
 use clap::Args;
 use ic_canisters::registry::RegistryCanisterWrapper;
-use ic_management_types::Network;
 
-use crate::auth::Neuron;
-
-use super::{ExecutableCommand, IcAdminRequirement};
+use super::{AuthRequirement, ExecutableCommand, IcAdminRequirement, NeuronRequirement};
 
 #[derive(Args, Debug)]
 pub struct UpdateUnassignedNodes {
@@ -15,10 +12,7 @@ pub struct UpdateUnassignedNodes {
 
 impl ExecutableCommand for UpdateUnassignedNodes {
     fn require_ic_admin(&self) -> IcAdminRequirement {
-        IcAdminRequirement::OverridableBy {
-            network: Network::mainnet_unchecked().unwrap(),
-            neuron: Neuron::automation_neuron_unchecked(),
-        }
+        IcAdminRequirement::new(AuthRequirement::Specified, NeuronRequirement::AutoDetect)
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {

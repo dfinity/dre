@@ -46,7 +46,7 @@ pub struct Registry {
 
 impl ExecutableCommand for Registry {
     fn require_ic_admin(&self) -> IcAdminRequirement {
-        IcAdminRequirement::None
+        IcAdminRequirement::none()
     }
 
     async fn execute(&self, ctx: DreContext) -> anyhow::Result<()> {

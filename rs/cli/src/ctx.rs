@@ -18,8 +18,8 @@ use ic_registry_local_registry::LocalRegistry;
 use log::info;
 
 use crate::{
-    auth::Neuron,
-    commands::{Args, ExecutableCommand, IcAdminRequirement},
+    auth::{Auth, AuthType},
+    commands::{Args, AuthRequirement, ExecutableCommand, IcAdminRequirement, NeuronRequirement},
     ic_admin::{download_ic_admin, should_update_ic_admin, IcAdminWrapper},
     runner::Runner,
     subnet_manager::SubnetManager,
@@ -94,36 +94,22 @@ impl DreContext {
         dry_run: bool,
         requirement: IcAdminRequirement,
     ) -> anyhow::Result<Option<Arc<IcAdminWrapper>>> {
-        if let IcAdminRequirement::None = requirement {
-            return Ok(None);
-        }
-        let neuron = match requirement {
-            IcAdminRequirement::Anonymous | IcAdminRequirement::None => Neuron {
-                auth: crate::auth::Auth::Anonymous,
-                neuron_id: 0,
-                include_proposer: false,
-            },
-            IcAdminRequirement::Unchecked => Neuron {
-                auth: crate::auth::Auth::from_cli_args(private_key_pem, hsm_slot, hsm_pin, hsm_key_id)?,
-                neuron_id: 0,
-                include_proposer: false,
-            },
-            IcAdminRequirement::Detect => {
-                Neuron::new(private_key_pem, hsm_slot, hsm_pin.clone(), hsm_key_id.clone(), neuron_id, network, true).await?
-            }
-            IcAdminRequirement::OverridableBy {
-                network: accepted_network,
-                neuron,
-            } => {
-                let maybe_neuron = Neuron::new(private_key_pem, hsm_slot, hsm_pin.clone(), hsm_key_id.clone(), neuron_id, network, true).await;
-
-                match maybe_neuron {
-                    Ok(n) => n,
-                    Err(_) if accepted_network == *network => neuron,
-                    Err(e) => return Err(e),
-                }
-            }
+        let auth = match requirement.auth_requirement {
+            AuthRequirement::None => crate::auth::Auth::new(crate::auth::AuthType::Anonymous),
+            AuthRequirement::Specified => Auth::new(AuthType::from_cli_args(private_key_pem, hsm_slot, hsm_pin, hsm_key_id)?)
         };
+        let auth = match requirement.neuron_requirement {
+            NeuronRequirement::None => auth,
+            NeuronRequirement::AutoDetect => auth.with_autodetect_neuron(network).await?,
+            NeuronRequirement::Specified => {
+                let neuron = crate::auth::Neuron {
+                    neuron_id: neuron_id.unwrap(),
+                    include_proposer: true,
+                };
+                auth.with_neuron(neuron)
+            },
+        };
+
         let ic_admin_path = match should_update_ic_admin()? {
             (true, _) => {
                 let govn_canister_version = governance_canister_version(network.get_nns_urls()).await?;
@@ -136,7 +122,7 @@ impl DreContext {
             network.clone(),
             Some(ic_admin_path),
             proceed_without_confirmation,
-            neuron,
+            auth,
             dry_run,
         )));
 
@@ -170,10 +156,10 @@ impl DreContext {
         let nns_url = self.network.get_nns_urls().first().expect("Should have at least one NNS url");
 
         match &self.ic_admin {
-            Some(a) => match &a.neuron.auth {
-                crate::auth::Auth::Hsm { pin, slot, key_id } => CanisterClient::from_hsm(pin.clone(), *slot, key_id.clone(), nns_url),
-                crate::auth::Auth::Keyfile { path } => CanisterClient::from_key_file(path.clone(), nns_url),
-                crate::auth::Auth::Anonymous => CanisterClient::from_anonymous(nns_url),
+            Some(a) => match &a.auth.auth_type {
+                crate::auth::AuthType::Hsm { pin, slot, key_id } => CanisterClient::from_hsm(pin.clone(), *slot, key_id.clone(), nns_url),
+                crate::auth::AuthType::Keyfile { path } => CanisterClient::from_key_file(path.clone(), nns_url),
+                crate::auth::AuthType::Anonymous => CanisterClient::from_anonymous(nns_url),
             },
             None => CanisterClient::from_anonymous(nns_url),
         }
@@ -183,12 +169,12 @@ impl DreContext {
     pub fn create_ic_agent_canister_client(&self, lock: Option<Mutex<()>>) -> anyhow::Result<IcAgentCanisterClient> {
         let nns_url = self.network.get_nns_urls().first().expect("Should have at least one NNS url");
         match &self.ic_admin {
-            Some(a) => match &a.neuron.auth {
-                crate::auth::Auth::Hsm { pin, slot, key_id } => {
+            Some(a) => match &a.auth.auth_type {
+                crate::auth::AuthType::Hsm { pin, slot, key_id } => {
                     IcAgentCanisterClient::from_hsm(pin.to_string(), *slot, key_id.to_string(), nns_url.to_owned(), lock)
                 }
-                crate::auth::Auth::Keyfile { path } => IcAgentCanisterClient::from_key_file(path.into(), nns_url.to_owned()),
-                crate::auth::Auth::Anonymous => IcAgentCanisterClient::from_anonymous(nns_url.to_owned()),
+                crate::auth::AuthType::Keyfile { path } => IcAgentCanisterClient::from_key_file(path.into(), nns_url.to_owned()),
+                crate::auth::AuthType::Anonymous => IcAgentCanisterClient::from_anonymous(nns_url.to_owned()),
             },
             None => IcAgentCanisterClient::from_anonymous(nns_url.to_owned()),
         }

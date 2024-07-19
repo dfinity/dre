@@ -45,7 +45,7 @@ regardless of the decentralization score"#)]
 
 impl ExecutableCommand for Create {
     fn require_ic_admin(&self) -> IcAdminRequirement {
-        IcAdminRequirement::Detect
+        IcAdminRequirement::default()
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
