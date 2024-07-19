@@ -60,11 +60,11 @@ impl ExecutableCommand for Registry {
         };
 
         if self.incorrect_rewards {
-            let node_operators = Self::get_registry(ctx).await?;
+            let node_operators = self.get_registry(ctx).await?;
             let node_operators = node_operators.node_operators.iter().filter(|rec| !rec.rewards_correct).collect_vec();
             serde_json::to_writer_pretty(writer, &node_operators)?;
         } else {
-            serde_json::to_writer_pretty(writer, &Self::get_registry(ctx).await?)?;
+            serde_json::to_writer_pretty(writer, &self.get_registry(ctx).await?)?;
         }
 
         Ok(())
@@ -74,7 +74,7 @@ impl ExecutableCommand for Registry {
 }
 
 impl Registry {
-    async fn get_registry(ctx: DreContext) -> anyhow::Result<RegistryDump> {
+    async fn get_registry(&self, ctx: DreContext) -> anyhow::Result<RegistryDump> {
         let local_registry = ctx.registry().await;
 
         let elected_guest_os_versions = get_elected_guest_os_versions(&local_registry)?;
