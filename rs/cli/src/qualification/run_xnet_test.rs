@@ -63,8 +63,8 @@ impl Step for XNetTest {
                 "https://download.dfinity.systems/ic/{}/binaries/x86_64-{}/{}.gz",
                 &self.version,
                 match std::env::consts::OS {
-                    "linux" => "x86_64-unknown-linux",
-                    "macos" => "x86_64-apple-darwin",
+                    "linux" => "linux",
+                    "macos" => "darwin",
                     s => return Err(anyhow::anyhow!("Unsupported os: {}", s)),
                 },
                 executable
@@ -75,7 +75,7 @@ impl Step for XNetTest {
             let mut d = GzDecoder::new(&response[..]);
             let mut collector: Vec<u8> = vec![];
             let mut file = std::fs::File::create(&exe_path)?;
-            d.read(&mut collector)?;
+            d.read_to_end(&mut collector)?;
 
             file.write_all(&collector)?;
             print_text(format!("Downloaded: {}", &url));
@@ -135,8 +135,8 @@ impl Step for XNetTest {
 
         match ensure_finalization_rate_for_subnet(
             &self.deployment_name,
-            end.timestamp_millis(),
-            elapsed.num_milliseconds(),
+            end.timestamp(),
+            elapsed.num_seconds(),
             &all_ipv6,
             &client,
             &self.prometheus_endpoint,
@@ -182,14 +182,12 @@ async fn ensure_finalization_rate_for_subnet(
         "artifact_pool_consensus_height_stat{{{},type=\"finalization\",pool_type=\"validated\",stat=\"max\"}}",
         common_labels
     );
-
+    let query = format!("avg(rate({}[{}s]))", query_selector, duration);
+    print_text(format!("Running query: {}", query));
     let response = client
         .get(prom_endpoint)
         .header("Accept", "application/json")
-        .query(&[
-            ("time", end_timestamp.to_string()),
-            ("query", format!("avg(rate({}[{}]))", query_selector, duration)),
-        ])
+        .query(&[("time", end_timestamp.to_string()), ("query", query)])
         .send()
         .await?
         .error_for_status()?
@@ -197,8 +195,9 @@ async fn ensure_finalization_rate_for_subnet(
         .await?;
 
     let finalization_rate = response["data"]["result"][0]["value"][1]
-        .as_f64()
-        .ok_or(anyhow::anyhow!("Response is not in the expected format {}", response.to_string()))?;
+        .as_str()
+        .ok_or(anyhow::anyhow!("Response is not in the expected format {}", response.to_string()))?
+        .parse::<f64>()?;
 
     let expected_finalization_rate = expected_finalization_rate_for_subnet(subnet_type, ips.len());
     let table = Table::new()
