@@ -22,21 +22,23 @@ mod upgrade_deployment_canister;
 mod upgrade_subnets;
 
 pub struct QualificationExecutor {
-    steps: Vec<Steps>,
+    steps: Vec<(usize, Steps)>,
 }
 
 pub struct QualificationContext {
     dre_ctx: DreContext,
     from_version: String,
     to_version: String,
+    step_range: String,
 }
 
 impl QualificationContext {
-    pub fn new(dre_ctx: DreContext) -> Self {
+    pub fn new(dre_ctx: DreContext, step_range: String) -> Self {
         Self {
             dre_ctx,
             from_version: "".to_string(),
             to_version: "".to_string(),
+            step_range,
         }
     }
 
@@ -51,67 +53,103 @@ impl QualificationContext {
 
 impl QualificationExecutor {
     pub fn new(ctx: &QualificationContext) -> Self {
+        let steps = vec![
+            // Blessing the version which we are qualifying
+            Steps::EnsureBlessedVersions(EnsureBlessedRevisions {
+                version: ctx.to_version.clone(),
+            }),
+            // Upgrading deployment canisters
+            Steps::UpgradeDeploymentCanisters(UpgradeDeploymentCanisters {}),
+            // Upgrading all application subnets
+            Steps::UpgradeSubnets(UpgradeSubnets {
+                action: Action::Upgrade,
+                subnet_type: Some(SubnetType::Application),
+                to_version: ctx.to_version.clone(),
+            }),
+            // Upgrading all system subnets
+            Steps::UpgradeSubnets(UpgradeSubnets {
+                action: Action::Upgrade,
+                subnet_type: Some(SubnetType::System),
+                to_version: ctx.to_version.clone(),
+            }),
+            // Upgrading unassigned nodes
+            Steps::UpgradeSubnets(UpgradeSubnets {
+                action: Action::Upgrade,
+                subnet_type: None,
+                to_version: ctx.to_version.clone(),
+            }),
+            // Since the initial testnet is spunup with disk-img
+            // retire the initial version.
+            Steps::RetireBlessedVersions(RetireBlessedVersions {
+                versions: vec![ctx.from_version.clone()],
+            }),
+            // Bless initial replica version with update-img
+            Steps::EnsureBlessedVersions(EnsureBlessedRevisions {
+                version: ctx.from_version.clone(),
+            }),
+            // Downgrade application subnets
+            Steps::UpgradeSubnets(UpgradeSubnets {
+                action: Action::Downgrade,
+                subnet_type: Some(SubnetType::Application),
+                to_version: ctx.from_version.clone(),
+            }),
+            // Downgrade system subnets
+            Steps::UpgradeSubnets(UpgradeSubnets {
+                action: Action::Downgrade,
+                subnet_type: Some(SubnetType::System),
+                to_version: ctx.from_version.clone(),
+            }),
+            // Downgrade unassinged nodes
+            Steps::UpgradeSubnets(UpgradeSubnets {
+                action: Action::Downgrade,
+                subnet_type: None,
+                to_version: ctx.from_version.clone(),
+            }),
+        ];
+
+        let (start_index, end_index) = if ctx.step_range.contains("..") {
+            let split = ctx.step_range.split("..").map(|f| f.to_string()).collect_vec();
+            let first = split.get(0).map(|s| s.parse::<usize>().unwrap_or(0)).unwrap_or(0);
+            let last = split
+                .get(1)
+                .map(|s| s.parse::<usize>().unwrap_or(steps.len() - 1))
+                .unwrap_or(steps.len() - 1);
+            (first, last)
+        } else {
+            match ctx.step_range.parse::<usize>() {
+                Ok(v) => (v, v),
+                Err(_) => (0, steps.len() - 1),
+            }
+        };
+
+        let (start_index, end_index) = match start_index.cmp(&end_index) {
+            std::cmp::Ordering::Less | std::cmp::Ordering::Equal => (start_index, end_index),
+            std::cmp::Ordering::Greater => (0, steps.len() - 1),
+        };
+
+        let end_index = if end_index > steps.len() - 1 { steps.len() - 1 } else { end_index };
         Self {
-            steps: vec![
-                // Blessing the version which we are qualifying
-                Steps::EnsureBlessedVersions(EnsureBlessedRevisions {
-                    version: ctx.to_version.clone(),
-                }),
-                // Upgrading deployment canisters
-                Steps::UpgradeDeploymentCanisters(UpgradeDeploymentCanisters {}),
-                // Upgrading all application subnets
-                Steps::UpgradeSubnets(UpgradeSubnets {
-                    action: Action::Upgrade,
-                    subnet_type: Some(SubnetType::Application),
-                    to_version: ctx.to_version.clone(),
-                }),
-                // Upgrading all system subnets
-                Steps::UpgradeSubnets(UpgradeSubnets {
-                    action: Action::Upgrade,
-                    subnet_type: Some(SubnetType::System),
-                    to_version: ctx.to_version.clone(),
-                }),
-                // Upgrading unassigned nodes
-                Steps::UpgradeSubnets(UpgradeSubnets {
-                    action: Action::Upgrade,
-                    subnet_type: None,
-                    to_version: ctx.to_version.clone(),
-                }),
-                // Since the initial testnet is spunup with disk-img
-                // retire the initial version.
-                Steps::RetireBlessedVersions(RetireBlessedVersions {
-                    versions: vec![ctx.from_version.clone()],
-                }),
-                // Bless initial replica version with update-img
-                Steps::EnsureBlessedVersions(EnsureBlessedRevisions {
-                    version: ctx.from_version.clone(),
-                }),
-                // Downgrade application subnets
-                Steps::UpgradeSubnets(UpgradeSubnets {
-                    action: Action::Downgrade,
-                    subnet_type: Some(SubnetType::Application),
-                    to_version: ctx.from_version.clone(),
-                }),
-                // Downgrade system subnets
-                Steps::UpgradeSubnets(UpgradeSubnets {
-                    action: Action::Downgrade,
-                    subnet_type: Some(SubnetType::System),
-                    to_version: ctx.from_version.clone(),
-                }),
-                // Downgrade unassinged nodes
-                Steps::UpgradeSubnets(UpgradeSubnets {
-                    action: Action::Downgrade,
-                    subnet_type: None,
-                    to_version: ctx.from_version.clone(),
-                }),
-            ],
+            steps: steps
+                .into_iter()
+                .enumerate()
+                .filter(|(i, _)| start_index <= *i && *i <= end_index)
+                .collect_vec(),
         }
     }
 
     pub fn list(&self) {
         let table = Table::new()
-            .with_columns(&[("Name", ColumnAlignment::Left), ("Help", ColumnAlignment::Left)])
-            .with_rows(self.steps.iter().map(|s| vec![s.name().to_string(), s.help().to_string()]).collect_vec())
+            .with_columns(&[
+                ("Index", ColumnAlignment::Middle),
+                ("Name", ColumnAlignment::Left),
+                ("Help", ColumnAlignment::Left),
+            ])
+            .with_rows(
+                self.steps
+                    .iter()
+                    .map(|(i, s)| vec![(i).to_string(), s.name().to_string(), s.help().to_string()])
+                    .collect_vec(),
+            )
             .to_table();
 
         println!("{}", table)
@@ -120,7 +158,7 @@ impl QualificationExecutor {
     pub async fn execute(&self, ctx: QualificationContext) -> anyhow::Result<()> {
         print_text(format!("Running qualification from version {} to {}", ctx.from_version, ctx.to_version));
         print_text(format!("Starting execution of {} steps:", self.steps.len()));
-        for (i, step) in self.steps.iter().enumerate() {
+        for (i, step) in self.steps.iter() {
             print_text(format!("Executing step {}: `{}`", i, step.name()));
 
             step.execute(&ctx).await?;

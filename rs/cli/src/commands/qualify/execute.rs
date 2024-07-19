@@ -19,6 +19,11 @@ pub struct Execute {
     /// If left empty, the tool will use the current NNS version
     #[clap(long, short)]
     from_version: Option<String>,
+
+    /// Specify the steps to run
+    /// A range can be: `4`, `3..`, `..3, `1..3`
+    #[clap(long)]
+    step_range: Option<String>,
 }
 
 impl ExecutableCommand for Execute {
@@ -50,7 +55,7 @@ impl ExecutableCommand for Execute {
             }
         };
 
-        let context = QualificationContext::new(ctx)
+        let context = QualificationContext::new(ctx, self.step_range.clone().unwrap_or_default())
             .with_from_version(from_version)
             .with_to_version(self.version.clone());
         let qualification_executor = QualificationExecutor::new(&context);
