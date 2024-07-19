@@ -98,6 +98,12 @@ The argument is mandatory for testnets, and is optional for mainnet and staging"
     /// To print as much information as possible
     #[clap(long, env = "VERBOSE", global = true)]
     pub verbose: bool,
+
+    /// Don't sync with the registry
+    ///
+    /// Useful for when the nns is unreachable
+    #[clap(long)]
+    pub no_sync: bool,
 }
 
 #[derive(Subcommand, Debug)]
