@@ -1,3 +1,5 @@
+use std::{path::PathBuf, time::Duration};
+
 use clap::Parser;
 use cli::Args;
 use dre::{
@@ -9,7 +11,11 @@ use ic_management_types::Network;
 use itertools::Itertools;
 use log::info;
 use serde_json::Value;
-use tokio::sync::oneshot;
+use tokio::{
+    io::AsyncReadExt,
+    process::Command,
+    sync::oneshot::{self, Sender},
+};
 use tokio_util::sync::CancellationToken;
 
 mod cli;
@@ -114,22 +120,15 @@ async fn main() -> anyhow::Result<()> {
     // we have to extract the neuron pem file to use with dre
     let token = CancellationToken::new();
     let (sender, receiver) = oneshot::channel();
-    let ic_git = args.ic_repo_path.clone();
-    let handle = tokio::spawn(async move {
-        let command = ic_git.join(".gitlab-ci/container/container-run.sh");
-        let args = &["ict", "testnet", "create", "--from-ic-config-path", "...", "--lifetime-mins", "180"];
-
-        info!("Running command: {} {}", command.display(), args.iter().join(" "));
-        sender.send("Hello").expect("Failed to send data across threads");
-    });
+    let handle = tokio::spawn(ict(args.ic_repo_path.clone(), config, token.clone(), sender));
 
     // Run dre to qualify with correct parameters
-    info!("Awaiting data...");
+    info!("Awaiting logs path...");
     let data = receiver.await?;
     token.cancel();
     info!("Received data: {}", data);
 
-    handle.await?;
+    handle.await??;
     Ok(())
 }
 
@@ -146,4 +145,45 @@ fn init_logger() {
         }
     }
     pretty_env_logger::init_custom_env("LOG_LEVEL");
+}
+
+async fn ict(ic_git: PathBuf, config: String, token: CancellationToken, sender: Sender<String>) -> anyhow::Result<()> {
+    let command = ic_git.join(".gitlab-ci/container/container-run.sh");
+    let args = &[
+        "ict",
+        "testnet",
+        "create",
+        "--lifetime-mins",
+        "180",
+        "--from-ic-config-path",
+        &format!("<(cat <<EOF\n{}\nEOF\n)", config),
+    ];
+
+    info!("Running command: {} {}", command.display(), args.iter().join(" "));
+    let child = Command::new(&command).args(args).spawn()?;
+    let _out = child.stdout.expect("Stdout not attached");
+    let mut err = child.stderr.expect("Stderr not attached");
+    let target = "Testnet is being deployed, please wait ...";
+    let logs;
+    loop {
+        // Read err to find out the path to
+        let mut all = "".to_string();
+        err.read_to_string(&mut all).await?;
+
+        if all.contains(target) {
+            logs = all.split(target).last().ok_or(anyhow::anyhow!("Failed to parse output"))?.to_string();
+            break;
+        }
+
+        tokio::time::sleep(Duration::from_secs(2)).await;
+        if token.is_cancelled() {
+            return Ok(());
+        }
+    }
+
+    sender
+        .send(logs.to_string())
+        .map_err(|_| anyhow::anyhow!("Failed to send data across channels"))?;
+
+    Ok(())
 }
