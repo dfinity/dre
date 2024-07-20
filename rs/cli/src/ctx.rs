@@ -33,13 +33,17 @@ pub struct DreContext {
     ic_admin: Option<Arc<IcAdminWrapper>>,
     runner: RefCell<Option<Rc<Runner>>>,
     verbose_runner: bool,
+    skip_sync: bool,
 }
 
 impl DreContext {
     pub async fn from_args(args: &Args) -> anyhow::Result<Self> {
-        let network = ic_management_types::Network::new(args.network.clone(), &args.nns_urls)
-            .await
-            .map_err(|e| anyhow::anyhow!(e))?;
+        let network = match args.no_sync {
+            false => ic_management_types::Network::new(args.network.clone(), &args.nns_urls)
+                .await
+                .map_err(|e| anyhow::anyhow!(e))?,
+            true => Network::new_unchecked(args.network.clone(), &args.nns_urls)?,
+        };
 
         let (neuron_id, private_key_pem) = {
             let neuron_id = match args.neuron_id {
@@ -76,6 +80,7 @@ impl DreContext {
             ic_admin,
             runner: RefCell::new(None),
             verbose_runner: args.verbose,
+            skip_sync: args.no_sync,
         })
     }
 
@@ -140,12 +145,14 @@ impl DreContext {
         }
         let network = self.network();
 
-        sync_local_store(network).await.expect("Should be able to sync registry");
+        if !self.skip_sync {
+            sync_local_store(network).await.expect("Should be able to sync registry");
+        }
         let local_path = local_registry_path(network);
         info!("Using local registry path for network {}: {}", network.name, local_path.display());
         let local_registry = LocalRegistry::new(local_path, Duration::from_millis(1000)).expect("Failed to create local registry");
 
-        let registry = Rc::new(LazyRegistry::new(local_registry, network.clone()));
+        let registry = Rc::new(LazyRegistry::new(local_registry, network.clone(), self.skip_sync));
         *self.registry.borrow_mut() = Some(registry.clone());
         registry
     }

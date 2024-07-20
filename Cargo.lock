@@ -3439,6 +3439,7 @@ dependencies = [
  "sha2 0.10.8",
  "simple_asn1",
  "thiserror",
+ "trustworthy-node-metrics",
  "url",
 ]
 

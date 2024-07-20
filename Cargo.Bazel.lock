@@ -1,5 +1,5 @@
 {
-  "checksum": "f3c6195e6654db56b4c772ec401cc5689f9b0fa6466d7c0fc6543302e0774321",
+  "checksum": "252e3897dfec85dbc5cec4650c9b7747da19932138d0f08e3f35584cac0b0ada",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -10558,6 +10558,10 @@
             {
               "id": "anyhow 1.0.86",
               "target": "anyhow"
+            },
+            {
+              "id": "backoff 0.4.0",
+              "target": "backoff"
             },
             {
               "id": "candid 0.10.9",
@@ -45604,8 +45608,18 @@
       "name": "trustworthy-node-metrics",
       "version": "0.4.3",
       "repository": null,
-      "targets": [],
-      "library_target_name": null,
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "trustworthy_node_metrics",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "trustworthy_node_metrics",
       "common_attrs": {
         "compile_data_glob": [
           "**"
