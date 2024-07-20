@@ -1,12 +1,21 @@
-use std::{rc::Rc, sync::Arc};
+use std::{
+    io::{Read, Write},
+    os::unix::fs::PermissionsExt,
+    path::PathBuf,
+    rc::Rc,
+    sync::Arc,
+    time::Duration,
+};
 
 use chrono::Utc;
 use ensure_blessed_versions::EnsureBlessedRevisions;
+use flate2::bufread::GzDecoder;
 use ic_management_backend::lazy_registry::LazyRegistry;
 use ic_registry_subnet_type::SubnetType;
 use itertools::Itertools;
+use reqwest::ClientBuilder;
 use retire_blessed_versions::RetireBlessedVersions;
-use run_xnet_test::XNetTest;
+use run_workload_test::Workload;
 use tabular_util::{ColumnAlignment, Table};
 use upgrade_deployment_canister::UpgradeDeploymentCanisters;
 use upgrade_subnets::{Action, UpgradeSubnets};
@@ -18,6 +27,7 @@ use crate::{
 
 mod ensure_blessed_versions;
 mod retire_blessed_versions;
+mod run_workload_test;
 mod run_xnet_test;
 mod tabular_util;
 mod upgrade_deployment_canister;
@@ -103,8 +113,8 @@ impl QualificationExecutor {
                 subnet_type: None,
                 to_version: ctx.to_version.clone(),
             }),
-            // Run xnet tests
-            Steps::RunXnetTest(XNetTest {
+            // Run workload tests
+            Steps::RunWorkloadTest(Workload {
                 version: ctx.to_version.clone(),
                 deployment_name: ctx.deployment_name.clone(),
                 prometheus_endpoint: ctx.prometheus_endpoint.clone(),
@@ -223,7 +233,7 @@ enum Steps {
     UpgradeDeploymentCanisters(UpgradeDeploymentCanisters),
     UpgradeSubnets(UpgradeSubnets),
     RetireBlessedVersions(RetireBlessedVersions),
-    RunXnetTest(XNetTest),
+    RunWorkloadTest(Workload),
 }
 
 pub trait Step {
@@ -241,7 +251,7 @@ impl Step for Steps {
             Steps::UpgradeDeploymentCanisters(c) => c.help(),
             Steps::UpgradeSubnets(c) => c.help(),
             Steps::RetireBlessedVersions(c) => c.help(),
-            Steps::RunXnetTest(c) => c.help(),
+            Steps::RunWorkloadTest(c) => c.help(),
         }
     }
 
@@ -251,7 +261,7 @@ impl Step for Steps {
             Steps::UpgradeDeploymentCanisters(c) => c.name(),
             Steps::UpgradeSubnets(c) => c.name(),
             Steps::RetireBlessedVersions(c) => c.name(),
-            Steps::RunXnetTest(c) => c.name(),
+            Steps::RunWorkloadTest(c) => c.name(),
         }
     }
 
@@ -261,10 +271,99 @@ impl Step for Steps {
             Steps::UpgradeDeploymentCanisters(c) => c.execute(ctx).await,
             Steps::UpgradeSubnets(c) => c.execute(ctx).await,
             Steps::RetireBlessedVersions(c) => c.execute(ctx).await,
-            Steps::RunXnetTest(c) => c.execute(ctx).await,
+            Steps::RunWorkloadTest(c) => c.execute(ctx).await,
         }
     }
 }
+
+const REQWEST_TIMEOUT: Duration = Duration::from_secs(30);
+pub async fn download_canisters(canistes: &[&str], version: &str) -> anyhow::Result<()> {
+    let client = ClientBuilder::new().timeout(REQWEST_TIMEOUT).build()?;
+    for canister in canistes {
+        let canister_path = construct_canister_path(canister, version)?;
+
+        if canister_path.exists() {
+            print_text(format!("Canister `{}` data already present", canister));
+            continue;
+        }
+
+        let url = format!("https://download.dfinity.systems/ic/{}/canisters/{}.gz", version, canister);
+
+        print_text(format!("Downloading: {}", url));
+        let response = client.get(&url).send().await?.error_for_status()?.bytes().await?;
+        let mut d = GzDecoder::new(&response[..]);
+        let mut collector: Vec<u8> = vec![];
+        let mut file = std::fs::File::create(&canister_path)?;
+        d.read_to_end(&mut collector)?;
+
+        file.write_all(&collector)?;
+        print_text(format!("Downloaded: {}", &url));
+    }
+    Ok(())
+}
+
+pub async fn download_executables(executables: &[&str], version: &str) -> anyhow::Result<()> {
+    let client = ClientBuilder::new().timeout(REQWEST_TIMEOUT).build()?;
+    for executable in executables {
+        let exe_path = construct_executable_path(executable, version)?;
+
+        if exe_path.exists() && exe_path.is_file() {
+            let permissions = exe_path.metadata()?.permissions();
+            let is_executable = permissions.mode() & 0o111 != 0;
+            if is_executable {
+                print_text(format!("Executable `{}` already present and executable", executable));
+                continue;
+            }
+        }
+
+        let url = format!(
+            "https://download.dfinity.systems/ic/{}/binaries/x86_64-{}/{}.gz",
+            version,
+            match std::env::consts::OS {
+                "linux" => "linux",
+                "macos" => "darwin",
+                s => return Err(anyhow::anyhow!("Unsupported os: {}", s)),
+            },
+            executable
+        );
+
+        print_text(format!("Downloading: {}", url));
+        let response = client.get(&url).send().await?.error_for_status()?.bytes().await?;
+        let mut d = GzDecoder::new(&response[..]);
+        let mut collector: Vec<u8> = vec![];
+        let mut file = std::fs::File::create(&exe_path)?;
+        d.read_to_end(&mut collector)?;
+
+        file.write_all(&collector)?;
+        print_text(format!("Downloaded: {}", &url));
+
+        file.set_permissions(PermissionsExt::from_mode(0o774))?;
+        print_text(format!("Created executable: {}", exe_path.display()))
+    }
+    Ok(())
+}
+
+const IC_EXECUTABLES_DIR: &str = "ic-executables";
+pub fn construct_canister_path(artifact: &str, version: &str) -> anyhow::Result<PathBuf> {
+    let mut canister_path = construct_executable_path(artifact, version)?;
+    canister_path.set_extension("wasm");
+    Ok(canister_path)
+}
+pub fn construct_executable_path(artifact: &str, version: &str) -> anyhow::Result<PathBuf> {
+    let cache = dirs::cache_dir().ok_or(anyhow::anyhow!("Can't cache dir"))?.join(IC_EXECUTABLES_DIR);
+    if !cache.exists() {
+        std::fs::create_dir_all(&cache)?;
+    }
+
+    let artifact_path = cache.join(format!("{}/{}.{}", artifact, artifact, version));
+    let artifact_dir = artifact_path.parent().unwrap();
+    if !artifact_dir.exists() {
+        std::fs::create_dir(artifact_dir)?;
+    }
+
+    Ok(artifact_path)
+}
+
 const MAX_RETIRES: usize = 10;
 pub async fn ic_admin_with_retry(ic_admin: Arc<IcAdminWrapper>, cmd: ProposeCommand, opts: ProposeOptions) -> anyhow::Result<()> {
     let mut retries = 0;
