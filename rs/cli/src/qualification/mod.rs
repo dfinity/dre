@@ -16,6 +16,7 @@ use itertools::Itertools;
 use reqwest::ClientBuilder;
 use retire_blessed_versions::RetireBlessedVersions;
 use run_workload_test::Workload;
+use run_xnet_test::RunXnetTest;
 use tabular_util::{ColumnAlignment, Table};
 use upgrade_deployment_canister::UpgradeDeploymentCanisters;
 use upgrade_subnets::{Action, UpgradeSubnets};
@@ -118,6 +119,10 @@ impl QualificationExecutor {
                 version: ctx.to_version.clone(),
                 deployment_name: ctx.deployment_name.clone(),
                 prometheus_endpoint: ctx.prometheus_endpoint.clone(),
+            }),
+            // Run XNet tests
+            Steps::RunXnetTest(RunXnetTest {
+                version: ctx.to_version.clone(),
             }),
             // Since the initial testnet is spunup with disk-img
             // retire the initial version.
@@ -234,6 +239,7 @@ enum Steps {
     UpgradeSubnets(UpgradeSubnets),
     RetireBlessedVersions(RetireBlessedVersions),
     RunWorkloadTest(Workload),
+    RunXnetTest(RunXnetTest),
 }
 
 pub trait Step {
@@ -252,6 +258,7 @@ impl Step for Steps {
             Steps::UpgradeSubnets(c) => c.help(),
             Steps::RetireBlessedVersions(c) => c.help(),
             Steps::RunWorkloadTest(c) => c.help(),
+            Steps::RunXnetTest(c) => c.help(),
         }
     }
 
@@ -262,6 +269,7 @@ impl Step for Steps {
             Steps::UpgradeSubnets(c) => c.name(),
             Steps::RetireBlessedVersions(c) => c.name(),
             Steps::RunWorkloadTest(c) => c.name(),
+            Steps::RunXnetTest(c) => c.name(),
         }
     }
 
@@ -272,6 +280,7 @@ impl Step for Steps {
             Steps::UpgradeSubnets(c) => c.execute(ctx).await,
             Steps::RetireBlessedVersions(c) => c.execute(ctx).await,
             Steps::RunWorkloadTest(c) => c.execute(ctx).await,
+            Steps::RunXnetTest(c) => c.execute(ctx).await,
         }
     }
 }
