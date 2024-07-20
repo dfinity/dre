@@ -36,7 +36,7 @@ impl Step for RunXnetTest {
             .join(XNET_PRINCIPAL_PATH);
 
         if !key.exists() {
-            anyhow::bail!("Principal key for xnet testing not found");
+            anyhow::bail!("Principal key for xnet testing not found at {}", key.display());
         }
         let file = std::fs::File::open(&key)?;
         file.set_permissions(PermissionsExt::from_mode(0o400))?;
