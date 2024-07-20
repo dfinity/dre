@@ -61,11 +61,11 @@ impl QualificationExecutorBuilder {
         }
     }
 
-    pub fn from_version(self, from_version: String) -> Self {
+    pub fn with_from_version(self, from_version: String) -> Self {
         Self { from_version, ..self }
     }
 
-    pub fn to_version(self, to_version: String) -> Self {
+    pub fn with_to_version(self, to_version: String) -> Self {
         Self { to_version, ..self }
     }
 
@@ -150,7 +150,7 @@ impl QualificationExecutor {
 
         let (start_index, end_index) = if ctx.step_range.contains("..") {
             let split = ctx.step_range.split("..").map(|f| f.to_string()).collect_vec();
-            let first = split.get(0).map(|s| s.parse::<usize>().unwrap_or(0)).unwrap_or(0);
+            let first = split.first().map(|s| s.parse::<usize>().unwrap_or(0)).unwrap_or(0);
             let last = split
                 .get(1)
                 .map(|s| s.parse::<usize>().unwrap_or(steps.len() - 1))

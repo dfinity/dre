@@ -65,8 +65,8 @@ impl ExecutableCommand for Execute {
 
         let qualification_executor = QualificationExecutorBuilder::new(ctx)
             .with_step_range(self.step_range.clone().unwrap_or_default())
-            .from_version(from_version)
-            .to_version(self.version.clone())
+            .with_from_version(from_version)
+            .with_to_version(self.version.clone())
             .with_deployment_namge(self.deployment_name.clone())
             .with_prometheus_endpoint(self.prometheus_endpoint.clone())
             .build();
