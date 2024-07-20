@@ -13,3 +13,8 @@ tokio = { workspace = true }
 log = { workspace = true }
 pretty_env_logger = { workspace = true }
 ic-nervous-system-common-test-keys = { workspace = true }
+dirs = { workspace = true }
+dre = { path = "../cli" }
+ic-management-types = { path = "../ic-management-types" }
+ic-canisters = { path = "../ic-canisters" }
+serde_json = { workspace = true }

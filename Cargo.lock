@@ -7167,9 +7167,14 @@ version = "0.4.3"
 dependencies = [
  "anyhow",
  "clap 4.5.9",
+ "dirs",
+ "dre",
+ "ic-canisters",
+ "ic-management-types",
  "ic-nervous-system-common-test-keys",
  "log",
  "pretty_env_logger",
+ "serde_json",
  "tokio",
 ]
 
