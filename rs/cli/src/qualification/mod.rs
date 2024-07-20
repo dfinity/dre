@@ -3,6 +3,7 @@ use std::{
     os::unix::fs::PermissionsExt,
     path::PathBuf,
     rc::Rc,
+    str::FromStr,
     sync::Arc,
     time::Duration,
 };
@@ -296,7 +297,7 @@ pub async fn download_canisters(canistes: &[&str], version: &str) -> anyhow::Res
             continue;
         }
 
-        let url = format!("https://download.dfinity.systems/ic/{}/canisters/{}.gz", version, canister);
+        let url = format!("https://download.dfinity.systems/ic/{}/canisters/{}.wasm.gz", version, canister);
 
         print_text(format!("Downloading: {}", url));
         let response = client.get(&url).send().await?.error_for_status()?.bytes().await?;
@@ -354,9 +355,8 @@ pub async fn download_executables(executables: &[&str], version: &str) -> anyhow
 
 const IC_EXECUTABLES_DIR: &str = "ic-executables";
 pub fn construct_canister_path(artifact: &str, version: &str) -> anyhow::Result<PathBuf> {
-    let mut canister_path = construct_executable_path(artifact, version)?;
-    canister_path.set_extension("wasm");
-    Ok(canister_path)
+    let canister_path = construct_executable_path(artifact, version)?;
+    PathBuf::from_str(&format!("{}.wasm", canister_path.display())).map_err(|e| anyhow::anyhow!(e))
 }
 pub fn construct_executable_path(artifact: &str, version: &str) -> anyhow::Result<PathBuf> {
     let cache = dirs::cache_dir().ok_or(anyhow::anyhow!("Can't cache dir"))?.join(IC_EXECUTABLES_DIR);

@@ -56,7 +56,7 @@ impl Step for RunXnetTest {
         let nns_node = subnet.nodes.first().ok_or(anyhow::anyhow!("Failed to find a node in a system subnet"))?;
 
         let args = &[
-            "--nns-urls".to_string(),
+            "--nns_url".to_string(),
             format!("http://[{}]:8080/", nns_node.ip_addr),
             "--subnets".to_string(),
             NUM_SUBNETS.to_string(),
@@ -66,7 +66,7 @@ impl Step for RunXnetTest {
             RUNTIME.as_secs().to_string(),
             "--rate".to_string(),
             REQUEST_RATE.to_string(),
-            "--paylod_size".to_string(),
+            "--payload_size".to_string(),
             PAYLOAD_SIZE.to_string(),
             "--cycles_per_subnet".to_string(),
             CYCLES_PER_SUBNET.to_string(),
