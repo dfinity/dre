@@ -6,8 +6,11 @@ use dre::{
 };
 use ic_canisters::governance::governance_canister_version;
 use ic_management_types::Network;
+use itertools::Itertools;
 use log::info;
 use serde_json::Value;
+use tokio::sync::oneshot;
+use tokio_util::sync::CancellationToken;
 
 mod cli;
 
@@ -24,7 +27,7 @@ async fn main() -> anyhow::Result<()> {
     // Take in one version and figure out what is the base version
     //
     // To find the initial version we could take NNS version?
-    let initial_version = if let Some(v) = args.initial_version {
+    let initial_version = if let Some(ref v) = args.initial_version {
         v.to_string()
     } else {
         info!("Fetching the version of NNS which will be used as starting point");
@@ -67,7 +70,7 @@ async fn main() -> anyhow::Result<()> {
     // Generate configuration for `ict` including the initial version
     //
     // We could take in a file and mutate it and copy it to /tmp folder
-    let config = if let Some(path) = args.config_override {
+    let config = if let Some(ref path) = args.config_override {
         let contents = std::fs::read_to_string(path)?;
         let mut config = serde_json::from_str::<Value>(&contents)?;
         config["initial_version"] = serde_json::Value::String(initial_version);
@@ -100,6 +103,8 @@ async fn main() -> anyhow::Result<()> {
         serde_json::to_string_pretty(&serde_json::from_str::<Value>(&config)?)?
     };
     info!("Using configuration: \n{}", config);
+
+    args.ensure_git().await?;
     // Run ict and capture its output
     //
     // Its important to parse the output correctly so we get the path to
@@ -107,9 +112,24 @@ async fn main() -> anyhow::Result<()> {
     // aggregate the output of the command which contains the json dump
     // of topology to parse it and get the nns urls and other links. Also
     // we have to extract the neuron pem file to use with dre
+    let token = CancellationToken::new();
+    let (sender, receiver) = oneshot::channel();
+    let ic_git = args.ic_repo_path.clone();
+    let handle = tokio::spawn(async move {
+        let command = ic_git.join(".gitlab-ci/container/container-run.sh");
+        let args = &["ict", "testnet", "create", "--from-ic-config-path", "...", "--lifetime-mins", "180"];
+
+        info!("Running command: {} {}", command.display(), args.iter().join(" "));
+        sender.send("Hello").expect("Failed to send data across threads");
+    });
 
     // Run dre to qualify with correct parameters
+    info!("Awaiting data...");
+    let data = receiver.await?;
+    token.cancel();
+    info!("Received data: {}", data);
 
+    handle.await?;
     Ok(())
 }
 

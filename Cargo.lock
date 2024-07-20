@@ -7172,10 +7172,12 @@ dependencies = [
  "ic-canisters",
  "ic-management-types",
  "ic-nervous-system-common-test-keys",
+ "itertools 0.13.0",
  "log",
  "pretty_env_logger",
  "serde_json",
  "tokio",
+ "tokio-util",
 ]
 
 [[package]]

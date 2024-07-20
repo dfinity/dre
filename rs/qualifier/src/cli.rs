@@ -3,6 +3,7 @@ use std::{path::PathBuf, str::FromStr};
 use clap::Parser;
 
 use ic_nervous_system_common_test_keys::TEST_NEURON_1_OWNER_KEYPAIR;
+use tokio::process::Command;
 const TEST_NEURON_1_IDENTITY_PATH: &str = ".config/dfx/identity/test_neuron_1/identity.pem";
 
 #[derive(Parser)]
@@ -25,6 +26,9 @@ pub struct Args {
     ///   4 unassigned nodes
     #[clap(long)]
     pub config_override: Option<PathBuf>,
+
+    #[clap(long, default_value = dirs::cache_dir().unwrap().join("git/ic").display().to_string())]
+    pub ic_repo_path: PathBuf,
 }
 
 impl Args {
@@ -39,5 +43,46 @@ impl Args {
         }
 
         std::fs::write(path, key_pair.to_pem()).map_err(|e| anyhow::anyhow!(e))
+    }
+
+    pub async fn ensure_git(&self) -> anyhow::Result<()> {
+        std::fs::create_dir_all(&self.ic_repo_path)?;
+
+        let git_dir = &self.ic_repo_path.join(".git");
+        if !git_dir.exists() {
+            if !Command::new("git")
+                .args(&["clone", "git@github.com:dfinity/ic.git", "."])
+                .current_dir(&self.ic_repo_path)
+                .status()
+                .await?
+                .success()
+            {
+                anyhow::bail!("Failed to clone ic repo")
+            }
+
+            return Ok(());
+        }
+
+        if !Command::new("git")
+            .args(&["switch", "master", "-f"])
+            .current_dir(&self.ic_repo_path)
+            .status()
+            .await?
+            .success()
+        {
+            anyhow::bail!("Failed to switch branch to master")
+        }
+
+        if !Command::new("git")
+            .args(&["pull"])
+            .current_dir(&self.ic_repo_path)
+            .status()
+            .await?
+            .success()
+        {
+            anyhow::bail!("Failed to pull master branch")
+        }
+
+        Ok(())
     }
 }
