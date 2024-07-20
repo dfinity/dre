@@ -1,4 +1,4 @@
-use std::{path::PathBuf, time::Duration};
+use std::{path::PathBuf, str::FromStr, time::Duration};
 
 use clap::Parser;
 use cli::Args;
@@ -148,7 +148,10 @@ fn init_logger() {
 }
 
 async fn ict(ic_git: PathBuf, config: String, token: CancellationToken, sender: Sender<String>) -> anyhow::Result<()> {
-    let command = ic_git.join(".gitlab-ci/container/container-run.sh");
+    let ic_config = PathBuf::from_str("/tmp/ic_config.json")?;
+    std::fs::write(&ic_config, &config)?;
+
+    let command = "gitlab-ci/container/container-run.sh";
     let args = &[
         "ict",
         "testnet",
@@ -156,13 +159,13 @@ async fn ict(ic_git: PathBuf, config: String, token: CancellationToken, sender: 
         "--lifetime-mins",
         "180",
         "--from-ic-config-path",
-        &format!("<(cat <<EOF\n{}\nEOF\n)", config),
+        &ic_config.display().to_string(),
     ];
 
-    info!("Running command: {} {}", command.display(), args.iter().join(" "));
-    let child = Command::new(&command).args(args).spawn()?;
-    let _out = child.stdout.expect("Stdout not attached");
-    let mut err = child.stderr.expect("Stderr not attached");
+    info!("Running command: {} {}", command, args.iter().join(" "));
+    let child = Command::new(&command).args(args).current_dir(&ic_git).spawn()?;
+    let out = child.stdout.ok_or(anyhow::anyhow!("Stdout not attached"))?;
+    let mut err = child.stderr.ok_or(anyhow::anyhow!("Stderr not attached"))?;
     let target = "Testnet is being deployed, please wait ...";
     let logs;
     loop {
