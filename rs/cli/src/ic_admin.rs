@@ -112,7 +112,7 @@ impl IcAdminWrapper {
         );
     }
 
-    async fn _exec(&self, cmd: ProposeCommand, opts: ProposeOptions, as_simulation: bool) -> anyhow::Result<String> {
+    async fn _exec(&self, cmd: ProposeCommand, opts: ProposeOptions, as_simulation: bool, print_out_command: bool) -> anyhow::Result<String> {
         if let Some(summary) = opts.clone().summary {
             let summary_count = summary.chars().count();
             if summary_count > MAX_SUMMARY_CHAR_COUNT {
@@ -147,7 +147,7 @@ impl IcAdminWrapper {
             ]
             .concat()
             .as_slice(),
-            false,
+            print_out_command,
         )
         .await
     }
@@ -159,18 +159,18 @@ impl IcAdminWrapper {
     async fn propose_run_inner(&self, cmd: ProposeCommand, opts: ProposeOptions, dry_run: bool) -> anyhow::Result<String> {
         // Dry run, or --help executions run immediately and do not proceed.
         if dry_run || cmd.args().contains(&String::from("--help")) || cmd.args().contains(&String::from("--dry-run")) {
-            return self._exec(cmd, opts, true).await;
+            return self._exec(cmd, opts, true, false).await;
         }
 
         // If --yes was specified, don't ask the user if they want to proceed
         if !self.proceed_without_confirmation {
-            self._exec(cmd.clone(), opts.clone(), false).await?;
+            self._exec(cmd.clone(), opts.clone(), true, false).await?;
         }
 
         if self.proceed_without_confirmation || Confirm::new().with_prompt("Do you want to continue?").default(false).interact()? {
             // User confirmed the desire to submit the proposal and no obvious problems were
             // found. Proceeding!
-            self._exec(cmd, opts, false).await
+            self._exec(cmd, opts, false, true).await
         } else {
             Err(anyhow::anyhow!("Action aborted"))
         }
