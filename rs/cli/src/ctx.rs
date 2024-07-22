@@ -34,6 +34,7 @@ pub struct DreContext {
     runner: RefCell<Option<Rc<Runner>>>,
     verbose_runner: bool,
     skip_sync: bool,
+    ic_admin_path: Option<String>,
 }
 
 impl DreContext {
@@ -61,7 +62,7 @@ impl DreContext {
             (neuron_id, private_key_pem)
         };
 
-        let ic_admin = Self::init_ic_admin(
+        let (ic_admin, ic_admin_path) = Self::init_ic_admin(
             &network,
             neuron_id,
             private_key_pem,
@@ -81,6 +82,7 @@ impl DreContext {
             runner: RefCell::new(None),
             verbose_runner: args.verbose,
             skip_sync: args.no_sync,
+            ic_admin_path,
         })
     }
 
@@ -94,9 +96,9 @@ impl DreContext {
         proceed_without_confirmation: bool,
         dry_run: bool,
         requirement: IcAdminRequirement,
-    ) -> anyhow::Result<Option<Arc<IcAdminWrapper>>> {
+    ) -> anyhow::Result<(Option<Arc<IcAdminWrapper>>, Option<String>)> {
         if let IcAdminRequirement::None = requirement {
-            return Ok(None);
+            return Ok((None, None));
         }
         let neuron = match requirement {
             IcAdminRequirement::Anonymous | IcAdminRequirement::None => Neuron {
@@ -130,13 +132,13 @@ impl DreContext {
 
         let ic_admin = Some(Arc::new(IcAdminWrapper::new(
             network.clone(),
-            Some(ic_admin_path),
+            Some(ic_admin_path.clone()),
             proceed_without_confirmation,
             neuron,
             dry_run,
         )));
 
-        Ok(ic_admin)
+        Ok((ic_admin, Some(ic_admin_path)))
     }
 
     pub async fn registry(&self) -> Rc<LazyRegistry> {
@@ -198,8 +200,7 @@ impl DreContext {
     }
 
     pub fn readonly_ic_admin_for_other_network(&self, network: Network) -> IcAdminWrapper {
-        let ic_admin = self.ic_admin();
-        IcAdminWrapper::new(network, ic_admin.ic_admin_bin_path.clone(), true, Neuron::anonymous_neuron(), false)
+        IcAdminWrapper::new(network, self.ic_admin_path.clone(), true, Neuron::anonymous_neuron(), false)
     }
 
     pub async fn subnet_manager(&self) -> SubnetManager {
