@@ -148,6 +148,16 @@ impl QualificationExecutor {
                 subnet_type: None,
                 to_version: ctx.from_version.clone(),
             }),
+            // Run workload tests again
+            Steps::RunWorkloadTest(Workload {
+                version: ctx.to_version.clone(),
+                deployment_name: ctx.deployment_name.clone(),
+                prometheus_endpoint: ctx.prometheus_endpoint.clone(),
+            }),
+            // Run XNet tests again
+            Steps::RunXnetTest(RunXnetTest {
+                version: ctx.to_version.clone(),
+            }),
         ];
 
         let (start_index, end_index) = if ctx.step_range.contains("..") {
