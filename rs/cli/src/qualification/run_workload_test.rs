@@ -10,7 +10,7 @@ use tokio::process::Command;
 use crate::ctx::DreContext;
 
 use super::{
-    construct_executable_path, download_executables, print_table, print_text,
+    download_executable, print_table, print_text,
     tabular_util::{ColumnAlignment, Table},
     Step, REQWEST_TIMEOUT,
 };
@@ -36,7 +36,7 @@ impl Step for Workload {
     }
 
     async fn execute(&self, ctx: &DreContext) -> anyhow::Result<()> {
-        download_executables(&[IC_WORKLOAD_GENERATOR], &self.version).await?;
+        let wg_binary = download_executable(IC_WORKLOAD_GENERATOR, &self.version).await?;
 
         let subnets = ctx.registry().await.subnets().await?;
         let subnet = subnets
@@ -45,7 +45,6 @@ impl Step for Workload {
             .ok_or(anyhow::anyhow!("Application subnet required for step `{}`", self.name()))?;
 
         let all_ipv6 = subnet.nodes.iter().map(|n| n.ip_addr).collect_vec();
-        let wg_binary = construct_executable_path(IC_WORKLOAD_GENERATOR, &self.version)?;
         let args = &[
             all_ipv6.iter().map(|ip| format!("http://[{}]:8080/", ip)).join(","),
             "-m=UpdateCounter".to_string(),

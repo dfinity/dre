@@ -4,7 +4,7 @@ use ic_registry_subnet_type::SubnetType;
 use itertools::Itertools;
 use tokio::process::Command;
 
-use super::{construct_canister_path, construct_executable_path, download_canisters, download_executables, print_text, Step};
+use super::{download_canister, download_executable, print_text, Step};
 
 const E2E_TEST_DRIVER: &str = "e2e-test-driver";
 const XNET_TEST_CANISTER: &str = "xnet-test-canister";
@@ -41,11 +41,8 @@ impl Step for RunXnetTest {
         let file = std::fs::File::open(&key)?;
         file.set_permissions(PermissionsExt::from_mode(0o400))?;
 
-        download_executables(&[E2E_TEST_DRIVER], &self.version).await?;
-        download_canisters(&[XNET_TEST_CANISTER], &self.version).await?;
-
-        let wasm_path = construct_canister_path(XNET_TEST_CANISTER, &self.version)?;
-        let e2e_bin = construct_executable_path(E2E_TEST_DRIVER, &self.version)?;
+        let e2e_bin = download_executable(E2E_TEST_DRIVER, &self.version).await?;
+        let wasm_path = download_canister(XNET_TEST_CANISTER, &self.version).await?;
 
         let registry = ctx.registry().await;
         let subnet = registry.subnets().await?;

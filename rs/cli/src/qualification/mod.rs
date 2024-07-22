@@ -314,90 +314,89 @@ impl Step for Steps {
 }
 
 const REQWEST_TIMEOUT: Duration = Duration::from_secs(30);
-pub async fn download_canisters(canistes: &[&str], version: &str) -> anyhow::Result<()> {
-    let client = ClientBuilder::new().timeout(REQWEST_TIMEOUT).build()?;
-    for canister in canistes {
-        let canister_path = construct_canister_path(canister, version)?;
-
-        if canister_path.exists() {
-            print_text(format!("Canister `{}` data already present", canister));
-            continue;
-        }
-
-        let url = format!("https://download.dfinity.systems/ic/{}/canisters/{}.wasm.gz", version, canister);
-
-        print_text(format!("Downloading: {}", url));
-        let response = client.get(&url).send().await?.error_for_status()?.bytes().await?;
-        let mut d = GzDecoder::new(&response[..]);
-        let mut collector: Vec<u8> = vec![];
-        let mut file = std::fs::File::create(&canister_path)?;
-        d.read_to_end(&mut collector)?;
-
-        file.write_all(&collector)?;
-        print_text(format!("Downloaded: {}", &url));
-    }
-    Ok(())
-}
-
-pub async fn download_executables(executables: &[&str], version: &str) -> anyhow::Result<()> {
-    let client = ClientBuilder::new().timeout(REQWEST_TIMEOUT).build()?;
-    for executable in executables {
-        let exe_path = construct_executable_path(executable, version)?;
-
-        if exe_path.exists() && exe_path.is_file() {
-            let permissions = exe_path.metadata()?.permissions();
-            let is_executable = permissions.mode() & 0o111 != 0;
-            if is_executable {
-                print_text(format!("Executable `{}` already present and executable", executable));
-                continue;
-            }
-        }
-
-        let url = format!(
-            "https://download.dfinity.systems/ic/{}/binaries/x86_64-{}/{}.gz",
-            version,
-            match std::env::consts::OS {
-                "linux" => "linux",
-                "macos" => "darwin",
-                s => return Err(anyhow::anyhow!("Unsupported os: {}", s)),
-            },
-            executable
-        );
-
-        print_text(format!("Downloading: {}", url));
-        let response = client.get(&url).send().await?.error_for_status()?.bytes().await?;
-        let mut d = GzDecoder::new(&response[..]);
-        let mut collector: Vec<u8> = vec![];
-        let mut file = std::fs::File::create(&exe_path)?;
-        d.read_to_end(&mut collector)?;
-
-        file.write_all(&collector)?;
-        print_text(format!("Downloaded: {}", &url));
-
-        file.set_permissions(PermissionsExt::from_mode(0o774))?;
-        print_text(format!("Created executable: {}", exe_path.display()))
-    }
-    Ok(())
-}
-
 const IC_EXECUTABLES_DIR: &str = "ic-executables";
-pub fn construct_canister_path(artifact: &str, version: &str) -> anyhow::Result<PathBuf> {
-    let canister_path = construct_executable_path(artifact, version)?;
-    PathBuf::from_str(&format!("{}.wasm", canister_path.display())).map_err(|e| anyhow::anyhow!(e))
-}
-pub fn construct_executable_path(artifact: &str, version: &str) -> anyhow::Result<PathBuf> {
+pub async fn download_canister(canister: &str, version: &str) -> anyhow::Result<PathBuf> {
+    let client = ClientBuilder::new().timeout(REQWEST_TIMEOUT).build()?;
+
     let cache = dirs::cache_dir().ok_or(anyhow::anyhow!("Can't cache dir"))?.join(IC_EXECUTABLES_DIR);
     if !cache.exists() {
         std::fs::create_dir_all(&cache)?;
     }
 
-    let artifact_path = cache.join(format!("{}/{}.{}", artifact, artifact, version));
+    let artifact_path = cache.join(format!("{}/{}.{}", canister, canister, version));
     let artifact_dir = artifact_path.parent().unwrap();
     if !artifact_dir.exists() {
         std::fs::create_dir(artifact_dir)?;
     }
 
-    Ok(artifact_path)
+    let canister_path = PathBuf::from_str(&format!("{}.wasm", artifact_path.display())).map_err(|e| anyhow::anyhow!(e))?;
+
+    if canister_path.exists() {
+        print_text(format!("Canister `{}` data already present", canister));
+        return Ok(canister_path);
+    }
+
+    let url = format!("https://download.dfinity.systems/ic/{}/canisters/{}.wasm.gz", version, canister);
+
+    print_text(format!("Downloading: {}", url));
+    let response = client.get(&url).send().await?.error_for_status()?.bytes().await?;
+    let mut d = GzDecoder::new(&response[..]);
+    let mut collector: Vec<u8> = vec![];
+    let mut file = std::fs::File::create(&canister_path)?;
+    d.read_to_end(&mut collector)?;
+
+    file.write_all(&collector)?;
+    print_text(format!("Downloaded: {}", &url));
+    Ok(canister_path)
+}
+
+pub async fn download_executable(executable: &str, version: &str) -> anyhow::Result<PathBuf> {
+    let client = ClientBuilder::new().timeout(REQWEST_TIMEOUT).build()?;
+
+    let cache = dirs::cache_dir().ok_or(anyhow::anyhow!("Can't cache dir"))?.join(IC_EXECUTABLES_DIR);
+    if !cache.exists() {
+        std::fs::create_dir_all(&cache)?;
+    }
+
+    let exe_path = cache.join(format!("{}/{}.{}", executable, executable, version));
+    let artifact_dir = exe_path.parent().unwrap();
+    if !artifact_dir.exists() {
+        std::fs::create_dir(artifact_dir)?;
+    }
+
+    if exe_path.exists() && exe_path.is_file() {
+        let permissions = exe_path.metadata()?.permissions();
+        let is_executable = permissions.mode() & 0o111 != 0;
+        if is_executable {
+            print_text(format!("Executable `{}` already present and executable", executable));
+            return Ok(exe_path);
+        }
+    }
+
+    let url = format!(
+        "https://download.dfinity.systems/ic/{}/binaries/x86_64-{}/{}.gz",
+        version,
+        match std::env::consts::OS {
+            "linux" => "linux",
+            "macos" => "darwin",
+            s => return Err(anyhow::anyhow!("Unsupported os: {}", s)),
+        },
+        executable
+    );
+
+    print_text(format!("Downloading: {}", url));
+    let response = client.get(&url).send().await?.error_for_status()?.bytes().await?;
+    let mut d = GzDecoder::new(&response[..]);
+    let mut collector: Vec<u8> = vec![];
+    let mut file = std::fs::File::create(&exe_path)?;
+    d.read_to_end(&mut collector)?;
+
+    file.write_all(&collector)?;
+    print_text(format!("Downloaded: {}", &url));
+
+    file.set_permissions(PermissionsExt::from_mode(0o774))?;
+    print_text(format!("Created executable: {}", exe_path.display()));
+    Ok(exe_path)
 }
 
 pub async fn print_subnet_versions(registry: Rc<LazyRegistry>) -> anyhow::Result<()> {
