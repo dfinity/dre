@@ -1,3 +1,4 @@
+use backon::{ExponentialBuilder, Retryable};
 use itertools::Itertools;
 
 use crate::{
@@ -6,7 +7,7 @@ use crate::{
 };
 
 use super::{
-    ic_admin_with_retry, print_table, print_text,
+    print_table, print_text,
     tabular_util::{ColumnAlignment, Table},
     Step,
 };
@@ -39,22 +40,25 @@ impl Step for RetireBlessedVersions {
             return Ok(());
         }
 
-        ic_admin_with_retry(
-            ctx.ic_admin(),
-            ProposeCommand::ReviseElectedVersions {
-                release_artifact: ic_management_types::Artifact::GuestOs,
-                args: to_unelect
-                    .iter()
-                    .flat_map(|v| vec!["--replica-versions-to-unelect".to_string(), v.to_string()])
-                    .collect(),
-            },
-            ProposeOptions {
-                title: Some("Retire replica versions".to_string()),
-                summary: Some("Unelecting a version".to_string()),
-                motivation: Some("Unelecting a version".to_string()),
-            },
-        )
-        .await?;
+        let place_proposal = || async {
+            ctx.ic_admin()
+                .propose_run(
+                    ProposeCommand::ReviseElectedVersions {
+                        release_artifact: ic_management_types::Artifact::GuestOs,
+                        args: to_unelect
+                            .iter()
+                            .flat_map(|v| vec!["--replica-versions-to-unelect".to_string(), v.to_string()])
+                            .collect(),
+                    },
+                    ProposeOptions {
+                        title: Some("Retire replica versions".to_string()),
+                        summary: Some("Unelecting a version".to_string()),
+                        motivation: Some("Unelecting a version".to_string()),
+                    },
+                )
+                .await
+        };
+        place_proposal.retry(&ExponentialBuilder::default()).await?;
 
         registry.sync_with_nns().await?;
         let blessed_versions = registry.elected_guestos()?;

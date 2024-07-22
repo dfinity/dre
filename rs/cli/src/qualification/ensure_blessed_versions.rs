@@ -1,3 +1,4 @@
+use backon::{ExponentialBuilder, Retryable};
 use itertools::Itertools;
 
 use crate::{
@@ -7,7 +8,7 @@ use crate::{
 };
 
 use super::{
-    ic_admin_with_retry, print_table,
+    print_table,
     tabular_util::{ColumnAlignment, Table},
 };
 
@@ -34,29 +35,33 @@ impl Step for EnsureBlessedRevisions {
         let sha = fetch_shasum_for_disk_img(&self.version).await?;
 
         // Place proposal
-        ic_admin_with_retry(
-            ctx.ic_admin(),
-            ProposeCommand::ReviseElectedVersions {
-                release_artifact: ic_management_types::Artifact::GuestOs,
-                args: vec![
-                    "--replica-version-to-elect".to_string(),
-                    self.version.clone(),
-                    "--release-package-sha256-hex".to_string(),
-                    sha,
-                    "--release-package-urls".to_string(),
-                    format!(
-                        "http://download.proxy-global.dfinity.network:8080/ic/{}/guest-os/update-img/update-img.tar.gz",
-                        &self.version
-                    ),
-                ],
-            },
-            ProposeOptions {
-                title: Some(format!("Blessing version: {}", &self.version)),
-                summary: Some("Some updates".to_string()),
-                ..Default::default()
-            },
-        )
-        .await?;
+        let place_proposal = || async {
+            ctx.ic_admin()
+                .propose_run(
+                    ProposeCommand::ReviseElectedVersions {
+                        release_artifact: ic_management_types::Artifact::GuestOs,
+                        args: vec![
+                            "--replica-version-to-elect".to_string(),
+                            self.version.clone(),
+                            "--release-package-sha256-hex".to_string(),
+                            sha.clone(),
+                            "--release-package-urls".to_string(),
+                            format!(
+                                "http://download.proxy-global.dfinity.network:8080/ic/{}/guest-os/update-img/update-img.tar.gz",
+                                &self.version
+                            ),
+                        ],
+                    },
+                    ProposeOptions {
+                        title: Some(format!("Blessing version: {}", &self.version)),
+                        summary: Some("Some updates".to_string()),
+                        ..Default::default()
+                    },
+                )
+                .await
+        };
+
+        place_proposal.retry(&ExponentialBuilder::default()).await?;
 
         registry.sync_with_nns().await?;
         let blessed_versions = registry.elected_guestos()?;

@@ -4,7 +4,6 @@ use std::{
     path::PathBuf,
     rc::Rc,
     str::FromStr,
-    sync::Arc,
     time::Duration,
 };
 
@@ -22,10 +21,7 @@ use tabular_util::{ColumnAlignment, Table};
 use upgrade_deployment_canister::UpgradeDeploymentCanisters;
 use upgrade_subnets::{Action, UpgradeSubnets};
 
-use crate::{
-    ctx::DreContext,
-    ic_admin::{IcAdminWrapper, ProposeCommand, ProposeOptions},
-};
+use crate::ctx::DreContext;
 
 mod ensure_blessed_versions;
 mod retire_blessed_versions;
@@ -371,34 +367,6 @@ pub fn construct_executable_path(artifact: &str, version: &str) -> anyhow::Resul
     }
 
     Ok(artifact_path)
-}
-
-const MAX_RETIRES: usize = 10;
-pub async fn ic_admin_with_retry(ic_admin: Arc<IcAdminWrapper>, cmd: ProposeCommand, opts: ProposeOptions) -> anyhow::Result<()> {
-    let mut retries = 0;
-    backoff::future::retry(backoff::ExponentialBackoff::default(), || {
-        let current_opts = opts.clone();
-        let current_cmd = cmd.clone();
-        let current_admin = ic_admin.clone();
-        async move {
-            match current_admin.propose_run(current_cmd, current_opts).await {
-                Ok(_) => Ok(()),
-                Err(e) => {
-                    print_text(format!("Retry count {}, failed to place proposal: {}", retries, e));
-
-                    retries += 1;
-                    if retries >= MAX_RETIRES {
-                        return Err(backoff::Error::Permanent(anyhow::anyhow!("Max retries exceeded")));
-                    }
-                    Err(backoff::Error::Transient {
-                        err: anyhow::anyhow!("Max retries exceeded"),
-                        retry_after: None,
-                    })
-                }
-            }
-        }
-    })
-    .await
 }
 
 pub async fn print_subnet_versions(registry: Rc<LazyRegistry>) -> anyhow::Result<()> {

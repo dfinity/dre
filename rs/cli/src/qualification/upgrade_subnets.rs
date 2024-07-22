@@ -1,5 +1,6 @@
 use std::{fmt::Display, rc::Rc, time::Duration};
 
+use backon::{ExponentialBuilder, Retryable};
 use ic_management_backend::lazy_registry::LazyRegistry;
 use ic_registry_subnet_type::SubnetType;
 use ic_types::PrincipalId;
@@ -15,7 +16,7 @@ use crate::{
     },
 };
 
-use super::{ic_admin_with_retry, print_subnet_versions, print_text, Step};
+use super::{print_subnet_versions, print_text, Step};
 
 pub struct UpgradeSubnets {
     pub subnet_type: Option<SubnetType>,
@@ -90,19 +91,22 @@ impl Step for UpgradeSubnets {
                 ));
 
                 // Place proposal
-                ic_admin_with_retry(
-                    ctx.ic_admin(),
-                    ProposeCommand::DeployGuestosToAllSubnetNodes {
-                        subnet: subnet.principal,
-                        version: self.to_version.clone(),
-                    },
-                    ProposeOptions {
-                        title: Some(format!("Propose to upgrade subnet {} to {}", subnet.principal, &self.to_version)),
-                        summary: Some("Qualification testing".to_string()),
-                        motivation: Some("Qualification testing".to_string()),
-                    },
-                )
-                .await?;
+                let place_proposal = || async {
+                    ctx.ic_admin()
+                        .propose_run(
+                            ProposeCommand::DeployGuestosToAllSubnetNodes {
+                                subnet: subnet.principal,
+                                version: self.to_version.clone(),
+                            },
+                            ProposeOptions {
+                                title: Some(format!("Propose to upgrade subnet {} to {}", subnet.principal, &self.to_version)),
+                                summary: Some("Qualification testing".to_string()),
+                                motivation: Some("Qualification testing".to_string()),
+                            },
+                        )
+                        .await
+                };
+                place_proposal.retry(&ExponentialBuilder::default()).await?;
 
                 print_text(format!("Placed proposal for subnet {}", subnet.principal));
 
@@ -128,18 +132,22 @@ impl Step for UpgradeSubnets {
                 &unassigned_nodes_version, &self.to_version
             ));
 
-            ic_admin_with_retry(
-                ctx.ic_admin(),
-                ProposeCommand::DeployGuestosToAllUnassignedNodes {
-                    replica_version: self.to_version.clone(),
-                },
-                ProposeOptions {
-                    title: Some("Upgrading unassigned nodes".to_string()),
-                    summary: Some("Upgrading unassigned nodes".to_string()),
-                    motivation: Some("Upgrading unassigned nodes".to_string()),
-                },
-            )
-            .await?;
+            let place_proposal = || async {
+                ctx.ic_admin()
+                    .propose_run(
+                        ProposeCommand::DeployGuestosToAllUnassignedNodes {
+                            replica_version: self.to_version.clone(),
+                        },
+                        ProposeOptions {
+                            title: Some("Upgrading unassigned nodes".to_string()),
+                            summary: Some("Upgrading unassigned nodes".to_string()),
+                            motivation: Some("Upgrading unassigned nodes".to_string()),
+                        },
+                    )
+                    .await
+            };
+
+            place_proposal.retry(&ExponentialBuilder::default()).await?;
 
             wait_for_subnet_revision(registry.clone(), None, &self.to_version).await?;
 
