@@ -17,7 +17,7 @@ REPLICA_TEAMS = set(
     [
         "consensus-owners",
         "consensus",
-        "crypto-owners",
+        "crypto-team",
         "dept-crypto-library",
         "execution-owners",
         "execution",
@@ -86,7 +86,7 @@ TEAM_PRETTY_MAP = {
     "consensus-owners": "Consensus",
     "consensus": "Consensus",
     "cross-chain-team": "Cross Chain",
-    "crypto-owners": "Crypto",
+    "crypto-team": "Crypto",
     "dept-crypto-library": "Crypto",
     "docs-owners": "Docs",
     "dre": "DRE",

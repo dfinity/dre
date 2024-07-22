@@ -46,6 +46,7 @@ py_test(
     name = "pytest",
     srcs = ["pytest.py"],
     data = glob(["*.py"]),
+    tags = ["no-sandbox"],
     env = env,
     deps = deps + dev_deps,
 )
