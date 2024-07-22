@@ -17,7 +17,6 @@ REPLICA_TEAMS = set(
     [
         "consensus-owners",
         "consensus",
-        "crypto-owners",
         "crypto-team",
         "dept-crypto-library",
         "execution-owners",
@@ -41,7 +40,7 @@ class Change(typing.TypedDict):
     """Change dataclass."""
 
     commit: str
-    team: str
+    teams: typing.List[str]
     type: str
     scope: str
     message: str
@@ -87,7 +86,6 @@ TEAM_PRETTY_MAP = {
     "consensus-owners": "Consensus",
     "consensus": "Consensus",
     "cross-chain-team": "Cross Chain",
-    "crypto-owners": "Crypto",
     "crypto-team": "Crypto",
     "dept-crypto-library": "Crypto",
     "docs-owners": "Docs",
@@ -134,7 +132,7 @@ EXCLUDE_PACKAGES_FILTERS = [
     r"^bazel$",
 ]
 
-NON_REPLICA_TEAMS = set(TEAM_PRETTY_MAP.keys()) - REPLICA_TEAMS
+NON_REPLICA_TEAMS = sorted(list(set(TEAM_PRETTY_MAP.keys()) - REPLICA_TEAMS))
 
 # Completely remove these teams from mentioning in the release notes
 DROP_TEAMS = {"Utopia", "Financial Integrations", "IDX", "T&V", "Prodsec", "Support", "SupportEU", "SupportNA"}
@@ -197,78 +195,6 @@ def get_rc_branch(repo_dir, commit_hash):
     if rc_branches:
         return rc_branches[0]
     return ""
-
-
-def get_merge_commit(repo_dir, commit_hash):
-    # Reference: https://stackoverflow.com/questions/8475448/find-merge-commit-which-includes-a-specific-commit
-    rc_branch = get_rc_branch(repo_dir, commit_hash)
-
-    try:
-        # Run the Git commands and capture their output
-        git_cmd = ["git", "rev-list", f"{commit_hash}..{rc_branch}"]
-        ancestry_path = subprocess.run(
-            git_cmd + ["--ancestry-path"],
-            cwd=repo_dir,
-            capture_output=True,
-            text=True,
-            check=True,
-        ).stdout.splitlines()
-        first_parent = subprocess.run(
-            git_cmd + ["--first-parent"],
-            cwd=repo_dir,
-            capture_output=True,
-            text=True,
-            check=True,
-        ).stdout.splitlines()
-
-        # Combine and process the outputs
-        combined_output = [(i + 1, line) for i, line in enumerate(ancestry_path + first_parent)]
-        combined_output.sort(key=lambda x: x[1])
-
-        # Find duplicates
-        seen = {}
-        duplicates = []
-        for number, commit_hash in combined_output:
-            if commit_hash in seen:
-                duplicates.append((seen[commit_hash], number, commit_hash))
-            seen[commit_hash] = number
-
-        # Sort by the original line number and get the last one
-        if duplicates:
-            duplicates.sort()
-            _, _, merge_commit = duplicates[-1]
-            return merge_commit
-        return None
-
-    except subprocess.CalledProcessError as e:
-        print(f"Error: {e}")
-        return None
-
-
-def get_commits(repo_dir, first_commit, last_commit):
-    def get_commits_info(git_commit_format):
-        return (
-            subprocess.check_output(
-                [
-                    "git",
-                    "log",
-                    "--format={}".format(git_commit_format),
-                    "--no-merges",
-                    "{}..{}".format(first_commit, last_commit),
-                ],
-                cwd=repo_dir,
-                stderr=subprocess.DEVNULL,
-            )
-            .decode("utf-8")
-            .strip()
-            .split("\n")
-        )
-
-    commit_hashes = get_commits_info("%h")
-    commit_messages = get_commits_info("%s")
-    commiters = get_commits_info("%an")
-
-    return list(zip(commit_hashes, commit_messages, commiters))
 
 
 def file_changes_for_commit(commit_hash, repo_dir):
@@ -390,7 +316,7 @@ def get_change_description_for_commit(
     codeowners,
     guestos_packages_all,
     guestos_packages_filtered,
-):
+) -> typing.Optional[Change]:
     # Conventional commit regex pattern
     conv_commit_pattern = re.compile(r"^(\w+)(\([^\)]*\))?: (.+)$")
     # Jira ticket: <whitespace?><word boundary><uppercase letters><digit?><hyphen><digits><word boundary><colon?>
@@ -398,7 +324,7 @@ def get_change_description_for_commit(
     # Sometimes Jira tickets are in square brackets
     empty_brackets_regex = r" *\[ *\]:?"
 
-    commit_hash, commit_message, commiter, merge_commit = commit_info
+    commit_hash, commit_message, commiter = commit_info
 
     file_changes = file_changes_for_commit(commit_hash, ic_repo_path)
     guestos_change = any(any(c["file_path"][1:].startswith(p) for c in file_changes) for p in guestos_packages_all)
@@ -447,7 +373,7 @@ def get_change_description_for_commit(
     commit_type = conventional["type"].lower()
     commit_type = commit_type if commit_type in TYPE_PRETTY_MAP else "other"
 
-    teams = teams - DROP_TEAMS
+    teams = sorted(list(teams - DROP_TEAMS))
 
     if not teams or all([team in NON_REPLICA_TEAMS for team in teams]):
         included = False
@@ -461,26 +387,19 @@ def get_change_description_for_commit(
         commiter_parts[1][:4] if len(commiter_parts) >= 2 else "",
     )
 
-    change_info = {
-        "commit": merge_commit,
-        "team": list(teams),
-        "type": commit_type,
-        "scope": conventional["scope"] if conventional["scope"] else "",
-        "message": conventional["message"],
-        "commiter": commiter,
-        "included": included,
-    }
-
-    return change_info
+    return Change(
+        commit=commit_hash,
+        teams=list(teams),
+        type=commit_type,
+        scope=conventional["scope"] if conventional["scope"] else "",
+        message=conventional["message"],
+        commiter=commiter,
+        included=included,
+    )
 
 
 def get_commits_in_range(ic_repo_path, first_commit, last_commit):
     """Get the commits in the range [first_commit, last_commit] from the IC repo."""
-    # Cache merge commits to avoid repeated slow calls to git
-    merge_commits_cache_path = ic_repo_path / ".git/merge_commits.json"
-    merge_commits_cache = {}
-    if merge_commits_cache_path.exists():
-        merge_commits_cache = json.loads(merge_commits_cache_path.read_text())
 
     if ic_repo_path.exists():
         print("Resetting HEAD to latest origin/master.")
@@ -517,21 +436,29 @@ def get_commits_in_range(ic_repo_path, first_commit, last_commit):
             stderr=subprocess.DEVNULL,
         )
 
-    commits = get_commits(ic_repo_path, first_commit, last_commit)
-    for i in range(len(commits)):
-        commit_hash = str(commits[i][0])
-        if commit_hash in merge_commits_cache:
-            merge_commit = merge_commits_cache[commit_hash]
-        else:
-            merge_commit = get_merge_commit(ic_repo_path, commit_hash)
-            merge_commits_cache[commit_hash] = merge_commit
-        used_commit = (merge_commit or commit_hash)[:COMMIT_HASH_LENGTH]
-        print("Commit: {} ==> using commit: {}".format(commit_hash, used_commit))
-        commits[i] = commits[i] + (used_commit,)
+    def get_commits_info(git_commit_format):
+        return (
+            subprocess.check_output(
+                [
+                    "git",
+                    "log",
+                    "--format={}".format(git_commit_format),
+                    "--no-merges",
+                    "{}..{}".format(first_commit, last_commit),
+                ],
+                cwd=ic_repo_path,
+                stderr=subprocess.DEVNULL,
+            )
+            .decode("utf-8")
+            .strip()
+            .split("\n")
+        )
 
-    merge_commits_cache_path.write_text(json.dumps(merge_commits_cache))
+    commit_hash = get_commits_info("%h")
+    commit_message = get_commits_info("%s")
+    commiter = get_commits_info("%an")
 
-    return commits
+    return list(zip(commit_hash, commit_message, commiter))
 
 
 def release_notes_html(first_commit, last_commit, release_name, change_infos, html_path):
@@ -626,9 +553,9 @@ Changelog since git revision [{first_commit}](https://dashboard.internetcomputer
             continue
         notes += "## {0}:\n".format(TYPE_PRETTY_MAP[current_type][0])
 
-        for change in sorted(change_infos[current_type], key=lambda x: ",".join(x["team"])):
+        for change in sorted(change_infos[current_type], key=lambda x: ",".join(x["teams"])):
             commit_part = "[`{0}`](https://github.com/dfinity/ic/commit/{0})".format(change["commit"][:9])
-            team_part = ",".join([TEAM_PRETTY_MAP.get(team, team) for team in change["team"]])
+            team_part = ",".join([TEAM_PRETTY_MAP.get(team, team) for team in change["teams"]])
             team_part = team_part if team_part else "General"
             scope_part = (
                 ":"
