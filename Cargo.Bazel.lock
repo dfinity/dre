@@ -1,5 +1,5 @@
 {
-  "checksum": "252e3897dfec85dbc5cec4650c9b7747da19932138d0f08e3f35584cac0b0ada",
+  "checksum": "de2785d064572eb341f754257cb693d4032195d7f260eb16e3cd07c0d7b2e389",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -10560,8 +10560,8 @@
               "target": "anyhow"
             },
             {
-              "id": "backoff 0.4.0",
-              "target": "backoff"
+              "id": "backon 0.4.4",
+              "target": "backon"
             },
             {
               "id": "candid 0.10.9",
