@@ -7175,6 +7175,7 @@ dependencies = [
  "itertools 0.13.0",
  "log",
  "pretty_env_logger",
+ "serde",
  "serde_json",
  "tokio",
  "tokio-util",
