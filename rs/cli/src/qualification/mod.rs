@@ -32,10 +32,16 @@ mod upgrade_deployment_canister;
 mod upgrade_subnets;
 
 pub struct QualificationExecutor {
-    steps: Vec<(usize, bool, Steps)>,
+    steps: Vec<OrderedStep>,
     dre_ctx: DreContext,
     from_version: String,
     to_version: String,
+}
+
+struct OrderedStep {
+    index: usize,
+    should_skip: bool,
+    step: Steps,
 }
 
 pub struct QualificationExecutorBuilder {
@@ -185,7 +191,11 @@ impl QualificationExecutor {
             steps: steps
                 .into_iter()
                 .enumerate()
-                .map(|(i, s)| (i, !(start_index <= i && i <= end_index), s))
+                .map(|(i, s)| OrderedStep {
+                    index: i,
+                    should_skip: !(start_index <= i && i <= end_index),
+                    step: s,
+                })
                 .collect_vec(),
             dre_ctx: ctx.dre_ctx,
             from_version: ctx.from_version,
@@ -204,7 +214,14 @@ impl QualificationExecutor {
             .with_rows(
                 self.steps
                     .iter()
-                    .map(|(i, sk, s)| vec![(i).to_string(), (!sk).to_string(), s.name().to_string(), s.help().to_string()])
+                    .map(|ordered_step| {
+                        vec![
+                            ordered_step.index.to_string(),
+                            (!ordered_step.should_skip).to_string(),
+                            ordered_step.step.name().to_string(),
+                            ordered_step.step.help().to_string(),
+                        ]
+                    })
                     .collect_vec(),
             )
             .to_table();
@@ -218,19 +235,23 @@ impl QualificationExecutor {
 
         print_text(format!("Running qualification from version {} to {}", self.from_version, self.to_version));
         print_text(format!("Starting execution of {} steps:", self.steps.len()));
-        for (i, sk, step) in self.steps.iter() {
-            if *sk {
-                print_text(format!("Skipping step {} due to skip-range: `{}`", i, step.name()));
+        for ordered_step in &self.steps {
+            if ordered_step.should_skip {
+                print_text(format!(
+                    "Skipping step {} due to skip-range: `{}`",
+                    ordered_step.index,
+                    ordered_step.step.name()
+                ));
                 continue;
             }
-            print_text(format!("Executing step {}: `{}`", i, step.name()));
+            print_text(format!("Executing step {}: `{}`", ordered_step.index, ordered_step.step.name()));
 
-            step.execute(&self.dre_ctx).await?;
+            ordered_step.step.execute(&self.dre_ctx).await?;
 
-            print_text(format!("Executed step {}: `{}`", i, step.name()));
+            print_text(format!("Executed step {}: `{}`", ordered_step.index, ordered_step.step.name()));
 
             let registry = self.dre_ctx.registry().await;
-            print_text(format!("Syncing with registry after step {}", i));
+            print_text(format!("Syncing with registry after step {}", ordered_step.index));
             registry.sync_with_nns().await?;
         }
 
