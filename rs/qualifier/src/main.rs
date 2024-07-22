@@ -1,4 +1,4 @@
-use std::fmt::Display;
+use std::{fmt::Display, time::Duration};
 
 use clap::Parser;
 use cli::Args;
@@ -11,6 +11,7 @@ use ic_management_types::Network;
 use ict_util::ict;
 use log::info;
 use qualify_util::qualify;
+use reqwest::ClientBuilder;
 use serde_json::Value;
 use tokio::sync::mpsc;
 use tokio_util::sync::CancellationToken;
@@ -22,6 +23,16 @@ mod qualify_util;
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     init_logger();
+
+    // Check if farm is reachable. If not, error
+    let client = ClientBuilder::new().timeout(Duration::from_secs(30)).build()?;
+    client
+        .get("https://kibana.testnet.dfinity.network")
+        .send()
+        .await
+        .map_err(|e| anyhow::anyhow!("Checking connectivity failed: {}", e.to_string()))?
+        .error_for_status()
+        .map_err(|e| anyhow::anyhow!("Checking connectivity failed: {}", e.to_string()))?;
 
     let args = Args::parse();
     info!("Running qualification for {}", args.version_to_qualify);
@@ -110,8 +121,6 @@ async fn main() -> anyhow::Result<()> {
     info!("Using configuration: \n{}", config);
 
     args.ensure_git().await?;
-
-    // Check if farm is reachable. If not, error
 
     // Run ict and capture its output
     //

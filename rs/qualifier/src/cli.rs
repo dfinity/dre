@@ -1,4 +1,4 @@
-use std::{path::PathBuf, str::FromStr};
+use std::{path::PathBuf, process::Stdio, str::FromStr};
 
 use clap::Parser;
 
@@ -29,6 +29,12 @@ pub struct Args {
 
     #[clap(long, default_value = dirs::cache_dir().unwrap().join("git/ic").display().to_string())]
     pub ic_repo_path: PathBuf,
+
+    /// Skip the pulling of ic repo which is mostly useful
+    /// for development since each change on master will
+    /// result in rebuilding of image
+    #[clap(long)]
+    pub skip_pull: bool,
 }
 
 impl Args {
@@ -53,6 +59,8 @@ impl Args {
             if !Command::new("git")
                 .args(&["clone", "https://github.com/dfinity/ic.git", "."])
                 .current_dir(&self.ic_repo_path)
+                .stderr(Stdio::null())
+                .stdout(Stdio::null())
                 .status()
                 .await?
                 .success()
@@ -66,6 +74,8 @@ impl Args {
         if !Command::new("git")
             .args(&["switch", "master", "-f"])
             .current_dir(&self.ic_repo_path)
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
             .status()
             .await?
             .success()
@@ -73,9 +83,15 @@ impl Args {
             anyhow::bail!("Failed to switch branch to master")
         }
 
+        if self.skip_pull {
+            return Ok(());
+        }
+
         if !Command::new("git")
             .args(&["pull"])
             .current_dir(&self.ic_repo_path)
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
             .status()
             .await?
             .success()
