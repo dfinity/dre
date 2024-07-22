@@ -27,7 +27,7 @@ mod api_boundary_nodes;
 mod completions;
 mod der_to_principal;
 mod firewall;
-mod get;
+pub mod get;
 mod heal;
 pub mod hostos;
 mod nodes;
@@ -159,7 +159,7 @@ pub trait ExecutableCommand {
 
     fn validate(&self, cmd: &mut Command);
 
-    async fn execute(&self, ctx: DreContext) -> anyhow::Result<()>;
+    fn execute(&self, ctx: DreContext) -> impl std::future::Future<Output = anyhow::Result<()>>;
 
     fn validate_min_nakamoto_coefficients(cmd: &mut clap::Command, min_nakamoto_coefficients: &[String]) {
         let _ = Self::_parse_min_nakamoto_coefficients_inner(Some(cmd), min_nakamoto_coefficients);

@@ -1,14 +1,21 @@
-use std::str::FromStr;
+use std::{path::PathBuf, str::FromStr};
 
 use anyhow::Error;
+use dre::{
+    commands::{Args, ExecutableCommand},
+    ctx::DreContext,
+};
+use ic_management_backend::registry::local_registry_path;
+use ic_management_types::Network;
 use itertools::Itertools;
 use log::info;
 use serde_json::Value;
 use tokio::sync::mpsc::Receiver;
+use url::Url;
 
 use crate::Message;
 
-pub async fn qualify(receiver: &mut Receiver<Message>) -> anyhow::Result<()> {
+pub async fn qualify(receiver: &mut Receiver<Message>, private_key_pem: PathBuf, neuron_id: u64, network_name: &str) -> anyhow::Result<()> {
     // Run dre to qualify with correct parameters
     info!("Awaiting logs path...");
     let data = receiver.recv().await.ok_or(anyhow::anyhow!("Failed to recv data"))?;
@@ -27,14 +34,41 @@ pub async fn qualify(receiver: &mut Receiver<Message>) -> anyhow::Result<()> {
     info!("Received following config: {:?}", config);
     info!("Running qualification...");
 
-    Ok(())
+    // At this point we are going to run so we need to remove previous
+    // registry stored on the disk
+    let reg_path = local_registry_path(&Network::new_unchecked(network_name, &config.nns_urls).unwrap());
+    if reg_path.exists() {
+        info!("Detected registry from previous runs on path: {}", reg_path.display());
+        std::fs::remove_dir_all(&reg_path)?;
+        info!("Removed registry from previous runs");
+    }
+
+    let args = Args {
+        hsm_pin: None,
+        hsm_slot: None,
+        hsm_key_id: None,
+        private_key_pem: Some(private_key_pem),
+        neuron_id: Some(neuron_id),
+        ic_admin: None,
+        yes: true,
+        dry_run: false,
+        network: network_name.to_string(),
+        nns_urls: config.nns_urls,
+        subcommands: dre::commands::Subcommands::Get(dre::commands::get::Get {
+            args: vec!["subnet-list".to_string()],
+        }),
+        verbose: false,
+    };
+    let ctx = DreContext::from_args(&args).await?;
+
+    args.execute(ctx).await
 }
 
 #[derive(Debug)]
 struct Config {
     deployment_name: String,
     kibana_url: String,
-    nns_urls: Vec<String>,
+    nns_urls: Vec<Url>,
     prometheus_url: String,
 }
 
@@ -74,7 +108,10 @@ impl FromStr for Config {
                 .as_str()
                 .ok_or(anyhow::anyhow!("Failed to find 'kibana_url.url'"))?
                 .to_string(),
-            nns_urls: nns_urls.into_iter().map(|n| format!("http://[{}]:8080/", n.unwrap())).collect_vec(),
+            nns_urls: nns_urls
+                .into_iter()
+                .map(|n| Url::from_str(&format!("http://[{}]:8080/", n.unwrap())).unwrap())
+                .collect_vec(),
         };
 
         Ok(config)

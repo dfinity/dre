@@ -38,7 +38,7 @@ pub struct Args {
 }
 
 impl Args {
-    pub fn ensure_key(&self) -> anyhow::Result<()> {
+    pub fn ensure_key(&self) -> anyhow::Result<(u64, PathBuf)> {
         let key_pair = &TEST_NEURON_1_OWNER_KEYPAIR;
         let path = dirs::home_dir()
             .ok_or(anyhow::anyhow!("No home dir present"))?
@@ -48,7 +48,8 @@ impl Args {
             std::fs::create_dir_all(dir)?;
         }
 
-        std::fs::write(path, key_pair.to_pem()).map_err(|e| anyhow::anyhow!(e))
+        std::fs::write(&path, key_pair.to_pem()).map_err(|e| anyhow::anyhow!(e))?;
+        Ok((449479075714955186, path))
     }
 
     pub async fn ensure_git(&self) -> anyhow::Result<()> {

@@ -20,6 +20,8 @@ mod cli;
 mod ict_util;
 mod qualify_util;
 
+const NETWORK_NAME: &str = "configured-testnet";
+
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     init_logger();
@@ -37,7 +39,7 @@ async fn main() -> anyhow::Result<()> {
     let args = Args::parse();
     info!("Running qualification for {}", args.version_to_qualify);
     info!("Generating keys for farm testnets...");
-    args.ensure_key()?;
+    let (neuron_id, private_key_pem) = args.ensure_key()?;
     info!("Principal key created");
 
     // Take in one version and figure out what is the base version
@@ -133,7 +135,7 @@ async fn main() -> anyhow::Result<()> {
     let (sender, mut receiver) = mpsc::channel(2);
     let handle = tokio::spawn(ict(args.ic_repo_path.clone(), config, token.clone(), sender));
 
-    qualify(&mut receiver).await?;
+    qualify(&mut receiver, private_key_pem, neuron_id, NETWORK_NAME).await?;
 
     token.cancel();
     handle.await??;

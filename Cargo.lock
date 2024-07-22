@@ -7170,6 +7170,7 @@ dependencies = [
  "dirs",
  "dre",
  "ic-canisters",
+ "ic-management-backend",
  "ic-management-types",
  "ic-nervous-system-common-test-keys",
  "itertools 0.13.0",
@@ -7180,6 +7181,7 @@ dependencies = [
  "serde_json",
  "tokio",
  "tokio-util",
+ "url",
 ]
 
 [[package]]
