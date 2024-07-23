@@ -7,6 +7,7 @@ use std::{
     time::Duration,
 };
 
+use backon::{ExponentialBuilder, Retryable};
 use chrono::Utc;
 use comfy_table::CellAlignment;
 use comfy_table_util::Table;
@@ -292,7 +293,8 @@ impl QualificationExecutor {
 
             let registry = self.dre_ctx.registry().await;
             print_text(format!("Syncing with registry after step {}", ordered_step.index));
-            registry.sync_with_nns().await?;
+            let sync_registry = || async { registry.sync_with_nns().await };
+            sync_registry.retry(&ExponentialBuilder::default()).await?;
         }
 
         print_text(format!("Qualification of {} finished successfully!", self.to_version));
