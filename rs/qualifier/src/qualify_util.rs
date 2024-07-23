@@ -2,7 +2,7 @@ use std::{path::PathBuf, str::FromStr};
 
 use anyhow::Error;
 use dre::{
-    commands::{Args, ExecutableCommand},
+    commands::{qualify::execute::Execute, Args, ExecutableCommand},
     ctx::DreContext,
 };
 use ic_management_backend::registry::local_registry_path;
@@ -15,7 +15,14 @@ use url::Url;
 
 use crate::Message;
 
-pub async fn qualify(receiver: &mut Receiver<Message>, private_key_pem: PathBuf, neuron_id: u64, network_name: &str) -> anyhow::Result<()> {
+pub async fn qualify(
+    receiver: &mut Receiver<Message>,
+    private_key_pem: PathBuf,
+    neuron_id: u64,
+    network_name: &str,
+    from_version: String,
+    to_version: String,
+) -> anyhow::Result<()> {
     // Run dre to qualify with correct parameters
     info!("Awaiting logs path...");
     let data = receiver.recv().await.ok_or(anyhow::anyhow!("Failed to recv data"))?;
@@ -31,7 +38,7 @@ pub async fn qualify(receiver: &mut Receiver<Message>, private_key_pem: PathBuf,
     };
     let config = Config::from_str(&config)?;
 
-    info!("Received following config: {:?}", config);
+    info!("Received following config: {:#?}", config);
     info!("Running qualification...");
 
     // At this point we are going to run so we need to remove previous
@@ -54,8 +61,14 @@ pub async fn qualify(receiver: &mut Receiver<Message>, private_key_pem: PathBuf,
         dry_run: false,
         network: network_name.to_string(),
         nns_urls: config.nns_urls,
-        subcommands: dre::commands::Subcommands::Get(dre::commands::get::Get {
-            args: vec!["subnet-list".to_string()],
+        subcommands: dre::commands::Subcommands::Qualify(dre::commands::qualify::QualifyCmd {
+            subcommand: dre::commands::qualify::QualifyCommands::Execute(Execute {
+                version: to_version,
+                from_version: Some(from_version),
+                step_range: None,
+                deployment_name: config.deployment_name,
+                prometheus_endpoint: config.prometheus_url,
+            }),
         }),
         verbose: false,
         no_sync: false,
@@ -66,6 +79,7 @@ pub async fn qualify(receiver: &mut Receiver<Message>, private_key_pem: PathBuf,
 }
 
 #[derive(Debug)]
+#[allow(dead_code)]
 struct Config {
     deployment_name: String,
     kibana_url: String,

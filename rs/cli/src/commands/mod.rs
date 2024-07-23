@@ -35,7 +35,7 @@ mod node_metrics;
 mod nodes;
 mod proposals;
 mod propose;
-mod qualify;
+pub mod qualify;
 mod registry;
 mod subnet;
 mod update_unassigned_nodes;

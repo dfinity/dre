@@ -35,15 +35,18 @@ pub async fn ict(ic_git: PathBuf, config: String, token: CancellationToken, send
         .current_dir(&ic_git)
         .spawn()?;
 
-    wait_data(child.stdout.take().ok_or(anyhow::anyhow!("Stdout not attached"))?, token.clone(), sender).await?;
+    if let Some(taken) = child.stdout.as_mut() {
+        wait_data(taken, token.clone(), sender).await?;
+    }
 
     token.cancelled().await;
+    info!("Received shutdown, killing testnet");
     child.kill().await?;
 
     Ok(())
 }
 
-async fn wait_data(stdout: ChildStdout, token: CancellationToken, sender: Sender<Message>) -> anyhow::Result<()> {
+async fn wait_data(stdout: &mut ChildStdout, token: CancellationToken, sender: Sender<Message>) -> anyhow::Result<()> {
     let mut stdout_reader = BufReader::new(stdout).lines();
 
     let target = "Testnet is being deployed, please wait ...";

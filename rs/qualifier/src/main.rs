@@ -91,7 +91,7 @@ async fn main() -> anyhow::Result<()> {
     let config = if let Some(ref path) = args.config_override {
         let contents = std::fs::read_to_string(path)?;
         let mut config = serde_json::from_str::<Value>(&contents)?;
-        config["initial_version"] = serde_json::Value::String(initial_version);
+        config["initial_version"] = serde_json::Value::String(initial_version.to_owned());
 
         serde_json::to_string_pretty(&config)?
     } else {
@@ -114,7 +114,7 @@ async fn main() -> anyhow::Result<()> {
           "num_unassigned_nodes": 4,
           "initial_version": "{}"
         }}"#,
-            initial_version
+            &initial_version
         );
 
         // Validate that the string is valid json
@@ -135,7 +135,17 @@ async fn main() -> anyhow::Result<()> {
     let (sender, mut receiver) = mpsc::channel(2);
     let handle = tokio::spawn(ict(args.ic_repo_path.clone(), config, token.clone(), sender));
 
-    qualify(&mut receiver, private_key_pem, neuron_id, NETWORK_NAME).await?;
+    qualify(
+        &mut receiver,
+        private_key_pem,
+        neuron_id,
+        NETWORK_NAME,
+        initial_version,
+        args.version_to_qualify.to_string(),
+    )
+    .await?;
+
+    info!("Finished qualifier run for: {}", args.version_to_qualify);
 
     token.cancel();
     handle.await??;
