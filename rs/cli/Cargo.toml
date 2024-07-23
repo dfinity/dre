@@ -10,6 +10,7 @@ documentation.workspace = true
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+backon = { workspace = true }
 actix-web = { workspace = true }
 anyhow = { workspace = true }
 async-recursion = { workspace = true }
@@ -72,6 +73,7 @@ humantime = { workspace = true }
 clap_complete = "4.5.8"
 cryptoki = { workspace = true }
 keyring = { workspace = true }
+comfy-table = { workspace = true }
 
 [dev-dependencies]
 actix-rt = { workspace = true }
