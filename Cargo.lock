@@ -3515,6 +3515,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "ic-cdk"
+version = "0.15.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0c44983d6e97135d86132111bae5b86c34c498d96b4f182638bebcc7ac07e03c"
+dependencies = [
+ "candid",
+ "ic-cdk-macros 0.15.0",
+ "ic0 0.23.0",
+ "serde",
+ "serde_bytes",
+]
+
+[[package]]
 name = "ic-cdk-macros"
 version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3524,7 +3537,7 @@ dependencies = [
  "proc-macro2",
  "quote",
  "serde",
- "serde_tokenstream",
+ "serde_tokenstream 0.1.7",
  "syn 1.0.109",
 ]
 
@@ -3538,8 +3551,22 @@ dependencies = [
  "proc-macro2",
  "quote",
  "serde",
- "serde_tokenstream",
+ "serde_tokenstream 0.1.7",
  "syn 1.0.109",
+]
+
+[[package]]
+name = "ic-cdk-macros"
+version = "0.15.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3af44fb4ec3a4b18831c9d3303ca8fa2ace846c4022d50cb8df4122635d3782e"
+dependencies = [
+ "candid",
+ "proc-macro2",
+ "quote",
+ "serde",
+ "serde_tokenstream 0.2.1",
+ "syn 2.0.66",
 ]
 
 [[package]]
@@ -3549,8 +3576,22 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "054727a3a1c486528b96349817d54290ff70df6addf417def456ea708a16f7fb"
 dependencies = [
  "futures",
- "ic-cdk",
+ "ic-cdk 0.13.2",
  "ic0 0.21.1",
+ "serde",
+ "serde_bytes",
+ "slotmap",
+]
+
+[[package]]
+name = "ic-cdk-timers"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "61fdca8e1d9ffb65ae68019b342c182009de9dc206fd849db0b0e90ee19f6fa4"
+dependencies = [
+ "futures",
+ "ic-cdk 0.15.0",
+ "ic0 0.23.0",
  "serde",
  "serde_bytes",
  "slotmap",
@@ -4034,9 +4075,9 @@ dependencies = [
  "ic-canister-log",
  "ic-canister-profiler",
  "ic-canisters-http-types",
- "ic-cdk",
+ "ic-cdk 0.13.2",
  "ic-cdk-macros 0.9.0",
- "ic-cdk-timers",
+ "ic-cdk-timers 0.7.0",
  "ic-crypto-sha2",
  "ic-icrc1",
  "ic-icrc1-tokens-u64",
@@ -4062,7 +4103,7 @@ dependencies = [
  "ic-base-types",
  "ic-canister-log",
  "ic-canisters-http-types",
- "ic-cdk",
+ "ic-cdk 0.13.2",
  "ic-cdk-macros 0.9.0",
  "ic-crypto-tree-hash",
  "ic-icrc1",
@@ -4438,7 +4479,7 @@ source = "git+https://github.com/dfinity/ic.git?rev=5ba1412f9175d987661ae3c0d8db
 dependencies = [
  "candid",
  "dfn_core",
- "ic-cdk",
+ "ic-cdk 0.13.2",
  "ic-crypto-sha2",
  "ic-management-canister-types",
  "ic-nervous-system-clients",
@@ -4457,7 +4498,7 @@ dependencies = [
  "dfn_candid",
  "dfn_core",
  "ic-base-types",
- "ic-cdk",
+ "ic-cdk 0.13.2",
 ]
 
 [[package]]
@@ -4913,7 +4954,7 @@ dependencies = [
  "cycles-minting-canister",
  "futures",
  "ic-base-types",
- "ic-cdk",
+ "ic-cdk 0.13.2",
  "ic-nervous-system-common",
  "ic-nervous-system-runtime",
  "ic-nervous-system-string",
@@ -4965,7 +5006,7 @@ dependencies = [
  "ic-base-types",
  "ic-canister-log",
  "ic-canisters-http-types",
- "ic-cdk",
+ "ic-cdk 0.13.2",
  "ic-cdk-macros 0.9.0",
  "ic-management-canister-types",
  "ic-metrics-encoder",
@@ -5046,7 +5087,7 @@ dependencies = [
  "futures",
  "hex",
  "ic-base-types",
- "ic-cdk",
+ "ic-cdk 0.13.2",
  "ic-crypto-sha2",
  "ic-management-canister-types",
  "ic-metrics-encoder",
@@ -5252,6 +5293,12 @@ name = "ic0"
 version = "0.21.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a54b5297861c651551676e8c43df805dad175cc33bc97dbd992edbbb85dcbcdf"
+
+[[package]]
+name = "ic0"
+version = "0.23.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8de254dd67bbd58073e23dc1c8553ba12fa1dc610a19de94ad2bbcd0460c067f"
 
 [[package]]
 name = "ic_bls12_381"
@@ -7310,7 +7357,7 @@ dependencies = [
  "dfn_http_metrics",
  "futures",
  "ic-base-types",
- "ic-cdk",
+ "ic-cdk 0.13.2",
  "ic-certified-map",
  "ic-crypto-node-key-validation",
  "ic-crypto-sha2",
@@ -7961,6 +8008,18 @@ dependencies = [
  "proc-macro2",
  "serde",
  "syn 1.0.109",
+]
+
+[[package]]
+name = "serde_tokenstream"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8790a7c3fe883e443eaa2af6f705952bc5d6e8671a220b9335c8cae92c037e74"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "serde",
+ "syn 2.0.66",
 ]
 
 [[package]]
@@ -9031,6 +9090,28 @@ dependencies = [
  "ic-crypto-tree-hash",
  "leb128",
  "serde",
+]
+
+[[package]]
+name = "trustworthy-node-metrics"
+version = "0.4.3"
+dependencies = [
+ "anyhow",
+ "candid",
+ "dfn_core",
+ "futures",
+ "ic-cdk 0.15.0",
+ "ic-cdk-macros 0.15.0",
+ "ic-cdk-timers 0.9.0",
+ "ic-management-canister-types",
+ "ic-nns-common",
+ "ic-nns-constants",
+ "ic-protobuf",
+ "ic-registry-transport",
+ "ic-stable-structures",
+ "itertools 0.13.0",
+ "prost",
+ "trustworthy-node-metrics-types",
 ]
 
 [[package]]

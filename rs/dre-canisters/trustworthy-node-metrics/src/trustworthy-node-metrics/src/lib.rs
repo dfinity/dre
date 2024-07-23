@@ -1,6 +1,7 @@
 use ic_cdk_macros::*;
 use itertools::Itertools;
 use std::time::Duration;
+use trustworthy_node_metrics_types::types::{SubnetNodeMetricsArgs, SubnetNodeMetricsResponse};
 mod metrics_manager;
 mod stable_memory;
 

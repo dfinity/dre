@@ -1,4 +1,5 @@
 use ic_stable_structures::{DefaultMemoryImpl, StableBTreeMap};
+use itertools::Itertools;
 use std::cell::RefCell;
 use trustworthy_node_metrics_types::types::{SubnetNodeMetrics, SubnetNodeMetricsStorable, TimestampNanos};
 
