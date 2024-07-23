@@ -58,3 +58,8 @@ fn subnet_node_metrics(args: SubnetNodeMetricsArgs) -> Result<Vec<SubnetNodeMetr
 
     Ok(result)
 }
+
+#[query]
+fn get_nodes() -> Vec<String> {
+    stable_memory::get_nodes()
+}

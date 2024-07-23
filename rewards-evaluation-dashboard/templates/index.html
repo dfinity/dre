@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Node Data Query</title>
+    <!-- Materialize CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- jQuery for AJAX -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h2 class="center-align">Node Data Query</h2>
+        <form id="node-form">
+            <div class="input-field">
+                <select name="node_id" id="node_id">
+                    <option value="" disabled selected>Choose your node</option>
+                    {% for node in nodes %}
+                    <option value="{{ node }}">{{ node }}</option>
+                    {% endfor %}
+                </select>
+                <label for="node_id">Select Node</label>
+            </div>
+            <button class="btn waves-effect waves-light" type="submit">Query</button>
+        </form>
+
+        <div class="row">
+            <div class="col s12">
+                <canvas id="myChart"></canvas>
+            </div>
+        </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                var elems = document.querySelectorAll('select');
+                var instances = M.FormSelect.init(elems, {});
+            });
+
+            $('#node-form').on('submit', function(e) {
+                e.preventDefault();
+                var node_id = $('#node_id').val();
+
+                $.ajax({
+                    type: 'POST',
+                    url: '/get_data',
+                    data: { node_id: node_id },
+                    success: function(data) {
+                        var ctx = document.getElementById('myChart').getContext('2d');
+                        var myChart = new Chart(ctx, {
+                            type: 'bar',
+                            data: {
+                                labels: data.labels, // Assuming data contains labels
+                                datasets: [{
+                                    label: 'Data',
+                                    data: data.values, // Assuming data contains values
+                                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                                    borderColor: 'rgba(75, 192, 192, 1)',
+                                    borderWidth: 1
+                                }]
+                            },
+                            options: {
+                                scales: {
+                                    y: {
+                                        beginAtZero: true
+                                    }
+                                }
+                            }
+                        });
+                    }
+                });
+            });
+        </script>
+    </div>
+
+    <!-- Materialize JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+</body>
+</html>
