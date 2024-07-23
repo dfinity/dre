@@ -2001,9 +2001,10 @@ def test_release_notes(mocker):
     mock.return_value = (guest_os_packages_all, guest_os_packages_filtered)
     assert (
         prepare_release_notes(
+            "release-2024-07-10_23-01-base",
             "a3831c87440df4821b435050c8a8fcb3745d86f6",
-            "de29a1a55b589428d173b31cdb8cec0923245657",
             "release-2024-07-18_01-30--github-base",
+            "de29a1a55b589428d173b31cdb8cec0923245657",
         )
         == """\
 # Review checklist
@@ -2013,8 +2014,16 @@ def test_release_notes(mocker):
 - @team-execution
 - @team-messaging
 
-# Release Notes for [release-2024-07-18_01-30--github-base](https://github.com/dfinity/ic/tree/release-2024-07-18_01-30--github-base) (de29a1a55b589428d173b31cdb8cec0923245657)
-Changelog since git revision [a3831c87440df4821b435050c8a8fcb3745d86f6](https://dashboard.internetcomputer.org/release/a3831c87440df4821b435050c8a8fcb3745d86f6)
+# Release Notes for [release-2024-07-18_01-30--github-base](https://github.com/dfinity/ic/tree/release-2024-07-18_01-30--github-base) (`de29a1a55b589428d173b31cdb8cec0923245657`)
+This release is based on [release-2024-07-10_23-01-base](https://dashboard.internetcomputer.org/release/a3831c87440df4821b435050c8a8fcb3745d86f6) (`a3831c87440df4821b435050c8a8fcb3745d86f6`).
+
+Please note that some commits may be excluded from this release if they're not relevant, or not modifying the GuestOS image.
+Additionally, some desriptions of some changes might have been slightly modified to fit the release notes format.
+
+To see a full list of commits added since last release, compare the revisions on [GitHub](https://github.com/dfinity/ic/compare/release-2024-07-10_23-01-base...release-2024-07-18_01-30--github-base).
+
+This release diverges from latest release. Merge base is [6135fdcf35e8226a0ff11342d608e5a5abd24129](https://github.com/dfinity/ic/tree/6135fdcf35e8226a0ff11342d608e5a5abd24129).
+Changes [were removed](https://github.com/dfinity/ic/compare/release-2024-07-18_01-30--github-base...release-2024-07-10_23-01-base) from this release.
 ## Features:
 * ~~author: Igor Novg | [`fde205151`](https://github.com/dfinity/ic/commit/fde205151) Boundary Nodes: ic-boundary: retry on most calls [AUTO-EXCLUDED]~~
 * author: Eero Kell | [`f5491f4b2`](https://github.com/dfinity/ic/commit/f5491f4b2) Consensus: Add backoff and jitter to HostOS upgrades (#395)

@@ -6,6 +6,7 @@ import tempfile
 from dotenv import load_dotenv
 from release_index import Release
 from release_index import Version
+from util import version_name
 
 
 class Commit:
@@ -37,7 +38,9 @@ class GitRepo:
             self.cache_temp_dir = tempfile.TemporaryDirectory()
             repo_cache_dir = pathlib.Path(self.cache_temp_dir.name)
 
-        self.dir = repo_cache_dir / (repo.split("@", 1)[1] if "@" in repo else repo.removeprefix("https://"))
+        self.dir = repo_cache_dir / (
+            "authed/{}".format(repo.split("@", 1)[1]) if "@" in repo else repo.removeprefix("https://")
+        )
         self.cache = {}
 
     def __del__(self):
@@ -159,20 +162,100 @@ class GitRepo:
             cwd=self.dir,
         )
 
-    def is_ancestor(self, maybe_ancestor_commit: str, descendant_commit: str) -> bool:
-        try:
-            return 0 == subprocess.check_call(
+    def merge_base(self, commit_a: str, commit_b: str) -> str:
+        return (
+            subprocess.check_output(
                 [
                     "git",
                     "merge-base",
-                    "--is-ancestor",
-                    maybe_ancestor_commit,
-                    descendant_commit,
+                    commit_a,
+                    commit_b,
                 ],
                 cwd=self.dir,
             )
-        except subprocess.CalledProcessError as e:
-            return e.returncode == 0
+            .decode("utf-8")
+            .strip()
+        )
+
+    def distance(self, commit_a: str, commit_b: str) -> int:
+        return int(
+            subprocess.check_output(
+                [
+                    "git",
+                    "rev-list",
+                    "--count",
+                    f"{commit_a}..{commit_b}",
+                ],
+                cwd=self.dir,
+            ).decode("utf-8")
+        )
+
+    def get_commits_in_range(self, first_commit, last_commit):
+        """Get the commits in the range [first_commit, last_commit] from the IC repo."""
+        self.fetch()
+
+        def get_commits_info(git_commit_format):
+            return (
+                subprocess.check_output(
+                    [
+                        "git",
+                        "log",
+                        "--format={}".format(git_commit_format),
+                        "--no-merges",
+                        "{}..{}".format(first_commit, last_commit),
+                    ],
+                    cwd=self.dir,
+                    stderr=subprocess.DEVNULL,
+                )
+                .decode("utf-8")
+                .strip()
+                .split("\n")
+            )
+
+        commit_hash = get_commits_info("%h")
+        commit_message = get_commits_info("%s")
+        commiter = get_commits_info("%an")
+
+        return list(zip(commit_hash, commit_message, commiter))
+
+    def file(self, path: str) -> pathlib.Path:
+        """Get the file for the given path."""
+        return self.dir / path
+
+    def file_changes_for_commit(self, commit_hash):
+        cmd = [
+            "git",
+            "diff",
+            "--numstat",
+            f"{commit_hash}^..{commit_hash}",
+        ]
+        diffstat_output = (
+            subprocess.check_output(
+                cmd,
+                cwd=self.dir,
+                stderr=subprocess.DEVNULL,
+            )
+            .decode()
+            .strip()
+        )
+
+        parts = diffstat_output.splitlines()
+        changes = []
+        for line in parts:
+            file_path = line.split()[2].strip()
+            additions = line.split()[0].strip()
+            deletions = line.split()[1].strip()
+            additions = additions if additions != "-" else "0"
+            deletions = deletions if deletions != "-" else "0"
+
+            changes.append(
+                {
+                    "file_path": "/" + file_path,
+                    "num_changes": int(additions) + int(deletions),
+                }
+            )
+
+        return changes
 
 
 # TODO: test
@@ -190,8 +273,7 @@ def push_release_tags(repo: GitRepo, release: Release):
             stderr=subprocess.DEVNULL,
             cwd=repo.dir,
         )
-        date = release.rc_name.removeprefix("rc--")
-        tag = f"release-{date}-{v.name}"
+        tag = version_name(release.rc_name, v.name)
         subprocess.check_call(
             [
                 "git",
