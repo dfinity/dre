@@ -7,9 +7,13 @@ import pathlib
 import re
 import subprocess
 import sys
+import tempfile
 import time
 import typing
 from dataclasses import dataclass
+from git_repo import GitRepo
+
+import markdown
 
 COMMIT_HASH_LENGTH = 9
 
@@ -197,42 +201,6 @@ def get_rc_branch(repo_dir, commit_hash):
     return ""
 
 
-def file_changes_for_commit(commit_hash, repo_dir):
-    cmd = [
-        "git",
-        "diff",
-        "--numstat",
-        f"{commit_hash}^..{commit_hash}",
-    ]
-    diffstat_output = (
-        subprocess.check_output(
-            cmd,
-            cwd=repo_dir,
-            stderr=subprocess.DEVNULL,
-        )
-        .decode()
-        .strip()
-    )
-
-    parts = diffstat_output.splitlines()
-    changes = []
-    for line in parts:
-        file_path = line.split()[2].strip()
-        additions = line.split()[0].strip()
-        deletions = line.split()[1].strip()
-        additions = additions if additions != "-" else "0"
-        deletions = deletions if deletions != "-" else "0"
-
-        changes.append(
-            {
-                "file_path": "/" + file_path,
-                "num_changes": int(additions) + int(deletions),
-            }
-        )
-
-    return changes
-
-
 def parse_codeowners(codeowners_path):
     with open(codeowners_path, encoding="utf8") as f:
         codeowners = f.readlines()
@@ -271,27 +239,34 @@ def best_matching_regex(file_path, regex_list):
     return matches[0]
 
 
-def prepare_release_notes(first_commit, last_commit, release_name, max_commits=1000, write_to_html=None) -> str:
+def prepare_release_notes(
+    base_release_tag,
+    base_release_commit,
+    release_tag,
+    release_commit,
+    max_commits=1000,
+) -> str:
     change_infos: dict[str, list[Change]] = {}
 
     ci_patterns = ["/**/*.lock", "/**/*.bzl"]
 
-    ic_repo_path = pathlib.Path.home() / ".cache/git/ic"
-    commits = get_commits_in_range(ic_repo_path, first_commit, last_commit)
-    codeowners = parse_codeowners(ic_repo_path / ".github" / "CODEOWNERS")
+    ic_repo = GitRepo("https://github.com/dfinity/ic.git", main_branch="master")
+
+    commits = ic_repo.get_commits_in_range(base_release_commit, release_commit)
+    codeowners = parse_codeowners(ic_repo.file(".github/CODEOWNERS"))
 
     if len(commits) >= max_commits:
         print("WARNING: max commits limit reached, increase depth")
         exit(1)
 
-    guestos_packages_all, guestos_packages_filtered = get_guestos_packages_with_bazel(ic_repo_path)
+    guestos_packages_all, guestos_packages_filtered = get_guestos_packages_with_bazel(ic_repo)
 
     for i, _ in progressbar([i[0] for i in commits], "Processing commit: ", 80):
         change_info = get_change_description_for_commit(
             commit_info=commits[i],
             change_infos=change_infos,
             ci_patterns=ci_patterns,
-            ic_repo_path=ic_repo_path,
+            ic_repo=ic_repo,
             codeowners=codeowners,
             guestos_packages_all=guestos_packages_all,
             guestos_packages_filtered=guestos_packages_filtered,
@@ -302,17 +277,16 @@ def prepare_release_notes(first_commit, last_commit, release_name, max_commits=1
         commit_type = change_info["type"]
         change_infos[commit_type].append(change_info)
 
-    if write_to_html:
-        release_notes_html(first_commit, last_commit, release_name, change_infos, write_to_html)
-        return ""
-    return release_notes_markdown(first_commit, last_commit, release_name, change_infos)
+    return release_notes_markdown(
+        ic_repo, base_release_tag, base_release_commit, release_tag, release_commit, change_infos
+    )
 
 
 def get_change_description_for_commit(
     commit_info,
     change_infos,
     ci_patterns,
-    ic_repo_path,
+    ic_repo,
     codeowners,
     guestos_packages_all,
     guestos_packages_filtered,
@@ -326,7 +300,7 @@ def get_change_description_for_commit(
 
     commit_hash, commit_message, commiter = commit_info
 
-    file_changes = file_changes_for_commit(commit_hash, ic_repo_path)
+    file_changes = ic_repo.file_changes_for_commit(commit_hash)
     guestos_change = any(any(c["file_path"][1:].startswith(p) for c in file_changes) for p in guestos_packages_all)
     if not guestos_change:
         return None
@@ -398,138 +372,22 @@ def get_change_description_for_commit(
     )
 
 
-def get_commits_in_range(ic_repo_path, first_commit, last_commit):
-    """Get the commits in the range [first_commit, last_commit] from the IC repo."""
-
-    if ic_repo_path.exists():
-        print("Resetting HEAD to latest origin/master.")
-        subprocess.check_call(
-            ["git", "checkout", "--force", "master"],
-            cwd=ic_repo_path,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        )
-        subprocess.check_call(
-            ["git", "reset", "--hard", "origin/master"],
-            cwd=ic_repo_path,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        )
-        print("Fetching new commits in {}".format(ic_repo_path))
-        subprocess.check_call(
-            ["git", "fetch"],
-            cwd=ic_repo_path,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        )
-
-    else:
-        print("Cloning IC repo to {}".format(ic_repo_path))
-        subprocess.check_call(
-            [
-                "git",
-                "clone",
-                "https://github.com/dfinity/ic.git",
-                ic_repo_path,
-            ],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        )
-
-    def get_commits_info(git_commit_format):
-        return (
-            subprocess.check_output(
-                [
-                    "git",
-                    "log",
-                    "--format={}".format(git_commit_format),
-                    "--no-merges",
-                    "{}..{}".format(first_commit, last_commit),
-                ],
-                cwd=ic_repo_path,
-                stderr=subprocess.DEVNULL,
-            )
-            .decode("utf-8")
-            .strip()
-            .split("\n")
-        )
-
-    commit_hash = get_commits_info("%h")
-    commit_message = get_commits_info("%s")
-    commiter = get_commits_info("%an")
-
-    return list(zip(commit_hash, commit_message, commiter))
-
-
-def release_notes_html(first_commit, last_commit, release_name, change_infos, html_path):
+def release_notes_html(notes_markdown):
     """Generate release notes in HTML format, typically for local testing."""
     import webbrowser
 
-    with open(html_path, "w", encoding="utf-8") as output:
-        output.write(
-            """
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap" rel="stylesheet">
-        """
-        )
-        output.write('<div style="font-family: Courier New; font-size: 8pt">')
-        output.write(
-            '<h1 id="{0}" style="font-size: 14pt; font-family: Roboto">Release Notes for <a style="font-size: 10pt; font-family: Roboto Mono" href="https://github.com/dfinity/ic/tree/{0}">{0}</a> <span style="font-family: Roboto Mono; font-weight: normal; font-size: 10pt">({1})</span></h1>\n'.format(
-                release_name, last_commit
-            )
-        )
-        output.write(
-            "<br><p>Change log since git revision [{0}](https://dashboard.internetcomputer.org/release/{0})</p>\n".format(
-                first_commit
-            )
-        )
-
-        for current_type in sorted(TYPE_PRETTY_MAP, key=lambda x: TYPE_PRETTY_MAP[x][1]):
-            if current_type not in change_infos:
-                continue
-            output.write(
-                '<h3 style="font-size: 14pt; font-family: Roboto">## {0}:</h3>\n'.format(
-                    TYPE_PRETTY_MAP[current_type][0]
-                )
-            )
-
-            for change in sorted(change_infos[current_type], key=lambda x: ",".join(x["team"])):
-                commit_part = '[<a href="https://github.com/dfinity/ic/commit/{0}">{0}</a>]'.format(
-                    change["commit"][:COMMIT_HASH_LENGTH]
-                )
-                team_part = ",".join([TEAM_PRETTY_MAP.get(team, team) for team in change["team"]])
-                team_part = team_part if team_part else "General"
-                scope_part = (
-                    ":"
-                    if change["scope"] == "" or change["scope"].lower() == team_part.lower()
-                    else "({0}):".format(change["scope"])
-                )
-                message_part = change["message"]
-                commiter_part = f"&lt!-- {change['commiter']} --&gt"
-
-                text = "* {0} {4} {1}{2} {3} {5}<br>".format(
-                    commit_part,
-                    team_part,
-                    scope_part,
-                    message_part,
-                    commiter_part,
-                    "" if change["included"] else "[AUTO-EXCLUDED]",
-                )
-                if not change["included"]:
-                    text = "<s>{}</s>".format(text)
-                output.write("<p style='font-size: 8pt; padding: 0; margin: 0; white-space: pre;'>{}</p>".format(text))
-
-        output.write("</div>")
-
-    html_path = os.path.abspath(html_path)
-
-    filename = "file://{}".format(html_path)
-    webbrowser.open_new_tab(filename)
+    with tempfile.NamedTemporaryFile(suffix=".html", delete=False) as output:
+        output.write(str.encode(markdown.markdown(notes_markdown)))
+        filename = "file://{}".format(output.name)
+        webbrowser.open_new_tab(filename)
 
 
-def release_notes_markdown(first_commit, last_commit, release_name, change_infos):
+def release_notes_markdown(
+    ic_repo: GitRepo, base_release_tag, base_release_commit, release_tag, release_commit, change_infos
+):
     """Generate release notes in markdown format."""
+    merge_base = ic_repo.merge_base(base_release_tag, release_tag)
+
     reviewers_text = "\n".join([f"- {t.google_docs_handle}" for t in RELEASE_NOTES_REVIEWERS if t.send_announcement])
 
     notes = """\
@@ -539,14 +397,29 @@ def release_notes_markdown(first_commit, last_commit, release_name, change_infos
 
 {reviewers_text}
 
-# Release Notes for [{rc_name}](https://github.com/dfinity/ic/tree/{rc_name}) ({last_commit})
-Changelog since git revision [{first_commit}](https://dashboard.internetcomputer.org/release/{first_commit})
+# Release Notes for [{release_tag}](https://github.com/dfinity/ic/tree/{release_tag}) (`{release_commit}`)
+This release is based on [{base_release_tag}](https://dashboard.internetcomputer.org/release/{base_release_commit}) (`{base_release_commit}`).
+
+Please note that some commits may be excluded from this release if they're not relevant, or not modifying the GuestOS image.
+Additionally, some desriptions of some changes might have been slightly modified to fit the release notes format.
+
+To see a full list of commits added since last release, compare the revisions on [GitHub](https://github.com/dfinity/ic/compare/{base_release_tag}...{release_tag}).
 """.format(
-        rc_name=release_name,
-        last_commit=last_commit,
-        first_commit=first_commit,
+        base_release_tag=base_release_tag,
+        base_release_commit=base_release_commit,
+        release_tag=release_tag,
+        release_commit=release_commit,
         reviewers_text=reviewers_text,
     )
+    if merge_base != base_release_commit:
+        notes += """
+This release diverges from latest release. Merge base is [{merge_base}](https://github.com/dfinity/ic/tree/{merge_base}).
+Changes [were removed](https://github.com/dfinity/ic/compare/{release_tag}...{base_release_tag}) from this release.
+""".format(
+            merge_base=merge_base,
+            release_tag=release_tag,
+            base_release_tag=base_release_tag,
+        )
 
     for current_type in sorted(TYPE_PRETTY_MAP, key=lambda x: TYPE_PRETTY_MAP[x][1]):
         if current_type not in change_infos:
@@ -573,7 +446,7 @@ Changelog since git revision [{first_commit}](https://dashboard.internetcomputer
     return notes
 
 
-def get_guestos_packages_with_bazel(ic_repo_path):
+def get_guestos_packages_with_bazel(ic_repo: GitRepo):
     """Get the packages that are related to the GuestOS image using Bazel."""
     bazel_query = [
         "bazel",
@@ -584,7 +457,7 @@ def get_guestos_packages_with_bazel(ic_repo_path):
     ]
     p = subprocess.run(
         ["gitlab-ci/container/container-run.sh"] + bazel_query,
-        cwd=ic_repo_path,
+        cwd=ic_repo.dir,
         text=True,
         stdout=subprocess.PIPE,
         check=False,
@@ -593,7 +466,7 @@ def get_guestos_packages_with_bazel(ic_repo_path):
         print("Failure running Bazel through container.  Attempting direct run.", file=sys.stderr)
         p = subprocess.run(
             bazel_query,
-            cwd=ic_repo_path,
+            cwd=ic_repo.dir,
             text=True,
             stdout=subprocess.PIPE,
             check=True,
@@ -609,23 +482,26 @@ def get_guestos_packages_with_bazel(ic_repo_path):
 
 def main():
     parser = argparse.ArgumentParser(description="Generate release notes")
-    parser.add_argument("first_commit", type=str, help="first commit")
-    parser.add_argument("last_commit", type=str, help="last commit")
+    parser.add_argument("base_release_tag", type=str, help="base release tag")
+    parser.add_argument("base_release_commit", type=str, help="base release commit")
+    parser.add_argument("release_tag", type=str, help="release tag")
+    parser.add_argument("release_commit", type=str, help="release commit")
     parser.add_argument(
         "--max-commits",
         default=os.environ.get("MAX_COMMITS", 1000),
         help="Maximum number of commits to include in the release notes",
     )
-    parser.add_argument(
-        "--html-path",
-        type=str,
-        default=None,
-        help="Path of the output HTML file. Default is to generate a markdown file.",
-    )
-    parser.add_argument("rc_name", type=str, help="name of the release i.e. 'rc--2023-01-12_18-31'")
     args = parser.parse_args()
 
-    print(prepare_release_notes(args.first_commit, args.last_commit, args.rc_name, args.max_commits, args.html_path))
+    release_notes_html(
+        prepare_release_notes(
+            args.base_release_tag,
+            args.base_release_commit,
+            args.release_tag,
+            args.release_commit,
+            max_commits=args.max_commits,
+        )
+    )
 
 
 if __name__ == "__main__":

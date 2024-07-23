@@ -1,6 +1,7 @@
 import os
 import pathlib
 import tempfile
+import typing
 
 import mammoth
 import markdown
@@ -35,20 +36,16 @@ class ReleaseNotesClient:
         gauth.ServiceAuth()
         self.drive = GoogleDrive(gauth)
 
-    def ensure(self, since_commit: str, version_name: str, git_revision: str, tag_teams_on_create: bool):
+    def ensure(self, base_release_tag, base_release_commit, release_tag, release_commit, tag_teams_on_create: bool):
         """Ensure that a release notes document exists for the given version."""
-        existing_file = self.file(git_revision)
+        existing_file = self.file(release_commit)
         if existing_file:
             return existing_file
-        content = prepare_release_notes(
-            first_commit=since_commit,
-            last_commit=git_revision,
-            release_name=version_name,
-        )
+        content = prepare_release_notes(base_release_tag, base_release_commit, release_tag, release_commit)
         htmldoc = md.convert(content)
         gdoc = self.drive.CreateFile(
             {
-                "title": f"Release Notes - {version_name} ({git_revision})",
+                "title": f"Release Notes - {release_tag} ({release_commit})",
                 "mimeType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                 "parents": [{"kind": "drive#fileLink", "id": self.release_notes_folder}],
             }
@@ -58,7 +55,7 @@ class ReleaseNotesClient:
         if "SLACK_WEBHOOK_URL" in os.environ:
             slack_announce.announce_release(
                 slack_url=os.environ["SLACK_WEBHOOK_URL"],
-                version_name=version_name,
+                version_name=release_tag,
                 google_doc_url=gdoc["alternateLink"],
                 tag_all_teams=tag_teams_on_create,
             )
@@ -99,9 +96,10 @@ def main():
     )
     version = "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f"
     gdoc = client.ensure(
-        version_name="rc--2024-02-21_23-01",
-        git_revision=version,
-        since_commit="8d4b6898d878fa3db4028b316b78b469ed29f293",
+        release_tag="relase--2024-02-21_23-01-base",
+        release_commit=version,
+        base_release_commit="8d4b6898d878fa3db4028b316b78b469ed29f293",
+        base_release_tag="release--2024-02-14_23-01-base",
         tag_teams_on_create=False,
     )
     print(client.markdown_file(version))
