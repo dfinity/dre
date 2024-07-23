@@ -57,10 +57,10 @@ impl QualificationExecutorBuilder {
     pub fn new(dre_ctx: DreContext) -> Self {
         Self {
             dre_ctx,
-            from_version: "".to_string(),
-            to_version: "".to_string(),
+            from_version: "<from-version>".to_string(),
+            to_version: "<to-version>".to_string(),
             step_range: "".to_string(),
-            deployment_name: "".to_string(),
+            deployment_name: "<network-name>".to_string(),
             prometheus_endpoint: "".to_string(),
         }
     }
@@ -93,11 +93,44 @@ impl QualificationExecutorBuilder {
 impl QualificationExecutor {
     fn _new(ctx: QualificationExecutorBuilder) -> Self {
         let steps = vec![
+            // Ensure the beginning version is blessed
+            // This step will be skipped for testnet runs, but may be
+            // required for staging
+            Steps::EnsureBlessedVersions(EnsureBlessedRevisions {
+                version: ctx.from_version.clone(),
+            }),
+            // Ensure app subnets are on beginning version
+            // This step will be skipped for testnet runs, but may be
+            // required for staging
+            Steps::UpgradeSubnets(UpgradeSubnets {
+                action: Action::Upgrade,
+                subnet_type: Some(SubnetType::Application),
+                to_version: ctx.from_version.clone(),
+            }),
+            // Ensure all system subnets are on beginning version
+            // This step will be skipped for testnet runs, but may be
+            // required for staging
+            Steps::UpgradeSubnets(UpgradeSubnets {
+                action: Action::Upgrade,
+                subnet_type: Some(SubnetType::System),
+                to_version: ctx.from_version.clone(),
+            }),
+            // Ensure unassigned nodes are on beginning version
+            // This step will be skipped for testnet runs, but may be
+            // required for staging
+            Steps::UpgradeSubnets(UpgradeSubnets {
+                action: Action::Upgrade,
+                subnet_type: None,
+                to_version: ctx.from_version.clone(),
+            }),
             // Blessing the version which we are qualifying
+            // This step will be run on each network and marks the
+            // beginning of a qualification
             Steps::EnsureBlessedVersions(EnsureBlessedRevisions {
                 version: ctx.to_version.clone(),
             }),
             // Upgrading deployment canisters
+            // TODO: finish this step
             Steps::UpgradeDeploymentCanisters(UpgradeDeploymentCanisters {}),
             // Upgrading all application subnets
             Steps::UpgradeSubnets(UpgradeSubnets {
@@ -118,17 +151,21 @@ impl QualificationExecutor {
                 to_version: ctx.to_version.clone(),
             }),
             // Run workload tests
+            // TODO: add artifacts exporting
             Steps::RunWorkloadTest(Workload {
                 version: ctx.to_version.clone(),
                 deployment_name: ctx.deployment_name.clone(),
                 prometheus_endpoint: ctx.prometheus_endpoint.clone(),
             }),
             // Run XNet tests
+            // TODO: add artifacts exporting
             Steps::RunXnetTest(RunXnetTest {
                 version: ctx.to_version.clone(),
             }),
             // Since the initial testnet is spunup with disk-img
             // retire the initial version.
+            // This step may not be required on staging but the version
+            // will just be re-elected in the next step
             Steps::RetireBlessedVersions(RetireBlessedVersions {
                 versions: vec![ctx.from_version.clone()],
             }),
@@ -155,12 +192,14 @@ impl QualificationExecutor {
                 to_version: ctx.from_version.clone(),
             }),
             // Run workload tests again
+            // TODO: add artifacts exporting
             Steps::RunWorkloadTest(Workload {
                 version: ctx.to_version.clone(),
                 deployment_name: ctx.deployment_name.clone(),
                 prometheus_endpoint: ctx.prometheus_endpoint.clone(),
             }),
             // Run XNet tests again
+            // TODO: add artifacts exporting
             Steps::RunXnetTest(RunXnetTest {
                 version: ctx.to_version.clone(),
             }),

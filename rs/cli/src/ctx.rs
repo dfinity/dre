@@ -125,7 +125,13 @@ impl DreContext {
         let ic_admin_path = match should_update_ic_admin()? {
             (true, _) => {
                 let govn_canister_version = governance_canister_version(network.get_nns_urls()).await?;
-                download_ic_admin(Some(govn_canister_version.stringified_hash)).await?
+                download_ic_admin(match govn_canister_version.stringified_hash.as_str() {
+                    // Some testnets could have this version setup if deployed
+                    // from HEAD of the branch they are created from
+                    "0000000000000000000000000000000000000000" => None,
+                    v => Some(v.to_owned()),
+                })
+                .await?
             }
             (false, s) => s,
         };
