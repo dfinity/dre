@@ -1,5 +1,5 @@
 {
-  "checksum": "3efd277a7135f4de14eb4aed75aaecad914a0b300a0570683d6f3b01643cb850",
+  "checksum": "0a147d75b6943fe7fce1c7d185a8c1576d83eebf42e9e15a9f046cae1ff72dbb",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -45872,18 +45872,8 @@
       "name": "trustworthy-node-metrics",
       "version": "0.4.3",
       "repository": null,
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "trustworthy_node_metrics",
-            "crate_root": "src/lib.rs",
-            "srcs": [
-              "**/*.rs"
-            ]
-          }
-        }
-      ],
-      "library_target_name": "trustworthy_node_metrics",
+      "targets": [],
+      "library_target_name": null,
       "common_attrs": {
         "compile_data_glob": [
           "**"
@@ -45897,10 +45887,6 @@
             {
               "id": "candid 0.10.9",
               "target": "candid"
-            },
-            {
-              "id": "ciborium 0.2.2",
-              "target": "ciborium"
             },
             {
               "id": "dfn_core 0.9.0",
@@ -45949,14 +45935,6 @@
             {
               "id": "prost 0.12.6",
               "target": "prost"
-            },
-            {
-              "id": "serde 1.0.204",
-              "target": "serde"
-            },
-            {
-              "id": "serde_json 1.0.120",
-              "target": "serde_json"
             }
           ],
           "selects": {}
@@ -45971,6 +45949,68 @@
           ],
           "selects": {}
         },
+        "version": "0.4.3"
+      },
+      "license": null
+    },
+    "trustworthy-node-metrics-types 0.4.3": {
+      "name": "trustworthy-node-metrics-types",
+      "version": "0.4.3",
+      "repository": null,
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "trustworthy_node_metrics_types",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "trustworthy_node_metrics_types",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "candid 0.10.9",
+              "target": "candid"
+            },
+            {
+              "id": "ciborium 0.2.2",
+              "target": "ciborium"
+            },
+            {
+              "id": "dfn_core 0.9.0",
+              "target": "dfn_core"
+            },
+            {
+              "id": "ic-management-canister-types 0.9.0",
+              "target": "ic_management_canister_types"
+            },
+            {
+              "id": "ic-stable-structures 0.6.5",
+              "target": "ic_stable_structures"
+            },
+            {
+              "id": "itertools 0.13.0",
+              "target": "itertools"
+            },
+            {
+              "id": "serde 1.0.204",
+              "target": "serde"
+            },
+            {
+              "id": "serde_json 1.0.120",
+              "target": "serde_json"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
         "version": "0.4.3"
       },
       "license": null
@@ -50350,7 +50390,8 @@
     "service-discovery 0.4.3": "rs/ic-observability/service-discovery",
     "slack-notifications 0.4.3": "rs/slack-notifications",
     "sns-downloader 0.4.3": "rs/ic-observability/sns-downloader",
-    "trustworthy-node-metrics 0.4.3": "rs/dre-canisters/trustworthy-node-metrics/src/trustworthy-node-metrics"
+    "trustworthy-node-metrics 0.4.3": "rs/dre-canisters/trustworthy-node-metrics/src/trustworthy-node-metrics",
+    "trustworthy-node-metrics-types 0.4.3": "rs/dre-canisters/trustworthy-node-metrics/src/trustworthy-node-metrics-types"
   },
   "conditions": {
     "aarch64-apple-darwin": [
