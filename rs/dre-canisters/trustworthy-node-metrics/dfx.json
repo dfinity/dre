@@ -4,6 +4,16 @@
       "candid": "src/trustworthy-node-metrics/trustworthy-node-metrics.did",
       "package": "trustworthy-node-metrics",
       "type": "rust"
+    },
+    "trustworthy-node-metrics-frontend": {
+      "dependencies": [
+        "trustworthy-node-metrics"
+      ],
+      "source": [
+        "src/trustworthy-node-metrics-frontend/dist"
+      ],
+      "type": "assets",
+      "workspace": "trustworthy-node-metrics-frontend"
     }
   },
   "defaults": {
