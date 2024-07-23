@@ -13,7 +13,7 @@ from mock_discourse import DiscourseClientMock
 from mock_google_docs import ReleaseNotesClientMock
 from publish_notes import PublishNotesClient
 from pydantic_yaml import parse_yaml_raw_as
-from reconciler import find_parent_release_commit, oldest_active_release
+from reconciler import find_base_release, oldest_active_release
 from reconciler import Reconciler
 from reconciler import ReconcilerState
 from reconciler import version_package_checksum
@@ -299,7 +299,7 @@ dff2072e34071110234b0cb169705efc13284e4a99b7795ef1951af1fe7b41ac *update-img.tar
     assert repr(e.value) == repr(RuntimeError("checksums do not match"))
 
 
-def test_find_parent_release_commit():
+def test_find_base_release():
     ic_repo = git_repo.GitRepo(
         f"https://github.com/dfinity/ic.git", main_branch="master", repo_cache_dir=pathlib.Path("/tmp/reconciler-cache")
     )
@@ -307,6 +307,34 @@ def test_find_parent_release_commit():
         release_index.Model,
         """
 releases:
+  - rc_name: rc--2024-07-10_23-01
+    versions:
+      - name: base
+        version: a3831c87440df4821b435050c8a8fcb3745d86f6
+      - name: storage-layer-disabled
+        version: 0d2b3965c813cd3a39ceedacd97fa2eee8760074
+  - rc_name: rc--2024-07-03_23-01
+    versions:
+      - # Successful qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/pipelines/1360352158
+        name: base
+        version: e4eeb331f874576126ef1196b9cdfbc520766fbd
+      - # Successful qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/pipelines/1360514977
+        name: storage-layer-disabled
+        version: 5849c6daf2037349bd36dcb6e26ce61c2c6570d0
+      - # Successful qualification pipeline: https://github.com/dfinity-ops/release/actions/runs/9877005239/job/27277530675
+        name: hotfix-https-outcalls
+        version: 16fabfd24617be66e08e00abc7ba3136bbd80010
+      - # Successful qualification pipeline: https://github.com/dfinity-ops/release/actions/runs/9880530622/job/27289909086
+        name: hotfix-https-outcalls-with-lsmt
+        version: 7dee90107a88b836fc72e78993913988f4f73ca2
+  - rc_name: rc--2024-06-26_23-01
+    versions:
+      - # Successful qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/pipelines/1350685950
+        name: base
+        version: 2e269c77aa2f6b2353ddad6a4ac3d5ddcac196b1
+      - # Successful qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/pipelines/1350889767
+        name: storage-layer-disabled
+        version: b6c3687fb3a03ca65fcd49f0aadc499367904c8b
   - rc_name: rc--2024-06-19_23-01
     versions:
       - name: base
@@ -388,19 +416,27 @@ releases:
 """,
     )
 
-    assert (
-        find_parent_release_commit(ic_repo, index, "48c500d1501e4165fc183e508872a2ef13fd0bef")
-        == "246d0ce0784d9990c06904809722ce5c2c816269"
+    assert find_base_release(ic_repo, index, "48c500d1501e4165fc183e508872a2ef13fd0bef") == (
+        "246d0ce0784d9990c06904809722ce5c2c816269",
+        "release-2024-06-12_23-01-base",
     )
-    assert (
-        find_parent_release_commit(ic_repo, index, "246d0ce0784d9990c06904809722ce5c2c816269")
-        == "d19fa446ab35780b2c6d8b82ea32d808cca558d5"
+    assert find_base_release(ic_repo, index, "246d0ce0784d9990c06904809722ce5c2c816269") == (
+        "d19fa446ab35780b2c6d8b82ea32d808cca558d5",
+        "release-2024-06-05_23-01-base",
     )
-    assert (
-        find_parent_release_commit(ic_repo, index, "9866a6f5cb43c54e3d87fa02a4eb80d0f159dddb")
-        == "2c4566b7b7af453167785504ba3c563e09f38504"
+    assert find_base_release(ic_repo, index, "9866a6f5cb43c54e3d87fa02a4eb80d0f159dddb") == (
+        "2c4566b7b7af453167785504ba3c563e09f38504",
+        "release-2024-05-09_23-02-base",
     )
-    assert (
-        find_parent_release_commit(ic_repo, index, "63acf4f88b20ec0c6384f4e18f0f6f69fc5d9b9f")
-        == "0a51fd74f08b2e6f23d6e1d60f1f52eb73b40ccc"
+    assert find_base_release(ic_repo, index, "63acf4f88b20ec0c6384f4e18f0f6f69fc5d9b9f") == (
+        "0a51fd74f08b2e6f23d6e1d60f1f52eb73b40ccc",
+        "release-2024-04-17_23-01-query-stats",
+    )
+    assert find_base_release(ic_repo, index, "0d2b3965c813cd3a39ceedacd97fa2eee8760074") == (
+        "a3831c87440df4821b435050c8a8fcb3745d86f6",
+        "release-2024-07-10_23-01-base",
+    )
+    assert find_base_release(ic_repo, index, "ec35ebd252d4ffb151d2cfceba3a86c4fb87c6d6") == (
+        "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d",
+        "release-2024-05-15_23-02-base",
     )

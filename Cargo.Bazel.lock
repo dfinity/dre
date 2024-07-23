@@ -1,5 +1,5 @@
 {
-  "checksum": "f3c6195e6654db56b4c772ec401cc5689f9b0fa6466d7c0fc6543302e0774321",
+  "checksum": "827b8ac63a079674084fad718693689f37a28b2c6ef6b5cb236e0b872ce2d814",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -7001,6 +7001,79 @@
       },
       "license": "MPL-2.0"
     },
+    "comfy-table 7.1.1": {
+      "name": "comfy-table",
+      "version": "7.1.1",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/comfy-table/7.1.1/download",
+          "sha256": "b34115915337defe99b2aff5c2ce6771e5fbc4079f4b506301f5cf394c8452f7"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "comfy_table",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "comfy_table",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "crate_features": {
+          "common": [
+            "crossterm",
+            "default",
+            "tty"
+          ],
+          "selects": {}
+        },
+        "deps": {
+          "common": [
+            {
+              "id": "strum 0.26.3",
+              "target": "strum"
+            },
+            {
+              "id": "unicode-width 0.1.13",
+              "target": "unicode_width"
+            }
+          ],
+          "selects": {
+            "cfg(not(windows))": [
+              {
+                "id": "crossterm 0.27.0",
+                "target": "crossterm"
+              }
+            ],
+            "cfg(windows)": [
+              {
+                "id": "crossterm 0.27.0",
+                "target": "crossterm"
+              }
+            ]
+          }
+        },
+        "edition": "2021",
+        "proc_macro_deps": {
+          "common": [
+            {
+              "id": "strum_macros 0.26.4",
+              "target": "strum_macros"
+            }
+          ],
+          "selects": {}
+        },
+        "version": "7.1.1"
+      },
+      "license": "MIT"
+    },
     "comparable 0.5.4": {
       "name": "comparable",
       "version": "0.5.4",
@@ -8020,6 +8093,121 @@
         ]
       },
       "license": "MIT OR Apache-2.0"
+    },
+    "crossterm 0.27.0": {
+      "name": "crossterm",
+      "version": "0.27.0",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/crossterm/0.27.0/download",
+          "sha256": "f476fe445d41c9e991fd07515a6f463074b782242ccf4a5b7b1d1012e70824df"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "crossterm",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "crossterm",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "crate_features": {
+          "common": [],
+          "selects": {
+            "aarch64-pc-windows-msvc": [
+              "windows"
+            ],
+            "i686-pc-windows-msvc": [
+              "windows"
+            ],
+            "x86_64-pc-windows-msvc": [
+              "windows"
+            ]
+          }
+        },
+        "deps": {
+          "common": [
+            {
+              "id": "bitflags 2.5.0",
+              "target": "bitflags"
+            },
+            {
+              "id": "parking_lot 0.12.3",
+              "target": "parking_lot"
+            }
+          ],
+          "selects": {
+            "cfg(unix)": [
+              {
+                "id": "libc 0.2.155",
+                "target": "libc"
+              }
+            ],
+            "cfg(windows)": [
+              {
+                "id": "crossterm_winapi 0.9.1",
+                "target": "crossterm_winapi"
+              },
+              {
+                "id": "winapi 0.3.9",
+                "target": "winapi"
+              }
+            ]
+          }
+        },
+        "edition": "2021",
+        "version": "0.27.0"
+      },
+      "license": "MIT"
+    },
+    "crossterm_winapi 0.9.1": {
+      "name": "crossterm_winapi",
+      "version": "0.9.1",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/crossterm_winapi/0.9.1/download",
+          "sha256": "acdd7c62a3665c7f6830a51635d9ac9b23ed385797f70a83bb8bafe9c572ab2b"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "crossterm_winapi",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "crossterm_winapi",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [],
+          "selects": {
+            "cfg(windows)": [
+              {
+                "id": "winapi 0.3.9",
+                "target": "winapi"
+              }
+            ]
+          }
+        },
+        "edition": "2018",
+        "version": "0.9.1"
+      },
+      "license": "MIT"
     },
     "crunchy 0.2.2": {
       "name": "crunchy",
@@ -10560,6 +10748,10 @@
               "target": "anyhow"
             },
             {
+              "id": "backon 0.4.4",
+              "target": "backon"
+            },
+            {
               "id": "candid 0.10.9",
               "target": "candid"
             },
@@ -10582,6 +10774,10 @@
             {
               "id": "colored 2.1.0",
               "target": "colored"
+            },
+            {
+              "id": "comfy-table 7.1.1",
+              "target": "comfy_table"
             },
             {
               "id": "cryptoki 0.3.1",
@@ -45604,8 +45800,18 @@
       "name": "trustworthy-node-metrics",
       "version": "0.4.3",
       "repository": null,
-      "targets": [],
-      "library_target_name": null,
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "trustworthy_node_metrics",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "trustworthy_node_metrics",
       "common_attrs": {
         "compile_data_glob": [
           "**"
@@ -47504,6 +47710,7 @@
             "fibersapi",
             "fileapi",
             "handleapi",
+            "impl-default",
             "knownfolders",
             "libloaderapi",
             "memoryapi",
@@ -47514,9 +47721,11 @@
             "processthreadsapi",
             "shlobj",
             "std",
+            "synchapi",
             "winbase",
             "wincon",
-            "winerror"
+            "winerror",
+            "winuser"
           ],
           "selects": {}
         },

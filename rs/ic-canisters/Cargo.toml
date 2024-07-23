@@ -33,3 +33,4 @@ simple_asn1 = { workspace = true }
 thiserror = { workspace = true }
 url = { workspace = true }
 ic-sns-wasm = { workspace = true }
+trustworthy-node-metrics = { workspace = true }

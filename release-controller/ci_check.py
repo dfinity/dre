@@ -107,7 +107,10 @@ def check_rc_order(index: ReleaseIndex) -> list[str]:
     errors = []
     date_format = "%Y-%m-%d_%H-%M"
     parsed = [
-        {"name": release.rc_name, "date": datetime.strptime(release.rc_name.removeprefix("rc--"), date_format)}
+        {
+            "name": release.rc_name,
+            "date": datetime.strptime(release.rc_name.removeprefix("rc--").removesuffix("--github"), date_format),
+        }
         for release in index.releases
     ]
 

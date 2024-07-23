@@ -7,6 +7,7 @@ import sys
 import tempfile
 import time
 import traceback
+import typing
 
 
 sys.path.append(os.path.join(os.path.dirname(__file__)))
@@ -91,19 +92,24 @@ def versions_to_unelect(
     return [v for v in elected_versions if v not in active_releases_versions and v not in active_versions]
 
 
-def find_parent_release_commit(ic_repo: GitRepo, config: release_index.Model, commit: str) -> str:
+def find_base_release(ic_repo: GitRepo, config: release_index.Model, commit: str) -> typing.Tuple[str, str]:
+    """
+    Find the parent release commit for the given commit. Optionally return merge base if it's not a direct parent.
+    """
     ic_repo.fetch()
     rc, rc_idx = next(
         (rc, i) for i, rc in enumerate(config.root.releases) if any(v.version == commit for v in rc.versions)
     )
     v_idx = next(i for i, v in enumerate(config.root.releases[rc_idx].versions) if v.version == commit)
     return (
-        config.root.releases[rc_idx + 1].versions[0].version  # take first version from the previous rc
+        (
+            config.root.releases[rc_idx + 1].versions[0].version,
+            version_name(config.root.releases[rc_idx + 1].rc_name, config.root.releases[rc_idx + 1].versions[0].name),
+        )  # take first version from the previous rc
         if v_idx == 0
-        else next(
-            v.version
-            for i, v in reversed(list(enumerate(rc.versions[:v_idx])))
-            if i == 0 or ic_repo.is_ancestor(v.version, commit)
+        else min(
+            [(v.version, version_name(rc.rc_name, v.name)) for v in rc.versions if v.version != commit],
+            key=lambda v: ic_repo.distance(ic_repo.merge_base(v[0], commit), commit),
         )
     )
 
@@ -190,10 +196,12 @@ class Reconciler:
             for v_idx, v in enumerate(rc.versions):
                 logging.info("Updating version %s", v)
                 push_release_tags(self.ic_repo, rc)
+                base_release_commit, base_release_name = find_base_release(self.ic_repo, config, v.version)
                 self.notes_client.ensure(
-                    version_name=version_name(rc_name=rc.rc_name, name=v.name),
-                    since_commit=find_parent_release_commit(self.ic_repo, config, v.version),
-                    git_revision=v.version,
+                    base_release_commit=base_release_commit,
+                    base_release_tag=base_release_name,
+                    release_tag=version_name(rc_name=rc.rc_name, name=v.name),
+                    release_commit=v.version,
                     tag_teams_on_create=v_idx == 0,
                 )
 

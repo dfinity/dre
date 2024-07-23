@@ -60,6 +60,7 @@ pub struct LazyRegistry {
     elected_hostos: RefCell<Option<Arc<Vec<String>>>>,
     unassigned_nodes_replica_version: RefCell<Option<Arc<String>>>,
     firewall_rule_set: RefCell<Option<Arc<BTreeMap<String, FirewallRuleSet>>>>,
+    no_sync: bool,
 }
 
 pub trait LazyRegistryEntry: RegistryValue {
@@ -153,7 +154,7 @@ impl LazyRegistryFamilyEntries for LazyRegistry {
 }
 
 impl LazyRegistry {
-    pub fn new(local_registry: LocalRegistry, network: Network) -> Self {
+    pub fn new(local_registry: LocalRegistry, network: Network, no_sync: bool) -> Self {
         Self {
             local_registry,
             network,
@@ -165,6 +166,7 @@ impl LazyRegistry {
             elected_hostos: RefCell::new(None),
             unassigned_nodes_replica_version: RefCell::new(None),
             firewall_rule_set: RefCell::new(None),
+            no_sync,
         }
     }
 
@@ -172,6 +174,12 @@ impl LazyRegistry {
     pub async fn node_labels(&self) -> anyhow::Result<Arc<Vec<Guest>>> {
         if let Some(guests) = self.node_labels_guests.borrow().as_ref() {
             return Ok(guests.to_owned());
+        }
+
+        if self.no_sync || (!self.network.is_mainnet() && !self.network.eq(&Network::staging_unchecked().unwrap())) {
+            let res = Arc::new(vec![]);
+            *self.node_labels_guests.borrow_mut() = Some(res.clone());
+            return Ok(res);
         }
 
         let guests = match node_labels::query_guests(&self.network.name).await {
@@ -220,14 +228,32 @@ impl LazyRegistry {
         Ok(record)
     }
 
+    // Resets the whole state of after fetching so that targets can be
+    // recalculated
+    pub async fn sync_with_nns(&self) -> anyhow::Result<()> {
+        self.local_registry.sync_with_nns().await.map_err(|e| anyhow::anyhow!(e))?;
+        *self.subnets.borrow_mut() = None;
+        *self.nodes.borrow_mut() = None;
+        *self.operators.borrow_mut() = None;
+
+        *self.elected_guestos.borrow_mut() = None;
+        *self.elected_hostos.borrow_mut() = None;
+        *self.unassigned_nodes_replica_version.borrow_mut() = None;
+        *self.firewall_rule_set.borrow_mut() = None;
+
+        Ok(())
+    }
+
     pub async fn operators(&self) -> anyhow::Result<Arc<BTreeMap<PrincipalId, Operator>>> {
         if let Some(operators) = self.operators.borrow().as_ref() {
             return Ok(operators.to_owned());
         }
 
         // Fetch node providers
-
-        let node_providers = query_ic_dashboard_list::<NodeProvidersResponse>(&self.network, "v3/node-providers").await?;
+        let node_providers = match self.no_sync {
+            false => query_ic_dashboard_list::<NodeProvidersResponse>(&self.network, "v3/node-providers").await?,
+            true => NodeProvidersResponse { node_providers: vec![] },
+        };
         let node_providers: BTreeMap<_, _> = node_providers.node_providers.iter().map(|p| (p.principal_id, p)).collect();
         let data_centers = self.get_family_entries::<DataCenterRecord>()?;
         let operators = self.get_family_entries::<NodeOperatorRecord>()?;
@@ -295,22 +321,25 @@ impl LazyRegistry {
         let operators = self.operators().await?;
         let nodes: BTreeMap<_, _> = node_entries
             .iter()
-            // Skipping nodes without operator. This should only occur at version 1
-            .filter(|(_, nr)| !nr.node_operator_id.is_empty())
             .map(|(p, nr)| {
                 let guest = Self::node_record_guest(guests.clone(), nr);
                 let operator = operators
                     .iter()
                     .find(|(op, _)| op.to_vec() == nr.node_operator_id)
-                    .map(|(_, o)| o.to_owned())
-                    .expect("Missing operator referenced by a node");
+                    .map(|(_, o)| o.to_owned());
+                if operator.is_none() && self.network.is_mainnet() {
+                    panic!("Operator cannot be none on mainnet")
+                }
 
                 let principal = PrincipalId::from_str(p).expect("Invalid node principal id");
                 let ip_addr = Self::node_ip_addr(nr);
-                let dc_name = match &operator.datacenter {
-                    Some(dc) => dc.name.to_lowercase(),
-                    None => "".to_string(),
-                };
+                let dc_name = operator
+                    .clone()
+                    .map(|op| match op.datacenter {
+                        Some(dc) => dc.name.to_lowercase(),
+                        None => "".to_string(),
+                    })
+                    .unwrap_or_default();
                 (
                     principal,
                     Node {
@@ -323,7 +352,10 @@ impl LazyRegistry {
                             .unwrap_or_else(|| {
                                 format!(
                                     "{}-{}",
-                                    operator.datacenter.as_ref().map(|d| d.name.clone()).unwrap_or_else(|| "??".to_string()),
+                                    operator
+                                        .clone()
+                                        .map(|operator| operator.datacenter.as_ref().map(|d| d.name.clone()).unwrap_or_else(|| "??".to_string()))
+                                        .unwrap_or_default(),
                                     p.to_string().split_once('-').map(|(first, _)| first).unwrap_or("?????")
                                 )
                             })
@@ -336,7 +368,7 @@ impl LazyRegistry {
                         hostos_version: nr.hostos_version_id.clone().unwrap_or_default(),
                         // TODO: map hostos release
                         hostos_release: None,
-                        operator,
+                        operator: operator.clone().unwrap_or_default(),
                         proposal: None,
                         label: guest.map(|g| g.name),
                         decentralized: ip_addr.segments()[4] == 0x6801,
@@ -484,6 +516,10 @@ impl LazyRegistry {
     }
 
     async fn update_proposal_data(&self) -> anyhow::Result<()> {
+        if self.no_sync {
+            return Ok(());
+        }
+
         let proposal_agent = proposal::ProposalAgent::new(self.network.get_nns_urls());
         let nodes = self.nodes().await?;
         let subnets = self.subnets().await?;
@@ -524,6 +560,8 @@ impl LazyRegistry {
         Ok(())
     }
 
+    // TODO: valid only for mainnet, on testnets its not mandatory that the first subnet
+    // is the NNS. Should query by subnet_type
     pub async fn nns_replica_version(&self) -> anyhow::Result<Option<String>> {
         Ok(self
             .subnets()
