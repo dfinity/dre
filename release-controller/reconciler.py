@@ -101,17 +101,16 @@ def find_base_release(ic_repo: GitRepo, config: release_index.Model, commit: str
         (rc, i) for i, rc in enumerate(config.root.releases) if any(v.version == commit for v in rc.versions)
     )
     v_idx = next(i for i, v in enumerate(config.root.releases[rc_idx].versions) if v.version == commit)
-    closest = min(
-        [v for v in rc.versions if v.version != commit],
-        key=lambda v: ic_repo.distance(ic_repo.merge_base(v.version, commit), commit),
-    )
     return (
         (
             config.root.releases[rc_idx + 1].versions[0].version,
             version_name(config.root.releases[rc_idx + 1].rc_name, config.root.releases[rc_idx + 1].versions[0].name),
         )  # take first version from the previous rc
         if v_idx == 0
-        else (closest.version, version_name(rc.rc_name, closest.name))
+        else min(
+            [(v.version, version_name(rc.rc_name, v.name)) for v in rc.versions if v.version != commit],
+            key=lambda v: ic_repo.distance(ic_repo.merge_base(v[0], commit), commit),
+        )
     )
 
 
