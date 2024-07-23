@@ -15,7 +15,7 @@ pub struct RetireBlessedVersions {
 
 impl Step for RetireBlessedVersions {
     fn help(&self) -> String {
-        "Ensure that versions are retired".to_string()
+        format!("Check that the following versions are retired: {}", self.versions.iter().join(", "))
     }
 
     fn name(&self) -> String {

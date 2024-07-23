@@ -195,14 +195,14 @@ impl QualificationExecutor {
             // Run workload tests again
             // TODO: add artifacts exporting
             Steps::RunWorkloadTest(Workload {
-                version: ctx.to_version.clone(),
+                version: ctx.from_version.clone(),
                 deployment_name: ctx.deployment_name.clone(),
                 prometheus_endpoint: ctx.prometheus_endpoint.clone(),
             }),
             // Run XNet tests again
             // TODO: add artifacts exporting
             Steps::RunXnetTest(RunXnetTest {
-                version: ctx.to_version.clone(),
+                version: ctx.from_version.clone(),
             }),
         ];
 

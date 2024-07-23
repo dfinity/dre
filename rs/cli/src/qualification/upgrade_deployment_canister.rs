@@ -8,7 +8,7 @@ pub struct UpgradeDeploymentCanisters {}
 
 impl Step for UpgradeDeploymentCanisters {
     fn help(&self) -> String {
-        "This step ensures that deployment canisters match the version of nns deployment canister".to_string()
+        "Ensure that deployment canisters match the version of nns deployment canister".to_string()
     }
 
     fn name(&self) -> String {

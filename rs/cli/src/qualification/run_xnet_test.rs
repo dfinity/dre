@@ -23,7 +23,7 @@ pub struct RunXnetTest {
 
 impl Step for RunXnetTest {
     fn help(&self) -> String {
-        "This step runs xnet test on a subnet".to_string()
+        format!("Run xnet test for version {}", self.version)
     }
 
     fn name(&self) -> String {

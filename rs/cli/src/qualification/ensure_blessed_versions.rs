@@ -16,7 +16,7 @@ pub struct EnsureBlessedRevisions {
 
 impl Step for EnsureBlessedRevisions {
     fn help(&self) -> String {
-        "This step runs the check to determine if all versions are blessed".to_string()
+        format!("Check if version {} is blessed", self.version)
     }
 
     fn name(&self) -> String {

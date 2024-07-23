@@ -33,8 +33,8 @@ impl Display for Action {
             f,
             "{}",
             match self {
-                Action::Upgrade => "upgrade".to_string(),
-                Action::Downgrade => "downgrade".to_string(),
+                Action::Upgrade => "Upgrade".to_string(),
+                Action::Downgrade => "Downgrade".to_string(),
             }
         )
     }
@@ -43,7 +43,7 @@ impl Display for Action {
 impl Step for UpgradeSubnets {
     fn help(&self) -> String {
         format!(
-            "This step {} all the {} to the desired version",
+            "{} all the {} to version {}",
             self.action,
             match self.subnet_type {
                 Some(s) => match s {
@@ -52,7 +52,8 @@ impl Step for UpgradeSubnets {
                     SubnetType::VerifiedApplication => "verified-application subnets",
                 },
                 None => "unassigned nodes",
-            }
+            },
+            self.to_version
         )
     }
 

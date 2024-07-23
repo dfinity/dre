@@ -25,7 +25,7 @@ pub struct Workload {
 
 impl Step for Workload {
     fn help(&self) -> String {
-        "This step runs the workload test on one app subnet.".to_string()
+        format!("Run workload test on version {} for network {}", self.version, self.deployment_name)
     }
 
     fn name(&self) -> String {
