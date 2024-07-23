@@ -1,24 +1,27 @@
-type decl = 
-    service {
-        "subnet_node_metrics" : (SubnetNodeMetricsArgs) -> (SubnetNodeMetricsResult) query;
-    };
-  type NodeMetrics = record {
-      node_id: principal;
-      num_blocks_proposed_total: nat64;
-      num_block_failures_total: nat64;
-  };
-  type SubnetNodeMetricsResponse = record {
-      ts: nat64;
-      subnet_id: principal;
-      node_metrics: vec NodeMetrics;
-  };
-  type SubnetNodeMetricsResult = variant {
-    Ok : vec SubnetNodeMetricsResponse;
-    Err : text;
-  };
-  type SubnetNodeMetricsArgs = record {
-    subnet_id: opt principal;
-    ts: opt nat64;
-  };
 
-service : () -> decl
+type NodeMetrics = record {
+    node_id: principal;
+    num_blocks_proposed_total: nat64;
+    num_block_failures_total: nat64;
+};
+
+type SubnetNodeMetricsResponse = record {
+    ts: nat64;
+    subnet_id: principal;
+    node_metrics: vec NodeMetrics;
+};
+
+type SubnetNodeMetricsResult = variant {
+  Ok : vec SubnetNodeMetricsResponse;
+  Err : text;
+};
+
+type SubnetNodeMetricsArgs = record {
+  subnet_id: opt principal;
+  ts: opt nat64;
+};
+
+
+service : {
+    "subnet_node_metrics" : (SubnetNodeMetricsArgs) -> (SubnetNodeMetricsResult) query;
+}
