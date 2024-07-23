@@ -18,6 +18,16 @@ pub struct NodeMetrics {
     pub num_block_failures_total: u64,
 }
 
+impl From<ICManagementNodeMetrics> for NodeMetrics {
+    fn from(node_metrics: ICManagementNodeMetrics) -> Self {
+        Self {
+            node_id: node_metrics.node_id.0,
+            num_block_failures_total: node_metrics.num_block_failures_total,
+            num_blocks_proposed_total: node_metrics.num_blocks_proposed_total,
+        }
+    }
+}
+
 #[derive(Deserialize, Serialize, CandidType)]
 pub struct SubnetNodeMetrics {
     pub subnet_id: Principal,
@@ -31,16 +41,6 @@ impl SubnetNodeMetrics {
         Self {
             subnet_id: subnet_id.0,
             node_metrics,
-        }
-    }
-}
-
-impl From<ICManagementNodeMetrics> for NodeMetrics {
-    fn from(node_metrics: ICManagementNodeMetrics) -> Self {
-        Self {
-            node_id: node_metrics.node_id.0,
-            num_block_failures_total: node_metrics.num_block_failures_total,
-            num_blocks_proposed_total: node_metrics.num_blocks_proposed_total,
         }
     }
 }
