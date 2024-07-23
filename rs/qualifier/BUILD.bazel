@@ -4,7 +4,9 @@ load("@//rs:oci_images.bzl", "rust_binary_oci_image_rules")
 
 DEPS = [
     "//rs/cli:dre-lib",
-    "//rs/ic-canisters"
+    "//rs/ic-canisters",
+    "//rs/ic-management-types",
+    "//rs/ic-management-backend:ic-management-backend-lib"
 ]
 
 rust_binary(

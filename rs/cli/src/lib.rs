@@ -4,5 +4,6 @@ pub mod commands;
 pub mod ctx;
 pub mod ic_admin;
 mod operations;
+mod qualification;
 mod runner;
 mod subnet_manager;

@@ -58,6 +58,7 @@ pub async fn qualify(receiver: &mut Receiver<Message>, private_key_pem: PathBuf,
             args: vec!["subnet-list".to_string()],
         }),
         verbose: false,
+        no_sync: false,
     };
     let ctx = DreContext::from_args(&args).await?;
 
