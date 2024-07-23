@@ -1,6 +1,7 @@
 use std::{fmt::Display, rc::Rc, time::Duration};
 
 use backon::{ExponentialBuilder, Retryable};
+use comfy_table::CellAlignment;
 use ic_management_backend::lazy_registry::LazyRegistry;
 use ic_registry_subnet_type::SubnetType;
 use ic_types::PrincipalId;
@@ -10,10 +11,7 @@ use reqwest::ClientBuilder;
 use crate::{
     ctx::DreContext,
     ic_admin::{ProposeCommand, ProposeOptions},
-    qualification::{
-        print_table,
-        tabular_util::{ColumnAlignment, Table},
-    },
+    qualification::{comfy_table_util::Table, print_table},
 };
 
 use super::{print_subnet_versions, print_text, Step};
@@ -222,7 +220,7 @@ async fn wait_for_subnet_revision(registry: Rc<LazyRegistry>, subnet: Option<Pri
 
         // print the status of nodes and versions
         let table = Table::new()
-            .with_columns(&[("Node Id", ColumnAlignment::Middle), ("Revision", ColumnAlignment::Left)])
+            .with_columns(&[("Node Id", CellAlignment::Center), ("Revision", CellAlignment::Left)])
             .with_rows(
                 nodes_with_reivison
                     .iter()

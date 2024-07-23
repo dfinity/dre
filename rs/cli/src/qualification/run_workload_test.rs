@@ -1,6 +1,7 @@
 use std::net::Ipv6Addr;
 
 use chrono::Utc;
+use comfy_table::CellAlignment;
 use ic_registry_subnet_type::SubnetType;
 use itertools::Itertools;
 use reqwest::ClientBuilder;
@@ -9,11 +10,7 @@ use tokio::process::Command;
 
 use crate::ctx::DreContext;
 
-use super::{
-    download_executable, print_table, print_text,
-    tabular_util::{ColumnAlignment, Table},
-    Step, REQWEST_TIMEOUT,
-};
+use super::{comfy_table_util::Table, download_executable, print_table, print_text, Step, REQWEST_TIMEOUT};
 
 const IC_WORKLOAD_GENERATOR: &str = "ic-workload-generator";
 
@@ -120,7 +117,7 @@ async fn ensure_finalization_rate_for_subnet(
 
     let expected_finalization_rate = expected_finalization_rate_for_subnet(subnet_type, ips.len());
     let table = Table::new()
-        .with_columns(&[("Expected", ColumnAlignment::Middle), ("Achieved", ColumnAlignment::Middle)])
+        .with_columns(&[("Expected", CellAlignment::Center), ("Achieved", CellAlignment::Center)])
         .with_rows(vec![vec![expected_finalization_rate.to_string(), finalization_rate.to_string()]])
         .to_table();
 

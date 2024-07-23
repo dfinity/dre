@@ -8,6 +8,8 @@ use std::{
 };
 
 use chrono::Utc;
+use comfy_table::CellAlignment;
+use comfy_table_util::Table;
 use ensure_blessed_versions::EnsureBlessedRevisions;
 use flate2::bufread::GzDecoder;
 use ic_management_backend::lazy_registry::LazyRegistry;
@@ -17,17 +19,16 @@ use reqwest::ClientBuilder;
 use retire_blessed_versions::RetireBlessedVersions;
 use run_workload_test::Workload;
 use run_xnet_test::RunXnetTest;
-use tabular_util::{ColumnAlignment, Table};
 use upgrade_deployment_canister::UpgradeDeploymentCanisters;
 use upgrade_subnets::{Action, UpgradeSubnets};
 
 use crate::ctx::DreContext;
 
+mod comfy_table_util;
 mod ensure_blessed_versions;
 mod retire_blessed_versions;
 mod run_workload_test;
 mod run_xnet_test;
-mod tabular_util;
 mod upgrade_deployment_canister;
 mod upgrade_subnets;
 
@@ -245,10 +246,10 @@ impl QualificationExecutor {
     pub fn list(&self) {
         let table = Table::new()
             .with_columns(&[
-                ("Index", ColumnAlignment::Middle),
-                ("Will run", ColumnAlignment::Middle),
-                ("Name", ColumnAlignment::Left),
-                ("Help", ColumnAlignment::Left),
+                ("Index", CellAlignment::Center),
+                ("Will run", CellAlignment::Center),
+                ("Name", CellAlignment::Left),
+                ("Help", CellAlignment::Left),
             ])
             .with_rows(
                 self.steps
@@ -445,9 +446,9 @@ pub async fn print_subnet_versions(registry: Rc<LazyRegistry>) -> anyhow::Result
     let unassigned = registry.unassigned_nodes_replica_version()?;
     let table = Table::new()
         .with_columns(&[
-            ("Subnet type", ColumnAlignment::Left),
-            ("Subnet Id", ColumnAlignment::Middle),
-            ("Version", ColumnAlignment::Middle),
+            ("Subnet type", CellAlignment::Left),
+            ("Subnet Id", CellAlignment::Center),
+            ("Version", CellAlignment::Center),
         ])
         .with_rows(
             subnets
@@ -476,7 +477,7 @@ pub fn print_text(message: String) {
     _print_with_time(message, false)
 }
 
-pub fn print_table(table: tabular::Table) {
+pub fn print_table(table: comfy_table::Table) {
     _print_with_time(format!("{}", table), true)
 }
 

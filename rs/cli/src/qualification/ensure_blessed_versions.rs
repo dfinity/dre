@@ -1,4 +1,5 @@
 use backon::{ExponentialBuilder, Retryable};
+use comfy_table::CellAlignment;
 use itertools::Itertools;
 
 use crate::{
@@ -7,10 +8,7 @@ use crate::{
     qualification::Step,
 };
 
-use super::{
-    print_table,
-    tabular_util::{ColumnAlignment, Table},
-};
+use super::{comfy_table_util::Table, print_table};
 
 pub struct EnsureBlessedRevisions {
     pub version: String,
@@ -67,7 +65,7 @@ impl Step for EnsureBlessedRevisions {
         let blessed_versions = registry.elected_guestos()?;
 
         let table = Table::new()
-            .with_columns(&[("Blessed versions", ColumnAlignment::Middle)])
+            .with_columns(&[("Blessed versions", CellAlignment::Center)])
             .with_rows(blessed_versions.iter().map(|ver| vec![ver.to_string()]).collect_vec())
             .to_table();
 
