@@ -1,5 +1,5 @@
 {
-  "checksum": "827b8ac63a079674084fad718693689f37a28b2c6ef6b5cb236e0b872ce2d814",
+  "checksum": "6fc3256d699072217ab959660601b812e62dc592932ad9574304973e2e9c49f8",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -17628,66 +17628,6 @@
       },
       "license": "Apache-2.0"
     },
-    "ic-cdk 0.15.0": {
-      "name": "ic-cdk",
-      "version": "0.15.0",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/ic-cdk/0.15.0/download",
-          "sha256": "0c44983d6e97135d86132111bae5b86c34c498d96b4f182638bebcc7ac07e03c"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "ic_cdk",
-            "crate_root": "src/lib.rs",
-            "srcs": [
-              "**/*.rs"
-            ]
-          }
-        }
-      ],
-      "library_target_name": "ic_cdk",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "candid 0.10.9",
-              "target": "candid"
-            },
-            {
-              "id": "ic0 0.23.0",
-              "target": "ic0"
-            },
-            {
-              "id": "serde 1.0.204",
-              "target": "serde"
-            },
-            {
-              "id": "serde_bytes 0.11.14",
-              "target": "serde_bytes"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2021",
-        "proc_macro_deps": {
-          "common": [
-            {
-              "id": "ic-cdk-macros 0.15.0",
-              "target": "ic_cdk_macros"
-            }
-          ],
-          "selects": {}
-        },
-        "version": "0.15.0"
-      },
-      "license": "Apache-2.0"
-    },
     "ic-cdk-macros 0.13.2": {
       "name": "ic-cdk-macros",
       "version": "0.13.2",
@@ -17744,65 +17684,6 @@
         },
         "edition": "2021",
         "version": "0.13.2"
-      },
-      "license": "Apache-2.0"
-    },
-    "ic-cdk-macros 0.15.0": {
-      "name": "ic-cdk-macros",
-      "version": "0.15.0",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/ic-cdk-macros/0.15.0/download",
-          "sha256": "3af44fb4ec3a4b18831c9d3303ca8fa2ace846c4022d50cb8df4122635d3782e"
-        }
-      },
-      "targets": [
-        {
-          "ProcMacro": {
-            "crate_name": "ic_cdk_macros",
-            "crate_root": "src/lib.rs",
-            "srcs": [
-              "**/*.rs"
-            ]
-          }
-        }
-      ],
-      "library_target_name": "ic_cdk_macros",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "candid 0.10.9",
-              "target": "candid"
-            },
-            {
-              "id": "proc-macro2 1.0.85",
-              "target": "proc_macro2"
-            },
-            {
-              "id": "quote 1.0.36",
-              "target": "quote"
-            },
-            {
-              "id": "serde 1.0.204",
-              "target": "serde"
-            },
-            {
-              "id": "serde_tokenstream 0.2.1",
-              "target": "serde_tokenstream"
-            },
-            {
-              "id": "syn 2.0.66",
-              "target": "syn"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2021",
-        "version": "0.15.0"
       },
       "license": "Apache-2.0"
     },
@@ -17921,65 +17802,6 @@
         },
         "edition": "2021",
         "version": "0.7.0"
-      },
-      "license": "Apache-2.0"
-    },
-    "ic-cdk-timers 0.9.0": {
-      "name": "ic-cdk-timers",
-      "version": "0.9.0",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/ic-cdk-timers/0.9.0/download",
-          "sha256": "61fdca8e1d9ffb65ae68019b342c182009de9dc206fd849db0b0e90ee19f6fa4"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "ic_cdk_timers",
-            "crate_root": "src/lib.rs",
-            "srcs": [
-              "**/*.rs"
-            ]
-          }
-        }
-      ],
-      "library_target_name": "ic_cdk_timers",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "futures 0.3.30",
-              "target": "futures"
-            },
-            {
-              "id": "ic-cdk 0.15.0",
-              "target": "ic_cdk"
-            },
-            {
-              "id": "ic0 0.23.0",
-              "target": "ic0"
-            },
-            {
-              "id": "serde 1.0.204",
-              "target": "serde"
-            },
-            {
-              "id": "serde_bytes 0.11.14",
-              "target": "serde_bytes"
-            },
-            {
-              "id": "slotmap 1.0.7",
-              "target": "slotmap"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2021",
-        "version": "0.9.0"
       },
       "license": "Apache-2.0"
     },
@@ -26134,36 +25956,6 @@
       },
       "license": "Apache-2.0"
     },
-    "ic0 0.23.0": {
-      "name": "ic0",
-      "version": "0.23.0",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/ic0/0.23.0/download",
-          "sha256": "8de254dd67bbd58073e23dc1c8553ba12fa1dc610a19de94ad2bbcd0460c067f"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "ic0",
-            "crate_root": "src/lib.rs",
-            "srcs": [
-              "**/*.rs"
-            ]
-          }
-        }
-      ],
-      "library_target_name": "ic0",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "edition": "2021",
-        "version": "0.23.0"
-      },
-      "license": "Apache-2.0"
-    },
     "ic_bls12_381 0.8.0": {
       "name": "ic_bls12_381",
       "version": "0.8.0",
@@ -28565,29 +28357,35 @@
         ],
         "crate_features": {
           "common": [
-            "elf",
-            "errno",
             "general",
             "ioctl",
             "no_std"
           ],
           "selects": {
             "aarch64-unknown-linux-gnu": [
+              "elf",
+              "errno",
               "prctl",
               "std",
               "system"
             ],
             "arm-unknown-linux-gnueabi": [
+              "elf",
+              "errno",
               "prctl",
               "std",
               "system"
             ],
             "armv7-unknown-linux-gnueabi": [
+              "elf",
+              "errno",
               "prctl",
               "std",
               "system"
             ],
             "i686-unknown-linux-gnu": [
+              "elf",
+              "errno",
               "prctl",
               "std",
               "system"
@@ -28603,6 +28401,8 @@
               "system"
             ],
             "x86_64-unknown-linux-gnu": [
+              "elf",
+              "errno",
               "prctl",
               "std",
               "system"
@@ -40362,57 +40162,6 @@
       },
       "license": "Apache-2.0"
     },
-    "serde_tokenstream 0.2.1": {
-      "name": "serde_tokenstream",
-      "version": "0.2.1",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/serde_tokenstream/0.2.1/download",
-          "sha256": "8790a7c3fe883e443eaa2af6f705952bc5d6e8671a220b9335c8cae92c037e74"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "serde_tokenstream",
-            "crate_root": "src/lib.rs",
-            "srcs": [
-              "**/*.rs"
-            ]
-          }
-        }
-      ],
-      "library_target_name": "serde_tokenstream",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "proc-macro2 1.0.85",
-              "target": "proc_macro2"
-            },
-            {
-              "id": "quote 1.0.36",
-              "target": "quote"
-            },
-            {
-              "id": "serde 1.0.204",
-              "target": "serde"
-            },
-            {
-              "id": "syn 2.0.66",
-              "target": "syn"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2021",
-        "version": "0.2.1"
-      },
-      "license": "Apache-2.0"
-    },
     "serde_urlencoded 0.7.1": {
       "name": "serde_urlencoded",
       "version": "0.7.1",
@@ -42848,7 +42597,6 @@
             "default",
             "derive",
             "extra-traits",
-            "fold",
             "full",
             "parsing",
             "printing",
@@ -45796,14 +45544,14 @@
       },
       "license": null
     },
-    "trustworthy-node-metrics 0.4.3": {
-      "name": "trustworthy-node-metrics",
+    "trustworthy-node-metrics-types 0.4.3": {
+      "name": "trustworthy-node-metrics-types",
       "version": "0.4.3",
       "repository": null,
       "targets": [
         {
           "Library": {
-            "crate_name": "trustworthy_node_metrics",
+            "crate_name": "trustworthy_node_metrics_types",
             "crate_root": "src/lib.rs",
             "srcs": [
               "**/*.rs"
@@ -45811,17 +45559,13 @@
           }
         }
       ],
-      "library_target_name": "trustworthy_node_metrics",
+      "library_target_name": "trustworthy_node_metrics_types",
       "common_attrs": {
         "compile_data_glob": [
           "**"
         ],
         "deps": {
           "common": [
-            {
-              "id": "anyhow 1.0.86",
-              "target": "anyhow"
-            },
             {
               "id": "candid 0.10.9",
               "target": "candid"
@@ -45835,36 +45579,8 @@
               "target": "dfn_core"
             },
             {
-              "id": "futures 0.3.30",
-              "target": "futures"
-            },
-            {
-              "id": "ic-cdk 0.15.0",
-              "target": "ic_cdk"
-            },
-            {
-              "id": "ic-cdk-timers 0.9.0",
-              "target": "ic_cdk_timers"
-            },
-            {
               "id": "ic-management-canister-types 0.9.0",
               "target": "ic_management_canister_types"
-            },
-            {
-              "id": "ic-nns-common 0.9.0",
-              "target": "ic_nns_common"
-            },
-            {
-              "id": "ic-nns-constants 0.9.0",
-              "target": "ic_nns_constants"
-            },
-            {
-              "id": "ic-protobuf 0.9.0",
-              "target": "ic_protobuf"
-            },
-            {
-              "id": "ic-registry-transport 0.9.0",
-              "target": "ic_registry_transport"
             },
             {
               "id": "ic-stable-structures 0.6.5",
@@ -45873,10 +45589,6 @@
             {
               "id": "itertools 0.13.0",
               "target": "itertools"
-            },
-            {
-              "id": "prost 0.12.6",
-              "target": "prost"
             },
             {
               "id": "serde 1.0.204",
@@ -45890,15 +45602,6 @@
           "selects": {}
         },
         "edition": "2021",
-        "proc_macro_deps": {
-          "common": [
-            {
-              "id": "ic-cdk-macros 0.15.0",
-              "target": "ic_cdk_macros"
-            }
-          ],
-          "selects": {}
-        },
         "version": "0.4.3"
       },
       "license": null
@@ -50277,7 +49980,7 @@
     "service-discovery 0.4.3": "rs/ic-observability/service-discovery",
     "slack-notifications 0.4.3": "rs/slack-notifications",
     "sns-downloader 0.4.3": "rs/ic-observability/sns-downloader",
-    "trustworthy-node-metrics 0.4.3": "rs/dre-canisters/trustworthy-node-metrics/src/trustworthy-node-metrics"
+    "trustworthy-node-metrics-types 0.4.3": "rs/dre-canisters/trustworthy-node-metrics/src/trustworthy-node-metrics-types"
   },
   "conditions": {
     "aarch64-apple-darwin": [

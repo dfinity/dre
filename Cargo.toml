@@ -21,7 +21,7 @@ members = [
     "rs/np-notifications",
     "rs/rollout-controller",
     "rs/slack-notifications",
-    "rs/dre-canisters/trustworthy-node-metrics/src/trustworthy-node-metrics",
+    "rs/dre-canisters/trustworthy-node-metrics/src/trustworthy-node-metrics-types",
 ]
 
 resolver = "2"
@@ -74,7 +74,7 @@ cryptoki = "0.3.1"
 csv = "1.3.0"
 custom_error = "1.9.2"
 decentralization = { path = "rs/decentralization" }
-trustworthy-node-metrics = { path = "rs/dre-canisters/trustworthy-node-metrics/src/trustworthy-node-metrics" }
+trustworthy-node-metrics-types = { path = "rs/dre-canisters/trustworthy-node-metrics/src/trustworthy-node-metrics-types" }
 derive_builder = "0.20.0"
 derive_more = "0.99.18"
 dialoguer = "0.11.0"
