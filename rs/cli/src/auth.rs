@@ -68,6 +68,14 @@ impl Neuron {
             include_proposer: true,
         }
     }
+
+    pub fn anonymous_neuron() -> Self {
+        Self {
+            auth: Auth::Anonymous,
+            neuron_id: 0,
+            include_proposer: false,
+        }
+    }
 }
 
 #[derive(Clone, Debug)]

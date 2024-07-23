@@ -436,3 +436,7 @@ releases:
         "a3831c87440df4821b435050c8a8fcb3745d86f6",
         "release-2024-07-10_23-01-base",
     )
+    assert find_base_release(ic_repo, index, "ec35ebd252d4ffb151d2cfceba3a86c4fb87c6d6") == (
+        "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d",
+        "release-2024-05-15_23-02-base",
+    )

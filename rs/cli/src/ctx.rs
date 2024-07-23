@@ -26,6 +26,7 @@ use crate::{
 };
 
 const STAGING_NEURON_ID: u64 = 49;
+#[derive(Clone)]
 pub struct DreContext {
     network: Network,
     registry: RefCell<Option<Rc<LazyRegistry>>>,
@@ -33,6 +34,7 @@ pub struct DreContext {
     runner: RefCell<Option<Rc<Runner>>>,
     verbose_runner: bool,
     skip_sync: bool,
+    ic_admin_path: Option<String>,
 }
 
 impl DreContext {
@@ -60,7 +62,7 @@ impl DreContext {
             (neuron_id, private_key_pem)
         };
 
-        let ic_admin = Self::init_ic_admin(
+        let (ic_admin, ic_admin_path) = Self::init_ic_admin(
             &network,
             neuron_id,
             private_key_pem,
@@ -80,6 +82,7 @@ impl DreContext {
             runner: RefCell::new(None),
             verbose_runner: args.verbose,
             skip_sync: args.no_sync,
+            ic_admin_path,
         })
     }
 
@@ -93,9 +96,9 @@ impl DreContext {
         proceed_without_confirmation: bool,
         dry_run: bool,
         requirement: IcAdminRequirement,
-    ) -> anyhow::Result<Option<Arc<IcAdminWrapper>>> {
+    ) -> anyhow::Result<(Option<Arc<IcAdminWrapper>>, Option<String>)> {
         if let IcAdminRequirement::None = requirement {
-            return Ok(None);
+            return Ok((None, None));
         }
         let neuron = match requirement {
             IcAdminRequirement::Anonymous | IcAdminRequirement::None => Neuron {
@@ -122,20 +125,26 @@ impl DreContext {
         let ic_admin_path = match should_update_ic_admin()? {
             (true, _) => {
                 let govn_canister_version = governance_canister_version(network.get_nns_urls()).await?;
-                download_ic_admin(Some(govn_canister_version.stringified_hash)).await?
+                download_ic_admin(match govn_canister_version.stringified_hash.as_str() {
+                    // Some testnets could have this version setup if deployed
+                    // from HEAD of the branch they are created from
+                    "0000000000000000000000000000000000000000" => None,
+                    v => Some(v.to_owned()),
+                })
+                .await?
             }
             (false, s) => s,
         };
 
         let ic_admin = Some(Arc::new(IcAdminWrapper::new(
             network.clone(),
-            Some(ic_admin_path),
+            Some(ic_admin_path.clone()),
             proceed_without_confirmation,
             neuron,
             dry_run,
         )));
 
-        Ok(ic_admin)
+        Ok((ic_admin, Some(ic_admin_path)))
     }
 
     pub async fn registry(&self) -> Rc<LazyRegistry> {
@@ -194,6 +203,10 @@ impl DreContext {
             Some(a) => a.clone(),
             None => panic!("This command is not configured to use ic admin"),
         }
+    }
+
+    pub fn readonly_ic_admin_for_other_network(&self, network: Network) -> IcAdminWrapper {
+        IcAdminWrapper::new(network, self.ic_admin_path.clone(), true, Neuron::anonymous_neuron(), false)
     }
 
     pub async fn subnet_manager(&self) -> SubnetManager {

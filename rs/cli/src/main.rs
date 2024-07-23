@@ -12,6 +12,7 @@ mod commands;
 mod ctx;
 mod ic_admin;
 mod operations;
+mod qualification;
 mod runner;
 mod subnet_manager;
 
