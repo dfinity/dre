@@ -7,7 +7,6 @@ on:
         description: "The version that should be qualified"
         type: string
         default: ""
-  pull_request:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -20,6 +19,17 @@ jobs:
     container: ghcr.io/dfinity/dre/actions-runner:e7053069fd8a084a19b410af4dbcba74048136c4
     steps:
       - uses: actions/checkout@v4
+
+      # NOTE! REMOVE BEFORE MERGING
+      # This will not be needed since it will not run on pr
+      - name: Mark bazel as success # because it should not run if only release files changed
+        uses: Sibz/github-status-action@v1
+        with:
+          authToken: ${{secrets.GITHUB_TOKEN}}
+          context: "bazel"
+          description: "Passed"
+          state: "success"
+          sha: ${{github.event.pull_request.head.sha || github.sha}}
 
       - name: "🔍 Check if the version is set"
         shell: bash
