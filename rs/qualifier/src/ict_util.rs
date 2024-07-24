@@ -5,7 +5,7 @@ use log::info;
 use serde_json::Value;
 use tokio::{
     io::{AsyncBufReadExt, BufReader},
-    process::{ChildStdout, Command},
+    process::Command,
     sync::mpsc::Sender,
 };
 use tokio_util::sync::CancellationToken;
@@ -35,19 +35,8 @@ pub async fn ict(ic_git: PathBuf, config: String, token: CancellationToken, send
         .current_dir(&ic_git)
         .spawn()?;
 
-    if let Some(taken) = child.stdout.as_mut() {
-        wait_data(taken, token.clone(), sender).await?;
-    }
-
-    token.cancelled().await;
-    info!("Received shutdown, killing testnet");
-    child.kill().await?;
-
-    Ok(())
-}
-
-async fn wait_data(stdout: &mut ChildStdout, token: CancellationToken, sender: Sender<Message>) -> anyhow::Result<()> {
-    let mut stdout_reader = BufReader::new(stdout).lines();
+    let mut stdout = child.stdout.take().ok_or(anyhow::anyhow!("Couldn't take stdout"))?;
+    let mut stdout_reader = BufReader::new(&mut stdout).lines();
 
     let target = "Testnet is being deployed, please wait ...";
     let logs;
@@ -69,6 +58,21 @@ async fn wait_data(stdout: &mut ChildStdout, token: CancellationToken, sender: S
 
         if token.is_cancelled() {
             return Ok(());
+        }
+
+        match child.try_wait() {
+            Ok(Some(s)) => {
+                let stderr = child.stderr.take().ok_or(anyhow::anyhow!("Unable to get stderr"))?;
+                let mut lines = BufReader::new(stderr).lines();
+
+                let mut all = vec![];
+                while let Some(line) = lines.next_line().await? {
+                    all.push(line)
+                }
+
+                anyhow::bail!("Finished early with status code {:?} and error: \n{}", s, all.iter().join("\n"))
+            }
+            _ => continue,
         }
     }
 
@@ -93,6 +97,21 @@ async fn wait_data(stdout: &mut ChildStdout, token: CancellationToken, sender: S
         if token.is_cancelled() {
             return Ok(());
         }
+
+        match child.try_wait() {
+            Ok(Some(s)) => {
+                let stderr = child.stderr.take().ok_or(anyhow::anyhow!("Unable to get stderr"))?;
+                let mut lines = BufReader::new(stderr).lines();
+
+                let mut all = vec![];
+                while let Some(line) = lines.next_line().await? {
+                    all.push(line)
+                }
+
+                anyhow::bail!("Finished early with status code {:?} and error: \n{}", s, all.iter().join("\n"))
+            }
+            _ => continue,
+        }
     }
 
     let config = whole_config.iter().join("");
@@ -100,6 +119,11 @@ async fn wait_data(stdout: &mut ChildStdout, token: CancellationToken, sender: S
         .send(Message::Config(config))
         .await
         .map_err(|_| anyhow::anyhow!("Failed to send data across channels"))?;
+
+    child.stdout = Some(stdout);
+    token.cancelled().await;
+    info!("Received shutdown, killing testnet");
+    child.kill().await?;
 
     Ok(())
 }
