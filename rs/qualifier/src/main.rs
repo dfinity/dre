@@ -133,22 +133,32 @@ async fn main() -> anyhow::Result<()> {
     // we have to extract the neuron pem file to use with dre
     let token = CancellationToken::new();
     let (sender, mut receiver) = mpsc::channel(2);
-    let handle = tokio::spawn(ict(args.ic_repo_path.clone(), config, token.clone(), sender));
 
-    qualify(
-        &mut receiver,
-        private_key_pem,
-        neuron_id,
-        NETWORK_NAME,
-        initial_version,
-        args.version_to_qualify.to_string(),
-    )
-    .await?;
+    tokio::select! {
+        res = ict(args.ic_repo_path.clone(), config, token.clone(), sender) => {
+            if let Err(e) = res {
+                token.cancel();
+                return Err(e)
+            }
+        }
+        res = qualify(
+            &mut receiver,
+            private_key_pem,
+            neuron_id,
+            NETWORK_NAME,
+            initial_version,
+            args.version_to_qualify.to_string(),
+        ) => {
+            if let Err(e) = res {
+                token.cancel();
+                return Err(e);
+            }
+        }
+    }
 
     info!("Finished qualifier run for: {}", args.version_to_qualify);
 
     token.cancel();
-    handle.await??;
     Ok(())
 }
 
