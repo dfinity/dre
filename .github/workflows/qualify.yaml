@@ -34,4 +34,5 @@ jobs:
       - name: "✨ Running qualification"
         shell: bash
         run: |
+          alias podman=docker
           bazel run //rs/qualifier -- "${{ github.event.inputs.version }}"
