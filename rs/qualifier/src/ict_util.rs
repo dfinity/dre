@@ -28,7 +28,7 @@ pub async fn ict(ic_git: PathBuf, config: String, token: CancellationToken, send
     ];
 
     info!("Running command: {} {}", command, args.iter().join(" "));
-    let mut child = Command::new(&command)
+    let mut child = Command::new(command)
         .args(args)
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
@@ -85,7 +85,7 @@ async fn wait_data(stdout: &mut ChildStdout, token: CancellationToken, sender: S
             whole_config.push(line.trim().to_string());
             let config = whole_config.iter().join("");
 
-            if let Ok(_) = serde_json::from_str::<Value>(&config) {
+            if serde_json::from_str::<Value>(&config).is_ok() {
                 break;
             }
         }

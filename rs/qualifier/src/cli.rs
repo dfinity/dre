@@ -58,7 +58,7 @@ impl Args {
         let git_dir = &self.ic_repo_path.join(".git");
         if !git_dir.exists() {
             if !Command::new("git")
-                .args(&["clone", "https://github.com/dfinity/ic.git", "."])
+                .args(["clone", "https://github.com/dfinity/ic.git", "."])
                 .current_dir(&self.ic_repo_path)
                 .stderr(Stdio::null())
                 .stdout(Stdio::null())
@@ -73,7 +73,7 @@ impl Args {
         }
 
         if !Command::new("git")
-            .args(&["switch", "master", "-f"])
+            .args(["switch", "master", "-f"])
             .current_dir(&self.ic_repo_path)
             .stdout(Stdio::null())
             .stderr(Stdio::null())
@@ -89,7 +89,7 @@ impl Args {
         }
 
         if !Command::new("git")
-            .args(&["pull"])
+            .args(["pull"])
             .current_dir(&self.ic_repo_path)
             .stdout(Stdio::null())
             .stderr(Stdio::null())

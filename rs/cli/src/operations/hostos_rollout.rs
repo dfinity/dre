@@ -578,7 +578,7 @@ pub mod test {
 
         let open_proposals: Vec<UpdateNodesHostosVersionsProposal> = vec![];
 
-        let network = Network::new("mainnet", &vec![]).await.unwrap();
+        let network = Network::new("mainnet", &[]).await.unwrap();
         let nns_urls = network.get_nns_urls();
         let hostos_rollout = HostosRollout::new(
             Arc::new(union.clone()),
