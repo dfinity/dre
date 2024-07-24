@@ -1,0 +1,38 @@
+name: Qualification
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "The version that should be qualified"
+        type: string
+        default: ""
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  qualify:
+    runs-on:
+      labels: dre-runner-custom
+    container: ghcr.io/dfinity/dre/actions-runner:e7053069fd8a084a19b410af4dbcba74048136c4
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: "🔍 Check if the version is set"
+        shell: bash
+        run: |
+          if [ -z "${{ github.event.inputs.version }}" ]; then
+            echo "Error: 'version' is required and cannot be empty."
+            exit 1
+          fi
+
+      - name: "☁️ Setup runner"
+        uses: ./.github/workflows/manage-runner-pre
+
+      - name: "✨ Running qualification"
+        shell: bash
+        run: |
+          bazel run //rs/qualifier -- "${{ github.event.inputs.version }}"
