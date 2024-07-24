@@ -20,6 +20,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: "Configuring alias deps"
+        shell: bash
+        run: docker info
+
+      - name: Check and add alias in ~/.bashrc
+        run: |
+          if ! grep -q "alias podman=docker" ~/.bashrc; then
+            echo "alias podman=docker" >> ~/.bashrc
+          fi
+
       - name: "🔍 Check if the version is set"
         shell: bash
         run: |
@@ -34,5 +44,4 @@ jobs:
       - name: "✨ Running qualification"
         shell: bash
         run: |
-          alias podman=docker
           bazel run //rs/qualifier -- "${{ github.event.inputs.version }}"
