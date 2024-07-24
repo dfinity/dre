@@ -99,16 +99,13 @@ async fn ensure_finalization_rate_for_subnet(
         common_labels
     );
     let query = format!("avg(rate({}[{}s]))", query_selector, duration);
-    print_text(format!("Running query: {}", query));
-    let response = client
+    let request = client
         .get(prom_endpoint)
         .header("Accept", "application/json")
-        .query(&[("time", end_timestamp.to_string()), ("query", query)])
-        .send()
-        .await?
-        .error_for_status()?
-        .json::<Value>()
-        .await?;
+        .query(&[("time", end_timestamp.to_string()), ("query", query)]);
+    print_text(format!("Running query: {:?}", request));
+    let response = request.send().await?.error_for_status()?.json::<Value>().await?;
+    print_text(format!("Received response: \n{}", serde_json::to_string_pretty(&response)?));
 
     let finalization_rate = response["data"]["result"][0]["value"][1]
         .as_str()
