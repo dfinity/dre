@@ -117,7 +117,7 @@ impl FromStr for Config {
             .to_string();
 
         let config = Self {
-            prometheus_url: format!("http://prometheus.{}.testnet.farm.dfinity.systems", deployment_name),
+            prometheus_url: format!("http://prometheus.{}.testnet.farm.dfinity.systems/api/v1/query", deployment_name),
             deployment_name,
             kibana_url: parsed["kibana_url"]["url"]
                 .as_str()

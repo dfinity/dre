@@ -287,7 +287,8 @@ impl QualificationExecutor {
             }
             print_text(format!("Executing step {}: `{}`", ordered_step.index, ordered_step.step.name()));
 
-            ordered_step.step.execute(&self.dre_ctx).await?;
+            let step_future = || async { ordered_step.step.execute(&self.dre_ctx).await };
+            step_future.retry(&ExponentialBuilder::default()).await?;
 
             print_text(format!("Executed step {}: `{}`", ordered_step.index, ordered_step.step.name()));
 
