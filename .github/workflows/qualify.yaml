@@ -20,17 +20,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # NOTE! REMOVE BEFORE MERGING
-      # This will not be needed since it will not run on pr
-      - name: Mark bazel as success # because it should not run if only release files changed
-        uses: Sibz/github-status-action@v1
-        with:
-          authToken: ${{secrets.GITHUB_TOKEN}}
-          context: "bazel"
-          description: "Passed"
-          state: "success"
-          sha: ${{github.event.pull_request.head.sha || github.sha}}
-
       - name: "🔍 Check if the version is set"
         shell: bash
         run: |
