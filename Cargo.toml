@@ -110,7 +110,7 @@ ic-canister-client = { git = "https://github.com/dfinity/ic.git", rev = "5ba1412
 ic-canister-client-sender = { git = "https://github.com/dfinity/ic.git", rev = "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d" }
 ic-canisters = { path = "rs/ic-canisters" }
 ic-nervous-system-common-test-keys = { git = "https://github.com/dfinity/ic.git", rev = "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d" }
-ic-cdk = "0.15.0"
+ic-cdk = { git = "https://github.com/dfinity/cdk-rs.git", rev = "22a6be44660d82768538e4a8b86268d4bdc05839" }
 ic-config = { git = "https://github.com/dfinity/ic.git", rev = "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d" }
 ic-crypto-utils-threshold-sig-der = { git = "https://github.com/dfinity/ic.git", rev = "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d" }
 ic-http-endpoints-metrics = { git = "https://github.com/dfinity/ic.git", rev = "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d" }
@@ -198,8 +198,8 @@ warp = "0.3"
 wiremock = "0.6.0"
 
 # dre-canisters dependencies
-ic-cdk-timers = "0.9"                                                                                      # Feel free to remove this dependency if you don't need timers
-ic-cdk-macros = "0.15.0"
+ic-cdk-timers = { git = "https://github.com/dfinity/cdk-rs.git", rev = "22a6be44660d82768538e4a8b86268d4bdc05839" }
+ic-cdk-macros = { git = "https://github.com/dfinity/cdk-rs.git", rev = "22a6be44660d82768538e4a8b86268d4bdc05839" }
 ic-stable-structures = "0.6.5"
 ciborium = "0.2.1"
 dfn_core = { git = "https://github.com/dfinity/ic.git", rev = "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d" }
