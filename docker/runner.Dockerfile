@@ -72,3 +72,9 @@ ENV PATH="$PATH:/home/runner/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/
 ENV CARGO_TARGET_X86_64_APPLE_DARWIN_LINKER=rust-lld
 
 RUN cargo install cargo-zigbuild
+
+RUN mkdir podman && \
+    curl -o podman/podman.tar.gz -L https://github.com/containers/podman/releases/download/v5.2.0-rc2/podman-remote-static-linux_amd64.tar.gz && \
+    tar -xzvf podman/podman.tar.gz -C podman && \
+    sudo mv podman/bin/podman-remote-static-linux_amd64 /usr/bin/podman && \
+    rm -rf podman
