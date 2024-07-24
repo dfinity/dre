@@ -1,5 +1,5 @@
 {
-  "checksum": "dc05b0d5d14def9120f2bdfa82aec1fac3b5e388003989fd56263827f1fab85b",
+  "checksum": "0a147d75b6943fe7fce1c7d185a8c1576d83eebf42e9e15a9f046cae1ff72dbb",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -28565,35 +28565,29 @@
         ],
         "crate_features": {
           "common": [
+            "elf",
+            "errno",
             "general",
             "ioctl",
             "no_std"
           ],
           "selects": {
             "aarch64-unknown-linux-gnu": [
-              "elf",
-              "errno",
               "prctl",
               "std",
               "system"
             ],
             "arm-unknown-linux-gnueabi": [
-              "elf",
-              "errno",
               "prctl",
               "std",
               "system"
             ],
             "armv7-unknown-linux-gnueabi": [
-              "elf",
-              "errno",
               "prctl",
               "std",
               "system"
             ],
             "i686-unknown-linux-gnu": [
-              "elf",
-              "errno",
               "prctl",
               "std",
               "system"
@@ -28609,8 +28603,6 @@
               "system"
             ],
             "x86_64-unknown-linux-gnu": [
-              "elf",
-              "errno",
               "prctl",
               "std",
               "system"
@@ -35830,6 +35822,78 @@
         "version": "0.1.4"
       },
       "license": "MIT"
+    },
+    "qualifier 0.4.3": {
+      "name": "qualifier",
+      "version": "0.4.3",
+      "repository": null,
+      "targets": [],
+      "library_target_name": null,
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "anyhow 1.0.86",
+              "target": "anyhow"
+            },
+            {
+              "id": "clap 4.5.9",
+              "target": "clap"
+            },
+            {
+              "id": "dirs 5.0.1",
+              "target": "dirs"
+            },
+            {
+              "id": "ic-nervous-system-common-test-keys 0.9.0",
+              "target": "ic_nervous_system_common_test_keys"
+            },
+            {
+              "id": "itertools 0.13.0",
+              "target": "itertools"
+            },
+            {
+              "id": "log 0.4.22",
+              "target": "log"
+            },
+            {
+              "id": "pretty_env_logger 0.5.0",
+              "target": "pretty_env_logger"
+            },
+            {
+              "id": "reqwest 0.12.5",
+              "target": "reqwest"
+            },
+            {
+              "id": "serde 1.0.204",
+              "target": "serde"
+            },
+            {
+              "id": "serde_json 1.0.120",
+              "target": "serde_json"
+            },
+            {
+              "id": "tokio 1.38.1",
+              "target": "tokio"
+            },
+            {
+              "id": "tokio-util 0.7.11",
+              "target": "tokio_util"
+            },
+            {
+              "id": "url 2.5.2",
+              "target": "url"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "0.4.3"
+      },
+      "license": null
     },
     "quick-xml 0.23.1": {
       "name": "quick-xml",
@@ -50321,6 +50385,7 @@
     "np-notifications 0.4.3": "rs/np-notifications",
     "obs-canister-clients 0.4.3": "rs/ic-observability/obs-canister-clients",
     "prometheus-config-updater 0.4.3": "rs/ic-observability/prometheus-config-updater",
+    "qualifier 0.4.3": "rs/qualifier",
     "rollout-controller 0.4.3": "rs/rollout-controller",
     "service-discovery 0.4.3": "rs/ic-observability/service-discovery",
     "slack-notifications 0.4.3": "rs/slack-notifications",

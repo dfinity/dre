@@ -287,14 +287,22 @@ impl QualificationExecutor {
             }
             print_text(format!("Executing step {}: `{}`", ordered_step.index, ordered_step.step.name()));
 
-            ordered_step.step.execute(&self.dre_ctx).await?;
+            let step_future = || async { ordered_step.step.execute(&self.dre_ctx).await };
+            step_future.retry(&ExponentialBuilder::default()).await?;
 
             print_text(format!("Executed step {}: `{}`", ordered_step.index, ordered_step.step.name()));
 
             let registry = self.dre_ctx.registry().await;
             print_text(format!("Syncing with registry after step {}", ordered_step.index));
             let sync_registry = || async { registry.sync_with_nns().await };
-            sync_registry.retry(&ExponentialBuilder::default()).await?;
+            // If the system subnet downgraded it could be some time until it boots up
+            sync_registry
+                .retry(
+                    &ExponentialBuilder::default()
+                        .with_max_times(10)
+                        .with_max_delay(Duration::from_secs(5 * 60)),
+                )
+                .await?;
         }
 
         print_text(format!("Qualification of {} finished successfully!", self.to_version));

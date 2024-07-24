@@ -6,7 +6,7 @@ use tokio::task::JoinHandle;
 
 use super::{ExecutableCommand, IcAdminRequirement};
 
-#[derive(Args, Debug)]
+#[derive(Args, Debug, Default)]
 pub struct Upgrade {
     /// Version to which the tool should be upgraded, if omitted
     /// the latest version will be used
@@ -15,10 +15,6 @@ pub struct Upgrade {
 }
 
 impl Upgrade {
-    pub fn new() -> Self {
-        Self { version: None }
-    }
-
     pub async fn run(&self) -> anyhow::Result<UpdateStatus> {
         let version = self.version.clone();
         tokio::task::spawn_blocking(move || Self::check_latest_release(env!("CARGO_PKG_VERSION"), true, version)).await?

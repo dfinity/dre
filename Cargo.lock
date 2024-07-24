@@ -7149,6 +7149,29 @@ dependencies = [
 ]
 
 [[package]]
+name = "qualifier"
+version = "0.4.3"
+dependencies = [
+ "anyhow",
+ "clap 4.5.9",
+ "dirs",
+ "dre",
+ "ic-canisters",
+ "ic-management-backend",
+ "ic-management-types",
+ "ic-nervous-system-common-test-keys",
+ "itertools 0.13.0",
+ "log",
+ "pretty_env_logger",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "tokio",
+ "tokio-util",
+ "url",
+]
+
+[[package]]
 name = "quick-xml"
 version = "0.23.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
