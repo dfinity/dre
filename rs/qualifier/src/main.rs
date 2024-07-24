@@ -135,12 +135,7 @@ async fn main() -> anyhow::Result<()> {
     let (sender, mut receiver) = mpsc::channel(2);
 
     tokio::select! {
-        res = ict(args.ic_repo_path.clone(), config, token.clone(), sender) => {
-            if let Err(e) = res {
-                token.cancel();
-                return Err(e)
-            }
-        }
+        res = ict(args.ic_repo_path.clone(), config, token.clone(), sender) => res?,
         res = qualify(
             &mut receiver,
             private_key_pem,
@@ -148,13 +143,8 @@ async fn main() -> anyhow::Result<()> {
             NETWORK_NAME,
             initial_version,
             args.version_to_qualify.to_string(),
-        ) => {
-            if let Err(e) = res {
-                token.cancel();
-                return Err(e);
-            }
-        }
-    }
+        ) => res?
+    };
 
     info!("Finished qualifier run for: {}", args.version_to_qualify);
 
