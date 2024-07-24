@@ -4,17 +4,17 @@ use list::List;
 
 use super::ExecutableCommand;
 
-mod execute;
+pub mod execute;
 mod list;
 
 #[derive(Args, Debug)]
 pub struct QualifyCmd {
     #[clap(subcommand)]
-    subcommand: QualifyCommands,
+    pub subcommand: QualifyCommands,
 }
 
 #[derive(Subcommand, Debug)]
-enum QualifyCommands {
+pub enum QualifyCommands {
     /// List all steps present in the qualification
     List(List),
     /// Execute the qualification

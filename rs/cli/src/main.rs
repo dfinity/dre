@@ -42,7 +42,7 @@ async fn main() -> anyhow::Result<()> {
 
     let r = args.execute(ctx).await;
 
-    let handle = Upgrade::new().check();
+    let handle = Upgrade::default().check();
     let maybe_update_status = handle.await?;
     match maybe_update_status {
         Ok(s) => match s {

@@ -66,6 +66,7 @@ def external_crates_repository():
             "//rs/slack-notifications:Cargo.toml",
             "//rs/rollout-controller:Cargo.toml",
             "//rs/dre-canisters/trustworthy-node-metrics/src/trustworthy-node-metrics:Cargo.toml",
+            "//rs/qualifier:Cargo.toml",
             "//rs/dre-canisters/trustworthy-node-metrics/src/trustworthy-node-metrics-types:Cargo.toml",
         ],
         splicing_config = splicing_config(

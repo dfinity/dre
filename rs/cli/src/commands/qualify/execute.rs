@@ -12,26 +12,26 @@ use crate::{
 pub struct Execute {
     /// Version which is to be qualified
     #[clap(long, short)]
-    version: String,
+    pub version: String,
 
     /// Starting version for the network.
     ///
     /// If left empty, the tool will use the current NNS version
     #[clap(long, short)]
-    from_version: Option<String>,
+    pub from_version: Option<String>,
 
     /// Specify the steps to run
     /// A range can be: `4`, `3..`, `..3, `1..3`
     #[clap(long)]
-    step_range: Option<String>,
+    pub step_range: Option<String>,
 
     /// Name of the deployment used for prometheus querying of `ic` label: `staging`, `from-config`...
     #[clap(long)]
-    deployment_name: String,
+    pub deployment_name: String,
 
     /// Prometheus compliant endpoint
     #[clap(long)]
-    prometheus_endpoint: String,
+    pub prometheus_endpoint: String,
 }
 
 impl ExecutableCommand for Execute {
