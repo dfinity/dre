@@ -31,6 +31,13 @@ jobs:
       - name: "☁️ Setup runner"
         uses: ./.github/workflows/manage-runner-pre
 
+      # This should be done in runner.Dockerfile
+      - name: "Remove utsns and netns from containers.conf"
+        shell: bash
+        run: |
+          sed -i s/utsns=\"host\"//g /etc/containers/containers.conf
+          sed -i s/netns=\"host\"//g /etc/containers/containers.conf
+
       - name: "✨ Running qualification"
         shell: bash
         run: |
