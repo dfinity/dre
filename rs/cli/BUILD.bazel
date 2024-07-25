@@ -7,7 +7,7 @@ DEPS = [
     "//rs/decentralization",
     "//rs/ic-management-types",
     "//rs/ic-management-backend:ic-management-backend-lib",
-    "//rs/dre-canisters/trustworthy-node-metrics/src/trustworthy-node-metrics-types:trustworthy_node_metrics_types"
+    "//rs/dre-canisters/trustworthy-node-metrics/src/trustworthy-node-metrics:trustworthy_node_metrics"
 ]
 
 package(default_visibility = ["//visibility:public"])
