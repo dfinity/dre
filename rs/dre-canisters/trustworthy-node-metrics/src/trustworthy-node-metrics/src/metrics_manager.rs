@@ -3,12 +3,36 @@ use std::collections::{btree_map::Entry, BTreeMap};
 use anyhow::Ok;
 use dfn_core::api::PrincipalId;
 use futures::FutureExt;
-
+use ic_management_canister_types::NodeMetrics as ICManagementNodeMetrics;
 use ic_management_canister_types::{NodeMetricsHistoryArgs, NodeMetricsHistoryResponse};
 use ic_protobuf::registry::subnet::v1::SubnetListRecord;
-use trustworthy_node_metrics_types::types::{PrincipalNodeMetricsHistory, SubnetNodeMetrics, TimestampNanos};
+use itertools::Itertools;
 
-use crate::stable_memory;
+use crate::{
+    stable_memory,
+    types::{NodeMetrics, PrincipalNodeMetricsHistory, SubnetNodeMetrics, TimestampNanos},
+};
+
+impl SubnetNodeMetrics {
+    pub fn new(subnet_id: PrincipalId, subnet_metrics: Vec<ICManagementNodeMetrics>) -> Self {
+        let node_metrics = subnet_metrics.into_iter().map(|node_metrics| node_metrics.into()).collect_vec();
+
+        Self {
+            subnet_id: subnet_id.0,
+            node_metrics,
+        }
+    }
+}
+
+impl From<ICManagementNodeMetrics> for NodeMetrics {
+    fn from(node_metrics: ICManagementNodeMetrics) -> Self {
+        Self {
+            node_id: node_metrics.node_id.0,
+            num_block_failures_total: node_metrics.num_block_failures_total,
+            num_blocks_proposed_total: node_metrics.num_blocks_proposed_total,
+        }
+    }
+}
 
 fn store_results(results: BTreeMap<u64, Vec<SubnetNodeMetrics>>) {
     for (timestamp, storable) in results {
