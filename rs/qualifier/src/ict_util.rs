@@ -151,12 +151,11 @@ pub async fn ict(ic_git: PathBuf, config: String, token: CancellationToken, send
 
 async fn keep_testnet_alive(group_name: String, token: CancellationToken) -> anyhow::Result<()> {
     let client = ClientBuilder::new().timeout(Duration::from_secs(15)).build()?;
+    let ttl_url = format!("{}/group/{}/ttl/{}", FARM_BASE_URL, &group_name, FARM_GROUP_KEEPALIVE_TTL_SEC);
+    info!("Will be using following ttl link: {}", ttl_url);
 
     while !token.is_cancelled() {
-        let resp_future = client
-            .put(&format!("{}/group/{}/ttl/{}", FARM_BASE_URL, &group_name, FARM_GROUP_KEEPALIVE_TTL_SEC))
-            .send()
-            .await;
+        let resp_future = client.put(&ttl_url).send().await;
 
         match resp_future {
             Ok(r) => match r.error_for_status() {

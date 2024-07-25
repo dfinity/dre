@@ -29,7 +29,7 @@ async fn main() -> anyhow::Result<()> {
     // Check if farm is reachable. If not, error
     let client = ClientBuilder::new().timeout(Duration::from_secs(30)).build()?;
     client
-        .get(FARM_BASE_URL)
+        .get("https://kibana.testnet.dfinity.network/")
         .send()
         .await
         .map_err(|e| anyhow::anyhow!("Checking connectivity failed: {}", e.to_string()))?
