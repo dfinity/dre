@@ -60,6 +60,31 @@ RUN mkdir -p /home/runner/.ssh \
 # Adjust permissions
 RUN chown -R runner:runner /home/runner
 
+# Setup podman
+ENV APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE="1"
+RUN echo 'deb http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_20.04/ /' > /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list && \
+    curl -o key https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_20.04/Release.key && \
+    apt-key add key && \
+    apt-get update -qq && \
+    apt-get install -y software-properties-common uidmap fuse-overlayfs podman
+
+RUN useradd podman; \
+    echo podman:10000:5000 > /etc/subuid; \
+    echo podman:10000:5000 > /etc/subgid;
+
+VOLUME /var/lib/containers
+VOLUME /home/podman/.local/share/containers
+
+ADD https://raw.githubusercontent.com/containers/image_build/main/podman/containers.conf /etc/containers/containers.conf
+ADD https://raw.githubusercontent.com/containers/image_build/main/podman/podman-containers.conf /home/podman/.config/containers/containers.conf
+
+RUN chown podman:podman -R /home/podman
+
+RUN chmod 644 /etc/containers/containers.conf; sed -i -e 's|^#mount_program|mount_program|g' -e '/additionalimage.*/a "/var/lib/shared",' -e 's|^mountopt[[:space:]]*=.*$|mountopt = "nodev,fsync=0"|g' /etc/containers/storage.conf
+RUN mkdir -p /var/lib/shared/overlay-images /var/lib/shared/overlay-layers /var/lib/shared/vfs-images /var/lib/shared/vfs-layers; touch /var/lib/shared/overlay-images/images.lock; touch /var/lib/shared/overlay-layers/layers.lock; touch /var/lib/shared/vfs-images/images.lock; touch /var/lib/shared/vfs-layers/layers.lock
+
+ENV _CONTAINERS_USERNS_CONFIGURED=""
+
 ENV HOME=/home/runner
 USER runner
 WORKDIR /home/runner
@@ -72,9 +97,3 @@ ENV PATH="$PATH:/home/runner/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/
 ENV CARGO_TARGET_X86_64_APPLE_DARWIN_LINKER=rust-lld
 
 RUN cargo install cargo-zigbuild
-
-RUN mkdir podman && \
-    curl -o podman/podman.tar.gz -L https://github.com/containers/podman/releases/download/v5.2.0-rc2/podman-remote-static-linux_amd64.tar.gz && \
-    tar -xzvf podman/podman.tar.gz -C podman && \
-    sudo mv podman/bin/podman-remote-static-linux_amd64 /usr/bin/podman && \
-    rm -rf podman
