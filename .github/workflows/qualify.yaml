@@ -37,7 +37,7 @@ jobs:
         run: |
           sudo sed -i s/utsns=\"host\"//g /etc/containers/containers.conf
           sudo sed -i s/netns=\"host\"//g /etc/containers/containers.conf
-          sudo sed -i s/cgroup_manager = \"cgroupfsq"//g /etc/containers/containers.conf
+          sudo sed -i s/cgroup_manager = \"cgroupfsq\"//g /etc/containers/containers.conf
           sudo cat /etc/containers/containers.conf
 
       - name: "✨ Running qualification"
