@@ -43,5 +43,5 @@ jobs:
           MANUALY_TTL_FARM: 1
         run: |
           mkdir -p ~/.config/dfx/identity/xnet-testing/
-          echo ${{ secrets.XNET_PRINCIPAL_KEY }} > ~/.config/dfx/identity/xnet-testing/identity.pem
+          echo "${{ secrets.XNET_PRINCIPAL_KEY }}" > ~/.config/dfx/identity/xnet-testing/identity.pem
           bazel run //rs/qualifier -- "${{ github.event.inputs.version }}"
