@@ -62,10 +62,9 @@ RUN chown -R runner:runner /home/runner
 
 # Setup podman
 # From https://www.redhat.com/sysadmin/podman-inside-container
-ENV APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE="1"
 RUN echo 'deb http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_20.04/ /' > /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list && \
     curl -o key https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_20.04/Release.key && \
-    apt-key add key && \
+    APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE="1" apt-key add key && \
     apt-get update -qq && \
     apt-get install -y software-properties-common uidmap fuse-overlayfs podman
 
