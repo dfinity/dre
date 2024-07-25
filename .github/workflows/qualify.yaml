@@ -35,8 +35,8 @@ jobs:
       - name: "Remove utsns and netns from containers.conf"
         shell: bash
         run: |
-          sed -i s/utsns=\"host\"//g /etc/containers/containers.conf
-          sed -i s/netns=\"host\"//g /etc/containers/containers.conf
+          sudo sed -i s/utsns=\"host\"//g /etc/containers/containers.conf
+          sudo sed -i s/netns=\"host\"//g /etc/containers/containers.conf
 
       - name: "✨ Running qualification"
         shell: bash
