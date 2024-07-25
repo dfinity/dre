@@ -8,7 +8,7 @@ use dre::{
 };
 use ic_canisters::governance::governance_canister_version;
 use ic_management_types::Network;
-use ict_util::ict;
+use ict_util::{ict, FARM_BASE_URL};
 use log::info;
 use qualify_util::qualify;
 use reqwest::ClientBuilder;
@@ -29,7 +29,7 @@ async fn main() -> anyhow::Result<()> {
     // Check if farm is reachable. If not, error
     let client = ClientBuilder::new().timeout(Duration::from_secs(30)).build()?;
     client
-        .get("https://kibana.testnet.dfinity.network")
+        .get(FARM_BASE_URL)
         .send()
         .await
         .map_err(|e| anyhow::anyhow!("Checking connectivity failed: {}", e.to_string()))?

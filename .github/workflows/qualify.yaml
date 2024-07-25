@@ -39,5 +39,7 @@ jobs:
 
       - name: "✨ Running qualification"
         shell: bash
+        env:
+          MANUALY_TTL_FARM: 1
         run: |
           bazel run //rs/qualifier -- "${{ github.event.inputs.version }}"

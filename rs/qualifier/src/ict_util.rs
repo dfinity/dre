@@ -1,7 +1,8 @@
-use std::{path::PathBuf, process::Stdio, str::FromStr};
+use std::{path::PathBuf, process::Stdio, str::FromStr, time::Duration};
 
 use itertools::Itertools;
 use log::info;
+use reqwest::ClientBuilder;
 use serde_json::Value;
 use tokio::{
     io::{AsyncBufReadExt, BufReader},
@@ -11,6 +12,12 @@ use tokio::{
 use tokio_util::sync::CancellationToken;
 
 use crate::Message;
+
+// Each 30s set the ttl for a testnet to 90 seconds
+const FARM_GROUP_KEEPALIVE_TTL_SEC: u64 = 90;
+const KEEPALIVE_PERIOD: Duration = Duration::from_secs(30);
+const KEEPALIVE_PERIOD_ERROR: Duration = Duration::from_secs(5);
+pub const FARM_BASE_URL: &str = "https://farm.dfinity.systems";
 
 pub async fn ict(ic_git: PathBuf, config: String, token: CancellationToken, sender: Sender<Message>) -> anyhow::Result<()> {
     let ic_config = PathBuf::from_str("/tmp/ic_config.json")?;
@@ -83,13 +90,18 @@ pub async fn ict(ic_git: PathBuf, config: String, token: CancellationToken, send
 
     info!("Building testnet...");
     let mut whole_config = vec![];
+    let deployment_name;
     loop {
         let line = stdout_reader.next_line().await?;
         if let Some(line) = line {
             whole_config.push(line.trim().to_string());
             let config = whole_config.iter().join("");
 
-            if serde_json::from_str::<Value>(&config).is_ok() {
+            if let Ok(v) = serde_json::from_str::<Value>(&config) {
+                deployment_name = v["farm"]["group"]
+                    .as_str()
+                    .ok_or(anyhow::anyhow!("Failed to find 'farm.group'"))?
+                    .to_string();
                 break;
             }
         }
@@ -121,9 +133,39 @@ pub async fn ict(ic_git: PathBuf, config: String, token: CancellationToken, send
         .map_err(|_| anyhow::anyhow!("Failed to send data across channels"))?;
 
     child.stdout = Some(stdout);
-    token.cancelled().await;
+
+    if std::env::var("MANUALY_TTL_FARM").is_ok() {
+        tokio::select! {
+            _ = keep_testnet_alive(deployment_name, token.clone()) => {},
+            _ = token.cancelled() => {}
+        }
+    } else {
+        token.cancelled().await;
+    }
+
     info!("Received shutdown, killing testnet");
     child.kill().await?;
+
+    Ok(())
+}
+
+async fn keep_testnet_alive(group_name: String, token: CancellationToken) -> anyhow::Result<()> {
+    let client = ClientBuilder::new().timeout(Duration::from_secs(15)).build()?;
+
+    while !token.is_cancelled() {
+        let resp_future = client
+            .put(&format!("{}/group/{}/ttl/{}", FARM_BASE_URL, &group_name, FARM_GROUP_KEEPALIVE_TTL_SEC))
+            .send()
+            .await;
+
+        match resp_future {
+            Ok(r) => match r.error_for_status() {
+                Ok(_) => tokio::time::sleep(KEEPALIVE_PERIOD).await,
+                _ => tokio::time::sleep(KEEPALIVE_PERIOD_ERROR).await,
+            },
+            _ => tokio::time::sleep(KEEPALIVE_PERIOD_ERROR).await,
+        }
+    }
 
     Ok(())
 }
