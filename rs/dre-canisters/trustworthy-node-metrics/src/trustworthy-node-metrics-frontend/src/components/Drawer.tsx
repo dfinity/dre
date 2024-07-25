@@ -1,8 +1,28 @@
-import React, { useState } from 'react';
-import { Drawer, List, ListItem, Menu, MenuItem, Typography } from '@mui/material';
+// src/components/Drawer.tsx
 
-const SidebarDrawer = ({ drawerWidth, filters, setFilters, subnets }) => {
-  const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null); // Menu anchor state
+import React, { useState } from 'react';
+import { Drawer as MUIDrawer, List, ListItem, Typography, Menu, MenuItem, Box, Theme, IconButton, Toolbar } from '@mui/material';
+import { SxProps } from '@mui/system';
+import Logo from '../assets/icp_logo.svg'; // Import SVG as React component
+
+interface DrawerProps {
+  subnets: Set<string>;
+  drawerWidth: number;
+  theme: Theme;
+  onSubnetSelect: (subnet: string) => void;
+}
+
+const Drawer: React.FC<DrawerProps> = ({ subnets, drawerWidth, theme, onSubnetSelect }) => {
+  const [drawerOpen, setDrawerOpen] = useState<boolean>(false);
+  const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
+
+  const handleDrawerOpen = () => {
+    setDrawerOpen(true);
+  };
+
+  const handleDrawerClose = () => {
+    setDrawerOpen(false);
+  };
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setMenuAnchorEl(event.currentTarget);
@@ -13,29 +33,35 @@ const SidebarDrawer = ({ drawerWidth, filters, setFilters, subnets }) => {
   };
 
   const handleSubnetSelect = (subnet: string) => {
-    setFilters((prev) => ({ ...prev, subnet }));
+    onSubnetSelect(subnet);
     handleMenuClose();
   };
 
   return (
     <>
-      <Drawer
+      <MUIDrawer
         variant="permanent"
-        sx={{ width: drawerWidth, flexShrink: 0 }}
-        PaperProps={{
-          sx: {
-            width: drawerWidth,
-            bgcolor: 'primary.main', // Set the background color to the primary color
-            color: 'white', // Set the text color to white for better visibility
-          }
+        open={drawerOpen}
+        onClose={handleDrawerClose}
+        sx={{
+          width: drawerWidth,
+          flexShrink: 0
         }}
       >
         <List>
-          <ListItem button onClick={handleMenuOpen}>
-            <Typography>Subnet</Typography>
-          </ListItem>
-        </List>
-      </Drawer>
+            <ListItem>
+              <IconButton edge="start" color="inherit" aria-label="logo">
+                <img src={Logo} alt="Logo" style={{ height: 30 }} />
+              </IconButton>
+            </ListItem>
+            <ListItem>
+              <Toolbar />
+            </ListItem>
+            <ListItem button onClick={handleMenuOpen}>
+              <Typography variant="h6">Subnets</Typography>
+            </ListItem>
+          </List>
+      </MUIDrawer>
       <Menu
         anchorEl={menuAnchorEl}
         open={Boolean(menuAnchorEl)}
@@ -54,4 +80,4 @@ const SidebarDrawer = ({ drawerWidth, filters, setFilters, subnets }) => {
   );
 };
 
-export default SidebarDrawer;
+export default Drawer;

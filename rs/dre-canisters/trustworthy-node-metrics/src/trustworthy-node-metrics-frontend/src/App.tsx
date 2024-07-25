@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
-import FilterBar, { Filters } from './components/FilterBar.js';
-import { Box, CircularProgress, Drawer, List, ListItem, Menu, MenuItem, CssBaseline, ThemeProvider, createTheme, Typography, Toolbar, IconButton } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import { Box, CircularProgress, CssBaseline, ThemeProvider, createTheme } from '@mui/material';
+import FilterBar, { Filters } from './components/FilterBar';
+import Drawer from './components/Drawer'; // Import the updated Drawer component
 import { trustworthy_node_metrics } from '../../declarations/trustworthy-node-metrics/index.js'; // Adjust the path as needed
 import { SubnetNodeMetricsArgs, SubnetNodeMetricsResult } from '../../declarations/trustworthy-node-metrics/trustworthy-node-metrics.did.js';
-import { NodeMetrics } from './models/NodeMetrics.js';
-import ChartGrid from './components/ChartGrid.js';
-import Header from './components/Header.js';
-import Logo from './assets/icp_logo.svg'; // Import SVG as React component
+import { NodeMetrics } from './models/NodeMetrics';
+import ChartGrid from './components/ChartGrid';
+import Header from './components/Header';
 
 const darkTheme = createTheme({
   palette: {
@@ -18,18 +18,16 @@ const darkTheme = createTheme({
 function App() {
   const [filters, setFilters] = useState<Filters>({
     dateStart: new Date(),
-    dateEnd: new Date(),
+    dateEnd: new Date(), 
     subnet: '' 
   });
   const [data, setData] = useState<NodeMetrics[]>([]);
   const [filteredData, setFilteredData] = useState<NodeMetrics[]>([]);
   const [subnets, setSubnets] = useState<Set<string>>(new Set());
   const [error, setError] = useState("");
-  const [drawerOpen, setDrawerOpen] = useState(false); // Add this state
-  const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null); // Menu anchor state
   const drawerWidth = 120;
 
-  React.useEffect(() => {
+  useEffect(() => {
     const fetchNodes = async () => {
       try {
         const request: SubnetNodeMetricsArgs = {
@@ -67,7 +65,7 @@ function App() {
     fetchNodes();
   }, []);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const filterData = () => {
       const f = data.filter((metrics) => {
         const metricsDate = metrics.date; 
@@ -82,17 +80,8 @@ function App() {
     filterData();
   }, [filters, data]);
 
-  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setMenuAnchorEl(event.currentTarget);
-  };
-
-  const handleMenuClose = () => {
-    setMenuAnchorEl(null);
-  };
-
   const handleSubnetSelect = (subnet: string) => {
     setFilters((prev) => ({ ...prev, subnet }));
-    handleMenuClose();
   };
 
   if (error) {
@@ -108,34 +97,14 @@ function App() {
       <CssBaseline />
       <Box sx={{ display: 'flex' }}>
         <Drawer
-          variant="permanent"
-          open={drawerOpen}
-          onClose={() => setDrawerOpen(false)}
-          sx={{ width: drawerWidth, flexShrink: 0 }}
-          PaperProps={{
-            sx: {
-              width: drawerWidth,
-              bgcolor: 'palette.background.paper', 
-            }
-          }}
-        >
-          <List>
-            <ListItem>
-              <IconButton edge="start" color="inherit" aria-label="logo">
-                <img src={Logo} alt="Logo" style={{ height: 30 }} />
-              </IconButton>
-            </ListItem>
-            <ListItem>
-              <Toolbar />
-            </ListItem>
-            <ListItem button onClick={handleMenuOpen}>
-              <Typography variant="h6">Subnets</Typography>
-            </ListItem>
-          </List>
-        </Drawer>
+          subnets={subnets}
+          drawerWidth={drawerWidth}
+          theme={darkTheme}
+          onSubnetSelect={handleSubnetSelect}
+        />
         <Box
           component="main"
-          sx={{ flexGrow: 1, width: `calc(100% - ${drawerWidth}px)` }}
+          sx={{ flexGrow: 1, width: `calc(100% - ${drawerWidth}px)`}}
         >
           <Header />
           <Box sx={{ mb: 2 }}>
@@ -144,20 +113,6 @@ function App() {
           <ChartGrid data={filteredData} />
         </Box>
       </Box>
-      <Menu
-        anchorEl={menuAnchorEl}
-        open={Boolean(menuAnchorEl)}
-        onClose={handleMenuClose}
-      >
-        <MenuItem value="" onClick={() => handleSubnetSelect('')}>
-          <em>None</em>
-        </MenuItem>
-        {Array.from(subnets).map((subnet, index) => (
-          <MenuItem  key={index} onClick={() => handleSubnetSelect(subnet)}>
-            {subnet}
-          </MenuItem>
-        ))}
-      </Menu>
     </ThemeProvider>
   );
 }

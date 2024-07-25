@@ -1,5 +1,4 @@
 import { AppBar, Toolbar, Typography, IconButton, styled } from '@mui/material';
-import Logo from '../assets/icp_logo.svg'; // Import SVG as React component
 
 const Title = styled(Typography)(({ theme }) => ({
     flexGrow: 1,
