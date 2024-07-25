@@ -61,6 +61,7 @@ RUN mkdir -p /home/runner/.ssh \
 RUN chown -R runner:runner /home/runner
 
 # Setup podman
+# From https://www.redhat.com/sysadmin/podman-inside-container
 ENV APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE="1"
 RUN echo 'deb http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_20.04/ /' > /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list && \
     curl -o key https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_20.04/Release.key && \
@@ -75,8 +76,8 @@ RUN useradd podman; \
 VOLUME /var/lib/containers
 VOLUME /home/podman/.local/share/containers
 
-ADD https://raw.githubusercontent.com/containers/image_build/main/podman/containers.conf /etc/containers/containers.conf
-ADD https://raw.githubusercontent.com/containers/image_build/main/podman/podman-containers.conf /home/podman/.config/containers/containers.conf
+ADD https://raw.githubusercontent.com/containers/image_build/147ee0bfd7736f3f2f11d59c7d08b4dd9273e01e/podman/containers.conf /etc/containers/containers.conf
+ADD https://raw.githubusercontent.com/containers/image_build/147ee0bfd7736f3f2f11d59c7d08b4dd9273e01e/podman/podman-containers.conf /home/podman/.config/containers/containers.conf
 
 RUN chown podman:podman -R /home/podman
 
