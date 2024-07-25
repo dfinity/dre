@@ -8,7 +8,7 @@ use dre::{
 };
 use ic_canisters::governance::governance_canister_version;
 use ic_management_types::Network;
-use ict_util::{ict, FARM_BASE_URL};
+use ict_util::ict;
 use log::info;
 use qualify_util::qualify;
 use reqwest::ClientBuilder;
@@ -39,9 +39,10 @@ async fn main() -> anyhow::Result<()> {
     let args = Args::parse();
     info!("Running qualification for {}", args.version_to_qualify);
     info!("Generating keys for farm testnets...");
-    let (neuron_id, private_key_pem) = args.ensure_key()?;
+    let (neuron_id, private_key_pem) = args.ensure_test_key()?;
     info!("Principal key created");
 
+    args.ensure_xnet_test_key()?;
     // Take in one version and figure out what is the base version
     //
     // To find the initial version we could take NNS version?
