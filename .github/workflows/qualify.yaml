@@ -35,7 +35,7 @@ jobs:
       - name: "Remove utsns and netns from containers.conf"
         shell: bash
         run: |
-          echo "" > /etc/containers/containers.conf
+          sudo echo "" > /etc/containers/containers.conf
 
       - name: "✨ Running qualification"
         shell: bash
