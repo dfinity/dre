@@ -1,7 +1,24 @@
+use ic_stable_structures::{storable::Bound, Storable};
 use ic_stable_structures::{DefaultMemoryImpl, StableBTreeMap};
 use itertools::Itertools;
+use std::borrow::Cow;
 use std::cell::RefCell;
-use trustworthy_node_metrics_types::types::{SubnetNodeMetrics, SubnetNodeMetricsStorable, TimestampNanos};
+
+use crate::types::{SubnetNodeMetrics, SubnetNodeMetricsStorable, TimestampNanos};
+
+impl Storable for SubnetNodeMetricsStorable {
+    fn to_bytes(&self) -> Cow<[u8]> {
+        let mut buf = vec![];
+        ciborium::ser::into_writer(self, &mut buf).expect("failed to encode SubnetsMetricsStorable");
+        Cow::Owned(buf)
+    }
+
+    fn from_bytes(bytes: Cow<'_, [u8]>) -> Self {
+        ciborium::de::from_reader(&bytes[..]).expect("failed to decode SubnetsMetricsStorable")
+    }
+
+    const BOUND: Bound = Bound::Unbounded;
+}
 
 thread_local! {
     pub static MAP: RefCell<StableBTreeMap<TimestampNanos, SubnetNodeMetricsStorable, DefaultMemoryImpl>> =

@@ -1,9 +1,10 @@
 use ic_cdk_macros::*;
 use itertools::Itertools;
 use std::time::Duration;
-use trustworthy_node_metrics_types::types::{SubnetNodeMetricsArgs, SubnetNodeMetricsResponse};
+use types::{SubnetNodeMetricsArgs, SubnetNodeMetricsResponse};
 mod metrics_manager;
 mod stable_memory;
+pub mod types;
 
 // Management canisters updates node metrics every day
 const TIMER_INTERVAL_SEC: u64 = 60 * 60 * 24;
