@@ -16,7 +16,7 @@ jobs:
   qualify:
     runs-on:
       labels: dre-runner-custom
-    container: ghcr.io/dfinity/dre/actions-runner:5ba79dfdcb2cd04f1a5a02a77b95f8cc6980303b
+    container: ghcr.io/dfinity/dre/actions-runner:7efd87b0eac3ebd255be7efe00a3b39b0f9e9fc1
     steps:
       - uses: actions/checkout@v4
 
