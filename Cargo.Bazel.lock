@@ -1,5 +1,5 @@
 {
-  "checksum": "2a351a75f300453f2fbf58d10fd3d5275ec2cc8c5a4565a506c11949d16128b4",
+  "checksum": "122ae00e2b90aff46a0aaf1e6e2d80c5729af927eb65d305a5e598b381eed7b1",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -17635,7 +17635,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/cdk-rs.git",
           "commitish": {
-            "Rev": "22a6be44660d82768538e4a8b86268d4bdc05839"
+            "Rev": "59795716487fbb8a9910ac503bcea1e0cb08c932"
           },
           "strip_prefix": "src/ic-cdk"
         }
@@ -17757,7 +17757,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/cdk-rs.git",
           "commitish": {
-            "Rev": "22a6be44660d82768538e4a8b86268d4bdc05839"
+            "Rev": "59795716487fbb8a9910ac503bcea1e0cb08c932"
           },
           "strip_prefix": "src/ic-cdk-macros"
         }
@@ -17937,7 +17937,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/cdk-rs.git",
           "commitish": {
-            "Rev": "22a6be44660d82768538e4a8b86268d4bdc05839"
+            "Rev": "59795716487fbb8a9910ac503bcea1e0cb08c932"
           },
           "strip_prefix": "src/ic-cdk-timers"
         }
@@ -26150,7 +26150,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/cdk-rs.git",
           "commitish": {
-            "Rev": "22a6be44660d82768538e4a8b86268d4bdc05839"
+            "Rev": "59795716487fbb8a9910ac503bcea1e0cb08c932"
           },
           "strip_prefix": "src/ic0"
         }
