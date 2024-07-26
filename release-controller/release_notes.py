@@ -124,6 +124,7 @@ TEAM_PRETTY_MAP = {
     "sdk-team": "SDK",
     "trust-team": "Trust",
     "utopia": "Utopia",
+    "pocket-ic": "Pocket IC",
 }
 
 
