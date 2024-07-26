@@ -45,7 +45,7 @@ jobs:
         with:
           ssh_pk_workflow: ${{ secrets.SSH_PK_WORKFLOW }}
       - name: "🚀 Testing"
-        run: bazel test ...
+        run: bazel test -vv ...
 
       # We don't need the linear-jira build and test step for now
       # - name: "🚀 Build and Test Linear-Jira with Bazel"
