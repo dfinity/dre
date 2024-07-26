@@ -140,7 +140,7 @@ async fn main() -> anyhow::Result<()> {
     info!("Will store artifacts in: {}", artifacts.display());
     if artifacts.exists() {
         info!("Making sure artifact store is empty");
-        std::fs::remove_dir(&artifacts)?;
+        std::fs::remove_dir_all(&artifacts)?;
         std::fs::create_dir(&artifacts)?;
     }
 

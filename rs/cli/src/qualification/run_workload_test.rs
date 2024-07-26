@@ -1,5 +1,6 @@
 use std::net::Ipv6Addr;
 
+use backon::{ExponentialBuilder, Retryable};
 use chrono::Utc;
 use comfy_table::CellAlignment;
 use ic_registry_subnet_type::SubnetType;
@@ -66,6 +67,22 @@ impl Step for Workload {
         if !status.success() {
             anyhow::bail!("Failed to run workload test with status code: {}", status.code().unwrap_or_default())
         }
+
+        let progress_clock_retry = || async {
+            ctx.capture_progress_clock(
+                self.deployment_name.to_string(),
+                &subnet.principal,
+                Some(start.timestamp()),
+                Some(end.timestamp()),
+                "workload_test",
+            )
+            .await
+        };
+        // No need to stop the qualification if taking picture fails
+        let _ = progress_clock_retry
+            .retry(&ExponentialBuilder::default())
+            .await
+            .map_err(|e| ctx.print_text(format!("Received error while trying to capture screenshot: {:?}", e)));
 
         match ensure_finalization_rate_for_subnet(
             &self.deployment_name,

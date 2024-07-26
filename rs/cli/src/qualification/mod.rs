@@ -168,6 +168,7 @@ impl QualificationExecutor {
             // TODO: add artifacts exporting
             Steps::RunXnetTest(RunXnetTest {
                 version: ctx.to_version.clone(),
+                deployment_name: ctx.deployment_name.clone(),
             }),
             // Since the initial testnet is spunup with disk-img
             // retire the initial version.
@@ -209,6 +210,7 @@ impl QualificationExecutor {
             // TODO: add artifacts exporting
             Steps::RunXnetTest(RunXnetTest {
                 version: ctx.from_version.clone(),
+                deployment_name: ctx.deployment_name.clone(),
             }),
         ];
 
@@ -243,7 +245,7 @@ impl QualificationExecutor {
                     step: s,
                 })
                 .collect_vec(),
-            step_ctx: StepCtx::new(ctx.dre_ctx, ctx.artifacts, ctx.to_version.clone())?,
+            step_ctx: StepCtx::new(ctx.dre_ctx, ctx.artifacts, ctx.to_version.clone(), ctx.grafana_endpoint)?,
             from_version: ctx.from_version,
             to_version: ctx.to_version,
         })

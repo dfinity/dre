@@ -4,15 +4,20 @@ use std::{
     os::unix::fs::PermissionsExt,
     path::PathBuf,
     str::FromStr,
+    sync::Arc,
     time::Duration,
 };
 
 use chrono::Utc;
 use comfy_table::CellAlignment;
 use flate2::bufread::GzDecoder;
+use headless_chrome::{Browser, LaunchOptionsBuilder, Tab};
 use ic_registry_subnet_type::SubnetType;
+use ic_types::PrincipalId;
 use itertools::Itertools;
 use reqwest::{Client, ClientBuilder};
+use strum::{EnumIter, IntoEnumIterator};
+use url::Url;
 
 use crate::ctx::DreContext;
 
@@ -27,10 +32,12 @@ pub struct StepCtx {
     log_path: Option<PathBuf>,
     client: Client,
     version: String,
+    grafana_url: Option<String>,
+    browser_tab: Option<Arc<Tab>>,
 }
 
 impl StepCtx {
-    pub fn new(dre_ctx: DreContext, artifacts: Option<PathBuf>, version: String) -> anyhow::Result<Self> {
+    pub fn new(dre_ctx: DreContext, artifacts: Option<PathBuf>, version: String, grafana_url: Option<String>) -> anyhow::Result<Self> {
         let artifacts_of_run = artifacts.as_ref().map(|t| {
             if let Err(e) = std::fs::create_dir_all(&t) {
                 panic!("Couldn't create dir {}: {:?}", t.display(), e)
@@ -48,7 +55,20 @@ impl StepCtx {
             }),
             artifacts: artifacts_of_run,
             client: ClientBuilder::new().timeout(REQWEST_TIMEOUT).build()?,
+            browser_tab: match grafana_url.is_some() {
+                true => {
+                    let options = LaunchOptionsBuilder::default()
+                        .window_size(Some((1920, 1080)))
+                        .build()
+                        .map_err(|e| anyhow::anyhow!(e))?;
+                    let browser = Browser::new(options).map_err(|e| anyhow::anyhow!(e))?;
+
+                    Some(browser.new_tab().map_err(|e| anyhow::anyhow!(e))?)
+                }
+                false => None,
+            },
             version,
+            grafana_url,
         })
     }
 
@@ -202,5 +222,98 @@ impl StepCtx {
         }
 
         println!("{}", formatted)
+    }
+
+    pub async fn capture_progress_clock(
+        &self,
+        deployment_name: String,
+        subnet: &PrincipalId,
+        from: Option<i64>,
+        to: Option<i64>,
+        path_suffix: &str,
+    ) -> anyhow::Result<()> {
+        let (url, artifacts, tab) = match (self.grafana_url.as_ref(), self.artifacts.as_ref(), self.browser_tab.as_ref()) {
+            (Some(url), Some(artifacts), Some(tab)) => (url, artifacts, tab),
+            _ => return Ok(()),
+        };
+
+        let timestamp = match from {
+            Some(t) => t.to_string(),
+            None => Utc::now().timestamp().to_string(),
+        };
+
+        for panel in Panel::iter() {
+            let url = Url::parse(&url)?.join("/d/ic-progress-clock/ic-progress-clock")?.join(
+                &[
+                    ("var-ic", deployment_name.to_string()),
+                    ("var-ic_subnet", subnet.to_string()),
+                    (
+                        "from",
+                        match from {
+                            Some(f) => f.to_string(),
+                            None => "now-1h".to_owned(),
+                        },
+                    ),
+                    (
+                        "to",
+                        match to {
+                            Some(t) => t.to_string(),
+                            None => "now".to_owned(),
+                        },
+                    ),
+                    ("orgId", "1".to_owned()),
+                    ("viewPanel", panel.into()),
+                ]
+                .iter()
+                .map(|(k, v)| format!("{}={}", k, v))
+                .join("&"),
+            )?;
+
+            self.print_text(format!("Capturing screen from link: {}", url));
+
+            tab.navigate_to(url.as_str()).map_err(|e| anyhow::anyhow!(e))?;
+            tab.wait_until_navigated().map_err(|e| anyhow::anyhow!(e))?;
+
+            // Sleep to make sure everything is loaded
+            tokio::time::sleep(Duration::from_secs(5)).await;
+
+            let png = tab
+                .capture_screenshot(
+                    headless_chrome::protocol::cdp::Page::CaptureScreenshotFormatOption::Png,
+                    Some(100),
+                    None,
+                    true,
+                )
+                .map_err(|e| anyhow::anyhow!(e))?;
+            std::fs::write(artifacts.join(format!("{}-{}-{}.png", panel.get_name(), path_suffix, timestamp)), png).map_err(|e| anyhow::anyhow!(e))?;
+        }
+
+        Ok(())
+    }
+}
+
+#[derive(Clone, Copy, EnumIter, Default)]
+enum Panel {
+    #[default]
+    FinalizationRate,
+    RunningReplicas,
+}
+
+impl Panel {
+    fn get_name(&self) -> String {
+        match self {
+            Panel::FinalizationRate => "FinalizationRate".to_string(),
+            Panel::RunningReplicas => "RunningReplicas".to_string(),
+        }
+    }
+}
+
+impl Into<String> for Panel {
+    fn into(self) -> String {
+        match self {
+            Panel::FinalizationRate => "4",
+            Panel::RunningReplicas => "32",
+        }
+        .to_string()
     }
 }

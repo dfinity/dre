@@ -55,6 +55,7 @@ impl Args {
         }
 
         std::fs::write(&path, key_pair.to_pem()).map_err(|e| anyhow::anyhow!(e))?;
+        // TODO: When we upgrade ic repo there will be a constant for this
         Ok((449479075714955186, path))
     }
 
