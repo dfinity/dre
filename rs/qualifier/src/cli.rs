@@ -5,6 +5,7 @@ use clap::Parser;
 use ic_nervous_system_common_test_keys::TEST_NEURON_1_OWNER_KEYPAIR;
 use tokio::process::Command;
 const TEST_NEURON_1_IDENTITY_PATH: &str = ".config/dfx/identity/test_neuron_1/identity.pem";
+const XNET_TESTING_IDENTITY_PATH: &str = ".config/dfx/identity/xnet-testing/identity.pem";
 
 #[derive(Parser)]
 #[clap(about, version)]
@@ -38,7 +39,7 @@ pub struct Args {
 }
 
 impl Args {
-    pub fn ensure_key(&self) -> anyhow::Result<(u64, PathBuf)> {
+    pub fn ensure_test_key(&self) -> anyhow::Result<(u64, PathBuf)> {
         let key_pair = &TEST_NEURON_1_OWNER_KEYPAIR;
         let path = dirs::home_dir()
             .ok_or(anyhow::anyhow!("No home dir present"))?
@@ -50,6 +51,16 @@ impl Args {
 
         std::fs::write(&path, key_pair.to_pem()).map_err(|e| anyhow::anyhow!(e))?;
         Ok((449479075714955186, path))
+    }
+
+    pub fn ensure_xnet_test_key(&self) -> anyhow::Result<()> {
+        let path = dirs::home_dir()
+            .ok_or(anyhow::anyhow!("No home dir present"))?
+            .join(PathBuf::from_str(XNET_TESTING_IDENTITY_PATH)?);
+        match path.exists() {
+            true => Ok(()),
+            false => anyhow::bail!("Missing xnet-testing identity on path: {}", path.display()),
+        }
     }
 
     pub async fn ensure_git(&self) -> anyhow::Result<()> {
