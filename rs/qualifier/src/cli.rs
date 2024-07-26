@@ -36,6 +36,11 @@ pub struct Args {
     /// result in rebuilding of image
     #[clap(long)]
     pub skip_pull: bool,
+
+    /// Specify the steps to run
+    /// A range can be: `4`, `3..`, `..3, `1..3`
+    #[clap(long)]
+    pub step_range: Option<String>,
 }
 
 impl Args {

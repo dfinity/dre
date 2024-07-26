@@ -22,6 +22,8 @@ pub async fn qualify(
     network_name: &str,
     from_version: String,
     to_version: String,
+    artifacts: PathBuf,
+    step_range: Option<String>,
 ) -> anyhow::Result<()> {
     // Run dre to qualify with correct parameters
     info!("Awaiting logs path...");
@@ -65,9 +67,10 @@ pub async fn qualify(
             subcommand: dre::commands::qualify::QualifyCommands::Execute(Execute {
                 version: to_version,
                 from_version: Some(from_version),
-                step_range: None,
+                step_range,
                 deployment_name: config.deployment_name,
                 prometheus_endpoint: config.prometheus_url,
+                artifacts: Some(artifacts),
             }),
         }),
         verbose: false,

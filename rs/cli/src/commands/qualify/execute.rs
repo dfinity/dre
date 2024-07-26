@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use clap::Args;
 use ic_management_types::Network;
 use registry_canister::mutations::do_delete_subnet::NNS_SUBNET_ID;
@@ -32,6 +34,10 @@ pub struct Execute {
     /// Prometheus compliant endpoint
     #[clap(long)]
     pub prometheus_endpoint: String,
+
+    /// Artifacts path
+    #[clap(long)]
+    pub artifacts: Option<PathBuf>,
 }
 
 impl ExecutableCommand for Execute {
@@ -63,13 +69,15 @@ impl ExecutableCommand for Execute {
             }
         };
 
-        let qualification_executor = QualificationExecutorBuilder::new(ctx)
+        let mut qualification_executor = QualificationExecutorBuilder::new(ctx)
             .with_step_range(self.step_range.clone().unwrap_or_default())
             .with_from_version(from_version)
             .with_to_version(self.version.clone())
             .with_deployment_namge(self.deployment_name.clone())
-            .with_prometheus_endpoint(self.prometheus_endpoint.clone())
-            .build()?;
-        qualification_executor.execute().await
+            .with_prometheus_endpoint(self.prometheus_endpoint.clone());
+        if let Some(path) = &self.artifacts {
+            qualification_executor = qualification_executor.with_artifacts(path.to_owned());
+        };
+        qualification_executor.build()?.execute().await
     }
 }

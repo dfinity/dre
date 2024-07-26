@@ -1,4 +1,4 @@
-use std::{fmt::Display, time::Duration};
+use std::{fmt::Display, path::PathBuf, str::FromStr, time::Duration};
 
 use clap::Parser;
 use cli::Args;
@@ -135,6 +135,9 @@ async fn main() -> anyhow::Result<()> {
     let token = CancellationToken::new();
     let (sender, mut receiver) = mpsc::channel(2);
 
+    let artifacts = PathBuf::from_str("/tmp/qualifier-artifacts/")?;
+    info!("Will store artifacts in: {}/{}", artifacts.display(), &args.version_to_qualify);
+
     tokio::select! {
         res = ict(args.ic_repo_path.clone(), config, token.clone(), sender) => res?,
         res = qualify(
@@ -144,6 +147,8 @@ async fn main() -> anyhow::Result<()> {
             NETWORK_NAME,
             initial_version,
             args.version_to_qualify.to_string(),
+            artifacts,
+            args.step_range
         ) => res?
     };
 
