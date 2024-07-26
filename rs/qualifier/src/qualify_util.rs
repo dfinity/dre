@@ -9,6 +9,7 @@ use ic_management_backend::registry::local_registry_path;
 use ic_management_types::Network;
 use itertools::Itertools;
 use log::info;
+use serde::Serialize;
 use serde_json::Value;
 use tokio::sync::mpsc::Receiver;
 use url::Url;
@@ -49,7 +50,7 @@ pub async fn qualify(
     };
     let config = Config::from_str(&config)?;
 
-    info!("Received following config: {:#?}", config);
+    info!("Received following config: {}", serde_json::to_string_pretty(&config)?);
     info!("Running qualification...");
 
     // At this point we are going to run so we need to remove previous
@@ -80,6 +81,7 @@ pub async fn qualify(
                 deployment_name: config.deployment_name,
                 prometheus_endpoint: config.prometheus_url,
                 artifacts: Some(artifacts.clone()),
+                grafana_url: Some(config.grafana_url),
             }),
         }),
         verbose: false,
@@ -93,13 +95,14 @@ pub async fn qualify(
     Ok(())
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 #[allow(dead_code)]
 struct Config {
     deployment_name: String,
     kibana_url: String,
     nns_urls: Vec<Url>,
     prometheus_url: String,
+    grafana_url: String,
 }
 
 impl FromStr for Config {
@@ -133,6 +136,7 @@ impl FromStr for Config {
 
         let config = Self {
             prometheus_url: format!("http://prometheus.{}.testnet.farm.dfinity.systems/api/v1/query", deployment_name),
+            grafana_url: format!("http://grafana.{}.testnet.farm.dfinity.systems/", deployment_name),
             deployment_name,
             kibana_url: parsed["kibana_url"]["url"]
                 .as_str()

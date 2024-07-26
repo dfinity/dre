@@ -1,4 +1,4 @@
-use std::{fmt::Display, fs::OpenOptions, path::PathBuf, str::FromStr, time::Duration};
+use std::{fmt::Display, path::PathBuf, str::FromStr, time::Duration};
 
 use clap::Parser;
 use cli::Args;

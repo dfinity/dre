@@ -41,6 +41,7 @@ pub struct QualificationExecutorBuilder {
     deployment_name: String,
     prometheus_endpoint: String,
     artifacts: Option<PathBuf>,
+    grafana_endpoint: Option<String>,
 }
 
 impl QualificationExecutorBuilder {
@@ -53,6 +54,7 @@ impl QualificationExecutorBuilder {
             deployment_name: "<network-name>".to_string(),
             prometheus_endpoint: "".to_string(),
             artifacts: None,
+            grafana_endpoint: None,
         }
     }
 
@@ -79,6 +81,13 @@ impl QualificationExecutorBuilder {
     pub fn with_artifacts(self, path: PathBuf) -> Self {
         Self {
             artifacts: Some(path),
+            ..self
+        }
+    }
+
+    pub fn with_grafana_endpoint(self, grafana_endpoint: String) -> Self {
+        Self {
+            grafana_endpoint: Some(grafana_endpoint),
             ..self
         }
     }
