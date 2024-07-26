@@ -4,14 +4,13 @@ use std::{
     os::unix::fs::PermissionsExt,
     path::PathBuf,
     str::FromStr,
-    sync::Arc,
     time::Duration,
 };
 
 use chrono::Utc;
 use comfy_table::CellAlignment;
 use flate2::bufread::GzDecoder;
-use headless_chrome::{Browser, LaunchOptionsBuilder, Tab};
+use headless_chrome::{Browser, LaunchOptionsBuilder};
 use ic_registry_subnet_type::SubnetType;
 use ic_types::PrincipalId;
 use itertools::Itertools;
@@ -33,7 +32,7 @@ pub struct StepCtx {
     client: Client,
     version: String,
     grafana_url: Option<String>,
-    browser_tab: Option<Arc<Tab>>,
+    browser: Option<Browser>,
 }
 
 impl StepCtx {
@@ -55,15 +54,17 @@ impl StepCtx {
             }),
             artifacts: artifacts_of_run,
             client: ClientBuilder::new().timeout(REQWEST_TIMEOUT).build()?,
-            browser_tab: match grafana_url.is_some() {
+            browser: match grafana_url.is_some() {
                 true => {
                     let options = LaunchOptionsBuilder::default()
+                        .headless(true)
+                        .ignore_certificate_errors(true)
                         .window_size(Some((1920, 1080)))
                         .build()
                         .map_err(|e| anyhow::anyhow!(e))?;
                     let browser = Browser::new(options).map_err(|e| anyhow::anyhow!(e))?;
 
-                    Some(browser.new_tab().map_err(|e| anyhow::anyhow!(e))?)
+                    Some(browser)
                 }
                 false => None,
             },
@@ -232,8 +233,8 @@ impl StepCtx {
         to: Option<i64>,
         path_suffix: &str,
     ) -> anyhow::Result<()> {
-        let (url, artifacts, tab) = match (self.grafana_url.as_ref(), self.artifacts.as_ref(), self.browser_tab.as_ref()) {
-            (Some(url), Some(artifacts), Some(tab)) => (url, artifacts, tab),
+        let (url, artifacts, browser) = match (self.grafana_url.as_ref(), self.artifacts.as_ref(), self.browser.as_ref()) {
+            (Some(url), Some(artifacts), Some(browser)) => (url, artifacts, browser),
             _ => return Ok(()),
         };
 
@@ -243,7 +244,7 @@ impl StepCtx {
         };
 
         for panel in Panel::iter() {
-            let url = Url::parse(&url)?.join("/d/ic-progress-clock/ic-progress-clock")?.join(
+            let url = Url::parse(&url)?.join("/d/ic-progress-clock/ic-progress-clock?")?.join(
                 &[
                     ("var-ic", deployment_name.to_string()),
                     ("var-ic_subnet", subnet.to_string()),
@@ -270,6 +271,8 @@ impl StepCtx {
             )?;
 
             self.print_text(format!("Capturing screen from link: {}", url));
+
+            let tab = browser.new_tab().map_err(|e| anyhow::anyhow!(e))?;
 
             tab.navigate_to(url.as_str()).map_err(|e| anyhow::anyhow!(e))?;
             tab.wait_until_navigated().map_err(|e| anyhow::anyhow!(e))?;
