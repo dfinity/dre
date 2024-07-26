@@ -69,7 +69,7 @@ impl ExecutableCommand for Execute {
             .with_to_version(self.version.clone())
             .with_deployment_namge(self.deployment_name.clone())
             .with_prometheus_endpoint(self.prometheus_endpoint.clone())
-            .build();
+            .build()?;
         qualification_executor.execute().await
     }
 }

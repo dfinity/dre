@@ -20,6 +20,7 @@ use reqwest::ClientBuilder;
 use retire_blessed_versions::RetireBlessedVersions;
 use run_workload_test::Workload;
 use run_xnet_test::RunXnetTest;
+use tempfile::TempDir;
 use upgrade_deployment_canister::UpgradeDeploymentCanisters;
 use upgrade_subnets::{Action, UpgradeSubnets};
 
@@ -38,6 +39,7 @@ pub struct QualificationExecutor {
     dre_ctx: DreContext,
     from_version: String,
     to_version: String,
+    artifacts_path: Option<TempDir>,
 }
 
 struct OrderedStep {
@@ -53,6 +55,7 @@ pub struct QualificationExecutorBuilder {
     step_range: String,
     deployment_name: String,
     prometheus_endpoint: String,
+    export_artifacts: bool,
 }
 
 impl QualificationExecutorBuilder {
@@ -64,6 +67,7 @@ impl QualificationExecutorBuilder {
             step_range: "".to_string(),
             deployment_name: "<network-name>".to_string(),
             prometheus_endpoint: "".to_string(),
+            export_artifacts: false,
         }
     }
 
@@ -87,13 +91,20 @@ impl QualificationExecutorBuilder {
         Self { prometheus_endpoint, ..self }
     }
 
-    pub fn build(self) -> QualificationExecutor {
+    pub fn with_artifacts(self) -> Self {
+        Self {
+            export_artifacts: true,
+            ..self
+        }
+    }
+
+    pub fn build(self) -> anyhow::Result<QualificationExecutor> {
         QualificationExecutor::_new(self)
     }
 }
 
 impl QualificationExecutor {
-    fn _new(ctx: QualificationExecutorBuilder) -> Self {
+    fn _new(ctx: QualificationExecutorBuilder) -> anyhow::Result<Self> {
         let steps = vec![
             // Ensure the beginning version is blessed
             // This step will be skipped for testnet runs, but may be
@@ -228,7 +239,7 @@ impl QualificationExecutor {
         };
 
         let end_index = if end_index > steps.len() - 1 { steps.len() - 1 } else { end_index };
-        Self {
+        Ok(Self {
             steps: steps
                 .into_iter()
                 .enumerate()
@@ -241,7 +252,11 @@ impl QualificationExecutor {
             dre_ctx: ctx.dre_ctx,
             from_version: ctx.from_version,
             to_version: ctx.to_version,
-        }
+            artifacts_path: match ctx.export_artifacts {
+                true => Some(TempDir::new()?),
+                false => None,
+            },
+        })
     }
 
     pub fn list(&self) {
