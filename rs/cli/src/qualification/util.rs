@@ -1,4 +1,5 @@
 use std::{
+    fs::OpenOptions,
     io::{Read, Write},
     os::unix::fs::PermissionsExt,
     path::PathBuf,
@@ -12,7 +13,6 @@ use flate2::bufread::GzDecoder;
 use ic_registry_subnet_type::SubnetType;
 use itertools::Itertools;
 use reqwest::{Client, ClientBuilder};
-use tempfile::TempDir;
 
 use crate::ctx::DreContext;
 
@@ -23,16 +23,33 @@ const IC_EXECUTABLES_DIR: &str = "ic-executables";
 
 pub struct StepCtx {
     dre_ctx: DreContext,
-    artifacts: Option<TempDir>,
+    artifacts: Option<PathBuf>,
+    log_path: Option<PathBuf>,
     client: Client,
+    version: String,
 }
 
 impl StepCtx {
-    pub fn new(dre_ctx: DreContext, artifacts: Option<TempDir>) -> anyhow::Result<Self> {
+    pub fn new(dre_ctx: DreContext, artifacts: Option<PathBuf>, version: String) -> anyhow::Result<Self> {
+        let artifacts_of_run = artifacts.as_ref().map(|t| {
+            let path = t.join(&version);
+            if let Err(e) = std::fs::create_dir_all(&path) {
+                panic!("Couldn't create dir {}: {:?}", path.display(), e)
+            }
+            path
+        });
         Ok(Self {
             dre_ctx,
-            artifacts,
+            log_path: artifacts_of_run.as_ref().map(|t| {
+                let path = t.join("run.log");
+                if let Err(e) = std::fs::File::create_new(&path) {
+                    panic!("Couldn't create file {}: {:?}", path.display(), e)
+                };
+                path
+            }),
+            artifacts: artifacts_of_run,
             client: ClientBuilder::new().timeout(REQWEST_TIMEOUT).build()?,
+            version,
         })
     }
 
@@ -165,8 +182,7 @@ impl StepCtx {
 
     fn _print_with_time(&self, message: String, add_new_line: bool) {
         let current_time = Utc::now();
-
-        println!(
+        let formatted = format!(
             "[{}]{}{}",
             current_time,
             match add_new_line {
@@ -174,6 +190,18 @@ impl StepCtx {
                 false => ' ',
             },
             message
-        )
+        );
+
+        if let Some(log_path) = &self.log_path {
+            let mut file = match OpenOptions::new().write(true).append(true).open(log_path) {
+                Ok(f) => f,
+                Err(e) => panic!("Couldn't open file {}: {:?}", log_path.display(), e),
+            };
+            if let Err(e) = writeln!(file, "{}", formatted) {
+                panic!("Couldn't append to file {}: {:?}", log_path.display(), e)
+            }
+        }
+
+        println!("{}", formatted)
     }
 }

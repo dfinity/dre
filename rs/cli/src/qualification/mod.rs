@@ -1,4 +1,4 @@
-use std::time::Duration;
+use std::{path::PathBuf, time::Duration};
 
 use backon::{ExponentialBuilder, Retryable};
 use comfy_table::CellAlignment;
@@ -10,7 +10,6 @@ use retire_blessed_versions::RetireBlessedVersions;
 use run_workload_test::Workload;
 use run_xnet_test::RunXnetTest;
 use step::{OrderedStep, Step, Steps};
-use tempfile::TempDir;
 use upgrade_deployment_canister::UpgradeDeploymentCanisters;
 use upgrade_subnets::{Action, UpgradeSubnets};
 use util::StepCtx;
@@ -41,7 +40,7 @@ pub struct QualificationExecutorBuilder {
     step_range: String,
     deployment_name: String,
     prometheus_endpoint: String,
-    export_artifacts: bool,
+    artifacts: Option<PathBuf>,
 }
 
 impl QualificationExecutorBuilder {
@@ -53,7 +52,7 @@ impl QualificationExecutorBuilder {
             step_range: "".to_string(),
             deployment_name: "<network-name>".to_string(),
             prometheus_endpoint: "".to_string(),
-            export_artifacts: false,
+            artifacts: None,
         }
     }
 
@@ -77,9 +76,9 @@ impl QualificationExecutorBuilder {
         Self { prometheus_endpoint, ..self }
     }
 
-    pub fn with_artifacts(self) -> Self {
+    pub fn with_artifacts(self, path: PathBuf) -> Self {
         Self {
-            export_artifacts: true,
+            artifacts: Some(path),
             ..self
         }
     }
@@ -235,13 +234,7 @@ impl QualificationExecutor {
                     step: s,
                 })
                 .collect_vec(),
-            step_ctx: StepCtx::new(
-                ctx.dre_ctx,
-                match ctx.export_artifacts {
-                    true => Some(TempDir::new()?),
-                    false => None,
-                },
-            )?,
+            step_ctx: StepCtx::new(ctx.dre_ctx, ctx.artifacts, ctx.to_version.clone())?,
             from_version: ctx.from_version,
             to_version: ctx.to_version,
         })
@@ -291,7 +284,10 @@ impl QualificationExecutor {
             self.print_text(format!("Executing step {}: `{}`", ordered_step.index, ordered_step.step.name()));
 
             let step_future = || async { ordered_step.step.execute(&self.step_ctx).await };
-            step_future.retry(&ExponentialBuilder::default()).await?;
+            if let Err(e) = step_future.retry(&ExponentialBuilder::default()).await {
+                self.print_text(format!("Failed to execute step {}: {:?}", ordered_step.step.name(), e));
+                anyhow::bail!(e)
+            }
 
             self.print_text(format!("Executed step {}: `{}`", ordered_step.index, ordered_step.step.name()));
 
@@ -299,13 +295,17 @@ impl QualificationExecutor {
             self.print_text(format!("Syncing with registry after step {}", ordered_step.index));
             let sync_registry = || async { registry.sync_with_nns().await };
             // If the system subnet downgraded it could be some time until it boots up
-            sync_registry
+            if let Err(e) = sync_registry
                 .retry(
                     &ExponentialBuilder::default()
                         .with_max_times(10)
                         .with_max_delay(Duration::from_secs(5 * 60)),
                 )
-                .await?;
+                .await
+            {
+                self.print_text(format!("Failed to sync with registry: {:?}", e));
+                anyhow::bail!(e)
+            }
         }
 
         self.print_text(format!("Qualification of {} finished successfully!", self.to_version));
