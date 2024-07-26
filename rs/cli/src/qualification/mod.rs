@@ -263,7 +263,7 @@ impl QualificationExecutor {
             )
             .to_table();
 
-        println!("{}", table)
+        self.step_ctx.print_table(table)
     }
 
     pub async fn execute(&self) -> anyhow::Result<()> {

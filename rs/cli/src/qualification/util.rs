@@ -32,17 +32,16 @@ pub struct StepCtx {
 impl StepCtx {
     pub fn new(dre_ctx: DreContext, artifacts: Option<PathBuf>, version: String) -> anyhow::Result<Self> {
         let artifacts_of_run = artifacts.as_ref().map(|t| {
-            let path = t.join(&version);
-            if let Err(e) = std::fs::create_dir_all(&path) {
-                panic!("Couldn't create dir {}: {:?}", path.display(), e)
+            if let Err(e) = std::fs::create_dir_all(&t) {
+                panic!("Couldn't create dir {}: {:?}", t.display(), e)
             }
-            path
+            t.clone()
         });
         Ok(Self {
             dre_ctx,
             log_path: artifacts_of_run.as_ref().map(|t| {
                 let path = t.join("run.log");
-                if let Err(e) = std::fs::File::create_new(&path) {
+                if let Err(e) = OpenOptions::new().write(true).truncate(true).create(true).open(&path) {
                     panic!("Couldn't create file {}: {:?}", path.display(), e)
                 };
                 path

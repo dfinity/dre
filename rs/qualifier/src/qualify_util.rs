@@ -28,8 +28,17 @@ pub async fn qualify(
     // Run dre to qualify with correct parameters
     info!("Awaiting logs path...");
     let data = receiver.recv().await.ok_or(anyhow::anyhow!("Failed to recv data"))?;
-
-    info!("Received logs: {}", data);
+    let log_path = match data {
+        Message::Log(line) => {
+            let log_path = line
+                .split_once('/')
+                .and_then(|(_, last)| Some(format!("/{}", last[..last.len() - 1].to_owned())))
+                .ok_or(anyhow::anyhow!("Expected log line"))?;
+            info!("Log file path: {}", log_path);
+            PathBuf::from_str(&log_path)?
+        }
+        _ => anyhow::bail!("Expected Log line instead of data"),
+    };
 
     info!("Awaiting config...");
     let data = receiver.recv().await.ok_or(anyhow::anyhow!("Failed to recv data"))?;
@@ -70,7 +79,7 @@ pub async fn qualify(
                 step_range,
                 deployment_name: config.deployment_name,
                 prometheus_endpoint: config.prometheus_url,
-                artifacts: Some(artifacts),
+                artifacts: Some(artifacts.clone()),
             }),
         }),
         verbose: false,
@@ -78,7 +87,10 @@ pub async fn qualify(
     };
     let ctx = DreContext::from_args(&args).await?;
 
-    args.execute(ctx).await
+    args.execute(ctx).await?;
+
+    std::fs::copy(&log_path, artifacts.join("farm-driver.log"))?;
+    Ok(())
 }
 
 #[derive(Debug)]
