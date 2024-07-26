@@ -29,7 +29,7 @@ async fn main() -> anyhow::Result<()> {
     // Check if farm is reachable. If not, error
     let client = ClientBuilder::new().timeout(Duration::from_secs(30)).build()?;
     client
-        .get("https://kibana.testnet.dfinity.network")
+        .get("https://kibana.testnet.dfinity.network/")
         .send()
         .await
         .map_err(|e| anyhow::anyhow!("Checking connectivity failed: {}", e.to_string()))?
@@ -39,9 +39,10 @@ async fn main() -> anyhow::Result<()> {
     let args = Args::parse();
     info!("Running qualification for {}", args.version_to_qualify);
     info!("Generating keys for farm testnets...");
-    let (neuron_id, private_key_pem) = args.ensure_key()?;
+    let (neuron_id, private_key_pem) = args.ensure_test_key()?;
     info!("Principal key created");
 
+    args.ensure_xnet_test_key()?;
     // Take in one version and figure out what is the base version
     //
     // To find the initial version we could take NNS version?
@@ -133,22 +134,22 @@ async fn main() -> anyhow::Result<()> {
     // we have to extract the neuron pem file to use with dre
     let token = CancellationToken::new();
     let (sender, mut receiver) = mpsc::channel(2);
-    let handle = tokio::spawn(ict(args.ic_repo_path.clone(), config, token.clone(), sender));
 
-    qualify(
-        &mut receiver,
-        private_key_pem,
-        neuron_id,
-        NETWORK_NAME,
-        initial_version,
-        args.version_to_qualify.to_string(),
-    )
-    .await?;
+    tokio::select! {
+        res = ict(args.ic_repo_path.clone(), config, token.clone(), sender) => res?,
+        res = qualify(
+            &mut receiver,
+            private_key_pem,
+            neuron_id,
+            NETWORK_NAME,
+            initial_version,
+            args.version_to_qualify.to_string(),
+        ) => res?
+    };
 
     info!("Finished qualifier run for: {}", args.version_to_qualify);
 
     token.cancel();
-    handle.await??;
     Ok(())
 }
 
