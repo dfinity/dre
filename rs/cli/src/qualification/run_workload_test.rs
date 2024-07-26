@@ -8,9 +8,11 @@ use reqwest::ClientBuilder;
 use serde_json::Value;
 use tokio::process::Command;
 
-use crate::ctx::DreContext;
-
-use super::{comfy_table_util::Table, download_executable, print_table, print_text, Step, REQWEST_TIMEOUT};
+use super::{
+    comfy_table_util::Table,
+    step::Step,
+    util::{StepCtx, REQWEST_TIMEOUT},
+};
 
 const IC_WORKLOAD_GENERATOR: &str = "ic-workload-generator";
 
@@ -32,10 +34,10 @@ impl Step for Workload {
         "workload_test".to_string()
     }
 
-    async fn execute(&self, ctx: &DreContext) -> anyhow::Result<()> {
-        let wg_binary = download_executable(IC_WORKLOAD_GENERATOR, &self.version).await?;
+    async fn execute(&self, ctx: &StepCtx) -> anyhow::Result<()> {
+        let wg_binary = ctx.download_executable(IC_WORKLOAD_GENERATOR, &self.version).await?;
 
-        let subnets = ctx.registry().await.subnets().await?;
+        let subnets = ctx.dre_ctx().registry().await.subnets().await?;
         let subnet = subnets
             .values()
             .find(|s| s.subnet_type.eq(&SubnetType::Application))
@@ -53,7 +55,7 @@ impl Step for Workload {
             format!("--ingress-timeout-secs={}", TIMEOUT),
         ];
 
-        print_text(format!("Spawning the command: {} {}", wg_binary.display(), args.iter().join(" ")));
+        ctx.print_text(format!("Spawning the command: {} {}", wg_binary.display(), args.iter().join(" ")));
 
         // Possible `ulimit` issue
         let start = Utc::now();
@@ -72,6 +74,7 @@ impl Step for Workload {
             &all_ipv6,
             &self.prometheus_endpoint,
             &SubnetType::Application,
+            ctx,
         )
         .await?
         {
@@ -89,6 +92,7 @@ async fn ensure_finalization_rate_for_subnet(
     ips: &[Ipv6Addr],
     prom_endpoint: &str,
     subnet_type: &SubnetType,
+    ctx: &StepCtx,
 ) -> anyhow::Result<bool> {
     let client = ClientBuilder::new().timeout(REQWEST_TIMEOUT).build()?;
     let metrics_hosts = ips.iter().map(|ip| format!("\\\\[{}\\\\]:9090", ip)).join("|");
@@ -103,9 +107,9 @@ async fn ensure_finalization_rate_for_subnet(
         .get(prom_endpoint)
         .header("Accept", "application/json")
         .query(&[("time", end_timestamp.to_string()), ("query", query)]);
-    print_text(format!("Running query: {:?}", request));
+    ctx.print_text(format!("Running query: {:?}", request));
     let response = request.send().await?.error_for_status()?.json::<Value>().await?;
-    print_text(format!("Received response: \n{}", serde_json::to_string_pretty(&response)?));
+    ctx.print_text(format!("Received response: \n{}", serde_json::to_string_pretty(&response)?));
 
     let finalization_rate = response["data"]["result"][0]["value"][1]
         .as_str()
@@ -118,7 +122,7 @@ async fn ensure_finalization_rate_for_subnet(
         .with_rows(vec![vec![expected_finalization_rate.to_string(), finalization_rate.to_string()]])
         .to_table();
 
-    print_table(table);
+    ctx.print_table(table);
 
     // Capture the image of grafana links
     // logging.info("Check the Grafana dashboard (adjust the subnets if necessary)"))
