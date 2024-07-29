@@ -9,7 +9,8 @@ import ArrowRightIcon from '@mui/icons-material/ArrowRight';
 export interface Filters {
   dateStart: Date;
   dateEnd: Date;
-  subnet: string; // Use string instead of String
+  subnet: string | null;
+  nodeProvider: string | null;
 }
 
 interface FilterBarProps {

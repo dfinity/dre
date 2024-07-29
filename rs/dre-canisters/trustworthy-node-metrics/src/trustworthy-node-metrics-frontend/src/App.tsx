@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Box, CircularProgress, CssBaseline, ThemeProvider, createTheme } from '@mui/material';
 import FilterBar, { Filters } from './components/FilterBar';
-import Drawer from './components/Drawer'; // Import the updated Drawer component
+import Drawer from './components/Drawer'; 
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import { trustworthy_node_metrics } from '../../declarations/trustworthy-node-metrics/index.js'; // Adjust the path as needed
 import { SubnetNodeMetricsArgs, SubnetNodeMetricsResult } from '../../declarations/trustworthy-node-metrics/trustworthy-node-metrics.did.js';
 import { NodeMetrics } from './models/NodeMetrics';
-import ChartGrid from './components/ChartGrid';
+import { ChartGrid } from './components/ChartGrid';
+import { StackedChart } from './components/ChartGrid';
 import Header from './components/Header';
 
 const darkTheme = createTheme({
@@ -16,16 +18,22 @@ const darkTheme = createTheme({
 });
 
 function App() {
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
   const [filters, setFilters] = useState<Filters>({
-    dateStart: new Date(),
+    dateStart: thirtyDaysAgo,
     dateEnd: new Date(), 
-    subnet: '' 
+    subnet: null,
+    nodeProvider: null
   });
   const [data, setData] = useState<NodeMetrics[]>([]);
   const [filteredData, setFilteredData] = useState<NodeMetrics[]>([]);
   const [subnets, setSubnets] = useState<Set<string>>(new Set());
+  const [nodeProviders, setNodeProviders] = useState<Set<string>>(new Set());
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
-  const drawerWidth = 120;
+  const drawerWidth = 180;
 
   useEffect(() => {
     const fetchNodes = async () => {
@@ -54,6 +62,7 @@ function App() {
 
           setData(metrics);
           setSubnets(subnets);
+          setIsLoading(false);
         } else {
           setError(response.Err);
         }
@@ -61,7 +70,7 @@ function App() {
         console.error("Error fetching nodes:", error);
       }
     };
-
+    
     fetchNodes();
   }, []);
 
@@ -71,48 +80,59 @@ function App() {
         const metricsDate = metrics.date; 
         const isDateInRange = metricsDate >= filters.dateStart && metricsDate <= filters.dateEnd;
 
-        return metrics.subnet_id.toText() === filters.subnet && isDateInRange;
+        if (filters.subnet !== null) {
+          return metrics.subnet_id.toText() === filters.subnet && isDateInRange;
+        }
+
+        return isDateInRange;
       });
 
       setFilteredData(f);
     }
-
     filterData();
   }, [filters, data]);
-
-  const handleSubnetSelect = (subnet: string) => {
-    setFilters((prev) => ({ ...prev, subnet }));
-  };
 
   if (error) {
     return <div>Error: {error}</div>;
   }
 
-  if (data.length === 0) {
-    return <CircularProgress />;
+  if (isLoading) {
+    return <CircularProgress />
   }
 
   return (
     <ThemeProvider theme={darkTheme}>
       <CssBaseline />
-      <Box sx={{ display: 'flex' }}>
-        <Drawer
-          subnets={subnets}
-          drawerWidth={drawerWidth}
-          theme={darkTheme}
-          onSubnetSelect={handleSubnetSelect}
-        />
-        <Box
-          component="main"
-          sx={{ flexGrow: 1, width: `calc(100% - ${drawerWidth}px)`}}
-        >
-          <Header />
-          <Box sx={{ mb: 2 }}>
-            <FilterBar filters={filters} setFilters={setFilters} subnets={subnets} />
+      <Router>
+        <Box sx={{ display: 'flex' }}>
+          <Drawer
+            subnets={subnets}
+            nodeProviders={nodeProviders}
+            drawerWidth={drawerWidth}
+            theme={darkTheme}
+            setFilters={setFilters}
+          />
+          <Box
+            component="main"
+            sx={{ flexGrow: 1, width: `calc(100% - ${drawerWidth}px)` }}
+          >
+            <Header />
+            <Box sx={{ mb: 2 }}>
+              <FilterBar
+                filters={filters}
+                setFilters={setFilters}
+                subnets={subnets}
+              />
+            </Box>
+            <Routes>
+              <Route path="/" element={<Navigate to="/nodes" />} />
+              <Route path="/nodes" element={<ChartGrid data={data} />} />
+              <Route path="/nodes2" element={<StackedChart data={filteredData} name={filters.subnet} />} />
+              <Route path="/subnets" element={<StackedChart data={filteredData} name={filters.subnet} />} />
+            </Routes>
           </Box>
-          <ChartGrid data={filteredData} />
         </Box>
-      </Box>
+      </Router>
     </ThemeProvider>
   );
 }
