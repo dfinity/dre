@@ -311,6 +311,8 @@ def get_change_description_for_commit(
     ownership = {}
     stripped_message = re.sub(jira_ticket_regex, "", commit_message)
     stripped_message = re.sub(empty_brackets_regex, "", stripped_message)
+    # add github PR links
+    stripped_message = re.sub(r"\(#(\d+)\)", r"([#\1](https://github.com/dfinity/ic/pull/\1))", stripped_message)
     stripped_message = stripped_message.strip()
 
     conventional = parse_conventional_commit(stripped_message, conv_commit_pattern)
@@ -399,10 +401,10 @@ def release_notes_markdown(
 {reviewers_text}
 
 # Release Notes for [{release_tag}](https://github.com/dfinity/ic/tree/{release_tag}) (`{release_commit}`)
-This release is based on [{base_release_tag}](https://dashboard.internetcomputer.org/release/{base_release_commit}) (`{base_release_commit}`).
+This release is based on changes since [{base_release_tag}](https://dashboard.internetcomputer.org/release/{base_release_commit}) (`{base_release_commit}`).
 
 Please note that some commits may be excluded from this release if they're not relevant, or not modifying the GuestOS image.
-Additionally, some desriptions of some changes might have been slightly modified to fit the release notes format.
+Additionally, descriptions of some changes might have been slightly modified to fit the release notes format.
 
 To see a full list of commits added since last release, compare the revisions on [GitHub](https://github.com/dfinity/ic/compare/{base_release_tag}...{release_tag}).
 """.format(
@@ -447,8 +449,8 @@ Changes [were removed](https://github.com/dfinity/ic/compare/{release_tag}...{ba
     return notes
 
 
-def get_guestos_packages_with_bazel(ic_repo: GitRepo):
-    """Get the packages that are related to the GuestOS image using Bazel."""
+def bazel_query_guestos_packages(ic_repo: GitRepo):
+    """Bazel query package for GuestOS."""
     bazel_query = [
         "bazel",
         "query",
@@ -464,7 +466,7 @@ def get_guestos_packages_with_bazel(ic_repo: GitRepo):
         check=False,
     )
     if p.returncode != 0:
-        print("Failure running Bazel through container.  Attempting direct run.", file=sys.stderr)
+        print("Failure running Bazel through container. Attempting direct run.", file=sys.stderr)
         p = subprocess.run(
             bazel_query,
             cwd=ic_repo.dir,
@@ -472,8 +474,12 @@ def get_guestos_packages_with_bazel(ic_repo: GitRepo):
             stdout=subprocess.PIPE,
             check=True,
         )
-    guestos_packages_all = p.stdout.strip().splitlines()
+    return p.stdout.strip().splitlines()
 
+
+def get_guestos_packages_with_bazel(ic_repo: GitRepo):
+    """Get the packages that are related to the GuestOS image using Bazel."""
+    guestos_packages_all = bazel_query_guestos_packages(ic_repo)
     guestos_packages_filtered = [
         p for p in guestos_packages_all if not any(re.match(f, p) for f in EXCLUDE_PACKAGES_FILTERS)
     ]
