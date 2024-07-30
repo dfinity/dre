@@ -2,121 +2,82 @@ import React from 'react';
 import {
   Drawer as MUIDrawer,
   List,
-  Typography,
-  MenuItem,
-  Theme,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
-  FormControl,
-  InputLabel,
-  Select,
-  ListItem,
-  IconButton,
-  Toolbar,
-  Button,
   ListItemButton,
+  ListItemText,
+  Collapse,
+  IconButton,
+  ListItem,
+  Toolbar,
 } from '@mui/material';
 import { Link } from 'react-router-dom';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { Filters } from './FilterBar';
-import { SxProps } from '@mui/system';
 import Logo from '../assets/icp_logo.svg'; 
+import { ExpandLess, ExpandMore } from '@mui/icons-material';
 
 interface DrawerProps {
   subnets: Set<string>;
   nodeProviders: Set<string>;
   drawerWidth: number;
-  theme: Theme;
-  setFilters: React.Dispatch<React.SetStateAction<Filters>>;
 }
 
-const Drawer: React.FC<DrawerProps> = ({ subnets, nodeProviders, drawerWidth, theme, setFilters }) => {
+const Drawer: React.FC<DrawerProps> = ({ subnets, nodeProviders, drawerWidth }) => {
+  const [openSubnets, setOpenSubnets] = React.useState(false);
+  const [openNP, setOpenNp] = React.useState(false);
 
-  const handleSubnetSelect = (subnet: string) => {
-    setFilters((prev) => ({ ...prev, subnet, nodeProvider: null }));
-  };
-
-  const handleNodeProviderSelect = (nodeProvider: string) => {
-    setFilters((prev) => ({ ...prev, nodeProvider, subnet: null  }));
-  };
+  const renderCollapsibleList = (
+    title: string,
+    items: Set<string>,
+    open: boolean,
+    setOpen: React.Dispatch<React.SetStateAction<boolean>>,
+    basePath: string
+  ) => (
+    <>
+      <ListItemButton onClick={() => setOpen(!open)}>
+        <ListItemText primary={title} />
+        {open ? <ExpandLess /> : <ExpandMore />}
+      </ListItemButton>
+      <Collapse in={open} timeout="auto" unmountOnExit>
+        <List component="div" disablePadding>
+          {Array.from(items).map((item, index) => (
+            <Link key={index} to={`/${basePath}/${item}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+              <ListItemButton>
+                <ListItemText primary={item.toString().split("-")[0]} />
+              </ListItemButton>
+            </Link>
+          ))}
+        </List>
+      </Collapse>
+    </>
+  );
 
   return (
     <MUIDrawer
-    variant="permanent"
-    sx={{
+      variant="permanent"
+      sx={{
         width: drawerWidth,
         flexShrink: 0,
-    }}
+      }}
     >
-    <List>
+      <List
+        sx={{ width: '100%', maxWidth: 360, bgcolor: 'background.paper' }}
+        component="nav"
+        aria-labelledby="nested-list-subheader"
+      >
         <ListItem>
-        <IconButton edge="start" color="inherit" aria-label="logo">
-            <img src={Logo} alt="Logo" style={{ height: 30 }} />
-        </IconButton>
+            <IconButton edge="start" color="inherit" aria-label="logo">
+              <img src={Logo} alt="Logo" style={{ height: 30 }} />
+            </IconButton>
         </ListItem>
-        <ListItem>
         <Toolbar />
-        </ListItem>
-        <ListItem>
-        <Button>
-        <Link to="/nodes" style={{ textDecoration: 'none', color: 'inherit' }}>
-                Nodes
+        <Link to="/nodes"  style={{ textDecoration: 'none', color: 'inherit' }}>
+          <ListItemButton>
+            <ListItemText primary="Nodes" />
+          </ListItemButton>
         </Link>
-        </Button>
-        <Button>
-        </Button>
-        </ListItem>
-        <Accordion>
-        <AccordionSummary
-            expandIcon={<ExpandMoreIcon style={{ color: theme.palette.common.white }} />}
-            aria-controls="panel1a-content"
-            id="panel1a-header"
-        >
-            <Typography>Subnets</Typography>
-        </AccordionSummary>
-        <AccordionDetails>
-            <FormControl fullWidth variant="outlined">
-
-            <List>
-                {Array.from(subnets).map((subnet, index) => (
-                <Link key={index} to="/subnets"   style={{ textDecoration: 'none', color: 'inherit' }}>
-                <ListItem disablePadding>
-                <ListItemButton onClick={() => handleSubnetSelect(subnet)}>
-                {subnet.toString().split("-")[0]}
-                </ListItemButton>
-                </ListItem>
-                </Link>
-                ))}
-            </List>
-            </FormControl>
-        </AccordionDetails>
-        </Accordion>
-        <Accordion>
-        <AccordionSummary
-            expandIcon={<ExpandMoreIcon style={{ color: theme.palette.common.white }} />}
-            aria-controls="panel1a-content"
-            id="panel1a-header"
-        >
-            <Typography>Node Providers</Typography>
-        </AccordionSummary>
-        <AccordionDetails>
-            <FormControl fullWidth variant="outlined">
-                {Array.from(nodeProviders).map((nodeProvider, index) => (
-                <MenuItem key={index} onClick={() => handleNodeProviderSelect(nodeProvider)}>
-                    <Link to="/node-providers" style={{ textDecoration: 'none', color: 'inherit' }}>
-                    {nodeProvider.toString().split("-")[0]}
-                    </Link>
-                </MenuItem>
-                ))}
-            </FormControl>
-        </AccordionDetails>
-        </Accordion>
-    </List>
+        {renderCollapsibleList("Subnets", subnets, openSubnets, setOpenSubnets, "subnets")}
+        {renderCollapsibleList("Node Providers", nodeProviders, openNP, setOpenNp, "node-providers")}
+      </List>
     </MUIDrawer>
   );
 };
 
 export default Drawer;
-
-

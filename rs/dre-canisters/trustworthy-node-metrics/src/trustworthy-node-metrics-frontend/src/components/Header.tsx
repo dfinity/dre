@@ -1,6 +1,7 @@
-import { AppBar, Toolbar, Typography, IconButton, styled } from '@mui/material';
+import { Toolbar, Typography, styled } from '@mui/material';
+import React from 'react';
 
-const Title = styled(Typography)(({ theme }) => ({
+const Title = styled(Typography)(() => ({
     flexGrow: 1,
     fontWeight: 500,
     fontSize: '1.5rem',
@@ -12,10 +13,9 @@ const Title = styled(Typography)(({ theme }) => ({
 
 const Header = () => {
   return (
-
       <Toolbar>
         <Title >
-          Nodes Penalties
+          Node Rewards
         </Title>
       </Toolbar>
   );

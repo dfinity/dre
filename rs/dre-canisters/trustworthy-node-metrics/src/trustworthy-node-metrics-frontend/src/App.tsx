@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Box, CircularProgress, CssBaseline, ThemeProvider, createTheme } from '@mui/material';
-import FilterBar, { Filters } from './components/FilterBar';
+import FilterBar, { PeriodFilter } from './components/FilterBar';
 import Drawer from './components/Drawer'; 
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import { trustworthy_node_metrics } from '../../declarations/trustworthy-node-metrics/index.js'; // Adjust the path as needed
 import { SubnetNodeMetricsArgs, SubnetNodeMetricsResult } from '../../declarations/trustworthy-node-metrics/trustworthy-node-metrics.did.js';
-import { NodeMetrics } from './models/NodeMetrics';
-import { ChartGrid } from './components/ChartGrid';
-import { StackedChart } from './components/ChartGrid';
+import { DashboardNodeMetrics, NodeMetrics } from './models/NodeMetrics';
+import { NodeList } from './components/NodeList';
 import Header from './components/Header';
+import { calculateDailyValues, groupBy } from './utils/utils';
+import { SubnetChart } from './components/SubnetChart';
 
 const darkTheme = createTheme({
   palette: {
@@ -17,18 +18,28 @@ const darkTheme = createTheme({
   },
 });
 
+const LoadingIndicator: React.FC = () => (
+  <Box
+    sx={{
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      height: '100vh',
+    }}
+  >
+    <CircularProgress />
+  </Box>
+);
+
 function App() {
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-  const [filters, setFilters] = useState<Filters>({
+  const [periodFilter, setPeriodFilter] = useState<PeriodFilter>({
     dateStart: thirtyDaysAgo,
-    dateEnd: new Date(), 
-    subnet: null,
-    nodeProvider: null
+    dateEnd: new Date()
   });
-  const [data, setData] = useState<NodeMetrics[]>([]);
-  const [filteredData, setFilteredData] = useState<NodeMetrics[]>([]);
+  const [nodeMetrics, setNodeMetrics] = useState<DashboardNodeMetrics[]>([]);
   const [subnets, setSubnets] = useState<Set<string>>(new Set());
   const [nodeProviders, setNodeProviders] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
@@ -38,6 +49,7 @@ function App() {
   useEffect(() => {
     const fetchNodes = async () => {
       try {
+        setIsLoading(true);
         const request: SubnetNodeMetricsArgs = {
           ts: [],
           subnet_id: [],
@@ -58,9 +70,27 @@ function App() {
               );
             })
           });
-          const subnets: Set<string> = new Set(metrics.map(metric => metric.subnet_id.toText()));
+          const metricsInPeriod = metrics.filter((metrics) => {
+            const metricsDate = metrics.date; 
+            const isDateInRange = metricsDate >= periodFilter.dateStart && metricsDate <= periodFilter.dateEnd;
+            return isDateInRange;
+          });
 
-          setData(metrics);
+          const subnets: Set<string> = new Set(metrics.map(metric => metric.subnetId.toText()));
+
+          const grouped = groupBy(metricsInPeriod, 'nodeId');
+          const groupedMetrics = Object.keys(grouped).map(nodeId => {
+              const items = grouped[nodeId];
+              const dailyData = calculateDailyValues(items);
+
+              return new DashboardNodeMetrics(
+                  nodeId,
+                  dailyData,
+              );
+          })
+          .sort((a, b) => b.failureRateAvg - a.failureRateAvg);
+
+          setNodeMetrics(groupedMetrics);
           setSubnets(subnets);
           setIsLoading(false);
         } else {
@@ -72,32 +102,10 @@ function App() {
     };
     
     fetchNodes();
-  }, []);
-
-  useEffect(() => {
-    const filterData = () => {
-      const f = data.filter((metrics) => {
-        const metricsDate = metrics.date; 
-        const isDateInRange = metricsDate >= filters.dateStart && metricsDate <= filters.dateEnd;
-
-        if (filters.subnet !== null) {
-          return metrics.subnet_id.toText() === filters.subnet && isDateInRange;
-        }
-
-        return isDateInRange;
-      });
-
-      setFilteredData(f);
-    }
-    filterData();
-  }, [filters, data]);
+  }, [periodFilter]);
 
   if (error) {
     return <div>Error: {error}</div>;
-  }
-
-  if (isLoading) {
-    return <CircularProgress />
   }
 
   return (
@@ -109,8 +117,6 @@ function App() {
             subnets={subnets}
             nodeProviders={nodeProviders}
             drawerWidth={drawerWidth}
-            theme={darkTheme}
-            setFilters={setFilters}
           />
           <Box
             component="main"
@@ -119,16 +125,19 @@ function App() {
             <Header />
             <Box sx={{ mb: 2 }}>
               <FilterBar
-                filters={filters}
-                setFilters={setFilters}
+                filters={periodFilter}
+                setFilters={setPeriodFilter}
                 subnets={subnets}
               />
             </Box>
             <Routes>
               <Route path="/" element={<Navigate to="/nodes" />} />
-              <Route path="/nodes" element={<ChartGrid data={data} />} />
-              <Route path="/nodes2" element={<StackedChart data={filteredData} name={filters.subnet} />} />
-              <Route path="/subnets" element={<StackedChart data={filteredData} name={filters.subnet} />} />
+              <Route path="/nodes" element={
+                isLoading ? (<LoadingIndicator />) : (<NodeList dashboardNodeMetrics={nodeMetrics} periodFilter={periodFilter} />)} 
+                />
+              <Route path="/subnets/:subnet" element={
+                isLoading ? (<LoadingIndicator />) : (<SubnetChart dashboardNodeMetrics={nodeMetrics} periodFilter={periodFilter} />)} 
+                />
             </Routes>
           </Box>
         </Box>

@@ -1,21 +1,18 @@
-import React, { useState, useEffect, ChangeEvent } from 'react';
-import { AppBar, Toolbar, TextField, Box, MenuItem, Select, InputLabel, FormControl, SelectChangeEvent } from '@mui/material';
+import React from 'react';
+import { Toolbar } from '@mui/material';
 import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { Principal } from '@dfinity/principal';
 import ArrowRightIcon from '@mui/icons-material/ArrowRight';
 
 // Define the types for props
-export interface Filters {
+export interface PeriodFilter {
   dateStart: Date;
   dateEnd: Date;
-  subnet: string | null;
-  nodeProvider: string | null;
 }
 
 interface FilterBarProps {
-  filters: Filters;
-  setFilters: React.Dispatch<React.SetStateAction<Filters>>;
+  filters: PeriodFilter;
+  setFilters: React.Dispatch<React.SetStateAction<PeriodFilter>>;
   subnets: Set<string> | null; // Use string instead of String
 }
 
