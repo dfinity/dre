@@ -26,11 +26,13 @@ jobs:
     container: ghcr.io/dfinity/dre/actions-runner:7efd87b0eac3ebd255be7efe00a3b39b0f9e9fc1
     steps:
       - uses: actions/checkout@v4
+        with:
+          repository: 'dfinity/dre' # this needs to be specified so it can be kicked off from the ic repo
 
       - name: "🔍 Check if the version is set"
         shell: bash
         run: |
-          if [ -z "${{ github.event.inputs.version }}" ]; then
+          if [ -z "${{ inputs.version }}" ]; then
             echo "Error: 'version' is required and cannot be empty."
             exit 1
           fi
