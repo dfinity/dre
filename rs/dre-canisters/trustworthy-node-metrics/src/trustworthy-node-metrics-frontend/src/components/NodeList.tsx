@@ -97,8 +97,8 @@ export const NodeList: React.FC<NodeListProps> = ({ dashboardNodeMetrics, period
                     />
                 </Box>
                 <Grid container spacing={2}>
-                {filteredMetrics.slice(0, 10).map(({ nodeId, dailyData, failureRateAvg }, index) => (
-                    <Grid item xs={6} key={index}>
+                {filteredMetrics.slice(0, 20).map(({ nodeId, dailyData, failureRateAvg }, index) => (
+                    <Grid item xs={4} key={index}>
                         {renderChart(nodeId, dailyData, failureRateAvg, periodFilter)}
                     </Grid>
                 ))}
