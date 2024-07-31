@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Box, CircularProgress, CssBaseline, ThemeProvider, createTheme } from '@mui/material';
 import FilterBar, { PeriodFilter } from './components/FilterBar';
 import Drawer from './components/Drawer'; 
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
-import { trustworthy_node_metrics } from '../../declarations/trustworthy-node-metrics/index.js'; // Adjust the path as needed
+import { trustworthy_node_metrics } from '../../declarations/trustworthy-node-metrics/index.js';
 import { SubnetNodeMetricsArgs, SubnetNodeMetricsResult } from '../../declarations/trustworthy-node-metrics/trustworthy-node-metrics.did.js';
 import { DashboardNodeMetrics, NodeMetrics } from './models/NodeMetrics';
 import { NodeList } from './components/NodeList';
@@ -39,8 +39,8 @@ function App() {
     dateStart: thirtyDaysAgo,
     dateEnd: new Date()
   });
-  const [nodeMetrics, setNodeMetrics] = useState<DashboardNodeMetrics[]>([]);
-  const [subnets, setSubnets] = useState<Set<string>>(new Set());
+  const [nodeMetrics, setnodeMetrics] = useState<NodeMetrics[]>([]);
+  let subnets: Set<string> = new Set();
   const [nodeProviders, setNodeProviders] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -49,7 +49,6 @@ function App() {
   useEffect(() => {
     const fetchNodes = async () => {
       try {
-        setIsLoading(true);
         const request: SubnetNodeMetricsArgs = {
           ts: [],
           subnet_id: [],
@@ -70,39 +69,46 @@ function App() {
               );
             })
           });
-          const metricsInPeriod = metrics.filter((metrics) => {
-            const metricsDate = metrics.date; 
-            const isDateInRange = metricsDate >= periodFilter.dateStart && metricsDate <= periodFilter.dateEnd;
-            return isDateInRange;
-          });
 
-          const subnets: Set<string> = new Set(metrics.map(metric => metric.subnetId.toText()));
-
-          const grouped = groupBy(metricsInPeriod, 'nodeId');
-          const groupedMetrics = Object.keys(grouped).map(nodeId => {
-              const items = grouped[nodeId];
-              const dailyData = calculateDailyValues(items);
-
-              return new DashboardNodeMetrics(
-                  nodeId,
-                  dailyData,
-              );
-          })
-          .sort((a, b) => b.failureRateAvg - a.failureRateAvg);
-
-          setNodeMetrics(groupedMetrics);
-          setSubnets(subnets);
-          setIsLoading(false);
+          setnodeMetrics(metrics);
         } else {
           setError(response.Err);
         }
       } catch (error) {
         console.error("Error fetching nodes:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
     
     fetchNodes();
-  }, [periodFilter]);
+  }, []);
+
+
+  const dashboardNodeMetrics = useMemo(() => {
+    const metricsInPeriod = nodeMetrics.filter((metrics) => {
+      const metricsDate = metrics.date; 
+      const isDateInRange = metricsDate >= periodFilter.dateStart && metricsDate <= periodFilter.dateEnd;
+      return isDateInRange;
+    });
+
+    subnets = new Set(nodeMetrics.map(metric => metric.subnetId.toText()));
+
+    const grouped = groupBy(metricsInPeriod, 'nodeId');
+    const groupedMetrics = Object.keys(grouped).map(nodeId => {
+      const items = grouped[nodeId];
+      const dailyData = calculateDailyValues(items);
+
+      return new DashboardNodeMetrics(
+        nodeId,
+        dailyData,
+      );
+    })
+    .sort((a, b) => b.failureRateAvg - a.failureRateAvg);
+
+    return groupedMetrics
+  }, [periodFilter, nodeMetrics]);
+
 
   if (error) {
     return <div>Error: {error}</div>;
@@ -131,12 +137,14 @@ function App() {
               />
             </Box>
             <Routes>
-              <Route path="/" element={<Navigate to="/nodes" />} />
+              <Route path="/" element={
+                isLoading ? (<LoadingIndicator />) : (<NodeList dashboardNodeMetrics={dashboardNodeMetrics} periodFilter={periodFilter} />)} 
+                />
               <Route path="/nodes" element={
-                isLoading ? (<LoadingIndicator />) : (<NodeList dashboardNodeMetrics={nodeMetrics} periodFilter={periodFilter} />)} 
+                isLoading ? (<LoadingIndicator />) : (<NodeList dashboardNodeMetrics={dashboardNodeMetrics} periodFilter={periodFilter} />)} 
                 />
               <Route path="/subnets/:subnet" element={
-                isLoading ? (<LoadingIndicator />) : (<SubnetChart dashboardNodeMetrics={nodeMetrics} periodFilter={periodFilter} />)} 
+                isLoading ? (<LoadingIndicator />) : (<SubnetChart dashboardNodeMetrics={dashboardNodeMetrics} periodFilter={periodFilter} />)} 
                 />
             </Routes>
           </Box>

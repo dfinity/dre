@@ -5,12 +5,12 @@ import React from 'react';
 export default function FailureRateArc(value: number) {
   return (
     <Box sx={{ p: 2 }}>
-    <Typography gutterBottom variant="h6" component="div">
+    <Typography variant="subtitle1" component="div">
         Failure Rate
     </Typography>
     <Gauge
-        width = {100}
-        height = {100}
+        width = {80}
+        height = {80}
         value= {value}
         cornerRadius="10%"
         text={
@@ -18,7 +18,7 @@ export default function FailureRateArc(value: number) {
          }
         sx={(theme) => ({
             [`& .${gaugeClasses.valueText}`]: {
-            fontSize: 20,
+            fontSize: 15,
             },
             [`& .${gaugeClasses.valueArc}`]: {
             fill: '#FF6347',
@@ -35,12 +35,12 @@ export default function FailureRateArc(value: number) {
 export function RewardsArc(value: number) {
   return (
     <Box sx={{ p: 2 }}>
-    <Typography gutterBottom variant="h6" component="div">
+    <Typography variant="subtitle1" component="div">
         Node Reward
     </Typography>
     <Gauge
-        width = {100}
-        height = {100}
+        width = {80}
+        height = {80}
         value= {value}
         cornerRadius="10%"
         text={
@@ -48,7 +48,7 @@ export function RewardsArc(value: number) {
          }
         sx={(theme) => ({
             [`& .${gaugeClasses.valueText}`]: {
-            fontSize: 20,
+            fontSize: 15,
             },
             [`& .${gaugeClasses.valueArc}`]: {
             fill: '#52b202',

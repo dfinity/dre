@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Box, Grid, Paper, Stack, Typography, Autocomplete, TextField } from '@mui/material';
 import { axisClasses, BarChart } from '@mui/x-charts';
-import { DashboardNodeMetrics } from '../models/NodeMetrics';
+import { DailyData, DashboardNodeMetrics } from '../models/NodeMetrics';
 import { styled } from '@mui/material/styles';
 import Divider from '@mui/material/Divider';
 import { PeriodFilter } from './FilterBar';
@@ -22,8 +22,56 @@ export interface NodeListProps {
     periodFilter: PeriodFilter
 }
 
+function renderChart(nodeId: string, dailyData: DailyData[], failureRateAvg: number, periodFilter: PeriodFilter): React.ReactNode {
+    return ( 
+    <Paper sx={{ p: 2, backgroundColor: '#11171E', borderRadius: '10px', color: 'white' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <Typography gutterBottom variant="h6" component="div">
+                {nodeId}
+            </Typography>
+            <Box sx={{ ml: 'auto', display: 'flex', alignItems: 'center' }}>
+                {FailureRateArc(Math.round(failureRateAvg))}
+                {RewardsArc(Math.round(failureRateAvg))}
+            </Box>
+        </Box>
+    <Box sx={{ p: 2 }}>
+        <Divider />
+        <BarChart
+                    borderRadius={9}
+                    sx={{
+                        p: 2,
+                        [`.${axisClasses.left} .${axisClasses.label}`]: {
+                            transform: 'translateX(-25px)',
+                        },
+                    }}
+                    slotProps={{ legend: { hidden: true } }}
+                    xAxis={[{ 
+                        scaleType: 'band',
+                        data: getFormattedDates(periodFilter),
+                    }]}
+                    yAxis={[
+                        {
+                            valueFormatter: value => `${value}%`,
+                            label: 'Failure Rate',
+                            min: 0,
+                            max: 100,
+                        },
+                    ]}
+                    series={[
+                        { dataKey: 'failureRate', label: "Failure Rate (%)", color: '#FF6347' },
+                    ]}
+                    dataset={transformDailyData(dailyData)}
+                    height={400}
+                />
+    </Box>
+</Paper>
+    )
+}
+
 export const NodeList: React.FC<NodeListProps> = ({ dashboardNodeMetrics, periodFilter }) => {
     const [filteredMetrics, setFilteredMetrics] = useState(dashboardNodeMetrics);
+
+    console.info(dashboardNodeMetrics.length)
 
     const handleSearchChange = (event: unknown, value: string | null) => {
         if (value) {
@@ -48,53 +96,13 @@ export const NodeList: React.FC<NodeListProps> = ({ dashboardNodeMetrics, period
                         )}
                     />
                 </Box>
+                <Grid container spacing={2}>
                 {filteredMetrics.slice(0, 10).map(({ nodeId, dailyData, failureRateAvg }, index) => (
-                    <Paper key={index} sx={{ p: 2, backgroundColor: '#11171E', borderRadius: '10px', color: 'white' }}>
-                        <Box sx={{ p: 2 }}>
-                            <Typography gutterBottom variant="h6" component="div">
-                                {nodeId}
-                            </Typography>
-                        </Box>
-                        <Box sx={{ p: 2 }}>
-                            <Divider />
-                            <Grid container spacing={2}>
-                                <Grid item xs={10}>
-                                    <BarChart
-                                        borderRadius={9}
-                                        sx={{
-                                            p: 2,
-                                            [`.${axisClasses.left} .${axisClasses.label}`]: {
-                                                transform: 'translateX(-25px)',
-                                            },
-                                        }}
-                                        slotProps={{ legend: { hidden: true } }}
-                                        xAxis={[{ 
-                                            scaleType: 'band',
-                                            data: getFormattedDates(periodFilter),
-                                        }]}
-                                        yAxis={[
-                                            {
-                                                valueFormatter: value => `${value}%`,
-                                                label: 'Failure Rate',
-                                                min: 0,
-                                                max: 100,
-                                            },
-                                        ]}
-                                        series={[
-                                            { dataKey: 'failureRate', label: "Failure Rate (%)", color: '#FF6347' },
-                                        ]}
-                                        dataset={transformDailyData(dailyData)}
-                                        height={400}
-                                    />
-                                </Grid>
-                                <Grid item xs={2}>
-                                    {FailureRateArc(Math.round(failureRateAvg))}
-                                    {RewardsArc(Math.round(failureRateAvg))}
-                                </Grid>
-                            </Grid>
-                        </Box>
-                    </Paper>
+                    <Grid item xs={6} key={index}>
+                        {renderChart(nodeId, dailyData, failureRateAvg, periodFilter)}
+                    </Grid>
                 ))}
+                </Grid>
             </Root>
         </React.Fragment>
     );
