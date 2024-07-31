@@ -66,7 +66,7 @@ impl ExecutableCommand for Replace {
             .with_target(subnet_target)
             .membership_replace(
                 !self.no_heal,
-                self.motivation.clone().unwrap_or_default(),
+                self.motivation.clone(),
                 self.optimize,
                 self.exclude.clone().into(),
                 self.only.clone(),
