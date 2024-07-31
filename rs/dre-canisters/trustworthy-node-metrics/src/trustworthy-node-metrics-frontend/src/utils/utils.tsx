@@ -1,5 +1,30 @@
 import { PeriodFilter } from "../components/FilterBar";
-import { DailyData, NodeMetrics } from "../models/NodeMetrics";
+import { ChartData, DailyData, NodeMetrics } from "../models/NodeMetrics";
+
+export const generateChartData = (periodFilter: PeriodFilter, dailyData: DailyData[]): ChartData[] => {
+    const { dateStart, dateEnd } = periodFilter;
+    const chartData: ChartData[] = [];
+
+    const currentDate = new Date(dateStart);
+
+    while (currentDate <= dateEnd) {
+        const dailyDataEntry = dailyData.find(data => 
+            data.date.getFullYear() === currentDate.getFullYear() &&
+            data.date.getMonth() === currentDate.getMonth() &&
+            data.date.getDate() === currentDate.getDate()
+        );
+
+        chartData.push({
+            date: new Date(currentDate),
+            failureRate: dailyDataEntry ? dailyDataEntry.failureRate : null,
+        });
+
+        currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    return chartData;
+};
+
 
 export const getFormattedDates = (period: PeriodFilter): string[] => {
     const { dateStart, dateEnd } = period;

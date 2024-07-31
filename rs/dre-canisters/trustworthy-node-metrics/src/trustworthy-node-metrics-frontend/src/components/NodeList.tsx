@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { Box, Grid, Paper, Stack, Typography, Autocomplete, TextField } from '@mui/material';
 import { axisClasses, BarChart } from '@mui/x-charts';
-import { DailyData, DashboardNodeMetrics } from '../models/NodeMetrics';
+import { ChartData, DailyData, DashboardNodeMetrics } from '../models/NodeMetrics';
 import { styled } from '@mui/material/styles';
 import Divider from '@mui/material/Divider';
 import { PeriodFilter } from './FilterBar';
-import { getFormattedDates, transformDailyData } from '../utils/utils';
+import { generateChartData, getFormattedDates, transformDailyData } from '../utils/utils';
 import FailureRateArc, { RewardsArc } from './Gauge';
 
 export const Root = styled('div')(({ theme }) => ({
@@ -23,6 +23,9 @@ export interface NodeListProps {
 }
 
 function renderChart(nodeId: string, dailyData: DailyData[], failureRateAvg: number, periodFilter: PeriodFilter): React.ReactNode {
+
+    const chartDailyData: ChartData[] = generateChartData(periodFilter, dailyData);
+
     return ( 
     <Paper sx={{ p: 2, backgroundColor: '#11171E', borderRadius: '10px', color: 'white' }}>
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -37,41 +40,50 @@ function renderChart(nodeId: string, dailyData: DailyData[], failureRateAvg: num
     <Box sx={{ p: 2 }}>
         <Divider />
         <BarChart
-                    borderRadius={9}
-                    sx={{
-                        p: 2,
-                        [`.${axisClasses.left} .${axisClasses.label}`]: {
-                            transform: 'translateX(-25px)',
-                        },
-                    }}
-                    slotProps={{ legend: { hidden: true } }}
-                    xAxis={[{ 
-                        scaleType: 'band',
-                        data: getFormattedDates(periodFilter),
-                    }]}
-                    yAxis={[
-                        {
-                            valueFormatter: value => `${value}%`,
-                            label: 'Failure Rate',
-                            min: 0,
-                            max: 100,
-                        },
-                    ]}
-                    series={[
-                        { dataKey: 'failureRate', label: "Failure Rate (%)", color: '#FF6347' },
-                    ]}
-                    dataset={transformDailyData(dailyData)}
-                    height={400}
-                />
+            borderRadius={9}
+            sx={{
+                p: 2,
+                [`.${axisClasses.left} .${axisClasses.label}`]: {
+                    transform: 'translateX(-25px)',
+                },
+            }}
+            slotProps={{ legend: { hidden: true } }}
+            xAxis={[{ 
+                scaleType: 'band',
+                dataKey: 'date',
+                valueFormatter: (value: Date) => value.toLocaleDateString('UTC', { month: 'short', day: 'numeric' }).replace(" ", "\n")
+            }]}
+            yAxis={[
+                {
+                    valueFormatter: value => `${value}%`,
+                    min: 0,
+                    max: 100,
+                },
+            ]}
+            series={[
+                { dataKey: 'failureRate', label: "Failure Rate", color: '#FF6347', 
+                    valueFormatter: (value: number | null) => value ? `${value}%` : 'Not assigned' },
+            ]}
+            dataset={chartDailyData.map(entry => ({
+                date: entry.date,
+                failureRate: entry.failureRate,
+            }))}
+
+            height={400}
+        />
     </Box>
 </Paper>
     )
 }
 
 export const NodeList: React.FC<NodeListProps> = ({ dashboardNodeMetrics, periodFilter }) => {
-    const [filteredMetrics, setFilteredMetrics] = useState(dashboardNodeMetrics);
+    const [prevItems, setPrevItems] = useState(dashboardNodeMetrics);
+    const [filteredMetrics, setFilteredMetrics] = useState(prevItems);
 
-    console.info(dashboardNodeMetrics.length)
+    if (dashboardNodeMetrics !== prevItems) {
+        setPrevItems(dashboardNodeMetrics);
+        setFilteredMetrics(dashboardNodeMetrics)
+      }
 
     const handleSearchChange = (event: unknown, value: string | null) => {
         if (value) {
@@ -97,7 +109,7 @@ export const NodeList: React.FC<NodeListProps> = ({ dashboardNodeMetrics, period
                     />
                 </Box>
                 <Grid container spacing={2}>
-                {filteredMetrics.slice(0, 20).map(({ nodeId, dailyData, failureRateAvg }, index) => (
+                {filteredMetrics.slice(0, 10).map(({ nodeId, dailyData, failureRateAvg }, index) => (
                     <Grid item xs={6} key={index}>
                         {renderChart(nodeId, dailyData, failureRateAvg, periodFilter)}
                     </Grid>

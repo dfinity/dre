@@ -23,6 +23,11 @@ export class NodeMetrics {
   }
 }
 
+export interface ChartData {
+  date: Date ;
+  failureRate: number | null;
+}
+
 export class DailyData {
   date: Date;
   subnetId: string;
@@ -41,16 +46,6 @@ export class DailyData {
     this.numBlockFailures = numBlockFailures;
     this.numBlocksProposed = numBlocksProposed;
     this.failureRate = numBlockFailures / (numBlockFailures + numBlocksProposed) * 100;
-  }
-
-  public transformDailyData(data: DailyData[]): { [key: string]: string | number | Date | null | undefined }[] {
-    return data.map(item => ({
-      date: item.date,
-      subnetId: item.subnetId,
-      numBlockFailures: item.numBlockFailures,
-      numBlocksProposed: item.numBlocksProposed,
-      failureRate: item.failureRate,
-    }));
   }
 }
 

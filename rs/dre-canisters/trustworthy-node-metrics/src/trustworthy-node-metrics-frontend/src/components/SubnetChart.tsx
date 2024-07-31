@@ -3,7 +3,7 @@ import { Box, Paper, Typography } from '@mui/material';
 import { axisClasses, BarChart, StackOrderType } from '@mui/x-charts';
 import Divider from '@mui/material/Divider';
 import { useParams } from 'react-router-dom';
-import { getFormattedDates } from '../utils/utils';
+import { generateChartData, getFormattedDates } from '../utils/utils';
 import { ChartsNoDataOverlay } from '@mui/x-charts/ChartsOverlay';
 import RewardTable from './RewardTable';
 import { DashboardNodeMetrics } from '../models/NodeMetrics';
@@ -22,7 +22,12 @@ export const SubnetChart: React.FC<SubnetChartProps> = ({ dashboardNodeMetrics, 
         .filter((nodeMetrics) => nodeMetrics.dailyData.some((daily) => daily.subnetId === subnet))
     const chartData = subnetNodeMetrics
         .filter((nodeMetrics) => nodeMetrics.dailyData.some(fr => fr.failureRate >= 10))
-        .map((nodeMetrics) => nodeMetrics.getChartSeries());
+        .map(nodeMetrics => {
+            return {
+                data: generateChartData(periodFilter, nodeMetrics.dailyData).map(daily => daily.failureRate),
+                label: nodeMetrics.nodeId,
+              }
+    });
     const series = [{ ...chartData[0], stackOrder }, ...chartData.slice(1)];
 
     return (

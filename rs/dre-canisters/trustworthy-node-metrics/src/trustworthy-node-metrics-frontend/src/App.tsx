@@ -55,8 +55,6 @@ function App() {
         };
         const response: SubnetNodeMetricsResult = await trustworthy_node_metrics.subnet_node_metrics(request);
 
-        console.info("Got response", response);
-
         if ('Ok' in response) {
           const metrics: NodeMetrics[] = response.Ok.flatMap((metricResponse) => {
             return metricResponse.node_metrics.map((nodeMetrics) => {
