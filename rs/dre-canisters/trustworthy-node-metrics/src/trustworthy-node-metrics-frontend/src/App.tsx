@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Box, CircularProgress, CssBaseline, ThemeProvider, createTheme } from '@mui/material';
 import FilterBar, { PeriodFilter } from './components/FilterBar';
 import Drawer from './components/Drawer'; 
-import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { trustworthy_node_metrics } from '../../declarations/trustworthy-node-metrics/index.js';
 import { SubnetNodeMetricsArgs, SubnetNodeMetricsResult } from '../../declarations/trustworthy-node-metrics/trustworthy-node-metrics.did.js';
 import { DashboardNodeMetrics, NodeMetrics } from './models/NodeMetrics';

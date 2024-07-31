@@ -24,5 +24,4 @@ type SubnetNodeMetricsArgs = record {
 
 service : {
     "subnet_node_metrics" : (SubnetNodeMetricsArgs) -> (SubnetNodeMetricsResult) query;
-    "get_nodes" : () -> (vec text) query;
 }

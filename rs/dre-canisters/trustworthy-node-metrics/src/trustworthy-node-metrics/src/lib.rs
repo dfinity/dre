@@ -59,12 +59,3 @@ fn subnet_node_metrics(args: SubnetNodeMetricsArgs) -> Result<Vec<SubnetNodeMetr
 
     Ok(result)
 }
-
-#[query]
-fn get_nodes() -> Vec<String> {
-    let nodes = stable_memory::get_nodes();
-    ic_cdk::println!("Fetched {} nodes for frontend", nodes.len());
-
-    nodes
-}
-
