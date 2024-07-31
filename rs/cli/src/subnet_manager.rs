@@ -110,7 +110,7 @@ impl SubnetManager {
     pub async fn membership_replace(
         &self,
         heal: bool,
-        motivation: String,
+        motivation: Option<String>,
         optimize: Option<usize>,
         exclude: Option<Vec<String>>,
         only: Vec<String>,
@@ -118,8 +118,12 @@ impl SubnetManager {
         min_nakamoto_coefficients: Option<MinNakamotoCoefficients>,
     ) -> anyhow::Result<SubnetChangeResponse> {
         let subnet_query_by = self.get_subnet_query_by(self.target()?).await?;
-        let mut motivations: Vec<String> = vec![motivation];
-        let mut to_be_replaced: Vec<DecentralizedNode> = vec![];
+        let mut motivations: Vec<String> = if let Some(motivation) = motivation { vec![motivation] } else { vec![] };
+        let mut to_be_replaced: Vec<DecentralizedNode> = if let SubnetQueryBy::NodeList(nodes) = &subnet_query_by {
+            nodes.clone()
+        } else {
+            vec![]
+        };
 
         let subnet_change_request = self
             .registry_instance
