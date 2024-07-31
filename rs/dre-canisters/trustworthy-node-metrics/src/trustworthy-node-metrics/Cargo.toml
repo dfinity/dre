@@ -9,7 +9,9 @@ documentation.workspace = true
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [lib]
-crate-type = ["cdylib"]
+crate-type = ["cdylib", "lib"]
+name = "trustworthy_node_metrics"
+path = "src/lib.rs"
 
 [dependencies]
 candid = { workspace = true }
@@ -17,14 +19,17 @@ ic-cdk = { workspace = true }
 ic-cdk-timers = { workspace = true }
 ic-cdk-macros = { workspace = true }
 ic-stable-structures = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
 prost = { workspace = true }
 itertools = { workspace = true }
 futures = { workspace = true }
 anyhow = { workspace = true }
+ciborium = { workspace = true }
+ic-management-canister-types = { workspace = true }
 ic-protobuf = { workspace = true }
 ic-nns-constants = { workspace = true }
 ic-nns-common = { workspace = true }
 ic-registry-transport = { workspace = true }
 dfn_core = { workspace = true }
-trustworthy-node-metrics-types = { workspace = true }
-ic-management-canister-types = { workspace = true }
+canbench-rs = { version = "0.1.4", optional = true }

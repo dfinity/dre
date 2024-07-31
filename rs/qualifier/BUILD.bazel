@@ -1,0 +1,23 @@
+load("@crate_index_dre//:defs.bzl", "aliases", "all_crate_deps")
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_test")
+load("@//rs:oci_images.bzl", "rust_binary_oci_image_rules")
+
+DEPS = [
+    "//rs/cli:dre-lib",
+    "//rs/ic-canisters",
+    "//rs/ic-management-types",
+    "//rs/ic-management-backend:ic-management-backend-lib"
+]
+
+rust_binary(
+    name = "qualifier",
+    srcs = glob(["src/**/*.rs"]),
+    aliases = aliases(),
+    proc_macro_deps = all_crate_deps(
+        proc_macro = True,
+    ),
+    stamp = 1,
+    deps = all_crate_deps(
+        normal = True,
+    ) + DEPS,
+)

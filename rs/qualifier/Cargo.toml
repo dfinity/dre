@@ -1,0 +1,26 @@
+[package]
+name = "qualifier"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+description.workspace = true
+documentation.workspace = true
+
+[dependencies]
+anyhow = { workspace = true }
+clap = { workspace = true }
+tokio = { workspace = true }
+log = { workspace = true }
+pretty_env_logger = { workspace = true }
+ic-nervous-system-common-test-keys = { workspace = true }
+dirs = { workspace = true }
+dre = { path = "../cli" }
+ic-management-types = { path = "../ic-management-types" }
+ic-canisters = { path = "../ic-canisters" }
+serde_json = { workspace = true }
+serde = { workspace = true }
+tokio-util = { workspace = true }
+itertools = { workspace = true }
+reqwest = { workspace = true }
+url = { workspace = true }
+ic-management-backend = { path = "../ic-management-backend" }

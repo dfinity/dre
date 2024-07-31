@@ -1,5 +1,5 @@
 {
-  "checksum": "dc05b0d5d14def9120f2bdfa82aec1fac3b5e388003989fd56263827f1fab85b",
+  "checksum": "122ae00e2b90aff46a0aaf1e6e2d80c5729af927eb65d305a5e598b381eed7b1",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -17632,9 +17632,12 @@
       "name": "ic-cdk",
       "version": "0.15.0",
       "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/ic-cdk/0.15.0/download",
-          "sha256": "0c44983d6e97135d86132111bae5b86c34c498d96b4f182638bebcc7ac07e03c"
+        "Git": {
+          "remote": "https://github.com/dfinity/cdk-rs.git",
+          "commitish": {
+            "Rev": "59795716487fbb8a9910ac503bcea1e0cb08c932"
+          },
+          "strip_prefix": "src/ic-cdk"
         }
       },
       "targets": [
@@ -17751,9 +17754,12 @@
       "name": "ic-cdk-macros",
       "version": "0.15.0",
       "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/ic-cdk-macros/0.15.0/download",
-          "sha256": "3af44fb4ec3a4b18831c9d3303ca8fa2ace846c4022d50cb8df4122635d3782e"
+        "Git": {
+          "remote": "https://github.com/dfinity/cdk-rs.git",
+          "commitish": {
+            "Rev": "59795716487fbb8a9910ac503bcea1e0cb08c932"
+          },
+          "strip_prefix": "src/ic-cdk-macros"
         }
       },
       "targets": [
@@ -17928,9 +17934,12 @@
       "name": "ic-cdk-timers",
       "version": "0.9.0",
       "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/ic-cdk-timers/0.9.0/download",
-          "sha256": "61fdca8e1d9ffb65ae68019b342c182009de9dc206fd849db0b0e90ee19f6fa4"
+        "Git": {
+          "remote": "https://github.com/dfinity/cdk-rs.git",
+          "commitish": {
+            "Rev": "59795716487fbb8a9910ac503bcea1e0cb08c932"
+          },
+          "strip_prefix": "src/ic-cdk-timers"
         }
       },
       "targets": [
@@ -26138,9 +26147,12 @@
       "name": "ic0",
       "version": "0.23.0",
       "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/ic0/0.23.0/download",
-          "sha256": "8de254dd67bbd58073e23dc1c8553ba12fa1dc610a19de94ad2bbcd0460c067f"
+        "Git": {
+          "remote": "https://github.com/dfinity/cdk-rs.git",
+          "commitish": {
+            "Rev": "59795716487fbb8a9910ac503bcea1e0cb08c932"
+          },
+          "strip_prefix": "src/ic0"
         }
       },
       "targets": [
@@ -28565,35 +28577,29 @@
         ],
         "crate_features": {
           "common": [
+            "elf",
+            "errno",
             "general",
             "ioctl",
             "no_std"
           ],
           "selects": {
             "aarch64-unknown-linux-gnu": [
-              "elf",
-              "errno",
               "prctl",
               "std",
               "system"
             ],
             "arm-unknown-linux-gnueabi": [
-              "elf",
-              "errno",
               "prctl",
               "std",
               "system"
             ],
             "armv7-unknown-linux-gnueabi": [
-              "elf",
-              "errno",
               "prctl",
               "std",
               "system"
             ],
             "i686-unknown-linux-gnu": [
-              "elf",
-              "errno",
               "prctl",
               "std",
               "system"
@@ -28609,8 +28615,6 @@
               "system"
             ],
             "x86_64-unknown-linux-gnu": [
-              "elf",
-              "errno",
               "prctl",
               "std",
               "system"
@@ -35830,6 +35834,78 @@
         "version": "0.1.4"
       },
       "license": "MIT"
+    },
+    "qualifier 0.4.3": {
+      "name": "qualifier",
+      "version": "0.4.3",
+      "repository": null,
+      "targets": [],
+      "library_target_name": null,
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "anyhow 1.0.86",
+              "target": "anyhow"
+            },
+            {
+              "id": "clap 4.5.9",
+              "target": "clap"
+            },
+            {
+              "id": "dirs 5.0.1",
+              "target": "dirs"
+            },
+            {
+              "id": "ic-nervous-system-common-test-keys 0.9.0",
+              "target": "ic_nervous_system_common_test_keys"
+            },
+            {
+              "id": "itertools 0.13.0",
+              "target": "itertools"
+            },
+            {
+              "id": "log 0.4.22",
+              "target": "log"
+            },
+            {
+              "id": "pretty_env_logger 0.5.0",
+              "target": "pretty_env_logger"
+            },
+            {
+              "id": "reqwest 0.12.5",
+              "target": "reqwest"
+            },
+            {
+              "id": "serde 1.0.204",
+              "target": "serde"
+            },
+            {
+              "id": "serde_json 1.0.120",
+              "target": "serde_json"
+            },
+            {
+              "id": "tokio 1.38.1",
+              "target": "tokio"
+            },
+            {
+              "id": "tokio-util 0.7.11",
+              "target": "tokio_util"
+            },
+            {
+              "id": "url 2.5.2",
+              "target": "url"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "0.4.3"
+      },
+      "license": null
     },
     "quick-xml 0.23.1": {
       "name": "quick-xml",
@@ -45808,8 +45884,18 @@
       "name": "trustworthy-node-metrics",
       "version": "0.4.3",
       "repository": null,
-      "targets": [],
-      "library_target_name": null,
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "trustworthy_node_metrics",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "trustworthy_node_metrics",
       "common_attrs": {
         "compile_data_glob": [
           "**"
@@ -45823,6 +45909,10 @@
             {
               "id": "candid 0.10.9",
               "target": "candid"
+            },
+            {
+              "id": "ciborium 0.2.2",
+              "target": "ciborium"
             },
             {
               "id": "dfn_core 0.9.0",
@@ -45871,6 +45961,14 @@
             {
               "id": "prost 0.12.6",
               "target": "prost"
+            },
+            {
+              "id": "serde 1.0.204",
+              "target": "serde"
+            },
+            {
+              "id": "serde_json 1.0.120",
+              "target": "serde_json"
             }
           ],
           "selects": {}
@@ -45885,68 +45983,6 @@
           ],
           "selects": {}
         },
-        "version": "0.4.3"
-      },
-      "license": null
-    },
-    "trustworthy-node-metrics-types 0.4.3": {
-      "name": "trustworthy-node-metrics-types",
-      "version": "0.4.3",
-      "repository": null,
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "trustworthy_node_metrics_types",
-            "crate_root": "src/lib.rs",
-            "srcs": [
-              "**/*.rs"
-            ]
-          }
-        }
-      ],
-      "library_target_name": "trustworthy_node_metrics_types",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "candid 0.10.9",
-              "target": "candid"
-            },
-            {
-              "id": "ciborium 0.2.2",
-              "target": "ciborium"
-            },
-            {
-              "id": "dfn_core 0.9.0",
-              "target": "dfn_core"
-            },
-            {
-              "id": "ic-management-canister-types 0.9.0",
-              "target": "ic_management_canister_types"
-            },
-            {
-              "id": "ic-stable-structures 0.6.5",
-              "target": "ic_stable_structures"
-            },
-            {
-              "id": "itertools 0.13.0",
-              "target": "itertools"
-            },
-            {
-              "id": "serde 1.0.204",
-              "target": "serde"
-            },
-            {
-              "id": "serde_json 1.0.120",
-              "target": "serde_json"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2021",
         "version": "0.4.3"
       },
       "license": null
@@ -50321,12 +50357,12 @@
     "np-notifications 0.4.3": "rs/np-notifications",
     "obs-canister-clients 0.4.3": "rs/ic-observability/obs-canister-clients",
     "prometheus-config-updater 0.4.3": "rs/ic-observability/prometheus-config-updater",
+    "qualifier 0.4.3": "rs/qualifier",
     "rollout-controller 0.4.3": "rs/rollout-controller",
     "service-discovery 0.4.3": "rs/ic-observability/service-discovery",
     "slack-notifications 0.4.3": "rs/slack-notifications",
     "sns-downloader 0.4.3": "rs/ic-observability/sns-downloader",
-    "trustworthy-node-metrics 0.4.3": "rs/dre-canisters/trustworthy-node-metrics/src/trustworthy-node-metrics",
-    "trustworthy-node-metrics-types 0.4.3": "rs/dre-canisters/trustworthy-node-metrics/src/trustworthy-node-metrics-types"
+    "trustworthy-node-metrics 0.4.3": "rs/dre-canisters/trustworthy-node-metrics/src/trustworthy-node-metrics"
   },
   "conditions": {
     "aarch64-apple-darwin": [

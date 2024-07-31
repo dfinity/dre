@@ -1,0 +1,56 @@
+name: Qualification
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "The version that should be qualified"
+        type: string
+        default: ""
+  # triggered from Release Testing workflow in dfinity/ic
+  workflow_call:
+    inputs:
+      version:
+        description: "The version that should be qualified"
+        type: string
+        default: ""
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  qualify:
+    runs-on:
+      labels: dre-runner-custom
+    container: ghcr.io/dfinity/dre/actions-runner:7efd87b0eac3ebd255be7efe00a3b39b0f9e9fc1
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: 'dfinity/dre' # this needs to be specified so it can be kicked off from the ic repo
+
+      - name: "🔍 Check if the version is set"
+        shell: bash
+        run: |
+          if [ -z "${{ inputs.version }}" ]; then
+            echo "Error: 'version' is required and cannot be empty."
+            exit 1
+          fi
+
+      - name: "☁️ Setup runner"
+        uses: ./.github/workflows/manage-runner-pre
+
+      # This should be done in runner.Dockerfile
+      - name: "Remove utsns and netns from containers.conf"
+        shell: bash
+        run: |
+          sudo rm /etc/containers/containers.conf
+
+      - name: "✨ Running qualification"
+        shell: bash
+        env:
+          MANUALY_TTL_FARM: 1
+        run: |
+          mkdir -p ~/.config/dfx/identity/xnet-testing/
+          echo "${{ secrets.XNET_PRINCIPAL_KEY }}" > ~/.config/dfx/identity/xnet-testing/identity.pem
+          bazel run //rs/qualifier -- "${{ github.event.inputs.version }}"

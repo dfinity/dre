@@ -1134,6 +1134,29 @@ dependencies = [
 ]
 
 [[package]]
+name = "canbench-rs"
+version = "0.1.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "53574f268dbe23dc83f891a4751b118a6ba927c8bc92e839ff108f3aaf151aa9"
+dependencies = [
+ "canbench-rs-macros",
+ "candid",
+ "ic-cdk 0.12.1",
+ "serde",
+]
+
+[[package]]
+name = "canbench-rs-macros"
+version = "0.1.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d454906c77138a3802a7a680259cca7c006e9b268ba6905f7f4f2b8b74293fa4"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 1.0.109",
+]
+
+[[package]]
 name = "candid"
 version = "0.10.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3451,7 +3474,7 @@ dependencies = [
  "sha2 0.10.8",
  "simple_asn1",
  "thiserror",
- "trustworthy-node-metrics-types",
+ "trustworthy-node-metrics",
  "url",
 ]
 
@@ -3503,6 +3526,19 @@ dependencies = [
 
 [[package]]
 name = "ic-cdk"
+version = "0.12.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9f3d204af0b11c45715169c997858edb58fa8407d08f4fae78a6b415dd39a362"
+dependencies = [
+ "candid",
+ "ic-cdk-macros 0.8.4",
+ "ic0 0.21.1",
+ "serde",
+ "serde_bytes",
+]
+
+[[package]]
+name = "ic-cdk"
 version = "0.13.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f8859bc2b863a77750acf199e1fb7e3fc403e1b475855ba13f59cb4e4036d238"
@@ -3517,14 +3553,27 @@ dependencies = [
 [[package]]
 name = "ic-cdk"
 version = "0.15.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0c44983d6e97135d86132111bae5b86c34c498d96b4f182638bebcc7ac07e03c"
+source = "git+https://github.com/dfinity/cdk-rs.git?rev=59795716487fbb8a9910ac503bcea1e0cb08c932#59795716487fbb8a9910ac503bcea1e0cb08c932"
 dependencies = [
  "candid",
  "ic-cdk-macros 0.15.0",
  "ic0 0.23.0",
  "serde",
  "serde_bytes",
+]
+
+[[package]]
+name = "ic-cdk-macros"
+version = "0.8.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a5a618e4020cea88e933d8d2f8c7f86d570ec06213506a80d4f2c520a9bba512"
+dependencies = [
+ "candid",
+ "proc-macro2",
+ "quote",
+ "serde",
+ "serde_tokenstream 0.1.7",
+ "syn 1.0.109",
 ]
 
 [[package]]
@@ -3558,8 +3607,7 @@ dependencies = [
 [[package]]
 name = "ic-cdk-macros"
 version = "0.15.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3af44fb4ec3a4b18831c9d3303ca8fa2ace846c4022d50cb8df4122635d3782e"
+source = "git+https://github.com/dfinity/cdk-rs.git?rev=59795716487fbb8a9910ac503bcea1e0cb08c932#59795716487fbb8a9910ac503bcea1e0cb08c932"
 dependencies = [
  "candid",
  "proc-macro2",
@@ -3586,8 +3634,7 @@ dependencies = [
 [[package]]
 name = "ic-cdk-timers"
 version = "0.9.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "61fdca8e1d9ffb65ae68019b342c182009de9dc206fd849db0b0e90ee19f6fa4"
+source = "git+https://github.com/dfinity/cdk-rs.git?rev=59795716487fbb8a9910ac503bcea1e0cb08c932#59795716487fbb8a9910ac503bcea1e0cb08c932"
 dependencies = [
  "futures",
  "ic-cdk 0.15.0",
@@ -5297,8 +5344,7 @@ checksum = "a54b5297861c651551676e8c43df805dad175cc33bc97dbd992edbbb85dcbcdf"
 [[package]]
 name = "ic0"
 version = "0.23.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8de254dd67bbd58073e23dc1c8553ba12fa1dc610a19de94ad2bbcd0460c067f"
+source = "git+https://github.com/dfinity/cdk-rs.git?rev=59795716487fbb8a9910ac503bcea1e0cb08c932#59795716487fbb8a9910ac503bcea1e0cb08c932"
 
 [[package]]
 name = "ic_bls12_381"
@@ -7146,6 +7192,29 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 1.0.109",
+]
+
+[[package]]
+name = "qualifier"
+version = "0.4.3"
+dependencies = [
+ "anyhow",
+ "clap 4.5.9",
+ "dirs",
+ "dre",
+ "ic-canisters",
+ "ic-management-backend",
+ "ic-management-types",
+ "ic-nervous-system-common-test-keys",
+ "itertools 0.13.0",
+ "log",
+ "pretty_env_logger",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "tokio",
+ "tokio-util",
+ "url",
 ]
 
 [[package]]
@@ -9097,7 +9166,9 @@ name = "trustworthy-node-metrics"
 version = "0.4.3"
 dependencies = [
  "anyhow",
+ "canbench-rs",
  "candid",
+ "ciborium",
  "dfn_core",
  "futures",
  "ic-cdk 0.15.0",
@@ -9111,19 +9182,6 @@ dependencies = [
  "ic-stable-structures",
  "itertools 0.13.0",
  "prost",
- "trustworthy-node-metrics-types",
-]
-
-[[package]]
-name = "trustworthy-node-metrics-types"
-version = "0.4.3"
-dependencies = [
- "candid",
- "ciborium",
- "dfn_core",
- "ic-management-canister-types",
- "ic-stable-structures",
- "itertools 0.13.0",
  "serde",
  "serde_json",
 ]
