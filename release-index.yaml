@@ -1,4 +1,10 @@
 releases:
+  - rc_name: rc--2024-07-30_01-30
+    versions:
+      - name: base
+        version: 2bdfdc54ccc7ef27dd7b4f37aaea172198dce6ab
+        # Successful qualification pipeline:
+        # https://github.com/dfinity-ops/release/actions/runs/10181215967/job/28160824323
   - rc_name: rc--2024-07-25_21-03
     versions:
       - name: base
