@@ -261,6 +261,7 @@ def prepare_release_notes(
         exit(1)
 
     guestos_packages_all, guestos_packages_filtered = get_guestos_packages_with_bazel(ic_repo)
+    bazel_packages_all = bazel_query_all_packages(ic_repo)
 
     for i, _ in progressbar([i[0] for i in commits], "Processing commit: ", 80):
         change_info = get_change_description_for_commit(
@@ -269,6 +270,7 @@ def prepare_release_notes(
             ci_patterns=ci_patterns,
             ic_repo=ic_repo,
             codeowners=codeowners,
+            bazel_packages_all=bazel_packages_all,
             guestos_packages_all=guestos_packages_all,
             guestos_packages_filtered=guestos_packages_filtered,
         )
@@ -289,6 +291,7 @@ def get_change_description_for_commit(
     ci_patterns,
     ic_repo,
     codeowners,
+    bazel_packages_all,
     guestos_packages_all,
     guestos_packages_filtered,
 ) -> typing.Optional[Change]:
@@ -302,11 +305,14 @@ def get_change_description_for_commit(
     commit_hash, commit_message, commiter = commit_info
 
     file_changes = ic_repo.file_changes_for_commit(commit_hash)
-    guestos_change = any(any(c["file_path"][1:].startswith(p) for c in file_changes) for p in guestos_packages_all)
-    if not guestos_change:
+    modified_packages = list(
+        next((p for p in sorted(bazel_packages_all, key=len, reverse=True) if c["file_path"][1:].startswith(p)), None)
+        for c in file_changes
+    )
+    if not any(p in guestos_packages_all for p in modified_packages):
         return None
 
-    included = any(any(c["file_path"][1:].startswith(p) for c in file_changes) for p in guestos_packages_filtered)
+    included = any(p in guestos_packages_filtered for p in modified_packages)
 
     ownership = {}
     stripped_message = re.sub(jira_ticket_regex, "", commit_message)
@@ -390,7 +396,7 @@ def release_notes_markdown(
     ic_repo: GitRepo, base_release_tag, base_release_commit, release_tag, release_commit, change_infos
 ):
     """Generate release notes in markdown format."""
-    merge_base = ic_repo.merge_base(base_release_tag, release_tag)
+    merge_base = ic_repo.merge_base(base_release_commit, release_commit)
 
     reviewers_text = "\n".join([f"- {t.google_docs_handle}" for t in RELEASE_NOTES_REVIEWERS if t.send_announcement])
 
@@ -450,13 +456,13 @@ Changes [were removed](https://github.com/dfinity/ic/compare/{release_tag}...{ba
     return notes
 
 
-def bazel_query_guestos_packages(ic_repo: GitRepo):
+def bazel_query(ic_repo: GitRepo, query):
     """Bazel query package for GuestOS."""
     bazel_query = [
         "bazel",
         "query",
         "--universe_scope=//...",
-        "deps(//ic-os/guestos/envs/prod:update-img.tar.gz) union deps(//ic-os/setupos/envs/prod:disk-img.tar.gz)",
+        query,
         "--output=package",
     ]
     p = subprocess.run(
@@ -475,12 +481,20 @@ def bazel_query_guestos_packages(ic_repo: GitRepo):
             stdout=subprocess.PIPE,
             check=True,
         )
-    return p.stdout.strip().splitlines()
+    return [l for l in p.stdout.strip().splitlines() if l]
+
+
+def bazel_query_all_packages(ic_repo: GitRepo):
+    """Bazel query package for GuestOS."""
+    return bazel_query(ic_repo, "//...:*")
 
 
 def get_guestos_packages_with_bazel(ic_repo: GitRepo):
     """Get the packages that are related to the GuestOS image using Bazel."""
-    guestos_packages_all = bazel_query_guestos_packages(ic_repo)
+    guestos_packages_all = bazel_query(
+        ic_repo,
+        "deps(//ic-os/guestos/envs/prod:update-img.tar.gz) union deps(//ic-os/setupos/envs/prod:disk-img.tar.gz)",
+    )
     guestos_packages_filtered = [
         p for p in guestos_packages_all if not any(re.match(f, p) for f in EXCLUDE_PACKAGES_FILTERS)
     ]
