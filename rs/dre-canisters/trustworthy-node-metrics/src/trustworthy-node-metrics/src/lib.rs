@@ -1,8 +1,13 @@
+use candid::Principal;
 use ic_cdk_macros::*;
 use itertools::Itertools;
-use std::time::Duration;
-use types::{SubnetNodeMetricsArgs, SubnetNodeMetricsResponse};
+use std::{collections, time::Duration};
+use types::{
+     NodeMetrics, NodeRewardsArgs, NodeRewardsResponse, SubnetNodeMetricsArgs,
+    SubnetNodeMetricsResponse, TimestampNanos,
+};
 mod metrics_manager;
+mod rewards_manager;
 mod stable_memory;
 pub mod types;
 
@@ -39,7 +44,7 @@ fn post_upgrade() {
 fn subnet_node_metrics(args: SubnetNodeMetricsArgs) -> Result<Vec<SubnetNodeMetricsResponse>, String> {
     let from_ts = args.ts.unwrap_or_default();
 
-    let metrics = stable_memory::get_metrics(from_ts);
+    let metrics = stable_memory::get_metrics_range(from_ts, None);
 
     let metrics_flat = metrics
         .into_iter()
@@ -58,4 +63,35 @@ fn subnet_node_metrics(args: SubnetNodeMetricsArgs) -> Result<Vec<SubnetNodeMetr
     };
 
     Ok(result)
+}
+
+#[query]
+fn node_rewards(args: NodeRewardsArgs) -> Vec<NodeRewardsResponse> {
+    let period_start = args.from_ts;
+    let period_end = args.to_ts;
+    let metrics = stable_memory::get_metrics_range(period_start, Some(period_end));
+
+    let mut metrics_by_node: collections::BTreeMap<Principal, Vec<(TimestampNanos, NodeMetrics)>> = collections::BTreeMap::new();
+    for (ts, subnets) in metrics {
+        for subnet_metrics in subnets {
+            for node_metrics in subnet_metrics.node_metrics {
+                metrics_by_node.entry(node_metrics.node_id).or_default().push((ts, node_metrics));
+            }
+        }
+    }
+
+    let node_ids = metrics_by_node.keys().cloned().collect_vec();
+    let initial_node_metrics = stable_memory::metrics_before_ts(node_ids, &period_start);
+
+
+    let result = metrics_by_node
+        .into_iter()
+        .map(|(node_id, metrics_in_period)| {
+            let node_rewards = rewards_manager::compute_rewards(metrics_in_period, initial_node_metrics.get(&node_id).cloned().unwrap());
+
+            NodeRewardsResponse { node_id, node_rewards }
+        })
+        .collect_vec();
+
+    result
 }
