@@ -137,6 +137,7 @@ EXCLUDE_PACKAGES_FILTERS = [
     r"^bazel$",
     r".*boundary.*",
     r".*rosetta.*",
+    r".*pocket[_-]ic.*",
 ]
 
 NON_REPLICA_TEAMS = sorted(list(set(TEAM_PRETTY_MAP.keys()) - REPLICA_TEAMS))
