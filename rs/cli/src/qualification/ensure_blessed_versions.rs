@@ -45,7 +45,7 @@ impl Step for EnsureBlessedRevisions {
                             sha.clone(),
                             "--release-package-urls".to_string(),
                             format!(
-                                "http://download.proxy-global.dfinity.network:8080/ic/{}/guest-os/update-img/update-img.tar.gz",
+                                "https://download.dfinity.systems/ic/{}/guest-os/update-img/update-img.tar.gz",
                                 &self.version
                             ),
                         ],
@@ -75,10 +75,7 @@ impl Step for EnsureBlessedRevisions {
 }
 const TAR_EXTENSION: &str = "update-img.tar.gz";
 async fn fetch_shasum_for_disk_img(version: &str) -> anyhow::Result<String> {
-    let url = format!(
-        "http://download.proxy-global.dfinity.network:8080/ic/{}/guest-os/update-img/SHA256SUMS",
-        version
-    );
+    let url = format!("https://download.dfinity.systems/ic/{}/guest-os/update-img/SHA256SUMS", version);
     let response = reqwest::get(&url).await?;
     if !response.status().is_success() {
         panic!("Received non-success response status: {:?}", response.status())

@@ -46,11 +46,9 @@ pub fn get_metrics_range(from_ts: TimestampNanos, to_ts: Option<TimestampNanos>)
     });
 }
 
-// Initialize metrics
 pub fn metrics_before_ts(node_ids: Vec<Principal>, ts: &TimestampNanos) -> BTreeMap<Principal, NodeMetrics> {
     let mut last_metrics: BTreeMap<Principal, NodeMetrics> = BTreeMap::new();
 
-    // Initialize nodes
     for node_id in node_ids {
         last_metrics.insert(node_id, NodeMetrics{
             node_id,
@@ -62,10 +60,9 @@ pub fn metrics_before_ts(node_ids: Vec<Principal>, ts: &TimestampNanos) -> BTree
     MAP.with(|p| {
         let borrowed = p.borrow();
 
-        for (ts, metrics_storable) in borrowed.range(..ts) {
+        for (_, metrics_storable) in borrowed.range(..ts) {
             for subnet_metrics in metrics_storable.0 {
                 for node_metrics in subnet_metrics.node_metrics {
-                    ic_cdk::println!("initial ts node {} {}", node_metrics.node_id, ts);
                     last_metrics.insert(node_metrics.node_id, node_metrics);
                 }
             }
