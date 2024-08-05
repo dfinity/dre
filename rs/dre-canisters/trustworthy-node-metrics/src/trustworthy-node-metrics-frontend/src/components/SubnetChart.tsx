@@ -4,7 +4,6 @@ import { axisClasses, BarChart, StackOrderType } from '@mui/x-charts';
 import Divider from '@mui/material/Divider';
 import { useParams } from 'react-router-dom';
 import { generateChartData, getFormattedDates } from '../utils/utils';
-import { ChartsNoDataOverlay } from '@mui/x-charts/ChartsOverlay';
 import RewardTable from './RewardTable';
 import { DashboardNodeMetrics } from '../models/NodeMetrics';
 import { PeriodFilter } from './FilterBar';

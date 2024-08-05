@@ -5,7 +5,7 @@ import Drawer from './components/Drawer';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { trustworthy_node_metrics } from '../../declarations/trustworthy-node-metrics/index.js';
 import { NodeRewardsArgs, NodeRewardsResponse, Rewards, SubnetNodeMetricsArgs, SubnetNodeMetricsResult } from '../../declarations/trustworthy-node-metrics/trustworthy-node-metrics.did.js';
-import { DashboardNodeMetrics, NodeMetrics } from './models/NodeMetrics';
+import { DailyNodeMetrics, DashboardNodeMetrics, NodeMetrics } from './models/NodeMetrics';
 import { NodeList } from './components/NodeList';
 import Header from './components/Header';
 import { calculateDailyValues, dateToNanoseconds, groupBy } from './utils/utils';
@@ -39,7 +39,7 @@ function App() {
     dateStart: thirtyDaysAgo,
     dateEnd: new Date()
   });
-  const [nodeMetrics, setnodeMetrics] = useState<NodeMetrics[]>([]);
+  const [dailyNodeMetrics, setDailyNodeMetrics] = useState<DailyNodeMetrics[]>([]);
   const [dashboardNodeMetrics, setDashboardNodeMetrics] = useState<DashboardNodeMetrics[]>([]);
 
   const [subnets, setSubnets] = useState<Set<string>>(new Set());
@@ -70,7 +70,20 @@ function App() {
             })
           });
 
-          setnodeMetrics(metrics);
+          const grouped = groupBy(metrics, 'nodeId');
+          const dailyNodeMetrics = Object.keys(grouped).flatMap(nodeId => {
+            const items = grouped[nodeId];
+            const dailyData = calculateDailyValues(items);
+  
+            return dailyData.map(daily => {
+              return new DailyNodeMetrics(
+                nodeId,
+                daily,
+              )
+            }
+          )});
+
+          setDailyNodeMetrics(dailyNodeMetrics);
         } else {
           setError(response.Err);
         }
@@ -93,26 +106,19 @@ function App() {
           from_ts: dateToNanoseconds(periodFilter.dateStart),
           to_ts: dateToNanoseconds(periodFilter.dateEnd),
         };
-
         const nodeRewardsResponse: NodeRewardsResponse[] = await trustworthy_node_metrics.node_rewards(request);
         nodeRewardsResponse.forEach((nodeReward) => {
-          
           nodeRewardsMap.set(nodeReward.node_id.toText(), nodeReward.node_rewards);
         });
         
-        const metricsInPeriod = nodeMetrics.filter((metrics) => {
-          const metricsDate = metrics.date; 
+        const metricsInPeriod = dailyNodeMetrics.filter((metrics) => {
+          const metricsDate = metrics.dailyData.date; 
           const isDateInRange = metricsDate >= periodFilter.dateStart && metricsDate <= periodFilter.dateEnd;
           return isDateInRange;
         });
-    
-        const subnets = new Set(nodeMetrics.map(metric => metric.subnetId.toText()));
-    
         const grouped = groupBy(metricsInPeriod, 'nodeId');
         const groupedMetrics = Object.keys(grouped).map(nodeId => {
-          const items = grouped[nodeId];
-          const dailyData = calculateDailyValues(items);
-          const rewards = nodeRewardsMap.get(nodeId)?.rewards_standard;
+          const rewards = nodeRewardsMap.get(nodeId);
 
           if (rewards === undefined) {
             throw new Error('rewards_standard is undefined');
@@ -120,11 +126,13 @@ function App() {
 
           return new DashboardNodeMetrics(
             nodeId,
-            dailyData,
-            rewards
+            grouped[nodeId].map(data => data.dailyData),
+            rewards.rewards_standard
           );
         })
         .sort((a, b) => a.rewardsNoPenalty - b.rewardsNoPenalty);
+
+        const subnets = new Set(metricsInPeriod.map(metric => metric.dailyData.subnetId));
 
         setDashboardNodeMetrics(groupedMetrics);
         setSubnets(subnets);
@@ -137,7 +145,7 @@ function App() {
     };
     
     updateRewards();
-  }, [periodFilter, nodeMetrics]);
+  }, [periodFilter, dailyNodeMetrics]);
 
 
   if (error) {

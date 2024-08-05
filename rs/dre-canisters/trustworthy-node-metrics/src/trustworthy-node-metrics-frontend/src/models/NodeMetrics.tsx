@@ -67,11 +67,17 @@ export class DashboardNodeMetrics {
     this.failureRateAvg = computeAverageFailureRate(dailyData.map(elem => elem.failureRate));
     this.rewardsNoPenalty = rewardsNoPenalty;
   }
+}
 
-  public getChartSeries() {
-    return {
-      data: this.dailyData.map(daily => daily.failureRate),
-      label: this.nodeId,
-    };
+export class DailyNodeMetrics {
+  nodeId: string;
+  dailyData: DailyData;
+
+  constructor(
+    nodeId: string,
+    dailyData: DailyData
+  ) {
+    this.nodeId = nodeId;
+    this.dailyData = dailyData;
   }
 }

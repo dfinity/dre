@@ -1,5 +1,4 @@
 use candid::{CandidType, Deserialize, Principal};
-use chrono::{DateTime, Utc};
 use dfn_core::api::PrincipalId;
 use ic_management_canister_types::NodeMetricsHistoryResponse;
 use serde::Serialize;
