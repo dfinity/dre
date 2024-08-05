@@ -1,12 +1,6 @@
 name: Qualification
 
 on:
-  workflow_dispatch:
-    inputs:
-      version:
-        description: "The version that should be qualified"
-        type: string
-        default: ""
   # triggered from Release Testing workflow in dfinity/ic
   workflow_call:
     inputs:
