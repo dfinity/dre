@@ -1,5 +1,5 @@
 {
-  "checksum": "122ae00e2b90aff46a0aaf1e6e2d80c5729af927eb65d305a5e598b381eed7b1",
+  "checksum": "b8f55a45d154895cfe0bec839ab21692ca278f057c5cf6afa56dc8c946e2620f",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -45909,6 +45909,10 @@
             {
               "id": "candid 0.10.9",
               "target": "candid"
+            },
+            {
+              "id": "chrono 0.4.38",
+              "target": "chrono"
             },
             {
               "id": "ciborium 0.2.2",
