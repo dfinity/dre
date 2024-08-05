@@ -37,14 +37,7 @@ pub struct SubnetNodeMetricsArgs {
 }
 
 #[derive(Debug, Deserialize, Serialize, CandidType)]
-pub struct DailyFailureRateResponse {
-    pub date_ts: TimestampNanos,
-    pub failure_rate: f64,
-}
-
-#[derive(Debug, Deserialize, Serialize, CandidType)]
 pub struct Rewards {
-    pub daily_failure_rate: Vec<DailyFailureRateResponse>,
     pub rewards_standard: f64,
     pub rewards_with_penalty: f64,
 }

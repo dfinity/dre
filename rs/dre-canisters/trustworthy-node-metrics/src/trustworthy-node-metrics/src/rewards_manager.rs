@@ -1,21 +1,11 @@
 use chrono::{DateTime, Duration, Utc};
-use itertools::Itertools;
 
-use crate::types::{DailyFailureRateResponse, NodeMetrics, Rewards, TimestampNanos};
+use crate::types::{NodeMetrics, Rewards, TimestampNanos};
 
 #[derive(Debug)]
 pub struct DailyFailureRate {
     pub datetime: DateTime<Utc>,
     pub failure_rate: f64,
-}
-
-impl From<DailyFailureRate> for DailyFailureRateResponse {
-    fn from(metrics: DailyFailureRate) -> Self {
-        DailyFailureRateResponse {
-            date_ts: metrics.datetime.timestamp_nanos_opt().unwrap() as u64,
-            failure_rate: metrics.failure_rate,
-        }
-    }
 }
 
 impl DailyFailureRate {
@@ -105,7 +95,6 @@ pub fn compute_rewards(mut metrics: Vec<(TimestampNanos, NodeMetrics)>, initial_
     let (reduction_no_penalty, reduction_with_penalty) = calculate_reduction(&daily_failure_rate);
 
     Rewards {
-        daily_failure_rate: daily_failure_rate.into_iter().map(|fr| fr.into()).collect_vec(),
         rewards_standard: (1.0 - reduction_no_penalty) * 100.0,
         rewards_with_penalty: (1.0 - reduction_with_penalty) * 100.0,
     }
