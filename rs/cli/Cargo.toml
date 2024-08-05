@@ -66,11 +66,11 @@ spinners = { workspace = true }
 strum = { workspace = true }
 tabled = { workspace = true }
 tabular = { workspace = true }
-tempfile = "3.10.1"
+tempfile = "3.11.0"
 tokio = { workspace = true }
 url = { workspace = true }
 humantime = { workspace = true }
-clap_complete = "4.5.8"
+clap_complete = "4.5.12"
 cryptoki = { workspace = true }
 keyring = { workspace = true }
 comfy-table = { workspace = true }
