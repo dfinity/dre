@@ -44,5 +44,5 @@ type NodeRewardsArgs = record {
 
 service : {
     "subnet_node_metrics" : (SubnetNodeMetricsArgs) -> (SubnetNodeMetricsResult) query;
-    "node_rewards" : (NodeRewardsArgs) -> (vec NodeRewardsResponse);
+    "node_rewards" : (NodeRewardsArgs) -> (vec NodeRewardsResponse) query;
 }
