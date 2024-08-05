@@ -62,7 +62,7 @@ fn subnet_node_metrics(args: SubnetNodeMetricsArgs) -> Result<Vec<SubnetNodeMetr
     Ok(result)
 }
 
-#[update]
+#[query]
 fn node_rewards(args: NodeRewardsArgs) -> Vec<NodeRewardsResponse> {
     let period_start = args.from_ts;
     let period_end = args.to_ts;
