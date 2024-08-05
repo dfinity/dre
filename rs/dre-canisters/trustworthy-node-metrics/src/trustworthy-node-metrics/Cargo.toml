@@ -33,3 +33,4 @@ ic-nns-common = { workspace = true }
 ic-registry-transport = { workspace = true }
 dfn_core = { workspace = true }
 canbench-rs = { version = "0.1.4", optional = true }
+chrono = { workspace = true }

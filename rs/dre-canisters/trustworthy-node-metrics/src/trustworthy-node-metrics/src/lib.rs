@@ -2,10 +2,7 @@ use candid::Principal;
 use ic_cdk_macros::*;
 use itertools::Itertools;
 use std::{collections, time::Duration};
-use types::{
-     NodeMetrics, NodeRewardsArgs, NodeRewardsResponse, SubnetNodeMetricsArgs,
-    SubnetNodeMetricsResponse, TimestampNanos,
-};
+use types::{NodeMetrics, NodeRewardsArgs, NodeRewardsResponse, SubnetNodeMetricsArgs, SubnetNodeMetricsResponse, TimestampNanos};
 mod metrics_manager;
 mod rewards_manager;
 mod stable_memory;
@@ -70,8 +67,8 @@ fn node_rewards(args: NodeRewardsArgs) -> Vec<NodeRewardsResponse> {
     let period_start = args.from_ts;
     let period_end = args.to_ts;
     let metrics = stable_memory::get_metrics_range(period_start, Some(period_end));
-
     let mut metrics_by_node: collections::BTreeMap<Principal, Vec<(TimestampNanos, NodeMetrics)>> = collections::BTreeMap::new();
+
     for (ts, subnets) in metrics {
         for subnet_metrics in subnets {
             for node_metrics in subnet_metrics.node_metrics {
@@ -82,7 +79,6 @@ fn node_rewards(args: NodeRewardsArgs) -> Vec<NodeRewardsResponse> {
 
     let node_ids = metrics_by_node.keys().cloned().collect_vec();
     let initial_node_metrics = stable_memory::metrics_before_ts(node_ids, &period_start);
-
 
     let result = metrics_by_node
         .into_iter()
