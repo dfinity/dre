@@ -53,18 +53,19 @@ export class DashboardNodeMetrics {
   nodeId: string;
   nodeIdSmall: string;
   dailyData: DailyData[];
-  failureRateSum: number;
   failureRateAvg: number;
+  rewardsNoPenalty: number;
 
   constructor(
     nodeId: string,
-    dailyData: DailyData[]
+    dailyData: DailyData[],
+    rewardsNoPenalty: number,
   ) {
     this.nodeId = nodeId;
     this.nodeIdSmall = nodeId.split('-')[0];
     this.dailyData = dailyData;
-    this.failureRateSum = dailyData.reduce((sum, item) => sum + item.failureRate, 0);
     this.failureRateAvg = computeAverageFailureRate(dailyData.map(elem => elem.failureRate));
+    this.rewardsNoPenalty = rewardsNoPenalty;
   }
 
   public getChartSeries() {

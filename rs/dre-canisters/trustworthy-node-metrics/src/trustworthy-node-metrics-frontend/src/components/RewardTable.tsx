@@ -22,6 +22,7 @@ const RewardTable: React.FC<RewardTableProps> = ({ dashboardNodeMetrics }) => {
           <TableRow>
             <TableCell>Nodes</TableCell>
             <TableCell>Failure Rates Avg.</TableCell>
+            <TableCell>Rewards No Penalty</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -35,6 +36,9 @@ const RewardTable: React.FC<RewardTableProps> = ({ dashboardNodeMetrics }) => {
               </TableCell>
               <TableCell component="th" scope="row">
                 {Math.round(nodeMetrics.failureRateAvg)}%
+              </TableCell>
+              <TableCell component="th" scope="row">
+                {Math.round(nodeMetrics.rewardsNoPenalty)}%
               </TableCell>
             </TableRow>
           ))}

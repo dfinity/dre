@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { Box, Grid, Paper, Stack, Typography, Autocomplete, TextField } from '@mui/material';
+import { Box, Grid, Paper, Typography, Autocomplete, TextField } from '@mui/material';
 import { axisClasses, BarChart } from '@mui/x-charts';
 import { ChartData, DailyData, DashboardNodeMetrics } from '../models/NodeMetrics';
 import { styled } from '@mui/material/styles';
 import Divider from '@mui/material/Divider';
 import { PeriodFilter } from './FilterBar';
-import { generateChartData, getFormattedDates, transformDailyData } from '../utils/utils';
+import { generateChartData} from '../utils/utils';
 import FailureRateArc, { RewardsArc } from './Gauge';
 
 export const Root = styled('div')(({ theme }) => ({
@@ -22,7 +22,7 @@ export interface NodeListProps {
     periodFilter: PeriodFilter
 }
 
-function renderChart(nodeId: string, dailyData: DailyData[], failureRateAvg: number, periodFilter: PeriodFilter): React.ReactNode {
+function renderChart(nodeId: string, dailyData: DailyData[], failureRateAvg: number, rewardsNoPenalty: number, periodFilter: PeriodFilter): React.ReactNode {
 
     const chartDailyData: ChartData[] = generateChartData(periodFilter, dailyData);
 
@@ -34,7 +34,7 @@ function renderChart(nodeId: string, dailyData: DailyData[], failureRateAvg: num
             </Typography>
             <Box sx={{ ml: 'auto', display: 'flex', alignItems: 'center' }}>
                 {FailureRateArc(Math.round(failureRateAvg))}
-                {RewardsArc(Math.round(failureRateAvg))}
+                {RewardsArc(Math.round(rewardsNoPenalty))}
             </Box>
         </Box>
     <Box sx={{ p: 2 }}>
@@ -109,9 +109,9 @@ export const NodeList: React.FC<NodeListProps> = ({ dashboardNodeMetrics, period
                     />
                 </Box>
                 <Grid container spacing={2}>
-                {filteredMetrics.slice(0, 10).map(({ nodeId, dailyData, failureRateAvg }, index) => (
+                {filteredMetrics.slice(0, 30).map(({ nodeId, dailyData, failureRateAvg, rewardsNoPenalty }, index) => (
                     <Grid item xs={6} key={index}>
-                        {renderChart(nodeId, dailyData, failureRateAvg, periodFilter)}
+                        {renderChart(nodeId, dailyData, failureRateAvg, rewardsNoPenalty, periodFilter)}
                     </Grid>
                 ))}
                 </Grid>

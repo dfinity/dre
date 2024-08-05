@@ -41,7 +41,6 @@ export const SubnetChart: React.FC<SubnetChartProps> = ({ dashboardNodeMetrics, 
                 <Divider />
                 <Box sx={{ p: 3 }}>
                     <Divider style={{ fontSize: '17px' }}>Daily Failure Rate</Divider>
-                    {chartData.length > 0 ? (
                     <BarChart
                         slotProps={{ legend: { hidden: true } }}
                         xAxis={[{ 
@@ -65,10 +64,9 @@ export const SubnetChart: React.FC<SubnetChartProps> = ({ dashboardNodeMetrics, 
                         borderRadius={9}
                         series={series}
                         height={500}
-                    />) : (<ChartsNoDataOverlay/>)}
+                    />
                     <Box sx={{ p: 10 }}>
                     <RewardTable dashboardNodeMetrics={subnetNodeMetrics}/>
-
                     </Box>
                 </Box>
             </Paper>

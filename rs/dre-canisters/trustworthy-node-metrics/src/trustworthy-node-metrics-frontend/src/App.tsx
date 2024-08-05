@@ -4,11 +4,11 @@ import FilterBar, { PeriodFilter } from './components/FilterBar';
 import Drawer from './components/Drawer'; 
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { trustworthy_node_metrics } from '../../declarations/trustworthy-node-metrics/index.js';
-import { SubnetNodeMetricsArgs, SubnetNodeMetricsResult } from '../../declarations/trustworthy-node-metrics/trustworthy-node-metrics.did.js';
+import { NodeRewardsArgs, NodeRewardsResponse, Rewards, SubnetNodeMetricsArgs, SubnetNodeMetricsResult } from '../../declarations/trustworthy-node-metrics/trustworthy-node-metrics.did.js';
 import { DashboardNodeMetrics, NodeMetrics } from './models/NodeMetrics';
 import { NodeList } from './components/NodeList';
 import Header from './components/Header';
-import { calculateDailyValues, groupBy } from './utils/utils';
+import { calculateDailyValues, dateToNanoseconds, groupBy } from './utils/utils';
 import { SubnetChart } from './components/SubnetChart';
 
 const darkTheme = createTheme({
@@ -40,7 +40,9 @@ function App() {
     dateEnd: new Date()
   });
   const [nodeMetrics, setnodeMetrics] = useState<NodeMetrics[]>([]);
-  let subnets: Set<string> = new Set();
+  const [dashboardNodeMetrics, setDashboardNodeMetrics] = useState<DashboardNodeMetrics[]>([]);
+
+  const [subnets, setSubnets] = useState<Set<string>>(new Set());
   const [nodeProviders, setNodeProviders] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -82,29 +84,59 @@ function App() {
     fetchNodes();
   }, []);
 
+  useEffect(() => {
+    const updateRewards = async () => {
+      try {
+        setIsLoading(true)
+        const nodeRewardsMap = new Map<string, Rewards>();
+        const request: NodeRewardsArgs = {
+          from_ts: dateToNanoseconds(periodFilter.dateStart),
+          to_ts: dateToNanoseconds(periodFilter.dateEnd),
+        };
 
-  const dashboardNodeMetrics = useMemo(() => {
-    const metricsInPeriod = nodeMetrics.filter((metrics) => {
-      const metricsDate = metrics.date; 
-      const isDateInRange = metricsDate >= periodFilter.dateStart && metricsDate <= periodFilter.dateEnd;
-      return isDateInRange;
-    });
+        const nodeRewardsResponse: NodeRewardsResponse[] = await trustworthy_node_metrics.node_rewards(request);
+        nodeRewardsResponse.forEach((nodeReward) => {
+          
+          nodeRewardsMap.set(nodeReward.node_id.toText(), nodeReward.node_rewards);
+        });
+        
+        const metricsInPeriod = nodeMetrics.filter((metrics) => {
+          const metricsDate = metrics.date; 
+          const isDateInRange = metricsDate >= periodFilter.dateStart && metricsDate <= periodFilter.dateEnd;
+          return isDateInRange;
+        });
+    
+        const subnets = new Set(nodeMetrics.map(metric => metric.subnetId.toText()));
+    
+        const grouped = groupBy(metricsInPeriod, 'nodeId');
+        const groupedMetrics = Object.keys(grouped).map(nodeId => {
+          const items = grouped[nodeId];
+          const dailyData = calculateDailyValues(items);
+          const rewards = nodeRewardsMap.get(nodeId)?.rewards_standard;
 
-    subnets = new Set(nodeMetrics.map(metric => metric.subnetId.toText()));
+          if (rewards === undefined) {
+            throw new Error('rewards_standard is undefined');
+          }
 
-    const grouped = groupBy(metricsInPeriod, 'nodeId');
-    const groupedMetrics = Object.keys(grouped).map(nodeId => {
-      const items = grouped[nodeId];
-      const dailyData = calculateDailyValues(items);
+          return new DashboardNodeMetrics(
+            nodeId,
+            dailyData,
+            rewards
+          );
+        })
+        .sort((a, b) => a.rewardsNoPenalty - b.rewardsNoPenalty);
 
-      return new DashboardNodeMetrics(
-        nodeId,
-        dailyData,
-      );
-    })
-    .sort((a, b) => b.failureRateAvg - a.failureRateAvg);
+        setDashboardNodeMetrics(groupedMetrics);
+        setSubnets(subnets);
 
-    return groupedMetrics
+      } catch (error) {
+        console.error("Error fetching nodes:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    updateRewards();
   }, [periodFilter, nodeMetrics]);
 
 

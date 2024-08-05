@@ -1,6 +1,13 @@
 import { PeriodFilter } from "../components/FilterBar";
 import { ChartData, DailyData, NodeMetrics } from "../models/NodeMetrics";
 
+
+export const dateToNanoseconds = (date: Date): bigint => {
+  const millisecondsSinceEpoch = date.getTime();
+  const nanosecondsSinceEpoch = BigInt(millisecondsSinceEpoch) * BigInt(1_000_000);
+  return nanosecondsSinceEpoch;
+};
+
 export const generateChartData = (periodFilter: PeriodFilter, dailyData: DailyData[]): ChartData[] => {
     const { dateStart, dateEnd } = periodFilter;
     const chartData: ChartData[] = [];
