@@ -21,7 +21,13 @@ type SubnetNodeMetricsArgs = record {
   ts: opt nat64;
 };
 
+type DailyFailureRateResponse = record {
+  date_ts: opt nat64;
+  failure_rate: opt float64;
+};
+
 type Rewards = record {
+  daily_failure_rate: vec DailyFailureRateResponse;
   rewards_standard: float64;
   rewards_with_penalty: float64;
 };
@@ -38,5 +44,5 @@ type NodeRewardsArgs = record {
 
 service : {
     "subnet_node_metrics" : (SubnetNodeMetricsArgs) -> (SubnetNodeMetricsResult) query;
-    "node_rewards" : (NodeRewardsArgs) -> (vec NodeRewardsResponse) query;
+    "node_rewards" : (NodeRewardsArgs) -> (vec NodeRewardsResponse);
 }

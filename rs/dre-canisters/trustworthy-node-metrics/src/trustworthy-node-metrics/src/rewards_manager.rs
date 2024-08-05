@@ -1,16 +1,24 @@
 use chrono::{DateTime, Duration, Utc};
+use itertools::Itertools;
 
-use crate::types::{NodeMetrics, Rewards, TimestampNanos};
+use crate::types::{DailyFailureRateResponse, NodeMetrics, Rewards, TimestampNanos};
 
 #[derive(Debug)]
-pub struct DailyMetrics {
+pub struct DailyFailureRate {
     pub datetime: DateTime<Utc>,
-    pub proposed_blocks: u64,
-    pub failed_blocks: u64,
-    failure_rate: f64,
+    pub failure_rate: f64,
 }
 
-impl DailyMetrics {
+impl From<DailyFailureRate> for DailyFailureRateResponse {
+    fn from(metrics: DailyFailureRate) -> Self {
+        DailyFailureRateResponse {
+            date_ts: metrics.datetime.timestamp_nanos_opt().unwrap() as u64,
+            failure_rate: metrics.failure_rate,
+        }
+    }
+}
+
+impl DailyFailureRate {
     pub fn new(ts_nanos: TimestampNanos, proposed_blocks: u64, failed_blocks: u64) -> Self {
         let secs = (ts_nanos / 1_000_000_000) as i64;
         let nanos = (secs % 1_000_000_000) as u32;
@@ -21,10 +29,8 @@ impl DailyMetrics {
             failed_blocks as f64 / total_blocks as f64
         };
 
-        DailyMetrics {
-            datetime: DateTime::<Utc>::from_timestamp(secs, nanos).unwrap(),
-            proposed_blocks,
-            failed_blocks,
+        DailyFailureRate {
+            datetime: chrono::DateTime::<Utc>::from_timestamp(secs, nanos).unwrap(),
             failure_rate,
         }
     }
@@ -43,7 +49,7 @@ fn daily_reduction(failure_rate: &f64) -> f64 {
     }
 }
 
-fn calculate_reduction(metrics: &[DailyMetrics]) -> (f64, f64) {
+fn calculate_reduction(metrics: &[DailyFailureRate]) -> (f64, f64) {
     let active_days = metrics.len();
 
     let mut day_tracker = metrics[0].datetime;
@@ -79,7 +85,7 @@ fn calculate_reduction(metrics: &[DailyMetrics]) -> (f64, f64) {
 }
 
 pub fn compute_rewards(mut metrics: Vec<(TimestampNanos, NodeMetrics)>, initial_metrics: NodeMetrics) -> Rewards {
-    let mut daily_metrics = Vec::new();
+    let mut daily_failure_rate = Vec::new();
 
     metrics.sort_by_key(|&(timestamp, _)| timestamp);
 
@@ -90,15 +96,16 @@ pub fn compute_rewards(mut metrics: Vec<(TimestampNanos, NodeMetrics)>, initial_
         let daily_proposed = node_metrics.num_blocks_proposed_total - previous_proposed_total;
         let daily_failed = node_metrics.num_block_failures_total - previous_failed_total;
 
-        daily_metrics.push(DailyMetrics::new(ts_nanos, daily_proposed, daily_failed));
+        daily_failure_rate.push(DailyFailureRate::new(ts_nanos, daily_proposed, daily_failed));
 
         previous_failed_total = node_metrics.num_block_failures_total;
         previous_proposed_total = node_metrics.num_blocks_proposed_total;
     }
 
-    let (reduction_no_penalty, reduction_with_penalty) = calculate_reduction(&daily_metrics);
+    let (reduction_no_penalty, reduction_with_penalty) = calculate_reduction(&daily_failure_rate);
 
     Rewards {
+        daily_failure_rate: daily_failure_rate.into_iter().map(|fr| fr.into()).collect_vec(),
         rewards_standard: (1.0 - reduction_no_penalty) * 100.0,
         rewards_with_penalty: (1.0 - reduction_with_penalty) * 100.0,
     }

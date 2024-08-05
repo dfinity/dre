@@ -1,4 +1,5 @@
 use candid::{CandidType, Deserialize, Principal};
+use chrono::{DateTime, Utc};
 use dfn_core::api::PrincipalId;
 use ic_management_canister_types::NodeMetricsHistoryResponse;
 use serde::Serialize;
@@ -35,14 +36,15 @@ pub struct SubnetNodeMetricsArgs {
     pub subnet_id: Option<Principal>,
 }
 
-#[derive(Debug)]
-pub struct RewardsMetrics {
-    pub rewards_standard: u64,
-    pub node_metrics: Vec<NodeMetrics>,
+#[derive(Debug, Deserialize, Serialize, CandidType)]
+pub struct DailyFailureRateResponse {
+    pub date_ts: TimestampNanos,
+    pub failure_rate: f64,
 }
 
 #[derive(Debug, Deserialize, Serialize, CandidType)]
 pub struct Rewards {
+    pub daily_failure_rate: Vec<DailyFailureRateResponse>,
     pub rewards_standard: f64,
     pub rewards_with_penalty: f64,
 }
