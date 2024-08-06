@@ -67,12 +67,12 @@ fn node_rewards(args: NodeRewardsArgs) -> Vec<NodeRewardsResponse> {
     let period_start = args.from_ts;
     let period_end = args.to_ts;
     let metrics = stable_memory::get_metrics_range(period_start, Some(period_end));
-    let mut metrics_by_node: collections::BTreeMap<Principal, Vec<(TimestampNanos, NodeMetrics)>> = collections::BTreeMap::new();
+    let mut metrics_by_node: collections::BTreeMap<Principal, Vec<(TimestampNanos, NodeMetrics, Principal)>> = collections::BTreeMap::new();
 
     for (ts, subnets) in metrics {
         for subnet_metrics in subnets {
             for node_metrics in subnet_metrics.node_metrics {
-                metrics_by_node.entry(node_metrics.node_id).or_default().push((ts, node_metrics));
+                metrics_by_node.entry(node_metrics.node_id).or_default().push((ts, node_metrics, subnet_metrics.subnet_id));
             }
         }
     }
@@ -83,9 +83,16 @@ fn node_rewards(args: NodeRewardsArgs) -> Vec<NodeRewardsResponse> {
     let result = metrics_by_node
         .into_iter()
         .map(|(node_id, metrics_in_period)| {
-            let node_rewards = rewards_manager::compute_rewards(metrics_in_period, initial_node_metrics.get(&node_id).cloned().unwrap());
+            let daily_data = rewards_manager::daily_data(metrics_in_period, initial_node_metrics.get(&node_id).cloned().unwrap());
+            let rewards_no_penalty = rewards_manager::rewards_no_penalty(&daily_data);
+            let rewards_with_penalty = rewards_manager::rewards_with_penalty(&daily_data);
 
-            NodeRewardsResponse { node_id, node_rewards }
+            NodeRewardsResponse { 
+                node_id,
+                rewards_no_penalty,
+                rewards_with_penalty,
+                daily_data 
+            }
         })
         .collect_vec();
 

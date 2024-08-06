@@ -21,14 +21,17 @@ type SubnetNodeMetricsArgs = record {
   ts: opt nat64;
 };
 
-type Rewards = record {
-  rewards_standard: float64;
-  rewards_with_penalty: float64;
+type DailyNodeData = record {
+  ts: nat64;
+  subnet_id: principal;
+  failure_rate: float64;
 };
 
 type NodeRewardsResponse = record {
   node_id: principal;
-  node_rewards: Rewards;
+  rewards_no_penalty: float64;
+  rewards_with_penalty: float64;
+  daily_data: vec DailyNodeData;
 };
 
 type NodeRewardsArgs = record {

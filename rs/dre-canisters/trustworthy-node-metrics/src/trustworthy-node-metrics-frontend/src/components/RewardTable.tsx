@@ -6,11 +6,11 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
-import { DashboardNodeMetrics } from '../models/NodeMetrics';
+import { DashboardNodeRewards } from '../models/NodeMetrics';
 import { SxProps, Theme } from '@mui/material';
 
 interface RewardTableProps {
-    dashboardNodeMetrics: DashboardNodeMetrics[],
+    dashboardNodeMetrics: DashboardNodeRewards[],
     sx?: SxProps<Theme>;
   }
 
@@ -28,17 +28,17 @@ const RewardTable: React.FC<RewardTableProps> = ({ dashboardNodeMetrics }) => {
         <TableBody>
           {dashboardNodeMetrics.map((nodeMetrics) => (
             <TableRow
-              key={nodeMetrics.nodeId}
+              key={nodeMetrics.nodeId.toText()}
               sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
             >
               <TableCell component="th" scope="row">
-                {nodeMetrics.nodeId}
+                {nodeMetrics.nodeId.toText()}
               </TableCell>
               <TableCell component="th" scope="row">
-                {Math.round(nodeMetrics.failureRateAvg)}%
+                {Math.round(nodeMetrics.failureRateAvg * 100)}%
               </TableCell>
               <TableCell component="th" scope="row">
-                {Math.round(nodeMetrics.rewardsNoPenalty)}%
+                {Math.round(nodeMetrics.rewardsNoPenalty * 100)}%
               </TableCell>
             </TableRow>
           ))}

@@ -6,12 +6,12 @@ export default function FailureRateArc(value: number) {
   return (
     <Box sx={{ p: 2 }}>
     <Typography variant="subtitle1" component="div">
-        Failure Rate
+        Failure Rate Average
     </Typography>
     <Gauge
         width = {80}
         height = {80}
-        value= {value}
+        value= {Math.round(value * 100)}
         cornerRadius="10%"
         text={
             ({ value }) => `${value}%`
@@ -41,7 +41,7 @@ export function RewardsArc(value: number) {
     <Gauge
         width = {80}
         height = {80}
-        value= {value}
+        value= {Math.round(value * 100)}
         cornerRadius="10%"
         text={
             ({ value }) => `${value}%`

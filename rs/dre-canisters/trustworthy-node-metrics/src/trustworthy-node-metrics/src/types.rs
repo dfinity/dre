@@ -36,15 +36,18 @@ pub struct SubnetNodeMetricsArgs {
 }
 
 #[derive(Debug, Deserialize, Serialize, CandidType)]
-pub struct Rewards {
-    pub rewards_standard: f64,
-    pub rewards_with_penalty: f64,
+pub struct DailyNodeData {
+    pub ts: u64,
+    pub subnet_id: Principal,
+    pub failure_rate: f64,
 }
 
 #[derive(Debug, Deserialize, CandidType)]
 pub struct NodeRewardsResponse {
     pub node_id: Principal,
-    pub node_rewards: Rewards,
+    pub rewards_no_penalty: f64,
+    pub rewards_with_penalty: f64,
+    pub daily_data: Vec<DailyNodeData>,
 }
 
 #[derive(Deserialize, CandidType)]

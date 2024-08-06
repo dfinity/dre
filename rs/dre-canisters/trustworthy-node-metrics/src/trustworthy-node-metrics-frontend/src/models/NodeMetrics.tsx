@@ -1,83 +1,30 @@
-import { Principal } from '@dfinity/principal';
 import { computeAverageFailureRate } from '../utils/utils';
-
-export class NodeMetrics {
-  date: Date;
-  numBlockFailuresTotal: bigint;
-  nodeId: Principal;
-  numBlocksProposedTotal: bigint;
-  subnetId: Principal
-
-  constructor(
-    ts: bigint,
-    numBlockFailuresTotal: bigint,
-    nodeId: Principal,
-    numBlocksProposedTotal: bigint,
-    subnetId: Principal
-  ) {
-    this.date = new Date(Number(ts / BigInt(1e6)));
-    this.numBlockFailuresTotal = numBlockFailuresTotal;
-    this.nodeId = nodeId;
-    this.numBlocksProposedTotal = numBlocksProposedTotal;
-    this.subnetId = subnetId;
-  }
-}
-
+import { DailyNodeData } from '../../../declarations/trustworthy-node-metrics/trustworthy-node-metrics.did';
+import { Principal } from '@dfinity/principal';
 export interface ChartData {
   date: Date ;
   failureRate: number | null;
 }
 
-export class DailyData {
-  date: Date;
-  subnetId: string;
-  numBlockFailures: number;
-  numBlocksProposed: number;
-  failureRate: number;
-
-  constructor(
-    date: Date,
-    subnetId: string,
-    numBlockFailures: number,
-    numBlocksProposed: number
-  ) {
-    this.date = date;
-    this.subnetId = subnetId;
-    this.numBlockFailures = numBlockFailures;
-    this.numBlocksProposed = numBlocksProposed;
-    this.failureRate = numBlockFailures / (numBlockFailures + numBlocksProposed) * 100;
-  }
-}
-
-export class DashboardNodeMetrics {
-  nodeId: string;
+export class DashboardNodeRewards {
+  nodeId: Principal;
   nodeIdSmall: string;
-  dailyData: DailyData[];
+  dailyData: DailyNodeData[];
   failureRateAvg: number;
   rewardsNoPenalty: number;
+  rewardsWithPenalty: number;
 
   constructor(
-    nodeId: string,
-    dailyData: DailyData[],
+    nodeId: Principal,
+    dailyData: DailyNodeData[],
     rewardsNoPenalty: number,
+    rewardsWithPenalty: number,
   ) {
     this.nodeId = nodeId;
-    this.nodeIdSmall = nodeId.split('-')[0];
+    this.nodeIdSmall = nodeId.toText().split('-')[0];
     this.dailyData = dailyData;
-    this.failureRateAvg = computeAverageFailureRate(dailyData.map(elem => elem.failureRate));
+    this.failureRateAvg = computeAverageFailureRate(dailyData.map(elem => elem.failure_rate));
     this.rewardsNoPenalty = rewardsNoPenalty;
-  }
-}
-
-export class DailyNodeMetrics {
-  nodeId: string;
-  dailyData: DailyData;
-
-  constructor(
-    nodeId: string,
-    dailyData: DailyData
-  ) {
-    this.nodeId = nodeId;
-    this.dailyData = dailyData;
+    this.rewardsWithPenalty = rewardsWithPenalty;
   }
 }

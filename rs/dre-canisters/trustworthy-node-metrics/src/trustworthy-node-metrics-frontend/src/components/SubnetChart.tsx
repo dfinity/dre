@@ -5,12 +5,12 @@ import Divider from '@mui/material/Divider';
 import { useParams } from 'react-router-dom';
 import { generateChartData, getFormattedDates } from '../utils/utils';
 import RewardTable from './RewardTable';
-import { DashboardNodeMetrics } from '../models/NodeMetrics';
+import { DashboardNodeRewards } from '../models/NodeMetrics';
 import { PeriodFilter } from './FilterBar';
 import { Root } from './NodeList';
 
 export interface SubnetChartProps {
-    dashboardNodeMetrics: DashboardNodeMetrics[],
+    dashboardNodeMetrics: DashboardNodeRewards[],
     periodFilter: PeriodFilter
   }
 
@@ -18,15 +18,17 @@ export const SubnetChart: React.FC<SubnetChartProps> = ({ dashboardNodeMetrics, 
     const [stackOrder] = useState<StackOrderType>('ascending');
     const { subnet } = useParams();
     const subnetNodeMetrics = dashboardNodeMetrics
-        .filter((nodeMetrics) => nodeMetrics.dailyData.some((daily) => daily.subnetId === subnet))
+        .filter((nodeMetrics) => nodeMetrics.dailyData.some((daily) => daily.subnet_id.toText() === subnet))
     const chartData = subnetNodeMetrics
-        .filter((nodeMetrics) => nodeMetrics.dailyData.some(fr => fr.failureRate >= 10))
+        .filter((nodeMetrics) => nodeMetrics.dailyData.some(data => data.failure_rate >= 0.1))
         .map(nodeMetrics => {
             return {
                 data: generateChartData(periodFilter, nodeMetrics.dailyData).map(daily => daily.failureRate),
-                label: nodeMetrics.nodeId,
+                label: nodeMetrics.nodeId.toText(),
               }
     });
+
+    console.info(chartData)
     const series = [{ ...chartData[0], stackOrder }, ...chartData.slice(1)];
 
     return (
@@ -39,7 +41,7 @@ export const SubnetChart: React.FC<SubnetChartProps> = ({ dashboardNodeMetrics, 
                 </Box>
                 <Divider />
                 <Box sx={{ p: 3 }}>
-                    <Divider style={{ fontSize: '17px' }}>Daily Failure Rate</Divider>
+                    <Divider style={{ fontSize: '17px' }}>Daily Failure Rate (grater 10%)</Divider>
                     <BarChart
                         slotProps={{ legend: { hidden: true } }}
                         xAxis={[{ 

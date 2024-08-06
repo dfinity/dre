@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { Box, Grid, Paper, Typography, Autocomplete, TextField } from '@mui/material';
 import { axisClasses, BarChart } from '@mui/x-charts';
-import { ChartData, DailyData, DashboardNodeMetrics } from '../models/NodeMetrics';
+import { ChartData, DashboardNodeRewards } from '../models/NodeMetrics';
 import { styled } from '@mui/material/styles';
 import Divider from '@mui/material/Divider';
 import { PeriodFilter } from './FilterBar';
 import { generateChartData} from '../utils/utils';
 import FailureRateArc, { RewardsArc } from './Gauge';
+import { Principal } from '@dfinity/principal';
+import { DailyNodeData } from '../../../declarations/trustworthy-node-metrics/trustworthy-node-metrics.did';
 
 export const Root = styled('div')(({ theme }) => ({
     width: '100%',
@@ -18,11 +20,11 @@ export const Root = styled('div')(({ theme }) => ({
 }));
 
 export interface NodeListProps {
-    dashboardNodeMetrics: DashboardNodeMetrics[],
+    dashboardNodeMetrics: DashboardNodeRewards[],
     periodFilter: PeriodFilter
 }
 
-function renderChart(nodeId: string, dailyData: DailyData[], failureRateAvg: number, rewardsNoPenalty: number, periodFilter: PeriodFilter): React.ReactNode {
+function renderChart(nodeId: Principal, dailyData: DailyNodeData[], failureRateAvg: number, rewardsNoPenalty: number, periodFilter: PeriodFilter): React.ReactNode {
 
     const chartDailyData: ChartData[] = generateChartData(periodFilter, dailyData);
 
@@ -30,11 +32,11 @@ function renderChart(nodeId: string, dailyData: DailyData[], failureRateAvg: num
     <Paper sx={{ p: 2, backgroundColor: '#11171E', borderRadius: '10px', color: 'white' }}>
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <Typography gutterBottom variant="h6" component="div">
-                {nodeId}
+                {nodeId.toText()}
             </Typography>
             <Box sx={{ ml: 'auto', display: 'flex', alignItems: 'center' }}>
-                {FailureRateArc(Math.round(failureRateAvg))}
-                {RewardsArc(Math.round(rewardsNoPenalty))}
+                {FailureRateArc(failureRateAvg)}
+                {RewardsArc(rewardsNoPenalty)}
             </Box>
         </Box>
     <Box sx={{ p: 2 }}>
@@ -87,7 +89,7 @@ export const NodeList: React.FC<NodeListProps> = ({ dashboardNodeMetrics, period
 
     const handleSearchChange = (event: unknown, value: string | null) => {
         if (value) {
-            const filtered = dashboardNodeMetrics.filter(node => node.nodeId.includes(value));
+            const filtered = dashboardNodeMetrics.filter(node => node.nodeId.toText().includes(value));
             setFilteredMetrics(filtered);
         } else {
             setFilteredMetrics(dashboardNodeMetrics);
@@ -101,7 +103,7 @@ export const NodeList: React.FC<NodeListProps> = ({ dashboardNodeMetrics, period
                     <Autocomplete
                         freeSolo
                         id="node-search"
-                        options={dashboardNodeMetrics.map((node) => node.nodeId)}
+                        options={dashboardNodeMetrics.map((node) => node.nodeId.toText())}
                         onInputChange={handleSearchChange}
                         renderInput={(params) => (
                             <TextField {...params} label="Search Node" variant="outlined" />
@@ -109,7 +111,7 @@ export const NodeList: React.FC<NodeListProps> = ({ dashboardNodeMetrics, period
                     />
                 </Box>
                 <Grid container spacing={2}>
-                {filteredMetrics.slice(0, 30).map(({ nodeId, dailyData, failureRateAvg, rewardsNoPenalty }, index) => (
+                {filteredMetrics.slice(0, 20).map(({ nodeId, dailyData, failureRateAvg, rewardsNoPenalty }, index) => (
                     <Grid item xs={6} key={index}>
                         {renderChart(nodeId, dailyData, failureRateAvg, rewardsNoPenalty, periodFilter)}
                     </Grid>
