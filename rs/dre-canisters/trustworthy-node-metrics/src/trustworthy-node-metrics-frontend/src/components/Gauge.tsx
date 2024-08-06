@@ -6,7 +6,7 @@ export default function FailureRateArc(value: number) {
   return (
     <Box sx={{ p: 2 }}>
     <Typography variant="subtitle1" component="div">
-        Failure Rate Average
+        Failure Rate
     </Typography>
     <Gauge
         width = {80}
@@ -32,11 +32,11 @@ export default function FailureRateArc(value: number) {
   );
 }
 
-export function RewardsArc(value: number) {
+export function RewardsArc(value: number, title: string) {
   return (
     <Box sx={{ p: 2 }}>
     <Typography variant="subtitle1" component="div">
-        Node Reward
+        {title}
     </Typography>
     <Gauge
         width = {80}

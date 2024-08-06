@@ -24,7 +24,13 @@ export interface NodeListProps {
     periodFilter: PeriodFilter
 }
 
-function renderChart(nodeId: Principal, dailyData: DailyNodeData[], failureRateAvg: number, rewardsNoPenalty: number, periodFilter: PeriodFilter): React.ReactNode {
+function renderChart(
+    nodeId: Principal, 
+    dailyData: DailyNodeData[], 
+    failureRateAvg: number, 
+    rewardsNoPenalty: number, 
+    rewardsWithPenalty: number, 
+    periodFilter: PeriodFilter): React.ReactNode {
 
     const chartDailyData: ChartData[] = generateChartData(periodFilter, dailyData);
 
@@ -36,7 +42,7 @@ function renderChart(nodeId: Principal, dailyData: DailyNodeData[], failureRateA
             </Typography>
             <Box sx={{ ml: 'auto', display: 'flex', alignItems: 'center' }}>
                 {FailureRateArc(failureRateAvg)}
-                {RewardsArc(rewardsNoPenalty)}
+                {RewardsArc(rewardsNoPenalty, 'Rewards No Penalty')}
             </Box>
         </Box>
     <Box sx={{ p: 2 }}>
@@ -111,9 +117,10 @@ export const NodeList: React.FC<NodeListProps> = ({ dashboardNodeMetrics, period
                     />
                 </Box>
                 <Grid container spacing={2}>
-                {filteredMetrics.slice(0, 20).map(({ nodeId, dailyData, failureRateAvg, rewardsNoPenalty }, index) => (
+                {filteredMetrics.slice(0, 20).map(
+                    ({ nodeId, dailyData, failureRateAvg, rewardsNoPenalty, rewardsWithPenalty }, index) => (
                     <Grid item xs={6} key={index}>
-                        {renderChart(nodeId, dailyData, failureRateAvg, rewardsNoPenalty, periodFilter)}
+                        {renderChart(nodeId, dailyData, failureRateAvg, rewardsNoPenalty, rewardsWithPenalty, periodFilter)}
                     </Grid>
                 ))}
                 </Grid>
