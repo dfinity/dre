@@ -72,7 +72,10 @@ fn node_rewards(args: NodeRewardsArgs) -> Vec<NodeRewardsResponse> {
     for (ts, subnets) in metrics {
         for subnet_metrics in subnets {
             for node_metrics in subnet_metrics.node_metrics {
-                metrics_by_node.entry(node_metrics.node_id).or_default().push((ts, node_metrics, subnet_metrics.subnet_id));
+                metrics_by_node
+                    .entry(node_metrics.node_id)
+                    .or_default()
+                    .push((ts, node_metrics, subnet_metrics.subnet_id));
             }
         }
     }
@@ -83,15 +86,15 @@ fn node_rewards(args: NodeRewardsArgs) -> Vec<NodeRewardsResponse> {
     let result = metrics_by_node
         .into_iter()
         .map(|(node_id, metrics_in_period)| {
-            let daily_data = rewards_manager::daily_data(metrics_in_period, initial_node_metrics.get(&node_id).cloned().unwrap());
-            let rewards_no_penalty = rewards_manager::rewards_no_penalty(&daily_data);
-            let rewards_with_penalty = rewards_manager::rewards_with_penalty(&daily_data);
+            let daily_metrics = rewards_manager::daily_metrics(metrics_in_period, initial_node_metrics.get(&node_id).cloned().unwrap());
+            let rewards_no_penalty = rewards_manager::rewards_no_penalty(&daily_metrics);
+            let rewards_with_penalty = rewards_manager::rewards_with_penalty(&daily_metrics);
 
-            NodeRewardsResponse { 
+            NodeRewardsResponse {
                 node_id,
                 rewards_no_penalty,
                 rewards_with_penalty,
-                daily_data 
+                daily_metrics,
             }
         })
         .collect_vec();

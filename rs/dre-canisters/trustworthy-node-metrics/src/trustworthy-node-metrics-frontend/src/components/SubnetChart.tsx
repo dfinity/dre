@@ -18,7 +18,7 @@ export const SubnetChart: React.FC<SubnetChartProps> = ({ dashboardNodeMetrics, 
     const [stackOrder] = useState<StackOrderType>('ascending');
     const { subnet } = useParams();
     const subnetNodeMetrics = dashboardNodeMetrics
-        .filter((nodeMetrics) => nodeMetrics.dailyData.some((daily) => daily.subnet_id.toText() === subnet))
+        .filter((nodeMetrics) => nodeMetrics.dailyData.some((daily) => daily.subnet_assigned.toText() === subnet))
     const chartData = subnetNodeMetrics
         .filter((nodeMetrics) => nodeMetrics.dailyData.some(data => data.failure_rate >= 0.1))
         .map(nodeMetrics => {

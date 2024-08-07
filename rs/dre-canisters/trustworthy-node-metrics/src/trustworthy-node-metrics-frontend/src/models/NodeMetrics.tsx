@@ -1,5 +1,5 @@
+import { DailyMetrics } from '../../../declarations/trustworthy-node-metrics/trustworthy-node-metrics.did';
 import { computeAverageFailureRate } from '../utils/utils';
-import { DailyNodeData } from '../../../declarations/trustworthy-node-metrics/trustworthy-node-metrics.did';
 import { Principal } from '@dfinity/principal';
 export interface ChartData {
   date: Date ;
@@ -9,14 +9,14 @@ export interface ChartData {
 export class DashboardNodeRewards {
   nodeId: Principal;
   nodeIdSmall: string;
-  dailyData: DailyNodeData[];
+  dailyData: DailyMetrics[];
   failureRateAvg: number;
   rewardsNoPenalty: number;
   rewardsWithPenalty: number;
 
   constructor(
     nodeId: Principal,
-    dailyData: DailyNodeData[],
+    dailyData: DailyMetrics[],
     rewardsNoPenalty: number,
     rewardsWithPenalty: number,
   ) {

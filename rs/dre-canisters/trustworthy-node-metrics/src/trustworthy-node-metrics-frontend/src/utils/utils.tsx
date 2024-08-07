@@ -1,4 +1,4 @@
-import { DailyNodeData } from "../../../declarations/trustworthy-node-metrics/trustworthy-node-metrics.did";
+import { DailyMetrics } from "../../../declarations/trustworthy-node-metrics/trustworthy-node-metrics.did";
 import { PeriodFilter } from "../components/FilterBar";
 import { ChartData } from "../models/NodeMetrics";
 
@@ -9,7 +9,7 @@ export const dateToNanoseconds = (date: Date): bigint => {
   return nanosecondsSinceEpoch;
 };
 
-export const generateChartData = (periodFilter: PeriodFilter, dailyData: DailyNodeData[]): ChartData[] => {
+export const generateChartData = (periodFilter: PeriodFilter, dailyData: DailyMetrics[]): ChartData[] => {
     const { dateStart, dateEnd } = periodFilter;
     const chartData: ChartData[] = [];
 

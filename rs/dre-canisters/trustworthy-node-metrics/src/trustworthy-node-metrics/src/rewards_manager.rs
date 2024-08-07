@@ -1,94 +1,98 @@
 use candid::Principal;
-use chrono::{Duration, Utc};
 
-use crate::types::{DailyNodeData, NodeMetrics, TimestampNanos};
+use crate::types::{DailyMetrics, NodeMetrics, TimestampNanos};
 
-impl DailyNodeData {
-    pub fn new(ts: TimestampNanos, subnet_id: Principal, proposed_blocks: u64, failed_blocks: u64) -> Self {
+const MIN_FAILURE_RATE: f64 = 0.1;
+const MAX_FAILURE_RATE: f64 = 0.7;
+
+fn daily_rewards_reduction(failure_rate: &f64) -> f64 {
+    if failure_rate < &MIN_FAILURE_RATE {
+        0.0
+    } else if failure_rate > &MAX_FAILURE_RATE {
+        1.0
+    } else {
+        let reduction = (failure_rate - MIN_FAILURE_RATE) / (MAX_FAILURE_RATE - MIN_FAILURE_RATE);
+        (reduction * 100.0).round() / 100.0 
+    }
+}
+
+impl DailyMetrics {
+    pub fn new(ts: TimestampNanos, subnet_assignment: Principal, proposed_blocks: u64, failed_blocks: u64) -> Self {
         let total_blocks = failed_blocks + proposed_blocks;
         let failure_rate = if total_blocks == 0 {
             0.0
         } else {
             failed_blocks as f64 / total_blocks as f64
         };
+        
+        let rewards_reduction = daily_rewards_reduction(&failure_rate);
 
-        DailyNodeData { ts, subnet_id, failure_rate }
-    }
-}
-
-const MIN_FAILURE_RATE: f64 = 0.1;
-const MAX_FAILURE_RATE: f64 = 0.7;
-
-fn daily_reduction(failure_rate: &f64) -> f64 {
-    if failure_rate < &MIN_FAILURE_RATE {
-        0.0
-    } else if failure_rate > &MAX_FAILURE_RATE {
-        1.0
-    } else {
-        (failure_rate - MIN_FAILURE_RATE) / (MAX_FAILURE_RATE - MIN_FAILURE_RATE)
-    }
-}
-
-fn is_one_day_after(ts1: u64, ts2: u64) -> bool {
-    let ts1_sec = ts1 / 1_000_000_000;
-    let ts2_sec = ts2 / 1_000_000_000;
-
-    let dt1 = chrono::DateTime::<Utc>::from_timestamp(ts1_sec as i64, 0).unwrap();
-    let dt2 = chrono::DateTime::<Utc>::from_timestamp(ts2_sec as i64, 0).unwrap();
-
-    dt2.date_naive() == dt1.date_naive() - Duration::days(1)
-}
-
-pub fn rewards_with_penalty(daily_data: &[DailyNodeData]) -> f64 {
-    let active_days = daily_data.len();
-
-    let mut previous_ts = daily_data[0].ts;
-    let mut consecutive_days = Vec::new();
-    let mut reduction_with_penalty = 0 as f64;
-
-    for node_data in daily_data {
-        let daily_reduction = daily_reduction(&node_data.failure_rate);
-        let is_day_after = is_one_day_after(node_data.ts, previous_ts);
-
-        if daily_reduction == 0 as f64 {
-            if !consecutive_days.is_empty() {
-                reduction_with_penalty += consecutive_days.len() as f64 * consecutive_days.iter().sum::<f64>();
-                consecutive_days.clear();
-            }
-        } else if is_day_after {
-            consecutive_days.push(daily_reduction)
-        } else {
-            reduction_with_penalty += daily_reduction
+        DailyMetrics {
+            ts,
+            subnet_assigned: subnet_assignment,
+            failure_rate,
+            rewards_reduction,
         }
-
-        previous_ts = node_data.ts
     }
-
-    reduction_with_penalty /= active_days as f64;
-
-    1.0 - reduction_with_penalty
 }
 
-pub fn rewards_no_penalty(daily_data: &[DailyNodeData]) -> f64 {
-    let active_days = daily_data.len();
+pub fn rewards_with_penalty(daily_metrics: &[DailyMetrics]) -> f64 {
+    let active_days = daily_metrics.len();
+    let mut reduction = 0.0;
+    let mut consecutive_reduction = 0.0;
+    let mut consecutive_count = 0;
 
-    let reduction_no_penalty = daily_data.iter().fold(0 as f64, |mut acc, data| {
-        acc += daily_reduction(&data.failure_rate);
+    for metrics in daily_metrics.iter() {
+        // Just if we want to count the day unassigned as 0.0 reduction
+        // we would need to check if previous daily metrics is <= 24hrs
+        // before current metrics
+        let daily_rewards: f64 = metrics.rewards_reduction;
+    
+        if daily_rewards == 0.0 {
+            if consecutive_count > 0 {
+                reduction += consecutive_reduction * consecutive_count as f64;
+                consecutive_reduction = 0.0;
+                consecutive_count = 0;
+            }
+        } else {
+            consecutive_reduction += daily_rewards;
+            consecutive_count += 1; 
+        }
+    }
+    
+    // Handles the last consecutive days
+    if consecutive_count > 0 {
+        reduction += consecutive_reduction * consecutive_count as f64;
+    }
+
+    reduction /= active_days as f64;
+    let reduction_normalized = reduction.min(1.0);
+    
+    ((1.0 - reduction_normalized) * 100.0).round() / 100.0
+}
+
+pub fn rewards_no_penalty(daily_metrics: &[DailyMetrics]) -> f64 {
+    let active_days = daily_metrics.len();
+
+    let reduction = daily_metrics.iter().fold(0.0, |mut acc, metrics| {
+        let daily_rewards = metrics.rewards_reduction;
+
+        acc += daily_rewards;
         acc
     }) / (active_days as f64);
 
-    1.0 - reduction_no_penalty
+    ((1.0 - reduction) * 100.0).round() / 100.0
 }
 
-pub fn daily_data(mut metrics: Vec<(TimestampNanos, NodeMetrics, Principal)>, initial_metrics: NodeMetrics) -> Vec<DailyNodeData> {
+pub fn daily_metrics(mut node_metrics: Vec<(TimestampNanos, NodeMetrics, Principal)>, initial_metrics: NodeMetrics) -> Vec<DailyMetrics> {
     let mut failure_rates = Vec::new();
 
-    metrics.sort_by_key(|&(timestamp, _, _)| timestamp);
+    node_metrics.sort_by_key(|&(timestamp, _, _)| timestamp);
 
     let mut previous_failed_total = initial_metrics.num_block_failures_total;
     let mut previous_proposed_total = initial_metrics.num_blocks_proposed_total;
 
-    for (ts_nanos, node_metrics, subnet_id) in metrics {
+    for (ts_nanos, node_metrics, subnet_id) in node_metrics {
         let current_failed_total = node_metrics.num_block_failures_total;
         let current_proposed_total = node_metrics.num_blocks_proposed_total;
 
@@ -101,11 +105,93 @@ pub fn daily_data(mut metrics: Vec<(TimestampNanos, NodeMetrics, Principal)>, in
         let daily_failed = current_failed_total - previous_failed_total;
         let daily_proposed = current_proposed_total - previous_proposed_total;
 
-        failure_rates.push(DailyNodeData::new(ts_nanos, subnet_id, daily_proposed, daily_failed));
+        failure_rates.push(DailyMetrics::new(ts_nanos, subnet_id, daily_proposed, daily_failed));
 
         previous_failed_total = current_failed_total;
         previous_proposed_total = current_proposed_total;
     }
 
     failure_rates
+}
+
+#[cfg(test)]
+mod tests {
+    use itertools::Itertools;
+
+    use super::*;
+
+    struct MockedMetrics {
+        days: u64,
+        proposed_blocks: u64,
+        failed_blocks: u64,
+    }
+
+    impl MockedMetrics {
+        fn new(days: u64, proposed_blocks: u64, failed_blocks: u64) -> Self {
+            MockedMetrics {
+                days,
+                proposed_blocks,
+                failed_blocks,
+            }
+        }
+    }
+
+    fn daily_mocked_metrics(metrics: Vec<MockedMetrics>) -> Vec<DailyMetrics> {
+        let subnet = Principal::anonymous();
+        let mut i = 0;
+
+        metrics.into_iter().flat_map(|mocked_metrics: MockedMetrics|
+            (0..mocked_metrics.days).map(move |_| {
+                let next_ts = i * 24 * 60 * 60 * 1_000_000_000;
+                i += 1;
+                DailyMetrics::new(next_ts, subnet, mocked_metrics.proposed_blocks, mocked_metrics.failed_blocks)
+            })
+        ).collect_vec()
+    }
+
+    #[test]
+    fn test_rewards_no_penalty() {
+        let metrics: Vec<MockedMetrics> = vec![
+            MockedMetrics::new(10, 6, 4)
+        ];
+
+        let daily_metrics = daily_mocked_metrics(metrics);
+        let no_penalty = rewards_no_penalty(&daily_metrics);
+        assert_eq!(no_penalty, 0.5);
+    }
+
+    #[test]
+    fn test_rewards_with_penalty() {
+        let metrics: Vec<MockedMetrics> = vec![
+            MockedMetrics::new(5, 6, 4),
+            MockedMetrics::new(25, 10, 0),
+        ];
+
+        let daily_metrics = daily_mocked_metrics(metrics);
+        let with_penalty = rewards_with_penalty(&daily_metrics);
+        assert_eq!(with_penalty, 0.58);
+    }
+
+    #[test]
+    fn test_rewards_with_penalty_min_0() {
+        let metrics: Vec<MockedMetrics> = vec![
+            MockedMetrics::new(5, 6, 4)
+        ];
+
+        let daily_metrics = daily_mocked_metrics(metrics);
+        let with_penalty = rewards_with_penalty(&daily_metrics);
+        assert_eq!(with_penalty, 0.0);
+    }
+
+    #[test]
+    fn test_rewards_with_penalty_2_days() {
+        let metrics: Vec<MockedMetrics> = vec![
+            MockedMetrics::new(5, 6, 4)
+        ];
+
+        let daily_metrics = daily_mocked_metrics(metrics);
+        let with_penalty = rewards_with_penalty(&daily_metrics);
+        assert_eq!(with_penalty, 0.0);
+    }
+
 }

@@ -9168,7 +9168,6 @@ dependencies = [
  "anyhow",
  "canbench-rs",
  "candid",
- "chrono",
  "ciborium",
  "dfn_core",
  "futures",

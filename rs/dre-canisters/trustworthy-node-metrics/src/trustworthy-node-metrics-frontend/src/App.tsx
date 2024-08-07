@@ -54,7 +54,6 @@ function App() {
     const updateRewards = async () => {
       try {
         setIsLoading(true)
-        const c = periodFilter.dateStart.setHours(0, 0, 0, 0);
         const request: NodeRewardsArgs = {
           from_ts: dateToNanoseconds(periodFilter.dateStart),
           to_ts: dateToNanoseconds(periodFilter.dateEnd),
@@ -64,14 +63,14 @@ function App() {
         const dashboardNodeRewards = nodeRewardsResponse.map((nodeRewards) => {
           return new DashboardNodeRewards(
             nodeRewards.node_id,
-            nodeRewards.daily_data,
+            nodeRewards.daily_metrics,
             nodeRewards.rewards_no_penalty,
             nodeRewards.rewards_with_penalty,
           );
         }).sort((a, b) => a.rewardsNoPenalty - b.rewardsNoPenalty );
         
 
-        const subnets = new Set(dashboardNodeRewards.flatMap(nodeRewards => nodeRewards.dailyData.map( data => data.subnet_id.toText())));
+        const subnets = new Set(dashboardNodeRewards.flatMap(nodeRewards => nodeRewards.dailyData.map( data => data.subnet_assigned.toText())));
 
         setDashboardNodeRewards(dashboardNodeRewards);
         setSubnets(subnets);
