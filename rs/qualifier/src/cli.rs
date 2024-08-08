@@ -58,7 +58,13 @@ impl Args {
             .ok_or(anyhow::anyhow!("No home dir present"))?
             .join(PathBuf::from_str(XNET_TESTING_IDENTITY_PATH)?);
         match path.exists() {
-            true => Ok(()),
+            true => {
+                let metadata = path.metadata()?;
+                match metadata.len() {
+                    0 => anyhow::bail!("Xnet-testing identity is present on path {} but is empty", path.display()),
+                    _ => Ok(()),
+                }
+            }
             false => anyhow::bail!("Missing xnet-testing identity on path: {}", path.display()),
         }
     }
