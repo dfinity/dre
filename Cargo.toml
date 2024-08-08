@@ -67,7 +67,7 @@ clap = { version = "4.5", features = [
     "cargo",
 ] }
 colored = "2.1.0"
-counter = "0.5.7"
+counter = "0.6.0"
 comfy-table = "7.1.1"
 crossbeam = "0.8.4"
 crossbeam-channel = "0.5.13"
@@ -77,7 +77,7 @@ custom_error = "1.9.2"
 decentralization = { path = "rs/decentralization" }
 trustworthy-node-metrics = { path = "rs/dre-canisters/trustworthy-node-metrics/src/trustworthy-node-metrics" }
 derive_builder = "0.20.0"
-derive_more = "0.99.18"
+derive_more = "*"
 dialoguer = "0.11.0"
 dirs = "5.0.1"
 dotenv = "0.15.0"
@@ -91,19 +91,19 @@ erased-serde = "0.4.5"
 exitcode = "1.1.2"
 flate2 = "1.0.30"
 float-ord = "0.3.2"
-fs2 = "0.4.3"
 fs-err = "2.11.0"
+fs2 = "0.4.3"
 futures = "0.3.30"
 futures-core = "0.3.30"
 futures-util = "0.3.30"
-octocrab = "0.38.0"
 hex = "0.4.3"
 humantime = "2.1.0"
 humantime-serde = "1.1.1"
 hyper = { version = "1.4.1" }
-self_update = { version = "0.40.0", features = ["archive-tar"] }
 hyper-tls = "0.6.0"
-ic-agent = "0.36.0"
+ic-agent = "0.37.1"
+octocrab = "0.39.0"
+self_update = { version = "0.41.0", features = ["archive-tar"] }
 ic-async-utils = { git = "https://github.com/dfinity/ic.git", rev = "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d" }
 ic-base-types = { git = "https://github.com/dfinity/ic.git", rev = "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d" }
 ic-canister-client = { git = "https://github.com/dfinity/ic.git", rev = "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d" }
@@ -114,7 +114,7 @@ ic-cdk = { git = "https://github.com/dfinity/cdk-rs.git", rev = "59795716487fbb8
 ic-config = { git = "https://github.com/dfinity/ic.git", rev = "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d" }
 ic-crypto-utils-threshold-sig-der = { git = "https://github.com/dfinity/ic.git", rev = "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d" }
 ic-http-endpoints-metrics = { git = "https://github.com/dfinity/ic.git", rev = "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d" }
-ic-identity-hsm = "0.36.0"
+ic-identity-hsm = "0.37.0"
 ic-interfaces = { git = "https://github.com/dfinity/ic.git", rev = "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d" }
 ic-interfaces-registry = { git = "https://github.com/dfinity/ic.git", rev = "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d" }
 ic-management-backend = { path = "rs/ic-management-backend" }
@@ -142,14 +142,14 @@ ic-nervous-system-root = { git = "https://github.com/dfinity/ic.git", rev = "5ba
 ic-nervous-system-clients = { git = "https://github.com/dfinity/ic.git", rev = "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d" }
 ic-sns-wasm = { git = "https://github.com/dfinity/ic.git", rev = "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d" }
 cycles-minting-canister = { git = "https://github.com/dfinity/ic.git", rev = "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d" }
-ic-utils = "0.36.0"
+ic-utils = "0.37.0"
 include_dir = "0.7.4"
 itertools = "0.13.0"
-keyring = "2.3.3"
+keyring = "3.0.5"
 lazy_static = "1.5.0"
 log = "0.4.22"
 lru = "0.12.3"
-opentelemetry = { version = "0.22.0", features = ["metrics"] }
+opentelemetry = { version = "0.24.0", features = ["metrics"] }
 phantom_newtype = { git = "https://github.com/dfinity/ic.git", rev = "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d" }
 pkcs11 = "0.5.0"
 pretty_assertions = "1.4.0"
@@ -158,15 +158,15 @@ prometheus-http-query = "0.8.3"
 prometheus = { version = "0.13.4", features = ["process"] }
 prost = "0.12.6"
 rand = { version = "0.8.5", features = ["std_rng"] }
-rand_seeder = "0.2.3"
+rand_seeder = "0.3.0"
 rayon = "1.10.0"
 regex = "1.10.5"
 registry-canister = { git = "https://github.com/dfinity/ic.git", rev = "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d" }
-reqwest = { version = "0.12.5", features = ["json"] }
+reqwest = { version = "0.12.5", features = ["json", "rustls-tls"] }
 retry = "2.0.0"
 reverse_geocoder = "4.1.1"
 ring = "0.17.8"
-rstest = { version = "0.21.0", default-features = false }
+rstest = { version = "0.22.0", default-features = false }
 serde = { version = "1.0", features = ["derive"] }
 serde_derive = "1.0.203"
 serde_json = "1.0.120"
@@ -186,7 +186,7 @@ socket2 = "0.5.7"
 spinners = "4.1.1"
 strum = { version = "0.26.3", features = ["derive"] }
 strum_macros = "0.26.4"
-tabled = "0.15.0"
+tabled = "0.16.0"
 tabular = "0.2"
 tempfile = "3.10.1"
 thiserror = "1.0.62"
