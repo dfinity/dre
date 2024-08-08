@@ -235,21 +235,22 @@ impl StepCtx {
         };
 
         for panel in Panel::iter() {
-            let url = Url::parse(&url)?.join("/d/ic-progress-clock/ic-progress-clock?")?.join(
+            let mut url = Url::parse(&url)?.join("/d/ic-progress-clock/ic-progress-clock")?;
+            url.set_query(Some(
                 &[
                     ("var-ic", deployment_name.to_string()),
                     ("var-ic_subnet", subnet.to_string()),
                     (
                         "from",
                         match from {
-                            Some(f) => f.to_string(),
+                            Some(f) => (f * 1000).to_string(),
                             None => "now-1h".to_owned(),
                         },
                     ),
                     (
                         "to",
                         match to {
-                            Some(t) => t.to_string(),
+                            Some(t) => (t * 1000).to_string(),
                             None => "now".to_owned(),
                         },
                     ),
@@ -259,21 +260,26 @@ impl StepCtx {
                 .iter()
                 .map(|(k, v)| format!("{}={}", k, v))
                 .join("&"),
-            )?;
+            ));
 
             let path = artifacts.join(format!("{}-{}-{}.png", panel.get_name(), path_suffix, timestamp));
             self.print_text(format!("Capturing screen from link: {}", url));
+
+            let sleep = 10000;
+            let mut image_out;
             unsafe {
-                // https://wkhtmltopdf.org/libwkhtmltox/pagesettings.html#pageLoad
-                let mut image_out = image_app
+                // Setting set can be found: https://wkhtmltopdf.org/libwkhtmltox/pagesettings.html#pageLoad
+                image_out = image_app
                     .builder()
                     .format(wkhtmltopdf::ImageFormat::Png)
                     .screen_width(1920)
-                    .global_setting("load.jsdelay", "5000")
+                    .global_setting("load.jsdelay", sleep.to_string())
+                    .global_setting("web.enableJavascript", "true")
                     .build_from_url(&url)?;
-
-                image_out.save(&path)?;
             }
+            self.print_text(format!("Sleeping for {} milliseconds to allow javascript to load", sleep));
+            tokio::time::sleep(Duration::from_millis(sleep)).await;
+            image_out.save(&path)?;
 
             self.print_text(format!("Captured image and saved to: {}", path.display()))
         }
