@@ -1,5 +1,5 @@
 {
-  "checksum": "c7051dbda9611de916bdf7c2fd0fe1031afcbbdc8632c066720c4f1ede7a7c8f",
+  "checksum": "77338735a08a50825b1898deb5aef7b9a0fd719295f031f0bd86ed9eed26d247",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -28118,7 +28118,7 @@
               "target": "ic_types"
             },
             {
-              "id": "opentelemetry 0.24.0",
+              "id": "opentelemetry 0.22.0",
               "target": "opentelemetry"
             },
             {
@@ -30125,78 +30125,6 @@
         },
         "edition": "2021",
         "version": "0.22.0"
-      },
-      "license": "Apache-2.0"
-    },
-    "opentelemetry 0.24.0": {
-      "name": "opentelemetry",
-      "version": "0.24.0",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/opentelemetry/0.24.0/download",
-          "sha256": "4c365a63eec4f55b7efeceb724f1336f26a9cf3427b70e59e2cd2a5b947fba96"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "opentelemetry",
-            "crate_root": "src/lib.rs",
-            "srcs": [
-              "**/*.rs"
-            ]
-          }
-        }
-      ],
-      "library_target_name": "opentelemetry",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "crate_features": {
-          "common": [
-            "default",
-            "logs",
-            "metrics",
-            "pin-project-lite",
-            "trace"
-          ],
-          "selects": {}
-        },
-        "deps": {
-          "common": [
-            {
-              "id": "futures-core 0.3.30",
-              "target": "futures_core"
-            },
-            {
-              "id": "futures-sink 0.3.30",
-              "target": "futures_sink"
-            },
-            {
-              "id": "once_cell 1.19.0",
-              "target": "once_cell"
-            },
-            {
-              "id": "pin-project-lite 0.2.14",
-              "target": "pin_project_lite"
-            },
-            {
-              "id": "thiserror 1.0.62",
-              "target": "thiserror"
-            }
-          ],
-          "selects": {
-            "cfg(all(target_arch = \"wasm32\", not(target_os = \"wasi\")))": [
-              {
-                "id": "js-sys 0.3.69",
-                "target": "js_sys"
-              }
-            ]
-          }
-        },
-        "edition": "2021",
-        "version": "0.24.0"
       },
       "license": "Apache-2.0"
     },
