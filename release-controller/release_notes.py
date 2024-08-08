@@ -493,7 +493,7 @@ def get_guestos_packages_with_bazel(ic_repo: GitRepo):
     """Get the packages that are related to the GuestOS image using Bazel."""
     guestos_packages_all = bazel_query(
         ic_repo,
-        "deps(//ic-os/guestos/envs/prod:update-img.tar.gz) union deps(//ic-os/setupos/envs/prod:disk-img.tar.gz)",
+        "deps(//ic-os/guestos/envs/prod:update-img.tar.gz) union deps(//ic-os/setupos/envs/prod:disk-img.tar.zst)",
     )
     guestos_packages_filtered = [
         p for p in guestos_packages_all if not any(re.match(f, p) for f in EXCLUDE_PACKAGES_FILTERS)
