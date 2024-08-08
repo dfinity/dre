@@ -956,9 +956,9 @@ Additionally, descriptions of some changes might have been slightly modified to 
 To see a full list of commits added since last release, compare the revisions on [GitHub](https://github.com/dfinity/ic/compare/release-2024-07-25_21-03-base...release-2024-08-02_01-30-base).
 ## Features:
 * author: Adri Alic | [`5e319b9de`](https://github.com/dfinity/ic/commit/5e319b9de) Consensus,Interface(consensus): Change definition of better to exclude disqualified block makers ([#673](https://github.com/dfinity/ic/pull/673))
-* author: Alex Uta  | [`736beea98`](https://github.com/dfinity/ic/commit/736beea98) Execution,Interface,Message Routing,Runtime: Enable transparent huge pages for the page allocator ([#665](https://github.com/dfinity/ic/pull/665))
-* author: Dimi Sarl | [`96035ca4c`](https://github.com/dfinity/ic/commit/96035ca4c) Execution,Interface,Networking,Runtime: Reduce DTS slice limit for regular messages on system subnets ([#621](https://github.com/dfinity/ic/pull/621))
-* author: Alex      | [`f0093242d`](https://github.com/dfinity/ic/commit/f0093242d) Execution,Interface,Runtime: Enforce taking a canister snapshot only when canister is not empty ([#452](https://github.com/dfinity/ic/pull/452))
+* author: Alex      | [`f0093242d`](https://github.com/dfinity/ic/commit/f0093242d) Execution,Interface: Enforce taking a canister snapshot only when canister is not empty ([#452](https://github.com/dfinity/ic/pull/452))
+* author: Alex Uta  | [`736beea98`](https://github.com/dfinity/ic/commit/736beea98) Execution,Interface,Message Routing: Enable transparent huge pages for the page allocator ([#665](https://github.com/dfinity/ic/pull/665))
+* author: Dimi Sarl | [`96035ca4c`](https://github.com/dfinity/ic/commit/96035ca4c) Execution,Interface,Networking: Reduce DTS slice limit for regular messages on system subnets ([#621](https://github.com/dfinity/ic/pull/621))
 * ~~author: maci      | [`9397d7264`](https://github.com/dfinity/ic/commit/9397d7264) Financial Integrations(icrc-ledger-types): bumping version to 0.1.6 in order to release icrc3 and icrc21 types. ([#509](https://github.com/dfinity/ic/pull/509)) [AUTO-EXCLUDED]~~
 * ~~author: dani      | [`a89a2e17c`](https://github.com/dfinity/ic/commit/a89a2e17c) Interface(nns): Metrics for public neurons. ([#685](https://github.com/dfinity/ic/pull/685)) [AUTO-EXCLUDED]~~
 * author: dani      | [`448c85ccc`](https://github.com/dfinity/ic/commit/448c85ccc) Interface(nns): Added include_public_neurons_in_full_neurons to ListNeurons. ([#589](https://github.com/dfinity/ic/pull/589))
@@ -972,8 +972,9 @@ To see a full list of commits added since last release, compare the revisions on
 * ~~author: Rost Rume | [`fd7fc6ebe`](https://github.com/dfinity/ic/commit/fd7fc6ebe) IDX: fix our release rules ([#630](https://github.com/dfinity/ic/pull/630)) [AUTO-EXCLUDED]~~
 ## Chores:
 * author: kpop      | [`204542c15`](https://github.com/dfinity/ic/commit/204542c15) Consensus,Interface(consensus): change the associated `Error` type of `TryFrom<pb>` from `String` to `ProxyDecodeError` for some consensus types ([#695](https://github.com/dfinity/ic/pull/695))
+* author: Maci Kot  | [`f6a88d1a5`](https://github.com/dfinity/ic/commit/f6a88d1a5) Execution,Interface: Saturate function index in system api calls ([#641](https://github.com/dfinity/ic/pull/641))
 * author: Drag Djur | [`4bebd6f6a`](https://github.com/dfinity/ic/commit/4bebd6f6a) Execution,Interface: Add Wasm memory threshold field to canister settings ([#475](https://github.com/dfinity/ic/pull/475))
-* author: Ulan Dege | [`3e9785f87`](https://github.com/dfinity/ic/commit/3e9785f87) Execution,Interface,Runtime: Rename fees_and_limits to icp_config ([#638](https://github.com/dfinity/ic/pull/638))
+* author: Ulan Dege | [`3e9785f87`](https://github.com/dfinity/ic/commit/3e9785f87) Execution,Interface: Rename fees_and_limits to icp_config ([#638](https://github.com/dfinity/ic/pull/638))
 * ~~author: Andr Popo | [`9bc6e18ac`](https://github.com/dfinity/ic/commit/9bc6e18ac) Interface(neurons_fund): Populate hotkeys when necessary in the NNS Governance → Swap → SNS Governance dataflow ([#688](https://github.com/dfinity/ic/pull/688)) [AUTO-EXCLUDED]~~
 * author: Dani Shar | [`b4be567dc`](https://github.com/dfinity/ic/commit/b4be567dc) Interface: Bump rust version to 1.80 ([#642](https://github.com/dfinity/ic/pull/642))
 * author: mras      | [`dbfbeceea`](https://github.com/dfinity/ic/commit/dbfbeceea) Interface: bump jemallocator v0.3 to tikv-jemallocator v0.5 ([#654](https://github.com/dfinity/ic/pull/654))
@@ -982,7 +983,6 @@ To see a full list of commits added since last release, compare the revisions on
 * author: Rost Rume | [`ec01b3735`](https://github.com/dfinity/ic/commit/ec01b3735) Interface: add tools-pkg ([#584](https://github.com/dfinity/ic/pull/584))
 * author: Dimi Sarl | [`0527e6f50`](https://github.com/dfinity/ic/commit/0527e6f50) Interface,Message Routing: Use a single sentence for error messages in IngressInductionError ([#648](https://github.com/dfinity/ic/pull/648))
 * author: Rost Rume | [`173d06185`](https://github.com/dfinity/ic/commit/173d06185) Interface,Node: build and strip IC-OS tools iff we build the VMs ([#609](https://github.com/dfinity/ic/pull/609))
-* author: Maci Kot  | [`f6a88d1a5`](https://github.com/dfinity/ic/commit/f6a88d1a5) Interface,Runtime: Saturate function index in system api calls ([#641](https://github.com/dfinity/ic/pull/641))
 * author: sa-g      | [`c77043f06`](https://github.com/dfinity/ic/commit/c77043f06) Node: Update Base Image Refs [2024-08-01-0150] ([#712](https://github.com/dfinity/ic/pull/712))
 * author: sa-g      | [`2c8adf74b`](https://github.com/dfinity/ic/commit/2c8adf74b) Node: Update Base Image Refs [2024-07-31-0139] ([#690](https://github.com/dfinity/ic/pull/690))
 ## Refactoring:
