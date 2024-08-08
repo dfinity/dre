@@ -783,8 +783,10 @@ Changes [were removed](https://github.com/dfinity/ic/compare/release-2024-07-25_
 * author: Eero Kell | [`f5491f4b2`](https://github.com/dfinity/ic/commit/f5491f4b2) Consensus,Interface: Add backoff and jitter to HostOS upgrades ([#395](https://github.com/dfinity/ic/pull/395))
 * author: Rost Rume | [`3ba4a08a2`](https://github.com/dfinity/ic/commit/3ba4a08a2) Crypto,Interface: quinn and rustls upgrade
 * author: Drag Djur | [`2bae326f0`](https://github.com/dfinity/ic/commit/2bae326f0) Execution,Interface: Add new type of task OnLowWasmMemory ([#379](https://github.com/dfinity/ic/pull/379))
-* author: Alex      | [`e7a36d5c8`](https://github.com/dfinity/ic/commit/e7a36d5c8) Execution,Interface,Runtime: Handle canister snapshots during subnet splitting ([#412](https://github.com/dfinity/ic/pull/412))
-* author: Dimi Sarl | [`59f22753b`](https://github.com/dfinity/ic/commit/59f22753b) Execution,Interface,Runtime: Print instructions consumed in DTS executions in a more readable form
+* author: Alex      | [`e7a36d5c8`](https://github.com/dfinity/ic/commit/e7a36d5c8) Execution,Interface: Handle canister snapshots during subnet splitting ([#412](https://github.com/dfinity/ic/pull/412))
+* author: Dimi Sarl | [`59f22753b`](https://github.com/dfinity/ic/commit/59f22753b) Execution,Interface: Print instructions consumed in DTS executions in a more readable form
+* author: Ulan Dege | [`9f25198cf`](https://github.com/dfinity/ic/commit/9f25198cf) Execution,Interface: Reland switch to compiler sandbox for compilation
+* author: Alex Uta  | [`75c57bc48`](https://github.com/dfinity/ic/commit/75c57bc48) Execution,Interface,Networking: Adjust max number of cached sandboxes
 * author: Dimi Sarl | [`9416ad7d0`](https://github.com/dfinity/ic/commit/9416ad7d0) Interface: Compute effective canister id for canister snapshot requests ([#541](https://github.com/dfinity/ic/pull/541))
 * ~~author: Niko      | [`67e53cc29`](https://github.com/dfinity/ic/commit/67e53cc29) Interface(ICP-Rosetta): add rosetta blocks to block/transaction endpoint ([#524](https://github.com/dfinity/ic/pull/524)) [AUTO-EXCLUDED]~~
 * ~~author: Andr Popo | [`fd0eafaf4`](https://github.com/dfinity/ic/commit/fd0eafaf4) Interface(sns): Include hash of upgrade args in UpgradeSnsControlledCanister payload text rendering ([#554](https://github.com/dfinity/ic/pull/554)) [AUTO-EXCLUDED]~~
@@ -804,19 +806,21 @@ Changes [were removed](https://github.com/dfinity/ic/compare/release-2024-07-25_
 * author: Chri Stie | [`0f3b81c5f`](https://github.com/dfinity/ic/commit/0f3b81c5f) Interface,Message Routing: Implement handling reject signals from incoming stream slices.
 * author: Alex Uta  | [`d267d7f0f`](https://github.com/dfinity/ic/commit/d267d7f0f) Interface,Message Routing,Networking: Revert to the memory allocator ([#515](https://github.com/dfinity/ic/pull/515))
 * author: Tim  Gret | [`4c03f768f`](https://github.com/dfinity/ic/commit/4c03f768f) Interface,Networking: publish https outcalls adapter with http enabled for dfx
-* author: Alex Uta  | [`75c57bc48`](https://github.com/dfinity/ic/commit/75c57bc48) Interface,Networking,Runtime: Adjust max number of cached sandboxes
 * author: Eero Kell | [`7d70776f8`](https://github.com/dfinity/ic/commit/7d70776f8) Interface,Node: Pull HostOS upgrade file in chunks
-* author: Ulan Dege | [`9f25198cf`](https://github.com/dfinity/ic/commit/9f25198cf) Interface,Runtime: Reland switch to compiler sandbox for compilation
 * ~~author: Nico Matt | [`aa89e8079`](https://github.com/dfinity/ic/commit/aa89e8079) IDX: Add Apple Silicon builds ([#512](https://github.com/dfinity/ic/pull/512)) [AUTO-EXCLUDED]~~
 ## Bugfixes:
 * ~~author: Rost Rume | [`b239fb792`](https://github.com/dfinity/ic/commit/b239fb792) General: upgrade the bytes crate since v1.6.0 was yanked due to a bug [AUTO-EXCLUDED]~~
 * author: Adri Alic | [`4fd343cae`](https://github.com/dfinity/ic/commit/4fd343cae) Consensus,Interface(consensus): Fix inconsistency when purging validated pool below maximum element ([#598](https://github.com/dfinity/ic/pull/598))
 * author: Chri Müll | [`9243f5c75`](https://github.com/dfinity/ic/commit/9243f5c75) Consensus,Interface: ic-replay when DTS is enabled
 * author: Jack Lloy | [`72e6f39b0`](https://github.com/dfinity/ic/commit/72e6f39b0) Crypto,Interface(crypto): Re-enable NIDKG cheating dealer solving test
+* author: Nico Matt | [`3eb105c27`](https://github.com/dfinity/ic/commit/3eb105c27) Execution,Interface(IDX): remove unused aarch64 import ([#507](https://github.com/dfinity/ic/pull/507))
+* author: Nico Matt | [`d1d720915`](https://github.com/dfinity/ic/commit/d1d720915) Execution,Interface(IDX): disable unused aarch64-darwin code ([#486](https://github.com/dfinity/ic/pull/486))
+* author: Alex Uta  | [`ff9e2941c`](https://github.com/dfinity/ic/commit/ff9e2941c) Execution,Interface: Cap Wasm64 heap memory size ([#446](https://github.com/dfinity/ic/pull/446))
+* author: Alex Uta  | [`d23960734`](https://github.com/dfinity/ic/commit/d23960734) Execution,Interface: Fix instrumentation for memory.init and table.init in Wasm 64-bit mode ([#442](https://github.com/dfinity/ic/pull/442))
+* author: Ulan Dege | [`7708333b2`](https://github.com/dfinity/ic/commit/7708333b2) Execution,Interface: Follow up on the reserved cycles limit fix ([#383](https://github.com/dfinity/ic/pull/383))
+* author: Ulan Dege | [`4a622c04c`](https://github.com/dfinity/ic/commit/4a622c04c) Execution,Interface: Free SandboxedExecutionController threads ([#354](https://github.com/dfinity/ic/pull/354))
+* author: Andr Bere | [`587c1485b`](https://github.com/dfinity/ic/commit/587c1485b) Execution,Interface: Revert "feat: Switch to compiler sandbox for compilation"
 * author: Stef Schn | [`fc5913c1c`](https://github.com/dfinity/ic/commit/fc5913c1c) Execution,Interface,Message Routing: Maintain snapshot_ids correctly ([#360](https://github.com/dfinity/ic/pull/360))
-* author: Nico Matt | [`3eb105c27`](https://github.com/dfinity/ic/commit/3eb105c27) Execution,Interface,Runtime(IDX): remove unused aarch64 import ([#507](https://github.com/dfinity/ic/pull/507))
-* author: Nico Matt | [`d1d720915`](https://github.com/dfinity/ic/commit/d1d720915) Execution,Interface,Runtime(IDX): disable unused aarch64-darwin code ([#486](https://github.com/dfinity/ic/pull/486))
-* author: Ulan Dege | [`7708333b2`](https://github.com/dfinity/ic/commit/7708333b2) Execution,Interface,Runtime: Follow up on the reserved cycles limit fix ([#383](https://github.com/dfinity/ic/pull/383))
 * author: Stef      | [`dd0be35cb`](https://github.com/dfinity/ic/commit/dd0be35cb) Interface: fifo tracing layers and connections dashboard ([#576](https://github.com/dfinity/ic/pull/576))
 * author: max-      | [`994af8f87`](https://github.com/dfinity/ic/commit/994af8f87) Interface(registry): Optimize get_key_family ([#556](https://github.com/dfinity/ic/pull/556))
 * author: Rost Rume | [`65c3775eb`](https://github.com/dfinity/ic/commit/65c3775eb) Interface: use idna for parsing domain names ([#414](https://github.com/dfinity/ic/pull/414))
@@ -826,10 +830,6 @@ Changes [were removed](https://github.com/dfinity/ic/compare/release-2024-07-25_
 * ~~author: Niko      | [`18243444a`](https://github.com/dfinity/ic/commit/18243444a) Interface(ICRC-Index): remove comment on removing 0 balance accounts ([#341](https://github.com/dfinity/ic/pull/341)) [AUTO-EXCLUDED]~~
 * author: Stef Schn | [`932506f89`](https://github.com/dfinity/ic/commit/932506f89) Interface,Message Routing: Add total_size to CanisterSnapshotBits ([#479](https://github.com/dfinity/ic/pull/479))
 * author: Rost Rume | [`3ee248686`](https://github.com/dfinity/ic/commit/3ee248686) Interface,Networking: use the Shutdown struct instead of explicitly passing the cancellation token for the sender side of the consensus manager
-* author: Alex Uta  | [`ff9e2941c`](https://github.com/dfinity/ic/commit/ff9e2941c) Interface,Runtime: Cap Wasm64 heap memory size ([#446](https://github.com/dfinity/ic/pull/446))
-* author: Alex Uta  | [`d23960734`](https://github.com/dfinity/ic/commit/d23960734) Interface,Runtime: Fix instrumentation for memory.init and table.init in Wasm 64-bit mode ([#442](https://github.com/dfinity/ic/pull/442))
-* author: Ulan Dege | [`4a622c04c`](https://github.com/dfinity/ic/commit/4a622c04c) Interface,Runtime: Free SandboxedExecutionController threads ([#354](https://github.com/dfinity/ic/pull/354))
-* author: Andr Bere | [`587c1485b`](https://github.com/dfinity/ic/commit/587c1485b) Interface,Runtime: Revert "feat: Switch to compiler sandbox for compilation"
 * ~~author: Bas  van  | [`24278eb74`](https://github.com/dfinity/ic/commit/24278eb74) IDX: fix the did_git_test on GitHub ([#480](https://github.com/dfinity/ic/pull/480)) [AUTO-EXCLUDED]~~
 * ~~author: Nico Matt | [`d7097b0ef`](https://github.com/dfinity/ic/commit/d7097b0ef) IDX: move build filters ([#482](https://github.com/dfinity/ic/pull/482)) [AUTO-EXCLUDED]~~
 ## Performance improvements:
@@ -851,15 +851,17 @@ Changes [were removed](https://github.com/dfinity/ic/compare/release-2024-07-25_
 * author: push      | [`f906cf8da`](https://github.com/dfinity/ic/commit/f906cf8da) Crypto(github-sync): PR#248 / feat(crypto): add new signature verification package initially supporting canister signatures
 * author: Jack Lloy | [`dbaa4375c`](https://github.com/dfinity/ic/commit/dbaa4375c) Crypto,Interface(crypto): Remove support for masked kappa in threshold ECDSA ([#368](https://github.com/dfinity/ic/pull/368))
 * author: Jack Lloy | [`bed4f13ef`](https://github.com/dfinity/ic/commit/bed4f13ef) Crypto,Interface(crypto): Implement ZIP25 Ed25519 verification in ic_crypto_ed25519
+* author: Dimi Sarl | [`d1206f45a`](https://github.com/dfinity/ic/commit/d1206f45a) Execution,Interface: Add logs to capture usages of legacy ICQC feature on system subnets ([#607](https://github.com/dfinity/ic/pull/607))
+* author: Dimi Sarl | [`bc2755cff`](https://github.com/dfinity/ic/commit/bc2755cff) Execution,Interface(execution): Remove wasm_chunk_store flag ([#542](https://github.com/dfinity/ic/pull/542))
+* author: Maks Arut | [`7a8c6c69f`](https://github.com/dfinity/ic/commit/7a8c6c69f) Execution,Interface: unify ECDSA and tSchnorr signing requests ([#544](https://github.com/dfinity/ic/pull/544))
+* author: Dimi Sarl | [`513b2baec`](https://github.com/dfinity/ic/commit/513b2baec) Execution,Interface(management-canister): Remove unimplemented delete_chunks API ([#537](https://github.com/dfinity/ic/pull/537))
+* author: Maks Arut | [`e41aefe34`](https://github.com/dfinity/ic/commit/e41aefe34) Execution,Interface: remove obsolete canister_logging feature flag ([#505](https://github.com/dfinity/ic/pull/505))
+* author: Dimi Sarl | [`005885513`](https://github.com/dfinity/ic/commit/005885513) Execution,Interface: Remove deprecated controller field in update settings requests ([#432](https://github.com/dfinity/ic/pull/432))
+* author: Ulan Dege | [`45aefaf9f`](https://github.com/dfinity/ic/commit/45aefaf9f) Execution,Interface: Derive ParitalEq for all sandbox IPC types ([#374](https://github.com/dfinity/ic/pull/374))
+* author: Andr Bere | [`234e5c396`](https://github.com/dfinity/ic/commit/234e5c396) Execution,Interface: Update Wasm benchmarks
 * author: Maks Arut | [`2411eb905`](https://github.com/dfinity/ic/commit/2411eb905) Execution,Interface: rename iDKG key to threshold key
 * author: Dimi Sarl | [`1ba3b5e0b`](https://github.com/dfinity/ic/commit/1ba3b5e0b) Execution,Interface,Message Routing: Update error message for subnet methods that are not allowed through ingress messages ([#574](https://github.com/dfinity/ic/pull/574))
-* author: Dimi Sarl | [`d1206f45a`](https://github.com/dfinity/ic/commit/d1206f45a) Execution,Interface,Runtime: Add logs to capture usages of legacy ICQC feature on system subnets ([#607](https://github.com/dfinity/ic/pull/607))
-* author: Dimi Sarl | [`bc2755cff`](https://github.com/dfinity/ic/commit/bc2755cff) Execution,Interface,Runtime(execution): Remove wasm_chunk_store flag ([#542](https://github.com/dfinity/ic/pull/542))
-* author: Maks Arut | [`7a8c6c69f`](https://github.com/dfinity/ic/commit/7a8c6c69f) Execution,Interface,Runtime: unify ECDSA and tSchnorr signing requests ([#544](https://github.com/dfinity/ic/pull/544))
-* author: Dimi Sarl | [`513b2baec`](https://github.com/dfinity/ic/commit/513b2baec) Execution,Interface,Runtime(management-canister): Remove unimplemented delete_chunks API ([#537](https://github.com/dfinity/ic/pull/537))
-* author: Maks Arut | [`e41aefe34`](https://github.com/dfinity/ic/commit/e41aefe34) Execution,Interface,Runtime: remove obsolete canister_logging feature flag ([#505](https://github.com/dfinity/ic/pull/505))
-* author: Dimi Sarl | [`005885513`](https://github.com/dfinity/ic/commit/005885513) Execution,Interface,Runtime: Remove deprecated controller field in update settings requests ([#432](https://github.com/dfinity/ic/pull/432))
-* author: Andr Bere | [`234e5c396`](https://github.com/dfinity/ic/commit/234e5c396) Execution,Interface,Runtime: Update Wasm benchmarks
+* author: Venk Seka | [`5dc3afeb5`](https://github.com/dfinity/ic/commit/5dc3afeb5) Execution,Interface,Networking(fuzzing): fix clippy warnings for fuzzers
 * ~~author: maci      | [`3ecb66f20`](https://github.com/dfinity/ic/commit/3ecb66f20) Interface(ICP/ICRC-ledger): return value in BalanceStrore.get_balance ([#518](https://github.com/dfinity/ic/pull/518)) [AUTO-EXCLUDED]~~
 * author: Dimi Sarl | [`c4eb29da7`](https://github.com/dfinity/ic/commit/c4eb29da7) Interface: Remove unused instruction limits from subnet record ([#441](https://github.com/dfinity/ic/pull/441))
 * ~~author: Niko      | [`cec100d16`](https://github.com/dfinity/ic/commit/cec100d16) Interface(ICRC-Rosetta): add secp key test ([#467](https://github.com/dfinity/ic/pull/467)) [AUTO-EXCLUDED]~~
@@ -880,11 +882,9 @@ Changes [were removed](https://github.com/dfinity/ic/compare/release-2024-07-25_
 * author: Tim  Gret | [`0775cd819`](https://github.com/dfinity/ic/commit/0775cd819) Interface,Networking: abort artifact download externally if peer set is empty
 * author: Stef Neam | [`a91bae41e`](https://github.com/dfinity/ic/commit/a91bae41e) Interface,Networking: decompress bitcoin data inside tests
 * author: Dani Shar | [`b2268cbaa`](https://github.com/dfinity/ic/commit/b2268cbaa) Interface,Networking(ingress-watcher): Add metric to track capacity of the channel from execeution
-* author: Venk Seka | [`5dc3afeb5`](https://github.com/dfinity/ic/commit/5dc3afeb5) Interface,Networking,Runtime(fuzzing): fix clippy warnings for fuzzers
 * author: Rost Rume | [`3d1337795`](https://github.com/dfinity/ic/commit/3d1337795) Interface,Node: make the visibility rules consistent ([#567](https://github.com/dfinity/ic/pull/567))
 * author: Rost Rume | [`21c75cb41`](https://github.com/dfinity/ic/commit/21c75cb41) Interface,Node: introduce release-pkg and ic-os-pkg package groups ([#553](https://github.com/dfinity/ic/pull/553))
 * author: r-bi      | [`eb775492d`](https://github.com/dfinity/ic/commit/eb775492d) Interface,Node: firewall counter exporter ([#343](https://github.com/dfinity/ic/pull/343))
-* author: Ulan Dege | [`45aefaf9f`](https://github.com/dfinity/ic/commit/45aefaf9f) Interface,Runtime: Derive ParitalEq for all sandbox IPC types ([#374](https://github.com/dfinity/ic/pull/374))
 * ~~author: Mark Kosm | [`2c0b76cfc`](https://github.com/dfinity/ic/commit/2c0b76cfc) IDX: updating container autobuild ([#390](https://github.com/dfinity/ic/pull/390)) [AUTO-EXCLUDED]~~
 * ~~author: Luka Skug | [`7c5e06583`](https://github.com/dfinity/ic/commit/7c5e06583) IDX: revert "remove binaries which don't need to be released (e.g. stripped) and don't need to to uploaded to the CDN" ([#616](https://github.com/dfinity/ic/pull/616)) [AUTO-EXCLUDED]~~
 * ~~author: Rost Rume | [`fd136861c`](https://github.com/dfinity/ic/commit/fd136861c) IDX: don't not upload/compress test canisters ([#561](https://github.com/dfinity/ic/pull/561)) [AUTO-EXCLUDED]~~
@@ -901,6 +901,7 @@ Changes [were removed](https://github.com/dfinity/ic/compare/release-2024-07-25_
 * author: Fran Prei | [`5b8fc4237`](https://github.com/dfinity/ic/commit/5b8fc4237) Crypto,Interface(crypto): remove CspPublicAndSecretKeyStoreChecker ([#559](https://github.com/dfinity/ic/pull/559))
 * author: Fran Prei | [`63da4b23a`](https://github.com/dfinity/ic/commit/63da4b23a) Crypto,Interface(crypto): unify threshold sign method names ([#321](https://github.com/dfinity/ic/pull/321))
 * author: Fran Prei | [`1413afe92`](https://github.com/dfinity/ic/commit/1413afe92) Crypto,Interface(crypto): replace ed25519-consensus with ic-crypto-ed25519 in prod ([#347](https://github.com/dfinity/ic/pull/347))
+* author: Venk Seka | [`34ff2857a`](https://github.com/dfinity/ic/commit/34ff2857a) Execution,Interface(fuzzing): create new test library `wasm_fuzzers`
 * author: stie      | [`61870cc77`](https://github.com/dfinity/ic/commit/61870cc77) Execution,Interface,Message Routing: Remove misleading `callback_id` from `register_callback()` test function ([#497](https://github.com/dfinity/ic/pull/497))
 * ~~author: Math Björ | [`2e8fa1ad7`](https://github.com/dfinity/ic/commit/2e8fa1ad7) Interface(icp_ledger): Move test helper functions to test utils ([#462](https://github.com/dfinity/ic/pull/462)) [AUTO-EXCLUDED]~~
 * ~~author: max-      | [`d04d4bbd5`](https://github.com/dfinity/ic/commit/d04d4bbd5) Interface(nns): no longer generate api types from internal protos ([#588](https://github.com/dfinity/ic/pull/588)) [AUTO-EXCLUDED]~~
@@ -910,18 +911,17 @@ Changes [were removed](https://github.com/dfinity/ic/compare/release-2024-07-25_
 * author: Andr Popo | [`8a852bed9`](https://github.com/dfinity/ic/commit/8a852bed9) Interface(nervous_system): Move `Principals` message definition to nervous_system/proto ([#447](https://github.com/dfinity/ic/pull/447))
 * ~~author: Andr Popo | [`7d3245ce7`](https://github.com/dfinity/ic/commit/7d3245ce7) Interface(nervous_system): Add fields with better names to NeuronsFundNeuron [AUTO-EXCLUDED]~~
 * author: tim  gret | [`f3628917c`](https://github.com/dfinity/ic/commit/f3628917c) Interface,Networking: introduce artifact downloader component ([#403](https://github.com/dfinity/ic/pull/403))
-* author: Venk Seka | [`34ff2857a`](https://github.com/dfinity/ic/commit/34ff2857a) Interface,Runtime(fuzzing): create new test library `wasm_fuzzers`
 ## Tests:
-* author: Ulan Dege | [`e15d65e1c`](https://github.com/dfinity/ic/commit/e15d65e1c) Execution,Interface,Runtime: Add execution smoke tests ([#526](https://github.com/dfinity/ic/pull/526))
-* author: Drag Djur | [`de3425fa6`](https://github.com/dfinity/ic/commit/de3425fa6) Execution,Interface,Runtime: make system api test to be state machine test ([#377](https://github.com/dfinity/ic/pull/377))
-* author: Maks Arut | [`c12b4b26d`](https://github.com/dfinity/ic/commit/c12b4b26d) Execution,Interface,Runtime: support signing disabled iDKG keys in state_machine_tests
+* author: Ulan Dege | [`e15d65e1c`](https://github.com/dfinity/ic/commit/e15d65e1c) Execution,Interface: Add execution smoke tests ([#526](https://github.com/dfinity/ic/pull/526))
+* author: Ulan Dege | [`ba82afe4d`](https://github.com/dfinity/ic/commit/ba82afe4d) Execution,Interface: Add unit tests for sandbox to replica IPC messages ([#435](https://github.com/dfinity/ic/pull/435))
+* author: Ulan Dege | [`9552f0828`](https://github.com/dfinity/ic/commit/9552f0828) Execution,Interface: Add unit tests for replica to sandbox IPC messages ([#411](https://github.com/dfinity/ic/pull/411))
+* author: Drag Djur | [`de3425fa6`](https://github.com/dfinity/ic/commit/de3425fa6) Execution,Interface: make system api test to be state machine test ([#377](https://github.com/dfinity/ic/pull/377))
+* author: Maks Arut | [`c12b4b26d`](https://github.com/dfinity/ic/commit/c12b4b26d) Execution,Interface: support signing disabled iDKG keys in state_machine_tests
 * ~~author: Ulan Dege | [`bc8db7683`](https://github.com/dfinity/ic/commit/bc8db7683) Interface: Remove the scalability benchmarking suite ([#527](https://github.com/dfinity/ic/pull/527)) [AUTO-EXCLUDED]~~
 * ~~author: Math Björ | [`f2f408333`](https://github.com/dfinity/ic/commit/f2f408333) Interface(ICRC-Ledger): Add tests for upgrading ICRC ledger with WASMs with different token types ([#388](https://github.com/dfinity/ic/pull/388)) [AUTO-EXCLUDED]~~
 * ~~author: Math Björ | [`620613591`](https://github.com/dfinity/ic/commit/620613591) Interface(icrc_ledger): Upgrade test for ledgers using golden state ([#399](https://github.com/dfinity/ic/pull/399)) [AUTO-EXCLUDED]~~
 * author: dani      | [`2d2f3b550`](https://github.com/dfinity/ic/commit/2d2f3b550) Interface(sns): SNS upgrade-related tests were flaking out. ([#391](https://github.com/dfinity/ic/pull/391))
 * author: Ognj Mari | [`38c7a5098`](https://github.com/dfinity/ic/commit/38c7a5098) Interface,Message Routing: check canister queue upgrade/downgrade compatibility against published version
-* author: Ulan Dege | [`ba82afe4d`](https://github.com/dfinity/ic/commit/ba82afe4d) Interface,Runtime: Add unit tests for sandbox to replica IPC messages ([#435](https://github.com/dfinity/ic/pull/435))
-* author: Ulan Dege | [`9552f0828`](https://github.com/dfinity/ic/commit/9552f0828) Interface,Runtime: Add unit tests for replica to sandbox IPC messages ([#411](https://github.com/dfinity/ic/pull/411))
 * ~~author: Rost Rume | [`3e4a107f6`](https://github.com/dfinity/ic/commit/3e4a107f6) IDX: stop uploading test canister artifacts  ([#533](https://github.com/dfinity/ic/pull/533)) [AUTO-EXCLUDED]~~
 ## Documentation:
 * ~~author: Rost Rume | [`7c4a08fc2`](https://github.com/dfinity/ic/commit/7c4a08fc2) General: why GuestOS deps are required ([#410](https://github.com/dfinity/ic/pull/410)) [AUTO-EXCLUDED]~~
