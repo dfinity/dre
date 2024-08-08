@@ -138,6 +138,7 @@ async fn main() -> anyhow::Result<()> {
 
     let artifacts = PathBuf::from_str("/tmp/qualifier-artifacts")?.join(&args.version_to_qualify);
     info!("Will store artifacts in: {}", artifacts.display());
+    std::fs::create_dir_all(&artifacts)?;
     if artifacts.exists() {
         info!("Making sure artifact store is empty");
         std::fs::remove_dir_all(&artifacts)?;

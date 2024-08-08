@@ -74,7 +74,7 @@ clap_complete = "4.5.8"
 cryptoki = { workspace = true }
 keyring = { workspace = true }
 comfy-table = { workspace = true }
-headless_chrome = { workspace = true }
+wkhtmltopdf = { workspace = true }
 
 [dev-dependencies]
 actix-rt = { workspace = true }

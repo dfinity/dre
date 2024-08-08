@@ -10,13 +10,13 @@ use std::{
 use chrono::Utc;
 use comfy_table::CellAlignment;
 use flate2::bufread::GzDecoder;
-use headless_chrome::{Browser, LaunchOptionsBuilder};
 use ic_registry_subnet_type::SubnetType;
 use ic_types::PrincipalId;
 use itertools::Itertools;
 use reqwest::{Client, ClientBuilder};
 use strum::{EnumIter, IntoEnumIterator};
 use url::Url;
+use wkhtmltopdf::ImageApplication;
 
 use crate::ctx::DreContext;
 
@@ -30,13 +30,12 @@ pub struct StepCtx {
     artifacts: Option<PathBuf>,
     log_path: Option<PathBuf>,
     client: Client,
-    version: String,
     grafana_url: Option<String>,
-    browser: Option<Browser>,
+    image_app: Option<ImageApplication>,
 }
 
 impl StepCtx {
-    pub fn new(dre_ctx: DreContext, artifacts: Option<PathBuf>, version: String, grafana_url: Option<String>) -> anyhow::Result<Self> {
+    pub fn new(dre_ctx: DreContext, artifacts: Option<PathBuf>, grafana_url: Option<String>) -> anyhow::Result<Self> {
         let artifacts_of_run = artifacts.as_ref().map(|t| {
             if let Err(e) = std::fs::create_dir_all(&t) {
                 panic!("Couldn't create dir {}: {:?}", t.display(), e)
@@ -52,23 +51,15 @@ impl StepCtx {
                 };
                 path
             }),
+            image_app: artifacts_of_run.as_ref().map(|_| {
+                let maybe_image_app = ImageApplication::new();
+                match maybe_image_app {
+                    Ok(a) => a,
+                    Err(e) => panic!("Couldn't initialize wkhtmltox: {:?}", e),
+                }
+            }),
             artifacts: artifacts_of_run,
             client: ClientBuilder::new().timeout(REQWEST_TIMEOUT).build()?,
-            browser: match grafana_url.is_some() {
-                true => {
-                    let options = LaunchOptionsBuilder::default()
-                        .headless(true)
-                        .ignore_certificate_errors(true)
-                        .window_size(Some((1920, 1080)))
-                        .build()
-                        .map_err(|e| anyhow::anyhow!(e))?;
-                    let browser = Browser::new(options).map_err(|e| anyhow::anyhow!(e))?;
-
-                    Some(browser)
-                }
-                false => None,
-            },
-            version,
             grafana_url,
         })
     }
@@ -233,8 +224,8 @@ impl StepCtx {
         to: Option<i64>,
         path_suffix: &str,
     ) -> anyhow::Result<()> {
-        let (url, artifacts, browser) = match (self.grafana_url.as_ref(), self.artifacts.as_ref(), self.browser.as_ref()) {
-            (Some(url), Some(artifacts), Some(browser)) => (url, artifacts, browser),
+        let (url, artifacts, image_app) = match (self.grafana_url.as_ref(), self.artifacts.as_ref(), self.image_app.as_ref()) {
+            (Some(url), Some(artifacts), Some(image_app)) => (url, artifacts, image_app),
             _ => return Ok(()),
         };
 
@@ -270,25 +261,21 @@ impl StepCtx {
                 .join("&"),
             )?;
 
+            let path = artifacts.join(format!("{}-{}-{}.png", panel.get_name(), path_suffix, timestamp));
             self.print_text(format!("Capturing screen from link: {}", url));
+            unsafe {
+                // https://wkhtmltopdf.org/libwkhtmltox/pagesettings.html#pageLoad
+                let mut image_out = image_app
+                    .builder()
+                    .format(wkhtmltopdf::ImageFormat::Png)
+                    .screen_width(1920)
+                    .global_setting("load.jsdelay", "5000")
+                    .build_from_url(&url)?;
 
-            let tab = browser.new_tab().map_err(|e| anyhow::anyhow!(e))?;
+                image_out.save(&path)?;
+            }
 
-            tab.navigate_to(url.as_str()).map_err(|e| anyhow::anyhow!(e))?;
-            tab.wait_until_navigated().map_err(|e| anyhow::anyhow!(e))?;
-
-            // Sleep to make sure everything is loaded
-            tokio::time::sleep(Duration::from_secs(5)).await;
-
-            let png = tab
-                .capture_screenshot(
-                    headless_chrome::protocol::cdp::Page::CaptureScreenshotFormatOption::Png,
-                    Some(100),
-                    None,
-                    true,
-                )
-                .map_err(|e| anyhow::anyhow!(e))?;
-            std::fs::write(artifacts.join(format!("{}-{}-{}.png", panel.get_name(), path_suffix, timestamp)), png).map_err(|e| anyhow::anyhow!(e))?;
+            self.print_text(format!("Captured image and saved to: {}", path.display()))
         }
 
         Ok(())
