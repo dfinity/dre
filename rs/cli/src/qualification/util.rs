@@ -16,7 +16,7 @@ use itertools::Itertools;
 use reqwest::{Client, ClientBuilder};
 use strum::{EnumIter, IntoEnumIterator};
 use url::Url;
-use wkhtmltopdf::ImageApplication;
+use wkhtmlapp::ImgApp;
 
 use crate::ctx::DreContext;
 
@@ -31,7 +31,6 @@ pub struct StepCtx {
     log_path: Option<PathBuf>,
     client: Client,
     grafana_url: Option<String>,
-    image_app: Option<ImageApplication>,
 }
 
 impl StepCtx {
@@ -50,13 +49,6 @@ impl StepCtx {
                     panic!("Couldn't create file {}: {:?}", path.display(), e)
                 };
                 path
-            }),
-            image_app: artifacts_of_run.as_ref().map(|_| {
-                let maybe_image_app = ImageApplication::new();
-                match maybe_image_app {
-                    Ok(a) => a,
-                    Err(e) => panic!("Couldn't initialize wkhtmltox: {:?}", e),
-                }
             }),
             artifacts: artifacts_of_run,
             client: ClientBuilder::new().timeout(REQWEST_TIMEOUT).build()?,
@@ -216,7 +208,7 @@ impl StepCtx {
         println!("{}", formatted)
     }
 
-    pub async fn capture_progress_clock(
+    pub fn capture_progress_clock(
         &self,
         deployment_name: String,
         subnet: &PrincipalId,
@@ -224,8 +216,8 @@ impl StepCtx {
         to: Option<i64>,
         path_suffix: &str,
     ) -> anyhow::Result<()> {
-        let (url, artifacts, image_app) = match (self.grafana_url.as_ref(), self.artifacts.as_ref(), self.image_app.as_ref()) {
-            (Some(url), Some(artifacts), Some(image_app)) => (url, artifacts, image_app),
+        let (url, artifacts) = match (self.grafana_url.as_ref(), self.artifacts.as_ref()) {
+            (Some(url), Some(artifacts)) => (url, artifacts),
             _ => return Ok(()),
         };
 
@@ -262,26 +254,25 @@ impl StepCtx {
                 .join("&"),
             ));
 
-            let path = artifacts.join(format!("{}-{}-{}.png", panel.get_name(), path_suffix, timestamp));
+            let name = format!("{}-{}-{}", panel.get_name(), path_suffix, timestamp);
             self.print_text(format!("Capturing screen from link: {}", url));
 
-            let sleep = 10000;
-            let mut image_out;
-            unsafe {
-                // Setting set can be found: https://wkhtmltopdf.org/libwkhtmltox/pagesettings.html#pageLoad
-                image_out = image_app
-                    .builder()
-                    .format(wkhtmltopdf::ImageFormat::Png)
-                    .screen_width(1920)
-                    .global_setting("load.jsdelay", sleep.to_string())
-                    .global_setting("web.enableJavascript", "true")
-                    .build_from_url(&url)?;
-            }
-            self.print_text(format!("Sleeping for {} milliseconds to allow javascript to load", sleep));
-            tokio::time::sleep(Duration::from_millis(sleep)).await;
-            image_out.save(&path)?;
+            let mut image_app = ImgApp::new().map_err(|e| anyhow::anyhow!(e))?;
+            let args = [("javascript-delay", "15000"), ("quiet", "true"), ("debug-javascript", "true")]
+                .into_iter()
+                .collect();
 
-            self.print_text(format!("Captured image and saved to: {}", path.display()))
+            let destination = image_app
+                .set_format(wkhtmlapp::ImgFormat::Jpg)
+                .map_err(|e| anyhow::anyhow!(e))?
+                .set_work_dir(artifacts.to_str().ok_or(anyhow::anyhow!("Should be a valid path"))?)
+                .map_err(|e| anyhow::anyhow!(e))?
+                .set_args(args)
+                .map_err(|e| anyhow::anyhow!(e))?
+                .run(wkhtmlapp::WkhtmlInput::Url(url.as_str()), &name)
+                .map_err(|e| anyhow::anyhow!(e))?;
+
+            self.print_text(format!("Captured image and saved to: {}", destination))
         }
 
         Ok(())

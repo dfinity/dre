@@ -1,6 +1,5 @@
 use std::{os::unix::fs::PermissionsExt, time::Duration};
 
-use backon::{ExponentialBuilder, Retryable};
 use chrono::Utc;
 use ic_registry_subnet_type::SubnetType;
 use itertools::Itertools;
@@ -89,21 +88,16 @@ impl Step for RunXnetTest {
             .await?;
         let end = Utc::now();
 
-        let progress_clock_retry = || async {
-            ctx.capture_progress_clock(
-                self.deployment_name.to_string(),
-                &subnet.principal,
-                Some(start.timestamp()),
-                Some(end.timestamp()),
-                "xnet_test",
-            )
-            .await
-        };
         // No need to stop the qualification if taking picture fails
-        let _ = progress_clock_retry
-            .retry(&ExponentialBuilder::default())
-            .await
-            .map_err(|e| ctx.print_text(format!("Received error while trying to capture screenshot: {:?}", e)));
+        if let Err(e) = ctx.capture_progress_clock(
+            self.deployment_name.to_string(),
+            &subnet.principal,
+            Some(start.timestamp()),
+            Some(end.timestamp()),
+            "xnet_test",
+        ) {
+            ctx.print_text(format!("Failed to capture progress clock: {:?}", e))
+        }
 
         if !status.success() {
             anyhow::bail!("Failed to run xnet test with status code: {}", status.code().unwrap_or_default())
