@@ -11,10 +11,8 @@ documentation.workspace = true
 
 [dependencies]
 backon = { workspace = true }
-actix-web = { workspace = true }
 anyhow = { workspace = true }
 async-recursion = { workspace = true }
-async-trait = { workspace = true }
 candid = { workspace = true }
 chrono = { workspace = true }
 clap = { workspace = true }
@@ -35,7 +33,6 @@ ic-base-types = { workspace = true }
 ic-canister-client = { workspace = true }
 ic-canister-client-sender = { workspace = true }
 ic-canisters = { workspace = true }
-ic-interfaces-registry = { workspace = true }
 ic-management-backend = { workspace = true }
 ic-management-types = { workspace = true }
 ic-nervous-system-clients = { workspace = true }
@@ -61,7 +58,6 @@ self_update = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 sha2 = { workspace = true }
-socket2 = { workspace = true }
 spinners = { workspace = true }
 strum = { workspace = true }
 tabled = { workspace = true }

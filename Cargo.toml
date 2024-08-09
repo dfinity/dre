@@ -100,7 +100,6 @@ hex = "0.4.3"
 humantime = "2.1.0"
 humantime-serde = "1.1.1"
 hyper = { version = "1.4.1" }
-hyper-tls = "0.6.0"
 ic-agent = "0.37.1"
 octocrab = "0.39.0"
 self_update = { version = "0.41.0", features = ["archive-tar"] }
