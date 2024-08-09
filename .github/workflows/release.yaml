@@ -21,6 +21,7 @@ jobs:
             release-index.yaml
             replica-releases/**
             node-labels/**
+            facts_db/**
 
       - name: Mark bazel as success # because it should not run if only release files changed
         uses: Sibz/github-status-action@v1

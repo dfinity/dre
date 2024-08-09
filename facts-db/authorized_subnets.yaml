@@ -1,0 +1,94 @@
+name: Index of IC Mainnet subnets and their users
+description: This file is used for keeping track of wether a given subnet is public or not, alongside the optional description as to why is the subnet in some state and has labels that will be used for filtering. The automation will automatically exclude all system subnets, state size over 300GB and with over 50k canisters. On top of that, there are labels which, if present in a subnet will result in that subnet being turned to a non-public subnet. Labels are case insensitive meaning that 'SNS' and 'sns' are the same label.
+
+skipped_labels: ["sns", "european", "fiduciary"]
+
+subnets:
+  # The check is a "starts_with", so not the whole subnet id has to be provided
+  - id: tdb26
+    public: false
+    description: system subnet that hosts NNS
+  - id: x33ed
+    public: false
+    description: subnet used for SNS
+    labels:
+      - sns
+  - id: uzr34
+    public: false
+    description: system subnet that hosts production tECDSA backup, II, cycles ledger, exchange rate canister and XRC dashboard
+  - id: pzp6e
+    public: true
+    description: production tECDSA signing
+    labels:
+      - fiduciary
+  - id: snjp4
+    public: false
+  - id: qxesv
+    public: false
+  - id: pae4o
+    public: false
+  - id: 4zbus
+    public: false
+  - id: w4asl
+    public: false
+  - id: io67a
+    public: false
+  - id: 5kdm2
+    public: false
+  - id: shefu
+    public: false
+  - id: ejbmu
+    public: false
+  - id: eq6en
+    public: false
+  - id: csyj4
+    public: false
+  - id: lspz2
+    public: true
+  - id: lhg73
+    public: true
+  - id: gmq5v
+    public: false
+  - id: pjljw
+    public: false
+  - id: brlsh
+    public: false
+  - id: mpubz
+    public: false
+  - id: qdvhd
+    public: false
+  - id: jtdsg
+    public: false
+  - id: k44fs
+    public: true
+  - id: opn46
+    public: true
+  - id: 6pbhf
+    public: true
+  - id: e66qm
+    public: true
+  - id: 4ecnw
+    public: true
+  - id: yinp6
+    public: false
+  - id: w4rem
+    public: false
+    description: system subnet that hosts Bitcoin mainnet and Bitcoin testnet
+  - id: cv73p
+    public: true
+  - id: o3ow2
+    public: false
+  - id: fuqsr
+    public: false
+  - id: 3hhby
+    public: true
+  - id: nl6hn
+    public: true
+  - id: 2fq7c
+    public: false
+    description: subnet that hosts state size test tECDSA signing and OpenChat 2
+  - id: bkfrj
+    public: true
+    description: European
+    labels:
+      - european
