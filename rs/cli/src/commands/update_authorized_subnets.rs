@@ -67,7 +67,7 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
 
             let subnet_principal_string = subnet.principal.to_string();
             if let Some((_, description)) = csv_contents.iter().find(|(short_id, _)| subnet_principal_string.starts_with(short_id)) {
-                excluded_subnets.insert(subnet.principal, description.to_owned());
+                excluded_subnets.insert(subnet.principal, format!("[Explicitly removed] {}", description));
                 continue;
             }
 
@@ -111,7 +111,10 @@ impl UpdateAuthorizedSubnets {
     fn parse_csv(&self) -> anyhow::Result<Vec<(String, String)>> {
         let contents = match &self.path {
             Some(p) => std::fs::read_to_string(p)?,
-            None => DEFAULT_AUTHORIZED_SUBNETS_CSV.to_string(),
+            None => {
+                info!("Using embedded version of authorized subnets csv that is added during build time");
+                DEFAULT_AUTHORIZED_SUBNETS_CSV.to_string()
+            }
         };
         let mut ret = vec![];
         for line in contents.lines() {
