@@ -1,5 +1,8 @@
 {
   "trustworthy-node-metrics": {
     "ic": "oqi72-gaaaa-aaaam-ac2pq-cai"
+  },
+  "trustworthy-node-metrics-frontend": {
+    "ic": "hucfy-dyaaa-aaaam-ac37a-cai"
   }
 }
