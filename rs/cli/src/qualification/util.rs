@@ -10,13 +10,13 @@ use std::{
 use chrono::Utc;
 use comfy_table::CellAlignment;
 use flate2::bufread::GzDecoder;
+use headless_chrome::{protocol::cdp::Page, Browser, LaunchOptionsBuilder};
 use ic_registry_subnet_type::SubnetType;
 use ic_types::PrincipalId;
 use itertools::Itertools;
 use reqwest::{Client, ClientBuilder};
 use strum::{EnumIter, IntoEnumIterator};
 use url::Url;
-use wkhtmlapp::ImgApp;
 
 use crate::ctx::DreContext;
 
@@ -226,6 +226,9 @@ impl StepCtx {
             None => Utc::now().timestamp().to_string(),
         };
 
+        let browser = Browser::new(LaunchOptionsBuilder::default().window_size(Some((1920, 1080))).build()?)?;
+        let tab = browser.new_tab()?;
+
         for panel in Panel::iter() {
             let mut url = Url::parse(&url)?.join("/d/ic-progress-clock/ic-progress-clock")?;
             url.set_query(Some(
@@ -254,25 +257,15 @@ impl StepCtx {
                 .join("&"),
             ));
 
-            let name = format!("{}-{}-{}", panel.get_name(), path_suffix, timestamp);
+            let destination = artifacts.join(format!("{}-{}-{}.png", panel.get_name(), path_suffix, timestamp));
             self.print_text(format!("Capturing screen from link: {}", url));
 
-            let mut image_app = ImgApp::new().map_err(|e| anyhow::anyhow!(e))?;
-            let args = [("javascript-delay", "15000"), ("quiet", "true"), ("debug-javascript", "true")]
-                .into_iter()
-                .collect();
+            tab.navigate_to(url.as_str())?;
+            std::thread::sleep(Duration::from_secs(5));
+            let data = tab.capture_screenshot(Page::CaptureScreenshotFormatOption::Png, None, None, true)?;
+            std::fs::write(&destination, data)?;
 
-            let destination = image_app
-                .set_format(wkhtmlapp::ImgFormat::Jpg)
-                .map_err(|e| anyhow::anyhow!(e))?
-                .set_work_dir(artifacts.to_str().ok_or(anyhow::anyhow!("Should be a valid path"))?)
-                .map_err(|e| anyhow::anyhow!(e))?
-                .set_args(args)
-                .map_err(|e| anyhow::anyhow!(e))?
-                .run(wkhtmlapp::WkhtmlInput::Url(url.as_str()), &name)
-                .map_err(|e| anyhow::anyhow!(e))?;
-
-            self.print_text(format!("Captured image and saved to: {}", destination))
+            self.print_text(format!("Captured image and saved to: {}", destination.display()))
         }
 
         Ok(())
