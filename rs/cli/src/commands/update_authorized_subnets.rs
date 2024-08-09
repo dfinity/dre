@@ -67,28 +67,25 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
 
         for subnet in subnets.values() {
             if subnet.subnet_type.eq(&SubnetType::System) {
-                excluded_subnets.insert(subnet.principal.clone(), "System subnet".to_string());
+                excluded_subnets.insert(subnet.principal, "System subnet".to_string());
                 continue;
             }
 
             let subnet_principal_string = subnet.principal.to_string();
             if let Some((_, description)) = csv_contents.iter().find(|(short_id, _)| subnet_principal_string.starts_with(short_id)) {
-                excluded_subnets.insert(subnet.principal.clone(), description.to_owned());
+                excluded_subnets.insert(subnet.principal, description.to_owned());
                 continue;
             }
 
             let subnet_metrics = agent.read_state_subnet_metrics(&subnet.principal).await?;
 
             if subnet_metrics.num_canisters >= self.canister_limit {
-                excluded_subnets.insert(
-                    subnet.principal.clone(),
-                    format!("Subnet has more than {} canisters", self.canister_limit),
-                );
+                excluded_subnets.insert(subnet.principal, format!("Subnet has more than {} canisters", self.canister_limit));
                 continue;
             }
 
             if subnet_metrics.canister_state_bytes >= self.state_size_limit {
-                excluded_subnets.insert(subnet.principal.clone(), format!("Subnet has more than {} state size", human_bytes));
+                excluded_subnets.insert(subnet.principal, format!("Subnet has more than {} state size", human_bytes));
             }
         }
 
@@ -148,7 +145,7 @@ fn construct_summary(subnets: &Arc<BTreeMap<PrincipalId, Subnet>>, excluded_subn
                 let excluded_desc = excluded_subnets.get(&s.principal);
                 format!(
                     "| {} | {} | {} |",
-                    s.principal.to_string(),
+                    s.principal,
                     excluded_desc.is_none(),
                     excluded_desc.map(|s| s.to_string()).unwrap_or_default()
                 )
