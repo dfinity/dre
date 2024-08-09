@@ -1,3 +1,4 @@
+
 #!/bin/bash
 
 # Function to fetch logs and filter out new lines

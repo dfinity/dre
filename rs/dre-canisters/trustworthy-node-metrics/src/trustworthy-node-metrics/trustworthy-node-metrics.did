@@ -21,7 +21,22 @@ type SubnetNodeMetricsArgs = record {
   ts: opt nat64;
 };
 
+type Rewards = record {
+  rewards_standard: float64;
+  rewards_with_penalty: float64;
+};
+
+type NodeRewardsResponse = record {
+  node_id: principal;
+  node_rewards: Rewards;
+};
+
+type NodeRewardsArgs = record {
+  from_ts: nat64;
+  to_ts: nat64;
+};
 
 service : {
     "subnet_node_metrics" : (SubnetNodeMetricsArgs) -> (SubnetNodeMetricsResult) query;
+    "node_rewards" : (NodeRewardsArgs) -> (vec NodeRewardsResponse) query;
 }
