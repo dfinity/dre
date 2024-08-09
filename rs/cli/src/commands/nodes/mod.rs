@@ -1,38 +1,27 @@
-use clap::{Args, Subcommand};
+use clap::Args;
 use remove::Remove;
 
-use super::{ExecutableCommand, IcAdminRequirement};
+use super::{impl_executable_command_for_enums, ExecutableCommand, IcAdminRequirement};
 
 mod remove;
 
 #[derive(Args, Debug)]
 pub struct Nodes {
     #[clap(subcommand)]
-    pub subcommand: NodesSubcommands,
+    pub subcommand: Subcommands,
 }
-
-#[derive(Subcommand, Debug)]
-pub enum NodesSubcommands {
-    /// Remove nodes from the network
-    Remove(Remove),
-}
+impl_executable_command_for_enums! { Remove }
 
 impl ExecutableCommand for Nodes {
     fn require_ic_admin(&self) -> IcAdminRequirement {
-        match &self.subcommand {
-            NodesSubcommands::Remove(r) => r.require_ic_admin(),
-        }
+        self.subcommand.require_ic_admin()
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        match &self.subcommand {
-            NodesSubcommands::Remove(r) => r.execute(ctx).await,
-        }
+        self.subcommand.execute(ctx).await
     }
 
     fn validate(&self, cmd: &mut clap::Command) {
-        match &self.subcommand {
-            NodesSubcommands::Remove(r) => r.validate(cmd),
-        }
+        self.subcommand.validate(cmd)
     }
 }

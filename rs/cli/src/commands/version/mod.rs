@@ -1,90 +1,28 @@
-use clap::{Args, Subcommand};
-use guest_os::GuestOs;
-use host_os::HostOs;
-use ic_management_types::Artifact;
+use clap::Args;
 
-use super::{ExecutableCommand, IcAdminRequirement};
+use super::{impl_executable_command_for_enums, ExecutableCommand, IcAdminRequirement};
+use crate::commands::version::revise::ReviseElectedVersions;
 
-mod guest_os;
-mod host_os;
+mod revise;
 
 #[derive(Args, Debug)]
-pub struct VersionCmd {
+pub struct Version {
     #[clap(subcommand)]
-    pub subcommand: VersionCommands,
+    pub subcommand: Subcommands,
 }
 
-#[derive(Subcommand, Debug)]
-pub enum VersionCommands {
-    ReviseElectedVersions(ReviseElectedVersionsCmd),
-}
+impl_executable_command_for_enums! { ReviseElectedVersions }
 
-impl ExecutableCommand for VersionCmd {
+impl ExecutableCommand for Version {
     fn require_ic_admin(&self) -> IcAdminRequirement {
-        match &self.subcommand {
-            VersionCommands::ReviseElectedVersions(c) => c.require_ic_admin(),
-        }
+        self.subcommand.require_ic_admin()
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        match &self.subcommand {
-            VersionCommands::ReviseElectedVersions(c) => c.execute(ctx).await,
-        }
+        self.subcommand.execute(ctx).await
     }
 
     fn validate(&self, cmd: &mut clap::Command) {
-        match &self.subcommand {
-            VersionCommands::ReviseElectedVersions(c) => c.validate(cmd),
-        }
-    }
-}
-
-#[derive(Args, Debug)]
-pub struct ReviseElectedVersionsCmd {
-    #[clap(subcommand)]
-    pub subcommand: ReviseElectedVersionsCommands,
-}
-
-#[derive(Subcommand, Debug)]
-pub enum ReviseElectedVersionsCommands {
-    #[clap(about = r#"Update the elected/blessed GuestOS versions in the registry
-by adding a new version and potentially removing obsolete
-versions"#)]
-    GuestOs(GuestOs),
-
-    #[clap(about = r#"Update the elected/blessed HostOS versions in the registry
-by adding a new version and potentially removing obsolete versions"#)]
-    HostOs(HostOs),
-}
-
-impl From<ReviseElectedVersionsCommands> for Artifact {
-    fn from(value: ReviseElectedVersionsCommands) -> Self {
-        match value {
-            ReviseElectedVersionsCommands::GuestOs { .. } => Artifact::GuestOs,
-            ReviseElectedVersionsCommands::HostOs { .. } => Artifact::HostOs,
-        }
-    }
-}
-
-impl ExecutableCommand for ReviseElectedVersionsCmd {
-    fn require_ic_admin(&self) -> IcAdminRequirement {
-        match &self.subcommand {
-            ReviseElectedVersionsCommands::GuestOs(g) => g.require_ic_admin(),
-            ReviseElectedVersionsCommands::HostOs(h) => h.require_ic_admin(),
-        }
-    }
-
-    async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        match &self.subcommand {
-            ReviseElectedVersionsCommands::GuestOs(g) => g.execute(ctx).await,
-            ReviseElectedVersionsCommands::HostOs(h) => h.execute(ctx).await,
-        }
-    }
-
-    fn validate(&self, cmd: &mut clap::Command) {
-        match &self.subcommand {
-            ReviseElectedVersionsCommands::GuestOs(g) => g.validate(cmd),
-            ReviseElectedVersionsCommands::HostOs(h) => h.validate(cmd),
-        }
+        self.subcommand.validate(cmd)
     }
 }

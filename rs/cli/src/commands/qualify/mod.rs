@@ -1,45 +1,31 @@
-use clap::{Args, Subcommand};
+use crate::commands::IcAdminRequirement;
+use clap::Args;
 use execute::Execute;
 use list::List;
 
-use super::ExecutableCommand;
+use super::{impl_executable_command_for_enums, ExecutableCommand};
 
 pub mod execute;
 mod list;
 
 #[derive(Args, Debug)]
-pub struct QualifyCmd {
+pub struct Qualify {
     #[clap(subcommand)]
-    pub subcommand: QualifyCommands,
+    pub subcommand: Subcommands,
 }
 
-#[derive(Subcommand, Debug)]
-pub enum QualifyCommands {
-    /// List all steps present in the qualification
-    List(List),
-    /// Execute the qualification
-    Execute(Execute),
-}
+impl_executable_command_for_enums! { List, Execute }
 
-impl ExecutableCommand for QualifyCmd {
+impl ExecutableCommand for Qualify {
     fn require_ic_admin(&self) -> super::IcAdminRequirement {
-        match &self.subcommand {
-            QualifyCommands::List(c) => c.require_ic_admin(),
-            QualifyCommands::Execute(c) => c.require_ic_admin(),
-        }
+        self.subcommand.require_ic_admin()
     }
 
     fn validate(&self, cmd: &mut clap::Command) {
-        match &self.subcommand {
-            QualifyCommands::List(c) => c.validate(cmd),
-            QualifyCommands::Execute(c) => c.validate(cmd),
-        }
+        self.subcommand.validate(cmd)
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        match &self.subcommand {
-            QualifyCommands::List(c) => c.execute(ctx).await,
-            QualifyCommands::Execute(c) => c.execute(ctx).await,
-        }
+        self.subcommand.execute(ctx).await
     }
 }
