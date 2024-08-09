@@ -1,6 +1,6 @@
 use analyze::Analyze;
 use candid::Decode;
-use clap::{Args, Subcommand};
+use clap::Args;
 use filter::Filter;
 use get::Get;
 use ic_nervous_system_clients::canister_id_record::CanisterIdRecord;
@@ -49,7 +49,7 @@ use registry_canister::mutations::{
 };
 use serde::{Deserialize, Serialize};
 
-use super::{ExecutableCommand, IcAdminRequirement};
+use super::{impl_executable_command_for_enums, ExecutableCommand, IcAdminRequirement};
 
 mod analyze;
 mod filter;
@@ -60,56 +60,22 @@ mod pending;
 #[derive(Args, Debug)]
 pub struct Proposals {
     #[clap(subcommand)]
-    pub subcommand: ProposalsSubcommands,
+    pub subcommand: Subcommands,
 }
 
-#[derive(Subcommand, Debug)]
-pub enum ProposalsSubcommands {
-    /// Get list of pending proposals
-    Pending(Pending),
-
-    /// Get a proposal by ID
-    Get(Get),
-
-    /// Print decentralization change for a CHANGE_SUBNET_MEMBERSHIP proposal given its ID
-    Analyze(Analyze),
-
-    /// Better proposal filtering
-    Filter(Filter),
-
-    /// List proposals
-    List(List),
-}
+impl_executable_command_for_enums! { Pending, Get, Analyze, Filter, List }
 
 impl ExecutableCommand for Proposals {
     fn require_ic_admin(&self) -> IcAdminRequirement {
-        match &self.subcommand {
-            ProposalsSubcommands::Pending(p) => p.require_ic_admin(),
-            ProposalsSubcommands::Get(g) => g.require_ic_admin(),
-            ProposalsSubcommands::Analyze(a) => a.require_ic_admin(),
-            ProposalsSubcommands::Filter(f) => f.require_ic_admin(),
-            ProposalsSubcommands::List(l) => l.require_ic_admin(),
-        }
+        self.subcommand.require_ic_admin()
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        match &self.subcommand {
-            ProposalsSubcommands::Pending(p) => p.execute(ctx).await,
-            ProposalsSubcommands::Get(g) => g.execute(ctx).await,
-            ProposalsSubcommands::Analyze(a) => a.execute(ctx).await,
-            ProposalsSubcommands::Filter(f) => f.execute(ctx).await,
-            ProposalsSubcommands::List(l) => l.execute(ctx).await,
-        }
+        self.subcommand.execute(ctx).await
     }
 
     fn validate(&self, cmd: &mut clap::Command) {
-        match &self.subcommand {
-            ProposalsSubcommands::Pending(p) => p.validate(cmd),
-            ProposalsSubcommands::Get(g) => g.validate(cmd),
-            ProposalsSubcommands::Analyze(a) => a.validate(cmd),
-            ProposalsSubcommands::Filter(f) => f.validate(cmd),
-            ProposalsSubcommands::List(l) => l.validate(cmd),
-        }
+        self.subcommand.validate(cmd)
     }
 }
 
