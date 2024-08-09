@@ -14,7 +14,7 @@ use super::ExecutableCommand;
 const DEFAULT_CANISTER_LIMIT: u64 = 60_000;
 const DEFAULT_STATE_SIZE_BYTES_LIMIT: u64 = 322_122_547_200; // 300GB
 
-const DEFAULT_AUTHORIZED_SUBNETS_CSV: &str = include_str!("../../../../facts-db/non_public_subnets.csv");
+const DEFAULT_AUTHORIZED_SUBNETS_CSV: &str = include_str!(concat!(env!("OUT_DIR"), "/non_public_subnets.csv"));
 
 #[derive(Args, Debug)]
 pub struct UpdateAuthorizedSubnets {

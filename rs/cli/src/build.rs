@@ -16,4 +16,11 @@ fn main() {
             option_env!("CARGO_PKG_VERSION").map(|v| format!("{}-{}", v, git_rev)).unwrap_or_default()
         );
     }
+
+    let out_dir = std::env::var("OUT_DIR").unwrap();
+    let path_to_non_public_subnets =
+        std::fs::canonicalize(option_env!("NON_PUBLIC_SUBNETS").unwrap_or("../../facts-db/non_public_subnets.csv")).unwrap();
+
+    std::fs::copy(&path_to_non_public_subnets, format!("{}/non_public_subnets.csv", out_dir))
+        .unwrap_or_else(|e| panic!("Error with file {}: {:?}", path_to_non_public_subnets.display(), e));
 }
