@@ -8,7 +8,7 @@ import { PeriodFilter } from './FilterBar';
 import { generateChartData} from '../utils/utils';
 import FailureRateArc, { RewardsArc } from './Gauge';
 import { Principal } from '@dfinity/principal';
-import { DailyMetrics } from '../../../declarations/trustworthy-node-metrics/trustworthy-node-metrics.did';
+import { DailyNodeMetrics } from '../../../declarations/trustworthy-node-metrics/trustworthy-node-metrics.did';
 
 export const Root = styled('div')(({ theme }) => ({
     width: '100%',
@@ -26,7 +26,7 @@ export interface NodeListProps {
 
 function renderChart(
     nodeId: Principal, 
-    dailyData: DailyMetrics[], 
+    dailyData: DailyNodeMetrics[], 
     failureRateAvg: number, 
     rewardsNoPenalty: number, 
     rewardsWithPenalty: number, 

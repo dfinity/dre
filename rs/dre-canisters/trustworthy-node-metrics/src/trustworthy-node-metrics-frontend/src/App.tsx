@@ -63,7 +63,7 @@ function App() {
         const dashboardNodeRewards = nodeRewardsResponse.map((nodeRewards) => {
           return new DashboardNodeRewards(
             nodeRewards.node_id,
-            nodeRewards.daily_metrics,
+            nodeRewards.daily_node_metrics,
             nodeRewards.rewards_no_penalty,
             nodeRewards.rewards_with_penalty,
           );

@@ -2,7 +2,7 @@
 type NodeMetrics = record {
     node_id: principal;
     num_blocks_proposed_total: nat64;
-    num_block_failures_total: nat64;
+    num_blocks_failures_total: nat64;
 };
 
 type SubnetNodeMetricsResponse = record {
@@ -21,9 +21,11 @@ type SubnetNodeMetricsArgs = record {
   ts: opt nat64;
 };
 
-type DailyMetrics = record {
+type DailyNodeMetrics = record {
   ts: nat64;
   subnet_assigned: principal;
+  num_blocks_proposed: nat64;
+  num_blocks_failed: nat64;
   failure_rate: float64;
   rewards_reduction: float64;
 };
@@ -32,7 +34,7 @@ type NodeRewardsResponse = record {
   node_id: principal;
   rewards_no_penalty: float64;
   rewards_with_penalty: float64;
-  daily_metrics: vec DailyMetrics;
+  daily_node_metrics: vec DailyNodeMetrics;
 };
 
 type NodeRewardsArgs = record {
