@@ -61,8 +61,8 @@ pub async fn qualify(
         dry_run: false,
         network: network_name.to_string(),
         nns_urls: config.nns_urls,
-        subcommands: dre::commands::Subcommands::Qualify(dre::commands::qualify::QualifyCmd {
-            subcommand: dre::commands::qualify::QualifyCommands::Execute(Execute {
+        subcommands: dre::commands::Subcommands::Qualify(dre::commands::qualify::Qualify {
+            subcommand: dre::commands::qualify::Subcommands::Execute(Execute {
                 version: to_version,
                 from_version: Some(from_version),
                 step_range: None,
