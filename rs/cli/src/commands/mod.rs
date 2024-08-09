@@ -16,6 +16,7 @@ use proposals::Proposals;
 use propose::Propose;
 use qualify::QualifyCmd;
 use registry::Registry;
+use update_authorized_subnets::UpdateAuthorizedSubnets;
 use update_unassigned_nodes::UpdateUnassignedNodes;
 use upgrade::Upgrade;
 use url::Url;
@@ -38,6 +39,7 @@ mod propose;
 pub mod qualify;
 mod registry;
 mod subnet;
+mod update_authorized_subnets;
 mod update_unassigned_nodes;
 pub mod upgrade;
 mod version;
@@ -163,6 +165,9 @@ pub enum Subcommands {
 
     /// Qualification
     Qualify(QualifyCmd),
+
+    /// Manage authorized subnets
+    UpdateAuthorizedSubnets(UpdateAuthorizedSubnets),
 }
 
 pub trait ExecutableCommand {
@@ -269,6 +274,7 @@ impl ExecutableCommand for Args {
             Subcommands::Completions(c) => c.require_ic_admin(),
             Subcommands::Qualify(c) => c.require_ic_admin(),
             Subcommands::NodeMetrics(c) => c.require_ic_admin(),
+            Subcommands::UpdateAuthorizedSubnets(c) => c.require_ic_admin(),
         }
     }
 
@@ -292,6 +298,7 @@ impl ExecutableCommand for Args {
             Subcommands::Completions(c) => c.execute(ctx).await,
             Subcommands::Qualify(c) => c.execute(ctx).await,
             Subcommands::NodeMetrics(c) => c.execute(ctx).await,
+            Subcommands::UpdateAuthorizedSubnets(c) => c.execute(ctx).await,
         }
     }
 
@@ -315,6 +322,7 @@ impl ExecutableCommand for Args {
             Subcommands::Completions(c) => c.validate(cmd),
             Subcommands::Qualify(c) => c.validate(cmd),
             Subcommands::NodeMetrics(c) => c.validate(cmd),
+            Subcommands::UpdateAuthorizedSubnets(c) => c.validate(cmd),
         }
     }
 }
