@@ -6,8 +6,7 @@ use std::{
     time::Duration,
 };
 use types::{
-    DailyNodeMetrics, NodeMetrics, NodeMetricsStoredKey, NodeRewardsArgs, NodeRewardsResponse, SubnetNodeMetricsArgs,
-    SubnetNodeMetricsResponse
+    DailyNodeMetrics, NodeMetrics, NodeMetricsStoredKey, NodeRewardsArgs, NodeRewardsResponse, SubnetNodeMetricsArgs, SubnetNodeMetricsResponse,
 };
 mod metrics_manager;
 mod rewards_manager;

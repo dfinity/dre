@@ -6,7 +6,7 @@ use std::borrow::Cow;
 use std::cell::RefCell;
 use std::u64;
 
-use crate::types::{NodeMetricsStoredKey, NodeMetricsStored, TimestampNanos};
+use crate::types::{NodeMetricsStored, NodeMetricsStoredKey, TimestampNanos};
 
 impl Storable for NodeMetricsStored {
     fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
@@ -43,10 +43,8 @@ pub fn get_metrics_range(from_ts: TimestampNanos, to_ts: Option<TimestampNanos>)
         let last = (to_ts.unwrap_or(u64::MAX), Principal::anonymous());
         first..=last
     };
-    
-    MAP.with(|p| p.borrow()
-        .range(range)
-        .collect_vec())
+
+    MAP.with(|p| p.borrow().range(range).collect_vec())
 }
 
 pub(crate) fn latest_metrics(principal: Principal) -> Option<NodeMetricsStored> {
@@ -55,10 +53,12 @@ pub(crate) fn latest_metrics(principal: Principal) -> Option<NodeMetricsStored> 
         let last = (u64::MAX, principal);
         first..=last
     };
-    
-    MAP.with(|p| p.borrow()
-        .range(range)
-        .take_while(|((_, p), _)| p == &principal)
-        .max_by_key(|((k, _), _)| *k))
-        .map(|(_, v)| v)
+
+    MAP.with(|p| {
+        p.borrow()
+            .range(range)
+            .take_while(|((_, p), _)| p == &principal)
+            .max_by_key(|((k, _), _)| *k)
+    })
+    .map(|(_, v)| v)
 }
