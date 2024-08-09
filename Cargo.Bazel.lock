@@ -1,5 +1,5 @@
 {
-  "checksum": "8d88dc93eade41b932c3475a04b3c57f0309791f0a2146dffe9869567ae774b3",
+  "checksum": "dc08bfd8966ace5e5f264b68dc5a79e2e32cd0d74b729b937be9c751eabc707e",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -1848,13 +1848,13 @@
       },
       "license": "MIT"
     },
-    "assert_cmd 2.0.15": {
+    "assert_cmd 2.0.16": {
       "name": "assert_cmd",
-      "version": "2.0.15",
+      "version": "2.0.16",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/assert_cmd/2.0.15/download",
-          "sha256": "bc65048dd435533bb1baf2ed9956b9a278fbfdcf90301b39ee117f06c0199d37"
+          "url": "https://static.crates.io/crates/assert_cmd/2.0.16/download",
+          "sha256": "dc1835b7f27878de8525dc71410b5a31cdcc5f230aed5ba5df968e09c201b23d"
         }
       },
       "targets": [
@@ -1889,7 +1889,7 @@
               "target": "anstyle"
             },
             {
-              "id": "assert_cmd 2.0.15",
+              "id": "assert_cmd 2.0.16",
               "target": "build_script_build"
             },
             {
@@ -1917,10 +1917,17 @@
               "target": "wait_timeout"
             }
           ],
-          "selects": {}
+          "selects": {
+            "cfg(any())": [
+              {
+                "id": "libc 0.2.155",
+                "target": "libc"
+              }
+            ]
+          }
         },
         "edition": "2021",
-        "version": "2.0.15"
+        "version": "2.0.16"
       },
       "build_script_attrs": {
         "data_glob": [
@@ -27949,7 +27956,7 @@
               "target": "anyhow"
             },
             {
-              "id": "assert_cmd 2.0.15",
+              "id": "assert_cmd 2.0.16",
               "target": "assert_cmd"
             },
             {
@@ -46908,6 +46915,7 @@
       "x86_64-unknown-freebsd",
       "x86_64-unknown-linux-gnu"
     ],
+    "cfg(any())": [],
     "cfg(any(target_arch = \"aarch64\", target_arch = \"arm\", target_arch = \"x86\", target_arch = \"x86_64\"))": [
       "aarch64-apple-darwin",
       "aarch64-apple-ios",
