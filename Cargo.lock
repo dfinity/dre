@@ -1956,6 +1956,7 @@ dependencies = [
  "fs-err",
  "futures",
  "futures-util",
+ "human_bytes",
  "humantime",
  "ic-base-types",
  "ic-canister-client",
@@ -2777,6 +2778,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "human_bytes"
+version = "0.4.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "91f255a4535024abf7640cb288260811fc14794f62b063652ed349f9a6c2348e"
+
+[[package]]
 name = "humantime"
 version = "2.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3175,6 +3182,7 @@ dependencies = [
  "ic-registry-transport",
  "ic-sns-wasm",
  "ic-sys",
+ "ic-transport-types",
  "ic-utils 0.37.0",
  "log",
  "pkcs11",

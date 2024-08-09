@@ -1,5 +1,5 @@
 {
-  "checksum": "827ad6c500961f9bae4b5548a1bc3f6f801842de52bd471142c5743546a42cdd",
+  "checksum": "8d88dc93eade41b932c3475a04b3c57f0309791f0a2146dffe9869567ae774b3",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -9795,6 +9795,10 @@
               "target": "futures_util"
             },
             {
+              "id": "human_bytes 0.4.3",
+              "target": "human_bytes"
+            },
+            {
               "id": "humantime 2.1.0",
               "target": "humantime"
             },
@@ -13936,6 +13940,43 @@
       },
       "license": "MIT OR Apache-2.0"
     },
+    "human_bytes 0.4.3": {
+      "name": "human_bytes",
+      "version": "0.4.3",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/human_bytes/0.4.3/download",
+          "sha256": "91f255a4535024abf7640cb288260811fc14794f62b063652ed349f9a6c2348e"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "human_bytes",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "human_bytes",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "crate_features": {
+          "common": [
+            "default",
+            "si-units"
+          ],
+          "selects": {}
+        },
+        "edition": "2018",
+        "version": "0.4.3"
+      },
+      "license": "BSD-2-Clause"
+    },
     "humantime 2.1.0": {
       "name": "humantime",
       "version": "2.1.0",
@@ -15846,6 +15887,10 @@
             {
               "id": "ic-sys 0.9.0",
               "target": "ic_sys"
+            },
+            {
+              "id": "ic-transport-types 0.37.1",
+              "target": "ic_transport_types"
             },
             {
               "id": "ic-utils 0.37.0",
