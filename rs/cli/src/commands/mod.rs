@@ -1,29 +1,30 @@
 use std::{collections::BTreeMap, path::PathBuf, str::FromStr};
 
+use crate::commands::subnet::Subnet;
 use api_boundary_nodes::ApiBoundaryNodes;
-use clap::{error::ErrorKind, Command, Parser, Subcommand};
+use clap::{error::ErrorKind, Parser};
 use clap_num::maybe_hex;
 use completions::Completions;
 use der_to_principal::DerToPrincipal;
 use firewall::Firewall;
 use get::Get;
 use heal::Heal;
-use hostos::HostOsCmd;
+use hostos::HostOs;
 use ic_management_types::{MinNakamotoCoefficients, Network, NodeFeature};
 use node_metrics::NodeMetrics;
 use nodes::Nodes;
 use proposals::Proposals;
 use propose::Propose;
-use qualify::QualifyCmd;
+use qualify::Qualify;
 use registry::Registry;
 use update_authorized_subnets::UpdateAuthorizedSubnets;
 use update_unassigned_nodes::UpdateUnassignedNodes;
 use upgrade::Upgrade;
 use url::Url;
-use version::VersionCmd;
+use version::Version;
 use vote::Vote;
 
-use crate::{auth::Neuron, ctx::DreContext};
+use crate::auth::Neuron;
 
 mod api_boundary_nodes;
 mod completions;
@@ -110,65 +111,40 @@ The argument is mandatory for testnets, and is optional for mainnet and staging"
     pub no_sync: bool,
 }
 
-#[derive(Subcommand, Debug)]
-pub enum Subcommands {
-    /// Convert a DER file to a Principal
-    DerToPrincipal(DerToPrincipal),
+macro_rules! impl_executable_command_for_enums {
+    ($($var:ident),*) => {
+        use crate::ctx::DreContext;
+        use clap::{Subcommand, Command};
 
-    /// Heal subnets
-    Heal(Heal),
+        #[derive(Subcommand, Debug)]
+        pub enum Subcommands { $(
+            $var($var),
+        )*}
 
-    /// Manage subnets
-    Subnet(subnet::SubnetCommand),
+        impl ExecutableCommand for Subcommands {
+            fn require_ic_admin(&self) -> IcAdminRequirement {
+                match &self {
+                    $(Subcommands::$var(variant) => variant.require_ic_admin(),)*
+                }
+            }
 
-    /// Get a value using ic-admin CLI
-    Get(Get),
+            async fn execute(&self, ctx: DreContext) -> anyhow::Result<()> {
+                match &self {
+                    $(Subcommands::$var(variant) => variant.execute(ctx).await,)*
+                }
+            }
 
-    /// Place a proposal using the ic-admin CLI
-    Propose(Propose),
-
-    /// Place a proposal for updating unassigned nodes
-    UpdateUnassignedNodes(UpdateUnassignedNodes),
-
-    /// Manage versions
-    Version(VersionCmd),
-
-    /// Fetch node metrics stats
-    NodeMetrics(NodeMetrics),
-
-    /// Manage hostos versions
-    HostOs(HostOsCmd),
-
-    /// Manage nodes
-    Nodes(Nodes),
-
-    /// Manage api boundary nodes
-    ApiBoundaryNodes(ApiBoundaryNodes),
-
-    /// Vote on our proposals
-    Vote(Vote),
-
-    /// Registry inspection (dump) operations
-    Registry(Registry),
-
-    /// Firewall rules
-    Firewall(Firewall),
-
-    /// Upgrade
-    Upgrade(Upgrade),
-
-    /// Proposals
-    Proposals(Proposals),
-
-    /// Completions
-    Completions(Completions),
-
-    /// Qualification
-    Qualify(QualifyCmd),
-
-    /// Manage authorized subnets
-    UpdateAuthorizedSubnets(UpdateAuthorizedSubnets),
+            fn validate(&self, cmd: &mut Command) {
+                match &self {
+                    $(Subcommands::$var(variant) => variant.validate(cmd),)*
+                }
+            }
+        }
+    }
 }
+pub(crate) use impl_executable_command_for_enums;
+
+impl_executable_command_for_enums! { DerToPrincipal, Heal, Subnet, Get, Propose, UpdateUnassignedNodes, Version, NodeMetrics, HostOs, Nodes, ApiBoundaryNodes, Vote, Registry, Firewall, Upgrade, Proposals, Completions, Qualify, UpdateAuthorizedSubnets }
 
 pub trait ExecutableCommand {
     fn require_ic_admin(&self) -> IcAdminRequirement;
@@ -255,74 +231,14 @@ pub enum IcAdminRequirement {
 
 impl ExecutableCommand for Args {
     fn require_ic_admin(&self) -> IcAdminRequirement {
-        match &self.subcommands {
-            Subcommands::DerToPrincipal(c) => c.require_ic_admin(),
-            Subcommands::Heal(c) => c.require_ic_admin(),
-            Subcommands::Subnet(c) => c.require_ic_admin(),
-            Subcommands::Get(c) => c.require_ic_admin(),
-            Subcommands::Propose(c) => c.require_ic_admin(),
-            Subcommands::UpdateUnassignedNodes(c) => c.require_ic_admin(),
-            Subcommands::Version(c) => c.require_ic_admin(),
-            Subcommands::HostOs(c) => c.require_ic_admin(),
-            Subcommands::Nodes(c) => c.require_ic_admin(),
-            Subcommands::ApiBoundaryNodes(c) => c.require_ic_admin(),
-            Subcommands::Vote(c) => c.require_ic_admin(),
-            Subcommands::Registry(c) => c.require_ic_admin(),
-            Subcommands::Firewall(c) => c.require_ic_admin(),
-            Subcommands::Upgrade(c) => c.require_ic_admin(),
-            Subcommands::Proposals(c) => c.require_ic_admin(),
-            Subcommands::Completions(c) => c.require_ic_admin(),
-            Subcommands::Qualify(c) => c.require_ic_admin(),
-            Subcommands::NodeMetrics(c) => c.require_ic_admin(),
-            Subcommands::UpdateAuthorizedSubnets(c) => c.require_ic_admin(),
-        }
+        self.subcommands.require_ic_admin()
     }
 
     async fn execute(&self, ctx: DreContext) -> anyhow::Result<()> {
-        match &self.subcommands {
-            Subcommands::DerToPrincipal(c) => c.execute(ctx).await,
-            Subcommands::Heal(c) => c.execute(ctx).await,
-            Subcommands::Subnet(c) => c.execute(ctx).await,
-            Subcommands::Get(c) => c.execute(ctx).await,
-            Subcommands::Propose(c) => c.execute(ctx).await,
-            Subcommands::UpdateUnassignedNodes(c) => c.execute(ctx).await,
-            Subcommands::Version(c) => c.execute(ctx).await,
-            Subcommands::HostOs(c) => c.execute(ctx).await,
-            Subcommands::Nodes(c) => c.execute(ctx).await,
-            Subcommands::ApiBoundaryNodes(c) => c.execute(ctx).await,
-            Subcommands::Vote(c) => c.execute(ctx).await,
-            Subcommands::Registry(c) => c.execute(ctx).await,
-            Subcommands::Firewall(c) => c.execute(ctx).await,
-            Subcommands::Upgrade(c) => c.execute(ctx).await,
-            Subcommands::Proposals(c) => c.execute(ctx).await,
-            Subcommands::Completions(c) => c.execute(ctx).await,
-            Subcommands::Qualify(c) => c.execute(ctx).await,
-            Subcommands::NodeMetrics(c) => c.execute(ctx).await,
-            Subcommands::UpdateAuthorizedSubnets(c) => c.execute(ctx).await,
-        }
+        self.subcommands.execute(ctx).await
     }
 
     fn validate(&self, cmd: &mut Command) {
-        match &self.subcommands {
-            Subcommands::DerToPrincipal(c) => c.validate(cmd),
-            Subcommands::Heal(c) => c.validate(cmd),
-            Subcommands::Subnet(c) => c.validate(cmd),
-            Subcommands::Get(c) => c.validate(cmd),
-            Subcommands::Propose(c) => c.validate(cmd),
-            Subcommands::UpdateUnassignedNodes(c) => c.validate(cmd),
-            Subcommands::Version(c) => c.validate(cmd),
-            Subcommands::HostOs(c) => c.validate(cmd),
-            Subcommands::Nodes(c) => c.validate(cmd),
-            Subcommands::ApiBoundaryNodes(c) => c.validate(cmd),
-            Subcommands::Vote(c) => c.validate(cmd),
-            Subcommands::Registry(c) => c.validate(cmd),
-            Subcommands::Firewall(c) => c.validate(cmd),
-            Subcommands::Upgrade(c) => c.validate(cmd),
-            Subcommands::Proposals(c) => c.validate(cmd),
-            Subcommands::Completions(c) => c.validate(cmd),
-            Subcommands::Qualify(c) => c.validate(cmd),
-            Subcommands::NodeMetrics(c) => c.validate(cmd),
-            Subcommands::UpdateAuthorizedSubnets(c) => c.validate(cmd),
-        }
+        self.subcommands.validate(cmd)
     }
 }
