@@ -205,7 +205,7 @@ async fn notify_for_new_proposals(target_network: Network) {
                             println!(
                                 "Got a response: {}",
                                 response
-                                    .text_with_charset("utf8")
+                                    .text()
                                     .await
                                     .unwrap_or_else(|_| { "ERROR: failed to decode the response from the slack servers".to_string() })
                             );
@@ -265,7 +265,7 @@ async fn notify_for_failed_proposals(target_network: Network) {
                             println!(
                                 "Got a response: {}",
                                 response
-                                    .text_with_charset("utf8")
+                                    .text()
                                     .await
                                     .unwrap_or_else(|_| { "ERROR: failed to decode the response from the slack servers".to_string() })
                             );
