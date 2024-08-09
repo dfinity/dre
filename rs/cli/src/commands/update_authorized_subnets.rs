@@ -1,10 +1,4 @@
-use std::{
-    collections::BTreeMap,
-    fs::File,
-    io::{BufRead, BufReader},
-    path::PathBuf,
-    sync::Arc,
-};
+use std::{collections::BTreeMap, path::PathBuf, sync::Arc};
 
 use clap::{error::ErrorKind, Args};
 use ic_management_types::Subnet;
@@ -20,11 +14,13 @@ use super::ExecutableCommand;
 const DEFAULT_CANISTER_LIMIT: u64 = 60_000;
 const DEFAULT_STATE_SIZE_BYTES_LIMIT: u64 = 322_122_547_200; // 300GB
 
+const DEFAULT_AUTHORIZED_SUBNETS_CSV: &str = include_str!("../../../../facts-db/non_public_subnets.csv");
+
 #[derive(Args, Debug)]
 pub struct UpdateAuthorizedSubnets {
     /// Path to csv file containing the blacklist.
-    #[clap(default_value = "./facts-db/non_public_subnets.csv")]
-    path: PathBuf,
+    #[clap(long)]
+    path: Option<PathBuf>,
 
     /// Canister num limit for marking a subnet as non public
     #[clap(default_value_t = DEFAULT_CANISTER_LIMIT)]
@@ -41,16 +37,14 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
     }
 
     fn validate(&self, cmd: &mut clap::Command) {
-        if !self.path.exists() {
-            cmd.error(ErrorKind::InvalidValue, format!("Path `{}` not found", self.path.display()))
-                .exit();
-        }
+        if let Some(path) = &self.path {
+            if !path.exists() {
+                cmd.error(ErrorKind::InvalidValue, format!("Path `{}` not found", path.display())).exit();
+            }
 
-        if !self.path.is_file() {
-            cmd.error(
-                ErrorKind::InvalidValue,
-                format!("Path `{}` found, but is not a file", self.path.display()),
-            );
+            if !path.is_file() {
+                cmd.error(ErrorKind::InvalidValue, format!("Path `{}` found, but is not a file", path.display()));
+            }
         }
     }
 
@@ -115,16 +109,18 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
 
 impl UpdateAuthorizedSubnets {
     fn parse_csv(&self) -> anyhow::Result<Vec<(String, String)>> {
-        let contents = BufReader::new(File::open(&self.path)?);
+        let contents = match &self.path {
+            Some(p) => std::fs::read_to_string(p)?,
+            None => DEFAULT_AUTHORIZED_SUBNETS_CSV.to_string(),
+        };
         let mut ret = vec![];
         for line in contents.lines() {
-            let content = line?;
-            if content.starts_with("subnet id") {
+            if line.starts_with("subnet id") {
                 info!("Skipping header line in csv");
                 continue;
             }
 
-            let (id, desc) = content.split_once(',').ok_or(anyhow::anyhow!("Failed to parse line: {}", content))?;
+            let (id, desc) = line.split_once(',').ok_or(anyhow::anyhow!("Failed to parse line: {}", line))?;
             ret.push((id.to_string(), desc.to_string()))
         }
 
