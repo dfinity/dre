@@ -1,8 +1,16 @@
+use candid::Principal;
 use ic_cdk_macros::*;
 use itertools::Itertools;
-use std::time::Duration;
-use types::{SubnetNodeMetricsArgs, SubnetNodeMetricsResponse};
+use std::{
+    collections::{self, btree_map::Entry, BTreeMap},
+    time::Duration,
+};
+use types::{
+    DailyNodeMetrics, NodeMetrics, NodeMetricsStoredKey, NodeRewardsArgs, NodeRewardsResponse, SubnetNodeMetricsArgs,
+    SubnetNodeMetricsResponse
+};
 mod metrics_manager;
+mod rewards_manager;
 mod stable_memory;
 pub mod types;
 
@@ -38,24 +46,81 @@ fn post_upgrade() {
 #[query]
 fn subnet_node_metrics(args: SubnetNodeMetricsArgs) -> Result<Vec<SubnetNodeMetricsResponse>, String> {
     let from_ts = args.ts.unwrap_or_default();
+    let mut subnet_node_metrics: BTreeMap<(u64, Principal), Vec<NodeMetrics>> = BTreeMap::new();
 
-    let metrics = stable_memory::get_metrics(from_ts);
+    let node_metrics: Vec<(NodeMetricsStoredKey, types::NodeMetricsStored)> = stable_memory::get_metrics_range(from_ts, None);
 
-    let metrics_flat = metrics
+    for ((ts, node_id), node_metrics_value) in node_metrics {
+        if let Some(subnet_id) = args.subnet_id {
+            if subnet_id != node_metrics_value.subnet_assigned {
+                continue;
+            }
+        }
+
+        let result_key = (ts, node_metrics_value.subnet_assigned);
+        let result_value: NodeMetrics = NodeMetrics {
+            node_id,
+            num_blocks_proposed_total: node_metrics_value.num_blocks_proposed_total,
+            num_blocks_failures_total: node_metrics_value.num_blocks_failures_total,
+        };
+
+        match subnet_node_metrics.entry(result_key) {
+            Entry::Occupied(mut entry) => {
+                let v: &mut Vec<NodeMetrics> = entry.get_mut();
+                v.push(result_value)
+            }
+            Entry::Vacant(entry) => {
+                entry.insert(vec![result_value]);
+            }
+        }
+    }
+
+    let result = subnet_node_metrics
         .into_iter()
-        .flat_map(|(ts, subnets)| {
-            subnets.into_iter().map(move |subnet_node_metrics| SubnetNodeMetricsResponse {
-                ts,
-                subnet_id: subnet_node_metrics.subnet_id,
-                node_metrics: subnet_node_metrics.node_metrics,
-            })
-        })
+        .map(|((ts, subnet_id), node_metrics)| SubnetNodeMetricsResponse { ts, subnet_id, node_metrics })
         .collect_vec();
 
-    let result = match args.subnet_id {
-        Some(subnet_id) => metrics_flat.into_iter().filter(|metrics| metrics.subnet_id == subnet_id).collect_vec(),
-        None => metrics_flat,
-    };
-
     Ok(result)
+}
+
+#[query]
+fn node_rewards(args: NodeRewardsArgs) -> Vec<NodeRewardsResponse> {
+    let period_start = args.from_ts;
+    let period_end = args.to_ts;
+    let node_metrics: Vec<(NodeMetricsStoredKey, types::NodeMetricsStored)> = stable_memory::get_metrics_range(period_start, Some(period_end));
+
+    let mut daily_metrics = collections::BTreeMap::new();
+    for ((ts, node_id), node_metrics_value) in node_metrics {
+        let daily_node_metrics = DailyNodeMetrics::new(
+            ts,
+            node_metrics_value.subnet_assigned,
+            node_metrics_value.num_blocks_proposed,
+            node_metrics_value.num_blocks_failed,
+        );
+
+        match daily_metrics.entry(node_id) {
+            Entry::Occupied(mut entry) => {
+                let v: &mut Vec<DailyNodeMetrics> = entry.get_mut();
+                v.push(daily_node_metrics)
+            }
+            Entry::Vacant(entry) => {
+                entry.insert(vec![daily_node_metrics]);
+            }
+        }
+    }
+
+    daily_metrics
+        .into_iter()
+        .map(|(node_id, daily_node_metrics)| {
+            let rewards_no_penalty = rewards_manager::rewards_no_penalty(&daily_node_metrics);
+            let rewards_with_penalty = rewards_manager::rewards_with_penalty(&daily_node_metrics);
+
+            NodeRewardsResponse {
+                node_id,
+                rewards_no_penalty,
+                rewards_with_penalty,
+                daily_node_metrics,
+            }
+        })
+        .collect_vec()
 }

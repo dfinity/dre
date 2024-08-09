@@ -1,65 +1,72 @@
-use std::collections::{btree_map::Entry, BTreeMap};
+use std::collections::BTreeMap;
 
 use anyhow::Ok;
 use dfn_core::api::PrincipalId;
 use futures::FutureExt;
-use ic_management_canister_types::NodeMetrics as ICManagementNodeMetrics;
 use ic_management_canister_types::{NodeMetricsHistoryArgs, NodeMetricsHistoryResponse};
 use ic_protobuf::registry::subnet::v1::SubnetListRecord;
-use itertools::Itertools;
 
+use crate::types::{NodeMetricsStored, NodeMetricsStoredKey};
 use crate::{
     stable_memory,
-    types::{NodeMetrics, PrincipalNodeMetricsHistory, SubnetNodeMetrics, TimestampNanos},
+    types::{PrincipalNodeMetricsHistory, TimestampNanos},
 };
 
-impl SubnetNodeMetrics {
-    pub fn new(subnet_id: PrincipalId, subnet_metrics: Vec<ICManagementNodeMetrics>) -> Self {
-        let node_metrics = subnet_metrics.into_iter().map(|node_metrics| node_metrics.into()).collect_vec();
-
-        Self {
-            subnet_id: subnet_id.0,
-            node_metrics,
-        }
-    }
-}
-
-impl From<ICManagementNodeMetrics> for NodeMetrics {
-    fn from(node_metrics: ICManagementNodeMetrics) -> Self {
-        Self {
-            node_id: node_metrics.node_id.0,
-            num_block_failures_total: node_metrics.num_block_failures_total,
-            num_blocks_proposed_total: node_metrics.num_blocks_proposed_total,
-        }
-    }
-}
-
-fn store_results(results: BTreeMap<u64, Vec<SubnetNodeMetrics>>) {
+fn store_results(results: BTreeMap<NodeMetricsStoredKey, NodeMetricsStored>) {
     for (timestamp, storable) in results {
         stable_memory::insert(timestamp, storable)
     }
 }
 
+fn get_daily_proposed_failed(new_node_metrics: &ic_management_canister_types::NodeMetrics) -> (u64, u64) {
+    let principal = new_node_metrics.node_id.0;
+    let existing_metrics = stable_memory::latest_metrics(principal);
+    let new_failed_total = new_node_metrics.num_block_failures_total;
+    let new_proposed_total = new_node_metrics.num_blocks_proposed_total;
+
+    let (num_blocks_proposed, num_blocks_failed) = match existing_metrics {
+        Some(existing_metrics_value) => {
+            let existing_failed_total = existing_metrics_value.num_blocks_failures_total;
+            let existing_proposed_total = existing_metrics_value.num_blocks_proposed_total;
+
+            if existing_failed_total > new_failed_total || existing_proposed_total > new_proposed_total {
+                // This is the case when the node gets redeployed
+                (new_proposed_total, new_failed_total)
+            } else {
+                (new_proposed_total - existing_proposed_total, new_failed_total - existing_failed_total)
+            }
+        }
+        None => (new_proposed_total, new_failed_total),
+    };
+
+    (num_blocks_proposed, num_blocks_failed)
+}
+
 /// Transform metrics
 ///
 /// Groups the metrics received by timestamp to fit the "storable" format
-fn transform_metrics(subnets_metrics: Vec<PrincipalNodeMetricsHistory>) -> BTreeMap<TimestampNanos, Vec<SubnetNodeMetrics>> {
+fn transform_metrics(subnets_metrics: Vec<PrincipalNodeMetricsHistory>) -> BTreeMap<NodeMetricsStoredKey, NodeMetricsStored> {
     let mut results = BTreeMap::new();
 
-    for (subnet, subnet_metrics) in subnets_metrics {
+    for (subnet_id, subnet_metrics) in subnets_metrics {
         for ts_node_metrics in subnet_metrics {
             let ts: TimestampNanos = ts_node_metrics.timestamp_nanos;
 
-            let subnet_metrics_storable = SubnetNodeMetrics::new(subnet, ts_node_metrics.node_metrics);
+            for node_metrics in ts_node_metrics.node_metrics {
+                let principal = node_metrics.node_id.0;
+                let node_metrics_key = (ts, principal);
 
-            match results.entry(ts) {
-                Entry::Occupied(mut entry) => {
-                    let v: &mut Vec<SubnetNodeMetrics> = entry.get_mut();
-                    v.push(subnet_metrics_storable)
-                }
-                Entry::Vacant(entry) => {
-                    entry.insert(vec![subnet_metrics_storable]);
-                }
+                let (new_blocks_proposed, new_blocks_failed) = get_daily_proposed_failed(&node_metrics);
+
+                let node_metrics_value = NodeMetricsStored {
+                    subnet_assigned: subnet_id.0,
+                    num_blocks_proposed_total: node_metrics.num_blocks_proposed_total,
+                    num_blocks_failures_total: node_metrics.num_block_failures_total,
+                    num_blocks_proposed: new_blocks_proposed,
+                    num_blocks_failed: new_blocks_failed,
+                };
+
+                results.insert(node_metrics_key, node_metrics_value);
             }
         }
     }
@@ -119,7 +126,7 @@ async fn fetch_subnets() -> anyhow::Result<Vec<PrincipalId>> {
 
 pub async fn update_metrics() -> anyhow::Result<()> {
     let subnets = fetch_subnets().await?;
-    let latest_ts = stable_memory::latest_key().unwrap_or_default();
+    let latest_ts = stable_memory::latest_ts().unwrap_or_default();
     let refresh_ts = latest_ts + 1;
 
     ic_cdk::println!(
