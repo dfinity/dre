@@ -34,3 +34,4 @@ thiserror = { workspace = true }
 url = { workspace = true }
 ic-sns-wasm = { workspace = true }
 trustworthy-node-metrics = { workspace = true }
+ic-transport-types = { workspace = true }

@@ -655,6 +655,9 @@ pub enum ProposeCommand {
         nodes: Vec<PrincipalId>,
         version: String,
     },
+    SetAuthorizedSubnetworks {
+        subnets: Vec<PrincipalId>,
+    },
 }
 
 impl ProposeCommand {
@@ -742,6 +745,7 @@ impl ProposeCommand {
                 vec!["--version".to_string(), version.to_string()],
             ]
             .concat(),
+            Self::SetAuthorizedSubnetworks { subnets } => subnets.iter().flat_map(|s| ["--subnets".to_string(), s.to_string()]).collect::<Vec<_>>(),
         }
     }
 }

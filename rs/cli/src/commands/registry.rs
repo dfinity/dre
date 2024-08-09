@@ -20,7 +20,7 @@ use ic_protobuf::registry::{
     node_operator::v1::NodeOperatorRecord,
     node_rewards::v2::NodeRewardsTable,
     replica_version::v1::ReplicaVersionRecord,
-    subnet::v1::{EcdsaConfig, GossipConfig as GossipConfigProto, SubnetFeatures, SubnetRecord as SubnetRecordProto},
+    subnet::v1::{EcdsaConfig, SubnetFeatures, SubnetRecord as SubnetRecordProto},
     unassigned_nodes_config::v1::UnassignedNodesConfigRecord,
 };
 use ic_registry_subnet_type::SubnetType;
@@ -237,7 +237,6 @@ fn get_subnets(local_registry: &Rc<LazyRegistry>) -> anyhow::Result<Vec<SubnetRe
             initial_notary_delay_millis: record.initial_notary_delay_millis,
             replica_version_id: record.replica_version_id,
             dkg_interval_length: record.dkg_interval_length,
-            gossip_config: record.gossip_config,
             start_as_nns: record.start_as_nns,
             subnet_type: SubnetType::try_from(record.subnet_type).unwrap(),
             max_instructions_per_message: record.max_instructions_per_message,
@@ -424,7 +423,6 @@ struct SubnetRecord {
     initial_notary_delay_millis: u64,
     replica_version_id: String,
     dkg_interval_length: u64,
-    gossip_config: Option<GossipConfigProto>,
     start_as_nns: bool,
     subnet_type: SubnetType,
     max_instructions_per_message: u64,

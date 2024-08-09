@@ -38,6 +38,9 @@ async fn main() -> anyhow::Result<()> {
         .map_err(|e| anyhow::anyhow!("Checking connectivity failed: {}", e.to_string()))?;
 
     let args = Args::parse();
+    if args.version_to_qualify.is_empty() {
+        anyhow::bail!("Version to qualify is required, but empty string is passed.");
+    }
     info!("Running qualification for {}", args.version_to_qualify);
     info!("Generating keys for farm testnets...");
     let (neuron_id, private_key_pem) = args.ensure_test_key()?;

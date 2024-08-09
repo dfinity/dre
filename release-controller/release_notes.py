@@ -124,6 +124,7 @@ TEAM_PRETTY_MAP = {
     "sdk-team": "SDK",
     "trust-team": "Trust",
     "utopia": "Utopia",
+    "pocket-ic": "Pocket IC",
 }
 
 
@@ -134,12 +135,12 @@ EXCLUDE_PACKAGES_FILTERS = [
     r"rs\/nns.+",
     r".+test.+",
     r"^bazel$",
+    r".*boundary.*",
+    r".*rosetta.*",
+    r".*pocket[_-]ic.*",
 ]
 
 NON_REPLICA_TEAMS = sorted(list(set(TEAM_PRETTY_MAP.keys()) - REPLICA_TEAMS))
-
-# Completely remove these teams from mentioning in the release notes
-DROP_TEAMS = {"Utopia", "Financial Integrations", "IDX", "T&V", "Prodsec", "Support", "SupportEU", "SupportNA"}
 
 # Ownership threshold for analyzing which teams were
 # involved in the commit
@@ -230,8 +231,8 @@ def parse_conventional_commit(message, pattern):
     return {"type": "other", "scope": None, "message": message}
 
 
-def best_matching_regex(file_path, regex_list):
-    matches = [(regex, fnmatch.fnmatch(file_path, regex)) for regex in regex_list]
+def matched_patterns(file_path, patterns):
+    matches = [(p, fnmatch.fnmatch(file_path, p)) for p in patterns]
     matches = [match for match in matches if match[1]]
     if len(matches) == 0:
         return None
@@ -260,6 +261,7 @@ def prepare_release_notes(
         exit(1)
 
     guestos_packages_all, guestos_packages_filtered = get_guestos_packages_with_bazel(ic_repo)
+    bazel_packages_all = bazel_query_all_packages(ic_repo)
 
     for i, _ in progressbar([i[0] for i in commits], "Processing commit: ", 80):
         change_info = get_change_description_for_commit(
@@ -268,6 +270,7 @@ def prepare_release_notes(
             ci_patterns=ci_patterns,
             ic_repo=ic_repo,
             codeowners=codeowners,
+            bazel_packages_all=bazel_packages_all,
             guestos_packages_all=guestos_packages_all,
             guestos_packages_filtered=guestos_packages_filtered,
         )
@@ -288,6 +291,7 @@ def get_change_description_for_commit(
     ci_patterns,
     ic_repo,
     codeowners,
+    bazel_packages_all,
     guestos_packages_all,
     guestos_packages_filtered,
 ) -> typing.Optional[Change]:
@@ -301,15 +305,20 @@ def get_change_description_for_commit(
     commit_hash, commit_message, commiter = commit_info
 
     file_changes = ic_repo.file_changes_for_commit(commit_hash)
-    guestos_change = any(any(c["file_path"][1:].startswith(p) for c in file_changes) for p in guestos_packages_all)
-    if not guestos_change:
+    modified_packages = list(
+        next((p for p in sorted(bazel_packages_all, key=len, reverse=True) if c["file_path"][1:].startswith(p)), None)
+        for c in file_changes
+    )
+    if not any(p in guestos_packages_all for p in modified_packages):
         return None
 
-    included = any(any(c["file_path"][1:].startswith(p) for c in file_changes) for p in guestos_packages_filtered)
+    included = any(p in guestos_packages_filtered for p in modified_packages)
 
     ownership = {}
     stripped_message = re.sub(jira_ticket_regex, "", commit_message)
     stripped_message = re.sub(empty_brackets_regex, "", stripped_message)
+    # add github PR links
+    stripped_message = re.sub(r"\(#(\d+)\)", r"([#\1](https://github.com/dfinity/ic/pull/\1))", stripped_message)
     stripped_message = stripped_message.strip()
 
     conventional = parse_conventional_commit(stripped_message, conv_commit_pattern)
@@ -318,8 +327,9 @@ def get_change_description_for_commit(
         if any([fnmatch.fnmatch(change["file_path"], pattern) for pattern in ci_patterns]):
             continue
 
-        key = best_matching_regex(change["file_path"], codeowners.keys())
-        teams = ["unknown"] if key is None else codeowners[key]
+        teams = set(sum([codeowners[p] for p in codeowners.keys() if fnmatch.fnmatch(change["file_path"], p)], []))
+        if not teams:
+            teams = ["unknown"]
 
         for team in teams:
             if team not in ownership:
@@ -327,30 +337,30 @@ def get_change_description_for_commit(
                 continue
             ownership[team] += change["num_changes"]
 
-        # Non reviewed files
-    if "ghost" in ownership:
-        ownership.pop("ghost")
-    if "owners-owners" in ownership:
-        ownership.pop("owners-owners")
+    if "ic-owners-owners" in ownership:
+        ownership.pop("ic-owners-owners")
 
+    # TODO: count max first by replica team then others
     teams = set()
     if ownership:
-        max_ownership = max(ownership.items(), key=lambda changed_lines_per_team: changed_lines_per_team[1])[1]
-        # Since multiple teams can own a path in CODEOWNERS we have to handle what happens if two teams have max changes
-        for key, value in ownership.items():
-            if value >= max_ownership * MAX_OWNERSHIP_AREA:
+        replica_ownership = {team: lines for team, lines in ownership.items() if team in REPLICA_TEAMS}
+        max_ownership_replica = max([lines for team, lines in ownership.items() if team in REPLICA_TEAMS] or [0])
+        for key, value in replica_ownership.items():
+            if value >= max_ownership_replica * MAX_OWNERSHIP_AREA:
                 teams.add(key)
-
-        if "test" in conventional["message"]:
-            conventional["type"] = "test"
+        if not teams:
+            max_ownership = max(ownership.values() or [0])
+            for key, value in ownership.items():
+                if value >= max_ownership * MAX_OWNERSHIP_AREA:
+                    teams.add(key)
 
     commit_type = conventional["type"].lower()
     commit_type = commit_type if commit_type in TYPE_PRETTY_MAP else "other"
 
-    teams = sorted(list(teams - DROP_TEAMS))
-
-    if not teams or all([team in NON_REPLICA_TEAMS for team in teams]):
+    if not REPLICA_TEAMS.intersection(teams):
         included = False
+
+    teams = sorted(list(teams))
 
     if commit_type not in change_infos:
         change_infos[commit_type] = []
@@ -386,7 +396,7 @@ def release_notes_markdown(
     ic_repo: GitRepo, base_release_tag, base_release_commit, release_tag, release_commit, change_infos
 ):
     """Generate release notes in markdown format."""
-    merge_base = ic_repo.merge_base(base_release_tag, release_tag)
+    merge_base = ic_repo.merge_base(base_release_commit, release_commit)
 
     reviewers_text = "\n".join([f"- {t.google_docs_handle}" for t in RELEASE_NOTES_REVIEWERS if t.send_announcement])
 
@@ -398,10 +408,10 @@ def release_notes_markdown(
 {reviewers_text}
 
 # Release Notes for [{release_tag}](https://github.com/dfinity/ic/tree/{release_tag}) (`{release_commit}`)
-This release is based on [{base_release_tag}](https://dashboard.internetcomputer.org/release/{base_release_commit}) (`{base_release_commit}`).
+This release is based on changes since [{base_release_tag}](https://dashboard.internetcomputer.org/release/{base_release_commit}) (`{base_release_commit}`).
 
 Please note that some commits may be excluded from this release if they're not relevant, or not modifying the GuestOS image.
-Additionally, some desriptions of some changes might have been slightly modified to fit the release notes format.
+Additionally, descriptions of some changes might have been slightly modified to fit the release notes format.
 
 To see a full list of commits added since last release, compare the revisions on [GitHub](https://github.com/dfinity/ic/compare/{base_release_tag}...{release_tag}).
 """.format(
@@ -446,13 +456,13 @@ Changes [were removed](https://github.com/dfinity/ic/compare/{release_tag}...{ba
     return notes
 
 
-def get_guestos_packages_with_bazel(ic_repo: GitRepo):
-    """Get the packages that are related to the GuestOS image using Bazel."""
+def bazel_query(ic_repo: GitRepo, query):
+    """Bazel query package for GuestOS."""
     bazel_query = [
         "bazel",
         "query",
         "--universe_scope=//...",
-        "deps(//ic-os/guestos/envs/prod:update-img.tar.gz) union deps(//ic-os/setupos/envs/prod:disk-img.tar.gz)",
+        query,
         "--output=package",
     ]
     p = subprocess.run(
@@ -463,7 +473,7 @@ def get_guestos_packages_with_bazel(ic_repo: GitRepo):
         check=False,
     )
     if p.returncode != 0:
-        print("Failure running Bazel through container.  Attempting direct run.", file=sys.stderr)
+        print("Failure running Bazel through container. Attempting direct run.", file=sys.stderr)
         p = subprocess.run(
             bazel_query,
             cwd=ic_repo.dir,
@@ -471,8 +481,20 @@ def get_guestos_packages_with_bazel(ic_repo: GitRepo):
             stdout=subprocess.PIPE,
             check=True,
         )
-    guestos_packages_all = p.stdout.strip().splitlines()
+    return [l for l in p.stdout.strip().splitlines() if l]
 
+
+def bazel_query_all_packages(ic_repo: GitRepo):
+    """Bazel query package for GuestOS."""
+    return bazel_query(ic_repo, "//...:*")
+
+
+def get_guestos_packages_with_bazel(ic_repo: GitRepo):
+    """Get the packages that are related to the GuestOS image using Bazel."""
+    guestos_packages_all = bazel_query(
+        ic_repo,
+        "deps(//ic-os/guestos/envs/prod:update-img.tar.gz) union deps(//ic-os/setupos/envs/prod:disk-img.tar.zst)",
+    )
     guestos_packages_filtered = [
         p for p in guestos_packages_all if not any(re.match(f, p) for f in EXCLUDE_PACKAGES_FILTERS)
     ]

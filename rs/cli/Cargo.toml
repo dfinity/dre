@@ -75,6 +75,7 @@ cryptoki = { workspace = true }
 keyring = { workspace = true }
 comfy-table = { workspace = true }
 wkhtmlapp = { workspace = true }
+human_bytes = { workspace = true }
 
 [dev-dependencies]
 actix-rt = { workspace = true }

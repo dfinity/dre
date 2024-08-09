@@ -2,6 +2,7 @@ use std::time::Duration;
 
 use candid::{CandidType, Decode, Encode};
 use ic_agent::agent::http_transport::ReqwestTransport;
+use ic_agent::agent::CallResponse;
 use ic_agent::{export::Principal, identity::AnonymousIdentity, Agent};
 use rand::seq::SliceRandom;
 use serde::Deserialize;
@@ -102,7 +103,7 @@ impl NodeStatusCanister {
     }
 
     pub async fn update_node_statuses(&self, statuses: Vec<NodeStatus>) -> Result<bool, NodeStatusCanisterError> {
-        let request_id = match self
+        let response = match self
             .choose_random_agent()
             .await
             .update(&self.canister_id, "update_node_status")
@@ -114,21 +115,21 @@ impl NodeStatusCanister {
             .call()
             .await
         {
-            Ok(result) => result,
+            Ok(CallResponse::Response(response)) => response,
+            Ok(CallResponse::Poll(request_id)) => self
+                .choose_random_agent()
+                .await
+                .wait(&request_id, self.canister_id)
+                .await
+                .map_err(|err| NodeStatusCanisterError::Unknown(format!("Error on getting response for update_node_status: {}", err)))?,
             Err(err) => return Err(NodeStatusCanisterError::Unknown(format!("Error on update_node_status request: {}", err))),
         };
 
-        match self.choose_random_agent().await.wait(request_id, self.canister_id).await {
-            Ok(response) => match Decode!(response.as_slice(), bool) {
-                Ok(response) => Ok(response),
-                Err(e) => Err(NodeStatusCanisterError::Decoding(format!(
-                    "Error decoding response for update_node_status: {}",
-                    e
-                ))),
-            },
-            Err(err) => Err(NodeStatusCanisterError::Unknown(format!(
-                "Error on getting response for update_node_status: {}",
-                err
+        match Decode!(response.as_slice(), bool) {
+            Ok(response) => Ok(response),
+            Err(e) => Err(NodeStatusCanisterError::Decoding(format!(
+                "Error decoding response for update_node_status: {}",
+                e
             ))),
         }
     }
