@@ -1,6 +1,5 @@
 use clap::Args;
 use ic_management_types::Network;
-use registry_canister::mutations::do_delete_subnet::NNS_SUBNET_ID;
 use serde_json::Value;
 
 use crate::{
@@ -51,8 +50,11 @@ impl ExecutableCommand for Execute {
             None => {
                 let anonymous_admin_wrapper_for_mainnet = ctx.readonly_ic_admin_for_other_network(Network::mainnet_unchecked().unwrap());
 
+                let subnets = ctx.registry().await.subnets().await?;
+                let nns_subnet_id = subnets.keys().next().unwrap();
+
                 let output = anonymous_admin_wrapper_for_mainnet
-                    .run_passthrough_get(&["subnet".to_string(), NNS_SUBNET_ID.to_string()], true)
+                    .run_passthrough_get(&["subnet".to_string(), nns_subnet_id.to_string()], true)
                     .await?;
 
                 let output = serde_json::from_str::<Value>(&output)?;
