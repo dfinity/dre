@@ -58,8 +58,6 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
         let csv_contents = self.parse_csv()?;
         info!("Found following elements: {:?}", csv_contents);
 
-        let state_metrics = self.fetch_subnet_state_metrics(ctx.network()).await?;
-
         let registry = ctx.registry().await;
         let subnets = registry.subnets().await?;
         let mut excluded_subnets = BTreeMap::new();
@@ -75,27 +73,6 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
             let subnet_principal_string = subnet.principal.to_string();
             if let Some((_, description)) = csv_contents.iter().find(|(short_id, _)| subnet_principal_string.starts_with(short_id)) {
                 excluded_subnets.insert(subnet.principal.clone(), description.to_owned());
-                continue;
-            }
-
-            let subnet_state = state_metrics.get(&subnet.principal).ok_or(anyhow::anyhow!(
-                "Didn't find state metric for subnet id: {}",
-                subnet.principal.to_string()
-            ))?;
-
-            if subnet_state >= &self.state_size_limit {
-                excluded_subnets.push(ExcludedSubnet {
-                    subnet_id: subnet.principal.clone(),
-                    description: format!("Subnet has over {} of state", human_bytes),
-                });
-                continue;
-            }
-
-            if self.subnet_canister_num_over_limit(&subnet.principal).await? {
-                excluded_subnets.push(ExcludedSubnet {
-                    subnet_id: subnet.principal.clone(),
-                    description: format!("Subnet has over {} canisters", self.canister_limit),
-                });
                 continue;
             }
         }
@@ -124,72 +101,4 @@ impl UpdateAuthorizedSubnets {
 
         Ok(ret)
     }
-
-    async fn subnet_canister_num_over_limit(&self, subnet_id: &PrincipalId) -> anyhow::Result<bool> {
-        let client = Client::builder().timeout(Duration::from_secs(30)).build()?;
-
-        let response = client
-            .get(DASHBOARD_CANISTER_API)
-            .query(&[("limit", "0"), ("subnet_id", subnet_id.to_string().as_str())])
-            .send()
-            .await?
-            .error_for_status()?
-            .json::<Value>()
-            .await?;
-
-        let canister_num = response["total_canisters"].as_u64().ok_or(anyhow::anyhow!(
-            "Missing `total_canisters` field in response body:\n{}",
-            serde_json::to_string_pretty(&response)?
-        ))?;
-
-        Ok(self.canister_limit <= canister_num)
-    }
-
-    async fn fetch_subnet_state_metrics(&self, network: &Network) -> anyhow::Result<BTreeMap<PrincipalId, u64>> {
-        let client = Client::builder().timeout(Duration::from_secs(30)).build()?;
-
-        let response = client
-            .get(network.get_prometheus_endpoint().join("api/v1/query")?)
-            .query(&[("query", format!("sum({}) by (ic_subnet)", STATE_METRIC))])
-            .send()
-            .await?
-            .error_for_status()?
-            .json::<Value>()
-            .await?;
-        let response = response["data"]["result"].as_array().ok_or(anyhow::anyhow!(
-            "Didn't find `data.result` within response: \n{}",
-            serde_json::to_string_pretty(&response)?
-        ))?;
-        let mut ret = BTreeMap::new();
-
-        for entry in response {
-            let subnet_id = entry["metric"]["ic_subnet"].as_str().ok_or(anyhow::anyhow!(
-                "Failed to find subnet id within structure:\n{}",
-                serde_json::to_string_pretty(&entry)?
-            ))?;
-
-            let state_size_bytes = entry["value"]
-                .as_array()
-                .ok_or(anyhow::anyhow!(
-                    "Failed to parse metric value for result:\n{}",
-                    serde_json::to_string_pretty(&entry)?
-                ))?
-                .get(1)
-                .ok_or(anyhow::anyhow!(
-                    "Array doesn't contain expected number of elements:\n{}",
-                    serde_json::to_string_pretty(&entry)?
-                ))?
-                .as_u64()
-                .ok_or(anyhow::anyhow!("Value isn't a u64:\n{}", serde_json::to_string_pretty(&entry)?))?;
-
-            ret.insert(PrincipalId::from_str(subnet_id)?, state_size_bytes);
-        }
-
-        Ok(ret)
-    }
-}
-
-struct ExcludedSubnet {
-    subnet_id: PrincipalId,
-    description: String,
 }

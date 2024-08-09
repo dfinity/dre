@@ -6,6 +6,7 @@ use ic_agent::identity::Secp256k1Identity;
 use ic_agent::Agent;
 use ic_agent::Identity;
 use ic_base_types::CanisterId;
+use ic_base_types::PrincipalId;
 use ic_canister_client::Agent as CanisterClientAgent;
 use ic_canister_client::Sender;
 use ic_canister_client_sender::SigKeys;
@@ -97,6 +98,13 @@ impl IcAgentCanisterClient {
             .with_verify_query_signatures(false)
             .build()?;
         Ok(Self { agent })
+    }
+
+    pub async fn read_state_subnet_metrics(&self, subnet_id: PrincipalId) -> anyhow::Result<SubnetMetrics> {
+        self.agent
+            .read_state_subnet_metrics(candid::Principal::from_str(subnet_id.to_string().as_str())?)
+            .await
+            .map_err(|e| anyhow::anyhow!(e))
     }
 }
 
