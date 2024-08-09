@@ -3,17 +3,17 @@ use std::{
     fs::File,
     io::{BufRead, BufReader},
     path::PathBuf,
-    str::FromStr,
-    time::Duration,
+    sync::Arc,
 };
 
 use clap::{error::ErrorKind, Args};
-use ic_management_types::Network;
+use ic_management_types::Subnet;
 use ic_registry_subnet_type::SubnetType;
 use ic_types::PrincipalId;
+use itertools::Itertools;
 use log::info;
-use reqwest::Client;
-use serde_json::Value;
+
+use crate::ic_admin::{ProposeCommand, ProposeOptions};
 
 use super::ExecutableCommand;
 
@@ -62,7 +62,8 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
         let subnets = registry.subnets().await?;
         let mut excluded_subnets = BTreeMap::new();
 
-        let human_bytes = human_bytes::human_bytes(DEFAULT_STATE_SIZE_BYTES_LIMIT as f64);
+        let human_bytes = human_bytes::human_bytes(self.state_size_limit as f64);
+        let agent = ctx.create_ic_agent_canister_client(None)?;
 
         for subnet in subnets.values() {
             if subnet.subnet_type.eq(&SubnetType::System) {
@@ -75,14 +76,45 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
                 excluded_subnets.insert(subnet.principal.clone(), description.to_owned());
                 continue;
             }
+
+            let subnet_metrics = agent.read_state_subnet_metrics(&subnet.principal).await?;
+
+            if subnet_metrics.num_canisters >= self.canister_limit {
+                excluded_subnets.insert(
+                    subnet.principal.clone(),
+                    format!("Subnet has more than {} canisters", self.canister_limit),
+                );
+                continue;
+            }
+
+            if subnet_metrics.canister_state_bytes >= self.state_size_limit {
+                excluded_subnets.insert(subnet.principal.clone(), format!("Subnet has more than {} state size", human_bytes));
+            }
         }
+
+        let summary = construct_summary(&subnets, &excluded_subnets)?;
+
+        let authorized = subnets
+            .keys()
+            .filter(|subnet_id| !excluded_subnets.contains_key(subnet_id))
+            .cloned()
+            .collect();
+
+        let ic_admin = ctx.ic_admin();
+        ic_admin
+            .propose_run(
+                ProposeCommand::SetAuthorizedSubnetworks { subnets: authorized },
+                ProposeOptions {
+                    title: Some("Update list of public subnets".to_string()),
+                    summary: Some(summary),
+                    motivation: None,
+                },
+            )
+            .await?;
 
         Ok(())
     }
 }
-
-const DASHBOARD_CANISTER_API: &str = "https://ic-api.internetcomputer.org/api/v3/canisters";
-const STATE_METRIC: &str = "state_manager_state_size_bytes";
 
 impl UpdateAuthorizedSubnets {
     fn parse_csv(&self) -> anyhow::Result<Vec<(String, String)>> {
@@ -101,4 +133,26 @@ impl UpdateAuthorizedSubnets {
 
         Ok(ret)
     }
+}
+
+fn construct_summary(subnets: &Arc<BTreeMap<PrincipalId, Subnet>>, excluded_subnets: &BTreeMap<PrincipalId, String>) -> anyhow::Result<String> {
+    Ok(format!(
+        "Updating the list of authorized subnets to:
+
+| Subnet id | Public | Description |
+| --------- | ------ | ----------- |
+{}",
+        subnets
+            .values()
+            .map(|s| {
+                let excluded_desc = excluded_subnets.get(&s.principal);
+                format!(
+                    "| {} | {} | {} |",
+                    s.principal.to_string(),
+                    excluded_desc.is_none(),
+                    excluded_desc.map(|s| s.to_string()).unwrap_or_default()
+                )
+            })
+            .join("\n")
+    ))
 }

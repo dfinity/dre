@@ -3182,6 +3182,7 @@ dependencies = [
  "ic-registry-transport",
  "ic-sns-wasm",
  "ic-sys",
+ "ic-transport-types",
  "ic-utils 0.37.0",
  "log",
  "pkcs11",

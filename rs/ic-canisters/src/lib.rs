@@ -11,6 +11,7 @@ use ic_canister_client::Agent as CanisterClientAgent;
 use ic_canister_client::Sender;
 use ic_canister_client_sender::SigKeys;
 use ic_sys::utility_command::UtilityCommand;
+use ic_transport_types::SubnetMetrics;
 use parallel_hardware_identity::ParallelHardwareIdentity;
 use serde::Deserialize;
 use std::path::PathBuf;
@@ -100,7 +101,7 @@ impl IcAgentCanisterClient {
         Ok(Self { agent })
     }
 
-    pub async fn read_state_subnet_metrics(&self, subnet_id: PrincipalId) -> anyhow::Result<SubnetMetrics> {
+    pub async fn read_state_subnet_metrics(&self, subnet_id: &PrincipalId) -> anyhow::Result<SubnetMetrics> {
         self.agent
             .read_state_subnet_metrics(candid::Principal::from_str(subnet_id.to_string().as_str())?)
             .await

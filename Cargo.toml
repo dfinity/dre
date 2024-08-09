@@ -142,6 +142,7 @@ ic-nervous-system-root = { git = "https://github.com/dfinity/ic.git", rev = "7de
 ic-nervous-system-clients = { git = "https://github.com/dfinity/ic.git", rev = "7dee90107a88b836fc72e78993913988f4f73ca2" }
 ic-sns-wasm = { git = "https://github.com/dfinity/ic.git", rev = "7dee90107a88b836fc72e78993913988f4f73ca2" }
 cycles-minting-canister = { git = "https://github.com/dfinity/ic.git", rev = "7dee90107a88b836fc72e78993913988f4f73ca2" }
+ic-transport-types = "0.37.1"
 ic-utils = "0.37.0"
 include_dir = "0.7.4"
 itertools = "0.13.0"
