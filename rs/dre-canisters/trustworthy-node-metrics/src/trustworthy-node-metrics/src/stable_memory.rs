@@ -4,7 +4,6 @@ use ic_stable_structures::{DefaultMemoryImpl, StableBTreeMap};
 use itertools::Itertools;
 use std::borrow::Cow;
 use std::cell::RefCell;
-use std::u64;
 
 use crate::types::{NodeMetricsStored, NodeMetricsStoredKey, TimestampNanos};
 
@@ -33,6 +32,7 @@ pub fn latest_ts() -> Option<TimestampNanos> {
     MAP.with(|p| p.borrow().last_key_value()).map(|((ts, _), _)| ts)
 }
 
+#[allow(dead_code)]
 pub fn get(node_metrics_key: &NodeMetricsStoredKey) -> Option<NodeMetricsStored> {
     MAP.with(|p| p.borrow().get(node_metrics_key))
 }
