@@ -7,9 +7,11 @@ SKIP = [
 	"Cargo.lock",
 	"Cargo.Bazel.lock",
 	"target/.*",
-	"\.png$",
-	"\.jpeg$",
-	"\.md$",
+	".*\.png$",
+	".*\.jpeg$",
+	".*\.md$",
+	".*\.ico$",
+	"\.git/.*"
 ]
 
 SKIP_REGEX = [re.compile(f".*/{pattern}") for pattern in SKIP]
