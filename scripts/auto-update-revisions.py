@@ -11,7 +11,8 @@ SKIP = [
 	".*\.jpeg$",
 	".*\.md$",
 	".*\.ico$",
-	"\.git/.*"
+	"\.git/.*",
+	"release-index.yaml"
 ]
 
 SKIP_REGEX = [re.compile(f".*/{pattern}") for pattern in SKIP]
