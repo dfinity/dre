@@ -7,12 +7,12 @@ SKIP = [
 	"Cargo.lock",
 	"Cargo.Bazel.lock",
 	"target/.*",
-	".*\.png$",
-	".*\.jpeg$",
-	".*\.md$",
+	"\.png$",
+	"\.jpeg$",
+	"\.md$",
 ]
 
-SKIP_REGEX = [re.compile(pattern) for pattern in SKIP]
+SKIP_REGEX = [re.compile(f".*/{pattern}") for pattern in SKIP]
 
 def get_toplevel() -> str:
 	return subprocess.run([
@@ -32,7 +32,7 @@ def get_latest_commit(repo_url: str, ref: str) -> str:
 def get_files(top_level: str):
 	path = Path(top_level)
 	for file_path in path.rglob('**/*'):
-		if file_path.is_file() and not any([regex.match(str(file_path)) != None for regex in SKIP_REGEX]):
+		if file_path.is_file() and not any([bool(regex.fullmatch(str(file_path))) for regex in SKIP_REGEX]):
 			yield file_path
 
 def update_files(top_level: str, to_update: list[(str, str)]):
