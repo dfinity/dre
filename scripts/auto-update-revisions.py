@@ -1,6 +1,18 @@
 import json
 import subprocess
 from pathlib import Path
+import re
+
+SKIP = [
+	"Cargo.lock",
+	"Cargo.Bazel.lock",
+	"target/.*",
+	".*\.png$",
+	".*\.jpeg$",
+	".*\.md$",
+]
+
+SKIP_REGEX = [re.compile(pattern) for pattern in SKIP]
 
 def get_toplevel() -> str:
 	return subprocess.run([
@@ -20,19 +32,22 @@ def get_latest_commit(repo_url: str, ref: str) -> str:
 def get_files(top_level: str):
 	path = Path(top_level)
 	for file_path in path.rglob('**/*'):
-		if file_path.is_file():
+		if file_path.is_file() and not any([regex.match(str(file_path)) != None for regex in SKIP_REGEX]):
 			yield file_path
 
 def update_files(top_level: str, to_update: list[(str, str)]):
 	for file_path in get_files(top_level):
-		with open(file_path, 'r') as file:
-			content = file.read()
+		try:
+			with open(file_path, 'r') as file:
+				content = file.read()
 
-		for (from_commit, to_commit) in to_update:
-			content = content.replace(from_commit, to_commit)
+			for (from_commit, to_commit) in to_update:
+				content = content.replace(from_commit, to_commit)
 
-		with open(file_path, 'w') as file:
-			file.write(content)
+			with open(file_path, 'w') as file:
+				file.write(content)
+		except Exception as e:
+			print(f"Error on path '{file_path}': {e}")
 	pass
 
 def main():
