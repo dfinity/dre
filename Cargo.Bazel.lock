@@ -1,5 +1,5 @@
 {
-  "checksum": "0e8350ebde417ba66db87b6983074ac1011b1d9f75402002e07e87d47fd0d3a2",
+  "checksum": "558e7855152e36db56eacef357453e362086bc55f6ea1a34c4b06661b7b9d71a",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -2363,11 +2363,9 @@
       "name": "auto_generate_cdp",
       "version": "0.4.4",
       "repository": {
-        "Git": {
-          "remote": "https://github.com/mdrokz/auto_generate_cdp",
-          "commitish": {
-            "Rev": "889a2f1c95f6eedeee8b51379dd19f8be761c526"
-          }
+        "Http": {
+          "url": "https://static.crates.io/crates/auto_generate_cdp/0.4.4/download",
+          "sha256": "7af08ed49930c50104b2f1699d257e5053fb1809e370647bde9c58b31d65d417"
         }
       },
       "targets": [
