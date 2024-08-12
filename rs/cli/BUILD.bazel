@@ -34,10 +34,7 @@ rust_binary(
     ),
     deps = all_crate_deps(
         normal = True,
-    ) + DEPS + ["//rs/cli:dre-lib", ":build_script"],
-    rustc_env = {
-        "DO_NOT_FORMAT": "1"
-    }
+    ) + DEPS + ["//rs/cli:dre-lib", ":build_script"]
 )
 
 rust_library(
