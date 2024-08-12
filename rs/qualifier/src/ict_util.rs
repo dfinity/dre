@@ -34,6 +34,7 @@ pub async fn ict(ic_git: PathBuf, config: String, token: CancellationToken, send
         &ic_config.display().to_string(),
     ];
 
+    info!("From directory: {}", ic_git.display());
     info!("Running command: {} {}", command, args.iter().join(" "));
     let mut child = Command::new(command)
         .args(args)

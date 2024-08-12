@@ -1,8 +1,6 @@
 use ic_nns_constants::ALL_NNS_CANISTER_IDS;
 
-use crate::ctx::DreContext;
-
-use super::{print_text, Step};
+use super::{step::Step, util::StepCtx};
 
 pub struct UpgradeDeploymentCanisters {}
 
@@ -15,9 +13,9 @@ impl Step for UpgradeDeploymentCanisters {
         "update_deployment_canisters".to_string()
     }
 
-    async fn execute(&self, _ctx: &DreContext) -> anyhow::Result<()> {
+    async fn execute(&self, ctx: &StepCtx) -> anyhow::Result<()> {
         for canister_id in ALL_NNS_CANISTER_IDS {
-            print_text(format!("Checking version of canister with id {}", canister_id))
+            ctx.print_text(format!("Checking version of canister with id {}", canister_id))
         }
 
         Ok(())

@@ -23,7 +23,7 @@ impl ExecutableCommand for List {
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
         let qualification_executor = QualificationExecutorBuilder::new(ctx)
             .with_step_range(self.step_range.clone().unwrap_or_default())
-            .build();
+            .build()?;
         qualification_executor.list();
 
         Ok(())

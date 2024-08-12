@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use clap::Args;
 use ic_management_types::Network;
 use serde_json::Value;
@@ -31,6 +33,13 @@ pub struct Execute {
     /// Prometheus compliant endpoint
     #[clap(long)]
     pub prometheus_endpoint: String,
+
+    /// Artifacts path
+    #[clap(long)]
+    pub artifacts: Option<PathBuf>,
+
+    /// Grafana url, needed if `artifacts` are present
+    pub grafana_url: Option<String>,
 }
 
 impl ExecutableCommand for Execute {
@@ -38,7 +47,15 @@ impl ExecutableCommand for Execute {
         IcAdminRequirement::Detect
     }
 
-    fn validate(&self, _cmd: &mut clap::Command) {}
+    fn validate(&self, cmd: &mut clap::Command) {
+        if self.artifacts.is_some() && self.grafana_url.is_none() {
+            cmd.error(
+                clap::error::ErrorKind::InvalidValue,
+                "`grafana_url` is mandatory if `artifacts` are to be exported",
+            )
+            .exit()
+        }
+    }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
         if ctx.network().eq(&Network::mainnet_unchecked().unwrap()) {
@@ -65,13 +82,18 @@ impl ExecutableCommand for Execute {
             }
         };
 
-        let qualification_executor = QualificationExecutorBuilder::new(ctx)
+        let mut qualification_executor = QualificationExecutorBuilder::new(ctx)
             .with_step_range(self.step_range.clone().unwrap_or_default())
             .with_from_version(from_version)
             .with_to_version(self.version.clone())
             .with_deployment_namge(self.deployment_name.clone())
-            .with_prometheus_endpoint(self.prometheus_endpoint.clone())
-            .build();
-        qualification_executor.execute().await
+            .with_prometheus_endpoint(self.prometheus_endpoint.clone());
+        if let Some(path) = &self.artifacts {
+            qualification_executor = qualification_executor.with_artifacts(path.to_owned());
+        };
+        if let Some(grafana_url) = &self.grafana_url {
+            qualification_executor = qualification_executor.with_grafana_endpoint(grafana_url.to_owned());
+        }
+        qualification_executor.build()?.execute().await
     }
 }
