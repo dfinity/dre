@@ -5,7 +5,7 @@ def external_crates_repository():
         name = "crate_index_dre",
         annotations = {
             "auto_generate_cdp": [crate.annotation(
-                build_script_env = {
+                rustc_env = {
                     "DO_NOT_FORMAT": "1",
                 },
             )],
