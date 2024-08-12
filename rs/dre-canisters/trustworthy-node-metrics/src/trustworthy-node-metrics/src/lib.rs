@@ -1,10 +1,7 @@
 use candid::Principal;
 use ic_cdk_macros::*;
 use itertools::Itertools;
-use std::{
-    collections::{self, btree_map::Entry, BTreeMap},
-    time::Duration,
-};
+use std::collections::{self, btree_map::Entry, BTreeMap};
 use types::{
     DailyNodeMetrics, NodeMetrics, NodeMetricsStoredKey, NodeRewardsArgs, NodeRewardsResponse, SubnetNodeMetricsArgs, SubnetNodeMetricsResponse,
 };
@@ -28,8 +25,8 @@ async fn update_metrics_task() {
 }
 
 fn setup_timers() {
-    ic_cdk_timers::set_timer(Duration::from_secs(0), || ic_cdk::spawn(update_metrics_task()));
-    ic_cdk_timers::set_timer_interval(Duration::from_secs(TIMER_INTERVAL_SEC), || ic_cdk::spawn(update_metrics_task()));
+    ic_cdk_timers::set_timer(std::time::Duration::from_secs(0), || ic_cdk::spawn(update_metrics_task()));
+    ic_cdk_timers::set_timer_interval(std::time::Duration::from_secs(TIMER_INTERVAL_SEC),|| ic_cdk::spawn(update_metrics_task()));
 }
 
 #[init]

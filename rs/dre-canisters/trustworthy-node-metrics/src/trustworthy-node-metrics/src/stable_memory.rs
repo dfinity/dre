@@ -47,18 +47,11 @@ pub fn get_metrics_range(from_ts: TimestampNanos, to_ts: Option<TimestampNanos>)
     MAP.with(|p| p.borrow().range(range).collect_vec())
 }
 
-pub(crate) fn latest_metrics(principal: Principal) -> Option<NodeMetricsStored> {
-    let range: std::ops::RangeInclusive<(u64, Principal)> = {
-        let first = (u64::MIN, principal);
-        let last = (u64::MAX, principal);
-        first..=last
-    };
-
+pub fn metrics_before_ts(principal: Principal, ts: u64) -> Option<(NodeMetricsStoredKey, NodeMetricsStored)> {
     MAP.with(|p| {
         p.borrow()
-            .range(range)
-            .take_while(|((_, p), _)| p == &principal)
-            .max_by_key(|((k, _), _)| *k)
+            .range((u64::MIN, principal)..(ts, principal))
+            .filter(|((_, p), _)| p == &principal)
+            .last()
     })
-    .map(|(_, v)| v)
 }

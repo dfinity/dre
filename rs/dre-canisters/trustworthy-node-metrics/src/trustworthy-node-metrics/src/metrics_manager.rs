@@ -6,78 +6,72 @@ use futures::FutureExt;
 use ic_management_canister_types::{NodeMetricsHistoryArgs, NodeMetricsHistoryResponse};
 use ic_protobuf::registry::subnet::v1::SubnetListRecord;
 
-use crate::types::{NodeMetricsStored, NodeMetricsStoredKey};
+use crate::types::{NodeMetricsGrouped, NodeMetricsStored, NodeMetricsStoredKey};
 use crate::{
     stable_memory,
-    types::{PrincipalNodeMetricsHistory, TimestampNanos},
+    types::{SubnetNodeMetricsHistory, TimestampNanos},
 };
 
-fn store_results(results: BTreeMap<NodeMetricsStoredKey, NodeMetricsStored>) {
-    for (timestamp, storable) in results {
-        stable_memory::insert(timestamp, storable)
+// Calculates the daily proposed and failed blocks
+fn calculate_daily_metrics(last_proposed_total: u64, last_failed_total: u64, current_proposed_total: u64, current_failed_total: u64) -> (u64, u64) {
+    if last_failed_total > current_failed_total || last_proposed_total > current_proposed_total {
+        // Node redeployment case
+        (current_proposed_total, current_failed_total)
+    } else {
+        (current_proposed_total - last_proposed_total, current_failed_total - last_failed_total)
     }
 }
 
-fn get_daily_proposed_failed(new_node_metrics: &ic_management_canister_types::NodeMetrics) -> (u64, u64) {
-    let principal = new_node_metrics.node_id.0;
-    let existing_metrics = stable_memory::latest_metrics(principal);
-    let new_failed_total = new_node_metrics.num_block_failures_total;
-    let new_proposed_total = new_node_metrics.num_blocks_proposed_total;
+fn node_metrics_storable(
+    node_id: PrincipalId,
+    node_metrics_grouped: Vec<NodeMetricsGrouped>,
+    initial_proposed_total: u64,
+    initial_failed_total: u64,
+) -> Vec<(NodeMetricsStoredKey, NodeMetricsStored)> {
+    let mut metrics_ordered = node_metrics_grouped;
+    metrics_ordered.sort_by_key(|(ts, _, _)| *ts);
 
-    let (num_blocks_proposed, num_blocks_failed) = match existing_metrics {
-        Some(existing_metrics_value) => {
-            let existing_failed_total = existing_metrics_value.num_blocks_failures_total;
-            let existing_proposed_total = existing_metrics_value.num_blocks_proposed_total;
+    let principal = node_id.0;
+    let mut node_metrics_storable = Vec::new();
 
-            if existing_failed_total > new_failed_total || existing_proposed_total > new_proposed_total {
-                // This is the case when the node gets redeployed
-                (new_proposed_total, new_failed_total)
-            } else {
-                (new_proposed_total - existing_proposed_total, new_failed_total - existing_failed_total)
-            }
-        }
-        None => (new_proposed_total, new_failed_total),
-    };
+    let mut previous_proposed_total = initial_proposed_total;
+    let mut previous_failed_total = initial_failed_total;
 
-    (num_blocks_proposed, num_blocks_failed)
-}
+    for (ts, subnet_assigned, metrics) in metrics_ordered {
+        let key = (ts, principal);
+        let current_proposed_total = metrics.num_blocks_proposed_total;
+        let current_failed_total = metrics.num_block_failures_total;
 
-/// Transform metrics
-///
-/// Groups the metrics received by timestamp to fit the "storable" format
-fn transform_metrics(subnets_metrics: Vec<PrincipalNodeMetricsHistory>) -> BTreeMap<NodeMetricsStoredKey, NodeMetricsStored> {
-    let mut results = BTreeMap::new();
+        // Calculate daily proposed and failed blocks
+        let (daily_proposed, daily_failed) = calculate_daily_metrics(
+            previous_proposed_total,
+            previous_failed_total,
+            metrics.num_blocks_proposed_total,
+            metrics.num_block_failures_total,
+        );
 
-    for (subnet_id, subnet_metrics) in subnets_metrics {
-        for ts_node_metrics in subnet_metrics {
-            let ts: TimestampNanos = ts_node_metrics.timestamp_nanos;
+        let node_metrics_stored = NodeMetricsStored {
+            subnet_assigned: subnet_assigned.0,
+            num_blocks_proposed_total: current_proposed_total,
+            num_blocks_failures_total: current_failed_total,
+            num_blocks_proposed: daily_proposed,
+            num_blocks_failed: daily_failed,
+        };
 
-            for node_metrics in ts_node_metrics.node_metrics {
-                let principal = node_metrics.node_id.0;
-                let node_metrics_key = (ts, principal);
+        node_metrics_storable.push((key, node_metrics_stored));
 
-                let (new_blocks_proposed, new_blocks_failed) = get_daily_proposed_failed(&node_metrics);
-
-                let node_metrics_value = NodeMetricsStored {
-                    subnet_assigned: subnet_id.0,
-                    num_blocks_proposed_total: node_metrics.num_blocks_proposed_total,
-                    num_blocks_failures_total: node_metrics.num_block_failures_total,
-                    num_blocks_proposed: new_blocks_proposed,
-                    num_blocks_failed: new_blocks_failed,
-                };
-
-                results.insert(node_metrics_key, node_metrics_value);
-            }
-        }
+        previous_proposed_total = current_proposed_total;
+        previous_failed_total = current_failed_total;
     }
-    results
+
+    node_metrics_storable
 }
 
 /// Fetch metrics
 ///
 /// Calls to the node_metrics_history endpoint of the management canister for all the subnets
 /// to get updated metrics since refresh_ts.
-async fn fetch_metrics(subnets: Vec<PrincipalId>, refresh_ts: TimestampNanos) -> anyhow::Result<Vec<PrincipalNodeMetricsHistory>> {
+async fn fetch_metrics(subnets: Vec<PrincipalId>, refresh_ts: TimestampNanos) -> anyhow::Result<Vec<SubnetNodeMetricsHistory>> {
     let mut subnets_node_metrics = Vec::new();
 
     for subnet_id in subnets {
@@ -124,23 +118,52 @@ async fn fetch_subnets() -> anyhow::Result<Vec<PrincipalId>> {
     Ok(subnets)
 }
 
+fn grouped_by_node(subnet_metrics: Vec<(PrincipalId, Vec<NodeMetricsHistoryResponse>)>) -> BTreeMap<PrincipalId, Vec<NodeMetricsGrouped>> {
+    let mut grouped_by_node: BTreeMap<PrincipalId, Vec<NodeMetricsGrouped>> = BTreeMap::new();
+
+    for (subnet_id, history) in subnet_metrics {
+        for history_response in history {
+            for metrics in history_response.node_metrics {
+                grouped_by_node
+                    .entry(metrics.node_id)
+                    .or_default()
+                    .push((history_response.timestamp_nanos, subnet_id, metrics));
+            }
+        }
+    }
+    grouped_by_node
+}
+
+fn store_metrics(node_metrics_storable: Vec<((u64, candid::Principal), NodeMetricsStored)>) {
+    for (key, node_metrics) in node_metrics_storable {
+        stable_memory::insert(key, node_metrics)
+    }
+}
+
 pub async fn update_metrics() -> anyhow::Result<()> {
     let subnets = fetch_subnets().await?;
     let latest_ts = stable_memory::latest_ts().unwrap_or_default();
     let refresh_ts = latest_ts + 1;
 
     ic_cdk::println!(
-        "Updating node metrics for {} subnets:\nLatest timestamp persisted: {}\nRefreshing metrics from timestamp {}",
+        "Updating node metrics for {} subnets: Latest timestamp persisted: {}  Refreshing metrics from timestamp {}",
         subnets.len(),
         latest_ts,
         refresh_ts
     );
+    let subnet_metrics: Vec<(PrincipalId, Vec<NodeMetricsHistoryResponse>)> = fetch_metrics(subnets, refresh_ts).await?;
+    let grouped_by_node: BTreeMap<PrincipalId, Vec<NodeMetricsGrouped>> = grouped_by_node(subnet_metrics);
 
-    let metrics = fetch_metrics(subnets, refresh_ts).await?;
+    for (node_id, node_metrics_grouped) in grouped_by_node {
+        let first_ts = node_metrics_grouped.first().expect("node_metrics empty").0;
+        let metrics_before = stable_memory::metrics_before_ts(node_id.0, first_ts);
 
-    let results = transform_metrics(metrics);
+        let initial_proposed_total = metrics_before.as_ref().map(|(_, metrics)| metrics.num_blocks_proposed_total).unwrap_or(0);
+        let initial_failed_total = metrics_before.as_ref().map(|(_, metrics)| metrics.num_blocks_failures_total).unwrap_or(0);
 
-    store_results(results);
+        let node_metrics_storable = node_metrics_storable(node_id, node_metrics_grouped, initial_proposed_total, initial_failed_total);
+        store_metrics(node_metrics_storable);
+    }
 
     Ok(())
 }

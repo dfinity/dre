@@ -3,7 +3,8 @@ use dfn_core::api::PrincipalId;
 use ic_management_canister_types::NodeMetricsHistoryResponse;
 use serde::Serialize;
 
-pub type PrincipalNodeMetricsHistory = (PrincipalId, Vec<NodeMetricsHistoryResponse>);
+pub type SubnetNodeMetricsHistory = (PrincipalId, Vec<NodeMetricsHistoryResponse>);
+pub type NodeMetricsGrouped = (u64, PrincipalId, ic_management_canister_types::NodeMetrics);
 
 // Stored in stable structure
 pub type TimestampNanos = u64;
