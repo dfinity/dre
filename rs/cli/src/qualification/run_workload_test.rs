@@ -135,17 +135,6 @@ async fn ensure_finalization_rate_for_subnet(
 
     ctx.print_table(table);
 
-    // Capture the image of grafana links
-    // logging.info("Check the Grafana dashboard (adjust the subnets if necessary)"))
-    //    logging.info(
-    //        "Grafana URL: https://grafana.testnet.dfinity.network/d/ic-progress-clock/ic-progress-clock?orgId=1&var-ic=%s&refresh=30s",
-    //        deployment_name,
-    //    )
-    //    logging.info(
-    //        "Grafana URL: https://grafana.testnet.dfinity.network/d/execution-metrics/execution-metrics?orgId=1&var-ic=%s",
-    //        deployment_name,
-    //    )
-
     Ok(finalization_rate >= expected_finalization_rate)
 }
 

@@ -230,7 +230,7 @@ impl StepCtx {
         let tab = browser.new_tab()?;
 
         for panel in Panel::iter() {
-            let mut url = Url::parse(&url)?.join("/d/ic-progress-clock/ic-progress-clock")?;
+            let mut url = Url::parse(&url)?.join(panel.get_dashboard())?;
             url.set_query(Some(
                 &[
                     ("var-ic", deployment_name.to_string()),
@@ -280,10 +280,17 @@ enum Panel {
 }
 
 impl Panel {
-    fn get_name(&self) -> String {
+    fn get_name(&self) -> &str {
         match self {
-            Panel::FinalizationRate => "FinalizationRate".to_string(),
-            Panel::RunningReplicas => "RunningReplicas".to_string(),
+            Panel::FinalizationRate => "FinalizationRate",
+            Panel::RunningReplicas => "RunningReplicas",
+        }
+    }
+
+    fn get_dashboard(&self) -> &str {
+        match self {
+            Panel::FinalizationRate => "/d/ic-progress-clock/ic-progress-clock",
+            Panel::RunningReplicas => "/d/ic-progress-clock/ic-progress-clock",
         }
     }
 }
