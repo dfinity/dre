@@ -201,7 +201,9 @@ urlencoding = "2.1.3"
 warp = "0.3"
 wiremock = "0.6.0"
 human_bytes = "0.4"
-headless_chrome = { version = "1.0.12", features = ["fetch"] }
+headless_chrome = { version = "1.0.12", features = [
+    "fetch",
+], default-features = false }
 
 # dre-canisters dependencies
 ic-cdk-timers = { git = "https://github.com/dfinity/cdk-rs.git", rev = "59795716487fbb8a9910ac503bcea1e0cb08c932" }
