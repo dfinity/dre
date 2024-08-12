@@ -4,8 +4,11 @@ def external_crates_repository():
     crates_repository(
         name = "crate_index_dre",
         annotations = {
-            "auto_generate_cdp": [crate.annotation(
+            "headless_chrome": [crate.annotation(
                 rustc_env = {
+                    "DO_NOT_FORMAT": "1",
+                },
+                build_script_env = {
                     "DO_NOT_FORMAT": "1",
                 },
             )],

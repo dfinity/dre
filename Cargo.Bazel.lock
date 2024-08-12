@@ -1,5 +1,5 @@
 {
-  "checksum": "3ebe712be8fb8e24731bd55a61029a8a0b767b02093afd0733d97c2938584cde",
+  "checksum": "5ec4fcee4c14e7594d0a1fb9642aa461e4bf174f5045552c66d4a39051d2de00",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -2427,12 +2427,6 @@
           "selects": {}
         },
         "edition": "2018",
-        "rustc_env": {
-          "common": {
-            "DO_NOT_FORMAT": "1"
-          },
-          "selects": {}
-        },
         "version": "0.4.4"
       },
       "build_script_attrs": {
@@ -14177,6 +14171,12 @@
           }
         },
         "edition": "2021",
+        "rustc_env": {
+          "common": {
+            "DO_NOT_FORMAT": "1"
+          },
+          "selects": {}
+        },
         "version": "1.0.12"
       },
       "build_script_attrs": {
@@ -14190,6 +14190,12 @@
               "target": "auto_generate_cdp"
             }
           ],
+          "selects": {}
+        },
+        "build_script_env": {
+          "common": {
+            "DO_NOT_FORMAT": "1"
+          },
           "selects": {}
         }
       },
