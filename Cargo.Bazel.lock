@@ -1,5 +1,5 @@
 {
-  "checksum": "706c437dc36c49ff8f845c6a350d37b911f102d8558db614184ddac3d3775ee8",
+  "checksum": "3ebe712be8fb8e24731bd55a61029a8a0b767b02093afd0733d97c2938584cde",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -2427,18 +2427,18 @@
           "selects": {}
         },
         "edition": "2018",
+        "rustc_env": {
+          "common": {
+            "DO_NOT_FORMAT": "1"
+          },
+          "selects": {}
+        },
         "version": "0.4.4"
       },
       "build_script_attrs": {
         "data_glob": [
           "**"
-        ],
-        "build_script_env": {
-          "common": {
-            "DO_NOT_FORMAT": "1"
-          },
-          "selects": {}
-        }
+        ]
       },
       "license": null
     },
