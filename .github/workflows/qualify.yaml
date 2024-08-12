@@ -8,9 +8,11 @@ on:
         description: "The version that should be qualified"
         type: string
         default: ""
-
+# Run one qualification per commit.
+# This means we can have multiple qualifications of different versions
+# in parallel but only one qualification of each commit
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: ${{ github.workflow }}-${{ github.event.inputs.version || github.ref }}
   cancel-in-progress: true
 
 jobs:
