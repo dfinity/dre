@@ -70,7 +70,7 @@ tempfile = { workspace = true }
 tokio = { workspace = true }
 url = { workspace = true }
 humantime = { workspace = true }
-clap_complete = "4.5.8"
+clap_complete = "4.5.14"
 cryptoki = { workspace = true }
 keyring = { workspace = true }
 comfy-table = { workspace = true }
