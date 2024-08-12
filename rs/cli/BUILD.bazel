@@ -1,6 +1,6 @@
 load("@crate_index_dre//:defs.bzl", "aliases", "all_crate_deps")
 load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_test", "rust_library")
-load("@rules_rust//cargo:defs.bzl", "cargo_build_script")
+load("@rules_rust//cargo:defs.bzl", "cargo_build_script", "cargo_dep_env")
 
 DEPS = [
     "//rs/ic-canisters",
@@ -34,7 +34,7 @@ rust_binary(
     ),
     deps = all_crate_deps(
         normal = True,
-    ) + DEPS + ["//rs/cli:dre-lib", ":build_script"],
+    ) + DEPS + ["//rs/cli:dre-lib", ":build_script"]
 )
 
 rust_library(
