@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   schedule:
     # * is a special character in YAML so you have to quote this string
-    - cron:  '30 1 * * Mon,Wed,Fri'
+    - cron: "30 1 * * Mon,Wed,Fri"
 
 jobs:
   update:
@@ -23,6 +23,10 @@ jobs:
           python-version: "3.11"
       - name: "🐍 Install Poetry"
         uses: snok/install-poetry@v1
+
+      - name: "⚒️ Run autoupdate for ic-deps"
+        run: |
+          python scripts/auto-update-revisions.py
 
       - name: "⚒️ Completely delete bazel cache and then recreate it"
         run: |
