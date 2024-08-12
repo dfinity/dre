@@ -217,6 +217,3 @@ dfn_core = { git = "https://github.com/dfinity/ic.git", rev = "7dee90107a88b836f
 # Makes flamegraphs and backtraces more readable.
 # https://doc.rust-lang.org/cargo/reference/manifest.html#the-profile-sections
 debug = true
-
-[patch.crates-io]
-auto_generate_cdp = { git = "https://github.com/NikolaMilosa/auto_generate_cdp.git", rev = "1a16da3d7a093e75b6521fb62b3f892b77660330" }
