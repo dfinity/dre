@@ -3,12 +3,11 @@ use comfy_table::CellAlignment;
 use itertools::Itertools;
 
 use crate::{
-    ctx::DreContext,
     ic_admin::{ProposeCommand, ProposeOptions},
     qualification::Step,
 };
 
-use super::{comfy_table_util::Table, print_table};
+use super::{comfy_table_util::Table, util::StepCtx};
 
 pub struct EnsureBlessedRevisions {
     pub version: String,
@@ -23,8 +22,8 @@ impl Step for EnsureBlessedRevisions {
         "ensure_blessed_revision".to_string()
     }
 
-    async fn execute(&self, ctx: &DreContext) -> anyhow::Result<()> {
-        let registry = ctx.registry().await;
+    async fn execute(&self, ctx: &StepCtx) -> anyhow::Result<()> {
+        let registry = ctx.dre_ctx().registry().await;
         let blessed_versions = registry.elected_guestos()?;
 
         if blessed_versions.contains(&self.version) {
@@ -34,7 +33,8 @@ impl Step for EnsureBlessedRevisions {
 
         // Place proposal
         let place_proposal = || async {
-            ctx.ic_admin()
+            ctx.dre_ctx()
+                .ic_admin()
                 .propose_run(
                     ProposeCommand::ReviseElectedVersions {
                         release_artifact: ic_management_types::Artifact::GuestOs,
@@ -69,7 +69,7 @@ impl Step for EnsureBlessedRevisions {
             .with_rows(blessed_versions.iter().map(|ver| vec![ver.to_string()]).collect_vec())
             .to_table();
 
-        print_table(table);
+        ctx.print_table(table);
         Ok(())
     }
 }

@@ -1,10 +1,11 @@
 use std::{os::unix::fs::PermissionsExt, time::Duration};
 
+use chrono::Utc;
 use ic_registry_subnet_type::SubnetType;
 use itertools::Itertools;
 use tokio::process::Command;
 
-use super::{download_canister, download_executable, print_text, Step};
+use super::{step::Step, util::StepCtx};
 
 const E2E_TEST_DRIVER: &str = "e2e-test-driver";
 const XNET_TEST_CANISTER: &str = "xnet-test-canister";
@@ -19,6 +20,7 @@ const XNET_TEST_NUMBER: &str = "4.3";
 
 pub struct RunXnetTest {
     pub version: String,
+    pub deployment_name: String,
 }
 
 impl Step for RunXnetTest {
@@ -30,7 +32,7 @@ impl Step for RunXnetTest {
         "xnet_test".to_string()
     }
 
-    async fn execute(&self, ctx: &crate::ctx::DreContext) -> anyhow::Result<()> {
+    async fn execute(&self, ctx: &StepCtx) -> anyhow::Result<()> {
         let key = dirs::home_dir()
             .ok_or(anyhow::anyhow!("Cannot get home directory"))?
             .join(XNET_PRINCIPAL_PATH);
@@ -41,10 +43,10 @@ impl Step for RunXnetTest {
         let file = std::fs::File::open(&key)?;
         file.set_permissions(PermissionsExt::from_mode(0o400))?;
 
-        let e2e_bin = download_executable(E2E_TEST_DRIVER, &self.version).await?;
-        let wasm_path = download_canister(XNET_TEST_CANISTER, &self.version).await?;
+        let e2e_bin = ctx.download_executable(E2E_TEST_DRIVER, &self.version).await?;
+        let wasm_path = ctx.download_canister(XNET_TEST_CANISTER, &self.version).await?;
 
-        let registry = ctx.registry().await;
+        let registry = ctx.dre_ctx().registry().await;
         let subnet = registry.subnets().await?;
         let subnet = subnet
             .values()
@@ -71,18 +73,31 @@ impl Step for RunXnetTest {
             XNET_TEST_NUMBER.to_string(),
         ];
 
-        print_text(format!(
+        ctx.print_text(format!(
             "Running command: XNET_TEST_CANISTER_WASM_PATH={} {} {}",
             wasm_path.display(),
             e2e_bin.display(),
             args.iter().join(" ")
         ));
 
+        let start = Utc::now();
         let status = Command::new(e2e_bin)
             .args(args)
             .env("XNET_TEST_CANISTER_WASM_PATH", wasm_path.display().to_string())
             .status()
             .await?;
+        let end = Utc::now();
+
+        // No need to stop the qualification if taking picture fails
+        if let Err(e) = ctx.capture_progress_clock(
+            self.deployment_name.to_string(),
+            &subnet.principal,
+            Some(start.timestamp()),
+            Some(end.timestamp()),
+            "xnet_test",
+        ) {
+            ctx.print_text(format!("Failed to capture progress clock: {:?}", e))
+        }
 
         if !status.success() {
             anyhow::bail!("Failed to run xnet test with status code: {}", status.code().unwrap_or_default())
