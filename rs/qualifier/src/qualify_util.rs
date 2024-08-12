@@ -33,7 +33,7 @@ pub async fn qualify(
         Message::Log(line) => {
             let log_path = line
                 .split_once('/')
-                .and_then(|(_, last)| Some(format!("/{}", last[..last.len() - 1].to_owned())))
+                .map(|(_, last)| format!("/{}", last[..last.len() - 1].to_owned()))
                 .ok_or(anyhow::anyhow!("Expected log line"))?;
             info!("Log file path: {}", log_path);
             PathBuf::from_str(&log_path)?

@@ -36,7 +36,7 @@ pub struct StepCtx {
 impl StepCtx {
     pub fn new(dre_ctx: DreContext, artifacts: Option<PathBuf>, grafana_url: Option<String>) -> anyhow::Result<Self> {
         let artifacts_of_run = artifacts.as_ref().map(|t| {
-            if let Err(e) = std::fs::create_dir_all(&t) {
+            if let Err(e) = std::fs::create_dir_all(t) {
                 panic!("Couldn't create dir {}: {:?}", t.display(), e)
             }
             t.clone()
@@ -196,7 +196,7 @@ impl StepCtx {
         );
 
         if let Some(log_path) = &self.log_path {
-            let mut file = match OpenOptions::new().write(true).append(true).open(log_path) {
+            let mut file = match OpenOptions::new().append(true).open(log_path) {
                 Ok(f) => f,
                 Err(e) => panic!("Couldn't open file {}: {:?}", log_path.display(), e),
             };
@@ -230,7 +230,7 @@ impl StepCtx {
         let tab = browser.new_tab()?;
 
         for panel in Panel::iter() {
-            let mut url = Url::parse(&url)?.join(panel.get_dashboard())?;
+            let mut url = Url::parse(url)?.join(panel.get_dashboard())?;
             url.set_query(Some(
                 &[
                     ("var-ic", deployment_name.to_string()),
@@ -295,9 +295,9 @@ impl Panel {
     }
 }
 
-impl Into<String> for Panel {
-    fn into(self) -> String {
-        match self {
+impl From<Panel> for String {
+    fn from(value: Panel) -> Self {
+        match value {
             Panel::FinalizationRate => "4",
             Panel::RunningReplicas => "32",
         }
