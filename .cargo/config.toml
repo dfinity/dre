@@ -4,3 +4,6 @@ rustflags = ["-C", "link-arg=-fuse-ld=mold"]
 
 [alias]
 drecross = "zigbuild --bin dre --release --target x86_64-apple-darwin"
+
+[env]
+DO_NOT_FORMAT = "1"

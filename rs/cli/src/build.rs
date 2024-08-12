@@ -23,7 +23,4 @@ fn main() {
 
     std::fs::copy(&path_to_non_public_subnets, format!("{}/non_public_subnets.csv", out_dir))
         .unwrap_or_else(|e| panic!("Error with file {}: {:?}", path_to_non_public_subnets.display(), e));
-
-    // To skip running rustfmt which produces error when running in CI with bazel
-    println!("cargo:DO_NOT_FORMAT=1")
 }
