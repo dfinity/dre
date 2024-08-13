@@ -84,6 +84,8 @@ Wait for the triggered [GH action to finish](https://github.com/dfinity/dre/acti
 Now open the [GH releases page](https://github.com/dfinity/dre/releases).
 You should see a new draft release. Edit it, to shorten the release notes by removing entries for older (previous) releases.
 
-Set the `latest` to point to this new release, and finally click publish.
+Set the `latest` to point to this new release by unselecting `Set as a pre-release` and selecting `Set as the latest release`. Create a new discussion for the release, and finally click `Publish release`.
+
+![make-release-screenshot](make-release-screenshot.png)
 
 Celebrate!
