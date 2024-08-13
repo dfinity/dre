@@ -26,7 +26,10 @@ async fn update_metrics_task() {
 
 fn setup_timers() {
     ic_cdk_timers::set_timer(std::time::Duration::from_secs(0), || ic_cdk::spawn(update_metrics_task()));
-    ic_cdk_timers::set_timer_interval(std::time::Duration::from_secs(TIMER_INTERVAL_SEC),|| ic_cdk::spawn(update_metrics_task()));
+    ic_cdk_timers::set_timer_interval(
+        std::time::Duration::from_secs(TIMER_INTERVAL_SEC),
+        || ic_cdk::spawn(update_metrics_task()),
+    );
 }
 
 #[init]
