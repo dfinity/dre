@@ -79,9 +79,19 @@ impl Upgrade {
             return Ok(UpdateStatus::NewVersion(release.version.clone()));
         }
 
-        let triple = match std::env::consts::OS {
-            "linux" => "x86_64-unknown-linux",
-            "macos" => "x86_64-apple-darwin",
+        let arch = match std::env::consts::ARCH {
+            s if s.eq("aarch64") || s.eq("x86_64") => s,
+            s => {
+                return Err(anyhow::anyhow!(
+                    "Architecture {} is currently not supported for automatic upgrades. Try building the code from source",
+                    s
+                ))
+            }
+        };
+
+        let os = match std::env::consts::OS {
+            "linux" => "unknown-linux",
+            "macos" => "apple-darwin",
             s => {
                 return Err(anyhow::anyhow!(
                     "{} is not currently not supported for automatic upgrades. Try building the code from source",
@@ -93,7 +103,8 @@ impl Upgrade {
         info!("Binary not up to date. Updating to {}", release.version);
         info!("Release: {:?}", release);
 
-        let asset = match release.asset_for(&format!("dre-{}", triple), None) {
+        // Will result in something like `dre-x86_64-unknown-linux`
+        let asset = match release.asset_for(&format!("dre-{}-{}", arch, os), None) {
             Some(asset) => asset,
             None => return Err(anyhow::anyhow!("No assets found for release")),
         };
