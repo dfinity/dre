@@ -66,14 +66,16 @@ spinners = { workspace = true }
 strum = { workspace = true }
 tabled = { workspace = true }
 tabular = { workspace = true }
-tempfile = "3.10.1"
+tempfile = { workspace = true }
 tokio = { workspace = true }
 url = { workspace = true }
 humantime = { workspace = true }
-clap_complete = "4.5.8"
+clap_complete = "4.5.14"
 cryptoki = { workspace = true }
 keyring = { workspace = true }
 comfy-table = { workspace = true }
+human_bytes = { workspace = true }
+headless_chrome = { workspace = true }
 
 [dev-dependencies]
 actix-rt = { workspace = true }

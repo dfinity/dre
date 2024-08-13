@@ -1,20 +1,18 @@
-use std::{fmt::Display, rc::Rc, time::Duration};
+use std::{fmt::Display, time::Duration};
 
 use backon::{ExponentialBuilder, Retryable};
 use comfy_table::CellAlignment;
-use ic_management_backend::lazy_registry::LazyRegistry;
 use ic_registry_subnet_type::SubnetType;
 use ic_types::PrincipalId;
 use itertools::Itertools;
 use reqwest::ClientBuilder;
 
 use crate::{
-    ctx::DreContext,
     ic_admin::{ProposeCommand, ProposeOptions},
-    qualification::{comfy_table_util::Table, print_table},
+    qualification::comfy_table_util::Table,
 };
 
-use super::{print_subnet_versions, print_text, Step};
+use super::{step::Step, util::StepCtx};
 
 pub struct UpgradeSubnets {
     pub subnet_type: Option<SubnetType>,
@@ -72,26 +70,26 @@ impl Step for UpgradeSubnets {
         )
     }
 
-    async fn execute(&self, ctx: &DreContext) -> anyhow::Result<()> {
-        let registry = ctx.registry().await;
+    async fn execute(&self, ctx: &StepCtx) -> anyhow::Result<()> {
+        let registry = ctx.dre_ctx().registry().await;
         let subnets = registry.subnets().await?;
-        print_text(format!("Found total of {} nodes", registry.nodes().await?.len()));
-        print_subnet_versions(registry.clone()).await?;
+        ctx.print_text(format!("Found total of {} nodes", registry.nodes().await?.len()));
+        ctx.print_subnet_versions().await?;
 
         if let Some(subnet_type) = &self.subnet_type {
             for subnet in subnets
                 .values()
                 .filter(|s| s.subnet_type.eq(subnet_type) && !s.replica_version.eq(&self.to_version))
             {
-                let registry = ctx.registry().await;
-                print_text(format!(
+                ctx.print_text(format!(
                     "Upgrading subnet {}: {} -> {}",
                     subnet.principal, &subnet.replica_version, &self.to_version
                 ));
 
                 // Place proposal
                 let place_proposal = || async {
-                    ctx.ic_admin()
+                    ctx.dre_ctx()
+                        .ic_admin()
                         .propose_run(
                             ProposeCommand::DeployGuestosToAllSubnetNodes {
                                 subnet: subnet.principal,
@@ -107,32 +105,33 @@ impl Step for UpgradeSubnets {
                 };
                 place_proposal.retry(&ExponentialBuilder::default()).await?;
 
-                print_text(format!("Placed proposal for subnet {}", subnet.principal));
+                ctx.print_text(format!("Placed proposal for subnet {}", subnet.principal));
 
                 // Wait for the version to be active on the subnet
-                wait_for_subnet_revision(registry.clone(), Some(subnet.principal), &self.to_version).await?;
+                wait_for_subnet_revision(ctx, Some(subnet.principal), &self.to_version).await?;
 
-                print_text(format!(
+                ctx.print_text(format!(
                     "Subnet {} successfully upgraded to version {}",
                     subnet.principal, &self.to_version
                 ));
 
-                print_subnet_versions(registry.clone()).await?;
+                ctx.print_subnet_versions().await?;
             }
         } else {
-            let registry = ctx.registry().await;
+            let registry = ctx.dre_ctx().registry().await;
             let unassigned_nodes_version = registry.unassigned_nodes_replica_version()?;
             if unassigned_nodes_version.to_string() == self.to_version {
-                print_text(format!("Unassigned nodes are already on {}, skipping", self.to_version));
+                ctx.print_text(format!("Unassigned nodes are already on {}, skipping", self.to_version));
                 return Ok(());
             }
-            print_text(format!(
+            ctx.print_text(format!(
                 "Upgrading unassigned version: {} -> {}",
                 &unassigned_nodes_version, &self.to_version
             ));
 
             let place_proposal = || async {
-                ctx.ic_admin()
+                ctx.dre_ctx()
+                    .ic_admin()
                     .propose_run(
                         ProposeCommand::DeployGuestosToAllUnassignedNodes {
                             replica_version: self.to_version.clone(),
@@ -148,11 +147,11 @@ impl Step for UpgradeSubnets {
 
             place_proposal.retry(&ExponentialBuilder::default()).await?;
 
-            wait_for_subnet_revision(registry.clone(), None, &self.to_version).await?;
+            wait_for_subnet_revision(ctx, None, &self.to_version).await?;
 
-            print_text(format!("Unassigned nodes successfully upgraded to version {}", &self.to_version));
+            ctx.print_text(format!("Unassigned nodes successfully upgraded to version {}", &self.to_version));
 
-            print_subnet_versions(registry.clone()).await?;
+            ctx.print_subnet_versions().await?;
         }
 
         Ok(())
@@ -164,11 +163,12 @@ const SLEEP: Duration = Duration::from_secs(10);
 const TIMEOUT: Duration = Duration::from_secs(60);
 const PLACEHOLDER: &str = "upgrading...";
 
-async fn wait_for_subnet_revision(registry: Rc<LazyRegistry>, subnet: Option<PrincipalId>, revision: &str) -> anyhow::Result<()> {
+async fn wait_for_subnet_revision(ctx: &StepCtx, subnet: Option<PrincipalId>, revision: &str) -> anyhow::Result<()> {
     let client = ClientBuilder::new().connect_timeout(TIMEOUT).build()?;
+    let registry = ctx.dre_ctx().registry().await;
     for i in 0..MAX_TRIES {
         tokio::time::sleep(SLEEP).await;
-        print_text(format!(
+        ctx.print_text(format!(
             "- {} - Checking if {} on {}",
             i,
             match &subnet {
@@ -179,7 +179,7 @@ async fn wait_for_subnet_revision(registry: Rc<LazyRegistry>, subnet: Option<Pri
         ));
 
         if let Err(e) = registry.sync_with_nns().await {
-            print_text(format!("Received error when syncing registry: {}", e));
+            ctx.print_text(format!("Received error when syncing registry: {}", e));
             continue;
         }
 
@@ -198,17 +198,17 @@ async fn wait_for_subnet_revision(registry: Rc<LazyRegistry>, subnet: Option<Pri
                     Ok(r) => match r.text().await {
                         Ok(r) => r,
                         Err(e) => {
-                            print_text(format!("Received error {}, skipping...", e));
+                            ctx.print_text(format!("Received error {}, skipping...", e));
                             continue;
                         }
                     },
                     Err(e) => {
-                        print_text(format!("Received error {}, skipping...", e));
+                        ctx.print_text(format!("Received error {}, skipping...", e));
                         continue;
                     }
                 },
                 Err(e) => {
-                    print_text(format!("Received error {}, skipping...", e));
+                    ctx.print_text(format!("Received error {}, skipping...", e));
                     continue;
                 }
             };
@@ -229,7 +229,7 @@ async fn wait_for_subnet_revision(registry: Rc<LazyRegistry>, subnet: Option<Pri
                     .collect_vec(),
             )
             .to_table();
-        print_table(table);
+        ctx.print_table(table);
 
         // Check if done
         if !nodes_with_reivison.iter().any(|(_, r)| *r == PLACEHOLDER) {

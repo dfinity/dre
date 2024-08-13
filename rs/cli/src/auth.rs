@@ -191,8 +191,9 @@ impl Auth {
                 &GOVERNANCE_CANISTER_ID,
                 "list_neurons",
                 Encode!(&ListNeurons {
-                    include_neurons_readable_by_caller: true,
                     neuron_ids: vec![],
+                    include_neurons_readable_by_caller: true,
+                    include_empty_neurons_readable_by_caller: None,
                 })?,
             )
             .await

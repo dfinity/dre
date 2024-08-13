@@ -36,6 +36,11 @@ pub struct Args {
     /// result in rebuilding of image
     #[clap(long)]
     pub skip_pull: bool,
+
+    /// Specify the steps to run
+    /// A range can be: `4`, `3..`, `..3, `1..3`
+    #[clap(long)]
+    pub step_range: Option<String>,
 }
 
 impl Args {
@@ -50,6 +55,7 @@ impl Args {
         }
 
         std::fs::write(&path, key_pair.to_pem()).map_err(|e| anyhow::anyhow!(e))?;
+        // TODO: When we upgrade ic repo there will be a constant for this
         Ok((449479075714955186, path))
     }
 
@@ -58,7 +64,13 @@ impl Args {
             .ok_or(anyhow::anyhow!("No home dir present"))?
             .join(PathBuf::from_str(XNET_TESTING_IDENTITY_PATH)?);
         match path.exists() {
-            true => Ok(()),
+            true => {
+                let metadata = path.metadata()?;
+                match metadata.len() {
+                    0 => anyhow::bail!("Xnet-testing identity is present on path {} but is empty", path.display()),
+                    _ => Ok(()),
+                }
+            }
             false => anyhow::bail!("Missing xnet-testing identity on path: {}", path.display()),
         }
     }

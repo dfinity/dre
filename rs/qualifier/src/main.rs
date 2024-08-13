@@ -1,4 +1,4 @@
-use std::{fmt::Display, time::Duration};
+use std::{fmt::Display, path::PathBuf, str::FromStr, time::Duration};
 
 use clap::Parser;
 use cli::Args;
@@ -13,6 +13,7 @@ use log::info;
 use qualify_util::qualify;
 use reqwest::ClientBuilder;
 use serde_json::Value;
+use std::io::Write;
 use tokio::sync::mpsc;
 use tokio_util::sync::CancellationToken;
 
@@ -37,6 +38,9 @@ async fn main() -> anyhow::Result<()> {
         .map_err(|e| anyhow::anyhow!("Checking connectivity failed: {}", e.to_string()))?;
 
     let args = Args::parse();
+    if args.version_to_qualify.is_empty() {
+        anyhow::bail!("Version to qualify is required, but empty string is passed.");
+    }
     info!("Running qualification for {}", args.version_to_qualify);
     info!("Generating keys for farm testnets...");
     let (neuron_id, private_key_pem) = args.ensure_test_key()?;
@@ -135,6 +139,18 @@ async fn main() -> anyhow::Result<()> {
     let token = CancellationToken::new();
     let (sender, mut receiver) = mpsc::channel(2);
 
+    let artifacts = PathBuf::from_str("/tmp/qualifier-artifacts")?.join(&args.version_to_qualify);
+    info!("Will store artifacts in: {}", artifacts.display());
+    std::fs::create_dir_all(&artifacts)?;
+    if artifacts.exists() {
+        info!("Making sure artifact store is empty");
+        std::fs::remove_dir_all(&artifacts)?;
+        std::fs::create_dir(&artifacts)?;
+    }
+
+    let mut file = std::fs::File::create_new(artifacts.join("ic-config.json"))?;
+    writeln!(file, "{}", &config)?;
+
     tokio::select! {
         res = ict(args.ic_repo_path.clone(), config, token.clone(), sender) => res?,
         res = qualify(
@@ -144,6 +160,8 @@ async fn main() -> anyhow::Result<()> {
             NETWORK_NAME,
             initial_version,
             args.version_to_qualify.to_string(),
+            artifacts,
+            args.step_range
         ) => res?
     };
 

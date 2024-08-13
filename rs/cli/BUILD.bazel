@@ -1,6 +1,6 @@
 load("@crate_index_dre//:defs.bzl", "aliases", "all_crate_deps")
 load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_test", "rust_library")
-load("@rules_rust//cargo:defs.bzl", "cargo_build_script")
+load("@rules_rust//cargo:defs.bzl", "cargo_build_script", "cargo_dep_env")
 
 DEPS = [
     "//rs/ic-canisters",
@@ -17,7 +17,11 @@ cargo_build_script(
     srcs = ["src/build.rs"],
     deps = all_crate_deps(
         build = True
-    )
+    ),
+    build_script_env = {
+        "NON_PUBLIC_SUBNETS": "$(execpath //facts-db:non_public_subnets)"
+    },
+    data = [ "//facts-db:non_public_subnets" ]
 )
 
 rust_binary(
@@ -30,7 +34,7 @@ rust_binary(
     ),
     deps = all_crate_deps(
         normal = True,
-    ) + DEPS + ["//rs/cli:dre-lib", ":build_script"],
+    ) + DEPS + ["//rs/cli:dre-lib", ":build_script"]
 )
 
 rust_library(
@@ -44,7 +48,7 @@ rust_library(
     ),
     deps = all_crate_deps(
         normal = True,
-    ) + DEPS,
+    ) + DEPS + [ ":build_script" ],
 )
 
 rust_test(

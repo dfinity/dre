@@ -9,6 +9,7 @@ use ic_management_backend::registry::local_registry_path;
 use ic_management_types::Network;
 use itertools::Itertools;
 use log::info;
+use serde::Serialize;
 use serde_json::Value;
 use tokio::sync::mpsc::Receiver;
 use url::Url;
@@ -22,12 +23,23 @@ pub async fn qualify(
     network_name: &str,
     from_version: String,
     to_version: String,
+    artifacts: PathBuf,
+    step_range: Option<String>,
 ) -> anyhow::Result<()> {
     // Run dre to qualify with correct parameters
     info!("Awaiting logs path...");
     let data = receiver.recv().await.ok_or(anyhow::anyhow!("Failed to recv data"))?;
-
-    info!("Received logs: {}", data);
+    let log_path = match data {
+        Message::Log(line) => {
+            let log_path = line
+                .split_once('/')
+                .map(|(_, last)| format!("/{}", last[..last.len() - 1].to_owned()))
+                .ok_or(anyhow::anyhow!("Expected log line"))?;
+            info!("Log file path: {}", log_path);
+            PathBuf::from_str(&log_path)?
+        }
+        _ => anyhow::bail!("Expected Log line instead of data"),
+    };
 
     info!("Awaiting config...");
     let data = receiver.recv().await.ok_or(anyhow::anyhow!("Failed to recv data"))?;
@@ -38,7 +50,7 @@ pub async fn qualify(
     };
     let config = Config::from_str(&config)?;
 
-    info!("Received following config: {:#?}", config);
+    info!("Received following config: {}", serde_json::to_string_pretty(&config)?);
     info!("Running qualification...");
 
     // At this point we are going to run so we need to remove previous
@@ -61,13 +73,15 @@ pub async fn qualify(
         dry_run: false,
         network: network_name.to_string(),
         nns_urls: config.nns_urls,
-        subcommands: dre::commands::Subcommands::Qualify(dre::commands::qualify::QualifyCmd {
-            subcommand: dre::commands::qualify::QualifyCommands::Execute(Execute {
+        subcommands: dre::commands::Subcommands::Qualify(dre::commands::qualify::Qualify {
+            subcommand: dre::commands::qualify::Subcommands::Execute(Execute {
                 version: to_version,
                 from_version: Some(from_version),
-                step_range: None,
+                step_range,
                 deployment_name: config.deployment_name,
                 prometheus_endpoint: config.prometheus_url,
+                artifacts: Some(artifacts.clone()),
+                grafana_url: Some(config.grafana_url),
             }),
         }),
         verbose: false,
@@ -75,16 +89,20 @@ pub async fn qualify(
     };
     let ctx = DreContext::from_args(&args).await?;
 
-    args.execute(ctx).await
+    args.execute(ctx).await?;
+
+    std::fs::copy(&log_path, artifacts.join("farm-driver.log"))?;
+    Ok(())
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 #[allow(dead_code)]
 struct Config {
     deployment_name: String,
     kibana_url: String,
     nns_urls: Vec<Url>,
     prometheus_url: String,
+    grafana_url: String,
 }
 
 impl FromStr for Config {
@@ -118,6 +136,7 @@ impl FromStr for Config {
 
         let config = Self {
             prometheus_url: format!("http://prometheus.{}.testnet.farm.dfinity.systems/api/v1/query", deployment_name),
+            grafana_url: format!("http://grafana.{}.testnet.farm.dfinity.systems/", deployment_name),
             deployment_name,
             kibana_url: parsed["kibana_url"]["url"]
                 .as_str()
