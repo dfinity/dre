@@ -9,6 +9,7 @@ use log::info;
 use spinners::{Spinner, Spinners};
 
 use super::{ExecutableCommand, IcAdminRequirement};
+use crate::desktop_notify::DesktopNotifier;
 
 #[derive(Args, Debug)]
 pub struct Vote {
@@ -49,7 +50,7 @@ impl ExecutableCommand for Vote {
         let client: GovernanceCanisterWrapper = ctx.create_canister_client()?.into();
 
         let mut voted_proposals = HashSet::new();
-        info!("Starting the voting loop...");
+        DesktopNotifier::send_info("DRE vote: starting", "Starting the voting loop...");
 
         loop {
             let proposals = client.get_pending_proposals().await?;
@@ -68,16 +69,34 @@ impl ExecutableCommand for Vote {
 
             for proposal in proposals {
                 let datetime = Local::now();
-                info!(
-                    "{} Voting on proposal {} (topic {:?}, proposer {}) -> {}",
-                    datetime,
-                    proposal.id.unwrap().id,
-                    proposal.topic(),
-                    proposal.proposer.unwrap_or_default().id,
-                    proposal.proposal.clone().unwrap().title.unwrap()
+                DesktopNotifier::send_info(
+                    "DRE vote: voting",
+                    &format!(
+                        "{} Voting on proposal {} (topic {:?}, proposer {}) -> {}",
+                        datetime,
+                        proposal.id.unwrap().id,
+                        proposal.topic(),
+                        proposal.proposer.unwrap_or_default().id,
+                        proposal.proposal.clone().unwrap().title.unwrap()
+                    ),
                 );
 
-                let response = client.register_vote(ctx.ic_admin().neuron.neuron_id, proposal.id.unwrap().id).await?;
+                let response = match client.register_vote(ctx.ic_admin().neuron.neuron_id, proposal.id.unwrap().id).await {
+                    Ok(response) => format!("Voted successfully: {}", response),
+                    Err(e) => {
+                        DesktopNotifier::send_critical(
+                            "DRE vote: error",
+                            &format!(
+                                "Error voting on proposal {} (topic {:?}, proposer {}) -> {}",
+                                proposal.id.unwrap().id,
+                                proposal.topic(),
+                                proposal.proposer.unwrap_or_default().id,
+                                e
+                            ),
+                        );
+                        format!("Error voting: {}", e)
+                    }
+                };
                 info!("{}", response);
                 voted_proposals.insert(proposal.id.unwrap().id);
             }
