@@ -1,5 +1,5 @@
 {
-  "checksum": "5ec4fcee4c14e7594d0a1fb9642aa461e4bf174f5045552c66d4a39051d2de00",
+  "checksum": "64e6dc9e67c573ea7e49c06d6ee0fb13851d923bf289d307ae05c451a55a3cdb",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -9104,10 +9104,6 @@
               "target": "serde_json"
             },
             {
-              "id": "strum 0.26.3",
-              "target": "strum"
-            },
-            {
               "id": "tabular 0.2.0",
               "target": "tabular"
             }
@@ -10621,10 +10617,6 @@
         "deps": {
           "common": [
             {
-              "id": "actix-web 4.9.0",
-              "target": "actix_web"
-            },
-            {
               "id": "anyhow 1.0.86",
               "target": "anyhow"
             },
@@ -10729,10 +10721,6 @@
               "target": "ic_canister_client_sender"
             },
             {
-              "id": "ic-interfaces-registry 0.9.0",
-              "target": "ic_interfaces_registry"
-            },
-            {
               "id": "ic-nervous-system-clients 0.0.1",
               "target": "ic_nervous_system_clients"
             },
@@ -10833,10 +10821,6 @@
               "target": "shlex"
             },
             {
-              "id": "socket2 0.5.7",
-              "target": "socket2"
-            },
-            {
               "id": "spinners 4.1.1",
               "target": "spinners"
             },
@@ -10882,10 +10866,6 @@
             {
               "id": "async-recursion 1.1.1",
               "target": "async_recursion"
-            },
-            {
-              "id": "async-trait 0.1.81",
-              "target": "async_trait"
             }
           ],
           "selects": {}
@@ -20656,10 +20636,6 @@
               "target": "backon"
             },
             {
-              "id": "base64 0.22.1",
-              "target": "base64"
-            },
-            {
               "id": "candid 0.10.10",
               "target": "candid"
             },
@@ -20670,10 +20646,6 @@
             {
               "id": "clap 4.5.15",
               "target": "clap"
-            },
-            {
-              "id": "csv 1.3.0",
-              "target": "csv"
             },
             {
               "id": "custom_error 1.9.2",
@@ -20702,10 +20674,6 @@
             {
               "id": "futures-util 0.3.30",
               "target": "futures_util"
-            },
-            {
-              "id": "hyper 1.4.1",
-              "target": "hyper"
             },
             {
               "id": "ic-agent 0.37.1",
@@ -20842,10 +20810,6 @@
         "edition": "2021",
         "proc_macro_deps": {
           "common": [
-            {
-              "id": "async-trait 0.1.81",
-              "target": "async_trait"
-            },
             {
               "id": "strum_macros 0.26.4",
               "target": "strum_macros"
@@ -40665,10 +40629,6 @@
               "target": "ic_async_utils"
             },
             {
-              "id": "regex 1.10.6",
-              "target": "regex"
-            },
-            {
               "id": "reqwest 0.12.5",
               "target": "reqwest"
             },
@@ -44351,16 +44311,8 @@
               "target": "ic_nns_common"
             },
             {
-              "id": "ic-nns-constants 0.9.0",
-              "target": "ic_nns_constants"
-            },
-            {
               "id": "ic-protobuf 0.9.0",
               "target": "ic_protobuf"
-            },
-            {
-              "id": "ic-registry-transport 0.9.0",
-              "target": "ic_registry_transport"
             },
             {
               "id": "ic-stable-structures 0.6.5",
@@ -44371,16 +44323,8 @@
               "target": "itertools"
             },
             {
-              "id": "prost 0.12.6",
-              "target": "prost"
-            },
-            {
               "id": "serde 1.0.206",
               "target": "serde"
-            },
-            {
-              "id": "serde_json 1.0.124",
-              "target": "serde_json"
             }
           ],
           "selects": {}
