@@ -90,7 +90,7 @@ USER runner
 WORKDIR /home/runner
 
 # Rust version should align with one in `rust-toolchain.toml` and `WORKSPACE.bazel`
-RUN curl https://sh.rustup.rs -sSf | bash -s -- -y --default-toolchain 1.79.0-x86_64-unknown-linux-gnu -t x86_64-apple-darwin --no-update-default-toolchain
+RUN curl https://sh.rustup.rs -sSf | bash -s -- -y --default-toolchain 1.79.0-x86_64-unknown-linux-gnu -t x86_64-apple-darwin -t aarch64-apple-darwin --no-update-default-toolchain
 ENV PATH="/home/runner/.cargo/bin:$PATH"
 
 ENV PATH="$PATH:/home/runner/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/bin/"
