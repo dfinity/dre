@@ -1,6 +1,48 @@
 # dre Changelog
 
 <!-- insertion marker -->
+## [0.5.0](https://github.com/dfinity/dre/releases/tag/0.5.0) - 2024-08-13
+
+<small>[Compare with first commit](https://github.com/dfinity/dre/compare/d51a1fa228e13af09f7dc15b09e8161ed3dbfb59...0.5.0)</small>
+
+### Features
+
+- [DRE-237] Send desktop notifications when (not) voting with dre tool (#711) ([5d4f8f2](https://github.com/dfinity/dre/commit/5d4f8f2aaacc1e17311db3ffc831ae2dc3c14346) by Saša Tomić).
+- adding artifacts (#709) ([13fd109](https://github.com/dfinity/dre/commit/13fd1094fc5451286f062ac969a79e9783b65329) by Nikola Milosavljevic).
+- autoupdate ic deps (#706) ([a3b2a5c](https://github.com/dfinity/dre/commit/a3b2a5cd32ab4c521ba2513b80722f204d58db43) by Nikola Milosavljevic).
+- subnet authorization with dre (#700) ([6c934f8](https://github.com/dfinity/dre/commit/6c934f82fc87ce16b386f947f9cd6470baf8295a) by Nikola Milosavljevic).
+- managing subnet authorization (#697) ([bdc0a7a](https://github.com/dfinity/dre/commit/bdc0a7a807163b51ffe332e2e2ab04cb769ca7dd) by Nikola Milosavljevic).
+- add trigger for qualifier workflow (#671) ([3e77d65](https://github.com/dfinity/dre/commit/3e77d65580258f4603cf1fccfdcafa8e75003bf4) by Carly Gundy).
+- qualifying as github job (#661) ([5a96588](https://github.com/dfinity/dre/commit/5a96588cb4d31ceb7a1ad0bf7686a02858ca79d5) by Nikola Milosavljevic).
+- adding podman (#662) ([5ba79df](https://github.com/dfinity/dre/commit/5ba79dfdcb2cd04f1a5a02a77b95f8cc6980303b) by Nikola Milosavljevic).
+- Adding qualificator util (#659) ([40dc9bc](https://github.com/dfinity/dre/commit/40dc9bc407e39d16ec52821ed8627ebea3303e11) by Nikola Milosavljevic).
+- qualification via command (#649) ([35303f9](https://github.com/dfinity/dre/commit/35303f9f5106c6685a652e08e21e787867febf08) by Nikola Milosavljevic).
+- adding an option for dre to not sync with the nns (#645) ([16abe8d](https://github.com/dfinity/dre/commit/16abe8d8b47c7f2b2c6b1eea0c03b2b5ac973bc2) by Nikola Milosavljevic).
+- allowing self update for macos (#624) ([f2559b3](https://github.com/dfinity/dre/commit/f2559b390f0a0ca0f23f80c8fcf644b9a23238c7) by Nikola Milosavljevic).
+- upgrading to arbitrary version (#617) ([a808c3f](https://github.com/dfinity/dre/commit/a808c3f77f0a092d5aa22e7ebe71329aefce67b2) by Nikola Milosavljevic).
+
+### Bug Fixes
+
+- adding missing ensurings (#691) ([dde91b0](https://github.com/dfinity/dre/commit/dde91b01e840e9ea3e4b89caf23ec9115e0b7ff3) by Nikola Milosavljevic).
+- change inputs format (#672) ([8a1726c](https://github.com/dfinity/dre/commit/8a1726c7e3ef83f4b2c68a4dc8aa29df50090c1f) by Carly Gundy).
+- podman setting container without vm (#664) ([7efd87b](https://github.com/dfinity/dre/commit/7efd87b0eac3ebd255be7efe00a3b39b0f9e9fc1) by Nikola Milosavljevic).
+- revert separating lib from canisters (#660) ([af99bba](https://github.com/dfinity/dre/commit/af99bba1ea96a1230b3cf5442e8063c7e91d4af6) by Nikola Milosavljevic).
+- dry run prints (#653) ([67130e2](https://github.com/dfinity/dre/commit/67130e2a9a70ec52e6004a68ffda742d9811dd17) by Nikola Milosavljevic).
+- without confirmation used to run always in dry-run mode (#641) ([8a867b7](https://github.com/dfinity/dre/commit/8a867b7bdf6b899681bf3e2c7838e9a0de0fbb0e) by Nikola Milosavljevic).
+- using service account token (#636) ([9e3a81e](https://github.com/dfinity/dre/commit/9e3a81e3ff12e68f187c10eb61efe89fea8697f3) by Nikola Milosavljevic).
+- setting correct token for auto update (#635) ([ab60bd5](https://github.com/dfinity/dre/commit/ab60bd5aaf06ba441a083826e12d39482d2472b8) by Nikola Milosavljevic).
+- adding full version for auto update (#634) ([07dfdd7](https://github.com/dfinity/dre/commit/07dfdd7912f34f5f69d4c797977d51bbfeaeafad) by Nikola Milosavljevic).
+- adding version to auto update (#633) ([80ba727](https://github.com/dfinity/dre/commit/80ba727ed0b1a1e9e134d18d45f5b05c74dcec64) by Nikola Milosavljevic).
+- Remove dependency on gitlab for release notes (#614) ([0294110](https://github.com/dfinity/dre/commit/0294110fc369a84b8db2b0b3dc28e20a5cb30f78) by Saša Tomić).
+- adding back autodetection of hsm (#619) ([1bd9777](https://github.com/dfinity/dre/commit/1bd97773e85dfe45d8a1707e6240ffd6f8231049) by Nikola Milosavljevic).
+
+### Code Refactoring
+
+- embedding default version excluded subnets (#703) ([6a353f3](https://github.com/dfinity/dre/commit/6a353f37732018532850397ca15789aeebc037c1) by Nikola Milosavljevic).
+- replacing boiler plate enum calls with a procedural macro  (#702) ([4aec5fc](https://github.com/dfinity/dre/commit/4aec5fc79c6ef27bb04b62b1e55d2a2579a92d2e) by Nikola Milosavljevic).
+- using `autoupdate` action (#638) ([e1783b5](https://github.com/dfinity/dre/commit/e1783b581d630bbc52b878085950ed7bbcaa2eff) by Nikola Milosavljevic).
+- major refactoring dre (#581) ([d51a1fa](https://github.com/dfinity/dre/commit/d51a1fa228e13af09f7dc15b09e8161ed3dbfb59) by Nikola Milosavljevic).
+
 ## [0.4.3](https://github.com/dfinity/dre/releases/tag/0.4.3) - 2024-07-12
 
 <small>[Compare with first commit](https://github.com/dfinity/dre/compare/e09b98c37ccb4f31dac7b73ba38f40a3fc450d3d...0.4.3)</small>
