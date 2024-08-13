@@ -12,16 +12,9 @@ use crate::{
     types::{SubnetNodeMetricsHistory, TimestampNanos},
 };
 
-// Calculates the daily proposed and failed blocks
-fn calculate_daily_metrics(last_proposed_total: u64, last_failed_total: u64, current_proposed_total: u64, current_failed_total: u64) -> (u64, u64) {
-    if last_failed_total > current_failed_total || last_proposed_total > current_proposed_total {
-        // Node redeployment case
-        (current_proposed_total, current_failed_total)
-    } else {
-        (current_proposed_total - last_proposed_total, current_failed_total - last_failed_total)
-    }
-}
-
+/// Node metrics storable
+///
+/// Computes daily proposed/failed blocks from a vector of node metrics
 fn node_metrics_storable(
     node_id: PrincipalId,
     node_metrics_grouped: Vec<NodeMetricsGrouped>,
@@ -42,7 +35,6 @@ fn node_metrics_storable(
         let current_proposed_total = metrics.num_blocks_proposed_total;
         let current_failed_total = metrics.num_block_failures_total;
 
-        // Calculate daily proposed and failed blocks
         let (daily_proposed, daily_failed) = calculate_daily_metrics(
             previous_proposed_total,
             previous_failed_total,
@@ -116,6 +108,16 @@ async fn fetch_subnets() -> anyhow::Result<Vec<PrincipalId>> {
         .collect::<Result<Vec<_>, _>>()?;
 
     Ok(subnets)
+}
+
+// Calculates the daily proposed and failed blocks
+fn calculate_daily_metrics(last_proposed_total: u64, last_failed_total: u64, current_proposed_total: u64, current_failed_total: u64) -> (u64, u64) {
+    if last_failed_total > current_failed_total || last_proposed_total > current_proposed_total {
+        // This is the case when node gets redeploied
+        (current_proposed_total, current_failed_total)
+    } else {
+        (current_proposed_total - last_proposed_total, current_failed_total - last_failed_total)
+    }
 }
 
 fn grouped_by_node(subnet_metrics: Vec<(PrincipalId, Vec<NodeMetricsHistoryResponse>)>) -> BTreeMap<PrincipalId, Vec<NodeMetricsGrouped>> {
