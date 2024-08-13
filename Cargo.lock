@@ -4139,7 +4139,6 @@ dependencies = [
  "candid",
  "chrono",
  "clap 4.5.15",
- "csv",
  "custom_error",
  "decentralization",
  "dirs",
