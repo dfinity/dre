@@ -5,6 +5,7 @@ use dfn_core::api::PrincipalId;
 use futures::FutureExt;
 use ic_management_canister_types::{NodeMetricsHistoryArgs, NodeMetricsHistoryResponse};
 use ic_protobuf::registry::subnet::v1::SubnetListRecord;
+use itertools::Itertools;
 
 use crate::types::{NodeMetricsGrouped, NodeMetricsStored, NodeMetricsStoredKey};
 use crate::{
@@ -142,6 +143,7 @@ fn store_metrics(node_metrics_storable: Vec<((u64, candid::Principal), NodeMetri
     }
 }
 
+/// Update metrics
 pub async fn update_metrics() -> anyhow::Result<()> {
     let subnets = fetch_subnets().await?;
     let latest_ts = stable_memory::latest_ts().unwrap_or_default();
@@ -155,15 +157,17 @@ pub async fn update_metrics() -> anyhow::Result<()> {
     );
     let subnet_metrics: Vec<(PrincipalId, Vec<NodeMetricsHistoryResponse>)> = fetch_metrics(subnets, refresh_ts).await?;
     let grouped_by_node: BTreeMap<PrincipalId, Vec<NodeMetricsGrouped>> = grouped_by_node(subnet_metrics);
+    let nodes_principal = grouped_by_node.keys().map(|p| p.0).collect_vec();
+
+    let latest_metrics = stable_memory::latest_metrics(nodes_principal);
 
     for (node_id, node_metrics_grouped) in grouped_by_node {
-        let first_ts = node_metrics_grouped.first().expect("node_metrics empty").0;
-        let metrics_before = stable_memory::metrics_before_ts(node_id.0, first_ts);
-
-        let initial_proposed_total = metrics_before.as_ref().map(|(_, metrics)| metrics.num_blocks_proposed_total).unwrap_or(0);
-        let initial_failed_total = metrics_before.as_ref().map(|(_, metrics)| metrics.num_blocks_failures_total).unwrap_or(0);
-
+        let (initial_proposed_total, initial_failed_total) = latest_metrics
+            .get(&node_id.0)
+            .map(|metrics| (metrics.num_blocks_proposed_total, metrics.num_blocks_failures_total))
+            .unwrap_or((0, 0));
         let node_metrics_storable = node_metrics_storable(node_id, node_metrics_grouped, initial_proposed_total, initial_failed_total);
+
         store_metrics(node_metrics_storable);
     }
 
