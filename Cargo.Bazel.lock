@@ -44323,10 +44323,6 @@
               "target": "candid"
             },
             {
-              "id": "chrono 0.4.38",
-              "target": "chrono"
-            },
-            {
               "id": "ciborium 0.2.2",
               "target": "ciborium"
             },
