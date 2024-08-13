@@ -1002,29 +1002,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "canbench-rs"
-version = "0.1.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "53574f268dbe23dc83f891a4751b118a6ba927c8bc92e839ff108f3aaf151aa9"
-dependencies = [
- "canbench-rs-macros",
- "candid",
- "ic-cdk 0.12.1",
- "serde",
-]
-
-[[package]]
-name = "canbench-rs-macros"
-version = "0.1.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d454906c77138a3802a7a680259cca7c006e9b268ba6905f7f4f2b8b74293fa4"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 1.0.109",
-]
-
-[[package]]
 name = "candid"
 version = "0.10.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1819,7 +1796,6 @@ dependencies = [
  "regex",
  "serde",
  "serde_json",
- "strum 0.26.3",
  "strum_macros 0.26.4",
  "tabular",
  "tokio",
@@ -2117,10 +2093,8 @@ name = "dre"
 version = "0.4.3"
 dependencies = [
  "actix-rt",
- "actix-web",
  "anyhow",
  "async-recursion",
- "async-trait",
  "backon",
  "candid",
  "chrono",
@@ -2147,7 +2121,6 @@ dependencies = [
  "ic-canister-client",
  "ic-canister-client-sender",
  "ic-canisters",
- "ic-interfaces-registry",
  "ic-management-backend",
  "ic-management-types",
  "ic-nervous-system-clients",
@@ -2175,7 +2148,6 @@ dependencies = [
  "serde_json",
  "sha2 0.10.8",
  "shlex",
- "socket2",
  "spinners",
  "strum 0.26.3",
  "tabled",
@@ -3456,19 +3428,6 @@ dependencies = [
 
 [[package]]
 name = "ic-cdk"
-version = "0.12.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9f3d204af0b11c45715169c997858edb58fa8407d08f4fae78a6b415dd39a362"
-dependencies = [
- "candid",
- "ic-cdk-macros 0.8.4",
- "ic0 0.21.1",
- "serde",
- "serde_bytes",
-]
-
-[[package]]
-name = "ic-cdk"
 version = "0.13.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f8859bc2b863a77750acf199e1fb7e3fc403e1b475855ba13f59cb4e4036d238"
@@ -3490,20 +3449,6 @@ dependencies = [
  "ic0 0.23.0",
  "serde",
  "serde_bytes",
-]
-
-[[package]]
-name = "ic-cdk-macros"
-version = "0.8.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a5a618e4020cea88e933d8d2f8c7f86d570ec06213506a80d4f2c520a9bba512"
-dependencies = [
- "candid",
- "proc-macro2",
- "quote",
- "serde",
- "serde_tokenstream 0.1.7",
- "syn 1.0.109",
 ]
 
 [[package]]
@@ -4190,13 +4135,10 @@ dependencies = [
  "actix-rt",
  "actix-web",
  "anyhow",
- "async-trait",
  "backon",
- "base64 0.22.1",
  "candid",
  "chrono",
  "clap 4.5.15",
- "csv",
  "custom_error",
  "decentralization",
  "dirs",
@@ -4205,7 +4147,6 @@ dependencies = [
  "fs2",
  "futures",
  "futures-util",
- "hyper 1.4.1",
  "ic-agent",
  "ic-base-types",
  "ic-canisters",
@@ -8157,7 +8098,6 @@ dependencies = [
  "ic-async-utils",
  "ic-canisters",
  "multiservice-discovery-shared",
- "regex",
  "reqwest",
  "serde_json",
  "slog",
@@ -8876,7 +8816,6 @@ name = "trustworthy-node-metrics"
 version = "0.4.3"
 dependencies = [
  "anyhow",
- "canbench-rs",
  "candid",
  "ciborium",
  "dfn_core",
@@ -8886,14 +8825,10 @@ dependencies = [
  "ic-cdk-timers 0.9.0",
  "ic-management-canister-types",
  "ic-nns-common",
- "ic-nns-constants",
  "ic-protobuf",
- "ic-registry-transport",
  "ic-stable-structures",
  "itertools 0.13.0",
- "prost",
  "serde",
- "serde_json",
 ]
 
 [[package]]
