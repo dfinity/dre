@@ -10,6 +10,7 @@ use log::{info, warn};
 mod auth;
 mod commands;
 mod ctx;
+mod desktop_notify;
 mod ic_admin;
 mod operations;
 mod qualification;
