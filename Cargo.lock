@@ -1002,29 +1002,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "canbench-rs"
-version = "0.1.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "53574f268dbe23dc83f891a4751b118a6ba927c8bc92e839ff108f3aaf151aa9"
-dependencies = [
- "canbench-rs-macros",
- "candid",
- "ic-cdk 0.12.1",
- "serde",
-]
-
-[[package]]
-name = "canbench-rs-macros"
-version = "0.1.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d454906c77138a3802a7a680259cca7c006e9b268ba6905f7f4f2b8b74293fa4"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 1.0.109",
-]
-
-[[package]]
 name = "candid"
 version = "0.10.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1061,7 +1038,7 @@ dependencies = [
 
 [[package]]
 name = "canister-log-fetcher"
-version = "0.4.3"
+version = "0.5.0"
 dependencies = [
  "anyhow",
  "clap 4.5.15",
@@ -1344,7 +1321,7 @@ dependencies = [
 
 [[package]]
 name = "config-writer-common"
-version = "0.4.3"
+version = "0.5.0"
 dependencies = [
  "crossbeam",
  "crossbeam-channel",
@@ -1804,7 +1781,7 @@ checksum = "092966b41edc516079bdf31ec78a2e0588d1d0c08f78b91d8307215928642b2b"
 
 [[package]]
 name = "decentralization"
-version = "0.4.3"
+version = "0.5.0"
 dependencies = [
  "actix-web",
  "ahash 0.8.11",
@@ -1819,7 +1796,6 @@ dependencies = [
  "regex",
  "serde",
  "serde_json",
- "strum 0.26.3",
  "strum_macros 0.26.4",
  "tabular",
  "tokio",
@@ -2114,13 +2090,11 @@ checksum = "1435fa1053d8b2fbbe9be7e97eca7f33d37b28409959813daefc1446a14247f1"
 
 [[package]]
 name = "dre"
-version = "0.4.3"
+version = "0.5.0"
 dependencies = [
  "actix-rt",
- "actix-web",
  "anyhow",
  "async-recursion",
- "async-trait",
  "backon",
  "candid",
  "chrono",
@@ -2147,7 +2121,6 @@ dependencies = [
  "ic-canister-client",
  "ic-canister-client-sender",
  "ic-canisters",
- "ic-interfaces-registry",
  "ic-management-backend",
  "ic-management-types",
  "ic-nervous-system-clients",
@@ -2175,7 +2148,6 @@ dependencies = [
  "serde_json",
  "sha2 0.10.8",
  "shlex",
- "socket2",
  "spinners",
  "strum 0.26.3",
  "tabled",
@@ -3376,7 +3348,7 @@ dependencies = [
 
 [[package]]
 name = "ic-canisters"
-version = "0.4.3"
+version = "0.5.0"
 dependencies = [
  "anyhow",
  "backoff",
@@ -3456,19 +3428,6 @@ dependencies = [
 
 [[package]]
 name = "ic-cdk"
-version = "0.12.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9f3d204af0b11c45715169c997858edb58fa8407d08f4fae78a6b415dd39a362"
-dependencies = [
- "candid",
- "ic-cdk-macros 0.8.4",
- "ic0 0.21.1",
- "serde",
- "serde_bytes",
-]
-
-[[package]]
-name = "ic-cdk"
 version = "0.13.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f8859bc2b863a77750acf199e1fb7e3fc403e1b475855ba13f59cb4e4036d238"
@@ -3490,20 +3449,6 @@ dependencies = [
  "ic0 0.23.0",
  "serde",
  "serde_bytes",
-]
-
-[[package]]
-name = "ic-cdk-macros"
-version = "0.8.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a5a618e4020cea88e933d8d2f8c7f86d570ec06213506a80d4f2c520a9bba512"
-dependencies = [
- "candid",
- "proc-macro2",
- "quote",
- "serde",
- "serde_tokenstream 0.1.7",
- "syn 1.0.109",
 ]
 
 [[package]]
@@ -4185,18 +4130,15 @@ dependencies = [
 
 [[package]]
 name = "ic-management-backend"
-version = "0.4.3"
+version = "0.5.0"
 dependencies = [
  "actix-rt",
  "actix-web",
  "anyhow",
- "async-trait",
  "backon",
- "base64 0.22.1",
  "candid",
  "chrono",
  "clap 4.5.15",
- "csv",
  "custom_error",
  "decentralization",
  "dirs",
@@ -4205,7 +4147,6 @@ dependencies = [
  "fs2",
  "futures",
  "futures-util",
- "hyper 1.4.1",
  "ic-agent",
  "ic-base-types",
  "ic-canisters",
@@ -4262,7 +4203,7 @@ dependencies = [
 
 [[package]]
 name = "ic-management-types"
-version = "0.4.3"
+version = "0.5.0"
 dependencies = [
  "actix-web",
  "anyhow",
@@ -5725,7 +5666,7 @@ checksum = "a7a70ba024b9dc04c27ea2f0c0548feb474ec5c54bba33a7f72f873a39d07b24"
 
 [[package]]
 name = "log-fetcher"
-version = "0.4.3"
+version = "0.5.0"
 dependencies = [
  "anyhow",
  "clap 4.5.15",
@@ -5740,7 +5681,7 @@ dependencies = [
 
 [[package]]
 name = "log-noise-filter-backend"
-version = "0.4.3"
+version = "0.5.0"
 dependencies = [
  "axum 0.7.5",
  "clap 4.5.15",
@@ -5755,7 +5696,7 @@ dependencies = [
 
 [[package]]
 name = "log-noise-filter-downloader"
-version = "0.4.3"
+version = "0.5.0"
 dependencies = [
  "anyhow",
  "clap 4.5.15",
@@ -5908,7 +5849,7 @@ checksum = "defc4c55412d89136f966bbb339008b474350e5e6e78d2714439c386b3137a03"
 
 [[package]]
 name = "multiservice-discovery"
-version = "0.4.3"
+version = "0.5.0"
 dependencies = [
  "anyhow",
  "assert_cmd",
@@ -5944,7 +5885,7 @@ dependencies = [
 
 [[package]]
 name = "multiservice-discovery-downloader"
-version = "0.4.3"
+version = "0.5.0"
 dependencies = [
  "clap 4.5.15",
  "crossbeam",
@@ -5965,7 +5906,7 @@ dependencies = [
 
 [[package]]
 name = "multiservice-discovery-shared"
-version = "0.4.3"
+version = "0.5.0"
 dependencies = [
  "erased-serde 0.4.5",
  "ic-sns-wasm",
@@ -6007,7 +5948,7 @@ dependencies = [
 
 [[package]]
 name = "node-status-updater"
-version = "0.4.3"
+version = "0.5.0"
 dependencies = [
  "anyhow",
  "clap 4.5.15",
@@ -6040,7 +5981,7 @@ dependencies = [
 
 [[package]]
 name = "np-notifications"
-version = "0.4.3"
+version = "0.5.0"
 dependencies = [
  "actix-web",
  "anyhow",
@@ -6177,7 +6118,7 @@ dependencies = [
 
 [[package]]
 name = "obs-canister-clients"
-version = "0.4.3"
+version = "0.5.0"
 dependencies = [
  "candid",
  "ic-agent",
@@ -6834,7 +6775,7 @@ dependencies = [
 
 [[package]]
 name = "prometheus-config-updater"
-version = "0.4.3"
+version = "0.5.0"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
@@ -6964,7 +6905,7 @@ dependencies = [
 
 [[package]]
 name = "qualifier"
-version = "0.4.3"
+version = "0.5.0"
 dependencies = [
  "anyhow",
  "clap 4.5.15",
@@ -7356,7 +7297,7 @@ checksum = "3582f63211428f83597b51b2ddb88e2a91a9d52d12831f9d08f5e624e8977422"
 
 [[package]]
 name = "rollout-controller"
-version = "0.4.3"
+version = "0.5.0"
 dependencies = [
  "anyhow",
  "candid",
@@ -7883,7 +7824,7 @@ dependencies = [
 
 [[package]]
 name = "service-discovery"
-version = "0.4.3"
+version = "0.5.0"
 dependencies = [
  "anyhow",
  "crossbeam",
@@ -8025,7 +7966,7 @@ dependencies = [
 
 [[package]]
 name = "slack-notifications"
-version = "0.4.3"
+version = "0.5.0"
 dependencies = [
  "anyhow",
  "candid",
@@ -8147,7 +8088,7 @@ dependencies = [
 
 [[package]]
 name = "sns-downloader"
-version = "0.4.3"
+version = "0.5.0"
 dependencies = [
  "clap 4.5.15",
  "crossbeam",
@@ -8157,7 +8098,6 @@ dependencies = [
  "ic-async-utils",
  "ic-canisters",
  "multiservice-discovery-shared",
- "regex",
  "reqwest",
  "serde_json",
  "slog",
@@ -8873,10 +8813,9 @@ dependencies = [
 
 [[package]]
 name = "trustworthy-node-metrics"
-version = "0.4.3"
+version = "0.5.0"
 dependencies = [
  "anyhow",
- "canbench-rs",
  "candid",
  "ciborium",
  "dfn_core",
@@ -8886,14 +8825,10 @@ dependencies = [
  "ic-cdk-timers 0.9.0",
  "ic-management-canister-types",
  "ic-nns-common",
- "ic-nns-constants",
  "ic-protobuf",
- "ic-registry-transport",
  "ic-stable-structures",
  "itertools 0.13.0",
- "prost",
  "serde",
- "serde_json",
 ]
 
 [[package]]
