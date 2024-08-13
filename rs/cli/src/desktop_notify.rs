@@ -52,6 +52,7 @@ impl DesktopNotifier {
         }
     }
 
+    #[cfg(target_os = "linux")]
     fn notify(title: &str, message: &str, level: &str) {
         let urgency = if level == "critical" {
             warn!("{}: {}", title, message);
