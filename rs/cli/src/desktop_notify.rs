@@ -11,13 +11,7 @@ impl DesktopNotifier {
     /// * `title` - A title for the notification.
     /// * `message` - The message body of the notification.
     pub fn send_info(title: &str, message: &str) {
-        if cfg!(target_os = "macos") {
-            DesktopNotifier::send_macos_notification(title, message, "info");
-        } else if cfg!(target_os = "linux") {
-            DesktopNotifier::send_linux_notification(title, message, "info");
-        } else {
-            DesktopNotifier::log_unsupported_os();
-        }
+        DesktopNotifier::notify(title, message, "info");
     }
 
     /// Sends a critical notification.
@@ -27,16 +21,11 @@ impl DesktopNotifier {
     /// * `title` - A title for the notification.
     /// * `message` - The message body of the notification.
     pub fn send_critical(title: &str, message: &str) {
-        if cfg!(target_os = "macos") {
-            DesktopNotifier::send_macos_notification(title, message, "critical");
-        } else if cfg!(target_os = "linux") {
-            DesktopNotifier::send_linux_notification(title, message, "critical");
-        } else {
-            DesktopNotifier::log_unsupported_os();
-        }
+        DesktopNotifier::notify(title, message, "critical");
     }
 
-    fn send_macos_notification(title: &str, message: &str, level: &str) {
+    #[cfg(target_os = "macos")]
+    fn notify(title: &str, message: &str, level: &str) {
         if level == "critical" {
             warn!("{}: {}", title, message);
         } else {
@@ -63,7 +52,7 @@ impl DesktopNotifier {
         }
     }
 
-    fn send_linux_notification(title: &str, message: &str, level: &str) {
+    fn notify(title: &str, message: &str, level: &str) {
         let urgency = if level == "critical" {
             warn!("{}: {}", title, message);
             "critical"
@@ -93,7 +82,8 @@ impl DesktopNotifier {
         }
     }
 
-    fn log_unsupported_os() {
+    #[cfg(not(any(target_os = "linux", target_os = "macos")))]
+    fn notify() {
         info!("Notification system is not supported on this operating system.");
     }
 }
