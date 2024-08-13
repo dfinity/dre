@@ -90,7 +90,7 @@ impl From<trustworthy_node_metrics::types::NodeMetrics> for NodeMetrics {
     fn from(value: trustworthy_node_metrics::types::NodeMetrics) -> Self {
         Self {
             node_id: PrincipalId::from(value.node_id),
-            num_block_failures_total: value.num_block_failures_total,
+            num_block_failures_total: value.num_blocks_failures_total,
             num_blocks_proposed_total: value.num_blocks_proposed_total,
         }
     }
