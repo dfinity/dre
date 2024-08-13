@@ -1,5 +1,5 @@
 {
-  "checksum": "f15fec06ab2545e214ce4dd616c33fc3dd557d55e91f242945f1c157fb41f627",
+  "checksum": "64e6dc9e67c573ea7e49c06d6ee0fb13851d923bf289d307ae05c451a55a3cdb",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -34485,6 +34485,10 @@
             {
               "id": "reqwest 0.12.5",
               "target": "reqwest"
+            },
+            {
+              "id": "serde 1.0.206",
+              "target": "serde"
             },
             {
               "id": "serde_json 1.0.124",

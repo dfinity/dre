@@ -17,6 +17,7 @@ dirs = { workspace = true }
 dre = { path = "../cli" }
 ic-management-types = { path = "../ic-management-types" }
 ic-canisters = { path = "../ic-canisters" }
+serde = { workspace = true }
 serde_json = { workspace = true }
 tokio-util = { workspace = true }
 itertools = { workspace = true }

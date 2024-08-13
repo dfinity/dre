@@ -6919,6 +6919,7 @@ dependencies = [
  "log",
  "pretty_env_logger",
  "reqwest",
+ "serde",
  "serde_json",
  "tokio",
  "tokio-util",
