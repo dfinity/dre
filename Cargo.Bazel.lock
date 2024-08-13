@@ -1,5 +1,5 @@
 {
-  "checksum": "64e6dc9e67c573ea7e49c06d6ee0fb13851d923bf289d307ae05c451a55a3cdb",
+  "checksum": "5ec4fcee4c14e7594d0a1fb9642aa461e4bf174f5045552c66d4a39051d2de00",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -10616,6 +10616,10 @@
         ],
         "deps": {
           "common": [
+            {
+              "id": "actix-web 4.9.0",
+              "target": "actix_web"
+            },
             {
               "id": "anyhow 1.0.86",
               "target": "anyhow"
@@ -44323,8 +44327,16 @@
               "target": "itertools"
             },
             {
+              "id": "prost 0.12.6",
+              "target": "prost"
+            },
+            {
               "id": "serde 1.0.206",
               "target": "serde"
+            },
+            {
+              "id": "serde_json 1.0.124",
+              "target": "serde_json"
             }
           ],
           "selects": {}
