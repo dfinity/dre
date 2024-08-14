@@ -3,12 +3,8 @@ load("@rules_rust//rust:defs.bzl", "rust_library")
 
 package(default_visibility = ["//visibility:public"])
 
-DEPS = [
-    "//rs/dre-canisters/trustworthy-node-metrics/src/trustworthy-node-metrics-types:trustworthy_node_metrics_types"
-]
-
 rust_library(
-    name = "trustworthy_node_metrics",
+    name = "trustworthy_node_metrics_types",
     srcs = glob(["src/**/*.rs"]),
     aliases = aliases(),
     proc_macro_deps = all_crate_deps(
@@ -16,5 +12,5 @@ rust_library(
     ),
     deps = all_crate_deps(
         normal = True,
-    ) + DEPS,
+    ),
 )

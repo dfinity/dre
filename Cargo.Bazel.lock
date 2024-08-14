@@ -1,5 +1,5 @@
 {
-  "checksum": "bb01d0dcdf9c1fe555b6578fa02db9e22077f281f0c0585134761d5ad726a128",
+  "checksum": "56a1654ffcad2aab45a1a97a7e1bd2e8faf5986e1d11b824bfcd4039e0db3c31",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -27897,29 +27897,35 @@
         ],
         "crate_features": {
           "common": [
-            "elf",
-            "errno",
             "general",
             "ioctl",
             "no_std"
           ],
           "selects": {
             "aarch64-unknown-linux-gnu": [
+              "elf",
+              "errno",
               "prctl",
               "std",
               "system"
             ],
             "arm-unknown-linux-gnueabi": [
+              "elf",
+              "errno",
               "prctl",
               "std",
               "system"
             ],
             "armv7-unknown-linux-gnueabi": [
+              "elf",
+              "errno",
               "prctl",
               "std",
               "system"
             ],
             "i686-unknown-linux-gnu": [
+              "elf",
+              "errno",
               "prctl",
               "std",
               "system"
@@ -27935,6 +27941,8 @@
               "system"
             ],
             "x86_64-unknown-linux-gnu": [
+              "elf",
+              "errno",
               "prctl",
               "std",
               "system"
@@ -44256,18 +44264,8 @@
       "name": "trustworthy-node-metrics",
       "version": "0.5.0",
       "repository": null,
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "trustworthy_node_metrics",
-            "crate_root": "src/lib.rs",
-            "srcs": [
-              "**/*.rs"
-            ]
-          }
-        }
-      ],
-      "library_target_name": "trustworthy_node_metrics",
+      "targets": [],
+      "library_target_name": null,
       "common_attrs": {
         "compile_data_glob": [
           "**"
@@ -44281,10 +44279,6 @@
             {
               "id": "candid 0.10.10",
               "target": "candid"
-            },
-            {
-              "id": "ciborium 0.2.2",
-              "target": "ciborium"
             },
             {
               "id": "dfn_core 0.9.0",
@@ -44321,10 +44315,6 @@
             {
               "id": "itertools 0.13.0",
               "target": "itertools"
-            },
-            {
-              "id": "serde 1.0.206",
-              "target": "serde"
             }
           ],
           "selects": {}
@@ -44339,6 +44329,64 @@
           ],
           "selects": {}
         },
+        "version": "0.5.0"
+      },
+      "license": null
+    },
+    "trustworthy-node-metrics-types 0.5.0": {
+      "name": "trustworthy-node-metrics-types",
+      "version": "0.5.0",
+      "repository": null,
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "trustworthy_node_metrics_types",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "trustworthy_node_metrics_types",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "candid 0.10.10",
+              "target": "candid"
+            },
+            {
+              "id": "ciborium 0.2.2",
+              "target": "ciborium"
+            },
+            {
+              "id": "dfn_core 0.9.0",
+              "target": "dfn_core"
+            },
+            {
+              "id": "ic-management-canister-types 0.9.0",
+              "target": "ic_management_canister_types"
+            },
+            {
+              "id": "ic-stable-structures 0.6.5",
+              "target": "ic_stable_structures"
+            },
+            {
+              "id": "serde 1.0.206",
+              "target": "serde"
+            },
+            {
+              "id": "serde_json 1.0.124",
+              "target": "serde_json"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
         "version": "0.5.0"
       },
       "license": null
@@ -48905,7 +48953,8 @@
     "service-discovery 0.5.0": "rs/ic-observability/service-discovery",
     "slack-notifications 0.5.0": "rs/slack-notifications",
     "sns-downloader 0.5.0": "rs/ic-observability/sns-downloader",
-    "trustworthy-node-metrics 0.5.0": "rs/dre-canisters/trustworthy-node-metrics/src/trustworthy-node-metrics"
+    "trustworthy-node-metrics 0.5.0": "rs/dre-canisters/trustworthy-node-metrics/src/trustworthy-node-metrics",
+    "trustworthy-node-metrics-types 0.5.0": "rs/dre-canisters/trustworthy-node-metrics/src/trustworthy-node-metrics-types"
   },
   "conditions": {
     "aarch64-apple-darwin": [

@@ -2,13 +2,13 @@ use candid::Principal;
 use ic_cdk_macros::*;
 use itertools::Itertools;
 use std::collections::{self, btree_map::Entry, BTreeMap};
-use types::{
-    DailyNodeMetrics, NodeMetrics, NodeMetricsStoredKey, NodeRewardsArgs, NodeRewardsResponse, SubnetNodeMetricsArgs, SubnetNodeMetricsResponse,
+use trustworthy_node_metrics_types::types::{
+    DailyNodeMetrics, NodeMetrics, NodeMetricsStored, NodeMetricsStoredKey, NodeRewardsArgs, NodeRewardsResponse, SubnetNodeMetricsArgs,
+    SubnetNodeMetricsResponse,
 };
 mod metrics_manager;
 mod rewards_manager;
 mod stable_memory;
-pub mod types;
 
 // Management canisters updates node metrics every day
 const TIMER_INTERVAL_SEC: u64 = 60 * 60 * 24;
@@ -47,7 +47,7 @@ fn subnet_node_metrics(args: SubnetNodeMetricsArgs) -> Result<Vec<SubnetNodeMetr
     let from_ts = args.ts.unwrap_or_default();
     let mut subnet_node_metrics: BTreeMap<(u64, Principal), Vec<NodeMetrics>> = BTreeMap::new();
 
-    let node_metrics: Vec<(NodeMetricsStoredKey, types::NodeMetricsStored)> = stable_memory::get_metrics_range(from_ts, None);
+    let node_metrics: Vec<(NodeMetricsStoredKey, NodeMetricsStored)> = stable_memory::get_metrics_range(from_ts, None);
 
     for ((ts, node_id), node_metrics_value) in node_metrics {
         if let Some(subnet_id) = args.subnet_id {
@@ -86,7 +86,7 @@ fn subnet_node_metrics(args: SubnetNodeMetricsArgs) -> Result<Vec<SubnetNodeMetr
 fn node_rewards(args: NodeRewardsArgs) -> Vec<NodeRewardsResponse> {
     let period_start = args.from_ts;
     let period_end = args.to_ts;
-    let node_metrics: Vec<(NodeMetricsStoredKey, types::NodeMetricsStored)> = stable_memory::get_metrics_range(period_start, Some(period_end));
+    let node_metrics: Vec<(NodeMetricsStoredKey, NodeMetricsStored)> = stable_memory::get_metrics_range(period_start, Some(period_end));
 
     let mut daily_metrics = collections::BTreeMap::new();
     for ((ts, node_id), node_metrics_value) in node_metrics {

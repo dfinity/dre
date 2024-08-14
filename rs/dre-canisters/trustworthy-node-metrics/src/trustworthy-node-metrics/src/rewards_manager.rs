@@ -1,63 +1,4 @@
-use candid::Principal;
-
-use crate::types::{DailyNodeMetrics, TimestampNanos};
-
-const MIN_FAILURE_RATE: f64 = 0.1;
-const MAX_FAILURE_RATE: f64 = 0.7;
-
-/// Calculates the daily rewards reduction based on the failure rate.
-///
-/// # Arguments
-///
-/// * `failure_rate` - A reference to a `f64` value representing the failure rate for the day.
-///
-/// # Returns
-///
-/// * A `f64` value representing the rewards reduction for the day, where:
-///   - `0.0` indicates no reduction (failure rate below the minimum threshold),
-///   - `1.0` indicates maximum reduction (failure rate above the maximum threshold),
-///   - A value between `0.0` and `1.0` represents a proportional reduction based on the failure rate.
-///
-/// # Explanation
-///
-/// 1. The function checks if the provided `failure_rate` is below the `MIN_FAILURE_RATE` -> no reduction in rewards.
-///
-/// 2. It then checks if the `failure_rate` is above the `MAX_FAILURE_RATE` -> maximum reduction in rewards.
-///
-/// 3. If the `failure_rate` is within the defined range (`MIN_FAILURE_RATE` to `MAX_FAILURE_RATE`),
-///    the function calculates the reduction proportionally:
-///    - The reduction is calculated by normalizing the `failure_rate` within the range, resulting in a value between `0.0` and `1.0`.
-fn daily_rewards_reduction(failure_rate: &f64) -> f64 {
-    if failure_rate < &MIN_FAILURE_RATE {
-        0.0
-    } else if failure_rate > &MAX_FAILURE_RATE {
-        1.0
-    } else {
-        (failure_rate - MIN_FAILURE_RATE) / (MAX_FAILURE_RATE - MIN_FAILURE_RATE)
-    }
-}
-
-impl DailyNodeMetrics {
-    pub fn new(ts: TimestampNanos, subnet_assignment: Principal, proposed_blocks: u64, failed_blocks: u64) -> Self {
-        let total_blocks = failed_blocks + proposed_blocks;
-        let failure_rate = if total_blocks == 0 {
-            0.0
-        } else {
-            failed_blocks as f64 / total_blocks as f64
-        };
-
-        let rewards_reduction = daily_rewards_reduction(&failure_rate);
-
-        DailyNodeMetrics {
-            ts,
-            subnet_assigned: subnet_assignment,
-            num_blocks_proposed: proposed_blocks,
-            num_blocks_failed: failed_blocks,
-            failure_rate,
-            rewards_reduction,
-        }
-    }
-}
+use trustworthy_node_metrics_types::types::DailyNodeMetrics;
 
 /// Computes the rewards percentage based on the daily reward reductions WITH consecutive days penalty.
 ///
@@ -144,6 +85,7 @@ pub fn rewards_no_penalty(daily_metrics: &[DailyNodeMetrics]) -> f64 {
 
 #[cfg(test)]
 mod tests {
+    use candid::Principal;
     use itertools::Itertools;
 
     use super::*;
