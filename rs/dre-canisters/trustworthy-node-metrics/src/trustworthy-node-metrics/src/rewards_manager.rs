@@ -39,7 +39,7 @@ impl DailyNodeMetrics {
 
 pub fn rewards_with_penalty(daily_metrics: &[DailyNodeMetrics]) -> f64 {
     let active_days = daily_metrics.len();
-    let mut reduction = 0.0;
+    let mut reduction_sum = 0.0;
     let mut consecutive_reduction = 0.0;
     let mut consecutive_count = 0;
 
@@ -47,42 +47,37 @@ pub fn rewards_with_penalty(daily_metrics: &[DailyNodeMetrics]) -> f64 {
         // Just if we want to count the day unassigned as 0.0 reduction
         // we would need to check if previous daily metrics is <= 24hrs
         // before current metrics
-        let daily_rewards: f64 = metrics.rewards_reduction;
+        let daily_reduction: f64 = metrics.rewards_reduction;
 
-        if daily_rewards == 0.0 {
+        if daily_reduction == 0.0 {
             if consecutive_count > 0 {
-                reduction += consecutive_reduction * consecutive_count as f64;
+                reduction_sum += consecutive_reduction * consecutive_count as f64;
                 consecutive_reduction = 0.0;
                 consecutive_count = 0;
             }
         } else {
-            consecutive_reduction += daily_rewards;
+            consecutive_reduction += daily_reduction;
             consecutive_count += 1;
         }
     }
 
     // Handles the last consecutive days
     if consecutive_count > 0 {
-        reduction += consecutive_reduction * consecutive_count as f64;
+        reduction_sum += consecutive_reduction * consecutive_count as f64;
     }
 
-    reduction /= active_days as f64;
-    let reduction_normalized = reduction.min(1.0);
+    let overall_reduction = reduction_sum / active_days as f64;
+    let reduction_normalized = overall_reduction.min(1.0);
 
     ((1.0 - reduction_normalized) * 100.0).round() / 100.0
 }
 
 pub fn rewards_no_penalty(daily_metrics: &[DailyNodeMetrics]) -> f64 {
     let active_days = daily_metrics.len();
+    let reduction_sum: f64 = daily_metrics.iter().map(|metrics| metrics.rewards_reduction).sum();
+    let overall_reduction = reduction_sum / (active_days as f64);
 
-    let reduction = daily_metrics.iter().fold(0.0, |mut acc, metrics| {
-        let daily_rewards = metrics.rewards_reduction;
-
-        acc += daily_rewards;
-        acc
-    }) / (active_days as f64);
-
-    ((1.0 - reduction) * 100.0).round() / 100.0
+    ((1.0 - overall_reduction) * 100.0).round() / 100.0
 }
 
 #[cfg(test)]
