@@ -1,0 +1,2488 @@
+{
+  "Ok": [
+    {
+      "node_metrics": [
+        {
+          "node_id": "6bpfz-cjaos-uck3k-c5ex2-nkdvr-oql64-jet7u-yfmqo-zgxqv-qiftz-4qe",
+          "num_block_failures_total": "40",
+          "num_blocks_proposed_total": "2091791"
+        },
+        {
+          "node_id": "n3hrq-akp7i-xednx-d2zd5-fl2xj-5hice-u2olr-5jacd-xrjvr-hbjy2-5qe",
+          "num_block_failures_total": "61",
+          "num_blocks_proposed_total": "2093233"
+        },
+        {
+          "node_id": "5xplq-if2d4-h55o5-fwkps-i7jsb-xrnto-romgb-erfht-cmvqe-jsmhh-sae",
+          "num_block_failures_total": "34",
+          "num_blocks_proposed_total": "2092456"
+        },
+        {
+          "node_id": "dlo4z-s65z7-ig6fn-zb2v5-s752c-jiva4-6ujh5-y7z2m-m2tht-ukzqf-3ae",
+          "num_block_failures_total": "50",
+          "num_blocks_proposed_total": "2092132"
+        },
+        {
+          "node_id": "fpubd-4hk24-5wezd-yvbum-de5i6-kyspp-l3cce-lxcy2-7vugt-yso3r-7ae",
+          "num_block_failures_total": "53",
+          "num_blocks_proposed_total": "2090761"
+        },
+        {
+          "node_id": "gmqia-rpzvg-ttwje-2buta-jhfvv-v7hxf-djvgq-ss7i2-rzlbm-tziyn-kqe",
+          "num_block_failures_total": "74",
+          "num_blocks_proposed_total": "2091793"
+        }
+      ],
+      "subnet_id": "34mm6-e24vu-pnyce-lp4fx-xtz2h-y5jpo-kwzgz-grf4m-v5kvr-xmeu4-tqe",
+      "ts": "1716681599483489334"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "6bpfz-cjaos-uck3k-c5ex2-nkdvr-oql64-jet7u-yfmqo-zgxqv-qiftz-4qe",
+          "num_block_failures_total": "40",
+          "num_blocks_proposed_total": "2104506"
+        },
+        {
+          "node_id": "n3hrq-akp7i-xednx-d2zd5-fl2xj-5hice-u2olr-5jacd-xrjvr-hbjy2-5qe",
+          "num_block_failures_total": "61",
+          "num_blocks_proposed_total": "2106115"
+        },
+        {
+          "node_id": "5xplq-if2d4-h55o5-fwkps-i7jsb-xrnto-romgb-erfht-cmvqe-jsmhh-sae",
+          "num_block_failures_total": "34",
+          "num_blocks_proposed_total": "2105451"
+        },
+        {
+          "node_id": "dlo4z-s65z7-ig6fn-zb2v5-s752c-jiva4-6ujh5-y7z2m-m2tht-ukzqf-3ae",
+          "num_block_failures_total": "50",
+          "num_blocks_proposed_total": "2105005"
+        },
+        {
+          "node_id": "fpubd-4hk24-5wezd-yvbum-de5i6-kyspp-l3cce-lxcy2-7vugt-yso3r-7ae",
+          "num_block_failures_total": "53",
+          "num_blocks_proposed_total": "2103618"
+        },
+        {
+          "node_id": "gmqia-rpzvg-ttwje-2buta-jhfvv-v7hxf-djvgq-ss7i2-rzlbm-tziyn-kqe",
+          "num_block_failures_total": "74",
+          "num_blocks_proposed_total": "2104698"
+        }
+      ],
+      "subnet_id": "34mm6-e24vu-pnyce-lp4fx-xtz2h-y5jpo-kwzgz-grf4m-v5kvr-xmeu4-tqe",
+      "ts": "1716767999773366328"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "6bpfz-cjaos-uck3k-c5ex2-nkdvr-oql64-jet7u-yfmqo-zgxqv-qiftz-4qe",
+          "num_block_failures_total": "40",
+          "num_blocks_proposed_total": "2117379"
+        },
+        {
+          "node_id": "n3hrq-akp7i-xednx-d2zd5-fl2xj-5hice-u2olr-5jacd-xrjvr-hbjy2-5qe",
+          "num_block_failures_total": "61",
+          "num_blocks_proposed_total": "2118951"
+        },
+        {
+          "node_id": "5xplq-if2d4-h55o5-fwkps-i7jsb-xrnto-romgb-erfht-cmvqe-jsmhh-sae",
+          "num_block_failures_total": "34",
+          "num_blocks_proposed_total": "2118512"
+        },
+        {
+          "node_id": "dlo4z-s65z7-ig6fn-zb2v5-s752c-jiva4-6ujh5-y7z2m-m2tht-ukzqf-3ae",
+          "num_block_failures_total": "50",
+          "num_blocks_proposed_total": "2117762"
+        },
+        {
+          "node_id": "fpubd-4hk24-5wezd-yvbum-de5i6-kyspp-l3cce-lxcy2-7vugt-yso3r-7ae",
+          "num_block_failures_total": "53",
+          "num_blocks_proposed_total": "2116431"
+        },
+        {
+          "node_id": "gmqia-rpzvg-ttwje-2buta-jhfvv-v7hxf-djvgq-ss7i2-rzlbm-tziyn-kqe",
+          "num_block_failures_total": "74",
+          "num_blocks_proposed_total": "2117567"
+        }
+      ],
+      "subnet_id": "34mm6-e24vu-pnyce-lp4fx-xtz2h-y5jpo-kwzgz-grf4m-v5kvr-xmeu4-tqe",
+      "ts": "1716854399060606686"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "6bpfz-cjaos-uck3k-c5ex2-nkdvr-oql64-jet7u-yfmqo-zgxqv-qiftz-4qe",
+          "num_block_failures_total": "40",
+          "num_blocks_proposed_total": "2130196"
+        },
+        {
+          "node_id": "n3hrq-akp7i-xednx-d2zd5-fl2xj-5hice-u2olr-5jacd-xrjvr-hbjy2-5qe",
+          "num_block_failures_total": "61",
+          "num_blocks_proposed_total": "2131848"
+        },
+        {
+          "node_id": "5xplq-if2d4-h55o5-fwkps-i7jsb-xrnto-romgb-erfht-cmvqe-jsmhh-sae",
+          "num_block_failures_total": "34",
+          "num_blocks_proposed_total": "2131353"
+        },
+        {
+          "node_id": "dlo4z-s65z7-ig6fn-zb2v5-s752c-jiva4-6ujh5-y7z2m-m2tht-ukzqf-3ae",
+          "num_block_failures_total": "50",
+          "num_blocks_proposed_total": "2130602"
+        },
+        {
+          "node_id": "fpubd-4hk24-5wezd-yvbum-de5i6-kyspp-l3cce-lxcy2-7vugt-yso3r-7ae",
+          "num_block_failures_total": "53",
+          "num_blocks_proposed_total": "2129240"
+        },
+        {
+          "node_id": "gmqia-rpzvg-ttwje-2buta-jhfvv-v7hxf-djvgq-ss7i2-rzlbm-tziyn-kqe",
+          "num_block_failures_total": "74",
+          "num_blocks_proposed_total": "2130592"
+        }
+      ],
+      "subnet_id": "34mm6-e24vu-pnyce-lp4fx-xtz2h-y5jpo-kwzgz-grf4m-v5kvr-xmeu4-tqe",
+      "ts": "1716940799761899833"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "6bpfz-cjaos-uck3k-c5ex2-nkdvr-oql64-jet7u-yfmqo-zgxqv-qiftz-4qe",
+          "num_block_failures_total": "40",
+          "num_blocks_proposed_total": "2143138"
+        },
+        {
+          "node_id": "n3hrq-akp7i-xednx-d2zd5-fl2xj-5hice-u2olr-5jacd-xrjvr-hbjy2-5qe",
+          "num_block_failures_total": "61",
+          "num_blocks_proposed_total": "2144621"
+        },
+        {
+          "node_id": "5xplq-if2d4-h55o5-fwkps-i7jsb-xrnto-romgb-erfht-cmvqe-jsmhh-sae",
+          "num_block_failures_total": "34",
+          "num_blocks_proposed_total": "2144270"
+        },
+        {
+          "node_id": "dlo4z-s65z7-ig6fn-zb2v5-s752c-jiva4-6ujh5-y7z2m-m2tht-ukzqf-3ae",
+          "num_block_failures_total": "50",
+          "num_blocks_proposed_total": "2143502"
+        },
+        {
+          "node_id": "fpubd-4hk24-5wezd-yvbum-de5i6-kyspp-l3cce-lxcy2-7vugt-yso3r-7ae",
+          "num_block_failures_total": "53",
+          "num_blocks_proposed_total": "2142135"
+        },
+        {
+          "node_id": "gmqia-rpzvg-ttwje-2buta-jhfvv-v7hxf-djvgq-ss7i2-rzlbm-tziyn-kqe",
+          "num_block_failures_total": "74",
+          "num_blocks_proposed_total": "2143370"
+        }
+      ],
+      "subnet_id": "34mm6-e24vu-pnyce-lp4fx-xtz2h-y5jpo-kwzgz-grf4m-v5kvr-xmeu4-tqe",
+      "ts": "1717027199691163351"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "6bpfz-cjaos-uck3k-c5ex2-nkdvr-oql64-jet7u-yfmqo-zgxqv-qiftz-4qe",
+          "num_block_failures_total": "40",
+          "num_blocks_proposed_total": "2156081"
+        },
+        {
+          "node_id": "n3hrq-akp7i-xednx-d2zd5-fl2xj-5hice-u2olr-5jacd-xrjvr-hbjy2-5qe",
+          "num_block_failures_total": "61",
+          "num_blocks_proposed_total": "2157434"
+        },
+        {
+          "node_id": "5xplq-if2d4-h55o5-fwkps-i7jsb-xrnto-romgb-erfht-cmvqe-jsmhh-sae",
+          "num_block_failures_total": "34",
+          "num_blocks_proposed_total": "2156993"
+        },
+        {
+          "node_id": "dlo4z-s65z7-ig6fn-zb2v5-s752c-jiva4-6ujh5-y7z2m-m2tht-ukzqf-3ae",
+          "num_block_failures_total": "51",
+          "num_blocks_proposed_total": "2156320"
+        },
+        {
+          "node_id": "fpubd-4hk24-5wezd-yvbum-de5i6-kyspp-l3cce-lxcy2-7vugt-yso3r-7ae",
+          "num_block_failures_total": "53",
+          "num_blocks_proposed_total": "2155090"
+        },
+        {
+          "node_id": "gmqia-rpzvg-ttwje-2buta-jhfvv-v7hxf-djvgq-ss7i2-rzlbm-tziyn-kqe",
+          "num_block_failures_total": "74",
+          "num_blocks_proposed_total": "2156131"
+        }
+      ],
+      "subnet_id": "34mm6-e24vu-pnyce-lp4fx-xtz2h-y5jpo-kwzgz-grf4m-v5kvr-xmeu4-tqe",
+      "ts": "1717113599414303587"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "6bpfz-cjaos-uck3k-c5ex2-nkdvr-oql64-jet7u-yfmqo-zgxqv-qiftz-4qe",
+          "num_block_failures_total": "40",
+          "num_blocks_proposed_total": "2168956"
+        },
+        {
+          "node_id": "n3hrq-akp7i-xednx-d2zd5-fl2xj-5hice-u2olr-5jacd-xrjvr-hbjy2-5qe",
+          "num_block_failures_total": "61",
+          "num_blocks_proposed_total": "2170473"
+        },
+        {
+          "node_id": "5xplq-if2d4-h55o5-fwkps-i7jsb-xrnto-romgb-erfht-cmvqe-jsmhh-sae",
+          "num_block_failures_total": "34",
+          "num_blocks_proposed_total": "2169884"
+        },
+        {
+          "node_id": "dlo4z-s65z7-ig6fn-zb2v5-s752c-jiva4-6ujh5-y7z2m-m2tht-ukzqf-3ae",
+          "num_block_failures_total": "51",
+          "num_blocks_proposed_total": "2169061"
+        },
+        {
+          "node_id": "fpubd-4hk24-5wezd-yvbum-de5i6-kyspp-l3cce-lxcy2-7vugt-yso3r-7ae",
+          "num_block_failures_total": "53",
+          "num_blocks_proposed_total": "2167860"
+        },
+        {
+          "node_id": "gmqia-rpzvg-ttwje-2buta-jhfvv-v7hxf-djvgq-ss7i2-rzlbm-tziyn-kqe",
+          "num_block_failures_total": "74",
+          "num_blocks_proposed_total": "2169020"
+        }
+      ],
+      "subnet_id": "34mm6-e24vu-pnyce-lp4fx-xtz2h-y5jpo-kwzgz-grf4m-v5kvr-xmeu4-tqe",
+      "ts": "1717199999631964702"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "6bpfz-cjaos-uck3k-c5ex2-nkdvr-oql64-jet7u-yfmqo-zgxqv-qiftz-4qe",
+          "num_block_failures_total": "40",
+          "num_blocks_proposed_total": "2181963"
+        },
+        {
+          "node_id": "n3hrq-akp7i-xednx-d2zd5-fl2xj-5hice-u2olr-5jacd-xrjvr-hbjy2-5qe",
+          "num_block_failures_total": "61",
+          "num_blocks_proposed_total": "2183390"
+        },
+        {
+          "node_id": "5xplq-if2d4-h55o5-fwkps-i7jsb-xrnto-romgb-erfht-cmvqe-jsmhh-sae",
+          "num_block_failures_total": "34",
+          "num_blocks_proposed_total": "2182612"
+        },
+        {
+          "node_id": "dlo4z-s65z7-ig6fn-zb2v5-s752c-jiva4-6ujh5-y7z2m-m2tht-ukzqf-3ae",
+          "num_block_failures_total": "51",
+          "num_blocks_proposed_total": "2182026"
+        },
+        {
+          "node_id": "fpubd-4hk24-5wezd-yvbum-de5i6-kyspp-l3cce-lxcy2-7vugt-yso3r-7ae",
+          "num_block_failures_total": "53",
+          "num_blocks_proposed_total": "2180755"
+        },
+        {
+          "node_id": "gmqia-rpzvg-ttwje-2buta-jhfvv-v7hxf-djvgq-ss7i2-rzlbm-tziyn-kqe",
+          "num_block_failures_total": "74",
+          "num_blocks_proposed_total": "2181713"
+        }
+      ],
+      "subnet_id": "34mm6-e24vu-pnyce-lp4fx-xtz2h-y5jpo-kwzgz-grf4m-v5kvr-xmeu4-tqe",
+      "ts": "1717286399752468497"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "6bpfz-cjaos-uck3k-c5ex2-nkdvr-oql64-jet7u-yfmqo-zgxqv-qiftz-4qe",
+          "num_block_failures_total": "40",
+          "num_blocks_proposed_total": "2194888"
+        },
+        {
+          "node_id": "n3hrq-akp7i-xednx-d2zd5-fl2xj-5hice-u2olr-5jacd-xrjvr-hbjy2-5qe",
+          "num_block_failures_total": "61",
+          "num_blocks_proposed_total": "2196326"
+        },
+        {
+          "node_id": "5xplq-if2d4-h55o5-fwkps-i7jsb-xrnto-romgb-erfht-cmvqe-jsmhh-sae",
+          "num_block_failures_total": "34",
+          "num_blocks_proposed_total": "2195633"
+        },
+        {
+          "node_id": "dlo4z-s65z7-ig6fn-zb2v5-s752c-jiva4-6ujh5-y7z2m-m2tht-ukzqf-3ae",
+          "num_block_failures_total": "51",
+          "num_blocks_proposed_total": "2194709"
+        },
+        {
+          "node_id": "fpubd-4hk24-5wezd-yvbum-de5i6-kyspp-l3cce-lxcy2-7vugt-yso3r-7ae",
+          "num_block_failures_total": "53",
+          "num_blocks_proposed_total": "2193565"
+        },
+        {
+          "node_id": "gmqia-rpzvg-ttwje-2buta-jhfvv-v7hxf-djvgq-ss7i2-rzlbm-tziyn-kqe",
+          "num_block_failures_total": "74",
+          "num_blocks_proposed_total": "2194546"
+        }
+      ],
+      "subnet_id": "34mm6-e24vu-pnyce-lp4fx-xtz2h-y5jpo-kwzgz-grf4m-v5kvr-xmeu4-tqe",
+      "ts": "1717372799135371824"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "6bpfz-cjaos-uck3k-c5ex2-nkdvr-oql64-jet7u-yfmqo-zgxqv-qiftz-4qe",
+          "num_block_failures_total": "40",
+          "num_blocks_proposed_total": "2208031"
+        },
+        {
+          "node_id": "n3hrq-akp7i-xednx-d2zd5-fl2xj-5hice-u2olr-5jacd-xrjvr-hbjy2-5qe",
+          "num_block_failures_total": "61",
+          "num_blocks_proposed_total": "2209148"
+        },
+        {
+          "node_id": "5xplq-if2d4-h55o5-fwkps-i7jsb-xrnto-romgb-erfht-cmvqe-jsmhh-sae",
+          "num_block_failures_total": "34",
+          "num_blocks_proposed_total": "2208500"
+        },
+        {
+          "node_id": "dlo4z-s65z7-ig6fn-zb2v5-s752c-jiva4-6ujh5-y7z2m-m2tht-ukzqf-3ae",
+          "num_block_failures_total": "51",
+          "num_blocks_proposed_total": "2207473"
+        },
+        {
+          "node_id": "fpubd-4hk24-5wezd-yvbum-de5i6-kyspp-l3cce-lxcy2-7vugt-yso3r-7ae",
+          "num_block_failures_total": "53",
+          "num_blocks_proposed_total": "2206320"
+        },
+        {
+          "node_id": "gmqia-rpzvg-ttwje-2buta-jhfvv-v7hxf-djvgq-ss7i2-rzlbm-tziyn-kqe",
+          "num_block_failures_total": "74",
+          "num_blocks_proposed_total": "2207389"
+        }
+      ],
+      "subnet_id": "34mm6-e24vu-pnyce-lp4fx-xtz2h-y5jpo-kwzgz-grf4m-v5kvr-xmeu4-tqe",
+      "ts": "1717459199927811941"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "6bpfz-cjaos-uck3k-c5ex2-nkdvr-oql64-jet7u-yfmqo-zgxqv-qiftz-4qe",
+          "num_block_failures_total": "40",
+          "num_blocks_proposed_total": "2220906"
+        },
+        {
+          "node_id": "n3hrq-akp7i-xednx-d2zd5-fl2xj-5hice-u2olr-5jacd-xrjvr-hbjy2-5qe",
+          "num_block_failures_total": "61",
+          "num_blocks_proposed_total": "2221973"
+        },
+        {
+          "node_id": "5xplq-if2d4-h55o5-fwkps-i7jsb-xrnto-romgb-erfht-cmvqe-jsmhh-sae",
+          "num_block_failures_total": "34",
+          "num_blocks_proposed_total": "2221423"
+        },
+        {
+          "node_id": "dlo4z-s65z7-ig6fn-zb2v5-s752c-jiva4-6ujh5-y7z2m-m2tht-ukzqf-3ae",
+          "num_block_failures_total": "52",
+          "num_blocks_proposed_total": "2220255"
+        },
+        {
+          "node_id": "fpubd-4hk24-5wezd-yvbum-de5i6-kyspp-l3cce-lxcy2-7vugt-yso3r-7ae",
+          "num_block_failures_total": "53",
+          "num_blocks_proposed_total": "2219268"
+        },
+        {
+          "node_id": "gmqia-rpzvg-ttwje-2buta-jhfvv-v7hxf-djvgq-ss7i2-rzlbm-tziyn-kqe",
+          "num_block_failures_total": "74",
+          "num_blocks_proposed_total": "2220227"
+        }
+      ],
+      "subnet_id": "34mm6-e24vu-pnyce-lp4fx-xtz2h-y5jpo-kwzgz-grf4m-v5kvr-xmeu4-tqe",
+      "ts": "1717545599429653929"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "6bpfz-cjaos-uck3k-c5ex2-nkdvr-oql64-jet7u-yfmqo-zgxqv-qiftz-4qe",
+          "num_block_failures_total": "40",
+          "num_blocks_proposed_total": "2233757"
+        },
+        {
+          "node_id": "n3hrq-akp7i-xednx-d2zd5-fl2xj-5hice-u2olr-5jacd-xrjvr-hbjy2-5qe",
+          "num_block_failures_total": "61",
+          "num_blocks_proposed_total": "2234665"
+        },
+        {
+          "node_id": "5xplq-if2d4-h55o5-fwkps-i7jsb-xrnto-romgb-erfht-cmvqe-jsmhh-sae",
+          "num_block_failures_total": "34",
+          "num_blocks_proposed_total": "2234215"
+        },
+        {
+          "node_id": "dlo4z-s65z7-ig6fn-zb2v5-s752c-jiva4-6ujh5-y7z2m-m2tht-ukzqf-3ae",
+          "num_block_failures_total": "52",
+          "num_blocks_proposed_total": "2233088"
+        },
+        {
+          "node_id": "fpubd-4hk24-5wezd-yvbum-de5i6-kyspp-l3cce-lxcy2-7vugt-yso3r-7ae",
+          "num_block_failures_total": "53",
+          "num_blocks_proposed_total": "2232354"
+        },
+        {
+          "node_id": "gmqia-rpzvg-ttwje-2buta-jhfvv-v7hxf-djvgq-ss7i2-rzlbm-tziyn-kqe",
+          "num_block_failures_total": "74",
+          "num_blocks_proposed_total": "2233137"
+        }
+      ],
+      "subnet_id": "34mm6-e24vu-pnyce-lp4fx-xtz2h-y5jpo-kwzgz-grf4m-v5kvr-xmeu4-tqe",
+      "ts": "1717631999111347594"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "6bpfz-cjaos-uck3k-c5ex2-nkdvr-oql64-jet7u-yfmqo-zgxqv-qiftz-4qe",
+          "num_block_failures_total": "41",
+          "num_blocks_proposed_total": "2246535"
+        },
+        {
+          "node_id": "n3hrq-akp7i-xednx-d2zd5-fl2xj-5hice-u2olr-5jacd-xrjvr-hbjy2-5qe",
+          "num_block_failures_total": "61",
+          "num_blocks_proposed_total": "2247410"
+        },
+        {
+          "node_id": "5xplq-if2d4-h55o5-fwkps-i7jsb-xrnto-romgb-erfht-cmvqe-jsmhh-sae",
+          "num_block_failures_total": "34",
+          "num_blocks_proposed_total": "2247092"
+        },
+        {
+          "node_id": "dlo4z-s65z7-ig6fn-zb2v5-s752c-jiva4-6ujh5-y7z2m-m2tht-ukzqf-3ae",
+          "num_block_failures_total": "53",
+          "num_blocks_proposed_total": "2245910"
+        },
+        {
+          "node_id": "fpubd-4hk24-5wezd-yvbum-de5i6-kyspp-l3cce-lxcy2-7vugt-yso3r-7ae",
+          "num_block_failures_total": "55",
+          "num_blocks_proposed_total": "2245259"
+        },
+        {
+          "node_id": "gmqia-rpzvg-ttwje-2buta-jhfvv-v7hxf-djvgq-ss7i2-rzlbm-tziyn-kqe",
+          "num_block_failures_total": "75",
+          "num_blocks_proposed_total": "2246060"
+        }
+      ],
+      "subnet_id": "34mm6-e24vu-pnyce-lp4fx-xtz2h-y5jpo-kwzgz-grf4m-v5kvr-xmeu4-tqe",
+      "ts": "1717718399425821175"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "6bpfz-cjaos-uck3k-c5ex2-nkdvr-oql64-jet7u-yfmqo-zgxqv-qiftz-4qe",
+          "num_block_failures_total": "42",
+          "num_blocks_proposed_total": "2259389"
+        },
+        {
+          "node_id": "n3hrq-akp7i-xednx-d2zd5-fl2xj-5hice-u2olr-5jacd-xrjvr-hbjy2-5qe",
+          "num_block_failures_total": "61",
+          "num_blocks_proposed_total": "2260082"
+        },
+        {
+          "node_id": "5xplq-if2d4-h55o5-fwkps-i7jsb-xrnto-romgb-erfht-cmvqe-jsmhh-sae",
+          "num_block_failures_total": "34",
+          "num_blocks_proposed_total": "2259931"
+        },
+        {
+          "node_id": "dlo4z-s65z7-ig6fn-zb2v5-s752c-jiva4-6ujh5-y7z2m-m2tht-ukzqf-3ae",
+          "num_block_failures_total": "53",
+          "num_blocks_proposed_total": "2258805"
+        },
+        {
+          "node_id": "fpubd-4hk24-5wezd-yvbum-de5i6-kyspp-l3cce-lxcy2-7vugt-yso3r-7ae",
+          "num_block_failures_total": "55",
+          "num_blocks_proposed_total": "2258092"
+        },
+        {
+          "node_id": "gmqia-rpzvg-ttwje-2buta-jhfvv-v7hxf-djvgq-ss7i2-rzlbm-tziyn-kqe",
+          "num_block_failures_total": "75",
+          "num_blocks_proposed_total": "2259019"
+        }
+      ],
+      "subnet_id": "34mm6-e24vu-pnyce-lp4fx-xtz2h-y5jpo-kwzgz-grf4m-v5kvr-xmeu4-tqe",
+      "ts": "1717804799314913257"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "6bpfz-cjaos-uck3k-c5ex2-nkdvr-oql64-jet7u-yfmqo-zgxqv-qiftz-4qe",
+          "num_block_failures_total": "42",
+          "num_blocks_proposed_total": "2272404"
+        },
+        {
+          "node_id": "n3hrq-akp7i-xednx-d2zd5-fl2xj-5hice-u2olr-5jacd-xrjvr-hbjy2-5qe",
+          "num_block_failures_total": "61",
+          "num_blocks_proposed_total": "2273036"
+        },
+        {
+          "node_id": "5xplq-if2d4-h55o5-fwkps-i7jsb-xrnto-romgb-erfht-cmvqe-jsmhh-sae",
+          "num_block_failures_total": "34",
+          "num_blocks_proposed_total": "2272642"
+        },
+        {
+          "node_id": "dlo4z-s65z7-ig6fn-zb2v5-s752c-jiva4-6ujh5-y7z2m-m2tht-ukzqf-3ae",
+          "num_block_failures_total": "53",
+          "num_blocks_proposed_total": "2271797"
+        },
+        {
+          "node_id": "fpubd-4hk24-5wezd-yvbum-de5i6-kyspp-l3cce-lxcy2-7vugt-yso3r-7ae",
+          "num_block_failures_total": "55",
+          "num_blocks_proposed_total": "2270720"
+        },
+        {
+          "node_id": "gmqia-rpzvg-ttwje-2buta-jhfvv-v7hxf-djvgq-ss7i2-rzlbm-tziyn-kqe",
+          "num_block_failures_total": "75",
+          "num_blocks_proposed_total": "2271966"
+        }
+      ],
+      "subnet_id": "34mm6-e24vu-pnyce-lp4fx-xtz2h-y5jpo-kwzgz-grf4m-v5kvr-xmeu4-tqe",
+      "ts": "1717891199670774838"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "6bpfz-cjaos-uck3k-c5ex2-nkdvr-oql64-jet7u-yfmqo-zgxqv-qiftz-4qe",
+          "num_block_failures_total": "42",
+          "num_blocks_proposed_total": "2285168"
+        },
+        {
+          "node_id": "n3hrq-akp7i-xednx-d2zd5-fl2xj-5hice-u2olr-5jacd-xrjvr-hbjy2-5qe",
+          "num_block_failures_total": "61",
+          "num_blocks_proposed_total": "2285903"
+        },
+        {
+          "node_id": "5xplq-if2d4-h55o5-fwkps-i7jsb-xrnto-romgb-erfht-cmvqe-jsmhh-sae",
+          "num_block_failures_total": "34",
+          "num_blocks_proposed_total": "2285593"
+        },
+        {
+          "node_id": "dlo4z-s65z7-ig6fn-zb2v5-s752c-jiva4-6ujh5-y7z2m-m2tht-ukzqf-3ae",
+          "num_block_failures_total": "53",
+          "num_blocks_proposed_total": "2284784"
+        },
+        {
+          "node_id": "fpubd-4hk24-5wezd-yvbum-de5i6-kyspp-l3cce-lxcy2-7vugt-yso3r-7ae",
+          "num_block_failures_total": "55",
+          "num_blocks_proposed_total": "2283405"
+        },
+        {
+          "node_id": "gmqia-rpzvg-ttwje-2buta-jhfvv-v7hxf-djvgq-ss7i2-rzlbm-tziyn-kqe",
+          "num_block_failures_total": "75",
+          "num_blocks_proposed_total": "2284963"
+        }
+      ],
+      "subnet_id": "34mm6-e24vu-pnyce-lp4fx-xtz2h-y5jpo-kwzgz-grf4m-v5kvr-xmeu4-tqe",
+      "ts": "1717977599988572190"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "6bpfz-cjaos-uck3k-c5ex2-nkdvr-oql64-jet7u-yfmqo-zgxqv-qiftz-4qe",
+          "num_block_failures_total": "42",
+          "num_blocks_proposed_total": "2298201"
+        },
+        {
+          "node_id": "n3hrq-akp7i-xednx-d2zd5-fl2xj-5hice-u2olr-5jacd-xrjvr-hbjy2-5qe",
+          "num_block_failures_total": "61",
+          "num_blocks_proposed_total": "2298917"
+        },
+        {
+          "node_id": "5xplq-if2d4-h55o5-fwkps-i7jsb-xrnto-romgb-erfht-cmvqe-jsmhh-sae",
+          "num_block_failures_total": "34",
+          "num_blocks_proposed_total": "2298277"
+        },
+        {
+          "node_id": "dlo4z-s65z7-ig6fn-zb2v5-s752c-jiva4-6ujh5-y7z2m-m2tht-ukzqf-3ae",
+          "num_block_failures_total": "53",
+          "num_blocks_proposed_total": "2297466"
+        },
+        {
+          "node_id": "fpubd-4hk24-5wezd-yvbum-de5i6-kyspp-l3cce-lxcy2-7vugt-yso3r-7ae",
+          "num_block_failures_total": "55",
+          "num_blocks_proposed_total": "2296433"
+        },
+        {
+          "node_id": "gmqia-rpzvg-ttwje-2buta-jhfvv-v7hxf-djvgq-ss7i2-rzlbm-tziyn-kqe",
+          "num_block_failures_total": "75",
+          "num_blocks_proposed_total": "2297771"
+        }
+      ],
+      "subnet_id": "34mm6-e24vu-pnyce-lp4fx-xtz2h-y5jpo-kwzgz-grf4m-v5kvr-xmeu4-tqe",
+      "ts": "1718063999910970656"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "6bpfz-cjaos-uck3k-c5ex2-nkdvr-oql64-jet7u-yfmqo-zgxqv-qiftz-4qe",
+          "num_block_failures_total": "42",
+          "num_blocks_proposed_total": "2310962"
+        },
+        {
+          "node_id": "n3hrq-akp7i-xednx-d2zd5-fl2xj-5hice-u2olr-5jacd-xrjvr-hbjy2-5qe",
+          "num_block_failures_total": "61",
+          "num_blocks_proposed_total": "2311772"
+        },
+        {
+          "node_id": "5xplq-if2d4-h55o5-fwkps-i7jsb-xrnto-romgb-erfht-cmvqe-jsmhh-sae",
+          "num_block_failures_total": "34",
+          "num_blocks_proposed_total": "2311244"
+        },
+        {
+          "node_id": "dlo4z-s65z7-ig6fn-zb2v5-s752c-jiva4-6ujh5-y7z2m-m2tht-ukzqf-3ae",
+          "num_block_failures_total": "53",
+          "num_blocks_proposed_total": "2310375"
+        },
+        {
+          "node_id": "fpubd-4hk24-5wezd-yvbum-de5i6-kyspp-l3cce-lxcy2-7vugt-yso3r-7ae",
+          "num_block_failures_total": "55",
+          "num_blocks_proposed_total": "2309307"
+        },
+        {
+          "node_id": "gmqia-rpzvg-ttwje-2buta-jhfvv-v7hxf-djvgq-ss7i2-rzlbm-tziyn-kqe",
+          "num_block_failures_total": "75",
+          "num_blocks_proposed_total": "2310650"
+        }
+      ],
+      "subnet_id": "34mm6-e24vu-pnyce-lp4fx-xtz2h-y5jpo-kwzgz-grf4m-v5kvr-xmeu4-tqe",
+      "ts": "1718150399585179614"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "6bpfz-cjaos-uck3k-c5ex2-nkdvr-oql64-jet7u-yfmqo-zgxqv-qiftz-4qe",
+          "num_block_failures_total": "42",
+          "num_blocks_proposed_total": "2323790"
+        },
+        {
+          "node_id": "n3hrq-akp7i-xednx-d2zd5-fl2xj-5hice-u2olr-5jacd-xrjvr-hbjy2-5qe",
+          "num_block_failures_total": "61",
+          "num_blocks_proposed_total": "2324562"
+        },
+        {
+          "node_id": "5xplq-if2d4-h55o5-fwkps-i7jsb-xrnto-romgb-erfht-cmvqe-jsmhh-sae",
+          "num_block_failures_total": "34",
+          "num_blocks_proposed_total": "2324105"
+        },
+        {
+          "node_id": "dlo4z-s65z7-ig6fn-zb2v5-s752c-jiva4-6ujh5-y7z2m-m2tht-ukzqf-3ae",
+          "num_block_failures_total": "53",
+          "num_blocks_proposed_total": "2323278"
+        },
+        {
+          "node_id": "fpubd-4hk24-5wezd-yvbum-de5i6-kyspp-l3cce-lxcy2-7vugt-yso3r-7ae",
+          "num_block_failures_total": "55",
+          "num_blocks_proposed_total": "2322155"
+        },
+        {
+          "node_id": "gmqia-rpzvg-ttwje-2buta-jhfvv-v7hxf-djvgq-ss7i2-rzlbm-tziyn-kqe",
+          "num_block_failures_total": "75",
+          "num_blocks_proposed_total": "2323669"
+        }
+      ],
+      "subnet_id": "34mm6-e24vu-pnyce-lp4fx-xtz2h-y5jpo-kwzgz-grf4m-v5kvr-xmeu4-tqe",
+      "ts": "1718236799815720400"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "6bpfz-cjaos-uck3k-c5ex2-nkdvr-oql64-jet7u-yfmqo-zgxqv-qiftz-4qe",
+          "num_block_failures_total": "49",
+          "num_blocks_proposed_total": "2336425"
+        },
+        {
+          "node_id": "n3hrq-akp7i-xednx-d2zd5-fl2xj-5hice-u2olr-5jacd-xrjvr-hbjy2-5qe",
+          "num_block_failures_total": "63",
+          "num_blocks_proposed_total": "2337408"
+        },
+        {
+          "node_id": "5xplq-if2d4-h55o5-fwkps-i7jsb-xrnto-romgb-erfht-cmvqe-jsmhh-sae",
+          "num_block_failures_total": "36",
+          "num_blocks_proposed_total": "2336847"
+        },
+        {
+          "node_id": "dlo4z-s65z7-ig6fn-zb2v5-s752c-jiva4-6ujh5-y7z2m-m2tht-ukzqf-3ae",
+          "num_block_failures_total": "68",
+          "num_blocks_proposed_total": "2336103"
+        },
+        {
+          "node_id": "fpubd-4hk24-5wezd-yvbum-de5i6-kyspp-l3cce-lxcy2-7vugt-yso3r-7ae",
+          "num_block_failures_total": "56",
+          "num_blocks_proposed_total": "2334941"
+        },
+        {
+          "node_id": "gmqia-rpzvg-ttwje-2buta-jhfvv-v7hxf-djvgq-ss7i2-rzlbm-tziyn-kqe",
+          "num_block_failures_total": "77",
+          "num_blocks_proposed_total": "2336333"
+        }
+      ],
+      "subnet_id": "34mm6-e24vu-pnyce-lp4fx-xtz2h-y5jpo-kwzgz-grf4m-v5kvr-xmeu4-tqe",
+      "ts": "1718323199240586165"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "6bpfz-cjaos-uck3k-c5ex2-nkdvr-oql64-jet7u-yfmqo-zgxqv-qiftz-4qe",
+          "num_block_failures_total": "54",
+          "num_blocks_proposed_total": "2349232"
+        },
+        {
+          "node_id": "n3hrq-akp7i-xednx-d2zd5-fl2xj-5hice-u2olr-5jacd-xrjvr-hbjy2-5qe",
+          "num_block_failures_total": "65",
+          "num_blocks_proposed_total": "2350231"
+        },
+        {
+          "node_id": "5xplq-if2d4-h55o5-fwkps-i7jsb-xrnto-romgb-erfht-cmvqe-jsmhh-sae",
+          "num_block_failures_total": "36",
+          "num_blocks_proposed_total": "2349796"
+        },
+        {
+          "node_id": "dlo4z-s65z7-ig6fn-zb2v5-s752c-jiva4-6ujh5-y7z2m-m2tht-ukzqf-3ae",
+          "num_block_failures_total": "68",
+          "num_blocks_proposed_total": "2349105"
+        },
+        {
+          "node_id": "fpubd-4hk24-5wezd-yvbum-de5i6-kyspp-l3cce-lxcy2-7vugt-yso3r-7ae",
+          "num_block_failures_total": "61",
+          "num_blocks_proposed_total": "2347711"
+        },
+        {
+          "node_id": "gmqia-rpzvg-ttwje-2buta-jhfvv-v7hxf-djvgq-ss7i2-rzlbm-tziyn-kqe",
+          "num_block_failures_total": "77",
+          "num_blocks_proposed_total": "2349063"
+        }
+      ],
+      "subnet_id": "34mm6-e24vu-pnyce-lp4fx-xtz2h-y5jpo-kwzgz-grf4m-v5kvr-xmeu4-tqe",
+      "ts": "1718409598936710240"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "6bpfz-cjaos-uck3k-c5ex2-nkdvr-oql64-jet7u-yfmqo-zgxqv-qiftz-4qe",
+          "num_block_failures_total": "54",
+          "num_blocks_proposed_total": "2362069"
+        },
+        {
+          "node_id": "n3hrq-akp7i-xednx-d2zd5-fl2xj-5hice-u2olr-5jacd-xrjvr-hbjy2-5qe",
+          "num_block_failures_total": "65",
+          "num_blocks_proposed_total": "2362966"
+        },
+        {
+          "node_id": "5xplq-if2d4-h55o5-fwkps-i7jsb-xrnto-romgb-erfht-cmvqe-jsmhh-sae",
+          "num_block_failures_total": "36",
+          "num_blocks_proposed_total": "2362641"
+        },
+        {
+          "node_id": "dlo4z-s65z7-ig6fn-zb2v5-s752c-jiva4-6ujh5-y7z2m-m2tht-ukzqf-3ae",
+          "num_block_failures_total": "68",
+          "num_blocks_proposed_total": "2362222"
+        },
+        {
+          "node_id": "fpubd-4hk24-5wezd-yvbum-de5i6-kyspp-l3cce-lxcy2-7vugt-yso3r-7ae",
+          "num_block_failures_total": "61",
+          "num_blocks_proposed_total": "2360675"
+        },
+        {
+          "node_id": "gmqia-rpzvg-ttwje-2buta-jhfvv-v7hxf-djvgq-ss7i2-rzlbm-tziyn-kqe",
+          "num_block_failures_total": "77",
+          "num_blocks_proposed_total": "2361880"
+        }
+      ],
+      "subnet_id": "34mm6-e24vu-pnyce-lp4fx-xtz2h-y5jpo-kwzgz-grf4m-v5kvr-xmeu4-tqe",
+      "ts": "1718495999375227452"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "6bpfz-cjaos-uck3k-c5ex2-nkdvr-oql64-jet7u-yfmqo-zgxqv-qiftz-4qe",
+          "num_block_failures_total": "54",
+          "num_blocks_proposed_total": "2374694"
+        },
+        {
+          "node_id": "n3hrq-akp7i-xednx-d2zd5-fl2xj-5hice-u2olr-5jacd-xrjvr-hbjy2-5qe",
+          "num_block_failures_total": "65",
+          "num_blocks_proposed_total": "2375949"
+        },
+        {
+          "node_id": "5xplq-if2d4-h55o5-fwkps-i7jsb-xrnto-romgb-erfht-cmvqe-jsmhh-sae",
+          "num_block_failures_total": "36",
+          "num_blocks_proposed_total": "2375490"
+        },
+        {
+          "node_id": "dlo4z-s65z7-ig6fn-zb2v5-s752c-jiva4-6ujh5-y7z2m-m2tht-ukzqf-3ae",
+          "num_block_failures_total": "68",
+          "num_blocks_proposed_total": "2375136"
+        },
+        {
+          "node_id": "fpubd-4hk24-5wezd-yvbum-de5i6-kyspp-l3cce-lxcy2-7vugt-yso3r-7ae",
+          "num_block_failures_total": "61",
+          "num_blocks_proposed_total": "2373648"
+        },
+        {
+          "node_id": "gmqia-rpzvg-ttwje-2buta-jhfvv-v7hxf-djvgq-ss7i2-rzlbm-tziyn-kqe",
+          "num_block_failures_total": "77",
+          "num_blocks_proposed_total": "2374846"
+        }
+      ],
+      "subnet_id": "34mm6-e24vu-pnyce-lp4fx-xtz2h-y5jpo-kwzgz-grf4m-v5kvr-xmeu4-tqe",
+      "ts": "1718582399154761330"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "6bpfz-cjaos-uck3k-c5ex2-nkdvr-oql64-jet7u-yfmqo-zgxqv-qiftz-4qe",
+          "num_block_failures_total": "55",
+          "num_blocks_proposed_total": "2387359"
+        },
+        {
+          "node_id": "n3hrq-akp7i-xednx-d2zd5-fl2xj-5hice-u2olr-5jacd-xrjvr-hbjy2-5qe",
+          "num_block_failures_total": "65",
+          "num_blocks_proposed_total": "2388857"
+        },
+        {
+          "node_id": "5xplq-if2d4-h55o5-fwkps-i7jsb-xrnto-romgb-erfht-cmvqe-jsmhh-sae",
+          "num_block_failures_total": "39",
+          "num_blocks_proposed_total": "2388280"
+        },
+        {
+          "node_id": "dlo4z-s65z7-ig6fn-zb2v5-s752c-jiva4-6ujh5-y7z2m-m2tht-ukzqf-3ae",
+          "num_block_failures_total": "68",
+          "num_blocks_proposed_total": "2387999"
+        },
+        {
+          "node_id": "fpubd-4hk24-5wezd-yvbum-de5i6-kyspp-l3cce-lxcy2-7vugt-yso3r-7ae",
+          "num_block_failures_total": "62",
+          "num_blocks_proposed_total": "2386501"
+        },
+        {
+          "node_id": "gmqia-rpzvg-ttwje-2buta-jhfvv-v7hxf-djvgq-ss7i2-rzlbm-tziyn-kqe",
+          "num_block_failures_total": "77",
+          "num_blocks_proposed_total": "2387806"
+        }
+      ],
+      "subnet_id": "34mm6-e24vu-pnyce-lp4fx-xtz2h-y5jpo-kwzgz-grf4m-v5kvr-xmeu4-tqe",
+      "ts": "1718668799743445274"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "6bpfz-cjaos-uck3k-c5ex2-nkdvr-oql64-jet7u-yfmqo-zgxqv-qiftz-4qe",
+          "num_block_failures_total": "55",
+          "num_blocks_proposed_total": "2400042"
+        },
+        {
+          "node_id": "n3hrq-akp7i-xednx-d2zd5-fl2xj-5hice-u2olr-5jacd-xrjvr-hbjy2-5qe",
+          "num_block_failures_total": "65",
+          "num_blocks_proposed_total": "2401750"
+        },
+        {
+          "node_id": "5xplq-if2d4-h55o5-fwkps-i7jsb-xrnto-romgb-erfht-cmvqe-jsmhh-sae",
+          "num_block_failures_total": "39",
+          "num_blocks_proposed_total": "2401175"
+        },
+        {
+          "node_id": "dlo4z-s65z7-ig6fn-zb2v5-s752c-jiva4-6ujh5-y7z2m-m2tht-ukzqf-3ae",
+          "num_block_failures_total": "68",
+          "num_blocks_proposed_total": "2400940"
+        },
+        {
+          "node_id": "fpubd-4hk24-5wezd-yvbum-de5i6-kyspp-l3cce-lxcy2-7vugt-yso3r-7ae",
+          "num_block_failures_total": "62",
+          "num_blocks_proposed_total": "2399542"
+        },
+        {
+          "node_id": "gmqia-rpzvg-ttwje-2buta-jhfvv-v7hxf-djvgq-ss7i2-rzlbm-tziyn-kqe",
+          "num_block_failures_total": "77",
+          "num_blocks_proposed_total": "2400833"
+        }
+      ],
+      "subnet_id": "34mm6-e24vu-pnyce-lp4fx-xtz2h-y5jpo-kwzgz-grf4m-v5kvr-xmeu4-tqe",
+      "ts": "1718755199463039848"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "6bpfz-cjaos-uck3k-c5ex2-nkdvr-oql64-jet7u-yfmqo-zgxqv-qiftz-4qe",
+          "num_block_failures_total": "55",
+          "num_blocks_proposed_total": "2412859"
+        },
+        {
+          "node_id": "n3hrq-akp7i-xednx-d2zd5-fl2xj-5hice-u2olr-5jacd-xrjvr-hbjy2-5qe",
+          "num_block_failures_total": "65",
+          "num_blocks_proposed_total": "2414534"
+        },
+        {
+          "node_id": "5xplq-if2d4-h55o5-fwkps-i7jsb-xrnto-romgb-erfht-cmvqe-jsmhh-sae",
+          "num_block_failures_total": "39",
+          "num_blocks_proposed_total": "2414166"
+        },
+        {
+          "node_id": "dlo4z-s65z7-ig6fn-zb2v5-s752c-jiva4-6ujh5-y7z2m-m2tht-ukzqf-3ae",
+          "num_block_failures_total": "68",
+          "num_blocks_proposed_total": "2413924"
+        },
+        {
+          "node_id": "fpubd-4hk24-5wezd-yvbum-de5i6-kyspp-l3cce-lxcy2-7vugt-yso3r-7ae",
+          "num_block_failures_total": "62",
+          "num_blocks_proposed_total": "2412394"
+        },
+        {
+          "node_id": "gmqia-rpzvg-ttwje-2buta-jhfvv-v7hxf-djvgq-ss7i2-rzlbm-tziyn-kqe",
+          "num_block_failures_total": "77",
+          "num_blocks_proposed_total": "2413776"
+        }
+      ],
+      "subnet_id": "34mm6-e24vu-pnyce-lp4fx-xtz2h-y5jpo-kwzgz-grf4m-v5kvr-xmeu4-tqe",
+      "ts": "1718841599195423534"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "6bpfz-cjaos-uck3k-c5ex2-nkdvr-oql64-jet7u-yfmqo-zgxqv-qiftz-4qe",
+          "num_block_failures_total": "56",
+          "num_blocks_proposed_total": "2425576"
+        },
+        {
+          "node_id": "n3hrq-akp7i-xednx-d2zd5-fl2xj-5hice-u2olr-5jacd-xrjvr-hbjy2-5qe",
+          "num_block_failures_total": "66",
+          "num_blocks_proposed_total": "2427451"
+        },
+        {
+          "node_id": "5xplq-if2d4-h55o5-fwkps-i7jsb-xrnto-romgb-erfht-cmvqe-jsmhh-sae",
+          "num_block_failures_total": "40",
+          "num_blocks_proposed_total": "2427066"
+        },
+        {
+          "node_id": "dlo4z-s65z7-ig6fn-zb2v5-s752c-jiva4-6ujh5-y7z2m-m2tht-ukzqf-3ae",
+          "num_block_failures_total": "69",
+          "num_blocks_proposed_total": "2426679"
+        },
+        {
+          "node_id": "fpubd-4hk24-5wezd-yvbum-de5i6-kyspp-l3cce-lxcy2-7vugt-yso3r-7ae",
+          "num_block_failures_total": "62",
+          "num_blocks_proposed_total": "2425293"
+        },
+        {
+          "node_id": "gmqia-rpzvg-ttwje-2buta-jhfvv-v7hxf-djvgq-ss7i2-rzlbm-tziyn-kqe",
+          "num_block_failures_total": "79",
+          "num_blocks_proposed_total": "2426583"
+        }
+      ],
+      "subnet_id": "34mm6-e24vu-pnyce-lp4fx-xtz2h-y5jpo-kwzgz-grf4m-v5kvr-xmeu4-tqe",
+      "ts": "1718927999351658313"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "6bpfz-cjaos-uck3k-c5ex2-nkdvr-oql64-jet7u-yfmqo-zgxqv-qiftz-4qe",
+          "num_block_failures_total": "56",
+          "num_blocks_proposed_total": "2438270"
+        },
+        {
+          "node_id": "n3hrq-akp7i-xednx-d2zd5-fl2xj-5hice-u2olr-5jacd-xrjvr-hbjy2-5qe",
+          "num_block_failures_total": "66",
+          "num_blocks_proposed_total": "2440320"
+        },
+        {
+          "node_id": "5xplq-if2d4-h55o5-fwkps-i7jsb-xrnto-romgb-erfht-cmvqe-jsmhh-sae",
+          "num_block_failures_total": "40",
+          "num_blocks_proposed_total": "2440000"
+        },
+        {
+          "node_id": "dlo4z-s65z7-ig6fn-zb2v5-s752c-jiva4-6ujh5-y7z2m-m2tht-ukzqf-3ae",
+          "num_block_failures_total": "69",
+          "num_blocks_proposed_total": "2439523"
+        },
+        {
+          "node_id": "fpubd-4hk24-5wezd-yvbum-de5i6-kyspp-l3cce-lxcy2-7vugt-yso3r-7ae",
+          "num_block_failures_total": "62",
+          "num_blocks_proposed_total": "2438133"
+        },
+        {
+          "node_id": "gmqia-rpzvg-ttwje-2buta-jhfvv-v7hxf-djvgq-ss7i2-rzlbm-tziyn-kqe",
+          "num_block_failures_total": "79",
+          "num_blocks_proposed_total": "2439508"
+        }
+      ],
+      "subnet_id": "34mm6-e24vu-pnyce-lp4fx-xtz2h-y5jpo-kwzgz-grf4m-v5kvr-xmeu4-tqe",
+      "ts": "1719014399075814558"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "6bpfz-cjaos-uck3k-c5ex2-nkdvr-oql64-jet7u-yfmqo-zgxqv-qiftz-4qe",
+          "num_block_failures_total": "56",
+          "num_blocks_proposed_total": "2451184"
+        },
+        {
+          "node_id": "n3hrq-akp7i-xednx-d2zd5-fl2xj-5hice-u2olr-5jacd-xrjvr-hbjy2-5qe",
+          "num_block_failures_total": "66",
+          "num_blocks_proposed_total": "2453089"
+        },
+        {
+          "node_id": "5xplq-if2d4-h55o5-fwkps-i7jsb-xrnto-romgb-erfht-cmvqe-jsmhh-sae",
+          "num_block_failures_total": "40",
+          "num_blocks_proposed_total": "2452964"
+        },
+        {
+          "node_id": "dlo4z-s65z7-ig6fn-zb2v5-s752c-jiva4-6ujh5-y7z2m-m2tht-ukzqf-3ae",
+          "num_block_failures_total": "69",
+          "num_blocks_proposed_total": "2452341"
+        },
+        {
+          "node_id": "fpubd-4hk24-5wezd-yvbum-de5i6-kyspp-l3cce-lxcy2-7vugt-yso3r-7ae",
+          "num_block_failures_total": "62",
+          "num_blocks_proposed_total": "2450996"
+        },
+        {
+          "node_id": "gmqia-rpzvg-ttwje-2buta-jhfvv-v7hxf-djvgq-ss7i2-rzlbm-tziyn-kqe",
+          "num_block_failures_total": "79",
+          "num_blocks_proposed_total": "2452359"
+        }
+      ],
+      "subnet_id": "34mm6-e24vu-pnyce-lp4fx-xtz2h-y5jpo-kwzgz-grf4m-v5kvr-xmeu4-tqe",
+      "ts": "1719100799337547664"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "6bpfz-cjaos-uck3k-c5ex2-nkdvr-oql64-jet7u-yfmqo-zgxqv-qiftz-4qe",
+          "num_block_failures_total": "56",
+          "num_blocks_proposed_total": "2464206"
+        },
+        {
+          "node_id": "n3hrq-akp7i-xednx-d2zd5-fl2xj-5hice-u2olr-5jacd-xrjvr-hbjy2-5qe",
+          "num_block_failures_total": "66",
+          "num_blocks_proposed_total": "2465769"
+        },
+        {
+          "node_id": "5xplq-if2d4-h55o5-fwkps-i7jsb-xrnto-romgb-erfht-cmvqe-jsmhh-sae",
+          "num_block_failures_total": "40",
+          "num_blocks_proposed_total": "2465753"
+        },
+        {
+          "node_id": "dlo4z-s65z7-ig6fn-zb2v5-s752c-jiva4-6ujh5-y7z2m-m2tht-ukzqf-3ae",
+          "num_block_failures_total": "69",
+          "num_blocks_proposed_total": "2465285"
+        },
+        {
+          "node_id": "fpubd-4hk24-5wezd-yvbum-de5i6-kyspp-l3cce-lxcy2-7vugt-yso3r-7ae",
+          "num_block_failures_total": "62",
+          "num_blocks_proposed_total": "2463886"
+        },
+        {
+          "node_id": "gmqia-rpzvg-ttwje-2buta-jhfvv-v7hxf-djvgq-ss7i2-rzlbm-tziyn-kqe",
+          "num_block_failures_total": "79",
+          "num_blocks_proposed_total": "2465131"
+        }
+      ],
+      "subnet_id": "34mm6-e24vu-pnyce-lp4fx-xtz2h-y5jpo-kwzgz-grf4m-v5kvr-xmeu4-tqe",
+      "ts": "1719187199352329068"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "6bpfz-cjaos-uck3k-c5ex2-nkdvr-oql64-jet7u-yfmqo-zgxqv-qiftz-4qe",
+          "num_block_failures_total": "57",
+          "num_blocks_proposed_total": "2477103"
+        },
+        {
+          "node_id": "n3hrq-akp7i-xednx-d2zd5-fl2xj-5hice-u2olr-5jacd-xrjvr-hbjy2-5qe",
+          "num_block_failures_total": "67",
+          "num_blocks_proposed_total": "2478616"
+        },
+        {
+          "node_id": "5xplq-if2d4-h55o5-fwkps-i7jsb-xrnto-romgb-erfht-cmvqe-jsmhh-sae",
+          "num_block_failures_total": "41",
+          "num_blocks_proposed_total": "2478661"
+        },
+        {
+          "node_id": "dlo4z-s65z7-ig6fn-zb2v5-s752c-jiva4-6ujh5-y7z2m-m2tht-ukzqf-3ae",
+          "num_block_failures_total": "69",
+          "num_blocks_proposed_total": "2478184"
+        },
+        {
+          "node_id": "fpubd-4hk24-5wezd-yvbum-de5i6-kyspp-l3cce-lxcy2-7vugt-yso3r-7ae",
+          "num_block_failures_total": "62",
+          "num_blocks_proposed_total": "2476416"
+        },
+        {
+          "node_id": "gmqia-rpzvg-ttwje-2buta-jhfvv-v7hxf-djvgq-ss7i2-rzlbm-tziyn-kqe",
+          "num_block_failures_total": "79",
+          "num_blocks_proposed_total": "2478016"
+        }
+      ],
+      "subnet_id": "34mm6-e24vu-pnyce-lp4fx-xtz2h-y5jpo-kwzgz-grf4m-v5kvr-xmeu4-tqe",
+      "ts": "1719273598957247659"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "6bpfz-cjaos-uck3k-c5ex2-nkdvr-oql64-jet7u-yfmqo-zgxqv-qiftz-4qe",
+          "num_block_failures_total": "57",
+          "num_blocks_proposed_total": "2490079"
+        },
+        {
+          "node_id": "n3hrq-akp7i-xednx-d2zd5-fl2xj-5hice-u2olr-5jacd-xrjvr-hbjy2-5qe",
+          "num_block_failures_total": "67",
+          "num_blocks_proposed_total": "2491390"
+        },
+        {
+          "node_id": "5xplq-if2d4-h55o5-fwkps-i7jsb-xrnto-romgb-erfht-cmvqe-jsmhh-sae",
+          "num_block_failures_total": "41",
+          "num_blocks_proposed_total": "2491572"
+        },
+        {
+          "node_id": "dlo4z-s65z7-ig6fn-zb2v5-s752c-jiva4-6ujh5-y7z2m-m2tht-ukzqf-3ae",
+          "num_block_failures_total": "69",
+          "num_blocks_proposed_total": "2491071"
+        },
+        {
+          "node_id": "fpubd-4hk24-5wezd-yvbum-de5i6-kyspp-l3cce-lxcy2-7vugt-yso3r-7ae",
+          "num_block_failures_total": "62",
+          "num_blocks_proposed_total": "2489352"
+        },
+        {
+          "node_id": "gmqia-rpzvg-ttwje-2buta-jhfvv-v7hxf-djvgq-ss7i2-rzlbm-tziyn-kqe",
+          "num_block_failures_total": "79",
+          "num_blocks_proposed_total": "2491012"
+        }
+      ],
+      "subnet_id": "34mm6-e24vu-pnyce-lp4fx-xtz2h-y5jpo-kwzgz-grf4m-v5kvr-xmeu4-tqe",
+      "ts": "1719359999862921420"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "6bpfz-cjaos-uck3k-c5ex2-nkdvr-oql64-jet7u-yfmqo-zgxqv-qiftz-4qe",
+          "num_block_failures_total": "57",
+          "num_blocks_proposed_total": "2502970"
+        },
+        {
+          "node_id": "n3hrq-akp7i-xednx-d2zd5-fl2xj-5hice-u2olr-5jacd-xrjvr-hbjy2-5qe",
+          "num_block_failures_total": "67",
+          "num_blocks_proposed_total": "2504411"
+        },
+        {
+          "node_id": "5xplq-if2d4-h55o5-fwkps-i7jsb-xrnto-romgb-erfht-cmvqe-jsmhh-sae",
+          "num_block_failures_total": "41",
+          "num_blocks_proposed_total": "2504508"
+        },
+        {
+          "node_id": "dlo4z-s65z7-ig6fn-zb2v5-s752c-jiva4-6ujh5-y7z2m-m2tht-ukzqf-3ae",
+          "num_block_failures_total": "69",
+          "num_blocks_proposed_total": "2504095"
+        },
+        {
+          "node_id": "fpubd-4hk24-5wezd-yvbum-de5i6-kyspp-l3cce-lxcy2-7vugt-yso3r-7ae",
+          "num_block_failures_total": "62",
+          "num_blocks_proposed_total": "2502195"
+        },
+        {
+          "node_id": "gmqia-rpzvg-ttwje-2buta-jhfvv-v7hxf-djvgq-ss7i2-rzlbm-tziyn-kqe",
+          "num_block_failures_total": "79",
+          "num_blocks_proposed_total": "2503739"
+        }
+      ],
+      "subnet_id": "34mm6-e24vu-pnyce-lp4fx-xtz2h-y5jpo-kwzgz-grf4m-v5kvr-xmeu4-tqe",
+      "ts": "1719446398888794692"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "6bpfz-cjaos-uck3k-c5ex2-nkdvr-oql64-jet7u-yfmqo-zgxqv-qiftz-4qe",
+          "num_block_failures_total": "57",
+          "num_blocks_proposed_total": "2515795"
+        },
+        {
+          "node_id": "n3hrq-akp7i-xednx-d2zd5-fl2xj-5hice-u2olr-5jacd-xrjvr-hbjy2-5qe",
+          "num_block_failures_total": "68",
+          "num_blocks_proposed_total": "2517158"
+        },
+        {
+          "node_id": "5xplq-if2d4-h55o5-fwkps-i7jsb-xrnto-romgb-erfht-cmvqe-jsmhh-sae",
+          "num_block_failures_total": "41",
+          "num_blocks_proposed_total": "2517197"
+        },
+        {
+          "node_id": "dlo4z-s65z7-ig6fn-zb2v5-s752c-jiva4-6ujh5-y7z2m-m2tht-ukzqf-3ae",
+          "num_block_failures_total": "71",
+          "num_blocks_proposed_total": "2517198"
+        },
+        {
+          "node_id": "fpubd-4hk24-5wezd-yvbum-de5i6-kyspp-l3cce-lxcy2-7vugt-yso3r-7ae",
+          "num_block_failures_total": "62",
+          "num_blocks_proposed_total": "2514964"
+        },
+        {
+          "node_id": "gmqia-rpzvg-ttwje-2buta-jhfvv-v7hxf-djvgq-ss7i2-rzlbm-tziyn-kqe",
+          "num_block_failures_total": "81",
+          "num_blocks_proposed_total": "2516556"
+        }
+      ],
+      "subnet_id": "34mm6-e24vu-pnyce-lp4fx-xtz2h-y5jpo-kwzgz-grf4m-v5kvr-xmeu4-tqe",
+      "ts": "1719532799564246555"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "6bpfz-cjaos-uck3k-c5ex2-nkdvr-oql64-jet7u-yfmqo-zgxqv-qiftz-4qe",
+          "num_block_failures_total": "57",
+          "num_blocks_proposed_total": "2528829"
+        },
+        {
+          "node_id": "n3hrq-akp7i-xednx-d2zd5-fl2xj-5hice-u2olr-5jacd-xrjvr-hbjy2-5qe",
+          "num_block_failures_total": "68",
+          "num_blocks_proposed_total": "2530145"
+        },
+        {
+          "node_id": "5xplq-if2d4-h55o5-fwkps-i7jsb-xrnto-romgb-erfht-cmvqe-jsmhh-sae",
+          "num_block_failures_total": "41",
+          "num_blocks_proposed_total": "2530167"
+        },
+        {
+          "node_id": "dlo4z-s65z7-ig6fn-zb2v5-s752c-jiva4-6ujh5-y7z2m-m2tht-ukzqf-3ae",
+          "num_block_failures_total": "71",
+          "num_blocks_proposed_total": "2530012"
+        },
+        {
+          "node_id": "fpubd-4hk24-5wezd-yvbum-de5i6-kyspp-l3cce-lxcy2-7vugt-yso3r-7ae",
+          "num_block_failures_total": "62",
+          "num_blocks_proposed_total": "2527764"
+        },
+        {
+          "node_id": "gmqia-rpzvg-ttwje-2buta-jhfvv-v7hxf-djvgq-ss7i2-rzlbm-tziyn-kqe",
+          "num_block_failures_total": "81",
+          "num_blocks_proposed_total": "2529455"
+        }
+      ],
+      "subnet_id": "34mm6-e24vu-pnyce-lp4fx-xtz2h-y5jpo-kwzgz-grf4m-v5kvr-xmeu4-tqe",
+      "ts": "1719619199478594702"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "6bpfz-cjaos-uck3k-c5ex2-nkdvr-oql64-jet7u-yfmqo-zgxqv-qiftz-4qe",
+          "num_block_failures_total": "57",
+          "num_blocks_proposed_total": "2541716"
+        },
+        {
+          "node_id": "n3hrq-akp7i-xednx-d2zd5-fl2xj-5hice-u2olr-5jacd-xrjvr-hbjy2-5qe",
+          "num_block_failures_total": "68",
+          "num_blocks_proposed_total": "2543046"
+        },
+        {
+          "node_id": "5xplq-if2d4-h55o5-fwkps-i7jsb-xrnto-romgb-erfht-cmvqe-jsmhh-sae",
+          "num_block_failures_total": "41",
+          "num_blocks_proposed_total": "2542986"
+        },
+        {
+          "node_id": "dlo4z-s65z7-ig6fn-zb2v5-s752c-jiva4-6ujh5-y7z2m-m2tht-ukzqf-3ae",
+          "num_block_failures_total": "71",
+          "num_blocks_proposed_total": "2542949"
+        },
+        {
+          "node_id": "fpubd-4hk24-5wezd-yvbum-de5i6-kyspp-l3cce-lxcy2-7vugt-yso3r-7ae",
+          "num_block_failures_total": "62",
+          "num_blocks_proposed_total": "2540724"
+        },
+        {
+          "node_id": "gmqia-rpzvg-ttwje-2buta-jhfvv-v7hxf-djvgq-ss7i2-rzlbm-tziyn-kqe",
+          "num_block_failures_total": "81",
+          "num_blocks_proposed_total": "2542452"
+        }
+      ],
+      "subnet_id": "34mm6-e24vu-pnyce-lp4fx-xtz2h-y5jpo-kwzgz-grf4m-v5kvr-xmeu4-tqe",
+      "ts": "1719705599706281335"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "6bpfz-cjaos-uck3k-c5ex2-nkdvr-oql64-jet7u-yfmqo-zgxqv-qiftz-4qe",
+          "num_block_failures_total": "57",
+          "num_blocks_proposed_total": "2554663"
+        },
+        {
+          "node_id": "n3hrq-akp7i-xednx-d2zd5-fl2xj-5hice-u2olr-5jacd-xrjvr-hbjy2-5qe",
+          "num_block_failures_total": "68",
+          "num_blocks_proposed_total": "2556212"
+        },
+        {
+          "node_id": "5xplq-if2d4-h55o5-fwkps-i7jsb-xrnto-romgb-erfht-cmvqe-jsmhh-sae",
+          "num_block_failures_total": "41",
+          "num_blocks_proposed_total": "2555981"
+        },
+        {
+          "node_id": "dlo4z-s65z7-ig6fn-zb2v5-s752c-jiva4-6ujh5-y7z2m-m2tht-ukzqf-3ae",
+          "num_block_failures_total": "71",
+          "num_blocks_proposed_total": "2555636"
+        },
+        {
+          "node_id": "fpubd-4hk24-5wezd-yvbum-de5i6-kyspp-l3cce-lxcy2-7vugt-yso3r-7ae",
+          "num_block_failures_total": "62",
+          "num_blocks_proposed_total": "2553670"
+        },
+        {
+          "node_id": "gmqia-rpzvg-ttwje-2buta-jhfvv-v7hxf-djvgq-ss7i2-rzlbm-tziyn-kqe",
+          "num_block_failures_total": "81",
+          "num_blocks_proposed_total": "2555219"
+        }
+      ],
+      "subnet_id": "34mm6-e24vu-pnyce-lp4fx-xtz2h-y5jpo-kwzgz-grf4m-v5kvr-xmeu4-tqe",
+      "ts": "1719791999572867905"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "6bpfz-cjaos-uck3k-c5ex2-nkdvr-oql64-jet7u-yfmqo-zgxqv-qiftz-4qe",
+          "num_block_failures_total": "57",
+          "num_blocks_proposed_total": "2567632"
+        },
+        {
+          "node_id": "n3hrq-akp7i-xednx-d2zd5-fl2xj-5hice-u2olr-5jacd-xrjvr-hbjy2-5qe",
+          "num_block_failures_total": "68",
+          "num_blocks_proposed_total": "2569148"
+        },
+        {
+          "node_id": "5xplq-if2d4-h55o5-fwkps-i7jsb-xrnto-romgb-erfht-cmvqe-jsmhh-sae",
+          "num_block_failures_total": "41",
+          "num_blocks_proposed_total": "2568926"
+        },
+        {
+          "node_id": "dlo4z-s65z7-ig6fn-zb2v5-s752c-jiva4-6ujh5-y7z2m-m2tht-ukzqf-3ae",
+          "num_block_failures_total": "71",
+          "num_blocks_proposed_total": "2568522"
+        },
+        {
+          "node_id": "fpubd-4hk24-5wezd-yvbum-de5i6-kyspp-l3cce-lxcy2-7vugt-yso3r-7ae",
+          "num_block_failures_total": "62",
+          "num_blocks_proposed_total": "2566493"
+        },
+        {
+          "node_id": "gmqia-rpzvg-ttwje-2buta-jhfvv-v7hxf-djvgq-ss7i2-rzlbm-tziyn-kqe",
+          "num_block_failures_total": "81",
+          "num_blocks_proposed_total": "2568174"
+        }
+      ],
+      "subnet_id": "34mm6-e24vu-pnyce-lp4fx-xtz2h-y5jpo-kwzgz-grf4m-v5kvr-xmeu4-tqe",
+      "ts": "1719878399164706522"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "6bpfz-cjaos-uck3k-c5ex2-nkdvr-oql64-jet7u-yfmqo-zgxqv-qiftz-4qe",
+          "num_block_failures_total": "57",
+          "num_blocks_proposed_total": "2580664"
+        },
+        {
+          "node_id": "n3hrq-akp7i-xednx-d2zd5-fl2xj-5hice-u2olr-5jacd-xrjvr-hbjy2-5qe",
+          "num_block_failures_total": "68",
+          "num_blocks_proposed_total": "2582096"
+        },
+        {
+          "node_id": "5xplq-if2d4-h55o5-fwkps-i7jsb-xrnto-romgb-erfht-cmvqe-jsmhh-sae",
+          "num_block_failures_total": "41",
+          "num_blocks_proposed_total": "2581722"
+        },
+        {
+          "node_id": "dlo4z-s65z7-ig6fn-zb2v5-s752c-jiva4-6ujh5-y7z2m-m2tht-ukzqf-3ae",
+          "num_block_failures_total": "71",
+          "num_blocks_proposed_total": "2581207"
+        },
+        {
+          "node_id": "fpubd-4hk24-5wezd-yvbum-de5i6-kyspp-l3cce-lxcy2-7vugt-yso3r-7ae",
+          "num_block_failures_total": "62",
+          "num_blocks_proposed_total": "2579459"
+        },
+        {
+          "node_id": "gmqia-rpzvg-ttwje-2buta-jhfvv-v7hxf-djvgq-ss7i2-rzlbm-tziyn-kqe",
+          "num_block_failures_total": "81",
+          "num_blocks_proposed_total": "2581221"
+        }
+      ],
+      "subnet_id": "34mm6-e24vu-pnyce-lp4fx-xtz2h-y5jpo-kwzgz-grf4m-v5kvr-xmeu4-tqe",
+      "ts": "1719964799125355947"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "6bpfz-cjaos-uck3k-c5ex2-nkdvr-oql64-jet7u-yfmqo-zgxqv-qiftz-4qe",
+          "num_block_failures_total": "57",
+          "num_blocks_proposed_total": "2593560"
+        },
+        {
+          "node_id": "n3hrq-akp7i-xednx-d2zd5-fl2xj-5hice-u2olr-5jacd-xrjvr-hbjy2-5qe",
+          "num_block_failures_total": "68",
+          "num_blocks_proposed_total": "2594969"
+        },
+        {
+          "node_id": "5xplq-if2d4-h55o5-fwkps-i7jsb-xrnto-romgb-erfht-cmvqe-jsmhh-sae",
+          "num_block_failures_total": "41",
+          "num_blocks_proposed_total": "2594570"
+        },
+        {
+          "node_id": "dlo4z-s65z7-ig6fn-zb2v5-s752c-jiva4-6ujh5-y7z2m-m2tht-ukzqf-3ae",
+          "num_block_failures_total": "71",
+          "num_blocks_proposed_total": "2594211"
+        },
+        {
+          "node_id": "fpubd-4hk24-5wezd-yvbum-de5i6-kyspp-l3cce-lxcy2-7vugt-yso3r-7ae",
+          "num_block_failures_total": "62",
+          "num_blocks_proposed_total": "2592368"
+        },
+        {
+          "node_id": "gmqia-rpzvg-ttwje-2buta-jhfvv-v7hxf-djvgq-ss7i2-rzlbm-tziyn-kqe",
+          "num_block_failures_total": "81",
+          "num_blocks_proposed_total": "2594096"
+        }
+      ],
+      "subnet_id": "34mm6-e24vu-pnyce-lp4fx-xtz2h-y5jpo-kwzgz-grf4m-v5kvr-xmeu4-tqe",
+      "ts": "1720051199532858341"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "6bpfz-cjaos-uck3k-c5ex2-nkdvr-oql64-jet7u-yfmqo-zgxqv-qiftz-4qe",
+          "num_block_failures_total": "58",
+          "num_blocks_proposed_total": "2606365"
+        },
+        {
+          "node_id": "n3hrq-akp7i-xednx-d2zd5-fl2xj-5hice-u2olr-5jacd-xrjvr-hbjy2-5qe",
+          "num_block_failures_total": "68",
+          "num_blocks_proposed_total": "2607706"
+        },
+        {
+          "node_id": "5xplq-if2d4-h55o5-fwkps-i7jsb-xrnto-romgb-erfht-cmvqe-jsmhh-sae",
+          "num_block_failures_total": "42",
+          "num_blocks_proposed_total": "2607463"
+        },
+        {
+          "node_id": "dlo4z-s65z7-ig6fn-zb2v5-s752c-jiva4-6ujh5-y7z2m-m2tht-ukzqf-3ae",
+          "num_block_failures_total": "73",
+          "num_blocks_proposed_total": "2606989"
+        },
+        {
+          "node_id": "fpubd-4hk24-5wezd-yvbum-de5i6-kyspp-l3cce-lxcy2-7vugt-yso3r-7ae",
+          "num_block_failures_total": "65",
+          "num_blocks_proposed_total": "2605254"
+        },
+        {
+          "node_id": "gmqia-rpzvg-ttwje-2buta-jhfvv-v7hxf-djvgq-ss7i2-rzlbm-tziyn-kqe",
+          "num_block_failures_total": "82",
+          "num_blocks_proposed_total": "2606910"
+        }
+      ],
+      "subnet_id": "34mm6-e24vu-pnyce-lp4fx-xtz2h-y5jpo-kwzgz-grf4m-v5kvr-xmeu4-tqe",
+      "ts": "1720137599383958858"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "6bpfz-cjaos-uck3k-c5ex2-nkdvr-oql64-jet7u-yfmqo-zgxqv-qiftz-4qe",
+          "num_block_failures_total": "58",
+          "num_blocks_proposed_total": "2619247"
+        },
+        {
+          "node_id": "n3hrq-akp7i-xednx-d2zd5-fl2xj-5hice-u2olr-5jacd-xrjvr-hbjy2-5qe",
+          "num_block_failures_total": "68",
+          "num_blocks_proposed_total": "2620659"
+        },
+        {
+          "node_id": "5xplq-if2d4-h55o5-fwkps-i7jsb-xrnto-romgb-erfht-cmvqe-jsmhh-sae",
+          "num_block_failures_total": "42",
+          "num_blocks_proposed_total": "2620250"
+        },
+        {
+          "node_id": "dlo4z-s65z7-ig6fn-zb2v5-s752c-jiva4-6ujh5-y7z2m-m2tht-ukzqf-3ae",
+          "num_block_failures_total": "73",
+          "num_blocks_proposed_total": "2619873"
+        },
+        {
+          "node_id": "fpubd-4hk24-5wezd-yvbum-de5i6-kyspp-l3cce-lxcy2-7vugt-yso3r-7ae",
+          "num_block_failures_total": "65",
+          "num_blocks_proposed_total": "2618242"
+        },
+        {
+          "node_id": "gmqia-rpzvg-ttwje-2buta-jhfvv-v7hxf-djvgq-ss7i2-rzlbm-tziyn-kqe",
+          "num_block_failures_total": "82",
+          "num_blocks_proposed_total": "2619903"
+        }
+      ],
+      "subnet_id": "34mm6-e24vu-pnyce-lp4fx-xtz2h-y5jpo-kwzgz-grf4m-v5kvr-xmeu4-tqe",
+      "ts": "1720223999433044766"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "6bpfz-cjaos-uck3k-c5ex2-nkdvr-oql64-jet7u-yfmqo-zgxqv-qiftz-4qe",
+          "num_block_failures_total": "58",
+          "num_blocks_proposed_total": "2632286"
+        },
+        {
+          "node_id": "n3hrq-akp7i-xednx-d2zd5-fl2xj-5hice-u2olr-5jacd-xrjvr-hbjy2-5qe",
+          "num_block_failures_total": "68",
+          "num_blocks_proposed_total": "2633577"
+        },
+        {
+          "node_id": "5xplq-if2d4-h55o5-fwkps-i7jsb-xrnto-romgb-erfht-cmvqe-jsmhh-sae",
+          "num_block_failures_total": "42",
+          "num_blocks_proposed_total": "2633156"
+        },
+        {
+          "node_id": "dlo4z-s65z7-ig6fn-zb2v5-s752c-jiva4-6ujh5-y7z2m-m2tht-ukzqf-3ae",
+          "num_block_failures_total": "73",
+          "num_blocks_proposed_total": "2632817"
+        },
+        {
+          "node_id": "fpubd-4hk24-5wezd-yvbum-de5i6-kyspp-l3cce-lxcy2-7vugt-yso3r-7ae",
+          "num_block_failures_total": "65",
+          "num_blocks_proposed_total": "2631087"
+        },
+        {
+          "node_id": "gmqia-rpzvg-ttwje-2buta-jhfvv-v7hxf-djvgq-ss7i2-rzlbm-tziyn-kqe",
+          "num_block_failures_total": "82",
+          "num_blocks_proposed_total": "2632751"
+        }
+      ],
+      "subnet_id": "34mm6-e24vu-pnyce-lp4fx-xtz2h-y5jpo-kwzgz-grf4m-v5kvr-xmeu4-tqe",
+      "ts": "1720310399249378780"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "6bpfz-cjaos-uck3k-c5ex2-nkdvr-oql64-jet7u-yfmqo-zgxqv-qiftz-4qe",
+          "num_block_failures_total": "58",
+          "num_blocks_proposed_total": "2645143"
+        },
+        {
+          "node_id": "n3hrq-akp7i-xednx-d2zd5-fl2xj-5hice-u2olr-5jacd-xrjvr-hbjy2-5qe",
+          "num_block_failures_total": "68",
+          "num_blocks_proposed_total": "2646424"
+        },
+        {
+          "node_id": "5xplq-if2d4-h55o5-fwkps-i7jsb-xrnto-romgb-erfht-cmvqe-jsmhh-sae",
+          "num_block_failures_total": "42",
+          "num_blocks_proposed_total": "2646204"
+        },
+        {
+          "node_id": "dlo4z-s65z7-ig6fn-zb2v5-s752c-jiva4-6ujh5-y7z2m-m2tht-ukzqf-3ae",
+          "num_block_failures_total": "73",
+          "num_blocks_proposed_total": "2645788"
+        },
+        {
+          "node_id": "fpubd-4hk24-5wezd-yvbum-de5i6-kyspp-l3cce-lxcy2-7vugt-yso3r-7ae",
+          "num_block_failures_total": "65",
+          "num_blocks_proposed_total": "2644044"
+        },
+        {
+          "node_id": "gmqia-rpzvg-ttwje-2buta-jhfvv-v7hxf-djvgq-ss7i2-rzlbm-tziyn-kqe",
+          "num_block_failures_total": "82",
+          "num_blocks_proposed_total": "2645572"
+        }
+      ],
+      "subnet_id": "34mm6-e24vu-pnyce-lp4fx-xtz2h-y5jpo-kwzgz-grf4m-v5kvr-xmeu4-tqe",
+      "ts": "1720396799109521534"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "6bpfz-cjaos-uck3k-c5ex2-nkdvr-oql64-jet7u-yfmqo-zgxqv-qiftz-4qe",
+          "num_block_failures_total": "58",
+          "num_blocks_proposed_total": "2657997"
+        },
+        {
+          "node_id": "n3hrq-akp7i-xednx-d2zd5-fl2xj-5hice-u2olr-5jacd-xrjvr-hbjy2-5qe",
+          "num_block_failures_total": "68",
+          "num_blocks_proposed_total": "2659108"
+        },
+        {
+          "node_id": "5xplq-if2d4-h55o5-fwkps-i7jsb-xrnto-romgb-erfht-cmvqe-jsmhh-sae",
+          "num_block_failures_total": "42",
+          "num_blocks_proposed_total": "2659434"
+        },
+        {
+          "node_id": "dlo4z-s65z7-ig6fn-zb2v5-s752c-jiva4-6ujh5-y7z2m-m2tht-ukzqf-3ae",
+          "num_block_failures_total": "73",
+          "num_blocks_proposed_total": "2658642"
+        },
+        {
+          "node_id": "fpubd-4hk24-5wezd-yvbum-de5i6-kyspp-l3cce-lxcy2-7vugt-yso3r-7ae",
+          "num_block_failures_total": "65",
+          "num_blocks_proposed_total": "2656929"
+        },
+        {
+          "node_id": "gmqia-rpzvg-ttwje-2buta-jhfvv-v7hxf-djvgq-ss7i2-rzlbm-tziyn-kqe",
+          "num_block_failures_total": "82",
+          "num_blocks_proposed_total": "2658520"
+        }
+      ],
+      "subnet_id": "34mm6-e24vu-pnyce-lp4fx-xtz2h-y5jpo-kwzgz-grf4m-v5kvr-xmeu4-tqe",
+      "ts": "1720483199208014620"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "6bpfz-cjaos-uck3k-c5ex2-nkdvr-oql64-jet7u-yfmqo-zgxqv-qiftz-4qe",
+          "num_block_failures_total": "58",
+          "num_blocks_proposed_total": "2670868"
+        },
+        {
+          "node_id": "n3hrq-akp7i-xednx-d2zd5-fl2xj-5hice-u2olr-5jacd-xrjvr-hbjy2-5qe",
+          "num_block_failures_total": "68",
+          "num_blocks_proposed_total": "2671974"
+        },
+        {
+          "node_id": "5xplq-if2d4-h55o5-fwkps-i7jsb-xrnto-romgb-erfht-cmvqe-jsmhh-sae",
+          "num_block_failures_total": "42",
+          "num_blocks_proposed_total": "2672452"
+        },
+        {
+          "node_id": "dlo4z-s65z7-ig6fn-zb2v5-s752c-jiva4-6ujh5-y7z2m-m2tht-ukzqf-3ae",
+          "num_block_failures_total": "73",
+          "num_blocks_proposed_total": "2671586"
+        },
+        {
+          "node_id": "fpubd-4hk24-5wezd-yvbum-de5i6-kyspp-l3cce-lxcy2-7vugt-yso3r-7ae",
+          "num_block_failures_total": "65",
+          "num_blocks_proposed_total": "2670106"
+        },
+        {
+          "node_id": "gmqia-rpzvg-ttwje-2buta-jhfvv-v7hxf-djvgq-ss7i2-rzlbm-tziyn-kqe",
+          "num_block_failures_total": "82",
+          "num_blocks_proposed_total": "2671362"
+        }
+      ],
+      "subnet_id": "34mm6-e24vu-pnyce-lp4fx-xtz2h-y5jpo-kwzgz-grf4m-v5kvr-xmeu4-tqe",
+      "ts": "1720569599968661148"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "6bpfz-cjaos-uck3k-c5ex2-nkdvr-oql64-jet7u-yfmqo-zgxqv-qiftz-4qe",
+          "num_block_failures_total": "58",
+          "num_blocks_proposed_total": "2683633"
+        },
+        {
+          "node_id": "n3hrq-akp7i-xednx-d2zd5-fl2xj-5hice-u2olr-5jacd-xrjvr-hbjy2-5qe",
+          "num_block_failures_total": "68",
+          "num_blocks_proposed_total": "2684933"
+        },
+        {
+          "node_id": "5xplq-if2d4-h55o5-fwkps-i7jsb-xrnto-romgb-erfht-cmvqe-jsmhh-sae",
+          "num_block_failures_total": "47",
+          "num_blocks_proposed_total": "2685432"
+        },
+        {
+          "node_id": "dlo4z-s65z7-ig6fn-zb2v5-s752c-jiva4-6ujh5-y7z2m-m2tht-ukzqf-3ae",
+          "num_block_failures_total": "74",
+          "num_blocks_proposed_total": "2684507"
+        },
+        {
+          "node_id": "fpubd-4hk24-5wezd-yvbum-de5i6-kyspp-l3cce-lxcy2-7vugt-yso3r-7ae",
+          "num_block_failures_total": "65",
+          "num_blocks_proposed_total": "2683016"
+        },
+        {
+          "node_id": "gmqia-rpzvg-ttwje-2buta-jhfvv-v7hxf-djvgq-ss7i2-rzlbm-tziyn-kqe",
+          "num_block_failures_total": "82",
+          "num_blocks_proposed_total": "2684022"
+        }
+      ],
+      "subnet_id": "34mm6-e24vu-pnyce-lp4fx-xtz2h-y5jpo-kwzgz-grf4m-v5kvr-xmeu4-tqe",
+      "ts": "1720655999188798300"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "6bpfz-cjaos-uck3k-c5ex2-nkdvr-oql64-jet7u-yfmqo-zgxqv-qiftz-4qe",
+          "num_block_failures_total": "58",
+          "num_blocks_proposed_total": "2696354"
+        },
+        {
+          "node_id": "n3hrq-akp7i-xednx-d2zd5-fl2xj-5hice-u2olr-5jacd-xrjvr-hbjy2-5qe",
+          "num_block_failures_total": "68",
+          "num_blocks_proposed_total": "2697611"
+        },
+        {
+          "node_id": "5xplq-if2d4-h55o5-fwkps-i7jsb-xrnto-romgb-erfht-cmvqe-jsmhh-sae",
+          "num_block_failures_total": "51",
+          "num_blocks_proposed_total": "2698223"
+        },
+        {
+          "node_id": "dlo4z-s65z7-ig6fn-zb2v5-s752c-jiva4-6ujh5-y7z2m-m2tht-ukzqf-3ae",
+          "num_block_failures_total": "74",
+          "num_blocks_proposed_total": "2697346"
+        },
+        {
+          "node_id": "fpubd-4hk24-5wezd-yvbum-de5i6-kyspp-l3cce-lxcy2-7vugt-yso3r-7ae",
+          "num_block_failures_total": "70",
+          "num_blocks_proposed_total": "2695826"
+        },
+        {
+          "node_id": "gmqia-rpzvg-ttwje-2buta-jhfvv-v7hxf-djvgq-ss7i2-rzlbm-tziyn-kqe",
+          "num_block_failures_total": "83",
+          "num_blocks_proposed_total": "2696842"
+        }
+      ],
+      "subnet_id": "34mm6-e24vu-pnyce-lp4fx-xtz2h-y5jpo-kwzgz-grf4m-v5kvr-xmeu4-tqe",
+      "ts": "1720742399550724680"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "6bpfz-cjaos-uck3k-c5ex2-nkdvr-oql64-jet7u-yfmqo-zgxqv-qiftz-4qe",
+          "num_block_failures_total": "58",
+          "num_blocks_proposed_total": "2709293"
+        },
+        {
+          "node_id": "n3hrq-akp7i-xednx-d2zd5-fl2xj-5hice-u2olr-5jacd-xrjvr-hbjy2-5qe",
+          "num_block_failures_total": "68",
+          "num_blocks_proposed_total": "2710414"
+        },
+        {
+          "node_id": "5xplq-if2d4-h55o5-fwkps-i7jsb-xrnto-romgb-erfht-cmvqe-jsmhh-sae",
+          "num_block_failures_total": "51",
+          "num_blocks_proposed_total": "2711105"
+        },
+        {
+          "node_id": "dlo4z-s65z7-ig6fn-zb2v5-s752c-jiva4-6ujh5-y7z2m-m2tht-ukzqf-3ae",
+          "num_block_failures_total": "74",
+          "num_blocks_proposed_total": "2710206"
+        },
+        {
+          "node_id": "fpubd-4hk24-5wezd-yvbum-de5i6-kyspp-l3cce-lxcy2-7vugt-yso3r-7ae",
+          "num_block_failures_total": "70",
+          "num_blocks_proposed_total": "2708581"
+        },
+        {
+          "node_id": "gmqia-rpzvg-ttwje-2buta-jhfvv-v7hxf-djvgq-ss7i2-rzlbm-tziyn-kqe",
+          "num_block_failures_total": "83",
+          "num_blocks_proposed_total": "2709897"
+        }
+      ],
+      "subnet_id": "34mm6-e24vu-pnyce-lp4fx-xtz2h-y5jpo-kwzgz-grf4m-v5kvr-xmeu4-tqe",
+      "ts": "1720828799201145810"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "6bpfz-cjaos-uck3k-c5ex2-nkdvr-oql64-jet7u-yfmqo-zgxqv-qiftz-4qe",
+          "num_block_failures_total": "58",
+          "num_blocks_proposed_total": "2722224"
+        },
+        {
+          "node_id": "n3hrq-akp7i-xednx-d2zd5-fl2xj-5hice-u2olr-5jacd-xrjvr-hbjy2-5qe",
+          "num_block_failures_total": "68",
+          "num_blocks_proposed_total": "2723363"
+        },
+        {
+          "node_id": "5xplq-if2d4-h55o5-fwkps-i7jsb-xrnto-romgb-erfht-cmvqe-jsmhh-sae",
+          "num_block_failures_total": "51",
+          "num_blocks_proposed_total": "2723856"
+        },
+        {
+          "node_id": "dlo4z-s65z7-ig6fn-zb2v5-s752c-jiva4-6ujh5-y7z2m-m2tht-ukzqf-3ae",
+          "num_block_failures_total": "74",
+          "num_blocks_proposed_total": "2722971"
+        },
+        {
+          "node_id": "fpubd-4hk24-5wezd-yvbum-de5i6-kyspp-l3cce-lxcy2-7vugt-yso3r-7ae",
+          "num_block_failures_total": "70",
+          "num_blocks_proposed_total": "2721557"
+        },
+        {
+          "node_id": "gmqia-rpzvg-ttwje-2buta-jhfvv-v7hxf-djvgq-ss7i2-rzlbm-tziyn-kqe",
+          "num_block_failures_total": "83",
+          "num_blocks_proposed_total": "2722813"
+        }
+      ],
+      "subnet_id": "34mm6-e24vu-pnyce-lp4fx-xtz2h-y5jpo-kwzgz-grf4m-v5kvr-xmeu4-tqe",
+      "ts": "1720915198910706388"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "6bpfz-cjaos-uck3k-c5ex2-nkdvr-oql64-jet7u-yfmqo-zgxqv-qiftz-4qe",
+          "num_block_failures_total": "58",
+          "num_blocks_proposed_total": "2735028"
+        },
+        {
+          "node_id": "n3hrq-akp7i-xednx-d2zd5-fl2xj-5hice-u2olr-5jacd-xrjvr-hbjy2-5qe",
+          "num_block_failures_total": "68",
+          "num_blocks_proposed_total": "2736195"
+        },
+        {
+          "node_id": "5xplq-if2d4-h55o5-fwkps-i7jsb-xrnto-romgb-erfht-cmvqe-jsmhh-sae",
+          "num_block_failures_total": "51",
+          "num_blocks_proposed_total": "2736895"
+        },
+        {
+          "node_id": "dlo4z-s65z7-ig6fn-zb2v5-s752c-jiva4-6ujh5-y7z2m-m2tht-ukzqf-3ae",
+          "num_block_failures_total": "74",
+          "num_blocks_proposed_total": "2735910"
+        },
+        {
+          "node_id": "fpubd-4hk24-5wezd-yvbum-de5i6-kyspp-l3cce-lxcy2-7vugt-yso3r-7ae",
+          "num_block_failures_total": "70",
+          "num_blocks_proposed_total": "2734416"
+        },
+        {
+          "node_id": "gmqia-rpzvg-ttwje-2buta-jhfvv-v7hxf-djvgq-ss7i2-rzlbm-tziyn-kqe",
+          "num_block_failures_total": "83",
+          "num_blocks_proposed_total": "2735627"
+        }
+      ],
+      "subnet_id": "34mm6-e24vu-pnyce-lp4fx-xtz2h-y5jpo-kwzgz-grf4m-v5kvr-xmeu4-tqe",
+      "ts": "1721001599683681697"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "6bpfz-cjaos-uck3k-c5ex2-nkdvr-oql64-jet7u-yfmqo-zgxqv-qiftz-4qe",
+          "num_block_failures_total": "58",
+          "num_blocks_proposed_total": "2747751"
+        },
+        {
+          "node_id": "n3hrq-akp7i-xednx-d2zd5-fl2xj-5hice-u2olr-5jacd-xrjvr-hbjy2-5qe",
+          "num_block_failures_total": "68",
+          "num_blocks_proposed_total": "2749350"
+        },
+        {
+          "node_id": "5xplq-if2d4-h55o5-fwkps-i7jsb-xrnto-romgb-erfht-cmvqe-jsmhh-sae",
+          "num_block_failures_total": "51",
+          "num_blocks_proposed_total": "2749810"
+        },
+        {
+          "node_id": "dlo4z-s65z7-ig6fn-zb2v5-s752c-jiva4-6ujh5-y7z2m-m2tht-ukzqf-3ae",
+          "num_block_failures_total": "74",
+          "num_blocks_proposed_total": "2748745"
+        },
+        {
+          "node_id": "fpubd-4hk24-5wezd-yvbum-de5i6-kyspp-l3cce-lxcy2-7vugt-yso3r-7ae",
+          "num_block_failures_total": "70",
+          "num_blocks_proposed_total": "2747228"
+        },
+        {
+          "node_id": "gmqia-rpzvg-ttwje-2buta-jhfvv-v7hxf-djvgq-ss7i2-rzlbm-tziyn-kqe",
+          "num_block_failures_total": "83",
+          "num_blocks_proposed_total": "2748482"
+        }
+      ],
+      "subnet_id": "34mm6-e24vu-pnyce-lp4fx-xtz2h-y5jpo-kwzgz-grf4m-v5kvr-xmeu4-tqe",
+      "ts": "1721087999904777181"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "6bpfz-cjaos-uck3k-c5ex2-nkdvr-oql64-jet7u-yfmqo-zgxqv-qiftz-4qe",
+          "num_block_failures_total": "58",
+          "num_blocks_proposed_total": "2760326"
+        },
+        {
+          "node_id": "n3hrq-akp7i-xednx-d2zd5-fl2xj-5hice-u2olr-5jacd-xrjvr-hbjy2-5qe",
+          "num_block_failures_total": "68",
+          "num_blocks_proposed_total": "2762401"
+        },
+        {
+          "node_id": "5xplq-if2d4-h55o5-fwkps-i7jsb-xrnto-romgb-erfht-cmvqe-jsmhh-sae",
+          "num_block_failures_total": "51",
+          "num_blocks_proposed_total": "2762581"
+        },
+        {
+          "node_id": "dlo4z-s65z7-ig6fn-zb2v5-s752c-jiva4-6ujh5-y7z2m-m2tht-ukzqf-3ae",
+          "num_block_failures_total": "74",
+          "num_blocks_proposed_total": "2761716"
+        },
+        {
+          "node_id": "fpubd-4hk24-5wezd-yvbum-de5i6-kyspp-l3cce-lxcy2-7vugt-yso3r-7ae",
+          "num_block_failures_total": "70",
+          "num_blocks_proposed_total": "2760260"
+        },
+        {
+          "node_id": "gmqia-rpzvg-ttwje-2buta-jhfvv-v7hxf-djvgq-ss7i2-rzlbm-tziyn-kqe",
+          "num_block_failures_total": "83",
+          "num_blocks_proposed_total": "2761358"
+        }
+      ],
+      "subnet_id": "34mm6-e24vu-pnyce-lp4fx-xtz2h-y5jpo-kwzgz-grf4m-v5kvr-xmeu4-tqe",
+      "ts": "1721174399251876961"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "6bpfz-cjaos-uck3k-c5ex2-nkdvr-oql64-jet7u-yfmqo-zgxqv-qiftz-4qe",
+          "num_block_failures_total": "58",
+          "num_blocks_proposed_total": "2773126"
+        },
+        {
+          "node_id": "n3hrq-akp7i-xednx-d2zd5-fl2xj-5hice-u2olr-5jacd-xrjvr-hbjy2-5qe",
+          "num_block_failures_total": "68",
+          "num_blocks_proposed_total": "2775106"
+        },
+        {
+          "node_id": "5xplq-if2d4-h55o5-fwkps-i7jsb-xrnto-romgb-erfht-cmvqe-jsmhh-sae",
+          "num_block_failures_total": "51",
+          "num_blocks_proposed_total": "2775457"
+        },
+        {
+          "node_id": "dlo4z-s65z7-ig6fn-zb2v5-s752c-jiva4-6ujh5-y7z2m-m2tht-ukzqf-3ae",
+          "num_block_failures_total": "74",
+          "num_blocks_proposed_total": "2774511"
+        },
+        {
+          "node_id": "fpubd-4hk24-5wezd-yvbum-de5i6-kyspp-l3cce-lxcy2-7vugt-yso3r-7ae",
+          "num_block_failures_total": "70",
+          "num_blocks_proposed_total": "2772928"
+        },
+        {
+          "node_id": "gmqia-rpzvg-ttwje-2buta-jhfvv-v7hxf-djvgq-ss7i2-rzlbm-tziyn-kqe",
+          "num_block_failures_total": "83",
+          "num_blocks_proposed_total": "2773914"
+        }
+      ],
+      "subnet_id": "34mm6-e24vu-pnyce-lp4fx-xtz2h-y5jpo-kwzgz-grf4m-v5kvr-xmeu4-tqe",
+      "ts": "1721260799590889198"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "6bpfz-cjaos-uck3k-c5ex2-nkdvr-oql64-jet7u-yfmqo-zgxqv-qiftz-4qe",
+          "num_block_failures_total": "58",
+          "num_blocks_proposed_total": "2786086"
+        },
+        {
+          "node_id": "n3hrq-akp7i-xednx-d2zd5-fl2xj-5hice-u2olr-5jacd-xrjvr-hbjy2-5qe",
+          "num_block_failures_total": "69",
+          "num_blocks_proposed_total": "2787961"
+        },
+        {
+          "node_id": "5xplq-if2d4-h55o5-fwkps-i7jsb-xrnto-romgb-erfht-cmvqe-jsmhh-sae",
+          "num_block_failures_total": "51",
+          "num_blocks_proposed_total": "2788080"
+        },
+        {
+          "node_id": "dlo4z-s65z7-ig6fn-zb2v5-s752c-jiva4-6ujh5-y7z2m-m2tht-ukzqf-3ae",
+          "num_block_failures_total": "74",
+          "num_blocks_proposed_total": "2787168"
+        },
+        {
+          "node_id": "fpubd-4hk24-5wezd-yvbum-de5i6-kyspp-l3cce-lxcy2-7vugt-yso3r-7ae",
+          "num_block_failures_total": "71",
+          "num_blocks_proposed_total": "2785540"
+        },
+        {
+          "node_id": "gmqia-rpzvg-ttwje-2buta-jhfvv-v7hxf-djvgq-ss7i2-rzlbm-tziyn-kqe",
+          "num_block_failures_total": "83",
+          "num_blocks_proposed_total": "2786754"
+        }
+      ],
+      "subnet_id": "34mm6-e24vu-pnyce-lp4fx-xtz2h-y5jpo-kwzgz-grf4m-v5kvr-xmeu4-tqe",
+      "ts": "1721347199749909168"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "6bpfz-cjaos-uck3k-c5ex2-nkdvr-oql64-jet7u-yfmqo-zgxqv-qiftz-4qe",
+          "num_block_failures_total": "58",
+          "num_blocks_proposed_total": "2799163"
+        },
+        {
+          "node_id": "n3hrq-akp7i-xednx-d2zd5-fl2xj-5hice-u2olr-5jacd-xrjvr-hbjy2-5qe",
+          "num_block_failures_total": "69",
+          "num_blocks_proposed_total": "2800615"
+        },
+        {
+          "node_id": "5xplq-if2d4-h55o5-fwkps-i7jsb-xrnto-romgb-erfht-cmvqe-jsmhh-sae",
+          "num_block_failures_total": "51",
+          "num_blocks_proposed_total": "2801000"
+        },
+        {
+          "node_id": "dlo4z-s65z7-ig6fn-zb2v5-s752c-jiva4-6ujh5-y7z2m-m2tht-ukzqf-3ae",
+          "num_block_failures_total": "74",
+          "num_blocks_proposed_total": "2800072"
+        },
+        {
+          "node_id": "fpubd-4hk24-5wezd-yvbum-de5i6-kyspp-l3cce-lxcy2-7vugt-yso3r-7ae",
+          "num_block_failures_total": "71",
+          "num_blocks_proposed_total": "2798386"
+        },
+        {
+          "node_id": "gmqia-rpzvg-ttwje-2buta-jhfvv-v7hxf-djvgq-ss7i2-rzlbm-tziyn-kqe",
+          "num_block_failures_total": "83",
+          "num_blocks_proposed_total": "2799669"
+        }
+      ],
+      "subnet_id": "34mm6-e24vu-pnyce-lp4fx-xtz2h-y5jpo-kwzgz-grf4m-v5kvr-xmeu4-tqe",
+      "ts": "1721433599883710941"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "6bpfz-cjaos-uck3k-c5ex2-nkdvr-oql64-jet7u-yfmqo-zgxqv-qiftz-4qe",
+          "num_block_failures_total": "58",
+          "num_blocks_proposed_total": "2812190"
+        },
+        {
+          "node_id": "n3hrq-akp7i-xednx-d2zd5-fl2xj-5hice-u2olr-5jacd-xrjvr-hbjy2-5qe",
+          "num_block_failures_total": "69",
+          "num_blocks_proposed_total": "2813377"
+        },
+        {
+          "node_id": "5xplq-if2d4-h55o5-fwkps-i7jsb-xrnto-romgb-erfht-cmvqe-jsmhh-sae",
+          "num_block_failures_total": "51",
+          "num_blocks_proposed_total": "2813894"
+        },
+        {
+          "node_id": "dlo4z-s65z7-ig6fn-zb2v5-s752c-jiva4-6ujh5-y7z2m-m2tht-ukzqf-3ae",
+          "num_block_failures_total": "74",
+          "num_blocks_proposed_total": "2813043"
+        },
+        {
+          "node_id": "fpubd-4hk24-5wezd-yvbum-de5i6-kyspp-l3cce-lxcy2-7vugt-yso3r-7ae",
+          "num_block_failures_total": "71",
+          "num_blocks_proposed_total": "2811150"
+        },
+        {
+          "node_id": "gmqia-rpzvg-ttwje-2buta-jhfvv-v7hxf-djvgq-ss7i2-rzlbm-tziyn-kqe",
+          "num_block_failures_total": "83",
+          "num_blocks_proposed_total": "2812592"
+        }
+      ],
+      "subnet_id": "34mm6-e24vu-pnyce-lp4fx-xtz2h-y5jpo-kwzgz-grf4m-v5kvr-xmeu4-tqe",
+      "ts": "1721519999560756953"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "6bpfz-cjaos-uck3k-c5ex2-nkdvr-oql64-jet7u-yfmqo-zgxqv-qiftz-4qe",
+          "num_block_failures_total": "58",
+          "num_blocks_proposed_total": "2825069"
+        },
+        {
+          "node_id": "n3hrq-akp7i-xednx-d2zd5-fl2xj-5hice-u2olr-5jacd-xrjvr-hbjy2-5qe",
+          "num_block_failures_total": "69",
+          "num_blocks_proposed_total": "2826308"
+        },
+        {
+          "node_id": "5xplq-if2d4-h55o5-fwkps-i7jsb-xrnto-romgb-erfht-cmvqe-jsmhh-sae",
+          "num_block_failures_total": "51",
+          "num_blocks_proposed_total": "2826643"
+        },
+        {
+          "node_id": "dlo4z-s65z7-ig6fn-zb2v5-s752c-jiva4-6ujh5-y7z2m-m2tht-ukzqf-3ae",
+          "num_block_failures_total": "74",
+          "num_blocks_proposed_total": "2825851"
+        },
+        {
+          "node_id": "fpubd-4hk24-5wezd-yvbum-de5i6-kyspp-l3cce-lxcy2-7vugt-yso3r-7ae",
+          "num_block_failures_total": "71",
+          "num_blocks_proposed_total": "2824191"
+        },
+        {
+          "node_id": "gmqia-rpzvg-ttwje-2buta-jhfvv-v7hxf-djvgq-ss7i2-rzlbm-tziyn-kqe",
+          "num_block_failures_total": "83",
+          "num_blocks_proposed_total": "2825528"
+        }
+      ],
+      "subnet_id": "34mm6-e24vu-pnyce-lp4fx-xtz2h-y5jpo-kwzgz-grf4m-v5kvr-xmeu4-tqe",
+      "ts": "1721606399618868422"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "6bpfz-cjaos-uck3k-c5ex2-nkdvr-oql64-jet7u-yfmqo-zgxqv-qiftz-4qe",
+          "num_block_failures_total": "58",
+          "num_blocks_proposed_total": "2837879"
+        },
+        {
+          "node_id": "n3hrq-akp7i-xednx-d2zd5-fl2xj-5hice-u2olr-5jacd-xrjvr-hbjy2-5qe",
+          "num_block_failures_total": "69",
+          "num_blocks_proposed_total": "2839288"
+        },
+        {
+          "node_id": "5xplq-if2d4-h55o5-fwkps-i7jsb-xrnto-romgb-erfht-cmvqe-jsmhh-sae",
+          "num_block_failures_total": "51",
+          "num_blocks_proposed_total": "2839427"
+        },
+        {
+          "node_id": "dlo4z-s65z7-ig6fn-zb2v5-s752c-jiva4-6ujh5-y7z2m-m2tht-ukzqf-3ae",
+          "num_block_failures_total": "74",
+          "num_blocks_proposed_total": "2838783"
+        },
+        {
+          "node_id": "fpubd-4hk24-5wezd-yvbum-de5i6-kyspp-l3cce-lxcy2-7vugt-yso3r-7ae",
+          "num_block_failures_total": "71",
+          "num_blocks_proposed_total": "2837072"
+        },
+        {
+          "node_id": "gmqia-rpzvg-ttwje-2buta-jhfvv-v7hxf-djvgq-ss7i2-rzlbm-tziyn-kqe",
+          "num_block_failures_total": "83",
+          "num_blocks_proposed_total": "2838242"
+        }
+      ],
+      "subnet_id": "34mm6-e24vu-pnyce-lp4fx-xtz2h-y5jpo-kwzgz-grf4m-v5kvr-xmeu4-tqe",
+      "ts": "1721692799708125439"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "6bpfz-cjaos-uck3k-c5ex2-nkdvr-oql64-jet7u-yfmqo-zgxqv-qiftz-4qe",
+          "num_block_failures_total": "58",
+          "num_blocks_proposed_total": "2850629"
+        },
+        {
+          "node_id": "n3hrq-akp7i-xednx-d2zd5-fl2xj-5hice-u2olr-5jacd-xrjvr-hbjy2-5qe",
+          "num_block_failures_total": "69",
+          "num_blocks_proposed_total": "2852125"
+        },
+        {
+          "node_id": "5xplq-if2d4-h55o5-fwkps-i7jsb-xrnto-romgb-erfht-cmvqe-jsmhh-sae",
+          "num_block_failures_total": "51",
+          "num_blocks_proposed_total": "2852372"
+        },
+        {
+          "node_id": "dlo4z-s65z7-ig6fn-zb2v5-s752c-jiva4-6ujh5-y7z2m-m2tht-ukzqf-3ae",
+          "num_block_failures_total": "74",
+          "num_blocks_proposed_total": "2851618"
+        },
+        {
+          "node_id": "fpubd-4hk24-5wezd-yvbum-de5i6-kyspp-l3cce-lxcy2-7vugt-yso3r-7ae",
+          "num_block_failures_total": "71",
+          "num_blocks_proposed_total": "2849941"
+        },
+        {
+          "node_id": "gmqia-rpzvg-ttwje-2buta-jhfvv-v7hxf-djvgq-ss7i2-rzlbm-tziyn-kqe",
+          "num_block_failures_total": "83",
+          "num_blocks_proposed_total": "2851119"
+        }
+      ],
+      "subnet_id": "34mm6-e24vu-pnyce-lp4fx-xtz2h-y5jpo-kwzgz-grf4m-v5kvr-xmeu4-tqe",
+      "ts": "1721779199416468524"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "6bpfz-cjaos-uck3k-c5ex2-nkdvr-oql64-jet7u-yfmqo-zgxqv-qiftz-4qe",
+          "num_block_failures_total": "58",
+          "num_blocks_proposed_total": "2863616"
+        },
+        {
+          "node_id": "n3hrq-akp7i-xednx-d2zd5-fl2xj-5hice-u2olr-5jacd-xrjvr-hbjy2-5qe",
+          "num_block_failures_total": "69",
+          "num_blocks_proposed_total": "2865056"
+        },
+        {
+          "node_id": "5xplq-if2d4-h55o5-fwkps-i7jsb-xrnto-romgb-erfht-cmvqe-jsmhh-sae",
+          "num_block_failures_total": "51",
+          "num_blocks_proposed_total": "2865276"
+        },
+        {
+          "node_id": "dlo4z-s65z7-ig6fn-zb2v5-s752c-jiva4-6ujh5-y7z2m-m2tht-ukzqf-3ae",
+          "num_block_failures_total": "74",
+          "num_blocks_proposed_total": "2864484"
+        },
+        {
+          "node_id": "fpubd-4hk24-5wezd-yvbum-de5i6-kyspp-l3cce-lxcy2-7vugt-yso3r-7ae",
+          "num_block_failures_total": "71",
+          "num_blocks_proposed_total": "2862767"
+        },
+        {
+          "node_id": "gmqia-rpzvg-ttwje-2buta-jhfvv-v7hxf-djvgq-ss7i2-rzlbm-tziyn-kqe",
+          "num_block_failures_total": "83",
+          "num_blocks_proposed_total": "2863979"
+        }
+      ],
+      "subnet_id": "34mm6-e24vu-pnyce-lp4fx-xtz2h-y5jpo-kwzgz-grf4m-v5kvr-xmeu4-tqe",
+      "ts": "1721865599927488258"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "6bpfz-cjaos-uck3k-c5ex2-nkdvr-oql64-jet7u-yfmqo-zgxqv-qiftz-4qe",
+          "num_block_failures_total": "59",
+          "num_blocks_proposed_total": "2876310"
+        },
+        {
+          "node_id": "n3hrq-akp7i-xednx-d2zd5-fl2xj-5hice-u2olr-5jacd-xrjvr-hbjy2-5qe",
+          "num_block_failures_total": "69",
+          "num_blocks_proposed_total": "2877878"
+        },
+        {
+          "node_id": "5xplq-if2d4-h55o5-fwkps-i7jsb-xrnto-romgb-erfht-cmvqe-jsmhh-sae",
+          "num_block_failures_total": "52",
+          "num_blocks_proposed_total": "2878148"
+        },
+        {
+          "node_id": "dlo4z-s65z7-ig6fn-zb2v5-s752c-jiva4-6ujh5-y7z2m-m2tht-ukzqf-3ae",
+          "num_block_failures_total": "76",
+          "num_blocks_proposed_total": "2877301"
+        },
+        {
+          "node_id": "fpubd-4hk24-5wezd-yvbum-de5i6-kyspp-l3cce-lxcy2-7vugt-yso3r-7ae",
+          "num_block_failures_total": "74",
+          "num_blocks_proposed_total": "2875657"
+        },
+        {
+          "node_id": "gmqia-rpzvg-ttwje-2buta-jhfvv-v7hxf-djvgq-ss7i2-rzlbm-tziyn-kqe",
+          "num_block_failures_total": "83",
+          "num_blocks_proposed_total": "2876962"
+        }
+      ],
+      "subnet_id": "34mm6-e24vu-pnyce-lp4fx-xtz2h-y5jpo-kwzgz-grf4m-v5kvr-xmeu4-tqe",
+      "ts": "1721951998934090476"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "6bpfz-cjaos-uck3k-c5ex2-nkdvr-oql64-jet7u-yfmqo-zgxqv-qiftz-4qe",
+          "num_block_failures_total": "59",
+          "num_blocks_proposed_total": "2889213"
+        },
+        {
+          "node_id": "n3hrq-akp7i-xednx-d2zd5-fl2xj-5hice-u2olr-5jacd-xrjvr-hbjy2-5qe",
+          "num_block_failures_total": "69",
+          "num_blocks_proposed_total": "2890644"
+        },
+        {
+          "node_id": "5xplq-if2d4-h55o5-fwkps-i7jsb-xrnto-romgb-erfht-cmvqe-jsmhh-sae",
+          "num_block_failures_total": "52",
+          "num_blocks_proposed_total": "2891059"
+        },
+        {
+          "node_id": "dlo4z-s65z7-ig6fn-zb2v5-s752c-jiva4-6ujh5-y7z2m-m2tht-ukzqf-3ae",
+          "num_block_failures_total": "76",
+          "num_blocks_proposed_total": "2890341"
+        },
+        {
+          "node_id": "fpubd-4hk24-5wezd-yvbum-de5i6-kyspp-l3cce-lxcy2-7vugt-yso3r-7ae",
+          "num_block_failures_total": "74",
+          "num_blocks_proposed_total": "2888586"
+        },
+        {
+          "node_id": "gmqia-rpzvg-ttwje-2buta-jhfvv-v7hxf-djvgq-ss7i2-rzlbm-tziyn-kqe",
+          "num_block_failures_total": "83",
+          "num_blocks_proposed_total": "2889775"
+        }
+      ],
+      "subnet_id": "34mm6-e24vu-pnyce-lp4fx-xtz2h-y5jpo-kwzgz-grf4m-v5kvr-xmeu4-tqe",
+      "ts": "1722038399476499196"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "6bpfz-cjaos-uck3k-c5ex2-nkdvr-oql64-jet7u-yfmqo-zgxqv-qiftz-4qe",
+          "num_block_failures_total": "59",
+          "num_blocks_proposed_total": "2902008"
+        },
+        {
+          "node_id": "n3hrq-akp7i-xednx-d2zd5-fl2xj-5hice-u2olr-5jacd-xrjvr-hbjy2-5qe",
+          "num_block_failures_total": "69",
+          "num_blocks_proposed_total": "2903332"
+        },
+        {
+          "node_id": "5xplq-if2d4-h55o5-fwkps-i7jsb-xrnto-romgb-erfht-cmvqe-jsmhh-sae",
+          "num_block_failures_total": "52",
+          "num_blocks_proposed_total": "2904042"
+        },
+        {
+          "node_id": "dlo4z-s65z7-ig6fn-zb2v5-s752c-jiva4-6ujh5-y7z2m-m2tht-ukzqf-3ae",
+          "num_block_failures_total": "76",
+          "num_blocks_proposed_total": "2903375"
+        },
+        {
+          "node_id": "fpubd-4hk24-5wezd-yvbum-de5i6-kyspp-l3cce-lxcy2-7vugt-yso3r-7ae",
+          "num_block_failures_total": "74",
+          "num_blocks_proposed_total": "2901529"
+        },
+        {
+          "node_id": "gmqia-rpzvg-ttwje-2buta-jhfvv-v7hxf-djvgq-ss7i2-rzlbm-tziyn-kqe",
+          "num_block_failures_total": "83",
+          "num_blocks_proposed_total": "2902701"
+        }
+      ],
+      "subnet_id": "34mm6-e24vu-pnyce-lp4fx-xtz2h-y5jpo-kwzgz-grf4m-v5kvr-xmeu4-tqe",
+      "ts": "1722124799451395655"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "6bpfz-cjaos-uck3k-c5ex2-nkdvr-oql64-jet7u-yfmqo-zgxqv-qiftz-4qe",
+          "num_block_failures_total": "59",
+          "num_blocks_proposed_total": "2915083"
+        },
+        {
+          "node_id": "n3hrq-akp7i-xednx-d2zd5-fl2xj-5hice-u2olr-5jacd-xrjvr-hbjy2-5qe",
+          "num_block_failures_total": "69",
+          "num_blocks_proposed_total": "2916137"
+        },
+        {
+          "node_id": "5xplq-if2d4-h55o5-fwkps-i7jsb-xrnto-romgb-erfht-cmvqe-jsmhh-sae",
+          "num_block_failures_total": "52",
+          "num_blocks_proposed_total": "2916814"
+        },
+        {
+          "node_id": "dlo4z-s65z7-ig6fn-zb2v5-s752c-jiva4-6ujh5-y7z2m-m2tht-ukzqf-3ae",
+          "num_block_failures_total": "76",
+          "num_blocks_proposed_total": "2916115"
+        },
+        {
+          "node_id": "fpubd-4hk24-5wezd-yvbum-de5i6-kyspp-l3cce-lxcy2-7vugt-yso3r-7ae",
+          "num_block_failures_total": "74",
+          "num_blocks_proposed_total": "2914515"
+        },
+        {
+          "node_id": "gmqia-rpzvg-ttwje-2buta-jhfvv-v7hxf-djvgq-ss7i2-rzlbm-tziyn-kqe",
+          "num_block_failures_total": "83",
+          "num_blocks_proposed_total": "2915701"
+        }
+      ],
+      "subnet_id": "34mm6-e24vu-pnyce-lp4fx-xtz2h-y5jpo-kwzgz-grf4m-v5kvr-xmeu4-tqe",
+      "ts": "1722211199022265393"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "6bpfz-cjaos-uck3k-c5ex2-nkdvr-oql64-jet7u-yfmqo-zgxqv-qiftz-4qe",
+          "num_block_failures_total": "59",
+          "num_blocks_proposed_total": "2927845"
+        },
+        {
+          "node_id": "n3hrq-akp7i-xednx-d2zd5-fl2xj-5hice-u2olr-5jacd-xrjvr-hbjy2-5qe",
+          "num_block_failures_total": "69",
+          "num_blocks_proposed_total": "2928983"
+        },
+        {
+          "node_id": "5xplq-if2d4-h55o5-fwkps-i7jsb-xrnto-romgb-erfht-cmvqe-jsmhh-sae",
+          "num_block_failures_total": "52",
+          "num_blocks_proposed_total": "2929756"
+        },
+        {
+          "node_id": "dlo4z-s65z7-ig6fn-zb2v5-s752c-jiva4-6ujh5-y7z2m-m2tht-ukzqf-3ae",
+          "num_block_failures_total": "76",
+          "num_blocks_proposed_total": "2929079"
+        },
+        {
+          "node_id": "fpubd-4hk24-5wezd-yvbum-de5i6-kyspp-l3cce-lxcy2-7vugt-yso3r-7ae",
+          "num_block_failures_total": "74",
+          "num_blocks_proposed_total": "2927495"
+        },
+        {
+          "node_id": "gmqia-rpzvg-ttwje-2buta-jhfvv-v7hxf-djvgq-ss7i2-rzlbm-tziyn-kqe",
+          "num_block_failures_total": "83",
+          "num_blocks_proposed_total": "2928583"
+        }
+      ],
+      "subnet_id": "34mm6-e24vu-pnyce-lp4fx-xtz2h-y5jpo-kwzgz-grf4m-v5kvr-xmeu4-tqe",
+      "ts": "1722297598880602693"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "6bpfz-cjaos-uck3k-c5ex2-nkdvr-oql64-jet7u-yfmqo-zgxqv-qiftz-4qe",
+          "num_block_failures_total": "59",
+          "num_blocks_proposed_total": "2940696"
+        },
+        {
+          "node_id": "n3hrq-akp7i-xednx-d2zd5-fl2xj-5hice-u2olr-5jacd-xrjvr-hbjy2-5qe",
+          "num_block_failures_total": "69",
+          "num_blocks_proposed_total": "2942028"
+        },
+        {
+          "node_id": "5xplq-if2d4-h55o5-fwkps-i7jsb-xrnto-romgb-erfht-cmvqe-jsmhh-sae",
+          "num_block_failures_total": "52",
+          "num_blocks_proposed_total": "2942647"
+        },
+        {
+          "node_id": "dlo4z-s65z7-ig6fn-zb2v5-s752c-jiva4-6ujh5-y7z2m-m2tht-ukzqf-3ae",
+          "num_block_failures_total": "76",
+          "num_blocks_proposed_total": "2941955"
+        },
+        {
+          "node_id": "fpubd-4hk24-5wezd-yvbum-de5i6-kyspp-l3cce-lxcy2-7vugt-yso3r-7ae",
+          "num_block_failures_total": "74",
+          "num_blocks_proposed_total": "2940187"
+        },
+        {
+          "node_id": "gmqia-rpzvg-ttwje-2buta-jhfvv-v7hxf-djvgq-ss7i2-rzlbm-tziyn-kqe",
+          "num_block_failures_total": "83",
+          "num_blocks_proposed_total": "2941595"
+        }
+      ],
+      "subnet_id": "34mm6-e24vu-pnyce-lp4fx-xtz2h-y5jpo-kwzgz-grf4m-v5kvr-xmeu4-tqe",
+      "ts": "1722383999973967169"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "6bpfz-cjaos-uck3k-c5ex2-nkdvr-oql64-jet7u-yfmqo-zgxqv-qiftz-4qe",
+          "num_block_failures_total": "60",
+          "num_blocks_proposed_total": "2953418"
+        },
+        {
+          "node_id": "n3hrq-akp7i-xednx-d2zd5-fl2xj-5hice-u2olr-5jacd-xrjvr-hbjy2-5qe",
+          "num_block_failures_total": "69",
+          "num_blocks_proposed_total": "2954990"
+        },
+        {
+          "node_id": "5xplq-if2d4-h55o5-fwkps-i7jsb-xrnto-romgb-erfht-cmvqe-jsmhh-sae",
+          "num_block_failures_total": "52",
+          "num_blocks_proposed_total": "2955425"
+        },
+        {
+          "node_id": "dlo4z-s65z7-ig6fn-zb2v5-s752c-jiva4-6ujh5-y7z2m-m2tht-ukzqf-3ae",
+          "num_block_failures_total": "77",
+          "num_blocks_proposed_total": "2954707"
+        },
+        {
+          "node_id": "fpubd-4hk24-5wezd-yvbum-de5i6-kyspp-l3cce-lxcy2-7vugt-yso3r-7ae",
+          "num_block_failures_total": "75",
+          "num_blocks_proposed_total": "2952988"
+        },
+        {
+          "node_id": "gmqia-rpzvg-ttwje-2buta-jhfvv-v7hxf-djvgq-ss7i2-rzlbm-tziyn-kqe",
+          "num_block_failures_total": "83",
+          "num_blocks_proposed_total": "2954763"
+        }
+      ],
+      "subnet_id": "34mm6-e24vu-pnyce-lp4fx-xtz2h-y5jpo-kwzgz-grf4m-v5kvr-xmeu4-tqe",
+      "ts": "1722470399577446169"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "6bpfz-cjaos-uck3k-c5ex2-nkdvr-oql64-jet7u-yfmqo-zgxqv-qiftz-4qe",
+          "num_block_failures_total": "60",
+          "num_blocks_proposed_total": "2966439"
+        },
+        {
+          "node_id": "n3hrq-akp7i-xednx-d2zd5-fl2xj-5hice-u2olr-5jacd-xrjvr-hbjy2-5qe",
+          "num_block_failures_total": "69",
+          "num_blocks_proposed_total": "2967842"
+        },
+        {
+          "node_id": "5xplq-if2d4-h55o5-fwkps-i7jsb-xrnto-romgb-erfht-cmvqe-jsmhh-sae",
+          "num_block_failures_total": "52",
+          "num_blocks_proposed_total": "2968329"
+        },
+        {
+          "node_id": "dlo4z-s65z7-ig6fn-zb2v5-s752c-jiva4-6ujh5-y7z2m-m2tht-ukzqf-3ae",
+          "num_block_failures_total": "77",
+          "num_blocks_proposed_total": "2967694"
+        },
+        {
+          "node_id": "fpubd-4hk24-5wezd-yvbum-de5i6-kyspp-l3cce-lxcy2-7vugt-yso3r-7ae",
+          "num_block_failures_total": "75",
+          "num_blocks_proposed_total": "2965847"
+        },
+        {
+          "node_id": "gmqia-rpzvg-ttwje-2buta-jhfvv-v7hxf-djvgq-ss7i2-rzlbm-tziyn-kqe",
+          "num_block_failures_total": "83",
+          "num_blocks_proposed_total": "2967512"
+        }
+      ],
+      "subnet_id": "34mm6-e24vu-pnyce-lp4fx-xtz2h-y5jpo-kwzgz-grf4m-v5kvr-xmeu4-tqe",
+      "ts": "1722556799604228415"
+    }
+  ]
+}

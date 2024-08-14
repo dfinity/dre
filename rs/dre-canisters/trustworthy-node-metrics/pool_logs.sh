@@ -1,9 +1,10 @@
+
 #!/bin/bash
 
 # Function to fetch logs and filter out new lines
 fetch_and_filter_logs() {
     # Fetch logs
-    new_logs=$(dfx canister logs trustworthy-node-metrics --network staging)
+    new_logs=$(dfx canister logs trustworthy-node-metrics --network ic)
 
     # Compare with previous logs to find new ones
     while IFS= read -r line; do
