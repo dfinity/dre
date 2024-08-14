@@ -5,13 +5,11 @@ use dfn_core::api::PrincipalId;
 use futures::FutureExt;
 use ic_management_canister_types::{NodeMetricsHistoryArgs, NodeMetricsHistoryResponse};
 use ic_protobuf::registry::subnet::v1::SubnetListRecord;
-use itertools::Itertools;
 
-use crate::types::{NodeMetricsGrouped, NodeMetricsStored, NodeMetricsStoredKey};
-use crate::{
-    stable_memory,
-    types::{SubnetNodeMetricsHistory, TimestampNanos},
-};
+use crate::stable_memory;
+use itertools::Itertools;
+use trustworthy_node_metrics_types::types::{NodeMetricsGrouped, NodeMetricsStored, NodeMetricsStoredKey};
+use trustworthy_node_metrics_types::types::{SubnetNodeMetricsHistory, TimestampNanos};
 
 /// Node metrics storable
 ///
