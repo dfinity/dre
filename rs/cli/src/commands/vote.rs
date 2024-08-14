@@ -23,7 +23,7 @@ pub struct Vote {
         use_value_delimiter = true,
         value_delimiter = ',',
         value_name = "PROPOSER_ID",
-        default_value = "80,39,40,46,58,61,77"
+        default_value = "80,39,40,46,58,61,77,17511507705568200227"
     )]
     pub accepted_neurons: Vec<u64>,
 
@@ -32,8 +32,8 @@ pub struct Vote {
     /// only by DRE in processes of rolling out new versions,
     /// everything else should be double checked manually
     ///
-    /// By default: SubnetReplicaVersionManagement
-    #[clap(long, use_value_delimiter = true, value_delimiter = ',', value_name = "PROPOSER_ID", default_value = "12")]
+    /// By default: IcOsVersionDeployment
+    #[clap(long, use_value_delimiter = true, value_delimiter = ',', default_value = "12")]
     pub accepted_topics: Vec<i32>,
 
     /// Override default sleep time
