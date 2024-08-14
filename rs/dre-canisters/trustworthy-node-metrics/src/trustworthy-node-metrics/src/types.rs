@@ -52,7 +52,15 @@ pub struct DailyNodeMetrics {
     pub subnet_assigned: Principal,
     pub num_blocks_proposed: u64,
     pub num_blocks_failed: u64,
+
+    /// The failure rate of the node for the day, calculated as a ratio of 
+    /// `num_blocks_failed` to `num_blocks_total` = `num_blocks_failed` + `num_blocks_proposed`. 
+    /// This value ranges from 0.0 (no failures) to 1.0 (all blocks failed).
     pub failure_rate: f64,
+    
+    /// The reduction in rewards for the node, determined by the failure rate.
+    /// This value is between 0.0 and 1.0, where 0.0 indicates no reduction 
+    /// (full rewards) and 1.0 indicates a complete reduction (no rewards).
     pub rewards_reduction: f64,
 }
 
