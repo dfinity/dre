@@ -17,7 +17,7 @@ pub struct Vote {
     /// These are the proposers which proposals will
     /// be automatically voted on
     ///
-    /// By default: DRE + automation neuron 80
+    /// By default: DRE + automation neuron 80 + Rüdiger Birkner
     #[clap(
         long,
         use_value_delimiter = true,
