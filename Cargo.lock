@@ -3376,7 +3376,7 @@ dependencies = [
  "sha2 0.10.8",
  "simple_asn1",
  "thiserror",
- "trustworthy-node-metrics",
+ "trustworthy-node-metrics-types",
  "url",
 ]
 
@@ -8817,7 +8817,6 @@ version = "0.5.0"
 dependencies = [
  "anyhow",
  "candid",
- "ciborium",
  "dfn_core",
  "futures",
  "ic-cdk 0.15.0",
@@ -8828,7 +8827,20 @@ dependencies = [
  "ic-protobuf",
  "ic-stable-structures",
  "itertools 0.13.0",
+ "trustworthy-node-metrics-types",
+]
+
+[[package]]
+name = "trustworthy-node-metrics-types"
+version = "0.5.0"
+dependencies = [
+ "candid",
+ "ciborium",
+ "dfn_core",
+ "ic-management-canister-types",
+ "ic-stable-structures",
  "serde",
+ "serde_json",
 ]
 
 [[package]]

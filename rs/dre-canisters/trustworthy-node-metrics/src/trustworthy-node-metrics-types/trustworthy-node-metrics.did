@@ -1,0 +1,48 @@
+
+type NodeMetrics = record {
+    node_id: principal;
+    num_blocks_proposed_total: nat64;
+    num_blocks_failures_total: nat64;
+};
+
+type SubnetNodeMetricsResponse = record {
+    ts: nat64;
+    subnet_id: principal;
+    node_metrics: vec NodeMetrics;
+};
+
+type SubnetNodeMetricsResult = variant {
+  Ok : vec SubnetNodeMetricsResponse;
+  Err : text;
+};
+
+type SubnetNodeMetricsArgs = record {
+  subnet_id: opt principal;
+  ts: opt nat64;
+};
+
+type DailyNodeMetrics = record {
+  ts: nat64;
+  subnet_assigned: principal;
+  num_blocks_proposed: nat64;
+  num_blocks_failed: nat64;
+  failure_rate: float64;
+  rewards_reduction: float64;
+};
+
+type NodeRewardsResponse = record {
+  node_id: principal;
+  rewards_no_penalty: float64;
+  rewards_with_penalty: float64;
+  daily_node_metrics: vec DailyNodeMetrics;
+};
+
+type NodeRewardsArgs = record {
+  from_ts: nat64;
+  to_ts: nat64;
+};
+
+service : {
+    "subnet_node_metrics" : (SubnetNodeMetricsArgs) -> (SubnetNodeMetricsResult) query;
+    "node_rewards" : (NodeRewardsArgs) -> (vec NodeRewardsResponse) query;
+}
