@@ -4,7 +4,7 @@ use candid::{Decode, Encode};
 use ic_agent::Agent;
 use ic_base_types::{CanisterId, PrincipalId};
 use log::error;
-use trustworthy_node_metrics::types::{SubnetNodeMetricsArgs, SubnetNodeMetricsResponse};
+use trustworthy_node_metrics_types::types::{SubnetNodeMetricsArgs, SubnetNodeMetricsResponse};
 
 use crate::IcAgentCanisterClient;
 

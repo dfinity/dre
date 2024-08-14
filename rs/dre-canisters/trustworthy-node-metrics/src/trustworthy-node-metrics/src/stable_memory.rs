@@ -1,32 +1,13 @@
-use candid::{Decode, Encode, Principal};
+use candid::Principal;
 use ic_stable_structures::memory_manager::{MemoryId, MemoryManager, VirtualMemory};
-use ic_stable_structures::{storable::Bound, Storable};
 use ic_stable_structures::{DefaultMemoryImpl, StableBTreeMap};
 use itertools::Itertools;
-use std::borrow::Cow;
 use std::cell::RefCell;
 use std::collections::BTreeMap;
 
-use crate::types::{NodeMetricsStored, NodeMetricsStoredKey, TimestampNanos};
+use trustworthy_node_metrics_types::types::{NodeMetricsStored, NodeMetricsStoredKey, TimestampNanos};
 
 type Memory = VirtualMemory<DefaultMemoryImpl>;
-
-const MAX_VALUE_SIZE_BYTE: u32 = 102;
-
-impl Storable for NodeMetricsStored {
-    fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
-        Cow::Owned(Encode!(self).unwrap())
-    }
-
-    fn from_bytes(bytes: std::borrow::Cow<[u8]>) -> Self {
-        Decode!(bytes.as_ref(), Self).unwrap()
-    }
-
-    const BOUND: Bound = Bound::Bounded {
-        max_size: MAX_VALUE_SIZE_BYTE,
-        is_fixed_size: false,
-    };
-}
 
 thread_local! {
 
