@@ -1,6 +1,5 @@
 use std::{collections::HashSet, io::Write, time::Duration};
 
-use chrono::Local;
 use clap::Args;
 use humantime::{format_duration, parse_duration};
 use ic_canisters::governance::GovernanceCanisterWrapper;
@@ -68,12 +67,10 @@ impl ExecutableCommand for Vote {
             std::io::stdout().flush().unwrap();
 
             for proposal in proposals {
-                let datetime = Local::now();
                 DesktopNotifier::send_info(
                     "DRE vote: voting",
                     &format!(
-                        "{} Voting on proposal {} (topic {:?}, proposer {}) -> {}",
-                        datetime,
+                        "Voting on proposal {} (topic {:?}, proposer {}) -> {}",
                         proposal.id.unwrap().id,
                         proposal.topic(),
                         proposal.proposer.unwrap_or_default().id,
