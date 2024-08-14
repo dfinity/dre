@@ -24,7 +24,7 @@ const MAX_FAILURE_RATE: f64 = 0.7;
 ///
 /// 2. It then checks if the `failure_rate` is above the `MAX_FAILURE_RATE` -> maximum reduction in rewards.
 ///
-/// 3. If the `failure_rate` is within the defined range (`MIN_FAILURE_RATE` to `MAX_FAILURE_RATE`), 
+/// 3. If the `failure_rate` is within the defined range (`MIN_FAILURE_RATE` to `MAX_FAILURE_RATE`),
 ///    the function calculates the reduction proportionally:
 ///    - The reduction is calculated by normalizing the `failure_rate` within the range, resulting in a value between `0.0` and `1.0`.
 fn daily_rewards_reduction(failure_rate: &f64) -> f64 {
@@ -127,12 +127,12 @@ pub fn rewards_with_penalty(daily_metrics: &[DailyNodeMetrics]) -> f64 {
 /// # Returns
 ///
 /// * A `f64` value representing the rewards percentage after overall reductions, rounded to two decimal places.
-/// 
+///
 /// # Explanation
 ///
 /// 1. The function iterates through each day's metrics, summing up the `rewards_reduction` values across all days.
 /// 2. The `overall_reduction` is calculated by dividing the total `reduction_sum` by the number of active days.
-/// 3. Finally, the function calculates the rewards percentage without penalty by subtracting `overall_reduction` from 1.0, 
+/// 3. Finally, the function calculates the rewards percentage without penalty by subtracting `overall_reduction` from 1.0,
 ///    multiplying by 100, and rounding to two decimal places before returning the result.
 pub fn rewards_no_penalty(daily_metrics: &[DailyNodeMetrics]) -> f64 {
     let active_days = daily_metrics.len();
