@@ -29,8 +29,6 @@ async fn main() -> anyhow::Result<()> {
     let mut cmd = Args::command();
     args.validate(&mut cmd);
 
-    info!("Starting DRE with args: {:?}", args);
-
     if let commands::Subcommands::Upgrade(upgrade) = args.subcommands {
         let response = upgrade.run().await?;
         match response {
