@@ -1,6 +1,6 @@
 from slack_bolt.app.async_app import AsyncApp
 from slack_bolt.adapter.socket_mode.async_handler import AsyncSocketModeHandler
-from slackblocks import DividerBlock, SectionBlock, ActionsBlock, Button, Text, Message
+from slackblocks import Button, Text, Message
 import logging
 import requests
 import json
@@ -29,33 +29,6 @@ class SilenceCreationException(SilenceException):
 
 
 class SlackApp:
-
-    def format_alert(self, alertname: str, proposal_id: str, proposal_topic: str, proposal_type: str):
-        """Format the alert in blocks of elements."""
-
-        text = (
-            f"<https://dashboard.internetcomputer.org/proposal/{proposal_id}|*Proposal:* {proposal_id}> *{alertname}*\n"
-            f"*Topic:* {proposal_topic}\n"
-            f"*Type:* {proposal_type}"
-        )
-        divider = DividerBlock()
-        section = SectionBlock(Text(text))
-        vote_button = Button(
-            text=Text("Vote :judge:", emoji=True),
-            value=proposal_id,
-            action_id="vote_blackhole",
-            url=f"https://nns.ic0.app/proposal/?u=qoctq-giaaa-aaaaa-aaaea-cai&proposal={proposal_id}"
-        )
-        silence_button = Button(
-            text=Text("Silence :no_bell:", emoji=True),
-            value=proposal_id,
-            action_id="silence_create"
-        )
-
-        actions = ActionsBlock(elements=[vote_button, silence_button])
-        blocks = [divider, section, actions]
-
-        return text, blocks
     
     def silence_create(self, proposal_id) -> str:
         """Handles the creation of the silence in alertmanager for the proposal_id."""
