@@ -55,17 +55,15 @@ jobs:
           fi
           rm ./$TAPLO
 
-          # Reinstall gcc-9
-          sudo apt install gcc-9 -y
+          # Reinstall gcc
+          sudo apt install gcc -y
 
           poetry update
           CARGO_BAZEL_REPIN=true bazel query >/dev/null
           ./bin/poetry.sh
           #
-          # Completely delete the bazel cache and then recreate it
-          # Cache should have everything that bazel build requires, and nothing more
+          # Repin
           #
-          sudo rm -rf ~/.cache/bazel/*
           CARGO_BAZEL_REPIN=true bazel build ...
           bazel test
 
