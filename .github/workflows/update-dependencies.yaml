@@ -46,7 +46,7 @@ jobs:
 
           # Install taplo cli
           TAPLO=taplo-linux-x86_64
-          curl -L "https://github.com/tamasfe/taplo/releases/latest/download/$TAPLO.gz"
+          curl -L "https://github.com/tamasfe/taplo/releases/latest/download/$TAPLO.gz" -O
           gunzip $TAPLO.gz
           chmod +x $TAPLO
           OTEL_VER=$($TAPLO get -f ~/Downloads/test.lock -o json | jq '.package[] | select(.name == "axum-otel-metrics")'| grep -oP '"opentelemetry\s\K[\d.]+')
