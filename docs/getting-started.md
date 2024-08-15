@@ -10,7 +10,7 @@ curl -L https://github.com/dfinity/dre/releases/latest/download/dre-x86_64-unkno
 chmod +x $HOME/bin/dre
 ```
 
-On x86_64 MacOS you should be able to use the following:
+On MacOS you can use the following:
 
 ```bash
 mkdir -p $HOME/bin
