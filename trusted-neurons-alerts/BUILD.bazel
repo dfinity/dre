@@ -9,6 +9,7 @@ deps = [
     requirement("aiohttp"),
     requirement("pytest"),
     requirement("slackblocks"),
+    requirement("ic-py"),
     "//pylib",
 ]
 
