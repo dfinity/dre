@@ -61,11 +61,6 @@ jobs:
           poetry update
           CARGO_BAZEL_REPIN=true bazel query >/dev/null
           ./bin/poetry.sh
-          #
-          # Repin
-          #
-          CARGO_BAZEL_REPIN=true bazel build ...
-          bazel test
 
       - name: "🆕 Create a new Pull Request with the changes"
         uses: peter-evans/create-pull-request@v6
