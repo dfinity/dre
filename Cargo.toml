@@ -52,7 +52,7 @@ axum-otel-metrics = "0.8.1"
 axum = "0.7.5"
 backoff = { version = "0.4.0", features = ["tokio"] }
 backon = "0.4.4"
-candid = "0.10.9"
+candid = "0.10.10"
 chrono = { version = "0.4.38", features = ["serde"] }
 clap-num = "1.1"
 clap = { version = "4.5", features = [
@@ -88,10 +88,10 @@ easy-parallel = "3.3.1"
 edit = "0.1.5"
 either = "1.13.0"
 enum-map = "1.1.1"
-env_logger = "0.11.3"
+env_logger = "0.11.5"
 erased-serde = "0.4.5"
 exitcode = "1.1.2"
-flate2 = "1.0.30"
+flate2 = "1.0.31"
 float-ord = "0.3.2"
 fs-err = "2.11.0"
 fs2 = "0.4.3"
@@ -147,10 +147,10 @@ ic-transport-types = "0.37.1"
 ic-utils = "0.37.0"
 include_dir = "0.7.4"
 itertools = "0.13.0"
-keyring = "3.0.5"
+keyring = "3.1.0"
 lazy_static = "1.5.0"
 log = "0.4.22"
-lru = "0.12.3"
+lru = "0.12.4"
 opentelemetry = { version = "0.22.0", features = ["metrics"] }
 phantom_newtype = { git = "https://github.com/dfinity/ic.git", rev = "7dee90107a88b836fc72e78993913988f4f73ca2" }
 pkcs11 = "0.5.0"
@@ -162,7 +162,7 @@ prost = "0.12"
 rand = { version = "0.8.5", features = ["std_rng"] }
 rand_seeder = "0.3.0"
 rayon = "1.10.0"
-regex = "1.10.5"
+regex = "1.10.6"
 registry-canister = { git = "https://github.com/dfinity/ic.git", rev = "7dee90107a88b836fc72e78993913988f4f73ca2" }
 reqwest = { version = "0.12", default-features = false, features = [
     "rustls-tls",
@@ -173,8 +173,8 @@ reverse_geocoder = "4.1.1"
 ring = "0.17.8"
 rstest = { version = "0.22.0", default-features = false }
 serde = { version = "1.0", features = ["derive"] }
-serde_derive = "1.0.203"
-serde_json = "1.0.124"
+serde_derive = "1.0.208"
+serde_json = "1.0.125"
 serde_yaml = "0.9.34"
 shlex = "1.3.0"
 sha2 = "0.10.8"
@@ -193,14 +193,14 @@ strum = { version = "0.26.3", features = ["derive"] }
 strum_macros = "0.26.4"
 tabled = "0.16.0"
 tabular = "0.2"
-tempfile = "3.10.1"
-thiserror = "1.0.62"
-tokio = { version = "1.38.1", features = ["full"] }
+tempfile = "3.12.0"
+thiserror = "1.0.63"
+tokio = { version = "1.39.2", features = ["full"] }
 tokio-util = "0.7.11"
 url = "2.5.2"
 urlencoding = "2.1.3"
 warp = "0.3"
-wiremock = "0.6.0"
+wiremock = "0.6.1"
 human_bytes = "0.4"
 headless_chrome = { version = "1.0.12", features = [
     "fetch",
@@ -210,7 +210,7 @@ headless_chrome = { version = "1.0.12", features = [
 ic-cdk-timers = { git = "https://github.com/dfinity/cdk-rs.git", rev = "59795716487fbb8a9910ac503bcea1e0cb08c932" }
 ic-cdk-macros = { git = "https://github.com/dfinity/cdk-rs.git", rev = "59795716487fbb8a9910ac503bcea1e0cb08c932" }
 ic-stable-structures = "0.6.5"
-ciborium = "0.2.1"
+ciborium = "0.2.2"
 dfn_core = { git = "https://github.com/dfinity/ic.git", rev = "7dee90107a88b836fc72e78993913988f4f73ca2" }
 
 [profile.release]
