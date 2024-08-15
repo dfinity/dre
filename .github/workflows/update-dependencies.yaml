@@ -36,7 +36,8 @@ jobs:
           git fetch
           git reset --hard origin/main
           cargo install cargo-upgrades
-          cargo upgrades --recursive
+          cargo install cargo-edit
+          cargo upgrade --recursive
 
           # Install taplo cli
           TAPLO=taplo-linux-x86_64
