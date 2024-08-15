@@ -35,6 +35,11 @@ jobs:
           #
           git fetch
           git reset --hard origin/main
+
+          # https://github.com/rustls/rustls/issues/1967#issuecomment-2279067420
+          sudo apt remove gcc-9 -y
+          sudo apt install clang -y
+
           cargo install cargo-upgrades
           cargo install cargo-edit
           cargo upgrade --recursive
