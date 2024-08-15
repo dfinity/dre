@@ -29,13 +29,6 @@ jobs:
 
       - name: "⚒️ Completely delete bazel cache and then recreate it"
         run: |
-          set -eExou pipefail
-          #
-          # Update dependencies and export files that bazel can consume
-          #
-          git fetch
-          git reset --hard origin/main
-
           # https://github.com/rustls/rustls/issues/1967#issuecomment-2279067420
           sudo apt remove gcc-9 -y
           sudo apt install clang -y
@@ -68,7 +61,7 @@ jobs:
           commit-message: "chore: Update dependencies"
           branch: bot-update-deps
           title: "chore: Update dependencies"
-          body: "This PR updates poetry (Python) and cargo (Rust) dependencies and recreates the bazel cache."
+          body: "This PR updates poetry (Python) and cargo (Rust) dependencies and IC repository dependencies"
           token: ${{ secrets.GIX_CREATE_PR_PAT }}
 
       - name: "🪓 Tear down runner"
