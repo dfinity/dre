@@ -48,6 +48,7 @@ jobs:
           if [[ -n "$OTEL_VER" ]]
             cargo update opentelemetry --precise $OTEL_VER
           fi
+          rm $TAPLO
 
           poetry update
           CARGO_BAZEL_REPIN=true bazel query >/dev/null
