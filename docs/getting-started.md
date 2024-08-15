@@ -4,6 +4,8 @@
 
 We build the DRE tool for Linux and for MacOS (Darwin). We tested on Ubuntu 22.04 and 24.04.
 
+On Linux, you can download the tool with:
+
 ```bash
 mkdir -p $HOME/bin
 curl -L https://github.com/dfinity/dre/releases/latest/download/dre-x86_64-unknown-linux -o $HOME/bin/dre
