@@ -36,6 +36,17 @@ jobs:
           git fetch
           git reset --hard origin/main
           cargo update --recursive
+
+          # Install taplo cli
+          TAPLO=taplo-linux-x86_64
+          curl -L "https://github.com/tamasfe/taplo/releases/latest/download/$TAPLO.gz"
+          gunzip $TAPLO.gz
+          chmod +x $TAPLO
+          OTEL_VER=$($TAPLO get -f ~/Downloads/test.lock -o json | jq '.package[] | select(.name == "axum-otel-metrics")'| grep -oP '"opentelemetry\s\K[\d.]+')
+          if [[ -n "$OTEL_VER" ]]
+            cargo update opentelemetry --precise $OTEL_VER
+          fi
+
           poetry update
           CARGO_BAZEL_REPIN=true bazel query >/dev/null
           ./bin/poetry.sh
