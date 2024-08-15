@@ -35,8 +35,7 @@ jobs:
           #
           git fetch
           git reset --hard origin/main
-          cargo install cargo-upgrade
-          cargo upgrade --exclude opentelemetry --recursive
+          cargo update --recursive
           poetry update
           CARGO_BAZEL_REPIN=true bazel query >/dev/null
           ./bin/poetry.sh
