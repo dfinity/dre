@@ -46,7 +46,7 @@ jobs:
           chmod +x $TAPLO
           OTEL_VER=$($TAPLO get -f ~/Downloads/test.lock -o json | jq '.package[] | select(.name == "axum-otel-metrics")'| grep -oP '"opentelemetry\s\K[\d.]+')
           if [[ -n "$OTEL_VER" ]]
-            cargo update opentelemetry --precise $OTEL_VER
+            cargo upgrade --package opentelemetry@$OTEL_VER
           fi
           rm $TAPLO
 
