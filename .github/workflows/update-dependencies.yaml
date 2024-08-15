@@ -49,7 +49,7 @@ jobs:
           curl -L "https://github.com/tamasfe/taplo/releases/latest/download/$TAPLO.gz" -O
           gunzip $TAPLO.gz
           chmod +x ./$TAPLO
-          OTEL_VER=$(./$TAPLO get -f Cargo.lock -o json | jq '.package[] | select(.name == "axum-otel-metrics")'| grep -oP '"opentelemetry\s\K[\d.]+')
+          OTEL_VER=$(./$TAPLO get -f Cargo.lock -o json | jq '.package[] | select(.name == "axum-otel-metrics")'| grep -oP '"opentelemetry\s\K[\d.]+' || echo "")
           if [[ -n "$OTEL_VER" ]]
             cargo upgrade --package opentelemetry@$OTEL_VER
           fi
