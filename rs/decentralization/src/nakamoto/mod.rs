@@ -328,30 +328,20 @@ impl NakamotoScore {
     pub fn controlled_nodes(&self, feature: &NodeFeature) -> Option<usize> {
         self.controlled_nodes.get(feature).copied()
     }
-}
 
-impl Ord for NakamotoScore {
-    fn cmp(&self, other: &Self) -> Ordering {
-        self.partial_cmp(other).expect("partial_cmp failed")
-    }
-}
-
-impl PartialOrd for NakamotoScore {
-    /// By default, the higher value will take the precedence
-    #[allow(clippy::non_canonical_partial_ord_impl)]
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+    pub fn describe_difference_from(&self, other: &NakamotoScore) -> (Option<Ordering>, String) {
         // Prefer higher score across all features
         let mut cmp = self.score_min().partial_cmp(&other.score_min());
 
         if cmp != Some(Ordering::Equal) {
-            return cmp;
+            return (cmp, "the minimum score across all features".to_string());
         }
 
         // Then try to increase the log2 avg
         cmp = self.score_avg_log2().partial_cmp(&other.score_avg_log2());
 
         if cmp != Some(Ordering::Equal) {
-            return cmp;
+            return (cmp, "the average log2 score across all features".to_string());
         }
 
         // Try to pick the candidate that *reduces* the number of nodes
@@ -359,7 +349,14 @@ impl PartialOrd for NakamotoScore {
         cmp = other.critical_features_num_nodes().partial_cmp(&self.critical_features_num_nodes());
 
         if cmp != Some(Ordering::Equal) {
-            return cmp;
+            return (
+                cmp,
+                format!(
+                    "the number of nodes controlled by dominant actors for critical features (NP, Country) changes from {:?} to {:?}",
+                    other.critical_features_num_nodes(),
+                    self.critical_features_num_nodes()
+                ),
+            );
         }
 
         // Compare the number of unique actors for the critical features
@@ -369,7 +366,14 @@ impl PartialOrd for NakamotoScore {
             .partial_cmp(&other.critical_features_unique_actors());
 
         if cmp != Some(Ordering::Equal) {
-            return cmp;
+            return (
+                cmp,
+                format!(
+                    "the number of different actors for critical features (NP, Country) changes from {:?} to {:?}",
+                    other.critical_features_unique_actors(),
+                    self.critical_features_unique_actors()
+                ),
+            );
         }
 
         // Compare the count of below-average coefficients
@@ -379,7 +383,7 @@ impl PartialOrd for NakamotoScore {
         cmp = c2.partial_cmp(&c1);
 
         if cmp != Some(Ordering::Equal) {
-            return cmp;
+            return (cmp, "the number of Nakamoto coefficients with extremely low values".to_string());
         }
 
         // If the worst feature is the same for both candidates
@@ -393,13 +397,31 @@ impl PartialOrd for NakamotoScore {
                 cmp = c2.partial_cmp(c1);
 
                 if cmp != Some(Ordering::Equal) {
-                    return cmp;
+                    return (cmp, format!("Nakamoto coefficient for feature {}", feature));
                 }
             }
         }
 
         // And finally try to increase the linear average
-        self.score_avg_linear().partial_cmp(&other.score_avg_linear())
+        match self.score_avg_linear().partial_cmp(&other.score_avg_linear()) {
+            Some(Ordering::Equal) => (Some(Ordering::Equal), "equal Nakamoto scores across all features".to_string()),
+            Some(cmp) => (Some(cmp), "the linear average of Nakamoto coefficients across all features".to_string()),
+            None => (None, String::new()),
+        }
+    }
+}
+
+impl Ord for NakamotoScore {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.partial_cmp(other).expect("partial_cmp failed")
+    }
+}
+
+impl PartialOrd for NakamotoScore {
+    /// By default, the higher value will take the precedence
+    #[allow(clippy::non_canonical_partial_ord_impl)]
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        self.describe_difference_from(other).0
     }
 }
 
@@ -436,6 +458,7 @@ mod tests {
     use std::sync::Arc;
 
     use crate::network::{DecentralizedSubnet, NetworkHealRequest, NetworkHealSubnets, SubnetChangeRequest};
+    use ahash::HashSet;
     use ic_base_types::PrincipalId;
     use ic_management_types::Status;
     use itertools::Itertools;
@@ -541,7 +564,8 @@ mod tests {
         DecentralizedSubnet {
             id: PrincipalId::new_subnet_test_id(subnet_num),
             nodes: new_test_nodes("feat", num_nodes, num_dfinity_nodes),
-            removed_nodes: Vec::new(),
+            added_nodes_desc: Vec::new(),
+            removed_nodes_desc: Vec::new(),
             min_nakamoto_coefficients: None,
             comment: None,
             run_log: Vec::new(),
@@ -559,7 +583,8 @@ mod tests {
         DecentralizedSubnet {
             id: PrincipalId::new_subnet_test_id(subnet_num),
             nodes: new_test_nodes_with_overrides("feat", node_number_start, num_nodes, num_dfinity_nodes, feature_to_override),
-            removed_nodes: Vec::new(),
+            added_nodes_desc: Vec::new(),
+            removed_nodes_desc: Vec::new(),
             min_nakamoto_coefficients: None,
             comment: None,
             run_log: Vec::new(),
@@ -779,7 +804,8 @@ mod tests {
                 .filter(|n| !re_unhealthy_nodes.is_match(&n.id.to_string()))
                 .cloned()
                 .collect(),
-            removed_nodes: Vec::new(),
+            added_nodes_desc: Vec::new(),
+            removed_nodes_desc: Vec::new(),
             min_nakamoto_coefficients: None,
             comment: None,
             run_log: Vec::new(),
@@ -951,8 +977,9 @@ mod tests {
             .unwrap();
         let result = network_heal_response.first().unwrap().clone();
 
+        let nodes_removed = result.removed_with_desc.iter().map(|(n, _)| n).collect::<HashSet<_>>();
         for unhealthy in unhealthy_principals.to_vec().iter() {
-            assert!(result.removed.contains(unhealthy));
+            assert!(nodes_removed.contains(unhealthy));
         }
     }
 

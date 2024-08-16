@@ -3,7 +3,7 @@ use crate::subnets::unhealthy_with_nodes;
 use crate::SubnetChangeResponse;
 use actix_web::http::StatusCode;
 use actix_web::{HttpResponse, ResponseError};
-use ahash::AHashSet;
+use ahash::{AHashSet, HashSet};
 use anyhow::anyhow;
 use ic_base_types::PrincipalId;
 use ic_management_types::{MinNakamotoCoefficients, NetworkError, NodeFeature, Status};
@@ -139,7 +139,8 @@ impl From<&ic_management_types::Node> for Node {
 pub struct DecentralizedSubnet {
     pub id: PrincipalId,
     pub nodes: Vec<Node>,
-    pub removed_nodes: Vec<Node>,
+    pub added_nodes_desc: Vec<(Node, String)>,
+    pub removed_nodes_desc: Vec<(Node, String)>,
     pub min_nakamoto_coefficients: Option<MinNakamotoCoefficients>,
     pub comment: Option<String>,
     pub run_log: Vec<String>,
@@ -160,22 +161,23 @@ impl DecentralizedSubnet {
 
     /// Return a new instance of a DecentralizedSubnet that does not contain the
     /// provided nodes.
-    pub fn without_nodes(&self, nodes: Vec<Node>) -> Result<Self, NetworkError> {
+    pub fn without_nodes(&self, nodes_to_remove_with_desc: Vec<(Node, String)>) -> Result<Self, NetworkError> {
         let mut new_subnet_nodes = self.nodes.clone();
         let mut removed = Vec::new();
-        for node in &nodes {
+        for (node, desc) in &nodes_to_remove_with_desc {
             if let Some(index) = new_subnet_nodes.iter().position(|n| n.id == node.id) {
-                removed.push(new_subnet_nodes.remove(index));
+                removed.push((new_subnet_nodes.remove(index), desc));
             } else {
                 return Err(NetworkError::NodeNotFound(node.id));
             }
         }
         let removed_is_empty = removed.is_empty();
-        let removed_node_ids = removed.iter().map(|n| n.id).collect::<Vec<_>>();
+        let removed_node_ids = removed.iter().map(|(n, _)| n.id).collect::<Vec<_>>();
         Ok(Self {
             id: self.id,
             nodes: new_subnet_nodes,
-            removed_nodes: removed,
+            added_nodes_desc: self.added_nodes_desc.clone(),
+            removed_nodes_desc: removed.iter().map(|(n, desc)| (n.clone(), desc.to_string())).collect(),
             min_nakamoto_coefficients: self.min_nakamoto_coefficients.clone(),
             comment: self.comment.clone(),
             run_log: {
@@ -192,19 +194,31 @@ impl DecentralizedSubnet {
 
     /// Return a new instance of a DecentralizedSubnet that contains the
     /// provided nodes.
-    pub fn with_nodes(self, nodes: Vec<Node>) -> Self {
+    pub fn with_nodes(self, nodes_to_add_with_desc: Vec<(Node, String)>) -> Self {
         Self {
             id: self.id,
-            nodes: self.nodes.clone().into_iter().chain(nodes.clone()).collect(),
-            removed_nodes: self.removed_nodes,
+            nodes: self
+                .nodes
+                .clone()
+                .into_iter()
+                .chain(nodes_to_add_with_desc.iter().map(|(n, _)| n.clone()))
+                .collect(),
+            added_nodes_desc: nodes_to_add_with_desc.clone(),
+            removed_nodes_desc: self.removed_nodes_desc,
             min_nakamoto_coefficients: self.min_nakamoto_coefficients.clone(),
             comment: self.comment,
             run_log: {
-                if nodes.is_empty() {
+                if nodes_to_add_with_desc.is_empty() {
                     self.run_log
                 } else {
                     let mut run_log = self.run_log;
-                    run_log.push(format!("Force-including nodes {:?}", nodes.iter().map(|n| n.id).collect::<Vec<_>>()));
+                    run_log.push(format!(
+                        "Including user-provided nodes {:?}",
+                        nodes_to_add_with_desc
+                            .iter()
+                            .map(|(n, desc)| format!("{}:{}", n, desc))
+                            .collect::<Vec<_>>()
+                    ));
                     run_log
                 }
             },
@@ -516,6 +530,7 @@ impl DecentralizedSubnet {
         let mut available_nodes = available_nodes.to_vec();
         let orig_available_nodes_len = &available_nodes.len();
         let mut nodes_after_extension = self.nodes.clone();
+        let mut added_nodes = Vec::new();
         let mut comment = None;
         let mut total_penalty = 0;
         let mut business_rules_log: Vec<String> = Vec::new();
@@ -546,6 +561,11 @@ impl DecentralizedSubnet {
                             .collect::<Vec<String>>(),
                     );
                     run_log.push(format!("Nakamoto score after extension {}", best_result.score));
+                    let nakamoto_score_before = NakamotoScore::new_from_nodes(&nodes_initial);
+                    added_nodes.push((
+                        best_result.node.clone(),
+                        best_result.score.describe_difference_from(&nakamoto_score_before).1,
+                    ));
                     available_nodes.retain(|n| n.id != best_result.node.id);
                     nodes_after_extension.push(best_result.node.clone());
                     nodes_initial.push(best_result.node.clone());
@@ -582,7 +602,8 @@ impl DecentralizedSubnet {
         Ok(Self {
             id: self.id,
             nodes: nodes_after_extension,
-            removed_nodes: self.removed_nodes,
+            added_nodes_desc: added_nodes,
+            removed_nodes_desc: self.removed_nodes_desc,
             min_nakamoto_coefficients: self.min_nakamoto_coefficients,
             comment,
             run_log,
@@ -625,7 +646,11 @@ impl DecentralizedSubnet {
                             .collect::<Vec<String>>(),
                     );
                     run_log.push(format!("Nakamoto score after removal {}", best_result.score));
-                    self.removed_nodes.push(best_result.node.clone());
+                    let nakamoto_score_before = NakamotoScore::new_from_nodes(&self.nodes);
+                    self.removed_nodes_desc.push((
+                        best_result.node.clone(),
+                        best_result.score.describe_difference_from(&nakamoto_score_before).1,
+                    ));
                     self.nodes.retain(|n| n.id != best_result.node.id);
                     total_penalty += best_result.penalty;
                     business_rules_log.extend(
@@ -661,7 +686,8 @@ impl DecentralizedSubnet {
         Ok(Self {
             id: self.id,
             nodes: self.nodes.clone(),
-            removed_nodes: self.removed_nodes,
+            added_nodes_desc: self.added_nodes_desc,
+            removed_nodes_desc: self.removed_nodes_desc,
             min_nakamoto_coefficients: self.min_nakamoto_coefficients,
             comment,
             run_log,
@@ -710,7 +736,8 @@ impl From<&ic_management_types::Subnet> for DecentralizedSubnet {
         Self {
             id: s.principal,
             nodes: s.nodes.iter().map(Node::from).collect(),
-            removed_nodes: Vec::new(),
+            added_nodes_desc: Vec::new(),
+            removed_nodes_desc: Vec::new(),
             min_nakamoto_coefficients: None,
             comment: None,
             run_log: Vec::new(),
@@ -787,7 +814,7 @@ pub trait TopologyManager: SubnetQuerier + AvailableNodesQuerier {
         .including_from_available(include_nodes.clone())
         .excluding_from_available(exclude_nodes.clone())
         .including_from_available(only_nodes.clone())
-        .resize(size, 0)
+        .resize(size, 0, 0)
     }
 }
 
@@ -920,10 +947,14 @@ impl SubnetChangeRequest {
 
     /// Optimize is implemented by removing a certain number of nodes and then
     /// adding the same number back.
-    pub fn optimize(mut self, optimize_count: usize, replacements_unhealthy: &[Node]) -> Result<SubnetChange, NetworkError> {
+    pub fn optimize(mut self, optimize_count: usize, replacements_unhealthy_with_desc: &[(Node, String)]) -> Result<SubnetChange, NetworkError> {
         let old_nodes = self.subnet.nodes.clone();
-        self.subnet = self.subnet.without_nodes(replacements_unhealthy.to_owned())?;
-        let result = self.resize(optimize_count + replacements_unhealthy.len(), optimize_count)?;
+        self.subnet = self.subnet.without_nodes(replacements_unhealthy_with_desc.to_owned())?;
+        let result = self.resize(
+            optimize_count + replacements_unhealthy_with_desc.len(),
+            optimize_count,
+            replacements_unhealthy_with_desc.len(),
+        )?;
         Ok(SubnetChange { old_nodes, ..result })
     }
 
@@ -936,19 +967,25 @@ impl SubnetChangeRequest {
             .filter(|n| !self.nodes_to_keep.contains(n))
             .cloned()
             .collect_vec();
-        self.subnet = self.subnet.without_nodes(nodes_to_remove)?;
+        self.subnet = self.subnet.without_nodes(
+            nodes_to_remove
+                .into_iter()
+                .map(|n| (n, "Recovering unhealthy subnet".to_string()))
+                .collect(),
+        )?;
 
         info!("Nodes left in the subnet:\n{:#?}", &self.subnet.nodes);
-        let result = self.resize(self.subnet.removed_nodes.len(), 0)?;
+        let result = self.resize(self.subnet.removed_nodes_desc.len(), 0, self.subnet.removed_nodes_desc.len())?;
         Ok(SubnetChange { old_nodes, ..result })
     }
 
     /// Add or remove nodes from the subnet.
-    pub fn resize(&self, how_many_nodes_to_add: usize, how_many_nodes_to_remove: usize) -> Result<SubnetChange, NetworkError> {
-        println!(
-            "Resizing subnet {} by adding {} nodes and removing {} nodes",
-            self.subnet.id, how_many_nodes_to_add, how_many_nodes_to_remove
-        );
+    pub fn resize(
+        &self,
+        how_many_nodes_to_add: usize,
+        how_many_nodes_to_remove: usize,
+        how_many_nodes_unhealthy: usize,
+    ) -> Result<SubnetChange, NetworkError> {
         let old_nodes = self.subnet.nodes.clone();
 
         let available_nodes = self
@@ -958,12 +995,24 @@ impl SubnetChangeRequest {
             .filter(|n| !self.include_nodes.contains(n))
             .collect::<Vec<_>>();
 
-        println!("available {}", available_nodes.len());
+        info!(
+            "Resizing subnet {} by adding {} nodes and removing {} (+{} unhealthy) nodes. Available {} healthy nodes.",
+            self.subnet.id,
+            how_many_nodes_to_add,
+            how_many_nodes_to_remove,
+            how_many_nodes_unhealthy,
+            available_nodes.len()
+        );
 
         let resized_subnet = self
             .subnet
             .clone()
-            .with_nodes(self.include_nodes.clone())
+            .with_nodes(
+                self.include_nodes
+                    .iter()
+                    .map(|n| (n.clone(), "included as per user request".to_string()))
+                    .collect(),
+            )
             .with_min_nakamoto_coefficients(&self.min_nakamoto_coefficients)
             .subnet_with_more_nodes(how_many_nodes_to_add, &available_nodes)
             .map_err(|e| NetworkError::ResizeFailed(e.to_string()))?;
@@ -980,16 +1029,12 @@ impl SubnetChangeRequest {
             id: self.subnet.id,
             old_nodes,
             new_nodes: resized_subnet.nodes,
+            removed_nodes_desc: resized_subnet.removed_nodes_desc,
+            added_nodes_desc: resized_subnet.added_nodes_desc,
             min_nakamoto_coefficients: self.min_nakamoto_coefficients.clone(),
             comment: resized_subnet.comment,
             run_log: resized_subnet.run_log,
         };
-        let node_add_count = subnet_change.added().len();
-        let node_remove_count = subnet_change.removed().len();
-        info!(
-            "Subnet {} resized, {} nodes added, {} nodes removed",
-            self.subnet.id, node_add_count, node_remove_count
-        );
         Ok(subnet_change)
     }
 
@@ -997,7 +1042,7 @@ impl SubnetChangeRequest {
     /// change. Command returns all the information about the subnet before
     /// and after the change.
     pub fn evaluate(self) -> Result<SubnetChange, NetworkError> {
-        self.resize(0, 0)
+        self.resize(0, 0, 0)
     }
 }
 
@@ -1006,36 +1051,43 @@ pub struct SubnetChange {
     pub id: PrincipalId,
     pub old_nodes: Vec<Node>,
     pub new_nodes: Vec<Node>,
+    pub removed_nodes_desc: Vec<(Node, String)>,
+    pub added_nodes_desc: Vec<(Node, String)>,
     pub min_nakamoto_coefficients: Option<MinNakamotoCoefficients>,
     pub comment: Option<String>,
     pub run_log: Vec<String>,
 }
 
 impl SubnetChange {
-    pub fn with_nodes(self, nodes: Vec<Node>) -> Self {
+    pub fn with_nodes(self, nodes_to_add_with_desc: Vec<(Node, String)>) -> Self {
+        let nodes_to_add: AHashSet<_> = nodes_to_add_with_desc.iter().map(|(n, _)| n).collect();
         Self {
-            new_nodes: [self.new_nodes, nodes].concat(),
+            new_nodes: [self.new_nodes, nodes_to_add.into_iter().cloned().collect_vec()].concat(),
+            added_nodes_desc: nodes_to_add_with_desc,
             ..self
         }
     }
-    pub fn without_nodes(mut self, nodes: Vec<Node>) -> Self {
-        self.new_nodes.retain(|n| !nodes.contains(n));
+    pub fn without_nodes(mut self, nodes_to_remove_with_desc: Vec<(Node, String)>) -> Self {
+        let nodes_to_rm: AHashSet<_> = nodes_to_remove_with_desc.iter().map(|(n, _)| n).collect();
+        self.removed_nodes_desc.extend(nodes_to_remove_with_desc.clone());
+        self.new_nodes.retain(|n| !nodes_to_rm.contains(n));
         self
     }
 
-    pub fn added(&self) -> Vec<Node> {
-        self.new_nodes.clone().into_iter().filter(|n| !self.old_nodes.contains(n)).collect()
+    pub fn added(&self) -> Vec<(Node, String)> {
+        self.added_nodes_desc.clone()
     }
 
-    pub fn removed(&self) -> Vec<Node> {
-        self.old_nodes.clone().into_iter().filter(|n| !self.new_nodes.contains(n)).collect()
+    pub fn removed(&self) -> Vec<(Node, String)> {
+        self.removed_nodes_desc.clone()
     }
 
     pub fn before(&self) -> DecentralizedSubnet {
         DecentralizedSubnet {
             id: self.id,
             nodes: self.old_nodes.clone(),
-            removed_nodes: Vec::new(),
+            added_nodes_desc: Vec::new(),
+            removed_nodes_desc: Vec::new(),
             min_nakamoto_coefficients: self.min_nakamoto_coefficients.clone(),
             comment: self.comment.clone(),
             run_log: Vec::new(),
@@ -1046,7 +1098,8 @@ impl SubnetChange {
         DecentralizedSubnet {
             id: self.id,
             nodes: self.new_nodes.clone(),
-            removed_nodes: self.old_nodes.clone().into_iter().filter(|n| !self.new_nodes.contains(n)).collect(),
+            added_nodes_desc: self.added_nodes_desc.clone(),
+            removed_nodes_desc: self.removed_nodes_desc.clone(),
             min_nakamoto_coefficients: self.min_nakamoto_coefficients.clone(),
             comment: self.comment.clone(),
             run_log: self.run_log.clone(),
@@ -1105,8 +1158,7 @@ impl NetworkHealRequest {
         healths: BTreeMap<PrincipalId, Status>,
     ) -> Result<Vec<SubnetChangeResponse>, NetworkError> {
         let mut subnets_changed = Vec::new();
-        let mut motivations = Vec::new();
-        let subnets_to_heal = unhealthy_with_nodes(&self.subnets, healths)
+        let subnets_to_heal = unhealthy_with_nodes(&self.subnets, &healths)
             .await
             .iter()
             .flat_map(|(id, unhealthy_nodes)| {
@@ -1127,8 +1179,6 @@ impl NetworkHealRequest {
             // From those 1/2 are added and 1/2 removed -> nodes_in_subnet/3 * 1/2 = nodes_in_subnet/6
             let max_replaceable_nodes = subnet.decentralized_subnet.nodes.len() / 6;
 
-            println!("optimize: {}", max_replaceable_nodes);
-
             let unhealthy_nodes = if subnet.unhealthy_nodes.len() > max_replaceable_nodes {
                 let unhealthy_nodes = subnet.unhealthy_nodes.into_iter().take(max_replaceable_nodes).collect_vec();
                 warn!(
@@ -1141,34 +1191,113 @@ impl NetworkHealRequest {
                 unhealthy_nodes
             } else {
                 info!(
-                    "Subnet {}: replacing {} unhealthy nodes: {:?}\nOptimizing {} nodes",
+                    "Subnet {}: replacing {} unhealthy nodes: {:?}, and optimizing {} nodes. Max safely replaceable nodes based on subnet size: {}",
                     subnet.decentralized_subnet.id,
                     subnet.unhealthy_nodes.len(),
-                    subnet.unhealthy_nodes.iter().map(|node| node.id).collect_vec(),
-                    max_replaceable_nodes - subnet.unhealthy_nodes.len()
+                    subnet
+                        .unhealthy_nodes
+                        .iter()
+                        .map(|node| node.id.to_string().split('-').next().unwrap().to_string())
+                        .collect_vec(),
+                    max_replaceable_nodes - subnet.unhealthy_nodes.len(),
+                    max_replaceable_nodes
                 );
                 subnet.unhealthy_nodes
             };
             let unhealthy_nodes_len = unhealthy_nodes.len();
             let optimize_limit = max_replaceable_nodes - unhealthy_nodes_len;
-            let change = SubnetChangeRequest {
+            let change_req = SubnetChangeRequest {
                 subnet: subnet.decentralized_subnet.clone(),
                 available_nodes: available_nodes.clone(),
                 ..Default::default()
             };
-            let change = change.optimize(optimize_limit, &unhealthy_nodes)?;
 
-            let replace_target = if unhealthy_nodes_len == 1 { "node" } else { "nodes" };
-            motivations.push(format!("replacing {unhealthy_nodes_len} unhealthy {replace_target}"));
-            let num_optimized = change.removed().len() - unhealthy_nodes_len;
-            if num_optimized > 0 {
-                let replace_target = if num_optimized == 1 { "node" } else { "nodes" };
-                motivations.push(format!("replacing {num_optimized} {replace_target} to improve subnet decentralization"));
+            // Try to replace 0 to optimize_limit nodes to optimize the network,
+            // and choose the change with the highest Nakamoto coefficient
+            let changes = (0..=optimize_limit)
+                .filter_map(|num_nodes_to_optimize| {
+                    change_req
+                        .clone()
+                        .optimize(
+                            num_nodes_to_optimize,
+                            &unhealthy_nodes
+                                .iter()
+                                .map(|node| {
+                                    (
+                                        node.clone(),
+                                        healths
+                                            .get(&node.id)
+                                            .map(|s| format!("health: {}", s.to_string().to_lowercase()))
+                                            .unwrap_or("health: Unknown".to_string()),
+                                    )
+                                })
+                                .collect::<Vec<_>>(),
+                        )
+                        .map_err(|e| warn!("{}", e))
+                        .ok()
+                })
+                .map(|change| SubnetChangeResponse::from(&change))
+                .collect::<Vec<_>>();
+
+            if changes.is_empty() {
+                warn!("No suitable changes found for subnet {}", subnet.decentralized_subnet.id);
+                continue;
+            }
+            for change in &changes {
+                info!(
+                    "Replacing {} nodes in subnet {} gives Nakamoto coefficient: {}\n",
+                    change.removed_with_desc.len(),
+                    subnet.decentralized_subnet.id,
+                    change.score_after
+                );
+            }
+            let changes_max_score = changes
+                .iter()
+                .max_by_key(|change| change.score_after.clone())
+                .expect("Failed to find a replacement with the highest Nakamoto coefficient");
+            let change = changes
+                .iter()
+                .find(|change| change.score_after == changes_max_score.score_after)
+                .expect("No suitable changes found");
+            // TODO: consider adding this (or similar) to the proposal summary message
+            // i.e. why are we replacing 2 instead of 1 node?
+            info!(
+                "Selected the change with {} nodes removed and {} nodes added. Select reason: {}",
+                change.removed_with_desc.len(),
+                change.added_with_desc.len(),
+                change
+                    .score_after
+                    .describe_difference_from(&NakamotoScore::new_from_nodes(&subnet.decentralized_subnet.nodes))
+                    .1
+            );
+
+            let mut motivations: Vec<String> = Vec::new();
+
+            for node in unhealthy_nodes.iter() {
+                motivations.push(format!(
+                    "replacing {} node {}",
+                    healths
+                        .get(&node.id)
+                        .map(|s| s.to_string().to_lowercase())
+                        .unwrap_or("unhealthy".to_string()),
+                    node.id
+                ));
             }
 
-            available_nodes.retain(|node| !change.added().contains(node));
-            subnets_changed.push(SubnetChangeResponse::from(&change).with_motivation(motivations.join("; ")));
-            motivations.clear();
+            let unhealthy_nodes_ids = unhealthy_nodes.iter().map(|node| node.id).collect::<HashSet<_>>();
+            for (node, _desc) in change.removed_with_desc.iter().filter(|(n, _)| !unhealthy_nodes_ids.contains(n)) {
+                motivations.push(format!("replacing node {} to optimize network topology", node));
+            }
+
+            let nodes_added = change.added_with_desc.iter().map(|(node_id, _)| node_id).collect::<HashSet<_>>();
+            available_nodes.retain(|node| !nodes_added.contains(&node.id));
+            // TODO: Add instructions for independent verification of the decentralization changes
+            let motivation = format!(
+                "\n{}\n\nNOTE: The information below is provided for your convenience. Please independently verify the decentralization changes rather than relying solely on this summary.\nCode for calculating replacements is at https://github.com/dfinity/dre/blob/79066127f58c852eaf4adda11610e815a426878c/rs/decentralization/src/network.rs#L912\n\n```\n{}\n```\n",
+                motivations.iter().map(|s| format!(" - {}", s)).collect::<Vec<String>>().join("\n"),
+                change
+            );
+            subnets_changed.push(change.clone().with_motivation(motivation));
         }
 
         Ok(subnets_changed)

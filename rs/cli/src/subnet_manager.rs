@@ -1,4 +1,5 @@
 use core::fmt;
+use std::collections::HashSet;
 use std::rc::Rc;
 
 use anyhow::anyhow;
@@ -12,7 +13,6 @@ use ic_management_backend::lazy_registry::LazyRegistry;
 use ic_management_types::MinNakamotoCoefficients;
 use ic_management_types::Network;
 use ic_types::PrincipalId;
-use itertools::Itertools;
 use log::{info, warn};
 
 #[derive(Clone)]
@@ -63,7 +63,7 @@ impl SubnetManager {
             .ok_or_else(|| anyhow!(SubnetManagerError::SubnetTargetNotProvided))
     }
 
-    async fn unhealthy_nodes(&self, subnet: DecentralizedSubnet) -> anyhow::Result<Vec<DecentralizedNode>> {
+    async fn unhealthy_nodes(&self, subnet: DecentralizedSubnet) -> anyhow::Result<Vec<(DecentralizedNode, ic_management_types::Status)>> {
         let health_client = health::HealthClient::new(self.network.clone());
         let subnet_health = health_client.subnet(subnet.id).await?;
 
@@ -76,12 +76,12 @@ impl SubnetManager {
                         None
                     } else {
                         info!("Node {} is {:?}", n.id, health);
-                        Some(n)
+                        Some((n, health.clone()))
                     }
                 }
                 None => {
                     warn!("Node {} has no known health, assuming unhealthy", n.id);
-                    Some(n)
+                    Some((n, ic_management_types::Status::Unknown))
                 }
             })
             .collect::<Vec<_>>();
@@ -119,8 +119,8 @@ impl SubnetManager {
     ) -> anyhow::Result<SubnetChangeResponse> {
         let subnet_query_by = self.get_subnet_query_by(self.target()?).await?;
         let mut motivations: Vec<String> = if let Some(motivation) = motivation { vec![motivation] } else { vec![] };
-        let mut to_be_replaced: Vec<DecentralizedNode> = if let SubnetQueryBy::NodeList(nodes) = &subnet_query_by {
-            nodes.clone()
+        let mut to_be_replaced: Vec<(DecentralizedNode, String)> = if let SubnetQueryBy::NodeList(nodes) = &subnet_query_by {
+            nodes.iter().map(|n| (n.clone(), "as per user request".to_string())).collect()
         } else {
             vec![]
         };
@@ -134,39 +134,36 @@ impl SubnetManager {
             .including_from_available(include.clone().unwrap_or_default())
             .with_min_nakamoto_coefficients(min_nakamoto_coefficients.clone());
 
+        let mut node_ids_unhealthy = HashSet::new();
         if heal {
             let subnet_unhealthy = self.unhealthy_nodes(subnet_change_request.subnet()).await?;
             let subnet_unhealthy_without_included = subnet_unhealthy
                 .into_iter()
-                .filter(|n| !include.as_ref().unwrap_or(&vec![]).contains(&n.id))
+                .filter(|(n, _)| !include.as_ref().unwrap_or(&vec![]).contains(&n.id))
+                .map(|(n, s)| (n, s.to_string().to_lowercase()))
                 .collect::<Vec<_>>();
 
-            to_be_replaced.extend(subnet_unhealthy_without_included);
-
-            let without_specified = to_be_replaced
-                .iter()
-                .filter(|n| match &subnet_query_by {
-                    SubnetQueryBy::NodeList(nodes) => !nodes.contains(n),
-                    _ => true,
-                })
-                .collect_vec();
-
-            if !without_specified.is_empty() {
-                let num_unhealthy = without_specified.len();
-                let replace_target = if num_unhealthy == 1 { "node" } else { "nodes" };
-                motivations.push(format!("replacing {num_unhealthy} unhealthy {replace_target}"));
+            for (n, reason) in subnet_unhealthy_without_included.iter() {
+                motivations.push(format!("replacing {reason} node {}", n.id));
+                node_ids_unhealthy.insert(n.id);
             }
+
+            to_be_replaced.extend(subnet_unhealthy_without_included);
         }
 
         let change = subnet_change_request.optimize(optimize.unwrap_or(0), &to_be_replaced)?;
-        let num_optimized = change.removed().len() - to_be_replaced.len();
 
-        if num_optimized > 0 {
-            let replace_target = if num_optimized == 1 { "node" } else { "nodes" };
-            motivations.push(format!("replacing {num_optimized} {replace_target} to improve subnet decentralization"));
+        for (n, _) in change.removed().iter().filter(|(n, _)| !node_ids_unhealthy.contains(&n.id)) {
+            motivations.push(format!("replacing {} to optimize network topology", n.id));
         }
 
-        let change = SubnetChangeResponse::from(&change).with_motivation(motivations.join("; "));
+        let motivation = format!(
+                "\n{}\n\nNOTE: The information below is provided for your convenience. Please independently verify the decentralization changes rather than relying solely on this summary.\nCode for calculating replacements is at https://github.com/dfinity/dre/blob/79066127f58c852eaf4adda11610e815a426878c/rs/decentralization/src/network.rs#L912\n\n```\n{}\n```\n",
+                motivations.iter().map(|s| format!(" - {}", s)).collect::<Vec<String>>().join("\n"),
+                change
+            );
+
+        let change = SubnetChangeResponse::from(&change).with_motivation(motivation);
 
         Ok(change)
     }
