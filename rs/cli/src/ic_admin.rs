@@ -756,7 +756,7 @@ pub struct ProposeOptions {
     pub summary: Option<String>,
     pub motivation: Option<String>,
 }
-const DEFAULT_IC_ADMIN_VERSION: &str = "7dee90107a88b836fc72e78993913988f4f73ca2";
+const DEFAULT_IC_ADMIN_VERSION: &str = "b4ccc86f84d6d6ffcd74eab706b0a0fed1607a46";
 
 fn get_ic_admin_revisions_dir() -> anyhow::Result<PathBuf> {
     let dir = dirs::home_dir()

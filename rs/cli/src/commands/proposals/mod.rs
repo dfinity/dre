@@ -8,10 +8,8 @@ use ic_nervous_system_root::change_canister::{AddCanisterRequest, ChangeCanister
 use ic_nns_common::types::UpdateIcpXdrConversionRatePayload;
 
 use cycles_minting_canister::SetAuthorizedSubnetworkListArgs;
-use ic_nns_governance::{
-    governance::{BitcoinSetConfigProposal, SubnetRentalRequest},
-    pb::v1::{proposal::Action, ProposalInfo, ProposalStatus, Topic},
-};
+use ic_nns_governance::pb::v1::{proposal::Action, ProposalInfo, ProposalStatus, Topic};
+use ic_nns_governance_api::{bitcoin::BitcoinSetConfigProposal, subnet_rental::SubnetRentalRequest};
 use ic_protobuf::registry::{
     dc::v1::AddOrRemoveDataCentersProposalPayload, node_operator::v1::RemoveNodeOperatorsPayload,
     node_rewards::v2::UpdateNodeRewardsTableProposalPayload,
@@ -274,6 +272,9 @@ impl TryFrom<ProposalInfo> for Proposal {
                 Action::SetSnsTokenSwapOpenTimeWindow(a) => serde_json::to_value(a)?,
                 Action::OpenSnsTokenSwap(a) => serde_json::to_value(a)?,
                 Action::CreateServiceNervousSystem(a) => serde_json::to_value(a)?,
+                Action::InstallCode(a) => serde_json::to_value(a)?,
+                Action::StopOrStartCanister(a) => serde_json::to_value(a)?,
+                Action::UpdateCanisterSettings(a) => serde_json::to_value(a)?,
             },
         })
     }
