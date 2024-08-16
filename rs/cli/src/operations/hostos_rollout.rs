@@ -4,7 +4,7 @@ use futures_util::future::try_join;
 use ic_base_types::{NodeId, PrincipalId};
 use ic_management_backend::health::{self, HealthStatusQuerier};
 use ic_management_backend::proposal::ProposalAgent;
-use ic_management_types::{Network, Node, Status, Subnet, UpdateNodesHostosVersionsProposal};
+use ic_management_types::{Network, Node, HealthStatus, Subnet, UpdateNodesHostosVersionsProposal};
 use log::{debug, info, warn};
 use std::sync::Arc;
 use std::{collections::BTreeMap, fmt::Display, str::FromStr};
@@ -219,12 +219,12 @@ impl HostosRollout {
             .collect()
     }
 
-    async fn nodes_by_status(&self, nodes: Vec<Node>, nodes_health: BTreeMap<PrincipalId, Status>) -> BTreeMap<Status, Vec<Node>> {
+    async fn nodes_by_status(&self, nodes: Vec<Node>, nodes_health: BTreeMap<PrincipalId, HealthStatus>) -> BTreeMap<HealthStatus, Vec<Node>> {
         let nodes_by_status = nodes
             .iter()
             .cloned()
-            .map(|node| (nodes_health.get(&node.principal).cloned().unwrap_or(Status::Unknown), node))
-            .fold(BTreeMap::new(), |mut acc: BTreeMap<Status, Vec<Node>>, (status, node)| {
+            .map(|node| (nodes_health.get(&node.principal).cloned().unwrap_or(HealthStatus::Unknown), node))
+            .fold(BTreeMap::new(), |mut acc: BTreeMap<HealthStatus, Vec<Node>>, (status, node)| {
                 acc.entry(status).or_default().push(node);
                 acc
             });
@@ -325,14 +325,14 @@ impl HostosRollout {
 
     async fn candidates_selection(
         &self,
-        nodes_health: BTreeMap<PrincipalId, Status>,
+        nodes_health: BTreeMap<PrincipalId, HealthStatus>,
         nodes_with_open_proposals: Vec<UpdateNodesHostosVersionsProposal>,
         nodes_in_group: Vec<Node>,
     ) -> anyhow::Result<CandidatesSelection> {
         let nodes_by_status = self.nodes_by_status(nodes_in_group.clone(), nodes_health).await;
         info!("Fetched {} nodes by status", nodes_by_status.values().flatten().count());
 
-        let nodes = nodes_by_status.get(&Status::Healthy).cloned().unwrap_or_default();
+        let nodes = nodes_by_status.get(&HealthStatus::Healthy).cloned().unwrap_or_default();
         info!("Found {} healthy nodes", nodes.len());
         if nodes.is_empty() {
             return Ok(CandidatesSelection::None(HostosRolloutReason::NoNodeHealthy));
@@ -363,7 +363,7 @@ impl HostosRollout {
     #[async_recursion]
     async fn with_nodes_health_and_open_proposals(
         &self,
-        nodes_health: BTreeMap<PrincipalId, Status>,
+        nodes_health: BTreeMap<PrincipalId, HealthStatus>,
         nodes_with_open_proposals: Vec<UpdateNodesHostosVersionsProposal>,
         update_group: NodeGroupUpdate,
     ) -> anyhow::Result<HostosRolloutResponse> {
@@ -372,7 +372,7 @@ impl HostosRollout {
             nodes_health
                 .iter()
                 .filter_map(|(principal, status)| {
-                    if *status == Status::Healthy {
+                    if *status == HealthStatus::Healthy {
                         Some(principal)
                     } else {
                         None
@@ -497,7 +497,7 @@ impl HostosRollout {
         let nodes_on_the_new_version = self.nodes_updated_to_the_new_version().await;
         let unhealthy_nodes_on_the_new_version = nodes_on_the_new_version
             .iter()
-            .filter(|n| nodes_health.get(&n.principal).cloned().unwrap_or(Status::Unknown) != Status::Healthy)
+            .filter(|n| nodes_health.get(&n.principal).cloned().unwrap_or(HealthStatus::Unknown) != HealthStatus::Healthy)
             .cloned()
             .collect::<Vec<_>>();
 
@@ -514,7 +514,7 @@ impl HostosRollout {
                     .map(|node| format!(
                         "{}: {:?} DC {} ({}) Node Provider {}",
                         node.principal,
-                        nodes_health.get(&node.principal).cloned().unwrap_or(Status::Unknown),
+                        nodes_health.get(&node.principal).cloned().unwrap_or(HealthStatus::Unknown),
                         node.operator.datacenter.as_ref().map(|dc| dc.name.as_str()).unwrap_or("-"),
                         node.label.as_deref().unwrap_or("-"),
                         node.operator.provider.name.as_deref().unwrap_or("-"),
@@ -573,8 +573,8 @@ pub mod test {
         let healthy_nodes = union
             .keys()
             .cloned()
-            .map(|principal| (principal, Status::Healthy))
-            .collect::<BTreeMap<PrincipalId, Status>>();
+            .map(|principal| (principal, HealthStatus::Healthy))
+            .collect::<BTreeMap<PrincipalId, HealthStatus>>();
 
         let open_proposals: Vec<UpdateNodesHostosVersionsProposal> = vec![];
 

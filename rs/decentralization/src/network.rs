@@ -6,7 +6,7 @@ use actix_web::{HttpResponse, ResponseError};
 use ahash::{AHashSet, HashSet};
 use anyhow::anyhow;
 use ic_base_types::PrincipalId;
-use ic_management_types::{MinNakamotoCoefficients, NetworkError, NodeFeature, Status};
+use ic_management_types::{MinNakamotoCoefficients, NetworkError, NodeFeature, HealthStatus};
 use itertools::Itertools;
 use log::{debug, info, warn};
 use rand::{seq::SliceRandom, SeedableRng};
@@ -173,6 +173,9 @@ impl DecentralizedSubnet {
         }
         let removed_is_empty = removed.is_empty();
         let removed_node_ids = removed.iter().map(|(n, _)| n.id).collect::<Vec<_>>();
+        if !removed_is_empty {
+            assert!(new_subnet_nodes.len() < self.nodes.len());
+        }
         Ok(Self {
             id: self.id,
             nodes: new_subnet_nodes,
@@ -195,14 +198,18 @@ impl DecentralizedSubnet {
     /// Return a new instance of a DecentralizedSubnet that contains the
     /// provided nodes.
     pub fn with_nodes(self, nodes_to_add_with_desc: Vec<(Node, String)>) -> Self {
+        let new_subnet_nodes: Vec<Node> = self
+            .nodes
+            .clone()
+            .into_iter()
+            .chain(nodes_to_add_with_desc.iter().map(|(n, _)| n.clone()))
+            .collect();
+        if !nodes_to_add_with_desc.is_empty() {
+            assert!(new_subnet_nodes.len() > self.nodes.len());
+        }
         Self {
             id: self.id,
-            nodes: self
-                .nodes
-                .clone()
-                .into_iter()
-                .chain(nodes_to_add_with_desc.iter().map(|(n, _)| n.clone()))
-                .collect(),
+            nodes: new_subnet_nodes,
             added_nodes_desc: nodes_to_add_with_desc.clone(),
             removed_nodes_desc: self.removed_nodes_desc,
             min_nakamoto_coefficients: self.min_nakamoto_coefficients.clone(),
@@ -1159,7 +1166,7 @@ impl NetworkHealRequest {
     pub async fn heal_and_optimize(
         &self,
         mut available_nodes: Vec<Node>,
-        healths: BTreeMap<PrincipalId, Status>,
+        healths: BTreeMap<PrincipalId, HealthStatus>,
     ) -> Result<Vec<SubnetChangeResponse>, NetworkError> {
         let mut subnets_changed = Vec::new();
         let subnets_to_heal = unhealthy_with_nodes(&self.subnets, &healths)

@@ -11,7 +11,7 @@ use ic_management_backend::{
     lazy_registry::{LazyRegistry, LazyRegistryFamilyEntries},
     public_dashboard::query_ic_dashboard_list,
 };
-use ic_management_types::{Network, NodeProvidersResponse, Status};
+use ic_management_types::{Network, NodeProvidersResponse, HealthStatus};
 use ic_protobuf::registry::{
     api_boundary_node::v1::ApiBoundaryNodeRecord,
     dc::v1::DataCenterRecord,
@@ -115,7 +115,7 @@ impl Registry {
             node_operator.total_up_nodes = nodes
                 .iter()
                 .filter(|n| {
-                    n.node_operator_id == node_operator.node_operator_principal_id && (n.status == Status::Healthy || n.status == Status::Degraded)
+                    n.node_operator_id == node_operator.node_operator_principal_id && (n.status == HealthStatus::Healthy || n.status == HealthStatus::Degraded)
                 })
                 .count() as u32;
 
@@ -298,7 +298,7 @@ async fn get_nodes(
                     Some(no) => no.dc_id.clone(),
                     None => "".to_string(),
                 },
-                status: nodes_health.get(&node_id).unwrap_or(&ic_management_types::Status::Unknown).clone(),
+                status: nodes_health.get(&node_id).unwrap_or(&ic_management_types::HealthStatus::Unknown).clone(),
             }
         })
         .collect::<Vec<_>>();
@@ -407,7 +407,7 @@ struct NodeDetails {
     subnet_id: Option<PrincipalId>,
     dc_id: String,
     node_provider_id: PrincipalId,
-    status: Status,
+    status: HealthStatus,
 }
 
 /// User-friendly representation of a SubnetRecord. For instance,
