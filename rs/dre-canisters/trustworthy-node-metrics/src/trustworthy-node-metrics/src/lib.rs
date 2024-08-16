@@ -111,14 +111,13 @@ fn node_rewards(args: NodeRewardsArgs) -> Vec<NodeRewardsResponse> {
     daily_metrics
         .into_iter()
         .map(|(node_id, daily_node_metrics)| {
-            let rewards_no_penalty = rewards_manager::rewards_no_penalty(&daily_node_metrics);
-            let rewards_with_penalty = rewards_manager::rewards_with_penalty(&daily_node_metrics);
+            let (rewards_percent, rewards_stats) = rewards_manager::compute_rewards_percent(&daily_node_metrics);
 
             NodeRewardsResponse {
                 node_id,
-                rewards_no_penalty,
-                rewards_with_penalty,
+                rewards_percent,
                 daily_node_metrics,
+                rewards_stats,
             }
         })
         .collect_vec()

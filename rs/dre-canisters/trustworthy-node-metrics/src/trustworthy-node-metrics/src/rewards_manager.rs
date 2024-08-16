@@ -1,4 +1,39 @@
-use trustworthy_node_metrics_types::types::DailyNodeMetrics;
+use trustworthy_node_metrics_types::types::{DailyNodeMetrics, RewardsStats};
+
+const MIN_FAILURE_RATE: f64 = 0.1;
+const MAX_FAILURE_RATE: f64 = 0.7;
+
+/// Calculates the rewards reduction based on the failure rate.
+///
+/// # Arguments
+///
+/// * `failure_rate` - A reference to a `f64` value representing the failure rate.
+///
+/// # Returns
+///
+/// * A `f64` value representing the rewards reduction, where:
+///   - `0.0` indicates no reduction (failure rate below the minimum threshold),
+///   - `1.0` indicates maximum reduction (failure rate above the maximum threshold),
+///   - A value between `0.0` and `1.0` represents a proportional reduction based on the failure rate.
+///
+/// # Explanation
+///
+/// 1. The function checks if the provided `failure_rate` is below the `MIN_FAILURE_RATE` -> no reduction in rewards.
+///
+/// 2. It then checks if the `failure_rate` is above the `MAX_FAILURE_RATE` -> maximum reduction in rewards.
+///
+/// 3. If the `failure_rate` is within the defined range (`MIN_FAILURE_RATE` to `MAX_FAILURE_RATE`),
+///    the function calculates the reduction proportionally:
+///    - The reduction is calculated by normalizing the `failure_rate` within the range, resulting in a value between `0.0` and `1.0`.
+fn rewards_reduction(failure_rate: &f64) -> f64 {
+    if failure_rate < &MIN_FAILURE_RATE {
+        0.0
+    } else if failure_rate > &MAX_FAILURE_RATE {
+        1.0
+    } else {
+        (failure_rate - MIN_FAILURE_RATE) / (MAX_FAILURE_RATE - MIN_FAILURE_RATE)
+    }
+}
 
 /// Computes the rewards percentage based on the daily reward reductions WITH consecutive days penalty.
 ///
@@ -21,6 +56,7 @@ use trustworthy_node_metrics_types::types::DailyNodeMetrics;
 ///
 /// 3. The overall reduction is calculated by dividing the total reduction (`reduction_sum`) by the number of active days.
 ///    The reduction is then normalized by ensuring it does not exceed 1.0.
+#[allow(dead_code)]
 pub fn rewards_with_penalty(daily_metrics: &[DailyNodeMetrics]) -> f64 {
     let active_days = daily_metrics.len();
     let mut reduction_sum = 0.0;
@@ -31,7 +67,7 @@ pub fn rewards_with_penalty(daily_metrics: &[DailyNodeMetrics]) -> f64 {
         // Just if we want to count the day unassigned as 0.0 reduction
         // we would need to check if previous daily metrics is <= 24hrs
         // before current metrics
-        let daily_reduction: f64 = metrics.rewards_reduction;
+        let daily_reduction: f64 = metrics.num_blocks_failed as f64 / (metrics.num_blocks_failed + metrics.num_blocks_proposed) as f64;
 
         if daily_reduction == 0.0 {
             if consecutive_count > 0 {
@@ -56,10 +92,9 @@ pub fn rewards_with_penalty(daily_metrics: &[DailyNodeMetrics]) -> f64 {
     ((1.0 - reduction_normalized) * 100.0).round() / 100.0
 }
 
-/// Rewards no penalty
+/// Compute rewards percent
 ///
-/// Computes the rewards percentage based on the daily reward reductions WITHOUT consecutive days penalty.
-/// `overall_reduction` is defined as the average of the daily reward reductions.
+/// Computes the rewards percentage based on the overall failure rate in the period.
 ///
 /// # Arguments
 ///
@@ -67,20 +102,41 @@ pub fn rewards_with_penalty(daily_metrics: &[DailyNodeMetrics]) -> f64 {
 ///
 /// # Returns
 ///
-/// * A `f64` value representing the rewards percentage after overall reductions, rounded to two decimal places.
+/// * A `f64` value representing the rewards percentage left after the rewards reduction, rounded to two decimal places.
 ///
 /// # Explanation
 ///
-/// 1. The function iterates through each day's metrics, summing up the `rewards_reduction` values across all days.
-/// 2. The `overall_reduction` is calculated by dividing the total `reduction_sum` by the number of active days.
-/// 3. Finally, the function calculates the rewards percentage without penalty by subtracting `overall_reduction` from 1.0,
-///    multiplying by 100, and rounding to two decimal places before returning the result.
-pub fn rewards_no_penalty(daily_metrics: &[DailyNodeMetrics]) -> f64 {
-    let active_days = daily_metrics.len();
-    let reduction_sum: f64 = daily_metrics.iter().map(|metrics| metrics.rewards_reduction).sum();
-    let overall_reduction = reduction_sum / (active_days as f64);
+/// 1. The function iterates through each day's metrics, summing up the `daily_failed` and `daily_total` blocks across all days.
+/// 2. The `overall_failure_rate` is calculated by dividing the `overall_failed` blocks by the `overall_total` blocks.
+/// 3. The `rewards_reduction` function is applied to `overall_failure_rate`.
+/// 3. Finally, the rewards percentage to be distrubuted to the node is computed.
+pub fn compute_rewards_percent(daily_metrics: &[DailyNodeMetrics]) -> (f64, RewardsStats) {
+    let (overall_failed, overall_proposed): (u64, u64) = daily_metrics
+        .iter()
+        .map(|metrics| {
+            let daily_failed = metrics.num_blocks_failed;
+            let daily_proposed = metrics.num_blocks_proposed;
 
-    ((1.0 - overall_reduction) * 100.0).round() / 100.0
+            (daily_failed, daily_proposed)
+        })
+        .fold((0, 0), |(failed_acc, total_acc), (failed, total)| {
+            (failed_acc + failed, total_acc + total)
+        });
+    let overall_total = overall_failed + overall_proposed;
+
+    let overall_failure_rate = overall_failed as f64 / overall_total as f64;
+    let rewards_reduction = rewards_reduction(&overall_failure_rate);
+    let rewards_percent = ((1.0 - rewards_reduction) * 100.0).round() / 100.0;
+
+    let rewards_stats = RewardsStats {
+        blocks_failed: overall_failed,
+        blocks_proposed: overall_proposed,
+        blocks_total: overall_total,
+        failure_rate: overall_failure_rate,
+        rewards_reduction,
+    };
+
+    (rewards_percent, rewards_stats)
 }
 
 #[cfg(test)]
@@ -123,97 +179,51 @@ mod tests {
     }
 
     #[test]
-    fn test_rewards_no_penalty() {
-        // Failure Rate = 40% Rewards reduction = 50%
-        // 0.5 * 5 days / 30 days = 0.08 -> Rewards 0.92
-        let daily_metrics: Vec<DailyNodeMetrics> = daily_mocked_metrics(vec![MockedMetrics::new(5, 6, 4), MockedMetrics::new(25, 10, 0)]);
-        let rewards = rewards_no_penalty(&daily_metrics);
-        assert_eq!(rewards, 0.92);
+    fn test_rewards_percent() {
+        // Overall failed = 130 Overall total = 500 Failure rate = 0.26
+        // rewards_reduction = 0.266
+        let daily_metrics: Vec<DailyNodeMetrics> = daily_mocked_metrics(vec![MockedMetrics::new(20, 6, 4), MockedMetrics::new(25, 10, 2)]);
+        let (rewards_percent, _) = compute_rewards_percent(&daily_metrics);
+        assert_eq!(rewards_percent, 0.73);
 
-        // Failure Rate = 40% Rewards reduction = 50%
-        // 0.5 / 2 days = 0.25 -> Rewards 0.75
+        // Overall failed = 45 Overall total = 450 Failure rate = 0.1
+        // rewards_reduction = 0.0
         let daily_metrics: Vec<DailyNodeMetrics> = daily_mocked_metrics(vec![
-            MockedMetrics::new(1, 6, 4),
-            MockedMetrics::new(1, 91, 9), // no penalty
+            MockedMetrics::new(1, 400, 20),
+            MockedMetrics::new(1, 5, 25), // no penalty
         ]);
-        let rewards = rewards_no_penalty(&daily_metrics);
-        assert_eq!(rewards, 0.75);
+        let (rewards_percent, _) = compute_rewards_percent(&daily_metrics);
+        assert_eq!(rewards_percent, 1.0);
 
-        // Failure Rate = 40% Rewards reduction = 50% 10 days
-        // Failure Rate = 30% Rewards reduction = 33%
-        // (0.5 * 10 + 0.33) / 11 = 0.48 Rewards 0.67
+        // Overall failed = 5 Overall total = 10 Failure rate = 0.5
+        // rewards_reduction = 0.666
         let daily_metrics: Vec<DailyNodeMetrics> = daily_mocked_metrics(vec![
-            MockedMetrics::new(1, 7, 3), // no penalty
+            MockedMetrics::new(1, 5, 5), // no penalty
         ]);
-        let rewards = rewards_no_penalty(&daily_metrics);
-        assert_eq!(rewards, 0.67);
+        let (rewards_percent, _) = compute_rewards_percent(&daily_metrics);
+        assert_eq!(rewards_percent, 0.33);
     }
 
     #[test]
-    fn test_rewards_with_penalty() {
-        // Failure Rate = 40% Rewards reduction = 50%
-        // 0.5 * 5^2 days / 30 days = 0.42 -> Rewards 0.58
-        let daily_metrics: Vec<DailyNodeMetrics> = daily_mocked_metrics(vec![MockedMetrics::new(5, 6, 4), MockedMetrics::new(25, 10, 0)]);
-        let rewards = rewards_with_penalty(&daily_metrics);
-        assert_eq!(rewards, 0.58);
-
-        // Failure Rate = 40% Rewards reduction = 50%
-        // 0.5 / 2 days = 0.25 -> Rewards 0.75
-        let daily_metrics: Vec<DailyNodeMetrics> = daily_mocked_metrics(vec![
-            MockedMetrics::new(1, 6, 4),
-            MockedMetrics::new(1, 91, 9), // no penalty
-        ]);
-        let rewards = rewards_no_penalty(&daily_metrics);
-        assert_eq!(rewards, 0.75);
-
-        // Failure Rate = 40% Rewards reduction = 50% 10 days
-        // Failure Rate = 30% Rewards reduction = 33%
-        // (0.5 * 10 + 0.33) / 11 -> Reduction 0.48 Rewards 0.67
-        let daily_metrics: Vec<DailyNodeMetrics> = daily_mocked_metrics(vec![
-            MockedMetrics::new(1, 7, 3), // no penalty
-        ]);
-        let rewards = rewards_no_penalty(&daily_metrics);
-        assert_eq!(rewards, 0.67);
-    }
-
-    #[test]
-    fn test_rewards_no_penalty_max_reduction() {
+    fn test_rewards_percent_max_reduction() {
         let daily_metrics: Vec<DailyNodeMetrics> = daily_mocked_metrics(vec![
             MockedMetrics::new(10, 5, 95), // max failure rate
         ]);
-        let rewards = rewards_no_penalty(&daily_metrics);
-        assert_eq!(rewards, 0.0);
+        let (rewards_percent, _) = compute_rewards_percent(&daily_metrics);
+        assert_eq!(rewards_percent, 0.0);
     }
 
     #[test]
-    fn test_rewards_with_penalty_max_reduction() {
-        let daily_metrics: Vec<DailyNodeMetrics> = daily_mocked_metrics(vec![
-            MockedMetrics::new(1, 9, 91), // max failure rate
-        ]);
-        let rewards = rewards_with_penalty(&daily_metrics);
-        assert_eq!(rewards, 0.0);
-    }
-
-    #[test]
-    fn test_rewards_no_penalty_min_reduction() {
+    fn test_rewards_percent_min_reduction() {
         let daily_metrics: Vec<DailyNodeMetrics> = daily_mocked_metrics(vec![
             MockedMetrics::new(10, 9, 1), // min failure rate
         ]);
-        let rewards = rewards_no_penalty(&daily_metrics);
-        assert_eq!(rewards, 1.0);
+        let (rewards_percent, _) = compute_rewards_percent(&daily_metrics);
+        assert_eq!(rewards_percent, 1.0);
     }
 
     #[test]
-    fn test_rewards_with_penalty_min_reduction() {
-        let daily_metrics: Vec<DailyNodeMetrics> = daily_mocked_metrics(vec![
-            MockedMetrics::new(10, 9, 1), // min failure rate
-        ]);
-        let rewards = rewards_no_penalty(&daily_metrics);
-        assert_eq!(rewards, 1.0);
-    }
-
-    #[test]
-    fn test_same_rewards_if_gaps_no_penalty() {
+    fn test_same_rewards_percent_if_gaps_no_penalty() {
         let gap = MockedMetrics::new(1, 10, 0);
 
         let daily_metrics_mid_gap: Vec<DailyNodeMetrics> =
@@ -225,23 +235,16 @@ mod tests {
         let daily_metrics_right_gap: Vec<DailyNodeMetrics> =
             daily_mocked_metrics(vec![gap.clone(), MockedMetrics::new(1, 6, 4), MockedMetrics::new(1, 7, 3)]);
 
-        assert_eq!(rewards_no_penalty(&daily_metrics_mid_gap), 0.72);
+        assert_eq!(compute_rewards_percent(&daily_metrics_mid_gap).0, 0.78);
 
-        assert_eq!(rewards_no_penalty(&daily_metrics_mid_gap), rewards_no_penalty(&daily_metrics_left_gap));
-        assert_eq!(rewards_no_penalty(&daily_metrics_right_gap), rewards_no_penalty(&daily_metrics_left_gap));
-    }
-
-    #[test]
-    fn test_less_rewards_if_consecutive_with_penalty() {
-        let gap = MockedMetrics::new(1, 10, 0);
-
-        let daily_metrics_no_gap: Vec<DailyNodeMetrics> = daily_mocked_metrics(vec![MockedMetrics::new(4, 8, 2)]);
-
-        let daily_metrics_with_gap: Vec<DailyNodeMetrics> = daily_mocked_metrics(vec![MockedMetrics::new(2, 8, 2), gap, MockedMetrics::new(2, 8, 2)]);
-
-        assert_eq!(rewards_with_penalty(&daily_metrics_no_gap), 0.33);
-
-        assert!(rewards_with_penalty(&daily_metrics_with_gap) > rewards_with_penalty(&daily_metrics_no_gap));
+        assert_eq!(
+            compute_rewards_percent(&daily_metrics_mid_gap).0,
+            compute_rewards_percent(&daily_metrics_left_gap).0
+        );
+        assert_eq!(
+            compute_rewards_percent(&daily_metrics_right_gap).0,
+            compute_rewards_percent(&daily_metrics_left_gap).0
+        );
     }
 
     #[test]
@@ -252,20 +255,12 @@ mod tests {
             MockedMetrics::new(25, 10, 0),
         ]);
 
-        let mut daily_metrics_1 = daily_metrics.clone();
-        let rewards = rewards_with_penalty(&daily_metrics_1);
-        daily_metrics_1.reverse();
-        let rewards_rev = rewards_with_penalty(&daily_metrics_1);
+        let mut daily_metrics = daily_metrics.clone();
+        let (rewards_percent, _) = compute_rewards_percent(&daily_metrics);
+        daily_metrics.reverse();
+        let (rewards_percent_rev, _) = compute_rewards_percent(&daily_metrics);
 
-        assert_eq!(rewards, 0.39);
-        assert_eq!(rewards_rev, rewards);
-
-        let mut daily_metrics_2 = daily_metrics.clone();
-        let rewards = rewards_no_penalty(&daily_metrics_2);
-        daily_metrics_2.reverse();
-        let rewards_rev = rewards_no_penalty(&daily_metrics_2);
-
-        assert_eq!(rewards, 0.9);
-        assert_eq!(rewards_rev, rewards);
+        assert_eq!(rewards_percent, 1.0);
+        assert_eq!(rewards_percent_rev, rewards_percent);
     }
 }
