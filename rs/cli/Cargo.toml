@@ -40,6 +40,7 @@ ic-nns-constants = { workspace = true }
 ic-nervous-system-root = { workspace = true }
 ic-nns-common = { workspace = true }
 ic-nns-governance = { workspace = true }
+ic-nns-governance-api = { workspace = true }
 ic-protobuf = { workspace = true }
 ic-registry-keys = { workspace = true }
 ic-registry-local-registry = { workspace = true }
@@ -66,7 +67,7 @@ tempfile = { workspace = true }
 tokio = { workspace = true }
 url = { workspace = true }
 humantime = { workspace = true }
-clap_complete = "4.5.14"
+clap_complete = "4.5.16"
 cryptoki = { workspace = true }
 keyring = { workspace = true }
 comfy-table = { workspace = true }

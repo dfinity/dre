@@ -5606,17 +5606,17 @@ files = [
 
 [[package]]
 name = "slack-bolt"
-version = "1.19.1"
+version = "1.20.0"
 description = "The Bolt Framework for Python"
 optional = false
 python-versions = ">=3.6"
 files = [
-    {file = "slack_bolt-1.19.1-py2.py3-none-any.whl", hash = "sha256:b916829ece0ff7a2cae1502f1774fd100592cd8a81a39e4f04e3137a3f19522b"},
-    {file = "slack_bolt-1.19.1.tar.gz", hash = "sha256:a3041d8f49eba22c3be4dd8f57602d6685d367c0e1cc7619260e1ce4a363d07f"},
+    {file = "slack_bolt-1.20.0-py2.py3-none-any.whl", hash = "sha256:e253dcae69ac7eea189b3270307fba6d733eb0764ae223b494427a9023a57380"},
+    {file = "slack_bolt-1.20.0.tar.gz", hash = "sha256:373d76a2b1a8ed91d5fe011bd3f671a05ec8620210c3a6ad99477e39d6b2b7fa"},
 ]
 
 [package.dependencies]
-slack-sdk = ">=3.25.0,<4"
+slack-sdk = ">=3.26.0,<4"
 
 [[package]]
 name = "slack-sdk"

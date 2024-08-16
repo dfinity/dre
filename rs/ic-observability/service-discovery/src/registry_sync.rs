@@ -17,7 +17,6 @@ use ic_registry_common_proto::pb::local_store::v1::{ChangelogEntry as PbChangelo
 use ic_registry_keys::{make_crypto_threshold_signing_pubkey_key, ROOT_SUBNET_ID_KEY};
 use ic_registry_local_store::{Changelog, ChangelogEntry, KeyMutation, LocalStoreImpl};
 use ic_registry_nns_data_provider::registry::RegistryCanister;
-use registry_canister::mutations::common::decode_registry_value;
 use slog::{debug, error, info, warn, Logger};
 use std::fmt::{Display, Formatter};
 use url::Url;
@@ -172,7 +171,7 @@ async fn get_nns_public_key(registry_canister: &RegistryCanister) -> anyhow::Res
         .get_value(ROOT_SUBNET_ID_KEY.as_bytes().to_vec(), None)
         .await
         .map_err(|e| anyhow::format_err!("failed to get root subnet: {}", e))?;
-    let nns_subnet_id = decode_registry_value::<ic_protobuf::types::v1::SubnetId>(nns_subnet_id_vec);
+    let nns_subnet_id = ic_protobuf::types::v1::SubnetId::decode(nns_subnet_id_vec.as_slice())?;
     let (nns_pub_key_vec, _) = registry_canister
         .get_value(
             make_crypto_threshold_signing_pubkey_key(SubnetId::new(PrincipalId::try_from(nns_subnet_id.principal_id.unwrap().raw).unwrap()))
