@@ -96,10 +96,9 @@ impl PublicDashboardHealthClient {
             .await
             .map_err(|e| anyhow::anyhow!("Error while fetching data from public dashboard: {:?}", e))?;
 
-        let response = response
-            .json::<Value>()
-            .await
-            .map_err(|e| anyhow::anyhow!("Error unmarshaling json: {:?}", e))?;
+        let response_text = response.text().await.map_err(|e| anyhow::anyhow!("Error reading response text: {}", e))?;
+        let response: Value = serde_json::from_str(&response_text)
+            .map_err(|e| anyhow::anyhow!("Error parsing json: {}. Raw text from the response: {}", e, response_text))?;
 
         let nodes = match response.get("nodes") {
             None => return Err(anyhow::anyhow!("Unexpected data contract. Missing 'nodes' key.")),
