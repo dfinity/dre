@@ -1247,8 +1247,7 @@ impl NetworkHealRequest {
                 .expect("Failed to find a replacement with the highest Nakamoto coefficient");
             let change = changes
                 .iter()
-                .filter(|change| change.score_after == changes_max_score.score_after)
-                .next()
+                .find(|change| change.score_after == changes_max_score.score_after)
                 .expect("No suitable changes found");
             // TODO: consider adding this (or similar) to the proposal summary message
             // i.e. why are we replacing 2 instead of 1 node?

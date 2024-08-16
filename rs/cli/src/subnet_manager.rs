@@ -120,7 +120,7 @@ impl SubnetManager {
         let subnet_query_by = self.get_subnet_query_by(self.target()?).await?;
         let mut motivations: Vec<String> = if let Some(motivation) = motivation { vec![motivation] } else { vec![] };
         let mut to_be_replaced: Vec<(DecentralizedNode, String)> = if let SubnetQueryBy::NodeList(nodes) = &subnet_query_by {
-            nodes.into_iter().map(|n| (n.clone(), "as per user request".to_string())).collect()
+            nodes.iter().map(|n| (n.clone(), "as per user request".to_string())).collect()
         } else {
             vec![]
         };
