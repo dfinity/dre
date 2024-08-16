@@ -2,7 +2,7 @@ pub mod nakamoto;
 pub mod network;
 pub mod subnets;
 use colored::Colorize;
-use itertools::{EitherOrBoth::*, Itertools};
+use itertools::Itertools;
 use std::collections::BTreeMap;
 use std::fmt::{Display, Formatter};
 
@@ -12,8 +12,8 @@ use serde::{self, Deserialize, Serialize};
 
 #[derive(Clone, Debug, Deserialize, Serialize, Default)]
 pub struct SubnetChangeResponse {
-    pub added: Vec<PrincipalId>,
-    pub removed: Vec<PrincipalId>,
+    pub added_with_desc: Vec<(PrincipalId, String)>,
+    pub removed_with_desc: Vec<(PrincipalId, String)>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub subnet_id: Option<PrincipalId>,
     pub score_before: nakamoto::NakamotoScore,
@@ -39,8 +39,8 @@ impl SubnetChangeResponse {
 impl From<&network::SubnetChange> for SubnetChangeResponse {
     fn from(change: &network::SubnetChange) -> Self {
         Self {
-            added: change.added().iter().map(|n| n.id).collect(),
-            removed: change.removed().iter().map(|n| n.id).collect(),
+            added_with_desc: change.added().iter().map(|n| (n.0.id, n.1.clone())).collect(),
+            removed_with_desc: change.removed().iter().map(|n| (n.0.id, n.1.clone())).collect(),
             subnet_id: if change.id == Default::default() { None } else { Some(change.id) },
             score_before: nakamoto::NakamotoScore::new_from_nodes(&change.old_nodes),
             score_after: nakamoto::NakamotoScore::new_from_nodes(&change.new_nodes),
@@ -157,25 +157,14 @@ impl Display for SubnetChangeResponse {
         }
 
         writeln!(f, "{}", table)?;
-        for pair in self.added.iter().zip_longest(self.removed.iter()) {
-            match pair {
-                Both(a, r) => {
-                    writeln!(f, "{}{}", format!("  - {}", r).red(), format!("    + {}", a).green()).expect("write failed");
-                }
-                Left(a) => {
-                    writeln!(
-                        f,
-                        "                                                                   {}",
-                        format!("    + {}", a).green()
-                    )
-                    .expect("write failed");
-                }
-                Right(r) => {
-                    writeln!(f, "{}", format!("  - {}", r).red()).expect("write failed");
-                }
-            }
+        writeln!(f, "    nodes removed:")?;
+        for (id, desc) in &self.removed_with_desc {
+            writeln!(f, "    --> {} [selected based on {}]", id, desc).expect("write failed");
         }
-        writeln!(f)?;
+        writeln!(f, "\n    nodes added:")?;
+        for (id, desc) in &self.added_with_desc {
+            writeln!(f, "    ++> {} [selected based on {}]", id, desc).expect("write failed");
+        }
 
         if let Some(comment) = &self.comment {
             writeln!(f, "{}", format!("*** Note ***\n{}", comment).red())?;

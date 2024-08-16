@@ -63,7 +63,7 @@ impl SubnetManager {
             .ok_or_else(|| anyhow!(SubnetManagerError::SubnetTargetNotProvided))
     }
 
-    async fn unhealthy_nodes(&self, subnet: DecentralizedSubnet) -> anyhow::Result<Vec<DecentralizedNode>> {
+    async fn unhealthy_nodes(&self, subnet: DecentralizedSubnet) -> anyhow::Result<Vec<(DecentralizedNode, ic_management_types::Status)>> {
         let health_client = health::HealthClient::new(self.network.clone());
         let subnet_health = health_client.subnet(subnet.id).await?;
 
@@ -76,12 +76,12 @@ impl SubnetManager {
                         None
                     } else {
                         info!("Node {} is {:?}", n.id, health);
-                        Some(n)
+                        Some((n, health.clone()))
                     }
                 }
                 None => {
                     warn!("Node {} has no known health, assuming unhealthy", n.id);
-                    Some(n)
+                    Some((n, ic_management_types::Status::Unknown))
                 }
             })
             .collect::<Vec<_>>();
@@ -119,8 +119,8 @@ impl SubnetManager {
     ) -> anyhow::Result<SubnetChangeResponse> {
         let subnet_query_by = self.get_subnet_query_by(self.target()?).await?;
         let mut motivations: Vec<String> = if let Some(motivation) = motivation { vec![motivation] } else { vec![] };
-        let mut to_be_replaced: Vec<DecentralizedNode> = if let SubnetQueryBy::NodeList(nodes) = &subnet_query_by {
-            nodes.clone()
+        let mut to_be_replaced: Vec<(DecentralizedNode, String)> = if let SubnetQueryBy::NodeList(nodes) = &subnet_query_by {
+            nodes.into_iter().map(|n| (n.clone(), "as per user request".to_string())).collect()
         } else {
             vec![]
         };
@@ -138,14 +138,15 @@ impl SubnetManager {
             let subnet_unhealthy = self.unhealthy_nodes(subnet_change_request.subnet()).await?;
             let subnet_unhealthy_without_included = subnet_unhealthy
                 .into_iter()
-                .filter(|n| !include.as_ref().unwrap_or(&vec![]).contains(&n.id))
+                .filter(|(n, _)| !include.as_ref().unwrap_or(&vec![]).contains(&n.id))
+                .map(|(n, s)| (n, format!("health: {}", s.to_string().to_lowercase())))
                 .collect::<Vec<_>>();
 
             to_be_replaced.extend(subnet_unhealthy_without_included);
 
             let without_specified = to_be_replaced
                 .iter()
-                .filter(|n| match &subnet_query_by {
+                .filter(|(n, _)| match &subnet_query_by {
                     SubnetQueryBy::NodeList(nodes) => !nodes.contains(n),
                     _ => true,
                 })

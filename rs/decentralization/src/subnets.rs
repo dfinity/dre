@@ -10,7 +10,7 @@ use itertools::Itertools;
 
 pub async fn unhealthy_with_nodes(
     subnets: &BTreeMap<PrincipalId, Subnet>,
-    nodes_health: BTreeMap<PrincipalId, Status>,
+    nodes_health: &BTreeMap<PrincipalId, Status>,
 ) -> BTreeMap<PrincipalId, Vec<ic_management_types::Node>> {
     subnets
         .clone()

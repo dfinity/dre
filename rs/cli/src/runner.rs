@@ -113,7 +113,7 @@ impl Runner {
             .excluding_from_available(request.exclude.clone().unwrap_or_default())
             .including_from_available(request.only.clone().unwrap_or_default())
             .including_from_available(request.include.clone().unwrap_or_default())
-            .resize(request.add, request.remove)?;
+            .resize(request.add, request.remove, 0)?;
 
         let change = SubnetChangeResponse::from(&change);
 
@@ -124,13 +124,13 @@ impl Runner {
         }
         println!("{}", change);
 
-        if change.added.is_empty() && change.removed.is_empty() {
+        if change.added_with_desc.is_empty() && change.removed_with_desc.is_empty() {
             return Ok(());
         }
-        if change.added.len() == change.removed.len() {
+        if change.added_with_desc.len() == change.removed_with_desc.len() {
             self.run_membership_change(change.clone(), replace_proposal_options(&change)?).await
         } else {
-            let action = if change.added.len() < change.removed.len() {
+            let action = if change.added_with_desc.len() < change.removed_with_desc.len() {
                 "Removing nodes from"
             } else {
                 "Adding nodes to"
@@ -189,7 +189,7 @@ impl Runner {
         self.ic_admin
             .propose_run(
                 ProposeCommand::CreateSubnet {
-                    node_ids: subnet_creation_data.added,
+                    node_ids: subnet_creation_data.added_with_desc.iter().map(|a| a.0).collect::<Vec<_>>(),
                     replica_version,
                     other_args,
                 },
@@ -211,7 +211,7 @@ impl Runner {
         }
         println!("{}", change);
 
-        if change.added.is_empty() && change.removed.is_empty() {
+        if change.added_with_desc.is_empty() && change.removed_with_desc.is_empty() {
             return Ok(());
         }
         self.run_membership_change(change.clone(), replace_proposal_options(&change)?).await
@@ -494,8 +494,8 @@ impl Runner {
             let removed_nodes = self.registry.get_decentralized_nodes(&change.get_added_node_ids()).await?;
 
             let subnet_after = subnet_before
-                .with_nodes(added_nodes)
-                .without_nodes(removed_nodes)
+                .with_nodes(added_nodes.into_iter().map(|n| (n, "added".to_string())).collect())
+                .without_nodes(removed_nodes.into_iter().map(|n| (n, "removed".to_string())).collect())
                 .map_err(|e| anyhow::anyhow!(e))?;
 
             let subnet_change = SubnetChange {
@@ -524,7 +524,7 @@ impl Runner {
         let change = SubnetChangeResponse::from(&change_request.rescue()?);
         println!("{}", change);
 
-        if change.added.is_empty() && change.removed.is_empty() {
+        if change.added_with_desc.is_empty() && change.removed_with_desc.is_empty() {
             return Ok(());
         }
 
@@ -615,8 +615,8 @@ impl Runner {
             .propose_run(
                 ProposeCommand::ChangeSubnetMembership {
                     subnet_id,
-                    node_ids_add: change.added.clone(),
-                    node_ids_remove: change.removed.clone(),
+                    node_ids_add: change.added_with_desc.iter().map(|a| a.0).collect::<Vec<_>>(),
+                    node_ids_remove: change.removed_with_desc.iter().map(|a| a.0).collect::<Vec<_>>(),
                 },
                 options,
             )
@@ -629,7 +629,7 @@ impl Runner {
 pub fn replace_proposal_options(change: &SubnetChangeResponse) -> anyhow::Result<ic_admin::ProposeOptions> {
     let subnet_id = change.subnet_id.ok_or_else(|| anyhow::anyhow!("subnet_id is required"))?.to_string();
 
-    let replace_target = if change.added.len() > 1 || change.removed.len() > 1 {
+    let replace_target = if change.added_with_desc.len() > 1 || change.removed_with_desc.len() > 1 {
         "nodes"
     } else {
         "a node"
