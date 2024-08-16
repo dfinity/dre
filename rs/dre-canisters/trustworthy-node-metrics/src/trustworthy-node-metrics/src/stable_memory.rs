@@ -10,7 +10,6 @@ use trustworthy_node_metrics_types::types::{NodeMetricsStored, NodeMetricsStored
 type Memory = VirtualMemory<DefaultMemoryImpl>;
 
 thread_local! {
-
     static MEMORY_MANAGER: RefCell<MemoryManager<DefaultMemoryImpl>> =
     RefCell::new(MemoryManager::init(DefaultMemoryImpl::default()));
 
