@@ -194,6 +194,7 @@ impl Auth {
                     neuron_ids: vec![],
                     include_neurons_readable_by_caller: true,
                     include_empty_neurons_readable_by_caller: None,
+                    include_public_neurons_in_full_neurons: None
                 })?,
             )
             .await
