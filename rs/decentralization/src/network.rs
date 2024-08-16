@@ -3,7 +3,7 @@ use crate::subnets::unhealthy_with_nodes;
 use crate::SubnetChangeResponse;
 use actix_web::http::StatusCode;
 use actix_web::{HttpResponse, ResponseError};
-use ahash::{AHashSet, HashSet};
+use ahash::AHashSet;
 use anyhow::anyhow;
 use ic_base_types::PrincipalId;
 use ic_management_types::{MinNakamotoCoefficients, NetworkError, NodeFeature, Status};
