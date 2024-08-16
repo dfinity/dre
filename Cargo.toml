@@ -214,6 +214,9 @@ ic-stable-structures = "0.6.5"
 ciborium = "0.2.2"
 dfn_core = { git = "https://github.com/dfinity/ic.git", rev = "b4ccc86f84d6d6ffcd74eab706b0a0fed1607a46" }
 
+# dre-airflow deps, should be replaced with dre-airflow once
+indexmap = { version = "2.3.0", features = ["serde"] }
+
 [profile.release]
 # Add debug information to the release build (does NOT reduce the level of optimization!)
 # Makes flamegraphs and backtraces more readable.

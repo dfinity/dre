@@ -2,12 +2,6 @@ use std::{fmt::Display, path::PathBuf, str::FromStr, time::Duration};
 
 use clap::Parser;
 use cli::Args;
-use dre::{
-    auth::{Auth, Neuron},
-    ic_admin::{download_ic_admin, should_update_ic_admin, IcAdminWrapper},
-};
-use ic_canisters::governance::governance_canister_version;
-use ic_management_types::Network;
 use ict_util::ict;
 use log::info;
 use qualify_util::qualify;
@@ -16,26 +10,18 @@ use serde_json::Value;
 use std::io::Write;
 use tokio::sync::mpsc;
 use tokio_util::sync::CancellationToken;
+use version_selector::StartVersionSelectorBuilder;
 
 mod cli;
 mod ict_util;
 mod qualify_util;
+mod version_selector;
 
 const NETWORK_NAME: &str = "configured-testnet";
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     init_logger();
-
-    // Check if farm is reachable. If not, error
-    let client = ClientBuilder::new().timeout(Duration::from_secs(30)).build()?;
-    client
-        .get("https://kibana.testnet.dfinity.network/")
-        .send()
-        .await
-        .map_err(|e| anyhow::anyhow!("Checking connectivity failed: {}", e.to_string()))?
-        .error_for_status()
-        .map_err(|e| anyhow::anyhow!("Checking connectivity failed: {}", e.to_string()))?;
 
     let args = Args::parse();
     if args.version_to_qualify.is_empty() {
@@ -53,36 +39,14 @@ async fn main() -> anyhow::Result<()> {
     let initial_version = if let Some(ref v) = args.initial_version {
         v.to_string()
     } else {
-        info!("Fetching the version of NNS which will be used as starting point");
-        let mainnet = Network::new_unchecked("mainnet", &[])?;
-        let ic_admin_path = match should_update_ic_admin()? {
-            (true, _) => {
-                let govn_canister_version = governance_canister_version(mainnet.get_nns_urls()).await?;
-                download_ic_admin(Some(govn_canister_version.stringified_hash)).await?
-            }
-            (false, s) => s,
-        };
-        let mainnet_anonymous_neuron = Neuron {
-            auth: Auth::Anonymous,
-            neuron_id: 0,
-            include_proposer: false,
-        };
-        let ic_admin = IcAdminWrapper::new(mainnet, Some(ic_admin_path), true, mainnet_anonymous_neuron, false);
-        let response = ic_admin
-            .run_passthrough_get(
-                &[
-                    "subnet".to_string(),
-                    "tdb26-jop6k-aogll-7ltgs-eruif-6kk7m-qpktf-gdiqx-mxtrf-vb5e6-eqe".to_string(),
-                ],
-                true,
-            )
+        info!("Fetching the forcasted version of NNS which will be used as starting point");
+        // Fetch the starter versions
+        let start_version_selector = StartVersionSelectorBuilder::new()
+            .with_client(ClientBuilder::new().connect_timeout(Duration::from_secs(30)))
+            .build()
             .await?;
 
-        let initial_version = serde_json::from_str::<Value>(&response)?;
-        let initial_version = initial_version["records"][0]["value"]["replica_version_id"]
-            .as_str()
-            .ok_or(anyhow::anyhow!("Couldn't parse subnet record"))?;
-        initial_version.to_string()
+        start_version_selector.get_forcasted_version_for_mainnet_nns()?
     };
 
     if initial_version == args.version_to_qualify {

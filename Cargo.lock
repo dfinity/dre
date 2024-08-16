@@ -5512,6 +5512,7 @@ checksum = "93ead53efc7ea8ed3cfb0c79fc8023fbb782a5432b52830b6518941cebe6505c"
 dependencies = [
  "equivalent",
  "hashbrown 0.14.5",
+ "serde",
 ]
 
 [[package]]
@@ -7090,6 +7091,8 @@ name = "qualifier"
 version = "0.5.0"
 dependencies = [
  "anyhow",
+ "backon",
+ "chrono",
  "clap 4.5.16",
  "dirs",
  "dre",
@@ -7097,12 +7100,14 @@ dependencies = [
  "ic-management-backend",
  "ic-management-types",
  "ic-nervous-system-common-test-keys",
+ "indexmap 2.4.0",
  "itertools 0.13.0",
  "log",
  "pretty_env_logger",
  "reqwest",
  "serde",
  "serde_json",
+ "strum 0.26.3",
  "tokio",
  "tokio-util",
  "url",
