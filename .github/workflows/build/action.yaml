@@ -2,8 +2,8 @@ name: Build and repin
 description: Reusable action for building and repin with bazel
 
 inputs:
-  ssh_pk_workflow:
-    description: "SSH PK for the repo allowing workflows to run actions"
+  GITHUB_TOKEN:
+    description: "Github SA PTA for the repo allowing workflows to run actions"
     required: true
 
 runs:
@@ -36,7 +36,7 @@ runs:
       if: ${{ steps.build.outputs.repin == 'true' }}
       with:
         ref: ${{ github.head_ref }}
-        token: ${{ secrets.GIX_CREATE_PR_PAT }}
+        token: ${{ inputs.GITHUB_TOKEN }}
         fetch-depth: 0
 
     - name: Commit files
