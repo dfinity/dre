@@ -1,5 +1,5 @@
 {
-  "checksum": "92f970e996d0fb8793a5bd6eff8c266a562d256f22e09ee857bc6de59135791c",
+  "checksum": "34920459f076d940ffff3b8d21b4fe77e45fdc2b9810d1f31f397be6908e739c",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -45353,10 +45353,6 @@
             {
               "id": "itertools 0.13.0",
               "target": "itertools"
-            },
-            {
-              "id": "serde 1.0.208",
-              "target": "serde"
             }
           ],
           "selects": {}
