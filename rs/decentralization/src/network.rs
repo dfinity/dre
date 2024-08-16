@@ -407,7 +407,7 @@ impl DecentralizedSubnet {
             // If any of the best_results nodes are already in the subnet,
             // we should prefer them. This is because we want to keep the
             // same nodes in the subnet if they are already there.
-            let current_nodes_set: HashSet<_> = current_nodes.iter().collect();
+            let current_nodes_set: AHashSet<_> = current_nodes.iter().collect();
             for result in best_results {
                 if current_nodes_set.contains(&result.node) {
                     return Some(result.clone());
