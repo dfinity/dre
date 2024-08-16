@@ -125,6 +125,7 @@ ic-metrics = { git = "https://github.com/dfinity/ic.git", rev = "b4ccc86f84d6d6f
 ic-nns-common = { git = "https://github.com/dfinity/ic.git", rev = "b4ccc86f84d6d6ffcd74eab706b0a0fed1607a46" }
 ic-nns-constants = { git = "https://github.com/dfinity/ic.git", rev = "b4ccc86f84d6d6ffcd74eab706b0a0fed1607a46" }
 ic-nns-governance = { git = "https://github.com/dfinity/ic.git", rev = "b4ccc86f84d6d6ffcd74eab706b0a0fed1607a46" }
+ic-nns-governance-api = { git = "https://github.com/dfinity/ic.git", rev = "b4ccc86f84d6d6ffcd74eab706b0a0fed1607a46" }
 ic-protobuf = { git = "https://github.com/dfinity/ic.git", rev = "b4ccc86f84d6d6ffcd74eab706b0a0fed1607a46" }
 ic-registry-client = { git = "https://github.com/dfinity/ic.git", rev = "b4ccc86f84d6d6ffcd74eab706b0a0fed1607a46" }
 ic-registry-client-fake = { git = "https://github.com/dfinity/ic.git", rev = "b4ccc86f84d6d6ffcd74eab706b0a0fed1607a46" }
