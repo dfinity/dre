@@ -43,7 +43,7 @@ jobs:
       - name: "🚀 Building"
         uses: ./.github/workflows/build
         with:
-          ssh_pk_workflow: ${{ secrets.SSH_PK_WORKFLOW }}
+          GITHUB_TOKEN: "${{ secrets.GIX_CREATE_PR_PAT }}"
       - name: "🚀 Testing"
         run: bazel test ...
 
