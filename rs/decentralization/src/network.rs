@@ -1013,6 +1013,11 @@ impl SubnetChangeRequest {
             self.subnet.clone()
         };
 
+        let available_nodes = available_nodes
+            .iter()
+            .cloned()
+            .chain(resized_subnet.removed_nodes_desc.iter().map(|(n, _)| n.clone()))
+            .collect::<Vec<_>>();
         let resized_subnet = resized_subnet
             .with_nodes(
                 self.include_nodes
