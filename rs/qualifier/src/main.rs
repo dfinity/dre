@@ -1,7 +1,13 @@
-use std::{fmt::Display, path::PathBuf, str::FromStr, time::Duration};
+use std::{
+    fmt::Display,
+    path::{Path, PathBuf},
+    str::FromStr,
+    time::Duration,
+};
 
 use clap::Parser;
 use cli::Args;
+use futures::future::join_all;
 use ict_util::ict;
 use log::info;
 use qualify_util::qualify;
@@ -33,26 +39,69 @@ async fn main() -> anyhow::Result<()> {
     info!("Principal key created");
 
     args.ensure_xnet_test_key()?;
-    // Take in one version and figure out what is the base version
-    //
-    // To find the initial version we could take NNS version?
-    let initial_version = if let Some(ref v) = args.initial_version {
-        v.to_string()
+
+    let initial_versions = if let Some(ref v) = args.initial_versions {
+        v
     } else {
-        info!("Fetching the forcasted version of NNS which will be used as starting point");
+        info!("Fetching the forcasted versions from mainnet which will be used as starting point");
         // Fetch the starter versions
         let start_version_selector = StartVersionSelectorBuilder::new()
             .with_client(ClientBuilder::new().connect_timeout(Duration::from_secs(30)))
             .build()
             .await?;
 
-        start_version_selector.get_forcasted_version_for_mainnet_nns()?
+        &start_version_selector.get_forcasted_versions_from_mainnet()?
     };
 
-    if initial_version == args.version_to_qualify {
-        anyhow::bail!("Initial version and version to qualify are the same")
+    info!("Initial versions that will be used: {}", initial_versions.join(","));
+
+    args.ensure_git().await?;
+
+    let artifacts = PathBuf::from_str("/tmp/qualifier-artifacts")?.join(&args.version_to_qualify);
+    info!("Will store artifacts in: {}", artifacts.display());
+    std::fs::create_dir_all(&artifacts)?;
+    if artifacts.exists() {
+        info!("Making sure artifact store is empty");
+        std::fs::remove_dir_all(&artifacts)?;
+        std::fs::create_dir(&artifacts)?;
     }
-    info!("Initial version that will be used: {}", initial_version);
+
+    info!("Qualification will run in {} mode", args.mode);
+    let outcomes = match args.mode {
+        cli::QualificationMode::Sequential => {
+            let mut outcomes = vec![];
+            for iv in initial_versions {
+                let current_path = &artifacts.join(format!("from-{}", iv));
+                if let Err(e) = std::fs::create_dir(current_path) {
+                    outcomes.push(Err(anyhow::anyhow!(e)))
+                }
+                outcomes.push(run_qualification(&args, iv.clone(), current_path, neuron_id, &private_key_pem).await)
+            }
+            outcomes
+        }
+        cli::QualificationMode::Parallel => {
+            join_all(initial_versions.iter().map(|iv| async {
+                let current_path = &artifacts.join(format!("from-{}", iv.clone()));
+                if let Err(e) = std::fs::create_dir(current_path) {
+                    return Err(anyhow::anyhow!(e));
+                };
+                run_qualification(&args, iv.clone(), current_path, neuron_id, &private_key_pem).await
+            }))
+            .await
+        }
+    };
+
+    if outcomes.iter().any(|o| o.is_err()) {
+        anyhow::bail!("Overall qualification failed due to one or more sub-qualifications failing")
+    }
+
+    Ok(())
+}
+
+async fn run_qualification(args: &Args, initial_version: String, artifacts: &Path, neuron_id: u64, private_key_pem: &Path) -> anyhow::Result<()> {
+    if initial_version == args.version_to_qualify {
+        anyhow::bail!("Starting version and version being qualified are the same: {}", args.version_to_qualify)
+    }
 
     // Generate configuration for `ict` including the initial version
     //
@@ -83,15 +132,13 @@ async fn main() -> anyhow::Result<()> {
           "num_unassigned_nodes": 4,
           "initial_version": "{}"
         }}"#,
-            &initial_version
+            initial_version
         );
 
         // Validate that the string is valid json
         serde_json::to_string_pretty(&serde_json::from_str::<Value>(&config)?)?
     };
-    info!("Using configuration: \n{}", config);
-
-    args.ensure_git().await?;
+    info!("[{} -> {}]: Using configuration: \n{}", initial_version, args.version_to_qualify, config);
 
     // Run ict and capture its output
     //
@@ -103,15 +150,6 @@ async fn main() -> anyhow::Result<()> {
     let token = CancellationToken::new();
     let (sender, mut receiver) = mpsc::channel(2);
 
-    let artifacts = PathBuf::from_str("/tmp/qualifier-artifacts")?.join(&args.version_to_qualify);
-    info!("Will store artifacts in: {}", artifacts.display());
-    std::fs::create_dir_all(&artifacts)?;
-    if artifacts.exists() {
-        info!("Making sure artifact store is empty");
-        std::fs::remove_dir_all(&artifacts)?;
-        std::fs::create_dir(&artifacts)?;
-    }
-
     let mut file = std::fs::File::create_new(artifacts.join("ic-config.json"))?;
     writeln!(file, "{}", &config)?;
 
@@ -119,17 +157,17 @@ async fn main() -> anyhow::Result<()> {
         res = ict(args.ic_repo_path.clone(), config, token.clone(), sender) => res?,
         res = qualify(
             &mut receiver,
-            private_key_pem,
+            private_key_pem.to_path_buf(),
             neuron_id,
             NETWORK_NAME,
-            initial_version,
+            initial_version.to_owned(),
             args.version_to_qualify.to_string(),
-            artifacts,
-            args.step_range
+            artifacts.to_path_buf(),
+            args.step_range.clone()
         ) => res?
     };
 
-    info!("Finished qualifier run for: {}", args.version_to_qualify);
+    info!("Finished qualifier run for: {} -> {}", initial_version, args.version_to_qualify);
 
     token.cancel();
     Ok(())

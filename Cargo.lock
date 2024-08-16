@@ -7096,6 +7096,7 @@ dependencies = [
  "clap 4.5.16",
  "dirs",
  "dre",
+ "futures",
  "ic-canisters",
  "ic-management-backend",
  "ic-management-types",

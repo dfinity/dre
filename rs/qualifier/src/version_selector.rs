@@ -3,7 +3,7 @@ use std::time::Duration;
 use backon::{ExponentialBuilder, Retryable};
 use itertools::Itertools;
 use reqwest::{Client, ClientBuilder};
-use rollouts::{RolloutState, Rollouts};
+use rollouts::{Rollout, RolloutState, Rollouts};
 
 pub struct StartVersionSelectorBuilder {
     client_builder: ClientBuilder,
@@ -38,6 +38,7 @@ impl StartVersionSelectorBuilder {
 }
 
 const DASHBOARD_URL: &str = "https://rollout-dashboard.ch1-rel1.dfinity.network/api/v1/rollouts";
+#[allow(dead_code)]
 const NNS_SUBNET_ID: &str = "tdb26-jop6k-aogll-7ltgs-eruif-6kk7m-qpktf-gdiqx-mxtrf-vb5e6-eqe";
 pub struct StartVersionSelector {
     rollouts: Rollouts,
@@ -55,9 +56,8 @@ impl StartVersionSelector {
         Ok(Self { rollouts })
     }
 
-    pub fn get_forcasted_version_for_mainnet_nns(&self) -> anyhow::Result<String> {
-        let rollout = self
-            .rollouts
+    fn get_active_rollout(&self) -> anyhow::Result<&Rollout> {
+        self.rollouts
             .iter()
             .filter(|r| r.state > RolloutState::Failed && r.state < RolloutState::Complete)
             // with this we basically reverse the sorting
@@ -69,12 +69,26 @@ impl StartVersionSelector {
             .ok_or(anyhow::anyhow!(
                 "No active rollouts found in the API. All rollouts: \n{:#?}",
                 self.rollouts
-            ))?;
+            ))
+    }
+
+    pub fn _get_forcasted_version_for_mainnet_nns(&self) -> anyhow::Result<String> {
+        let rollout = self.get_active_rollout()?;
         rollout
             .batches
             .iter()
             .find_map(|(_, b)| b.subnets.iter().find(|s| s.subnet_id.eq(NNS_SUBNET_ID)).cloned().map(|s| s.git_revision))
             .ok_or(anyhow::anyhow!("Couldn't find NNS in the active rollout: \n{:#?}", rollout))
+    }
+
+    pub fn get_forcasted_versions_from_mainnet(&self) -> anyhow::Result<Vec<String>> {
+        Ok(self
+            .get_active_rollout()?
+            .batches
+            .iter()
+            .flat_map(|(_, batch)| batch.subnets.iter().map(|s| s.git_revision.clone()))
+            .dedup()
+            .collect())
     }
 }
 

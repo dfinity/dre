@@ -3,6 +3,7 @@ use std::{path::PathBuf, process::Stdio, str::FromStr};
 use clap::Parser;
 
 use ic_nervous_system_common_test_keys::TEST_NEURON_1_OWNER_KEYPAIR;
+use strum::Display;
 use tokio::process::Command;
 const TEST_NEURON_1_IDENTITY_PATH: &str = ".config/dfx/identity/test_neuron_1/identity.pem";
 const XNET_TESTING_IDENTITY_PATH: &str = ".config/dfx/identity/xnet-testing/identity.pem";
@@ -13,11 +14,14 @@ pub struct Args {
     /// Version to qualify
     pub version_to_qualify: String,
 
-    /// Specify a version from which the qualification
-    /// should start. The default will be the same
-    /// version as the NNS
+    /// Specify a list of versions from which the qualification
+    /// should start. The default will be the same forcasted
+    /// versions that will endup on mainnet after the active
+    /// rollout is finished.
+    ///
+    /// The information is gathered from https://rollout-dashboard.ch1-rel1.dfinity.network/api/v1/rollouts
     #[clap(long)]
-    pub initial_version: Option<String>,
+    pub initial_versions: Option<Vec<String>>,
 
     /// Path which contains the layout of the network to
     /// be deployed. The default value will be a network
@@ -41,6 +45,35 @@ pub struct Args {
     /// A range can be: `4`, `3..`, `..3, `1..3`
     #[clap(long)]
     pub step_range: Option<String>,
+
+    /// If there are multiple forcasted versions on the network at
+    /// the end of an active rollout this controls how the qualification
+    /// will run.
+    #[clap(long, default_value_t = QualificationMode::Sequential)]
+    pub mode: QualificationMode,
+}
+
+#[derive(Display, Clone, clap::ValueEnum)]
+#[strum(serialize_all = "snake_case")]
+pub enum QualificationMode {
+    /// Less invasive towards farm, but slower.
+    ///
+    /// If default config is used this means 16 vm's
+    /// Each qualification is run in sequence and
+    /// observed time for one qualification is roughly
+    /// 1h 30mins, meaning that if there is more than
+    /// 2 beginning versions qualification can take up
+    /// to 5 hours to complete.
+    Sequential,
+    /// More invasive towards farm, but faster.
+    ///
+    /// If the default config is used this means that
+    /// qualifier will spin up N amount of networks
+    /// where N is the number of start versions for
+    /// qualification. Each network (for the default config)
+    /// will take 16 vm's meaning that in total qualifier
+    /// will take 16 * N vm's.
+    Parallel,
 }
 
 impl Args {
