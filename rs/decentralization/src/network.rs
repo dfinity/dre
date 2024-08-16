@@ -403,6 +403,16 @@ impl DecentralizedSubnet {
         if best_results.is_empty() {
             None
         } else {
+            // If any of the best_results nodes are already in the subnet,
+            // we should prefer them. This is because we want to keep the
+            // same nodes in the subnet if they are already there.
+            let current_nodes_set: HashSet<_> = current_nodes.iter().collect();
+            for result in best_results {
+                if current_nodes_set.contains(&result.node) {
+                    return Some(result.clone());
+                }
+            }
+
             // We sort the current nodes by alphabetical order on their
             // PrincipalIDs to ensure consistency of the seed with the
             // same machines in the subnet
