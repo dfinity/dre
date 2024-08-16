@@ -37,4 +37,4 @@ tempfile = { workspace = true }
 reqwest = { workspace = true }
 assert_cmd = "2.0.16"
 anyhow = "1.0.86"
-flate2 = "1.0.30"
+flate2 = "1.0.31"

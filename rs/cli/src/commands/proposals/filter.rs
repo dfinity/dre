@@ -162,6 +162,12 @@ pub enum Topic {
     ApiBoundaryNodeManagement = 15,
     /// Proposals related to the management of API Boundary Nodes
     SubnetRental = 16,
+    /// Proposals to manage protocol canisters. Those are canisters that are considered part of the IC
+    /// protocol, without which the IC will not be able to function properly.
+    ProtocolCanisterManagement = 17,
+    /// Proposals related to Service Nervous System (SNS) - (1) upgrading SNS-W, (2) upgrading SNS
+    /// Aggregator, and (3) adding WASM's or custom upgrade paths to SNS-W.
+    ServiceNervousSystemManagement = 18,
 }
 
 impl From<Topic> for TopicUpstream {
@@ -183,6 +189,8 @@ impl From<Topic> for TopicUpstream {
             Topic::SnsAndCommunityFund => Self::SnsAndCommunityFund,
             Topic::ApiBoundaryNodeManagement => Self::ApiBoundaryNodeManagement,
             Topic::SubnetRental => Self::SubnetRental,
+            Topic::ProtocolCanisterManagement => Self::ProtocolCanisterManagement,
+            Topic::ServiceNervousSystemManagement => Self::ServiceNervousSystemManagement,
         }
     }
 }
@@ -206,6 +214,8 @@ impl From<TopicUpstream> for Topic {
             TopicUpstream::SnsAndCommunityFund => Self::SnsAndCommunityFund,
             TopicUpstream::ApiBoundaryNodeManagement => Self::ApiBoundaryNodeManagement,
             TopicUpstream::SubnetRental => Self::SubnetRental,
+            TopicUpstream::ProtocolCanisterManagement => Self::ProtocolCanisterManagement,
+            TopicUpstream::ServiceNervousSystemManagement => Self::ServiceNervousSystemManagement,
         }
     }
 }

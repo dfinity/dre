@@ -37,7 +37,6 @@ use itertools::Itertools;
 use lazy_static::lazy_static;
 use log::{debug, error, info, warn};
 use regex::Regex;
-use registry_canister::mutations::common::decode_registry_value;
 use std::cmp::Ordering;
 use std::collections::{HashMap, HashSet};
 use std::convert::TryFrom;
@@ -921,7 +920,7 @@ pub async fn nns_public_key(registry_canister: &RegistryCanister) -> anyhow::Res
         .get_value(ROOT_SUBNET_ID_KEY.as_bytes().to_vec(), None)
         .await
         .map_err(|e| anyhow::format_err!("failed to get root subnet: {}", e))?;
-    let nns_subnet_id = decode_registry_value::<ic_protobuf::types::v1::SubnetId>(nns_subnet_id_vec);
+    let nns_subnet_id = ic_protobuf::types::v1::SubnetId::decode(nns_subnet_id_vec.as_slice())?;
     let (nns_pub_key_vec, _) = registry_canister
         .get_value(
             make_crypto_threshold_signing_pubkey_key(SubnetId::new(PrincipalId::try_from(nns_subnet_id.principal_id.unwrap().raw).unwrap()))
