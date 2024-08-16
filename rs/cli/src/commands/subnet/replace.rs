@@ -41,7 +41,7 @@ algorithm"#
     pub only: Vec<String>,
 
     /// Force the inclusion of the provided nodes for replacement, regardless
-    /// of the decentralization score
+    /// of the decentralization coefficients
     #[clap(long, num_args(1..))]
     pub include: Vec<PrincipalId>,
 
