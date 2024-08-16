@@ -36,7 +36,7 @@ runs:
       if: ${{ steps.build.outputs.repin == 'true' }}
       with:
         ref: ${{ github.head_ref }}
-        ssh-key: ${{ inputs.ssh_pk_workflow }}
+        token: ${{ secrets.GIX_CREATE_PR_PAT }}
         fetch-depth: 0
 
     - name: Commit files

@@ -9046,6 +9046,7 @@ dependencies = [
  "ic-protobuf",
  "ic-stable-structures",
  "itertools 0.13.0",
+ "serde",
  "trustworthy-node-metrics-types",
 ]
 

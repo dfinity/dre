@@ -25,3 +25,4 @@ ic-protobuf = { workspace = true }
 ic-nns-common = { workspace = true }
 dfn_core = { workspace = true }
 trustworthy-node-metrics-types = { workspace = true }
+serde = { workspace = true }
