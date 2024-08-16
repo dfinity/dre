@@ -508,13 +508,18 @@ def bazel_query(ic_repo: GitRepo, query):
     )
     if p.returncode != 0:
         print("Failure running Bazel through container. Attempting direct run.", file=sys.stderr)
-        p = subprocess.run(
-            bazel_query,
-            cwd=ic_repo.dir,
-            text=True,
-            stdout=subprocess.PIPE,
-            check=True,
-        )
+        try:
+            p = subprocess.run(
+                bazel_query,
+                cwd=ic_repo.dir,
+                text=True,
+                stdout=subprocess.PIPE,
+                check=True,
+            )
+        except subprocess.CalledProcessError as e:
+            print(p.stdout)
+            print(p.stderr)
+            raise e
     return [l[::-1].replace(":", "/", 1)[::-1].removeprefix("//") for l in p.stdout.splitlines()]
 
 
