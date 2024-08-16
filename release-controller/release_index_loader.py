@@ -5,6 +5,7 @@ import sys
 import tempfile
 
 from pydantic_yaml import parse_yaml_raw_as
+import re
 import release_index
 from git_repo import GitRepo
 from publish_notes import REPLICA_RELEASES_DIR
@@ -37,9 +38,15 @@ class ReleaseLoader:
     def changelog(self, version: str) -> str | None:
         version_changelog_path = self.release_index_dir / f"{REPLICA_RELEASES_DIR}/{version}.md"
         if version_changelog_path.exists():
-            return open(version_changelog_path, "r").read() + _verify_release_instructions(version)
+            return open(version_changelog_path, "r").read()
 
-        return None
+    def proposal_summary(self, version: str) -> str | None:
+        changelog = self.changelog(version)
+        if not changelog:
+            return None
+
+        # remove details html block from content for now until we can ensure it's going to fit into proposal size limits
+        return re.sub(r"\n<details>.*?</details>\n", "", changelog, flags=re.S) + _verify_release_instructions(version)
 
 
 class DevReleaseLoader(ReleaseLoader):
@@ -63,9 +70,9 @@ class GitReleaseLoader(ReleaseLoader):
         self.git_repo.fetch()
         return super().index()
 
-    def changelog(self, version):
+    def proposal_summary(self, version):
         self.git_repo.fetch()
-        return super().changelog(version)
+        return super().proposal_summary(version)
 
 
 class StaticReleaseLoader(ReleaseLoader):

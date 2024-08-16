@@ -32,7 +32,7 @@ Changelog since git revision [8d4b6898d878fa3db4028b316b78b469ed29f293](https://
 Features:
 ---------
 
-* ~~author: Igor Novg |~~ [5f9e639d1](https://github.com/dfinity/ic/commit/5f9e639d1) ~~Boundary Nodes: remove njs~~
+* ~~author: Igor Novg |~~ [5f9e639d1](https://github.com/dfinity/ic/commit/5f9e639d1) ~~Boundary Nodes: remove njs [AUTO-EXCLUDED:not a GuestOS change]~~
 * ~~author: Igor Novg |~~ [eb7f3dc5c](https://github.com/dfinity/ic/commit/eb7f3dc5c) ~~Boundary Nodes: improve nginx performance~~
 * author: Kami Popi | [26f30f055](https://github.com/dfinity/ic/commit/26f30f055) Consensus: Purge non-finalized blocks and notarizations below the finalized height
 * author: ~~Leo Eich | [b4673936a](https://github.com/dfinity/ic/commit/b4673936a) Consensus(ecdsa):~~ Make key\\_unmasked\\_ref in PreSignatureQuadrupleRef required
@@ -59,6 +59,16 @@ Features:
 * [`b733f7043`](https://github.com/dfinity/ic/commit/b733f7043) Consensus(ecdsa): Extend Quadruple state machine in preparation for random unmasked kappa
 * [`e76c5a374`](https://github.com/dfinity/ic/commit/e76c5a374) Consensus(ecdsa): Stop relaying tECDSA signature shares
 * [`2d63da24c`](https://github.com/dfinity/ic/commit/2d63da24c) Consensus(ecdsa): Add optional kappa\\_unmasked config to QuadrupleInCreation
+
+<details>
+<summary>Other changes (either not directly modifying GuestOS or not relevant)</summary>
+<ul>
+<li><a href="https://github.com/dfinity/ic/commit/5f9e639d1"><code>5f9e639d1</code></a> Boundary Nodes: remove njs</li>
+<li><a href="https://github.com/dfinity/ic/commit/eb7f3dc5c"><code>eb7f3dc5c</code></a> Boundary Nodes: improve nginx performance</li>
+<li><a href="https://github.com/dfinity/ic/commit/b4673936a"><code>b4673936a</code></a> Consensus(ecdsa): Make key_unmasked_ref in PreSignatureQuadrupleRef required</li>
+<li><a href="https://github.com/dfinity/ic/commit/6a4d8962c"><code>6a4d8962c</code></a> Consensus(ecdsa): Make masked kappa config optional</li>
+</ul>
+</details>
 """,
     )
 

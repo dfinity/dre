@@ -2,11 +2,17 @@ import os
 import pathlib
 import subprocess
 import tempfile
+import typing
 
 from dotenv import load_dotenv
 from release_index import Release
 from release_index import Version
 from util import version_name
+
+
+class FileChange(typing.TypedDict):
+    file_path: str
+    num_changes: int
 
 
 class Commit:
@@ -190,39 +196,53 @@ class GitRepo:
             ).decode("utf-8")
         )
 
-    def get_commits_in_range(self, first_commit, last_commit):
-        """Get the commits in the range [first_commit, last_commit] from the IC repo."""
-        self.fetch()
-
-        def get_commits_info(git_commit_format):
-            return (
-                subprocess.check_output(
-                    [
-                        "git",
-                        "log",
-                        "--format={}".format(git_commit_format),
-                        "--no-merges",
-                        "{}..{}".format(first_commit, last_commit),
-                    ],
-                    cwd=self.dir,
-                    stderr=subprocess.DEVNULL,
-                )
-                .decode("utf-8")
-                .strip()
-                .split("\n")
+    def get_commits_info(
+        self,
+        git_commit_format: str,
+        first_commit: str,
+        last_commit: str,
+    ) -> list[str]:
+        """Get the info of commits in the range [first_commit, last_commit]."""
+        return (
+            subprocess.check_output(
+                [
+                    "git",
+                    "log",
+                    "--format={}".format(git_commit_format),
+                    "--no-merges",
+                    "{}..{}".format(first_commit, last_commit),
+                ],
+                cwd=self.dir,
+                stderr=subprocess.DEVNULL,
             )
+            .decode("utf-8")
+            .strip()
+            .split("\n")
+        )
 
-        commit_hash = get_commits_info("%h")
-        commit_message = get_commits_info("%s")
-        commiter = get_commits_info("%an")
-
-        return list(zip(commit_hash, commit_message, commiter))
+    def get_commit_info(
+        self,
+        git_commit_format: str,
+        first_commit: str,
+    ) -> str:
+        """Get the info of commit."""
+        return subprocess.check_output(
+            [
+                "git",
+                "show",
+                "-s",
+                "--format={}".format(git_commit_format),
+                first_commit,
+            ],
+            cwd=self.dir,
+            stderr=subprocess.DEVNULL,
+        ).decode("utf-8")
 
     def file(self, path: str) -> pathlib.Path:
         """Get the file for the given path."""
         return self.dir / path
 
-    def file_changes_for_commit(self, commit_hash):
+    def file_changes_for_commit(self, commit_hash) -> list[FileChange]:
         cmd = [
             "git",
             "diff",
@@ -250,12 +270,27 @@ class GitRepo:
 
             changes.append(
                 {
-                    "file_path": "/" + file_path,
+                    "file_path": file_path,
                     "num_changes": int(additions) + int(deletions),
                 }
             )
 
         return changes
+
+    def checkout(self, ref: str):
+        """Checkout the given ref."""
+        subprocess.check_call(
+            ["git", "reset", "--hard", f"origin/{self.main_branch}"],
+            cwd=self.dir,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        subprocess.check_call(
+            ["git", "checkout", ref],
+            cwd=self.dir,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
 
 
 # TODO: test

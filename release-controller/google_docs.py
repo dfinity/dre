@@ -12,7 +12,7 @@ from pydrive2.drive import GoogleDrive
 from release_notes import prepare_release_notes
 
 md = markdown.Markdown(
-    extensions=["pymdownx.tilde"],
+    extensions=["pymdownx.tilde", "pymdownx.details"],
 )
 
 
@@ -94,12 +94,12 @@ def main():
         credentials_file=pathlib.Path(__file__).parent.resolve() / "credentials.json",
         release_notes_folder="1zOPwbYdOREhhLv-spRIRRMaFaAQlOVvF",
     )
-    version = "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f"
+    version = "3d0b3f10417fc6708e8b5d844a0bac5e86f3e17d"
     gdoc = client.ensure(
-        release_tag="relase--2024-02-21_23-01-base",
+        release_tag="release-2024-08-02_01-30-base",
         release_commit=version,
-        base_release_commit="8d4b6898d878fa3db4028b316b78b469ed29f293",
-        base_release_tag="release--2024-02-14_23-01-base",
+        base_release_commit="2c0b76cfc7e596d5c4304cff5222a2619294c8c1",
+        base_release_tag="release-2024-07-25_21-03-base",
         tag_teams_on_create=False,
     )
     print(client.markdown_file(version))

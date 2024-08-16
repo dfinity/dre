@@ -6,8 +6,54 @@ from dotenv import load_dotenv
 from github import Auth
 from github import Github
 from github.Repository import Repository
+import markdown
 
 REPLICA_RELEASES_DIR = "replica-releases"
+
+
+def post_process_release_notes(release_notes: str) -> str:
+    """Process the release notes."""
+    lines = [
+        # add ticks around commit hash
+        re.sub(
+            r"(?<=\[)([a-h0-9]{9})(?=\])",
+            r"`\g<1>`",
+            # remove author
+            re.sub(r"(?<=^\* )(.*)author:[^|]+\| ?", r"\g<1>", line),
+        )
+        for line in release_notes.split("\n")
+    ]
+
+    changelog = "\n".join([line for line in lines if "~~" not in line])
+    excluded_lines = [line for line in lines if "~~" in line]
+    excluded_changes = "\n".join(
+        [
+            l
+            for l in [
+                re.sub(
+                    # remove whitespace after *
+                    r"(?<=^\* )\s+",
+                    "",
+                    # remove [AUTO-EXCLUDED]
+                    re.sub(r"\[AUTO-EXCLUDED[^]]*\]", "", line)
+                    # remove ~~
+                    .replace("~~", ""),
+                ).strip()
+                for line in excluded_lines
+            ]
+            if l.startswith("* [")
+        ]
+    )
+    if excluded_changes:
+        changelog += (
+            "\n<details>\n<summary>Other changes (either not directly modifying GuestOS or not relevant)</summary>\n"
+        )
+        md = markdown.Markdown(
+            extensions=["pymdownx.tilde"],
+        )
+        changelog += md.convert(excluded_changes)
+        changelog += "\n</details>\n"
+    return changelog
 
 
 class PublishNotesClient:
@@ -46,21 +92,7 @@ class PublishNotesClient:
             logging.info("didn't get markdown notes for %s, skipping", version)
             return
 
-        changelog = google_doc_markdownified
-        changelog = "\n".join(
-            [
-                # add ticks around commit hash
-                re.sub(
-                    r"(?<=^\* \[)([a-h0-9]{9})(?=\])",
-                    r"`\g<1>`",
-                    # remove author
-                    re.sub(r"(?<=^\* )author:[^|]+\| ", "", line),
-                )
-                for line in changelog.split("\n")
-                # remove crossed out lines (including reviewer checklist)
-                if "~~" not in line
-            ]
-        )
+        changelog = post_process_release_notes(google_doc_markdownified)
 
         release_notes_start = changelog.find("Release Notes")
         if release_notes_start == -1:

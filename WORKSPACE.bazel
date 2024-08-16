@@ -24,6 +24,18 @@ http_archive(
     url = "https://github.com/bazelbuild/rules_python/archive/c5c03b2477dd1ce0c06c9dc60bf816995f222bcf.zip",
 )
 
+http_file(
+    name = "bazelisk_darwin",
+    sha256 = "9a4b169038a63ebf60a9b4f367b449ab9b484c4ec7d1ef9f6b7a4196dfd50f33",
+    url = "https://github.com/bazelbuild/bazelisk/releases/download/v1.20.0/bazelisk-darwin",
+)
+
+http_file(
+    name = "bazelisk_linux",
+    sha256 = "d9af1fa808c0529753c3befda75123236a711d971d3485a390507122148773a3",
+    url = "https://github.com/bazelbuild/bazelisk/releases/download/v1.20.0/bazelisk-linux-amd64",
+)
+
 load("@rules_python//python:repositories.bzl", "py_repositories", "python_register_toolchains")
 
 py_repositories()
