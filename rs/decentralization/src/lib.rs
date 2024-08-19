@@ -74,7 +74,11 @@ impl From<&network::SubnetChange> for SubnetChangeResponse {
 
 impl Display for SubnetChangeResponse {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        writeln!(f, "Decentralization score changes for subnet {}:\n", self.subnet_id.unwrap_or_default())?;
+        writeln!(
+            f,
+            "Decentralization Nakamoto coefficient changes for subnet {}:\n",
+            self.subnet_id.unwrap_or_default()
+        )?;
         let before_individual = self.score_before.scores_individual();
         let after_individual = self.score_after.scores_individual();
         self.score_before
@@ -123,6 +127,15 @@ impl Display for SubnetChangeResponse {
             }
         )?;
 
+        writeln!(f, "Nodes removed:")?;
+        for (id, desc) in &self.removed_with_desc {
+            writeln!(f, " --> {} [selected based on {}]", id, desc).expect("write failed");
+        }
+        writeln!(f, "\nNodes added:")?;
+        for (id, desc) in &self.added_with_desc {
+            writeln!(f, " ++> {} [selected based on {}]", id, desc).expect("write failed");
+        }
+
         let rows = self.feature_diff.values().map(|diff| diff.len()).max().unwrap_or(0);
         let mut table = tabular::Table::new(&self.feature_diff.keys().map(|_| "    {:<}  {:>}").collect::<Vec<_>>().join(""));
         table.add_row(
@@ -156,15 +169,7 @@ impl Display for SubnetChangeResponse {
             }));
         }
 
-        writeln!(f, "{}", table)?;
-        writeln!(f, "    nodes removed:")?;
-        for (id, desc) in &self.removed_with_desc {
-            writeln!(f, "    --> {} [selected based on {}]", id, desc).expect("write failed");
-        }
-        writeln!(f, "\n    nodes added:")?;
-        for (id, desc) in &self.added_with_desc {
-            writeln!(f, "    ++> {} [selected based on {}]", id, desc).expect("write failed");
-        }
+        writeln!(f, "\n\n{}", table)?;
 
         if let Some(comment) = &self.comment {
             writeln!(f, "{}", format!("*** Note ***\n{}", comment).red())?;
