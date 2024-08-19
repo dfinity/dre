@@ -334,14 +334,14 @@ impl NakamotoScore {
         let mut cmp = self.score_min().partial_cmp(&other.score_min());
 
         if cmp != Some(Ordering::Equal) {
-            return (cmp, "the minimum score across all features".to_string());
+            return (cmp, "the minimum Nakamoto coefficient across all features".to_string());
         }
 
         // Then try to increase the log2 avg
         cmp = self.score_avg_log2().partial_cmp(&other.score_avg_log2());
 
         if cmp != Some(Ordering::Equal) {
-            return (cmp, "the average log2 score across all features".to_string());
+            return (cmp, "the average log2 of Nakamoto Coefficients across all features".to_string());
         }
 
         // Try to pick the candidate that *reduces* the number of nodes
@@ -349,13 +349,21 @@ impl NakamotoScore {
         cmp = other.critical_features_num_nodes().partial_cmp(&self.critical_features_num_nodes());
 
         if cmp != Some(Ordering::Equal) {
+            let val_self = self.critical_features_num_nodes();
+            let val_other = other.critical_features_num_nodes();
             return (
                 cmp,
-                format!(
-                    "the number of nodes controlled by dominant actors for critical features (NP, Country) changes from {:?} to {:?}",
-                    other.critical_features_num_nodes(),
-                    self.critical_features_num_nodes()
-                ),
+                if val_self[0] != val_other[0] {
+                    format!(
+                        "the number of nodes controlled by dominant NPs: value changes from {} to {}",
+                        val_other[0], val_self[0]
+                    )
+                } else {
+                    format!(
+                        "the number of nodes controlled by dominant Country actors: value changes from {} to {}",
+                        val_other[1], val_self[1]
+                    )
+                },
             );
         }
 
@@ -366,13 +374,21 @@ impl NakamotoScore {
             .partial_cmp(&other.critical_features_unique_actors());
 
         if cmp != Some(Ordering::Equal) {
+            let val_self = self.critical_features_unique_actors();
+            let val_other = other.critical_features_unique_actors();
             return (
                 cmp,
-                format!(
-                    "the number of different actors for critical features (NP, Country) changes from {:?} to {:?}",
-                    other.critical_features_unique_actors(),
-                    self.critical_features_unique_actors()
-                ),
+                if val_self[0] != val_other[0] {
+                    format!(
+                        "the number of different NP actors: value changes from {} to {}",
+                        val_other[0], val_self[0]
+                    )
+                } else {
+                    format!(
+                        "the number of different Country actors: value changes from {} to {}",
+                        val_other[1], val_self[1]
+                    )
+                },
             );
         }
 
@@ -397,7 +413,7 @@ impl NakamotoScore {
                 cmp = c2.partial_cmp(c1);
 
                 if cmp != Some(Ordering::Equal) {
-                    return (cmp, format!("Nakamoto coefficient for feature {}", feature));
+                    return (cmp, format!("the Nakamoto coefficient value for feature {}", feature));
                 }
             }
         }

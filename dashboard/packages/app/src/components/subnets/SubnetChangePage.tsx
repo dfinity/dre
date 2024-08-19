@@ -140,7 +140,7 @@ export const SubnetChangePage = ({ network }: { network: string }) => {
           <Grid item xs={12}>
             <Chip label="Vote on the proposal" component="a" href={`https://nns.ic0.app/proposal/?proposal=${change?.proposal_id}`} clickable target='_blank' icon={<HowToVoteIcon style={{ color: purple[500] }} />} />
           </Grid>
-          <Typography variant="h5" style={{ marginLeft: 16 }}>Decentralization scores</Typography>
+          <Typography variant="h5" style={{ marginLeft: 16 }}>Decentralization Nakamoto coefficients</Typography>
           <Grid item xs={12} container direction='column'>
 
             {Object.entries(change?.score_after?.coefficients ?? {}).map(([key, _]) => {
@@ -158,7 +158,7 @@ export const SubnetChangePage = ({ network }: { network: string }) => {
           </Grid>
           {change?.comment && <Grid item>
             <Alert variant="filled" severity="warning">
-              { change?.comment.split("\n").filter(l => l).map((line, index) => { if (index == 0) {return line} else { return <li>{line}</li> } }) }
+              {change?.comment.split("\n").filter(l => l).map((line, index) => { if (index == 0) { return line } else { return <li>{line}</li> } })}
             </Alert>
           </Grid>
           }
