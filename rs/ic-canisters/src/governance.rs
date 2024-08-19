@@ -214,7 +214,7 @@ impl GovernanceCanisterWrapper {
     }
 
     pub async fn get_neuron_info(&self, neuron_id: u64) -> anyhow::Result<NeuronInfo> {
-        let args = candid::encode_one(&neuron_id)?;
+        let args = candid::encode_one(neuron_id)?;
         match self
             .client
             .agent
@@ -228,7 +228,7 @@ impl GovernanceCanisterWrapper {
     }
 
     pub async fn get_full_neuron(&self, neuron_id: u64) -> anyhow::Result<Neuron> {
-        let args = candid::encode_one(&neuron_id)?;
+        let args = candid::encode_one(neuron_id)?;
         match self
             .client
             .agent

@@ -1,5 +1,6 @@
 use clap::Args;
 use ic_canisters::governance::GovernanceCanisterWrapper;
+use itertools::Itertools;
 
 use crate::commands::ExecutableCommand;
 
@@ -16,7 +17,7 @@ impl ExecutableCommand for TopUp {
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
         let governance = GovernanceCanisterWrapper::from(ctx.create_canister_client()?);
         let full_neuron = governance.get_full_neuron(ctx.ic_admin().neuron.neuron_id).await?;
-        let account_hex = full_neuron.account.iter().map(|byte| format!("{:02x}", byte)).collect::<String>();
+        let account_hex = full_neuron.account.iter().map(|byte| format!("{:02x}", byte)).join("");
 
         println!("Please request ICP in the #icp-to-go slack channel:");
         println!(
