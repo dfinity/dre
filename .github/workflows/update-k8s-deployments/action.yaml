@@ -53,15 +53,19 @@ runs:
           --force --set-upstream origin "${K8S_REPO_BRANCH}" || \
           git push --force --set-upstream origin "${K8S_REPO_BRANCH}"
 
-        echo "branch=${K8S_REPO_BRANCH}" >> $GITHUB_OUTPUT
+        (type -p wget >/dev/null || (sudo apt update && sudo apt-get install wget -y)) \
+        && sudo mkdir -p -m 755 /etc/apt/keyrings \
+        && wget -qO- https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null \
+        && sudo chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
+        && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
+        && sudo apt update \
+        && sudo apt install gh -y
 
-    - name: "🆕 Create a new Pull Request with the changes"
-      if: "${{ steps.update_k8s.outputs.branch != '' }}"
-      uses: peter-evans/create-pull-request@v6
-      with:
-        commit-message: "chore: Update dependencies"
-        branch: ${{ steps.update_k8s.branch }}
-        title: "[nomrbot] - Updating DRE container images"
-        body: "Updating the DRE container images based on the latest changes in the DRE repository - [here](https://github.com/dfinity/dre/commits/$DRE_REPO_BRANCH)"
-        token: ${{ inputs.github_api_token }}
-        path: .git/k8s
+        echo "$GITHUB_API_TOKEN" > token.txt
+        gh pr create \
+          --body "Updating the DRE container images based on the latest changes in the DRE repository - [here](https://github.com/dfinity/dre/commits/$DRE_REPO_BRANCH)" \
+          --title "[nomrbot] - Updating DRE container images" \
+          --base "main" \
+          --head "$K8S_REPO_BRANCH" \
+          --assignee "@me" \
+          --reviewer "@dfinity-ops/dre"
