@@ -55,16 +55,6 @@ runs:
 
         echo "k8s_branch=$K8S_REPO_BRANCH" >> $GITHUB_OUTPUT
 
-        echo "$GITHUB_API_TOKEN" > token.txt
-        gh auth login --with-token < token.txt
-        gh pr create \
-          --body "Updating the DRE container images based on the latest changes in the DRE repository - [here](https://github.com/dfinity/dre/commits/$DRE_REPO_BRANCH)" \
-          --title "[nomrbot] - Updating DRE container images" \
-          --base "main" \
-          --head "$K8S_REPO_BRANCH" \
-          --assignee "@me" \
-          --reviewer "@dfinity-ops/dre"
-
     - name: "Create mr"
       if: ${{ steps.update_k8s.outputs.k8s_branch != '' }}
       uses: "paygoc6/action-pull-request-another-repo@v1.0.1"
