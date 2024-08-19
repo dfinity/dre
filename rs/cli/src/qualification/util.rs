@@ -226,7 +226,7 @@ impl StepCtx {
             None => Utc::now().timestamp().to_string(),
         };
 
-        let browser = Browser::new(LaunchOptionsBuilder::default().window_size(Some((1920, 1080))).build()?)?;
+        let browser = Browser::new(LaunchOptionsBuilder::default().devtools(false).window_size(Some((1920, 1080))).build()?)?;
         let tab = browser.new_tab()?;
 
         for panel in Panel::iter() {
