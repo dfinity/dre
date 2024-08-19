@@ -4,6 +4,9 @@ use ic_agent::Agent;
 use ic_nns_common::pb::v1::NeuronId;
 use ic_nns_common::pb::v1::ProposalId;
 use ic_nns_constants::GOVERNANCE_CANISTER_ID;
+use ic_nns_governance::pb::v1::manage_neuron::claim_or_refresh::By;
+use ic_nns_governance::pb::v1::manage_neuron::ClaimOrRefresh;
+use ic_nns_governance::pb::v1::manage_neuron::Command::ClaimOrRefresh as CoR;
 use ic_nns_governance::pb::v1::manage_neuron::RegisterVote;
 use ic_nns_governance::pb::v1::GovernanceError;
 use ic_nns_governance::pb::v1::ListProposalInfo;
@@ -163,6 +166,17 @@ impl GovernanceCanisterWrapper {
             }
             _err => Err(anyhow::anyhow!("Error registering vote: {:?}", _err)),
         }
+    }
+
+    pub async fn refresh_neuron(&self, neuron_id: u64) -> anyhow::Result<ManageNeuronResponse> {
+        self.manage_neuron(&ManageNeuron {
+            id: Some(NeuronId { id: neuron_id }),
+            neuron_id_or_subaccount: None,
+            command: Some(CoR(ClaimOrRefresh {
+                by: Some(By::NeuronIdOrSubaccount(ic_nns_governance::pb::v1::Empty {})),
+            })),
+        })
+        .await
     }
 
     async fn manage_neuron(&self, manage_neuron: &ManageNeuron) -> anyhow::Result<ManageNeuronResponse> {
