@@ -43,14 +43,14 @@ async fn main() -> anyhow::Result<()> {
     let initial_versions = if let Some(ref v) = args.initial_versions {
         v
     } else {
-        info!("Fetching the forcasted versions from mainnet which will be used as starting point");
+        info!("Fetching the forecasted versions from mainnet which will be used as starting point");
         // Fetch the starter versions
         let start_version_selector = StartVersionSelectorBuilder::new()
             .with_client(ClientBuilder::new().connect_timeout(Duration::from_secs(30)))
             .build()
             .await?;
 
-        &start_version_selector.get_forcasted_versions_from_mainnet()?
+        &start_version_selector.get_forecasted_versions_from_mainnet()?
     };
 
     info!("Initial versions that will be used: {}", initial_versions.join(","));

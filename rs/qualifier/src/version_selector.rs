@@ -72,7 +72,7 @@ impl StartVersionSelector {
             ))
     }
 
-    pub fn _get_forcasted_version_for_mainnet_nns(&self) -> anyhow::Result<String> {
+    pub fn _get_forecasted_version_for_mainnet_nns(&self) -> anyhow::Result<String> {
         let rollout = self.get_active_rollout()?;
         rollout
             .batches
@@ -81,7 +81,7 @@ impl StartVersionSelector {
             .ok_or(anyhow::anyhow!("Couldn't find NNS in the active rollout: \n{:#?}", rollout))
     }
 
-    pub fn get_forcasted_versions_from_mainnet(&self) -> anyhow::Result<Vec<String>> {
+    pub fn get_forecasted_versions_from_mainnet(&self) -> anyhow::Result<Vec<String>> {
         Ok(self
             .get_active_rollout()?
             .batches

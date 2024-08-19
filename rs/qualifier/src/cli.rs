@@ -15,7 +15,7 @@ pub struct Args {
     pub version_to_qualify: String,
 
     /// Specify a list of versions from which the qualification
-    /// should start. The default will be the same forcasted
+    /// should start. The default will be the same forecasted
     /// versions that will endup on mainnet after the active
     /// rollout is finished.
     ///
@@ -46,7 +46,7 @@ pub struct Args {
     #[clap(long)]
     pub step_range: Option<String>,
 
-    /// If there are multiple forcasted versions on the network at
+    /// If there are multiple forecasted versions on the network at
     /// the end of an active rollout this controls how the qualification
     /// will run.
     #[clap(long, default_value_t = QualificationMode::Sequential)]
