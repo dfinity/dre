@@ -1,4 +1,4 @@
-use crate::{MinNakamotoCoefficients, Node, HealthStatus};
+use crate::{HealthStatus, MinNakamotoCoefficients, Node};
 use ic_base_types::PrincipalId;
 use serde::{Deserialize, Serialize};
 

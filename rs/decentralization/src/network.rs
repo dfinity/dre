@@ -6,7 +6,7 @@ use actix_web::{HttpResponse, ResponseError};
 use ahash::{AHashSet, HashSet};
 use anyhow::anyhow;
 use ic_base_types::PrincipalId;
-use ic_management_types::{MinNakamotoCoefficients, NetworkError, NodeFeature, HealthStatus};
+use ic_management_types::{HealthStatus, MinNakamotoCoefficients, NetworkError, NodeFeature};
 use itertools::Itertools;
 use log::{debug, info, warn};
 use rand::{seq::SliceRandom, SeedableRng};

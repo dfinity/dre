@@ -120,10 +120,18 @@ mod tests {
         ];
 
         let statuses = NodesStatus {
-            nodes: BTreeMap::from([(ids[0], HealthStatus::Healthy), (ids[1], HealthStatus::Healthy), (ids[2], HealthStatus::Healthy)]),
+            nodes: BTreeMap::from([
+                (ids[0], HealthStatus::Healthy),
+                (ids[1], HealthStatus::Healthy),
+                (ids[2], HealthStatus::Healthy),
+            ]),
         };
         let new_statuses = NodesStatus {
-            nodes: BTreeMap::from([(ids[0], HealthStatus::Healthy), (ids[1], HealthStatus::Degraded), (ids[3], HealthStatus::Healthy)]),
+            nodes: BTreeMap::from([
+                (ids[0], HealthStatus::Healthy),
+                (ids[1], HealthStatus::Degraded),
+                (ids[3], HealthStatus::Healthy),
+            ]),
         };
         let (statuses, notifications) = statuses.updated(new_statuses.clone());
 

@@ -132,7 +132,7 @@ impl From<RouterConfig> for Router {
 mod tests {
     use super::{Route, Router, RouterConfig};
 
-    use ic_management_types::{Provider, HealthStatus};
+    use ic_management_types::{HealthStatus, Provider};
     use ic_types::PrincipalId;
     use pretty_assertions::assert_eq;
     use rand::distributions::Alphanumeric;

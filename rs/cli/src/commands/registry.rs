@@ -11,7 +11,7 @@ use ic_management_backend::{
     lazy_registry::{LazyRegistry, LazyRegistryFamilyEntries},
     public_dashboard::query_ic_dashboard_list,
 };
-use ic_management_types::{Network, NodeProvidersResponse, HealthStatus};
+use ic_management_types::{HealthStatus, Network, NodeProvidersResponse};
 use ic_protobuf::registry::{
     api_boundary_node::v1::ApiBoundaryNodeRecord,
     dc::v1::DataCenterRecord,
@@ -115,7 +115,8 @@ impl Registry {
             node_operator.total_up_nodes = nodes
                 .iter()
                 .filter(|n| {
-                    n.node_operator_id == node_operator.node_operator_principal_id && (n.status == HealthStatus::Healthy || n.status == HealthStatus::Degraded)
+                    n.node_operator_id == node_operator.node_operator_principal_id
+                        && (n.status == HealthStatus::Healthy || n.status == HealthStatus::Degraded)
                 })
                 .count() as u32;
 

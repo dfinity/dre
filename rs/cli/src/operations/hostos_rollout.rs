@@ -4,7 +4,7 @@ use futures_util::future::try_join;
 use ic_base_types::{NodeId, PrincipalId};
 use ic_management_backend::health::{self, HealthStatusQuerier};
 use ic_management_backend::proposal::ProposalAgent;
-use ic_management_types::{Network, Node, HealthStatus, Subnet, UpdateNodesHostosVersionsProposal};
+use ic_management_types::{HealthStatus, Network, Node, Subnet, UpdateNodesHostosVersionsProposal};
 use log::{debug, info, warn};
 use std::sync::Arc;
 use std::{collections::BTreeMap, fmt::Display, str::FromStr};

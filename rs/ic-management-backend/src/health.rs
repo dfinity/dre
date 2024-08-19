@@ -4,7 +4,7 @@ use std::{
 };
 
 use ic_base_types::PrincipalId;
-use ic_management_types::{Network, HealthStatus};
+use ic_management_types::{HealthStatus, Network};
 use log::warn;
 use prometheus_http_query::{Client, Selector};
 use reqwest::{Client as ReqwestClient, Method};

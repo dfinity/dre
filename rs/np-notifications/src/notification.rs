@@ -5,7 +5,7 @@ use std::{
 };
 
 use actix_web::{rt::time::sleep, web};
-use ic_management_types::{Provider, HealthStatus};
+use ic_management_types::{HealthStatus, Provider};
 use ic_types::PrincipalId;
 use serde::ser::{SerializeStruct, Serializer};
 use serde::Serialize;
