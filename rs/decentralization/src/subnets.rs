@@ -4,13 +4,13 @@ use crate::network::Node;
 use ic_base_types::PrincipalId;
 use ic_management_types::{
     requests::{NodeRemoval, NodeRemovalReason},
-    Status, Subnet,
+    HealthStatus, Subnet,
 };
 use itertools::Itertools;
 
 pub async fn unhealthy_with_nodes(
     subnets: &BTreeMap<PrincipalId, Subnet>,
-    nodes_health: &BTreeMap<PrincipalId, Status>,
+    nodes_health: &BTreeMap<PrincipalId, HealthStatus>,
 ) -> BTreeMap<PrincipalId, Vec<ic_management_types::Node>> {
     subnets
         .clone()
@@ -20,7 +20,7 @@ pub async fn unhealthy_with_nodes(
                 .nodes
                 .into_iter()
                 .filter_map(|n| match nodes_health.get(&n.principal) {
-                    Some(health) if *health == ic_management_types::Status::Healthy => None,
+                    Some(health) if *health == ic_management_types::HealthStatus::Healthy => None,
                     _ => Some(n),
                 })
                 .collect::<Vec<_>>();
@@ -44,14 +44,14 @@ pub struct NodesRemover {
 impl NodesRemover {
     pub fn remove_nodes(
         &self,
-        mut healths: std::collections::BTreeMap<ic_base_types::PrincipalId, ic_management_types::Status>,
+        mut healths: std::collections::BTreeMap<ic_base_types::PrincipalId, ic_management_types::HealthStatus>,
         nodes_with_proposals: Arc<std::collections::BTreeMap<ic_base_types::PrincipalId, ic_management_types::Node>>,
     ) -> (Vec<NodeRemoval>, String) {
         let nodes_to_rm = nodes_with_proposals
             .values()
             .cloned()
             .map(|n| {
-                let status = healths.remove(&n.principal).unwrap_or(ic_management_types::Status::Unknown);
+                let status = healths.remove(&n.principal).unwrap_or(ic_management_types::HealthStatus::Unknown);
                 (n, status)
             })
             .filter(|(n, _)| n.proposal.is_none())
@@ -85,9 +85,9 @@ impl NodesRemover {
                         });
                     }
                     let should_remove_node = if self.remove_degraded {
-                        matches!(status, ic_management_types::Status::Dead) || matches!(status, ic_management_types::Status::Degraded)
+                        matches!(status, ic_management_types::HealthStatus::Dead) || matches!(status, ic_management_types::HealthStatus::Degraded)
                     } else {
-                        matches!(status, ic_management_types::Status::Dead)
+                        matches!(status, ic_management_types::HealthStatus::Dead)
                     };
                     if should_remove_node {
                         return Some(NodeRemoval {
