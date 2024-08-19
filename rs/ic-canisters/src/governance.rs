@@ -5,10 +5,12 @@ use ic_nns_common::pb::v1::NeuronId;
 use ic_nns_common::pb::v1::ProposalId;
 use ic_nns_constants::GOVERNANCE_CANISTER_ID;
 use ic_nns_governance::pb::v1::manage_neuron::RegisterVote;
+use ic_nns_governance::pb::v1::GovernanceError;
 use ic_nns_governance::pb::v1::ListProposalInfo;
 use ic_nns_governance::pb::v1::ListProposalInfoResponse;
 use ic_nns_governance::pb::v1::ManageNeuron;
 use ic_nns_governance::pb::v1::ManageNeuronResponse;
+use ic_nns_governance::pb::v1::NeuronInfo;
 use ic_nns_governance::pb::v1::ProposalInfo;
 use log::warn;
 use serde::{self, Serialize};
@@ -193,6 +195,20 @@ impl GovernanceCanisterWrapper {
             },
             Ok(None) => Ok(vec![]),
             Err(e) => Err(anyhow::anyhow!("Error executing query: {}", e)),
+        }
+    }
+
+    pub async fn get_neuron_info(&self, neuron_id: u64) -> anyhow::Result<NeuronInfo> {
+        let args = candid::encode_one(&neuron_id)?;
+        match self
+            .client
+            .agent
+            .execute_query(&GOVERNANCE_CANISTER_ID, "get_neuron_info", args)
+            .await
+            .map_err(|e| anyhow::anyhow!(e))?
+        {
+            Some(response) => Ok(Decode!(response.as_slice(), Result<NeuronInfo, GovernanceError>)?.map_err(|e| anyhow::anyhow!(e))?),
+            None => Err(anyhow::anyhow!("Didn't find neuron with id {}", neuron_id)),
         }
     }
 }
