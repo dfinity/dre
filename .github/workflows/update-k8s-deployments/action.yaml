@@ -60,7 +60,6 @@ runs:
       uses: peter-evans/create-pull-request@v6
       with:
         commit-message: "chore: Update dependencies"
-        base: "main"
         branch: ${{ steps.update_k8s.branch }}
         title: "[nomrbot] - Updating DRE container images"
         body: "Updating the DRE container images based on the latest changes in the DRE repository - [here](https://github.com/dfinity/dre/commits/$DRE_REPO_BRANCH)"
