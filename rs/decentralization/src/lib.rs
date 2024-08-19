@@ -1,7 +1,6 @@
 pub mod nakamoto;
 pub mod network;
 pub mod subnets;
-use colored::Colorize;
 use itertools::Itertools;
 use std::collections::BTreeMap;
 use std::fmt::{Display, Formatter};
@@ -74,7 +73,11 @@ impl From<&network::SubnetChange> for SubnetChangeResponse {
 
 impl Display for SubnetChangeResponse {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        writeln!(f, "Decentralization score changes for subnet {}:\n", self.subnet_id.unwrap_or_default())?;
+        writeln!(
+            f,
+            "Decentralization Nakamoto coefficient changes for subnet {}:\n",
+            self.subnet_id.unwrap_or_default()
+        )?;
         let before_individual = self.score_before.scores_individual();
         let after_individual = self.score_after.scores_individual();
         self.score_before
@@ -84,44 +87,54 @@ impl Display for SubnetChangeResponse {
             .map(|k| {
                 let before = before_individual.get(k).unwrap();
                 let after = after_individual.get(k).unwrap();
-                let output = format!(
+                format!(
                     "{}: {:.2} -> {:.2}  {:>7}",
                     k,
                     before,
                     after,
                     format_args!("({:+.0}%)", ((after - before) / before) * 100.).to_string()
-                );
-                if before > after {
-                    output.bright_red()
-                } else if after > before {
-                    output.bright_green()
-                } else {
-                    output.dimmed()
-                }
+                )
             })
             .for_each(|s| writeln!(f, "{: >40}", s).expect("write failed"));
 
         let total_before = self.score_before.score_avg_linear();
         let total_after = self.score_after.score_avg_linear();
         let output = format!(
-            "\tTotal: {:.2} -> {:.2}  ({:+.0}%)",
+            "**Mean Nakamoto comparison:** {:.2} -> {:.2}  ({:+.0}%)\n\nOverall replacement impact: {}",
             total_before,
             total_after,
-            ((total_after - total_before) / total_before) * 100.
-        )
-        .bold();
+            ((total_after - total_before) / total_before) * 100.,
+            self.score_after.describe_difference_from(&self.score_before).1
+        );
 
-        writeln!(
-            f,
-            "\n{}\n",
-            if total_before > total_after {
-                output.red()
-            } else if total_after > total_before {
-                output.green()
-            } else {
-                output.dimmed()
-            }
-        )?;
+        writeln!(f, "\n{}\n\n# Details\n\n", output)?;
+
+        writeln!(f, "Nodes removed:")?;
+        for (id, desc) in &self.removed_with_desc {
+            writeln!(f, " --> {} [{}]", id, desc).expect("write failed");
+        }
+        writeln!(f, "\nNodes added:")?;
+        for (id, desc) in &self.added_with_desc {
+            writeln!(f, " ++> {} [{}]", id, desc).expect("write failed");
+        }
+
+        writeln!(f, "Nodes removed:")?;
+        for (id, desc) in &self.removed_with_desc {
+            writeln!(f, " --> {} [selected based on {}]", id, desc).expect("write failed");
+        }
+        writeln!(f, "\nNodes added:")?;
+        for (id, desc) in &self.added_with_desc {
+            writeln!(f, " ++> {} [selected based on {}]", id, desc).expect("write failed");
+        }
+
+        writeln!(f, "Nodes removed:")?;
+        for (id, desc) in &self.removed_with_desc {
+            writeln!(f, " --> {} [selected based on {}]", id, desc).expect("write failed");
+        }
+        writeln!(f, "\nNodes added:")?;
+        for (id, desc) in &self.added_with_desc {
+            writeln!(f, " ++> {} [selected based on {}]", id, desc).expect("write failed");
+        }
 
         let rows = self.feature_diff.values().map(|diff| diff.len()).max().unwrap_or(0);
         let mut table = tabular::Table::new(&self.feature_diff.keys().map(|_| "    {:<}  {:>}").collect::<Vec<_>>().join(""));
@@ -156,18 +169,10 @@ impl Display for SubnetChangeResponse {
             }));
         }
 
-        writeln!(f, "{}", table)?;
-        writeln!(f, "    nodes removed:")?;
-        for (id, desc) in &self.removed_with_desc {
-            writeln!(f, "    --> {} [selected based on {}]", id, desc).expect("write failed");
-        }
-        writeln!(f, "\n    nodes added:")?;
-        for (id, desc) in &self.added_with_desc {
-            writeln!(f, "    ++> {} [selected based on {}]", id, desc).expect("write failed");
-        }
+        writeln!(f, "\n\n{}", table)?;
 
         if let Some(comment) = &self.comment {
-            writeln!(f, "{}", format!("*** Note ***\n{}", comment).red())?;
+            writeln!(f, "*** Note ***\n{}", comment)?;
         }
 
         Ok(())

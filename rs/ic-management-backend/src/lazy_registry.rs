@@ -702,7 +702,7 @@ impl AvailableNodesQuerier for LazyRegistry {
                 // Keep only healthy nodes.
                 healths
                     .get(&n.principal)
-                    .map(|s| matches!(*s, ic_management_types::Status::Healthy))
+                    .map(|s| matches!(*s, ic_management_types::HealthStatus::Healthy))
                     .unwrap_or(false)
             })
             .filter(|n| {
