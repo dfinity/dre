@@ -59,6 +59,7 @@ runs:
     - name: "Create mr on k8s repo"
       if: ${{ steps.update_k8s.outputs.k8s_branch != '' }}
       uses: actions/github-script@v7
+      continue-on-error: true
       with:
         github-token: ${{ inputs.github_api_token }}
         script: |
