@@ -12,6 +12,7 @@ runs:
     - name: "☸️ Update k8s deployments"
       env:
         GITHUB_API_TOKEN: ${{ inputs.github_api_token }}
+        GH_TOKEN: ${{ inputs.github_api_token }}
       shell: bash
       run: |
         set -eExou pipefail
@@ -61,4 +62,4 @@ runs:
           --force --set-upstream origin "${K8S_REPO_BRANCH}" || \
           git push --force --set-upstream origin "${K8S_REPO_BRANCH}"
 
-        GH_TOKEN=${GITHUB_API_TOKEN} gh pr create --assignee "@me" --base "main" --head "${K8S_REPO_BRANCH}" --title "[nomrbot] - Updating DRE container images" --body "Updating the DRE container images based on the latest changes in the DRE repository - [here](https://github.com/dfinity/dre/commits/$DRE_REPO_BRANCH)" --reviewer dfinity-ops/dre
+        gh pr create --assignee "@me" --base "main" --head "${K8S_REPO_BRANCH}" --title "[nomrbot] - Updating DRE container images" --body "Updating the DRE container images based on the latest changes in the DRE repository - [here](https://github.com/dfinity/dre/commits/$DRE_REPO_BRANCH)" --reviewer dfinity-ops/dre
