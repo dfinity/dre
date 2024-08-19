@@ -91,8 +91,9 @@ async fn main() -> anyhow::Result<()> {
         }
     };
 
-    if outcomes.iter().any(|o| o.is_err()) {
-        anyhow::bail!("Overall qualification failed due to one or more sub-qualifications failing")
+    let errs = outcomes.iter().filter(|o| o.is_err()).collect::<Vec<_>>();
+    if !errs.is_empty() {
+        anyhow::bail!("Overall qualification failed due to one or more sub-qualifications failing:\n{:?}", errs)
     }
 
     Ok(())
