@@ -132,7 +132,7 @@ impl From<RouterConfig> for Router {
 mod tests {
     use super::{Route, Router, RouterConfig};
 
-    use ic_management_types::{Provider, Status};
+    use ic_management_types::{HealthStatus, Provider};
     use ic_types::PrincipalId;
     use pretty_assertions::assert_eq;
     use rand::distributions::Alphanumeric;
@@ -228,7 +228,7 @@ node_providers:
                 name: None,
                 website: None,
             }),
-            status_change: (Status::Healthy, Status::Degraded),
+            status_change: (HealthStatus::Healthy, HealthStatus::Degraded),
         };
 
         let notification_some_2 = Notification {
@@ -238,13 +238,13 @@ node_providers:
                 name: None,
                 website: None,
             }),
-            status_change: (Status::Healthy, Status::Degraded),
+            status_change: (HealthStatus::Healthy, HealthStatus::Degraded),
         };
 
         let notification_none = Notification {
             node_id: PrincipalId::new_node_test_id(1),
             node_provider: None,
-            status_change: (Status::Healthy, Status::Degraded),
+            status_change: (HealthStatus::Healthy, HealthStatus::Degraded),
         };
 
         assert!(m_some_1.matches(&notification_some_1));
@@ -270,7 +270,7 @@ node_providers:
                 name: None,
                 website: None,
             }),
-            status_change: (Status::Healthy, Status::Degraded),
+            status_change: (HealthStatus::Healthy, HealthStatus::Degraded),
         };
 
         let principal_id_2 = PrincipalId::new_user_test_id(2);
@@ -281,7 +281,7 @@ node_providers:
                 name: None,
                 website: None,
             }),
-            status_change: (Status::Healthy, Status::Degraded),
+            status_change: (HealthStatus::Healthy, HealthStatus::Degraded),
         };
 
         let test_sink = Rc::new(TestSink::new());

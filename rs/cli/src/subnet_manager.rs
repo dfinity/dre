@@ -63,7 +63,7 @@ impl SubnetManager {
             .ok_or_else(|| anyhow!(SubnetManagerError::SubnetTargetNotProvided))
     }
 
-    async fn unhealthy_nodes(&self, subnet: DecentralizedSubnet) -> anyhow::Result<Vec<(DecentralizedNode, ic_management_types::Status)>> {
+    async fn unhealthy_nodes(&self, subnet: DecentralizedSubnet) -> anyhow::Result<Vec<(DecentralizedNode, ic_management_types::HealthStatus)>> {
         let health_client = health::HealthClient::new(self.network.clone());
         let subnet_health = health_client.subnet(subnet.id).await?;
 
@@ -72,7 +72,7 @@ impl SubnetManager {
             .into_iter()
             .filter_map(|n| match subnet_health.get(&n.id) {
                 Some(health) => {
-                    if *health == ic_management_types::Status::Healthy {
+                    if *health == ic_management_types::HealthStatus::Healthy {
                         None
                     } else {
                         info!("Node {} is {:?}", n.id, health);
@@ -81,7 +81,7 @@ impl SubnetManager {
                 }
                 None => {
                     warn!("Node {} has no known health, assuming unhealthy", n.id);
-                    Some((n, ic_management_types::Status::Unknown))
+                    Some((n, ic_management_types::HealthStatus::Unknown))
                 }
             })
             .collect::<Vec<_>>();
