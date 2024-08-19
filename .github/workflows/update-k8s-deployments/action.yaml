@@ -53,7 +53,7 @@ runs:
           --force --set-upstream origin "${K8S_REPO_BRANCH}" || \
           git push --force --set-upstream origin "${K8S_REPO_BRANCH}"
 
-        echo "k8s_branch=${K8S_REPO_BRANCH}" >> $GITHUB_OUTPUT
+        echo "k8s_branch=$K8S_REPO_BRANCH" >> $GITHUB_OUTPUT
 
     - name: "🆕 Create a new Pull Request with the changes"
       if: "${{ steps.update_k8s.k8s_branch != '' }}"
