@@ -55,6 +55,10 @@ runs:
 
         echo "k8s_branch=$K8S_REPO_BRANCH" >> $GITHUB_OUTPUT
 
+    - name: "Test"
+      run: echo ${{ steps.update_k8s.k8s_branch }}
+      shell: bash
+
     - name: "🆕 Create a new Pull Request with the changes"
       if: "${{ steps.update_k8s.k8s_branch != '' }}"
       uses: peter-evans/create-pull-request@v6
