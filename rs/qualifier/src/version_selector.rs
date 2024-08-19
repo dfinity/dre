@@ -87,6 +87,7 @@ impl StartVersionSelector {
             .batches
             .iter()
             .flat_map(|(_, batch)| batch.subnets.iter().map(|s| s.git_revision.clone()))
+            .sorted()
             .dedup()
             .collect())
     }
