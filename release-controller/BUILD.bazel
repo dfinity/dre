@@ -59,6 +59,7 @@ py_test(
     env = env,
     tags = ["no-sandbox"],
     deps = deps + dev_deps,
+    env_inherit = ["HOME"],
 )
 
 py_oci_image(
