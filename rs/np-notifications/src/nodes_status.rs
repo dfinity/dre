@@ -1,17 +1,17 @@
 use std::collections::{BTreeMap, BTreeSet};
 
-use ic_management_types::Status;
+use ic_management_types::HealthStatus;
 use ic_types::PrincipalId;
 
 use crate::notification::Notification;
 
 #[derive(Debug, PartialOrd, Ord, PartialEq, Eq, Clone)]
 pub struct NodesStatus {
-    nodes: BTreeMap<PrincipalId, Status>,
+    nodes: BTreeMap<PrincipalId, HealthStatus>,
 }
 
-impl From<BTreeMap<PrincipalId, Status>> for NodesStatus {
-    fn from(tree: BTreeMap<PrincipalId, Status>) -> Self {
+impl From<BTreeMap<PrincipalId, HealthStatus>> for NodesStatus {
+    fn from(tree: BTreeMap<PrincipalId, HealthStatus>) -> Self {
         Self { nodes: tree }
     }
 }
@@ -25,11 +25,11 @@ impl NodesStatus {
         self.nodes.keys().copied().collect()
     }
 
-    fn get(&self, id: PrincipalId) -> Option<&Status> {
+    fn get(&self, id: PrincipalId) -> Option<&HealthStatus> {
         self.nodes.get(&id)
     }
 
-    pub fn updated_from_map(&self, map: BTreeMap<PrincipalId, Status>) -> (NodesStatus, Vec<Notification>) {
+    pub fn updated_from_map(&self, map: BTreeMap<PrincipalId, HealthStatus>) -> (NodesStatus, Vec<Notification>) {
         self.updated(Self::from(map))
     }
 
@@ -49,7 +49,7 @@ impl NodesStatus {
             notifications.push(Notification {
                 node_id,
                 status_change: (
-                    Status::Unknown,
+                    HealthStatus::Unknown,
                     new_statuses
                         .get(node_id)
                         .unwrap_or_else(|| panic!("New statuses map should contain id {}", node_id))
@@ -68,7 +68,7 @@ impl NodesStatus {
                     self.get(node_id)
                         .unwrap_or_else(|| panic!("Current statuses map should contain id {}", node_id))
                         .clone(),
-                    Status::Unknown,
+                    HealthStatus::Unknown,
                 ),
                 node_provider: None,
             })
@@ -100,7 +100,7 @@ impl NodesStatus {
 
 #[cfg(test)]
 mod tests {
-    use ic_management_types::Status;
+    use ic_management_types::HealthStatus;
     use ic_types::PrincipalId;
     use pretty_assertions::assert_eq;
 
@@ -120,10 +120,18 @@ mod tests {
         ];
 
         let statuses = NodesStatus {
-            nodes: BTreeMap::from([(ids[0], Status::Healthy), (ids[1], Status::Healthy), (ids[2], Status::Healthy)]),
+            nodes: BTreeMap::from([
+                (ids[0], HealthStatus::Healthy),
+                (ids[1], HealthStatus::Healthy),
+                (ids[2], HealthStatus::Healthy),
+            ]),
         };
         let new_statuses = NodesStatus {
-            nodes: BTreeMap::from([(ids[0], Status::Healthy), (ids[1], Status::Degraded), (ids[3], Status::Healthy)]),
+            nodes: BTreeMap::from([
+                (ids[0], HealthStatus::Healthy),
+                (ids[1], HealthStatus::Degraded),
+                (ids[3], HealthStatus::Healthy),
+            ]),
         };
         let (statuses, notifications) = statuses.updated(new_statuses.clone());
 
@@ -132,17 +140,17 @@ mod tests {
         assert!(notifications.contains(&Notification {
             node_id: ids[1],
             node_provider: None,
-            status_change: (Status::Healthy, Status::Degraded),
+            status_change: (HealthStatus::Healthy, HealthStatus::Degraded),
         }));
         assert!(notifications.contains(&Notification {
             node_id: ids[2],
             node_provider: None,
-            status_change: (Status::Healthy, Status::Unknown),
+            status_change: (HealthStatus::Healthy, HealthStatus::Unknown),
         }));
         assert!(notifications.contains(&Notification {
             node_id: ids[3],
             node_provider: None,
-            status_change: (Status::Unknown, Status::Healthy),
+            status_change: (HealthStatus::Unknown, HealthStatus::Healthy),
         }));
     }
 }
