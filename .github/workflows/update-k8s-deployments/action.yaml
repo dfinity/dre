@@ -53,18 +53,18 @@ runs:
           --force --set-upstream origin "${K8S_REPO_BRANCH}" || \
           git push --force --set-upstream origin "${K8S_REPO_BRANCH}"
 
-        echo "k8s_branch=$K8S_REPO_BRANCH" >> $GITHUB_OUTPUT
+        echo "branch=${K8S_REPO_BRANCH}" >> $GITHUB_OUTPUT
 
     - name: "Test"
-      run: echo ${{ steps.update_k8s.k8s_branch }}
+      run: echo ${{ steps.update_k8s.branch }}
       shell: bash
 
     - name: "🆕 Create a new Pull Request with the changes"
-      if: "${{ steps.update_k8s.k8s_branch != '' }}"
+      if: "${{ steps.update_k8s.branch != '' }}"
       uses: peter-evans/create-pull-request@v6
       with:
         commit-message: "chore: Update dependencies"
-        branch: ${{ steps.update_k8s.k8s_branch }}
+        branch: ${{ steps.update_k8s.branch }}
         title: "[nomrbot] - Updating DRE container images"
         body: "Updating the DRE container images based on the latest changes in the DRE repository - [here](https://github.com/dfinity/dre/commits/$DRE_REPO_BRANCH)"
         token: ${{ inputs.github_api_token }}
