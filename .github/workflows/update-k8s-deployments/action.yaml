@@ -53,13 +53,7 @@ runs:
           --force --set-upstream origin "${K8S_REPO_BRANCH}" || \
           git push --force --set-upstream origin "${K8S_REPO_BRANCH}"
 
-        (type -p wget >/dev/null || (sudo apt update && sudo apt-get install wget -y)) \
-        && sudo mkdir -p -m 755 /etc/apt/keyrings \
-        && wget -qO- https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null \
-        && sudo chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
-        && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
-        && sudo apt update \
-        && sudo apt install gh -y
+        echo "k8s_branch=$K8S_REPO_BRANCH" >> $GITHUB_OUTPUT
 
         echo "$GITHUB_API_TOKEN" > token.txt
         gh auth login --with-token < token.txt
@@ -70,3 +64,16 @@ runs:
           --head "$K8S_REPO_BRANCH" \
           --assignee "@me" \
           --reviewer "@dfinity-ops/dre"
+
+    - name: "Create mr"
+      if: ${{ steps.update_k8s.outputs.k8s_branch != '' }}
+      uses: "paygoc6/action-pull-request-another-repo@v1.0.1"
+      env:
+        API_TOKEN_GITHUB: ${{ inputs.github_api_token }}
+      with:
+        source_folder: .git/k8s
+        destination_repo: dfinity-ops/k8s
+        destination_base_branch: main
+        destination_head_branch: ${{ steps.update_k8s.outputs.k8s_branch }}
+        user_email: "idx@dfinity.org"
+        user_name: "nomrbot"
