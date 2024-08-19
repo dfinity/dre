@@ -54,16 +54,18 @@ runs:
           git push --force --set-upstream origin "${K8S_REPO_BRANCH}"
 
         echo "k8s_branch=$K8S_REPO_BRANCH" >> $GITHUB_OUTPUT
+        echo "dre_branch=$DRE_REPO_BRANCH" >> $GITHUB_OUTPUT
 
-    - name: "Create mr"
+    - name: "Create mr on k8s repo"
       if: ${{ steps.update_k8s.outputs.k8s_branch != '' }}
-      uses: "paygoc6/action-pull-request-another-repo@v1.0.1"
-      env:
-        API_TOKEN_GITHUB: ${{ inputs.github_api_token }}
+      uses: actions/github-script@v7
       with:
-        source_folder: .git/k8s
-        destination_repo: dfinity-ops/k8s
-        destination_base_branch: main
-        destination_head_branch: ${{ steps.update_k8s.outputs.k8s_branch }}
-        user_email: "idx@dfinity.org"
-        user_name: "nomrbot"
+        script: |
+          const result = await github.rest.pulls.create({
+            title: '[nomrbot] - Updating DRE container images',
+            owner: 'dfinity-ops',
+            repo: 'k8s',
+            head: '${{ steps.update_k8s.outputs.k8s_branch }}',
+            base: 'main',
+            body: 'Updating the DRE container images based on the latest changes in the DRE repository - [here](https://github.com/dfinity/dre/commits/${{ steps.update_k8s.outputs.dre_branch }})'
+          });
