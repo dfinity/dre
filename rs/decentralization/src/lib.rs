@@ -127,6 +127,15 @@ impl Display for SubnetChangeResponse {
             writeln!(f, " ++> {} [selected based on {}]", id, desc).expect("write failed");
         }
 
+        writeln!(f, "Nodes removed:")?;
+        for (id, desc) in &self.removed_with_desc {
+            writeln!(f, " --> {} [selected based on {}]", id, desc).expect("write failed");
+        }
+        writeln!(f, "\nNodes added:")?;
+        for (id, desc) in &self.added_with_desc {
+            writeln!(f, " ++> {} [selected based on {}]", id, desc).expect("write failed");
+        }
+
         let rows = self.feature_diff.values().map(|diff| diff.len()).max().unwrap_or(0);
         let mut table = tabular::Table::new(&self.feature_diff.keys().map(|_| "    {:<}  {:>}").collect::<Vec<_>>().join(""));
         table.add_row(
