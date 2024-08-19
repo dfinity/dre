@@ -221,7 +221,12 @@ async fn nodes_healths(registry: web::Data<Arc<RwLock<registry::RegistryState>>>
         registry
             .nodes()
             .values()
-            .map(|n| (n.principal, healths.remove(&n.principal).unwrap_or(ic_management_types::Status::Unknown)))
+            .map(|n| {
+                (
+                    n.principal,
+                    healths.remove(&n.principal).unwrap_or(ic_management_types::HealthStatus::Unknown),
+                )
+            })
             .collect::<BTreeMap<_, _>>()
     }))
 }

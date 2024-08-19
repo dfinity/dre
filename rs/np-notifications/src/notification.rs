@@ -5,7 +5,7 @@ use std::{
 };
 
 use actix_web::{rt::time::sleep, web};
-use ic_management_types::{Provider, Status};
+use ic_management_types::{HealthStatus, Provider};
 use ic_types::PrincipalId;
 use serde::ser::{SerializeStruct, Serializer};
 use serde::Serialize;
@@ -45,7 +45,7 @@ pub async fn start_notification_sender_loop(config: NotificationSenderLoopConfig
 pub struct Notification {
     pub node_id: PrincipalId,
     pub node_provider: Option<Provider>,
-    pub status_change: (Status, Status),
+    pub status_change: (HealthStatus, HealthStatus),
 }
 
 impl Display for Notification {
@@ -91,7 +91,7 @@ impl Notification {
                 name: Some("test".into()),
                 website: None,
             }),
-            status_change: (Status::Healthy, Status::Degraded),
+            status_change: (HealthStatus::Healthy, HealthStatus::Degraded),
         }
     }
 }
