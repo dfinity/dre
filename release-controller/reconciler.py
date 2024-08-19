@@ -192,7 +192,7 @@ class Reconciler:
                 continue
             rc_forum_topic = self.forum_client.get_or_create(rc)
             # update to create posts for any releases
-            rc_forum_topic.update(changelog=self.loader.changelog, proposal=self.state.version_proposal)
+            rc_forum_topic.update(changelog=self.loader.proposal_summary, proposal=self.state.version_proposal)
             for v_idx, v in enumerate(rc.versions):
                 logging.info("Updating version %s", v)
                 push_release_tags(self.ic_repo, rc)
@@ -210,7 +210,7 @@ class Reconciler:
                 )
 
                 # returns a result only if changelog is published
-                changelog = self.loader.changelog(v.version)
+                changelog = self.loader.proposal_summary(v.version)
                 if changelog:
                     if not self.state.proposal_submitted(v.version):
                         unelect_versions = []
@@ -240,7 +240,7 @@ class Reconciler:
                         self.state.save_proposal(v.version, versions_proposals[v.version])
 
             # update the forum posts in case the proposal was created
-            rc_forum_topic.update(changelog=self.loader.changelog, proposal=self.state.version_proposal)
+            rc_forum_topic.update(changelog=self.loader.proposal_summary, proposal=self.state.version_proposal)
 
 
 def place_proposal(ic_admin, changelog, version: str, forum_post_url: str, unelect_versions: list[str], dry_run=False):
@@ -329,7 +329,7 @@ def main():
 def oneoff():
     release_loader = GitReleaseLoader(f"https://github.com/{dre_repo}.git")
     version = "ac971e7b4c851b89b312bee812f6de542ed907c5"
-    changelog = release_loader.changelog(version)
+    changelog = release_loader.proposal_summary(version)
 
     ic_admin = IcAdmin("https://ic0.app", git_revision="5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d")
     place_proposal(
