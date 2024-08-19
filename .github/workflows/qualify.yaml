@@ -23,7 +23,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          repository: 'dfinity/dre' # this needs to be specified so it can be kicked off from the ic repo
+          repository: "dfinity/dre" # this needs to be specified so it can be kicked off from the ic repo
 
       - name: "🔍 Check if the version is set"
         shell: bash
@@ -49,4 +49,4 @@ jobs:
         run: |
           mkdir -p ~/.config/dfx/identity/xnet-testing/
           echo "${{ secrets.XNET_PRINCIPAL_KEY }}" > ~/.config/dfx/identity/xnet-testing/identity.pem
-          bazel run //rs/qualifier -- "${{ inputs.version }}"
+          bazel run //rs/qualifier -- "${{ inputs.version }}" --mode parallel
