@@ -62,6 +62,7 @@ runs:
         && sudo apt install gh -y
 
         echo "$GITHUB_API_TOKEN" > token.txt
+        gh auth login --with-token < token.txt
         gh pr create \
           --body "Updating the DRE container images based on the latest changes in the DRE repository - [here](https://github.com/dfinity/dre/commits/$DRE_REPO_BRANCH)" \
           --title "[nomrbot] - Updating DRE container images" \
