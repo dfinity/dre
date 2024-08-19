@@ -125,7 +125,7 @@ jobs:
       # Update k8s deployments
       ########################################
       - name: "🤖 Update k8s deployments"
-        if: ${{ github.ref == 'refs/heads/main' }}
+        #if: ${{ github.ref == 'refs/heads/main' }}
         uses: ./.github/workflows/update-k8s-deployments
         with:
           github_api_token: ${{ secrets.K8S_API_TOKEN }}
