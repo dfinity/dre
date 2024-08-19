@@ -152,6 +152,7 @@ async fn run_qualification(args: &Args, initial_version: String, artifacts: &Pat
 
     let mut file = std::fs::File::create_new(artifacts.join("ic-config.json"))?;
     writeln!(file, "{}", &config)?;
+    let current_network_name = format!("{}-{}", NETWORK_NAME, initial_version);
 
     tokio::select! {
         res = ict(args.ic_repo_path.clone(), config, token.clone(), sender) => res?,
@@ -159,7 +160,7 @@ async fn run_qualification(args: &Args, initial_version: String, artifacts: &Pat
             &mut receiver,
             private_key_pem.to_path_buf(),
             neuron_id,
-            NETWORK_NAME,
+            current_network_name.as_str(),
             initial_version.to_owned(),
             args.version_to_qualify.to_string(),
             artifacts.to_path_buf(),
