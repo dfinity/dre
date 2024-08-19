@@ -2,8 +2,8 @@ name: Update k8s deployments
 description: Reusable action for updating k8s deployments
 
 inputs:
-  gitlab_api_token:
-    description: 'A GitLab API token with access to the k8s repository'
+  github_api_token:
+    description: "A Github API token with access to the k8s repository"
     required: true
 
 runs:
@@ -11,7 +11,7 @@ runs:
   steps:
     - name: "☸️ Update k8s deployments"
       env:
-        GITLAB_API_TOKEN: ${{ inputs.gitlab_api_token }}
+        GITHUB_API_TOKEN: ${{ inputs.github_api_token }}
       shell: bash
       run: |
         set -eExou pipefail
@@ -24,7 +24,7 @@ runs:
         cd .git
 
         # checkout branch
-        git clone --depth 10 --branch "main" "https://gitlab-ci-token:${GITLAB_API_TOKEN}@gitlab.com/dfinity-lab/private/k8s/k8s.git"
+        git clone --depth 10 --branch "main" "https://${GITHUB_API_TOKEN}@github.com/dfinity-ops/k8s.git"
 
         cd k8s
         git config user.email "idx@dfinity.org"
