@@ -22,8 +22,8 @@ pub struct Create {
     #[clap(long, num_args(1..))]
     pub only: Vec<String>,
 
-    #[clap(long, num_args(1..), help = r#"Force t he inclusion of the provided nodes for replacement,
-regardless of the decentralization score"#)]
+    #[clap(long, num_args(1..), help = r#"Force the inclusion of the provided nodes for replacement,
+regardless of the decentralization coefficients"#)]
     pub include: Vec<PrincipalId>,
 
     /// Motivation for replacing custom nodes
