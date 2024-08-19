@@ -19,9 +19,8 @@ const KEEPALIVE_PERIOD: Duration = Duration::from_secs(30);
 const KEEPALIVE_PERIOD_ERROR: Duration = Duration::from_secs(5);
 pub const FARM_BASE_URL: &str = "https://farm.dfinity.systems";
 
-pub async fn ict(ic_git: PathBuf, config: String, token: CancellationToken, sender: Sender<Message>) -> anyhow::Result<()> {
-    let ic_config = PathBuf::from_str("/tmp/ic_config.json")?;
-    std::fs::write(&ic_config, &config)?;
+pub async fn ict(ic_git: PathBuf, config: String, token: CancellationToken, sender: Sender<Message>, artifacts: PathBuf) -> anyhow::Result<()> {
+    let ic_config = artifacts.join("ic_config.json")?;
 
     let command = "gitlab-ci/container/container-run.sh";
     let args = &[

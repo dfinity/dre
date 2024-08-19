@@ -155,7 +155,7 @@ async fn run_qualification(args: &Args, initial_version: String, artifacts: &Pat
     let current_network_name = format!("{}-{}", NETWORK_NAME, initial_version);
 
     tokio::select! {
-        res = ict(args.ic_repo_path.clone(), config, token.clone(), sender) => res?,
+        res = ict(args.ic_repo_path.clone(), config, token.clone(), sender, artifacts.to_path_buf()) => res?,
         res = qualify(
             &mut receiver,
             private_key_pem.to_path_buf(),
