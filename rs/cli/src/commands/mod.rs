@@ -11,6 +11,7 @@ use get::Get;
 use heal::Heal;
 use hostos::HostOs;
 use ic_management_types::{MinNakamotoCoefficients, Network, NodeFeature};
+use neuron::Neuron;
 use node_metrics::NodeMetrics;
 use nodes::Nodes;
 use proposals::Proposals;
@@ -24,7 +25,7 @@ use url::Url;
 use version::Version;
 use vote::Vote;
 
-use crate::auth::Neuron;
+use crate::auth::Neuron as AuthNeuron;
 
 mod api_boundary_nodes;
 mod completions;
@@ -33,6 +34,7 @@ mod firewall;
 pub mod get;
 mod heal;
 pub mod hostos;
+mod neuron;
 mod node_metrics;
 mod nodes;
 mod proposals;
@@ -144,7 +146,7 @@ macro_rules! impl_executable_command_for_enums {
 }
 pub(crate) use impl_executable_command_for_enums;
 
-impl_executable_command_for_enums! { DerToPrincipal, Heal, Subnet, Get, Propose, UpdateUnassignedNodes, Version, NodeMetrics, HostOs, Nodes, ApiBoundaryNodes, Vote, Registry, Firewall, Upgrade, Proposals, Completions, Qualify, UpdateAuthorizedSubnets }
+impl_executable_command_for_enums! { DerToPrincipal, Heal, Subnet, Get, Propose, UpdateUnassignedNodes, Version, NodeMetrics, HostOs, Nodes, ApiBoundaryNodes, Vote, Registry, Firewall, Upgrade, Proposals, Completions, Qualify, UpdateAuthorizedSubnets, Neuron }
 
 pub trait ExecutableCommand {
     fn require_ic_admin(&self) -> IcAdminRequirement;
@@ -224,9 +226,9 @@ pub trait ExecutableCommand {
 
 pub enum IcAdminRequirement {
     None,
-    Anonymous,                                          // for get commands
-    Detect,                                             // detect the neuron
-    OverridableBy { network: Network, neuron: Neuron }, // eg automation which we know where is placed
+    Anonymous,                                              // for get commands
+    Detect,                                                 // detect the neuron
+    OverridableBy { network: Network, neuron: AuthNeuron }, // eg automation which we know where is placed
 }
 
 impl ExecutableCommand for Args {
