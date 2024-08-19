@@ -60,6 +60,7 @@ runs:
       if: ${{ steps.update_k8s.outputs.k8s_branch != '' }}
       uses: actions/github-script@v7
       with:
+        github-token: ${{ inputs.github_api_token }}
         script: |
           const result = await github.rest.pulls.create({
             title: '[nomrbot] - Updating DRE container images',
