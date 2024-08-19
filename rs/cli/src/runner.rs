@@ -122,7 +122,6 @@ impl Runner {
                 println!("{}\n", run_log.join("\n"));
             }
         }
-        println!("{}", change);
 
         if change.added_with_desc.is_empty() && change.removed_with_desc.is_empty() {
             return Ok(());
@@ -209,7 +208,6 @@ impl Runner {
                 println!("{}\n", run_log.join("\n"));
             }
         }
-        println!("{}", change);
 
         if change.added_with_desc.is_empty() && change.removed_with_desc.is_empty() {
             return Ok(());
