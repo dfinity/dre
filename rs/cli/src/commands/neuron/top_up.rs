@@ -18,6 +18,14 @@ impl ExecutableCommand for TopUp {
         let full_neuron = governance.get_full_neuron(ctx.ic_admin().neuron.neuron_id).await?;
         let account_hex = full_neuron.account.iter().map(|byte| format!("{:02x}", byte)).collect::<String>();
 
+        println!("Please request ICP in the #icp-to-go slack channel:");
+        println!(
+            "> Hi! Can I please get XX ICPs on the account address `{}` for neuron ID {} in order to be able to submit more NNS proposals. Thank you\n",
+            account_hex,
+            ctx.ic_admin().neuron.neuron_id
+        );
+        println!("You can check balance by running `dre neuron balance`");
+
         Ok(())
     }
 }
