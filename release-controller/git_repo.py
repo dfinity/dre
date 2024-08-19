@@ -322,7 +322,7 @@ def push_release_tags(repo: GitRepo, release: Release):
             cwd=repo.dir,
         )
         if (
-            not subprocess.check_output(
+            subprocess.check_output(
                 [
                     "git",
                     "ls-remote",
@@ -333,6 +333,7 @@ def push_release_tags(repo: GitRepo, release: Release):
             )
             .decode("utf-8")
             .strip()
+            .split(" ")[0] != v.version
         ):
             subprocess.check_call(
                 [
@@ -340,6 +341,7 @@ def push_release_tags(repo: GitRepo, release: Release):
                     "push",
                     "origin",
                     tag,
+                    "-f",
                 ],
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
