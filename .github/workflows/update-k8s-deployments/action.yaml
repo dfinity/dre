@@ -21,6 +21,15 @@ runs:
         echo "Should change following files:"
         echo $files
 
+        # Setup gh cli
+        (type -p wget >/dev/null || (sudo apt update && sudo apt-get install wget -y)) \
+        && sudo mkdir -p -m 755 /etc/apt/keyrings \
+        && wget -qO- https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null \
+        && sudo chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
+        && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
+        && sudo apt update \
+        && sudo apt install gh -y
+
         cd .git
 
         # checkout branch
@@ -49,8 +58,7 @@ runs:
         # Push changes and create a new merge request
         git commit -m "Updating DRE container images from $DRE_REPO_BRANCH branch"
         git push \
-          -o merge_request.create \
-          -o merge_request.title="[nomrbot] - Updating DRE container images" \
-          -o merge_request.description="Updating the DRE container images based on the latest changes in the DRE repository - [here](https://github.com/dfinity/dre/commits/$DRE_REPO_BRANCH)" \
           --force --set-upstream origin "${K8S_REPO_BRANCH}" || \
           git push --force --set-upstream origin "${K8S_REPO_BRANCH}"
+
+        GH_TOKEN=${GITHUB_API_TOKEN} gh pr create --assignee "@me" --base "main" --head "${K8S_REPO_BRANCH}" --title "[nomrbot] - Updating DRE container images" --body "Updating the DRE container images based on the latest changes in the DRE repository - [here](https://github.com/dfinity/dre/commits/$DRE_REPO_BRANCH)" --reviewer dfinity-ops/dre
