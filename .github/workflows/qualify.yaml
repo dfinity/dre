@@ -23,7 +23,26 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  setup:
+    runs-on: 
+      labels: dre-runner-custom
+    container: ghcr.io/dfinity/dre/actions-runner:7efd87b0eac3ebd255be7efe00a3b39b0f9e9fc1
+    outputs:
+      matrix: ${{ steps.generate.outputs.output }}
+    steps:
+      - id: generate
+        shell: bash
+        run: |
+          sudo apt-get install -y jq
+          UNIQUE_VERSIONS=$(curl https://rollout-dashboard.ch1-rel1.dfinity.network/api/v1/rollouts | jq -r '.[] | select (.state != "failed") | select (.state != "complete") | .batches | to_entries[] | "\(.value)"' | jq '.subnets[].git_revision' |  sort | uniq | jq -s )
+          echo "Will qualify starting from versions: ${UNIQUE_VERSIONS}"
+          echo "output=$(jq -cn --argjson versions "$UNIQUE_VERSIONS" '{version: $versions}')" >> $GITHUB_OUTPUT
+
   qualify:
+    name: Qualifying ${{ matrix.version }} -> ${{ inputs.version }}
+    needs: setup
+    strategy:
+      matrix: ${{ fromJson(needs.setup.outputs.matrix) }}
     runs-on:
       labels: dre-runner-custom
     container: ghcr.io/dfinity/dre/actions-runner:7efd87b0eac3ebd255be7efe00a3b39b0f9e9fc1
@@ -56,4 +75,4 @@ jobs:
         run: |
           mkdir -p ~/.config/dfx/identity/xnet-testing/
           echo "${{ secrets.XNET_PRINCIPAL_KEY }}" > ~/.config/dfx/identity/xnet-testing/identity.pem
-          bazel run //rs/qualifier -- "${{ inputs.version }}"
+          bazel run //rs/qualifier -- "${{ inputs.version }}" --initial-versions ${{ matrix.version }}
