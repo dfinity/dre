@@ -2,6 +2,7 @@ use clap::Args;
 
 use super::{impl_executable_command_for_enums, ExecutableCommand, IcAdminRequirement};
 use crate::commands::neuron::balance::Balance;
+use crate::commands::neuron::top_up::TopUp;
 
 mod balance;
 mod top_up;
@@ -12,7 +13,7 @@ pub struct Neuron {
     pub subcommand: Subcommands,
 }
 
-impl_executable_command_for_enums! { Balance }
+impl_executable_command_for_enums! { Balance, TopUp }
 
 impl ExecutableCommand for Neuron {
     fn require_ic_admin(&self) -> IcAdminRequirement {

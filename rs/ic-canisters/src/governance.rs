@@ -10,6 +10,7 @@ use ic_nns_governance::pb::v1::ListProposalInfo;
 use ic_nns_governance::pb::v1::ListProposalInfoResponse;
 use ic_nns_governance::pb::v1::ManageNeuron;
 use ic_nns_governance::pb::v1::ManageNeuronResponse;
+use ic_nns_governance::pb::v1::Neuron;
 use ic_nns_governance::pb::v1::NeuronInfo;
 use ic_nns_governance::pb::v1::ProposalInfo;
 use log::warn;
@@ -208,6 +209,20 @@ impl GovernanceCanisterWrapper {
             .map_err(|e| anyhow::anyhow!(e))?
         {
             Some(response) => Ok(Decode!(response.as_slice(), Result<NeuronInfo, GovernanceError>)?.map_err(|e| anyhow::anyhow!(e))?),
+            None => Err(anyhow::anyhow!("Didn't find neuron with id {}", neuron_id)),
+        }
+    }
+
+    pub async fn get_full_neuron(&self, neuron_id: u64) -> anyhow::Result<Neuron> {
+        let args = candid::encode_one(&neuron_id)?;
+        match self
+            .client
+            .agent
+            .execute_query(&GOVERNANCE_CANISTER_ID, "get_full_neuron", args)
+            .await
+            .map_err(|e| anyhow::anyhow!(e))?
+        {
+            Some(response) => Ok(Decode!(response.as_slice(), Result<Neuron, GovernanceError>)?.map_err(|e| anyhow::anyhow!(e))?),
             None => Err(anyhow::anyhow!("Didn't find neuron with id {}", neuron_id)),
         }
     }
