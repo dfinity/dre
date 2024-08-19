@@ -514,6 +514,7 @@ def bazel_query(ic_repo: GitRepo, query):
                 cwd=ic_repo.dir,
                 text=True,
                 stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
                 check=True,
             )
         except subprocess.CalledProcessError as e:
