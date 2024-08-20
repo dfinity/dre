@@ -8,6 +8,12 @@ on:
         description: "The version that should be qualified"
         type: string
         default: ""
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "The version that should be qualified"
+        type: string
+        default: ""
 
 # Run one qualification per commit.
 # This means we can have multiple qualifications of different versions
@@ -18,7 +24,7 @@ concurrency:
 
 jobs:
   setup:
-    runs-on: 
+    runs-on:
       labels: dre-runner-custom
     container: ghcr.io/dfinity/dre/actions-runner:7efd87b0eac3ebd255be7efe00a3b39b0f9e9fc1
     outputs:
@@ -69,4 +75,36 @@ jobs:
         run: |
           mkdir -p ~/.config/dfx/identity/xnet-testing/
           echo "${{ secrets.XNET_PRINCIPAL_KEY }}" > ~/.config/dfx/identity/xnet-testing/identity.pem
-          bazel run //rs/qualifier -- "${{ inputs.version }}" --initial-versions ${{ matrix.version }}
+          bazel run //rs/qualifier -- "${{ inputs.version }}" --initial-versions ${{ matrix.version }} --step-range 9..109
+
+      - name: "⚙️ Uploading artifacts during qualification"
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.version }}-${{ matrix.version }}
+          path: /tmp/qualifier-artifacts/${{ inputs.version }}
+          retention-days: 1
+          overwrite: true
+
+  finish:
+    needs: qualify
+    runs-on: ubuntu-22.04
+    steps:
+      - name: "Download all artifacts"
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          pattern: ${{ inputs.version }}-*
+
+      - name: "Get current date"
+        id: date
+        shell: bash
+        run: |
+          echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
+
+      - name: "Upload artifacts to google drive"
+        uses: adityak74/google-drive-upload-git-action@v0.3
+        with:
+          credentials: ${{ secrets.ARTIFACTS_DRIVE_CREDENTIALS }}
+          filename: ${{ inputs.version }}-${{ steps.date.outputs.date }}
+          folderId: ${{ secrets.ARTIFACTS_DRIVE_FOLDER_ID }}
+          mirrorDirectoryStructure: true
