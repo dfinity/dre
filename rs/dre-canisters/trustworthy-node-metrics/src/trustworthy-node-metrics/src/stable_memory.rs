@@ -18,9 +18,14 @@ thread_local! {
         MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(0)))
     ));
 
+    static NODE_PROVIDER_MAP: RefCell<StableBTreeMap<Principal, Principal, Memory>> =
+        RefCell::new(StableBTreeMap::init(
+        MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(1)))
+    ));
+
 }
 
-pub fn insert(key: NodeMetricsStoredKey, value: NodeMetricsStored) {
+pub fn insert_node_metrics(key: NodeMetricsStoredKey, value: NodeMetricsStored) {
     NODE_METRICS_MAP.with(|p| p.borrow_mut().insert(key, value));
 }
 
@@ -36,15 +41,23 @@ pub fn get_metrics_range(from_ts: TimestampNanos, to_ts: Option<TimestampNanos>)
     })
 }
 
-pub fn latest_metrics(principals: Vec<Principal>) -> BTreeMap<Principal, NodeMetricsStored> {
+pub fn latest_metrics(nodes_principal: &[Principal]) -> BTreeMap<Principal, NodeMetricsStored> {
     let mut latest_metrics = BTreeMap::new();
     NODE_METRICS_MAP.with(|p| {
         for ((_, principal), value) in p.borrow().iter() {
-            if principals.contains(&principal) {
+            if nodes_principal.contains(&principal) {
                 latest_metrics.insert(principal, value);
             }
         }
     });
 
     latest_metrics
+}
+
+pub fn insert_node_provider(key: Principal, value: Principal) {
+    NODE_PROVIDER_MAP.with(|p| p.borrow_mut().insert(key, value));
+}
+
+pub(crate) fn get_node_provider(node_principal: &Principal) -> Option<Principal> {
+    NODE_PROVIDER_MAP.with_borrow(|np_map| np_map.get(node_principal))
 }

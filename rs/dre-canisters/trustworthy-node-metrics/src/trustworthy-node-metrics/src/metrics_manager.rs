@@ -1,10 +1,14 @@
 use std::collections::BTreeMap;
 
-use anyhow::Ok;
+use anyhow::{anyhow, Ok};
 use dfn_core::api::PrincipalId;
 use futures::FutureExt;
+use ic_base_types::NodeId;
 use ic_management_canister_types::{NodeMetricsHistoryArgs, NodeMetricsHistoryResponse};
+use ic_protobuf::registry::node::v1::NodeRecord;
+use ic_protobuf::registry::node_operator::v1::NodeOperatorRecord;
 use ic_protobuf::registry::subnet::v1::SubnetListRecord;
+use ic_registry_keys::{make_node_operator_record_key, make_node_record_key};
 
 use crate::stable_memory;
 use itertools::Itertools;
@@ -109,6 +113,40 @@ async fn fetch_subnets() -> anyhow::Result<Vec<PrincipalId>> {
     Ok(subnets)
 }
 
+/// Fetch node provider
+///
+/// Fetch node provider from the registry canister given node_id
+async fn fetch_node_provider(node_id: &PrincipalId) -> anyhow::Result<PrincipalId> {
+    let node_id = NodeId::from(*node_id);
+
+    let node_record_key = make_node_record_key(node_id);
+    let (node_record, _) = ic_nns_common::registry::get_value::<NodeRecord>(node_record_key.as_bytes(), None)
+        .await
+        .map_err(|e| {
+            anyhow!(
+                "Error getting the node_record from the registry for node {}. Error: {:?}",
+                node_principal,
+                e
+            )
+        })?;
+
+    let node_operator_id: PrincipalId = node_record.node_operator_id.try_into()?;
+    let node_operator_key = make_node_operator_record_key(node_operator_id);
+    let (node_operator_record, _) = ic_nns_common::registry::get_value::<NodeOperatorRecord>(node_operator_key.as_bytes(), None)
+        .await
+        .map_err(|e| {
+            anyhow!(
+                "Error getting the node_operator_record from the registry for node  {}. Error: {:?}",
+                node_principal,
+                e
+            )
+        })?;
+
+    let node_provider_id: PrincipalId = node_operator_record.node_provider_principal_id.try_into()?;
+
+    Ok(node_provider_id)
+}
+
 // Calculates the daily proposed and failed blocks
 fn calculate_daily_metrics(last_proposed_total: u64, last_failed_total: u64, current_proposed_total: u64, current_failed_total: u64) -> (u64, u64) {
     if last_failed_total > current_failed_total || last_proposed_total > current_proposed_total {
@@ -135,9 +173,33 @@ fn grouped_by_node(subnet_metrics: Vec<(PrincipalId, Vec<NodeMetricsHistoryRespo
     grouped_by_node
 }
 
-fn store_metrics(node_metrics_storable: Vec<((u64, candid::Principal), NodeMetricsStored)>) {
-    for (key, node_metrics) in node_metrics_storable {
-        stable_memory::insert(key, node_metrics)
+async fn update_node_providers(nodes_principal: Vec<&PrincipalId>) -> anyhow::Result<()> {
+    for node_principal in nodes_principal {
+        let maybe_node_provider = stable_memory::get_node_provider(&node_principal.0);
+
+        if maybe_node_provider.is_none() {
+            let node_provider_id = fetch_node_provider(node_principal).await?;
+
+            stable_memory::insert_node_provider(node_principal.0, node_provider_id.0)
+        }
+    }
+    Ok(())
+}
+
+fn update_node_metrics(metrics_by_node: BTreeMap<PrincipalId, Vec<NodeMetricsGrouped>>) {
+    let principals = metrics_by_node.keys().map(|p| p.0).collect_vec();
+    let latest_metrics = stable_memory::latest_metrics(&principals);
+
+    for (node_id, node_metrics_grouped) in metrics_by_node {
+        let (initial_proposed_total, initial_failed_total) = latest_metrics
+            .get(&node_id.0)
+            .map(|metrics| (metrics.num_blocks_proposed_total, metrics.num_blocks_failures_total))
+            .unwrap_or((0, 0));
+        let node_metrics_storable = node_metrics_storable(node_id, node_metrics_grouped, initial_proposed_total, initial_failed_total);
+
+        for (key, node_metrics) in node_metrics_storable {
+            stable_memory::insert_node_metrics(key, node_metrics)
+        }
     }
 }
 
@@ -154,20 +216,11 @@ pub async fn update_metrics() -> anyhow::Result<()> {
         refresh_ts
     );
     let subnet_metrics: Vec<(PrincipalId, Vec<NodeMetricsHistoryResponse>)> = fetch_metrics(subnets, refresh_ts).await?;
-    let grouped_by_node: BTreeMap<PrincipalId, Vec<NodeMetricsGrouped>> = grouped_by_node(subnet_metrics);
-    let nodes_principal = grouped_by_node.keys().map(|p| p.0).collect_vec();
+    let metrics_by_node: BTreeMap<PrincipalId, Vec<NodeMetricsGrouped>> = grouped_by_node(subnet_metrics);
+    let nodes_principal: Vec<&PrincipalId> = metrics_by_node.keys().collect_vec();
 
-    let latest_metrics = stable_memory::latest_metrics(nodes_principal);
-
-    for (node_id, node_metrics_grouped) in grouped_by_node {
-        let (initial_proposed_total, initial_failed_total) = latest_metrics
-            .get(&node_id.0)
-            .map(|metrics| (metrics.num_blocks_proposed_total, metrics.num_blocks_failures_total))
-            .unwrap_or((0, 0));
-        let node_metrics_storable = node_metrics_storable(node_id, node_metrics_grouped, initial_proposed_total, initial_failed_total);
-
-        store_metrics(node_metrics_storable);
-    }
+    update_node_providers(nodes_principal).await?;
+    update_node_metrics(metrics_by_node);
 
     Ok(())
 }

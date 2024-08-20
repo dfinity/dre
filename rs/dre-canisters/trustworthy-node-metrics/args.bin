@@ -1,4 +1,4 @@
 (record {
-    subnet_id = opt principal "yinp6-35cfo-wgcd2-oc4ty-2kqpf-t4dul-rfk33-fsq3r-mfmua-m2ngh-jqe";
+    subnet_id = opt principal "tfiqy-cbhk2-fkeq5-5p5r5-kk7eg-kctmo-tfaor-jogn2-ouxpw-un4kh-kqe";
     ts = opt 0;
 })
