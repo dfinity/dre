@@ -125,7 +125,7 @@ async fn fetch_node_provider(node_id: &PrincipalId) -> anyhow::Result<PrincipalI
         .map_err(|e| {
             anyhow!(
                 "Error getting the node_record from the registry for node {}. Error: {:?}",
-                node_principal,
+                node_id,
                 e
             )
         })?;
@@ -137,7 +137,7 @@ async fn fetch_node_provider(node_id: &PrincipalId) -> anyhow::Result<PrincipalI
         .map_err(|e| {
             anyhow!(
                 "Error getting the node_operator_record from the registry for node  {}. Error: {:?}",
-                node_principal,
+                node_id,
                 e
             )
         })?;

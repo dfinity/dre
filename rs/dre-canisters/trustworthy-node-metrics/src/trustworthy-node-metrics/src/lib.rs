@@ -1,10 +1,9 @@
 use candid::Principal;
 use ic_cdk_macros::*;
 use itertools::Itertools;
-use std::collections::{btree_map::Entry, BTreeMap};
+use std::collections::{self, btree_map::Entry, BTreeMap};
 use trustworthy_node_metrics_types::types::{
-    NodeMetrics, NodeMetricsStored, NodeMetricsStoredKey, SubnetNodeMetricsArgs,
-    SubnetNodeMetricsResponse,
+    DailyNodeMetrics, NodeMetrics, NodeMetricsStored, NodeMetricsStoredKey, NodeRewardsArgs, NodeRewardsResponse, SubnetNodeMetricsArgs, SubnetNodeMetricsResponse
 };
 mod metrics_manager;
 mod rewards_manager;
@@ -112,7 +111,7 @@ fn node_rewards(args: NodeRewardsArgs) -> Vec<NodeRewardsResponse> {
         .into_iter()
         .map(|(node_id, daily_node_metrics)| {
             let (rewards_percent, rewards_stats) = rewards_manager::compute_rewards_percent(&daily_node_metrics);
-            let node_provider_id: stable_memory::get_node_provider(&node_id).unwrap_or(Principal::anonymous())
+            let node_provider_id = stable_memory::get_node_provider(&node_id).unwrap_or(Principal::anonymous());
 
             NodeRewardsResponse {
                 node_id,
