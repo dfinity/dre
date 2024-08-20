@@ -58,6 +58,6 @@ pub fn insert_node_provider(key: Principal, value: Principal) {
     NODE_PROVIDER_MAP.with(|p| p.borrow_mut().insert(key, value));
 }
 
-pub(crate) fn get_node_provider(node_principal: &Principal) -> Option<Principal> {
+pub fn get_node_provider(node_principal: &Principal) -> Option<Principal> {
     NODE_PROVIDER_MAP.with_borrow(|np_map| np_map.get(node_principal))
 }

@@ -122,13 +122,7 @@ async fn fetch_node_provider(node_id: &PrincipalId) -> anyhow::Result<PrincipalI
     let node_record_key = make_node_record_key(node_id);
     let (node_record, _) = ic_nns_common::registry::get_value::<NodeRecord>(node_record_key.as_bytes(), None)
         .await
-        .map_err(|e| {
-            anyhow!(
-                "Error getting the node_record from the registry for node {}. Error: {:?}",
-                node_id,
-                e
-            )
-        })?;
+        .map_err(|e| anyhow!("Error getting the node_record from the registry for node {}. Error: {:?}", node_id, e))?;
 
     let node_operator_id: PrincipalId = node_record.node_operator_id.try_into()?;
     let node_operator_key = make_node_operator_record_key(node_operator_id);
