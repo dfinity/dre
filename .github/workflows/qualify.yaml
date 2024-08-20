@@ -110,12 +110,12 @@ jobs:
         run: |
           sudo apt-get install -y tree
           tree $ARTIFACTS_DIR
+          tar -cvf "$ARTIFACTS_DIR.tar" $ARTIFACTS_DIR
 
       - name: "Upload artifacts to google drive"
         uses: adityak74/google-drive-upload-git-action@v0.3
         with:
           credentials: ${{ secrets.ARTIFACTS_DRIVE_CREDENTIALS }}
-          filename: ${{ inputs.version }}-${{ steps.date.outputs.date }}/**/*
+          filename: ${{ inputs.version }}-${{ steps.date.outputs.date }}.tar
           folderId: ${{ secrets.ARTIFACTS_DRIVE_FOLDER_ID }}
-          mirrorDirectoryStructure: true
-          name: ${{ inputs.version }}-${{ steps.date.outputs.date }}
+          name: ${{ inputs.version }}-${{ steps.date.outputs.date }}.tar
