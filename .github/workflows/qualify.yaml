@@ -79,6 +79,7 @@ jobs:
 
       - name: "⚙️ Uploading artifacts created during qualification"
         uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: ${{ inputs.version }}-${{ matrix.version }}
           path: /tmp/qualifier-artifacts/${{ inputs.version }}
@@ -88,6 +89,7 @@ jobs:
   finish:
     needs: qualify
     runs-on: ubuntu-22.04
+    if: always()
     steps:
       - name: "Get current date"
         id: date
