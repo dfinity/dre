@@ -115,7 +115,7 @@ jobs:
         uses: adityak74/google-drive-upload-git-action@v0.3
         with:
           credentials: ${{ secrets.ARTIFACTS_DRIVE_CREDENTIALS }}
-          filename: ${{ inputs.version }}-${{ steps.date.outputs.date }}
+          filename: ${{ inputs.version }}-${{ steps.date.outputs.date }}/**/*
           folderId: ${{ secrets.ARTIFACTS_DRIVE_FOLDER_ID }}
           mirrorDirectoryStructure: true
           name: ${{ inputs.version }}-${{ steps.date.outputs.date }}
