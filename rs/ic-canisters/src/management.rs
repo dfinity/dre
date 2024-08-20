@@ -86,8 +86,8 @@ pub struct NodeMetrics {
     pub num_block_failures_total: u64,
 }
 
-impl From<trustworthy_node_metrics::types::NodeMetrics> for NodeMetrics {
-    fn from(value: trustworthy_node_metrics::types::NodeMetrics) -> Self {
+impl From<trustworthy_node_metrics_types::types::NodeMetrics> for NodeMetrics {
+    fn from(value: trustworthy_node_metrics_types::types::NodeMetrics) -> Self {
         Self {
             node_id: PrincipalId::from(value.node_id),
             num_block_failures_total: value.num_blocks_failures_total,

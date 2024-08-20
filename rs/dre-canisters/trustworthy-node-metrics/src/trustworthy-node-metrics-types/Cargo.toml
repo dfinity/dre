@@ -1,0 +1,24 @@
+
+[package]
+name = "trustworthy-node-metrics-types"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+description.workspace = true
+documentation.workspace = true
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+crate-type = ["lib"]
+name = "trustworthy_node_metrics_types"
+path = "src/lib.rs"
+
+[dependencies]
+candid = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+dfn_core = { workspace = true }
+ic-management-canister-types = { workspace = true }
+ciborium = { workspace = true }
+ic-stable-structures = { workspace = true }

@@ -245,7 +245,13 @@ impl QualificationExecutor {
                     step: s,
                 })
                 .collect_vec(),
-            step_ctx: StepCtx::new(ctx.dre_ctx, ctx.artifacts, ctx.grafana_endpoint)?,
+            step_ctx: StepCtx::new(
+                ctx.dre_ctx,
+                ctx.artifacts,
+                ctx.grafana_endpoint,
+                ctx.from_version.clone(),
+                ctx.to_version.clone(),
+            )?,
             from_version: ctx.from_version,
             to_version: ctx.to_version,
         })

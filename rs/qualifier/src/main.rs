@@ -1,13 +1,13 @@
-use std::{fmt::Display, path::PathBuf, str::FromStr, time::Duration};
+use std::{
+    fmt::Display,
+    path::{Path, PathBuf},
+    str::FromStr,
+    time::Duration,
+};
 
 use clap::Parser;
 use cli::Args;
-use dre::{
-    auth::{Auth, Neuron},
-    ic_admin::{download_ic_admin, should_update_ic_admin, IcAdminWrapper},
-};
-use ic_canisters::governance::governance_canister_version;
-use ic_management_types::Network;
+use futures::future::join_all;
 use ict_util::ict;
 use log::info;
 use qualify_util::qualify;
@@ -16,26 +16,18 @@ use serde_json::Value;
 use std::io::Write;
 use tokio::sync::mpsc;
 use tokio_util::sync::CancellationToken;
+use version_selector::StartVersionSelectorBuilder;
 
 mod cli;
 mod ict_util;
 mod qualify_util;
+mod version_selector;
 
 const NETWORK_NAME: &str = "configured-testnet";
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     init_logger();
-
-    // Check if farm is reachable. If not, error
-    let client = ClientBuilder::new().timeout(Duration::from_secs(30)).build()?;
-    client
-        .get("https://kibana.testnet.dfinity.network/")
-        .send()
-        .await
-        .map_err(|e| anyhow::anyhow!("Checking connectivity failed: {}", e.to_string()))?
-        .error_for_status()
-        .map_err(|e| anyhow::anyhow!("Checking connectivity failed: {}", e.to_string()))?;
 
     let args = Args::parse();
     if args.version_to_qualify.is_empty() {
@@ -47,48 +39,70 @@ async fn main() -> anyhow::Result<()> {
     info!("Principal key created");
 
     args.ensure_xnet_test_key()?;
-    // Take in one version and figure out what is the base version
-    //
-    // To find the initial version we could take NNS version?
-    let initial_version = if let Some(ref v) = args.initial_version {
-        v.to_string()
+
+    let initial_versions = if let Some(ref v) = args.initial_versions {
+        v
     } else {
-        info!("Fetching the version of NNS which will be used as starting point");
-        let mainnet = Network::new_unchecked("mainnet", &[])?;
-        let ic_admin_path = match should_update_ic_admin()? {
-            (true, _) => {
-                let govn_canister_version = governance_canister_version(mainnet.get_nns_urls()).await?;
-                download_ic_admin(Some(govn_canister_version.stringified_hash)).await?
-            }
-            (false, s) => s,
-        };
-        let mainnet_anonymous_neuron = Neuron {
-            auth: Auth::Anonymous,
-            neuron_id: 0,
-            include_proposer: false,
-        };
-        let ic_admin = IcAdminWrapper::new(mainnet, Some(ic_admin_path), true, mainnet_anonymous_neuron, false);
-        let response = ic_admin
-            .run_passthrough_get(
-                &[
-                    "subnet".to_string(),
-                    "tdb26-jop6k-aogll-7ltgs-eruif-6kk7m-qpktf-gdiqx-mxtrf-vb5e6-eqe".to_string(),
-                ],
-                true,
-            )
+        info!("Fetching the forecasted versions from mainnet which will be used as starting point");
+        // Fetch the starter versions
+        let start_version_selector = StartVersionSelectorBuilder::new()
+            .with_client(ClientBuilder::new().connect_timeout(Duration::from_secs(30)))
+            .build()
             .await?;
 
-        let initial_version = serde_json::from_str::<Value>(&response)?;
-        let initial_version = initial_version["records"][0]["value"]["replica_version_id"]
-            .as_str()
-            .ok_or(anyhow::anyhow!("Couldn't parse subnet record"))?;
-        initial_version.to_string()
+        &start_version_selector.get_forecasted_versions_from_mainnet()?
     };
 
-    if initial_version == args.version_to_qualify {
-        anyhow::bail!("Initial version and version to qualify are the same")
+    info!("Initial versions that will be used: {}", initial_versions.join(","));
+
+    args.ensure_git().await?;
+
+    let artifacts = PathBuf::from_str("/tmp/qualifier-artifacts")?.join(&args.version_to_qualify);
+    info!("Will store artifacts in: {}", artifacts.display());
+    std::fs::create_dir_all(&artifacts)?;
+    if artifacts.exists() {
+        info!("Making sure artifact store is empty");
+        std::fs::remove_dir_all(&artifacts)?;
+        std::fs::create_dir(&artifacts)?;
     }
-    info!("Initial version that will be used: {}", initial_version);
+
+    info!("Qualification will run in {} mode", args.mode);
+    let outcomes = match args.mode {
+        cli::QualificationMode::Sequential => {
+            let mut outcomes = vec![];
+            for iv in initial_versions {
+                let current_path = &artifacts.join(format!("from-{}", iv));
+                if let Err(e) = std::fs::create_dir(current_path) {
+                    outcomes.push(Err(anyhow::anyhow!(e)))
+                }
+                outcomes.push(run_qualification(&args, iv.clone(), current_path, neuron_id, &private_key_pem).await)
+            }
+            outcomes
+        }
+        cli::QualificationMode::Parallel => {
+            join_all(initial_versions.iter().map(|iv| async {
+                let current_path = &artifacts.join(format!("from-{}", iv.clone()));
+                if let Err(e) = std::fs::create_dir(current_path) {
+                    return Err(anyhow::anyhow!(e));
+                };
+                run_qualification(&args, iv.clone(), current_path, neuron_id, &private_key_pem).await
+            }))
+            .await
+        }
+    };
+
+    let errs = outcomes.iter().filter(|o| o.is_err()).collect::<Vec<_>>();
+    if !errs.is_empty() {
+        anyhow::bail!("Overall qualification failed due to one or more sub-qualifications failing:\n{:?}", errs)
+    }
+
+    Ok(())
+}
+
+async fn run_qualification(args: &Args, initial_version: String, artifacts: &Path, neuron_id: u64, private_key_pem: &Path) -> anyhow::Result<()> {
+    if initial_version == args.version_to_qualify {
+        anyhow::bail!("Starting version and version being qualified are the same: {}", args.version_to_qualify)
+    }
 
     // Generate configuration for `ict` including the initial version
     //
@@ -119,15 +133,13 @@ async fn main() -> anyhow::Result<()> {
           "num_unassigned_nodes": 4,
           "initial_version": "{}"
         }}"#,
-            &initial_version
+            initial_version
         );
 
         // Validate that the string is valid json
         serde_json::to_string_pretty(&serde_json::from_str::<Value>(&config)?)?
     };
-    info!("Using configuration: \n{}", config);
-
-    args.ensure_git().await?;
+    info!("[{} -> {}]: Using configuration: \n{}", initial_version, args.version_to_qualify, config);
 
     // Run ict and capture its output
     //
@@ -139,33 +151,25 @@ async fn main() -> anyhow::Result<()> {
     let token = CancellationToken::new();
     let (sender, mut receiver) = mpsc::channel(2);
 
-    let artifacts = PathBuf::from_str("/tmp/qualifier-artifacts")?.join(&args.version_to_qualify);
-    info!("Will store artifacts in: {}", artifacts.display());
-    std::fs::create_dir_all(&artifacts)?;
-    if artifacts.exists() {
-        info!("Making sure artifact store is empty");
-        std::fs::remove_dir_all(&artifacts)?;
-        std::fs::create_dir(&artifacts)?;
-    }
-
     let mut file = std::fs::File::create_new(artifacts.join("ic-config.json"))?;
     writeln!(file, "{}", &config)?;
+    let current_network_name = format!("{}-{}", NETWORK_NAME, initial_version);
 
     tokio::select! {
-        res = ict(args.ic_repo_path.clone(), config, token.clone(), sender) => res?,
+        res = ict(args.ic_repo_path.clone(), token.clone(), sender, artifacts.to_path_buf()) => res?,
         res = qualify(
             &mut receiver,
-            private_key_pem,
+            private_key_pem.to_path_buf(),
             neuron_id,
-            NETWORK_NAME,
-            initial_version,
+            current_network_name.as_str(),
+            initial_version.to_owned(),
             args.version_to_qualify.to_string(),
-            artifacts,
-            args.step_range
+            artifacts.to_path_buf(),
+            args.step_range.clone()
         ) => res?
     };
 
-    info!("Finished qualifier run for: {}", args.version_to_qualify);
+    info!("Finished qualifier run for: {} -> {}", initial_version, args.version_to_qualify);
 
     token.cancel();
     Ok(())

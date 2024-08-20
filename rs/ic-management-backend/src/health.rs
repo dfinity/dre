@@ -4,7 +4,7 @@ use std::{
 };
 
 use ic_base_types::PrincipalId;
-use ic_management_types::{Network, Status};
+use ic_management_types::{HealthStatus, Network};
 use log::warn;
 use prometheus_http_query::{Client, Selector};
 use reqwest::{Client as ReqwestClient, Method};
@@ -26,14 +26,14 @@ impl HealthClient {
 }
 
 impl HealthStatusQuerier for HealthClient {
-    async fn subnet(&self, subnet: PrincipalId) -> anyhow::Result<BTreeMap<PrincipalId, Status>> {
+    async fn subnet(&self, subnet: PrincipalId) -> anyhow::Result<BTreeMap<PrincipalId, HealthStatus>> {
         match &self.implementation {
             HealthStatusQuerierImplementations::Dashboard(c) => c.subnet(subnet).await,
             HealthStatusQuerierImplementations::Prometheus(c) => c.subnet(subnet).await,
         }
     }
 
-    async fn nodes(&self) -> anyhow::Result<BTreeMap<PrincipalId, Status>> {
+    async fn nodes(&self) -> anyhow::Result<BTreeMap<PrincipalId, HealthStatus>> {
         match &self.implementation {
             HealthStatusQuerierImplementations::Dashboard(c) => c.nodes().await,
             HealthStatusQuerierImplementations::Prometheus(c) => c.nodes().await,
@@ -57,8 +57,8 @@ impl From<Network> for HealthStatusQuerierImplementations {
 }
 
 pub trait HealthStatusQuerier {
-    fn subnet(&self, subnet: PrincipalId) -> impl std::future::Future<Output = anyhow::Result<BTreeMap<PrincipalId, Status>>> + Send;
-    fn nodes(&self) -> impl std::future::Future<Output = anyhow::Result<BTreeMap<PrincipalId, Status>>> + Send;
+    fn subnet(&self, subnet: PrincipalId) -> impl std::future::Future<Output = anyhow::Result<BTreeMap<PrincipalId, HealthStatus>>> + Send;
+    fn nodes(&self) -> impl std::future::Future<Output = anyhow::Result<BTreeMap<PrincipalId, HealthStatus>>> + Send;
 }
 
 pub struct PublicDashboardHealthClient {
@@ -96,10 +96,9 @@ impl PublicDashboardHealthClient {
             .await
             .map_err(|e| anyhow::anyhow!("Error while fetching data from public dashboard: {:?}", e))?;
 
-        let response = response
-            .json::<Value>()
-            .await
-            .map_err(|e| anyhow::anyhow!("Error unmarshaling json: {:?}", e))?;
+        let response_text = response.text().await.map_err(|e| anyhow::anyhow!("Error reading response text: {}", e))?;
+        let response: Value = serde_json::from_str(&response_text)
+            .map_err(|e| anyhow::anyhow!("Error parsing json: {}. Raw text from the response: {}", e, response_text))?;
 
         let nodes = match response.get("nodes") {
             None => return Err(anyhow::anyhow!("Unexpected data contract. Missing 'nodes' key.")),
@@ -141,7 +140,7 @@ impl PublicDashboardHealthClient {
                 Some(s) => {
                     let s = s.to_string();
                     let s = get_unquoted(&s);
-                    Status::from_str_from_dashboard(s)
+                    HealthStatus::from_str_from_dashboard(s)
                 }
             };
 
@@ -183,11 +182,11 @@ fn get_unquoted(s: &str) -> &str {
 struct ShortNodeInfo {
     node_id: PrincipalId,
     subnet_id: Option<PrincipalId>,
-    status: Status,
+    status: HealthStatus,
 }
 
 impl HealthStatusQuerier for PublicDashboardHealthClient {
-    async fn subnet(&self, subnet: PrincipalId) -> anyhow::Result<BTreeMap<PrincipalId, Status>> {
+    async fn subnet(&self, subnet: PrincipalId) -> anyhow::Result<BTreeMap<PrincipalId, HealthStatus>> {
         Ok(self
             .get_all_nodes()
             .await?
@@ -200,7 +199,7 @@ impl HealthStatusQuerier for PublicDashboardHealthClient {
             .collect())
     }
 
-    async fn nodes(&self) -> anyhow::Result<BTreeMap<PrincipalId, Status>> {
+    async fn nodes(&self) -> anyhow::Result<BTreeMap<PrincipalId, HealthStatus>> {
         Ok(self.get_all_nodes().await?.into_iter().map(|n| (n.node_id, n.status)).collect())
     }
 }
@@ -220,7 +219,7 @@ impl PrometheusHealthClient {
 }
 
 impl HealthStatusQuerier for PrometheusHealthClient {
-    async fn subnet(&self, subnet: PrincipalId) -> anyhow::Result<BTreeMap<PrincipalId, Status>> {
+    async fn subnet(&self, subnet: PrincipalId) -> anyhow::Result<BTreeMap<PrincipalId, HealthStatus>> {
         let ic_name = self.network.legacy_name();
         let subnet_name = subnet.to_string();
         let query_up = Selector::new()
@@ -252,12 +251,12 @@ impl HealthStatusQuerier for PrometheusHealthClient {
                 r.metric().get("ic_node").and_then(|id| PrincipalId::from_str(id).ok()).map(|id| {
                     let status = if r.sample().value() == 1.0 {
                         if node_ids_with_alerts.contains(&id) {
-                            Status::Degraded
+                            HealthStatus::Degraded
                         } else {
-                            Status::Healthy
+                            HealthStatus::Healthy
                         }
                     } else {
-                        Status::Dead
+                        HealthStatus::Dead
                     };
                     (id, status)
                 })
@@ -265,7 +264,7 @@ impl HealthStatusQuerier for PrometheusHealthClient {
             .collect())
     }
 
-    async fn nodes(&self) -> anyhow::Result<BTreeMap<PrincipalId, Status>> {
+    async fn nodes(&self) -> anyhow::Result<BTreeMap<PrincipalId, HealthStatus>> {
         let query = format!(
             r#"ic_replica_orchestrator:health_state:bottomk_1{{ic="{network}"}}"#,
             network = self.network.legacy_name(),
@@ -275,7 +274,7 @@ impl HealthStatusQuerier for PrometheusHealthClient {
         Ok(results
             .iter()
             .filter_map(|r| {
-                let status = Status::from_str(r.metric().get("state").expect("all vectors should have a state label"))
+                let status = HealthStatus::from_str(r.metric().get("state").expect("all vectors should have a state label"))
                     .expect("all vectors should have a valid label");
                 r.metric().get("ic_node").map(|id| (PrincipalId::from_str(id).unwrap(), status))
             })

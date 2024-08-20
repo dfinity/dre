@@ -69,5 +69,5 @@ fn init_logger() {
             }
         }
     }
-    pretty_env_logger::init_custom_env("LOG_LEVEL");
+    pretty_env_logger::try_init_timed_custom_env("LOG_LEVEL").expect("Failed to initialize logger");
 }

@@ -2,11 +2,21 @@
 
 ## Downloading the pre-built binary
 
-These instructions are for a Linux based system. We tested on Ubuntu 22.04.
+We build the DRE tool for Linux and for MacOS (Darwin). We tested on Ubuntu 22.04 and 24.04.
+
+On Linux, you can download the tool with:
 
 ```bash
 mkdir -p $HOME/bin
-curl -L https://github.com/dfinity/dre/releases/latest/download/dre -o $HOME/bin/dre
+curl -L https://github.com/dfinity/dre/releases/latest/download/dre-x86_64-unknown-linux -o $HOME/bin/dre
+chmod +x $HOME/bin/dre
+```
+
+On MacOS you can use the following:
+
+```bash
+mkdir -p $HOME/bin
+curl -L https://github.com/dfinity/dre/releases/latest/download/dre-x86_64-apple-darwin -o $HOME/bin/dre
 chmod +x $HOME/bin/dre
 ```
 

@@ -11,7 +11,7 @@ use ic_management_backend::{
     lazy_registry::{LazyRegistry, LazyRegistryFamilyEntries},
     public_dashboard::query_ic_dashboard_list,
 };
-use ic_management_types::{Network, NodeProvidersResponse, Status};
+use ic_management_types::{HealthStatus, Network, NodeProvidersResponse};
 use ic_protobuf::registry::{
     api_boundary_node::v1::ApiBoundaryNodeRecord,
     dc::v1::DataCenterRecord,
@@ -20,7 +20,7 @@ use ic_protobuf::registry::{
     node_operator::v1::NodeOperatorRecord,
     node_rewards::v2::NodeRewardsTable,
     replica_version::v1::ReplicaVersionRecord,
-    subnet::v1::{EcdsaConfig, SubnetFeatures, SubnetRecord as SubnetRecordProto},
+    subnet::v1::{ChainKeyConfig, EcdsaConfig, SubnetFeatures, SubnetRecord as SubnetRecordProto},
     unassigned_nodes_config::v1::UnassignedNodesConfigRecord,
 };
 use ic_registry_subnet_type::SubnetType;
@@ -115,7 +115,8 @@ impl Registry {
             node_operator.total_up_nodes = nodes
                 .iter()
                 .filter(|n| {
-                    n.node_operator_id == node_operator.node_operator_principal_id && (n.status == Status::Healthy || n.status == Status::Degraded)
+                    n.node_operator_id == node_operator.node_operator_principal_id
+                        && (n.status == HealthStatus::Healthy || n.status == HealthStatus::Degraded)
                 })
                 .count() as u32;
 
@@ -239,14 +240,15 @@ fn get_subnets(local_registry: &Rc<LazyRegistry>) -> anyhow::Result<Vec<SubnetRe
             dkg_interval_length: record.dkg_interval_length,
             start_as_nns: record.start_as_nns,
             subnet_type: SubnetType::try_from(record.subnet_type).unwrap(),
-            max_instructions_per_message: record.max_instructions_per_message,
-            max_instructions_per_round: record.max_instructions_per_round,
-            max_instructions_per_install_code: record.max_instructions_per_install_code,
             features: record.features.clone().unwrap_or_default(),
             max_number_of_canisters: record.max_number_of_canisters,
             ssh_readonly_access: record.ssh_readonly_access,
             ssh_backup_access: record.ssh_backup_access,
             ecdsa_config: record.ecdsa_config,
+            dkg_dealings_per_block: record.dkg_dealings_per_block,
+            is_halted: record.is_halted,
+            halt_at_cup_height: record.halt_at_cup_height,
+            chain_key_config: record.chain_key_config,
         })
         .collect::<Vec<_>>())
 }
@@ -297,7 +299,7 @@ async fn get_nodes(
                     Some(no) => no.dc_id.clone(),
                     None => "".to_string(),
                 },
-                status: nodes_health.get(&node_id).unwrap_or(&ic_management_types::Status::Unknown).clone(),
+                status: nodes_health.get(&node_id).unwrap_or(&ic_management_types::HealthStatus::Unknown).clone(),
             }
         })
         .collect::<Vec<_>>();
@@ -406,7 +408,7 @@ struct NodeDetails {
     subnet_id: Option<PrincipalId>,
     dc_id: String,
     node_provider_id: PrincipalId,
-    status: Status,
+    status: HealthStatus,
 }
 
 /// User-friendly representation of a SubnetRecord. For instance,
@@ -423,16 +425,17 @@ struct SubnetRecord {
     initial_notary_delay_millis: u64,
     replica_version_id: String,
     dkg_interval_length: u64,
+    dkg_dealings_per_block: u64,
     start_as_nns: bool,
     subnet_type: SubnetType,
-    max_instructions_per_message: u64,
-    max_instructions_per_round: u64,
-    max_instructions_per_install_code: u64,
     features: SubnetFeatures,
     max_number_of_canisters: u64,
     ssh_readonly_access: Vec<String>,
     ssh_backup_access: Vec<String>,
     ecdsa_config: Option<EcdsaConfig>,
+    is_halted: bool,
+    halt_at_cup_height: bool,
+    chain_key_config: Option<ChainKeyConfig>,
 }
 
 #[derive(Clone, Debug, Serialize)]

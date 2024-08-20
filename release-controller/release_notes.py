@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 import fnmatch
-import json
 import os
-import pathlib
 import re
 import subprocess
 import sys
@@ -36,6 +34,7 @@ REPLICA_TEAMS = set(
         "Orchestrator",
         "runtime-owners",
         "runtime",
+        "ic-owners-owners",
     ]
 )
 
@@ -49,7 +48,8 @@ class Change(typing.TypedDict):
     scope: str
     message: str
     commiter: str
-    included: bool
+    exclusion_reason: typing.Optional[str]
+    guestos_change: bool
 
 
 @dataclass
@@ -128,7 +128,7 @@ TEAM_PRETTY_MAP = {
 }
 
 
-EXCLUDE_PACKAGES_FILTERS = [
+EXCLUDE_CHANGES_FILTERS = [
     r".+\/sns\/.+",
     r".+\/ckbtc\/.+",
     r".+\/cketh\/.+",
@@ -139,6 +139,8 @@ EXCLUDE_PACKAGES_FILTERS = [
     r".*rosetta.*",
     r".*pocket[_-]ic.*",
 ]
+
+INCLUDE_CHANGES = ["bazel/external_crates.bzl"]
 
 NON_REPLICA_TEAMS = sorted(list(set(TEAM_PRETTY_MAP.keys()) - REPLICA_TEAMS))
 
@@ -240,61 +242,61 @@ def matched_patterns(file_path, patterns):
     return matches[0]
 
 
+def release_changes(
+    ic_repo: GitRepo,
+    base_release_commit,
+    release_commit,
+    max_commits=1000,
+) -> dict[str, list[Change]]:
+    changes: dict[str, list[Change]] = {}
+
+    commits = ic_repo.get_commits_info("%h", base_release_commit, release_commit)
+
+    if len(commits) >= max_commits:
+        print("WARNING: max commits limit reached, increase depth")
+        exit(1)
+
+    if "KUBERNETES_SERVICE_HOST" not in os.environ:
+        commit_iter = progressbar([i[0] for i in commits], "Processing commit: ", 80)
+    else:
+        commit_iter = enumerate([i[0] for i in commits])
+    for i, _ in commit_iter:
+        change = get_change_description_for_commit(
+            commit_hash=commits[i],
+            ic_repo=ic_repo,
+        )
+        if change is None:
+            continue
+
+        commit_type = change["type"]
+        if commit_type not in changes:
+            changes[commit_type] = []
+        changes[commit_type].append(change)
+
+    return changes
+
+
 def prepare_release_notes(
     base_release_tag,
     base_release_commit,
     release_tag,
     release_commit,
     max_commits=1000,
-) -> str:
-    change_infos: dict[str, list[Change]] = {}
-
-    ci_patterns = ["/**/*.lock", "/**/*.bzl"]
-
+):
     ic_repo = GitRepo("https://github.com/dfinity/ic.git", main_branch="master")
-
-    commits = ic_repo.get_commits_in_range(base_release_commit, release_commit)
-    codeowners = parse_codeowners(ic_repo.file(".github/CODEOWNERS"))
-
-    if len(commits) >= max_commits:
-        print("WARNING: max commits limit reached, increase depth")
-        exit(1)
-
-    guestos_packages_all, guestos_packages_filtered = get_guestos_packages_with_bazel(ic_repo)
-    bazel_packages_all = bazel_query_all_packages(ic_repo)
-
-    for i, _ in progressbar([i[0] for i in commits], "Processing commit: ", 80):
-        change_info = get_change_description_for_commit(
-            commit_info=commits[i],
-            change_infos=change_infos,
-            ci_patterns=ci_patterns,
-            ic_repo=ic_repo,
-            codeowners=codeowners,
-            bazel_packages_all=bazel_packages_all,
-            guestos_packages_all=guestos_packages_all,
-            guestos_packages_filtered=guestos_packages_filtered,
-        )
-        if change_info is None:
-            continue
-
-        commit_type = change_info["type"]
-        change_infos[commit_type].append(change_info)
-
-    return release_notes_markdown(
-        ic_repo, base_release_tag, base_release_commit, release_tag, release_commit, change_infos
+    changes = release_changes(
+        ic_repo,
+        base_release_commit,
+        release_commit,
+        max_commits,
     )
+    return release_notes_markdown(ic_repo, base_release_tag, base_release_commit, release_tag, release_commit, changes)
 
 
 def get_change_description_for_commit(
-    commit_info,
-    change_infos,
-    ci_patterns,
-    ic_repo,
-    codeowners,
-    bazel_packages_all,
-    guestos_packages_all,
-    guestos_packages_filtered,
-) -> typing.Optional[Change]:
+    commit_hash: str,
+    ic_repo: GitRepo,
+) -> Change:
     # Conventional commit regex pattern
     conv_commit_pattern = re.compile(r"^(\w+)(\([^\)]*\))?: (.+)$")
     # Jira ticket: <whitespace?><word boundary><uppercase letters><digit?><hyphen><digits><word boundary><colon?>
@@ -302,17 +304,23 @@ def get_change_description_for_commit(
     # Sometimes Jira tickets are in square brackets
     empty_brackets_regex = r" *\[ *\]:?"
 
-    commit_hash, commit_message, commiter = commit_info
+    commit_message = ic_repo.get_commit_info("%s", commit_hash)
+    commiter = ic_repo.get_commit_info("%an", commit_hash)
+
+    ic_repo.checkout(commit_hash)
+    guestos_targets_all = get_guestos_targets_with_bazel(ic_repo) + INCLUDE_CHANGES
+    guestos_targets_filtered = [
+        t
+        for t in guestos_targets_all
+        if t in INCLUDE_CHANGES or not any(re.match(f, t) for f in EXCLUDE_CHANGES_FILTERS)
+    ]
 
     file_changes = ic_repo.file_changes_for_commit(commit_hash)
-    modified_packages = list(
-        next((p for p in sorted(bazel_packages_all, key=len, reverse=True) if c["file_path"][1:].startswith(p)), None)
-        for c in file_changes
-    )
-    if not any(p in guestos_packages_all for p in modified_packages):
-        return None
 
-    included = any(p in guestos_packages_filtered for p in modified_packages)
+    exclusion_reasons = []
+    guestos_change = any(f["file_path"] in guestos_targets_all for f in file_changes)
+    if guestos_change and not any(f["file_path"] in guestos_targets_filtered for f in file_changes):
+        exclusion_reasons.append("filtered out by package filters")
 
     ownership = {}
     stripped_message = re.sub(jira_ticket_regex, "", commit_message)
@@ -323,11 +331,14 @@ def get_change_description_for_commit(
 
     conventional = parse_conventional_commit(stripped_message, conv_commit_pattern)
 
+    codeowners = parse_codeowners(ic_repo.file(".github/CODEOWNERS"))
     for change in file_changes:
-        if any([fnmatch.fnmatch(change["file_path"], pattern) for pattern in ci_patterns]):
-            continue
-
-        teams = set(sum([codeowners[p] for p in codeowners.keys() if fnmatch.fnmatch(change["file_path"], p)], []))
+        teams = set(
+            sum(
+                [codeowners[p] for p in codeowners.keys() if fnmatch.fnmatch(change["file_path"], p.removeprefix("/"))],
+                [],
+            )
+        )
         if not teams:
             teams = ["unknown"]
 
@@ -337,7 +348,7 @@ def get_change_description_for_commit(
                 continue
             ownership[team] += change["num_changes"]
 
-    if "ic-owners-owners" in ownership:
+    if "ic-owners-owners" in ownership and len(set(ownership.keys()).intersection(REPLICA_TEAMS)) > 1:
         ownership.pop("ic-owners-owners")
 
     # TODO: count max first by replica team then others
@@ -357,13 +368,10 @@ def get_change_description_for_commit(
     commit_type = conventional["type"].lower()
     commit_type = commit_type if commit_type in TYPE_PRETTY_MAP else "other"
 
-    if not REPLICA_TEAMS.intersection(teams):
-        included = False
+    if guestos_change and not REPLICA_TEAMS.intersection(teams):
+        exclusion_reasons.append("not a replica team change")
 
     teams = sorted(list(teams))
-
-    if commit_type not in change_infos:
-        change_infos[commit_type] = []
 
     commiter_parts = commiter.split()
     commiter = "{:<4} {:<4}".format(
@@ -378,7 +386,8 @@ def get_change_description_for_commit(
         scope=conventional["scope"] if conventional["scope"] else "",
         message=conventional["message"],
         commiter=commiter,
-        included=included,
+        exclusion_reason=",".join(exclusion_reasons) if exclusion_reasons else None,
+        guestos_change=guestos_change,
     )
 
 
@@ -386,14 +395,23 @@ def release_notes_html(notes_markdown):
     """Generate release notes in HTML format, typically for local testing."""
     import webbrowser
 
+    md = markdown.Markdown(
+        extensions=["pymdownx.tilde", "pymdownx.details"],
+    )
+
     with tempfile.NamedTemporaryFile(suffix=".html", delete=False) as output:
-        output.write(str.encode(markdown.markdown(notes_markdown)))
+        output.write(str.encode(md.convert(notes_markdown)))
         filename = "file://{}".format(output.name)
         webbrowser.open_new_tab(filename)
 
 
 def release_notes_markdown(
-    ic_repo: GitRepo, base_release_tag, base_release_commit, release_tag, release_commit, change_infos
+    ic_repo: GitRepo,
+    base_release_tag,
+    base_release_commit,
+    release_tag,
+    release_commit,
+    change_infos: dict[str, list[Change]],
 ):
     """Generate release notes in markdown format."""
     merge_base = ic_repo.merge_base(base_release_commit, release_commit)
@@ -431,39 +449,55 @@ Changes [were removed](https://github.com/dfinity/ic/compare/{release_tag}...{ba
             base_release_tag=base_release_tag,
         )
 
+    def format_change(change: Change):
+        commit_part = "[`{0}`](https://github.com/dfinity/ic/commit/{0})".format(change["commit"][:9])
+        team_part = ",".join([TEAM_PRETTY_MAP.get(team, team) for team in change["teams"]])
+        team_part = team_part if team_part else "General"
+        scope_part = (
+            ":"
+            if change["scope"] == "" or change["scope"].lower() == team_part.lower()
+            else "({0}):".format(change["scope"])
+        )
+        message_part = change["message"]
+        commiter_part = f"author: {change['commiter']}"
+
+        text = "{4} | {0} {1}{2} {3}".format(commit_part, team_part, scope_part, message_part, commiter_part)
+        if change["exclusion_reason"] or not change["guestos_change"]:
+            text = "~~{} [AUTO-EXCLUDED:{}]~~".format(
+                text, "not a GuestOS change" if not change["guestos_change"] else change["exclusion_reason"]
+            )
+        return "* " + text + "\n"
+
+    non_guestos_changes = []
     for current_type in sorted(TYPE_PRETTY_MAP, key=lambda x: TYPE_PRETTY_MAP[x][1]):
-        if current_type not in change_infos:
+        if current_type not in change_infos or not change_infos[current_type]:
             continue
         notes += "## {0}:\n".format(TYPE_PRETTY_MAP[current_type][0])
 
         for change in sorted(change_infos[current_type], key=lambda x: ",".join(x["teams"])):
-            commit_part = "[`{0}`](https://github.com/dfinity/ic/commit/{0})".format(change["commit"][:9])
-            team_part = ",".join([TEAM_PRETTY_MAP.get(team, team) for team in change["teams"]])
-            team_part = team_part if team_part else "General"
-            scope_part = (
-                ":"
-                if change["scope"] == "" or change["scope"].lower() == team_part.lower()
-                else "({0}):".format(change["scope"])
-            )
-            message_part = change["message"]
-            commiter_part = f"author: {change['commiter']}"
+            if not change["guestos_change"]:
+                non_guestos_changes.append(change)
+                continue
 
-            text = "{4} | {0} {1}{2} {3}".format(commit_part, team_part, scope_part, message_part, commiter_part)
-            if not change["included"]:
-                text = "~~{} [AUTO-EXCLUDED]~~".format(text)
-            notes += "* " + text + "\n"
+            notes += format_change(change)
 
+    if non_guestos_changes:
+        notes += "## ~~Other changes not modifying GuestOS~~\n"
+        for change in non_guestos_changes:
+            notes += format_change(change)
     return notes
 
 
 def bazel_query(ic_repo: GitRepo, query):
     """Bazel query package for GuestOS."""
+    bazel_binary = "bazel"
+    if "BAZEL" in os.environ:
+        bazel_binary = os.path.abspath(os.curdir) + "/release-controller/bazelisk"
+
     bazel_query = [
-        "bazel",
+        bazel_binary,
         "query",
-        "--universe_scope=//...",
         query,
-        "--output=package",
     ]
     p = subprocess.run(
         ["gitlab-ci/container/container-run.sh"] + bazel_query,
@@ -474,32 +508,30 @@ def bazel_query(ic_repo: GitRepo, query):
     )
     if p.returncode != 0:
         print("Failure running Bazel through container. Attempting direct run.", file=sys.stderr)
-        p = subprocess.run(
-            bazel_query,
-            cwd=ic_repo.dir,
-            text=True,
-            stdout=subprocess.PIPE,
-            check=True,
-        )
-    return [l for l in p.stdout.strip().splitlines() if l]
+        try:
+            p = subprocess.run(
+                bazel_query,
+                cwd=ic_repo.dir,
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                check=True,
+            )
+        except subprocess.CalledProcessError as e:
+            print(p.stdout)
+            print(p.stderr)
+            raise e
+    return [l[::-1].replace(":", "/", 1)[::-1].removeprefix("//") for l in p.stdout.splitlines()]
 
 
-def bazel_query_all_packages(ic_repo: GitRepo):
-    """Bazel query package for GuestOS."""
-    return bazel_query(ic_repo, "//...:*")
-
-
-def get_guestos_packages_with_bazel(ic_repo: GitRepo):
+def get_guestos_targets_with_bazel(ic_repo: GitRepo):
     """Get the packages that are related to the GuestOS image using Bazel."""
     guestos_packages_all = bazel_query(
         ic_repo,
-        "deps(//ic-os/guestos/envs/prod:update-img.tar.gz) union deps(//ic-os/setupos/envs/prod:disk-img.tar.zst)",
+        "deps(//ic-os/guestos/envs/prod:update-img.tar.zst) union deps(//ic-os/setupos/envs/prod:disk-img.tar.zst)",
     )
-    guestos_packages_filtered = [
-        p for p in guestos_packages_all if not any(re.match(f, p) for f in EXCLUDE_PACKAGES_FILTERS)
-    ]
 
-    return guestos_packages_all, guestos_packages_filtered
+    return guestos_packages_all
 
 
 def main():
@@ -515,15 +547,15 @@ def main():
     )
     args = parser.parse_args()
 
-    release_notes_html(
-        prepare_release_notes(
-            args.base_release_tag,
-            args.base_release_commit,
-            args.release_tag,
-            args.release_commit,
-            max_commits=args.max_commits,
-        )
+    release_notes = prepare_release_notes(
+        args.base_release_tag,
+        args.base_release_commit,
+        args.release_tag,
+        args.release_commit,
+        max_commits=args.max_commits,
     )
+    print(release_notes)
+    release_notes_html(release_notes)
 
 
 if __name__ == "__main__":

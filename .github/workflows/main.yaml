@@ -43,7 +43,7 @@ jobs:
       - name: "🚀 Building"
         uses: ./.github/workflows/build
         with:
-          ssh_pk_workflow: ${{ secrets.SSH_PK_WORKFLOW }}
+          GITHUB_TOKEN: "${{ secrets.GIX_CREATE_PR_PAT }}"
       - name: "🚀 Testing"
         run: bazel test ...
 
@@ -128,7 +128,7 @@ jobs:
         if: ${{ github.ref == 'refs/heads/main' }}
         uses: ./.github/workflows/update-k8s-deployments
         with:
-          gitlab_api_token: ${{ secrets.GITLAB_K8S_API_TOKEN }}
+          github_api_token: ${{ secrets.K8S_API_TOKEN }}
 
       ########################################
       # Deploy to github pages

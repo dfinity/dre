@@ -1,6 +1,5 @@
 use std::{collections::HashSet, io::Write, time::Duration};
 
-use chrono::Local;
 use clap::Args;
 use humantime::{format_duration, parse_duration};
 use ic_canisters::governance::GovernanceCanisterWrapper;
@@ -17,13 +16,13 @@ pub struct Vote {
     /// These are the proposers which proposals will
     /// be automatically voted on
     ///
-    /// By default: DRE + automation neuron 80
+    /// By default: DRE + automation neuron 80 + Rüdiger Birkner
     #[clap(
         long,
         use_value_delimiter = true,
         value_delimiter = ',',
         value_name = "PROPOSER_ID",
-        default_value = "80,39,40,46,58,61,77"
+        default_value = "80,39,40,46,58,61,77,17511507705568200227"
     )]
     pub accepted_neurons: Vec<u64>,
 
@@ -32,8 +31,8 @@ pub struct Vote {
     /// only by DRE in processes of rolling out new versions,
     /// everything else should be double checked manually
     ///
-    /// By default: SubnetReplicaVersionManagement
-    #[clap(long, use_value_delimiter = true, value_delimiter = ',', value_name = "PROPOSER_ID", default_value = "12")]
+    /// By default: IcOsVersionDeployment
+    #[clap(long, use_value_delimiter = true, value_delimiter = ',', default_value = "12")]
     pub accepted_topics: Vec<i32>,
 
     /// Override default sleep time
@@ -68,12 +67,10 @@ impl ExecutableCommand for Vote {
             std::io::stdout().flush().unwrap();
 
             for proposal in proposals {
-                let datetime = Local::now();
                 DesktopNotifier::send_info(
                     "DRE vote: voting",
                     &format!(
-                        "{} Voting on proposal {} (topic {:?}, proposer {}) -> {}",
-                        datetime,
+                        "Voting on proposal {} (topic {:?}, proposer {}) -> {}",
                         proposal.id.unwrap().id,
                         proposal.topic(),
                         proposal.proposer.unwrap_or_default().id,

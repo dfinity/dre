@@ -37,7 +37,6 @@ use itertools::Itertools;
 use lazy_static::lazy_static;
 use log::{debug, error, info, warn};
 use regex::Regex;
-use registry_canister::mutations::common::decode_registry_value;
 use std::cmp::Ordering;
 use std::collections::{HashMap, HashSet};
 use std::convert::TryFrom;
@@ -822,7 +821,8 @@ impl SubnetQuerier for RegistryState {
                 .map(|s| decentralization::network::DecentralizedSubnet {
                     id: s.principal,
                     nodes: s.nodes.iter().map(decentralization::network::Node::from).collect(),
-                    removed_nodes: Vec::new(),
+                    added_nodes_desc: Vec::new(),
+                    removed_nodes_desc: Vec::new(),
                     min_nakamoto_coefficients: None,
                     comment: None,
                     run_log: Vec::new(),
@@ -848,7 +848,8 @@ impl SubnetQuerier for RegistryState {
                             .iter()
                             .map(decentralization::network::Node::from)
                             .collect(),
-                        removed_nodes: Vec::new(),
+                        added_nodes_desc: Vec::new(),
+                        removed_nodes_desc: Vec::new(),
                         min_nakamoto_coefficients: None,
                         comment: None,
                         run_log: Vec::new(),
@@ -882,7 +883,7 @@ impl AvailableNodesQuerier for RegistryState {
                 // Keep only healthy nodes.
                 healths
                     .get(&n.principal)
-                    .map(|s| matches!(*s, ic_management_types::Status::Healthy))
+                    .map(|s| matches!(*s, ic_management_types::HealthStatus::Healthy))
                     .unwrap_or(false)
             })
             .filter(|n| {
@@ -919,7 +920,7 @@ pub async fn nns_public_key(registry_canister: &RegistryCanister) -> anyhow::Res
         .get_value(ROOT_SUBNET_ID_KEY.as_bytes().to_vec(), None)
         .await
         .map_err(|e| anyhow::format_err!("failed to get root subnet: {}", e))?;
-    let nns_subnet_id = decode_registry_value::<ic_protobuf::types::v1::SubnetId>(nns_subnet_id_vec);
+    let nns_subnet_id = ic_protobuf::types::v1::SubnetId::decode(nns_subnet_id_vec.as_slice())?;
     let (nns_pub_key_vec, _) = registry_canister
         .get_value(
             make_crypto_threshold_signing_pubkey_key(SubnetId::new(PrincipalId::try_from(nns_subnet_id.principal_id.unwrap().raw).unwrap()))

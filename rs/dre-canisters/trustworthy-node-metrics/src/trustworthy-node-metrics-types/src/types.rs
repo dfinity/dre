@@ -1,6 +1,9 @@
-use candid::{CandidType, Deserialize, Principal};
+use std::borrow::Cow;
+
+use candid::{CandidType, Decode, Deserialize, Encode, Principal};
 use dfn_core::api::PrincipalId;
 use ic_management_canister_types::NodeMetricsHistoryResponse;
+use ic_stable_structures::{storable::Bound, Storable};
 use serde::Serialize;
 
 pub type SubnetNodeMetricsHistory = (PrincipalId, Vec<NodeMetricsHistoryResponse>);
@@ -16,6 +19,23 @@ pub struct NodeMetricsStored {
     pub num_blocks_failures_total: u64,
     pub num_blocks_proposed: u64,
     pub num_blocks_failed: u64,
+}
+
+const MAX_VALUE_SIZE_BYTES: u32 = 102;
+
+impl Storable for NodeMetricsStored {
+    fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
+        Cow::Owned(Encode!(self).unwrap())
+    }
+
+    fn from_bytes(bytes: std::borrow::Cow<[u8]>) -> Self {
+        Decode!(bytes.as_ref(), Self).unwrap()
+    }
+
+    const BOUND: Bound = Bound::Bounded {
+        max_size: MAX_VALUE_SIZE_BYTES,
+        is_fixed_size: false,
+    };
 }
 
 // subnet_node_metrics query call
@@ -57,17 +77,41 @@ pub struct DailyNodeMetrics {
     /// `num_blocks_failed` to `num_blocks_total` = `num_blocks_failed` + `num_blocks_proposed`.
     /// This value ranges from 0.0 (no failures) to 1.0 (all blocks failed).
     pub failure_rate: f64,
+}
 
-    /// The reduction in rewards for the node, determined by the failure rate.
-    /// This value is between 0.0 and 1.0, where 0.0 indicates no reduction
-    /// (full rewards) and 1.0 indicates a complete reduction (no rewards).
+impl DailyNodeMetrics {
+    pub fn new(ts: TimestampNanos, subnet_assignment: Principal, proposed_blocks: u64, failed_blocks: u64) -> Self {
+        let total_blocks = failed_blocks + proposed_blocks;
+        let failure_rate = if total_blocks == 0 {
+            0.0
+        } else {
+            failed_blocks as f64 / total_blocks as f64
+        };
+
+        DailyNodeMetrics {
+            ts,
+            subnet_assigned: subnet_assignment,
+            num_blocks_proposed: proposed_blocks,
+            num_blocks_failed: failed_blocks,
+            failure_rate,
+        }
+    }
+}
+
+#[derive(Debug, Deserialize, CandidType)]
+pub struct RewardsStats {
+    pub blocks_failed: u64,
+    pub blocks_proposed: u64,
+    pub blocks_total: u64,
+    pub failure_rate: f64,
     pub rewards_reduction: f64,
 }
 
 #[derive(Debug, Deserialize, CandidType)]
 pub struct NodeRewardsResponse {
     pub node_id: Principal,
-    pub rewards_no_penalty: f64,
-    pub rewards_with_penalty: f64,
+    pub node_provider_id: Principal,
+    pub rewards_percent: f64,
     pub daily_node_metrics: Vec<DailyNodeMetrics>,
+    pub rewards_stats: RewardsStats,
 }

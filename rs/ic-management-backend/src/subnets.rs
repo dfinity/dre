@@ -14,6 +14,8 @@ pub fn get_proposed_subnet_changes(
             id: subnet.principal,
             old_nodes: subnet.nodes.iter().map(decentralization::network::Node::from).collect(),
             new_nodes: subnet.nodes.iter().map(decentralization::network::Node::from).collect(),
+            removed_nodes_desc: vec![],
+            added_nodes_desc: vec![],
             min_nakamoto_coefficients: None,
             comment: None,
             run_log: vec![],
@@ -22,14 +24,24 @@ pub fn get_proposed_subnet_changes(
             proposal
                 .node_ids_added
                 .iter()
-                .map(|p| decentralization::network::Node::from(all_nodes.get(p).unwrap()))
+                .map(|p| {
+                    (
+                        decentralization::network::Node::from(all_nodes.get(p).unwrap()),
+                        "added in proposal".to_string(),
+                    )
+                })
                 .collect::<Vec<_>>(),
         )
         .without_nodes(
             proposal
                 .node_ids_removed
                 .iter()
-                .map(|p| decentralization::network::Node::from(all_nodes.get(p).unwrap()))
+                .map(|p| {
+                    (
+                        decentralization::network::Node::from(all_nodes.get(p).unwrap()),
+                        "removed in proposal".to_string(),
+                    )
+                })
                 .collect::<Vec<_>>(),
         );
         let mut response = SubnetChangeResponse::from(&change);
@@ -85,8 +97,8 @@ mod tests {
             ..Default::default()
         };
         let change = get_proposed_subnet_changes(&all_nodes, &subnet).unwrap();
-        assert_eq!(change.added, node_ids_added);
-        assert_eq!(change.removed, vec![]);
+        assert_eq!(change.added_with_desc.iter().map(|a| a.0).collect::<Vec<_>>(), node_ids_added);
+        assert_eq!(change.removed_with_desc, vec![]);
     }
 
     #[test]
@@ -109,8 +121,8 @@ mod tests {
             ..Default::default()
         };
         let change = get_proposed_subnet_changes(&all_nodes, &subnet).unwrap();
-        assert_eq!(change.added, node_ids_added);
-        assert_eq!(change.removed, node_ids_removed);
+        assert_eq!(change.added_with_desc.iter().map(|a| a.0).collect::<Vec<_>>(), node_ids_added);
+        assert_eq!(change.removed_with_desc.iter().map(|x| x.0).collect::<Vec<_>>(), node_ids_removed);
     }
 
     fn gen_test_nodes(subnet_id: PrincipalId, num_nodes: u64, start_at_number: u64) -> BTreeMap<PrincipalId, Node> {

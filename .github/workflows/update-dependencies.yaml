@@ -29,24 +29,31 @@ jobs:
 
       - name: "⚒️ Completely delete bazel cache and then recreate it"
         run: |
-          set -eExou pipefail
-          #
-          # Update dependencies and export files that bazel can consume
-          #
-          git fetch
-          git reset --hard origin/main
-          cargo install cargo-upgrade
-          cargo upgrade --exclude opentelemetry --recursive
+          # https://github.com/rustls/rustls/issues/1967#issuecomment-2279067420
+          sudo apt remove gcc-9 -y
+          sudo apt install clang -y
+
+          cargo install cargo-upgrades
+          cargo install cargo-edit
+          cargo upgrade --recursive
+
+          # Install taplo cli
+          TAPLO=taplo-linux-x86_64
+          curl -L "https://github.com/tamasfe/taplo/releases/latest/download/$TAPLO.gz" -O
+          gunzip $TAPLO.gz
+          chmod +x ./$TAPLO
+          OTEL_VER=$(./$TAPLO get -f Cargo.lock -o json | jq '.package[] | select(.name == "axum-otel-metrics")'| grep -oP '"opentelemetry\s\K[\d.]+' || echo "")
+          if [[ -n "$OTEL_VER" ]]; then
+            cargo upgrade --package opentelemetry@$OTEL_VER
+          fi
+          rm ./$TAPLO
+
+          # Reinstall gcc
+          sudo apt install gcc -y
+
           poetry update
           CARGO_BAZEL_REPIN=true bazel query >/dev/null
           ./bin/poetry.sh
-          #
-          # Completely delete the bazel cache and then recreate it
-          # Cache should have everything that bazel build requires, and nothing more
-          #
-          sudo rm -rf ~/.cache/bazel/*
-          CARGO_BAZEL_REPIN=true bazel build ...
-          bazel test
 
       - name: "🆕 Create a new Pull Request with the changes"
         uses: peter-evans/create-pull-request@v6
@@ -54,7 +61,7 @@ jobs:
           commit-message: "chore: Update dependencies"
           branch: bot-update-deps
           title: "chore: Update dependencies"
-          body: "This PR updates poetry (Python) and cargo (Rust) dependencies and recreates the bazel cache."
+          body: "This PR updates poetry (Python) and cargo (Rust) dependencies and IC repository dependencies"
           token: ${{ secrets.GIX_CREATE_PR_PAT }}
 
       - name: "🪓 Tear down runner"

@@ -1,35 +1,15 @@
-use candid::{Decode, Encode, Principal};
+use candid::Principal;
 use ic_stable_structures::memory_manager::{MemoryId, MemoryManager, VirtualMemory};
-use ic_stable_structures::{storable::Bound, Storable};
 use ic_stable_structures::{DefaultMemoryImpl, StableBTreeMap};
 use itertools::Itertools;
-use std::borrow::Cow;
 use std::cell::RefCell;
 use std::collections::BTreeMap;
 
-use crate::types::{NodeMetricsStored, NodeMetricsStoredKey, TimestampNanos};
+use trustworthy_node_metrics_types::types::{NodeMetricsStored, NodeMetricsStoredKey, TimestampNanos};
 
 type Memory = VirtualMemory<DefaultMemoryImpl>;
 
-const MAX_VALUE_SIZE_BYTE: u32 = 102;
-
-impl Storable for NodeMetricsStored {
-    fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
-        Cow::Owned(Encode!(self).unwrap())
-    }
-
-    fn from_bytes(bytes: std::borrow::Cow<[u8]>) -> Self {
-        Decode!(bytes.as_ref(), Self).unwrap()
-    }
-
-    const BOUND: Bound = Bound::Bounded {
-        max_size: MAX_VALUE_SIZE_BYTE,
-        is_fixed_size: false,
-    };
-}
-
 thread_local! {
-
     static MEMORY_MANAGER: RefCell<MemoryManager<DefaultMemoryImpl>> =
     RefCell::new(MemoryManager::init(DefaultMemoryImpl::default()));
 
@@ -38,9 +18,14 @@ thread_local! {
         MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(0)))
     ));
 
+    static NODE_PROVIDER_MAP: RefCell<StableBTreeMap<Principal, Principal, Memory>> =
+        RefCell::new(StableBTreeMap::init(
+        MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(1)))
+    ));
+
 }
 
-pub fn insert(key: NodeMetricsStoredKey, value: NodeMetricsStored) {
+pub fn insert_node_metrics(key: NodeMetricsStoredKey, value: NodeMetricsStored) {
     NODE_METRICS_MAP.with(|p| p.borrow_mut().insert(key, value));
 }
 
@@ -56,15 +41,23 @@ pub fn get_metrics_range(from_ts: TimestampNanos, to_ts: Option<TimestampNanos>)
     })
 }
 
-pub fn latest_metrics(principals: Vec<Principal>) -> BTreeMap<Principal, NodeMetricsStored> {
+pub fn latest_metrics(nodes_principal: &[Principal]) -> BTreeMap<Principal, NodeMetricsStored> {
     let mut latest_metrics = BTreeMap::new();
     NODE_METRICS_MAP.with(|p| {
         for ((_, principal), value) in p.borrow().iter() {
-            if principals.contains(&principal) {
+            if nodes_principal.contains(&principal) {
                 latest_metrics.insert(principal, value);
             }
         }
     });
 
     latest_metrics
+}
+
+pub fn insert_node_provider(key: Principal, value: Principal) {
+    NODE_PROVIDER_MAP.with(|p| p.borrow_mut().insert(key, value));
+}
+
+pub fn get_node_provider(node_principal: &Principal) -> Option<Principal> {
+    NODE_PROVIDER_MAP.with_borrow(|np_map| np_map.get(node_principal))
 }

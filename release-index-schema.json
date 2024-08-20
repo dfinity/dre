@@ -1,59 +1,51 @@
 {
-    "$schema": "http://json-schema.org/draft-06/schema#",
-    "$ref": "#/definitions/Welcome4",
-    "definitions": {
-        "Welcome4": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-                "releases": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/Release"
-                    }
-                }
-            },
-            "required": [
-                "releases"
-            ],
-            "title": "Welcome4"
-        },
-        "Release": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-                "rc_name": {
-                    "type": "string"
-                },
-                "versions": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/Version"
-                    }
-                }
-            },
-            "required": [
-                "rc_name",
-                "versions"
-            ],
-            "title": "Release"
-        },
-        "Version": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-                "name": {
-                    "type": "string"
-                },
-                "version": {
-                    "type": "string"
-                }
-            },
-            "required": [
-                "name",
-                "version"
-            ],
-            "title": "Version"
+  "$schema": "http://json-schema.org/draft-06/schema#",
+  "$ref": "#/definitions/ReleaseIndex",
+  "definitions": {
+    "ReleaseIndex": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "releases": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Release"
+          }
         }
+      },
+      "required": ["releases"],
+      "title": "ReleaseIndex"
+    },
+    "Release": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "rc_name": {
+          "type": "string"
+        },
+        "versions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Version"
+          }
+        }
+      },
+      "required": ["rc_name", "versions"],
+      "title": "Release"
+    },
+    "Version": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        }
+      },
+      "required": ["name", "version"],
+      "title": "Version"
     }
+  }
 }

@@ -54,7 +54,7 @@ pub(crate) async fn decentralization_whatif_query(
 async fn get_decentralization_analysis(
     registry: web::Data<Arc<RwLock<RegistryState>>>,
     subnet: Option<PrincipalId>,
-    nodes_to_add: Option<Vec<PrincipalId>>,
+    node_ids_to_add: Option<Vec<PrincipalId>>,
     node_ids_to_remove: Option<Vec<PrincipalId>>,
     min_nakamoto_coefficients: Option<MinNakamotoCoefficients>,
 ) -> Result<HttpResponse, Error> {
@@ -66,7 +66,8 @@ async fn get_decentralization_analysis(
             Some(subnet) => DecentralizedSubnet {
                 id: subnet_id,
                 nodes: subnet.nodes.iter().map(decentralization::network::Node::from).collect(),
-                removed_nodes: Vec::new(),
+                added_nodes_desc: Vec::new(),
+                removed_nodes_desc: Vec::new(),
                 min_nakamoto_coefficients: min_nakamoto_coefficients.clone(),
                 comment: None,
                 run_log: Vec::new(),
@@ -74,7 +75,8 @@ async fn get_decentralization_analysis(
             None => DecentralizedSubnet {
                 id: PrincipalId::new_subnet_test_id(0),
                 nodes: Vec::new(),
-                removed_nodes: Vec::new(),
+                added_nodes_desc: Vec::new(),
+                removed_nodes_desc: Vec::new(),
                 min_nakamoto_coefficients: min_nakamoto_coefficients.clone(),
                 comment: None,
                 run_log: Vec::new(),
@@ -83,7 +85,8 @@ async fn get_decentralization_analysis(
         .unwrap_or_else(|| DecentralizedSubnet {
             id: PrincipalId::new_subnet_test_id(0),
             nodes: Vec::new(),
-            removed_nodes: Vec::new(),
+            added_nodes_desc: Vec::new(),
+            removed_nodes_desc: Vec::new(),
             min_nakamoto_coefficients: min_nakamoto_coefficients.clone(),
             comment: None,
             run_log: Vec::new(),
@@ -93,7 +96,7 @@ async fn get_decentralization_analysis(
         node_ids_to_remove
             .iter()
             .filter_map(|n| registry_nodes.get(n))
-            .map(decentralization::network::Node::from)
+            .map(|n| (decentralization::network::Node::from(n), "".to_string()))
             .collect::<Vec<_>>()
     });
     let updated_subnet = match &nodes_to_remove {
@@ -101,11 +104,11 @@ async fn get_decentralization_analysis(
         None => original_subnet.clone(),
     };
 
-    let updated_subnet = match &nodes_to_add {
+    let updated_subnet = match &node_ids_to_add {
         Some(nodes_to_add) => {
             let nodes_to_add = nodes_to_add
                 .iter()
-                .map(|n| decentralization::network::Node::from(&registry_nodes[n]))
+                .map(|n| (decentralization::network::Node::from(&registry_nodes[n]), "added".to_string()))
                 .collect();
             updated_subnet.with_nodes(nodes_to_add)
         }
@@ -116,6 +119,8 @@ async fn get_decentralization_analysis(
         id: original_subnet.id,
         old_nodes: original_subnet.nodes,
         new_nodes: updated_subnet.nodes.clone(),
+        removed_nodes_desc: updated_subnet.removed_nodes_desc.clone(),
+        added_nodes_desc: updated_subnet.added_nodes_desc.clone(),
         min_nakamoto_coefficients: updated_subnet.min_nakamoto_coefficients.clone(),
         comment: updated_subnet.comment.clone(),
         run_log: updated_subnet.run_log.clone(),
