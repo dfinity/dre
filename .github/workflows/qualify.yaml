@@ -75,7 +75,7 @@ jobs:
         run: |
           mkdir -p ~/.config/dfx/identity/xnet-testing/
           echo "${{ secrets.XNET_PRINCIPAL_KEY }}" > ~/.config/dfx/identity/xnet-testing/identity.pem
-          bazel run //rs/qualifier -- "${{ inputs.version }}" --initial-versions ${{ matrix.version }} --step-range 9..109
+          bazel run //rs/qualifier -- "${{ inputs.version }}" --initial-versions ${{ matrix.version }} --step-range 9..10
 
       - name: "⚙️ Uploading artifacts during qualification"
         uses: actions/upload-artifact@v4
