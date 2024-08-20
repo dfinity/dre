@@ -103,6 +103,14 @@ jobs:
           path: ${{ inputs.version }}-${{ steps.date.outputs.date }}
           pattern: ${{ inputs.version }}-*
 
+      - name: "Printing what will be uploaded"
+        shell: bash
+        env:
+          ARTIFACTS_DIR: ${{ inputs.version }}-${{ steps.date.outputs.date }}
+        run: |
+          sudo apt-get install -y tree
+          tree $ARTIFACTS_DIR
+
       - name: "Upload artifacts to google drive"
         uses: adityak74/google-drive-upload-git-action@v0.3
         with:
@@ -110,3 +118,4 @@ jobs:
           filename: ${{ inputs.version }}-${{ steps.date.outputs.date }}
           folderId: ${{ secrets.ARTIFACTS_DRIVE_FOLDER_ID }}
           mirrorDirectoryStructure: true
+          name: ${{ inputs.version }}-${{ steps.date.outputs.date }}
