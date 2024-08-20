@@ -31,10 +31,18 @@ pub struct StepCtx {
     log_path: Option<PathBuf>,
     client: Client,
     grafana_url: Option<String>,
+    from_version: String,
+    to_version: String,
 }
 
 impl StepCtx {
-    pub fn new(dre_ctx: DreContext, artifacts: Option<PathBuf>, grafana_url: Option<String>) -> anyhow::Result<Self> {
+    pub fn new(
+        dre_ctx: DreContext,
+        artifacts: Option<PathBuf>,
+        grafana_url: Option<String>,
+        from_version: String,
+        to_version: String,
+    ) -> anyhow::Result<Self> {
         let artifacts_of_run = artifacts.as_ref().map(|t| {
             if let Err(e) = std::fs::create_dir_all(t) {
                 panic!("Couldn't create dir {}: {:?}", t.display(), e)
@@ -53,6 +61,8 @@ impl StepCtx {
             artifacts: artifacts_of_run,
             client: ClientBuilder::new().timeout(REQWEST_TIMEOUT).build()?,
             grafana_url,
+            from_version: from_version[..6].to_string(),
+            to_version: to_version[..6].to_string(),
         })
     }
 
@@ -186,8 +196,10 @@ impl StepCtx {
     fn _print_with_time(&self, message: String, add_new_line: bool) {
         let current_time = Utc::now();
         let formatted = format!(
-            "[{}]{}{}",
+            "[{} {} -> {}]{}{}",
             current_time,
+            self.from_version,
+            self.to_version,
             match add_new_line {
                 true => '\n',
                 false => ' ',

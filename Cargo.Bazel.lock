@@ -1,5 +1,5 @@
 {
-  "checksum": "b595f31cbc3e94b284e51ec8b54de93639b9409006890414e0c0d18f4b917606",
+  "checksum": "ea5dd38d60356ea002de789a5eb67763d68cb6b2e016ed921f20e9c61a9b1d9d",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -35360,6 +35360,10 @@
             {
               "id": "dirs 5.0.1",
               "target": "dirs"
+            },
+            {
+              "id": "futures 0.3.30",
+              "target": "futures"
             },
             {
               "id": "ic-nervous-system-common-test-keys 0.9.0",
