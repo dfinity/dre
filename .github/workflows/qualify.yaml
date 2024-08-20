@@ -8,12 +8,6 @@ on:
         description: "The version that should be qualified"
         type: string
         default: ""
-  workflow_dispatch:
-    inputs:
-      version:
-        description: "The version that should be qualified"
-        type: string
-        default: ""
 
 # Run one qualification per commit.
 # This means we can have multiple qualifications of different versions
@@ -75,7 +69,7 @@ jobs:
         run: |
           mkdir -p ~/.config/dfx/identity/xnet-testing/
           echo "${{ secrets.XNET_PRINCIPAL_KEY }}" > ~/.config/dfx/identity/xnet-testing/identity.pem
-          bazel run //rs/qualifier -- "${{ inputs.version }}" --initial-versions ${{ matrix.version }} --step-range 9..10
+          bazel run //rs/qualifier -- "${{ inputs.version }}" --initial-versions ${{ matrix.version }}
 
       - name: "⚙️ Uploading artifacts created during qualification"
         uses: actions/upload-artifact@v4
