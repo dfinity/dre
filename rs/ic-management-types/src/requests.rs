@@ -1,4 +1,4 @@
-use crate::{MinNakamotoCoefficients, Node, Status};
+use crate::{HealthStatus, MinNakamotoCoefficients, Node};
 use ic_base_types::PrincipalId;
 use serde::{Deserialize, Serialize};
 
@@ -36,7 +36,7 @@ pub struct NodeRemoval {
 #[derive(Serialize, Deserialize)]
 pub enum NodeRemovalReason {
     Duplicates(PrincipalId),
-    Unhealthy(Status),
+    Unhealthy(HealthStatus),
     MatchedFilter(String),
 }
 

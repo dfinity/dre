@@ -1,6 +1,7 @@
 load("@python_deps//:requirements.bzl", "requirement")
 load("@rules_python//python:defs.bzl", "py_binary")
 load("@//tools/python:py_oci_image.bzl", "py_oci_image")
+load("@bazel_skylib//rules:native_binary.bzl", "native_binary")
 
 deps = [
     requirement("requests"),
@@ -42,13 +43,23 @@ py_binary(
     deps = deps,
 )
 
+native_binary(
+    name = "bazelisk",
+    src = select({
+        "@platforms//os:linux": "@bazelisk_linux//file",
+        "@platforms//os:macos": "@bazelisk_darwin//file",
+    }),
+    out = "bazelisk",
+)
+
 py_test(
     name = "pytest",
     srcs = ["pytest.py"],
-    data = glob(["*.py"]),
-    tags = ["no-sandbox"],
+    data = glob(["*.py"]) + [":bazelisk"],
     env = env,
+    tags = ["no-sandbox"],
     deps = deps + dev_deps,
+    env_inherit = ["HOME"],
 )
 
 py_oci_image(

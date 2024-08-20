@@ -176,9 +176,11 @@ impl NakamotoScore {
     }
 
     /// Build a new NakamotoScore object from a slice of [Node]s.
-    pub fn new_from_nodes(nodes: &[Node]) -> Self {
+    pub fn new_from_nodes<'a>(nodes: impl IntoIterator<Item = &'a Node> + Clone) -> Self {
         let mut memoize_key = AHasher::default();
-        for node in nodes.iter().sorted_by_cached_key(|n| n.id) {
+        let nodes_iter = nodes.clone().into_iter();
+
+        for node in nodes_iter.sorted_by_cached_key(|n| n.id) {
             for byte in node.id.0.as_slice() {
                 memoize_key.write_u8(*byte);
             }
@@ -209,7 +211,7 @@ impl NakamotoScore {
                                 score.clone()
                             }
                             None => {
-                                let score = Self::new_from_slice_node_features(&nodes.iter().map(|n| n.features.clone()).collect::<Vec<_>>());
+                                let score = Self::new_from_slice_node_features(&nodes.into_iter().map(|n| n.features.clone()).collect::<Vec<_>>());
                                 memoize_cache.insert(memoize_key, score.clone());
                                 score
                             }
@@ -334,14 +336,28 @@ impl NakamotoScore {
         let mut cmp = self.score_min().partial_cmp(&other.score_min());
 
         if cmp != Some(Ordering::Equal) {
-            return (cmp, "the minimum score across all features".to_string());
+            return (
+                cmp,
+                format!(
+                    "the minimum Nakamoto coefficient across all features changed from {} to {}",
+                    other.score_min(),
+                    self.score_min()
+                ),
+            );
         }
 
         // Then try to increase the log2 avg
         cmp = self.score_avg_log2().partial_cmp(&other.score_avg_log2());
 
         if cmp != Some(Ordering::Equal) {
-            return (cmp, "the average log2 score across all features".to_string());
+            return (
+                cmp,
+                format!(
+                    "the average log2 of Nakamoto Coefficients across all features changed from {:.2} to {:.2}",
+                    other.score_avg_log2().unwrap_or(0.0),
+                    self.score_avg_log2().unwrap_or(0.0)
+                ),
+            );
         }
 
         // Try to pick the candidate that *reduces* the number of nodes
@@ -349,13 +365,21 @@ impl NakamotoScore {
         cmp = other.critical_features_num_nodes().partial_cmp(&self.critical_features_num_nodes());
 
         if cmp != Some(Ordering::Equal) {
+            let val_self = self.critical_features_num_nodes();
+            let val_other = other.critical_features_num_nodes();
             return (
                 cmp,
-                format!(
-                    "the number of nodes controlled by dominant actors for critical features (NP, Country) changes from {:?} to {:?}",
-                    other.critical_features_num_nodes(),
-                    self.critical_features_num_nodes()
-                ),
+                if val_self[0] != val_other[0] {
+                    format!(
+                        "the number of nodes controlled by dominant NPs: value changes from {} to {}",
+                        val_other[0], val_self[0]
+                    )
+                } else {
+                    format!(
+                        "the number of nodes controlled by dominant Country actors: value changes from {} to {}",
+                        val_other[1], val_self[1]
+                    )
+                },
             );
         }
 
@@ -366,13 +390,21 @@ impl NakamotoScore {
             .partial_cmp(&other.critical_features_unique_actors());
 
         if cmp != Some(Ordering::Equal) {
+            let val_self = self.critical_features_unique_actors();
+            let val_other = other.critical_features_unique_actors();
             return (
                 cmp,
-                format!(
-                    "the number of different actors for critical features (NP, Country) changes from {:?} to {:?}",
-                    other.critical_features_unique_actors(),
-                    self.critical_features_unique_actors()
-                ),
+                if val_self[0] != val_other[0] {
+                    format!(
+                        "the number of different NP actors: value changes from {} to {}",
+                        val_other[0], val_self[0]
+                    )
+                } else {
+                    format!(
+                        "the number of different Country actors: value changes from {} to {}",
+                        val_other[1], val_self[1]
+                    )
+                },
             );
         }
 
@@ -383,7 +415,13 @@ impl NakamotoScore {
         cmp = c2.partial_cmp(&c1);
 
         if cmp != Some(Ordering::Equal) {
-            return (cmp, "the number of Nakamoto coefficients with extremely low values".to_string());
+            return (
+                cmp,
+                format!(
+                    "the number of Nakamoto coefficients with extremely low values changed from {} to {}",
+                    c2, c1
+                ),
+            );
         }
 
         // If the worst feature is the same for both candidates
@@ -397,7 +435,13 @@ impl NakamotoScore {
                 cmp = c2.partial_cmp(c1);
 
                 if cmp != Some(Ordering::Equal) {
-                    return (cmp, format!("Nakamoto coefficient for feature {}", feature));
+                    return (
+                        cmp,
+                        format!(
+                            "the Nakamoto coefficient value for feature {} changed from {:.2} to {:.2}",
+                            feature, c2, c1
+                        ),
+                    );
                 }
             }
         }
@@ -405,7 +449,14 @@ impl NakamotoScore {
         // And finally try to increase the linear average
         match self.score_avg_linear().partial_cmp(&other.score_avg_linear()) {
             Some(Ordering::Equal) => (Some(Ordering::Equal), "equal Nakamoto scores across all features".to_string()),
-            Some(cmp) => (Some(cmp), "the linear average of Nakamoto coefficients across all features".to_string()),
+            Some(cmp) => (
+                Some(cmp),
+                format!(
+                    "the linear average of Nakamoto coefficients across all features changed from {:.2} to {:.2}",
+                    other.score_avg_linear(),
+                    self.score_avg_linear()
+                ),
+            ),
             None => (None, String::new()),
         }
     }
@@ -460,7 +511,7 @@ mod tests {
     use crate::network::{DecentralizedSubnet, NetworkHealRequest, NetworkHealSubnets, SubnetChangeRequest};
     use ahash::HashSet;
     use ic_base_types::PrincipalId;
-    use ic_management_types::Status;
+    use ic_management_types::HealthStatus;
     use itertools::Itertools;
     use regex::Regex;
 
@@ -961,9 +1012,9 @@ mod tests {
             .cloned()
             .map(|n| {
                 if unhealthy_principals.contains(&n.principal) {
-                    (n.principal, Status::Dead)
+                    (n.principal, HealthStatus::Dead)
                 } else {
-                    (n.principal, Status::Healthy)
+                    (n.principal, HealthStatus::Healthy)
                 }
             })
             .collect::<BTreeMap<_, _>>();

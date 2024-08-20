@@ -449,7 +449,7 @@ pub enum Health {
 }
 
 #[derive(PartialOrd, Ord, Eq, PartialEq, EnumString, Serialize, strum_macros::Display, Deserialize, Debug, Clone, Hash)]
-pub enum Status {
+pub enum HealthStatus {
     Healthy,
     Degraded,
     Dead,
@@ -457,7 +457,7 @@ pub enum Status {
 }
 
 /// Even if `from_str` is implemented by `EnumString` in derive, public api returns them capitalized and this is the implementation for that convertion
-impl Status {
+impl HealthStatus {
     pub fn from_str_from_dashboard(s: &str) -> Self {
         match s {
             "UP" | "UNASSIGNED" => Self::Healthy,
