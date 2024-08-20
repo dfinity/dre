@@ -25,3 +25,16 @@ ic-protobuf = { workspace = true }
 ic-nns-common = { workspace = true }
 dfn_core = { workspace = true }
 trustworthy-node-metrics-types = { workspace = true }
+
+ic-nns-constants = { workspace = true }
+
+
+on_wire = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+ic-registry-transport = { workspace = true }
+prost = { workspace = true }
+ic-types = { workspace = true }
+ic-crypto-tree-hash = { workspace = true }
+ic-interfaces-registry = { workspace = true }
+tree-deserializer = { workspace = true }

@@ -21,15 +21,17 @@ pub struct NodeMetricsStored {
     pub num_blocks_failed: u64,
 }
 
-const MAX_VALUE_SIZE_BYTES: u32 = 102;
+const MAX_VALUE_SIZE_BYTES: u32 = 180;
 
 impl Storable for NodeMetricsStored {
     fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
-        Cow::Owned(Encode!(self).unwrap())
+        let mut bytes = vec![];
+        ciborium::ser::into_writer(&self, &mut bytes).unwrap();
+        Cow::Owned(bytes)
     }
 
     fn from_bytes(bytes: std::borrow::Cow<[u8]>) -> Self {
-        Decode!(bytes.as_ref(), Self).unwrap()
+        ciborium::de::from_reader(&*bytes).expect("deserialization must succeed.")
     }
 
     const BOUND: Bound = Bound::Bounded {

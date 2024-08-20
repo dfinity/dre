@@ -9,6 +9,7 @@ use trustworthy_node_metrics_types::types::{
 mod metrics_manager;
 mod rewards_manager;
 mod stable_memory;
+mod registry_client;
 
 // Management canisters updates node metrics every day
 const TIMER_INTERVAL_SEC: u64 = 60 * 60 * 24;
@@ -40,6 +41,15 @@ fn init() {
 #[post_upgrade]
 fn post_upgrade() {
     setup_timers();
+}
+
+
+#[query]
+fn get_storable() -> Vec<NodeMetricsStored> {
+
+    let node_metrics = stable_memory::get_metrics_range(0, None).into_iter().map(|(_, value)| value).collect_vec();
+
+    node_metrics
 }
 
 #[query]

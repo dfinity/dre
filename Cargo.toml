@@ -114,6 +114,7 @@ ic-nervous-system-common-test-keys = { git = "https://github.com/dfinity/ic.git"
 ic-cdk = { git = "https://github.com/dfinity/cdk-rs.git", rev = "deb1e15ae4c60333636f0581e0f30d169d8c9a0a" }
 ic-config = { git = "https://github.com/dfinity/ic.git", rev = "b4ccc86f84d6d6ffcd74eab706b0a0fed1607a46" }
 ic-crypto-utils-threshold-sig-der = { git = "https://github.com/dfinity/ic.git", rev = "b4ccc86f84d6d6ffcd74eab706b0a0fed1607a46" }
+ic-crypto-tree-hash = { git = "https://github.com/dfinity/ic.git", rev = "b4ccc86f84d6d6ffcd74eab706b0a0fed1607a46" }
 ic-http-endpoints-metrics = { git = "https://github.com/dfinity/ic.git", rev = "b4ccc86f84d6d6ffcd74eab706b0a0fed1607a46" }
 ic-identity-hsm = "0.37.0"
 ic-interfaces = { git = "https://github.com/dfinity/ic.git", rev = "b4ccc86f84d6d6ffcd74eab706b0a0fed1607a46" }
@@ -213,7 +214,8 @@ ic-cdk-macros = { git = "https://github.com/dfinity/cdk-rs.git", rev = "deb1e15a
 ic-stable-structures = "0.6.5"
 ciborium = "0.2.2"
 dfn_core = { git = "https://github.com/dfinity/ic.git", rev = "b4ccc86f84d6d6ffcd74eab706b0a0fed1607a46" }
-
+on_wire =  { git = "https://github.com/dfinity/ic.git", rev = "b4ccc86f84d6d6ffcd74eab706b0a0fed1607a46" }
+tree-deserializer = { git = "https://github.com/dfinity/ic.git", rev = "b4ccc86f84d6d6ffcd74eab706b0a0fed1607a46" }
 # dre-airflow deps, should be replaced with dre-airflow once
 indexmap = { version = "2.3.0", features = ["serde"] }
 

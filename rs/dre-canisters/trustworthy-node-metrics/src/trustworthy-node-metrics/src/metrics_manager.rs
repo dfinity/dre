@@ -6,6 +6,7 @@ use futures::FutureExt;
 use ic_management_canister_types::{NodeMetricsHistoryArgs, NodeMetricsHistoryResponse};
 use ic_protobuf::registry::subnet::v1::SubnetListRecord;
 
+use crate::registry_client::RegistryClient;
 use crate::stable_memory;
 use itertools::Itertools;
 use trustworthy_node_metrics_types::types::{NodeMetricsGrouped, NodeMetricsStored, NodeMetricsStoredKey};
@@ -143,6 +144,7 @@ fn store_metrics(node_metrics_storable: Vec<((u64, candid::Principal), NodeMetri
 
 /// Update metrics
 pub async fn update_metrics() -> anyhow::Result<()> {
+    let _ = RegistryClient::new().await;
     let subnets = fetch_subnets().await?;
     let latest_ts = stable_memory::latest_ts().unwrap_or_default();
     let refresh_ts = latest_ts + 1;
@@ -171,3 +173,4 @@ pub async fn update_metrics() -> anyhow::Result<()> {
 
     Ok(())
 }
+
