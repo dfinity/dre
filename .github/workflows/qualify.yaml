@@ -125,7 +125,7 @@ jobs:
         shell: bash
         run: |
           COMMIT="${{ inputs.version }}"
-          FULL_MESSAGE="Qualification of ${COMMIT}: "
+          FULL_MESSAGE="Qualification of `${COMMIT}`: "
           if [[ "${{ needs.qualify.result }}" =~ ^(success)$ ]]; then
             FULL_MESSAGE="${FULL_MESSAGE} :white_check_mark:"
           elif [[ "${{ needs.qualify.result }}" =~ ^(failure|timed_out)$ ]]; then
@@ -141,7 +141,7 @@ jobs:
           slack-message: |
             ${{ steps.slack.outputs.message }}
 
-            Artifacts of run: ${{ inputs.version }}-${{ steps.date.outputs.date }}.tar
+            Artifacts of run: `${{ inputs.version }}-${{ steps.date.outputs.date }}.tar`
             Artifacts can be found on <https://drive.google.com/drive/u/1/folders/${{secrets.ARTIFACTS_DRIVE_FOLDER_ID}}|Google Drive :open_file_folder:>
         env:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_API_TOKEN }}
