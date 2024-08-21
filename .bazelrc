@@ -72,7 +72,7 @@ build:fmt --aspects=@rules_rust//rust:defs.bzl%rustfmt_aspect
 build:fmt --output_groups=+rustfmt_checks
 build --@rules_rust//:rustfmt.toml=//:rustfmt.toml
 
-test --test_output=errors
+test --test_output=streamed
 test --test_env=RUST_BACKTRACE=full
 
 test:precommit --build_tests_only
