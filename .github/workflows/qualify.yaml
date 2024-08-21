@@ -125,7 +125,7 @@ jobs:
         shell: bash
         run: |
           COMMIT="${{ inputs.version }}"
-          FULL_MESSAGE="Qualification of `${COMMIT}`: "
+          FULL_MESSAGE="Qualification of \`${COMMIT}\`: "
           if [[ "${{ needs.qualify.result }}" =~ ^(success)$ ]]; then
             FULL_MESSAGE="${FULL_MESSAGE} :white_check_mark:"
           elif [[ "${{ needs.qualify.result }}" =~ ^(failure|timed_out)$ ]]; then
