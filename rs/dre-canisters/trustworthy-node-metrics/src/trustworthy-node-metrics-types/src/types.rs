@@ -110,6 +110,7 @@ pub struct RewardsStats {
 #[derive(Debug, Deserialize, CandidType)]
 pub struct NodeRewardsResponse {
     pub node_id: Principal,
+    pub node_provider_id: Principal,
     pub rewards_percent: f64,
     pub daily_node_metrics: Vec<DailyNodeMetrics>,
     pub rewards_stats: RewardsStats,
