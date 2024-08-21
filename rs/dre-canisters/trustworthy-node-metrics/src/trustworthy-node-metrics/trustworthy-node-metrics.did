@@ -39,6 +39,7 @@ type RewardsStats = record {
 
 type NodeRewardsResponse = record {
   node_id: principal;
+  node_provider_id: principal;
   rewards_percent: float64;
   daily_node_metrics: vec DailyNodeMetrics;
   rewards_stats: RewardsStats;
