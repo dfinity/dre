@@ -1,5 +1,5 @@
 {
-  "checksum": "ea5dd38d60356ea002de789a5eb67763d68cb6b2e016ed921f20e9c61a9b1d9d",
+  "checksum": "65890af6a96379e8bf9cadc28d9809e75af72e7e5d2127b2b888fe28d05ebc42",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -45349,6 +45349,10 @@
               "target": "futures"
             },
             {
+              "id": "ic-base-types 0.9.0",
+              "target": "ic_base_types"
+            },
+            {
               "id": "ic-cdk 0.15.0",
               "target": "ic_cdk"
             },
@@ -45367,6 +45371,10 @@
             {
               "id": "ic-protobuf 0.9.0",
               "target": "ic_protobuf"
+            },
+            {
+              "id": "ic-registry-keys 0.9.0",
+              "target": "ic_registry_keys"
             },
             {
               "id": "ic-stable-structures 0.6.5",
