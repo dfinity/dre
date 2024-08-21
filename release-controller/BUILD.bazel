@@ -23,6 +23,7 @@ deps = [
 
 dev_deps = [
     requirement("httpretty"),
+    requirement("pytest-xdist"),
 ]
 
 env = {

@@ -1,16 +1,30 @@
+import pathlib
+import tempfile
 from commit_annotator import target_determinator
 from git_repo import GitRepo
 
 
-def test_target_guestos_changed():
-    ic_repo = GitRepo("https://github.com/dfinity/ic.git", main_branch="master")
-    # not a guestos change
-    assert target_determinator(object="00dc67f8d", ic_repo=ic_repo) == False
-    # bumping dependencies
-    assert target_determinator(object="2d0835bba", ic_repo=ic_repo) == True
-    # .github change
-    assert target_determinator(object="94fd38099", ic_repo=ic_repo) == False
-    # replica change
-    assert target_determinator(object="951e895c7", ic_repo=ic_repo) == True
-    # modifies Cargo.lock but not in a meaningful way
-    assert target_determinator(object="5a250cb34", ic_repo=ic_repo) == False
+def _test_guestos_changed(object: str, changed: bool):
+    with tempfile.TemporaryDirectory() as d:
+        ic_repo = GitRepo("https://github.com/dfinity/ic.git", main_branch="master", repo_cache_dir=pathlib.Path(d))
+        assert target_determinator(object=object, ic_repo=ic_repo) == changed
+
+
+def test_guestos_changed__not_guestos_change():
+    _test_guestos_changed(object="00dc67f8d", changed=False)
+
+
+def test_guestos_changed__bumped_dependencies():
+    _test_guestos_changed(object="2d0835bba", changed=True)
+
+
+def test_guestos_changed__github_dir_changed():
+    _test_guestos_changed(object="94fd38099", changed=False)
+
+
+def test_guestos_changed__replica_changed():
+    _test_guestos_changed(object="951e895c7", changed=True)
+
+
+def test_guestos_changed__cargo_lock_paths_only():
+    _test_guestos_changed(object="5a250cb34", changed=False)
