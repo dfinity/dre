@@ -111,24 +111,6 @@ impl Display for SubnetChangeResponse {
 
         writeln!(f, "Nodes removed:")?;
         for (id, desc) in &self.removed_with_desc {
-            writeln!(f, " --> {} [{}]", id, desc).expect("write failed");
-        }
-        writeln!(f, "\nNodes added:")?;
-        for (id, desc) in &self.added_with_desc {
-            writeln!(f, " ++> {} [{}]", id, desc).expect("write failed");
-        }
-
-        writeln!(f, "Nodes removed:")?;
-        for (id, desc) in &self.removed_with_desc {
-            writeln!(f, " --> {} [selected based on {}]", id, desc).expect("write failed");
-        }
-        writeln!(f, "\nNodes added:")?;
-        for (id, desc) in &self.added_with_desc {
-            writeln!(f, " ++> {} [selected based on {}]", id, desc).expect("write failed");
-        }
-
-        writeln!(f, "Nodes removed:")?;
-        for (id, desc) in &self.removed_with_desc {
             writeln!(f, " --> {} [selected based on {}]", id, desc).expect("write failed");
         }
         writeln!(f, "\nNodes added:")?;
