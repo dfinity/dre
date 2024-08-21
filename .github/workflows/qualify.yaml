@@ -138,7 +138,7 @@ jobs:
         uses: slackapi/slack-github-action@6c661ce58804a1a20f6dc5fbee7f0381b469e001 # v1.25.0
         with:
           channel-id: eng-release-bots
-          message: |
+          slack-message: |
             ${{ steps.slack.outputs.message }}
 
             Artifacts of run: ${{ inputs.version }}-${{ steps.date.outputs.date }}.tar
