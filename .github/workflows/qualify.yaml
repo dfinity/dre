@@ -128,7 +128,7 @@ jobs:
           FULL_MESSAGE="Qualification of ${COMMIT}: "
           if [[ "${{ needs.qualify.result }}" =~ ^(success)$ ]]; then
             FULL_MESSAGE="${FULL_MESSAGE} :white_check_mark:"
-          elif [[ "${{ needs.qualify.result }" =~ ^(failure|timed_out)$ ]]; then
+          elif [[ "${{ needs.qualify.result }}" =~ ^(failure|timed_out)$ ]]; then
             FULL_MESSAGE="${FULL_MESSAGE} :x:"
           fi
 
