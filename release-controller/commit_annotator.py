@@ -3,12 +3,13 @@ import os
 import subprocess
 import sys
 import re
+sys.path.append(os.path.join(os.path.dirname(__file__)))
+
 from git_repo import GitRepo
 from datetime import datetime
 from tenacity import retry, stop_after_attempt
 from util import bazel_binary
 
-sys.path.append(os.path.join(os.path.dirname(__file__)))
 
 GUESTOS_CHANGED_NOTES_NAMESPACE = "guestos-changed"
 GUESTOS_TARGETS_NOTES_NAMESPACE = "guestos-targets"
