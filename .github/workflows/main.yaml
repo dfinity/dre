@@ -104,7 +104,8 @@ jobs:
         shell: bash
         run: |
           files=(
-            bases/apps/ic-release-controller/sts.yaml
+            bases/apps/ic-release-controller/controller/controller.yaml
+            bases/apps/ic-release-controller/commit-annotator/commit-annotator.yaml
             bases/apps/mainnet-dashboard/backend/base/deployment.yaml
             bases/apps/mainnet-dashboard/statefulset-slack.yaml
             bases/apps/service-discovery/service-discovery.yaml
