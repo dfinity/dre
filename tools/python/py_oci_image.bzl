@@ -78,7 +78,7 @@ def py_oci_image(name, binary, tars = [], **kwargs):
 
     binary_label = native.package_relative_label(binary)
     oci_push(
-        name = "push_image",
+        name = "{}_push".format(name),
         image = name,
         repository = "ghcr.io/dfinity/dre/{}".format(binary_label.name),
     )

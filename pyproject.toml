@@ -57,6 +57,7 @@ slackblocks = "^1.0.10"
 aiohttp = "^3.10.3"
 quart = "^0.19.6"
 pytest-asyncio = "^0.23.8"
+pytest-xdist = "^3.6.1"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24"
