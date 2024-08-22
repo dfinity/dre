@@ -6,20 +6,13 @@ export const paperStyle: SxProps<Theme> = {
   p: 2,
 };
 
-export const boxStyleLeft: SxProps<Theme> = {
+export const boxStyleWidget = (justifyContent: 'left' | 'right', alignItems?: 'flex-start' | 'center' | 'flex-end'): SxProps<Theme> => ({
   display: 'flex',
   flexWrap: 'wrap',
-  justifyContent: 'left',
+  justifyContent: justifyContent,
+  alignItems: alignItems || 'stretch',
   gap: 2,
-};
-
-export const boxStyleRight: SxProps<Theme> = {
-  display: 'flex',
-  flexWrap: 'wrap',
-  justifyContent: 'right',
-  alignItems: 'left',
-  gap: 2,
-};
+});
 
 export const paperStyleWidget: SxProps<Theme> = {
     p: 2, 

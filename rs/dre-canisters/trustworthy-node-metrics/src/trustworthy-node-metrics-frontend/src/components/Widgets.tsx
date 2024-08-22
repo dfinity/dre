@@ -1,6 +1,6 @@
 import { Box, Paper, Stack, Typography } from '@mui/material';
 import { Gauge, gaugeClasses } from '@mui/x-charts/Gauge';
-import { boxStyleRight, paperStyleWidget } from '../Styles';
+import { boxStyleWidget, paperStyleWidget } from '../Styles';
 
 import React from 'react';
 
@@ -24,7 +24,7 @@ export function WidgetNumber({ value, title }: { value: string, title: string })
 export function WidgetGauge({ value, title }: { value: number, title: string }) {
   return (
     <Box 
-      sx={boxStyleRight}
+      sx={boxStyleWidget('right')}
     >
       <Paper 
         elevation={15} 

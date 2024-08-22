@@ -6,7 +6,7 @@ import { Box, Grid, Paper, Typography } from '@mui/material';
 import { useParams } from 'react-router-dom';
 import DailyPerformanceChart from './DailyPerformanceChart';
 import NodeInfo from './NodeInfo';
-import { paperStyle, boxStyleLeft, boxStyleRight } from '../Styles';
+import { paperStyle, boxStyleWidget } from '../Styles';
 import { NodeRewardsResponse } from '../../../declarations/trustworthy-node-metrics/trustworthy-node-metrics.did';
 
 export interface NodeChartProps {
@@ -15,14 +15,14 @@ export interface NodeChartProps {
 }
 
 const NodeMetricsStats: React.FC<{ stats: NodeRewardsResponse['rewards_stats'] }> = ({ stats }) => (
-    <Box sx={boxStyleLeft}>
+    <Box sx={boxStyleWidget('left')}>
         <WidgetNumber value={stats.blocks_proposed.toString()} title="Blocks Proposed Total" />
         <WidgetNumber value={stats.blocks_failed.toString()} title="Blocks Failed Total" />
     </Box>
 );
 
 const NodePerformanceStats: React.FC<{ failureRateAvg: string, rewardPercent: string }> = ({ failureRateAvg, rewardPercent }) => (
-    <Box sx={boxStyleRight}>
+    <Box sx={boxStyleWidget('right')}>
         <WidgetNumber value={failureRateAvg} title="Failure Rate Assigned" />
         <WidgetNumber value={rewardPercent} title="Rewards Percent Assigned" />
         <WidgetNumber value={"100%"} title="Rewards Percent Unassigned" />
