@@ -49,7 +49,8 @@ def target_determinator(ic_repo: GitRepo, object: str) -> bool:
         stderr=subprocess.PIPE,
     )
     output = p.stdout.decode().strip()
-    print("target determinator output", "object", object, "stdout:", output, "stderr", p.stderr.decode().strip())
+    logging.info(f"stdout of target determinator for {object}: '{output}'")
+    logging.info(f"stderr of target determinator for {object}: '{p.stderr.decode().strip()}'")
     return output != ""
 
 

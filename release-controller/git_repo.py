@@ -308,11 +308,6 @@ class GitRepo:
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
             )
-        print(f"git status {ref}")
-        subprocess.run(
-            ["git", "status"],
-            cwd=self.dir,
-        )
 
     def parent(self, object: str) -> str:
         return (
