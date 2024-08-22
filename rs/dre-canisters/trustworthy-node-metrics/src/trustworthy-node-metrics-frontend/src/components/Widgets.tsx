@@ -35,7 +35,7 @@ export function WidgetGauge({ value, title }: { value: number, title: string }) 
           alignItems: 'center', 
           justifyContent: 'center',
           width: '150px',
-          height: '180px',
+          height: '160px',
           bgcolor: 'background.paper', 
           borderRadius: '10px'
         }}
