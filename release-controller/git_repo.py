@@ -1,6 +1,7 @@
 import logging
 import os
 import pathlib
+import re
 import subprocess
 import tempfile
 import typing
@@ -282,7 +283,7 @@ class GitRepo:
     def checkout(self, ref: str):
         """Checkout the given ref."""
         subprocess.check_call(
-            ["git", "reset", "--hard", f"origin/{self.main_branch}"],
+            ["git", "reset", "--hard"],
             cwd=self.dir,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
@@ -293,6 +294,89 @@ class GitRepo:
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         )
+        if (
+            subprocess.check_output(
+                ["git", "branch", "--show-current"],
+                cwd=self.dir,
+            )
+            .decode()
+            .strip()
+        ):
+            subprocess.check_call(
+                ["git", "reset", "--hard", f"origin/{ref}"],
+                cwd=self.dir,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+
+    def parent(self, object: str) -> str:
+        return (
+            subprocess.check_output(
+                ["git", "log", "--pretty=%P", "-n", "1", object],
+                cwd=self.dir,
+            )
+            .decode()
+            .strip()
+        )
+
+    def branch_list(self, pattern) -> typing.List[str]:
+        return [
+            b.strip().removeprefix("origin/")
+            for b in subprocess.check_output(
+                ["git", "branch", "-r", "--list", f"origin/{pattern}"],
+                cwd=self.dir,
+            )
+            .decode()
+            .splitlines()
+        ]
+
+    def _fetch_notes(self):
+        ref = f"refs/notes/*"
+        subprocess.check_call(
+            ["git", "fetch", "origin", f"{ref}:{ref}", "-f", "--prune"],
+            cwd=self.dir,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+
+    def _push_notes(self, namespace: str):
+        subprocess.check_call(
+            ["git", "push", "origin", f"refs/notes/{namespace}", "-f"],
+            cwd=self.dir,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+
+    def _notes(self, namespace: str, *args) -> str:
+        return subprocess.check_output(
+            ["git", "notes", f"--ref={namespace}", *args],
+            cwd=self.dir,
+        ).decode()
+
+    def add_note(self, namespace: str, object: str, content: str):
+        self._fetch_notes()
+        with tempfile.TemporaryDirectory() as td:
+            f = os.path.join(td, "content")
+            with open(f, "w") as fh:
+                fh.write(content)
+
+            self._notes(namespace, "add", f"--file={f}", object, "-f")
+
+        self._push_notes(namespace=namespace)
+
+    def get_note(self, namespace: str, object: str) -> typing.Optional[str]:
+        self._fetch_notes()
+        if (
+            subprocess.check_output(
+                ["git", "rev-parse", object],
+                cwd=self.dir,
+            )
+            .decode()
+            .strip()
+            not in self._notes(namespace, "list").strip()
+        ):
+            return None
+        return self._notes(namespace, "show", object)
 
 
 # TODO: test
@@ -336,6 +420,7 @@ def push_release_tags(repo: GitRepo, release: Release):
             .decode("utf-8")
             .strip()
             .split(" ")[0]
+            != v.version
         )
         if tag_version == v.version:
             logging.info("RC %s: tag %s already exists on origin", release.rc_name, tag)

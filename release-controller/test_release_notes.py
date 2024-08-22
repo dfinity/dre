@@ -3,6 +3,7 @@ from git_repo import GitRepo
 import pytest
 
 
+@pytest.mark.skip(reason="expensive, will be removed")
 def test_get_change_description_for_commit():
     ic_repo = GitRepo("https://github.com/dfinity/ic.git", main_branch="master")
     # not a guestos change
