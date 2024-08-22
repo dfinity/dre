@@ -34,7 +34,7 @@ def target_determinator(ic_repo: GitRepo, object: str) -> bool:
     if os.path.exists(target_determinator_binary_local):
         target_determinator_binary = target_determinator_binary_local
     return (
-        subprocess.check_output(
+        target_determinator_output = subprocess.check_output(
             [
                 target_determinator_binary,
                 f"-bazel={bazel_binary()}",
@@ -46,7 +46,8 @@ def target_determinator(ic_repo: GitRepo, object: str) -> bool:
         )
         .decode()
         .strip()
-        != ""
+        print()
+        return target_determinator_output != ""
     )
 
 
