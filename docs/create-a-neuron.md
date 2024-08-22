@@ -1,4 +1,4 @@
-# Instructions for Creating a New Neuron for Proposal Submission
+# Create a New Neuron for Proposal Submissions
 
 Follow these steps to create a new neuron for proposal submission.
 
