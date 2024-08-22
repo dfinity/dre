@@ -33,22 +33,22 @@ def target_determinator(ic_repo: GitRepo, object: str) -> bool:
     target_determinator_binary_local = os.path.abspath(os.curdir) + "/release-controller/target-determinator"
     if os.path.exists(target_determinator_binary_local):
         target_determinator_binary = target_determinator_binary_local
-    return (
-        target_determinator_output = subprocess.check_output(
-            [
-                target_determinator_binary,
-                f"-bazel={bazel_binary()}",
-                "--targets",
-                GUESTOS_BAZEL_TARGETS,
-                ic_repo.parent(object),
-            ],
-            cwd=ic_repo.dir,
-        )
-        .decode()
-        .strip()
-        print()
-        return target_determinator_output != ""
+
+    p = subprocess.run(
+        [
+            target_determinator_binary,
+            f"-bazel={bazel_binary()}",
+            "--targets",
+            GUESTOS_BAZEL_TARGETS,
+            ic_repo.parent(object),
+        ],
+        cwd=ic_repo.dir,
+        stderr=sys.stdout,
+        check=True,
     )
+    output = p.stdout.decode().strip()
+    print("target determinator output", "object", object, "stdout:", output, "stderr", p.stderr.decode().strip())
+    return p.stdout.decode().strip() != ""
 
 
 def annotate_object(ic_repo: GitRepo, object: str):
