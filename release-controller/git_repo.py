@@ -1,3 +1,4 @@
+import logging
 import os
 import pathlib
 import re
@@ -411,7 +412,7 @@ def push_release_tags(repo: GitRepo, release: Release):
             stderr=subprocess.DEVNULL,
             cwd=repo.dir,
         )
-        if (
+        tag_version = (
             subprocess.check_output(
                 [
                     "git",
@@ -425,7 +426,11 @@ def push_release_tags(repo: GitRepo, release: Release):
             .strip()
             .split(" ")[0]
             != v.version
-        ):
+        )
+        if tag_version == v.version:
+            logging.info("RC %s: tag %s already exists on origin", release.rc_name, tag)
+        else:
+            logging.info("RC %s: pushing tag %s to the origin", release.rc_name, tag)
             subprocess.check_call(
                 [
                     "git",
