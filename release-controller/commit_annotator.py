@@ -26,7 +26,7 @@ def release_branch_date(branch: str) -> datetime:
 
 
 # target-determinator sometimes fails on first few tries
-@retry(stop=stop_after_attempt(3))
+@retry(stop=stop_after_attempt(10))
 def target_determinator(ic_repo: GitRepo, object: str) -> bool:
     ic_repo.checkout(object)
     target_determinator_binary = "target-determinator"
@@ -37,6 +37,7 @@ def target_determinator(ic_repo: GitRepo, object: str) -> bool:
     p = subprocess.run(
         [
             target_determinator_binary,
+            "-before-query-error-behavior=fatal",
             f"-bazel={bazel_binary()}",
             "--targets",
             GUESTOS_BAZEL_TARGETS,
