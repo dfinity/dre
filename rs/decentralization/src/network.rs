@@ -155,6 +155,18 @@ struct ReplacementCandidate {
 }
 
 impl DecentralizedSubnet {
+    pub fn new_with_subnet_id_and_nodes(subnet_id: PrincipalId, nodes: Vec<Node>) -> Self {
+        Self {
+            id: subnet_id,
+            nodes,
+            added_nodes_desc: vec![],
+            removed_nodes_desc: vec![],
+            min_nakamoto_coefficients: None,
+            comment: None,
+            run_log: vec![],
+        }
+    }
+
     pub fn with_subnet_id(self, subnet_id: PrincipalId) -> Self {
         Self { id: subnet_id, ..self }
     }

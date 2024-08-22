@@ -33,7 +33,7 @@ impl ExecutableCommand for Analyze {
         let runner = ctx.runner().await;
 
         match filter_map_nns_function_proposals::<ChangeSubnetMembershipPayload>(&[proposal]).first() {
-            Some((_, change_membership)) => runner.decentralization_change(change_membership).await,
+            Some((_, change_membership)) => runner.decentralization_change(change_membership, None).await,
             _ => Err(anyhow::anyhow!(
                 "Proposal {} must have {} type",
                 self.proposal_id,

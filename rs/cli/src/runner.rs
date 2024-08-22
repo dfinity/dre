@@ -529,38 +529,51 @@ impl Runner {
         result
     }
 
-    pub async fn decentralization_change(&self, change: &ChangeSubnetMembershipPayload) -> anyhow::Result<()> {
-        if let Some(id) = change.get_subnet() {
-            let subnet_before = self.registry.subnet(SubnetQueryBy::SubnetId(id)).await.map_err(|e| anyhow::anyhow!(e))?;
-            let nodes_before = subnet_before.nodes.clone();
-            let health_client = health::HealthClient::new(self.network.clone());
-            let healths = health_client.nodes().await?;
+    pub async fn decentralization_change(
+        &self,
+        change: &ChangeSubnetMembershipPayload,
+        override_subnet_nodes: Option<Vec<PrincipalId>>,
+    ) -> anyhow::Result<()> {
+        let subnet_before = match override_subnet_nodes {
+            Some(nodes) => {
+                let nodes = self.registry.get_decentralized_nodes(&nodes).await?;
+                DecentralizedSubnet::new_with_subnet_id_and_nodes(change.subnet_id, nodes)
+            }
+            None => {
+                let subnet = self
+                    .registry
+                    .subnet(SubnetQueryBy::SubnetId(change.subnet_id))
+                    .await
+                    .map_err(|e| anyhow::anyhow!(e))?;
+                subnet.into()
+            }
+        };
+        let nodes_before = subnet_before.nodes.clone();
+        let health_client = health::HealthClient::new(self.network.clone());
+        let healths = health_client.nodes().await?;
 
-            // Simulate node removal
-            let removed_nodes = self.registry.get_decentralized_nodes(&change.get_removed_node_ids()).await?;
-            let removed_nodes_with_desc = self.recalc_remove_node_with_desc(&subnet_before, &healths, &removed_nodes);
-            let subnet_mid = subnet_before
-                .without_nodes(removed_nodes_with_desc.clone())
-                .map_err(|e| anyhow::anyhow!(e))?;
+        // Simulate node removal
+        let removed_nodes = self.registry.get_decentralized_nodes(&change.get_removed_node_ids()).await?;
+        let removed_nodes_with_desc = self.recalc_remove_node_with_desc(&subnet_before, &healths, &removed_nodes);
+        let subnet_mid = subnet_before
+            .without_nodes(removed_nodes_with_desc.clone())
+            .map_err(|e| anyhow::anyhow!(e))?;
 
-            // Now simulate node addition
-            let added_nodes = self.registry.get_decentralized_nodes(&change.get_added_node_ids()).await?;
-            let added_nodes_with_desc = self.recalc_add_node_with_desc(&subnet_mid, &healths, &added_nodes);
+        // Now simulate node addition
+        let added_nodes = self.registry.get_decentralized_nodes(&change.get_added_node_ids()).await?;
+        let added_nodes_with_desc = self.recalc_add_node_with_desc(&subnet_mid, &healths, &added_nodes);
 
-            let subnet_after = subnet_mid.with_nodes(added_nodes_with_desc.clone());
+        let subnet_after = subnet_mid.with_nodes(added_nodes_with_desc.clone());
 
-            let subnet_change = SubnetChange {
-                id: subnet_after.id,
-                old_nodes: nodes_before,
-                new_nodes: subnet_after.nodes,
-                added_nodes_desc: added_nodes_with_desc.clone(),
-                removed_nodes_desc: removed_nodes_with_desc.clone(),
-                ..Default::default()
-            };
-            println!("{}", SubnetChangeResponse::from(&subnet_change));
-        } else {
-            anyhow::bail!("Subnet could not be found");
-        }
+        let subnet_change = SubnetChange {
+            id: subnet_after.id,
+            old_nodes: nodes_before,
+            new_nodes: subnet_after.nodes,
+            added_nodes_desc: added_nodes_with_desc.clone(),
+            removed_nodes_desc: removed_nodes_with_desc.clone(),
+            ..Default::default()
+        };
+        println!("{}", SubnetChangeResponse::from(&subnet_change));
         Ok(())
     }
 
