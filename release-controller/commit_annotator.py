@@ -26,7 +26,7 @@ def release_branch_date(branch: str) -> datetime:
 
 
 # target-determinator sometimes fails on first few tries
-@retry(stop=stop_after_attempt(10))
+@retry(stop=stop_after_attempt(3))
 def target_determinator(ic_repo: GitRepo, object: str) -> bool:
     ic_repo.checkout(object)
     target_determinator_binary = "target-determinator"
@@ -43,12 +43,13 @@ def target_determinator(ic_repo: GitRepo, object: str) -> bool:
             ic_repo.parent(object),
         ],
         cwd=ic_repo.dir,
-        stderr=sys.stdout,
         check=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
     )
     output = p.stdout.decode().strip()
     print("target determinator output", "object", object, "stdout:", output, "stderr", p.stderr.decode().strip())
-    return p.stdout.decode().strip() != ""
+    return output != ""
 
 
 def annotate_object(ic_repo: GitRepo, object: str):
