@@ -1,10 +1,9 @@
 import React from 'react';
-import { Toolbar } from '@mui/material';
+import { Toolbar, Box } from '@mui/material';
 import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import ArrowRightIcon from '@mui/icons-material/ArrowRight';
 
-// Define the types for props
 export interface PeriodFilter {
   dateStart: Date;
   dateEnd: Date;
@@ -13,40 +12,44 @@ export interface PeriodFilter {
 interface FilterBarProps {
   filters: PeriodFilter;
   setFilters: React.Dispatch<React.SetStateAction<PeriodFilter>>;
-  subnets: Set<string> | null; // Use string instead of String
 }
 
 const FilterBar: React.FC<FilterBarProps> = ({ filters, setFilters }) => {
   const handleDateStartChange = (newValue: Date | null) => {
-    if (newValue !== null) {
-      setFilters((prev) => ({ ...prev, dateStart: newValue }));
-    }
+    setFilters(prev => ({
+      ...prev,
+      dateStart: newValue ?? prev.dateStart,
+    }));
   };
 
   const handleDateEndChange = (newValue: Date | null) => {
-    if (newValue !== null) {
-      setFilters((prev) => ({ ...prev, dateEnd: newValue }));
-    }
+    setFilters(prev => ({
+      ...prev,
+      dateEnd: newValue ?? prev.dateEnd,
+    }));
   };
 
   return (
-      <Toolbar>
-        <LocalizationProvider dateAdapter={AdapterDateFns}>
+    <Toolbar>
+      <LocalizationProvider dateAdapter={AdapterDateFns}>
+        <Box display="flex" alignItems="center">
           <DatePicker
             label="From"
             value={filters.dateStart}
             onChange={handleDateStartChange}
+            sx={{ mr: 2 }}
           />
           <ArrowRightIcon />
           <DatePicker
             label="To"
             value={filters.dateEnd}
             onChange={handleDateEndChange}
+            sx={{ ml: 2 }}
           />
-        </LocalizationProvider>
-      </Toolbar>
+        </Box>
+      </LocalizationProvider>
+    </Toolbar>
   );
 };
-
 
 export default FilterBar;

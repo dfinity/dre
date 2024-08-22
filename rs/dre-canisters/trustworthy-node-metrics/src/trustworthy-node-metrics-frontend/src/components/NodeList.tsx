@@ -1,131 +1,93 @@
-import React, { useState } from 'react';
-import { Box, Grid, Paper, Typography, Autocomplete, TextField } from '@mui/material';
-import { axisClasses, BarChart } from '@mui/x-charts';
-import { ChartData, DashboardNodeRewards } from '../models/NodeMetrics';
+import React, { useState, useEffect } from 'react';
+import { Box, Autocomplete, TextField, TableCell, TableRow, TableHead, Table, TableContainer, Paper, TableBody } from '@mui/material';
+import { Link } from 'react-router-dom';
 import { styled } from '@mui/material/styles';
-import Divider from '@mui/material/Divider';
 import { PeriodFilter } from './FilterBar';
-import { generateChartData} from '../utils/utils';
-import FailureRateArc, { RewardsArc } from './Gauge';
-import { Principal } from '@dfinity/principal';
-import { DailyNodeMetrics } from '../../../declarations/trustworthy-node-metrics/trustworthy-node-metrics.did';
+import { NodeRewardsResponse } from '../../../declarations/trustworthy-node-metrics/trustworthy-node-metrics.did';
 
 export const Root = styled('div')(({ theme }) => ({
-    width: '100%',
-    ...theme.typography.body2,
-    color: theme.palette.text.secondary,
-    '& > :not(style) ~ :not(style)': {
-      marginTop: theme.spacing(2),
-    },
+  width: '100%',
+  ...theme.typography.body2,
+  color: theme.palette.text.secondary,
+  '& > :not(style) ~ :not(style)': {
+    marginTop: theme.spacing(2),
+  },
 }));
 
 export interface NodeListProps {
-    dashboardNodeMetrics: DashboardNodeRewards[],
-    periodFilter: PeriodFilter
+  nodeRewards: NodeRewardsResponse[];
+  periodFilter: PeriodFilter;
 }
 
-function renderChart(
-    nodeId: Principal, 
-    dailyData: DailyNodeMetrics[], 
-    failureRateAvg: number, 
-    rewardsNoPenalty: number, 
-    rewardsWithPenalty: number, 
-    periodFilter: PeriodFilter): React.ReactNode {
+const tableHeaders = [
+  { label: 'Node ID', key: 'node_id' },
+  { label: 'Node Provider ID', key: 'node_provider_id' },
+  { label: 'Days Assigned', key: 'days_assigned' },
+  { label: 'Rewards Percent', key: 'rewards_percent' },
+  { label: 'Failure Rate Avg.', key: 'failure_rate' },
+];
 
-    const chartDailyData: ChartData[] = generateChartData(periodFilter, dailyData);
+export const NodeList: React.FC<NodeListProps> = ({ nodeRewards }) => {
+  const [filteredMetrics, setFilteredMetrics] = useState<NodeRewardsResponse[]>(nodeRewards);
 
-    return ( 
-    <Paper sx={{ p: 2, backgroundColor: '#11171E', borderRadius: '10px', color: 'white' }}>
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <Typography gutterBottom variant="h6" component="div">
-                {nodeId.toText()}
-            </Typography>
-            <Box sx={{ ml: 'auto', display: 'flex', alignItems: 'center' }}>
-                {FailureRateArc(failureRateAvg)}
-                {RewardsArc(rewardsNoPenalty, 'Rewards No Penalty')}
-                {RewardsArc(rewardsWithPenalty, 'Rewards With Penalty')}
-            </Box>
-        </Box>
-    <Box sx={{ p: 2 }}>
-        <Divider />
-        <BarChart
-            borderRadius={9}
-            sx={{
-                p: 2,
-                [`.${axisClasses.left} .${axisClasses.label}`]: {
-                    transform: 'translateX(-25px)',
-                },
-            }}
-            slotProps={{ legend: { hidden: true } }}
-            xAxis={[{ 
-                scaleType: 'band',
-                dataKey: 'date',
-                valueFormatter: (value: Date) => value.toLocaleDateString('UTC', { month: 'short', day: 'numeric' }).replace(" ", "\n")
-            }]}
-            yAxis={[
-                {
-                    valueFormatter: value => `${value}%`,
-                    min: 0,
-                    max: 100,
-                },
-            ]}
-            series={[
-                { dataKey: 'failureRate', label: "Failure Rate", color: '#FF6347', 
-                    valueFormatter: (value: number | null) => value ? `${value}%` : 'Not assigned' },
-            ]}
-            dataset={chartDailyData.map(entry => ({
-                date: entry.date,
-                failureRate: entry.failureRate,
-            }))}
+  useEffect(() => {
+    setFilteredMetrics(nodeRewards);
+  }, [nodeRewards]);
 
-            height={400}
+  const handleSearchChange = (event: React.SyntheticEvent, value: string | null) => {
+    if (value) {
+      setFilteredMetrics(nodeRewards.filter(node => node.node_id.toText().includes(value)));
+    } else {
+      setFilteredMetrics(nodeRewards);
+    }
+  };
+
+  return (
+    <>
+      <Box sx={{ p: 3 }}>
+        <Autocomplete
+          freeSolo
+          id="node-search"
+          options={nodeRewards.map(node => node.node_id.toText())}
+          onInputChange={handleSearchChange}
+          renderInput={(params) => (
+            <TextField {...params} label="Search Node" variant="outlined" />
+          )}
         />
-    </Box>
-</Paper>
-    )
-}
-
-export const NodeList: React.FC<NodeListProps> = ({ dashboardNodeMetrics, periodFilter }) => {
-    const [prevItems, setPrevItems] = useState(dashboardNodeMetrics);
-    const [filteredMetrics, setFilteredMetrics] = useState(prevItems);
-
-    if (dashboardNodeMetrics !== prevItems) {
-        setPrevItems(dashboardNodeMetrics);
-        setFilteredMetrics(dashboardNodeMetrics)
-      }
-
-    const handleSearchChange = (event: unknown, value: string | null) => {
-        if (value) {
-            const filtered = dashboardNodeMetrics.filter(node => node.nodeId.toText().includes(value));
-            setFilteredMetrics(filtered);
-        } else {
-            setFilteredMetrics(dashboardNodeMetrics);
-        }
-    };
-
-    return (
-        <React.Fragment>
-            <Root>
-                <Box sx={{ p: 2 }}>
-                    <Autocomplete
-                        freeSolo
-                        id="node-search"
-                        options={dashboardNodeMetrics.map((node) => node.nodeId.toText())}
-                        onInputChange={handleSearchChange}
-                        renderInput={(params) => (
-                            <TextField {...params} label="Search Node" variant="outlined" />
-                        )}
-                    />
-                </Box>
-                <Grid container spacing={2}>
-                {filteredMetrics.slice(0, 20).map(
-                    ({ nodeId, dailyData, failureRateAvg, rewardsNoPenalty, rewardsWithPenalty }, index) => (
-                    <Grid item xs={6} key={index}>
-                        {renderChart(nodeId, dailyData, failureRateAvg, rewardsNoPenalty, rewardsWithPenalty, periodFilter)}
-                    </Grid>
+      </Box>
+      <Box sx={{ m: 3 }}>
+        <Paper sx={{ bgcolor: 'background.paper', borderRadius: '10px' }}>
+          <TableContainer>
+            <Table aria-label="node metrics table">
+              <TableHead>
+                <TableRow>
+                  {tableHeaders.map(header => (
+                    <TableCell key={header.key}>{header.label}</TableCell>
+                  ))}
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {filteredMetrics.map(nodeMetrics => (
+                  <TableRow
+                    key={nodeMetrics.node_id.toText()}
+                    sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                  >
+                    <TableCell component="th" scope="row">
+                      <Link to={`/nodes/${nodeMetrics.node_id.toText()}`} className="custom-link">
+                        {nodeMetrics.node_id.toText()}
+                      </Link>
+                    </TableCell>
+                    <TableCell>{nodeMetrics.node_provider_id.toText()}</TableCell>
+                    <TableCell>{nodeMetrics.daily_node_metrics.length}</TableCell>
+                    <TableCell>{Math.round(nodeMetrics.rewards_percent * 100)}%</TableCell>
+                    <TableCell>{Math.round(nodeMetrics.rewards_stats.failure_rate * 100)}%</TableCell>
+                  </TableRow>
                 ))}
-                </Grid>
-            </Root>
-        </React.Fragment>
-    );
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Paper>
+      </Box>
+    </>
+  );
 };

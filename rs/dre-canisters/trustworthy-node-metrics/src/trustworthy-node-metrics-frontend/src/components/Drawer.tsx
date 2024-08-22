@@ -8,6 +8,8 @@ import {
   IconButton,
   ListItem,
   Toolbar,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material';
 import { Link } from 'react-router-dom';
 import Logo from '../assets/icp_logo.svg'; 
@@ -17,66 +19,77 @@ interface DrawerProps {
   subnets: Set<string>;
   nodeProviders: Set<string>;
   drawerWidth: number;
+  open: boolean;
+  onClose: () => void;
 }
 
-const Drawer: React.FC<DrawerProps> = ({ subnets, nodeProviders, drawerWidth }) => {
-  const [openSubnets, setOpenSubnets] = React.useState(false);
-  const [openNP, setOpenNp] = React.useState(false);
+const Drawer: React.FC<DrawerProps> = ({ subnets, nodeProviders, drawerWidth, open, onClose }) => {
+  const [isSubnetsOpen, setIsSubnetsOpen] = React.useState(false);
+  const [isNodeProvidersOpen, setIsNodeProvidersOpen] = React.useState(false);
+
+  const theme = useTheme();
+  const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
 
   const renderCollapsibleList = (
     title: string,
     items: Set<string>,
-    open: boolean,
-    setOpen: React.Dispatch<React.SetStateAction<boolean>>,
+    isOpen: boolean,
+    toggleOpen: React.Dispatch<React.SetStateAction<boolean>>,
     basePath: string
-  ) => (
-    <>
-      <ListItemButton onClick={() => setOpen(!open)}>
-        <ListItemText primary={title} />
-        {open ? <ExpandLess /> : <ExpandMore />}
-      </ListItemButton>
-      <Collapse in={open} timeout="auto" unmountOnExit>
-        <List component="div" disablePadding>
-          {Array.from(items).map((item, index) => (
-            <Link key={index} to={`/${basePath}/${item}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-              <ListItemButton>
-                <ListItemText primary={item.toString().split("-")[0]} />
-              </ListItemButton>
-            </Link>
-          ))}
-        </List>
-      </Collapse>
-    </>
-  );
+  ) => {
+    const itemList = items ? Array.from(items) : [];
+
+    return (
+      <>
+        <ListItemButton onClick={() => toggleOpen(!isOpen)}>
+          <ListItemText primary={title} />
+          {isOpen ? <ExpandLess /> : <ExpandMore />}
+        </ListItemButton>
+        <Collapse in={isOpen} timeout="auto" unmountOnExit>
+          <List component="div" disablePadding>
+            {itemList.map((item, index) => (
+              <Link key={index} to={`/${basePath}/${item}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                <ListItemButton>
+                  <ListItemText primary={item.split("-")[0]} />
+                </ListItemButton>
+              </Link>
+            ))}
+          </List>
+        </Collapse>
+      </>
+    );
+  };
 
   return (
-    <MUIDrawer
-      variant="permanent"
-      sx={{
-        width: drawerWidth,
-        flexShrink: 0,
-      }}
-    >
-      <List
-        sx={{ width: '100%', maxWidth: 360, bgcolor: 'background.paper' }}
-        component="nav"
-        aria-labelledby="nested-list-subheader"
+      <MUIDrawer
+        variant={isSmallScreen ? 'temporary' : 'permanent'}
+        open={open}
+        onClose={onClose}
+        sx={{
+          width: drawerWidth,
+          flexShrink: 0,
+          '& .MuiDrawer-paper': {
+            width: drawerWidth,
+            boxSizing: 'border-box',
+          },
+        }}
       >
-        <ListItem>
+        <List sx={{ width: '100%' }}>
+          <ListItem>
             <IconButton edge="start" color="inherit" aria-label="logo">
               <img src={Logo} alt="Logo" style={{ height: 30 }} />
             </IconButton>
-        </ListItem>
-        <Toolbar />
-        <Link to="/nodes"  style={{ textDecoration: 'none', color: 'inherit' }}>
-          <ListItemButton>
-            <ListItemText primary="Nodes" />
-          </ListItemButton>
-        </Link>
-        {renderCollapsibleList("Subnets", subnets, openSubnets, setOpenSubnets, "subnets")}
-        {renderCollapsibleList("Node Providers", nodeProviders, openNP, setOpenNp, "node-providers")}
-      </List>
-    </MUIDrawer>
+          </ListItem>
+          <Toolbar />
+          <Link to="/nodes" style={{ textDecoration: 'none', color: 'inherit' }}>
+            <ListItemButton>
+              <ListItemText primary="Nodes" />
+            </ListItemButton>
+          </Link>
+          {renderCollapsibleList("Subnets", subnets, isSubnetsOpen, setIsSubnetsOpen, "subnets")}
+          {renderCollapsibleList("Node Providers", nodeProviders, isNodeProvidersOpen, setIsNodeProvidersOpen, "node-providers")}
+        </List>
+      </MUIDrawer>
   );
 };
 

@@ -5,26 +5,26 @@ import Divider from '@mui/material/Divider';
 import { useParams } from 'react-router-dom';
 import { generateChartData, getFormattedDates } from '../utils/utils';
 import RewardTable from './RewardTable';
-import { DashboardNodeRewards } from '../models/NodeMetrics';
 import { PeriodFilter } from './FilterBar';
 import { Root } from './NodeList';
+import { NodeRewardsResponse } from '../../../declarations/trustworthy-node-metrics/trustworthy-node-metrics.did';
 
 export interface SubnetChartProps {
-    dashboardNodeMetrics: DashboardNodeRewards[],
+    nodeRewards: NodeRewardsResponse[],
     periodFilter: PeriodFilter
   }
 
-export const SubnetChart: React.FC<SubnetChartProps> = ({ dashboardNodeMetrics, periodFilter }) => {
+export const SubnetChart: React.FC<SubnetChartProps> = ({ nodeRewards, periodFilter }) => {
     const [stackOrder] = useState<StackOrderType>('ascending');
     const { subnet } = useParams();
-    const subnetNodeMetrics = dashboardNodeMetrics
-        .filter((nodeMetrics) => nodeMetrics.dailyData.some((daily) => daily.subnet_assigned.toText() === subnet))
-    const chartData = subnetNodeMetrics
-        .filter((nodeMetrics) => nodeMetrics.dailyData.some(data => data.failure_rate >= 0.1))
+    const subnetNodeMetrics = nodeRewards
+        .filter((nodeMetrics) => nodeMetrics.daily_node_metrics.some((daily) => daily.subnet_assigned.toText() === subnet))
+    const chartData = nodeRewards
+        .filter((nodeMetrics) => nodeMetrics.daily_node_metrics.some(data => data.failure_rate >= 0.1))
         .map(nodeMetrics => {
             return {
-                data: generateChartData(periodFilter, nodeMetrics.dailyData).map(daily => daily.failureRate),
-                label: nodeMetrics.nodeId.toText(),
+                data: generateChartData(periodFilter, nodeMetrics.daily_node_metrics).map(daily => 3),
+                label: nodeMetrics.node_id.toText(),
               }
     });
 
@@ -33,7 +33,7 @@ export const SubnetChart: React.FC<SubnetChartProps> = ({ dashboardNodeMetrics, 
 
     return (
         <Root>
-            <Paper sx={{ p: 2, backgroundColor: '#11171E', borderRadius: '10px', color: 'white' }}>
+            <Paper sx={{ p: 2, backgroundColor: '#11171E', borderRadius: '10px'}}>
                 <Box sx={{ p: 2 }}>
                         <Typography gutterBottom variant="h6" component="div">
                             Subnet: {subnet}
@@ -67,7 +67,7 @@ export const SubnetChart: React.FC<SubnetChartProps> = ({ dashboardNodeMetrics, 
                         height={500}
                     />
                     <Box sx={{ p: 10 }}>
-                    <RewardTable dashboardNodeMetrics={subnetNodeMetrics}/>
+                    <RewardTable nodeRewards={subnetNodeMetrics}/>
                     </Box>
                 </Box>
             </Paper>

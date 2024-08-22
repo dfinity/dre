@@ -19,3 +19,18 @@ form {
   margin: auto;
   align-items: baseline;
 }
+
+.custom-link {
+  text-decoration: none;
+  color: rgb(113, 113, 246);
+}
+
+.custom-link:hover {
+  color: rgb(44, 44, 191); 
+}
+
+.custom-paper {
+  background-color: #11171E;
+  border-radius: 10px;
+  color: white;
+}

@@ -1,7 +1,9 @@
 import { DailyNodeMetrics } from "../../../declarations/trustworthy-node-metrics/trustworthy-node-metrics.did";
 import { PeriodFilter } from "../components/FilterBar";
-import { ChartData } from "../models/NodeMetrics";
-
+export interface ChartData {
+  date: Date ;
+  dailyNodeMetrics: DailyNodeMetrics | null;
+}
 
 export const dateToNanoseconds = (date: Date): bigint => {
   const millisecondsSinceEpoch = date.getTime();
@@ -26,7 +28,7 @@ export const generateChartData = (periodFilter: PeriodFilter, dailyData: DailyNo
       
       chartData.push({
           date: new Date(currentDate),
-          failureRate: dailyDataEntry ? dailyDataEntry.failure_rate * 100 : null,
+          dailyNodeMetrics: dailyDataEntry ? dailyDataEntry : null,
       });
 
       currentDate.setDate(currentDate.getDate() + 1);
