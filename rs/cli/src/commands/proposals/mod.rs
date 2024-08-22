@@ -56,6 +56,7 @@ mod list;
 mod pending;
 
 #[derive(Args, Debug)]
+#[clap(alias = "proposal")]
 pub struct Proposals {
     #[clap(subcommand)]
     pub subcommand: Subcommands,

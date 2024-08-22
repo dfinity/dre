@@ -23,6 +23,7 @@ deps = [
 
 dev_deps = [
     requirement("httpretty"),
+    requirement("pytest-xdist"),
 ]
 
 env = {
@@ -43,29 +44,73 @@ py_binary(
     deps = deps,
 )
 
+py_binary(
+    name = "commit_annotator",
+    main = "commit_annotator.py",
+    srcs = glob(
+        ["*.py"],
+        exclude = [
+            "test_*.py",
+            "pytest.py",
+        ],
+    ),
+    data = [":bazelisk", ":target_determinator"],
+    env = env,
+    deps = deps,
+)
+
 native_binary(
     name = "bazelisk",
     src = select({
         "@platforms//os:linux": "@bazelisk_linux//file",
-        "@platforms//os:macos": "@bazelisk_darwin//file",
     }),
     out = "bazelisk",
 )
 
+native_binary(
+    name = "target_determinator",
+    src = select({
+        "@platforms//os:linux": "@target_determinator//file",
+    }),
+    out = "target-determinator",
+)
+
+long_tests = [
+    "test_commit_annotator.py",
+]
+
 py_test(
     name = "pytest",
     srcs = ["pytest.py"],
-    data = glob(["*.py"]) + [":bazelisk"],
+    data = glob(["*.py"], exclude = long_tests) + [":bazelisk", ":target_determinator"],
     env = env,
     tags = ["no-sandbox"],
     deps = deps + dev_deps,
     env_inherit = ["HOME"],
 )
 
+py_test(
+    name = "pytest_enormous",
+    srcs = ["pytest.py"],
+    main = "pytest.py",
+    data = long_tests + glob(["*.py"], exclude = ["test*.py"]) + [":bazelisk", ":target_determinator"],
+    env = env,
+    tags = ["no-sandbox"],
+    deps = deps + dev_deps,
+    env_inherit = ["HOME"],
+    size = "enormous",
+)
+
 py_oci_image(
     name = "oci_image",
     base = "@bazel_image_6_5_0",
     binary = ":release_controller",
+)
+
+py_oci_image(
+    name = "oci_image_commit_annotator",
+    base = "@bazel_image_6_5_0",
+    binary = ":commit_annotator",
 )
 
 exports_files(["README.md"])
