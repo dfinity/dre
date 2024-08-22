@@ -58,7 +58,14 @@ class ReconcilerState:
 
     def proposal_submitted(self, version: str) -> bool:
         """Check if a proposal has been submitted for the given version."""
-        return self._version_path(version).exists()
+        if self._version_path(version).exists():
+            proposal_id = self.version_proposal(version)
+            if proposal_id:
+                logging.info("version %s: proposal %s already submitted", version, proposal_id)
+            else:
+                logging.warning("version %s: earlier proposal submission attempted but failed, will not retry", version)
+            return True
+        return False
 
     def mark_submitted(self, version: str):
         """Mark a proposal as submitted."""
@@ -212,7 +219,10 @@ class Reconciler:
                 # returns a result only if changelog is published
                 changelog = self.loader.proposal_summary(v.version)
                 if changelog:
-                    if not self.state.proposal_submitted(v.version):
+                    if self.state.proposal_submitted(v.version):
+                        logging.info("RC %s: proposal already submitted for version %s", rc.rc_name, v.version)
+                    else:
+                        logging.info("RC %s: submitting proposal for version %s", rc.rc_name, v.version)
                         unelect_versions = []
                         if v_idx == 0:
                             unelect_versions.extend(
