@@ -49,6 +49,7 @@ class GitRepo:
             "authed/{}".format(repo.split("@", 1)[1]) if "@" in repo else repo.removeprefix("https://")
         )
         self.cache = {}
+        self.fetch()
 
     def __del__(self):
         """Clean up the temporary directory."""
