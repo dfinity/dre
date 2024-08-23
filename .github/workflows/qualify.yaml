@@ -98,7 +98,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: "dfinity/dre" # this needs to be specified so it can be kicked off from the ic repo
-          ref: "main"
 
       - name: "Get current date"
         id: date
@@ -167,6 +166,12 @@ jobs:
 
           BRANCH_REF=$(git ls-remote --heads https://github.com/dfinity/dre.git refs/heads/${AUTO_UPDATE_BRANCH})
 
+          # Cache current version of script to be able to force checkout main
+          # If testing it is usually hard to get the version correct so this is
+          # a workaround
+          cp scripts/auto-update-release-index.py /tmp/auto-update-release-index.py
+          git checkout main
+
           if [[ $BRANCH_REF == *"${AUTO_UPDATE_BRANCH}"* ]]; then
             git checkout ${AUTO_UPDATE_BRANCH}
             PUSH_ORIGIN=1
@@ -175,7 +180,7 @@ jobs:
             PUSH_ORIGIN=0
           fi
 
-          python scripts/auto-update-release-index.py ${{ inputs.version }} ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          python /tmp/auto-update-release-index.py ${{ inputs.version }} ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
       - name: "Create/Update PR after a successful rc cut"
         if: ${{ needs.qualify.result == 'success' }}
