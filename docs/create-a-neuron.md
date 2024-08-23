@@ -70,6 +70,6 @@ In the NNS UI you can also add a hardware wallet as a controlling entity. You wi
 Steps:
 1. After the basic NNS neuron is created, add the hardware wallet in the NNS UI.
 2. Confirm adding the IC NNS Dapp in your hardware wallet by following the instructions from the hardware wallet.
-3. You can send funds to the hardware wallet address.
+3. You can send funds to the hardware wallet address instead of sending them to the regular address in the NNS UI.
 4. When staking ICPs, confirm the transaction on your hardware wallet.
 5. For voting and proposal submission from the command line you still need to add a regular dfx identity (plaintext)
