@@ -2,7 +2,7 @@ import React from 'react';
 import { ChartData, generateChartData } from '../utils/utils';
 import { WidgetGauge, WidgetNumber } from './Widgets';
 import { PeriodFilter } from './FilterBar';
-import { Box, Grid, Paper, Typography } from '@mui/material';
+import { Box, Divider, Grid, Paper, Typography } from '@mui/material';
 import { useParams } from 'react-router-dom';
 import DailyPerformanceChart from './DailyPerformanceChart';
 import NodeInfo from './NodeInfo';
@@ -37,7 +37,7 @@ export const NodeChart: React.FC<NodeChartProps> = ({ nodeRewards, periodFilter 
         return <p>Node metrics not found</p>;
     }
 
-    const chartDailyData: ChartData[] = generateChartData(periodFilter, nodeMetrics.daily_node_metrics);
+    const chartDailyData: ChartData[] = generateChartData(periodFilter, nodeMetrics.daily_node_metrics, nodeMetrics.node_id);
     const failureRateAvg = `${Math.round(nodeMetrics.rewards_stats.failure_rate * 100)}%`;
     const rewardPercent = `${Math.round(nodeMetrics.rewards_percent * 100)}%`;
 
@@ -49,6 +49,7 @@ export const NodeChart: React.FC<NodeChartProps> = ({ nodeRewards, periodFilter 
                         <Typography gutterBottom variant="h5" component="div">
                             {"Node Machine"}
                         </Typography>
+                        <Divider></Divider>
                     </Grid>
                     <Grid item xs={12} md={4}>
                         <NodeInfo nodeId={nodeMetrics.node_id.toText()} nodeProviderId={nodeMetrics.node_provider_id.toText()} />

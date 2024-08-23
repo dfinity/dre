@@ -5,12 +5,10 @@ import Drawer from './components/Drawer';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import { trustworthy_node_metrics } from '../../declarations/trustworthy-node-metrics/index.js';
 import { NodeRewardsArgs, NodeRewardsResponse } from '../../declarations/trustworthy-node-metrics/trustworthy-node-metrics.did.js';
-import { DashboardNodeRewards } from './models/NodeMetrics';
 import { NodeList } from './components/NodeList';
 import Header from './components/Header';
 import { dateToNanoseconds } from './utils/utils';
-import { SubnetChart } from './components/SubnetChart';
-import { NodeChart } from './components/NodeChart';
+import { NodeChart } from './components/NodePage';
 
 // Theme configuration
 const darkTheme = createTheme({
@@ -111,7 +109,8 @@ const App: React.FC = () => {
                 isLoading ? <LoadingIndicator /> : <NodeChart nodeRewards={nodeRewards} periodFilter={periodFilter} />
               } />
               <Route path="/subnets/:subnet" element={
-                isLoading ? <LoadingIndicator /> : <SubnetChart nodeRewards={nodeRewards} periodFilter={periodFilter} />
+                // TODO: Add subnet page
+                isLoading ? <LoadingIndicator /> : <NodeList nodeRewards={nodeRewards} periodFilter={periodFilter} />
               } />
             </Routes>
           </Box>
