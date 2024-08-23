@@ -170,6 +170,7 @@ jobs:
           # If testing it is usually hard to get the version correct so this is
           # a workaround
           cp scripts/auto-update-release-index.py /tmp/auto-update-release-index.py
+          git fetch origin main --depth 1
           git checkout main
 
           if [[ $BRANCH_REF == *"${AUTO_UPDATE_BRANCH}"* ]]; then
