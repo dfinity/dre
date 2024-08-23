@@ -4,6 +4,7 @@ use deploy::Deploy;
 use replace::Replace;
 use rescue::Rescue;
 use resize::Resize;
+use whatif::WhatifDecentralization;
 
 use super::{impl_executable_command_for_enums, ExecutableCommand, IcAdminRequirement};
 
@@ -12,6 +13,7 @@ mod deploy;
 mod replace;
 mod rescue;
 mod resize;
+mod whatif;
 
 #[derive(Parser, Debug)]
 pub struct Subnet {
@@ -19,7 +21,7 @@ pub struct Subnet {
     pub subcommand: Subcommands,
 }
 
-impl_executable_command_for_enums! { Deploy, Replace, Resize, Create, Rescue }
+impl_executable_command_for_enums! { WhatifDecentralization, Deploy, Replace, Resize, Create, Rescue }
 
 impl ExecutableCommand for Subnet {
     fn require_ic_admin(&self) -> IcAdminRequirement {
