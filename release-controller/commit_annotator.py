@@ -3,6 +3,7 @@ import os
 import subprocess
 import sys
 import re
+
 sys.path.append(os.path.join(os.path.dirname(__file__)))
 
 from git_repo import GitRepo
@@ -104,6 +105,7 @@ def main():
     )
     while True:
         ic_repo.fetch()
+        annotate_branch(ic_repo, branch="master")
         for b in ic_repo.branch_list("rc--*"):
             if (datetime.now() - release_branch_date(b)).days > 20:
                 logging.info("skipping branch {}".format(b))
