@@ -31,7 +31,7 @@ def release_branch_date(branch: str) -> datetime:
 def target_determinator(ic_repo: GitRepo, object: str) -> bool:
     ic_repo.checkout(object)
     target_determinator_binary = "target-determinator"
-    target_determinator_binary_local = os.path.abspath(os.curdir) + "/release-controller/target-determinator"
+    target_determinator_binary_local = os.path.join(os.path.dirname(__file__), "target-determinator")
     if os.path.exists(target_determinator_binary_local):
         target_determinator_binary = target_determinator_binary_local
 
