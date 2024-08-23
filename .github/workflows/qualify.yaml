@@ -173,14 +173,6 @@ jobs:
           git fetch origin main --depth 1
           git checkout main
 
-          if [[ $BRANCH_REF == *"${AUTO_UPDATE_BRANCH}"* ]]; then
-            git checkout ${AUTO_UPDATE_BRANCH}
-            PUSH_ORIGIN=1
-          else
-            git checkout -b ${AUTO_UPDATE_BRANCH}
-            PUSH_ORIGIN=0
-          fi
-
           python /tmp/auto-update-release-index.py ${{ inputs.version }} ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
       - name: "Create/Update PR after a successful rc cut"
