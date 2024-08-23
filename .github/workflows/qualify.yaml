@@ -98,6 +98,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: "dfinity/dre" # this needs to be specified so it can be kicked off from the ic repo
+          ref: "main"
 
       - name: "Get current date"
         id: date
