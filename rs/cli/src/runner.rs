@@ -539,14 +539,11 @@ impl Runner {
                 let nodes = self.registry.get_decentralized_nodes(&nodes).await?;
                 DecentralizedSubnet::new_with_subnet_id_and_nodes(change.subnet_id, nodes)
             }
-            None => {
-                let subnet = self
-                    .registry
-                    .subnet(SubnetQueryBy::SubnetId(change.subnet_id))
-                    .await
-                    .map_err(|e| anyhow::anyhow!(e))?;
-                subnet.into()
-            }
+            None => self
+                .registry
+                .subnet(SubnetQueryBy::SubnetId(change.subnet_id))
+                .await
+                .map_err(|e| anyhow::anyhow!(e))?,
         };
         let nodes_before = subnet_before.nodes.clone();
         let health_client = health::HealthClient::new(self.network.clone());
