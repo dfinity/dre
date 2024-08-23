@@ -4,6 +4,7 @@ import subprocess
 
 import ruamel.yaml
 from ruamel.yaml.main import YAML
+from typing_extensions import Any
 
 
 def get_toplevel() -> str:
@@ -44,17 +45,32 @@ def parse_branch(branch: str) -> tuple[str, str]:
     return (name, feature)
 
 
-def indent_comment(s, indent):
-    return s.replace("\n", "\n" + " " * indent)
+def checkout_branch():
+    branch = "auto-update-rel-index"
+    output = subprocess.run(
+        ["git", "ls-remote", "--heads", "https://github.com/dfinity/dre.git", f"refs/heads/{branch}"],
+        check=True,
+        text=True,
+        capture_output=True,
+    ).stdout.strip()
+    if branch in output:
+        subprocess.check_call(["git", "checkout", branch])
+    else:
+        subprocess.check_call(["git", "checkout", "-b", branch])
+
+
+def check_if_should_pop_latest_rc(rc_name: str, index: Any):
+    diff = subprocess.run(
+        ["git", "diff", "main", "--", "release-index.yaml"], check=True, capture_output=True, text=True
+    ).stdout.strip()
+    if not diff or rc_name in diff:
+        return
+
+    index["releases"].pop(0)
 
 
 def main():
     args = parse_args()
-
-    index_path = f"{get_toplevel()}/release-index.yaml"
-    yaml = YAML(typ="rt")
-    yaml.indent(mapping=4, sequence=4, offset=2)
-    index = yaml.load(open(index_path, "r").read())
 
     try:
         branch = get_branch_with_commit(args.commit)
@@ -68,6 +84,13 @@ def main():
     except ValueError as e:
         print(e)
         exit(1)
+
+    # checkout_branch()
+    index_path = f"{get_toplevel()}/release-index.yaml"
+    yaml = YAML(typ="rt")
+    yaml.indent(mapping=4, sequence=4, offset=2)
+    index = yaml.load(open(index_path, "r").read())
+    check_if_should_pop_latest_rc(rc_name, index)
 
     releases = index["releases"]
     elem_to_add = {"name": tag, "version": args.commit}
