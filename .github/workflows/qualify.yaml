@@ -95,6 +95,10 @@ jobs:
     runs-on: ubuntu-22.04
     if: always()
     steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: "dfinity/dre" # this needs to be specified so it can be kicked off from the ic repo
+
       - name: "Get current date"
         id: date
         shell: bash
