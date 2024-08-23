@@ -46,9 +46,10 @@ def parse_branch(branch: str) -> tuple[str, str]:
 
 
 def check_if_should_pop_latest_rc(rc_name: str, index):
-    diff = subprocess.run(
-        ["git", "diff", "main", "--", "release-index.yaml"], check=True, capture_output=True, text=True
-    ).stdout.strip()
+    output = subprocess.run(["git", "diff", "main", "--", "release-index.yaml"], capture_output=True, text=True)
+    if output.returncode != 0:
+        raise ValueError(f"Unexpected response from command: \n{output.stderr.strip()}")
+    diff = output.stdout.strip()
     if not diff or rc_name in diff:
         return
 
