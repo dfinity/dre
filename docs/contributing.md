@@ -82,11 +82,10 @@ Run the following from the repo root:
 ```bash
 # change into the directory of the repo
 # cd ~/src/release
-pyenv install 3.11.6  # installs Python 3.11.6 via pyenv
-pyenv local 3.11.6    # tells pyenv to use 3.11.6 for this repo
-pip3 install poetry   # installs poetry to your 3.11.6
-poetry env use $(which python)  # instructs poetry to use 3.11.6
-poetry install        # installs all our dependencies to 3.11.6
+pyenv install # installs Python from .python-version
+pip3 install poetry   # installs poetry to your Python
+poetry env use $(which python)  # instructs poetry to use pyenv's Python
+poetry install        # installs all our dependencies
 ```
 
 Follow the instructions onscreen.  Once the install is done,
@@ -181,7 +180,7 @@ Bazel eats up a lot of inotify user watches.
 
 # IC Network Internal Dashboard
 
-## Pre-requisites 
+## Pre-requisites
 
 ### 1. Install cargo-watch
 
