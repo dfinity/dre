@@ -14,7 +14,7 @@ def test_publish_if_ready__ready(mocker):
 Review checklist
 ================
 
-Please cross-out your team once you finished the review
+Please cross\\-out your team once you finished the review
 
 * ~~@team-consensus~~
 * ~~@team-crypto~~
@@ -85,7 +85,7 @@ def test_publish_if_ready__not_ready1(mocker):
 Review checklist
 ================
 
-Please cross-out your team once you finished the review
+Please cross\\-out your team once you finished the review
 
 * ~~@team-consensus~~
 * ~~@team-crypto~~
