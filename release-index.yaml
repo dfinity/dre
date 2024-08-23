@@ -1,4 +1,10 @@
 releases:
+  - rc_name: rc--2024-08-23_09-00
+    versions:
+      # Qualification pipeline:
+      # https://github.com/dfinity/dre/actions/runs/10530436681
+      - name: base
+        version: 23e28495f706f5894b8c31866a1ee9b7f36e11e0
   - rc_name: rc--2024-08-21_15-36
     versions:
       # Qualification pipeline:
@@ -49,69 +55,69 @@ releases:
         version: 0d2b3965c813cd3a39ceedacd97fa2eee8760074
   - rc_name: rc--2024-07-03_23-01
     versions:
-      - # Successful qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/pipelines/1360352158
-        name: base
+        # Successful qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/pipelines/1360352158
+      - name: base
         version: e4eeb331f874576126ef1196b9cdfbc520766fbd
-      - # Successful qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/pipelines/1360514977
-        name: storage-layer-disabled
+        # Successful qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/pipelines/1360514977
+      - name: storage-layer-disabled
         version: 5849c6daf2037349bd36dcb6e26ce61c2c6570d0
-      - # Successful qualification pipeline: https://github.com/dfinity-ops/release/actions/runs/9877005239/job/27277530675
-        name: hotfix-https-outcalls
+        # Successful qualification pipeline: https://github.com/dfinity-ops/release/actions/runs/9877005239/job/27277530675
+      - name: hotfix-https-outcalls
         version: 16fabfd24617be66e08e00abc7ba3136bbd80010
-      - # Successful qualification pipeline: https://github.com/dfinity-ops/release/actions/runs/9880530622/job/27289909086
-        name: hotfix-https-outcalls-with-lsmt
+        # Successful qualification pipeline: https://github.com/dfinity-ops/release/actions/runs/9880530622/job/27289909086
+      - name: hotfix-https-outcalls-with-lsmt
         version: 7dee90107a88b836fc72e78993913988f4f73ca2
   - rc_name: rc--2024-06-26_23-01
     versions:
-      - # Successful qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/pipelines/1350685950
-        name: base
+        # Successful qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/pipelines/1350685950
+      - name: base
         version: 2e269c77aa2f6b2353ddad6a4ac3d5ddcac196b1
-      - # Successful qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/pipelines/1350889767
-        name: storage-layer-disabled
+        # Successful qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/pipelines/1350889767
+      - name: storage-layer-disabled
         version: b6c3687fb3a03ca65fcd49f0aadc499367904c8b
   - rc_name: rc--2024-06-19_23-01
     versions:
-      - # Successful qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/jobs/7147033611
-        name: base
+        # Successful qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/jobs/7147033611
+      - name: base
         version: e3fca54d11e19dc7134e374d9f472c5929f755f9
-      - # Successful qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/jobs/7147621252
-        name: storage-layer-disabled
+        # Successful qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/jobs/7147621252
+      - name: storage-layer-disabled
         version: ae3c4f30f198eba9c5b113ec32fdec90713c24a0
-      - # Ongoing qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/pipelines/1345332930
+        # Ongoing qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/pipelines/1345332930
         # This cut will only be rolled out to lhg73.
-        name: cycle-hotfix
+      - name: cycle-hotfix
         version: 9c006a50d364edf1403ef50b24c3be39dba8a5f6
   - rc_name: rc--2024-06-12_23-01
     versions:
-      - # Successful qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/jobs/7098651594
-        name: base
+        # Successful qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/jobs/7098651594
+      - name: base
         version: 246d0ce0784d9990c06904809722ce5c2c816269
-      - # Successful qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/jobs/7114764016
-        name: storage-layer-disabled
+        # Successful qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/jobs/7114764016
+      - name: storage-layer-disabled
         version: 2dfe3a1864d1b9a6df462e9503adf351036e7965
-      - # Ongoing qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/pipelines/1345332852
+        # Ongoing qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/pipelines/1345332852
         # This cut will only be rolled out to lhg73.
-        name: cycle-hotfix
+      - name: cycle-hotfix
         version: 48c500d1501e4165fc183e508872a2ef13fd0bef
   - rc_name: rc--2024-06-05_23-01
     versions:
-      - # Successful qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/jobs/7033661917
-        name: base
+        # Successful qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/jobs/7033661917
+      - name: base
         version: d19fa446ab35780b2c6d8b82ea32d808cca558d5
-      - # Successful qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/jobs/7113921560
-        name: storage-layer-disabled
+        # Successful qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/jobs/7113921560
+      - name: storage-layer-disabled
         version: 08f32722df2f56f1e5c1e603fee0c87c40b77cba
   - rc_name: rc--2024-05-29_23-02
     versions:
-      - # Successful qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/pipelines/1311667262
-        name: base
+        # Successful qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/pipelines/1311667262
+      - name: base
         version: b9a0f18dd5d6019e3241f205de797bca0d9cc3f8
       - name: hotfix-nns
         version: 42284da596a2596361f305b8d6d6097b0f40e6d6
   - rc_name: rc--2024-05-22_23-01
     versions:
-      - # Successful qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/pipelines/1302061674
-        name: base
+        # Successful qualification pipeline: https://gitlab.com/dfinity-lab/core/release/-/pipelines/1302061674
+      - name: base
         version: ec35ebd252d4ffb151d2cfceba3a86c4fb87c6d6
   - rc_name: rc--2024-05-15_23-02
     versions:
