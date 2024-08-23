@@ -59,9 +59,46 @@ dre propose remove-node-operators kdqam-hauon-sdvym-42eyg-5wyff-4ywbw-v6iij-2sw2
     --summary "<An appropriate summary for the proposal, and a link to the forum post for further discussion, if possible>"
 ```
 
-### Removing nodes from a subnet
+### Replacing (or removing) nodes in a subnet
 
 There are situations where nodes need to be removed from subnets, such as for maintenance. Subnets are expected to maintain a certain size (number of nodes). Therefore, nodes cannot simply be removed from a subnet; new nodes must be added back into the subnet to maintain the required number.
+
+The `ic-admin` command for this is `propose-to-change-subnet-membership` but this command should NOT be invoked directly from `ic-admin` because it's necessary to consider the effect of node replacement on the subnet decentralization.
+The DRE tool will 1) find the optimal replacement for a node the given subnet, and 2) help you to review and submit the required NNS proposal.
+
+Typical usage would be like this:
+
+```bash
+dre subnet replace <NODE_ID...>
+```
+
+**Note:** It is possible to provide multiple node IDs in the same command line, but they MUST be in the same subnet.
+
+Example usage to remove an unhealthy node from the subnet `tdb26`:
+
+```bash
+dre subnet replace --id tdb26-jop6k-aogll-7ltgs-eruif-6kk7m-qpktf-gdiqx-mxtrf-vb5e6-eqe
+```
+
+Example usage to remove healthy nodes from their current subnet:
+
+```bash
+dre subnet replace --nodes tm3pc-2bjsx-hhv3v-fsrt7-wotdj-nbu3t-ewloq-uporp-tacou-lupdn-oae 5iihd-fkroy-ow5zp-hlvwz-bsgbl-mecta-kxubm-6adxr-ckcu6-prsus-fqe --motivation "Removing nodes for redeployment. Link to the forum post: https://forum.dfinity.org/...."
+```
+
+### Replacing and optimizing nodes in all subnet with unhealthy nodes
+
+It is possible to run a single dre command to a) find all subnets with unhealthy nodes, b) subnet proposals for all subnets with unhealthy nodes, and attempt to replace a few additional nodes to improve optimization.
+
+The invocation is straighforward:
+
+```bash
+dre heal
+```
+
+Please pay close attention to the output of the command and if possible get someone else to double check the effect on decentralization before confirming the proposal submission.
+
+#### Freeing up (removing from their subnets) nodes from a specific DC
 
 To free up nodes from a specific data center (e.g., bo1) within subnets, follow these steps:
 

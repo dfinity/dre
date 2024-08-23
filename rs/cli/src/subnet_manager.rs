@@ -118,9 +118,12 @@ impl SubnetManager {
         min_nakamoto_coefficients: Option<MinNakamotoCoefficients>,
     ) -> anyhow::Result<SubnetChangeResponse> {
         let subnet_query_by = self.get_subnet_query_by(self.target()?).await?;
-        let mut motivations: Vec<String> = if let Some(motivation) = motivation { vec![motivation] } else { vec![] };
+        let mut motivations = vec![];
         let mut to_be_replaced: Vec<(DecentralizedNode, String)> = if let SubnetQueryBy::NodeList(nodes) = &subnet_query_by {
-            nodes.iter().map(|n| (n.clone(), "as per user request".to_string())).collect()
+            nodes
+                .iter()
+                .map(|n| (n.clone(), motivation.clone().unwrap_or("as per user request".to_string())))
+                .collect()
         } else {
             vec![]
         };
@@ -140,11 +143,11 @@ impl SubnetManager {
             let subnet_unhealthy_without_included = subnet_unhealthy
                 .into_iter()
                 .filter(|(n, _)| !include.as_ref().unwrap_or(&vec![]).contains(&n.id))
-                .map(|(n, s)| (n, s.to_string().to_lowercase()))
+                .map(|(n, s)| (n, format!("health: {}", s.to_string().to_lowercase())))
                 .collect::<Vec<_>>();
 
             for (n, reason) in subnet_unhealthy_without_included.iter() {
-                motivations.push(format!("replacing {reason} node {}", n.id));
+                motivations.push(format!("replacing node {} due to {reason}", n.id));
                 node_ids_unhealthy.insert(n.id);
             }
 
@@ -154,7 +157,11 @@ impl SubnetManager {
         let change = subnet_change_request.optimize(optimize.unwrap_or(0), &to_be_replaced)?;
 
         for (n, _) in change.removed().iter().filter(|(n, _)| !node_ids_unhealthy.contains(&n.id)) {
-            motivations.push(format!("replacing {} to optimize network topology", n.id));
+            motivations.push(format!(
+                "replacing {} as per user request: {}",
+                n.id,
+                motivation.clone().unwrap_or("as per user request".to_string())
+            ));
         }
 
         let motivation = format!(
