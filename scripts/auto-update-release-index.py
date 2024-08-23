@@ -16,6 +16,7 @@ def get_toplevel() -> str:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser("Automatic update of release index")
     parser.add_argument("commit", help="Commit of the release, it will be used to determine the rc")
+    parser.add_argument("link", help="Link to the pipeline of qualification job")
     return parser.parse_args()
 
 
@@ -95,7 +96,7 @@ def main():
     releases = index["releases"]
     elem_to_add = {"name": tag, "version": args.commit}
     elem_to_add = ruamel.yaml.CommentedMap(elem_to_add)
-    elem_to_add.yaml_set_start_comment("Qualification pipeline: ...", indent=6)
+    elem_to_add.yaml_set_start_comment(f"Qualification pipeline:\n# {args.link}", indent=6)
 
     potential_release = list(filter(lambda release: release["rc_name"] == rc_name, releases))
     if len(potential_release) > 0:
