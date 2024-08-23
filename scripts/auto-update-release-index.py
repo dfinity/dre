@@ -46,20 +46,6 @@ def parse_branch(branch: str) -> tuple[str, str]:
     return (name, feature)
 
 
-def checkout_branch():
-    branch = "auto-update-rel-index"
-    output = subprocess.run(
-        ["git", "ls-remote", "--heads", "https://github.com/dfinity/dre.git", f"refs/heads/{branch}"],
-        check=True,
-        text=True,
-        capture_output=True,
-    ).stdout.strip()
-    if branch in output:
-        subprocess.check_call(["git", "checkout", branch])
-    else:
-        subprocess.check_call(["git", "checkout", "-b", branch])
-
-
 def check_if_should_pop_latest_rc(rc_name: str, index: Any):
     diff = subprocess.run(
         ["git", "diff", "main", "--", "release-index.yaml"], check=True, capture_output=True, text=True
@@ -86,7 +72,6 @@ def main():
         print(e)
         exit(1)
 
-    # checkout_branch()
     index_path = f"{get_toplevel()}/release-index.yaml"
     yaml = YAML(typ="rt")
     yaml.indent(mapping=4, sequence=4, offset=2)

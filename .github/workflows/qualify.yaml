@@ -16,6 +16,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.inputs.version || github.ref }}
   cancel-in-progress: true
 
+env:
+  AUTO_UPDATE_BRANCH: "auto-update-rel-index"
+
 jobs:
   setup:
     runs-on:
@@ -139,3 +142,31 @@ jobs:
             Artifacts can be found on <https://drive.google.com/drive/u/1/folders/${{secrets.ARTIFACTS_DRIVE_FOLDER_ID}}|Google Drive :open_file_folder:>
         env:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_API_TOKEN }}
+
+      - name: "Modify release index"
+        if: ${{ needs.qualify.result == 'success' }}
+        shell: bash
+        run: |
+          pip install ruamel.yaml
+
+          BRANCH_REF=$(git ls-remote --heads https://github.com/dfinity/dre.git refs/heads/${AUTO_UPDATE_BRANCH})
+
+          if [[ $BRANCH_REF == *"${AUTO_UPDATE_BRANCH}"* ]]; then
+            git checkout ${AUTO_UPDATE_BRANCH}
+            PUSH_ORIGIN=1
+          else
+            git checkout -b ${AUTO_UPDATE_BRANCH}
+            PUSH_ORIGIN=0
+          fi
+
+          python scripts/auto-update-release-index.py
+
+      - name: "Create/Update PR after a successful rc cut"
+        if: ${{ needs.qualify.result == 'success' }}
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: "chore: Update `release-index.yaml` after a successful rc cut of ${{ inputs.version }}"
+          branch: ${{ env.AUTO_UPDATE_BRANCH }}
+          title: "chore: Update `release-index.yaml`"
+          body: "This PR updates `release-index.yaml` after a successful rc cut"
+          token: ${{ secrets.GIX_CREATE_PR_PAT }}
