@@ -95,7 +95,7 @@ py_test(
     main = "pytest.py",
     data = long_tests + glob(["*.py"], exclude = ["test*.py"]) + [":bazelisk", ":target_determinator"],
     env = env,
-    tags = ["no-sandbox"],
+    tags = ["no-sandbox", "manual"],
     deps = deps + dev_deps,
     env_inherit = ["HOME"],
     size = "enormous",
