@@ -1,6 +1,34 @@
 # dre Changelog
 
 <!-- insertion marker -->
+## [0.5.1](https://github.com/dfinity/dre/releases/tag/0.5.1) - 2024-08-23
+
+<small>[Compare with first commit](https://github.com/dfinity/dre/compare/c2530ebf566627158e7a99759b2d95e4e5751118...0.5.1)</small>
+
+### Features
+
+- Add whatif command for analyzing decentralization (#767) ([31ab0a1](https://github.com/dfinity/dre/commit/31ab0a12c6ff40862f0c8a492ed666d1c924a64f) by Saša Tomić).
+- slack notification about quali (#764) ([c32aa4f](https://github.com/dfinity/dre/commit/c32aa4f399497eec9770d871a05ff409b031d10c) by Nikola Milosavljevic).
+- uploading of artifacts (#755) ([5b1474d](https://github.com/dfinity/dre/commit/5b1474d025d31b937a83d32b0f41ab8dfd25434a) by Nikola Milosavljevic).
+- implementing multiple starting versions (#743) ([6b7626b](https://github.com/dfinity/dre/commit/6b7626b6409cad300ecc0965947f8e34b3331cd8) by Nikola Milosavljevic).
+- various improvements (#742) ([26e6ce0](https://github.com/dfinity/dre/commit/26e6ce0e21ceabeb45176fa2b43971c6947af486) by Luka Skugor).
+- top up neuron request (#752) ([4866612](https://github.com/dfinity/dre/commit/48666128ab051859bc240f002573a965d4fe37fe) by Nikola Milosavljevic).
+- adding resolving version from nns via rollout dashboard (#740) ([a84a727](https://github.com/dfinity/dre/commit/a84a72754e3b8a39eade7bc162555264ad0099b1) by Nikola Milosavljevic).
+- [DRE-240] Add more info to the subnet membership change proposals (#736) ([c980019](https://github.com/dfinity/dre/commit/c980019edb2354d6d606387294316e7d32e42541) by Saša Tomić).
+- Add time to all dre tool logs, and remove it from voting events only (#726) ([bbf1ad5](https://github.com/dfinity/dre/commit/bbf1ad59700db7a0063a217840925cd4c9cb03d2) by Saša Tomić).
+
+### Bug Fixes
+
+- Improve numbering in create new neuron instructions (#776) ([e638cf8](https://github.com/dfinity/dre/commit/e638cf85d234025a3f1d4cd4dac6f1c3275882a6) by Saša Tomić).
+- Fix the duplicate output (printout) of the SubnetChangeResponse (#762) ([b1130f0](https://github.com/dfinity/dre/commit/b1130f0630296008aabd94d1305465eeb7d41c2b) by Saša Tomić).
+- continue on error for creating mr on k8s repo (#754) ([46f36b8](https://github.com/dfinity/dre/commit/46f36b8b153c8a6db2a3be6d3cb619c5c8468b74) by Nikola Milosavljevic).
+- disabling devtools (#749) ([a948a92](https://github.com/dfinity/dre/commit/a948a928d72cc307e86e9f72b57f7042eb6bcc63) by Nikola Milosavljevic).
+- updating refs in update-k8s-deployments (#748) ([2a1f3a7](https://github.com/dfinity/dre/commit/2a1f3a7aa42e5000de140188f5a01c0a85297c8a) by Nikola Milosavljevic).
+- Fix the "proposals analyze", and improve the output (#746) ([c6c74dc](https://github.com/dfinity/dre/commit/c6c74dccc9e44254bac315fbdbd8a66da66a46fd) by Saša Tomić).
+- [DRE-241] Prefer existing nodes in subnet when selecting best results (#734) ([ec22c7c](https://github.com/dfinity/dre/commit/ec22c7ca6d04f8480721b2a1e71466d088ab902f) by Saša Tomić).
+- schema root namings (#735) ([f8935f6](https://github.com/dfinity/dre/commit/f8935f6a12b9e0fca1472fa0d1f168242682e471) by Nikola Milosavljevic).
+- upgrade dependencies job (#728) ([7906612](https://github.com/dfinity/dre/commit/79066127f58c852eaf4adda11610e815a426878c) by Nikola Milosavljevic).
+
 ## [0.5.0](https://github.com/dfinity/dre/releases/tag/0.5.0) - 2024-08-13
 
 <small>[Compare with first commit](https://github.com/dfinity/dre/compare/d51a1fa228e13af09f7dc15b09e8161ed3dbfb59...0.5.0)</small>
