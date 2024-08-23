@@ -4,7 +4,6 @@ import subprocess
 
 import ruamel.yaml
 from ruamel.yaml.main import YAML
-from typing_extensions import Any
 
 
 def get_toplevel() -> str:
@@ -46,7 +45,7 @@ def parse_branch(branch: str) -> tuple[str, str]:
     return (name, feature)
 
 
-def check_if_should_pop_latest_rc(rc_name: str, index: Any):
+def check_if_should_pop_latest_rc(rc_name: str, index):
     diff = subprocess.run(
         ["git", "diff", "main", "--", "release-index.yaml"], check=True, capture_output=True, text=True
     ).stdout.strip()
