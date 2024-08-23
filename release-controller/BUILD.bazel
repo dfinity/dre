@@ -2,6 +2,7 @@ load("@python_deps//:requirements.bzl", "requirement")
 load("@rules_python//python:defs.bzl", "py_binary")
 load("@//tools/python:py_oci_image.bzl", "py_oci_image")
 load("@bazel_skylib//rules:native_binary.bzl", "native_binary")
+load("@aspect_bazel_lib//lib:tar.bzl", "tar")
 
 deps = [
     requirement("requests"),
@@ -101,6 +102,15 @@ py_test(
     size = "enormous",
 )
 
+tar(
+    name = "bazelisk_tar",
+    srcs = [":bazelisk"]
+)
+tar(
+    name = "target_determinator_tar",
+    srcs = [":target_determinator"]
+)
+
 py_oci_image(
     name = "oci_image",
     base = "@bazel_image_6_5_0",
@@ -111,6 +121,7 @@ py_oci_image(
     name = "oci_image_commit_annotator",
     base = "@bazel_image_6_5_0",
     binary = ":commit_annotator",
+    tars = [":bazelisk_tar", ":target_determinator_tar"]
 )
 
 exports_files(["README.md"])

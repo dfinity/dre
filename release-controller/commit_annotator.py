@@ -3,6 +3,7 @@ import os
 import subprocess
 import sys
 import re
+
 sys.path.append(os.path.join(os.path.dirname(__file__)))
 
 from git_repo import GitRepo
@@ -31,7 +32,7 @@ def release_branch_date(branch: str) -> datetime:
 def target_determinator(ic_repo: GitRepo, object: str) -> bool:
     ic_repo.checkout(object)
     target_determinator_binary = "target-determinator"
-    target_determinator_binary_local = os.path.abspath(os.curdir) + "/release-controller/target-determinator"
+    target_determinator_binary_local = os.path.join(os.path.dirname(__file__), "target-determinator")
     if os.path.exists(target_determinator_binary_local):
         target_determinator_binary = target_determinator_binary_local
 
@@ -104,6 +105,7 @@ def main():
     )
     while True:
         ic_repo.fetch()
+        annotate_branch(ic_repo, branch="master")
         for b in ic_repo.branch_list("rc--*"):
             if (datetime.now() - release_branch_date(b)).days > 20:
                 logging.info("skipping branch {}".format(b))
