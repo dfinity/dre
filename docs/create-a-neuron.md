@@ -28,7 +28,7 @@ dfx --version
 ## Create a neuron Hotkey
 
 The neuron in the NNS UI (https://nns.ic0.app) needs to be managed with a locally generated private key, in order to be able to submit proposals from the command line.
-This is done though a so called Hotkey. In the NNS UI you need to add a locally generate identity as a hotkey, which means that you will be able to perform actions with the NNS UI identity, by using the locally generated identity.
+This is done through a so called Hotkey. In the NNS UI you need to add a locally generated identity as a hotkey, which means that you will be able to perform actions with the NNS UI identity, by using the locally generated identity.
 
 ```bash
 dfx identity new --storage-mode=plaintext neuron-hotkey
