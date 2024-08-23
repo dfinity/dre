@@ -68,8 +68,8 @@ So that the staked balance on the neuron is refreshed by the governance canister
 In the NNS UI you can also add a hardware wallet as a controlling entity. You will not be able to submit proposals with the hardware wallet entity though. But you can keep all your funds on the hardware wallet.
 
 Steps:
-1. After the basic NNS neuron is created, the hardware wallet in the NNS UI.
-2. Add the IC NNS Dapp to your hardware wallet.
+1. After the basic NNS neuron is created, add the hardware wallet in the NNS UI.
+2. Confirm adding the IC NNS Dapp in your hardware wallet by following the instructions from the hardware wallet.
 3. You can send funds to the hardware wallet address.
 4. When staking ICPs, confirm the transaction on your hardware wallet.
 5. For voting and proposal submission from the command line you still need to add a regular dfx identity (plaintext)
