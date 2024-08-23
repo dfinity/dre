@@ -15,7 +15,7 @@ pub async fn unhealthy_with_nodes(
     subnets
         .clone()
         .into_iter()
-        .filter_map(|(id, subnet)| {
+        .filter_map(|(subnet_id, subnet)| {
             let unhealthy = subnet
                 .nodes
                 .into_iter()
@@ -26,7 +26,7 @@ pub async fn unhealthy_with_nodes(
                 .collect::<Vec<_>>();
 
             if !unhealthy.is_empty() {
-                Some((id, unhealthy))
+                Some((subnet_id, unhealthy))
             } else {
                 None
             }

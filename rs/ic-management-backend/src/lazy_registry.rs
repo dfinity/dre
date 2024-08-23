@@ -504,14 +504,16 @@ impl LazyRegistry {
         self.nodes().await
     }
 
-    pub async fn subnets_with_proposals(&self) -> anyhow::Result<Arc<BTreeMap<PrincipalId, Subnet>>> {
+    /// Get the list of subnets, and the list of open proposal for each subnet, if any
+    pub async fn subnets_and_proposals(&self) -> anyhow::Result<Arc<BTreeMap<PrincipalId, Subnet>>> {
         let subnets = self.subnets().await?;
+
+        self.update_proposal_data().await?;
 
         if subnets.iter().any(|(_, s)| s.proposal.is_some()) {
             return Ok(subnets);
         }
 
-        self.update_proposal_data().await?;
         self.subnets().await
     }
 
