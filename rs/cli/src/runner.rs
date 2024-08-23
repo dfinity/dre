@@ -465,10 +465,24 @@ impl Runner {
         let health_client = health::HealthClient::new(self.network.clone());
         let mut errors = vec![];
 
-        let subnets = self.registry.subnets().await?;
+        // Get the list of subnets, and the list of open proposal for each subnet, if any
+        let subnets = self.registry.subnets_and_proposals().await?;
+        let subnets_without_proposals = subnets
+            .iter()
+            .filter(|(subnet_id, subnet)| match &subnet.proposal {
+                Some(p) => {
+                    info!("Skipping subnet {} as it has a pending proposal {}", subnet_id, p.id);
+                    false
+                }
+                None => true,
+            })
+            .map(|(id, subnet)| (*id, subnet.clone()))
+            .collect::<BTreeMap<_, _>>();
         let (available_nodes, healths) = try_join(self.registry.available_nodes().map_err(anyhow::Error::from), health_client.nodes()).await?;
 
-        let subnets_change_response = NetworkHealRequest::new(subnets).heal_and_optimize(available_nodes, healths).await?;
+        let subnets_change_response = NetworkHealRequest::new(subnets_without_proposals)
+            .heal_and_optimize(available_nodes, healths)
+            .await?;
         subnets_change_response.iter().for_each(|change| println!("{}", change));
 
         for change in &subnets_change_response {
@@ -663,7 +677,7 @@ impl Runner {
         let subnet_id = change.subnet_id.ok_or_else(|| anyhow::anyhow!("subnet_id is required"))?;
         let pending_action = self
             .registry
-            .subnets_with_proposals()
+            .subnets_and_proposals()
             .await?
             .get(&subnet_id)
             .map(|s| s.proposal.clone())
