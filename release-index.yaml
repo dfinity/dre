@@ -5,6 +5,10 @@ releases:
       # https://github.com/dfinity/ic/actions/runs/10492985355
       - name: base
         version: b0ade55f7e8999e2842fe3f49df163ba224b71a2
+      # Qualification pipeline:
+      # https://github.com/dfinity-ops/release/actions/runs/10527526885/job/29171019069
+      - name: canister-snapshots
+        version: 3d6a76efba59d6f03026d6b7c1c9a1dfce96ee93
   - rc_name: rc--2024-08-15_01-30
     versions:
       # Qualification pipeline:
