@@ -75,7 +75,11 @@ def main():
     yaml = YAML(typ="rt")
     yaml.indent(mapping=4, sequence=4, offset=2)
     index = yaml.load(open(index_path, "r").read())
-    check_if_should_pop_latest_rc(rc_name, index)
+    try:
+        check_if_should_pop_latest_rc(rc_name, index)
+    except Exception as e:
+        print(f"Error: {e}")
+        exit(1)
 
     releases = index["releases"]
     elem_to_add = {"name": tag, "version": args.commit}
