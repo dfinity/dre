@@ -15,7 +15,6 @@ use std::cmp::Ordering;
 use std::collections::BTreeMap;
 use std::fmt::{Debug, Display, Formatter};
 use std::hash::Hash;
-use std::sync::Arc;
 
 #[derive(Clone, Serialize, Deserialize, Default)]
 pub struct DataCenterInfo {
@@ -155,6 +154,18 @@ struct ReplacementCandidate {
 }
 
 impl DecentralizedSubnet {
+    pub fn new_with_subnet_id_and_nodes(subnet_id: PrincipalId, nodes: Vec<Node>) -> Self {
+        Self {
+            id: subnet_id,
+            nodes,
+            added_nodes_desc: vec![],
+            removed_nodes_desc: vec![],
+            min_nakamoto_coefficients: None,
+            comment: None,
+            run_log: vec![],
+        }
+    }
+
     pub fn with_subnet_id(self, subnet_id: PrincipalId) -> Self {
         Self { id: subnet_id, ..self }
     }
@@ -1155,11 +1166,11 @@ impl Ord for NetworkHealSubnets {
 }
 
 pub struct NetworkHealRequest {
-    pub subnets: Arc<BTreeMap<PrincipalId, ic_management_types::Subnet>>,
+    pub subnets: BTreeMap<PrincipalId, ic_management_types::Subnet>,
 }
 
 impl NetworkHealRequest {
-    pub fn new(subnets: Arc<BTreeMap<PrincipalId, ic_management_types::Subnet>>) -> Self {
+    pub fn new(subnets: BTreeMap<PrincipalId, ic_management_types::Subnet>) -> Self {
         Self { subnets }
     }
 
@@ -1172,9 +1183,9 @@ impl NetworkHealRequest {
         let subnets_to_heal = unhealthy_with_nodes(&self.subnets, &healths)
             .await
             .iter()
-            .flat_map(|(id, unhealthy_nodes)| {
+            .flat_map(|(subnet_id, unhealthy_nodes)| {
                 let unhealthy_nodes = unhealthy_nodes.iter().map(Node::from).collect::<Vec<_>>();
-                let unhealthy_subnet = self.subnets.get(id).ok_or(NetworkError::SubnetNotFound(*id))?;
+                let unhealthy_subnet = self.subnets.get(subnet_id).ok_or(NetworkError::SubnetNotFound(*subnet_id))?;
 
                 Ok::<NetworkHealSubnets, NetworkError>(NetworkHealSubnets {
                     name: unhealthy_subnet.metadata.name.clone(),
@@ -1266,23 +1277,43 @@ impl NetworkHealRequest {
                 .iter()
                 .max_by_key(|change| change.score_after.clone())
                 .expect("Failed to find a replacement with the highest Nakamoto coefficient");
+
+            let optimizations_desc = changes
+                .iter()
+                .enumerate()
+                .skip(1)
+                .map(|(num_opt, change)| {
+                    format!(
+                        "- {} additional node{}: {}",
+                        num_opt,
+                        if num_opt > 1 { "s" } else { "" },
+                        change.score_after.describe_difference_from(&changes[num_opt - 1].score_after).1
+                    )
+                })
+                .collect::<Vec<_>>();
+
             let change = changes
                 .iter()
                 .find(|change| change.score_after == changes_max_score.score_after)
                 .expect("No suitable changes found");
 
             let num_opt = change.removed_with_desc.len() - unhealthy_nodes_len;
-            let reason_additional_optimizations =
-                format!("\nReplacing additional {} node{} optimizes topology based on {}.
+            let reason_additional_optimizations = format!("
+
+Calculated impact on subnet decentralization if replacing:
+
+{}
+
+Based on the calculated impact, replacing {} additional nodes to improve optimization
+
 Note: the heuristic for node replacement relies not only on the Nakamoto coefficient but also on other factors that iteratively optimize network topology.
 Due to this, Nakamoto coefficients may not directly increase in every node replacement proposal.
 Code for comparing decentralization of two candidate subnet topologies is at:
 https://github.com/dfinity/dre/blob/79066127f58c852eaf4adda11610e815a426878c/rs/decentralization/src/nakamoto/mod.rs#L342
 ",
-                    num_opt,
-                    if num_opt > 1 { "s" } else { "" },
-                    change.score_after.describe_difference_from(&changes[0].score_after).1
-                );
+                optimizations_desc.join("\n"),
+                num_opt
+            );
 
             let mut motivations: Vec<String> = Vec::new();
 
@@ -1306,7 +1337,7 @@ https://github.com/dfinity/dre/blob/79066127f58c852eaf4adda11610e815a426878c/rs/
             available_nodes.retain(|node| !nodes_added.contains(&node.id));
             // TODO: Add instructions for independent verification of the decentralization changes
             let motivation = format!(
-                "\n{}\n{}\nNOTE: The information below is provided for your convenience. Please independently verify the decentralization changes rather than relying solely on this summary.\n\n```\n{}\n```\n",
+                "\n{}{}\nNOTE: The information below is provided for your convenience. Please independently verify the decentralization changes rather than relying solely on this summary.\nHere is [an explaination of how decentralization is currently calculated](https://dfinity.github.io/dre/decentralization.html), and there are also [instructions for performing what-if analysis](https://dfinity.github.io/dre/subnet-decentralization-whatif.html) if you are wondering if another node would have improved decentralization more.\n\n```\n{}\n```\n",
                 motivations.iter().map(|s| format!(" - {}", s)).collect::<Vec<String>>().join("\n"),
                 reason_additional_optimizations,
                 change

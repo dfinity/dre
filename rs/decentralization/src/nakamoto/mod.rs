@@ -448,7 +448,7 @@ impl NakamotoScore {
 
         // And finally try to increase the linear average
         match self.score_avg_linear().partial_cmp(&other.score_avg_linear()) {
-            Some(Ordering::Equal) => (Some(Ordering::Equal), "equal Nakamoto scores across all features".to_string()),
+            Some(Ordering::Equal) => (Some(Ordering::Equal), "equal decentralization across all features".to_string()),
             Some(cmp) => (
                 Some(cmp),
                 format!(
@@ -506,7 +506,6 @@ impl Display for NakamotoScore {
 #[cfg(test)]
 mod tests {
     use std::str::FromStr;
-    use std::sync::Arc;
 
     use crate::network::{DecentralizedSubnet, NetworkHealRequest, NetworkHealSubnets, SubnetChangeRequest};
     use ahash::HashSet;
@@ -1022,7 +1021,7 @@ mod tests {
 
         important.insert(subnet.principal, subnet);
 
-        let network_heal_response = NetworkHealRequest::new(Arc::new(important.clone()))
+        let network_heal_response = NetworkHealRequest::new(important.clone())
             .heal_and_optimize(nodes_available.clone(), healths.clone())
             .await
             .unwrap();

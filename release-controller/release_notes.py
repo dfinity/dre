@@ -10,6 +10,7 @@ import time
 import typing
 from dataclasses import dataclass
 from git_repo import GitRepo
+from util import bazel_binary
 
 import markdown
 
@@ -490,12 +491,8 @@ Changes [were removed](https://github.com/dfinity/ic/compare/{release_tag}...{ba
 
 def bazel_query(ic_repo: GitRepo, query):
     """Bazel query package for GuestOS."""
-    bazel_binary = "bazel"
-    if "BAZEL" in os.environ:
-        bazel_binary = os.path.abspath(os.curdir) + "/release-controller/bazelisk"
-
     bazel_query = [
-        bazel_binary,
+        bazel_binary(),
         "query",
         query,
     ]

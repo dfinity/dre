@@ -9,19 +9,14 @@ use crate::{
 #[derive(Args, Debug)]
 pub struct Replace {
     /// Set of custom nodes to be replaced
-    #[clap(long, short)]
+    #[clap(long, short, num_args(1..), visible_aliases = &["node", "nodes", "node-id", "node-ids"])]
     pub nodes: Vec<PrincipalId>,
 
     /// Do not replace unhealthy nodes
     #[clap(long)]
     pub no_heal: bool,
 
-    #[clap(
-        long,
-        short,
-        help = r#"Amount of nodes to be replaced by decentralization optimization
-algorithm"#
-    )]
+    #[clap(long, short, help = r#"How many nodes to try replacing in the subnet to improve decentralization?"#)]
     pub optimize: Option<usize>,
 
     /// Motivation for replacing custom nodes
@@ -46,7 +41,7 @@ algorithm"#
     pub include: Vec<PrincipalId>,
 
     /// The ID of the subnet.
-    #[clap(long, short)]
+    #[clap(long, short, alias = "subnet-id")]
     pub id: Option<PrincipalId>,
 }
 

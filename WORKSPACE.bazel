@@ -25,9 +25,9 @@ http_archive(
 )
 
 http_file(
-    name = "bazelisk_darwin",
-    sha256 = "9a4b169038a63ebf60a9b4f367b449ab9b484c4ec7d1ef9f6b7a4196dfd50f33",
-    url = "https://github.com/bazelbuild/bazelisk/releases/download/v1.20.0/bazelisk-darwin",
+    name = "target_determinator",
+    sha256 = "65000bba3a5eb1713d93b1e08e33b6fbe5787535664bbc1ba2f4166b0d26d0a1",
+    url = "https://github.com/bazel-contrib/target-determinator/releases/download/v0.27.0/target-determinator.linux.amd64",
 )
 
 http_file(
@@ -81,7 +81,7 @@ aspect_bazel_lib_dependencies()
 
 aspect_bazel_lib_register_toolchains()
 
-IC_REPO_VERSION = "b0aef30f10784189a5ce73e58ed1f19359a5a3ae"
+IC_REPO_VERSION = "29b0ffdf82661103e9108309e070592f1575f0e5"
 
 http_archive(
     name = "ic_repo",
