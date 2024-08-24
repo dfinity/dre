@@ -26,9 +26,9 @@ const darkTheme = createTheme({
 const getDateRange = () => {
   const dateStart = new Date();
   const dateEnd = new Date();
-  dateStart.setDate(dateStart.getDate() - 30);
-  dateStart.setHours(0, 0, 0, 0);
-  dateEnd.setHours(23, 59, 59, 999);
+  dateStart.setUTCDate(dateStart.getUTCDate() - 30);
+  dateStart.setUTCHours(0, 0, 0, 0);
+  dateEnd.setUTCHours(23, 59, 59, 999);
   return { dateStart, dateEnd };
 };
 
