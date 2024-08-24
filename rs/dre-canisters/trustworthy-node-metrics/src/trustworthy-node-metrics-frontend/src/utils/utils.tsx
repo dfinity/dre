@@ -21,9 +21,9 @@ export const generateChartData = (periodFilter: PeriodFilter, dailyData: DailyNo
       const dailyDataEntry = dailyData.find(data => {
         const date = new Date(Number(data.ts) / 1000000);
         
-        return date.getFullYear() === currentDate.getFullYear() &&
-        date.getMonth() === currentDate.getMonth() &&
-        date.getDate() === currentDate.getDate()
+        return date.getUTCFullYear() === currentDate.getUTCFullYear() &&
+        date.getUTCMonth() === currentDate.getUTCMonth() &&
+        date.getUTCDate() === currentDate.getUTCDate()
       });
       
       chartData.push({

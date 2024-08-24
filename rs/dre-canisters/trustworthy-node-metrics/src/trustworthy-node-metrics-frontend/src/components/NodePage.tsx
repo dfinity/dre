@@ -37,7 +37,7 @@ export const NodeChart: React.FC<NodeChartProps> = ({ nodeRewards, periodFilter 
         return <p>Node metrics not found</p>;
     }
 
-    const chartDailyData: ChartData[] = generateChartData(periodFilter, nodeMetrics.daily_node_metrics, nodeMetrics.node_id);
+    const chartDailyData: ChartData[] = generateChartData(periodFilter, nodeMetrics.daily_node_metrics);
     const failureRateAvg = `${Math.round(nodeMetrics.rewards_stats.failure_rate * 100)}%`;
     const rewardPercent = `${Math.round(nodeMetrics.rewards_percent * 100)}%`;
 
