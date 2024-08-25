@@ -3,7 +3,7 @@ import { SxProps, Theme } from '@mui/material';
 export const paperStyle: SxProps<Theme> = {
   bgcolor: 'background.paper',
   borderRadius: '10px',
-  p: 2,
+  p: 3,
 };
 
 export const boxStyleWidget = (justifyContent: 'left' | 'right', alignItems?: 'flex-start' | 'center' | 'flex-end'): SxProps<Theme> => ({

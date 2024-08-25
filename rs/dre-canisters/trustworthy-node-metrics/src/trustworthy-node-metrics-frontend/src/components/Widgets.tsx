@@ -21,6 +21,7 @@ export function WidgetNumber({ value, title }: { value: string, title: string })
     </Paper>
   );
 }
+
 export function WidgetGauge({ value, title }: { value: number, title: string }) {
   return (
     <Box 
