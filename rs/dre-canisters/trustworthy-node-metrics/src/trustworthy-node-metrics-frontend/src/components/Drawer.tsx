@@ -19,17 +19,15 @@ interface DrawerProps {
   subnets: Set<string>;
   nodeProviders: Set<string>;
   drawerWidth: number;
-  open: boolean;
-  onClose: () => void;
+  temporary: boolean;
+  drawerOpen: boolean;
+  onClosed: () => void;
 }
 
-const Drawer: React.FC<DrawerProps> = ({ subnets, nodeProviders, drawerWidth, open, onClose }) => {
+const Drawer: React.FC<DrawerProps> = ({ subnets, nodeProviders, drawerWidth, temporary, drawerOpen, onClosed }) => {
   const [isSubnetsOpen, setIsSubnetsOpen] = React.useState(false);
   const [isNodeProvidersOpen, setIsNodeProvidersOpen] = React.useState(false);
-
-  const theme = useTheme();
-  const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
-
+  
   const renderCollapsibleList = (
     title: string,
     items: Set<string>,
@@ -62,9 +60,9 @@ const Drawer: React.FC<DrawerProps> = ({ subnets, nodeProviders, drawerWidth, op
 
   return (
       <MUIDrawer
-        variant={isSmallScreen ? 'temporary' : 'permanent'}
-        open={open}
-        onClose={onClose}
+        variant={temporary ? 'temporary' : 'permanent'}
+        open={drawerOpen}
+        onClose={onClosed}
         sx={{
           width: drawerWidth,
           flexShrink: 0,
