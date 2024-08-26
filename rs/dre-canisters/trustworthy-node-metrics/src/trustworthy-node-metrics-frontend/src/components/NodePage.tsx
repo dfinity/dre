@@ -22,7 +22,7 @@ const NodeMetricsStats: React.FC<{ stats: NodeRewardsResponse['rewards_stats'] }
     </Box>
 );
 
-const NodePerformanceStats: React.FC<{ rewardsReduction: string }> = ({ failureRateAvg, rewardsReduction }) => (
+const NodePerformanceStats: React.FC<{ rewardsReduction: string }> = ({ rewardsReduction }) => (
     <Box sx={boxStyleWidget('right')}>
         <WidgetNumber value={rewardsReduction} title="Rewards Reduction Assigned" />
         <WidgetNumber value={"0%"} title="Rewards Reduction Unassigned" />
