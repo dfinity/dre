@@ -3,6 +3,7 @@ import os
 import subprocess
 import sys
 import re
+import typing
 
 sys.path.append(os.path.join(os.path.dirname(__file__)))
 
@@ -18,12 +19,12 @@ GUESTOS_BAZEL_TARGETS = "//ic-os/guestos/envs/prod:update-img.tar.zst union //ic
 CUTOFF_COMMIT = "8646665552677436c8a889ce970857e531fee49b"
 
 
-def release_branch_date(branch: str) -> datetime:
+def release_branch_date(branch: str) -> typing.Optional[datetime]:
     branch_search = re.search(r"rc--(\d{4}-\d{2}-\d{2})", branch, re.IGNORECASE)
     if branch_search:
         branch_date = branch_search.group(1)
     else:
-        raise Exception(f"branch '{branch}' does not match RC branch format")
+        return None
     return datetime.strptime(branch_date, "%Y-%m-%d")
 
 
@@ -107,7 +108,8 @@ def main():
         ic_repo.fetch()
         annotate_branch(ic_repo, branch="master")
         for b in ic_repo.branch_list("rc--*"):
-            if (datetime.now() - release_branch_date(b)).days > 20:
+            branch_date = release_branch_date(b)
+            if not branch_date or (datetime.now() - branch_date).days > 20:
                 logging.info("skipping branch {}".format(b))
                 continue
             logging.info("annotating branch {}".format(b))
