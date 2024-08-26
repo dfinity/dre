@@ -8,7 +8,7 @@ import DailyPerformanceChart from './DailyPerformanceChart';
 import NodeInfo from './NodeInfo';
 import { paperStyle, boxStyleWidget } from '../Styles';
 import { NodeRewardsResponse } from '../../../declarations/trustworthy-node-metrics/trustworthy-node-metrics.did';
-import { RewardsInfo } from './RewardsInfo';
+import RewardsInfo, { LinearReductionChart } from './RewardsInfo';
 
 export interface NodeChartProps {
     nodeRewards: NodeRewardsResponse[];
@@ -22,11 +22,10 @@ const NodeMetricsStats: React.FC<{ stats: NodeRewardsResponse['rewards_stats'] }
     </Box>
 );
 
-const NodePerformanceStats: React.FC<{ failureRateAvg: string, rewardPercent: string }> = ({ failureRateAvg, rewardPercent }) => (
+const NodePerformanceStats: React.FC<{ rewardsReduction: string }> = ({ failureRateAvg, rewardsReduction }) => (
     <Box sx={boxStyleWidget('right')}>
-        <WidgetNumber value={failureRateAvg} title="Failure Rate Assigned" />
-        <WidgetNumber value={rewardPercent} title="Rewards Percent Assigned" />
-        <WidgetNumber value={"100%"} title="Rewards Percent Unassigned" />
+        <WidgetNumber value={rewardsReduction} title="Rewards Reduction Assigned" />
+        <WidgetNumber value={"0%"} title="Rewards Reduction Unassigned" />
     </Box>
 );
 
@@ -40,12 +39,13 @@ export const NodeChart: React.FC<NodeChartProps> = ({ nodeRewards, periodFilter 
 
     const chartDailyData: ChartData[] = generateChartData(periodFilter, nodeMetrics.daily_node_metrics);
     const failureRateAvg = Math.round(nodeMetrics.rewards_stats.failure_rate * 100);
-    const rewardPercent = Math.round(nodeMetrics.rewards_percent * 100);
+    const rewardsPercent = Math.round(nodeMetrics.rewards_percent * 100);
+    const rewardsReduction = 100 - rewardsPercent;
 
     return (
         <Box sx={{ p: 3 }}>
             <Paper sx={paperStyle}>
-                <Grid container spacing={5}>
+                <Grid container spacing={3}>
                     <Grid item xs={12} md={12}>
                         <Typography gutterBottom variant="h5" component="div">
                             {"Node Machine"}
@@ -56,22 +56,22 @@ export const NodeChart: React.FC<NodeChartProps> = ({ nodeRewards, periodFilter 
                         <NodeInfo nodeId={nodeMetrics.node_id.toText()} nodeProviderId={nodeMetrics.node_provider_id.toText()} />
                     </Grid>
                     <Grid item xs={12} md={8}>
-                        <WidgetGauge value={rewardPercent} title={"Rewards Total"} />
+                        <WidgetGauge value={rewardsPercent} title={"Rewards Total"} />
                     </Grid>
                     <Grid item xs={12} md={4}>
                         <NodeMetricsStats stats={nodeMetrics.rewards_stats} />
                     </Grid>
                     <Grid item xs={12} md={8}>
-                        <NodePerformanceStats failureRateAvg={failureRateAvg.toString().concat("%")} rewardPercent={rewardPercent.toString().concat("%")} />
+                        <NodePerformanceStats rewardsReduction={rewardsReduction.toString().concat("%")} />
                     </Grid>
                     <Grid item xs={12}>
                         <DailyPerformanceChart chartDailyData={chartDailyData} />
                     </Grid>
-                    <Grid item xs={12} md={4}>
+                    <Grid item xs={12} md={8}>
                         <RewardsInfo />
                     </Grid>
-                    <Grid item xs={12} md={8}>
-                        <WidgetGauge value={rewardPercent} title={"Rewards Total"} />
+                    <Grid item xs={12} md={4}>
+                        <LinearReductionChart failureRate={failureRateAvg} rewardReduction={rewardsReduction}/>
                     </Grid>
                 </Grid>
             </Paper>

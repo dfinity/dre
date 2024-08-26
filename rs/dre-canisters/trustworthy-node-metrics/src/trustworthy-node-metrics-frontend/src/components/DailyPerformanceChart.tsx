@@ -77,9 +77,16 @@ const DailyPerformanceChart: React.FC<DailyPerformanceChartProps> = ({ chartDail
 
   const legendConfig = {
     legend: {
+      labelStyle: {
+        fontSize: 14,
+        fill: 'white',
+      },
       direction: 'row' as const,
       position: { vertical: 'top', horizontal: 'right' } as const,
-      padding: 0,
+      itemMarkWidth: 18,
+      itemMarkHeight: 18,
+      markGap: 6,
+      itemGap: 10,
     },
   };
 
