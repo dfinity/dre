@@ -42,7 +42,7 @@ impl UpdateVersion {
         [
             [
                 vec![
-                    format!("--{}-version-to-elect", self.release_artifact),
+                    "--replica-version-to-elect".to_string(),
                     self.version.to_string(),
                     "--release-package-sha256-hex".to_string(),
                     self.stringified_hash.to_string(),
@@ -52,7 +52,7 @@ impl UpdateVersion {
             ]
             .concat(),
             match self.versions_to_retire.clone() {
-                Some(versions) => [vec![format!("--{}-versions-to-unelect", &self.release_artifact)], versions].concat(),
+                Some(versions) => vec![vec!["--replica-versions-to-unelect".to_string()], versions].concat(),
                 None => vec![],
             },
         ]
