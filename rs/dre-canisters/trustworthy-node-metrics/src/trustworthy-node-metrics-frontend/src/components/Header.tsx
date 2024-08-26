@@ -6,7 +6,6 @@ const Title = styled(Typography)(() => ({
     flexGrow: 1,
     fontWeight: 500,
     fontSize: '1.5rem',
-    letterSpacing: '1px',
     fontFamily: 'Roboto, sans-serif',
     color: 'white'
   }));

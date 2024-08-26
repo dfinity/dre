@@ -58,8 +58,6 @@ const App: React.FC = () => {
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
   const drawerWidth = 180;
 
-  const handleDrawerToggle = () => setDrawerOpen(prev => !prev);
-
   useEffect(() => {
     const updateRewards = async () => {
       try {
@@ -90,7 +88,7 @@ const App: React.FC = () => {
     drawerWidth,
     temporary: isSmallScreen,
     drawerOpen,
-    onClosed: handleDrawerToggle
+    onClosed: () => setDrawerOpen(false)
   }), [subnets, nodeProviders, drawerWidth, isSmallScreen, drawerOpen]);
 
   return (
@@ -100,7 +98,7 @@ const App: React.FC = () => {
         <Box sx={{ display: 'flex' }}>
           <Drawer {...drawerProps} />
           <Box sx={{ flexGrow: 1, width: `calc(100% - ${drawerWidth}px)` }}>
-            <Header withDrawerIcon={isSmallScreen} onDrawerIconClicked={handleDrawerToggle} />
+            <Header withDrawerIcon={isSmallScreen} onDrawerIconClicked={() => setDrawerOpen(true)} />
             <FilterBar filters={periodFilter} setFilters={setPeriodFilter} />
             
             <Routes>
