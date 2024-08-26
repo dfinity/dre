@@ -814,6 +814,7 @@ pub trait TopologyManager: SubnetQuerier + AvailableNodesQuerier {
         include_nodes: Vec<PrincipalId>,
         exclude_nodes: Vec<String>,
         only_nodes: Vec<String>,
+        health_of_nodes: &BTreeMap<PrincipalId, HealthStatus>,
     ) -> Result<SubnetChange, NetworkError> {
         SubnetChangeRequest {
             available_nodes: self.available_nodes().await?,
@@ -823,7 +824,7 @@ pub trait TopologyManager: SubnetQuerier + AvailableNodesQuerier {
         .including_from_available(include_nodes.clone())
         .excluding_from_available(exclude_nodes.clone())
         .including_from_available(only_nodes.clone())
-        .resize(size, 0, 0)
+        .resize(size, 0, 0, &health_of_nodes)
     }
 }
 
@@ -956,18 +957,24 @@ impl SubnetChangeRequest {
 
     /// Optimize is implemented by removing a certain number of nodes and then
     /// adding the same number back.
-    pub fn optimize(mut self, optimize_count: usize, replacements_unhealthy_with_desc: &[(Node, String)]) -> Result<SubnetChange, NetworkError> {
+    pub fn optimize(
+        mut self,
+        optimize_count: usize,
+        replacements_unhealthy_with_desc: &[(Node, String)],
+        health_of_nodes: &BTreeMap<PrincipalId, HealthStatus>,
+    ) -> Result<SubnetChange, NetworkError> {
         let old_nodes = self.subnet.nodes.clone();
         self.subnet = self.subnet.without_nodes(replacements_unhealthy_with_desc.to_owned())?;
         let result = self.resize(
             optimize_count + replacements_unhealthy_with_desc.len(),
             optimize_count,
             replacements_unhealthy_with_desc.len(),
+            health_of_nodes,
         )?;
         Ok(SubnetChange { old_nodes, ..result })
     }
 
-    pub fn rescue(mut self) -> Result<SubnetChange, NetworkError> {
+    pub fn rescue(mut self, health_of_nodes: &BTreeMap<PrincipalId, HealthStatus>) -> Result<SubnetChange, NetworkError> {
         let old_nodes = self.subnet.nodes.clone();
         let nodes_to_remove = self
             .subnet
@@ -984,7 +991,12 @@ impl SubnetChangeRequest {
         )?;
 
         info!("Nodes left in the subnet:\n{:#?}", &self.subnet.nodes);
-        let result = self.resize(self.subnet.removed_nodes_desc.len(), 0, self.subnet.removed_nodes_desc.len())?;
+        let result = self.resize(
+            self.subnet.removed_nodes_desc.len(),
+            0,
+            self.subnet.removed_nodes_desc.len(),
+            health_of_nodes,
+        )?;
         Ok(SubnetChange { old_nodes, ..result })
     }
 
@@ -994,6 +1006,7 @@ impl SubnetChangeRequest {
         how_many_nodes_to_add: usize,
         how_many_nodes_to_remove: usize,
         how_many_nodes_unhealthy: usize,
+        health_of_nodes: &BTreeMap<PrincipalId, HealthStatus>,
     ) -> Result<SubnetChange, NetworkError> {
         let old_nodes = self.subnet.nodes.clone();
 
@@ -1002,6 +1015,7 @@ impl SubnetChangeRequest {
             .clone()
             .into_iter()
             .filter(|n| !self.include_nodes.contains(n))
+            .filter(|n| health_of_nodes.get(&n.id).unwrap_or(&HealthStatus::Unknown) == &HealthStatus::Healthy)
             .collect::<Vec<_>>();
 
         info!(
@@ -1026,6 +1040,7 @@ impl SubnetChangeRequest {
             .iter()
             .cloned()
             .chain(resized_subnet.removed_nodes_desc.iter().map(|(n, _)| n.clone()))
+            .filter(|n| health_of_nodes.get(&n.id).unwrap_or(&HealthStatus::Unknown) == &HealthStatus::Healthy)
             .collect::<Vec<_>>();
         let resized_subnet = resized_subnet
             .with_nodes(
@@ -1054,8 +1069,8 @@ impl SubnetChangeRequest {
     /// Evaluates the subnet change request to simulate the requested topology
     /// change. Command returns all the information about the subnet before
     /// and after the change.
-    pub fn evaluate(self) -> Result<SubnetChange, NetworkError> {
-        self.resize(0, 0, 0)
+    pub fn evaluate(self, health_of_nodes: &BTreeMap<PrincipalId, HealthStatus>) -> Result<SubnetChange, NetworkError> {
+        self.resize(0, 0, 0, health_of_nodes)
     }
 }
 
@@ -1080,6 +1095,7 @@ impl SubnetChange {
             ..self
         }
     }
+
     pub fn without_nodes(mut self, nodes_to_remove_with_desc: Vec<(Node, String)>) -> Self {
         let nodes_to_rm: AHashSet<_> = nodes_to_remove_with_desc.iter().map(|(n, _)| n).collect();
         self.removed_nodes_desc.extend(nodes_to_remove_with_desc.clone());
@@ -1117,12 +1133,6 @@ impl SubnetChange {
             comment: self.comment.clone(),
             run_log: self.run_log.clone(),
         }
-    }
-}
-
-impl Display for SubnetChange {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", SubnetChangeResponse::from(self))
     }
 }
 
@@ -1168,10 +1178,10 @@ impl NetworkHealRequest {
     pub async fn heal_and_optimize(
         &self,
         mut available_nodes: Vec<Node>,
-        healths: BTreeMap<PrincipalId, HealthStatus>,
+        health_of_nodes: &BTreeMap<PrincipalId, HealthStatus>,
     ) -> Result<Vec<SubnetChangeResponse>, NetworkError> {
         let mut subnets_changed = Vec::new();
-        let subnets_to_heal = unhealthy_with_nodes(&self.subnets, &healths)
+        let subnets_to_heal = unhealthy_with_nodes(&self.subnets, &health_of_nodes)
             .await
             .iter()
             .flat_map(|(subnet_id, unhealthy_nodes)| {
@@ -1227,29 +1237,27 @@ impl NetworkHealRequest {
 
             // Try to replace 0 to optimize_limit nodes to optimize the network,
             // and choose the change with the highest Nakamoto coefficient
+            let unhealthy_nodes_with_desc = &unhealthy_nodes
+                .iter()
+                .map(|node| {
+                    (
+                        node.clone(),
+                        health_of_nodes
+                            .get(&node.id)
+                            .map(|s| format!("health: {}", s.to_string().to_lowercase()))
+                            .unwrap_or("health: Unknown".to_string()),
+                    )
+                })
+                .collect::<Vec<_>>();
             let changes = (0..=optimize_limit)
                 .filter_map(|num_nodes_to_optimize| {
                     change_req
                         .clone()
-                        .optimize(
-                            num_nodes_to_optimize,
-                            &unhealthy_nodes
-                                .iter()
-                                .map(|node| {
-                                    (
-                                        node.clone(),
-                                        healths
-                                            .get(&node.id)
-                                            .map(|s| format!("health: {}", s.to_string().to_lowercase()))
-                                            .unwrap_or("health: Unknown".to_string()),
-                                    )
-                                })
-                                .collect::<Vec<_>>(),
-                        )
+                        .optimize(num_nodes_to_optimize, unhealthy_nodes_with_desc, &health_of_nodes)
                         .map_err(|e| warn!("{}", e))
                         .ok()
                 })
-                .map(|change| SubnetChangeResponse::from(&change))
+                .map(|change| SubnetChangeResponse::from(&change).with_health_of_nodes(health_of_nodes.clone()))
                 .collect::<Vec<_>>();
 
             if changes.is_empty() {
@@ -1289,7 +1297,10 @@ impl NetworkHealRequest {
                 .expect("No suitable changes found");
 
             let num_opt = change.removed_with_desc.len() - unhealthy_nodes_len;
-            let reason_additional_optimizations = format!("
+            let reason_additional_optimizations = if num_opt == 0 {
+                "\n\nNot replacing any additional nodes to improve optimization.\n\n".to_string()
+            } else {
+                format!("
 
 Calculated impact on subnet decentralization if replacing:
 
@@ -1302,16 +1313,17 @@ Due to this, Nakamoto coefficients may not directly increase in every node repla
 Code for comparing decentralization of two candidate subnet topologies is at:
 https://github.com/dfinity/dre/blob/79066127f58c852eaf4adda11610e815a426878c/rs/decentralization/src/nakamoto/mod.rs#L342
 ",
-                optimizations_desc.join("\n"),
-                num_opt
-            );
+                    optimizations_desc.join("\n"),
+                    num_opt
+                )
+            };
 
             let mut motivations: Vec<String> = Vec::new();
 
             for node in unhealthy_nodes.iter() {
                 motivations.push(format!(
                     "replacing {} node {}",
-                    healths
+                    health_of_nodes
                         .get(&node.id)
                         .map(|s| s.to_string().to_lowercase())
                         .unwrap_or("unhealthy".to_string()),
@@ -1326,12 +1338,11 @@ https://github.com/dfinity/dre/blob/79066127f58c852eaf4adda11610e815a426878c/rs/
 
             let nodes_added = change.added_with_desc.iter().map(|(node_id, _)| node_id).collect::<HashSet<_>>();
             available_nodes.retain(|node| !nodes_added.contains(&node.id));
-            // TODO: Add instructions for independent verification of the decentralization changes
+
             let motivation = format!(
-                "\n{}{}\nNOTE: The information below is provided for your convenience. Please independently verify the decentralization changes rather than relying solely on this summary.\nHere is [an explaination of how decentralization is currently calculated](https://dfinity.github.io/dre/decentralization.html), and there are also [instructions for performing what-if analysis](https://dfinity.github.io/dre/subnet-decentralization-whatif.html) if you are wondering if another node would have improved decentralization more.\n\n```\n{}\n```\n",
+                "\n{}{}\nNote: the information below is provided for your convenience. Please independently verify the decentralization changes rather than relying solely on this summary.\nHere is [an explaination of how decentralization is currently calculated](https://dfinity.github.io/dre/decentralization.html), \nand there are also [instructions for performing what-if analysis](https://dfinity.github.io/dre/subnet-decentralization-whatif.html) if you are wondering if another node would have improved decentralization more.\n\n",
                 motivations.iter().map(|s| format!(" - {}", s)).collect::<Vec<String>>().join("\n"),
-                reason_additional_optimizations,
-                change
+                reason_additional_optimizations
             );
             subnets_changed.push(change.clone().with_motivation(motivation));
         }

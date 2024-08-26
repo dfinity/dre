@@ -109,7 +109,17 @@ impl Runner {
         Ok(())
     }
 
-    pub async fn subnet_resize(&self, request: ic_management_types::requests::SubnetResizeRequest, motivation: String) -> anyhow::Result<()> {
+    pub async fn health_of_nodes(&self) -> anyhow::Result<BTreeMap<PrincipalId, HealthStatus>> {
+        let health_client = health::HealthClient::new(self.network.clone());
+        health_client.nodes().await
+    }
+
+    pub async fn subnet_resize(
+        &self,
+        request: ic_management_types::requests::SubnetResizeRequest,
+        motivation: String,
+        health_of_nodes: &BTreeMap<PrincipalId, HealthStatus>,
+    ) -> anyhow::Result<()> {
         let change = self
             .registry
             .modify_subnet_nodes(SubnetQueryBy::SubnetId(request.subnet))
@@ -117,9 +127,9 @@ impl Runner {
             .excluding_from_available(request.exclude.clone().unwrap_or_default())
             .including_from_available(request.only.clone().unwrap_or_default())
             .including_from_available(request.include.clone().unwrap_or_default())
-            .resize(request.add, request.remove, 0)?;
+            .resize(request.add, request.remove, 0, health_of_nodes)?;
 
-        let change = SubnetChangeResponse::from(&change);
+        let change = SubnetChangeResponse::from(&change).with_health_of_nodes(health_of_nodes.clone());
 
         if self.verbose {
             if let Some(run_log) = &change.run_log {
@@ -163,6 +173,8 @@ impl Runner {
             return Ok(());
         }
 
+        let health_of_nodes = self.health_of_nodes().await?;
+
         let subnet_creation_data = self
             .registry
             .create_subnet(
@@ -171,9 +183,10 @@ impl Runner {
                 request.include.clone().unwrap_or_default(),
                 request.exclude.clone().unwrap_or_default(),
                 request.only.clone().unwrap_or_default(),
+                &health_of_nodes,
             )
             .await?;
-        let subnet_creation_data = SubnetChangeResponse::from(&subnet_creation_data);
+        let subnet_creation_data = SubnetChangeResponse::from(&subnet_creation_data).with_health_of_nodes(health_of_nodes.clone());
 
         if self.verbose {
             if let Some(run_log) = &subnet_creation_data.run_log {
@@ -216,7 +229,9 @@ impl Runner {
         if change.added_with_desc.is_empty() && change.removed_with_desc.is_empty() {
             return Ok(());
         }
-        self.run_membership_change(change.clone(), replace_proposal_options(&change)?).await
+
+        let options = replace_proposal_options(&change)?;
+        self.run_membership_change(change, options).await
     }
 
     pub async fn prepare_versions_to_retire(&self, release_artifact: &Artifact, edit_summary: bool) -> anyhow::Result<(String, Option<Vec<String>>)> {
@@ -478,18 +493,12 @@ impl Runner {
             })
             .map(|(id, subnet)| (*id, subnet.clone()))
             .collect::<BTreeMap<_, _>>();
-        let (available_nodes, healths) = try_join(self.registry.available_nodes().map_err(anyhow::Error::from), health_client.nodes()).await?;
-
-        // Remove the unhealthy nodes from the list of available nodes
-        let available_nodes = available_nodes
-            .into_iter()
-            .filter(|n| healths.get(&n.id).map_or(false, |h| h == &HealthStatus::Healthy))
-            .collect::<Vec<_>>();
+        let (available_nodes, health_of_nodes) =
+            try_join(self.registry.available_nodes().map_err(anyhow::Error::from), health_client.nodes()).await?;
 
         let subnets_change_response = NetworkHealRequest::new(subnets_without_proposals)
-            .heal_and_optimize(available_nodes, healths)
+            .heal_and_optimize(available_nodes, &health_of_nodes)
             .await?;
-        subnets_change_response.iter().for_each(|change| println!("{}", change));
 
         for change in &subnets_change_response {
             let _ = self
@@ -566,19 +575,18 @@ impl Runner {
                 .map_err(|e| anyhow::anyhow!(e))?,
         };
         let nodes_before = subnet_before.nodes.clone();
-        let health_client = health::HealthClient::new(self.network.clone());
-        let healths = health_client.nodes().await?;
+        let health_of_nodes = self.health_of_nodes().await?;
 
         // Simulate node removal
         let removed_nodes = self.registry.get_decentralized_nodes(&change.get_removed_node_ids()).await?;
-        let removed_nodes_with_desc = self.recalc_remove_node_with_desc(&subnet_before, &healths, &removed_nodes);
+        let removed_nodes_with_desc = self.recalc_remove_node_with_desc(&subnet_before, &health_of_nodes, &removed_nodes);
         let subnet_mid = subnet_before
             .without_nodes(removed_nodes_with_desc.clone())
             .map_err(|e| anyhow::anyhow!(e))?;
 
         // Now simulate node addition
         let added_nodes = self.registry.get_decentralized_nodes(&change.get_added_node_ids()).await?;
-        let added_nodes_with_desc = self.recalc_add_node_with_desc(&subnet_mid, &healths, &added_nodes);
+        let added_nodes_with_desc = self.recalc_add_node_with_desc(&subnet_mid, &health_of_nodes, &added_nodes);
 
         let subnet_after = subnet_mid.with_nodes(added_nodes_with_desc.clone());
 
@@ -590,7 +598,10 @@ impl Runner {
             removed_nodes_desc: removed_nodes_with_desc.clone(),
             ..Default::default()
         };
-        println!("{}", SubnetChangeResponse::from(&subnet_change));
+        println!(
+            "{}",
+            SubnetChangeResponse::from(&subnet_change).with_health_of_nodes(health_of_nodes.clone())
+        );
         Ok(())
     }
 
@@ -606,8 +617,9 @@ impl Runner {
             None => change_request,
         };
 
-        let change = SubnetChangeResponse::from(&change_request.rescue()?);
-        println!("{}", change);
+        let health_of_nodes = self.health_of_nodes().await?;
+
+        let change = SubnetChangeResponse::from(&change_request.rescue(&health_of_nodes)?).with_health_of_nodes(health_of_nodes);
 
         if change.added_with_desc.is_empty() && change.removed_with_desc.is_empty() {
             return Ok(());
@@ -724,7 +736,11 @@ pub fn replace_proposal_options(change: &SubnetChangeResponse) -> anyhow::Result
     Ok(ic_admin::ProposeOptions {
         title: format!("Replace {replace_target} in subnet {subnet_id_short}",).into(),
         summary: format!("# Replace {replace_target} in subnet {subnet_id_short}",).into(),
-        motivation: change.motivation.clone(),
+        motivation: Some(format!(
+            "{}\n\n```\n{}\n```\n",
+            change.motivation.as_ref().unwrap_or(&String::new()),
+            change
+        )),
     })
 }
 

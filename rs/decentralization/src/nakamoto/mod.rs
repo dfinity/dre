@@ -339,7 +339,7 @@ impl NakamotoScore {
             return (
                 cmp,
                 format!(
-                    "the minimum Nakamoto coefficient across all features changed from {} to {}",
+                    "the minimum Nakamoto coefficient across all features changes from {} to {}",
                     other.score_min(),
                     self.score_min()
                 ),
@@ -353,7 +353,7 @@ impl NakamotoScore {
             return (
                 cmp,
                 format!(
-                    "the average log2 of Nakamoto Coefficients across all features changed from {:.2} to {:.2}",
+                    "the average log2 of Nakamoto Coefficients across all features changes from {:.2} to {:.2}",
                     other.score_avg_log2().unwrap_or(0.0),
                     self.score_avg_log2().unwrap_or(0.0)
                 ),
@@ -371,12 +371,12 @@ impl NakamotoScore {
                 cmp,
                 if val_self[0] != val_other[0] {
                     format!(
-                        "the number of nodes controlled by dominant NPs: value changes from {} to {}",
+                        "the number of nodes controlled by dominant NPs changes from {} to {}",
                         val_other[0], val_self[0]
                     )
                 } else {
                     format!(
-                        "the number of nodes controlled by dominant Country actors: value changes from {} to {}",
+                        "the number of nodes controlled by dominant Country actors changes from {} to {}",
                         val_other[1], val_self[1]
                     )
                 },
@@ -395,15 +395,9 @@ impl NakamotoScore {
             return (
                 cmp,
                 if val_self[0] != val_other[0] {
-                    format!(
-                        "the number of different NP actors: value changes from {} to {}",
-                        val_other[0], val_self[0]
-                    )
+                    format!("the number of different NP actors changes from {} to {}", val_other[0], val_self[0])
                 } else {
-                    format!(
-                        "the number of different Country actors: value changes from {} to {}",
-                        val_other[1], val_self[1]
-                    )
+                    format!("the number of different Country actors changes from {} to {}", val_other[1], val_self[1])
                 },
             );
         }
@@ -418,7 +412,7 @@ impl NakamotoScore {
             return (
                 cmp,
                 format!(
-                    "the number of Nakamoto coefficients with extremely low values changed from {} to {}",
+                    "the number of Nakamoto coefficients with extremely low values changes from {} to {}",
                     c2, c1
                 ),
             );
@@ -438,7 +432,7 @@ impl NakamotoScore {
                     return (
                         cmp,
                         format!(
-                            "the Nakamoto coefficient value for feature {} changed from {:.2} to {:.2}",
+                            "the Nakamoto coefficient value for feature {} changes from {:.2} to {:.2}",
                             feature, c2, c1
                         ),
                     );
@@ -452,7 +446,7 @@ impl NakamotoScore {
             Some(cmp) => (
                 Some(cmp),
                 format!(
-                    "the linear average of Nakamoto coefficients across all features changed from {:.2} to {:.2}",
+                    "the linear average of Nakamoto coefficients across all features changes from {:.2} to {:.2}",
                     other.score_avg_linear(),
                     self.score_avg_linear()
                 ),
@@ -707,6 +701,11 @@ mod tests {
             )
         );
         let nodes_available = new_test_nodes_with_overrides("spare", 13, 3, 0, (&NodeFeature::Country, &["US", "RO", "JP"]));
+        let health_of_nodes = nodes_available
+            .iter()
+            .chain(subnet_initial.nodes.iter())
+            .map(|n| (n.id, HealthStatus::Healthy))
+            .collect::<BTreeMap<_, _>>();
 
         println!(
             "initial {} Countries {:?}",
@@ -719,7 +718,7 @@ mod tests {
         );
 
         let subnet_change_req = SubnetChangeRequest::new(subnet_initial, nodes_available, Vec::new(), Vec::new(), Vec::new(), None);
-        let subnet_change = subnet_change_req.optimize(2, &[]).unwrap();
+        let subnet_change = subnet_change_req.optimize(2, &[], &health_of_nodes).unwrap();
         for log in subnet_change.after().run_log.iter() {
             println!("{}", log);
         }
@@ -757,6 +756,7 @@ mod tests {
             (10000, vec!["A single Node Provider can halt the subnet".to_string()])
         );
         let nodes_available = new_test_nodes_with_overrides("spare", 7, 2, 0, (&NodeFeature::NodeProvider, &["NP6", "NP7"]));
+        let health_of_nodes = nodes_available.iter().map(|n| (n.id, HealthStatus::Healthy)).collect::<BTreeMap<_, _>>();
 
         println!(
             "initial {} NPs {:?}",
@@ -769,7 +769,7 @@ mod tests {
         );
 
         let subnet_change_req = SubnetChangeRequest::new(subnet_initial, nodes_available, Vec::new(), Vec::new(), Vec::new(), None);
-        let subnet_change = subnet_change_req.optimize(2, &[]).unwrap();
+        let subnet_change = subnet_change_req.optimize(2, &[], &health_of_nodes).unwrap();
         println!("Replacement run log:");
         for line in subnet_change.after().run_log.iter() {
             println!("{}", line);
@@ -804,6 +804,11 @@ mod tests {
 
         // There are 2 spare nodes, but both are DFINITY
         let nodes_available = new_test_nodes_with_overrides("spare", 7, 2, 2, (&NodeFeature::NodeProvider, &["NP6", "NP7"]));
+        let health_of_nodes = nodes_available
+            .iter()
+            .chain(subnet_initial.nodes.iter())
+            .map(|n| (n.id, HealthStatus::Healthy))
+            .collect::<BTreeMap<_, _>>();
 
         println!(
             "initial {} NPs {:?}",
@@ -816,7 +821,7 @@ mod tests {
         );
 
         let subnet_change_req = SubnetChangeRequest::new(subnet_initial, nodes_available, Vec::new(), Vec::new(), Vec::new(), None);
-        let subnet_change = subnet_change_req.optimize(2, &[]).unwrap();
+        let subnet_change = subnet_change_req.optimize(2, &[], &health_of_nodes).unwrap();
 
         println!("Replacement run log:");
         for line in subnet_change.after().run_log.iter() {
@@ -1004,15 +1009,16 @@ mod tests {
         .flat_map(PrincipalId::from_str)
         .collect_vec();
 
-        let healths = subnet
+        let health_of_nodes = subnet
             .nodes
             .iter()
-            .cloned()
+            .map(|n| n.principal)
+            .chain(nodes_available.iter().map(|n| n.id))
             .map(|n| {
-                if unhealthy_principals.contains(&n.principal) {
-                    (n.principal, HealthStatus::Dead)
+                if unhealthy_principals.contains(&n) {
+                    (n, HealthStatus::Dead)
                 } else {
-                    (n.principal, HealthStatus::Healthy)
+                    (n, HealthStatus::Healthy)
                 }
             })
             .collect::<BTreeMap<_, _>>();
@@ -1021,7 +1027,7 @@ mod tests {
         important.insert(subnet.principal, subnet);
 
         let network_heal_response = NetworkHealRequest::new(important.clone())
-            .heal_and_optimize(nodes_available.clone(), healths.clone())
+            .heal_and_optimize(nodes_available.clone(), &health_of_nodes)
             .await
             .unwrap();
         let result = network_heal_response.first().unwrap().clone();
@@ -1036,10 +1042,19 @@ mod tests {
     fn test_subnet_rescue() {
         let nodes_available = new_test_nodes("spare", 10, 1);
         let subnet_initial = new_test_subnet_with_overrides(0, 11, 7, 1, (&NodeFeature::Country, &["CH", "CA", "CA", "CA", "CA", "CA", "BE"]));
+        let health_of_nodes = nodes_available
+            .iter()
+            .chain(subnet_initial.nodes.iter())
+            .map(|n| (n.id, HealthStatus::Healthy))
+            .collect::<BTreeMap<_, _>>();
 
         let change_initial = SubnetChangeRequest::new(subnet_initial.clone(), nodes_available, Vec::new(), Vec::new(), Vec::new(), None);
 
-        let with_keeping_features = change_initial.clone().keeping_from_used(vec!["CH".to_string()]).rescue().unwrap();
+        let with_keeping_features = change_initial
+            .clone()
+            .keeping_from_used(vec!["CH".to_string()])
+            .rescue(&health_of_nodes)
+            .unwrap();
 
         assert_eq!(with_keeping_features.added().len(), 6);
         assert_eq!(
@@ -1053,7 +1068,11 @@ mod tests {
         );
 
         let node_to_keep = subnet_initial.nodes.first().unwrap();
-        let with_keeping_principals = change_initial.clone().keeping_from_used(vec!["CH".to_string()]).rescue().unwrap();
+        let with_keeping_principals = change_initial
+            .clone()
+            .keeping_from_used(vec!["CH".to_string()])
+            .rescue(&health_of_nodes)
+            .unwrap();
 
         assert_eq!(with_keeping_principals.added().len(), 6);
         assert_eq!(
@@ -1066,7 +1085,7 @@ mod tests {
             1
         );
 
-        let rescue_all = change_initial.clone().rescue().unwrap();
+        let rescue_all = change_initial.clone().rescue(&health_of_nodes).unwrap();
 
         assert_eq!(rescue_all.added().len(), 7);
         assert_eq!(rescue_all.removed().len(), 7);
