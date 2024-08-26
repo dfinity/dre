@@ -4,17 +4,15 @@ import 'katex/dist/katex.min.css';
 import { InlineMath } from 'react-katex';
 import { axisClasses, ChartsReferenceLine, LineChart } from '@mui/x-charts';
 
-const NodeRewardExplanation: React.FC = () => {
+const NodeRewardExplanation: React.FC<{ failureRate: number; rewardReduction: number }> = ({ failureRate, rewardReduction }) => {
   return (
-    <Grid container spacing={3}>
+    <Grid container>
       <Grid item xs={12}>
         <Typography variant="h6" gutterBottom>
           How are rewards computed?
         </Typography>
       </Grid>
-      
-      {/* Unassigned Node */}
-      <Grid item xs={12} md={6}>
+      <Grid item xs={4}>
         <Typography variant="body1" gutterBottom>
           Node Unassigned:
         </Typography>
@@ -44,10 +42,9 @@ const NodeRewardExplanation: React.FC = () => {
             </Typography>
           </ListItem>
         </List>
-      </Grid>
-      
-      {/* Calculation Explanation */}
-      <Grid item xs={12} md={6}>
+        </Grid>
+
+        <Grid item xs={4}>
         <List sx={{ listStyle: 'circle', ml: 4 }}>
           <ListItem sx={{ display: 'list-item' }}>
             <Typography variant="body2" gutterBottom>
@@ -63,8 +60,10 @@ const NodeRewardExplanation: React.FC = () => {
               This gives the proportion of blocks the node failed to produce relative to the total expected.
             </Typography>
           </ListItem>
-          
+        </List>
+
           {/* Apply Linear Reduction Function */}
+          <List sx={{ listStyle: 'circle', ml: 4 }}>
           <ListItem sx={{ display: 'list-item' }}>
             <Typography variant="body2" gutterBottom>
               Apply Linear Reduction Function:
@@ -77,6 +76,9 @@ const NodeRewardExplanation: React.FC = () => {
             </Typography>
           </ListItem>
         </List>
+      </Grid>
+      <Grid item xs={4}>
+        <LinearReductionChart failureRate={failureRate} rewardReduction={rewardReduction}/>
       </Grid>
     </Grid>
   );
@@ -101,11 +103,11 @@ export const LinearReductionChart: React.FC<{ failureRate: number; rewardReducti
 
   return (
     <>
-      <Typography variant="h6" gutterBottom>
+      <Typography variant="body1" gutterBottom>
         Linear Rewards Reduction
       </Typography>
       <LineChart
-        margin={{ top: 70, left: 60, right: 150, bottom: 60 }}
+        margin={{ top: 20, left: 60, right: 150, bottom: 60 }}
         grid={{ vertical: true, horizontal: true }}
         yAxis={[{
           label: 'Rewards reduction',
@@ -122,11 +124,12 @@ export const LinearReductionChart: React.FC<{ failureRate: number; rewardReducti
           valueFormatter: (value: number) => `${value}%`,
         }]}
         series={[
-          { dataKey: 'rewardsRatePercent', showMark: false, disableHighlight: true },
+          { dataKey: 'rewardsRatePercent', showMark: false},
           { dataKey: 'dotPoints' },
         ]}
+        tooltip={{ trigger: 'none' }} 
         dataset={dataset}
-        height={350}
+        height={300}
         sx={{
           [`.${axisClasses.left} .${axisClasses.label}`]: {
             transform: 'translate(-20px, 0)',

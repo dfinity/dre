@@ -27,6 +27,8 @@ const DailyPerformanceChart: React.FC<DailyPerformanceChartProps> = ({ chartDail
       id: 'x-axis-id',
       scaleType: 'band' as const,
       dataKey: 'date',
+      categoryGapRatio: 0.4,
+      barGapRatio: 0.3,
       valueFormatter: (value: Date) => value
         .toLocaleDateString('UTC', { month: 'short', day: 'numeric' })
         .replace(" ", "\n"),
