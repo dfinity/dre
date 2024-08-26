@@ -45,14 +45,17 @@ def parse_branch(branch: str) -> tuple[str, str]:
     return (name, feature)
 
 
-def check_if_should_pop_latest_rc(rc_name: str, index, yaml: YAML):
+def pop_rcs_not_found_on_main(rc_name: str, index, yaml: YAML):
+    # Remove all rcs not found on main unless its the same release as the potential added one.
+    #
+    # This can happen if the rc that is being added has a base and feature versions
     output = subprocess.run(["git", "show", "main:release-index.yaml"], capture_output=True, text=True)
     if output.returncode != 0:
         raise ValueError(f"Unexpected response from git: \n{output.stderr.strip()}")
     index_on_main = output.stdout.strip()
     index_on_main = yaml.load(index_on_main)
     rcs_on_main = [rc["rc_name"] for rc in index_on_main["releases"]]
-    index["releases"] = [rc for rc in index["releases"] if rc["rc_name"] in rcs_on_main]
+    index["releases"] = [rc for rc in index["releases"] if rc["rc_name"] in rcs_on_main or rc["rc_name"] == rc_name]
 
 
 def main():
@@ -76,7 +79,7 @@ def main():
     yaml.indent(mapping=4, sequence=4, offset=2)
     index = yaml.load(open(index_path, "r").read())
     try:
-        check_if_should_pop_latest_rc(rc_name, index, yaml)
+        pop_rcs_not_found_on_main(rc_name, index, yaml)
     except Exception as e:
         print(f"Error: {e}")
         exit(1)
