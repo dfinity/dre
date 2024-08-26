@@ -480,6 +480,12 @@ impl Runner {
             .collect::<BTreeMap<_, _>>();
         let (available_nodes, healths) = try_join(self.registry.available_nodes().map_err(anyhow::Error::from), health_client.nodes()).await?;
 
+        // Remove the unhealthy nodes from the list of available nodes
+        let available_nodes = available_nodes
+            .into_iter()
+            .filter(|n| healths.get(&n.id).map_or(false, |h| h == &HealthStatus::Healthy))
+            .collect::<Vec<_>>();
+
         let subnets_change_response = NetworkHealRequest::new(subnets_without_proposals)
             .heal_and_optimize(available_nodes, healths)
             .await?;
