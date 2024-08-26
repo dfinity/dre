@@ -578,7 +578,7 @@ mod tests {
         for i in 0..num_nodes {
             let dfinity_owned = i < num_dfinity_nodes;
             let node_features = NodeFeatures::new_test_feature_set(&format!("{} {}", feat_prefix, i));
-            let node = Node::new_test_node(i as u64, node_features, dfinity_owned, true);
+            let node = Node::new_test_node(i as u64, node_features, dfinity_owned);
             subnet_nodes.push(node);
         }
         subnet_nodes
@@ -602,7 +602,7 @@ mod tests {
                 }
                 None => NodeFeatures::new_test_feature_set(&format!("feat {}", i)),
             };
-            let node = Node::new_test_node((node_number_start + i) as u64, node_features, dfinity_owned, true);
+            let node = Node::new_test_node((node_number_start + i) as u64, node_features, dfinity_owned);
             subnet_nodes.push(node);
         }
         subnet_nodes
@@ -869,7 +869,6 @@ mod tests {
             .sorted_by(|a, b| a.principal.cmp(&b.principal))
             .filter(|n| n.subnet_id.is_none() && n.proposal.is_none())
             .map(Node::from)
-            .map(|n| Node { decentralized: true, ..n })
             .collect::<Vec<_>>();
 
         subnet_healthy.check_business_rules().expect("Check business rules failed");
@@ -894,7 +893,7 @@ mod tests {
     #[test]
     fn test_extend_empty_subnet() {
         let available_nodes = (0..20)
-            .map(|i| Node::new_test_node(i, NodeFeatures::new_test_feature_set(&format!("foo{i}")), i % 10 == 0, true))
+            .map(|i| Node::new_test_node(i, NodeFeatures::new_test_feature_set(&format!("foo{i}")), i % 10 == 0))
             .collect::<Vec<_>>();
         let empty_subnet = DecentralizedSubnet::default();
 

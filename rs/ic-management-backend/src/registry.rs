@@ -490,7 +490,6 @@ impl RegistryState {
                         operator,
                         proposal: None,
                         label: guest.map(|g| g.name),
-                        decentralized: ip_addr.segments()[4] == 0x6801,
                         duplicates: node_entries
                             .iter()
                             .filter(|(_, (_, nr2))| node_ip_addr(nr2) == node_ip_addr(nr))
@@ -885,10 +884,6 @@ impl AvailableNodesQuerier for RegistryState {
                     .get(&n.principal)
                     .map(|s| matches!(*s, ic_management_types::HealthStatus::Healthy))
                     .unwrap_or(false)
-            })
-            .filter(|n| {
-                // Keep only the decentralized or DFINITY-owned nodes.
-                n.decentralized || n.dfinity_owned.unwrap_or(false)
             })
             .map(decentralization::network::Node::from)
             .sorted_by(|n1, n2| n1.id.cmp(&n2.id))

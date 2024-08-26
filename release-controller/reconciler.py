@@ -134,8 +134,8 @@ def sha256sum(filename):
 
 def version_package_urls(version: str):
     return [
-        f"https://download.dfinity.systems/ic/{version}/guest-os/update-img/update-img.tar.gz",
-        f"https://download.dfinity.network/ic/{version}/guest-os/update-img/update-img.tar.gz",
+        f"https://download.dfinity.systems/ic/{version}/guest-os/update-img/update-img.tar.zst",
+        f"https://download.dfinity.network/ic/{version}/guest-os/update-img/update-img.tar.zst",
     ]
 
 
@@ -145,11 +145,11 @@ def version_package_checksum(version: str):
             f"https://download.dfinity.systems/ic/{version}/guest-os/update-img/SHA256SUMS", timeout=10
         )
         checksum = [
-            line for line in response.content.decode("utf-8").splitlines() if line.strip().endswith("update-img.tar.gz")
+            line for line in response.content.decode("utf-8").splitlines() if line.strip().endswith("update-img.tar.zst")
         ][0].split(" ")[0]
 
         for i, u in enumerate(version_package_urls(version)):
-            image_file = str(pathlib.Path(d) / f"update-img-{i}.tar.gz")
+            image_file = str(pathlib.Path(d) / f"update-img-{i}.tar.zst")
             logging.debug("fetching package %s", u)
             with open(image_file, "wb") as file:
                 response = requests.get(u, timeout=10)
