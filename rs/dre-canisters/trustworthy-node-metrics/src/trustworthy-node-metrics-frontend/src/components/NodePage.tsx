@@ -10,6 +10,7 @@ import { paperStyle, boxStyleWidget } from '../Styles';
 import { NodeRewardsResponse } from '../../../declarations/trustworthy-node-metrics/trustworthy-node-metrics.did';
 import RewardsInfo, { LinearReductionChart } from './RewardsInfo';
 import ExportCustomToolbar from './NodeDailyData';
+import { ExportCustomToolbar } from './NodeDailyData';
 
 export interface NodePageProps {
     nodeRewards: NodeRewardsResponse[];
@@ -68,11 +69,11 @@ export const NodePage: React.FC<NodePageProps> = ({ nodeRewards, periodFilter })
                     <Grid item xs={12}>
                         <DailyPerformanceChart chartDailyData={chartDailyData} />
                     </Grid>
-                    <Grid item xs={12} md={8}>
-                        <RewardsInfo />
+                    <Grid item xs={12}>
+                        <RewardsInfo failureRate={failureRateAvg} rewardReduction={rewardsReduction}/>
                     </Grid>
-                    <Grid item xs={12} md={4}>
-                        <LinearReductionChart failureRate={failureRateAvg} rewardReduction={rewardsReduction}/>
+                    <Grid item xs={12} md={12}>
+                        <ExportCustomToolbar chartDailyData={chartDailyData}/>
                     </Grid>
                     <Grid item xs={12} md={12}>
                         <ExportCustomToolbar />
