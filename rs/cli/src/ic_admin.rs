@@ -52,7 +52,7 @@ impl UpdateVersion {
             ]
             .concat(),
             match self.versions_to_retire.clone() {
-                Some(versions) => vec![vec!["--replica-versions-to-unelect".to_string()], versions].concat(),
+                Some(versions) => [vec!["--replica-versions-to-unelect".to_string()], versions].concat(),
                 None => vec![],
             },
         ]
