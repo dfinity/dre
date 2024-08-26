@@ -175,6 +175,7 @@ jobs:
       - name: "Create/Update PR after a successful rc cut"
         if: ${{ needs.qualify.result == 'success' && steps.modify.outputs.SHOULD_CREATE == 'true' }}
         uses: peter-evans/create-pull-request@v6
+        continue-on-error: true
         with:
           commit-message: "chore: Update `release-index.yaml` after a successful rc cut of ${{ inputs.version }}"
           branch: ${{ env.AUTO_UPDATE_BRANCH }}
