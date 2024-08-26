@@ -73,6 +73,9 @@ export const NodeChart: React.FC<NodeChartProps> = ({ nodeRewards, periodFilter 
                     <Grid item xs={12} md={4}>
                         <LinearReductionChart failureRate={failureRateAvg} rewardReduction={rewardsReduction}/>
                     </Grid>
+                    <Grid item xs={12} md={12}>
+                        <ExportCustomToolbar />
+                    </Grid>
                 </Grid>
             </Paper>
         </Box>
