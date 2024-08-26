@@ -8,7 +8,8 @@ import { NodeRewardsArgs, NodeRewardsResponse } from '../../declarations/trustwo
 import { NodeList } from './components/NodeList';
 import Header from './components/Header';
 import { dateToNanoseconds } from './utils/utils';
-import { NodeChart } from './components/NodePage';
+import { NodePage } from './components/NodePage';
+import { NodeProviderPage } from './components/NodeProviderPage';
 
 // Theme configuration
 const darkTheme = createTheme({
@@ -51,7 +52,7 @@ const App: React.FC = () => {
   const [periodFilter, setPeriodFilter] = useState<PeriodFilter>({ dateStart, dateEnd });
   const [nodeRewards, setNodeRewards] = useState<NodeRewardsResponse[]>([]);
   const [subnets, setSubnets] = useState<Set<string>>(new Set());
-  const [nodeProviders, setNodeProviders] = useState<Set<string>>(new Set());
+  const [providers, setProviders] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const theme = useTheme();
@@ -69,9 +70,11 @@ const App: React.FC = () => {
         const nodeRewardsResponse = await trustworthy_node_metrics.node_rewards(request);
         const sortedNodeRewards = nodeRewardsResponse.sort((a, b) => a.rewards_percent - b.rewards_percent);
         const subnets = new Set(sortedNodeRewards.flatMap(node => node.daily_node_metrics.map(data => data.subnet_assigned.toText())));
+        const providers = new Set(sortedNodeRewards.flatMap(node => node.node_provider_id.toText()));
         
         setNodeRewards(sortedNodeRewards);
         setSubnets(subnets);
+        setProviders(providers);
       } catch (error) {
         console.error("Error fetching node:", error);
       } finally {
@@ -84,12 +87,12 @@ const App: React.FC = () => {
 
   const drawerProps = useMemo(() => ({
     subnets,
-    nodeProviders,
+    providers,
     drawerWidth,
     temporary: isSmallScreen,
     drawerOpen,
     onClosed: () => setDrawerOpen(false)
-  }), [subnets, nodeProviders, drawerWidth, isSmallScreen, drawerOpen]);
+  }), [subnets, providers, drawerWidth, isSmallScreen, drawerOpen]);
 
   return (
     <ThemeProvider theme={darkTheme}>
@@ -107,11 +110,15 @@ const App: React.FC = () => {
                 isLoading ? <LoadingIndicator /> : <NodeList nodeRewards={nodeRewards} periodFilter={periodFilter} />
               } />
               <Route path="/nodes/:node" element={
-                isLoading ? <LoadingIndicator /> : <NodeChart nodeRewards={nodeRewards} periodFilter={periodFilter} />
+                isLoading ? <LoadingIndicator /> : <NodePage nodeRewards={nodeRewards} periodFilter={periodFilter} />
               } />
               <Route path="/subnets/:subnet" element={
                 // TODO: Add subnet page
                 isLoading ? <LoadingIndicator /> : <NodeList nodeRewards={nodeRewards} periodFilter={periodFilter} />
+              } />
+              <Route path="/providers/:provider" element={
+                // TODO: Add subnet page
+                isLoading ? <LoadingIndicator /> : <NodeProviderPage nodeRewards={nodeRewards} periodFilter={periodFilter} />
               } />
             </Routes>
           </Box>

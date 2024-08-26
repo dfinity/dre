@@ -9,8 +9,9 @@ import NodeInfo from './NodeInfo';
 import { paperStyle, boxStyleWidget } from '../Styles';
 import { NodeRewardsResponse } from '../../../declarations/trustworthy-node-metrics/trustworthy-node-metrics.did';
 import RewardsInfo, { LinearReductionChart } from './RewardsInfo';
+import ExportCustomToolbar from './NodeDailyData';
 
-export interface NodeChartProps {
+export interface NodePageProps {
     nodeRewards: NodeRewardsResponse[];
     periodFilter: PeriodFilter;
 }
@@ -29,7 +30,7 @@ const NodePerformanceStats: React.FC<{ rewardsReduction: string }> = ({ rewardsR
     </Box>
 );
 
-export const NodeChart: React.FC<NodeChartProps> = ({ nodeRewards, periodFilter }) => {
+export const NodePage: React.FC<NodePageProps> = ({ nodeRewards, periodFilter }) => {
     const { node } = useParams();
     
     const nodeMetrics = nodeRewards.find((metrics) => metrics.node_id.toText() === node);
@@ -82,4 +83,4 @@ export const NodeChart: React.FC<NodeChartProps> = ({ nodeRewards, periodFilter 
     );
 };
 
-export default NodeChart;
+export default NodePage;
