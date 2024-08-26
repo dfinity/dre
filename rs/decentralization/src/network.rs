@@ -824,7 +824,7 @@ pub trait TopologyManager: SubnetQuerier + AvailableNodesQuerier {
         .including_from_available(include_nodes.clone())
         .excluding_from_available(exclude_nodes.clone())
         .including_from_available(only_nodes.clone())
-        .resize(size, 0, 0, &health_of_nodes)
+        .resize(size, 0, 0, health_of_nodes)
     }
 }
 
@@ -1181,7 +1181,7 @@ impl NetworkHealRequest {
         health_of_nodes: &BTreeMap<PrincipalId, HealthStatus>,
     ) -> Result<Vec<SubnetChangeResponse>, NetworkError> {
         let mut subnets_changed = Vec::new();
-        let subnets_to_heal = unhealthy_with_nodes(&self.subnets, &health_of_nodes)
+        let subnets_to_heal = unhealthy_with_nodes(&self.subnets, health_of_nodes)
             .await
             .iter()
             .flat_map(|(subnet_id, unhealthy_nodes)| {
@@ -1253,7 +1253,7 @@ impl NetworkHealRequest {
                 .filter_map(|num_nodes_to_optimize| {
                     change_req
                         .clone()
-                        .optimize(num_nodes_to_optimize, unhealthy_nodes_with_desc, &health_of_nodes)
+                        .optimize(num_nodes_to_optimize, unhealthy_nodes_with_desc, health_of_nodes)
                         .map_err(|e| warn!("{}", e))
                         .ok()
                 })
