@@ -28,7 +28,6 @@ pub struct Node {
     pub id: PrincipalId,
     pub features: nakamoto::NodeFeatures,
     pub dfinity_owned: bool,
-    pub decentralized: bool,
 }
 
 impl std::fmt::Display for Node {
@@ -42,12 +41,11 @@ impl std::fmt::Display for Node {
 }
 
 impl Node {
-    pub fn new_test_node(node_number: u64, features: nakamoto::NodeFeatures, dfinity_owned: bool, decentralized: bool) -> Self {
+    pub fn new_test_node(node_number: u64, features: nakamoto::NodeFeatures, dfinity_owned: bool) -> Self {
         Node {
             id: PrincipalId::new_node_test_id(node_number),
             features,
             dfinity_owned,
-            decentralized,
         }
     }
 

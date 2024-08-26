@@ -869,7 +869,6 @@ mod tests {
             .sorted_by(|a, b| a.principal.cmp(&b.principal))
             .filter(|n| n.subnet_id.is_none() && n.proposal.is_none())
             .map(Node::from)
-            .map(|n| Node { decentralized: true, ..n })
             .collect::<Vec<_>>();
 
         subnet_healthy.check_business_rules().expect("Check business rules failed");

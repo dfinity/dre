@@ -371,7 +371,6 @@ impl LazyRegistry {
                         operator: operator.clone().unwrap_or_default(),
                         proposal: None,
                         label: guest.map(|g| g.name),
-                        decentralized: ip_addr.segments()[4] == 0x6801,
                         duplicates: versioned_node_entries
                             .iter()
                             .filter(|(_, (_, nr2))| Self::node_ip_addr(nr2) == Self::node_ip_addr(nr))

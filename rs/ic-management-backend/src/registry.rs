@@ -490,7 +490,6 @@ impl RegistryState {
                         operator,
                         proposal: None,
                         label: guest.map(|g| g.name),
-                        decentralized: ip_addr.segments()[4] == 0x6801,
                         duplicates: node_entries
                             .iter()
                             .filter(|(_, (_, nr2))| node_ip_addr(nr2) == node_ip_addr(nr))
