@@ -886,10 +886,6 @@ impl AvailableNodesQuerier for RegistryState {
                     .map(|s| matches!(*s, ic_management_types::HealthStatus::Healthy))
                     .unwrap_or(false)
             })
-            .filter(|n| {
-                // Keep only the decentralized or DFINITY-owned nodes.
-                n.decentralized || n.dfinity_owned.unwrap_or(false)
-            })
             .map(decentralization::network::Node::from)
             .sorted_by(|n1, n2| n1.id.cmp(&n2.id))
             .collect())

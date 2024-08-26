@@ -35,8 +35,8 @@ impl std::fmt::Display for Node {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "Node ID: {}\nFeatures:\n{}\nDfinity Owned: {}\nDecentralized: {}",
-            self.id, self.features, self.dfinity_owned, self.decentralized
+            "Node ID: {}\nFeatures:\n{}\nDfinity Owned: {}",
+            self.id, self.features, self.dfinity_owned
         )
     }
 }
@@ -129,7 +129,6 @@ impl From<&ic_management_types::Node> for Node {
                 (NodeFeature::NodeProvider, n.operator.provider.principal.to_string()),
             ]),
             dfinity_owned: n.dfinity_owned.unwrap_or_default(),
-            decentralized: n.decentralized,
         }
     }
 }
@@ -304,12 +303,6 @@ impl DecentralizedSubnet {
                 target_dfinity_owned_nodes_count, dfinity_owned_nodes_count
             ));
             penalties += target_dfinity_owned_nodes_count.abs_diff(dfinity_owned_nodes_count) * 1000;
-        }
-
-        let count_non_decentralized_nodes = nodes.iter().filter(|n| !n.decentralized).count();
-        if count_non_decentralized_nodes > 0 {
-            checks.push(format!("Subnet has {} non-decentralized node(s)", count_non_decentralized_nodes));
-            penalties += count_non_decentralized_nodes * 100;
         }
 
         if subnet_id_str == *"uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe"
