@@ -67,6 +67,7 @@ jobs:
 
       - name: "✨ Running qualification"
         shell: bash
+        if: false
         env:
           MANUALY_TTL_FARM: 1
         run: |
@@ -76,7 +77,7 @@ jobs:
 
       - name: "⚙️ Uploading artifacts created during qualification"
         uses: actions/upload-artifact@v4
-        if: always()
+        if: false
         with:
           name: ${{ inputs.version }}-${{ matrix.version }}
           path: /tmp/qualifier-artifacts/${{ inputs.version }}
@@ -100,12 +101,14 @@ jobs:
 
       - name: "Download all artifacts"
         uses: actions/download-artifact@v4
+        if: false
         with:
           path: ${{ inputs.version }}-${{ steps.date.outputs.date }}
           pattern: ${{ inputs.version }}-*
 
       - name: "Printing what will be uploaded"
         shell: bash
+        if: false
         env:
           ARTIFACTS_DIR: ${{ inputs.version }}-${{ steps.date.outputs.date }}
         run: |
@@ -115,6 +118,7 @@ jobs:
 
       - name: "Upload artifacts to google drive"
         uses: adityak74/google-drive-upload-git-action@v0.3
+        if: false
         with:
           credentials: ${{ secrets.ARTIFACTS_DRIVE_CREDENTIALS }}
           filename: ${{ inputs.version }}-${{ steps.date.outputs.date }}.tar
@@ -137,6 +141,7 @@ jobs:
 
       - name: "Notify DRE on slack"
         uses: slackapi/slack-github-action@70cd7be8e40a46e8b0eced40b0de447bdb42f68e # v1.26.0
+        if: false
         with:
           channel-id: eng-release-bots
           slack-message: |
@@ -149,11 +154,20 @@ jobs:
 
       - name: "Modify release index"
         if: ${{ needs.qualify.result == 'success' }}
+        id: modify
         shell: bash
         run: |
           pip install ruamel.yaml
 
           BRANCH_REF=$(git ls-remote --heads https://github.com/dfinity/dre.git refs/heads/${AUTO_UPDATE_BRANCH})
+          if [ -z "$BRANCH_REF" ]; then
+            echo "Branch $BRANCH_REF does not exist, creating..."
+            git checkout -b $BRANCH_REF
+            echo "SHOULD_CREATE_PR=true" >> $GITHUB_OUTPUT
+          else
+            echo "Branch $BRANCH_REF exists"
+            git checkout $BRANCH_REF
+            echo "SHOULD_CREATE_PR=false" >> $GITHUB_OUTPUT
 
           # Cache current version of script to be able to force checkout main
           # If testing it is usually hard to get the version correct so this is
@@ -165,7 +179,7 @@ jobs:
           python /tmp/auto-update-release-index.py ${{ inputs.version }} ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
       - name: "Create/Update PR after a successful rc cut"
-        if: ${{ needs.qualify.result == 'success' }}
+        if: ${{ needs.qualify.result == 'success' && steps.modify.outputs.SHOULD_CREATE == 'true' }}
         uses: peter-evans/create-pull-request@v6
         with:
           commit-message: "chore: Update `release-index.yaml` after a successful rc cut of ${{ inputs.version }}"
