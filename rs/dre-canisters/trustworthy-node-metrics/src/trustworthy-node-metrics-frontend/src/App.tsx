@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Box, CircularProgress, CssBaseline, ThemeProvider, createTheme } from '@mui/material';
+import { Box, CircularProgress, CssBaseline, ThemeProvider, createTheme, useMediaQuery, useTheme } from '@mui/material';
 import FilterBar, { PeriodFilter } from './components/FilterBar';
 import Drawer from './components/Drawer'; 
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
@@ -26,9 +26,9 @@ const darkTheme = createTheme({
 const getDateRange = () => {
   const dateStart = new Date();
   const dateEnd = new Date();
-  dateStart.setDate(dateStart.getDate() - 30);
-  dateStart.setHours(0, 0, 0, 0);
-  dateEnd.setHours(23, 59, 59, 999);
+  dateStart.setUTCDate(dateStart.getUTCDate() - 30);
+  dateStart.setUTCHours(0, 0, 0, 0);
+  dateEnd.setUTCHours(23, 59, 59, 999);
   return { dateStart, dateEnd };
 };
 
@@ -52,9 +52,13 @@ const App: React.FC = () => {
   const [nodeRewards, setNodeRewards] = useState<NodeRewardsResponse[]>([]);
   const [subnets, setSubnets] = useState<Set<string>>(new Set());
   const [nodeProviders, setNodeProviders] = useState<Set<string>>(new Set());
-  const [drawerOpen, setDrawerOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const theme = useTheme();
+  const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
   const drawerWidth = 180;
+
+  const handleDrawerToggle = () => setDrawerOpen(prev => !prev);
 
   useEffect(() => {
     const updateRewards = async () => {
@@ -80,15 +84,14 @@ const App: React.FC = () => {
     updateRewards();
   }, [periodFilter]);
 
-  const handleDrawerToggle = () => setDrawerOpen(prev => !prev);
-
   const drawerProps = useMemo(() => ({
     subnets,
     nodeProviders,
     drawerWidth,
-    open: drawerOpen,
-    onClose: () => setDrawerOpen(false),
-  }), [subnets, nodeProviders, drawerWidth, drawerOpen]);
+    temporary: isSmallScreen,
+    drawerOpen,
+    onClosed: handleDrawerToggle
+  }), [subnets, nodeProviders, drawerWidth, isSmallScreen, drawerOpen]);
 
   return (
     <ThemeProvider theme={darkTheme}>
@@ -97,7 +100,7 @@ const App: React.FC = () => {
         <Box sx={{ display: 'flex' }}>
           <Drawer {...drawerProps} />
           <Box sx={{ flexGrow: 1, width: `calc(100% - ${drawerWidth}px)` }}>
-            <Header onDrawerToggle={handleDrawerToggle} />
+            <Header withDrawerIcon={isSmallScreen} onDrawerIconClicked={handleDrawerToggle} />
             <FilterBar filters={periodFilter} setFilters={setPeriodFilter} />
             
             <Routes>

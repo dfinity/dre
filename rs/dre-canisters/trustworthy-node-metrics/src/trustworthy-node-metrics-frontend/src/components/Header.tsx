@@ -12,17 +12,15 @@ const Title = styled(Typography)(() => ({
   }));
 
 interface HeaderProps {
-  onDrawerToggle: () => void;
+  withDrawerIcon: boolean;
+  onDrawerIconClicked: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ onDrawerToggle }) =>  {
-  const theme = useTheme();
-  const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
-  
+const Header: React.FC<HeaderProps> = ({ withDrawerIcon, onDrawerIconClicked }) =>  {
   return (
       <Toolbar>
-        {isSmallScreen && (
-          <IconButton edge="start" color="inherit" aria-label="menu" onClick={onDrawerToggle}>
+        {withDrawerIcon && (
+          <IconButton edge="start" color="inherit" aria-label="menu" onClick={onDrawerIconClicked}>
             <MenuIcon />
           </IconButton>
         )}

@@ -8,12 +8,6 @@ on:
         description: "The version that should be qualified"
         type: string
         default: ""
-  workflow_dispatch:
-    inputs:
-      version:
-        description: "The version that should be qualified"
-        type: string
-        default: ""
 
 # Run one qualification per commit.
 # This means we can have multiple qualifications of different versions
@@ -72,7 +66,6 @@ jobs:
           sudo rm /etc/containers/containers.conf
 
       - name: "✨ Running qualification"
-        if: false
         shell: bash
         env:
           MANUALY_TTL_FARM: 1
@@ -83,7 +76,6 @@ jobs:
 
       - name: "⚙️ Uploading artifacts created during qualification"
         uses: actions/upload-artifact@v4
-        if: false
         with:
           name: ${{ inputs.version }}-${{ matrix.version }}
           path: /tmp/qualifier-artifacts/${{ inputs.version }}
@@ -106,14 +98,12 @@ jobs:
           echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
 
       - name: "Download all artifacts"
-        if: false
         uses: actions/download-artifact@v4
         with:
           path: ${{ inputs.version }}-${{ steps.date.outputs.date }}
           pattern: ${{ inputs.version }}-*
 
       - name: "Printing what will be uploaded"
-        if: false
         shell: bash
         env:
           ARTIFACTS_DIR: ${{ inputs.version }}-${{ steps.date.outputs.date }}
@@ -123,7 +113,7 @@ jobs:
           tar -cvf "$ARTIFACTS_DIR.tar" $ARTIFACTS_DIR
 
       - name: "Upload artifacts to google drive"
-        if: false
+        if: always()
         uses: adityak74/google-drive-upload-git-action@v0.3
         with:
           credentials: ${{ secrets.ARTIFACTS_DRIVE_CREDENTIALS }}
@@ -146,8 +136,7 @@ jobs:
           echo "message=${FULL_MESSAGE}" >> $GITHUB_OUTPUT
 
       - name: "Notify DRE on slack"
-        if: false
-        uses: slackapi/slack-github-action@6c661ce58804a1a20f6dc5fbee7f0381b469e001 # v1.25.0
+        uses: slackapi/slack-github-action@70cd7be8e40a46e8b0eced40b0de447bdb42f68e # v1.26.0
         with:
           channel-id: eng-release-bots
           slack-message: |

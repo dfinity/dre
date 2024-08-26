@@ -8,6 +8,7 @@ import DailyPerformanceChart from './DailyPerformanceChart';
 import NodeInfo from './NodeInfo';
 import { paperStyle, boxStyleWidget } from '../Styles';
 import { NodeRewardsResponse } from '../../../declarations/trustworthy-node-metrics/trustworthy-node-metrics.did';
+import { RewardsInfo } from './RewardsInfo';
 
 export interface NodeChartProps {
     nodeRewards: NodeRewardsResponse[];
@@ -37,9 +38,9 @@ export const NodeChart: React.FC<NodeChartProps> = ({ nodeRewards, periodFilter 
         return <p>Node metrics not found</p>;
     }
 
-    const chartDailyData: ChartData[] = generateChartData(periodFilter, nodeMetrics.daily_node_metrics, nodeMetrics.node_id);
-    const failureRateAvg = `${Math.round(nodeMetrics.rewards_stats.failure_rate * 100)}%`;
-    const rewardPercent = `${Math.round(nodeMetrics.rewards_percent * 100)}%`;
+    const chartDailyData: ChartData[] = generateChartData(periodFilter, nodeMetrics.daily_node_metrics);
+    const failureRateAvg = Math.round(nodeMetrics.rewards_stats.failure_rate * 100);
+    const rewardPercent = Math.round(nodeMetrics.rewards_percent * 100);
 
     return (
         <Box sx={{ p: 3 }}>
@@ -49,22 +50,28 @@ export const NodeChart: React.FC<NodeChartProps> = ({ nodeRewards, periodFilter 
                         <Typography gutterBottom variant="h5" component="div">
                             {"Node Machine"}
                         </Typography>
-                        <Divider></Divider>
+                        <Divider/>
                     </Grid>
                     <Grid item xs={12} md={4}>
                         <NodeInfo nodeId={nodeMetrics.node_id.toText()} nodeProviderId={nodeMetrics.node_provider_id.toText()} />
                     </Grid>
                     <Grid item xs={12} md={8}>
-                        <WidgetGauge value={nodeMetrics.rewards_percent * 100} title={"Rewards Total"} />
+                        <WidgetGauge value={rewardPercent} title={"Rewards Total"} />
                     </Grid>
                     <Grid item xs={12} md={4}>
                         <NodeMetricsStats stats={nodeMetrics.rewards_stats} />
                     </Grid>
                     <Grid item xs={12} md={8}>
-                        <NodePerformanceStats failureRateAvg={failureRateAvg} rewardPercent={rewardPercent} />
+                        <NodePerformanceStats failureRateAvg={failureRateAvg.toString().concat("%")} rewardPercent={rewardPercent.toString().concat("%")} />
                     </Grid>
                     <Grid item xs={12}>
                         <DailyPerformanceChart chartDailyData={chartDailyData} />
+                    </Grid>
+                    <Grid item xs={12} md={4}>
+                        <RewardsInfo />
+                    </Grid>
+                    <Grid item xs={12} md={8}>
+                        <WidgetGauge value={rewardPercent} title={"Rewards Total"} />
                     </Grid>
                 </Grid>
             </Paper>

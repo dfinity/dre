@@ -21,6 +21,7 @@ export function WidgetNumber({ value, title }: { value: string, title: string })
     </Paper>
   );
 }
+
 export function WidgetGauge({ value, title }: { value: number, title: string }) {
   return (
     <Box 
@@ -34,14 +35,16 @@ export function WidgetGauge({ value, title }: { value: number, title: string }) 
           flexDirection: 'row', 
           alignItems: 'center', 
           justifyContent: 'center',
-          width: '150px',
+          width: '140px',
           height: '160px',
           bgcolor: 'background.paper', 
           borderRadius: '10px'
         }}
       >
         <Stack spacing={0.8}>
-
+        <Typography variant="subtitle1" sx={{ mb: 2 }}>
+          {title}
+        </Typography>
         <Gauge
           width={100}
           height={100}
@@ -60,9 +63,6 @@ export function WidgetGauge({ value, title }: { value: number, title: string }) 
             },
           })}
         />
-        <Typography variant="subtitle1" sx={{ mb: 2 }}>
-          {title}
-        </Typography>
         </Stack>
       </Paper>
     </Box>

@@ -36,6 +36,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ filters, setFilters }) => {
           <DatePicker
             label="From"
             value={filters.dateStart}
+            timezone="UTC" 
             onChange={handleDateStartChange}
             sx={{ mr: 2 }}
           />
@@ -43,6 +44,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ filters, setFilters }) => {
           <DatePicker
             label="To"
             value={filters.dateEnd}
+            timezone="UTC" 
             onChange={handleDateEndChange}
             sx={{ ml: 2 }}
           />
