@@ -75,6 +75,7 @@ jobs:
           bazel run //rs/qualifier -- "${{ inputs.version }}" --initial-versions ${{ matrix.version }}
 
       - name: "⚙️ Uploading artifacts created during qualification"
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: ${{ inputs.version }}-${{ matrix.version }}
@@ -113,7 +114,6 @@ jobs:
           tar -cvf "$ARTIFACTS_DIR.tar" $ARTIFACTS_DIR
 
       - name: "Upload artifacts to google drive"
-        if: always()
         uses: adityak74/google-drive-upload-git-action@v0.3
         with:
           credentials: ${{ secrets.ARTIFACTS_DRIVE_CREDENTIALS }}
