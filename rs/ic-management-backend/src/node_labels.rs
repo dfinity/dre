@@ -44,7 +44,6 @@ pub async fn query_guests(network: &String) -> anyhow::Result<Vec<Guest>> {
                 ipv6: ip.parse().unwrap(),
                 name: format!("{}-{}", dc, label),
                 dfinity_owned: DFINITY_DCS.contains(dc),
-                decentralized: true,
             }
         })
         .collect())

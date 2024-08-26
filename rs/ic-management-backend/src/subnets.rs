@@ -152,7 +152,6 @@ mod tests {
                 },
                 subnet_id: Some(subnet_id),
                 hostos_release: None,
-                decentralized: true,
                 ip_addr: Ipv6Addr::new(0, 0, 0, 0, 0, 0, 0, 1),
                 hostname: None,
                 dfinity_owned: None,

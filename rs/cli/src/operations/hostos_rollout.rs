@@ -704,7 +704,6 @@ pub mod test {
                 hostos_release: None,
                 proposal: None,
                 label: None,
-                decentralized: false,
                 duplicates: None,
                 subnet_id,
                 hostos_version: hostos_version.clone(),

@@ -143,12 +143,6 @@ export default function NodeSearch({ onSearchChange, expand }: { onSearchChange:
             hidden: false,
             searchable: true,
         },
-        {
-            title: 'Decentralized',
-            field: 'decentralized',
-            type: 'boolean',
-            hidden: false,
-        },
     ];
 
 

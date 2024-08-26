@@ -371,7 +371,6 @@ impl LazyRegistry {
                         operator: operator.clone().unwrap_or_default(),
                         proposal: None,
                         label: guest.map(|g| g.name),
-                        decentralized: ip_addr.segments()[4] == 0x6801,
                         duplicates: versioned_node_entries
                             .iter()
                             .filter(|(_, (_, nr2))| Self::node_ip_addr(nr2) == Self::node_ip_addr(nr))
@@ -706,10 +705,6 @@ impl AvailableNodesQuerier for LazyRegistry {
                     .get(&n.principal)
                     .map(|s| matches!(*s, ic_management_types::HealthStatus::Healthy))
                     .unwrap_or(false)
-            })
-            .filter(|n| {
-                // Keep only the decentralized or DFINITY-owned nodes.
-                n.decentralized || n.dfinity_owned.unwrap_or(false)
             })
             .map(decentralization::network::Node::from)
             .sorted_by(|n1, n2| n1.id.cmp(&n2.id))
