@@ -46,7 +46,9 @@ def parse_branch(branch: str) -> tuple[str, str]:
 
 
 def check_if_should_pop_latest_rc(rc_name: str, index):
-    output = subprocess.run(["git", "diff", "main", "--", "release-index.yaml"], capture_output=True, text=True)
+    output = subprocess.run(
+        ["git", "diff", "main", "--unified=0", "--", "release-index.yaml"], capture_output=True, text=True
+    )
     if output.returncode != 0:
         raise ValueError(f"Unexpected response from command: \n{output.stderr.strip()}")
     diff = output.stdout.strip()
@@ -87,14 +89,12 @@ def main():
     elem_to_add = ruamel.yaml.CommentedMap(elem_to_add)
     elem_to_add.yaml_set_start_comment(f"Qualification pipeline:\n# {args.link}", indent=6)
 
-    potential_release = list(filter(lambda release: release["rc_name"] == rc_name, releases))
-    if len(potential_release) > 0:
-        potential_release = potential_release[0]
-        potential_release["versions"].append(elem_to_add)
-    else:
-        elem_to_add = ruamel.yaml.CommentedMap({"rc_name": rc_name, "versions": [elem_to_add]})
-        releases.insert(0, elem_to_add)
+    potential_release = next(filter(lambda release: release["rc_name"] == rc_name, releases), None)
+    if not potential_release:
+        potential_release = ruamel.yaml.CommentedMap({"rc_name": rc_name, "versions": []})
+        releases.insert(0, potential_release)
 
+    potential_release["versions"].append(elem_to_add)
     yaml.dump(index, open(index_path, "w"))
 
 
