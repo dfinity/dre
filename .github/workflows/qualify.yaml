@@ -75,8 +75,8 @@ jobs:
           bazel run //rs/qualifier -- "${{ inputs.version }}" --initial-versions ${{ matrix.version }}
 
       - name: "⚙️ Uploading artifacts created during qualification"
-        if: always()
         uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: ${{ inputs.version }}-${{ matrix.version }}
           path: /tmp/qualifier-artifacts/${{ inputs.version }}
