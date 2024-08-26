@@ -1,5 +1,5 @@
 {
-  "checksum": "9e05ecab90017fdddd5fedce84fc7824df3be9ca635e84b88366d75eb9168d68",
+  "checksum": "44ef1b9c537f19666442f8f5335890b78b47e96bf61e42351709b1a0982ff3ce",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -149,7 +149,7 @@
               "target": "encoding_rs"
             },
             {
-              "id": "flate2 1.0.32",
+              "id": "flate2 1.0.33",
               "target": "flate2"
             },
             {
@@ -265,7 +265,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.75",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -326,7 +326,7 @@
               "target": "regex_lite"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
@@ -697,11 +697,11 @@
               "target": "regex_lite"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
-              "id": "serde_json 1.0.125",
+              "id": "serde_json 1.0.127",
               "target": "serde_json"
             },
             {
@@ -789,7 +789,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.75",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -924,13 +924,6 @@
         "compile_data_glob": [
           "**"
         ],
-        "crate_features": {
-          "common": [
-            "default",
-            "std"
-          ],
-          "selects": {}
-        },
         "edition": "2018",
         "version": "1.2.0"
       },
@@ -1291,7 +1284,7 @@
         "deps": {
           "common": [
             {
-              "id": "libc 0.2.158",
+              "id": "libc 0.2.157",
               "target": "libc"
             }
           ],
@@ -1866,7 +1859,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.75",
+              "id": "syn 2.0.76",
               "target": "syn"
             },
             {
@@ -1917,7 +1910,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.75",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -1956,11 +1949,11 @@
         "deps": {
           "common": [
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
-              "id": "serde_json 1.0.125",
+              "id": "serde_json 1.0.127",
               "target": "serde_json"
             }
           ],
@@ -2043,7 +2036,7 @@
           "selects": {
             "cfg(any())": [
               {
-                "id": "libc 0.2.158",
+                "id": "libc 0.2.157",
                 "target": "libc"
               }
             ]
@@ -2149,7 +2142,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.75",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -2248,7 +2241,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.75",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -2295,7 +2288,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.75",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -2372,7 +2365,7 @@
             ],
             "cfg(unix)": [
               {
-                "id": "libc 0.2.158",
+                "id": "libc 0.2.157",
                 "target": "libc"
               }
             ],
@@ -2442,11 +2435,11 @@
               "target": "quote"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
-              "id": "serde_json 1.0.125",
+              "id": "serde_json 1.0.127",
               "target": "serde_json"
             },
             {
@@ -2589,7 +2582,7 @@
               "target": "pin_project_lite"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
@@ -2751,11 +2744,11 @@
               "target": "pin_project_lite"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
-              "id": "serde_json 1.0.125",
+              "id": "serde_json 1.0.127",
               "target": "serde_json"
             },
             {
@@ -3298,7 +3291,7 @@
                 "target": "addr2line"
               },
               {
-                "id": "libc 0.2.158",
+                "id": "libc 0.2.157",
                 "target": "libc"
               },
               {
@@ -3574,7 +3567,7 @@
         "deps": {
           "common": [
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             }
           ],
@@ -4056,7 +4049,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.75",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -4263,7 +4256,7 @@
               "target": "rustc_version"
             },
             {
-              "id": "serde_json 1.0.125",
+              "id": "serde_json 1.0.127",
               "target": "serde_json"
             },
             {
@@ -4321,7 +4314,7 @@
               "target": "semver"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             }
           ],
@@ -4415,7 +4408,7 @@
               "target": "quote"
             },
             {
-              "id": "serde_json 1.0.125",
+              "id": "serde_json 1.0.127",
               "target": "serde_json"
             },
             {
@@ -4547,7 +4540,7 @@
         "deps": {
           "common": [
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
@@ -4855,7 +4848,7 @@
               "target": "bzip2_sys"
             },
             {
-              "id": "libc 0.2.158",
+              "id": "libc 0.2.157",
               "target": "libc"
             }
           ],
@@ -4907,7 +4900,7 @@
               "target": "build_script_build"
             },
             {
-              "id": "libc 0.2.158",
+              "id": "libc 0.2.157",
               "target": "libc"
             }
           ],
@@ -5097,7 +5090,7 @@
               "target": "build_script_build"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             }
           ],
@@ -5187,7 +5180,7 @@
               "target": "pretty"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
@@ -5266,7 +5259,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.75",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -5314,11 +5307,11 @@
               "target": "reqwest"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
-              "id": "serde_json 1.0.125",
+              "id": "serde_json 1.0.127",
               "target": "serde_json"
             },
             {
@@ -5365,7 +5358,7 @@
         "deps": {
           "common": [
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             }
           ],
@@ -5422,11 +5415,11 @@
               "target": "semver"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
-              "id": "serde_json 1.0.125",
+              "id": "serde_json 1.0.127",
               "target": "serde_json"
             }
           ],
@@ -5482,7 +5475,7 @@
           "selects": {
             "cfg(unix)": [
               {
-                "id": "libc 0.2.158",
+                "id": "libc 0.2.157",
                 "target": "libc"
               }
             ]
@@ -5604,7 +5597,7 @@
               "target": "num_traits"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             }
           ],
@@ -5687,7 +5680,7 @@
               "target": "ciborium_ll"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             }
           ],
@@ -6238,7 +6231,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.75",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -6506,7 +6499,7 @@
               "target": "pretty_assertions"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             }
           ],
@@ -6724,11 +6717,11 @@
               "target": "regex"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
-              "id": "serde_json 1.0.125",
+              "id": "serde_json 1.0.127",
               "target": "serde_json"
             },
             {
@@ -6783,7 +6776,7 @@
               "target": "lazy_static"
             },
             {
-              "id": "libc 0.2.158",
+              "id": "libc 0.2.157",
               "target": "libc"
             },
             {
@@ -6977,7 +6970,7 @@
               "target": "core_foundation_sys"
             },
             {
-              "id": "libc 0.2.158",
+              "id": "libc 0.2.157",
               "target": "libc"
             }
           ],
@@ -7101,25 +7094,25 @@
           "selects": {
             "aarch64-linux-android": [
               {
-                "id": "libc 0.2.158",
+                "id": "libc 0.2.157",
                 "target": "libc"
               }
             ],
             "cfg(all(target_arch = \"aarch64\", target_os = \"linux\"))": [
               {
-                "id": "libc 0.2.158",
+                "id": "libc 0.2.157",
                 "target": "libc"
               }
             ],
             "cfg(all(target_arch = \"aarch64\", target_vendor = \"apple\"))": [
               {
-                "id": "libc 0.2.158",
+                "id": "libc 0.2.157",
                 "target": "libc"
               }
             ],
             "cfg(all(target_arch = \"loongarch64\", target_os = \"linux\"))": [
               {
-                "id": "libc 0.2.158",
+                "id": "libc 0.2.157",
                 "target": "libc"
               }
             ]
@@ -7613,7 +7606,7 @@
           "selects": {
             "cfg(unix)": [
               {
-                "id": "libc 0.2.158",
+                "id": "libc 0.2.157",
                 "target": "libc"
               }
             ],
@@ -7989,7 +7982,7 @@
               "target": "ryu"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             }
           ],
@@ -8203,7 +8196,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.75",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -8360,7 +8353,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/nns/cmc"
         }
@@ -8505,7 +8498,7 @@
               "target": "rand"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
@@ -8786,7 +8779,7 @@
               "target": "strsim"
             },
             {
-              "id": "syn 2.0.75",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -8880,7 +8873,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.75",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -9113,11 +9106,11 @@
               "target": "rand_seeder"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
-              "id": "serde_json 1.0.125",
+              "id": "serde_json 1.0.127",
               "target": "serde_json"
             },
             {
@@ -9355,7 +9348,7 @@
               "target": "powerfmt"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             }
           ],
@@ -9449,7 +9442,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.75",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -9552,7 +9545,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.75",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -9601,7 +9594,7 @@
               "target": "derive_builder_core"
             },
             {
-              "id": "syn 2.0.75",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -9683,7 +9676,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.75",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -9701,7 +9694,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/rust_canisters/dfn_candid"
         }
@@ -9741,7 +9734,7 @@
               "target": "on_wire"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             }
           ],
@@ -9759,7 +9752,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/rust_canisters/dfn_core"
         }
@@ -9805,7 +9798,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/rust_canisters/dfn_http"
         }
@@ -9841,7 +9834,7 @@
               "target": "dfn_core"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
@@ -9863,7 +9856,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/rust_canisters/dfn_http_metrics"
         }
@@ -9899,6 +9892,10 @@
               "target": "dfn_http"
             },
             {
+              "id": "ic-canisters-http-types 0.9.0",
+              "target": "ic_canisters_http_types"
+            },
+            {
               "id": "ic-metrics-encoder 1.1.1",
               "target": "ic_metrics_encoder"
             },
@@ -9921,7 +9918,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/rust_canisters/dfn_protobuf"
         }
@@ -10351,7 +10348,7 @@
             ],
             "cfg(unix)": [
               {
-                "id": "libc 0.2.158",
+                "id": "libc 0.2.157",
                 "target": "libc"
               }
             ],
@@ -10404,7 +10401,7 @@
             ],
             "cfg(unix)": [
               {
-                "id": "libc 0.2.158",
+                "id": "libc 0.2.157",
                 "target": "libc"
               }
             ],
@@ -10464,7 +10461,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.75",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -10691,7 +10688,7 @@
               "target": "edit"
             },
             {
-              "id": "flate2 1.0.32",
+              "id": "flate2 1.0.33",
               "target": "flate2"
             },
             {
@@ -10819,11 +10816,11 @@
               "target": "self_update"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
-              "id": "serde_json 1.0.125",
+              "id": "serde_json 1.0.127",
               "target": "serde_json"
             },
             {
@@ -11134,7 +11131,7 @@
               "target": "rand_core"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
@@ -11551,7 +11548,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.75",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -11806,7 +11803,7 @@
         "deps": {
           "common": [
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             }
           ],
@@ -11853,7 +11850,7 @@
         "deps": {
           "common": [
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
@@ -11904,19 +11901,19 @@
           "selects": {
             "cfg(target_os = \"hermit\")": [
               {
-                "id": "libc 0.2.158",
+                "id": "libc 0.2.157",
                 "target": "libc"
               }
             ],
             "cfg(target_os = \"wasi\")": [
               {
-                "id": "libc 0.2.158",
+                "id": "libc 0.2.157",
                 "target": "libc"
               }
             ],
             "cfg(unix)": [
               {
-                "id": "libc 0.2.158",
+                "id": "libc 0.2.157",
                 "target": "libc"
               }
             ],
@@ -12161,7 +12158,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/crypto/internal/crypto_lib/threshold_sig/tecdsa/fe-derive"
         }
@@ -12336,7 +12333,7 @@
             ],
             "cfg(unix)": [
               {
-                "id": "libc 0.2.158",
+                "id": "libc 0.2.157",
                 "target": "libc"
               }
             ],
@@ -12383,13 +12380,13 @@
       },
       "license": "MIT/Apache-2.0"
     },
-    "flate2 1.0.32": {
+    "flate2 1.0.33": {
       "name": "flate2",
-      "version": "1.0.32",
+      "version": "1.0.33",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/flate2/1.0.32/download",
-          "sha256": "9c0596c1eac1f9e04ed902702e9878208b336edc9d6fddc8a48387349bab3666"
+          "url": "https://static.crates.io/crates/flate2/1.0.33/download",
+          "sha256": "324a1be68054ef05ad64b861cc9eaf1d623d2d8cb25b4bf2cb9cdd902b4bf253"
         }
       },
       "targets": [
@@ -12431,7 +12428,7 @@
           "selects": {}
         },
         "edition": "2018",
-        "version": "1.0.32"
+        "version": "1.0.33"
       },
       "license": "MIT OR Apache-2.0"
     },
@@ -12710,7 +12707,7 @@
           "selects": {
             "cfg(unix)": [
               {
-                "id": "libc 0.2.158",
+                "id": "libc 0.2.157",
                 "target": "libc"
               }
             ],
@@ -13048,7 +13045,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.75",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -13379,7 +13376,7 @@
             ],
             "cfg(unix)": [
               {
-                "id": "libc 0.2.158",
+                "id": "libc 0.2.157",
                 "target": "libc"
               }
             ]
@@ -13875,7 +13872,8 @@
             "allocator-api2",
             "default",
             "inline-more",
-            "raw"
+            "raw",
+            "serde"
           ],
           "selects": {}
         },
@@ -13888,6 +13886,10 @@
             {
               "id": "allocator-api2 0.2.18",
               "target": "allocator_api2"
+            },
+            {
+              "id": "serde 1.0.209",
+              "target": "serde"
             }
           ],
           "selects": {}
@@ -14019,11 +14021,11 @@
               "target": "regex"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
-              "id": "serde_json 1.0.125",
+              "id": "serde_json 1.0.127",
               "target": "serde_json"
             },
             {
@@ -14232,7 +14234,7 @@
         "deps": {
           "common": [
             {
-              "id": "libc 0.2.158",
+              "id": "libc 0.2.157",
               "target": "libc"
             }
           ],
@@ -14340,7 +14342,7 @@
         "deps": {
           "common": [
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             }
           ],
@@ -14918,11 +14920,11 @@
               "target": "regex"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
-              "id": "serde_json 1.0.125",
+              "id": "serde_json 1.0.127",
               "target": "serde_json"
             },
             {
@@ -15040,7 +15042,7 @@
               "target": "humantime"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             }
           ],
@@ -15937,7 +15939,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/monitoring/adapter_metrics/client"
         }
@@ -16007,7 +16009,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/monitoring/adapter_metrics/service"
         }
@@ -16215,7 +16217,7 @@
               "target": "sec1"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
@@ -16281,7 +16283,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/async_utils"
         }
@@ -16371,7 +16373,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/types/base_types"
         }
@@ -16427,7 +16429,7 @@
               "target": "prost"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             }
           ],
@@ -16470,7 +16472,7 @@
               "target": "candid"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
@@ -16492,7 +16494,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/bitcoin/replica_types"
         }
@@ -16532,7 +16534,7 @@
               "target": "ic_protobuf"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
@@ -16554,7 +16556,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/canister_client"
         }
@@ -16638,7 +16640,7 @@
               "target": "rustls"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
@@ -16672,7 +16674,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/canister_client/sender"
         }
@@ -16734,7 +16736,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/rust_canisters/canister_log"
         }
@@ -16758,7 +16760,7 @@
         "deps": {
           "common": [
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             }
           ],
@@ -16776,7 +16778,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/rust_canisters/canister_profiler"
         }
@@ -16926,7 +16928,7 @@
               "target": "reqwest"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
@@ -16960,7 +16962,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/rust_canisters/http_types"
         }
@@ -16992,7 +16994,7 @@
               "target": "dfn_candid"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
@@ -17014,7 +17016,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/canonical_state"
         }
@@ -17086,7 +17088,7 @@
               "target": "phantom_newtype"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
@@ -17125,7 +17127,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/canonical_state/tree_hash"
         }
@@ -17212,7 +17214,7 @@
               "target": "ic0"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
@@ -17275,7 +17277,7 @@
               "target": "ic0"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
@@ -17339,7 +17341,7 @@
               "target": "quote"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
@@ -17401,7 +17403,7 @@
               "target": "quote"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
@@ -17409,7 +17411,7 @@
               "target": "serde_tokenstream"
             },
             {
-              "id": "syn 2.0.75",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -17460,7 +17462,7 @@
               "target": "quote"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
@@ -17519,7 +17521,7 @@
               "target": "ic0"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
@@ -17581,7 +17583,7 @@
               "target": "ic0"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
@@ -17607,7 +17609,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/certification"
         }
@@ -17651,7 +17653,7 @@
               "target": "ic_types"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
@@ -17710,7 +17712,7 @@
               "target": "hex"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
@@ -17736,7 +17738,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/canonical_state/certification_version"
         }
@@ -17808,7 +17810,7 @@
         "deps": {
           "common": [
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
@@ -17834,7 +17836,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/config"
         }
@@ -17882,7 +17884,7 @@
               "target": "json5"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
@@ -17904,7 +17906,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/constants"
         }
@@ -17937,7 +17939,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/crypto/ed25519"
         }
@@ -18003,7 +18005,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/crypto/getrandom_for_wasm"
         }
@@ -18053,7 +18055,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/crypto/interfaces/sig_verification"
         }
@@ -18095,7 +18097,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/crypto/internal/crypto_lib/basic_sig/der_utils"
         }
@@ -18145,7 +18147,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/crypto/internal/crypto_lib/basic_sig/ed25519"
         }
@@ -18217,7 +18219,7 @@
               "target": "rand_chacha"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
@@ -18243,7 +18245,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/crypto/internal/crypto_lib/bls12_381/type"
         }
@@ -18330,7 +18332,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/crypto/internal/crypto_lib/hmac"
         }
@@ -18372,7 +18374,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/crypto/internal/crypto_lib/multi_sig/bls12_381"
         }
@@ -18436,7 +18438,7 @@
               "target": "rand_chacha"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
@@ -18458,7 +18460,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/crypto/internal/crypto_lib/seed"
         }
@@ -18498,7 +18500,7 @@
               "target": "rand_chacha"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
@@ -18520,7 +18522,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/crypto/internal/crypto_lib/sha2"
         }
@@ -18562,7 +18564,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/crypto/internal/crypto_lib/threshold_sig/bls12_381"
         }
@@ -18638,7 +18640,7 @@
               "target": "rand_chacha"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
@@ -18681,7 +18683,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/crypto/internal/crypto_lib/threshold_sig/tecdsa"
         }
@@ -18761,7 +18763,7 @@
               "target": "rand"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
@@ -18816,7 +18818,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/crypto/internal/crypto_lib/types"
         }
@@ -18856,7 +18858,7 @@
               "target": "phantom_newtype"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
@@ -18899,7 +18901,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/crypto/node_key_validation"
         }
@@ -18963,7 +18965,7 @@
               "target": "ic_types"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             }
           ],
@@ -18981,7 +18983,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/crypto/secp256k1"
         }
@@ -19055,7 +19057,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/crypto/secrets_containers"
         }
@@ -19079,7 +19081,7 @@
         "deps": {
           "common": [
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
@@ -19101,7 +19103,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/crypto/sha2"
         }
@@ -19143,7 +19145,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/crypto/node_key_validation/tls_cert_validation"
         }
@@ -19183,7 +19185,7 @@
               "target": "ic_types"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
@@ -19205,7 +19207,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/crypto/tree_hash"
         }
@@ -19241,7 +19243,7 @@
               "target": "ic_protobuf"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
@@ -19267,7 +19269,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/crypto/utils/basic_sig"
         }
@@ -19317,7 +19319,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/crypto/utils/ni_dkg"
         }
@@ -19367,7 +19369,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/crypto/utils/threshold_sig"
         }
@@ -19421,7 +19423,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/crypto/utils/threshold_sig_der"
         }
@@ -19475,7 +19477,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/types/error_types"
         }
@@ -19507,7 +19509,7 @@
               "target": "ic_utils"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
@@ -19538,7 +19540,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/http_endpoints/metrics"
         }
@@ -19616,7 +19618,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/rosetta-api/icrc1"
         }
@@ -19694,7 +19696,7 @@
               "target": "num_traits"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
@@ -19724,7 +19726,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/rosetta-api/icrc1/index-ng"
         }
@@ -19826,11 +19828,11 @@
               "target": "scopeguard"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
-              "id": "serde_json 1.0.125",
+              "id": "serde_json 1.0.127",
               "target": "serde_json"
             }
           ],
@@ -19857,7 +19859,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/rosetta-api/icrc1/ledger"
         }
@@ -19974,7 +19976,7 @@
               "target": "num_traits"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
@@ -20032,7 +20034,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/rosetta-api/icrc1/tokens_u64"
         }
@@ -20072,7 +20074,7 @@
               "target": "num_traits"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             }
           ],
@@ -20090,7 +20092,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/interfaces"
         }
@@ -20166,7 +20168,7 @@
               "target": "prost"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
@@ -20205,7 +20207,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/interfaces/registry"
         }
@@ -20237,7 +20239,7 @@
               "target": "prost"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             }
           ],
@@ -20255,7 +20257,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/interfaces/state_manager"
         }
@@ -20309,7 +20311,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/rosetta-api/ledger_canister_core"
         }
@@ -20369,7 +20371,7 @@
               "target": "num_traits"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             }
           ],
@@ -20396,7 +20398,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/rosetta-api/ledger_core"
         }
@@ -20432,7 +20434,7 @@
               "target": "num_traits"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
@@ -20454,7 +20456,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "packages/ic-ledger-hash-of"
         }
@@ -20486,7 +20488,7 @@
               "target": "hex"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             }
           ],
@@ -20504,7 +20506,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/monitoring/logger"
         }
@@ -20544,7 +20546,7 @@
               "target": "ic_utils"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
@@ -20746,11 +20748,11 @@
               "target": "reqwest"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
-              "id": "serde_json 1.0.125",
+              "id": "serde_json 1.0.127",
               "target": "serde_json"
             },
             {
@@ -20802,7 +20804,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/types/management_canister_types"
         }
@@ -20858,7 +20860,7 @@
               "target": "num_traits"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
@@ -20957,11 +20959,11 @@
               "target": "reqwest"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
-              "id": "serde_json 1.0.125",
+              "id": "serde_json 1.0.127",
               "target": "serde_json"
             },
             {
@@ -21009,7 +21011,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/monitoring/metrics"
         }
@@ -21041,7 +21043,7 @@
               "target": "ic_adapter_metrics_client"
             },
             {
-              "id": "libc 0.2.158",
+              "id": "libc 0.2.157",
               "target": "libc"
             },
             {
@@ -21108,7 +21110,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/nervous_system/clients"
         }
@@ -21188,7 +21190,7 @@
               "target": "num_traits"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             }
           ],
@@ -21215,7 +21217,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/nervous_system/collections/union_multi_map"
         }
@@ -21248,7 +21250,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/nervous_system/common"
         }
@@ -21385,11 +21387,11 @@
               "target": "rust_decimal"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
-              "id": "serde_json 1.0.125",
+              "id": "serde_json 1.0.127",
               "target": "serde_json"
             }
           ],
@@ -21430,7 +21432,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/nervous_system/common/build_metadata"
         }
@@ -21463,7 +21465,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/nervous_system/common/test_keys"
         }
@@ -21525,7 +21527,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/nervous_system/governance"
         }
@@ -21583,7 +21585,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/nervous_system/lock"
         }
@@ -21616,7 +21618,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/nervous_system/proto"
         }
@@ -21660,7 +21662,7 @@
               "target": "rust_decimal"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             }
           ],
@@ -21678,7 +21680,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/nervous_system/proxied_canister_calls_tracker"
         }
@@ -21720,7 +21722,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/nervous_system/root"
         }
@@ -21772,7 +21774,7 @@
               "target": "ic_nervous_system_runtime"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
@@ -21794,7 +21796,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/nervous_system/runtime"
         }
@@ -21861,7 +21863,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/nervous_system/string"
         }
@@ -21894,7 +21896,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/nervous_system/temporary"
         }
@@ -21927,7 +21929,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/nervous_system/neurons_fund"
         }
@@ -21963,11 +21965,11 @@
               "target": "rust_decimal"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
-              "id": "serde_json 1.0.125",
+              "id": "serde_json 1.0.127",
               "target": "serde_json"
             }
           ],
@@ -21994,7 +21996,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/nns/common"
         }
@@ -22082,7 +22084,7 @@
               "target": "prost"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
@@ -22108,7 +22110,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/nns/constants"
         }
@@ -22154,7 +22156,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/nns/governance"
         }
@@ -22399,7 +22401,7 @@
               "target": "rust_decimal"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
@@ -22407,7 +22409,7 @@
               "target": "serde_bytes"
             },
             {
-              "id": "serde_json 1.0.125",
+              "id": "serde_json 1.0.127",
               "target": "serde_json"
             },
             {
@@ -22475,7 +22477,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/nns/governance/api"
         }
@@ -22513,6 +22515,10 @@
             {
               "id": "ic-base-types 0.9.0",
               "target": "ic_base_types"
+            },
+            {
+              "id": "ic-crypto-sha2 0.9.0",
+              "target": "ic_crypto_sha2"
             },
             {
               "id": "ic-nervous-system-clients 0.0.1",
@@ -22559,7 +22565,7 @@
               "target": "prost"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
@@ -22594,7 +22600,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/nns/governance/init"
         }
@@ -22680,7 +22686,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/nns/gtc_accounts"
         }
@@ -22713,7 +22719,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/nns/handlers/root/interface"
         }
@@ -22761,7 +22767,7 @@
               "target": "ic_nns_constants"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             }
           ],
@@ -22788,7 +22794,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/protobuf"
         }
@@ -22828,11 +22834,11 @@
               "target": "prost"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
-              "id": "serde_json 1.0.125",
+              "id": "serde_json 1.0.127",
               "target": "serde_json"
             },
             {
@@ -22854,7 +22860,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/registry/canister/api"
         }
@@ -22886,7 +22892,7 @@
               "target": "ic_base_types"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
@@ -22908,7 +22914,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/registry/client"
         }
@@ -22970,7 +22976,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/registry/fake"
         }
@@ -23016,7 +23022,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/registry/helpers"
         }
@@ -23102,7 +23108,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/registry/proto"
         }
@@ -23144,7 +23150,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/registry/keys"
         }
@@ -23184,7 +23190,7 @@
               "target": "ic_types"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             }
           ],
@@ -23202,7 +23208,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/registry/local_registry"
         }
@@ -23284,7 +23290,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/registry/local_store"
         }
@@ -23342,7 +23348,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/registry/local_store/artifacts"
         }
@@ -23375,7 +23381,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/registry/nns_data_provider"
         }
@@ -23439,7 +23445,7 @@
               "target": "rand"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
@@ -23465,7 +23471,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/registry/provisional_whitelist"
         }
@@ -23511,7 +23517,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/registry/routing_table"
         }
@@ -23547,7 +23553,7 @@
               "target": "ic_protobuf"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             }
           ],
@@ -23565,7 +23571,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/registry/subnet_features"
         }
@@ -23601,7 +23607,7 @@
               "target": "ic_protobuf"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             }
           ],
@@ -23619,7 +23625,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/registry/subnet_type"
         }
@@ -23651,7 +23657,7 @@
               "target": "ic_protobuf"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
@@ -23682,7 +23688,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/registry/transport"
         }
@@ -23722,7 +23728,7 @@
               "target": "prost"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             }
           ],
@@ -23740,7 +23746,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/replicated_state"
         }
@@ -23864,7 +23870,7 @@
               "target": "lazy_static"
             },
             {
-              "id": "libc 0.2.158",
+              "id": "libc 0.2.157",
               "target": "libc"
             },
             {
@@ -23896,7 +23902,7 @@
               "target": "rayon"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
@@ -23943,7 +23949,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/sns/governance"
         }
@@ -24144,7 +24150,7 @@
               "target": "rust_decimal"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
@@ -24213,7 +24219,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/sns/governance/proposal_criticality"
         }
@@ -24255,7 +24261,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/sns/governance/proposals_amount_total_limit"
         }
@@ -24314,7 +24320,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/sns/governance/token_valuation"
         }
@@ -24413,7 +24419,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/sns/init"
         }
@@ -24509,7 +24515,7 @@
               "target": "prost"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
@@ -24531,7 +24537,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/sns/root"
         }
@@ -24620,6 +24626,10 @@
               "target": "ic_nervous_system_runtime"
             },
             {
+              "id": "ic-nns-constants 0.9.0",
+              "target": "ic_nns_constants"
+            },
+            {
               "id": "ic-sns-root 0.9.0",
               "target": "build_script_build"
             },
@@ -24636,7 +24646,7 @@
               "target": "prost"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             }
           ],
@@ -24685,7 +24695,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/sns/swap"
         }
@@ -24826,7 +24836,7 @@
               "target": "rust_decimal"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
@@ -24875,7 +24885,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/sns/swap/proto_library"
         }
@@ -24923,7 +24933,7 @@
               "target": "prost"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
@@ -24945,7 +24955,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/nns/sns-wasm"
         }
@@ -25057,16 +25067,12 @@
               "target": "ic_utils"
             },
             {
-              "id": "ic-wasm 0.7.2",
+              "id": "ic-wasm 0.8.1",
               "target": "ic_wasm"
             },
             {
               "id": "icrc-ledger-types 0.1.6",
               "target": "icrc_ledger_types"
-            },
-            {
-              "id": "libflate 1.4.0",
-              "target": "libflate"
             },
             {
               "id": "maplit 1.0.2",
@@ -25077,7 +25083,7 @@
               "target": "prost"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
@@ -25085,7 +25091,7 @@
               "target": "serde_bytes"
             },
             {
-              "id": "serde_json 1.0.125",
+              "id": "serde_json 1.0.127",
               "target": "serde_json"
             }
           ],
@@ -25151,7 +25157,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/sys"
         }
@@ -25187,7 +25193,7 @@
               "target": "lazy_static"
             },
             {
-              "id": "libc 0.2.158",
+              "id": "libc 0.2.157",
               "target": "libc"
             },
             {
@@ -25279,7 +25285,7 @@
               "target": "leb128"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
@@ -25318,7 +25324,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/types/types"
         }
@@ -25418,7 +25424,7 @@
               "target": "prost"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
@@ -25430,7 +25436,7 @@
               "target": "serde_cbor"
             },
             {
-              "id": "serde_json 1.0.125",
+              "id": "serde_json 1.0.127",
               "target": "serde_json"
             },
             {
@@ -25525,7 +25531,7 @@
               "target": "semver"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
@@ -25580,7 +25586,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/utils"
         }
@@ -25612,7 +25618,7 @@
               "target": "scoped_threadpool"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
@@ -25634,7 +25640,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/utils/thread"
         }
@@ -25667,7 +25673,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/utils/validate_eq"
         }
@@ -25709,7 +25715,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/utils/validate_eq_derive"
         }
@@ -25825,13 +25831,13 @@
       },
       "license": "Apache-2.0"
     },
-    "ic-wasm 0.7.2": {
+    "ic-wasm 0.8.1": {
       "name": "ic-wasm",
-      "version": "0.7.2",
+      "version": "0.8.1",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/ic-wasm/0.7.2/download",
-          "sha256": "a1f3f1ec63f08807d176691225de0b993e832b1fff71c631ed897df5888c7be4"
+          "url": "https://static.crates.io/crates/ic-wasm/0.8.1/download",
+          "sha256": "941376953c00628d8edae0adcad4b6e882c01cbfd5416d2ac2bc5fb709927737"
         }
       },
       "targets": [
@@ -25882,11 +25888,11 @@
               "target": "rustc_demangle"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
-              "id": "serde_json 1.0.125",
+              "id": "serde_json 1.0.127",
               "target": "serde_json"
             },
             {
@@ -25894,14 +25900,14 @@
               "target": "thiserror"
             },
             {
-              "id": "walrus 0.20.3",
+              "id": "walrus 0.21.1",
               "target": "walrus"
             }
           ],
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.7.2"
+        "version": "0.8.1"
       },
       "license": "Apache-2.0"
     },
@@ -25912,7 +25918,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/types/wasm_types"
         }
@@ -25956,7 +25962,7 @@
               "target": "ic_validate_eq"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             }
           ],
@@ -26008,7 +26014,7 @@
               "target": "candid"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             }
           ],
@@ -26233,7 +26239,7 @@
               "target": "data_encoding"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
@@ -26259,7 +26265,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/rosetta-api/icp_ledger"
         }
@@ -26355,7 +26361,7 @@
               "target": "prost"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
@@ -26394,7 +26400,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "packages/icrc-ledger-client"
         }
@@ -26426,7 +26432,7 @@
               "target": "icrc_ledger_types"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             }
           ],
@@ -26453,7 +26459,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "packages/icrc-ledger-types"
         }
@@ -26505,7 +26511,7 @@
               "target": "num_traits"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
@@ -27094,7 +27100,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.75",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -27429,7 +27435,7 @@
               "target": "hashbrown"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             }
           ],
@@ -27688,7 +27694,7 @@
           "selects": {
             "cfg(any(unix, target_os = \"wasi\"))": [
               {
-                "id": "libc 0.2.158",
+                "id": "libc 0.2.157",
                 "target": "libc"
               }
             ],
@@ -27775,7 +27781,7 @@
         "deps": {
           "common": [
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
@@ -27944,7 +27950,7 @@
           "selects": {
             "cfg(unix)": [
               {
-                "id": "libc 0.2.158",
+                "id": "libc 0.2.157",
                 "target": "libc"
               }
             ]
@@ -28026,7 +28032,7 @@
               "target": "pest"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             }
           ],
@@ -28091,11 +28097,11 @@
               "target": "pem"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
-              "id": "serde_json 1.0.125",
+              "id": "serde_json 1.0.127",
               "target": "serde_json"
             },
             {
@@ -28384,13 +28390,13 @@
       },
       "license": "Apache-2.0/MIT"
     },
-    "libc 0.2.158": {
+    "libc 0.2.157": {
       "name": "libc",
-      "version": "0.2.158",
+      "version": "0.2.157",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/libc/0.2.158/download",
-          "sha256": "d8adc4bb1803a324070e64a98ae98f38934d91957a99cfb3a43dcbc01bc56439"
+          "url": "https://static.crates.io/crates/libc/0.2.157/download",
+          "sha256": "374af5f94e54fa97cf75e945cce8a6b201e88a1a07e688b47dfd2a59c66dbd86"
         }
       },
       "targets": [
@@ -28429,14 +28435,14 @@
         "deps": {
           "common": [
             {
-              "id": "libc 0.2.158",
+              "id": "libc 0.2.157",
               "target": "build_script_build"
             }
           ],
           "selects": {}
         },
         "edition": "2015",
-        "version": "0.2.158"
+        "version": "0.2.157"
       },
       "build_script_attrs": {
         "data_glob": [
@@ -28444,53 +28450,6 @@
         ]
       },
       "license": "MIT OR Apache-2.0"
-    },
-    "libflate 1.4.0": {
-      "name": "libflate",
-      "version": "1.4.0",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/libflate/1.4.0/download",
-          "sha256": "5ff4ae71b685bbad2f2f391fe74f6b7659a34871c08b210fdc039e43bee07d18"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "libflate",
-            "crate_root": "src/lib.rs",
-            "srcs": [
-              "**/*.rs"
-            ]
-          }
-        }
-      ],
-      "library_target_name": "libflate",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "adler32 1.2.0",
-              "target": "adler32"
-            },
-            {
-              "id": "crc32fast 1.4.2",
-              "target": "crc32fast"
-            },
-            {
-              "id": "libflate_lz77 1.2.0",
-              "target": "libflate_lz77"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2018",
-        "version": "1.4.0"
-      },
-      "license": "MIT"
     },
     "libflate 2.1.0": {
       "name": "libflate",
@@ -28551,45 +28510,6 @@
         },
         "edition": "2021",
         "version": "2.1.0"
-      },
-      "license": "MIT"
-    },
-    "libflate_lz77 1.2.0": {
-      "name": "libflate_lz77",
-      "version": "1.2.0",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/libflate_lz77/1.2.0/download",
-          "sha256": "a52d3a8bfc85f250440e4424db7d857e241a3aebbbe301f3eb606ab15c39acbf"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "libflate_lz77",
-            "crate_root": "src/lib.rs",
-            "srcs": [
-              "**/*.rs"
-            ]
-          }
-        }
-      ],
-      "library_target_name": "libflate_lz77",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "rle-decode-fast 1.0.3",
-              "target": "rle_decode_fast"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2018",
-        "version": "1.2.0"
       },
       "license": "MIT"
     },
@@ -28853,7 +28773,7 @@
               "target": "bitflags"
             },
             {
-              "id": "libc 0.2.158",
+              "id": "libc 0.2.157",
               "target": "libc"
             }
           ],
@@ -29225,11 +29145,11 @@
               "target": "reqwest"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
-              "id": "serde_json 1.0.125",
+              "id": "serde_json 1.0.127",
               "target": "serde_json"
             },
             {
@@ -29283,11 +29203,11 @@
               "target": "regex"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
-              "id": "serde_json 1.0.125",
+              "id": "serde_json 1.0.127",
               "target": "serde_json"
             },
             {
@@ -29339,11 +29259,11 @@
               "target": "reqwest"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
-              "id": "serde_json 1.0.125",
+              "id": "serde_json 1.0.127",
               "target": "serde_json"
             },
             {
@@ -29461,7 +29381,7 @@
         "deps": {
           "common": [
             {
-              "id": "libc 0.2.158",
+              "id": "libc 0.2.157",
               "target": "libc"
             },
             {
@@ -29959,7 +29879,7 @@
             ],
             "cfg(target_os = \"wasi\")": [
               {
-                "id": "libc 0.2.158",
+                "id": "libc 0.2.157",
                 "target": "libc"
               },
               {
@@ -29969,7 +29889,7 @@
             ],
             "cfg(unix)": [
               {
-                "id": "libc 0.2.158",
+                "id": "libc 0.2.157",
                 "target": "libc"
               }
             ],
@@ -30103,7 +30023,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.75",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -30222,11 +30142,11 @@
               "target": "retry"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
-              "id": "serde_json 1.0.125",
+              "id": "serde_json 1.0.127",
               "target": "serde_json"
             },
             {
@@ -30263,7 +30183,7 @@
               "target": "assert_cmd"
             },
             {
-              "id": "flate2 1.0.32",
+              "id": "flate2 1.0.33",
               "target": "flate2"
             },
             {
@@ -30393,11 +30313,11 @@
               "target": "regex"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
-              "id": "serde_json 1.0.125",
+              "id": "serde_json 1.0.127",
               "target": "serde_json"
             }
           ],
@@ -30482,7 +30402,7 @@
             ],
             "cfg(target_vendor = \"apple\")": [
               {
-                "id": "libc 0.2.158",
+                "id": "libc 0.2.157",
                 "target": "libc"
               },
               {
@@ -30592,7 +30512,7 @@
               "target": "cfg_if"
             },
             {
-              "id": "libc 0.2.158",
+              "id": "libc 0.2.157",
               "target": "libc"
             }
           ],
@@ -30778,11 +30698,11 @@
               "target": "reqwest"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
-              "id": "serde_json 1.0.125",
+              "id": "serde_json 1.0.127",
               "target": "serde_json"
             },
             {
@@ -31009,7 +30929,7 @@
               "target": "num_traits"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             }
           ],
@@ -31100,7 +31020,7 @@
               "target": "rand"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
@@ -31344,7 +31264,7 @@
           "selects": {
             "cfg(not(windows))": [
               {
-                "id": "libc 0.2.158",
+                "id": "libc 0.2.157",
                 "target": "libc"
               }
             ],
@@ -31476,7 +31396,7 @@
               "target": "reqwest"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
@@ -31615,11 +31535,11 @@
               "target": "secrecy"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
-              "id": "serde_json 1.0.125",
+              "id": "serde_json 1.0.127",
               "target": "serde_json"
             },
             {
@@ -31751,7 +31671,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/rust_canisters/on_wire"
         }
@@ -31901,7 +31821,7 @@
               "target": "foreign_types"
             },
             {
-              "id": "libc 0.2.158",
+              "id": "libc 0.2.157",
               "target": "libc"
             },
             {
@@ -31991,7 +31911,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.75",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -32075,7 +31995,7 @@
         "deps": {
           "common": [
             {
-              "id": "libc 0.2.158",
+              "id": "libc 0.2.157",
               "target": "libc"
             },
             {
@@ -32836,7 +32756,7 @@
             ],
             "cfg(unix)": [
               {
-                "id": "libc 0.2.158",
+                "id": "libc 0.2.157",
                 "target": "libc"
               }
             ],
@@ -33284,7 +33204,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.75",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -33394,7 +33314,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/phantom_newtype"
         }
@@ -33422,7 +33342,7 @@
               "target": "candid"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
@@ -33512,7 +33432,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.75",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -34154,7 +34074,7 @@
               "target": "proc_macro2"
             },
             {
-              "id": "syn 2.0.75",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -34702,7 +34622,7 @@
               "target": "byteorder"
             },
             {
-              "id": "flate2 1.0.32",
+              "id": "flate2 1.0.33",
               "target": "flate2"
             },
             {
@@ -34714,7 +34634,7 @@
               "target": "lazy_static"
             },
             {
-              "id": "libc 0.2.158",
+              "id": "libc 0.2.157",
               "target": "libc"
             }
           ],
@@ -34827,7 +34747,7 @@
               "target": "lazy_static"
             },
             {
-              "id": "libc 0.2.158",
+              "id": "libc 0.2.157",
               "target": "libc"
             },
             {
@@ -34935,11 +34855,11 @@
               "target": "regex"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
-              "id": "serde_json 1.0.125",
+              "id": "serde_json 1.0.127",
               "target": "serde_json"
             },
             {
@@ -35013,7 +34933,7 @@
               "target": "reqwest"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
@@ -35188,7 +35108,7 @@
               "target": "bytes"
             },
             {
-              "id": "heck 0.4.1",
+              "id": "heck 0.5.0",
               "target": "heck"
             },
             {
@@ -35228,7 +35148,7 @@
               "target": "regex"
             },
             {
-              "id": "syn 2.0.75",
+              "id": "syn 2.0.76",
               "target": "syn"
             },
             {
@@ -35287,7 +35207,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.75",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -35599,11 +35519,11 @@
               "target": "reqwest"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
-              "id": "serde_json 1.0.125",
+              "id": "serde_json 1.0.127",
               "target": "serde_json"
             },
             {
@@ -35851,7 +35771,7 @@
         "deps": {
           "common": [
             {
-              "id": "libc 0.2.158",
+              "id": "libc 0.2.157",
               "target": "libc"
             },
             {
@@ -36032,7 +35952,7 @@
           "selects": {
             "cfg(unix)": [
               {
-                "id": "libc 0.2.158",
+                "id": "libc 0.2.157",
                 "target": "libc"
               }
             ]
@@ -36768,7 +36688,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/registry/canister"
         }
@@ -36933,7 +36853,7 @@
               "target": "build_script_build"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
@@ -37126,11 +37046,11 @@
               "target": "http"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
-              "id": "serde_json 1.0.125",
+              "id": "serde_json 1.0.127",
               "target": "serde_json"
             },
             {
@@ -37439,7 +37359,7 @@
           "selects": {
             "cfg(all(any(target_os = \"android\", target_os = \"linux\"), any(target_arch = \"aarch64\", target_arch = \"arm\")))": [
               {
-                "id": "libc 0.2.158",
+                "id": "libc 0.2.157",
                 "target": "libc"
               }
             ],
@@ -37693,7 +37613,7 @@
               "target": "reqwest"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
@@ -37845,7 +37765,7 @@
               "target": "build_script_build"
             },
             {
-              "id": "syn 2.0.75",
+              "id": "syn 2.0.76",
               "target": "syn"
             },
             {
@@ -37931,7 +37851,7 @@
               "target": "build_script_build"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             }
           ],
@@ -38259,7 +38179,7 @@
                 "alias": "libc_errno"
               },
               {
-                "id": "libc 0.2.158",
+                "id": "libc 0.2.157",
                 "target": "libc"
               }
             ],
@@ -39487,7 +39407,7 @@
               "target": "core_foundation_sys"
             },
             {
-              "id": "libc 0.2.158",
+              "id": "libc 0.2.157",
               "target": "libc"
             },
             {
@@ -39544,7 +39464,7 @@
               "target": "core_foundation_sys"
             },
             {
-              "id": "libc 0.2.158",
+              "id": "libc 0.2.157",
               "target": "libc"
             }
           ],
@@ -39686,7 +39606,7 @@
               "target": "semver"
             },
             {
-              "id": "serde_json 1.0.125",
+              "id": "serde_json 1.0.127",
               "target": "serde_json"
             },
             {
@@ -39763,7 +39683,7 @@
               "target": "build_script_build"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             }
           ],
@@ -39779,13 +39699,13 @@
       },
       "license": "MIT OR Apache-2.0"
     },
-    "serde 1.0.208": {
+    "serde 1.0.209": {
       "name": "serde",
-      "version": "1.0.208",
+      "version": "1.0.209",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/serde/1.0.208/download",
-          "sha256": "cff085d2cb684faa248efb494c39b68e522822ac0de72ccf08109abde717cfb2"
+          "url": "https://static.crates.io/crates/serde/1.0.209/download",
+          "sha256": "99fce0ffe7310761ca6bf9faf5115afbc19688edd00171d81b1bb1b116c63e09"
         }
       },
       "targets": [
@@ -39826,7 +39746,7 @@
         "deps": {
           "common": [
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "build_script_build"
             }
           ],
@@ -39836,13 +39756,13 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "serde_derive 1.0.208",
+              "id": "serde_derive 1.0.209",
               "target": "serde_derive"
             }
           ],
           "selects": {}
         },
-        "version": "1.0.208"
+        "version": "1.0.209"
       },
       "build_script_attrs": {
         "data_glob": [
@@ -39886,7 +39806,7 @@
         "deps": {
           "common": [
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             }
           ],
@@ -39936,7 +39856,7 @@
               "target": "half"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             }
           ],
@@ -39947,13 +39867,13 @@
       },
       "license": "MIT/Apache-2.0"
     },
-    "serde_derive 1.0.208": {
+    "serde_derive 1.0.209": {
       "name": "serde_derive",
-      "version": "1.0.208",
+      "version": "1.0.209",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/serde_derive/1.0.208/download",
-          "sha256": "24008e81ff7613ed8e5ba0cfaf24e2c2f1e5b8a0495711e44fcd4882fca62bcf"
+          "url": "https://static.crates.io/crates/serde_derive/1.0.209/download",
+          "sha256": "a5831b979fd7b5439637af1752d535ff49f4860c0f341d1baeb6faf0f4242170"
         }
       },
       "targets": [
@@ -39989,24 +39909,24 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.75",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
           "selects": {}
         },
         "edition": "2015",
-        "version": "1.0.208"
+        "version": "1.0.209"
       },
       "license": "MIT OR Apache-2.0"
     },
-    "serde_json 1.0.125": {
+    "serde_json 1.0.127": {
       "name": "serde_json",
-      "version": "1.0.125",
+      "version": "1.0.127",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/serde_json/1.0.125/download",
-          "sha256": "83c8e735a073ccf5be70aa8066aa984eaf2fa000db6c8d0100ae605b366d31ed"
+          "url": "https://static.crates.io/crates/serde_json/1.0.127/download",
+          "sha256": "8043c06d9f82bd7271361ed64f415fe5e12a77fdb52e573e7f06a516dea329ad"
         }
       },
       "targets": [
@@ -40058,18 +39978,18 @@
               "target": "ryu"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
-              "id": "serde_json 1.0.125",
+              "id": "serde_json 1.0.127",
               "target": "build_script_build"
             }
           ],
           "selects": {}
         },
         "edition": "2021",
-        "version": "1.0.125"
+        "version": "1.0.127"
       },
       "build_script_attrs": {
         "data_glob": [
@@ -40110,7 +40030,7 @@
               "target": "itoa"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             }
           ],
@@ -40157,7 +40077,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.75",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -40200,7 +40120,7 @@
               "target": "proc_macro2"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
@@ -40251,11 +40171,11 @@
               "target": "quote"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
-              "id": "syn 2.0.75",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -40306,7 +40226,7 @@
               "target": "ryu"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             }
           ],
@@ -40353,7 +40273,7 @@
         "deps": {
           "common": [
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             }
           ],
@@ -40464,7 +40384,7 @@
               "target": "ryu"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
@@ -40582,11 +40502,11 @@
               "target": "registry_canister"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
-              "id": "serde_json 1.0.125",
+              "id": "serde_json 1.0.127",
               "target": "serde_json"
             },
             {
@@ -40939,7 +40859,7 @@
         "deps": {
           "common": [
             {
-              "id": "libc 0.2.158",
+              "id": "libc 0.2.157",
               "target": "libc"
             }
           ],
@@ -41269,11 +41189,11 @@
               "target": "retry"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
-              "id": "serde_json 1.0.125",
+              "id": "serde_json 1.0.127",
               "target": "serde_json"
             },
             {
@@ -41477,11 +41397,11 @@
               "target": "erased_serde"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
-              "id": "serde_json 1.0.125",
+              "id": "serde_json 1.0.127",
               "target": "serde_json"
             },
             {
@@ -41791,7 +41711,7 @@
         "deps": {
           "common": [
             {
-              "id": "heck 0.4.1",
+              "id": "heck 0.5.0",
               "target": "heck"
             },
             {
@@ -41803,7 +41723,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.75",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -41855,7 +41775,7 @@
               "target": "reqwest"
             },
             {
-              "id": "serde_json 1.0.125",
+              "id": "serde_json 1.0.127",
               "target": "serde_json"
             },
             {
@@ -41922,7 +41842,7 @@
           "selects": {
             "cfg(unix)": [
               {
-                "id": "libc 0.2.158",
+                "id": "libc 0.2.157",
                 "target": "libc"
               }
             ],
@@ -41974,7 +41894,7 @@
           "selects": {
             "cfg(unix)": [
               {
-                "id": "libc 0.2.158",
+                "id": "libc 0.2.157",
                 "target": "libc"
               }
             ],
@@ -42199,7 +42119,7 @@
               "target": "cfg_if"
             },
             {
-              "id": "libc 0.2.158",
+              "id": "libc 0.2.157",
               "target": "libc"
             },
             {
@@ -42495,7 +42415,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.75",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -42665,13 +42585,13 @@
       },
       "license": "MIT OR Apache-2.0"
     },
-    "syn 2.0.75": {
+    "syn 2.0.76": {
       "name": "syn",
-      "version": "2.0.75",
+      "version": "2.0.76",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/syn/2.0.75/download",
-          "sha256": "f6af063034fc1935ede7be0122941bafa9bacb949334d090b77ca98b5817c7d9"
+          "url": "https://static.crates.io/crates/syn/2.0.76/download",
+          "sha256": "578e081a14e0cefc3279b0472138c513f37b41a08d5a3cca9b6e4e8ceb6cd525"
         }
       },
       "targets": [
@@ -42724,7 +42644,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "2.0.75"
+        "version": "2.0.76"
       },
       "license": "MIT OR Apache-2.0"
     },
@@ -42768,7 +42688,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.75",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -42882,7 +42802,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.75",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -43154,7 +43074,7 @@
           "selects": {
             "cfg(unix)": [
               {
-                "id": "libc 0.2.158",
+                "id": "libc 0.2.157",
                 "target": "libc"
               },
               {
@@ -43506,7 +43426,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.75",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -43645,7 +43565,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.75",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -43785,7 +43705,7 @@
               "target": "powerfmt"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
@@ -44116,7 +44036,7 @@
             ],
             "cfg(unix)": [
               {
-                "id": "libc 0.2.158",
+                "id": "libc 0.2.157",
                 "target": "libc"
               },
               {
@@ -44225,7 +44145,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.75",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -44871,7 +44791,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.75",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -45263,7 +45183,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.75",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -45486,7 +45406,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "29b0ffdf82661103e9108309e070592f1575f0e5"
+            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
           },
           "strip_prefix": "rs/tree_deserializer"
         }
@@ -45518,7 +45438,7 @@
               "target": "leb128"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             }
           ],
@@ -45653,11 +45573,11 @@
               "target": "ic_stable_structures"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
-              "id": "serde_json 1.0.125",
+              "id": "serde_json 1.0.127",
               "target": "serde_json"
             }
           ],
@@ -46220,7 +46140,7 @@
               "target": "base64"
             },
             {
-              "id": "flate2 1.0.32",
+              "id": "flate2 1.0.33",
               "target": "flate2"
             },
             {
@@ -46306,7 +46226,7 @@
               "target": "percent_encoding"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             }
           ],
@@ -46545,7 +46465,7 @@
               "target": "getrandom"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             }
           ],
@@ -46699,7 +46619,7 @@
           "selects": {
             "cfg(unix)": [
               {
-                "id": "libc 0.2.158",
+                "id": "libc 0.2.157",
                 "target": "libc"
               }
             ]
@@ -46756,13 +46676,13 @@
       },
       "license": "Unlicense/MIT"
     },
-    "walrus 0.20.3": {
+    "walrus 0.21.1": {
       "name": "walrus",
-      "version": "0.20.3",
+      "version": "0.21.1",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/walrus/0.20.3/download",
-          "sha256": "2c03529cd0c4400a2449f640d2f27cd1b48c3065226d15e26d98e4429ab0adb7"
+          "url": "https://static.crates.io/crates/walrus/0.21.1/download",
+          "sha256": "467611cafbc8a84834b77d2b4bb191fd2f5769752def8340407e924390c6883b"
         }
       },
       "targets": [
@@ -46804,11 +46724,11 @@
               "target": "log"
             },
             {
-              "id": "wasm-encoder 0.29.0",
+              "id": "wasm-encoder 0.212.0",
               "target": "wasm_encoder"
             },
             {
-              "id": "wasmparser 0.80.2",
+              "id": "wasmparser 0.212.0",
               "target": "wasmparser"
             }
           ],
@@ -46824,7 +46744,7 @@
           ],
           "selects": {}
         },
-        "version": "0.20.3"
+        "version": "0.21.1"
       },
       "license": "MIT/Apache-2.0"
     },
@@ -47083,7 +47003,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.75",
+              "id": "syn 2.0.76",
               "target": "syn"
             },
             {
@@ -47243,7 +47163,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.75",
+              "id": "syn 2.0.76",
               "target": "syn"
             },
             {
@@ -47316,13 +47236,13 @@
       },
       "license": "MIT OR Apache-2.0"
     },
-    "wasm-encoder 0.29.0": {
+    "wasm-encoder 0.212.0": {
       "name": "wasm-encoder",
-      "version": "0.29.0",
+      "version": "0.212.0",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/wasm-encoder/0.29.0/download",
-          "sha256": "18c41dbd92eaebf3612a39be316540b8377c871cb9bde6b064af962984912881"
+          "url": "https://static.crates.io/crates/wasm-encoder/0.212.0/download",
+          "sha256": "501940df4418b8929eb6d52f1aade1fdd15a5b86c92453cb696e3c906bd3fc33"
         }
       },
       "targets": [
@@ -47351,7 +47271,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.29.0"
+        "version": "0.212.0"
       },
       "license": "Apache-2.0 WITH LLVM-exception"
     },
@@ -47410,13 +47330,13 @@
       },
       "license": "MIT OR Apache-2.0"
     },
-    "wasmparser 0.80.2": {
+    "wasmparser 0.212.0": {
       "name": "wasmparser",
-      "version": "0.80.2",
+      "version": "0.212.0",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/wasmparser/0.80.2/download",
-          "sha256": "449167e2832691a1bff24cde28d2804e90e09586a448c8e76984792c44334a6b"
+          "url": "https://static.crates.io/crates/wasmparser/0.212.0/download",
+          "sha256": "8d28bc49ba1e5c5b61ffa7a2eace10820443c4b7d1c0b144109261d14570fdf8"
         }
       },
       "targets": [
@@ -47435,8 +47355,46 @@
         "compile_data_glob": [
           "**"
         ],
-        "edition": "2018",
-        "version": "0.80.2"
+        "crate_features": {
+          "common": [
+            "default",
+            "serde",
+            "std",
+            "validate"
+          ],
+          "selects": {}
+        },
+        "deps": {
+          "common": [
+            {
+              "id": "ahash 0.8.11",
+              "target": "ahash"
+            },
+            {
+              "id": "bitflags 2.6.0",
+              "target": "bitflags"
+            },
+            {
+              "id": "hashbrown 0.14.5",
+              "target": "hashbrown"
+            },
+            {
+              "id": "indexmap 2.4.0",
+              "target": "indexmap"
+            },
+            {
+              "id": "semver 1.0.23",
+              "target": "semver"
+            },
+            {
+              "id": "serde 1.0.209",
+              "target": "serde"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "0.212.0"
       },
       "license": "Apache-2.0 WITH LLVM-exception"
     },
@@ -49288,11 +49246,11 @@
               "target": "regex"
             },
             {
-              "id": "serde 1.0.208",
+              "id": "serde 1.0.209",
               "target": "serde"
             },
             {
-              "id": "serde_json 1.0.125",
+              "id": "serde_json 1.0.127",
               "target": "serde_json"
             },
             {
@@ -49574,7 +49532,7 @@
           "selects": {
             "cfg(any(target_os = \"freebsd\", target_os = \"netbsd\"))": [
               {
-                "id": "libc 0.2.158",
+                "id": "libc 0.2.157",
                 "target": "libc"
               }
             ],
@@ -49757,7 +49715,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.75",
+              "id": "syn 2.0.76",
               "target": "syn"
             },
             {
@@ -49866,7 +49824,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.75",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -49959,7 +49917,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.75",
+              "id": "syn 2.0.76",
               "target": "syn"
             },
             {
@@ -50057,7 +50015,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.75",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -50163,7 +50121,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.75",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -50258,7 +50216,7 @@
               "target": "deflate64"
             },
             {
-              "id": "flate2 1.0.32",
+              "id": "flate2 1.0.33",
               "target": "flate2"
             },
             {

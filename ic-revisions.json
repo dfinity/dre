@@ -1,6 +1,6 @@
 {
     "https://github.com/dfinity/ic.git": {
-        "commit": "29b0ffdf82661103e9108309e070592f1575f0e5",
+        "commit": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5",
         "ref": "refs/heads/master"
     },
     "https://github.com/dfinity/cdk-rs.git": {
