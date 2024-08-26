@@ -1,11 +1,9 @@
 use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
-use std::collections::HashMap;
 use std::rc::Rc;
 use std::sync::Arc;
 
-use decentralization::nakamoto::NakamotoScore;
 use decentralization::network::AvailableNodesQuerier;
 use decentralization::network::DecentralizedSubnet;
 use decentralization::network::NetworkHealRequest;
@@ -13,6 +11,7 @@ use decentralization::network::SubnetChange;
 use decentralization::network::SubnetQuerier;
 use decentralization::network::SubnetQueryBy;
 use decentralization::network::TopologyManager;
+use decentralization::network::{generate_added_node_description, generate_removed_nodes_description};
 use decentralization::subnets::NodesRemover;
 use decentralization::SubnetChangeResponse;
 use futures::TryFutureExt;
@@ -516,48 +515,6 @@ impl Runner {
         Ok(())
     }
 
-    fn recalc_remove_node_with_desc(
-        &self,
-        subnet: &DecentralizedSubnet,
-        healths: &BTreeMap<PrincipalId, HealthStatus>,
-        remove_nodes: &[decentralization::network::Node],
-    ) -> Vec<(decentralization::network::Node, String)> {
-        let mut subnet_nodes: HashMap<PrincipalId, decentralization::network::Node> =
-            HashMap::from_iter(subnet.nodes.iter().map(|n| (n.id, n.clone())));
-        let mut result = Vec::new();
-        for node in remove_nodes {
-            let node_health = healths.get(&node.id).unwrap_or(&HealthStatus::Unknown).to_string().to_lowercase();
-            let nakamoto_before = NakamotoScore::new_from_nodes(subnet_nodes.values());
-            subnet_nodes.remove(&node.id);
-            let nakamoto_after = NakamotoScore::new_from_nodes(subnet_nodes.values());
-            let nakamoto_diff = nakamoto_after.describe_difference_from(&nakamoto_before).1;
-
-            result.push((node.clone(), format!("health: {}, nakamoto impact: {}", node_health, nakamoto_diff)));
-        }
-        result
-    }
-
-    fn recalc_add_node_with_desc(
-        &self,
-        subnet: &DecentralizedSubnet,
-        healths: &BTreeMap<PrincipalId, HealthStatus>,
-        add_nodes: &[decentralization::network::Node],
-    ) -> Vec<(decentralization::network::Node, String)> {
-        let mut subnet_nodes: HashMap<PrincipalId, decentralization::network::Node> =
-            HashMap::from_iter(subnet.nodes.iter().map(|n| (n.id, n.clone())));
-        let mut result = Vec::new();
-        for node in add_nodes {
-            let node_health = healths.get(&node.id).unwrap_or(&HealthStatus::Unknown).to_string().to_lowercase();
-            let nakamoto_before = NakamotoScore::new_from_nodes(subnet_nodes.values());
-            subnet_nodes.insert(node.id, node.clone());
-            let nakamoto_after = NakamotoScore::new_from_nodes(subnet_nodes.values());
-            let nakamoto_diff = nakamoto_after.describe_difference_from(&nakamoto_before).1;
-
-            result.push((node.clone(), format!("health: {}, nakamoto impact: {}", node_health, nakamoto_diff)));
-        }
-        result
-    }
-
     pub async fn decentralization_change(
         &self,
         change: &ChangeSubnetMembershipPayload,
@@ -579,14 +536,14 @@ impl Runner {
 
         // Simulate node removal
         let removed_nodes = self.registry.get_decentralized_nodes(&change.get_removed_node_ids()).await?;
-        let removed_nodes_with_desc = self.recalc_remove_node_with_desc(&subnet_before, &health_of_nodes, &removed_nodes);
+        let removed_nodes_with_desc = generate_removed_nodes_description(&subnet_before.nodes, &removed_nodes);
         let subnet_mid = subnet_before
             .without_nodes(removed_nodes_with_desc.clone())
             .map_err(|e| anyhow::anyhow!(e))?;
 
         // Now simulate node addition
         let added_nodes = self.registry.get_decentralized_nodes(&change.get_added_node_ids()).await?;
-        let added_nodes_with_desc = self.recalc_add_node_with_desc(&subnet_mid, &health_of_nodes, &added_nodes);
+        let added_nodes_with_desc = generate_added_node_description(&subnet_mid.nodes, &added_nodes);
 
         let subnet_after = subnet_mid.with_nodes(added_nodes_with_desc.clone());
 

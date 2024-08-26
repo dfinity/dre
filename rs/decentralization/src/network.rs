@@ -3,7 +3,7 @@ use crate::subnets::unhealthy_with_nodes;
 use crate::SubnetChangeResponse;
 use actix_web::http::StatusCode;
 use actix_web::{HttpResponse, ResponseError};
-use ahash::{AHashSet, HashSet};
+use ahash::{AHashMap, AHashSet, HashSet};
 use anyhow::anyhow;
 use ic_base_types::PrincipalId;
 use ic_management_types::{HealthStatus, MinNakamotoCoefficients, NetworkError, NodeFeature};
@@ -1235,20 +1235,18 @@ impl NetworkHealRequest {
                 ..Default::default()
             };
 
-            // Try to replace 0 to optimize_limit nodes to optimize the network,
-            // and choose the change with the highest Nakamoto coefficient
-            let unhealthy_nodes_with_desc = &unhealthy_nodes
-                .iter()
-                .map(|node| {
-                    (
-                        node.clone(),
-                        health_of_nodes
-                            .get(&node.id)
-                            .map(|s| format!("health: {}", s.to_string().to_lowercase()))
-                            .unwrap_or("health: Unknown".to_string()),
-                    )
-                })
-                .collect::<Vec<_>>();
+            let unhealthy_nodes_with_desc = &generate_removed_nodes_description(&subnet.decentralized_subnet.nodes, &unhealthy_nodes);
+            info!(
+                "Subnet {}: unhealthy nodes: {:?}",
+                subnet.decentralized_subnet.id,
+                unhealthy_nodes_with_desc
+                    .iter()
+                    .map(|(node, desc)| format!("{} --> {}", node.id, desc))
+                    .collect_vec()
+            );
+
+            // Try to replace from 0 to optimize_limit nodes to optimize the network,
+            // and choose the replacement of the fewest nodes that gives the most decentralization benefit.
             let changes = (0..=optimize_limit)
                 .filter_map(|num_nodes_to_optimize| {
                     change_req
@@ -1349,4 +1347,32 @@ https://github.com/dfinity/dre/blob/79066127f58c852eaf4adda11610e815a426878c/rs/
 
         Ok(subnets_changed)
     }
+}
+
+pub fn generate_removed_nodes_description(subnet_nodes: &[Node], remove_nodes: &[Node]) -> Vec<(Node, String)> {
+    let mut subnet_nodes: AHashMap<PrincipalId, Node> = AHashMap::from_iter(subnet_nodes.iter().map(|n| (n.id, n.clone())));
+    let mut result = Vec::new();
+    for node in remove_nodes {
+        let nakamoto_before = NakamotoScore::new_from_nodes(subnet_nodes.values());
+        subnet_nodes.remove(&node.id);
+        let nakamoto_after = NakamotoScore::new_from_nodes(subnet_nodes.values());
+        let nakamoto_diff = nakamoto_after.describe_difference_from(&nakamoto_before).1;
+
+        result.push((node.clone(), nakamoto_diff));
+    }
+    result
+}
+
+pub fn generate_added_node_description(subnet_nodes: &[Node], add_nodes: &[Node]) -> Vec<(Node, String)> {
+    let mut subnet_nodes: AHashMap<PrincipalId, Node> = AHashMap::from_iter(subnet_nodes.iter().map(|n| (n.id, n.clone())));
+    let mut result = Vec::new();
+    for node in add_nodes {
+        let nakamoto_before = NakamotoScore::new_from_nodes(subnet_nodes.values());
+        subnet_nodes.insert(node.id, node.clone());
+        let nakamoto_after = NakamotoScore::new_from_nodes(subnet_nodes.values());
+        let nakamoto_diff = nakamoto_after.describe_difference_from(&nakamoto_before).1;
+
+        result.push((node.clone(), nakamoto_diff));
+    }
+    result
 }

@@ -353,7 +353,7 @@ impl NakamotoScore {
             return (
                 cmp,
                 format!(
-                    "the average log2 of Nakamoto Coefficients across all features changes from {:.2} to {:.2}",
+                    "the average log2 of Nakamoto Coefficients across all features changes from {:.4} to {:.4}",
                     other.score_avg_log2().unwrap_or(0.0),
                     self.score_avg_log2().unwrap_or(0.0)
                 ),
@@ -446,7 +446,7 @@ impl NakamotoScore {
             Some(cmp) => (
                 Some(cmp),
                 format!(
-                    "the linear average of Nakamoto coefficients across all features changes from {:.2} to {:.2}",
+                    "the linear average of Nakamoto coefficients across all features changes from {:.4} to {:.4}",
                     other.score_avg_linear(),
                     self.score_avg_linear()
                 ),
