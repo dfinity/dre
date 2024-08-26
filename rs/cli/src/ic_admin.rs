@@ -42,7 +42,7 @@ impl UpdateVersion {
         [
             [
                 vec![
-                    format!("--{}-version-to-elect", self.release_artifact),
+                    "--replica-version-to-elect".to_string(),
                     self.version.to_string(),
                     "--release-package-sha256-hex".to_string(),
                     self.stringified_hash.to_string(),
@@ -52,7 +52,7 @@ impl UpdateVersion {
             ]
             .concat(),
             match self.versions_to_retire.clone() {
-                Some(versions) => [vec![format!("--{}-versions-to-unelect", &self.release_artifact)], versions].concat(),
+                Some(versions) => [vec!["--replica-versions-to-unelect".to_string()], versions].concat(),
                 None => vec![],
             },
         ]
@@ -112,7 +112,14 @@ impl IcAdminWrapper {
         );
     }
 
-    async fn _exec(&self, cmd: ProposeCommand, opts: ProposeOptions, as_simulation: bool, print_out_command: bool) -> anyhow::Result<String> {
+    async fn _exec(
+        &self,
+        cmd: ProposeCommand,
+        opts: ProposeOptions,
+        as_simulation: bool,
+        print_out_command: bool,
+        print_ic_admin_out: bool,
+    ) -> anyhow::Result<String> {
         if let Some(summary) = opts.clone().summary {
             let summary_count = summary.chars().count();
             if summary_count > MAX_SUMMARY_CHAR_COUNT {
@@ -124,32 +131,39 @@ impl IcAdminWrapper {
             }
         }
 
-        self.run(
-            &cmd.get_command_name(),
-            [
-                // Make sure there is no more than one `--dry-run` argument, or else ic-admin will complain.
-                if as_simulation && !cmd.args().contains(&String::from("--dry-run")) {
-                    vec!["--dry-run".to_string()]
-                } else {
-                    Default::default()
-                },
-                opts.title.map(|t| vec!["--proposal-title".to_string(), t]).unwrap_or_default(),
-                opts.summary
-                    .map(|s| {
-                        vec![
-                            "--summary".to_string(),
-                            format!("{}{}", s, opts.motivation.map(|m| format!("\n\nMotivation: {m}")).unwrap_or_default(),),
-                        ]
-                    })
-                    .unwrap_or_default(),
-                cmd.args(),
-                self.neuron.proposer_as_arg_vec(),
-            ]
-            .concat()
-            .as_slice(),
-            print_out_command,
-        )
-        .await
+        let cmd_out = self
+            .run(
+                &cmd.get_command_name(),
+                [
+                    // Make sure there is no more than one `--dry-run` argument, or else ic-admin will complain.
+                    if as_simulation && !cmd.args().contains(&String::from("--dry-run")) {
+                        vec!["--dry-run".to_string()]
+                    } else {
+                        Default::default()
+                    },
+                    opts.title.map(|t| vec!["--proposal-title".to_string(), t]).unwrap_or_default(),
+                    opts.summary
+                        .map(|s| {
+                            vec![
+                                "--summary".to_string(),
+                                format!("{}{}", s, opts.motivation.map(|m| format!("\n\nMotivation: {m}")).unwrap_or_default(),),
+                            ]
+                        })
+                        .unwrap_or_default(),
+                    cmd.args(),
+                    self.neuron.proposer_as_arg_vec(),
+                ]
+                .concat()
+                .as_slice(),
+                print_out_command,
+            )
+            .await?;
+
+        if print_ic_admin_out {
+            println!("{}", cmd_out)
+        }
+
+        Ok(cmd_out)
     }
 
     pub async fn propose_run(&self, cmd: ProposeCommand, opts: ProposeOptions) -> anyhow::Result<String> {
@@ -159,18 +173,18 @@ impl IcAdminWrapper {
     async fn propose_run_inner(&self, cmd: ProposeCommand, opts: ProposeOptions, dry_run: bool) -> anyhow::Result<String> {
         // Dry run, or --help executions run immediately and do not proceed.
         if dry_run || cmd.args().contains(&String::from("--help")) || cmd.args().contains(&String::from("--dry-run")) {
-            return self._exec(cmd, opts, true, false).await;
+            return self._exec(cmd, opts, true, false, false).await;
         }
 
         // If --yes was specified, don't ask the user if they want to proceed
         if !self.proceed_without_confirmation {
-            self._exec(cmd.clone(), opts.clone(), true, false).await?;
+            self._exec(cmd.clone(), opts.clone(), true, false, true).await?;
         }
 
         if self.proceed_without_confirmation || Confirm::new().with_prompt("Do you want to continue?").default(false).interact()? {
             // User confirmed the desire to submit the proposal and no obvious problems were
             // found. Proceeding!
-            self._exec(cmd, opts, false, true).await
+            self._exec(cmd, opts, false, true, true).await
         } else {
             Err(anyhow::anyhow!("Action aborted"))
         }
