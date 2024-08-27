@@ -17,14 +17,14 @@ import { ExpandLess, ExpandMore } from '@mui/icons-material';
 
 interface DrawerProps {
   subnets: Set<string>;
-  nodeProviders: Set<string>;
+  providers: Set<string>;
   drawerWidth: number;
   temporary: boolean;
   drawerOpen: boolean;
   onClosed: () => void;
 }
 
-const Drawer: React.FC<DrawerProps> = ({ subnets, nodeProviders, drawerWidth, temporary, drawerOpen, onClosed }) => {
+const Drawer: React.FC<DrawerProps> = ({ subnets, providers, drawerWidth, temporary, drawerOpen, onClosed }) => {
   const [isSubnetsOpen, setIsSubnetsOpen] = React.useState(false);
   const [isNodeProvidersOpen, setIsNodeProvidersOpen] = React.useState(false);
   
@@ -85,7 +85,7 @@ const Drawer: React.FC<DrawerProps> = ({ subnets, nodeProviders, drawerWidth, te
             </ListItemButton>
           </Link>
           {renderCollapsibleList("Subnets", subnets, isSubnetsOpen, setIsSubnetsOpen, "subnets")}
-          {renderCollapsibleList("Node Providers", nodeProviders, isNodeProvidersOpen, setIsNodeProvidersOpen, "node-providers")}
+          {renderCollapsibleList("Node Providers", providers, isNodeProvidersOpen, setIsNodeProvidersOpen, "providers")}
         </List>
       </MUIDrawer>
   );
