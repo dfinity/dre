@@ -696,8 +696,11 @@ mod tests {
         assert_eq!(
             subnet_initial.check_business_rules().unwrap(),
             (
-                1000,
-                vec!["NodeFeature 'country' controls 9 of nodes, which is > 8 (2/3 of all) nodes".to_string()]
+                1070,
+                vec![
+                    "Country 'US' controls 9 of nodes, which is higher than target of 2 for the subnet. Applying penalty of 70.".to_string(),
+                    "NodeFeature 'country' controls 9 of nodes, which is > 8 (2/3 of all) nodes".to_string()
+                ]
             )
         );
         let nodes_available = new_test_nodes_with_overrides("spare", 13, 3, 0, (&NodeFeature::Country, &["US", "RO", "JP"]));
@@ -753,7 +756,13 @@ mod tests {
         );
         assert_eq!(
             subnet_initial.check_business_rules().unwrap(),
-            (10000, vec!["A single Node Provider can halt the subnet".to_string()])
+            (
+                10020,
+                vec![
+                    "node_provider 'NP2' controls 3 of nodes, which is higher than target of 1 for the subnet. Applying penalty of 20.".to_string(),
+                    "A single Node Provider can halt the subnet".to_string()
+                ]
+            )
         );
         let nodes_available = new_test_nodes_with_overrides("spare", 7, 2, 0, (&NodeFeature::NodeProvider, &["NP6", "NP7"]));
         let health_of_nodes = nodes_available.iter().map(|n| (n.id, HealthStatus::Healthy)).collect::<BTreeMap<_, _>>();
@@ -800,7 +809,13 @@ mod tests {
             1,
             (&NodeFeature::NodeProvider, &["NP1", "NP2", "NP2", "NP3", "NP4", "NP4", "NP5"]),
         );
-        assert_eq!(subnet_initial.check_business_rules().unwrap(), (0, vec![]));
+        assert_eq!(
+            subnet_initial.check_business_rules().unwrap(),
+            (
+                10,
+                vec!["node_provider 'NP4' controls 2 of nodes, which is higher than target of 1 for the subnet. Applying penalty of 10.".to_string()]
+            )
+        );
 
         // There are 2 spare nodes, but both are DFINITY
         let nodes_available = new_test_nodes_with_overrides("spare", 7, 2, 2, (&NodeFeature::NodeProvider, &["NP6", "NP7"]));
