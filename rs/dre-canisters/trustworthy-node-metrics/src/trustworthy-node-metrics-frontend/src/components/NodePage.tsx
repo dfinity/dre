@@ -44,16 +44,14 @@ export const NodePage: React.FC<NodePageProps> = ({ nodeRewards, periodFilter })
     const rewardsPercent = Math.round(nodeMetrics.rewards_percent * 100);
     const rewardsReduction = 100 - rewardsPercent;
 
-    let index = 0;
-    const rows: GridRowsProp = nodeMetrics.daily_node_metrics.map((data) => {
-        index = index + 1;
+    const rows: GridRowsProp = nodeMetrics.daily_node_metrics.map((data, index) => {
         return { 
-            id: index,
+            id: index + 1,
             col1: new Date(Number(data.ts) / 1000000), 
-            col2: data.num_blocks_proposed, 
-            col3: data.num_blocks_failed,
+            col2: Number(data.num_blocks_proposed), 
+            col3: Number(data.num_blocks_failed),
             col4: data.failure_rate,
-            col5: data.subnet_assigned,
+            col5: data.subnet_assigned.toText(),
             };
     });
       
