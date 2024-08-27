@@ -8,11 +8,11 @@ use crate::commands::{ExecutableCommand, IcAdminRequirement};
 #[clap(visible_aliases = &["analyze", "analyze-decentralization", "decentralization", "whatif", "what-if"])]
 pub struct WhatifDecentralization {
     /// Set of nodes to add to the subnet in the analysis
-    #[clap(long)]
+    #[clap(long, num_args(1..))]
     pub add_nodes: Vec<PrincipalId>,
 
     /// Set of nodes to remove from the subnet in the analysis
-    #[clap(long)]
+    #[clap(long, num_args(1..))]
     pub remove_nodes: Vec<PrincipalId>,
 
     subnet_id: PrincipalId,
