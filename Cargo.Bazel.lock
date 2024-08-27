@@ -1,5 +1,5 @@
 {
-  "checksum": "44ef1b9c537f19666442f8f5335890b78b47e96bf61e42351709b1a0982ff3ce",
+  "checksum": "8f8316053a9bbdfb2e006bb7300906283da5cbb9888e2eaaab85777bd8924e11",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -5270,9 +5270,9 @@
       },
       "license": "Apache-2.0"
     },
-    "canister-log-fetcher 0.5.1": {
+    "canister-log-fetcher 0.5.2": {
       "name": "canister-log-fetcher",
-      "version": "0.5.1",
+      "version": "0.5.2",
       "repository": null,
       "targets": [],
       "library_target_name": null,
@@ -5303,7 +5303,7 @@
               "target": "pretty_env_logger"
             },
             {
-              "id": "reqwest 0.12.5",
+              "id": "reqwest 0.12.7",
               "target": "reqwest"
             },
             {
@@ -5326,7 +5326,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.5.1"
+        "version": "0.5.2"
       },
       "license": null
     },
@@ -6670,9 +6670,9 @@
       },
       "license": "Apache-2.0 OR MIT"
     },
-    "config-writer-common 0.5.1": {
+    "config-writer-common 0.5.2": {
       "name": "config-writer-common",
-      "version": "0.5.1",
+      "version": "0.5.2",
       "repository": null,
       "targets": [
         {
@@ -6732,7 +6732,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.5.1"
+        "version": "0.5.2"
       },
       "license": null
     },
@@ -9047,9 +9047,9 @@
       },
       "license": "MIT OR Apache-2.0"
     },
-    "decentralization 0.5.1": {
+    "decentralization 0.5.2": {
       "name": "decentralization",
-      "version": "0.5.1",
+      "version": "0.5.2",
       "repository": null,
       "targets": [
         {
@@ -9143,7 +9143,7 @@
           ],
           "selects": {}
         },
-        "version": "0.5.1"
+        "version": "0.5.2"
       },
       "license": null
     },
@@ -10592,9 +10592,9 @@
       },
       "license": "MIT"
     },
-    "dre 0.5.1": {
+    "dre 0.5.2": {
       "name": "dre",
-      "version": "0.5.1",
+      "version": "0.5.2",
       "repository": null,
       "targets": [
         {
@@ -10680,7 +10680,7 @@
               "target": "dotenv"
             },
             {
-              "id": "dre 0.5.1",
+              "id": "dre 0.5.2",
               "target": "build_script_build"
             },
             {
@@ -10808,7 +10808,7 @@
               "target": "registry_canister"
             },
             {
-              "id": "reqwest 0.12.5",
+              "id": "reqwest 0.12.7",
               "target": "reqwest"
             },
             {
@@ -10881,7 +10881,7 @@
           ],
           "selects": {}
         },
-        "version": "0.5.1"
+        "version": "0.5.2"
       },
       "build_script_attrs": {
         "data_glob": [
@@ -16205,7 +16205,7 @@
               "target": "rangemap"
             },
             {
-              "id": "reqwest 0.12.5",
+              "id": "reqwest 0.12.7",
               "target": "reqwest"
             },
             {
@@ -16817,9 +16817,9 @@
       },
       "license": null
     },
-    "ic-canisters 0.5.1": {
+    "ic-canisters 0.5.2": {
       "name": "ic-canisters",
-      "version": "0.5.1",
+      "version": "0.5.2",
       "repository": null,
       "targets": [
         {
@@ -16924,7 +16924,7 @@
               "target": "prost"
             },
             {
-              "id": "reqwest 0.12.5",
+              "id": "reqwest 0.12.7",
               "target": "reqwest"
             },
             {
@@ -16951,7 +16951,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.5.1"
+        "version": "0.5.2"
       },
       "license": null
     },
@@ -20577,9 +20577,9 @@
       },
       "license": null
     },
-    "ic-management-backend 0.5.1": {
+    "ic-management-backend 0.5.2": {
       "name": "ic-management-backend",
-      "version": "0.5.1",
+      "version": "0.5.2",
       "repository": null,
       "targets": [
         {
@@ -20744,7 +20744,7 @@
               "target": "registry_canister"
             },
             {
-              "id": "reqwest 0.12.5",
+              "id": "reqwest 0.12.7",
               "target": "reqwest"
             },
             {
@@ -20793,7 +20793,7 @@
           ],
           "selects": {}
         },
-        "version": "0.5.1"
+        "version": "0.5.2"
       },
       "license": null
     },
@@ -20892,9 +20892,9 @@
       },
       "license": null
     },
-    "ic-management-types 0.5.1": {
+    "ic-management-types 0.5.2": {
       "name": "ic-management-types",
-      "version": "0.5.1",
+      "version": "0.5.2",
       "repository": null,
       "targets": [
         {
@@ -20955,7 +20955,7 @@
               "target": "registry_canister"
             },
             {
-              "id": "reqwest 0.12.5",
+              "id": "reqwest 0.12.7",
               "target": "reqwest"
             },
             {
@@ -21000,7 +21000,7 @@
           ],
           "selects": {}
         },
-        "version": "0.5.1"
+        "version": "0.5.2"
       },
       "license": null
     },
@@ -29112,9 +29112,9 @@
       },
       "license": "MIT OR Apache-2.0"
     },
-    "log-fetcher 0.5.1": {
+    "log-fetcher 0.5.2": {
       "name": "log-fetcher",
-      "version": "0.5.1",
+      "version": "0.5.2",
       "repository": null,
       "targets": [],
       "library_target_name": null,
@@ -29141,7 +29141,7 @@
               "target": "pretty_env_logger"
             },
             {
-              "id": "reqwest 0.12.5",
+              "id": "reqwest 0.12.7",
               "target": "reqwest"
             },
             {
@@ -29164,13 +29164,13 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.5.1"
+        "version": "0.5.2"
       },
       "license": null
     },
-    "log-noise-filter-backend 0.5.1": {
+    "log-noise-filter-backend 0.5.2": {
       "name": "log-noise-filter-backend",
-      "version": "0.5.1",
+      "version": "0.5.2",
       "repository": null,
       "targets": [
         {
@@ -29230,13 +29230,13 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.5.1"
+        "version": "0.5.2"
       },
       "license": null
     },
-    "log-noise-filter-downloader 0.5.1": {
+    "log-noise-filter-downloader 0.5.2": {
       "name": "log-noise-filter-downloader",
-      "version": "0.5.1",
+      "version": "0.5.2",
       "repository": null,
       "targets": [],
       "library_target_name": null,
@@ -29255,7 +29255,7 @@
               "target": "clap"
             },
             {
-              "id": "reqwest 0.12.5",
+              "id": "reqwest 0.12.7",
               "target": "reqwest"
             },
             {
@@ -29290,7 +29290,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.5.1"
+        "version": "0.5.2"
       },
       "license": null
     },
@@ -30069,9 +30069,9 @@
       },
       "license": "MIT OR Apache-2.0"
     },
-    "multiservice-discovery 0.5.1": {
+    "multiservice-discovery 0.5.2": {
       "name": "multiservice-discovery",
-      "version": "0.5.1",
+      "version": "0.5.2",
       "repository": null,
       "targets": [],
       "library_target_name": null,
@@ -30187,7 +30187,7 @@
               "target": "flate2"
             },
             {
-              "id": "reqwest 0.12.5",
+              "id": "reqwest 0.12.7",
               "target": "reqwest"
             },
             {
@@ -30198,13 +30198,13 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.5.1"
+        "version": "0.5.2"
       },
       "license": null
     },
-    "multiservice-discovery-downloader 0.5.1": {
+    "multiservice-discovery-downloader 0.5.2": {
       "name": "multiservice-discovery-downloader",
-      "version": "0.5.1",
+      "version": "0.5.2",
       "repository": null,
       "targets": [],
       "library_target_name": null,
@@ -30243,7 +30243,7 @@
               "target": "regex"
             },
             {
-              "id": "reqwest 0.12.5",
+              "id": "reqwest 0.12.7",
               "target": "reqwest"
             },
             {
@@ -30270,13 +30270,13 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.5.1"
+        "version": "0.5.2"
       },
       "license": null
     },
-    "multiservice-discovery-shared 0.5.1": {
+    "multiservice-discovery-shared 0.5.2": {
       "name": "multiservice-discovery-shared",
-      "version": "0.5.1",
+      "version": "0.5.2",
       "repository": null,
       "targets": [
         {
@@ -30324,7 +30324,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.5.1"
+        "version": "0.5.2"
       },
       "license": null
     },
@@ -30530,9 +30530,9 @@
       },
       "license": "MIT"
     },
-    "node-status-updater 0.5.1": {
+    "node-status-updater 0.5.2": {
       "name": "node-status-updater",
-      "version": "0.5.1",
+      "version": "0.5.2",
       "repository": null,
       "targets": [],
       "library_target_name": null,
@@ -30606,7 +30606,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.5.1"
+        "version": "0.5.2"
       },
       "license": null
     },
@@ -30661,9 +30661,9 @@
       },
       "license": "MIT"
     },
-    "np-notifications 0.5.1": {
+    "np-notifications 0.5.2": {
       "name": "np-notifications",
-      "version": "0.5.1",
+      "version": "0.5.2",
       "repository": null,
       "targets": [],
       "library_target_name": null,
@@ -30694,7 +30694,7 @@
               "target": "rand"
             },
             {
-              "id": "reqwest 0.12.5",
+              "id": "reqwest 0.12.7",
               "target": "reqwest"
             },
             {
@@ -30758,7 +30758,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.5.1"
+        "version": "0.5.2"
       },
       "license": null
     },
@@ -31357,9 +31357,9 @@
       },
       "license": "Apache-2.0 OR MIT"
     },
-    "obs-canister-clients 0.5.1": {
+    "obs-canister-clients 0.5.2": {
       "name": "obs-canister-clients",
-      "version": "0.5.1",
+      "version": "0.5.2",
       "repository": null,
       "targets": [
         {
@@ -31392,7 +31392,7 @@
               "target": "rand"
             },
             {
-              "id": "reqwest 0.12.5",
+              "id": "reqwest 0.12.7",
               "target": "reqwest"
             },
             {
@@ -31407,7 +31407,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.5.1"
+        "version": "0.5.2"
       },
       "license": null
     },
@@ -34790,9 +34790,9 @@
       },
       "license": "Apache-2.0"
     },
-    "prometheus-config-updater 0.5.1": {
+    "prometheus-config-updater 0.5.2": {
       "name": "prometheus-config-updater",
-      "version": "0.5.1",
+      "version": "0.5.2",
       "repository": null,
       "targets": [],
       "library_target_name": null,
@@ -34886,7 +34886,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.5.1"
+        "version": "0.5.2"
       },
       "license": null
     },
@@ -34929,7 +34929,7 @@
               "target": "mime"
             },
             {
-              "id": "reqwest 0.12.5",
+              "id": "reqwest 0.12.7",
               "target": "reqwest"
             },
             {
@@ -35458,9 +35458,9 @@
       },
       "license": "MIT"
     },
-    "qualifier 0.5.1": {
+    "qualifier 0.5.2": {
       "name": "qualifier",
-      "version": "0.5.1",
+      "version": "0.5.2",
       "repository": null,
       "targets": [],
       "library_target_name": null,
@@ -35515,7 +35515,7 @@
               "target": "pretty_env_logger"
             },
             {
-              "id": "reqwest 0.12.5",
+              "id": "reqwest 0.12.7",
               "target": "reqwest"
             },
             {
@@ -35546,7 +35546,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.5.1"
+        "version": "0.5.2"
       },
       "license": null
     },
@@ -36984,13 +36984,13 @@
       },
       "license": "MIT"
     },
-    "reqwest 0.12.5": {
+    "reqwest 0.12.7": {
       "name": "reqwest",
-      "version": "0.12.5",
+      "version": "0.12.7",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/reqwest/0.12.5/download",
-          "sha256": "c7d6d2a27d57148378eb5e111173f4276ad26340ecc5c49a4a2152167a2d6a37"
+          "url": "https://static.crates.io/crates/reqwest/0.12.7/download",
+          "sha256": "f8f4955649ef5c38cc7f9e8aa41761d48fb9677197daea9984dc54f56aad5e63"
         }
       },
       "targets": [
@@ -37186,14 +37186,14 @@
             ],
             "cfg(windows)": [
               {
-                "id": "winreg 0.52.0",
-                "target": "winreg"
+                "id": "windows-registry 0.2.0",
+                "target": "windows_registry"
               }
             ]
           }
         },
         "edition": "2021",
-        "version": "0.12.5"
+        "version": "0.12.7"
       },
       "license": "MIT OR Apache-2.0"
     },
@@ -37548,9 +37548,9 @@
       },
       "license": "MIT OR Apache-2.0"
     },
-    "rollout-controller 0.5.1": {
+    "rollout-controller 0.5.2": {
       "name": "rollout-controller",
-      "version": "0.5.1",
+      "version": "0.5.2",
       "repository": null,
       "targets": [],
       "library_target_name": null,
@@ -37609,7 +37609,7 @@
               "target": "registry_canister"
             },
             {
-              "id": "reqwest 0.12.5",
+              "id": "reqwest 0.12.7",
               "target": "reqwest"
             },
             {
@@ -37657,7 +37657,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.5.1"
+        "version": "0.5.2"
       },
       "license": null
     },
@@ -39590,7 +39590,7 @@
               "target": "regex"
             },
             {
-              "id": "reqwest 0.12.5",
+              "id": "reqwest 0.12.7",
               "target": "reqwest"
             },
             {
@@ -40399,9 +40399,9 @@
       },
       "license": "MIT OR Apache-2.0"
     },
-    "service-discovery 0.5.1": {
+    "service-discovery 0.5.2": {
       "name": "service-discovery",
-      "version": "0.5.1",
+      "version": "0.5.2",
       "repository": null,
       "targets": [
         {
@@ -40542,7 +40542,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.5.1"
+        "version": "0.5.2"
       },
       "license": null
     },
@@ -41108,9 +41108,9 @@
       },
       "license": "MIT"
     },
-    "slack-notifications 0.5.1": {
+    "slack-notifications 0.5.2": {
       "name": "slack-notifications",
-      "version": "0.5.1",
+      "version": "0.5.2",
       "repository": null,
       "targets": [],
       "library_target_name": null,
@@ -41181,7 +41181,7 @@
               "target": "registry_canister"
             },
             {
-              "id": "reqwest 0.12.5",
+              "id": "reqwest 0.12.7",
               "target": "reqwest"
             },
             {
@@ -41208,7 +41208,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.5.1"
+        "version": "0.5.2"
       },
       "license": null
     },
@@ -41734,9 +41734,9 @@
       },
       "license": "MIT OR Apache-2.0"
     },
-    "sns-downloader 0.5.1": {
+    "sns-downloader 0.5.2": {
       "name": "sns-downloader",
-      "version": "0.5.1",
+      "version": "0.5.2",
       "repository": null,
       "targets": [],
       "library_target_name": null,
@@ -41771,7 +41771,7 @@
               "target": "ic_async_utils"
             },
             {
-              "id": "reqwest 0.12.5",
+              "id": "reqwest 0.12.7",
               "target": "reqwest"
             },
             {
@@ -41802,7 +41802,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.5.1"
+        "version": "0.5.2"
       },
       "license": null
     },
@@ -42754,6 +42754,22 @@
         "compile_data_glob": [
           "**"
         ],
+        "crate_features": {
+          "common": [
+            "futures",
+            "futures-core"
+          ],
+          "selects": {}
+        },
+        "deps": {
+          "common": [
+            {
+              "id": "futures-core 0.3.30",
+              "target": "futures_core"
+            }
+          ],
+          "selects": {}
+        },
         "edition": "2018",
         "version": "1.0.1"
       },
@@ -45449,9 +45465,9 @@
       },
       "license": null
     },
-    "trustworthy-node-metrics 0.5.1": {
+    "trustworthy-node-metrics 0.5.2": {
       "name": "trustworthy-node-metrics",
-      "version": "0.5.1",
+      "version": "0.5.2",
       "repository": null,
       "targets": [],
       "library_target_name": null,
@@ -45526,13 +45542,13 @@
           ],
           "selects": {}
         },
-        "version": "0.5.1"
+        "version": "0.5.2"
       },
       "license": null
     },
-    "trustworthy-node-metrics-types 0.5.1": {
+    "trustworthy-node-metrics-types 0.5.2": {
       "name": "trustworthy-node-metrics-types",
-      "version": "0.5.1",
+      "version": "0.5.2",
       "repository": null,
       "targets": [
         {
@@ -45584,7 +45600,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.5.1"
+        "version": "0.5.2"
       },
       "license": null
     },
@@ -47912,6 +47928,149 @@
         },
         "edition": "2021",
         "version": "0.52.0"
+      },
+      "license": "MIT OR Apache-2.0"
+    },
+    "windows-registry 0.2.0": {
+      "name": "windows-registry",
+      "version": "0.2.0",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/windows-registry/0.2.0/download",
+          "sha256": "e400001bb720a623c1c69032f8e3e4cf09984deec740f007dd2b03ec864804b0"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "windows_registry",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "windows_registry",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "windows-result 0.2.0",
+              "target": "windows_result"
+            },
+            {
+              "id": "windows-strings 0.1.0",
+              "target": "windows_strings"
+            },
+            {
+              "id": "windows-targets 0.52.6",
+              "target": "windows_targets"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "0.2.0"
+      },
+      "license": "MIT OR Apache-2.0"
+    },
+    "windows-result 0.2.0": {
+      "name": "windows-result",
+      "version": "0.2.0",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/windows-result/0.2.0/download",
+          "sha256": "1d1043d8214f791817bab27572aaa8af63732e11bf84aa21a45a78d6c317ae0e"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "windows_result",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "windows_result",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "crate_features": {
+          "common": [
+            "default",
+            "std"
+          ],
+          "selects": {}
+        },
+        "deps": {
+          "common": [
+            {
+              "id": "windows-targets 0.52.6",
+              "target": "windows_targets"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "0.2.0"
+      },
+      "license": "MIT OR Apache-2.0"
+    },
+    "windows-strings 0.1.0": {
+      "name": "windows-strings",
+      "version": "0.1.0",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/windows-strings/0.1.0/download",
+          "sha256": "4cd9b125c486025df0eabcb585e62173c6c9eddcec5d117d3b6e8c30e2ee4d10"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "windows_strings",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "windows_strings",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "crate_features": {
+          "common": [
+            "default",
+            "std"
+          ],
+          "selects": {}
+        },
+        "deps": {
+          "common": [
+            {
+              "id": "windows-result 0.2.0",
+              "target": "windows_result"
+            },
+            {
+              "id": "windows-targets 0.52.6",
+              "target": "windows_targets"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "0.1.0"
       },
       "license": "MIT OR Apache-2.0"
     },
@@ -50608,30 +50767,30 @@
   },
   "binary_crates": [],
   "workspace_members": {
-    "canister-log-fetcher 0.5.1": "rs/canister-log-fetcher",
-    "config-writer-common 0.5.1": "rs/ic-observability/config-writer-common",
-    "decentralization 0.5.1": "rs/decentralization",
-    "dre 0.5.1": "rs/cli",
-    "ic-canisters 0.5.1": "rs/ic-canisters",
-    "ic-management-backend 0.5.1": "rs/ic-management-backend",
-    "ic-management-types 0.5.1": "rs/ic-management-types",
-    "log-fetcher 0.5.1": "rs/log-fetcher",
-    "log-noise-filter-backend 0.5.1": "rs/ic-observability/log-noise-filter-backend",
-    "log-noise-filter-downloader 0.5.1": "rs/ic-observability/log-noise-filter-downloader",
-    "multiservice-discovery 0.5.1": "rs/ic-observability/multiservice-discovery",
-    "multiservice-discovery-downloader 0.5.1": "rs/ic-observability/multiservice-discovery-downloader",
-    "multiservice-discovery-shared 0.5.1": "rs/ic-observability/multiservice-discovery-shared",
-    "node-status-updater 0.5.1": "rs/ic-observability/node-status-updater",
-    "np-notifications 0.5.1": "rs/np-notifications",
-    "obs-canister-clients 0.5.1": "rs/ic-observability/obs-canister-clients",
-    "prometheus-config-updater 0.5.1": "rs/ic-observability/prometheus-config-updater",
-    "qualifier 0.5.1": "rs/qualifier",
-    "rollout-controller 0.5.1": "rs/rollout-controller",
-    "service-discovery 0.5.1": "rs/ic-observability/service-discovery",
-    "slack-notifications 0.5.1": "rs/slack-notifications",
-    "sns-downloader 0.5.1": "rs/ic-observability/sns-downloader",
-    "trustworthy-node-metrics 0.5.1": "rs/dre-canisters/trustworthy-node-metrics/src/trustworthy-node-metrics",
-    "trustworthy-node-metrics-types 0.5.1": "rs/dre-canisters/trustworthy-node-metrics/src/trustworthy-node-metrics-types"
+    "canister-log-fetcher 0.5.2": "rs/canister-log-fetcher",
+    "config-writer-common 0.5.2": "rs/ic-observability/config-writer-common",
+    "decentralization 0.5.2": "rs/decentralization",
+    "dre 0.5.2": "rs/cli",
+    "ic-canisters 0.5.2": "rs/ic-canisters",
+    "ic-management-backend 0.5.2": "rs/ic-management-backend",
+    "ic-management-types 0.5.2": "rs/ic-management-types",
+    "log-fetcher 0.5.2": "rs/log-fetcher",
+    "log-noise-filter-backend 0.5.2": "rs/ic-observability/log-noise-filter-backend",
+    "log-noise-filter-downloader 0.5.2": "rs/ic-observability/log-noise-filter-downloader",
+    "multiservice-discovery 0.5.2": "rs/ic-observability/multiservice-discovery",
+    "multiservice-discovery-downloader 0.5.2": "rs/ic-observability/multiservice-discovery-downloader",
+    "multiservice-discovery-shared 0.5.2": "rs/ic-observability/multiservice-discovery-shared",
+    "node-status-updater 0.5.2": "rs/ic-observability/node-status-updater",
+    "np-notifications 0.5.2": "rs/np-notifications",
+    "obs-canister-clients 0.5.2": "rs/ic-observability/obs-canister-clients",
+    "prometheus-config-updater 0.5.2": "rs/ic-observability/prometheus-config-updater",
+    "qualifier 0.5.2": "rs/qualifier",
+    "rollout-controller 0.5.2": "rs/rollout-controller",
+    "service-discovery 0.5.2": "rs/ic-observability/service-discovery",
+    "slack-notifications 0.5.2": "rs/slack-notifications",
+    "sns-downloader 0.5.2": "rs/ic-observability/sns-downloader",
+    "trustworthy-node-metrics 0.5.2": "rs/dre-canisters/trustworthy-node-metrics/src/trustworthy-node-metrics",
+    "trustworthy-node-metrics-types 0.5.2": "rs/dre-canisters/trustworthy-node-metrics/src/trustworthy-node-metrics-types"
   },
   "conditions": {
     "aarch64-apple-darwin": [
