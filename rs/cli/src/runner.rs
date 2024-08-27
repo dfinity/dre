@@ -678,6 +678,42 @@ impl Runner {
             .map_err(|e| anyhow::anyhow!(e))?;
         Ok(())
     }
+
+    pub async fn update_unassigned_nodes(&self, nns_subnet_id: &PrincipalId) -> anyhow::Result<()> {
+        let subnets = self.registry.subnets().await?;
+
+        let nns = match subnets.get_key_value(nns_subnet_id) {
+            Some((_, value)) => value,
+            None => return Err(anyhow::anyhow!("Couldn't find nns subnet with id '{}'", nns_subnet_id)),
+        };
+
+        let unassigned_version = self.registry.unassigned_nodes_replica_version()?;
+
+        if unassigned_version == nns.replica_version.clone().into() {
+            info!(
+                "Unassigned nodes and nns are of the same version '{}', skipping proposal submition.",
+                unassigned_version
+            );
+            return Ok(());
+        }
+
+        info!(
+            "NNS version '{}' and Unassigned nodes '{}' differ",
+            nns.replica_version, unassigned_version
+        );
+
+        let command = ProposeCommand::DeployGuestosToAllUnassignedNodes {
+            replica_version: nns.replica_version.clone(),
+        };
+        let options = ProposeOptions {
+            summary: Some("Update the unassigned nodes to the latest rolled-out version".to_string()),
+            motivation: None,
+            title: Some("Update all unassigned nodes".to_string()),
+        };
+
+        self.ic_admin.propose_run(command, options).await?;
+        Ok(())
+    }
 }
 
 pub fn replace_proposal_options(change: &SubnetChangeResponse) -> anyhow::Result<ic_admin::ProposeOptions> {
