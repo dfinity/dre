@@ -6,7 +6,7 @@ use std::collections::BTreeMap;
 use std::fmt::{Display, Formatter};
 
 use ic_base_types::PrincipalId;
-use ic_management_types::NodeFeature;
+use ic_management_types::{HealthStatus, NodeFeature};
 use serde::{self, Deserialize, Serialize};
 
 #[derive(Clone, Debug, Deserialize, Serialize, Default)]
@@ -15,6 +15,7 @@ pub struct SubnetChangeResponse {
     pub removed_with_desc: Vec<(PrincipalId, String)>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub subnet_id: Option<PrincipalId>,
+    pub health_of_nodes: BTreeMap<PrincipalId, HealthStatus>,
     pub score_before: nakamoto::NakamotoScore,
     pub score_after: nakamoto::NakamotoScore,
     pub motivation: Option<String>,
@@ -33,6 +34,9 @@ impl SubnetChangeResponse {
             ..self
         }
     }
+    pub fn with_health_of_nodes(self, health_of_nodes: BTreeMap<PrincipalId, HealthStatus>) -> Self {
+        SubnetChangeResponse { health_of_nodes, ..self }
+    }
 }
 
 impl From<&network::SubnetChange> for SubnetChangeResponse {
@@ -41,6 +45,7 @@ impl From<&network::SubnetChange> for SubnetChangeResponse {
             added_with_desc: change.added().iter().map(|n| (n.0.id, n.1.clone())).collect(),
             removed_with_desc: change.removed().iter().map(|n| (n.0.id, n.1.clone())).collect(),
             subnet_id: if change.id == Default::default() { None } else { Some(change.id) },
+            health_of_nodes: BTreeMap::new(),
             score_before: nakamoto::NakamotoScore::new_from_nodes(&change.old_nodes),
             score_after: nakamoto::NakamotoScore::new_from_nodes(&change.new_nodes),
             motivation: None,
@@ -111,11 +116,21 @@ impl Display for SubnetChangeResponse {
 
         writeln!(f, "Nodes removed:")?;
         for (id, desc) in &self.removed_with_desc {
-            writeln!(f, " --> {} [selected based on {}]", id, desc).expect("write failed");
+            let health = self
+                .health_of_nodes
+                .get(id)
+                .map(|h| h.to_string().to_lowercase())
+                .unwrap_or("unknown".to_string());
+            writeln!(f, " --> {} [health: {}, impact on decentralization: {}]", id, health, desc).expect("write failed");
         }
         writeln!(f, "\nNodes added:")?;
         for (id, desc) in &self.added_with_desc {
-            writeln!(f, " ++> {} [selected based on {}]", id, desc).expect("write failed");
+            let health = self
+                .health_of_nodes
+                .get(id)
+                .map(|h| h.to_string().to_lowercase())
+                .unwrap_or("unknown".to_string());
+            writeln!(f, " ++> {} [health: {}, impact on decentralization: {}]", id, health, desc).expect("write failed");
         }
 
         let rows = self.feature_diff.values().map(|diff| diff.len()).max().unwrap_or(0);

@@ -54,6 +54,7 @@ impl ExecutableCommand for Resize {
                     include: self.include.clone().into(),
                 },
                 self.motivation.clone(),
+                &runner.health_of_nodes().await?,
             )
             .await
     }
