@@ -1,3 +1,5 @@
+import pathlib
+import tempfile
 from release_notes import prepare_release_notes, get_change_description_for_commit, Change
 from git_repo import GitRepo
 import pytest
@@ -5,74 +7,77 @@ import pytest
 
 # @pytest.mark.skip(reason="expensive, will be removed")
 def test_get_change_description_for_commit():
-    ic_repo = GitRepo("https://github.com/dfinity/ic.git", main_branch="master")
-    # not a guestos change
-    assert get_change_description_for_commit(commit_hash="00dc67f8d", ic_repo=ic_repo) == Change(
-        commit="00dc67f8d",
-        teams=[
-            "crypto-team",
-            "ic-interface-owners",
-        ],
-        type="refactor",
-        scope="",
-        message="Use ic_cdk::api::time for ingress message validator crate ([#802](https://github.com/dfinity/ic/pull/802))",
-        commiter="Dimi Sarl",
-        exclusion_reason=None,
-        guestos_change=False,
-    )
-    # bumping dependencies
-    assert get_change_description_for_commit(commit_hash="2d0835bba", ic_repo=ic_repo) == Change(
-        commit="2d0835bba",
-        teams=[
-            "ic-owners-owners",
-        ],
-        type="chore",
-        scope="crypto",
-        message="bump ic_bls12_381 to 0.10.0 ([#770](https://github.com/dfinity/ic/pull/770))",
-        commiter="Olek Tkac",
-        exclusion_reason=None,
-        guestos_change=True,
-    )
-    # .github change
-    assert get_change_description_for_commit(commit_hash="94fd38099", ic_repo=ic_repo) == Change(
-        commit="94fd38099",
-        teams=[
-            "ic-owners-owners",
-        ],
-        type="chore",
-        scope="IDX",
-        message="fix workflow syntax ([#824](https://github.com/dfinity/ic/pull/824))",
-        commiter="Carl Gund",
-        exclusion_reason=None,
-        guestos_change=False,
-    )
-    # replica change
-    assert get_change_description_for_commit(commit_hash="951e895c7", ic_repo=ic_repo) == Change(
-        commit="951e895c7",
-        teams=[
-            "execution",
-            "ic-interface-owners",
-        ],
-        type="feat",
-        scope="",
-        message="Handle stable_read/write with Wasm64 heaps and testing infrastructure ([#781](https://github.com/dfinity/ic/pull/781))",
-        commiter="Alex Uta ",
-        exclusion_reason=None,
-        guestos_change=True,
-    )
-    # modifies Cargo.lock but not in a meaningful way
-    assert get_change_description_for_commit(commit_hash="5a250cb34", ic_repo=ic_repo) == Change(
-        commit="5a250cb34",
-        teams=[
-            "ic-interface-owners",
-        ],
-        type="feat",
-        scope="ic-admin",
-        message="Support sending update_canister_settings proposals through ic-admin ([#789](https://github.com/dfinity/ic/pull/789))",
-        commiter="jaso     ",
-        exclusion_reason=None,
-        guestos_change=False,
-    )
+    with tempfile.TemporaryDirectory() as repo_cache_dir:
+        ic_repo = GitRepo(
+            "https://github.com/dfinity/ic.git", main_branch="master", repo_cache_dir=pathlib.Path(repo_cache_dir)
+        )
+        # not a guestos change
+        assert get_change_description_for_commit(commit_hash="00dc67f8d", ic_repo=ic_repo) == Change(
+            commit="00dc67f8d",
+            teams=[
+                "crypto-team",
+                "ic-interface-owners",
+            ],
+            type="refactor",
+            scope="",
+            message="Use ic_cdk::api::time for ingress message validator crate ([#802](https://github.com/dfinity/ic/pull/802))",
+            commiter="Dimi Sarl",
+            exclusion_reason=None,
+            guestos_change=False,
+        )
+        # bumping dependencies
+        assert get_change_description_for_commit(commit_hash="2d0835bba", ic_repo=ic_repo) == Change(
+            commit="2d0835bba",
+            teams=[
+                "ic-owners-owners",
+            ],
+            type="chore",
+            scope="crypto",
+            message="bump ic_bls12_381 to 0.10.0 ([#770](https://github.com/dfinity/ic/pull/770))",
+            commiter="Olek Tkac",
+            exclusion_reason=None,
+            guestos_change=True,
+        )
+        # .github change
+        assert get_change_description_for_commit(commit_hash="94fd38099", ic_repo=ic_repo) == Change(
+            commit="94fd38099",
+            teams=[
+                "ic-owners-owners",
+            ],
+            type="chore",
+            scope="IDX",
+            message="fix workflow syntax ([#824](https://github.com/dfinity/ic/pull/824))",
+            commiter="Carl Gund",
+            exclusion_reason=None,
+            guestos_change=False,
+        )
+        # replica change
+        assert get_change_description_for_commit(commit_hash="951e895c7", ic_repo=ic_repo) == Change(
+            commit="951e895c7",
+            teams=[
+                "execution",
+                "ic-interface-owners",
+            ],
+            type="feat",
+            scope="",
+            message="Handle stable_read/write with Wasm64 heaps and testing infrastructure ([#781](https://github.com/dfinity/ic/pull/781))",
+            commiter="Alex Uta ",
+            exclusion_reason=None,
+            guestos_change=True,
+        )
+        # modifies Cargo.lock but not in a meaningful way
+        assert get_change_description_for_commit(commit_hash="5a250cb34", ic_repo=ic_repo) == Change(
+            commit="5a250cb34",
+            teams=[
+                "ic-interface-owners",
+            ],
+            type="feat",
+            scope="ic-admin",
+            message="Support sending update_canister_settings proposals through ic-admin ([#789](https://github.com/dfinity/ic/pull/789))",
+            commiter="jaso     ",
+            exclusion_reason=None,
+            guestos_change=False,
+        )
 
 
 def test_release_notes():
