@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env -S poetry run
 """
 Utility script to create a new release of the project.
 

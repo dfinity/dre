@@ -1,6 +1,10 @@
 
 # How to make a new release
 
+You will need `poetry` installed on your system.  After that, run
+`poetry install` to update your poetry setup to have the necessary
+requirements to produce a new release.
+
 Go to the repo root, and check that you don't have any dirty changes and that you are on the main branch.
 
 ```
@@ -14,7 +18,7 @@ If all looks okay, you can run the following convenience script to change the ve
 Example:
 
 ```
-❯ ./bin/mk-release.py 0.5.0
+❯ poetry run bin/mk-release.py 0.5.0
 INFO: Updating version from 0.4.3 to 0.5.0
 Already up to date.
 INFO: Patching file pyproject.toml
