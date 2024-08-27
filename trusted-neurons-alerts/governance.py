@@ -51,6 +51,7 @@ class GovernanceCanister:
             governance_canister = Canister(agent=self.agent, canister_id=self.principal, candid=open(governance_did, encoding="utf8").read())
 
             response = governance_canister.get_neuron_info(DFINITY_NEURON_ID)
+            print(response)
             recent_ballots = response[0].get('Ok', {}).get('recent_ballots', [])
             return recent_ballots
 
@@ -72,7 +73,7 @@ class GovernanceCanister:
 
 def main():
     canister = GovernanceCanister()
-    print(canister.has_dfinity_voted(0))
+    print(canister._get_recent_ballots())
 
 
 if __name__ == "__main__":

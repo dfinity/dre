@@ -7,20 +7,23 @@ import { axisClasses, ChartsReferenceLine, LineChart } from '@mui/x-charts';
 const NodeRewardExplanation: React.FC<{ failureRate: number; rewardReduction: number }> = ({ failureRate, rewardReduction }) => {
   return (
     <Grid container>
+      {/* Title Section */}
       <Grid item xs={12}>
         <Typography variant="h6" gutterBottom>
           How are rewards computed?
         </Typography>
       </Grid>
-      <Grid item xs={4}>
+
+      {/* Node Unassigned Section */}
+      <Grid item xs={12} md={4}>
         <Typography variant="body1" gutterBottom>
           Node Unassigned:
         </Typography>
         <Typography variant="body2" color="textSecondary" gutterBottom>
           When a node is not assigned to any subnet, it automatically receives the full reward (100%). No further calculations are needed.
         </Typography>
-        
-        {/* Assigned Node */}
+
+        {/* Node Assigned Section */}
         <Typography variant="body1" gutterBottom>
           Node Assigned:
         </Typography>
@@ -42,9 +45,8 @@ const NodeRewardExplanation: React.FC<{ failureRate: number; rewardReduction: nu
             </Typography>
           </ListItem>
         </List>
-        </Grid>
 
-        <Grid item xs={4}>
+        {/* Failure Rate Calculation */}
         <List sx={{ listStyle: 'circle', ml: 4 }}>
           <ListItem sx={{ display: 'list-item' }}>
             <Typography variant="body2" gutterBottom>
@@ -61,9 +63,12 @@ const NodeRewardExplanation: React.FC<{ failureRate: number; rewardReduction: nu
             </Typography>
           </ListItem>
         </List>
+      </Grid>
 
-          {/* Apply Linear Reduction Function */}
-          <List sx={{ listStyle: 'circle', ml: 4 }}>
+      {/* Reward Reduction Section */}
+      <Grid item xs={12} md={4}>
+        {/* Linear Reduction Function */}
+        <List sx={{ listStyle: 'circle', ml: 4 }}>
           <ListItem sx={{ display: 'list-item' }}>
             <Typography variant="body2" gutterBottom>
               Apply Linear Reduction Function:
@@ -71,18 +76,46 @@ const NodeRewardExplanation: React.FC<{ failureRate: number; rewardReduction: nu
             <Typography variant="body2" color="textSecondary" gutterBottom>
               Based on the failure rate, we apply a linear reduction function to determine how much the failure rate reduces the node's rewards.
             </Typography>
+
+            {/* Specific Failure Rate Conditions */}
+            <List sx={{ listStyle: 'circle', ml: 4 }}>
+              <ListItem sx={{ display: 'list-item' }}>
+                <Typography variant="body2" color="textSecondary" gutterBottom>
+                  Failure Rates Below 10%: For failure rates ≤ 10%, there is no reduction in rewards. The rewards reduction is 0%, meaning for performance below this threshold, rewards remain unaffected.
+                </Typography>
+              </ListItem>
+              <ListItem sx={{ display: 'list-item' }}>
+                <Typography variant="body2" color="textSecondary" gutterBottom>
+                  Failure Rates Above 70%: Once the failure rate exceeds 70%, the rewards reduction reaches its maximum of 100%. Any failure rate beyond this threshold results in a complete loss of rewards.
+                </Typography>
+              </ListItem>
+            </List>
+
             <Typography variant="body2" color="textSecondary" gutterBottom>
-              The final reward percentage is computed by subtracting the rewards reduction from 100%.
+              The final reward percentage for the assigned period is computed by subtracting the rewards reduction from 100%.
+            </Typography>
+          </ListItem>
+
+          {/* Total Rewards Calculation Placeholder */}
+          <ListItem sx={{ display: 'list-item' }}>
+            <Typography variant="body2" gutterBottom>
+              Compute total rewards:
+            </Typography>
+            <Typography variant="body2" color="textSecondary" gutterBottom>
+              Work in progress...
             </Typography>
           </ListItem>
         </List>
       </Grid>
-      <Grid item xs={4}>
-        <LinearReductionChart failureRate={failureRate} rewardReduction={rewardReduction}/>
+
+      {/* Reward Reduction Chart */}
+      <Grid item xs={12} md={4}>
+        <LinearReductionChart failureRate={failureRate} rewardReduction={rewardReduction} />
       </Grid>
     </Grid>
   );
 };
+
 
 export default NodeRewardExplanation;
 
@@ -107,7 +140,7 @@ export const LinearReductionChart: React.FC<{ failureRate: number; rewardReducti
         Linear Rewards Reduction
       </Typography>
       <LineChart
-        margin={{ top: 20, left: 60, right: 150, bottom: 60 }}
+        margin={{ left: 60, right: 150}}
         grid={{ vertical: true, horizontal: true }}
         yAxis={[{
           label: 'Rewards reduction',

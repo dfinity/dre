@@ -53,9 +53,17 @@ export const getFormattedDates = (period: PeriodFilter): string[] => {
     return dates;
   };
 
-  export const computeAverageFailureRate = (data: number[]): number => {
-      if (data.length === 0) return 0;
-      const sum = data.reduce((acc, val) => acc + val, 0);
-      return sum / data.length;
-    };
+export const formatDateToUTC = (date: Date): string => {
+    const day = String(date.getUTCDate()).padStart(2, '0');
+    const month = String(date.getUTCMonth() + 1).padStart(2, '0'); // Months are zero-indexed
+    const year = date.getUTCFullYear();
   
+    return `${day}-${month}-${year}`;
+  };
+  
+export const computeAverageFailureRate = (data: number[]): number => {
+    if (data.length === 0) return 0;
+    const sum = data.reduce((acc, val) => acc + val, 0);
+    return sum / data.length;
+  };
+

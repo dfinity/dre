@@ -1,12 +1,16 @@
 import React, { useState } from 'react';
-import { Box, Paper, Typography } from '@mui/material';
+import { Box, Grid, Paper, Typography } from '@mui/material';
 import { axisClasses, BarChart, StackOrderType } from '@mui/x-charts';
 import Divider from '@mui/material/Divider';
 import { useParams } from 'react-router-dom';
-import { generateChartData, getFormattedDates } from '../utils/utils';
+import { formatDateToUTC, generateChartData, getFormattedDates } from '../utils/utils';
 import { PeriodFilter } from './FilterBar';
 import { Root } from './NodeList';
 import { NodeRewardsResponse } from '../../../declarations/trustworthy-node-metrics/trustworthy-node-metrics.did';
+import { paperStyle } from '../Styles';
+import InfoFormatter from './NodeInfo';
+import { ExportTable } from './ExportTable';
+import { GridColDef, GridRowsProp } from '@mui/x-data-grid';
 
 export interface NodeProviderPageProps {
     nodeRewards: NodeRewardsResponse[],
@@ -14,58 +18,88 @@ export interface NodeProviderPageProps {
   }
 
 export const NodeProviderPage: React.FC<NodeProviderPageProps> = ({ nodeRewards, periodFilter }) => {
-    const [stackOrder] = useState<StackOrderType>('ascending');
     const { provider } = useParams();
     const providerNodeMetrics = nodeRewards
         .filter((nodeMetrics) => nodeMetrics.node_provider_id.toText() === provider)
-    const chartData = providerNodeMetrics
-        .map(nodeMetrics => {
+    const highFailureRateChart = providerNodeMetrics
+        .filter(nodeMetrics => nodeMetrics.rewards_stats.rewards_reduction > 0)
+        .flatMap(nodeMetrics => {
+            const chartData = generateChartData(periodFilter, nodeMetrics.daily_node_metrics);
             return {
-                data: generateChartData(periodFilter, nodeMetrics.daily_node_metrics),
-                label: provider,
-              }
+                data: chartData.map(data => data.dailyNodeMetrics? data.dailyNodeMetrics.failure_rate * 100: null),
+                label: nodeMetrics.node_id.toText(),
+                stack: 'total' 
+            }
     });
 
-    console.info(chartData)
-    const series = [{ ...chartData[0], stackOrder }, ...chartData.slice(1)];
+    let index = 0;
+    const rows: GridRowsProp = providerNodeMetrics.flatMap((nodeRewards) => {
+        return nodeRewards.daily_node_metrics.map((data) => {
+            index = index + 1;
+            return { 
+                id: index,
+                col1: new Date(Number(data.ts) / 1000000), 
+                col2: nodeRewards.node_id,
+                col3: data.num_blocks_proposed, 
+                col4: data.num_blocks_failed,
+                col5: data.failure_rate,
+                col6: data.subnet_assigned,
+              };
+        })
+      });
+      
+    const colDef: GridColDef[] = [
+        { field: 'col1', headerName: 'Date (UTC)', width: 200, valueFormatter: (value: Date) => formatDateToUTC(value)},
+        { field: 'col2', headerName: 'Node ID', width: 550 },
+        { field: 'col3', headerName: 'Blocks Proposed', width: 150 },
+        { field: 'col4', headerName: 'Blocks Failed', width: 150 },
+        { field: 'col5', headerName: 'Daily Failure Rate', width: 350 , valueFormatter: (value: number) => `${value * 100}%`,},
+        { field: 'col6', headerName: 'Subnet Assigned', width: 550 },
+        ];
 
     return (
-        <Root>
-            <Paper sx={{ p: 2, backgroundColor: '#11171E', borderRadius: '10px', color: 'white' }}>
-                <Box sx={{ p: 2 }}>
-                        <Typography gutterBottom variant="h6" component="div">
-                            Node Provider: {provider}
-                        </Typography>
-                </Box>
-                <Divider />
-                <Box sx={{ p: 3 }}>
-                    <Divider style={{ fontSize: '17px' }}>Daily Failure Rate (grater 10%)</Divider>
-                    <BarChart
+
+        <Box sx={{ p: 3 }}>
+        <Paper sx={paperStyle}>
+            <Grid container spacing={3}>
+                <Grid item xs={12} md={12}>
+                    <Typography gutterBottom variant="h5" component="div">
+                        {"Node Provider"}
+                    </Typography>
+                    <Divider/>
+                </Grid>
+                <Grid item xs={12} md={12}>
+                    <InfoFormatter name={"Provider ID"} value={provider ? provider : "Anonym"} />
+                </Grid>
+                <Grid item xs={12}>
+                <Typography variant="h6" component="div">
+                    Daily Failure Rate
+                </Typography>
+                <Typography variant="subtitle2" sx={{ color: 'text.disabled' }} component="div">
+                    For nodes with rewards reduction
+                </Typography>
+                </Grid>
+                <Grid item xs={12} md={12}>
+                <BarChart
                         slotProps={{ legend: { hidden: true } }}
                         xAxis={[{ 
                             scaleType: 'band',
                             data: getFormattedDates(periodFilter),
                         }]}
-                        yAxis={[
-                            {
-                                valueFormatter: value => `${value}%`,
-                                label: 'Failure Rate',
-                                min: 0,
-                                max: 100,
-                            },
-                        ]}
-                        sx={{
-                            p: 2,
-                            [`.${axisClasses.left} .${axisClasses.label}`]: {
-                                transform: 'translateX(-25px)',
-                            },
-                        }}
+                        yAxis={[{
+                            valueFormatter: (value: number) => `${value}%`,
+                          }]}
+                        leftAxis={null}
                         borderRadius={9}
-                        series={series}
-                        height={500}
+                        series={highFailureRateChart}
+                        height={300}
                     />
-                </Box>
-            </Paper>
-        </Root>
+                </Grid>
+                <Grid item xs={12} md={12}>
+                    <ExportTable colDef={colDef} rows={rows}/>
+                </Grid>
+            </Grid>
+        </Paper>
+    </Box>
     );
 };
