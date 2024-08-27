@@ -64,6 +64,10 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
                 excluded_subnets.insert(subnet.principal, "System subnet".to_string());
                 continue;
             }
+            if subnet.subnet_type.eq(&SubnetType::VerifiedApplication) {
+                excluded_subnets.insert(subnet.principal, "Verified App subnet".to_string());
+                continue;
+            }
 
             let subnet_principal_string = subnet.principal.to_string();
             if let Some((_, description)) = csv_contents.iter().find(|(short_id, _)| subnet_principal_string.starts_with(short_id)) {
