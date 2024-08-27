@@ -83,7 +83,7 @@ long_tests = [
 py_test(
     name = "pytest",
     srcs = ["pytest.py"],
-    data = glob(["*.py"], exclude = long_tests) + [":bazelisk", ":target_determinator"],
+    data = glob(["*.py"], exclude = long_tests) + glob(["test_data/*"]),
     env = env,
     tags = ["no-sandbox"],
     deps = deps + dev_deps,
