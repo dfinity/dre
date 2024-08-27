@@ -51,6 +51,7 @@ jobs:
           # Reinstall gcc
           sudo apt install gcc -y
 
+          poetry lock --no-update
           poetry update
           CARGO_BAZEL_REPIN=true bazel query >/dev/null
           ./bin/poetry.sh
