@@ -1,12 +1,14 @@
-#!/usr/bin/env python3
+#!/usr/bin/env -S poetry run
 """
 Utility script to create a new release of the project.
 
 Example use:
     # Assuming the latest released version is v0.3.1
-    poetry run mk-release.py v0.3.2
+    # cd /path/to/dre
+    ./bin/mk-release.py v0.3.2
     # That will create a new PR. Get it approved and merged to main.
-    poetry run mk-release.py v0.3.2 --tag
+    # cd /path/to/dre
+    ./bin/mk-release.py v0.3.2 --tag
     # That will create and push the new git tag to github
     # Open https://github.com/dfinity/dre/releases/ and review, check, and publish the new release
 """
