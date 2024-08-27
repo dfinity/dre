@@ -61,10 +61,7 @@ impl NodeMetrics {
                 tokio::spawn(async move { (s, w.get_node_metrics_history(wallet, start, s).await) })
             });
 
-        info!("Running in parallel mode");
-
-        for handle in handles {
-            let (subnet, maybe_metrics) = handle.await?;
+        for (subnet, maybe_metrics) in futures::future::try_join_all(handles).await? {
             match maybe_metrics {
                 Result::Ok(m) => {
                     info!("Received metrics for subnet: {}", subnet);
