@@ -387,7 +387,7 @@ impl DecentralizedSubnet {
 
                     if score == 1.0 && controlled_nodes > nodes.len() * 2 / 3 && !european_subnet_continent_penalty {
                         checks.push(format!(
-                            "NodeFeature '{}' controls {} of nodes, which is > {} (2/3 of all) nodes",
+                            "NodeFeature {} controls {} of nodes, which is > {} (2/3 of all) nodes",
                             feature,
                             controlled_nodes,
                             nodes.len() * 2 / 3
@@ -583,18 +583,26 @@ impl DecentralizedSubnet {
                         best_result
                             .business_rules_log
                             .iter()
-                            .map(|s| format!("node {}/{} ({}): {}", i + 1, how_many_nodes, best_result.node.id, s))
+                            .map(|s| {
+                                format!(
+                                    "- adding node {} of {} ({}): {}",
+                                    i + 1,
+                                    how_many_nodes,
+                                    best_result.node.id.to_string().split('-').next().unwrap_or_default(),
+                                    s
+                                )
+                            })
                             .collect::<Vec<String>>(),
                     );
                     if i + 1 == how_many_nodes {
                         if total_penalty != 0 {
                             comment = Some(format!(
-                                "Subnet extension with {} nodes finished with the total penalty {}. Penalty causes throughout the extension:\n{}\n\n{}",
+                                "Subnet extension with {} nodes finished with the total penalty {}. Penalty causes throughout the extension:\n\n{}\n\n{}",
                                 how_many_nodes,
                                 total_penalty,
                                 business_rules_log.join("\n"),
                                 if how_many_nodes > 1 {
-                                    "Note that the penalty for nodes before the last node may not be relevant in the end. We leave this to humans to assess."
+                                    "Business rules analysis is calculated on each operation. Typically only the last operation is relevant, although this may depend on the case."
                                 } else { "" }
                             ));
                         } else {
@@ -666,18 +674,26 @@ impl DecentralizedSubnet {
                         best_result
                             .business_rules_log
                             .iter()
-                            .map(|s| format!("node {}/{} ({}): {}", i + 1, how_many_nodes, best_result.node.id, s))
+                            .map(|s| {
+                                format!(
+                                    "- removing node {} of {} ({}): {}",
+                                    i + 1,
+                                    how_many_nodes,
+                                    best_result.node.id.to_string().split('-').next().unwrap_or_default(),
+                                    s
+                                )
+                            })
                             .collect::<Vec<String>>(),
                     );
                     if i + 1 == how_many_nodes {
                         if total_penalty != 0 {
                             comment = Some(format!(
-                                "Subnet removal of {} nodes finished with the total penalty {}. Penalty causes throughout the removal:\n{}\n\n{}",
+                                "Subnet removal of {} nodes finished with the total penalty {}. Penalty causes throughout the removal:\n\n{}\n\n{}",
                                 how_many_nodes,
                                 total_penalty,
                                 business_rules_log.join("\n"),
                                 if how_many_nodes > 1 {
-                                    "Note that the penalty for nodes before the last node may not be relevant in the end. We leave this to humans to assess."
+                                    "Business rules analysis is calculated on each operation. Typically only the last operation is relevant, although this may depend on the case."
                                 } else {
                                     ""
                                 }
@@ -1284,19 +1300,40 @@ impl NetworkHealRequest {
                         "- {} additional node{}: {}",
                         num_opt,
                         if num_opt > 1 { "s" } else { "" },
-                        change.score_after.describe_difference_from(&changes[num_opt - 1].score_after).1
+                        change
+                            .score_after
+                            .describe_difference_from(&changes[num_opt.saturating_sub(1)].score_after)
+                            .1
                     )
                 })
                 .collect::<Vec<_>>();
+            info!("Max score: {}", changes_max_score.score_after);
 
             let change = changes
                 .iter()
-                .find(|change| change.score_after == changes_max_score.score_after)
+                .find(|change: &&SubnetChangeResponse| change.score_after == changes_max_score.score_after)
                 .expect("No suitable changes found");
+
+            info!(
+                "Replacing {} nodes in subnet {} gives Nakamoto coefficient: {}\n",
+                change.removed_with_desc.len(),
+                subnet.decentralized_subnet.id,
+                change.score_after
+            );
 
             let num_opt = change.removed_with_desc.len() - unhealthy_nodes_len;
             let reason_additional_optimizations = if num_opt == 0 {
-                "\n\nNot replacing any additional nodes to improve optimization.\n\n".to_string()
+                format!(
+                    "
+
+Calculated impact on subnet decentralization if replacing:
+
+{}
+
+Based on the calculated impact, not replacing additional nodes to improve optimization.
+",
+                    optimizations_desc.join("\n")
+                )
             } else {
                 format!("
 

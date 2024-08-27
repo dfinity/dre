@@ -729,11 +729,7 @@ pub fn replace_proposal_options(change: &SubnetChangeResponse) -> anyhow::Result
     Ok(ic_admin::ProposeOptions {
         title: format!("Replace {replace_target} in subnet {subnet_id_short}",).into(),
         summary: format!("# Replace {replace_target} in subnet {subnet_id_short}",).into(),
-        motivation: Some(format!(
-            "{}\n\n```\n{}\n```\n",
-            change.motivation.as_ref().unwrap_or(&String::new()),
-            change
-        )),
+        motivation: Some(format!("{}\n\n{}\n", change.motivation.as_ref().unwrap_or(&String::new()), change)),
     })
 }
 
