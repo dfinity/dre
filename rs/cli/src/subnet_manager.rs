@@ -154,7 +154,10 @@ impl SubnetManager {
             to_be_replaced.extend(subnet_unhealthy_without_included);
         }
 
-        let change = subnet_change_request.optimize(optimize.unwrap_or(0), &to_be_replaced)?;
+        let health_client = health::HealthClient::new(self.network.clone());
+        let health_of_nodes = health_client.nodes().await?;
+
+        let change = subnet_change_request.optimize(optimize.unwrap_or(0), &to_be_replaced, &health_of_nodes)?;
 
         for (n, _) in change.removed().iter().filter(|(n, _)| !node_ids_unhealthy.contains(&n.id)) {
             motivations.push(format!(
@@ -165,12 +168,13 @@ impl SubnetManager {
         }
 
         let motivation = format!(
-                "\n{}\n\nNOTE: The information below is provided for your convenience. Please independently verify the decentralization changes rather than relying solely on this summary.\nCode for calculating replacements is at https://github.com/dfinity/dre/blob/79066127f58c852eaf4adda11610e815a426878c/rs/decentralization/src/network.rs#L912\n\n```\n{}\n```\n",
-                motivations.iter().map(|s| format!(" - {}", s)).collect::<Vec<String>>().join("\n"),
-                change
+                "\n{}\n\nNOTE: The information below is provided for your convenience. Please independently verify the decentralization changes rather than relying solely on this summary.\nCode for calculating replacements is at https://github.com/dfinity/dre/blob/79066127f58c852eaf4adda11610e815a426878c/rs/decentralization/src/network.rs#L912",
+                motivations.iter().map(|s| format!(" - {}", s)).collect::<Vec<String>>().join("\n")
             );
 
-        let change = SubnetChangeResponse::from(&change).with_motivation(motivation);
+        let change = SubnetChangeResponse::from(&change)
+            .with_health_of_nodes(health_of_nodes)
+            .with_motivation(motivation);
 
         Ok(change)
     }
