@@ -1,6 +1,9 @@
+use std::str::FromStr;
+
 use clap::Args;
 use ic_canisters::registry::RegistryCanisterWrapper;
 use ic_management_types::Network;
+use ic_types::PrincipalId;
 
 use crate::auth::Neuron;
 
@@ -22,7 +25,7 @@ impl ExecutableCommand for UpdateUnassignedNodes {
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        let ic_admin = ctx.ic_admin();
+        let runner = ctx.runner().await;
         let canister_agent = ctx.create_ic_agent_canister_client(None)?;
 
         let nns_subnet_id = match &self.nns_subnet_id {
@@ -38,7 +41,7 @@ impl ExecutableCommand for UpdateUnassignedNodes {
             }
         };
 
-        ic_admin.update_unassigned_nodes(&nns_subnet_id, ctx.network()).await
+        runner.update_unassigned_nodes(&PrincipalId::from_str(&nns_subnet_id)?).await
     }
 
     fn validate(&self, _cmd: &mut clap::Command) {}
