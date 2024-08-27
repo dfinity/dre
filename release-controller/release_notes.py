@@ -10,7 +10,7 @@ import time
 import typing
 from dataclasses import dataclass
 from git_repo import GitRepo
-from commit_annotator import GUESTOS_CHANGED_NOTES_NAMESPACE, GUESTOS_TARGETS_NOTES_NAMESPACE
+from commit_annotator import GUESTOS_CHANGED_NOTES_NAMESPACE
 
 import markdown
 
@@ -481,14 +481,6 @@ Changes [were removed](https://github.com/dfinity/ic/compare/{release_tag}...{ba
         for change in non_guestos_changes:
             notes += format_change(change)
     return notes
-
-
-def get_guestos_targets(ic_repo: GitRepo, commit: str) -> list[str]:
-    """Get the packages that are related to the GuestOS image from git notes populated by commit annotator."""
-    targets = ic_repo.get_note(GUESTOS_TARGETS_NOTES_NAMESPACE, commit)
-    if not targets:
-        raise ValueError(f"Could not find targets for commit {commit}")
-    return targets.splitlines()
 
 
 def is_guestos_change(ic_repo: GitRepo, commit: str) -> bool:
