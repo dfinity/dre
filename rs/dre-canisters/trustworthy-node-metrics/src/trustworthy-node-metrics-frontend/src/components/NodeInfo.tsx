@@ -1,29 +1,22 @@
 import React from 'react';
 import Typography from '@mui/material/Typography';
 
-interface NodeInfoProps {
-  nodeId: string;
-  nodeProviderId: string;
+interface InfoFormatterProps {
+  name: string;
+  value: string;
 }
 
-const NodeInfo: React.FC<NodeInfoProps> = ({ nodeId, nodeProviderId }) => {
+const InfoFormatter: React.FC<InfoFormatterProps> = ({ name, value }) => {
   return (
     <div>
       <Typography gutterBottom variant="subtitle1" component="div">
-        {"Node ID"}
+        {name}
       </Typography>
       <Typography gutterBottom variant="subtitle2" sx={{ color: 'text.disabled' }} component="div">
-        {nodeId}
-      </Typography>
-
-      <Typography gutterBottom variant="subtitle1" component="div">
-        {"Node Provider ID"}
-      </Typography>
-      <Typography gutterBottom variant="subtitle2" sx={{ color: 'text.disabled' }} component="div">
-        {nodeProviderId}
+        {value}
       </Typography>
     </div>
   );
 };
 
-export default NodeInfo;
+export default InfoFormatter;
