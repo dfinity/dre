@@ -39,11 +39,11 @@ export const NodeProviderPage: React.FC<NodeProviderPageProps> = ({ nodeRewards,
             return { 
                 id: index,
                 col1: new Date(Number(data.ts) / 1000000), 
-                col2: nodeRewards.node_id,
-                col3: data.num_blocks_proposed, 
-                col4: data.num_blocks_failed,
+                col2: nodeRewards.node_id.toText(),
+                col3: Number(data.num_blocks_proposed), 
+                col4: Number(data.num_blocks_failed),
                 col5: data.failure_rate,
-                col6: data.subnet_assigned,
+                col6: data.subnet_assigned.toText(),
               };
         })
       });
