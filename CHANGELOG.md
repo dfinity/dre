@@ -1,6 +1,26 @@
 # dre Changelog
 
 <!-- insertion marker -->
+## [0.5.2](https://github.com/dfinity/dre/releases/tag/0.5.2) - 2024-08-27
+
+<small>[Compare with first commit](https://github.com/dfinity/dre/compare/e560ab4487484cedfd5162e03aa45824376d93ef...0.5.2)</small>
+
+### Features
+
+- Include node health when resizing or creating a subnet (#801) ([3c91b71](https://github.com/dfinity/dre/commit/3c91b71f293fc344703b859eb4e0f5d81b9df9d6) by Saša Tomić).
+- automatic pr for successful (#793) ([4ce76af](https://github.com/dfinity/dre/commit/4ce76af036daf206afe21240464bf95a2ac3a263) by Nikola Milosavljevic).
+- use .zst images instead of .gz (#797) ([d785043](https://github.com/dfinity/dre/commit/d78504372d07135e78a83e1dae0ad4cfe1f187fb) by Luka Skugor).
+- Optimize subnet healing process (#780) ([37ccfff](https://github.com/dfinity/dre/commit/37ccfffe5d9281f1229c93e8ae5916d1bee8e985) by Saša Tomić).
+
+### Bug Fixes
+
+- `update-unassigned-nodes` logic in the wrong place (#805) ([3e1445d](https://github.com/dfinity/dre/commit/3e1445db102584f255a8a1e853a7db039dd2dfb9) by Nikola Milosavljevic).
+- Update subnet analysis command to allow adding and removing multiple nodes at once (#802) ([ef80ac2](https://github.com/dfinity/dre/commit/ef80ac2978cad865dcb2fa02523f7fc86068e6dd) by Saša Tomić).
+- Make node metrics retrieval parallel again, for improved performance (#804) ([867cb3d](https://github.com/dfinity/dre/commit/867cb3da95c12d278aa470c4811449738323fa9f) by Saša Tomić).
+- adding back output of proposals (#798) ([9169836](https://github.com/dfinity/dre/commit/9169836097b9436b5949fe8e1616438c6d1722af) by Nikola Milosavljevic).
+- Skip rc branches without date (#796) ([3d398e9](https://github.com/dfinity/dre/commit/3d398e9326940a4462d872f1f55dccec58f122ac) by Luka Skugor).
+- dre heal should not consider unhealthy nodes as replacement candidates (#794) ([9e99906](https://github.com/dfinity/dre/commit/9e99906bd03326a2348e901905b0cd13af8a7d0c) by Saša Tomić).
+
 ## [0.5.1](https://github.com/dfinity/dre/releases/tag/0.5.1) - 2024-08-23
 
 <small>[Compare with first commit](https://github.com/dfinity/dre/compare/c2530ebf566627158e7a99759b2d95e4e5751118...0.5.1)</small>
