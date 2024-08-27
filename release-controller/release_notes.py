@@ -10,7 +10,7 @@ import time
 import typing
 from dataclasses import dataclass
 from git_repo import GitRepo
-from util import bazel_binary
+from commit_annotator import GUESTOS_CHANGED_NOTES_NAMESPACE
 
 import markdown
 
@@ -309,18 +309,12 @@ def get_change_description_for_commit(
     commiter = ic_repo.get_commit_info("%an", commit_hash)
 
     ic_repo.checkout(commit_hash)
-    guestos_targets_all = get_guestos_targets_with_bazel(ic_repo) + INCLUDE_CHANGES
-    guestos_targets_filtered = [
-        t
-        for t in guestos_targets_all
-        if t in INCLUDE_CHANGES or not any(re.match(f, t) for f in EXCLUDE_CHANGES_FILTERS)
-    ]
-
     file_changes = ic_repo.file_changes_for_commit(commit_hash)
-
     exclusion_reasons = []
-    guestos_change = any(f["file_path"] in guestos_targets_all for f in file_changes)
-    if guestos_change and not any(f["file_path"] in guestos_targets_filtered for f in file_changes):
+    guestos_change = is_guestos_change(ic_repo, commit_hash)
+    if guestos_change and not any(
+        f for f in file_changes if not any(re.match(filter, f["file_path"]) for filter in EXCLUDE_CHANGES_FILTERS)
+    ):
         exclusion_reasons.append("filtered out by package filters")
 
     ownership = {}
@@ -489,46 +483,18 @@ Changes [were removed](https://github.com/dfinity/ic/compare/{release_tag}...{ba
     return notes
 
 
-def bazel_query(ic_repo: GitRepo, query):
-    """Bazel query package for GuestOS."""
-    bazel_query = [
-        bazel_binary(),
-        "query",
-        query,
-    ]
-    p = subprocess.run(
-        ["gitlab-ci/container/container-run.sh"] + bazel_query,
-        cwd=ic_repo.dir,
-        text=True,
-        stdout=subprocess.PIPE,
-        check=False,
-    )
-    if p.returncode != 0:
-        print("Failure running Bazel through container. Attempting direct run.", file=sys.stderr)
-        try:
-            p = subprocess.run(
-                bazel_query,
-                cwd=ic_repo.dir,
-                text=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                check=True,
-            )
-        except subprocess.CalledProcessError as e:
-            print(p.stdout)
-            print(p.stderr)
-            raise e
-    return [l[::-1].replace(":", "/", 1)[::-1].removeprefix("//") for l in p.stdout.splitlines()]
-
-
-def get_guestos_targets_with_bazel(ic_repo: GitRepo):
-    """Get the packages that are related to the GuestOS image using Bazel."""
-    guestos_packages_all = bazel_query(
-        ic_repo,
-        "deps(//ic-os/guestos/envs/prod:update-img.tar.zst) union deps(//ic-os/setupos/envs/prod:disk-img.tar.zst)",
-    )
-
-    return guestos_packages_all
+def is_guestos_change(ic_repo: GitRepo, commit: str) -> bool:
+    """Check if GuestOS changed for the commit by querying git notes populated by commit annotator."""
+    changed = ic_repo.get_note(GUESTOS_CHANGED_NOTES_NAMESPACE, commit)
+    if not changed:
+        raise ValueError(f"Could not find targets for commit {commit}")
+    changed = changed.strip()
+    if changed == "True":
+        return True
+    elif changed == "False":
+        return False
+    else:
+        raise ValueError(f"Invalid value for changed note {changed}")
 
 
 def main():

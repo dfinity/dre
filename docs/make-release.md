@@ -1,6 +1,10 @@
 
 # How to make a new release
 
+You will need `poetry` installed on your system.  After that, run
+`poetry install` in the DRE repo folder to update your poetry setup
+to have the necessary requirements to produce a new release.
+
 Go to the repo root, and check that you don't have any dirty changes and that you are on the main branch.
 
 ```
@@ -14,7 +18,7 @@ If all looks okay, you can run the following convenience script to change the ve
 Example:
 
 ```
-❯ ./bin/mk-release.py 0.5.0
+❯ poetry run bin/mk-release.py 0.5.0
 INFO: Updating version from 0.4.3 to 0.5.0
 Already up to date.
 INFO: Patching file pyproject.toml
@@ -76,7 +80,7 @@ Next, create and push the git tag to the repo, to trigger the release CI workflo
 git checkout main
 git pull
 git status
-./bin/mk-release.py --tag 0.5.0
+poetry run bin/mk-release.py --tag 0.5.0
 ```
 
 Wait for the triggered [GH action to finish](https://github.com/dfinity/dre/actions). It will take some time because it's building binaries for x86 and for darwin.

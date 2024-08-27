@@ -1,11 +1,9 @@
 use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
-use std::collections::HashMap;
 use std::rc::Rc;
 use std::sync::Arc;
 
-use decentralization::nakamoto::NakamotoScore;
 use decentralization::network::AvailableNodesQuerier;
 use decentralization::network::DecentralizedSubnet;
 use decentralization::network::NetworkHealRequest;
@@ -13,6 +11,7 @@ use decentralization::network::SubnetChange;
 use decentralization::network::SubnetQuerier;
 use decentralization::network::SubnetQueryBy;
 use decentralization::network::TopologyManager;
+use decentralization::network::{generate_added_node_description, generate_removed_nodes_description};
 use decentralization::subnets::NodesRemover;
 use decentralization::SubnetChangeResponse;
 use futures::TryFutureExt;
@@ -109,7 +108,17 @@ impl Runner {
         Ok(())
     }
 
-    pub async fn subnet_resize(&self, request: ic_management_types::requests::SubnetResizeRequest, motivation: String) -> anyhow::Result<()> {
+    pub async fn health_of_nodes(&self) -> anyhow::Result<BTreeMap<PrincipalId, HealthStatus>> {
+        let health_client = health::HealthClient::new(self.network.clone());
+        health_client.nodes().await
+    }
+
+    pub async fn subnet_resize(
+        &self,
+        request: ic_management_types::requests::SubnetResizeRequest,
+        motivation: String,
+        health_of_nodes: &BTreeMap<PrincipalId, HealthStatus>,
+    ) -> anyhow::Result<()> {
         let change = self
             .registry
             .modify_subnet_nodes(SubnetQueryBy::SubnetId(request.subnet))
@@ -117,9 +126,9 @@ impl Runner {
             .excluding_from_available(request.exclude.clone().unwrap_or_default())
             .including_from_available(request.only.clone().unwrap_or_default())
             .including_from_available(request.include.clone().unwrap_or_default())
-            .resize(request.add, request.remove, 0)?;
+            .resize(request.add, request.remove, 0, health_of_nodes)?;
 
-        let change = SubnetChangeResponse::from(&change);
+        let change = SubnetChangeResponse::from(&change).with_health_of_nodes(health_of_nodes.clone());
 
         if self.verbose {
             if let Some(run_log) = &change.run_log {
@@ -163,6 +172,8 @@ impl Runner {
             return Ok(());
         }
 
+        let health_of_nodes = self.health_of_nodes().await?;
+
         let subnet_creation_data = self
             .registry
             .create_subnet(
@@ -171,9 +182,10 @@ impl Runner {
                 request.include.clone().unwrap_or_default(),
                 request.exclude.clone().unwrap_or_default(),
                 request.only.clone().unwrap_or_default(),
+                &health_of_nodes,
             )
             .await?;
-        let subnet_creation_data = SubnetChangeResponse::from(&subnet_creation_data);
+        let subnet_creation_data = SubnetChangeResponse::from(&subnet_creation_data).with_health_of_nodes(health_of_nodes.clone());
 
         if self.verbose {
             if let Some(run_log) = &subnet_creation_data.run_log {
@@ -216,7 +228,9 @@ impl Runner {
         if change.added_with_desc.is_empty() && change.removed_with_desc.is_empty() {
             return Ok(());
         }
-        self.run_membership_change(change.clone(), replace_proposal_options(&change)?).await
+
+        let options = replace_proposal_options(&change)?;
+        self.run_membership_change(change, options).await
     }
 
     pub async fn prepare_versions_to_retire(&self, release_artifact: &Artifact, edit_summary: bool) -> anyhow::Result<(String, Option<Vec<String>>)> {
@@ -478,18 +492,12 @@ impl Runner {
             })
             .map(|(id, subnet)| (*id, subnet.clone()))
             .collect::<BTreeMap<_, _>>();
-        let (available_nodes, healths) = try_join(self.registry.available_nodes().map_err(anyhow::Error::from), health_client.nodes()).await?;
-
-        // Remove the unhealthy nodes from the list of available nodes
-        let available_nodes = available_nodes
-            .into_iter()
-            .filter(|n| healths.get(&n.id).map_or(false, |h| h == &HealthStatus::Healthy))
-            .collect::<Vec<_>>();
+        let (available_nodes, health_of_nodes) =
+            try_join(self.registry.available_nodes().map_err(anyhow::Error::from), health_client.nodes()).await?;
 
         let subnets_change_response = NetworkHealRequest::new(subnets_without_proposals)
-            .heal_and_optimize(available_nodes, healths)
+            .heal_and_optimize(available_nodes, &health_of_nodes)
             .await?;
-        subnets_change_response.iter().for_each(|change| println!("{}", change));
 
         for change in &subnets_change_response {
             let _ = self
@@ -505,48 +513,6 @@ impl Runner {
         }
 
         Ok(())
-    }
-
-    fn recalc_remove_node_with_desc(
-        &self,
-        subnet: &DecentralizedSubnet,
-        healths: &BTreeMap<PrincipalId, HealthStatus>,
-        remove_nodes: &[decentralization::network::Node],
-    ) -> Vec<(decentralization::network::Node, String)> {
-        let mut subnet_nodes: HashMap<PrincipalId, decentralization::network::Node> =
-            HashMap::from_iter(subnet.nodes.iter().map(|n| (n.id, n.clone())));
-        let mut result = Vec::new();
-        for node in remove_nodes {
-            let node_health = healths.get(&node.id).unwrap_or(&HealthStatus::Unknown).to_string().to_lowercase();
-            let nakamoto_before = NakamotoScore::new_from_nodes(subnet_nodes.values());
-            subnet_nodes.remove(&node.id);
-            let nakamoto_after = NakamotoScore::new_from_nodes(subnet_nodes.values());
-            let nakamoto_diff = nakamoto_after.describe_difference_from(&nakamoto_before).1;
-
-            result.push((node.clone(), format!("health: {}, nakamoto impact: {}", node_health, nakamoto_diff)));
-        }
-        result
-    }
-
-    fn recalc_add_node_with_desc(
-        &self,
-        subnet: &DecentralizedSubnet,
-        healths: &BTreeMap<PrincipalId, HealthStatus>,
-        add_nodes: &[decentralization::network::Node],
-    ) -> Vec<(decentralization::network::Node, String)> {
-        let mut subnet_nodes: HashMap<PrincipalId, decentralization::network::Node> =
-            HashMap::from_iter(subnet.nodes.iter().map(|n| (n.id, n.clone())));
-        let mut result = Vec::new();
-        for node in add_nodes {
-            let node_health = healths.get(&node.id).unwrap_or(&HealthStatus::Unknown).to_string().to_lowercase();
-            let nakamoto_before = NakamotoScore::new_from_nodes(subnet_nodes.values());
-            subnet_nodes.insert(node.id, node.clone());
-            let nakamoto_after = NakamotoScore::new_from_nodes(subnet_nodes.values());
-            let nakamoto_diff = nakamoto_after.describe_difference_from(&nakamoto_before).1;
-
-            result.push((node.clone(), format!("health: {}, nakamoto impact: {}", node_health, nakamoto_diff)));
-        }
-        result
     }
 
     pub async fn decentralization_change(
@@ -566,19 +532,18 @@ impl Runner {
                 .map_err(|e| anyhow::anyhow!(e))?,
         };
         let nodes_before = subnet_before.nodes.clone();
-        let health_client = health::HealthClient::new(self.network.clone());
-        let healths = health_client.nodes().await?;
+        let health_of_nodes = self.health_of_nodes().await?;
 
         // Simulate node removal
         let removed_nodes = self.registry.get_decentralized_nodes(&change.get_removed_node_ids()).await?;
-        let removed_nodes_with_desc = self.recalc_remove_node_with_desc(&subnet_before, &healths, &removed_nodes);
+        let removed_nodes_with_desc = generate_removed_nodes_description(&subnet_before.nodes, &removed_nodes);
         let subnet_mid = subnet_before
             .without_nodes(removed_nodes_with_desc.clone())
             .map_err(|e| anyhow::anyhow!(e))?;
 
         // Now simulate node addition
         let added_nodes = self.registry.get_decentralized_nodes(&change.get_added_node_ids()).await?;
-        let added_nodes_with_desc = self.recalc_add_node_with_desc(&subnet_mid, &healths, &added_nodes);
+        let added_nodes_with_desc = generate_added_node_description(&subnet_mid.nodes, &added_nodes);
 
         let subnet_after = subnet_mid.with_nodes(added_nodes_with_desc.clone());
 
@@ -590,7 +555,10 @@ impl Runner {
             removed_nodes_desc: removed_nodes_with_desc.clone(),
             ..Default::default()
         };
-        println!("{}", SubnetChangeResponse::from(&subnet_change));
+        println!(
+            "{}",
+            SubnetChangeResponse::from(&subnet_change).with_health_of_nodes(health_of_nodes.clone())
+        );
         Ok(())
     }
 
@@ -606,8 +574,9 @@ impl Runner {
             None => change_request,
         };
 
-        let change = SubnetChangeResponse::from(&change_request.rescue()?);
-        println!("{}", change);
+        let health_of_nodes = self.health_of_nodes().await?;
+
+        let change = SubnetChangeResponse::from(&change_request.rescue(&health_of_nodes)?).with_health_of_nodes(health_of_nodes);
 
         if change.added_with_desc.is_empty() && change.removed_with_desc.is_empty() {
             return Ok(());
@@ -709,6 +678,42 @@ impl Runner {
             .map_err(|e| anyhow::anyhow!(e))?;
         Ok(())
     }
+
+    pub async fn update_unassigned_nodes(&self, nns_subnet_id: &PrincipalId) -> anyhow::Result<()> {
+        let subnets = self.registry.subnets().await?;
+
+        let nns = match subnets.get_key_value(nns_subnet_id) {
+            Some((_, value)) => value,
+            None => return Err(anyhow::anyhow!("Couldn't find nns subnet with id '{}'", nns_subnet_id)),
+        };
+
+        let unassigned_version = self.registry.unassigned_nodes_replica_version()?;
+
+        if unassigned_version == nns.replica_version.clone().into() {
+            info!(
+                "Unassigned nodes and nns are of the same version '{}', skipping proposal submition.",
+                unassigned_version
+            );
+            return Ok(());
+        }
+
+        info!(
+            "NNS version '{}' and Unassigned nodes '{}' differ",
+            nns.replica_version, unassigned_version
+        );
+
+        let command = ProposeCommand::DeployGuestosToAllUnassignedNodes {
+            replica_version: nns.replica_version.clone(),
+        };
+        let options = ProposeOptions {
+            summary: Some("Update the unassigned nodes to the latest rolled-out version".to_string()),
+            motivation: None,
+            title: Some("Update all unassigned nodes".to_string()),
+        };
+
+        self.ic_admin.propose_run(command, options).await?;
+        Ok(())
+    }
 }
 
 pub fn replace_proposal_options(change: &SubnetChangeResponse) -> anyhow::Result<ic_admin::ProposeOptions> {
@@ -724,7 +729,11 @@ pub fn replace_proposal_options(change: &SubnetChangeResponse) -> anyhow::Result
     Ok(ic_admin::ProposeOptions {
         title: format!("Replace {replace_target} in subnet {subnet_id_short}",).into(),
         summary: format!("# Replace {replace_target} in subnet {subnet_id_short}",).into(),
-        motivation: change.motivation.clone(),
+        motivation: Some(format!(
+            "{}\n\n```\n{}\n```\n",
+            change.motivation.as_ref().unwrap_or(&String::new()),
+            change
+        )),
     })
 }
 
