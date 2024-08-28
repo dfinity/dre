@@ -3,7 +3,7 @@ from publish_notes import post_process_release_notes
 import pathlib
 
 
-def test_remove_details(mocker):
+def test_remove_excluded_changes(mocker):
     processed = post_process_release_notes(
         """\
 Review checklist
