@@ -10,14 +10,14 @@ const MAX_FAILURE_RATE: u64 = 70;
 ///
 /// # Arguments
 ///
-/// * `failure_rate` - A reference to a `f64` value representing the failure rate.
+/// * `failure_rate` - A reference to a `u64` value representing the failure rate.
 ///
 /// # Returns
 ///
-/// * A `f64` value representing the rewards reduction, where:
-///   - `0.0` indicates no reduction (failure rate below the minimum threshold),
-///   - `1.0` indicates maximum reduction (failure rate above the maximum threshold),
-///   - A value between `0.0` and `1.0` represents a proportional reduction based on the failure rate.
+/// * A `u64` value representing the rewards reduction, where:
+///   - `0` indicates no reduction (failure rate below the minimum threshold),
+///   - `100` indicates maximum reduction (failure rate above the maximum threshold),
+///   - A value between `0` and `100` represents a proportional reduction based on the failure rate.
 ///
 /// # Explanation
 ///
@@ -27,8 +27,8 @@ const MAX_FAILURE_RATE: u64 = 70;
 ///
 /// 3. If the `failure_rate` is within the defined range (`MIN_FAILURE_RATE` to `MAX_FAILURE_RATE`),
 ///    the function calculates the reduction proportionally:
-///    - The reduction is calculated by normalizing the `failure_rate` within the range, resulting in a value between `0.0` and `1.0`.
-fn rewards_reduction(failure_rate: &u64) -> (Vec<OperationTracker<u64>>, u64) {
+///    - The reduction is calculated by normalizing the `failure_rate` within the range, resulting in a value between `0` and `100`.
+fn rewards_reduction_percent(failure_rate: &u64) -> (Vec<OperationTracker<u64>>, u64) {
     if failure_rate < &MIN_FAILURE_RATE {
         let (operation, result) = OperationTracker::execute(
             &format!(
@@ -153,7 +153,7 @@ pub fn compute_rewards_percent(daily_metrics: &[DailyNodeMetrics]) -> RewardsCom
         OperationTracker::execute("Computing Total Failure Rate", Operation::Percent(overall_failed, overall_total));
     ops_tracker.push(operation);
 
-    let (operations, rewards_reduction) = rewards_reduction(&overall_failure_rate);
+    let (operations, rewards_reduction) = rewards_reduction_percent(&overall_failure_rate);
     for operation in operations {
         ops_tracker.push(operation);
     }
