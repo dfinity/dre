@@ -7,9 +7,9 @@ use trustworthy_node_metrics_types::types::{
     SubnetNodeMetricsResponse,
 };
 mod metrics_manager;
+mod operations_tracker;
 mod rewards_manager;
 mod stable_memory;
-mod operations_tracker;
 
 // Management canisters updates node metrics every day
 const TIMER_INTERVAL_SEC: u64 = 60 * 60 * 24;
