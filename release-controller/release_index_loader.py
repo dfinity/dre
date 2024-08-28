@@ -35,8 +35,14 @@ class ReleaseLoader:
     def index(self) -> release_index.Model:
         return parse_yaml_raw_as(release_index.Model, open(self.release_index_dir / RELEASE_INDEX_FILE, "r").read())
 
+    def changelog_commit(self, _) -> str:
+        return ""
+
+    def changelog_path(self, version: str) -> str:
+        return f"{REPLICA_RELEASES_DIR}/{version}.md"
+
     def changelog(self, version: str) -> str | None:
-        version_changelog_path = self.release_index_dir / f"{REPLICA_RELEASES_DIR}/{version}.md"
+        version_changelog_path = self.release_index_dir / self.changelog_path(version)
         if version_changelog_path.exists():
             return open(version_changelog_path, "r").read()
 
@@ -45,8 +51,12 @@ class ReleaseLoader:
         if not changelog:
             return None
 
-        # remove details html block from content for now until we can ensure it's going to fit into proposal size limits
-        return re.sub(r"\n## Excluded Changes.*$", "", changelog, flags=re.S) + _verify_release_instructions(version)
+        return re.sub(
+            r"\n## Excluded Changes.*$",
+            f"Full list of changes (including the ones that are not relevant to GuestOS) can be found on [GitHub](https://github.com/dfinity/dre/blob/{self.changelog_commit(version)}/replica-releases/{version}.md).\n",
+            changelog,
+            flags=re.S,
+        ) + _verify_release_instructions(version)
 
 
 class DevReleaseLoader(ReleaseLoader):
@@ -62,7 +72,10 @@ class DevReleaseLoader(ReleaseLoader):
 
 
 class GitReleaseLoader(ReleaseLoader):
-    def __init__(self, git_repo: str):
+    def __init__(
+        self,
+        git_repo: str,
+    ):
         self.git_repo = GitRepo(git_repo)
         super().__init__(self.git_repo.dir)
 
@@ -73,6 +86,9 @@ class GitReleaseLoader(ReleaseLoader):
     def proposal_summary(self, version):
         self.git_repo.fetch()
         return super().proposal_summary(version)
+
+    def changelog_commit(self, version) -> str:
+        return self.git_repo.latest_commit_for_file(self.changelog_path(version))
 
 
 class StaticReleaseLoader(ReleaseLoader):

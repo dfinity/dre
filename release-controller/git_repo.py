@@ -378,6 +378,16 @@ class GitRepo:
             return None
         return self._notes(namespace, "show", object)
 
+    def latest_commit_for_file(self, file: str) -> str:
+        return (
+            subprocess.check_output(
+                ["git", "log", "-n", "1", "--pretty=format:%H", "--", file],
+                cwd=self.dir,
+            )
+            .decode()
+            .strip()
+        )
+
 
 # TODO: test
 def push_release_tags(repo: GitRepo, release: Release):
