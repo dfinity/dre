@@ -30,19 +30,24 @@ type DailyNodeMetrics = record {
 };
 
 type RewardsStats = record {
+
+};
+
+type RewardsComputationResult = record {
+  rewards_percent: nat64;
+  rewards_reduction: nat64;
   blocks_failed: nat64;
   blocks_proposed: nat64;
   blocks_total: nat64;
-  failure_rate: float64;
-  rewards_reduction: float64;
+  failure_rate: nat64;
+  computation_log: text;
 };
 
 type NodeRewardsResponse = record {
   node_id: principal;
   node_provider_id: principal;
-  rewards_percent: float64;
   daily_node_metrics: vec DailyNodeMetrics;
-  rewards_stats: RewardsStats;
+  rewards_computation: RewardsComputationResult;
 };
 
 type NodeRewardsArgs = record {

@@ -99,19 +99,20 @@ impl DailyNodeMetrics {
 }
 
 #[derive(Debug, Deserialize, CandidType)]
-pub struct RewardsStats {
+pub struct RewardsComputationResult {
+    pub rewards_percent: u64,
+    pub rewards_reduction: u64,
     pub blocks_failed: u64,
     pub blocks_proposed: u64,
     pub blocks_total: u64,
-    pub failure_rate: f64,
-    pub rewards_reduction: f64,
+    pub failure_rate: u64,
+    pub computation_log: String,
 }
 
 #[derive(Debug, Deserialize, CandidType)]
 pub struct NodeRewardsResponse {
     pub node_id: Principal,
     pub node_provider_id: Principal,
-    pub rewards_percent: f64,
     pub daily_node_metrics: Vec<DailyNodeMetrics>,
-    pub rewards_stats: RewardsStats,
+    pub rewards_computation: RewardsComputationResult,
 }

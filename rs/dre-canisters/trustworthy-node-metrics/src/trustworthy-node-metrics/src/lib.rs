@@ -9,6 +9,7 @@ use trustworthy_node_metrics_types::types::{
 mod metrics_manager;
 mod rewards_manager;
 mod stable_memory;
+mod operations_tracker;
 
 // Management canisters updates node metrics every day
 const TIMER_INTERVAL_SEC: u64 = 60 * 60 * 24;
@@ -111,15 +112,14 @@ fn node_rewards(args: NodeRewardsArgs) -> Vec<NodeRewardsResponse> {
     daily_metrics
         .into_iter()
         .map(|(node_id, daily_node_metrics)| {
-            let (rewards_percent, rewards_stats) = rewards_manager::compute_rewards_percent(&daily_node_metrics);
+            let rewards_computation = rewards_manager::compute_rewards_percent(&daily_node_metrics);
             let node_provider_id = stable_memory::get_node_provider(&node_id).unwrap_or(Principal::anonymous());
 
             NodeRewardsResponse {
                 node_id,
                 node_provider_id,
-                rewards_percent,
                 daily_node_metrics,
-                rewards_stats,
+                rewards_computation,
             }
         })
         .collect_vec()

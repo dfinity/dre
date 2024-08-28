@@ -152,6 +152,7 @@ keyring = "3.2.0"
 lazy_static = "1.5.0"
 log = "0.4.22"
 lru = "0.12.4"
+num-traits = "0.2"
 opentelemetry = { version = "0.22.0", features = ["metrics"] }
 phantom_newtype = { git = "https://github.com/dfinity/ic.git", rev = "26d5f9d0bdca0a817c236134dc9c7317b32c69a5" }
 pkcs11 = "0.5.0"

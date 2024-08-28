@@ -1,7 +1,10 @@
-use trustworthy_node_metrics_types::types::{DailyNodeMetrics, RewardsStats};
+use itertools::Itertools;
+use trustworthy_node_metrics_types::types::{DailyNodeMetrics, RewardsComputationResult};
 
-const MIN_FAILURE_RATE: f64 = 0.1;
-const MAX_FAILURE_RATE: f64 = 0.7;
+use crate::operations_tracker::{Operation, OperationTracker};
+
+const MIN_FAILURE_RATE: u64 = 10;
+const MAX_FAILURE_RATE: u64 = 70;
 
 /// Calculates the rewards reduction based on the failure rate.
 ///
@@ -25,13 +28,28 @@ const MAX_FAILURE_RATE: f64 = 0.7;
 /// 3. If the `failure_rate` is within the defined range (`MIN_FAILURE_RATE` to `MAX_FAILURE_RATE`),
 ///    the function calculates the reduction proportionally:
 ///    - The reduction is calculated by normalizing the `failure_rate` within the range, resulting in a value between `0.0` and `1.0`.
-fn rewards_reduction(failure_rate: &f64) -> f64 {
+fn rewards_reduction(failure_rate: &u64) -> (Vec<OperationTracker<u64>>, u64) {
     if failure_rate < &MIN_FAILURE_RATE {
-        0.0
+        let (operation, result) = OperationTracker::execute(
+            &format!("No Reduction applied because {}% is less than {}% failure rate", *failure_rate, MIN_FAILURE_RATE),
+            Operation::Set(0),
+        );
+        (vec![operation], result)
     } else if failure_rate > &MAX_FAILURE_RATE {
-        1.0
+        let (operation, result) = OperationTracker::execute(
+            &format!("Max reduction applied because {}% is over {}% failure rate", *failure_rate, MAX_FAILURE_RATE),
+            Operation::Set(100),
+        );
+
+        (vec![operation], result)
     } else {
-        (failure_rate - MIN_FAILURE_RATE) / (MAX_FAILURE_RATE - MIN_FAILURE_RATE)
+        let (y_change_operation, y_change) =
+            OperationTracker::execute("Linear Reduction Y change", Operation::Subtract(*failure_rate, MIN_FAILURE_RATE));
+        let (x_change_operation, x_change) =
+            OperationTracker::execute("Linear Reduction X change", Operation::Subtract(MAX_FAILURE_RATE, MIN_FAILURE_RATE));
+
+        let (operation, result) = OperationTracker::execute("Linear Reduction Percent", Operation::Percent(y_change, x_change));
+        (vec![y_change_operation, x_change_operation, operation], result)
     }
 }
 
@@ -110,33 +128,49 @@ pub fn rewards_with_penalty(daily_metrics: &[DailyNodeMetrics]) -> f64 {
 /// 2. The `overall_failure_rate` is calculated by dividing the `overall_failed` blocks by the `overall_total` blocks.
 /// 3. The `rewards_reduction` function is applied to `overall_failure_rate`.
 /// 3. Finally, the rewards percentage to be distrubuted to the node is computed.
-pub fn compute_rewards_percent(daily_metrics: &[DailyNodeMetrics]) -> (f64, RewardsStats) {
-    let (overall_failed, overall_proposed): (u64, u64) = daily_metrics
+pub fn compute_rewards_percent(daily_metrics: &[DailyNodeMetrics]) -> RewardsComputationResult {
+    let mut ops_tracker = Vec::new();
+
+    let daily_failed = daily_metrics.iter().map(|metrics| metrics.num_blocks_failed).collect_vec();
+    let daily_proposed = daily_metrics.iter().map(|metrics| metrics.num_blocks_proposed).collect_vec();
+
+    let (operation, overall_failed) = OperationTracker::execute("Computing Total Failed Blocks", Operation::Add(daily_failed));
+    ops_tracker.push(operation);
+
+    let (operation, overall_proposed) = OperationTracker::execute("Computing Total Proposed Blocks", Operation::Add(daily_proposed));
+    ops_tracker.push(operation);
+
+    let (operation, overall_total) = OperationTracker::execute("Computing Total Blocks", Operation::Add(vec![overall_failed, overall_proposed]));
+    ops_tracker.push(operation);
+
+    let (operation, overall_failure_rate) =
+        OperationTracker::execute("Computing Total Failure Rate", Operation::Percent(overall_failed, overall_total));
+    ops_tracker.push(operation);
+
+    let (operations, rewards_reduction) = rewards_reduction(&overall_failure_rate);
+    for operation in operations {
+        ops_tracker.push(operation);
+    }
+
+    let (operation, rewards_percent) = OperationTracker::execute("Total Rewards Percent", Operation::Subtract(100, rewards_reduction));
+    ops_tracker.push(operation);
+
+    let computation_log = ops_tracker
         .iter()
-        .map(|metrics| {
-            let daily_failed = metrics.num_blocks_failed;
-            let daily_proposed = metrics.num_blocks_proposed;
+        .enumerate() // Get both index and item
+        .map(|(index, item)| format!("STEP {}: {}", index + 1, item)) // Format with index and item
+        .collect_vec() // Collect into a Vec of Strings
+        .join("\n");
 
-            (daily_failed, daily_proposed)
-        })
-        .fold((0, 0), |(failed_acc, total_acc), (failed, total)| {
-            (failed_acc + failed, total_acc + total)
-        });
-    let overall_total = overall_failed + overall_proposed;
-
-    let overall_failure_rate = overall_failed as f64 / overall_total as f64;
-    let rewards_reduction = rewards_reduction(&overall_failure_rate);
-    let rewards_percent = ((1.0 - rewards_reduction) * 100.0).round() / 100.0;
-
-    let rewards_stats = RewardsStats {
+    RewardsComputationResult {
+        rewards_percent,
+        rewards_reduction,
         blocks_failed: overall_failed,
         blocks_proposed: overall_proposed,
         blocks_total: overall_total,
         failure_rate: overall_failure_rate,
-        rewards_reduction,
-    };
-
-    (rewards_percent, rewards_stats)
+        computation_log,
+    }
 }
 
 #[cfg(test)]
@@ -183,8 +217,8 @@ mod tests {
         // Overall failed = 130 Overall total = 500 Failure rate = 0.26
         // rewards_reduction = 0.266
         let daily_metrics: Vec<DailyNodeMetrics> = daily_mocked_metrics(vec![MockedMetrics::new(20, 6, 4), MockedMetrics::new(25, 10, 2)]);
-        let (rewards_percent, _) = compute_rewards_percent(&daily_metrics);
-        assert_eq!(rewards_percent, 0.73);
+        let result = compute_rewards_percent(&daily_metrics);
+        assert_eq!(result.rewards_percent, 73);
 
         // Overall failed = 45 Overall total = 450 Failure rate = 0.1
         // rewards_reduction = 0.0
@@ -192,16 +226,16 @@ mod tests {
             MockedMetrics::new(1, 400, 20),
             MockedMetrics::new(1, 5, 25), // no penalty
         ]);
-        let (rewards_percent, _) = compute_rewards_percent(&daily_metrics);
-        assert_eq!(rewards_percent, 1.0);
+        let result = compute_rewards_percent(&daily_metrics);
+        assert_eq!(result.rewards_percent, 100);
 
         // Overall failed = 5 Overall total = 10 Failure rate = 0.5
         // rewards_reduction = 0.666
         let daily_metrics: Vec<DailyNodeMetrics> = daily_mocked_metrics(vec![
             MockedMetrics::new(1, 5, 5), // no penalty
         ]);
-        let (rewards_percent, _) = compute_rewards_percent(&daily_metrics);
-        assert_eq!(rewards_percent, 0.33);
+        let result = compute_rewards_percent(&daily_metrics);
+        assert_eq!(result.rewards_percent, 33);
     }
 
     #[test]
@@ -209,8 +243,8 @@ mod tests {
         let daily_metrics: Vec<DailyNodeMetrics> = daily_mocked_metrics(vec![
             MockedMetrics::new(10, 5, 95), // max failure rate
         ]);
-        let (rewards_percent, _) = compute_rewards_percent(&daily_metrics);
-        assert_eq!(rewards_percent, 0.0);
+        let result = compute_rewards_percent(&daily_metrics);
+        assert_eq!(result.rewards_percent, 0);
     }
 
     #[test]
@@ -218,8 +252,8 @@ mod tests {
         let daily_metrics: Vec<DailyNodeMetrics> = daily_mocked_metrics(vec![
             MockedMetrics::new(10, 9, 1), // min failure rate
         ]);
-        let (rewards_percent, _) = compute_rewards_percent(&daily_metrics);
-        assert_eq!(rewards_percent, 1.0);
+        let result = compute_rewards_percent(&daily_metrics);
+        assert_eq!(result.rewards_percent, 100);
     }
 
     #[test]
@@ -235,15 +269,15 @@ mod tests {
         let daily_metrics_right_gap: Vec<DailyNodeMetrics> =
             daily_mocked_metrics(vec![gap.clone(), MockedMetrics::new(1, 6, 4), MockedMetrics::new(1, 7, 3)]);
 
-        assert_eq!(compute_rewards_percent(&daily_metrics_mid_gap).0, 0.78);
+        assert_eq!(compute_rewards_percent(&daily_metrics_mid_gap).rewards_percent, 78);
 
         assert_eq!(
-            compute_rewards_percent(&daily_metrics_mid_gap).0,
-            compute_rewards_percent(&daily_metrics_left_gap).0
+            compute_rewards_percent(&daily_metrics_mid_gap).rewards_percent,
+            compute_rewards_percent(&daily_metrics_left_gap).rewards_percent
         );
         assert_eq!(
-            compute_rewards_percent(&daily_metrics_right_gap).0,
-            compute_rewards_percent(&daily_metrics_left_gap).0
+            compute_rewards_percent(&daily_metrics_right_gap).rewards_percent,
+            compute_rewards_percent(&daily_metrics_left_gap).rewards_percent
         );
     }
 
@@ -256,11 +290,11 @@ mod tests {
         ]);
 
         let mut daily_metrics = daily_metrics.clone();
-        let (rewards_percent, _) = compute_rewards_percent(&daily_metrics);
+        let result = compute_rewards_percent(&daily_metrics);
         daily_metrics.reverse();
-        let (rewards_percent_rev, _) = compute_rewards_percent(&daily_metrics);
+        let result_rev = compute_rewards_percent(&daily_metrics);
 
-        assert_eq!(rewards_percent, 1.0);
-        assert_eq!(rewards_percent_rev, rewards_percent);
+        assert_eq!(result.rewards_percent, 100);
+        assert_eq!(result_rev.rewards_percent, result.rewards_percent);
     }
 }
