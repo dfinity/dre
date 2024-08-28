@@ -44,7 +44,6 @@ Bugfixes:
 ---------
 
 * [`2998e00de`](https://github.com/dfinity/ic/commit/2998e00de) Consensus,Interface: remove the attribute concept ([\\#392](https://github.com/dfinity/ic/pull/392))
-* [`f04c0ce20`](https://github.com/dfinity/ic/commit/f04c0ce20) Execution,Interface,Message Routing: Fix bug in StreamsTesting fixture ([\\#1014](https://github.com/dfinity/ic/pull/1014))
 * [`dada69e8f`](https://github.com/dfinity/ic/commit/dada69e8f) Interface: method not supported error message ([\\#921](https://github.com/dfinity/ic/pull/921))
 
 Performance improvements:
@@ -57,7 +56,6 @@ Chores:
 -------
 
 * [`510fcac2f`](https://github.com/dfinity/ic/commit/510fcac2f) Consensus,Interface: Introduce the ArtifactMutation type ([\\#929](https://github.com/dfinity/ic/pull/929))
-* [`43c59b2ff`](https://github.com/dfinity/ic/commit/43c59b2ff) Consensus,Interface: Make Cannot report master public key changed metric warning less noisy ([\\#986](https://github.com/dfinity/ic/pull/986))
 * [`87b72bec4`](https://github.com/dfinity/ic/commit/87b72bec4) Consensus,Interface(IDX): remove custom lmdb\\-rkv build ([\\#905](https://github.com/dfinity/ic/pull/905))
 * [`435bdcc9f`](https://github.com/dfinity/ic/commit/435bdcc9f) Consensus,Interface,Networking: purge before shares creation ([\\#882](https://github.com/dfinity/ic/pull/882))
 * [`68586671c`](https://github.com/dfinity/ic/commit/68586671c) Consensus,Interface,Networking(consensus): \\[Con\\-1229] stash more shares ([\\#902](https://github.com/dfinity/ic/pull/902))
@@ -85,63 +83,68 @@ Tests:
 -------------------------------------------
 
 
-<details>
-<summary>Other changes (either not directly modifying GuestOS or not relevant)</summary>
-<ul>
-<li><a href="https://github.com/dfinity/ic/commit/366404d06"><code>366404d06</code></a> Interface(nns): Add date filtering to list_node_provider_rewards (<a href="https://github.com/dfinity/ic/pull/979">#979</a>) [AUTO-EXCLUDED:filtered out by package filters]</li>
-<li><a href="https://github.com/dfinity/ic/commit/af6561dc3"><code>af6561dc3</code></a> Interface(nns): Add endpoint to get historical node provider rewards (<a href="https://github.com/dfinity/ic/pull/941">#941</a>) [AUTO-EXCLUDED:filtered out by package filters]</li>
-<li><a href="https://github.com/dfinity/ic/commit/b4ccc86f8"><code>b4ccc86f8</code></a> Interface(nns): Change InstallCode proposal to always return wasm_module_hash and arg_hash (<a href="https://github.com/dfinity/ic/pull/937">#937</a>) [AUTO-EXCLUDED:filtered out by package filters]</li>
-<li><a href="https://github.com/dfinity/ic/commit/4039ea27e"><code>4039ea27e</code></a> Consensus,Interface,Node: add a per-boundary-node rate-limit of 1000 update calls per second (<a href="https://github.com/dfinity/ic/pull/922">#922</a>) [AUTO-EXCLUDED:filtered out by package filters]</li>
-<li><a href="https://github.com/dfinity/ic/commit/528e08c1f"><code>528e08c1f</code></a> Execution,Interface,Message Routing: Convert proptests to test strategy (<a href="https://github.com/dfinity/ic/pull/978">#978</a>) [AUTO-EXCLUDED:filtered out by package filters]</li>
-<li><a href="https://github.com/dfinity/ic/commit/2251ac411"><code>2251ac411</code></a> Interface(nns): Make the comments on the topics and proposals consistent with NNS Dapp and ICP Dashboard (<a href="https://github.com/dfinity/ic/pull/1003">#1003</a>) [AUTO-EXCLUDED:filtered out by package filters]</li>
-<li><a href="https://github.com/dfinity/ic/commit/1fd18580d"><code>1fd18580d</code></a> Interface(ICP-Ledger): remove maximum number of accounts (<a href="https://github.com/dfinity/ic/pull/972">#972</a>) [AUTO-EXCLUDED:filtered out by package filters]</li>
-<li><a href="https://github.com/dfinity/ic/commit/8e4ffb731"><code>8e4ffb731</code></a> Interface(nns): Cleanup NNS Governance API type definitions (<a href="https://github.com/dfinity/ic/pull/961">#961</a>) [AUTO-EXCLUDED:filtered out by package filters]</li>
-<li><a href="https://github.com/dfinity/ic/commit/9edfbdc4b"><code>9edfbdc4b</code></a> Interface,Message Routing: Add snapshots to subnet split manifest test (<a href="https://github.com/dfinity/ic/pull/975">#975</a>) [AUTO-EXCLUDED:filtered out by package filters]</li>
-<li><a href="https://github.com/dfinity/ic/commit/56551ce78"><code>56551ce78</code></a> Consensus,Interface(ic-backup): Purge snapshots from the hot storage more aggresively (<a href="https://github.com/dfinity/ic/pull/1008">#1008</a>) [AUTO-EXCLUDED:not a GuestOS change]</li>
-<li><a href="https://github.com/dfinity/ic/commit/63345d6a4"><code>63345d6a4</code></a> Interface(PocketIC): specify replica log level of PocketIC instances (<a href="https://github.com/dfinity/ic/pull/971">#971</a>) [AUTO-EXCLUDED:not a GuestOS change]</li>
-<li><a href="https://github.com/dfinity/ic/commit/c16696f93"><code>c16696f93</code></a> Interface(ckerc20): NNS proposal to add ckEURC (<a href="https://github.com/dfinity/ic/pull/946">#946</a>) [AUTO-EXCLUDED:not a GuestOS change]</li>
-<li><a href="https://github.com/dfinity/ic/commit/268967ec9"><code>268967ec9</code></a> Interface(PocketIC): VerifiedApplication subnets (<a href="https://github.com/dfinity/ic/pull/963">#963</a>) [AUTO-EXCLUDED:not a GuestOS change]</li>
-<li><a href="https://github.com/dfinity/ic/commit/96cf599a6"><code>96cf599a6</code></a> Interface(ICP-Rosetta): add symbol check (<a href="https://github.com/dfinity/ic/pull/884">#884</a>) [AUTO-EXCLUDED:not a GuestOS change]</li>
-<li><a href="https://github.com/dfinity/ic/commit/6621525c0"><code>6621525c0</code></a> Interface(nns): Flag for SetVisibility Proposals. (<a href="https://github.com/dfinity/ic/pull/887">#887</a>) [AUTO-EXCLUDED:not a GuestOS change]</li>
-<li><a href="https://github.com/dfinity/ic/commit/52a3d3659"><code>52a3d3659</code></a> Interface(PocketIC): artificial delay in auto progress mode of PocketIC (<a href="https://github.com/dfinity/ic/pull/970">#970</a>) [AUTO-EXCLUDED:not a GuestOS change]</li>
-<li><a href="https://github.com/dfinity/ic/commit/b92f83285"><code>b92f83285</code></a> Owners: slack failover data store (<a href="https://github.com/dfinity/ic/pull/697">#697</a>) [AUTO-EXCLUDED:not a GuestOS change]</li>
-<li><a href="https://github.com/dfinity/ic/commit/1ad0ad696"><code>1ad0ad696</code></a> Owners: add ic-gateway to dependency scanning (<a href="https://github.com/dfinity/ic/pull/964">#964</a>) [AUTO-EXCLUDED:not a GuestOS change]</li>
-<li><a href="https://github.com/dfinity/ic/commit/449066c40"><code>449066c40</code></a> Consensus,Interface(IDX): Fix nix MacOs build for rocksdb dependency (<a href="https://github.com/dfinity/ic/pull/993">#993</a>) [AUTO-EXCLUDED:not a GuestOS change]</li>
-<li><a href="https://github.com/dfinity/ic/commit/74dae345f"><code>74dae345f</code></a> Crypto,Interface: fix crypto cargo build (<a href="https://github.com/dfinity/ic/pull/934">#934</a>) [AUTO-EXCLUDED:not a GuestOS change]</li>
-<li><a href="https://github.com/dfinity/ic/commit/c7b8d3d8b"><code>c7b8d3d8b</code></a> Interface(PocketIC): HTTP gateway crash (<a href="https://github.com/dfinity/ic/pull/1029">#1029</a>) [AUTO-EXCLUDED:not a GuestOS change]</li>
-<li><a href="https://github.com/dfinity/ic/commit/688137852"><code>688137852</code></a> Interface(PocketIC): HTTP gateway can handle requests with IP address hosts (<a href="https://github.com/dfinity/ic/pull/1025">#1025</a>) [AUTO-EXCLUDED:not a GuestOS change]</li>
-<li><a href="https://github.com/dfinity/ic/commit/d5f514da6"><code>d5f514da6</code></a> Interface: adjust metric names in p2p dashboard (<a href="https://github.com/dfinity/ic/pull/933">#933</a>) [AUTO-EXCLUDED:not a GuestOS change]</li>
-<li><a href="https://github.com/dfinity/ic/commit/12d1e6e9d"><code>12d1e6e9d</code></a> Interface,Networking: simulated network didn't correctly apply all tc filters (<a href="https://github.com/dfinity/ic/pull/928">#928</a>) [AUTO-EXCLUDED:not a GuestOS change]</li>
-<li><a href="https://github.com/dfinity/ic/commit/b0ade55f7"><code>b0ade55f7</code></a> Owners(PSEC): check environment in periodic job before running [AUTO-EXCLUDED:not a GuestOS change]</li>
-<li><a href="https://github.com/dfinity/ic/commit/f72e44ad0"><code>f72e44ad0</code></a> Owners: check first block if text field doesn't contain prefix (<a href="https://github.com/dfinity/ic/pull/1034">#1034</a>) [AUTO-EXCLUDED:not a GuestOS change]</li>
-<li><a href="https://github.com/dfinity/ic/commit/b0c612da4"><code>b0c612da4</code></a> Owners(IDX): syntax error workflow daily (<a href="https://github.com/dfinity/ic/pull/1018">#1018</a>) [AUTO-EXCLUDED:not a GuestOS change]</li>
-<li><a href="https://github.com/dfinity/ic/commit/dc960ac1b"><code>dc960ac1b</code></a> Owners(IDX): update darwin trigger logic (<a href="https://github.com/dfinity/ic/pull/1013">#1013</a>) [AUTO-EXCLUDED:not a GuestOS change]</li>
-<li><a href="https://github.com/dfinity/ic/commit/6392b8eae"><code>6392b8eae</code></a> Owners(IDX): add cache permissions [RUN_ALL_BAZEL_TARGETS] (<a href="https://github.com/dfinity/ic/pull/984">#984</a>) [AUTO-EXCLUDED:not a GuestOS change]</li>
-<li><a href="https://github.com/dfinity/ic/commit/9bd0a407b"><code>9bd0a407b</code></a> Owners(ci): Use .zst instead of .gz disk images in more places (<a href="https://github.com/dfinity/ic/pull/958">#958</a>) [AUTO-EXCLUDED:not a GuestOS change]</li>
-<li><a href="https://github.com/dfinity/ic/commit/975199acb"><code>975199acb</code></a> Owners(IDX): remove darwin container check (<a href="https://github.com/dfinity/ic/pull/950">#950</a>) [AUTO-EXCLUDED:not a GuestOS change]</li>
-<li><a href="https://github.com/dfinity/ic/commit/b3ee4e736"><code>b3ee4e736</code></a> Node: Remove dead boundary-guestos files (<a href="https://github.com/dfinity/ic/pull/962">#962</a>) [AUTO-EXCLUDED:not a GuestOS change]</li>
-<li><a href="https://github.com/dfinity/ic/commit/df4aca5dd"><code>df4aca5dd</code></a> Consensus,Node: Update Mainnet IC revisions file (<a href="https://github.com/dfinity/ic/pull/1010">#1010</a>) [AUTO-EXCLUDED:not a GuestOS change]</li>
-<li><a href="https://github.com/dfinity/ic/commit/3340b3656"><code>3340b3656</code></a> Crypto: bump ic-signature-verification version to 0.2 (<a href="https://github.com/dfinity/ic/pull/1006">#1006</a>) [AUTO-EXCLUDED:not a GuestOS change]</li>
-<li><a href="https://github.com/dfinity/ic/commit/dbf9b25d1"><code>dbf9b25d1</code></a> Interface(PocketIC): block in instance deletion until PocketIC is dropped (<a href="https://github.com/dfinity/ic/pull/1030">#1030</a>) [AUTO-EXCLUDED:not a GuestOS change]</li>
-<li><a href="https://github.com/dfinity/ic/commit/f19e510e5"><code>f19e510e5</code></a> Interface(ICP-Rosetta): icp rosetta database table consolidation (<a href="https://github.com/dfinity/ic/pull/872">#872</a>) [AUTO-EXCLUDED:not a GuestOS change]</li>
-<li><a href="https://github.com/dfinity/ic/commit/3c7b7f2ca"><code>3c7b7f2ca</code></a> Interface: Remove obsolete and unused deployment in NNS canister_ids.json (<a href="https://github.com/dfinity/ic/pull/931">#931</a>) [AUTO-EXCLUDED:not a GuestOS change]</li>
-<li><a href="https://github.com/dfinity/ic/commit/1e5a4012d"><code>1e5a4012d</code></a> Interface: optimize NNS canister builds again (<a href="https://github.com/dfinity/ic/pull/952">#952</a>) [AUTO-EXCLUDED:not a GuestOS change]</li>
-<li><a href="https://github.com/dfinity/ic/commit/7b3981ca0"><code>7b3981ca0</code></a> Owners(IDX): remove channel alerts (<a href="https://github.com/dfinity/ic/pull/1033">#1033</a>) [AUTO-EXCLUDED:not a GuestOS change]</li>
-<li><a href="https://github.com/dfinity/ic/commit/545a018dc"><code>545a018dc</code></a> Owners: Bump governance-canister / governance-canister_test compressed WASM size limit from 1.3 to 1.4 MB (<a href="https://github.com/dfinity/ic/pull/1012">#1012</a>) [AUTO-EXCLUDED:not a GuestOS change]</li>
-<li><a href="https://github.com/dfinity/ic/commit/830d1b9f3"><code>830d1b9f3</code></a> Owners(ic): bump ic-cdk v0.12 \\&amp; v0.14 (<a href="https://github.com/dfinity/ic/pull/1009">#1009</a>) [AUTO-EXCLUDED:not a GuestOS change]</li>
-<li><a href="https://github.com/dfinity/ic/commit/baeef4d7b"><code>baeef4d7b</code></a> Owners(IDX): update namespace jobs to trigger on pull_request (<a href="https://github.com/dfinity/ic/pull/996">#996</a>) [AUTO-EXCLUDED:not a GuestOS change]</li>
-<li><a href="https://github.com/dfinity/ic/commit/6b6c8477c"><code>6b6c8477c</code></a> Owners(IDX): bazel --profile\\=profile.json (<a href="https://github.com/dfinity/ic/pull/901">#901</a>) [AUTO-EXCLUDED:not a GuestOS change]</li>
-<li><a href="https://github.com/dfinity/ic/commit/6f444bdf4"><code>6f444bdf4</code></a> Owners(IDX): Add languages team channel (<a href="https://github.com/dfinity/ic/pull/989">#989</a>) [AUTO-EXCLUDED:not a GuestOS change]</li>
-<li><a href="https://github.com/dfinity/ic/commit/bf0c93467"><code>bf0c93467</code></a> Owners(dependency-mgmt): Check node version compatibility before performing the scan (<a href="https://github.com/dfinity/ic/pull/793">#793</a>) [AUTO-EXCLUDED:not a GuestOS change]</li>
-<li><a href="https://github.com/dfinity/ic/commit/ecf68e296"><code>ecf68e296</code></a> Owners: set networking team as codeowner for network simulation module (<a href="https://github.com/dfinity/ic/pull/945">#945</a>) [AUTO-EXCLUDED:not a GuestOS change]</li>
-<li><a href="https://github.com/dfinity/ic/commit/24d732eb1"><code>24d732eb1</code></a> Interface(ckerc20): Simplify return type of eth_rpc::call (<a href="https://github.com/dfinity/ic/pull/853">#853</a>) [AUTO-EXCLUDED:not a GuestOS change]</li>
-<li><a href="https://github.com/dfinity/ic/commit/9a68c3bcf"><code>9a68c3bcf</code></a> Interface,Message Routing: Use Testing Constants as Subnet IDs in Messaging Integration Tests (<a href="https://github.com/dfinity/ic/pull/936">#936</a>) [AUTO-EXCLUDED:not a GuestOS change]</li>
-<li><a href="https://github.com/dfinity/ic/commit/676c5448f"><code>676c5448f</code></a> Interface(ICRC_ledger): Add downgrade to mainnet version for SNS ledgers (<a href="https://github.com/dfinity/ic/pull/967">#967</a>) [AUTO-EXCLUDED:not a GuestOS change]</li>
-<li><a href="https://github.com/dfinity/ic/commit/039322fe3"><code>039322fe3</code></a> Interface(consensus): Use the synchronous call-v3 agent for consensus performance test (<a href="https://github.com/dfinity/ic/pull/910">#910</a>) [AUTO-EXCLUDED:not a GuestOS change]</li>
-<li><a href="https://github.com/dfinity/ic/commit/b388425da"><code>b388425da</code></a> Interface(icrc_ledger): Add ledger state verification for golden state upgrade test of SNS ledger (<a href="https://github.com/dfinity/ic/pull/720">#720</a>) [AUTO-EXCLUDED:not a GuestOS change]</li>
-<li><a href="https://github.com/dfinity/ic/commit/a2f7d24f4"><code>a2f7d24f4</code></a> Interface,Networking(network-simulation): Increase transmission control buffers (<a href="https://github.com/dfinity/ic/pull/908">#908</a>) [AUTO-EXCLUDED:not a GuestOS change]</li>
-</ul>
-</details>
+
+## Excluded Changes
+
+### Excluded by authors
+* [`f04c0ce20`](https://github.com/dfinity/ic/commit/f04c0ce20) Execution,Interface,Message Routing: Fix bug in StreamsTesting fixture ([\\#1014](https://github.com/dfinity/ic/pull/1014))
+* [`43c59b2ff`](https://github.com/dfinity/ic/commit/43c59b2ff) Consensus,Interface: Make Cannot report master public key changed metric warning less noisy ([\\#986](https://github.com/dfinity/ic/pull/986))
+
+### filtered out by package filters
+* [`366404d06`](https://github.com/dfinity/ic/commit/366404d06) Interface(nns): Add date filtering to list\\_node\\_provider\\_rewards ([\\#979](https://github.com/dfinity/ic/pull/979))
+* [`af6561dc3`](https://github.com/dfinity/ic/commit/af6561dc3) Interface(nns): Add endpoint to get historical node provider rewards ([\\#941](https://github.com/dfinity/ic/pull/941))
+* [`b4ccc86f8`](https://github.com/dfinity/ic/commit/b4ccc86f8) Interface(nns): Change InstallCode proposal to always return wasm\\_module\\_hash and arg\\_hash ([\\#937](https://github.com/dfinity/ic/pull/937))
+* [`4039ea27e`](https://github.com/dfinity/ic/commit/4039ea27e) Consensus,Interface,Node: add a per\\-boundary\\-node rate\\-limit of 1000 update calls per second ([\\#922](https://github.com/dfinity/ic/pull/922))
+* [`528e08c1f`](https://github.com/dfinity/ic/commit/528e08c1f) Execution,Interface,Message Routing: Convert proptests to test strategy ([\\#978](https://github.com/dfinity/ic/pull/978))
+* [`2251ac411`](https://github.com/dfinity/ic/commit/2251ac411) Interface(nns): Make the comments on the topics and proposals consistent with NNS Dapp and ICP Dashboard ([\\#1003](https://github.com/dfinity/ic/pull/1003))
+* [`1fd18580d`](https://github.com/dfinity/ic/commit/1fd18580d) Interface(ICP\\-Ledger): remove maximum number of accounts ([\\#972](https://github.com/dfinity/ic/pull/972))
+* [`8e4ffb731`](https://github.com/dfinity/ic/commit/8e4ffb731) Interface(nns): Cleanup NNS Governance API type definitions ([\\#961](https://github.com/dfinity/ic/pull/961))
+* [`9edfbdc4b`](https://github.com/dfinity/ic/commit/9edfbdc4b) Interface,Message Routing: Add snapshots to subnet split manifest test ([\\#975](https://github.com/dfinity/ic/pull/975))
+
+### not a GuestOS change
+* [`56551ce78`](https://github.com/dfinity/ic/commit/56551ce78) Consensus,Interface(ic\\-backup): Purge snapshots from the hot storage more aggresively ([\\#1008](https://github.com/dfinity/ic/pull/1008))
+* [`63345d6a4`](https://github.com/dfinity/ic/commit/63345d6a4) Interface(PocketIC): specify replica log level of PocketIC instances ([\\#971](https://github.com/dfinity/ic/pull/971))
+* [`c16696f93`](https://github.com/dfinity/ic/commit/c16696f93) Interface(ckerc20\\): NNS proposal to add ckEURC ([\\#946](https://github.com/dfinity/ic/pull/946))
+* [`268967ec9`](https://github.com/dfinity/ic/commit/268967ec9) Interface(PocketIC): VerifiedApplication subnets ([\\#963](https://github.com/dfinity/ic/pull/963))
+* [`96cf599a6`](https://github.com/dfinity/ic/commit/96cf599a6) Interface(ICP\\-Rosetta): add symbol check ([\\#884](https://github.com/dfinity/ic/pull/884))
+* [`6621525c0`](https://github.com/dfinity/ic/commit/6621525c0) Interface(nns): Flag for SetVisibility Proposals. ([\\#887](https://github.com/dfinity/ic/pull/887))
+* [`52a3d3659`](https://github.com/dfinity/ic/commit/52a3d3659) Interface(PocketIC): artificial delay in auto progress mode of PocketIC ([\\#970](https://github.com/dfinity/ic/pull/970))
+* [`b92f83285`](https://github.com/dfinity/ic/commit/b92f83285) Owners: slack failover data store ([\\#697](https://github.com/dfinity/ic/pull/697))
+* [`1ad0ad696`](https://github.com/dfinity/ic/commit/1ad0ad696) Owners: add ic\\-gateway to dependency scanning ([\\#964](https://github.com/dfinity/ic/pull/964))
+* [`449066c40`](https://github.com/dfinity/ic/commit/449066c40) Consensus,Interface(IDX): Fix nix MacOs build for rocksdb dependency ([\\#993](https://github.com/dfinity/ic/pull/993))
+* [`74dae345f`](https://github.com/dfinity/ic/commit/74dae345f) Crypto,Interface: fix crypto cargo build ([\\#934](https://github.com/dfinity/ic/pull/934))
+* [`c7b8d3d8b`](https://github.com/dfinity/ic/commit/c7b8d3d8b) Interface(PocketIC): HTTP gateway crash ([\\#1029](https://github.com/dfinity/ic/pull/1029))
+* [`688137852`](https://github.com/dfinity/ic/commit/688137852) Interface(PocketIC): HTTP gateway can handle requests with IP address hosts ([\\#1025](https://github.com/dfinity/ic/pull/1025))
+* [`d5f514da6`](https://github.com/dfinity/ic/commit/d5f514da6) Interface: adjust metric names in p2p dashboard ([\\#933](https://github.com/dfinity/ic/pull/933))
+* [`12d1e6e9d`](https://github.com/dfinity/ic/commit/12d1e6e9d) Interface,Networking: simulated network didn't correctly apply all tc filters ([\\#928](https://github.com/dfinity/ic/pull/928))
+* [`b0ade55f7`](https://github.com/dfinity/ic/commit/b0ade55f7) Owners(PSEC): check environment in periodic job before running
+* [`f72e44ad0`](https://github.com/dfinity/ic/commit/f72e44ad0) Owners: check first block if text field doesn't contain prefix ([\\#1034](https://github.com/dfinity/ic/pull/1034))
+* [`b0c612da4`](https://github.com/dfinity/ic/commit/b0c612da4) Owners(IDX): syntax error workflow daily ([\\#1018](https://github.com/dfinity/ic/pull/1018))
+* [`dc960ac1b`](https://github.com/dfinity/ic/commit/dc960ac1b) Owners(IDX): update darwin trigger logic ([\\#1013](https://github.com/dfinity/ic/pull/1013))
+* [`6392b8eae`](https://github.com/dfinity/ic/commit/6392b8eae) Owners(IDX): add cache permissions \\[RUN\\_ALL\\_BAZEL\\_TARGETS] ([\\#984](https://github.com/dfinity/ic/pull/984))
+* [`9bd0a407b`](https://github.com/dfinity/ic/commit/9bd0a407b) Owners(ci): Use .zst instead of .gz disk images in more places ([\\#958](https://github.com/dfinity/ic/pull/958))
+* [`975199acb`](https://github.com/dfinity/ic/commit/975199acb) Owners(IDX): remove darwin container check ([\\#950](https://github.com/dfinity/ic/pull/950))
+* [`b3ee4e736`](https://github.com/dfinity/ic/commit/b3ee4e736) Node: Remove dead boundary\\-guestos files ([\\#962](https://github.com/dfinity/ic/pull/962))
+* [`df4aca5dd`](https://github.com/dfinity/ic/commit/df4aca5dd) Consensus,Node: Update Mainnet IC revisions file ([\\#1010](https://github.com/dfinity/ic/pull/1010))
+* [`3340b3656`](https://github.com/dfinity/ic/commit/3340b3656) Crypto: bump ic\\-signature\\-verification version to 0\\.2 ([\\#1006](https://github.com/dfinity/ic/pull/1006))
+* [`dbf9b25d1`](https://github.com/dfinity/ic/commit/dbf9b25d1) Interface(PocketIC): block in instance deletion until PocketIC is dropped ([\\#1030](https://github.com/dfinity/ic/pull/1030))
+* [`f19e510e5`](https://github.com/dfinity/ic/commit/f19e510e5) Interface(ICP\\-Rosetta): icp rosetta database table consolidation ([\\#872](https://github.com/dfinity/ic/pull/872))
+* [`3c7b7f2ca`](https://github.com/dfinity/ic/commit/3c7b7f2ca) Interface: Remove obsolete and unused deployment in NNS canister\\_ids.json ([\\#931](https://github.com/dfinity/ic/pull/931))
+* [`1e5a4012d`](https://github.com/dfinity/ic/commit/1e5a4012d) Interface: optimize NNS canister builds again ([\\#952](https://github.com/dfinity/ic/pull/952))
+* [`7b3981ca0`](https://github.com/dfinity/ic/commit/7b3981ca0) Owners(IDX): remove channel alerts ([\\#1033](https://github.com/dfinity/ic/pull/1033))
+* [`545a018dc`](https://github.com/dfinity/ic/commit/545a018dc) Owners: Bump governance\\-canister / governance\\-canister\\_test compressed WASM size limit from 1\\.3 to 1\\.4 MB ([\\#1012](https://github.com/dfinity/ic/pull/1012))
+* [`830d1b9f3`](https://github.com/dfinity/ic/commit/830d1b9f3) Owners(ic): bump ic\\-cdk v0\\.12 \\& v0\\.14 ([\\#1009](https://github.com/dfinity/ic/pull/1009))
+* [`baeef4d7b`](https://github.com/dfinity/ic/commit/baeef4d7b) Owners(IDX): update namespace jobs to trigger on pull\\_request ([\\#996](https://github.com/dfinity/ic/pull/996))
+* [`6b6c8477c`](https://github.com/dfinity/ic/commit/6b6c8477c) Owners(IDX): bazel \\-\\-profile\\=profile.json ([\\#901](https://github.com/dfinity/ic/pull/901))
+* [`6f444bdf4`](https://github.com/dfinity/ic/commit/6f444bdf4) Owners(IDX): Add languages team channel ([\\#989](https://github.com/dfinity/ic/pull/989))
+* [`bf0c93467`](https://github.com/dfinity/ic/commit/bf0c93467) Owners(dependency\\-mgmt): Check node version compatibility before performing the scan ([\\#793](https://github.com/dfinity/ic/pull/793))
+* [`ecf68e296`](https://github.com/dfinity/ic/commit/ecf68e296) Owners: set networking team as codeowner for network simulation module ([\\#945](https://github.com/dfinity/ic/pull/945))
+* [`24d732eb1`](https://github.com/dfinity/ic/commit/24d732eb1) Interface(ckerc20\\): Simplify return type of eth\\_rpc::call ([\\#853](https://github.com/dfinity/ic/pull/853))
+* [`9a68c3bcf`](https://github.com/dfinity/ic/commit/9a68c3bcf) Interface,Message Routing: Use Testing Constants as Subnet IDs in Messaging Integration Tests ([\\#936](https://github.com/dfinity/ic/pull/936))
+* [`676c5448f`](https://github.com/dfinity/ic/commit/676c5448f) Interface(ICRC\\_ledger): Add downgrade to mainnet version for SNS ledgers ([\\#967](https://github.com/dfinity/ic/pull/967))
+* [`039322fe3`](https://github.com/dfinity/ic/commit/039322fe3) Interface(consensus): Use the synchronous call\\-v3 agent for consensus performance test ([\\#910](https://github.com/dfinity/ic/pull/910))
+* [`b388425da`](https://github.com/dfinity/ic/commit/b388425da) Interface(icrc\\_ledger): Add ledger state verification for golden state upgrade test of SNS ledger ([\\#720](https://github.com/dfinity/ic/pull/720))
+* [`a2f7d24f4`](https://github.com/dfinity/ic/commit/a2f7d24f4) Interface,Networking(network\\-simulation): Increase transmission control buffers ([\\#908](https://github.com/dfinity/ic/pull/908))
 """,
     )
 

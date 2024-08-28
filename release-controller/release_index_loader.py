@@ -46,7 +46,7 @@ class ReleaseLoader:
             return None
 
         # remove details html block from content for now until we can ensure it's going to fit into proposal size limits
-        return re.sub(r"\n<details>.*?</details>\n", "", changelog, flags=re.S) + _verify_release_instructions(version)
+        return re.sub(r"\n## Excluded Changes.*$", "", changelog, flags=re.S) + _verify_release_instructions(version)
 
 
 class DevReleaseLoader(ReleaseLoader):
