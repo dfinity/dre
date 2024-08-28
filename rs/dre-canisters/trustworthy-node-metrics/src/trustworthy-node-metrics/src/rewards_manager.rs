@@ -161,14 +161,20 @@ pub fn compute_rewards_percent(daily_metrics: &[DailyNodeMetrics]) -> RewardsCom
     let (operation, rewards_percent) = OperationTracker::execute("Total Rewards Percent", Operation::Subtract(100, rewards_reduction));
     ops_tracker.push(operation);
 
-    let computation_log = ops_tracker
+    let input_log = daily_metrics
+        .iter()
+        .map(|metric| metric.to_string()) // Convert each DailyNodeMetrics to string
+        .collect_vec()
+        .join("\n");
+
+    let operations_log = ops_tracker
         .iter()
         .enumerate() // Get both index and item
         .map(|(index, item)| format!("STEP {}: {}", index + 1, item)) // Format with index and item
         .collect_vec() // Collect into a Vec of Strings
         .join("\n");
 
-    println!("{}", computation_log);
+    let computation_log = format!("INPUT:\n{}\nREWARDS COMPUTATION LOG:\n\n{}", input_log, operations_log);
 
     RewardsComputationResult {
         rewards_percent,

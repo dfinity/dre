@@ -1,4 +1,4 @@
-use std::borrow::Cow;
+use std::{borrow::Cow, fmt};
 
 use candid::{CandidType, Decode, Deserialize, Encode, Principal};
 use dfn_core::api::PrincipalId;
@@ -77,6 +77,16 @@ pub struct DailyNodeMetrics {
     /// `num_blocks_failed` to `num_blocks_total` = `num_blocks_failed` + `num_blocks_proposed`.
     /// This value ranges from 0.0 (no failures) to 1.0 (all blocks failed).
     pub failure_rate: f64,
+}
+
+impl fmt::Display for DailyNodeMetrics {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "timestamp_nanoseconds: {}, num_blocks_proposed: {},  num_blocks_failed: {}",
+            self.ts, self.num_blocks_proposed, self.num_blocks_failed
+        )
+    }
 }
 
 impl DailyNodeMetrics {
