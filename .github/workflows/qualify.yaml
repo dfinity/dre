@@ -162,6 +162,7 @@ jobs:
             echo "Branch $BRANCH_REF exists"
             git checkout $BRANCH_REF
             echo "SHOULD_CREATE_PR=false" >> $GITHUB_OUTPUT
+          fi
 
           # Cache current version of script to be able to force checkout main
           # If testing it is usually hard to get the version correct so this is
