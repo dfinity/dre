@@ -31,13 +31,19 @@ const MAX_FAILURE_RATE: u64 = 70;
 fn rewards_reduction(failure_rate: &u64) -> (Vec<OperationTracker<u64>>, u64) {
     if failure_rate < &MIN_FAILURE_RATE {
         let (operation, result) = OperationTracker::execute(
-            &format!("No Reduction applied because {}% is less than {}% failure rate", *failure_rate, MIN_FAILURE_RATE),
+            &format!(
+                "No Reduction applied because {}% is less than {}% failure rate",
+                *failure_rate, MIN_FAILURE_RATE
+            ),
             Operation::Set(0),
         );
         (vec![operation], result)
     } else if failure_rate > &MAX_FAILURE_RATE {
         let (operation, result) = OperationTracker::execute(
-            &format!("Max reduction applied because {}% is over {}% failure rate", *failure_rate, MAX_FAILURE_RATE),
+            &format!(
+                "Max reduction applied because {}% is over {}% failure rate",
+                *failure_rate, MAX_FAILURE_RATE
+            ),
             Operation::Set(100),
         );
 
@@ -161,6 +167,8 @@ pub fn compute_rewards_percent(daily_metrics: &[DailyNodeMetrics]) -> RewardsCom
         .map(|(index, item)| format!("STEP {}: {}", index + 1, item)) // Format with index and item
         .collect_vec() // Collect into a Vec of Strings
         .join("\n");
+
+    println!("{}", computation_log);
 
     RewardsComputationResult {
         rewards_percent,
