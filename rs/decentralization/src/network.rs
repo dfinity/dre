@@ -320,14 +320,62 @@ impl DecentralizedSubnet {
                 Some((country_dominant, country_nodes_count)) => {
                     let controlled_nodes_max = nodes.len() / 3;
                     if country_nodes_count > controlled_nodes_max {
+                        let penalty = (country_nodes_count - controlled_nodes_max) * 1000;
                         checks.push(format!(
-                            "Country '{}' controls {} of nodes, which is > {} (1/3 - 1) of subnet nodes",
-                            country_dominant, country_nodes_count, controlled_nodes_max
+                            "Country {} controls {} of nodes, which is > {} (1/3 - 1) of subnet nodes. Applying penalty of {}.",
+                            country_dominant, country_nodes_count, controlled_nodes_max, penalty
                         ));
-                        penalties += (country_nodes_count - controlled_nodes_max) * 1000;
+                        penalties += penalty;
                     }
                 }
                 _ => return Err(anyhow::anyhow!("Incomplete data for {}", feature)),
+            }
+        }
+
+        // As per the adopted target topology
+        // https://dashboard.internetcomputer.org/proposal/132136
+        let max_nodes_per_np_and_dc = 1;
+        for feature in &[NodeFeature::NodeProvider, NodeFeature::DataCenter, NodeFeature::DataCenterOwner] {
+            match nakamoto_scores.feature_value_counts_max(feature) {
+                Some((name, value)) => {
+                    if value > max_nodes_per_np_and_dc {
+                        let penalty = (value - max_nodes_per_np_and_dc) * 10;
+                        checks.push(format!(
+                            "{} {} controls {} of nodes, which is higher than target of {} for the subnet. Applying penalty of {}.",
+                            feature, name, value, max_nodes_per_np_and_dc, penalty
+                        ));
+                        penalties += penalty;
+                    }
+                }
+                _ => return Err(anyhow::anyhow!("Incomplete data for {}", feature)),
+            }
+        }
+
+        // As per the adopted target topology
+        // https://dashboard.internetcomputer.org/proposal/132136
+        let max_nodes_per_country = match subnet_id_str.as_str() {
+            "tdb26-jop6k-aogll-7ltgs-eruif-6kk7m-qpktf-gdiqx-mxtrf-vb5e6-eqe"
+            | "x33ed-h457x-bsgyx-oqxqf-6pzwv-wkhzr-rm2j3-npodi-purzm-n66cg-gae"
+            | "pzp6e-ekpqk-3c5x7-2h6so-njoeq-mt45d-h3h6c-q3mxf-vpeq5-fk5o7-yae"
+            | "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe" => 3,
+            _ => 2,
+        };
+        match nakamoto_scores.feature_value_counts_max(&NodeFeature::Country) {
+            Some((name, value)) => {
+                if value > max_nodes_per_country {
+                    let penalty = (value - max_nodes_per_country) * 10;
+                    checks.push(format!(
+                        "Country {} controls {} of nodes, which is higher than target of {} for the subnet. Applying penalty of {}.",
+                        name, value, max_nodes_per_country, penalty
+                    ));
+                    penalties += penalty;
+                }
+            }
+            _ => {
+                return Err(anyhow::anyhow!(
+                    "Incomplete data for Node Feature Country in subnet {}",
+                    subnet_id.to_string()
+                ))
             }
         }
 
@@ -387,7 +435,7 @@ impl DecentralizedSubnet {
 
                     if score == 1.0 && controlled_nodes > nodes.len() * 2 / 3 && !european_subnet_continent_penalty {
                         checks.push(format!(
-                            "NodeFeature '{}' controls {} of nodes, which is > {} (2/3 of all) nodes",
+                            "NodeFeature {} controls {} of nodes, which is > {} (2/3 of all) nodes",
                             feature,
                             controlled_nodes,
                             nodes.len() * 2 / 3
