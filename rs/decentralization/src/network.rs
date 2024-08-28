@@ -435,7 +435,7 @@ impl DecentralizedSubnet {
 
                     if score == 1.0 && controlled_nodes > nodes.len() * 2 / 3 && !european_subnet_continent_penalty {
                         checks.push(format!(
-                            "NodeFeature '{}' controls {} of nodes, which is > {} (2/3 of all) nodes",
+                            "NodeFeature {} controls {} of nodes, which is > {} (2/3 of all) nodes",
                             feature,
                             controlled_nodes,
                             nodes.len() * 2 / 3

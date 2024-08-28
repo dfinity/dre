@@ -140,7 +140,17 @@ impl NakamotoScore {
             let only_counter = counters.iter().map(|(_feat, cnt)| *cnt).collect::<Vec<_>>();
             // But for deeper understanding (logging and debugging) we also keep track of
             // all strings and their counts
-            let value_counts = counters.into_iter().sorted_by_key(|(_feat, cnt)| -(*cnt as isize)).collect::<Vec<_>>();
+            let value_counts = counters
+                .into_iter()
+                .sorted_unstable_by(|(feat1, cnt1), (feat2, cnt2)| {
+                    let cmp1 = cnt2.partial_cmp(cnt1).unwrap();
+                    if cmp1 == Ordering::Equal {
+                        feat1.partial_cmp(feat2).unwrap_or(Ordering::Equal)
+                    } else {
+                        cmp1
+                    }
+                })
+                .collect::<Vec<_>>();
 
             (value.0.clone(), Self::nakamoto(&only_counter), value_counts)
         });
@@ -698,8 +708,8 @@ mod tests {
             (
                 1070,
                 vec![
-                    "Country 'US' controls 9 of nodes, which is higher than target of 2 for the subnet. Applying penalty of 70.".to_string(),
-                    "NodeFeature 'country' controls 9 of nodes, which is > 8 (2/3 of all) nodes".to_string()
+                    "Country US controls 9 of nodes, which is higher than target of 2 for the subnet. Applying penalty of 70.".to_string(),
+                    "NodeFeature country controls 9 of nodes, which is > 8 (2/3 of all) nodes".to_string()
                 ]
             )
         );
@@ -759,7 +769,7 @@ mod tests {
             (
                 10020,
                 vec![
-                    "node_provider 'NP2' controls 3 of nodes, which is higher than target of 1 for the subnet. Applying penalty of 20.".to_string(),
+                    "node_provider NP2 controls 3 of nodes, which is higher than target of 1 for the subnet. Applying penalty of 20.".to_string(),
                     "A single Node Provider can halt the subnet".to_string()
                 ]
             )
@@ -813,7 +823,7 @@ mod tests {
             subnet_initial.check_business_rules().unwrap(),
             (
                 10,
-                vec!["node_provider 'NP4' controls 2 of nodes, which is higher than target of 1 for the subnet. Applying penalty of 10.".to_string()]
+                vec!["node_provider NP2 controls 2 of nodes, which is higher than target of 1 for the subnet. Applying penalty of 10.".to_string()]
             )
         );
 
