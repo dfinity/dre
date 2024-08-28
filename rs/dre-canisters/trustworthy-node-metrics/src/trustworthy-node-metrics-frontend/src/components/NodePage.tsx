@@ -1,17 +1,18 @@
 import React from 'react';
-import { ChartData, generateChartData } from '../utils/utils';
+import { ChartData, formatDateToUTC, generateChartData } from '../utils/utils';
 import { WidgetGauge, WidgetNumber } from './Widgets';
 import { PeriodFilter } from './FilterBar';
 import { Box, Divider, Grid, Paper, Typography } from '@mui/material';
 import { useParams } from 'react-router-dom';
 import DailyPerformanceChart from './DailyPerformanceChart';
-import NodeInfo from './NodeInfo';
 import { paperStyle, boxStyleWidget } from '../Styles';
 import { NodeRewardsResponse } from '../../../declarations/trustworthy-node-metrics/trustworthy-node-metrics.did';
-import RewardsInfo, { LinearReductionChart } from './RewardsInfo';
-import { ExportCustomToolbar } from './NodeDailyData';
+import RewardsInfo from './RewardsInfo';
+import { ExportTable } from './ExportTable';
+import InfoFormatter from './NodeInfo';
+import { GridColDef, GridRowsProp } from '@mui/x-data-grid';
 
-export interface NodeChartProps {
+export interface NodePageProps {
     nodeRewards: NodeRewardsResponse[];
     periodFilter: PeriodFilter;
 }
@@ -30,7 +31,7 @@ const NodePerformanceStats: React.FC<{ rewardsReduction: string }> = ({ rewardsR
     </Box>
 );
 
-export const NodeChart: React.FC<NodeChartProps> = ({ nodeRewards, periodFilter }) => {
+export const NodePage: React.FC<NodePageProps> = ({ nodeRewards, periodFilter }) => {
     const { node } = useParams();
     
     const nodeMetrics = nodeRewards.find((metrics) => metrics.node_id.toText() === node);
@@ -43,6 +44,25 @@ export const NodeChart: React.FC<NodeChartProps> = ({ nodeRewards, periodFilter 
     const rewardsPercent = Math.round(nodeMetrics.rewards_percent * 100);
     const rewardsReduction = 100 - rewardsPercent;
 
+    const rows: GridRowsProp = nodeMetrics.daily_node_metrics.map((data, index) => {
+        return { 
+            id: index + 1,
+            col1: new Date(Number(data.ts) / 1000000), 
+            col2: Number(data.num_blocks_proposed), 
+            col3: Number(data.num_blocks_failed),
+            col4: data.failure_rate,
+            col5: data.subnet_assigned.toText(),
+            };
+    });
+      
+    const colDef: GridColDef[] = [
+        { field: 'col1', headerName: 'Date (UTC)', width: 200, valueFormatter: (value: Date) => formatDateToUTC(value)},
+        { field: 'col2', headerName: 'Blocks Proposed', width: 150 },
+        { field: 'col3', headerName: 'Blocks Failed', width: 150 },
+        { field: 'col4', headerName: 'Daily Failure Rate', width: 350 , valueFormatter: (value: number) => `${value * 100}%`,},
+        { field: 'col5', headerName: 'Subnet Assigned', width: 550 },
+        ];
+
     return (
         <Box sx={{ p: 3 }}>
             <Paper sx={paperStyle}>
@@ -54,7 +74,8 @@ export const NodeChart: React.FC<NodeChartProps> = ({ nodeRewards, periodFilter 
                         <Divider/>
                     </Grid>
                     <Grid item xs={12} md={4}>
-                        <NodeInfo nodeId={nodeMetrics.node_id.toText()} nodeProviderId={nodeMetrics.node_provider_id.toText()} />
+                        <InfoFormatter name={"Node ID"} value={nodeMetrics.node_id.toText()} />
+                        <InfoFormatter name={"Node Provider ID"} value={nodeMetrics.node_provider_id.toText()} />
                     </Grid>
                     <Grid item xs={12} md={8}>
                         <WidgetGauge value={rewardsPercent} title={"Rewards Total"} />
@@ -72,7 +93,7 @@ export const NodeChart: React.FC<NodeChartProps> = ({ nodeRewards, periodFilter 
                         <RewardsInfo failureRate={failureRateAvg} rewardReduction={rewardsReduction}/>
                     </Grid>
                     <Grid item xs={12} md={12}>
-                        <ExportCustomToolbar chartDailyData={chartDailyData}/>
+                        <ExportTable colDef={colDef} rows={rows}/>
                     </Grid>
                 </Grid>
             </Paper>
@@ -80,4 +101,4 @@ export const NodeChart: React.FC<NodeChartProps> = ({ nodeRewards, periodFilter 
     );
 };
 
-export default NodeChart;
+export default NodePage;

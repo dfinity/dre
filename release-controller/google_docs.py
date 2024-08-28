@@ -1,6 +1,7 @@
 import os
 import pathlib
 import tempfile
+import time
 import typing
 
 import mammoth
@@ -77,16 +78,20 @@ class ReleaseNotesClient:
         with tempfile.TemporaryDirectory() as d:
             release_docx = pathlib.Path(d) / "release.docx"
             f.GetContentFile(release_docx)
-            # google docs will convert the document to docx format first time it's saved
-            # before that, it should be in html
-            try:
-                with open(release_docx, "tr", encoding="utf8") as f:  # try open file in text mode
-                    release_html = f.read()
-            except:  # if fail then file is non-text (binary)  # noqa: E722  # pylint: disable=bare-except
-                release_html = mammoth.convert_to_html(open(release_docx, "rb")).value
+            return google_doc_to_markdown(release_docx)
 
-            release_md = markdownify(release_html)
-            return release_md
+
+def google_doc_to_markdown(release_docx: pathlib.Path) -> str:
+    # google docs will convert the document to docx format first time it's saved
+    # before that, it should be in html
+    try:
+        with open(release_docx, "tr", encoding="utf8") as f:  # try open file in text mode
+            release_html = f.read()
+    except:  # if fail then file is non-text (binary)  # noqa: E722  # pylint: disable=bare-except
+        release_html = mammoth.convert_to_html(open(release_docx, "rb")).value
+
+    release_md = markdownify(release_html)
+    return release_md
 
 
 def main():
