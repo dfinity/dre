@@ -7,6 +7,7 @@ from github import Auth
 from github import Github
 from github.Repository import Repository
 import markdown
+from itertools import groupby
 
 REPLICA_RELEASES_DIR = "replica-releases"
 
@@ -16,7 +17,7 @@ def post_process_release_notes(release_notes: str) -> str:
     lines = [
         # add ticks around commit hash
         re.sub(
-            r"(?<=\[)([a-h0-9]{9})(?=\])",
+            r"(?<=\[)(~*[a-h0-9]{9}~*)(?=\])",
             r"`\g<1>`",
             # remove author
             re.sub(r"(?<=^\* )(.*)author:[^|]+\| ?", r"\g<1>", line),
@@ -26,33 +27,37 @@ def post_process_release_notes(release_notes: str) -> str:
 
     changelog = "\n".join([line for line in lines if "~~" not in line])
     excluded_lines = [line for line in lines if "~~" in line]
-    excluded_changes = "\n".join(
-        [
-            l
-            for l in [
-                re.sub(
-                    # remove whitespace after *
-                    r"(?<=^\* )\s+",
-                    "",
-                    # remove [AUTO-EXCLUDED]
-                    re.sub(r"\[AUTO-EXCLUDED[^]]*\]", "", line)
-                    # remove ~~
-                    .replace("~~", ""),
-                ).strip()
-                for line in excluded_lines
-            ]
-            if l.startswith("* [")
+    excluded_changes = [
+        l
+        for l in [
+            re.sub(
+                # remove whitespace after *
+                r"(?<=^\* )\s+",
+                "",
+                # remove ~~
+                line.replace("~~", ""),
+            ).strip()
+            for line in excluded_lines
         ]
-    )
+        if l.startswith("* [")
+    ]
+
+    EXCLUSION_REGEX = r"\\*\[AUTO\\*-EXCLUDED:([^]]+)\]"
+
+    def exclusion_reason(line: str) -> str:
+        m = re.search(EXCLUSION_REGEX, line)
+        if not m:
+            return "Excluded by authors"
+        return m.group(1)
+
     if excluded_changes:
-        changelog += (
-            "\n<details>\n<summary>Other changes (either not directly modifying GuestOS or not relevant)</summary>\n"
-        )
-        md = markdown.Markdown(
-            extensions=["pymdownx.tilde"],
-        )
-        changelog += md.convert(excluded_changes)
-        changelog += "\n</details>\n"
+        changelog += "\n\n## Excluded Changes\n"
+        for reason, lines in groupby(sorted(excluded_changes, key=exclusion_reason), exclusion_reason):
+            lines = [re.sub(EXCLUSION_REGEX, "", line).strip() for line in lines]
+            changelog += f"\n### {reason}\n"
+            changelog += "\n".join(lines)
+            changelog += "\n"
+
     return changelog
 
 

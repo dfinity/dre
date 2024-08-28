@@ -3,7 +3,7 @@ from publish_notes import post_process_release_notes
 import pathlib
 
 
-def test_remove_details(mocker):
+def test_remove_excluded_changes(mocker):
     processed = post_process_release_notes(
         """\
 Review checklist
@@ -62,6 +62,7 @@ Features:
 * [`b733f7043`](https://github.com/dfinity/ic/commit/b733f7043) Consensus(ecdsa): Extend Quadruple state machine in preparation for random unmasked kappa
 * [`e76c5a374`](https://github.com/dfinity/ic/commit/e76c5a374) Consensus(ecdsa): Stop relaying tECDSA signature shares
 * [`2d63da24c`](https://github.com/dfinity/ic/commit/2d63da24c) Consensus(ecdsa): Add optional kappa\\_unmasked config to QuadrupleInCreation
+
 
 # IC-OS Verification
 

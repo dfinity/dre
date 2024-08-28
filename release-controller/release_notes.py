@@ -310,12 +310,12 @@ def get_change_description_for_commit(
 
     ic_repo.checkout(commit_hash)
     file_changes = ic_repo.file_changes_for_commit(commit_hash)
-    exclusion_reasons = []
+    exclusion_reason = None
     guestos_change = is_guestos_change(ic_repo, commit_hash)
     if guestos_change and not any(
         f for f in file_changes if not any(re.match(filter, f["file_path"]) for filter in EXCLUDE_CHANGES_FILTERS)
     ):
-        exclusion_reasons.append("filtered out by package filters")
+        exclusion_reason = "Changed files are exluded by file path filter"
 
     ownership = {}
     stripped_message = re.sub(jira_ticket_regex, "", commit_message)
@@ -364,7 +364,7 @@ def get_change_description_for_commit(
     commit_type = commit_type if commit_type in TYPE_PRETTY_MAP else "other"
 
     if guestos_change and not REPLICA_TEAMS.intersection(teams):
-        exclusion_reasons.append("not a replica team change")
+        exclusion_reason = "The change is not owned by any replica team"
 
     teams = sorted(list(teams))
 
@@ -381,7 +381,7 @@ def get_change_description_for_commit(
         scope=conventional["scope"] if conventional["scope"] else "",
         message=conventional["message"],
         commiter=commiter,
-        exclusion_reason=",".join(exclusion_reasons) if exclusion_reasons else None,
+        exclusion_reason=exclusion_reason,
         guestos_change=guestos_change,
     )
 
@@ -459,7 +459,7 @@ Changes [were removed](https://github.com/dfinity/ic/compare/{release_tag}...{ba
         text = "{4} | {0} {1}{2} {3}".format(commit_part, team_part, scope_part, message_part, commiter_part)
         if change["exclusion_reason"] or not change["guestos_change"]:
             text = "~~{} [AUTO-EXCLUDED:{}]~~".format(
-                text, "not a GuestOS change" if not change["guestos_change"] else change["exclusion_reason"]
+                text, "Not modifying GuestOS" if not change["guestos_change"] else change["exclusion_reason"]
             )
         return "* " + text + "\n"
 
