@@ -459,7 +459,7 @@ Changes [were removed](https://github.com/dfinity/ic/compare/{release_tag}...{ba
         text = "{4} | {0} {1}{2} {3}".format(commit_part, team_part, scope_part, message_part, commiter_part)
         if change["exclusion_reason"] or not change["guestos_change"]:
             text = "~~{} [AUTO-EXCLUDED:{}]~~".format(
-                text, "not a GuestOS change" if not change["guestos_change"] else change["exclusion_reason"]
+                text, "Not modifying GuestOS" if not change["guestos_change"] else change["exclusion_reason"]
             )
         return "* " + text + "\n"
 
