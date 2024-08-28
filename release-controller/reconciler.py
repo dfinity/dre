@@ -145,7 +145,9 @@ def version_package_checksum(version: str):
             f"https://download.dfinity.systems/ic/{version}/guest-os/update-img/SHA256SUMS", timeout=10
         )
         checksum = [
-            line for line in response.content.decode("utf-8").splitlines() if line.strip().endswith("update-img.tar.zst")
+            line
+            for line in response.content.decode("utf-8").splitlines()
+            if line.strip().endswith("update-img.tar.zst")
         ][0].split(" ")[0]
 
         for i, u in enumerate(version_package_urls(version)):
