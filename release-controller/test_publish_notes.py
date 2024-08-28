@@ -44,7 +44,6 @@ Bugfixes:
 ---------
 
 * [`2998e00de`](https://github.com/dfinity/ic/commit/2998e00de) Consensus,Interface: remove the attribute concept ([\\#392](https://github.com/dfinity/ic/pull/392))
-* [`f04c0ce20`](https://github.com/dfinity/ic/commit/f04c0ce20) Execution,Interface,Message Routing: Fix bug in StreamsTesting fixture ([\\#1014](https://github.com/dfinity/ic/pull/1014))
 * [`dada69e8f`](https://github.com/dfinity/ic/commit/dada69e8f) Interface: method not supported error message ([\\#921](https://github.com/dfinity/ic/pull/921))
 
 Performance improvements:
@@ -57,7 +56,6 @@ Chores:
 -------
 
 * [`510fcac2f`](https://github.com/dfinity/ic/commit/510fcac2f) Consensus,Interface: Introduce the ArtifactMutation type ([\\#929](https://github.com/dfinity/ic/pull/929))
-* [`43c59b2ff`](https://github.com/dfinity/ic/commit/43c59b2ff) Consensus,Interface: Make Cannot report master public key changed metric warning less noisy ([\\#986](https://github.com/dfinity/ic/pull/986))
 * [`87b72bec4`](https://github.com/dfinity/ic/commit/87b72bec4) Consensus,Interface(IDX): remove custom lmdb\\-rkv build ([\\#905](https://github.com/dfinity/ic/pull/905))
 * [`435bdcc9f`](https://github.com/dfinity/ic/commit/435bdcc9f) Consensus,Interface,Networking: purge before shares creation ([\\#882](https://github.com/dfinity/ic/pull/882))
 * [`68586671c`](https://github.com/dfinity/ic/commit/68586671c) Consensus,Interface,Networking(consensus): \\[Con\\-1229] stash more shares ([\\#902](https://github.com/dfinity/ic/pull/902))
@@ -87,6 +85,10 @@ Tests:
 
 
 ## Excluded Changes
+
+### Excluded by authors
+* [`f04c0ce20`](https://github.com/dfinity/ic/commit/f04c0ce20) Execution,Interface,Message Routing: Fix bug in StreamsTesting fixture ([\\#1014](https://github.com/dfinity/ic/pull/1014))
+* [`43c59b2ff`](https://github.com/dfinity/ic/commit/43c59b2ff) Consensus,Interface: Make Cannot report master public key changed metric warning less noisy ([\\#986](https://github.com/dfinity/ic/pull/986))
 
 ### filtered out by package filters
 * [`366404d06`](https://github.com/dfinity/ic/commit/366404d06) Interface(nns): Add date filtering to list\\_node\\_provider\\_rewards ([\\#979](https://github.com/dfinity/ic/pull/979))

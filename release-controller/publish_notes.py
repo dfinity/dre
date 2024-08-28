@@ -17,7 +17,7 @@ def post_process_release_notes(release_notes: str) -> str:
     lines = [
         # add ticks around commit hash
         re.sub(
-            r"(?<=\[)([a-h0-9]{9})(?=\])",
+            r"(?<=\[)(~*[a-h0-9]{9}~*)(?=\])",
             r"`\g<1>`",
             # remove author
             re.sub(r"(?<=^\* )(.*)author:[^|]+\| ?", r"\g<1>", line),
@@ -52,7 +52,7 @@ def post_process_release_notes(release_notes: str) -> str:
 
     if excluded_changes:
         changelog += "\n\n## Excluded Changes\n"
-        for reason, lines in groupby(excluded_changes, exclusion_reason):
+        for reason, lines in groupby(sorted(excluded_changes, key=exclusion_reason), exclusion_reason):
             lines = [re.sub(EXCLUSION_REGEX, "", line).strip() for line in lines]
             changelog += f"\n### {reason}\n"
             changelog += "\n".join(lines)

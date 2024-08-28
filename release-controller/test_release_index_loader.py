@@ -63,6 +63,7 @@ Features:
 * [`e76c5a374`](https://github.com/dfinity/ic/commit/e76c5a374) Consensus(ecdsa): Stop relaying tECDSA signature shares
 * [`2d63da24c`](https://github.com/dfinity/ic/commit/2d63da24c) Consensus(ecdsa): Add optional kappa\\_unmasked config to QuadrupleInCreation
 
+
 # IC-OS Verification
 
 To build and verify the IC-OS disk image, run:
