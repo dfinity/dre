@@ -80,7 +80,7 @@ impl Display for SubnetChangeResponse {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         writeln!(
             f,
-            "Decentralization Nakamoto coefficient changes for subnet {}:\n",
+            "Decentralization Nakamoto coefficient changes for subnet `{}`:\n```",
             self.subnet_id.unwrap_or_default()
         )?;
         let before_individual = self.score_before.scores_individual();
@@ -105,14 +105,14 @@ impl Display for SubnetChangeResponse {
         let total_before = self.score_before.score_avg_linear();
         let total_after = self.score_after.score_avg_linear();
         let output = format!(
-            "**Mean Nakamoto comparison:** {:.2} -> {:.2}  ({:+.0}%)\n\nOverall replacement impact: {}",
+            "\n**Mean Nakamoto comparison:** {:.2} -> {:.2}  ({:+.0}%)\n\nOverall replacement impact: {}",
             total_before,
             total_after,
             ((total_after - total_before) / total_before) * 100.,
             self.score_after.describe_difference_from(&self.score_before).1
         );
 
-        writeln!(f, "\n{}\n\n# Details\n\n", output)?;
+        writeln!(f, "```\n{}\n\n# Details\n\n", output)?;
 
         writeln!(f, "Nodes removed:")?;
         for (id, desc) in &self.removed_with_desc {
@@ -121,7 +121,7 @@ impl Display for SubnetChangeResponse {
                 .get(id)
                 .map(|h| h.to_string().to_lowercase())
                 .unwrap_or("unknown".to_string());
-            writeln!(f, " --> {} [health: {}, impact on decentralization: {}]", id, health, desc).expect("write failed");
+            writeln!(f, "- `{}` [health: {}, impact on decentralization: {}]", id, health, desc).expect("write failed");
         }
         writeln!(f, "\nNodes added:")?;
         for (id, desc) in &self.added_with_desc {
@@ -130,7 +130,7 @@ impl Display for SubnetChangeResponse {
                 .get(id)
                 .map(|h| h.to_string().to_lowercase())
                 .unwrap_or("unknown".to_string());
-            writeln!(f, " ++> {} [health: {}, impact on decentralization: {}]", id, health, desc).expect("write failed");
+            writeln!(f, "- `{}` [health: {}, impact on decentralization: {}]", id, health, desc).expect("write failed");
         }
 
         let rows = self.feature_diff.values().map(|diff| diff.len()).max().unwrap_or(0);
@@ -166,10 +166,10 @@ impl Display for SubnetChangeResponse {
             }));
         }
 
-        writeln!(f, "\n\n{}", table)?;
+        writeln!(f, "\n\n```\n{}```\n", table)?;
 
         if let Some(comment) = &self.comment {
-            writeln!(f, "*** Note ***\n{}", comment)?;
+            writeln!(f, "### Business rules analysis\n{}", comment)?;
         }
 
         Ok(())

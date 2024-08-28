@@ -348,11 +348,19 @@ impl NakamotoScore {
         if cmp != Some(Ordering::Equal) {
             return (
                 cmp,
-                format!(
-                    "the minimum Nakamoto coefficient across all features changes from {} to {}",
-                    other.score_min(),
-                    self.score_min()
-                ),
+                if cmp == Some(Ordering::Less) {
+                    format!(
+                        "(gets worse) the minimum Nakamoto coefficient across all features decreases from {} to {}",
+                        other.score_min(),
+                        self.score_min()
+                    )
+                } else {
+                    format!(
+                        "(gets better) the minimum Nakamoto coefficient across all features increases from {} to {}",
+                        other.score_min(),
+                        self.score_min()
+                    )
+                },
             );
         }
 
@@ -362,11 +370,19 @@ impl NakamotoScore {
         if cmp != Some(Ordering::Equal) {
             return (
                 cmp,
-                format!(
-                    "the average log2 of Nakamoto Coefficients across all features changes from {:.4} to {:.4}",
-                    other.score_avg_log2().unwrap_or(0.0),
-                    self.score_avg_log2().unwrap_or(0.0)
-                ),
+                if cmp == Some(Ordering::Less) {
+                    format!(
+                        "(gets worse) the average log2 of Nakamoto Coefficients across all features decreases from {:.4} to {:.4}",
+                        other.score_avg_log2().unwrap_or(0.0),
+                        self.score_avg_log2().unwrap_or(0.0)
+                    )
+                } else {
+                    format!(
+                        "(gets better) the average log2 of Nakamoto Coefficients across all features increases from {:.4} to {:.4}",
+                        other.score_avg_log2().unwrap_or(0.0),
+                        self.score_avg_log2().unwrap_or(0.0)
+                    )
+                },
             );
         }
 
@@ -380,13 +396,25 @@ impl NakamotoScore {
             return (
                 cmp,
                 if val_self[0] != val_other[0] {
+                    if val_self[0] > val_other[0] {
+                        format!(
+                            "(gets better) the number of nodes controlled by dominant NPs decreases from {} to {}",
+                            val_other[0], val_self[0]
+                        )
+                    } else {
+                        format!(
+                            "(gets worse) the number of nodes controlled by dominant NPs increases from {} to {}",
+                            val_other[0], val_self[0]
+                        )
+                    }
+                } else if val_self[1] > val_other[1] {
                     format!(
-                        "the number of nodes controlled by dominant NPs changes from {} to {}",
-                        val_other[0], val_self[0]
+                        "(gets better) the number of nodes controlled by dominant Country actors decreases from {} to {}",
+                        val_other[1], val_self[1]
                     )
                 } else {
                     format!(
-                        "the number of nodes controlled by dominant Country actors changes from {} to {}",
+                        "(gets worse) the number of nodes controlled by dominant Country actors increases from {} to {}",
                         val_other[1], val_self[1]
                     )
                 },
@@ -405,9 +433,27 @@ impl NakamotoScore {
             return (
                 cmp,
                 if val_self[0] != val_other[0] {
-                    format!("the number of different NP actors changes from {} to {}", val_other[0], val_self[0])
+                    if val_other[0] < val_self[0] {
+                        format!(
+                            "(gets better) the number of different NP actors increases from {} to {}",
+                            val_other[0], val_self[0]
+                        )
+                    } else {
+                        format!(
+                            "(gets worse) the number of different NP actors decreases from {} to {}",
+                            val_other[0], val_self[0]
+                        )
+                    }
+                } else if val_other[1] < val_self[1] {
+                    format!(
+                        "(gets better) the number of different Country actors increases from {} to {}",
+                        val_other[1], val_self[1]
+                    )
                 } else {
-                    format!("the number of different Country actors changes from {} to {}", val_other[1], val_self[1])
+                    format!(
+                        "(gets worse) the number of different Country actors decreases from {} to {}",
+                        val_other[1], val_self[1]
+                    )
                 },
             );
         }
@@ -421,10 +467,17 @@ impl NakamotoScore {
         if cmp != Some(Ordering::Equal) {
             return (
                 cmp,
-                format!(
-                    "the number of Nakamoto coefficients with extremely low values changes from {} to {}",
-                    c2, c1
-                ),
+                if cmp == Some(Ordering::Less) {
+                    format!(
+                        "(gets better) the number of Nakamoto coefficients with extremely low values decreases from {} to {}",
+                        c2, c1
+                    )
+                } else {
+                    format!(
+                        "(gets worse) the number of Nakamoto coefficients with extremely low values increases from {} to {}",
+                        c2, c1
+                    )
+                },
             );
         }
 
@@ -491,12 +544,12 @@ impl Eq for NakamotoScore {}
 impl Display for NakamotoScore {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let avg_log2_str = match self.avg_log2 {
-            Some(v) => format!("{:0.2}", v),
+            Some(v) => format!("{:0.4}", v),
             None => "undefined".to_string(),
         };
         write!(
             f,
-            "NakamotoScore: min {:0.2} avg log2 {} #crit nodes {:?} # crit uniq {:?} #crit coeff {} avg linear {:0.2}",
+            "NakamotoScore: min {:0.2} avg log2 {} #crit nodes {:?} # crit uniq {:?} #crit coeff {} avg linear {:0.4}",
             self.min,
             avg_log2_str,
             self.critical_features_num_nodes(),
