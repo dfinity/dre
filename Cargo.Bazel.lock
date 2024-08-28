@@ -1,5 +1,5 @@
 {
-  "checksum": "8f8316053a9bbdfb2e006bb7300906283da5cbb9888e2eaaab85777bd8924e11",
+  "checksum": "3e05383681bea3979640c30ae1e595263eb176f895e48d5962f74816261dc223",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -45528,6 +45528,10 @@
             {
               "id": "itertools 0.13.0",
               "target": "itertools"
+            },
+            {
+              "id": "num-traits 0.2.19",
+              "target": "num_traits"
             }
           ],
           "selects": {}
