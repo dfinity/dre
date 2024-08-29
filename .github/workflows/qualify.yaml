@@ -155,12 +155,12 @@ jobs:
 
           BRANCH_REF=$(git ls-remote --heads https://github.com/dfinity/dre.git refs/heads/${AUTO_UPDATE_BRANCH})
           if [ -z "$BRANCH_REF" ]; then
-            echo "Branch $BRANCH_REF does not exist, creating..."
-            git checkout -b $BRANCH_REF
+            echo "Branch $AUTO_UPDATE_BRANCH does not exist, creating..."
+            git checkout -b $AUTO_UPDATE_BRANCH
             echo "SHOULD_CREATE_PR=true" >> $GITHUB_OUTPUT
           else
-            echo "Branch $BRANCH_REF exists"
-            git checkout $BRANCH_REF
+            echo "Branch $AUTO_UPDATE_BRANCH exists"
+            git checkout $AUTO_UPDATE_BRANCH
             echo "SHOULD_CREATE_PR=false" >> $GITHUB_OUTPUT
           fi
 
