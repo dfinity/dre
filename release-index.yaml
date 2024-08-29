@@ -3,6 +3,8 @@ releases:
     versions:
       - name: base
         version: 35bfcadd0f2a474057e42393917b8b3ac269627a
+      - name: canister-snapshots
+        version: 9c42c7c0cdc44dc95a4a2d7685d512786c3fb0e2
   - rc_name: rc--2024-08-21_15-36
     versions:
       # Qualification pipeline:
