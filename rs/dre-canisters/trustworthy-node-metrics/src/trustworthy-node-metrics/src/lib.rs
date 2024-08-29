@@ -6,8 +6,8 @@ use trustworthy_node_metrics_types::types::{
     DailyNodeMetrics, NodeMetrics, NodeMetricsStored, NodeMetricsStoredKey, NodeRewardsArgs, NodeRewardsResponse, SubnetNodeMetricsArgs,
     SubnetNodeMetricsResponse,
 };
+mod computation_logger;
 mod metrics_manager;
-mod operations_tracker;
 mod rewards_manager;
 mod stable_memory;
 

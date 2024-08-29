@@ -110,8 +110,8 @@ impl DailyNodeMetrics {
 
 #[derive(Debug, Deserialize, CandidType)]
 pub struct RewardsComputationResult {
-    pub rewards_percent: u64,
-    pub rewards_reduction: u64,
+    pub rewards_percent: f64,
+    pub rewards_reduction: f64,
     pub blocks_failed: u64,
     pub blocks_proposed: u64,
     pub blocks_total: u64,
