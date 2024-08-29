@@ -1,5 +1,5 @@
 {
-  "checksum": "3e05383681bea3979640c30ae1e595263eb176f895e48d5962f74816261dc223",
+  "checksum": "2bbd3d15bf606c9af001e99012b5deb363a91b712bf83a21702c95fdf0ccdf21",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -21383,7 +21383,7 @@
               "target": "prost"
             },
             {
-              "id": "rust_decimal 1.35.0",
+              "id": "rust_decimal 1.36.0",
               "target": "rust_decimal"
             },
             {
@@ -21658,7 +21658,7 @@
               "target": "prost"
             },
             {
-              "id": "rust_decimal 1.35.0",
+              "id": "rust_decimal 1.36.0",
               "target": "rust_decimal"
             },
             {
@@ -21961,7 +21961,7 @@
               "target": "lazy_static"
             },
             {
-              "id": "rust_decimal 1.35.0",
+              "id": "rust_decimal 1.36.0",
               "target": "rust_decimal"
             },
             {
@@ -21979,7 +21979,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "rust_decimal_macros 1.35.0",
+              "id": "rust_decimal_macros 1.36.0",
               "target": "rust_decimal_macros"
             }
           ],
@@ -22397,7 +22397,7 @@
               "target": "registry_canister"
             },
             {
-              "id": "rust_decimal 1.35.0",
+              "id": "rust_decimal 1.36.0",
               "target": "rust_decimal"
             },
             {
@@ -22442,7 +22442,7 @@
               "target": "ic_nervous_system_common_build_metadata"
             },
             {
-              "id": "rust_decimal_macros 1.35.0",
+              "id": "rust_decimal_macros 1.36.0",
               "target": "rust_decimal_macros"
             },
             {
@@ -24146,7 +24146,7 @@
               "target": "rand_chacha"
             },
             {
-              "id": "rust_decimal 1.35.0",
+              "id": "rust_decimal 1.36.0",
               "target": "rust_decimal"
             },
             {
@@ -24176,7 +24176,7 @@
               "target": "ic_nervous_system_common_build_metadata"
             },
             {
-              "id": "rust_decimal_macros 1.35.0",
+              "id": "rust_decimal_macros 1.36.0",
               "target": "rust_decimal_macros"
             },
             {
@@ -24293,7 +24293,7 @@
               "target": "num_traits"
             },
             {
-              "id": "rust_decimal 1.35.0",
+              "id": "rust_decimal 1.36.0",
               "target": "rust_decimal"
             }
           ],
@@ -24303,7 +24303,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "rust_decimal_macros 1.35.0",
+              "id": "rust_decimal_macros 1.36.0",
               "target": "rust_decimal_macros"
             }
           ],
@@ -24392,7 +24392,7 @@
               "target": "mockall"
             },
             {
-              "id": "rust_decimal 1.35.0",
+              "id": "rust_decimal 1.36.0",
               "target": "rust_decimal"
             }
           ],
@@ -24832,7 +24832,7 @@
               "target": "prost"
             },
             {
-              "id": "rust_decimal 1.35.0",
+              "id": "rust_decimal 1.36.0",
               "target": "rust_decimal"
             },
             {
@@ -24854,7 +24854,7 @@
               "target": "async_trait"
             },
             {
-              "id": "rust_decimal_macros 1.35.0",
+              "id": "rust_decimal_macros 1.36.0",
               "target": "rust_decimal_macros"
             }
           ],
@@ -37794,13 +37794,13 @@
       },
       "license": "MIT OR Apache-2.0"
     },
-    "rust_decimal 1.35.0": {
+    "rust_decimal 1.36.0": {
       "name": "rust_decimal",
-      "version": "1.35.0",
+      "version": "1.36.0",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/rust_decimal/1.35.0/download",
-          "sha256": "1790d1c4c0ca81211399e0e0af16333276f375209e71a37b67698a373db5b47a"
+          "url": "https://static.crates.io/crates/rust_decimal/1.36.0/download",
+          "sha256": "b082d80e3e3cc52b2ed634388d436fe1f4de6af5786cc2de9ba9737527bdf555"
         }
       },
       "targets": [
@@ -37847,7 +37847,7 @@
               "target": "num_traits"
             },
             {
-              "id": "rust_decimal 1.35.0",
+              "id": "rust_decimal 1.36.0",
               "target": "build_script_build"
             },
             {
@@ -37858,7 +37858,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "1.35.0"
+        "version": "1.36.0"
       },
       "build_script_attrs": {
         "data_glob": [
@@ -37867,13 +37867,13 @@
       },
       "license": "MIT"
     },
-    "rust_decimal_macros 1.35.0": {
+    "rust_decimal_macros 1.36.0": {
       "name": "rust_decimal_macros",
-      "version": "1.35.0",
+      "version": "1.36.0",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/rust_decimal_macros/1.35.0/download",
-          "sha256": "a05bf7103af0797dbce0667c471946b29b9eaea34652eff67324f360fec027de"
+          "url": "https://static.crates.io/crates/rust_decimal_macros/1.36.0/download",
+          "sha256": "da991f231869f34268415a49724c6578e740ad697ba0999199d6f22b3949332c"
         }
       },
       "targets": [
@@ -37905,14 +37905,14 @@
               "target": "quote"
             },
             {
-              "id": "rust_decimal 1.35.0",
+              "id": "rust_decimal 1.36.0",
               "target": "rust_decimal"
             }
           ],
           "selects": {}
         },
         "edition": "2021",
-        "version": "1.35.0"
+        "version": "1.36.0"
       },
       "license": "MIT"
     },
@@ -45532,6 +45532,10 @@
             {
               "id": "num-traits 0.2.19",
               "target": "num_traits"
+            },
+            {
+              "id": "rust_decimal 1.36.0",
+              "target": "rust_decimal"
             }
           ],
           "selects": {}
@@ -45542,6 +45546,10 @@
             {
               "id": "ic-cdk-macros 0.15.0",
               "target": "ic_cdk_macros"
+            },
+            {
+              "id": "rust_decimal_macros 1.36.0",
+              "target": "rust_decimal_macros"
             }
           ],
           "selects": {}
