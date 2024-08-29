@@ -436,7 +436,7 @@ To see a full list of commits added since last release, compare the revisions on
     )
     if merge_base != base_release_commit:
         notes += """
-This release diverges from latest release. Merge base is [{merge_base}](https://github.com/dfinity/ic/tree/{merge_base}).
+This release diverges from the latest release. Merge base is [{merge_base}](https://github.com/dfinity/ic/tree/{merge_base}).
 Changes [were removed](https://github.com/dfinity/ic/compare/{release_tag}...{base_release_tag}) from this release.
 """.format(
             merge_base=merge_base,
