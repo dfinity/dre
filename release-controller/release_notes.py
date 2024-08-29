@@ -315,7 +315,7 @@ def get_change_description_for_commit(
     if guestos_change and not any(
         f for f in file_changes if not any(re.match(filter, f["file_path"]) for filter in EXCLUDE_CHANGES_FILTERS)
     ):
-        exclusion_reason = "Changed files are exluded by file path filter"
+        exclusion_reason = "Changed files are excluded by file path filter"
 
     ownership = {}
     stripped_message = re.sub(jira_ticket_regex, "", commit_message)
