@@ -1,5 +1,7 @@
 use itertools::Itertools;
 use num_traits::{FromPrimitive, Num, ToPrimitive};
+use rust_decimal::Decimal;
+use rust_decimal_macros::dec;
 use std::fmt::{self, Display};
 
 // Define a trait that will be used to store and manipulate numbers
@@ -20,13 +22,14 @@ impl<T: Number> Operation<T> {
             Operation::Sum(operators) => operators.iter().cloned().sum(),
             Operation::Subtract(o1, o2) => *o1 - *o2,
             Operation::Percent(o1, o2) => {
+                assert!(o2 > &T::zero(), "Percent operation requires o1 <= o2");
                 assert!(o1 <= o2, "Percent operation requires o1 <= o2");
-                assert!(!T::is_zero(o2), "Division by 0");
-                let numerator = o1.to_f64().unwrap();
-                let denominator = o2.to_f64().unwrap();
 
-                let result = (numerator / denominator * 100.0).round();
-                FromPrimitive::from_f64(result).unwrap()
+                let numerator = Decimal::from(o1.to_u64().unwrap());
+                let denominator = Decimal::from(o2.to_u64().unwrap());
+
+                let result = (numerator / denominator * dec!(100)).round().to_u64().unwrap();
+                FromPrimitive::from_u64(result).unwrap()
             }
             Operation::Set(o1) => *o1,
         }

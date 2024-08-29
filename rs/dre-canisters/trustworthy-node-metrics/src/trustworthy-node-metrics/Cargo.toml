@@ -28,3 +28,5 @@ trustworthy-node-metrics-types = { workspace = true }
 ic-base-types = { workspace = true }
 ic-registry-keys = { workspace = true }
 num-traits = { workspace = true }
+rust_decimal = "1.27.0"  # or the latest version
+rust_decimal_macros = "1.27.0"  # optional, for using macros

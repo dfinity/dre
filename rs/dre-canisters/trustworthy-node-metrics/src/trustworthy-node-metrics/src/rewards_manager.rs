@@ -1,4 +1,7 @@
 use itertools::Itertools;
+use num_traits::ToPrimitive;
+use rust_decimal::Decimal;
+use rust_decimal_macros::dec;
 use trustworthy_node_metrics_types::types::{DailyNodeMetrics, RewardsComputationResult};
 
 use crate::computation_logger::{ComputationLogger, Operation, OperationExecuted};
@@ -135,11 +138,6 @@ pub fn rewards_with_penalty(daily_metrics: &[DailyNodeMetrics]) -> f64 {
 /// 3. The `rewards_reduction` function is applied to `overall_failure_rate`.
 /// 3. Finally, the rewards percentage to be distrubuted to the node is computed.
 pub fn compute_rewards_percent(daily_metrics: &[DailyNodeMetrics]) -> RewardsComputationResult {
-    let computation_input = daily_metrics
-        .iter()
-        .map(|metric| metric.to_string()) // Convert each DailyNodeMetrics to string
-        .collect_vec()
-        .join("\n");
     let mut computation_logger = ComputationLogger::new().with_input(computation_input);
 
     let daily_failed = daily_metrics.iter().map(|metrics| metrics.num_blocks_failed).collect_vec();
@@ -148,21 +146,26 @@ pub fn compute_rewards_percent(daily_metrics: &[DailyNodeMetrics]) -> RewardsCom
     let overall_failed = computation_logger.execute("Computing Total Failed Blocks", Operation::Sum(daily_failed));
     let overall_proposed = computation_logger.execute("Computing Total Proposed Blocks", Operation::Sum(daily_proposed));
     let overall_total = computation_logger.execute("Computing Total Blocks", Operation::Sum(vec![overall_failed, overall_proposed]));
-
     let overall_failure_rate = computation_logger.execute("Computing Total Failure Rate", Operation::Percent(overall_failed, overall_total));
-
     let (operations, rewards_reduction) = rewards_reduction_percent(&overall_failure_rate);
     computation_logger.add_executed(operations);
-
     let rewards_percent = computation_logger.execute("Total Rewards Percent", Operation::Subtract(100, rewards_reduction));
 
+    let computation_input = daily_metrics
+        .iter()
+        .map(|metric| metric.to_string()) // Convert each DailyNodeMetrics to string
+        .collect_vec()
+        .join("\n");
+
+    let computation_logger = computation_logger.with_input(computation_input);
+
     RewardsComputationResult {
-        rewards_percent: rewards_percent as f64 / 100.0,
-        rewards_reduction: rewards_reduction as f64 / 100.0,
+        rewards_percent: (Decimal::from(rewards_percent) / dec!(100)).to_f64().unwrap(),
+        rewards_reduction: (Decimal::from(rewards_reduction) / dec!(100)).to_f64().unwrap(),
         blocks_failed: overall_failed,
         blocks_proposed: overall_proposed,
         blocks_total: overall_total,
-        failure_rate: overall_failure_rate,
+        failure_rate: (Decimal::from(overall_failure_rate) / dec!(100)).to_f64().unwrap(),
         computation_log: computation_logger.get_log(),
     }
 }

@@ -115,7 +115,7 @@ pub struct RewardsComputationResult {
     pub blocks_failed: u64,
     pub blocks_proposed: u64,
     pub blocks_total: u64,
-    pub failure_rate: u64,
+    pub failure_rate: f64,
     pub computation_log: String,
 }
 

@@ -34,12 +34,12 @@ type RewardsStats = record {
 };
 
 type RewardsComputationResult = record {
-  rewards_percent: nat64;
-  rewards_reduction: nat64;
+  rewards_percent: float64;
+  rewards_reduction: float64;
   blocks_failed: nat64;
   blocks_proposed: nat64;
   blocks_total: nat64;
-  failure_rate: nat64;
+  failure_rate: float64;
   computation_log: text;
 };
 
