@@ -106,14 +106,22 @@ def main():
     )
     while True:
         ic_repo.fetch()
-        annotate_branch(ic_repo, branch="master")
+        try:
+            annotate_branch(ic_repo, branch="master")
+        except Exception as e:
+            logging.error("failed to annotate master, retrying", exc_info=e)
+            continue
         for b in ic_repo.branch_list("rc--*"):
-            branch_date = release_branch_date(b)
-            if not branch_date or (datetime.now() - branch_date).days > 20:
-                logging.info("skipping branch {}".format(b))
+            try:
+                branch_date = release_branch_date(b)
+                if not branch_date or (datetime.now() - branch_date).days > 20:
+                    logging.info("skipping branch {}".format(b))
+                    continue
+                logging.info("annotating branch {}".format(b))
+                annotate_branch(ic_repo, branch=b)
+            except Exception as e:
+                logging.error("failed to annotate branch {}, will retry later".format(b), exc_info=e)
                 continue
-            logging.info("annotating branch {}".format(b))
-            annotate_branch(ic_repo, branch=b)
 
 
 if __name__ == "__main__":
