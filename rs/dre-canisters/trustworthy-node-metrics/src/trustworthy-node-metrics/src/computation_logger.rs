@@ -1,6 +1,7 @@
 use std::fmt;
 
 use itertools::Itertools;
+use num_traits::Zero;
 use rust_decimal::Decimal;
 
 pub enum Operation {

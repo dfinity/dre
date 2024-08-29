@@ -9077,6 +9077,7 @@ dependencies = [
  "ic-registry-keys",
  "ic-stable-structures",
  "itertools 0.13.0",
+ "num-traits",
  "rust_decimal",
  "rust_decimal_macros",
  "trustworthy-node-metrics-types",
