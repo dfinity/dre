@@ -1,4 +1,8 @@
 releases:
+  - rc_name: rc--2024-08-29_01-30
+    versions:
+      - name: base
+        version: 35bfcadd0f2a474057e42393917b8b3ac269627a
   - rc_name: rc--2024-08-21_15-36
     versions:
       # Qualification pipeline:
