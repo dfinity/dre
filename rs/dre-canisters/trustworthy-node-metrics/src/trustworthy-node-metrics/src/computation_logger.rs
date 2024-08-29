@@ -1,42 +1,28 @@
+use std::fmt;
+
 use itertools::Itertools;
-use num_traits::{FromPrimitive, Num, ToPrimitive};
+use num_traits::Zero;
 use rust_decimal::Decimal;
-use rust_decimal_macros::dec;
-use std::fmt::{self, Display};
 
-// Define a trait that will be used to store and manipulate numbers
-pub trait Number: Num + Copy + std::fmt::Debug + Display + ToPrimitive + FromPrimitive + std::iter::Sum + std::cmp::PartialOrd {}
-
-impl Number for u64 {}
-
-pub enum Operation<T> {
-    Set(T),
-    Sum(Vec<T>),
-    Subtract(T, T),
-    Percent(T, T),
+pub enum Operation {
+    Set(Decimal),
+    Sum(Vec<Decimal>),
+    Subtract(Decimal, Decimal),
+    Divide(Decimal, Decimal),
 }
 
-impl<T: Number> Operation<T> {
-    fn execute(&self) -> T {
+impl Operation {
+    fn execute(&self) -> Decimal {
         match self {
-            Operation::Sum(operators) => operators.iter().cloned().sum(),
-            Operation::Subtract(o1, o2) => *o1 - *o2,
-            Operation::Percent(o1, o2) => {
-                assert!(o2 > &T::zero(), "Percent operation requires o1 <= o2");
-                assert!(o1 <= o2, "Percent operation requires o1 <= o2");
-
-                let numerator = Decimal::from(o1.to_u64().unwrap());
-                let denominator = Decimal::from(o2.to_u64().unwrap());
-
-                let result = (numerator / denominator * dec!(100)).round().to_u64().unwrap();
-                FromPrimitive::from_u64(result).unwrap()
-            }
+            Operation::Sum(operators) => operators.iter().cloned().fold(Decimal::zero(), |acc, val| acc + val),
+            Operation::Subtract(o1, o2) => o1 - o2,
+            Operation::Divide(o1, o2) => o1/o2,
             Operation::Set(o1) => *o1,
         }
     }
 }
 
-impl<T: Number> fmt::Display for Operation<T> {
+impl fmt::Display for Operation {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let (symbol, o1, o2) = match self {
             Operation::Sum(values) => {
@@ -48,21 +34,21 @@ impl<T: Number> fmt::Display for Operation<T> {
                 )
             }
             Operation::Subtract(o1, o2) => ("-", o1, o2),
-            Operation::Percent(o1, o2) => return write!(f, "{} / {} * 100", o1, o2),
+            Operation::Divide(o1, o2) => return write!(f, "{} / {}", o1, o2),
             Operation::Set(o1) => return write!(f, "{}", o1),
         };
         write!(f, "{} {} {}", o1, symbol, o2)
     }
 }
 
-pub struct OperationExecuted<T: Number> {
+pub struct OperationExecutor {
     reason: String,
-    operation: Operation<T>,
-    result: T,
+    operation: Operation,
+    result: Decimal,
 }
 
-impl<T: Number> OperationExecuted<T> {
-    pub fn execute(reason: &str, operation: Operation<T>) -> (Self, T) {
+impl OperationExecutor {
+    pub fn execute(reason: &str, operation: Operation) -> (Self, Decimal) {
         let result = operation.execute();
 
         let operation_executed = Self {
@@ -75,25 +61,27 @@ impl<T: Number> OperationExecuted<T> {
     }
 }
 
-impl<T: Number> fmt::Display for OperationExecuted<T> {
+impl fmt::Display for OperationExecutor {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         writeln!(f, "{}: {} = {}", self.reason, self.operation, self.result)?;
         Ok(())
     }
 }
 
-pub struct ComputationLogger<T: Number> {
+// Modify ComputationLogger to use NumberEnum
+pub struct ComputationLogger {
     maybe_input: Option<String>,
-    operations_executed: Vec<OperationExecuted<T>>,
+    operations_executed: Vec<OperationExecutor>,
 }
 
-impl<T: Number> ComputationLogger<T> {
+impl ComputationLogger {
     pub fn new() -> Self {
         Self {
             maybe_input: None,
             operations_executed: Vec::new(),
         }
     }
+
     pub fn with_input(self, input: String) -> Self {
         Self {
             maybe_input: Some(input),
@@ -101,10 +89,10 @@ impl<T: Number> ComputationLogger<T> {
         }
     }
 
-    pub fn execute(&mut self, reason: &str, operation: Operation<T>) -> T {
+    pub fn execute(&mut self, reason: &str, operation: Operation) -> Decimal {
         let result = operation.execute();
 
-        let operation_executed = OperationExecuted {
+        let operation_executed = OperationExecutor {
             reason: reason.to_string(),
             operation,
             result,
@@ -113,7 +101,7 @@ impl<T: Number> ComputationLogger<T> {
         result
     }
 
-    pub fn add_executed(&mut self, operations: Vec<OperationExecuted<T>>) {
+    pub fn add_executed(&mut self, operations: Vec<OperationExecutor>) {
         for operation in operations {
             self.operations_executed.push(operation)
         }

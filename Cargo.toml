@@ -174,6 +174,8 @@ retry = "2.0.0"
 reverse_geocoder = "4.1.1"
 ring = "0.17.8"
 rstest = { version = "0.22.0", default-features = false }
+rust_decimal = "1.36.0"  # or the latest version
+rust_decimal_macros = "1.36.0"  # optional, for using macros
 serde = { version = "1.0", features = ["derive"] }
 serde_derive = "1.0.209"
 serde_json = "1.0.127"

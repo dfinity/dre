@@ -4,10 +4,10 @@ use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
 use trustworthy_node_metrics_types::types::{DailyNodeMetrics, RewardsComputationResult};
 
-use crate::computation_logger::{ComputationLogger, Operation, OperationExecuted};
+use crate::computation_logger::{ComputationLogger, Operation, OperationExecutor};
 
-const MIN_FAILURE_RATE: u64 = 10;
-const MAX_FAILURE_RATE: u64 = 70;
+const MIN_FAILURE_RATE: Decimal = dec!(0.1);
+const MAX_FAILURE_RATE: Decimal = dec!(0.7);
 
 /// Calculates the rewards reduction based on the failure rate.
 ///
@@ -31,92 +31,35 @@ const MAX_FAILURE_RATE: u64 = 70;
 /// 3. If the `failure_rate` is within the defined range (`MIN_FAILURE_RATE` to `MAX_FAILURE_RATE`),
 ///    the function calculates the reduction proportionally:
 ///    - The reduction is calculated by normalizing the `failure_rate` within the range, resulting in a value between `0` and `100`.
-fn rewards_reduction_percent(failure_rate: &u64) -> (Vec<OperationExecuted<u64>>, u64) {
+fn rewards_reduction_percent(failure_rate: &Decimal) -> (Vec<OperationExecutor>, Decimal) {
     if failure_rate < &MIN_FAILURE_RATE {
-        let (operation, result) = OperationExecuted::execute(
+        let (operation, result) = OperationExecutor::execute(
             &format!(
                 "No Reduction applied because {}% is less than {}% failure rate",
                 *failure_rate, MIN_FAILURE_RATE
             ),
-            Operation::Set(0),
+            Operation::Set(dec!(0)),
         );
         (vec![operation], result)
     } else if failure_rate > &MAX_FAILURE_RATE {
-        let (operation, result) = OperationExecuted::execute(
+        let (operation, result) = OperationExecutor::execute(
             &format!(
                 "Max reduction applied because {}% is over {}% failure rate",
                 *failure_rate, MAX_FAILURE_RATE
             ),
-            Operation::Set(100),
+            Operation::Set(dec!(1)),
         );
 
         (vec![operation], result)
     } else {
         let (y_change_operation, y_change) =
-            OperationExecuted::execute("Linear Reduction Y change", Operation::Subtract(*failure_rate, MIN_FAILURE_RATE));
+            OperationExecutor::execute("Linear Reduction Y change", Operation::Subtract(*failure_rate, MIN_FAILURE_RATE));
         let (x_change_operation, x_change) =
-            OperationExecuted::execute("Linear Reduction X change", Operation::Subtract(MAX_FAILURE_RATE, MIN_FAILURE_RATE));
+            OperationExecutor::execute("Linear Reduction X change", Operation::Subtract(MAX_FAILURE_RATE, MIN_FAILURE_RATE));
 
-        let (operation, result) = OperationExecuted::execute("Linear Reduction Percent", Operation::Percent(y_change, x_change));
+        let (operation, result) = OperationExecutor::execute("Linear Reduction Percent", Operation::Divide(y_change, x_change));
         (vec![y_change_operation, x_change_operation, operation], result)
     }
-}
-
-/// Computes the rewards percentage based on the daily reward reductions WITH consecutive days penalty.
-///
-/// # Arguments
-///
-/// * `daily_metrics` - A slice of `DailyNodeMetrics` structs, where each struct represents the metrics for a single day.
-///
-/// # Returns
-///
-/// * A `f64` value representing the rewards percentage after reductions and penalties, rounded to two decimal places.
-///
-/// # Explanation
-///
-/// 1. The function calculates the number of active days.
-///
-/// 2. The function iterates over each day's metrics:
-///    - For each day with a non-zero reduction, it adds the reduction to the cumulative penalty and increments the consecutive day penalty counter.
-///    - For each day with zero reduction (`daily_reduction == 0.0`), if there was a streak of consecutive days with reductions,
-///      it adds the cumulative penalty to the `reduction_sum` and resets the streak counters.
-///
-/// 3. The overall reduction is calculated by dividing the total reduction (`reduction_sum`) by the number of active days.
-///    The reduction is then normalized by ensuring it does not exceed 1.0.
-#[allow(dead_code)]
-pub fn rewards_with_penalty(daily_metrics: &[DailyNodeMetrics]) -> f64 {
-    let active_days = daily_metrics.len();
-    let mut reduction_sum = 0.0;
-    let mut consecutive_reduction = 0.0;
-    let mut consecutive_count = 0;
-
-    for metrics in daily_metrics.iter() {
-        // Just if we want to count the day unassigned as 0.0 reduction
-        // we would need to check if previous daily metrics is <= 24hrs
-        // before current metrics
-        let daily_reduction: f64 = metrics.num_blocks_failed as f64 / (metrics.num_blocks_failed + metrics.num_blocks_proposed) as f64;
-
-        if daily_reduction == 0.0 {
-            if consecutive_count > 0 {
-                reduction_sum += consecutive_reduction * consecutive_count as f64;
-                consecutive_reduction = 0.0;
-                consecutive_count = 0;
-            }
-        } else {
-            consecutive_reduction += daily_reduction;
-            consecutive_count += 1;
-        }
-    }
-
-    // Handles the last consecutive days
-    if consecutive_count > 0 {
-        reduction_sum += consecutive_reduction * consecutive_count as f64;
-    }
-
-    let overall_reduction = reduction_sum / active_days as f64;
-    let reduction_normalized = overall_reduction.min(1.0);
-
-    ((1.0 - reduction_normalized) * 100.0).round() / 100.0
 }
 
 /// Compute rewards percent
@@ -138,18 +81,18 @@ pub fn rewards_with_penalty(daily_metrics: &[DailyNodeMetrics]) -> f64 {
 /// 3. The `rewards_reduction` function is applied to `overall_failure_rate`.
 /// 3. Finally, the rewards percentage to be distrubuted to the node is computed.
 pub fn compute_rewards_percent(daily_metrics: &[DailyNodeMetrics]) -> RewardsComputationResult {
-    let mut computation_logger = ComputationLogger::new().with_input(computation_input);
+    let mut computation_logger = ComputationLogger::new();
 
-    let daily_failed = daily_metrics.iter().map(|metrics| metrics.num_blocks_failed).collect_vec();
-    let daily_proposed = daily_metrics.iter().map(|metrics| metrics.num_blocks_proposed).collect_vec();
+    let daily_failed = daily_metrics.iter().map(|metrics| metrics.num_blocks_failed.into()).collect_vec();
+    let daily_proposed = daily_metrics.iter().map(|metrics| metrics.num_blocks_proposed.into()).collect_vec();
 
     let overall_failed = computation_logger.execute("Computing Total Failed Blocks", Operation::Sum(daily_failed));
     let overall_proposed = computation_logger.execute("Computing Total Proposed Blocks", Operation::Sum(daily_proposed));
     let overall_total = computation_logger.execute("Computing Total Blocks", Operation::Sum(vec![overall_failed, overall_proposed]));
-    let overall_failure_rate = computation_logger.execute("Computing Total Failure Rate", Operation::Percent(overall_failed, overall_total));
+    let overall_failure_rate = computation_logger.execute("Computing Total Failure Rate", Operation::Divide(overall_failed, overall_total));
     let (operations, rewards_reduction) = rewards_reduction_percent(&overall_failure_rate);
     computation_logger.add_executed(operations);
-    let rewards_percent = computation_logger.execute("Total Rewards Percent", Operation::Subtract(100, rewards_reduction));
+    let rewards_percent = computation_logger.execute("Total Rewards Percent", Operation::Subtract(dec!(1), rewards_reduction));
 
     let computation_input = daily_metrics
         .iter()
@@ -160,12 +103,20 @@ pub fn compute_rewards_percent(daily_metrics: &[DailyNodeMetrics]) -> RewardsCom
     let computation_logger = computation_logger.with_input(computation_input);
 
     RewardsComputationResult {
-        rewards_percent: (Decimal::from(rewards_percent) / dec!(100)).to_f64().unwrap(),
-        rewards_reduction: (Decimal::from(rewards_reduction) / dec!(100)).to_f64().unwrap(),
-        blocks_failed: overall_failed,
-        blocks_proposed: overall_proposed,
-        blocks_total: overall_total,
-        failure_rate: (Decimal::from(overall_failure_rate) / dec!(100)).to_f64().unwrap(),
+        // Decision to round at f64 precision, assumed acceptable:
+        // 40 Nodes x 2000$ monthly max rewards = 80000$ monthly
+        // subjected to an error of 1e-26% -> 8e^-24$ assumed acceptable
+
+        // Overflow impossible
+        rewards_percent: rewards_percent.to_f64().unwrap(),
+        rewards_reduction: rewards_reduction.to_f64().unwrap(),
+
+        // Overflow impossible since u64 in input will always fit
+        // No negative numbers
+        blocks_failed: overall_failed.to_u64().unwrap(),
+        blocks_proposed: overall_proposed.to_u64().unwrap(),
+        blocks_total: overall_total.to_u64().unwrap(),
+        failure_rate: overall_failure_rate.to_f64().unwrap(),
         computation_log: computation_logger.get_log(),
     }
 }
@@ -215,7 +166,7 @@ mod tests {
         // rewards_reduction = 0.266
         let daily_metrics: Vec<DailyNodeMetrics> = daily_mocked_metrics(vec![MockedMetrics::new(20, 6, 4), MockedMetrics::new(25, 10, 2)]);
         let result = compute_rewards_percent(&daily_metrics);
-        assert_eq!(result.rewards_percent, 0.73);
+        assert_eq!(result.rewards_percent, 0.7333333333333334);
 
         // Overall failed = 45 Overall total = 450 Failure rate = 0.1
         // rewards_reduction = 0.0
@@ -232,7 +183,7 @@ mod tests {
             MockedMetrics::new(1, 5, 5), // no penalty
         ]);
         let result = compute_rewards_percent(&daily_metrics);
-        assert_eq!(result.rewards_percent, 0.33);
+        assert_eq!(result.rewards_percent, 0.33333333333333337);
     }
 
     #[test]
@@ -266,7 +217,7 @@ mod tests {
         let daily_metrics_right_gap: Vec<DailyNodeMetrics> =
             daily_mocked_metrics(vec![gap.clone(), MockedMetrics::new(1, 6, 4), MockedMetrics::new(1, 7, 3)]);
 
-        assert_eq!(compute_rewards_percent(&daily_metrics_mid_gap).rewards_percent, 0.78);
+        assert_eq!(compute_rewards_percent(&daily_metrics_mid_gap).rewards_percent, 0.7777777777777779);
 
         assert_eq!(
             compute_rewards_percent(&daily_metrics_mid_gap).rewards_percent,
