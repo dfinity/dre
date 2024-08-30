@@ -40,6 +40,7 @@ pub struct NodesRemover {
     pub extra_nodes_filter: Vec<String>,
     pub exclude: Option<Vec<String>>,
     pub motivation: String,
+    pub forum_post_link: Option<String>,
 }
 impl NodesRemover {
     pub fn remove_nodes(

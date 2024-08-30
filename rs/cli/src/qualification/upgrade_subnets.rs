@@ -99,6 +99,7 @@ impl Step for UpgradeSubnets {
                                 title: Some(format!("Propose to upgrade subnet {} to {}", subnet.principal, &self.to_version)),
                                 summary: Some("Qualification testing".to_string()),
                                 motivation: Some("Qualification testing".to_string()),
+                                forum_post_link: None,
                             },
                         )
                         .await
@@ -140,6 +141,7 @@ impl Step for UpgradeSubnets {
                             title: Some("Upgrading unassigned nodes".to_string()),
                             summary: Some("Upgrading unassigned nodes".to_string()),
                             motivation: Some("Upgrading unassigned nodes".to_string()),
+                            forum_post_link: None,
                         },
                     )
                     .await

@@ -86,6 +86,7 @@ pub async fn qualify(
         }),
         verbose: false,
         no_sync: false,
+        forum_post_link: None,
     };
     let ctx = DreContext::from_args(&args).await?;
 

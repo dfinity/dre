@@ -39,6 +39,7 @@ impl ExecutableCommand for Remove {
                 extra_nodes_filter: self.extra_nodes_filter.clone(),
                 exclude: Some(self.exclude.clone()),
                 motivation: self.motivation.clone().unwrap_or_default(),
+                forum_post_link: ctx.forum_post_link(),
             })
             .await
     }
