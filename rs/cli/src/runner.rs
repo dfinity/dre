@@ -4,13 +4,10 @@ use std::collections::BTreeSet;
 use std::rc::Rc;
 use std::sync::Arc;
 
-use decentralization::network::AvailableNodesQuerier;
 use decentralization::network::DecentralizedSubnet;
 use decentralization::network::NetworkHealRequest;
 use decentralization::network::SubnetChange;
-use decentralization::network::SubnetQuerier;
 use decentralization::network::SubnetQueryBy;
-use decentralization::network::TopologyManager;
 use decentralization::network::{generate_added_node_description, generate_removed_nodes_description};
 use decentralization::subnets::NodesRemover;
 use decentralization::SubnetChangeResponse;
@@ -47,7 +44,7 @@ use crate::operations::hostos_rollout::NodeGroupUpdate;
 
 pub struct Runner {
     ic_admin: Arc<IcAdminWrapper>,
-    registry: Rc<LazyRegistry>,
+    registry: Arc<dyn LazyRegistry>,
     ic_repo: RefCell<Option<Rc<LazyGit>>>,
     network: Network,
     proposal_agent: ProposalAgent,
@@ -55,7 +52,7 @@ pub struct Runner {
 }
 
 impl Runner {
-    pub fn new(ic_admin: Arc<IcAdminWrapper>, registry: Rc<LazyRegistry>, network: Network, agent: ProposalAgent, verbose: bool) -> Self {
+    pub fn new(ic_admin: Arc<IcAdminWrapper>, registry: Arc<dyn LazyRegistry>, network: Network, agent: ProposalAgent, verbose: bool) -> Self {
         Self {
             ic_admin,
             registry,
@@ -66,7 +63,7 @@ impl Runner {
         }
     }
 
-    fn ic_repo(&self) -> Rc<LazyGit> {
+    async fn ic_repo(&self) -> Rc<LazyGit> {
         if let Some(ic_repo) = self.ic_repo.borrow().as_ref() {
             return ic_repo.clone();
         }
@@ -76,10 +73,12 @@ impl Runner {
                 self.network.clone(),
                 self.registry
                     .elected_guestos()
+                    .await
                     .expect("Should be able to fetch elected guestos versions")
                     .to_vec(),
                 self.registry
                     .elected_hostos()
+                    .await
                     .expect("Should be able to fetch elected hostos versions")
                     .to_vec(),
             )
@@ -319,7 +318,7 @@ impl Runner {
         only: &[String],
         exclude: &[String],
     ) -> anyhow::Result<Option<(Vec<PrincipalId>, String)>> {
-        let elected_versions = self.registry.elected_hostos().unwrap();
+        let elected_versions = self.registry.elected_hostos().await.unwrap();
         if !elected_versions.contains(&version.to_string()) {
             return Err(anyhow::anyhow!(format!(
                 "The version {} has not being elected.\nVersions elected are: {:?}",
@@ -610,7 +609,7 @@ impl Runner {
     }
 
     async fn retireable_hostos_versions(&self) -> anyhow::Result<Vec<Release>> {
-        let ic_repo = self.ic_repo();
+        let ic_repo = self.ic_repo().await;
         let hosts = ic_repo.hostos_releases().await?;
         let active_releases = hosts.get_active_branches();
         let hostos_versions: BTreeSet<String> = self.registry.nodes().await?.values().map(|s| s.hostos_version.clone()).collect();
@@ -637,11 +636,11 @@ impl Runner {
     }
 
     async fn retireable_guestos_versions(&self) -> anyhow::Result<Vec<Release>> {
-        let ic_repo = self.ic_repo();
+        let ic_repo = self.ic_repo().await;
         let guests = ic_repo.guestos_releases().await?;
         let active_releases = guests.get_active_branches();
         let subnet_versions: BTreeSet<String> = self.registry.subnets().await?.values().map(|s| s.replica_version.clone()).collect();
-        let version_on_unassigned_nodes = self.registry.unassigned_nodes_replica_version()?;
+        let version_on_unassigned_nodes = self.registry.unassigned_nodes_replica_version().await?;
         let versions_in_proposals: BTreeSet<String> = self
             .proposal_agent
             .list_open_elect_replica_proposals()
@@ -704,7 +703,7 @@ impl Runner {
             None => return Err(anyhow::anyhow!("Couldn't find nns subnet with id '{}'", nns_subnet_id)),
         };
 
-        let unassigned_version = self.registry.unassigned_nodes_replica_version()?;
+        let unassigned_version = self.registry.unassigned_nodes_replica_version().await?;
 
         if unassigned_version == nns.replica_version.clone().into() {
             info!(

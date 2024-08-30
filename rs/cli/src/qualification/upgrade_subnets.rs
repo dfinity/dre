@@ -120,7 +120,7 @@ impl Step for UpgradeSubnets {
             }
         } else {
             let registry = ctx.dre_ctx().registry().await;
-            let unassigned_nodes_version = registry.unassigned_nodes_replica_version()?;
+            let unassigned_nodes_version = registry.unassigned_nodes_replica_version().await?;
             if unassigned_nodes_version.to_string() == self.to_version {
                 ctx.print_text(format!("Unassigned nodes are already on {}, skipping", self.to_version));
                 return Ok(());
