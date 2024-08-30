@@ -22,7 +22,7 @@ export const NodeProviderPage: React.FC<NodeProviderPageProps> = ({ nodeRewards,
     const providerNodeMetrics = nodeRewards
         .filter((nodeMetrics) => nodeMetrics.node_provider_id.toText() === provider)
     const highFailureRateChart = providerNodeMetrics
-        .filter(nodeMetrics => nodeMetrics.rewards_stats.rewards_reduction > 0)
+        .filter(nodeMetrics => nodeMetrics.rewards_computation.rewards_reduction > 0)
         .flatMap(nodeMetrics => {
             const chartData = generateChartData(periodFilter, nodeMetrics.daily_node_metrics);
             return {
