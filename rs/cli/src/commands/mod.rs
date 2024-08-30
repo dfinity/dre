@@ -111,6 +111,10 @@ The argument is mandatory for testnets, and is optional for mainnet and staging"
     /// Useful for when the nns is unreachable
     #[clap(long)]
     pub no_sync: bool,
+
+    /// Link to the related forum post, where proposal details can be discussed
+    #[clap(long, global = true, visible_aliases = &["forum-link", "forum"])]
+    pub forum_post_link: Option<String>,
 }
 
 macro_rules! impl_executable_command_for_enums {

@@ -66,6 +66,7 @@ impl ExecutableCommand for Create {
                     include: self.include.clone().into(),
                 },
                 motivation.to_string(),
+                ctx.forum_post_link(),
                 self.replica_version.clone(),
                 self.other_args.to_owned(),
                 self.help_other_args,

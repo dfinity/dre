@@ -21,7 +21,7 @@ impl ExecutableCommand for Deploy {
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
         let runner = ctx.runner().await;
-        runner.deploy(&self.id, &self.version).await
+        runner.deploy(&self.id, &self.version, ctx.forum_post_link()).await
     }
 
     fn validate(&self, _cmd: &mut clap::Command) {}
