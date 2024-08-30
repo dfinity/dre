@@ -4,6 +4,7 @@ use backon::{ExponentialBuilder, Retryable};
 use comfy_table::CellAlignment;
 use comfy_table_util::Table;
 use ensure_blessed_versions::EnsureBlessedRevisions;
+use ic_management_backend::lazy_registry::LazyRegistry;
 use ic_registry_subnet_type::SubnetType;
 use itertools::Itertools;
 use retire_blessed_versions::RetireBlessedVersions;

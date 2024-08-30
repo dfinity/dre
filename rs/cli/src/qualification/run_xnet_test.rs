@@ -1,6 +1,7 @@
 use std::{os::unix::fs::PermissionsExt, time::Duration};
 
 use chrono::Utc;
+use ic_management_backend::lazy_registry::LazyRegistry;
 use ic_registry_subnet_type::SubnetType;
 use itertools::Itertools;
 use tokio::process::Command;

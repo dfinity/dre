@@ -1,5 +1,6 @@
 use backon::{ExponentialBuilder, Retryable};
 use comfy_table::CellAlignment;
+use ic_management_backend::lazy_registry::LazyRegistry;
 use itertools::Itertools;
 
 use crate::{

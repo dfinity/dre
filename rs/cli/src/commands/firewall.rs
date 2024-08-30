@@ -6,6 +6,7 @@ use std::{
 };
 
 use clap::Args;
+use ic_management_backend::lazy_registry::LazyRegistry;
 use ic_protobuf::registry::firewall::v1::FirewallRule;
 use ic_registry_keys::FirewallRulesScope;
 use itertools::Itertools;

@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 
 use clap::Args;
+use ic_management_backend::lazy_registry::LazyRegistry;
 use ic_management_types::Network;
 use serde_json::Value;
 

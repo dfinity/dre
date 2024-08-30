@@ -3,7 +3,7 @@ use std::{collections::BTreeMap, path::PathBuf, rc::Rc, str::FromStr};
 use clap::Args;
 use ic_management_backend::{
     health::{HealthClient, HealthStatusQuerier},
-    lazy_registry::LazyRegistryImpl,
+    lazy_registry::{LazyRegistry, LazyRegistryImpl},
 };
 use ic_management_types::{HealthStatus, Network};
 use ic_protobuf::registry::{

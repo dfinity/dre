@@ -2,6 +2,7 @@ use std::net::Ipv6Addr;
 
 use chrono::Utc;
 use comfy_table::CellAlignment;
+use ic_management_backend::lazy_registry::LazyRegistry;
 use ic_registry_subnet_type::SubnetType;
 use itertools::Itertools;
 use reqwest::ClientBuilder;
