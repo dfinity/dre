@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 
-use anyhow::{anyhow, Ok};
+use anyhow::anyhow;
 use dfn_core::api::PrincipalId;
 use futures::FutureExt;
 use ic_base_types::NodeId;
@@ -167,17 +167,21 @@ fn grouped_by_node(subnet_metrics: Vec<(PrincipalId, Vec<NodeMetricsHistoryRespo
     grouped_by_node
 }
 
-async fn update_node_providers(nodes_principal: Vec<&PrincipalId>) -> anyhow::Result<()> {
+async fn update_node_providers(nodes_principal: Vec<&PrincipalId>) {
     for node_principal in nodes_principal {
         let maybe_node_provider = stable_memory::get_node_provider(&node_principal.0);
 
         if maybe_node_provider.is_none() {
-            let node_provider_id = fetch_node_provider(node_principal).await?;
-
-            stable_memory::insert_node_provider(node_principal.0, node_provider_id.0)
+            match fetch_node_provider(node_principal).await {
+                Ok(node_provider_id) => {
+                    stable_memory::insert_node_provider(node_principal.0, node_provider_id.0);
+                }
+                Err(e) => {
+                    ic_cdk::println!("Failed to fetch node provider for {:?}: {:?}", node_principal, e);
+                }
+            }
         }
     }
-    Ok(())
 }
 
 fn update_node_metrics(metrics_by_node: BTreeMap<PrincipalId, Vec<NodeMetricsGrouped>>) {
@@ -213,7 +217,7 @@ pub async fn update_metrics() -> anyhow::Result<()> {
     let metrics_by_node: BTreeMap<PrincipalId, Vec<NodeMetricsGrouped>> = grouped_by_node(subnet_metrics);
     let nodes_principal: Vec<&PrincipalId> = metrics_by_node.keys().collect_vec();
 
-    update_node_providers(nodes_principal).await?;
+    update_node_providers(nodes_principal).await;
     update_node_metrics(metrics_by_node);
 
     Ok(())
