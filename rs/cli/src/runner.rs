@@ -89,7 +89,7 @@ impl Runner {
         ic_repo
     }
 
-    pub async fn deploy(&self, subnet: &PrincipalId, version: &str) -> anyhow::Result<()> {
+    pub async fn deploy(&self, subnet: &PrincipalId, version: &str, forum_post_link: Option<String>) -> anyhow::Result<()> {
         let _ = self
             .ic_admin
             .propose_run(
@@ -101,6 +101,7 @@ impl Runner {
                     title: format!("Update subnet {subnet} to GuestOS version {version}").into(),
                     summary: format!("Update subnet {subnet} to GuestOS version {version}").into(),
                     motivation: None,
+                    forum_post_link,
                 },
             )
             .await?;
@@ -117,6 +118,7 @@ impl Runner {
         &self,
         request: ic_management_types::requests::SubnetResizeRequest,
         motivation: String,
+        forum_post_link: Option<String>,
         health_of_nodes: &BTreeMap<PrincipalId, HealthStatus>,
     ) -> anyhow::Result<()> {
         let change = self
@@ -140,7 +142,8 @@ impl Runner {
             return Ok(());
         }
         if change.added_with_desc.len() == change.removed_with_desc.len() {
-            self.run_membership_change(change.clone(), replace_proposal_options(&change)?).await
+            self.run_membership_change(change.clone(), replace_proposal_options(&change, forum_post_link)?)
+                .await
         } else {
             let action = if change.added_with_desc.len() < change.removed_with_desc.len() {
                 "Removing nodes from"
@@ -153,6 +156,7 @@ impl Runner {
                     title: format!("{action} subnet {}", request.subnet).into(),
                     summary: format!("{action} subnet {}", request.subnet).into(),
                     motivation: motivation.clone().into(),
+                    forum_post_link,
                 },
             )
             .await
@@ -162,6 +166,7 @@ impl Runner {
         &self,
         request: ic_management_types::requests::SubnetCreateRequest,
         motivation: String,
+        forum_post_link: Option<String>,
         replica_version: Option<String>,
         other_args: Vec<String>,
         help_other_args: bool,
@@ -212,13 +217,14 @@ impl Runner {
                     title: Some("Creating new subnet".into()),
                     summary: Some("# Creating new subnet with nodes: ".into()),
                     motivation: Some(motivation.clone()),
+                    forum_post_link,
                 },
             )
             .await?;
         Ok(())
     }
 
-    pub async fn propose_subnet_change(&self, change: SubnetChangeResponse) -> anyhow::Result<()> {
+    pub async fn propose_subnet_change(&self, change: SubnetChangeResponse, forum_post_link: Option<String>) -> anyhow::Result<()> {
         if self.verbose {
             if let Some(run_log) = &change.run_log {
                 println!("{}\n", run_log.join("\n"));
@@ -229,7 +235,7 @@ impl Runner {
             return Ok(());
         }
 
-        let options = replace_proposal_options(&change)?;
+        let options = replace_proposal_options(&change, forum_post_link)?;
         self.run_membership_change(change, options).await
     }
 
@@ -278,6 +284,7 @@ impl Runner {
         version: &String,
         release_tag: &String,
         force: bool,
+        forum_post_link: Option<String>,
     ) -> anyhow::Result<()> {
         let update_version = IcAdminWrapper::prepare_to_propose_to_revise_elected_versions(
             release_artifact,
@@ -298,6 +305,7 @@ impl Runner {
                     title: Some(update_version.title),
                     summary: Some(update_version.summary.clone()),
                     motivation: None,
+                    forum_post_link,
                 },
             )
             .await?;
@@ -395,7 +403,13 @@ impl Runner {
         }
     }
 
-    pub async fn hostos_rollout(&self, nodes: Vec<PrincipalId>, version: &str, maybe_summary: Option<String>) -> anyhow::Result<()> {
+    pub async fn hostos_rollout(
+        &self,
+        nodes: Vec<PrincipalId>,
+        version: &str,
+        maybe_summary: Option<String>,
+        forum_post_link: Option<String>,
+    ) -> anyhow::Result<()> {
         let title = format!("Set HostOS version: {version} on {} nodes", nodes.clone().len());
 
         self.ic_admin
@@ -408,6 +422,7 @@ impl Runner {
                     title: title.clone().into(),
                     summary: maybe_summary.unwrap_or(title).into(),
                     motivation: None,
+                    forum_post_link,
                 },
             )
             .await
@@ -469,13 +484,14 @@ impl Runner {
                     title: "Remove nodes from the network".to_string().into(),
                     summary: "Remove nodes from the network".to_string().into(),
                     motivation: motivation.into(),
+                    forum_post_link: nodes_remover.forum_post_link,
                 },
             )
             .await?;
         Ok(())
     }
 
-    pub async fn network_heal(&self) -> anyhow::Result<()> {
+    pub async fn network_heal(&self, forum_post_link: Option<String>) -> anyhow::Result<()> {
         let health_client = health::HealthClient::new(self.network.clone());
         let mut errors = vec![];
 
@@ -501,7 +517,7 @@ impl Runner {
 
         for change in &subnets_change_response {
             let _ = self
-                .run_membership_change(change.clone(), replace_proposal_options(change)?)
+                .run_membership_change(change.clone(), replace_proposal_options(change, forum_post_link.clone())?)
                 .await
                 .map_err(|e| {
                     println!("{}", e);
@@ -562,7 +578,7 @@ impl Runner {
         Ok(())
     }
 
-    pub async fn subnet_rescue(&self, subnet: &PrincipalId, keep_nodes: Option<Vec<String>>) -> anyhow::Result<()> {
+    pub async fn subnet_rescue(&self, subnet: &PrincipalId, keep_nodes: Option<Vec<String>>, forum_post_link: Option<String>) -> anyhow::Result<()> {
         let change_request = self
             .registry
             .modify_subnet_nodes(SubnetQueryBy::SubnetId(*subnet))
@@ -582,7 +598,8 @@ impl Runner {
             return Ok(());
         }
 
-        self.run_membership_change(change.clone(), replace_proposal_options(&change)?).await
+        self.run_membership_change(change.clone(), replace_proposal_options(&change, forum_post_link)?)
+            .await
     }
 
     pub async fn retireable_versions(&self, artifact: &Artifact) -> anyhow::Result<Vec<Release>> {
@@ -679,7 +696,7 @@ impl Runner {
         Ok(())
     }
 
-    pub async fn update_unassigned_nodes(&self, nns_subnet_id: &PrincipalId) -> anyhow::Result<()> {
+    pub async fn update_unassigned_nodes(&self, nns_subnet_id: &PrincipalId, forum_post_link: Option<String>) -> anyhow::Result<()> {
         let subnets = self.registry.subnets().await?;
 
         let nns = match subnets.get_key_value(nns_subnet_id) {
@@ -709,6 +726,7 @@ impl Runner {
             summary: Some("Update the unassigned nodes to the latest rolled-out version".to_string()),
             motivation: None,
             title: Some("Update all unassigned nodes".to_string()),
+            forum_post_link,
         };
 
         self.ic_admin.propose_run(command, options).await?;
@@ -716,7 +734,7 @@ impl Runner {
     }
 }
 
-pub fn replace_proposal_options(change: &SubnetChangeResponse) -> anyhow::Result<ic_admin::ProposeOptions> {
+pub fn replace_proposal_options(change: &SubnetChangeResponse, forum_post_link: Option<String>) -> anyhow::Result<ic_admin::ProposeOptions> {
     let subnet_id = change.subnet_id.ok_or_else(|| anyhow::anyhow!("subnet_id is required"))?.to_string();
 
     let replace_target = if change.added_with_desc.len() > 1 || change.removed_with_desc.len() > 1 {
@@ -730,6 +748,7 @@ pub fn replace_proposal_options(change: &SubnetChangeResponse) -> anyhow::Result
         title: format!("Replace {replace_target} in subnet {subnet_id_short}",).into(),
         summary: format!("# Replace {replace_target} in subnet {subnet_id_short}",).into(),
         motivation: Some(format!("{}\n\n{}\n", change.motivation.as_ref().unwrap_or(&String::new()), change)),
+        forum_post_link,
     })
 }
 

@@ -38,6 +38,7 @@ impl ExecutableCommand for Update {
                     title: Some(format!("Update {} API boundary node(s) to {}", self.nodes.len(), &self.version)),
                     summary: Some(format!("Update {} API boundary node(s) to {}", self.nodes.len(), &self.version)),
                     motivation: self.motivation.clone(),
+                    forum_post_link: ctx.forum_post_link(),
                 },
             )
             .await?;

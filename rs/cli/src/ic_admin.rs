@@ -143,7 +143,19 @@ impl IcAdminWrapper {
                         .map(|s| {
                             vec![
                                 "--summary".to_string(),
-                                format!("{}{}", s, opts.motivation.map(|m| format!("\n\nMotivation: {m}")).unwrap_or_default(),),
+                                format!(
+                                    "{}{}",
+                                    s,
+                                    opts.motivation
+                                        .map(|m| format!(
+                                            "\n\nMotivation: {m}{}",
+                                            match opts.forum_post_link {
+                                                Some(link) => format!("\nForum post link: {}\n", link),
+                                                None => "".to_string(),
+                                            }
+                                        ))
+                                        .unwrap_or_default(),
+                                ),
                             ]
                         })
                         .unwrap_or_default(),
@@ -720,6 +732,7 @@ pub struct ProposeOptions {
     pub title: Option<String>,
     pub summary: Option<String>,
     pub motivation: Option<String>,
+    pub forum_post_link: Option<String>,
 }
 const DEFAULT_IC_ADMIN_VERSION: &str = "26d5f9d0bdca0a817c236134dc9c7317b32c69a5";
 
