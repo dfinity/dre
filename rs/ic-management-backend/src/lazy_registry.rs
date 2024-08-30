@@ -115,6 +115,12 @@ pub trait LazyRegistry:
     fn unassigned_nodes_replica_version(&self) -> anyhow::Result<Arc<String>>;
 
     fn get_api_boundary_nodes(&self) -> anyhow::Result<Vec<ApiBoundaryNodeRecord>>;
+
+    fn get_node_rewards_table(&self) -> anyhow::Result<BTreeMap<String, NodeRewardsTable>>;
+
+    fn get_unassigned_nodes(&self) -> anyhow::Result<Option<UnassignedNodesConfigRecord>>;
+
+    fn get_datacenters(&self) -> anyhow::Result<Vec<DataCenterRecord>>;
 }
 
 impl NodesConverter for Box<dyn LazyRegistry> {
