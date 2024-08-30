@@ -35,6 +35,7 @@ pub struct DreContext {
     verbose_runner: bool,
     skip_sync: bool,
     ic_admin_path: Option<String>,
+    forum_post_link: Option<String>,
 }
 
 impl DreContext {
@@ -83,6 +84,7 @@ impl DreContext {
             verbose_runner: args.verbose,
             skip_sync: args.no_sync,
             ic_admin_path,
+            forum_post_link: args.forum_post_link.clone(),
         })
     }
 
@@ -233,5 +235,9 @@ impl DreContext {
         ));
         *self.runner.borrow_mut() = Some(runner.clone());
         runner
+    }
+
+    pub fn forum_post_link(&self) -> Option<String> {
+        self.forum_post_link.clone()
     }
 }

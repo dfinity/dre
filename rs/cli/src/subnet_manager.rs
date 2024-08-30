@@ -161,9 +161,12 @@ impl SubnetManager {
 
         for (n, _) in change.removed().iter().filter(|(n, _)| !node_ids_unhealthy.contains(&n.id)) {
             motivations.push(format!(
-                "replacing {} as per user request: {}",
+                "replacing {} as per user request{}",
                 n.id,
-                motivation.clone().unwrap_or("as per user request".to_string())
+                match motivation {
+                    Some(ref m) => format!(": {}", m),
+                    None => "".to_string(),
+                }
             ));
         }
 

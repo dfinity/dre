@@ -31,6 +31,7 @@ impl ExecutableCommand for Remove {
                     title: Some(format!("Remove {} API boundary node(s)", self.nodes.len())),
                     summary: Some(format!("Remove {} API boundary node(s)", self.nodes.len())),
                     motivation: self.motivation.clone(),
+                    forum_post_link: ctx.forum_post_link(),
                 },
             )
             .await?;

@@ -49,6 +49,7 @@ impl Step for RetireBlessedVersions {
                         title: Some("Retire replica versions".to_string()),
                         summary: Some("Unelecting a version".to_string()),
                         motivation: Some("Unelecting a version".to_string()),
+                        forum_post_link: None,
                     },
                 )
                 .await
