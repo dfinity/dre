@@ -167,7 +167,7 @@ fn grouped_by_node(subnet_metrics: Vec<(PrincipalId, Vec<NodeMetricsHistoryRespo
     grouped_by_node
 }
 
-async fn update_node_providers(nodes_principal: Vec<&PrincipalId>) -> anyhow::Result<()> {
+async fn update_node_providers(nodes_principal: Vec<&PrincipalId>) {
     for node_principal in nodes_principal {
         let maybe_node_provider = stable_memory::get_node_provider(&node_principal.0);
 
@@ -182,7 +182,6 @@ async fn update_node_providers(nodes_principal: Vec<&PrincipalId>) -> anyhow::Re
             }
         }
     }
-    Ok(())
 }
 
 fn update_node_metrics(metrics_by_node: BTreeMap<PrincipalId, Vec<NodeMetricsGrouped>>) {
@@ -218,7 +217,7 @@ pub async fn update_metrics() -> anyhow::Result<()> {
     let metrics_by_node: BTreeMap<PrincipalId, Vec<NodeMetricsGrouped>> = grouped_by_node(subnet_metrics);
     let nodes_principal: Vec<&PrincipalId> = metrics_by_node.keys().collect_vec();
 
-    update_node_providers(nodes_principal).await?;
+    update_node_providers(nodes_principal).await;
     update_node_metrics(metrics_by_node);
 
     Ok(())
