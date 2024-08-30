@@ -61,7 +61,7 @@ impl UpdateVersion {
 pub trait IcAdmin: Send + Sync {
     fn neuron(&self) -> Neuron;
 
-    fn propose_run<'a>(&'a self, cmd: ProposeCommand, opts: ProposeOptions) -> BoxFuture<'a, anyhow::Result<String>>;
+    fn propose_run(&self, cmd: ProposeCommand, opts: ProposeOptions) -> BoxFuture<'_, anyhow::Result<String>>;
 
     fn run<'a>(&'a self, command: &'a str, args: &'a [String], silent: bool) -> BoxFuture<'a, anyhow::Result<String>>;
 
@@ -74,8 +74,8 @@ pub trait IcAdmin: Send + Sync {
     fn prepare_to_propose_to_revise_elected_versions<'a>(
         &'a self,
         release_artifact: &'a Artifact,
-        version: &'a String,
-        release_tag: &'a String,
+        version: &'a str,
+        release_tag: &'a str,
         force: bool,
         retire_versions: Option<Vec<String>>,
     ) -> BoxFuture<'a, anyhow::Result<UpdateVersion>>;
@@ -95,7 +95,7 @@ impl IcAdmin for IcAdminImpl {
         self.neuron.clone()
     }
 
-    fn propose_run<'a>(&'a self, cmd: ProposeCommand, opts: ProposeOptions) -> BoxFuture<'a, anyhow::Result<String>> {
+    fn propose_run(&self, cmd: ProposeCommand, opts: ProposeOptions) -> BoxFuture<'_, anyhow::Result<String>> {
         Box::pin(async move { self.propose_run_inner(cmd, opts, self.dry_run).await })
     }
 
@@ -199,8 +199,8 @@ impl IcAdmin for IcAdminImpl {
     fn prepare_to_propose_to_revise_elected_versions<'a>(
         &'a self,
         release_artifact: &'a Artifact,
-        version: &'a String,
-        release_tag: &'a String,
+        version: &'a str,
+        release_tag: &'a str,
         force: bool,
         retire_versions: Option<Vec<String>>,
     ) -> BoxFuture<'a, anyhow::Result<UpdateVersion>> {
@@ -276,7 +276,7 @@ impl IcAdmin for IcAdminImpl {
 
                 Ok(UpdateVersion {
                     release_artifact: release_artifact.clone(),
-                    version: version.clone(),
+                    version: version.to_string(),
                     title: proposal_title.clone(),
                     stringified_hash: expected_hash,
                     summary: edited,
@@ -497,14 +497,14 @@ impl IcAdminImpl {
         }
     }
 
-    fn get_s3_cdn_image_url(version: &String, s3_subdir: &String) -> String {
+    fn get_s3_cdn_image_url(version: &str, s3_subdir: &String) -> String {
         format!(
             "https://download.dfinity.systems/ic/{}/{}/update-img/update-img.tar.gz",
             version, s3_subdir
         )
     }
 
-    fn get_r2_cdn_image_url(version: &String, s3_subdir: &String) -> String {
+    fn get_r2_cdn_image_url(version: &str, s3_subdir: &String) -> String {
         format!(
             "https://download.dfinity.network/ic/{}/{}/update-img/update-img.tar.gz",
             version, s3_subdir
@@ -553,7 +553,7 @@ impl IcAdminImpl {
 
     async fn download_images_and_validate_sha256(
         image: &Artifact,
-        version: &String,
+        version: &str,
         ignore_missing_urls: bool,
     ) -> anyhow::Result<(Vec<String>, String)> {
         let update_urls = vec![

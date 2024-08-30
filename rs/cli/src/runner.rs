@@ -281,8 +281,8 @@ impl Runner {
     pub async fn do_revise_elected_replica_versions(
         &self,
         release_artifact: &Artifact,
-        version: &String,
-        release_tag: &String,
+        version: &str,
+        release_tag: &str,
         force: bool,
         forum_post_link: Option<String>,
     ) -> anyhow::Result<()> {
