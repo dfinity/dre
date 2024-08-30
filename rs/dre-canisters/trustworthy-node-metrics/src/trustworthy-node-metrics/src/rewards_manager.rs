@@ -32,11 +32,15 @@ const MAX_FAILURE_RATE: Decimal = dec!(0.7);
 ///    the function calculates the reduction proportionally:
 ///    - The reduction is calculated by normalizing the `failure_rate` within the range, resulting in a value between `0` and `100`.
 fn rewards_reduction_percent(failure_rate: &Decimal) -> (Vec<OperationExecutor>, Decimal) {
+    const RF: &str = "Linear Reduction factor";
+
     if failure_rate < &MIN_FAILURE_RATE {
         let (operation, result) = OperationExecutor::execute(
             &format!(
-                "No Reduction applied because {}% is less than {}% failure rate",
-                *failure_rate, MIN_FAILURE_RATE
+                "No Reduction applied because {} is less than {} failure rate.\n{}",
+                failure_rate.round_dp(4),
+                MIN_FAILURE_RATE,
+                RF
             ),
             Operation::Set(dec!(0)),
         );
@@ -44,8 +48,10 @@ fn rewards_reduction_percent(failure_rate: &Decimal) -> (Vec<OperationExecutor>,
     } else if failure_rate > &MAX_FAILURE_RATE {
         let (operation, result) = OperationExecutor::execute(
             &format!(
-                "Max reduction applied because {}% is over {}% failure rate",
-                *failure_rate, MAX_FAILURE_RATE
+                "Max reduction applied because {} is over {} failure rate.\n{}",
+                failure_rate.round_dp(4),
+                MAX_FAILURE_RATE,
+                RF
             ),
             Operation::Set(dec!(1)),
         );
@@ -57,7 +63,7 @@ fn rewards_reduction_percent(failure_rate: &Decimal) -> (Vec<OperationExecutor>,
         let (x_change_operation, x_change) =
             OperationExecutor::execute("Linear Reduction X change", Operation::Subtract(MAX_FAILURE_RATE, MIN_FAILURE_RATE));
 
-        let (operation, result) = OperationExecutor::execute("Linear Reduction Percent", Operation::Divide(y_change, x_change));
+        let (operation, result) = OperationExecutor::execute(RF, Operation::Divide(y_change, x_change));
         (vec![y_change_operation, x_change_operation, operation], result)
     }
 }
@@ -92,21 +98,13 @@ pub fn compute_rewards_percent(daily_metrics: &[DailyNodeMetrics]) -> RewardsCom
     let overall_failure_rate = computation_logger.execute("Computing Total Failure Rate", Operation::Divide(overall_failed, overall_total));
     let (operations, rewards_reduction) = rewards_reduction_percent(&overall_failure_rate);
     computation_logger.add_executed(operations);
-    let rewards_percent = computation_logger.execute("Total Rewards Percent", Operation::Subtract(dec!(1), rewards_reduction));
+    let rewards_percent = computation_logger.execute("Total Rewards", Operation::Subtract(dec!(1), rewards_reduction));
 
-    let computation_input = daily_metrics
-        .iter()
-        .map(|metric| metric.to_string()) // Convert each DailyNodeMetrics to string
-        .collect_vec()
-        .join("\n");
+    let computation_input = daily_metrics.iter().map(|metric| metric.to_string()).collect_vec().join("\n");
 
     let computation_logger = computation_logger.with_input(computation_input);
 
     RewardsComputationResult {
-        // Decision to round at f64 precision, assumed acceptable:
-        // 40 Nodes x 2000$ monthly max rewards = 80000$ monthly
-        // subjected to an error of 1e-26% -> 8e^-24$ assumed acceptable
-
         // Overflow impossible
         rewards_percent: rewards_percent.to_f64().unwrap(),
         rewards_reduction: rewards_reduction.to_f64().unwrap(),

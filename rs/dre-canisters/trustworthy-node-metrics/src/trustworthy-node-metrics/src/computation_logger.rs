@@ -16,7 +16,7 @@ impl Operation {
         match self {
             Operation::Sum(operators) => operators.iter().cloned().fold(Decimal::zero(), |acc, val| acc + val),
             Operation::Subtract(o1, o2) => o1 - o2,
-            Operation::Divide(o1, o2) => o1/o2,
+            Operation::Divide(o1, o2) => o1 / o2,
             Operation::Set(o1) => *o1,
         }
     }
@@ -30,14 +30,14 @@ impl fmt::Display for Operation {
                     f,
                     "{} + {}",
                     values[0],
-                    values[1..].iter().map(ToString::to_string).collect::<Vec<_>>().join(" + ")
+                    values[1..].iter().map(|o| format!("{}", o.round_dp(4))).collect::<Vec<_>>().join(" + ")
                 )
             }
             Operation::Subtract(o1, o2) => ("-", o1, o2),
-            Operation::Divide(o1, o2) => return write!(f, "{} / {}", o1, o2),
+            Operation::Divide(o1, o2) => ("/", o1, o2),
             Operation::Set(o1) => return write!(f, "{}", o1),
         };
-        write!(f, "{} {} {}", o1, symbol, o2)
+        write!(f, "{} {} {}", o1.round_dp(4), symbol, o2.round_dp(4))
     }
 }
 
@@ -63,7 +63,10 @@ impl OperationExecutor {
 
 impl fmt::Display for OperationExecutor {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        writeln!(f, "{}: {} = {}", self.reason, self.operation, self.result)?;
+        match self.operation {
+            Operation::Set(x) => writeln!(f, "{}: {}", self.reason, x)?,
+            _ => writeln!(f, "{}: {} = {}", self.reason, self.operation, self.result.round_dp(4))?,
+        }
         Ok(())
     }
 }
