@@ -103,6 +103,7 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
                     title: Some("Update list of public subnets".to_string()),
                     summary: Some(summary),
                     motivation: None,
+                    forum_post_link: ctx.forum_post_link(),
                 },
             )
             .await?;

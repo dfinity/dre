@@ -41,7 +41,9 @@ impl ExecutableCommand for UpdateUnassignedNodes {
             }
         };
 
-        runner.update_unassigned_nodes(&PrincipalId::from_str(&nns_subnet_id)?).await
+        runner
+            .update_unassigned_nodes(&PrincipalId::from_str(&nns_subnet_id)?, ctx.forum_post_link())
+            .await
     }
 
     fn validate(&self, _cmd: &mut clap::Command) {}
