@@ -243,21 +243,37 @@ pub struct Subnet {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub proposal: Option<TopologyChangeProposal>,
     pub replica_release: Option<Release>,
+    #[serde(default)]
     pub max_ingress_bytes_per_message: u64,
+    #[serde(default)]
     pub max_ingress_messages_per_block: u64,
+    #[serde(default)]
     pub max_block_payload_size: u64,
+    #[serde(default)]
     pub unit_delay_millis: u64,
+    #[serde(default)]
     pub initial_notary_delay_millis: u64,
+    #[serde(default)]
     pub dkg_interval_length: u64,
+    #[serde(default)]
     pub start_as_nns: bool,
+    #[serde(skip_serializing_if = "Option::is_none", default)]
     pub features: Option<SubnetFeatures>,
+    #[serde(default)]
     pub max_number_of_canisters: u64,
+    #[serde(default)]
     pub ssh_readonly_access: Vec<String>,
+    #[serde(default)]
     pub ssh_backup_access: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none", default)]
     pub ecdsa_config: Option<EcdsaConfig>,
+    #[serde(default)]
     pub dkg_dealings_per_block: u64,
+    #[serde(default)]
     pub is_halted: bool,
+    #[serde(default)]
     pub halt_at_cup_height: bool,
+    #[serde(skip_serializing_if = "Option::is_none", default)]
     pub chain_key_config: Option<ChainKeyConfig>,
 }
 
@@ -373,7 +389,9 @@ pub struct Operator {
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub datacenter: Option<Datacenter>,
+    #[serde(default)]
     pub rewardable_nodes: BTreeMap<String, u32>,
+    #[serde(default)]
     pub ipv6: String,
 }
 

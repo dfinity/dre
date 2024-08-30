@@ -21,9 +21,7 @@
           "continent": "North America",
           "latitude": 36.08000183105469,
           "longitude": -115.16999816894531
-        },
-        "rewardable_nodes": {},
-        "ipv6": ""
+        }
       },
       "hostname": "lv1-dll12",
       "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
@@ -52,9 +50,7 @@
           "continent": "Europe",
           "latitude": 43.29650115966797,
           "longitude": 5.369800090789795
-        },
-        "rewardable_nodes": {},
-        "ipv6": ""
+        }
       },
       "hostname": "mr1-dll08",
       "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
@@ -84,9 +80,7 @@
           "continent": "Asia",
           "latitude": 35.67620086669922,
           "longitude": 139.65029907226562
-        },
-        "rewardable_nodes": {},
-        "ipv6": ""
+        }
       },
       "hostname": "ty3-dll14",
       "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
@@ -116,9 +110,7 @@
           "continent": "Europe",
           "latitude": 50.12229919433594,
           "longitude": 8.663660049438477
-        },
-        "rewardable_nodes": {},
-        "ipv6": ""
+        }
       },
       "hostname": "fr2-dll26",
       "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
@@ -148,9 +140,7 @@
           "continent": "Asia",
           "latitude": 1.3521000146865845,
           "longitude": 103.82890319824219
-        },
-        "rewardable_nodes": {},
-        "ipv6": ""
+        }
       },
       "hostname": "sg1-dll14",
       "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
@@ -180,9 +170,7 @@
           "continent": "Europe",
           "latitude": 47.385799407958984,
           "longitude": 8.527299880981445
-        },
-        "rewardable_nodes": {},
-        "ipv6": ""
+        }
       },
       "hostname": "zh5-dll27",
       "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
@@ -212,9 +200,7 @@
           "continent": "Europe",
           "latitude": 47.36800003051758,
           "longitude": 8.51930046081543
-        },
-        "rewardable_nodes": {},
-        "ipv6": ""
+        }
       },
       "hostname": "zh3-dll05",
       "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
@@ -244,9 +230,7 @@
           "continent": "Europe",
           "latitude": 46.55764389038086,
           "longitude": 15.645585060119629
-        },
-        "rewardable_nodes": {},
-        "ipv6": ""
+        }
       },
       "hostname": "mb1-dll08",
       "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
@@ -276,9 +260,7 @@
           "continent": "North America",
           "latitude": 40.60219955444336,
           "longitude": -75.47119903564453
-        },
-        "rewardable_nodes": {},
-        "ipv6": ""
+        }
       },
       "hostname": "aw1-dll17",
       "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
@@ -308,9 +290,7 @@
           "continent": "Europe",
           "latitude": 47.385799407958984,
           "longitude": 8.527299880981445
-        },
-        "rewardable_nodes": {},
-        "ipv6": ""
+        }
       },
       "hostname": "zh5-dll21",
       "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
@@ -340,9 +320,7 @@
           "continent": "Asia",
           "latitude": 35.67620086669922,
           "longitude": 139.65029907226562
-        },
-        "rewardable_nodes": {},
-        "ipv6": ""
+        }
       },
       "hostname": "ty3-dll13",
       "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
@@ -372,9 +350,7 @@
           "continent": "North America",
           "latitude": 37.548500061035156,
           "longitude": -121.98860168457031
-        },
-        "rewardable_nodes": {},
-        "ipv6": ""
+        }
       },
       "hostname": "fm1-dll12",
       "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
@@ -404,9 +380,7 @@
           "continent": "Europe",
           "latitude": 50.12229919433594,
           "longitude": 8.663660049438477
-        },
-        "rewardable_nodes": {},
-        "ipv6": ""
+        }
       },
       "hostname": "fr2-dll28",
       "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
@@ -435,9 +409,7 @@
           "continent": "North America",
           "latitude": 45.50510025024414,
           "longitude": -122.67500305175781
-        },
-        "rewardable_nodes": {},
-        "ipv6": ""
+        }
       },
       "hostname": "pl1-dll03",
       "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
@@ -467,9 +439,7 @@
           "continent": "North America",
           "latitude": 33.81800079345703,
           "longitude": -84.3905029296875
-        },
-        "rewardable_nodes": {},
-        "ipv6": ""
+        }
       },
       "hostname": "at2-dll26",
       "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
@@ -499,9 +469,7 @@
           "continent": "Asia",
           "latitude": 1.3521000146865845,
           "longitude": 103.82890319824219
-        },
-        "rewardable_nodes": {},
-        "ipv6": ""
+        }
       },
       "hostname": "sg1-dll22",
       "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
@@ -531,9 +499,7 @@
           "continent": "North America",
           "latitude": 33.68439865112305,
           "longitude": -84.38200378417969
-        },
-        "rewardable_nodes": {},
-        "ipv6": ""
+        }
       },
       "hostname": "at1-dll23",
       "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
@@ -563,9 +529,7 @@
           "continent": "Europe",
           "latitude": 51.219398498535156,
           "longitude": 4.402500152587891
-        },
-        "rewardable_nodes": {},
-        "ipv6": ""
+        }
       },
       "hostname": "an1-dll12",
       "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
@@ -595,9 +559,7 @@
           "continent": "Europe",
           "latitude": 46.04998016357422,
           "longitude": 14.50685977935791
-        },
-        "rewardable_nodes": {},
-        "ipv6": ""
+        }
       },
       "hostname": "lj1-dll02",
       "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
@@ -627,9 +589,7 @@
           "continent": "Europe",
           "latitude": 46.20439910888672,
           "longitude": 6.143199920654297
-        },
-        "rewardable_nodes": {},
-        "ipv6": ""
+        }
       },
       "hostname": "ge1-dll02",
       "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
@@ -658,9 +618,7 @@
           "continent": "Europe",
           "latitude": 44.42679977416992,
           "longitude": 26.102500915527344
-        },
-        "rewardable_nodes": {},
-        "ipv6": ""
+        }
       },
       "hostname": "bu1-dll25",
       "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
@@ -690,9 +648,7 @@
           "continent": "North America",
           "latitude": 40.60219955444336,
           "longitude": -75.47119903564453
-        },
-        "rewardable_nodes": {},
-        "ipv6": ""
+        }
       },
       "hostname": "aw1-dll09",
       "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
@@ -722,9 +678,7 @@
           "continent": "Asia",
           "latitude": 1.3321000337600708,
           "longitude": 103.95269775390625
-        },
-        "rewardable_nodes": {},
-        "ipv6": ""
+        }
       },
       "hostname": "sg3-dll20",
       "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
@@ -754,9 +708,7 @@
           "continent": "Europe",
           "latitude": 46.04998016357422,
           "longitude": 14.50685977935791
-        },
-        "rewardable_nodes": {},
-        "ipv6": ""
+        }
       },
       "hostname": "lj1-dll18",
       "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
@@ -786,9 +738,7 @@
           "continent": "North America",
           "latitude": 28.588300704956055,
           "longitude": -81.37920379638672
-        },
-        "rewardable_nodes": {},
-        "ipv6": ""
+        }
       },
       "hostname": "or1-dll25",
       "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
@@ -818,9 +768,7 @@
           "continent": "Europe",
           "latitude": 46.20220184326172,
           "longitude": 6.136280059814453
-        },
-        "rewardable_nodes": {},
-        "ipv6": ""
+        }
       },
       "hostname": "ge2-dll14",
       "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
@@ -850,9 +798,7 @@
           "continent": "North America",
           "latitude": 40.60219955444336,
           "longitude": -75.47119903564453
-        },
-        "rewardable_nodes": {},
-        "ipv6": ""
+        }
       },
       "hostname": "aw1-dll03",
       "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
@@ -882,9 +828,7 @@
           "continent": "Europe",
           "latitude": 46.20439910888672,
           "longitude": 6.143199920654297
-        },
-        "rewardable_nodes": {},
-        "ipv6": ""
+        }
       },
       "hostname": "ge1-dll12",
       "subnet": "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe",
