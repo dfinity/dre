@@ -699,6 +699,8 @@ pub mod test {
                     },
                     allowance: 23933,
                     datacenter: None,
+                    rewardable_nodes: BTreeMap::new(),
+                    ipv6: "".to_string(),
                 },
                 hostname: None,
                 hostos_release: None,
@@ -709,6 +711,8 @@ pub mod test {
                 hostos_version: hostos_version.clone(),
                 dfinity_owned: Some(dfinity_owned),
                 is_api_boundary_node,
+                chip_id: None,
+                public_ipv4_config: None,
             };
             n.insert(node.principal, node);
         }
