@@ -19,7 +19,7 @@ use futures_util::future::try_join;
 use ic_management_backend::health;
 use ic_management_backend::health::HealthStatusQuerier;
 use ic_management_backend::lazy_git::LazyGit;
-use ic_management_backend::lazy_registry::LazyRegistry;
+use ic_management_backend::lazy_registry::LazyRegistryImpl;
 use ic_management_backend::proposal::ProposalAgent;
 use ic_management_backend::registry::ReleasesOps;
 use ic_management_types::Artifact;
@@ -47,7 +47,7 @@ use crate::operations::hostos_rollout::NodeGroupUpdate;
 
 pub struct Runner {
     ic_admin: Arc<IcAdminWrapper>,
-    registry: Rc<LazyRegistry>,
+    registry: Rc<LazyRegistryImpl>,
     ic_repo: RefCell<Option<Rc<LazyGit>>>,
     network: Network,
     proposal_agent: ProposalAgent,
@@ -55,7 +55,7 @@ pub struct Runner {
 }
 
 impl Runner {
-    pub fn new(ic_admin: Arc<IcAdminWrapper>, registry: Rc<LazyRegistry>, network: Network, agent: ProposalAgent, verbose: bool) -> Self {
+    pub fn new(ic_admin: Arc<IcAdminWrapper>, registry: Rc<LazyRegistryImpl>, network: Network, agent: ProposalAgent, verbose: bool) -> Self {
         Self {
             ic_admin,
             registry,

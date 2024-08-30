@@ -9,7 +9,7 @@ use decentralization::{
     SubnetChangeResponse,
 };
 use ic_management_backend::health::{self, HealthStatusQuerier};
-use ic_management_backend::lazy_registry::LazyRegistry;
+use ic_management_backend::lazy_registry::LazyRegistryImpl;
 use ic_management_types::MinNakamotoCoefficients;
 use ic_management_types::Network;
 use ic_types::PrincipalId;
@@ -37,12 +37,12 @@ impl fmt::Display for SubnetManagerError {
 
 pub struct SubnetManager {
     subnet_target: Option<SubnetTarget>,
-    registry_instance: Rc<LazyRegistry>,
+    registry_instance: Rc<LazyRegistryImpl>,
     network: Network,
 }
 
 impl SubnetManager {
-    pub fn new(registry_instance: Rc<LazyRegistry>, network: Network) -> Self {
+    pub fn new(registry_instance: Rc<LazyRegistryImpl>, network: Network) -> Self {
         Self {
             subnet_target: None,
             registry_instance,

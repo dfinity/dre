@@ -48,7 +48,7 @@ const KNOWN_SUBNETS: &[(&str, &str)] = &[
     ("bkfrj-6k62g-dycql-7h53p-atvkj-zg4to-gaogh-netha-ptybj-ntsgw-rqe", "European"),
 ];
 
-pub struct LazyRegistry {
+pub struct LazyRegistryImpl {
     local_registry: LocalRegistry,
     network: Network,
 
@@ -139,7 +139,7 @@ pub trait LazyRegistryFamilyEntries {
     }
 }
 
-impl LazyRegistryFamilyEntries for LazyRegistry {
+impl LazyRegistryFamilyEntries for LazyRegistryImpl {
     fn get_key_family(&self, key_prefix: &str, version: RegistryVersion) -> anyhow::Result<Vec<String>> {
         Ok(self.local_registry.get_key_family(key_prefix, version)?)
     }
@@ -153,7 +153,7 @@ impl LazyRegistryFamilyEntries for LazyRegistry {
     }
 }
 
-impl LazyRegistry {
+impl LazyRegistryImpl {
     pub fn new(local_registry: LocalRegistry, network: Network, no_sync: bool) -> Self {
         Self {
             local_registry,
@@ -614,7 +614,7 @@ impl LazyRegistry {
     }
 }
 
-impl NodesConverter for LazyRegistry {
+impl NodesConverter for LazyRegistryImpl {
     async fn get_nodes(&self, from: &[PrincipalId]) -> Result<Vec<decentralization::network::Node>, ic_management_types::NetworkError> {
         let nodes = self
             .nodes()
@@ -631,7 +631,7 @@ impl NodesConverter for LazyRegistry {
     }
 }
 
-impl SubnetQuerier for LazyRegistry {
+impl SubnetQuerier for LazyRegistryImpl {
     async fn subnet(&self, by: SubnetQueryBy) -> Result<DecentralizedSubnet, ic_management_types::NetworkError> {
         match by {
             SubnetQueryBy::SubnetId(id) => self
@@ -684,9 +684,9 @@ impl SubnetQuerier for LazyRegistry {
         }
     }
 }
-impl decentralization::network::TopologyManager for LazyRegistry {}
+impl decentralization::network::TopologyManager for LazyRegistryImpl {}
 
-impl AvailableNodesQuerier for LazyRegistry {
+impl AvailableNodesQuerier for LazyRegistryImpl {
     async fn available_nodes(&self) -> Result<Vec<decentralization::network::Node>, ic_management_types::NetworkError> {
         let health_client = crate::health::HealthClient::new(self.network.clone());
         let (nodes, healths) = try_join!(self.nodes_with_proposals(), health_client.nodes())
