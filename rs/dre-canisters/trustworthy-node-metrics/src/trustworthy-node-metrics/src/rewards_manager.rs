@@ -13,14 +13,14 @@ const MAX_FAILURE_RATE: Decimal = dec!(0.7);
 ///
 /// # Arguments
 ///
-/// * `failure_rate` - A reference to a `u64` value representing the failure rate.
+/// * `failure_rate` - A reference to a `Decimal` value representing the failure rate.
 ///
 /// # Returns
 ///
-/// * A `u64` value representing the rewards reduction, where:
+/// * A `Decimal` value representing the rewards reduction, where:
 ///   - `0` indicates no reduction (failure rate below the minimum threshold),
-///   - `100` indicates maximum reduction (failure rate above the maximum threshold),
-///   - A value between `0` and `100` represents a proportional reduction based on the failure rate.
+///   - `1` indicates maximum reduction (failure rate above the maximum threshold),
+///   - A value between `0` and `1` represents a proportional reduction based on the failure rate.
 ///
 /// # Explanation
 ///
@@ -29,8 +29,7 @@ const MAX_FAILURE_RATE: Decimal = dec!(0.7);
 /// 2. It then checks if the `failure_rate` is above the `MAX_FAILURE_RATE` -> maximum reduction in rewards.
 ///
 /// 3. If the `failure_rate` is within the defined range (`MIN_FAILURE_RATE` to `MAX_FAILURE_RATE`),
-///    the function calculates the reduction proportionally:
-///    - The reduction is calculated by normalizing the `failure_rate` within the range, resulting in a value between `0` and `100`.
+///    the function calculates the reduction proportionally.
 fn rewards_reduction_percent(failure_rate: &Decimal) -> (Vec<OperationExecutor>, Decimal) {
     const RF: &str = "Linear Reduction factor";
 
@@ -78,7 +77,7 @@ fn rewards_reduction_percent(failure_rate: &Decimal) -> (Vec<OperationExecutor>,
 ///
 /// # Returns
 ///
-/// * A `f64` value representing the rewards percentage left after the rewards reduction, rounded to two decimal places.
+/// * A `RewardsComputationResult`.
 ///
 /// # Explanation
 ///
