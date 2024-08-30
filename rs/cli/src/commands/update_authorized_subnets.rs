@@ -7,7 +7,7 @@ use ic_types::PrincipalId;
 use itertools::Itertools;
 use log::info;
 
-use crate::ic_admin::{ProposeCommand, ProposeOptions};
+use crate::ic_admin::{IcAdmin, ProposeCommand, ProposeOptions};
 
 use super::ExecutableCommand;
 

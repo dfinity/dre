@@ -6,6 +6,7 @@ use serde_json::Value;
 
 use crate::{
     commands::{ExecutableCommand, IcAdminRequirement},
+    ic_admin::IcAdmin,
     qualification::QualificationExecutorBuilder,
 };
 

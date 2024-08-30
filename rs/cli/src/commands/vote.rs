@@ -8,7 +8,7 @@ use log::info;
 use spinners::{Spinner, Spinners};
 
 use super::{ExecutableCommand, IcAdminRequirement};
-use crate::desktop_notify::DesktopNotifier;
+use crate::{desktop_notify::DesktopNotifier, ic_admin::IcAdmin};
 
 #[derive(Args, Debug)]
 pub struct Vote {
@@ -78,7 +78,7 @@ impl ExecutableCommand for Vote {
                     ),
                 );
 
-                let response = match client.register_vote(ctx.ic_admin().neuron.neuron_id, proposal.id.unwrap().id).await {
+                let response = match client.register_vote(ctx.ic_admin().neuron().neuron_id, proposal.id.unwrap().id).await {
                     Ok(response) => format!("Voted successfully: {}", response),
                     Err(e) => {
                         DesktopNotifier::send_critical(

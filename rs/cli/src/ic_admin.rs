@@ -3,6 +3,7 @@ use anyhow::{anyhow, Result};
 use colored::Colorize;
 use dialoguer::Confirm;
 use flate2::read::GzDecoder;
+use futures::future::BoxFuture;
 use futures::stream::{self, StreamExt};
 use ic_base_types::PrincipalId;
 use ic_management_types::{Artifact, Network};
@@ -57,16 +58,237 @@ impl UpdateVersion {
     }
 }
 
+pub trait IcAdmin: Send + Sync {
+    fn neuron(&self) -> Neuron;
+
+    fn propose_run<'a>(&'a self, cmd: ProposeCommand, opts: ProposeOptions) -> BoxFuture<'a, anyhow::Result<String>>;
+
+    fn run<'a>(&'a self, command: &'a str, args: &'a [String], silent: bool) -> BoxFuture<'a, anyhow::Result<String>>;
+
+    fn grep_subcommand_arguments(&self, subcommand: &str) -> String;
+
+    fn run_passthrough_get<'a>(&'a self, args: &'a [String], silent: bool) -> BoxFuture<'a, anyhow::Result<String>>;
+
+    fn run_passthrough_propose<'a>(&'a self, args: &'a [String]) -> BoxFuture<'a, anyhow::Result<String>>;
+
+    fn prepare_to_propose_to_revise_elected_versions<'a>(
+        &'a self,
+        release_artifact: &'a Artifact,
+        version: &'a String,
+        release_tag: &'a String,
+        force: bool,
+        retire_versions: Option<Vec<String>>,
+    ) -> BoxFuture<'a, anyhow::Result<UpdateVersion>>;
+}
+
 #[derive(Clone)]
-pub struct IcAdminWrapper {
+pub struct IcAdminImpl {
     network: Network,
     ic_admin_bin_path: Option<String>,
     proceed_without_confirmation: bool,
-    pub neuron: Neuron,
+    neuron: Neuron,
     dry_run: bool,
 }
 
-impl IcAdminWrapper {
+impl IcAdmin for IcAdminImpl {
+    fn neuron(&self) -> Neuron {
+        self.neuron.clone()
+    }
+
+    fn propose_run<'a>(&'a self, cmd: ProposeCommand, opts: ProposeOptions) -> BoxFuture<'a, anyhow::Result<String>> {
+        Box::pin(async move { self.propose_run_inner(cmd, opts, self.dry_run).await })
+    }
+
+    fn run<'a>(&'a self, command: &'a str, args: &'a [String], silent: bool) -> BoxFuture<'a, anyhow::Result<String>> {
+        let ic_admin_args = [&[command.to_string()], args].concat();
+        Box::pin(async move { self._run_ic_admin_with_args(&ic_admin_args, silent).await })
+    }
+
+    fn grep_subcommand_arguments(&self, subcommand: &str) -> String {
+        let ic_admin_path = self.ic_admin_bin_path.clone().unwrap_or_else(|| "ic-admin".to_string());
+        let cmd_result = Command::new(ic_admin_path).args([subcommand, "--help"]).output();
+        match cmd_result.map_err(|e| e.to_string()) {
+            Ok(output) => {
+                if output.status.success() {
+                    String::from_utf8_lossy(output.stdout.as_ref()).to_string()
+                } else {
+                    error!("Execution of ic-admin failed: {}", String::from_utf8_lossy(output.stderr.as_ref()));
+                    String::new()
+                }
+            }
+            Err(err) => {
+                error!("Error starting ic-admin process: {}", err);
+                String::new()
+            }
+        }
+    }
+
+    /// Run an `ic-admin get-*` command directly, and without an HSM
+    fn run_passthrough_get<'a>(&'a self, args: &'a [String], silent: bool) -> BoxFuture<'a, anyhow::Result<String>> {
+        if args.is_empty() {
+            println!("List of available ic-admin 'get' sub-commands:\n");
+            for subcmd in self.grep_subcommands(r"\s+get-(.+?)\s") {
+                println!("\t{}", subcmd)
+            }
+            std::process::exit(1);
+        }
+
+        // The `get` subcommand of the cli expects that "get-" prefix is not provided as
+        // the ic-admin command
+        let args = if args[0].starts_with("get-") {
+            // The user did provide the "get-" prefix, so let's just keep it and use it.
+            // This provides a convenient backward compatibility with ic-admin commands
+            // i.e., `dre get get-subnet 0` still works, although `dre get
+            // subnet 0` is preferred
+            args.to_vec()
+        } else {
+            // But since ic-admin expects these commands to include the "get-" prefix, we
+            // need to add it back Example:
+            // `dre get subnet 0` becomes
+            // `ic-admin --nns-url "http://[2600:3000:6100:200:5000:b0ff:fe8e:6b7b]:8080" get-subnet 0`
+            let mut args_with_get_prefix = vec![String::from("get-") + args[0].as_str()];
+            args_with_get_prefix.extend_from_slice(args.split_at(1).1);
+            args_with_get_prefix
+        };
+
+        Box::pin(async move { self.run(&args[0], &args.iter().skip(1).cloned().collect::<Vec<_>>(), silent).await })
+    }
+
+    /// Run an `ic-admin propose-to-*` command directly
+    fn run_passthrough_propose<'a>(&'a self, args: &'a [String]) -> BoxFuture<'a, anyhow::Result<String>> {
+        if args.is_empty() {
+            println!("List of available ic-admin 'propose' sub-commands:\n");
+            for subcmd in self.grep_subcommands(r"\s+propose-to-(.+?)\s") {
+                println!("\t{}", subcmd)
+            }
+            std::process::exit(1);
+        }
+
+        // The `propose` subcommand of the cli expects that "propose-to-" prefix is not
+        // provided as the ic-admin command
+        let args = if args[0].starts_with("propose-to-") {
+            // The user did provide the "propose-to-" prefix, so let's just keep it and use
+            // it.
+            args.to_vec()
+        } else {
+            // But since ic-admin expects these commands to include the "propose-to-"
+            // prefix, we need to add it back.
+            let mut args_with_fixed_prefix = vec![String::from("propose-to-") + args[0].as_str()];
+            args_with_fixed_prefix.extend_from_slice(args.split_at(1).1);
+            args_with_fixed_prefix
+        };
+
+        // ic-admin expects --summary and not --motivation
+        // make sure the expected argument is provided
+        let args = if !args.contains(&String::from("--summary")) && args.contains(&String::from("--motivation")) {
+            args.iter()
+                .map(|arg| if arg == "--motivation" { "--summary".to_string() } else { arg.clone() })
+                .collect::<Vec<_>>()
+        } else {
+            args.to_vec()
+        };
+
+        let cmd = ProposeCommand::Raw {
+            command: args[0].clone(),
+            args: args.iter().skip(1).cloned().collect::<Vec<_>>(),
+        };
+        let dry_run = self.dry_run || cmd.args().contains(&String::from("--dry-run"));
+        Box::pin(async move { self.propose_run_inner(cmd, Default::default(), dry_run).await })
+    }
+
+    fn prepare_to_propose_to_revise_elected_versions<'a>(
+        &'a self,
+        release_artifact: &'a Artifact,
+        version: &'a String,
+        release_tag: &'a String,
+        force: bool,
+        retire_versions: Option<Vec<String>>,
+    ) -> BoxFuture<'a, anyhow::Result<UpdateVersion>> {
+        Box::pin(async move {
+            let (update_urls, expected_hash) = Self::download_images_and_validate_sha256(release_artifact, version, force).await?;
+
+            let template = format!(
+                r#"Elect new {release_artifact} binary revision [{version}](https://github.com/dfinity/ic/tree/{release_tag})
+
+    # Release Notes:
+
+    [comment]: <> Remove this block of text from the proposal.
+    [comment]: <> Then, add the {release_artifact} binary release notes as bullet points here.
+    [comment]: <> Any [commit ID] within square brackets will auto-link to the specific changeset.
+
+    # IC-OS Verification
+
+    To build and verify the IC-OS disk image, run:
+
+    ```
+    # From https://github.com/dfinity/ic#verifying-releases
+    sudo apt-get install -y curl && curl --proto '=https' --tlsv1.2 -sSLO https://raw.githubusercontent.com/dfinity/ic/{version}/gitlab-ci/tools/repro-check.sh && chmod +x repro-check.sh && ./repro-check.sh -c {version}
+    ```
+
+    The two SHA256 sums printed above from a) the downloaded CDN image and b) the locally built image,
+    must be identical, and must match the SHA256 from the payload of the NNS proposal.
+    "#
+            );
+
+            // Remove <!--...--> from the commit
+            // Leading or trailing spaces are removed as well and replaced with a single space.
+            // Regex can be analyzed and tested at:
+            // https://rregex.dev/?version=1.7&method=replace&regex=%5Cs*%3C%21--.%2B%3F--%3E%5Cs*&replace=+&text=*+%5Babc%5D+%3C%21--+ignored+1+--%3E+line%0A*+%5Babc%5D+%3C%21--+ignored+2+--%3E+comment+1+%3C%21--+ignored+3+--%3E+comment+2%0A
+            let re_comment = Regex::new(r"\s*<!--.+?-->\s*").unwrap();
+            let mut builder = edit::Builder::new();
+            let with_suffix = builder.suffix(".md");
+            let edited = edit::edit_with_builder(template, with_suffix)?
+                .trim()
+                .replace("\r(\n)?", "\n")
+                .split('\n')
+                .map(|f| {
+                    let f = re_comment.replace_all(f.trim(), " ");
+
+                    if !f.starts_with('*') {
+                        return f.to_string();
+                    }
+                    match f.split_once(']') {
+                        Some((left, message)) => {
+                            let commit_hash = left.split_once('[').unwrap().1.to_string();
+
+                            format!("* [[{}](https://github.com/dfinity/ic/commit/{})] {}", commit_hash, commit_hash, message)
+                        }
+                        None => f.to_string(),
+                    }
+                })
+                .join("\n");
+            if edited.contains(&String::from("Remove this block of text from the proposal.")) {
+                Err(anyhow::anyhow!("The edited proposal text has not been edited to add release notes."))
+            } else {
+                let proposal_title = match &retire_versions {
+                    Some(v) => {
+                        let pluralize = if v.len() == 1 { "version" } else { "versions" };
+                        format!(
+                            "Elect new IC/{} revision (commit {}), and retire old replica {} {}",
+                            release_artifact.capitalized(),
+                            &version[..8],
+                            pluralize,
+                            v.iter().map(|v| &v[..8]).join(",")
+                        )
+                    }
+                    None => format!("Elect new IC/{} revision (commit {})", release_artifact.capitalized(), &version[..8]),
+                };
+
+                Ok(UpdateVersion {
+                    release_artifact: release_artifact.clone(),
+                    version: version.clone(),
+                    title: proposal_title.clone(),
+                    stringified_hash: expected_hash,
+                    summary: edited,
+                    update_urls,
+                    versions_to_retire: retire_versions.clone(),
+                })
+            }
+        })
+    }
+}
+
+impl IcAdminImpl {
     pub fn new(network: Network, ic_admin_bin_path: Option<String>, proceed_without_confirmation: bool, neuron: Neuron, dry_run: bool) -> Self {
         Self {
             network,
@@ -175,10 +397,6 @@ impl IcAdminWrapper {
         Ok(cmd_out)
     }
 
-    pub async fn propose_run(&self, cmd: ProposeCommand, opts: ProposeOptions) -> anyhow::Result<String> {
-        self.propose_run_inner(cmd, opts, self.dry_run).await
-    }
-
     async fn propose_run_inner(&self, cmd: ProposeCommand, opts: ProposeOptions, dry_run: bool) -> anyhow::Result<String> {
         // Dry run, or --help executions run immediately and do not proceed.
         if dry_run || cmd.args().contains(&String::from("--help")) || cmd.args().contains(&String::from("--dry-run")) {
@@ -253,11 +471,6 @@ impl IcAdminWrapper {
         }
     }
 
-    pub async fn run(&self, command: &str, args: &[String], silent: bool) -> anyhow::Result<String> {
-        let ic_admin_args = [&[command.to_string()], args].concat();
-        self._run_ic_admin_with_args(&ic_admin_args, silent).await
-    }
-
     /// Run ic-admin and parse sub-commands that it lists with "--help",
     /// extract the ones matching `needle_regex` and return them as a
     /// `Vec<String>`
@@ -282,100 +495,6 @@ impl IcAdminWrapper {
                 vec![]
             }
         }
-    }
-
-    pub(crate) fn grep_subcommand_arguments(&self, subcommand: &str) -> String {
-        let ic_admin_path = self.ic_admin_bin_path.clone().unwrap_or_else(|| "ic-admin".to_string());
-        let cmd_result = Command::new(ic_admin_path).args([subcommand, "--help"]).output();
-        match cmd_result.map_err(|e| e.to_string()) {
-            Ok(output) => {
-                if output.status.success() {
-                    String::from_utf8_lossy(output.stdout.as_ref()).to_string()
-                } else {
-                    error!("Execution of ic-admin failed: {}", String::from_utf8_lossy(output.stderr.as_ref()));
-                    String::new()
-                }
-            }
-            Err(err) => {
-                error!("Error starting ic-admin process: {}", err);
-                String::new()
-            }
-        }
-    }
-
-    /// Run an `ic-admin get-*` command directly, and without an HSM
-    pub async fn run_passthrough_get(&self, args: &[String], silent: bool) -> anyhow::Result<String> {
-        if args.is_empty() {
-            println!("List of available ic-admin 'get' sub-commands:\n");
-            for subcmd in self.grep_subcommands(r"\s+get-(.+?)\s") {
-                println!("\t{}", subcmd)
-            }
-            std::process::exit(1);
-        }
-
-        // The `get` subcommand of the cli expects that "get-" prefix is not provided as
-        // the ic-admin command
-        let args = if args[0].starts_with("get-") {
-            // The user did provide the "get-" prefix, so let's just keep it and use it.
-            // This provides a convenient backward compatibility with ic-admin commands
-            // i.e., `dre get get-subnet 0` still works, although `dre get
-            // subnet 0` is preferred
-            args.to_vec()
-        } else {
-            // But since ic-admin expects these commands to include the "get-" prefix, we
-            // need to add it back Example:
-            // `dre get subnet 0` becomes
-            // `ic-admin --nns-url "http://[2600:3000:6100:200:5000:b0ff:fe8e:6b7b]:8080" get-subnet 0`
-            let mut args_with_get_prefix = vec![String::from("get-") + args[0].as_str()];
-            args_with_get_prefix.extend_from_slice(args.split_at(1).1);
-            args_with_get_prefix
-        };
-
-        let stdout = self.run(&args[0], &args.iter().skip(1).cloned().collect::<Vec<_>>(), silent).await?;
-        Ok(stdout)
-    }
-
-    /// Run an `ic-admin propose-to-*` command directly
-    pub async fn run_passthrough_propose(&self, args: &[String]) -> anyhow::Result<()> {
-        if args.is_empty() {
-            println!("List of available ic-admin 'propose' sub-commands:\n");
-            for subcmd in self.grep_subcommands(r"\s+propose-to-(.+?)\s") {
-                println!("\t{}", subcmd)
-            }
-            std::process::exit(1);
-        }
-
-        // The `propose` subcommand of the cli expects that "propose-to-" prefix is not
-        // provided as the ic-admin command
-        let args = if args[0].starts_with("propose-to-") {
-            // The user did provide the "propose-to-" prefix, so let's just keep it and use
-            // it.
-            args.to_vec()
-        } else {
-            // But since ic-admin expects these commands to include the "propose-to-"
-            // prefix, we need to add it back.
-            let mut args_with_fixed_prefix = vec![String::from("propose-to-") + args[0].as_str()];
-            args_with_fixed_prefix.extend_from_slice(args.split_at(1).1);
-            args_with_fixed_prefix
-        };
-
-        // ic-admin expects --summary and not --motivation
-        // make sure the expected argument is provided
-        let args = if !args.contains(&String::from("--summary")) && args.contains(&String::from("--motivation")) {
-            args.iter()
-                .map(|arg| if arg == "--motivation" { "--summary".to_string() } else { arg.clone() })
-                .collect::<Vec<_>>()
-        } else {
-            args.to_vec()
-        };
-
-        let cmd = ProposeCommand::Raw {
-            command: args[0].clone(),
-            args: args.iter().skip(1).cloned().collect::<Vec<_>>(),
-        };
-        let dry_run = self.dry_run || cmd.args().contains(&String::from("--dry-run"));
-        self.propose_run_inner(cmd, Default::default(), dry_run).await?;
-        Ok(())
     }
 
     fn get_s3_cdn_image_url(version: &String, s3_subdir: &String) -> String {
@@ -495,94 +614,6 @@ impl IcAdminWrapper {
             }
         }
         Ok((update_urls, expected_hash))
-    }
-
-    pub async fn prepare_to_propose_to_revise_elected_versions(
-        release_artifact: &Artifact,
-        version: &String,
-        release_tag: &String,
-        force: bool,
-        retire_versions: Option<Vec<String>>,
-    ) -> anyhow::Result<UpdateVersion> {
-        let (update_urls, expected_hash) = Self::download_images_and_validate_sha256(release_artifact, version, force).await?;
-
-        let template = format!(
-            r#"Elect new {release_artifact} binary revision [{version}](https://github.com/dfinity/ic/tree/{release_tag})
-
-# Release Notes:
-
-[comment]: <> Remove this block of text from the proposal.
-[comment]: <> Then, add the {release_artifact} binary release notes as bullet points here.
-[comment]: <> Any [commit ID] within square brackets will auto-link to the specific changeset.
-
-# IC-OS Verification
-
-To build and verify the IC-OS disk image, run:
-
-```
-# From https://github.com/dfinity/ic#verifying-releases
-sudo apt-get install -y curl && curl --proto '=https' --tlsv1.2 -sSLO https://raw.githubusercontent.com/dfinity/ic/{version}/gitlab-ci/tools/repro-check.sh && chmod +x repro-check.sh && ./repro-check.sh -c {version}
-```
-
-The two SHA256 sums printed above from a) the downloaded CDN image and b) the locally built image,
-must be identical, and must match the SHA256 from the payload of the NNS proposal.
-"#
-        );
-
-        // Remove <!--...--> from the commit
-        // Leading or trailing spaces are removed as well and replaced with a single space.
-        // Regex can be analyzed and tested at:
-        // https://rregex.dev/?version=1.7&method=replace&regex=%5Cs*%3C%21--.%2B%3F--%3E%5Cs*&replace=+&text=*+%5Babc%5D+%3C%21--+ignored+1+--%3E+line%0A*+%5Babc%5D+%3C%21--+ignored+2+--%3E+comment+1+%3C%21--+ignored+3+--%3E+comment+2%0A
-        let re_comment = Regex::new(r"\s*<!--.+?-->\s*").unwrap();
-        let mut builder = edit::Builder::new();
-        let with_suffix = builder.suffix(".md");
-        let edited = edit::edit_with_builder(template, with_suffix)?
-            .trim()
-            .replace("\r(\n)?", "\n")
-            .split('\n')
-            .map(|f| {
-                let f = re_comment.replace_all(f.trim(), " ");
-
-                if !f.starts_with('*') {
-                    return f.to_string();
-                }
-                match f.split_once(']') {
-                    Some((left, message)) => {
-                        let commit_hash = left.split_once('[').unwrap().1.to_string();
-
-                        format!("* [[{}](https://github.com/dfinity/ic/commit/{})] {}", commit_hash, commit_hash, message)
-                    }
-                    None => f.to_string(),
-                }
-            })
-            .join("\n");
-        if edited.contains(&String::from("Remove this block of text from the proposal.")) {
-            Err(anyhow::anyhow!("The edited proposal text has not been edited to add release notes."))
-        } else {
-            let proposal_title = match &retire_versions {
-                Some(v) => {
-                    let pluralize = if v.len() == 1 { "version" } else { "versions" };
-                    format!(
-                        "Elect new IC/{} revision (commit {}), and retire old replica {} {}",
-                        release_artifact.capitalized(),
-                        &version[..8],
-                        pluralize,
-                        v.iter().map(|v| &v[..8]).join(",")
-                    )
-                }
-                None => format!("Elect new IC/{} revision (commit {})", release_artifact.capitalized(), &version[..8]),
-            };
-
-            Ok(UpdateVersion {
-                release_artifact: release_artifact.clone(),
-                version: version.clone(),
-                title: proposal_title.clone(),
-                stringified_hash: expected_hash,
-                summary: edited,
-                update_urls,
-                versions_to_retire: retire_versions.clone(),
-            })
-        }
     }
 }
 

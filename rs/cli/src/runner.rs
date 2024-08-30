@@ -36,14 +36,15 @@ use registry_canister::mutations::do_change_subnet_membership::ChangeSubnetMembe
 use tabled::builder::Builder;
 use tabled::settings::Style;
 
-use crate::ic_admin::{self, IcAdminWrapper};
+use crate::ic_admin::IcAdmin;
+use crate::ic_admin::{self, IcAdminImpl};
 use crate::ic_admin::{ProposeCommand, ProposeOptions};
 use crate::operations::hostos_rollout::HostosRollout;
 use crate::operations::hostos_rollout::HostosRolloutResponse;
 use crate::operations::hostos_rollout::NodeGroupUpdate;
 
 pub struct Runner {
-    ic_admin: Arc<IcAdminWrapper>,
+    ic_admin: Arc<IcAdminImpl>,
     registry: Arc<dyn LazyRegistry>,
     ic_repo: RefCell<Option<Rc<LazyGit>>>,
     network: Network,
@@ -52,7 +53,7 @@ pub struct Runner {
 }
 
 impl Runner {
-    pub fn new(ic_admin: Arc<IcAdminWrapper>, registry: Arc<dyn LazyRegistry>, network: Network, agent: ProposalAgent, verbose: bool) -> Self {
+    pub fn new(ic_admin: Arc<IcAdminImpl>, registry: Arc<dyn LazyRegistry>, network: Network, agent: ProposalAgent, verbose: bool) -> Self {
         Self {
             ic_admin,
             registry,
@@ -285,14 +286,16 @@ impl Runner {
         force: bool,
         forum_post_link: Option<String>,
     ) -> anyhow::Result<()> {
-        let update_version = IcAdminWrapper::prepare_to_propose_to_revise_elected_versions(
-            release_artifact,
-            version,
-            release_tag,
-            force,
-            self.prepare_versions_to_retire(release_artifact, false).await.map(|r| r.1)?,
-        )
-        .await?;
+        let update_version = self
+            .ic_admin
+            .prepare_to_propose_to_revise_elected_versions(
+                release_artifact,
+                version,
+                release_tag,
+                force,
+                self.prepare_versions_to_retire(release_artifact, false).await.map(|r| r.1)?,
+            )
+            .await?;
 
         self.ic_admin
             .propose_run(

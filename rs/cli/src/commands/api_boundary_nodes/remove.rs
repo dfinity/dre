@@ -3,7 +3,7 @@ use ic_types::PrincipalId;
 
 use crate::{
     commands::{ExecutableCommand, IcAdminRequirement},
-    ic_admin,
+    ic_admin::{self, IcAdmin},
 };
 
 #[derive(Args, Debug)]
