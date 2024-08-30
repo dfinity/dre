@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 
-use anyhow::{anyhow, Ok};
+use anyhow::anyhow;
 use dfn_core::api::PrincipalId;
 use futures::FutureExt;
 use ic_base_types::NodeId;
@@ -172,9 +172,14 @@ async fn update_node_providers(nodes_principal: Vec<&PrincipalId>) -> anyhow::Re
         let maybe_node_provider = stable_memory::get_node_provider(&node_principal.0);
 
         if maybe_node_provider.is_none() {
-            let node_provider_id = fetch_node_provider(node_principal).await?;
-
-            stable_memory::insert_node_provider(node_principal.0, node_provider_id.0)
+            match fetch_node_provider(node_principal).await {
+                Ok(node_provider_id) => {
+                    stable_memory::insert_node_provider(node_principal.0, node_provider_id.0);
+                }
+                Err(e) => {
+                    ic_cdk::println!("Failed to fetch node provider for {:?}: {:?}", node_principal, e);
+                }
+            }
         }
     }
     Ok(())
