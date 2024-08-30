@@ -1,4 +1,4 @@
-use std::borrow::Cow;
+use std::{borrow::Cow, fmt};
 
 use candid::{CandidType, Decode, Deserialize, Encode, Principal};
 use dfn_core::api::PrincipalId;
@@ -79,6 +79,16 @@ pub struct DailyNodeMetrics {
     pub failure_rate: f64,
 }
 
+impl fmt::Display for DailyNodeMetrics {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "timestamp_nanoseconds: {}, num_blocks_proposed: {},  num_blocks_failed: {}",
+            self.ts, self.num_blocks_proposed, self.num_blocks_failed
+        )
+    }
+}
+
 impl DailyNodeMetrics {
     pub fn new(ts: TimestampNanos, subnet_assignment: Principal, proposed_blocks: u64, failed_blocks: u64) -> Self {
         let total_blocks = failed_blocks + proposed_blocks;
@@ -99,19 +109,20 @@ impl DailyNodeMetrics {
 }
 
 #[derive(Debug, Deserialize, CandidType)]
-pub struct RewardsStats {
+pub struct RewardsComputationResult {
+    pub rewards_percent: f64,
+    pub rewards_reduction: f64,
     pub blocks_failed: u64,
     pub blocks_proposed: u64,
     pub blocks_total: u64,
     pub failure_rate: f64,
-    pub rewards_reduction: f64,
+    pub computation_log: String,
 }
 
 #[derive(Debug, Deserialize, CandidType)]
 pub struct NodeRewardsResponse {
     pub node_id: Principal,
     pub node_provider_id: Principal,
-    pub rewards_percent: f64,
     pub daily_node_metrics: Vec<DailyNodeMetrics>,
-    pub rewards_stats: RewardsStats,
+    pub rewards_computation: RewardsComputationResult,
 }

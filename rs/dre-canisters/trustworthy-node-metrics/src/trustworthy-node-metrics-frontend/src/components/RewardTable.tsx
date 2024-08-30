@@ -35,7 +35,7 @@ const RewardTable: React.FC<RewardTableProps> = ({ nodeRewards }) => {
                 {nodeMetrics.node_id.toText()}
               </TableCell>
               <TableCell component="th" scope="row">
-                {Math.round(nodeMetrics.rewards_stats.failure_rate * 100)}%
+                {nodeMetrics.rewards_computation.failure_rate * 100}%
               </TableCell>
             </TableRow>
           ))}
