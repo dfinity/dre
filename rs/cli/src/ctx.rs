@@ -30,7 +30,7 @@ const STAGING_NEURON_ID: u64 = 49;
 pub struct DreContext {
     network: Network,
     registry: RefCell<Option<Arc<dyn LazyRegistry>>>,
-    ic_admin: Option<Arc<IcAdminImpl>>,
+    ic_admin: Option<Arc<dyn IcAdmin>>,
     runner: RefCell<Option<Rc<Runner>>>,
     verbose_runner: bool,
     skip_sync: bool,
@@ -98,7 +98,7 @@ impl DreContext {
         proceed_without_confirmation: bool,
         dry_run: bool,
         requirement: IcAdminRequirement,
-    ) -> anyhow::Result<(Option<Arc<IcAdminImpl>>, Option<String>)> {
+    ) -> anyhow::Result<(Option<Arc<dyn IcAdmin>>, Option<String>)> {
         if let IcAdminRequirement::None = requirement {
             return Ok((None, None));
         }
@@ -144,7 +144,7 @@ impl DreContext {
             proceed_without_confirmation,
             neuron,
             dry_run,
-        )));
+        )) as Arc<dyn IcAdmin>);
 
         Ok((ic_admin, Some(ic_admin_path)))
     }
@@ -200,14 +200,14 @@ impl DreContext {
         }
     }
 
-    pub fn ic_admin(&self) -> Arc<IcAdminImpl> {
+    pub fn ic_admin(&self) -> Arc<dyn IcAdmin> {
         match &self.ic_admin {
             Some(a) => a.clone(),
             None => panic!("This command is not configured to use ic admin"),
         }
     }
 
-    pub fn readonly_ic_admin_for_other_network(&self, network: Network) -> IcAdminImpl {
+    pub fn readonly_ic_admin_for_other_network(&self, network: Network) -> impl IcAdmin {
         IcAdminImpl::new(network, self.ic_admin_path.clone(), true, Neuron::anonymous_neuron(), false)
     }
 

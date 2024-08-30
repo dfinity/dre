@@ -36,15 +36,14 @@ use registry_canister::mutations::do_change_subnet_membership::ChangeSubnetMembe
 use tabled::builder::Builder;
 use tabled::settings::Style;
 
-use crate::ic_admin::IcAdmin;
-use crate::ic_admin::{self, IcAdminImpl};
+use crate::ic_admin::{self, IcAdmin};
 use crate::ic_admin::{ProposeCommand, ProposeOptions};
 use crate::operations::hostos_rollout::HostosRollout;
 use crate::operations::hostos_rollout::HostosRolloutResponse;
 use crate::operations::hostos_rollout::NodeGroupUpdate;
 
 pub struct Runner {
-    ic_admin: Arc<IcAdminImpl>,
+    ic_admin: Arc<dyn IcAdmin>,
     registry: Arc<dyn LazyRegistry>,
     ic_repo: RefCell<Option<Rc<LazyGit>>>,
     network: Network,
@@ -53,7 +52,7 @@ pub struct Runner {
 }
 
 impl Runner {
-    pub fn new(ic_admin: Arc<IcAdminImpl>, registry: Arc<dyn LazyRegistry>, network: Network, agent: ProposalAgent, verbose: bool) -> Self {
+    pub fn new(ic_admin: Arc<dyn IcAdmin>, registry: Arc<dyn LazyRegistry>, network: Network, agent: ProposalAgent, verbose: bool) -> Self {
         Self {
             ic_admin,
             registry,

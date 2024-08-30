@@ -13,7 +13,7 @@ use log::{info, warn};
 use serde::Serialize;
 use tempfile::NamedTempFile;
 
-use crate::ic_admin::{IcAdmin, IcAdminImpl, ProposeCommand, ProposeOptions};
+use crate::ic_admin::{IcAdmin, ProposeCommand, ProposeOptions};
 
 use super::{ExecutableCommand, IcAdminRequirement};
 
@@ -119,7 +119,7 @@ impl ExecutableCommand for Firewall {
 
 impl Firewall {
     async fn submit_proposal(
-        admin: Arc<IcAdminImpl>,
+        admin: Arc<dyn IcAdmin>,
         modifications: Vec<FirewallRuleModification>,
         propose_options: ProposeOptions,
         firewall_rules_scope: &FirewallRulesScope,
