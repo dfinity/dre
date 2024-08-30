@@ -9,7 +9,7 @@ use std::{
 
 use ic_canisters::{governance::governance_canister_version, CanisterClient, IcAgentCanisterClient};
 use ic_management_backend::{
-    lazy_registry::LazyRegistry,
+    lazy_registry::{LazyRegistry, LazyRegistryImpl},
     proposal::ProposalAgent,
     registry::{local_registry_path, sync_local_store},
 };
@@ -29,7 +29,7 @@ const STAGING_NEURON_ID: u64 = 49;
 #[derive(Clone)]
 pub struct DreContext {
     network: Network,
-    registry: RefCell<Option<Rc<LazyRegistry>>>,
+    registry: RefCell<Option<Arc<dyn LazyRegistry>>>,
     ic_admin: Option<Arc<IcAdminWrapper>>,
     runner: RefCell<Option<Rc<Runner>>>,
     verbose_runner: bool,
@@ -149,7 +149,7 @@ impl DreContext {
         Ok((ic_admin, Some(ic_admin_path)))
     }
 
-    pub async fn registry(&self) -> Rc<LazyRegistry> {
+    pub async fn registry(&self) -> Arc<dyn LazyRegistry> {
         if let Some(reg) = self.registry.borrow().as_ref() {
             return reg.clone();
         }
@@ -162,7 +162,7 @@ impl DreContext {
         info!("Using local registry path for network {}: {}", network.name, local_path.display());
         let local_registry = LocalRegistry::new(local_path, Duration::from_millis(1000)).expect("Failed to create local registry");
 
-        let registry = Rc::new(LazyRegistry::new(local_registry, network.clone(), self.skip_sync));
+        let registry = Arc::new(LazyRegistryImpl::new(local_registry, network.clone(), self.skip_sync));
         *self.registry.borrow_mut() = Some(registry.clone());
         registry
     }
