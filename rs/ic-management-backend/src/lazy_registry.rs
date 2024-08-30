@@ -53,25 +53,25 @@ const KNOWN_SUBNETS: &[(&str, &str)] = &[
 pub trait LazyRegistry:
     LazyRegistryFamilyEntries + NodesConverter + SubnetQuerier + decentralization::network::TopologyManager + AvailableNodesQuerier + Send + Sync
 {
-    fn node_labels<'a>(&'a self) -> BoxFuture<'a, anyhow::Result<Arc<Vec<Guest>>>>;
+    fn node_labels(&self) -> BoxFuture<'_, anyhow::Result<Arc<Vec<Guest>>>>;
 
     fn elected_guestos(&self) -> anyhow::Result<Arc<Vec<String>>>;
 
     fn elected_hostos(&self) -> anyhow::Result<Arc<Vec<String>>>;
 
-    fn sync_with_nns<'a>(&'a self) -> BoxFuture<'a, anyhow::Result<()>>;
+    fn sync_with_nns(&self) -> BoxFuture<'_, anyhow::Result<()>>;
 
-    fn operators<'a>(&'a self) -> BoxFuture<'a, anyhow::Result<Arc<BTreeMap<PrincipalId, Operator>>>>;
+    fn operators(&self) -> BoxFuture<'_, anyhow::Result<Arc<BTreeMap<PrincipalId, Operator>>>>;
 
-    fn nodes<'a>(&'a self) -> BoxFuture<'a, anyhow::Result<Arc<BTreeMap<PrincipalId, Node>>>>;
+    fn nodes(&self) -> BoxFuture<'_, anyhow::Result<Arc<BTreeMap<PrincipalId, Node>>>>;
 
     fn firewall_rule_set(&self, firewall_rule_scope: FirewallRulesScope) -> anyhow::Result<FirewallRuleSet>;
 
-    fn subnets<'a>(&'a self) -> BoxFuture<'a, anyhow::Result<Arc<BTreeMap<PrincipalId, Subnet>>>>;
+    fn subnets(&self) -> BoxFuture<'_, anyhow::Result<Arc<BTreeMap<PrincipalId, Subnet>>>>;
 
-    fn nodes_with_proposals<'a>(&'a self) -> BoxFuture<'a, anyhow::Result<Arc<BTreeMap<PrincipalId, Node>>>>;
+    fn nodes_with_proposals(&self) -> BoxFuture<'_, anyhow::Result<Arc<BTreeMap<PrincipalId, Node>>>>;
 
-    fn nns_replica_version<'a>(&'a self) -> BoxFuture<'a, anyhow::Result<Option<String>>> {
+    fn nns_replica_version(&self) -> BoxFuture<'_, anyhow::Result<Option<String>>> {
         Box::pin(async {
             Ok(self.subnets().await?.values().find_map(|s| {
                 if s.subnet_type.eq(&SubnetType::System) {
@@ -82,7 +82,7 @@ pub trait LazyRegistry:
         })
     }
 
-    fn missing_guests<'a>(&'a self) -> BoxFuture<'a, anyhow::Result<Vec<Guest>>> {
+    fn missing_guests(&self) -> BoxFuture<'_, anyhow::Result<Vec<Guest>>> {
         Box::pin(async {
             let nodes = self.nodes().await?;
             let mut missing_guests = self
@@ -207,17 +207,15 @@ pub trait LazyRegistryFamilyEntries {
     fn get_latest_version(&self) -> RegistryVersion;
 }
 
-fn get_family_entries<T: LazyRegistryEntry + Default>(reg: &(impl LazyRegistryFamilyEntries)) -> anyhow::Result<BTreeMap<String, T>> {
+fn get_family_entries<T: LazyRegistryEntry + Default>(reg: &impl LazyRegistryFamilyEntries) -> anyhow::Result<BTreeMap<String, T>> {
     let family = get_family_entries_versioned::<T>(reg)?;
     Ok(family.into_iter().map(|(k, (_, v))| (k, v)).collect())
 }
-fn get_family_entries_versioned<T: LazyRegistryEntry + Default>(
-    reg: &(impl LazyRegistryFamilyEntries),
-) -> anyhow::Result<BTreeMap<String, (u64, T)>> {
+fn get_family_entries_versioned<T: LazyRegistryEntry + Default>(reg: &impl LazyRegistryFamilyEntries) -> anyhow::Result<BTreeMap<String, (u64, T)>> {
     get_family_entries_of_version(reg, reg.get_latest_version())
 }
 fn get_family_entries_of_version<T: LazyRegistryEntry + Default>(
-    reg: &(impl LazyRegistryFamilyEntries),
+    reg: &impl LazyRegistryFamilyEntries,
     version: RegistryVersion,
 ) -> anyhow::Result<BTreeMap<String, (u64, T)>> {
     let prefix_length = T::KEY_PREFIX.len();
@@ -753,7 +751,7 @@ impl LazyRegistryImpl {
     }
 
     pub fn get_node_rewards_table(&self) -> anyhow::Result<BTreeMap<String, NodeRewardsTable>> {
-        Ok(get_family_entries::<NodeRewardsTable>(self).map_err(|e| anyhow::anyhow!("Couldn't get node rewards table: {:?}", e))?)
+        get_family_entries::<NodeRewardsTable>(self).map_err(|e| anyhow::anyhow!("Couldn't get node rewards table: {:?}", e))
     }
 
     pub fn get_unassigned_nodes(&self) -> anyhow::Result<Option<UnassignedNodesConfigRecord>> {
@@ -796,7 +794,7 @@ impl NodesConverter for LazyRegistryImpl {
 }
 
 impl SubnetQuerier for LazyRegistryImpl {
-    fn subnet<'a>(&'a self, by: SubnetQueryBy) -> BoxFuture<'a, Result<DecentralizedSubnet, ic_management_types::NetworkError>> {
+    fn subnet(&self, by: SubnetQueryBy) -> BoxFuture<'_, Result<DecentralizedSubnet, ic_management_types::NetworkError>> {
         Box::pin(async {
             match by {
                 SubnetQueryBy::SubnetId(id) => self
@@ -853,7 +851,7 @@ impl SubnetQuerier for LazyRegistryImpl {
 impl decentralization::network::TopologyManager for LazyRegistryImpl {}
 
 impl AvailableNodesQuerier for LazyRegistryImpl {
-    fn available_nodes<'a>(&'a self) -> BoxFuture<'a, Result<Vec<decentralization::network::Node>, ic_management_types::NetworkError>> {
+    fn available_nodes(&self) -> BoxFuture<'_, Result<Vec<decentralization::network::Node>, ic_management_types::NetworkError>> {
         Box::pin(async {
             let health_client = crate::health::HealthClient::new(self.network.clone());
             let (nodes, healths) = try_join!(self.nodes_with_proposals(), health_client.nodes())

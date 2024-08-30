@@ -1,26 +1,17 @@
-use std::{
-    collections::{BTreeMap, HashMap},
-    path::PathBuf,
-    rc::Rc,
-    str::FromStr,
-};
+use std::{collections::BTreeMap, path::PathBuf, rc::Rc, str::FromStr};
 
 use clap::Args;
 use ic_management_backend::{
     health::{HealthClient, HealthStatusQuerier},
-    lazy_registry::{LazyRegistryFamilyEntries, LazyRegistryImpl},
-    public_dashboard::query_ic_dashboard_list,
+    lazy_registry::LazyRegistryImpl,
 };
-use ic_management_types::{HealthStatus, Network, NodeProvidersResponse};
+use ic_management_types::{HealthStatus, Network};
 use ic_protobuf::registry::{
-    api_boundary_node::v1::ApiBoundaryNodeRecord,
     dc::v1::DataCenterRecord,
     hostos_version::v1::HostosVersionRecord,
-    node::v1::{ConnectionEndpoint, IPv4InterfaceConfig, NodeRecord},
-    node_operator::v1::NodeOperatorRecord,
-    node_rewards::v2::NodeRewardsTable,
+    node::v1::{ConnectionEndpoint, IPv4InterfaceConfig},
     replica_version::v1::ReplicaVersionRecord,
-    subnet::v1::{ChainKeyConfig, EcdsaConfig, SubnetFeatures, SubnetRecord as SubnetRecordProto},
+    subnet::v1::{ChainKeyConfig, EcdsaConfig, SubnetFeatures},
     unassigned_nodes_config::v1::UnassignedNodesConfigRecord,
 };
 use ic_registry_subnet_type::SubnetType;
@@ -80,14 +71,7 @@ impl Registry {
         let elected_guest_os_versions = get_elected_guest_os_versions(&local_registry)?;
         let elected_host_os_versions = get_elected_host_os_versions(&local_registry)?;
 
-        let node_provider_names: HashMap<PrincipalId, String> = HashMap::from_iter(
-            query_ic_dashboard_list::<NodeProvidersResponse>(ctx.network(), "v3/node-providers")
-                .await?
-                .node_providers
-                .iter()
-                .map(|np| (np.principal_id, np.display_name.clone())),
-        );
-        let mut node_operators = get_node_operators(&local_registry, &node_provider_names, ctx.network()).await?;
+        let mut node_operators = get_node_operators(&local_registry, ctx.network()).await?;
 
         let dcs = local_registry.get_datacenters()?;
 
@@ -145,11 +129,7 @@ fn get_elected_host_os_versions(local_registry: &Rc<LazyRegistryImpl>) -> anyhow
     local_registry.elected_hostos_records()
 }
 
-async fn get_node_operators(
-    local_registry: &Rc<LazyRegistryImpl>,
-    node_provider_names: &HashMap<PrincipalId, String>,
-    network: &Network,
-) -> anyhow::Result<BTreeMap<PrincipalId, NodeOperator>> {
+async fn get_node_operators(local_registry: &Rc<LazyRegistryImpl>, network: &Network) -> anyhow::Result<BTreeMap<PrincipalId, NodeOperator>> {
     let all_nodes = local_registry.nodes().await?;
     let operators = local_registry
         .operators()
@@ -167,12 +147,12 @@ async fn get_node_operators(
             // Find the number of nodes registered by this operator
             let operator_registered_nodes_num = all_nodes.iter().filter(|(nk, _)| nk == &k).count() as u64;
             (
-                record.provider.principal.clone(),
+                record.provider.principal,
                 NodeOperator {
-                    node_operator_principal_id: k.clone(),
+                    node_operator_principal_id: *k,
                     node_allowance_remaining: record.allowance,
                     node_allowance_total: record.allowance + operator_registered_nodes_num,
-                    node_provider_principal_id: record.provider.principal.clone(),
+                    node_provider_principal_id: record.provider.principal,
                     node_provider_name,
                     dc_id: record.datacenter.as_ref().map(|d| d.name.to_owned()).unwrap_or_default(),
                     rewardable_nodes: record.rewardable_nodes.clone(),
@@ -192,7 +172,7 @@ async fn get_subnets(local_registry: &Rc<LazyRegistryImpl>) -> anyhow::Result<Ve
     Ok(subnets
         .iter()
         .map(|(subnet_id, record)| SubnetRecord {
-            subnet_id: subnet_id.clone(),
+            subnet_id: *subnet_id,
             membership: record.nodes.iter().map(|n| n.principal.to_string()).collect(),
             nodes: Default::default(),
             max_ingress_bytes_per_message: record.max_ingress_bytes_per_message,
@@ -203,7 +183,7 @@ async fn get_subnets(local_registry: &Rc<LazyRegistryImpl>) -> anyhow::Result<Ve
             replica_version_id: record.replica_version.clone(),
             dkg_interval_length: record.dkg_interval_length,
             start_as_nns: record.start_as_nns,
-            subnet_type: record.subnet_type.clone(),
+            subnet_type: record.subnet_type,
             features: record.features.clone().unwrap_or_default(),
             max_number_of_canisters: record.max_number_of_canisters,
             ssh_readonly_access: record.ssh_readonly_access.clone(),
@@ -238,7 +218,7 @@ async fn get_nodes(
         .map(|(k, record)| {
             let node_operator_id = record.operator.principal;
             NodeDetails {
-                node_id: k.clone(),
+                node_id: *k,
                 xnet: Some(ConnectionEndpoint {
                     ip_addr: record.ip_addr.to_string(),
                     port: 2497,
@@ -252,7 +232,7 @@ async fn get_nodes(
                 hostos_version_id: Some(record.hostos_version.clone()),
                 public_ipv4_config: record.public_ipv4_config.clone(),
                 node_provider_id: match node_operators.get(&node_operator_id) {
-                    Some(no) => no.node_provider_principal_id.clone(),
+                    Some(no) => no.node_provider_principal_id,
                     None => PrincipalId::new_anonymous(),
                 },
                 subnet_id: subnets
@@ -263,7 +243,7 @@ async fn get_nodes(
                     Some(no) => no.dc_id.clone(),
                     None => "".to_string(),
                 },
-                status: nodes_health.get(&k).unwrap_or(&ic_management_types::HealthStatus::Unknown).clone(),
+                status: nodes_health.get(k).unwrap_or(&ic_management_types::HealthStatus::Unknown).clone(),
             }
         })
         .collect::<Vec<_>>();

@@ -8,5 +8,5 @@ mod operations;
 mod qualification;
 mod runner;
 mod subnet_manager;
-#[cfg(tests)]
+#[cfg(test)]
 mod unit_tests;

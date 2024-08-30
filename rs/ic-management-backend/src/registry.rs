@@ -835,7 +835,7 @@ impl NodesConverter for RegistryState {
 }
 
 impl SubnetQuerier for RegistryState {
-    fn subnet<'a>(&'a self, by: SubnetQueryBy) -> BoxFuture<'a, Result<decentralization::network::DecentralizedSubnet, NetworkError>> {
+    fn subnet(&self, by: SubnetQueryBy) -> BoxFuture<'_, Result<decentralization::network::DecentralizedSubnet, NetworkError>> {
         Box::pin(async {
             match by {
                 SubnetQueryBy::SubnetId(id) => self
@@ -887,7 +887,7 @@ impl SubnetQuerier for RegistryState {
 }
 
 impl AvailableNodesQuerier for RegistryState {
-    fn available_nodes<'a>(&'a self) -> BoxFuture<'a, Result<Vec<decentralization::network::Node>, NetworkError>> {
+    fn available_nodes(&self) -> BoxFuture<'_, Result<Vec<decentralization::network::Node>, NetworkError>> {
         Box::pin(async {
             let nodes = self
                 .nodes_with_proposals()

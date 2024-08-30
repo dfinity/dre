@@ -826,7 +826,7 @@ impl From<ic_management_types::Subnet> for DecentralizedSubnet {
 }
 
 pub trait AvailableNodesQuerier {
-    fn available_nodes<'a>(&'a self) -> BoxFuture<'a, Result<Vec<Node>, NetworkError>>;
+    fn available_nodes(&self) -> BoxFuture<'_, Result<Vec<Node>, NetworkError>>;
 }
 
 #[derive(Clone)]
@@ -840,7 +840,7 @@ pub trait NodesConverter {
 }
 
 pub trait SubnetQuerier {
-    fn subnet<'a>(&'a self, by: SubnetQueryBy) -> BoxFuture<'a, Result<DecentralizedSubnet, NetworkError>>;
+    fn subnet(&self, by: SubnetQueryBy) -> BoxFuture<'_, Result<DecentralizedSubnet, NetworkError>>;
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug, strum_macros::Display)]
@@ -863,7 +863,7 @@ impl ResponseError for DecentralizationError {
 }
 
 pub trait TopologyManager: SubnetQuerier + AvailableNodesQuerier + Sync {
-    fn modify_subnet_nodes<'a>(&'a self, by: SubnetQueryBy) -> BoxFuture<'a, Result<SubnetChangeRequest, NetworkError>> {
+    fn modify_subnet_nodes(&self, by: SubnetQueryBy) -> BoxFuture<'_, Result<SubnetChangeRequest, NetworkError>> {
         Box::pin(async {
             Ok(SubnetChangeRequest {
                 available_nodes: self.available_nodes().await?,
