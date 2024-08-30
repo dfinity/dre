@@ -152,6 +152,7 @@ keyring = "3.2.0"
 lazy_static = "1.5.0"
 log = "0.4.22"
 lru = "0.12.4"
+num-traits = "0.2"
 opentelemetry = { version = "0.22.0", features = ["metrics"] }
 phantom_newtype = { git = "https://github.com/dfinity/ic.git", rev = "26d5f9d0bdca0a817c236134dc9c7317b32c69a5" }
 pkcs11 = "0.5.0"
@@ -173,6 +174,8 @@ retry = "2.0.0"
 reverse_geocoder = "4.1.1"
 ring = "0.17.8"
 rstest = { version = "0.22.0", default-features = false }
+rust_decimal = "1.36.0"  # or the latest version
+rust_decimal_macros = "1.36.0"  # optional, for using macros
 serde = { version = "1.0", features = ["derive"] }
 serde_derive = "1.0.209"
 serde_json = "1.0.127"

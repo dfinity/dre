@@ -79,8 +79,8 @@ export const NodeList: React.FC<NodeListProps> = ({ nodeRewards }) => {
                     </TableCell>
                     <TableCell>{nodeMetrics.node_provider_id.toText()}</TableCell>
                     <TableCell>{nodeMetrics.daily_node_metrics.length}</TableCell>
-                    <TableCell>{Math.round(nodeMetrics.rewards_percent * 100)}%</TableCell>
-                    <TableCell>{Math.round(nodeMetrics.rewards_stats.failure_rate * 100)}%</TableCell>
+                    <TableCell>{Math.round(nodeMetrics.rewards_computation.rewards_percent * 100)}%</TableCell>
+                    <TableCell>{Math.round(nodeMetrics.rewards_computation.failure_rate * 100)}%</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
