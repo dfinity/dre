@@ -74,9 +74,12 @@ class DevReleaseLoader(ReleaseLoader):
 class GitReleaseLoader(ReleaseLoader):
     def __init__(
         self,
-        git_repo: str,
+        git_repo: str | GitRepo,
     ):
-        self.git_repo = GitRepo(git_repo)
+        if isinstance(git_repo, str):
+            self.git_repo = GitRepo(git_repo)
+        else:
+            self.git_repo = git_repo
         super().__init__(self.git_repo.dir)
 
     def index(self):
