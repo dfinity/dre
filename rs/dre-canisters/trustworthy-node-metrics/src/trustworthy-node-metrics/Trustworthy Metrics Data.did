@@ -1,0 +1,23 @@
+( vec { record { 
+  subnet_id = principal "w4rem-dv5e3-widiz-wbpea-kbttk-mnzfm-tzrc7-svcj3-kbxyb-zamch-hqe"; 
+  node_metrics_history = vec {record {
+  timestamp_nanos = 1706399999689375915;
+  node_metrics = vec {record {
+      node_id = principal "wy5dm-dyvr3-wpi3g-d4xcd-6paqv-75bb5-5it3l-ovbv6-botde-7dlof-qae";
+      num_blocks_proposed_total= 413273;
+      num_block_failures_total= 474;
+    }
+  }}
+};
+record {
+  timestamp_nanos = 1706399999689375915;
+  node_metrics = vec {record {
+      node_id = principal "wy5dm-dyvr3-wpi3g-d4xcd-6paqv-75bb5-5it3l-ovbv6-botde-7dlof-qae";
+      num_blocks_proposed_total= 413273;
+      num_block_failures_total= 474;
+    }
+  }}
+}
+}
+}
+)

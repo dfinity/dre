@@ -1,0 +1,62 @@
+Calls a method on a deployed canister
+
+Usage: dfx canister call [OPTIONS] <CANISTER_NAME> <METHOD_NAME> [ARGUMENT]
+
+Arguments:
+  <CANISTER_NAME>  Specifies the name/id of the canister to call. You must specify either a canister or the --all option
+  <METHOD_NAME>    Specifies the method name to call on the canister
+  [ARGUMENT]       Specifies the argument to pass to the method
+
+Options:
+      --network <NETWORK>
+          Override the compute network to connect to. By default, the local network is used. A valid URL (starting with
+          `http:` or `https:`) can be used here, and a special ephemeral network will be created specifically for this
+          request. E.g. "http://localhost:12345/" is a valid network name
+      --type <TYPE>
+          Specifies the data type for the argument when making the call using an argument [possible values: idl, raw]
+  -v, --verbose...
+          Displays detailed information about operations. -vv will generate a very large number of messages and can affect
+          performance
+      --argument-file <ARGUMENT_FILE>
+          Specifies the file from which to read the argument to pass to the method
+      --playground
+          Shorthand for --network=playground. Borrows short-lived canisters on the real IC network instead of creating
+          normal canisters
+  -q, --quiet...
+          Suppresses informational messages. -qq limits to errors only; -qqqq disables them all
+      --async
+          Specifies not to wait for the result of the call to be returned by polling the replica. Instead return a
+          response ID
+      --ic
+          Shorthand for --network=ic
+      --log <LOGMODE>
+          The logging mode to use. You can log to stderr, a file, or both [default: stderr] [possible values: stderr, tee,
+          file]
+      --logfile <LOGFILE>
+          The file to log to, if logging to a file (see --logmode)
+      --query
+          Sends a query request to a canister instead of an update request
+      --wallet <WALLET>
+          Specify a wallet canister id to perform the call. If none specified, defaults to use the selected Identity's
+          wallet canister
+      --identity <IDENTITY>
+          The user identity to run this command as. It contains your principal as well as some things DFX associates with
+          it like the wallet [env: DFX_IDENTITY=]
+      --update
+          Sends an update request to a canister. This is the default if the method is not a query method
+      --provisional-create-canister-effective-canister-id <PRINCIPAL>
+          The effective canister id for provisional canister creation must be a canister id in the canister ranges of the
+          subnet on which new canisters should be created
+      --random <RANDOM>
+          Specifies the config for generating random argument
+      --output <OUTPUT>
+          Specifies the format for displaying the method's return result [possible values: idl, raw, pp, json]
+      --with-cycles <WITH_CYCLES>
+          Specifies the amount of cycles to send on the call. Deducted from the wallet. Requires --wallet as a flag to
+          `dfx canister`
+      --candid <CANDID>
+          Provide the .did file with which to decode the response.  Overrides value from dfx.json for project canisters
+      --always-assist
+          Always use Candid assist when the argument types are all optional
+  -h, --help
+          Print help

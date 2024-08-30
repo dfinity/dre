@@ -1,0 +1,4832 @@
+{
+  "Ok": [
+    {
+      "node_metrics": [
+        {
+          "node_id": "wvxfb-eqeex-26z4r-vefff-llfh7-vv76x-pje4o-oh57m-eklny-zcs56-wae",
+          "num_blocks_failures_total": "36098",
+          "num_blocks_proposed_total": "1487490"
+        },
+        {
+          "node_id": "nhkbm-fqj7r-jdjii-spvcr-to3iu-ccrkm-pils3-6io5l-ahtry-qhlly-4ae",
+          "num_blocks_failures_total": "70848",
+          "num_blocks_proposed_total": "1448542"
+        },
+        {
+          "node_id": "rg3ny-2qkvz-btitk-sxuiu-fsl2h-nkmij-lagjs-y4bnq-cb63u-vh2rd-aqe",
+          "num_blocks_failures_total": "4011",
+          "num_blocks_proposed_total": "1522922"
+        },
+        {
+          "node_id": "ebfjs-4yyde-6v3qo-zhvwl-2fvp2-4tarv-autre-tparv-kwi7f-t4wml-fae",
+          "num_blocks_failures_total": "4251",
+          "num_blocks_proposed_total": "1522098"
+        },
+        {
+          "node_id": "ijqzn-wklsd-asfzv-ixif4-u7lrb-dblfi-mcq2d-nrwuk-d6cys-jgnar-7qe",
+          "num_blocks_failures_total": "2308",
+          "num_blocks_proposed_total": "1524780"
+        },
+        {
+          "node_id": "7qvtt-6lr4l-gx337-d6xvn-55ka2-6kcx2-c7iby-w36qm-u3ojf-ildyc-iqe",
+          "num_blocks_failures_total": "3724",
+          "num_blocks_proposed_total": "1523197"
+        },
+        {
+          "node_id": "2lhun-vmepu-zc7ic-6lrjj-o4yda-nlmwn-m4i2i-h4oby-hwv4y-mpv7c-fae",
+          "num_blocks_failures_total": "6155",
+          "num_blocks_proposed_total": "1521869"
+        },
+        {
+          "node_id": "dkx5h-i5d56-xeb37-uldi5-dlgmp-atrom-gyfn7-edeih-i5ph6-2cquy-dqe",
+          "num_blocks_failures_total": "11314",
+          "num_blocks_proposed_total": "1513705"
+        },
+        {
+          "node_id": "s5waw-pnvds-kpwqg-n6bly-r45vy-ax64x-sltbe-bbzl3-74npl-u4sos-mae",
+          "num_blocks_failures_total": "7874",
+          "num_blocks_proposed_total": "1392880"
+        },
+        {
+          "node_id": "mlbpy-pvy7z-gfwcb-5bakp-cuubm-prmi3-dppq6-rlepq-nkyvb-u7acf-fqe",
+          "num_blocks_failures_total": "84529",
+          "num_blocks_proposed_total": "1311586"
+        },
+        {
+          "node_id": "2vmqi-lwsmy-rad75-wus6x-3rlbf-cgig6-rtheo-t42r2-i4vdg-jyguw-uqe",
+          "num_blocks_failures_total": "26026",
+          "num_blocks_proposed_total": "1499282"
+        },
+        {
+          "node_id": "ew5us-dwxat-fg6sp-opp2j-fjjg7-rcmyj-d3saj-vyych-f3keg-5kor5-yqe",
+          "num_blocks_failures_total": "8237",
+          "num_blocks_proposed_total": "1517502"
+        },
+        {
+          "node_id": "tliwu-apd5m-f5kxi-g37rt-cqcag-4kmua-v7dsq-xsmv4-pvmhr-la6hu-xae",
+          "num_blocks_failures_total": "2416",
+          "num_blocks_proposed_total": "1445654"
+        }
+      ],
+      "subnet_id": "eq6en-6jqla-fbu5s-daskr-h6hx2-376n5-iqabl-qgrng-gfqmv-n3yjr-mqe",
+      "ts": "1719187199395767513"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "wvxfb-eqeex-26z4r-vefff-llfh7-vv76x-pje4o-oh57m-eklny-zcs56-wae",
+          "num_blocks_failures_total": "36098",
+          "num_blocks_proposed_total": "1495220"
+        },
+        {
+          "node_id": "nhkbm-fqj7r-jdjii-spvcr-to3iu-ccrkm-pils3-6io5l-ahtry-qhlly-4ae",
+          "num_blocks_failures_total": "71852",
+          "num_blocks_proposed_total": "1455374"
+        },
+        {
+          "node_id": "rg3ny-2qkvz-btitk-sxuiu-fsl2h-nkmij-lagjs-y4bnq-cb63u-vh2rd-aqe",
+          "num_blocks_failures_total": "4015",
+          "num_blocks_proposed_total": "1530829"
+        },
+        {
+          "node_id": "ebfjs-4yyde-6v3qo-zhvwl-2fvp2-4tarv-autre-tparv-kwi7f-t4wml-fae",
+          "num_blocks_failures_total": "4251",
+          "num_blocks_proposed_total": "1529976"
+        },
+        {
+          "node_id": "ijqzn-wklsd-asfzv-ixif4-u7lrb-dblfi-mcq2d-nrwuk-d6cys-jgnar-7qe",
+          "num_blocks_failures_total": "2308",
+          "num_blocks_proposed_total": "1532641"
+        },
+        {
+          "node_id": "7qvtt-6lr4l-gx337-d6xvn-55ka2-6kcx2-c7iby-w36qm-u3ojf-ildyc-iqe",
+          "num_blocks_failures_total": "3725",
+          "num_blocks_proposed_total": "1530929"
+        },
+        {
+          "node_id": "2lhun-vmepu-zc7ic-6lrjj-o4yda-nlmwn-m4i2i-h4oby-hwv4y-mpv7c-fae",
+          "num_blocks_failures_total": "6156",
+          "num_blocks_proposed_total": "1529802"
+        },
+        {
+          "node_id": "dkx5h-i5d56-xeb37-uldi5-dlgmp-atrom-gyfn7-edeih-i5ph6-2cquy-dqe",
+          "num_blocks_failures_total": "11327",
+          "num_blocks_proposed_total": "1521385"
+        },
+        {
+          "node_id": "s5waw-pnvds-kpwqg-n6bly-r45vy-ax64x-sltbe-bbzl3-74npl-u4sos-mae",
+          "num_blocks_failures_total": "7963",
+          "num_blocks_proposed_total": "1400684"
+        },
+        {
+          "node_id": "mlbpy-pvy7z-gfwcb-5bakp-cuubm-prmi3-dppq6-rlepq-nkyvb-u7acf-fqe",
+          "num_blocks_failures_total": "85697",
+          "num_blocks_proposed_total": "1318110"
+        },
+        {
+          "node_id": "2vmqi-lwsmy-rad75-wus6x-3rlbf-cgig6-rtheo-t42r2-i4vdg-jyguw-uqe",
+          "num_blocks_failures_total": "26157",
+          "num_blocks_proposed_total": "1506915"
+        },
+        {
+          "node_id": "ew5us-dwxat-fg6sp-opp2j-fjjg7-rcmyj-d3saj-vyych-f3keg-5kor5-yqe",
+          "num_blocks_failures_total": "8241",
+          "num_blocks_proposed_total": "1525250"
+        },
+        {
+          "node_id": "tliwu-apd5m-f5kxi-g37rt-cqcag-4kmua-v7dsq-xsmv4-pvmhr-la6hu-xae",
+          "num_blocks_failures_total": "2607",
+          "num_blocks_proposed_total": "1453353"
+        }
+      ],
+      "subnet_id": "eq6en-6jqla-fbu5s-daskr-h6hx2-376n5-iqabl-qgrng-gfqmv-n3yjr-mqe",
+      "ts": "1719273599518503886"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "wvxfb-eqeex-26z4r-vefff-llfh7-vv76x-pje4o-oh57m-eklny-zcs56-wae",
+          "num_blocks_failures_total": "36102",
+          "num_blocks_proposed_total": "1503170"
+        },
+        {
+          "node_id": "nhkbm-fqj7r-jdjii-spvcr-to3iu-ccrkm-pils3-6io5l-ahtry-qhlly-4ae",
+          "num_blocks_failures_total": "72449",
+          "num_blocks_proposed_total": "1462634"
+        },
+        {
+          "node_id": "rg3ny-2qkvz-btitk-sxuiu-fsl2h-nkmij-lagjs-y4bnq-cb63u-vh2rd-aqe",
+          "num_blocks_failures_total": "4015",
+          "num_blocks_proposed_total": "1538812"
+        },
+        {
+          "node_id": "ebfjs-4yyde-6v3qo-zhvwl-2fvp2-4tarv-autre-tparv-kwi7f-t4wml-fae",
+          "num_blocks_failures_total": "4255",
+          "num_blocks_proposed_total": "1537891"
+        },
+        {
+          "node_id": "ijqzn-wklsd-asfzv-ixif4-u7lrb-dblfi-mcq2d-nrwuk-d6cys-jgnar-7qe",
+          "num_blocks_failures_total": "2317",
+          "num_blocks_proposed_total": "1540646"
+        },
+        {
+          "node_id": "7qvtt-6lr4l-gx337-d6xvn-55ka2-6kcx2-c7iby-w36qm-u3ojf-ildyc-iqe",
+          "num_blocks_failures_total": "3735",
+          "num_blocks_proposed_total": "1538722"
+        },
+        {
+          "node_id": "2lhun-vmepu-zc7ic-6lrjj-o4yda-nlmwn-m4i2i-h4oby-hwv4y-mpv7c-fae",
+          "num_blocks_failures_total": "6157",
+          "num_blocks_proposed_total": "1537648"
+        },
+        {
+          "node_id": "dkx5h-i5d56-xeb37-uldi5-dlgmp-atrom-gyfn7-edeih-i5ph6-2cquy-dqe",
+          "num_blocks_failures_total": "11327",
+          "num_blocks_proposed_total": "1529235"
+        },
+        {
+          "node_id": "s5waw-pnvds-kpwqg-n6bly-r45vy-ax64x-sltbe-bbzl3-74npl-u4sos-mae",
+          "num_blocks_failures_total": "8793",
+          "num_blocks_proposed_total": "1407542"
+        },
+        {
+          "node_id": "mlbpy-pvy7z-gfwcb-5bakp-cuubm-prmi3-dppq6-rlepq-nkyvb-u7acf-fqe",
+          "num_blocks_failures_total": "86859",
+          "num_blocks_proposed_total": "1324852"
+        },
+        {
+          "node_id": "2vmqi-lwsmy-rad75-wus6x-3rlbf-cgig6-rtheo-t42r2-i4vdg-jyguw-uqe",
+          "num_blocks_failures_total": "26358",
+          "num_blocks_proposed_total": "1514766"
+        },
+        {
+          "node_id": "ew5us-dwxat-fg6sp-opp2j-fjjg7-rcmyj-d3saj-vyych-f3keg-5kor5-yqe",
+          "num_blocks_failures_total": "8247",
+          "num_blocks_proposed_total": "1533058"
+        },
+        {
+          "node_id": "tliwu-apd5m-f5kxi-g37rt-cqcag-4kmua-v7dsq-xsmv4-pvmhr-la6hu-xae",
+          "num_blocks_failures_total": "2620",
+          "num_blocks_proposed_total": "1461152"
+        }
+      ],
+      "subnet_id": "eq6en-6jqla-fbu5s-daskr-h6hx2-376n5-iqabl-qgrng-gfqmv-n3yjr-mqe",
+      "ts": "1719359999792913321"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "wvxfb-eqeex-26z4r-vefff-llfh7-vv76x-pje4o-oh57m-eklny-zcs56-wae",
+          "num_blocks_failures_total": "36102",
+          "num_blocks_proposed_total": "1510944"
+        },
+        {
+          "node_id": "nhkbm-fqj7r-jdjii-spvcr-to3iu-ccrkm-pils3-6io5l-ahtry-qhlly-4ae",
+          "num_blocks_failures_total": "73118",
+          "num_blocks_proposed_total": "1469790"
+        },
+        {
+          "node_id": "rg3ny-2qkvz-btitk-sxuiu-fsl2h-nkmij-lagjs-y4bnq-cb63u-vh2rd-aqe",
+          "num_blocks_failures_total": "4015",
+          "num_blocks_proposed_total": "1546582"
+        },
+        {
+          "node_id": "ebfjs-4yyde-6v3qo-zhvwl-2fvp2-4tarv-autre-tparv-kwi7f-t4wml-fae",
+          "num_blocks_failures_total": "4255",
+          "num_blocks_proposed_total": "1545813"
+        },
+        {
+          "node_id": "ijqzn-wklsd-asfzv-ixif4-u7lrb-dblfi-mcq2d-nrwuk-d6cys-jgnar-7qe",
+          "num_blocks_failures_total": "2317",
+          "num_blocks_proposed_total": "1548585"
+        },
+        {
+          "node_id": "7qvtt-6lr4l-gx337-d6xvn-55ka2-6kcx2-c7iby-w36qm-u3ojf-ildyc-iqe",
+          "num_blocks_failures_total": "3736",
+          "num_blocks_proposed_total": "1546776"
+        },
+        {
+          "node_id": "2lhun-vmepu-zc7ic-6lrjj-o4yda-nlmwn-m4i2i-h4oby-hwv4y-mpv7c-fae",
+          "num_blocks_failures_total": "6157",
+          "num_blocks_proposed_total": "1545599"
+        },
+        {
+          "node_id": "dkx5h-i5d56-xeb37-uldi5-dlgmp-atrom-gyfn7-edeih-i5ph6-2cquy-dqe",
+          "num_blocks_failures_total": "11327",
+          "num_blocks_proposed_total": "1537093"
+        },
+        {
+          "node_id": "s5waw-pnvds-kpwqg-n6bly-r45vy-ax64x-sltbe-bbzl3-74npl-u4sos-mae",
+          "num_blocks_failures_total": "9537",
+          "num_blocks_proposed_total": "1414815"
+        },
+        {
+          "node_id": "mlbpy-pvy7z-gfwcb-5bakp-cuubm-prmi3-dppq6-rlepq-nkyvb-u7acf-fqe",
+          "num_blocks_failures_total": "87962",
+          "num_blocks_proposed_total": "1331536"
+        },
+        {
+          "node_id": "2vmqi-lwsmy-rad75-wus6x-3rlbf-cgig6-rtheo-t42r2-i4vdg-jyguw-uqe",
+          "num_blocks_failures_total": "26363",
+          "num_blocks_proposed_total": "1522798"
+        },
+        {
+          "node_id": "ew5us-dwxat-fg6sp-opp2j-fjjg7-rcmyj-d3saj-vyych-f3keg-5kor5-yqe",
+          "num_blocks_failures_total": "8249",
+          "num_blocks_proposed_total": "1541108"
+        },
+        {
+          "node_id": "tliwu-apd5m-f5kxi-g37rt-cqcag-4kmua-v7dsq-xsmv4-pvmhr-la6hu-xae",
+          "num_blocks_failures_total": "2626",
+          "num_blocks_proposed_total": "1468967"
+        }
+      ],
+      "subnet_id": "eq6en-6jqla-fbu5s-daskr-h6hx2-376n5-iqabl-qgrng-gfqmv-n3yjr-mqe",
+      "ts": "1719446399920075593"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "wvxfb-eqeex-26z4r-vefff-llfh7-vv76x-pje4o-oh57m-eklny-zcs56-wae",
+          "num_blocks_failures_total": "36118",
+          "num_blocks_proposed_total": "1518870"
+        },
+        {
+          "node_id": "nhkbm-fqj7r-jdjii-spvcr-to3iu-ccrkm-pils3-6io5l-ahtry-qhlly-4ae",
+          "num_blocks_failures_total": "73555",
+          "num_blocks_proposed_total": "1477160"
+        },
+        {
+          "node_id": "rg3ny-2qkvz-btitk-sxuiu-fsl2h-nkmij-lagjs-y4bnq-cb63u-vh2rd-aqe",
+          "num_blocks_failures_total": "4036",
+          "num_blocks_proposed_total": "1554410"
+        },
+        {
+          "node_id": "ebfjs-4yyde-6v3qo-zhvwl-2fvp2-4tarv-autre-tparv-kwi7f-t4wml-fae",
+          "num_blocks_failures_total": "4352",
+          "num_blocks_proposed_total": "1553651"
+        },
+        {
+          "node_id": "ijqzn-wklsd-asfzv-ixif4-u7lrb-dblfi-mcq2d-nrwuk-d6cys-jgnar-7qe",
+          "num_blocks_failures_total": "2319",
+          "num_blocks_proposed_total": "1556458"
+        },
+        {
+          "node_id": "7qvtt-6lr4l-gx337-d6xvn-55ka2-6kcx2-c7iby-w36qm-u3ojf-ildyc-iqe",
+          "num_blocks_failures_total": "3746",
+          "num_blocks_proposed_total": "1554625"
+        },
+        {
+          "node_id": "2lhun-vmepu-zc7ic-6lrjj-o4yda-nlmwn-m4i2i-h4oby-hwv4y-mpv7c-fae",
+          "num_blocks_failures_total": "6732",
+          "num_blocks_proposed_total": "1552861"
+        },
+        {
+          "node_id": "dkx5h-i5d56-xeb37-uldi5-dlgmp-atrom-gyfn7-edeih-i5ph6-2cquy-dqe",
+          "num_blocks_failures_total": "11328",
+          "num_blocks_proposed_total": "1545010"
+        },
+        {
+          "node_id": "s5waw-pnvds-kpwqg-n6bly-r45vy-ax64x-sltbe-bbzl3-74npl-u4sos-mae",
+          "num_blocks_failures_total": "9610",
+          "num_blocks_proposed_total": "1422783"
+        },
+        {
+          "node_id": "mlbpy-pvy7z-gfwcb-5bakp-cuubm-prmi3-dppq6-rlepq-nkyvb-u7acf-fqe",
+          "num_blocks_failures_total": "88753",
+          "num_blocks_proposed_total": "1338524"
+        },
+        {
+          "node_id": "2vmqi-lwsmy-rad75-wus6x-3rlbf-cgig6-rtheo-t42r2-i4vdg-jyguw-uqe",
+          "num_blocks_failures_total": "26370",
+          "num_blocks_proposed_total": "1530686"
+        },
+        {
+          "node_id": "ew5us-dwxat-fg6sp-opp2j-fjjg7-rcmyj-d3saj-vyych-f3keg-5kor5-yqe",
+          "num_blocks_failures_total": "8252",
+          "num_blocks_proposed_total": "1548937"
+        },
+        {
+          "node_id": "tliwu-apd5m-f5kxi-g37rt-cqcag-4kmua-v7dsq-xsmv4-pvmhr-la6hu-xae",
+          "num_blocks_failures_total": "2628",
+          "num_blocks_proposed_total": "1476864"
+        }
+      ],
+      "subnet_id": "eq6en-6jqla-fbu5s-daskr-h6hx2-376n5-iqabl-qgrng-gfqmv-n3yjr-mqe",
+      "ts": "1719532799748330871"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "wvxfb-eqeex-26z4r-vefff-llfh7-vv76x-pje4o-oh57m-eklny-zcs56-wae",
+          "num_blocks_failures_total": "36118",
+          "num_blocks_proposed_total": "1526820"
+        },
+        {
+          "node_id": "nhkbm-fqj7r-jdjii-spvcr-to3iu-ccrkm-pils3-6io5l-ahtry-qhlly-4ae",
+          "num_blocks_failures_total": "73983",
+          "num_blocks_proposed_total": "1484387"
+        },
+        {
+          "node_id": "rg3ny-2qkvz-btitk-sxuiu-fsl2h-nkmij-lagjs-y4bnq-cb63u-vh2rd-aqe",
+          "num_blocks_failures_total": "4036",
+          "num_blocks_proposed_total": "1562151"
+        },
+        {
+          "node_id": "ebfjs-4yyde-6v3qo-zhvwl-2fvp2-4tarv-autre-tparv-kwi7f-t4wml-fae",
+          "num_blocks_failures_total": "4352",
+          "num_blocks_proposed_total": "1561592"
+        },
+        {
+          "node_id": "ijqzn-wklsd-asfzv-ixif4-u7lrb-dblfi-mcq2d-nrwuk-d6cys-jgnar-7qe",
+          "num_blocks_failures_total": "2320",
+          "num_blocks_proposed_total": "1564379"
+        },
+        {
+          "node_id": "7qvtt-6lr4l-gx337-d6xvn-55ka2-6kcx2-c7iby-w36qm-u3ojf-ildyc-iqe",
+          "num_blocks_failures_total": "3747",
+          "num_blocks_proposed_total": "1562502"
+        },
+        {
+          "node_id": "2lhun-vmepu-zc7ic-6lrjj-o4yda-nlmwn-m4i2i-h4oby-hwv4y-mpv7c-fae",
+          "num_blocks_failures_total": "6733",
+          "num_blocks_proposed_total": "1560757"
+        },
+        {
+          "node_id": "dkx5h-i5d56-xeb37-uldi5-dlgmp-atrom-gyfn7-edeih-i5ph6-2cquy-dqe",
+          "num_blocks_failures_total": "11328",
+          "num_blocks_proposed_total": "1552945"
+        },
+        {
+          "node_id": "s5waw-pnvds-kpwqg-n6bly-r45vy-ax64x-sltbe-bbzl3-74npl-u4sos-mae",
+          "num_blocks_failures_total": "9633",
+          "num_blocks_proposed_total": "1430561"
+        },
+        {
+          "node_id": "mlbpy-pvy7z-gfwcb-5bakp-cuubm-prmi3-dppq6-rlepq-nkyvb-u7acf-fqe",
+          "num_blocks_failures_total": "89864",
+          "num_blocks_proposed_total": "1345023"
+        },
+        {
+          "node_id": "2vmqi-lwsmy-rad75-wus6x-3rlbf-cgig6-rtheo-t42r2-i4vdg-jyguw-uqe",
+          "num_blocks_failures_total": "26381",
+          "num_blocks_proposed_total": "1538551"
+        },
+        {
+          "node_id": "ew5us-dwxat-fg6sp-opp2j-fjjg7-rcmyj-d3saj-vyych-f3keg-5kor5-yqe",
+          "num_blocks_failures_total": "8252",
+          "num_blocks_proposed_total": "1556770"
+        },
+        {
+          "node_id": "tliwu-apd5m-f5kxi-g37rt-cqcag-4kmua-v7dsq-xsmv4-pvmhr-la6hu-xae",
+          "num_blocks_failures_total": "2645",
+          "num_blocks_proposed_total": "1484810"
+        }
+      ],
+      "subnet_id": "eq6en-6jqla-fbu5s-daskr-h6hx2-376n5-iqabl-qgrng-gfqmv-n3yjr-mqe",
+      "ts": "1719619199385981558"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "wvxfb-eqeex-26z4r-vefff-llfh7-vv76x-pje4o-oh57m-eklny-zcs56-wae",
+          "num_blocks_failures_total": "36118",
+          "num_blocks_proposed_total": "1534757"
+        },
+        {
+          "node_id": "nhkbm-fqj7r-jdjii-spvcr-to3iu-ccrkm-pils3-6io5l-ahtry-qhlly-4ae",
+          "num_blocks_failures_total": "74321",
+          "num_blocks_proposed_total": "1491751"
+        },
+        {
+          "node_id": "rg3ny-2qkvz-btitk-sxuiu-fsl2h-nkmij-lagjs-y4bnq-cb63u-vh2rd-aqe",
+          "num_blocks_failures_total": "4036",
+          "num_blocks_proposed_total": "1570053"
+        },
+        {
+          "node_id": "ebfjs-4yyde-6v3qo-zhvwl-2fvp2-4tarv-autre-tparv-kwi7f-t4wml-fae",
+          "num_blocks_failures_total": "4352",
+          "num_blocks_proposed_total": "1569506"
+        },
+        {
+          "node_id": "ijqzn-wklsd-asfzv-ixif4-u7lrb-dblfi-mcq2d-nrwuk-d6cys-jgnar-7qe",
+          "num_blocks_failures_total": "2320",
+          "num_blocks_proposed_total": "1572200"
+        },
+        {
+          "node_id": "7qvtt-6lr4l-gx337-d6xvn-55ka2-6kcx2-c7iby-w36qm-u3ojf-ildyc-iqe",
+          "num_blocks_failures_total": "3748",
+          "num_blocks_proposed_total": "1570304"
+        },
+        {
+          "node_id": "2lhun-vmepu-zc7ic-6lrjj-o4yda-nlmwn-m4i2i-h4oby-hwv4y-mpv7c-fae",
+          "num_blocks_failures_total": "6735",
+          "num_blocks_proposed_total": "1568754"
+        },
+        {
+          "node_id": "dkx5h-i5d56-xeb37-uldi5-dlgmp-atrom-gyfn7-edeih-i5ph6-2cquy-dqe",
+          "num_blocks_failures_total": "11328",
+          "num_blocks_proposed_total": "1560794"
+        },
+        {
+          "node_id": "s5waw-pnvds-kpwqg-n6bly-r45vy-ax64x-sltbe-bbzl3-74npl-u4sos-mae",
+          "num_blocks_failures_total": "9635",
+          "num_blocks_proposed_total": "1438457"
+        },
+        {
+          "node_id": "mlbpy-pvy7z-gfwcb-5bakp-cuubm-prmi3-dppq6-rlepq-nkyvb-u7acf-fqe",
+          "num_blocks_failures_total": "90613",
+          "num_blocks_proposed_total": "1352107"
+        },
+        {
+          "node_id": "2vmqi-lwsmy-rad75-wus6x-3rlbf-cgig6-rtheo-t42r2-i4vdg-jyguw-uqe",
+          "num_blocks_failures_total": "26386",
+          "num_blocks_proposed_total": "1546423"
+        },
+        {
+          "node_id": "ew5us-dwxat-fg6sp-opp2j-fjjg7-rcmyj-d3saj-vyych-f3keg-5kor5-yqe",
+          "num_blocks_failures_total": "8252",
+          "num_blocks_proposed_total": "1564766"
+        },
+        {
+          "node_id": "tliwu-apd5m-f5kxi-g37rt-cqcag-4kmua-v7dsq-xsmv4-pvmhr-la6hu-xae",
+          "num_blocks_failures_total": "2646",
+          "num_blocks_proposed_total": "1492795"
+        }
+      ],
+      "subnet_id": "eq6en-6jqla-fbu5s-daskr-h6hx2-376n5-iqabl-qgrng-gfqmv-n3yjr-mqe",
+      "ts": "1719705599392191377"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "wvxfb-eqeex-26z4r-vefff-llfh7-vv76x-pje4o-oh57m-eklny-zcs56-wae",
+          "num_blocks_failures_total": "36118",
+          "num_blocks_proposed_total": "1542679"
+        },
+        {
+          "node_id": "nhkbm-fqj7r-jdjii-spvcr-to3iu-ccrkm-pils3-6io5l-ahtry-qhlly-4ae",
+          "num_blocks_failures_total": "74522",
+          "num_blocks_proposed_total": "1499376"
+        },
+        {
+          "node_id": "rg3ny-2qkvz-btitk-sxuiu-fsl2h-nkmij-lagjs-y4bnq-cb63u-vh2rd-aqe",
+          "num_blocks_failures_total": "4036",
+          "num_blocks_proposed_total": "1578108"
+        },
+        {
+          "node_id": "ebfjs-4yyde-6v3qo-zhvwl-2fvp2-4tarv-autre-tparv-kwi7f-t4wml-fae",
+          "num_blocks_failures_total": "4352",
+          "num_blocks_proposed_total": "1577422"
+        },
+        {
+          "node_id": "ijqzn-wklsd-asfzv-ixif4-u7lrb-dblfi-mcq2d-nrwuk-d6cys-jgnar-7qe",
+          "num_blocks_failures_total": "2320",
+          "num_blocks_proposed_total": "1580083"
+        },
+        {
+          "node_id": "7qvtt-6lr4l-gx337-d6xvn-55ka2-6kcx2-c7iby-w36qm-u3ojf-ildyc-iqe",
+          "num_blocks_failures_total": "3748",
+          "num_blocks_proposed_total": "1578113"
+        },
+        {
+          "node_id": "2lhun-vmepu-zc7ic-6lrjj-o4yda-nlmwn-m4i2i-h4oby-hwv4y-mpv7c-fae",
+          "num_blocks_failures_total": "6739",
+          "num_blocks_proposed_total": "1576524"
+        },
+        {
+          "node_id": "dkx5h-i5d56-xeb37-uldi5-dlgmp-atrom-gyfn7-edeih-i5ph6-2cquy-dqe",
+          "num_blocks_failures_total": "11328",
+          "num_blocks_proposed_total": "1568633"
+        },
+        {
+          "node_id": "s5waw-pnvds-kpwqg-n6bly-r45vy-ax64x-sltbe-bbzl3-74npl-u4sos-mae",
+          "num_blocks_failures_total": "9658",
+          "num_blocks_proposed_total": "1446420"
+        },
+        {
+          "node_id": "mlbpy-pvy7z-gfwcb-5bakp-cuubm-prmi3-dppq6-rlepq-nkyvb-u7acf-fqe",
+          "num_blocks_failures_total": "91269",
+          "num_blocks_proposed_total": "1359286"
+        },
+        {
+          "node_id": "2vmqi-lwsmy-rad75-wus6x-3rlbf-cgig6-rtheo-t42r2-i4vdg-jyguw-uqe",
+          "num_blocks_failures_total": "26400",
+          "num_blocks_proposed_total": "1554230"
+        },
+        {
+          "node_id": "ew5us-dwxat-fg6sp-opp2j-fjjg7-rcmyj-d3saj-vyych-f3keg-5kor5-yqe",
+          "num_blocks_failures_total": "8252",
+          "num_blocks_proposed_total": "1572677"
+        },
+        {
+          "node_id": "tliwu-apd5m-f5kxi-g37rt-cqcag-4kmua-v7dsq-xsmv4-pvmhr-la6hu-xae",
+          "num_blocks_failures_total": "2650",
+          "num_blocks_proposed_total": "1500751"
+        }
+      ],
+      "subnet_id": "eq6en-6jqla-fbu5s-daskr-h6hx2-376n5-iqabl-qgrng-gfqmv-n3yjr-mqe",
+      "ts": "1719791999592617482"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "wvxfb-eqeex-26z4r-vefff-llfh7-vv76x-pje4o-oh57m-eklny-zcs56-wae",
+          "num_blocks_failures_total": "36118",
+          "num_blocks_proposed_total": "1550437"
+        },
+        {
+          "node_id": "nhkbm-fqj7r-jdjii-spvcr-to3iu-ccrkm-pils3-6io5l-ahtry-qhlly-4ae",
+          "num_blocks_failures_total": "74583",
+          "num_blocks_proposed_total": "1507168"
+        },
+        {
+          "node_id": "rg3ny-2qkvz-btitk-sxuiu-fsl2h-nkmij-lagjs-y4bnq-cb63u-vh2rd-aqe",
+          "num_blocks_failures_total": "4036",
+          "num_blocks_proposed_total": "1585972"
+        },
+        {
+          "node_id": "ebfjs-4yyde-6v3qo-zhvwl-2fvp2-4tarv-autre-tparv-kwi7f-t4wml-fae",
+          "num_blocks_failures_total": "4352",
+          "num_blocks_proposed_total": "1585333"
+        },
+        {
+          "node_id": "ijqzn-wklsd-asfzv-ixif4-u7lrb-dblfi-mcq2d-nrwuk-d6cys-jgnar-7qe",
+          "num_blocks_failures_total": "2323",
+          "num_blocks_proposed_total": "1587946"
+        },
+        {
+          "node_id": "7qvtt-6lr4l-gx337-d6xvn-55ka2-6kcx2-c7iby-w36qm-u3ojf-ildyc-iqe",
+          "num_blocks_failures_total": "3763",
+          "num_blocks_proposed_total": "1585980"
+        },
+        {
+          "node_id": "2lhun-vmepu-zc7ic-6lrjj-o4yda-nlmwn-m4i2i-h4oby-hwv4y-mpv7c-fae",
+          "num_blocks_failures_total": "6740",
+          "num_blocks_proposed_total": "1584499"
+        },
+        {
+          "node_id": "dkx5h-i5d56-xeb37-uldi5-dlgmp-atrom-gyfn7-edeih-i5ph6-2cquy-dqe",
+          "num_blocks_failures_total": "11329",
+          "num_blocks_proposed_total": "1576552"
+        },
+        {
+          "node_id": "s5waw-pnvds-kpwqg-n6bly-r45vy-ax64x-sltbe-bbzl3-74npl-u4sos-mae",
+          "num_blocks_failures_total": "9668",
+          "num_blocks_proposed_total": "1454303"
+        },
+        {
+          "node_id": "mlbpy-pvy7z-gfwcb-5bakp-cuubm-prmi3-dppq6-rlepq-nkyvb-u7acf-fqe",
+          "num_blocks_failures_total": "91710",
+          "num_blocks_proposed_total": "1366738"
+        },
+        {
+          "node_id": "2vmqi-lwsmy-rad75-wus6x-3rlbf-cgig6-rtheo-t42r2-i4vdg-jyguw-uqe",
+          "num_blocks_failures_total": "26406",
+          "num_blocks_proposed_total": "1562031"
+        },
+        {
+          "node_id": "ew5us-dwxat-fg6sp-opp2j-fjjg7-rcmyj-d3saj-vyych-f3keg-5kor5-yqe",
+          "num_blocks_failures_total": "8252",
+          "num_blocks_proposed_total": "1580668"
+        },
+        {
+          "node_id": "tliwu-apd5m-f5kxi-g37rt-cqcag-4kmua-v7dsq-xsmv4-pvmhr-la6hu-xae",
+          "num_blocks_failures_total": "2650",
+          "num_blocks_proposed_total": "1508611"
+        }
+      ],
+      "subnet_id": "eq6en-6jqla-fbu5s-daskr-h6hx2-376n5-iqabl-qgrng-gfqmv-n3yjr-mqe",
+      "ts": "1719878399652849252"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "wvxfb-eqeex-26z4r-vefff-llfh7-vv76x-pje4o-oh57m-eklny-zcs56-wae",
+          "num_blocks_failures_total": "36229",
+          "num_blocks_proposed_total": "1558117"
+        },
+        {
+          "node_id": "nhkbm-fqj7r-jdjii-spvcr-to3iu-ccrkm-pils3-6io5l-ahtry-qhlly-4ae",
+          "num_blocks_failures_total": "74813",
+          "num_blocks_proposed_total": "1514847"
+        },
+        {
+          "node_id": "rg3ny-2qkvz-btitk-sxuiu-fsl2h-nkmij-lagjs-y4bnq-cb63u-vh2rd-aqe",
+          "num_blocks_failures_total": "4153",
+          "num_blocks_proposed_total": "1593811"
+        },
+        {
+          "node_id": "ebfjs-4yyde-6v3qo-zhvwl-2fvp2-4tarv-autre-tparv-kwi7f-t4wml-fae",
+          "num_blocks_failures_total": "4352",
+          "num_blocks_proposed_total": "1593141"
+        },
+        {
+          "node_id": "ijqzn-wklsd-asfzv-ixif4-u7lrb-dblfi-mcq2d-nrwuk-d6cys-jgnar-7qe",
+          "num_blocks_failures_total": "2336",
+          "num_blocks_proposed_total": "1595848"
+        },
+        {
+          "node_id": "7qvtt-6lr4l-gx337-d6xvn-55ka2-6kcx2-c7iby-w36qm-u3ojf-ildyc-iqe",
+          "num_blocks_failures_total": "3766",
+          "num_blocks_proposed_total": "1593901"
+        },
+        {
+          "node_id": "2lhun-vmepu-zc7ic-6lrjj-o4yda-nlmwn-m4i2i-h4oby-hwv4y-mpv7c-fae",
+          "num_blocks_failures_total": "6744",
+          "num_blocks_proposed_total": "1592356"
+        },
+        {
+          "node_id": "dkx5h-i5d56-xeb37-uldi5-dlgmp-atrom-gyfn7-edeih-i5ph6-2cquy-dqe",
+          "num_blocks_failures_total": "11330",
+          "num_blocks_proposed_total": "1584365"
+        },
+        {
+          "node_id": "s5waw-pnvds-kpwqg-n6bly-r45vy-ax64x-sltbe-bbzl3-74npl-u4sos-mae",
+          "num_blocks_failures_total": "9690",
+          "num_blocks_proposed_total": "1462149"
+        },
+        {
+          "node_id": "mlbpy-pvy7z-gfwcb-5bakp-cuubm-prmi3-dppq6-rlepq-nkyvb-u7acf-fqe",
+          "num_blocks_failures_total": "92290",
+          "num_blocks_proposed_total": "1374028"
+        },
+        {
+          "node_id": "2vmqi-lwsmy-rad75-wus6x-3rlbf-cgig6-rtheo-t42r2-i4vdg-jyguw-uqe",
+          "num_blocks_failures_total": "26408",
+          "num_blocks_proposed_total": "1570069"
+        },
+        {
+          "node_id": "ew5us-dwxat-fg6sp-opp2j-fjjg7-rcmyj-d3saj-vyych-f3keg-5kor5-yqe",
+          "num_blocks_failures_total": "8252",
+          "num_blocks_proposed_total": "1588353"
+        },
+        {
+          "node_id": "tliwu-apd5m-f5kxi-g37rt-cqcag-4kmua-v7dsq-xsmv4-pvmhr-la6hu-xae",
+          "num_blocks_failures_total": "2652",
+          "num_blocks_proposed_total": "1516646"
+        }
+      ],
+      "subnet_id": "eq6en-6jqla-fbu5s-daskr-h6hx2-376n5-iqabl-qgrng-gfqmv-n3yjr-mqe",
+      "ts": "1719964799721201952"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "wvxfb-eqeex-26z4r-vefff-llfh7-vv76x-pje4o-oh57m-eklny-zcs56-wae",
+          "num_blocks_failures_total": "36231",
+          "num_blocks_proposed_total": "1565704"
+        },
+        {
+          "node_id": "nhkbm-fqj7r-jdjii-spvcr-to3iu-ccrkm-pils3-6io5l-ahtry-qhlly-4ae",
+          "num_blocks_failures_total": "74983",
+          "num_blocks_proposed_total": "1522382"
+        },
+        {
+          "node_id": "rg3ny-2qkvz-btitk-sxuiu-fsl2h-nkmij-lagjs-y4bnq-cb63u-vh2rd-aqe",
+          "num_blocks_failures_total": "4153",
+          "num_blocks_proposed_total": "1601513"
+        },
+        {
+          "node_id": "ebfjs-4yyde-6v3qo-zhvwl-2fvp2-4tarv-autre-tparv-kwi7f-t4wml-fae",
+          "num_blocks_failures_total": "4468",
+          "num_blocks_proposed_total": "1600596"
+        },
+        {
+          "node_id": "ijqzn-wklsd-asfzv-ixif4-u7lrb-dblfi-mcq2d-nrwuk-d6cys-jgnar-7qe",
+          "num_blocks_failures_total": "2454",
+          "num_blocks_proposed_total": "1603294"
+        },
+        {
+          "node_id": "7qvtt-6lr4l-gx337-d6xvn-55ka2-6kcx2-c7iby-w36qm-u3ojf-ildyc-iqe",
+          "num_blocks_failures_total": "3892",
+          "num_blocks_proposed_total": "1601515"
+        },
+        {
+          "node_id": "2lhun-vmepu-zc7ic-6lrjj-o4yda-nlmwn-m4i2i-h4oby-hwv4y-mpv7c-fae",
+          "num_blocks_failures_total": "6918",
+          "num_blocks_proposed_total": "1599930"
+        },
+        {
+          "node_id": "dkx5h-i5d56-xeb37-uldi5-dlgmp-atrom-gyfn7-edeih-i5ph6-2cquy-dqe",
+          "num_blocks_failures_total": "11606",
+          "num_blocks_proposed_total": "1591709"
+        },
+        {
+          "node_id": "s5waw-pnvds-kpwqg-n6bly-r45vy-ax64x-sltbe-bbzl3-74npl-u4sos-mae",
+          "num_blocks_failures_total": "12444",
+          "num_blocks_proposed_total": "1466822"
+        },
+        {
+          "node_id": "mlbpy-pvy7z-gfwcb-5bakp-cuubm-prmi3-dppq6-rlepq-nkyvb-u7acf-fqe",
+          "num_blocks_failures_total": "93620",
+          "num_blocks_proposed_total": "1380210"
+        },
+        {
+          "node_id": "2vmqi-lwsmy-rad75-wus6x-3rlbf-cgig6-rtheo-t42r2-i4vdg-jyguw-uqe",
+          "num_blocks_failures_total": "26916",
+          "num_blocks_proposed_total": "1577193"
+        },
+        {
+          "node_id": "ew5us-dwxat-fg6sp-opp2j-fjjg7-rcmyj-d3saj-vyych-f3keg-5kor5-yqe",
+          "num_blocks_failures_total": "8253",
+          "num_blocks_proposed_total": "1596006"
+        },
+        {
+          "node_id": "tliwu-apd5m-f5kxi-g37rt-cqcag-4kmua-v7dsq-xsmv4-pvmhr-la6hu-xae",
+          "num_blocks_failures_total": "2652",
+          "num_blocks_proposed_total": "1524301"
+        }
+      ],
+      "subnet_id": "eq6en-6jqla-fbu5s-daskr-h6hx2-376n5-iqabl-qgrng-gfqmv-n3yjr-mqe",
+      "ts": "1720051199621569331"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "wvxfb-eqeex-26z4r-vefff-llfh7-vv76x-pje4o-oh57m-eklny-zcs56-wae",
+          "num_blocks_failures_total": "36242",
+          "num_blocks_proposed_total": "1572723"
+        },
+        {
+          "node_id": "nhkbm-fqj7r-jdjii-spvcr-to3iu-ccrkm-pils3-6io5l-ahtry-qhlly-4ae",
+          "num_blocks_failures_total": "75047",
+          "num_blocks_proposed_total": "1529281"
+        },
+        {
+          "node_id": "rg3ny-2qkvz-btitk-sxuiu-fsl2h-nkmij-lagjs-y4bnq-cb63u-vh2rd-aqe",
+          "num_blocks_failures_total": "4153",
+          "num_blocks_proposed_total": "1608452"
+        },
+        {
+          "node_id": "ebfjs-4yyde-6v3qo-zhvwl-2fvp2-4tarv-autre-tparv-kwi7f-t4wml-fae",
+          "num_blocks_failures_total": "4784",
+          "num_blocks_proposed_total": "1607280"
+        },
+        {
+          "node_id": "ijqzn-wklsd-asfzv-ixif4-u7lrb-dblfi-mcq2d-nrwuk-d6cys-jgnar-7qe",
+          "num_blocks_failures_total": "2462",
+          "num_blocks_proposed_total": "1610332"
+        },
+        {
+          "node_id": "7qvtt-6lr4l-gx337-d6xvn-55ka2-6kcx2-c7iby-w36qm-u3ojf-ildyc-iqe",
+          "num_blocks_failures_total": "3892",
+          "num_blocks_proposed_total": "1608457"
+        },
+        {
+          "node_id": "2lhun-vmepu-zc7ic-6lrjj-o4yda-nlmwn-m4i2i-h4oby-hwv4y-mpv7c-fae",
+          "num_blocks_failures_total": "8569",
+          "num_blocks_proposed_total": "1605189"
+        },
+        {
+          "node_id": "dkx5h-i5d56-xeb37-uldi5-dlgmp-atrom-gyfn7-edeih-i5ph6-2cquy-dqe",
+          "num_blocks_failures_total": "11606",
+          "num_blocks_proposed_total": "1598628"
+        },
+        {
+          "node_id": "s5waw-pnvds-kpwqg-n6bly-r45vy-ax64x-sltbe-bbzl3-74npl-u4sos-mae",
+          "num_blocks_failures_total": "13485",
+          "num_blocks_proposed_total": "1472705"
+        },
+        {
+          "node_id": "mlbpy-pvy7z-gfwcb-5bakp-cuubm-prmi3-dppq6-rlepq-nkyvb-u7acf-fqe",
+          "num_blocks_failures_total": "95066",
+          "num_blocks_proposed_total": "1385590"
+        },
+        {
+          "node_id": "2vmqi-lwsmy-rad75-wus6x-3rlbf-cgig6-rtheo-t42r2-i4vdg-jyguw-uqe",
+          "num_blocks_failures_total": "27831",
+          "num_blocks_proposed_total": "1583229"
+        },
+        {
+          "node_id": "ew5us-dwxat-fg6sp-opp2j-fjjg7-rcmyj-d3saj-vyych-f3keg-5kor5-yqe",
+          "num_blocks_failures_total": "8399",
+          "num_blocks_proposed_total": "1602845"
+        },
+        {
+          "node_id": "tliwu-apd5m-f5kxi-g37rt-cqcag-4kmua-v7dsq-xsmv4-pvmhr-la6hu-xae",
+          "num_blocks_failures_total": "2768",
+          "num_blocks_proposed_total": "1531253"
+        }
+      ],
+      "subnet_id": "eq6en-6jqla-fbu5s-daskr-h6hx2-376n5-iqabl-qgrng-gfqmv-n3yjr-mqe",
+      "ts": "1720137599669255635"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "wvxfb-eqeex-26z4r-vefff-llfh7-vv76x-pje4o-oh57m-eklny-zcs56-wae",
+          "num_blocks_failures_total": "36242",
+          "num_blocks_proposed_total": "1579945"
+        },
+        {
+          "node_id": "nhkbm-fqj7r-jdjii-spvcr-to3iu-ccrkm-pils3-6io5l-ahtry-qhlly-4ae",
+          "num_blocks_failures_total": "75151",
+          "num_blocks_proposed_total": "1536393"
+        },
+        {
+          "node_id": "rg3ny-2qkvz-btitk-sxuiu-fsl2h-nkmij-lagjs-y4bnq-cb63u-vh2rd-aqe",
+          "num_blocks_failures_total": "4153",
+          "num_blocks_proposed_total": "1615423"
+        },
+        {
+          "node_id": "ebfjs-4yyde-6v3qo-zhvwl-2fvp2-4tarv-autre-tparv-kwi7f-t4wml-fae",
+          "num_blocks_failures_total": "4909",
+          "num_blocks_proposed_total": "1614323"
+        },
+        {
+          "node_id": "ijqzn-wklsd-asfzv-ixif4-u7lrb-dblfi-mcq2d-nrwuk-d6cys-jgnar-7qe",
+          "num_blocks_failures_total": "2474",
+          "num_blocks_proposed_total": "1617504"
+        },
+        {
+          "node_id": "7qvtt-6lr4l-gx337-d6xvn-55ka2-6kcx2-c7iby-w36qm-u3ojf-ildyc-iqe",
+          "num_blocks_failures_total": "3895",
+          "num_blocks_proposed_total": "1615786"
+        },
+        {
+          "node_id": "2lhun-vmepu-zc7ic-6lrjj-o4yda-nlmwn-m4i2i-h4oby-hwv4y-mpv7c-fae",
+          "num_blocks_failures_total": "9306",
+          "num_blocks_proposed_total": "1611515"
+        },
+        {
+          "node_id": "dkx5h-i5d56-xeb37-uldi5-dlgmp-atrom-gyfn7-edeih-i5ph6-2cquy-dqe",
+          "num_blocks_failures_total": "11619",
+          "num_blocks_proposed_total": "1605930"
+        },
+        {
+          "node_id": "s5waw-pnvds-kpwqg-n6bly-r45vy-ax64x-sltbe-bbzl3-74npl-u4sos-mae",
+          "num_blocks_failures_total": "13536",
+          "num_blocks_proposed_total": "1479882"
+        },
+        {
+          "node_id": "mlbpy-pvy7z-gfwcb-5bakp-cuubm-prmi3-dppq6-rlepq-nkyvb-u7acf-fqe",
+          "num_blocks_failures_total": "96837",
+          "num_blocks_proposed_total": "1390794"
+        },
+        {
+          "node_id": "2vmqi-lwsmy-rad75-wus6x-3rlbf-cgig6-rtheo-t42r2-i4vdg-jyguw-uqe",
+          "num_blocks_failures_total": "28065",
+          "num_blocks_proposed_total": "1590147"
+        },
+        {
+          "node_id": "ew5us-dwxat-fg6sp-opp2j-fjjg7-rcmyj-d3saj-vyych-f3keg-5kor5-yqe",
+          "num_blocks_failures_total": "8400",
+          "num_blocks_proposed_total": "1610066"
+        },
+        {
+          "node_id": "tliwu-apd5m-f5kxi-g37rt-cqcag-4kmua-v7dsq-xsmv4-pvmhr-la6hu-xae",
+          "num_blocks_failures_total": "2771",
+          "num_blocks_proposed_total": "1538454"
+        }
+      ],
+      "subnet_id": "eq6en-6jqla-fbu5s-daskr-h6hx2-376n5-iqabl-qgrng-gfqmv-n3yjr-mqe",
+      "ts": "1720223999557904260"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "wvxfb-eqeex-26z4r-vefff-llfh7-vv76x-pje4o-oh57m-eklny-zcs56-wae",
+          "num_blocks_failures_total": "36242",
+          "num_blocks_proposed_total": "1587045"
+        },
+        {
+          "node_id": "nhkbm-fqj7r-jdjii-spvcr-to3iu-ccrkm-pils3-6io5l-ahtry-qhlly-4ae",
+          "num_blocks_failures_total": "75428",
+          "num_blocks_proposed_total": "1543265"
+        },
+        {
+          "node_id": "rg3ny-2qkvz-btitk-sxuiu-fsl2h-nkmij-lagjs-y4bnq-cb63u-vh2rd-aqe",
+          "num_blocks_failures_total": "4153",
+          "num_blocks_proposed_total": "1622296"
+        },
+        {
+          "node_id": "ebfjs-4yyde-6v3qo-zhvwl-2fvp2-4tarv-autre-tparv-kwi7f-t4wml-fae",
+          "num_blocks_failures_total": "5093",
+          "num_blocks_proposed_total": "1621212"
+        },
+        {
+          "node_id": "ijqzn-wklsd-asfzv-ixif4-u7lrb-dblfi-mcq2d-nrwuk-d6cys-jgnar-7qe",
+          "num_blocks_failures_total": "2505",
+          "num_blocks_proposed_total": "1624724"
+        },
+        {
+          "node_id": "7qvtt-6lr4l-gx337-d6xvn-55ka2-6kcx2-c7iby-w36qm-u3ojf-ildyc-iqe",
+          "num_blocks_failures_total": "3895",
+          "num_blocks_proposed_total": "1623049"
+        },
+        {
+          "node_id": "2lhun-vmepu-zc7ic-6lrjj-o4yda-nlmwn-m4i2i-h4oby-hwv4y-mpv7c-fae",
+          "num_blocks_failures_total": "9939",
+          "num_blocks_proposed_total": "1618090"
+        },
+        {
+          "node_id": "dkx5h-i5d56-xeb37-uldi5-dlgmp-atrom-gyfn7-edeih-i5ph6-2cquy-dqe",
+          "num_blocks_failures_total": "11635",
+          "num_blocks_proposed_total": "1613111"
+        },
+        {
+          "node_id": "s5waw-pnvds-kpwqg-n6bly-r45vy-ax64x-sltbe-bbzl3-74npl-u4sos-mae",
+          "num_blocks_failures_total": "13571",
+          "num_blocks_proposed_total": "1486987"
+        },
+        {
+          "node_id": "mlbpy-pvy7z-gfwcb-5bakp-cuubm-prmi3-dppq6-rlepq-nkyvb-u7acf-fqe",
+          "num_blocks_failures_total": "98592",
+          "num_blocks_proposed_total": "1395880"
+        },
+        {
+          "node_id": "2vmqi-lwsmy-rad75-wus6x-3rlbf-cgig6-rtheo-t42r2-i4vdg-jyguw-uqe",
+          "num_blocks_failures_total": "28245",
+          "num_blocks_proposed_total": "1597297"
+        },
+        {
+          "node_id": "ew5us-dwxat-fg6sp-opp2j-fjjg7-rcmyj-d3saj-vyych-f3keg-5kor5-yqe",
+          "num_blocks_failures_total": "8415",
+          "num_blocks_proposed_total": "1617333"
+        },
+        {
+          "node_id": "tliwu-apd5m-f5kxi-g37rt-cqcag-4kmua-v7dsq-xsmv4-pvmhr-la6hu-xae",
+          "num_blocks_failures_total": "2771",
+          "num_blocks_proposed_total": "1545759"
+        }
+      ],
+      "subnet_id": "eq6en-6jqla-fbu5s-daskr-h6hx2-376n5-iqabl-qgrng-gfqmv-n3yjr-mqe",
+      "ts": "1720310399552258717"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "wvxfb-eqeex-26z4r-vefff-llfh7-vv76x-pje4o-oh57m-eklny-zcs56-wae",
+          "num_blocks_failures_total": "36242",
+          "num_blocks_proposed_total": "1594301"
+        },
+        {
+          "node_id": "nhkbm-fqj7r-jdjii-spvcr-to3iu-ccrkm-pils3-6io5l-ahtry-qhlly-4ae",
+          "num_blocks_failures_total": "75470",
+          "num_blocks_proposed_total": "1550321"
+        },
+        {
+          "node_id": "rg3ny-2qkvz-btitk-sxuiu-fsl2h-nkmij-lagjs-y4bnq-cb63u-vh2rd-aqe",
+          "num_blocks_failures_total": "4153",
+          "num_blocks_proposed_total": "1629336"
+        },
+        {
+          "node_id": "ebfjs-4yyde-6v3qo-zhvwl-2fvp2-4tarv-autre-tparv-kwi7f-t4wml-fae",
+          "num_blocks_failures_total": "5307",
+          "num_blocks_proposed_total": "1628296"
+        },
+        {
+          "node_id": "ijqzn-wklsd-asfzv-ixif4-u7lrb-dblfi-mcq2d-nrwuk-d6cys-jgnar-7qe",
+          "num_blocks_failures_total": "2505",
+          "num_blocks_proposed_total": "1631910"
+        },
+        {
+          "node_id": "7qvtt-6lr4l-gx337-d6xvn-55ka2-6kcx2-c7iby-w36qm-u3ojf-ildyc-iqe",
+          "num_blocks_failures_total": "3895",
+          "num_blocks_proposed_total": "1630118"
+        },
+        {
+          "node_id": "2lhun-vmepu-zc7ic-6lrjj-o4yda-nlmwn-m4i2i-h4oby-hwv4y-mpv7c-fae",
+          "num_blocks_failures_total": "10587",
+          "num_blocks_proposed_total": "1624455"
+        },
+        {
+          "node_id": "dkx5h-i5d56-xeb37-uldi5-dlgmp-atrom-gyfn7-edeih-i5ph6-2cquy-dqe",
+          "num_blocks_failures_total": "11655",
+          "num_blocks_proposed_total": "1620366"
+        },
+        {
+          "node_id": "s5waw-pnvds-kpwqg-n6bly-r45vy-ax64x-sltbe-bbzl3-74npl-u4sos-mae",
+          "num_blocks_failures_total": "13576",
+          "num_blocks_proposed_total": "1494060"
+        },
+        {
+          "node_id": "mlbpy-pvy7z-gfwcb-5bakp-cuubm-prmi3-dppq6-rlepq-nkyvb-u7acf-fqe",
+          "num_blocks_failures_total": "100273",
+          "num_blocks_proposed_total": "1401182"
+        },
+        {
+          "node_id": "2vmqi-lwsmy-rad75-wus6x-3rlbf-cgig6-rtheo-t42r2-i4vdg-jyguw-uqe",
+          "num_blocks_failures_total": "28562",
+          "num_blocks_proposed_total": "1604165"
+        },
+        {
+          "node_id": "ew5us-dwxat-fg6sp-opp2j-fjjg7-rcmyj-d3saj-vyych-f3keg-5kor5-yqe",
+          "num_blocks_failures_total": "8415",
+          "num_blocks_proposed_total": "1624553"
+        },
+        {
+          "node_id": "tliwu-apd5m-f5kxi-g37rt-cqcag-4kmua-v7dsq-xsmv4-pvmhr-la6hu-xae",
+          "num_blocks_failures_total": "2771",
+          "num_blocks_proposed_total": "1552723"
+        }
+      ],
+      "subnet_id": "eq6en-6jqla-fbu5s-daskr-h6hx2-376n5-iqabl-qgrng-gfqmv-n3yjr-mqe",
+      "ts": "1720396799239100361"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "wvxfb-eqeex-26z4r-vefff-llfh7-vv76x-pje4o-oh57m-eklny-zcs56-wae",
+          "num_blocks_failures_total": "36242",
+          "num_blocks_proposed_total": "1601191"
+        },
+        {
+          "node_id": "nhkbm-fqj7r-jdjii-spvcr-to3iu-ccrkm-pils3-6io5l-ahtry-qhlly-4ae",
+          "num_blocks_failures_total": "75494",
+          "num_blocks_proposed_total": "1557067"
+        },
+        {
+          "node_id": "rg3ny-2qkvz-btitk-sxuiu-fsl2h-nkmij-lagjs-y4bnq-cb63u-vh2rd-aqe",
+          "num_blocks_failures_total": "4153",
+          "num_blocks_proposed_total": "1636226"
+        },
+        {
+          "node_id": "ebfjs-4yyde-6v3qo-zhvwl-2fvp2-4tarv-autre-tparv-kwi7f-t4wml-fae",
+          "num_blocks_failures_total": "5879",
+          "num_blocks_proposed_total": "1634618"
+        },
+        {
+          "node_id": "ijqzn-wklsd-asfzv-ixif4-u7lrb-dblfi-mcq2d-nrwuk-d6cys-jgnar-7qe",
+          "num_blocks_failures_total": "2508",
+          "num_blocks_proposed_total": "1638740"
+        },
+        {
+          "node_id": "7qvtt-6lr4l-gx337-d6xvn-55ka2-6kcx2-c7iby-w36qm-u3ojf-ildyc-iqe",
+          "num_blocks_failures_total": "3938",
+          "num_blocks_proposed_total": "1636985"
+        },
+        {
+          "node_id": "2lhun-vmepu-zc7ic-6lrjj-o4yda-nlmwn-m4i2i-h4oby-hwv4y-mpv7c-fae",
+          "num_blocks_failures_total": "12880",
+          "num_blocks_proposed_total": "1628832"
+        },
+        {
+          "node_id": "dkx5h-i5d56-xeb37-uldi5-dlgmp-atrom-gyfn7-edeih-i5ph6-2cquy-dqe",
+          "num_blocks_failures_total": "11655",
+          "num_blocks_proposed_total": "1627248"
+        },
+        {
+          "node_id": "s5waw-pnvds-kpwqg-n6bly-r45vy-ax64x-sltbe-bbzl3-74npl-u4sos-mae",
+          "num_blocks_failures_total": "13623",
+          "num_blocks_proposed_total": "1501012"
+        },
+        {
+          "node_id": "mlbpy-pvy7z-gfwcb-5bakp-cuubm-prmi3-dppq6-rlepq-nkyvb-u7acf-fqe",
+          "num_blocks_failures_total": "101640",
+          "num_blocks_proposed_total": "1406631"
+        },
+        {
+          "node_id": "2vmqi-lwsmy-rad75-wus6x-3rlbf-cgig6-rtheo-t42r2-i4vdg-jyguw-uqe",
+          "num_blocks_failures_total": "29362",
+          "num_blocks_proposed_total": "1610318"
+        },
+        {
+          "node_id": "ew5us-dwxat-fg6sp-opp2j-fjjg7-rcmyj-d3saj-vyych-f3keg-5kor5-yqe",
+          "num_blocks_failures_total": "8415",
+          "num_blocks_proposed_total": "1631458"
+        },
+        {
+          "node_id": "tliwu-apd5m-f5kxi-g37rt-cqcag-4kmua-v7dsq-xsmv4-pvmhr-la6hu-xae",
+          "num_blocks_failures_total": "2771",
+          "num_blocks_proposed_total": "1559730"
+        }
+      ],
+      "subnet_id": "eq6en-6jqla-fbu5s-daskr-h6hx2-376n5-iqabl-qgrng-gfqmv-n3yjr-mqe",
+      "ts": "1720483199595705838"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "wvxfb-eqeex-26z4r-vefff-llfh7-vv76x-pje4o-oh57m-eklny-zcs56-wae",
+          "num_blocks_failures_total": "36242",
+          "num_blocks_proposed_total": "1607581"
+        },
+        {
+          "node_id": "nhkbm-fqj7r-jdjii-spvcr-to3iu-ccrkm-pils3-6io5l-ahtry-qhlly-4ae",
+          "num_blocks_failures_total": "75672",
+          "num_blocks_proposed_total": "1563252"
+        },
+        {
+          "node_id": "rg3ny-2qkvz-btitk-sxuiu-fsl2h-nkmij-lagjs-y4bnq-cb63u-vh2rd-aqe",
+          "num_blocks_failures_total": "4153",
+          "num_blocks_proposed_total": "1642618"
+        },
+        {
+          "node_id": "ebfjs-4yyde-6v3qo-zhvwl-2fvp2-4tarv-autre-tparv-kwi7f-t4wml-fae",
+          "num_blocks_failures_total": "6268",
+          "num_blocks_proposed_total": "1640474"
+        },
+        {
+          "node_id": "ijqzn-wklsd-asfzv-ixif4-u7lrb-dblfi-mcq2d-nrwuk-d6cys-jgnar-7qe",
+          "num_blocks_failures_total": "2520",
+          "num_blocks_proposed_total": "1645005"
+        },
+        {
+          "node_id": "7qvtt-6lr4l-gx337-d6xvn-55ka2-6kcx2-c7iby-w36qm-u3ojf-ildyc-iqe",
+          "num_blocks_failures_total": "4001",
+          "num_blocks_proposed_total": "1643272"
+        },
+        {
+          "node_id": "2lhun-vmepu-zc7ic-6lrjj-o4yda-nlmwn-m4i2i-h4oby-hwv4y-mpv7c-fae",
+          "num_blocks_failures_total": "14049",
+          "num_blocks_proposed_total": "1633906"
+        },
+        {
+          "node_id": "dkx5h-i5d56-xeb37-uldi5-dlgmp-atrom-gyfn7-edeih-i5ph6-2cquy-dqe",
+          "num_blocks_failures_total": "11660",
+          "num_blocks_proposed_total": "1633555"
+        },
+        {
+          "node_id": "s5waw-pnvds-kpwqg-n6bly-r45vy-ax64x-sltbe-bbzl3-74npl-u4sos-mae",
+          "num_blocks_failures_total": "13648",
+          "num_blocks_proposed_total": "1507294"
+        },
+        {
+          "node_id": "mlbpy-pvy7z-gfwcb-5bakp-cuubm-prmi3-dppq6-rlepq-nkyvb-u7acf-fqe",
+          "num_blocks_failures_total": "102262",
+          "num_blocks_proposed_total": "1412409"
+        },
+        {
+          "node_id": "2vmqi-lwsmy-rad75-wus6x-3rlbf-cgig6-rtheo-t42r2-i4vdg-jyguw-uqe",
+          "num_blocks_failures_total": "30565",
+          "num_blocks_proposed_total": "1615396"
+        },
+        {
+          "node_id": "ew5us-dwxat-fg6sp-opp2j-fjjg7-rcmyj-d3saj-vyych-f3keg-5kor5-yqe",
+          "num_blocks_failures_total": "8416",
+          "num_blocks_proposed_total": "1637748"
+        },
+        {
+          "node_id": "tliwu-apd5m-f5kxi-g37rt-cqcag-4kmua-v7dsq-xsmv4-pvmhr-la6hu-xae",
+          "num_blocks_failures_total": "2771",
+          "num_blocks_proposed_total": "1566111"
+        }
+      ],
+      "subnet_id": "eq6en-6jqla-fbu5s-daskr-h6hx2-376n5-iqabl-qgrng-gfqmv-n3yjr-mqe",
+      "ts": "1720569599307275584"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "wvxfb-eqeex-26z4r-vefff-llfh7-vv76x-pje4o-oh57m-eklny-zcs56-wae",
+          "num_blocks_failures_total": "36242",
+          "num_blocks_proposed_total": "1614565"
+        },
+        {
+          "node_id": "nhkbm-fqj7r-jdjii-spvcr-to3iu-ccrkm-pils3-6io5l-ahtry-qhlly-4ae",
+          "num_blocks_failures_total": "76213",
+          "num_blocks_proposed_total": "1569973"
+        },
+        {
+          "node_id": "rg3ny-2qkvz-btitk-sxuiu-fsl2h-nkmij-lagjs-y4bnq-cb63u-vh2rd-aqe",
+          "num_blocks_failures_total": "4153",
+          "num_blocks_proposed_total": "1649833"
+        },
+        {
+          "node_id": "ebfjs-4yyde-6v3qo-zhvwl-2fvp2-4tarv-autre-tparv-kwi7f-t4wml-fae",
+          "num_blocks_failures_total": "6294",
+          "num_blocks_proposed_total": "1647656"
+        },
+        {
+          "node_id": "ijqzn-wklsd-asfzv-ixif4-u7lrb-dblfi-mcq2d-nrwuk-d6cys-jgnar-7qe",
+          "num_blocks_failures_total": "2524",
+          "num_blocks_proposed_total": "1652088"
+        },
+        {
+          "node_id": "7qvtt-6lr4l-gx337-d6xvn-55ka2-6kcx2-c7iby-w36qm-u3ojf-ildyc-iqe",
+          "num_blocks_failures_total": "4105",
+          "num_blocks_proposed_total": "1650426"
+        },
+        {
+          "node_id": "2lhun-vmepu-zc7ic-6lrjj-o4yda-nlmwn-m4i2i-h4oby-hwv4y-mpv7c-fae",
+          "num_blocks_failures_total": "14082",
+          "num_blocks_proposed_total": "1641058"
+        },
+        {
+          "node_id": "dkx5h-i5d56-xeb37-uldi5-dlgmp-atrom-gyfn7-edeih-i5ph6-2cquy-dqe",
+          "num_blocks_failures_total": "11760",
+          "num_blocks_proposed_total": "1640570"
+        },
+        {
+          "node_id": "s5waw-pnvds-kpwqg-n6bly-r45vy-ax64x-sltbe-bbzl3-74npl-u4sos-mae",
+          "num_blocks_failures_total": "13660",
+          "num_blocks_proposed_total": "1514366"
+        },
+        {
+          "node_id": "mlbpy-pvy7z-gfwcb-5bakp-cuubm-prmi3-dppq6-rlepq-nkyvb-u7acf-fqe",
+          "num_blocks_failures_total": "102278",
+          "num_blocks_proposed_total": "1419585"
+        },
+        {
+          "node_id": "2vmqi-lwsmy-rad75-wus6x-3rlbf-cgig6-rtheo-t42r2-i4vdg-jyguw-uqe",
+          "num_blocks_failures_total": "30845",
+          "num_blocks_proposed_total": "1622262"
+        },
+        {
+          "node_id": "ew5us-dwxat-fg6sp-opp2j-fjjg7-rcmyj-d3saj-vyych-f3keg-5kor5-yqe",
+          "num_blocks_failures_total": "8419",
+          "num_blocks_proposed_total": "1644803"
+        },
+        {
+          "node_id": "tliwu-apd5m-f5kxi-g37rt-cqcag-4kmua-v7dsq-xsmv4-pvmhr-la6hu-xae",
+          "num_blocks_failures_total": "2771",
+          "num_blocks_proposed_total": "1573189"
+        }
+      ],
+      "subnet_id": "eq6en-6jqla-fbu5s-daskr-h6hx2-376n5-iqabl-qgrng-gfqmv-n3yjr-mqe",
+      "ts": "1720655996940677234"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "wvxfb-eqeex-26z4r-vefff-llfh7-vv76x-pje4o-oh57m-eklny-zcs56-wae",
+          "num_blocks_failures_total": "36244",
+          "num_blocks_proposed_total": "1622216"
+        },
+        {
+          "node_id": "nhkbm-fqj7r-jdjii-spvcr-to3iu-ccrkm-pils3-6io5l-ahtry-qhlly-4ae",
+          "num_blocks_failures_total": "76609",
+          "num_blocks_proposed_total": "1577040"
+        },
+        {
+          "node_id": "rg3ny-2qkvz-btitk-sxuiu-fsl2h-nkmij-lagjs-y4bnq-cb63u-vh2rd-aqe",
+          "num_blocks_failures_total": "4153",
+          "num_blocks_proposed_total": "1657478"
+        },
+        {
+          "node_id": "ebfjs-4yyde-6v3qo-zhvwl-2fvp2-4tarv-autre-tparv-kwi7f-t4wml-fae",
+          "num_blocks_failures_total": "6294",
+          "num_blocks_proposed_total": "1655479"
+        },
+        {
+          "node_id": "ijqzn-wklsd-asfzv-ixif4-u7lrb-dblfi-mcq2d-nrwuk-d6cys-jgnar-7qe",
+          "num_blocks_failures_total": "2524",
+          "num_blocks_proposed_total": "1659751"
+        },
+        {
+          "node_id": "7qvtt-6lr4l-gx337-d6xvn-55ka2-6kcx2-c7iby-w36qm-u3ojf-ildyc-iqe",
+          "num_blocks_failures_total": "4110",
+          "num_blocks_proposed_total": "1658096"
+        },
+        {
+          "node_id": "2lhun-vmepu-zc7ic-6lrjj-o4yda-nlmwn-m4i2i-h4oby-hwv4y-mpv7c-fae",
+          "num_blocks_failures_total": "14082",
+          "num_blocks_proposed_total": "1648794"
+        },
+        {
+          "node_id": "dkx5h-i5d56-xeb37-uldi5-dlgmp-atrom-gyfn7-edeih-i5ph6-2cquy-dqe",
+          "num_blocks_failures_total": "11767",
+          "num_blocks_proposed_total": "1648329"
+        },
+        {
+          "node_id": "s5waw-pnvds-kpwqg-n6bly-r45vy-ax64x-sltbe-bbzl3-74npl-u4sos-mae",
+          "num_blocks_failures_total": "13715",
+          "num_blocks_proposed_total": "1522008"
+        },
+        {
+          "node_id": "mlbpy-pvy7z-gfwcb-5bakp-cuubm-prmi3-dppq6-rlepq-nkyvb-u7acf-fqe",
+          "num_blocks_failures_total": "102319",
+          "num_blocks_proposed_total": "1427253"
+        },
+        {
+          "node_id": "2vmqi-lwsmy-rad75-wus6x-3rlbf-cgig6-rtheo-t42r2-i4vdg-jyguw-uqe",
+          "num_blocks_failures_total": "30849",
+          "num_blocks_proposed_total": "1629797"
+        },
+        {
+          "node_id": "ew5us-dwxat-fg6sp-opp2j-fjjg7-rcmyj-d3saj-vyych-f3keg-5kor5-yqe",
+          "num_blocks_failures_total": "8419",
+          "num_blocks_proposed_total": "1652556"
+        },
+        {
+          "node_id": "tliwu-apd5m-f5kxi-g37rt-cqcag-4kmua-v7dsq-xsmv4-pvmhr-la6hu-xae",
+          "num_blocks_failures_total": "2771",
+          "num_blocks_proposed_total": "1580799"
+        }
+      ],
+      "subnet_id": "eq6en-6jqla-fbu5s-daskr-h6hx2-376n5-iqabl-qgrng-gfqmv-n3yjr-mqe",
+      "ts": "1720742399761110956"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "wvxfb-eqeex-26z4r-vefff-llfh7-vv76x-pje4o-oh57m-eklny-zcs56-wae",
+          "num_blocks_failures_total": "36244",
+          "num_blocks_proposed_total": "1630031"
+        },
+        {
+          "node_id": "nhkbm-fqj7r-jdjii-spvcr-to3iu-ccrkm-pils3-6io5l-ahtry-qhlly-4ae",
+          "num_blocks_failures_total": "77068",
+          "num_blocks_proposed_total": "1584186"
+        },
+        {
+          "node_id": "rg3ny-2qkvz-btitk-sxuiu-fsl2h-nkmij-lagjs-y4bnq-cb63u-vh2rd-aqe",
+          "num_blocks_failures_total": "4153",
+          "num_blocks_proposed_total": "1665253"
+        },
+        {
+          "node_id": "ebfjs-4yyde-6v3qo-zhvwl-2fvp2-4tarv-autre-tparv-kwi7f-t4wml-fae",
+          "num_blocks_failures_total": "6294",
+          "num_blocks_proposed_total": "1663179"
+        },
+        {
+          "node_id": "ijqzn-wklsd-asfzv-ixif4-u7lrb-dblfi-mcq2d-nrwuk-d6cys-jgnar-7qe",
+          "num_blocks_failures_total": "2525",
+          "num_blocks_proposed_total": "1667437"
+        },
+        {
+          "node_id": "7qvtt-6lr4l-gx337-d6xvn-55ka2-6kcx2-c7iby-w36qm-u3ojf-ildyc-iqe",
+          "num_blocks_failures_total": "4114",
+          "num_blocks_proposed_total": "1665830"
+        },
+        {
+          "node_id": "2lhun-vmepu-zc7ic-6lrjj-o4yda-nlmwn-m4i2i-h4oby-hwv4y-mpv7c-fae",
+          "num_blocks_failures_total": "14082",
+          "num_blocks_proposed_total": "1656496"
+        },
+        {
+          "node_id": "dkx5h-i5d56-xeb37-uldi5-dlgmp-atrom-gyfn7-edeih-i5ph6-2cquy-dqe",
+          "num_blocks_failures_total": "11768",
+          "num_blocks_proposed_total": "1656094"
+        },
+        {
+          "node_id": "s5waw-pnvds-kpwqg-n6bly-r45vy-ax64x-sltbe-bbzl3-74npl-u4sos-mae",
+          "num_blocks_failures_total": "13755",
+          "num_blocks_proposed_total": "1529439"
+        },
+        {
+          "node_id": "mlbpy-pvy7z-gfwcb-5bakp-cuubm-prmi3-dppq6-rlepq-nkyvb-u7acf-fqe",
+          "num_blocks_failures_total": "102361",
+          "num_blocks_proposed_total": "1434849"
+        },
+        {
+          "node_id": "2vmqi-lwsmy-rad75-wus6x-3rlbf-cgig6-rtheo-t42r2-i4vdg-jyguw-uqe",
+          "num_blocks_failures_total": "30854",
+          "num_blocks_proposed_total": "1637450"
+        },
+        {
+          "node_id": "ew5us-dwxat-fg6sp-opp2j-fjjg7-rcmyj-d3saj-vyych-f3keg-5kor5-yqe",
+          "num_blocks_failures_total": "8419",
+          "num_blocks_proposed_total": "1660341"
+        },
+        {
+          "node_id": "tliwu-apd5m-f5kxi-g37rt-cqcag-4kmua-v7dsq-xsmv4-pvmhr-la6hu-xae",
+          "num_blocks_failures_total": "2771",
+          "num_blocks_proposed_total": "1588472"
+        }
+      ],
+      "subnet_id": "eq6en-6jqla-fbu5s-daskr-h6hx2-376n5-iqabl-qgrng-gfqmv-n3yjr-mqe",
+      "ts": "1720828799363703300"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "wvxfb-eqeex-26z4r-vefff-llfh7-vv76x-pje4o-oh57m-eklny-zcs56-wae",
+          "num_blocks_failures_total": "36260",
+          "num_blocks_proposed_total": "1637700"
+        },
+        {
+          "node_id": "nhkbm-fqj7r-jdjii-spvcr-to3iu-ccrkm-pils3-6io5l-ahtry-qhlly-4ae",
+          "num_blocks_failures_total": "77353",
+          "num_blocks_proposed_total": "1591657"
+        },
+        {
+          "node_id": "rg3ny-2qkvz-btitk-sxuiu-fsl2h-nkmij-lagjs-y4bnq-cb63u-vh2rd-aqe",
+          "num_blocks_failures_total": "4153",
+          "num_blocks_proposed_total": "1672949"
+        },
+        {
+          "node_id": "ebfjs-4yyde-6v3qo-zhvwl-2fvp2-4tarv-autre-tparv-kwi7f-t4wml-fae",
+          "num_blocks_failures_total": "6295",
+          "num_blocks_proposed_total": "1670837"
+        },
+        {
+          "node_id": "ijqzn-wklsd-asfzv-ixif4-u7lrb-dblfi-mcq2d-nrwuk-d6cys-jgnar-7qe",
+          "num_blocks_failures_total": "2525",
+          "num_blocks_proposed_total": "1675204"
+        },
+        {
+          "node_id": "7qvtt-6lr4l-gx337-d6xvn-55ka2-6kcx2-c7iby-w36qm-u3ojf-ildyc-iqe",
+          "num_blocks_failures_total": "4117",
+          "num_blocks_proposed_total": "1673495"
+        },
+        {
+          "node_id": "2lhun-vmepu-zc7ic-6lrjj-o4yda-nlmwn-m4i2i-h4oby-hwv4y-mpv7c-fae",
+          "num_blocks_failures_total": "14083",
+          "num_blocks_proposed_total": "1664262"
+        },
+        {
+          "node_id": "dkx5h-i5d56-xeb37-uldi5-dlgmp-atrom-gyfn7-edeih-i5ph6-2cquy-dqe",
+          "num_blocks_failures_total": "11771",
+          "num_blocks_proposed_total": "1663640"
+        },
+        {
+          "node_id": "s5waw-pnvds-kpwqg-n6bly-r45vy-ax64x-sltbe-bbzl3-74npl-u4sos-mae",
+          "num_blocks_failures_total": "13768",
+          "num_blocks_proposed_total": "1537080"
+        },
+        {
+          "node_id": "mlbpy-pvy7z-gfwcb-5bakp-cuubm-prmi3-dppq6-rlepq-nkyvb-u7acf-fqe",
+          "num_blocks_failures_total": "102375",
+          "num_blocks_proposed_total": "1442427"
+        },
+        {
+          "node_id": "2vmqi-lwsmy-rad75-wus6x-3rlbf-cgig6-rtheo-t42r2-i4vdg-jyguw-uqe",
+          "num_blocks_failures_total": "30860",
+          "num_blocks_proposed_total": "1645195"
+        },
+        {
+          "node_id": "ew5us-dwxat-fg6sp-opp2j-fjjg7-rcmyj-d3saj-vyych-f3keg-5kor5-yqe",
+          "num_blocks_failures_total": "8419",
+          "num_blocks_proposed_total": "1668143"
+        },
+        {
+          "node_id": "tliwu-apd5m-f5kxi-g37rt-cqcag-4kmua-v7dsq-xsmv4-pvmhr-la6hu-xae",
+          "num_blocks_failures_total": "2771",
+          "num_blocks_proposed_total": "1596182"
+        }
+      ],
+      "subnet_id": "eq6en-6jqla-fbu5s-daskr-h6hx2-376n5-iqabl-qgrng-gfqmv-n3yjr-mqe",
+      "ts": "1720915199897470649"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "wvxfb-eqeex-26z4r-vefff-llfh7-vv76x-pje4o-oh57m-eklny-zcs56-wae",
+          "num_blocks_failures_total": "36260",
+          "num_blocks_proposed_total": "1645323"
+        },
+        {
+          "node_id": "nhkbm-fqj7r-jdjii-spvcr-to3iu-ccrkm-pils3-6io5l-ahtry-qhlly-4ae",
+          "num_blocks_failures_total": "77633",
+          "num_blocks_proposed_total": "1598908"
+        },
+        {
+          "node_id": "rg3ny-2qkvz-btitk-sxuiu-fsl2h-nkmij-lagjs-y4bnq-cb63u-vh2rd-aqe",
+          "num_blocks_failures_total": "4153",
+          "num_blocks_proposed_total": "1680516"
+        },
+        {
+          "node_id": "ebfjs-4yyde-6v3qo-zhvwl-2fvp2-4tarv-autre-tparv-kwi7f-t4wml-fae",
+          "num_blocks_failures_total": "6296",
+          "num_blocks_proposed_total": "1678531"
+        },
+        {
+          "node_id": "ijqzn-wklsd-asfzv-ixif4-u7lrb-dblfi-mcq2d-nrwuk-d6cys-jgnar-7qe",
+          "num_blocks_failures_total": "2525",
+          "num_blocks_proposed_total": "1682963"
+        },
+        {
+          "node_id": "7qvtt-6lr4l-gx337-d6xvn-55ka2-6kcx2-c7iby-w36qm-u3ojf-ildyc-iqe",
+          "num_blocks_failures_total": "4120",
+          "num_blocks_proposed_total": "1681298"
+        },
+        {
+          "node_id": "2lhun-vmepu-zc7ic-6lrjj-o4yda-nlmwn-m4i2i-h4oby-hwv4y-mpv7c-fae",
+          "num_blocks_failures_total": "14084",
+          "num_blocks_proposed_total": "1672085"
+        },
+        {
+          "node_id": "dkx5h-i5d56-xeb37-uldi5-dlgmp-atrom-gyfn7-edeih-i5ph6-2cquy-dqe",
+          "num_blocks_failures_total": "11776",
+          "num_blocks_proposed_total": "1671368"
+        },
+        {
+          "node_id": "s5waw-pnvds-kpwqg-n6bly-r45vy-ax64x-sltbe-bbzl3-74npl-u4sos-mae",
+          "num_blocks_failures_total": "13794",
+          "num_blocks_proposed_total": "1544609"
+        },
+        {
+          "node_id": "mlbpy-pvy7z-gfwcb-5bakp-cuubm-prmi3-dppq6-rlepq-nkyvb-u7acf-fqe",
+          "num_blocks_failures_total": "102413",
+          "num_blocks_proposed_total": "1449983"
+        },
+        {
+          "node_id": "2vmqi-lwsmy-rad75-wus6x-3rlbf-cgig6-rtheo-t42r2-i4vdg-jyguw-uqe",
+          "num_blocks_failures_total": "30860",
+          "num_blocks_proposed_total": "1652653"
+        },
+        {
+          "node_id": "ew5us-dwxat-fg6sp-opp2j-fjjg7-rcmyj-d3saj-vyych-f3keg-5kor5-yqe",
+          "num_blocks_failures_total": "8419",
+          "num_blocks_proposed_total": "1676012"
+        },
+        {
+          "node_id": "tliwu-apd5m-f5kxi-g37rt-cqcag-4kmua-v7dsq-xsmv4-pvmhr-la6hu-xae",
+          "num_blocks_failures_total": "2771",
+          "num_blocks_proposed_total": "1603816"
+        }
+      ],
+      "subnet_id": "eq6en-6jqla-fbu5s-daskr-h6hx2-376n5-iqabl-qgrng-gfqmv-n3yjr-mqe",
+      "ts": "1721001599400182175"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "wvxfb-eqeex-26z4r-vefff-llfh7-vv76x-pje4o-oh57m-eklny-zcs56-wae",
+          "num_blocks_failures_total": "36261",
+          "num_blocks_proposed_total": "1653066"
+        },
+        {
+          "node_id": "nhkbm-fqj7r-jdjii-spvcr-to3iu-ccrkm-pils3-6io5l-ahtry-qhlly-4ae",
+          "num_blocks_failures_total": "77999",
+          "num_blocks_proposed_total": "1606149"
+        },
+        {
+          "node_id": "rg3ny-2qkvz-btitk-sxuiu-fsl2h-nkmij-lagjs-y4bnq-cb63u-vh2rd-aqe",
+          "num_blocks_failures_total": "4153",
+          "num_blocks_proposed_total": "1688199"
+        },
+        {
+          "node_id": "ebfjs-4yyde-6v3qo-zhvwl-2fvp2-4tarv-autre-tparv-kwi7f-t4wml-fae",
+          "num_blocks_failures_total": "6296",
+          "num_blocks_proposed_total": "1686186"
+        },
+        {
+          "node_id": "ijqzn-wklsd-asfzv-ixif4-u7lrb-dblfi-mcq2d-nrwuk-d6cys-jgnar-7qe",
+          "num_blocks_failures_total": "2525",
+          "num_blocks_proposed_total": "1690686"
+        },
+        {
+          "node_id": "7qvtt-6lr4l-gx337-d6xvn-55ka2-6kcx2-c7iby-w36qm-u3ojf-ildyc-iqe",
+          "num_blocks_failures_total": "4123",
+          "num_blocks_proposed_total": "1688769"
+        },
+        {
+          "node_id": "2lhun-vmepu-zc7ic-6lrjj-o4yda-nlmwn-m4i2i-h4oby-hwv4y-mpv7c-fae",
+          "num_blocks_failures_total": "14084",
+          "num_blocks_proposed_total": "1679848"
+        },
+        {
+          "node_id": "dkx5h-i5d56-xeb37-uldi5-dlgmp-atrom-gyfn7-edeih-i5ph6-2cquy-dqe",
+          "num_blocks_failures_total": "11780",
+          "num_blocks_proposed_total": "1679076"
+        },
+        {
+          "node_id": "s5waw-pnvds-kpwqg-n6bly-r45vy-ax64x-sltbe-bbzl3-74npl-u4sos-mae",
+          "num_blocks_failures_total": "13811",
+          "num_blocks_proposed_total": "1552276"
+        },
+        {
+          "node_id": "mlbpy-pvy7z-gfwcb-5bakp-cuubm-prmi3-dppq6-rlepq-nkyvb-u7acf-fqe",
+          "num_blocks_failures_total": "102428",
+          "num_blocks_proposed_total": "1457529"
+        },
+        {
+          "node_id": "2vmqi-lwsmy-rad75-wus6x-3rlbf-cgig6-rtheo-t42r2-i4vdg-jyguw-uqe",
+          "num_blocks_failures_total": "30869",
+          "num_blocks_proposed_total": "1660332"
+        },
+        {
+          "node_id": "ew5us-dwxat-fg6sp-opp2j-fjjg7-rcmyj-d3saj-vyych-f3keg-5kor5-yqe",
+          "num_blocks_failures_total": "8419",
+          "num_blocks_proposed_total": "1683809"
+        },
+        {
+          "node_id": "tliwu-apd5m-f5kxi-g37rt-cqcag-4kmua-v7dsq-xsmv4-pvmhr-la6hu-xae",
+          "num_blocks_failures_total": "2771",
+          "num_blocks_proposed_total": "1611466"
+        }
+      ],
+      "subnet_id": "eq6en-6jqla-fbu5s-daskr-h6hx2-376n5-iqabl-qgrng-gfqmv-n3yjr-mqe",
+      "ts": "1721087983518056187"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "wvxfb-eqeex-26z4r-vefff-llfh7-vv76x-pje4o-oh57m-eklny-zcs56-wae",
+          "num_blocks_failures_total": "36261",
+          "num_blocks_proposed_total": "1660650"
+        },
+        {
+          "node_id": "nhkbm-fqj7r-jdjii-spvcr-to3iu-ccrkm-pils3-6io5l-ahtry-qhlly-4ae",
+          "num_blocks_failures_total": "78688",
+          "num_blocks_proposed_total": "1612941"
+        },
+        {
+          "node_id": "rg3ny-2qkvz-btitk-sxuiu-fsl2h-nkmij-lagjs-y4bnq-cb63u-vh2rd-aqe",
+          "num_blocks_failures_total": "4153",
+          "num_blocks_proposed_total": "1695942"
+        },
+        {
+          "node_id": "ebfjs-4yyde-6v3qo-zhvwl-2fvp2-4tarv-autre-tparv-kwi7f-t4wml-fae",
+          "num_blocks_failures_total": "6296",
+          "num_blocks_proposed_total": "1693979"
+        },
+        {
+          "node_id": "ijqzn-wklsd-asfzv-ixif4-u7lrb-dblfi-mcq2d-nrwuk-d6cys-jgnar-7qe",
+          "num_blocks_failures_total": "2525",
+          "num_blocks_proposed_total": "1698340"
+        },
+        {
+          "node_id": "7qvtt-6lr4l-gx337-d6xvn-55ka2-6kcx2-c7iby-w36qm-u3ojf-ildyc-iqe",
+          "num_blocks_failures_total": "4132",
+          "num_blocks_proposed_total": "1696496"
+        },
+        {
+          "node_id": "2lhun-vmepu-zc7ic-6lrjj-o4yda-nlmwn-m4i2i-h4oby-hwv4y-mpv7c-fae",
+          "num_blocks_failures_total": "14088",
+          "num_blocks_proposed_total": "1687619"
+        },
+        {
+          "node_id": "dkx5h-i5d56-xeb37-uldi5-dlgmp-atrom-gyfn7-edeih-i5ph6-2cquy-dqe",
+          "num_blocks_failures_total": "11783",
+          "num_blocks_proposed_total": "1686782"
+        },
+        {
+          "node_id": "s5waw-pnvds-kpwqg-n6bly-r45vy-ax64x-sltbe-bbzl3-74npl-u4sos-mae",
+          "num_blocks_failures_total": "13832",
+          "num_blocks_proposed_total": "1560021"
+        },
+        {
+          "node_id": "mlbpy-pvy7z-gfwcb-5bakp-cuubm-prmi3-dppq6-rlepq-nkyvb-u7acf-fqe",
+          "num_blocks_failures_total": "102463",
+          "num_blocks_proposed_total": "1465147"
+        },
+        {
+          "node_id": "2vmqi-lwsmy-rad75-wus6x-3rlbf-cgig6-rtheo-t42r2-i4vdg-jyguw-uqe",
+          "num_blocks_failures_total": "30879",
+          "num_blocks_proposed_total": "1667916"
+        },
+        {
+          "node_id": "ew5us-dwxat-fg6sp-opp2j-fjjg7-rcmyj-d3saj-vyych-f3keg-5kor5-yqe",
+          "num_blocks_failures_total": "8419",
+          "num_blocks_proposed_total": "1691478"
+        },
+        {
+          "node_id": "tliwu-apd5m-f5kxi-g37rt-cqcag-4kmua-v7dsq-xsmv4-pvmhr-la6hu-xae",
+          "num_blocks_failures_total": "2771",
+          "num_blocks_proposed_total": "1619179"
+        }
+      ],
+      "subnet_id": "eq6en-6jqla-fbu5s-daskr-h6hx2-376n5-iqabl-qgrng-gfqmv-n3yjr-mqe",
+      "ts": "1721174399995734360"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "wvxfb-eqeex-26z4r-vefff-llfh7-vv76x-pje4o-oh57m-eklny-zcs56-wae",
+          "num_blocks_failures_total": "36261",
+          "num_blocks_proposed_total": "1668028"
+        },
+        {
+          "node_id": "nhkbm-fqj7r-jdjii-spvcr-to3iu-ccrkm-pils3-6io5l-ahtry-qhlly-4ae",
+          "num_blocks_failures_total": "80020",
+          "num_blocks_proposed_total": "1618791"
+        },
+        {
+          "node_id": "rg3ny-2qkvz-btitk-sxuiu-fsl2h-nkmij-lagjs-y4bnq-cb63u-vh2rd-aqe",
+          "num_blocks_failures_total": "4154",
+          "num_blocks_proposed_total": "1703200"
+        },
+        {
+          "node_id": "ebfjs-4yyde-6v3qo-zhvwl-2fvp2-4tarv-autre-tparv-kwi7f-t4wml-fae",
+          "num_blocks_failures_total": "6296",
+          "num_blocks_proposed_total": "1701415"
+        },
+        {
+          "node_id": "ijqzn-wklsd-asfzv-ixif4-u7lrb-dblfi-mcq2d-nrwuk-d6cys-jgnar-7qe",
+          "num_blocks_failures_total": "2527",
+          "num_blocks_proposed_total": "1705636"
+        },
+        {
+          "node_id": "7qvtt-6lr4l-gx337-d6xvn-55ka2-6kcx2-c7iby-w36qm-u3ojf-ildyc-iqe",
+          "num_blocks_failures_total": "4147",
+          "num_blocks_proposed_total": "1703628"
+        },
+        {
+          "node_id": "2lhun-vmepu-zc7ic-6lrjj-o4yda-nlmwn-m4i2i-h4oby-hwv4y-mpv7c-fae",
+          "num_blocks_failures_total": "14165",
+          "num_blocks_proposed_total": "1694830"
+        },
+        {
+          "node_id": "dkx5h-i5d56-xeb37-uldi5-dlgmp-atrom-gyfn7-edeih-i5ph6-2cquy-dqe",
+          "num_blocks_failures_total": "11907",
+          "num_blocks_proposed_total": "1693860"
+        },
+        {
+          "node_id": "s5waw-pnvds-kpwqg-n6bly-r45vy-ax64x-sltbe-bbzl3-74npl-u4sos-mae",
+          "num_blocks_failures_total": "13919",
+          "num_blocks_proposed_total": "1567303"
+        },
+        {
+          "node_id": "mlbpy-pvy7z-gfwcb-5bakp-cuubm-prmi3-dppq6-rlepq-nkyvb-u7acf-fqe",
+          "num_blocks_failures_total": "102740",
+          "num_blocks_proposed_total": "1472275"
+        },
+        {
+          "node_id": "2vmqi-lwsmy-rad75-wus6x-3rlbf-cgig6-rtheo-t42r2-i4vdg-jyguw-uqe",
+          "num_blocks_failures_total": "30904",
+          "num_blocks_proposed_total": "1675214"
+        },
+        {
+          "node_id": "ew5us-dwxat-fg6sp-opp2j-fjjg7-rcmyj-d3saj-vyych-f3keg-5kor5-yqe",
+          "num_blocks_failures_total": "8419",
+          "num_blocks_proposed_total": "1698830"
+        },
+        {
+          "node_id": "tliwu-apd5m-f5kxi-g37rt-cqcag-4kmua-v7dsq-xsmv4-pvmhr-la6hu-xae",
+          "num_blocks_failures_total": "2772",
+          "num_blocks_proposed_total": "1626525"
+        }
+      ],
+      "subnet_id": "eq6en-6jqla-fbu5s-daskr-h6hx2-376n5-iqabl-qgrng-gfqmv-n3yjr-mqe",
+      "ts": "1721260799498003142"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "wvxfb-eqeex-26z4r-vefff-llfh7-vv76x-pje4o-oh57m-eklny-zcs56-wae",
+          "num_blocks_failures_total": "36261",
+          "num_blocks_proposed_total": "1674459"
+        },
+        {
+          "node_id": "nhkbm-fqj7r-jdjii-spvcr-to3iu-ccrkm-pils3-6io5l-ahtry-qhlly-4ae",
+          "num_blocks_failures_total": "82427",
+          "num_blocks_proposed_total": "1622820"
+        },
+        {
+          "node_id": "rg3ny-2qkvz-btitk-sxuiu-fsl2h-nkmij-lagjs-y4bnq-cb63u-vh2rd-aqe",
+          "num_blocks_failures_total": "4154",
+          "num_blocks_proposed_total": "1709682"
+        },
+        {
+          "node_id": "ebfjs-4yyde-6v3qo-zhvwl-2fvp2-4tarv-autre-tparv-kwi7f-t4wml-fae",
+          "num_blocks_failures_total": "6296",
+          "num_blocks_proposed_total": "1708025"
+        },
+        {
+          "node_id": "ijqzn-wklsd-asfzv-ixif4-u7lrb-dblfi-mcq2d-nrwuk-d6cys-jgnar-7qe",
+          "num_blocks_failures_total": "2543",
+          "num_blocks_proposed_total": "1711990"
+        },
+        {
+          "node_id": "7qvtt-6lr4l-gx337-d6xvn-55ka2-6kcx2-c7iby-w36qm-u3ojf-ildyc-iqe",
+          "num_blocks_failures_total": "4148",
+          "num_blocks_proposed_total": "1710062"
+        },
+        {
+          "node_id": "2lhun-vmepu-zc7ic-6lrjj-o4yda-nlmwn-m4i2i-h4oby-hwv4y-mpv7c-fae",
+          "num_blocks_failures_total": "14194",
+          "num_blocks_proposed_total": "1701369"
+        },
+        {
+          "node_id": "dkx5h-i5d56-xeb37-uldi5-dlgmp-atrom-gyfn7-edeih-i5ph6-2cquy-dqe",
+          "num_blocks_failures_total": "12202",
+          "num_blocks_proposed_total": "1700109"
+        },
+        {
+          "node_id": "s5waw-pnvds-kpwqg-n6bly-r45vy-ax64x-sltbe-bbzl3-74npl-u4sos-mae",
+          "num_blocks_failures_total": "13947",
+          "num_blocks_proposed_total": "1573818"
+        },
+        {
+          "node_id": "mlbpy-pvy7z-gfwcb-5bakp-cuubm-prmi3-dppq6-rlepq-nkyvb-u7acf-fqe",
+          "num_blocks_failures_total": "102917",
+          "num_blocks_proposed_total": "1478541"
+        },
+        {
+          "node_id": "2vmqi-lwsmy-rad75-wus6x-3rlbf-cgig6-rtheo-t42r2-i4vdg-jyguw-uqe",
+          "num_blocks_failures_total": "30966",
+          "num_blocks_proposed_total": "1681566"
+        },
+        {
+          "node_id": "ew5us-dwxat-fg6sp-opp2j-fjjg7-rcmyj-d3saj-vyych-f3keg-5kor5-yqe",
+          "num_blocks_failures_total": "8419",
+          "num_blocks_proposed_total": "1705294"
+        },
+        {
+          "node_id": "tliwu-apd5m-f5kxi-g37rt-cqcag-4kmua-v7dsq-xsmv4-pvmhr-la6hu-xae",
+          "num_blocks_failures_total": "2773",
+          "num_blocks_proposed_total": "1633003"
+        }
+      ],
+      "subnet_id": "eq6en-6jqla-fbu5s-daskr-h6hx2-376n5-iqabl-qgrng-gfqmv-n3yjr-mqe",
+      "ts": "1721347199384558936"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "wvxfb-eqeex-26z4r-vefff-llfh7-vv76x-pje4o-oh57m-eklny-zcs56-wae",
+          "num_blocks_failures_total": "36261",
+          "num_blocks_proposed_total": "1681576"
+        },
+        {
+          "node_id": "nhkbm-fqj7r-jdjii-spvcr-to3iu-ccrkm-pils3-6io5l-ahtry-qhlly-4ae",
+          "num_blocks_failures_total": "84130",
+          "num_blocks_proposed_total": "1628044"
+        },
+        {
+          "node_id": "rg3ny-2qkvz-btitk-sxuiu-fsl2h-nkmij-lagjs-y4bnq-cb63u-vh2rd-aqe",
+          "num_blocks_failures_total": "4154",
+          "num_blocks_proposed_total": "1716704"
+        },
+        {
+          "node_id": "ebfjs-4yyde-6v3qo-zhvwl-2fvp2-4tarv-autre-tparv-kwi7f-t4wml-fae",
+          "num_blocks_failures_total": "6297",
+          "num_blocks_proposed_total": "1715067"
+        },
+        {
+          "node_id": "ijqzn-wklsd-asfzv-ixif4-u7lrb-dblfi-mcq2d-nrwuk-d6cys-jgnar-7qe",
+          "num_blocks_failures_total": "2548",
+          "num_blocks_proposed_total": "1719048"
+        },
+        {
+          "node_id": "7qvtt-6lr4l-gx337-d6xvn-55ka2-6kcx2-c7iby-w36qm-u3ojf-ildyc-iqe",
+          "num_blocks_failures_total": "4169",
+          "num_blocks_proposed_total": "1717205"
+        },
+        {
+          "node_id": "2lhun-vmepu-zc7ic-6lrjj-o4yda-nlmwn-m4i2i-h4oby-hwv4y-mpv7c-fae",
+          "num_blocks_failures_total": "14211",
+          "num_blocks_proposed_total": "1708450"
+        },
+        {
+          "node_id": "dkx5h-i5d56-xeb37-uldi5-dlgmp-atrom-gyfn7-edeih-i5ph6-2cquy-dqe",
+          "num_blocks_failures_total": "12449",
+          "num_blocks_proposed_total": "1707047"
+        },
+        {
+          "node_id": "s5waw-pnvds-kpwqg-n6bly-r45vy-ax64x-sltbe-bbzl3-74npl-u4sos-mae",
+          "num_blocks_failures_total": "13963",
+          "num_blocks_proposed_total": "1580932"
+        },
+        {
+          "node_id": "mlbpy-pvy7z-gfwcb-5bakp-cuubm-prmi3-dppq6-rlepq-nkyvb-u7acf-fqe",
+          "num_blocks_failures_total": "103110",
+          "num_blocks_proposed_total": "1485616"
+        },
+        {
+          "node_id": "2vmqi-lwsmy-rad75-wus6x-3rlbf-cgig6-rtheo-t42r2-i4vdg-jyguw-uqe",
+          "num_blocks_failures_total": "30987",
+          "num_blocks_proposed_total": "1688806"
+        },
+        {
+          "node_id": "ew5us-dwxat-fg6sp-opp2j-fjjg7-rcmyj-d3saj-vyych-f3keg-5kor5-yqe",
+          "num_blocks_failures_total": "8445",
+          "num_blocks_proposed_total": "1712419"
+        },
+        {
+          "node_id": "tliwu-apd5m-f5kxi-g37rt-cqcag-4kmua-v7dsq-xsmv4-pvmhr-la6hu-xae",
+          "num_blocks_failures_total": "2773",
+          "num_blocks_proposed_total": "1640106"
+        }
+      ],
+      "subnet_id": "eq6en-6jqla-fbu5s-daskr-h6hx2-376n5-iqabl-qgrng-gfqmv-n3yjr-mqe",
+      "ts": "1721433599492189782"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "wvxfb-eqeex-26z4r-vefff-llfh7-vv76x-pje4o-oh57m-eklny-zcs56-wae",
+          "num_blocks_failures_total": "36261",
+          "num_blocks_proposed_total": "1688688"
+        },
+        {
+          "node_id": "nhkbm-fqj7r-jdjii-spvcr-to3iu-ccrkm-pils3-6io5l-ahtry-qhlly-4ae",
+          "num_blocks_failures_total": "86336",
+          "num_blocks_proposed_total": "1632797"
+        },
+        {
+          "node_id": "rg3ny-2qkvz-btitk-sxuiu-fsl2h-nkmij-lagjs-y4bnq-cb63u-vh2rd-aqe",
+          "num_blocks_failures_total": "4154",
+          "num_blocks_proposed_total": "1723974"
+        },
+        {
+          "node_id": "ebfjs-4yyde-6v3qo-zhvwl-2fvp2-4tarv-autre-tparv-kwi7f-t4wml-fae",
+          "num_blocks_failures_total": "6297",
+          "num_blocks_proposed_total": "1722251"
+        },
+        {
+          "node_id": "ijqzn-wklsd-asfzv-ixif4-u7lrb-dblfi-mcq2d-nrwuk-d6cys-jgnar-7qe",
+          "num_blocks_failures_total": "2549",
+          "num_blocks_proposed_total": "1726197"
+        },
+        {
+          "node_id": "7qvtt-6lr4l-gx337-d6xvn-55ka2-6kcx2-c7iby-w36qm-u3ojf-ildyc-iqe",
+          "num_blocks_failures_total": "4187",
+          "num_blocks_proposed_total": "1724292"
+        },
+        {
+          "node_id": "2lhun-vmepu-zc7ic-6lrjj-o4yda-nlmwn-m4i2i-h4oby-hwv4y-mpv7c-fae",
+          "num_blocks_failures_total": "14221",
+          "num_blocks_proposed_total": "1715719"
+        },
+        {
+          "node_id": "dkx5h-i5d56-xeb37-uldi5-dlgmp-atrom-gyfn7-edeih-i5ph6-2cquy-dqe",
+          "num_blocks_failures_total": "12475",
+          "num_blocks_proposed_total": "1714196"
+        },
+        {
+          "node_id": "s5waw-pnvds-kpwqg-n6bly-r45vy-ax64x-sltbe-bbzl3-74npl-u4sos-mae",
+          "num_blocks_failures_total": "13999",
+          "num_blocks_proposed_total": "1587950"
+        },
+        {
+          "node_id": "mlbpy-pvy7z-gfwcb-5bakp-cuubm-prmi3-dppq6-rlepq-nkyvb-u7acf-fqe",
+          "num_blocks_failures_total": "103205",
+          "num_blocks_proposed_total": "1492802"
+        },
+        {
+          "node_id": "2vmqi-lwsmy-rad75-wus6x-3rlbf-cgig6-rtheo-t42r2-i4vdg-jyguw-uqe",
+          "num_blocks_failures_total": "31064",
+          "num_blocks_proposed_total": "1695818"
+        },
+        {
+          "node_id": "ew5us-dwxat-fg6sp-opp2j-fjjg7-rcmyj-d3saj-vyych-f3keg-5kor5-yqe",
+          "num_blocks_failures_total": "8446",
+          "num_blocks_proposed_total": "1719541"
+        },
+        {
+          "node_id": "tliwu-apd5m-f5kxi-g37rt-cqcag-4kmua-v7dsq-xsmv4-pvmhr-la6hu-xae",
+          "num_blocks_failures_total": "2773",
+          "num_blocks_proposed_total": "1647295"
+        }
+      ],
+      "subnet_id": "eq6en-6jqla-fbu5s-daskr-h6hx2-376n5-iqabl-qgrng-gfqmv-n3yjr-mqe",
+      "ts": "1721519999389008524"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "wvxfb-eqeex-26z4r-vefff-llfh7-vv76x-pje4o-oh57m-eklny-zcs56-wae",
+          "num_blocks_failures_total": "36264",
+          "num_blocks_proposed_total": "1695814"
+        },
+        {
+          "node_id": "nhkbm-fqj7r-jdjii-spvcr-to3iu-ccrkm-pils3-6io5l-ahtry-qhlly-4ae",
+          "num_blocks_failures_total": "88961",
+          "num_blocks_proposed_total": "1637136"
+        },
+        {
+          "node_id": "rg3ny-2qkvz-btitk-sxuiu-fsl2h-nkmij-lagjs-y4bnq-cb63u-vh2rd-aqe",
+          "num_blocks_failures_total": "4154",
+          "num_blocks_proposed_total": "1731204"
+        },
+        {
+          "node_id": "ebfjs-4yyde-6v3qo-zhvwl-2fvp2-4tarv-autre-tparv-kwi7f-t4wml-fae",
+          "num_blocks_failures_total": "6297",
+          "num_blocks_proposed_total": "1729440"
+        },
+        {
+          "node_id": "ijqzn-wklsd-asfzv-ixif4-u7lrb-dblfi-mcq2d-nrwuk-d6cys-jgnar-7qe",
+          "num_blocks_failures_total": "2549",
+          "num_blocks_proposed_total": "1733131"
+        },
+        {
+          "node_id": "7qvtt-6lr4l-gx337-d6xvn-55ka2-6kcx2-c7iby-w36qm-u3ojf-ildyc-iqe",
+          "num_blocks_failures_total": "4196",
+          "num_blocks_proposed_total": "1731581"
+        },
+        {
+          "node_id": "2lhun-vmepu-zc7ic-6lrjj-o4yda-nlmwn-m4i2i-h4oby-hwv4y-mpv7c-fae",
+          "num_blocks_failures_total": "14234",
+          "num_blocks_proposed_total": "1722861"
+        },
+        {
+          "node_id": "dkx5h-i5d56-xeb37-uldi5-dlgmp-atrom-gyfn7-edeih-i5ph6-2cquy-dqe",
+          "num_blocks_failures_total": "12482",
+          "num_blocks_proposed_total": "1721512"
+        },
+        {
+          "node_id": "s5waw-pnvds-kpwqg-n6bly-r45vy-ax64x-sltbe-bbzl3-74npl-u4sos-mae",
+          "num_blocks_failures_total": "14060",
+          "num_blocks_proposed_total": "1594979"
+        },
+        {
+          "node_id": "mlbpy-pvy7z-gfwcb-5bakp-cuubm-prmi3-dppq6-rlepq-nkyvb-u7acf-fqe",
+          "num_blocks_failures_total": "103337",
+          "num_blocks_proposed_total": "1499832"
+        },
+        {
+          "node_id": "2vmqi-lwsmy-rad75-wus6x-3rlbf-cgig6-rtheo-t42r2-i4vdg-jyguw-uqe",
+          "num_blocks_failures_total": "31099",
+          "num_blocks_proposed_total": "1703006"
+        },
+        {
+          "node_id": "ew5us-dwxat-fg6sp-opp2j-fjjg7-rcmyj-d3saj-vyych-f3keg-5kor5-yqe",
+          "num_blocks_failures_total": "8447",
+          "num_blocks_proposed_total": "1726695"
+        },
+        {
+          "node_id": "tliwu-apd5m-f5kxi-g37rt-cqcag-4kmua-v7dsq-xsmv4-pvmhr-la6hu-xae",
+          "num_blocks_failures_total": "2774",
+          "num_blocks_proposed_total": "1654444"
+        }
+      ],
+      "subnet_id": "eq6en-6jqla-fbu5s-daskr-h6hx2-376n5-iqabl-qgrng-gfqmv-n3yjr-mqe",
+      "ts": "1721606399757264115"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "wvxfb-eqeex-26z4r-vefff-llfh7-vv76x-pje4o-oh57m-eklny-zcs56-wae",
+          "num_blocks_failures_total": "36264",
+          "num_blocks_proposed_total": "1702915"
+        },
+        {
+          "node_id": "nhkbm-fqj7r-jdjii-spvcr-to3iu-ccrkm-pils3-6io5l-ahtry-qhlly-4ae",
+          "num_blocks_failures_total": "91091",
+          "num_blocks_proposed_total": "1642053"
+        },
+        {
+          "node_id": "rg3ny-2qkvz-btitk-sxuiu-fsl2h-nkmij-lagjs-y4bnq-cb63u-vh2rd-aqe",
+          "num_blocks_failures_total": "4155",
+          "num_blocks_proposed_total": "1738505"
+        },
+        {
+          "node_id": "ebfjs-4yyde-6v3qo-zhvwl-2fvp2-4tarv-autre-tparv-kwi7f-t4wml-fae",
+          "num_blocks_failures_total": "6297",
+          "num_blocks_proposed_total": "1736632"
+        },
+        {
+          "node_id": "ijqzn-wklsd-asfzv-ixif4-u7lrb-dblfi-mcq2d-nrwuk-d6cys-jgnar-7qe",
+          "num_blocks_failures_total": "2550",
+          "num_blocks_proposed_total": "1740287"
+        },
+        {
+          "node_id": "7qvtt-6lr4l-gx337-d6xvn-55ka2-6kcx2-c7iby-w36qm-u3ojf-ildyc-iqe",
+          "num_blocks_failures_total": "4239",
+          "num_blocks_proposed_total": "1738519"
+        },
+        {
+          "node_id": "2lhun-vmepu-zc7ic-6lrjj-o4yda-nlmwn-m4i2i-h4oby-hwv4y-mpv7c-fae",
+          "num_blocks_failures_total": "14253",
+          "num_blocks_proposed_total": "1729887"
+        },
+        {
+          "node_id": "dkx5h-i5d56-xeb37-uldi5-dlgmp-atrom-gyfn7-edeih-i5ph6-2cquy-dqe",
+          "num_blocks_failures_total": "12496",
+          "num_blocks_proposed_total": "1728569"
+        },
+        {
+          "node_id": "s5waw-pnvds-kpwqg-n6bly-r45vy-ax64x-sltbe-bbzl3-74npl-u4sos-mae",
+          "num_blocks_failures_total": "14133",
+          "num_blocks_proposed_total": "1601989"
+        },
+        {
+          "node_id": "mlbpy-pvy7z-gfwcb-5bakp-cuubm-prmi3-dppq6-rlepq-nkyvb-u7acf-fqe",
+          "num_blocks_failures_total": "103549",
+          "num_blocks_proposed_total": "1506729"
+        },
+        {
+          "node_id": "2vmqi-lwsmy-rad75-wus6x-3rlbf-cgig6-rtheo-t42r2-i4vdg-jyguw-uqe",
+          "num_blocks_failures_total": "31219",
+          "num_blocks_proposed_total": "1710058"
+        },
+        {
+          "node_id": "ew5us-dwxat-fg6sp-opp2j-fjjg7-rcmyj-d3saj-vyych-f3keg-5kor5-yqe",
+          "num_blocks_failures_total": "8448",
+          "num_blocks_proposed_total": "1733814"
+        },
+        {
+          "node_id": "tliwu-apd5m-f5kxi-g37rt-cqcag-4kmua-v7dsq-xsmv4-pvmhr-la6hu-xae",
+          "num_blocks_failures_total": "2774",
+          "num_blocks_proposed_total": "1661550"
+        }
+      ],
+      "subnet_id": "eq6en-6jqla-fbu5s-daskr-h6hx2-376n5-iqabl-qgrng-gfqmv-n3yjr-mqe",
+      "ts": "1721692799603483631"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "wvxfb-eqeex-26z4r-vefff-llfh7-vv76x-pje4o-oh57m-eklny-zcs56-wae",
+          "num_blocks_failures_total": "36264",
+          "num_blocks_proposed_total": "1709866"
+        },
+        {
+          "node_id": "nhkbm-fqj7r-jdjii-spvcr-to3iu-ccrkm-pils3-6io5l-ahtry-qhlly-4ae",
+          "num_blocks_failures_total": "92757",
+          "num_blocks_proposed_total": "1647248"
+        },
+        {
+          "node_id": "rg3ny-2qkvz-btitk-sxuiu-fsl2h-nkmij-lagjs-y4bnq-cb63u-vh2rd-aqe",
+          "num_blocks_failures_total": "4155",
+          "num_blocks_proposed_total": "1745623"
+        },
+        {
+          "node_id": "ebfjs-4yyde-6v3qo-zhvwl-2fvp2-4tarv-autre-tparv-kwi7f-t4wml-fae",
+          "num_blocks_failures_total": "6297",
+          "num_blocks_proposed_total": "1743674"
+        },
+        {
+          "node_id": "ijqzn-wklsd-asfzv-ixif4-u7lrb-dblfi-mcq2d-nrwuk-d6cys-jgnar-7qe",
+          "num_blocks_failures_total": "2550",
+          "num_blocks_proposed_total": "1747488"
+        },
+        {
+          "node_id": "7qvtt-6lr4l-gx337-d6xvn-55ka2-6kcx2-c7iby-w36qm-u3ojf-ildyc-iqe",
+          "num_blocks_failures_total": "4248",
+          "num_blocks_proposed_total": "1745625"
+        },
+        {
+          "node_id": "2lhun-vmepu-zc7ic-6lrjj-o4yda-nlmwn-m4i2i-h4oby-hwv4y-mpv7c-fae",
+          "num_blocks_failures_total": "14296",
+          "num_blocks_proposed_total": "1736994"
+        },
+        {
+          "node_id": "dkx5h-i5d56-xeb37-uldi5-dlgmp-atrom-gyfn7-edeih-i5ph6-2cquy-dqe",
+          "num_blocks_failures_total": "12512",
+          "num_blocks_proposed_total": "1735700"
+        },
+        {
+          "node_id": "s5waw-pnvds-kpwqg-n6bly-r45vy-ax64x-sltbe-bbzl3-74npl-u4sos-mae",
+          "num_blocks_failures_total": "14147",
+          "num_blocks_proposed_total": "1608986"
+        },
+        {
+          "node_id": "mlbpy-pvy7z-gfwcb-5bakp-cuubm-prmi3-dppq6-rlepq-nkyvb-u7acf-fqe",
+          "num_blocks_failures_total": "103815",
+          "num_blocks_proposed_total": "1513507"
+        },
+        {
+          "node_id": "2vmqi-lwsmy-rad75-wus6x-3rlbf-cgig6-rtheo-t42r2-i4vdg-jyguw-uqe",
+          "num_blocks_failures_total": "31220",
+          "num_blocks_proposed_total": "1717225"
+        },
+        {
+          "node_id": "ew5us-dwxat-fg6sp-opp2j-fjjg7-rcmyj-d3saj-vyych-f3keg-5kor5-yqe",
+          "num_blocks_failures_total": "8448",
+          "num_blocks_proposed_total": "1740802"
+        },
+        {
+          "node_id": "tliwu-apd5m-f5kxi-g37rt-cqcag-4kmua-v7dsq-xsmv4-pvmhr-la6hu-xae",
+          "num_blocks_failures_total": "2774",
+          "num_blocks_proposed_total": "1668693"
+        }
+      ],
+      "subnet_id": "eq6en-6jqla-fbu5s-daskr-h6hx2-376n5-iqabl-qgrng-gfqmv-n3yjr-mqe",
+      "ts": "1721779199797555162"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "wvxfb-eqeex-26z4r-vefff-llfh7-vv76x-pje4o-oh57m-eklny-zcs56-wae",
+          "num_blocks_failures_total": "36267",
+          "num_blocks_proposed_total": "1716746"
+        },
+        {
+          "node_id": "nhkbm-fqj7r-jdjii-spvcr-to3iu-ccrkm-pils3-6io5l-ahtry-qhlly-4ae",
+          "num_blocks_failures_total": "94364",
+          "num_blocks_proposed_total": "1652663"
+        },
+        {
+          "node_id": "rg3ny-2qkvz-btitk-sxuiu-fsl2h-nkmij-lagjs-y4bnq-cb63u-vh2rd-aqe",
+          "num_blocks_failures_total": "4156",
+          "num_blocks_proposed_total": "1752687"
+        },
+        {
+          "node_id": "ebfjs-4yyde-6v3qo-zhvwl-2fvp2-4tarv-autre-tparv-kwi7f-t4wml-fae",
+          "num_blocks_failures_total": "6297",
+          "num_blocks_proposed_total": "1750607"
+        },
+        {
+          "node_id": "ijqzn-wklsd-asfzv-ixif4-u7lrb-dblfi-mcq2d-nrwuk-d6cys-jgnar-7qe",
+          "num_blocks_failures_total": "2553",
+          "num_blocks_proposed_total": "1754588"
+        },
+        {
+          "node_id": "7qvtt-6lr4l-gx337-d6xvn-55ka2-6kcx2-c7iby-w36qm-u3ojf-ildyc-iqe",
+          "num_blocks_failures_total": "4250",
+          "num_blocks_proposed_total": "1752722"
+        },
+        {
+          "node_id": "2lhun-vmepu-zc7ic-6lrjj-o4yda-nlmwn-m4i2i-h4oby-hwv4y-mpv7c-fae",
+          "num_blocks_failures_total": "14309",
+          "num_blocks_proposed_total": "1744068"
+        },
+        {
+          "node_id": "dkx5h-i5d56-xeb37-uldi5-dlgmp-atrom-gyfn7-edeih-i5ph6-2cquy-dqe",
+          "num_blocks_failures_total": "12521",
+          "num_blocks_proposed_total": "1742711"
+        },
+        {
+          "node_id": "s5waw-pnvds-kpwqg-n6bly-r45vy-ax64x-sltbe-bbzl3-74npl-u4sos-mae",
+          "num_blocks_failures_total": "14171",
+          "num_blocks_proposed_total": "1616058"
+        },
+        {
+          "node_id": "mlbpy-pvy7z-gfwcb-5bakp-cuubm-prmi3-dppq6-rlepq-nkyvb-u7acf-fqe",
+          "num_blocks_failures_total": "104050",
+          "num_blocks_proposed_total": "1520349"
+        },
+        {
+          "node_id": "2vmqi-lwsmy-rad75-wus6x-3rlbf-cgig6-rtheo-t42r2-i4vdg-jyguw-uqe",
+          "num_blocks_failures_total": "31235",
+          "num_blocks_proposed_total": "1724319"
+        },
+        {
+          "node_id": "ew5us-dwxat-fg6sp-opp2j-fjjg7-rcmyj-d3saj-vyych-f3keg-5kor5-yqe",
+          "num_blocks_failures_total": "8448",
+          "num_blocks_proposed_total": "1747880"
+        },
+        {
+          "node_id": "tliwu-apd5m-f5kxi-g37rt-cqcag-4kmua-v7dsq-xsmv4-pvmhr-la6hu-xae",
+          "num_blocks_failures_total": "2774",
+          "num_blocks_proposed_total": "1675723"
+        }
+      ],
+      "subnet_id": "eq6en-6jqla-fbu5s-daskr-h6hx2-376n5-iqabl-qgrng-gfqmv-n3yjr-mqe",
+      "ts": "1721865599428829655"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "wvxfb-eqeex-26z4r-vefff-llfh7-vv76x-pje4o-oh57m-eklny-zcs56-wae",
+          "num_blocks_failures_total": "36267",
+          "num_blocks_proposed_total": "1723717"
+        },
+        {
+          "node_id": "nhkbm-fqj7r-jdjii-spvcr-to3iu-ccrkm-pils3-6io5l-ahtry-qhlly-4ae",
+          "num_blocks_failures_total": "95476",
+          "num_blocks_proposed_total": "1658424"
+        },
+        {
+          "node_id": "rg3ny-2qkvz-btitk-sxuiu-fsl2h-nkmij-lagjs-y4bnq-cb63u-vh2rd-aqe",
+          "num_blocks_failures_total": "4157",
+          "num_blocks_proposed_total": "1759794"
+        },
+        {
+          "node_id": "ebfjs-4yyde-6v3qo-zhvwl-2fvp2-4tarv-autre-tparv-kwi7f-t4wml-fae",
+          "num_blocks_failures_total": "6297",
+          "num_blocks_proposed_total": "1757638"
+        },
+        {
+          "node_id": "ijqzn-wklsd-asfzv-ixif4-u7lrb-dblfi-mcq2d-nrwuk-d6cys-jgnar-7qe",
+          "num_blocks_failures_total": "2553",
+          "num_blocks_proposed_total": "1761651"
+        },
+        {
+          "node_id": "7qvtt-6lr4l-gx337-d6xvn-55ka2-6kcx2-c7iby-w36qm-u3ojf-ildyc-iqe",
+          "num_blocks_failures_total": "4252",
+          "num_blocks_proposed_total": "1759665"
+        },
+        {
+          "node_id": "2lhun-vmepu-zc7ic-6lrjj-o4yda-nlmwn-m4i2i-h4oby-hwv4y-mpv7c-fae",
+          "num_blocks_failures_total": "14317",
+          "num_blocks_proposed_total": "1751044"
+        },
+        {
+          "node_id": "dkx5h-i5d56-xeb37-uldi5-dlgmp-atrom-gyfn7-edeih-i5ph6-2cquy-dqe",
+          "num_blocks_failures_total": "12535",
+          "num_blocks_proposed_total": "1749774"
+        },
+        {
+          "node_id": "s5waw-pnvds-kpwqg-n6bly-r45vy-ax64x-sltbe-bbzl3-74npl-u4sos-mae",
+          "num_blocks_failures_total": "14173",
+          "num_blocks_proposed_total": "1623122"
+        },
+        {
+          "node_id": "mlbpy-pvy7z-gfwcb-5bakp-cuubm-prmi3-dppq6-rlepq-nkyvb-u7acf-fqe",
+          "num_blocks_failures_total": "104264",
+          "num_blocks_proposed_total": "1527128"
+        },
+        {
+          "node_id": "2vmqi-lwsmy-rad75-wus6x-3rlbf-cgig6-rtheo-t42r2-i4vdg-jyguw-uqe",
+          "num_blocks_failures_total": "31254",
+          "num_blocks_proposed_total": "1731317"
+        },
+        {
+          "node_id": "ew5us-dwxat-fg6sp-opp2j-fjjg7-rcmyj-d3saj-vyych-f3keg-5kor5-yqe",
+          "num_blocks_failures_total": "8508",
+          "num_blocks_proposed_total": "1754755"
+        },
+        {
+          "node_id": "tliwu-apd5m-f5kxi-g37rt-cqcag-4kmua-v7dsq-xsmv4-pvmhr-la6hu-xae",
+          "num_blocks_failures_total": "2774",
+          "num_blocks_proposed_total": "1682608"
+        }
+      ],
+      "subnet_id": "eq6en-6jqla-fbu5s-daskr-h6hx2-376n5-iqabl-qgrng-gfqmv-n3yjr-mqe",
+      "ts": "1721951999229729591"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "wvxfb-eqeex-26z4r-vefff-llfh7-vv76x-pje4o-oh57m-eklny-zcs56-wae",
+          "num_blocks_failures_total": "36267",
+          "num_blocks_proposed_total": "1730450"
+        },
+        {
+          "node_id": "nhkbm-fqj7r-jdjii-spvcr-to3iu-ccrkm-pils3-6io5l-ahtry-qhlly-4ae",
+          "num_blocks_failures_total": "96264",
+          "num_blocks_proposed_total": "1664206"
+        },
+        {
+          "node_id": "rg3ny-2qkvz-btitk-sxuiu-fsl2h-nkmij-lagjs-y4bnq-cb63u-vh2rd-aqe",
+          "num_blocks_failures_total": "4157",
+          "num_blocks_proposed_total": "1766598"
+        },
+        {
+          "node_id": "ebfjs-4yyde-6v3qo-zhvwl-2fvp2-4tarv-autre-tparv-kwi7f-t4wml-fae",
+          "num_blocks_failures_total": "6297",
+          "num_blocks_proposed_total": "1764426"
+        },
+        {
+          "node_id": "ijqzn-wklsd-asfzv-ixif4-u7lrb-dblfi-mcq2d-nrwuk-d6cys-jgnar-7qe",
+          "num_blocks_failures_total": "2561",
+          "num_blocks_proposed_total": "1768413"
+        },
+        {
+          "node_id": "7qvtt-6lr4l-gx337-d6xvn-55ka2-6kcx2-c7iby-w36qm-u3ojf-ildyc-iqe",
+          "num_blocks_failures_total": "4252",
+          "num_blocks_proposed_total": "1766438"
+        },
+        {
+          "node_id": "2lhun-vmepu-zc7ic-6lrjj-o4yda-nlmwn-m4i2i-h4oby-hwv4y-mpv7c-fae",
+          "num_blocks_failures_total": "14318",
+          "num_blocks_proposed_total": "1757647"
+        },
+        {
+          "node_id": "dkx5h-i5d56-xeb37-uldi5-dlgmp-atrom-gyfn7-edeih-i5ph6-2cquy-dqe",
+          "num_blocks_failures_total": "12560",
+          "num_blocks_proposed_total": "1756312"
+        },
+        {
+          "node_id": "s5waw-pnvds-kpwqg-n6bly-r45vy-ax64x-sltbe-bbzl3-74npl-u4sos-mae",
+          "num_blocks_failures_total": "14182",
+          "num_blocks_proposed_total": "1629899"
+        },
+        {
+          "node_id": "mlbpy-pvy7z-gfwcb-5bakp-cuubm-prmi3-dppq6-rlepq-nkyvb-u7acf-fqe",
+          "num_blocks_failures_total": "104418",
+          "num_blocks_proposed_total": "1533680"
+        },
+        {
+          "node_id": "2vmqi-lwsmy-rad75-wus6x-3rlbf-cgig6-rtheo-t42r2-i4vdg-jyguw-uqe",
+          "num_blocks_failures_total": "31259",
+          "num_blocks_proposed_total": "1737923"
+        },
+        {
+          "node_id": "ew5us-dwxat-fg6sp-opp2j-fjjg7-rcmyj-d3saj-vyych-f3keg-5kor5-yqe",
+          "num_blocks_failures_total": "8510",
+          "num_blocks_proposed_total": "1761477"
+        },
+        {
+          "node_id": "tliwu-apd5m-f5kxi-g37rt-cqcag-4kmua-v7dsq-xsmv4-pvmhr-la6hu-xae",
+          "num_blocks_failures_total": "2774",
+          "num_blocks_proposed_total": "1689413"
+        }
+      ],
+      "subnet_id": "eq6en-6jqla-fbu5s-daskr-h6hx2-376n5-iqabl-qgrng-gfqmv-n3yjr-mqe",
+      "ts": "1722038399311013545"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "wvxfb-eqeex-26z4r-vefff-llfh7-vv76x-pje4o-oh57m-eklny-zcs56-wae",
+          "num_blocks_failures_total": "36267",
+          "num_blocks_proposed_total": "1736681"
+        },
+        {
+          "node_id": "nhkbm-fqj7r-jdjii-spvcr-to3iu-ccrkm-pils3-6io5l-ahtry-qhlly-4ae",
+          "num_blocks_failures_total": "97049",
+          "num_blocks_proposed_total": "1669571"
+        },
+        {
+          "node_id": "rg3ny-2qkvz-btitk-sxuiu-fsl2h-nkmij-lagjs-y4bnq-cb63u-vh2rd-aqe",
+          "num_blocks_failures_total": "4157",
+          "num_blocks_proposed_total": "1772837"
+        },
+        {
+          "node_id": "ebfjs-4yyde-6v3qo-zhvwl-2fvp2-4tarv-autre-tparv-kwi7f-t4wml-fae",
+          "num_blocks_failures_total": "6298",
+          "num_blocks_proposed_total": "1770600"
+        },
+        {
+          "node_id": "ijqzn-wklsd-asfzv-ixif4-u7lrb-dblfi-mcq2d-nrwuk-d6cys-jgnar-7qe",
+          "num_blocks_failures_total": "2573",
+          "num_blocks_proposed_total": "1774765"
+        },
+        {
+          "node_id": "7qvtt-6lr4l-gx337-d6xvn-55ka2-6kcx2-c7iby-w36qm-u3ojf-ildyc-iqe",
+          "num_blocks_failures_total": "4283",
+          "num_blocks_proposed_total": "1772732"
+        },
+        {
+          "node_id": "2lhun-vmepu-zc7ic-6lrjj-o4yda-nlmwn-m4i2i-h4oby-hwv4y-mpv7c-fae",
+          "num_blocks_failures_total": "14508",
+          "num_blocks_proposed_total": "1763649"
+        },
+        {
+          "node_id": "dkx5h-i5d56-xeb37-uldi5-dlgmp-atrom-gyfn7-edeih-i5ph6-2cquy-dqe",
+          "num_blocks_failures_total": "16983",
+          "num_blocks_proposed_total": "1757553"
+        },
+        {
+          "node_id": "s5waw-pnvds-kpwqg-n6bly-r45vy-ax64x-sltbe-bbzl3-74npl-u4sos-mae",
+          "num_blocks_failures_total": "14196",
+          "num_blocks_proposed_total": "1636237"
+        },
+        {
+          "node_id": "mlbpy-pvy7z-gfwcb-5bakp-cuubm-prmi3-dppq6-rlepq-nkyvb-u7acf-fqe",
+          "num_blocks_failures_total": "104551",
+          "num_blocks_proposed_total": "1539783"
+        },
+        {
+          "node_id": "2vmqi-lwsmy-rad75-wus6x-3rlbf-cgig6-rtheo-t42r2-i4vdg-jyguw-uqe",
+          "num_blocks_failures_total": "31313",
+          "num_blocks_proposed_total": "1744065"
+        },
+        {
+          "node_id": "ew5us-dwxat-fg6sp-opp2j-fjjg7-rcmyj-d3saj-vyych-f3keg-5kor5-yqe",
+          "num_blocks_failures_total": "8522",
+          "num_blocks_proposed_total": "1767677"
+        },
+        {
+          "node_id": "tliwu-apd5m-f5kxi-g37rt-cqcag-4kmua-v7dsq-xsmv4-pvmhr-la6hu-xae",
+          "num_blocks_failures_total": "2775",
+          "num_blocks_proposed_total": "1695613"
+        }
+      ],
+      "subnet_id": "eq6en-6jqla-fbu5s-daskr-h6hx2-376n5-iqabl-qgrng-gfqmv-n3yjr-mqe",
+      "ts": "1722124799354715232"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "wvxfb-eqeex-26z4r-vefff-llfh7-vv76x-pje4o-oh57m-eklny-zcs56-wae",
+          "num_blocks_failures_total": "36286",
+          "num_blocks_proposed_total": "1743971"
+        },
+        {
+          "node_id": "nhkbm-fqj7r-jdjii-spvcr-to3iu-ccrkm-pils3-6io5l-ahtry-qhlly-4ae",
+          "num_blocks_failures_total": "97786",
+          "num_blocks_proposed_total": "1676049"
+        },
+        {
+          "node_id": "rg3ny-2qkvz-btitk-sxuiu-fsl2h-nkmij-lagjs-y4bnq-cb63u-vh2rd-aqe",
+          "num_blocks_failures_total": "4157",
+          "num_blocks_proposed_total": "1780135"
+        },
+        {
+          "node_id": "ebfjs-4yyde-6v3qo-zhvwl-2fvp2-4tarv-autre-tparv-kwi7f-t4wml-fae",
+          "num_blocks_failures_total": "6298",
+          "num_blocks_proposed_total": "1777920"
+        },
+        {
+          "node_id": "ijqzn-wklsd-asfzv-ixif4-u7lrb-dblfi-mcq2d-nrwuk-d6cys-jgnar-7qe",
+          "num_blocks_failures_total": "2576",
+          "num_blocks_proposed_total": "1781993"
+        },
+        {
+          "node_id": "7qvtt-6lr4l-gx337-d6xvn-55ka2-6kcx2-c7iby-w36qm-u3ojf-ildyc-iqe",
+          "num_blocks_failures_total": "4288",
+          "num_blocks_proposed_total": "1779942"
+        },
+        {
+          "node_id": "2lhun-vmepu-zc7ic-6lrjj-o4yda-nlmwn-m4i2i-h4oby-hwv4y-mpv7c-fae",
+          "num_blocks_failures_total": "14522",
+          "num_blocks_proposed_total": "1770972"
+        },
+        {
+          "node_id": "dkx5h-i5d56-xeb37-uldi5-dlgmp-atrom-gyfn7-edeih-i5ph6-2cquy-dqe",
+          "num_blocks_failures_total": "23553",
+          "num_blocks_proposed_total": "1757648"
+        },
+        {
+          "node_id": "s5waw-pnvds-kpwqg-n6bly-r45vy-ax64x-sltbe-bbzl3-74npl-u4sos-mae",
+          "num_blocks_failures_total": "14202",
+          "num_blocks_proposed_total": "1643491"
+        },
+        {
+          "node_id": "mlbpy-pvy7z-gfwcb-5bakp-cuubm-prmi3-dppq6-rlepq-nkyvb-u7acf-fqe",
+          "num_blocks_failures_total": "104763",
+          "num_blocks_proposed_total": "1546816"
+        },
+        {
+          "node_id": "2vmqi-lwsmy-rad75-wus6x-3rlbf-cgig6-rtheo-t42r2-i4vdg-jyguw-uqe",
+          "num_blocks_failures_total": "31378",
+          "num_blocks_proposed_total": "1751283"
+        },
+        {
+          "node_id": "ew5us-dwxat-fg6sp-opp2j-fjjg7-rcmyj-d3saj-vyych-f3keg-5kor5-yqe",
+          "num_blocks_failures_total": "8532",
+          "num_blocks_proposed_total": "1774962"
+        },
+        {
+          "node_id": "tliwu-apd5m-f5kxi-g37rt-cqcag-4kmua-v7dsq-xsmv4-pvmhr-la6hu-xae",
+          "num_blocks_failures_total": "2776",
+          "num_blocks_proposed_total": "1702980"
+        }
+      ],
+      "subnet_id": "eq6en-6jqla-fbu5s-daskr-h6hx2-376n5-iqabl-qgrng-gfqmv-n3yjr-mqe",
+      "ts": "1722211199588389395"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "wvxfb-eqeex-26z4r-vefff-llfh7-vv76x-pje4o-oh57m-eklny-zcs56-wae",
+          "num_blocks_failures_total": "36287",
+          "num_blocks_proposed_total": "1751298"
+        },
+        {
+          "node_id": "nhkbm-fqj7r-jdjii-spvcr-to3iu-ccrkm-pils3-6io5l-ahtry-qhlly-4ae",
+          "num_blocks_failures_total": "98968",
+          "num_blocks_proposed_total": "1681934"
+        },
+        {
+          "node_id": "rg3ny-2qkvz-btitk-sxuiu-fsl2h-nkmij-lagjs-y4bnq-cb63u-vh2rd-aqe",
+          "num_blocks_failures_total": "4157",
+          "num_blocks_proposed_total": "1787427"
+        },
+        {
+          "node_id": "ebfjs-4yyde-6v3qo-zhvwl-2fvp2-4tarv-autre-tparv-kwi7f-t4wml-fae",
+          "num_blocks_failures_total": "6300",
+          "num_blocks_proposed_total": "1785242"
+        },
+        {
+          "node_id": "ijqzn-wklsd-asfzv-ixif4-u7lrb-dblfi-mcq2d-nrwuk-d6cys-jgnar-7qe",
+          "num_blocks_failures_total": "2581",
+          "num_blocks_proposed_total": "1789226"
+        },
+        {
+          "node_id": "7qvtt-6lr4l-gx337-d6xvn-55ka2-6kcx2-c7iby-w36qm-u3ojf-ildyc-iqe",
+          "num_blocks_failures_total": "4291",
+          "num_blocks_proposed_total": "1787238"
+        },
+        {
+          "node_id": "2lhun-vmepu-zc7ic-6lrjj-o4yda-nlmwn-m4i2i-h4oby-hwv4y-mpv7c-fae",
+          "num_blocks_failures_total": "14530",
+          "num_blocks_proposed_total": "1778258"
+        },
+        {
+          "node_id": "dkx5h-i5d56-xeb37-uldi5-dlgmp-atrom-gyfn7-edeih-i5ph6-2cquy-dqe",
+          "num_blocks_failures_total": "29950",
+          "num_blocks_proposed_total": "1757978"
+        },
+        {
+          "node_id": "s5waw-pnvds-kpwqg-n6bly-r45vy-ax64x-sltbe-bbzl3-74npl-u4sos-mae",
+          "num_blocks_failures_total": "14212",
+          "num_blocks_proposed_total": "1650857"
+        },
+        {
+          "node_id": "mlbpy-pvy7z-gfwcb-5bakp-cuubm-prmi3-dppq6-rlepq-nkyvb-u7acf-fqe",
+          "num_blocks_failures_total": "104960",
+          "num_blocks_proposed_total": "1553948"
+        },
+        {
+          "node_id": "2vmqi-lwsmy-rad75-wus6x-3rlbf-cgig6-rtheo-t42r2-i4vdg-jyguw-uqe",
+          "num_blocks_failures_total": "31391",
+          "num_blocks_proposed_total": "1758488"
+        },
+        {
+          "node_id": "ew5us-dwxat-fg6sp-opp2j-fjjg7-rcmyj-d3saj-vyych-f3keg-5kor5-yqe",
+          "num_blocks_failures_total": "8587",
+          "num_blocks_proposed_total": "1782092"
+        },
+        {
+          "node_id": "tliwu-apd5m-f5kxi-g37rt-cqcag-4kmua-v7dsq-xsmv4-pvmhr-la6hu-xae",
+          "num_blocks_failures_total": "2796",
+          "num_blocks_proposed_total": "1710225"
+        }
+      ],
+      "subnet_id": "eq6en-6jqla-fbu5s-daskr-h6hx2-376n5-iqabl-qgrng-gfqmv-n3yjr-mqe",
+      "ts": "1722297599276331102"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "wvxfb-eqeex-26z4r-vefff-llfh7-vv76x-pje4o-oh57m-eklny-zcs56-wae",
+          "num_blocks_failures_total": "36310",
+          "num_blocks_proposed_total": "1758673"
+        },
+        {
+          "node_id": "nhkbm-fqj7r-jdjii-spvcr-to3iu-ccrkm-pils3-6io5l-ahtry-qhlly-4ae",
+          "num_blocks_failures_total": "99600",
+          "num_blocks_proposed_total": "1688627"
+        },
+        {
+          "node_id": "rg3ny-2qkvz-btitk-sxuiu-fsl2h-nkmij-lagjs-y4bnq-cb63u-vh2rd-aqe",
+          "num_blocks_failures_total": "4160",
+          "num_blocks_proposed_total": "1794753"
+        },
+        {
+          "node_id": "ebfjs-4yyde-6v3qo-zhvwl-2fvp2-4tarv-autre-tparv-kwi7f-t4wml-fae",
+          "num_blocks_failures_total": "6307",
+          "num_blocks_proposed_total": "1792668"
+        },
+        {
+          "node_id": "ijqzn-wklsd-asfzv-ixif4-u7lrb-dblfi-mcq2d-nrwuk-d6cys-jgnar-7qe",
+          "num_blocks_failures_total": "2595",
+          "num_blocks_proposed_total": "1796641"
+        },
+        {
+          "node_id": "7qvtt-6lr4l-gx337-d6xvn-55ka2-6kcx2-c7iby-w36qm-u3ojf-ildyc-iqe",
+          "num_blocks_failures_total": "4315",
+          "num_blocks_proposed_total": "1794653"
+        },
+        {
+          "node_id": "2lhun-vmepu-zc7ic-6lrjj-o4yda-nlmwn-m4i2i-h4oby-hwv4y-mpv7c-fae",
+          "num_blocks_failures_total": "14532",
+          "num_blocks_proposed_total": "1785842"
+        },
+        {
+          "node_id": "dkx5h-i5d56-xeb37-uldi5-dlgmp-atrom-gyfn7-edeih-i5ph6-2cquy-dqe",
+          "num_blocks_failures_total": "33942",
+          "num_blocks_proposed_total": "1761087"
+        },
+        {
+          "node_id": "s5waw-pnvds-kpwqg-n6bly-r45vy-ax64x-sltbe-bbzl3-74npl-u4sos-mae",
+          "num_blocks_failures_total": "14223",
+          "num_blocks_proposed_total": "1658306"
+        },
+        {
+          "node_id": "mlbpy-pvy7z-gfwcb-5bakp-cuubm-prmi3-dppq6-rlepq-nkyvb-u7acf-fqe",
+          "num_blocks_failures_total": "105013",
+          "num_blocks_proposed_total": "1561304"
+        },
+        {
+          "node_id": "2vmqi-lwsmy-rad75-wus6x-3rlbf-cgig6-rtheo-t42r2-i4vdg-jyguw-uqe",
+          "num_blocks_failures_total": "31439",
+          "num_blocks_proposed_total": "1765855"
+        },
+        {
+          "node_id": "ew5us-dwxat-fg6sp-opp2j-fjjg7-rcmyj-d3saj-vyych-f3keg-5kor5-yqe",
+          "num_blocks_failures_total": "8593",
+          "num_blocks_proposed_total": "1789597"
+        },
+        {
+          "node_id": "tliwu-apd5m-f5kxi-g37rt-cqcag-4kmua-v7dsq-xsmv4-pvmhr-la6hu-xae",
+          "num_blocks_failures_total": "2801",
+          "num_blocks_proposed_total": "1717804"
+        }
+      ],
+      "subnet_id": "eq6en-6jqla-fbu5s-daskr-h6hx2-376n5-iqabl-qgrng-gfqmv-n3yjr-mqe",
+      "ts": "1722383999227747454"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "wvxfb-eqeex-26z4r-vefff-llfh7-vv76x-pje4o-oh57m-eklny-zcs56-wae",
+          "num_blocks_failures_total": "36310",
+          "num_blocks_proposed_total": "1766185"
+        },
+        {
+          "node_id": "nhkbm-fqj7r-jdjii-spvcr-to3iu-ccrkm-pils3-6io5l-ahtry-qhlly-4ae",
+          "num_blocks_failures_total": "100023",
+          "num_blocks_proposed_total": "1695756"
+        },
+        {
+          "node_id": "rg3ny-2qkvz-btitk-sxuiu-fsl2h-nkmij-lagjs-y4bnq-cb63u-vh2rd-aqe",
+          "num_blocks_failures_total": "4161",
+          "num_blocks_proposed_total": "1802399"
+        },
+        {
+          "node_id": "ebfjs-4yyde-6v3qo-zhvwl-2fvp2-4tarv-autre-tparv-kwi7f-t4wml-fae",
+          "num_blocks_failures_total": "6307",
+          "num_blocks_proposed_total": "1800458"
+        },
+        {
+          "node_id": "ijqzn-wklsd-asfzv-ixif4-u7lrb-dblfi-mcq2d-nrwuk-d6cys-jgnar-7qe",
+          "num_blocks_failures_total": "2600",
+          "num_blocks_proposed_total": "1804266"
+        },
+        {
+          "node_id": "7qvtt-6lr4l-gx337-d6xvn-55ka2-6kcx2-c7iby-w36qm-u3ojf-ildyc-iqe",
+          "num_blocks_failures_total": "4318",
+          "num_blocks_proposed_total": "1802339"
+        },
+        {
+          "node_id": "2lhun-vmepu-zc7ic-6lrjj-o4yda-nlmwn-m4i2i-h4oby-hwv4y-mpv7c-fae",
+          "num_blocks_failures_total": "14533",
+          "num_blocks_proposed_total": "1793411"
+        },
+        {
+          "node_id": "dkx5h-i5d56-xeb37-uldi5-dlgmp-atrom-gyfn7-edeih-i5ph6-2cquy-dqe",
+          "num_blocks_failures_total": "33943",
+          "num_blocks_proposed_total": "1768660"
+        },
+        {
+          "node_id": "s5waw-pnvds-kpwqg-n6bly-r45vy-ax64x-sltbe-bbzl3-74npl-u4sos-mae",
+          "num_blocks_failures_total": "14243",
+          "num_blocks_proposed_total": "1665949"
+        },
+        {
+          "node_id": "mlbpy-pvy7z-gfwcb-5bakp-cuubm-prmi3-dppq6-rlepq-nkyvb-u7acf-fqe",
+          "num_blocks_failures_total": "105088",
+          "num_blocks_proposed_total": "1568847"
+        },
+        {
+          "node_id": "2vmqi-lwsmy-rad75-wus6x-3rlbf-cgig6-rtheo-t42r2-i4vdg-jyguw-uqe",
+          "num_blocks_failures_total": "31462",
+          "num_blocks_proposed_total": "1773522"
+        },
+        {
+          "node_id": "ew5us-dwxat-fg6sp-opp2j-fjjg7-rcmyj-d3saj-vyych-f3keg-5kor5-yqe",
+          "num_blocks_failures_total": "8609",
+          "num_blocks_proposed_total": "1797325"
+        },
+        {
+          "node_id": "tliwu-apd5m-f5kxi-g37rt-cqcag-4kmua-v7dsq-xsmv4-pvmhr-la6hu-xae",
+          "num_blocks_failures_total": "2819",
+          "num_blocks_proposed_total": "1725363"
+        }
+      ],
+      "subnet_id": "eq6en-6jqla-fbu5s-daskr-h6hx2-376n5-iqabl-qgrng-gfqmv-n3yjr-mqe",
+      "ts": "1722470399609803379"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "wvxfb-eqeex-26z4r-vefff-llfh7-vv76x-pje4o-oh57m-eklny-zcs56-wae",
+          "num_blocks_failures_total": "36310",
+          "num_blocks_proposed_total": "1773953"
+        },
+        {
+          "node_id": "nhkbm-fqj7r-jdjii-spvcr-to3iu-ccrkm-pils3-6io5l-ahtry-qhlly-4ae",
+          "num_blocks_failures_total": "100342",
+          "num_blocks_proposed_total": "1702897"
+        },
+        {
+          "node_id": "rg3ny-2qkvz-btitk-sxuiu-fsl2h-nkmij-lagjs-y4bnq-cb63u-vh2rd-aqe",
+          "num_blocks_failures_total": "4161",
+          "num_blocks_proposed_total": "1810155"
+        },
+        {
+          "node_id": "ebfjs-4yyde-6v3qo-zhvwl-2fvp2-4tarv-autre-tparv-kwi7f-t4wml-fae",
+          "num_blocks_failures_total": "6308",
+          "num_blocks_proposed_total": "1808121"
+        },
+        {
+          "node_id": "ijqzn-wklsd-asfzv-ixif4-u7lrb-dblfi-mcq2d-nrwuk-d6cys-jgnar-7qe",
+          "num_blocks_failures_total": "2600",
+          "num_blocks_proposed_total": "1811911"
+        },
+        {
+          "node_id": "7qvtt-6lr4l-gx337-d6xvn-55ka2-6kcx2-c7iby-w36qm-u3ojf-ildyc-iqe",
+          "num_blocks_failures_total": "4318",
+          "num_blocks_proposed_total": "1810008"
+        },
+        {
+          "node_id": "2lhun-vmepu-zc7ic-6lrjj-o4yda-nlmwn-m4i2i-h4oby-hwv4y-mpv7c-fae",
+          "num_blocks_failures_total": "14534",
+          "num_blocks_proposed_total": "1801103"
+        },
+        {
+          "node_id": "dkx5h-i5d56-xeb37-uldi5-dlgmp-atrom-gyfn7-edeih-i5ph6-2cquy-dqe",
+          "num_blocks_failures_total": "33944",
+          "num_blocks_proposed_total": "1776305"
+        },
+        {
+          "node_id": "s5waw-pnvds-kpwqg-n6bly-r45vy-ax64x-sltbe-bbzl3-74npl-u4sos-mae",
+          "num_blocks_failures_total": "14258",
+          "num_blocks_proposed_total": "1673444"
+        },
+        {
+          "node_id": "mlbpy-pvy7z-gfwcb-5bakp-cuubm-prmi3-dppq6-rlepq-nkyvb-u7acf-fqe",
+          "num_blocks_failures_total": "105182",
+          "num_blocks_proposed_total": "1576284"
+        },
+        {
+          "node_id": "2vmqi-lwsmy-rad75-wus6x-3rlbf-cgig6-rtheo-t42r2-i4vdg-jyguw-uqe",
+          "num_blocks_failures_total": "31476",
+          "num_blocks_proposed_total": "1781233"
+        },
+        {
+          "node_id": "ew5us-dwxat-fg6sp-opp2j-fjjg7-rcmyj-d3saj-vyych-f3keg-5kor5-yqe",
+          "num_blocks_failures_total": "8627",
+          "num_blocks_proposed_total": "1804969"
+        },
+        {
+          "node_id": "tliwu-apd5m-f5kxi-g37rt-cqcag-4kmua-v7dsq-xsmv4-pvmhr-la6hu-xae",
+          "num_blocks_failures_total": "2827",
+          "num_blocks_proposed_total": "1732991"
+        }
+      ],
+      "subnet_id": "eq6en-6jqla-fbu5s-daskr-h6hx2-376n5-iqabl-qgrng-gfqmv-n3yjr-mqe",
+      "ts": "1722556798520120119"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "wvxfb-eqeex-26z4r-vefff-llfh7-vv76x-pje4o-oh57m-eklny-zcs56-wae",
+          "num_blocks_failures_total": "36310",
+          "num_blocks_proposed_total": "1781518"
+        },
+        {
+          "node_id": "nhkbm-fqj7r-jdjii-spvcr-to3iu-ccrkm-pils3-6io5l-ahtry-qhlly-4ae",
+          "num_blocks_failures_total": "100529",
+          "num_blocks_proposed_total": "1710200"
+        },
+        {
+          "node_id": "rg3ny-2qkvz-btitk-sxuiu-fsl2h-nkmij-lagjs-y4bnq-cb63u-vh2rd-aqe",
+          "num_blocks_failures_total": "4161",
+          "num_blocks_proposed_total": "1817701"
+        },
+        {
+          "node_id": "ebfjs-4yyde-6v3qo-zhvwl-2fvp2-4tarv-autre-tparv-kwi7f-t4wml-fae",
+          "num_blocks_failures_total": "6308",
+          "num_blocks_proposed_total": "1815653"
+        },
+        {
+          "node_id": "ijqzn-wklsd-asfzv-ixif4-u7lrb-dblfi-mcq2d-nrwuk-d6cys-jgnar-7qe",
+          "num_blocks_failures_total": "2602",
+          "num_blocks_proposed_total": "1819580"
+        },
+        {
+          "node_id": "7qvtt-6lr4l-gx337-d6xvn-55ka2-6kcx2-c7iby-w36qm-u3ojf-ildyc-iqe",
+          "num_blocks_failures_total": "4319",
+          "num_blocks_proposed_total": "1817704"
+        },
+        {
+          "node_id": "2lhun-vmepu-zc7ic-6lrjj-o4yda-nlmwn-m4i2i-h4oby-hwv4y-mpv7c-fae",
+          "num_blocks_failures_total": "14535",
+          "num_blocks_proposed_total": "1808666"
+        },
+        {
+          "node_id": "dkx5h-i5d56-xeb37-uldi5-dlgmp-atrom-gyfn7-edeih-i5ph6-2cquy-dqe",
+          "num_blocks_failures_total": "33946",
+          "num_blocks_proposed_total": "1784054"
+        },
+        {
+          "node_id": "s5waw-pnvds-kpwqg-n6bly-r45vy-ax64x-sltbe-bbzl3-74npl-u4sos-mae",
+          "num_blocks_failures_total": "14275",
+          "num_blocks_proposed_total": "1681230"
+        },
+        {
+          "node_id": "mlbpy-pvy7z-gfwcb-5bakp-cuubm-prmi3-dppq6-rlepq-nkyvb-u7acf-fqe",
+          "num_blocks_failures_total": "105237",
+          "num_blocks_proposed_total": "1583879"
+        },
+        {
+          "node_id": "2vmqi-lwsmy-rad75-wus6x-3rlbf-cgig6-rtheo-t42r2-i4vdg-jyguw-uqe",
+          "num_blocks_failures_total": "31490",
+          "num_blocks_proposed_total": "1788895"
+        },
+        {
+          "node_id": "ew5us-dwxat-fg6sp-opp2j-fjjg7-rcmyj-d3saj-vyych-f3keg-5kor5-yqe",
+          "num_blocks_failures_total": "8642",
+          "num_blocks_proposed_total": "1812652"
+        },
+        {
+          "node_id": "tliwu-apd5m-f5kxi-g37rt-cqcag-4kmua-v7dsq-xsmv4-pvmhr-la6hu-xae",
+          "num_blocks_failures_total": "2828",
+          "num_blocks_proposed_total": "1740761"
+        }
+      ],
+      "subnet_id": "eq6en-6jqla-fbu5s-daskr-h6hx2-376n5-iqabl-qgrng-gfqmv-n3yjr-mqe",
+      "ts": "1722643199651855471"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "wvxfb-eqeex-26z4r-vefff-llfh7-vv76x-pje4o-oh57m-eklny-zcs56-wae",
+          "num_blocks_failures_total": "36310",
+          "num_blocks_proposed_total": "1789210"
+        },
+        {
+          "node_id": "nhkbm-fqj7r-jdjii-spvcr-to3iu-ccrkm-pils3-6io5l-ahtry-qhlly-4ae",
+          "num_blocks_failures_total": "100997",
+          "num_blocks_proposed_total": "1717299"
+        },
+        {
+          "node_id": "rg3ny-2qkvz-btitk-sxuiu-fsl2h-nkmij-lagjs-y4bnq-cb63u-vh2rd-aqe",
+          "num_blocks_failures_total": "4175",
+          "num_blocks_proposed_total": "1825425"
+        },
+        {
+          "node_id": "ebfjs-4yyde-6v3qo-zhvwl-2fvp2-4tarv-autre-tparv-kwi7f-t4wml-fae",
+          "num_blocks_failures_total": "6308",
+          "num_blocks_proposed_total": "1823366"
+        },
+        {
+          "node_id": "ijqzn-wklsd-asfzv-ixif4-u7lrb-dblfi-mcq2d-nrwuk-d6cys-jgnar-7qe",
+          "num_blocks_failures_total": "2603",
+          "num_blocks_proposed_total": "1827197"
+        },
+        {
+          "node_id": "7qvtt-6lr4l-gx337-d6xvn-55ka2-6kcx2-c7iby-w36qm-u3ojf-ildyc-iqe",
+          "num_blocks_failures_total": "4321",
+          "num_blocks_proposed_total": "1825292"
+        },
+        {
+          "node_id": "2lhun-vmepu-zc7ic-6lrjj-o4yda-nlmwn-m4i2i-h4oby-hwv4y-mpv7c-fae",
+          "num_blocks_failures_total": "14537",
+          "num_blocks_proposed_total": "1816222"
+        },
+        {
+          "node_id": "dkx5h-i5d56-xeb37-uldi5-dlgmp-atrom-gyfn7-edeih-i5ph6-2cquy-dqe",
+          "num_blocks_failures_total": "33946",
+          "num_blocks_proposed_total": "1791683"
+        },
+        {
+          "node_id": "s5waw-pnvds-kpwqg-n6bly-r45vy-ax64x-sltbe-bbzl3-74npl-u4sos-mae",
+          "num_blocks_failures_total": "14278",
+          "num_blocks_proposed_total": "1688918"
+        },
+        {
+          "node_id": "mlbpy-pvy7z-gfwcb-5bakp-cuubm-prmi3-dppq6-rlepq-nkyvb-u7acf-fqe",
+          "num_blocks_failures_total": "105286",
+          "num_blocks_proposed_total": "1591477"
+        },
+        {
+          "node_id": "2vmqi-lwsmy-rad75-wus6x-3rlbf-cgig6-rtheo-t42r2-i4vdg-jyguw-uqe",
+          "num_blocks_failures_total": "31505",
+          "num_blocks_proposed_total": "1796549"
+        },
+        {
+          "node_id": "ew5us-dwxat-fg6sp-opp2j-fjjg7-rcmyj-d3saj-vyych-f3keg-5kor5-yqe",
+          "num_blocks_failures_total": "8647",
+          "num_blocks_proposed_total": "1820261"
+        },
+        {
+          "node_id": "tliwu-apd5m-f5kxi-g37rt-cqcag-4kmua-v7dsq-xsmv4-pvmhr-la6hu-xae",
+          "num_blocks_failures_total": "2828",
+          "num_blocks_proposed_total": "1748376"
+        }
+      ],
+      "subnet_id": "eq6en-6jqla-fbu5s-daskr-h6hx2-376n5-iqabl-qgrng-gfqmv-n3yjr-mqe",
+      "ts": "1722729599544591585"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "wvxfb-eqeex-26z4r-vefff-llfh7-vv76x-pje4o-oh57m-eklny-zcs56-wae",
+          "num_blocks_failures_total": "36310",
+          "num_blocks_proposed_total": "1796843"
+        },
+        {
+          "node_id": "nhkbm-fqj7r-jdjii-spvcr-to3iu-ccrkm-pils3-6io5l-ahtry-qhlly-4ae",
+          "num_blocks_failures_total": "101256",
+          "num_blocks_proposed_total": "1724725"
+        },
+        {
+          "node_id": "rg3ny-2qkvz-btitk-sxuiu-fsl2h-nkmij-lagjs-y4bnq-cb63u-vh2rd-aqe",
+          "num_blocks_failures_total": "4175",
+          "num_blocks_proposed_total": "1833086"
+        },
+        {
+          "node_id": "ebfjs-4yyde-6v3qo-zhvwl-2fvp2-4tarv-autre-tparv-kwi7f-t4wml-fae",
+          "num_blocks_failures_total": "6308",
+          "num_blocks_proposed_total": "1830956"
+        },
+        {
+          "node_id": "ijqzn-wklsd-asfzv-ixif4-u7lrb-dblfi-mcq2d-nrwuk-d6cys-jgnar-7qe",
+          "num_blocks_failures_total": "2604",
+          "num_blocks_proposed_total": "1834779"
+        },
+        {
+          "node_id": "7qvtt-6lr4l-gx337-d6xvn-55ka2-6kcx2-c7iby-w36qm-u3ojf-ildyc-iqe",
+          "num_blocks_failures_total": "4321",
+          "num_blocks_proposed_total": "1832958"
+        },
+        {
+          "node_id": "2lhun-vmepu-zc7ic-6lrjj-o4yda-nlmwn-m4i2i-h4oby-hwv4y-mpv7c-fae",
+          "num_blocks_failures_total": "14537",
+          "num_blocks_proposed_total": "1823744"
+        },
+        {
+          "node_id": "dkx5h-i5d56-xeb37-uldi5-dlgmp-atrom-gyfn7-edeih-i5ph6-2cquy-dqe",
+          "num_blocks_failures_total": "33947",
+          "num_blocks_proposed_total": "1799327"
+        },
+        {
+          "node_id": "s5waw-pnvds-kpwqg-n6bly-r45vy-ax64x-sltbe-bbzl3-74npl-u4sos-mae",
+          "num_blocks_failures_total": "14292",
+          "num_blocks_proposed_total": "1696658"
+        },
+        {
+          "node_id": "mlbpy-pvy7z-gfwcb-5bakp-cuubm-prmi3-dppq6-rlepq-nkyvb-u7acf-fqe",
+          "num_blocks_failures_total": "105328",
+          "num_blocks_proposed_total": "1598960"
+        },
+        {
+          "node_id": "2vmqi-lwsmy-rad75-wus6x-3rlbf-cgig6-rtheo-t42r2-i4vdg-jyguw-uqe",
+          "num_blocks_failures_total": "31515",
+          "num_blocks_proposed_total": "1804081"
+        },
+        {
+          "node_id": "ew5us-dwxat-fg6sp-opp2j-fjjg7-rcmyj-d3saj-vyych-f3keg-5kor5-yqe",
+          "num_blocks_failures_total": "8654",
+          "num_blocks_proposed_total": "1827873"
+        },
+        {
+          "node_id": "tliwu-apd5m-f5kxi-g37rt-cqcag-4kmua-v7dsq-xsmv4-pvmhr-la6hu-xae",
+          "num_blocks_failures_total": "2828",
+          "num_blocks_proposed_total": "1756041"
+        }
+      ],
+      "subnet_id": "eq6en-6jqla-fbu5s-daskr-h6hx2-376n5-iqabl-qgrng-gfqmv-n3yjr-mqe",
+      "ts": "1722815999259826355"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "wvxfb-eqeex-26z4r-vefff-llfh7-vv76x-pje4o-oh57m-eklny-zcs56-wae",
+          "num_blocks_failures_total": "36310",
+          "num_blocks_proposed_total": "1804548"
+        },
+        {
+          "node_id": "nhkbm-fqj7r-jdjii-spvcr-to3iu-ccrkm-pils3-6io5l-ahtry-qhlly-4ae",
+          "num_blocks_failures_total": "101411",
+          "num_blocks_proposed_total": "1732324"
+        },
+        {
+          "node_id": "rg3ny-2qkvz-btitk-sxuiu-fsl2h-nkmij-lagjs-y4bnq-cb63u-vh2rd-aqe",
+          "num_blocks_failures_total": "4175",
+          "num_blocks_proposed_total": "1840673"
+        },
+        {
+          "node_id": "ebfjs-4yyde-6v3qo-zhvwl-2fvp2-4tarv-autre-tparv-kwi7f-t4wml-fae",
+          "num_blocks_failures_total": "6308",
+          "num_blocks_proposed_total": "1838414"
+        },
+        {
+          "node_id": "ijqzn-wklsd-asfzv-ixif4-u7lrb-dblfi-mcq2d-nrwuk-d6cys-jgnar-7qe",
+          "num_blocks_failures_total": "2607",
+          "num_blocks_proposed_total": "1842385"
+        },
+        {
+          "node_id": "7qvtt-6lr4l-gx337-d6xvn-55ka2-6kcx2-c7iby-w36qm-u3ojf-ildyc-iqe",
+          "num_blocks_failures_total": "4326",
+          "num_blocks_proposed_total": "1840649"
+        },
+        {
+          "node_id": "2lhun-vmepu-zc7ic-6lrjj-o4yda-nlmwn-m4i2i-h4oby-hwv4y-mpv7c-fae",
+          "num_blocks_failures_total": "14543",
+          "num_blocks_proposed_total": "1831349"
+        },
+        {
+          "node_id": "dkx5h-i5d56-xeb37-uldi5-dlgmp-atrom-gyfn7-edeih-i5ph6-2cquy-dqe",
+          "num_blocks_failures_total": "33947",
+          "num_blocks_proposed_total": "1807018"
+        },
+        {
+          "node_id": "s5waw-pnvds-kpwqg-n6bly-r45vy-ax64x-sltbe-bbzl3-74npl-u4sos-mae",
+          "num_blocks_failures_total": "14295",
+          "num_blocks_proposed_total": "1704235"
+        },
+        {
+          "node_id": "mlbpy-pvy7z-gfwcb-5bakp-cuubm-prmi3-dppq6-rlepq-nkyvb-u7acf-fqe",
+          "num_blocks_failures_total": "105402",
+          "num_blocks_proposed_total": "1606675"
+        },
+        {
+          "node_id": "2vmqi-lwsmy-rad75-wus6x-3rlbf-cgig6-rtheo-t42r2-i4vdg-jyguw-uqe",
+          "num_blocks_failures_total": "31523",
+          "num_blocks_proposed_total": "1811665"
+        },
+        {
+          "node_id": "ew5us-dwxat-fg6sp-opp2j-fjjg7-rcmyj-d3saj-vyych-f3keg-5kor5-yqe",
+          "num_blocks_failures_total": "8668",
+          "num_blocks_proposed_total": "1835617"
+        },
+        {
+          "node_id": "tliwu-apd5m-f5kxi-g37rt-cqcag-4kmua-v7dsq-xsmv4-pvmhr-la6hu-xae",
+          "num_blocks_failures_total": "2828",
+          "num_blocks_proposed_total": "1763797"
+        }
+      ],
+      "subnet_id": "eq6en-6jqla-fbu5s-daskr-h6hx2-376n5-iqabl-qgrng-gfqmv-n3yjr-mqe",
+      "ts": "1722902399777785115"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "wvxfb-eqeex-26z4r-vefff-llfh7-vv76x-pje4o-oh57m-eklny-zcs56-wae",
+          "num_blocks_failures_total": "36310",
+          "num_blocks_proposed_total": "1812163"
+        },
+        {
+          "node_id": "nhkbm-fqj7r-jdjii-spvcr-to3iu-ccrkm-pils3-6io5l-ahtry-qhlly-4ae",
+          "num_blocks_failures_total": "101537",
+          "num_blocks_proposed_total": "1739782"
+        },
+        {
+          "node_id": "rg3ny-2qkvz-btitk-sxuiu-fsl2h-nkmij-lagjs-y4bnq-cb63u-vh2rd-aqe",
+          "num_blocks_failures_total": "4175",
+          "num_blocks_proposed_total": "1848402"
+        },
+        {
+          "node_id": "ebfjs-4yyde-6v3qo-zhvwl-2fvp2-4tarv-autre-tparv-kwi7f-t4wml-fae",
+          "num_blocks_failures_total": "6308",
+          "num_blocks_proposed_total": "1846143"
+        },
+        {
+          "node_id": "ijqzn-wklsd-asfzv-ixif4-u7lrb-dblfi-mcq2d-nrwuk-d6cys-jgnar-7qe",
+          "num_blocks_failures_total": "2607",
+          "num_blocks_proposed_total": "1850247"
+        },
+        {
+          "node_id": "7qvtt-6lr4l-gx337-d6xvn-55ka2-6kcx2-c7iby-w36qm-u3ojf-ildyc-iqe",
+          "num_blocks_failures_total": "4328",
+          "num_blocks_proposed_total": "1848157"
+        },
+        {
+          "node_id": "2lhun-vmepu-zc7ic-6lrjj-o4yda-nlmwn-m4i2i-h4oby-hwv4y-mpv7c-fae",
+          "num_blocks_failures_total": "14544",
+          "num_blocks_proposed_total": "1838963"
+        },
+        {
+          "node_id": "dkx5h-i5d56-xeb37-uldi5-dlgmp-atrom-gyfn7-edeih-i5ph6-2cquy-dqe",
+          "num_blocks_failures_total": "33947",
+          "num_blocks_proposed_total": "1814624"
+        },
+        {
+          "node_id": "s5waw-pnvds-kpwqg-n6bly-r45vy-ax64x-sltbe-bbzl3-74npl-u4sos-mae",
+          "num_blocks_failures_total": "14306",
+          "num_blocks_proposed_total": "1711951"
+        },
+        {
+          "node_id": "mlbpy-pvy7z-gfwcb-5bakp-cuubm-prmi3-dppq6-rlepq-nkyvb-u7acf-fqe",
+          "num_blocks_failures_total": "105463",
+          "num_blocks_proposed_total": "1614034"
+        },
+        {
+          "node_id": "2vmqi-lwsmy-rad75-wus6x-3rlbf-cgig6-rtheo-t42r2-i4vdg-jyguw-uqe",
+          "num_blocks_failures_total": "31527",
+          "num_blocks_proposed_total": "1819420"
+        },
+        {
+          "node_id": "ew5us-dwxat-fg6sp-opp2j-fjjg7-rcmyj-d3saj-vyych-f3keg-5kor5-yqe",
+          "num_blocks_failures_total": "8675",
+          "num_blocks_proposed_total": "1843295"
+        },
+        {
+          "node_id": "tliwu-apd5m-f5kxi-g37rt-cqcag-4kmua-v7dsq-xsmv4-pvmhr-la6hu-xae",
+          "num_blocks_failures_total": "2828",
+          "num_blocks_proposed_total": "1771483"
+        }
+      ],
+      "subnet_id": "eq6en-6jqla-fbu5s-daskr-h6hx2-376n5-iqabl-qgrng-gfqmv-n3yjr-mqe",
+      "ts": "1722988799637809618"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "wvxfb-eqeex-26z4r-vefff-llfh7-vv76x-pje4o-oh57m-eklny-zcs56-wae",
+          "num_blocks_failures_total": "36310",
+          "num_blocks_proposed_total": "1819746"
+        },
+        {
+          "node_id": "nhkbm-fqj7r-jdjii-spvcr-to3iu-ccrkm-pils3-6io5l-ahtry-qhlly-4ae",
+          "num_blocks_failures_total": "101674",
+          "num_blocks_proposed_total": "1747304"
+        },
+        {
+          "node_id": "rg3ny-2qkvz-btitk-sxuiu-fsl2h-nkmij-lagjs-y4bnq-cb63u-vh2rd-aqe",
+          "num_blocks_failures_total": "4175",
+          "num_blocks_proposed_total": "1856166"
+        },
+        {
+          "node_id": "ebfjs-4yyde-6v3qo-zhvwl-2fvp2-4tarv-autre-tparv-kwi7f-t4wml-fae",
+          "num_blocks_failures_total": "6309",
+          "num_blocks_proposed_total": "1853785"
+        },
+        {
+          "node_id": "ijqzn-wklsd-asfzv-ixif4-u7lrb-dblfi-mcq2d-nrwuk-d6cys-jgnar-7qe",
+          "num_blocks_failures_total": "2607",
+          "num_blocks_proposed_total": "1857940"
+        },
+        {
+          "node_id": "7qvtt-6lr4l-gx337-d6xvn-55ka2-6kcx2-c7iby-w36qm-u3ojf-ildyc-iqe",
+          "num_blocks_failures_total": "4328",
+          "num_blocks_proposed_total": "1855764"
+        },
+        {
+          "node_id": "2lhun-vmepu-zc7ic-6lrjj-o4yda-nlmwn-m4i2i-h4oby-hwv4y-mpv7c-fae",
+          "num_blocks_failures_total": "14550",
+          "num_blocks_proposed_total": "1846541"
+        },
+        {
+          "node_id": "dkx5h-i5d56-xeb37-uldi5-dlgmp-atrom-gyfn7-edeih-i5ph6-2cquy-dqe",
+          "num_blocks_failures_total": "33967",
+          "num_blocks_proposed_total": "1822317"
+        },
+        {
+          "node_id": "s5waw-pnvds-kpwqg-n6bly-r45vy-ax64x-sltbe-bbzl3-74npl-u4sos-mae",
+          "num_blocks_failures_total": "14323",
+          "num_blocks_proposed_total": "1719583"
+        },
+        {
+          "node_id": "mlbpy-pvy7z-gfwcb-5bakp-cuubm-prmi3-dppq6-rlepq-nkyvb-u7acf-fqe",
+          "num_blocks_failures_total": "105510",
+          "num_blocks_proposed_total": "1621627"
+        },
+        {
+          "node_id": "2vmqi-lwsmy-rad75-wus6x-3rlbf-cgig6-rtheo-t42r2-i4vdg-jyguw-uqe",
+          "num_blocks_failures_total": "31540",
+          "num_blocks_proposed_total": "1827121"
+        },
+        {
+          "node_id": "ew5us-dwxat-fg6sp-opp2j-fjjg7-rcmyj-d3saj-vyych-f3keg-5kor5-yqe",
+          "num_blocks_failures_total": "8675",
+          "num_blocks_proposed_total": "1851009"
+        },
+        {
+          "node_id": "tliwu-apd5m-f5kxi-g37rt-cqcag-4kmua-v7dsq-xsmv4-pvmhr-la6hu-xae",
+          "num_blocks_failures_total": "2829",
+          "num_blocks_proposed_total": "1779115"
+        }
+      ],
+      "subnet_id": "eq6en-6jqla-fbu5s-daskr-h6hx2-376n5-iqabl-qgrng-gfqmv-n3yjr-mqe",
+      "ts": "1723075199372888081"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "wvxfb-eqeex-26z4r-vefff-llfh7-vv76x-pje4o-oh57m-eklny-zcs56-wae",
+          "num_blocks_failures_total": "36310",
+          "num_blocks_proposed_total": "1827384"
+        },
+        {
+          "node_id": "nhkbm-fqj7r-jdjii-spvcr-to3iu-ccrkm-pils3-6io5l-ahtry-qhlly-4ae",
+          "num_blocks_failures_total": "101757",
+          "num_blocks_proposed_total": "1754826"
+        },
+        {
+          "node_id": "rg3ny-2qkvz-btitk-sxuiu-fsl2h-nkmij-lagjs-y4bnq-cb63u-vh2rd-aqe",
+          "num_blocks_failures_total": "4175",
+          "num_blocks_proposed_total": "1863811"
+        },
+        {
+          "node_id": "ebfjs-4yyde-6v3qo-zhvwl-2fvp2-4tarv-autre-tparv-kwi7f-t4wml-fae",
+          "num_blocks_failures_total": "6309",
+          "num_blocks_proposed_total": "1861416"
+        },
+        {
+          "node_id": "ijqzn-wklsd-asfzv-ixif4-u7lrb-dblfi-mcq2d-nrwuk-d6cys-jgnar-7qe",
+          "num_blocks_failures_total": "2608",
+          "num_blocks_proposed_total": "1865672"
+        },
+        {
+          "node_id": "7qvtt-6lr4l-gx337-d6xvn-55ka2-6kcx2-c7iby-w36qm-u3ojf-ildyc-iqe",
+          "num_blocks_failures_total": "4328",
+          "num_blocks_proposed_total": "1863477"
+        },
+        {
+          "node_id": "2lhun-vmepu-zc7ic-6lrjj-o4yda-nlmwn-m4i2i-h4oby-hwv4y-mpv7c-fae",
+          "num_blocks_failures_total": "14745",
+          "num_blocks_proposed_total": "1853921"
+        },
+        {
+          "node_id": "dkx5h-i5d56-xeb37-uldi5-dlgmp-atrom-gyfn7-edeih-i5ph6-2cquy-dqe",
+          "num_blocks_failures_total": "33967",
+          "num_blocks_proposed_total": "1829925"
+        },
+        {
+          "node_id": "s5waw-pnvds-kpwqg-n6bly-r45vy-ax64x-sltbe-bbzl3-74npl-u4sos-mae",
+          "num_blocks_failures_total": "14326",
+          "num_blocks_proposed_total": "1727254"
+        },
+        {
+          "node_id": "mlbpy-pvy7z-gfwcb-5bakp-cuubm-prmi3-dppq6-rlepq-nkyvb-u7acf-fqe",
+          "num_blocks_failures_total": "105527",
+          "num_blocks_proposed_total": "1629300"
+        },
+        {
+          "node_id": "2vmqi-lwsmy-rad75-wus6x-3rlbf-cgig6-rtheo-t42r2-i4vdg-jyguw-uqe",
+          "num_blocks_failures_total": "31544",
+          "num_blocks_proposed_total": "1834773"
+        },
+        {
+          "node_id": "ew5us-dwxat-fg6sp-opp2j-fjjg7-rcmyj-d3saj-vyych-f3keg-5kor5-yqe",
+          "num_blocks_failures_total": "8675",
+          "num_blocks_proposed_total": "1858723"
+        },
+        {
+          "node_id": "tliwu-apd5m-f5kxi-g37rt-cqcag-4kmua-v7dsq-xsmv4-pvmhr-la6hu-xae",
+          "num_blocks_failures_total": "2829",
+          "num_blocks_proposed_total": "1786850"
+        }
+      ],
+      "subnet_id": "eq6en-6jqla-fbu5s-daskr-h6hx2-376n5-iqabl-qgrng-gfqmv-n3yjr-mqe",
+      "ts": "1723161599428643370"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "wvxfb-eqeex-26z4r-vefff-llfh7-vv76x-pje4o-oh57m-eklny-zcs56-wae",
+          "num_blocks_failures_total": "36312",
+          "num_blocks_proposed_total": "1835067"
+        },
+        {
+          "node_id": "nhkbm-fqj7r-jdjii-spvcr-to3iu-ccrkm-pils3-6io5l-ahtry-qhlly-4ae",
+          "num_blocks_failures_total": "101886",
+          "num_blocks_proposed_total": "1762361"
+        },
+        {
+          "node_id": "rg3ny-2qkvz-btitk-sxuiu-fsl2h-nkmij-lagjs-y4bnq-cb63u-vh2rd-aqe",
+          "num_blocks_failures_total": "4175",
+          "num_blocks_proposed_total": "1871524"
+        },
+        {
+          "node_id": "ebfjs-4yyde-6v3qo-zhvwl-2fvp2-4tarv-autre-tparv-kwi7f-t4wml-fae",
+          "num_blocks_failures_total": "6309",
+          "num_blocks_proposed_total": "1868988"
+        },
+        {
+          "node_id": "ijqzn-wklsd-asfzv-ixif4-u7lrb-dblfi-mcq2d-nrwuk-d6cys-jgnar-7qe",
+          "num_blocks_failures_total": "2608",
+          "num_blocks_proposed_total": "1873379"
+        },
+        {
+          "node_id": "7qvtt-6lr4l-gx337-d6xvn-55ka2-6kcx2-c7iby-w36qm-u3ojf-ildyc-iqe",
+          "num_blocks_failures_total": "4336",
+          "num_blocks_proposed_total": "1871227"
+        },
+        {
+          "node_id": "2lhun-vmepu-zc7ic-6lrjj-o4yda-nlmwn-m4i2i-h4oby-hwv4y-mpv7c-fae",
+          "num_blocks_failures_total": "14747",
+          "num_blocks_proposed_total": "1861560"
+        },
+        {
+          "node_id": "dkx5h-i5d56-xeb37-uldi5-dlgmp-atrom-gyfn7-edeih-i5ph6-2cquy-dqe",
+          "num_blocks_failures_total": "33967",
+          "num_blocks_proposed_total": "1837534"
+        },
+        {
+          "node_id": "s5waw-pnvds-kpwqg-n6bly-r45vy-ax64x-sltbe-bbzl3-74npl-u4sos-mae",
+          "num_blocks_failures_total": "15069",
+          "num_blocks_proposed_total": "1734056"
+        },
+        {
+          "node_id": "mlbpy-pvy7z-gfwcb-5bakp-cuubm-prmi3-dppq6-rlepq-nkyvb-u7acf-fqe",
+          "num_blocks_failures_total": "105566",
+          "num_blocks_proposed_total": "1636859"
+        },
+        {
+          "node_id": "2vmqi-lwsmy-rad75-wus6x-3rlbf-cgig6-rtheo-t42r2-i4vdg-jyguw-uqe",
+          "num_blocks_failures_total": "31555",
+          "num_blocks_proposed_total": "1842393"
+        },
+        {
+          "node_id": "ew5us-dwxat-fg6sp-opp2j-fjjg7-rcmyj-d3saj-vyych-f3keg-5kor5-yqe",
+          "num_blocks_failures_total": "8675",
+          "num_blocks_proposed_total": "1866434"
+        },
+        {
+          "node_id": "tliwu-apd5m-f5kxi-g37rt-cqcag-4kmua-v7dsq-xsmv4-pvmhr-la6hu-xae",
+          "num_blocks_failures_total": "2830",
+          "num_blocks_proposed_total": "1794422"
+        }
+      ],
+      "subnet_id": "eq6en-6jqla-fbu5s-daskr-h6hx2-376n5-iqabl-qgrng-gfqmv-n3yjr-mqe",
+      "ts": "1723247999463769817"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "wvxfb-eqeex-26z4r-vefff-llfh7-vv76x-pje4o-oh57m-eklny-zcs56-wae",
+          "num_blocks_failures_total": "36312",
+          "num_blocks_proposed_total": "1842667"
+        },
+        {
+          "node_id": "nhkbm-fqj7r-jdjii-spvcr-to3iu-ccrkm-pils3-6io5l-ahtry-qhlly-4ae",
+          "num_blocks_failures_total": "102015",
+          "num_blocks_proposed_total": "1769888"
+        },
+        {
+          "node_id": "rg3ny-2qkvz-btitk-sxuiu-fsl2h-nkmij-lagjs-y4bnq-cb63u-vh2rd-aqe",
+          "num_blocks_failures_total": "4175",
+          "num_blocks_proposed_total": "1879111"
+        },
+        {
+          "node_id": "ebfjs-4yyde-6v3qo-zhvwl-2fvp2-4tarv-autre-tparv-kwi7f-t4wml-fae",
+          "num_blocks_failures_total": "6309",
+          "num_blocks_proposed_total": "1876659"
+        },
+        {
+          "node_id": "ijqzn-wklsd-asfzv-ixif4-u7lrb-dblfi-mcq2d-nrwuk-d6cys-jgnar-7qe",
+          "num_blocks_failures_total": "2608",
+          "num_blocks_proposed_total": "1880940"
+        },
+        {
+          "node_id": "7qvtt-6lr4l-gx337-d6xvn-55ka2-6kcx2-c7iby-w36qm-u3ojf-ildyc-iqe",
+          "num_blocks_failures_total": "4336",
+          "num_blocks_proposed_total": "1878839"
+        },
+        {
+          "node_id": "2lhun-vmepu-zc7ic-6lrjj-o4yda-nlmwn-m4i2i-h4oby-hwv4y-mpv7c-fae",
+          "num_blocks_failures_total": "14748",
+          "num_blocks_proposed_total": "1869275"
+        },
+        {
+          "node_id": "dkx5h-i5d56-xeb37-uldi5-dlgmp-atrom-gyfn7-edeih-i5ph6-2cquy-dqe",
+          "num_blocks_failures_total": "33967",
+          "num_blocks_proposed_total": "1845075"
+        },
+        {
+          "node_id": "s5waw-pnvds-kpwqg-n6bly-r45vy-ax64x-sltbe-bbzl3-74npl-u4sos-mae",
+          "num_blocks_failures_total": "15304",
+          "num_blocks_proposed_total": "1741494"
+        },
+        {
+          "node_id": "mlbpy-pvy7z-gfwcb-5bakp-cuubm-prmi3-dppq6-rlepq-nkyvb-u7acf-fqe",
+          "num_blocks_failures_total": "105610",
+          "num_blocks_proposed_total": "1644407"
+        },
+        {
+          "node_id": "2vmqi-lwsmy-rad75-wus6x-3rlbf-cgig6-rtheo-t42r2-i4vdg-jyguw-uqe",
+          "num_blocks_failures_total": "31572",
+          "num_blocks_proposed_total": "1850071"
+        },
+        {
+          "node_id": "ew5us-dwxat-fg6sp-opp2j-fjjg7-rcmyj-d3saj-vyych-f3keg-5kor5-yqe",
+          "num_blocks_failures_total": "8677",
+          "num_blocks_proposed_total": "1874086"
+        },
+        {
+          "node_id": "tliwu-apd5m-f5kxi-g37rt-cqcag-4kmua-v7dsq-xsmv4-pvmhr-la6hu-xae",
+          "num_blocks_failures_total": "2831",
+          "num_blocks_proposed_total": "1802172"
+        }
+      ],
+      "subnet_id": "eq6en-6jqla-fbu5s-daskr-h6hx2-376n5-iqabl-qgrng-gfqmv-n3yjr-mqe",
+      "ts": "1723334399798677030"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "wvxfb-eqeex-26z4r-vefff-llfh7-vv76x-pje4o-oh57m-eklny-zcs56-wae",
+          "num_blocks_failures_total": "36313",
+          "num_blocks_proposed_total": "1850498"
+        },
+        {
+          "node_id": "nhkbm-fqj7r-jdjii-spvcr-to3iu-ccrkm-pils3-6io5l-ahtry-qhlly-4ae",
+          "num_blocks_failures_total": "102162",
+          "num_blocks_proposed_total": "1777465"
+        },
+        {
+          "node_id": "rg3ny-2qkvz-btitk-sxuiu-fsl2h-nkmij-lagjs-y4bnq-cb63u-vh2rd-aqe",
+          "num_blocks_failures_total": "4175",
+          "num_blocks_proposed_total": "1886944"
+        },
+        {
+          "node_id": "ebfjs-4yyde-6v3qo-zhvwl-2fvp2-4tarv-autre-tparv-kwi7f-t4wml-fae",
+          "num_blocks_failures_total": "6309",
+          "num_blocks_proposed_total": "1884340"
+        },
+        {
+          "node_id": "ijqzn-wklsd-asfzv-ixif4-u7lrb-dblfi-mcq2d-nrwuk-d6cys-jgnar-7qe",
+          "num_blocks_failures_total": "2608",
+          "num_blocks_proposed_total": "1888530"
+        },
+        {
+          "node_id": "7qvtt-6lr4l-gx337-d6xvn-55ka2-6kcx2-c7iby-w36qm-u3ojf-ildyc-iqe",
+          "num_blocks_failures_total": "4336",
+          "num_blocks_proposed_total": "1886616"
+        },
+        {
+          "node_id": "2lhun-vmepu-zc7ic-6lrjj-o4yda-nlmwn-m4i2i-h4oby-hwv4y-mpv7c-fae",
+          "num_blocks_failures_total": "14756",
+          "num_blocks_proposed_total": "1876901"
+        },
+        {
+          "node_id": "dkx5h-i5d56-xeb37-uldi5-dlgmp-atrom-gyfn7-edeih-i5ph6-2cquy-dqe",
+          "num_blocks_failures_total": "33968",
+          "num_blocks_proposed_total": "1852789"
+        },
+        {
+          "node_id": "s5waw-pnvds-kpwqg-n6bly-r45vy-ax64x-sltbe-bbzl3-74npl-u4sos-mae",
+          "num_blocks_failures_total": "15306",
+          "num_blocks_proposed_total": "1749317"
+        },
+        {
+          "node_id": "mlbpy-pvy7z-gfwcb-5bakp-cuubm-prmi3-dppq6-rlepq-nkyvb-u7acf-fqe",
+          "num_blocks_failures_total": "105659",
+          "num_blocks_proposed_total": "1651969"
+        },
+        {
+          "node_id": "2vmqi-lwsmy-rad75-wus6x-3rlbf-cgig6-rtheo-t42r2-i4vdg-jyguw-uqe",
+          "num_blocks_failures_total": "31580",
+          "num_blocks_proposed_total": "1857768"
+        },
+        {
+          "node_id": "ew5us-dwxat-fg6sp-opp2j-fjjg7-rcmyj-d3saj-vyych-f3keg-5kor5-yqe",
+          "num_blocks_failures_total": "8679",
+          "num_blocks_proposed_total": "1881624"
+        },
+        {
+          "node_id": "tliwu-apd5m-f5kxi-g37rt-cqcag-4kmua-v7dsq-xsmv4-pvmhr-la6hu-xae",
+          "num_blocks_failures_total": "2831",
+          "num_blocks_proposed_total": "1809985"
+        }
+      ],
+      "subnet_id": "eq6en-6jqla-fbu5s-daskr-h6hx2-376n5-iqabl-qgrng-gfqmv-n3yjr-mqe",
+      "ts": "1723420799730164942"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "wvxfb-eqeex-26z4r-vefff-llfh7-vv76x-pje4o-oh57m-eklny-zcs56-wae",
+          "num_blocks_failures_total": "36313",
+          "num_blocks_proposed_total": "1858133"
+        },
+        {
+          "node_id": "nhkbm-fqj7r-jdjii-spvcr-to3iu-ccrkm-pils3-6io5l-ahtry-qhlly-4ae",
+          "num_blocks_failures_total": "102282",
+          "num_blocks_proposed_total": "1785031"
+        },
+        {
+          "node_id": "rg3ny-2qkvz-btitk-sxuiu-fsl2h-nkmij-lagjs-y4bnq-cb63u-vh2rd-aqe",
+          "num_blocks_failures_total": "4175",
+          "num_blocks_proposed_total": "1894646"
+        },
+        {
+          "node_id": "ebfjs-4yyde-6v3qo-zhvwl-2fvp2-4tarv-autre-tparv-kwi7f-t4wml-fae",
+          "num_blocks_failures_total": "6309",
+          "num_blocks_proposed_total": "1892161"
+        },
+        {
+          "node_id": "ijqzn-wklsd-asfzv-ixif4-u7lrb-dblfi-mcq2d-nrwuk-d6cys-jgnar-7qe",
+          "num_blocks_failures_total": "2608",
+          "num_blocks_proposed_total": "1896186"
+        },
+        {
+          "node_id": "7qvtt-6lr4l-gx337-d6xvn-55ka2-6kcx2-c7iby-w36qm-u3ojf-ildyc-iqe",
+          "num_blocks_failures_total": "4354",
+          "num_blocks_proposed_total": "1894267"
+        },
+        {
+          "node_id": "2lhun-vmepu-zc7ic-6lrjj-o4yda-nlmwn-m4i2i-h4oby-hwv4y-mpv7c-fae",
+          "num_blocks_failures_total": "14762",
+          "num_blocks_proposed_total": "1884476"
+        },
+        {
+          "node_id": "dkx5h-i5d56-xeb37-uldi5-dlgmp-atrom-gyfn7-edeih-i5ph6-2cquy-dqe",
+          "num_blocks_failures_total": "33968",
+          "num_blocks_proposed_total": "1860612"
+        },
+        {
+          "node_id": "s5waw-pnvds-kpwqg-n6bly-r45vy-ax64x-sltbe-bbzl3-74npl-u4sos-mae",
+          "num_blocks_failures_total": "15310",
+          "num_blocks_proposed_total": "1756961"
+        },
+        {
+          "node_id": "mlbpy-pvy7z-gfwcb-5bakp-cuubm-prmi3-dppq6-rlepq-nkyvb-u7acf-fqe",
+          "num_blocks_failures_total": "105692",
+          "num_blocks_proposed_total": "1659611"
+        },
+        {
+          "node_id": "2vmqi-lwsmy-rad75-wus6x-3rlbf-cgig6-rtheo-t42r2-i4vdg-jyguw-uqe",
+          "num_blocks_failures_total": "31588",
+          "num_blocks_proposed_total": "1865392"
+        },
+        {
+          "node_id": "ew5us-dwxat-fg6sp-opp2j-fjjg7-rcmyj-d3saj-vyych-f3keg-5kor5-yqe",
+          "num_blocks_failures_total": "8679",
+          "num_blocks_proposed_total": "1889377"
+        },
+        {
+          "node_id": "tliwu-apd5m-f5kxi-g37rt-cqcag-4kmua-v7dsq-xsmv4-pvmhr-la6hu-xae",
+          "num_blocks_failures_total": "2831",
+          "num_blocks_proposed_total": "1817479"
+        }
+      ],
+      "subnet_id": "eq6en-6jqla-fbu5s-daskr-h6hx2-376n5-iqabl-qgrng-gfqmv-n3yjr-mqe",
+      "ts": "1723507199872807796"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "wvxfb-eqeex-26z4r-vefff-llfh7-vv76x-pje4o-oh57m-eklny-zcs56-wae",
+          "num_blocks_failures_total": "36313",
+          "num_blocks_proposed_total": "1865872"
+        },
+        {
+          "node_id": "nhkbm-fqj7r-jdjii-spvcr-to3iu-ccrkm-pils3-6io5l-ahtry-qhlly-4ae",
+          "num_blocks_failures_total": "102371",
+          "num_blocks_proposed_total": "1792561"
+        },
+        {
+          "node_id": "rg3ny-2qkvz-btitk-sxuiu-fsl2h-nkmij-lagjs-y4bnq-cb63u-vh2rd-aqe",
+          "num_blocks_failures_total": "4175",
+          "num_blocks_proposed_total": "1902290"
+        },
+        {
+          "node_id": "ebfjs-4yyde-6v3qo-zhvwl-2fvp2-4tarv-autre-tparv-kwi7f-t4wml-fae",
+          "num_blocks_failures_total": "6309",
+          "num_blocks_proposed_total": "1899643"
+        },
+        {
+          "node_id": "ijqzn-wklsd-asfzv-ixif4-u7lrb-dblfi-mcq2d-nrwuk-d6cys-jgnar-7qe",
+          "num_blocks_failures_total": "2608",
+          "num_blocks_proposed_total": "1903902"
+        },
+        {
+          "node_id": "7qvtt-6lr4l-gx337-d6xvn-55ka2-6kcx2-c7iby-w36qm-u3ojf-ildyc-iqe",
+          "num_blocks_failures_total": "4354",
+          "num_blocks_proposed_total": "1901882"
+        },
+        {
+          "node_id": "2lhun-vmepu-zc7ic-6lrjj-o4yda-nlmwn-m4i2i-h4oby-hwv4y-mpv7c-fae",
+          "num_blocks_failures_total": "14798",
+          "num_blocks_proposed_total": "1892218"
+        },
+        {
+          "node_id": "dkx5h-i5d56-xeb37-uldi5-dlgmp-atrom-gyfn7-edeih-i5ph6-2cquy-dqe",
+          "num_blocks_failures_total": "33968",
+          "num_blocks_proposed_total": "1868232"
+        },
+        {
+          "node_id": "s5waw-pnvds-kpwqg-n6bly-r45vy-ax64x-sltbe-bbzl3-74npl-u4sos-mae",
+          "num_blocks_failures_total": "15312",
+          "num_blocks_proposed_total": "1764565"
+        },
+        {
+          "node_id": "mlbpy-pvy7z-gfwcb-5bakp-cuubm-prmi3-dppq6-rlepq-nkyvb-u7acf-fqe",
+          "num_blocks_failures_total": "105722",
+          "num_blocks_proposed_total": "1667239"
+        },
+        {
+          "node_id": "2vmqi-lwsmy-rad75-wus6x-3rlbf-cgig6-rtheo-t42r2-i4vdg-jyguw-uqe",
+          "num_blocks_failures_total": "31597",
+          "num_blocks_proposed_total": "1873074"
+        },
+        {
+          "node_id": "ew5us-dwxat-fg6sp-opp2j-fjjg7-rcmyj-d3saj-vyych-f3keg-5kor5-yqe",
+          "num_blocks_failures_total": "8818",
+          "num_blocks_proposed_total": "1897048"
+        },
+        {
+          "node_id": "tliwu-apd5m-f5kxi-g37rt-cqcag-4kmua-v7dsq-xsmv4-pvmhr-la6hu-xae",
+          "num_blocks_failures_total": "2831",
+          "num_blocks_proposed_total": "1825129"
+        }
+      ],
+      "subnet_id": "eq6en-6jqla-fbu5s-daskr-h6hx2-376n5-iqabl-qgrng-gfqmv-n3yjr-mqe",
+      "ts": "1723593599919216468"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "wvxfb-eqeex-26z4r-vefff-llfh7-vv76x-pje4o-oh57m-eklny-zcs56-wae",
+          "num_blocks_failures_total": "36313",
+          "num_blocks_proposed_total": "1873613"
+        },
+        {
+          "node_id": "nhkbm-fqj7r-jdjii-spvcr-to3iu-ccrkm-pils3-6io5l-ahtry-qhlly-4ae",
+          "num_blocks_failures_total": "102582",
+          "num_blocks_proposed_total": "1800018"
+        },
+        {
+          "node_id": "rg3ny-2qkvz-btitk-sxuiu-fsl2h-nkmij-lagjs-y4bnq-cb63u-vh2rd-aqe",
+          "num_blocks_failures_total": "4175",
+          "num_blocks_proposed_total": "1910057"
+        },
+        {
+          "node_id": "ebfjs-4yyde-6v3qo-zhvwl-2fvp2-4tarv-autre-tparv-kwi7f-t4wml-fae",
+          "num_blocks_failures_total": "6309",
+          "num_blocks_proposed_total": "1907353"
+        },
+        {
+          "node_id": "ijqzn-wklsd-asfzv-ixif4-u7lrb-dblfi-mcq2d-nrwuk-d6cys-jgnar-7qe",
+          "num_blocks_failures_total": "2625",
+          "num_blocks_proposed_total": "1911535"
+        },
+        {
+          "node_id": "7qvtt-6lr4l-gx337-d6xvn-55ka2-6kcx2-c7iby-w36qm-u3ojf-ildyc-iqe",
+          "num_blocks_failures_total": "4355",
+          "num_blocks_proposed_total": "1909438"
+        },
+        {
+          "node_id": "2lhun-vmepu-zc7ic-6lrjj-o4yda-nlmwn-m4i2i-h4oby-hwv4y-mpv7c-fae",
+          "num_blocks_failures_total": "14805",
+          "num_blocks_proposed_total": "1899835"
+        },
+        {
+          "node_id": "dkx5h-i5d56-xeb37-uldi5-dlgmp-atrom-gyfn7-edeih-i5ph6-2cquy-dqe",
+          "num_blocks_failures_total": "33975",
+          "num_blocks_proposed_total": "1875855"
+        },
+        {
+          "node_id": "s5waw-pnvds-kpwqg-n6bly-r45vy-ax64x-sltbe-bbzl3-74npl-u4sos-mae",
+          "num_blocks_failures_total": "15325",
+          "num_blocks_proposed_total": "1772195"
+        },
+        {
+          "node_id": "mlbpy-pvy7z-gfwcb-5bakp-cuubm-prmi3-dppq6-rlepq-nkyvb-u7acf-fqe",
+          "num_blocks_failures_total": "105761",
+          "num_blocks_proposed_total": "1675097"
+        },
+        {
+          "node_id": "2vmqi-lwsmy-rad75-wus6x-3rlbf-cgig6-rtheo-t42r2-i4vdg-jyguw-uqe",
+          "num_blocks_failures_total": "31597",
+          "num_blocks_proposed_total": "1880845"
+        },
+        {
+          "node_id": "ew5us-dwxat-fg6sp-opp2j-fjjg7-rcmyj-d3saj-vyych-f3keg-5kor5-yqe",
+          "num_blocks_failures_total": "8818",
+          "num_blocks_proposed_total": "1904794"
+        },
+        {
+          "node_id": "tliwu-apd5m-f5kxi-g37rt-cqcag-4kmua-v7dsq-xsmv4-pvmhr-la6hu-xae",
+          "num_blocks_failures_total": "2831",
+          "num_blocks_proposed_total": "1832849"
+        }
+      ],
+      "subnet_id": "eq6en-6jqla-fbu5s-daskr-h6hx2-376n5-iqabl-qgrng-gfqmv-n3yjr-mqe",
+      "ts": "1723679999577701800"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "wvxfb-eqeex-26z4r-vefff-llfh7-vv76x-pje4o-oh57m-eklny-zcs56-wae",
+          "num_blocks_failures_total": "36313",
+          "num_blocks_proposed_total": "1881082"
+        },
+        {
+          "node_id": "nhkbm-fqj7r-jdjii-spvcr-to3iu-ccrkm-pils3-6io5l-ahtry-qhlly-4ae",
+          "num_blocks_failures_total": "102666",
+          "num_blocks_proposed_total": "1807672"
+        },
+        {
+          "node_id": "rg3ny-2qkvz-btitk-sxuiu-fsl2h-nkmij-lagjs-y4bnq-cb63u-vh2rd-aqe",
+          "num_blocks_failures_total": "4176",
+          "num_blocks_proposed_total": "1917671"
+        },
+        {
+          "node_id": "ebfjs-4yyde-6v3qo-zhvwl-2fvp2-4tarv-autre-tparv-kwi7f-t4wml-fae",
+          "num_blocks_failures_total": "6309",
+          "num_blocks_proposed_total": "1915075"
+        },
+        {
+          "node_id": "ijqzn-wklsd-asfzv-ixif4-u7lrb-dblfi-mcq2d-nrwuk-d6cys-jgnar-7qe",
+          "num_blocks_failures_total": "2626",
+          "num_blocks_proposed_total": "1919286"
+        },
+        {
+          "node_id": "7qvtt-6lr4l-gx337-d6xvn-55ka2-6kcx2-c7iby-w36qm-u3ojf-ildyc-iqe",
+          "num_blocks_failures_total": "4358",
+          "num_blocks_proposed_total": "1917040"
+        },
+        {
+          "node_id": "2lhun-vmepu-zc7ic-6lrjj-o4yda-nlmwn-m4i2i-h4oby-hwv4y-mpv7c-fae",
+          "num_blocks_failures_total": "14806",
+          "num_blocks_proposed_total": "1907601"
+        },
+        {
+          "node_id": "dkx5h-i5d56-xeb37-uldi5-dlgmp-atrom-gyfn7-edeih-i5ph6-2cquy-dqe",
+          "num_blocks_failures_total": "33975",
+          "num_blocks_proposed_total": "1883569"
+        },
+        {
+          "node_id": "s5waw-pnvds-kpwqg-n6bly-r45vy-ax64x-sltbe-bbzl3-74npl-u4sos-mae",
+          "num_blocks_failures_total": "15333",
+          "num_blocks_proposed_total": "1780070"
+        },
+        {
+          "node_id": "mlbpy-pvy7z-gfwcb-5bakp-cuubm-prmi3-dppq6-rlepq-nkyvb-u7acf-fqe",
+          "num_blocks_failures_total": "105822",
+          "num_blocks_proposed_total": "1682724"
+        },
+        {
+          "node_id": "2vmqi-lwsmy-rad75-wus6x-3rlbf-cgig6-rtheo-t42r2-i4vdg-jyguw-uqe",
+          "num_blocks_failures_total": "31597",
+          "num_blocks_proposed_total": "1888485"
+        },
+        {
+          "node_id": "ew5us-dwxat-fg6sp-opp2j-fjjg7-rcmyj-d3saj-vyych-f3keg-5kor5-yqe",
+          "num_blocks_failures_total": "8818",
+          "num_blocks_proposed_total": "1912360"
+        },
+        {
+          "node_id": "tliwu-apd5m-f5kxi-g37rt-cqcag-4kmua-v7dsq-xsmv4-pvmhr-la6hu-xae",
+          "num_blocks_failures_total": "2831",
+          "num_blocks_proposed_total": "1840523"
+        }
+      ],
+      "subnet_id": "eq6en-6jqla-fbu5s-daskr-h6hx2-376n5-iqabl-qgrng-gfqmv-n3yjr-mqe",
+      "ts": "1723766399232346547"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "wvxfb-eqeex-26z4r-vefff-llfh7-vv76x-pje4o-oh57m-eklny-zcs56-wae",
+          "num_blocks_failures_total": "36313",
+          "num_blocks_proposed_total": "1888694"
+        },
+        {
+          "node_id": "nhkbm-fqj7r-jdjii-spvcr-to3iu-ccrkm-pils3-6io5l-ahtry-qhlly-4ae",
+          "num_blocks_failures_total": "103175",
+          "num_blocks_proposed_total": "1814553"
+        },
+        {
+          "node_id": "rg3ny-2qkvz-btitk-sxuiu-fsl2h-nkmij-lagjs-y4bnq-cb63u-vh2rd-aqe",
+          "num_blocks_failures_total": "4176",
+          "num_blocks_proposed_total": "1925143"
+        },
+        {
+          "node_id": "ebfjs-4yyde-6v3qo-zhvwl-2fvp2-4tarv-autre-tparv-kwi7f-t4wml-fae",
+          "num_blocks_failures_total": "6309",
+          "num_blocks_proposed_total": "1922669"
+        },
+        {
+          "node_id": "ijqzn-wklsd-asfzv-ixif4-u7lrb-dblfi-mcq2d-nrwuk-d6cys-jgnar-7qe",
+          "num_blocks_failures_total": "2628",
+          "num_blocks_proposed_total": "1926761"
+        },
+        {
+          "node_id": "7qvtt-6lr4l-gx337-d6xvn-55ka2-6kcx2-c7iby-w36qm-u3ojf-ildyc-iqe",
+          "num_blocks_failures_total": "4361",
+          "num_blocks_proposed_total": "1924524"
+        },
+        {
+          "node_id": "2lhun-vmepu-zc7ic-6lrjj-o4yda-nlmwn-m4i2i-h4oby-hwv4y-mpv7c-fae",
+          "num_blocks_failures_total": "14807",
+          "num_blocks_proposed_total": "1915212"
+        },
+        {
+          "node_id": "dkx5h-i5d56-xeb37-uldi5-dlgmp-atrom-gyfn7-edeih-i5ph6-2cquy-dqe",
+          "num_blocks_failures_total": "33975",
+          "num_blocks_proposed_total": "1891154"
+        },
+        {
+          "node_id": "s5waw-pnvds-kpwqg-n6bly-r45vy-ax64x-sltbe-bbzl3-74npl-u4sos-mae",
+          "num_blocks_failures_total": "15353",
+          "num_blocks_proposed_total": "1787453"
+        },
+        {
+          "node_id": "mlbpy-pvy7z-gfwcb-5bakp-cuubm-prmi3-dppq6-rlepq-nkyvb-u7acf-fqe",
+          "num_blocks_failures_total": "105973",
+          "num_blocks_proposed_total": "1690056"
+        },
+        {
+          "node_id": "2vmqi-lwsmy-rad75-wus6x-3rlbf-cgig6-rtheo-t42r2-i4vdg-jyguw-uqe",
+          "num_blocks_failures_total": "31606",
+          "num_blocks_proposed_total": "1895990"
+        },
+        {
+          "node_id": "ew5us-dwxat-fg6sp-opp2j-fjjg7-rcmyj-d3saj-vyych-f3keg-5kor5-yqe",
+          "num_blocks_failures_total": "8820",
+          "num_blocks_proposed_total": "1919790"
+        },
+        {
+          "node_id": "tliwu-apd5m-f5kxi-g37rt-cqcag-4kmua-v7dsq-xsmv4-pvmhr-la6hu-xae",
+          "num_blocks_failures_total": "2837",
+          "num_blocks_proposed_total": "1848034"
+        }
+      ],
+      "subnet_id": "eq6en-6jqla-fbu5s-daskr-h6hx2-376n5-iqabl-qgrng-gfqmv-n3yjr-mqe",
+      "ts": "1723852799836272975"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "wvxfb-eqeex-26z4r-vefff-llfh7-vv76x-pje4o-oh57m-eklny-zcs56-wae",
+          "num_blocks_failures_total": "36314",
+          "num_blocks_proposed_total": "1896238"
+        },
+        {
+          "node_id": "nhkbm-fqj7r-jdjii-spvcr-to3iu-ccrkm-pils3-6io5l-ahtry-qhlly-4ae",
+          "num_blocks_failures_total": "103633",
+          "num_blocks_proposed_total": "1821697"
+        },
+        {
+          "node_id": "rg3ny-2qkvz-btitk-sxuiu-fsl2h-nkmij-lagjs-y4bnq-cb63u-vh2rd-aqe",
+          "num_blocks_failures_total": "4176",
+          "num_blocks_proposed_total": "1932817"
+        },
+        {
+          "node_id": "ebfjs-4yyde-6v3qo-zhvwl-2fvp2-4tarv-autre-tparv-kwi7f-t4wml-fae",
+          "num_blocks_failures_total": "6309",
+          "num_blocks_proposed_total": "1930346"
+        },
+        {
+          "node_id": "ijqzn-wklsd-asfzv-ixif4-u7lrb-dblfi-mcq2d-nrwuk-d6cys-jgnar-7qe",
+          "num_blocks_failures_total": "2628",
+          "num_blocks_proposed_total": "1934355"
+        },
+        {
+          "node_id": "7qvtt-6lr4l-gx337-d6xvn-55ka2-6kcx2-c7iby-w36qm-u3ojf-ildyc-iqe",
+          "num_blocks_failures_total": "4363",
+          "num_blocks_proposed_total": "1932228"
+        },
+        {
+          "node_id": "2lhun-vmepu-zc7ic-6lrjj-o4yda-nlmwn-m4i2i-h4oby-hwv4y-mpv7c-fae",
+          "num_blocks_failures_total": "14807",
+          "num_blocks_proposed_total": "1922772"
+        },
+        {
+          "node_id": "dkx5h-i5d56-xeb37-uldi5-dlgmp-atrom-gyfn7-edeih-i5ph6-2cquy-dqe",
+          "num_blocks_failures_total": "33976",
+          "num_blocks_proposed_total": "1898951"
+        },
+        {
+          "node_id": "s5waw-pnvds-kpwqg-n6bly-r45vy-ax64x-sltbe-bbzl3-74npl-u4sos-mae",
+          "num_blocks_failures_total": "15358",
+          "num_blocks_proposed_total": "1795132"
+        },
+        {
+          "node_id": "mlbpy-pvy7z-gfwcb-5bakp-cuubm-prmi3-dppq6-rlepq-nkyvb-u7acf-fqe",
+          "num_blocks_failures_total": "106082",
+          "num_blocks_proposed_total": "1697652"
+        },
+        {
+          "node_id": "2vmqi-lwsmy-rad75-wus6x-3rlbf-cgig6-rtheo-t42r2-i4vdg-jyguw-uqe",
+          "num_blocks_failures_total": "31618",
+          "num_blocks_proposed_total": "1903679"
+        },
+        {
+          "node_id": "ew5us-dwxat-fg6sp-opp2j-fjjg7-rcmyj-d3saj-vyych-f3keg-5kor5-yqe",
+          "num_blocks_failures_total": "8821",
+          "num_blocks_proposed_total": "1927371"
+        },
+        {
+          "node_id": "tliwu-apd5m-f5kxi-g37rt-cqcag-4kmua-v7dsq-xsmv4-pvmhr-la6hu-xae",
+          "num_blocks_failures_total": "2838",
+          "num_blocks_proposed_total": "1855653"
+        }
+      ],
+      "subnet_id": "eq6en-6jqla-fbu5s-daskr-h6hx2-376n5-iqabl-qgrng-gfqmv-n3yjr-mqe",
+      "ts": "1723939197657337459"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "wvxfb-eqeex-26z4r-vefff-llfh7-vv76x-pje4o-oh57m-eklny-zcs56-wae",
+          "num_blocks_failures_total": "36318",
+          "num_blocks_proposed_total": "1903962"
+        },
+        {
+          "node_id": "nhkbm-fqj7r-jdjii-spvcr-to3iu-ccrkm-pils3-6io5l-ahtry-qhlly-4ae",
+          "num_blocks_failures_total": "103860",
+          "num_blocks_proposed_total": "1829185"
+        },
+        {
+          "node_id": "rg3ny-2qkvz-btitk-sxuiu-fsl2h-nkmij-lagjs-y4bnq-cb63u-vh2rd-aqe",
+          "num_blocks_failures_total": "4176",
+          "num_blocks_proposed_total": "1940523"
+        },
+        {
+          "node_id": "ebfjs-4yyde-6v3qo-zhvwl-2fvp2-4tarv-autre-tparv-kwi7f-t4wml-fae",
+          "num_blocks_failures_total": "6309",
+          "num_blocks_proposed_total": "1938085"
+        },
+        {
+          "node_id": "ijqzn-wklsd-asfzv-ixif4-u7lrb-dblfi-mcq2d-nrwuk-d6cys-jgnar-7qe",
+          "num_blocks_failures_total": "2628",
+          "num_blocks_proposed_total": "1942070"
+        },
+        {
+          "node_id": "7qvtt-6lr4l-gx337-d6xvn-55ka2-6kcx2-c7iby-w36qm-u3ojf-ildyc-iqe",
+          "num_blocks_failures_total": "4366",
+          "num_blocks_proposed_total": "1939729"
+        },
+        {
+          "node_id": "2lhun-vmepu-zc7ic-6lrjj-o4yda-nlmwn-m4i2i-h4oby-hwv4y-mpv7c-fae",
+          "num_blocks_failures_total": "14808",
+          "num_blocks_proposed_total": "1930245"
+        },
+        {
+          "node_id": "dkx5h-i5d56-xeb37-uldi5-dlgmp-atrom-gyfn7-edeih-i5ph6-2cquy-dqe",
+          "num_blocks_failures_total": "33976",
+          "num_blocks_proposed_total": "1906573"
+        },
+        {
+          "node_id": "s5waw-pnvds-kpwqg-n6bly-r45vy-ax64x-sltbe-bbzl3-74npl-u4sos-mae",
+          "num_blocks_failures_total": "15380",
+          "num_blocks_proposed_total": "1802731"
+        },
+        {
+          "node_id": "mlbpy-pvy7z-gfwcb-5bakp-cuubm-prmi3-dppq6-rlepq-nkyvb-u7acf-fqe",
+          "num_blocks_failures_total": "106206",
+          "num_blocks_proposed_total": "1705284"
+        },
+        {
+          "node_id": "2vmqi-lwsmy-rad75-wus6x-3rlbf-cgig6-rtheo-t42r2-i4vdg-jyguw-uqe",
+          "num_blocks_failures_total": "31640",
+          "num_blocks_proposed_total": "1911196"
+        },
+        {
+          "node_id": "ew5us-dwxat-fg6sp-opp2j-fjjg7-rcmyj-d3saj-vyych-f3keg-5kor5-yqe",
+          "num_blocks_failures_total": "8821",
+          "num_blocks_proposed_total": "1934927"
+        },
+        {
+          "node_id": "tliwu-apd5m-f5kxi-g37rt-cqcag-4kmua-v7dsq-xsmv4-pvmhr-la6hu-xae",
+          "num_blocks_failures_total": "2838",
+          "num_blocks_proposed_total": "1863390"
+        }
+      ],
+      "subnet_id": "eq6en-6jqla-fbu5s-daskr-h6hx2-376n5-iqabl-qgrng-gfqmv-n3yjr-mqe",
+      "ts": "1724025599409340446"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "wvxfb-eqeex-26z4r-vefff-llfh7-vv76x-pje4o-oh57m-eklny-zcs56-wae",
+          "num_blocks_failures_total": "36321",
+          "num_blocks_proposed_total": "1911567"
+        },
+        {
+          "node_id": "nhkbm-fqj7r-jdjii-spvcr-to3iu-ccrkm-pils3-6io5l-ahtry-qhlly-4ae",
+          "num_blocks_failures_total": "104080",
+          "num_blocks_proposed_total": "1836665"
+        },
+        {
+          "node_id": "rg3ny-2qkvz-btitk-sxuiu-fsl2h-nkmij-lagjs-y4bnq-cb63u-vh2rd-aqe",
+          "num_blocks_failures_total": "4176",
+          "num_blocks_proposed_total": "1948124"
+        },
+        {
+          "node_id": "ebfjs-4yyde-6v3qo-zhvwl-2fvp2-4tarv-autre-tparv-kwi7f-t4wml-fae",
+          "num_blocks_failures_total": "6309",
+          "num_blocks_proposed_total": "1945827"
+        },
+        {
+          "node_id": "ijqzn-wklsd-asfzv-ixif4-u7lrb-dblfi-mcq2d-nrwuk-d6cys-jgnar-7qe",
+          "num_blocks_failures_total": "2628",
+          "num_blocks_proposed_total": "1949832"
+        },
+        {
+          "node_id": "7qvtt-6lr4l-gx337-d6xvn-55ka2-6kcx2-c7iby-w36qm-u3ojf-ildyc-iqe",
+          "num_blocks_failures_total": "4369",
+          "num_blocks_proposed_total": "1947349"
+        },
+        {
+          "node_id": "2lhun-vmepu-zc7ic-6lrjj-o4yda-nlmwn-m4i2i-h4oby-hwv4y-mpv7c-fae",
+          "num_blocks_failures_total": "14808",
+          "num_blocks_proposed_total": "1937841"
+        },
+        {
+          "node_id": "dkx5h-i5d56-xeb37-uldi5-dlgmp-atrom-gyfn7-edeih-i5ph6-2cquy-dqe",
+          "num_blocks_failures_total": "33976",
+          "num_blocks_proposed_total": "1914234"
+        },
+        {
+          "node_id": "s5waw-pnvds-kpwqg-n6bly-r45vy-ax64x-sltbe-bbzl3-74npl-u4sos-mae",
+          "num_blocks_failures_total": "15387",
+          "num_blocks_proposed_total": "1810272"
+        },
+        {
+          "node_id": "mlbpy-pvy7z-gfwcb-5bakp-cuubm-prmi3-dppq6-rlepq-nkyvb-u7acf-fqe",
+          "num_blocks_failures_total": "106320",
+          "num_blocks_proposed_total": "1712785"
+        },
+        {
+          "node_id": "2vmqi-lwsmy-rad75-wus6x-3rlbf-cgig6-rtheo-t42r2-i4vdg-jyguw-uqe",
+          "num_blocks_failures_total": "31650",
+          "num_blocks_proposed_total": "1918912"
+        },
+        {
+          "node_id": "ew5us-dwxat-fg6sp-opp2j-fjjg7-rcmyj-d3saj-vyych-f3keg-5kor5-yqe",
+          "num_blocks_failures_total": "8821",
+          "num_blocks_proposed_total": "1942435"
+        },
+        {
+          "node_id": "tliwu-apd5m-f5kxi-g37rt-cqcag-4kmua-v7dsq-xsmv4-pvmhr-la6hu-xae",
+          "num_blocks_failures_total": "2839",
+          "num_blocks_proposed_total": "1871053"
+        }
+      ],
+      "subnet_id": "eq6en-6jqla-fbu5s-daskr-h6hx2-376n5-iqabl-qgrng-gfqmv-n3yjr-mqe",
+      "ts": "1724111999440824171"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "wvxfb-eqeex-26z4r-vefff-llfh7-vv76x-pje4o-oh57m-eklny-zcs56-wae",
+          "num_blocks_failures_total": "36321",
+          "num_blocks_proposed_total": "1918596"
+        },
+        {
+          "node_id": "nhkbm-fqj7r-jdjii-spvcr-to3iu-ccrkm-pils3-6io5l-ahtry-qhlly-4ae",
+          "num_blocks_failures_total": "105887",
+          "num_blocks_proposed_total": "1841835"
+        },
+        {
+          "node_id": "rg3ny-2qkvz-btitk-sxuiu-fsl2h-nkmij-lagjs-y4bnq-cb63u-vh2rd-aqe",
+          "num_blocks_failures_total": "4176",
+          "num_blocks_proposed_total": "1955031"
+        },
+        {
+          "node_id": "ebfjs-4yyde-6v3qo-zhvwl-2fvp2-4tarv-autre-tparv-kwi7f-t4wml-fae",
+          "num_blocks_failures_total": "6696",
+          "num_blocks_proposed_total": "1952346"
+        },
+        {
+          "node_id": "ijqzn-wklsd-asfzv-ixif4-u7lrb-dblfi-mcq2d-nrwuk-d6cys-jgnar-7qe",
+          "num_blocks_failures_total": "2641",
+          "num_blocks_proposed_total": "1956927"
+        },
+        {
+          "node_id": "7qvtt-6lr4l-gx337-d6xvn-55ka2-6kcx2-c7iby-w36qm-u3ojf-ildyc-iqe",
+          "num_blocks_failures_total": "4375",
+          "num_blocks_proposed_total": "1954319"
+        },
+        {
+          "node_id": "2lhun-vmepu-zc7ic-6lrjj-o4yda-nlmwn-m4i2i-h4oby-hwv4y-mpv7c-fae",
+          "num_blocks_failures_total": "14808",
+          "num_blocks_proposed_total": "1944839"
+        },
+        {
+          "node_id": "dkx5h-i5d56-xeb37-uldi5-dlgmp-atrom-gyfn7-edeih-i5ph6-2cquy-dqe",
+          "num_blocks_failures_total": "34023",
+          "num_blocks_proposed_total": "1921358"
+        },
+        {
+          "node_id": "s5waw-pnvds-kpwqg-n6bly-r45vy-ax64x-sltbe-bbzl3-74npl-u4sos-mae",
+          "num_blocks_failures_total": "15394",
+          "num_blocks_proposed_total": "1817308"
+        },
+        {
+          "node_id": "mlbpy-pvy7z-gfwcb-5bakp-cuubm-prmi3-dppq6-rlepq-nkyvb-u7acf-fqe",
+          "num_blocks_failures_total": "106430",
+          "num_blocks_proposed_total": "1719698"
+        },
+        {
+          "node_id": "2vmqi-lwsmy-rad75-wus6x-3rlbf-cgig6-rtheo-t42r2-i4vdg-jyguw-uqe",
+          "num_blocks_failures_total": "31663",
+          "num_blocks_proposed_total": "1926113"
+        },
+        {
+          "node_id": "ew5us-dwxat-fg6sp-opp2j-fjjg7-rcmyj-d3saj-vyych-f3keg-5kor5-yqe",
+          "num_blocks_failures_total": "8821",
+          "num_blocks_proposed_total": "1949426"
+        },
+        {
+          "node_id": "tliwu-apd5m-f5kxi-g37rt-cqcag-4kmua-v7dsq-xsmv4-pvmhr-la6hu-xae",
+          "num_blocks_failures_total": "2839",
+          "num_blocks_proposed_total": "1878083"
+        }
+      ],
+      "subnet_id": "eq6en-6jqla-fbu5s-daskr-h6hx2-376n5-iqabl-qgrng-gfqmv-n3yjr-mqe",
+      "ts": "1724198399594154708"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "wvxfb-eqeex-26z4r-vefff-llfh7-vv76x-pje4o-oh57m-eklny-zcs56-wae",
+          "num_blocks_failures_total": "36339",
+          "num_blocks_proposed_total": "1925249"
+        },
+        {
+          "node_id": "nhkbm-fqj7r-jdjii-spvcr-to3iu-ccrkm-pils3-6io5l-ahtry-qhlly-4ae",
+          "num_blocks_failures_total": "106996",
+          "num_blocks_proposed_total": "1847594"
+        },
+        {
+          "node_id": "rg3ny-2qkvz-btitk-sxuiu-fsl2h-nkmij-lagjs-y4bnq-cb63u-vh2rd-aqe",
+          "num_blocks_failures_total": "4183",
+          "num_blocks_proposed_total": "1961799"
+        },
+        {
+          "node_id": "ebfjs-4yyde-6v3qo-zhvwl-2fvp2-4tarv-autre-tparv-kwi7f-t4wml-fae",
+          "num_blocks_failures_total": "6696",
+          "num_blocks_proposed_total": "1959120"
+        },
+        {
+          "node_id": "ijqzn-wklsd-asfzv-ixif4-u7lrb-dblfi-mcq2d-nrwuk-d6cys-jgnar-7qe",
+          "num_blocks_failures_total": "2792",
+          "num_blocks_proposed_total": "1963594"
+        },
+        {
+          "node_id": "7qvtt-6lr4l-gx337-d6xvn-55ka2-6kcx2-c7iby-w36qm-u3ojf-ildyc-iqe",
+          "num_blocks_failures_total": "4379",
+          "num_blocks_proposed_total": "1961153"
+        },
+        {
+          "node_id": "2lhun-vmepu-zc7ic-6lrjj-o4yda-nlmwn-m4i2i-h4oby-hwv4y-mpv7c-fae",
+          "num_blocks_failures_total": "14831",
+          "num_blocks_proposed_total": "1951576"
+        },
+        {
+          "node_id": "dkx5h-i5d56-xeb37-uldi5-dlgmp-atrom-gyfn7-edeih-i5ph6-2cquy-dqe",
+          "num_blocks_failures_total": "34174",
+          "num_blocks_proposed_total": "1927911"
+        },
+        {
+          "node_id": "s5waw-pnvds-kpwqg-n6bly-r45vy-ax64x-sltbe-bbzl3-74npl-u4sos-mae",
+          "num_blocks_failures_total": "15399",
+          "num_blocks_proposed_total": "1824131"
+        },
+        {
+          "node_id": "mlbpy-pvy7z-gfwcb-5bakp-cuubm-prmi3-dppq6-rlepq-nkyvb-u7acf-fqe",
+          "num_blocks_failures_total": "106444",
+          "num_blocks_proposed_total": "1726582"
+        },
+        {
+          "node_id": "2vmqi-lwsmy-rad75-wus6x-3rlbf-cgig6-rtheo-t42r2-i4vdg-jyguw-uqe",
+          "num_blocks_failures_total": "31672",
+          "num_blocks_proposed_total": "1932928"
+        },
+        {
+          "node_id": "ew5us-dwxat-fg6sp-opp2j-fjjg7-rcmyj-d3saj-vyych-f3keg-5kor5-yqe",
+          "num_blocks_failures_total": "8821",
+          "num_blocks_proposed_total": "1956226"
+        },
+        {
+          "node_id": "tliwu-apd5m-f5kxi-g37rt-cqcag-4kmua-v7dsq-xsmv4-pvmhr-la6hu-xae",
+          "num_blocks_failures_total": "2842",
+          "num_blocks_proposed_total": "1884855"
+        }
+      ],
+      "subnet_id": "eq6en-6jqla-fbu5s-daskr-h6hx2-376n5-iqabl-qgrng-gfqmv-n3yjr-mqe",
+      "ts": "1724284799914998339"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "wvxfb-eqeex-26z4r-vefff-llfh7-vv76x-pje4o-oh57m-eklny-zcs56-wae",
+          "num_blocks_failures_total": "36340",
+          "num_blocks_proposed_total": "1932661"
+        },
+        {
+          "node_id": "nhkbm-fqj7r-jdjii-spvcr-to3iu-ccrkm-pils3-6io5l-ahtry-qhlly-4ae",
+          "num_blocks_failures_total": "107331",
+          "num_blocks_proposed_total": "1854738"
+        },
+        {
+          "node_id": "rg3ny-2qkvz-btitk-sxuiu-fsl2h-nkmij-lagjs-y4bnq-cb63u-vh2rd-aqe",
+          "num_blocks_failures_total": "4184",
+          "num_blocks_proposed_total": "1969280"
+        },
+        {
+          "node_id": "ebfjs-4yyde-6v3qo-zhvwl-2fvp2-4tarv-autre-tparv-kwi7f-t4wml-fae",
+          "num_blocks_failures_total": "6696",
+          "num_blocks_proposed_total": "1966602"
+        },
+        {
+          "node_id": "ijqzn-wklsd-asfzv-ixif4-u7lrb-dblfi-mcq2d-nrwuk-d6cys-jgnar-7qe",
+          "num_blocks_failures_total": "2811",
+          "num_blocks_proposed_total": "1971272"
+        },
+        {
+          "node_id": "7qvtt-6lr4l-gx337-d6xvn-55ka2-6kcx2-c7iby-w36qm-u3ojf-ildyc-iqe",
+          "num_blocks_failures_total": "4385",
+          "num_blocks_proposed_total": "1968509"
+        },
+        {
+          "node_id": "2lhun-vmepu-zc7ic-6lrjj-o4yda-nlmwn-m4i2i-h4oby-hwv4y-mpv7c-fae",
+          "num_blocks_failures_total": "14832",
+          "num_blocks_proposed_total": "1958994"
+        },
+        {
+          "node_id": "dkx5h-i5d56-xeb37-uldi5-dlgmp-atrom-gyfn7-edeih-i5ph6-2cquy-dqe",
+          "num_blocks_failures_total": "34176",
+          "num_blocks_proposed_total": "1935522"
+        },
+        {
+          "node_id": "s5waw-pnvds-kpwqg-n6bly-r45vy-ax64x-sltbe-bbzl3-74npl-u4sos-mae",
+          "num_blocks_failures_total": "15409",
+          "num_blocks_proposed_total": "1831573"
+        },
+        {
+          "node_id": "mlbpy-pvy7z-gfwcb-5bakp-cuubm-prmi3-dppq6-rlepq-nkyvb-u7acf-fqe",
+          "num_blocks_failures_total": "106474",
+          "num_blocks_proposed_total": "1734164"
+        },
+        {
+          "node_id": "2vmqi-lwsmy-rad75-wus6x-3rlbf-cgig6-rtheo-t42r2-i4vdg-jyguw-uqe",
+          "num_blocks_failures_total": "31682",
+          "num_blocks_proposed_total": "1940509"
+        },
+        {
+          "node_id": "ew5us-dwxat-fg6sp-opp2j-fjjg7-rcmyj-d3saj-vyych-f3keg-5kor5-yqe",
+          "num_blocks_failures_total": "8822",
+          "num_blocks_proposed_total": "1963765"
+        },
+        {
+          "node_id": "tliwu-apd5m-f5kxi-g37rt-cqcag-4kmua-v7dsq-xsmv4-pvmhr-la6hu-xae",
+          "num_blocks_failures_total": "2845",
+          "num_blocks_proposed_total": "1892295"
+        }
+      ],
+      "subnet_id": "eq6en-6jqla-fbu5s-daskr-h6hx2-376n5-iqabl-qgrng-gfqmv-n3yjr-mqe",
+      "ts": "1724371199332093128"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "wvxfb-eqeex-26z4r-vefff-llfh7-vv76x-pje4o-oh57m-eklny-zcs56-wae",
+          "num_blocks_failures_total": "36340",
+          "num_blocks_proposed_total": "1939433"
+        },
+        {
+          "node_id": "nhkbm-fqj7r-jdjii-spvcr-to3iu-ccrkm-pils3-6io5l-ahtry-qhlly-4ae",
+          "num_blocks_failures_total": "109841",
+          "num_blocks_proposed_total": "1858929"
+        },
+        {
+          "node_id": "rg3ny-2qkvz-btitk-sxuiu-fsl2h-nkmij-lagjs-y4bnq-cb63u-vh2rd-aqe",
+          "num_blocks_failures_total": "4213",
+          "num_blocks_proposed_total": "1976160"
+        },
+        {
+          "node_id": "ebfjs-4yyde-6v3qo-zhvwl-2fvp2-4tarv-autre-tparv-kwi7f-t4wml-fae",
+          "num_blocks_failures_total": "6696",
+          "num_blocks_proposed_total": "1973205"
+        },
+        {
+          "node_id": "ijqzn-wklsd-asfzv-ixif4-u7lrb-dblfi-mcq2d-nrwuk-d6cys-jgnar-7qe",
+          "num_blocks_failures_total": "2816",
+          "num_blocks_proposed_total": "1978235"
+        },
+        {
+          "node_id": "7qvtt-6lr4l-gx337-d6xvn-55ka2-6kcx2-c7iby-w36qm-u3ojf-ildyc-iqe",
+          "num_blocks_failures_total": "4386",
+          "num_blocks_proposed_total": "1975415"
+        },
+        {
+          "node_id": "2lhun-vmepu-zc7ic-6lrjj-o4yda-nlmwn-m4i2i-h4oby-hwv4y-mpv7c-fae",
+          "num_blocks_failures_total": "14834",
+          "num_blocks_proposed_total": "1965669"
+        },
+        {
+          "node_id": "dkx5h-i5d56-xeb37-uldi5-dlgmp-atrom-gyfn7-edeih-i5ph6-2cquy-dqe",
+          "num_blocks_failures_total": "34178",
+          "num_blocks_proposed_total": "1942274"
+        },
+        {
+          "node_id": "s5waw-pnvds-kpwqg-n6bly-r45vy-ax64x-sltbe-bbzl3-74npl-u4sos-mae",
+          "num_blocks_failures_total": "15433",
+          "num_blocks_proposed_total": "1838346"
+        },
+        {
+          "node_id": "mlbpy-pvy7z-gfwcb-5bakp-cuubm-prmi3-dppq6-rlepq-nkyvb-u7acf-fqe",
+          "num_blocks_failures_total": "106512",
+          "num_blocks_proposed_total": "1740925"
+        },
+        {
+          "node_id": "2vmqi-lwsmy-rad75-wus6x-3rlbf-cgig6-rtheo-t42r2-i4vdg-jyguw-uqe",
+          "num_blocks_failures_total": "31690",
+          "num_blocks_proposed_total": "1947313"
+        },
+        {
+          "node_id": "ew5us-dwxat-fg6sp-opp2j-fjjg7-rcmyj-d3saj-vyych-f3keg-5kor5-yqe",
+          "num_blocks_failures_total": "8825",
+          "num_blocks_proposed_total": "1970571"
+        },
+        {
+          "node_id": "tliwu-apd5m-f5kxi-g37rt-cqcag-4kmua-v7dsq-xsmv4-pvmhr-la6hu-xae",
+          "num_blocks_failures_total": "2997",
+          "num_blocks_proposed_total": "1898970"
+        }
+      ],
+      "subnet_id": "eq6en-6jqla-fbu5s-daskr-h6hx2-376n5-iqabl-qgrng-gfqmv-n3yjr-mqe",
+      "ts": "1724457599743083243"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "wvxfb-eqeex-26z4r-vefff-llfh7-vv76x-pje4o-oh57m-eklny-zcs56-wae",
+          "num_blocks_failures_total": "36341",
+          "num_blocks_proposed_total": "1945997"
+        },
+        {
+          "node_id": "nhkbm-fqj7r-jdjii-spvcr-to3iu-ccrkm-pils3-6io5l-ahtry-qhlly-4ae",
+          "num_blocks_failures_total": "112020",
+          "num_blocks_proposed_total": "1863094"
+        },
+        {
+          "node_id": "rg3ny-2qkvz-btitk-sxuiu-fsl2h-nkmij-lagjs-y4bnq-cb63u-vh2rd-aqe",
+          "num_blocks_failures_total": "4246",
+          "num_blocks_proposed_total": "1982815"
+        },
+        {
+          "node_id": "ebfjs-4yyde-6v3qo-zhvwl-2fvp2-4tarv-autre-tparv-kwi7f-t4wml-fae",
+          "num_blocks_failures_total": "6697",
+          "num_blocks_proposed_total": "1979822"
+        },
+        {
+          "node_id": "ijqzn-wklsd-asfzv-ixif4-u7lrb-dblfi-mcq2d-nrwuk-d6cys-jgnar-7qe",
+          "num_blocks_failures_total": "2847",
+          "num_blocks_proposed_total": "1984827"
+        },
+        {
+          "node_id": "7qvtt-6lr4l-gx337-d6xvn-55ka2-6kcx2-c7iby-w36qm-u3ojf-ildyc-iqe",
+          "num_blocks_failures_total": "4386",
+          "num_blocks_proposed_total": "1982021"
+        },
+        {
+          "node_id": "2lhun-vmepu-zc7ic-6lrjj-o4yda-nlmwn-m4i2i-h4oby-hwv4y-mpv7c-fae",
+          "num_blocks_failures_total": "14912",
+          "num_blocks_proposed_total": "1972110"
+        },
+        {
+          "node_id": "dkx5h-i5d56-xeb37-uldi5-dlgmp-atrom-gyfn7-edeih-i5ph6-2cquy-dqe",
+          "num_blocks_failures_total": "34180",
+          "num_blocks_proposed_total": "1948804"
+        },
+        {
+          "node_id": "s5waw-pnvds-kpwqg-n6bly-r45vy-ax64x-sltbe-bbzl3-74npl-u4sos-mae",
+          "num_blocks_failures_total": "15446",
+          "num_blocks_proposed_total": "1844892"
+        },
+        {
+          "node_id": "mlbpy-pvy7z-gfwcb-5bakp-cuubm-prmi3-dppq6-rlepq-nkyvb-u7acf-fqe",
+          "num_blocks_failures_total": "106548",
+          "num_blocks_proposed_total": "1747626"
+        },
+        {
+          "node_id": "2vmqi-lwsmy-rad75-wus6x-3rlbf-cgig6-rtheo-t42r2-i4vdg-jyguw-uqe",
+          "num_blocks_failures_total": "31693",
+          "num_blocks_proposed_total": "1953912"
+        },
+        {
+          "node_id": "ew5us-dwxat-fg6sp-opp2j-fjjg7-rcmyj-d3saj-vyych-f3keg-5kor5-yqe",
+          "num_blocks_failures_total": "8825",
+          "num_blocks_proposed_total": "1977310"
+        },
+        {
+          "node_id": "tliwu-apd5m-f5kxi-g37rt-cqcag-4kmua-v7dsq-xsmv4-pvmhr-la6hu-xae",
+          "num_blocks_failures_total": "3049",
+          "num_blocks_proposed_total": "1905493"
+        }
+      ],
+      "subnet_id": "eq6en-6jqla-fbu5s-daskr-h6hx2-376n5-iqabl-qgrng-gfqmv-n3yjr-mqe",
+      "ts": "1724543999781696998"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "wvxfb-eqeex-26z4r-vefff-llfh7-vv76x-pje4o-oh57m-eklny-zcs56-wae",
+          "num_blocks_failures_total": "36341",
+          "num_blocks_proposed_total": "1953068"
+        },
+        {
+          "node_id": "nhkbm-fqj7r-jdjii-spvcr-to3iu-ccrkm-pils3-6io5l-ahtry-qhlly-4ae",
+          "num_blocks_failures_total": "112664",
+          "num_blocks_proposed_total": "1869509"
+        },
+        {
+          "node_id": "rg3ny-2qkvz-btitk-sxuiu-fsl2h-nkmij-lagjs-y4bnq-cb63u-vh2rd-aqe",
+          "num_blocks_failures_total": "4273",
+          "num_blocks_proposed_total": "1989870"
+        },
+        {
+          "node_id": "ebfjs-4yyde-6v3qo-zhvwl-2fvp2-4tarv-autre-tparv-kwi7f-t4wml-fae",
+          "num_blocks_failures_total": "6697",
+          "num_blocks_proposed_total": "1986869"
+        },
+        {
+          "node_id": "ijqzn-wklsd-asfzv-ixif4-u7lrb-dblfi-mcq2d-nrwuk-d6cys-jgnar-7qe",
+          "num_blocks_failures_total": "2862",
+          "num_blocks_proposed_total": "1991869"
+        },
+        {
+          "node_id": "7qvtt-6lr4l-gx337-d6xvn-55ka2-6kcx2-c7iby-w36qm-u3ojf-ildyc-iqe",
+          "num_blocks_failures_total": "4387",
+          "num_blocks_proposed_total": "1989247"
+        },
+        {
+          "node_id": "2lhun-vmepu-zc7ic-6lrjj-o4yda-nlmwn-m4i2i-h4oby-hwv4y-mpv7c-fae",
+          "num_blocks_failures_total": "14918",
+          "num_blocks_proposed_total": "1979239"
+        },
+        {
+          "node_id": "dkx5h-i5d56-xeb37-uldi5-dlgmp-atrom-gyfn7-edeih-i5ph6-2cquy-dqe",
+          "num_blocks_failures_total": "34189",
+          "num_blocks_proposed_total": "1955785"
+        },
+        {
+          "node_id": "s5waw-pnvds-kpwqg-n6bly-r45vy-ax64x-sltbe-bbzl3-74npl-u4sos-mae",
+          "num_blocks_failures_total": "15455",
+          "num_blocks_proposed_total": "1851924"
+        },
+        {
+          "node_id": "mlbpy-pvy7z-gfwcb-5bakp-cuubm-prmi3-dppq6-rlepq-nkyvb-u7acf-fqe",
+          "num_blocks_failures_total": "106588",
+          "num_blocks_proposed_total": "1754827"
+        },
+        {
+          "node_id": "2vmqi-lwsmy-rad75-wus6x-3rlbf-cgig6-rtheo-t42r2-i4vdg-jyguw-uqe",
+          "num_blocks_failures_total": "31696",
+          "num_blocks_proposed_total": "1961026"
+        },
+        {
+          "node_id": "ew5us-dwxat-fg6sp-opp2j-fjjg7-rcmyj-d3saj-vyych-f3keg-5kor5-yqe",
+          "num_blocks_failures_total": "8825",
+          "num_blocks_proposed_total": "1984527"
+        },
+        {
+          "node_id": "tliwu-apd5m-f5kxi-g37rt-cqcag-4kmua-v7dsq-xsmv4-pvmhr-la6hu-xae",
+          "num_blocks_failures_total": "3063",
+          "num_blocks_proposed_total": "1912556"
+        }
+      ],
+      "subnet_id": "eq6en-6jqla-fbu5s-daskr-h6hx2-376n5-iqabl-qgrng-gfqmv-n3yjr-mqe",
+      "ts": "1724630399205114717"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "wvxfb-eqeex-26z4r-vefff-llfh7-vv76x-pje4o-oh57m-eklny-zcs56-wae",
+          "num_blocks_failures_total": "36341",
+          "num_blocks_proposed_total": "1960040"
+        },
+        {
+          "node_id": "nhkbm-fqj7r-jdjii-spvcr-to3iu-ccrkm-pils3-6io5l-ahtry-qhlly-4ae",
+          "num_blocks_failures_total": "113119",
+          "num_blocks_proposed_total": "1876224"
+        },
+        {
+          "node_id": "rg3ny-2qkvz-btitk-sxuiu-fsl2h-nkmij-lagjs-y4bnq-cb63u-vh2rd-aqe",
+          "num_blocks_failures_total": "4308",
+          "num_blocks_proposed_total": "1996945"
+        },
+        {
+          "node_id": "ebfjs-4yyde-6v3qo-zhvwl-2fvp2-4tarv-autre-tparv-kwi7f-t4wml-fae",
+          "num_blocks_failures_total": "6697",
+          "num_blocks_proposed_total": "1994046"
+        },
+        {
+          "node_id": "ijqzn-wklsd-asfzv-ixif4-u7lrb-dblfi-mcq2d-nrwuk-d6cys-jgnar-7qe",
+          "num_blocks_failures_total": "2871",
+          "num_blocks_proposed_total": "1998819"
+        },
+        {
+          "node_id": "7qvtt-6lr4l-gx337-d6xvn-55ka2-6kcx2-c7iby-w36qm-u3ojf-ildyc-iqe",
+          "num_blocks_failures_total": "4388",
+          "num_blocks_proposed_total": "1996349"
+        },
+        {
+          "node_id": "2lhun-vmepu-zc7ic-6lrjj-o4yda-nlmwn-m4i2i-h4oby-hwv4y-mpv7c-fae",
+          "num_blocks_failures_total": "14921",
+          "num_blocks_proposed_total": "1986378"
+        },
+        {
+          "node_id": "dkx5h-i5d56-xeb37-uldi5-dlgmp-atrom-gyfn7-edeih-i5ph6-2cquy-dqe",
+          "num_blocks_failures_total": "34194",
+          "num_blocks_proposed_total": "1962866"
+        },
+        {
+          "node_id": "s5waw-pnvds-kpwqg-n6bly-r45vy-ax64x-sltbe-bbzl3-74npl-u4sos-mae",
+          "num_blocks_failures_total": "15461",
+          "num_blocks_proposed_total": "1859024"
+        },
+        {
+          "node_id": "mlbpy-pvy7z-gfwcb-5bakp-cuubm-prmi3-dppq6-rlepq-nkyvb-u7acf-fqe",
+          "num_blocks_failures_total": "106616",
+          "num_blocks_proposed_total": "1761895"
+        },
+        {
+          "node_id": "2vmqi-lwsmy-rad75-wus6x-3rlbf-cgig6-rtheo-t42r2-i4vdg-jyguw-uqe",
+          "num_blocks_failures_total": "31699",
+          "num_blocks_proposed_total": "1967945"
+        },
+        {
+          "node_id": "ew5us-dwxat-fg6sp-opp2j-fjjg7-rcmyj-d3saj-vyych-f3keg-5kor5-yqe",
+          "num_blocks_failures_total": "8825",
+          "num_blocks_proposed_total": "1991445"
+        },
+        {
+          "node_id": "tliwu-apd5m-f5kxi-g37rt-cqcag-4kmua-v7dsq-xsmv4-pvmhr-la6hu-xae",
+          "num_blocks_failures_total": "3080",
+          "num_blocks_proposed_total": "1919494"
+        }
+      ],
+      "subnet_id": "eq6en-6jqla-fbu5s-daskr-h6hx2-376n5-iqabl-qgrng-gfqmv-n3yjr-mqe",
+      "ts": "1724716799889612865"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "wvxfb-eqeex-26z4r-vefff-llfh7-vv76x-pje4o-oh57m-eklny-zcs56-wae",
+          "num_blocks_failures_total": "36341",
+          "num_blocks_proposed_total": "1967279"
+        },
+        {
+          "node_id": "nhkbm-fqj7r-jdjii-spvcr-to3iu-ccrkm-pils3-6io5l-ahtry-qhlly-4ae",
+          "num_blocks_failures_total": "113809",
+          "num_blocks_proposed_total": "1882537"
+        },
+        {
+          "node_id": "rg3ny-2qkvz-btitk-sxuiu-fsl2h-nkmij-lagjs-y4bnq-cb63u-vh2rd-aqe",
+          "num_blocks_failures_total": "4326",
+          "num_blocks_proposed_total": "2004023"
+        },
+        {
+          "node_id": "ebfjs-4yyde-6v3qo-zhvwl-2fvp2-4tarv-autre-tparv-kwi7f-t4wml-fae",
+          "num_blocks_failures_total": "6697",
+          "num_blocks_proposed_total": "2000992"
+        },
+        {
+          "node_id": "ijqzn-wklsd-asfzv-ixif4-u7lrb-dblfi-mcq2d-nrwuk-d6cys-jgnar-7qe",
+          "num_blocks_failures_total": "2893",
+          "num_blocks_proposed_total": "2005814"
+        },
+        {
+          "node_id": "7qvtt-6lr4l-gx337-d6xvn-55ka2-6kcx2-c7iby-w36qm-u3ojf-ildyc-iqe",
+          "num_blocks_failures_total": "4388",
+          "num_blocks_proposed_total": "2003502"
+        },
+        {
+          "node_id": "2lhun-vmepu-zc7ic-6lrjj-o4yda-nlmwn-m4i2i-h4oby-hwv4y-mpv7c-fae",
+          "num_blocks_failures_total": "14921",
+          "num_blocks_proposed_total": "1993313"
+        },
+        {
+          "node_id": "dkx5h-i5d56-xeb37-uldi5-dlgmp-atrom-gyfn7-edeih-i5ph6-2cquy-dqe",
+          "num_blocks_failures_total": "34195",
+          "num_blocks_proposed_total": "1970070"
+        },
+        {
+          "node_id": "s5waw-pnvds-kpwqg-n6bly-r45vy-ax64x-sltbe-bbzl3-74npl-u4sos-mae",
+          "num_blocks_failures_total": "15463",
+          "num_blocks_proposed_total": "1866134"
+        },
+        {
+          "node_id": "mlbpy-pvy7z-gfwcb-5bakp-cuubm-prmi3-dppq6-rlepq-nkyvb-u7acf-fqe",
+          "num_blocks_failures_total": "106630",
+          "num_blocks_proposed_total": "1768877"
+        },
+        {
+          "node_id": "2vmqi-lwsmy-rad75-wus6x-3rlbf-cgig6-rtheo-t42r2-i4vdg-jyguw-uqe",
+          "num_blocks_failures_total": "31726",
+          "num_blocks_proposed_total": "1975075"
+        },
+        {
+          "node_id": "ew5us-dwxat-fg6sp-opp2j-fjjg7-rcmyj-d3saj-vyych-f3keg-5kor5-yqe",
+          "num_blocks_failures_total": "8825",
+          "num_blocks_proposed_total": "1998265"
+        },
+        {
+          "node_id": "tliwu-apd5m-f5kxi-g37rt-cqcag-4kmua-v7dsq-xsmv4-pvmhr-la6hu-xae",
+          "num_blocks_failures_total": "3083",
+          "num_blocks_proposed_total": "1926572"
+        }
+      ],
+      "subnet_id": "eq6en-6jqla-fbu5s-daskr-h6hx2-376n5-iqabl-qgrng-gfqmv-n3yjr-mqe",
+      "ts": "1724803199971485419"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "wvxfb-eqeex-26z4r-vefff-llfh7-vv76x-pje4o-oh57m-eklny-zcs56-wae",
+          "num_blocks_failures_total": "36342",
+          "num_blocks_proposed_total": "1974616"
+        },
+        {
+          "node_id": "nhkbm-fqj7r-jdjii-spvcr-to3iu-ccrkm-pils3-6io5l-ahtry-qhlly-4ae",
+          "num_blocks_failures_total": "114044",
+          "num_blocks_proposed_total": "1889617"
+        },
+        {
+          "node_id": "rg3ny-2qkvz-btitk-sxuiu-fsl2h-nkmij-lagjs-y4bnq-cb63u-vh2rd-aqe",
+          "num_blocks_failures_total": "4338",
+          "num_blocks_proposed_total": "2011318"
+        },
+        {
+          "node_id": "ebfjs-4yyde-6v3qo-zhvwl-2fvp2-4tarv-autre-tparv-kwi7f-t4wml-fae",
+          "num_blocks_failures_total": "6700",
+          "num_blocks_proposed_total": "2008260"
+        },
+        {
+          "node_id": "ijqzn-wklsd-asfzv-ixif4-u7lrb-dblfi-mcq2d-nrwuk-d6cys-jgnar-7qe",
+          "num_blocks_failures_total": "2901",
+          "num_blocks_proposed_total": "2013152"
+        },
+        {
+          "node_id": "7qvtt-6lr4l-gx337-d6xvn-55ka2-6kcx2-c7iby-w36qm-u3ojf-ildyc-iqe",
+          "num_blocks_failures_total": "4402",
+          "num_blocks_proposed_total": "2010945"
+        },
+        {
+          "node_id": "2lhun-vmepu-zc7ic-6lrjj-o4yda-nlmwn-m4i2i-h4oby-hwv4y-mpv7c-fae",
+          "num_blocks_failures_total": "14924",
+          "num_blocks_proposed_total": "2000906"
+        },
+        {
+          "node_id": "dkx5h-i5d56-xeb37-uldi5-dlgmp-atrom-gyfn7-edeih-i5ph6-2cquy-dqe",
+          "num_blocks_failures_total": "34207",
+          "num_blocks_proposed_total": "1977534"
+        },
+        {
+          "node_id": "s5waw-pnvds-kpwqg-n6bly-r45vy-ax64x-sltbe-bbzl3-74npl-u4sos-mae",
+          "num_blocks_failures_total": "15477",
+          "num_blocks_proposed_total": "1873650"
+        },
+        {
+          "node_id": "mlbpy-pvy7z-gfwcb-5bakp-cuubm-prmi3-dppq6-rlepq-nkyvb-u7acf-fqe",
+          "num_blocks_failures_total": "106753",
+          "num_blocks_proposed_total": "1776161"
+        },
+        {
+          "node_id": "2vmqi-lwsmy-rad75-wus6x-3rlbf-cgig6-rtheo-t42r2-i4vdg-jyguw-uqe",
+          "num_blocks_failures_total": "31745",
+          "num_blocks_proposed_total": "1982447"
+        },
+        {
+          "node_id": "ew5us-dwxat-fg6sp-opp2j-fjjg7-rcmyj-d3saj-vyych-f3keg-5kor5-yqe",
+          "num_blocks_failures_total": "8826",
+          "num_blocks_proposed_total": "2005686"
+        },
+        {
+          "node_id": "tliwu-apd5m-f5kxi-g37rt-cqcag-4kmua-v7dsq-xsmv4-pvmhr-la6hu-xae",
+          "num_blocks_failures_total": "3093",
+          "num_blocks_proposed_total": "1933988"
+        }
+      ],
+      "subnet_id": "eq6en-6jqla-fbu5s-daskr-h6hx2-376n5-iqabl-qgrng-gfqmv-n3yjr-mqe",
+      "ts": "1724889599320102710"
+    },
+    {
+      "node_metrics": [
+        {
+          "node_id": "wvxfb-eqeex-26z4r-vefff-llfh7-vv76x-pje4o-oh57m-eklny-zcs56-wae",
+          "num_blocks_failures_total": "36343",
+          "num_blocks_proposed_total": "1982164"
+        },
+        {
+          "node_id": "nhkbm-fqj7r-jdjii-spvcr-to3iu-ccrkm-pils3-6io5l-ahtry-qhlly-4ae",
+          "num_blocks_failures_total": "114183",
+          "num_blocks_proposed_total": "1897052"
+        },
+        {
+          "node_id": "rg3ny-2qkvz-btitk-sxuiu-fsl2h-nkmij-lagjs-y4bnq-cb63u-vh2rd-aqe",
+          "num_blocks_failures_total": "4339",
+          "num_blocks_proposed_total": "2019027"
+        },
+        {
+          "node_id": "ebfjs-4yyde-6v3qo-zhvwl-2fvp2-4tarv-autre-tparv-kwi7f-t4wml-fae",
+          "num_blocks_failures_total": "6704",
+          "num_blocks_proposed_total": "2015870"
+        },
+        {
+          "node_id": "ijqzn-wklsd-asfzv-ixif4-u7lrb-dblfi-mcq2d-nrwuk-d6cys-jgnar-7qe",
+          "num_blocks_failures_total": "2901",
+          "num_blocks_proposed_total": "2020882"
+        },
+        {
+          "node_id": "7qvtt-6lr4l-gx337-d6xvn-55ka2-6kcx2-c7iby-w36qm-u3ojf-ildyc-iqe",
+          "num_blocks_failures_total": "4403",
+          "num_blocks_proposed_total": "2018715"
+        },
+        {
+          "node_id": "2lhun-vmepu-zc7ic-6lrjj-o4yda-nlmwn-m4i2i-h4oby-hwv4y-mpv7c-fae",
+          "num_blocks_failures_total": "14932",
+          "num_blocks_proposed_total": "2008632"
+        },
+        {
+          "node_id": "dkx5h-i5d56-xeb37-uldi5-dlgmp-atrom-gyfn7-edeih-i5ph6-2cquy-dqe",
+          "num_blocks_failures_total": "34210",
+          "num_blocks_proposed_total": "1985277"
+        },
+        {
+          "node_id": "s5waw-pnvds-kpwqg-n6bly-r45vy-ax64x-sltbe-bbzl3-74npl-u4sos-mae",
+          "num_blocks_failures_total": "15487",
+          "num_blocks_proposed_total": "1881169"
+        },
+        {
+          "node_id": "mlbpy-pvy7z-gfwcb-5bakp-cuubm-prmi3-dppq6-rlepq-nkyvb-u7acf-fqe",
+          "num_blocks_failures_total": "107142",
+          "num_blocks_proposed_total": "1783336"
+        },
+        {
+          "node_id": "2vmqi-lwsmy-rad75-wus6x-3rlbf-cgig6-rtheo-t42r2-i4vdg-jyguw-uqe",
+          "num_blocks_failures_total": "31754",
+          "num_blocks_proposed_total": "1989949"
+        },
+        {
+          "node_id": "ew5us-dwxat-fg6sp-opp2j-fjjg7-rcmyj-d3saj-vyych-f3keg-5kor5-yqe",
+          "num_blocks_failures_total": "8830",
+          "num_blocks_proposed_total": "2013285"
+        },
+        {
+          "node_id": "tliwu-apd5m-f5kxi-g37rt-cqcag-4kmua-v7dsq-xsmv4-pvmhr-la6hu-xae",
+          "num_blocks_failures_total": "3094",
+          "num_blocks_proposed_total": "1941773"
+        }
+      ],
+      "subnet_id": "eq6en-6jqla-fbu5s-daskr-h6hx2-376n5-iqabl-qgrng-gfqmv-n3yjr-mqe",
+      "ts": "1724975999598666369"
+    }
+  ]
+}

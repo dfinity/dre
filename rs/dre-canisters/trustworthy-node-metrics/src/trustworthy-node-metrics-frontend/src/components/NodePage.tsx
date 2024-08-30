@@ -7,7 +7,7 @@ import { useParams } from 'react-router-dom';
 import DailyPerformanceChart from './DailyPerformanceChart';
 import { paperStyle, boxStyleWidget } from '../Styles';
 import { NodeRewardsResponse } from '../../../declarations/trustworthy-node-metrics/trustworthy-node-metrics.did';
-import RewardsInfo from './RewardsInfo';
+import RewardsInfo, { LinearReductionChart } from './RewardsInfo';
 import { ExportTable } from './ExportTable';
 import InfoFormatter from './NodeInfo';
 import { GridColDef, GridRowsProp } from '@mui/x-data-grid';
@@ -90,7 +90,7 @@ export const NodePage: React.FC<NodePageProps> = ({ nodeRewards, periodFilter })
                         <DailyPerformanceChart chartDailyData={chartDailyData} />
                     </Grid>
                     <Grid item xs={12}>
-                        <RewardsInfo failureRate={failureRateAvg} rewardReduction={rewardsReduction}/>
+                        <RewardsInfo failureRate={failureRateAvg} rewardsReduction={rewardsReduction} computationLog={nodeMetrics.rewards_computation.computation_log}/>
                     </Grid>
                     <Grid item xs={12} md={12}>
                         <ExportTable colDef={colDef} rows={rows}/>

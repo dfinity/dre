@@ -5,6 +5,13 @@ type NodeMetrics = record {
     num_blocks_failures_total: nat64;
 };
 
+type NodeMetricsIC = record {
+    node_id: principal;
+    num_blocks_proposed_total: nat64;
+    num_block_failures_total: nat64;
+};
+
+
 type SubnetNodeMetricsResponse = record {
     ts: nat64;
     subnet_id: principal;
@@ -55,7 +62,24 @@ type NodeRewardsArgs = record {
   to_ts: nat64;
 };
 
+type BackfillResult = variant {
+  Ok : null;
+  Err : text;
+};
+
+type NodeMetricsHistoryResponse = record {
+  timestamp_nanos : nat64;
+  node_metrics : vec NodeMetricsIC;
+};
+
+type BackfillArgs = record {
+  subnet_id: principal;
+  node_metrics_history: vec NodeMetricsHistoryResponse;
+}
+
+
 service : {
     "subnet_node_metrics" : (SubnetNodeMetricsArgs) -> (SubnetNodeMetricsResult) query;
     "node_rewards" : (NodeRewardsArgs) -> (vec NodeRewardsResponse) query;
+    "backfill_subnet_metrics" : (vec BackfillArgs) -> (BackfillResult);
 }
