@@ -53,7 +53,7 @@ class ReleaseCandidateForumTopic:
             post = client.create_post(
                 category_id=governance_category["id"],
                 content="The proposal for the next release will be announced soon.",
-                tags=["replica", "release"],
+                tags=["IC-OS-election", "release"],
                 title="Proposal to elect new release {}".format(self.release.rc_name),
             )
             if post:
