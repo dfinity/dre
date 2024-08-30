@@ -2,7 +2,7 @@ use backon::{ExponentialBuilder, Retryable};
 use comfy_table::CellAlignment;
 use itertools::Itertools;
 
-use crate::ic_admin::{IcAdmin, ProposeCommand, ProposeOptions};
+use crate::ic_admin::{ProposeCommand, ProposeOptions};
 
 use super::{comfy_table_util::Table, step::Step, util::StepCtx};
 

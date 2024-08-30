@@ -1,7 +1,5 @@
 use clap::Args;
 
-use crate::ic_admin::IcAdmin;
-
 use super::{ExecutableCommand, IcAdminRequirement};
 
 #[derive(Args, Debug)]

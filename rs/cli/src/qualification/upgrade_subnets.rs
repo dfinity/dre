@@ -8,7 +8,7 @@ use itertools::Itertools;
 use reqwest::ClientBuilder;
 
 use crate::{
-    ic_admin::{IcAdmin, ProposeCommand, ProposeOptions},
+    ic_admin::{ProposeCommand, ProposeOptions},
     qualification::comfy_table_util::Table,
 };
 

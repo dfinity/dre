@@ -2,7 +2,7 @@ use clap::Args;
 use ic_canisters::governance::GovernanceCanisterWrapper;
 use itertools::Itertools;
 
-use crate::{commands::ExecutableCommand, ic_admin::IcAdmin};
+use crate::commands::ExecutableCommand;
 
 #[derive(Args, Debug)]
 pub struct TopUp {}

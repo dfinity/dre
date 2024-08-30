@@ -8,7 +8,7 @@ use log::info;
 use spinners::{Spinner, Spinners};
 
 use super::{ExecutableCommand, IcAdminRequirement};
-use crate::{desktop_notify::DesktopNotifier, ic_admin::IcAdmin};
+use crate::desktop_notify::DesktopNotifier;
 
 #[derive(Args, Debug)]
 pub struct Vote {

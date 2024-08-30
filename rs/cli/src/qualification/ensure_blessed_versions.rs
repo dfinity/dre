@@ -3,7 +3,7 @@ use comfy_table::CellAlignment;
 use itertools::Itertools;
 
 use crate::{
-    ic_admin::{IcAdmin, ProposeCommand, ProposeOptions},
+    ic_admin::{ProposeCommand, ProposeOptions},
     qualification::Step,
 };
 
