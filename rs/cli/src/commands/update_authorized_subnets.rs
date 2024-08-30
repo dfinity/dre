@@ -1,7 +1,6 @@
 use std::{collections::BTreeMap, path::PathBuf, sync::Arc};
 
 use clap::{error::ErrorKind, Args};
-use ic_management_backend::lazy_registry::LazyRegistry;
 use ic_management_types::Subnet;
 use ic_registry_subnet_type::SubnetType;
 use ic_types::PrincipalId;

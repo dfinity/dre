@@ -1,9 +1,9 @@
-use std::{collections::BTreeMap, path::PathBuf, rc::Rc, str::FromStr};
+use std::{collections::BTreeMap, path::PathBuf, str::FromStr, sync::Arc};
 
 use clap::Args;
 use ic_management_backend::{
     health::{HealthClient, HealthStatusQuerier},
-    lazy_registry::{LazyRegistry, LazyRegistryImpl},
+    lazy_registry::LazyRegistry,
 };
 use ic_management_types::{HealthStatus, Network};
 use ic_protobuf::registry::{
@@ -121,15 +121,15 @@ impl Registry {
     }
 }
 
-fn get_elected_guest_os_versions(local_registry: &Rc<LazyRegistryImpl>) -> anyhow::Result<Vec<ReplicaVersionRecord>> {
+fn get_elected_guest_os_versions(local_registry: &Arc<dyn LazyRegistry>) -> anyhow::Result<Vec<ReplicaVersionRecord>> {
     local_registry.elected_guestos_records()
 }
 
-fn get_elected_host_os_versions(local_registry: &Rc<LazyRegistryImpl>) -> anyhow::Result<Vec<HostosVersionRecord>> {
+fn get_elected_host_os_versions(local_registry: &Arc<dyn LazyRegistry>) -> anyhow::Result<Vec<HostosVersionRecord>> {
     local_registry.elected_hostos_records()
 }
 
-async fn get_node_operators(local_registry: &Rc<LazyRegistryImpl>, network: &Network) -> anyhow::Result<BTreeMap<PrincipalId, NodeOperator>> {
+async fn get_node_operators(local_registry: &Arc<dyn LazyRegistry>, network: &Network) -> anyhow::Result<BTreeMap<PrincipalId, NodeOperator>> {
     let all_nodes = local_registry.nodes().await?;
     let operators = local_registry
         .operators()
@@ -167,7 +167,7 @@ async fn get_node_operators(local_registry: &Rc<LazyRegistryImpl>, network: &Net
     Ok(node_operators)
 }
 
-async fn get_subnets(local_registry: &Rc<LazyRegistryImpl>) -> anyhow::Result<Vec<SubnetRecord>> {
+async fn get_subnets(local_registry: &Arc<dyn LazyRegistry>) -> anyhow::Result<Vec<SubnetRecord>> {
     let subnets = local_registry.subnets().await?;
     Ok(subnets
         .iter()
@@ -197,12 +197,12 @@ async fn get_subnets(local_registry: &Rc<LazyRegistryImpl>) -> anyhow::Result<Ve
         .collect::<Vec<_>>())
 }
 
-fn get_unassigned_nodes(local_registry: &Rc<LazyRegistryImpl>) -> anyhow::Result<Option<UnassignedNodesConfigRecord>> {
+fn get_unassigned_nodes(local_registry: &Arc<dyn LazyRegistry>) -> anyhow::Result<Option<UnassignedNodesConfigRecord>> {
     local_registry.get_unassigned_nodes()
 }
 
 async fn get_nodes(
-    local_registry: &Rc<LazyRegistryImpl>,
+    local_registry: &Arc<dyn LazyRegistry>,
     node_operators: &BTreeMap<PrincipalId, NodeOperator>,
     subnets: &[SubnetRecord],
     network: &Network,
@@ -250,7 +250,7 @@ async fn get_nodes(
     Ok(nodes)
 }
 
-fn get_node_rewards_table(local_registry: &Rc<LazyRegistryImpl>, network: &Network) -> NodeRewardsTableFlattened {
+fn get_node_rewards_table(local_registry: &Arc<dyn LazyRegistry>, network: &Network) -> NodeRewardsTableFlattened {
     let rewards_table_bytes = local_registry.get_node_rewards_table();
 
     let mut rewards_table = match rewards_table_bytes {
@@ -304,7 +304,7 @@ fn get_node_rewards_table(local_registry: &Rc<LazyRegistryImpl>, network: &Netwo
     }
 }
 
-fn get_api_boundary_nodes(local_registry: &Rc<LazyRegistryImpl>) -> anyhow::Result<Vec<ApiBoundaryNodeDetails>> {
+fn get_api_boundary_nodes(local_registry: &Arc<dyn LazyRegistry>) -> anyhow::Result<Vec<ApiBoundaryNodeDetails>> {
     let api_bns = local_registry
         .get_api_boundary_nodes()
         .map_err(|e| anyhow::anyhow!("Couldn't get api boundary nodes: {:?}", e))?

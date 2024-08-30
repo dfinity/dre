@@ -11,7 +11,6 @@ use chrono::Utc;
 use comfy_table::CellAlignment;
 use flate2::bufread::GzDecoder;
 use headless_chrome::{protocol::cdp::Page, Browser, LaunchOptionsBuilder};
-use ic_management_backend::lazy_registry::LazyRegistry;
 use ic_registry_subnet_type::SubnetType;
 use ic_types::PrincipalId;
 use itertools::Itertools;

@@ -4,13 +4,10 @@ use std::collections::BTreeSet;
 use std::rc::Rc;
 use std::sync::Arc;
 
-use decentralization::network::AvailableNodesQuerier;
 use decentralization::network::DecentralizedSubnet;
 use decentralization::network::NetworkHealRequest;
 use decentralization::network::SubnetChange;
-use decentralization::network::SubnetQuerier;
 use decentralization::network::SubnetQueryBy;
-use decentralization::network::TopologyManager;
 use decentralization::network::{generate_added_node_description, generate_removed_nodes_description};
 use decentralization::subnets::NodesRemover;
 use decentralization::SubnetChangeResponse;
@@ -20,7 +17,6 @@ use ic_management_backend::health;
 use ic_management_backend::health::HealthStatusQuerier;
 use ic_management_backend::lazy_git::LazyGit;
 use ic_management_backend::lazy_registry::LazyRegistry;
-use ic_management_backend::lazy_registry::LazyRegistryImpl;
 use ic_management_backend::proposal::ProposalAgent;
 use ic_management_backend::registry::ReleasesOps;
 use ic_management_types::Artifact;
@@ -48,7 +44,7 @@ use crate::operations::hostos_rollout::NodeGroupUpdate;
 
 pub struct Runner {
     ic_admin: Arc<IcAdminWrapper>,
-    registry: Rc<LazyRegistryImpl>,
+    registry: Arc<dyn LazyRegistry>,
     ic_repo: RefCell<Option<Rc<LazyGit>>>,
     network: Network,
     proposal_agent: ProposalAgent,
@@ -56,7 +52,7 @@ pub struct Runner {
 }
 
 impl Runner {
-    pub fn new(ic_admin: Arc<IcAdminWrapper>, registry: Rc<LazyRegistryImpl>, network: Network, agent: ProposalAgent, verbose: bool) -> Self {
+    pub fn new(ic_admin: Arc<IcAdminWrapper>, registry: Arc<dyn LazyRegistry>, network: Network, agent: ProposalAgent, verbose: bool) -> Self {
         Self {
             ic_admin,
             registry,

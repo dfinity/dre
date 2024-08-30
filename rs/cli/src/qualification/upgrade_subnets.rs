@@ -2,7 +2,6 @@ use std::{fmt::Display, time::Duration};
 
 use backon::{ExponentialBuilder, Retryable};
 use comfy_table::CellAlignment;
-use ic_management_backend::lazy_registry::LazyRegistry;
 use ic_registry_subnet_type::SubnetType;
 use ic_types::PrincipalId;
 use itertools::Itertools;
