@@ -17,7 +17,7 @@ export interface NodePageProps {
     periodFilter: PeriodFilter;
 }
 
-const NodeMetricsStats: React.FC<{ stats: NodeRewardsResponse['rewards_stats'] }> = ({ stats }) => (
+const NodeMetricsStats: React.FC<{ stats: NodeRewardsResponse['rewards_computation'] }> = ({ stats }) => (
     <Box sx={boxStyleWidget('left')}>
         <WidgetNumber value={stats.blocks_proposed.toString()} title="Blocks Proposed Total" />
         <WidgetNumber value={stats.blocks_failed.toString()} title="Blocks Failed Total" />
@@ -40,8 +40,8 @@ export const NodePage: React.FC<NodePageProps> = ({ nodeRewards, periodFilter })
     }
 
     const chartDailyData: ChartData[] = generateChartData(periodFilter, nodeMetrics.daily_node_metrics);
-    const failureRateAvg = Math.round(nodeMetrics.rewards_stats.failure_rate * 100);
-    const rewardsPercent = Math.round(nodeMetrics.rewards_percent * 100);
+    const failureRateAvg = Math.round(nodeMetrics.rewards_computation.failure_rate * 100);
+    const rewardsPercent = Math.round(nodeMetrics.rewards_computation.rewards_percent * 100);
     const rewardsReduction = 100 - rewardsPercent;
 
     const rows: GridRowsProp = nodeMetrics.daily_node_metrics.map((data, index) => {
@@ -81,7 +81,7 @@ export const NodePage: React.FC<NodePageProps> = ({ nodeRewards, periodFilter })
                         <WidgetGauge value={rewardsPercent} title={"Rewards Total"} />
                     </Grid>
                     <Grid item xs={12} md={4}>
-                        <NodeMetricsStats stats={nodeMetrics.rewards_stats} />
+                        <NodeMetricsStats stats={nodeMetrics.rewards_computation} />
                     </Grid>
                     <Grid item xs={12} md={8}>
                         <NodePerformanceStats rewardsReduction={rewardsReduction.toString().concat("%")} />

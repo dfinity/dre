@@ -27,3 +27,6 @@ dfn_core = { workspace = true }
 trustworthy-node-metrics-types = { workspace = true }
 ic-base-types = { workspace = true }
 ic-registry-keys = { workspace = true }
+rust_decimal = { workspace = true }
+rust_decimal_macros = { workspace = true }
+num-traits = { workspace = true }

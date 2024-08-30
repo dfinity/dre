@@ -68,7 +68,7 @@ const App: React.FC = () => {
           to_ts: dateToNanoseconds(periodFilter.dateEnd),
         };
         const nodeRewardsResponse = await trustworthy_node_metrics.node_rewards(request);
-        const sortedNodeRewards = nodeRewardsResponse.sort((a, b) => a.rewards_percent - b.rewards_percent);
+        const sortedNodeRewards = nodeRewardsResponse.sort((a, b) => a.rewards_computation.rewards_percent - b.rewards_computation.rewards_percent);
         const subnets = new Set(sortedNodeRewards.flatMap(node => node.daily_node_metrics.map(data => data.subnet_assigned.toText())));
         const providers = new Set(sortedNodeRewards.flatMap(node => node.node_provider_id.toText()));
         
