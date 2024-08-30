@@ -2,7 +2,7 @@ use std::{path::PathBuf, time::Duration};
 
 use dre::{
     auth::Neuron,
-    ic_admin::{IcAdminImpl, ProposeCommand, ProposeOptions},
+    ic_admin::{IcAdmin, IcAdminImpl, ProposeCommand, ProposeOptions},
 };
 use ic_base_types::PrincipalId;
 use ic_management_types::Network;
