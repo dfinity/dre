@@ -22,7 +22,7 @@ impl Step for RetireBlessedVersions {
     async fn execute(&self, ctx: &StepCtx) -> anyhow::Result<()> {
         let registry = ctx.dre_ctx().registry().await;
 
-        let blessed_versions = registry.elected_guestos()?;
+        let blessed_versions = registry.elected_guestos().await?;
         let mut to_unelect = vec![];
         for version in &self.versions {
             if blessed_versions.contains(version) {
@@ -56,7 +56,7 @@ impl Step for RetireBlessedVersions {
         place_proposal.retry(&ExponentialBuilder::default()).await?;
 
         registry.sync_with_nns().await?;
-        let blessed_versions = registry.elected_guestos()?;
+        let blessed_versions = registry.elected_guestos().await?;
 
         let table = Table::new()
             .with_columns(&[("Blessed versions", CellAlignment::Center)])

@@ -1,10 +1,11 @@
+use std::collections::BTreeMap;
 use std::collections::{BTreeSet, HashSet};
 use std::net::Ipv6Addr;
 use std::str::FromStr;
 use std::sync::Arc;
-use std::{cell::RefCell, collections::BTreeMap};
 
 use decentralization::network::{AvailableNodesQuerier, DecentralizedSubnet, NodesConverter, SubnetQuerier, SubnetQueryBy};
+use futures::future::BoxFuture;
 use ic_interfaces_registry::RegistryClient;
 use ic_interfaces_registry::{RegistryClientVersionedResult, RegistryValue};
 use ic_management_types::{
@@ -28,6 +29,7 @@ use ic_registry_subnet_type::SubnetType;
 use ic_types::{NodeId, PrincipalId, RegistryVersion};
 use itertools::Itertools;
 use log::warn;
+use tokio::sync::RwLock;
 use tokio::try_join;
 
 use crate::health::HealthStatusQuerier;
@@ -48,18 +50,110 @@ const KNOWN_SUBNETS: &[(&str, &str)] = &[
     ("bkfrj-6k62g-dycql-7h53p-atvkj-zg4to-gaogh-netha-ptybj-ntsgw-rqe", "European"),
 ];
 
-pub struct LazyRegistryImpl {
+pub trait LazyRegistry:
+    LazyRegistryFamilyEntries + NodesConverter + SubnetQuerier + decentralization::network::TopologyManager + AvailableNodesQuerier + Send + Sync
+{
+    fn node_labels<'a>(&'a self) -> BoxFuture<'a, anyhow::Result<Arc<Vec<Guest>>>>;
+
+    fn elected_guestos(&self) -> anyhow::Result<Arc<Vec<String>>>;
+
+    fn elected_hostos(&self) -> anyhow::Result<Arc<Vec<String>>>;
+
+    fn sync_with_nns<'a>(&'a self) -> BoxFuture<'a, anyhow::Result<()>>;
+
+    fn operators<'a>(&'a self) -> BoxFuture<'a, anyhow::Result<Arc<BTreeMap<PrincipalId, Operator>>>>;
+
+    fn nodes<'a>(&'a self) -> BoxFuture<'a, anyhow::Result<Arc<BTreeMap<PrincipalId, Node>>>>;
+
+    fn firewall_rule_set(&self, firewall_rule_scope: FirewallRulesScope) -> anyhow::Result<FirewallRuleSet>;
+
+    fn subnets<'a>(&'a self) -> BoxFuture<'a, anyhow::Result<Arc<BTreeMap<PrincipalId, Subnet>>>>;
+
+    fn nodes_with_proposals<'a>(&'a self) -> BoxFuture<'a, anyhow::Result<Arc<BTreeMap<PrincipalId, Node>>>>;
+
+    fn nns_replica_version<'a>(&'a self) -> BoxFuture<'a, anyhow::Result<Option<String>>> {
+        Box::pin(async {
+            Ok(self.subnets().await?.values().find_map(|s| {
+                if s.subnet_type.eq(&SubnetType::System) {
+                    return Some(s.replica_version.clone());
+                }
+                None
+            }))
+        })
+    }
+
+    fn missing_guests<'a>(&'a self) -> BoxFuture<'a, anyhow::Result<Vec<Guest>>> {
+        Box::pin(async {
+            let nodes = self.nodes().await?;
+            let mut missing_guests = self
+                .node_labels()
+                .await?
+                .iter()
+                .filter(|g| !nodes.iter().any(|(_, n)| n.label.clone().unwrap_or_default() == g.name))
+                .cloned()
+                .collect_vec();
+
+            missing_guests.sort_by_key(|g| g.name.to_owned());
+            missing_guests.dedup_by_key(|g| g.name.to_owned());
+
+            Ok(missing_guests)
+        })
+    }
+
+    fn get_decentralized_nodes<'a>(&'a self, principals: &'a [PrincipalId]) -> BoxFuture<'a, anyhow::Result<Vec<decentralization::network::Node>>> {
+        Box::pin(async {
+            Ok(self
+                .nodes()
+                .await?
+                .values()
+                .filter(|n| principals.contains(&n.principal))
+                .map(decentralization::network::Node::from)
+                .collect_vec())
+        })
+    }
+
+    fn unassigned_nodes_replica_version(&self) -> anyhow::Result<Arc<String>>;
+
+    fn get_api_boundary_nodes(&self) -> anyhow::Result<Vec<ApiBoundaryNodeRecord>>;
+}
+
+impl NodesConverter for Box<dyn LazyRegistry> {
+    fn get_nodes<'a>(
+        &'a self,
+        from: &'a [PrincipalId],
+    ) -> BoxFuture<'a, Result<Vec<decentralization::network::Node>, ic_management_types::NetworkError>> {
+        Box::pin(async {
+            let nodes = self
+                .nodes()
+                .await
+                .map_err(|e| ic_management_types::NetworkError::DataRequestError(e.to_string()))?;
+            from.iter()
+                .map(|n| {
+                    nodes
+                        .get(n)
+                        .ok_or(ic_management_types::NetworkError::NodeNotFound(*n))
+                        .map(decentralization::network::Node::from)
+                })
+                .collect()
+        })
+    }
+}
+
+pub struct LazyRegistryImpl
+where
+    Self: Send + Sync,
+{
     local_registry: LocalRegistry,
     network: Network,
 
-    subnets: RefCell<Option<Arc<BTreeMap<PrincipalId, Subnet>>>>,
-    nodes: RefCell<Option<Arc<BTreeMap<PrincipalId, Node>>>>,
-    operators: RefCell<Option<Arc<BTreeMap<PrincipalId, Operator>>>>,
-    node_labels_guests: RefCell<Option<Arc<Vec<Guest>>>>,
-    elected_guestos: RefCell<Option<Arc<Vec<String>>>>,
-    elected_hostos: RefCell<Option<Arc<Vec<String>>>>,
-    unassigned_nodes_replica_version: RefCell<Option<Arc<String>>>,
-    firewall_rule_set: RefCell<Option<Arc<BTreeMap<String, FirewallRuleSet>>>>,
+    subnets: RwLock<Option<Arc<BTreeMap<PrincipalId, Subnet>>>>,
+    nodes: RwLock<Option<Arc<BTreeMap<PrincipalId, Node>>>>,
+    operators: RwLock<Option<Arc<BTreeMap<PrincipalId, Operator>>>>,
+    node_labels_guests: RwLock<Option<Arc<Vec<Guest>>>>,
+    elected_guestos: RwLock<Option<Arc<Vec<String>>>>,
+    elected_hostos: RwLock<Option<Arc<Vec<String>>>>,
+    unassigned_nodes_replica_version: RwLock<Option<Arc<String>>>,
+    firewall_rule_set: RwLock<Option<Arc<BTreeMap<String, FirewallRuleSet>>>>,
     no_sync: bool,
 }
 
@@ -111,32 +205,37 @@ pub trait LazyRegistryFamilyEntries {
     fn get_key_family(&self, key_prefix: &str, version: RegistryVersion) -> anyhow::Result<Vec<String>>;
     fn get_versioned_value(&self, key: &str, version: RegistryVersion) -> RegistryClientVersionedResult<Vec<u8>>;
     fn get_latest_version(&self) -> RegistryVersion;
+}
 
-    fn get_family_entries<T: LazyRegistryEntry + Default>(&self) -> anyhow::Result<BTreeMap<String, T>> {
-        let family = self.get_family_entries_versioned::<T>()?;
-        Ok(family.into_iter().map(|(k, (_, v))| (k, v)).collect())
-    }
-    fn get_family_entries_versioned<T: LazyRegistryEntry + Default>(&self) -> anyhow::Result<BTreeMap<String, (u64, T)>> {
-        self.get_family_entries_of_version(self.get_latest_version())
-    }
-    fn get_family_entries_of_version<T: LazyRegistryEntry + Default>(&self, version: RegistryVersion) -> anyhow::Result<BTreeMap<String, (u64, T)>> {
-        let prefix_length = T::KEY_PREFIX.len();
-        Ok(self
-            .get_key_family(T::KEY_PREFIX, version)?
-            .iter()
-            .filter_map(|key| {
-                let r = self
-                    .get_versioned_value(key, version)
-                    .unwrap_or_else(|_| panic!("Failed to get entry {} for type {}", key, std::any::type_name::<T>()));
-                r.as_ref().map(|v| {
-                    (
-                        key[prefix_length..].to_string(),
-                        (r.version.get(), T::decode(v.as_slice()).expect("Invalid registry value")),
-                    )
-                })
+fn get_family_entries<T: LazyRegistryEntry + Default>(reg: &(impl LazyRegistryFamilyEntries)) -> anyhow::Result<BTreeMap<String, T>> {
+    let family = get_family_entries_versioned::<T>(reg)?;
+    Ok(family.into_iter().map(|(k, (_, v))| (k, v)).collect())
+}
+fn get_family_entries_versioned<T: LazyRegistryEntry + Default>(
+    reg: &(impl LazyRegistryFamilyEntries),
+) -> anyhow::Result<BTreeMap<String, (u64, T)>> {
+    get_family_entries_of_version(reg, reg.get_latest_version())
+}
+fn get_family_entries_of_version<T: LazyRegistryEntry + Default>(
+    reg: &(impl LazyRegistryFamilyEntries),
+    version: RegistryVersion,
+) -> anyhow::Result<BTreeMap<String, (u64, T)>> {
+    let prefix_length = T::KEY_PREFIX.len();
+    Ok(reg
+        .get_key_family(T::KEY_PREFIX, version)?
+        .iter()
+        .filter_map(|key| {
+            let r = reg
+                .get_versioned_value(key, version)
+                .unwrap_or_else(|_| panic!("Failed to get entry {} for type {}", key, std::any::type_name::<T>()));
+            r.as_ref().map(|v| {
+                (
+                    key[prefix_length..].to_string(),
+                    (r.version.get(), T::decode(v.as_slice()).expect("Invalid registry value")),
+                )
             })
-            .collect())
-    }
+        })
+        .collect())
 }
 
 impl LazyRegistryFamilyEntries for LazyRegistryImpl {
@@ -158,27 +257,27 @@ impl LazyRegistryImpl {
         Self {
             local_registry,
             network,
-            subnets: RefCell::new(None),
-            nodes: RefCell::new(None),
-            operators: RefCell::new(None),
-            node_labels_guests: RefCell::new(None),
-            elected_guestos: RefCell::new(None),
-            elected_hostos: RefCell::new(None),
-            unassigned_nodes_replica_version: RefCell::new(None),
-            firewall_rule_set: RefCell::new(None),
+            subnets: RwLock::new(None),
+            nodes: RwLock::new(None),
+            operators: RwLock::new(None),
+            node_labels_guests: RwLock::new(None),
+            elected_guestos: RwLock::new(None),
+            elected_hostos: RwLock::new(None),
+            unassigned_nodes_replica_version: RwLock::new(None),
+            firewall_rule_set: RwLock::new(None),
             no_sync,
         }
     }
 
     // See if making it async would change anything
     pub async fn node_labels(&self) -> anyhow::Result<Arc<Vec<Guest>>> {
-        if let Some(guests) = self.node_labels_guests.borrow().as_ref() {
+        if let Some(guests) = self.node_labels_guests.read().await.as_ref() {
             return Ok(guests.to_owned());
         }
 
         if self.no_sync || (!self.network.is_mainnet() && !self.network.eq(&Network::staging_unchecked().unwrap())) {
             let res = Arc::new(vec![]);
-            *self.node_labels_guests.borrow_mut() = Some(res.clone());
+            *self.node_labels_guests.write().await = Some(res.clone());
             return Ok(res);
         }
 
@@ -191,61 +290,75 @@ impl LazyRegistryImpl {
         };
 
         let guests = Arc::new(guests);
-        *self.node_labels_guests.borrow_mut() = Some(guests.clone());
+        *self.node_labels_guests.write().await = Some(guests.clone());
         Ok(guests)
     }
 
-    pub fn elected_guestos(&self) -> anyhow::Result<Arc<Vec<String>>> {
-        if let Some(elected) = self.elected_guestos.borrow().as_ref() {
+    pub async fn elected_guestos(&self) -> anyhow::Result<Arc<Vec<String>>> {
+        if let Some(elected) = self.elected_guestos.read().await.as_ref() {
             return Ok(elected.to_owned());
         }
 
-        let record = self
-            .get_family_entries::<BlessedReplicaVersions>()?
+        let record = get_family_entries::<BlessedReplicaVersions>(self)?
             .first_entry()
             .ok_or(anyhow::anyhow!("No blessed replica versions found"))?
             .get()
             .to_owned();
 
         let record = Arc::new(record.blessed_version_ids);
-        *self.elected_guestos.borrow_mut() = Some(record.clone());
+        *self.elected_guestos.write().await = Some(record.clone());
         Ok(record)
     }
 
-    pub fn elected_hostos(&self) -> anyhow::Result<Arc<Vec<String>>> {
-        if let Some(elected) = self.elected_hostos.borrow().as_ref() {
+    pub fn elected_guestos_records(&self) -> anyhow::Result<Vec<ReplicaVersionRecord>> {
+        Ok(get_family_entries_versioned::<ReplicaVersionRecord>(self)
+            .map_err(|e| anyhow::anyhow!("Couldn't get elected versions: {:?}", e))?
+            .into_iter()
+            .map(|(_, (_, record))| record)
+            .collect())
+    }
+
+    pub async fn elected_hostos(&self) -> anyhow::Result<Arc<Vec<String>>> {
+        if let Some(elected) = self.elected_hostos.read().await.as_ref() {
             return Ok(elected.to_owned());
         }
 
-        let record = self
-            .get_family_entries::<HostosVersionRecord>()?
+        let record = get_family_entries::<HostosVersionRecord>(self)?
             .values()
             .map(|v| v.hostos_version_id.to_owned())
             .collect_vec();
 
         let record = Arc::new(record);
-        *self.elected_hostos.borrow_mut() = Some(record.clone());
+        *self.elected_hostos.write().await = Some(record.clone());
         Ok(record)
+    }
+
+    pub fn elected_hostos_records(&self) -> anyhow::Result<Vec<HostosVersionRecord>> {
+        Ok(get_family_entries_versioned::<HostosVersionRecord>(self)
+            .map_err(|e| anyhow::anyhow!("Couldn't get elected versions: {:?}", e))?
+            .into_iter()
+            .map(|(_, (_, record))| record)
+            .collect())
     }
 
     // Resets the whole state of after fetching so that targets can be
     // recalculated
     pub async fn sync_with_nns(&self) -> anyhow::Result<()> {
         self.local_registry.sync_with_nns().await.map_err(|e| anyhow::anyhow!(e))?;
-        *self.subnets.borrow_mut() = None;
-        *self.nodes.borrow_mut() = None;
-        *self.operators.borrow_mut() = None;
+        *self.subnets.write().await = None;
+        *self.nodes.write().await = None;
+        *self.operators.write().await = None;
 
-        *self.elected_guestos.borrow_mut() = None;
-        *self.elected_hostos.borrow_mut() = None;
-        *self.unassigned_nodes_replica_version.borrow_mut() = None;
-        *self.firewall_rule_set.borrow_mut() = None;
+        *self.elected_guestos.write().await = None;
+        *self.elected_hostos.write().await = None;
+        *self.unassigned_nodes_replica_version.write().await = None;
+        *self.firewall_rule_set.write().await = None;
 
         Ok(())
     }
 
     pub async fn operators(&self) -> anyhow::Result<Arc<BTreeMap<PrincipalId, Operator>>> {
-        if let Some(operators) = self.operators.borrow().as_ref() {
+        if let Some(operators) = self.operators.read().await.as_ref() {
             return Ok(operators.to_owned());
         }
 
@@ -255,8 +368,8 @@ impl LazyRegistryImpl {
             true => NodeProvidersResponse { node_providers: vec![] },
         };
         let node_providers: BTreeMap<_, _> = node_providers.node_providers.iter().map(|p| (p.principal_id, p)).collect();
-        let data_centers = self.get_family_entries::<DataCenterRecord>()?;
-        let operators = self.get_family_entries::<NodeOperatorRecord>()?;
+        let data_centers = get_family_entries::<DataCenterRecord>(self)?;
+        let operators = get_family_entries::<NodeOperatorRecord>(self)?;
 
         let records: BTreeMap<_, _> = operators
             .iter()
@@ -298,25 +411,27 @@ impl LazyRegistryImpl {
                                 longitude: dc.gps.clone().map(|l| l.longitude as f64),
                             }
                         }),
+                        rewardable_nodes: or.rewardable_nodes.clone(),
+                        ipv6: or.ipv6().to_string(),
                     },
                 )
             })
             .collect();
 
         let records = Arc::new(records);
-        *self.operators.borrow_mut() = Some(records.clone());
+        *self.operators.write().await = Some(records.clone());
         Ok(records)
     }
 
     pub async fn nodes(&self) -> anyhow::Result<Arc<BTreeMap<PrincipalId, Node>>> {
-        if let Some(nodes) = self.nodes.borrow().as_ref() {
+        if let Some(nodes) = self.nodes.read().await.as_ref() {
             return Ok(nodes.to_owned());
         }
 
-        let node_entries = self.get_family_entries::<NodeRecord>()?;
-        let versioned_node_entries = self.get_family_entries_versioned::<NodeRecord>()?;
+        let node_entries = get_family_entries::<NodeRecord>(self)?;
+        let versioned_node_entries = get_family_entries_versioned::<NodeRecord>(self)?;
         let dfinity_dcs = DFINITY_DCS.split(' ').map(|dc| dc.to_string().to_lowercase()).collect::<HashSet<_>>();
-        let api_boundary_nodes = self.get_family_entries::<ApiBoundaryNodeRecord>()?;
+        let api_boundary_nodes = get_family_entries::<ApiBoundaryNodeRecord>(self)?;
         let guests = self.node_labels().await?;
         let operators = self.operators().await?;
         let nodes: BTreeMap<_, _> = node_entries
@@ -383,19 +498,21 @@ impl LazyRegistryImpl {
                                 }
                             }),
                         is_api_boundary_node: api_boundary_nodes.contains_key(p),
+                        chip_id: nr.chip_id.clone(),
+                        public_ipv4_config: nr.public_ipv4_config.clone(),
                     },
                 )
             })
             .collect();
 
         let nodes = Arc::new(nodes);
-        *self.nodes.borrow_mut() = Some(nodes.clone());
+        *self.nodes.write().await = Some(nodes.clone());
         Ok(nodes)
     }
 
-    pub fn firewall_rule_set(&self, firewall_rule_scope: FirewallRulesScope) -> anyhow::Result<FirewallRuleSet> {
+    pub async fn firewall_rule_set(&self, firewall_rule_scope: FirewallRulesScope) -> anyhow::Result<FirewallRuleSet> {
         let key = make_firewall_rules_record_key(&firewall_rule_scope);
-        if let Some(firewall_rule_set) = self.firewall_rule_set.borrow().as_ref() {
+        if let Some(firewall_rule_set) = self.firewall_rule_set.read().await.as_ref() {
             if let Some(entry) = firewall_rule_set.get(&key) {
                 return Ok(entry.to_owned());
             }
@@ -410,7 +527,7 @@ impl LazyRegistryImpl {
             None => FirewallRuleSet::default(),
         };
 
-        let mut opt_arc_map = self.firewall_rule_set.borrow_mut();
+        let mut opt_arc_map = self.firewall_rule_set.write().await;
         if let Some(arc_map) = opt_arc_map.as_mut() {
             let bag = Arc::make_mut(arc_map);
             bag.insert(key.to_owned(), value.clone());
@@ -435,14 +552,13 @@ impl LazyRegistryImpl {
     }
 
     pub async fn subnets(&self) -> anyhow::Result<Arc<BTreeMap<PrincipalId, Subnet>>> {
-        if let Some(subnets) = self.subnets.borrow().as_ref() {
+        if let Some(subnets) = self.subnets.read().await.as_ref() {
             return Ok(subnets.to_owned());
         }
 
         let all_nodes = self.nodes().await?;
 
-        let subnets: BTreeMap<_, _> = self
-            .get_family_entries::<SubnetRecord>()?
+        let subnets: BTreeMap<_, _> = get_family_entries::<SubnetRecord>(self)?
             .iter()
             .enumerate()
             .map(|(i, (p, sr))| {
@@ -482,6 +598,22 @@ impl LazyRegistryImpl {
                         // TODO: map replica release
                         replica_release: None,
                         proposal: None,
+                        max_ingress_bytes_per_message: sr.max_ingress_bytes_per_message,
+                        max_ingress_messages_per_block: sr.max_ingress_messages_per_block,
+                        max_block_payload_size: sr.max_block_payload_size,
+                        unit_delay_millis: sr.unit_delay_millis,
+                        initial_notary_delay_millis: sr.initial_notary_delay_millis,
+                        dkg_interval_length: sr.dkg_interval_length,
+                        start_as_nns: sr.start_as_nns,
+                        features: sr.features.clone(),
+                        max_number_of_canisters: sr.max_number_of_canisters,
+                        ssh_readonly_access: sr.ssh_readonly_access.clone(),
+                        ssh_backup_access: sr.ssh_backup_access.clone(),
+                        ecdsa_config: sr.ecdsa_config.clone(),
+                        dkg_dealings_per_block: sr.dkg_dealings_per_block,
+                        is_halted: sr.is_halted,
+                        halt_at_cup_height: sr.halt_at_cup_height,
+                        chain_key_config: sr.chain_key_config.clone(),
                     },
                 )
             })
@@ -489,7 +621,7 @@ impl LazyRegistryImpl {
             .collect();
 
         let subnets = Arc::new(subnets);
-        *self.subnets.borrow_mut() = Some(subnets.clone());
+        *self.subnets.write().await = Some(subnets.clone());
         Ok(subnets)
     }
 
@@ -555,8 +687,8 @@ impl LazyRegistryImpl {
             })
             .collect();
 
-        *self.nodes.borrow_mut() = Some(Arc::new(nodes));
-        *self.subnets.borrow_mut() = Some(Arc::new(subnets));
+        *self.nodes.write().await = Some(Arc::new(nodes));
+        *self.subnets.write().await = Some(Arc::new(subnets));
 
         Ok(())
     }
@@ -597,117 +729,153 @@ impl LazyRegistryImpl {
             .collect_vec())
     }
 
-    pub fn unassigned_nodes_replica_version(&self) -> anyhow::Result<Arc<String>> {
-        if let Some(v) = self.unassigned_nodes_replica_version.borrow().as_ref() {
+    pub async fn unassigned_nodes_replica_version(&self) -> anyhow::Result<Arc<String>> {
+        if let Some(v) = self.unassigned_nodes_replica_version.read().await.as_ref() {
             return Ok(v.to_owned());
         }
 
-        let version = self
-            .get_family_entries::<UnassignedNodesConfigRecord>()?
+        let version = get_family_entries::<UnassignedNodesConfigRecord>(self)?
             .first_entry()
             .map(|v| v.get().to_owned())
             .ok_or(anyhow::anyhow!("No unassigned nodes version"))?;
 
         let version = Arc::new(version.replica_version);
-        *self.unassigned_nodes_replica_version.borrow_mut() = Some(version.clone());
+        *self.unassigned_nodes_replica_version.write().await = Some(version.clone());
         Ok(version)
+    }
+
+    pub fn get_api_boundary_nodes(&self) -> anyhow::Result<Vec<(String, ApiBoundaryNodeRecord)>> {
+        Ok(get_family_entries_versioned::<ApiBoundaryNodeRecord>(self)
+            .map_err(|e| anyhow::anyhow!("Couldn't get api boundary nodes: {:?}", e))?
+            .into_iter()
+            .map(|(k, (_, r))| (k, r))
+            .collect_vec())
+    }
+
+    pub fn get_node_rewards_table(&self) -> anyhow::Result<BTreeMap<String, NodeRewardsTable>> {
+        Ok(get_family_entries::<NodeRewardsTable>(self).map_err(|e| anyhow::anyhow!("Couldn't get node rewards table: {:?}", e))?)
+    }
+
+    pub fn get_unassigned_nodes(&self) -> anyhow::Result<Option<UnassignedNodesConfigRecord>> {
+        Ok(get_family_entries_versioned::<UnassignedNodesConfigRecord>(self)
+            .map_err(|e| anyhow::anyhow!("Couldn't get unassigned nodes config: {:?}", e))?
+            .into_iter()
+            .map(|(_, (_, record))| record)
+            .next())
+    }
+
+    pub fn get_datacenters(&self) -> anyhow::Result<Vec<DataCenterRecord>> {
+        Ok(get_family_entries_versioned::<DataCenterRecord>(self)
+            .map_err(|e| anyhow::anyhow!("Couldn't get data centers: {:?}", e))?
+            .into_iter()
+            .map(|(_, (_, record))| record)
+            .collect())
     }
 }
 
 impl NodesConverter for LazyRegistryImpl {
-    async fn get_nodes(&self, from: &[PrincipalId]) -> Result<Vec<decentralization::network::Node>, ic_management_types::NetworkError> {
-        let nodes = self
-            .nodes()
-            .await
-            .map_err(|e| ic_management_types::NetworkError::DataRequestError(e.to_string()))?;
-        from.iter()
-            .map(|n| {
-                nodes
-                    .get(n)
-                    .ok_or(ic_management_types::NetworkError::NodeNotFound(*n))
-                    .map(decentralization::network::Node::from)
-            })
-            .collect()
+    fn get_nodes<'a>(
+        &'a self,
+        from: &'a [PrincipalId],
+    ) -> BoxFuture<'a, Result<Vec<decentralization::network::Node>, ic_management_types::NetworkError>> {
+        Box::pin(async {
+            let nodes = self
+                .nodes()
+                .await
+                .map_err(|e| ic_management_types::NetworkError::DataRequestError(e.to_string()))?;
+            from.iter()
+                .map(|n| {
+                    nodes
+                        .get(n)
+                        .ok_or(ic_management_types::NetworkError::NodeNotFound(*n))
+                        .map(decentralization::network::Node::from)
+                })
+                .collect()
+        })
     }
 }
 
 impl SubnetQuerier for LazyRegistryImpl {
-    async fn subnet(&self, by: SubnetQueryBy) -> Result<DecentralizedSubnet, ic_management_types::NetworkError> {
-        match by {
-            SubnetQueryBy::SubnetId(id) => self
-                .subnets()
-                .await
-                .map_err(|e| ic_management_types::NetworkError::DataRequestError(e.to_string()))?
-                .get(&id)
-                .map(|s| DecentralizedSubnet {
-                    id: s.principal,
-                    nodes: s.nodes.iter().map(decentralization::network::Node::from).collect(),
-                    added_nodes_desc: vec![],
-                    removed_nodes_desc: vec![],
-                    min_nakamoto_coefficients: None,
-                    comment: None,
-                    run_log: vec![],
-                })
-                .ok_or(ic_management_types::NetworkError::SubnetNotFound(id)),
-            SubnetQueryBy::NodeList(nodes) => {
-                let reg_nodes = self.nodes().await.map_err(|e| NetworkError::DataRequestError(e.to_string()))?;
-                let subnets = nodes
-                    .iter()
-                    .map(|n| reg_nodes.get(&n.id).and_then(|n| n.subnet_id))
-                    .collect::<BTreeSet<_>>();
-                if subnets.len() > 1 {
-                    return Err(NetworkError::IllegalRequest("Nodes don't belong to the same subnet".to_owned()));
-                }
-                if let Some(Some(subnet)) = subnets.first() {
-                    Ok(decentralization::network::DecentralizedSubnet {
-                        id: *subnet,
-                        nodes: self
-                            .subnets()
-                            .await
-                            .map_err(|e| NetworkError::IllegalRequest(e.to_string()))?
-                            .get(subnet)
-                            .ok_or(NetworkError::SubnetNotFound(*subnet))?
-                            .nodes
-                            .iter()
-                            .map(decentralization::network::Node::from)
-                            .collect(),
+    fn subnet<'a>(&'a self, by: SubnetQueryBy) -> BoxFuture<'a, Result<DecentralizedSubnet, ic_management_types::NetworkError>> {
+        Box::pin(async {
+            match by {
+                SubnetQueryBy::SubnetId(id) => self
+                    .subnets()
+                    .await
+                    .map_err(|e| ic_management_types::NetworkError::DataRequestError(e.to_string()))?
+                    .get(&id)
+                    .map(|s| DecentralizedSubnet {
+                        id: s.principal,
+                        nodes: s.nodes.iter().map(decentralization::network::Node::from).collect(),
                         added_nodes_desc: vec![],
                         removed_nodes_desc: vec![],
                         min_nakamoto_coefficients: None,
                         comment: None,
                         run_log: vec![],
                     })
-                } else {
-                    Err(NetworkError::IllegalRequest("no subnets found".to_string()))
+                    .ok_or(ic_management_types::NetworkError::SubnetNotFound(id)),
+                SubnetQueryBy::NodeList(nodes) => {
+                    let reg_nodes = self.nodes().await.map_err(|e| NetworkError::DataRequestError(e.to_string()))?;
+                    let subnets = nodes
+                        .iter()
+                        .map(|n| reg_nodes.get(&n.id).and_then(|n| n.subnet_id))
+                        .collect::<BTreeSet<_>>();
+                    if subnets.len() > 1 {
+                        return Err(NetworkError::IllegalRequest("Nodes don't belong to the same subnet".to_owned()));
+                    }
+                    if let Some(Some(subnet)) = subnets.first() {
+                        Ok(decentralization::network::DecentralizedSubnet {
+                            id: *subnet,
+                            nodes: self
+                                .subnets()
+                                .await
+                                .map_err(|e| NetworkError::IllegalRequest(e.to_string()))?
+                                .get(subnet)
+                                .ok_or(NetworkError::SubnetNotFound(*subnet))?
+                                .nodes
+                                .iter()
+                                .map(decentralization::network::Node::from)
+                                .collect(),
+                            added_nodes_desc: vec![],
+                            removed_nodes_desc: vec![],
+                            min_nakamoto_coefficients: None,
+                            comment: None,
+                            run_log: vec![],
+                        })
+                    } else {
+                        Err(NetworkError::IllegalRequest("no subnets found".to_string()))
+                    }
                 }
             }
-        }
+        })
     }
 }
 impl decentralization::network::TopologyManager for LazyRegistryImpl {}
 
 impl AvailableNodesQuerier for LazyRegistryImpl {
-    async fn available_nodes(&self) -> Result<Vec<decentralization::network::Node>, ic_management_types::NetworkError> {
-        let health_client = crate::health::HealthClient::new(self.network.clone());
-        let (nodes, healths) = try_join!(self.nodes_with_proposals(), health_client.nodes())
-            .map_err(|e| ic_management_types::NetworkError::DataRequestError(e.to_string()))?;
-        let nodes = nodes
-            .values()
-            .filter(|n| n.subnet_id.is_none() && n.proposal.is_none() && n.duplicates.is_none() && !n.is_api_boundary_node)
-            .cloned()
-            .collect_vec();
+    fn available_nodes<'a>(&'a self) -> BoxFuture<'a, Result<Vec<decentralization::network::Node>, ic_management_types::NetworkError>> {
+        Box::pin(async {
+            let health_client = crate::health::HealthClient::new(self.network.clone());
+            let (nodes, healths) = try_join!(self.nodes_with_proposals(), health_client.nodes())
+                .map_err(|e| ic_management_types::NetworkError::DataRequestError(e.to_string()))?;
+            let nodes = nodes
+                .values()
+                .filter(|n| n.subnet_id.is_none() && n.proposal.is_none() && n.duplicates.is_none() && !n.is_api_boundary_node)
+                .cloned()
+                .collect_vec();
 
-        Ok(nodes
-            .iter()
-            .filter(|n| {
-                // Keep only healthy nodes.
-                healths
-                    .get(&n.principal)
-                    .map(|s| matches!(*s, ic_management_types::HealthStatus::Healthy))
-                    .unwrap_or(false)
-            })
-            .map(decentralization::network::Node::from)
-            .sorted_by(|n1, n2| n1.id.cmp(&n2.id))
-            .collect())
+            Ok(nodes
+                .iter()
+                .filter(|n| {
+                    // Keep only healthy nodes.
+                    healths
+                        .get(&n.principal)
+                        .map(|s| matches!(*s, ic_management_types::HealthStatus::Healthy))
+                        .unwrap_or(false)
+                })
+                .map(decentralization::network::Node::from)
+                .sorted_by(|n1, n2| n1.id.cmp(&n2.id))
+                .collect())
+        })
     }
 }

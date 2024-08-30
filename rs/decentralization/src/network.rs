@@ -5,6 +5,7 @@ use actix_web::http::StatusCode;
 use actix_web::{HttpResponse, ResponseError};
 use ahash::{AHashMap, AHashSet, HashSet};
 use anyhow::anyhow;
+use futures::future::BoxFuture;
 use ic_base_types::PrincipalId;
 use ic_management_types::{HealthStatus, MinNakamotoCoefficients, NetworkError, NodeFeature};
 use itertools::Itertools;
@@ -825,7 +826,7 @@ impl From<ic_management_types::Subnet> for DecentralizedSubnet {
 }
 
 pub trait AvailableNodesQuerier {
-    fn available_nodes(&self) -> impl std::future::Future<Output = Result<Vec<Node>, NetworkError>>;
+    fn available_nodes<'a>(&'a self) -> BoxFuture<'a, Result<Vec<Node>, NetworkError>>;
 }
 
 #[derive(Clone)]
@@ -835,11 +836,11 @@ pub enum SubnetQueryBy {
 }
 
 pub trait NodesConverter {
-    fn get_nodes(&self, from: &[PrincipalId]) -> impl std::future::Future<Output = Result<Vec<Node>, NetworkError>>;
+    fn get_nodes<'a>(&'a self, from: &'a [PrincipalId]) -> BoxFuture<'a, Result<Vec<Node>, NetworkError>>;
 }
 
 pub trait SubnetQuerier {
-    fn subnet(&self, by: SubnetQueryBy) -> impl std::future::Future<Output = Result<DecentralizedSubnet, NetworkError>>;
+    fn subnet<'a>(&'a self, by: SubnetQueryBy) -> BoxFuture<'a, Result<DecentralizedSubnet, NetworkError>>;
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug, strum_macros::Display)]
@@ -861,34 +862,37 @@ impl ResponseError for DecentralizationError {
     }
 }
 
-#[allow(async_fn_in_trait)]
-pub trait TopologyManager: SubnetQuerier + AvailableNodesQuerier {
-    async fn modify_subnet_nodes(&self, by: SubnetQueryBy) -> Result<SubnetChangeRequest, NetworkError> {
-        Ok(SubnetChangeRequest {
-            available_nodes: self.available_nodes().await?,
-            subnet: self.subnet(by).await?,
-            ..Default::default()
+pub trait TopologyManager: SubnetQuerier + AvailableNodesQuerier + Sync {
+    fn modify_subnet_nodes<'a>(&'a self, by: SubnetQueryBy) -> BoxFuture<'a, Result<SubnetChangeRequest, NetworkError>> {
+        Box::pin(async {
+            Ok(SubnetChangeRequest {
+                available_nodes: self.available_nodes().await?,
+                subnet: self.subnet(by).await?,
+                ..Default::default()
+            })
         })
     }
 
-    async fn create_subnet(
-        &self,
+    fn create_subnet<'a>(
+        &'a self,
         size: usize,
         min_nakamoto_coefficients: Option<MinNakamotoCoefficients>,
         include_nodes: Vec<PrincipalId>,
         exclude_nodes: Vec<String>,
         only_nodes: Vec<String>,
-        health_of_nodes: &BTreeMap<PrincipalId, HealthStatus>,
-    ) -> Result<SubnetChange, NetworkError> {
-        SubnetChangeRequest {
-            available_nodes: self.available_nodes().await?,
-            min_nakamoto_coefficients,
-            ..Default::default()
-        }
-        .including_from_available(include_nodes.clone())
-        .excluding_from_available(exclude_nodes.clone())
-        .including_from_available(only_nodes.clone())
-        .resize(size, 0, 0, health_of_nodes)
+        health_of_nodes: &'a BTreeMap<PrincipalId, HealthStatus>,
+    ) -> BoxFuture<'a, Result<SubnetChange, NetworkError>> {
+        Box::pin(async move {
+            SubnetChangeRequest {
+                available_nodes: self.available_nodes().await?,
+                min_nakamoto_coefficients,
+                ..Default::default()
+            }
+            .including_from_available(include_nodes.clone())
+            .excluding_from_available(exclude_nodes.clone())
+            .including_from_available(only_nodes.clone())
+            .resize(size, 0, 0, health_of_nodes)
+        })
     }
 }
 

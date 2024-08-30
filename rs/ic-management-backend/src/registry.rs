@@ -4,6 +4,7 @@ use crate::node_labels;
 use crate::proposal::{self, SubnetUpdateProposal, UpdateUnassignedNodesProposal};
 use crate::public_dashboard::query_ic_dashboard_list;
 use decentralization::network::{AvailableNodesQuerier, NodesConverter, SubnetQuerier, SubnetQueryBy};
+use futures::future::BoxFuture;
 use futures::TryFutureExt;
 use ic_base_types::NodeId;
 use ic_base_types::{RegistryVersion, SubnetId};
@@ -420,6 +421,8 @@ impl RegistryState {
                                 longitude: dc.gps.clone().map(|l| l.longitude as f64),
                             }
                         }),
+                        rewardable_nodes: or.rewardable_nodes.clone(),
+                        ipv6: or.ipv6().to_string(),
                     },
                 )
             })
@@ -502,6 +505,8 @@ impl RegistryState {
                                 }
                             }),
                         is_api_boundary_node: api_boundary_nodes.contains_key(p),
+                        chip_id: nr.chip_id.clone(),
+                        public_ipv4_config: nr.public_ipv4_config.clone(),
                     },
                 )
             })
@@ -567,6 +572,22 @@ impl RegistryState {
                             .find(|r| r.commit_hash == sr.replica_version_id)
                             .cloned(),
                         proposal: None,
+                        max_ingress_bytes_per_message: sr.max_ingress_bytes_per_message,
+                        max_ingress_messages_per_block: sr.max_ingress_messages_per_block,
+                        max_block_payload_size: sr.max_block_payload_size,
+                        unit_delay_millis: sr.unit_delay_millis,
+                        initial_notary_delay_millis: sr.initial_notary_delay_millis,
+                        dkg_interval_length: sr.dkg_interval_length,
+                        start_as_nns: sr.start_as_nns,
+                        features: sr.features.clone(),
+                        max_number_of_canisters: sr.max_number_of_canisters,
+                        ssh_readonly_access: sr.ssh_readonly_access.clone(),
+                        ssh_backup_access: sr.ssh_backup_access.clone(),
+                        ecdsa_config: sr.ecdsa_config.clone(),
+                        dkg_dealings_per_block: sr.dkg_dealings_per_block,
+                        is_halted: sr.is_halted,
+                        halt_at_cup_height: sr.halt_at_cup_height,
+                        chain_key_config: sr.chain_key_config.clone(),
                     },
                 )
             })
@@ -799,95 +820,101 @@ impl RegistryState {
 impl decentralization::network::TopologyManager for RegistryState {}
 
 impl NodesConverter for RegistryState {
-    async fn get_nodes(&self, from: &[PrincipalId]) -> std::result::Result<Vec<decentralization::network::Node>, NetworkError> {
-        from.iter()
-            .map(|n| {
-                self.nodes()
-                    .get(n)
-                    .ok_or(NetworkError::NodeNotFound(*n))
-                    .map(decentralization::network::Node::from)
-            })
-            .collect()
+    fn get_nodes<'a>(&'a self, from: &'a [PrincipalId]) -> BoxFuture<'a, std::result::Result<Vec<decentralization::network::Node>, NetworkError>> {
+        Box::pin(async {
+            from.iter()
+                .map(|n| {
+                    self.nodes()
+                        .get(n)
+                        .ok_or(NetworkError::NodeNotFound(*n))
+                        .map(decentralization::network::Node::from)
+                })
+                .collect()
+        })
     }
 }
 
 impl SubnetQuerier for RegistryState {
-    async fn subnet(&self, by: SubnetQueryBy) -> Result<decentralization::network::DecentralizedSubnet, NetworkError> {
-        match by {
-            SubnetQueryBy::SubnetId(id) => self
-                .subnets
-                .get(&id)
-                .map(|s| decentralization::network::DecentralizedSubnet {
-                    id: s.principal,
-                    nodes: s.nodes.iter().map(decentralization::network::Node::from).collect(),
-                    added_nodes_desc: Vec::new(),
-                    removed_nodes_desc: Vec::new(),
-                    min_nakamoto_coefficients: None,
-                    comment: None,
-                    run_log: Vec::new(),
-                })
-                .ok_or(NetworkError::SubnetNotFound(id)),
-            SubnetQueryBy::NodeList(nodes) => {
-                let subnets = nodes
-                    .to_vec()
-                    .iter()
-                    .map(|n| self.nodes.get(&n.id).and_then(|n| n.subnet_id))
-                    .collect::<BTreeSet<_>>();
-                if subnets.len() > 1 {
-                    return Err(NetworkError::IllegalRequest("nodes don't belong to the same subnet".to_string()));
-                }
-                if let Some(Some(subnet)) = subnets.into_iter().next() {
-                    Ok(decentralization::network::DecentralizedSubnet {
-                        id: subnet,
-                        nodes: self
-                            .subnets
-                            .get(&subnet)
-                            .ok_or(NetworkError::SubnetNotFound(subnet))?
-                            .nodes
-                            .iter()
-                            .map(decentralization::network::Node::from)
-                            .collect(),
+    fn subnet<'a>(&'a self, by: SubnetQueryBy) -> BoxFuture<'a, Result<decentralization::network::DecentralizedSubnet, NetworkError>> {
+        Box::pin(async {
+            match by {
+                SubnetQueryBy::SubnetId(id) => self
+                    .subnets
+                    .get(&id)
+                    .map(|s| decentralization::network::DecentralizedSubnet {
+                        id: s.principal,
+                        nodes: s.nodes.iter().map(decentralization::network::Node::from).collect(),
                         added_nodes_desc: Vec::new(),
                         removed_nodes_desc: Vec::new(),
                         min_nakamoto_coefficients: None,
                         comment: None,
                         run_log: Vec::new(),
                     })
-                } else {
-                    Err(NetworkError::IllegalRequest("no subnet found".to_string()))
+                    .ok_or(NetworkError::SubnetNotFound(id)),
+                SubnetQueryBy::NodeList(nodes) => {
+                    let subnets = nodes
+                        .to_vec()
+                        .iter()
+                        .map(|n| self.nodes.get(&n.id).and_then(|n| n.subnet_id))
+                        .collect::<BTreeSet<_>>();
+                    if subnets.len() > 1 {
+                        return Err(NetworkError::IllegalRequest("nodes don't belong to the same subnet".to_string()));
+                    }
+                    if let Some(Some(subnet)) = subnets.into_iter().next() {
+                        Ok(decentralization::network::DecentralizedSubnet {
+                            id: subnet,
+                            nodes: self
+                                .subnets
+                                .get(&subnet)
+                                .ok_or(NetworkError::SubnetNotFound(subnet))?
+                                .nodes
+                                .iter()
+                                .map(decentralization::network::Node::from)
+                                .collect(),
+                            added_nodes_desc: Vec::new(),
+                            removed_nodes_desc: Vec::new(),
+                            min_nakamoto_coefficients: None,
+                            comment: None,
+                            run_log: Vec::new(),
+                        })
+                    } else {
+                        Err(NetworkError::IllegalRequest("no subnet found".to_string()))
+                    }
                 }
             }
-        }
+        })
     }
 }
 
 impl AvailableNodesQuerier for RegistryState {
-    async fn available_nodes(&self) -> Result<Vec<decentralization::network::Node>, NetworkError> {
-        let nodes = self
-            .nodes_with_proposals()
-            .await
-            .map_err(|err| NetworkError::DataRequestError(err.to_string()))?
-            .into_values()
-            .filter(|n| n.subnet_id.is_none() && n.proposal.is_none() && n.duplicates.is_none() && !n.is_api_boundary_node)
-            .collect::<Vec<_>>();
+    fn available_nodes<'a>(&'a self) -> BoxFuture<'a, Result<Vec<decentralization::network::Node>, NetworkError>> {
+        Box::pin(async {
+            let nodes = self
+                .nodes_with_proposals()
+                .await
+                .map_err(|err| NetworkError::DataRequestError(err.to_string()))?
+                .into_values()
+                .filter(|n| n.subnet_id.is_none() && n.proposal.is_none() && n.duplicates.is_none() && !n.is_api_boundary_node)
+                .collect::<Vec<_>>();
 
-        let health_client = crate::health::HealthClient::new(self.network());
-        let healths = health_client
-            .nodes()
-            .await
-            .map_err(|err| NetworkError::DataRequestError(err.to_string()))?;
-        Ok(nodes
-            .iter()
-            .filter(|n| {
-                // Keep only healthy nodes.
-                healths
-                    .get(&n.principal)
-                    .map(|s| matches!(*s, ic_management_types::HealthStatus::Healthy))
-                    .unwrap_or(false)
-            })
-            .map(decentralization::network::Node::from)
-            .sorted_by(|n1, n2| n1.id.cmp(&n2.id))
-            .collect())
+            let health_client = crate::health::HealthClient::new(self.network());
+            let healths = health_client
+                .nodes()
+                .await
+                .map_err(|err| NetworkError::DataRequestError(err.to_string()))?;
+            Ok(nodes
+                .iter()
+                .filter(|n| {
+                    // Keep only healthy nodes.
+                    healths
+                        .get(&n.principal)
+                        .map(|s| matches!(*s, ic_management_types::HealthStatus::Healthy))
+                        .unwrap_or(false)
+                })
+                .map(decentralization::network::Node::from)
+                .sorted_by(|n1, n2| n1.id.cmp(&n2.id))
+                .collect())
+        })
     }
 }
 

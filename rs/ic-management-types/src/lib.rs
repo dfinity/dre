@@ -9,6 +9,10 @@ use ic_nns_governance::pb::v1::proposal::Action;
 use ic_nns_governance::pb::v1::NnsFunction;
 use ic_nns_governance::pb::v1::ProposalInfo;
 use ic_nns_governance::pb::v1::ProposalStatus;
+use ic_protobuf::registry::node::v1::IPv4InterfaceConfig;
+use ic_protobuf::registry::subnet::v1::ChainKeyConfig;
+use ic_protobuf::registry::subnet::v1::EcdsaConfig;
+use ic_protobuf::registry::subnet::v1::SubnetFeatures;
 use ic_registry_subnet_type::SubnetType;
 use ic_types::PrincipalId;
 use registry_canister::mutations::do_add_nodes_to_subnet::AddNodesToSubnetPayload;
@@ -239,6 +243,22 @@ pub struct Subnet {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub proposal: Option<TopologyChangeProposal>,
     pub replica_release: Option<Release>,
+    pub max_ingress_bytes_per_message: u64,
+    pub max_ingress_messages_per_block: u64,
+    pub max_block_payload_size: u64,
+    pub unit_delay_millis: u64,
+    pub initial_notary_delay_millis: u64,
+    pub dkg_interval_length: u64,
+    pub start_as_nns: bool,
+    pub features: Option<SubnetFeatures>,
+    pub max_number_of_canisters: u64,
+    pub ssh_readonly_access: Vec<String>,
+    pub ssh_backup_access: Vec<String>,
+    pub ecdsa_config: Option<EcdsaConfig>,
+    pub dkg_dealings_per_block: u64,
+    pub is_halted: bool,
+    pub halt_at_cup_height: bool,
+    pub chain_key_config: Option<ChainKeyConfig>,
 }
 
 type Application = String;
@@ -271,6 +291,8 @@ pub struct Node {
     #[serde(default)]
     pub duplicates: Option<PrincipalId>,
     pub is_api_boundary_node: bool,
+    pub chip_id: Option<Vec<u8>>,
+    pub public_ipv4_config: Option<IPv4InterfaceConfig>,
 }
 
 #[derive(strum_macros::Display, EnumString, VariantNames, Hash, Eq, PartialEq, Ord, PartialOrd, Clone, Serialize, Deserialize, Debug)]
@@ -351,6 +373,8 @@ pub struct Operator {
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub datacenter: Option<Datacenter>,
+    pub rewardable_nodes: BTreeMap<String, u32>,
+    pub ipv6: String,
 }
 
 #[derive(Clone, Serialize, Default, Debug, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
