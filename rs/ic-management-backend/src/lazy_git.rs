@@ -12,7 +12,7 @@ use regex::Regex;
 
 use crate::git_ic_repo::IcRepo;
 
-pub struct LazyGit {
+pub struct LazyGitImpl {
     guestos_releases: RefCell<Option<Arc<ArtifactReleases>>>,
     hostos_releases: RefCell<Option<Arc<ArtifactReleases>>>,
     ic_repo: RefCell<IcRepo>,
@@ -21,7 +21,7 @@ pub struct LazyGit {
     elected_hostos_versions: Vec<String>,
 }
 
-impl LazyGit {
+impl LazyGitImpl {
     pub fn new(network: Network, blessed_replica_versions: Vec<String>, elected_hostos_versions: Vec<String>) -> anyhow::Result<Self> {
         Ok(Self {
             guestos_releases: RefCell::new(None),
