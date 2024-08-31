@@ -15,6 +15,7 @@ use futures::TryFutureExt;
 use futures_util::future::try_join;
 use ic_management_backend::health;
 use ic_management_backend::health::HealthStatusQuerier;
+use ic_management_backend::lazy_git::LazyGit;
 use ic_management_backend::lazy_git::LazyGitImpl;
 use ic_management_backend::lazy_registry::LazyRegistry;
 use ic_management_backend::proposal::ProposalAgent;
