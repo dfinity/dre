@@ -14,9 +14,9 @@ use tokio::sync::RwLock;
 use crate::git_ic_repo::IcRepo;
 
 pub trait LazyGit: Send + Sync {
-    fn guestos_releases<'a>(&'a self) -> BoxFuture<'a, anyhow::Result<Arc<ArtifactReleases>>>;
+    fn guestos_releases(&self) -> BoxFuture<'_, anyhow::Result<Arc<ArtifactReleases>>>;
 
-    fn hostos_releases<'a>(&'a self) -> BoxFuture<'a, anyhow::Result<Arc<ArtifactReleases>>>;
+    fn hostos_releases(&self) -> BoxFuture<'_, anyhow::Result<Arc<ArtifactReleases>>>;
 }
 
 pub struct LazyGitImpl {
@@ -29,7 +29,7 @@ pub struct LazyGitImpl {
 }
 
 impl LazyGit for LazyGitImpl {
-    fn guestos_releases<'a>(&'a self) -> BoxFuture<'a, anyhow::Result<Arc<ArtifactReleases>>> {
+    fn guestos_releases(&self) -> BoxFuture<'_, anyhow::Result<Arc<ArtifactReleases>>> {
         Box::pin(async {
             if let Some(releases) = self.guestos_releases.read().await.as_ref() {
                 return Ok(releases.to_owned());
@@ -45,7 +45,7 @@ impl LazyGit for LazyGitImpl {
         })
     }
 
-    fn hostos_releases<'a>(&'a self) -> BoxFuture<'a, anyhow::Result<Arc<ArtifactReleases>>> {
+    fn hostos_releases(&self) -> BoxFuture<'_, anyhow::Result<Arc<ArtifactReleases>>> {
         Box::pin(async {
             if let Some(releases) = self.hostos_releases.read().await.as_ref() {
                 return Ok(releases.to_owned());

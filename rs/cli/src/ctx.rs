@@ -9,6 +9,7 @@ use std::{
 
 use ic_canisters::{governance::governance_canister_version, CanisterClient, IcAgentCanisterClient};
 use ic_management_backend::{
+    lazy_git::LazyGit,
     lazy_registry::{LazyRegistry, LazyRegistryImpl},
     proposal::ProposalAgent,
     registry::{local_registry_path, sync_local_store},
@@ -32,6 +33,7 @@ pub struct DreContext {
     registry: RefCell<Option<Arc<dyn LazyRegistry>>>,
     ic_admin: Option<Arc<IcAdminWrapper>>,
     runner: RefCell<Option<Rc<Runner>>>,
+    ic_repo: RefCell<Option<Arc<dyn LazyGit>>>,
     verbose_runner: bool,
     skip_sync: bool,
     ic_admin_path: Option<String>,
@@ -85,6 +87,7 @@ impl DreContext {
             skip_sync: args.no_sync,
             ic_admin_path,
             forum_post_link: args.forum_post_link.clone(),
+            ic_repo: RefCell::new(None),
         })
     }
 
@@ -232,6 +235,7 @@ impl DreContext {
             self.network().clone(),
             self.proposals_agent(),
             self.verbose_runner,
+            self.ic_repo.clone(),
         ));
         *self.runner.borrow_mut() = Some(runner.clone());
         runner

@@ -1,7 +1,6 @@
 use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
-use std::rc::Rc;
 use std::sync::Arc;
 
 use decentralization::network::DecentralizedSubnet;
@@ -46,30 +45,37 @@ use crate::operations::hostos_rollout::NodeGroupUpdate;
 pub struct Runner {
     ic_admin: Arc<IcAdminWrapper>,
     registry: Arc<dyn LazyRegistry>,
-    ic_repo: RefCell<Option<Rc<LazyGitImpl>>>,
+    ic_repo: RefCell<Option<Arc<dyn LazyGit>>>,
     network: Network,
     proposal_agent: ProposalAgent,
     verbose: bool,
 }
 
 impl Runner {
-    pub fn new(ic_admin: Arc<IcAdminWrapper>, registry: Arc<dyn LazyRegistry>, network: Network, agent: ProposalAgent, verbose: bool) -> Self {
+    pub fn new(
+        ic_admin: Arc<IcAdminWrapper>,
+        registry: Arc<dyn LazyRegistry>,
+        network: Network,
+        agent: ProposalAgent,
+        verbose: bool,
+        ic_repo: RefCell<Option<Arc<dyn LazyGit>>>,
+    ) -> Self {
         Self {
             ic_admin,
             registry,
-            ic_repo: RefCell::new(None),
+            ic_repo,
             network,
             proposal_agent: agent,
             verbose,
         }
     }
 
-    async fn ic_repo(&self) -> Rc<LazyGitImpl> {
+    async fn ic_repo(&self) -> Arc<dyn LazyGit> {
         if let Some(ic_repo) = self.ic_repo.borrow().as_ref() {
             return ic_repo.clone();
         }
 
-        let ic_repo = Rc::new(
+        let ic_repo = Arc::new(
             LazyGitImpl::new(
                 self.network.clone(),
                 self.registry
@@ -84,7 +90,7 @@ impl Runner {
                     .to_vec(),
             )
             .expect("Should be able to create IC repo"),
-        );
+        ) as Arc<dyn LazyGit>;
         *self.ic_repo.borrow_mut() = Some(ic_repo.clone());
         ic_repo
     }
