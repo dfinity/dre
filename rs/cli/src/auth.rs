@@ -116,7 +116,8 @@ impl Auth {
                 // and must fail upfront if autodetection fails, and other operations do not require
                 // authentication and should not even attempt to perform HSM autodetection.
                 // Ideally that means the operations that require authentication, and only those
-                // operations, accept the command line arguments that create authentication.
+                // operations, accept the command line arguments that create authentication --
+                // other operations should outright reject the arguments.
                 (None, None, None) => Ok(Self::detect_hsm_auth()?.map_or(Auth::Anonymous, |a| a)),
                 _ => Err(anyhow::anyhow!("When specifying either --hsm-slot, --hsm-pin or --hsm-key-id, autodetection is disabled and all three arguments must be specified")),
             },
