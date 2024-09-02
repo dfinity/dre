@@ -105,7 +105,7 @@ impl Auth {
         hsm_key_id: Option<String>,
     ) -> anyhow::Result<Self> {
         match private_key_pem {
-            Some(tentative_path) => match tentative_path.exists() {
+            Some(tentative_path) => match tentative_path.is_file() {
                 true => Ok(Auth::Keyfile { path: tentative_path }),
                 false => Err(anyhow::anyhow!("Invalid private key file path: {}", tentative_path.display())),
             },
