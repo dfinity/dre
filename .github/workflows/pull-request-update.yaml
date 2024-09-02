@@ -2,7 +2,8 @@ name: Auto update PR's
 on:
   push:
     branches:
-      - main
+      - main-disabled  # change back to "main" to re-enable
+
 jobs:
   autoupdate:
     name: autoupdate
