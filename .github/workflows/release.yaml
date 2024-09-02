@@ -9,7 +9,7 @@ jobs:
     runs-on:
       labels: dre-runner-custom
     # This image is based on ubuntu:20.04
-    container: ghcr.io/dfinity/dre/actions-runner:e7053069fd8a084a19b410af4dbcba74048136c4
+    container: ghcr.io/dfinity/dre/actions-runner:f6690a4413269978d8b5d2e53b7346e99b0231b8
     name: Test changed-files
     steps:
       - uses: actions/checkout@v4

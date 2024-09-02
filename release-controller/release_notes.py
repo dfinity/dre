@@ -315,7 +315,7 @@ def get_change_description_for_commit(
     if guestos_change and not any(
         f for f in file_changes if not any(re.match(filter, f["file_path"]) for filter in EXCLUDE_CHANGES_FILTERS)
     ):
-        exclusion_reason = "Changed files are exluded by file path filter"
+        exclusion_reason = "Changed files are excluded by file path filter"
 
     ownership = {}
     stripped_message = re.sub(jira_ticket_regex, "", commit_message)
@@ -436,7 +436,7 @@ To see a full list of commits added since last release, compare the revisions on
     )
     if merge_base != base_release_commit:
         notes += """
-This release diverges from latest release. Merge base is [{merge_base}](https://github.com/dfinity/ic/tree/{merge_base}).
+This release diverges from the latest release. Merge base is [{merge_base}](https://github.com/dfinity/ic/tree/{merge_base}).
 Changes [were removed](https://github.com/dfinity/ic/compare/{release_tag}...{base_release_tag}) from this release.
 """.format(
             merge_base=merge_base,
