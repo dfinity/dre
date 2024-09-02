@@ -12,6 +12,8 @@ use ic_management_types::Network;
 use keyring::{Entry, Error};
 use log::info;
 
+use crate::commands::AuthOpts;
+
 #[derive(Clone, Debug)]
 pub struct Neuron {
     pub auth: Auth,
@@ -23,16 +25,8 @@ static RELEASE_AUTOMATION_DEFAULT_PRIVATE_KEY_PEM: &str = ".config/dfx/identity/
 const RELEASE_AUTOMATION_NEURON_ID: u64 = 80;
 
 impl Neuron {
-    pub async fn new(
-        private_key_pem: Option<PathBuf>,
-        hsm_slot: Option<u64>,
-        hsm_pin: Option<String>,
-        hsm_key_id: Option<String>,
-        neuron_id: Option<u64>,
-        network: &Network,
-        include_proposer: bool,
-    ) -> anyhow::Result<Self> {
-        let auth = Auth::from_cli_args(private_key_pem, hsm_slot, hsm_pin, hsm_key_id)?;
+    pub async fn new(auth_opts: AuthOpts, neuron_id: Option<u64>, network: &Network, include_proposer: bool) -> anyhow::Result<Self> {
+        let auth = Auth::from_cli_args(auth_opts)?;
         let neuron_id = match neuron_id {
             Some(n) => n,
             None => auth.auto_detect_neuron_id(network.get_nns_urls()).await?,
@@ -98,29 +92,25 @@ impl Auth {
         }
     }
 
-    pub fn from_cli_args(
-        private_key_pem: Option<PathBuf>,
-        hsm_slot: Option<u64>,
-        hsm_pin: Option<String>,
-        hsm_key_id: Option<String>,
-    ) -> anyhow::Result<Self> {
-        match private_key_pem {
-            Some(tentative_path) => match tentative_path.is_file() {
-                true => Ok(Auth::Keyfile { path: tentative_path }),
-                false => Err(anyhow::anyhow!("Invalid private key file path: {}", tentative_path.display())),
-            },
-            None => match (hsm_slot, hsm_pin, hsm_key_id) {
-                (Some(slot), Some(pin), Some(key_id)) => Ok(Auth::Hsm { pin, slot, key_id }),
-                // There is a logic error in the line underneath -- if autodetection fails, then
-                // Anonymous is assumed.  This is not correct -- some operations require authentication
-                // and must fail upfront if autodetection fails, and other operations do not require
-                // authentication and should not even attempt to perform HSM autodetection.
-                // Ideally that means the operations that require authentication, and only those
-                // operations, accept the command line arguments that create authentication --
-                // other operations should outright reject the arguments.
-                (None, None, None) => Ok(Self::detect_hsm_auth()?.map_or(Auth::Anonymous, |a| a)),
-                _ => Err(anyhow::anyhow!("When specifying either --hsm-slot, --hsm-pin or --hsm-key-id, autodetection is disabled and all three arguments must be specified")),
-            },
+    pub fn from_cli_args(auth_opts: AuthOpts) -> anyhow::Result<Self> {
+        match &auth_opts {
+            AuthOpts {
+                private_key_pem: Some(private_key_pem),
+                hsm_opts: _,
+            } => Ok(Auth::Keyfile {
+                path: private_key_pem.path().to_path_buf(),
+            }),
+            AuthOpts {
+                private_key_pem: _,
+                hsm_opts: Some(hsm_opts),
+            } => Ok(Auth::Hsm {
+                pin: hsm_opts.hsm_pin.clone(),
+                slot: hsm_opts.hsm_slot,
+                key_id: hsm_opts.hsm_key_id.clone(),
+            }),
+            // I think the next line should not fall back to anonymous.
+            // It should always be autodetect and fail if detection fails.
+            _ => Ok(Self::detect_hsm_auth()?.map_or(Auth::Anonymous, |a| a)),
         }
     }
 

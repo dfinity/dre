@@ -2,7 +2,7 @@ use std::{path::PathBuf, str::FromStr};
 
 use anyhow::Error;
 use dre::{
-    commands::{qualify::execute::Execute, Args, ExecutableCommand},
+    commands::{qualify::execute::Execute, Args, AuthOpts, ExecutableCommand},
     ctx::DreContext,
 };
 use ic_management_backend::registry::local_registry_path;
@@ -63,10 +63,7 @@ pub async fn qualify(
     }
 
     let args = Args {
-        hsm_pin: None,
-        hsm_slot: None,
-        hsm_key_id: None,
-        private_key_pem: Some(private_key_pem),
+        auth_opts: AuthOpts::try_from(private_key_pem)?,
         neuron_id: Some(neuron_id),
         ic_admin: None,
         yes: true,

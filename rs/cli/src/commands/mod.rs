@@ -1,9 +1,12 @@
-use std::{collections::BTreeMap, path::PathBuf, str::FromStr};
+use std::path::PathBuf;
+use std::{collections::BTreeMap, str::FromStr};
 
 use crate::commands::subnet::Subnet;
 use api_boundary_nodes::ApiBoundaryNodes;
-use clap::{error::ErrorKind, Parser};
+use clap::Parser;
+use clap::{error::ErrorKind, Args as ClapArgs};
 use clap_num::maybe_hex;
+use clio::*;
 use completions::Completions;
 use der_to_principal::DerToPrincipal;
 use firewall::Firewall;
@@ -48,24 +51,90 @@ pub mod upgrade;
 mod version;
 mod vote;
 
+// Stupid clap does not let me define this
+// and the below struct as enums.
+// https://github.com/clap-rs/clap/issues/2621
+/// HSM authentication arguments
+#[derive(ClapArgs, Debug, Clone)]
+pub struct HsmOpts {
+    /// Pin for the HSM key used for submitting proposals
+    #[clap(
+        required = false,
+        alias = "hsm-pim",
+        requires_all = ["hsm_pin", "hsm_slot","hsm_key_id"],
+        conflicts_with = "private_key_pem",
+        long,
+        global = true,
+        hide_env_values = true,
+        env = "HSM_PIN"
+    )]
+    pub hsm_pin: String,
+
+    /// Slot that HSM key uses, can be read with pkcs11-tool
+    #[clap(required = false,
+        requires_all = ["hsm_pin", "hsm_slot","hsm_key_id"],
+        conflicts_with = "private_key_pem",
+        long, value_parser=maybe_hex::<u64>, global = true, env = "HSM_SLOT")]
+    pub hsm_slot: u64,
+
+    /// HSM Key ID, can be read with pkcs11-tool
+    #[clap(
+        required = false,
+        requires_all = ["hsm_pin", "hsm_slot","hsm_key_id"],
+        conflicts_with = "private_key_pem",
+        long,
+        global = true,
+        env = "HSM_KEY_ID"
+    )]
+    pub hsm_key_id: String,
+}
+
+// Stupid clap does not let me define this
+// and the above struct as enums.
+// https://github.com/clap-rs/clap/issues/2621
+#[derive(ClapArgs, Debug, Clone)]
+#[group(multiple = false)]
+/// Authentication arguments
+pub struct AuthOpts {
+    /// Path to private key file (in PEM format)
+    #[clap(
+        long,
+        required = false,
+        global = true,
+        conflicts_with_all = ["hsm_pin", "hsm_slot", "hsm_key_id"],
+        env = "PRIVATE_KEY_PEM")]
+    pub private_key_pem: Option<InputPath>,
+    #[clap(flatten)]
+    pub hsm_opts: Option<HsmOpts>,
+}
+
+impl TryFrom<PathBuf> for AuthOpts {
+    type Error = clio::Error;
+    fn try_from(path: PathBuf) -> Result<Self> {
+        let p = Some(InputPath::new(&path)?);
+        Ok(Self {
+            private_key_pem: p,
+            hsm_opts: None,
+        })
+    }
+}
+
+impl TryFrom<String> for AuthOpts {
+    type Error = clio::Error;
+    fn try_from(path: String) -> Result<Self> {
+        let p = Some(InputPath::new(&PathBuf::from(path))?);
+        Ok(Self {
+            private_key_pem: p,
+            hsm_opts: None,
+        })
+    }
+}
+
 #[derive(Parser, Debug)]
 #[clap(version = env!("CARGO_PKG_VERSION"), about, author)]
 pub struct Args {
-    /// Pin for the HSM key used for submitting proposals
-    #[clap(long, global = true, hide_env_values = true, env = "HSM_PIN")]
-    pub hsm_pin: Option<String>,
-
-    /// Slot that HSM key uses, can be read with pkcs11-tool
-    #[clap(long, value_parser=maybe_hex::<u64>, global = true, env = "HSM_SLOT")]
-    pub hsm_slot: Option<u64>,
-
-    /// HSM Key ID, can be read with pkcs11-tool
-    #[clap(long, global = true, env = "HSM_KEY_ID")]
-    pub hsm_key_id: Option<String>,
-
-    /// Path to key pem file
-    #[clap(long, global = true, env = "PRIVATE_KEY_PEM")]
-    pub private_key_pem: Option<PathBuf>,
+    #[clap(flatten)]
+    pub auth_opts: AuthOpts,
 
     /// Neuron ID
     #[clap(long, global = true, env = "NEURON_ID")]

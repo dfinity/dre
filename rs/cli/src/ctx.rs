@@ -20,7 +20,7 @@ use log::info;
 
 use crate::{
     auth::Neuron,
-    commands::{Args, ExecutableCommand, IcAdminRequirement},
+    commands::{Args, AuthOpts, ExecutableCommand, IcAdminRequirement},
     ic_admin::{download_ic_admin, should_update_ic_admin, IcAdmin, IcAdminImpl},
     runner::Runner,
     subnet_manager::SubnetManager,
@@ -50,34 +50,35 @@ impl DreContext {
             true => Network::new_unchecked(args.network.clone(), &args.nns_urls)?,
         };
 
-        let (neuron_id, private_key_pem) = {
-            let neuron_id = match args.neuron_id {
-                Some(n) => Some(n),
-                None if network.name == "staging" => Some(STAGING_NEURON_ID),
-                None => None,
-            };
-
-            let path = PathBuf::from_str(&std::env::var("HOME")?)?.join(".config/dfx/identity/bootstrap-super-leader/identity.pem");
-            let private_key_pem = match args.private_key_pem.as_ref() {
-                Some(p) => Some(p.clone()),
-                None if network.name == "staging" && path.exists() => Some(path),
-                None => None,
-            };
-            (neuron_id, private_key_pem)
+        // Overrides of neuron ID and private key PEM file for staging.
+        // Appropriate fallbacks take place when options are missing.
+        let (neuron_id, auth_opts) = if network.name == "staging" {
+            let staging_path =
+                clio::InputPath::new(&PathBuf::from_str(&std::env::var("HOME")?)?.join(".config/dfx/identity/bootstrap-super-leader/identity.pem"));
+            (
+                args.neuron_id.or(Some(STAGING_NEURON_ID)),
+                match (&args.auth_opts, staging_path.is_ok()) {
+                    // There is no private key PEM specified, this is staging, the user
+                    // did not specify HSM options, and the default staging path exists,
+                    // so we use the default staging path.
+                    (
+                        AuthOpts {
+                            private_key_pem: None,
+                            hsm_opts: None,
+                        },
+                        true,
+                    ) => AuthOpts {
+                        private_key_pem: Some(staging_path.unwrap()),
+                        hsm_opts: None,
+                    },
+                    _ => args.auth_opts.clone(),
+                },
+            )
+        } else {
+            (args.neuron_id, args.auth_opts.clone())
         };
 
-        let (ic_admin, ic_admin_path) = Self::init_ic_admin(
-            &network,
-            neuron_id,
-            private_key_pem,
-            args.hsm_slot,
-            args.hsm_key_id.clone(),
-            args.hsm_pin.clone(),
-            args.yes,
-            args.dry_run,
-            args.require_ic_admin(),
-        )
-        .await?;
+        let (ic_admin, ic_admin_path) = Self::init_ic_admin(&network, neuron_id, auth_opts, args.yes, args.dry_run, args.require_ic_admin()).await?;
 
         Ok(Self {
             proposal_agent: Arc::new(ProposalAgentImpl::new(&network.nns_urls)),
@@ -96,10 +97,7 @@ impl DreContext {
     async fn init_ic_admin(
         network: &Network,
         neuron_id: Option<u64>,
-        private_key_pem: Option<PathBuf>,
-        hsm_slot: Option<u64>,
-        hsm_key_id: Option<String>,
-        hsm_pin: Option<String>,
+        auth_args: AuthOpts,
         proceed_without_confirmation: bool,
         dry_run: bool,
         requirement: IcAdminRequirement,
@@ -113,14 +111,12 @@ impl DreContext {
                 neuron_id: 0,
                 include_proposer: false,
             },
-            IcAdminRequirement::Detect => {
-                Neuron::new(private_key_pem, hsm_slot, hsm_pin.clone(), hsm_key_id.clone(), neuron_id, network, true).await?
-            }
+            IcAdminRequirement::Detect => Neuron::new(auth_args.clone(), neuron_id, network, true).await?,
             IcAdminRequirement::OverridableBy {
                 network: accepted_network,
                 neuron,
             } => {
-                let maybe_neuron = Neuron::new(private_key_pem, hsm_slot, hsm_pin.clone(), hsm_key_id.clone(), neuron_id, network, true).await;
+                let maybe_neuron = Neuron::new(auth_args, neuron_id, network, true).await;
 
                 match maybe_neuron {
                     Ok(n) => n,

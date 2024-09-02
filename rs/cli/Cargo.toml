@@ -73,6 +73,7 @@ keyring = { workspace = true }
 comfy-table = { workspace = true }
 human_bytes = { workspace = true }
 headless_chrome = { workspace = true }
+clio = { workspace = true }
 
 [dev-dependencies]
 actix-rt = { workspace = true }
