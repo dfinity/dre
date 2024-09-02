@@ -51,6 +51,7 @@ pub mod upgrade;
 mod version;
 mod vote;
 
+/// HSM authentication parameters
 #[derive(ClapArgs, Debug, Clone)]
 pub struct HsmParams {
     /// Slot that HSM key uses, can be read with pkcs11-tool
@@ -72,10 +73,10 @@ pub struct HsmParams {
     pub hsm_key_id: String,
 }
 
-// Stupid clap does not let me define this
-// and the below struct as enums.
-// https://github.com/clap-rs/clap/issues/2621
 /// HSM authentication arguments
+/// These comprise an optional PIN and optional parameters.
+/// The PIN is used during autodetection if the optional
+/// parameters are missing.
 #[derive(ClapArgs, Debug, Clone)]
 pub struct HsmOpts {
     /// Pin for the HSM key used for submitting proposals
@@ -94,9 +95,14 @@ pub struct HsmOpts {
     pub hsm_params: Option<HsmParams>,
 }
 
-// Stupid clap does not let me define this
-// and the above struct as enums.
-// https://github.com/clap-rs/clap/issues/2621
+// The following should ideally be defined in terms of an Enum
+// as there is no conceivable scenario in which both a PEM file
+// and a set of HSM options can be used by the program.
+// Sadly, until ticket
+//   https://github.com/clap-rs/clap/issues/2621
+// is fixed, we cannot do this, and we must use a struct instead.
+// Note that group(multiple = false) has no effect, and therefore
+// we have to use conflicts and requires to specify option deps.
 #[derive(ClapArgs, Debug, Clone)]
 #[group(multiple = false)]
 /// Authentication arguments
