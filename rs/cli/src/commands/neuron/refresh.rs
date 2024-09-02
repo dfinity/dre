@@ -16,7 +16,7 @@ impl ExecutableCommand for Refresh {
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
         let governance_canister = GovernanceCanisterWrapper::from(ctx.create_canister_client()?);
 
-        let resp = governance_canister.refresh_neuron(ctx.ic_admin().neuron.neuron_id).await?;
+        let resp = governance_canister.refresh_neuron(ctx.ic_admin().neuron().neuron_id).await?;
         println!("{:?}", resp);
 
         Ok(())
