@@ -5744,13 +5744,10 @@ name = "keyring"
 version = "3.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "030a9b84bb2a2f3673d4c8b8236091ed5d8f6b66a56d8085471d8abd5f3c6a80"
-<<<<<<< HEAD
 dependencies = [
  "dbus-secret-service",
  "security-framework",
 ]
-=======
->>>>>>> main
 
 [[package]]
 name = "language-tags"
