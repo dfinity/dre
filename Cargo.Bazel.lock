@@ -1,5 +1,5 @@
 {
-  "checksum": "a988093f6392901f75c4d030d955d8d68425dcbc955e21dc756f512a07574dc5",
+  "checksum": "27fe767f31285f8df8dba84c128288e00c33da30bc6ab9481a1d35464a10adf5",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -2252,13 +2252,13 @@
       },
       "license": "MIT"
     },
-    "async-trait 0.1.81": {
+    "async-trait 0.1.82": {
       "name": "async-trait",
-      "version": "0.1.81",
+      "version": "0.1.82",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/async-trait/0.1.81/download",
-          "sha256": "6e0c28dcc82d7c8ead5cb13beb15405b57b8546e93215673ff8ca0349a028107"
+          "url": "https://static.crates.io/crates/async-trait/0.1.82/download",
+          "sha256": "a27b8a3a6e1a44fa4c8baf1f653e4172e81486d4941f2237e20dc2d0cf4ddff1"
         }
       },
       "targets": [
@@ -2295,7 +2295,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.1.81"
+        "version": "0.1.82"
       },
       "license": "MIT OR Apache-2.0"
     },
@@ -2608,7 +2608,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.81",
+              "id": "async-trait 0.1.82",
               "target": "async_trait"
             }
           ],
@@ -2790,7 +2790,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.81",
+              "id": "async-trait 0.1.82",
               "target": "async_trait"
             }
           ],
@@ -2889,7 +2889,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.81",
+              "id": "async-trait 0.1.82",
               "target": "async_trait"
             }
           ],
@@ -3010,7 +3010,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.81",
+              "id": "async-trait 0.1.82",
               "target": "async_trait"
             }
           ],
@@ -8520,7 +8520,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.81",
+              "id": "async-trait 0.1.82",
               "target": "async_trait"
             },
             {
@@ -9007,7 +9007,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.81",
+              "id": "async-trait 0.1.82",
               "target": "async_trait"
             }
           ],
@@ -9457,13 +9457,13 @@
       },
       "license": "MIT/Apache-2.0"
     },
-    "derive_builder 0.20.0": {
+    "derive_builder 0.20.1": {
       "name": "derive_builder",
-      "version": "0.20.0",
+      "version": "0.20.1",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/derive_builder/0.20.0/download",
-          "sha256": "0350b5cb0331628a5916d6c5c0b72e97393b8b6b03b47a9284f4e7f5a405ffd7"
+          "url": "https://static.crates.io/crates/derive_builder/0.20.1/download",
+          "sha256": "cd33f37ee6a119146a1781d3356a7c26028f83d779b2e04ecd45fdc75c76877b"
         }
       },
       "targets": [
@@ -9493,23 +9493,23 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "derive_builder_macro 0.20.0",
+              "id": "derive_builder_macro 0.20.1",
               "target": "derive_builder_macro"
             }
           ],
           "selects": {}
         },
-        "version": "0.20.0"
+        "version": "0.20.1"
       },
       "license": "MIT OR Apache-2.0"
     },
-    "derive_builder_core 0.20.0": {
+    "derive_builder_core 0.20.1": {
       "name": "derive_builder_core",
-      "version": "0.20.0",
+      "version": "0.20.1",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/derive_builder_core/0.20.0/download",
-          "sha256": "d48cda787f839151732d396ac69e3473923d54312c070ee21e9effcaa8ca0b1d"
+          "url": "https://static.crates.io/crates/derive_builder_core/0.20.1/download",
+          "sha256": "7431fa049613920234f22c47fdc33e6cf3ee83067091ea4277a3f8c4587aae38"
         }
       },
       "targets": [
@@ -9556,17 +9556,17 @@
           "selects": {}
         },
         "edition": "2018",
-        "version": "0.20.0"
+        "version": "0.20.1"
       },
       "license": "MIT OR Apache-2.0"
     },
-    "derive_builder_macro 0.20.0": {
+    "derive_builder_macro 0.20.1": {
       "name": "derive_builder_macro",
-      "version": "0.20.0",
+      "version": "0.20.1",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/derive_builder_macro/0.20.0/download",
-          "sha256": "206868b8242f27cecce124c19fd88157fbd0dd334df2587f36417bafbc85097b"
+          "url": "https://static.crates.io/crates/derive_builder_macro/0.20.1/download",
+          "sha256": "4abae7035bf79b9877b779505d8cf3749285b80c43941eda66604841889451dc"
         }
       },
       "targets": [
@@ -9594,7 +9594,7 @@
         "deps": {
           "common": [
             {
-              "id": "derive_builder_core 0.20.0",
+              "id": "derive_builder_core 0.20.1",
               "target": "derive_builder_core"
             },
             {
@@ -9605,7 +9605,7 @@
           "selects": {}
         },
         "edition": "2018",
-        "version": "0.20.0"
+        "version": "0.20.1"
       },
       "license": "MIT OR Apache-2.0"
     },
@@ -14001,7 +14001,7 @@
               "target": "base64"
             },
             {
-              "id": "derive_builder 0.20.0",
+              "id": "derive_builder 0.20.1",
               "target": "derive_builder"
             },
             {
@@ -19935,7 +19935,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.81",
+              "id": "async-trait 0.1.82",
               "target": "async_trait"
             },
             {
@@ -20326,7 +20326,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.81",
+              "id": "async-trait 0.1.82",
               "target": "async_trait"
             }
           ],
@@ -21149,7 +21149,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.81",
+              "id": "async-trait 0.1.82",
               "target": "async_trait"
             }
           ],
@@ -21350,7 +21350,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.81",
+              "id": "async-trait 0.1.82",
               "target": "async_trait"
             }
           ],
@@ -21795,7 +21795,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.81",
+              "id": "async-trait 0.1.82",
               "target": "async_trait"
             }
           ],
@@ -22383,7 +22383,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.81",
+              "id": "async-trait 0.1.82",
               "target": "async_trait"
             },
             {
@@ -22726,7 +22726,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.81",
+              "id": "async-trait 0.1.82",
               "target": "async_trait"
             }
           ],
@@ -24163,7 +24163,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.81",
+              "id": "async-trait 0.1.82",
               "target": "async_trait"
             },
             {
@@ -24397,7 +24397,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.81",
+              "id": "async-trait 0.1.82",
               "target": "async_trait"
             }
           ],
@@ -24647,7 +24647,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.81",
+              "id": "async-trait 0.1.82",
               "target": "async_trait"
             },
             {
@@ -24841,7 +24841,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.81",
+              "id": "async-trait 0.1.82",
               "target": "async_trait"
             },
             {
@@ -25092,7 +25092,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.81",
+              "id": "async-trait 0.1.82",
               "target": "async_trait"
             }
           ],
@@ -25556,7 +25556,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.81",
+              "id": "async-trait 0.1.82",
               "target": "async_trait"
             },
             {
@@ -26433,7 +26433,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.81",
+              "id": "async-trait 0.1.82",
               "target": "async_trait"
             }
           ],
@@ -31572,7 +31572,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.81",
+              "id": "async-trait 0.1.82",
               "target": "async_trait"
             }
           ],
@@ -32298,7 +32298,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.81",
+              "id": "async-trait 0.1.82",
               "target": "async_trait"
             }
           ],
@@ -44410,7 +44410,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.81",
+              "id": "async-trait 0.1.82",
               "target": "async_trait"
             }
           ],
@@ -49105,7 +49105,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.81",
+              "id": "async-trait 0.1.82",
               "target": "async_trait"
             }
           ],
