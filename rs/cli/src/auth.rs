@@ -162,7 +162,7 @@ impl Auth {
     }
 
     pub async fn auto_detect_neuron_id(&self, nns_urls: &[url::Url]) -> anyhow::Result<u64> {
-        let url = nns_urls.get(0).ok_or(anyhow::anyhow!("No nns urls provided"))?.to_owned();
+        let url = nns_urls.first().ok_or(anyhow::anyhow!("No nns urls provided"))?.to_owned();
         let client = match self {
             Auth::Hsm { pin, slot, key_id } => {
                 let pin_clone = pin.clone();

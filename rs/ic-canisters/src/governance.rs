@@ -18,7 +18,6 @@ use ic_nns_governance::pb::v1::ManageNeuronResponse;
 use ic_nns_governance::pb::v1::Neuron;
 use ic_nns_governance::pb::v1::NeuronInfo;
 use ic_nns_governance::pb::v1::ProposalInfo;
-use prost::Message;
 use serde::{self, Serialize};
 use std::str::FromStr;
 use std::time::Duration;
@@ -233,7 +232,7 @@ impl GovernanceCanisterWrapper {
     }
 
     pub async fn list_neurons(&self) -> anyhow::Result<ListNeuronsResponse> {
-        let args = candid::encode_one(&ListNeurons {
+        let args = candid::encode_one(ListNeurons {
             neuron_ids: vec![],
             include_neurons_readable_by_caller: true,
             include_empty_neurons_readable_by_caller: None,
