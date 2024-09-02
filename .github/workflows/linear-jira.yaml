@@ -4,8 +4,8 @@ on:
     paths:
       - linear-jira/**
       - ./.github/workflows/linear-jira.yaml
-    # branches:
-    #   - "*"
+    branches:
+      - "main"
   pull_request:
     paths:
       - linear-jira/**
