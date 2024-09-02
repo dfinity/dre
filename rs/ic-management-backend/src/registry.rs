@@ -615,7 +615,7 @@ impl RegistryState {
 
     pub async fn nodes_with_proposals(&self) -> Result<BTreeMap<PrincipalId, Node>> {
         let nodes = self.nodes.clone();
-        let proposal_agent = proposal::ProposalAgent::new(self.network.get_nns_urls());
+        let proposal_agent = proposal::ProposalAgentImpl::new(self.network.get_nns_urls());
 
         let topology_proposals = proposal_agent.list_open_topology_proposals().await?;
 
@@ -633,18 +633,18 @@ impl RegistryState {
     }
 
     pub async fn open_elect_replica_proposals(&self) -> Result<Vec<UpdateElectedReplicaVersionsProposal>> {
-        let proposal_agent = proposal::ProposalAgent::new(self.network.get_nns_urls());
+        let proposal_agent = proposal::ProposalAgentImpl::new(self.network.get_nns_urls());
         proposal_agent.list_open_elect_replica_proposals().await
     }
 
     pub async fn open_elect_hostos_proposals(&self) -> Result<Vec<UpdateElectedHostosVersionsProposal>> {
-        let proposal_agent = proposal::ProposalAgent::new(self.network.get_nns_urls());
+        let proposal_agent = proposal::ProposalAgentImpl::new(self.network.get_nns_urls());
         proposal_agent.list_open_elect_hostos_proposals().await
     }
 
     pub async fn subnets_with_proposals(&self) -> Result<BTreeMap<PrincipalId, Subnet>> {
         let subnets = self.subnets.clone();
-        let proposal_agent = proposal::ProposalAgent::new(self.network.get_nns_urls());
+        let proposal_agent = proposal::ProposalAgentImpl::new(self.network.get_nns_urls());
 
         let topology_proposals = proposal_agent.list_open_topology_proposals().await?;
 
@@ -682,13 +682,13 @@ impl RegistryState {
     }
 
     pub async fn open_subnet_upgrade_proposals(&self) -> Result<Vec<SubnetUpdateProposal>> {
-        let proposal_agent = proposal::ProposalAgent::new(self.get_nns_urls());
+        let proposal_agent = proposal::ProposalAgentImpl::new(self.get_nns_urls());
 
         proposal_agent.list_update_subnet_version_proposals().await
     }
 
     pub async fn open_upgrade_unassigned_nodes_proposals(&self) -> Result<Vec<UpdateUnassignedNodesProposal>> {
-        let proposal_agent = proposal::ProposalAgent::new(self.get_nns_urls());
+        let proposal_agent = proposal::ProposalAgentImpl::new(self.get_nns_urls());
 
         proposal_agent.list_update_unassigned_nodes_version_proposals().await
     }

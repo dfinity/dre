@@ -13,7 +13,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::str::FromStr;
 use strum_macros::{Display, EnumString};
 
-use crate::proposal::{ProposalAgent, SubnetUpdateProposal};
+use crate::proposal::{ProposalAgentImpl, SubnetUpdateProposal};
 use crate::registry::NNS_SUBNET_NAME;
 
 #[derive(Serialize, Clone, Display, EnumString)]
@@ -141,7 +141,7 @@ impl RolloutConfig {
 }
 
 pub struct RolloutBuilder {
-    pub proposal_agent: ProposalAgent,
+    pub proposal_agent: ProposalAgentImpl,
     pub prometheus_client: prometheus_http_query::Client,
     pub subnets: BTreeMap<PrincipalId, Subnet>,
     pub releases: Vec<Release>,
@@ -620,7 +620,7 @@ async fn get_update_states(
 }
 
 pub async fn list_subnets_release_statuses(
-    proposal_agent: &ProposalAgent,
+    proposal_agent: &ProposalAgentImpl,
     prometheus_client: &prometheus_http_query::Client,
     network: Network,
     subnets: BTreeMap<PrincipalId, Subnet>,

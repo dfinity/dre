@@ -11,7 +11,7 @@ use ic_canisters::{governance::governance_canister_version, CanisterClient, IcAg
 use ic_management_backend::{
     lazy_git::LazyGit,
     lazy_registry::{LazyRegistry, LazyRegistryImpl},
-    proposal::ProposalAgent,
+    proposal::ProposalAgentImpl,
     registry::{local_registry_path, sync_local_store},
 };
 use ic_management_types::Network;
@@ -220,8 +220,8 @@ impl DreContext {
         SubnetManager::new(registry, self.network().clone())
     }
 
-    pub fn proposals_agent(&self) -> ProposalAgent {
-        ProposalAgent::new(self.network().get_nns_urls())
+    pub fn proposals_agent(&self) -> ProposalAgentImpl {
+        ProposalAgentImpl::new(self.network().get_nns_urls())
     }
 
     pub async fn runner(&self) -> Rc<Runner> {

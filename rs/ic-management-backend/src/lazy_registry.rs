@@ -686,7 +686,7 @@ impl LazyRegistry for LazyRegistryImpl {
                 return Ok(());
             }
 
-            let proposal_agent = proposal::ProposalAgent::new(self.network.get_nns_urls());
+            let proposal_agent = proposal::ProposalAgentImpl::new(self.network.get_nns_urls());
             let nodes = self.nodes().await?;
             let subnets = self.subnets().await?;
 

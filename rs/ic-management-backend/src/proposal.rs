@@ -29,7 +29,7 @@ use serde::Serialize;
 use url::Url;
 
 #[derive(Clone)]
-pub struct ProposalAgent {
+pub struct ProposalAgentImpl {
     agent: Agent,
 }
 
@@ -85,7 +85,7 @@ pub struct UpdateUnassignedNodesProposal {
 }
 
 #[allow(dead_code)]
-impl ProposalAgent {
+impl ProposalAgentImpl {
     pub fn new(nns_urls: &[Url]) -> Self {
         let client = reqwest::Client::builder()
             .use_rustls_tls()

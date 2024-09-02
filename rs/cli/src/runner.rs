@@ -17,7 +17,7 @@ use ic_management_backend::health::HealthStatusQuerier;
 use ic_management_backend::lazy_git::LazyGit;
 use ic_management_backend::lazy_git::LazyGitImpl;
 use ic_management_backend::lazy_registry::LazyRegistry;
-use ic_management_backend::proposal::ProposalAgent;
+use ic_management_backend::proposal::ProposalAgentImpl;
 use ic_management_backend::registry::ReleasesOps;
 use ic_management_types::Artifact;
 use ic_management_types::HealthStatus;
@@ -47,7 +47,7 @@ pub struct Runner {
     registry: Arc<dyn LazyRegistry>,
     ic_repo: RefCell<Option<Arc<dyn LazyGit>>>,
     network: Network,
-    proposal_agent: ProposalAgent,
+    proposal_agent: ProposalAgentImpl,
     verbose: bool,
 }
 
@@ -56,7 +56,7 @@ impl Runner {
         ic_admin: Arc<dyn IcAdmin>,
         registry: Arc<dyn LazyRegistry>,
         network: Network,
-        agent: ProposalAgent,
+        agent: ProposalAgentImpl,
         verbose: bool,
         ic_repo: RefCell<Option<Arc<dyn LazyGit>>>,
     ) -> Self {
