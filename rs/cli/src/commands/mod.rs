@@ -51,28 +51,11 @@ pub mod upgrade;
 mod version;
 mod vote;
 
-// Stupid clap does not let me define this
-// and the below struct as enums.
-// https://github.com/clap-rs/clap/issues/2621
-/// HSM authentication arguments
 #[derive(ClapArgs, Debug, Clone)]
-pub struct HsmOpts {
-    /// Pin for the HSM key used for submitting proposals
-    #[clap(
-        required = false,
-        alias = "hsm-pim",
-        requires_all = ["hsm_pin", "hsm_slot","hsm_key_id"],
-        conflicts_with = "private_key_pem",
-        long,
-        global = true,
-        hide_env_values = true,
-        env = "HSM_PIN"
-    )]
-    pub hsm_pin: String,
-
+pub struct HsmParams {
     /// Slot that HSM key uses, can be read with pkcs11-tool
     #[clap(required = false,
-        requires_all = ["hsm_pin", "hsm_slot","hsm_key_id"],
+        requires_all = ["hsm_slot","hsm_key_id", "hsm_pin"],
         conflicts_with = "private_key_pem",
         long, value_parser=maybe_hex::<u64>, global = true, env = "HSM_SLOT")]
     pub hsm_slot: u64,
@@ -80,13 +63,35 @@ pub struct HsmOpts {
     /// HSM Key ID, can be read with pkcs11-tool
     #[clap(
         required = false,
-        requires_all = ["hsm_pin", "hsm_slot","hsm_key_id"],
+        requires_all = ["hsm_slot","hsm_key_id", "hsm_pin"],
         conflicts_with = "private_key_pem",
         long,
         global = true,
         env = "HSM_KEY_ID"
     )]
     pub hsm_key_id: String,
+}
+
+// Stupid clap does not let me define this
+// and the below struct as enums.
+// https://github.com/clap-rs/clap/issues/2621
+/// HSM authentication arguments
+#[derive(ClapArgs, Debug, Clone)]
+pub struct HsmOpts {
+    /// Pin for the HSM key used for submitting proposals
+    // Must be present if slot and key are specified.
+    #[clap(
+        required = false,
+        alias = "hsm-pim",
+        conflicts_with = "private_key_pem",
+        long,
+        global = true,
+        hide_env_values = true,
+        env = "HSM_PIN"
+    )]
+    pub hsm_pin: Option<String>,
+    #[clap(flatten)]
+    pub hsm_params: Option<HsmParams>,
 }
 
 // Stupid clap does not let me define this
@@ -105,7 +110,7 @@ pub struct AuthOpts {
         env = "PRIVATE_KEY_PEM")]
     pub private_key_pem: Option<InputPath>,
     #[clap(flatten)]
-    pub hsm_opts: Option<HsmOpts>,
+    pub hsm_opts: HsmOpts,
 }
 
 impl TryFrom<PathBuf> for AuthOpts {
@@ -114,7 +119,10 @@ impl TryFrom<PathBuf> for AuthOpts {
         let p = Some(InputPath::new(&path)?);
         Ok(Self {
             private_key_pem: p,
-            hsm_opts: None,
+            hsm_opts: HsmOpts {
+                hsm_pin: None,
+                hsm_params: None,
+            },
         })
     }
 }
@@ -125,7 +133,10 @@ impl TryFrom<String> for AuthOpts {
         let p = Some(InputPath::new(&PathBuf::from(path))?);
         Ok(Self {
             private_key_pem: p,
-            hsm_opts: None,
+            hsm_opts: HsmOpts {
+                hsm_pin: None,
+                hsm_params: None,
+            },
         })
     }
 }

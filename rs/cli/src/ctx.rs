@@ -64,12 +64,12 @@ impl DreContext {
                     (
                         AuthOpts {
                             private_key_pem: None,
-                            hsm_opts: None,
+                            hsm_opts: opts,
                         },
                         true,
                     ) => AuthOpts {
                         private_key_pem: Some(staging_path.unwrap()),
-                        hsm_opts: None,
+                        hsm_opts: opts.clone(),
                     },
                     _ => args.auth_opts.clone(),
                 },

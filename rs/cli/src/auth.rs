@@ -12,7 +12,7 @@ use ic_management_types::Network;
 use keyring::{Entry, Error};
 use log::info;
 
-use crate::commands::AuthOpts;
+use crate::commands::{AuthOpts, HsmOpts};
 
 #[derive(Clone, Debug)]
 pub struct Neuron {
@@ -104,7 +104,7 @@ impl Auth {
         }
     }
 
-    fn detect_hsm_auth() -> anyhow::Result<Option<Self>> {
+    fn detect_hsm_auth(hsm_pin: Option<String>) -> anyhow::Result<Option<Self>> {
         info!("Detecting HSM devices");
         let ctx = Pkcs11::new(Self::pkcs11_lib_path()?)?;
         ctx.initialize(CInitializeArgs::OsThreads)?;
@@ -113,22 +113,25 @@ impl Auth {
             if info.slot_description().starts_with("Nitrokey Nitrokey HSM") {
                 let key_id = format!("hsm-{}-{}", info.slot_description(), info.manufacturer_id());
                 let pin_entry = Entry::new("dre-tool-hsm-pin", &key_id)?;
-                let pin = match pin_entry.get_password() {
-                    // TODO: Remove the old keyring entry search ("release-cli") after August 1st, 2024
-                    Err(Error::NoEntry) => match Entry::new("release-cli", &key_id) {
-                        Err(Error::NoEntry) => Password::new().with_prompt("Please enter the HSM PIN: ").interact()?,
-                        Ok(pin_entry) => pin_entry.get_password()?,
+                let pin = match hsm_pin {
+                    Some(pin) => pin,
+                    None => match pin_entry.get_password() {
+                        // TODO: Remove the old keyring entry search ("release-cli") after August 1st, 2024
+                        Err(Error::NoEntry) => match Entry::new("release-cli", &key_id) {
+                            Err(Error::NoEntry) => Password::new().with_prompt("Please enter the HSM PIN: ").interact()?,
+                            Ok(pin_entry) => pin_entry.get_password()?,
+                            Err(e) => return Err(anyhow::anyhow!("Failed to get pin from keyring: {}", e)),
+                        },
+                        Ok(pin) => pin,
                         Err(e) => return Err(anyhow::anyhow!("Failed to get pin from keyring: {}", e)),
                     },
-                    Ok(pin) => pin,
-                    Err(e) => return Err(anyhow::anyhow!("Failed to get pin from keyring: {}", e)),
                 };
 
                 let mut flags = SessionFlags::new();
                 flags.set_serial_session(true);
                 let session = ctx.open_session_no_callback(slot, flags).unwrap();
                 session.login(UserType::User, Some(&pin))?;
-                info!("HSM login successful!");
+                info!("HSM login successful");
                 pin_entry.set_password(&pin)?;
                 return Ok(Some(Auth::Hsm {
                     pin,
@@ -137,6 +140,7 @@ impl Auth {
                 }));
             }
         }
+        info!("No HSM detected -- continuing anonymously");
         Ok(None)
     }
 
@@ -175,23 +179,40 @@ impl TryFrom<AuthOpts> for Auth {
     type Error = anyhow::Error;
     fn try_from(auth_opts: AuthOpts) -> Result<Self, anyhow::Error> {
         match &auth_opts {
+            // Private key case.
             AuthOpts {
                 private_key_pem: Some(private_key_pem),
                 hsm_opts: _,
-            } => Ok(Auth::Keyfile {
-                path: private_key_pem.path().to_path_buf(),
-            }),
+            } => {
+                info!("Using requested private key file {}", private_key_pem.path());
+                Ok(Auth::Keyfile {
+                    path: private_key_pem.path().to_path_buf(),
+                })
+            }
+            // Full PIN, slot and key case.
             AuthOpts {
                 private_key_pem: _,
-                hsm_opts: Some(hsm_opts),
-            } => Ok(Auth::Hsm {
-                pin: hsm_opts.hsm_pin.clone(),
-                slot: hsm_opts.hsm_slot,
-                key_id: hsm_opts.hsm_key_id.clone(),
-            }),
+                hsm_opts: HsmOpts {
+                    hsm_pin,
+                    hsm_params: Some(hsm_params),
+                },
+            } => {
+                info!("Using requested HSM slot {} with key ID {}", hsm_params.hsm_slot, hsm_params.hsm_key_id);
+                Ok(Auth::Hsm {
+                    pin: hsm_pin.clone().expect("PIN must have been set because the other HSM parameters were set"),
+                    slot: hsm_params.hsm_slot,
+                    key_id: hsm_params.hsm_key_id.clone(),
+                })
+            }
             // I think the next line should not fall back to anonymous.
             // It should always be autodetect and fail if detection fails.
-            _ => Ok(Self::detect_hsm_auth()?.map_or(Auth::Anonymous, |a| a)),
+            AuthOpts {
+                private_key_pem: _,
+                hsm_opts: HsmOpts {
+                    hsm_pin: pin,
+                    hsm_params: None,
+                },
+            } => Ok(Self::detect_hsm_auth(pin.clone())?.map_or(Auth::Anonymous, |a| a)),
         }
     }
 }
