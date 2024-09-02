@@ -26,7 +26,7 @@ const RELEASE_AUTOMATION_NEURON_ID: u64 = 80;
 
 impl Neuron {
     pub async fn new(auth_opts: AuthOpts, neuron_id: Option<u64>, network: &Network, include_proposer: bool) -> anyhow::Result<Self> {
-        let auth = Auth::from_cli_args(auth_opts)?;
+        let auth = Auth::try_from(auth_opts)?;
         let neuron_id = match neuron_id {
             Some(n) => n,
             None => auth.auto_detect_neuron_id(network.get_nns_urls()).await?,
@@ -89,28 +89,6 @@ impl Auth {
             ],
             Auth::Keyfile { path } => vec!["--secret-key-pem".to_string(), path.to_string_lossy().to_string()],
             Auth::Anonymous => vec![],
-        }
-    }
-
-    pub fn from_cli_args(auth_opts: AuthOpts) -> anyhow::Result<Self> {
-        match &auth_opts {
-            AuthOpts {
-                private_key_pem: Some(private_key_pem),
-                hsm_opts: _,
-            } => Ok(Auth::Keyfile {
-                path: private_key_pem.path().to_path_buf(),
-            }),
-            AuthOpts {
-                private_key_pem: _,
-                hsm_opts: Some(hsm_opts),
-            } => Ok(Auth::Hsm {
-                pin: hsm_opts.hsm_pin.clone(),
-                slot: hsm_opts.hsm_slot,
-                key_id: hsm_opts.hsm_key_id.clone(),
-            }),
-            // I think the next line should not fall back to anonymous.
-            // It should always be autodetect and fail if detection fails.
-            _ => Ok(Self::detect_hsm_auth()?.map_or(Auth::Anonymous, |a| a)),
         }
     }
 
@@ -189,6 +167,31 @@ impl Auth {
                 .interact_on_opt(&Term::stderr())?
                 .map(|i| neuron_ids[i])
                 .ok_or_else(|| anyhow::anyhow!("No neuron selected")),
+        }
+    }
+}
+
+impl TryFrom<AuthOpts> for Auth {
+    type Error = anyhow::Error;
+    fn try_from(auth_opts: AuthOpts) -> Result<Self, anyhow::Error> {
+        match &auth_opts {
+            AuthOpts {
+                private_key_pem: Some(private_key_pem),
+                hsm_opts: _,
+            } => Ok(Auth::Keyfile {
+                path: private_key_pem.path().to_path_buf(),
+            }),
+            AuthOpts {
+                private_key_pem: _,
+                hsm_opts: Some(hsm_opts),
+            } => Ok(Auth::Hsm {
+                pin: hsm_opts.hsm_pin.clone(),
+                slot: hsm_opts.hsm_slot,
+                key_id: hsm_opts.hsm_key_id.clone(),
+            }),
+            // I think the next line should not fall back to anonymous.
+            // It should always be autodetect and fail if detection fails.
+            _ => Ok(Self::detect_hsm_auth()?.map_or(Auth::Anonymous, |a| a)),
         }
     }
 }
