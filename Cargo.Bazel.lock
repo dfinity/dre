@@ -1,5 +1,5 @@
 {
-  "checksum": "b92d8de730e6f789d5322f3f47eaecd7bdbef7250e5d5b835bb493ec0a3ce1da",
+  "checksum": "a988093f6392901f75c4d030d955d8d68425dcbc955e21dc756f512a07574dc5",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -53,7 +53,7 @@
               "target": "pin_project_lite"
             },
             {
-              "id": "tokio 1.39.3",
+              "id": "tokio 1.40.0",
               "target": "tokio"
             },
             {
@@ -205,7 +205,7 @@
               "target": "smallvec"
             },
             {
-              "id": "tokio 1.39.3",
+              "id": "tokio 1.40.0",
               "target": "tokio"
             },
             {
@@ -265,7 +265,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.76",
+              "id": "syn 2.0.77",
               "target": "syn"
             }
           ],
@@ -381,7 +381,7 @@
               "target": "futures_core"
             },
             {
-              "id": "tokio 1.39.3",
+              "id": "tokio 1.40.0",
               "target": "tokio"
             }
           ],
@@ -463,7 +463,7 @@
               "target": "socket2"
             },
             {
-              "id": "tokio 1.39.3",
+              "id": "tokio 1.40.0",
               "target": "tokio"
             },
             {
@@ -789,7 +789,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.76",
+              "id": "syn 2.0.77",
               "target": "syn"
             }
           ],
@@ -1284,7 +1284,7 @@
         "deps": {
           "common": [
             {
-              "id": "libc 0.2.157",
+              "id": "libc 0.2.158",
               "target": "libc"
             }
           ],
@@ -1859,7 +1859,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.76",
+              "id": "syn 2.0.77",
               "target": "syn"
             },
             {
@@ -1910,7 +1910,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.76",
+              "id": "syn 2.0.77",
               "target": "syn"
             }
           ],
@@ -2036,7 +2036,7 @@
           "selects": {
             "cfg(any())": [
               {
-                "id": "libc 0.2.157",
+                "id": "libc 0.2.158",
                 "target": "libc"
               }
             ]
@@ -2142,7 +2142,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.76",
+              "id": "syn 2.0.77",
               "target": "syn"
             }
           ],
@@ -2241,7 +2241,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.76",
+              "id": "syn 2.0.77",
               "target": "syn"
             }
           ],
@@ -2288,7 +2288,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.76",
+              "id": "syn 2.0.77",
               "target": "syn"
             }
           ],
@@ -2365,7 +2365,7 @@
             ],
             "cfg(unix)": [
               {
-                "id": "libc 0.2.157",
+                "id": "libc 0.2.158",
                 "target": "libc"
               }
             ],
@@ -2764,7 +2764,7 @@
               "target": "sync_wrapper"
             },
             {
-              "id": "tokio 1.39.3",
+              "id": "tokio 1.40.0",
               "target": "tokio"
             },
             {
@@ -3172,7 +3172,7 @@
               "target": "rand"
             },
             {
-              "id": "tokio 1.39.3",
+              "id": "tokio 1.40.0",
               "target": "tokio",
               "alias": "tokio_1"
             }
@@ -3224,7 +3224,7 @@
               "target": "pin_project"
             },
             {
-              "id": "tokio 1.39.3",
+              "id": "tokio 1.40.0",
               "target": "tokio"
             }
           ],
@@ -3291,7 +3291,7 @@
                 "target": "addr2line"
               },
               {
-                "id": "libc 0.2.157",
+                "id": "libc 0.2.158",
                 "target": "libc"
               },
               {
@@ -3315,7 +3315,7 @@
         "deps": {
           "common": [
             {
-              "id": "cc 1.1.13",
+              "id": "cc 1.1.15",
               "target": "cc"
             }
           ],
@@ -4049,7 +4049,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.76",
+              "id": "syn 2.0.77",
               "target": "syn"
             }
           ],
@@ -4848,7 +4848,7 @@
               "target": "bzip2_sys"
             },
             {
-              "id": "libc 0.2.157",
+              "id": "libc 0.2.158",
               "target": "libc"
             }
           ],
@@ -4900,7 +4900,7 @@
               "target": "build_script_build"
             },
             {
-              "id": "libc 0.2.157",
+              "id": "libc 0.2.158",
               "target": "libc"
             }
           ],
@@ -4916,7 +4916,7 @@
         "deps": {
           "common": [
             {
-              "id": "cc 1.1.13",
+              "id": "cc 1.1.15",
               "target": "cc"
             },
             {
@@ -5259,7 +5259,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.76",
+              "id": "syn 2.0.77",
               "target": "syn"
             }
           ],
@@ -5315,7 +5315,7 @@
               "target": "serde_json"
             },
             {
-              "id": "tokio 1.39.3",
+              "id": "tokio 1.40.0",
               "target": "tokio"
             },
             {
@@ -5430,13 +5430,13 @@
       },
       "license": "MIT"
     },
-    "cc 1.1.13": {
+    "cc 1.1.15": {
       "name": "cc",
-      "version": "1.1.13",
+      "version": "1.1.15",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/cc/1.1.13/download",
-          "sha256": "72db2f7947ecee9b03b510377e8bb9077afa27176fdbff55c51027e976fdcc48"
+          "url": "https://static.crates.io/crates/cc/1.1.15/download",
+          "sha256": "57b6a275aa2903740dc87da01c62040406b8812552e97129a63ea8850a17c6e6"
         }
       },
       "targets": [
@@ -5475,14 +5475,14 @@
           "selects": {
             "cfg(unix)": [
               {
-                "id": "libc 0.2.157",
+                "id": "libc 0.2.158",
                 "target": "libc"
               }
             ]
           }
         },
         "edition": "2018",
-        "version": "1.1.13"
+        "version": "1.1.15"
       },
       "license": "MIT OR Apache-2.0"
     },
@@ -6079,13 +6079,13 @@
       },
       "license": "MIT OR Apache-2.0"
     },
-    "clap_complete 4.5.23": {
+    "clap_complete 4.5.24": {
       "name": "clap_complete",
-      "version": "4.5.23",
+      "version": "4.5.24",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/clap_complete/4.5.23/download",
-          "sha256": "531d7959c5bbb6e266cecdd0f20213639c3a5c3e4d615f97db87661745f781ff"
+          "url": "https://static.crates.io/crates/clap_complete/4.5.24/download",
+          "sha256": "6d7db6eca8c205649e8d3ccd05aa5042b1800a784e56bc7c43524fde8abbfa9b"
         }
       },
       "targets": [
@@ -6120,7 +6120,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "4.5.23"
+        "version": "4.5.24"
       },
       "license": "MIT OR Apache-2.0"
     },
@@ -6231,7 +6231,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.76",
+              "id": "syn 2.0.77",
               "target": "syn"
             }
           ],
@@ -6776,7 +6776,7 @@
               "target": "lazy_static"
             },
             {
-              "id": "libc 0.2.157",
+              "id": "libc 0.2.158",
               "target": "libc"
             },
             {
@@ -6970,7 +6970,7 @@
               "target": "core_foundation_sys"
             },
             {
-              "id": "libc 0.2.157",
+              "id": "libc 0.2.158",
               "target": "libc"
             }
           ],
@@ -7094,25 +7094,25 @@
           "selects": {
             "aarch64-linux-android": [
               {
-                "id": "libc 0.2.157",
+                "id": "libc 0.2.158",
                 "target": "libc"
               }
             ],
             "cfg(all(target_arch = \"aarch64\", target_os = \"linux\"))": [
               {
-                "id": "libc 0.2.157",
+                "id": "libc 0.2.158",
                 "target": "libc"
               }
             ],
             "cfg(all(target_arch = \"aarch64\", target_vendor = \"apple\"))": [
               {
-                "id": "libc 0.2.157",
+                "id": "libc 0.2.158",
                 "target": "libc"
               }
             ],
             "cfg(all(target_arch = \"loongarch64\", target_os = \"linux\"))": [
               {
-                "id": "libc 0.2.157",
+                "id": "libc 0.2.158",
                 "target": "libc"
               }
             ]
@@ -7606,7 +7606,7 @@
           "selects": {
             "cfg(unix)": [
               {
-                "id": "libc 0.2.157",
+                "id": "libc 0.2.158",
                 "target": "libc"
               }
             ],
@@ -8196,7 +8196,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.76",
+              "id": "syn 2.0.77",
               "target": "syn"
             }
           ],
@@ -8353,7 +8353,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/nns/cmc"
         }
@@ -8779,7 +8779,7 @@
               "target": "strsim"
             },
             {
-              "id": "syn 2.0.76",
+              "id": "syn 2.0.77",
               "target": "syn"
             }
           ],
@@ -8873,7 +8873,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.76",
+              "id": "syn 2.0.77",
               "target": "syn"
             }
           ],
@@ -8997,7 +8997,7 @@
               "target": "num_cpus"
             },
             {
-              "id": "tokio 1.39.3",
+              "id": "tokio 1.40.0",
               "target": "tokio"
             }
           ],
@@ -9131,7 +9131,7 @@
               "target": "regex"
             },
             {
-              "id": "tokio 1.39.3",
+              "id": "tokio 1.40.0",
               "target": "tokio"
             }
           ],
@@ -9446,7 +9446,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.76",
+              "id": "syn 2.0.77",
               "target": "syn"
             }
           ],
@@ -9549,7 +9549,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.76",
+              "id": "syn 2.0.77",
               "target": "syn"
             }
           ],
@@ -9598,7 +9598,7 @@
               "target": "derive_builder_core"
             },
             {
-              "id": "syn 2.0.76",
+              "id": "syn 2.0.77",
               "target": "syn"
             }
           ],
@@ -9680,7 +9680,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.76",
+              "id": "syn 2.0.77",
               "target": "syn"
             }
           ],
@@ -9698,7 +9698,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/rust_canisters/dfn_candid"
         }
@@ -9756,7 +9756,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/rust_canisters/dfn_core"
         }
@@ -9802,7 +9802,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/rust_canisters/dfn_http"
         }
@@ -9860,7 +9860,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/rust_canisters/dfn_http_metrics"
         }
@@ -9922,7 +9922,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/rust_canisters/dfn_protobuf"
         }
@@ -10352,7 +10352,7 @@
             ],
             "cfg(unix)": [
               {
-                "id": "libc 0.2.157",
+                "id": "libc 0.2.158",
                 "target": "libc"
               }
             ],
@@ -10405,7 +10405,7 @@
             ],
             "cfg(unix)": [
               {
-                "id": "libc 0.2.157",
+                "id": "libc 0.2.158",
                 "target": "libc"
               }
             ],
@@ -10465,7 +10465,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.76",
+              "id": "syn 2.0.77",
               "target": "syn"
             }
           ],
@@ -10652,7 +10652,7 @@
               "target": "clap_num"
             },
             {
-              "id": "clap_complete 4.5.23",
+              "id": "clap_complete 4.5.24",
               "target": "clap_complete"
             },
             {
@@ -10788,7 +10788,7 @@
               "target": "itertools"
             },
             {
-              "id": "keyring 3.2.0",
+              "id": "keyring 3.2.1",
               "target": "keyring"
             },
             {
@@ -10856,7 +10856,7 @@
               "target": "tempfile"
             },
             {
-              "id": "tokio 1.39.3",
+              "id": "tokio 1.40.0",
               "target": "tokio"
             },
             {
@@ -11552,7 +11552,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.76",
+              "id": "syn 2.0.77",
               "target": "syn"
             }
           ],
@@ -11905,19 +11905,19 @@
           "selects": {
             "cfg(target_os = \"hermit\")": [
               {
-                "id": "libc 0.2.157",
+                "id": "libc 0.2.158",
                 "target": "libc"
               }
             ],
             "cfg(target_os = \"wasi\")": [
               {
-                "id": "libc 0.2.157",
+                "id": "libc 0.2.158",
                 "target": "libc"
               }
             ],
             "cfg(unix)": [
               {
-                "id": "libc 0.2.157",
+                "id": "libc 0.2.158",
                 "target": "libc"
               }
             ],
@@ -12162,7 +12162,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/crypto/internal/crypto_lib/threshold_sig/tecdsa/fe-derive"
         }
@@ -12337,7 +12337,7 @@
             ],
             "cfg(unix)": [
               {
-                "id": "libc 0.2.157",
+                "id": "libc 0.2.158",
                 "target": "libc"
               }
             ],
@@ -12711,7 +12711,7 @@
           "selects": {
             "cfg(unix)": [
               {
-                "id": "libc 0.2.157",
+                "id": "libc 0.2.158",
                 "target": "libc"
               }
             ],
@@ -13049,7 +13049,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.76",
+              "id": "syn 2.0.77",
               "target": "syn"
             }
           ],
@@ -13380,7 +13380,7 @@
             ],
             "cfg(unix)": [
               {
-                "id": "libc 0.2.157",
+                "id": "libc 0.2.158",
                 "target": "libc"
               }
             ]
@@ -13618,7 +13618,7 @@
               "target": "http"
             },
             {
-              "id": "indexmap 2.4.0",
+              "id": "indexmap 2.5.0",
               "target": "indexmap"
             },
             {
@@ -13626,7 +13626,7 @@
               "target": "slab"
             },
             {
-              "id": "tokio 1.39.3",
+              "id": "tokio 1.40.0",
               "target": "tokio"
             },
             {
@@ -13697,7 +13697,7 @@
               "target": "http"
             },
             {
-              "id": "indexmap 2.4.0",
+              "id": "indexmap 2.5.0",
               "target": "indexmap"
             },
             {
@@ -13705,7 +13705,7 @@
               "target": "slab"
             },
             {
-              "id": "tokio 1.39.3",
+              "id": "tokio 1.40.0",
               "target": "tokio"
             },
             {
@@ -14238,7 +14238,7 @@
         "deps": {
           "common": [
             {
-              "id": "libc 0.2.157",
+              "id": "libc 0.2.158",
               "target": "libc"
             }
           ],
@@ -14936,7 +14936,7 @@
               "target": "serde_urlencoded"
             },
             {
-              "id": "tokio 1.39.3",
+              "id": "tokio 1.40.0",
               "target": "tokio"
             }
           ],
@@ -15149,7 +15149,7 @@
               "target": "socket2"
             },
             {
-              "id": "tokio 1.39.3",
+              "id": "tokio 1.40.0",
               "target": "tokio"
             },
             {
@@ -15255,7 +15255,7 @@
               "target": "smallvec"
             },
             {
-              "id": "tokio 1.39.3",
+              "id": "tokio 1.40.0",
               "target": "tokio"
             },
             {
@@ -15269,88 +15269,6 @@
         "version": "1.4.1"
       },
       "license": "MIT"
-    },
-    "hyper-rustls 0.24.2": {
-      "name": "hyper-rustls",
-      "version": "0.24.2",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/hyper-rustls/0.24.2/download",
-          "sha256": "ec3efd23720e2049821a693cbc7e65ea87c72f1c58ff2f9522ff332b1491e590"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "hyper_rustls",
-            "crate_root": "src/lib.rs",
-            "srcs": [
-              "**/*.rs"
-            ]
-          }
-        }
-      ],
-      "library_target_name": "hyper_rustls",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "crate_features": {
-          "common": [
-            "acceptor",
-            "default",
-            "http1",
-            "http2",
-            "log",
-            "logging",
-            "native-tokio",
-            "rustls-native-certs",
-            "tls12",
-            "tokio-runtime"
-          ],
-          "selects": {}
-        },
-        "deps": {
-          "common": [
-            {
-              "id": "futures-util 0.3.30",
-              "target": "futures_util"
-            },
-            {
-              "id": "http 0.2.12",
-              "target": "http"
-            },
-            {
-              "id": "hyper 0.14.30",
-              "target": "hyper"
-            },
-            {
-              "id": "log 0.4.22",
-              "target": "log"
-            },
-            {
-              "id": "rustls 0.21.12",
-              "target": "rustls"
-            },
-            {
-              "id": "rustls-native-certs 0.6.3",
-              "target": "rustls_native_certs"
-            },
-            {
-              "id": "tokio 1.39.3",
-              "target": "tokio"
-            },
-            {
-              "id": "tokio-rustls 0.24.1",
-              "target": "tokio_rustls"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2021",
-        "version": "0.24.2"
-      },
-      "license": "Apache-2.0 OR ISC OR MIT"
     },
     "hyper-rustls 0.26.0": {
       "name": "hyper-rustls",
@@ -15426,7 +15344,7 @@
               "alias": "pki_types"
             },
             {
-              "id": "tokio 1.39.3",
+              "id": "tokio 1.40.0",
               "target": "tokio"
             },
             {
@@ -15473,7 +15391,10 @@
         "crate_features": {
           "common": [
             "http1",
+            "http2",
+            "native-tokio",
             "ring",
+            "rustls-native-certs",
             "tls12",
             "webpki-roots",
             "webpki-tokio"
@@ -15503,12 +15424,16 @@
               "target": "rustls"
             },
             {
+              "id": "rustls-native-certs 0.7.1",
+              "target": "rustls_native_certs"
+            },
+            {
               "id": "rustls-pki-types 1.8.0",
               "target": "rustls_pki_types",
               "alias": "pki_types"
             },
             {
-              "id": "tokio 1.39.3",
+              "id": "tokio 1.40.0",
               "target": "tokio"
             },
             {
@@ -15567,7 +15492,7 @@
               "target": "pin_project_lite"
             },
             {
-              "id": "tokio 1.39.3",
+              "id": "tokio 1.40.0",
               "target": "tokio"
             },
             {
@@ -15622,7 +15547,7 @@
               "target": "pin_project_lite"
             },
             {
-              "id": "tokio 1.39.3",
+              "id": "tokio 1.40.0",
               "target": "tokio"
             },
             {
@@ -15685,7 +15610,7 @@
               "target": "native_tls"
             },
             {
-              "id": "tokio 1.39.3",
+              "id": "tokio 1.40.0",
               "target": "tokio"
             },
             {
@@ -15734,9 +15659,13 @@
             "client",
             "client-legacy",
             "default",
+            "full",
             "http1",
             "http2",
             "server",
+            "server-auto",
+            "server-graceful",
+            "service",
             "tokio"
           ],
           "selects": {}
@@ -15776,7 +15705,7 @@
               "target": "socket2"
             },
             {
-              "id": "tokio 1.39.3",
+              "id": "tokio 1.40.0",
               "target": "tokio"
             },
             {
@@ -15927,7 +15856,7 @@
         "deps": {
           "common": [
             {
-              "id": "cc 1.1.13",
+              "id": "cc 1.1.15",
               "target": "cc"
             }
           ],
@@ -15943,7 +15872,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/monitoring/adapter_metrics/client"
         }
@@ -15987,7 +15916,7 @@
               "target": "slog"
             },
             {
-              "id": "tokio 1.39.3",
+              "id": "tokio 1.40.0",
               "target": "tokio"
             },
             {
@@ -16013,7 +15942,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/monitoring/adapter_metrics/service"
         }
@@ -16260,7 +16189,7 @@
                 "target": "webpki"
               },
               {
-                "id": "tokio 1.39.3",
+                "id": "tokio 1.40.0",
                 "target": "tokio"
               }
             ]
@@ -16287,7 +16216,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/async_utils"
         }
@@ -16355,7 +16284,7 @@
               "target": "thiserror"
             },
             {
-              "id": "tokio 1.39.3",
+              "id": "tokio 1.40.0",
               "target": "tokio"
             },
             {
@@ -16377,7 +16306,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/types/base_types"
         }
@@ -16498,7 +16427,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/bitcoin/replica_types"
         }
@@ -16560,7 +16489,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/canister_client"
         }
@@ -16592,12 +16521,20 @@
               "target": "futures_util"
             },
             {
-              "id": "hyper 0.14.30",
+              "id": "http-body-util 0.1.2",
+              "target": "http_body_util"
+            },
+            {
+              "id": "hyper 1.4.1",
               "target": "hyper"
             },
             {
-              "id": "hyper-rustls 0.24.2",
+              "id": "hyper-rustls 0.27.2",
               "target": "hyper_rustls"
+            },
+            {
+              "id": "hyper-util 0.1.7",
+              "target": "hyper_util"
             },
             {
               "id": "ic-canister-client-sender 0.9.0",
@@ -16640,7 +16577,7 @@
               "target": "prost"
             },
             {
-              "id": "rustls 0.21.12",
+              "id": "rustls 0.23.12",
               "target": "rustls"
             },
             {
@@ -16652,8 +16589,12 @@
               "target": "serde_cbor"
             },
             {
-              "id": "tokio 1.39.3",
+              "id": "tokio 1.40.0",
               "target": "tokio"
+            },
+            {
+              "id": "tower 0.4.13",
+              "target": "tower"
             },
             {
               "id": "tree-deserializer 0.9.0",
@@ -16678,7 +16619,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/canister_client/sender"
         }
@@ -16740,7 +16681,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/rust_canisters/canister_log"
         }
@@ -16782,7 +16723,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/rust_canisters/canister_profiler"
         }
@@ -16966,7 +16907,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/rust_canisters/http_types"
         }
@@ -17020,7 +16961,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/canonical_state"
         }
@@ -17131,7 +17072,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/canonical_state/tree_hash"
         }
@@ -17242,14 +17183,14 @@
       },
       "license": "Apache-2.0"
     },
-    "ic-cdk 0.15.0": {
+    "ic-cdk 0.16.0": {
       "name": "ic-cdk",
-      "version": "0.15.0",
+      "version": "0.16.0",
       "repository": {
         "Git": {
           "remote": "https://github.com/dfinity/cdk-rs.git",
           "commitish": {
-            "Rev": "bd17d57a7b8ca59665fea5fad6143ca02724d03b"
+            "Rev": "3e54016734c8f73fb3acabc9c9e72c960c85eb3b"
           },
           "strip_prefix": "src/ic-cdk"
         }
@@ -17295,13 +17236,13 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "ic-cdk-macros 0.15.0",
+              "id": "ic-cdk-macros 0.16.0",
               "target": "ic_cdk_macros"
             }
           ],
           "selects": {}
         },
-        "version": "0.15.0"
+        "version": "0.16.0"
       },
       "license": "Apache-2.0"
     },
@@ -17364,14 +17305,14 @@
       },
       "license": "Apache-2.0"
     },
-    "ic-cdk-macros 0.15.0": {
+    "ic-cdk-macros 0.16.0": {
       "name": "ic-cdk-macros",
-      "version": "0.15.0",
+      "version": "0.16.0",
       "repository": {
         "Git": {
           "remote": "https://github.com/dfinity/cdk-rs.git",
           "commitish": {
-            "Rev": "bd17d57a7b8ca59665fea5fad6143ca02724d03b"
+            "Rev": "3e54016734c8f73fb3acabc9c9e72c960c85eb3b"
           },
           "strip_prefix": "src/ic-cdk-macros"
         }
@@ -17415,14 +17356,14 @@
               "target": "serde_tokenstream"
             },
             {
-              "id": "syn 2.0.76",
+              "id": "syn 2.0.77",
               "target": "syn"
             }
           ],
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.15.0"
+        "version": "0.16.0"
       },
       "license": "Apache-2.0"
     },
@@ -17485,6 +17426,68 @@
       },
       "license": "Apache-2.0"
     },
+    "ic-cdk-timers 0.10.0": {
+      "name": "ic-cdk-timers",
+      "version": "0.10.0",
+      "repository": {
+        "Git": {
+          "remote": "https://github.com/dfinity/cdk-rs.git",
+          "commitish": {
+            "Rev": "3e54016734c8f73fb3acabc9c9e72c960c85eb3b"
+          },
+          "strip_prefix": "src/ic-cdk-timers"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "ic_cdk_timers",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "ic_cdk_timers",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "futures 0.3.30",
+              "target": "futures"
+            },
+            {
+              "id": "ic-cdk 0.16.0",
+              "target": "ic_cdk"
+            },
+            {
+              "id": "ic0 0.23.0",
+              "target": "ic0"
+            },
+            {
+              "id": "serde 1.0.209",
+              "target": "serde"
+            },
+            {
+              "id": "serde_bytes 0.11.15",
+              "target": "serde_bytes"
+            },
+            {
+              "id": "slotmap 1.0.7",
+              "target": "slotmap"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "0.10.0"
+      },
+      "license": "Apache-2.0"
+    },
     "ic-cdk-timers 0.7.0": {
       "name": "ic-cdk-timers",
       "version": "0.7.0",
@@ -17544,68 +17547,6 @@
       },
       "license": "Apache-2.0"
     },
-    "ic-cdk-timers 0.9.0": {
-      "name": "ic-cdk-timers",
-      "version": "0.9.0",
-      "repository": {
-        "Git": {
-          "remote": "https://github.com/dfinity/cdk-rs.git",
-          "commitish": {
-            "Rev": "bd17d57a7b8ca59665fea5fad6143ca02724d03b"
-          },
-          "strip_prefix": "src/ic-cdk-timers"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "ic_cdk_timers",
-            "crate_root": "src/lib.rs",
-            "srcs": [
-              "**/*.rs"
-            ]
-          }
-        }
-      ],
-      "library_target_name": "ic_cdk_timers",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "futures 0.3.30",
-              "target": "futures"
-            },
-            {
-              "id": "ic-cdk 0.15.0",
-              "target": "ic_cdk"
-            },
-            {
-              "id": "ic0 0.23.0",
-              "target": "ic0"
-            },
-            {
-              "id": "serde 1.0.209",
-              "target": "serde"
-            },
-            {
-              "id": "serde_bytes 0.11.15",
-              "target": "serde_bytes"
-            },
-            {
-              "id": "slotmap 1.0.7",
-              "target": "slotmap"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2021",
-        "version": "0.9.0"
-      },
-      "license": "Apache-2.0"
-    },
     "ic-certification 0.9.0": {
       "name": "ic-certification",
       "version": "0.9.0",
@@ -17613,7 +17554,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/certification"
         }
@@ -17742,7 +17683,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/canonical_state/certification_version"
         }
@@ -17840,7 +17781,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/config"
         }
@@ -17910,7 +17851,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/constants"
         }
@@ -17943,7 +17884,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/crypto/ed25519"
         }
@@ -18009,7 +17950,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/crypto/getrandom_for_wasm"
         }
@@ -18059,7 +18000,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/crypto/interfaces/sig_verification"
         }
@@ -18101,7 +18042,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/crypto/internal/crypto_lib/basic_sig/der_utils"
         }
@@ -18151,7 +18092,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/crypto/internal/crypto_lib/basic_sig/ed25519"
         }
@@ -18249,7 +18190,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/crypto/internal/crypto_lib/bls12_381/type"
         }
@@ -18336,7 +18277,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/crypto/internal/crypto_lib/hmac"
         }
@@ -18378,7 +18319,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/crypto/internal/crypto_lib/multi_sig/bls12_381"
         }
@@ -18464,7 +18405,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/crypto/internal/crypto_lib/seed"
         }
@@ -18526,7 +18467,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/crypto/internal/crypto_lib/sha2"
         }
@@ -18568,7 +18509,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/crypto/internal/crypto_lib/threshold_sig/bls12_381"
         }
@@ -18687,7 +18628,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/crypto/internal/crypto_lib/threshold_sig/tecdsa"
         }
@@ -18822,7 +18763,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/crypto/internal/crypto_lib/types"
         }
@@ -18905,7 +18846,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/crypto/node_key_validation"
         }
@@ -18987,7 +18928,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/crypto/secp256k1"
         }
@@ -19061,7 +19002,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/crypto/secrets_containers"
         }
@@ -19107,7 +19048,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/crypto/sha2"
         }
@@ -19149,7 +19090,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/crypto/node_key_validation/tls_cert_validation"
         }
@@ -19211,7 +19152,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/crypto/tree_hash"
         }
@@ -19273,7 +19214,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/crypto/utils/basic_sig"
         }
@@ -19323,7 +19264,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/crypto/utils/ni_dkg"
         }
@@ -19373,7 +19314,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/crypto/utils/threshold_sig"
         }
@@ -19427,7 +19368,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/crypto/utils/threshold_sig_der"
         }
@@ -19481,7 +19422,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/types/error_types"
         }
@@ -19544,7 +19485,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/http_endpoints/metrics"
         }
@@ -19596,7 +19537,7 @@
               "target": "thiserror"
             },
             {
-              "id": "tokio 1.39.3",
+              "id": "tokio 1.40.0",
               "target": "tokio"
             },
             {
@@ -19622,7 +19563,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/rosetta-api/icrc1"
         }
@@ -19730,7 +19671,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/rosetta-api/icrc1/index-ng"
         }
@@ -19863,7 +19804,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/rosetta-api/icrc1/ledger"
         }
@@ -20038,7 +19979,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/rosetta-api/icrc1/tokens_u64"
         }
@@ -20096,7 +20037,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/interfaces"
         }
@@ -20211,7 +20152,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/interfaces/registry"
         }
@@ -20261,7 +20202,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/interfaces/state_manager"
         }
@@ -20315,7 +20256,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/rosetta-api/ledger_canister_core"
         }
@@ -20402,7 +20343,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/rosetta-api/ledger_core"
         }
@@ -20460,7 +20401,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "packages/ic-ledger-hash-of"
         }
@@ -20510,7 +20451,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/monitoring/logger"
         }
@@ -20768,7 +20709,7 @@
               "target": "strum"
             },
             {
-              "id": "tokio 1.39.3",
+              "id": "tokio 1.40.0",
               "target": "tokio"
             },
             {
@@ -20808,7 +20749,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/types/management_canister_types"
         }
@@ -20979,7 +20920,7 @@
               "target": "strum"
             },
             {
-              "id": "tokio 1.39.3",
+              "id": "tokio 1.40.0",
               "target": "tokio"
             },
             {
@@ -21019,7 +20960,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/monitoring/metrics"
         }
@@ -21051,7 +20992,7 @@
               "target": "ic_adapter_metrics_client"
             },
             {
-              "id": "libc 0.2.157",
+              "id": "libc 0.2.158",
               "target": "libc"
             },
             {
@@ -21059,7 +21000,7 @@
               "target": "prometheus"
             },
             {
-              "id": "tokio 1.39.3",
+              "id": "tokio 1.40.0",
               "target": "tokio"
             },
             {
@@ -21118,7 +21059,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/nervous_system/clients"
         }
@@ -21225,7 +21166,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/nervous_system/collections/union_multi_map"
         }
@@ -21258,7 +21199,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/nervous_system/common"
         }
@@ -21440,7 +21381,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/nervous_system/common/build_metadata"
         }
@@ -21473,7 +21414,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/nervous_system/common/test_keys"
         }
@@ -21535,7 +21476,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/nervous_system/governance"
         }
@@ -21593,7 +21534,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/nervous_system/lock"
         }
@@ -21626,7 +21567,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/nervous_system/proto"
         }
@@ -21688,7 +21629,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/nervous_system/proxied_canister_calls_tracker"
         }
@@ -21730,7 +21671,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/nervous_system/root"
         }
@@ -21804,7 +21745,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/nervous_system/runtime"
         }
@@ -21871,7 +21812,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/nervous_system/string"
         }
@@ -21904,7 +21845,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/nervous_system/temporary"
         }
@@ -21937,7 +21878,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/nervous_system/neurons_fund"
         }
@@ -22004,7 +21945,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/nns/common"
         }
@@ -22118,7 +22059,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/nns/constants"
         }
@@ -22164,7 +22105,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/nns/governance"
         }
@@ -22485,7 +22426,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/nns/governance/api"
         }
@@ -22608,7 +22549,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/nns/governance/init"
         }
@@ -22694,7 +22635,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/nns/gtc_accounts"
         }
@@ -22727,7 +22668,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/nns/handlers/root/interface"
         }
@@ -22802,7 +22743,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/protobuf"
         }
@@ -22868,7 +22809,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/registry/canister/api"
         }
@@ -22922,7 +22863,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/registry/client"
         }
@@ -22984,7 +22925,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/registry/fake"
         }
@@ -23030,7 +22971,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/registry/helpers"
         }
@@ -23116,7 +23057,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/registry/proto"
         }
@@ -23158,7 +23099,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/registry/keys"
         }
@@ -23216,7 +23157,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/registry/local_registry"
         }
@@ -23276,7 +23217,7 @@
               "target": "thiserror"
             },
             {
-              "id": "tokio 1.39.3",
+              "id": "tokio 1.40.0",
               "target": "tokio"
             },
             {
@@ -23298,7 +23239,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/registry/local_store"
         }
@@ -23356,7 +23297,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/registry/local_store/artifacts"
         }
@@ -23389,7 +23330,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/registry/nns_data_provider"
         }
@@ -23472,6 +23413,52 @@
       },
       "license": null
     },
+    "ic-registry-node-provider-rewards 0.9.0": {
+      "name": "ic-registry-node-provider-rewards",
+      "version": "0.9.0",
+      "repository": {
+        "Git": {
+          "remote": "https://github.com/dfinity/ic.git",
+          "commitish": {
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
+          },
+          "strip_prefix": "rs/registry/node_provider_rewards"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "ic_registry_node_provider_rewards",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "ic_registry_node_provider_rewards",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "ic-base-types 0.9.0",
+              "target": "ic_base_types"
+            },
+            {
+              "id": "ic-protobuf 0.9.0",
+              "target": "ic_protobuf"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "0.9.0"
+      },
+      "license": null
+    },
     "ic-registry-provisional-whitelist 0.9.0": {
       "name": "ic-registry-provisional-whitelist",
       "version": "0.9.0",
@@ -23479,7 +23466,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/registry/provisional_whitelist"
         }
@@ -23525,7 +23512,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/registry/routing_table"
         }
@@ -23579,7 +23566,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/registry/subnet_features"
         }
@@ -23633,7 +23620,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/registry/subnet_type"
         }
@@ -23696,7 +23683,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/registry/transport"
         }
@@ -23754,7 +23741,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/replicated_state"
         }
@@ -23878,7 +23865,7 @@
               "target": "lazy_static"
             },
             {
-              "id": "libc 0.2.157",
+              "id": "libc 0.2.158",
               "target": "libc"
             },
             {
@@ -23957,7 +23944,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/sns/governance"
         }
@@ -24227,7 +24214,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/sns/governance/proposal_criticality"
         }
@@ -24269,7 +24256,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/sns/governance/proposals_amount_total_limit"
         }
@@ -24328,7 +24315,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/sns/governance/token_valuation"
         }
@@ -24427,7 +24414,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/sns/init"
         }
@@ -24545,7 +24532,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/sns/root"
         }
@@ -24634,10 +24621,6 @@
               "target": "ic_nervous_system_runtime"
             },
             {
-              "id": "ic-nns-constants 0.9.0",
-              "target": "ic_nns_constants"
-            },
-            {
               "id": "ic-sns-root 0.9.0",
               "target": "build_script_build"
             },
@@ -24703,7 +24686,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/sns/swap"
         }
@@ -24893,7 +24876,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/sns/swap/proto_library"
         }
@@ -24963,7 +24946,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/nns/sns-wasm"
         }
@@ -25165,7 +25148,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/sys"
         }
@@ -25201,7 +25184,7 @@
               "target": "lazy_static"
             },
             {
-              "id": "libc 0.2.157",
+              "id": "libc 0.2.158",
               "target": "libc"
             },
             {
@@ -25217,7 +25200,7 @@
               "target": "prost"
             },
             {
-              "id": "tokio 1.39.3",
+              "id": "tokio 1.40.0",
               "target": "tokio"
             },
             {
@@ -25332,7 +25315,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/types/types"
         }
@@ -25563,7 +25546,7 @@
               "target": "time"
             },
             {
-              "id": "tokio 1.39.3",
+              "id": "tokio 1.40.0",
               "target": "tokio"
             }
           ],
@@ -25594,7 +25577,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/utils"
         }
@@ -25648,7 +25631,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/utils/thread"
         }
@@ -25681,7 +25664,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/utils/validate_eq"
         }
@@ -25723,7 +25706,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/utils/validate_eq_derive"
         }
@@ -25926,7 +25909,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/types/wasm_types"
         }
@@ -26100,7 +26083,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/cdk-rs.git",
           "commitish": {
-            "Rev": "bd17d57a7b8ca59665fea5fad6143ca02724d03b"
+            "Rev": "3e54016734c8f73fb3acabc9c9e72c960c85eb3b"
           },
           "strip_prefix": "src/ic0"
         }
@@ -26273,7 +26256,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/rosetta-api/icp_ledger"
         }
@@ -26408,7 +26391,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "packages/icrc-ledger-client"
         }
@@ -26467,7 +26450,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "packages/icrc-ledger-types"
         }
@@ -27108,7 +27091,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.76",
+              "id": "syn 2.0.77",
               "target": "syn"
             }
           ],
@@ -27399,13 +27382,13 @@
       },
       "license": "Apache-2.0 OR MIT"
     },
-    "indexmap 2.4.0": {
+    "indexmap 2.5.0": {
       "name": "indexmap",
-      "version": "2.4.0",
+      "version": "2.5.0",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/indexmap/2.4.0/download",
-          "sha256": "93ead53efc7ea8ed3cfb0c79fc8023fbb782a5432b52830b6518941cebe6505c"
+          "url": "https://static.crates.io/crates/indexmap/2.5.0/download",
+          "sha256": "68b900aa2f7301e21c36462b170ee99994de34dff39a4a6a528e80e7376d07e5"
         }
       },
       "targets": [
@@ -27450,7 +27433,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "2.4.0"
+        "version": "2.5.0"
       },
       "license": "Apache-2.0 OR MIT"
     },
@@ -27702,7 +27685,7 @@
           "selects": {
             "cfg(any(unix, target_os = \"wasi\"))": [
               {
-                "id": "libc 0.2.157",
+                "id": "libc 0.2.158",
                 "target": "libc"
               }
             ],
@@ -27958,7 +27941,7 @@
           "selects": {
             "cfg(unix)": [
               {
-                "id": "libc 0.2.157",
+                "id": "libc 0.2.158",
                 "target": "libc"
               }
             ]
@@ -28262,13 +28245,13 @@
       },
       "license": "Apache-2.0 OR MIT"
     },
-    "keyring 3.2.0": {
+    "keyring 3.2.1": {
       "name": "keyring",
-      "version": "3.2.0",
+      "version": "3.2.1",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/keyring/3.2.0/download",
-          "sha256": "73b9af47ded4df3067484d7d45758ca2b36bd083bf6d024c2952bbd8af1cdaa4"
+          "url": "https://static.crates.io/crates/keyring/3.2.1/download",
+          "sha256": "030a9b84bb2a2f3673d4c8b8236091ed5d8f6b66a56d8085471d8abd5f3c6a80"
         }
       },
       "targets": [
@@ -28288,7 +28271,7 @@
           "**"
         ],
         "edition": "2021",
-        "version": "3.2.0"
+        "version": "3.2.1"
       },
       "license": "MIT OR Apache-2.0"
     },
@@ -28398,13 +28381,13 @@
       },
       "license": "Apache-2.0/MIT"
     },
-    "libc 0.2.157": {
+    "libc 0.2.158": {
       "name": "libc",
-      "version": "0.2.157",
+      "version": "0.2.158",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/libc/0.2.157/download",
-          "sha256": "374af5f94e54fa97cf75e945cce8a6b201e88a1a07e688b47dfd2a59c66dbd86"
+          "url": "https://static.crates.io/crates/libc/0.2.158/download",
+          "sha256": "d8adc4bb1803a324070e64a98ae98f38934d91957a99cfb3a43dcbc01bc56439"
         }
       },
       "targets": [
@@ -28443,14 +28426,14 @@
         "deps": {
           "common": [
             {
-              "id": "libc 0.2.157",
+              "id": "libc 0.2.158",
               "target": "build_script_build"
             }
           ],
           "selects": {}
         },
         "edition": "2015",
-        "version": "0.2.157"
+        "version": "0.2.158"
       },
       "build_script_attrs": {
         "data_glob": [
@@ -28634,7 +28617,7 @@
         "deps": {
           "common": [
             {
-              "id": "cc 1.1.13",
+              "id": "cc 1.1.15",
               "target": "cc"
             }
           ],
@@ -28781,7 +28764,7 @@
               "target": "bitflags"
             },
             {
-              "id": "libc 0.2.157",
+              "id": "libc 0.2.158",
               "target": "libc"
             }
           ],
@@ -29161,7 +29144,7 @@
               "target": "serde_json"
             },
             {
-              "id": "tokio 1.39.3",
+              "id": "tokio 1.40.0",
               "target": "tokio"
             },
             {
@@ -29231,7 +29214,7 @@
               "target": "slog_term"
             },
             {
-              "id": "tokio 1.39.3",
+              "id": "tokio 1.40.0",
               "target": "tokio"
             }
           ],
@@ -29287,7 +29270,7 @@
               "target": "slog_term"
             },
             {
-              "id": "tokio 1.39.3",
+              "id": "tokio 1.40.0",
               "target": "tokio"
             },
             {
@@ -29389,7 +29372,7 @@
         "deps": {
           "common": [
             {
-              "id": "libc 0.2.157",
+              "id": "libc 0.2.158",
               "target": "libc"
             },
             {
@@ -29409,7 +29392,7 @@
         "deps": {
           "common": [
             {
-              "id": "cc 1.1.13",
+              "id": "cc 1.1.15",
               "target": "cc"
             },
             {
@@ -29887,7 +29870,7 @@
             ],
             "cfg(target_os = \"wasi\")": [
               {
-                "id": "libc 0.2.157",
+                "id": "libc 0.2.158",
                 "target": "libc"
               },
               {
@@ -29897,7 +29880,7 @@
             ],
             "cfg(unix)": [
               {
-                "id": "libc 0.2.157",
+                "id": "libc 0.2.158",
                 "target": "libc"
               }
             ],
@@ -30031,7 +30014,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.76",
+              "id": "syn 2.0.77",
               "target": "syn"
             }
           ],
@@ -30170,7 +30153,7 @@
               "target": "slog_term"
             },
             {
-              "id": "tokio 1.39.3",
+              "id": "tokio 1.40.0",
               "target": "tokio"
             },
             {
@@ -30267,7 +30250,7 @@
               "target": "slog_term"
             },
             {
-              "id": "tokio 1.39.3",
+              "id": "tokio 1.40.0",
               "target": "tokio"
             },
             {
@@ -30410,7 +30393,7 @@
             ],
             "cfg(target_vendor = \"apple\")": [
               {
-                "id": "libc 0.2.157",
+                "id": "libc 0.2.158",
                 "target": "libc"
               },
               {
@@ -30520,7 +30503,7 @@
               "target": "cfg_if"
             },
             {
-              "id": "libc 0.2.157",
+              "id": "libc 0.2.158",
               "target": "libc"
             }
           ],
@@ -30603,7 +30586,7 @@
               "target": "slog_term"
             },
             {
-              "id": "tokio 1.39.3",
+              "id": "tokio 1.40.0",
               "target": "tokio"
             },
             {
@@ -30718,7 +30701,7 @@
               "target": "serde_yaml"
             },
             {
-              "id": "tokio 1.39.3",
+              "id": "tokio 1.40.0",
               "target": "tokio"
             },
             {
@@ -31272,7 +31255,7 @@
           "selects": {
             "cfg(not(windows))": [
               {
-                "id": "libc 0.2.157",
+                "id": "libc 0.2.158",
                 "target": "libc"
               }
             ],
@@ -31563,7 +31546,7 @@
               "target": "snafu"
             },
             {
-              "id": "tokio 1.39.3",
+              "id": "tokio 1.40.0",
               "target": "tokio"
             },
             {
@@ -31679,7 +31662,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/rust_canisters/on_wire"
         }
@@ -31829,7 +31812,7 @@
               "target": "foreign_types"
             },
             {
-              "id": "libc 0.2.157",
+              "id": "libc 0.2.158",
               "target": "libc"
             },
             {
@@ -31919,7 +31902,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.76",
+              "id": "syn 2.0.77",
               "target": "syn"
             }
           ],
@@ -32003,7 +31986,7 @@
         "deps": {
           "common": [
             {
-              "id": "libc 0.2.157",
+              "id": "libc 0.2.158",
               "target": "libc"
             },
             {
@@ -32029,7 +32012,7 @@
         "deps": {
           "common": [
             {
-              "id": "cc 1.1.13",
+              "id": "cc 1.1.15",
               "target": "cc"
             },
             {
@@ -32301,7 +32284,7 @@
               "target": "thiserror"
             },
             {
-              "id": "tokio 1.39.3",
+              "id": "tokio 1.40.0",
               "target": "tokio"
             },
             {
@@ -32764,7 +32747,7 @@
             ],
             "cfg(unix)": [
               {
-                "id": "libc 0.2.157",
+                "id": "libc 0.2.158",
                 "target": "libc"
               }
             ],
@@ -33212,7 +33195,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.76",
+              "id": "syn 2.0.77",
               "target": "syn"
             }
           ],
@@ -33304,7 +33287,7 @@
               "target": "fixedbitset"
             },
             {
-              "id": "indexmap 2.4.0",
+              "id": "indexmap 2.5.0",
               "target": "indexmap"
             }
           ],
@@ -33322,7 +33305,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/phantom_newtype"
         }
@@ -33440,7 +33423,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.76",
+              "id": "syn 2.0.77",
               "target": "syn"
             }
           ],
@@ -34082,7 +34065,7 @@
               "target": "proc_macro2"
             },
             {
-              "id": "syn 2.0.76",
+              "id": "syn 2.0.77",
               "target": "syn"
             }
           ],
@@ -34578,7 +34561,7 @@
               "target": "procfs_core"
             },
             {
-              "id": "rustix 0.38.34",
+              "id": "rustix 0.38.35",
               "target": "rustix"
             }
           ],
@@ -34642,7 +34625,7 @@
               "target": "lazy_static"
             },
             {
-              "id": "libc 0.2.157",
+              "id": "libc 0.2.158",
               "target": "libc"
             }
           ],
@@ -34755,7 +34738,7 @@
               "target": "lazy_static"
             },
             {
-              "id": "libc 0.2.157",
+              "id": "libc 0.2.158",
               "target": "libc"
             },
             {
@@ -34883,7 +34866,7 @@
               "target": "slog_term"
             },
             {
-              "id": "tokio 1.39.3",
+              "id": "tokio 1.40.0",
               "target": "tokio"
             },
             {
@@ -35116,7 +35099,7 @@
               "target": "bytes"
             },
             {
-              "id": "heck 0.5.0",
+              "id": "heck 0.4.1",
               "target": "heck"
             },
             {
@@ -35156,7 +35139,7 @@
               "target": "regex"
             },
             {
-              "id": "syn 2.0.76",
+              "id": "syn 2.0.77",
               "target": "syn"
             },
             {
@@ -35215,7 +35198,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.76",
+              "id": "syn 2.0.77",
               "target": "syn"
             }
           ],
@@ -35371,7 +35354,7 @@
         "deps": {
           "common": [
             {
-              "id": "cc 1.1.13",
+              "id": "cc 1.1.15",
               "target": "cc"
             }
           ],
@@ -35507,7 +35490,7 @@
               "target": "ic_nervous_system_common_test_keys"
             },
             {
-              "id": "indexmap 2.4.0",
+              "id": "indexmap 2.5.0",
               "target": "indexmap"
             },
             {
@@ -35539,7 +35522,7 @@
               "target": "strum"
             },
             {
-              "id": "tokio 1.39.3",
+              "id": "tokio 1.40.0",
               "target": "tokio"
             },
             {
@@ -35665,7 +35648,7 @@
               "target": "thiserror"
             },
             {
-              "id": "tokio 1.39.3",
+              "id": "tokio 1.40.0",
               "target": "tokio"
             },
             {
@@ -35779,7 +35762,7 @@
         "deps": {
           "common": [
             {
-              "id": "libc 0.2.157",
+              "id": "libc 0.2.158",
               "target": "libc"
             },
             {
@@ -35960,7 +35943,7 @@
           "selects": {
             "cfg(unix)": [
               {
-                "id": "libc 0.2.157",
+                "id": "libc 0.2.158",
                 "target": "libc"
               }
             ]
@@ -36696,7 +36679,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/registry/canister"
         }
@@ -36811,6 +36794,10 @@
             {
               "id": "ic-registry-keys 0.9.0",
               "target": "ic_registry_keys"
+            },
+            {
+              "id": "ic-registry-node-provider-rewards 0.9.0",
+              "target": "ic_registry_node_provider_rewards"
             },
             {
               "id": "ic-registry-routing-table 0.9.0",
@@ -37150,7 +37137,7 @@
                 "target": "rustls_pki_types"
               },
               {
-                "id": "tokio 1.39.3",
+                "id": "tokio 1.40.0",
                 "target": "tokio"
               },
               {
@@ -37367,7 +37354,7 @@
           "selects": {
             "cfg(all(any(target_os = \"android\", target_os = \"linux\"), any(target_arch = \"aarch64\", target_arch = \"arm\")))": [
               {
-                "id": "libc 0.2.157",
+                "id": "libc 0.2.158",
                 "target": "libc"
               }
             ],
@@ -37395,7 +37382,7 @@
         "deps": {
           "common": [
             {
-              "id": "cc 1.1.13",
+              "id": "cc 1.1.15",
               "target": "cc"
             }
           ],
@@ -37641,7 +37628,7 @@
               "target": "slog_term"
             },
             {
-              "id": "tokio 1.39.3",
+              "id": "tokio 1.40.0",
               "target": "tokio"
             },
             {
@@ -37773,7 +37760,7 @@
               "target": "build_script_build"
             },
             {
-              "id": "syn 2.0.76",
+              "id": "syn 2.0.77",
               "target": "syn"
             },
             {
@@ -38062,13 +38049,13 @@
       },
       "license": "MIT/Apache-2.0"
     },
-    "rustix 0.38.34": {
+    "rustix 0.38.35": {
       "name": "rustix",
-      "version": "0.38.34",
+      "version": "0.38.35",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/rustix/0.38.34/download",
-          "sha256": "70dc5ec042f7a43c4a73241207cecc9873a06d45debb38b329f8541d85c2730f"
+          "url": "https://static.crates.io/crates/rustix/0.38.35/download",
+          "sha256": "a85d50532239da68e9addb745ba38ff4612a242c1c7ceea689c4bc7c2f43c36f"
         }
       },
       "targets": [
@@ -38158,7 +38145,7 @@
               "target": "bitflags"
             },
             {
-              "id": "rustix 0.38.34",
+              "id": "rustix 0.38.35",
               "target": "build_script_build"
             }
           ],
@@ -38187,7 +38174,7 @@
                 "alias": "libc_errno"
               },
               {
-                "id": "libc 0.2.157",
+                "id": "libc 0.2.158",
                 "target": "libc"
               }
             ],
@@ -38205,7 +38192,7 @@
           }
         },
         "edition": "2021",
-        "version": "0.38.34"
+        "version": "0.38.35"
       },
       "build_script_attrs": {
         "data_glob": [
@@ -38213,94 +38200,6 @@
         ]
       },
       "license": "Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT"
-    },
-    "rustls 0.21.12": {
-      "name": "rustls",
-      "version": "0.21.12",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/rustls/0.21.12/download",
-          "sha256": "3f56a14d1f48b391359b22f731fd4bd7e43c97f3c50eee276f3aa09c94784d3e"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "rustls",
-            "crate_root": "src/lib.rs",
-            "srcs": [
-              "**/*.rs"
-            ]
-          }
-        },
-        {
-          "BuildScript": {
-            "crate_name": "build_script_build",
-            "crate_root": "build.rs",
-            "srcs": [
-              "**/*.rs"
-            ]
-          }
-        }
-      ],
-      "library_target_name": "rustls",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "crate_features": {
-          "common": [
-            "dangerous_configuration",
-            "default",
-            "log",
-            "logging",
-            "tls12"
-          ],
-          "selects": {}
-        },
-        "deps": {
-          "common": [
-            {
-              "id": "log 0.4.22",
-              "target": "log"
-            },
-            {
-              "id": "ring 0.17.8",
-              "target": "ring"
-            },
-            {
-              "id": "rustls 0.21.12",
-              "target": "build_script_build"
-            },
-            {
-              "id": "rustls-webpki 0.101.7",
-              "target": "webpki"
-            },
-            {
-              "id": "sct 0.7.1",
-              "target": "sct"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2021",
-        "version": "0.21.12"
-      },
-      "build_script_attrs": {
-        "data_glob": [
-          "**"
-        ],
-        "link_deps": {
-          "common": [
-            {
-              "id": "ring 0.17.8",
-              "target": "ring"
-            }
-          ],
-          "selects": {}
-        }
-      },
-      "license": "Apache-2.0 OR ISC OR MIT"
     },
     "rustls 0.22.4": {
       "name": "rustls",
@@ -38499,64 +38398,6 @@
       },
       "license": "Apache-2.0 OR ISC OR MIT"
     },
-    "rustls-native-certs 0.6.3": {
-      "name": "rustls-native-certs",
-      "version": "0.6.3",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/rustls-native-certs/0.6.3/download",
-          "sha256": "a9aace74cb666635c918e9c12bc0d348266037aa8eb599b5cba565709a8dff00"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "rustls_native_certs",
-            "crate_root": "src/lib.rs",
-            "srcs": [
-              "**/*.rs"
-            ]
-          }
-        }
-      ],
-      "library_target_name": "rustls_native_certs",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "rustls-pemfile 1.0.4",
-              "target": "rustls_pemfile"
-            }
-          ],
-          "selects": {
-            "cfg(all(unix, not(target_os = \"macos\")))": [
-              {
-                "id": "openssl-probe 0.1.5",
-                "target": "openssl_probe"
-              }
-            ],
-            "cfg(target_os = \"macos\")": [
-              {
-                "id": "security-framework 2.11.1",
-                "target": "security_framework"
-              }
-            ],
-            "cfg(windows)": [
-              {
-                "id": "schannel 0.1.23",
-                "target": "schannel"
-              }
-            ]
-          }
-        },
-        "edition": "2021",
-        "version": "0.6.3"
-      },
-      "license": "Apache-2.0 OR ISC OR MIT"
-    },
     "rustls-native-certs 0.7.1": {
       "name": "rustls-native-certs",
       "version": "0.7.1",
@@ -38617,45 +38458,6 @@
         },
         "edition": "2021",
         "version": "0.7.1"
-      },
-      "license": "Apache-2.0 OR ISC OR MIT"
-    },
-    "rustls-pemfile 1.0.4": {
-      "name": "rustls-pemfile",
-      "version": "1.0.4",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/rustls-pemfile/1.0.4/download",
-          "sha256": "1c74cae0a4cf6ccbbf5f359f08efdf8ee7e1dc532573bf0db71968cb56b1448c"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "rustls_pemfile",
-            "crate_root": "src/lib.rs",
-            "srcs": [
-              "**/*.rs"
-            ]
-          }
-        }
-      ],
-      "library_target_name": "rustls_pemfile",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "base64 0.21.7",
-              "target": "base64"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2018",
-        "version": "1.0.4"
       },
       "license": "Apache-2.0 OR ISC OR MIT"
     },
@@ -38747,57 +38549,6 @@
         "version": "1.8.0"
       },
       "license": "MIT OR Apache-2.0"
-    },
-    "rustls-webpki 0.101.7": {
-      "name": "rustls-webpki",
-      "version": "0.101.7",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/rustls-webpki/0.101.7/download",
-          "sha256": "8b6275d1ee7a1cd780b64aca7726599a1dbc893b1e64144529e55c3c2f745765"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "webpki",
-            "crate_root": "src/lib.rs",
-            "srcs": [
-              "**/*.rs"
-            ]
-          }
-        }
-      ],
-      "library_target_name": "webpki",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "crate_features": {
-          "common": [
-            "alloc",
-            "default",
-            "std"
-          ],
-          "selects": {}
-        },
-        "deps": {
-          "common": [
-            {
-              "id": "ring 0.17.8",
-              "target": "ring"
-            },
-            {
-              "id": "untrusted 0.9.0",
-              "target": "untrusted"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2021",
-        "version": "0.101.7"
-      },
-      "license": "ISC"
     },
     "rustls-webpki 0.102.6": {
       "name": "rustls-webpki",
@@ -39173,49 +38924,6 @@
       },
       "license": "MIT OR Apache-2.0"
     },
-    "sct 0.7.1": {
-      "name": "sct",
-      "version": "0.7.1",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/sct/0.7.1/download",
-          "sha256": "da046153aa2352493d6cb7da4b6e5c0c057d8a1d0a9aa8560baffdd945acd414"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "sct",
-            "crate_root": "src/lib.rs",
-            "srcs": [
-              "**/*.rs"
-            ]
-          }
-        }
-      ],
-      "library_target_name": "sct",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "ring 0.17.8",
-              "target": "ring"
-            },
-            {
-              "id": "untrusted 0.9.0",
-              "target": "untrusted"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2021",
-        "version": "0.7.1"
-      },
-      "license": "Apache-2.0 OR ISC OR MIT"
-    },
     "seahash 4.1.0": {
       "name": "seahash",
       "version": "4.1.0",
@@ -39415,7 +39123,7 @@
               "target": "core_foundation_sys"
             },
             {
-              "id": "libc 0.2.157",
+              "id": "libc 0.2.158",
               "target": "libc"
             },
             {
@@ -39472,7 +39180,7 @@
               "target": "core_foundation_sys"
             },
             {
-              "id": "libc 0.2.157",
+              "id": "libc 0.2.158",
               "target": "libc"
             }
           ],
@@ -39917,7 +39625,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.76",
+              "id": "syn 2.0.77",
               "target": "syn"
             }
           ],
@@ -40085,7 +39793,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.76",
+              "id": "syn 2.0.77",
               "target": "syn"
             }
           ],
@@ -40183,7 +39891,7 @@
               "target": "serde"
             },
             {
-              "id": "syn 2.0.76",
+              "id": "syn 2.0.77",
               "target": "syn"
             }
           ],
@@ -40380,7 +40088,7 @@
         "deps": {
           "common": [
             {
-              "id": "indexmap 2.4.0",
+              "id": "indexmap 2.5.0",
               "target": "indexmap"
             },
             {
@@ -40530,7 +40238,7 @@
               "target": "thiserror"
             },
             {
-              "id": "tokio 1.39.3",
+              "id": "tokio 1.40.0",
               "target": "tokio"
             },
             {
@@ -40867,7 +40575,7 @@
         "deps": {
           "common": [
             {
-              "id": "libc 0.2.157",
+              "id": "libc 0.2.158",
               "target": "libc"
             }
           ],
@@ -41209,7 +40917,7 @@
               "target": "serde_yaml"
             },
             {
-              "id": "tokio 1.39.3",
+              "id": "tokio 1.40.0",
               "target": "tokio"
             }
           ],
@@ -41719,7 +41427,7 @@
         "deps": {
           "common": [
             {
-              "id": "heck 0.5.0",
+              "id": "heck 0.4.1",
               "target": "heck"
             },
             {
@@ -41731,7 +41439,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.76",
+              "id": "syn 2.0.77",
               "target": "syn"
             }
           ],
@@ -41799,7 +41507,7 @@
               "target": "slog_term"
             },
             {
-              "id": "tokio 1.39.3",
+              "id": "tokio 1.40.0",
               "target": "tokio"
             },
             {
@@ -41850,7 +41558,7 @@
           "selects": {
             "cfg(unix)": [
               {
-                "id": "libc 0.2.157",
+                "id": "libc 0.2.158",
                 "target": "libc"
               }
             ],
@@ -41902,7 +41610,7 @@
           "selects": {
             "cfg(unix)": [
               {
-                "id": "libc 0.2.157",
+                "id": "libc 0.2.158",
                 "target": "libc"
               }
             ],
@@ -42127,7 +41835,7 @@
               "target": "cfg_if"
             },
             {
-              "id": "libc 0.2.157",
+              "id": "libc 0.2.158",
               "target": "libc"
             },
             {
@@ -42158,7 +41866,7 @@
         "deps": {
           "common": [
             {
-              "id": "cc 1.1.13",
+              "id": "cc 1.1.15",
               "target": "cc"
             }
           ],
@@ -42423,7 +42131,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.76",
+              "id": "syn 2.0.77",
               "target": "syn"
             }
           ],
@@ -42593,13 +42301,13 @@
       },
       "license": "MIT OR Apache-2.0"
     },
-    "syn 2.0.76": {
+    "syn 2.0.77": {
       "name": "syn",
-      "version": "2.0.76",
+      "version": "2.0.77",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/syn/2.0.76/download",
-          "sha256": "578e081a14e0cefc3279b0472138c513f37b41a08d5a3cca9b6e4e8ceb6cd525"
+          "url": "https://static.crates.io/crates/syn/2.0.77/download",
+          "sha256": "9f35bcdf61fd8e7be6caf75f429fdca8beb3ed76584befb503b1569faee373ed"
         }
       },
       "targets": [
@@ -42652,7 +42360,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "2.0.76"
+        "version": "2.0.77"
       },
       "license": "MIT OR Apache-2.0"
     },
@@ -42696,7 +42404,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.76",
+              "id": "syn 2.0.77",
               "target": "syn"
             }
           ],
@@ -42826,7 +42534,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.76",
+              "id": "syn 2.0.77",
               "target": "syn"
             }
           ],
@@ -43098,7 +42806,7 @@
           "selects": {
             "cfg(unix)": [
               {
-                "id": "libc 0.2.157",
+                "id": "libc 0.2.158",
                 "target": "libc"
               },
               {
@@ -43156,7 +42864,7 @@
           "selects": {
             "cfg(any(unix, target_os = \"wasi\"))": [
               {
-                "id": "rustix 0.38.34",
+                "id": "rustix 0.38.35",
                 "target": "rustix"
               }
             ],
@@ -43307,7 +43015,7 @@
           "selects": {
             "cfg(not(windows))": [
               {
-                "id": "rustix 0.38.34",
+                "id": "rustix 0.38.35",
                 "target": "rustix"
               }
             ],
@@ -43450,7 +43158,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.76",
+              "id": "syn 2.0.77",
               "target": "syn"
             }
           ],
@@ -43589,7 +43297,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.76",
+              "id": "syn 2.0.77",
               "target": "syn"
             }
           ],
@@ -43966,13 +43674,13 @@
       },
       "license": "MIT OR Apache-2.0 OR Zlib"
     },
-    "tokio 1.39.3": {
+    "tokio 1.40.0": {
       "name": "tokio",
-      "version": "1.39.3",
+      "version": "1.40.0",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/tokio/1.39.3/download",
-          "sha256": "9babc99b9923bfa4804bd74722ff02c0381021eafa4db9949217e3be8e84fff5"
+          "url": "https://static.crates.io/crates/tokio/1.40.0/download",
+          "sha256": "e2b070231665d27ad9ec9b8df639893f46727666c6767db40317fbe920a5d998"
         }
       },
       "targets": [
@@ -44060,7 +43768,7 @@
             ],
             "cfg(unix)": [
               {
-                "id": "libc 0.2.157",
+                "id": "libc 0.2.158",
                 "target": "libc"
               },
               {
@@ -44086,7 +43794,7 @@
           ],
           "selects": {}
         },
-        "version": "1.39.3"
+        "version": "1.40.0"
       },
       "license": "MIT"
     },
@@ -44122,7 +43830,7 @@
               "target": "pin_project_lite"
             },
             {
-              "id": "tokio 1.39.3",
+              "id": "tokio 1.40.0",
               "target": "tokio"
             }
           ],
@@ -44169,7 +43877,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.76",
+              "id": "syn 2.0.77",
               "target": "syn"
             }
           ],
@@ -44224,7 +43932,7 @@
               "target": "pin_project_lite"
             },
             {
-              "id": "tokio 1.39.3",
+              "id": "tokio 1.40.0",
               "target": "tokio"
             },
             {
@@ -44271,7 +43979,7 @@
               "target": "native_tls"
             },
             {
-              "id": "tokio 1.39.3",
+              "id": "tokio 1.40.0",
               "target": "tokio"
             }
           ],
@@ -44281,56 +43989,6 @@
         "version": "0.3.1"
       },
       "license": "MIT"
-    },
-    "tokio-rustls 0.24.1": {
-      "name": "tokio-rustls",
-      "version": "0.24.1",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/tokio-rustls/0.24.1/download",
-          "sha256": "c28327cf380ac148141087fbfb9de9d7bd4e84ab5d2c28fbc911d753de8a7081"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "tokio_rustls",
-            "crate_root": "src/lib.rs",
-            "srcs": [
-              "**/*.rs"
-            ]
-          }
-        }
-      ],
-      "library_target_name": "tokio_rustls",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "crate_features": {
-          "common": [
-            "logging",
-            "tls12"
-          ],
-          "selects": {}
-        },
-        "deps": {
-          "common": [
-            {
-              "id": "rustls 0.21.12",
-              "target": "rustls"
-            },
-            {
-              "id": "tokio 1.39.3",
-              "target": "tokio"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2018",
-        "version": "0.24.1"
-      },
-      "license": "MIT/Apache-2.0"
     },
     "tokio-rustls 0.25.0": {
       "name": "tokio-rustls",
@@ -44376,7 +44034,7 @@
               "alias": "pki_types"
             },
             {
-              "id": "tokio 1.39.3",
+              "id": "tokio 1.40.0",
               "target": "tokio"
             }
           ],
@@ -44431,7 +44089,7 @@
               "alias": "pki_types"
             },
             {
-              "id": "tokio 1.39.3",
+              "id": "tokio 1.40.0",
               "target": "tokio"
             }
           ],
@@ -44485,7 +44143,7 @@
               "target": "pin_project_lite"
             },
             {
-              "id": "tokio 1.39.3",
+              "id": "tokio 1.40.0",
               "target": "tokio"
             }
           ],
@@ -44548,7 +44206,7 @@
               "target": "pin_project_lite"
             },
             {
-              "id": "tokio 1.39.3",
+              "id": "tokio 1.40.0",
               "target": "tokio"
             }
           ],
@@ -44617,7 +44275,7 @@
         "deps": {
           "common": [
             {
-              "id": "indexmap 2.4.0",
+              "id": "indexmap 2.5.0",
               "target": "indexmap"
             },
             {
@@ -44722,7 +44380,7 @@
               "target": "prost"
             },
             {
-              "id": "tokio 1.39.3",
+              "id": "tokio 1.40.0",
               "target": "tokio"
             },
             {
@@ -44815,7 +44473,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.76",
+              "id": "syn 2.0.77",
               "target": "syn"
             }
           ],
@@ -44922,7 +44580,7 @@
               "target": "slab"
             },
             {
-              "id": "tokio 1.39.3",
+              "id": "tokio 1.40.0",
               "target": "tokio"
             },
             {
@@ -45207,7 +44865,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.76",
+              "id": "syn 2.0.77",
               "target": "syn"
             }
           ],
@@ -45430,7 +45088,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+            "Rev": "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
           },
           "strip_prefix": "rs/tree_deserializer"
         }
@@ -45506,11 +45164,11 @@
               "target": "ic_base_types"
             },
             {
-              "id": "ic-cdk 0.15.0",
+              "id": "ic-cdk 0.16.0",
               "target": "ic_cdk"
             },
             {
-              "id": "ic-cdk-timers 0.9.0",
+              "id": "ic-cdk-timers 0.10.0",
               "target": "ic_cdk_timers"
             },
             {
@@ -45552,7 +45210,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "ic-cdk-macros 0.15.0",
+              "id": "ic-cdk-macros 0.16.0",
               "target": "ic_cdk_macros"
             },
             {
@@ -46655,7 +46313,7 @@
           "selects": {
             "cfg(unix)": [
               {
-                "id": "libc 0.2.157",
+                "id": "libc 0.2.158",
                 "target": "libc"
               }
             ]
@@ -47039,7 +46697,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.76",
+              "id": "syn 2.0.77",
               "target": "syn"
             },
             {
@@ -47199,7 +46857,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.76",
+              "id": "syn 2.0.77",
               "target": "syn"
             },
             {
@@ -47415,7 +47073,7 @@
               "target": "hashbrown"
             },
             {
-              "id": "indexmap 2.4.0",
+              "id": "indexmap 2.5.0",
               "target": "indexmap"
             },
             {
@@ -47591,7 +47249,7 @@
               "target": "either"
             },
             {
-              "id": "rustix 0.38.34",
+              "id": "rustix 0.38.35",
               "target": "rustix"
             }
           ],
@@ -47650,7 +47308,7 @@
           "selects": {
             "cfg(any(unix, target_os = \"wasi\", target_os = \"redox\"))": [
               {
-                "id": "rustix 0.38.34",
+                "id": "rustix 0.38.35",
                 "target": "rustix"
               }
             ],
@@ -49433,7 +49091,7 @@
               "target": "serde_json"
             },
             {
-              "id": "tokio 1.39.3",
+              "id": "tokio 1.40.0",
               "target": "tokio"
             },
             {
@@ -49704,14 +49362,14 @@
         "deps": {
           "common": [
             {
-              "id": "rustix 0.38.34",
+              "id": "rustix 0.38.35",
               "target": "rustix"
             }
           ],
           "selects": {
             "cfg(any(target_os = \"freebsd\", target_os = \"netbsd\"))": [
               {
-                "id": "libc 0.2.157",
+                "id": "libc 0.2.158",
                 "target": "libc"
               }
             ],
@@ -49894,7 +49552,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.76",
+              "id": "syn 2.0.77",
               "target": "syn"
             },
             {
@@ -50003,7 +49661,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.76",
+              "id": "syn 2.0.77",
               "target": "syn"
             }
           ],
@@ -50096,7 +49754,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.76",
+              "id": "syn 2.0.77",
               "target": "syn"
             },
             {
@@ -50194,7 +49852,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.76",
+              "id": "syn 2.0.77",
               "target": "syn"
             }
           ],
@@ -50300,7 +49958,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.76",
+              "id": "syn 2.0.77",
               "target": "syn"
             }
           ],
@@ -50403,7 +50061,7 @@
               "target": "hmac"
             },
             {
-              "id": "indexmap 2.4.0",
+              "id": "indexmap 2.5.0",
               "target": "indexmap"
             },
             {
@@ -50770,7 +50428,7 @@
         "deps": {
           "common": [
             {
-              "id": "cc 1.1.13",
+              "id": "cc 1.1.15",
               "target": "cc"
             },
             {
