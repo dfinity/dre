@@ -81,7 +81,7 @@ aspect_bazel_lib_dependencies()
 
 aspect_bazel_lib_register_toolchains()
 
-IC_REPO_VERSION = "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+IC_REPO_VERSION = "0ca139ca39dfee21c8ca75e7fe37422df65e4b96"
 
 http_archive(
     name = "ic_repo",
