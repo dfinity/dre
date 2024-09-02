@@ -1,13 +1,15 @@
 name: Build and push linear-jira image
 on:
   push:
-    paths: &paths
+    paths:
       - linear-jira/**
       - ./.github/workflows/linear-jira.yaml
-    branches:
-      - "*"
-  # pull_request:
-  #   paths: *paths
+    # branches:
+    #   - "*"
+  pull_request:
+    paths:
+      - linear-jira/**
+      - ./.github/workflows/linear-jira.yaml
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
