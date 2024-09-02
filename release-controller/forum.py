@@ -39,11 +39,11 @@ class ReleaseCandidateForumPost:
 class ReleaseCandidateForumTopic:
     """A topic in the governance category for a release candidate."""
 
-    def __init__(self, release: Release, client: DiscourseClient, governance_category):
+    def __init__(self, release: Release, client: DiscourseClient, nns_proposal_discussions_category):
         """Create a new topic."""
         self.release = release
         self.client = client
-        self.governance_category = governance_category
+        self.nns_proposal_discussions_category = nns_proposal_discussions_category
         topic = next(
             (t for t in client.topics_by(self.client.api_username) if self.release.rc_name in t["title"]), None
         )
@@ -51,9 +51,9 @@ class ReleaseCandidateForumTopic:
             self.topic_id = topic["id"]
         else:
             post = client.create_post(
-                category_id=governance_category["id"],
+                category_id=nns_proposal_discussions_category["id"],
                 content="The proposal for the next release will be announced soon.",
-                tags=["replica", "release"],
+                tags=["IC-OS-election", "release"],
                 title="Proposal to elect new release {}".format(self.release.rc_name),
             )
             if post:
@@ -130,14 +130,16 @@ class ReleaseCandidateForumClient:
     def __init__(self, discourse_client: DiscourseClient):
         """Create a new client."""
         self.discourse_client = discourse_client
-        self.governance_category = next(c for c in self.discourse_client.categories() if c["name"] == "Governance")
+        self.nns_proposal_discussions_category = next(
+            c for c in self.discourse_client.categories() if c["name"] == "NNS proposal discussions"
+        )
 
     def get_or_create(self, release: Release) -> ReleaseCandidateForumTopic:
         """Get or create a forum topic for the given release."""
         return ReleaseCandidateForumTopic(
             release=release,
             client=self.discourse_client,
-            governance_category=self.governance_category,
+            nns_proposal_discussions_category=self.nns_proposal_discussions_category,
         )
 
 
