@@ -22,7 +22,11 @@ class DiscourseClientMock(DiscourseClient):
                     {
                         "id": 5,
                         "name": "Governance",
-                    }
+                    },
+                    {
+                        "id": 6,
+                        "name": "NNS proposal discussions",
+                    },
                 ]
             )
         ]
