@@ -1,5 +1,5 @@
 {
-  "checksum": "4dac898a5aa7fb14205c8de0457534452a508d981367acdee074cb5781b66b10",
+  "checksum": "64131b7fabf39dabf039924088d6e4545d8d03ed2b30e11a3bfce6f460cedafb",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -265,7 +265,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.77",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -789,7 +789,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.77",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -1284,7 +1284,7 @@
         "deps": {
           "common": [
             {
-              "id": "libc 0.2.158",
+              "id": "libc 0.2.157",
               "target": "libc"
             }
           ],
@@ -1859,7 +1859,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.77",
+              "id": "syn 2.0.76",
               "target": "syn"
             },
             {
@@ -1910,7 +1910,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.77",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -2036,7 +2036,7 @@
           "selects": {
             "cfg(any())": [
               {
-                "id": "libc 0.2.158",
+                "id": "libc 0.2.157",
                 "target": "libc"
               }
             ]
@@ -2142,7 +2142,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.77",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -2241,7 +2241,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.77",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -2252,13 +2252,13 @@
       },
       "license": "MIT"
     },
-    "async-trait 0.1.82": {
+    "async-trait 0.1.81": {
       "name": "async-trait",
-      "version": "0.1.82",
+      "version": "0.1.81",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/async-trait/0.1.82/download",
-          "sha256": "a27b8a3a6e1a44fa4c8baf1f653e4172e81486d4941f2237e20dc2d0cf4ddff1"
+          "url": "https://static.crates.io/crates/async-trait/0.1.81/download",
+          "sha256": "6e0c28dcc82d7c8ead5cb13beb15405b57b8546e93215673ff8ca0349a028107"
         }
       },
       "targets": [
@@ -2288,14 +2288,14 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.77",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.1.82"
+        "version": "0.1.81"
       },
       "license": "MIT OR Apache-2.0"
     },
@@ -2365,7 +2365,7 @@
             ],
             "cfg(unix)": [
               {
-                "id": "libc 0.2.158",
+                "id": "libc 0.2.157",
                 "target": "libc"
               }
             ],
@@ -2608,7 +2608,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.82",
+              "id": "async-trait 0.1.81",
               "target": "async_trait"
             }
           ],
@@ -2790,7 +2790,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.82",
+              "id": "async-trait 0.1.81",
               "target": "async_trait"
             }
           ],
@@ -2889,7 +2889,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.82",
+              "id": "async-trait 0.1.81",
               "target": "async_trait"
             }
           ],
@@ -3010,7 +3010,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.82",
+              "id": "async-trait 0.1.81",
               "target": "async_trait"
             }
           ],
@@ -3291,7 +3291,7 @@
                 "target": "addr2line"
               },
               {
-                "id": "libc 0.2.158",
+                "id": "libc 0.2.157",
                 "target": "libc"
               },
               {
@@ -3315,7 +3315,7 @@
         "deps": {
           "common": [
             {
-              "id": "cc 1.1.15",
+              "id": "cc 1.1.13",
               "target": "cc"
             }
           ],
@@ -4049,7 +4049,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.77",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -4848,7 +4848,7 @@
               "target": "bzip2_sys"
             },
             {
-              "id": "libc 0.2.158",
+              "id": "libc 0.2.157",
               "target": "libc"
             }
           ],
@@ -4900,7 +4900,7 @@
               "target": "build_script_build"
             },
             {
-              "id": "libc 0.2.158",
+              "id": "libc 0.2.157",
               "target": "libc"
             }
           ],
@@ -4916,7 +4916,7 @@
         "deps": {
           "common": [
             {
-              "id": "cc 1.1.15",
+              "id": "cc 1.1.13",
               "target": "cc"
             },
             {
@@ -5259,7 +5259,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.77",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -5430,13 +5430,13 @@
       },
       "license": "MIT"
     },
-    "cc 1.1.15": {
+    "cc 1.1.13": {
       "name": "cc",
-      "version": "1.1.15",
+      "version": "1.1.13",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/cc/1.1.15/download",
-          "sha256": "57b6a275aa2903740dc87da01c62040406b8812552e97129a63ea8850a17c6e6"
+          "url": "https://static.crates.io/crates/cc/1.1.13/download",
+          "sha256": "72db2f7947ecee9b03b510377e8bb9077afa27176fdbff55c51027e976fdcc48"
         }
       },
       "targets": [
@@ -5475,14 +5475,14 @@
           "selects": {
             "cfg(unix)": [
               {
-                "id": "libc 0.2.158",
+                "id": "libc 0.2.157",
                 "target": "libc"
               }
             ]
           }
         },
         "edition": "2018",
-        "version": "1.1.15"
+        "version": "1.1.13"
       },
       "license": "MIT OR Apache-2.0"
     },
@@ -6231,7 +6231,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.77",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -6776,7 +6776,7 @@
               "target": "lazy_static"
             },
             {
-              "id": "libc 0.2.158",
+              "id": "libc 0.2.157",
               "target": "libc"
             },
             {
@@ -6970,7 +6970,7 @@
               "target": "core_foundation_sys"
             },
             {
-              "id": "libc 0.2.158",
+              "id": "libc 0.2.157",
               "target": "libc"
             }
           ],
@@ -7094,25 +7094,25 @@
           "selects": {
             "aarch64-linux-android": [
               {
-                "id": "libc 0.2.158",
+                "id": "libc 0.2.157",
                 "target": "libc"
               }
             ],
             "cfg(all(target_arch = \"aarch64\", target_os = \"linux\"))": [
               {
-                "id": "libc 0.2.158",
+                "id": "libc 0.2.157",
                 "target": "libc"
               }
             ],
             "cfg(all(target_arch = \"aarch64\", target_vendor = \"apple\"))": [
               {
-                "id": "libc 0.2.158",
+                "id": "libc 0.2.157",
                 "target": "libc"
               }
             ],
             "cfg(all(target_arch = \"loongarch64\", target_os = \"linux\"))": [
               {
-                "id": "libc 0.2.158",
+                "id": "libc 0.2.157",
                 "target": "libc"
               }
             ]
@@ -7606,7 +7606,7 @@
           "selects": {
             "cfg(unix)": [
               {
-                "id": "libc 0.2.158",
+                "id": "libc 0.2.157",
                 "target": "libc"
               }
             ],
@@ -8196,7 +8196,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.77",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -8520,7 +8520,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.82",
+              "id": "async-trait 0.1.81",
               "target": "async_trait"
             },
             {
@@ -8779,7 +8779,7 @@
               "target": "strsim"
             },
             {
-              "id": "syn 2.0.77",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -8873,7 +8873,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.77",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -8980,7 +8980,7 @@
         "deps": {
           "common": [
             {
-              "id": "libc 0.2.158",
+              "id": "libc 0.2.157",
               "target": "libc"
             },
             {
@@ -9112,7 +9112,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.82",
+              "id": "async-trait 0.1.81",
               "target": "async_trait"
             }
           ],
@@ -9185,10 +9185,6 @@
             {
               "id": "anyhow 1.0.86",
               "target": "anyhow"
-            },
-            {
-              "id": "colored 2.1.0",
-              "target": "colored"
             },
             {
               "id": "futures 0.3.30",
@@ -9551,7 +9547,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.77",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -9654,7 +9650,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.77",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -9703,7 +9699,7 @@
               "target": "derive_builder_core"
             },
             {
-              "id": "syn 2.0.77",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -9785,7 +9781,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.77",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -10457,7 +10453,7 @@
             ],
             "cfg(unix)": [
               {
-                "id": "libc 0.2.158",
+                "id": "libc 0.2.157",
                 "target": "libc"
               }
             ],
@@ -10510,7 +10506,7 @@
             ],
             "cfg(unix)": [
               {
-                "id": "libc 0.2.158",
+                "id": "libc 0.2.157",
                 "target": "libc"
               }
             ],
@@ -10570,7 +10566,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.77",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -11657,7 +11653,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.77",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -12010,19 +12006,19 @@
           "selects": {
             "cfg(target_os = \"hermit\")": [
               {
-                "id": "libc 0.2.158",
+                "id": "libc 0.2.157",
                 "target": "libc"
               }
             ],
             "cfg(target_os = \"wasi\")": [
               {
-                "id": "libc 0.2.158",
+                "id": "libc 0.2.157",
                 "target": "libc"
               }
             ],
             "cfg(unix)": [
               {
-                "id": "libc 0.2.158",
+                "id": "libc 0.2.157",
                 "target": "libc"
               }
             ],
@@ -12442,7 +12438,7 @@
             ],
             "cfg(unix)": [
               {
-                "id": "libc 0.2.158",
+                "id": "libc 0.2.157",
                 "target": "libc"
               }
             ],
@@ -12816,7 +12812,7 @@
           "selects": {
             "cfg(unix)": [
               {
-                "id": "libc 0.2.158",
+                "id": "libc 0.2.157",
                 "target": "libc"
               }
             ],
@@ -13154,7 +13150,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.77",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -13485,7 +13481,7 @@
             ],
             "cfg(unix)": [
               {
-                "id": "libc 0.2.158",
+                "id": "libc 0.2.157",
                 "target": "libc"
               }
             ]
@@ -14343,7 +14339,7 @@
         "deps": {
           "common": [
             {
-              "id": "libc 0.2.158",
+              "id": "libc 0.2.157",
               "target": "libc"
             }
           ],
@@ -15961,7 +15957,7 @@
         "deps": {
           "common": [
             {
-              "id": "cc 1.1.15",
+              "id": "cc 1.1.13",
               "target": "cc"
             }
           ],
@@ -16914,14 +16910,6 @@
               "target": "ic_base_types"
             },
             {
-              "id": "ic-canister-client 0.9.0",
-              "target": "ic_canister_client"
-            },
-            {
-              "id": "ic-canister-client-sender 0.9.0",
-              "target": "ic_canister_client_sender"
-            },
-            {
               "id": "ic-management-canister-types 0.9.0",
               "target": "ic_management_canister_types"
             },
@@ -16948,10 +16936,6 @@
             {
               "id": "ic-sns-wasm 1.0.0",
               "target": "ic_sns_wasm"
-            },
-            {
-              "id": "ic-sys 0.9.0",
-              "target": "ic_sys"
             },
             {
               "id": "ic-transport-types 0.37.1",
@@ -17461,7 +17445,7 @@
               "target": "serde_tokenstream"
             },
             {
-              "id": "syn 2.0.77",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -20040,7 +20024,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.82",
+              "id": "async-trait 0.1.81",
               "target": "async_trait"
             },
             {
@@ -20431,7 +20415,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.82",
+              "id": "async-trait 0.1.81",
               "target": "async_trait"
             }
           ],
@@ -21097,7 +21081,7 @@
               "target": "ic_adapter_metrics_client"
             },
             {
-              "id": "libc 0.2.158",
+              "id": "libc 0.2.157",
               "target": "libc"
             },
             {
@@ -21254,7 +21238,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.82",
+              "id": "async-trait 0.1.81",
               "target": "async_trait"
             }
           ],
@@ -21455,7 +21439,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.82",
+              "id": "async-trait 0.1.81",
               "target": "async_trait"
             }
           ],
@@ -21900,7 +21884,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.82",
+              "id": "async-trait 0.1.81",
               "target": "async_trait"
             }
           ],
@@ -22488,7 +22472,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.82",
+              "id": "async-trait 0.1.81",
               "target": "async_trait"
             },
             {
@@ -22831,7 +22815,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.82",
+              "id": "async-trait 0.1.81",
               "target": "async_trait"
             }
           ],
@@ -23970,7 +23954,7 @@
               "target": "lazy_static"
             },
             {
-              "id": "libc 0.2.158",
+              "id": "libc 0.2.157",
               "target": "libc"
             },
             {
@@ -24268,7 +24252,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.82",
+              "id": "async-trait 0.1.81",
               "target": "async_trait"
             },
             {
@@ -24502,7 +24486,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.82",
+              "id": "async-trait 0.1.81",
               "target": "async_trait"
             }
           ],
@@ -24752,7 +24736,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.82",
+              "id": "async-trait 0.1.81",
               "target": "async_trait"
             },
             {
@@ -24946,7 +24930,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.82",
+              "id": "async-trait 0.1.81",
               "target": "async_trait"
             },
             {
@@ -25197,7 +25181,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.82",
+              "id": "async-trait 0.1.81",
               "target": "async_trait"
             }
           ],
@@ -25289,7 +25273,7 @@
               "target": "lazy_static"
             },
             {
-              "id": "libc 0.2.158",
+              "id": "libc 0.2.157",
               "target": "libc"
             },
             {
@@ -25661,7 +25645,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.82",
+              "id": "async-trait 0.1.81",
               "target": "async_trait"
             },
             {
@@ -26538,7 +26522,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.82",
+              "id": "async-trait 0.1.81",
               "target": "async_trait"
             }
           ],
@@ -27196,7 +27180,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.77",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -27790,7 +27774,7 @@
           "selects": {
             "cfg(any(unix, target_os = \"wasi\"))": [
               {
-                "id": "libc 0.2.158",
+                "id": "libc 0.2.157",
                 "target": "libc"
               }
             ],
@@ -28046,7 +28030,7 @@
           "selects": {
             "cfg(unix)": [
               {
-                "id": "libc 0.2.158",
+                "id": "libc 0.2.157",
                 "target": "libc"
               }
             ]
@@ -28522,13 +28506,13 @@
       },
       "license": "Apache-2.0/MIT"
     },
-    "libc 0.2.158": {
+    "libc 0.2.157": {
       "name": "libc",
-      "version": "0.2.158",
+      "version": "0.2.157",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/libc/0.2.158/download",
-          "sha256": "d8adc4bb1803a324070e64a98ae98f38934d91957a99cfb3a43dcbc01bc56439"
+          "url": "https://static.crates.io/crates/libc/0.2.157/download",
+          "sha256": "374af5f94e54fa97cf75e945cce8a6b201e88a1a07e688b47dfd2a59c66dbd86"
         }
       },
       "targets": [
@@ -28567,14 +28551,14 @@
         "deps": {
           "common": [
             {
-              "id": "libc 0.2.158",
+              "id": "libc 0.2.157",
               "target": "build_script_build"
             }
           ],
           "selects": {}
         },
         "edition": "2015",
-        "version": "0.2.158"
+        "version": "0.2.157"
       },
       "build_script_attrs": {
         "data_glob": [
@@ -28828,7 +28812,7 @@
         "deps": {
           "common": [
             {
-              "id": "cc 1.1.15",
+              "id": "cc 1.1.13",
               "target": "cc"
             }
           ],
@@ -28975,7 +28959,7 @@
               "target": "bitflags"
             },
             {
-              "id": "libc 0.2.158",
+              "id": "libc 0.2.157",
               "target": "libc"
             }
           ],
@@ -29583,7 +29567,7 @@
         "deps": {
           "common": [
             {
-              "id": "libc 0.2.158",
+              "id": "libc 0.2.157",
               "target": "libc"
             },
             {
@@ -29603,7 +29587,7 @@
         "deps": {
           "common": [
             {
-              "id": "cc 1.1.15",
+              "id": "cc 1.1.13",
               "target": "cc"
             },
             {
@@ -30081,7 +30065,7 @@
             ],
             "cfg(target_os = \"wasi\")": [
               {
-                "id": "libc 0.2.158",
+                "id": "libc 0.2.157",
                 "target": "libc"
               },
               {
@@ -30091,7 +30075,7 @@
             ],
             "cfg(unix)": [
               {
-                "id": "libc 0.2.158",
+                "id": "libc 0.2.157",
                 "target": "libc"
               }
             ],
@@ -30225,7 +30209,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.77",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -30604,7 +30588,7 @@
             ],
             "cfg(target_vendor = \"apple\")": [
               {
-                "id": "libc 0.2.158",
+                "id": "libc 0.2.157",
                 "target": "libc"
               },
               {
@@ -30714,7 +30698,7 @@
               "target": "cfg_if"
             },
             {
-              "id": "libc 0.2.158",
+              "id": "libc 0.2.157",
               "target": "libc"
             }
           ],
@@ -31674,7 +31658,7 @@
           "selects": {
             "cfg(not(windows))": [
               {
-                "id": "libc 0.2.158",
+                "id": "libc 0.2.157",
                 "target": "libc"
               }
             ],
@@ -31991,7 +31975,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.82",
+              "id": "async-trait 0.1.81",
               "target": "async_trait"
             }
           ],
@@ -32231,7 +32215,7 @@
               "target": "foreign_types"
             },
             {
-              "id": "libc 0.2.158",
+              "id": "libc 0.2.157",
               "target": "libc"
             },
             {
@@ -32321,7 +32305,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.77",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -32405,7 +32389,7 @@
         "deps": {
           "common": [
             {
-              "id": "libc 0.2.158",
+              "id": "libc 0.2.157",
               "target": "libc"
             },
             {
@@ -32431,7 +32415,7 @@
         "deps": {
           "common": [
             {
-              "id": "cc 1.1.15",
+              "id": "cc 1.1.13",
               "target": "cc"
             },
             {
@@ -32717,7 +32701,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.82",
+              "id": "async-trait 0.1.81",
               "target": "async_trait"
             }
           ],
@@ -33166,7 +33150,7 @@
             ],
             "cfg(unix)": [
               {
-                "id": "libc 0.2.158",
+                "id": "libc 0.2.157",
                 "target": "libc"
               }
             ],
@@ -33614,7 +33598,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.77",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -33842,7 +33826,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.77",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -34484,7 +34468,7 @@
               "target": "proc_macro2"
             },
             {
-              "id": "syn 2.0.77",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -34980,7 +34964,7 @@
               "target": "procfs_core"
             },
             {
-              "id": "rustix 0.38.35",
+              "id": "rustix 0.38.34",
               "target": "rustix"
             }
           ],
@@ -35044,7 +35028,7 @@
               "target": "lazy_static"
             },
             {
-              "id": "libc 0.2.158",
+              "id": "libc 0.2.157",
               "target": "libc"
             }
           ],
@@ -35157,7 +35141,7 @@
               "target": "lazy_static"
             },
             {
-              "id": "libc 0.2.158",
+              "id": "libc 0.2.157",
               "target": "libc"
             },
             {
@@ -35518,7 +35502,7 @@
               "target": "bytes"
             },
             {
-              "id": "heck 0.4.1",
+              "id": "heck 0.5.0",
               "target": "heck"
             },
             {
@@ -35558,7 +35542,7 @@
               "target": "regex"
             },
             {
-              "id": "syn 2.0.77",
+              "id": "syn 2.0.76",
               "target": "syn"
             },
             {
@@ -35617,7 +35601,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.77",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -35773,7 +35757,7 @@
         "deps": {
           "common": [
             {
-              "id": "cc 1.1.15",
+              "id": "cc 1.1.13",
               "target": "cc"
             }
           ],
@@ -36181,7 +36165,7 @@
         "deps": {
           "common": [
             {
-              "id": "libc 0.2.158",
+              "id": "libc 0.2.157",
               "target": "libc"
             },
             {
@@ -36362,7 +36346,7 @@
           "selects": {
             "cfg(unix)": [
               {
-                "id": "libc 0.2.158",
+                "id": "libc 0.2.157",
                 "target": "libc"
               }
             ]
@@ -37773,7 +37757,7 @@
           "selects": {
             "cfg(all(any(target_os = \"android\", target_os = \"linux\"), any(target_arch = \"aarch64\", target_arch = \"arm\")))": [
               {
-                "id": "libc 0.2.158",
+                "id": "libc 0.2.157",
                 "target": "libc"
               }
             ],
@@ -37801,7 +37785,7 @@
         "deps": {
           "common": [
             {
-              "id": "cc 1.1.15",
+              "id": "cc 1.1.13",
               "target": "cc"
             }
           ],
@@ -38179,7 +38163,7 @@
               "target": "build_script_build"
             },
             {
-              "id": "syn 2.0.77",
+              "id": "syn 2.0.76",
               "target": "syn"
             },
             {
@@ -38468,13 +38452,13 @@
       },
       "license": "MIT/Apache-2.0"
     },
-    "rustix 0.38.35": {
+    "rustix 0.38.34": {
       "name": "rustix",
-      "version": "0.38.35",
+      "version": "0.38.34",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/rustix/0.38.35/download",
-          "sha256": "a85d50532239da68e9addb745ba38ff4612a242c1c7ceea689c4bc7c2f43c36f"
+          "url": "https://static.crates.io/crates/rustix/0.38.34/download",
+          "sha256": "70dc5ec042f7a43c4a73241207cecc9873a06d45debb38b329f8541d85c2730f"
         }
       },
       "targets": [
@@ -38564,7 +38548,7 @@
               "target": "bitflags"
             },
             {
-              "id": "rustix 0.38.35",
+              "id": "rustix 0.38.34",
               "target": "build_script_build"
             }
           ],
@@ -38593,7 +38577,7 @@
                 "alias": "libc_errno"
               },
               {
-                "id": "libc 0.2.158",
+                "id": "libc 0.2.157",
                 "target": "libc"
               }
             ],
@@ -38611,7 +38595,7 @@
           }
         },
         "edition": "2021",
-        "version": "0.38.35"
+        "version": "0.38.34"
       },
       "build_script_attrs": {
         "data_glob": [
@@ -39542,7 +39526,7 @@
               "target": "core_foundation_sys"
             },
             {
-              "id": "libc 0.2.158",
+              "id": "libc 0.2.157",
               "target": "libc"
             },
             {
@@ -39599,7 +39583,7 @@
               "target": "core_foundation_sys"
             },
             {
-              "id": "libc 0.2.158",
+              "id": "libc 0.2.157",
               "target": "libc"
             }
           ],
@@ -40044,7 +40028,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.77",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -40212,7 +40196,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.77",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -40310,7 +40294,7 @@
               "target": "serde"
             },
             {
-              "id": "syn 2.0.77",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -40631,10 +40615,6 @@
             {
               "id": "regex 1.10.6",
               "target": "regex"
-            },
-            {
-              "id": "registry-canister 0.9.0",
-              "target": "registry_canister"
             },
             {
               "id": "serde 1.0.209",
@@ -40994,7 +40974,7 @@
         "deps": {
           "common": [
             {
-              "id": "libc 0.2.158",
+              "id": "libc 0.2.157",
               "target": "libc"
             }
           ],
@@ -41846,7 +41826,7 @@
         "deps": {
           "common": [
             {
-              "id": "heck 0.4.1",
+              "id": "heck 0.5.0",
               "target": "heck"
             },
             {
@@ -41858,7 +41838,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.77",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -41977,7 +41957,7 @@
           "selects": {
             "cfg(unix)": [
               {
-                "id": "libc 0.2.158",
+                "id": "libc 0.2.157",
                 "target": "libc"
               }
             ],
@@ -42029,7 +42009,7 @@
           "selects": {
             "cfg(unix)": [
               {
-                "id": "libc 0.2.158",
+                "id": "libc 0.2.157",
                 "target": "libc"
               }
             ],
@@ -42254,7 +42234,7 @@
               "target": "cfg_if"
             },
             {
-              "id": "libc 0.2.158",
+              "id": "libc 0.2.157",
               "target": "libc"
             },
             {
@@ -42285,7 +42265,7 @@
         "deps": {
           "common": [
             {
-              "id": "cc 1.1.15",
+              "id": "cc 1.1.13",
               "target": "cc"
             }
           ],
@@ -42550,7 +42530,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.77",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -42720,13 +42700,13 @@
       },
       "license": "MIT OR Apache-2.0"
     },
-    "syn 2.0.77": {
+    "syn 2.0.76": {
       "name": "syn",
-      "version": "2.0.77",
+      "version": "2.0.76",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/syn/2.0.77/download",
-          "sha256": "9f35bcdf61fd8e7be6caf75f429fdca8beb3ed76584befb503b1569faee373ed"
+          "url": "https://static.crates.io/crates/syn/2.0.76/download",
+          "sha256": "578e081a14e0cefc3279b0472138c513f37b41a08d5a3cca9b6e4e8ceb6cd525"
         }
       },
       "targets": [
@@ -42779,7 +42759,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "2.0.77"
+        "version": "2.0.76"
       },
       "license": "MIT OR Apache-2.0"
     },
@@ -42823,7 +42803,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.77",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -42953,7 +42933,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.77",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -43225,7 +43205,7 @@
           "selects": {
             "cfg(unix)": [
               {
-                "id": "libc 0.2.158",
+                "id": "libc 0.2.157",
                 "target": "libc"
               },
               {
@@ -43283,7 +43263,7 @@
           "selects": {
             "cfg(any(unix, target_os = \"wasi\"))": [
               {
-                "id": "rustix 0.38.35",
+                "id": "rustix 0.38.34",
                 "target": "rustix"
               }
             ],
@@ -43434,7 +43414,7 @@
           "selects": {
             "cfg(not(windows))": [
               {
-                "id": "rustix 0.38.35",
+                "id": "rustix 0.38.34",
                 "target": "rustix"
               }
             ],
@@ -43577,7 +43557,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.77",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -43716,7 +43696,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.77",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -44187,7 +44167,7 @@
             ],
             "cfg(unix)": [
               {
-                "id": "libc 0.2.158",
+                "id": "libc 0.2.157",
                 "target": "libc"
               },
               {
@@ -44296,7 +44276,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.77",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -44829,7 +44809,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.82",
+              "id": "async-trait 0.1.81",
               "target": "async_trait"
             }
           ],
@@ -44892,7 +44872,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.77",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -45284,7 +45264,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.77",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -45668,10 +45648,6 @@
             {
               "id": "candid 0.10.10",
               "target": "candid"
-            },
-            {
-              "id": "ciborium 0.2.2",
-              "target": "ciborium"
             },
             {
               "id": "dfn_core 0.9.0",
@@ -46732,7 +46708,7 @@
           "selects": {
             "cfg(unix)": [
               {
-                "id": "libc 0.2.158",
+                "id": "libc 0.2.157",
                 "target": "libc"
               }
             ]
@@ -47116,7 +47092,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.77",
+              "id": "syn 2.0.76",
               "target": "syn"
             },
             {
@@ -47276,7 +47252,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.77",
+              "id": "syn 2.0.76",
               "target": "syn"
             },
             {
@@ -47668,7 +47644,7 @@
               "target": "either"
             },
             {
-              "id": "rustix 0.38.35",
+              "id": "rustix 0.38.34",
               "target": "rustix"
             }
           ],
@@ -47727,7 +47703,7 @@
           "selects": {
             "cfg(any(unix, target_os = \"wasi\", target_os = \"redox\"))": [
               {
-                "id": "rustix 0.38.35",
+                "id": "rustix 0.38.34",
                 "target": "rustix"
               }
             ],
@@ -49524,7 +49500,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.82",
+              "id": "async-trait 0.1.81",
               "target": "async_trait"
             }
           ],
@@ -49781,14 +49757,14 @@
         "deps": {
           "common": [
             {
-              "id": "rustix 0.38.35",
+              "id": "rustix 0.38.34",
               "target": "rustix"
             }
           ],
           "selects": {
             "cfg(any(target_os = \"freebsd\", target_os = \"netbsd\"))": [
               {
-                "id": "libc 0.2.158",
+                "id": "libc 0.2.157",
                 "target": "libc"
               }
             ],
@@ -49971,7 +49947,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.77",
+              "id": "syn 2.0.76",
               "target": "syn"
             },
             {
@@ -50080,7 +50056,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.77",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -50173,7 +50149,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.77",
+              "id": "syn 2.0.76",
               "target": "syn"
             },
             {
@@ -50271,7 +50247,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.77",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -50377,7 +50353,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.77",
+              "id": "syn 2.0.76",
               "target": "syn"
             }
           ],
@@ -50847,7 +50823,7 @@
         "deps": {
           "common": [
             {
-              "id": "cc 1.1.15",
+              "id": "cc 1.1.13",
               "target": "cc"
             },
             {
