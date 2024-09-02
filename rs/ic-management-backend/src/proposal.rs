@@ -29,6 +29,7 @@ use registry_canister::mutations::node_management::do_remove_nodes::RemoveNodesP
 use serde::Serialize;
 use url::Url;
 
+#[allow(dead_code)]
 pub trait ProposalAgent: Send + Sync {
     fn list_open_topology_proposals(&self) -> BoxFuture<'_, Result<Vec<TopologyChangeProposal>>>;
 
