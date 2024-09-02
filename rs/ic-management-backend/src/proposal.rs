@@ -30,17 +30,17 @@ use serde::Serialize;
 use url::Url;
 
 pub trait ProposalAgent: Send + Sync {
-    fn list_open_topology_proposals<'a>(&'a self) -> BoxFuture<'a, Result<Vec<TopologyChangeProposal>>>;
+    fn list_open_topology_proposals(&self) -> BoxFuture<'_, Result<Vec<TopologyChangeProposal>>>;
 
-    fn list_open_elect_replica_proposals<'a>(&'a self) -> BoxFuture<'a, Result<Vec<UpdateElectedReplicaVersionsProposal>>>;
+    fn list_open_elect_replica_proposals(&self) -> BoxFuture<'_, Result<Vec<UpdateElectedReplicaVersionsProposal>>>;
 
-    fn list_open_elect_hostos_proposals<'a>(&'a self) -> BoxFuture<'a, Result<Vec<UpdateElectedHostosVersionsProposal>>>;
+    fn list_open_elect_hostos_proposals(&self) -> BoxFuture<'_, Result<Vec<UpdateElectedHostosVersionsProposal>>>;
 
-    fn list_open_update_nodes_hostos_versions_proposals<'a>(&'a self) -> BoxFuture<'a, Result<Vec<UpdateNodesHostosVersionsProposal>>>;
+    fn list_open_update_nodes_hostos_versions_proposals(&self) -> BoxFuture<'_, Result<Vec<UpdateNodesHostosVersionsProposal>>>;
 
-    fn list_update_subnet_version_proposals<'a>(&'a self) -> BoxFuture<'a, Result<Vec<SubnetUpdateProposal>>>;
+    fn list_update_subnet_version_proposals(&self) -> BoxFuture<'_, Result<Vec<SubnetUpdateProposal>>>;
 
-    fn list_update_unassigned_nodes_version_proposals<'a>(&'a self) -> BoxFuture<'a, Result<Vec<UpdateUnassignedNodesProposal>>>;
+    fn list_update_unassigned_nodes_version_proposals(&self) -> BoxFuture<'_, Result<Vec<UpdateUnassignedNodesProposal>>>;
 }
 
 #[derive(Clone)]
@@ -100,7 +100,7 @@ pub struct UpdateUnassignedNodesProposal {
 }
 
 impl ProposalAgent for ProposalAgentImpl {
-    fn list_open_topology_proposals<'a>(&'a self) -> BoxFuture<'a, Result<Vec<TopologyChangeProposal>>> {
+    fn list_open_topology_proposals(&self) -> BoxFuture<'_, Result<Vec<TopologyChangeProposal>>> {
         Box::pin(async {
             let proposals = &self.list_proposals(vec![ProposalStatus::Open]).await?;
             let create_subnet_proposals = Self::nodes_proposals(filter_map_nns_function_proposals::<CreateSubnetPayload>(proposals)).into_iter();
@@ -129,7 +129,7 @@ impl ProposalAgent for ProposalAgentImpl {
         })
     }
 
-    fn list_open_elect_replica_proposals<'a>(&'a self) -> BoxFuture<'a, Result<Vec<UpdateElectedReplicaVersionsProposal>>> {
+    fn list_open_elect_replica_proposals(&self) -> BoxFuture<'_, Result<Vec<UpdateElectedReplicaVersionsProposal>>> {
         Box::pin(async {
             let proposals = &self.list_proposals(vec![ProposalStatus::Open]).await?;
             let open_elect_guest_proposals = filter_map_nns_function_proposals::<ReviseElectedGuestosVersionsPayload>(proposals);
@@ -150,7 +150,7 @@ impl ProposalAgent for ProposalAgentImpl {
         })
     }
 
-    fn list_open_elect_hostos_proposals<'a>(&'a self) -> BoxFuture<'a, Result<Vec<UpdateElectedHostosVersionsProposal>>> {
+    fn list_open_elect_hostos_proposals(&self) -> BoxFuture<'_, Result<Vec<UpdateElectedHostosVersionsProposal>>> {
         Box::pin(async {
             let proposals = &self.list_proposals(vec![ProposalStatus::Open]).await?;
             let open_elect_guest_proposals = filter_map_nns_function_proposals::<UpdateElectedHostosVersionsPayload>(proposals);
@@ -171,7 +171,7 @@ impl ProposalAgent for ProposalAgentImpl {
         })
     }
 
-    fn list_open_update_nodes_hostos_versions_proposals<'a>(&'a self) -> BoxFuture<'a, Result<Vec<UpdateNodesHostosVersionsProposal>>> {
+    fn list_open_update_nodes_hostos_versions_proposals(&self) -> BoxFuture<'_, Result<Vec<UpdateNodesHostosVersionsProposal>>> {
         Box::pin(async {
             let proposals = &self.list_proposals(vec![ProposalStatus::Open]).await?;
             let open_update_nodes_hostos_versions_proposals = filter_map_nns_function_proposals::<UpdateNodesHostosVersionPayload>(proposals);
@@ -192,7 +192,7 @@ impl ProposalAgent for ProposalAgentImpl {
         })
     }
 
-    fn list_update_subnet_version_proposals<'a>(&'a self) -> BoxFuture<'a, Result<Vec<SubnetUpdateProposal>>> {
+    fn list_update_subnet_version_proposals(&self) -> BoxFuture<'_, Result<Vec<SubnetUpdateProposal>>> {
         Box::pin(async {
             Ok(filter_map_nns_function_proposals(&self.list_proposals(vec![]).await?)
                 .into_iter()
@@ -201,7 +201,7 @@ impl ProposalAgent for ProposalAgentImpl {
         })
     }
 
-    fn list_update_unassigned_nodes_version_proposals<'a>(&'a self) -> BoxFuture<'a, Result<Vec<UpdateUnassignedNodesProposal>>> {
+    fn list_update_unassigned_nodes_version_proposals(&self) -> BoxFuture<'_, Result<Vec<UpdateUnassignedNodesProposal>>> {
         Box::pin(async {
             Ok(filter_map_nns_function_proposals(&self.list_proposals(vec![]).await?)
                 .into_iter()
