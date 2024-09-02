@@ -160,6 +160,8 @@ mod tests {
                 label: None,
                 hostos_version: "".to_string(),
                 is_api_boundary_node: false,
+                chip_id: None,
+                public_ipv4_config: None,
             };
             nodes.insert(node.principal, node);
         }

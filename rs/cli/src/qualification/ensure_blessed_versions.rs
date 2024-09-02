@@ -24,7 +24,7 @@ impl Step for EnsureBlessedRevisions {
 
     async fn execute(&self, ctx: &StepCtx) -> anyhow::Result<()> {
         let registry = ctx.dre_ctx().registry().await;
-        let blessed_versions = registry.elected_guestos()?;
+        let blessed_versions = registry.elected_guestos().await?;
 
         if blessed_versions.contains(&self.version) {
             return Ok(());
@@ -62,7 +62,7 @@ impl Step for EnsureBlessedRevisions {
         place_proposal.retry(&ExponentialBuilder::default()).await?;
 
         registry.sync_with_nns().await?;
-        let blessed_versions = registry.elected_guestos()?;
+        let blessed_versions = registry.elected_guestos().await?;
 
         let table = Table::new()
             .with_columns(&[("Blessed versions", CellAlignment::Center)])

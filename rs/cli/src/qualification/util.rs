@@ -155,7 +155,7 @@ impl StepCtx {
         let subnets = registry.subnets().await?;
 
         let subnets = subnets.values();
-        let unassigned = registry.unassigned_nodes_replica_version()?;
+        let unassigned = registry.unassigned_nodes_replica_version().await?;
         let table = Table::new()
             .with_columns(&[
                 ("Subnet type", CellAlignment::Left),
