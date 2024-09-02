@@ -13,6 +13,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::str::FromStr;
 use strum_macros::{Display, EnumString};
 
+use crate::proposal::ProposalAgent;
 use crate::proposal::{ProposalAgentImpl, SubnetUpdateProposal};
 use crate::registry::NNS_SUBNET_NAME;
 

@@ -1,7 +1,7 @@
 use crate::git_ic_repo::IcRepo;
 use crate::health::HealthStatusQuerier;
 use crate::node_labels;
-use crate::proposal::{self, SubnetUpdateProposal, UpdateUnassignedNodesProposal};
+use crate::proposal::{self, ProposalAgent, SubnetUpdateProposal, UpdateUnassignedNodesProposal};
 use crate::public_dashboard::query_ic_dashboard_list;
 use decentralization::network::{AvailableNodesQuerier, NodesConverter, SubnetQuerier, SubnetQueryBy};
 use futures::future::BoxFuture;

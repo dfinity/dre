@@ -3,7 +3,7 @@ use async_recursion::async_recursion;
 use futures_util::future::try_join;
 use ic_base_types::{NodeId, PrincipalId};
 use ic_management_backend::health::{self, HealthStatusQuerier};
-use ic_management_backend::proposal::ProposalAgentImpl;
+use ic_management_backend::proposal::ProposalAgent;
 use ic_management_types::{HealthStatus, Network, Node, Subnet, UpdateNodesHostosVersionsProposal};
 use log::{debug, info, warn};
 use std::sync::Arc;
@@ -132,7 +132,7 @@ pub struct HostosRollout {
     pub grouped_nodes: BTreeMap<NodeGroup, Vec<Node>>,
     pub subnets: Arc<BTreeMap<PrincipalId, Subnet>>,
     pub network: Network,
-    pub proposal_agent: ProposalAgentImpl,
+    pub proposal_agent: Arc<dyn ProposalAgent>,
     pub only_filter: Vec<String>,
     pub exclude_filter: Vec<String>,
     pub version: String,
@@ -142,7 +142,7 @@ impl HostosRollout {
         nodes: Arc<BTreeMap<PrincipalId, Node>>,
         subnets: Arc<BTreeMap<PrincipalId, Subnet>>,
         network: &Network,
-        proposal_agent: ProposalAgentImpl,
+        proposal_agent: Arc<dyn ProposalAgent>,
         rollout_version: &str,
         only_filter: &[String],
         exclude_filter: &[String],
