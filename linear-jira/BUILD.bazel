@@ -71,7 +71,7 @@ oci_image(
 oci_push(
     name = "push_image",
     image = ":linear-jira-image",
-    repository = "registry.gitlab.com/dfinity-lab/core/release/linear-jira",
+    repository = "ghcr.io/dfinity/dre/linear-jira",
 )
 
 js_test(
