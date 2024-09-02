@@ -25,7 +25,6 @@ ic-registry-nns-data-provider = { workspace = true }
 ic-sys = { workspace = true }
 prometheus = { workspace = true }
 regex = { workspace = true }
-registry-canister = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 slog = { workspace = true }
