@@ -15,7 +15,7 @@ impl ExecutableCommand for TopUp {
     fn validate(&self, _cmd: &mut clap::Command) {}
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        let governance = GovernanceCanisterWrapper::from(ctx.create_canister_client()?);
+        let governance = GovernanceCanisterWrapper::from(ctx.create_ic_agent_canister_client(None)?);
         let full_neuron = governance.get_full_neuron(ctx.ic_admin().neuron.neuron_id).await?;
         let account_hex = full_neuron.account.iter().map(|byte| format!("{:02x}", byte)).join("");
 

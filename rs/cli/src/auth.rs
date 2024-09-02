@@ -1,18 +1,14 @@
 use std::path::PathBuf;
-use std::{fs::read_to_string, str::FromStr};
+use std::str::FromStr;
 
-use candid::{Decode, Encode};
 use cryptoki::{
     context::{CInitializeArgs, Pkcs11},
     session::{SessionFlags, UserType},
 };
 use dialoguer::{console::Term, theme::ColorfulTheme, Password, Select};
-use ic_canister_client::{Agent, Sender};
-use ic_canister_client_sender::SigKeys;
+use ic_canisters::governance::GovernanceCanisterWrapper;
+use ic_canisters::IcAgentCanisterClient;
 use ic_management_types::Network;
-use ic_nns_constants::GOVERNANCE_CANISTER_ID;
-use ic_nns_governance::pb::v1::{ListNeurons, ListNeuronsResponse};
-use ic_sys::utility_command::UtilityCommand;
 use keyring::{Entry, Error};
 use log::info;
 
@@ -166,57 +162,32 @@ impl Auth {
     }
 
     pub async fn auto_detect_neuron_id(&self, nns_urls: &[url::Url]) -> anyhow::Result<u64> {
-        let sender = match self {
+        let url = nns_urls.get(0).ok_or(anyhow::anyhow!("No nns urls provided"))?.to_owned();
+        let client = match self {
             Auth::Hsm { pin, slot, key_id } => {
                 let pin_clone = pin.clone();
                 let slot = *slot;
                 let key_id_clone = key_id.clone();
-                Sender::from_external_hsm(
-                    UtilityCommand::read_public_key(Some(&slot.to_string()), Some(&key_id_clone)).execute()?,
-                    std::sync::Arc::new(move |input| {
-                        Ok(UtilityCommand::sign_message(input.to_vec(), Some(&slot.to_string()), Some(&pin_clone), Some(&key_id_clone)).execute()?)
-                    }),
-                )
+                IcAgentCanisterClient::from_hsm(pin_clone, slot, key_id_clone, url, None)?
             }
-            Auth::Keyfile { path } => {
-                let contents = read_to_string(path).expect("Could not read key file");
-                let sig_keys = SigKeys::from_pem(&contents).expect("Failed to parse pem file");
-                Sender::SigKeys(sig_keys)
-            }
-            Auth::Anonymous => Sender::Anonymous,
+            Auth::Keyfile { path } => IcAgentCanisterClient::from_key_file(path.clone(), url)?,
+            Auth::Anonymous => IcAgentCanisterClient::from_anonymous(url)?,
         };
-        let agent = Agent::new(nns_urls[0].clone(), sender);
-        if let Some(response) = agent
-            .execute_query(
-                &GOVERNANCE_CANISTER_ID,
-                "list_neurons",
-                Encode!(&ListNeurons {
-                    neuron_ids: vec![],
-                    include_neurons_readable_by_caller: true,
-                    include_empty_neurons_readable_by_caller: None,
-                    include_public_neurons_in_full_neurons: None
-                })?,
-            )
-            .await
-            .map_err(|e| anyhow::anyhow!(e))?
-        {
-            let response = Decode!(&response, ListNeuronsResponse)?;
-            let neuron_ids = response.neuron_infos.keys().copied().collect::<Vec<_>>();
-            match neuron_ids.len() {
-                0 => Err(anyhow::anyhow!(
-                    "HSM doesn't control any neurons. Response fro governance canister: {:?}",
-                    response
-                )),
-                1 => Ok(neuron_ids[0]),
-                _ => Select::with_theme(&ColorfulTheme::default())
-                    .items(&neuron_ids)
-                    .default(0)
-                    .interact_on_opt(&Term::stderr())?
-                    .map(|i| neuron_ids[i])
-                    .ok_or_else(|| anyhow::anyhow!("No neuron selected")),
-            }
-        } else {
-            Err(anyhow::anyhow!("Empty response when listing controlled neurons"))
+        let governance = GovernanceCanisterWrapper::from(client);
+        let response = governance.list_neurons().await?;
+        let neuron_ids = response.neuron_infos.keys().copied().collect::<Vec<_>>();
+        match neuron_ids.len() {
+            0 => Err(anyhow::anyhow!(
+                "HSM doesn't control any neurons. Response fro governance canister: {:?}",
+                response
+            )),
+            1 => Ok(neuron_ids[0]),
+            _ => Select::with_theme(&ColorfulTheme::default())
+                .items(&neuron_ids)
+                .default(0)
+                .interact_on_opt(&Term::stderr())?
+                .map(|i| neuron_ids[i])
+                .ok_or_else(|| anyhow::anyhow!("No neuron selected")),
         }
     }
 }

@@ -46,7 +46,7 @@ impl ExecutableCommand for Vote {
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        let client: GovernanceCanisterWrapper = ctx.create_canister_client()?.into();
+        let client: GovernanceCanisterWrapper = ctx.create_ic_agent_canister_client(None)?.into();
 
         let mut voted_proposals = HashSet::new();
         DesktopNotifier::send_info("DRE vote: starting", "Starting the voting loop...");
