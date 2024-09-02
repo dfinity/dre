@@ -104,12 +104,22 @@ impl Auth {
         hsm_pin: Option<String>,
         hsm_key_id: Option<String>,
     ) -> anyhow::Result<Self> {
-        match (private_key_pem, hsm_slot, hsm_pin, hsm_key_id) {
-            (Some(path), _, _, _) if path.exists() => Ok(Auth::Keyfile { path }),
-            (Some(path), _, _, _) => Err(anyhow::anyhow!("Invalid key file path: {}", path.display())),
-            (None, Some(slot), Some(pin), Some(key_id)) => Ok(Auth::Hsm { pin, slot, key_id }),
-            (None, None, None, None) => Ok(Self::detect_hsm_auth()?.map_or(Auth::Anonymous, |a| a)),
-            _ => Err(anyhow::anyhow!("Invalid auth arguments")),
+        match private_key_pem {
+            Some(tentative_path) => match tentative_path.exists() {
+                true => Ok(Auth::Keyfile { path: tentative_path }),
+                false => Err(anyhow::anyhow!("Invalid private key file path: {}", tentative_path.display())),
+            },
+            None => match (hsm_slot, hsm_pin, hsm_key_id) {
+                (Some(slot), Some(pin), Some(key_id)) => Ok(Auth::Hsm { pin, slot, key_id }),
+                // There is a logic error in the line underneath -- if autodetection fails, then
+                // Anonymous is assumed.  This is not correct -- some operations require authentication
+                // and must fail upfront if autodetection fails, and other operations do not require
+                // authentication and should not even attempt to perform HSM autodetection.
+                // Ideally that means the operations that require authentication, and only those
+                // operations, accept the command line arguments that create authentication.
+                (None, None, None) => Ok(Self::detect_hsm_auth()?.map_or(Auth::Anonymous, |a| a)),
+                _ => Err(anyhow::anyhow!("When specifying either --hsm-slot, --hsm-pin or --hsm-key-id, autodetection is disabled and all three arguments must be specified")),
+            },
         }
     }
 
