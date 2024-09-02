@@ -4,8 +4,10 @@ on:
     paths: &paths
       - linear-jira/**
       - ./.github/workflows/linear-jira.yaml
-  pull_request:
-    paths: *paths
+    branches:
+      - "*"
+  # pull_request:
+  #   paths: *paths
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
