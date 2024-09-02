@@ -9,6 +9,7 @@ use std::{
 
 use ic_canisters::{governance::governance_canister_version, IcAgentCanisterClient};
 use ic_management_backend::{
+    lazy_git::LazyGit,
     lazy_registry::{LazyRegistry, LazyRegistryImpl},
     proposal::ProposalAgent,
     registry::{local_registry_path, sync_local_store},
@@ -20,7 +21,7 @@ use log::info;
 use crate::{
     auth::Neuron,
     commands::{Args, ExecutableCommand, IcAdminRequirement},
-    ic_admin::{download_ic_admin, should_update_ic_admin, IcAdminWrapper},
+    ic_admin::{download_ic_admin, should_update_ic_admin, IcAdmin, IcAdminImpl},
     runner::Runner,
     subnet_manager::SubnetManager,
 };
@@ -30,8 +31,9 @@ const STAGING_NEURON_ID: u64 = 49;
 pub struct DreContext {
     network: Network,
     registry: RefCell<Option<Arc<dyn LazyRegistry>>>,
-    ic_admin: Option<Arc<IcAdminWrapper>>,
+    ic_admin: Option<Arc<dyn IcAdmin>>,
     runner: RefCell<Option<Rc<Runner>>>,
+    ic_repo: RefCell<Option<Arc<dyn LazyGit>>>,
     verbose_runner: bool,
     skip_sync: bool,
     ic_admin_path: Option<String>,
@@ -85,6 +87,7 @@ impl DreContext {
             skip_sync: args.no_sync,
             ic_admin_path,
             forum_post_link: args.forum_post_link.clone(),
+            ic_repo: RefCell::new(None),
         })
     }
 
@@ -98,7 +101,7 @@ impl DreContext {
         proceed_without_confirmation: bool,
         dry_run: bool,
         requirement: IcAdminRequirement,
-    ) -> anyhow::Result<(Option<Arc<IcAdminWrapper>>, Option<String>)> {
+    ) -> anyhow::Result<(Option<Arc<dyn IcAdmin>>, Option<String>)> {
         if let IcAdminRequirement::None = requirement {
             return Ok((None, None));
         }
@@ -138,13 +141,13 @@ impl DreContext {
             (false, s) => s,
         };
 
-        let ic_admin = Some(Arc::new(IcAdminWrapper::new(
+        let ic_admin = Some(Arc::new(IcAdminImpl::new(
             network.clone(),
             Some(ic_admin_path.clone()),
             proceed_without_confirmation,
             neuron,
             dry_run,
-        )));
+        )) as Arc<dyn IcAdmin>);
 
         Ok((ic_admin, Some(ic_admin_path)))
     }
@@ -175,7 +178,7 @@ impl DreContext {
     pub fn create_ic_agent_canister_client(&self, lock: Option<Mutex<()>>) -> anyhow::Result<IcAgentCanisterClient> {
         let nns_url = self.network.get_nns_urls().first().expect("Should have at least one NNS url");
         match &self.ic_admin {
-            Some(a) => match &a.neuron.auth {
+            Some(a) => match &a.neuron().auth {
                 crate::auth::Auth::Hsm { pin, slot, key_id } => {
                     IcAgentCanisterClient::from_hsm(pin.to_string(), *slot, key_id.to_string(), nns_url.to_owned(), lock)
                 }
@@ -186,15 +189,15 @@ impl DreContext {
         }
     }
 
-    pub fn ic_admin(&self) -> Arc<IcAdminWrapper> {
+    pub fn ic_admin(&self) -> Arc<dyn IcAdmin> {
         match &self.ic_admin {
             Some(a) => a.clone(),
             None => panic!("This command is not configured to use ic admin"),
         }
     }
 
-    pub fn readonly_ic_admin_for_other_network(&self, network: Network) -> IcAdminWrapper {
-        IcAdminWrapper::new(network, self.ic_admin_path.clone(), true, Neuron::anonymous_neuron(), false)
+    pub fn readonly_ic_admin_for_other_network(&self, network: Network) -> impl IcAdmin {
+        IcAdminImpl::new(network, self.ic_admin_path.clone(), true, Neuron::anonymous_neuron(), false)
     }
 
     pub async fn subnet_manager(&self) -> SubnetManager {
@@ -218,6 +221,7 @@ impl DreContext {
             self.network().clone(),
             self.proposals_agent(),
             self.verbose_runner,
+            self.ic_repo.clone(),
         ));
         *self.runner.borrow_mut() = Some(runner.clone());
         runner

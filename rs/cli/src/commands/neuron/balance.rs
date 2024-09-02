@@ -23,7 +23,7 @@ impl ExecutableCommand for Balance {
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
         let governance = GovernanceCanisterWrapper::from(ctx.create_ic_agent_canister_client(None)?);
         let neuron_info = governance
-            .get_neuron_info(self.neuron.unwrap_or_else(|| ctx.ic_admin().neuron.neuron_id))
+            .get_neuron_info(self.neuron.unwrap_or_else(|| ctx.ic_admin().neuron().neuron_id))
             .await?;
 
         println!("{}", neuron_info.stake_e8s / 10_u64.pow(8));

@@ -1,7 +1,6 @@
 use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
-use std::rc::Rc;
 use std::sync::Arc;
 
 use decentralization::network::DecentralizedSubnet;
@@ -16,6 +15,7 @@ use futures_util::future::try_join;
 use ic_management_backend::health;
 use ic_management_backend::health::HealthStatusQuerier;
 use ic_management_backend::lazy_git::LazyGit;
+use ic_management_backend::lazy_git::LazyGitImpl;
 use ic_management_backend::lazy_registry::LazyRegistry;
 use ic_management_backend::proposal::ProposalAgent;
 use ic_management_backend::registry::ReleasesOps;
@@ -36,40 +36,47 @@ use registry_canister::mutations::do_change_subnet_membership::ChangeSubnetMembe
 use tabled::builder::Builder;
 use tabled::settings::Style;
 
-use crate::ic_admin::{self, IcAdminWrapper};
+use crate::ic_admin::{self, IcAdmin};
 use crate::ic_admin::{ProposeCommand, ProposeOptions};
 use crate::operations::hostos_rollout::HostosRollout;
 use crate::operations::hostos_rollout::HostosRolloutResponse;
 use crate::operations::hostos_rollout::NodeGroupUpdate;
 
 pub struct Runner {
-    ic_admin: Arc<IcAdminWrapper>,
+    ic_admin: Arc<dyn IcAdmin>,
     registry: Arc<dyn LazyRegistry>,
-    ic_repo: RefCell<Option<Rc<LazyGit>>>,
+    ic_repo: RefCell<Option<Arc<dyn LazyGit>>>,
     network: Network,
     proposal_agent: ProposalAgent,
     verbose: bool,
 }
 
 impl Runner {
-    pub fn new(ic_admin: Arc<IcAdminWrapper>, registry: Arc<dyn LazyRegistry>, network: Network, agent: ProposalAgent, verbose: bool) -> Self {
+    pub fn new(
+        ic_admin: Arc<dyn IcAdmin>,
+        registry: Arc<dyn LazyRegistry>,
+        network: Network,
+        agent: ProposalAgent,
+        verbose: bool,
+        ic_repo: RefCell<Option<Arc<dyn LazyGit>>>,
+    ) -> Self {
         Self {
             ic_admin,
             registry,
-            ic_repo: RefCell::new(None),
+            ic_repo,
             network,
             proposal_agent: agent,
             verbose,
         }
     }
 
-    async fn ic_repo(&self) -> Rc<LazyGit> {
+    async fn ic_repo(&self) -> Arc<dyn LazyGit> {
         if let Some(ic_repo) = self.ic_repo.borrow().as_ref() {
             return ic_repo.clone();
         }
 
-        let ic_repo = Rc::new(
-            LazyGit::new(
+        let ic_repo = Arc::new(
+            LazyGitImpl::new(
                 self.network.clone(),
                 self.registry
                     .elected_guestos()
@@ -83,7 +90,7 @@ impl Runner {
                     .to_vec(),
             )
             .expect("Should be able to create IC repo"),
-        );
+        ) as Arc<dyn LazyGit>;
         *self.ic_repo.borrow_mut() = Some(ic_repo.clone());
         ic_repo
     }
@@ -280,19 +287,21 @@ impl Runner {
     pub async fn do_revise_elected_replica_versions(
         &self,
         release_artifact: &Artifact,
-        version: &String,
-        release_tag: &String,
+        version: &str,
+        release_tag: &str,
         force: bool,
         forum_post_link: Option<String>,
     ) -> anyhow::Result<()> {
-        let update_version = IcAdminWrapper::prepare_to_propose_to_revise_elected_versions(
-            release_artifact,
-            version,
-            release_tag,
-            force,
-            self.prepare_versions_to_retire(release_artifact, false).await.map(|r| r.1)?,
-        )
-        .await?;
+        let update_version = self
+            .ic_admin
+            .prepare_to_propose_to_revise_elected_versions(
+                release_artifact,
+                version,
+                release_tag,
+                force,
+                self.prepare_versions_to_retire(release_artifact, false).await.map(|r| r.1)?,
+            )
+            .await?;
 
         self.ic_admin
             .propose_run(
