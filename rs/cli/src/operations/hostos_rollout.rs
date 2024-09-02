@@ -533,6 +533,7 @@ impl HostosRollout {
 pub mod test {
     use crate::operations::hostos_rollout::NodeAssignment::{Assigned, Unassigned};
     use crate::operations::hostos_rollout::NodeOwner::{Dfinity, Others};
+    use ic_management_backend::proposal::ProposalAgentImpl;
     use ic_management_types::{Network, Node, Operator, Provider, Subnet};
     use std::net::Ipv6Addr;
 
@@ -584,7 +585,7 @@ pub mod test {
             Arc::new(union.clone()),
             Arc::new(subnet.clone()),
             &network,
-            ProposalAgent::new(nns_urls),
+            Arc::new(ProposalAgentImpl::new(nns_urls)) as Arc<dyn ProposalAgent>,
             version_one.clone().as_str(),
             &[],
             &[],
@@ -623,7 +624,7 @@ pub mod test {
             Arc::new(union.clone()),
             Arc::new(subnet.clone()),
             &network,
-            ProposalAgent::new(nns_urls),
+            Arc::new(ProposalAgentImpl::new(nns_urls)) as Arc<dyn ProposalAgent>,
             version_one.clone().as_str(),
             &[],
             &nodes_to_exclude,
@@ -651,7 +652,7 @@ pub mod test {
             Arc::new(union.clone()),
             Arc::new(subnet.clone()),
             &network,
-            ProposalAgent::new(nns_urls),
+            Arc::new(ProposalAgentImpl::new(nns_urls)) as Arc<dyn ProposalAgent>,
             version_two.clone().as_str(),
             &[],
             &[],
