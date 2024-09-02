@@ -1,4 +1,6 @@
 use candid::CandidType;
+use candid::Decode;
+use candid::Principal;
 use ic_agent::agent::http_transport::ReqwestTransport;
 use ic_agent::identity::AnonymousIdentity;
 use ic_agent::identity::BasicIdentity;
@@ -67,6 +69,20 @@ impl IcAgentCanisterClient {
             .read_state_subnet_metrics(candid::Principal::from_str(subnet_id.to_string().as_str())?)
             .await
             .map_err(|e| anyhow::anyhow!(e))
+    }
+
+    async fn query<T>(&self, canister_id: &Principal, method_name: &str, args: Vec<u8>) -> anyhow::Result<T>
+    where
+        T: candid::CandidType + for<'a> candid::Deserialize<'a>,
+    {
+        self.agent
+            .query(canister_id, method_name)
+            .with_arg(args)
+            .call()
+            .await
+            .map_err(anyhow::Error::from)
+            .map(|r| Decode!(r.as_slice(), T))?
+            .map_err(|e| anyhow::anyhow!("Error while decoding into {}: {:?}", std::any::type_name::<T>(), e))
     }
 }
 

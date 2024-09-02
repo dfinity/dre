@@ -79,18 +79,12 @@ impl GovernanceCanisterWrapper {
             if retries >= MAX_RETRIES {
                 return Err(backoff::Error::Permanent(anyhow::anyhow!("Max retries exceeded")));
             }
-            let empty_args = candid::encode_one(()).map_err(|err| backoff::Error::Permanent(anyhow::format_err!(err)))?;
-            match self
-                .client
-                .agent
-                .query(&GOVERNANCE_CANISTER_ID.into(), "get_pending_proposals")
-                .with_arg(empty_args)
-                .call()
-                .await
-            {
-                Ok(r) => Decode!(r.as_slice(), Vec<ProposalInfo>).map_err(|e| backoff::Error::permanent(e.into())),
-                Err(e) => Err(backoff::Error::transient(e.into())),
-            }
+            self.query(
+                "get_pending_proposals",
+                candid::encode_one(()).map_err(|err| backoff::Error::Permanent(anyhow::format_err!(err)))?,
+            )
+            .await
+            .map_err(backoff::Error::permanent)
         })
         .await
     }
@@ -102,21 +96,13 @@ impl GovernanceCanisterWrapper {
             if retries >= MAX_RETRIES {
                 return Err(backoff::Error::Permanent(anyhow::anyhow!("Max retries exceeded")));
             }
-            let args = candid::encode_one(proposal_id).map_err(|err| backoff::Error::Permanent(anyhow::format_err!(err)))?;
-            match self
-                .client
-                .agent
-                .query(&GOVERNANCE_CANISTER_ID.into(), "get_proposal_info")
-                .with_arg(args)
-                .call()
-                .await
-            {
-                Ok(r) => match Decode!(r.as_slice(), Option<ProposalInfo>) {
-                    Ok(r) => r.ok_or(backoff::Error::permanent(anyhow::anyhow!("Failed to find proposal {}", proposal_id))),
-                    Err(e) => Err(backoff::Error::permanent(e.into())),
-                },
-                Err(e) => Err(backoff::Error::transient(e.into())),
-            }
+            self.query::<Option<ProposalInfo>>(
+                "get_proposal_info",
+                candid::encode_one(proposal_id).map_err(|err| backoff::Error::Permanent(anyhow::format_err!(err)))?,
+            )
+            .await
+            .map_err(|e| backoff::Error::transient(anyhow::format_err!(e)))?
+            .ok_or(backoff::Error::permanent(anyhow::anyhow!("Failed to find proposal {}", proposal_id)))
         })
         .await
     }
@@ -184,67 +170,40 @@ impl GovernanceCanisterWrapper {
     }
 
     pub async fn list_proposals(&self, contract: ListProposalInfo) -> anyhow::Result<Vec<ProposalInfo>> {
-        let args = candid::encode_one(&contract)?;
-        let resp = self
-            .client
-            .agent
-            .query(&GOVERNANCE_CANISTER_ID.into(), "list_proposals")
-            .with_arg(args)
-            .call()
+        self.query::<ListProposalInfoResponse>("list_proposals", candid::encode_one(&contract)?)
             .await
-            .map_err(anyhow::Error::from)?;
-
-        Decode!(resp.as_slice(), ListProposalInfoResponse)
-            .map_err(anyhow::Error::from)
             .map(|r| r.proposal_info)
     }
 
     pub async fn get_neuron_info(&self, neuron_id: u64) -> anyhow::Result<NeuronInfo> {
-        let args = candid::encode_one(neuron_id)?;
-        let resp = self
-            .client
-            .agent
-            .query(&GOVERNANCE_CANISTER_ID.into(), "get_neuron_info")
-            .with_arg(args)
-            .call()
-            .await
-            .map_err(anyhow::Error::from)?;
-        Decode!(resp.as_slice(), Result<NeuronInfo, GovernanceError>)
-            //Maps the decode error
-            .map_err(anyhow::Error::from)?
-            //Maps GovernanceError
+        self.query::<Result<NeuronInfo, GovernanceError>>("get_neuron_info", candid::encode_one(neuron_id)?)
+            .await?
             .map_err(|e| anyhow::anyhow!("Failed to read neuron {}: {:?}", neuron_id, e))
     }
 
     pub async fn get_full_neuron(&self, neuron_id: u64) -> anyhow::Result<Neuron> {
-        let args = candid::encode_one(neuron_id)?;
-        let resp = self
-            .client
-            .agent
-            .query(&GOVERNANCE_CANISTER_ID.into(), "get_full_neuron")
-            .with_arg(args)
-            .call()
-            .await
-            .map_err(anyhow::Error::from)?;
-        Decode!(resp.as_slice(), Result<Neuron, GovernanceError>)
-            .map_err(anyhow::Error::from)?
+        self.query::<Result<Neuron, GovernanceError>>("get_full_neuron", candid::encode_one(neuron_id)?)
+            .await?
             .map_err(|e| anyhow::anyhow!("Failed to get full neuron {}: {:?}", neuron_id, e))
     }
 
     pub async fn list_neurons(&self) -> anyhow::Result<ListNeuronsResponse> {
-        let args = candid::encode_one(ListNeurons {
-            neuron_ids: vec![],
-            include_neurons_readable_by_caller: true,
-            include_empty_neurons_readable_by_caller: None,
-            include_public_neurons_in_full_neurons: None,
-        })?;
-        let resp = self
-            .client
-            .agent
-            .query(&GOVERNANCE_CANISTER_ID.into(), "list_neurons")
-            .with_arg(args)
-            .call()
-            .await?;
-        Decode!(resp.as_slice(), ListNeuronsResponse).map_err(anyhow::Error::from)
+        self.query(
+            "list_neurons",
+            candid::encode_one(ListNeurons {
+                neuron_ids: vec![],
+                include_neurons_readable_by_caller: true,
+                include_empty_neurons_readable_by_caller: None,
+                include_public_neurons_in_full_neurons: None,
+            })?,
+        )
+        .await
+    }
+
+    async fn query<T>(&self, method_name: &str, args: Vec<u8>) -> anyhow::Result<T>
+    where
+        T: candid::CandidType + for<'a> candid::Deserialize<'a>,
+    {
+        self.client.query(&GOVERNANCE_CANISTER_ID.into(), method_name, args).await
     }
 }
