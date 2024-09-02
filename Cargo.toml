@@ -148,7 +148,10 @@ ic-transport-types = "0.37.1"
 ic-utils = "0.37.0"
 include_dir = "0.7.4"
 itertools = "0.13.0"
-keyring = "3.2.0"
+keyring = { version = "3.2.1", features = [
+    "apple-native",
+    "sync-secret-service",
+] }
 lazy_static = "1.5.0"
 log = "0.4.22"
 lru = "0.12.4"
@@ -174,8 +177,8 @@ retry = "2.0.0"
 reverse_geocoder = "4.1.1"
 ring = "0.17.8"
 rstest = { version = "0.22.0", default-features = false }
-rust_decimal = "1.36.0"  # or the latest version
-rust_decimal_macros = "1.36.0"  # optional, for using macros
+rust_decimal = "1.36.0" # or the latest version
+rust_decimal_macros = "1.36.0" # optional, for using macros
 serde = { version = "1.0", features = ["derive"] }
 serde_derive = "1.0.209"
 serde_json = "1.0.127"
