@@ -57,7 +57,7 @@ impl RegistryCanisterWrapper {
     }
 
     pub async fn get_latest_version(&self) -> anyhow::Result<u64> {
-        let response = self.get_value("get_latest_version".to_string()).await?;
+        let response = self.agent.query(&REGISTRY_CANISTER_ID.into(), "get_latest_version").call().await?;
 
         RegistryGetLatestVersionResponse::decode(response.as_slice())
             .map_err(anyhow::Error::from)
