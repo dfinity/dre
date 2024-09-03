@@ -33,9 +33,10 @@ use tokio::sync::RwLock;
 use tokio::try_join;
 
 use crate::health::HealthStatusQuerier;
+use crate::node_labels;
+use crate::proposal::ProposalAgent;
 use crate::public_dashboard::query_ic_dashboard_list;
 use crate::registry::{DFINITY_DCS, NNS_SUBNET_NAME};
-use crate::{node_labels, proposal};
 
 const KNOWN_SUBNETS: &[(&str, &str)] = &[
     (
@@ -181,6 +182,7 @@ where
     unassigned_nodes_replica_version: RwLock<Option<Arc<String>>>,
     firewall_rule_set: RwLock<Option<Arc<BTreeMap<String, FirewallRuleSet>>>>,
     no_sync: bool,
+    proposal_agent: Arc<dyn ProposalAgent>,
 }
 
 pub trait LazyRegistryEntry: RegistryValue {
@@ -277,7 +279,7 @@ impl LazyRegistryFamilyEntries for LazyRegistryImpl {
 }
 
 impl LazyRegistryImpl {
-    pub fn new(local_registry: LocalRegistry, network: Network, no_sync: bool) -> Self {
+    pub fn new(local_registry: LocalRegistry, network: Network, no_sync: bool, proposal_agent: Arc<dyn ProposalAgent>) -> Self {
         Self {
             local_registry,
             network,
@@ -290,6 +292,7 @@ impl LazyRegistryImpl {
             unassigned_nodes_replica_version: RwLock::new(None),
             firewall_rule_set: RwLock::new(None),
             no_sync,
+            proposal_agent,
         }
     }
 
@@ -686,11 +689,10 @@ impl LazyRegistry for LazyRegistryImpl {
                 return Ok(());
             }
 
-            let proposal_agent = proposal::ProposalAgent::new(self.network.get_nns_urls());
             let nodes = self.nodes().await?;
             let subnets = self.subnets().await?;
 
-            let topology_proposals = proposal_agent.list_open_topology_proposals().await?;
+            let topology_proposals = self.proposal_agent.list_open_topology_proposals().await?;
             let nodes: BTreeMap<_, _> = nodes
                 .iter()
                 .map(|(p, n)| {

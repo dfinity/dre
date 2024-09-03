@@ -159,7 +159,7 @@ async fn get_subnet(
 #[get("/rollout")]
 async fn rollout(registry: web::Data<Arc<RwLock<registry::RegistryState>>>) -> Result<HttpResponse, Error> {
     let registry = registry.read().await;
-    let proposal_agent = proposal::ProposalAgent::new(registry.get_nns_urls());
+    let proposal_agent = proposal::ProposalAgentImpl::new(registry.get_nns_urls());
     let network = registry.network();
     let prometheus_client = prometheus::client(&network);
     let service = RolloutBuilder {
@@ -175,7 +175,7 @@ async fn rollout(registry: web::Data<Arc<RwLock<registry::RegistryState>>>) -> R
 #[get("/subnets/versions")]
 async fn subnets_release(registry: web::Data<Arc<RwLock<registry::RegistryState>>>) -> Result<HttpResponse, Error> {
     let registry = registry.read().await;
-    let proposal_agent = proposal::ProposalAgent::new(registry.get_nns_urls());
+    let proposal_agent = proposal::ProposalAgentImpl::new(registry.get_nns_urls());
     let network = registry.network();
     let prometheus_client = prometheus::client(&network);
     response_from_result(

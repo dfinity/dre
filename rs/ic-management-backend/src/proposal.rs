@@ -4,6 +4,7 @@ use anyhow::Result;
 use backon::ExponentialBuilder;
 use backon::Retryable;
 use candid::{Decode, Encode};
+use futures::future::BoxFuture;
 use futures_util::future::try_join_all;
 use ic_agent::agent::http_transport::ReqwestTransport;
 use ic_agent::Agent;
@@ -28,8 +29,23 @@ use registry_canister::mutations::node_management::do_remove_nodes::RemoveNodesP
 use serde::Serialize;
 use url::Url;
 
+#[allow(dead_code)]
+pub trait ProposalAgent: Send + Sync {
+    fn list_open_topology_proposals(&self) -> BoxFuture<'_, Result<Vec<TopologyChangeProposal>>>;
+
+    fn list_open_elect_replica_proposals(&self) -> BoxFuture<'_, Result<Vec<UpdateElectedReplicaVersionsProposal>>>;
+
+    fn list_open_elect_hostos_proposals(&self) -> BoxFuture<'_, Result<Vec<UpdateElectedHostosVersionsProposal>>>;
+
+    fn list_open_update_nodes_hostos_versions_proposals(&self) -> BoxFuture<'_, Result<Vec<UpdateNodesHostosVersionsProposal>>>;
+
+    fn list_update_subnet_version_proposals(&self) -> BoxFuture<'_, Result<Vec<SubnetUpdateProposal>>>;
+
+    fn list_update_unassigned_nodes_version_proposals(&self) -> BoxFuture<'_, Result<Vec<UpdateUnassignedNodesProposal>>>;
+}
+
 #[derive(Clone)]
-pub struct ProposalAgent {
+pub struct ProposalAgentImpl {
     agent: Agent,
 }
 
@@ -84,8 +100,120 @@ pub struct UpdateUnassignedNodesProposal {
     pub payload: UpdateUnassignedNodesConfigPayload,
 }
 
+impl ProposalAgent for ProposalAgentImpl {
+    fn list_open_topology_proposals(&self) -> BoxFuture<'_, Result<Vec<TopologyChangeProposal>>> {
+        Box::pin(async {
+            let proposals = &self.list_proposals(vec![ProposalStatus::Open]).await?;
+            let create_subnet_proposals = Self::nodes_proposals(filter_map_nns_function_proposals::<CreateSubnetPayload>(proposals)).into_iter();
+
+            let add_nodes_to_subnet_proposals =
+                Self::nodes_proposals(filter_map_nns_function_proposals::<AddNodesToSubnetPayload>(proposals)).into_iter();
+
+            let remove_nodes_from_subnet_proposals =
+                Self::nodes_proposals(filter_map_nns_function_proposals::<RemoveNodesFromSubnetPayload>(proposals)).into_iter();
+
+            let remove_nodes_proposals = Self::nodes_proposals(filter_map_nns_function_proposals::<RemoveNodesPayload>(proposals)).into_iter();
+
+            let membership_change_proposals =
+                Self::nodes_proposals(filter_map_nns_function_proposals::<ChangeSubnetMembershipPayload>(proposals)).into_iter();
+
+            let mut result = create_subnet_proposals
+                .chain(add_nodes_to_subnet_proposals)
+                .chain(remove_nodes_from_subnet_proposals)
+                .chain(membership_change_proposals)
+                .chain(remove_nodes_proposals)
+                .collect::<Vec<_>>();
+            result.sort_by_key(|p| p.id);
+            result.reverse();
+
+            Ok(result)
+        })
+    }
+
+    fn list_open_elect_replica_proposals(&self) -> BoxFuture<'_, Result<Vec<UpdateElectedReplicaVersionsProposal>>> {
+        Box::pin(async {
+            let proposals = &self.list_proposals(vec![ProposalStatus::Open]).await?;
+            let open_elect_guest_proposals = filter_map_nns_function_proposals::<ReviseElectedGuestosVersionsPayload>(proposals);
+
+            let result = open_elect_guest_proposals
+                .into_iter()
+                .map(|(proposal_info, proposal_payload)| UpdateElectedReplicaVersionsProposal {
+                    proposal_id: proposal_info.id.expect("proposal should have an id").id,
+                    version_elect: proposal_payload.replica_version_to_elect.expect("version elect should exist"),
+
+                    versions_unelect: proposal_payload.replica_versions_to_unelect,
+                })
+                .sorted_by_key(|p| p.proposal_id)
+                .rev()
+                .collect::<Vec<_>>();
+
+            Ok(result)
+        })
+    }
+
+    fn list_open_elect_hostos_proposals(&self) -> BoxFuture<'_, Result<Vec<UpdateElectedHostosVersionsProposal>>> {
+        Box::pin(async {
+            let proposals = &self.list_proposals(vec![ProposalStatus::Open]).await?;
+            let open_elect_guest_proposals = filter_map_nns_function_proposals::<UpdateElectedHostosVersionsPayload>(proposals);
+
+            let result = open_elect_guest_proposals
+                .into_iter()
+                .map(|(proposal_info, proposal_payload)| UpdateElectedHostosVersionsProposal {
+                    proposal_id: proposal_info.id.expect("proposal should have an id").id,
+                    version_elect: proposal_payload.hostos_version_to_elect.expect("version elect should exist"),
+
+                    versions_unelect: proposal_payload.hostos_versions_to_unelect,
+                })
+                .sorted_by_key(|p| p.proposal_id)
+                .rev()
+                .collect::<Vec<_>>();
+
+            Ok(result)
+        })
+    }
+
+    fn list_open_update_nodes_hostos_versions_proposals(&self) -> BoxFuture<'_, Result<Vec<UpdateNodesHostosVersionsProposal>>> {
+        Box::pin(async {
+            let proposals = &self.list_proposals(vec![ProposalStatus::Open]).await?;
+            let open_update_nodes_hostos_versions_proposals = filter_map_nns_function_proposals::<UpdateNodesHostosVersionPayload>(proposals);
+
+            let result = open_update_nodes_hostos_versions_proposals
+                .into_iter()
+                .map(|(proposal_info, proposal_payload)| UpdateNodesHostosVersionsProposal {
+                    proposal_id: proposal_info.id.expect("proposal should have an id").id,
+                    hostos_version_id: proposal_payload.hostos_version_id.expect("version elect should exist"),
+
+                    node_ids: proposal_payload.node_ids,
+                })
+                .sorted_by_key(|p| p.proposal_id)
+                .rev()
+                .collect::<Vec<_>>();
+
+            Ok(result)
+        })
+    }
+
+    fn list_update_subnet_version_proposals(&self) -> BoxFuture<'_, Result<Vec<SubnetUpdateProposal>>> {
+        Box::pin(async {
+            Ok(filter_map_nns_function_proposals(&self.list_proposals(vec![]).await?)
+                .into_iter()
+                .map(|(info, payload)| SubnetUpdateProposal { info: info.into(), payload })
+                .collect::<Vec<_>>())
+        })
+    }
+
+    fn list_update_unassigned_nodes_version_proposals(&self) -> BoxFuture<'_, Result<Vec<UpdateUnassignedNodesProposal>>> {
+        Box::pin(async {
+            Ok(filter_map_nns_function_proposals(&self.list_proposals(vec![]).await?)
+                .into_iter()
+                .map(|(info, payload)| UpdateUnassignedNodesProposal { info: info.into(), payload })
+                .collect::<Vec<_>>())
+        })
+    }
+}
+
 #[allow(dead_code)]
-impl ProposalAgent {
+impl ProposalAgentImpl {
     pub fn new(nns_urls: &[Url]) -> Self {
         let client = reqwest::Client::builder()
             .use_rustls_tls()
@@ -103,104 +231,6 @@ impl ProposalAgent {
 
     fn nodes_proposals<T: TopologyChangePayload>(proposals: Vec<(ProposalInfo, T)>) -> Vec<TopologyChangeProposal> {
         proposals.into_iter().map(TopologyChangeProposal::from).collect()
-    }
-
-    pub async fn list_open_topology_proposals(&self) -> Result<Vec<TopologyChangeProposal>> {
-        let proposals = &self.list_proposals(vec![ProposalStatus::Open]).await?;
-        let create_subnet_proposals = Self::nodes_proposals(filter_map_nns_function_proposals::<CreateSubnetPayload>(proposals)).into_iter();
-
-        let add_nodes_to_subnet_proposals =
-            Self::nodes_proposals(filter_map_nns_function_proposals::<AddNodesToSubnetPayload>(proposals)).into_iter();
-
-        let remove_nodes_from_subnet_proposals =
-            Self::nodes_proposals(filter_map_nns_function_proposals::<RemoveNodesFromSubnetPayload>(proposals)).into_iter();
-
-        let remove_nodes_proposals = Self::nodes_proposals(filter_map_nns_function_proposals::<RemoveNodesPayload>(proposals)).into_iter();
-
-        let membership_change_proposals =
-            Self::nodes_proposals(filter_map_nns_function_proposals::<ChangeSubnetMembershipPayload>(proposals)).into_iter();
-
-        let mut result = create_subnet_proposals
-            .chain(add_nodes_to_subnet_proposals)
-            .chain(remove_nodes_from_subnet_proposals)
-            .chain(membership_change_proposals)
-            .chain(remove_nodes_proposals)
-            .collect::<Vec<_>>();
-        result.sort_by_key(|p| p.id);
-        result.reverse();
-
-        Ok(result)
-    }
-
-    pub async fn list_open_elect_replica_proposals(&self) -> Result<Vec<UpdateElectedReplicaVersionsProposal>> {
-        let proposals = &self.list_proposals(vec![ProposalStatus::Open]).await?;
-        let open_elect_guest_proposals = filter_map_nns_function_proposals::<ReviseElectedGuestosVersionsPayload>(proposals);
-
-        let result = open_elect_guest_proposals
-            .into_iter()
-            .map(|(proposal_info, proposal_payload)| UpdateElectedReplicaVersionsProposal {
-                proposal_id: proposal_info.id.expect("proposal should have an id").id,
-                version_elect: proposal_payload.replica_version_to_elect.expect("version elect should exist"),
-
-                versions_unelect: proposal_payload.replica_versions_to_unelect,
-            })
-            .sorted_by_key(|p| p.proposal_id)
-            .rev()
-            .collect::<Vec<_>>();
-
-        Ok(result)
-    }
-
-    pub async fn list_open_elect_hostos_proposals(&self) -> Result<Vec<UpdateElectedHostosVersionsProposal>> {
-        let proposals = &self.list_proposals(vec![ProposalStatus::Open]).await?;
-        let open_elect_guest_proposals = filter_map_nns_function_proposals::<UpdateElectedHostosVersionsPayload>(proposals);
-
-        let result = open_elect_guest_proposals
-            .into_iter()
-            .map(|(proposal_info, proposal_payload)| UpdateElectedHostosVersionsProposal {
-                proposal_id: proposal_info.id.expect("proposal should have an id").id,
-                version_elect: proposal_payload.hostos_version_to_elect.expect("version elect should exist"),
-
-                versions_unelect: proposal_payload.hostos_versions_to_unelect,
-            })
-            .sorted_by_key(|p| p.proposal_id)
-            .rev()
-            .collect::<Vec<_>>();
-
-        Ok(result)
-    }
-
-    pub async fn list_open_update_nodes_hostos_versions_proposals(&self) -> Result<Vec<UpdateNodesHostosVersionsProposal>> {
-        let proposals = &self.list_proposals(vec![ProposalStatus::Open]).await?;
-        let open_update_nodes_hostos_versions_proposals = filter_map_nns_function_proposals::<UpdateNodesHostosVersionPayload>(proposals);
-
-        let result = open_update_nodes_hostos_versions_proposals
-            .into_iter()
-            .map(|(proposal_info, proposal_payload)| UpdateNodesHostosVersionsProposal {
-                proposal_id: proposal_info.id.expect("proposal should have an id").id,
-                hostos_version_id: proposal_payload.hostos_version_id.expect("version elect should exist"),
-
-                node_ids: proposal_payload.node_ids,
-            })
-            .sorted_by_key(|p| p.proposal_id)
-            .rev()
-            .collect::<Vec<_>>();
-
-        Ok(result)
-    }
-
-    pub async fn list_update_subnet_version_proposals(&self) -> Result<Vec<SubnetUpdateProposal>> {
-        Ok(filter_map_nns_function_proposals(&self.list_proposals(vec![]).await?)
-            .into_iter()
-            .map(|(info, payload)| SubnetUpdateProposal { info: info.into(), payload })
-            .collect::<Vec<_>>())
-    }
-
-    pub async fn list_update_unassigned_nodes_version_proposals(&self) -> Result<Vec<UpdateUnassignedNodesProposal>> {
-        Ok(filter_map_nns_function_proposals(&self.list_proposals(vec![]).await?)
-            .into_iter()
-            .map(|(info, payload)| UpdateUnassignedNodesProposal { info: info.into(), payload })
-            .collect::<Vec<_>>())
     }
 
     async fn list_proposals(&self, include_status: Vec<ProposalStatus>) -> Result<Vec<ProposalInfo>> {

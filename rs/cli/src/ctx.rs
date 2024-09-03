@@ -11,7 +11,7 @@ use ic_canisters::{governance::governance_canister_version, IcAgentCanisterClien
 use ic_management_backend::{
     lazy_git::LazyGit,
     lazy_registry::{LazyRegistry, LazyRegistryImpl},
-    proposal::ProposalAgent,
+    proposal::{ProposalAgent, ProposalAgentImpl},
     registry::{local_registry_path, sync_local_store},
 };
 use ic_management_types::Network;
@@ -34,6 +34,7 @@ pub struct DreContext {
     ic_admin: Option<Arc<dyn IcAdmin>>,
     runner: RefCell<Option<Rc<Runner>>>,
     ic_repo: RefCell<Option<Arc<dyn LazyGit>>>,
+    proposal_agent: Arc<dyn ProposalAgent>,
     verbose_runner: bool,
     skip_sync: bool,
     ic_admin_path: Option<String>,
@@ -79,6 +80,7 @@ impl DreContext {
         .await?;
 
         Ok(Self {
+            proposal_agent: Arc::new(ProposalAgentImpl::new(&network.nns_urls)),
             network,
             registry: RefCell::new(None),
             ic_admin,
@@ -165,7 +167,12 @@ impl DreContext {
         info!("Using local registry path for network {}: {}", network.name, local_path.display());
         let local_registry = LocalRegistry::new(local_path, Duration::from_millis(1000)).expect("Failed to create local registry");
 
-        let registry = Arc::new(LazyRegistryImpl::new(local_registry, network.clone(), self.skip_sync));
+        let registry = Arc::new(LazyRegistryImpl::new(
+            local_registry,
+            network.clone(),
+            self.skip_sync,
+            self.proposals_agent(),
+        ));
         *self.registry.borrow_mut() = Some(registry.clone());
         registry
     }
@@ -206,8 +213,8 @@ impl DreContext {
         SubnetManager::new(registry, self.network().clone())
     }
 
-    pub fn proposals_agent(&self) -> ProposalAgent {
-        ProposalAgent::new(self.network().get_nns_urls())
+    pub fn proposals_agent(&self) -> Arc<dyn ProposalAgent> {
+        self.proposal_agent.clone()
     }
 
     pub async fn runner(&self) -> Rc<Runner> {
