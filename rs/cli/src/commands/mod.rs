@@ -1,4 +1,3 @@
-use std::path::PathBuf;
 use std::{collections::BTreeMap, str::FromStr};
 
 use crate::commands::subnet::Subnet;
@@ -53,13 +52,13 @@ mod vote;
 
 /// HSM authentication parameters
 #[derive(ClapArgs, Debug, Clone)]
-pub struct HsmParams {
+pub(crate) struct HsmParams {
     /// Slot that HSM key uses, can be read with pkcs11-tool
     #[clap(required = false,
         requires_all = ["hsm_slot","hsm_key_id", "hsm_pin"],
         conflicts_with = "private_key_pem",
         long, value_parser=maybe_hex::<u64>, global = true, env = "HSM_SLOT")]
-    pub hsm_slot: u64,
+    pub(crate) hsm_slot: u64,
 
     /// HSM Key ID, can be read with pkcs11-tool
     #[clap(
@@ -70,7 +69,7 @@ pub struct HsmParams {
         global = true,
         env = "HSM_KEY_ID"
     )]
-    pub hsm_key_id: String,
+    pub(crate) hsm_key_id: String,
 }
 
 /// HSM authentication arguments
@@ -78,7 +77,7 @@ pub struct HsmParams {
 /// The PIN is used during autodetection if the optional
 /// parameters are missing.
 #[derive(ClapArgs, Debug, Clone)]
-pub struct HsmOpts {
+pub(crate) struct HsmOpts {
     /// Pin for the HSM key used for submitting proposals
     // Must be present if slot and key are specified.
     #[clap(
@@ -90,9 +89,9 @@ pub struct HsmOpts {
         hide_env_values = true,
         env = "HSM_PIN"
     )]
-    pub hsm_pin: Option<String>,
+    pub(crate) hsm_pin: Option<String>,
     #[clap(flatten)]
-    pub hsm_params: Option<HsmParams>,
+    pub(crate) hsm_params: Option<HsmParams>,
 }
 
 // The following should ideally be defined in terms of an Enum
@@ -106,7 +105,7 @@ pub struct HsmOpts {
 #[derive(ClapArgs, Debug, Clone)]
 #[group(multiple = false)]
 /// Authentication arguments
-pub struct AuthOpts {
+pub(crate) struct AuthOpts {
     /// Path to private key file (in PEM format)
     #[clap(
         long,
@@ -114,44 +113,16 @@ pub struct AuthOpts {
         global = true,
         conflicts_with_all = ["hsm_pin", "hsm_slot", "hsm_key_id"],
         env = "PRIVATE_KEY_PEM")]
-    pub private_key_pem: Option<InputPath>,
+    pub(crate) private_key_pem: Option<InputPath>,
     #[clap(flatten)]
-    pub hsm_opts: HsmOpts,
-}
-
-impl TryFrom<PathBuf> for AuthOpts {
-    type Error = clio::Error;
-    fn try_from(path: PathBuf) -> Result<Self> {
-        let p = Some(InputPath::new(&path)?);
-        Ok(Self {
-            private_key_pem: p,
-            hsm_opts: HsmOpts {
-                hsm_pin: None,
-                hsm_params: None,
-            },
-        })
-    }
-}
-
-impl TryFrom<String> for AuthOpts {
-    type Error = clio::Error;
-    fn try_from(path: String) -> Result<Self> {
-        let p = Some(InputPath::new(&PathBuf::from(path))?);
-        Ok(Self {
-            private_key_pem: p,
-            hsm_opts: HsmOpts {
-                hsm_pin: None,
-                hsm_params: None,
-            },
-        })
-    }
+    pub(crate) hsm_opts: HsmOpts,
 }
 
 #[derive(Parser, Debug)]
 #[clap(version = env!("CARGO_PKG_VERSION"), about, author)]
-pub struct Args {
+pub(crate) struct Args {
     #[clap(flatten)]
-    pub auth_opts: AuthOpts,
+    pub(crate) auth_opts: AuthOpts,
 
     /// Neuron ID
     #[clap(long, global = true, env = "NEURON_ID")]
@@ -201,6 +172,22 @@ The argument is mandatory for testnets, and is optional for mainnet and staging"
     /// Link to the related forum post, where proposal details can be discussed
     #[clap(long, global = true, visible_aliases = &["forum-link", "forum"])]
     pub forum_post_link: Option<String>,
+}
+
+// Do not use outside of DRE CLI.
+// You can run your command by directly instantiating it.
+impl ExecutableCommand for Args {
+    fn require_ic_admin(&self) -> IcAdminRequirement {
+        self.subcommands.require_ic_admin()
+    }
+
+    async fn execute(&self, ctx: DreContext) -> anyhow::Result<()> {
+        self.subcommands.execute(ctx).await
+    }
+
+    fn validate(&self, cmd: &mut Command) {
+        self.subcommands.validate(cmd)
+    }
 }
 
 macro_rules! impl_executable_command_for_enums {
@@ -319,18 +306,4 @@ pub enum IcAdminRequirement {
     Anonymous,                                              // for get commands
     Detect,                                                 // detect the neuron
     OverridableBy { network: Network, neuron: AuthNeuron }, // eg automation which we know where is placed
-}
-
-impl ExecutableCommand for Args {
-    fn require_ic_admin(&self) -> IcAdminRequirement {
-        self.subcommands.require_ic_admin()
-    }
-
-    async fn execute(&self, ctx: DreContext) -> anyhow::Result<()> {
-        self.subcommands.execute(ctx).await
-    }
-
-    fn validate(&self, cmd: &mut Command) {
-        self.subcommands.validate(cmd)
-    }
 }

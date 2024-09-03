@@ -17,10 +17,11 @@ use ic_management_backend::{
 use ic_management_types::Network;
 use ic_registry_local_registry::LocalRegistry;
 use log::info;
+use url::Url;
 
 use crate::{
-    auth::Neuron,
-    commands::{Args, AuthOpts, ExecutableCommand, IcAdminRequirement},
+    auth::{Auth, Neuron},
+    commands::{Args, ExecutableCommand, IcAdminRequirement},
     ic_admin::{download_ic_admin, should_update_ic_admin, IcAdmin, IcAdminImpl},
     runner::Runner,
     subnet_manager::SubnetManager,
@@ -42,43 +43,46 @@ pub struct DreContext {
 }
 
 impl DreContext {
-    pub async fn from_args(args: &Args) -> anyhow::Result<Self> {
-        let network = match args.no_sync {
-            false => ic_management_types::Network::new(args.network.clone(), &args.nns_urls)
+    pub async fn new(
+        network: String,
+        nns_urls: Vec<Url>,
+        auth: Auth,
+        neuron_id: Option<u64>,
+        verbose: bool,
+        no_sync: bool,
+        yes: bool,
+        dry_run: bool,
+        ic_admin_requirement: IcAdminRequirement,
+        forum_post_link: Option<String>,
+    ) -> anyhow::Result<Self> {
+        let network = match no_sync {
+            false => ic_management_types::Network::new(network.clone(), &nns_urls)
                 .await
                 .map_err(|e| anyhow::anyhow!(e))?,
-            true => Network::new_unchecked(args.network.clone(), &args.nns_urls)?,
+            true => Network::new_unchecked(network.clone(), &nns_urls)?,
         };
 
         // Overrides of neuron ID and private key PEM file for staging.
         // Appropriate fallbacks take place when options are missing.
+        // I personally don't think this should be here, but more refactoring
+        // needs to take place for this code to reach its final destination.
         let (neuron_id, auth_opts) = if network.name == "staging" {
-            let staging_path =
-                clio::InputPath::new(&PathBuf::from_str(&std::env::var("HOME")?)?.join(".config/dfx/identity/bootstrap-super-leader/identity.pem"));
+            let staging_path = PathBuf::from_str(&std::env::var("HOME")?)?.join(".config/dfx/identity/bootstrap-super-leader/identity.pem");
             (
-                args.neuron_id.or(Some(STAGING_NEURON_ID)),
-                match (&args.auth_opts, staging_path.is_ok()) {
+                neuron_id.or(Some(STAGING_NEURON_ID)),
+                match (&auth, Auth::pem(staging_path).await) {
                     // There is no private key PEM specified, this is staging, the user
                     // did not specify HSM options, and the default staging path exists,
                     // so we use the default staging path.
-                    (
-                        AuthOpts {
-                            private_key_pem: None,
-                            hsm_opts: opts,
-                        },
-                        true,
-                    ) => AuthOpts {
-                        private_key_pem: Some(staging_path.unwrap()),
-                        hsm_opts: opts.clone(),
-                    },
-                    _ => args.auth_opts.clone(),
+                    (Auth::Anonymous, Ok(staging_pem_auth)) => staging_pem_auth,
+                    _ => auth.clone(),
                 },
             )
         } else {
-            (args.neuron_id, args.auth_opts.clone())
+            (neuron_id, auth.clone())
         };
 
-        let (ic_admin, ic_admin_path) = Self::init_ic_admin(&network, neuron_id, auth_opts, args.yes, args.dry_run, args.require_ic_admin()).await?;
+        let (ic_admin, ic_admin_path) = Self::init_ic_admin(&network, neuron_id, auth_opts, yes, dry_run, ic_admin_requirement).await?;
 
         Ok(Self {
             proposal_agent: Arc::new(ProposalAgentImpl::new(&network.nns_urls)),
@@ -86,18 +90,34 @@ impl DreContext {
             registry: RefCell::new(None),
             ic_admin,
             runner: RefCell::new(None),
-            verbose_runner: args.verbose,
-            skip_sync: args.no_sync,
+            verbose_runner: verbose,
+            skip_sync: no_sync,
             ic_admin_path,
-            forum_post_link: args.forum_post_link.clone(),
+            forum_post_link: forum_post_link.clone(),
             ic_repo: RefCell::new(None),
         })
+    }
+
+    pub(crate) async fn from_args(args: &Args) -> anyhow::Result<Self> {
+        Self::new(
+            args.network.clone(),
+            args.nns_urls.clone(),
+            Auth::from_auth_opts(args.auth_opts.clone()).await?,
+            args.neuron_id,
+            args.verbose,
+            args.no_sync,
+            args.yes,
+            args.dry_run,
+            args.subcommands.require_ic_admin(),
+            args.forum_post_link.clone(),
+        )
+        .await
     }
 
     async fn init_ic_admin(
         network: &Network,
         neuron_id: Option<u64>,
-        auth_args: AuthOpts,
+        auth: Auth,
         proceed_without_confirmation: bool,
         dry_run: bool,
         requirement: IcAdminRequirement,
@@ -111,12 +131,12 @@ impl DreContext {
                 neuron_id: 0,
                 include_proposer: false,
             },
-            IcAdminRequirement::Detect => Neuron::new(auth_args.clone(), neuron_id, network, true).await?,
+            IcAdminRequirement::Detect => Neuron::new(auth, neuron_id, network, true).await?,
             IcAdminRequirement::OverridableBy {
                 network: accepted_network,
                 neuron,
             } => {
-                let maybe_neuron = Neuron::new(auth_args, neuron_id, network, true).await;
+                let maybe_neuron = Neuron::new(auth, neuron_id, network, true).await;
 
                 match maybe_neuron {
                     Ok(n) => n,

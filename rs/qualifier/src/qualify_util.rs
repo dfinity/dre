@@ -2,7 +2,8 @@ use std::{path::PathBuf, str::FromStr};
 
 use anyhow::Error;
 use dre::{
-    commands::{qualify::execute::Execute, Args, AuthOpts, ExecutableCommand},
+    auth::Auth,
+    commands::{qualify::execute::Execute, ExecutableCommand},
     ctx::DreContext,
 };
 use ic_management_backend::registry::local_registry_path;
@@ -62,32 +63,32 @@ pub async fn qualify(
         info!("Removed registry from previous runs");
     }
 
-    let args = Args {
-        auth_opts: AuthOpts::try_from(private_key_pem)?,
-        neuron_id: Some(neuron_id),
-        ic_admin: None,
-        yes: true,
-        dry_run: false,
-        network: network_name.to_string(),
-        nns_urls: config.nns_urls,
-        subcommands: dre::commands::Subcommands::Qualify(dre::commands::qualify::Qualify {
-            subcommand: dre::commands::qualify::Subcommands::Execute(Execute {
-                version: to_version,
-                from_version: Some(from_version),
-                step_range,
-                deployment_name: config.deployment_name,
-                prometheus_endpoint: config.prometheus_url,
-                artifacts: Some(artifacts.clone()),
-                grafana_url: Some(config.grafana_url),
-            }),
+    let cmd = dre::commands::Subcommands::Qualify(dre::commands::qualify::Qualify {
+        subcommand: dre::commands::qualify::Subcommands::Execute(Execute {
+            version: to_version,
+            from_version: Some(from_version),
+            step_range,
+            deployment_name: config.deployment_name,
+            prometheus_endpoint: config.prometheus_url,
+            artifacts: Some(artifacts.clone()),
+            grafana_url: Some(config.grafana_url),
         }),
-        verbose: false,
-        no_sync: false,
-        forum_post_link: None,
-    };
-    let ctx = DreContext::from_args(&args).await?;
+    });
+    let ctx = DreContext::new(
+        network_name.to_string(),
+        config.nns_urls,
+        Auth::pem(private_key_pem).await?,
+        Some(neuron_id),
+        false,
+        false,
+        true,
+        false,
+        cmd.require_ic_admin(),
+        None,
+    )
+    .await?;
 
-    args.execute(ctx).await?;
+    cmd.execute(ctx).await?;
 
     std::fs::copy(&log_path, artifacts.join("farm-driver.log"))?;
     Ok(())

@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 use std::str::FromStr;
 
+use clio::InputPath;
 use cryptoki::{
     context::{CInitializeArgs, Pkcs11},
     session::{SessionFlags, UserType},
@@ -25,8 +26,7 @@ static RELEASE_AUTOMATION_DEFAULT_PRIVATE_KEY_PEM: &str = ".config/dfx/identity/
 const RELEASE_AUTOMATION_NEURON_ID: u64 = 80;
 
 impl Neuron {
-    pub async fn new(auth_opts: AuthOpts, neuron_id: Option<u64>, network: &Network, include_proposer: bool) -> anyhow::Result<Self> {
-        let auth = Auth::try_from(auth_opts)?;
+    pub async fn new(auth: Auth, neuron_id: Option<u64>, network: &Network, include_proposer: bool) -> anyhow::Result<Self> {
         let neuron_id = match neuron_id {
             Some(n) => n,
             None => auth.auto_detect_neuron_id(network.get_nns_urls()).await?,
@@ -104,7 +104,7 @@ impl Auth {
         }
     }
 
-    fn detect_hsm_auth(hsm_pin: Option<String>) -> anyhow::Result<Option<Self>> {
+    fn detect_hsm_auth(hsm_pin: Option<String>) -> anyhow::Result<Self> {
         info!("Detecting HSM devices");
         let ctx = Pkcs11::new(Self::pkcs11_lib_path()?)?;
         ctx.initialize(CInitializeArgs::OsThreads)?;
@@ -133,18 +133,44 @@ impl Auth {
                 session.login(UserType::User, Some(&pin))?;
                 info!("HSM login successful");
                 pin_entry.set_password(&pin)?;
-                return Ok(Some(Auth::Hsm {
+                let detected = Some(Auth::Hsm {
                     pin,
                     slot: slot.id(),
                     key_id: "01".to_string(),
-                }));
+                });
+                match &detected {
+                    Some(x) => match x {
+                        Auth::Anonymous => info!("Detected anonymous authentication"),
+                        Auth::Keyfile { path } => info!("Detected authentication with private key file {}", path.display()),
+                        Auth::Hsm { slot, key_id, .. } => info!("Using detected HSM slot {} with key ID {}", slot, key_id),
+                    },
+                    None => info!("Detected no authentication, falling back to anonymous"),
+                };
+                return Ok(detected.map_or(Auth::Anonymous, |a| a));
             }
         }
         info!("No HSM detected -- continuing anonymously");
-        Ok(None)
+        Ok(Auth::Anonymous)
     }
 
-    pub async fn auto_detect_neuron_id(&self, nns_urls: &[url::Url]) -> anyhow::Result<u64> {
+    pub async fn auto(hsm_pin: Option<String>) -> anyhow::Result<Self> {
+        tokio::task::spawn_blocking(|| Self::detect_hsm_auth(hsm_pin)).await?
+    }
+
+    pub async fn pem(private_key_pem: PathBuf) -> anyhow::Result<Self> {
+        // Check path exists.  This blocks.
+        let t = tokio::task::spawn_blocking(move || {
+            let inp = InputPath::new(&private_key_pem);
+            match inp {
+                Ok(inp) => Ok(inp.path().to_path_buf()),
+                Err(e) => Err(e),
+            }
+        })
+        .await?;
+        Ok(Self::Keyfile { path: t? })
+    }
+
+    async fn auto_detect_neuron_id(&self, nns_urls: &[url::Url]) -> anyhow::Result<u64> {
         let url = nns_urls.first().ok_or(anyhow::anyhow!("No nns urls provided"))?.to_owned();
         let client = match self {
             Auth::Hsm { pin, slot, key_id } => {
@@ -173,11 +199,8 @@ impl Auth {
                 .ok_or_else(|| anyhow::anyhow!("No neuron selected")),
         }
     }
-}
 
-impl TryFrom<AuthOpts> for Auth {
-    type Error = anyhow::Error;
-    fn try_from(auth_opts: AuthOpts) -> Result<Self, anyhow::Error> {
+    pub(crate) async fn from_auth_opts(auth_opts: AuthOpts) -> Result<Self, anyhow::Error> {
         match &auth_opts {
             // Private key case.
             AuthOpts {
@@ -185,9 +208,7 @@ impl TryFrom<AuthOpts> for Auth {
                 hsm_opts: _,
             } => {
                 info!("Using requested private key file {}", private_key_pem.path());
-                Ok(Auth::Keyfile {
-                    path: private_key_pem.path().to_path_buf(),
-                })
+                Auth::pem(private_key_pem.path().to_path_buf()).await
             }
             // Full PIN, slot and key case.
             AuthOpts {
@@ -204,15 +225,13 @@ impl TryFrom<AuthOpts> for Auth {
                     key_id: hsm_params.hsm_key_id.clone(),
                 })
             }
-            // I think the next line should not fall back to anonymous.
-            // It should always be autodetect and fail if detection fails.
             AuthOpts {
                 private_key_pem: _,
                 hsm_opts: HsmOpts {
                     hsm_pin: pin,
                     hsm_params: None,
                 },
-            } => Ok(Self::detect_hsm_auth(pin.clone())?.map_or(Auth::Anonymous, |a| a)),
+            } => Auth::auto(pin.clone()).await,
         }
     }
 }
