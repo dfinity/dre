@@ -1,5 +1,5 @@
 {
-  "checksum": "76ee0866d5618a992b9197d6e283f29d8ae8c99652ea79b1025390bcd0d1ab07",
+  "checksum": "98c4b087938d37a4ae4cd08aa4c609f2abde672bb6e51a11137bd24fa1b6b40d",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -16910,6 +16910,10 @@
               "target": "ic_base_types"
             },
             {
+              "id": "ic-interfaces-registry 0.9.0",
+              "target": "ic_interfaces_registry"
+            },
+            {
               "id": "ic-management-canister-types 0.9.0",
               "target": "ic_management_canister_types"
             },
@@ -16930,6 +16934,14 @@
               "target": "ic_protobuf"
             },
             {
+              "id": "ic-registry-keys 0.9.0",
+              "target": "ic_registry_keys"
+            },
+            {
+              "id": "ic-registry-nns-data-provider 0.9.0",
+              "target": "ic_registry_nns_data_provider"
+            },
+            {
               "id": "ic-registry-transport 0.9.0",
               "target": "ic_registry_transport"
             },
@@ -16940,6 +16952,10 @@
             {
               "id": "ic-transport-types 0.37.1",
               "target": "ic_transport_types"
+            },
+            {
+              "id": "ic-types 0.9.0",
+              "target": "ic_types"
             },
             {
               "id": "ic-utils 0.37.0",

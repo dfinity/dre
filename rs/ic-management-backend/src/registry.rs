@@ -8,6 +8,8 @@ use futures::future::BoxFuture;
 use futures::TryFutureExt;
 use ic_base_types::NodeId;
 use ic_base_types::{RegistryVersion, SubnetId};
+use ic_canisters::registry::RegistryCanisterWrapper;
+use ic_canisters::IcAgentCanisterClient;
 use ic_interfaces_registry::{RegistryClient, RegistryValue, ZERO_REGISTRY_VERSION};
 use ic_management_types::{
     Artifact, ArtifactReleases, Datacenter, DatacenterOwner, Guest, Network, NetworkError, Node, NodeProviderDetails, NodeProvidersResponse,
@@ -937,6 +939,8 @@ pub fn local_registry_path(network: &Network) -> PathBuf {
     local_cache_path().join(Path::new(network.name.as_str())).join("local_registry")
 }
 
+#[allow(dead_code)]
+// Probably will not be used anymore
 pub async fn nns_public_key(registry_canister: &RegistryCanister) -> anyhow::Result<ThresholdSigPublicKey> {
     let (nns_subnet_id_vec, _) = registry_canister
         .get_value(ROOT_SUBNET_ID_KEY.as_bytes().to_vec(), None)
@@ -963,7 +967,8 @@ pub async fn sync_local_store(target_network: &Network) -> anyhow::Result<()> {
     let local_registry_path = local_registry_path(target_network);
     let local_store = Arc::new(LocalStoreImpl::new(local_registry_path.clone()));
     let nns_urls = target_network.get_nns_urls().clone();
-    let registry_canister = RegistryCanister::new(nns_urls);
+    let agent = IcAgentCanisterClient::from_anonymous(nns_urls.first().unwrap().clone()).unwrap();
+    let registry_canister: RegistryCanisterWrapper = agent.into();
     let mut local_latest_version = if !Path::new(&local_registry_path).exists() {
         ZERO_REGISTRY_VERSION
     } else {
@@ -972,7 +977,6 @@ pub async fn sync_local_store(target_network: &Network) -> anyhow::Result<()> {
         registry_cache.get_latest_version()
     };
     let mut updates = vec![];
-    let nns_public_key = nns_public_key(&registry_canister).await?;
 
     loop {
         match registry_canister.get_latest_version().await {
@@ -998,13 +1002,10 @@ pub async fn sync_local_store(target_network: &Network) -> anyhow::Result<()> {
                 }
             },
             Err(e) => {
-                error!("Failed to get latest registry version: {}", e);
+                error!("Failed to get latest registry version: {:?}", e);
             }
         }
-        if let Ok((mut initial_records, _, _)) = registry_canister
-            .get_certified_changes_since(local_latest_version.get(), &nns_public_key)
-            .await
-        {
+        if let Ok(mut initial_records) = registry_canister.get_certified_changes_since(local_latest_version.get()).await {
             initial_records.sort_by_key(|tr| tr.version);
             let changelog = initial_records.iter().fold(Changelog::default(), |mut cl, r| {
                 let rel_version = (r.version - local_latest_version).get();
