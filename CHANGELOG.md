@@ -1,6 +1,31 @@
 # dre Changelog
 
 <!-- insertion marker -->
+## [0.5.3](https://github.com/dfinity/dre/releases/tag/0.5.3) - 2024-09-03
+
+<small>[Compare with first commit](https://github.com/dfinity/dre/compare/09221a6073f9b283fcfc5c16e9b430ff0fba1d87...0.5.3)</small>
+
+### Features
+
+- Add forum post link to commands for proposal discussion (#830) ([7c8f4be](https://github.com/dfinity/dre/commit/7c8f4be9a4e871d34f19eb4e17db217915fedd0b) by Saša Tomić).
+- add the link to full changelog in the proposal (#820) ([248ef92](https://github.com/dfinity/dre/commit/248ef924819e4faef257d4ed1834e1b3a6a33ab1) by Luka Skugor).
+- Provide more details on the node replacement proposals (#816) ([c161563](https://github.com/dfinity/dre/commit/c16156365f4718902e90e9f075f51fdbfaa48cc3) by Saša Tomić).
+- Add distance from the target topology as business rules (#817) ([3752142](https://github.com/dfinity/dre/commit/37521426eefb31547f03e1dfea43ea8d213b710a) by Saša Tomić).
+
+### Bug Fixes
+
+- canister handshake error (#850) ([238e164](https://github.com/dfinity/dre/commit/238e164f88bbb19db4f09d5dc7b65f4e891bbf6e) by Nikola Milosavljevic).
+- autodetection of HSM (#845) ([e666fd5](https://github.com/dfinity/dre/commit/e666fd530902ff22d0ca2b7f75de278791919584) by Nikola Milosavljevic).
+- typo in the description of a NakamotoScore change (#832) ([931d1e0](https://github.com/dfinity/dre/commit/931d1e0f22f2774871dd3eb1661807e2b0c8a51d) by Saša Tomić).
+- handle errors and retry (#824) ([936a17b](https://github.com/dfinity/dre/commit/936a17bb57a49c76f6bba8c74cae31a2794e4000) by Luka Skugor).
+- wrong variable (#822) ([e74a315](https://github.com/dfinity/dre/commit/e74a315c4d3c4d618c15000ee10d9622297c9305) by Nikola Milosavljevic).
+
+### Code Refactoring
+
+- ic admin (#835) ([2a1657e](https://github.com/dfinity/dre/commit/2a1657e40510dc4cf98de5dae40ced720ca04d79) by Nikola Milosavljevic).
+- lazy git (#837) ([60c745f](https://github.com/dfinity/dre/commit/60c745f6b66c1b692ce5b53491e2092cfda4756e) by Nikola Milosavljevic).
+- lazy registry (#831) ([ceeb19b](https://github.com/dfinity/dre/commit/ceeb19b7a9667d311603dd0a1521c055b9111366) by Nikola Milosavljevic).
+
 ## [0.5.2](https://github.com/dfinity/dre/releases/tag/0.5.2) - 2024-08-27
 
 <small>[Compare with first commit](https://github.com/dfinity/dre/compare/e560ab4487484cedfd5162e03aa45824376d93ef...0.5.2)</small>
