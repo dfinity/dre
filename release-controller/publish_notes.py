@@ -58,6 +58,9 @@ def post_process_release_notes(release_notes: str) -> str:
             changelog += "\n".join(lines)
             changelog += "\n"
 
+    # remove empty sections
+    changelog = re.sub(r"[^\n]+\n-+\n(?!\s*\*)", "", changelog, flags=re.S)
+    changelog = re.sub(r"\n{3,}", "\n\n", changelog, flags=re.S)
     return changelog
 
 

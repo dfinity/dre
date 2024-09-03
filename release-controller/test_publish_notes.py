@@ -82,8 +82,6 @@ Tests:
 
 -------------------------------------------
 
-
-
 ## Excluded Changes
 
 ### Excluded by authors
@@ -145,6 +143,95 @@ Tests:
 * [`039322fe3`](https://github.com/dfinity/ic/commit/039322fe3) Interface(consensus): Use the synchronous call\\-v3 agent for consensus performance test ([\\#910](https://github.com/dfinity/ic/pull/910))
 * [`b388425da`](https://github.com/dfinity/ic/commit/b388425da) Interface(icrc\\_ledger): Add ledger state verification for golden state upgrade test of SNS ledger ([\\#720](https://github.com/dfinity/ic/pull/720))
 * [`a2f7d24f4`](https://github.com/dfinity/ic/commit/a2f7d24f4) Interface,Networking(network\\-simulation): Increase transmission control buffers ([\\#908](https://github.com/dfinity/ic/pull/908))
+""",
+    )
+
+
+def test_publish_if_ready__remove_empty_sections(mocker):
+    github_client = Github()
+    mocker.patch.object(github_client, "get_repo")
+    repo = github_client.get_repo("dfinity/non-existent-mock")
+    publish_client = PublishNotesClient(repo)
+    mocker.patch.object(publish_client, "ensure_published")
+
+    publish_client.publish_if_ready(
+        """\
+Review checklist
+================
+
+Please cross\\-out your team once you finished the review
+
+* ~~@team-consensus~~
+* ~~@team-crypto~~
+* ~~@team-messaging~~
+* ~~@team-networking~~
+* ~~@node-team~~
+* ~~@team-runtime~~
+
+Release Notes for [**rc--2024-02-21\\_23-01**](https://github.com/dfinity/ic/tree/rc--2024-02-21_23-01) (2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f)
+=================================================================================================================================================
+
+Changelog since git revision [8d4b6898d878fa3db4028b316b78b469ed29f293](https://dashboard.internetcomputer.org/release/8d4b6898d878fa3db4028b316b78b469ed29f293)
+
+Bugfixes:
+---------
+
+Features:
+---------
+
+* ~~author: Igor Novg |~~ [5f9e639d1](https://github.com/dfinity/ic/commit/5f9e639d1) ~~Boundary Nodes: remove njs~~
+* ~~author: Igor Novg |~~ [eb7f3dc5c](https://github.com/dfinity/ic/commit/eb7f3dc5c) ~~Boundary Nodes: improve nginx performance~~
+* author: Kami Popi | [26f30f055](https://github.com/dfinity/ic/commit/26f30f055) Consensus: Purge non-finalized blocks and notarizations below the finalized height
+
+Tests:
+------
+
+Chores:
+-------
+
+* author: ~~Leo Eich | [b4673936a](https://github.com/dfinity/ic/commit/b4673936a) Consensus(ecdsa):~~ Make key\\_unmasked\\_ref in PreSignatureQuadrupleRef required
+* author: Leo Eich | [b733f7043](https://github.com/dfinity/ic/commit/b733f7043) Consensus(ecdsa): Extend Quadruple state machine in preparation for random unmasked kappa
+* ~~author: Leo Eich | [6a4d8962c](https://github.com/dfinity/ic/commit/6a4d8962c) Consensus(ecdsa): Make masked kappa config optional~~
+* author: Leo Eich | [e76c5a374](https://github.com/dfinity/ic/commit/e76c5a374) Consensus(ecdsa): Stop relaying tECDSA signature shares
+
+Something:
+----------
+* author: Leo Eich | [2d63da24c](https://github.com/dfinity/ic/commit/2d63da24c) Consensus(ecdsa): ~~Add optional kappa\\_unmasked config to QuadrupleInCreation~~
+
+Other:
+------
+""",
+        "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f",
+    )
+
+    # assert publish_client.ensure_published.call_count == 1
+    publish_client.ensure_published.assert_called_once_with(  # pylint: disable=no-member
+        version="2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f",
+        changelog="""\
+Release Notes for [**rc--2024-02-21\\_23-01**](https://github.com/dfinity/ic/tree/rc--2024-02-21_23-01) (2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f)
+=================================================================================================================================================
+
+Changelog since git revision [8d4b6898d878fa3db4028b316b78b469ed29f293](https://dashboard.internetcomputer.org/release/8d4b6898d878fa3db4028b316b78b469ed29f293)
+
+Features:
+---------
+
+* [`26f30f055`](https://github.com/dfinity/ic/commit/26f30f055) Consensus: Purge non-finalized blocks and notarizations below the finalized height
+
+Chores:
+-------
+
+* [`b733f7043`](https://github.com/dfinity/ic/commit/b733f7043) Consensus(ecdsa): Extend Quadruple state machine in preparation for random unmasked kappa
+* [`e76c5a374`](https://github.com/dfinity/ic/commit/e76c5a374) Consensus(ecdsa): Stop relaying tECDSA signature shares
+
+## Excluded Changes
+
+### Excluded by authors
+* [`5f9e639d1`](https://github.com/dfinity/ic/commit/5f9e639d1) Boundary Nodes: remove njs
+* [`eb7f3dc5c`](https://github.com/dfinity/ic/commit/eb7f3dc5c) Boundary Nodes: improve nginx performance
+* [`b4673936a`](https://github.com/dfinity/ic/commit/b4673936a) Consensus(ecdsa): Make key\\_unmasked\\_ref in PreSignatureQuadrupleRef required
+* [`6a4d8962c`](https://github.com/dfinity/ic/commit/6a4d8962c) Consensus(ecdsa): Make masked kappa config optional
+* [`2d63da24c`](https://github.com/dfinity/ic/commit/2d63da24c) Consensus(ecdsa): Add optional kappa\\_unmasked config to QuadrupleInCreation
 """,
     )
 
