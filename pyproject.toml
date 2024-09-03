@@ -47,12 +47,13 @@ dependencies = [
   "ic-py>=1.0.1",
   "quart>=0.19.6",
   "ruamel-yaml>=0.18.6",
+  "httpretty>=1.1.4",
 ]
 
 [tool.rye]
-universal = true                                     # The dependency resolver will attempt to generate a resolution that's valid on all platforms, operating systems, and architectures, rather than a resolution that's specific to the current platform.
-virtual = true                                       # This is a special mode in which the package itself is not installed, but only the dependencies are.
-dev-dependencies = ["black>=24", "httpretty>=1.1.4"]
+universal = true                 # The dependency resolver will attempt to generate a resolution that's valid on all platforms, operating systems, and architectures, rather than a resolution that's specific to the current platform.
+virtual = true                   # This is a special mode in which the package itself is not installed, but only the dependencies are.
+dev-dependencies = ["black>=24"]
 
 [tool.black]
 line-length = 120
