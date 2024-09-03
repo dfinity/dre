@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use dre::{
     auth::Neuron,
-    commands::AuthOpts,
+    commands::{AuthOpts, HsmOpts},
     ic_admin::{IcAdmin, IcAdminImpl, ProposeCommand, ProposeOptions},
 };
 use ic_base_types::PrincipalId;
@@ -124,7 +124,10 @@ impl<'a> ActionExecutor<'a> {
         let neuron = Neuron::new(
             AuthOpts {
                 private_key_pem: None,
-                hsm_opts: None,
+                hsm_opts: HsmOpts {
+                    hsm_pin: None,
+                    hsm_params: None,
+                },
             },
             None,
             &network,
