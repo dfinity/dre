@@ -64,7 +64,7 @@ impl ExecutableCommand for List {
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        let client = GovernanceCanisterWrapper::from(ctx.create_canister_client()?);
+        let client = GovernanceCanisterWrapper::from(ctx.create_ic_agent_canister_client(None)?);
         let proposals = client
             .list_proposals(ListProposalInfo {
                 limit: self.limit,

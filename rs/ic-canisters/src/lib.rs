@@ -1,4 +1,6 @@
 use candid::CandidType;
+use candid::Decode;
+use candid::Principal;
 use ic_agent::agent::http_transport::ReqwestTransport;
 use ic_agent::identity::AnonymousIdentity;
 use ic_agent::identity::BasicIdentity;
@@ -7,10 +9,6 @@ use ic_agent::Agent;
 use ic_agent::Identity;
 use ic_base_types::CanisterId;
 use ic_base_types::PrincipalId;
-use ic_canister_client::Agent as CanisterClientAgent;
-use ic_canister_client::Sender;
-use ic_canister_client_sender::SigKeys;
-use ic_sys::utility_command::UtilityCommand;
 use ic_transport_types::SubnetMetrics;
 use parallel_hardware_identity::ParallelHardwareIdentity;
 use serde::Deserialize;
@@ -26,41 +24,6 @@ pub mod node_metrics;
 pub mod parallel_hardware_identity;
 pub mod registry;
 pub mod sns_wasm;
-
-pub struct CanisterClient {
-    pub agent: CanisterClientAgent,
-}
-
-impl CanisterClient {
-    pub fn from_hsm(pin: String, slot: u64, key_id: String, nns_url: &Url) -> anyhow::Result<Self> {
-        let sender = Sender::from_external_hsm(
-            UtilityCommand::read_public_key(Some(&slot.to_string()), Some(&key_id)).execute()?,
-            std::sync::Arc::new(move |input| {
-                Ok(UtilityCommand::sign_message(input.to_vec(), Some(&slot.to_string()), Some(&pin), Some(&key_id)).execute()?)
-            }),
-        );
-
-        Ok(Self {
-            agent: CanisterClientAgent::new(nns_url.clone(), sender),
-        })
-    }
-
-    pub fn from_key_file(file: PathBuf, nns_url: &Url) -> anyhow::Result<Self> {
-        let contents = std::fs::read_to_string(file).expect("Could not read key file");
-        let sig_keys = SigKeys::from_pem(&contents).expect("Failed to parse pem file");
-        let sender = Sender::SigKeys(sig_keys);
-
-        Ok(Self {
-            agent: CanisterClientAgent::new(nns_url.clone(), sender),
-        })
-    }
-
-    pub fn from_anonymous(nns_url: &Url) -> anyhow::Result<Self> {
-        Ok(Self {
-            agent: CanisterClientAgent::new(nns_url.clone(), Sender::Anonymous),
-        })
-    }
-}
 
 pub struct IcAgentCanisterClient {
     pub agent: Agent,
@@ -106,6 +69,20 @@ impl IcAgentCanisterClient {
             .read_state_subnet_metrics(candid::Principal::from_str(subnet_id.to_string().as_str())?)
             .await
             .map_err(|e| anyhow::anyhow!(e))
+    }
+
+    async fn query<T>(&self, canister_id: &Principal, method_name: &str, args: Vec<u8>) -> anyhow::Result<T>
+    where
+        T: candid::CandidType + for<'a> candid::Deserialize<'a>,
+    {
+        self.agent
+            .query(canister_id, method_name)
+            .with_arg(args)
+            .call()
+            .await
+            .map_err(anyhow::Error::from)
+            .map(|r| Decode!(r.as_slice(), T))?
+            .map_err(|e| anyhow::anyhow!("Error while decoding into {}: {:?}", std::any::type_name::<T>(), e))
     }
 }
 
