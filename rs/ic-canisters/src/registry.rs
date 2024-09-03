@@ -1,12 +1,16 @@
 use ic_agent::Agent;
 use ic_base_types::PrincipalId;
+use ic_interfaces_registry::RegistryTransportRecord;
 use ic_nns_constants::REGISTRY_CANISTER_ID;
 use ic_protobuf::{
     registry::{crypto::v1::PublicKey, subnet::v1::SubnetListRecord},
     types::v1::SubnetId,
 };
 use ic_registry_keys::make_crypto_threshold_signing_pubkey_key;
-use ic_registry_transport::pb::v1::{RegistryGetLatestVersionResponse, RegistryGetValueRequest, RegistryGetValueResponse};
+use ic_registry_nns_data_provider::certification::decode_certified_deltas;
+use ic_registry_transport::pb::v1::{
+    RegistryGetChangesSinceRequest, RegistryGetLatestVersionResponse, RegistryGetValueRequest, RegistryGetValueResponse,
+};
 use ic_types::crypto::threshold_sig::ThresholdSigPublicKey;
 use prost::Message;
 
@@ -58,6 +62,23 @@ impl RegistryCanisterWrapper {
         RegistryGetLatestVersionResponse::decode(response.as_slice())
             .map_err(anyhow::Error::from)
             .map(|r| r.version)
+    }
+
+    pub async fn get_certified_changes_since(&self, version: u64) -> anyhow::Result<Vec<RegistryTransportRecord>> {
+        let request = RegistryGetChangesSinceRequest { version };
+        let mut buf = vec![];
+        request.encode(&mut buf)?;
+
+        let response = self
+            .agent
+            .query(&REGISTRY_CANISTER_ID.into(), "get_certified_changes_since")
+            .with_arg(buf)
+            .call()
+            .await?;
+
+        decode_certified_deltas(version, &REGISTRY_CANISTER_ID.into(), &self.nns_public_key().await?, response.as_slice())
+            .map_err(|e| anyhow::anyhow!("Error decoding certificed deltas: {:?}", e))
+            .map(|(res, _, _)| res)
     }
 
     async fn get_value(&self, request: String) -> anyhow::Result<Vec<u8>> {
