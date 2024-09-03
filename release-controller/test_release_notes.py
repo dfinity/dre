@@ -5,7 +5,6 @@ from git_repo import GitRepo
 import pytest
 
 
-# @pytest.mark.skip(reason="expensive, will be removed")
 def test_get_change_description_for_commit():
     with tempfile.TemporaryDirectory() as repo_cache_dir:
         ic_repo = GitRepo(
@@ -78,6 +77,91 @@ def test_get_change_description_for_commit():
             exclusion_reason=None,
             guestos_change=False,
         )
+        # modifies ic-admin
+        assert get_change_description_for_commit(commit_hash="d436a526d", ic_repo=ic_repo) == Change(
+            commit="d436a526d",
+            teams=[
+                "ic-interface-owners",
+            ],
+            type="feat",
+            scope="ic-admin",
+            message="Print hashes rather than entire blobs when submitting InstallCode proposals ([#1093](https://github.com/dfinity/ic/pull/1093))",
+            commiter="jaso     ",
+            exclusion_reason="Changed files are excluded by file path filter",
+            guestos_change=True,
+        )
+        assert get_change_description_for_commit(commit_hash="92e0f4a55", ic_repo=ic_repo) == Change(
+            commit="92e0f4a55",
+            teams=[
+                "ic-interface-owners",
+            ],
+            type="feat",
+            scope="nns",
+            message="Store `wasm_metadata` in SNS-W's stable memory (attempt #2) ([#977](https://github.com/dfinity/ic/pull/977))",
+            commiter="Arsh Ter-",
+            exclusion_reason="Scope of the change (nns) is not related to GuestOS",
+            guestos_change=True,
+        )
+        assert get_change_description_for_commit(commit_hash="0aa15a5be", ic_repo=ic_repo) == Change(
+            commit="0aa15a5be",
+            teams=[
+                "ic-interface-owners",
+            ],
+            type="feat",
+            scope="nns",
+            message="Automatically set SNS Governance, Ledger, Index, Archive canisters memory limits once ([#1004](https://github.com/dfinity/ic/pull/1004))",
+            commiter="Andr Popo",
+            exclusion_reason="Changed files are excluded by file path filter",
+            guestos_change=True,
+        )
+        assert get_change_description_for_commit(commit_hash="974f22dc1", ic_repo=ic_repo) == Change(
+            commit="974f22dc1",
+            teams=[
+                "ic-interface-owners",
+            ],
+            type="feat",
+            scope="sns",
+            message="Expose the wasm_memory_limit in sns_canisters_summary's settings ([#1054](https://github.com/dfinity/ic/pull/1054))",
+            commiter="Andr Popo",
+            exclusion_reason="Changed files are excluded by file path filter",
+            guestos_change=True,
+        )
+        assert get_change_description_for_commit(commit_hash="05b02520f", ic_repo=ic_repo) == Change(
+            commit="05b02520f",
+            teams=[
+                "ic-interface-owners",
+            ],
+            type="feat",
+            scope="sns",
+            message="Reject new participants if the maximum number of required SNS neurons has been reached ([#924](https://github.com/dfinity/ic/pull/924))",
+            commiter="Arsh Ter-",
+            exclusion_reason="Scope of the change (sns) is not related to GuestOS",
+            guestos_change=True,
+        )
+        assert get_change_description_for_commit(commit_hash="57293157d", ic_repo=ic_repo) == Change(
+            commit="57293157d",
+            teams=[
+                "ic-interface-owners",
+            ],
+            type="chore",
+            scope="sns",
+            message="Remove migration code for setting SNS memory limits ([#1159](https://github.com/dfinity/ic/pull/1159))",
+            commiter="Andr Popo",
+            exclusion_reason="Changed files are excluded by file path filter",
+            guestos_change=True,
+        )
+        assert get_change_description_for_commit(commit_hash="f4242cbcf", ic_repo=ic_repo) == Change(
+            commit="f4242cbcf",
+            teams=[
+                "ic-interface-owners",
+            ],
+            type="chore",
+            scope="",
+            message="add decoding quota to http_request in NNS root canister ([#1031](https://github.com/dfinity/ic/pull/1031))",
+            commiter="mras     ",
+            exclusion_reason="Changed files are excluded by file path filter",
+            guestos_change=True,
+        )
 
 
 def test_release_notes():
@@ -107,7 +191,7 @@ To see a full list of commits added since last release, compare the revisions on
 * author: Adri Alic | [`5e319b9de`](https://github.com/dfinity/ic/commit/5e319b9de) Consensus,Interface(consensus): Change definition of better to exclude disqualified block makers ([#673](https://github.com/dfinity/ic/pull/673))
 * author: Alex Uta  | [`736beea98`](https://github.com/dfinity/ic/commit/736beea98) Execution,Interface,Message Routing,Runtime: Enable transparent huge pages for the page allocator ([#665](https://github.com/dfinity/ic/pull/665))
 * author: Dimi Sarl | [`96035ca4c`](https://github.com/dfinity/ic/commit/96035ca4c) Execution,Interface,Networking,Runtime: Reduce DTS slice limit for regular messages on system subnets ([#621](https://github.com/dfinity/ic/pull/621))
-* author: Alex      | [`f0093242d`](https://github.com/dfinity/ic/commit/f0093242d) Execution,Interface,Runtime: Enforce taking a canister snapshot only when canister is not empty ([#452](https://github.com/dfinity/ic/pull/452))
+* ~~author: Alex      | [`f0093242d`](https://github.com/dfinity/ic/commit/f0093242d) Execution,Interface,Runtime: Enforce taking a canister snapshot only when canister is not empty ([#452](https://github.com/dfinity/ic/pull/452)) [AUTO-EXCLUDED:Changed files are excluded by file path filter]~~
 * ~~author: dani      | [`a89a2e17c`](https://github.com/dfinity/ic/commit/a89a2e17c) Interface(nns): Metrics for public neurons. ([#685](https://github.com/dfinity/ic/pull/685)) [AUTO-EXCLUDED:Changed files are excluded by file path filter]~~
 * ~~author: dani      | [`448c85ccc`](https://github.com/dfinity/ic/commit/448c85ccc) Interface(nns): Added include_public_neurons_in_full_neurons to ListNeurons. ([#589](https://github.com/dfinity/ic/pull/589)) [AUTO-EXCLUDED:Changed files are excluded by file path filter]~~
 * ~~author: jaso      | [`2b109fb9b`](https://github.com/dfinity/ic/commit/2b109fb9b) Interface(nns): Define update_canister_settings proposal type without execution ([#529](https://github.com/dfinity/ic/pull/529)) [AUTO-EXCLUDED:Changed files are excluded by file path filter]~~
@@ -120,7 +204,7 @@ To see a full list of commits added since last release, compare the revisions on
 ## Chores:
 * author: kpop      | [`204542c15`](https://github.com/dfinity/ic/commit/204542c15) Consensus,Interface(consensus): change the associated `Error` type of `TryFrom<pb>` from `String` to `ProxyDecodeError` for some consensus types ([#695](https://github.com/dfinity/ic/pull/695))
 * author: Drag Djur | [`4bebd6f6a`](https://github.com/dfinity/ic/commit/4bebd6f6a) Execution,Interface: Add Wasm memory threshold field to canister settings ([#475](https://github.com/dfinity/ic/pull/475))
-* author: Andr Popo | [`9bc6e18ac`](https://github.com/dfinity/ic/commit/9bc6e18ac) Interface(neurons_fund): Populate hotkeys when necessary in the NNS Governance → Swap → SNS Governance dataflow ([#688](https://github.com/dfinity/ic/pull/688))
+* ~~author: Andr Popo | [`9bc6e18ac`](https://github.com/dfinity/ic/commit/9bc6e18ac) Interface(neurons_fund): Populate hotkeys when necessary in the NNS Governance → Swap → SNS Governance dataflow ([#688](https://github.com/dfinity/ic/pull/688)) [AUTO-EXCLUDED:Changed files are excluded by file path filter]~~
 * author: Dani Shar | [`b4be567dc`](https://github.com/dfinity/ic/commit/b4be567dc) Interface: Bump rust version to 1.80 ([#642](https://github.com/dfinity/ic/pull/642))
 * author: mras      | [`dbfbeceea`](https://github.com/dfinity/ic/commit/dbfbeceea) Interface: bump jemallocator v0.3 to tikv-jemallocator v0.5 ([#654](https://github.com/dfinity/ic/pull/654))
 * author: Leo  Eich | [`668fbe08f`](https://github.com/dfinity/ic/commit/668fbe08f) Interface: Rename ECDSA metrics ([#535](https://github.com/dfinity/ic/pull/535))
