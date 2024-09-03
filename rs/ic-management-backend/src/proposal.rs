@@ -16,6 +16,7 @@ use ic_management_types::{TopologyChangePayload, TopologyChangeProposal};
 use ic_nns_governance::pb::v1::{proposal::Action, ListProposalInfo, ListProposalInfoResponse};
 use ic_nns_governance::pb::v1::{ProposalInfo, ProposalStatus, Topic};
 use itertools::Itertools;
+use mockall::automock;
 use registry_canister::mutations::do_add_nodes_to_subnet::AddNodesToSubnetPayload;
 use registry_canister::mutations::do_change_subnet_membership::ChangeSubnetMembershipPayload;
 use registry_canister::mutations::do_create_subnet::CreateSubnetPayload;
@@ -30,6 +31,7 @@ use serde::Serialize;
 use url::Url;
 
 #[allow(dead_code)]
+#[automock]
 pub trait ProposalAgent: Send + Sync {
     fn list_open_topology_proposals(&self) -> BoxFuture<'_, Result<Vec<TopologyChangeProposal>>>;
 

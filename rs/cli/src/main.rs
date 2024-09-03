@@ -16,6 +16,8 @@ mod operations;
 mod qualification;
 mod runner;
 mod subnet_manager;
+#[cfg(test)]
+mod unit_tests;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {

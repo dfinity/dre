@@ -238,3 +238,37 @@ impl DreContext {
         self.forum_post_link.clone()
     }
 }
+
+#[cfg(test)]
+#[allow(dead_code)]
+pub mod tests {
+    use std::{cell::RefCell, sync::Arc};
+
+    use ic_management_backend::{lazy_git::LazyGit, lazy_registry::LazyRegistry, proposal::ProposalAgent};
+    use ic_management_types::Network;
+
+    use crate::ic_admin::IcAdmin;
+
+    use super::DreContext;
+
+    pub fn get_mocked_ctx(
+        network: Network,
+        registry: Arc<dyn LazyRegistry>,
+        ic_admin: Arc<dyn IcAdmin>,
+        git: Arc<dyn LazyGit>,
+        proposal_agent: Arc<dyn ProposalAgent>,
+    ) -> DreContext {
+        DreContext {
+            network,
+            registry: RefCell::new(Some(registry)),
+            ic_admin: Some(ic_admin),
+            runner: RefCell::new(None),
+            ic_repo: RefCell::new(Some(git)),
+            proposal_agent,
+            verbose_runner: true,
+            skip_sync: false,
+            ic_admin_path: None,
+            forum_post_link: None,
+        }
+    }
+}
