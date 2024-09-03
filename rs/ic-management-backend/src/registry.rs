@@ -939,6 +939,8 @@ pub fn local_registry_path(network: &Network) -> PathBuf {
     local_cache_path().join(Path::new(network.name.as_str())).join("local_registry")
 }
 
+#[allow(dead_code)]
+// Probably will not be used anymore
 pub async fn nns_public_key(registry_canister: &RegistryCanister) -> anyhow::Result<ThresholdSigPublicKey> {
     let (nns_subnet_id_vec, _) = registry_canister
         .get_value(ROOT_SUBNET_ID_KEY.as_bytes().to_vec(), None)

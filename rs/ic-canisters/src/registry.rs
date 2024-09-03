@@ -76,7 +76,7 @@ impl RegistryCanisterWrapper {
             .call()
             .await?;
 
-        decode_certified_deltas(version, &REGISTRY_CANISTER_ID.into(), &self.nns_public_key().await?, response.as_slice())
+        decode_certified_deltas(version, &REGISTRY_CANISTER_ID, &self.nns_public_key().await?, response.as_slice())
             .map_err(|e| anyhow::anyhow!("Error decoding certificed deltas: {:?}", e))
             .map(|(res, _, _)| res)
     }
