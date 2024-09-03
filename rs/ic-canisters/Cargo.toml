@@ -32,3 +32,5 @@ url = { workspace = true }
 ic-sns-wasm = { workspace = true }
 trustworthy-node-metrics-types = { workspace = true }
 ic-transport-types = { workspace = true }
+ic-registry-keys.workspace = true
+ic-types.workspace = true

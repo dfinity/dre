@@ -1,8 +1,13 @@
 use ic_agent::Agent;
 use ic_base_types::PrincipalId;
 use ic_nns_constants::REGISTRY_CANISTER_ID;
-use ic_protobuf::registry::subnet::v1::SubnetListRecord;
-use ic_registry_transport::pb::v1::{RegistryGetValueRequest, RegistryGetValueResponse};
+use ic_protobuf::{
+    registry::{crypto::v1::PublicKey, subnet::v1::SubnetListRecord},
+    types::v1::SubnetId,
+};
+use ic_registry_keys::make_crypto_threshold_signing_pubkey_key;
+use ic_registry_transport::pb::v1::{RegistryGetLatestVersionResponse, RegistryGetValueRequest, RegistryGetValueResponse};
+use ic_types::crypto::threshold_sig::ThresholdSigPublicKey;
 use prost::Message;
 
 use crate::IcAgentCanisterClient;
@@ -23,14 +28,46 @@ impl RegistryCanisterWrapper {
     }
 
     pub async fn get_subnets(&self) -> anyhow::Result<Vec<PrincipalId>> {
+        let decoded_resp = self.get_value("subnet_list".to_string()).await?;
+
+        let mapped = SubnetListRecord::decode(decoded_resp.as_slice())?;
+
+        Ok(mapped.subnets.into_iter().map(|id: Vec<u8>| PrincipalId::try_from(id).unwrap()).collect())
+    }
+
+    pub async fn nns_subnet_id(&self) -> anyhow::Result<SubnetId> {
+        let decoded_resp = self.get_value("nns_subnet_id".to_string()).await?;
+
+        SubnetId::decode(decoded_resp.as_slice()).map_err(anyhow::Error::from)
+    }
+
+    pub async fn nns_public_key(&self) -> anyhow::Result<ThresholdSigPublicKey> {
+        let subnet_id = self.nns_subnet_id().await?;
+        let subnet_id = ic_types::SubnetId::new(ic_types::PrincipalId::try_from(
+            subnet_id.principal_id.ok_or(anyhow::anyhow!("Failed to find nns subnet id"))?.raw,
+        )?);
+
+        let decoded_resp = self.get_value(make_crypto_threshold_signing_pubkey_key(subnet_id)).await?;
+
+        ThresholdSigPublicKey::try_from(PublicKey::decode(decoded_resp.as_slice())?).map_err(anyhow::Error::from)
+    }
+
+    pub async fn get_latest_version(&self) -> anyhow::Result<u64> {
+        let response = self.get_value("get_latest_version".to_string()).await?;
+
+        RegistryGetLatestVersionResponse::decode(response.as_slice())
+            .map_err(anyhow::Error::from)
+            .map(|r| r.version)
+    }
+
+    async fn get_value(&self, request: String) -> anyhow::Result<Vec<u8>> {
         let request = RegistryGetValueRequest {
-            key: "subnet_list".as_bytes().to_vec(),
+            key: request.as_bytes().to_vec(),
             ..Default::default()
         };
 
         let mut buf = vec![];
         request.encode(&mut buf)?;
-
         let response = self.agent.query(&REGISTRY_CANISTER_ID.into(), "get_value").with_arg(buf).call().await?;
 
         let decoded_resp = RegistryGetValueResponse::decode(&response[..])?;
@@ -38,8 +75,6 @@ impl RegistryCanisterWrapper {
             return Err(anyhow::anyhow!(error.reason));
         }
 
-        let mapped = SubnetListRecord::decode(&decoded_resp.value[..])?;
-
-        Ok(mapped.subnets.into_iter().map(|id: Vec<u8>| PrincipalId::try_from(id).unwrap()).collect())
+        Ok(decoded_resp.value)
     }
 }
