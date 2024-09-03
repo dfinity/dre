@@ -148,9 +148,9 @@ ic-transport-types = "0.37.1"
 ic-utils = "0.37.0"
 include_dir = "0.7.4"
 itertools = "0.13.0"
-keyring = { version = "3.2.1", features = [
+keyring = { version = "3.2.1", default-features = false, features = [
     "apple-native",
-    "sync-secret-service",
+    "linux-native",
 ] }
 lazy_static = "1.5.0"
 log = "0.4.22"
