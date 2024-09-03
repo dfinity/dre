@@ -5,7 +5,6 @@ from git_repo import GitRepo
 import pytest
 
 
-# @pytest.mark.skip(reason="expensive, will be removed")
 def test_get_change_description_for_commit():
     with tempfile.TemporaryDirectory() as repo_cache_dir:
         ic_repo = GitRepo(
@@ -77,6 +76,91 @@ def test_get_change_description_for_commit():
             commiter="jaso     ",
             exclusion_reason=None,
             guestos_change=False,
+        )
+        # modifies ic-admin
+        assert get_change_description_for_commit(commit_hash="d436a526d", ic_repo=ic_repo) == Change(
+            commit="d436a526d",
+            teams=[
+                "ic-interface-owners",
+            ],
+            type="feat",
+            scope="ic-admin",
+            message="Print hashes rather than entire blobs when submitting InstallCode proposals ([#1093](https://github.com/dfinity/ic/pull/1093))",
+            commiter="jaso     ",
+            exclusion_reason="Changed files are excluded by file path filter",
+            guestos_change=True,
+        )
+        assert get_change_description_for_commit(commit_hash="92e0f4a55", ic_repo=ic_repo) == Change(
+            commit="92e0f4a55",
+            teams=[
+                "ic-interface-owners",
+            ],
+            type="feat",
+            scope="nns",
+            message="Store `wasm_metadata` in SNS-W's stable memory (attempt #2) ([#977](https://github.com/dfinity/ic/pull/977))",
+            commiter="Arsh Ter-",
+            exclusion_reason="Scope of the change (nns) is not related to GuestOS",
+            guestos_change=True,
+        )
+        assert get_change_description_for_commit(commit_hash="0aa15a5be", ic_repo=ic_repo) == Change(
+            commit="0aa15a5be",
+            teams=[
+                "ic-interface-owners",
+            ],
+            type="feat",
+            scope="nns",
+            message="Automatically set SNS Governance, Ledger, Index, Archive canisters memory limits once ([#1004](https://github.com/dfinity/ic/pull/1004))",
+            commiter="Andr Popo",
+            exclusion_reason="Changed files are excluded by file path filter",
+            guestos_change=True,
+        )
+        assert get_change_description_for_commit(commit_hash="974f22dc1", ic_repo=ic_repo) == Change(
+            commit="974f22dc1",
+            teams=[
+                "ic-interface-owners",
+            ],
+            type="feat",
+            scope="sns",
+            message="Expose the wasm_memory_limit in sns_canisters_summary's settings ([#1054](https://github.com/dfinity/ic/pull/1054))",
+            commiter="Andr Popo",
+            exclusion_reason="Changed files are excluded by file path filter",
+            guestos_change=True,
+        )
+        assert get_change_description_for_commit(commit_hash="05b02520f", ic_repo=ic_repo) == Change(
+            commit="05b02520f",
+            teams=[
+                "ic-interface-owners",
+            ],
+            type="feat",
+            scope="sns",
+            message="Reject new participants if the maximum number of required SNS neurons has been reached ([#924](https://github.com/dfinity/ic/pull/924))",
+            commiter="Arsh Ter-",
+            exclusion_reason="Scope of the change (sns) is not related to GuestOS",
+            guestos_change=True,
+        )
+        assert get_change_description_for_commit(commit_hash="57293157d", ic_repo=ic_repo) == Change(
+            commit="57293157d",
+            teams=[
+                "ic-interface-owners",
+            ],
+            type="chore",
+            scope="sns",
+            message="Remove migration code for setting SNS memory limits ([#1159](https://github.com/dfinity/ic/pull/1159))",
+            commiter="Andr Popo",
+            exclusion_reason="Changed files are excluded by file path filter",
+            guestos_change=True,
+        )
+        assert get_change_description_for_commit(commit_hash="f4242cbcf", ic_repo=ic_repo) == Change(
+            commit="f4242cbcf",
+            teams=[
+                "ic-interface-owners",
+            ],
+            type="chore",
+            scope="",
+            message="add decoding quota to http_request in NNS root canister ([#1031](https://github.com/dfinity/ic/pull/1031))",
+            commiter="mras     ",
+            exclusion_reason="Changed files are excluded by file path filter",
+            guestos_change=True,
         )
 
 
