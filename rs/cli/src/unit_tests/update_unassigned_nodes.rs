@@ -35,7 +35,7 @@ async fn should_skip_update_same_version_nns_not_provided() {
     let principal = PrincipalId::from_str("tdb26-jop6k-aogll-7ltgs-eruif-6kk7m-qpktf-gdiqx-mxtrf-vb5e6-eqe").unwrap();
 
     let mut registry = registry_with_subnets(vec![Subnet {
-        principal: principal.clone(),
+        principal,
         replica_version: "version".to_string(),
         ..Default::default()
     }]);
@@ -67,7 +67,7 @@ async fn should_skip_update_same_version_nns_provided() {
     let principal = PrincipalId::new_anonymous();
 
     let mut registry = registry_with_subnets(vec![Subnet {
-        principal: principal.clone(),
+        principal,
         replica_version: "version".to_string(),
         ..Default::default()
     }]);
@@ -101,7 +101,7 @@ async fn should_update_unassigned_nodes() {
     let principal = PrincipalId::new_anonymous();
 
     let mut registry = registry_with_subnets(vec![Subnet {
-        principal: principal.clone(),
+        principal,
         replica_version: "version".to_string(),
         ..Default::default()
     }]);
@@ -139,7 +139,7 @@ async fn should_fail_nns_not_found() {
     let other_principal = PrincipalId::new_subnet_test_id(1);
 
     let mut registry = registry_with_subnets(vec![Subnet {
-        principal: principal.clone(),
+        principal,
         replica_version: "version".to_string(),
         ..Default::default()
     }]);
