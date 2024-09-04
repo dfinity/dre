@@ -39,14 +39,15 @@ jobs:
 
       ########################################
       # Build and test
+      # Will run test as a local subprocess because for some tests
+      # create status files on certain locations (like $HOME)
       ########################################
       - name: "🚀 Building"
         uses: ./.github/workflows/build
         with:
           GITHUB_TOKEN: "${{ secrets.GIX_CREATE_PR_PAT }}"
-        # Bazel creates a readonly file system for tests
       - name: "🚀 Testing"
-        run: bazel test ... --test_env=ADMIN_REVISIONS_IN_TMP_FOR_CI=1
+        run: bazel test ...--spawn_stragety=local
 
       # We don't need the linear-jira build and test step for now
       # - name: "🚀 Build and Test Linear-Jira with Bazel"

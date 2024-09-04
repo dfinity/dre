@@ -770,12 +770,9 @@ pub struct ProposeOptions {
 pub const DEFAULT_IC_ADMIN_VERSION: &str = "0ca139ca39dfee21c8ca75e7fe37422df65e4b96";
 
 fn get_ic_admin_revisions_dir() -> anyhow::Result<PathBuf> {
-    let dir = match std::env::var("ADMIN_REVISIONS_IN_TMP_FOR_CI") {
-        Ok(_) => Some(PathBuf::from("/tmp")),
-        Err(_) => dirs::home_dir(),
-    }
-    .map(|d| d.join("bin").join("ic-admin.revisions"))
-    .ok_or_else(|| anyhow::format_err!("Cannot find home directory"))?;
+    let dir = dirs::home_dir()
+        .map(|d| d.join("bin").join("ic-admin.revisions"))
+        .ok_or_else(|| anyhow::format_err!("Cannot find home directory"))?;
 
     if !dir.exists() {
         std::fs::create_dir_all(&dir)?;
