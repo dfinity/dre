@@ -60,7 +60,7 @@ pub(crate) struct HsmParams {
     pub(crate) hsm_slot: Option<u64>,
 
     /// HSM Key ID, can be read with pkcs11-tool
-    #[clap(required = false, conflicts_with = "private_key_pem", long, global = true, env = "HSM_KEY_ID")]
+    #[clap(required = false, conflicts_with = "private_key_pem", long, value_parser=maybe_hex::<u8>, global = true, env = "HSM_KEY_ID")]
     pub(crate) hsm_key_id: Option<u8>,
 }
 
