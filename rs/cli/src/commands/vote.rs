@@ -35,7 +35,8 @@ pub struct Vote {
     #[clap(long, use_value_delimiter = true, value_delimiter = ',', default_value = "12")]
     pub accepted_topics: Vec<i32>,
 
-    /// Override default sleep time
+    /// Sleep time between voting cycles.  If set to 0s,
+    /// only one voting cycle will take place.
     #[clap(long, default_value = "60s", value_parser = parse_duration)]
     pub sleep_time: Duration,
 }
@@ -49,7 +50,10 @@ impl ExecutableCommand for Vote {
         let client: GovernanceCanisterWrapper = ctx.create_ic_agent_canister_client(None)?.into();
 
         let mut voted_proposals = HashSet::new();
-        DesktopNotifier::send_info("DRE vote: starting", "Starting the voting loop...");
+
+        if self.sleep_time != Duration::from_secs(0) {
+            DesktopNotifier::send_info("DRE vote: starting", "Starting the voting loop...");
+        }
 
         loop {
             let proposals = client.get_pending_proposals().await?;
@@ -64,7 +68,8 @@ impl ExecutableCommand for Vote {
 
             // Clear last line in terminal
             print!("\x1B[1A\x1B[K");
-            std::io::stdout().flush().unwrap();
+            // No need to panic if standard out doesn't flush (e.g. /dev/null).
+            let _ = std::io::stdout().flush();
 
             for proposal in proposals {
                 DesktopNotifier::send_info(
@@ -78,24 +83,33 @@ impl ExecutableCommand for Vote {
                     ),
                 );
 
-                let response = match client.register_vote(ctx.ic_admin().neuron().neuron_id, proposal.id.unwrap().id).await {
-                    Ok(response) => format!("Voted successfully: {}", response),
-                    Err(e) => {
-                        DesktopNotifier::send_critical(
-                            "DRE vote: error",
-                            &format!(
-                                "Error voting on proposal {} (topic {:?}, proposer {}) -> {}",
-                                proposal.id.unwrap().id,
-                                proposal.topic(),
-                                proposal.proposer.unwrap_or_default().id,
-                                e
-                            ),
-                        );
-                        format!("Error voting: {}", e)
-                    }
-                };
-                info!("{}", response);
-                voted_proposals.insert(proposal.id.unwrap().id);
+                let prop_id = proposal.id.unwrap().id;
+                if !ctx.is_dry_run() {
+                    let response = match client.register_vote(ctx.ic_admin().neuron().neuron_id, proposal.id.unwrap().id).await {
+                        Ok(response) => format!("Voted successfully: {}", response),
+                        Err(e) => {
+                            DesktopNotifier::send_critical(
+                                "DRE vote: error",
+                                &format!(
+                                    "Error voting on proposal {} (topic {:?}, proposer {}) -> {}",
+                                    prop_id,
+                                    proposal.topic(),
+                                    proposal.proposer.unwrap_or_default().id,
+                                    e
+                                ),
+                            );
+                            format!("Error voting: {}", e)
+                        }
+                    };
+                    info!("{}", response);
+                } else {
+                    info!("Would have voted for proposal {}", prop_id)
+                }
+                voted_proposals.insert(prop_id);
+            }
+
+            if self.sleep_time == Duration::from_secs(0) {
+                break;
             }
 
             let mut sp = Spinner::with_timer(
