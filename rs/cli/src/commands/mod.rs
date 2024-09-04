@@ -157,7 +157,7 @@ The argument is mandatory for testnets, and is optional for mainnet and staging"
 
     /// Don't sync with the registry
     ///
-    /// Useful for when the nns is unreachable
+    /// Useful for when the NNS is unreachable
     #[clap(long)]
     pub no_sync: bool,
 
