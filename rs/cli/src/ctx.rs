@@ -275,6 +275,11 @@ impl DreContext {
     pub fn forum_post_link(&self) -> Option<String> {
         self.forum_post_link.clone()
     }
+
+    #[cfg(test)]
+    pub fn ic_admin_path(&self) -> Option<String> {
+        self.ic_admin_path.clone()
+    }
 }
 
 #[cfg(test)]

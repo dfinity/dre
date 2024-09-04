@@ -817,7 +817,7 @@ pub async fn download_ic_admin(version: Option<String>) -> Result<String> {
             format!("https://download.dfinity.systems/ic/{version}/binaries/x86_64-linux/ic-admin.gz")
         };
         info!("Downloading ic-admin version: {} from {}", version, url);
-        let body = reqwest::get(url).await?.bytes().await?;
+        let body = reqwest::get(url).await?.error_for_status()?.bytes().await?;
         let mut decoded = GzDecoder::new(body.as_ref());
 
         let path_parent = path.parent().expect("path parent unwrap failed!");
