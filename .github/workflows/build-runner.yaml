@@ -35,7 +35,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: "Copy docker image dependencies"
-        run: cp pyproject.toml requirements.lock requirements-dev.lock .python-version README.md docker
+        run: cp pyproject.toml requirements.lock requirements-dev.lock .python-version README.md rust-toolchain.toml docker/
         shell: bash
 
       - name: Build and push Docker image
