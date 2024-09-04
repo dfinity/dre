@@ -18,6 +18,7 @@ use ic_management_types::Network;
 use keyring::{Entry, Error};
 use log::{info, warn};
 use secrecy::SecretString;
+use std::sync::Mutex;
 
 use crate::commands::{AuthOpts, HsmOpts, HsmParams};
 
@@ -45,7 +46,7 @@ impl Neuron {
     pub async fn new(auth: Auth, neuron_id: Option<u64>, network: &Network, include_proposer: bool) -> anyhow::Result<Self> {
         let neuron_id = match neuron_id {
             Some(n) => n,
-            None => auth.auto_detect_neuron_id(network.get_nns_urls()).await?,
+            None => auth.auto_detect_neuron_id(network.get_nns_urls().to_vec()).await?,
         };
         info!("Identifying as neuron ID {}", neuron_id);
         Ok(Self {
@@ -125,14 +126,20 @@ impl Auth {
         }
     }
 
-    async fn auto_detect_neuron_id(&self, nns_urls: &[url::Url]) -> anyhow::Result<u64> {
+    pub fn create_canister_client(&self, nns_urls: Vec<url::Url>, lock: Option<Mutex<()>>) -> anyhow::Result<IcAgentCanisterClient> {
         // FIXME: why do we even take multiple URLs if only the first one is ever used?
         let url = nns_urls.first().ok_or(anyhow::anyhow!("No NNS URLs provided"))?.to_owned();
-        let client = match self {
-            Auth::Hsm { pin, slot, key_id } => IcAgentCanisterClient::from_hsm(pin.clone(), *slot, hsm_key_id_to_string(*key_id), url, None)?,
-            Auth::Keyfile { path } => IcAgentCanisterClient::from_key_file(path.clone(), url)?,
-            Auth::Anonymous => IcAgentCanisterClient::from_anonymous(url)?,
-        };
+        match self {
+            Auth::Hsm { pin, slot, key_id } => IcAgentCanisterClient::from_hsm(pin.clone(), *slot, hsm_key_id_to_string(*key_id), url, lock),
+            Auth::Keyfile { path } => IcAgentCanisterClient::from_key_file(path.clone(), url),
+            Auth::Anonymous => IcAgentCanisterClient::from_anonymous(url),
+        }
+    }
+
+    async fn auto_detect_neuron_id(&self, nns_urls: Vec<url::Url>) -> anyhow::Result<u64> {
+        let selfclone = self.clone();
+        let nnsurlsclone = nns_urls.clone();
+        let client = tokio::task::spawn_blocking(move || selfclone.create_canister_client(nnsurlsclone, None)).await??;
         let governance = GovernanceCanisterWrapper::from(client);
         let response = governance.list_neurons().await?;
         let neuron_ids = response.neuron_infos.keys().copied().collect::<Vec<_>>();

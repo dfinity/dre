@@ -20,7 +20,7 @@ use log::info;
 use url::Url;
 
 use crate::{
-    auth::{hsm_key_id_to_string, Auth, Neuron},
+    auth::{Auth, Neuron},
     commands::{Args, ExecutableCommand, IcAdminRequirement},
     ic_admin::{download_ic_admin, should_update_ic_admin, IcAdmin, IcAdminImpl},
     runner::Runner,
@@ -205,16 +205,10 @@ impl DreContext {
 
     /// Uses `ic_agent::Agent`
     pub fn create_ic_agent_canister_client(&self, lock: Option<Mutex<()>>) -> anyhow::Result<IcAgentCanisterClient> {
-        let nns_url = self.network.get_nns_urls().first().expect("Should have at least one NNS url");
+        let urls = self.network.get_nns_urls().to_vec();
         match &self.ic_admin {
-            Some(a) => match &a.neuron().auth {
-                crate::auth::Auth::Hsm { pin, slot, key_id } => {
-                    IcAgentCanisterClient::from_hsm(pin.to_string(), *slot, hsm_key_id_to_string(*key_id), nns_url.to_owned(), lock)
-                }
-                crate::auth::Auth::Keyfile { path } => IcAgentCanisterClient::from_key_file(path.into(), nns_url.to_owned()),
-                crate::auth::Auth::Anonymous => IcAgentCanisterClient::from_anonymous(nns_url.to_owned()),
-            },
-            None => IcAgentCanisterClient::from_anonymous(nns_url.to_owned()),
+            Some(a) => a.neuron().auth.create_canister_client(urls, lock),
+            None => IcAgentCanisterClient::from_anonymous(urls.first().expect("Should have at least one NNS url").clone()),
         }
     }
 
