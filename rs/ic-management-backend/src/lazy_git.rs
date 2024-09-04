@@ -8,11 +8,13 @@ use ic_management_types::{Artifact, ArtifactReleases, Network, Release};
 use itertools::Itertools;
 use lazy_static::lazy_static;
 use log::{debug, error};
+use mockall::automock;
 use regex::Regex;
 use tokio::sync::RwLock;
 
 use crate::git_ic_repo::IcRepo;
 
+#[automock]
 pub trait LazyGit: Send + Sync {
     fn guestos_releases(&self) -> BoxFuture<'_, anyhow::Result<Arc<ArtifactReleases>>>;
 

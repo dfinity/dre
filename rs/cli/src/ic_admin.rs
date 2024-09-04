@@ -9,6 +9,7 @@ use ic_base_types::PrincipalId;
 use ic_management_types::{Artifact, Network};
 use itertools::Itertools;
 use log::{error, info, warn};
+use mockall::automock;
 use regex::Regex;
 use reqwest::StatusCode;
 use sha2::{Digest, Sha256};
@@ -58,18 +59,19 @@ impl UpdateVersion {
     }
 }
 
+#[automock]
 pub trait IcAdmin: Send + Sync {
     fn neuron(&self) -> Neuron;
 
     fn propose_run(&self, cmd: ProposeCommand, opts: ProposeOptions) -> BoxFuture<'_, anyhow::Result<String>>;
 
-    fn run<'a>(&'a self, command: &'a str, args: &'a [String], silent: bool) -> BoxFuture<'a, anyhow::Result<String>>;
+    fn run<'a>(&'a self, command: &'a str, args: &'a [String], silent: bool) -> BoxFuture<'_, anyhow::Result<String>>;
 
     fn grep_subcommand_arguments(&self, subcommand: &str) -> String;
 
-    fn run_passthrough_get<'a>(&'a self, args: &'a [String], silent: bool) -> BoxFuture<'a, anyhow::Result<String>>;
+    fn run_passthrough_get<'a>(&'a self, args: &'a [String], silent: bool) -> BoxFuture<'_, anyhow::Result<String>>;
 
-    fn run_passthrough_propose<'a>(&'a self, args: &'a [String]) -> BoxFuture<'a, anyhow::Result<String>>;
+    fn run_passthrough_propose<'a>(&'a self, args: &'a [String]) -> BoxFuture<'_, anyhow::Result<String>>;
 
     fn prepare_to_propose_to_revise_elected_versions<'a>(
         &'a self,
@@ -78,7 +80,7 @@ pub trait IcAdmin: Send + Sync {
         release_tag: &'a str,
         force: bool,
         retire_versions: Option<Vec<String>>,
-    ) -> BoxFuture<'a, anyhow::Result<UpdateVersion>>;
+    ) -> BoxFuture<'_, anyhow::Result<UpdateVersion>>;
 }
 
 #[derive(Clone)]
@@ -99,7 +101,7 @@ impl IcAdmin for IcAdminImpl {
         Box::pin(async move { self.propose_run_inner(cmd, opts, self.dry_run).await })
     }
 
-    fn run<'a>(&'a self, command: &'a str, args: &'a [String], silent: bool) -> BoxFuture<'a, anyhow::Result<String>> {
+    fn run<'a>(&'a self, command: &'a str, args: &'a [String], silent: bool) -> BoxFuture<'_, anyhow::Result<String>> {
         let ic_admin_args = [&[command.to_string()], args].concat();
         Box::pin(async move { self._run_ic_admin_with_args(&ic_admin_args, silent).await })
     }
@@ -124,7 +126,7 @@ impl IcAdmin for IcAdminImpl {
     }
 
     /// Run an `ic-admin get-*` command directly, and without an HSM
-    fn run_passthrough_get<'a>(&'a self, args: &'a [String], silent: bool) -> BoxFuture<'a, anyhow::Result<String>> {
+    fn run_passthrough_get<'a>(&'a self, args: &'a [String], silent: bool) -> BoxFuture<'_, anyhow::Result<String>> {
         if args.is_empty() {
             println!("List of available ic-admin 'get' sub-commands:\n");
             for subcmd in self.grep_subcommands(r"\s+get-(.+?)\s") {
@@ -155,7 +157,7 @@ impl IcAdmin for IcAdminImpl {
     }
 
     /// Run an `ic-admin propose-to-*` command directly
-    fn run_passthrough_propose<'a>(&'a self, args: &'a [String]) -> BoxFuture<'a, anyhow::Result<String>> {
+    fn run_passthrough_propose<'a>(&'a self, args: &'a [String]) -> BoxFuture<'_, anyhow::Result<String>> {
         if args.is_empty() {
             println!("List of available ic-admin 'propose' sub-commands:\n");
             for subcmd in self.grep_subcommands(r"\s+propose-to-(.+?)\s") {
@@ -203,7 +205,7 @@ impl IcAdmin for IcAdminImpl {
         release_tag: &'a str,
         force: bool,
         retire_versions: Option<Vec<String>>,
-    ) -> BoxFuture<'a, anyhow::Result<UpdateVersion>> {
+    ) -> BoxFuture<'_, anyhow::Result<UpdateVersion>> {
         Box::pin(async move {
             let (update_urls, expected_hash) = Self::download_images_and_validate_sha256(release_artifact, version, force).await?;
 

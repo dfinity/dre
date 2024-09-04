@@ -29,26 +29,26 @@ use vote::Vote;
 
 use crate::auth::Neuron as AuthNeuron;
 
-mod api_boundary_nodes;
-mod completions;
-mod der_to_principal;
-mod firewall;
+pub(crate) mod api_boundary_nodes;
+pub(crate) mod completions;
+pub(crate) mod der_to_principal;
+pub(crate) mod firewall;
 pub mod get;
-mod heal;
+pub(crate) mod heal;
 pub mod hostos;
-mod neuron;
-mod node_metrics;
-mod nodes;
-mod proposals;
-mod propose;
+pub(crate) mod neuron;
+pub(crate) mod node_metrics;
+pub(crate) mod nodes;
+pub(crate) mod proposals;
+pub(crate) mod propose;
 pub mod qualify;
-mod registry;
-mod subnet;
-mod update_authorized_subnets;
-mod update_unassigned_nodes;
+pub(crate) mod registry;
+pub(crate) mod subnet;
+pub(crate) mod update_authorized_subnets;
+pub(crate) mod update_unassigned_nodes;
 pub mod upgrade;
-mod version;
-mod vote;
+pub(crate) mod version;
+pub(crate) mod vote;
 
 /// HSM authentication parameters
 #[derive(ClapArgs, Debug, Clone)]

@@ -54,10 +54,10 @@ strum = { workspace = true }
 strum_macros = { workspace = true }
 tokio = { workspace = true }
 url = { workspace = true }
+mockall.workspace = true
 
 [dev-dependencies]
 actix-rt = { workspace = true }
-
 
 [[bin]]
 name = "ic-management-backend"

@@ -185,6 +185,7 @@ human_bytes = "0.4"
 headless_chrome = { version = "1.0.13", features = [
     "fetch",
 ], default-features = false }
+mockall = "0.13.0"
 
 # dre-canisters dependencies
 ic-cdk-timers = { git = "https://github.com/dfinity/cdk-rs.git", rev = "3e54016734c8f73fb3acabc9c9e72c960c85eb3b" }

@@ -1,5 +1,5 @@
 {
-  "checksum": "2c42277b10b758d02d577974e54b09d0e0b596963845dfadd0589edcabe3044a",
+  "checksum": "7c6e7634ec0d7045cdb8c8875094bcc3c2ef94dde5b0a5d505607233a5852f7c",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -10937,6 +10937,10 @@
               "target": "log"
             },
             {
+              "id": "mockall 0.13.0",
+              "target": "mockall"
+            },
+            {
               "id": "pretty_env_logger 0.5.0",
               "target": "pretty_env_logger"
             },
@@ -20820,6 +20824,10 @@
             {
               "id": "log 0.4.22",
               "target": "log"
+            },
+            {
+              "id": "mockall 0.13.0",
+              "target": "mockall"
             },
             {
               "id": "octocrab 0.39.0",
