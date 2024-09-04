@@ -31,6 +31,16 @@ pub struct Neuron {
 static RELEASE_AUTOMATION_DEFAULT_PRIVATE_KEY_PEM: &str = ".config/dfx/identity/release-automation/identity.pem"; // Relative to the home directory
 const RELEASE_AUTOMATION_NEURON_ID: u64 = 80;
 
+// As per fn str_to_key_id(s: &str) in ic-canisters/.../parallel_hardware_identity.rs,
+// the representation of key ID that the canister client wants is a sequence of
+// pairs of hex digits, case-insensitive.  The key ID as stored in the HSM is
+// a Vec<u8>.  We only store the little-endianest of the digits from that Vec<> in
+// our key_id variable.  The following function produces what the ic-canisters
+// code wants.
+pub fn hsm_key_id_to_string(s: u8) -> String {
+    format!("{:02x?}", s)
+}
+
 impl Neuron {
     pub async fn new(auth: Auth, neuron_id: Option<u64>, network: &Network, include_proposer: bool) -> anyhow::Result<Self> {
         let neuron_id = match neuron_id {
@@ -116,20 +126,10 @@ impl Auth {
     }
 
     async fn auto_detect_neuron_id(&self, nns_urls: &[url::Url]) -> anyhow::Result<u64> {
-        // As per fn str_to_key_id(s: &str) in ic-canisters/.../parallel_hardware_identity.rs,
-        // the representation of key ID that the canister client wants is a sequence of
-        // pairs of hex digits, case-insensitive.  The key ID as stored in the HSM is
-        // a Vec<u8>.  We only store the little-endianest of the digits from that Vec<> in
-        // our key_id variable.  The following function produces what the ic-canisters
-        // code wants.
-        fn key_id_to_str(s: u8) -> String {
-            format!("{:02x?}", s)
-        }
-
         // FIXME: why do we even take multiple URLs if only the first one is ever used?
         let url = nns_urls.first().ok_or(anyhow::anyhow!("No NNS URLs provided"))?.to_owned();
         let client = match self {
-            Auth::Hsm { pin, slot, key_id } => IcAgentCanisterClient::from_hsm(pin.clone(), *slot, key_id_to_str(*key_id), url, None)?,
+            Auth::Hsm { pin, slot, key_id } => IcAgentCanisterClient::from_hsm(pin.clone(), *slot, hsm_key_id_to_string(*key_id), url, None)?,
             Auth::Keyfile { path } => IcAgentCanisterClient::from_key_file(path.clone(), url)?,
             Auth::Anonymous => IcAgentCanisterClient::from_anonymous(url)?,
         };

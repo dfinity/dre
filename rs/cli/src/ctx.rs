@@ -20,7 +20,7 @@ use log::info;
 use url::Url;
 
 use crate::{
-    auth::{Auth, Neuron},
+    auth::{hsm_key_id_to_string, Auth, Neuron},
     commands::{Args, ExecutableCommand, IcAdminRequirement},
     ic_admin::{download_ic_admin, should_update_ic_admin, IcAdmin, IcAdminImpl},
     runner::Runner,
@@ -209,7 +209,7 @@ impl DreContext {
         match &self.ic_admin {
             Some(a) => match &a.neuron().auth {
                 crate::auth::Auth::Hsm { pin, slot, key_id } => {
-                    IcAgentCanisterClient::from_hsm(pin.to_string(), *slot, key_id.to_string(), nns_url.to_owned(), lock)
+                    IcAgentCanisterClient::from_hsm(pin.to_string(), *slot, hsm_key_id_to_string(*key_id), nns_url.to_owned(), lock)
                 }
                 crate::auth::Auth::Keyfile { path } => IcAgentCanisterClient::from_key_file(path.into(), nns_url.to_owned()),
                 crate::auth::Auth::Anonymous => IcAgentCanisterClient::from_anonymous(nns_url.to_owned()),
