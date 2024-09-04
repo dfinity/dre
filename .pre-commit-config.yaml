@@ -43,7 +43,7 @@ repos:
               release-controller/release_index.py
           )$
         args:
-          - --application-directories=.:gitlab-ci/src/
+          - --application-directories=.
 
   - repo: https://github.com/pycqa/flake8
     rev: "7.0.0"
