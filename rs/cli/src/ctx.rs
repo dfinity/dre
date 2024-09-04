@@ -40,6 +40,7 @@ pub struct DreContext {
     skip_sync: bool,
     ic_admin_path: Option<String>,
     forum_post_link: Option<String>,
+    dry_run: bool,
 }
 
 impl DreContext {
@@ -95,6 +96,7 @@ impl DreContext {
             ic_admin_path,
             forum_post_link: forum_post_link.clone(),
             ic_repo: RefCell::new(None),
+            dry_run: dry_run,
         })
     }
 
@@ -195,6 +197,10 @@ impl DreContext {
 
     pub fn network(&self) -> &Network {
         &self.network
+    }
+
+    pub fn is_dry_run(&self) -> bool {
+        self.dry_run
     }
 
     /// Uses `ic_agent::Agent`

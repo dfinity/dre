@@ -55,21 +55,13 @@ mod vote;
 pub(crate) struct HsmParams {
     /// Slot that HSM key uses, can be read with pkcs11-tool
     #[clap(required = false,
-        requires_all = ["hsm_slot","hsm_key_id", "hsm_pin"],
         conflicts_with = "private_key_pem",
         long, value_parser=maybe_hex::<u64>, global = true, env = "HSM_SLOT")]
-    pub(crate) hsm_slot: u64,
+    pub(crate) hsm_slot: Option<u64>,
 
     /// HSM Key ID, can be read with pkcs11-tool
-    #[clap(
-        required = false,
-        requires_all = ["hsm_slot","hsm_key_id", "hsm_pin"],
-        conflicts_with = "private_key_pem",
-        long,
-        global = true,
-        env = "HSM_KEY_ID"
-    )]
-    pub(crate) hsm_key_id: String,
+    #[clap(required = false, conflicts_with = "private_key_pem", long, global = true, env = "HSM_KEY_ID")]
+    pub(crate) hsm_key_id: Option<u8>,
 }
 
 /// HSM authentication arguments
@@ -91,7 +83,7 @@ pub(crate) struct HsmOpts {
     )]
     pub(crate) hsm_pin: Option<String>,
     #[clap(flatten)]
-    pub(crate) hsm_params: Option<HsmParams>,
+    pub(crate) hsm_params: HsmParams,
 }
 
 // The following should ideally be defined in terms of an Enum

@@ -68,7 +68,7 @@ colored = "2.1.0"
 comfy-table = "7.1.1"
 crossbeam = "0.8.4"
 crossbeam-channel = "0.5.13"
-cryptoki = "0.3.1"
+cryptoki = "0.7.0"
 custom_error = "1.9.2"
 decentralization = { path = "rs/decentralization" }
 trustworthy-node-metrics-types = { path = "rs/dre-canisters/trustworthy-node-metrics/src/trustworthy-node-metrics-types" }

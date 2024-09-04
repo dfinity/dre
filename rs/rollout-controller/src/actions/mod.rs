@@ -120,7 +120,7 @@ impl<'a> ActionExecutor<'a> {
     }
 
     pub async fn test(network: Network, logger: Option<&'a Logger>) -> anyhow::Result<Self> {
-        let neuron = Neuron::new(Auth::auto(None).await?, None, &network, true).await?;
+        let neuron = Neuron::new(Auth::auto(None, None, None).await?, None, &network, true).await?;
         Ok(Self {
             ic_admin_wrapper: IcAdminImpl::new(network, None, true, neuron, true),
             logger,
