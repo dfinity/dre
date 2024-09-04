@@ -5,6 +5,7 @@ authors.workspace = true
 edition.workspace = true
 description.workspace = true
 documentation.workspace = true
+license.workspace = true
 
 [dependencies]
 actix-web = { workspace = true }

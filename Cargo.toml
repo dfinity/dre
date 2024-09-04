@@ -34,6 +34,7 @@ edition = "2021"
 authors = ["IC Decentralized Reliability Engineering (DRE) Team"]
 description = "Tooling for managing the Internet Computer"
 documentation = "https://github.com/dfinity/dre/"
+license = "Apache-2.0"
 
 [workspace.dependencies]
 actix-web = { version = "4.9.0", default-features = false, features = [
@@ -89,7 +90,10 @@ humantime = "2.1.0"
 humantime-serde = "1.1.1"
 ic-agent = "0.37.1"
 octocrab = "0.39.0"
-self_update = { version = "0.41.0", features = ["archive-tar"] }
+self_update = { version = "0.41.0", default-features = false, features = [
+    "archive-tar",
+    "rustls",
+] }
 ic-async-utils = { git = "https://github.com/dfinity/ic.git", rev = "0ca139ca39dfee21c8ca75e7fe37422df65e4b96" }
 ic-base-types = { git = "https://github.com/dfinity/ic.git", rev = "0ca139ca39dfee21c8ca75e7fe37422df65e4b96" }
 ic-canister-client = { git = "https://github.com/dfinity/ic.git", rev = "0ca139ca39dfee21c8ca75e7fe37422df65e4b96" }
@@ -141,7 +145,9 @@ opentelemetry = { version = "0.22.0", features = ["metrics"] }
 pkcs11 = "0.5.0"
 pretty_assertions = "1.4.0"
 pretty_env_logger = "0.5.0"
-prometheus-http-query = "0.8.3"
+prometheus-http-query = { version = "0.8.3", default-features = false, features = [
+    "rustls-tls-webpki-roots",
+] }
 prometheus = { version = "0.13.4", features = ["process"] }
 prost = "0.12"
 rand = { version = "0.8.5", features = ["std_rng"] }
@@ -149,7 +155,7 @@ rand_seeder = "0.3.0"
 regex = "1.10.6"
 registry-canister = { git = "https://github.com/dfinity/ic.git", rev = "0ca139ca39dfee21c8ca75e7fe37422df65e4b96" }
 reqwest = { version = "0.12", default-features = false, features = [
-    "rustls-tls",
+    "rustls-tls-webpki-roots",
     "blocking",
 ] }
 retry = "2.0.0"
