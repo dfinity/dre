@@ -16,7 +16,7 @@ use ic_canisters::governance::GovernanceCanisterWrapper;
 use ic_canisters::IcAgentCanisterClient;
 use ic_management_types::Network;
 use keyring::{Entry, Error};
-use log::{info, warn};
+use log::{debug, info, warn};
 use secrecy::SecretString;
 use std::sync::Mutex;
 
@@ -48,7 +48,7 @@ impl Neuron {
             Some(n) => n,
             None => auth.auto_detect_neuron_id(network.get_nns_urls().to_vec()).await?,
         };
-        info!("Identifying as neuron ID {}", neuron_id);
+        debug!("Identifying as neuron ID {}", neuron_id);
         Ok(Self {
             auth,
             neuron_id,
@@ -70,7 +70,7 @@ impl Neuron {
     // FIXME: there should be no unchecked anything.
     // Caller must be able to bubble up the error of the file not existing there.
     pub fn automation_neuron_unchecked() -> Self {
-        info!("Constructing neuron using the release automation private key");
+        debug!("Constructing neuron using the release automation private key");
         Self {
             auth: Auth::Keyfile {
                 path: dirs::home_dir().unwrap().join(RELEASE_AUTOMATION_DEFAULT_PRIVATE_KEY_PEM),
@@ -81,7 +81,7 @@ impl Neuron {
     }
 
     pub fn anonymous_neuron() -> Self {
-        info!("Constructing anonymous neuron (ID 0)");
+        debug!("Constructing anonymous neuron (ID 0)");
         Self {
             auth: Auth::Anonymous,
             neuron_id: 0,
@@ -160,13 +160,13 @@ impl Auth {
 
     fn detect_hsm_auth(maybe_pin: Option<String>, maybe_slot: Option<u64>, maybe_key_id: Option<u8>) -> anyhow::Result<Self> {
         if maybe_slot.is_none() && maybe_key_id.is_none() {
-            info!("Scanning hardware security module devices");
+            debug!("Scanning hardware security module devices");
         }
         if let Some(slot) = &maybe_slot {
-            info!("Probing hardware security module in slot {}", slot);
+            debug!("Probing hardware security module in slot {}", slot);
         }
         if let Some(key_id) = &maybe_key_id {
-            info!("Limiting key scan to keys with ID {}", key_id);
+            debug!("Limiting key scan to keys with ID {}", key_id);
         }
 
         let ctx = Pkcs11::new(Self::pkcs11_lib_path()?)?;
@@ -178,7 +178,7 @@ impl Auth {
                 let session = ctx.open_ro_session(slot)?;
                 let key_id = match Auth::find_key_id_in_slot_session(&session, maybe_key_id)? {
                     Some((key_id, label)) => {
-                        info!(
+                        debug!(
                             "Found key with ID {} ({}) in slot {}",
                             key_id,
                             match label {
@@ -215,7 +215,7 @@ impl Auth {
                 return Ok(detected.map_or(Auth::Anonymous, |a| a));
             }
         }
-        if maybe_slot.is_none() && maybe_key_id.is_none() {
+        if maybe_slot.is_none() && maybe_key_id.is_none() && maybe_pin.is_none() {
             info!("No hardware security module detected -- falling back to anonymous operations");
         } else {
             return Err(anyhow!(
