@@ -1,9 +1,11 @@
-use std::{collections::BTreeMap, path::PathBuf, str::FromStr};
+use std::{collections::BTreeMap, str::FromStr};
 
 use crate::commands::subnet::Subnet;
 use api_boundary_nodes::ApiBoundaryNodes;
-use clap::{error::ErrorKind, Parser};
+use clap::Parser;
+use clap::{error::ErrorKind, Args as ClapArgs};
 use clap_num::maybe_hex;
+use clio::*;
 use completions::Completions;
 use der_to_principal::DerToPrincipal;
 use firewall::Firewall;
@@ -48,24 +50,71 @@ pub mod upgrade;
 mod version;
 mod vote;
 
-#[derive(Parser, Debug)]
-#[clap(version = env!("CARGO_PKG_VERSION"), about, author)]
-pub struct Args {
-    /// Pin for the HSM key used for submitting proposals
-    #[clap(long, global = true, hide_env_values = true, env = "HSM_PIN")]
-    pub hsm_pin: Option<String>,
-
+/// HSM authentication parameters
+#[derive(ClapArgs, Debug, Clone)]
+pub(crate) struct HsmParams {
     /// Slot that HSM key uses, can be read with pkcs11-tool
-    #[clap(long, value_parser=maybe_hex::<u64>, global = true, env = "HSM_SLOT")]
-    pub hsm_slot: Option<u64>,
+    #[clap(required = false,
+        conflicts_with = "private_key_pem",
+        long, value_parser=maybe_hex::<u64>, global = true, env = "HSM_SLOT")]
+    pub(crate) hsm_slot: Option<u64>,
 
     /// HSM Key ID, can be read with pkcs11-tool
-    #[clap(long, global = true, env = "HSM_KEY_ID")]
-    pub hsm_key_id: Option<String>,
+    #[clap(required = false, conflicts_with = "private_key_pem", long, value_parser=maybe_hex::<u8>, global = true, env = "HSM_KEY_ID")]
+    pub(crate) hsm_key_id: Option<u8>,
+}
 
-    /// Path to key pem file
-    #[clap(long, global = true, env = "PRIVATE_KEY_PEM")]
-    pub private_key_pem: Option<PathBuf>,
+/// HSM authentication arguments
+/// These comprise an optional PIN and optional parameters.
+/// The PIN is used during autodetection if the optional
+/// parameters are missing.
+#[derive(ClapArgs, Debug, Clone)]
+pub(crate) struct HsmOpts {
+    /// Pin for the HSM key used for submitting proposals
+    // Must be present if slot and key are specified.
+    #[clap(
+        required = false,
+        alias = "hsm-pim",
+        conflicts_with = "private_key_pem",
+        long,
+        global = true,
+        hide_env_values = true,
+        env = "HSM_PIN"
+    )]
+    pub(crate) hsm_pin: Option<String>,
+    #[clap(flatten)]
+    pub(crate) hsm_params: HsmParams,
+}
+
+// The following should ideally be defined in terms of an Enum
+// as there is no conceivable scenario in which both a PEM file
+// and a set of HSM options can be used by the program.
+// Sadly, until ticket
+//   https://github.com/clap-rs/clap/issues/2621
+// is fixed, we cannot do this, and we must use a struct instead.
+// Note that group(multiple = false) has no effect, and therefore
+// we have to use conflicts and requires to specify option deps.
+#[derive(ClapArgs, Debug, Clone)]
+#[group(multiple = false)]
+/// Authentication arguments
+pub(crate) struct AuthOpts {
+    /// Path to private key file (in PEM format)
+    #[clap(
+        long,
+        required = false,
+        global = true,
+        conflicts_with_all = ["hsm_pin", "hsm_slot", "hsm_key_id"],
+        env = "PRIVATE_KEY_PEM")]
+    pub(crate) private_key_pem: Option<InputPath>,
+    #[clap(flatten)]
+    pub(crate) hsm_opts: HsmOpts,
+}
+
+#[derive(Parser, Debug)]
+#[clap(version = env!("CARGO_PKG_VERSION"), about, author)]
+pub(crate) struct Args {
+    #[clap(flatten)]
+    pub(crate) auth_opts: AuthOpts,
 
     /// Neuron ID
     #[clap(long, global = true, env = "NEURON_ID")]
@@ -108,13 +157,29 @@ The argument is mandatory for testnets, and is optional for mainnet and staging"
 
     /// Don't sync with the registry
     ///
-    /// Useful for when the nns is unreachable
+    /// Useful for when the NNS is unreachable
     #[clap(long)]
     pub no_sync: bool,
 
     /// Link to the related forum post, where proposal details can be discussed
     #[clap(long, global = true, visible_aliases = &["forum-link", "forum"])]
     pub forum_post_link: Option<String>,
+}
+
+// Do not use outside of DRE CLI.
+// You can run your command by directly instantiating it.
+impl ExecutableCommand for Args {
+    fn require_ic_admin(&self) -> IcAdminRequirement {
+        self.subcommands.require_ic_admin()
+    }
+
+    async fn execute(&self, ctx: DreContext) -> anyhow::Result<()> {
+        self.subcommands.execute(ctx).await
+    }
+
+    fn validate(&self, cmd: &mut Command) {
+        self.subcommands.validate(cmd)
+    }
 }
 
 macro_rules! impl_executable_command_for_enums {
@@ -233,18 +298,4 @@ pub enum IcAdminRequirement {
     Anonymous,                                              // for get commands
     Detect,                                                 // detect the neuron
     OverridableBy { network: Network, neuron: AuthNeuron }, // eg automation which we know where is placed
-}
-
-impl ExecutableCommand for Args {
-    fn require_ic_admin(&self) -> IcAdminRequirement {
-        self.subcommands.require_ic_admin()
-    }
-
-    async fn execute(&self, ctx: DreContext) -> anyhow::Result<()> {
-        self.subcommands.execute(ctx).await
-    }
-
-    fn validate(&self, cmd: &mut Command) {
-        self.subcommands.validate(cmd)
-    }
 }

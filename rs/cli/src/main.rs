@@ -26,6 +26,7 @@ async fn main() -> anyhow::Result<()> {
     dotenv().ok();
 
     let args = Args::parse();
+
     let mut cmd = Args::command();
     args.validate(&mut cmd);
 

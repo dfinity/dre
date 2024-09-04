@@ -56,6 +56,7 @@ regex = { workspace = true }
 registry-canister = { workspace = true }
 reqwest = { workspace = true }
 self_update = { workspace = true }
+secrecy = { version = "0.8.0" }
 serde = { workspace = true }
 serde_json = { workspace = true }
 sha2 = { workspace = true }
@@ -73,6 +74,7 @@ keyring = { workspace = true }
 comfy-table = { workspace = true }
 human_bytes = { workspace = true }
 headless_chrome = { workspace = true }
+clio = { workspace = true }
 
 [dev-dependencies]
 actix-rt = { workspace = true }
