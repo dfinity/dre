@@ -81,7 +81,7 @@ impl Neuron {
 
 #[derive(Clone, Debug)]
 pub enum Auth {
-    Hsm { pin: String, slot: u64, key_id: String },
+    Hsm { pin: String, slot: u64, key_id: u8 },
     Keyfile { path: PathBuf },
     Anonymous,
 }
@@ -96,7 +96,7 @@ impl Auth {
                 "--slot".to_string(),
                 slot.to_string(),
                 "--key-id".to_string(),
-                key_id.clone(),
+                key_id.to_string(),
             ],
             Auth::Keyfile { path } => vec!["--secret-key-pem".to_string(), path.to_string_lossy().to_string()],
             Auth::Anonymous => vec![],
@@ -116,15 +116,20 @@ impl Auth {
     }
 
     async fn auto_detect_neuron_id(&self, nns_urls: &[url::Url]) -> anyhow::Result<u64> {
+        // As per fn str_to_key_id(s: &str) in ic-canisters/.../parallel_hardware_identity.rs,
+        // the representation of key ID that the canister client wants is a sequence of
+        // pairs of hex digits, case-insensitive.  The key ID as stored in the HSM is
+        // a Vec<u8>.  We only store the little-endianest of the digits from that Vec<> in
+        // our key_id variable.  The following function produces what the ic-canisters
+        // code wants.
+        fn key_id_to_str(s: u8) -> String {
+            format!("{:02x?}", s)
+        }
+
         // FIXME: why do we even take multiple URLs if only the first one is ever used?
         let url = nns_urls.first().ok_or(anyhow::anyhow!("No NNS URLs provided"))?.to_owned();
         let client = match self {
-            Auth::Hsm { pin, slot, key_id } => {
-                let pin_clone = pin.clone();
-                let slot = *slot;
-                let key_id_clone = key_id.clone();
-                IcAgentCanisterClient::from_hsm(pin_clone, slot, key_id_clone, url, None)?
-            }
+            Auth::Hsm { pin, slot, key_id } => IcAgentCanisterClient::from_hsm(pin.clone(), *slot, key_id_to_str(*key_id), url, None)?,
             Auth::Keyfile { path } => IcAgentCanisterClient::from_key_file(path.clone(), url)?,
             Auth::Anonymous => IcAgentCanisterClient::from_anonymous(url)?,
         };
@@ -197,7 +202,7 @@ impl Auth {
                 let detected = Some(Auth::Hsm {
                     pin,
                     slot: slot.id(),
-                    key_id: format!("{}", key_id),
+                    key_id: key_id,
                 });
                 info!("Using key ID {} of hardware security module in slot {}", key_id, slot);
                 return Ok(detected.map_or(Auth::Anonymous, |a| a));
