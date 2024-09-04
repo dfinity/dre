@@ -9,6 +9,6 @@ command -v rye >/dev/null \
         --input $git_root/release-index-schema.json \
         --input-file-type jsonschema \
         --output $git_root/release-controller/release_index.py \
-        --target-python-version 3.12 \
+        --target-python-version $(cat .python-version) \
         --output-model-type pydantic_v2.BaseModel \
         --disable-timestamp
