@@ -47,7 +47,7 @@ jobs:
         with:
           GITHUB_TOKEN: "${{ secrets.GIX_CREATE_PR_PAT }}"
       - name: "🚀 Testing"
-        run: bazel test --spawn_stragety=local ...
+        run: bazel test --spawn_strategy=local ...
 
       # We don't need the linear-jira build and test step for now
       # - name: "🚀 Build and Test Linear-Jira with Bazel"
