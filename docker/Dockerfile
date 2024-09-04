@@ -59,9 +59,10 @@ ENV RUSTUP_HOME=/opt/rustup \
     PROTOC_INCLUDE=/opt/protoc/include \
     PATH=/opt/cargo/bin:$PATH
 
-# Make sure /rust-toolchain.toml has the same version
-ARG rust_version=1.79.0
-RUN curl --fail https://sh.rustup.rs -sSf \
+COPY rust-toolchain.toml /usr/src/rust-toolchain.toml
+
+RUN rust_version=$(grep -oP '(?<=channel = ")[^"]+' /usr/src/rust-toolchain.toml) && \
+    curl --fail https://sh.rustup.rs -sSf \
     | sh -s -- -y --default-toolchain ${rust_version}-x86_64-unknown-linux-gnu --no-modify-path && \
     rustup default ${rust_version}-x86_64-unknown-linux-gnu && \
     rustup component add rls && \
