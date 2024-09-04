@@ -34,8 +34,8 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: "Copy requirements.txt"
-        run: cp requirements.txt docker
+      - name: "Copy docker image dependencies"
+        run: cp pyproject.toml requirements.lock requirements-dev.lock .python-version README.md docker
         shell: bash
 
       - name: Build and push Docker image
