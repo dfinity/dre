@@ -50,14 +50,8 @@ load("@rules_python//python:pip.bzl", "pip_parse")
 
 pip_parse(
     name = "python_deps",
-    experimental_requirement_cycles = {
-        "poetry": [
-            "poetry",
-            "poetry-plugin-export",
-        ],
-    },
     python_interpreter_target = interpreter,
-    requirements_lock = "//:requirements.txt",
+    requirements_lock = "//:requirements.lock",
 )
 
 load("@python_deps//:requirements.bzl", "install_deps")

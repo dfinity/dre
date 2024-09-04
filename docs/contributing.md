@@ -75,44 +75,45 @@ Note: if the list of dependencies above changes, update the
 [docker/Dockerfile] file accordingly, so CI stays in sync
 with local development environments.
 
-#### poetry installation
+#### Rye installation
+
+Rye is a comprehensive project and package management solution for Python.
+Rye provides a unified experience to install and manages Python installations,
+pyproject.toml based projects, dependencies and virtualenvs seamlessly.
 
 Run the following from the repo root:
 
 ```bash
-# change into the directory of the repo
-# cd ~/src/release
-pyenv install # installs Python from .python-version
-pip3 install poetry   # installs poetry to your Python
-poetry env use $(which python)  # instructs poetry to use pyenv's Python
-poetry install        # installs all our dependencies
+curl -sSf https://rye.astral.sh/get | bash
 ```
 
-Follow the instructions onscreen.  Once the install is done,
-close and open your shell window, or run `bash` again.
-When you change into the `release` directory (this repo),
-typing `poetry env info` should show that the current
-folder is associated with a 3.11-based virtualenv.
+Follow the instructions on screen. Once the install is done,
+reopen your shell or run `source "$HOME/.rye/env"`.
 
-You can see the full path to your virtualenv's Python interpreter
-with the command `poetry env info -p`.  This is the interpreter
-you should use in your IDE and in day-to-day commands with regards
-to the Python programs in this repo.  To activate the use of
-this interpreter on the shell:
+You can make sure all dependencies are installed by running
 
 ```bash
-source "$(poetry env info -p)/bin/activate"
+rye sync
 ```
+
+And you can enter the `venv` manually if needed by running `. .venv/bin/activate`.
+This is typically not needed.
+
+It's sufficient to prefix any command with the following:
+
+```bash
+rye run <command>
+```
+
+to run the `<command>` with all expected dependencies.
 
 ### 3. Install pre-commit
 
 Install and enable pre-commit. It's highly recommended in order to prevent pushing code to github that will surely cause failures.
 
 ```
-# cd ~/src/release
-# source "$(poetry env info -p)/bin/activate"
-pip3 install --user pre-commit
-pre-commit install
+# cd ~/src/dre
+rye run pre-commit install
 ```
 
 More detailed instructions at https://pre-commit.com/#installation .

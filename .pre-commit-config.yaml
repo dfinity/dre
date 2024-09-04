@@ -66,22 +66,6 @@ repos:
             # files will be recognized regardless of extension.
           - --match=.*
 
-  - repo: https://github.com/PyCQA/pylint
-    rev: v3.2.5
-    hooks:
-      - id: pylint
-        name: pylint
-        exclude: |
-          (?x)^(
-              release-controller/release_index.py
-          )$
-        entry: python3 -m pylint.__main__
-        types: [python]
-        args: [
-            "-rn", # Only display messages
-            "-sn", # Don't display the score
-            "--disable=R,C,W0621,E0401,W0703,E1123", # Disable: Refactor, Convention, some warnings
-          ]
   - repo: local
     hooks:
       - id: release-index-checks
@@ -104,5 +88,6 @@ repos:
           if [[ "$found" == false ]]; then
               exit 0
           fi
-          poetry run python release-controller/ci_check.py --repo-path ~/.cache/git/ic
+          command -v rye >/dev/null || echo 'rye' not found. Please install it by following the instructions from https://rye.astral.sh/
+          rye run python release-controller/ci_check.py --repo-path ~/.cache/git/ic
           '
