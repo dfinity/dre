@@ -44,8 +44,9 @@ jobs:
         uses: ./.github/workflows/build
         with:
           GITHUB_TOKEN: "${{ secrets.GIX_CREATE_PR_PAT }}"
+        # Bazel creates a readonly file system for tests
       - name: "🚀 Testing"
-        run: bazel test ...
+        run: bazel test ... --test_env=ADMIN_REVISIONS_IN_TMP_FOR_CI=1
 
       # We don't need the linear-jira build and test step for now
       # - name: "🚀 Build and Test Linear-Jira with Bazel"
