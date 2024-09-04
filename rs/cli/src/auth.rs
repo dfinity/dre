@@ -202,7 +202,7 @@ impl Auth {
                 let detected = Some(Auth::Hsm {
                     pin,
                     slot: slot.id(),
-                    key_id: key_id,
+                    key_id,
                 });
                 info!("Using key ID {} of hardware security module in slot {}", key_id, slot);
                 return Ok(detected.map_or(Auth::Anonymous, |a| a));
@@ -242,7 +242,7 @@ impl Auth {
                 // Object may be a token and has an ID.
                 if let [Attribute::Token(true), Attribute::Id(token_id)] = &session.get_attributes(*hnd, &token_types)?[0..token_types.len()] {
                     // Object is a token, and we have extracted the ID.
-                    if token_id.len() > 0 && (key_id.is_none() || token_id[0] == key_id.unwrap()) {
+                    if !token_id.is_empty() && (key_id.is_none() || token_id[0] == key_id.unwrap()) {
                         let found_key_id = token_id[0];
                         let mut label: Option<String> = None;
                         if let [AttributeInfo::Available(_)] = &session.get_attribute_info(*hnd, &label_types)?[0..label_types.len()] {
@@ -268,7 +268,7 @@ impl Auth {
         maybe_pin: Option<String>,
         slot: Slot,
         token_info: TokenInfo,
-        memo_key: &String,
+        memo_key: &str,
     ) -> anyhow::Result<String> {
         if token_info.user_pin_locked() {
             return Err(anyhow!("The PIN for the token stored in slot {} is locked", slot.id()));
@@ -286,10 +286,10 @@ impl Auth {
                 pin
             }
             None => {
-                let pin_entry = Entry::new("dre-tool-hsm-pin", &memo_key)?;
+                let pin_entry = Entry::new("dre-tool-hsm-pin", memo_key)?;
                 let tentative_pin = match pin_entry.get_password() {
                     // TODO: Remove the old keyring entry search ("release-cli") after August 1st, 2024
-                    Err(Error::NoEntry) => match Entry::new("release-cli", &memo_key) {
+                    Err(Error::NoEntry) => match Entry::new("release-cli", memo_key) {
                         Err(Error::NoEntry) => Password::new()
                             .with_prompt("Please enter the hardware security module PIN: ")
                             .interact()?,
@@ -356,7 +356,7 @@ impl Auth {
                         hsm_pin: pin,
                         hsm_params: HsmParams { hsm_slot, hsm_key_id },
                     },
-            } => Auth::auto(pin.clone(), hsm_slot.clone(), hsm_key_id.clone()).await,
+            } => Auth::auto(pin.clone(), *hsm_slot, *hsm_key_id).await,
         }
     }
 }

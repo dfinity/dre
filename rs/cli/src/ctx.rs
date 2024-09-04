@@ -96,7 +96,7 @@ impl DreContext {
             ic_admin_path,
             forum_post_link: forum_post_link.clone(),
             ic_repo: RefCell::new(None),
-            dry_run: dry_run,
+            dry_run,
         })
     }
 
