@@ -285,6 +285,7 @@ pub mod tests {
             skip_sync: false,
             ic_admin_path: None,
             forum_post_link: None,
+            dry_run: true,
         }
     }
 }
