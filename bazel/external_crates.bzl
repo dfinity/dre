@@ -36,15 +36,6 @@ def external_crates_repository():
                     "IC_ICRC1_ARCHIVE_WASM_PATH": "$(execpath @ic-icrc1-archive//file)",
                 },
             )],
-            "openssl": [crate.annotation(
-                deps = ["@openssl//:openssl"]
-            )],
-            "openssl-probe": [crate.annotation(
-                deps = ["@openssl//:openssl"]
-            )],
-            "openssl-sys": [crate.annotation(
-                deps = ["@openssl//:openssl"]
-            )],
         },
         cargo_config = "//:.cargo/config.toml",
         cargo_lockfile = "//:Cargo.lock",
