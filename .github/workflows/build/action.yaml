@@ -9,6 +9,14 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: "Cargo deny checks"
+      id: cargo-deny
+      run: |
+        set -xe
+        command -v cargo-deny >/dev/null 2>&1 || cargo install cargo-deny
+        cargo deny check
+      shell: bash
+
     - name: "Build and repin"
       id: build
       run: |
