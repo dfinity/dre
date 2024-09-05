@@ -17,7 +17,7 @@ If all looks okay, you can run the following convenience script to change the ve
 Example:
 
 ```
-❯ rye run bin/mk-release.py 0.5.0
+❯ rye run python3 bin/mk-release.py 0.5.0
 INFO: Updating version from 0.4.3 to 0.5.0
 Already up to date.
 INFO: Patching file pyproject.toml
@@ -79,7 +79,7 @@ Next, create and push the git tag to the repo, to trigger the release CI workflo
 git checkout main
 git pull
 git status
-rye run bin/mk-release.py --tag 0.5.0
+rye run python3 bin/mk-release.py --tag 0.5.0
 ```
 
 Wait for the triggered [GH action to finish](https://github.com/dfinity/dre/actions). It will take some time because it's building binaries for x86 and for darwin.

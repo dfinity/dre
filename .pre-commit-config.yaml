@@ -69,34 +69,13 @@ repos:
   - repo: local
     hooks:
       - id: release-index-checks
-        language: system
+        language: script
         name: release-index-checks
         verbose: true
-        entry: |
-          bash -c '
-          files=("release-index-schema.json" "release-index.yaml" "release-controller/ci_check.py")
+        entry: bin/release-index-checks.sh
 
-          found=false
-
-          for file in "$@"; do
-            if [[ "${files[@]}" =~ "$file" ]]; then
-              found=true
-              break
-            fi
-          done
-
-          if [[ "$found" == false ]]; then
-              exit 0
-          fi
-          command -v rye >/dev/null || echo 'rye' not found. Please install it by following the instructions from https://rye.astral.sh/
-          rye run python release-controller/ci_check.py --repo-path ~/.cache/git/ic
-          '
       - id: cargo-deny-checks
-        language: system
+        language: script
         name: Cargo deny checks
         verbose: true
-        entry: |
-          bash -c '
-          command -v cargo-deny >/dev/null || echo "'cargo-deny' not found. Please install it by running 'cargo install cargo-deny'"
-          cargo deny check
-          '
+        entry: bin/cargo-deny-checks.sh
