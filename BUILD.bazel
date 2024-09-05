@@ -6,6 +6,11 @@ exports_files([
     "rustfmt.toml",
     "WORKSPACE.bazel",
 ])
+exports_files([
+    "Cargo.toml"
+],
+    visibility = ["//visibility:public"]
+)
 
 alias(
     name = "rustfmt",
