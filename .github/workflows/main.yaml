@@ -25,7 +25,7 @@ jobs:
     runs-on:
       labels: dre-runner-custom
     # This image is based on ubuntu:20.04
-    container: ghcr.io/dfinity/dre/actions-runner:f6690a4413269978d8b5d2e53b7346e99b0231b8
+    container: ghcr.io/dfinity/dre/actions-runner:9a9cef61d3483d2706b9d030a4a7e4d35c6ff1a2
     steps:
       - uses: actions/checkout@v4
         with:
@@ -39,13 +39,15 @@ jobs:
 
       ########################################
       # Build and test
+      # Will run test as a local subprocess because for some tests
+      # create status files on certain locations (like $HOME)
       ########################################
       - name: "🚀 Building"
         uses: ./.github/workflows/build
         with:
           GITHUB_TOKEN: "${{ secrets.GIX_CREATE_PR_PAT }}"
       - name: "🚀 Testing"
-        run: bazel test ...
+        run: bazel test --spawn_strategy=local ...
 
       # We don't need the linear-jira build and test step for now
       # - name: "🚀 Build and Test Linear-Jira with Bazel"
@@ -109,7 +111,7 @@ jobs:
             bases/apps/mainnet-dashboard/backend/base/deployment.yaml
             bases/apps/mainnet-dashboard/statefulset-slack.yaml
             bases/apps/service-discovery/service-discovery.yaml
-            gitlab-ci/vector-configs.yml
+            .github/workflows/dre-vector-configs.yaml
           )
           if [[ $changed == "true" ]]; then
             echo "Adding frontend to list of files"

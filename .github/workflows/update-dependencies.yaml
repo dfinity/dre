@@ -8,6 +8,7 @@ on:
 jobs:
   update:
     runs-on: ubuntu-20.04
+    container: ghcr.io/dfinity/dre/actions-runner:9a9cef61d3483d2706b9d030a4a7e4d35c6ff1a2
     steps:
       - uses: actions/checkout@v4
       - name: "🔧 Setup runner"
@@ -16,15 +17,9 @@ jobs:
       ########################################
       # Once per night, update dependencies and completely delete and recreate bazel cache
       ########################################
-      - name: "🐍 Setup Python"
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-      - name: "🐍 Install Poetry"
-        uses: snok/install-poetry@v1
-
       - name: "⚒️ Run autoupdate for ic-deps"
         run: |
+          rye sync
           python scripts/auto-update-revisions.py
 
       - name: "⚒️ Completely delete bazel cache and then recreate it"
@@ -51,10 +46,8 @@ jobs:
           # Reinstall gcc
           sudo apt install gcc -y
 
-          poetry lock --no-update
-          poetry update
           CARGO_BAZEL_REPIN=true bazel query >/dev/null
-          ./bin/poetry.sh
+          ./bin/release-controller-update-data-model.sh
 
       - name: "🆕 Create a new Pull Request with the changes"
         uses: peter-evans/create-pull-request@v6
@@ -62,7 +55,7 @@ jobs:
           commit-message: "chore: Update dependencies"
           branch: bot-update-deps
           title: "chore: Update dependencies"
-          body: "This PR updates poetry (Python) and cargo (Rust) dependencies and IC repository dependencies"
+          body: "This PR updates Python, Rust crates, and IC repository dependencies"
           token: ${{ secrets.GIX_CREATE_PR_PAT }}
 
       - name: "🪓 Tear down runner"

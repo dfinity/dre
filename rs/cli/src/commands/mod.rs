@@ -20,6 +20,7 @@ use proposals::Proposals;
 use propose::Propose;
 use qualify::Qualify;
 use registry::Registry;
+use strum::Display;
 use update_authorized_subnets::UpdateAuthorizedSubnets;
 use update_unassigned_nodes::UpdateUnassignedNodes;
 use upgrade::Upgrade;
@@ -29,26 +30,26 @@ use vote::Vote;
 
 use crate::auth::Neuron as AuthNeuron;
 
-mod api_boundary_nodes;
-mod completions;
-mod der_to_principal;
-mod firewall;
+pub(crate) mod api_boundary_nodes;
+pub(crate) mod completions;
+pub(crate) mod der_to_principal;
+pub(crate) mod firewall;
 pub mod get;
-mod heal;
+pub(crate) mod heal;
 pub mod hostos;
-mod neuron;
-mod node_metrics;
-mod nodes;
-mod proposals;
-mod propose;
+pub(crate) mod neuron;
+pub(crate) mod node_metrics;
+pub(crate) mod nodes;
+pub(crate) mod proposals;
+pub(crate) mod propose;
 pub mod qualify;
-mod registry;
-mod subnet;
-mod update_authorized_subnets;
-mod update_unassigned_nodes;
+pub(crate) mod registry;
+pub(crate) mod subnet;
+pub(crate) mod update_authorized_subnets;
+pub(crate) mod update_unassigned_nodes;
 pub mod upgrade;
-mod version;
-mod vote;
+pub(crate) mod version;
+pub(crate) mod vote;
 
 /// HSM authentication parameters
 #[derive(ClapArgs, Debug, Clone)]
@@ -123,6 +124,13 @@ pub(crate) struct Args {
     /// Path to explicitly state ic-admin path to use
     #[clap(long, global = true, env = "IC_ADMIN")]
     pub ic_admin: Option<String>,
+
+    #[clap(long, global = true, env = "IC_ADMIN_VERSION", default_value = "from-governance", value_parser = clap::value_parser!(IcAdminVersion), help = r#"Specify the version of ic admin to use
+Options:
+    1. from-governance, governance, govn, g => same as governance canister
+    2. default, d => strict default version, embedded at build time
+    3. <commit> => specific commit"#)]
+    pub ic_admin_version: IcAdminVersion,
 
     /// To skip the confirmation prompt
     #[clap(short, long, global = true, env = "YES", conflicts_with = "dry_run")]
@@ -298,4 +306,21 @@ pub enum IcAdminRequirement {
     Anonymous,                                              // for get commands
     Detect,                                                 // detect the neuron
     OverridableBy { network: Network, neuron: AuthNeuron }, // eg automation which we know where is placed
+}
+
+#[derive(Debug, Display, Clone)]
+pub enum IcAdminVersion {
+    FromGovernance,
+    Fallback,
+    Strict(String),
+}
+
+impl From<&str> for IcAdminVersion {
+    fn from(value: &str) -> Self {
+        match value {
+            "from-governance" | "governance" | "g" | "govn" => Self::FromGovernance,
+            "fallback" | "f" => Self::Fallback,
+            s => Self::Strict(s.to_string()),
+        }
+    }
 }

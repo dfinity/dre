@@ -29,6 +29,7 @@ use ic_registry_subnet_type::SubnetType;
 use ic_types::{NodeId, PrincipalId, RegistryVersion};
 use itertools::Itertools;
 use log::warn;
+use mockall::mock;
 use tokio::sync::RwLock;
 use tokio::try_join;
 
@@ -909,5 +910,66 @@ impl AvailableNodesQuerier for LazyRegistryImpl {
                 .sorted_by(|n1, n2| n1.id.cmp(&n2.id))
                 .collect())
         })
+    }
+}
+
+mock! {
+    pub LazyRegistry {}
+    impl LazyRegistry for LazyRegistry {
+        fn node_labels(&self) -> BoxFuture<'_, anyhow::Result<Arc<Vec<Guest>>>>;
+
+        fn elected_guestos(&self) -> BoxFuture<'_, anyhow::Result<Arc<Vec<String>>>>;
+
+        fn elected_hostos(&self) -> BoxFuture<'_, anyhow::Result<Arc<Vec<String>>>>;
+
+        fn sync_with_nns(&self) -> BoxFuture<'_, anyhow::Result<()>>;
+
+        fn operators(&self) -> BoxFuture<'_, anyhow::Result<Arc<BTreeMap<PrincipalId, Operator>>>>;
+
+        fn nodes(&self) -> BoxFuture<'_, anyhow::Result<Arc<BTreeMap<PrincipalId, Node>>>>;
+
+        fn firewall_rule_set(&self, firewall_rule_scope: FirewallRulesScope) -> BoxFuture<'_, anyhow::Result<FirewallRuleSet>>;
+
+        fn subnets(&self) -> BoxFuture<'_, anyhow::Result<Arc<BTreeMap<PrincipalId, Subnet>>>>;
+
+        fn nodes_with_proposals(&self) -> BoxFuture<'_, anyhow::Result<Arc<BTreeMap<PrincipalId, Node>>>>;
+
+        fn unassigned_nodes_replica_version(&self) -> BoxFuture<'_, anyhow::Result<Arc<String>>>;
+
+        fn get_api_boundary_nodes(&self) -> anyhow::Result<Vec<(String, ApiBoundaryNodeRecord)>>;
+
+        fn get_node_rewards_table(&self) -> anyhow::Result<BTreeMap<String, NodeRewardsTable>>;
+
+        fn get_unassigned_nodes(&self) -> anyhow::Result<Option<UnassignedNodesConfigRecord>>;
+
+        fn get_datacenters(&self) -> anyhow::Result<Vec<DataCenterRecord>>;
+
+        fn elected_guestos_records(&self) -> anyhow::Result<Vec<ReplicaVersionRecord>>;
+
+        fn elected_hostos_records(&self) -> anyhow::Result<Vec<HostosVersionRecord>>;
+
+        fn update_proposal_data(&self) -> BoxFuture<'_, anyhow::Result<()>>;
+    }
+
+    impl LazyRegistryFamilyEntries for LazyRegistry {
+        fn get_key_family(&self, key_prefix: &str, version: RegistryVersion) -> anyhow::Result<Vec<String>>;
+
+        fn get_versioned_value(&self, key: &str, version: RegistryVersion) -> RegistryClientVersionedResult<Vec<u8>>;
+
+        fn get_latest_version(&self) -> RegistryVersion;
+    }
+
+    impl NodesConverter for LazyRegistry {
+        fn get_nodes<'a>(&'a self, from: &'a [PrincipalId]) -> BoxFuture<'_, Result<Vec<decentralization::network::Node>, NetworkError>>;
+    }
+
+    impl SubnetQuerier for LazyRegistry {
+        fn subnet(&self, by: SubnetQueryBy) -> BoxFuture<'_, Result<DecentralizedSubnet, NetworkError>>;
+    }
+
+    impl decentralization::network::TopologyManager for LazyRegistry {}
+
+    impl AvailableNodesQuerier for LazyRegistry {
+        fn available_nodes(&self) -> BoxFuture<'_, Result<Vec<decentralization::network::Node>, NetworkError>>;
     }
 }
