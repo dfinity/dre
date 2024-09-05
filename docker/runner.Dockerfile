@@ -32,16 +32,6 @@ RUN ln -s /usr/local/lib/libssl.so.1.1 /usr/lib64/libssl.so.1.1 && \
     ln -s /usr/local/lib/libcrypto.so.1.1 /usr/lib/libcrypto.so.1.1 && \
     rm -rf openssl
 
-
-ENV RYE_HOME="/opt/rye"
-ENV PATH="$RYE_HOME/shims:$PATH"
-
-RUN curl -sSf https://rye.astral.sh/get | RYE_NO_AUTO_INSTALL=1 RYE_INSTALL_OPTION="--yes" bash
-
-COPY pyproject.toml requirements.lock requirements-dev.lock .python-version README.md ./
-
-RUN rye sync --no-dev --no-lock
-
 # Runner user
 RUN adduser --disabled-password --gecos "" --uid $RUNNER_UID runner \
     && usermod -aG sudo runner \
@@ -100,3 +90,6 @@ RUN cargo install cargo-zigbuild
 
 RUN curl -sSf https://rye.astral.sh/get | RYE_HOME=/home/runner/.rye RYE_VERSION="0.4.0" RYE_INSTALL_OPTION="--yes" bash
 RUN source /home/runner/.rye/env
+COPY pyproject.toml requirements.lock requirements-dev.lock .python-version README.md ./
+
+RUN rye sync --no-dev --no-lock

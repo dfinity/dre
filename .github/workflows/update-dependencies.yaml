@@ -23,7 +23,9 @@ jobs:
       - name: "🐍 Install rye"
         run: |
           export RYE_INSTALL_OPTION="--yes"
+          export RYE_HOME="$HOME/.rye"
           curl -sSf https://rye.astral.sh/get | bash
+          source /home/runner/.rye/env
 
       - name: "⚒️ Run autoupdate for ic-deps"
         run: |
