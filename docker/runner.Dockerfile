@@ -85,6 +85,7 @@ ENV _CONTAINERS_USERNS_CONFIGURED=""
 ENV HOME=/home/runner
 USER runner
 WORKDIR /home/runner
+SHELL [ "/bin/bash", "-c" ]
 
 COPY rust-toolchain.toml /usr/src/rust-toolchain.toml
 
@@ -96,3 +97,6 @@ ENV PATH="$PATH:/home/runner/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/
 ENV CARGO_TARGET_X86_64_APPLE_DARWIN_LINKER=rust-lld
 
 RUN cargo install cargo-zigbuild
+
+RUN curl -sSf https://rye.astral.sh/get | RYE_HOME=/home/runner/.rye RYE_VERSION="0.4.0" RYE_INSTALL_OPTION="--yes" bash
+RUN source /home/runner/.rye/env
