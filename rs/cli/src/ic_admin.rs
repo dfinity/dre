@@ -767,7 +767,7 @@ pub struct ProposeOptions {
     pub motivation: Option<String>,
     pub forum_post_link: Option<String>,
 }
-pub const DEFAULT_IC_ADMIN_VERSION: &str = "0ca139ca39dfee21c8ca75e7fe37422df65e4b96";
+pub const FALLBACK_IC_ADMIN_VERSION: &str = "0ca139ca39dfee21c8ca75e7fe37422df65e4b96";
 
 fn get_ic_admin_revisions_dir() -> anyhow::Result<PathBuf> {
     let dir = dirs::home_dir()
@@ -805,7 +805,7 @@ pub fn should_update_ic_admin() -> Result<(bool, String)> {
 
 /// Returns a path to downloaded ic-admin binary
 pub async fn download_ic_admin(version: Option<String>) -> Result<String> {
-    let version = version.unwrap_or_else(|| DEFAULT_IC_ADMIN_VERSION.to_string()).trim().to_string();
+    let version = version.unwrap_or_else(|| FALLBACK_IC_ADMIN_VERSION.to_string()).trim().to_string();
     let ic_admin_bin_dir = get_ic_admin_revisions_dir()?;
     let path = ic_admin_bin_dir.join(&version).join("ic-admin");
     let path = Path::new(&path);

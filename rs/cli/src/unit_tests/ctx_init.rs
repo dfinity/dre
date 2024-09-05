@@ -4,7 +4,7 @@ use crate::auth::Auth;
 use ic_canisters::governance::governance_canister_version;
 use ic_management_types::Network;
 
-use crate::{commands::IcAdminVersion, ctx::DreContext, ic_admin::DEFAULT_IC_ADMIN_VERSION};
+use crate::{commands::IcAdminVersion, ctx::DreContext, ic_admin::FALLBACK_IC_ADMIN_VERSION};
 
 fn status_file_path() -> PathBuf {
     dirs::home_dir().unwrap().join("bin").join("ic-admin.revisions").join("ic-admin.status")
@@ -83,8 +83,8 @@ async fn init_tests_ic_admin_version() {
             .should_contain(&governance_version.stringified_hash),
         TestScenario::new("use default version")
             .delete_status_file()
-            .version(IcAdminVersion::Default)
-            .should_contain(DEFAULT_IC_ADMIN_VERSION),
+            .version(IcAdminVersion::Fallback)
+            .should_contain(FALLBACK_IC_ADMIN_VERSION),
         TestScenario::new("existing version on s3")
             .delete_status_file()
             .version(IcAdminVersion::Strict(version_on_s3.to_string()))
