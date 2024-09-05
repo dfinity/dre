@@ -269,7 +269,7 @@ impl QualificationExecutor {
     }
 
     pub async fn execute(&self) -> anyhow::Result<()> {
-        self.print_text(format!("This qualification run for will execute the following steps:"));
+        self.print_text("This qualification run for will execute the following steps:".to_string());
         self.list();
 
         self.print_text(format!("Running qualification from version {} to {}", self.from_version, self.to_version));
