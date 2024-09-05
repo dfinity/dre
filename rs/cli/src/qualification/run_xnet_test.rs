@@ -3,6 +3,7 @@ use std::{os::unix::fs::PermissionsExt, time::Duration};
 use chrono::Utc;
 use ic_registry_subnet_type::SubnetType;
 use itertools::Itertools;
+use log::info;
 use tokio::process::Command;
 
 use super::{step::Step, util::StepCtx};
@@ -20,6 +21,7 @@ const XNET_TEST_NUMBER: &str = "4.3";
 
 pub struct RunXnetTest {
     pub version: String,
+    #[allow(dead_code)]
     pub deployment_name: String,
 }
 
@@ -87,17 +89,7 @@ impl Step for RunXnetTest {
             .status()
             .await?;
         let end = Utc::now();
-
-        // No need to stop the qualification if taking picture fails
-        if let Err(e) = ctx.capture_progress_clock(
-            self.deployment_name.to_string(),
-            &subnet.principal,
-            Some(start.timestamp()),
-            Some(end.timestamp()),
-            "xnet_test",
-        ) {
-            ctx.print_text(format!("Failed to capture progress clock: {:?}", e))
-        }
+        info!("Total time for command: {}", end - start);
 
         if !status.success() {
             anyhow::bail!("Failed to run xnet test with status code: {}", status.code().unwrap_or_default())

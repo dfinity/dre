@@ -807,18 +807,8 @@ deny = [
 #exact = true
 
 # Certain crates/versions that will be skipped when doing duplicate detection.
-skip = [
-    { crate = "which", reason = "it is known that both edit and headless_chrome require a different version, and there is no update to edit crate to fix the issue" },
-]
+skip = []
 skip-tree = [
-    "windows_x86_64_msvc",    # ignore duplicates brought in by this duplicate, we don't target Windows
-    "windows_x86_64_gnullvm",
-    "windows_x86_64_gnu",
-    "windows_i686_msvc",
-    "windows_i686_gnullvm",
-    "windows_i686_gnu",
-    "windows-targets",
-    "windows-sys",
     # These which follow should be fixed!
     { crate = "tokio-rustls", reason = "it is known that octocrab requires a version older than the version required by ic-canister-client" },
     { crate = "hyper-rustls", reason = "it is known that octocrab requires a version older than the version required by ic-canister-client" },

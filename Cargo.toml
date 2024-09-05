@@ -190,16 +190,12 @@ tokio-util = "0.7.12"
 url = "2.5.2"
 wiremock = "0.6.1"
 human_bytes = "0.4"
-headless_chrome = { version = "1.0.14", features = [
-    "fetch",
-], default-features = false }
 mockall = "0.13.0"
 
 # dre-canisters dependencies
 ic-cdk-timers = { git = "https://github.com/dfinity/cdk-rs.git", rev = "3e54016734c8f73fb3acabc9c9e72c960c85eb3b" }
 ic-cdk-macros = { git = "https://github.com/dfinity/cdk-rs.git", rev = "3e54016734c8f73fb3acabc9c9e72c960c85eb3b" }
 ic-stable-structures = "0.6.5"
-ciborium = "0.2.2"
 dfn_core = { git = "https://github.com/dfinity/ic.git", rev = "f3a6cf88defb92e8b457d2438cb5b086b51e26b2" }
 
 # dre-airflow deps, should be replaced with dre-airflow once
