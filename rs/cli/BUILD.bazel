@@ -1,6 +1,8 @@
 load("@crate_index_dre//:defs.bzl", "aliases", "all_crate_deps")
 load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_test", "rust_library")
 load("@rules_rust//cargo:defs.bzl", "cargo_build_script", "cargo_dep_env")
+load("@bazel_skylib//rules:native_binary.bzl", "native_binary")
+load("@bazel_skylib//rules:run_binary.bzl", "run_binary")
 
 DEPS = [
     "//rs/ic-canisters",
@@ -11,6 +13,21 @@ DEPS = [
 ]
 
 package(default_visibility = ["//visibility:public"])
+
+native_binary(
+    name = "cargo_deny",
+    src = select({
+        "@platforms//os:linux": "@cargo_deny//file",
+    }),
+    out = "cargo-deny",
+)
+
+run_binary(
+    name = "run_cargo_deny",
+    srcs = ["Cargo.toml"],
+    tool = ":cargo_deny",
+    outs = ["cargo-deny-out"]
+)
 
 cargo_build_script(
     name = "build_script",
@@ -34,7 +51,8 @@ rust_binary(
     ),
     deps = all_crate_deps(
         normal = True,
-    ) + DEPS + ["//rs/cli:dre-lib", ":build_script"]
+    ) + DEPS + ["//rs/cli:dre-lib", ":build_script"],
+    compile_data = [":run_cargo_deny"]
 )
 
 rust_library(
