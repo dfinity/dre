@@ -16,13 +16,13 @@ use ic_management_backend::{
 };
 use ic_management_types::Network;
 use ic_registry_local_registry::LocalRegistry;
-use log::info;
+use log::{debug, info};
 use url::Url;
 
 use crate::{
     auth::{Auth, Neuron},
-    commands::{Args, ExecutableCommand, IcAdminRequirement},
-    ic_admin::{download_ic_admin, should_update_ic_admin, IcAdmin, IcAdminImpl},
+    commands::{Args, ExecutableCommand, IcAdminRequirement, IcAdminVersion},
+    ic_admin::{download_ic_admin, should_update_ic_admin, IcAdmin, IcAdminImpl, DEFAULT_IC_ADMIN_VERSION},
     runner::Runner,
     subnet_manager::SubnetManager,
 };
@@ -55,6 +55,7 @@ impl DreContext {
         dry_run: bool,
         ic_admin_requirement: IcAdminRequirement,
         forum_post_link: Option<String>,
+        ic_admin_version: IcAdminVersion,
     ) -> anyhow::Result<Self> {
         let network = match no_sync {
             false => ic_management_types::Network::new(network.clone(), &nns_urls)
@@ -83,7 +84,8 @@ impl DreContext {
             (neuron_id, auth.clone())
         };
 
-        let (ic_admin, ic_admin_path) = Self::init_ic_admin(&network, neuron_id, auth_opts, yes, dry_run, ic_admin_requirement).await?;
+        let (ic_admin, ic_admin_path) =
+            Self::init_ic_admin(&network, neuron_id, auth_opts, yes, dry_run, ic_admin_requirement, ic_admin_version).await?;
 
         Ok(Self {
             proposal_agent: Arc::new(ProposalAgentImpl::new(&network.nns_urls)),
@@ -112,6 +114,7 @@ impl DreContext {
             args.dry_run,
             args.subcommands.require_ic_admin(),
             args.forum_post_link.clone(),
+            args.ic_admin_version.clone(),
         )
         .await
     }
@@ -123,6 +126,7 @@ impl DreContext {
         proceed_without_confirmation: bool,
         dry_run: bool,
         requirement: IcAdminRequirement,
+        version: IcAdminVersion,
     ) -> anyhow::Result<(Option<Arc<dyn IcAdmin>>, Option<String>)> {
         if let IcAdminRequirement::None = requirement {
             return Ok((None, None));
@@ -147,18 +151,36 @@ impl DreContext {
                 }
             }
         };
-        let ic_admin_path = match should_update_ic_admin()? {
-            (true, _) => {
-                let govn_canister_version = governance_canister_version(network.get_nns_urls()).await?;
-                download_ic_admin(match govn_canister_version.stringified_hash.as_str() {
-                    // Some testnets could have this version setup if deployed
-                    // from HEAD of the branch they are created from
-                    "0000000000000000000000000000000000000000" => None,
-                    v => Some(v.to_owned()),
-                })
-                .await?
+
+        let ic_admin_path = match version {
+            IcAdminVersion::FromGovernance => match should_update_ic_admin()? {
+                (true, _) => {
+                    let govn_canister_version = governance_canister_version(network.get_nns_urls()).await?;
+                    debug!(
+                        "Using ic-admin matching the version of governance canister, version: {}",
+                        govn_canister_version.stringified_hash
+                    );
+                    download_ic_admin(match govn_canister_version.stringified_hash.as_str() {
+                        // Some testnets could have this version setup if deployed
+                        // from HEAD of the branch they are created from
+                        "0000000000000000000000000000000000000000" => None,
+                        v => Some(v.to_owned()),
+                    })
+                    .await?
+                }
+                (false, s) => {
+                    debug!("Using cached ic-admin matching the version of governance canister, path: {}", s);
+                    s
+                }
+            },
+            IcAdminVersion::Default => {
+                debug!("Using default ic-admin, version: {}", DEFAULT_IC_ADMIN_VERSION);
+                download_ic_admin(None).await?
             }
-            (false, s) => s,
+            IcAdminVersion::Strict(ver) => {
+                debug!("Using ic-admin specified via args: {}", ver);
+                download_ic_admin(Some(ver)).await?
+            }
         };
 
         let ic_admin = Some(Arc::new(IcAdminImpl::new(
@@ -252,6 +274,11 @@ impl DreContext {
 
     pub fn forum_post_link(&self) -> Option<String> {
         self.forum_post_link.clone()
+    }
+
+    #[cfg(test)]
+    pub fn ic_admin_path(&self) -> Option<String> {
+        self.ic_admin_path.clone()
     }
 }
 

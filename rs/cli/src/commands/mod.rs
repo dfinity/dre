@@ -20,6 +20,7 @@ use proposals::Proposals;
 use propose::Propose;
 use qualify::Qualify;
 use registry::Registry;
+use strum::Display;
 use update_authorized_subnets::UpdateAuthorizedSubnets;
 use update_unassigned_nodes::UpdateUnassignedNodes;
 use upgrade::Upgrade;
@@ -123,6 +124,13 @@ pub(crate) struct Args {
     /// Path to explicitly state ic-admin path to use
     #[clap(long, global = true, env = "IC_ADMIN")]
     pub ic_admin: Option<String>,
+
+    #[clap(long, global = true, env = "IC_ADMIN_VERSION", default_value_t = IcAdminVersion::FromGovernance, value_parser = clap::value_parser!(IcAdminVersion), help = r#"Specify the version of ic admin to use
+Options:
+    1. from-governance, governance, govn, g => same as governance canister
+    2. default, d => strict default version, embedded at build time
+    3. <commit> => specific commit"#)]
+    pub ic_admin_version: IcAdminVersion,
 
     /// To skip the confirmation prompt
     #[clap(short, long, global = true, env = "YES", conflicts_with = "dry_run")]
@@ -298,4 +306,21 @@ pub enum IcAdminRequirement {
     Anonymous,                                              // for get commands
     Detect,                                                 // detect the neuron
     OverridableBy { network: Network, neuron: AuthNeuron }, // eg automation which we know where is placed
+}
+
+#[derive(Debug, Display, Clone)]
+pub enum IcAdminVersion {
+    FromGovernance,
+    Default,
+    Strict(String),
+}
+
+impl From<&str> for IcAdminVersion {
+    fn from(value: &str) -> Self {
+        match value {
+            "from-governance" | "governance" | "g" | "govn" => Self::FromGovernance,
+            "default" | "d" => Self::Default,
+            s => Self::Strict(s.to_string()),
+        }
+    }
 }

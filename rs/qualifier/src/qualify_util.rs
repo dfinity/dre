@@ -85,6 +85,7 @@ pub async fn qualify(
         false,
         cmd.require_ic_admin(),
         None,
+        dre::commands::IcAdminVersion::FromGovernance,
     )
     .await?;
 

@@ -767,7 +767,7 @@ pub struct ProposeOptions {
     pub motivation: Option<String>,
     pub forum_post_link: Option<String>,
 }
-const DEFAULT_IC_ADMIN_VERSION: &str = "0ca139ca39dfee21c8ca75e7fe37422df65e4b96";
+pub const DEFAULT_IC_ADMIN_VERSION: &str = "0ca139ca39dfee21c8ca75e7fe37422df65e4b96";
 
 fn get_ic_admin_revisions_dir() -> anyhow::Result<PathBuf> {
     let dir = dirs::home_dir()
@@ -817,7 +817,7 @@ pub async fn download_ic_admin(version: Option<String>) -> Result<String> {
             format!("https://download.dfinity.systems/ic/{version}/binaries/x86_64-linux/ic-admin.gz")
         };
         info!("Downloading ic-admin version: {} from {}", version, url);
-        let body = reqwest::get(url).await?.bytes().await?;
+        let body = reqwest::get(url).await?.error_for_status()?.bytes().await?;
         let mut decoded = GzDecoder::new(body.as_ref());
 
         let path_parent = path.parent().expect("path parent unwrap failed!");
