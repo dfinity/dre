@@ -125,7 +125,7 @@ pub(crate) struct Args {
     #[clap(long, global = true, env = "IC_ADMIN")]
     pub ic_admin: Option<String>,
 
-    #[clap(long, global = true, env = "IC_ADMIN_VERSION", default_value_t = IcAdminVersion::FromGovernance, value_parser = clap::value_parser!(IcAdminVersion), help = r#"Specify the version of ic admin to use
+    #[clap(long, global = true, env = "IC_ADMIN_VERSION", default_value = "from-governance", value_parser = clap::value_parser!(IcAdminVersion), help = r#"Specify the version of ic admin to use
 Options:
     1. from-governance, governance, govn, g => same as governance canister
     2. default, d => strict default version, embedded at build time
