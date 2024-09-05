@@ -19,7 +19,7 @@ deps = [
     requirement("pydiscourse"),
     requirement("pydantic-yaml"),
     requirement("ic-py"),
-    "//pylib",
+    requirement("tenacity"),
 ]
 
 dev_deps = [
@@ -65,7 +65,7 @@ native_binary(
     src = select({
         "@platforms//os:linux": "@bazelisk_linux//file",
     }),
-    out = "bazelisk",
+    out = "bazel",
 )
 
 native_binary(
@@ -103,12 +103,8 @@ py_test(
 )
 
 tar(
-    name = "bazelisk_tar",
-    srcs = [":bazelisk"]
-)
-tar(
-    name = "target_determinator_tar",
-    srcs = [":target_determinator"]
+    name = "bins_tar",
+    srcs = [":bazelisk", ":target_determinator", "//rs/cli:dre"],
 )
 
 py_oci_image(
@@ -121,7 +117,7 @@ py_oci_image(
     name = "oci_image_commit_annotator",
     base = "@bazel_image_6_5_0",
     binary = ":commit_annotator",
-    tars = [":bazelisk_tar", ":target_determinator_tar"]
+    tars = [":bins_tar"]
 )
 
 exports_files(["README.md"])
