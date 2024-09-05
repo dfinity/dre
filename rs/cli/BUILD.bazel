@@ -22,11 +22,24 @@ native_binary(
     out = "cargo-deny",
 )
 
+genrule(
+    name = "untar_cargo_deny",
+    srcs = [":cargo_deny"],
+    outs = ["cargo-deny-0.16.1-x86_64-unknown-linux-musl/cargo-deny"],
+    cmd = """
+        tar -xzvf $(execpath :cargo_deny)
+        chmod +x cargo-deny-0.16.1-x86_64-unknown-linux-musl/cargo-deny
+        cp cargo-deny-0.16.1-x86_64-unknown-linux-musl/cargo-deny $@
+    """,
+    executable = True
+)
+
 run_binary(
     name = "run_cargo_deny",
-    srcs = ["Cargo.toml"],
-    tool = ":cargo_deny",
-    outs = ["cargo-deny-out"]
+    srcs = ["Cargo.toml", ":untar_cargo_deny"],
+    tool = ":untar_cargo_deny",
+    outs = ["cargo-deny-out"],
+    args = ["check"]
 )
 
 cargo_build_script(

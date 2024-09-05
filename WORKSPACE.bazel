@@ -32,8 +32,8 @@ http_file(
 
 http_file(
     name = "cargo_deny",
-    sha256 = "3df23bbdc19f5bf12284cbebde70f8d00587fe416c1fdd92dd1bee858d6bfada",
-    url = "https://github.com/EmbarkStudios/cargo-deny/releases/download/0.16.1/cargo-deny-0.16.1-aarch64-unknown-linux-musl.tar.gz",
+    sha256 = "9612f02c85effbc97924c91e1e5b20eb51e48206e2627abb80a8f1b152ac0103",
+    url = "https://github.com/EmbarkStudios/cargo-deny/releases/download/0.16.1/cargo-deny-0.16.1-x86_64-unknown-linux-musl.tar.gz",
 )
 
 http_file(
