@@ -17,7 +17,7 @@ runs:
           echo Installing cargo-deny >&2
           cargo install --quiet cargo-deny
         }
-        cargo deny check
+        cargo deny check -D warnings
       shell: bash
 
     - name: "Build and repin"
