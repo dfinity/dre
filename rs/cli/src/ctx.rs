@@ -22,7 +22,7 @@ use url::Url;
 use crate::{
     auth::{Auth, Neuron},
     commands::{Args, ExecutableCommand, IcAdminRequirement, IcAdminVersion},
-    ic_admin::{download_ic_admin, should_update_ic_admin, IcAdmin, IcAdminImpl, DEFAULT_IC_ADMIN_VERSION},
+    ic_admin::{download_ic_admin, should_update_ic_admin, IcAdmin, IcAdminImpl, FALLBACK_IC_ADMIN_VERSION},
     runner::Runner,
     subnet_manager::SubnetManager,
 };
@@ -173,8 +173,8 @@ impl DreContext {
                     s
                 }
             },
-            IcAdminVersion::Default => {
-                debug!("Using default ic-admin, version: {}", DEFAULT_IC_ADMIN_VERSION);
+            IcAdminVersion::Fallback => {
+                debug!("Using default ic-admin, version: {}", FALLBACK_IC_ADMIN_VERSION);
                 download_ic_admin(None).await?
             }
             IcAdminVersion::Strict(ver) => {

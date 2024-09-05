@@ -311,7 +311,7 @@ pub enum IcAdminRequirement {
 #[derive(Debug, Display, Clone)]
 pub enum IcAdminVersion {
     FromGovernance,
-    Default,
+    Fallback,
     Strict(String),
 }
 
@@ -319,7 +319,7 @@ impl From<&str> for IcAdminVersion {
     fn from(value: &str) -> Self {
         match value {
             "from-governance" | "governance" | "g" | "govn" => Self::FromGovernance,
-            "default" | "d" => Self::Default,
+            "fallback" | "f" => Self::Fallback,
             s => Self::Strict(s.to_string()),
         }
     }
