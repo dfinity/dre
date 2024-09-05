@@ -1,6 +1,25 @@
 # dre Changelog
 
 <!-- insertion marker -->
+## [0.5.4](https://github.com/dfinity/dre/releases/tag/0.5.4) - 2024-09-05
+
+<small>[Compare with first commit](https://github.com/dfinity/dre/compare/e3b94efb3d36a89b7c981813626719ed48d5ec2f...0.5.4)</small>
+
+### Features
+
+- overriding ic admin versions (#864) ([69b4cf3](https://github.com/dfinity/dre/commit/69b4cf38e75c617374774199ff45487ddff7201d) by Nikola Milosavljevic).
+- dre testing of `update-unassigned-nodes` command (#858) ([415f697](https://github.com/dfinity/dre/commit/415f6978960d701d7b7861542e6865160dc828f2) by Nikola Milosavljevic).
+- Replace poetry with rye for managing Python dependencies (#857) ([00e419f](https://github.com/dfinity/dre/commit/00e419f85fb9dff6754447206047ab690cf044c0) by Saša Tomić).
+- improve exclusion filters (#855) ([c5940e8](https://github.com/dfinity/dre/commit/c5940e8bc889a14065236af1f172ef71b49c96bb) by Luka Skugor).
+
+### Bug Fixes
+
+- Update cache job fix (#874) ([6f46268](https://github.com/dfinity/dre/commit/6f46268f44848c022ceb7fac4c35a543c60a17d4) by Saša Tomić).
+- use container image with rye for update-dependencies (#871) ([f692898](https://github.com/dfinity/dre/commit/f692898a6ac1bcacfcb52310ab4b0e6b9bc358a8) by Saša Tomić).
+- fixing default value for ic-admin-version (#872) ([9dd0e95](https://github.com/dfinity/dre/commit/9dd0e955f24b48bfb776e130f27ce419600a966e) by Nikola Milosavljevic).
+- updating leftover runner images (#860) ([9e58a66](https://github.com/dfinity/dre/commit/9e58a66df73ce8d9f6bb896b6f6680836cfd5b44) by Nikola Milosavljevic).
+- registry canister (#854) ([65e1de7](https://github.com/dfinity/dre/commit/65e1de743d99f0ee1db105f59ed9ebe0cb947474) by Nikola Milosavljevic).
+
 ## [0.5.3](https://github.com/dfinity/dre/releases/tag/0.5.3) - 2024-09-03
 
 <small>[Compare with first commit](https://github.com/dfinity/dre/compare/09221a6073f9b283fcfc5c16e9b430ff0fba1d87...0.5.3)</small>
