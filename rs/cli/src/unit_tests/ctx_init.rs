@@ -195,6 +195,8 @@ struct NeuronAuthTestScenarion<'a> {
     want: anyhow::Result<Neuron>,
 }
 
+// Must be left here until we add HSM simulator
+#[allow(dead_code)]
 impl<'a> NeuronAuthTestScenarion<'a> {
     fn new(name: &'a str) -> Self {
         Self {
@@ -309,6 +311,8 @@ fn ensure_testing_pem(name: &str) -> PathBuf {
 #[tokio::test]
 async fn init_test_neuron_and_auth() {
     let scenarios = &[
+        // Successful scenarios
+        //
         // Should use the known neuron for staging
         // If run in CI it will require the key to be there
         NeuronAuthTestScenarion::new("Staging signer")
@@ -373,6 +377,13 @@ async fn init_test_neuron_and_auth() {
                     include_proposer: true,
                 },
             }),
+        // Failing scenarios
+        //
+        NeuronAuthTestScenarion::new("Detecting neuron id for random private key")
+            .with_network("mainnet")
+            .with_private_key(ensure_testing_pem("testing").to_str().unwrap().to_string())
+            .want(Err(anyhow::anyhow!("Will not be able to detect neuron id")))
+            .when_requirement(AuthRequirement::Neuron),
     ];
 
     let mut outcomes = vec![];
