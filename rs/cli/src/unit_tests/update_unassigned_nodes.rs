@@ -1,5 +1,6 @@
 use std::{str::FromStr, sync::Arc};
 
+use crate::artifact_downloader::MockArtifactDownloader;
 use crate::auth::Neuron;
 use crate::commands::{update_unassigned_nodes::UpdateUnassignedNodes, ExecutableCommand};
 use crate::ic_admin::MockIcAdmin;
@@ -53,6 +54,7 @@ async fn should_skip_update_same_version_nns_not_provided() {
         Arc::new(ic_admin),
         Arc::new(MockLazyGit::new()),
         Arc::new(MockProposalAgent::new()),
+        Arc::new(MockArtifactDownloader::new()),
     );
 
     let cmd = UpdateUnassignedNodes { nns_subnet_id: None };
@@ -85,6 +87,7 @@ async fn should_skip_update_same_version_nns_provided() {
         Arc::new(ic_admin),
         Arc::new(MockLazyGit::new()),
         Arc::new(MockProposalAgent::new()),
+        Arc::new(MockArtifactDownloader::new()),
     );
 
     let cmd = UpdateUnassignedNodes {
@@ -122,6 +125,7 @@ async fn should_update_unassigned_nodes() {
         Arc::new(ic_admin),
         Arc::new(MockLazyGit::new()),
         Arc::new(MockProposalAgent::new()),
+        Arc::new(MockArtifactDownloader::new()),
     );
 
     let cmd = UpdateUnassignedNodes {
@@ -157,6 +161,7 @@ async fn should_fail_nns_not_found() {
         Arc::new(ic_admin),
         Arc::new(MockLazyGit::new()),
         Arc::new(MockProposalAgent::new()),
+        Arc::new(MockArtifactDownloader::new()),
     );
 
     let cmd = UpdateUnassignedNodes {
