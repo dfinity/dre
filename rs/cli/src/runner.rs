@@ -51,6 +51,7 @@ pub struct Runner {
     network: Network,
     proposal_agent: Arc<dyn ProposalAgent>,
     verbose: bool,
+    artifact_downloader: Arc<dyn ArtifactDownloader>,
 }
 
 impl Runner {
@@ -61,6 +62,7 @@ impl Runner {
         agent: Arc<dyn ProposalAgent>,
         verbose: bool,
         ic_repo: RefCell<Option<Arc<dyn LazyGit>>>,
+        artifact_downloader: Arc<dyn ArtifactDownloader>,
     ) -> Self {
         Self {
             ic_admin,
@@ -69,6 +71,7 @@ impl Runner {
             network,
             proposal_agent: agent,
             verbose,
+            artifact_downloader,
         }
     }
 
@@ -332,7 +335,10 @@ impl Runner {
         retire_versions: Option<Vec<String>>,
         security_fix: bool,
     ) -> anyhow::Result<UpdateVersion> {
-        let (update_urls, expected_hash) = self.download_images_and_validate_sha256(release_artifact, version, force).await?;
+        let (update_urls, expected_hash) = self
+            .artifact_downloader
+            .download_images_and_validate_sha256(release_artifact, version, force)
+            .await?;
 
         let summary = match security_fix {
             true => format_security_hotfix(),
@@ -341,18 +347,21 @@ impl Runner {
         if summary.contains("Remove this block of text from the proposal.") {
             Err(anyhow::anyhow!("The edited proposal text has not been edited to add release notes."))
         } else {
-            let proposal_title = match &retire_versions {
-                Some(v) => {
-                    let pluralize = if v.len() == 1 { "version" } else { "versions" };
-                    format!(
-                        "Elect new IC/{} revision (commit {}), and retire old replica {} {}",
-                        release_artifact.capitalized(),
-                        &version[..8],
-                        pluralize,
-                        v.iter().map(|v| &v[..8]).join(",")
-                    )
-                }
-                None => format!("Elect new IC/{} revision (commit {})", release_artifact.capitalized(), &version[..8]),
+            let proposal_title = match security_fix {
+                true => "Security patch update".to_string(),
+                false => match &retire_versions {
+                    Some(v) => {
+                        let pluralize = if v.len() == 1 { "version" } else { "versions" };
+                        format!(
+                            "Elect new IC/{} revision (commit {}), and retire old replica {} {}",
+                            release_artifact.capitalized(),
+                            &version[..8],
+                            pluralize,
+                            v.iter().map(|v| &v[..8]).join(",")
+                        )
+                    }
+                    None => format!("Elect new IC/{} revision (commit {})", release_artifact.capitalized(), &version[..8]),
+                },
             };
 
             Ok(UpdateVersion {
@@ -863,8 +872,6 @@ impl UpdateVersion {
     }
 }
 
-impl ArtifactDownloader for Runner {}
-
 pub fn format_regular_version_upgrade_summary(version: &str, release_artifact: &Artifact, release_tag: &str) -> anyhow::Result<String> {
     let template = format!(
         r#"Elect new {release_artifact} binary revision [{version}](https://github.com/dfinity/ic/tree/{release_tag})
@@ -925,12 +932,8 @@ pub fn format_regular_version_upgrade_summary(version: &str, release_artifact: &
 }
 
 pub fn format_security_hotfix() -> String {
-    format!(
-        r#"# Security patch update
-
-    In accordance with the Security Patch Policy and Procedure that was adopted in proposal [48792](https://dashboard.internetcomputer.org/proposal/48792), the source code that was used to build this release will be exposed at the latest 10 days after the fix is rolled out to all subnets.
+    r#"In accordance with the Security Patch Policy and Procedure that was adopted in proposal [48792](https://dashboard.internetcomputer.org/proposal/48792), the source code that was used to build this release will be exposed at the latest 10 days after the fix is rolled out to all subnets.
 
     The community will be able to retroactively verify the binaries that were rolled out.
-"#
-    ).lines().map(|l| l.trim()).join("\n")
+"#.to_string().lines().map(|l| l.trim()).join("\n")
 }

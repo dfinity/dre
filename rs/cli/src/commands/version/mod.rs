@@ -3,7 +3,7 @@ use clap::Args;
 use super::{impl_executable_command_for_enums, ExecutableCommand, IcAdminRequirement};
 use crate::commands::version::revise::ReviseElectedVersions;
 
-mod revise;
+pub(crate) mod revise;
 
 #[derive(Args, Debug)]
 pub struct Version {
