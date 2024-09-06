@@ -109,7 +109,12 @@ impl DreContext {
         Self::new(
             args.network.clone(),
             args.nns_urls.clone(),
-            Auth::from_auth_opts(args.auth_opts.clone()).await?,
+            match args.subcommands.require_ic_admin() {
+                IcAdminRequirement::None | IcAdminRequirement::Anonymous => Auth::Anonymous,
+                IcAdminRequirement::Detect | IcAdminRequirement::OverridableBy { network: _, neuron: _ } => {
+                    Auth::from_auth_opts(args.auth_opts.clone()).await?
+                }
+            },
             args.neuron_id,
             args.verbose,
             args.no_sync,
