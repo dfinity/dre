@@ -272,12 +272,12 @@ impl<'a> NeuronAuthTestScenarion<'a> {
                 hsm_opts: HsmOpts {
                     hsm_pin: self.hsm_pin.clone(),
                     hsm_params: crate::commands::HsmParams {
-                        hsm_slot: self.hsm_slot.clone(),
-                        hsm_key_id: self.hsm_key_id.clone(),
+                        hsm_slot: self.hsm_slot,
+                        hsm_key_id: self.hsm_key_id,
                     },
                 },
             },
-            self.neuron_id.clone(),
+            self.neuron_id,
             self.requirement.clone(),
             self.network.clone(),
         )
