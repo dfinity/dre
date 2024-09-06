@@ -248,12 +248,13 @@ pub mod tests {
     use ic_management_backend::{lazy_git::LazyGit, lazy_registry::LazyRegistry, proposal::ProposalAgent};
     use ic_management_types::Network;
 
-    use crate::{artifact_downloader::ArtifactDownloader, ic_admin::IcAdmin};
+    use crate::{artifact_downloader::ArtifactDownloader, auth::Neuron, ic_admin::IcAdmin};
 
     use super::DreContext;
 
     pub fn get_mocked_ctx(
         network: Network,
+        neuron: Neuron,
         registry: Arc<dyn LazyRegistry>,
         ic_admin: Arc<dyn IcAdmin>,
         git: Arc<dyn LazyGit>,
@@ -263,16 +264,18 @@ pub mod tests {
         DreContext {
             network,
             registry: RefCell::new(Some(registry)),
-            ic_admin: Some(ic_admin),
+            ic_admin: RefCell::new(Some(ic_admin)),
             runner: RefCell::new(None),
             ic_repo: RefCell::new(Some(git)),
             proposal_agent,
             verbose_runner: true,
             skip_sync: false,
-            ic_admin_path: None,
             forum_post_link: None,
             dry_run: true,
             artifact_downloader,
+            neuron,
+            proceed_without_confirmation: true,
+            version: crate::commands::IcAdminVersion::Strict("Shouldn't reach this because of mock".to_string()),
         }
     }
 }
