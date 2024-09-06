@@ -15,14 +15,14 @@ pub struct ArtifactDownloaderImpl {}
 pub trait ArtifactDownloader: Sync + Send {
     fn get_s3_cdn_image_url<'a>(&'a self, version: &'a str, s3_subdir: &'a str) -> String {
         format!(
-            "https://download.dfinity.systems/ic/{}/{}/update-img/update-img.tar.gz",
+            "https://download.dfinity.systems/ic/{}/{}/update-img/update-img.tar.zst",
             version, s3_subdir
         )
     }
 
     fn get_r2_cdn_image_url<'a>(&'a self, version: &'a str, s3_subdir: &'a str) -> String {
         format!(
-            "https://download.dfinity.network/ic/{}/{}/update-img/update-img.tar.gz",
+            "https://download.dfinity.network/ic/{}/{}/update-img/update-img.tar.zst",
             version, s3_subdir
         )
     }
