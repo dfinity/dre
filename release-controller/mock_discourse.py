@@ -13,7 +13,7 @@ class DiscourseClientMock(DiscourseClient):
         self.api_key = "test_api_key"
         self.timeout = 10
 
-    def categories(self):
+    def categories(self, **kwargs):  # pylint: disable=unused-argument
         """Return a list of categories."""
         return [
             {"id": i} | t
@@ -41,7 +41,9 @@ class DiscourseClientMock(DiscourseClient):
             "post_stream": {
                 "posts": [
                     p
-                    for p in [{"id": i + 1} | p for i, p in enumerate(self.created_posts)]
+                    for p in [
+                        {"id": i + 1} | p for i, p in enumerate(self.created_posts)
+                    ]
                     if p["topic_id"] == topic_id
                 ]
             }
@@ -58,7 +60,9 @@ class DiscourseClientMock(DiscourseClient):
     ):
         """Create a new post. If topic_id is not provided, a new topic is created."""
         if not topic_id:
-            self.created_topics.append({"title": title, "category_id": category_id, "tags": tags or []})
+            self.created_topics.append(
+                {"title": title, "category_id": category_id, "tags": tags or []}
+            )
             topic_id = self.topics_by("")[-1]["id"]
         self.created_posts.append(
             {
