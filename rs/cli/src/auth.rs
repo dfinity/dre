@@ -327,6 +327,7 @@ impl Auth {
         }
     }
 
+    /// If it is called it is expected to retrieve an Auth of type Hsm or fail
     fn detect_hsm_auth(maybe_pin: Option<String>, maybe_slot: Option<u64>, maybe_key_id: Option<u8>) -> anyhow::Result<Self> {
         if maybe_slot.is_none() && maybe_key_id.is_none() {
             debug!("Scanning hardware security module devices");
@@ -375,31 +376,26 @@ impl Auth {
                 };
                 let memo_key: String = format!("hsm-{}-{}", info.slot_description(), info.manufacturer_id());
                 let pin = Auth::get_or_prompt_pin_checked_for_slot(&session, maybe_pin, slot, token_info, &memo_key)?;
-                let detected = Some(Auth::Hsm {
+                let detected = Auth::Hsm {
                     pin,
                     slot: slot.id(),
                     key_id,
-                });
+                };
                 info!("Using key ID {} of hardware security module in slot {}", key_id, slot);
-                return Ok(detected.map_or(Auth::Anonymous, |a| a));
+                return Ok(detected);
             }
         }
-        if maybe_slot.is_none() && maybe_key_id.is_none() && maybe_pin.is_none() {
-            info!("No hardware security module detected -- falling back to anonymous operations");
-        } else {
-            return Err(anyhow!(
-                "No hardware security module detected{}{}",
-                match maybe_slot {
-                    None => "".to_string(),
-                    Some(slot) => format!(" in slot {}", slot),
-                },
-                match maybe_key_id {
-                    None => "".to_string(),
-                    Some(key_id) => format!(" that contains a key ID {}", key_id),
-                }
-            ));
-        }
-        Ok(Auth::Anonymous)
+        Err(anyhow!(
+            "No hardware security module detected{}{}",
+            match maybe_slot {
+                None => "".to_string(),
+                Some(slot) => format!(" in slot {}", slot),
+            },
+            match maybe_key_id {
+                None => "".to_string(),
+                Some(key_id) => format!(" that contains a key ID {}", key_id),
+            }
+        ))
     }
 
     /// Finds the key ID in a slot.  If a key ID is specified,
