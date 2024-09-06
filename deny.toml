@@ -75,6 +75,7 @@ ignore = [
     { id = "RUSTSEC-2021-0127", reason = "migration to ciborium / minicbor pending" },
     { id = "RUSTSEC-2021-0141", reason = "migration away from dotenv pending" },
     { id = "RUSTSEC-2021-0145", reason = "the potential security issue only affects Windows, which we do not target" },
+    { id = "RUSTSEC-2024-0370", reason = "alternative not yet available" },
     #"a-crate-that-is-yanked@0.1.1", # you can also ignore yanked crate versions if you wish
     #{ crate = "a-crate-that-is-yanked@0.1.1", reason = "you can specify why you are ignoring the yanked crate" },
 ]
@@ -751,7 +752,7 @@ registries = [
 # https://embarkstudios.github.io/cargo-deny/checks/bans/cfg.html
 [bans]
 # Lint level for when multiple versions of the same crate are detected
-multiple-versions = "warn"
+multiple-versions = "deny"
 # Lint level for when a crate version requirement is `*`
 wildcards = "allow"
 # The graph highlighting used when creating dotgraphs for crates
@@ -776,6 +777,7 @@ allow = [
 # List of crates to deny
 deny = [
     "openssl",
+    "openssl-sys",
     #"ansi_term@0.11.0",
     #{ crate = "ansi_term@0.11.0", reason = "you can specify a reason it is banned" },
     # Wrapper crates can optionally be specified to allow the crate when it

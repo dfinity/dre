@@ -39,13 +39,23 @@ class ReleaseCandidateForumPost:
 class ReleaseCandidateForumTopic:
     """A topic in the governance category for a release candidate."""
 
-    def __init__(self, release: Release, client: DiscourseClient, nns_proposal_discussions_category):
+    def __init__(
+        self,
+        release: Release,
+        client: DiscourseClient,
+        nns_proposal_discussions_category,
+    ):
         """Create a new topic."""
         self.release = release
         self.client = client
         self.nns_proposal_discussions_category = nns_proposal_discussions_category
         topic = next(
-            (t for t in client.topics_by(self.client.api_username) if self.release.rc_name in t["title"]), None
+            (
+                t
+                for t in client.topics_by(self.client.api_username)
+                if self.release.rc_name in t["title"]
+            ),
+            None,
         )
         if topic:
             self.topic_id = topic["id"]
@@ -67,9 +77,15 @@ class ReleaseCandidateForumTopic:
         if not topic_posts:
             raise RuntimeError("failed to list topic posts")
 
-        return [p for p in topic_posts.get("post_stream", {}).get("posts", {}) if p["yours"]]
+        return [
+            p for p in topic_posts.get("post_stream", {}).get("posts", {}) if p["yours"]
+        ]
 
-    def update(self, changelog: Callable[[str], str | None], proposal: Callable[[str], int | None]):
+    def update(
+        self,
+        changelog: Callable[[str], str | None],
+        proposal: Callable[[str], int | None],
+    ):
         """Update the topic with the latest release information."""
         posts = [
             ReleaseCandidateForumPost(
@@ -85,7 +101,9 @@ class ReleaseCandidateForumTopic:
             if i < len(created_posts):
                 post_id = created_posts[i]["id"]
                 content_expected = _post_template(
-                    version_name=p.version_name, changelog=p.changelog, proposal=p.proposal
+                    version_name=p.version_name,
+                    changelog=p.changelog,
+                    proposal=p.proposal,
                 )
                 post = self.client.post_by_id(post_id)
                 if post["raw"] == content_expected:
@@ -100,12 +118,18 @@ class ReleaseCandidateForumTopic:
             else:
                 self.client.create_post(
                     topic_id=self.topic_id,
-                    content=_post_template(version_name=p.version_name, changelog=p.changelog, proposal=p.proposal),
+                    content=_post_template(
+                        version_name=p.version_name,
+                        changelog=p.changelog,
+                        proposal=p.proposal,
+                    ),
                 )
 
     def post_url(self, version: str):
         """Return the URL of the post for the given version."""
-        post_index = [i for i, v in enumerate(self.release.versions) if v.version == version][0]
+        post_index = [
+            i for i, v in enumerate(self.release.versions) if v.version == version
+        ][0]
         post = self.client.post_by_id(post_id=self.created_posts()[post_index]["id"])
         if not post:
             raise RuntimeError("failed to find post")
@@ -131,7 +155,14 @@ class ReleaseCandidateForumClient:
         """Create a new client."""
         self.discourse_client = discourse_client
         self.nns_proposal_discussions_category = next(
-            c for c in self.discourse_client.categories() if c["name"] == "NNS proposal discussions"
+            (
+                c
+                for c in self.discourse_client.categories(include_subcategories="true")
+                if c["name"] == "NNS proposal discussions"
+            ),
+            self.discourse_client.category(
+                76
+            ),  # hardcoded category id, seems like "include_subcategories" is not working
         )
 
     def get_or_create(self, release: Release) -> ReleaseCandidateForumTopic:
