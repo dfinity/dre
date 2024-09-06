@@ -26,7 +26,10 @@ class DRECli:
 
     def run(self, *args):
         """Run the dre CLI."""
-        return subprocess.check_output([self.cli, *self.auth, *args], env=self.env)
+        return subprocess.check_output(
+            [self.cli, *(["--yes"] if "propose" in args else []), *self.auth, *args],
+            env=self.env,
+        )
 
     def get_blessed_versions(self):
         """Query the blessed versions."""
