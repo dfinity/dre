@@ -293,6 +293,7 @@ impl Runner {
         release_tag: &str,
         force: bool,
         forum_post_link: Option<String>,
+        security_fix: bool,
     ) -> anyhow::Result<()> {
         let update_version = self
             .prepare_to_propose_to_revise_elected_versions(
@@ -301,6 +302,7 @@ impl Runner {
                 release_tag,
                 force,
                 self.prepare_versions_to_retire(release_artifact, false).await.map(|r| r.1)?,
+                security_fix,
             )
             .await?;
 
@@ -328,60 +330,15 @@ impl Runner {
         release_tag: &str,
         force: bool,
         retire_versions: Option<Vec<String>>,
+        security_fix: bool,
     ) -> anyhow::Result<UpdateVersion> {
         let (update_urls, expected_hash) = self.download_images_and_validate_sha256(release_artifact, version, force).await?;
 
-        let template = format!(
-            r#"Elect new {release_artifact} binary revision [{version}](https://github.com/dfinity/ic/tree/{release_tag})
-
-        # Release Notes:
-
-        [comment]: <> Remove this block of text from the proposal.
-        [comment]: <> Then, add the {release_artifact} binary release notes as bullet points here.
-        [comment]: <> Any [commit ID] within square brackets will auto-link to the specific changeset.
-
-        # IC-OS Verification
-
-        To build and verify the IC-OS disk image, run:
-
-        ```
-        # From https://github.com/dfinity/ic#verifying-releases
-        sudo apt-get install -y curl && curl --proto '=https' --tlsv1.2 -sSLO https://raw.githubusercontent.com/dfinity/ic/{version}/gitlab-ci/tools/repro-check.sh && chmod +x repro-check.sh && ./repro-check.sh -c {version}
-        ```
-
-        The two SHA256 sums printed above from a) the downloaded CDN image and b) the locally built image,
-        must be identical, and must match the SHA256 from the payload of the NNS proposal.
-        "#
-        );
-
-        // Remove <!--...--> from the commit
-        // Leading or trailing spaces are removed as well and replaced with a single space.
-        // Regex can be analyzed and tested at:
-        // https://rregex.dev/?version=1.7&method=replace&regex=%5Cs*%3C%21--.%2B%3F--%3E%5Cs*&replace=+&text=*+%5Babc%5D+%3C%21--+ignored+1+--%3E+line%0A*+%5Babc%5D+%3C%21--+ignored+2+--%3E+comment+1+%3C%21--+ignored+3+--%3E+comment+2%0A
-        let re_comment = Regex::new(r"\s*<!--.+?-->\s*").unwrap();
-        let mut builder = edit::Builder::new();
-        let with_suffix = builder.suffix(".md");
-        let edited = edit::edit_with_builder(template, with_suffix)?
-            .trim()
-            .replace("\r(\n)?", "\n")
-            .split('\n')
-            .map(|f| {
-                let f = re_comment.replace_all(f.trim(), " ");
-
-                if !f.starts_with('*') {
-                    return f.to_string();
-                }
-                match f.split_once(']') {
-                    Some((left, message)) => {
-                        let commit_hash = left.split_once('[').unwrap().1.to_string();
-
-                        format!("* [[{}](https://github.com/dfinity/ic/commit/{})] {}", commit_hash, commit_hash, message)
-                    }
-                    None => f.to_string(),
-                }
-            })
-            .join("\n");
-        if edited.contains(&String::from("Remove this block of text from the proposal.")) {
+        let summary = match security_fix {
+            true => format_security_hotfix(),
+            false => format_regular_version_upgrade_summary(version, release_artifact, release_tag)?,
+        };
+        if summary.contains("Remove this block of text from the proposal.") {
             Err(anyhow::anyhow!("The edited proposal text has not been edited to add release notes."))
         } else {
             let proposal_title = match &retire_versions {
@@ -403,7 +360,7 @@ impl Runner {
                 version: version.to_string(),
                 title: proposal_title.clone(),
                 stringified_hash: expected_hash,
-                summary: edited,
+                summary,
                 update_urls,
                 versions_to_retire: retire_versions.clone(),
             })
@@ -907,3 +864,73 @@ impl UpdateVersion {
 }
 
 impl ArtifactDownloader for Runner {}
+
+pub fn format_regular_version_upgrade_summary(version: &str, release_artifact: &Artifact, release_tag: &str) -> anyhow::Result<String> {
+    let template = format!(
+        r#"Elect new {release_artifact} binary revision [{version}](https://github.com/dfinity/ic/tree/{release_tag})
+
+    # Release Notes:
+
+    [comment]: <> Remove this block of text from the proposal.
+    [comment]: <> Then, add the {release_artifact} binary release notes as bullet points here.
+    [comment]: <> Any [commit ID] within square brackets will auto-link to the specific changeset.
+
+    # IC-OS Verification
+
+    To build and verify the IC-OS disk image, run:
+
+    ```
+    # From https://github.com/dfinity/ic#verifying-releases
+    sudo apt-get install -y curl && curl --proto '=https' --tlsv1.2 -sSLO https://raw.githubusercontent.com/dfinity/ic/{version}/gitlab-ci/tools/repro-check.sh && chmod +x repro-check.sh && ./repro-check.sh -c {version}
+    ```
+
+    The two SHA256 sums printed above from a) the downloaded CDN image and b) the locally built image,
+    must be identical, and must match the SHA256 from the payload of the NNS proposal.
+    "#
+    );
+
+    // Remove <!--...--> from the commit
+    // Leading or trailing spaces are removed as well and replaced with a single space.
+    // Regex can be analyzed and tested at:
+    // https://rregex.dev/?version=1.7&method=replace&regex=%5Cs*%3C%21--.%2B%3F--%3E%5Cs*&replace=+&text=*+%5Babc%5D+%3C%21--+ignored+1+--%3E+line%0A*+%5Babc%5D+%3C%21--+ignored+2+--%3E+comment+1+%3C%21--+ignored+3+--%3E+comment+2%0A
+    let re_comment = Regex::new(r"\s*<!--.+?-->\s*").unwrap();
+
+    Ok(match cfg!(test) {
+        true => template.lines().map(|l| l.trim()).filter(|l| !l.starts_with("[comment]")).join("\n"),
+        false => {
+            let mut builder = edit::Builder::new();
+            let with_suffix = builder.suffix(".md");
+            edit::edit_with_builder(template, with_suffix)?
+        }
+    }
+    .trim()
+    .replace("\r(\n)?", "\n")
+    .split('\n')
+    .map(|f| {
+        let f = re_comment.replace_all(f.trim(), " ");
+
+        if !f.starts_with('*') {
+            return f.to_string();
+        }
+        match f.split_once(']') {
+            Some((left, message)) => {
+                let commit_hash = left.split_once('[').unwrap().1.to_string();
+
+                format!("* [[{}](https://github.com/dfinity/ic/commit/{})] {}", commit_hash, commit_hash, message)
+            }
+            None => f.to_string(),
+        }
+    })
+    .join("\n"))
+}
+
+pub fn format_security_hotfix() -> String {
+    format!(
+        r#"# Security patch update
+
+    In accordance with the Security Patch Policy and Procedure that was adopted in proposal [48792](https://dashboard.internetcomputer.org/proposal/48792), the source code that was used to build this release will be exposed at the latest 10 days after the fix is rolled out to all subnets.
+
+    The community will be able to retroactively verify the binaries that were rolled out.
+"#
+    ).lines().map(|l| l.trim()).join("\n")
+}

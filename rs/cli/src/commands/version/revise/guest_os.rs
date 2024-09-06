@@ -15,6 +15,10 @@ pub struct GuestOs {
     /// Force proposal submission, ignoring missing download URLs
     #[clap(long)]
     pub force: bool,
+
+    /// Mark version as a security hotfix
+    #[clap(long)]
+    pub security_fix: bool,
 }
 
 impl ExecutableCommand for GuestOs {
@@ -31,6 +35,7 @@ impl ExecutableCommand for GuestOs {
                 &self.release_tag,
                 self.force,
                 ctx.forum_post_link(),
+                self.security_fix,
             )
             .await
     }
