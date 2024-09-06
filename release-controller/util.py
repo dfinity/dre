@@ -6,9 +6,12 @@ def version_name(rc_name: str, name: str):
     return f"release-{date}-{name}"
 
 
-def bazel_binary():
-    bazel_binary = "bazel"
-    bazel_binary_local = os.path.join(os.path.dirname(__file__), "bazelisk")
-    if os.path.exists(bazel_binary_local):
-        bazel_binary = bazel_binary_local
-    return bazel_binary
+def resolve_binary(name: str):
+    """
+    Resolve the binary path for the given binary name.
+    Try to locate the binary in expected location if it was packaged in an OCI image.
+    """
+    binary_local = os.path.join(os.path.dirname(__file__), name)
+    if os.path.exists(binary_local):
+        return binary_local
+    return name
