@@ -2,7 +2,7 @@ use clap::{error::ErrorKind, Args};
 use ic_types::PrincipalId;
 
 use crate::{
-    commands::{ExecutableCommand, IcAdminRequirement},
+    commands::{AuthRequirement, ExecutableCommand},
     subnet_manager::SubnetTarget,
 };
 
@@ -46,8 +46,8 @@ pub struct Replace {
 }
 
 impl ExecutableCommand for Replace {
-    fn require_ic_admin(&self) -> IcAdminRequirement {
-        IcAdminRequirement::Detect
+    fn require_auth(&self) -> AuthRequirement {
+        AuthRequirement::Neuron
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {

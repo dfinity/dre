@@ -7,7 +7,7 @@ use ic_nns_governance::pb::v1::ProposalInfo;
 use log::info;
 use spinners::{Spinner, Spinners};
 
-use super::{ExecutableCommand, IcAdminRequirement};
+use super::{AuthRequirement, ExecutableCommand};
 use crate::desktop_notify::DesktopNotifier;
 
 #[derive(Args, Debug)]
@@ -42,8 +42,8 @@ pub struct Vote {
 }
 
 impl ExecutableCommand for Vote {
-    fn require_ic_admin(&self) -> IcAdminRequirement {
-        IcAdminRequirement::Detect
+    fn require_auth(&self) -> AuthRequirement {
+        AuthRequirement::Neuron
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {

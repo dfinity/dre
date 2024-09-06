@@ -11,10 +11,10 @@ pub struct Balance {
 }
 
 impl ExecutableCommand for Balance {
-    fn require_ic_admin(&self) -> crate::commands::IcAdminRequirement {
+    fn require_auth(&self) -> crate::commands::AuthRequirement {
         match &self.neuron {
-            Some(_) => crate::commands::IcAdminRequirement::None,
-            None => crate::commands::IcAdminRequirement::Detect,
+            Some(_) => crate::commands::AuthRequirement::Anonymous,
+            None => crate::commands::AuthRequirement::Neuron,
         }
     }
 

@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use clap::Args;
 
-use super::{ExecutableCommand, IcAdminRequirement};
+use super::{AuthRequirement, ExecutableCommand, IcAdminRequirement};
 
 #[derive(Args, Debug)]
 pub struct DerToPrincipal {
@@ -11,8 +11,8 @@ pub struct DerToPrincipal {
 }
 
 impl ExecutableCommand for DerToPrincipal {
-    fn require_ic_admin(&self) -> IcAdminRequirement {
-        IcAdminRequirement::None
+    fn require_auth(&self) -> AuthRequirement {
+        AuthRequirement::Neuron
     }
 
     async fn execute(&self, _ctx: crate::ctx::DreContext) -> anyhow::Result<()> {

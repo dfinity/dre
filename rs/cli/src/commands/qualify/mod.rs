@@ -17,8 +17,8 @@ pub struct Qualify {
 impl_executable_command_for_enums! { List, Execute }
 
 impl ExecutableCommand for Qualify {
-    fn require_ic_admin(&self) -> super::IcAdminRequirement {
-        self.subcommand.require_ic_admin()
+    fn require_auth(&self) -> super::AuthRequirement {
+        self.subcommand.require_auth()
     }
 
     fn validate(&self, cmd: &mut clap::Command) {

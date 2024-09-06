@@ -8,8 +8,8 @@ use crate::commands::ExecutableCommand;
 pub struct TopUp {}
 
 impl ExecutableCommand for TopUp {
-    fn require_ic_admin(&self) -> crate::commands::IcAdminRequirement {
-        crate::commands::IcAdminRequirement::Detect
+    fn require_auth(&self) -> crate::commands::AuthRequirement {
+        crate::commands::AuthRequirement::Neuron
     }
 
     fn validate(&self, _cmd: &mut clap::Command) {}

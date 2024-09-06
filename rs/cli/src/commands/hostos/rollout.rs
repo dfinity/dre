@@ -1,7 +1,7 @@
 use clap::Args;
 use ic_types::PrincipalId;
 
-use crate::commands::{ExecutableCommand, IcAdminRequirement};
+use crate::commands::{AuthRequirement, ExecutableCommand, IcAdminRequirement};
 
 #[derive(Args, Debug)]
 pub struct Rollout {
@@ -15,8 +15,8 @@ pub struct Rollout {
 }
 
 impl ExecutableCommand for Rollout {
-    fn require_ic_admin(&self) -> IcAdminRequirement {
-        IcAdminRequirement::Detect
+    fn require_auth(&self) -> AuthRequirement {
+        AuthRequirement::Neuron
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {

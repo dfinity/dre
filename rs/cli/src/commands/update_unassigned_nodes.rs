@@ -7,7 +7,7 @@ use ic_types::PrincipalId;
 
 use crate::auth::Neuron;
 
-use super::{ExecutableCommand, IcAdminRequirement};
+use super::{AuthRequirement, ExecutableCommand};
 
 #[derive(Args, Debug)]
 pub struct UpdateUnassignedNodes {
@@ -17,8 +17,8 @@ pub struct UpdateUnassignedNodes {
 }
 
 impl ExecutableCommand for UpdateUnassignedNodes {
-    fn require_ic_admin(&self) -> IcAdminRequirement {
-        IcAdminRequirement::OverridableBy {
+    fn require_auth(&self) -> AuthRequirement {
+        AuthRequirement::OverridableBy {
             network: Network::mainnet_unchecked().unwrap(),
             neuron: Neuron::automation_neuron_unchecked(),
         }

@@ -14,8 +14,8 @@ pub struct List {
 }
 
 impl ExecutableCommand for List {
-    fn require_ic_admin(&self) -> crate::commands::IcAdminRequirement {
-        IcAdminRequirement::None
+    fn require_auth(&self) -> crate::commands::AuthRequirement {
+        crate::commands::AuthRequirement::Anonymous
     }
 
     fn validate(&self, _cmd: &mut clap::Command) {}

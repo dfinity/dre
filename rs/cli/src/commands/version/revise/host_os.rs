@@ -1,6 +1,6 @@
 use clap::Args;
 
-use crate::commands::{ExecutableCommand, IcAdminRequirement};
+use crate::commands::{AuthRequirement, ExecutableCommand};
 
 #[derive(Debug, Args)]
 pub struct HostOs {
@@ -22,8 +22,8 @@ pub struct HostOs {
 }
 
 impl ExecutableCommand for HostOs {
-    fn require_ic_admin(&self) -> IcAdminRequirement {
-        IcAdminRequirement::Detect
+    fn require_auth(&self) -> AuthRequirement {
+        AuthRequirement::Neuron
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {

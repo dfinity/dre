@@ -1,6 +1,6 @@
 use clap::Args;
 
-use super::{impl_executable_command_for_enums, ExecutableCommand, IcAdminRequirement};
+use super::{impl_executable_command_for_enums, AuthRequirement, ExecutableCommand};
 use crate::commands::neuron::balance::Balance;
 use crate::commands::neuron::refresh::Refresh;
 use crate::commands::neuron::top_up::TopUp;
@@ -18,8 +18,8 @@ pub struct Neuron {
 impl_executable_command_for_enums! { Balance, TopUp, Refresh }
 
 impl ExecutableCommand for Neuron {
-    fn require_ic_admin(&self) -> IcAdminRequirement {
-        self.subcommand.require_ic_admin()
+    fn require_auth(&self) -> AuthRequirement {
+        self.subcommand.require_auth()
     }
 
     fn validate(&self, cmd: &mut Command) {

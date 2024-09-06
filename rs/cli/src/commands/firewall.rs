@@ -15,7 +15,7 @@ use tempfile::NamedTempFile;
 
 use crate::ic_admin::{IcAdmin, ProposeCommand, ProposeOptions};
 
-use super::{ExecutableCommand, IcAdminRequirement};
+use super::{AuthRequirement, ExecutableCommand};
 
 #[derive(Args, Debug)]
 pub struct Firewall {
@@ -31,8 +31,8 @@ pub struct Firewall {
 }
 
 impl ExecutableCommand for Firewall {
-    fn require_ic_admin(&self) -> IcAdminRequirement {
-        IcAdminRequirement::Detect
+    fn require_auth(&self) -> AuthRequirement {
+        AuthRequirement::Neuron
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {

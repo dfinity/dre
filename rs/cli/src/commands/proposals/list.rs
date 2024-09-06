@@ -4,7 +4,7 @@ use ic_nns_common::pb::v1::ProposalId;
 use ic_nns_governance::pb::v1::ListProposalInfo;
 use itertools::Itertools;
 
-use crate::commands::{ExecutableCommand, IcAdminRequirement};
+use crate::commands::{AuthRequirement, ExecutableCommand};
 
 use super::Proposal;
 
@@ -59,8 +59,8 @@ pub struct List {
 }
 
 impl ExecutableCommand for List {
-    fn require_ic_admin(&self) -> IcAdminRequirement {
-        IcAdminRequirement::None
+    fn require_auth(&self) -> AuthRequirement {
+        AuthRequirement::Anonymous
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {

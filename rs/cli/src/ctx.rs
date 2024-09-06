@@ -22,7 +22,7 @@ use url::Url;
 use crate::{
     artifact_downloader::{ArtifactDownloader, ArtifactDownloaderImpl},
     auth::{Auth, Neuron},
-    commands::{Args, ExecutableCommand, IcAdminRequirement, IcAdminVersion},
+    commands::{Args, ExecutableCommand, IcAdminVersion},
     ic_admin::{download_ic_admin, should_update_ic_admin, IcAdmin, IcAdminImpl, FALLBACK_IC_ADMIN_VERSION},
     runner::Runner,
     subnet_manager::SubnetManager,
@@ -43,6 +43,7 @@ pub struct DreContext {
     forum_post_link: Option<String>,
     dry_run: bool,
     artifact_downloader: Arc<dyn ArtifactDownloader>,
+    neuron: Neuron,
 }
 
 impl DreContext {
@@ -102,6 +103,7 @@ impl DreContext {
             ic_repo: RefCell::new(None),
             dry_run,
             artifact_downloader: Arc::new(ArtifactDownloaderImpl {}) as Arc<dyn ArtifactDownloader>,
+            neuron: Neuron::anonymous_neuron(),
         })
     }
 
@@ -109,7 +111,7 @@ impl DreContext {
         Self::new(
             args.network.clone(),
             args.nns_urls.clone(),
-            match args.subcommands.require_ic_admin() {
+            match args.subcommands.require_auth() {
                 IcAdminRequirement::None | IcAdminRequirement::Anonymous => Auth::Anonymous,
                 IcAdminRequirement::Detect | IcAdminRequirement::OverridableBy { network: _, neuron: _ } => {
                     Auth::from_auth_opts(args.auth_opts.clone()).await?

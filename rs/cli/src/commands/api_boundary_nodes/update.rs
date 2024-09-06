@@ -2,7 +2,7 @@ use clap::Args;
 use ic_types::PrincipalId;
 
 use crate::{
-    commands::{ExecutableCommand, IcAdminRequirement},
+    commands::{AuthRequirement, ExecutableCommand, IcAdminRequirement},
     ic_admin::{self},
 };
 
@@ -21,8 +21,8 @@ pub struct Update {
 }
 
 impl ExecutableCommand for Update {
-    fn require_ic_admin(&self) -> IcAdminRequirement {
-        IcAdminRequirement::Detect
+    fn require_auth(&self) -> AuthRequirement {
+        AuthRequirement::Neuron
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {

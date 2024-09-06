@@ -1,6 +1,6 @@
 use clap::Args;
 
-use super::{ExecutableCommand, IcAdminRequirement};
+use super::{AuthRequirement, ExecutableCommand, IcAdminRequirement};
 
 #[derive(Args, Debug)]
 pub struct Propose {
@@ -10,8 +10,8 @@ pub struct Propose {
 }
 
 impl ExecutableCommand for Propose {
-    fn require_ic_admin(&self) -> IcAdminRequirement {
-        IcAdminRequirement::Detect
+    fn require_auth(&self) -> AuthRequirement {
+        AuthRequirement::Neuron
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {

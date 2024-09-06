@@ -3,7 +3,7 @@ use std::str::FromStr;
 use clap::{Args, ValueEnum};
 
 use crate::{
-    commands::{ExecutableCommand, IcAdminRequirement},
+    commands::{AuthRequirement, ExecutableCommand, IcAdminRequirement},
     operations::hostos_rollout::{NodeGroupUpdate, NumberOfNodes},
 };
 
@@ -76,8 +76,8 @@ supported values are absolute numbers (10) or percentage (10%)"#
 }
 
 impl ExecutableCommand for RolloutFromNodeGroup {
-    fn require_ic_admin(&self) -> IcAdminRequirement {
-        IcAdminRequirement::Detect
+    fn require_auth(&self) -> AuthRequirement {
+        AuthRequirement::Neuron
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {

@@ -177,8 +177,8 @@ The argument is mandatory for testnets, and is optional for mainnet and staging"
 // Do not use outside of DRE CLI.
 // You can run your command by directly instantiating it.
 impl ExecutableCommand for Args {
-    fn require_ic_admin(&self) -> IcAdminRequirement {
-        self.subcommands.require_ic_admin()
+    fn require_auth(&self) -> AuthRequirement {
+        self.subcommands.require_auth()
     }
 
     async fn execute(&self, ctx: DreContext) -> anyhow::Result<()> {
@@ -201,9 +201,9 @@ macro_rules! impl_executable_command_for_enums {
         )*}
 
         impl ExecutableCommand for Subcommands {
-            fn require_ic_admin(&self) -> IcAdminRequirement {
+            fn require_auth(&self) -> AuthRequirement {
                 match &self {
-                    $(Subcommands::$var(variant) => variant.require_ic_admin(),)*
+                    $(Subcommands::$var(variant) => variant.require_auth(),)*
                 }
             }
 
@@ -226,7 +226,7 @@ pub(crate) use impl_executable_command_for_enums;
 impl_executable_command_for_enums! { DerToPrincipal, Heal, Subnet, Get, Propose, UpdateUnassignedNodes, Version, NodeMetrics, HostOs, Nodes, ApiBoundaryNodes, Vote, Registry, Firewall, Upgrade, Proposals, Completions, Qualify, UpdateAuthorizedSubnets, Neuron }
 
 pub trait ExecutableCommand {
-    fn require_ic_admin(&self) -> IcAdminRequirement;
+    fn require_auth(&self) -> AuthRequirement;
 
     fn validate(&self, cmd: &mut Command);
 
@@ -301,10 +301,10 @@ pub trait ExecutableCommand {
     }
 }
 
-pub enum IcAdminRequirement {
-    None,
+pub enum AuthRequirement {
     Anonymous,                                              // for get commands
-    Detect,                                                 // detect the neuron
+    Signer,                                                 // just authentication details used for signing
+    Neuron,                                                 // Signer + neuron_id used for proposals
     OverridableBy { network: Network, neuron: AuthNeuron }, // eg automation which we know where is placed
 }
 
