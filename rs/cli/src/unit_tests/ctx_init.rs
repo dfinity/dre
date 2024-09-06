@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use crate::auth::Auth;
+use crate::commands::AuthOpts;
 use ic_canisters::governance::governance_canister_version;
 use ic_management_types::Network;
 
@@ -22,13 +22,22 @@ async fn get_context(network: &Network, version: IcAdminVersion) -> anyhow::Resu
     DreContext::new(
         network.name.clone(),
         network.nns_urls.clone(),
-        Auth::Anonymous,
+        AuthOpts {
+            private_key_pem: None,
+            hsm_opts: crate::commands::HsmOpts {
+                hsm_pin: None,
+                hsm_params: crate::commands::HsmParams {
+                    hsm_slot: None,
+                    hsm_key_id: None,
+                },
+            },
+        },
         None,
         false,
         true,
         false,
         true,
-        crate::commands::IcAdminRequirement::Detect,
+        crate::commands::AuthRequirement::Anonymous,
         None,
         version,
     )
@@ -109,7 +118,7 @@ async fn init_tests_ic_admin_version() {
             );
             let ctx = maybe_ctx.unwrap();
 
-            let ic_admin_path = ctx.ic_admin_path().unwrap();
+            let ic_admin_path = ctx.ic_admin().await.ic_admin_path().unwrap();
             assert!(
                 ic_admin_path.contains(ver),
                 "Test `{}`: ic_admin_path `{}`, expected version `{}`",
@@ -119,10 +128,10 @@ async fn init_tests_ic_admin_version() {
             )
         } else {
             assert!(
-                maybe_ctx.is_err(),
-                "Test `{}`: expected error but got ok with version: {}",
+                maybe_ctx.is_ok(),
+                "Test `{}`: expected ok but got err: {:?}",
                 test.name,
-                maybe_ctx.unwrap().ic_admin_path().unwrap()
+                maybe_ctx.err().unwrap()
             );
         }
 

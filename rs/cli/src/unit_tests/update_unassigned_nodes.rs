@@ -43,6 +43,7 @@ async fn should_skip_update_same_version_nns_not_provided() {
 
     let ctx = get_mocked_ctx(
         Network::mainnet_unchecked().unwrap(),
+        Neuron::anonymous_neuron(),
         Arc::new(registry),
         Arc::new(MockIcAdmin::new()),
         Arc::new(MockLazyGit::new()),
@@ -76,6 +77,7 @@ async fn should_skip_update_same_version_nns_provided() {
 
     let ctx = get_mocked_ctx(
         Network::mainnet_unchecked().unwrap(),
+        Neuron::anonymous_neuron(),
         Arc::new(registry),
         Arc::new(ic_admin),
         Arc::new(MockLazyGit::new()),
@@ -114,6 +116,7 @@ async fn should_update_unassigned_nodes() {
 
     let ctx = get_mocked_ctx(
         Network::mainnet_unchecked().unwrap(),
+        Neuron::anonymous_neuron(),
         Arc::new(registry),
         Arc::new(ic_admin),
         Arc::new(MockLazyGit::new()),
@@ -150,6 +153,7 @@ async fn should_fail_nns_not_found() {
 
     let ctx = get_mocked_ctx(
         Network::mainnet_unchecked().unwrap(),
+        Neuron::anonymous_neuron(),
         Arc::new(registry),
         Arc::new(ic_admin),
         Arc::new(MockLazyGit::new()),

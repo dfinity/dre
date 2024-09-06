@@ -235,8 +235,8 @@ impl DreContext {
     }
 
     #[cfg(test)]
-    pub fn ic_admin_path(&self) -> Option<String> {
-        self.ic_admin_path.clone()
+    pub fn ic_admin_version(&self) -> IcAdminVersion {
+        self.version.clone()
     }
 }
 
