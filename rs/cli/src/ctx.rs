@@ -45,7 +45,7 @@ pub struct DreContext {
 }
 
 impl DreContext {
-    pub(crate) async fn new(
+    pub async fn new(
         network: String,
         nns_urls: Vec<Url>,
         auth: AuthOpts,

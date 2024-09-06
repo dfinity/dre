@@ -2,7 +2,6 @@ use std::{path::PathBuf, str::FromStr};
 
 use anyhow::Error;
 use dre::{
-    auth::Auth,
     commands::{qualify::execute::Execute, ExecutableCommand},
     ctx::DreContext,
 };
@@ -77,13 +76,13 @@ pub async fn qualify(
     let ctx = DreContext::new(
         network_name.to_string(),
         config.nns_urls,
-        Auth::pem(private_key_pem).await?,
+        private_key_pem.try_into()?,
         Some(neuron_id),
         false,
         false,
         true,
         false,
-        cmd.require_ic_admin(),
+        cmd.require_auth(),
         None,
         dre::commands::IcAdminVersion::FromGovernance,
     )

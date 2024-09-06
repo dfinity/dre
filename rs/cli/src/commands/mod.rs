@@ -1,3 +1,4 @@
+use std::path::PathBuf;
 use std::{collections::BTreeMap, str::FromStr};
 
 use crate::commands::subnet::Subnet;
@@ -98,7 +99,7 @@ pub(crate) struct HsmOpts {
 #[derive(ClapArgs, Debug, Clone)]
 #[group(multiple = false)]
 /// Authentication arguments
-pub(crate) struct AuthOpts {
+pub struct AuthOpts {
     /// Path to private key file (in PEM format)
     #[clap(
         long,
@@ -109,6 +110,23 @@ pub(crate) struct AuthOpts {
     pub(crate) private_key_pem: Option<InputPath>,
     #[clap(flatten)]
     pub(crate) hsm_opts: HsmOpts,
+}
+
+impl TryFrom<PathBuf> for AuthOpts {
+    type Error = anyhow::Error;
+
+    fn try_from(value: PathBuf) -> std::result::Result<Self, Self::Error> {
+        Ok(AuthOpts {
+            private_key_pem: Some(InputPath::new(ClioPath::new(value)?)?),
+            hsm_opts: HsmOpts {
+                hsm_pin: None,
+                hsm_params: HsmParams {
+                    hsm_slot: None,
+                    hsm_key_id: None,
+                },
+            },
+        })
+    }
 }
 
 #[derive(Parser, Debug)]
