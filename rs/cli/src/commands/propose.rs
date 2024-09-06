@@ -1,6 +1,6 @@
 use clap::Args;
 
-use super::{AuthRequirement, ExecutableCommand, IcAdminRequirement};
+use super::{AuthRequirement, ExecutableCommand};
 
 #[derive(Args, Debug)]
 pub struct Propose {
@@ -15,7 +15,7 @@ impl ExecutableCommand for Propose {
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        let ic_admin = ctx.ic_admin();
+        let ic_admin = ctx.ic_admin().await;
 
         ic_admin.run_passthrough_propose(&self.args).await?;
         Ok(())

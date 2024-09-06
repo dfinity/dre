@@ -1,8 +1,9 @@
 use std::path::PathBuf;
+use std::pin::Pin;
 use std::str::FromStr;
 
 use anyhow::anyhow;
-use clio::InputPath;
+use clio::{ClioPath, InputPath};
 use cryptoki::object::AttributeInfo;
 use cryptoki::session::Session;
 use cryptoki::{
@@ -32,6 +33,8 @@ pub struct Neuron {
 static RELEASE_AUTOMATION_DEFAULT_PRIVATE_KEY_PEM: &str = ".config/dfx/identity/release-automation/identity.pem"; // Relative to the home directory
 const RELEASE_AUTOMATION_NEURON_ID: u64 = 80;
 
+const STAGING_NEURON_ID: u64 = 49;
+
 // As per fn str_to_key_id(s: &str) in ic-canisters/.../parallel_hardware_identity.rs,
 // the representation of key ID that the canister client wants is a sequence of
 // pairs of hex digits, case-insensitive.  The key ID as stored in the HSM is
@@ -43,7 +46,56 @@ pub fn hsm_key_id_to_string(s: u8) -> String {
 }
 
 impl Neuron {
-    pub async fn from_opts_and_req(auth_opts: AuthOpts, requirement: AuthRequirement, network: &Network) -> anyhow::Result<Self> {
+    pub(crate) async fn from_opts_and_req(
+        auth_opts: AuthOpts,
+        requirement: AuthRequirement,
+        network: &Network,
+        neuron_id: Option<u64>,
+    ) -> anyhow::Result<Self> {
+        let (neuron_id, auth_opts) = if network.name == "staging" {
+            let staging_known_path = PathBuf::from_str(&std::env::var("HOME").unwrap())
+                // Must be a valid path
+                .unwrap()
+                .join(".config/dfx/identity/bootstrap-super-leader/identity.pem");
+
+            match neuron_id {
+                Some(n) => (Some(n), auth_opts),
+                None => (
+                    Some(STAGING_NEURON_ID),
+                    match Auth::pem(staging_known_path.clone()).await {
+                        Ok(_) => AuthOpts {
+                            private_key_pem: Some(InputPath::new(ClioPath::new(staging_known_path).unwrap()).unwrap()),
+                            hsm_opts: HsmOpts {
+                                hsm_pin: None,
+                                hsm_params: HsmParams {
+                                    hsm_slot: None,
+                                    hsm_key_id: None,
+                                },
+                            },
+                        },
+                        Err(e) => match requirement {
+                            // If there is an error but auth is not needed
+                            // just send what we have since it won't be
+                            // checked anyway
+                            AuthRequirement::Anonymous => auth_opts,
+                            _ => anyhow::bail!("Failed to find staging auth: {:?}", e),
+                        },
+                    },
+                ),
+            }
+        } else {
+            (neuron_id, auth_opts)
+        };
+
+        Self::from_opts_and_req_inner(auth_opts, requirement, network, neuron_id).await
+    }
+
+    async fn from_opts_and_req_inner(
+        auth_opts: AuthOpts,
+        requirement: AuthRequirement,
+        network: &Network,
+        neuron_id: Option<u64>,
+    ) -> anyhow::Result<Self> {
         match requirement {
             AuthRequirement::Anonymous => Ok(Self {
                 auth: Auth::Anonymous,
@@ -58,7 +110,10 @@ impl Neuron {
             AuthRequirement::Neuron => Ok({
                 let auth = Auth::from_auth_opts(auth_opts).await?;
                 Self {
-                    neuron_id: auth.auto_detect_neuron_id(network.nns_urls.clone()).await?,
+                    neuron_id: match neuron_id {
+                        Some(n) => n,
+                        None => auth.auto_detect_neuron_id(network.nns_urls.clone()).await?,
+                    },
                     auth,
                     include_proposer: true,
                 }
@@ -67,9 +122,20 @@ impl Neuron {
                 network: required_network,
                 neuron,
             } => {
-                let maybe_user_provided_neuron = Auth::from_auth_opts(auth_opts)
-                    .await
-                    .map(|auth| (auth.auto_detect_neuron_id(network.nns_urls.clone()), auth));
+                let maybe_user_provided_neuron = Auth::from_auth_opts(auth_opts).await.map(|auth| {
+                    (
+                        match neuron_id {
+                            Some(n) => {
+                                Box::pin(async move { Ok(n) }) as Pin<Box<dyn futures::Future<Output = std::result::Result<u64, anyhow::Error>>>>
+                            }
+                            None => Box::pin({
+                                let auth_clone = auth.clone();
+                                async move { auth_clone.auto_detect_neuron_id(network.nns_urls.clone()).await }
+                            }),
+                        },
+                        auth,
+                    )
+                });
 
                 let (neuron_id, auth) = if required_network.eq(network) {
                     // The network matches, check if the override is possible
@@ -93,10 +159,10 @@ impl Neuron {
                                 // User specified auth succeeded,
                                 // use that
                                 (Ok(neuron_id), _) => (neuron_id, user_auth),
-                                (Err(e), Ok((override_neuron_id, override_auth))) => {
+                                (Err(e), Ok((overriden_neuron_id, override_auth))) => {
                                     warn!("Error while trying to use user specified auth: {:?}", e);
-                                    warn!("Defaulting to override neuron: {}", overidden_neuron_id);
-                                    (override_neuron_id, override_auth)
+                                    warn!("Defaulting to override neuron: {}", overriden_neuron_id);
+                                    (overriden_neuron_id, override_auth)
                                 }
                                 // Both don't work
                                 // Error out
@@ -121,6 +187,19 @@ impl Neuron {
                             oe
                         ),
                     }
+                } else {
+                    // Check if override is possible
+                    match neuron.auth {
+                        // Soft error. This will error only if
+                        // the user didn't provide any of his auth
+                        Auth::Keyfile { path } if !path.exists() => anyhow::bail!(
+                            "Path `{}` not found, which can be used to override this command. Specify your own auth args",
+                            path.display()
+                        ),
+                        Auth::Keyfile { path } => (neuron.neuron_id, Auth::Keyfile { path }),
+                        // Hard error on the whole program since we don't support this
+                        _ => anyhow::bail!("Overriding neuron with auth types other than keyfile is not supported"),
+                    }
                 };
 
                 Ok(Self {
@@ -132,6 +211,7 @@ impl Neuron {
         }
     }
 
+    #[allow(dead_code)]
     pub async fn new(auth: Auth, neuron_id: Option<u64>, network: &Network, include_proposer: bool) -> anyhow::Result<Self> {
         let neuron_id = match neuron_id {
             Some(n) => n,

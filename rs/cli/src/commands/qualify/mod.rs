@@ -1,9 +1,8 @@
-use crate::commands::IcAdminRequirement;
 use clap::Args;
 use execute::Execute;
 use list::List;
 
-use super::{impl_executable_command_for_enums, ExecutableCommand};
+use super::{impl_executable_command_for_enums, AuthRequirement, ExecutableCommand};
 
 pub mod execute;
 mod list;
@@ -17,7 +16,7 @@ pub struct Qualify {
 impl_executable_command_for_enums! { List, Execute }
 
 impl ExecutableCommand for Qualify {
-    fn require_auth(&self) -> super::AuthRequirement {
+    fn require_auth(&self) -> AuthRequirement {
         self.subcommand.require_auth()
     }
 

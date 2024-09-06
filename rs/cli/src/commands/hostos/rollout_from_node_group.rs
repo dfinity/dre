@@ -3,7 +3,7 @@ use std::str::FromStr;
 use clap::{Args, ValueEnum};
 
 use crate::{
-    commands::{AuthRequirement, ExecutableCommand, IcAdminRequirement},
+    commands::{AuthRequirement, ExecutableCommand},
     operations::hostos_rollout::{NodeGroupUpdate, NumberOfNodes},
 };
 

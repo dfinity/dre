@@ -62,7 +62,7 @@ impl ExecutableCommand for Execute {
         let from_version = match &self.from_version {
             Some(v) => v.to_string(),
             None => {
-                let anonymous_admin_wrapper_for_mainnet = ctx.readonly_ic_admin_for_other_network(Network::mainnet_unchecked().unwrap());
+                let anonymous_admin_wrapper_for_mainnet = ctx.readonly_ic_admin_for_other_network(Network::mainnet_unchecked().unwrap()).await?;
 
                 let subnets = ctx.registry().await.subnets().await?;
                 let nns_subnet_id = subnets.keys().next().unwrap();

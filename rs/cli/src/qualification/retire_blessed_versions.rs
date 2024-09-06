@@ -37,6 +37,7 @@ impl Step for RetireBlessedVersions {
         let place_proposal = || async {
             ctx.dre_ctx()
                 .ic_admin()
+                .await
                 .propose_run(
                     ProposeCommand::ReviseElectedVersions {
                         release_artifact: ic_management_types::Artifact::GuestOs,

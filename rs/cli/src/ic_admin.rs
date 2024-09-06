@@ -22,7 +22,7 @@ const MAX_SUMMARY_CHAR_COUNT: usize = 29000;
 
 #[automock]
 pub trait IcAdmin: Send + Sync {
-    fn neuron(&self) -> Neuron;
+    fn ic_admin_path(&self) -> Option<String>;
 
     fn propose_run(&self, cmd: ProposeCommand, opts: ProposeOptions) -> BoxFuture<'_, anyhow::Result<String>>;
 
@@ -45,8 +45,8 @@ pub struct IcAdminImpl {
 }
 
 impl IcAdmin for IcAdminImpl {
-    fn neuron(&self) -> Neuron {
-        self.neuron.clone()
+    fn ic_admin_path(&self) -> Option<String> {
+        self.ic_admin_bin_path.clone()
     }
 
     fn propose_run(&self, cmd: ProposeCommand, opts: ProposeOptions) -> BoxFuture<'_, anyhow::Result<String>> {

@@ -85,7 +85,7 @@ impl ExecutableCommand for Vote {
 
                 let prop_id = proposal.id.unwrap().id;
                 if !ctx.is_dry_run() {
-                    let response = match client.register_vote(ctx.ic_admin().neuron().neuron_id, proposal.id.unwrap().id).await {
+                    let response = match client.register_vote(ctx.neuron().neuron_id, proposal.id.unwrap().id).await {
                         Ok(response) => format!("Voted successfully: {}", response),
                         Err(e) => {
                             DesktopNotifier::send_critical(

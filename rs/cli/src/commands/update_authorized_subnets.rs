@@ -95,7 +95,7 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
             .cloned()
             .collect();
 
-        let ic_admin = ctx.ic_admin();
+        let ic_admin = ctx.ic_admin().await;
         ic_admin
             .propose_run(
                 ProposeCommand::SetAuthorizedSubnetworks { subnets: authorized },

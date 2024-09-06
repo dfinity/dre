@@ -2,7 +2,7 @@ use clap::Args;
 use ic_types::PrincipalId;
 
 use crate::{
-    commands::{AuthRequirement, ExecutableCommand, IcAdminRequirement},
+    commands::{AuthRequirement, ExecutableCommand},
     ic_admin::{self},
 };
 
@@ -23,7 +23,7 @@ impl ExecutableCommand for Remove {
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        let ic_admin = ctx.ic_admin();
+        let ic_admin = ctx.ic_admin().await;
         ic_admin
             .propose_run(
                 ic_admin::ProposeCommand::RemoveApiBoundaryNodes { nodes: self.nodes.to_vec() },

@@ -1,9 +1,6 @@
 use clap::Args;
 
-use crate::{
-    commands::{ExecutableCommand, IcAdminRequirement},
-    qualification::QualificationExecutorBuilder,
-};
+use crate::{commands::ExecutableCommand, qualification::QualificationExecutorBuilder};
 
 #[derive(Args, Debug)]
 pub struct List {
