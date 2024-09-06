@@ -1,4 +1,13 @@
 releases:
+  - rc_name: rc--2024-09-06_01-30
+    versions:
+    # Qualification pipeline:
+    # https://github.com/dfinity/ic/actions/runs/10730861579
+      - name: base
+        version: 36c1976526fc488d40a89000f81d9f4897d2324e
+      # TODO: add when qualification is finished
+      # - name: canister-snapshots
+      #   version: 843e71b994e1bf28edf80ad7746a7355259de91a
   - rc_name: rc--2024-08-29_01-30
     versions:
       - name: base
