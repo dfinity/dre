@@ -13,7 +13,7 @@ concurrency:
 
 jobs:
   clean-bazel-cache:
-    runs-on: [self-hosted, dre-runner-custom]
+    runs-on: dre-runner-custom
     strategy:
       matrix:
         runner: [1, 2, 3, 4] # We currently have 4 runners, adjust this number if more runners are added
