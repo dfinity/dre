@@ -99,7 +99,7 @@ impl ExecutableCommand for Firewall {
         match reverse_sorted.into_iter().last() {
             Some((_, mods)) => {
                 Self::submit_proposal(
-                    ctx.ic_admin().await,
+                    ctx.ic_admin().await?,
                     mods,
                     ProposeOptions {
                         title: self.title.clone(),

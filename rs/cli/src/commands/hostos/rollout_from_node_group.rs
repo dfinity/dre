@@ -82,7 +82,7 @@ impl ExecutableCommand for RolloutFromNodeGroup {
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
         let update_group = NodeGroupUpdate::new(self.assignment, self.owner, NumberOfNodes::from_str(&self.nodes_in_group)?);
-        let runner = ctx.runner().await;
+        let runner = ctx.runner().await?;
         if let Some((nodes_to_update, summary)) = runner
             .hostos_rollout_nodes(update_group, &self.version, &self.only, &self.exclude)
             .await?

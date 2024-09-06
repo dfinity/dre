@@ -31,7 +31,7 @@ impl ExecutableCommand for Remove {
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        let runner = ctx.runner().await;
+        let runner = ctx.runner().await?;
         runner
             .remove_nodes(NodesRemover {
                 no_auto: self.no_auto,

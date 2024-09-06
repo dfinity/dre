@@ -49,7 +49,7 @@ impl ExecutableCommand for Create {
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        let runner = ctx.runner().await;
+        let runner = ctx.runner().await?;
         let motivation = match &self.motivation {
             Some(m) => m,
             None if self.help_other_args => &"help for options".to_string(),

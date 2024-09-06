@@ -70,7 +70,7 @@ impl ExecutableCommand for Replace {
             )
             .await?;
 
-        let runner = ctx.runner().await;
+        let runner = ctx.runner().await?;
 
         runner.propose_subnet_change(subnet_change_response, ctx.forum_post_link()).await
     }

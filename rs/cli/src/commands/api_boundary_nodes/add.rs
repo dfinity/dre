@@ -27,7 +27,7 @@ impl ExecutableCommand for Add {
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        let ic_admin = ctx.ic_admin().await;
+        let ic_admin = ctx.ic_admin().await?;
 
         ic_admin
             .propose_run(

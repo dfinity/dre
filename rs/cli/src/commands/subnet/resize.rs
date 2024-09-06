@@ -42,7 +42,7 @@ impl ExecutableCommand for Resize {
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        let runner = ctx.runner().await;
+        let runner = ctx.runner().await?;
         runner
             .subnet_resize(
                 SubnetResizeRequest {

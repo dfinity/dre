@@ -27,7 +27,7 @@ impl ExecutableCommand for GuestOs {
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        let runner = ctx.runner().await;
+        let runner = ctx.runner().await?;
         runner
             .do_revise_elected_replica_versions(
                 &ic_management_types::Artifact::GuestOs,

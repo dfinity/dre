@@ -25,8 +25,6 @@ impl ExecutableCommand for UpdateUnassignedNodes {
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        let runner = ctx.runner().await;
-
         let nns_subnet_id = match &self.nns_subnet_id {
             Some(n) => n.to_owned(),
             None => {
@@ -41,6 +39,7 @@ impl ExecutableCommand for UpdateUnassignedNodes {
             }
         };
 
+        let runner = ctx.runner().await?;
         runner
             .update_unassigned_nodes(&PrincipalId::from_str(&nns_subnet_id)?, ctx.forum_post_link())
             .await

@@ -138,15 +138,15 @@ impl DreContext {
         self.neuron.auth.create_canister_client(self.network.get_nns_urls().to_vec(), lock)
     }
 
-    pub async fn ic_admin(&self) -> Arc<dyn IcAdmin> {
+    pub async fn ic_admin(&self) -> anyhow::Result<Arc<dyn IcAdmin>> {
         if let Some(a) = self.ic_admin.borrow().as_ref() {
-            return a.clone();
+            return Ok(a.clone());
         }
 
         let ic_admin_path = match &self.version {
-            IcAdminVersion::FromGovernance => match should_update_ic_admin().unwrap() {
+            IcAdminVersion::FromGovernance => match should_update_ic_admin()? {
                 (true, _) => {
-                    let govn_canister_version = governance_canister_version(self.network().get_nns_urls()).await.unwrap();
+                    let govn_canister_version = governance_canister_version(self.network().get_nns_urls()).await?;
                     debug!(
                         "Using ic-admin matching the version of governance canister, version: {}",
                         govn_canister_version.stringified_hash
@@ -157,8 +157,7 @@ impl DreContext {
                         "0000000000000000000000000000000000000000" => None,
                         v => Some(v.to_owned()),
                     })
-                    .await
-                    .unwrap()
+                    .await?
                 }
                 (false, s) => {
                     debug!("Using cached ic-admin matching the version of governance canister, path: {}", s);
@@ -167,11 +166,11 @@ impl DreContext {
             },
             IcAdminVersion::Fallback => {
                 debug!("Using default ic-admin, version: {}", FALLBACK_IC_ADMIN_VERSION);
-                download_ic_admin(None).await.unwrap()
+                download_ic_admin(None).await?
             }
             IcAdminVersion::Strict(ver) => {
                 debug!("Using ic-admin specified via args: {}", ver);
-                download_ic_admin(Some(ver.to_string())).await.unwrap()
+                download_ic_admin(Some(ver.to_string())).await?
             }
         };
 
@@ -184,7 +183,7 @@ impl DreContext {
         )) as Arc<dyn IcAdmin>;
 
         *self.ic_admin.borrow_mut() = Some(ic_admin.clone());
-        ic_admin
+        Ok(ic_admin)
     }
 
     pub fn neuron(&self) -> Neuron {
@@ -192,7 +191,7 @@ impl DreContext {
     }
 
     pub async fn readonly_ic_admin_for_other_network(&self, network: Network) -> anyhow::Result<impl IcAdmin> {
-        let ic_admin = self.ic_admin().await;
+        let ic_admin = self.ic_admin().await?;
         Ok(IcAdminImpl::new(
             network,
             ic_admin.ic_admin_path(),
@@ -212,13 +211,13 @@ impl DreContext {
         self.proposal_agent.clone()
     }
 
-    pub async fn runner(&self) -> Rc<Runner> {
+    pub async fn runner(&self) -> anyhow::Result<Rc<Runner>> {
         if let Some(r) = self.runner.borrow().as_ref() {
-            return r.clone();
+            return Ok(r.clone());
         }
 
         let runner = Rc::new(Runner::new(
-            self.ic_admin().await,
+            self.ic_admin().await?,
             self.registry().await,
             self.network().clone(),
             self.proposals_agent(),
@@ -227,7 +226,7 @@ impl DreContext {
             self.artifact_downloader.clone(),
         ));
         *self.runner.borrow_mut() = Some(runner.clone());
-        runner
+        Ok(runner)
     }
 
     pub fn forum_post_link(&self) -> Option<String> {

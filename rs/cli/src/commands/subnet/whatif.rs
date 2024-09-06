@@ -29,7 +29,7 @@ impl ExecutableCommand for WhatifDecentralization {
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        let runner = ctx.runner().await;
+        let runner = ctx.runner().await?;
 
         let change_membership = ChangeSubnetMembershipPayload {
             subnet_id: self.subnet_id,

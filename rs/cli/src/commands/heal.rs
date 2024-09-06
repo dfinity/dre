@@ -11,7 +11,7 @@ impl ExecutableCommand for Heal {
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        let runner = ctx.runner().await;
+        let runner = ctx.runner().await?;
         runner.network_heal(ctx.forum_post_link()).await
     }
 
