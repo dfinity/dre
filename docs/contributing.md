@@ -1,82 +1,5 @@
 # Pre-requisites
 
-## 1. Install dependencies
-
-### pixi
-
-[Pixi](https://pixi.sh/) is a package management tool for developers. It allows the developer to install libraries and applications in a reproducible way. Use pixi cross-platform, on Windows, Mac and Linux.
-
-Installation:
-```
-curl -fsSL https://pixi.sh/install.sh | bash
-```
-
-Then logout and login and you can then install Python with:
-```
-pixi global install python==3.11
-```
-
-### pyenv
-
-pyenv is a more conventional alternative to pixi. It installs slower but it's more tested. Use it if pixi doesn't work for you.
-
-#### On Linux
-
-In order to manage python versions, you can use the [pyenv
-installer](https://github.com/pyenv/pyenv-installer).
-
-Installing pyenv would be something like:
-
-``` bash
-curl https://pyenv.run | bash
-```
-
-Then log off and log back on, in order to ensure that the
-`~/.local/bin` directory (used by `pip`) is
-available in your session's `$PATH`, as well as the pyenv
-shims directory.
-
-#### On Mac OS
-
-On Mac, pyenv can be installed with Brew https://brew.sh/
-```bash
-brew install pyenv
-```
-
-If you get an error `configure: error: C compiler cannot create executables`,
-you may not have recent development tools. Run the following:
-```bash
-sudo rm -rf /Library/Developer/CommandLineTools
-sudo xcode-select --install
-```
-
-You should verify that a new terminal session has added
-the pyenv shims directory to your `$PATH`, then continue
-in that new terminal session from now on.
-
-### 2. Install the Python packages needed by the repo
-
-
-#### Linux dependencies
-
-pyenv will install a clean Python for you.   This installation will
-insist on a few important libraries which you should have on your
-system before it installs our chosen Python development version.
-
-```bash
-sudo apt install -y libncurses-dev libbz2-dev libreadline-dev \
-  libssl-dev make build-essential libssl-dev zlib1g-dev \
-  libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm \
-  libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev \
-  libffi-dev liblzma-dev
-```
-
-Note: if the list of dependencies above changes, update the
-[docker/Dockerfile] file accordingly, so CI stays in sync
-with local development environments.
-
-#### Rye installation
-
 Rye is a comprehensive project and package management solution for Python.
 Rye provides a unified experience to install and manages Python installations,
 pyproject.toml based projects, dependencies and virtualenvs seamlessly.
@@ -209,5 +132,5 @@ To use the `dre` CLI tool with the local dashboard instance run it with `--dev` 
 E.g.
 
 ```sh
-dre --dev subnet --id <id> replace -o1
+dre --dev subnet replace --id <subnet-id> -o1
 ```
