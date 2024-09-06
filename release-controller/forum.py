@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 from typing import Callable
@@ -160,9 +161,9 @@ class ReleaseCandidateForumClient:
                 for c in self.discourse_client.categories(include_subcategories="true")
                 if c["name"] == "NNS proposal discussions"
             ),
-            self.discourse_client.category(
-                76
-            ),  # hardcoded category id, seems like "include_subcategories" is not working
+            self.discourse_client.category(76)[
+                "category"
+            ],  # hardcoded category id, seems like "include_subcategories" is not working
         )
 
     def get_or_create(self, release: Release) -> ReleaseCandidateForumTopic:
@@ -182,31 +183,32 @@ def main():
         api_username=os.environ["DISCOURSE_USER"],
         api_key=os.environ["DISCOURSE_KEY"],
     )
-    index = parse_yaml_raw_as(
-        Model,
-        """
-rollout:
-  stages: []
+    #     index = parse_yaml_raw_as(
+    #         Model,
+    #         """
+    # rollout:
+    #   stages: []
 
-releases:
-  - rc_name: rc--2024-03-13_23-05
-    versions:
-      - version: 2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f
-        name: default
-      - version: 31e9076fb99dfc36eb27fb3a2edc68885e6163ac
-        name: feat
-      - version: db583db46f0894d35bcbcfdea452d93abdadd8a6
-        name: feat-hotfix1
-""",
-    )
+    # releases:
+    #   - rc_name: rc--2024-03-13_23-05
+    #     versions:
+    #       - version: 2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f
+    #         name: default
+    #       - version: 31e9076fb99dfc36eb27fb3a2edc68885e6163ac
+    #         name: feat
+    #       - version: db583db46f0894d35bcbcfdea452d93abdadd8a6
+    #         name: feat-hotfix1
+    # """,
+    #     )
     forum_client = ReleaseCandidateForumClient(
         discourse_client,
     )
 
-    topic = forum_client.get_or_create(index.root.releases[0])
-    topic.update(lambda _: None, lambda _: None)
 
-    print(topic.post_url(version="31e9076fb99dfc36eb27fb3a2edc68885e6163ac"))
+#     topic = forum_client.get_or_create(index.root.releases[0])
+#     topic.update(lambda _: None, lambda _: None)
+
+# print(topic.post_url(version="31e9076fb99dfc36eb27fb3a2edc68885e6163ac"))
 
 
 if __name__ == "__main__":
