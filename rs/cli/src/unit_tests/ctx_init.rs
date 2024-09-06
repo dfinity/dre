@@ -1,8 +1,13 @@
-use std::path::PathBuf;
+use std::{path::PathBuf, str::FromStr};
 
-use crate::commands::AuthOpts;
+use crate::{
+    auth::{Auth, Neuron, STAGING_KEY_PATH_FROM_HOME, STAGING_NEURON_ID},
+    commands::{AuthOpts, AuthRequirement, HsmOpts},
+};
+use clio::{ClioPath, InputPath};
 use ic_canisters::governance::governance_canister_version;
 use ic_management_types::Network;
+use itertools::Itertools;
 
 use crate::{commands::IcAdminVersion, ctx::DreContext, ic_admin::FALLBACK_IC_ADMIN_VERSION};
 
@@ -44,14 +49,14 @@ async fn get_context(network: &Network, version: IcAdminVersion) -> anyhow::Resu
     .await
 }
 
-struct TestScenario<'a> {
+struct AdminVersionTestScenario<'a> {
     name: &'static str,
     version: IcAdminVersion,
     should_delete_status_file: bool,
     should_contain: Option<&'a str>,
 }
 
-impl<'a> TestScenario<'a> {
+impl<'a> AdminVersionTestScenario<'a> {
     fn new(name: &'static str) -> Self {
         Self {
             name,
@@ -87,18 +92,18 @@ async fn init_tests_ic_admin_version() {
     let governance_version = governance_canister_version(&mainnet.nns_urls).await.unwrap();
 
     let tests = &[
-        TestScenario::new("match governance canister")
+        AdminVersionTestScenario::new("match governance canister")
             .delete_status_file()
             .should_contain(&governance_version.stringified_hash),
-        TestScenario::new("use default version")
+        AdminVersionTestScenario::new("use default version")
             .delete_status_file()
             .version(IcAdminVersion::Fallback)
             .should_contain(FALLBACK_IC_ADMIN_VERSION),
-        TestScenario::new("existing version on s3")
+        AdminVersionTestScenario::new("existing version on s3")
             .delete_status_file()
             .version(IcAdminVersion::Strict(version_on_s3.to_string()))
             .should_contain(version_on_s3),
-        TestScenario::new("random version not present on s3").version(IcAdminVersion::Strict("random-version".to_string())),
+        AdminVersionTestScenario::new("random version not present on s3").version(IcAdminVersion::Strict("random-version".to_string())),
     ];
 
     for test in tests {
@@ -154,4 +159,238 @@ async fn init_tests_ic_admin_version() {
             )
         }
     }
+}
+
+async fn get_ctx_for_neuron_test(auth: AuthOpts, neuron_id: Option<u64>, requirement: AuthRequirement, network: String) -> DreContext {
+    DreContext::new(
+        network,
+        vec![],
+        auth,
+        neuron_id,
+        true,
+        false,
+        false,
+        true,
+        requirement,
+        None,
+        IcAdminVersion::Strict("Shouldn't get to here".to_string()),
+    )
+    .await
+    .unwrap()
+}
+
+struct NeuronAuthTestScenarion<'a> {
+    name: &'a str,
+    neuron_id: Option<u64>,
+    private_key_pem: Option<String>,
+    hsm_pin: Option<String>,
+    hsm_key_id: Option<u8>,
+    hsm_slot: Option<u64>,
+    requirement: AuthRequirement,
+    network: String,
+    want: Neuron,
+}
+
+impl<'a> NeuronAuthTestScenarion<'a> {
+    fn new(name: &'a str) -> Self {
+        Self {
+            name,
+            neuron_id: None,
+            private_key_pem: None,
+            hsm_pin: None,
+            hsm_key_id: None,
+            hsm_slot: None,
+            requirement: AuthRequirement::Anonymous,
+            network: "".to_string(),
+            want: Neuron::anonymous_neuron(),
+        }
+    }
+
+    fn with_neuron_id(self, neuron_id: u64) -> Self {
+        Self {
+            neuron_id: Some(neuron_id),
+            ..self
+        }
+    }
+
+    fn with_private_key(self, private_key_path: String) -> Self {
+        Self {
+            private_key_pem: Some(private_key_path),
+            ..self
+        }
+    }
+
+    fn with_pin(self, hsm_pin: &'a str) -> Self {
+        Self {
+            hsm_pin: Some(hsm_pin.to_string()),
+            ..self
+        }
+    }
+
+    fn with_key_id(self, hsm_key_id: u8) -> Self {
+        Self {
+            hsm_key_id: Some(hsm_key_id),
+            ..self
+        }
+    }
+
+    fn with_slot(self, hsm_slot: u64) -> Self {
+        Self {
+            hsm_slot: Some(hsm_slot),
+            ..self
+        }
+    }
+
+    fn when_requirement(self, auth: AuthRequirement) -> Self {
+        Self { requirement: auth, ..self }
+    }
+
+    fn with_network(self, network: &'a str) -> Self {
+        Self {
+            network: network.to_string(),
+            ..self
+        }
+    }
+
+    fn want(self, neuron: Neuron) -> Self {
+        Self { want: neuron, ..self }
+    }
+
+    async fn get_context(&self) -> DreContext {
+        get_ctx_for_neuron_test(
+            AuthOpts {
+                private_key_pem: self
+                    .private_key_pem
+                    .as_ref()
+                    .map(|path| InputPath::new(ClioPath::new(path).unwrap()).unwrap()),
+                hsm_opts: HsmOpts {
+                    hsm_pin: self.hsm_pin.clone(),
+                    hsm_params: crate::commands::HsmParams {
+                        hsm_slot: self.hsm_slot.clone(),
+                        hsm_key_id: self.hsm_key_id.clone(),
+                    },
+                },
+            },
+            self.neuron_id.clone(),
+            self.requirement.clone(),
+            self.network.clone(),
+        )
+        .await
+    }
+}
+
+fn get_staging_key_path() -> PathBuf {
+    PathBuf::from_str(&std::env::var("HOME").unwrap())
+        .unwrap()
+        .join(STAGING_KEY_PATH_FROM_HOME)
+}
+
+fn ensure_testing_pem(name: &str) -> PathBuf {
+    let path = PathBuf::from_str(&std::env::var("HOME").unwrap())
+        .unwrap()
+        .join(format!(".config/dfx/identity/{}/identity.pem", name));
+
+    let parent = path.parent().unwrap();
+    if !parent.exists() {
+        std::fs::create_dir_all(parent).unwrap()
+    }
+
+    if !path.exists() {
+        std::fs::write(&path, "Some private key").unwrap();
+    }
+    path
+}
+
+#[tokio::test]
+async fn init_test_neuron_and_auth() {
+    let scenarios = &[
+        // Should use the known neuron for staging
+        // If run in CI it will require the key to be there
+        NeuronAuthTestScenarion::new("Staging signer")
+            .with_network("staging")
+            .want(Neuron {
+                auth: Auth::Keyfile {
+                    path: get_staging_key_path(),
+                },
+                neuron_id: 0,
+                include_proposer: false,
+            })
+            .when_requirement(AuthRequirement::Signer),
+        NeuronAuthTestScenarion::new("Staging anonymous")
+            .with_network("staging")
+            .want(Neuron {
+                auth: Auth::Anonymous,
+                neuron_id: 0,
+                include_proposer: false,
+            })
+            .when_requirement(AuthRequirement::Anonymous),
+        NeuronAuthTestScenarion::new("Staging neuron")
+            .with_network("staging")
+            .want(Neuron {
+                auth: Auth::Keyfile {
+                    path: get_staging_key_path(),
+                },
+                neuron_id: STAGING_NEURON_ID,
+                include_proposer: true,
+            })
+            .when_requirement(AuthRequirement::Neuron),
+        NeuronAuthTestScenarion::new("Staging shouldn't override different network")
+            .with_network("staging")
+            .want(Neuron {
+                auth: Auth::Keyfile {
+                    path: get_staging_key_path(),
+                },
+                neuron_id: STAGING_NEURON_ID,
+                include_proposer: true,
+            })
+            .when_requirement(AuthRequirement::OverridableBy {
+                network: Network::mainnet_unchecked().unwrap(),
+                neuron: Neuron {
+                    auth: Auth::Keyfile {
+                        path: ensure_testing_pem("testing"),
+                    },
+                    neuron_id: 123,
+                    include_proposer: true,
+                },
+            }),
+        NeuronAuthTestScenarion::new("Mainnet overidden")
+            .with_network("mainnet")
+            .with_private_key(ensure_testing_pem("other_testing").to_str().unwrap().to_string())
+            .want(Neuron {
+                auth: Auth::Keyfile {
+                    path: ensure_testing_pem("testing"),
+                },
+                neuron_id: 123,
+                include_proposer: true,
+            })
+            .when_requirement(AuthRequirement::OverridableBy {
+                network: Network::mainnet_unchecked().unwrap(),
+                neuron: Neuron {
+                    auth: Auth::Keyfile {
+                        path: ensure_testing_pem("testing"),
+                    },
+                    neuron_id: 123,
+                    include_proposer: true,
+                },
+            }),
+    ];
+
+    let mut outcomes = vec![];
+    for test in scenarios {
+        let ctx = test.get_context().await;
+        let neuron = ctx.neuron();
+        outcomes.push((test.name, test.want.clone(), neuron.clone(), test.want.eq(&neuron)))
+    }
+
+    assert!(
+        outcomes.iter().map(|(_, _, _, is_successful)| is_successful).all(|o| *o),
+        "{}",
+        outcomes
+            .iter()
+            .filter_map(|(name, wanted, got, is_successful)| match is_successful {
+                true => None,
+                false => Some(format!("Test `{}` failed:\nWanted:\n\t{:?}\nGot:\n\t{:?}\n", name, wanted, got)),
+            })
+            .join("\n\n")
+    )
 }

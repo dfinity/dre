@@ -23,7 +23,7 @@ use std::sync::Mutex;
 
 use crate::commands::{AuthOpts, AuthRequirement, HsmOpts, HsmParams};
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Neuron {
     pub auth: Auth,
     pub neuron_id: u64,
@@ -33,7 +33,8 @@ pub struct Neuron {
 static RELEASE_AUTOMATION_DEFAULT_PRIVATE_KEY_PEM: &str = ".config/dfx/identity/release-automation/identity.pem"; // Relative to the home directory
 const RELEASE_AUTOMATION_NEURON_ID: u64 = 80;
 
-const STAGING_NEURON_ID: u64 = 49;
+pub const STAGING_NEURON_ID: u64 = 49;
+pub const STAGING_KEY_PATH_FROM_HOME: &str = ".config/dfx/identity/bootstrap-super-leader/identity.pem";
 
 // As per fn str_to_key_id(s: &str) in ic-canisters/.../parallel_hardware_identity.rs,
 // the representation of key ID that the canister client wants is a sequence of
@@ -56,7 +57,7 @@ impl Neuron {
             let staging_known_path = PathBuf::from_str(&std::env::var("HOME").unwrap())
                 // Must be a valid path
                 .unwrap()
-                .join(".config/dfx/identity/bootstrap-super-leader/identity.pem");
+                .join(STAGING_KEY_PATH_FROM_HOME);
 
             match neuron_id {
                 Some(n) => (Some(n), auth_opts),
@@ -188,18 +189,8 @@ impl Neuron {
                         ),
                     }
                 } else {
-                    // Check if override is possible
-                    match neuron.auth {
-                        // Soft error. This will error only if
-                        // the user didn't provide any of his auth
-                        Auth::Keyfile { path } if !path.exists() => anyhow::bail!(
-                            "Path `{}` not found, which can be used to override this command. Specify your own auth args",
-                            path.display()
-                        ),
-                        Auth::Keyfile { path } => (neuron.neuron_id, Auth::Keyfile { path }),
-                        // Hard error on the whole program since we don't support this
-                        _ => anyhow::bail!("Overriding neuron with auth types other than keyfile is not supported"),
-                    }
+                    let (user_neuron_future, user_auth) = maybe_user_provided_neuron?;
+                    (user_neuron_future.await?, user_auth)
                 };
 
                 Ok(Self {
@@ -259,7 +250,7 @@ impl Neuron {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Auth {
     Hsm { pin: String, slot: u64, key_id: u8 },
     Keyfile { path: PathBuf },

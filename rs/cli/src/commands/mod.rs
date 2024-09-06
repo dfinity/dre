@@ -301,6 +301,7 @@ pub trait ExecutableCommand {
     }
 }
 
+#[derive(Clone)]
 pub enum AuthRequirement {
     Anonymous,                                              // for get commands
     Signer,                                                 // just authentication details used for signing
