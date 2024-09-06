@@ -14,4 +14,7 @@ def resolve_binary(name: str):
     binary_local = os.path.join(os.path.dirname(__file__), name)
     if os.path.exists(binary_local):
         return binary_local
+    binary_local = os.path.join("/rs/cli", name)
+    if name == "dre" and os.path.exists(binary_local):
+        return binary_local
     return name
