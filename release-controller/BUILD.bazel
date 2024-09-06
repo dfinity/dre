@@ -103,21 +103,27 @@ py_test(
 )
 
 tar(
-    name = "bins_tar",
-    srcs = [":bazelisk", ":target_determinator", "//rs/cli:dre"],
+    name = "bins_release_controller_tar",
+    srcs = ["//rs/cli:dre"],
+)
+
+tar(
+    name = "bins_commit_annotator_tar",
+    srcs = [":bazelisk", ":target_determinator"],
 )
 
 py_oci_image(
     name = "oci_image",
     base = "@bazel_image_6_5_0",
     binary = ":release_controller",
+    tars = [":bins_release_controller_tar"]
 )
 
 py_oci_image(
     name = "oci_image_commit_annotator",
     base = "@bazel_image_6_5_0",
     binary = ":commit_annotator",
-    tars = [":bins_tar"]
+    tars = [":bins_commit_annotator_tar"]
 )
 
 exports_files(["README.md"])
