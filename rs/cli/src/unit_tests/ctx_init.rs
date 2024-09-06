@@ -118,7 +118,9 @@ async fn init_tests_ic_admin_version() {
             );
             let ctx = maybe_ctx.unwrap();
 
-            let ic_admin_path = ctx.ic_admin().await.ic_admin_path().unwrap();
+            let ic_admin_path = ctx.ic_admin().await;
+            assert!(ic_admin_path.is_ok());
+            let ic_admin_path = ic_admin_path.unwrap().ic_admin_path().unwrap_or_default();
             assert!(
                 ic_admin_path.contains(ver),
                 "Test `{}`: ic_admin_path `{}`, expected version `{}`",
@@ -129,10 +131,19 @@ async fn init_tests_ic_admin_version() {
         } else {
             assert!(
                 maybe_ctx.is_ok(),
-                "Test `{}`: expected ok but got err: {:?}",
+                "Test `{}`: expected ok for ctx but got err: {:?}",
                 test.name,
                 maybe_ctx.err().unwrap()
             );
+
+            let ctx = maybe_ctx.unwrap();
+            let maybe_ic_admin = ctx.ic_admin().await;
+            assert!(
+                maybe_ic_admin.is_err(),
+                "Test `{}`: expected err for ic-admin but got ok with path: {}",
+                test.name,
+                maybe_ic_admin.unwrap().ic_admin_path().unwrap_or_default()
+            )
         }
 
         if test.should_delete_status_file {

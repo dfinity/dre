@@ -232,11 +232,6 @@ impl DreContext {
     pub fn forum_post_link(&self) -> Option<String> {
         self.forum_post_link.clone()
     }
-
-    #[cfg(test)]
-    pub fn ic_admin_version(&self) -> IcAdminVersion {
-        self.version.clone()
-    }
 }
 
 #[cfg(test)]
