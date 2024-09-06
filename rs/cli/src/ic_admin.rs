@@ -4,18 +4,13 @@ use colored::Colorize;
 use dialoguer::Confirm;
 use flate2::read::GzDecoder;
 use futures::future::BoxFuture;
-use futures::stream::{self, StreamExt};
 use ic_base_types::PrincipalId;
 use ic_management_types::{Artifact, Network};
-use itertools::Itertools;
-use log::{error, info, warn};
+use log::{error, info};
 use mockall::automock;
 use regex::Regex;
-use reqwest::StatusCode;
-use sha2::{Digest, Sha256};
 use shlex::try_quote;
-use std::fs::File;
-use std::io::{Read, Write};
+use std::io::Read;
 use std::os::unix::fs::PermissionsExt;
 use std::path::PathBuf;
 use std::process::Stdio;
@@ -24,40 +19,6 @@ use std::{path::Path, process::Command};
 use strum::Display;
 
 const MAX_SUMMARY_CHAR_COUNT: usize = 29000;
-
-#[derive(Clone)]
-pub struct UpdateVersion {
-    pub release_artifact: Artifact,
-    pub version: String,
-    pub title: String,
-    pub summary: String,
-    pub update_urls: Vec<String>,
-    pub stringified_hash: String,
-    pub versions_to_retire: Option<Vec<String>>,
-}
-
-impl UpdateVersion {
-    pub fn get_update_cmd_args(&self) -> Vec<String> {
-        [
-            [
-                vec![
-                    "--replica-version-to-elect".to_string(),
-                    self.version.to_string(),
-                    "--release-package-sha256-hex".to_string(),
-                    self.stringified_hash.to_string(),
-                    "--release-package-urls".to_string(),
-                ],
-                self.update_urls.clone(),
-            ]
-            .concat(),
-            match self.versions_to_retire.clone() {
-                Some(versions) => [vec!["--replica-versions-to-unelect".to_string()], versions].concat(),
-                None => vec![],
-            },
-        ]
-        .concat()
-    }
-}
 
 #[automock]
 pub trait IcAdmin: Send + Sync {
@@ -72,15 +33,6 @@ pub trait IcAdmin: Send + Sync {
     fn run_passthrough_get<'a>(&'a self, args: &'a [String], silent: bool) -> BoxFuture<'_, anyhow::Result<String>>;
 
     fn run_passthrough_propose<'a>(&'a self, args: &'a [String]) -> BoxFuture<'_, anyhow::Result<String>>;
-
-    fn prepare_to_propose_to_revise_elected_versions<'a>(
-        &'a self,
-        release_artifact: &'a Artifact,
-        version: &'a str,
-        release_tag: &'a str,
-        force: bool,
-        retire_versions: Option<Vec<String>>,
-    ) -> BoxFuture<'_, anyhow::Result<UpdateVersion>>;
 }
 
 #[derive(Clone)]
@@ -196,97 +148,6 @@ impl IcAdmin for IcAdminImpl {
         };
         let dry_run = self.dry_run || cmd.args().contains(&String::from("--dry-run"));
         Box::pin(async move { self.propose_run_inner(cmd, Default::default(), dry_run).await })
-    }
-
-    fn prepare_to_propose_to_revise_elected_versions<'a>(
-        &'a self,
-        release_artifact: &'a Artifact,
-        version: &'a str,
-        release_tag: &'a str,
-        force: bool,
-        retire_versions: Option<Vec<String>>,
-    ) -> BoxFuture<'_, anyhow::Result<UpdateVersion>> {
-        Box::pin(async move {
-            let (update_urls, expected_hash) = Self::download_images_and_validate_sha256(release_artifact, version, force).await?;
-
-            let template = format!(
-                r#"Elect new {release_artifact} binary revision [{version}](https://github.com/dfinity/ic/tree/{release_tag})
-
-    # Release Notes:
-
-    [comment]: <> Remove this block of text from the proposal.
-    [comment]: <> Then, add the {release_artifact} binary release notes as bullet points here.
-    [comment]: <> Any [commit ID] within square brackets will auto-link to the specific changeset.
-
-    # IC-OS Verification
-
-    To build and verify the IC-OS disk image, run:
-
-    ```
-    # From https://github.com/dfinity/ic#verifying-releases
-    sudo apt-get install -y curl && curl --proto '=https' --tlsv1.2 -sSLO https://raw.githubusercontent.com/dfinity/ic/{version}/gitlab-ci/tools/repro-check.sh && chmod +x repro-check.sh && ./repro-check.sh -c {version}
-    ```
-
-    The two SHA256 sums printed above from a) the downloaded CDN image and b) the locally built image,
-    must be identical, and must match the SHA256 from the payload of the NNS proposal.
-    "#
-            );
-
-            // Remove <!--...--> from the commit
-            // Leading or trailing spaces are removed as well and replaced with a single space.
-            // Regex can be analyzed and tested at:
-            // https://rregex.dev/?version=1.7&method=replace&regex=%5Cs*%3C%21--.%2B%3F--%3E%5Cs*&replace=+&text=*+%5Babc%5D+%3C%21--+ignored+1+--%3E+line%0A*+%5Babc%5D+%3C%21--+ignored+2+--%3E+comment+1+%3C%21--+ignored+3+--%3E+comment+2%0A
-            let re_comment = Regex::new(r"\s*<!--.+?-->\s*").unwrap();
-            let mut builder = edit::Builder::new();
-            let with_suffix = builder.suffix(".md");
-            let edited = edit::edit_with_builder(template, with_suffix)?
-                .trim()
-                .replace("\r(\n)?", "\n")
-                .split('\n')
-                .map(|f| {
-                    let f = re_comment.replace_all(f.trim(), " ");
-
-                    if !f.starts_with('*') {
-                        return f.to_string();
-                    }
-                    match f.split_once(']') {
-                        Some((left, message)) => {
-                            let commit_hash = left.split_once('[').unwrap().1.to_string();
-
-                            format!("* [[{}](https://github.com/dfinity/ic/commit/{})] {}", commit_hash, commit_hash, message)
-                        }
-                        None => f.to_string(),
-                    }
-                })
-                .join("\n");
-            if edited.contains(&String::from("Remove this block of text from the proposal.")) {
-                Err(anyhow::anyhow!("The edited proposal text has not been edited to add release notes."))
-            } else {
-                let proposal_title = match &retire_versions {
-                    Some(v) => {
-                        let pluralize = if v.len() == 1 { "version" } else { "versions" };
-                        format!(
-                            "Elect new IC/{} revision (commit {}), and retire old replica {} {}",
-                            release_artifact.capitalized(),
-                            &version[..8],
-                            pluralize,
-                            v.iter().map(|v| &v[..8]).join(",")
-                        )
-                    }
-                    None => format!("Elect new IC/{} revision (commit {})", release_artifact.capitalized(), &version[..8]),
-                };
-
-                Ok(UpdateVersion {
-                    release_artifact: release_artifact.clone(),
-                    version: version.to_string(),
-                    title: proposal_title.clone(),
-                    stringified_hash: expected_hash,
-                    summary: edited,
-                    update_urls,
-                    versions_to_retire: retire_versions.clone(),
-                })
-            }
-        })
     }
 }
 
@@ -497,125 +358,6 @@ impl IcAdminImpl {
                 vec![]
             }
         }
-    }
-
-    fn get_s3_cdn_image_url(version: &str, s3_subdir: &String) -> String {
-        format!(
-            "https://download.dfinity.systems/ic/{}/{}/update-img/update-img.tar.gz",
-            version, s3_subdir
-        )
-    }
-
-    fn get_r2_cdn_image_url(version: &str, s3_subdir: &String) -> String {
-        format!(
-            "https://download.dfinity.network/ic/{}/{}/update-img/update-img.tar.gz",
-            version, s3_subdir
-        )
-    }
-
-    async fn download_file_and_get_sha256(download_url: &String) -> anyhow::Result<String> {
-        let url = url::Url::parse(download_url)?;
-        let subdir = format!("{}{}", url.domain().expect("url.domain() is None"), url.path().to_owned());
-        // replace special characters in subdir with _
-        let subdir = subdir.replace(|c: char| !c.is_ascii_alphanumeric(), "_");
-        let download_dir = format!("{}/tmp/ic/{}", dirs::home_dir().expect("home_dir is not set").as_path().display(), subdir);
-        let download_dir = Path::new(&download_dir);
-
-        std::fs::create_dir_all(download_dir).unwrap_or_else(|_| panic!("create_dir_all failed for {}", download_dir.display()));
-
-        let download_image = format!("{}/update-img.tar.gz", download_dir.to_str().unwrap());
-        let download_image = Path::new(&download_image);
-
-        let response = reqwest::get(download_url.clone()).await?;
-
-        if response.status() != StatusCode::RANGE_NOT_SATISFIABLE && !response.status().is_success() {
-            return Err(anyhow::anyhow!(
-                "Download failed with http_code {} for {}",
-                response.status(),
-                download_url
-            ));
-        }
-        info!("Download {} succeeded {}", download_url, response.status());
-
-        let mut file = match File::create(download_image) {
-            Ok(file) => file,
-            Err(err) => return Err(anyhow::anyhow!("Couldn't create a file: {}", err)),
-        };
-
-        let content = response.bytes().await?;
-        file.write_all(&content)?;
-
-        let mut hasher = Sha256::new();
-        hasher.update(&content);
-        let hash = hasher.finalize();
-        let stringified_hash = hash[..].iter().map(|byte| format!("{:01$x?}", byte, 2)).collect::<Vec<String>>().join("");
-        info!("File saved at {} has sha256 {}", download_image.display(), stringified_hash);
-        Ok(stringified_hash)
-    }
-
-    async fn download_images_and_validate_sha256(
-        image: &Artifact,
-        version: &str,
-        ignore_missing_urls: bool,
-    ) -> anyhow::Result<(Vec<String>, String)> {
-        let update_urls = vec![
-            Self::get_s3_cdn_image_url(version, &image.s3_folder()),
-            Self::get_r2_cdn_image_url(version, &image.s3_folder()),
-        ];
-
-        // Download images, verify them and compare the SHA256
-        let hash_and_valid_urls: Vec<(String, &String)> = stream::iter(&update_urls)
-            .filter_map(|update_url| async move {
-                match Self::download_file_and_get_sha256(update_url).await {
-                    Ok(hash) => {
-                        info!("SHA256 of {}: {}", update_url, hash);
-                        Some((hash, update_url))
-                    }
-                    Err(err) => {
-                        warn!("Error downloading {}: {}", update_url, err);
-                        None
-                    }
-                }
-            })
-            .collect()
-            .await;
-        let hashes_unique = hash_and_valid_urls.iter().map(|(h, _)| h.clone()).unique().collect::<Vec<String>>();
-        let expected_hash: String = match hashes_unique.len() {
-            0 => {
-                return Err(anyhow::anyhow!(
-                    "Unable to download the update image from none of the following URLs: {}",
-                    update_urls.join(", ")
-                ))
-            }
-            1 => {
-                let hash = hashes_unique.into_iter().next().unwrap();
-                info!("SHA256 of all download images is: {}", hash);
-                hash
-            }
-            _ => {
-                return Err(anyhow::anyhow!(
-                    "Update images do not have the same hash: {:?}",
-                    hash_and_valid_urls.iter().map(|(h, u)| format!("{}  {}", h, u)).join("\n")
-                ))
-            }
-        };
-        let update_urls = hash_and_valid_urls.into_iter().map(|(_, u)| u.clone()).collect::<Vec<String>>();
-
-        if update_urls.is_empty() {
-            return Err(anyhow::anyhow!(
-                "Unable to download the update image from none of the following URLs: {}",
-                update_urls.join(", ")
-            ));
-        } else if update_urls.len() == 1 {
-            if ignore_missing_urls {
-                warn!("Only 1 update image is available. At least 2 should be present in the proposal");
-            } else {
-                return Err(anyhow::anyhow!(
-                    "Only 1 update image is available. At least 2 should be present in the proposal"
-                ));
-            }
-        }
-        Ok((update_urls, expected_hash))
     }
 }
 

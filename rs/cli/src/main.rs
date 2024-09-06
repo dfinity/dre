@@ -7,6 +7,7 @@ use ctx::DreContext;
 use dotenv::dotenv;
 use log::{info, warn};
 
+mod artifact_downloader;
 mod auth;
 mod commands;
 mod ctx;

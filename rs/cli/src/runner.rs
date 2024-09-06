@@ -32,10 +32,12 @@ use itertools::Itertools;
 use log::info;
 use log::warn;
 
+use regex::Regex;
 use registry_canister::mutations::do_change_subnet_membership::ChangeSubnetMembershipPayload;
 use tabled::builder::Builder;
 use tabled::settings::Style;
 
+use crate::artifact_downloader::ArtifactDownloader;
 use crate::ic_admin::{self, IcAdmin};
 use crate::ic_admin::{ProposeCommand, ProposeOptions};
 use crate::operations::hostos_rollout::HostosRollout;
@@ -293,7 +295,6 @@ impl Runner {
         forum_post_link: Option<String>,
     ) -> anyhow::Result<()> {
         let update_version = self
-            .ic_admin
             .prepare_to_propose_to_revise_elected_versions(
                 release_artifact,
                 version,
@@ -318,6 +319,95 @@ impl Runner {
             )
             .await?;
         Ok(())
+    }
+
+    async fn prepare_to_propose_to_revise_elected_versions(
+        &self,
+        release_artifact: &Artifact,
+        version: &str,
+        release_tag: &str,
+        force: bool,
+        retire_versions: Option<Vec<String>>,
+    ) -> anyhow::Result<UpdateVersion> {
+        let (update_urls, expected_hash) = self.download_images_and_validate_sha256(release_artifact, version, force).await?;
+
+        let template = format!(
+            r#"Elect new {release_artifact} binary revision [{version}](https://github.com/dfinity/ic/tree/{release_tag})
+
+        # Release Notes:
+
+        [comment]: <> Remove this block of text from the proposal.
+        [comment]: <> Then, add the {release_artifact} binary release notes as bullet points here.
+        [comment]: <> Any [commit ID] within square brackets will auto-link to the specific changeset.
+
+        # IC-OS Verification
+
+        To build and verify the IC-OS disk image, run:
+
+        ```
+        # From https://github.com/dfinity/ic#verifying-releases
+        sudo apt-get install -y curl && curl --proto '=https' --tlsv1.2 -sSLO https://raw.githubusercontent.com/dfinity/ic/{version}/gitlab-ci/tools/repro-check.sh && chmod +x repro-check.sh && ./repro-check.sh -c {version}
+        ```
+
+        The two SHA256 sums printed above from a) the downloaded CDN image and b) the locally built image,
+        must be identical, and must match the SHA256 from the payload of the NNS proposal.
+        "#
+        );
+
+        // Remove <!--...--> from the commit
+        // Leading or trailing spaces are removed as well and replaced with a single space.
+        // Regex can be analyzed and tested at:
+        // https://rregex.dev/?version=1.7&method=replace&regex=%5Cs*%3C%21--.%2B%3F--%3E%5Cs*&replace=+&text=*+%5Babc%5D+%3C%21--+ignored+1+--%3E+line%0A*+%5Babc%5D+%3C%21--+ignored+2+--%3E+comment+1+%3C%21--+ignored+3+--%3E+comment+2%0A
+        let re_comment = Regex::new(r"\s*<!--.+?-->\s*").unwrap();
+        let mut builder = edit::Builder::new();
+        let with_suffix = builder.suffix(".md");
+        let edited = edit::edit_with_builder(template, with_suffix)?
+            .trim()
+            .replace("\r(\n)?", "\n")
+            .split('\n')
+            .map(|f| {
+                let f = re_comment.replace_all(f.trim(), " ");
+
+                if !f.starts_with('*') {
+                    return f.to_string();
+                }
+                match f.split_once(']') {
+                    Some((left, message)) => {
+                        let commit_hash = left.split_once('[').unwrap().1.to_string();
+
+                        format!("* [[{}](https://github.com/dfinity/ic/commit/{})] {}", commit_hash, commit_hash, message)
+                    }
+                    None => f.to_string(),
+                }
+            })
+            .join("\n");
+        if edited.contains(&String::from("Remove this block of text from the proposal.")) {
+            Err(anyhow::anyhow!("The edited proposal text has not been edited to add release notes."))
+        } else {
+            let proposal_title = match &retire_versions {
+                Some(v) => {
+                    let pluralize = if v.len() == 1 { "version" } else { "versions" };
+                    format!(
+                        "Elect new IC/{} revision (commit {}), and retire old replica {} {}",
+                        release_artifact.capitalized(),
+                        &version[..8],
+                        pluralize,
+                        v.iter().map(|v| &v[..8]).join(",")
+                    )
+                }
+                None => format!("Elect new IC/{} revision (commit {})", release_artifact.capitalized(), &version[..8]),
+            };
+
+            Ok(UpdateVersion {
+                release_artifact: release_artifact.clone(),
+                version: version.to_string(),
+                title: proposal_title.clone(),
+                stringified_hash: expected_hash,
+                summary: edited,
+                update_urls,
+                versions_to_retire: retire_versions.clone(),
+            })
+        }
     }
 
     pub async fn hostos_rollout_nodes(
@@ -781,3 +871,39 @@ fn nodes_by_dc(nodes: Vec<Node>) -> BTreeMap<String, Vec<(String, String)>> {
             acc
         })
 }
+
+#[derive(Clone)]
+pub struct UpdateVersion {
+    pub release_artifact: Artifact,
+    pub version: String,
+    pub title: String,
+    pub summary: String,
+    pub update_urls: Vec<String>,
+    pub stringified_hash: String,
+    pub versions_to_retire: Option<Vec<String>>,
+}
+
+impl UpdateVersion {
+    pub fn get_update_cmd_args(&self) -> Vec<String> {
+        [
+            [
+                vec![
+                    "--replica-version-to-elect".to_string(),
+                    self.version.to_string(),
+                    "--release-package-sha256-hex".to_string(),
+                    self.stringified_hash.to_string(),
+                    "--release-package-urls".to_string(),
+                ],
+                self.update_urls.clone(),
+            ]
+            .concat(),
+            match self.versions_to_retire.clone() {
+                Some(versions) => [vec!["--replica-versions-to-unelect".to_string()], versions].concat(),
+                None => vec![],
+            },
+        ]
+        .concat()
+    }
+}
+
+impl ArtifactDownloader for Runner {}
