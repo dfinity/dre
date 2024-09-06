@@ -1,5 +1,7 @@
 # Pre-requisites
 
+## Rye installation
+
 Rye is a comprehensive project and package management solution for Python.
 Rye provides a unified experience to install and manages Python installations,
 pyproject.toml based projects, dependencies and virtualenvs seamlessly.
