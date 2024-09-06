@@ -161,7 +161,12 @@ async fn init_tests_ic_admin_version() {
     }
 }
 
-async fn get_ctx_for_neuron_test(auth: AuthOpts, neuron_id: Option<u64>, requirement: AuthRequirement, network: String) -> DreContext {
+async fn get_ctx_for_neuron_test(
+    auth: AuthOpts,
+    neuron_id: Option<u64>,
+    requirement: AuthRequirement,
+    network: String,
+) -> anyhow::Result<DreContext> {
     DreContext::new(
         network,
         vec![],
@@ -176,7 +181,6 @@ async fn get_ctx_for_neuron_test(auth: AuthOpts, neuron_id: Option<u64>, require
         IcAdminVersion::Strict("Shouldn't get to here".to_string()),
     )
     .await
-    .unwrap()
 }
 
 struct NeuronAuthTestScenarion<'a> {
@@ -188,7 +192,7 @@ struct NeuronAuthTestScenarion<'a> {
     hsm_slot: Option<u64>,
     requirement: AuthRequirement,
     network: String,
-    want: Neuron,
+    want: anyhow::Result<Neuron>,
 }
 
 impl<'a> NeuronAuthTestScenarion<'a> {
@@ -202,7 +206,7 @@ impl<'a> NeuronAuthTestScenarion<'a> {
             hsm_slot: None,
             requirement: AuthRequirement::Anonymous,
             network: "".to_string(),
-            want: Neuron::anonymous_neuron(),
+            want: Ok(Neuron::anonymous_neuron()),
         }
     }
 
@@ -252,11 +256,11 @@ impl<'a> NeuronAuthTestScenarion<'a> {
         }
     }
 
-    fn want(self, neuron: Neuron) -> Self {
+    fn want(self, neuron: anyhow::Result<Neuron>) -> Self {
         Self { want: neuron, ..self }
     }
 
-    async fn get_context(&self) -> DreContext {
+    async fn get_neuron(&self) -> anyhow::Result<Neuron> {
         get_ctx_for_neuron_test(
             AuthOpts {
                 private_key_pem: self
@@ -276,6 +280,7 @@ impl<'a> NeuronAuthTestScenarion<'a> {
             self.network.clone(),
         )
         .await
+        .map(|ctx| ctx.neuron())
     }
 }
 
@@ -308,41 +313,36 @@ async fn init_test_neuron_and_auth() {
         // If run in CI it will require the key to be there
         NeuronAuthTestScenarion::new("Staging signer")
             .with_network("staging")
-            .want(Neuron {
+            .want(Ok(Neuron {
                 auth: Auth::Keyfile {
                     path: get_staging_key_path(),
                 },
-                neuron_id: 0,
-                include_proposer: false,
-            })
+                ..Neuron::anonymous_neuron()
+            }))
             .when_requirement(AuthRequirement::Signer),
         NeuronAuthTestScenarion::new("Staging anonymous")
             .with_network("staging")
-            .want(Neuron {
-                auth: Auth::Anonymous,
-                neuron_id: 0,
-                include_proposer: false,
-            })
+            .want(Ok(Neuron::anonymous_neuron()))
             .when_requirement(AuthRequirement::Anonymous),
         NeuronAuthTestScenarion::new("Staging neuron")
             .with_network("staging")
-            .want(Neuron {
+            .want(Ok(Neuron {
                 auth: Auth::Keyfile {
                     path: get_staging_key_path(),
                 },
                 neuron_id: STAGING_NEURON_ID,
                 include_proposer: true,
-            })
+            }))
             .when_requirement(AuthRequirement::Neuron),
         NeuronAuthTestScenarion::new("Staging shouldn't override different network")
             .with_network("staging")
-            .want(Neuron {
+            .want(Ok(Neuron {
                 auth: Auth::Keyfile {
                     path: get_staging_key_path(),
                 },
                 neuron_id: STAGING_NEURON_ID,
                 include_proposer: true,
-            })
+            }))
             .when_requirement(AuthRequirement::OverridableBy {
                 network: Network::mainnet_unchecked().unwrap(),
                 neuron: Neuron {
@@ -356,13 +356,13 @@ async fn init_test_neuron_and_auth() {
         NeuronAuthTestScenarion::new("Mainnet overidden")
             .with_network("mainnet")
             .with_private_key(ensure_testing_pem("other_testing").to_str().unwrap().to_string())
-            .want(Neuron {
+            .want(Ok(Neuron {
                 auth: Auth::Keyfile {
                     path: ensure_testing_pem("testing"),
                 },
                 neuron_id: 123,
                 include_proposer: true,
-            })
+            }))
             .when_requirement(AuthRequirement::OverridableBy {
                 network: Network::mainnet_unchecked().unwrap(),
                 neuron: Neuron {
@@ -377,9 +377,18 @@ async fn init_test_neuron_and_auth() {
 
     let mut outcomes = vec![];
     for test in scenarios {
-        let ctx = test.get_context().await;
-        let neuron = ctx.neuron();
-        outcomes.push((test.name, test.want.clone(), neuron.clone(), test.want.eq(&neuron)))
+        let got = test.get_neuron().await;
+        outcomes.push((
+            test.name,
+            format!("{:?}", test.want),
+            format!("{:?}", got),
+            (match (&test.want, got) {
+                (Ok(want), Ok(got)) => want.eq(&got),
+                (Ok(_), Err(_)) => false,
+                (Err(_), Ok(_)) => false,
+                (Err(_), Err(_)) => true,
+            }),
+        ))
     }
 
     assert!(
@@ -389,7 +398,7 @@ async fn init_test_neuron_and_auth() {
             .iter()
             .filter_map(|(name, wanted, got, is_successful)| match is_successful {
                 true => None,
-                false => Some(format!("Test `{}` failed:\nWanted:\n\t{:?}\nGot:\n\t{:?}\n", name, wanted, got)),
+                false => Some(format!("Test `{}` failed:\nWanted:\n\t{}\nGot:\n\t{}\n", name, wanted, got)),
             })
             .join("\n\n")
     )
