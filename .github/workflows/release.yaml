@@ -35,4 +35,5 @@ jobs:
 
       - name: Run checks for release index
         run: |
+          rye sync
           rye run python3 release-controller/ci_check.py --repo-path /home/runner/.cache
