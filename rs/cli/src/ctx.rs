@@ -20,6 +20,7 @@ use log::{debug, info};
 use url::Url;
 
 use crate::{
+    artifact_downloader::{ArtifactDownloader, ArtifactDownloaderImpl},
     auth::{Auth, Neuron},
     commands::{Args, ExecutableCommand, IcAdminRequirement, IcAdminVersion},
     ic_admin::{download_ic_admin, should_update_ic_admin, IcAdmin, IcAdminImpl, FALLBACK_IC_ADMIN_VERSION},
@@ -41,6 +42,7 @@ pub struct DreContext {
     ic_admin_path: Option<String>,
     forum_post_link: Option<String>,
     dry_run: bool,
+    artifact_downloader: Arc<dyn ArtifactDownloader>,
 }
 
 impl DreContext {
@@ -99,6 +101,7 @@ impl DreContext {
             forum_post_link: forum_post_link.clone(),
             ic_repo: RefCell::new(None),
             dry_run,
+            artifact_downloader: Arc::new(ArtifactDownloaderImpl {}) as Arc<dyn ArtifactDownloader>,
         })
     }
 
@@ -267,6 +270,7 @@ impl DreContext {
             self.proposals_agent(),
             self.verbose_runner,
             self.ic_repo.clone(),
+            self.artifact_downloader.clone(),
         ));
         *self.runner.borrow_mut() = Some(runner.clone());
         runner
@@ -290,7 +294,7 @@ pub mod tests {
     use ic_management_backend::{lazy_git::LazyGit, lazy_registry::LazyRegistry, proposal::ProposalAgent};
     use ic_management_types::Network;
 
-    use crate::ic_admin::IcAdmin;
+    use crate::{artifact_downloader::ArtifactDownloader, ic_admin::IcAdmin};
 
     use super::DreContext;
 
@@ -300,6 +304,7 @@ pub mod tests {
         ic_admin: Arc<dyn IcAdmin>,
         git: Arc<dyn LazyGit>,
         proposal_agent: Arc<dyn ProposalAgent>,
+        artifact_downloader: Arc<dyn ArtifactDownloader>,
     ) -> DreContext {
         DreContext {
             network,
@@ -313,6 +318,7 @@ pub mod tests {
             ic_admin_path: None,
             forum_post_link: None,
             dry_run: true,
+            artifact_downloader,
         }
     }
 }

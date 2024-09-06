@@ -607,7 +607,7 @@ impl ArtifactReleases {
     }
 }
 
-#[derive(strum_macros::Display, Serialize, Deserialize, PartialEq, Eq, Hash, Clone)]
+#[derive(strum_macros::Display, Serialize, Deserialize, PartialEq, Eq, Hash, Clone, Debug)]
 #[strum(serialize_all = "lowercase")]
 #[serde(rename_all = "lowercase")]
 pub enum Artifact {
