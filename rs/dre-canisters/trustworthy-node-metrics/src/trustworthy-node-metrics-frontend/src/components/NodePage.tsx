@@ -7,7 +7,7 @@ import { useParams } from 'react-router-dom';
 import DailyPerformanceChart from './DailyPerformanceChart';
 import { paperStyle, boxStyleWidget } from '../Styles';
 import { NodeRewardsResponse } from '../../../declarations/trustworthy-node-metrics/trustworthy-node-metrics.did';
-import RewardsInfo from './RewardsInfo';
+import RewardsInfo, { LinearReductionChart } from './RewardsInfo';
 import { ExportTable } from './ExportTable';
 import InfoFormatter from './NodeInfo';
 import { GridColDef, GridRowsProp } from '@mui/x-data-grid';

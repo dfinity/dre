@@ -2,7 +2,6 @@ import React from 'react';
 import { Toolbar, Box } from '@mui/material';
 import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import ArrowRightIcon from '@mui/icons-material/ArrowRight';
 
 export interface PeriodFilter {
   dateStart: Date;
@@ -15,39 +14,30 @@ interface FilterBarProps {
 }
 
 const FilterBar: React.FC<FilterBarProps> = ({ filters, setFilters }) => {
-  const handleDateStartChange = (newValue: Date | null) => {
-    setFilters(prev => ({
-      ...prev,
-      dateStart: newValue ?? prev.dateStart,
-    }));
+  const handleMonthChange = (newMonth: Date | null) => {
+    if (newMonth) {
+      const month = newMonth.getUTCMonth();
+      const year = newMonth.getUTCFullYear();
+  
+      const beginRewardPeriod = new Date(Date.UTC(year, month - 1, 14, 0, 0, 0, 0));
+      const endRewardPeriod = new Date(Date.UTC(year, month, 14, 23, 59, 59, 999));
+  
+      setFilters(() => ({
+        dateStart: beginRewardPeriod,
+        dateEnd: endRewardPeriod,
+      }));
+    } else {
+      setFilters(prev => ({
+        dateStart: prev.dateStart,
+        dateEnd: prev.dateEnd,
+      }));
+    }
   };
-
-  const handleDateEndChange = (newValue: Date | null) => {
-    setFilters(prev => ({
-      ...prev,
-      dateEnd: newValue ?? prev.dateEnd,
-    }));
-  };
-
   return (
     <Toolbar>
       <LocalizationProvider dateAdapter={AdapterDateFns}>
         <Box display="flex" alignItems="center">
-          <DatePicker
-            label="From"
-            value={filters.dateStart}
-            timezone="UTC" 
-            onChange={handleDateStartChange}
-            sx={{ mr: 2 }}
-          />
-          <ArrowRightIcon />
-          <DatePicker
-            label="To"
-            value={filters.dateEnd}
-            timezone="UTC" 
-            onChange={handleDateEndChange}
-            sx={{ ml: 2 }}
-          />
+          <DatePicker label="Reward Period" views={['month']} value={filters.dateEnd} onChange={handleMonthChange} />
         </Box>
       </LocalizationProvider>
     </Toolbar>

@@ -109,7 +109,6 @@ const DailyPerformanceChart: React.FC<DailyPerformanceChartProps> = ({ chartDail
         <MarkPlot />
         <ChartsAxisHighlight />
         <ChartsTooltip />
-        <ChartsLegend slotProps={legendConfig} />
         <ChartsXAxis position="bottom" axisId="x-axis-id" />
         <ChartsYAxis position="left" axisId="y-axis-id" />
       </ResponsiveChartContainer>
