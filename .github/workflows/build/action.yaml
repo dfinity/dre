@@ -10,6 +10,8 @@ runs:
   using: composite
   steps:
     - name: "Cargo deny checks"
+      # Only run on pull request.  No need to run on tag or push.
+      if: ${{ contains(fromJSON('["pull_request"]'), github.event_name) }}
       id: cargo-deny
       run: |
         set -xe

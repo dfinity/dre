@@ -10,4 +10,10 @@ command -v cargo >/dev/null || {
 }
 
 command -v cargo-deny >/dev/null || echo "'cargo-deny' not found. Please install it by running 'cargo install cargo-deny'"
-cargo deny check --warn unmaintained
+# Do not change -D here.
+# If there is a warning that causes a problem, and there
+# is no fix at hand, then add an exception to deny.toml.
+# If --warn unmaintained is added below, then the exceptions
+# already listed in deny.toml are ignored, which is exactly
+# the OPPOSITE of what we want.
+cargo deny check -D warnings
