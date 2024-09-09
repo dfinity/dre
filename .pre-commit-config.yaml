@@ -66,43 +66,16 @@ repos:
             # files will be recognized regardless of extension.
           - --match=.*
 
-  - repo: https://github.com/PyCQA/pylint
-    rev: v3.2.5
-    hooks:
-      - id: pylint
-        name: pylint
-        exclude: |
-          (?x)^(
-              release-controller/release_index.py
-          )$
-        entry: python3 -m pylint.__main__
-        types: [python]
-        args: [
-            "-rn", # Only display messages
-            "-sn", # Don't display the score
-            "--disable=R,C,W0621,E0401,W0703,E1123", # Disable: Refactor, Convention, some warnings
-          ]
   - repo: local
     hooks:
       - id: release-index-checks
-        language: system
+        language: script
         name: release-index-checks
         verbose: true
-        entry: |
-          bash -c '
-          files=("release-index-schema.json" "release-index.yaml" "release-controller/ci_check.py")
+        entry: bin/release-index-checks.sh
 
-          found=false
-
-          for file in "$@"; do
-            if [[ "${files[@]}" =~ "$file" ]]; then
-              found=true
-              break
-            fi
-          done
-
-          if [[ "$found" == false ]]; then
-              exit 0
-          fi
-          poetry run python release-controller/ci_check.py --repo-path ~/.cache/git/ic
-          '
+      - id: cargo-deny-checks
+        language: script
+        name: Cargo deny checks
+        verbose: true
+        entry: bin/cargo-deny-checks.sh

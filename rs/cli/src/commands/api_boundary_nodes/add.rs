@@ -3,7 +3,7 @@ use ic_types::PrincipalId;
 
 use crate::{
     commands::{ExecutableCommand, IcAdminRequirement},
-    ic_admin,
+    ic_admin::{self},
 };
 
 #[derive(Args, Debug)]
@@ -39,6 +39,7 @@ impl ExecutableCommand for Add {
                     title: Some(format!("Add {} API boundary node(s)", self.nodes.len())),
                     summary: Some(format!("Add {} API boundary node(s)", self.nodes.len())),
                     motivation: self.motivation.clone(),
+                    forum_post_link: ctx.forum_post_link(),
                 },
             )
             .await?;

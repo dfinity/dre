@@ -1,6 +1,68 @@
 # dre Changelog
 
 <!-- insertion marker -->
+## [0.5.5](https://github.com/dfinity/dre/releases/tag/0.5.5) - 2024-09-09
+
+<small>[Compare with first commit](https://github.com/dfinity/dre/compare/d3c9efa02d88bab5454e795c50acb6d1575c5ecf...0.5.5)</small>
+
+### Features
+
+- Add a manual CI job that cleans bazel caches (#890) ([38b7bb9](https://github.com/dfinity/dre/commit/38b7bb959ff9caaa2f6bfe5decaf61c47ab0d8e2) by Saša Tomić).
+- security fix proposal (#882) ([d4ce9d0](https://github.com/dfinity/dre/commit/d4ce9d013da8f2509a6614062bd3f17ab2375471) by Nikola Milosavljevic).
+
+### Bug Fixes
+
+- only require our label for bazel cache cleanup job (#891) ([2004230](https://github.com/dfinity/dre/commit/20042307d55785071bc1e57338acaa6190713e09) by Saša Tomić).
+- --yes on propose (#892) ([66f2e5f](https://github.com/dfinity/dre/commit/66f2e5fb4eae2131ad68e3679c19f7997b845861) by Luka Skugor).
+- initialization logic (#889) ([a1f42a7](https://github.com/dfinity/dre/commit/a1f42a757c63e5e2f1cfdf42a03ebd579fe86310) by Nikola Milosavljevic).
+- add missing bins (#887) ([9f327c3](https://github.com/dfinity/dre/commit/9f327c378ac09be8882c76a0c98383ebe8ba535c) by Luka Skugor).
+- fix the forum category code (#884) ([0351499](https://github.com/dfinity/dre/commit/035149972605d5245f61e122f2ec56600771fa64) by Luka Skugor).
+- fix finding the forum category (#881) ([ce39a3e](https://github.com/dfinity/dre/commit/ce39a3e8baddc359a45f64e66e3718d25287c3d7) by Luka Skugor).
+
+## [0.5.4](https://github.com/dfinity/dre/releases/tag/0.5.4) - 2024-09-05
+
+<small>[Compare with first commit](https://github.com/dfinity/dre/compare/e3b94efb3d36a89b7c981813626719ed48d5ec2f...0.5.4)</small>
+
+### Features
+
+- overriding ic admin versions (#864) ([69b4cf3](https://github.com/dfinity/dre/commit/69b4cf38e75c617374774199ff45487ddff7201d) by Nikola Milosavljevic).
+- dre testing of `update-unassigned-nodes` command (#858) ([415f697](https://github.com/dfinity/dre/commit/415f6978960d701d7b7861542e6865160dc828f2) by Nikola Milosavljevic).
+- Replace poetry with rye for managing Python dependencies (#857) ([00e419f](https://github.com/dfinity/dre/commit/00e419f85fb9dff6754447206047ab690cf044c0) by Saša Tomić).
+- improve exclusion filters (#855) ([c5940e8](https://github.com/dfinity/dre/commit/c5940e8bc889a14065236af1f172ef71b49c96bb) by Luka Skugor).
+
+### Bug Fixes
+
+- Update cache job fix (#874) ([6f46268](https://github.com/dfinity/dre/commit/6f46268f44848c022ceb7fac4c35a543c60a17d4) by Saša Tomić).
+- use container image with rye for update-dependencies (#871) ([f692898](https://github.com/dfinity/dre/commit/f692898a6ac1bcacfcb52310ab4b0e6b9bc358a8) by Saša Tomić).
+- fixing default value for ic-admin-version (#872) ([9dd0e95](https://github.com/dfinity/dre/commit/9dd0e955f24b48bfb776e130f27ce419600a966e) by Nikola Milosavljevic).
+- updating leftover runner images (#860) ([9e58a66](https://github.com/dfinity/dre/commit/9e58a66df73ce8d9f6bb896b6f6680836cfd5b44) by Nikola Milosavljevic).
+- registry canister (#854) ([65e1de7](https://github.com/dfinity/dre/commit/65e1de743d99f0ee1db105f59ed9ebe0cb947474) by Nikola Milosavljevic).
+
+## [0.5.3](https://github.com/dfinity/dre/releases/tag/0.5.3) - 2024-09-03
+
+<small>[Compare with first commit](https://github.com/dfinity/dre/compare/09221a6073f9b283fcfc5c16e9b430ff0fba1d87...0.5.3)</small>
+
+### Features
+
+- Add forum post link to commands for proposal discussion (#830) ([7c8f4be](https://github.com/dfinity/dre/commit/7c8f4be9a4e871d34f19eb4e17db217915fedd0b) by Saša Tomić).
+- add the link to full changelog in the proposal (#820) ([248ef92](https://github.com/dfinity/dre/commit/248ef924819e4faef257d4ed1834e1b3a6a33ab1) by Luka Skugor).
+- Provide more details on the node replacement proposals (#816) ([c161563](https://github.com/dfinity/dre/commit/c16156365f4718902e90e9f075f51fdbfaa48cc3) by Saša Tomić).
+- Add distance from the target topology as business rules (#817) ([3752142](https://github.com/dfinity/dre/commit/37521426eefb31547f03e1dfea43ea8d213b710a) by Saša Tomić).
+
+### Bug Fixes
+
+- canister handshake error (#850) ([238e164](https://github.com/dfinity/dre/commit/238e164f88bbb19db4f09d5dc7b65f4e891bbf6e) by Nikola Milosavljevic).
+- autodetection of HSM (#845) ([e666fd5](https://github.com/dfinity/dre/commit/e666fd530902ff22d0ca2b7f75de278791919584) by Nikola Milosavljevic).
+- typo in the description of a NakamotoScore change (#832) ([931d1e0](https://github.com/dfinity/dre/commit/931d1e0f22f2774871dd3eb1661807e2b0c8a51d) by Saša Tomić).
+- handle errors and retry (#824) ([936a17b](https://github.com/dfinity/dre/commit/936a17bb57a49c76f6bba8c74cae31a2794e4000) by Luka Skugor).
+- wrong variable (#822) ([e74a315](https://github.com/dfinity/dre/commit/e74a315c4d3c4d618c15000ee10d9622297c9305) by Nikola Milosavljevic).
+
+### Code Refactoring
+
+- ic admin (#835) ([2a1657e](https://github.com/dfinity/dre/commit/2a1657e40510dc4cf98de5dae40ced720ca04d79) by Nikola Milosavljevic).
+- lazy git (#837) ([60c745f](https://github.com/dfinity/dre/commit/60c745f6b66c1b692ce5b53491e2092cfda4756e) by Nikola Milosavljevic).
+- lazy registry (#831) ([ceeb19b](https://github.com/dfinity/dre/commit/ceeb19b7a9667d311603dd0a1521c055b9111366) by Nikola Milosavljevic).
+
 ## [0.5.2](https://github.com/dfinity/dre/releases/tag/0.5.2) - 2024-08-27
 
 <small>[Compare with first commit](https://github.com/dfinity/dre/compare/e560ab4487484cedfd5162e03aa45824376d93ef...0.5.2)</small>

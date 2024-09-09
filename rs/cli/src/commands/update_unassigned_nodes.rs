@@ -26,11 +26,11 @@ impl ExecutableCommand for UpdateUnassignedNodes {
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
         let runner = ctx.runner().await;
-        let canister_agent = ctx.create_ic_agent_canister_client(None)?;
 
         let nns_subnet_id = match &self.nns_subnet_id {
             Some(n) => n.to_owned(),
             None => {
+                let canister_agent = ctx.create_ic_agent_canister_client(None)?;
                 let registry_client = RegistryCanisterWrapper::new(canister_agent.agent);
                 let subnet_list = registry_client.get_subnets().await?;
                 subnet_list
@@ -41,7 +41,9 @@ impl ExecutableCommand for UpdateUnassignedNodes {
             }
         };
 
-        runner.update_unassigned_nodes(&PrincipalId::from_str(&nns_subnet_id)?).await
+        runner
+            .update_unassigned_nodes(&PrincipalId::from_str(&nns_subnet_id)?, ctx.forum_post_link())
+            .await
     }
 
     fn validate(&self, _cmd: &mut clap::Command) {}

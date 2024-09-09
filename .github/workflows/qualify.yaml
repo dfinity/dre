@@ -23,7 +23,7 @@ jobs:
   setup:
     runs-on:
       labels: dre-runner-custom
-    container: ghcr.io/dfinity/dre/actions-runner:7efd87b0eac3ebd255be7efe00a3b39b0f9e9fc1
+    container: ghcr.io/dfinity/dre/actions-runner:9a9cef61d3483d2706b9d030a4a7e4d35c6ff1a2
     outputs:
       matrix: ${{ steps.generate.outputs.output }}
     steps:
@@ -42,7 +42,7 @@ jobs:
       matrix: ${{ fromJson(needs.setup.outputs.matrix) }}
     runs-on:
       labels: dre-runner-custom
-    container: ghcr.io/dfinity/dre/actions-runner:7efd87b0eac3ebd255be7efe00a3b39b0f9e9fc1
+    container: ghcr.io/dfinity/dre/actions-runner:9a9cef61d3483d2706b9d030a4a7e4d35c6ff1a2
     steps:
       - uses: actions/checkout@v4
         with:
@@ -135,7 +135,7 @@ jobs:
           echo "message=${FULL_MESSAGE}" >> $GITHUB_OUTPUT
 
       - name: "Notify DRE on slack"
-        uses: slackapi/slack-github-action@70cd7be8e40a46e8b0eced40b0de447bdb42f68e # v1.26.0
+        uses: slackapi/slack-github-action@37ebaef184d7626c5f204ab8d3baff4262dd30f0 # v1.27.0
         with:
           channel-id: eng-release-bots
           slack-message: |
@@ -171,7 +171,8 @@ jobs:
           git fetch origin main --depth 1
           git checkout main
 
-          python /tmp/auto-update-release-index.py ${{ inputs.version }} ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          rye sync
+          rye run python3 /tmp/auto-update-release-index.py ${{ inputs.version }} ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
       - name: "Create/Update PR after a successful rc cut"
         if: ${{ needs.qualify.result == 'success' && steps.modify.outputs.SHOULD_CREATE == 'true' }}

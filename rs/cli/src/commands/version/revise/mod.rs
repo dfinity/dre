@@ -4,8 +4,8 @@ use crate::commands::version::revise::host_os::HostOs;
 use clap::Args;
 use ic_management_types::Artifact;
 
-mod guest_os;
-mod host_os;
+pub(crate) mod guest_os;
+pub(crate) mod host_os;
 
 #[derive(Args, Debug)]
 pub struct ReviseElectedVersions {

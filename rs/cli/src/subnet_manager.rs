@@ -1,11 +1,11 @@
 use core::fmt;
 use std::collections::HashSet;
-use std::rc::Rc;
+use std::sync::Arc;
 
 use anyhow::anyhow;
 use anyhow::Ok;
 use decentralization::{
-    network::{DecentralizedSubnet, Node as DecentralizedNode, NodesConverter, SubnetQueryBy, TopologyManager},
+    network::{DecentralizedSubnet, Node as DecentralizedNode, SubnetQueryBy},
     SubnetChangeResponse,
 };
 use ic_management_backend::health::{self, HealthStatusQuerier};
@@ -37,12 +37,12 @@ impl fmt::Display for SubnetManagerError {
 
 pub struct SubnetManager {
     subnet_target: Option<SubnetTarget>,
-    registry_instance: Rc<LazyRegistry>,
+    registry_instance: Arc<dyn LazyRegistry>,
     network: Network,
 }
 
 impl SubnetManager {
-    pub fn new(registry_instance: Rc<LazyRegistry>, network: Network) -> Self {
+    pub fn new(registry_instance: Arc<dyn LazyRegistry>, network: Network) -> Self {
         Self {
             subnet_target: None,
             registry_instance,
@@ -161,9 +161,12 @@ impl SubnetManager {
 
         for (n, _) in change.removed().iter().filter(|(n, _)| !node_ids_unhealthy.contains(&n.id)) {
             motivations.push(format!(
-                "replacing {} as per user request: {}",
+                "replacing {} as per user request{}",
                 n.id,
-                motivation.clone().unwrap_or("as per user request".to_string())
+                match motivation {
+                    Some(ref m) => format!(": {}", m),
+                    None => "".to_string(),
+                }
             ));
         }
 

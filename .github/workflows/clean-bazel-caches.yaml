@@ -1,0 +1,30 @@
+name: Clean Bazel Cache
+on:
+  workflow_dispatch:
+    inputs:
+      clean_options:
+        description: "Additional bazel clean options (e.g. --expunge)"
+        type: string
+        default: ""
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  clean-bazel-cache:
+    runs-on: dre-runner-custom
+    strategy:
+      matrix:
+        runner: [1, 2, 3, 4] # We currently have 4 runners, adjust this number if more runners are added
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: "☁️ Setup bazelisk"
+        uses: bazelbuild/setup-bazelisk@v2
+
+      - name: Clean Bazel Cache
+        run: |
+          bazel clean ${{ inputs.clean_options }}

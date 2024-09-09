@@ -7,20 +7,23 @@ use std::{
     time::Duration,
 };
 
-use ic_canisters::{governance::governance_canister_version, CanisterClient, IcAgentCanisterClient};
+use ic_canisters::{governance::governance_canister_version, IcAgentCanisterClient};
 use ic_management_backend::{
-    lazy_registry::LazyRegistry,
-    proposal::ProposalAgent,
+    lazy_git::LazyGit,
+    lazy_registry::{LazyRegistry, LazyRegistryImpl},
+    proposal::{ProposalAgent, ProposalAgentImpl},
     registry::{local_registry_path, sync_local_store},
 };
 use ic_management_types::Network;
 use ic_registry_local_registry::LocalRegistry;
-use log::info;
+use log::{debug, info};
+use url::Url;
 
 use crate::{
-    auth::Neuron,
-    commands::{Args, ExecutableCommand, IcAdminRequirement},
-    ic_admin::{download_ic_admin, should_update_ic_admin, IcAdminWrapper},
+    artifact_downloader::{ArtifactDownloader, ArtifactDownloaderImpl},
+    auth::{Auth, Neuron},
+    commands::{Args, ExecutableCommand, IcAdminRequirement, IcAdminVersion},
+    ic_admin::{download_ic_admin, should_update_ic_admin, IcAdmin, IcAdminImpl, FALLBACK_IC_ADMIN_VERSION},
     runner::Runner,
     subnet_manager::SubnetManager,
 };
@@ -29,74 +32,110 @@ const STAGING_NEURON_ID: u64 = 49;
 #[derive(Clone)]
 pub struct DreContext {
     network: Network,
-    registry: RefCell<Option<Rc<LazyRegistry>>>,
-    ic_admin: Option<Arc<IcAdminWrapper>>,
+    registry: RefCell<Option<Arc<dyn LazyRegistry>>>,
+    ic_admin: Option<Arc<dyn IcAdmin>>,
     runner: RefCell<Option<Rc<Runner>>>,
+    ic_repo: RefCell<Option<Arc<dyn LazyGit>>>,
+    proposal_agent: Arc<dyn ProposalAgent>,
     verbose_runner: bool,
     skip_sync: bool,
     ic_admin_path: Option<String>,
+    forum_post_link: Option<String>,
+    dry_run: bool,
+    artifact_downloader: Arc<dyn ArtifactDownloader>,
 }
 
 impl DreContext {
-    pub async fn from_args(args: &Args) -> anyhow::Result<Self> {
-        let network = match args.no_sync {
-            false => ic_management_types::Network::new(args.network.clone(), &args.nns_urls)
+    pub async fn new(
+        network: String,
+        nns_urls: Vec<Url>,
+        auth: Auth,
+        neuron_id: Option<u64>,
+        verbose: bool,
+        no_sync: bool,
+        yes: bool,
+        dry_run: bool,
+        ic_admin_requirement: IcAdminRequirement,
+        forum_post_link: Option<String>,
+        ic_admin_version: IcAdminVersion,
+    ) -> anyhow::Result<Self> {
+        let network = match no_sync {
+            false => ic_management_types::Network::new(network.clone(), &nns_urls)
                 .await
                 .map_err(|e| anyhow::anyhow!(e))?,
-            true => Network::new_unchecked(args.network.clone(), &args.nns_urls)?,
+            true => Network::new_unchecked(network.clone(), &nns_urls)?,
         };
 
-        let (neuron_id, private_key_pem) = {
-            let neuron_id = match args.neuron_id {
-                Some(n) => Some(n),
-                None if network.name == "staging" => Some(STAGING_NEURON_ID),
-                None => None,
-            };
-
-            let path = PathBuf::from_str(&std::env::var("HOME")?)?.join(".config/dfx/identity/bootstrap-super-leader/identity.pem");
-            let private_key_pem = match args.private_key_pem.as_ref() {
-                Some(p) => Some(p.clone()),
-                None if network.name == "staging" && path.exists() => Some(path),
-                None => None,
-            };
-            (neuron_id, private_key_pem)
+        // Overrides of neuron ID and private key PEM file for staging.
+        // Appropriate fallbacks take place when options are missing.
+        // I personally don't think this should be here, but more refactoring
+        // needs to take place for this code to reach its final destination.
+        let (neuron_id, auth_opts) = if network.name == "staging" {
+            let staging_path = PathBuf::from_str(&std::env::var("HOME")?)?.join(".config/dfx/identity/bootstrap-super-leader/identity.pem");
+            (
+                neuron_id.or(Some(STAGING_NEURON_ID)),
+                match (&auth, Auth::pem(staging_path).await) {
+                    // There is no private key PEM specified, this is staging, the user
+                    // did not specify HSM options, and the default staging path exists,
+                    // so we use the default staging path.
+                    (Auth::Anonymous, Ok(staging_pem_auth)) => staging_pem_auth,
+                    _ => auth.clone(),
+                },
+            )
+        } else {
+            (neuron_id, auth.clone())
         };
 
-        let (ic_admin, ic_admin_path) = Self::init_ic_admin(
-            &network,
-            neuron_id,
-            private_key_pem,
-            args.hsm_slot,
-            args.hsm_key_id.clone(),
-            args.hsm_pin.clone(),
-            args.yes,
-            args.dry_run,
-            args.require_ic_admin(),
-        )
-        .await?;
+        let (ic_admin, ic_admin_path) =
+            Self::init_ic_admin(&network, neuron_id, auth_opts, yes, dry_run, ic_admin_requirement, ic_admin_version).await?;
 
         Ok(Self {
+            proposal_agent: Arc::new(ProposalAgentImpl::new(&network.nns_urls)),
             network,
             registry: RefCell::new(None),
             ic_admin,
             runner: RefCell::new(None),
-            verbose_runner: args.verbose,
-            skip_sync: args.no_sync,
+            verbose_runner: verbose,
+            skip_sync: no_sync,
             ic_admin_path,
+            forum_post_link: forum_post_link.clone(),
+            ic_repo: RefCell::new(None),
+            dry_run,
+            artifact_downloader: Arc::new(ArtifactDownloaderImpl {}) as Arc<dyn ArtifactDownloader>,
         })
+    }
+
+    pub(crate) async fn from_args(args: &Args) -> anyhow::Result<Self> {
+        Self::new(
+            args.network.clone(),
+            args.nns_urls.clone(),
+            match args.subcommands.require_ic_admin() {
+                IcAdminRequirement::None | IcAdminRequirement::Anonymous => Auth::Anonymous,
+                IcAdminRequirement::Detect | IcAdminRequirement::OverridableBy { network: _, neuron: _ } => {
+                    Auth::from_auth_opts(args.auth_opts.clone()).await?
+                }
+            },
+            args.neuron_id,
+            args.verbose,
+            args.no_sync,
+            args.yes,
+            args.dry_run,
+            args.subcommands.require_ic_admin(),
+            args.forum_post_link.clone(),
+            args.ic_admin_version.clone(),
+        )
+        .await
     }
 
     async fn init_ic_admin(
         network: &Network,
         neuron_id: Option<u64>,
-        private_key_pem: Option<PathBuf>,
-        hsm_slot: Option<u64>,
-        hsm_key_id: Option<String>,
-        hsm_pin: Option<String>,
+        auth: Auth,
         proceed_without_confirmation: bool,
         dry_run: bool,
         requirement: IcAdminRequirement,
-    ) -> anyhow::Result<(Option<Arc<IcAdminWrapper>>, Option<String>)> {
+        version: IcAdminVersion,
+    ) -> anyhow::Result<(Option<Arc<dyn IcAdmin>>, Option<String>)> {
         if let IcAdminRequirement::None = requirement {
             return Ok((None, None));
         }
@@ -106,14 +145,12 @@ impl DreContext {
                 neuron_id: 0,
                 include_proposer: false,
             },
-            IcAdminRequirement::Detect => {
-                Neuron::new(private_key_pem, hsm_slot, hsm_pin.clone(), hsm_key_id.clone(), neuron_id, network, true).await?
-            }
+            IcAdminRequirement::Detect => Neuron::new(auth, neuron_id, network, true).await?,
             IcAdminRequirement::OverridableBy {
                 network: accepted_network,
                 neuron,
             } => {
-                let maybe_neuron = Neuron::new(private_key_pem, hsm_slot, hsm_pin.clone(), hsm_key_id.clone(), neuron_id, network, true).await;
+                let maybe_neuron = Neuron::new(auth, neuron_id, network, true).await;
 
                 match maybe_neuron {
                     Ok(n) => n,
@@ -122,32 +159,50 @@ impl DreContext {
                 }
             }
         };
-        let ic_admin_path = match should_update_ic_admin()? {
-            (true, _) => {
-                let govn_canister_version = governance_canister_version(network.get_nns_urls()).await?;
-                download_ic_admin(match govn_canister_version.stringified_hash.as_str() {
-                    // Some testnets could have this version setup if deployed
-                    // from HEAD of the branch they are created from
-                    "0000000000000000000000000000000000000000" => None,
-                    v => Some(v.to_owned()),
-                })
-                .await?
+
+        let ic_admin_path = match version {
+            IcAdminVersion::FromGovernance => match should_update_ic_admin()? {
+                (true, _) => {
+                    let govn_canister_version = governance_canister_version(network.get_nns_urls()).await?;
+                    debug!(
+                        "Using ic-admin matching the version of governance canister, version: {}",
+                        govn_canister_version.stringified_hash
+                    );
+                    download_ic_admin(match govn_canister_version.stringified_hash.as_str() {
+                        // Some testnets could have this version setup if deployed
+                        // from HEAD of the branch they are created from
+                        "0000000000000000000000000000000000000000" => None,
+                        v => Some(v.to_owned()),
+                    })
+                    .await?
+                }
+                (false, s) => {
+                    debug!("Using cached ic-admin matching the version of governance canister, path: {}", s);
+                    s
+                }
+            },
+            IcAdminVersion::Fallback => {
+                debug!("Using default ic-admin, version: {}", FALLBACK_IC_ADMIN_VERSION);
+                download_ic_admin(None).await?
             }
-            (false, s) => s,
+            IcAdminVersion::Strict(ver) => {
+                debug!("Using ic-admin specified via args: {}", ver);
+                download_ic_admin(Some(ver)).await?
+            }
         };
 
-        let ic_admin = Some(Arc::new(IcAdminWrapper::new(
+        let ic_admin = Some(Arc::new(IcAdminImpl::new(
             network.clone(),
             Some(ic_admin_path.clone()),
             proceed_without_confirmation,
             neuron,
             dry_run,
-        )));
+        )) as Arc<dyn IcAdmin>);
 
         Ok((ic_admin, Some(ic_admin_path)))
     }
 
-    pub async fn registry(&self) -> Rc<LazyRegistry> {
+    pub async fn registry(&self) -> Arc<dyn LazyRegistry> {
         if let Some(reg) = self.registry.borrow().as_ref() {
             return reg.clone();
         }
@@ -160,7 +215,12 @@ impl DreContext {
         info!("Using local registry path for network {}: {}", network.name, local_path.display());
         let local_registry = LocalRegistry::new(local_path, Duration::from_millis(1000)).expect("Failed to create local registry");
 
-        let registry = Rc::new(LazyRegistry::new(local_registry, network.clone(), self.skip_sync));
+        let registry = Arc::new(LazyRegistryImpl::new(
+            local_registry,
+            network.clone(),
+            self.skip_sync,
+            self.proposals_agent(),
+        ));
         *self.registry.borrow_mut() = Some(registry.clone());
         registry
     }
@@ -169,44 +229,28 @@ impl DreContext {
         &self.network
     }
 
-    /// Uses `ic_canister_client::Agent`
-    pub fn create_canister_client(&self) -> anyhow::Result<CanisterClient> {
-        let nns_url = self.network.get_nns_urls().first().expect("Should have at least one NNS url");
-
-        match &self.ic_admin {
-            Some(a) => match &a.neuron.auth {
-                crate::auth::Auth::Hsm { pin, slot, key_id } => CanisterClient::from_hsm(pin.clone(), *slot, key_id.clone(), nns_url),
-                crate::auth::Auth::Keyfile { path } => CanisterClient::from_key_file(path.clone(), nns_url),
-                crate::auth::Auth::Anonymous => CanisterClient::from_anonymous(nns_url),
-            },
-            None => CanisterClient::from_anonymous(nns_url),
-        }
+    pub fn is_dry_run(&self) -> bool {
+        self.dry_run
     }
 
     /// Uses `ic_agent::Agent`
     pub fn create_ic_agent_canister_client(&self, lock: Option<Mutex<()>>) -> anyhow::Result<IcAgentCanisterClient> {
-        let nns_url = self.network.get_nns_urls().first().expect("Should have at least one NNS url");
+        let urls = self.network.get_nns_urls().to_vec();
         match &self.ic_admin {
-            Some(a) => match &a.neuron.auth {
-                crate::auth::Auth::Hsm { pin, slot, key_id } => {
-                    IcAgentCanisterClient::from_hsm(pin.to_string(), *slot, key_id.to_string(), nns_url.to_owned(), lock)
-                }
-                crate::auth::Auth::Keyfile { path } => IcAgentCanisterClient::from_key_file(path.into(), nns_url.to_owned()),
-                crate::auth::Auth::Anonymous => IcAgentCanisterClient::from_anonymous(nns_url.to_owned()),
-            },
-            None => IcAgentCanisterClient::from_anonymous(nns_url.to_owned()),
+            Some(a) => a.neuron().auth.create_canister_client(urls, lock),
+            None => IcAgentCanisterClient::from_anonymous(urls.first().expect("Should have at least one NNS url").clone()),
         }
     }
 
-    pub fn ic_admin(&self) -> Arc<IcAdminWrapper> {
+    pub fn ic_admin(&self) -> Arc<dyn IcAdmin> {
         match &self.ic_admin {
             Some(a) => a.clone(),
             None => panic!("This command is not configured to use ic admin"),
         }
     }
 
-    pub fn readonly_ic_admin_for_other_network(&self, network: Network) -> IcAdminWrapper {
-        IcAdminWrapper::new(network, self.ic_admin_path.clone(), true, Neuron::anonymous_neuron(), false)
+    pub fn readonly_ic_admin_for_other_network(&self, network: Network) -> impl IcAdmin {
+        IcAdminImpl::new(network, self.ic_admin_path.clone(), true, Neuron::anonymous_neuron(), false)
     }
 
     pub async fn subnet_manager(&self) -> SubnetManager {
@@ -215,8 +259,8 @@ impl DreContext {
         SubnetManager::new(registry, self.network().clone())
     }
 
-    pub fn proposals_agent(&self) -> ProposalAgent {
-        ProposalAgent::new(self.network().get_nns_urls())
+    pub fn proposals_agent(&self) -> Arc<dyn ProposalAgent> {
+        self.proposal_agent.clone()
     }
 
     pub async fn runner(&self) -> Rc<Runner> {
@@ -230,8 +274,56 @@ impl DreContext {
             self.network().clone(),
             self.proposals_agent(),
             self.verbose_runner,
+            self.ic_repo.clone(),
+            self.artifact_downloader.clone(),
         ));
         *self.runner.borrow_mut() = Some(runner.clone());
         runner
+    }
+
+    pub fn forum_post_link(&self) -> Option<String> {
+        self.forum_post_link.clone()
+    }
+
+    #[cfg(test)]
+    pub fn ic_admin_path(&self) -> Option<String> {
+        self.ic_admin_path.clone()
+    }
+}
+
+#[cfg(test)]
+#[allow(dead_code)]
+pub mod tests {
+    use std::{cell::RefCell, sync::Arc};
+
+    use ic_management_backend::{lazy_git::LazyGit, lazy_registry::LazyRegistry, proposal::ProposalAgent};
+    use ic_management_types::Network;
+
+    use crate::{artifact_downloader::ArtifactDownloader, ic_admin::IcAdmin};
+
+    use super::DreContext;
+
+    pub fn get_mocked_ctx(
+        network: Network,
+        registry: Arc<dyn LazyRegistry>,
+        ic_admin: Arc<dyn IcAdmin>,
+        git: Arc<dyn LazyGit>,
+        proposal_agent: Arc<dyn ProposalAgent>,
+        artifact_downloader: Arc<dyn ArtifactDownloader>,
+    ) -> DreContext {
+        DreContext {
+            network,
+            registry: RefCell::new(Some(registry)),
+            ic_admin: Some(ic_admin),
+            runner: RefCell::new(None),
+            ic_repo: RefCell::new(Some(git)),
+            proposal_agent,
+            verbose_runner: true,
+            skip_sync: false,
+            ic_admin_path: None,
+            forum_post_link: None,
+            dry_run: true,
+            artifact_downloader,
+        }
     }
 }

@@ -1,68 +1,85 @@
 use std::{
-    cell::RefCell,
     collections::{HashMap, HashSet},
     sync::Arc,
 };
 
+use futures::future::BoxFuture;
 use ic_management_types::{Artifact, ArtifactReleases, Network, Release};
 use itertools::Itertools;
 use lazy_static::lazy_static;
 use log::{debug, error};
+use mockall::automock;
 use regex::Regex;
+use tokio::sync::RwLock;
 
 use crate::git_ic_repo::IcRepo;
 
-pub struct LazyGit {
-    guestos_releases: RefCell<Option<Arc<ArtifactReleases>>>,
-    hostos_releases: RefCell<Option<Arc<ArtifactReleases>>>,
-    ic_repo: RefCell<IcRepo>,
+#[automock]
+pub trait LazyGit: Send + Sync {
+    fn guestos_releases(&self) -> BoxFuture<'_, anyhow::Result<Arc<ArtifactReleases>>>;
+
+    fn hostos_releases(&self) -> BoxFuture<'_, anyhow::Result<Arc<ArtifactReleases>>>;
+}
+
+pub struct LazyGitImpl {
+    guestos_releases: RwLock<Option<Arc<ArtifactReleases>>>,
+    hostos_releases: RwLock<Option<Arc<ArtifactReleases>>>,
+    ic_repo: RwLock<IcRepo>,
     network: Network,
     blessed_replica_versions: Vec<String>,
     elected_hostos_versions: Vec<String>,
 }
 
-impl LazyGit {
+impl LazyGit for LazyGitImpl {
+    fn guestos_releases(&self) -> BoxFuture<'_, anyhow::Result<Arc<ArtifactReleases>>> {
+        Box::pin(async {
+            if let Some(releases) = self.guestos_releases.read().await.as_ref() {
+                return Ok(releases.to_owned());
+            }
+
+            self.update_releases().await?;
+            self.guestos_releases
+                .read()
+                .await
+                .as_ref()
+                .map(|n| n.to_owned())
+                .ok_or(anyhow::anyhow!("Failed to update releases"))
+        })
+    }
+
+    fn hostos_releases(&self) -> BoxFuture<'_, anyhow::Result<Arc<ArtifactReleases>>> {
+        Box::pin(async {
+            if let Some(releases) = self.hostos_releases.read().await.as_ref() {
+                return Ok(releases.to_owned());
+            }
+
+            self.update_releases().await?;
+            self.hostos_releases
+                .read()
+                .await
+                .as_ref()
+                .map(|n| n.to_owned())
+                .ok_or(anyhow::anyhow!("Failed to update releases"))
+        })
+    }
+}
+
+impl LazyGitImpl {
     pub fn new(network: Network, blessed_replica_versions: Vec<String>, elected_hostos_versions: Vec<String>) -> anyhow::Result<Self> {
         Ok(Self {
-            guestos_releases: RefCell::new(None),
-            hostos_releases: RefCell::new(None),
-            ic_repo: RefCell::new(IcRepo::new()?),
+            guestos_releases: RwLock::new(None),
+            hostos_releases: RwLock::new(None),
+            ic_repo: RwLock::new(IcRepo::new()?),
             network,
             blessed_replica_versions,
             elected_hostos_versions,
         })
     }
 
-    pub async fn guestos_releases(&self) -> anyhow::Result<Arc<ArtifactReleases>> {
-        if let Some(releases) = self.guestos_releases.borrow().as_ref() {
-            return Ok(releases.to_owned());
-        }
-
-        self.update_releases().await?;
-        self.guestos_releases
-            .borrow()
-            .as_ref()
-            .map(|n| n.to_owned())
-            .ok_or(anyhow::anyhow!("Failed to update releases"))
-    }
-
-    pub async fn hostos_releases(&self) -> anyhow::Result<Arc<ArtifactReleases>> {
-        if let Some(releases) = self.hostos_releases.borrow().as_ref() {
-            return Ok(releases.to_owned());
-        }
-
-        self.update_releases().await?;
-        self.hostos_releases
-            .borrow()
-            .as_ref()
-            .map(|n| n.to_owned())
-            .ok_or(anyhow::anyhow!("Failed to update releases"))
-    }
-
     async fn update_releases(&self) -> anyhow::Result<()> {
         if !self.network.eq(&Network::mainnet_unchecked()?) {
-            *self.guestos_releases.borrow_mut() = Some(Arc::new(ArtifactReleases::new(Artifact::GuestOs)));
-            *self.hostos_releases.borrow_mut() = Some(Arc::new(ArtifactReleases::new(Artifact::HostOs)));
+            *self.guestos_releases.write().await = Some(Arc::new(ArtifactReleases::new(Artifact::GuestOs)));
+            *self.hostos_releases.write().await = Some(Arc::new(ArtifactReleases::new(Artifact::HostOs)));
             return Ok(());
         }
 
@@ -84,8 +101,8 @@ impl LazyGit {
         // A HashMap from the git revision to the latest commit branch in which the
         // commit is present
         let mut commit_to_release: HashMap<String, Release> = HashMap::new();
+        let mut ic_repo = self.ic_repo.write().await;
         blessed_versions.into_iter().for_each(|commit_hash| {
-            let mut ic_repo = self.ic_repo.borrow_mut();
             match ic_repo.get_branches_with_commit(commit_hash) {
                 // For each commit get a list of branches that have the commit
                 Ok(branches) => {
@@ -126,8 +143,8 @@ impl LazyGit {
         });
 
         for (blessed_versions, mut to_update, artifact_type) in [
-            (&self.blessed_replica_versions, self.guestos_releases.borrow_mut(), Artifact::GuestOs),
-            (&self.elected_hostos_versions, self.hostos_releases.borrow_mut(), Artifact::HostOs),
+            (&self.blessed_replica_versions, self.guestos_releases.write().await, Artifact::GuestOs),
+            (&self.elected_hostos_versions, self.hostos_releases.write().await, Artifact::HostOs),
         ] {
             let releases = blessed_versions
                 .iter()

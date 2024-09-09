@@ -21,9 +21,9 @@ impl ExecutableCommand for Balance {
     fn validate(&self, _cmd: &mut clap::Command) {}
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        let governance = GovernanceCanisterWrapper::from(ctx.create_canister_client()?);
+        let governance = GovernanceCanisterWrapper::from(ctx.create_ic_agent_canister_client(None)?);
         let neuron_info = governance
-            .get_neuron_info(self.neuron.unwrap_or_else(|| ctx.ic_admin().neuron.neuron_id))
+            .get_neuron_info(self.neuron.unwrap_or_else(|| ctx.ic_admin().neuron().neuron_id))
             .await?;
 
         println!("{}", neuron_info.stake_e8s / 10_u64.pow(8));

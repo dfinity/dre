@@ -5,6 +5,7 @@ authors.workspace = true
 edition.workspace = true
 description.workspace = true
 documentation.workspace = true
+license.workspace = true
 
 [dependencies]
 actix-web = { workspace = true }
@@ -24,6 +25,7 @@ tokio = { workspace = true }
 url = { workspace = true }
 anyhow = { workspace = true }
 candid = { workspace = true }
+ic-protobuf.workspace = true
 
 [dev-dependencies]
 wiremock = { workspace = true }

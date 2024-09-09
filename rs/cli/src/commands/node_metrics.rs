@@ -78,7 +78,7 @@ impl NodeMetrics {
 
     async fn get_untrusted_metrics(&self, canister_agent: ic_canisters::IcAgentCanisterClient) -> anyhow::Result<CLINodeMetrics> {
         let mut metrics_by_subnet = BTreeMap::new();
-        let metrics_client = NodeMetricsCanisterWrapper::new(canister_agent.agent);
+        let metrics_client: NodeMetricsCanisterWrapper = canister_agent.into();
 
         let node_metrics_response = match &self.subnet_ids.is_empty() {
             true => metrics_client.get_node_metrics(None, Some(self.start_at_timestamp)).await?,

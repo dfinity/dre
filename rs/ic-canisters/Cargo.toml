@@ -5,6 +5,7 @@ authors.workspace = true
 edition.workspace = true
 description.workspace = true
 documentation.workspace = true
+license.workspace = true
 
 [dependencies]
 anyhow = { workspace = true }
@@ -13,15 +14,12 @@ candid = { workspace = true }
 hex = { workspace = true }
 ic-agent = { workspace = true }
 ic-base-types = { workspace = true }
-ic-canister-client = { workspace = true }
-ic-canister-client-sender = { workspace = true }
 ic-management-canister-types = { workspace = true }
 ic-nns-common = { workspace = true }
 ic-nns-constants = { workspace = true }
 ic-nns-governance = { workspace = true }
 ic-protobuf = { workspace = true }
 ic-registry-transport = { workspace = true }
-ic-sys = { workspace = true }
 ic-utils = { workspace = true }
 log = { workspace = true }
 pkcs11 = { workspace = true }
@@ -35,3 +33,7 @@ url = { workspace = true }
 ic-sns-wasm = { workspace = true }
 trustworthy-node-metrics-types = { workspace = true }
 ic-transport-types = { workspace = true }
+ic-registry-keys.workspace = true
+ic-types.workspace = true
+ic-interfaces-registry.workspace = true
+ic-registry-nns-data-provider.workspace = true

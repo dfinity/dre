@@ -6,6 +6,7 @@ use serde_json::Value;
 
 use crate::{
     commands::{ExecutableCommand, IcAdminRequirement},
+    ic_admin::IcAdmin,
     qualification::QualificationExecutorBuilder,
 };
 
@@ -86,14 +87,11 @@ impl ExecutableCommand for Execute {
             .with_step_range(self.step_range.clone().unwrap_or_default())
             .with_from_version(from_version)
             .with_to_version(self.version.clone())
-            .with_deployment_namge(self.deployment_name.clone())
+            .with_deployment_name(self.deployment_name.clone())
             .with_prometheus_endpoint(self.prometheus_endpoint.clone());
         if let Some(path) = &self.artifacts {
             qualification_executor = qualification_executor.with_artifacts(path.to_owned());
         };
-        if let Some(grafana_url) = &self.grafana_url {
-            qualification_executor = qualification_executor.with_grafana_endpoint(grafana_url.to_owned());
-        }
         qualification_executor.build()?.execute().await
     }
 }

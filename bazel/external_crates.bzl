@@ -4,14 +4,6 @@ def external_crates_repository():
     crates_repository(
         name = "crate_index_dre",
         annotations = {
-            "headless_chrome": [crate.annotation(
-                rustc_env = {
-                    "DO_NOT_FORMAT": "1",
-                },
-                build_script_env = {
-                    "DO_NOT_FORMAT": "1",
-                },
-            )],
             "ic-adapter-metrics-service": [crate.annotation(
                 build_script_data = [
                     "@com_google_protobuf//:protoc",
@@ -35,15 +27,6 @@ def external_crates_repository():
                 rustc_env = {
                     "IC_ICRC1_ARCHIVE_WASM_PATH": "$(execpath @ic-icrc1-archive//file)",
                 },
-            )],
-            "openssl": [crate.annotation(
-                deps = ["@openssl//:openssl"]
-            )],
-            "openssl-probe": [crate.annotation(
-                deps = ["@openssl//:openssl"]
-            )],
-            "openssl-sys": [crate.annotation(
-                deps = ["@openssl//:openssl"]
             )],
         },
         cargo_config = "//:.cargo/config.toml",

@@ -67,17 +67,6 @@ impl Step for Workload {
             anyhow::bail!("Failed to run workload test with status code: {}", status.code().unwrap_or_default())
         }
 
-        // No need to stop the qualification if taking picture fails
-        if let Err(e) = ctx.capture_progress_clock(
-            self.deployment_name.to_string(),
-            &subnet.principal,
-            Some(start.timestamp()),
-            Some(end.timestamp()),
-            "workload_test",
-        ) {
-            ctx.print_text(format!("Failed to capture progress clock: {:?}", e))
-        };
-
         match ensure_finalization_rate_for_subnet(
             &self.deployment_name,
             end.timestamp(),

@@ -226,7 +226,7 @@ impl ExecutableCommand for Filter {
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        let client = GovernanceCanisterWrapper::from(ctx.create_canister_client()?);
+        let client = GovernanceCanisterWrapper::from(ctx.create_ic_agent_canister_client(None)?);
 
         let exclude_topic = match self.topics.is_empty() {
             true => vec![],

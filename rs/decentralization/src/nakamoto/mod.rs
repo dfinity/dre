@@ -396,7 +396,7 @@ impl NakamotoScore {
             return (
                 cmp,
                 if val_self[0] != val_other[0] {
-                    if val_self[0] > val_other[0] {
+                    if val_other[0] > val_self[0] {
                         format!(
                             "(gets better) the number of nodes controlled by dominant NPs decreases from {} to {}",
                             val_other[0], val_self[0]
@@ -407,7 +407,7 @@ impl NakamotoScore {
                             val_other[0], val_self[0]
                         )
                     }
-                } else if val_self[1] > val_other[1] {
+                } else if val_other[1] > val_self[1] {
                     format!(
                         "(gets better) the number of nodes controlled by dominant Country actors decreases from {} to {}",
                         val_other[1], val_self[1]

@@ -130,15 +130,24 @@ TEAM_PRETTY_MAP = {
 
 
 EXCLUDE_CHANGES_FILTERS = [
-    r".+\/sns\/.+",
-    r".+\/ckbtc\/.+",
-    r".+\/cketh\/.+",
+    r"sns",
+    r"ckbtc",
+    r"cketh",
     r"rs\/nns.+",
-    r".+test.+",
-    r"^bazel$",
-    r".*boundary.*",
-    r".*rosetta.*",
-    r".*pocket[_-]ic.*",
+    r"test",
+    r"^bazel",
+    r"boundary",
+    r"rosetta",
+    r"pocket[_-]ic",
+    r"^Cargo.lock$",
+    r"registry\/admin",
+    r"canister",
+]
+
+EXCLUDED_SCOPES = [
+    "ic-admin",
+    "nns",
+    "sns",
 ]
 
 INCLUDE_CHANGES = ["bazel/external_crates.bzl"]
@@ -312,10 +321,18 @@ def get_change_description_for_commit(
     file_changes = ic_repo.file_changes_for_commit(commit_hash)
     exclusion_reason = None
     guestos_change = is_guestos_change(ic_repo, commit_hash)
-    if guestos_change and not any(
-        f for f in file_changes if not any(re.match(filter, f["file_path"]) for filter in EXCLUDE_CHANGES_FILTERS)
+    if (
+        guestos_change
+        and not exclusion_reason
+        and not any(
+            f
+            for f in file_changes
+            if not any(
+                f not in INCLUDE_CHANGES and re.search(filter, f["file_path"]) for filter in EXCLUDE_CHANGES_FILTERS
+            )
+        )
     ):
-        exclusion_reason = "Changed files are exluded by file path filter"
+        exclusion_reason = "Changed files are excluded by file path filter"
 
     ownership = {}
     stripped_message = re.sub(jira_ticket_regex, "", commit_message)
@@ -363,8 +380,12 @@ def get_change_description_for_commit(
     commit_type = conventional["type"].lower()
     commit_type = commit_type if commit_type in TYPE_PRETTY_MAP else "other"
 
-    if guestos_change and not REPLICA_TEAMS.intersection(teams):
+    if guestos_change and not exclusion_reason and not REPLICA_TEAMS.intersection(teams):
         exclusion_reason = "The change is not owned by any replica team"
+
+    scope = conventional["scope"] if conventional["scope"] else ""
+    if guestos_change and not exclusion_reason and scope in EXCLUDED_SCOPES:
+        exclusion_reason = f"Scope of the change ({scope}) is not related to GuestOS"
 
     teams = sorted(list(teams))
 
@@ -378,7 +399,7 @@ def get_change_description_for_commit(
         commit=commit_hash,
         teams=list(teams),
         type=commit_type,
-        scope=conventional["scope"] if conventional["scope"] else "",
+        scope=scope,
         message=conventional["message"],
         commiter=commiter,
         exclusion_reason=exclusion_reason,
@@ -436,7 +457,7 @@ To see a full list of commits added since last release, compare the revisions on
     )
     if merge_base != base_release_commit:
         notes += """
-This release diverges from latest release. Merge base is [{merge_base}](https://github.com/dfinity/ic/tree/{merge_base}).
+This release diverges from the latest release. Merge base is [{merge_base}](https://github.com/dfinity/ic/tree/{merge_base}).
 Changes [were removed](https://github.com/dfinity/ic/compare/{release_tag}...{base_release_tag}) from this release.
 """.format(
             merge_base=merge_base,

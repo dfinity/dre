@@ -7,6 +7,7 @@ use ctx::DreContext;
 use dotenv::dotenv;
 use log::{info, warn};
 
+mod artifact_downloader;
 mod auth;
 mod commands;
 mod ctx;
@@ -16,6 +17,8 @@ mod operations;
 mod qualification;
 mod runner;
 mod subnet_manager;
+#[cfg(test)]
+mod unit_tests;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -26,6 +29,7 @@ async fn main() -> anyhow::Result<()> {
     dotenv().ok();
 
     let args = Args::parse();
+
     let mut cmd = Args::command();
     args.validate(&mut cmd);
 

@@ -22,7 +22,7 @@ impl ExecutableCommand for Rescue {
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
         let runner = ctx.runner().await;
 
-        runner.subnet_rescue(&self.id, self.keep_nodes.clone()).await
+        runner.subnet_rescue(&self.id, self.keep_nodes.clone(), ctx.forum_post_link()).await
     }
 
     fn validate(&self, _cmd: &mut clap::Command) {}

@@ -6,6 +6,7 @@ authors.workspace = true
 edition.workspace = true
 description.workspace = true
 documentation.workspace = true
+license.workspace = true
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -56,6 +57,7 @@ regex = { workspace = true }
 registry-canister = { workspace = true }
 reqwest = { workspace = true }
 self_update = { workspace = true }
+secrecy = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 sha2 = { workspace = true }
@@ -67,12 +69,13 @@ tempfile = { workspace = true }
 tokio = { workspace = true }
 url = { workspace = true }
 humantime = { workspace = true }
-clap_complete = "4.5.23"
+clap_complete = { workspace = true }
 cryptoki = { workspace = true }
 keyring = { workspace = true }
 comfy-table = { workspace = true }
 human_bytes = { workspace = true }
-headless_chrome = { workspace = true }
+mockall.workspace = true
+clio = { workspace = true }
 
 [dev-dependencies]
 actix-rt = { workspace = true }

@@ -9,7 +9,7 @@ jobs:
     runs-on:
       labels: dre-runner-custom
     # This image is based on ubuntu:20.04
-    container: ghcr.io/dfinity/dre/actions-runner:e7053069fd8a084a19b410af4dbcba74048136c4
+    container: ghcr.io/dfinity/dre/actions-runner:9a9cef61d3483d2706b9d030a4a7e4d35c6ff1a2
     name: Test changed-files
     steps:
       - uses: actions/checkout@v4
@@ -34,6 +34,6 @@ jobs:
           sha: ${{github.event.pull_request.head.sha || github.sha}}
 
       - name: Run checks for release index
-        if: ${{ steps.changed-files.outputs.all_changed_files_count > 0 && steps.changed-files.outputs.other_changed_files_count == 0  }}
         run: |
-          python release-controller/ci_check.py --repo-path /home/runner/.cache
+          rye sync
+          rye run python3 release-controller/ci_check.py --repo-path /home/runner/.cache
