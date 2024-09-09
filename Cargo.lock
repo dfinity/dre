@@ -312,9 +312,9 @@ dependencies = [
 
 [[package]]
 name = "anyhow"
-version = "1.0.86"
+version = "1.0.87"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b3d1d046238990b9cf5bcde22a3fb3584ee5cf65fb2765f454ed428c7a0063da"
+checksum = "10f00e1f6e58a40e807377c75c6a7f97bf9044fab57816f2414e6f5f4499d7b8"
 
 [[package]]
 name = "arc-swap"
@@ -992,7 +992,7 @@ name = "canister-log-fetcher"
 version = "0.5.5"
 dependencies = [
  "anyhow",
- "clap 4.5.16",
+ "clap 4.5.17",
  "humantime",
  "log",
  "pretty_env_logger",
@@ -1107,9 +1107,9 @@ dependencies = [
 
 [[package]]
 name = "clap"
-version = "4.5.16"
+version = "4.5.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ed6719fffa43d0d87e5fd8caeab59be1554fb028cd30edc88fc4369b17971019"
+checksum = "3e5a21b8495e732f1b3c364c9949b201ca7bae518c502c80256c96ad79eaf6ac"
 dependencies = [
  "clap_builder",
  "clap_derive 4.5.13",
@@ -1126,9 +1126,9 @@ dependencies = [
 
 [[package]]
 name = "clap_builder"
-version = "4.5.15"
+version = "4.5.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "216aec2b177652e3846684cbfe25c9964d18ec45234f0f5da5157b207ed1aab6"
+checksum = "8cf2dd12af7a047ad9d6da2b6b249759a22a7abc0f474c1dae1777afa4b21a73"
 dependencies = [
  "anstream",
  "anstyle",
@@ -1139,11 +1139,11 @@ dependencies = [
 
 [[package]]
 name = "clap_complete"
-version = "4.5.24"
+version = "4.5.26"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6d7db6eca8c205649e8d3ccd05aa5042b1800a784e56bc7c43524fde8abbfa9b"
+checksum = "205d5ef6d485fa47606b98b0ddc4ead26eb850aaa86abfb562a94fb3280ecba0"
 dependencies = [
- "clap 4.5.16",
+ "clap 4.5.17",
 ]
 
 [[package]]
@@ -1193,7 +1193,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b7fc6734af48458f72f5a3fa7b840903606427d98a710256e808f76a965047d9"
 dependencies = [
  "cfg-if",
- "clap 4.5.16",
+ "clap 4.5.17",
  "is-terminal",
  "libc",
  "tempfile",
@@ -1991,7 +1991,7 @@ dependencies = [
  "backon",
  "candid",
  "chrono",
- "clap 4.5.16",
+ "clap 4.5.17",
  "clap-num",
  "clap_complete",
  "clio",
@@ -3960,7 +3960,7 @@ dependencies = [
  "backon",
  "candid",
  "chrono",
- "clap 4.5.16",
+ "clap 4.5.17",
  "custom_error",
  "decentralization",
  "dirs",
@@ -5067,7 +5067,7 @@ checksum = "941376953c00628d8edae0adcad4b6e882c01cbfd5416d2ac2bc5fb709927737"
 dependencies = [
  "anyhow",
  "candid",
- "clap 4.5.16",
+ "clap 4.5.17",
  "libflate",
  "rustc-demangle",
  "serde",
@@ -5687,7 +5687,7 @@ name = "log-fetcher"
 version = "0.5.5"
 dependencies = [
  "anyhow",
- "clap 4.5.16",
+ "clap 4.5.17",
  "log",
  "pretty_env_logger",
  "reqwest",
@@ -5702,7 +5702,7 @@ name = "log-noise-filter-backend"
 version = "0.5.5"
 dependencies = [
  "axum 0.7.5",
- "clap 4.5.16",
+ "clap 4.5.17",
  "regex",
  "serde",
  "serde_json",
@@ -5717,7 +5717,7 @@ name = "log-noise-filter-downloader"
 version = "0.5.5"
 dependencies = [
  "anyhow",
- "clap 4.5.16",
+ "clap 4.5.17",
  "log-noise-filter-backend",
  "reqwest",
  "serde",
@@ -5872,7 +5872,7 @@ dependencies = [
  "axum 0.7.5",
  "axum-otel-metrics",
  "base64 0.22.1",
- "clap 4.5.16",
+ "clap 4.5.17",
  "crossbeam",
  "crossbeam-channel",
  "flate2",
@@ -5903,7 +5903,7 @@ dependencies = [
 name = "multiservice-discovery-downloader"
 version = "0.5.5"
 dependencies = [
- "clap 4.5.16",
+ "clap 4.5.17",
  "crossbeam",
  "crossbeam-channel",
  "futures-util",
@@ -5950,7 +5950,7 @@ name = "node-status-updater"
 version = "0.5.5"
 dependencies = [
  "anyhow",
- "clap 4.5.16",
+ "clap 4.5.17",
  "crossbeam",
  "crossbeam-channel",
  "futures-util",
@@ -5984,7 +5984,7 @@ version = "0.5.5"
 dependencies = [
  "actix-web",
  "anyhow",
- "clap 4.5.16",
+ "clap 4.5.17",
  "httptest",
  "ic-management-backend",
  "ic-management-types",
@@ -6755,7 +6755,7 @@ version = "0.5.5"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
- "clap 4.5.16",
+ "clap 4.5.17",
  "config-writer-common",
  "crossbeam",
  "futures-util",
@@ -6898,7 +6898,7 @@ dependencies = [
  "anyhow",
  "backon",
  "chrono",
- "clap 4.5.16",
+ "clap 4.5.17",
  "dirs",
  "dre",
  "futures",
@@ -7315,7 +7315,7 @@ dependencies = [
  "anyhow",
  "candid",
  "chrono",
- "clap 4.5.16",
+ "clap 4.5.17",
  "crossbeam",
  "dre",
  "humantime",
@@ -7641,9 +7641,9 @@ dependencies = [
 
 [[package]]
 name = "serde"
-version = "1.0.209"
+version = "1.0.210"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "99fce0ffe7310761ca6bf9faf5115afbc19688edd00171d81b1bb1b116c63e09"
+checksum = "c8e3592472072e6e22e0a54d5904d9febf8508f65fb8552499a1abc7d1078c3a"
 dependencies = [
  "serde_derive",
 ]
@@ -7669,9 +7669,9 @@ dependencies = [
 
 [[package]]
 name = "serde_derive"
-version = "1.0.209"
+version = "1.0.210"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a5831b979fd7b5439637af1752d535ff49f4860c0f341d1baeb6faf0f4242170"
+checksum = "243902eda00fad750862fc144cea25caca5e20d615af0a81bee94ca738f1df1f"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -7922,7 +7922,7 @@ version = "0.5.5"
 dependencies = [
  "anyhow",
  "candid",
- "clap 4.5.16",
+ "clap 4.5.17",
  "dotenv",
  "env_logger 0.11.5",
  "futures",
@@ -8042,7 +8042,7 @@ dependencies = [
 name = "sns-downloader"
 version = "0.5.5"
 dependencies = [
- "clap 4.5.16",
+ "clap 4.5.17",
  "crossbeam",
  "crossbeam-channel",
  "futures-util",
@@ -9401,13 +9401,13 @@ dependencies = [
 
 [[package]]
 name = "wiremock"
-version = "0.6.1"
+version = "0.6.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6a59f8ae78a4737fb724f20106fb35ccb7cfe61ff335665d3042b3aa98e34717"
+checksum = "7fff469918e7ca034884c7fd8f93fe27bacb7fcb599fd879df6c7b429a29b646"
 dependencies = [
  "assert-json-diff",
  "async-trait",
- "base64 0.21.7",
+ "base64 0.22.1",
  "deadpool",
  "futures",
  "http 1.1.0",

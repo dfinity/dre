@@ -43,7 +43,7 @@ actix-web = { version = "4.9.0", default-features = false, features = [
 ] }
 actix-rt = "2.10.0"
 ahash = "0.8.11"
-anyhow = "1.0.86"
+anyhow = "1.0.87"
 async-recursion = "1.1.1"
 axum-otel-metrics = "0.8.1"
 axum = "0.7.5"
@@ -64,7 +64,7 @@ clap = { version = "4.5", features = [
     "string",
     "cargo",
 ] }
-clap_complete = "4.5.24"
+clap_complete = "4.5.26"
 clio = { version = "0.3.5", features = ["clap", "clap-parse"] }
 colored = "2.1.0"
 comfy-table = "7.1.1"
@@ -188,7 +188,7 @@ thiserror = "1.0.63"
 tokio = { version = "1.40.0", features = ["full"] }
 tokio-util = "0.7.12"
 url = "2.5.2"
-wiremock = "0.6.1"
+wiremock = "0.6.2"
 human_bytes = "0.4"
 mockall = "0.13.0"
 
