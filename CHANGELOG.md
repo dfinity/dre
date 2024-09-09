@@ -1,6 +1,24 @@
 # dre Changelog
 
 <!-- insertion marker -->
+## [0.5.5](https://github.com/dfinity/dre/releases/tag/0.5.5) - 2024-09-09
+
+<small>[Compare with first commit](https://github.com/dfinity/dre/compare/d3c9efa02d88bab5454e795c50acb6d1575c5ecf...0.5.5)</small>
+
+### Features
+
+- Add a manual CI job that cleans bazel caches (#890) ([38b7bb9](https://github.com/dfinity/dre/commit/38b7bb959ff9caaa2f6bfe5decaf61c47ab0d8e2) by Saša Tomić).
+- security fix proposal (#882) ([d4ce9d0](https://github.com/dfinity/dre/commit/d4ce9d013da8f2509a6614062bd3f17ab2375471) by Nikola Milosavljevic).
+
+### Bug Fixes
+
+- only require our label for bazel cache cleanup job (#891) ([2004230](https://github.com/dfinity/dre/commit/20042307d55785071bc1e57338acaa6190713e09) by Saša Tomić).
+- --yes on propose (#892) ([66f2e5f](https://github.com/dfinity/dre/commit/66f2e5fb4eae2131ad68e3679c19f7997b845861) by Luka Skugor).
+- initialization logic (#889) ([a1f42a7](https://github.com/dfinity/dre/commit/a1f42a757c63e5e2f1cfdf42a03ebd579fe86310) by Nikola Milosavljevic).
+- add missing bins (#887) ([9f327c3](https://github.com/dfinity/dre/commit/9f327c378ac09be8882c76a0c98383ebe8ba535c) by Luka Skugor).
+- fix the forum category code (#884) ([0351499](https://github.com/dfinity/dre/commit/035149972605d5245f61e122f2ec56600771fa64) by Luka Skugor).
+- fix finding the forum category (#881) ([ce39a3e](https://github.com/dfinity/dre/commit/ce39a3e8baddc359a45f64e66e3718d25287c3d7) by Luka Skugor).
+
 ## [0.5.4](https://github.com/dfinity/dre/releases/tag/0.5.4) - 2024-09-05
 
 <small>[Compare with first commit](https://github.com/dfinity/dre/compare/e3b94efb3d36a89b7c981813626719ed48d5ec2f...0.5.4)</small>
