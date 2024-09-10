@@ -85,6 +85,7 @@ impl ComputationLogger {
         }
     }
 
+    #[allow(dead_code)]
     pub fn with_input(self, input: String) -> Self {
         Self {
             maybe_input: Some(input),
