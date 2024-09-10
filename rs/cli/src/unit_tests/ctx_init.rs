@@ -367,7 +367,7 @@ fn ensure_slot_exists(slot: u64, label: &str, pin: &str) -> u64 {
         .output()
         .unwrap();
     let slot = String::from_utf8_lossy(&output.stdout);
-    slot.trim().split(" ").last().unwrap().parse().unwrap()
+    slot.trim().split(' ').last().unwrap().parse().unwrap()
 }
 
 fn delete_test_slot(slot: u64, label: &str) {
@@ -462,8 +462,8 @@ impl<'a> HsmTestScenario<'a> {
                 hsm_pin: Some(self.pin.to_string()),
                 hsm_so_module: Some(self.so_module.clone()),
                 hsm_params: crate::commands::HsmParams {
-                    hsm_slot: self.slot.clone(),
-                    hsm_key_id: self.key_id.clone(),
+                    hsm_slot: self.slot,
+                    hsm_key_id: self.key_id,
                 },
             },
         };
@@ -559,7 +559,7 @@ async fn hsm_neuron_tests() {
         let neuron = maybe_neuron.unwrap();
         let wanted = want.as_ref().unwrap();
 
-        if !compare_neurons(&neuron, &wanted) {
+        if !compare_neurons(&neuron, wanted) {
             failed.push((scenario.name, Ok(neuron), want))
         }
     }
