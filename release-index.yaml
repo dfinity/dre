@@ -7,6 +7,14 @@ releases:
         version: 36c1976526fc488d40a89000f81d9f4897d2324e
       - name: canister-snapshots
         version: 843e71b994e1bf28edf80ad7746a7355259de91a
+      # Qualification pipeline:
+      # https://github.com/dfinity/ic/actions/runs/10792292299
+      - name: base-hotfix-https-outcalls
+        version: 3318f746113e7695ae0b904be5a48820884eb6d8
+      # Qualification pipeline:
+      # https://github.com/dfinity/ic/actions/runs/10792321422
+      - name: canister-snapshots-hotfix-https-outcalls
+        version: 290fd2ae93a02e1ab579895c806161e42b6acf2b
   - rc_name: rc--2024-08-29_01-30
     versions:
       - name: base
