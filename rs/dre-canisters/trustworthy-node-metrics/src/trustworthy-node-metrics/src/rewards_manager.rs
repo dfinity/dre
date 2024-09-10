@@ -99,10 +99,6 @@ pub fn compute_rewards_percent(daily_metrics: &[DailyNodeMetrics]) -> RewardsCom
     computation_logger.add_executed(operations);
     let rewards_percent = computation_logger.execute("Total Rewards", Operation::Subtract(dec!(1), rewards_reduction));
 
-    let computation_input = daily_metrics.iter().map(|metric| metric.to_string()).collect_vec().join("\n");
-
-    let computation_logger = computation_logger.with_input(computation_input);
-
     RewardsComputationResult {
         // Overflow impossible
         rewards_percent: rewards_percent.to_f64().unwrap(),

@@ -63,10 +63,7 @@ const NodeRewardExplanation: React.FC<{ failureRate: number; rewardReduction: nu
             </Typography>
           </ListItem>
         </List>
-      </Grid>
 
-      {/* Reward Reduction Section */}
-      <Grid item xs={12} md={4}>
         {/* Linear Reduction Function */}
         <List sx={{ listStyle: 'circle', ml: 4 }}>
           <ListItem sx={{ display: 'list-item' }}>
@@ -137,10 +134,10 @@ export const LinearReductionChart: React.FC<{ failureRate: number; rewardReducti
   return (
     <>
       <Typography variant="body1" gutterBottom>
-        Linear Rewards Reduction
+        Linear Rewards Reduction Applied
       </Typography>
       <LineChart
-        margin={{ left: 60, right: 150}}
+        margin={{ left: 60}}
         grid={{ vertical: true, horizontal: true }}
         yAxis={[{
           label: 'Rewards reduction',

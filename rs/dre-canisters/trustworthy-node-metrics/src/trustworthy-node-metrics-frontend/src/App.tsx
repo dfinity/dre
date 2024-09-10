@@ -25,11 +25,19 @@ const darkTheme = createTheme({
 });
 
 const getDateRange = () => {
-  const dateStart = new Date();
-  const dateEnd = new Date();
-  dateStart.setUTCDate(dateStart.getUTCDate() - 30);
-  dateStart.setUTCHours(0, 0, 0, 0);
-  dateEnd.setUTCHours(23, 59, 59, 999);
+  const now = new Date();
+  const currentDay = now.getUTCDate();
+
+  const dateStart = new Date(
+    Date.UTC(
+      now.getUTCFullYear(),
+      currentDay <= 14 && currentDay > 1 ? now.getUTCMonth() - 1 : now.getUTCMonth(),
+      14, 0, 0, 0, 0 
+    )
+  );
+
+  const dateEnd = now; 
+
   return { dateStart, dateEnd };
 };
 
@@ -113,11 +121,9 @@ const App: React.FC = () => {
                 isLoading ? <LoadingIndicator /> : <NodePage nodeRewards={nodeRewards} periodFilter={periodFilter} />
               } />
               <Route path="/subnets/:subnet" element={
-                // TODO: Add subnet page
                 isLoading ? <LoadingIndicator /> : <NodeList nodeRewards={nodeRewards} periodFilter={periodFilter} />
               } />
               <Route path="/providers/:provider" element={
-                // TODO: Add subnet page
                 isLoading ? <LoadingIndicator /> : <NodeProviderPage nodeRewards={nodeRewards} periodFilter={periodFilter} />
               } />
             </Routes>

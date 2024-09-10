@@ -141,6 +141,7 @@ keyring = { version = "3.2.1", features = [
 ] }
 lazy_static = "1.5.0"
 log = "0.4.22"
+lru = "0.12.4"
 num-traits = "0.2"
 opentelemetry = { version = "0.22.0", features = ["metrics"] }
 pkcs11 = "0.5.0"
@@ -161,8 +162,8 @@ reqwest = { version = "0.12", default-features = false, features = [
 ] }
 retry = "2.0.0"
 rstest = { version = "0.22.0", default-features = false }
-rust_decimal = "1.36.0" # or the latest version
-rust_decimal_macros = "1.36.0" # optional, for using macros
+rust_decimal = "1.36.0"
+rust_decimal_macros = "1.36.0"
 secrecy = { version = "0.8.0" }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0.128"
