@@ -366,6 +366,9 @@ fn ensure_slot_exists(slot: u64, label: &str, pin: &str) -> u64 {
         .arg(pin)
         .output()
         .unwrap();
+    if !output.status.success() {
+        panic!("Failed to create token: {}", String::from_utf8_lossy(&output.stderr))
+    }
     let slot = String::from_utf8_lossy(&output.stdout);
     slot.trim().split(' ').last().unwrap().parse().unwrap()
 }
