@@ -36,7 +36,9 @@ pub fn latest_ts() -> Option<TimestampNanos> {
 pub fn get_metrics_range(from_ts: TimestampNanos, to_ts: Option<TimestampNanos>) -> Vec<(NodeMetricsStoredKey, NodeMetricsStored)> {
     NODE_METRICS_MAP.with(|p| {
         let to_ts = to_ts.unwrap_or(u64::MAX);
-        p.borrow().range((from_ts, Principal::anonymous())..=(to_ts, Principal::anonymous())).collect_vec()
+        p.borrow()
+            .range((from_ts, Principal::anonymous())..=(to_ts, Principal::anonymous()))
+            .collect_vec()
     })
 }
 
