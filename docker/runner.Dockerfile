@@ -10,7 +10,7 @@ RUN apt-get update && \
     apt-get upgrade -y && \
     apt-get install ca-certificates curl git-all gcc g++ clang pkg-config make sudo docker.io build-essential \
     libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev libffi-dev liblzma-dev libncurses5-dev libncursesw5-dev \
-    xz-utils tk-dev libffi-dev liblzma-dev python-openssl protobuf-compiler libdbus-1-dev -y
+    xz-utils tk-dev libffi-dev liblzma-dev python-openssl protobuf-compiler libdbus-1-dev softhsm2 libsofthsm2 -y
 
 RUN curl -L https://ziglang.org/builds/zig-linux-x86_64-0.14.0-dev.321+888708ec8.tar.xz | tar -xJ && \
     mv zig-linux-x86_64-0.14.0-dev.321+888708ec8 /zig
@@ -87,6 +87,8 @@ USER runner
 WORKDIR /home/runner
 SHELL [ "/bin/bash", "-c" ]
 
+RUN source /opt/rye/env
+
 COPY rust-toolchain.toml /usr/src/rust-toolchain.toml
 
 # Rust version should align with one in `rust-toolchain.toml` and `WORKSPACE.bazel`
@@ -97,6 +99,3 @@ ENV PATH="$PATH:/home/runner/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/
 ENV CARGO_TARGET_X86_64_APPLE_DARWIN_LINKER=rust-lld
 
 RUN cargo install --quiet cargo-zigbuild cargo-deny
-
-RUN curl -sSf https://rye.astral.sh/get | RYE_HOME=/home/runner/.rye RYE_VERSION="0.4.0" RYE_INSTALL_OPTION="--yes" bash
-RUN source /home/runner/.rye/env
