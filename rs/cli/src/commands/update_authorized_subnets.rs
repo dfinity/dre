@@ -87,7 +87,7 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
             }
         }
 
-        let summary = construct_summary(&subnets, &excluded_subnets)?;
+        let summary = construct_summary(&subnets, &excluded_subnets, ctx.forum_post_link())?;
 
         let authorized = subnets
             .keys()
@@ -136,13 +136,19 @@ impl UpdateAuthorizedSubnets {
     }
 }
 
-fn construct_summary(subnets: &Arc<BTreeMap<PrincipalId, Subnet>>, excluded_subnets: &BTreeMap<PrincipalId, String>) -> anyhow::Result<String> {
+fn construct_summary(
+    subnets: &Arc<BTreeMap<PrincipalId, Subnet>>,
+    excluded_subnets: &BTreeMap<PrincipalId, String>,
+    forum_post_link: Option<String>,
+) -> anyhow::Result<String> {
     Ok(format!(
         "Updating the list of authorized subnets to:
 
 | Subnet id | Public | Description |
 | --------- | ------ | ----------- |
-{}",
+{}
+{}
+",
         subnets
             .values()
             .map(|s| {
@@ -154,6 +160,10 @@ fn construct_summary(subnets: &Arc<BTreeMap<PrincipalId, Subnet>>, excluded_subn
                     excluded_desc.map(|s| s.to_string()).unwrap_or_default()
                 )
             })
-            .join("\n")
+            .join("\n"),
+        match forum_post_link {
+            Some(link) => format!("\nForum post link: {}", link),
+            None => "".to_string(),
+        }
     ))
 }
