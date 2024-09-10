@@ -41,6 +41,7 @@ ic-registry-local-store = { workspace = true }
 ic-registry-nns-data-provider = { workspace = true }
 ic-registry-subnet-type = { workspace = true }
 ic-types = { workspace = true }
+indexmap = { workspace = true }
 itertools = { workspace = true }
 lazy_static = { workspace = true }
 log = { workspace = true }

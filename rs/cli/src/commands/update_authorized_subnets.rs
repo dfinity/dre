@@ -1,4 +1,5 @@
-use std::{collections::BTreeMap, path::PathBuf, sync::Arc};
+use indexmap::IndexMap;
+use std::{path::PathBuf, sync::Arc};
 
 use clap::{error::ErrorKind, Args};
 use ic_management_types::Subnet;
@@ -54,7 +55,7 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
 
         let registry = ctx.registry().await;
         let subnets = registry.subnets().await?;
-        let mut excluded_subnets = BTreeMap::new();
+        let mut excluded_subnets = IndexMap::new();
 
         let human_bytes = human_bytes::human_bytes(self.state_size_limit as f64);
         let agent = ctx.create_ic_agent_canister_client(None)?;
@@ -91,7 +92,7 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
 
         let authorized = subnets
             .keys()
-            .filter(|subnet_id| !excluded_subnets.contains_key(subnet_id))
+            .filter(|subnet_id| !excluded_subnets.contains_key(*subnet_id))
             .cloned()
             .collect();
 
@@ -137,8 +138,8 @@ impl UpdateAuthorizedSubnets {
 }
 
 fn construct_summary(
-    subnets: &Arc<BTreeMap<PrincipalId, Subnet>>,
-    excluded_subnets: &BTreeMap<PrincipalId, String>,
+    subnets: &Arc<IndexMap<PrincipalId, Subnet>>,
+    excluded_subnets: &IndexMap<PrincipalId, String>,
     forum_post_link: Option<String>,
 ) -> anyhow::Result<String> {
     Ok(format!(

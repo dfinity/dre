@@ -1,5 +1,5 @@
 {
-  "checksum": "8f276b46cbd4dab6df35c316a7bc7ed6716d52e987e3b60aa1a127416a00915a",
+  "checksum": "ac1c7f35e7cd235485ebc4e9085ef127ba2881abba9deee4940ac3a40ac97b9a",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -5739,13 +5739,13 @@
       },
       "license": "MIT OR Apache-2.0"
     },
-    "clap_complete 4.5.24": {
+    "clap_complete 4.5.26": {
       "name": "clap_complete",
-      "version": "4.5.24",
+      "version": "4.5.26",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/clap_complete/4.5.24/download",
-          "sha256": "6d7db6eca8c205649e8d3ccd05aa5042b1800a784e56bc7c43524fde8abbfa9b"
+          "url": "https://static.crates.io/crates/clap_complete/4.5.26/download",
+          "sha256": "205d5ef6d485fa47606b98b0ddc4ead26eb850aaa86abfb562a94fb3280ecba0"
         }
       },
       "targets": [
@@ -5780,7 +5780,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "4.5.24"
+        "version": "4.5.26"
       },
       "license": "MIT OR Apache-2.0"
     },
@@ -8839,6 +8839,10 @@
               "target": "ic_base_types"
             },
             {
+              "id": "indexmap 2.5.0",
+              "target": "indexmap"
+            },
+            {
               "id": "itertools 0.13.0",
               "target": "itertools"
             },
@@ -10082,7 +10086,7 @@
               "target": "clap_num"
             },
             {
-              "id": "clap_complete 4.5.24",
+              "id": "clap_complete 4.5.26",
               "target": "clap_complete"
             },
             {
@@ -10212,6 +10216,10 @@
             {
               "id": "ic-types 0.9.0",
               "target": "ic_types"
+            },
+            {
+              "id": "indexmap 2.5.0",
+              "target": "indexmap"
             },
             {
               "id": "itertools 0.13.0",
@@ -19829,6 +19837,10 @@
               "target": "ic_types"
             },
             {
+              "id": "indexmap 2.5.0",
+              "target": "indexmap"
+            },
+            {
               "id": "itertools 0.13.0",
               "target": "itertools"
             },
@@ -20070,6 +20082,10 @@
             {
               "id": "ic-types 0.9.0",
               "target": "ic_types"
+            },
+            {
+              "id": "indexmap 2.5.0",
+              "target": "indexmap"
             },
             {
               "id": "registry-canister 0.9.0",
@@ -29688,6 +29704,10 @@
             {
               "id": "ic-types 0.9.0",
               "target": "ic_types"
+            },
+            {
+              "id": "indexmap 2.5.0",
+              "target": "indexmap"
             },
             {
               "id": "rand 0.8.5",

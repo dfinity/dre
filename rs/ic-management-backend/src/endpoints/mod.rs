@@ -12,9 +12,9 @@ use decentralization::network::AvailableNodesQuerier;
 use ic_management_types::Network;
 use ic_registry_nns_data_provider::registry::RegistryCanister;
 use ic_types::PrincipalId;
+use indexmap::IndexMap;
 use log::{debug, info};
 use serde::{Deserialize, Serialize};
-use std::collections::BTreeMap;
 use std::ops::Deref;
 use std::str::FromStr;
 use std::sync::Arc;
@@ -224,10 +224,10 @@ async fn nodes_healths(registry: web::Data<Arc<RwLock<registry::RegistryState>>>
             .map(|n| {
                 (
                     n.principal,
-                    healths.remove(&n.principal).unwrap_or(ic_management_types::HealthStatus::Unknown),
+                    healths.shift_remove(&n.principal).unwrap_or(ic_management_types::HealthStatus::Unknown),
                 )
             })
-            .collect::<BTreeMap<_, _>>()
+            .collect::<IndexMap<_, _>>()
     }))
 }
 

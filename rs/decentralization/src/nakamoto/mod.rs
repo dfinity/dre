@@ -1,10 +1,11 @@
 use crate::network::Node;
 use ahash::{AHashMap, AHasher};
+use indexmap::IndexMap;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use std::cell::RefCell;
 use std::cmp::Ordering;
-use std::collections::{BTreeMap, VecDeque};
+use std::collections::VecDeque;
 use std::fmt::{self, Debug, Display, Formatter};
 use std::hash::Hasher;
 use std::iter::{FromIterator, IntoIterator};
@@ -13,7 +14,7 @@ use ic_management_types::NodeFeature;
 
 #[derive(Eq, PartialEq, Clone, Serialize, Deserialize, Debug)]
 pub struct NodeFeatures {
-    pub feature_map: BTreeMap<NodeFeature, String>,
+    pub feature_map: IndexMap<NodeFeature, String>,
 }
 
 impl fmt::Display for NodeFeatures {
@@ -32,7 +33,7 @@ impl NodeFeatures {
 
     #[cfg(test)]
     fn new_test_feature_set(value: &str) -> Self {
-        let mut result = BTreeMap::new();
+        let mut result = IndexMap::new();
         for feature in NodeFeature::variants() {
             result.insert(feature, value.to_string());
         }
@@ -50,7 +51,7 @@ impl NodeFeatures {
 impl FromIterator<(NodeFeature, &'static str)> for NodeFeatures {
     fn from_iter<I: IntoIterator<Item = (NodeFeature, &'static str)>>(iter: I) -> Self {
         Self {
-            feature_map: BTreeMap::from_iter(iter.into_iter().map(|x| (x.0, String::from(x.1)))),
+            feature_map: IndexMap::from_iter(iter.into_iter().map(|x| (x.0, String::from(x.1)))),
         }
     }
 }
@@ -58,7 +59,7 @@ impl FromIterator<(NodeFeature, &'static str)> for NodeFeatures {
 impl FromIterator<(NodeFeature, std::string::String)> for NodeFeatures {
     fn from_iter<I: IntoIterator<Item = (NodeFeature, std::string::String)>>(iter: I) -> Self {
         Self {
-            feature_map: BTreeMap::from_iter(iter),
+            feature_map: IndexMap::from_iter(iter),
         }
     }
 }
@@ -77,9 +78,9 @@ thread_local! {
 /// For instance: [NodeFeature::NodeProvider], [NodeFeature::DataCenter], etc...
 /// For a complete reference check [NodeFeature]
 pub struct NakamotoScore {
-    coefficients: BTreeMap<NodeFeature, f64>,
-    value_counts: BTreeMap<NodeFeature, Vec<(String, usize)>>,
-    controlled_nodes: BTreeMap<NodeFeature, usize>,
+    coefficients: IndexMap<NodeFeature, f64>,
+    value_counts: IndexMap<NodeFeature, Vec<(String, usize)>>,
+    controlled_nodes: IndexMap<NodeFeature, usize>,
     avg_linear: f64,
 
     /// This field needs to be optional in case we get a -inf result because of
@@ -101,13 +102,13 @@ pub struct NakamotoScore {
 impl NakamotoScore {
     /// Build a new NakamotoScore object from a slice of [NodeFeatures].
     pub fn new_from_slice_node_features(slice_node_features: &[NodeFeatures]) -> Self {
-        let mut features_to_nodes_map = BTreeMap::new();
+        let mut features_to_nodes_map = IndexMap::new();
 
         for feature in NodeFeature::variants() {
             features_to_nodes_map.insert(feature, Vec::new());
         }
 
-        // Convert a Vec<BTreeMap<NodeFeature, Value>> into a Vec<BTreeMap<NodeFeature,
+        // Convert a Vec<IndexMap<NodeFeature, Value>> into a Vec<IndexMap<NodeFeature,
         // Vec<Values>>
         for node_features in slice_node_features.iter() {
             for feature in NodeFeature::variants() {
@@ -158,9 +159,9 @@ impl NakamotoScore {
         let scores = nakamoto_calc
             .clone()
             .map(|(f, n, _)| (f, n.0 as f64))
-            .collect::<BTreeMap<NodeFeature, f64>>();
+            .collect::<IndexMap<NodeFeature, f64>>();
 
-        let controlled_nodes = nakamoto_calc.clone().map(|(f, n, _)| (f, n.1)).collect::<BTreeMap<NodeFeature, usize>>();
+        let controlled_nodes = nakamoto_calc.clone().map(|(f, n, _)| (f, n.1)).collect::<IndexMap<NodeFeature, usize>>();
 
         let value_counts = nakamoto_calc.map(|(f, _, value_counts)| (f, value_counts)).collect();
 
@@ -290,7 +291,7 @@ impl NakamotoScore {
     }
 
     /// Get a Map with all the features and the corresponding Nakamoto score
-    pub fn scores_individual(&self) -> BTreeMap<NodeFeature, f64> {
+    pub fn scores_individual(&self) -> IndexMap<NodeFeature, f64> {
         self.coefficients.clone()
     }
 
@@ -568,6 +569,7 @@ mod tests {
     use ahash::HashSet;
     use ic_base_types::PrincipalId;
     use ic_management_types::HealthStatus;
+    use indexmap::IndexMap;
     use itertools::Itertools;
     use regex::Regex;
 
@@ -604,7 +606,7 @@ mod tests {
         let score = NakamotoScore::new_from_slice_node_features(&features);
 
         let score_expected = NakamotoScore {
-            coefficients: BTreeMap::from([
+            coefficients: IndexMap::from([
                 (NodeFeature::City, 1.),
                 (NodeFeature::Country, 1.),
                 (NodeFeature::Continent, 1.),
@@ -612,8 +614,8 @@ mod tests {
                 (NodeFeature::NodeProvider, 1.),
                 (NodeFeature::DataCenter, 1.),
             ]),
-            value_counts: BTreeMap::new(),
-            controlled_nodes: BTreeMap::from([
+            value_counts: IndexMap::new(),
+            controlled_nodes: IndexMap::from([
                 (NodeFeature::City, 1),
                 (NodeFeature::Country, 1),
                 (NodeFeature::Continent, 1),
@@ -771,7 +773,7 @@ mod tests {
             .iter()
             .chain(subnet_initial.nodes.iter())
             .map(|n| (n.id, HealthStatus::Healthy))
-            .collect::<BTreeMap<_, _>>();
+            .collect::<IndexMap<_, _>>();
 
         println!(
             "initial {} Countries {:?}",
@@ -828,7 +830,7 @@ mod tests {
             )
         );
         let nodes_available = new_test_nodes_with_overrides("spare", 7, 2, 0, (&NodeFeature::NodeProvider, &["NP6", "NP7"]));
-        let health_of_nodes = nodes_available.iter().map(|n| (n.id, HealthStatus::Healthy)).collect::<BTreeMap<_, _>>();
+        let health_of_nodes = nodes_available.iter().map(|n| (n.id, HealthStatus::Healthy)).collect::<IndexMap<_, _>>();
 
         println!(
             "initial {} NPs {:?}",
@@ -886,7 +888,7 @@ mod tests {
             .iter()
             .chain(subnet_initial.nodes.iter())
             .map(|n| (n.id, HealthStatus::Healthy))
-            .collect::<BTreeMap<_, _>>();
+            .collect::<IndexMap<_, _>>();
 
         println!(
             "initial {} NPs {:?}",
@@ -1099,8 +1101,8 @@ mod tests {
                     (n, HealthStatus::Healthy)
                 }
             })
-            .collect::<BTreeMap<_, _>>();
-        let mut important = BTreeMap::new();
+            .collect::<IndexMap<_, _>>();
+        let mut important = IndexMap::new();
 
         important.insert(subnet.principal, subnet);
 
@@ -1124,7 +1126,7 @@ mod tests {
             .iter()
             .chain(subnet_initial.nodes.iter())
             .map(|n| (n.id, HealthStatus::Healthy))
-            .collect::<BTreeMap<_, _>>();
+            .collect::<IndexMap<_, _>>();
 
         let change_initial = SubnetChangeRequest::new(subnet_initial.clone(), nodes_available, Vec::new(), Vec::new(), Vec::new(), None);
 
