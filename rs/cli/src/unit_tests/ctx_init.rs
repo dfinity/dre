@@ -351,10 +351,10 @@ async fn init_test_neuron_and_auth() {
     )
 }
 
-fn ensure_slot_exists(slot: u64, label: &str, pin: &str) {
+fn ensure_slot_exists(slot: u64, label: &str, pin: &str) -> u64 {
     // If run multiple times for an existing slot it will fail but we don't care
     // since its a test
-    Command::new("softhsm2-util")
+    let output = Command::new("softhsm2-util")
         .arg("--init-token")
         .arg("--slot")
         .arg(slot.to_string())
@@ -366,6 +366,8 @@ fn ensure_slot_exists(slot: u64, label: &str, pin: &str) {
         .arg(pin)
         .output()
         .unwrap();
+    let slot = String::from_utf8_lossy(&output.stdout);
+    slot.trim().split(" ").last().unwrap().parse().unwrap()
 }
 
 fn delete_test_slot(slot: u64, label: &str) {
@@ -469,7 +471,7 @@ impl<'a> HsmTestScenario<'a> {
     }
 }
 
-// Needed because SoftHSM assigns a random slot for pkcs11
+// For some reason left.eq(&right) doesn't work.
 fn compare_neurons(left: &Neuron, right: &Neuron) -> bool {
     if !left.include_proposer.eq(&right.include_proposer) || !left.neuron_id.eq(&right.neuron_id) {
         return false;
@@ -479,17 +481,19 @@ fn compare_neurons(left: &Neuron, right: &Neuron) -> bool {
         (
             Auth::Hsm {
                 pin: left_pin,
-                slot: _,
+                slot: left_slot,
                 key_id: left_key_id,
                 so_path: left_so_path,
             },
             Auth::Hsm {
                 pin: right_pin,
-                slot: _,
+                slot: right_slot,
                 key_id: right_key_id,
                 so_path: right_so_path,
             },
-        ) if PartialEq::eq(&left_pin, &right_pin) && left_key_id.eq(&right_key_id) && left_so_path.eq(&right_so_path) => true,
+        ) if PartialEq::eq(&left_pin, &right_pin) && left_key_id.eq(&right_key_id) && left_so_path.eq(&right_so_path) && left_slot == right_slot => {
+            true
+        }
         (Auth::Keyfile { path: left_path }, Auth::Keyfile { path: right_path }) if left_path.eq(&right_path) => true,
         (Auth::Anonymous, Auth::Anonymous) => true,
         _ => false,
@@ -498,11 +502,10 @@ fn compare_neurons(left: &Neuron, right: &Neuron) -> bool {
 
 #[tokio::test]
 async fn hsm_neuron_tests() {
-    let test_slot = 0;
     let test_label = "Test HSM";
     let pin = "1234";
     let key_id = 1;
-    ensure_slot_exists(test_slot, test_label, pin);
+    let test_slot = ensure_slot_exists(0, test_label, pin);
     generate_password_for_test_hsm(pin, key_id, test_label);
 
     let scenarios = &[

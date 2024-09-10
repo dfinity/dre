@@ -22,7 +22,7 @@ use std::sync::Mutex;
 
 use crate::commands::{AuthOpts, AuthRequirement, HsmOpts, HsmParams};
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Neuron {
     pub auth: Auth,
     pub neuron_id: u64,
@@ -130,7 +130,7 @@ impl Neuron {
     }
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Auth {
     Hsm { pin: String, slot: u64, key_id: u8, so_path: PathBuf },
     Keyfile { path: PathBuf },
