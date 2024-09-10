@@ -82,6 +82,11 @@ pub(crate) struct HsmOpts {
         env = "HSM_PIN"
     )]
     pub(crate) hsm_pin: Option<String>,
+
+    /// SO module for the HSM, usually should be left empty, but can be overriden for testing
+    #[clap(required = false, conflicts_with = "private_key_pem", long, global = true, env = "HSM_SO_MODULE")]
+    pub(crate) hsm_so_module: Option<PathBuf>,
+
     #[clap(flatten)]
     pub(crate) hsm_params: HsmParams,
 }
@@ -103,7 +108,7 @@ pub struct AuthOpts {
         long,
         required = false,
         global = true,
-        conflicts_with_all = ["hsm_pin", "hsm_slot", "hsm_key_id"],
+        conflicts_with_all = ["hsm_pin", "hsm_slot", "hsm_key_id", "hsm_so_module"],
         env = "PRIVATE_KEY_PEM")]
     pub(crate) private_key_pem: Option<InputPath>,
     #[clap(flatten)]
@@ -118,6 +123,7 @@ impl TryFrom<PathBuf> for AuthOpts {
             private_key_pem: Some(InputPath::new(ClioPath::new(value)?)?),
             hsm_opts: HsmOpts {
                 hsm_pin: None,
+                hsm_so_module: None,
                 hsm_params: HsmParams {
                     hsm_slot: None,
                     hsm_key_id: None,

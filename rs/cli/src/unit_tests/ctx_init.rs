@@ -1,4 +1,4 @@
-use std::{path::PathBuf, str::FromStr};
+use std::{path::PathBuf, process::Command, str::FromStr};
 
 use crate::{
     auth::{Auth, Neuron, STAGING_KEY_PATH_FROM_HOME, STAGING_NEURON_ID},
@@ -35,6 +35,7 @@ async fn get_context(network: &Network, version: IcAdminVersion) -> anyhow::Resu
                     hsm_slot: None,
                     hsm_key_id: None,
                 },
+                hsm_so_module: None,
             },
         },
         None,
@@ -187,9 +188,6 @@ struct NeuronAuthTestScenarion<'a> {
     name: &'a str,
     neuron_id: Option<u64>,
     private_key_pem: Option<String>,
-    hsm_pin: Option<String>,
-    hsm_key_id: Option<u8>,
-    hsm_slot: Option<u64>,
     requirement: AuthRequirement,
     network: String,
     want: anyhow::Result<Neuron>,
@@ -203,9 +201,6 @@ impl<'a> NeuronAuthTestScenarion<'a> {
             name,
             neuron_id: None,
             private_key_pem: None,
-            hsm_pin: None,
-            hsm_key_id: None,
-            hsm_slot: None,
             requirement: AuthRequirement::Anonymous,
             network: "".to_string(),
             want: Ok(Neuron::anonymous_neuron()),
@@ -222,27 +217,6 @@ impl<'a> NeuronAuthTestScenarion<'a> {
     fn with_private_key(self, private_key_path: String) -> Self {
         Self {
             private_key_pem: Some(private_key_path),
-            ..self
-        }
-    }
-
-    fn with_pin(self, hsm_pin: &'a str) -> Self {
-        Self {
-            hsm_pin: Some(hsm_pin.to_string()),
-            ..self
-        }
-    }
-
-    fn with_key_id(self, hsm_key_id: u8) -> Self {
-        Self {
-            hsm_key_id: Some(hsm_key_id),
-            ..self
-        }
-    }
-
-    fn with_slot(self, hsm_slot: u64) -> Self {
-        Self {
-            hsm_slot: Some(hsm_slot),
             ..self
         }
     }
@@ -270,11 +244,12 @@ impl<'a> NeuronAuthTestScenarion<'a> {
                     .as_ref()
                     .map(|path| InputPath::new(ClioPath::new(path).unwrap()).unwrap()),
                 hsm_opts: HsmOpts {
-                    hsm_pin: self.hsm_pin.clone(),
+                    hsm_pin: None,
                     hsm_params: crate::commands::HsmParams {
-                        hsm_slot: self.hsm_slot,
-                        hsm_key_id: self.hsm_key_id,
+                        hsm_slot: None,
+                        hsm_key_id: None,
                     },
+                    hsm_so_module: None,
                 },
             },
             self.neuron_id,
@@ -373,5 +348,226 @@ async fn init_test_neuron_and_auth() {
                 false => Some(format!("Test `{}` failed:\nWanted:\n\t{}\nGot:\n\t{}\n", name, wanted, got)),
             })
             .join("\n\n")
+    )
+}
+
+fn ensure_slot_exists(slot: u64, label: &str, pin: &str) {
+    // If run multiple times for an existing slot it will fail but we don't care
+    // since its a test
+    Command::new("softhsm2-util")
+        .arg("--init-token")
+        .arg("--slot")
+        .arg(slot.to_string())
+        .arg("--label")
+        .arg(label)
+        .arg("--so-pin")
+        .arg(pin)
+        .arg("--pin")
+        .arg(pin)
+        .output()
+        .unwrap();
+}
+
+fn delete_test_slot(slot: u64, label: &str) {
+    // Cleanup. Again we don't care if it fails or not
+    Command::new("softhsm2-util")
+        .arg("--delete-token")
+        .arg(slot.to_string())
+        .arg("--token")
+        .arg(label)
+        .output()
+        .unwrap();
+}
+
+fn generate_password_for_test_hsm(pin: &str, key_id: u8, label: &str) {
+    Command::new("pkcs11-tool")
+        .arg("--module")
+        .arg(get_softhsm2_module())
+        .arg("-l")
+        .arg("-p")
+        .arg(pin)
+        .arg("-k")
+        .arg("--id")
+        .arg(key_id.to_string())
+        .arg("--label")
+        .arg(label)
+        .arg("--key-type")
+        .arg("EC:prime256v1")
+        .output()
+        .unwrap();
+}
+
+fn get_softhsm2_module() -> PathBuf {
+    PathBuf::from_str(&std::env::var("SOFTHSM2_MODULE").unwrap_or("/usr/lib/softhsm/libsofthsm2.so".to_string())).unwrap()
+}
+
+struct HsmTestScenario<'a> {
+    name: &'a str,
+    pin: &'a str,
+    slot: Option<u64>,
+    key_id: Option<u8>,
+    so_module: PathBuf,
+    network: Network,
+    requirement: AuthRequirement,
+    neuron_id: Option<u64>,
+}
+
+impl<'a> HsmTestScenario<'a> {
+    fn new(name: &'a str, pin: &'a str) -> Self {
+        Self {
+            requirement: AuthRequirement::Anonymous,
+            name,
+            pin,
+            slot: None,
+            key_id: None,
+            so_module: get_softhsm2_module(),
+            network: Network::mainnet_unchecked().unwrap(),
+            neuron_id: None,
+        }
+    }
+
+    fn with_slot(self, slot: u64) -> Self {
+        Self { slot: Some(slot), ..self }
+    }
+
+    fn with_key_id(self, key_id: u8) -> Self {
+        Self {
+            key_id: Some(key_id),
+            ..self
+        }
+    }
+
+    fn with_neuron_id(self, neuron_id: u64) -> Self {
+        Self {
+            neuron_id: Some(neuron_id),
+            ..self
+        }
+    }
+
+    fn for_network(self, network: Network) -> Self {
+        Self { network, ..self }
+    }
+
+    fn when_required(self, requirement: AuthRequirement) -> Self {
+        Self { requirement, ..self }
+    }
+
+    async fn build_neuron(&self) -> anyhow::Result<Neuron> {
+        let auth_opts = AuthOpts {
+            private_key_pem: None,
+            hsm_opts: HsmOpts {
+                hsm_pin: Some(self.pin.to_string()),
+                hsm_so_module: Some(self.so_module.clone()),
+                hsm_params: crate::commands::HsmParams {
+                    hsm_slot: self.slot.clone(),
+                    hsm_key_id: self.key_id.clone(),
+                },
+            },
+        };
+
+        Neuron::from_opts_and_req(auth_opts, self.requirement.clone(), &self.network, self.neuron_id).await
+    }
+}
+
+// Needed because SoftHSM assigns a random slot for pkcs11
+fn compare_neurons(left: &Neuron, right: &Neuron) -> bool {
+    if !left.include_proposer.eq(&right.include_proposer) || !left.neuron_id.eq(&right.neuron_id) {
+        return false;
+    }
+
+    match (left.auth.clone(), right.auth.clone()) {
+        (
+            Auth::Hsm {
+                pin: left_pin,
+                slot: _,
+                key_id: left_key_id,
+                so_path: left_so_path,
+            },
+            Auth::Hsm {
+                pin: right_pin,
+                slot: _,
+                key_id: right_key_id,
+                so_path: right_so_path,
+            },
+        ) if PartialEq::eq(&left_pin, &right_pin) && left_key_id.eq(&right_key_id) && left_so_path.eq(&right_so_path) => true,
+        (Auth::Keyfile { path: left_path }, Auth::Keyfile { path: right_path }) if left_path.eq(&right_path) => true,
+        (Auth::Anonymous, Auth::Anonymous) => true,
+        _ => false,
+    }
+}
+
+#[tokio::test]
+async fn hsm_neuron_tests() {
+    let test_slot = 0;
+    let test_label = "Test HSM";
+    let pin = "1234";
+    let key_id = 1;
+    ensure_slot_exists(test_slot, test_label, pin);
+    generate_password_for_test_hsm(pin, key_id, test_label);
+
+    let scenarios = &[
+        (
+            HsmTestScenario::new("Detect slot and key id", pin).when_required(AuthRequirement::Signer),
+            Ok(Neuron {
+                auth: Auth::Hsm {
+                    pin: pin.to_string(),
+                    slot: test_slot,
+                    key_id,
+                    so_path: get_softhsm2_module(),
+                },
+                include_proposer: false,
+                neuron_id: 0,
+            }),
+        ),
+        (
+            HsmTestScenario::new("Can't detect neuron_id", pin).when_required(AuthRequirement::Neuron),
+            Err(anyhow::anyhow!("Error because private key doesn't control any neurons")),
+        ),
+        (
+            HsmTestScenario::new("Detect only slot", pin)
+                .when_required(AuthRequirement::Signer)
+                .with_key_id(key_id),
+            Ok(Neuron {
+                auth: Auth::Hsm {
+                    pin: pin.to_string(),
+                    slot: test_slot,
+                    key_id,
+                    so_path: get_softhsm2_module(),
+                },
+                neuron_id: 0,
+                include_proposer: false,
+            }),
+        ),
+    ];
+
+    let mut failed = vec![];
+    for (scenario, want) in scenarios {
+        let maybe_neuron = scenario.build_neuron().await;
+        if (want.is_err() && maybe_neuron.is_ok()) || (want.is_ok() && maybe_neuron.is_err()) {
+            failed.push((scenario.name, maybe_neuron, want));
+            continue;
+        }
+
+        if want.is_err() && maybe_neuron.is_err() {
+            continue;
+        }
+
+        let neuron = maybe_neuron.unwrap();
+        let wanted = want.as_ref().unwrap();
+
+        if !compare_neurons(&neuron, &wanted) {
+            failed.push((scenario.name, Ok(neuron), want))
+        }
+    }
+
+    delete_test_slot(test_slot, test_label);
+
+    assert!(
+        failed.is_empty(),
+        "Failed scenarios:\n{}",
+        failed
+            .iter()
+            .map(|(name, neuron, want)| format!("Scenario `{}`\nExpected:\n\t{:?}\nGot:\n\t{:?}", name, want, neuron))
+            .join("\n")
     )
 }

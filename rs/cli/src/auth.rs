@@ -2,7 +2,7 @@ use std::path::PathBuf;
 use std::str::FromStr;
 
 use anyhow::anyhow;
-use clio::{ClioPath, InputPath};
+use clio::InputPath;
 use cryptoki::object::AttributeInfo;
 use cryptoki::session::Session;
 use cryptoki::{
@@ -60,16 +60,7 @@ impl Neuron {
                 None => (
                     Some(STAGING_NEURON_ID),
                     match Auth::pem(staging_known_path.clone()).await {
-                        Ok(_) => AuthOpts {
-                            private_key_pem: Some(InputPath::new(ClioPath::new(staging_known_path).unwrap()).unwrap()),
-                            hsm_opts: HsmOpts {
-                                hsm_pin: None,
-                                hsm_params: HsmParams {
-                                    hsm_slot: None,
-                                    hsm_key_id: None,
-                                },
-                            },
-                        },
+                        Ok(_) => AuthOpts::try_from(staging_known_path)?,
                         Err(e) => match requirement {
                             // If there is an error but auth is not needed
                             // just send what we have since it won't be
@@ -118,20 +109,6 @@ impl Neuron {
         }
     }
 
-    #[allow(dead_code)]
-    pub async fn new(auth: Auth, neuron_id: Option<u64>, network: &Network, include_proposer: bool) -> anyhow::Result<Self> {
-        let neuron_id = match neuron_id {
-            Some(n) => n,
-            None => auth.auto_detect_neuron_id(network.get_nns_urls().to_vec()).await?,
-        };
-        debug!("Identifying as neuron ID {}", neuron_id);
-        Ok(Self {
-            auth,
-            neuron_id,
-            include_proposer,
-        })
-    }
-
     pub fn as_arg_vec(&self) -> Vec<String> {
         self.auth.as_arg_vec()
     }
@@ -155,7 +132,7 @@ impl Neuron {
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Auth {
-    Hsm { pin: String, slot: u64, key_id: u8 },
+    Hsm { pin: String, slot: u64, key_id: u8, so_path: PathBuf },
     Keyfile { path: PathBuf },
     Anonymous,
 }
@@ -163,7 +140,12 @@ pub enum Auth {
 impl Auth {
     pub fn as_arg_vec(&self) -> Vec<String> {
         match self {
-            Auth::Hsm { pin, slot, key_id } => vec![
+            Auth::Hsm {
+                pin,
+                slot,
+                key_id,
+                so_path: _,
+            } => vec![
                 "--use-hsm".to_string(),
                 "--pin".to_string(),
                 pin.clone(),
@@ -193,7 +175,9 @@ impl Auth {
         // FIXME: why do we even take multiple URLs if only the first one is ever used?
         let url = nns_urls.first().ok_or(anyhow::anyhow!("No NNS URLs provided"))?.to_owned();
         match self {
-            Auth::Hsm { pin, slot, key_id } => IcAgentCanisterClient::from_hsm(pin.clone(), *slot, hsm_key_id_to_string(*key_id), url, lock),
+            Auth::Hsm { pin, slot, key_id, so_path } => {
+                IcAgentCanisterClient::from_hsm(pin.clone(), *slot, hsm_key_id_to_string(*key_id), url, lock, so_path.to_path_buf())
+            }
             Auth::Keyfile { path } => IcAgentCanisterClient::from_key_file(path.clone(), url),
             Auth::Anonymous => IcAgentCanisterClient::from_anonymous(url),
         }
@@ -221,8 +205,23 @@ impl Auth {
         }
     }
 
+    #[cfg(not(test))]
+    fn slot_description() -> &'static str {
+        "Nitrokey Nitrokey HSM"
+    }
+
+    #[cfg(test)]
+    fn slot_description() -> &'static str {
+        "SoftHSM"
+    }
+
     /// If it is called it is expected to retrieve an Auth of type Hsm or fail
-    fn detect_hsm_auth(maybe_pin: Option<String>, maybe_slot: Option<u64>, maybe_key_id: Option<u8>) -> anyhow::Result<Self> {
+    fn detect_hsm_auth(
+        maybe_pin: Option<String>,
+        maybe_slot: Option<u64>,
+        maybe_key_id: Option<u8>,
+        hsm_so_module: Option<PathBuf>,
+    ) -> anyhow::Result<Self> {
         if maybe_slot.is_none() && maybe_key_id.is_none() {
             debug!("Scanning hardware security module devices");
         }
@@ -232,13 +231,17 @@ impl Auth {
         if let Some(key_id) = &maybe_key_id {
             debug!("Limiting key scan to keys with ID {}", key_id);
         }
+        let so_path = match hsm_so_module {
+            Some(p) => p,
+            None => Self::pkcs11_lib_path()?,
+        };
 
-        let ctx = Pkcs11::new(Self::pkcs11_lib_path()?)?;
+        let ctx = Pkcs11::new(&so_path)?;
         ctx.initialize(CInitializeArgs::OsThreads)?;
         for slot in ctx.get_slots_with_token()? {
             let info = ctx.get_slot_info(slot)?;
             let token_info = ctx.get_token_info(slot)?;
-            if info.slot_description().starts_with("Nitrokey Nitrokey HSM") && maybe_slot.is_none() || (maybe_slot.unwrap() == slot.id()) {
+            if info.slot_description().starts_with(Self::slot_description()) && maybe_slot.is_none() || (maybe_slot.unwrap() == slot.id()) {
                 let session = ctx.open_ro_session(slot)?;
                 let key_id = match Auth::find_key_id_in_slot_session(&session, maybe_key_id)? {
                     Some((key_id, label)) => {
@@ -274,6 +277,7 @@ impl Auth {
                     pin,
                     slot: slot.id(),
                     key_id,
+                    so_path,
                 };
                 info!("Using key ID {} of hardware security module in slot {}", key_id, slot);
                 return Ok(detected);
@@ -386,8 +390,13 @@ impl Auth {
     /// anonymous authentication if no HSM is detected.  Prompts the user
     /// for a PIN if no PIN is specified and the HSM needs to be unlocked.
     /// Caller can optionally limit search to a specific slot or key ID.
-    pub async fn auto(hsm_pin: Option<String>, hsm_slot: Option<u64>, hsm_key_id: Option<u8>) -> anyhow::Result<Self> {
-        tokio::task::spawn_blocking(move || Self::detect_hsm_auth(hsm_pin, hsm_slot, hsm_key_id)).await?
+    pub async fn auto(
+        hsm_pin: Option<String>,
+        hsm_slot: Option<u64>,
+        hsm_key_id: Option<u8>,
+        hsm_so_module: Option<PathBuf>,
+    ) -> anyhow::Result<Self> {
+        tokio::task::spawn_blocking(move || Self::detect_hsm_auth(hsm_pin, hsm_slot, hsm_key_id, hsm_so_module)).await?
     }
 
     pub async fn pem(private_key_pem: PathBuf) -> anyhow::Result<Self> {
@@ -420,9 +429,10 @@ impl Auth {
                 hsm_opts:
                     HsmOpts {
                         hsm_pin: pin,
+                        hsm_so_module,
                         hsm_params: HsmParams { hsm_slot, hsm_key_id },
                     },
-            } => Auth::auto(pin.clone(), *hsm_slot, *hsm_key_id).await,
+            } => Auth::auto(pin.clone(), *hsm_slot, *hsm_key_id, hsm_so_module.clone()).await,
         }
     }
 }

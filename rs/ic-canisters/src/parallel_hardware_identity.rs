@@ -17,7 +17,7 @@ use simple_asn1::{
     ASN1Block::{BitString, ObjectIdentifier, OctetString, Sequence},
     ASN1DecodeErr, ASN1EncodeErr,
 };
-use std::{path::Path, ptr, sync::Mutex};
+use std::{path::PathBuf, ptr, sync::Mutex};
 use thiserror::Error;
 
 type KeyIdVec = Vec<u8>;
@@ -101,23 +101,22 @@ pub struct ParallelHardwareIdentity {
 
 impl ParallelHardwareIdentity {
     /// Create an identity using a specific key on an HSM.
-    /// The filename will be something like /usr/local/lib/opensc-pkcs11.s
+    /// The filename will be something like /usr/local/lib/opensc-pkcs11.so
     /// The key_id must refer to a ECDSA key with parameters prime256v1 (secp256r1)
     /// The key must already have been created.  You can create one with pkcs11-tool:
     /// $ pkcs11-tool -k --slot $SLOT -d $KEY_ID --key-type EC:prime256v1 --pin $PIN
-    pub fn new<P, PinFn>(
-        pkcs11_lib_path: P,
-        slot_index: usize,
+    pub fn new<PinFn>(
+        pkcs11_lib_path: PathBuf,
+        slot: usize,
         key_id: &str,
         pin_fn: PinFn,
         lock: Option<Mutex<()>>,
     ) -> Result<Self, HardwareIdentityError>
     where
-        P: AsRef<Path>,
         PinFn: FnOnce() -> Result<String, String>,
     {
         let ctx = Ctx::new_and_initialize(pkcs11_lib_path)?;
-        let slot_id = get_slot_id(&ctx, slot_index)?;
+        let slot_id = get_slot_id(&ctx, slot)?;
         let session_handle = open_session(&ctx, slot_id)?;
         let pin = pin_fn().map_err(HardwareIdentityError::UserPinRequired)?;
         login_if_required(&ctx, session_handle, pin.clone(), slot_id)?;
@@ -171,10 +170,11 @@ impl Identity for ParallelHardwareIdentity {
     }
 }
 
-fn get_slot_id(ctx: &Ctx, slot_index: usize) -> Result<CK_SLOT_ID, HardwareIdentityError> {
+fn get_slot_id(ctx: &Ctx, slot: usize) -> Result<CK_SLOT_ID, HardwareIdentityError> {
     ctx.get_slot_list(true)?
-        .get(slot_index)
-        .ok_or(HardwareIdentityError::NoSuchSlotIndex(slot_index))
+        .iter()
+        .find(|s| **s == slot as u64)
+        .ok_or(HardwareIdentityError::NoSuchSlotIndex(slot))
         .copied()
 }
 
