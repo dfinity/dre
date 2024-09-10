@@ -1,6 +1,7 @@
-use super::{impl_executable_command_for_enums, ExecutableCommand, IcAdminRequirement};
+use super::{impl_executable_command_for_enums, ExecutableCommand};
 use crate::commands::version::revise::guest_os::GuestOs;
 use crate::commands::version::revise::host_os::HostOs;
+use crate::commands::AuthRequirement;
 use clap::Args;
 use ic_management_types::Artifact;
 
@@ -25,8 +26,8 @@ impl From<Subcommands> for Artifact {
 }
 
 impl ExecutableCommand for ReviseElectedVersions {
-    fn require_ic_admin(&self) -> IcAdminRequirement {
-        self.subcommand.require_ic_admin()
+    fn require_auth(&self) -> AuthRequirement {
+        self.subcommand.require_auth()
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {

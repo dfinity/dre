@@ -2,7 +2,7 @@ use clap::Args;
 use ic_types::PrincipalId;
 use registry_canister::mutations::do_change_subnet_membership::ChangeSubnetMembershipPayload;
 
-use crate::commands::{ExecutableCommand, IcAdminRequirement};
+use crate::commands::{AuthRequirement, ExecutableCommand};
 
 #[derive(Args, Debug)]
 #[clap(visible_aliases = &["analyze", "analyze-decentralization", "decentralization", "whatif", "what-if"])]
@@ -24,12 +24,12 @@ pub struct WhatifDecentralization {
 }
 
 impl ExecutableCommand for WhatifDecentralization {
-    fn require_ic_admin(&self) -> IcAdminRequirement {
-        IcAdminRequirement::Anonymous
+    fn require_auth(&self) -> AuthRequirement {
+        AuthRequirement::Anonymous
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        let runner = ctx.runner().await;
+        let runner = ctx.runner().await?;
 
         let change_membership = ChangeSubnetMembershipPayload {
             subnet_id: self.subnet_id,

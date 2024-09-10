@@ -1,6 +1,6 @@
 use clap::Args;
 
-use super::{impl_executable_command_for_enums, ExecutableCommand, IcAdminRequirement};
+use super::{impl_executable_command_for_enums, AuthRequirement, ExecutableCommand};
 use crate::commands::version::revise::ReviseElectedVersions;
 
 pub(crate) mod revise;
@@ -14,8 +14,8 @@ pub struct Version {
 impl_executable_command_for_enums! { ReviseElectedVersions }
 
 impl ExecutableCommand for Version {
-    fn require_ic_admin(&self) -> IcAdminRequirement {
-        self.subcommand.require_ic_admin()
+    fn require_auth(&self) -> AuthRequirement {
+        self.subcommand.require_auth()
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {

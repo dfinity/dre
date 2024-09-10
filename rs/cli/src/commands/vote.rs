@@ -7,7 +7,7 @@ use ic_nns_governance::pb::v1::ProposalInfo;
 use log::info;
 use spinners::{Spinner, Spinners};
 
-use super::{ExecutableCommand, IcAdminRequirement};
+use super::{AuthRequirement, ExecutableCommand};
 use crate::desktop_notify::DesktopNotifier;
 
 #[derive(Args, Debug)]
@@ -42,8 +42,8 @@ pub struct Vote {
 }
 
 impl ExecutableCommand for Vote {
-    fn require_ic_admin(&self) -> IcAdminRequirement {
-        IcAdminRequirement::Detect
+    fn require_auth(&self) -> AuthRequirement {
+        AuthRequirement::Neuron
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
@@ -85,7 +85,7 @@ impl ExecutableCommand for Vote {
 
                 let prop_id = proposal.id.unwrap().id;
                 if !ctx.is_dry_run() {
-                    let response = match client.register_vote(ctx.ic_admin().neuron().neuron_id, proposal.id.unwrap().id).await {
+                    let response = match client.register_vote(ctx.neuron().neuron_id, proposal.id.unwrap().id).await {
                         Ok(response) => format!("Voted successfully: {}", response),
                         Err(e) => {
                             DesktopNotifier::send_critical(

@@ -22,7 +22,7 @@ use serde::Serialize;
 
 use crate::ctx::DreContext;
 
-use super::{ExecutableCommand, IcAdminRequirement};
+use super::{AuthRequirement, ExecutableCommand};
 
 #[derive(Args, Debug)]
 pub struct Registry {
@@ -36,8 +36,8 @@ pub struct Registry {
 }
 
 impl ExecutableCommand for Registry {
-    fn require_ic_admin(&self) -> IcAdminRequirement {
-        IcAdminRequirement::None
+    fn require_auth(&self) -> AuthRequirement {
+        AuthRequirement::Anonymous
     }
 
     async fn execute(&self, ctx: DreContext) -> anyhow::Result<()> {

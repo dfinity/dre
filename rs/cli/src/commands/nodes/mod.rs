@@ -1,7 +1,7 @@
 use clap::Args;
 use remove::Remove;
 
-use super::{impl_executable_command_for_enums, ExecutableCommand, IcAdminRequirement};
+use super::{impl_executable_command_for_enums, AuthRequirement, ExecutableCommand};
 
 mod remove;
 
@@ -13,8 +13,8 @@ pub struct Nodes {
 impl_executable_command_for_enums! { Remove }
 
 impl ExecutableCommand for Nodes {
-    fn require_ic_admin(&self) -> IcAdminRequirement {
-        self.subcommand.require_ic_admin()
+    fn require_auth(&self) -> AuthRequirement {
+        self.subcommand.require_auth()
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {

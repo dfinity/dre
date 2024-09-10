@@ -2,7 +2,7 @@ use std::path::PathBuf;
 use std::str::FromStr;
 
 use anyhow::anyhow;
-use clio::InputPath;
+use clio::{ClioPath, InputPath};
 use cryptoki::object::AttributeInfo;
 use cryptoki::session::Session;
 use cryptoki::{
@@ -20,17 +20,17 @@ use log::{debug, info, warn};
 use secrecy::SecretString;
 use std::sync::Mutex;
 
-use crate::commands::{AuthOpts, HsmOpts, HsmParams};
+use crate::commands::{AuthOpts, AuthRequirement, HsmOpts, HsmParams};
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Neuron {
     pub auth: Auth,
     pub neuron_id: u64,
     pub include_proposer: bool,
 }
 
-static RELEASE_AUTOMATION_DEFAULT_PRIVATE_KEY_PEM: &str = ".config/dfx/identity/release-automation/identity.pem"; // Relative to the home directory
-const RELEASE_AUTOMATION_NEURON_ID: u64 = 80;
+pub const STAGING_NEURON_ID: u64 = 49;
+pub const STAGING_KEY_PATH_FROM_HOME: &str = ".config/dfx/identity/bootstrap-super-leader/identity.pem";
 
 // As per fn str_to_key_id(s: &str) in ic-canisters/.../parallel_hardware_identity.rs,
 // the representation of key ID that the canister client wants is a sequence of
@@ -43,6 +43,82 @@ pub fn hsm_key_id_to_string(s: u8) -> String {
 }
 
 impl Neuron {
+    pub(crate) async fn from_opts_and_req(
+        auth_opts: AuthOpts,
+        requirement: AuthRequirement,
+        network: &Network,
+        neuron_id: Option<u64>,
+    ) -> anyhow::Result<Self> {
+        let (neuron_id, auth_opts) = if network.name == "staging" {
+            let staging_known_path = PathBuf::from_str(&std::env::var("HOME").unwrap())
+                // Must be a valid path
+                .unwrap()
+                .join(STAGING_KEY_PATH_FROM_HOME);
+
+            match neuron_id {
+                Some(n) => (Some(n), auth_opts),
+                None => (
+                    Some(STAGING_NEURON_ID),
+                    match Auth::pem(staging_known_path.clone()).await {
+                        Ok(_) => AuthOpts {
+                            private_key_pem: Some(InputPath::new(ClioPath::new(staging_known_path).unwrap()).unwrap()),
+                            hsm_opts: HsmOpts {
+                                hsm_pin: None,
+                                hsm_params: HsmParams {
+                                    hsm_slot: None,
+                                    hsm_key_id: None,
+                                },
+                            },
+                        },
+                        Err(e) => match requirement {
+                            // If there is an error but auth is not needed
+                            // just send what we have since it won't be
+                            // checked anyway
+                            AuthRequirement::Anonymous => auth_opts,
+                            _ => anyhow::bail!("Failed to find staging auth: {:?}", e),
+                        },
+                    },
+                ),
+            }
+        } else {
+            (neuron_id, auth_opts)
+        };
+
+        Self::from_opts_and_req_inner(auth_opts, requirement, network, neuron_id).await
+    }
+
+    async fn from_opts_and_req_inner(
+        auth_opts: AuthOpts,
+        requirement: AuthRequirement,
+        network: &Network,
+        neuron_id: Option<u64>,
+    ) -> anyhow::Result<Self> {
+        match requirement {
+            AuthRequirement::Anonymous => Ok(Self {
+                auth: Auth::Anonymous,
+                neuron_id: 0,
+                include_proposer: false,
+            }),
+            AuthRequirement::Signer => Ok(Self {
+                auth: Auth::from_auth_opts(auth_opts).await?,
+                neuron_id: 0,
+                include_proposer: false,
+            }),
+            AuthRequirement::Neuron => Ok({
+                let auth = Auth::from_auth_opts(auth_opts).await?;
+                Self {
+                    neuron_id: match neuron_id {
+                        Some(n) => n,
+                        None => auth.auto_detect_neuron_id(network.nns_urls.clone()).await?,
+                    },
+                    auth,
+                    include_proposer: true,
+                }
+            }),
+        }
+    }
+
+    #[allow(dead_code)]
     pub async fn new(auth: Auth, neuron_id: Option<u64>, network: &Network, include_proposer: bool) -> anyhow::Result<Self> {
         let neuron_id = match neuron_id {
             Some(n) => n,
@@ -67,19 +143,6 @@ impl Neuron {
         vec![]
     }
 
-    // FIXME: there should be no unchecked anything.
-    // Caller must be able to bubble up the error of the file not existing there.
-    pub fn automation_neuron_unchecked() -> Self {
-        debug!("Constructing neuron using the release automation private key");
-        Self {
-            auth: Auth::Keyfile {
-                path: dirs::home_dir().unwrap().join(RELEASE_AUTOMATION_DEFAULT_PRIVATE_KEY_PEM),
-            },
-            neuron_id: RELEASE_AUTOMATION_NEURON_ID,
-            include_proposer: true,
-        }
-    }
-
     pub fn anonymous_neuron() -> Self {
         debug!("Constructing anonymous neuron (ID 0)");
         Self {
@@ -90,7 +153,7 @@ impl Neuron {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Auth {
     Hsm { pin: String, slot: u64, key_id: u8 },
     Keyfile { path: PathBuf },
@@ -158,6 +221,7 @@ impl Auth {
         }
     }
 
+    /// If it is called it is expected to retrieve an Auth of type Hsm or fail
     fn detect_hsm_auth(maybe_pin: Option<String>, maybe_slot: Option<u64>, maybe_key_id: Option<u8>) -> anyhow::Result<Self> {
         if maybe_slot.is_none() && maybe_key_id.is_none() {
             debug!("Scanning hardware security module devices");
@@ -206,31 +270,26 @@ impl Auth {
                 };
                 let memo_key: String = format!("hsm-{}-{}", info.slot_description(), info.manufacturer_id());
                 let pin = Auth::get_or_prompt_pin_checked_for_slot(&session, maybe_pin, slot, token_info, &memo_key)?;
-                let detected = Some(Auth::Hsm {
+                let detected = Auth::Hsm {
                     pin,
                     slot: slot.id(),
                     key_id,
-                });
+                };
                 info!("Using key ID {} of hardware security module in slot {}", key_id, slot);
-                return Ok(detected.map_or(Auth::Anonymous, |a| a));
+                return Ok(detected);
             }
         }
-        if maybe_slot.is_none() && maybe_key_id.is_none() && maybe_pin.is_none() {
-            info!("No hardware security module detected -- falling back to anonymous operations");
-        } else {
-            return Err(anyhow!(
-                "No hardware security module detected{}{}",
-                match maybe_slot {
-                    None => "".to_string(),
-                    Some(slot) => format!(" in slot {}", slot),
-                },
-                match maybe_key_id {
-                    None => "".to_string(),
-                    Some(key_id) => format!(" that contains a key ID {}", key_id),
-                }
-            ));
-        }
-        Ok(Auth::Anonymous)
+        Err(anyhow!(
+            "No hardware security module detected{}{}",
+            match maybe_slot {
+                None => "".to_string(),
+                Some(slot) => format!(" in slot {}", slot),
+            },
+            match maybe_key_id {
+                None => "".to_string(),
+                Some(key_id) => format!(" that contains a key ID {}", key_id),
+            }
+        ))
     }
 
     /// Finds the key ID in a slot.  If a key ID is specified,

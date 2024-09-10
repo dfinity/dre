@@ -1,3 +1,4 @@
+use std::path::PathBuf;
 use std::{collections::BTreeMap, str::FromStr};
 
 use crate::commands::subnet::Subnet;
@@ -12,7 +13,7 @@ use firewall::Firewall;
 use get::Get;
 use heal::Heal;
 use hostos::HostOs;
-use ic_management_types::{MinNakamotoCoefficients, Network, NodeFeature};
+use ic_management_types::{MinNakamotoCoefficients, NodeFeature};
 use neuron::Neuron;
 use node_metrics::NodeMetrics;
 use nodes::Nodes;
@@ -27,8 +28,6 @@ use upgrade::Upgrade;
 use url::Url;
 use version::Version;
 use vote::Vote;
-
-use crate::auth::Neuron as AuthNeuron;
 
 pub(crate) mod api_boundary_nodes;
 pub(crate) mod completions;
@@ -98,7 +97,7 @@ pub(crate) struct HsmOpts {
 #[derive(ClapArgs, Debug, Clone)]
 #[group(multiple = false)]
 /// Authentication arguments
-pub(crate) struct AuthOpts {
+pub struct AuthOpts {
     /// Path to private key file (in PEM format)
     #[clap(
         long,
@@ -109,6 +108,23 @@ pub(crate) struct AuthOpts {
     pub(crate) private_key_pem: Option<InputPath>,
     #[clap(flatten)]
     pub(crate) hsm_opts: HsmOpts,
+}
+
+impl TryFrom<PathBuf> for AuthOpts {
+    type Error = anyhow::Error;
+
+    fn try_from(value: PathBuf) -> std::result::Result<Self, Self::Error> {
+        Ok(AuthOpts {
+            private_key_pem: Some(InputPath::new(ClioPath::new(value)?)?),
+            hsm_opts: HsmOpts {
+                hsm_pin: None,
+                hsm_params: HsmParams {
+                    hsm_slot: None,
+                    hsm_key_id: None,
+                },
+            },
+        })
+    }
 }
 
 #[derive(Parser, Debug)]
@@ -177,8 +193,8 @@ The argument is mandatory for testnets, and is optional for mainnet and staging"
 // Do not use outside of DRE CLI.
 // You can run your command by directly instantiating it.
 impl ExecutableCommand for Args {
-    fn require_ic_admin(&self) -> IcAdminRequirement {
-        self.subcommands.require_ic_admin()
+    fn require_auth(&self) -> AuthRequirement {
+        self.subcommands.require_auth()
     }
 
     async fn execute(&self, ctx: DreContext) -> anyhow::Result<()> {
@@ -201,9 +217,9 @@ macro_rules! impl_executable_command_for_enums {
         )*}
 
         impl ExecutableCommand for Subcommands {
-            fn require_ic_admin(&self) -> IcAdminRequirement {
+            fn require_auth(&self) -> AuthRequirement {
                 match &self {
-                    $(Subcommands::$var(variant) => variant.require_ic_admin(),)*
+                    $(Subcommands::$var(variant) => variant.require_auth(),)*
                 }
             }
 
@@ -226,7 +242,7 @@ pub(crate) use impl_executable_command_for_enums;
 impl_executable_command_for_enums! { DerToPrincipal, Heal, Subnet, Get, Propose, UpdateUnassignedNodes, Version, NodeMetrics, HostOs, Nodes, ApiBoundaryNodes, Vote, Registry, Firewall, Upgrade, Proposals, Completions, Qualify, UpdateAuthorizedSubnets, Neuron }
 
 pub trait ExecutableCommand {
-    fn require_ic_admin(&self) -> IcAdminRequirement;
+    fn require_auth(&self) -> AuthRequirement;
 
     fn validate(&self, cmd: &mut Command);
 
@@ -301,11 +317,11 @@ pub trait ExecutableCommand {
     }
 }
 
-pub enum IcAdminRequirement {
-    None,
-    Anonymous,                                              // for get commands
-    Detect,                                                 // detect the neuron
-    OverridableBy { network: Network, neuron: AuthNeuron }, // eg automation which we know where is placed
+#[derive(Clone)]
+pub enum AuthRequirement {
+    Anonymous, // for get commands
+    Signer,    // just authentication details used for signing
+    Neuron,    // Signer + neuron_id used for proposals
 }
 
 #[derive(Debug, Display, Clone)]

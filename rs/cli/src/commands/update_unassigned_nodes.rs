@@ -2,12 +2,9 @@ use std::str::FromStr;
 
 use clap::Args;
 use ic_canisters::registry::RegistryCanisterWrapper;
-use ic_management_types::Network;
 use ic_types::PrincipalId;
 
-use crate::auth::Neuron;
-
-use super::{ExecutableCommand, IcAdminRequirement};
+use super::{AuthRequirement, ExecutableCommand};
 
 #[derive(Args, Debug)]
 pub struct UpdateUnassignedNodes {
@@ -17,16 +14,11 @@ pub struct UpdateUnassignedNodes {
 }
 
 impl ExecutableCommand for UpdateUnassignedNodes {
-    fn require_ic_admin(&self) -> IcAdminRequirement {
-        IcAdminRequirement::OverridableBy {
-            network: Network::mainnet_unchecked().unwrap(),
-            neuron: Neuron::automation_neuron_unchecked(),
-        }
+    fn require_auth(&self) -> AuthRequirement {
+        AuthRequirement::Neuron
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        let runner = ctx.runner().await;
-
         let nns_subnet_id = match &self.nns_subnet_id {
             Some(n) => n.to_owned(),
             None => {
@@ -41,6 +33,7 @@ impl ExecutableCommand for UpdateUnassignedNodes {
             }
         };
 
+        let runner = ctx.runner().await?;
         runner
             .update_unassigned_nodes(&PrincipalId::from_str(&nns_subnet_id)?, ctx.forum_post_link())
             .await

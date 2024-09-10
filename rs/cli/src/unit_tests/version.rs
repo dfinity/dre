@@ -10,6 +10,7 @@ use itertools::Itertools;
 
 use crate::{
     artifact_downloader::MockArtifactDownloader,
+    auth::Neuron,
     commands::ExecutableCommand,
     ctx::tests::get_mocked_ctx,
     ic_admin::{MockIcAdmin, ProposeCommand, ProposeOptions},
@@ -64,6 +65,7 @@ async fn guest_os_elect_version_tests() {
 
     let ctx = get_mocked_ctx(
         Network::mainnet_unchecked().unwrap(),
+        Neuron::anonymous_neuron(),
         Arc::new(registry),
         Arc::new(ic_admin),
         Arc::new(git),

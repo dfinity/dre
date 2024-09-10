@@ -2,7 +2,7 @@ use clap::Args;
 use ic_management_types::requests::SubnetResizeRequest;
 use ic_types::PrincipalId;
 
-use crate::commands::{ExecutableCommand, IcAdminRequirement};
+use crate::commands::{AuthRequirement, ExecutableCommand};
 
 #[derive(Args, Debug)]
 pub struct Resize {
@@ -37,12 +37,12 @@ pub struct Resize {
 }
 
 impl ExecutableCommand for Resize {
-    fn require_ic_admin(&self) -> IcAdminRequirement {
-        IcAdminRequirement::Detect
+    fn require_auth(&self) -> AuthRequirement {
+        AuthRequirement::Neuron
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        let runner = ctx.runner().await;
+        let runner = ctx.runner().await?;
         runner
             .subnet_resize(
                 SubnetResizeRequest {

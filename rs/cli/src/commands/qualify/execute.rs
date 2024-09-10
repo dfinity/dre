@@ -4,11 +4,7 @@ use clap::Args;
 use ic_management_types::Network;
 use serde_json::Value;
 
-use crate::{
-    commands::{ExecutableCommand, IcAdminRequirement},
-    ic_admin::IcAdmin,
-    qualification::QualificationExecutorBuilder,
-};
+use crate::{commands::ExecutableCommand, ic_admin::IcAdmin, qualification::QualificationExecutorBuilder};
 
 #[derive(Args, Debug)]
 pub struct Execute {
@@ -44,8 +40,8 @@ pub struct Execute {
 }
 
 impl ExecutableCommand for Execute {
-    fn require_ic_admin(&self) -> crate::commands::IcAdminRequirement {
-        IcAdminRequirement::Detect
+    fn require_auth(&self) -> crate::commands::AuthRequirement {
+        crate::commands::AuthRequirement::Neuron
     }
 
     fn validate(&self, cmd: &mut clap::Command) {
@@ -66,7 +62,7 @@ impl ExecutableCommand for Execute {
         let from_version = match &self.from_version {
             Some(v) => v.to_string(),
             None => {
-                let anonymous_admin_wrapper_for_mainnet = ctx.readonly_ic_admin_for_other_network(Network::mainnet_unchecked().unwrap());
+                let anonymous_admin_wrapper_for_mainnet = ctx.readonly_ic_admin_for_other_network(Network::mainnet_unchecked().unwrap()).await?;
 
                 let subnets = ctx.registry().await.subnets().await?;
                 let nns_subnet_id = subnets.keys().next().unwrap();

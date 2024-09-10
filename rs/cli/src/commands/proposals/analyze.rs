@@ -4,7 +4,7 @@ use ic_management_types::filter_map_nns_function_proposals;
 use ic_nns_governance::pb::v1::ProposalStatus;
 use registry_canister::mutations::do_change_subnet_membership::ChangeSubnetMembershipPayload;
 
-use crate::commands::{ExecutableCommand, IcAdminRequirement};
+use crate::commands::{AuthRequirement, ExecutableCommand};
 
 #[derive(Args, Debug)]
 pub struct Analyze {
@@ -13,8 +13,8 @@ pub struct Analyze {
 }
 
 impl ExecutableCommand for Analyze {
-    fn require_ic_admin(&self) -> IcAdminRequirement {
-        IcAdminRequirement::Anonymous
+    fn require_auth(&self) -> AuthRequirement {
+        AuthRequirement::Anonymous
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
@@ -30,7 +30,7 @@ impl ExecutableCommand for Analyze {
             ));
         }
 
-        let runner = ctx.runner().await;
+        let runner = ctx.runner().await?;
 
         match filter_map_nns_function_proposals::<ChangeSubnetMembershipPayload>(&[proposal]).first() {
             Some((_, change_membership)) => runner.decentralization_change(change_membership, None).await,

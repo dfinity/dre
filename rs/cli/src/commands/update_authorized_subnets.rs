@@ -9,7 +9,7 @@ use log::info;
 
 use crate::ic_admin::{ProposeCommand, ProposeOptions};
 
-use super::ExecutableCommand;
+use super::{AuthRequirement, ExecutableCommand};
 
 const DEFAULT_CANISTER_LIMIT: u64 = 60_000;
 const DEFAULT_STATE_SIZE_BYTES_LIMIT: u64 = 322_122_547_200; // 300GB
@@ -32,8 +32,8 @@ pub struct UpdateAuthorizedSubnets {
 }
 
 impl ExecutableCommand for UpdateAuthorizedSubnets {
-    fn require_ic_admin(&self) -> super::IcAdminRequirement {
-        super::IcAdminRequirement::Detect
+    fn require_auth(&self) -> AuthRequirement {
+        super::AuthRequirement::Neuron
     }
 
     fn validate(&self, cmd: &mut clap::Command) {
@@ -95,7 +95,7 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
             .cloned()
             .collect();
 
-        let ic_admin = ctx.ic_admin();
+        let ic_admin = ctx.ic_admin().await?;
         ic_admin
             .propose_run(
                 ProposeCommand::SetAuthorizedSubnetworks { subnets: authorized },

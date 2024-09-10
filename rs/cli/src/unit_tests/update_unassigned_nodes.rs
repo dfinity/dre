@@ -10,12 +10,6 @@ use ic_types::PrincipalId;
 
 use crate::ctx::tests::get_mocked_ctx;
 
-fn anonymous_admin() -> MockIcAdmin {
-    let mut ic_admin = MockIcAdmin::new();
-    ic_admin.expect_neuron().returning(|| Neuron::anonymous_neuron());
-    ic_admin
-}
-
 fn registry_with_subnets(subnets: Vec<Subnet>) -> MockLazyRegistry {
     let mut registry = MockLazyRegistry::new();
 
@@ -31,8 +25,7 @@ fn registry_with_subnets(subnets: Vec<Subnet>) -> MockLazyRegistry {
 
 #[tokio::test]
 async fn should_skip_update_same_version_nns_not_provided() {
-    let mut ic_admin = anonymous_admin();
-
+    let mut ic_admin = MockIcAdmin::new();
     let principal = PrincipalId::from_str("tdb26-jop6k-aogll-7ltgs-eruif-6kk7m-qpktf-gdiqx-mxtrf-vb5e6-eqe").unwrap();
 
     let mut registry = registry_with_subnets(vec![Subnet {
@@ -50,8 +43,9 @@ async fn should_skip_update_same_version_nns_not_provided() {
 
     let ctx = get_mocked_ctx(
         Network::mainnet_unchecked().unwrap(),
+        Neuron::anonymous_neuron(),
         Arc::new(registry),
-        Arc::new(ic_admin),
+        Arc::new(MockIcAdmin::new()),
         Arc::new(MockLazyGit::new()),
         Arc::new(MockProposalAgent::new()),
         Arc::new(MockArtifactDownloader::new()),
@@ -64,7 +58,7 @@ async fn should_skip_update_same_version_nns_not_provided() {
 
 #[tokio::test]
 async fn should_skip_update_same_version_nns_provided() {
-    let mut ic_admin = anonymous_admin();
+    let mut ic_admin = MockIcAdmin::new();
 
     let principal = PrincipalId::new_anonymous();
 
@@ -83,6 +77,7 @@ async fn should_skip_update_same_version_nns_provided() {
 
     let ctx = get_mocked_ctx(
         Network::mainnet_unchecked().unwrap(),
+        Neuron::anonymous_neuron(),
         Arc::new(registry),
         Arc::new(ic_admin),
         Arc::new(MockLazyGit::new()),
@@ -99,7 +94,7 @@ async fn should_skip_update_same_version_nns_provided() {
 
 #[tokio::test]
 async fn should_update_unassigned_nodes() {
-    let mut ic_admin = anonymous_admin();
+    let mut ic_admin = MockIcAdmin::new();
 
     let principal = PrincipalId::new_anonymous();
 
@@ -121,6 +116,7 @@ async fn should_update_unassigned_nodes() {
 
     let ctx = get_mocked_ctx(
         Network::mainnet_unchecked().unwrap(),
+        Neuron::anonymous_neuron(),
         Arc::new(registry),
         Arc::new(ic_admin),
         Arc::new(MockLazyGit::new()),
@@ -137,7 +133,7 @@ async fn should_update_unassigned_nodes() {
 
 #[tokio::test]
 async fn should_fail_nns_not_found() {
-    let mut ic_admin = anonymous_admin();
+    let mut ic_admin = MockIcAdmin::new();
 
     let principal = PrincipalId::new_subnet_test_id(0);
     let other_principal = PrincipalId::new_subnet_test_id(1);
@@ -157,6 +153,7 @@ async fn should_fail_nns_not_found() {
 
     let ctx = get_mocked_ctx(
         Network::mainnet_unchecked().unwrap(),
+        Neuron::anonymous_neuron(),
         Arc::new(registry),
         Arc::new(ic_admin),
         Arc::new(MockLazyGit::new()),

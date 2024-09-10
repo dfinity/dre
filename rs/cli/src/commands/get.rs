@@ -1,6 +1,6 @@
 use clap::Args;
 
-use super::{ExecutableCommand, IcAdminRequirement};
+use super::{AuthRequirement, ExecutableCommand};
 
 #[derive(Args, Debug)]
 pub struct Get {
@@ -10,12 +10,12 @@ pub struct Get {
 }
 
 impl ExecutableCommand for Get {
-    fn require_ic_admin(&self) -> IcAdminRequirement {
-        IcAdminRequirement::Anonymous
+    fn require_auth(&self) -> AuthRequirement {
+        AuthRequirement::Anonymous
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        let ic_admin = ctx.ic_admin();
+        let ic_admin = ctx.ic_admin().await?;
         let _ = ic_admin.run_passthrough_get(&self.args, false).await?;
 
         Ok(())

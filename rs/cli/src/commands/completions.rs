@@ -10,8 +10,8 @@ pub struct Completions {
 }
 
 impl ExecutableCommand for Completions {
-    fn require_ic_admin(&self) -> super::IcAdminRequirement {
-        super::IcAdminRequirement::None
+    fn require_auth(&self) -> super::AuthRequirement {
+        super::AuthRequirement::Anonymous
     }
 
     fn validate(&self, _cmd: &mut clap::Command) {}
