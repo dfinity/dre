@@ -13,7 +13,7 @@ use firewall::Firewall;
 use get::Get;
 use heal::Heal;
 use hostos::HostOs;
-use ic_management_types::{MinNakamotoCoefficients, Network, NodeFeature};
+use ic_management_types::{MinNakamotoCoefficients, NodeFeature};
 use neuron::Neuron;
 use node_metrics::NodeMetrics;
 use nodes::Nodes;
@@ -28,8 +28,6 @@ use upgrade::Upgrade;
 use url::Url;
 use version::Version;
 use vote::Vote;
-
-use crate::auth::Neuron as AuthNeuron;
 
 pub(crate) mod api_boundary_nodes;
 pub(crate) mod completions;
@@ -321,10 +319,9 @@ pub trait ExecutableCommand {
 
 #[derive(Clone)]
 pub enum AuthRequirement {
-    Anonymous,                                              // for get commands
-    Signer,                                                 // just authentication details used for signing
-    Neuron,                                                 // Signer + neuron_id used for proposals
-    OverridableBy { network: Network, neuron: AuthNeuron }, // eg automation which we know where is placed
+    Anonymous, // for get commands
+    Signer,    // just authentication details used for signing
+    Neuron,    // Signer + neuron_id used for proposals
 }
 
 #[derive(Debug, Display, Clone)]

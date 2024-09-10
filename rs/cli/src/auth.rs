@@ -1,5 +1,4 @@
 use std::path::PathBuf;
-use std::pin::Pin;
 use std::str::FromStr;
 
 use anyhow::anyhow;
@@ -29,9 +28,6 @@ pub struct Neuron {
     pub neuron_id: u64,
     pub include_proposer: bool,
 }
-
-static RELEASE_AUTOMATION_DEFAULT_PRIVATE_KEY_PEM: &str = ".config/dfx/identity/release-automation/identity.pem"; // Relative to the home directory
-const RELEASE_AUTOMATION_NEURON_ID: u64 = 80;
 
 pub const STAGING_NEURON_ID: u64 = 49;
 pub const STAGING_KEY_PATH_FROM_HOME: &str = ".config/dfx/identity/bootstrap-super-leader/identity.pem";
@@ -119,86 +115,6 @@ impl Neuron {
                     include_proposer: true,
                 }
             }),
-            AuthRequirement::OverridableBy {
-                network: required_network,
-                neuron,
-            } => {
-                let maybe_user_provided_neuron = Auth::from_auth_opts(auth_opts).await.map(|auth| {
-                    (
-                        match neuron_id {
-                            Some(n) => {
-                                Box::pin(async move { Ok(n) }) as Pin<Box<dyn futures::Future<Output = std::result::Result<u64, anyhow::Error>>>>
-                            }
-                            None => Box::pin({
-                                let auth_clone = auth.clone();
-                                async move { auth_clone.auto_detect_neuron_id(network.nns_urls.clone()).await }
-                            }),
-                        },
-                        auth,
-                    )
-                });
-
-                let (neuron_id, auth) = if required_network.eq(network) {
-                    // The network matches, check if the override is possible
-                    let maybe_neuron_override = match neuron.auth {
-                        // Soft error. This will error only if
-                        // the user didn't provide any of his auth
-                        Auth::Keyfile { path } if !path.exists() => Err(anyhow::anyhow!(
-                            "Path `{}` not found, which can be used to override this command. Specify your own auth args",
-                            path.display()
-                        )),
-                        Auth::Keyfile { path } => Ok((neuron.neuron_id, Auth::Keyfile { path })),
-                        // Hard error on the whole program since we don't support this
-                        _ => anyhow::bail!("Overriding neuron with auth types other than keyfile is not supported"),
-                    };
-
-                    match (maybe_user_provided_neuron, maybe_neuron_override) {
-                        // Prioritize user auth
-                        (Ok((user_neuron_future, user_auth)), override_result) => {
-                            let maybe_user_neuron_id = user_neuron_future.await;
-                            match (maybe_user_neuron_id, override_result) {
-                                // User specified auth succeeded,
-                                // use that
-                                (Ok(neuron_id), _) => (neuron_id, user_auth),
-                                (Err(e), Ok((overriden_neuron_id, override_auth))) => {
-                                    warn!("Error while trying to use user specified auth: {:?}", e);
-                                    warn!("Defaulting to override neuron: {}", overriden_neuron_id);
-                                    (overriden_neuron_id, override_auth)
-                                }
-                                // Both don't work
-                                // Error out
-                                (Err(ue), Err(oe)) => anyhow::bail!(
-                                    "Problems with both user auth and overriden auth:\nUser error: {:?}\nOverride error: {:?}",
-                                    ue,
-                                    oe
-                                ),
-                            }
-                        }
-                        // If it failed use overriden values
-                        (Err(e), Ok((overidden_neuron_id, override_auth))) => {
-                            warn!("Error while trying to use user specified auth: {:?}", e);
-                            warn!("Defaulting to override neuron: {}", overidden_neuron_id);
-                            (overidden_neuron_id, override_auth)
-                        }
-                        // Both don't work
-                        // Error out
-                        (Err(ue), Err(oe)) => anyhow::bail!(
-                            "Problems with both user auth and overriden auth:\nUser error: {:?}\nOverride error: {:?}",
-                            ue,
-                            oe
-                        ),
-                    }
-                } else {
-                    let (user_neuron_future, user_auth) = maybe_user_provided_neuron?;
-                    (user_neuron_future.await?, user_auth)
-                };
-
-                Ok(Self {
-                    auth,
-                    neuron_id,
-                    include_proposer: true,
-                })
-            }
         }
     }
 
@@ -225,19 +141,6 @@ impl Neuron {
             return vec!["--proposer".to_string(), self.neuron_id.to_string()];
         }
         vec![]
-    }
-
-    // FIXME: there should be no unchecked anything.
-    // Caller must be able to bubble up the error of the file not existing there.
-    pub fn automation_neuron_unchecked() -> Self {
-        debug!("Constructing neuron using the release automation private key");
-        Self {
-            auth: Auth::Keyfile {
-                path: dirs::home_dir().unwrap().join(RELEASE_AUTOMATION_DEFAULT_PRIVATE_KEY_PEM),
-            },
-            neuron_id: RELEASE_AUTOMATION_NEURON_ID,
-            include_proposer: true,
-        }
     }
 
     pub fn anonymous_neuron() -> Self {

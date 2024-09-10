@@ -338,45 +338,6 @@ async fn init_test_neuron_and_auth() {
                 include_proposer: true,
             }))
             .when_requirement(AuthRequirement::Neuron),
-        NeuronAuthTestScenarion::new("Staging shouldn't override different network")
-            .with_network("staging")
-            .want(Ok(Neuron {
-                auth: Auth::Keyfile {
-                    path: get_staging_key_path(),
-                },
-                neuron_id: STAGING_NEURON_ID,
-                include_proposer: true,
-            }))
-            .when_requirement(AuthRequirement::OverridableBy {
-                network: Network::mainnet_unchecked().unwrap(),
-                neuron: Neuron {
-                    auth: Auth::Keyfile {
-                        path: ensure_testing_pem("testing"),
-                    },
-                    neuron_id: 123,
-                    include_proposer: true,
-                },
-            }),
-        NeuronAuthTestScenarion::new("Mainnet overidden")
-            .with_network("mainnet")
-            .with_private_key(ensure_testing_pem("other_testing").to_str().unwrap().to_string())
-            .want(Ok(Neuron {
-                auth: Auth::Keyfile {
-                    path: ensure_testing_pem("testing"),
-                },
-                neuron_id: 123,
-                include_proposer: true,
-            }))
-            .when_requirement(AuthRequirement::OverridableBy {
-                network: Network::mainnet_unchecked().unwrap(),
-                neuron: Neuron {
-                    auth: Auth::Keyfile {
-                        path: ensure_testing_pem("testing"),
-                    },
-                    neuron_id: 123,
-                    include_proposer: true,
-                },
-            }),
         // Failing scenarios
         //
         NeuronAuthTestScenarion::new("Detecting neuron id for random private key")

@@ -2,10 +2,7 @@ use std::str::FromStr;
 
 use clap::Args;
 use ic_canisters::registry::RegistryCanisterWrapper;
-use ic_management_types::Network;
 use ic_types::PrincipalId;
-
-use crate::auth::Neuron;
 
 use super::{AuthRequirement, ExecutableCommand};
 
@@ -18,10 +15,7 @@ pub struct UpdateUnassignedNodes {
 
 impl ExecutableCommand for UpdateUnassignedNodes {
     fn require_auth(&self) -> AuthRequirement {
-        AuthRequirement::OverridableBy {
-            network: Network::mainnet_unchecked().unwrap(),
-            neuron: Neuron::automation_neuron_unchecked(),
-        }
+        AuthRequirement::Neuron
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
