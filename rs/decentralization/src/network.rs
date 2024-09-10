@@ -8,12 +8,12 @@ use anyhow::anyhow;
 use futures::future::BoxFuture;
 use ic_base_types::PrincipalId;
 use ic_management_types::{HealthStatus, MinNakamotoCoefficients, NetworkError, NodeFeature};
+use indexmap::IndexMap;
 use itertools::Itertools;
 use log::{debug, info, warn};
 use rand::{seq::SliceRandom, SeedableRng};
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
-use std::collections::BTreeMap;
 use std::fmt::{Debug, Display, Formatter};
 use std::hash::Hash;
 
@@ -880,7 +880,7 @@ pub trait TopologyManager: SubnetQuerier + AvailableNodesQuerier + Sync {
         include_nodes: Vec<PrincipalId>,
         exclude_nodes: Vec<String>,
         only_nodes: Vec<String>,
-        health_of_nodes: &'a BTreeMap<PrincipalId, HealthStatus>,
+        health_of_nodes: &'a IndexMap<PrincipalId, HealthStatus>,
     ) -> BoxFuture<'a, Result<SubnetChange, NetworkError>> {
         Box::pin(async move {
             SubnetChangeRequest {
@@ -1029,7 +1029,7 @@ impl SubnetChangeRequest {
         mut self,
         optimize_count: usize,
         replacements_unhealthy_with_desc: &[(Node, String)],
-        health_of_nodes: &BTreeMap<PrincipalId, HealthStatus>,
+        health_of_nodes: &IndexMap<PrincipalId, HealthStatus>,
     ) -> Result<SubnetChange, NetworkError> {
         let old_nodes = self.subnet.nodes.clone();
         self.subnet = self.subnet.without_nodes(replacements_unhealthy_with_desc.to_owned())?;
@@ -1042,7 +1042,7 @@ impl SubnetChangeRequest {
         Ok(SubnetChange { old_nodes, ..result })
     }
 
-    pub fn rescue(mut self, health_of_nodes: &BTreeMap<PrincipalId, HealthStatus>) -> Result<SubnetChange, NetworkError> {
+    pub fn rescue(mut self, health_of_nodes: &IndexMap<PrincipalId, HealthStatus>) -> Result<SubnetChange, NetworkError> {
         let old_nodes = self.subnet.nodes.clone();
         let nodes_to_remove = self
             .subnet
@@ -1074,7 +1074,7 @@ impl SubnetChangeRequest {
         how_many_nodes_to_add: usize,
         how_many_nodes_to_remove: usize,
         how_many_nodes_unhealthy: usize,
-        health_of_nodes: &BTreeMap<PrincipalId, HealthStatus>,
+        health_of_nodes: &IndexMap<PrincipalId, HealthStatus>,
     ) -> Result<SubnetChange, NetworkError> {
         let old_nodes = self.subnet.nodes.clone();
 
@@ -1137,7 +1137,7 @@ impl SubnetChangeRequest {
     /// Evaluates the subnet change request to simulate the requested topology
     /// change. Command returns all the information about the subnet before
     /// and after the change.
-    pub fn evaluate(self, health_of_nodes: &BTreeMap<PrincipalId, HealthStatus>) -> Result<SubnetChange, NetworkError> {
+    pub fn evaluate(self, health_of_nodes: &IndexMap<PrincipalId, HealthStatus>) -> Result<SubnetChange, NetworkError> {
         self.resize(0, 0, 0, health_of_nodes)
     }
 }
@@ -1235,18 +1235,18 @@ impl Ord for NetworkHealSubnets {
 }
 
 pub struct NetworkHealRequest {
-    pub subnets: BTreeMap<PrincipalId, ic_management_types::Subnet>,
+    pub subnets: IndexMap<PrincipalId, ic_management_types::Subnet>,
 }
 
 impl NetworkHealRequest {
-    pub fn new(subnets: BTreeMap<PrincipalId, ic_management_types::Subnet>) -> Self {
+    pub fn new(subnets: IndexMap<PrincipalId, ic_management_types::Subnet>) -> Self {
         Self { subnets }
     }
 
     pub async fn heal_and_optimize(
         &self,
         mut available_nodes: Vec<Node>,
-        health_of_nodes: &BTreeMap<PrincipalId, HealthStatus>,
+        health_of_nodes: &IndexMap<PrincipalId, HealthStatus>,
     ) -> Result<Vec<SubnetChangeResponse>, NetworkError> {
         let mut subnets_changed = Vec::new();
         let subnets_to_heal = unhealthy_with_nodes(&self.subnets, health_of_nodes)

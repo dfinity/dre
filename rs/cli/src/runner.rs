@@ -1,6 +1,4 @@
 use std::cell::RefCell;
-use std::collections::BTreeMap;
-use std::collections::BTreeSet;
 use std::sync::Arc;
 
 use decentralization::network::DecentralizedSubnet;
@@ -28,6 +26,7 @@ use ic_management_types::NodeFeature;
 use ic_management_types::Release;
 use ic_management_types::TopologyChangePayload;
 use ic_types::PrincipalId;
+use indexmap::{IndexMap, IndexSet};
 use itertools::Itertools;
 use log::info;
 use log::warn;
@@ -120,7 +119,7 @@ impl Runner {
         Ok(())
     }
 
-    pub async fn health_of_nodes(&self) -> anyhow::Result<BTreeMap<PrincipalId, HealthStatus>> {
+    pub async fn health_of_nodes(&self) -> anyhow::Result<IndexMap<PrincipalId, HealthStatus>> {
         let health_client = health::HealthClient::new(self.network.clone());
         health_client.nodes().await
     }
@@ -130,7 +129,7 @@ impl Runner {
         request: ic_management_types::requests::SubnetResizeRequest,
         motivation: String,
         forum_post_link: Option<String>,
-        health_of_nodes: &BTreeMap<PrincipalId, HealthStatus>,
+        health_of_nodes: &IndexMap<PrincipalId, HealthStatus>,
     ) -> anyhow::Result<()> {
         let change = self
             .registry
@@ -571,7 +570,7 @@ impl Runner {
                 None => true,
             })
             .map(|(id, subnet)| (*id, subnet.clone()))
-            .collect::<BTreeMap<_, _>>();
+            .collect::<IndexMap<_, _>>();
         let (available_nodes, health_of_nodes) =
             try_join(self.registry.available_nodes().map_err(anyhow::Error::from), health_client.nodes()).await?;
 
@@ -677,8 +676,8 @@ impl Runner {
         let ic_repo = self.ic_repo().await;
         let hosts = ic_repo.hostos_releases().await?;
         let active_releases = hosts.get_active_branches();
-        let hostos_versions: BTreeSet<String> = self.registry.nodes().await?.values().map(|s| s.hostos_version.clone()).collect();
-        let versions_in_proposals: BTreeSet<String> = self
+        let hostos_versions: IndexSet<String> = self.registry.nodes().await?.values().map(|s| s.hostos_version.clone()).collect();
+        let versions_in_proposals: IndexSet<String> = self
             .proposal_agent
             .list_open_elect_hostos_proposals()
             .await?
@@ -704,9 +703,9 @@ impl Runner {
         let ic_repo = self.ic_repo().await;
         let guests = ic_repo.guestos_releases().await?;
         let active_releases = guests.get_active_branches();
-        let subnet_versions: BTreeSet<String> = self.registry.subnets().await?.values().map(|s| s.replica_version.clone()).collect();
+        let subnet_versions: IndexSet<String> = self.registry.subnets().await?.values().map(|s| s.replica_version.clone()).collect();
         let version_on_unassigned_nodes = self.registry.unassigned_nodes_replica_version().await?;
-        let versions_in_proposals: BTreeSet<String> = self
+        let versions_in_proposals: IndexSet<String> = self
             .proposal_agent
             .list_open_elect_replica_proposals()
             .await?
@@ -816,7 +815,7 @@ pub fn replace_proposal_options(change: &SubnetChangeResponse, forum_post_link: 
     })
 }
 
-fn nodes_by_dc(nodes: Vec<Node>) -> BTreeMap<String, Vec<(String, String)>> {
+fn nodes_by_dc(nodes: Vec<Node>) -> IndexMap<String, Vec<(String, String)>> {
     nodes
         .iter()
         .cloned()
@@ -832,7 +831,7 @@ fn nodes_by_dc(nodes: Vec<Node>) -> BTreeMap<String, Vec<(String, String)>> {
                 n.operator.datacenter,
             )
         })
-        .fold(BTreeMap::new(), |mut acc, (node_id, subnet, dc)| {
+        .fold(IndexMap::new(), |mut acc, (node_id, subnet, dc)| {
             acc.entry(dc.unwrap_or_default().name).or_default().push((node_id, subnet));
             acc
         })

@@ -1,7 +1,5 @@
-use std::{
-    collections::BTreeMap,
-    sync::{Arc, RwLock},
-};
+use indexmap::IndexMap;
+use std::sync::{Arc, RwLock};
 
 use futures::future::ok;
 use ic_management_backend::{lazy_git::MockLazyGit, lazy_registry::MockLazyRegistry, proposal::MockProposalAgent};
@@ -35,7 +33,7 @@ async fn guest_os_elect_version_tests() {
         .returning(|| Box::pin(ok(Arc::new(ArtifactReleases::new(ic_management_types::Artifact::GuestOs)))));
 
     let mut registry = MockLazyRegistry::new();
-    registry.expect_subnets().returning(|| Box::pin(ok(Arc::new(BTreeMap::new()))));
+    registry.expect_subnets().returning(|| Box::pin(ok(Arc::new(IndexMap::new()))));
     registry
         .expect_unassigned_nodes_replica_version()
         .returning(|| Box::pin(ok(Arc::new("some_ver".to_string()))));

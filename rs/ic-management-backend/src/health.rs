@@ -1,7 +1,5 @@
-use std::{
-    collections::{BTreeMap, HashSet},
-    str::FromStr,
-};
+use indexmap::IndexMap;
+use std::{collections::HashSet, str::FromStr};
 
 use ic_base_types::PrincipalId;
 use ic_management_types::{HealthStatus, Network};
@@ -26,14 +24,14 @@ impl HealthClient {
 }
 
 impl HealthStatusQuerier for HealthClient {
-    async fn subnet(&self, subnet: PrincipalId) -> anyhow::Result<BTreeMap<PrincipalId, HealthStatus>> {
+    async fn subnet(&self, subnet: PrincipalId) -> anyhow::Result<IndexMap<PrincipalId, HealthStatus>> {
         match &self.implementation {
             HealthStatusQuerierImplementations::Dashboard(c) => c.subnet(subnet).await,
             HealthStatusQuerierImplementations::Prometheus(c) => c.subnet(subnet).await,
         }
     }
 
-    async fn nodes(&self) -> anyhow::Result<BTreeMap<PrincipalId, HealthStatus>> {
+    async fn nodes(&self) -> anyhow::Result<IndexMap<PrincipalId, HealthStatus>> {
         match &self.implementation {
             HealthStatusQuerierImplementations::Dashboard(c) => c.nodes().await,
             HealthStatusQuerierImplementations::Prometheus(c) => c.nodes().await,
@@ -57,8 +55,8 @@ impl From<Network> for HealthStatusQuerierImplementations {
 }
 
 pub trait HealthStatusQuerier {
-    fn subnet(&self, subnet: PrincipalId) -> impl std::future::Future<Output = anyhow::Result<BTreeMap<PrincipalId, HealthStatus>>> + Send;
-    fn nodes(&self) -> impl std::future::Future<Output = anyhow::Result<BTreeMap<PrincipalId, HealthStatus>>> + Send;
+    fn subnet(&self, subnet: PrincipalId) -> impl std::future::Future<Output = anyhow::Result<IndexMap<PrincipalId, HealthStatus>>> + Send;
+    fn nodes(&self) -> impl std::future::Future<Output = anyhow::Result<IndexMap<PrincipalId, HealthStatus>>> + Send;
 }
 
 pub struct PublicDashboardHealthClient {
@@ -186,7 +184,7 @@ struct ShortNodeInfo {
 }
 
 impl HealthStatusQuerier for PublicDashboardHealthClient {
-    async fn subnet(&self, subnet: PrincipalId) -> anyhow::Result<BTreeMap<PrincipalId, HealthStatus>> {
+    async fn subnet(&self, subnet: PrincipalId) -> anyhow::Result<IndexMap<PrincipalId, HealthStatus>> {
         Ok(self
             .get_all_nodes()
             .await?
@@ -199,7 +197,7 @@ impl HealthStatusQuerier for PublicDashboardHealthClient {
             .collect())
     }
 
-    async fn nodes(&self) -> anyhow::Result<BTreeMap<PrincipalId, HealthStatus>> {
+    async fn nodes(&self) -> anyhow::Result<IndexMap<PrincipalId, HealthStatus>> {
         Ok(self.get_all_nodes().await?.into_iter().map(|n| (n.node_id, n.status)).collect())
     }
 }
@@ -219,7 +217,7 @@ impl PrometheusHealthClient {
 }
 
 impl HealthStatusQuerier for PrometheusHealthClient {
-    async fn subnet(&self, subnet: PrincipalId) -> anyhow::Result<BTreeMap<PrincipalId, HealthStatus>> {
+    async fn subnet(&self, subnet: PrincipalId) -> anyhow::Result<IndexMap<PrincipalId, HealthStatus>> {
         let ic_name = self.network.legacy_name();
         let subnet_name = subnet.to_string();
         let query_up = Selector::new()
@@ -264,7 +262,7 @@ impl HealthStatusQuerier for PrometheusHealthClient {
             .collect())
     }
 
-    async fn nodes(&self) -> anyhow::Result<BTreeMap<PrincipalId, HealthStatus>> {
+    async fn nodes(&self) -> anyhow::Result<IndexMap<PrincipalId, HealthStatus>> {
         let query = format!(
             r#"ic_replica_orchestrator:health_state:bottomk_1{{ic="{network}"}}"#,
             network = self.network.legacy_name(),

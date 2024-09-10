@@ -15,6 +15,7 @@ ic-base-types = { workspace = true }
 ic-nns-governance = { workspace = true }
 ic-registry-subnet-type = { workspace = true }
 ic-types = { workspace = true }
+indexmap = { workspace = true }
 registry-canister = { workspace = true }
 reqwest = { workspace = true }
 serde = { workspace = true }

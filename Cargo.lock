@@ -1139,9 +1139,9 @@ dependencies = [
 
 [[package]]
 name = "clap_complete"
-version = "4.5.24"
+version = "4.5.26"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6d7db6eca8c205649e8d3ccd05aa5042b1800a784e56bc7c43524fde8abbfa9b"
+checksum = "205d5ef6d485fa47606b98b0ddc4ead26eb850aaa86abfb562a94fb3280ecba0"
 dependencies = [
  "clap 4.5.16",
 ]
@@ -1749,6 +1749,7 @@ dependencies = [
  "futures",
  "ic-base-types",
  "ic-management-types",
+ "indexmap 2.5.0",
  "itertools 0.13.0",
  "log",
  "rand",
@@ -2029,6 +2030,7 @@ dependencies = [
  "ic-sns-wasm",
  "ic-sys",
  "ic-types",
+ "indexmap 2.5.0",
  "itertools 0.13.0",
  "keyring",
  "log",
@@ -3987,6 +3989,7 @@ dependencies = [
  "ic-registry-nns-data-provider",
  "ic-registry-subnet-type",
  "ic-types",
+ "indexmap 2.5.0",
  "itertools 0.13.0",
  "lazy_static",
  "log",
@@ -4039,6 +4042,7 @@ dependencies = [
  "ic-protobuf",
  "ic-registry-subnet-type",
  "ic-types",
+ "indexmap 2.5.0",
  "registry-canister",
  "reqwest",
  "serde",
@@ -5989,6 +5993,7 @@ dependencies = [
  "ic-management-backend",
  "ic-management-types",
  "ic-types",
+ "indexmap 2.5.0",
  "pretty_assertions",
  "rand",
  "reqwest",
