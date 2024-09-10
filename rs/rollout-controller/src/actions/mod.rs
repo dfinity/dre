@@ -1,7 +1,8 @@
-use std::time::Duration;
+use std::{path::PathBuf, str::FromStr, time::Duration};
 
 use dre::{
-    auth::{Auth, Neuron},
+    auth::Neuron,
+    commands::AuthOpts,
     ic_admin::{IcAdmin, IcAdminImpl, ProposeCommand, ProposeOptions},
 };
 use ic_base_types::PrincipalId;
@@ -112,7 +113,13 @@ pub struct ActionExecutor<'a> {
 
 impl<'a> ActionExecutor<'a> {
     pub async fn new(neuron_id: u64, private_key_pem: String, network: Network, simulate: bool, logger: Option<&'a Logger>) -> anyhow::Result<Self> {
-        let neuron = Neuron::new(Auth::pem(private_key_pem.into()).await?, Some(neuron_id), &network, true).await?;
+        let neuron = Neuron::from_opts_and_req(
+            AuthOpts::try_from(PathBuf::from_str(&private_key_pem)?)?,
+            dre::commands::AuthRequirement::Neuron,
+            &network,
+            Some(neuron_id),
+        )
+        .await?;
         Ok(Self {
             ic_admin_wrapper: IcAdminImpl::new(network, None, true, neuron, simulate),
             logger,
@@ -120,7 +127,7 @@ impl<'a> ActionExecutor<'a> {
     }
 
     pub async fn test(network: Network, logger: Option<&'a Logger>) -> anyhow::Result<Self> {
-        let neuron = Neuron::new(Auth::auto(None, None, None).await?, None, &network, true).await?;
+        let neuron = Neuron::from_opts_and_req(AuthOpts::none(), dre::commands::AuthRequirement::Anonymous, &network, None).await?;
         Ok(Self {
             ic_admin_wrapper: IcAdminImpl::new(network, None, true, neuron, true),
             logger,

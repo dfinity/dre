@@ -43,7 +43,7 @@ pub fn hsm_key_id_to_string(s: u8) -> String {
 }
 
 impl Neuron {
-    pub(crate) async fn from_opts_and_req(
+    pub async fn from_opts_and_req(
         auth_opts: AuthOpts,
         requirement: AuthRequirement,
         network: &Network,

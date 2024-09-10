@@ -414,6 +414,7 @@ struct HsmTestScenario<'a> {
     neuron_id: Option<u64>,
 }
 
+#[allow(dead_code)]
 impl<'a> HsmTestScenario<'a> {
     fn new(name: &'a str, pin: &'a str) -> Self {
         Self {

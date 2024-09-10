@@ -115,6 +115,23 @@ pub struct AuthOpts {
     pub(crate) hsm_opts: HsmOpts,
 }
 
+#[allow(dead_code)]
+impl AuthOpts {
+    pub fn none() -> Self {
+        Self {
+            private_key_pem: None,
+            hsm_opts: HsmOpts {
+                hsm_pin: None,
+                hsm_so_module: None,
+                hsm_params: HsmParams {
+                    hsm_slot: None,
+                    hsm_key_id: None,
+                },
+            },
+        }
+    }
+}
+
 impl TryFrom<PathBuf> for AuthOpts {
     type Error = anyhow::Error;
 
