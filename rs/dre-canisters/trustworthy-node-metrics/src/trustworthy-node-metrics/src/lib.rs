@@ -49,7 +49,7 @@ fn subnet_node_metrics(args: SubnetNodeMetricsArgs) -> Result<Vec<SubnetNodeMetr
     let mut subnet_node_metrics: BTreeMap<(u64, Principal), Vec<NodeMetrics>> = BTreeMap::new();
 
     let node_metrics: Vec<(NodeMetricsStoredKey, NodeMetricsStored)> = stable_memory::get_metrics_range(from_ts, None);
-    
+
     for ((ts, node_id), node_metrics_value) in node_metrics {
         if let Some(subnet_id) = args.subnet_id {
             if subnet_id != node_metrics_value.subnet_assigned {
