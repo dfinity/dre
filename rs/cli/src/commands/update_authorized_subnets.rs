@@ -1,4 +1,5 @@
-use std::{collections::BTreeMap, path::PathBuf, sync::Arc};
+use indexmap::IndexMap;
+use std::{path::PathBuf, sync::Arc};
 
 use clap::{error::ErrorKind, Args};
 use ic_management_types::Subnet;
@@ -54,7 +55,7 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
 
         let registry = ctx.registry().await;
         let subnets = registry.subnets().await?;
-        let mut excluded_subnets = BTreeMap::new();
+        let mut excluded_subnets = IndexMap::new();
 
         let human_bytes = human_bytes::human_bytes(self.state_size_limit as f64);
         let agent = ctx.create_ic_agent_canister_client(None)?;
@@ -87,11 +88,11 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
             }
         }
 
-        let summary = construct_summary(&subnets, &excluded_subnets)?;
+        let summary = construct_summary(&subnets, &excluded_subnets, ctx.forum_post_link())?;
 
         let authorized = subnets
             .keys()
-            .filter(|subnet_id| !excluded_subnets.contains_key(subnet_id))
+            .filter(|subnet_id| !excluded_subnets.contains_key(*subnet_id))
             .cloned()
             .collect();
 
@@ -136,13 +137,19 @@ impl UpdateAuthorizedSubnets {
     }
 }
 
-fn construct_summary(subnets: &Arc<BTreeMap<PrincipalId, Subnet>>, excluded_subnets: &BTreeMap<PrincipalId, String>) -> anyhow::Result<String> {
+fn construct_summary(
+    subnets: &Arc<IndexMap<PrincipalId, Subnet>>,
+    excluded_subnets: &IndexMap<PrincipalId, String>,
+    forum_post_link: Option<String>,
+) -> anyhow::Result<String> {
     Ok(format!(
         "Updating the list of authorized subnets to:
 
 | Subnet id | Public | Description |
 | --------- | ------ | ----------- |
-{}",
+{}
+{}
+",
         subnets
             .values()
             .map(|s| {
@@ -154,6 +161,10 @@ fn construct_summary(subnets: &Arc<BTreeMap<PrincipalId, Subnet>>, excluded_subn
                     excluded_desc.map(|s| s.to_string()).unwrap_or_default()
                 )
             })
-            .join("\n")
+            .join("\n"),
+        match forum_post_link {
+            Some(link) => format!("\nForum post link: {}", link),
+            None => "".to_string(),
+        }
     ))
 }

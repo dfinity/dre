@@ -7,7 +7,7 @@ use crate::{
     operations::hostos_rollout::{NodeGroupUpdate, NumberOfNodes},
 };
 
-#[derive(ValueEnum, Copy, Clone, Debug, Ord, Eq, PartialEq, PartialOrd, Default)]
+#[derive(ValueEnum, Copy, Clone, Debug, Ord, Eq, PartialEq, PartialOrd, Default, Hash)]
 pub enum NodeOwner {
     Dfinity,
     Others,
@@ -25,7 +25,7 @@ impl std::fmt::Display for NodeOwner {
     }
 }
 
-#[derive(ValueEnum, Copy, Clone, Debug, Ord, Eq, PartialEq, PartialOrd, Default)]
+#[derive(ValueEnum, Copy, Clone, Debug, Ord, Eq, PartialEq, PartialOrd, Default, Hash)]
 pub enum NodeAssignment {
     Unassigned,
     Assigned,

@@ -16,6 +16,7 @@ use ic_protobuf::registry::{
 };
 use ic_registry_subnet_type::SubnetType;
 use ic_types::PrincipalId;
+use indexmap::IndexMap;
 use itertools::Itertools;
 use log::{info, warn};
 use serde::Serialize;
@@ -83,7 +84,7 @@ impl Registry {
 
         // Calculate number of rewardable nodes for node operators
         for node_operator in node_operators.values_mut() {
-            let mut nodes_by_health = BTreeMap::new();
+            let mut nodes_by_health = IndexMap::new();
             for node_details in nodes.iter().filter(|n| n.node_operator_id == node_operator.node_operator_principal_id) {
                 let node_id = node_details.node_id;
                 let health = node_details.status.to_string();
@@ -129,7 +130,7 @@ fn get_elected_host_os_versions(local_registry: &Arc<dyn LazyRegistry>) -> anyho
     local_registry.elected_hostos_records()
 }
 
-async fn get_node_operators(local_registry: &Arc<dyn LazyRegistry>, network: &Network) -> anyhow::Result<BTreeMap<PrincipalId, NodeOperator>> {
+async fn get_node_operators(local_registry: &Arc<dyn LazyRegistry>, network: &Network) -> anyhow::Result<IndexMap<PrincipalId, NodeOperator>> {
     let all_nodes = local_registry.nodes().await?;
     let operators = local_registry
         .operators()
@@ -163,7 +164,7 @@ async fn get_node_operators(local_registry: &Arc<dyn LazyRegistry>, network: &Ne
                 },
             )
         })
-        .collect::<BTreeMap<_, _>>();
+        .collect::<IndexMap<_, _>>();
     Ok(node_operators)
 }
 
@@ -203,7 +204,7 @@ fn get_unassigned_nodes(local_registry: &Arc<dyn LazyRegistry>) -> anyhow::Resul
 
 async fn get_nodes(
     local_registry: &Arc<dyn LazyRegistry>,
-    node_operators: &BTreeMap<PrincipalId, NodeOperator>,
+    node_operators: &IndexMap<PrincipalId, NodeOperator>,
     subnets: &[SubnetRecord],
     network: &Network,
 ) -> anyhow::Result<Vec<NodeDetails>> {
@@ -260,7 +261,7 @@ fn get_node_rewards_table(local_registry: &Arc<dyn LazyRegistry>, network: &Netw
                 panic!("Failed to get Node Rewards Table for mainnet")
             } else {
                 warn!("Failed to get Node Rewards Table for {}", network.name);
-                BTreeMap::new()
+                IndexMap::new()
             }
         }
     };
@@ -361,7 +362,7 @@ struct NodeDetails {
 struct SubnetRecord {
     subnet_id: PrincipalId,
     membership: Vec<String>,
-    nodes: BTreeMap<PrincipalId, NodeDetails>,
+    nodes: IndexMap<PrincipalId, NodeDetails>,
     max_ingress_bytes_per_message: u64,
     max_ingress_messages_per_block: u64,
     max_block_payload_size: u64,
@@ -393,7 +394,7 @@ struct NodeOperator {
     rewardable_nodes: BTreeMap<String, u32>,
     ipv6: Option<String>,
     total_up_nodes: u32,
-    nodes_health: BTreeMap<String, Vec<PrincipalId>>,
+    nodes_health: IndexMap<String, Vec<PrincipalId>>,
     rewards_correct: bool,
 }
 

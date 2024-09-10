@@ -36,6 +36,7 @@ use ic_registry_local_store::{Changelog, ChangelogEntry, KeyMutation, LocalStore
 use ic_registry_nns_data_provider::registry::RegistryCanister;
 use ic_registry_subnet_type::SubnetType;
 use ic_types::PrincipalId;
+use indexmap::{IndexMap, IndexSet};
 use itertools::Itertools;
 use lazy_static::lazy_static;
 use log::{debug, error, info, warn};
@@ -43,14 +44,11 @@ use regex::Regex;
 use std::cmp::Ordering;
 use std::collections::{HashMap, HashSet};
 use std::convert::TryFrom;
+use std::net::Ipv6Addr;
 use std::ops::Add;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 use std::sync::Arc;
-use std::{
-    collections::{BTreeMap, BTreeSet},
-    net::Ipv6Addr,
-};
 use tokio::sync::RwLock;
 use tokio::time::{sleep, Duration};
 use url::Url;
@@ -68,11 +66,11 @@ pub struct RegistryState {
     pub local_registry: Arc<LocalRegistry>,
 
     version: u64,
-    subnets: BTreeMap<PrincipalId, Subnet>,
-    nodes: BTreeMap<PrincipalId, Node>,
-    operators: BTreeMap<PrincipalId, Operator>,
+    subnets: IndexMap<PrincipalId, Subnet>,
+    nodes: IndexMap<PrincipalId, Node>,
+    operators: IndexMap<PrincipalId, Operator>,
     node_labels_guests: Vec<Guest>,
-    known_subnets: BTreeMap<PrincipalId, String>,
+    known_subnets: IndexMap<PrincipalId, String>,
 
     guestos_releases: ArtifactReleases,
     hostos_releases: ArtifactReleases,
@@ -115,13 +113,13 @@ impl RegistryEntry for ApiBoundaryNodeRecord {
 }
 
 pub trait RegistryFamilyEntries {
-    fn get_family_entries<T: RegistryEntry + Default>(&self) -> Result<BTreeMap<String, T>>;
-    fn get_family_entries_versioned<T: RegistryEntry + Default>(&self) -> Result<BTreeMap<String, (u64, T)>>;
-    fn get_family_entries_of_version<T: RegistryEntry + Default>(&self, version: RegistryVersion) -> Result<BTreeMap<String, (u64, T)>>;
+    fn get_family_entries<T: RegistryEntry + Default>(&self) -> Result<IndexMap<String, T>>;
+    fn get_family_entries_versioned<T: RegistryEntry + Default>(&self) -> Result<IndexMap<String, (u64, T)>>;
+    fn get_family_entries_of_version<T: RegistryEntry + Default>(&self, version: RegistryVersion) -> Result<IndexMap<String, (u64, T)>>;
 }
 
 impl RegistryFamilyEntries for LocalRegistry {
-    fn get_family_entries<T: RegistryEntry + Default>(&self) -> Result<BTreeMap<String, T>> {
+    fn get_family_entries<T: RegistryEntry + Default>(&self) -> Result<IndexMap<String, T>> {
         let prefix_length = T::KEY_PREFIX.len();
         Ok(self
             .get_key_family(T::KEY_PREFIX, self.get_latest_version())?
@@ -131,14 +129,14 @@ impl RegistryFamilyEntries for LocalRegistry {
                     .unwrap_or_else(|_| panic!("failed to get entry {} for type {}", key, std::any::type_name::<T>()))
                     .map(|v| (key[prefix_length..].to_string(), T::decode(v.as_slice()).expect("invalid registry value")))
             })
-            .collect::<BTreeMap<_, _>>())
+            .collect::<IndexMap<_, _>>())
     }
 
-    fn get_family_entries_versioned<T: RegistryEntry + Default>(&self) -> Result<BTreeMap<String, (u64, T)>> {
+    fn get_family_entries_versioned<T: RegistryEntry + Default>(&self) -> Result<IndexMap<String, (u64, T)>> {
         self.get_family_entries_of_version(self.get_latest_version())
     }
 
-    fn get_family_entries_of_version<T: RegistryEntry + Default>(&self, version: RegistryVersion) -> Result<BTreeMap<String, (u64, T)>> {
+    fn get_family_entries_of_version<T: RegistryEntry + Default>(&self, version: RegistryVersion) -> Result<IndexMap<String, (u64, T)>> {
         let prefix_length = T::KEY_PREFIX.len();
         Ok(self
             .get_key_family(T::KEY_PREFIX, version)?
@@ -155,7 +153,7 @@ impl RegistryFamilyEntries for LocalRegistry {
                     })
                     .unwrap_or_else(|_| panic!("failed to get entry {} for type {}", key, std::any::type_name::<T>()))
             })
-            .collect::<BTreeMap<_, _>>())
+            .collect::<IndexMap<_, _>>())
     }
 }
 
@@ -218,9 +216,9 @@ impl RegistryState {
             network: network.clone(),
             local_registry,
             version: 0,
-            subnets: BTreeMap::<PrincipalId, Subnet>::new(),
-            nodes: BTreeMap::new(),
-            operators: BTreeMap::new(),
+            subnets: IndexMap::<PrincipalId, Subnet>::new(),
+            nodes: IndexMap::new(),
+            operators: IndexMap::new(),
             node_labels_guests: Vec::new(),
             guestos_releases: ArtifactReleases::new(Artifact::GuestOs),
             hostos_releases: ArtifactReleases::new(Artifact::HostOs),
@@ -386,9 +384,9 @@ impl RegistryState {
     }
 
     fn update_operators(&mut self, providers: &[NodeProviderDetails]) -> Result<()> {
-        let providers = providers.iter().map(|p| (p.principal_id, p)).collect::<BTreeMap<_, _>>();
-        let data_center_records: BTreeMap<String, DataCenterRecord> = self.local_registry.get_family_entries()?;
-        let operator_records: BTreeMap<String, NodeOperatorRecord> = self.local_registry.get_family_entries()?;
+        let providers = providers.iter().map(|p| (p.principal_id, p)).collect::<IndexMap<_, _>>();
+        let data_center_records: IndexMap<String, DataCenterRecord> = self.local_registry.get_family_entries()?;
+        let operator_records: IndexMap<String, NodeOperatorRecord> = self.local_registry.get_family_entries()?;
 
         self.operators = operator_records
             .iter()
@@ -423,7 +421,7 @@ impl RegistryState {
                                 longitude: dc.gps.clone().map(|l| l.longitude as f64),
                             }
                         }),
-                        rewardable_nodes: or.rewardable_nodes.clone(),
+                        rewardable_nodes: or.rewardable_nodes.iter().map(|(k, v)| (k.clone(), *v)).collect(),
                         ipv6: or.ipv6().to_string(),
                     },
                 )
@@ -443,7 +441,7 @@ impl RegistryState {
     fn update_nodes(&mut self) -> Result<()> {
         let node_entries = self.local_registry.get_family_entries_versioned::<NodeRecord>()?;
         let dfinity_dcs = DFINITY_DCS.split(' ').map(|dc| dc.to_string().to_lowercase()).collect::<HashSet<_>>();
-        let api_boundary_nodes: BTreeMap<String, ApiBoundaryNodeRecord> = self.local_registry.get_family_entries()?;
+        let api_boundary_nodes: IndexMap<String, ApiBoundaryNodeRecord> = self.local_registry.get_family_entries()?;
 
         self.nodes = node_entries
             .iter()
@@ -607,15 +605,15 @@ impl RegistryState {
         self.version
     }
 
-    pub fn subnets(&self) -> BTreeMap<PrincipalId, Subnet> {
+    pub fn subnets(&self) -> IndexMap<PrincipalId, Subnet> {
         self.subnets.clone()
     }
 
-    pub fn nodes(&self) -> BTreeMap<PrincipalId, Node> {
+    pub fn nodes(&self) -> IndexMap<PrincipalId, Node> {
         self.nodes.clone()
     }
 
-    pub async fn nodes_with_proposals(&self) -> Result<BTreeMap<PrincipalId, Node>> {
+    pub async fn nodes_with_proposals(&self) -> Result<IndexMap<PrincipalId, Node>> {
         let nodes = self.nodes.clone();
         let proposal_agent = proposal::ProposalAgentImpl::new(self.network.get_nns_urls());
 
@@ -644,7 +642,7 @@ impl RegistryState {
         proposal_agent.list_open_elect_hostos_proposals().await
     }
 
-    pub async fn subnets_with_proposals(&self) -> Result<BTreeMap<PrincipalId, Subnet>> {
+    pub async fn subnets_with_proposals(&self) -> Result<IndexMap<PrincipalId, Subnet>> {
         let subnets = self.subnets.clone();
         let proposal_agent = proposal::ProposalAgentImpl::new(self.network.get_nns_urls());
 
@@ -697,8 +695,8 @@ impl RegistryState {
 
     async fn retireable_hostos_versions(&self) -> Result<Vec<Release>> {
         let active_releases = self.hostos_releases.get_active_branches();
-        let hostos_versions: BTreeSet<String> = self.nodes.values().map(|s| s.hostos_version.clone()).collect();
-        let versions_in_proposals: BTreeSet<String> = self
+        let hostos_versions: IndexSet<String> = self.nodes.values().map(|s| s.hostos_version.clone()).collect();
+        let versions_in_proposals: IndexSet<String> = self
             .open_elect_hostos_proposals()
             .await?
             .iter()
@@ -721,9 +719,9 @@ impl RegistryState {
 
     async fn retireable_guestos_versions(&self) -> Result<Vec<Release>> {
         let active_releases = self.guestos_releases.get_active_branches();
-        let subnet_versions: BTreeSet<String> = self.subnets.values().map(|s| s.replica_version.clone()).collect();
+        let subnet_versions: IndexSet<String> = self.subnets.values().map(|s| s.replica_version.clone()).collect();
         let version_on_unassigned_nodes = self.get_unassigned_nodes_replica_version().await?;
-        let versions_in_proposals: BTreeSet<String> = self
+        let versions_in_proposals: IndexSet<String> = self
             .open_elect_replica_proposals()
             .await?
             .iter()
@@ -754,7 +752,7 @@ impl RegistryState {
         )
     }
 
-    pub fn operators(&self) -> BTreeMap<PrincipalId, Operator> {
+    pub fn operators(&self) -> IndexMap<PrincipalId, Operator> {
         self.operators.clone()
     }
 
@@ -858,7 +856,7 @@ impl SubnetQuerier for RegistryState {
                         .to_vec()
                         .iter()
                         .map(|n| self.nodes.get(&n.id).and_then(|n| n.subnet_id))
-                        .collect::<BTreeSet<_>>();
+                        .collect::<IndexSet<_>>();
                     if subnets.len() > 1 {
                         return Err(NetworkError::IllegalRequest("nodes don't belong to the same subnet".to_string()));
                     }
