@@ -126,3 +126,9 @@ pub struct NodeRewardsResponse {
     pub daily_node_metrics: Vec<DailyNodeMetrics>,
     pub rewards_computation: RewardsComputationResult,
 }
+
+#[derive(Debug, Deserialize, CandidType)]
+pub struct BackfillArgs {
+    pub subnet_id: PrincipalId,
+    pub node_metrics_history: Vec<NodeMetricsHistoryResponse>
+  }

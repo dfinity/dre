@@ -1,10 +1,10 @@
 use candid::Principal;
+use ic_base_types::PrincipalId;
 use ic_cdk_macros::*;
 use itertools::Itertools;
 use std::collections::{self, btree_map::Entry, BTreeMap};
 use trustworthy_node_metrics_types::types::{
-    DailyNodeMetrics, NodeMetrics, NodeMetricsStored, NodeMetricsStoredKey, NodeRewardsArgs, NodeRewardsResponse, SubnetNodeMetricsArgs,
-    SubnetNodeMetricsResponse,
+    BackfillArgs, DailyNodeMetrics, NodeMetrics, NodeMetricsStored, NodeMetricsStoredKey, NodeRewardsArgs, NodeRewardsResponse, SubnetNodeMetricsArgs, SubnetNodeMetricsResponse
 };
 mod computation_logger;
 mod metrics_manager;
@@ -123,4 +123,19 @@ fn node_rewards(args: NodeRewardsArgs) -> Vec<NodeRewardsResponse> {
             }
         })
         .collect_vec()
+}
+
+#[update]
+async fn backfill_subnet_metrics(subnet_metrics: Vec<BackfillArgs>) -> Result<(), String> {
+    let tupled = subnet_metrics.into_iter()
+    .map(|arg| (arg.subnet_id, arg.node_metrics_history))
+    .collect_vec();
+    metrics_manager::store_subnet_metrics(tupled).await.map_err(|e| e.to_string())
+}
+
+#[update]
+async fn update_node_provider(node_id: PrincipalId) -> Result<(), String> {
+    metrics_manager::store_principal(node_id).await;
+    
+    Ok(())
 }

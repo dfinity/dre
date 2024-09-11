@@ -1,6 +1,7 @@
 use std::collections::BTreeMap;
 
 use anyhow::anyhow;
+use candid::Principal;
 use dfn_core::api::PrincipalId;
 use futures::FutureExt;
 use ic_base_types::NodeId;
@@ -222,3 +223,18 @@ pub async fn update_metrics() -> anyhow::Result<()> {
 
     Ok(())
 }
+
+pub async fn store_subnet_metrics(subnet_metrics: Vec<(PrincipalId, Vec<NodeMetricsHistoryResponse>)>) -> anyhow::Result<()> {
+    
+    let metrics_by_node: BTreeMap<PrincipalId, Vec<NodeMetricsGrouped>> = grouped_by_node(subnet_metrics);
+    let nodes_principal: Vec<&PrincipalId> = metrics_by_node.keys().collect_vec();
+    
+    update_node_metrics(metrics_by_node);
+    
+    Ok(())
+}
+
+pub(crate) async fn store_principal(node_id: PrincipalId) {
+    update_node_providers(vec![&node_id]).await
+}
+

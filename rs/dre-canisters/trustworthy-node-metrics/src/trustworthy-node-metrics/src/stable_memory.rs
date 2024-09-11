@@ -62,3 +62,13 @@ pub fn insert_node_provider(key: Principal, value: Principal) {
 pub fn get_node_provider(node_principal: &Principal) -> Option<Principal> {
     NODE_PROVIDER_MAP.with_borrow(|np_map| np_map.get(node_principal))
 }
+
+pub(crate) fn wipe_metrics(ts: TimestampNanos) {
+    NODE_METRICS_MAP.with(|p| {
+        let keys_to_remove = p.borrow().range((0, Principal::anonymous())..=(ts, Principal::anonymous())).collect_vec();
+
+        for (k, _) in keys_to_remove {
+            let _ = p.borrow_mut().remove(&k);
+        } 
+    })
+}
