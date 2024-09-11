@@ -1,5 +1,9 @@
-import { DailyNodeMetrics } from "../../../declarations/trustworthy-node-metrics/trustworthy-node-metrics.did";
+import React from 'react';
+import { Principal } from "@dfinity/principal";
+import { trustworthy_node_metrics } from "../../../declarations/trustworthy-node-metrics";
+import { DailyNodeMetrics, NodeRewardsArgs, NodeRewardsResponse } from "../../../declarations/trustworthy-node-metrics/trustworthy-node-metrics.did";
 import { PeriodFilter } from "../components/FilterBar";
+import { Box, CircularProgress } from "@mui/material";
 export interface ChartData {
   date: Date ;
   dailyNodeMetrics: DailyNodeMetrics | null;
@@ -67,3 +71,58 @@ export const computeAverageFailureRate = (data: number[]): number => {
     return sum / data.length;
   };
 
+export const getDateRange = () => {
+  const now = new Date();
+  const currentDay = now.getUTCDate();
+
+  const dateStart = new Date(
+    Date.UTC(
+      now.getUTCFullYear(),
+      currentDay <= 14 && currentDay > 1 ? now.getUTCMonth() - 1 : now.getUTCMonth(),
+      14, 0, 0, 0, 0 
+    )
+  );
+
+  const dateEnd = now; 
+
+  return { dateStart, dateEnd };
+};
+
+export const setNodeRewardsData = async (
+  periodFilter: PeriodFilter, 
+  node_id: [] | [Principal],
+  node_provider_id: [] | [Principal],
+  setNodeRewards: React.Dispatch<React.SetStateAction<NodeRewardsResponse[]>>,
+  setIsLoading: React.Dispatch<React.SetStateAction<boolean>>) => {
+  try {
+    setIsLoading(true);
+
+    const request: NodeRewardsArgs = {
+      from_ts: dateToNanoseconds(periodFilter.dateStart),
+      to_ts: dateToNanoseconds(periodFilter.dateEnd),
+      node_id: node_id,
+      node_provider_id: node_provider_id,
+    };
+    const nodeRewardsResponse = await trustworthy_node_metrics.node_rewards(request);
+    const sortedNodeRewards = nodeRewardsResponse.sort((a, b) => a.rewards_computation.rewards_percent - b.rewards_computation.rewards_percent);
+
+    setNodeRewards(sortedNodeRewards);
+  } catch (error) {
+    console.error("Error fetching node:", error);
+  } finally {
+    setIsLoading(false);
+  }
+};
+
+export const LoadingIndicator: React.FC = () => (
+  <Box
+    sx={{
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      height: '100vh',
+    }}
+  >
+    <CircularProgress />
+  </Box>
+);

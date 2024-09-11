@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Box, Grid, Paper, Typography } from '@mui/material';
 import { axisClasses, BarChart, StackOrderType } from '@mui/x-charts';
 import Divider from '@mui/material/Divider';
 import { useParams } from 'react-router-dom';
-import { formatDateToUTC, generateChartData, getFormattedDates } from '../utils/utils';
+import { formatDateToUTC, generateChartData, getFormattedDates, LoadingIndicator, setNodeRewardsData } from '../utils/utils';
 import { PeriodFilter } from './FilterBar';
 import { Root } from './NodeList';
 import { NodeRewardsResponse } from '../../../declarations/trustworthy-node-metrics/trustworthy-node-metrics.did';
@@ -11,14 +11,32 @@ import { paperStyle } from '../Styles';
 import InfoFormatter from './NodeInfo';
 import { ExportTable } from './ExportTable';
 import { GridColDef, GridRowsProp } from '@mui/x-data-grid';
+import { Principal } from '@dfinity/principal';
 
 export interface NodeProviderPageProps {
-    nodeRewards: NodeRewardsResponse[],
     periodFilter: PeriodFilter
   }
 
-export const NodeProviderPage: React.FC<NodeProviderPageProps> = ({ nodeRewards, periodFilter }) => {
+export const NodeProviderPage: React.FC<NodeProviderPageProps> = ({ periodFilter }) => {
     const { provider } = useParams();
+
+    const [nodeRewards, setNodeRewards] = useState<NodeRewardsResponse[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        if (provider) {
+            setNodeRewardsData(periodFilter, [], [Principal.fromText(provider)], setNodeRewards, setIsLoading);
+        }    
+    }, [periodFilter, provider]);
+    
+    if (isLoading) {
+        return <LoadingIndicator />;
+    }
+
+    if (nodeRewards.length == 0) {
+        return <p>No metrics for the time period selected</p>;
+    }
+    
     const providerNodeMetrics = nodeRewards
         .filter((nodeMetrics) => nodeMetrics.node_provider_id.toText() === provider)
     const highFailureRateChart = providerNodeMetrics

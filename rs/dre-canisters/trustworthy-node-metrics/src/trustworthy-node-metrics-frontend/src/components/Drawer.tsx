@@ -8,15 +8,12 @@ import {
   IconButton,
   ListItem,
   Toolbar,
-  useMediaQuery,
-  useTheme,
 } from '@mui/material';
 import { Link } from 'react-router-dom';
 import Logo from '../assets/icp_logo.svg'; 
 import { ExpandLess, ExpandMore } from '@mui/icons-material';
 
 interface DrawerProps {
-  subnets: Set<string>;
   providers: Set<string>;
   drawerWidth: number;
   temporary: boolean;
@@ -24,8 +21,7 @@ interface DrawerProps {
   onClosed: () => void;
 }
 
-const Drawer: React.FC<DrawerProps> = ({ subnets, providers, drawerWidth, temporary, drawerOpen, onClosed }) => {
-  const [isSubnetsOpen, setIsSubnetsOpen] = React.useState(false);
+const Drawer: React.FC<DrawerProps> = ({ providers, drawerWidth, temporary, drawerOpen, onClosed }) => {
   const [isNodeProvidersOpen, setIsNodeProvidersOpen] = React.useState(false);
   
   const renderCollapsibleList = (
@@ -84,7 +80,6 @@ const Drawer: React.FC<DrawerProps> = ({ subnets, providers, drawerWidth, tempor
               <ListItemText primary="Nodes" />
             </ListItemButton>
           </Link>
-          {renderCollapsibleList("Subnets", subnets, isSubnetsOpen, setIsSubnetsOpen, "subnets")}
           {renderCollapsibleList("Node Providers", providers, isNodeProvidersOpen, setIsNodeProvidersOpen, "providers")}
         </List>
       </MUIDrawer>

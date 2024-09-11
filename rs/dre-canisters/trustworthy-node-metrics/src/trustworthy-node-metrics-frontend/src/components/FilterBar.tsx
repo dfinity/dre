@@ -20,7 +20,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ filters, setFilters }) => {
       const year = newMonth.getUTCFullYear();
   
       const beginRewardPeriod = new Date(Date.UTC(year, month - 1, 14, 0, 0, 0, 0));
-      const endRewardPeriod = new Date(Date.UTC(year, month, 14, 23, 59, 59, 999));
+      const endRewardPeriod = new Date(Date.UTC(year, month, 13, 23, 59, 59, 999));
   
       setFilters(() => ({
         dateStart: beginRewardPeriod,

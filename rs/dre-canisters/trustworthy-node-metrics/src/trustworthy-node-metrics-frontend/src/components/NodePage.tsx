@@ -1,19 +1,19 @@
-import React from 'react';
-import { ChartData, formatDateToUTC, generateChartData } from '../utils/utils';
-import { WidgetGauge, WidgetNumber } from './Widgets';
+import React, { useEffect, useState } from 'react';
+import { ChartData, formatDateToUTC, generateChartData, LoadingIndicator, setNodeRewardsData } from '../utils/utils';
+import { WidgetNumber } from './Widgets';
 import { PeriodFilter } from './FilterBar';
 import { Box, Divider, Grid, Paper, Typography } from '@mui/material';
 import { useParams } from 'react-router-dom';
-import DailyPerformanceChart from './DailyPerformanceChart';
+import RewardChart from './RewardChart';
 import { paperStyle, boxStyleWidget } from '../Styles';
 import { NodeRewardsResponse } from '../../../declarations/trustworthy-node-metrics/trustworthy-node-metrics.did';
 import RewardsInfo, { LinearReductionChart } from './RewardsInfo';
 import { ExportTable } from './ExportTable';
 import InfoFormatter from './NodeInfo';
 import { GridColDef, GridRowsProp } from '@mui/x-data-grid';
+import { Principal } from '@dfinity/principal';
 
 export interface NodePageProps {
-    nodeRewards: NodeRewardsResponse[];
     periodFilter: PeriodFilter;
 }
 
@@ -24,27 +24,41 @@ const NodeMetricsStats: React.FC<{ stats: NodeRewardsResponse['rewards_computati
     </Box>
 );
 
-const NodePerformanceStats: React.FC<{ rewardsReduction: string }> = ({ rewardsReduction }) => (
+const NodePerformanceStats: React.FC<{ rewardsReduction: string, rewardsPercent: string }> = ({ rewardsReduction, rewardsPercent }) => (
     <Box sx={boxStyleWidget('right')}>
         <WidgetNumber value={rewardsReduction} title="Rewards Reduction Assigned" />
         <WidgetNumber value={"0%"} title="Rewards Reduction Unassigned" />
+        <WidgetNumber value={rewardsPercent} title="Rewards Total" sxValue={{ color: '#FFCC00' }} />
     </Box>
 );
 
-export const NodePage: React.FC<NodePageProps> = ({ nodeRewards, periodFilter }) => {
+export const NodePage: React.FC<NodePageProps> = ({ periodFilter }) => {
     const { node } = useParams();
+
+    const [nodeRewards, setNodeRewards] = useState<NodeRewardsResponse[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        if (node) {
+            setNodeRewardsData(periodFilter, [Principal.fromText(node)], [], setNodeRewards, setIsLoading);
+        }    
+    }, [periodFilter]);
     
-    const nodeMetrics = nodeRewards.find((metrics) => metrics.node_id.toText() === node);
-    if (!nodeMetrics) {
-        return <p>Node metrics not found</p>;
+    if (isLoading) {
+        return <LoadingIndicator />;
     }
 
-    const chartDailyData: ChartData[] = generateChartData(periodFilter, nodeMetrics.daily_node_metrics);
-    const failureRateAvg = Math.round(nodeMetrics.rewards_computation.failure_rate * 100);
-    const rewardsPercent = Math.round(nodeMetrics.rewards_computation.rewards_percent * 100);
+    if (nodeRewards.length == 0) {
+        return <p>No metrics for the time period selected</p>;
+    }
+
+    const rewards = nodeRewards[0];
+    const chartDailyData: ChartData[] = generateChartData(periodFilter, rewards.daily_node_metrics);
+    const failureRateAvg = Math.round(rewards.rewards_computation.failure_rate * 100);
+    const rewardsPercent = Math.round(rewards.rewards_computation.rewards_percent * 100);
     const rewardsReduction = 100 - rewardsPercent;
 
-    const rows: GridRowsProp = nodeMetrics.daily_node_metrics.map((data, index) => {
+    const rows: GridRowsProp = rewards.daily_node_metrics.map((data, index) => {
         return { 
             id: index + 1,
             col1: new Date(Number(data.ts) / 1000000), 
@@ -74,23 +88,29 @@ export const NodePage: React.FC<NodePageProps> = ({ nodeRewards, periodFilter })
                         <Divider/>
                     </Grid>
                     <Grid item xs={12} md={4}>
-                        <InfoFormatter name={"Node ID"} value={nodeMetrics.node_id.toText()} />
-                        <InfoFormatter name={"Node Provider ID"} value={nodeMetrics.node_provider_id.toText()} />
+                        <InfoFormatter name={"Node ID"} value={rewards.node_id.toText()} />
+                        <InfoFormatter name={"Node Provider ID"} value={rewards.node_provider_id.toText()} />
                     </Grid>
-                    <Grid item xs={12} md={8}>
-                        <WidgetGauge value={rewardsPercent} title={"Rewards Total"} />
+                    <Grid item xs={12} md={12}>
+                    <Typography variant="h6" component="div" >
+                        Reward Metrics
+                    </Typography>
+                    <Divider/>
                     </Grid>
                     <Grid item xs={12} md={4}>
-                        <NodeMetricsStats stats={nodeMetrics.rewards_computation} />
+                        <NodeMetricsStats stats={rewards.rewards_computation} />
                     </Grid>
                     <Grid item xs={12} md={8}>
-                        <NodePerformanceStats rewardsReduction={rewardsReduction.toString().concat("%")} />
+                        <NodePerformanceStats rewardsReduction={rewardsReduction.toString().concat("%")} rewardsPercent={rewardsPercent.toString().concat("%")} />
                     </Grid>
                     <Grid item xs={12}>
-                        <DailyPerformanceChart chartDailyData={chartDailyData} />
+                        <RewardChart chartDailyData={chartDailyData} />
+                    </Grid>
+                    <Grid item xs={12} md={6}>
+                        <LinearReductionChart failureRate={failureRateAvg} rewardReduction={rewardsReduction} />
                     </Grid>
                     <Grid item xs={12}>
-                        <RewardsInfo failureRate={failureRateAvg} rewardReduction={rewardsReduction}/>
+                        <RewardsInfo/>
                     </Grid>
                     <Grid item xs={12} md={12}>
                         <ExportTable colDef={colDef} rows={rows}/>

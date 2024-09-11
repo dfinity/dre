@@ -1,10 +1,9 @@
 use candid::Principal;
 use ic_cdk_macros::*;
 use itertools::Itertools;
-use std::collections::{self, btree_map::Entry, BTreeMap};
+use std::collections::{self, btree_map::Entry, BTreeMap, HashSet};
 use trustworthy_node_metrics_types::types::{
-    DailyNodeMetrics, NodeMetrics, NodeMetricsStored, NodeMetricsStoredKey, NodeRewardsArgs, NodeRewardsResponse, SubnetNodeMetricsArgs,
-    SubnetNodeMetricsResponse,
+    DailyNodeMetrics, NodeMetrics, NodeMetricsStored, NodeMetricsStoredKey, NodeProviderMapping, NodeRewardsArgs, NodeRewardsResponse, SubnetNodeMetricsArgs, SubnetNodeMetricsResponse
 };
 mod computation_logger;
 mod metrics_manager;
@@ -48,7 +47,7 @@ fn subnet_node_metrics(args: SubnetNodeMetricsArgs) -> Result<Vec<SubnetNodeMetr
     let from_ts = args.ts.unwrap_or_default();
     let mut subnet_node_metrics: BTreeMap<(u64, Principal), Vec<NodeMetrics>> = BTreeMap::new();
 
-    let node_metrics: Vec<(NodeMetricsStoredKey, NodeMetricsStored)> = stable_memory::get_metrics_range(from_ts, None);
+    let node_metrics: Vec<(NodeMetricsStoredKey, NodeMetricsStored)> = stable_memory::get_metrics_range(from_ts, None, None);
 
     for ((ts, node_id), node_metrics_value) in node_metrics {
         if let Some(subnet_id) = args.subnet_id {
@@ -87,7 +86,20 @@ fn subnet_node_metrics(args: SubnetNodeMetricsArgs) -> Result<Vec<SubnetNodeMetr
 fn node_rewards(args: NodeRewardsArgs) -> Vec<NodeRewardsResponse> {
     let period_start = args.from_ts;
     let period_end = args.to_ts;
-    let node_metrics: Vec<(NodeMetricsStoredKey, NodeMetricsStored)> = stable_memory::get_metrics_range(period_start, Some(period_end));
+
+    let mut nodes_set: HashSet<Principal> = HashSet::new();
+    if let Some(node_id) = args.node_id {
+        nodes_set.insert(node_id);
+    }
+    if let Some(node_provider_id) = args.node_provider_id {
+        let node_ids = stable_memory::get_node_principals(&node_provider_id);
+        for node_id in node_ids {
+            nodes_set.insert(node_id);
+        }
+    }
+    let node_ids_filter = if nodes_set.is_empty() { None } else { Some(nodes_set.into_iter().collect_vec())};
+
+    let node_metrics: Vec<(NodeMetricsStoredKey, NodeMetricsStored)> = stable_memory::get_metrics_range(period_start, Some(period_end), node_ids_filter);
 
     let mut daily_metrics = collections::BTreeMap::new();
     for ((ts, node_id), node_metrics_value) in node_metrics {
@@ -123,4 +135,9 @@ fn node_rewards(args: NodeRewardsArgs) -> Vec<NodeRewardsResponse> {
             }
         })
         .collect_vec()
+}
+
+#[query]
+fn node_provider_mapping() -> Vec<NodeProviderMapping> {
+    stable_memory::get_node_provider_mapping()
 }
