@@ -70,7 +70,7 @@ class ReconcilerState:
                 remaining_time_until_retry = datetime.timedelta(minutes=3) - (
                     datetime.datetime.now() - last_modified
                 )
-                if remaining_time_until_retry > datetime.timedelta():
+                if remaining_time_until_retry.total_seconds() > 0:
                     logging.warning(
                         "version %s: earlier proposal submission attempted but most likely failed, will retry in %s seconds",
                         version,
