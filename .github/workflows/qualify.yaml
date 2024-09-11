@@ -23,7 +23,7 @@ jobs:
   setup:
     runs-on:
       labels: dre-runner-custom
-    container: ghcr.io/dfinity/dre/actions-runner:81944049d9c85d2365f83fbcafc4e2baddd663c5
+    container: ghcr.io/dfinity/dre/actions-runner:f47914030bbdb5c3d542aa876ba8a11a6b183bff
     outputs:
       matrix: ${{ steps.generate.outputs.output }}
     steps:
@@ -42,7 +42,7 @@ jobs:
       matrix: ${{ fromJson(needs.setup.outputs.matrix) }}
     runs-on:
       labels: dre-runner-custom
-    container: ghcr.io/dfinity/dre/actions-runner:81944049d9c85d2365f83fbcafc4e2baddd663c5
+    container: ghcr.io/dfinity/dre/actions-runner:f47914030bbdb5c3d542aa876ba8a11a6b183bff
     steps:
       - uses: actions/checkout@v4
         with:
