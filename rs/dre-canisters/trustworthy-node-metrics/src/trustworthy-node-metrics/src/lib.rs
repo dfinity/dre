@@ -3,7 +3,8 @@ use ic_cdk_macros::*;
 use itertools::Itertools;
 use std::collections::{self, btree_map::Entry, BTreeMap, HashSet};
 use trustworthy_node_metrics_types::types::{
-    DailyNodeMetrics, NodeMetrics, NodeMetricsStored, NodeMetricsStoredKey, NodeProviderMapping, NodeRewardsArgs, NodeRewardsResponse, SubnetNodeMetricsArgs, SubnetNodeMetricsResponse
+    DailyNodeMetrics, NodeMetrics, NodeMetricsStored, NodeMetricsStoredKey, NodeProviderMapping, NodeRewardsArgs, NodeRewardsResponse,
+    SubnetNodeMetricsArgs, SubnetNodeMetricsResponse,
 };
 mod computation_logger;
 mod metrics_manager;
@@ -97,9 +98,14 @@ fn node_rewards(args: NodeRewardsArgs) -> Vec<NodeRewardsResponse> {
             nodes_set.insert(node_id);
         }
     }
-    let node_ids_filter = if nodes_set.is_empty() { None } else { Some(nodes_set.into_iter().collect_vec())};
+    let node_ids_filter = if nodes_set.is_empty() {
+        None
+    } else {
+        Some(nodes_set.into_iter().collect_vec())
+    };
 
-    let node_metrics: Vec<(NodeMetricsStoredKey, NodeMetricsStored)> = stable_memory::get_metrics_range(period_start, Some(period_end), node_ids_filter);
+    let node_metrics: Vec<(NodeMetricsStoredKey, NodeMetricsStored)> =
+        stable_memory::get_metrics_range(period_start, Some(period_end), node_ids_filter);
 
     let mut daily_metrics = collections::BTreeMap::new();
     for ((ts, node_id), node_metrics_value) in node_metrics {
