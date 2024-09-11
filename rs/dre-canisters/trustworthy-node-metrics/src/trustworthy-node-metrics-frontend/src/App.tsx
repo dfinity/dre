@@ -53,7 +53,7 @@ const App: React.FC = () => {
     };
     
     updateRewards();
-  }, [periodFilter]);
+  }, []);
 
   const drawerProps = useMemo(() => ({
     providers,
@@ -71,18 +71,24 @@ const App: React.FC = () => {
           <Drawer {...drawerProps} />
           <Box sx={{ flexGrow: 1, width: `calc(100% - ${drawerWidth}px)` }}>
             <Header withDrawerIcon={isSmallScreen} onDrawerIconClicked={() => setDrawerOpen(true)} />
-            <FilterBar filters={periodFilter} setFilters={setPeriodFilter} />
-            
             <Routes>
               <Route path="/" element={<Navigate to="/nodes" replace />} />
               <Route path="/nodes" element={
                 isLoading ? <LoadingIndicator /> : <NodeList nodeProviderMapping={nodeProvidersMapping} periodFilter={periodFilter} />
               } />
               <Route path="/nodes/:node" element={
-                isLoading ? <LoadingIndicator /> : <NodePage periodFilter={periodFilter} />
+                isLoading ? <LoadingIndicator /> : 
+                <>
+                <FilterBar filters={periodFilter} setFilters={setPeriodFilter} />
+                <NodePage periodFilter={periodFilter} />
+                </>
               } />
               <Route path="/providers/:provider" element={
-                isLoading ? <LoadingIndicator /> : <NodeProviderPage periodFilter={periodFilter} />
+                isLoading ? <LoadingIndicator /> : 
+                <>
+                <FilterBar filters={periodFilter} setFilters={setPeriodFilter} />
+                <NodeProviderPage nodeProvidersMapping={nodeProvidersMapping} periodFilter={periodFilter} />
+                </>
               } />
             </Routes>
           </Box>

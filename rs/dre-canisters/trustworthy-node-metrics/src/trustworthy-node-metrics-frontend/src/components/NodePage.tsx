@@ -3,7 +3,7 @@ import { ChartData, formatDateToUTC, generateChartData, LoadingIndicator, setNod
 import { WidgetNumber } from './Widgets';
 import { PeriodFilter } from './FilterBar';
 import { Box, Divider, Grid, Paper, Typography } from '@mui/material';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import RewardChart from './RewardChart';
 import { paperStyle, boxStyleWidget } from '../Styles';
 import { NodeRewardsResponse } from '../../../declarations/trustworthy-node-metrics/trustworthy-node-metrics.did';
@@ -89,7 +89,14 @@ export const NodePage: React.FC<NodePageProps> = ({ periodFilter }) => {
                     </Grid>
                     <Grid item xs={12} md={4}>
                         <InfoFormatter name={"Node ID"} value={rewards.node_id.toText()} />
-                        <InfoFormatter name={"Node Provider ID"} value={rewards.node_provider_id.toText()} />
+                        <Typography gutterBottom variant="subtitle1" component="div">
+                            Node Provider ID
+                        </Typography>
+                        <Typography gutterBottom variant="subtitle2" sx={{ color: 'text.disabled' }} component="div">
+                        <Link to={`/providers/${rewards.node_provider_id.toText()}`} className="custom-link">
+                            {rewards.node_provider_id.toText()}
+                        </Link>
+                        </Typography>
                     </Grid>
                     <Grid item xs={12} md={12}>
                     <Typography variant="h6" component="div" >

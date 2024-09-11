@@ -1,6 +1,6 @@
 import React from 'react';
-import { Toolbar, Box } from '@mui/material';
-import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
+import { Toolbar, Box, Divider } from '@mui/material';
+import { LocalizationProvider, DatePicker, ArrowRightIcon } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 
 export interface PeriodFilter {
@@ -33,11 +33,36 @@ const FilterBar: React.FC<FilterBarProps> = ({ filters, setFilters }) => {
       }));
     }
   };
+
+  const handleDateStartChange = (newValue: Date | null) => {
+    if (newValue !== null) {
+      setFilters((prev) => ({ ...prev, dateStart: newValue }));
+    }
+  };
+
+  const handleDateEndChange = (newValue: Date | null) => {
+    if (newValue !== null) {
+      setFilters((prev) => ({ ...prev, dateEnd: newValue }));
+    }
+  };
+
   return (
     <Toolbar>
       <LocalizationProvider dateAdapter={AdapterDateFns}>
         <Box display="flex" alignItems="center">
           <DatePicker label="Reward Period" views={['month']} value={filters.dateEnd} onChange={handleMonthChange} />
+          <Divider orientation="vertical" flexItem sx={{ mx: 2 }} />
+          <DatePicker
+            label="From"
+            value={filters.dateStart}
+            onChange={handleDateStartChange}
+          />
+          <ArrowRightIcon />
+          <DatePicker
+            label="To"
+            value={filters.dateEnd}
+            onChange={handleDateEndChange}
+          />
         </Box>
       </LocalizationProvider>
     </Toolbar>
