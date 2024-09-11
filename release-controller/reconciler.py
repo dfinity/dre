@@ -1,3 +1,4 @@
+import datetime
 import hashlib
 import logging
 import os
@@ -57,6 +58,7 @@ class ReconcilerState:
 
     def proposal_submitted(self, version: str) -> bool:
         """Check if a proposal has been submitted for the given version."""
+        version_path = self._version_path(version)
         if self._version_path(version).exists():
             proposal_id = self.version_proposal(version)
             if proposal_id:
@@ -64,10 +66,19 @@ class ReconcilerState:
                     "version %s: proposal %s already submitted", version, proposal_id
                 )
             else:
-                logging.warning(
-                    "version %s: earlier proposal submission attempted but failed, will not retry",
-                    version,
+                last_modified = datetime.datetime.fromtimestamp(os.path.getmtime(version_path))
+                remaining_time_until_retry = datetime.timedelta(minutes=10) - (
+                    datetime.datetime.now() - last_modified
                 )
+                if remaining_time_until_retry.total_seconds() > 0:
+                    logging.warning(
+                        "version %s: earlier proposal submission attempted but most likely failed, will retry in %s seconds",
+                        version,
+                        remaining_time_until_retry.total_seconds(),
+                    )
+                else:
+                    os.remove(version_path)
+                    return False
             return True
         return False
 

@@ -10,7 +10,7 @@ RUN apt-get update && \
     apt-get upgrade -y && \
     apt-get install ca-certificates curl git-all gcc g++ clang pkg-config make sudo docker.io build-essential \
     libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev libffi-dev liblzma-dev libncurses5-dev libncursesw5-dev \
-    xz-utils tk-dev libffi-dev liblzma-dev python-openssl protobuf-compiler libdbus-1-dev softhsm2 libsofthsm2 -y
+    xz-utils tk-dev libffi-dev liblzma-dev python-openssl protobuf-compiler libdbus-1-dev softhsm2 libsofthsm2 opensc -y
 
 RUN curl -L https://ziglang.org/builds/zig-linux-x86_64-0.14.0-dev.321+888708ec8.tar.xz | tar -xJ && \
     mv zig-linux-x86_64-0.14.0-dev.321+888708ec8 /zig
@@ -56,6 +56,8 @@ RUN mkdir -p /home/runner/.ssh \
 
 # Adjust permissions
 RUN chown -R runner:runner /home/runner
+RUN chown -R runner:runner /etc/softhsm
+RUN chown -R runner:runner /var/lib/softhsm
 
 # Setup podman
 # From https://www.redhat.com/sysadmin/podman-inside-container
