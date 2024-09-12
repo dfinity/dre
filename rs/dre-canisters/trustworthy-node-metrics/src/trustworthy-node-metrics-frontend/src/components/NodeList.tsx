@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Box, Autocomplete, TextField, TableCell, TableRow, TableHead, Table, TableContainer, Paper, TableBody } from '@mui/material';
 import { Link } from 'react-router-dom';
 import { styled } from '@mui/material/styles';
-import { PeriodFilter } from './FilterBar';
 import { NodeProviderMapping } from '../../../declarations/trustworthy-node-metrics/trustworthy-node-metrics.did';
 
 export const Root = styled('div')(({ theme }) => ({
@@ -16,7 +15,6 @@ export const Root = styled('div')(({ theme }) => ({
 
 export interface NodeListProps {
   nodeProviderMapping: NodeProviderMapping[];
-  periodFilter: PeriodFilter;
 }
 
 const tableHeaders = [

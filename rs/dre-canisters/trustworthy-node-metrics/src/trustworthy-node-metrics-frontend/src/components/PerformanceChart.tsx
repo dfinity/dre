@@ -11,11 +11,11 @@ import {
 } from '@mui/x-charts'; // Update paths
 import { ChartData } from '../utils/utils';
 
-interface RewardChartProps {
+interface PerformanceChartProps {
   chartDailyData: ChartData[];
 }
 
-const RewardChart: React.FC<RewardChartProps> = ({ chartDailyData }) => {
+const PerformanceChart: React.FC<PerformanceChartProps> = ({ chartDailyData }) => {
   const maxBlocks = Math.max(
     ...chartDailyData.map(entry => entry.dailyNodeMetrics ? 
             Number(entry.dailyNodeMetrics.num_blocks_proposed + entry.dailyNodeMetrics.num_blocks_failed) : 0)
@@ -76,13 +76,13 @@ const RewardChart: React.FC<RewardChartProps> = ({ chartDailyData }) => {
   }));
 
   return (
-    <div>
+    <>
       <ResponsiveChartContainer
         xAxis={xAxisConfig}
         yAxis={yAxisConfig}
         series={seriesConfig}
         dataset={dataset}
-        height={400}
+        height={300}
       >
         <BarPlot borderRadius={9} />
         <LinePlot />
@@ -92,8 +92,8 @@ const RewardChart: React.FC<RewardChartProps> = ({ chartDailyData }) => {
         <ChartsXAxis position="bottom" axisId="x-axis-id" />
         <ChartsYAxis position="left" axisId="y-axis-id" />
       </ResponsiveChartContainer>
-    </div>
+    </>
   );
 };
 
-export default RewardChart;
+export default PerformanceChart;

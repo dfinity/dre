@@ -18,7 +18,7 @@ const NodeRewardExplanation = () => {
           Node Unassigned:
         </Typography>
         <Typography variant="body2" color="textSecondary" gutterBottom>
-          When a node is not assigned to any subnet, it automatically receives the full reward (100%). No further calculations are needed.
+          When a node is not assigned to any subnet, it automatically receives the full reward (100%).
         </Typography>
 
         {/* Node Assigned Section */}
@@ -89,7 +89,7 @@ const NodeRewardExplanation = () => {
             </List>
 
             <Typography variant="body2" color="textSecondary" gutterBottom>
-              The final reward percentage for the assigned period is computed by subtracting the rewards reduction from 100%.
+              The reward multiplier for the assigned period is computed by subtracting the rewards reduction from 100%.
             </Typography>
           </ListItem>
         </List>
@@ -99,10 +99,10 @@ const NodeRewardExplanation = () => {
           {/* Total Rewards Calculation Placeholder */}
           <ListItem sx={{ display: 'list-item' }}>
             <Typography variant="body2" gutterBottom>
-              Compute total rewards:
+              Compute Reward Multiplier:
             </Typography>
             <Typography variant="body2" color="textSecondary" gutterBottom>
-              Work in progress...
+              The final reward multiplier is then the weighted average between the multiplier for days in which the node is assigned to a subnet and 100% for the days in which the node is unassigned. 
             </Typography>
           </ListItem>
         </List>
@@ -131,9 +131,6 @@ export const LinearReductionChart: React.FC<{ failureRate: number; rewardReducti
 
   return (
     <>
-      <Typography variant="body1" gutterBottom>
-        Linear Rewards Reduction Applied
-      </Typography>
       <LineChart
         margin={{ left: 60}}
         yAxis={[{

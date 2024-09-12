@@ -25,9 +25,6 @@ const darkTheme = createTheme({
 });
 
 const App: React.FC = () => {
-  const { dateStart, dateEnd } = useMemo(() => getDateRange(), []);
-  
-  const [periodFilter, setPeriodFilter] = useState<PeriodFilter>({ dateStart, dateEnd });
   const [providers, setProviders] = useState<Set<string>>(new Set());
   const [nodeProvidersMapping, setNodeProvidersMapping] = useState<NodeProviderMapping[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -74,22 +71,10 @@ const App: React.FC = () => {
             <Routes>
               <Route path="/" element={<Navigate to="/nodes" replace />} />
               <Route path="/nodes" element={
-                isLoading ? <LoadingIndicator /> : <NodeList nodeProviderMapping={nodeProvidersMapping} periodFilter={periodFilter} />
+                isLoading ? <LoadingIndicator /> : <NodeList nodeProviderMapping={nodeProvidersMapping} />
               } />
-              <Route path="/nodes/:node" element={
-                isLoading ? <LoadingIndicator /> : 
-                <>
-                <FilterBar filters={periodFilter} setFilters={setPeriodFilter} />
-                <NodePage periodFilter={periodFilter} />
-                </>
-              } />
-              <Route path="/providers/:provider" element={
-                isLoading ? <LoadingIndicator /> : 
-                <>
-                <FilterBar filters={periodFilter} setFilters={setPeriodFilter} />
-                <NodeProviderPage nodeProvidersMapping={nodeProvidersMapping} periodFilter={periodFilter} />
-                </>
-              } />
+              <Route path="/nodes/:node" element={ isLoading ? <LoadingIndicator /> : <NodePage nodeProvidersMapping={nodeProvidersMapping} />} />
+              <Route path="/providers/:provider" element={ isLoading ? <LoadingIndicator /> :  <NodeProviderPage  nodeProvidersMapping={nodeProvidersMapping} /> } />
             </Routes>
           </Box>
         </Box>
