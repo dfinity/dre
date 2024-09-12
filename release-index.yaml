@@ -1,4 +1,14 @@
 releases:
+  - rc_name: rc--2024-09-12_01-30
+    versions:
+      # Qualification pipeline:
+      # https://github.com/dfinity/ic/actions/runs/10822488140
+      - name: base
+        version: afe1a18291987667fdb52dac3ca44b1aebf7176e
+      # Qualification pipeline:
+      # https://github.com/dfinity/ic/actions/runs/10828697477
+      - name: canister-snapshots
+        version: 179973553248415fc85679d853b48b0e0ec231c6
   - rc_name: rc--2024-09-06_01-30
     versions:
       # Qualification pipeline:
