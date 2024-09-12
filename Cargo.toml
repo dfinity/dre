@@ -192,7 +192,7 @@ url = "2.5.2"
 wiremock = "0.6.1"
 human_bytes = "0.4"
 mockall = "0.13.0"
-
+openssl = "0.10.66"
 
 # dre-canisters dependencies
 ic-cdk-timers = { git = "https://github.com/dfinity/cdk-rs.git", rev = "3e54016734c8f73fb3acabc9c9e72c960c85eb3b" }
