@@ -16,6 +16,7 @@ export const NodeRewardsChart: React.FC<NodeRewardsChartProps> = ({ node }) => {
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
+        window.scrollTo(0, 0);
         if (node) {
             setNodeRewardsData(latestRewardRange, [Principal.fromText(node)], [], setLatestNodeRewards, setIsLoading);
         }    
