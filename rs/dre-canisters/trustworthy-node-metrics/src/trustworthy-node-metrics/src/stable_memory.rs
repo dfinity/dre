@@ -90,12 +90,7 @@ pub fn get_node_provider_mapping() -> Vec<NodeProviderMapping> {
     NODE_PROVIDER_MAP.with_borrow(|np_map| {
         np_map
             .iter()
-            .map(|(node_id, node_provider_id)| {
-                NodeProviderMapping {
-                    node_id,
-                    node_provider_id
-                }
-            })
+            .map(|(node_id, node_provider_id)| NodeProviderMapping { node_id, node_provider_id })
             .collect_vec()
     })
 }
