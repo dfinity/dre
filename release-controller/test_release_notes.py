@@ -1,6 +1,10 @@
 import pathlib
 import tempfile
-from release_notes import prepare_release_notes, get_change_description_for_commit, Change
+from release_notes import (
+    prepare_release_notes,
+    get_change_description_for_commit,
+    Change,
+)
 from git_repo import GitRepo
 import pytest
 
@@ -8,10 +12,14 @@ import pytest
 def test_get_change_description_for_commit():
     with tempfile.TemporaryDirectory() as repo_cache_dir:
         ic_repo = GitRepo(
-            "https://github.com/dfinity/ic.git", main_branch="master", repo_cache_dir=pathlib.Path(repo_cache_dir)
+            "https://github.com/dfinity/ic.git",
+            main_branch="master",
+            repo_cache_dir=pathlib.Path(repo_cache_dir),
         )
         # Not modifying GuestOS
-        assert get_change_description_for_commit(commit_hash="00dc67f8d", ic_repo=ic_repo) == Change(
+        assert get_change_description_for_commit(
+            commit_hash="00dc67f8d", ic_repo=ic_repo
+        ) == Change(
             commit="00dc67f8d",
             teams=[
                 "crypto-team",
@@ -25,7 +33,9 @@ def test_get_change_description_for_commit():
             guestos_change=False,
         )
         # bumping dependencies
-        assert get_change_description_for_commit(commit_hash="2d0835bba", ic_repo=ic_repo) == Change(
+        assert get_change_description_for_commit(
+            commit_hash="2d0835bba", ic_repo=ic_repo
+        ) == Change(
             commit="2d0835bba",
             teams=[
                 "ic-owners-owners",
@@ -38,7 +48,9 @@ def test_get_change_description_for_commit():
             guestos_change=True,
         )
         # .github change
-        assert get_change_description_for_commit(commit_hash="94fd38099", ic_repo=ic_repo) == Change(
+        assert get_change_description_for_commit(
+            commit_hash="94fd38099", ic_repo=ic_repo
+        ) == Change(
             commit="94fd38099",
             teams=[
                 "ic-owners-owners",
@@ -51,7 +63,9 @@ def test_get_change_description_for_commit():
             guestos_change=False,
         )
         # replica change
-        assert get_change_description_for_commit(commit_hash="951e895c7", ic_repo=ic_repo) == Change(
+        assert get_change_description_for_commit(
+            commit_hash="951e895c7", ic_repo=ic_repo
+        ) == Change(
             commit="951e895c7",
             teams=[
                 "execution",
@@ -65,7 +79,9 @@ def test_get_change_description_for_commit():
             guestos_change=True,
         )
         # modifies Cargo.lock but not in a meaningful way
-        assert get_change_description_for_commit(commit_hash="5a250cb34", ic_repo=ic_repo) == Change(
+        assert get_change_description_for_commit(
+            commit_hash="5a250cb34", ic_repo=ic_repo
+        ) == Change(
             commit="5a250cb34",
             teams=[
                 "ic-interface-owners",
@@ -78,7 +94,9 @@ def test_get_change_description_for_commit():
             guestos_change=False,
         )
         # modifies ic-admin
-        assert get_change_description_for_commit(commit_hash="d436a526d", ic_repo=ic_repo) == Change(
+        assert get_change_description_for_commit(
+            commit_hash="d436a526d", ic_repo=ic_repo
+        ) == Change(
             commit="d436a526d",
             teams=[
                 "ic-interface-owners",
@@ -90,7 +108,9 @@ def test_get_change_description_for_commit():
             exclusion_reason="Changed files are excluded by file path filter",
             guestos_change=True,
         )
-        assert get_change_description_for_commit(commit_hash="92e0f4a55", ic_repo=ic_repo) == Change(
+        assert get_change_description_for_commit(
+            commit_hash="92e0f4a55", ic_repo=ic_repo
+        ) == Change(
             commit="92e0f4a55",
             teams=[
                 "ic-interface-owners",
@@ -102,7 +122,9 @@ def test_get_change_description_for_commit():
             exclusion_reason="Scope of the change (nns) is not related to GuestOS",
             guestos_change=True,
         )
-        assert get_change_description_for_commit(commit_hash="0aa15a5be", ic_repo=ic_repo) == Change(
+        assert get_change_description_for_commit(
+            commit_hash="0aa15a5be", ic_repo=ic_repo
+        ) == Change(
             commit="0aa15a5be",
             teams=[
                 "ic-interface-owners",
@@ -114,7 +136,9 @@ def test_get_change_description_for_commit():
             exclusion_reason="Changed files are excluded by file path filter",
             guestos_change=True,
         )
-        assert get_change_description_for_commit(commit_hash="974f22dc1", ic_repo=ic_repo) == Change(
+        assert get_change_description_for_commit(
+            commit_hash="974f22dc1", ic_repo=ic_repo
+        ) == Change(
             commit="974f22dc1",
             teams=[
                 "ic-interface-owners",
@@ -126,7 +150,9 @@ def test_get_change_description_for_commit():
             exclusion_reason="Changed files are excluded by file path filter",
             guestos_change=True,
         )
-        assert get_change_description_for_commit(commit_hash="05b02520f", ic_repo=ic_repo) == Change(
+        assert get_change_description_for_commit(
+            commit_hash="05b02520f", ic_repo=ic_repo
+        ) == Change(
             commit="05b02520f",
             teams=[
                 "ic-interface-owners",
@@ -138,7 +164,9 @@ def test_get_change_description_for_commit():
             exclusion_reason="Scope of the change (sns) is not related to GuestOS",
             guestos_change=True,
         )
-        assert get_change_description_for_commit(commit_hash="57293157d", ic_repo=ic_repo) == Change(
+        assert get_change_description_for_commit(
+            commit_hash="57293157d", ic_repo=ic_repo
+        ) == Change(
             commit="57293157d",
             teams=[
                 "ic-interface-owners",
@@ -150,7 +178,9 @@ def test_get_change_description_for_commit():
             exclusion_reason="Changed files are excluded by file path filter",
             guestos_change=True,
         )
-        assert get_change_description_for_commit(commit_hash="f4242cbcf", ic_repo=ic_repo) == Change(
+        assert get_change_description_for_commit(
+            commit_hash="f4242cbcf", ic_repo=ic_repo
+        ) == Change(
             commit="f4242cbcf",
             teams=[
                 "ic-interface-owners",
@@ -160,6 +190,22 @@ def test_get_change_description_for_commit():
             message="add decoding quota to http_request in NNS root canister ([#1031](https://github.com/dfinity/ic/pull/1031))",
             commiter="mras     ",
             exclusion_reason="Changed files are excluded by file path filter",
+            guestos_change=True,
+        )
+        assert get_change_description_for_commit(
+            commit_hash="a63138ab5", ic_repo=ic_repo
+        ) == Change(
+            commit="a63138ab5",
+            teams=[
+                "execution",
+                "ic-interface-owners",
+                "ic-message-routing-owners",
+            ],
+            type="feat",
+            scope="",
+            message="Check `SystemState` invariants on checkpoint loading ([#1165](https://github.com/dfinity/ic/pull/1165))",
+            commiter="Alin Sinp",
+            exclusion_reason=None,
             guestos_change=True,
         )
 
