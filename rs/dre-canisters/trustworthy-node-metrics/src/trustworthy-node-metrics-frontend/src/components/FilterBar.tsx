@@ -14,35 +14,48 @@ interface FilterBarProps {
   setFilters: React.Dispatch<React.SetStateAction<PeriodFilter>>;
 }
 
+const makeLocalAppearUTC = (date: Date) => {
+  return new Date(date.getTime() + date.getTimezoneOffset() * 60000);
+};
+
+const localToUTC = (date: Date) => {
+  return new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+};
+
 const FilterBar: React.FC<FilterBarProps> = ({ filters, setFilters }) => {
   const [error, setError] = useState<string | null>(null);
 
   const handleDateStartChange = (newValue: Date | null) => {
-    if (newValue !== null) {
+    if (newValue) {
+      const startValue = localToUTC(newValue);
       const updatedEndDate = filters.dateEnd;
-      if (updatedEndDate && isAfter(updatedEndDate, newValue) && differenceInMonths(updatedEndDate, newValue) <= 2) {
-        setFilters((prev) => ({ ...prev, dateStart: newValue }));
+      if (updatedEndDate && isAfter(updatedEndDate, startValue) && differenceInMonths(updatedEndDate, startValue) <= 2) {
+        setFilters((prev) => ({ ...prev, dateStart: startValue }));
         setError(null);
       } else {
         setError('The "To" date must be within 2 months of the "From" date.');
-        setFilters((prev) => ({ ...prev, dateStart: newValue, dateEnd: addMonths(newValue, 2) }));
+        setFilters((prev) => ({ ...prev, dateStart: startValue, dateEnd: addMonths(startValue, 2) }));
       }
     }
   };
 
   const handleDateEndChange = (newValue: Date | null) => {
-    newValue?.setUTCMilliseconds(999)
-    if (newValue !== null && filters.dateStart) {
-      if (isAfter(newValue, filters.dateStart)) {
-        if (differenceInMonths(newValue, filters.dateStart) <= 2) {
-          setFilters((prev) => ({ ...prev, dateEnd: newValue }));
-          setError(null);
+    if (newValue) {
+      newValue.setUTCMilliseconds(999);
+      const endValue = localToUTC(newValue);
+
+      if (filters.dateStart) {
+        if (isAfter(endValue, filters.dateStart)) {
+          if (differenceInMonths(endValue, filters.dateStart) <= 2) {
+            setFilters((prev) => ({ ...prev, dateEnd: endValue }));
+            setError(null);
+          } else {
+            setError('The "To" date must be within 2 months of the "From" date.');
+            setFilters((prev) => ({ ...prev, dateEnd: addMonths(filters.dateStart, 2) }));
+          }
         } else {
-          setError('The "To" date must be within 2 months of the "From" date.');
-          setFilters((prev) => ({ ...prev, dateEnd: addMonths(filters.dateStart, 2) }));
+          setError('The "To" date must be after the "From" date.');
         }
-      } else {
-        setError('The "To" date must be after the "From" date.');
       }
     }
   };
@@ -53,14 +66,14 @@ const FilterBar: React.FC<FilterBarProps> = ({ filters, setFilters }) => {
         <Box display="flex" alignItems="center">
           <DatePicker
             label="From"
-            value={filters.dateStart}
+            value={makeLocalAppearUTC(filters.dateStart)}
             onChange={handleDateStartChange}
             format="dd/MM/yyy"
           />
           <ArrowRightIcon />
           <DatePicker
             label="To"
-            value={filters.dateEnd}
+            value={makeLocalAppearUTC(filters.dateEnd)}
             onChange={handleDateEndChange}
             format="dd/MM/yyy"
           />
