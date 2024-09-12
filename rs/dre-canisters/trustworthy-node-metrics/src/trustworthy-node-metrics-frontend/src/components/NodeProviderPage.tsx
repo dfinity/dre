@@ -1,65 +1,39 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Box, Grid, Paper, Typography } from '@mui/material';
-import { axisClasses, BarChart, StackOrderType } from '@mui/x-charts';
 import Divider from '@mui/material/Divider';
-import { useParams } from 'react-router-dom';
-import { formatDateToUTC, generateChartData, getFormattedDates } from '../utils/utils';
-import { PeriodFilter } from './FilterBar';
-import { Root } from './NodeList';
-import { NodeRewardsResponse } from '../../../declarations/trustworthy-node-metrics/trustworthy-node-metrics.did';
+import { Link, useParams } from 'react-router-dom';
+import { getDateRange } from '../utils/utils';
+import FilterBar, { PeriodFilter } from './FilterBar';
+import { NodeProviderMapping } from '../../../declarations/trustworthy-node-metrics/trustworthy-node-metrics.did';
 import { paperStyle } from '../Styles';
 import InfoFormatter from './NodeInfo';
-import { ExportTable } from './ExportTable';
-import { GridColDef, GridRowsProp } from '@mui/x-data-grid';
+import { NodeProviderChart } from './NodeProviderChart';
 
 export interface NodeProviderPageProps {
-    nodeRewards: NodeRewardsResponse[],
-    periodFilter: PeriodFilter
+    nodeProvidersMapping: NodeProviderMapping[]
   }
 
-export const NodeProviderPage: React.FC<NodeProviderPageProps> = ({ nodeRewards, periodFilter }) => {
+export const NodeProviderPage: React.FC<NodeProviderPageProps> = ({ nodeProvidersMapping }) => {
     const { provider } = useParams();
-    const providerNodeMetrics = nodeRewards
-        .filter((nodeMetrics) => nodeMetrics.node_provider_id.toText() === provider)
-    const highFailureRateChart = providerNodeMetrics
-        .filter(nodeMetrics => nodeMetrics.rewards_computation.rewards_reduction > 0)
-        .flatMap(nodeMetrics => {
-            const chartData = generateChartData(periodFilter, nodeMetrics.daily_node_metrics);
-            return {
-                data: chartData.map(data => data.dailyNodeMetrics? data.dailyNodeMetrics.failure_rate * 100: null),
-                label: nodeMetrics.node_id.toText(),
-                stack: 'total' 
-            }
-    });
+    const { dateStart, dateEnd } = useMemo(() => getDateRange(), []);
+    const [periodFilter, setPeriodFilter] = useState<PeriodFilter>({ dateStart, dateEnd });
 
-    let index = 0;
-    const rows: GridRowsProp = providerNodeMetrics.flatMap((nodeRewards) => {
-        return nodeRewards.daily_node_metrics.map((data) => {
-            index = index + 1;
-            return { 
-                id: index,
-                col1: new Date(Number(data.ts) / 1000000), 
-                col2: nodeRewards.node_id.toText(),
-                col3: Number(data.num_blocks_proposed), 
-                col4: Number(data.num_blocks_failed),
-                col5: data.failure_rate,
-                col6: data.subnet_assigned.toText(),
-              };
-        })
-      });
-      
-    const colDef: GridColDef[] = [
-        { field: 'col1', headerName: 'Date (UTC)', width: 200, valueFormatter: (value: Date) => formatDateToUTC(value)},
-        { field: 'col2', headerName: 'Node ID', width: 550 },
-        { field: 'col3', headerName: 'Blocks Proposed', width: 150 },
-        { field: 'col4', headerName: 'Blocks Failed', width: 150 },
-        { field: 'col5', headerName: 'Daily Failure Rate', width: 350 , valueFormatter: (value: number) => `${value * 100}%`,},
-        { field: 'col6', headerName: 'Subnet Assigned', width: 550 },
-        ];
+    if (!provider) {
+        return <p>No Node provider</p>;
+    }
+
+    const nodeIds = nodeProvidersMapping.filter(map => map.node_provider_id.toText() == provider);
+
+    if (!nodeIds) {
+        return <p>No Node Ids found</p>;
+    }
+
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, [provider]);
 
     return (
-
-        <Box sx={{ p: 3 }}>
+    <Box sx={{ p: 3 }}>
         <Paper sx={paperStyle}>
             <Grid container spacing={3}>
                 <Grid item xs={12} md={12}>
@@ -68,36 +42,32 @@ export const NodeProviderPage: React.FC<NodeProviderPageProps> = ({ nodeRewards,
                     </Typography>
                     <Divider/>
                 </Grid>
-                <Grid item xs={12} md={12}>
-                    <InfoFormatter name={"Provider ID"} value={provider ? provider : "Anonym"} />
+                <Grid item xs={12}>
+                <InfoFormatter name={"Provider ID"} value={provider ? provider : "Anonym"} />
+                </Grid>
+                <Grid item xs={12} md={6}>
+                    <Typography gutterBottom variant="subtitle1" component="div">
+                        Node Machines
+                    </Typography>
+                    {nodeIds.map((map, index) => (
+                        <Typography key={index} gutterBottom variant="subtitle2" sx={{ color: 'text.disabled' }} component="div">
+                        <Link to={`/nodes/${map.node_id.toText()}`} className="custom-link">
+                            {map.node_id.toText()}
+                        </Link>
+                        </Typography>
+                    ))}
+                    
                 </Grid>
                 <Grid item xs={12}>
                 <Typography variant="h6" component="div">
                     Daily Failure Rate
                 </Typography>
                 <Typography variant="subtitle2" sx={{ color: 'text.disabled' }} component="div">
-                    For nodes with rewards reduction
+                    Top 3 nodes with highest average failure rate in the period
                 </Typography>
+                <FilterBar filters={periodFilter} setFilters={setPeriodFilter} />   
                 </Grid>
-                <Grid item xs={12} md={12}>
-                <BarChart
-                        slotProps={{ legend: { hidden: true } }}
-                        xAxis={[{ 
-                            scaleType: 'band',
-                            data: getFormattedDates(periodFilter),
-                        }]}
-                        yAxis={[{
-                            valueFormatter: (value: number) => `${value}%`,
-                          }]}
-                        leftAxis={null}
-                        borderRadius={9}
-                        series={highFailureRateChart}
-                        height={300}
-                    />
-                </Grid>
-                <Grid item xs={12} md={12}>
-                    <ExportTable colDef={colDef} rows={rows}/>
-                </Grid>
+                <NodeProviderChart provider={provider} periodFilter={periodFilter}/>
             </Grid>
         </Paper>
     </Box>

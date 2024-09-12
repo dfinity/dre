@@ -64,6 +64,8 @@ pub struct SubnetNodeMetricsResponse {
 pub struct NodeRewardsArgs {
     pub from_ts: u64,
     pub to_ts: u64,
+    pub node_id: Option<Principal>,
+    pub node_provider_id: Option<Principal>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, CandidType)]
@@ -125,4 +127,10 @@ pub struct NodeRewardsResponse {
     pub node_provider_id: Principal,
     pub daily_node_metrics: Vec<DailyNodeMetrics>,
     pub rewards_computation: RewardsComputationResult,
+}
+
+#[derive(Debug, Deserialize, CandidType)]
+pub struct NodeProviderMapping {
+    pub node_id: Principal,
+    pub node_provider_id: Principal,
 }

@@ -1,15 +1,14 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Box, CircularProgress, CssBaseline, ThemeProvider, createTheme, useMediaQuery, useTheme } from '@mui/material';
-import FilterBar, { PeriodFilter } from './components/FilterBar';
+import { Box, CssBaseline, ThemeProvider, createTheme, useMediaQuery, useTheme } from '@mui/material';
 import Drawer from './components/Drawer'; 
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import { trustworthy_node_metrics } from '../../declarations/trustworthy-node-metrics/index.js';
-import { NodeRewardsArgs, NodeRewardsResponse } from '../../declarations/trustworthy-node-metrics/trustworthy-node-metrics.did.js';
 import { NodeList } from './components/NodeList';
 import Header from './components/Header';
-import { dateToNanoseconds } from './utils/utils';
+import { LoadingIndicator } from './utils/utils';
 import { NodePage } from './components/NodePage';
 import { NodeProviderPage } from './components/NodeProviderPage';
+import { NodeProviderMapping } from '../../declarations/trustworthy-node-metrics/trustworthy-node-metrics.did.d';
 
 // Theme configuration
 const darkTheme = createTheme({
@@ -24,43 +23,9 @@ const darkTheme = createTheme({
   },
 });
 
-const getDateRange = () => {
-  const now = new Date();
-  const currentDay = now.getUTCDate();
-
-  const dateStart = new Date(
-    Date.UTC(
-      now.getUTCFullYear(),
-      currentDay <= 14 && currentDay > 1 ? now.getUTCMonth() - 1 : now.getUTCMonth(),
-      14, 0, 0, 0, 0 
-    )
-  );
-
-  const dateEnd = now; 
-
-  return { dateStart, dateEnd };
-};
-
-const LoadingIndicator: React.FC = () => (
-  <Box
-    sx={{
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      height: '100vh',
-    }}
-  >
-    <CircularProgress />
-  </Box>
-);
-
 const App: React.FC = () => {
-  const { dateStart, dateEnd } = useMemo(() => getDateRange(), []);
-  
-  const [periodFilter, setPeriodFilter] = useState<PeriodFilter>({ dateStart, dateEnd });
-  const [nodeRewards, setNodeRewards] = useState<NodeRewardsResponse[]>([]);
-  const [subnets, setSubnets] = useState<Set<string>>(new Set());
   const [providers, setProviders] = useState<Set<string>>(new Set());
+  const [nodeProvidersMapping, setNodeProvidersMapping] = useState<NodeProviderMapping[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const theme = useTheme();
@@ -71,36 +36,28 @@ const App: React.FC = () => {
     const updateRewards = async () => {
       try {
         setIsLoading(true);
-        const request: NodeRewardsArgs = {
-          from_ts: dateToNanoseconds(periodFilter.dateStart),
-          to_ts: dateToNanoseconds(periodFilter.dateEnd),
-        };
-        const nodeRewardsResponse = await trustworthy_node_metrics.node_rewards(request);
-        const sortedNodeRewards = nodeRewardsResponse.sort((a, b) => a.rewards_computation.rewards_percent - b.rewards_computation.rewards_percent);
-        const subnets = new Set(sortedNodeRewards.flatMap(node => node.daily_node_metrics.map(data => data.subnet_assigned.toText())));
-        const providers = new Set(sortedNodeRewards.flatMap(node => node.node_provider_id.toText()));
-        
-        setNodeRewards(sortedNodeRewards);
-        setSubnets(subnets);
+        const nodeProviderMapping = await trustworthy_node_metrics.node_provider_mapping();
+        const providers = new Set(nodeProviderMapping.flatMap(node => node.node_provider_id.toText()));
+
         setProviders(providers);
+        setNodeProvidersMapping(nodeProviderMapping);
       } catch (error) {
-        console.error("Error fetching node:", error);
+        console.error("Error fetching nodeProviderMapping:", error);
       } finally {
         setIsLoading(false);
       }
     };
     
     updateRewards();
-  }, [periodFilter]);
+  }, []);
 
   const drawerProps = useMemo(() => ({
-    subnets,
     providers,
     drawerWidth,
     temporary: isSmallScreen,
     drawerOpen,
     onClosed: () => setDrawerOpen(false)
-  }), [subnets, providers, drawerWidth, isSmallScreen, drawerOpen]);
+  }), [providers, drawerWidth, isSmallScreen, drawerOpen]);
 
   return (
     <ThemeProvider theme={darkTheme}>
@@ -110,22 +67,13 @@ const App: React.FC = () => {
           <Drawer {...drawerProps} />
           <Box sx={{ flexGrow: 1, width: `calc(100% - ${drawerWidth}px)` }}>
             <Header withDrawerIcon={isSmallScreen} onDrawerIconClicked={() => setDrawerOpen(true)} />
-            <FilterBar filters={periodFilter} setFilters={setPeriodFilter} />
-            
             <Routes>
               <Route path="/" element={<Navigate to="/nodes" replace />} />
               <Route path="/nodes" element={
-                isLoading ? <LoadingIndicator /> : <NodeList nodeRewards={nodeRewards} periodFilter={periodFilter} />
+                isLoading ? <LoadingIndicator /> : <NodeList nodeProviderMapping={nodeProvidersMapping} />
               } />
-              <Route path="/nodes/:node" element={
-                isLoading ? <LoadingIndicator /> : <NodePage nodeRewards={nodeRewards} periodFilter={periodFilter} />
-              } />
-              <Route path="/subnets/:subnet" element={
-                isLoading ? <LoadingIndicator /> : <NodeList nodeRewards={nodeRewards} periodFilter={periodFilter} />
-              } />
-              <Route path="/providers/:provider" element={
-                isLoading ? <LoadingIndicator /> : <NodeProviderPage nodeRewards={nodeRewards} periodFilter={periodFilter} />
-              } />
+              <Route path="/nodes/:node" element={ isLoading ? <LoadingIndicator /> : <NodePage nodeProvidersMapping={nodeProvidersMapping} />} />
+              <Route path="/providers/:provider" element={ isLoading ? <LoadingIndicator /> :  <NodeProviderPage  nodeProvidersMapping={nodeProvidersMapping} /> } />
             </Routes>
           </Box>
         </Box>

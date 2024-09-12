@@ -1,23 +1,21 @@
 import React from 'react';
-import Typography from '@mui/material/Typography';
 import { 
   BarPlot, 
   LinePlot, 
   MarkPlot, 
   ChartsAxisHighlight, 
   ChartsTooltip, 
-  ChartsLegend, 
   ChartsXAxis, 
   ChartsYAxis,
   ResponsiveChartContainer
 } from '@mui/x-charts'; // Update paths
 import { ChartData } from '../utils/utils';
 
-interface DailyPerformanceChartProps {
+interface PerformanceChartProps {
   chartDailyData: ChartData[];
 }
 
-const DailyPerformanceChart: React.FC<DailyPerformanceChartProps> = ({ chartDailyData }) => {
+const PerformanceChart: React.FC<PerformanceChartProps> = ({ chartDailyData }) => {
   const maxBlocks = Math.max(
     ...chartDailyData.map(entry => entry.dailyNodeMetrics ? 
             Number(entry.dailyNodeMetrics.num_blocks_proposed + entry.dailyNodeMetrics.num_blocks_failed) : 0)
@@ -77,32 +75,14 @@ const DailyPerformanceChart: React.FC<DailyPerformanceChartProps> = ({ chartDail
     unassigned: entry.dailyNodeMetrics ? null : maxBlocks / 2,
   }));
 
-  const legendConfig = {
-    legend: {
-      labelStyle: {
-        fontSize: 14,
-        fill: 'white',
-      },
-      direction: 'row' as const,
-      position: { vertical: 'top', horizontal: 'right' } as const,
-      itemMarkWidth: 18,
-      itemMarkHeight: 18,
-      markGap: 6,
-      itemGap: 10,
-    },
-  };
-
   return (
-    <div>
-      <Typography variant="h6" component="div">
-        Daily Performance
-      </Typography>
+    <>
       <ResponsiveChartContainer
         xAxis={xAxisConfig}
         yAxis={yAxisConfig}
         series={seriesConfig}
         dataset={dataset}
-        height={400}
+        height={300}
       >
         <BarPlot borderRadius={9} />
         <LinePlot />
@@ -112,8 +92,8 @@ const DailyPerformanceChart: React.FC<DailyPerformanceChartProps> = ({ chartDail
         <ChartsXAxis position="bottom" axisId="x-axis-id" />
         <ChartsYAxis position="left" axisId="y-axis-id" />
       </ResponsiveChartContainer>
-    </div>
+    </>
   );
 };
 
-export default DailyPerformanceChart;
+export default PerformanceChart;

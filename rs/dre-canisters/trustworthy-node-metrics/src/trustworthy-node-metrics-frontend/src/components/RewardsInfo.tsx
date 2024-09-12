@@ -4,27 +4,25 @@ import 'katex/dist/katex.min.css';
 import { InlineMath } from 'react-katex';
 import { axisClasses, ChartsReferenceLine, LineChart } from '@mui/x-charts';
 
-const NodeRewardExplanation: React.FC<{ failureRate: number; rewardReduction: number }> = ({ failureRate, rewardReduction }) => {
+const NodeRewardExplanation = () => {
   return (
     <Grid container>
       {/* Title Section */}
       <Grid item xs={12}>
-        <Typography variant="h6" gutterBottom>
+        <Typography variant="body1" gutterBottom>
           How are rewards computed?
         </Typography>
       </Grid>
-
-      {/* Node Unassigned Section */}
       <Grid item xs={12} md={4}>
-        <Typography variant="body1" gutterBottom>
+        <Typography variant="body2" gutterBottom>
           Node Unassigned:
         </Typography>
         <Typography variant="body2" color="textSecondary" gutterBottom>
-          When a node is not assigned to any subnet, it automatically receives the full reward (100%). No further calculations are needed.
+          When a node is not assigned to any subnet, it automatically receives the full reward (100%).
         </Typography>
 
         {/* Node Assigned Section */}
-        <Typography variant="body1" gutterBottom>
+        <Typography variant="body2" gutterBottom>
           Node Assigned:
         </Typography>
         <Typography variant="body2" color="textSecondary" gutterBottom>
@@ -63,6 +61,8 @@ const NodeRewardExplanation: React.FC<{ failureRate: number; rewardReduction: nu
             </Typography>
           </ListItem>
         </List>
+        </Grid>
+        <Grid item xs={12} md={4}>
 
         {/* Linear Reduction Function */}
         <List sx={{ listStyle: 'circle', ml: 4 }}>
@@ -89,26 +89,24 @@ const NodeRewardExplanation: React.FC<{ failureRate: number; rewardReduction: nu
             </List>
 
             <Typography variant="body2" color="textSecondary" gutterBottom>
-              The final reward percentage for the assigned period is computed by subtracting the rewards reduction from 100%.
-            </Typography>
-          </ListItem>
-
-          {/* Total Rewards Calculation Placeholder */}
-          <ListItem sx={{ display: 'list-item' }}>
-            <Typography variant="body2" gutterBottom>
-              Compute total rewards:
-            </Typography>
-            <Typography variant="body2" color="textSecondary" gutterBottom>
-              Work in progress...
+              The reward multiplier for the assigned period is computed by subtracting the rewards reduction from 100%.
             </Typography>
           </ListItem>
         </List>
       </Grid>
-
-      {/* Reward Reduction Chart */}
-      <Grid item xs={12} md={4}>
-        <LinearReductionChart failureRate={failureRate} rewardReduction={rewardReduction} />
-      </Grid>
+        <Grid item xs={12} md={4}>
+          <List sx={{ listStyle: 'circle', ml: 4 }}>
+          {/* Total Rewards Calculation Placeholder */}
+          <ListItem sx={{ display: 'list-item' }}>
+            <Typography variant="body2" gutterBottom>
+              Compute Reward Multiplier:
+            </Typography>
+            <Typography variant="body2" color="textSecondary" gutterBottom>
+              The final reward multiplier is then the weighted average between the multiplier for days in which the node is assigned to a subnet and 100% for the days in which the node is unassigned. 
+            </Typography>
+          </ListItem>
+        </List>
+        </Grid>
     </Grid>
   );
 };
@@ -133,12 +131,8 @@ export const LinearReductionChart: React.FC<{ failureRate: number; rewardReducti
 
   return (
     <>
-      <Typography variant="body1" gutterBottom>
-        Linear Rewards Reduction Applied
-      </Typography>
       <LineChart
         margin={{ left: 60}}
-        grid={{ vertical: true, horizontal: true }}
         yAxis={[{
           label: 'Rewards reduction',
           valueFormatter: (value: number) => `${value}%`,
