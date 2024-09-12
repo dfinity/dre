@@ -83,7 +83,14 @@ export const getDateRange = () => {
     )
   );
 
-  const dateEnd = now; 
+  const dateEnd = new Date(
+    Date.UTC(
+      now.getUTCFullYear(),
+      now.getUTCMonth(),
+      now.getUTCDate(),
+      23, 59, 59, 999
+    )
+  );
 
   return { dateStart, dateEnd };
 };

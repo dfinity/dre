@@ -31,6 +31,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ filters, setFilters }) => {
   };
 
   const handleDateEndChange = (newValue: Date | null) => {
+    newValue?.setUTCMilliseconds(999)
     if (newValue !== null && filters.dateStart) {
       if (isAfter(newValue, filters.dateStart)) {
         if (differenceInMonths(newValue, filters.dateStart) <= 2) {
@@ -54,14 +55,14 @@ const FilterBar: React.FC<FilterBarProps> = ({ filters, setFilters }) => {
             label="From"
             value={filters.dateStart}
             onChange={handleDateStartChange}
-            format="dd/MM/yyyy"
+            format="dd/MM/yyy"
           />
           <ArrowRightIcon />
           <DatePicker
             label="To"
             value={filters.dateEnd}
             onChange={handleDateEndChange}
-            format="dd/MM/yyyy"
+            format="dd/MM/yyy"
           />
         </Box>
       </LocalizationProvider>

@@ -1,12 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Box, CircularProgress, CssBaseline, ThemeProvider, createTheme, useMediaQuery, useTheme } from '@mui/material';
-import FilterBar, { PeriodFilter } from './components/FilterBar';
+import { Box, CssBaseline, ThemeProvider, createTheme, useMediaQuery, useTheme } from '@mui/material';
 import Drawer from './components/Drawer'; 
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import { trustworthy_node_metrics } from '../../declarations/trustworthy-node-metrics/index.js';
 import { NodeList } from './components/NodeList';
 import Header from './components/Header';
-import { getDateRange, LoadingIndicator } from './utils/utils';
+import { LoadingIndicator } from './utils/utils';
 import { NodePage } from './components/NodePage';
 import { NodeProviderPage } from './components/NodeProviderPage';
 import { NodeProviderMapping } from '../../declarations/trustworthy-node-metrics/trustworthy-node-metrics.did.d';

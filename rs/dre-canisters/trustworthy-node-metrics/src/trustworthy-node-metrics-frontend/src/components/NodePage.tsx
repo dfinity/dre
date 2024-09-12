@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { getDateRange } from '../utils/utils';
 import FilterBar, { PeriodFilter } from './FilterBar';
 import { Box, Divider, Grid, Paper, Typography } from '@mui/material';
@@ -27,6 +27,10 @@ export const NodePage: React.FC<NodeProviderPageProps> = ({ nodeProvidersMapping
     if (!mapping) {
         return <p>No mapping found</p>;
     }
+
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, []);
 
     return (
         <Box sx={{ p: 3 }}>

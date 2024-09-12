@@ -18,7 +18,6 @@ export const NodeProviderChart: React.FC<NodeProviderChartProps> = ({ provider, 
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        window.scrollTo(0, 0);
         if (provider) {
             setNodeRewardsData(periodFilter, [], [Principal.fromText(provider)], setProviderNodeMetrics, setIsLoading);
         }    

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Box, Grid, Paper, Typography } from '@mui/material';
 import Divider from '@mui/material/Divider';
 import { Link, useParams } from 'react-router-dom';
@@ -27,6 +27,11 @@ export const NodeProviderPage: React.FC<NodeProviderPageProps> = ({ nodeProvider
     if (!nodeIds) {
         return <p>No Node Ids found</p>;
     }
+
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, [provider]);
+
     return (
     <Box sx={{ p: 3 }}>
         <Paper sx={paperStyle}>
