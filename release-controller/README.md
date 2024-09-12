@@ -20,6 +20,8 @@ releases:
 
 The project is split into two parts - commit annotator and reconciler.
 
+If you want fix a bug, or add a feature, please consider writing a test.
+
 ### commit annotator
 
 This simple service checks out each commit on `master` and `rc-*` branches of IC repo and runs [target-determinator](https://github.com/bazel-contrib/target-determinator) to identify whether GuestOS build changed as a result of changes in that commit. This information is then pushed to git notes and later used by reconciler.
@@ -28,23 +30,23 @@ This simple service checks out each commit on `master` and `rc-*` branches of IC
 
 Reconciler is responsible for generating release notes (1), publishing them as google docs and sending a notification to #eng-release Slack channel (2), creating a GitHub PR to publish notes (3), placing the proposal for electing a version (4) and creating and updating forum post (5).
 
-(1) generating release notes
+1. generating release notes
 
 Done by release_notes.py. You can manually run the script for debugging purposes.
 
-(2) google docs publish
+2. google docs publish
 
 Done by google_docs.py. You can run the program manually to debug issues. Change the `main()` function to your needs.
 
-(3) creating a GitHub PR to publish notes
+3. creating a GitHub PR to publish notes
 
 Done by publish_notes.py. It's not recommended to run this manually. Instead, if you have an issue, try to create a unit test to resolve the issue. You can download the Google Doc you're having problems with to use it in your test. See tests that use `release-controller/test_data/b0ade55f7e8999e2842fe3f49df163ba224b71a2.docx`.
 
-(4) placing the proposal for electing a version
+4. placing the proposal for electing a version
 
 Done by dre_cli.py / reconciler.py. There should be a logs for the command that was run if you want to debug any issues with it.
 
-(5) forum post update
+5. forum post update
 
 Done by forum.py. You can run the program manually to debug issues. Change the `main()` function to your needs.
 
