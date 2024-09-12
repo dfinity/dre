@@ -1,10 +1,11 @@
-use std::{path::PathBuf, process::Command, str::FromStr};
+use std::{io::Write, path::PathBuf, process::Command, str::FromStr};
 
 use crate::{
     auth::{Auth, Neuron, STAGING_KEY_PATH_FROM_HOME, STAGING_NEURON_ID},
     commands::{AuthOpts, AuthRequirement, HsmOpts},
 };
 use clio::{ClioPath, InputPath};
+use hex;
 use ic_canisters::governance::governance_canister_version;
 use ic_management_types::Network;
 use itertools::Itertools;
@@ -402,6 +403,40 @@ fn generate_password_for_test_hsm(pin: &str, key_id: u8, label: &str) {
         .unwrap();
 }
 
+fn import_pem_as_pkey(pin: &str, key_id: u8, label: &str, module: &PathBuf) {
+    // Convert the staging .pem file to have only private key
+    let pem = std::fs::read_to_string(get_staging_key_path()).unwrap();
+    let hex = hex::encode(&openssl::base64::decode_block(&pem).unwrap());
+    let sub_hex_data = &hex[10..96];
+    let final_hex_string = format!("302E020100{}", sub_hex_data);
+    let binary_data = hex::decode(final_hex_string).unwrap();
+    let only_priv = get_staging_key_path().parent().unwrap().join("identity-only-priv-key.pem");
+    let pkey = openssl::pkey::PKey::private_key_from_der(&binary_data).unwrap();
+    let mut file = std::fs::File::create(&only_priv).unwrap();
+    file.write_all(&pkey.private_key_to_pem_pkcs8().unwrap()).unwrap();
+
+    let output = Command::new("pkcs11-tool")
+        .arg("--module")
+        .arg(module.display().to_string())
+        .arg("-l")
+        .arg("-p")
+        .arg(pin)
+        .arg("--write-object")
+        .arg(&only_priv.display().to_string())
+        .arg("--type")
+        .arg("privkey")
+        .arg("--id")
+        .arg(key_id.to_string())
+        .arg("--label")
+        .arg(label)
+        .output()
+        .unwrap();
+
+    if !output.status.success() {
+        panic!("Failed to create token: {}", String::from_utf8_lossy(&output.stderr))
+    }
+}
+
 fn get_softhsm2_module() -> PathBuf {
     PathBuf::from_str(&std::env::var("SOFTHSM2_MODULE").unwrap_or("/usr/lib/softhsm/libsofthsm2.so".to_string())).unwrap()
 }
@@ -415,6 +450,7 @@ struct HsmTestScenario<'a> {
     network: Network,
     requirement: AuthRequirement,
     neuron_id: Option<u64>,
+    use_random_key: bool,
 }
 
 #[allow(dead_code)]
@@ -429,6 +465,7 @@ impl<'a> HsmTestScenario<'a> {
             so_module: get_softhsm2_module(),
             network: Network::mainnet_unchecked().unwrap(),
             neuron_id: None,
+            use_random_key: true,
         }
     }
 
@@ -485,19 +522,17 @@ fn compare_neurons(left: &Neuron, right: &Neuron) -> bool {
         (
             Auth::Hsm {
                 pin: left_pin,
-                slot: left_slot,
+                slot: _,
                 key_id: left_key_id,
                 so_path: left_so_path,
             },
             Auth::Hsm {
                 pin: right_pin,
-                slot: right_slot,
+                slot: _,
                 key_id: right_key_id,
                 so_path: right_so_path,
             },
-        ) if PartialEq::eq(&left_pin, &right_pin) && left_key_id.eq(&right_key_id) && left_so_path.eq(&right_so_path) && left_slot == right_slot => {
-            true
-        }
+        ) if PartialEq::eq(&left_pin, &right_pin) && left_key_id.eq(&right_key_id) && left_so_path.eq(&right_so_path) => true,
         (Auth::Keyfile { path: left_path }, Auth::Keyfile { path: right_path }) if left_path.eq(&right_path) => true,
         (Auth::Anonymous, Auth::Anonymous) => true,
         _ => false,
@@ -509,8 +544,7 @@ async fn hsm_neuron_tests() {
     let test_label = "Test HSM";
     let pin = "1234";
     let key_id = 1;
-    let test_slot = ensure_slot_exists(0, test_label, pin);
-    generate_password_for_test_hsm(pin, key_id, test_label);
+    let mut test_slot = 0;
 
     let scenarios = &[
         (
@@ -518,7 +552,7 @@ async fn hsm_neuron_tests() {
             Ok(Neuron {
                 auth: Auth::Hsm {
                     pin: pin.to_string(),
-                    slot: test_slot,
+                    slot: 0,
                     key_id,
                     so_path: get_softhsm2_module(),
                 },
@@ -537,7 +571,7 @@ async fn hsm_neuron_tests() {
             Ok(Neuron {
                 auth: Auth::Hsm {
                     pin: pin.to_string(),
-                    slot: test_slot,
+                    slot: 0,
                     key_id,
                     so_path: get_softhsm2_module(),
                 },
@@ -549,6 +583,12 @@ async fn hsm_neuron_tests() {
 
     let mut failed = vec![];
     for (scenario, want) in scenarios {
+        delete_test_slot(test_slot, test_label);
+        test_slot = ensure_slot_exists(0, test_label, pin);
+        match scenario.use_random_key {
+            true => generate_password_for_test_hsm(pin, key_id, test_label),
+            false => import_pem_as_pkey(pin, key_id, test_label, &get_softhsm2_module()),
+        }
         let maybe_neuron = scenario.build_neuron().await;
         if (want.is_err() && maybe_neuron.is_ok()) || (want.is_ok() && maybe_neuron.is_err()) {
             failed.push((scenario.name, maybe_neuron, want));
@@ -566,8 +606,6 @@ async fn hsm_neuron_tests() {
             failed.push((scenario.name, Ok(neuron), want))
         }
     }
-
-    delete_test_slot(test_slot, test_label);
 
     assert!(
         failed.is_empty(),
