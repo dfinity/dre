@@ -22,7 +22,7 @@ pub const FARM_BASE_URL: &str = "https://farm.dfinity.systems";
 pub async fn ict(ic_git: PathBuf, token: CancellationToken, sender: Sender<Message>, artifacts: PathBuf) -> anyhow::Result<()> {
     let ic_config = artifacts.join("ic-config.json");
 
-    let command = "gitlab-ci/container/container-run.sh";
+    let command = "ci/container/container-run.sh";
     let args = &[
         "ict",
         "testnet",
