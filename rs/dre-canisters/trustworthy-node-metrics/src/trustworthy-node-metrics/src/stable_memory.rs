@@ -5,7 +5,7 @@ use itertools::Itertools;
 use std::cell::RefCell;
 use std::collections::BTreeMap;
 
-use trustworthy_node_metrics_types::types::{NodeMetricsStored, NodeMetricsStoredKey, NodeProviderMapping, TimestampNanos};
+use trustworthy_node_metrics_types::types::{NodeMetricsStored, NodeMetricsStoredKey, NodeProviderMapping, NodeProviderStored, TimestampNanos};
 
 type Memory = VirtualMemory<DefaultMemoryImpl>;
 
@@ -23,6 +23,10 @@ thread_local! {
         MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(1)))
     ));
 
+    static NODE_PROVIDER_MAP_V2: RefCell<StableBTreeMap<Principal, NodeProviderStored, Memory>> =
+        RefCell::new(StableBTreeMap::init(
+        MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(2)))
+    ));
 }
 
 pub fn insert_node_metrics(key: NodeMetricsStoredKey, value: NodeMetricsStored) {

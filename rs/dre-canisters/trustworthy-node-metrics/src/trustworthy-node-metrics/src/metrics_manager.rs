@@ -222,3 +222,7 @@ pub async fn update_metrics() -> anyhow::Result<()> {
 
     Ok(())
 }
+
+pub(crate) async fn migrate_np(args: _) -> _ {
+    todo!()
+}

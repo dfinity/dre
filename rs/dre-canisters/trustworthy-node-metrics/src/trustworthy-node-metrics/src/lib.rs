@@ -4,7 +4,7 @@ use itertools::Itertools;
 use std::collections::{self, btree_map::Entry, BTreeMap, HashSet};
 use trustworthy_node_metrics_types::types::{
     DailyNodeMetrics, NodeMetrics, NodeMetricsStored, NodeMetricsStoredKey, NodeProviderMapping, NodeRewardsArgs, NodeRewardsResponse,
-    SubnetNodeMetricsArgs, SubnetNodeMetricsResponse,
+    SubnetNodeMetricsArgs, SubnetNodeMetricsResponse, UpdateNPArgs,
 };
 mod computation_logger;
 mod metrics_manager;
@@ -146,4 +146,11 @@ fn node_rewards(args: NodeRewardsArgs) -> Vec<NodeRewardsResponse> {
 #[query]
 fn node_provider_mapping() -> Vec<NodeProviderMapping> {
     stable_memory::get_node_provider_mapping()
+}
+
+#[update]
+async fn update_node_provider(args: Vec<UpdateNPArgs>) -> Result<(), String> {
+    metrics_manager::migrate_np(args).await;
+    
+    Ok(())
 }
