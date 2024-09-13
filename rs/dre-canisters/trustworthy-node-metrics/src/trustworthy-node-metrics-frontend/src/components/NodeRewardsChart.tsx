@@ -34,8 +34,7 @@ export const NodeRewardsChart: React.FC<NodeRewardsChartProps> = ({ node }) => {
     const rewardsReduction = 100 - rewardsPercent;
     const millisecondsPerDay = 24 * 60 * 60 * 1000;
     const daysTotal = Math.round((latestRewardRange.dateEnd.getTime() - latestRewardRange.dateStart.getTime()) / millisecondsPerDay);
-  
-    const rewardMultiplier = (daysAssigned * rewardsPercent + (daysTotal - daysAssigned) * 100) / daysTotal;
+    const rewardMultiplier = Math.round((daysAssigned * rewardsPercent + (daysTotal - daysAssigned) * 100) / daysTotal);
 
     return (
         <>

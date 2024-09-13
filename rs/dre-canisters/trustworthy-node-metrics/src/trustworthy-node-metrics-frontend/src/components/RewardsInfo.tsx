@@ -83,7 +83,7 @@ const NodeRewardExplanation = () => {
               </ListItem>
               <ListItem sx={{ display: 'list-item' }}>
                 <Typography variant="body2" color="textSecondary" gutterBottom>
-                  Failure Rates Above 70%: Once the failure rate exceeds 70%, the rewards reduction reaches its maximum of 100%. Any failure rate beyond this threshold results in a complete loss of rewards.
+                  Failure Rates Above 80%: Once the failure rate exceeds 80%, the rewards reduction reaches its maximum of 100%. Any failure rate beyond this threshold results in a complete loss of rewards.
                 </Typography>
               </ListItem>
             </List>
@@ -116,7 +116,7 @@ export default NodeRewardExplanation;
 
 export const LinearReductionChart: React.FC<{ failureRate: number; rewardReduction: number }> = ({ failureRate, rewardReduction }) => {
   const MIN_FAILURE_RATE = 10;
-  const MAX_FAILURE_RATE = 70;
+  const MAX_FAILURE_RATE = 80;
 
   // Create dataset for chart
   const dataset = Array.from({ length: 101 }, (_, index) => {

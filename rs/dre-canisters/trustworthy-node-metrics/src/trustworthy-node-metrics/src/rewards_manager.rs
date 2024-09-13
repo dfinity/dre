@@ -7,7 +7,7 @@ use trustworthy_node_metrics_types::types::{DailyNodeMetrics, RewardsComputation
 use crate::computation_logger::{ComputationLogger, Operation, OperationExecutor};
 
 const MIN_FAILURE_RATE: Decimal = dec!(0.1);
-const MAX_FAILURE_RATE: Decimal = dec!(0.7);
+const MAX_FAILURE_RATE: Decimal = dec!(0.8);
 
 /// Calculates the rewards reduction based on the failure rate.
 ///
@@ -156,10 +156,9 @@ mod tests {
     #[test]
     fn test_rewards_percent() {
         // Overall failed = 130 Overall total = 500 Failure rate = 0.26
-        // rewards_reduction = 0.266
         let daily_metrics: Vec<DailyNodeMetrics> = daily_mocked_metrics(vec![MockedMetrics::new(20, 6, 4), MockedMetrics::new(25, 10, 2)]);
         let result = compute_rewards_percent(&daily_metrics);
-        assert_eq!(result.rewards_percent, 0.7333333333333334);
+        assert_eq!(result.rewards_percent, 0.7714285714285715);
 
         // Overall failed = 45 Overall total = 450 Failure rate = 0.1
         // rewards_reduction = 0.0
@@ -171,12 +170,11 @@ mod tests {
         assert_eq!(result.rewards_percent, 1.0);
 
         // Overall failed = 5 Overall total = 10 Failure rate = 0.5
-        // rewards_reduction = 0.666
         let daily_metrics: Vec<DailyNodeMetrics> = daily_mocked_metrics(vec![
             MockedMetrics::new(1, 5, 5), // no penalty
         ]);
         let result = compute_rewards_percent(&daily_metrics);
-        assert_eq!(result.rewards_percent, 0.33333333333333337);
+        assert_eq!(result.rewards_percent, 0.4285714285714286);
     }
 
     #[test]
@@ -210,7 +208,7 @@ mod tests {
         let daily_metrics_right_gap: Vec<DailyNodeMetrics> =
             daily_mocked_metrics(vec![gap.clone(), MockedMetrics::new(1, 6, 4), MockedMetrics::new(1, 7, 3)]);
 
-        assert_eq!(compute_rewards_percent(&daily_metrics_mid_gap).rewards_percent, 0.7777777777777779);
+        assert_eq!(compute_rewards_percent(&daily_metrics_mid_gap).rewards_percent, 0.8095238095238095);
 
         assert_eq!(
             compute_rewards_percent(&daily_metrics_mid_gap).rewards_percent,
