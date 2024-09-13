@@ -148,7 +148,7 @@ async fn get_node_operators(local_registry: &Arc<dyn LazyRegistry>, network: &Ne
             // Find the number of nodes registered by this operator
             let operator_registered_nodes_num = all_nodes.iter().filter(|(nk, _)| nk == &k).count() as u64;
             (
-                record.provider.principal,
+                record.principal,
                 NodeOperator {
                     node_operator_principal_id: *k,
                     node_allowance_remaining: record.allowance,
@@ -211,6 +211,10 @@ async fn get_nodes(
     let health_client = HealthClient::new(network.clone());
     let nodes_health = health_client.nodes().await?;
 
+    // Rewardable nodes for all node operators
+    let mut rewardable_nodes: IndexMap<PrincipalId, BTreeMap<String, u32>> =
+        node_operators.iter().map(|(k, v)| (*k, v.rewardable_nodes.clone())).collect();
+
     let nodes = local_registry
         .nodes()
         .await
@@ -218,6 +222,33 @@ async fn get_nodes(
         .iter()
         .map(|(k, record)| {
             let node_operator_id = record.operator.principal;
+            let node_type = match rewardable_nodes.get_mut(&node_operator_id) {
+                Some(rewardable_nodes) => {
+                    // Find first non-zero rewardable nodes entry
+                    if rewardable_nodes.is_empty() {
+                        "unknown:no_rewardable_nodes_found".to_string()
+                    } else {
+                        // Find the first non-zero rewardable node type, or "unknown" if none are found
+                        let (k, mut v) = loop {
+                            let (k, v) = match rewardable_nodes.pop_first() {
+                                Some(kv) => kv,
+                                None => break ("unknown:rewardable_nodes_used_up".to_string(), 0),
+                            };
+                            if v != 0 {
+                                break (k, v);
+                            }
+                        };
+                        v = v.saturating_sub(1);
+                        // Insert back if not zero
+                        if v != 0 {
+                            rewardable_nodes.insert(k.clone(), v);
+                        }
+                        k
+                    }
+                }
+
+                None => "unknown".to_string(),
+            };
             NodeDetails {
                 node_id: *k,
                 xnet: Some(ConnectionEndpoint {
@@ -245,6 +276,7 @@ async fn get_nodes(
                     None => "".to_string(),
                 },
                 status: nodes_health.get(k).unwrap_or(&ic_management_types::HealthStatus::Unknown).clone(),
+                node_type,
             }
         })
         .collect::<Vec<_>>();
@@ -354,6 +386,7 @@ struct NodeDetails {
     dc_id: String,
     node_provider_id: PrincipalId,
     status: HealthStatus,
+    node_type: String,
 }
 
 /// User-friendly representation of a SubnetRecord. For instance,
