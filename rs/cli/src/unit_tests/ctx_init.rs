@@ -166,6 +166,7 @@ async fn get_ctx_for_neuron_test(
     neuron_id: Option<u64>,
     requirement: AuthRequirement,
     network: String,
+    dry_run: bool,
 ) -> anyhow::Result<DreContext> {
     DreContext::new(
         network,
@@ -175,7 +176,7 @@ async fn get_ctx_for_neuron_test(
         true,
         false,
         false,
-        true,
+        dry_run,
         requirement,
         None,
         IcAdminVersion::Strict("Shouldn't get to here".to_string()),
@@ -193,6 +194,7 @@ struct NeuronAuthTestScenarion<'a> {
     requirement: AuthRequirement,
     network: String,
     want: anyhow::Result<Neuron>,
+    dry_run: bool,
 }
 
 // Must be left here until we add HSM simulator
@@ -209,7 +211,15 @@ impl<'a> NeuronAuthTestScenarion<'a> {
             requirement: AuthRequirement::Anonymous,
             network: "".to_string(),
             want: Ok(Neuron::anonymous_neuron()),
+            dry_run: false,
         }
+    }
+
+    // It really is self so that we can use
+    // `test.is_dry_run().with_neuron_id(...)`
+    #[allow(clippy::wrong_self_convention)]
+    fn is_dry_run(self) -> Self {
+        Self { dry_run: true, ..self }
     }
 
     fn with_neuron_id(self, neuron_id: u64) -> Self {
@@ -280,6 +290,7 @@ impl<'a> NeuronAuthTestScenarion<'a> {
             self.neuron_id,
             self.requirement.clone(),
             self.network.clone(),
+            self.dry_run,
         )
         .await
         .map(|ctx| ctx.neuron())
@@ -336,6 +347,15 @@ async fn init_test_neuron_and_auth() {
                 },
                 neuron_id: STAGING_NEURON_ID,
                 include_proposer: true,
+            }))
+            .when_requirement(AuthRequirement::Neuron),
+        NeuronAuthTestScenarion::new("Dry running commands shouldn't fail if neuron cannot be detected")
+            .with_network("mainnet")
+            .is_dry_run()
+            .want(Ok(Neuron {
+                auth: Auth::Anonymous,
+                neuron_id: 0,
+                include_proposer: false,
             }))
             .when_requirement(AuthRequirement::Neuron),
         // Failing scenarios
