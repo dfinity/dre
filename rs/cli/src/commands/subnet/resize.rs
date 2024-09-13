@@ -7,11 +7,11 @@ use crate::commands::{AuthRequirement, ExecutableCommand};
 #[derive(Args, Debug)]
 pub struct Resize {
     /// Number of nodes to be added
-    #[clap(long)]
+    #[clap(long, default_value = "0")]
     pub add: usize,
 
     /// Number of nodes to be removed
-    #[clap(long)]
+    #[clap(long, default_value = "0")]
     pub remove: usize,
 
     /// Features or Node IDs to exclude from the available nodes pool
@@ -32,7 +32,7 @@ pub struct Resize {
     pub motivation: String,
 
     /// The ID of the subnet.
-    #[clap(long, short)]
+    #[clap(long, short, alias = "subnet-id")]
     pub id: PrincipalId,
 }
 
@@ -43,7 +43,10 @@ impl ExecutableCommand for Resize {
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
         let runner = ctx.runner().await?;
-        runner
+
+        let subnet_manager = ctx.subnet_manager().await;
+
+        let subnet_change_response = subnet_manager
             .subnet_resize(
                 SubnetResizeRequest {
                     subnet: self.id,
@@ -54,10 +57,11 @@ impl ExecutableCommand for Resize {
                     include: self.include.clone().into(),
                 },
                 self.motivation.clone(),
-                ctx.forum_post_link(),
                 &runner.health_of_nodes().await?,
             )
-            .await
+            .await?;
+
+        runner.propose_subnet_change(subnet_change_response, ctx.forum_post_link()).await
     }
 
     fn validate(&self, _cmd: &mut clap::Command) {}

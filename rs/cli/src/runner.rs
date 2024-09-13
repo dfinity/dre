@@ -124,54 +124,6 @@ impl Runner {
         health_client.nodes().await
     }
 
-    pub async fn subnet_resize(
-        &self,
-        request: ic_management_types::requests::SubnetResizeRequest,
-        motivation: String,
-        forum_post_link: Option<String>,
-        health_of_nodes: &IndexMap<PrincipalId, HealthStatus>,
-    ) -> anyhow::Result<()> {
-        let change = self
-            .registry
-            .modify_subnet_nodes(SubnetQueryBy::SubnetId(request.subnet))
-            .await?
-            .excluding_from_available(request.exclude.clone().unwrap_or_default())
-            .including_from_available(request.only.clone().unwrap_or_default())
-            .including_from_available(request.include.clone().unwrap_or_default())
-            .resize(request.add, request.remove, 0, health_of_nodes)?;
-
-        let change = SubnetChangeResponse::from(&change).with_health_of_nodes(health_of_nodes.clone());
-
-        if self.verbose {
-            if let Some(run_log) = &change.run_log {
-                println!("{}\n", run_log.join("\n"));
-            }
-        }
-
-        if change.added_with_desc.is_empty() && change.removed_with_desc.is_empty() {
-            return Ok(());
-        }
-        if change.added_with_desc.len() == change.removed_with_desc.len() {
-            self.run_membership_change(change.clone(), replace_proposal_options(&change, forum_post_link)?)
-                .await
-        } else {
-            let action = if change.added_with_desc.len() < change.removed_with_desc.len() {
-                "Removing nodes from"
-            } else {
-                "Adding nodes to"
-            };
-            self.run_membership_change(
-                change,
-                ProposeOptions {
-                    title: format!("{action} subnet {}", request.subnet).into(),
-                    summary: format!("{action} subnet {}", request.subnet).into(),
-                    motivation: motivation.clone().into(),
-                    forum_post_link,
-                },
-            )
-            .await
-        }
-    }
     pub async fn subnet_create(
         &self,
         request: ic_management_types::requests::SubnetCreateRequest,
