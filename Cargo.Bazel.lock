@@ -1,5 +1,5 @@
 {
-  "checksum": "ac1c7f35e7cd235485ebc4e9085ef127ba2881abba9deee4940ac3a40ac97b9a",
+  "checksum": "c442757a3917dcf43241853bc5a2e77532c6d00192aac0abd0612f2d00c993eb",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -10317,6 +10317,14 @@
             {
               "id": "actix-rt 2.10.0",
               "target": "actix_rt"
+            },
+            {
+              "id": "hex 0.4.3",
+              "target": "hex"
+            },
+            {
+              "id": "openssl 0.10.66",
+              "target": "openssl"
             }
           ],
           "selects": {}
@@ -11918,6 +11926,75 @@
         "version": "1.0.7"
       },
       "license": "Apache-2.0 / MIT"
+    },
+    "foreign-types 0.3.2": {
+      "name": "foreign-types",
+      "version": "0.3.2",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/foreign-types/0.3.2/download",
+          "sha256": "f6f339eb8adc052cd2ca78910fda869aefa38d22d5cb648e6485e4d3fc06f3b1"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "foreign_types",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "foreign_types",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "foreign-types-shared 0.1.1",
+              "target": "foreign_types_shared"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2015",
+        "version": "0.3.2"
+      },
+      "license": "MIT/Apache-2.0"
+    },
+    "foreign-types-shared 0.1.1": {
+      "name": "foreign-types-shared",
+      "version": "0.1.1",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/foreign-types-shared/0.1.1/download",
+          "sha256": "00b0228411908ca8685dba7fc2cdd70ec9990a6e753e89b6ac91a84c40fbaf4b"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "foreign_types_shared",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "foreign_types_shared",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "edition": "2015",
+        "version": "0.1.1"
+      },
+      "license": "MIT/Apache-2.0"
     },
     "form_urlencoded 1.2.1": {
       "name": "form_urlencoded",
@@ -30994,6 +31071,156 @@
       },
       "license": "MIT OR Apache-2.0"
     },
+    "openssl 0.10.66": {
+      "name": "openssl",
+      "version": "0.10.66",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/openssl/0.10.66/download",
+          "sha256": "9529f4786b70a3e8c61e11179af17ab6188ad8d0ded78c5529441ed39d4bd9c1"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "openssl",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        },
+        {
+          "BuildScript": {
+            "crate_name": "build_script_build",
+            "crate_root": "build.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "openssl",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "crate_features": {
+          "common": [
+            "default"
+          ],
+          "selects": {}
+        },
+        "deps": {
+          "common": [
+            {
+              "id": "bitflags 2.6.0",
+              "target": "bitflags"
+            },
+            {
+              "id": "cfg-if 1.0.0",
+              "target": "cfg_if"
+            },
+            {
+              "id": "foreign-types 0.3.2",
+              "target": "foreign_types"
+            },
+            {
+              "id": "libc 0.2.157",
+              "target": "libc"
+            },
+            {
+              "id": "once_cell 1.19.0",
+              "target": "once_cell"
+            },
+            {
+              "id": "openssl 0.10.66",
+              "target": "build_script_build"
+            },
+            {
+              "id": "openssl-sys 0.9.103",
+              "target": "openssl_sys",
+              "alias": "ffi"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2018",
+        "proc_macro_deps": {
+          "common": [
+            {
+              "id": "openssl-macros 0.1.1",
+              "target": "openssl_macros"
+            }
+          ],
+          "selects": {}
+        },
+        "version": "0.10.66"
+      },
+      "build_script_attrs": {
+        "data_glob": [
+          "**"
+        ],
+        "link_deps": {
+          "common": [
+            {
+              "id": "openssl-sys 0.9.103",
+              "target": "openssl_sys",
+              "alias": "ffi"
+            }
+          ],
+          "selects": {}
+        }
+      },
+      "license": "Apache-2.0"
+    },
+    "openssl-macros 0.1.1": {
+      "name": "openssl-macros",
+      "version": "0.1.1",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/openssl-macros/0.1.1/download",
+          "sha256": "a948666b637a0f465e8564c73e89d4dde00d72d4d473cc972f390fc3dcee7d9c"
+        }
+      },
+      "targets": [
+        {
+          "ProcMacro": {
+            "crate_name": "openssl_macros",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "openssl_macros",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "proc-macro2 1.0.86",
+              "target": "proc_macro2"
+            },
+            {
+              "id": "quote 1.0.37",
+              "target": "quote"
+            },
+            {
+              "id": "syn 2.0.76",
+              "target": "syn"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2018",
+        "version": "0.1.1"
+      },
+      "license": "MIT/Apache-2.0"
+    },
     "openssl-probe 0.1.5": {
       "name": "openssl-probe",
       "version": "0.1.5",
@@ -31023,6 +31250,81 @@
         "version": "0.1.5"
       },
       "license": "MIT/Apache-2.0"
+    },
+    "openssl-sys 0.9.103": {
+      "name": "openssl-sys",
+      "version": "0.9.103",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/openssl-sys/0.9.103/download",
+          "sha256": "7f9e8deee91df40a943c71b917e5874b951d32a802526c85721ce3b776c929d6"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "openssl_sys",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        },
+        {
+          "BuildScript": {
+            "crate_name": "build_script_main",
+            "crate_root": "build/main.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "openssl_sys",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "libc 0.2.157",
+              "target": "libc"
+            },
+            {
+              "id": "openssl-sys 0.9.103",
+              "target": "build_script_main"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2018",
+        "version": "0.9.103"
+      },
+      "build_script_attrs": {
+        "data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "cc 1.1.13",
+              "target": "cc"
+            },
+            {
+              "id": "pkg-config 0.3.30",
+              "target": "pkg_config"
+            },
+            {
+              "id": "vcpkg 0.2.15",
+              "target": "vcpkg"
+            }
+          ],
+          "selects": {}
+        },
+        "links": "openssl"
+      },
+      "license": "MIT"
     },
     "opentelemetry 0.22.0": {
       "name": "opentelemetry",
@@ -44807,6 +45109,36 @@
         ]
       },
       "license": "MIT"
+    },
+    "vcpkg 0.2.15": {
+      "name": "vcpkg",
+      "version": "0.2.15",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/vcpkg/0.2.15/download",
+          "sha256": "accd4ea62f7bb7a82fe23066fb0957d48ef677f6eeb8215f372f52e48bb32426"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "vcpkg",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "vcpkg",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "edition": "2015",
+        "version": "0.2.15"
+      },
+      "license": "MIT/Apache-2.0"
     },
     "version_check 0.9.5": {
       "name": "version_check",

@@ -14,6 +14,7 @@
 # The graph table configures how the dependency graph is constructed and thus
 # which crates the checks are performed against
 [graph]
+exclude-dev = true
 # If 1 or more target triples (and optionally, target_features) are specified,
 # only the specified targets will be checked when running `cargo deny check`.
 # This means, if a particular package is only ever used as a target specific

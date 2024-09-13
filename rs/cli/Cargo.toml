@@ -80,6 +80,8 @@ clio = { workspace = true }
 
 [dev-dependencies]
 actix-rt = { workspace = true }
+hex.workspace = true
+openssl.workspace = true
 
 [build-dependencies]
 clap = { workspace = true }
