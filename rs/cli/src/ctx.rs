@@ -71,7 +71,7 @@ impl DreContext {
                 Ok(n) => n,
                 Err(e) => {
                     warn!("Couldn't detect neuron due to: {:?}", e);
-                    warn!("Falling back to Annonymous for dry-run");
+                    warn!("Falling back to Anonymous for dry-run");
                     Neuron::dry_run_fake_neuron(&network).await?
                 }
             },
