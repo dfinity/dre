@@ -28,6 +28,7 @@ const App: React.FC = () => {
   const [nodeProvidersMapping, setNodeProvidersMapping] = useState<NodeProviderMapping[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [infoBanner, setInfoBanner] = useState<boolean | null>(true);
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
   const drawerWidth = 180;
@@ -69,12 +70,12 @@ const App: React.FC = () => {
             <Header withDrawerIcon={isSmallScreen} onDrawerIconClicked={() => setDrawerOpen(true)} />
             <Snackbar open={true} anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}>
               <Alert severity="warning" sx={{ width: '100%' }}>
-                This is a DEV dashboard
+                DEV dashboard
               </Alert>
             </Snackbar>
-            <Snackbar open={true} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
-              <Alert severity="info" sx={{ width: '100%' }}>
-              Only nodes that have been assigned to a subnet for at least one full day since 01/01/2024 are displayed
+            <Snackbar open={!!infoBanner} onClose={() => setInfoBanner(null)} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
+              <Alert onClose={() => setInfoBanner(null)} severity="info" sx={{ width: '100%' }}>
+                Only nodes that have been assigned to a subnet for at least one full day since 01/01/2024 are displayed
               </Alert>
             </Snackbar>
             <Routes>
