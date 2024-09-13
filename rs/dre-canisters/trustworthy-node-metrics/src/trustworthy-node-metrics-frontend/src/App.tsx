@@ -24,11 +24,11 @@ const darkTheme = createTheme({
 });
 
 const App: React.FC = () => {
+  const [infoBanner, setInfoBanner] = useState<boolean | null>(true);
   const [providers, setProviders] = useState<Set<string>>(new Set());
   const [nodeProvidersMapping, setNodeProvidersMapping] = useState<NodeProviderMapping[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [infoBanner, setInfoBanner] = useState<boolean | null>(true);
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
   const drawerWidth = 180;
