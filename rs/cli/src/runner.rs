@@ -887,7 +887,7 @@ pub fn format_regular_version_upgrade_summary(version: &str, release_artifact: &
 
     ```
     # From https://github.com/dfinity/ic#verifying-releases
-    sudo apt-get install -y curl && curl --proto '=https' --tlsv1.2 -sSLO https://raw.githubusercontent.com/dfinity/ic/{version}/gitlab-ci/tools/repro-check.sh && chmod +x repro-check.sh && ./repro-check.sh -c {version}
+    sudo apt-get install -y curl && curl --proto '=https' --tlsv1.2 -sSLO https://raw.githubusercontent.com/dfinity/ic/{version}/ci/tools/repro-check.sh && chmod +x repro-check.sh && ./repro-check.sh -c {version}
     ```
 
     The two SHA256 sums printed above from a) the downloaded CDN image and b) the locally built image,
