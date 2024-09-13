@@ -241,7 +241,7 @@ impl Auth {
         for slot in ctx.get_slots_with_token()? {
             let info = ctx.get_slot_info(slot)?;
             let token_info = ctx.get_token_info(slot)?;
-            if info.slot_description().starts_with(Self::slot_description()) && maybe_slot.is_none() || (maybe_slot.unwrap() == slot.id()) {
+            if info.slot_description().starts_with("SoftHSM") && maybe_slot.is_none() || (maybe_slot.unwrap() == slot.id()) {
                 let session = ctx.open_ro_session(slot)?;
                 let key_id = match Auth::find_key_id_in_slot_session(&session, maybe_key_id)? {
                     Some((key_id, label)) => {

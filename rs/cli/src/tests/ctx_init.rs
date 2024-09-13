@@ -406,7 +406,10 @@ fn generate_password_for_test_hsm(pin: &str, key_id: u8, label: &str) {
 fn import_pem_as_pkey(pin: &str, key_id: u8, label: &str, module: &PathBuf) {
     // Convert the staging .pem file to have only private key
     let pem = std::fs::read_to_string(get_staging_key_path()).unwrap();
-    let hex = hex::encode(&openssl::base64::decode_block(&pem).unwrap());
+    let pem_lines = pem.lines().collect_vec();
+    let pem_without_markings = pem_lines[1..pem_lines.len() - 1].join("");
+    println!("PEM: {}", pem_without_markings);
+    let hex = hex::encode(&openssl::base64::decode_block(&pem_without_markings).unwrap());
     let sub_hex_data = &hex[10..96];
     let final_hex_string = format!("302E020100{}", sub_hex_data);
     let binary_data = hex::decode(final_hex_string).unwrap();
@@ -495,6 +498,13 @@ impl<'a> HsmTestScenario<'a> {
         Self { requirement, ..self }
     }
 
+    fn import_pem_as_hsm(self) -> Self {
+        Self {
+            use_random_key: false,
+            ..self
+        }
+    }
+
     async fn build_neuron(&self) -> anyhow::Result<Neuron> {
         let auth_opts = AuthOpts {
             private_key_pem: None,
@@ -577,6 +587,21 @@ async fn hsm_neuron_tests() {
                 },
                 neuron_id: 0,
                 include_proposer: false,
+            }),
+        ),
+        (
+            HsmTestScenario::new("Should be able to fetch neuron_id", pin)
+                .when_required(AuthRequirement::Neuron)
+                .import_pem_as_hsm(),
+            Ok(Neuron {
+                auth: Auth::Hsm {
+                    pin: pin.to_string(),
+                    slot: 0,
+                    key_id,
+                    so_path: get_softhsm2_module(),
+                },
+                neuron_id: 0,
+                include_proposer: true,
             }),
         ),
     ];
