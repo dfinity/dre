@@ -215,6 +215,9 @@ impl<'a> NeuronAuthTestScenarion<'a> {
         }
     }
 
+    // It really is self so that we can use
+    // `test.is_dry_run().with_neuron_id(...)`
+    #[allow(clippy::wrong_self_convention)]
     fn is_dry_run(self) -> Self {
         Self { dry_run: true, ..self }
     }
