@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Box, CssBaseline, ThemeProvider, createTheme, useMediaQuery, useTheme } from '@mui/material';
+import { Alert, Box, CssBaseline, Snackbar, ThemeProvider, createTheme, useMediaQuery, useTheme } from '@mui/material';
 import Drawer from './components/Drawer'; 
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import { trustworthy_node_metrics } from '../../declarations/trustworthy-node-metrics/index.js';
@@ -24,6 +24,7 @@ const darkTheme = createTheme({
 });
 
 const App: React.FC = () => {
+  const [infoBanner, setInfoBanner] = useState<boolean | null>(true);
   const [providers, setProviders] = useState<Set<string>>(new Set());
   const [nodeProvidersMapping, setNodeProvidersMapping] = useState<NodeProviderMapping[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -67,6 +68,16 @@ const App: React.FC = () => {
           <Drawer {...drawerProps} />
           <Box sx={{ flexGrow: 1, width: `calc(100% - ${drawerWidth}px)` }}>
             <Header withDrawerIcon={isSmallScreen} onDrawerIconClicked={() => setDrawerOpen(true)} />
+            <Snackbar open={true} anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}>
+              <Alert severity="warning" sx={{ width: '100%' }}>
+                DEV dashboard
+              </Alert>
+            </Snackbar>
+            <Snackbar open={!!infoBanner} onClose={() => setInfoBanner(null)} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
+              <Alert onClose={() => setInfoBanner(null)} severity="info" sx={{ width: '100%' }}>
+                Only nodes that have been assigned to a subnet for at least one full day since 01/01/2024 are displayed
+              </Alert>
+            </Snackbar>
             <Routes>
               <Route path="/" element={<Navigate to="/nodes" replace />} />
               <Route path="/nodes" element={

@@ -57,7 +57,7 @@ const NodeRewardExplanation = () => {
               <InlineMath math="Failure \, Rate = \frac{\text{Blocks Failed Total}}{\text{Blocks Proposed Total} + \text{Blocks Failed Total}}" />
             </Typography>
             <Typography variant="body2" color="textSecondary" gutterBottom>
-              This gives the proportion of blocks the node failed to produce relative to the total expected.
+              This gives the proportion of blocks the node failed to produce relative to the total expected in a given month.
             </Typography>
           </ListItem>
         </List>
