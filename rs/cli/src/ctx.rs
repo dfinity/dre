@@ -14,7 +14,7 @@ use ic_management_backend::{
 };
 use ic_management_types::Network;
 use ic_registry_local_registry::LocalRegistry;
-use log::{debug, info};
+use log::{debug, info, warn};
 use url::Url;
 
 use crate::{
@@ -65,7 +65,18 @@ impl DreContext {
             true => Network::new_unchecked(network.clone(), &nns_urls)?,
         };
 
-        let neuron = Neuron::from_opts_and_req(auth, auth_requirement, &network, neuron_id).await?;
+        let maybe_neuron = Neuron::from_opts_and_req(auth, auth_requirement, &network, neuron_id).await;
+        let neuron = match dry_run {
+            true => match maybe_neuron {
+                Ok(n) => n,
+                Err(e) => {
+                    warn!("Couldn't detect neuron due to: {:?}", e);
+                    warn!("Falling back to Annonymous for dry-run");
+                    Neuron::dry_run_fake_neuron(&network).await?
+                }
+            },
+            false => maybe_neuron?,
+        };
 
         Ok(Self {
             proposal_agent: Arc::new(ProposalAgentImpl::new(&network.nns_urls)),

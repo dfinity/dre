@@ -87,6 +87,10 @@ impl Neuron {
         Self::from_opts_and_req_inner(auth_opts, requirement, network, neuron_id).await
     }
 
+    pub async fn dry_run_fake_neuron(network: &Network) -> anyhow::Result<Self> {
+        Self::from_opts_and_req(AuthOpts::none(), AuthRequirement::Anonymous, network, None).await
+    }
+
     async fn from_opts_and_req_inner(
         auth_opts: AuthOpts,
         requirement: AuthRequirement,
