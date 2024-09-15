@@ -8,6 +8,7 @@ on:
         description: "The version that should be qualified"
         type: string
         default: ""
+  workflow_dispatch:
 
 # Run one qualification per commit.
 # This means we can have multiple qualifications of different versions
