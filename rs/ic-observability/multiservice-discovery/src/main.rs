@@ -6,6 +6,7 @@ use std::vec;
 use axum_otel_metrics::HttpMetricsLayerBuilder;
 use clap::Parser;
 use humantime::parse_duration;
+use ic_management_types::Network;
 use slog::{error, info, o, Drain, Logger};
 use tokio::runtime::Runtime;
 use tokio::sync::oneshot::{self};
@@ -34,6 +35,19 @@ fn main() {
             vec![cli_args.nns_url.clone()],
             cli_args.targets_dir.clone(),
             "mercury".to_string(),
+            log.clone(),
+            None,
+            cli_args.poll_interval,
+            cli_args.registry_query_timeout,
+        )
+    }
+
+    fn get_staging_definition(cli_args: &CliArgs, log: Logger) -> Definition {
+        let staging = Network::staging_unchecked().unwrap();
+        Definition::new(
+            staging.get_nns_urls().clone(),
+            cli_args.targets_dir.clone(),
+            staging.name.clone(),
             log.clone(),
             None,
             cli_args.poll_interval,
@@ -102,6 +116,16 @@ fn main() {
                     )
                     .await;
             });
+        } else if cli_args.start_with_staging {
+            rt.block_on(async {
+                let _ = supervisor
+                    .start(
+                        vec![get_staging_definition(&cli_args, log.clone())],
+                        StartMode::AddToDefinitions,
+                        metrics.running_definition_metrics.clone(),
+                    )
+                    .await;
+            })
         }
 
         //Configure server
@@ -194,6 +218,16 @@ Start the discovery without the IC Mainnet target.
 "#
     )]
     start_without_mainnet: bool,
+
+    #[clap(
+        long = "start-with-staging",
+        default_value = "false",
+        action,
+        help = r#"
+Start the discovery with the IC Staging target.
+"#
+    )]
+    start_with_staging: bool,
 
     #[clap(
         long = "render-prom-targets-to-stdout",
