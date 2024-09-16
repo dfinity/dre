@@ -50,7 +50,7 @@ jobs:
           ./bin/release-controller-update-data-model.sh
 
       - name: "🆕 Create a new Pull Request with the changes"
-        uses: peter-evans/create-pull-request@v6
+        uses: peter-evans/create-pull-request@v7
         with:
           commit-message: "chore: Update dependencies"
           branch: bot-update-deps
