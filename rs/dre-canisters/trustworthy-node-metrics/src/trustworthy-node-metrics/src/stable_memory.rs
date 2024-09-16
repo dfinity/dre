@@ -5,7 +5,9 @@ use itertools::Itertools;
 use std::cell::RefCell;
 use std::collections::BTreeMap;
 
-use trustworthy_node_metrics_types::types::{NodeMetadata, NodeMetadataStored, NodeMetricsStored, NodeMetricsStoredKey, NodeProviderMapping, TimestampNanos};
+use trustworthy_node_metrics_types::types::{
+    NodeMetadata, NodeMetadataStored, NodeMetricsStored, NodeMetricsStoredKey, NodeProviderMapping, TimestampNanos,
+};
 
 type Memory = VirtualMemory<DefaultMemoryImpl>;
 
@@ -103,16 +105,15 @@ pub fn get_node_provider_mapping() -> Vec<NodeProviderMapping> {
     })
 }
 
-
 pub fn nodes_metadata() -> Vec<NodeMetadata> {
     NODE_METADATA.with_borrow(|node_metadata| {
-        node_metadata.iter().map(|(node_id, node_metadata_stored)| {
-            NodeMetadata {
+        node_metadata
+            .iter()
+            .map(|(node_id, node_metadata_stored)| NodeMetadata {
                 node_id,
                 node_provider_id: node_metadata_stored.node_provider_id,
-                node_provider_name: node_metadata_stored.node_provider_name
-            }
-        })
-        .collect_vec()
+                node_provider_name: node_metadata_stored.node_provider_name,
+            })
+            .collect_vec()
     })
 }
