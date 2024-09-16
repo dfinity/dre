@@ -4,16 +4,16 @@ import Divider from '@mui/material/Divider';
 import { Link, useParams } from 'react-router-dom';
 import { getDateRange } from '../utils/utils';
 import FilterBar, { PeriodFilter } from './FilterBar';
-import { NodeProviderMapping } from '../../../declarations/trustworthy-node-metrics/trustworthy-node-metrics.did';
+import { NodeMetadata } from '../../../declarations/trustworthy-node-metrics/trustworthy-node-metrics.did';
 import { paperStyle } from '../Styles';
 import InfoFormatter from './NodeInfo';
 import { NodeProviderChart } from './NodeProviderChart';
 
 export interface NodeProviderPageProps {
-    nodeProvidersMapping: NodeProviderMapping[]
+    nodeMetadata: NodeMetadata[]
   }
 
-export const NodeProviderPage: React.FC<NodeProviderPageProps> = ({ nodeProvidersMapping }) => {
+export const NodeProviderPage: React.FC<NodeProviderPageProps> = ({ nodeMetadata: nodeProvidersMapping }) => {
     const { provider } = useParams();
     const { dateStart, dateEnd } = useMemo(() => getDateRange(), []);
     const [periodFilter, setPeriodFilter] = useState<PeriodFilter>({ dateStart, dateEnd });
@@ -23,6 +23,7 @@ export const NodeProviderPage: React.FC<NodeProviderPageProps> = ({ nodeProvider
     }
 
     const nodeIds = nodeProvidersMapping.filter(map => map.node_provider_id.toText() == provider);
+    const providerName = nodeIds[0].node_provider_name[0];
 
     if (!nodeIds) {
         return <p>No Node Ids found</p>;
@@ -44,6 +45,7 @@ export const NodeProviderPage: React.FC<NodeProviderPageProps> = ({ nodeProvider
                 </Grid>
                 <Grid item xs={12}>
                 <InfoFormatter name={"Provider ID"} value={provider ? provider : "Anonym"} />
+                <InfoFormatter name={"Provider Name"} value={providerName ? providerName : "Anonym"} />
                 </Grid>
                 <Grid item xs={12} md={6}>
                     <Typography gutterBottom variant="subtitle1" component="div">

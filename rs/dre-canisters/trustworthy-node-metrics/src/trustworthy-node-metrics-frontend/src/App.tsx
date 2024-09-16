@@ -8,7 +8,7 @@ import Header from './components/Header';
 import { LoadingIndicator } from './utils/utils';
 import { NodePage } from './components/NodePage';
 import { NodeProviderPage } from './components/NodeProviderPage';
-import { NodeProviderMapping } from '../../declarations/trustworthy-node-metrics/trustworthy-node-metrics.did.d';
+import { NodeMetadata } from '../../declarations/trustworthy-node-metrics/trustworthy-node-metrics.did.d';
 
 // Theme configuration
 const darkTheme = createTheme({
@@ -26,7 +26,7 @@ const darkTheme = createTheme({
 const App: React.FC = () => {
   const [infoBanner, setInfoBanner] = useState<boolean | null>(true);
   const [providers, setProviders] = useState<Set<string>>(new Set());
-  const [nodeProvidersMapping, setNodeProvidersMapping] = useState<NodeProviderMapping[]>([]);
+  const [nodeMetadata, setNodeMetadata] = useState<NodeMetadata[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const theme = useTheme();
@@ -37,11 +37,11 @@ const App: React.FC = () => {
     const updateRewards = async () => {
       try {
         setIsLoading(true);
-        const nodeProviderMapping = await trustworthy_node_metrics.node_provider_mapping();
-        const providers = new Set(nodeProviderMapping.flatMap(node => node.node_provider_id.toText()));
+        const nodeMetadata = await trustworthy_node_metrics.nodes_metadata();
+        const providers = new Set(nodeMetadata.flatMap(node => node.node_provider_id.toText()));
 
         setProviders(providers);
-        setNodeProvidersMapping(nodeProviderMapping);
+        setNodeMetadata(nodeMetadata);
       } catch (error) {
         console.error("Error fetching nodeProviderMapping:", error);
       } finally {
@@ -81,10 +81,10 @@ const App: React.FC = () => {
             <Routes>
               <Route path="/" element={<Navigate to="/nodes" replace />} />
               <Route path="/nodes" element={
-                isLoading ? <LoadingIndicator /> : <NodeList nodeProviderMapping={nodeProvidersMapping} />
+                isLoading ? <LoadingIndicator /> : <NodeList nodeProviderMapping={nodeMetadata} />
               } />
-              <Route path="/nodes/:node" element={ isLoading ? <LoadingIndicator /> : <NodePage nodeProvidersMapping={nodeProvidersMapping} />} />
-              <Route path="/providers/:provider" element={ isLoading ? <LoadingIndicator /> :  <NodeProviderPage  nodeProvidersMapping={nodeProvidersMapping} /> } />
+              <Route path="/nodes/:node" element={ isLoading ? <LoadingIndicator /> : <NodePage nodeProvidersMapping={nodeMetadata} />} />
+              <Route path="/providers/:provider" element={ isLoading ? <LoadingIndicator /> :  <NodeProviderPage  nodeMetadata={nodeMetadata} /> } />
             </Routes>
           </Box>
         </Box>

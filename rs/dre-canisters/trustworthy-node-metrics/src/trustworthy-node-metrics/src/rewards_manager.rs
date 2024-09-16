@@ -7,7 +7,7 @@ use trustworthy_node_metrics_types::types::{DailyNodeMetrics, RewardsComputation
 use crate::computation_logger::{ComputationLogger, Operation, OperationExecutor};
 
 const MIN_FAILURE_RATE: Decimal = dec!(0.1);
-const MAX_FAILURE_RATE: Decimal = dec!(0.8);
+const MAX_FAILURE_RATE: Decimal = dec!(0.6);
 
 /// Calculates the rewards reduction based on the failure rate.
 ///
@@ -52,7 +52,7 @@ fn rewards_reduction_percent(failure_rate: &Decimal) -> (Vec<OperationExecutor>,
                 MAX_FAILURE_RATE,
                 RF
             ),
-            Operation::Set(dec!(1)),
+            Operation::Set(dec!(0.8)),
         );
 
         (vec![operation], result)
@@ -62,8 +62,9 @@ fn rewards_reduction_percent(failure_rate: &Decimal) -> (Vec<OperationExecutor>,
         let (x_change_operation, x_change) =
             OperationExecutor::execute("Linear Reduction X change", Operation::Subtract(MAX_FAILURE_RATE, MIN_FAILURE_RATE));
 
-        let (operation, result) = OperationExecutor::execute(RF, Operation::Divide(y_change, x_change));
-        (vec![y_change_operation, x_change_operation, operation], result)
+        let (m_operation, m) = OperationExecutor::execute("Compute m", Operation::Divide(y_change, x_change));
+        let (operation, result) = OperationExecutor::execute(RF, Operation::Multiply(m, dec!(0.8)));
+        (vec![y_change_operation, x_change_operation, m_operation, operation], result)
     }
 }
 
@@ -158,7 +159,7 @@ mod tests {
         // Overall failed = 130 Overall total = 500 Failure rate = 0.26
         let daily_metrics: Vec<DailyNodeMetrics> = daily_mocked_metrics(vec![MockedMetrics::new(20, 6, 4), MockedMetrics::new(25, 10, 2)]);
         let result = compute_rewards_percent(&daily_metrics);
-        assert_eq!(result.rewards_percent, 0.7714285714285715);
+        assert_eq!(result.rewards_percent, 0.744);
 
         // Overall failed = 45 Overall total = 450 Failure rate = 0.1
         // rewards_reduction = 0.0
@@ -174,7 +175,7 @@ mod tests {
             MockedMetrics::new(1, 5, 5), // no penalty
         ]);
         let result = compute_rewards_percent(&daily_metrics);
-        assert_eq!(result.rewards_percent, 0.4285714285714286);
+        assert_eq!(result.rewards_percent, 0.36);
     }
 
     #[test]
@@ -183,7 +184,7 @@ mod tests {
             MockedMetrics::new(10, 5, 95), // max failure rate
         ]);
         let result = compute_rewards_percent(&daily_metrics);
-        assert_eq!(result.rewards_percent, 0.0);
+        assert_eq!(result.rewards_percent, 0.2);
     }
 
     #[test]
@@ -208,7 +209,7 @@ mod tests {
         let daily_metrics_right_gap: Vec<DailyNodeMetrics> =
             daily_mocked_metrics(vec![gap.clone(), MockedMetrics::new(1, 6, 4), MockedMetrics::new(1, 7, 3)]);
 
-        assert_eq!(compute_rewards_percent(&daily_metrics_mid_gap).rewards_percent, 0.8095238095238095);
+        assert_eq!(compute_rewards_percent(&daily_metrics_mid_gap).rewards_percent, 0.7866666666666666);
 
         assert_eq!(
             compute_rewards_percent(&daily_metrics_mid_gap).rewards_percent,

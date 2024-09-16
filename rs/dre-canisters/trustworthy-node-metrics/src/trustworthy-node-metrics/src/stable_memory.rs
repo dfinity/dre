@@ -5,7 +5,7 @@ use itertools::Itertools;
 use std::cell::RefCell;
 use std::collections::BTreeMap;
 
-use trustworthy_node_metrics_types::types::{NodeMetricsStored, NodeMetricsStoredKey, NodeProviderMapping, TimestampNanos};
+use trustworthy_node_metrics_types::types::{NodeMetadata, NodeMetadataStored, NodeMetricsStored, NodeMetricsStoredKey, NodeProviderMapping, TimestampNanos};
 
 type Memory = VirtualMemory<DefaultMemoryImpl>;
 
@@ -21,6 +21,14 @@ thread_local! {
     static NODE_PROVIDER_MAP: RefCell<StableBTreeMap<Principal, Principal, Memory>> =
         RefCell::new(StableBTreeMap::init(
         MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(1)))
+    ));
+    static NODE_PROVIDER_MAP_V1: RefCell<StableBTreeMap<Principal, Principal, Memory>> =
+        RefCell::new(StableBTreeMap::init(
+        MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(2)))
+    ));
+    static NODE_METADATA: RefCell<StableBTreeMap<Principal, NodeMetadataStored, Memory>> =
+        RefCell::new(StableBTreeMap::init(
+        MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(3)))
     ));
 
 }
@@ -92,5 +100,19 @@ pub fn get_node_provider_mapping() -> Vec<NodeProviderMapping> {
             .iter()
             .map(|(node_id, node_provider_id)| NodeProviderMapping { node_id, node_provider_id })
             .collect_vec()
+    })
+}
+
+
+pub fn nodes_metadata() -> Vec<NodeMetadata> {
+    NODE_METADATA.with_borrow(|node_metadata| {
+        node_metadata.iter().map(|(node_id, node_metadata_stored)| {
+            NodeMetadata {
+                node_id,
+                node_provider_id: node_metadata_stored.node_provider_id,
+                node_provider_name: node_metadata_stored.node_provider_name
+            }
+        })
+        .collect_vec()
     })
 }
