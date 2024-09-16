@@ -83,7 +83,7 @@ const NodeRewardExplanation = () => {
               </ListItem>
               <ListItem sx={{ display: 'list-item' }}>
                 <Typography variant="body2" color="textSecondary" gutterBottom>
-                  Failure Rates Above 80%: Once the failure rate exceeds 80%, the rewards reduction reaches its maximum of 100%. Any failure rate beyond this threshold results in a complete loss of rewards.
+                  Failure Rates Above 60%: Once the failure rate exceeds 60%, the rewards reduction reaches its maximum of 80%. Any failure rate beyond this threshold results in 20% of the full rewards.
                 </Typography>
               </ListItem>
             </List>
