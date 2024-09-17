@@ -2,8 +2,8 @@ import csv
 import subprocess
 
 # Define the file paths and constants
-csv_file_path = "/Users/pietro.di.marco/Documents/dfinity/dre-1/rs/dre-canisters/trustworthy-node-metrics/src/trustworthy-node-metrics/node_info_api.csv"  # Path to the CSV file
-did_file_path = "/Users/pietro.di.marco/Documents/dfinity/dre/rs/dre-canisters/trustworthy-node-metrics/src/trustworthy-node-metrics/trustworthy-node-metrics.did"
+csv_file_path = "node_info_api.csv" 
+did_file_path = "rs/dre-canisters/trustworthy-node-metrics/src/trustworthy-node-metrics/trustworthy-node-metrics.did"
 network = "ic"
 canister_name = "trustworthy-node-metrics"
 
