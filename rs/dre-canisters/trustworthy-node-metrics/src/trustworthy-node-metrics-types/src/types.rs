@@ -162,4 +162,3 @@ pub struct NodeMetadata {
     pub node_provider_id: Principal,
     pub node_provider_name: Option<String>,
 }
-
