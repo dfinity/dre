@@ -1,10 +1,15 @@
+use ic_protobuf::registry::node_rewards::v2::NodeRewardsTable;
+use ic_registry_keys::NODE_REWARDS_TABLE_KEY;
 use itertools::Itertools;
 use num_traits::ToPrimitive;
 use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
 use trustworthy_node_metrics_types::types::{DailyNodeMetrics, RewardsComputationResult};
 
-use crate::computation_logger::{ComputationLogger, Operation, OperationExecutor};
+use crate::{
+    computation_logger::{ComputationLogger, Operation, OperationExecutor},
+    stable_memory,
+};
 
 const MIN_FAILURE_RATE: Decimal = dec!(0.1);
 const MAX_FAILURE_RATE: Decimal = dec!(0.6);
@@ -113,6 +118,16 @@ pub fn compute_rewards_percent(daily_metrics: &[DailyNodeMetrics]) -> RewardsCom
         failure_rate: overall_failure_rate.to_f64().unwrap(),
         computation_log: computation_logger.get_log(),
     }
+}
+
+/// Update node rewards table
+pub async fn update_node_rewards_table() -> anyhow::Result<()> {
+    let (rewards_table, _): (NodeRewardsTable, _) = ic_nns_common::registry::get_value(NODE_REWARDS_TABLE_KEY.as_bytes(), None).await?;
+    for (area, rewards_rates) in rewards_table.table {
+        stable_memory::insert_rewards_rates(area, rewards_rates)
+    }
+
+    Ok(())
 }
 
 #[cfg(test)]

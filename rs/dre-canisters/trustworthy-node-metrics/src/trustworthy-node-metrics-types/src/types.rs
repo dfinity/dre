@@ -3,6 +3,7 @@ use std::{borrow::Cow, fmt};
 use candid::{CandidType, Decode, Deserialize, Encode, Principal};
 use dfn_core::api::PrincipalId;
 use ic_management_canister_types::NodeMetricsHistoryResponse;
+use ic_protobuf::registry::node_rewards::v2::NodeRewardRates;
 use ic_stable_structures::{storable::Bound, Storable};
 use serde::Serialize;
 
@@ -21,7 +22,7 @@ pub struct NodeMetricsStored {
     pub num_blocks_failed: u64,
 }
 
-const MAX_VALUE_SIZE_BYTES: u32 = 102;
+const MAX_VALUE_SIZE_BYTES_NODE_METRICS: u32 = 102;
 
 impl Storable for NodeMetricsStored {
     fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
@@ -33,7 +34,29 @@ impl Storable for NodeMetricsStored {
     }
 
     const BOUND: Bound = Bound::Bounded {
-        max_size: MAX_VALUE_SIZE_BYTES,
+        max_size: MAX_VALUE_SIZE_BYTES_NODE_METRICS,
+        is_fixed_size: false,
+    };
+}
+
+#[derive(Debug, Deserialize, Serialize, CandidType, Clone)]
+pub struct NodeRewardRatesStored {
+    pub rewards_rates: NodeRewardRates,
+}
+
+const MAX_VALUE_SIZE_BYTES_REWARD_RATES: u32 = 133;
+
+impl Storable for NodeRewardRatesStored {
+    fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
+        Cow::Owned(Encode!(self).unwrap())
+    }
+
+    fn from_bytes(bytes: std::borrow::Cow<[u8]>) -> Self {
+        Decode!(bytes.as_ref(), Self).unwrap()
+    }
+
+    const BOUND: Bound = Bound::Bounded {
+        max_size: MAX_VALUE_SIZE_BYTES_REWARD_RATES,
         is_fixed_size: false,
     };
 }
@@ -54,7 +77,7 @@ impl Storable for NodeMetadataStored {
     }
 
     const BOUND: Bound = Bound::Bounded {
-        max_size: MAX_VALUE_SIZE_BYTES,
+        max_size: MAX_VALUE_SIZE_BYTES_NODE_METRICS,
         is_fixed_size: false,
     };
 }

@@ -23,6 +23,15 @@ async fn update_metrics_task() {
             ic_cdk::println!("Error updating metrics: {}", e);
         }
     }
+
+    match rewards_manager::update_node_rewards_table().await {
+        Ok(_) => {
+            ic_cdk::println!("Successfully updated node_rewards_table");
+        }
+        Err(e) => {
+            ic_cdk::println!("Error updating node_rewards_table: {}", e);
+        }
+    }
 }
 
 fn setup_timers() {

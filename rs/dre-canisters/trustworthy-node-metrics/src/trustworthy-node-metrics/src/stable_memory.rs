@@ -1,11 +1,14 @@
 use candid::Principal;
+use ic_protobuf::registry::node_rewards::v2::NodeRewardRates;
 use ic_stable_structures::memory_manager::{MemoryId, MemoryManager, VirtualMemory};
 use ic_stable_structures::{DefaultMemoryImpl, StableBTreeMap};
 use itertools::Itertools;
 use std::cell::RefCell;
 use std::collections::BTreeMap;
 
-use trustworthy_node_metrics_types::types::{NodeMetadata, NodeMetadataStored, NodeMetricsStored, NodeMetricsStoredKey, TimestampNanos};
+use trustworthy_node_metrics_types::types::{
+    NodeMetadata, NodeMetadataStored, NodeMetricsStored, NodeMetricsStoredKey, NodeRewardRatesStored, TimestampNanos,
+};
 
 type Memory = VirtualMemory<DefaultMemoryImpl>;
 
@@ -31,6 +34,10 @@ thread_local! {
         MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(3)))
     ));
 
+    static REWARDS_TABLE: RefCell<StableBTreeMap<String, NodeRewardRatesStored, Memory>> =
+        RefCell::new(StableBTreeMap::init(
+        MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(4)))
+    ));
 }
 
 pub fn insert_node_metrics(key: NodeMetricsStoredKey, value: NodeMetricsStored) {
@@ -119,4 +126,8 @@ pub fn nodes_metadata() -> Vec<NodeMetadata> {
             })
             .collect_vec()
     })
+}
+
+pub fn insert_rewards_rates(area: String, rewards_rates: NodeRewardRates) {
+    REWARDS_TABLE.with_borrow_mut(|rewards_table| rewards_table.insert(area, NodeRewardRatesStored { rewards_rates }));
 }
