@@ -1,8 +1,8 @@
-import tempfile
-from release_index_loader import GitReleaseLoader
-from publish_notes import post_process_release_notes
-from git_repo import GitRepo
 import pathlib
+import tempfile
+
+from git_repo import GitRepo
+from release_index_loader import GitReleaseLoader
 
 
 def test_remove_excluded_changes():
