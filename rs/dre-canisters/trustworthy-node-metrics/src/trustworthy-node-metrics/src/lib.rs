@@ -3,7 +3,7 @@ use ic_cdk_macros::*;
 use itertools::Itertools;
 use std::collections::{self, btree_map::Entry, BTreeMap, HashSet};
 use trustworthy_node_metrics_types::types::{
-    DailyNodeMetrics, NodeMetrics, NodeMetricsStored, NodeMetricsStoredKey, NodeProviderMapping, NodeRewardsArgs, NodeRewardsResponse,
+    DailyNodeMetrics, NodeMetadata, NodeMetrics, NodeMetricsStored, NodeMetricsStoredKey, NodeRewardsArgs, NodeRewardsResponse,
     SubnetNodeMetricsArgs, SubnetNodeMetricsResponse,
 };
 mod computation_logger;
@@ -144,6 +144,6 @@ fn node_rewards(args: NodeRewardsArgs) -> Vec<NodeRewardsResponse> {
 }
 
 #[query]
-fn node_provider_mapping() -> Vec<NodeProviderMapping> {
-    stable_memory::get_node_provider_mapping()
+fn nodes_metadata() -> Vec<NodeMetadata> {
+    stable_memory::nodes_metadata()
 }

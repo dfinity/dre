@@ -38,6 +38,27 @@ impl Storable for NodeMetricsStored {
     };
 }
 
+#[derive(Debug, Deserialize, Serialize, CandidType, Clone)]
+pub struct NodeMetadataStored {
+    pub node_provider_id: Principal,
+    pub node_provider_name: Option<String>,
+}
+
+impl Storable for NodeMetadataStored {
+    fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
+        Cow::Owned(Encode!(self).unwrap())
+    }
+
+    fn from_bytes(bytes: std::borrow::Cow<[u8]>) -> Self {
+        Decode!(bytes.as_ref(), Self).unwrap()
+    }
+
+    const BOUND: Bound = Bound::Bounded {
+        max_size: MAX_VALUE_SIZE_BYTES,
+        is_fixed_size: false,
+    };
+}
+
 // subnet_node_metrics query call
 #[derive(Deserialize, CandidType)]
 pub struct SubnetNodeMetricsArgs {
@@ -133,4 +154,11 @@ pub struct NodeRewardsResponse {
 pub struct NodeProviderMapping {
     pub node_id: Principal,
     pub node_provider_id: Principal,
+}
+
+#[derive(Debug, Deserialize, CandidType)]
+pub struct NodeMetadata {
+    pub node_id: Principal,
+    pub node_provider_id: Principal,
+    pub node_provider_name: Option<String>,
 }

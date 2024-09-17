@@ -83,7 +83,7 @@ const NodeRewardExplanation = () => {
               </ListItem>
               <ListItem sx={{ display: 'list-item' }}>
                 <Typography variant="body2" color="textSecondary" gutterBottom>
-                  Failure Rates Above 70%: Once the failure rate exceeds 70%, the rewards reduction reaches its maximum of 100%. Any failure rate beyond this threshold results in a complete loss of rewards.
+                  Failure Rates Above 60%: Once the failure rate exceeds 60%, the rewards reduction reaches its maximum of 80%. Any failure rate beyond this threshold results in 20% of the full rewards.
                 </Typography>
               </ListItem>
             </List>
@@ -116,13 +116,14 @@ export default NodeRewardExplanation;
 
 export const LinearReductionChart: React.FC<{ failureRate: number; rewardReduction: number }> = ({ failureRate, rewardReduction }) => {
   const MIN_FAILURE_RATE = 10;
-  const MAX_FAILURE_RATE = 70;
+  const MAX_FAILURE_RATE = 60;
+  const MAX_REDUCTION_CAP = 80;
 
   // Create dataset for chart
   const dataset = Array.from({ length: 101 }, (_, index) => {
     const rewardsRatePercent = index < MIN_FAILURE_RATE ? 0 :
-      index > MAX_FAILURE_RATE ? 100 :
-      ((index - MIN_FAILURE_RATE) / (MAX_FAILURE_RATE - MIN_FAILURE_RATE)) * 100;
+      index > MAX_FAILURE_RATE ? 80 :
+      (index - MIN_FAILURE_RATE) / (MAX_FAILURE_RATE - MIN_FAILURE_RATE) * MAX_REDUCTION_CAP;
 
     const dotPoints = index === failureRate ? rewardsRatePercent : null;
 
@@ -136,7 +137,9 @@ export const LinearReductionChart: React.FC<{ failureRate: number; rewardReducti
         yAxis={[{
           label: 'Rewards reduction',
           valueFormatter: (value: number) => `${value}%`,
+          max: 100
         }]}
+        grid={{ horizontal: true }}
         xAxis={[{
           dataKey: 'failureRatePercent',
           label: 'Failure rate',

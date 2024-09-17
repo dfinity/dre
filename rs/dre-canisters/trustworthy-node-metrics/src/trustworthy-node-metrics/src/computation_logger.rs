@@ -8,6 +8,7 @@ pub enum Operation {
     Set(Decimal),
     Sum(Vec<Decimal>),
     Subtract(Decimal, Decimal),
+    Multiply(Decimal, Decimal),
     Divide(Decimal, Decimal),
 }
 
@@ -18,6 +19,7 @@ impl Operation {
             Operation::Subtract(o1, o2) => o1 - o2,
             Operation::Divide(o1, o2) => o1 / o2,
             Operation::Set(o1) => *o1,
+            Operation::Multiply(o1, o2) => o1 * o2,
         }
     }
 }
@@ -36,6 +38,7 @@ impl fmt::Display for Operation {
             Operation::Subtract(o1, o2) => ("-", o1, o2),
             Operation::Divide(o1, o2) => ("/", o1, o2),
             Operation::Set(o1) => return write!(f, "{}", o1),
+            Operation::Multiply(o1, o2) => ("*", o1, o2),
         };
         write!(f, "{} {} {}", o1.round_dp(4), symbol, o2.round_dp(4))
     }

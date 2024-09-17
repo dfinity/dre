@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Box, Autocomplete, TextField, TableCell, TableRow, TableHead, Table, TableContainer, Paper, TableBody } from '@mui/material';
 import { Link } from 'react-router-dom';
 import { styled } from '@mui/material/styles';
-import { NodeProviderMapping } from '../../../declarations/trustworthy-node-metrics/trustworthy-node-metrics.did';
+import { NodeMetadata } from '../../../declarations/trustworthy-node-metrics/trustworthy-node-metrics.did';
 
 export const Root = styled('div')(({ theme }) => ({
   width: '100%',
@@ -14,7 +14,7 @@ export const Root = styled('div')(({ theme }) => ({
 }));
 
 export interface NodeListProps {
-  nodeProviderMapping: NodeProviderMapping[];
+  nodeProviderMapping: NodeMetadata[];
 }
 
 const tableHeaders = [
@@ -23,7 +23,7 @@ const tableHeaders = [
 ];
 
 export const NodeList: React.FC<NodeListProps> = ({ nodeProviderMapping }) => {
-  const [filteredNodes, setFilteredNodes] = useState<NodeProviderMapping[]>(nodeProviderMapping);
+  const [filteredNodes, setFilteredNodes] = useState<NodeMetadata[]>(nodeProviderMapping);
 
   useEffect(() => {
     setFilteredNodes(nodeProviderMapping);

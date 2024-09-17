@@ -73,6 +73,16 @@ export const computeAverageFailureRate = (data: number[]): number => {
     return sum / data.length;
   };
 
+export const dateStartToEnd = (date: Date): Date => {
+  return new Date(
+    Date.UTC(
+      date.getUTCFullYear(),
+      date.getUTCMonth(),
+      date.getUTCDate(),
+      23, 59, 59, 999
+    )
+  )
+};
 export const getDateRange = () => {
   const now = new Date();
   const dateStart = new Date(
