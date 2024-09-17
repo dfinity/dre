@@ -1,5 +1,5 @@
 {
-  "checksum": "c6c860e2db1b1b76657d2ec81b52a28a64d857a7335b955584dd5bc0aa3ca267",
+  "checksum": "c06c474bc0bdf09c86b7a0176d53a06fdcc2379f268e44160375b1d7dfb22e22",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -685,7 +685,7 @@
               "target": "mime"
             },
             {
-              "id": "once_cell 1.20.0",
+              "id": "once_cell 1.19.0",
               "target": "once_cell"
             },
             {
@@ -979,7 +979,7 @@
             ],
             "cfg(not(all(target_arch = \"arm\", target_os = \"none\")))": [
               {
-                "id": "once_cell 1.20.0",
+                "id": "once_cell 1.19.0",
                 "target": "once_cell"
               }
             ]
@@ -1069,7 +1069,7 @@
           "selects": {
             "cfg(not(all(target_arch = \"arm\", target_os = \"none\")))": [
               {
-                "id": "once_cell 1.20.0",
+                "id": "once_cell 1.19.0",
                 "target": "once_cell"
               }
             ]
@@ -3936,7 +3936,7 @@
         "deps": {
           "common": [
             {
-              "id": "once_cell 1.20.0",
+              "id": "once_cell 1.19.0",
               "target": "once_cell"
             },
             {
@@ -4860,7 +4860,7 @@
               "target": "instant"
             },
             {
-              "id": "once_cell 1.20.0",
+              "id": "once_cell 1.19.0",
               "target": "once_cell"
             },
             {
@@ -4921,7 +4921,7 @@
               "target": "instant"
             },
             {
-              "id": "once_cell 1.20.0",
+              "id": "once_cell 1.19.0",
               "target": "once_cell"
             },
             {
@@ -5707,7 +5707,7 @@
               "target": "indexmap"
             },
             {
-              "id": "once_cell 1.20.0",
+              "id": "once_cell 1.19.0",
               "target": "once_cell"
             },
             {
@@ -8860,7 +8860,7 @@
               "target": "num"
             },
             {
-              "id": "once_cell 1.20.0",
+              "id": "once_cell 1.19.0",
               "target": "once_cell"
             },
             {
@@ -14308,7 +14308,7 @@
               "target": "log"
             },
             {
-              "id": "once_cell 1.20.0",
+              "id": "once_cell 1.19.0",
               "target": "once_cell"
             },
             {
@@ -24868,7 +24868,7 @@
               "target": "maplit"
             },
             {
-              "id": "once_cell 1.20.0",
+              "id": "once_cell 1.19.0",
               "target": "once_cell"
             },
             {
@@ -24979,7 +24979,7 @@
               "target": "ic_agent"
             },
             {
-              "id": "once_cell 1.20.0",
+              "id": "once_cell 1.19.0",
               "target": "once_cell"
             },
             {
@@ -27570,7 +27570,7 @@
               "target": "elliptic_curve"
             },
             {
-              "id": "once_cell 1.20.0",
+              "id": "once_cell 1.19.0",
               "target": "once_cell"
             },
             {
@@ -31024,7 +31024,7 @@
               "target": "jsonwebtoken"
             },
             {
-              "id": "once_cell 1.20.0",
+              "id": "once_cell 1.19.0",
               "target": "once_cell"
             },
             {
@@ -31202,13 +31202,13 @@
       },
       "license": null
     },
-    "once_cell 1.20.0": {
+    "once_cell 1.19.0": {
       "name": "once_cell",
-      "version": "1.20.0",
+      "version": "1.19.0",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/once_cell/1.20.0/download",
-          "sha256": "33ea5043e58958ee56f3e15a90aee535795cd7dfd319846288d93c5b57d85cbe"
+          "url": "https://static.crates.io/crates/once_cell/1.19.0/download",
+          "sha256": "3fdb12b2476b595f9358c5161aa467c2438859caa136dec86c26fdd2efe17b92"
         }
       },
       "targets": [
@@ -31237,7 +31237,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "1.20.0"
+        "version": "1.19.0"
       },
       "license": "MIT OR Apache-2.0"
     },
@@ -31346,7 +31346,7 @@
               "target": "futures_sink"
             },
             {
-              "id": "once_cell 1.20.0",
+              "id": "once_cell 1.19.0",
               "target": "once_cell"
             },
             {
@@ -31410,7 +31410,7 @@
         "deps": {
           "common": [
             {
-              "id": "once_cell 1.20.0",
+              "id": "once_cell 1.19.0",
               "target": "once_cell"
             },
             {
@@ -31531,7 +31531,7 @@
               "target": "glob"
             },
             {
-              "id": "once_cell 1.20.0",
+              "id": "once_cell 1.19.0",
               "target": "once_cell"
             },
             {
@@ -32461,7 +32461,7 @@
         "deps": {
           "common": [
             {
-              "id": "once_cell 1.20.0",
+              "id": "once_cell 1.19.0",
               "target": "once_cell"
             },
             {
@@ -34212,7 +34212,7 @@
               "target": "itertools"
             },
             {
-              "id": "once_cell 1.20.0",
+              "id": "once_cell 1.19.0",
               "target": "once_cell"
             },
             {
@@ -34339,7 +34339,7 @@
               "target": "multimap"
             },
             {
-              "id": "once_cell 1.20.0",
+              "id": "once_cell 1.19.0",
               "target": "once_cell"
             },
             {
@@ -35001,7 +35001,7 @@
           "selects": {
             "cfg(windows)": [
               {
-                "id": "once_cell 1.20.0",
+                "id": "once_cell 1.19.0",
                 "target": "once_cell"
               },
               {
@@ -36331,7 +36331,7 @@
                 "target": "mime"
               },
               {
-                "id": "once_cell 1.20.0",
+                "id": "once_cell 1.19.0",
                 "target": "once_cell"
               },
               {
@@ -37565,7 +37565,7 @@
               "target": "brotli_decompressor"
             },
             {
-              "id": "once_cell 1.20.0",
+              "id": "once_cell 1.19.0",
               "target": "once_cell"
             },
             {
@@ -42010,7 +42010,7 @@
               "target": "fastrand"
             },
             {
-              "id": "once_cell 1.20.0",
+              "id": "once_cell 1.19.0",
               "target": "once_cell"
             }
           ],
@@ -42523,7 +42523,7 @@
               "target": "cfg_if"
             },
             {
-              "id": "once_cell 1.20.0",
+              "id": "once_cell 1.19.0",
               "target": "once_cell"
             }
           ],
@@ -44022,7 +44022,7 @@
         "deps": {
           "common": [
             {
-              "id": "once_cell 1.20.0",
+              "id": "once_cell 1.19.0",
               "target": "once_cell"
             }
           ],
@@ -44080,7 +44080,7 @@
               "target": "log"
             },
             {
-              "id": "once_cell 1.20.0",
+              "id": "once_cell 1.19.0",
               "target": "once_cell"
             },
             {
@@ -44152,7 +44152,7 @@
               "target": "nu_ansi_term"
             },
             {
-              "id": "once_cell 1.20.0",
+              "id": "once_cell 1.19.0",
               "target": "once_cell"
             },
             {
@@ -45564,7 +45564,7 @@
               "target": "log"
             },
             {
-              "id": "once_cell 1.20.0",
+              "id": "once_cell 1.19.0",
               "target": "once_cell"
             },
             {
@@ -46141,7 +46141,7 @@
             ],
             "cfg(windows)": [
               {
-                "id": "once_cell 1.20.0",
+                "id": "once_cell 1.19.0",
                 "target": "once_cell"
               }
             ]
@@ -48299,7 +48299,7 @@
               "target": "log"
             },
             {
-              "id": "once_cell 1.20.0",
+              "id": "once_cell 1.19.0",
               "target": "once_cell"
             },
             {
