@@ -10,11 +10,11 @@ releases:
       - name: canister-snapshots
         version: 179973553248415fc85679d853b48b0e0ec231c6
       # Qualification pipeline:
-      # FIXME
+      # https://github.com/dfinity/ic/actions/runs/10902578918
       - name: base-hotfix-deprecated-assert
         version: cacf86a2ea7e21150d106e9e4dda5973088f53c5
       # Qualification pipeline:
-      # FIXME
+      # https://github.com/dfinity/ic/actions/runs/10902588180
       - name: canister-snapshots-hotfix-deprecated-assert
         version: c66489953ed34670667ad81ce42a172948f289f5
   - rc_name: rc--2024-09-06_01-30
