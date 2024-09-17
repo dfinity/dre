@@ -43,7 +43,7 @@ actix-web = { version = "4.9.0", default-features = false, features = [
 ] }
 actix-rt = "2.10.0"
 ahash = "0.8.11"
-anyhow = "1.0.86"
+anyhow = "1.0.89"
 async-recursion = "1.1.1"
 axum-otel-metrics = "0.8.1"
 axum = "0.7.5"
@@ -145,7 +145,7 @@ lru = "0.12.4"
 num-traits = "0.2"
 opentelemetry = { version = "0.22.0", features = ["metrics"] }
 pkcs11 = "0.5.0"
-pretty_assertions = "1.4.0"
+pretty_assertions = "1.4.1"
 pretty_env_logger = "0.5.0"
 prometheus-http-query = { version = "0.8.3", default-features = false, features = [
     "rustls-tls-webpki-roots",
@@ -189,7 +189,7 @@ thiserror = "1.0.63"
 tokio = { version = "1.40.0", features = ["full"] }
 tokio-util = "0.7.12"
 url = "2.5.2"
-wiremock = "0.6.1"
+wiremock = "0.6.2"
 human_bytes = "0.4"
 mockall = "0.13.0"
 
