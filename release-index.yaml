@@ -25,6 +25,14 @@ releases:
       # https://github.com/dfinity/ic/actions/runs/10792321422
       - name: canister-snapshots-hotfix-https-outcalls
         version: 290fd2ae93a02e1ab579895c806161e42b6acf2b
+      # Qualification pipeline:
+      # https://github.com/dfinity/ic-private/actions/runs/10873147621
+      - name: base-hotfix-https-outcalls-remove-assert
+        version: 5d1beaca74d0bf2ad2e8a37809e1e3ffa5ee9a32
+      # Qualification pipeline:
+      # https://github.com/dfinity/ic-private/actions/runs/10873188297
+      - name: canister-snapshots-hotfix-https-outcalls-remove-assert
+        version: c180069c95739773293599d90c23defc12c3084f
   - rc_name: rc--2024-08-29_01-30
     versions:
       - name: base
