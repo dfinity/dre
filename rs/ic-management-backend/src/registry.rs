@@ -373,7 +373,13 @@ impl RegistryState {
                 releases.extend(
                     blessed_versions
                         .iter()
-                        .map(|version| commit_to_release.get(version).unwrap().clone())
+                        .filter_map(|version| match commit_to_release.get(version) {
+                            Some(release) => Some(release.clone()),
+                            None => {
+                                error!("Failed to find release for version {}", version);
+                                None
+                            }
+                        })
                         .sorted_by_key(|rr| rr.time)
                         .collect::<Vec<Release>>(),
                 );
