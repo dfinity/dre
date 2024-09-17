@@ -5,9 +5,7 @@ use itertools::Itertools;
 use std::cell::RefCell;
 use std::collections::BTreeMap;
 
-use trustworthy_node_metrics_types::types::{
-    NodeMetadata, NodeMetadataStored, NodeMetricsStored, NodeMetricsStoredKey, NodeProviderMapping, TimestampNanos,
-};
+use trustworthy_node_metrics_types::types::{NodeMetadata, NodeMetadataStored, NodeMetricsStored, NodeMetricsStoredKey, TimestampNanos};
 
 type Memory = VirtualMemory<DefaultMemoryImpl>;
 
@@ -80,27 +78,32 @@ pub fn latest_metrics(nodes_principal: &[Principal]) -> BTreeMap<Principal, Node
 }
 
 pub fn insert_node_provider(key: Principal, value: Principal) {
-    NODE_PROVIDER_MAP.with(|p| p.borrow_mut().insert(key, value));
+    NODE_METADATA.with_borrow_mut(|node_metadata| {
+        node_metadata.insert(
+            key,
+            NodeMetadataStored {
+                node_provider_id: value,
+                node_provider_name: None,
+            },
+        )
+    });
 }
 
 pub fn get_node_provider(node_principal: &Principal) -> Option<Principal> {
-    NODE_PROVIDER_MAP.with_borrow(|np_map| np_map.get(node_principal))
+    NODE_METADATA.with_borrow(|node_metadata| node_metadata.get(node_principal).map(|metadata| metadata.node_provider_id))
 }
 
 pub fn get_node_principals(node_provider: &Principal) -> Vec<Principal> {
-    NODE_PROVIDER_MAP.with_borrow(|np_map| {
-        np_map
+    NODE_METADATA.with_borrow(|node_metadata| {
+        node_metadata
             .iter()
-            .filter_map(|(node_id, node_p)| if &node_p == node_provider { Some(node_id) } else { None })
-            .collect_vec()
-    })
-}
-
-pub fn get_node_provider_mapping() -> Vec<NodeProviderMapping> {
-    NODE_PROVIDER_MAP.with_borrow(|np_map| {
-        np_map
-            .iter()
-            .map(|(node_id, node_provider_id)| NodeProviderMapping { node_id, node_provider_id })
+            .filter_map(|(node_id, node_metadata)| {
+                if &node_metadata.node_provider_id == node_provider {
+                    Some(node_id)
+                } else {
+                    None
+                }
+            })
             .collect_vec()
     })
 }
