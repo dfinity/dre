@@ -424,12 +424,22 @@ expression = "LicenseRef-IC-1.0"
 license-files = [{ path = "../../../LICENSE", hash = 0xbd0eed23 }]
 
 [[licenses.clarify]]
+crate = "ic-limits"
+expression = "LicenseRef-IC-1.0"
+license-files = [{ path = "../../LICENSE", hash = 0xbd0eed23 }]
+
+[[licenses.clarify]]
 crate = "ic-management-canister-types"
 expression = "LicenseRef-IC-1.0"
 license-files = [{ path = "../../../LICENSE", hash = 0xbd0eed23 }]
 
 [[licenses.clarify]]
 crate = "ic-metrics"
+expression = "LicenseRef-IC-1.0"
+license-files = [{ path = "../../../LICENSE", hash = 0xbd0eed23 }]
+
+[[licenses.clarify]]
+crate = "ic-nervous-system-canisters"
 expression = "LicenseRef-IC-1.0"
 license-files = [{ path = "../../../LICENSE", hash = 0xbd0eed23 }]
 
