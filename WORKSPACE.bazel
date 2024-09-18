@@ -237,7 +237,7 @@ oci_pull(
 
 oci_pull(
     name = "python3",
-    digest = "sha256:5120c734a5ba810c47b97a80cdc6e03004bd4ff7ad98e492b9ccdaf70ff2b8d6",
+    digest = "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     image = "index.docker.io/library/python",
 )
 
