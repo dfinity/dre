@@ -22,6 +22,8 @@ runs:
         bin/cargo-deny-checks.sh
       shell: bash
 
+    - name: Setup upterm session
+      uses: lhotari/action-upterm@v1
     - name: "Build and repin"
       id: build
       run: |
