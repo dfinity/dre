@@ -88,18 +88,6 @@ pub fn latest_metrics(nodes_principal: &[Principal]) -> BTreeMap<Principal, Node
     latest_metrics
 }
 
-pub fn insert_node_provider(key: Principal, value: Principal) {
-    NODE_METADATA.with_borrow_mut(|node_metadata| {
-        node_metadata.insert(
-            key,
-            NodeMetadataStored {
-                node_provider_id: value,
-                node_provider_name: None,
-            },
-        )
-    });
-}
-
 pub fn get_node_provider(node_principal: &Principal) -> Option<Principal> {
     NODE_METADATA.with_borrow(|node_metadata| node_metadata.get(node_principal).map(|metadata| metadata.node_provider_id))
 }
@@ -136,7 +124,7 @@ pub fn insert_rewards_rates(area: String, rewards_rates: NodeRewardRates) {
     REWARDS_TABLE.with_borrow_mut(|rewards_table| rewards_table.insert(area, NodeRewardRatesStored { rewards_rates }));
 }
 
-pub fn insert_metadata_v2(node: NodeMetadata, node_operator_id: Principal, dc_id: String, region: String, node_type: String) {
+pub fn insert_metadata_v2(node_id: Principal, node_operator_id: Principal, node_provider_id: Principal, dc_id: String, region: String, node_type: String) {
     NODE_METADATA_V2.with_borrow_mut(|node_metadata| {
         node_metadata.insert(
             node_id,
@@ -145,14 +133,28 @@ pub fn insert_metadata_v2(node: NodeMetadata, node_operator_id: Principal, dc_id
                 node_type,
                 dc_id,
                 node_operator_id,
-                node_provider_id: node.node_provider_id,
-                node_provider_name: node.node_provider_name
+                node_provider_id,
+                node_provider_name: None
             },
         )
     });
 }
 
-pub(crate) fn node_types_count(node_operator_id: ic_base_types::PrincipalId) -> _ {
+pub fn node_types_count(node_operator_id: Principal) -> Option<BTreeMap<String, i32>> {
+    let mut node_types_count = BTreeMap::new();
+
     NODE_METADATA_V2.with_borrow(|node_metadata| {
-        node_metadata.iter().filter(|(_, metadata)| metadata.)
+        let operator_metadata = node_metadata.iter().filter(|(_, metadata)| metadata.node_operator_id == node_operator_id).collect_vec();
+
+        for (_, metadata) in operator_metadata {
+            let counter = node_types_count.entry(metadata.node_type).or_insert(0);
+            *counter += 1;
+        }
+    });
+
+    if node_types_count.is_empty() {
+        None
+    } else {
+        Some(node_types_count)
+    }
 }
