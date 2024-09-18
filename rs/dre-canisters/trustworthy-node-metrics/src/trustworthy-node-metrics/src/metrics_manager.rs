@@ -169,24 +169,75 @@ fn grouped_by_node(subnet_metrics: Vec<(PrincipalId, Vec<NodeMetricsHistoryRespo
     grouped_by_node
 }
 
-async fn update_node_providers(nodes_principal: Vec<&PrincipalId>) {
+async fn update_nodes_metadata(nodes_principal: Vec<&PrincipalId>) {
+    let mut nodes_added = Vec::new();
+    let mut rewardable_nodes: BTreeMap<PrincipalId, BTreeMap<String, u32>> = BTreeMap::new();
+    let unknown_string = "unknown".to_string();
+
     for node_principal in nodes_principal {
         let maybe_node_provider = stable_memory::get_node_provider(&node_principal.0);
 
         if maybe_node_provider.is_none() {
-            match fetch_node_provider(node_principal).await {
-                Ok(node_provider_id) => {
-                    stable_memory::insert_node_provider(node_principal.0, node_provider_id.0);
-                }
-                Err(e) => {
-                    ic_cdk::println!("Failed to fetch node provider for {:?}: {:?}", node_principal, e);
-                }
-            }
+            ic_cdk::println!("Added node {}. Will fetch metadata for it.", node_principal);
+            nodes_added.push(node_principal);
         }
+    }
+
+    for node_id in nodes_added {
+        ic_cdk::println!("Fetching metadata for node: {}", node_id);
+
+        let node_record_key = make_node_record_key(NodeId::from(*node_id));
+        let node_record = match ic_nns_common::registry::get_value::<NodeRecord>(node_record_key.as_bytes(), None).await {
+            Ok((node_record, _)) => node_record,
+            Err(e) => {
+                ic_cdk::println!("Error getting the node_record from the registry for node {}. Error: {:?}", node_id, e);
+                continue;
+            }
+        };
+    
+        let node_operator_id: PrincipalId = match node_record.node_operator_id.try_into() {
+            Ok(id) => id,
+            Err(e) => {
+                ic_cdk::println!("Error converting node_operator_id for node {}. Error: {:?}", node_id, e);
+                continue;
+            }
+        };
+    
+        let node_operator_key = make_node_operator_record_key(node_operator_id);
+        let node_operator_record = match ic_nns_common::registry::get_value::<NodeOperatorRecord>(node_operator_key.as_bytes(), None).await {
+            Ok((node_operator_record, _)) => node_operator_record,
+            Err(e) => {
+                ic_cdk::println!("Error getting the node_operator_record from the registry for node {}. Error: {:?}", node_id, e);
+                continue; 
+            }
+        };
+
+        let node_provider_id: PrincipalId = match node_operator_record.node_provider_principal_id.try_into() {
+            Ok(id) => id,
+            Err(e) => {
+                ic_cdk::println!("Error converting node_provider_principal_id for node {}. Error: {:?}", node_id, e);
+                continue;
+            }
+        };
+
+        let node_types_count = stable_memory::node_types_count(node_operator_id);
+    
+        let dc_id: String = node_operator_record.dc_id;
+        let data_center_key = make_data_center_record_key(&dc_id);
+        
+        let data_center_record = match ic_nns_common::registry::get_value::<DataCenterRecord>(data_center_key.as_bytes(), None).await {
+            Ok((data_center_record, _)) => data_center_record,
+            Err(e) => {
+                ic_cdk::println!("Error getting the data_center_record from the registry for node {}. Error: {:?}", node_id, e);
+                continue; 
+            }
+        };
+
+        nodes_metadata.insert(*node_id, (node_operator_id, node_provider_id, data_center_record.region));
     }
 }
 
-fn update_node_metrics(metrics_by_node: BTreeMap<PrincipalId, Vec<NodeMetricsGrouped>>) {
+fn update_nodes_metrics(metrics_by_node: BTreeMap<PrincipalId, Vec<NodeMetricsGrouped>>) {
     let principals = metrics_by_node.keys().map(|p| p.0).collect_vec();
     let latest_metrics = stable_memory::latest_metrics(&principals);
 
@@ -201,102 +252,6 @@ fn update_node_metrics(metrics_by_node: BTreeMap<PrincipalId, Vec<NodeMetricsGro
             stable_memory::insert_node_metrics(key, node_metrics)
         }
     }
-}
-
-
-pub async fn update_metadata() -> anyhow::Result<()> {
-    let nodes_metadata = stable_memory::nodes_metadata();
-    let nodes_metadata_len = nodes_metadata.len();
-
-    let mut rewardable_nodes: BTreeMap<PrincipalId, BTreeMap<String, u32>> = BTreeMap::new();
-    let mut nodes_region: BTreeMap<Principal, (PrincipalId, String, String)> = BTreeMap::new();
-
-    for (index, node) in nodes_metadata.iter().enumerate() {
-        ic_cdk::println!("Processing node: {} {}/{}", node.node_id ,index, nodes_metadata_len);
-
-        let node_record_key = make_node_record_key(NodeId::from(PrincipalId::from(node.node_id)));
-        
-        let node_record = match ic_nns_common::registry::get_value::<NodeRecord>(node_record_key.as_bytes(), None).await {
-            Ok((node_record, _)) => node_record,
-            Err(e) => {
-                ic_cdk::println!("Error getting the node_record from the registry for node {}. Error: {:?}", node.node_id, e);
-                continue;
-            }
-        };
-    
-        let node_operator_id: PrincipalId = match node_record.node_operator_id.try_into() {
-            Ok(id) => id,
-            Err(e) => {
-                ic_cdk::println!("Error converting node_operator_id for node {}. Error: {:?}", node.node_id, e);
-                continue;
-            }
-        };
-    
-        let node_operator_key = make_node_operator_record_key(node_operator_id);
-        
-        let node_operator_record = match ic_nns_common::registry::get_value::<NodeOperatorRecord>(node_operator_key.as_bytes(), None).await {
-            Ok((node_operator_record, _)) => node_operator_record,
-            Err(e) => {
-                ic_cdk::println!("Error getting the node_operator_record from the registry for node {}. Error: {:?}", node.node_id, e);
-                continue; 
-            }
-        };
-        rewardable_nodes.insert(node_operator_id, node_operator_record.rewardable_nodes);
-    
-        let dc_id: String = node_operator_record.dc_id;
-        let data_center_key = make_data_center_record_key(&dc_id);
-        
-        let data_center_record = match ic_nns_common::registry::get_value::<DataCenterRecord>(data_center_key.as_bytes(), None).await {
-            Ok((data_center_record, _)) => data_center_record,
-            Err(e) => {
-                ic_cdk::println!("Error getting the data_center_record from the registry for node {}. Error: {:?}", node.node_id, e);
-                continue; 
-            }
-        };
-        
-        nodes_region.insert(node.node_id, (node_operator_id, data_center_record.region, dc_id));
-    }
-
-    let nodes_medatata = stable_memory::nodes_metadata();
-
-    for node in nodes_medatata {
-        if let Some((node_operator_id, region, dc_id)) = nodes_region.get(&node.node_id){
-            let node_type = match rewardable_nodes.get_mut(node_operator_id) {
-                Some(rewardable_nodes) => {
-                    // Find first non-zero rewardable nodes entry
-                    if rewardable_nodes.is_empty() {
-                        "unknown:no_rewardable_nodes_found".to_string()
-                    } else {
-                        // Find the first non-zero rewardable node type, or "unknown" if none are found
-                        let (k, mut v) = loop {
-                            let (k, v) = match rewardable_nodes.pop_first() {
-                                Some(kv) => kv,
-                                None => break ("unknown:rewardable_nodes_used_up".to_string(), 0),
-                            };
-                            if v != 0 {
-                                break (k, v);
-                            }
-                        };
-                        v = v.saturating_sub(1);
-                        // Insert back if not zero
-                        if v != 0 {
-                            rewardable_nodes.insert(k.clone(), v);
-                        }
-                        k
-                    }
-                }
-    
-                None => "unknown".to_string(),
-            };
-
-        
-            ic_cdk::println!("Processing node: {} {} {}", node.node_id ,region.clone(), node_type);
-            stable_memory::insert_metadata_v2(node, dc_id.clone() , region.clone(), node_type);
-        } else {
-            stable_memory::insert_metadata_v2(node, "unknown".to_string(), "unknown".to_string(), "unknown".to_string());
-        }
-    }
-    Ok(())
 }
 
 /// Update metrics
@@ -315,8 +270,8 @@ pub async fn update_metrics() -> anyhow::Result<()> {
     let metrics_by_node: BTreeMap<PrincipalId, Vec<NodeMetricsGrouped>> = grouped_by_node(subnet_metrics);
     let nodes_principal: Vec<&PrincipalId> = metrics_by_node.keys().collect_vec();
 
-    update_node_providers(nodes_principal).await;
-    update_node_metrics(metrics_by_node);
+    update_nodes_metadata(nodes_principal).await;
+    update_nodes_metrics(metrics_by_node);
 
     Ok(())
 }

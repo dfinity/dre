@@ -136,17 +136,22 @@ pub fn insert_rewards_rates(area: String, rewards_rates: NodeRewardRates) {
     REWARDS_TABLE.with_borrow_mut(|rewards_table| rewards_table.insert(area, NodeRewardRatesStored { rewards_rates }));
 }
 
-pub fn insert_metadata_v2(node: NodeMetadata, dc_id: String, region: String, node_type: String) {
+pub fn insert_metadata_v2(node_id: Principal, node_provider_id: Principal, dc_id: String, region: String, node_type: String) {
     NODE_METADATA_V2.with_borrow_mut(|node_metadata| {
         node_metadata.insert(
-            node.node_id,
+            node_id,
             NodeMetadataStoredV2 {
                 region,
                 node_type,
                 dc_id,
-                node_provider_id: node.node_provider_id,
-                node_provider_name: node.node_provider_name
+                node_provider_id,
+                node_provider_name: None
             },
         )
     });
+}
+
+pub(crate) fn node_types_count(node_operator_id: ic_base_types::PrincipalId) -> _ {
+    NODE_METADATA_V2.with_borrow(|node_metadata| {
+        node_metadata.iter().filter(|(_, metadata)| metadata.)
 }
