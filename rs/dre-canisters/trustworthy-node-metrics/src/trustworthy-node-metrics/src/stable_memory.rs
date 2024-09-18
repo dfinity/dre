@@ -136,7 +136,7 @@ pub fn insert_rewards_rates(area: String, rewards_rates: NodeRewardRates) {
     REWARDS_TABLE.with_borrow_mut(|rewards_table| rewards_table.insert(area, NodeRewardRatesStored { rewards_rates }));
 }
 
-pub fn insert_metadata_v2(node_id: Principal, node_provider_id: Principal, dc_id: String, region: String, node_type: String) {
+pub fn insert_metadata_v2(node: NodeMetadata, node_operator_id: Principal, dc_id: String, region: String, node_type: String) {
     NODE_METADATA_V2.with_borrow_mut(|node_metadata| {
         node_metadata.insert(
             node_id,
@@ -144,8 +144,9 @@ pub fn insert_metadata_v2(node_id: Principal, node_provider_id: Principal, dc_id
                 region,
                 node_type,
                 dc_id,
-                node_provider_id,
-                node_provider_name: None
+                node_operator_id,
+                node_provider_id: node.node_provider_id,
+                node_provider_name: node.node_provider_name
             },
         )
     });
