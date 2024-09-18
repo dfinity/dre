@@ -4,13 +4,13 @@ import FilterBar, { PeriodFilter } from './FilterBar';
 import { Box, Divider, Grid, Paper, Typography } from '@mui/material';
 import { Link, useParams } from 'react-router-dom';
 import { paperStyle } from '../Styles';
-import { NodeProviderMapping } from '../../../declarations/trustworthy-node-metrics/trustworthy-node-metrics.did';
+import { NodeMetadata } from '../../../declarations/trustworthy-node-metrics/trustworthy-node-metrics.did';
 import InfoFormatter from './NodeInfo';
 import NodeRewardsChart from './NodeRewardsChart';
 import NodePerformanceChart from './NodePerformanceChart';
 
 export interface NodeProviderPageProps {
-    nodeProvidersMapping: NodeProviderMapping[]
+    nodeProvidersMapping: NodeMetadata[]
   }
   
 export const NodePage: React.FC<NodeProviderPageProps> = ({ nodeProvidersMapping }) => {

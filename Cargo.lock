@@ -8849,6 +8849,7 @@ dependencies = [
  "candid",
  "dfn_core",
  "ic-management-canister-types",
+ "ic-protobuf",
  "ic-stable-structures",
  "serde",
  "serde_json",

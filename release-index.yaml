@@ -9,6 +9,14 @@ releases:
       # https://github.com/dfinity/ic/actions/runs/10828697477
       - name: canister-snapshots
         version: 179973553248415fc85679d853b48b0e0ec231c6
+      # Qualification pipeline:
+      # https://github.com/dfinity/ic/actions/runs/10902578918
+      - name: base-hotfix-deprecated-assert
+        version: cacf86a2ea7e21150d106e9e4dda5973088f53c5
+      # Qualification pipeline:
+      # https://github.com/dfinity/ic/actions/runs/10902588180
+      - name: canister-snapshots-hotfix-deprecated-assert
+        version: c66489953ed34670667ad81ce42a172948f289f5
   - rc_name: rc--2024-09-06_01-30
     versions:
       # Qualification pipeline:
@@ -25,6 +33,14 @@ releases:
       # https://github.com/dfinity/ic/actions/runs/10792321422
       - name: canister-snapshots-hotfix-https-outcalls
         version: 290fd2ae93a02e1ab579895c806161e42b6acf2b
+      # Qualification pipeline:
+      # https://github.com/dfinity/ic-private/actions/runs/10873147621
+      - name: base-hotfix-https-outcalls-remove-assert
+        version: 5d1beaca74d0bf2ad2e8a37809e1e3ffa5ee9a32
+      # Qualification pipeline:
+      # https://github.com/dfinity/ic-private/actions/runs/10873188297
+      - name: canister-snapshots-hotfix-https-outcalls-remove-assert
+        version: c180069c95739773293599d90c23defc12c3084f
   - rc_name: rc--2024-08-29_01-30
     versions:
       - name: base

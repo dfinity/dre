@@ -3,7 +3,7 @@ use ic_cdk_macros::*;
 use itertools::Itertools;
 use std::collections::{self, btree_map::Entry, BTreeMap, HashSet};
 use trustworthy_node_metrics_types::types::{
-    DailyNodeMetrics, NodeMetrics, NodeMetricsStored, NodeMetricsStoredKey, NodeProviderMapping, NodeRewardsArgs, NodeRewardsResponse,
+    DailyNodeMetrics, NodeMetadata, NodeMetrics, NodeMetricsStored, NodeMetricsStoredKey, NodeRewardsArgs, NodeRewardsResponse,
     SubnetNodeMetricsArgs, SubnetNodeMetricsResponse,
 };
 mod computation_logger;
@@ -21,6 +21,15 @@ async fn update_metrics_task() {
         }
         Err(e) => {
             ic_cdk::println!("Error updating metrics: {}", e);
+        }
+    }
+
+    match rewards_manager::update_node_rewards_table().await {
+        Ok(_) => {
+            ic_cdk::println!("Successfully updated node_rewards_table");
+        }
+        Err(e) => {
+            ic_cdk::println!("Error updating node_rewards_table: {}", e);
         }
     }
 }
@@ -144,6 +153,6 @@ fn node_rewards(args: NodeRewardsArgs) -> Vec<NodeRewardsResponse> {
 }
 
 #[query]
-fn node_provider_mapping() -> Vec<NodeProviderMapping> {
-    stable_memory::get_node_provider_mapping()
+fn nodes_metadata() -> Vec<NodeMetadata> {
+    stable_memory::nodes_metadata()
 }

@@ -20,7 +20,6 @@ export const NodePerformanceChart: React.FC<NodePerformanceChartProps> = ({ node
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        console.log("period fetched", periodFilter);
         if (node) {
             setNodeRewardsData(periodFilter, [Principal.fromText(node)], [], setPerformanceData, setIsLoading);
         }    

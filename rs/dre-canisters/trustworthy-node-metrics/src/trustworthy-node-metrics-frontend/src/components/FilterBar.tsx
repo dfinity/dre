@@ -3,6 +3,7 @@ import { Box, Snackbar, Alert } from '@mui/material';
 import { LocalizationProvider, DatePicker, ArrowRightIcon } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { addMonths, isAfter, differenceInMonths } from 'date-fns';
+import { dateStartToEnd } from '../utils/utils';
 
 export interface PeriodFilter {
   dateStart: Date;
@@ -34,7 +35,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ filters, setFilters }) => {
         setError(null);
       } else {
         setError('The "To" date must be within 2 months of the "From" date.');
-        setFilters((prev) => ({ ...prev, dateStart: startValue, dateEnd: addMonths(startValue, 2) }));
+        setFilters((prev) => ({ ...prev, dateStart: startValue, dateEnd: dateStartToEnd(addMonths(startValue, 2)) }));
       }
     }
   };
@@ -51,7 +52,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ filters, setFilters }) => {
             setError(null);
           } else {
             setError('The "To" date must be within 2 months of the "From" date.');
-            setFilters((prev) => ({ ...prev, dateEnd: addMonths(filters.dateStart, 2) }));
+            setFilters((prev) => ({ ...prev, dateEnd: dateStartToEnd(addMonths(filters.dateStart, 2)) }));
           }
         } else {
           setError('The "To" date must be after the "From" date.');

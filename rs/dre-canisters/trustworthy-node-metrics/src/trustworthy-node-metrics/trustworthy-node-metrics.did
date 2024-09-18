@@ -57,14 +57,15 @@ type NodeRewardsArgs = record {
   node_provider_id: opt principal;
 };
 
-type NodeProviderMapping = record {
+type NodeMetadata = record {
   node_id: principal;
   node_provider_id: principal;
+  node_provider_name: opt text;
 };
 
 service : {
     "subnet_node_metrics" : (SubnetNodeMetricsArgs) -> (SubnetNodeMetricsResult) query;
     "node_rewards" : (NodeRewardsArgs) -> (vec NodeRewardsResponse) query;
     "node_ids" : () -> (vec principal) query;
-    "node_provider_mapping" : () -> (vec NodeProviderMapping) query;
+    "nodes_metadata": () -> (vec NodeMetadata) query;
 }
