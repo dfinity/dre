@@ -9,6 +9,8 @@ pub struct Completions {
     shell: Shell,
 }
 
+
+
 impl ExecutableCommand for Completions {
     fn require_auth(&self) -> super::AuthRequirement {
         super::AuthRequirement::Anonymous
