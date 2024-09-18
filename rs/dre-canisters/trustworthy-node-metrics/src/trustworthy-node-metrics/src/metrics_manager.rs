@@ -291,9 +291,9 @@ pub async fn update_metadata() -> anyhow::Result<()> {
 
         
             ic_cdk::println!("Processing node: {} {} {}", node.node_id ,region.clone(), node_type);
-            stable_memory::insert_metadata_v2(node, dc_id.clone() , region.clone(), node_type);
+            stable_memory::insert_metadata_v2(node, node_operator_id.0, dc_id.clone() , region.clone(), node_type);
         } else {
-            stable_memory::insert_metadata_v2(node, "unknown".to_string(), "unknown".to_string(), "unknown".to_string());
+            stable_memory::insert_metadata_v2(node, Principal::anonymous(), "unknown".to_string(), "unknown".to_string(), "unknown".to_string());
         }
     }
     Ok(())
