@@ -92,7 +92,7 @@ pub struct NodeMetadataStoredV2 {
     pub node_type: String,
 }
 
-const MAX_VALUE_SIZE_BYTES_NODE_METADATA: u32 = 204;
+const MAX_VALUE_SIZE_BYTES_NODE_METADATA: u32 = 250;
 
 impl Storable for NodeMetadataStoredV2 {
     fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
