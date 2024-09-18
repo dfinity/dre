@@ -34,7 +34,6 @@ async fn update_metrics_task() {
     }
 }
 
-
 async fn update_metadata_backfill() {
     ic_cdk::println!("Spawning updated metadata");
     match metrics_manager::update_metadata().await {
@@ -46,7 +45,6 @@ async fn update_metadata_backfill() {
         }
     }
 }
-
 
 fn setup_timers() {
     ic_cdk_timers::set_timer(std::time::Duration::from_secs(0), || ic_cdk::spawn(update_metrics_task()));

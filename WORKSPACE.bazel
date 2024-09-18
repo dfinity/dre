@@ -183,7 +183,7 @@ oci_pull(
     name = "distroless_cc_debian12",
     # Note: this is a "debug" image, which means that it has busybox, so also a shell at /busybox/sh
     # https://github.com/GoogleContainerTools/distroless/tree/9dc924b9fe812eec2fa0061824dcad39eb09d0d6?tab=readme-ov-file#debug-images
-    digest = "sha256:53895c8e3a37652d075d22dde58f40b310daa4a7a59d078b8a7f604d11b1adc6",
+    digest = "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     image = "gcr.io/distroless/cc-debian12",
     platforms = [
         "linux/amd64",
@@ -227,7 +227,7 @@ oci_pull(
 
 oci_pull(
     name = "distroless_python3",
-    digest = "sha256:db34936540e7bc575cc24a318e41eae7ad8c426b8d8e20a465f0dd67843590eb",
+    digest = "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     image = "gcr.io/distroless/python3",
     platforms = [
         "linux/amd64",

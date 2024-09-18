@@ -7,7 +7,7 @@ use std::cell::RefCell;
 use std::collections::BTreeMap;
 
 use trustworthy_node_metrics_types::types::{
-    NodeMetadata, NodeMetadataStored, NodeMetadataStoredV2, NodeMetricsStored, NodeMetricsStoredKey, NodeRewardRatesStored, TimestampNanos
+    NodeMetadata, NodeMetadataStored, NodeMetadataStoredV2, NodeMetricsStored, NodeMetricsStoredKey, NodeRewardRatesStored, TimestampNanos,
 };
 
 type Memory = VirtualMemory<DefaultMemoryImpl>;
@@ -146,7 +146,7 @@ pub fn insert_metadata_v2(node: NodeMetadata, node_operator_id: Principal, dc_id
                 dc_id,
                 node_operator_id,
                 node_provider_id: node.node_provider_id,
-                node_provider_name: node.node_provider_name
+                node_provider_name: node.node_provider_name,
             },
         )
     });
