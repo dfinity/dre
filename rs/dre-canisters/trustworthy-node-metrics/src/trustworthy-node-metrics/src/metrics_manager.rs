@@ -1,14 +1,16 @@
 use std::collections::BTreeMap;
 
 use anyhow::anyhow;
+use candid::Principal;
 use dfn_core::api::PrincipalId;
 use futures::FutureExt;
 use ic_base_types::NodeId;
 use ic_management_canister_types::{NodeMetricsHistoryArgs, NodeMetricsHistoryResponse};
+use ic_protobuf::registry::dc::v1::DataCenterRecord;
 use ic_protobuf::registry::node::v1::NodeRecord;
 use ic_protobuf::registry::node_operator::v1::NodeOperatorRecord;
 use ic_protobuf::registry::subnet::v1::SubnetListRecord;
-use ic_registry_keys::{make_node_operator_record_key, make_node_record_key};
+use ic_registry_keys::{make_data_center_record_key, make_node_operator_record_key, make_node_record_key};
 
 use crate::stable_memory;
 use itertools::Itertools;
@@ -199,6 +201,102 @@ fn update_node_metrics(metrics_by_node: BTreeMap<PrincipalId, Vec<NodeMetricsGro
             stable_memory::insert_node_metrics(key, node_metrics)
         }
     }
+}
+
+
+pub async fn update_metadata() -> anyhow::Result<()> {
+    let nodes_metadata = stable_memory::nodes_metadata();
+    let nodes_metadata_len = nodes_metadata.len();
+
+    let mut rewardable_nodes: BTreeMap<PrincipalId, BTreeMap<String, u32>> = BTreeMap::new();
+    let mut nodes_region: BTreeMap<Principal, (PrincipalId, String, String)> = BTreeMap::new();
+
+    for (index, node) in nodes_metadata.iter().enumerate() {
+        ic_cdk::println!("Processing node: {} {}/{}", node.node_id ,index, nodes_metadata_len);
+
+        let node_record_key = make_node_record_key(NodeId::from(PrincipalId::from(node.node_id)));
+        
+        let node_record = match ic_nns_common::registry::get_value::<NodeRecord>(node_record_key.as_bytes(), None).await {
+            Ok((node_record, _)) => node_record,
+            Err(e) => {
+                ic_cdk::println!("Error getting the node_record from the registry for node {}. Error: {:?}", node.node_id, e);
+                continue;
+            }
+        };
+    
+        let node_operator_id: PrincipalId = match node_record.node_operator_id.try_into() {
+            Ok(id) => id,
+            Err(e) => {
+                ic_cdk::println!("Error converting node_operator_id for node {}. Error: {:?}", node.node_id, e);
+                continue;
+            }
+        };
+    
+        let node_operator_key = make_node_operator_record_key(node_operator_id);
+        
+        let node_operator_record = match ic_nns_common::registry::get_value::<NodeOperatorRecord>(node_operator_key.as_bytes(), None).await {
+            Ok((node_operator_record, _)) => node_operator_record,
+            Err(e) => {
+                ic_cdk::println!("Error getting the node_operator_record from the registry for node {}. Error: {:?}", node.node_id, e);
+                continue; 
+            }
+        };
+        rewardable_nodes.insert(node_operator_id, node_operator_record.rewardable_nodes);
+    
+        let dc_id: String = node_operator_record.dc_id;
+        let data_center_key = make_data_center_record_key(&dc_id);
+        
+        let data_center_record = match ic_nns_common::registry::get_value::<DataCenterRecord>(data_center_key.as_bytes(), None).await {
+            Ok((data_center_record, _)) => data_center_record,
+            Err(e) => {
+                ic_cdk::println!("Error getting the data_center_record from the registry for node {}. Error: {:?}", node.node_id, e);
+                continue; 
+            }
+        };
+        
+        nodes_region.insert(node.node_id, (node_operator_id, data_center_record.region, dc_id));
+    }
+
+    let nodes_medatata = stable_memory::nodes_metadata();
+
+    for node in nodes_medatata {
+        if let Some((node_operator_id, region, dc_id)) = nodes_region.get(&node.node_id){
+            let node_type = match rewardable_nodes.get_mut(node_operator_id) {
+                Some(rewardable_nodes) => {
+                    // Find first non-zero rewardable nodes entry
+                    if rewardable_nodes.is_empty() {
+                        "unknown:no_rewardable_nodes_found".to_string()
+                    } else {
+                        // Find the first non-zero rewardable node type, or "unknown" if none are found
+                        let (k, mut v) = loop {
+                            let (k, v) = match rewardable_nodes.pop_first() {
+                                Some(kv) => kv,
+                                None => break ("unknown:rewardable_nodes_used_up".to_string(), 0),
+                            };
+                            if v != 0 {
+                                break (k, v);
+                            }
+                        };
+                        v = v.saturating_sub(1);
+                        // Insert back if not zero
+                        if v != 0 {
+                            rewardable_nodes.insert(k.clone(), v);
+                        }
+                        k
+                    }
+                }
+    
+                None => "unknown".to_string(),
+            };
+
+        
+            ic_cdk::println!("Processing node: {} {} {}", node.node_id ,region.clone(), node_type);
+            stable_memory::insert_metadata_v2(node, dc_id.clone() , region.clone(), node_type);
+        } else {
+            stable_memory::insert_metadata_v2(node, "unknown".to_string(), "unknown".to_string(), "unknown".to_string());
+        }
+    }
+    Ok(())
 }
 
 /// Update metrics

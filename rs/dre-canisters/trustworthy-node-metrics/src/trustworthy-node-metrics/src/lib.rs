@@ -34,6 +34,20 @@ async fn update_metrics_task() {
     }
 }
 
+
+async fn update_metadata_backfill() {
+    ic_cdk::println!("Spawning updated metadata");
+    match metrics_manager::update_metadata().await {
+        Ok(_) => {
+            ic_cdk::println!("Successfully updated metadata");
+        }
+        Err(e) => {
+            ic_cdk::println!("Error updating metadata: {}", e);
+        }
+    }
+}
+
+
 fn setup_timers() {
     ic_cdk_timers::set_timer(std::time::Duration::from_secs(0), || ic_cdk::spawn(update_metrics_task()));
     ic_cdk_timers::set_timer_interval(
@@ -155,4 +169,9 @@ fn node_rewards(args: NodeRewardsArgs) -> Vec<NodeRewardsResponse> {
 #[query]
 fn nodes_metadata() -> Vec<NodeMetadata> {
     stable_memory::nodes_metadata()
+}
+
+#[update]
+fn update_metadata() {
+    ic_cdk_timers::set_timer(std::time::Duration::from_secs(0), || ic_cdk::spawn(update_metadata_backfill()));
 }

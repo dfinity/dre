@@ -7,7 +7,7 @@ use std::cell::RefCell;
 use std::collections::BTreeMap;
 
 use trustworthy_node_metrics_types::types::{
-    NodeMetadata, NodeMetadataStored, NodeMetricsStored, NodeMetricsStoredKey, NodeRewardRatesStored, TimestampNanos,
+    NodeMetadata, NodeMetadataStored, NodeMetadataStoredV2, NodeMetricsStored, NodeMetricsStoredKey, NodeRewardRatesStored, TimestampNanos
 };
 
 type Memory = VirtualMemory<DefaultMemoryImpl>;
@@ -32,6 +32,10 @@ thread_local! {
     static NODE_METADATA: RefCell<StableBTreeMap<Principal, NodeMetadataStored, Memory>> =
         RefCell::new(StableBTreeMap::init(
         MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(3)))
+    ));
+    static NODE_METADATA_V2: RefCell<StableBTreeMap<Principal, NodeMetadataStoredV2, Memory>> =
+        RefCell::new(StableBTreeMap::init(
+        MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(5)))
     ));
 
     static REWARDS_TABLE: RefCell<StableBTreeMap<String, NodeRewardRatesStored, Memory>> =
@@ -130,4 +134,19 @@ pub fn nodes_metadata() -> Vec<NodeMetadata> {
 
 pub fn insert_rewards_rates(area: String, rewards_rates: NodeRewardRates) {
     REWARDS_TABLE.with_borrow_mut(|rewards_table| rewards_table.insert(area, NodeRewardRatesStored { rewards_rates }));
+}
+
+pub fn insert_metadata_v2(node: NodeMetadata, dc_id: String, region: String, node_type: String) {
+    NODE_METADATA_V2.with_borrow_mut(|node_metadata| {
+        node_metadata.insert(
+            node.node_id,
+            NodeMetadataStoredV2 {
+                region,
+                node_type,
+                dc_id,
+                node_provider_id: node.node_provider_id,
+                node_provider_name: node.node_provider_name
+            },
+        )
+    });
 }

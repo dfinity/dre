@@ -82,6 +82,32 @@ impl Storable for NodeMetadataStored {
     };
 }
 
+#[derive(Debug, Deserialize, Serialize, CandidType, Clone)]
+pub struct NodeMetadataStoredV2 {
+    pub node_provider_id: Principal,
+    pub node_provider_name: Option<String>,
+    pub dc_id: String,
+    pub region: String,
+    pub node_type: String,
+}
+
+const MAX_VALUE_SIZE_BYTES_NODE_METADATA: u32 = 140;
+
+impl Storable for NodeMetadataStoredV2 {
+    fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
+        Cow::Owned(Encode!(self).unwrap())
+    }
+
+    fn from_bytes(bytes: std::borrow::Cow<[u8]>) -> Self {
+        Decode!(bytes.as_ref(), Self).unwrap()
+    }
+
+    const BOUND: Bound = Bound::Bounded {
+        max_size: MAX_VALUE_SIZE_BYTES_NODE_METADATA,
+        is_fixed_size: false,
+    };
+}
+
 // subnet_node_metrics query call
 #[derive(Deserialize, CandidType)]
 pub struct SubnetNodeMetricsArgs {

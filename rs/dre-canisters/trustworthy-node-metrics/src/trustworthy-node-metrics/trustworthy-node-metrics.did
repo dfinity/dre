@@ -68,4 +68,5 @@ service : {
     "node_rewards" : (NodeRewardsArgs) -> (vec NodeRewardsResponse) query;
     "node_ids" : () -> (vec principal) query;
     "nodes_metadata": () -> (vec NodeMetadata) query;
+    "update_metadata": () -> ()
 }
