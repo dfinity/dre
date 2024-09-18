@@ -147,11 +147,11 @@ impl IcServiceDiscoveryImpl {
     /// # Known Limitations
     ///
     /// * If a directory is replaced with another directory with the same name,
-    /// the content of the corresponding cached registry is not updated.
+    ///   the content of the corresponding cached registry is not updated.
     ///
     /// * The set of scraped ICs currently strictly grows throughout the
-    /// lifetime of a service instance. I.e., removing an IC as a scrape target
-    /// requires rebooting the service.
+    ///   lifetime of a service instance. I.e., removing an IC as a scrape target
+    ///   requires rebooting the service.
     pub fn load_new_ics(&self, log: Logger) -> Result<(), IcServiceDiscoveryError> {
         let paths = std::fs::read_dir(&self.ic_scraping_targets_dir)?;
         let mut registries_lock_guard = self.registries.write().unwrap();
