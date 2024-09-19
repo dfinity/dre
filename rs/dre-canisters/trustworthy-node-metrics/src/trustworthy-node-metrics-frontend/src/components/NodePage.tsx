@@ -48,8 +48,8 @@ export const NodePage: React.FC<NodeProviderPageProps> = ({ nodeProvidersMapping
                             Node Provider ID
                         </Typography>
                         <Typography gutterBottom variant="subtitle2" sx={{ color: 'text.disabled' }} component="div">
-                        <Link to={`/providers/${mapping.node_provider_id.toText()}`} className="custom-link">
-                            {mapping.node_provider_id.toText()}
+                        <Link to={`/providers/${mapping.node_metadata_stored.node_provider_id.toText()}`} className="custom-link">
+                            {mapping.node_metadata_stored.node_provider_id.toText()}
                         </Link>
                         </Typography>
                     </Grid>

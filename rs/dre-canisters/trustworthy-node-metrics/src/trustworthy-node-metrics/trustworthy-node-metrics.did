@@ -57,10 +57,18 @@ type NodeRewardsArgs = record {
   node_provider_id: opt principal;
 };
 
+type NodeMetadataStoredV2 = record {
+    node_operator_id: principal;
+    node_provider_id: principal;
+    node_provider_name: opt text;
+    dc_id: text;
+    region: text;
+    node_type: text;
+};
+
 type NodeMetadata = record {
   node_id: principal;
-  node_provider_id: principal;
-  node_provider_name: opt text;
+  node_metadata_stored: NodeMetadataStoredV2;
 };
 
 service : {

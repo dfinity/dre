@@ -38,7 +38,7 @@ const App: React.FC = () => {
       try {
         setIsLoading(true);
         const nodeMetadata = await trustworthy_node_metrics.nodes_metadata();
-        const providers = new Set(nodeMetadata.flatMap(node => node.node_provider_id.toText()));
+        const providers = new Set(nodeMetadata.flatMap(metadata => metadata.node_metadata_stored.node_provider_id.toText()));
 
         setProviders(providers);
         setNodeMetadata(nodeMetadata);
