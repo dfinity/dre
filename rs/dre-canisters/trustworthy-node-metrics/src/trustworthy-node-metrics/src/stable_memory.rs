@@ -7,7 +7,7 @@ use std::cell::RefCell;
 use std::collections::BTreeMap;
 
 use trustworthy_node_metrics_types::types::{
-    NodeMetadata, NodeMetadataStored, NodeMetadataStoredV2, NodeMetricsStored, NodeMetricsStoredKey, NodeRewardRatesStored, TimestampNanos
+    NodeMetadata, NodeMetadataStored, NodeMetadataStoredV2, NodeMetricsStored, NodeMetricsStoredKey, NodeRewardRatesStored, TimestampNanos,
 };
 
 type Memory = VirtualMemory<DefaultMemoryImpl>;
@@ -113,7 +113,7 @@ pub fn nodes_metadata() -> Vec<NodeMetadata> {
             .iter()
             .map(|(node_id, node_metadata_stored)| NodeMetadata {
                 node_id,
-                node_metadata_stored
+                node_metadata_stored,
             })
             .collect_vec()
     })
@@ -123,7 +123,14 @@ pub fn insert_rewards_rates(area: String, rewards_rates: NodeRewardRates) {
     REWARDS_TABLE.with_borrow_mut(|rewards_table| rewards_table.insert(area, NodeRewardRatesStored { rewards_rates }));
 }
 
-pub fn insert_metadata_v2(node_id: Principal, node_operator_id: Principal, node_provider_id: Principal, dc_id: String, region: String, node_type: String) {
+pub fn insert_metadata_v2(
+    node_id: Principal,
+    node_operator_id: Principal,
+    node_provider_id: Principal,
+    dc_id: String,
+    region: String,
+    node_type: String,
+) {
     NODE_METADATA_V2.with_borrow_mut(|node_metadata| {
         node_metadata.insert(
             node_id,
@@ -133,7 +140,7 @@ pub fn insert_metadata_v2(node_id: Principal, node_operator_id: Principal, node_
                 dc_id: dc_id.to_string(),
                 node_operator_id,
                 node_provider_id,
-                node_provider_name: None
+                node_provider_name: None,
             },
         )
     });
@@ -143,7 +150,10 @@ pub fn node_types_count(node_operator_id: Principal) -> Option<BTreeMap<String, 
     let mut node_types_count = BTreeMap::new();
 
     NODE_METADATA_V2.with_borrow(|node_metadata| {
-        let operator_metadata = node_metadata.iter().filter(|(_, metadata)| metadata.node_operator_id == node_operator_id).collect_vec();
+        let operator_metadata = node_metadata
+            .iter()
+            .filter(|(_, metadata)| metadata.node_operator_id == node_operator_id)
+            .collect_vec();
 
         for (_, metadata) in operator_metadata {
             let counter = node_types_count.entry(metadata.node_type).or_insert(0);

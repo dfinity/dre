@@ -164,11 +164,7 @@ fn generate_node_type(node_types_count: Option<BTreeMap<String, i32>>, mut rewar
     }
 }
 
-fn insert_metadata_with_unknown(
-    node_id: Principal,
-    node_operator_id: Principal,
-    node_provider_id: Principal,
-) {
+fn insert_metadata_with_unknown(node_id: Principal, node_operator_id: Principal, node_provider_id: Principal) {
     stable_memory::insert_metadata_v2(
         node_id,
         node_operator_id,
@@ -192,7 +188,7 @@ async fn update_nodes_metadata(nodes_principal: Vec<&PrincipalId>) {
                 Ok((node_record, _)) => node_record,
                 Err(e) => {
                     ic_cdk::println!("Error fetching node record for {}: {:?}", node_principal, e);
-                    insert_metadata_with_unknown(node_principal.0, Principal::anonymous(),Principal::anonymous());
+                    insert_metadata_with_unknown(node_principal.0, Principal::anonymous(), Principal::anonymous());
                     continue;
                 }
             };
@@ -201,7 +197,7 @@ async fn update_nodes_metadata(nodes_principal: Vec<&PrincipalId>) {
             Ok(id) => id,
             Err(e) => {
                 ic_cdk::println!("Error converting node operator ID for {}: {:?}", node_principal, e);
-                insert_metadata_with_unknown(node_principal.0, Principal::anonymous(),Principal::anonymous());
+                insert_metadata_with_unknown(node_principal.0, Principal::anonymous(), Principal::anonymous());
                 continue;
             }
         };
@@ -211,7 +207,7 @@ async fn update_nodes_metadata(nodes_principal: Vec<&PrincipalId>) {
                 Ok((record, _)) => record,
                 Err(e) => {
                     ic_cdk::println!("Error fetching node operator record for {}: {:?}", node_principal, e);
-                    insert_metadata_with_unknown(node_principal.0, node_operator_id.0,Principal::anonymous());
+                    insert_metadata_with_unknown(node_principal.0, node_operator_id.0, Principal::anonymous());
                     continue;
                 }
             };
