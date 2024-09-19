@@ -152,15 +152,11 @@ fn generate_node_type(node_types_count: Option<BTreeMap<String, i32>>, mut rewar
     if rewardable_nodes.is_empty() {
         "unknown:no_rewardable_nodes_found".to_string()
     } else {
-        loop {
-            let (k, v) = match rewardable_nodes.pop_first() {
-                Some(kv) => kv,
-                None => break "unknown:rewardable_nodes_used_up".to_string(),
-            };
-            if v != 0 {
-                break k;
-            }
-        }
+        rewardable_nodes
+            .into_iter()
+            .find(|(_, v)| *v != 0)
+            .map(|(k, _)| k)
+            .unwrap_or_else(|| "unknown:rewardable_nodes_used_up".to_string())
     }
 }
 
