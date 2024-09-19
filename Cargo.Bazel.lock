@@ -1,5 +1,5 @@
 {
-  "checksum": "ac1c7f35e7cd235485ebc4e9085ef127ba2881abba9deee4940ac3a40ac97b9a",
+  "checksum": "b56548df73e3611b6967660ea1984112a5afc5cc24a198a8386dba53f8a6106d",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -44043,6 +44043,10 @@
             {
               "id": "ic-management-canister-types 0.9.0",
               "target": "ic_management_canister_types"
+            },
+            {
+              "id": "ic-protobuf 0.9.0",
+              "target": "ic_protobuf"
             },
             {
               "id": "ic-stable-structures 0.6.5",
