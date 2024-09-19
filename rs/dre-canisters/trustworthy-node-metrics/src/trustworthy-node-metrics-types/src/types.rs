@@ -209,6 +209,5 @@ pub struct NodeProviderMapping {
 #[derive(Debug, Deserialize, CandidType)]
 pub struct NodeMetadata {
     pub node_id: Principal,
-    pub node_provider_id: Principal,
-    pub node_provider_name: Option<String>,
+    pub node_metadata_stored: NodeMetadataStoredV2
 }

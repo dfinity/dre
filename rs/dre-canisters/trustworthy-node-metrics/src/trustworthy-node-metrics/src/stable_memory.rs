@@ -108,13 +108,12 @@ pub fn get_node_principals(node_provider: &Principal) -> Vec<Principal> {
 }
 
 pub fn nodes_metadata() -> Vec<NodeMetadata> {
-    NODE_METADATA.with_borrow(|node_metadata| {
+    NODE_METADATA_V2.with_borrow(|node_metadata| {
         node_metadata
             .iter()
             .map(|(node_id, node_metadata_stored)| NodeMetadata {
                 node_id,
-                node_provider_id: node_metadata_stored.node_provider_id,
-                node_provider_name: node_metadata_stored.node_provider_name,
+                node_metadata_stored
             })
             .collect_vec()
     })
@@ -129,9 +128,9 @@ pub fn insert_metadata_v2(node_id: Principal, node_operator_id: Principal, node_
         node_metadata.insert(
             node_id,
             NodeMetadataStoredV2 {
-                region,
-                node_type,
-                dc_id,
+                region: region.to_string(),
+                node_type: node_type.to_string(),
+                dc_id: dc_id.to_string(),
                 node_operator_id,
                 node_provider_id,
                 node_provider_name: None

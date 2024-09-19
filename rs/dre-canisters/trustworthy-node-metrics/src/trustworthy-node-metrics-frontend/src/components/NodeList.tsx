@@ -20,34 +20,49 @@ export interface NodeListProps {
 const tableHeaders = [
   { label: 'Node ID', key: 'node_id' },
   { label: 'Node Provider ID', key: 'node_provider_id' },
+  { label: 'Node Provider Name', key: 'node_provider_name' },
+  { label: 'Data Center ID', key: 'dc_id' },
+  { label: 'Region', key: 'region' },
 ];
 
 export const NodeList: React.FC<NodeListProps> = ({ nodeProviderMapping }) => {
   const [filteredNodes, setFilteredNodes] = useState<NodeMetadata[]>(nodeProviderMapping);
+  const [searchTerm, setSearchTerm] = useState<string>('');
+
 
   useEffect(() => {
     setFilteredNodes(nodeProviderMapping);
   }, [nodeProviderMapping]);
 
-  const handleSearchChange = (event: React.SyntheticEvent, value: string | null) => {
+  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value;
+    setSearchTerm(value);
+    const lowerCaseValue = value.toLowerCase();
+
     if (value) {
-      setFilteredNodes(nodeProviderMapping.filter(node => node.node_id.toText().includes(value)));
+      setFilteredNodes(nodeProviderMapping.filter(node =>
+        node.node_metadata_stored.node_provider_name.join(' ').toLowerCase().includes(lowerCaseValue) ||
+        node.node_id.toText().includes(lowerCaseValue) ||
+        node.node_metadata_stored.node_provider_id.toText().includes(lowerCaseValue) ||
+        node.node_metadata_stored.dc_id.toLowerCase().includes(lowerCaseValue) ||
+        node.node_metadata_stored.region.toLowerCase().includes(lowerCaseValue) ||
+        node.node_metadata_stored.node_type.toLowerCase().includes(lowerCaseValue)
+      ));
     } else {
       setFilteredNodes(nodeProviderMapping);
     }
   };
+  
 
   return (
     <>
       <Box sx={{ p: 3 }}>
-        <Autocomplete
-          freeSolo
-          id="node-search"
-          options={nodeProviderMapping.map(node => node.node_id.toText())}
-          onInputChange={handleSearchChange}
-          renderInput={(params) => (
-            <TextField {...params} label="Search Node" variant="outlined" />
-          )}
+      <TextField
+          label="Search"
+          variant="outlined"
+          fullWidth
+          value={searchTerm}
+          onChange={handleSearchChange}
         />
       </Box>
       <Box sx={{ m: 3 }}>
@@ -72,7 +87,18 @@ export const NodeList: React.FC<NodeListProps> = ({ nodeProviderMapping }) => {
                         {nodesMap.node_id.toText()}
                       </Link>
                     </TableCell>
-                    <TableCell>{nodesMap.node_provider_id.toText()}</TableCell>
+                    <TableCell>
+                      <Link to={`/providers/${nodesMap.node_metadata_stored.node_provider_id.toText()}`} className="custom-link">
+                        {nodesMap.node_metadata_stored.node_provider_id.toText()}
+                      </Link>
+                    </TableCell>
+                    <TableCell>
+                      <Link to={`/providers/${nodesMap.node_metadata_stored.node_provider_id.toText()}`} className="custom-link">
+                        {nodesMap.node_metadata_stored.node_provider_name}
+                      </Link>
+                    </TableCell>
+                    <TableCell>{nodesMap.node_metadata_stored.dc_id}</TableCell>
+                    <TableCell>{nodesMap.node_metadata_stored.region}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

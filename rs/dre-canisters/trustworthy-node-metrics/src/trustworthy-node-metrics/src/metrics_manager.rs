@@ -1,5 +1,6 @@
 use std::collections::BTreeMap;
 
+use candid::Principal;
 use dfn_core::api::PrincipalId;
 use futures::FutureExt;
 use ic_base_types::NodeId;
@@ -163,6 +164,21 @@ fn generate_node_type(node_types_count: Option<BTreeMap<String, i32>>, mut rewar
     }
 }
 
+fn insert_metadata_with_unknown(
+    node_id: Principal,
+    node_operator_id: Principal,
+    node_provider_id: Principal,
+) {
+    stable_memory::insert_metadata_v2(
+        node_id,
+        node_operator_id,
+        node_provider_id,
+        "unknown".to_string(),
+        "unknown".to_string(),
+        "unknown".to_string(),
+    );
+}
+
 async fn update_nodes_metadata(nodes_principal: Vec<&PrincipalId>) {
     for node_principal in nodes_principal {
         if stable_memory::get_node_provider(&node_principal.0).is_some() {
@@ -171,62 +187,74 @@ async fn update_nodes_metadata(nodes_principal: Vec<&PrincipalId>) {
 
         ic_cdk::println!("Fetching metadata for node: {}", node_principal);
 
-        let node_record_key = make_node_record_key(NodeId::from(*node_principal));
-        let node_record = match ic_nns_common::registry::get_value::<NodeRecord>(node_record_key.as_bytes(), None).await {
-            Ok((node_record, _)) => node_record,
-            Err(e) => {
-                ic_cdk::println!("Error fetching node record for {}: {:?}", node_principal, e);
-                continue;
-            }
-        };
+        let node_record =
+            match ic_nns_common::registry::get_value::<NodeRecord>(make_node_record_key(NodeId::from(*node_principal)).as_bytes(), None).await {
+                Ok((node_record, _)) => node_record,
+                Err(e) => {
+                    ic_cdk::println!("Error fetching node record for {}: {:?}", node_principal, e);
+                    insert_metadata_with_unknown(node_principal.0, Principal::anonymous(),Principal::anonymous());
+                    continue;
+                }
+            };
 
         let node_operator_id = match node_record.node_operator_id.try_into() {
             Ok(id) => id,
             Err(e) => {
                 ic_cdk::println!("Error converting node operator ID for {}: {:?}", node_principal, e);
+                insert_metadata_with_unknown(node_principal.0, Principal::anonymous(),Principal::anonymous());
                 continue;
             }
         };
 
-        let node_operator_key = make_node_operator_record_key(node_operator_id);
-        let node_operator_record = match ic_nns_common::registry::get_value::<NodeOperatorRecord>(node_operator_key.as_bytes(), None).await {
-            Ok((record, _)) => record,
-            Err(e) => {
-                ic_cdk::println!("Error fetching node operator record for {}: {:?}", node_principal, e);
-                continue;
-            }
-        };
-
-        let node_provider_id: PrincipalId = match node_operator_record.node_provider_principal_id.try_into() {
-            Ok(id) => id,
-            Err(e) => {
-                ic_cdk::println!("Error converting node provider ID for {}: {:?}", node_principal, e);
-                continue;
-            }
-        };
+        let node_operator_record =
+            match ic_nns_common::registry::get_value::<NodeOperatorRecord>(make_node_operator_record_key(node_operator_id).as_bytes(), None).await {
+                Ok((record, _)) => record,
+                Err(e) => {
+                    ic_cdk::println!("Error fetching node operator record for {}: {:?}", node_principal, e);
+                    insert_metadata_with_unknown(node_principal.0, node_operator_id.0,Principal::anonymous());
+                    continue;
+                }
+            };
 
         let dc_id = node_operator_record.dc_id;
         let node_types_count: Option<BTreeMap<String, i32>> = stable_memory::node_types_count(node_operator_id.0);
         let node_type = generate_node_type(node_types_count, node_operator_record.rewardable_nodes);
 
-        let data_center_key = make_data_center_record_key(&dc_id);
-        let data_center_record = match ic_nns_common::registry::get_value::<DataCenterRecord>(data_center_key.as_bytes(), None).await {
-            Ok((record, _)) => record,
+        let node_provider_id: PrincipalId = match node_operator_record.node_provider_principal_id.try_into() {
+            Ok(id) => id,
             Err(e) => {
-                ic_cdk::println!("Error fetching data center record for {}: {:?}", node_principal, e);
+                ic_cdk::println!("Error converting node provider ID for {}: {:?}", node_principal, e);
+                stable_memory::insert_metadata_v2(
+                    node_principal.0,
+                    node_operator_id.0,
+                    Principal::anonymous(),
+                    dc_id,
+                    "unknown".to_string(),
+                    node_type,
+                );
                 continue;
             }
         };
-        let region = data_center_record.region;
 
-        stable_memory::insert_metadata_v2(
-            node_principal.0, 
-            node_operator_id.0, 
-            node_provider_id.0, 
-            dc_id, 
-            region, 
-            node_type
-        );
+        let data_center_record =
+            match ic_nns_common::registry::get_value::<DataCenterRecord>(make_data_center_record_key(&dc_id).as_bytes(), None).await {
+                Ok((record, _)) => record,
+                Err(e) => {
+                    ic_cdk::println!("Error fetching data center record for {}: {:?}", node_principal, e);
+                    stable_memory::insert_metadata_v2(
+                        node_principal.0,
+                        node_operator_id.0,
+                        node_provider_id.0,
+                        dc_id,
+                        "unknown".to_string(),
+                        node_type,
+                    );
+                    continue;
+                }
+            };
+
+        let region = data_center_record.region;
+        stable_memory::insert_metadata_v2(node_principal.0, node_operator_id.0, node_provider_id.0, dc_id, region, node_type);
     }
 }
 
