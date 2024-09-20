@@ -13,8 +13,8 @@ pub struct HostOs {
     pub release_tag: String,
 
     /// Force proposal submission, ignoring missing download URLs
-    #[clap(long)]
-    pub force: bool,
+    #[clap(long, visible_alias = "force")]
+    pub ignore_missing_urls: bool,
 
     /// Mark version as a security hotfix
     #[clap(long)]
@@ -33,8 +33,8 @@ impl ExecutableCommand for HostOs {
                 &ic_management_types::Artifact::HostOs,
                 &self.version,
                 &self.release_tag,
-                self.force,
-                ctx.forum_post_link(),
+                self.ignore_missing_urls,
+                ctx.forum_post_link().expect("Forum post link is required for this proposal"),
                 self.security_fix,
             )
             .await
