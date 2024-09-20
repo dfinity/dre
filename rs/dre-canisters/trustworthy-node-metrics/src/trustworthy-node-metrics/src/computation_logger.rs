@@ -28,12 +28,16 @@ impl fmt::Display for Operation {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let (symbol, o1, o2) = match self {
             Operation::Sum(values) => {
-                return write!(
-                    f,
-                    "{} + {}",
-                    values[0],
-                    values[1..].iter().map(|o| format!("{}", o.round_dp(4))).collect::<Vec<_>>().join(" + ")
-                )
+                return if values.is_empty() {
+                    write!(f, "0")
+                } else {
+                    write!(
+                        f,
+                        "{} + {}",
+                        values[0],
+                        values[1..].iter().map(|o| format!("{}", o.round_dp(4))).collect::<Vec<_>>().join(" + ")
+                    )
+                }
             }
             Operation::Subtract(o1, o2) => ("-", o1, o2),
             Operation::Divide(o1, o2) => ("/", o1, o2),

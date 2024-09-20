@@ -1,5 +1,5 @@
 use candid::Principal;
-use ic_protobuf::registry::node_rewards::v2::NodeRewardRates;
+use ic_protobuf::registry::node_rewards::v2::{NodeRewardRate, NodeRewardRates};
 use ic_stable_structures::memory_manager::{MemoryId, MemoryManager, VirtualMemory};
 use ic_stable_structures::{DefaultMemoryImpl, StableBTreeMap};
 use itertools::Itertools;
@@ -89,22 +89,11 @@ pub fn latest_metrics(nodes_principal: &[Principal]) -> BTreeMap<Principal, Node
 }
 
 pub fn get_node_provider(node_principal: &Principal) -> Option<Principal> {
-    NODE_METADATA.with_borrow(|node_metadata| node_metadata.get(node_principal).map(|metadata| metadata.node_provider_id))
+    NODE_METADATA_V2.with_borrow(|node_metadata| node_metadata.get(node_principal).map(|metadata| metadata.node_provider_id))
 }
 
-pub fn get_node_principals(node_provider: &Principal) -> Vec<Principal> {
-    NODE_METADATA.with_borrow(|node_metadata| {
-        node_metadata
-            .iter()
-            .filter_map(|(node_id, node_metadata)| {
-                if &node_metadata.node_provider_id == node_provider {
-                    Some(node_id)
-                } else {
-                    None
-                }
-            })
-            .collect_vec()
-    })
+pub fn get_node_metadata(node_principal: &Principal) -> Option<NodeMetadataStoredV2> {
+    NODE_METADATA_V2.with_borrow(|node_metadata| node_metadata.get(node_principal))
 }
 
 pub fn nodes_metadata() -> Vec<NodeMetadata> {
@@ -119,8 +108,39 @@ pub fn nodes_metadata() -> Vec<NodeMetadata> {
     })
 }
 
-pub fn insert_rewards_rates(area: String, rewards_rates: NodeRewardRates) {
-    REWARDS_TABLE.with_borrow_mut(|rewards_table| rewards_table.insert(area, NodeRewardRatesStored { rewards_rates }));
+pub fn get_node_principals(node_provider: &Principal) -> Vec<Principal> {
+    NODE_METADATA_V2.with_borrow(|node_metadata| {
+        node_metadata
+            .iter()
+            .filter_map(|(node_id, node_metadata)| {
+                if &node_metadata.node_provider_id == node_provider {
+                    Some(node_id)
+                } else {
+                    None
+                }
+            })
+            .collect_vec()
+    })
+}
+
+pub fn insert_rewards_rates(region: String, rewards_rates: NodeRewardRates) {
+    REWARDS_TABLE.with_borrow_mut(|rewards_table| rewards_table.insert(region, NodeRewardRatesStored { rewards_rates }));
+}
+
+pub fn get_rate(region: &str, node_type: &str) -> Option<NodeRewardRate> {
+    REWARDS_TABLE.with_borrow(|rewards_table| {
+        let mut sub_regions: Vec<&str> = region.split(',').collect();
+        while !sub_regions.is_empty() {
+            let full_region = sub_regions.join(",");
+            if let Some(rates) = rewards_table.get(&full_region) {
+                if let Some(rate) = rates.rewards_rates.rates.get(node_type) {
+                    return Some(rate.clone());
+                }
+            }
+            sub_regions.pop();
+        }
+        None
+    })
 }
 
 pub fn insert_metadata_v2(

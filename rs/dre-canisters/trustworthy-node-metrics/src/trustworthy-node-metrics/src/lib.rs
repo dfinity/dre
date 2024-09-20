@@ -1,9 +1,9 @@
 use candid::Principal;
 use ic_cdk_macros::*;
 use itertools::Itertools;
-use std::collections::{self, btree_map::Entry, BTreeMap, HashSet};
+use std::collections::{btree_map::Entry, BTreeMap};
 use trustworthy_node_metrics_types::types::{
-    DailyNodeMetrics, NodeMetadata, NodeMetrics, NodeMetricsStored, NodeMetricsStoredKey, NodeRewardsArgs, NodeRewardsResponse,
+    NodeMetadata, NodeMetrics, NodeMetricsStored, NodeMetricsStoredKey, NodeProviderRewards, NodeProviderRewardsArgs, NodeRewards, NodeRewardsArgs,
     SubnetNodeMetricsArgs, SubnetNodeMetricsResponse,
 };
 mod computation_logger;
@@ -93,66 +93,25 @@ fn subnet_node_metrics(args: SubnetNodeMetricsArgs) -> Result<Vec<SubnetNodeMetr
 }
 
 #[query]
-fn node_rewards(args: NodeRewardsArgs) -> Vec<NodeRewardsResponse> {
-    let period_start = args.from_ts;
-    let period_end = args.to_ts;
-
-    let mut nodes_set: HashSet<Principal> = HashSet::new();
-    if let Some(node_id) = args.node_id {
-        nodes_set.insert(node_id);
-    }
-    if let Some(node_provider_id) = args.node_provider_id {
-        let node_ids = stable_memory::get_node_principals(&node_provider_id);
-        for node_id in node_ids {
-            nodes_set.insert(node_id);
-        }
-    }
-    let node_ids_filter = if nodes_set.is_empty() {
-        None
-    } else {
-        Some(nodes_set.into_iter().collect_vec())
-    };
-
-    let node_metrics: Vec<(NodeMetricsStoredKey, NodeMetricsStored)> =
-        stable_memory::get_metrics_range(period_start, Some(period_end), node_ids_filter);
-
-    let mut daily_metrics = collections::BTreeMap::new();
-    for ((ts, node_id), node_metrics_value) in node_metrics {
-        let daily_node_metrics = DailyNodeMetrics::new(
-            ts,
-            node_metrics_value.subnet_assigned,
-            node_metrics_value.num_blocks_proposed,
-            node_metrics_value.num_blocks_failed,
-        );
-
-        match daily_metrics.entry(node_id) {
-            Entry::Occupied(mut entry) => {
-                let v: &mut Vec<DailyNodeMetrics> = entry.get_mut();
-                v.push(daily_node_metrics)
-            }
-            Entry::Vacant(entry) => {
-                entry.insert(vec![daily_node_metrics]);
-            }
-        }
-    }
-
-    daily_metrics
-        .into_iter()
-        .map(|(node_id, daily_node_metrics)| {
-            let rewards_computation = rewards_manager::compute_rewards_percent(&daily_node_metrics);
-            let node_provider_id = stable_memory::get_node_provider(&node_id).unwrap_or(Principal::anonymous());
-
-            NodeRewardsResponse {
-                node_id,
-                node_provider_id,
-                daily_node_metrics,
-                rewards_computation,
-            }
-        })
-        .collect_vec()
+fn nodes_metadata() -> Vec<NodeMetadata> {
+    stable_memory::nodes_metadata()
 }
 
 #[query]
-fn nodes_metadata() -> Vec<NodeMetadata> {
-    stable_memory::nodes_metadata()
+fn node_rewards(args: NodeRewardsArgs) -> NodeRewards {
+    let period_start = args.from_ts;
+    let period_end = args.to_ts;
+    let node_id = args.node_id;
+
+    let rewards = rewards_manager::compute_node_rewards(vec![node_id], period_start, period_end);
+    rewards.into_iter().next().unwrap()
+}
+
+#[query]
+fn node_provider_rewards(args: NodeProviderRewardsArgs) -> NodeProviderRewards {
+    let period_start = args.from_ts;
+    let period_end = args.to_ts;
+    let node_provider_id = args.node_provider_id;
+
+    rewards_manager::compute_node_provider_rewards(node_provider_id, period_start, period_end)
 }

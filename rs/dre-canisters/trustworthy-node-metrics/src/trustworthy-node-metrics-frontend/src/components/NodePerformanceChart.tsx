@@ -3,7 +3,7 @@ import { ChartData, formatDateToUTC, generateChartData, LoadingIndicator, NodeMe
 import { PeriodFilter } from './FilterBar';
 import { Box, Grid } from '@mui/material';
 import PerformanceChart from './PerformanceChart';
-import { NodeRewardsResponse } from '../../../declarations/trustworthy-node-metrics/trustworthy-node-metrics.did';
+import { NodeRewards } from '../../../declarations/trustworthy-node-metrics/trustworthy-node-metrics.did';
 import { ExportTable } from './ExportTable';
 import { GridColDef, GridRowsProp } from '@mui/x-data-grid';
 import { Principal } from '@dfinity/principal';
@@ -16,27 +16,29 @@ export interface NodePerformanceChartProps {
   }
 
 export const NodePerformanceChart: React.FC<NodePerformanceChartProps> = ({ node, periodFilter }) => {
-    const [performanceData, setPerformanceData] = useState<NodeRewardsResponse[]>([]);
+    const [performanceData, setPerformanceData] = useState<NodeRewards | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         if (node) {
-            setNodeRewardsData(periodFilter, [Principal.fromText(node)], [], setPerformanceData, setIsLoading);
+            setNodeRewardsData(periodFilter, Principal.fromText(node), setPerformanceData, setIsLoading);
         }    
     }, [node, periodFilter]);
     
     if (isLoading) {
         return <LoadingIndicator />;
     }
-
-    if (performanceData.length == 0 || !node) {
+    if (!performanceData) {
+        return <p>No metrics for the time period selected</p>;
+    }
+    if (!node) {
         return <p>No metrics for the time period selected</p>;
     }
 
-    const performanceDailyData: ChartData[] = generateChartData(periodFilter, performanceData[0].daily_node_metrics);
-    const failureRateAvg = Math.round(performanceData[0].rewards_computation.failure_rate * 100);
+    const performanceDailyData: ChartData[] = generateChartData(periodFilter, performanceData.daily_node_metrics);
+    const failureRateAvg = Math.round(performanceData.rewards_computation.failure_rate * 100);
 
-    const rows: GridRowsProp = performanceData[0].daily_node_metrics.map((data, index) => {
+    const rows: GridRowsProp = performanceData.daily_node_metrics.map((data, index) => {
         return { 
             id: index + 1,
             col1: new Date(Number(data.ts) / 1000000), 
@@ -60,12 +62,12 @@ export const NodePerformanceChart: React.FC<NodePerformanceChartProps> = ({ node
     return (
         <>
             <Grid item xs={12} md={6}>
-                <NodeMetricsStats stats={performanceData[0].rewards_computation} />
+                <NodeMetricsStats stats={performanceData.rewards_computation} />
             </Grid>
             <Grid item xs={12} md={6}>
                 <Box sx={boxStyleWidget('right')}>
                     <WidgetNumber value={failureRateAvg.toString().concat("%")} title="Average Failure Rate" />
-                </Box>            
+                </Box>
             </Grid>
             <Grid item xs={12} md={12}>
                 <PerformanceChart chartDailyData={performanceDailyData} />
