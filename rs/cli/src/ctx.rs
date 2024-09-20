@@ -35,7 +35,7 @@ pub struct DreContext {
     ic_repo: RefCell<Option<Arc<dyn LazyGit>>>,
     proposal_agent: Arc<dyn ProposalAgent>,
     verbose_runner: bool,
-    skip_sync: bool,
+    offline: bool,
     forum_post_link: Option<String>,
     dry_run: bool,
     artifact_downloader: Arc<dyn ArtifactDownloader>,
@@ -51,14 +51,14 @@ impl DreContext {
         auth: AuthOpts,
         neuron_id: Option<u64>,
         verbose: bool,
-        no_sync: bool,
+        offline: bool,
         yes: bool,
         dry_run: bool,
         auth_requirement: AuthRequirement,
         forum_post_link: Option<String>,
         ic_admin_version: IcAdminVersion,
     ) -> anyhow::Result<Self> {
-        let network = match no_sync {
+        let network = match offline {
             false => ic_management_types::Network::new(network.clone(), &nns_urls)
                 .await
                 .map_err(|e| anyhow::anyhow!(e))?,
@@ -85,7 +85,7 @@ impl DreContext {
             ic_admin: RefCell::new(None),
             runner: RefCell::new(None),
             verbose_runner: verbose,
-            skip_sync: no_sync,
+            offline,
             forum_post_link: forum_post_link.clone(),
             ic_repo: RefCell::new(None),
             dry_run,
@@ -103,7 +103,7 @@ impl DreContext {
             args.auth_opts.clone(),
             args.neuron_id,
             args.verbose,
-            args.no_sync,
+            args.offline,
             args.yes,
             args.dry_run,
             args.subcommands.require_auth(),
@@ -119,7 +119,7 @@ impl DreContext {
         }
         let network = self.network();
 
-        if !self.skip_sync {
+        if !self.offline {
             sync_local_store(network).await.expect("Should be able to sync registry");
         }
         let local_path = local_registry_path(network);
@@ -129,7 +129,7 @@ impl DreContext {
         let registry = Arc::new(LazyRegistryImpl::new(
             local_registry,
             network.clone(),
-            self.skip_sync,
+            self.offline,
             self.proposals_agent(),
         ));
         *self.registry.borrow_mut() = Some(registry.clone());

@@ -194,11 +194,11 @@ The argument is mandatory for testnets, and is optional for mainnet and staging"
     #[clap(long, env = "VERBOSE", global = true)]
     pub verbose: bool,
 
-    /// Don't sync with the registry
+    /// Run the tool offline when possible
     ///
-    /// Useful for when the NNS is unreachable
+    /// Useful for when the NNS or Public dashboard are unreachable
     #[clap(long)]
-    pub no_sync: bool,
+    pub offline: bool,
 
     /// Link to the related forum post, where proposal details can be discussed
     #[clap(long, global = true, visible_aliases = &["forum-link", "forum"])]
