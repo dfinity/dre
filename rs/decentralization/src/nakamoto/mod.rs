@@ -320,6 +320,7 @@ impl NakamotoScore {
     /// in each of these features.
     /// - Top Node Providers control 5 nodes
     /// - Top Countries control 7 nodes
+    ///
     /// In that case we would return (5, 7)
     pub fn critical_features_num_nodes(&self) -> Vec<usize> {
         [NodeFeature::NodeProvider, NodeFeature::Country]

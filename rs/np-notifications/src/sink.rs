@@ -54,7 +54,7 @@ impl WebhookSink {
             notification = notification.to_string(),
         );
         let client = reqwest::Client::new();
-        let response = client.post(&self.url.to_string()).json(&notification).send().await.map_err(|e| {
+        let response = client.post(self.url.to_string()).json(&notification).send().await.map_err(|e| {
             error!(
                 message = "Error while sending the notification",
                 notification = notification.to_string(),
