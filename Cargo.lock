@@ -1028,7 +1028,7 @@ name = "canister-log-fetcher"
 version = "0.5.5"
 dependencies = [
  "anyhow",
- "clap 4.5.16",
+ "clap 4.5.17",
  "humantime",
  "log",
  "pretty_env_logger",
@@ -1143,9 +1143,9 @@ dependencies = [
 
 [[package]]
 name = "clap"
-version = "4.5.16"
+version = "4.5.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ed6719fffa43d0d87e5fd8caeab59be1554fb028cd30edc88fc4369b17971019"
+checksum = "3e5a21b8495e732f1b3c364c9949b201ca7bae518c502c80256c96ad79eaf6ac"
 dependencies = [
  "clap_builder",
  "clap_derive 4.5.13",
@@ -1162,9 +1162,9 @@ dependencies = [
 
 [[package]]
 name = "clap_builder"
-version = "4.5.15"
+version = "4.5.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "216aec2b177652e3846684cbfe25c9964d18ec45234f0f5da5157b207ed1aab6"
+checksum = "8cf2dd12af7a047ad9d6da2b6b249759a22a7abc0f474c1dae1777afa4b21a73"
 dependencies = [
  "anstream",
  "anstyle",
@@ -1175,11 +1175,11 @@ dependencies = [
 
 [[package]]
 name = "clap_complete"
-version = "4.5.26"
+version = "4.5.28"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "205d5ef6d485fa47606b98b0ddc4ead26eb850aaa86abfb562a94fb3280ecba0"
+checksum = "9b378c786d3bde9442d2c6dd7e6080b2a818db2b96e30d6e7f1b6d224eb617d3"
 dependencies = [
- "clap 4.5.16",
+ "clap 4.5.17",
 ]
 
 [[package]]
@@ -1229,7 +1229,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b7fc6734af48458f72f5a3fa7b840903606427d98a710256e808f76a965047d9"
 dependencies = [
  "cfg-if",
- "clap 4.5.16",
+ "clap 4.5.17",
  "is-terminal",
  "libc",
  "tempfile",
@@ -2028,7 +2028,7 @@ dependencies = [
  "backon",
  "candid",
  "chrono",
- "clap 4.5.16",
+ "clap 4.5.17",
  "clap-num",
  "clap_complete",
  "clio",
@@ -3998,7 +3998,7 @@ dependencies = [
  "backon",
  "candid",
  "chrono",
- "clap 4.5.16",
+ "clap 4.5.17",
  "custom_error",
  "decentralization",
  "dirs",
@@ -5129,7 +5129,7 @@ checksum = "941376953c00628d8edae0adcad4b6e882c01cbfd5416d2ac2bc5fb709927737"
 dependencies = [
  "anyhow",
  "candid",
- "clap 4.5.16",
+ "clap 4.5.17",
  "libflate",
  "rustc-demangle",
  "serde",
@@ -5595,9 +5595,9 @@ dependencies = [
 
 [[package]]
 name = "keyring"
-version = "3.2.1"
+version = "3.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "030a9b84bb2a2f3673d4c8b8236091ed5d8f6b66a56d8085471d8abd5f3c6a80"
+checksum = "5fa83d1ca02db069b5fbe94b23b584d588e989218310c9c15015bb5571ef1a94"
 dependencies = [
  "dbus-secret-service",
  "security-framework",
@@ -5749,7 +5749,7 @@ name = "log-fetcher"
 version = "0.5.5"
 dependencies = [
  "anyhow",
- "clap 4.5.16",
+ "clap 4.5.17",
  "log",
  "pretty_env_logger",
  "reqwest",
@@ -5764,7 +5764,7 @@ name = "log-noise-filter-backend"
 version = "0.5.5"
 dependencies = [
  "axum 0.7.5",
- "clap 4.5.16",
+ "clap 4.5.17",
  "regex",
  "serde",
  "serde_json",
@@ -5779,7 +5779,7 @@ name = "log-noise-filter-downloader"
 version = "0.5.5"
 dependencies = [
  "anyhow",
- "clap 4.5.16",
+ "clap 4.5.17",
  "log-noise-filter-backend",
  "reqwest",
  "serde",
@@ -5934,7 +5934,7 @@ dependencies = [
  "axum 0.7.5",
  "axum-otel-metrics",
  "base64 0.22.1",
- "clap 4.5.16",
+ "clap 4.5.17",
  "crossbeam",
  "crossbeam-channel",
  "flate2",
@@ -5965,7 +5965,7 @@ dependencies = [
 name = "multiservice-discovery-downloader"
 version = "0.5.5"
 dependencies = [
- "clap 4.5.16",
+ "clap 4.5.17",
  "crossbeam",
  "crossbeam-channel",
  "futures-util",
@@ -6012,7 +6012,7 @@ name = "node-status-updater"
 version = "0.5.5"
 dependencies = [
  "anyhow",
- "clap 4.5.16",
+ "clap 4.5.17",
  "crossbeam",
  "crossbeam-channel",
  "futures-util",
@@ -6046,7 +6046,7 @@ version = "0.5.5"
 dependencies = [
  "actix-web",
  "anyhow",
- "clap 4.5.16",
+ "clap 4.5.17",
  "httptest",
  "ic-management-backend",
  "ic-management-types",
@@ -6819,7 +6819,7 @@ version = "0.5.5"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
- "clap 4.5.16",
+ "clap 4.5.17",
  "config-writer-common",
  "crossbeam",
  "futures-util",
@@ -6962,7 +6962,7 @@ dependencies = [
  "anyhow",
  "backon",
  "chrono",
- "clap 4.5.16",
+ "clap 4.5.17",
  "dirs",
  "dre",
  "futures",
@@ -7380,7 +7380,7 @@ dependencies = [
  "anyhow",
  "candid",
  "chrono",
- "clap 4.5.16",
+ "clap 4.5.17",
  "crossbeam",
  "dre",
  "humantime",
@@ -7989,7 +7989,7 @@ version = "0.5.5"
 dependencies = [
  "anyhow",
  "candid",
- "clap 4.5.16",
+ "clap 4.5.17",
  "dotenv",
  "env_logger 0.11.5",
  "futures",
@@ -8109,7 +8109,7 @@ dependencies = [
 name = "sns-downloader"
 version = "0.5.5"
 dependencies = [
- "clap 4.5.16",
+ "clap 4.5.17",
  "crossbeam",
  "crossbeam-channel",
  "futures-util",

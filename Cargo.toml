@@ -64,7 +64,7 @@ clap = { version = "4.5", features = [
     "string",
     "cargo",
 ] }
-clap_complete = "4.5.26"
+clap_complete = "4.5.28"
 clio = { version = "0.3.5", features = ["clap", "clap-parse"] }
 colored = "2.1.0"
 comfy-table = "7.1.1"
@@ -135,7 +135,7 @@ cycles-minting-canister = { git = "https://github.com/dfinity/ic.git", rev = "d4
 ic-transport-types = "0.37.1"
 ic-utils = "0.37.0"
 itertools = "0.13.0"
-keyring = { version = "3.2.1", features = [
+keyring = { version = "3.3.0", features = [
     "apple-native",
     "sync-secret-service",
 ] }
