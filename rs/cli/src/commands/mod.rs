@@ -194,7 +194,7 @@ The argument is mandatory for testnets, and is optional for mainnet and staging"
     #[clap(long, env = "VERBOSE", global = true)]
     pub verbose: bool,
 
-    /// Run the tool offline when possible
+    /// Run the tool offline when possible, i.e., do not sync registry and public dashboard data before the run
     ///
     /// Useful for when the NNS or Public dashboard are unreachable
     #[clap(long)]
