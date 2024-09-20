@@ -54,6 +54,7 @@ impl From<Network> for HealthStatusQuerierImplementations {
     }
 }
 
+#[allow(dead_code)]
 pub trait HealthStatusQuerier {
     fn subnet(&self, subnet: PrincipalId) -> impl std::future::Future<Output = anyhow::Result<IndexMap<PrincipalId, HealthStatus>>> + Send;
     fn nodes(&self) -> impl std::future::Future<Output = anyhow::Result<IndexMap<PrincipalId, HealthStatus>>> + Send;
@@ -177,6 +178,7 @@ fn get_unquoted(s: &str) -> &str {
     chars.as_str()
 }
 
+#[allow(dead_code)]
 struct ShortNodeInfo {
     node_id: PrincipalId,
     subnet_id: Option<PrincipalId>,

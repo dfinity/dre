@@ -106,7 +106,7 @@ impl SubnetManager {
     ///    1. Setting `heal` to `true` in the request to replace unhealthy nodes
     ///    2. Replace `optimize` nodes to optimize subnet decentralization.
     ///    3. Explicitly add or remove nodes from the subnet specifying their
-    /// Principals.
+    ///       Principals.
     ///
     /// All nodes in the request must belong to exactly one subnet.
     pub async fn membership_replace(
