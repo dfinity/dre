@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { Grid } from '@mui/material';
 import { axisClasses, BarChart } from '@mui/x-charts';
-import { formatDateToUTC, generateChartData, getFormattedDates, LoadingIndicator, setNodeRewardsData } from '../utils/utils';
+import { dateToNanoseconds, formatDateToUTC, generateChartData, getFormattedDates, LoadingIndicator } from '../utils/utils';
 import { PeriodFilter } from './FilterBar';
-import { NodeRewardsResponse } from '../../../declarations/trustworthy-node-metrics/trustworthy-node-metrics.did';
+import { NodeProviderRewards, NodeProviderRewardsArgs } from '../../../declarations/trustworthy-node-metrics/trustworthy-node-metrics.did';
 import { ExportTable } from './ExportTable';
 import { GridColDef, GridRowsProp } from '@mui/x-data-grid';
 import { Principal } from '@dfinity/principal';
+import { trustworthy_node_metrics } from '../../../declarations/trustworthy-node-metrics';
 
 export interface NodeProviderChartProps {
     provider: string,
@@ -14,12 +15,30 @@ export interface NodeProviderChartProps {
   }
 
 export const NodeProviderChart: React.FC<NodeProviderChartProps> = ({ provider, periodFilter }) => {
-    const [providerNodeMetrics, setProviderNodeMetrics] = useState<NodeRewardsResponse[]>([]);
+    const [providerRewards, setProviderRewards] = useState<NodeProviderRewards | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         if (provider) {
-            setNodeRewardsData(periodFilter, [], [Principal.fromText(provider)], setProviderNodeMetrics, setIsLoading);
+            const updateNodeProviderRewards = async () => {
+            try {
+                setIsLoading(true);
+            
+                const request: NodeProviderRewardsArgs = {
+                  from_ts: dateToNanoseconds(periodFilter.dateStart),
+                  to_ts: dateToNanoseconds(periodFilter.dateEnd),
+                  node_provider_id: Principal.from(provider),
+                };
+                const nodeRewardsResponse = await trustworthy_node_metrics.node_provider_rewards(request);
+            
+                setProviderRewards(nodeRewardsResponse);
+              } catch (error) {
+                console.error("Error fetching node:", error);
+              } finally {
+                setIsLoading(false);
+              }
+            };
+            updateNodeProviderRewards();
         }    
     }, [periodFilter, provider]);
     
@@ -27,9 +46,11 @@ export const NodeProviderChart: React.FC<NodeProviderChartProps> = ({ provider, 
         return <LoadingIndicator />;
     }
 
-    if (providerNodeMetrics.length == 0) {
+    if (!providerRewards) {
         return <p>No metrics for the time period selected</p>;
     }
+
+    const providerNodeMetrics = providerRewards.nodes_rewards;
 
     const highFailureRateChart = providerNodeMetrics
         .sort((a, b) => b.rewards_computation.failure_rate - a.rewards_computation.failure_rate)

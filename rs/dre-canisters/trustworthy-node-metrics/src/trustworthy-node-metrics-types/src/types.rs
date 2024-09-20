@@ -3,7 +3,7 @@ use std::{borrow::Cow, fmt};
 use candid::{CandidType, Decode, Deserialize, Encode, Principal};
 use dfn_core::api::PrincipalId;
 use ic_management_canister_types::NodeMetricsHistoryResponse;
-use ic_protobuf::registry::node_rewards::v2::NodeRewardRates;
+use ic_protobuf::registry::node_rewards::v2::{NodeRewardRate, NodeRewardRates};
 use ic_stable_structures::{storable::Bound, Storable};
 use serde::Serialize;
 
@@ -135,8 +135,14 @@ pub struct SubnetNodeMetricsResponse {
 pub struct NodeRewardsArgs {
     pub from_ts: u64,
     pub to_ts: u64,
-    pub node_id: Option<Principal>,
-    pub node_provider_id: Option<Principal>,
+    pub node_id: Principal,
+}
+
+#[derive(Deserialize, CandidType)]
+pub struct NodeProviderRewardsArgs {
+    pub from_ts: u64,
+    pub to_ts: u64,
+    pub node_provider_id: Principal,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, CandidType)]
@@ -182,7 +188,7 @@ impl DailyNodeMetrics {
 }
 
 #[derive(Debug, Deserialize, CandidType)]
-pub struct RewardsComputationResult {
+pub struct RewardMultiplierResult {
     pub rewards_percent: f64,
     pub rewards_reduction: f64,
     pub blocks_failed: u64,
@@ -193,11 +199,19 @@ pub struct RewardsComputationResult {
 }
 
 #[derive(Debug, Deserialize, CandidType)]
-pub struct NodeRewardsResponse {
+pub struct NodeRewards {
     pub node_id: Principal,
-    pub node_provider_id: Principal,
     pub daily_node_metrics: Vec<DailyNodeMetrics>,
-    pub rewards_computation: RewardsComputationResult,
+    pub node_rate: NodeRewardRate,
+    pub rewards_computation: RewardMultiplierResult,
+}
+
+#[derive(Debug, Deserialize, CandidType)]
+pub struct NodeProviderRewards {
+    pub node_provider_id: Principal,
+    pub rewards_xdr: f64,
+    pub rewards_xdr_old: f64,
+    pub nodes_rewards: Vec<NodeRewards>,
 }
 
 #[derive(Debug, Deserialize, CandidType)]
