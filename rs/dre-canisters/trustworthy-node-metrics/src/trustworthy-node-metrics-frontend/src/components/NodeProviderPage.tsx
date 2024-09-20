@@ -22,8 +22,8 @@ export const NodeProviderPage: React.FC<NodeProviderPageProps> = ({ nodeMetadata
         return <p>No Node provider</p>;
     }
 
-    const nodeIds = nodeProvidersMapping.filter(map => map.node_provider_id.toText() == provider);
-    const providerName = nodeIds[0].node_provider_name[0];
+    const nodeIds = nodeProvidersMapping.filter(map => map.node_metadata_stored.node_provider_id.toText() == provider);
+    const providerName = nodeIds[0].node_metadata_stored.node_provider_name[0];
 
     if (!nodeIds) {
         return <p>No Node Ids found</p>;

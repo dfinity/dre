@@ -1,4 +1,18 @@
 releases:
+  - rc_name: rc--2024-09-19_01-31
+    versions:
+      # Qualification pipeline:
+      # https://github.com/dfinity/ic/actions/runs/10932825071
+      - name: base
+        version: 0441f40482386397f7c688bf508ddd901ca6c1b7
+      # Qualification pipeline:
+      # https://github.com/dfinity/ic/actions/runs/10946553517
+      - name: canister-snapshots
+        version: 7f6a81f48e2a25a28bf07f83ca99f9ec1356da9d
+      # Qualification pipeline:
+      # https://github.com/dfinity/ic/actions/runs/10946565193
+      - name: ubuntu24
+        version: c87abf70cf6f0f81f7f16d9f517c3ff0db1fab1e
   - rc_name: rc--2024-09-12_01-30
     versions:
       # Qualification pipeline:

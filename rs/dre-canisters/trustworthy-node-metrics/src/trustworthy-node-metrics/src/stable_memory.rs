@@ -7,7 +7,7 @@ use std::cell::RefCell;
 use std::collections::BTreeMap;
 
 use trustworthy_node_metrics_types::types::{
-    NodeMetadata, NodeMetadataStored, NodeMetricsStored, NodeMetricsStoredKey, NodeRewardRatesStored, TimestampNanos,
+    NodeMetadata, NodeMetadataStored, NodeMetadataStoredV2, NodeMetricsStored, NodeMetricsStoredKey, NodeRewardRatesStored, TimestampNanos,
 };
 
 type Memory = VirtualMemory<DefaultMemoryImpl>;
@@ -32,6 +32,10 @@ thread_local! {
     static NODE_METADATA: RefCell<StableBTreeMap<Principal, NodeMetadataStored, Memory>> =
         RefCell::new(StableBTreeMap::init(
         MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(3)))
+    ));
+    static NODE_METADATA_V2: RefCell<StableBTreeMap<Principal, NodeMetadataStoredV2, Memory>> =
+        RefCell::new(StableBTreeMap::init(
+        MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(5)))
     ));
 
     static REWARDS_TABLE: RefCell<StableBTreeMap<String, NodeRewardRatesStored, Memory>> =
@@ -84,18 +88,6 @@ pub fn latest_metrics(nodes_principal: &[Principal]) -> BTreeMap<Principal, Node
     latest_metrics
 }
 
-pub fn insert_node_provider(key: Principal, value: Principal) {
-    NODE_METADATA.with_borrow_mut(|node_metadata| {
-        node_metadata.insert(
-            key,
-            NodeMetadataStored {
-                node_provider_id: value,
-                node_provider_name: None,
-            },
-        )
-    });
-}
-
 pub fn get_node_provider(node_principal: &Principal) -> Option<Principal> {
     NODE_METADATA.with_borrow(|node_metadata| node_metadata.get(node_principal).map(|metadata| metadata.node_provider_id))
 }
@@ -116,13 +108,12 @@ pub fn get_node_principals(node_provider: &Principal) -> Vec<Principal> {
 }
 
 pub fn nodes_metadata() -> Vec<NodeMetadata> {
-    NODE_METADATA.with_borrow(|node_metadata| {
+    NODE_METADATA_V2.with_borrow(|node_metadata| {
         node_metadata
             .iter()
             .map(|(node_id, node_metadata_stored)| NodeMetadata {
                 node_id,
-                node_provider_id: node_metadata_stored.node_provider_id,
-                node_provider_name: node_metadata_stored.node_provider_name,
+                node_metadata_stored,
             })
             .collect_vec()
     })
@@ -130,4 +121,49 @@ pub fn nodes_metadata() -> Vec<NodeMetadata> {
 
 pub fn insert_rewards_rates(area: String, rewards_rates: NodeRewardRates) {
     REWARDS_TABLE.with_borrow_mut(|rewards_table| rewards_table.insert(area, NodeRewardRatesStored { rewards_rates }));
+}
+
+pub fn insert_metadata_v2(
+    node_id: Principal,
+    node_operator_id: Principal,
+    node_provider_id: Principal,
+    dc_id: String,
+    region: String,
+    node_type: String,
+) {
+    NODE_METADATA_V2.with_borrow_mut(|node_metadata| {
+        node_metadata.insert(
+            node_id,
+            NodeMetadataStoredV2 {
+                region: region.to_string(),
+                node_type: node_type.to_string(),
+                dc_id: dc_id.to_string(),
+                node_operator_id,
+                node_provider_id,
+                node_provider_name: None,
+            },
+        )
+    });
+}
+
+pub fn node_types_count(node_operator_id: Principal) -> Option<BTreeMap<String, i32>> {
+    let mut node_types_count = BTreeMap::new();
+
+    NODE_METADATA_V2.with_borrow(|node_metadata| {
+        let operator_metadata = node_metadata
+            .iter()
+            .filter(|(_, metadata)| metadata.node_operator_id == node_operator_id)
+            .collect_vec();
+
+        for (_, metadata) in operator_metadata {
+            let counter = node_types_count.entry(metadata.node_type).or_insert(0);
+            *counter += 1;
+        }
+    });
+
+    if node_types_count.is_empty() {
+        None
+    } else {
+        Some(node_types_count)
+    }
 }
