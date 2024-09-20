@@ -218,8 +218,6 @@ pub fn compute_node_provider_rewards(node_provider_id: Principal, period_start: 
         })
         .collect_vec();
 
-    ic_cdk::println!("counter {}", ic_cdk::api::instruction_counter());
-
     let nodes_rewards_xdr_sum: Decimal = nodes_rewards
         .iter()
         .map(|node_rewards| Decimal::from(node_rewards.node_rate.xdr_permyriad_per_node_per_month))
