@@ -21,8 +21,6 @@ export const NodeProviderRewardsChart: React.FC<NodeProviderRewardsChartProps> =
         }    
     }, [provider]);
 
-
-
     if (isLoading) {
         return <LoadingIndicator />;
     }
