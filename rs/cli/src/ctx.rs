@@ -274,7 +274,7 @@ pub mod tests {
             ic_repo: RefCell::new(Some(git)),
             proposal_agent,
             verbose_runner: true,
-            skip_sync: false,
+            offline: false,
             forum_post_link: None,
             dry_run: true,
             artifact_downloader,
