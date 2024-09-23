@@ -1,5 +1,5 @@
 {
-  "checksum": "477d8ee63917a92575509692e0eb19de29c567dceb066a343e4705ddf77e498e",
+  "checksum": "9bac44d4885af5af0b8fbc37bfc91af52d1b3883476ae918ceaedcabfc572868",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -43158,6 +43158,14 @@
               "target": "ic_nns_common"
             },
             {
+              "id": "ic-nns-constants 0.9.0",
+              "target": "ic_nns_constants"
+            },
+            {
+              "id": "ic-nns-governance-api 0.9.0",
+              "target": "ic_nns_governance_api"
+            },
+            {
               "id": "ic-protobuf 0.9.0",
               "target": "ic_protobuf"
             },
@@ -43235,6 +43243,10 @@
             {
               "id": "ic-management-canister-types 0.9.0",
               "target": "ic_management_canister_types"
+            },
+            {
+              "id": "ic-nns-governance-api 0.9.0",
+              "target": "ic_nns_governance_api"
             },
             {
               "id": "ic-protobuf 0.9.0",
