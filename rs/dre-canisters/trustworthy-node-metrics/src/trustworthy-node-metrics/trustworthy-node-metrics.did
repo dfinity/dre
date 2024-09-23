@@ -63,8 +63,10 @@ type NodeRewardsArgs = record {
 
 type NodeProviderRewards = record {
   node_provider_id: principal;
-  rewards_xdr: float64;
-  rewards_xdr_old: float64;
+  rewards_xdr: nat64;
+  rewards_xdr_old: opt nat64;
+  ts_distribution: nat64;
+  xdr_conversion_rate: opt nat64;
   nodes_rewards: vec NodeRewards;
 };
 
