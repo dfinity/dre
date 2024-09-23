@@ -40,7 +40,7 @@ runs:
         # when set to "true" but frees about 6 GB
         tool-cache: true
         large-packages: true  # this is slow
-  
+
     - uses: bazelbuild/setup-bazelisk@v2
 
     ########################################
