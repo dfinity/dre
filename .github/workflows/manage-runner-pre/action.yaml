@@ -30,26 +30,6 @@ runs:
         fi
 
     ########################################
-    # Clean local Bazel cache if cache size > 250GB
-    ########################################
-    - name: "🧹 Clean local bazel cache"
-      if: ${{ !startsWith(runner.name, 'dre-runner-custom') }}
-      shell: bash
-      run: |
-        set -exuo pipefail
-        
-        CACHE_DIR="~/.cache"
-        MAX_SIZE=$((250 ))
-        CURRENT_SIZE=$(du -sb "$CACHE_DIR" | cut -f1)
-
-        echo "Current cache size: $(numfmt --to=iec-i --suffix=B "$CURRENT_SIZE")"
-        if [ "$CURRENT_SIZE" -gt "$MAX_SIZE" ]; then
-          echo "=============== cleaning bazel cache ==============="
-
-          rm -rf "$CACHE_DIR"
-        fi
-
-    ########################################
     # Setup
     ########################################
     - name: "🔧 Free Up Disk Space"
