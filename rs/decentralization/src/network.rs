@@ -7,7 +7,7 @@ use ahash::{AHashMap, AHashSet, HashSet};
 use anyhow::anyhow;
 use futures::future::BoxFuture;
 use ic_base_types::PrincipalId;
-use ic_management_types::{HealthStatus, MinNakamotoCoefficients, NetworkError, NodeFeature};
+use ic_management_types::{HealthStatus, NetworkError, NodeFeature};
 use indexmap::IndexMap;
 use itertools::Itertools;
 use log::{debug, info, warn};
@@ -138,7 +138,6 @@ pub struct DecentralizedSubnet {
     pub nodes: Vec<Node>,
     pub added_nodes_desc: Vec<(Node, String)>,
     pub removed_nodes_desc: Vec<(Node, String)>,
-    pub min_nakamoto_coefficients: Option<MinNakamotoCoefficients>,
     pub comment: Option<String>,
     pub run_log: Vec<String>,
 }
@@ -158,7 +157,6 @@ impl DecentralizedSubnet {
             nodes,
             added_nodes_desc: vec![],
             removed_nodes_desc: vec![],
-            min_nakamoto_coefficients: None,
             comment: None,
             run_log: vec![],
         }
@@ -190,7 +188,6 @@ impl DecentralizedSubnet {
             nodes: new_subnet_nodes,
             added_nodes_desc: self.added_nodes_desc.clone(),
             removed_nodes_desc: removed.iter().map(|(n, desc)| (n.clone(), desc.to_string())).collect(),
-            min_nakamoto_coefficients: self.min_nakamoto_coefficients.clone(),
             comment: self.comment.clone(),
             run_log: {
                 if removed_is_empty {
@@ -221,7 +218,6 @@ impl DecentralizedSubnet {
             nodes: new_subnet_nodes,
             added_nodes_desc: nodes_to_add_with_desc.clone(),
             removed_nodes_desc: self.removed_nodes_desc,
-            min_nakamoto_coefficients: self.min_nakamoto_coefficients.clone(),
             comment: self.comment,
             run_log: {
                 if nodes_to_add_with_desc.is_empty() {
@@ -259,26 +255,15 @@ impl DecentralizedSubnet {
             .collect()
     }
 
-    pub fn with_min_nakamoto_coefficients(self, min_nakamoto_coefficients: &Option<MinNakamotoCoefficients>) -> Self {
-        Self {
-            min_nakamoto_coefficients: min_nakamoto_coefficients.clone(),
-            ..self
-        }
-    }
-
     /// Ensure "business rules" or constraints for the subnet nodes are met.
     /// For instance, there needs to be at least one DFINITY-owned node in each
     /// subnet. For the mainnet NNS there needs to be at least 3
     /// DFINITY-owned nodes.
     pub fn check_business_rules(&self) -> anyhow::Result<(usize, Vec<String>)> {
-        Self::_check_business_rules_for_nodes(&self.id, &self.nodes, &self.min_nakamoto_coefficients)
+        Self::_check_business_rules_for_nodes(&self.id, &self.nodes)
     }
 
-    fn _check_business_rules_for_nodes(
-        subnet_id: &PrincipalId,
-        nodes: &[Node],
-        min_nakamoto_coefficients: &Option<MinNakamotoCoefficients>,
-    ) -> anyhow::Result<(usize, Vec<String>)> {
+    fn _check_business_rules_for_nodes(subnet_id: &PrincipalId, nodes: &[Node]) -> anyhow::Result<(usize, Vec<String>)> {
         let mut checks = Vec::new();
         let mut penalties = 0;
         if nodes.len() <= 1 {
@@ -402,31 +387,6 @@ impl DecentralizedSubnet {
                 }
             }
             None => return Err(anyhow::anyhow!("Missing the Nakamoto score for the Node Provider")),
-        }
-
-        if let Some(min_nakamoto_coefficients) = min_nakamoto_coefficients {
-            for (feature, min_coeff) in min_nakamoto_coefficients.coefficients.iter() {
-                match nakamoto_scores.score_feature(feature) {
-                    Some(score) => {
-                        if score < *min_coeff {
-                            checks.push(format!(
-                                "Lower than expected Nakamoto Coefficient {} < {} for feature {}",
-                                score, min_coeff, feature
-                            ));
-                            penalties += ((*min_coeff - score) * 100.) as usize;
-                        }
-                    }
-                    None => return Err(anyhow::anyhow!("NodeFeature '{}' not found", feature.to_string())),
-                }
-            }
-            if nakamoto_scores.score_avg_linear() < min_nakamoto_coefficients.average {
-                checks.push(format!(
-                    "Lower than expected average Nakamoto Coefficient {} < {}",
-                    nakamoto_scores.score_avg_linear(),
-                    min_nakamoto_coefficients.average
-                ));
-                penalties += ((min_nakamoto_coefficients.average - nakamoto_scores.score_avg_linear()) * 100.) as usize;
-            }
         }
 
         for feature in &NodeFeature::variants() {
@@ -670,7 +630,6 @@ impl DecentralizedSubnet {
             nodes: nodes_after_extension,
             added_nodes_desc: added_nodes,
             removed_nodes_desc: self.removed_nodes_desc,
-            min_nakamoto_coefficients: self.min_nakamoto_coefficients,
             comment,
             run_log,
         })
@@ -762,14 +721,13 @@ impl DecentralizedSubnet {
             nodes: self.nodes.clone(),
             added_nodes_desc: self.added_nodes_desc,
             removed_nodes_desc: self.removed_nodes_desc,
-            min_nakamoto_coefficients: self.min_nakamoto_coefficients,
             comment,
             run_log,
         })
     }
 
     fn _node_to_replacement_candidate(&self, subnet_nodes: &[Node], touched_node: &Node, err_log: &mut Vec<String>) -> Option<ReplacementCandidate> {
-        match Self::_check_business_rules_for_nodes(&self.id, subnet_nodes, &self.min_nakamoto_coefficients) {
+        match Self::_check_business_rules_for_nodes(&self.id, subnet_nodes) {
             Ok((penalty, business_rules_log)) => {
                 let new_score = Self::_calc_nakamoto_score(subnet_nodes);
                 Some(ReplacementCandidate {
@@ -812,7 +770,6 @@ impl From<&ic_management_types::Subnet> for DecentralizedSubnet {
             nodes: s.nodes.iter().map(Node::from).collect(),
             added_nodes_desc: Vec::new(),
             removed_nodes_desc: Vec::new(),
-            min_nakamoto_coefficients: None,
             comment: None,
             run_log: Vec::new(),
         }
@@ -876,7 +833,6 @@ pub trait TopologyManager: SubnetQuerier + AvailableNodesQuerier + Sync {
     fn create_subnet<'a>(
         &'a self,
         size: usize,
-        min_nakamoto_coefficients: Option<MinNakamotoCoefficients>,
         include_nodes: Vec<PrincipalId>,
         exclude_nodes: Vec<String>,
         only_nodes: Vec<String>,
@@ -885,7 +841,6 @@ pub trait TopologyManager: SubnetQuerier + AvailableNodesQuerier + Sync {
         Box::pin(async move {
             SubnetChangeRequest {
                 available_nodes: self.available_nodes().await?,
-                min_nakamoto_coefficients,
                 ..Default::default()
             }
             .including_from_available(include_nodes.clone())
@@ -935,7 +890,6 @@ pub struct SubnetChangeRequest {
     include_nodes: Vec<Node>,
     nodes_to_remove: Vec<Node>,
     nodes_to_keep: Vec<Node>,
-    min_nakamoto_coefficients: Option<MinNakamotoCoefficients>,
 }
 
 impl SubnetChangeRequest {
@@ -945,7 +899,6 @@ impl SubnetChangeRequest {
         include_nodes: Vec<Node>,
         nodes_to_remove: Vec<Node>,
         nodes_to_keep: Vec<Node>,
-        min_nakamoto_coefficients: Option<MinNakamotoCoefficients>,
     ) -> Self {
         SubnetChangeRequest {
             subnet,
@@ -953,7 +906,6 @@ impl SubnetChangeRequest {
             include_nodes,
             nodes_to_remove,
             nodes_to_keep,
-            min_nakamoto_coefficients,
         }
     }
 
@@ -1012,13 +964,6 @@ impl SubnetChangeRequest {
     pub fn with_custom_available_nodes(self, nodes: Vec<Node>) -> Self {
         Self {
             available_nodes: nodes,
-            ..self
-        }
-    }
-
-    pub fn with_min_nakamoto_coefficients(self, min_nakamoto_coefficients: Option<MinNakamotoCoefficients>) -> Self {
-        Self {
-            min_nakamoto_coefficients,
             ..self
         }
     }
@@ -1117,7 +1062,6 @@ impl SubnetChangeRequest {
                     .map(|n| (n.clone(), "included as per user request".to_string()))
                     .collect(),
             )
-            .with_min_nakamoto_coefficients(&self.min_nakamoto_coefficients)
             .subnet_with_more_nodes(how_many_nodes_to_add, &available_nodes)
             .map_err(|e| NetworkError::ResizeFailed(e.to_string()))?;
 
@@ -1127,7 +1071,6 @@ impl SubnetChangeRequest {
             new_nodes: resized_subnet.nodes,
             removed_nodes_desc: resized_subnet.removed_nodes_desc,
             added_nodes_desc: resized_subnet.added_nodes_desc,
-            min_nakamoto_coefficients: self.min_nakamoto_coefficients.clone(),
             comment: resized_subnet.comment,
             run_log: resized_subnet.run_log,
         };
@@ -1149,7 +1092,6 @@ pub struct SubnetChange {
     pub new_nodes: Vec<Node>,
     pub removed_nodes_desc: Vec<(Node, String)>,
     pub added_nodes_desc: Vec<(Node, String)>,
-    pub min_nakamoto_coefficients: Option<MinNakamotoCoefficients>,
     pub comment: Option<String>,
     pub run_log: Vec<String>,
 }
@@ -1185,7 +1127,6 @@ impl SubnetChange {
             nodes: self.old_nodes.clone(),
             added_nodes_desc: Vec::new(),
             removed_nodes_desc: Vec::new(),
-            min_nakamoto_coefficients: self.min_nakamoto_coefficients.clone(),
             comment: self.comment.clone(),
             run_log: Vec::new(),
         }
@@ -1197,7 +1138,6 @@ impl SubnetChange {
             nodes: self.new_nodes.clone(),
             added_nodes_desc: self.added_nodes_desc.clone(),
             removed_nodes_desc: self.removed_nodes_desc.clone(),
-            min_nakamoto_coefficients: self.min_nakamoto_coefficients.clone(),
             comment: self.comment.clone(),
             run_log: self.run_log.clone(),
         }

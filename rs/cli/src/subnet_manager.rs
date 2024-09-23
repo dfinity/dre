@@ -11,7 +11,6 @@ use decentralization::{
 use ic_management_backend::health::{self, HealthStatusQuerier};
 use ic_management_backend::lazy_registry::LazyRegistry;
 use ic_management_types::HealthStatus;
-use ic_management_types::MinNakamotoCoefficients;
 use ic_management_types::Network;
 use ic_types::PrincipalId;
 use indexmap::IndexMap;
@@ -117,7 +116,6 @@ impl SubnetManager {
         exclude: Option<Vec<String>>,
         only: Vec<String>,
         include: Option<Vec<PrincipalId>>,
-        min_nakamoto_coefficients: Option<MinNakamotoCoefficients>,
     ) -> anyhow::Result<SubnetChangeResponse> {
         let subnet_query_by = self.get_subnet_query_by(self.target()?).await?;
         let mut motivations = vec![];
@@ -136,8 +134,7 @@ impl SubnetManager {
             .await?
             .excluding_from_available(exclude.clone().unwrap_or_default())
             .including_from_available(only.clone())
-            .including_from_available(include.clone().unwrap_or_default())
-            .with_min_nakamoto_coefficients(min_nakamoto_coefficients.clone());
+            .including_from_available(include.clone().unwrap_or_default());
 
         let mut node_ids_unhealthy = HashSet::new();
         if heal {
