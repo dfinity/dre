@@ -151,3 +151,7 @@ pub fn insert_metadata_v2(node: NodeMetadata, node_operator_id: Principal, dc_id
         )
     });
 }
+
+pub(crate) fn wipe_metadatav2() {
+    NODE_METADATA_V2.with_borrow_mut(|p| p.clear_new());
+}

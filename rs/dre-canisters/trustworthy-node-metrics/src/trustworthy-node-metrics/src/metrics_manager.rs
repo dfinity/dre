@@ -205,6 +205,7 @@ fn update_node_metrics(metrics_by_node: BTreeMap<PrincipalId, Vec<NodeMetricsGro
 
 
 pub async fn update_metadata() -> anyhow::Result<()> {
+    stable_memory::wipe_metadatav2();
     let nodes_metadata = stable_memory::nodes_metadata();
     let nodes_metadata_len = nodes_metadata.len();
 
