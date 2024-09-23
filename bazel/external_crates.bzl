@@ -53,12 +53,9 @@ def external_crates_repository():
             "//rs/ic-observability/service-discovery:Cargo.toml",
             "//rs/ic-observability/sns-downloader:Cargo.toml",
             "//rs/log-fetcher:Cargo.toml",
-            "//rs/np-notifications:Cargo.toml",
             "//rs/slack-notifications:Cargo.toml",
-            "//rs/rollout-controller:Cargo.toml",
             "//rs/dre-canisters/trustworthy-node-metrics/src/trustworthy-node-metrics:Cargo.toml",
             "//rs/dre-canisters/trustworthy-node-metrics/src/trustworthy-node-metrics-types:Cargo.toml",
-            "//rs/qualifier:Cargo.toml",
         ],
         splicing_config = splicing_config(
             resolver_version = "2",

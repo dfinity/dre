@@ -18,12 +18,9 @@ members = [
     "rs/ic-observability/sns-downloader",
     "rs/log-fetcher",
     "rs/canister-log-fetcher",
-    "rs/np-notifications",
-    "rs/rollout-controller",
     "rs/slack-notifications",
     "rs/dre-canisters/trustworthy-node-metrics/src/trustworthy-node-metrics",
     "rs/dre-canisters/trustworthy-node-metrics/src/trustworthy-node-metrics-types",
-    "rs/qualifier",
 ]
 
 resolver = "2"
