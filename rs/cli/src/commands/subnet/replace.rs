@@ -23,10 +23,6 @@ pub struct Replace {
     #[clap(long, short, aliases = [ "summary" ])]
     pub motivation: Option<String>,
 
-    /// Minimum Nakamoto coefficients after the replacement
-    #[clap(long, num_args(1..))]
-    pub min_nakamoto_coefficients: Vec<String>,
-
     /// Features or Node IDs to exclude from the available nodes pool
     #[clap(long, num_args(1..))]
     pub exclude: Vec<String>,
@@ -66,7 +62,6 @@ impl ExecutableCommand for Replace {
                 self.exclude.clone().into(),
                 self.only.clone(),
                 self.include.clone().into(),
-                Self::parse_min_nakamoto_coefficients(&self.min_nakamoto_coefficients),
             )
             .await?;
 
@@ -92,7 +87,5 @@ impl ExecutableCommand for Replace {
             cmd.error(ErrorKind::MissingRequiredArgument, "Required argument motivation not found")
                 .exit();
         }
-
-        Self::validate_min_nakamoto_coefficients(cmd, &self.min_nakamoto_coefficients);
     }
 }

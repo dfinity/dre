@@ -676,7 +676,6 @@ mod tests {
             nodes: new_test_nodes("feat", num_nodes, num_dfinity_nodes),
             added_nodes_desc: Vec::new(),
             removed_nodes_desc: Vec::new(),
-            min_nakamoto_coefficients: None,
             comment: None,
             run_log: Vec::new(),
         }
@@ -695,7 +694,6 @@ mod tests {
             nodes: new_test_nodes_with_overrides("feat", node_number_start, num_nodes, num_dfinity_nodes, feature_to_override),
             added_nodes_desc: Vec::new(),
             removed_nodes_desc: Vec::new(),
-            min_nakamoto_coefficients: None,
             comment: None,
             run_log: Vec::new(),
         }
@@ -942,7 +940,6 @@ mod tests {
                 .collect(),
             added_nodes_desc: Vec::new(),
             removed_nodes_desc: Vec::new(),
-            min_nakamoto_coefficients: None,
             comment: None,
             run_log: Vec::new(),
         };
