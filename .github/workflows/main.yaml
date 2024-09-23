@@ -31,7 +31,7 @@ jobs:
         with:
           fetch-depth: 2
       - name: "☁️ Setup runner"
-        uses: ./.github/workflows/manage-runner-pre
+        uses: ./.github/workflows/manage-runner-pre-new
 
       ########################################
       # Build and test
