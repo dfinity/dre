@@ -10,10 +10,6 @@ pub struct Create {
     #[clap(long, default_value_t = 13)]
     pub size: usize,
 
-    /// Minimum nakamoto coefficients desired
-    #[clap(long, num_args(1..))]
-    pub min_nakamoto_coefficients: Vec<String>,
-
     /// Features or Node IDs to exclude from the available nodes pool
     #[clap(long, num_args(1..))]
     pub exclude: Vec<String>,
@@ -60,7 +56,6 @@ impl ExecutableCommand for Create {
             .subnet_create(
                 SubnetCreateRequest {
                     size: self.size,
-                    min_nakamoto_coefficients: Self::parse_min_nakamoto_coefficients(&self.min_nakamoto_coefficients),
                     exclude: self.exclude.clone().into(),
                     only: self.only.clone().into(),
                     include: self.include.clone().into(),
@@ -82,7 +77,5 @@ impl ExecutableCommand for Create {
             )
             .exit()
         }
-
-        Self::validate_min_nakamoto_coefficients(cmd, &self.min_nakamoto_coefficients);
     }
 }

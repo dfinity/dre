@@ -15,7 +15,6 @@ pub fn get_proposed_subnet_changes(
             new_nodes: subnet.nodes.iter().map(decentralization::network::Node::from).collect(),
             removed_nodes_desc: vec![],
             added_nodes_desc: vec![],
-            min_nakamoto_coefficients: None,
             comment: None,
             run_log: vec![],
         }

@@ -145,7 +145,6 @@ impl Runner {
             .registry
             .create_subnet(
                 request.size,
-                request.min_nakamoto_coefficients.clone(),
                 request.include.clone().unwrap_or_default(),
                 request.exclude.clone().unwrap_or_default(),
                 request.only.clone().unwrap_or_default(),
@@ -245,8 +244,8 @@ impl Runner {
         release_artifact: &Artifact,
         version: &str,
         release_tag: &str,
-        force: bool,
-        forum_post_link: Option<String>,
+        ignore_missing_urls: bool,
+        forum_post_link: String,
         security_fix: bool,
     ) -> anyhow::Result<()> {
         let update_version = self
@@ -254,9 +253,10 @@ impl Runner {
                 release_artifact,
                 version,
                 release_tag,
-                force,
+                ignore_missing_urls,
                 self.prepare_versions_to_retire(release_artifact, false).await.map(|r| r.1)?,
                 security_fix,
+                forum_post_link.clone(),
             )
             .await?;
 
@@ -270,7 +270,7 @@ impl Runner {
                     title: Some(update_version.title),
                     summary: Some(update_version.summary.clone()),
                     motivation: None,
-                    forum_post_link,
+                    forum_post_link: Some(forum_post_link),
                 },
             )
             .await?;
@@ -282,18 +282,19 @@ impl Runner {
         release_artifact: &Artifact,
         version: &str,
         release_tag: &str,
-        force: bool,
+        ignore_missing_urls: bool,
         retire_versions: Option<Vec<String>>,
         security_fix: bool,
+        forum_post_link: String,
     ) -> anyhow::Result<UpdateVersion> {
         let (update_urls, expected_hash) = self
             .artifact_downloader
-            .download_images_and_validate_sha256(release_artifact, version, force)
+            .download_images_and_validate_sha256(release_artifact, version, ignore_missing_urls)
             .await?;
 
         let summary = match security_fix {
-            true => format_security_hotfix(),
-            false => format_regular_version_upgrade_summary(version, release_artifact, release_tag)?,
+            true => format_security_hotfix(forum_post_link),
+            false => format_regular_version_upgrade_summary(version, release_artifact, release_tag, forum_post_link)?,
         };
         if summary.contains("Remove this block of text from the proposal.") {
             Err(anyhow::anyhow!("The edited proposal text has not been edited to add release notes."))
@@ -759,9 +760,15 @@ pub fn replace_proposal_options(change: &SubnetChangeResponse, forum_post_link: 
     };
     let subnet_id_short = subnet_id.split('-').next().unwrap();
 
+    let change_desc = if change.added_with_desc.len() == change.removed_with_desc.len() {
+        format!("Replace {} in subnet {}", replace_target, subnet_id_short)
+    } else {
+        format!("Resize subnet {}", subnet_id_short)
+    };
+
     Ok(ic_admin::ProposeOptions {
-        title: format!("Replace {replace_target} in subnet {subnet_id_short}",).into(),
-        summary: format!("# Replace {replace_target} in subnet {subnet_id_short}",).into(),
+        title: Some(change_desc.clone()),
+        summary: Some(change_desc),
         motivation: Some(format!("{}\n\n{}\n", change.motivation.as_ref().unwrap_or(&String::new()), change)),
         forum_post_link,
     })
@@ -823,7 +830,12 @@ impl UpdateVersion {
     }
 }
 
-pub fn format_regular_version_upgrade_summary(version: &str, release_artifact: &Artifact, release_tag: &str) -> anyhow::Result<String> {
+pub fn format_regular_version_upgrade_summary(
+    version: &str,
+    release_artifact: &Artifact,
+    release_tag: &str,
+    forum_post_link: String,
+) -> anyhow::Result<String> {
     let template = format!(
         r#"Elect new {release_artifact} binary revision [{version}](https://github.com/dfinity/ic/tree/{release_tag})
 
@@ -844,6 +856,8 @@ pub fn format_regular_version_upgrade_summary(version: &str, release_artifact: &
 
     The two SHA256 sums printed above from a) the downloaded CDN image and b) the locally built image,
     must be identical, and must match the SHA256 from the payload of the NNS proposal.
+
+    Forum post link: {forum_post_link}
     "#
     );
 
@@ -882,9 +896,11 @@ pub fn format_regular_version_upgrade_summary(version: &str, release_artifact: &
     .join("\n"))
 }
 
-pub fn format_security_hotfix() -> String {
-    r#"In accordance with the Security Patch Policy and Procedure that was adopted in proposal [48792](https://dashboard.internetcomputer.org/proposal/48792), the source code that was used to build this release will be exposed at the latest 10 days after the fix is rolled out to all subnets.
+pub fn format_security_hotfix(forum_post_link: String) -> String {
+    format!(r#"In accordance with the Security Patch Policy and Procedure that was adopted in proposal [48792](https://dashboard.internetcomputer.org/proposal/48792), the source code that was used to build this release will be exposed at the latest 10 days after the fix is rolled out to all subnets.
 
     The community will be able to retroactively verify the binaries that were rolled out.
-"#.to_string().lines().map(|l| l.trim()).join("\n")
+
+    Forum post link: {forum_post_link}
+"#).lines().map(|l| l.trim()).join("\n")
 }
