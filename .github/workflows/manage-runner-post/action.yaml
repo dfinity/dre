@@ -32,23 +32,3 @@ runs:
         # https://github.com/actions/cache/blob/main/tips-and-workarounds.md#update-a-cache
         # https://github.com/actions/cache/blob/main/examples.md#---bazel
         key: ${{ runner.os }}-bazel-${{ hashFiles('.bazelversion', '.bazelrc', 'WORKSPACE.bazel', 'Cargo.Bazel.lock', 'requirements.lock') }}
-
-    ########################################
-    # Clean local Bazel cache if cache size > 250GB
-    ########################################
-    - name: "🧹 Clean local bazel cache"
-      shell: bash
-      run: |
-        set -eExou pipefail
-        CACHE_DIR="~/.cache"
-        MAX_SIZE=$((250 ))
-        CURRENT_SIZE=$(du -sb "$CACHE_DIR" | cut -f1)
-
-        echo "Current cache size: $(numfmt --to=iec-i --suffix=B "$CURRENT_SIZE")"
-
-        if [ "$CURRENT_SIZE" -gt "$MAX_SIZE" ]; then
-
-          echo "=============== cleaning bazel cache ==============="
-
-          rm -rf "$CACHE_DIR"
-        fi
