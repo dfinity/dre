@@ -30,25 +30,14 @@ runs:
         fi
 
     ########################################
-    # Setup
-    ########################################
-    - name: "🔧 Free Up Disk Space"
-      uses: jlumbroso/free-disk-space@v1.3.1
-      if: ${{ !startsWith(runner.name, 'dre-runner-custom') }}
-      with:
-        # this might remove tools that are actually needed,
-        # when set to "true" but frees about 6 GB
-        tool-cache: true
-        large-packages: true  # this is slow
-
-    ########################################
     # Clean local Bazel cache if cache size > 250GB
     ########################################
     - name: "🧹 Clean local bazel cache"
       if: ${{ !startsWith(runner.name, 'dre-runner-custom') }}
       shell: bash
       run: |
-        set -eExou pipefail
+        set -exuo pipefail
+        
         CACHE_DIR="~/.cache"
         MAX_SIZE=$((250 ))
         CURRENT_SIZE=$(du -sb "$CACHE_DIR" | cut -f1)
@@ -59,6 +48,18 @@ runs:
 
           rm -rf "$CACHE_DIR"
         fi
+
+    ########################################
+    # Setup
+    ########################################
+    - name: "🔧 Free Up Disk Space"
+      uses: jlumbroso/free-disk-space@v1.3.1
+      if: ${{ !startsWith(runner.name, 'dre-runner-custom') }}
+      with:
+        # this might remove tools that are actually needed,
+        # when set to "true" but frees about 6 GB
+        tool-cache: true
+        large-packages: true  # this is slow
   
     - uses: bazelbuild/setup-bazelisk@v2
 
