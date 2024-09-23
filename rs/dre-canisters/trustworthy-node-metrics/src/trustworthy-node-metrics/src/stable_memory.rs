@@ -8,8 +8,7 @@ use std::cell::RefCell;
 use std::collections::BTreeMap;
 
 use trustworthy_node_metrics_types::types::{
-    MonthlyNodeProviderRewardsStored, NodeMetadata, NodeMetadataStoredV2, NodeMetricsStored, NodeMetricsStoredKey, NodeRewardRatesStored,
-    TimestampNanos,
+    MonthlyNodeProviderRewardsStored, NodeMetadata, NodeMetadataStored, NodeMetadataStoredV2, NodeMetricsStored, NodeMetricsStoredKey, NodeRewardRatesStored, TimestampNanos
 };
 
 type Memory = VirtualMemory<DefaultMemoryImpl>;
@@ -36,6 +35,22 @@ thread_local! {
     static MONTHLY_NP_REWARDS: RefCell<StableBTreeMap<u64, MonthlyNodeProviderRewardsStored, Memory>> =
         RefCell::new(StableBTreeMap::init(
         MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(6)))
+    ));
+
+    // Backups
+    static NODE_PROVIDER_MAP: RefCell<StableBTreeMap<Principal, Principal, Memory>> =
+    RefCell::new(StableBTreeMap::init(
+    MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(1)))
+    ));
+
+    static NODE_PROVIDER_MAP_V1: RefCell<StableBTreeMap<Principal, Principal, Memory>> =
+        RefCell::new(StableBTreeMap::init(
+        MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(2)))
+    ));
+
+    static NODE_METADATA: RefCell<StableBTreeMap<Principal, NodeMetadataStored, Memory>> =
+        RefCell::new(StableBTreeMap::init(
+        MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(3)))
     ));
 }
 
