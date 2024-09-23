@@ -1292,11 +1292,18 @@ impl NetworkHealRequest {
                     change.score_after
                 );
             }
-            let min_penalty = changes.iter().map(|change| change.penalties_after_change).min().unwrap();
-            info!("Min business-rules penalty: {}", min_penalty);
+
+            // Some community members have expressed concern about the business-rules penalty.
+            // https://forum.dfinity.org/t/subnet-management-tdb26-nns/33663/26 and a few comments below.
+            // As a compromise, we will choose the change that has the lowest business-rules penalty,
+            // or if there is no improvement in the business-rules penalty, we will choose the change
+            // that replaces the fewest nodes.
+            let penalty_optimize_min = changes.iter().map(|change| change.penalties_after_change).min().unwrap();
+            info!("Min business-rules penalty: {}", penalty_optimize_min);
+
             let changes = changes
                 .into_iter()
-                .filter(|change| change.penalties_after_change == min_penalty)
+                .filter(|change| change.penalties_after_change == penalty_optimize_min)
                 .collect::<Vec<_>>();
 
             let changes_max_score = changes
@@ -1310,9 +1317,14 @@ impl NetworkHealRequest {
                 .skip(1)
                 .map(|(num_opt, change)| {
                     format!(
-                        "- {} additional node{}: {}",
+                        "- {} additional node{}{}: {}",
                         num_opt,
                         if num_opt > 1 { "s" } else { "" },
+                        if change.penalties_after_change > 0 {
+                            format!(" (solution penalty: {})", change.penalties_after_change)
+                        } else {
+                            "".to_string()
+                        },
                         change
                             .score_after
                             .describe_difference_from(&changes[num_opt.saturating_sub(1)].score_after)
@@ -1322,10 +1334,15 @@ impl NetworkHealRequest {
                 .collect::<Vec<_>>();
             info!("Max score: {}", changes_max_score.score_after);
 
-            let change = changes
-                .iter()
-                .find(|change: &&SubnetChangeResponse| change.score_after == changes_max_score.score_after)
-                .expect("No suitable changes found");
+            let change = if penalty_optimize_min > 0 && penalty_optimize_min == changes[0].penalties_after_change {
+                info!("No reduction in business-rules penalty, choosing the first change");
+                &changes[0]
+            } else {
+                changes
+                    .iter()
+                    .find(|change: &&SubnetChangeResponse| change.score_after == changes_max_score.score_after)
+                    .expect("No suitable changes found")
+            };
 
             info!(
                 "Replacing {} nodes in subnet {} gives Nakamoto coefficient: {}\n",
