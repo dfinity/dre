@@ -32,6 +32,31 @@ rye run <command>
 
 to run the `<command>` with all expected dependencies.
 
+### Troubleshooting rye
+
+If you face problems in `rye sync`, such as `unknown version cpython@...`, you can try to
+
+* List all available toolchains
+```
+rye toolchain list --include-downloadable
+```
+
+* Upgrade rye itself
+```
+rye self update
+```
+
+* Ensure rye python is in path
+```
+which python3
+```
+
+* Show the actively used rye environment in the project
+```
+rye show
+```
+
+
 ### 3. Install pre-commit
 
 Install and enable pre-commit. It's highly recommended in order to prevent pushing code to github that will surely cause failures.
