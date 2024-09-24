@@ -255,15 +255,15 @@ impl DecentralizedSubnet {
             .collect()
     }
 
-    /// Ensure "business rules" or constraints for the subnet nodes are met.
-    /// For instance, there needs to be at least one DFINITY-owned node in each
-    /// subnet. For the mainnet NNS there needs to be at least 3
-    /// DFINITY-owned nodes.
+    /// Check the "business rules" for the current DecentralizedSubnet.
     pub fn check_business_rules(&self) -> anyhow::Result<(usize, Vec<String>)> {
-        Self::_check_business_rules_for_nodes(&self.id, &self.nodes)
+        Self::check_business_rules_for_subnet_with_nodes(&self.id, &self.nodes)
     }
 
-    fn _check_business_rules_for_nodes(subnet_id: &PrincipalId, nodes: &[Node]) -> anyhow::Result<(usize, Vec<String>)> {
+    /// Ensure "business rules" or constraints are met for the subnet id with provided list of nodes.
+    /// For instance, there needs to be at least one DFINITY-owned node in each subnet.
+    /// For the mainnet NNS there needs to be at least 3 DFINITY-owned nodes.
+    pub fn check_business_rules_for_subnet_with_nodes(subnet_id: &PrincipalId, nodes: &[Node]) -> anyhow::Result<(usize, Vec<String>)> {
         let mut checks = Vec::new();
         let mut penalties = 0;
         if nodes.len() <= 1 {
@@ -727,7 +727,7 @@ impl DecentralizedSubnet {
     }
 
     fn _node_to_replacement_candidate(&self, subnet_nodes: &[Node], touched_node: &Node, err_log: &mut Vec<String>) -> Option<ReplacementCandidate> {
-        match Self::_check_business_rules_for_nodes(&self.id, subnet_nodes) {
+        match Self::check_business_rules_for_subnet_with_nodes(&self.id, subnet_nodes) {
             Ok((penalty, business_rules_log)) => {
                 let new_score = Self::_calc_nakamoto_score(subnet_nodes);
                 Some(ReplacementCandidate {
@@ -1064,6 +1064,9 @@ impl SubnetChangeRequest {
             )
             .subnet_with_more_nodes(how_many_nodes_to_add, &available_nodes)
             .map_err(|e| NetworkError::ResizeFailed(e.to_string()))?;
+        let penalties_after_change = DecentralizedSubnet::check_business_rules_for_subnet_with_nodes(&self.subnet.id, &resized_subnet.nodes)
+            .map_err(|e| NetworkError::ResizeFailed(e.to_string()))?
+            .0;
 
         let subnet_change = SubnetChange {
             id: self.subnet.id,
@@ -1071,6 +1074,7 @@ impl SubnetChangeRequest {
             new_nodes: resized_subnet.nodes,
             removed_nodes_desc: resized_subnet.removed_nodes_desc,
             added_nodes_desc: resized_subnet.added_nodes_desc,
+            penalties_after_change,
             comment: resized_subnet.comment,
             run_log: resized_subnet.run_log,
         };
@@ -1092,6 +1096,7 @@ pub struct SubnetChange {
     pub new_nodes: Vec<Node>,
     pub removed_nodes_desc: Vec<(Node, String)>,
     pub added_nodes_desc: Vec<(Node, String)>,
+    pub penalties_after_change: usize,
     pub comment: Option<String>,
     pub run_log: Vec<String>,
 }
@@ -1099,9 +1104,14 @@ pub struct SubnetChange {
 impl SubnetChange {
     pub fn with_nodes(self, nodes_to_add_with_desc: Vec<(Node, String)>) -> Self {
         let nodes_to_add: AHashSet<_> = nodes_to_add_with_desc.iter().map(|(n, _)| n).collect();
+        let new_nodes = [self.new_nodes, nodes_to_add.into_iter().cloned().collect_vec()].concat();
+        let penalties_after_change = DecentralizedSubnet::check_business_rules_for_subnet_with_nodes(&self.id, &new_nodes)
+            .expect("Business rules check should succeed")
+            .0;
         Self {
-            new_nodes: [self.new_nodes, nodes_to_add.into_iter().cloned().collect_vec()].concat(),
+            new_nodes,
             added_nodes_desc: nodes_to_add_with_desc,
+            penalties_after_change,
             ..self
         }
     }
@@ -1110,6 +1120,9 @@ impl SubnetChange {
         let nodes_to_rm: AHashSet<_> = nodes_to_remove_with_desc.iter().map(|(n, _)| n).collect();
         self.removed_nodes_desc.extend(nodes_to_remove_with_desc.clone());
         self.new_nodes.retain(|n| !nodes_to_rm.contains(n));
+        self.penalties_after_change = DecentralizedSubnet::check_business_rules_for_subnet_with_nodes(&self.id, &self.new_nodes)
+            .expect("Business rules check should succeed")
+            .0;
         self
     }
 
@@ -1272,12 +1285,27 @@ impl NetworkHealRequest {
             }
             for change in &changes {
                 info!(
-                    "Replacing {} nodes in subnet {} gives Nakamoto coefficient: {}\n",
+                    "Replacing {} nodes in subnet {} results in subnet with business-rules penalty {} and Nakamoto coefficient: {}\n",
                     change.removed_with_desc.len(),
                     subnet.decentralized_subnet.id,
+                    change.penalties_after_change,
                     change.score_after
                 );
             }
+
+            // Some community members have expressed concern about the business-rules penalty.
+            // https://forum.dfinity.org/t/subnet-management-tdb26-nns/33663/26 and a few comments below.
+            // As a compromise, we will choose the change that has the lowest business-rules penalty,
+            // or if there is no improvement in the business-rules penalty, we will choose the change
+            // that replaces the fewest nodes.
+            let penalty_optimize_min = changes.iter().map(|change| change.penalties_after_change).min().unwrap();
+            info!("Min business-rules penalty: {}", penalty_optimize_min);
+
+            let changes = changes
+                .into_iter()
+                .filter(|change| change.penalties_after_change == penalty_optimize_min)
+                .collect::<Vec<_>>();
+
             let changes_max_score = changes
                 .iter()
                 .max_by_key(|change| change.score_after.clone())
@@ -1289,9 +1317,14 @@ impl NetworkHealRequest {
                 .skip(1)
                 .map(|(num_opt, change)| {
                     format!(
-                        "- {} additional node{}: {}",
+                        "- {} additional node{}{}: {}",
                         num_opt,
                         if num_opt > 1 { "s" } else { "" },
+                        if change.penalties_after_change > 0 {
+                            format!(" (solution penalty: {})", change.penalties_after_change)
+                        } else {
+                            "".to_string()
+                        },
                         change
                             .score_after
                             .describe_difference_from(&changes[num_opt.saturating_sub(1)].score_after)
@@ -1301,10 +1334,15 @@ impl NetworkHealRequest {
                 .collect::<Vec<_>>();
             info!("Max score: {}", changes_max_score.score_after);
 
-            let change = changes
-                .iter()
-                .find(|change: &&SubnetChangeResponse| change.score_after == changes_max_score.score_after)
-                .expect("No suitable changes found");
+            let change = if penalty_optimize_min > 0 && penalty_optimize_min == changes[0].penalties_after_change {
+                info!("No reduction in business-rules penalty, choosing the first change");
+                &changes[0]
+            } else {
+                changes
+                    .iter()
+                    .find(|change: &&SubnetChangeResponse| change.score_after == changes_max_score.score_after)
+                    .expect("No suitable changes found")
+            };
 
             info!(
                 "Replacing {} nodes in subnet {} gives Nakamoto coefficient: {}\n",
