@@ -233,7 +233,6 @@ pub fn coumpute_node_provider_rewards(nodes_rewards: &[NodeRewards]) -> Decimal 
     rewards_xdr
 }
 
-
 pub fn node_provider_rewards(node_provider_id: Principal, period_start: TimestampNanos, period_end: TimestampNanos) -> NodeProviderRewards {
     let node_ids = stable_memory::get_node_principals(&node_provider_id);
     let nodes_rewards = compute_node_rewards(node_ids, period_start, period_end)
