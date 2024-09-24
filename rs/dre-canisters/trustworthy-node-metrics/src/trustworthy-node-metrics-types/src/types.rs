@@ -17,7 +17,7 @@ pub type NodeMetricsStoredKey = (TimestampNanos, Principal);
 
 #[derive(Debug, Deserialize, Serialize, CandidType, Clone)]
 pub struct MonthlyNodeProviderRewardsStored {
-    pub monthly_node_provider_rewards: MonthlyNodeProviderRewards
+    pub monthly_node_provider_rewards: MonthlyNodeProviderRewards,
 }
 
 const MAX_VALUE_SIZE: u32 = 20000;
