@@ -841,7 +841,6 @@ impl SubnetQuerier for LazyRegistryImpl {
                         nodes: s.nodes.iter().map(decentralization::network::Node::from).collect(),
                         added_nodes_desc: vec![],
                         removed_nodes_desc: vec![],
-                        min_nakamoto_coefficients: None,
                         comment: None,
                         run_log: vec![],
                     })
@@ -870,7 +869,6 @@ impl SubnetQuerier for LazyRegistryImpl {
                                 .collect(),
                             added_nodes_desc: vec![],
                             removed_nodes_desc: vec![],
-                            min_nakamoto_coefficients: None,
                             comment: None,
                             run_log: vec![],
                         })

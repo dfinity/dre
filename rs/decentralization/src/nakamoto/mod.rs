@@ -676,7 +676,6 @@ mod tests {
             nodes: new_test_nodes("feat", num_nodes, num_dfinity_nodes),
             added_nodes_desc: Vec::new(),
             removed_nodes_desc: Vec::new(),
-            min_nakamoto_coefficients: None,
             comment: None,
             run_log: Vec::new(),
         }
@@ -695,7 +694,6 @@ mod tests {
             nodes: new_test_nodes_with_overrides("feat", node_number_start, num_nodes, num_dfinity_nodes, feature_to_override),
             added_nodes_desc: Vec::new(),
             removed_nodes_desc: Vec::new(),
-            min_nakamoto_coefficients: None,
             comment: None,
             run_log: Vec::new(),
         }
@@ -786,7 +784,7 @@ mod tests {
                 .collect::<Vec<_>>()
         );
 
-        let subnet_change_req = SubnetChangeRequest::new(subnet_initial, nodes_available, Vec::new(), Vec::new(), Vec::new(), None);
+        let subnet_change_req = SubnetChangeRequest::new(subnet_initial, nodes_available, Vec::new(), Vec::new(), Vec::new());
         let subnet_change = subnet_change_req.optimize(2, &[], &health_of_nodes).unwrap();
         for log in subnet_change.after().run_log.iter() {
             println!("{}", log);
@@ -843,7 +841,7 @@ mod tests {
                 .collect::<Vec<_>>()
         );
 
-        let subnet_change_req = SubnetChangeRequest::new(subnet_initial, nodes_available, Vec::new(), Vec::new(), Vec::new(), None);
+        let subnet_change_req = SubnetChangeRequest::new(subnet_initial, nodes_available, Vec::new(), Vec::new(), Vec::new());
         let subnet_change = subnet_change_req.optimize(2, &[], &health_of_nodes).unwrap();
         println!("Replacement run log:");
         for line in subnet_change.after().run_log.iter() {
@@ -901,7 +899,7 @@ mod tests {
                 .collect::<Vec<_>>()
         );
 
-        let subnet_change_req = SubnetChangeRequest::new(subnet_initial, nodes_available, Vec::new(), Vec::new(), Vec::new(), None);
+        let subnet_change_req = SubnetChangeRequest::new(subnet_initial, nodes_available, Vec::new(), Vec::new(), Vec::new());
         let subnet_change = subnet_change_req.optimize(2, &[], &health_of_nodes).unwrap();
 
         println!("Replacement run log:");
@@ -942,7 +940,6 @@ mod tests {
                 .collect(),
             added_nodes_desc: Vec::new(),
             removed_nodes_desc: Vec::new(),
-            min_nakamoto_coefficients: None,
             comment: None,
             run_log: Vec::new(),
         };
@@ -1129,7 +1126,7 @@ mod tests {
             .map(|n| (n.id, HealthStatus::Healthy))
             .collect::<IndexMap<_, _>>();
 
-        let change_initial = SubnetChangeRequest::new(subnet_initial.clone(), nodes_available, Vec::new(), Vec::new(), Vec::new(), None);
+        let change_initial = SubnetChangeRequest::new(subnet_initial.clone(), nodes_available, Vec::new(), Vec::new(), Vec::new());
 
         let with_keeping_features = change_initial
             .clone()
