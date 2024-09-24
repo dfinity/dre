@@ -29,12 +29,22 @@ export const NodeProviderRewardsChart: React.FC<NodeProviderRewardsChartProps> =
         return <p>No latestNodeRewards</p>;
     }
 
+    const xdr_conversion_rate = latestProviderRewards.xdr_conversion_rate;
+    const rewards_xdr_old = latestProviderRewards.rewards_xdr_old;
+
+    if (xdr_conversion_rate.length == 0 || rewards_xdr_old.length == 0) {
+        return <p>No latestNodeRewards</p>;
+    }
+
+
     return (
-        <Grid item xs={12}>
-            <Box sx={boxStyleWidget('right')}>
-                <WidgetNumber value={Math.round(Number(latestProviderRewards.rewards_xdr)).toString()} title="Rewards XDR"  sxValue={{ color: '#FFCC00' }} />
-            </Box>
-        </Grid>
+        <>
+            <Grid item xs={12} md={12}>
+                <Box sx={boxStyleWidget('left')}>
+                    <WidgetNumber value={Math.round(Number(rewards_xdr_old[0]) / 100000000).toString()} title="Last Rewards ICP Received"  sxValue={{ color: '#FFCC00' }} />
+                </Box>
+            </Grid> 
+        </>
     );
 };
 

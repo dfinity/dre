@@ -224,10 +224,10 @@ pub fn coumpute_node_provider_rewards(nodes_rewards: &[NodeRewards]) -> Decimal 
                 let reward_coefficient_percent: Decimal = Decimal::from(node_rewards.node_rate.reward_coefficient_percent.unwrap_or(80)) / dec!(100);
                 coefficient *= reward_coefficient_percent;
 
-                nodes_rewards_xdr_avg * coefficient * Decimal::from_f64(node_rewards.rewards_computation.rewards_percent).unwrap()
+                nodes_rewards_xdr_avg * coefficient
             }
             _ => node_rewards.node_rate.xdr_permyriad_per_node_per_month.into(),
-        };
+        } * Decimal::from_f64(node_rewards.rewards_computation.rewards_percent).unwrap();
     }
 
     rewards_xdr
