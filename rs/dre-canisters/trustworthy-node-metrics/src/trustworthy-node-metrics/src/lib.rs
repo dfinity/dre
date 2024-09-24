@@ -175,3 +175,9 @@ fn nodes_metadata() -> Vec<NodeMetadata> {
 fn update_metadata() {
     ic_cdk_timers::set_timer(std::time::Duration::from_secs(0), || ic_cdk::spawn(update_metadata_backfill()));
 }
+
+#[update]
+fn nodes_without_mapping() -> Vec<String> {
+    metrics_manager::nodes_without_mapping()
+}
+

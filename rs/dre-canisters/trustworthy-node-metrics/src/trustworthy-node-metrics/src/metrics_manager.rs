@@ -1,4 +1,4 @@
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashSet};
 
 use anyhow::anyhow;
 use candid::Principal;
@@ -320,3 +320,84 @@ pub async fn update_metrics() -> anyhow::Result<()> {
 
     Ok(())
 }
+
+pub fn nodes_without_mapping() -> Vec<String>  {
+    let nodes_id_unique: HashSet<Principal>  = stable_memory::get_metrics_range(0, None, None).into_iter().map(|((_, principal), _)| principal).collect();
+    let mut nodes_without_name = Vec::new();
+    let mut nodes_without_np = Vec::new();
+
+    for id in nodes_id_unique {
+        let metadata = stable_memory::get_node_metadata(&id);
+
+        if let Some(meta) = metadata {
+            if meta.node_provider_name.is_none() {
+                nodes_without_name.push(PrincipalId::from(id).to_string());
+            }
+        } else {
+            nodes_without_np.push(PrincipalId::from(id).to_string());
+        }
+    }
+
+    let mut combined_output = Vec::new();
+    
+    // Add title and content for nodes without NP name
+    combined_output.push(format!("Nodes without NP name: {:?}", nodes_without_name));
+    
+    // Add title and content for nodes without NP
+    combined_output.push(format!("Nodes without NP: {:?}", nodes_without_np));
+
+    combined_output
+
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::collections::BTreeMap;
+
+    #[test]
+    fn test_generate_node_type() {
+        let mut node_types_count = BTreeMap::new();
+        node_types_count.insert("type1".to_string(), 1);
+        node_types_count.insert("type2".to_string(), 2);
+
+        // Test Case 1: Normal case with both node types and rewardable nodes
+        let mut rewardable_nodes = BTreeMap::new();
+        rewardable_nodes.insert("type1".to_string(), 3);
+        rewardable_nodes.insert("type2".to_string(), 5);
+
+        let result = generate_node_type(Some(node_types_count.clone()), rewardable_nodes.clone());
+        assert_eq!(result, "type1");
+
+        // Test Case 2: Node types that don't match rewardable nodes
+        let mut rewardable_nodes = BTreeMap::new();
+        rewardable_nodes.insert("type3".to_string(), 4);
+
+        let result = generate_node_type(Some(node_types_count.clone()), rewardable_nodes.clone());
+        assert_eq!(result, "type3");
+
+        // Test Case 3: All rewardable nodes are used up
+        let mut rewardable_nodes = BTreeMap::new();
+        rewardable_nodes.insert("type1".to_string(), 1);
+        rewardable_nodes.insert("type2".to_string(), 2);
+
+        let result = generate_node_type(Some(node_types_count.clone()), rewardable_nodes.clone());
+        assert_eq!(result, "unknown:rewardable_nodes_used_up");
+
+        // Test Case 4: No rewardable nodes
+        let rewardable_nodes = BTreeMap::new();
+
+        let result = generate_node_type(Some(node_types_count.clone()), rewardable_nodes);
+        assert_eq!(result, "unknown:no_rewardable_nodes_found");
+
+        // Test Case 3: Normal case with both node types and rewardable nodes
+        let mut rewardable_nodes = BTreeMap::new();
+        rewardable_nodes.insert("type1".to_string(), 1);
+        rewardable_nodes.insert("type2".to_string(), 3);
+
+        let result = generate_node_type(Some(node_types_count), rewardable_nodes.clone());
+        assert_eq!(result, "type2");
+    }
+}
+

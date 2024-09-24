@@ -69,4 +69,5 @@ service : {
     "node_ids" : () -> (vec principal) query;
     "nodes_metadata": () -> (vec NodeMetadata) query;
     "update_metadata": () -> ()
+    "nodes_without_mapping": () -> (vec text);
 }
