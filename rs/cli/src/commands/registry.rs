@@ -55,10 +55,11 @@ impl FromStr for Filter {
         if split.len() != 2 {
             anyhow::bail!("Expected `key=value` format, found {}", s)
         }
-
+        let first = split.first().unwrap();
+        let last = split.last().unwrap();
         Ok(Self {
-            key: split.first().map(|s| s.to_string()).unwrap(),
-            value: serde_json::from_str(split.last().unwrap())?,
+            key: first.to_string(),
+            value: serde_json::from_str(last).unwrap_or_else(|_| serde_json::Value::String(last.to_string())),
         })
     }
 }
