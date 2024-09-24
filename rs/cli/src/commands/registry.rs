@@ -58,7 +58,7 @@ impl FromStr for Filter {
 
         Ok(Self {
             key: split.get(0).map(|s| s.to_string()).unwrap(),
-            value: serde_json::to_value(split.get(1).unwrap())?,
+            value: serde_json::from_str(split.get(1).unwrap())?,
         })
     }
 }
