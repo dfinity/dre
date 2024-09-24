@@ -32,6 +32,15 @@ async fn update_metrics_task() {
             ic_cdk::println!("Error updating node_rewards_table: {}", e);
         }
     }
+
+    match rewards_manager::update_recent_provider_rewards().await {
+        Ok(_) => {
+            ic_cdk::println!("Successfully updated recent provider rewards");
+        }
+        Err(e) => {
+            ic_cdk::println!("Error updated recent provider rewards: {}", e);
+        }
+    }
 }
 
 fn setup_timers() {
@@ -113,5 +122,5 @@ fn node_provider_rewards(args: NodeProviderRewardsArgs) -> NodeProviderRewards {
     let period_end = args.to_ts;
     let node_provider_id = args.node_provider_id;
 
-    rewards_manager::compute_node_provider_rewards(node_provider_id, period_start, period_end)
+    rewards_manager::node_provider_rewards(node_provider_id, period_start, period_end)
 }

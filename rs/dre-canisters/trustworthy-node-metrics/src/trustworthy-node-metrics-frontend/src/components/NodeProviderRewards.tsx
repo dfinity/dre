@@ -32,7 +32,7 @@ export const NodeProviderRewardsChart: React.FC<NodeProviderRewardsChartProps> =
     return (
         <Grid item xs={12}>
             <Box sx={boxStyleWidget('right')}>
-                <WidgetNumber value={Math.round(latestProviderRewards.rewards_xdr).toString()} title="Rewards XDR"  sxValue={{ color: '#FFCC00' }} />
+                <WidgetNumber value={Math.round(Number(latestProviderRewards.rewards_xdr)).toString()} title="Rewards XDR"  sxValue={{ color: '#FFCC00' }} />
             </Box>
         </Grid>
     );
