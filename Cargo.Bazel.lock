@@ -1,5 +1,5 @@
 {
-  "checksum": "9bac44d4885af5af0b8fbc37bfc91af52d1b3883476ae918ceaedcabfc572868",
+  "checksum": "06da4df9dd66c389618b0921a08c03251c247c4325192eb08dcb94e4063b5f9b",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -38062,6 +38062,8 @@
         "crate_features": {
           "common": [
             "default",
+            "indexmap",
+            "preserve_order",
             "raw_value",
             "std",
             "unbounded_depth"
@@ -38070,6 +38072,10 @@
         },
         "deps": {
           "common": [
+            {
+              "id": "indexmap 2.5.0",
+              "target": "indexmap"
+            },
             {
               "id": "itoa 1.0.11",
               "target": "itoa"

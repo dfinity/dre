@@ -20,6 +20,7 @@ use indexmap::IndexMap;
 use itertools::Itertools;
 use log::{info, warn};
 use serde::Serialize;
+use serde_json::Value;
 
 use crate::ctx::DreContext;
 
@@ -34,6 +35,33 @@ pub struct Registry {
     /// Output only information related to the node operator records with incorrect rewards
     #[clap(long)]
     pub incorrect_rewards: bool,
+
+    /// Filters in `key=value` format
+    #[clap(long, short, alias = "filter")]
+    pub filters: Vec<Filter>,
+}
+
+#[derive(Debug, Clone)]
+pub struct Filter {
+    key: String,
+    value: Value,
+}
+
+impl FromStr for Filter {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let split = s.split('=').collect_vec();
+        if split.len() != 2 {
+            anyhow::bail!("Expected `key=value` format, found {}", s)
+        }
+        let first = split.first().unwrap();
+        let last = split.last().unwrap();
+        Ok(Self {
+            key: first.to_string(),
+            value: serde_json::from_str(last).unwrap_or_else(|_| serde_json::Value::String(last.to_string())),
+        })
+    }
 }
 
 impl ExecutableCommand for Registry {
@@ -51,12 +79,18 @@ impl ExecutableCommand for Registry {
             None => Box::new(std::io::stdout()),
         };
 
+        let registry = self.get_registry(ctx).await?;
+
         if self.incorrect_rewards {
-            let node_operators = self.get_registry(ctx).await?;
-            let node_operators = node_operators.node_operators.iter().filter(|rec| !rec.rewards_correct).collect_vec();
+            let node_operators = registry.node_operators.iter().filter(|rec| !rec.rewards_correct).collect_vec();
             serde_json::to_writer_pretty(writer, &node_operators)?;
         } else {
-            serde_json::to_writer_pretty(writer, &self.get_registry(ctx).await?)?;
+            let mut serde_value = serde_json::to_value(registry)?;
+            self.filters.iter().for_each(|filter| {
+                filter_json_value(&mut serde_value, &filter.key, &filter.value);
+            });
+
+            serde_json::to_writer_pretty(writer, &serde_value)?;
         }
 
         Ok(())
@@ -458,4 +492,29 @@ pub struct NodeRewardsTableFlattened {
     #[prost(btree_map = "string, message", tag = "1")]
     #[serde(flatten)]
     pub table: BTreeMap<String, NodeRewardRatesFlattened>,
+}
+
+fn filter_json_value(current: &mut Value, key: &str, value: &Value) -> bool {
+    match current {
+        Value::Object(map) => {
+            // Check if current object contains key-value pair
+            if let Some(v) = map.get(key) {
+                return v == value;
+            }
+
+            // Filter nested objects
+            map.retain(|_, v| filter_json_value(v, key, value));
+
+            // If the map is empty consider it doesn't contain the key-value
+            !map.is_empty()
+        }
+        Value::Array(arr) => {
+            // Filter entries in the array
+            arr.retain_mut(|v| filter_json_value(v, key, value));
+
+            // If the array is empty consider it doesn't contain the key-value
+            !arr.is_empty()
+        }
+        _ => false, // Since this is a string comparison, non-object and non-array values don't match
+    }
 }
