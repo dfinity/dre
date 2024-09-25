@@ -19,6 +19,7 @@ use ic_types::PrincipalId;
 use indexmap::IndexMap;
 use itertools::Itertools;
 use log::{info, warn};
+use regex::Regex;
 use serde::Serialize;
 use serde_json::Value;
 
@@ -45,22 +46,30 @@ pub struct Registry {
 pub struct Filter {
     key: String,
     value: Value,
+    comparison: Comparison,
 }
 
 impl FromStr for Filter {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let split = s.split('=').collect_vec();
-        if split.len() != 2 {
-            anyhow::bail!("Expected `key=value` format, found {}", s)
+        // Define the regex pattern for `key comparison value` with optional spaces
+        let re = Regex::new(r"^\s*(\w+)\s*\b(.+?)\b\s*(.*)$").unwrap();
+
+        // Capture key, comparison, and value
+        if let Some(captures) = re.captures(s) {
+            let key = captures[1].to_string();
+            let comparison_str = &captures[2];
+            let value_str = &captures[3];
+
+            let comparison = Comparison::from_str(comparison_str)?;
+
+            let value = serde_json::from_str(value_str).unwrap_or_else(|_| serde_json::Value::String(value_str.to_string()));
+
+            Ok(Self { key, value, comparison })
+        } else {
+            anyhow::bail!("Expected format: `key comparison value` (spaces around the comparison are optional, supported comparison: = != > < >= <= re contains startswith endswith), found {}", s);
         }
-        let first = split.first().unwrap();
-        let last = split.last().unwrap();
-        Ok(Self {
-            key: first.to_string(),
-            value: serde_json::from_str(last).unwrap_or_else(|_| serde_json::Value::String(last.to_string())),
-        })
     }
 }
 
@@ -87,7 +96,7 @@ impl ExecutableCommand for Registry {
         } else {
             let mut serde_value = serde_json::to_value(registry)?;
             self.filters.iter().for_each(|filter| {
-                filter_json_value(&mut serde_value, &filter.key, &filter.value);
+                filter_json_value(&mut serde_value, &filter.key, &filter.value, &filter.comparison);
             });
 
             serde_json::to_writer_pretty(writer, &serde_value)?;
@@ -110,11 +119,9 @@ impl Registry {
 
         let dcs = local_registry.get_datacenters()?;
 
-        let subnets = get_subnets(&local_registry).await?;
+        let (subnets, nodes) = get_subnets_and_nodes(&local_registry, &node_operators, ctx.network()).await?;
 
         let unassigned_nodes_config = get_unassigned_nodes(&local_registry)?;
-
-        let nodes = get_nodes(&local_registry, &node_operators, &subnets, ctx.network()).await?;
 
         // Calculate number of rewardable nodes for node operators
         for node_operator in node_operators.values_mut() {
@@ -202,9 +209,13 @@ async fn get_node_operators(local_registry: &Arc<dyn LazyRegistry>, network: &Ne
     Ok(node_operators)
 }
 
-async fn get_subnets(local_registry: &Arc<dyn LazyRegistry>) -> anyhow::Result<Vec<SubnetRecord>> {
+async fn get_subnets_and_nodes(
+    local_registry: &Arc<dyn LazyRegistry>,
+    node_operators: &IndexMap<PrincipalId, NodeOperator>,
+    network: &Network,
+) -> anyhow::Result<(Vec<SubnetRecord>, Vec<NodeDetails>)> {
     let subnets = local_registry.subnets().await?;
-    Ok(subnets
+    let subnets = subnets
         .iter()
         .map(|(subnet_id, record)| SubnetRecord {
             subnet_id: *subnet_id,
@@ -229,14 +240,24 @@ async fn get_subnets(local_registry: &Arc<dyn LazyRegistry>) -> anyhow::Result<V
             halt_at_cup_height: record.halt_at_cup_height,
             chain_key_config: record.chain_key_config.clone(),
         })
-        .collect::<Vec<_>>())
+        .collect::<Vec<_>>();
+    let nodes = _get_nodes(local_registry, node_operators, &subnets, network).await?;
+    let subnets = subnets
+        .into_iter()
+        .map(|subnet| {
+            let nodes = nodes
+                .iter()
+                .filter(|n| subnet.membership.contains(&n.node_id.to_string()))
+                .cloned()
+                .map(|n| (n.node_id, n))
+                .collect::<IndexMap<_, _>>();
+            SubnetRecord { nodes, ..subnet }
+        })
+        .collect();
+    Ok((subnets, nodes))
 }
 
-fn get_unassigned_nodes(local_registry: &Arc<dyn LazyRegistry>) -> anyhow::Result<Option<UnassignedNodesConfigRecord>> {
-    local_registry.get_unassigned_nodes()
-}
-
-async fn get_nodes(
+async fn _get_nodes(
     local_registry: &Arc<dyn LazyRegistry>,
     node_operators: &IndexMap<PrincipalId, NodeOperator>,
     subnets: &[SubnetRecord],
@@ -317,6 +338,10 @@ async fn get_nodes(
     Ok(nodes)
 }
 
+fn get_unassigned_nodes(local_registry: &Arc<dyn LazyRegistry>) -> anyhow::Result<Option<UnassignedNodesConfigRecord>> {
+    local_registry.get_unassigned_nodes()
+}
+
 fn get_node_rewards_table(local_registry: &Arc<dyn LazyRegistry>, network: &Network) -> NodeRewardsTableFlattened {
     let rewards_table_bytes = local_registry.get_node_rewards_table();
 
@@ -390,15 +415,15 @@ fn get_api_boundary_nodes(local_registry: &Arc<dyn LazyRegistry>) -> anyhow::Res
 
 #[derive(Debug, Serialize)]
 struct RegistryDump {
-    elected_guest_os_versions: Vec<ReplicaVersionRecord>,
-    elected_host_os_versions: Vec<HostosVersionRecord>,
-    nodes: Vec<NodeDetails>,
     subnets: Vec<SubnetRecord>,
+    nodes: Vec<NodeDetails>,
     unassigned_nodes_config: Option<UnassignedNodesConfigRecord>,
     dcs: Vec<DataCenterRecord>,
     node_operators: Vec<NodeOperator>,
     node_rewards_table: NodeRewardsTableFlattened,
     api_bns: Vec<ApiBoundaryNodeDetails>,
+    elected_guest_os_versions: Vec<ReplicaVersionRecord>,
+    elected_host_os_versions: Vec<HostosVersionRecord>,
 }
 
 #[derive(Clone, Debug, Serialize)]
@@ -494,23 +519,131 @@ pub struct NodeRewardsTableFlattened {
     pub table: BTreeMap<String, NodeRewardRatesFlattened>,
 }
 
-fn filter_json_value(current: &mut Value, key: &str, value: &Value) -> bool {
+#[derive(Debug, Clone)]
+enum Comparison {
+    Equal,
+    NotEqual,
+    GreaterThan,
+    LessThan,
+    GreaterThanOrEqual,
+    LessThanOrEqual,
+    Regex,
+    Contains,
+    StartsWith,
+    EndsWith,
+}
+
+impl FromStr for Comparison {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "eq" | "=" | "==" => Ok(Comparison::Equal),
+            "ne" | "!=" => Ok(Comparison::NotEqual),
+            "gt" | ">" => Ok(Comparison::GreaterThan),
+            "lt" | "<" => Ok(Comparison::LessThan),
+            "ge" | ">=" => Ok(Comparison::GreaterThanOrEqual),
+            "le" | "<=" => Ok(Comparison::LessThanOrEqual),
+            "regex" | "re" | "matches" | "=~" => Ok(Comparison::Regex),
+            "contains" => Ok(Comparison::Contains),
+            "startswith" => Ok(Comparison::StartsWith),
+            "endswith" => Ok(Comparison::EndsWith),
+            _ => anyhow::bail!("Invalid comparison operator: {}", s),
+        }
+    }
+}
+
+impl Comparison {
+    fn matches(&self, value: &Value, other: &Value) -> bool {
+        match self {
+            Comparison::Equal => value == other,
+            Comparison::NotEqual => value != other,
+            Comparison::GreaterThan => match (value, other) {
+                (Value::Number(a), Value::Number(b)) => a.as_f64() > b.as_f64(),
+                (Value::String(a), Value::String(b)) => a > b,
+                _ => false,
+            },
+            Comparison::LessThan => match (value, other) {
+                (Value::Number(a), Value::Number(b)) => a.as_f64() < b.as_f64(),
+                (Value::String(a), Value::String(b)) => a < b,
+                _ => false,
+            },
+            Comparison::GreaterThanOrEqual => match (value, other) {
+                (Value::Number(a), Value::Number(b)) => a.as_f64() >= b.as_f64(),
+                (Value::String(a), Value::String(b)) => a >= b,
+                _ => false,
+            },
+            Comparison::LessThanOrEqual => match (value, other) {
+                (Value::Number(a), Value::Number(b)) => a.as_f64() <= b.as_f64(),
+                (Value::String(a), Value::String(b)) => a <= b,
+                _ => false,
+            },
+            Comparison::Regex => {
+                if let Value::String(s) = value {
+                    if let Value::String(other) = other {
+                        let re = Regex::new(other).unwrap();
+                        re.is_match(s)
+                    } else {
+                        false
+                    }
+                } else {
+                    false
+                }
+            }
+            Comparison::Contains => {
+                if let Value::String(s) = value {
+                    if let Value::String(other) = other {
+                        s.contains(other)
+                    } else {
+                        false
+                    }
+                } else {
+                    false
+                }
+            }
+            Comparison::StartsWith => {
+                if let Value::String(s) = value {
+                    if let Value::String(other) = other {
+                        s.starts_with(other)
+                    } else {
+                        false
+                    }
+                } else {
+                    false
+                }
+            }
+            Comparison::EndsWith => {
+                if let Value::String(s) = value {
+                    if let Value::String(other) = other {
+                        s.ends_with(other)
+                    } else {
+                        false
+                    }
+                } else {
+                    false
+                }
+            }
+        }
+    }
+}
+
+fn filter_json_value(current: &mut Value, key: &str, value: &Value, comparison: &Comparison) -> bool {
     match current {
         Value::Object(map) => {
             // Check if current object contains key-value pair
             if let Some(v) = map.get(key) {
-                return v == value;
+                return comparison.matches(v, value);
             }
 
             // Filter nested objects
-            map.retain(|_, v| filter_json_value(v, key, value));
+            map.retain(|_, v| filter_json_value(v, key, value, comparison));
 
             // If the map is empty consider it doesn't contain the key-value
             !map.is_empty()
         }
         Value::Array(arr) => {
             // Filter entries in the array
-            arr.retain_mut(|v| filter_json_value(v, key, value));
+            arr.retain_mut(|v| filter_json_value(v, key, value, comparison));
 
             // If the array is empty consider it doesn't contain the key-value
             !arr.is_empty()
