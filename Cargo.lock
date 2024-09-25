@@ -2080,6 +2080,7 @@ dependencies = [
  "self_update",
  "serde",
  "serde_json",
+ "serde_yaml",
  "sha2 0.10.8",
  "shlex",
  "spinners",

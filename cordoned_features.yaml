@@ -1,0 +1,8 @@
+# This file is used for cordoining ceratin node features
+# which are used while managing subnets.
+# The full list of features can be found here:
+# https://github.com/dfinity/dre/blob/main/rs/ic-management-types/src/lib.rs#L317-L324
+features:
+  # Example entry
+  # - feature: data_center
+  #   value: mu1

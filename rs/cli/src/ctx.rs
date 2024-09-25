@@ -21,6 +21,7 @@ use crate::{
     artifact_downloader::{ArtifactDownloader, ArtifactDownloaderImpl},
     auth::Neuron,
     commands::{Args, AuthOpts, AuthRequirement, ExecutableCommand, IcAdminVersion},
+    cordoned_feature_fetcher::{CordonedFeatureFetcher, CordonedFeatureFetcherImpl},
     ic_admin::{download_ic_admin, should_update_ic_admin, IcAdmin, IcAdminImpl, FALLBACK_IC_ADMIN_VERSION},
     runner::Runner,
     subnet_manager::SubnetManager,
@@ -42,6 +43,7 @@ pub struct DreContext {
     neuron: Neuron,
     proceed_without_confirmation: bool,
     version: IcAdminVersion,
+    cordoned_features_fetcher: Arc<dyn CordonedFeatureFetcher>,
 }
 
 impl DreContext {
@@ -57,6 +59,7 @@ impl DreContext {
         auth_requirement: AuthRequirement,
         forum_post_link: Option<String>,
         ic_admin_version: IcAdminVersion,
+        cordoned_features_fetcher: Arc<dyn CordonedFeatureFetcher>,
     ) -> anyhow::Result<Self> {
         let network = match offline {
             false => ic_management_types::Network::new(network.clone(), &nns_urls)
@@ -93,6 +96,7 @@ impl DreContext {
             neuron,
             proceed_without_confirmation: yes,
             version: ic_admin_version,
+            cordoned_features_fetcher,
         })
     }
 
@@ -109,6 +113,7 @@ impl DreContext {
             args.subcommands.require_auth(),
             args.forum_post_link.clone(),
             args.ic_admin_version.clone(),
+            Arc::new(CordonedFeatureFetcherImpl::new(args.offline, args.cordone_feature_fallback_file.clone())?) as Arc<dyn CordonedFeatureFetcher>,
         )
         .await
     }
@@ -212,10 +217,14 @@ impl DreContext {
         ))
     }
 
-    pub async fn subnet_manager(&self) -> SubnetManager {
+    pub async fn subnet_manager(&self) -> anyhow::Result<SubnetManager> {
         let registry = self.registry().await;
 
-        SubnetManager::new(registry, self.network().clone(), vec![])
+        Ok(SubnetManager::new(
+            registry,
+            self.network().clone(),
+            self.cordoned_features_fetcher.fetch().await?,
+        ))
     }
 
     pub fn proposals_agent(&self) -> Arc<dyn ProposalAgent> {
@@ -235,7 +244,7 @@ impl DreContext {
             self.verbose_runner,
             self.ic_repo.clone(),
             self.artifact_downloader.clone(),
-            vec![],
+            self.cordoned_features_fetcher.fetch().await?,
         ));
         *self.runner.borrow_mut() = Some(runner.clone());
         Ok(runner)
