@@ -42,5 +42,7 @@ impl ExecutableCommand for WhatifDecentralization {
             .await
     }
 
-    fn validate(&self, _cmd: &mut clap::Command) {}
+    fn validate(&self, _args: &crate::commands::Args, _cmd: &mut clap::Command) -> Result<(), clap::Error> {
+        Ok(())
+    }
 }

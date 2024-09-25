@@ -20,8 +20,8 @@ impl ExecutableCommand for Qualify {
         self.subcommand.require_auth()
     }
 
-    fn validate(&self, cmd: &mut clap::Command) {
-        self.subcommand.validate(cmd)
+    fn validate(&self, args: &crate::commands::Args, cmd: &mut clap::Command) -> Result<(), clap::Error> {
+        self.subcommand.validate(args, cmd)
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {

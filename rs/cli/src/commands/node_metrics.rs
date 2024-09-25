@@ -4,7 +4,6 @@ use std::{
     sync::{Arc, Mutex},
 };
 
-use anyhow::Ok;
 use clap::{error::ErrorKind, Args};
 use ic_canisters::{
     management::{NodeMetricsHistoryResponse, WalletCanisterWrapper},
@@ -145,10 +144,11 @@ impl ExecutableCommand for NodeMetrics {
         Ok(())
     }
 
-    fn validate(&self, cmd: &mut clap::Command) {
+    fn validate(&self, _args: &crate::commands::Args, cmd: &mut clap::Command) -> Result<(), clap::Error> {
         if self.trustworthy && self.wallet.is_none() {
-            cmd.error(ErrorKind::MissingRequiredArgument, "Wallet is required for fetching trustworthy metrics.")
-                .exit();
+            Err(cmd.error(ErrorKind::MissingRequiredArgument, "Wallet is required for fetching trustworthy metrics."))
+        } else {
+            Ok(())
         }
     }
 }

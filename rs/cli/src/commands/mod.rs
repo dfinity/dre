@@ -142,7 +142,7 @@ impl TryFrom<PathBuf> for AuthOpts {
 
 #[derive(Parser, Debug)]
 #[clap(version = env!("CARGO_PKG_VERSION"), about, author)]
-pub(crate) struct Args {
+pub struct Args {
     #[clap(flatten)]
     pub(crate) auth_opts: AuthOpts,
 
@@ -214,8 +214,19 @@ impl ExecutableCommand for Args {
         self.subcommands.execute(ctx).await
     }
 
-    fn validate(&self, cmd: &mut Command) {
-        self.subcommands.validate(cmd)
+    /// Validate the command line arguments. You can return an error with something like:
+    /// ```rust
+    /// match args.neuron_id {
+    ///     Some(_) => {
+    ///        Ok(())
+    ///     }
+    ///     None => {
+    ///         Err(cmd.error(ErrorKind::MissingRequiredArgument, "Neuron ID is required for this command."))
+    ///     }
+    /// }
+    /// ```
+    fn validate(&self, args: &crate::commands::Args, cmd: &mut Command) -> std::result::Result<(), clap::Error> {
+        self.subcommands.validate(args, cmd)
     }
 }
 
@@ -242,9 +253,9 @@ macro_rules! impl_executable_command_for_enums {
                 }
             }
 
-            fn validate(&self, cmd: &mut Command) {
+            fn validate(&self, args: &crate::commands::Args, cmd: &mut Command) -> std::result::Result<(), clap::Error> {
                 match &self {
-                    $(Subcommands::$var(variant) => variant.validate(cmd),)*
+                    $(Subcommands::$var(variant) => variant.validate(args, cmd),)*
                 }
             }
         }
@@ -257,7 +268,7 @@ impl_executable_command_for_enums! { DerToPrincipal, Heal, Subnet, Get, Propose,
 pub trait ExecutableCommand {
     fn require_auth(&self) -> AuthRequirement;
 
-    fn validate(&self, cmd: &mut Command);
+    fn validate(&self, args: &crate::commands::Args, cmd: &mut Command) -> std::result::Result<(), clap::Error>;
 
     fn execute(&self, ctx: DreContext) -> impl std::future::Future<Output = anyhow::Result<()>>;
 }

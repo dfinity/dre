@@ -14,7 +14,9 @@ impl ExecutableCommand for Completions {
         super::AuthRequirement::Anonymous
     }
 
-    fn validate(&self, _cmd: &mut clap::Command) {}
+    fn validate(&self, _args: &crate::commands::Args, _cmd: &mut clap::Command) -> Result<(), clap::Error> {
+        Ok(())
+    }
 
     async fn execute(&self, _ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
         let mut command = super::Args::command();

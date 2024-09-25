@@ -12,7 +12,9 @@ impl ExecutableCommand for TopUp {
         crate::commands::AuthRequirement::Neuron
     }
 
-    fn validate(&self, _cmd: &mut clap::Command) {}
+    fn validate(&self, _args: &crate::commands::Args, _cmd: &mut clap::Command) -> Result<(), clap::Error> {
+        Ok(())
+    }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
         let governance = GovernanceCanisterWrapper::from(ctx.create_ic_agent_canister_client(None)?);

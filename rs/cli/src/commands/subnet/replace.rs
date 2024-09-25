@@ -70,22 +70,21 @@ impl ExecutableCommand for Replace {
         runner.propose_subnet_change(subnet_change_response, ctx.forum_post_link()).await
     }
 
-    fn validate(&self, cmd: &mut clap::Command) {
+    fn validate(&self, _args: &crate::commands::Args, cmd: &mut clap::Command) -> Result<(), clap::Error> {
         if !self.nodes.is_empty() && self.id.is_some() {
-            cmd.error(
+            Err(cmd.error(
                 ErrorKind::ArgumentConflict,
                 "Both subnet id and a list of nodes to replace are provided. Only one of the two is allowed.",
-            )
-            .exit();
+            ))
         } else if self.nodes.is_empty() && self.id.is_none() {
-            cmd.error(
+            Err(cmd.error(
                 ErrorKind::MissingRequiredArgument,
                 "Specify either a subnet id or a list of nodes to replace",
-            )
-            .exit();
+            ))
         } else if !self.nodes.is_empty() && self.motivation.is_none() {
-            cmd.error(ErrorKind::MissingRequiredArgument, "Required argument motivation not found")
-                .exit();
+            Err(cmd.error(ErrorKind::MissingRequiredArgument, "Required argument motivation not found"))
+        } else {
+            Ok(())
         }
     }
 }
