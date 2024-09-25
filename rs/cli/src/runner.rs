@@ -10,7 +10,6 @@ use decentralization::subnets::NodesRemover;
 use decentralization::SubnetChangeResponse;
 use futures::TryFutureExt;
 use futures_util::future::try_join;
-use ic_management_backend::health;
 use ic_management_backend::health::HealthStatusQuerier;
 use ic_management_backend::lazy_git::LazyGit;
 use ic_management_backend::lazy_git::LazyGitImpl;
@@ -53,6 +52,7 @@ pub struct Runner {
     verbose: bool,
     artifact_downloader: Arc<dyn ArtifactDownloader>,
     cordoned_features_fetcher: Arc<dyn CordonedFeatureFetcher>,
+    health_client: Arc<dyn HealthStatusQuerier>,
 }
 
 impl Runner {
@@ -65,6 +65,7 @@ impl Runner {
         ic_repo: RefCell<Option<Arc<dyn LazyGit>>>,
         artifact_downloader: Arc<dyn ArtifactDownloader>,
         cordoned_features_fetcher: Arc<dyn CordonedFeatureFetcher>,
+        health_client: Arc<dyn HealthStatusQuerier>,
     ) -> Self {
         Self {
             ic_admin,
@@ -75,6 +76,7 @@ impl Runner {
             verbose,
             artifact_downloader,
             cordoned_features_fetcher,
+            health_client,
         }
     }
 
@@ -124,8 +126,7 @@ impl Runner {
     }
 
     pub async fn health_of_nodes(&self) -> anyhow::Result<IndexMap<PrincipalId, HealthStatus>> {
-        let health_client = health::HealthClient::new(self.network.clone());
-        health_client.nodes().await
+        self.health_client.nodes().await
     }
 
     pub async fn subnet_create(
@@ -351,11 +352,11 @@ impl Runner {
         let hostos_rollout = HostosRollout::new(
             self.registry.nodes().await?,
             self.registry.subnets().await?,
-            &self.network,
             self.proposal_agent.clone(),
             version,
             only,
             exclude,
+            self.health_client.clone(),
         );
 
         match hostos_rollout.execute(node_group).await? {
@@ -460,8 +461,7 @@ impl Runner {
     }
 
     pub async fn remove_nodes(&self, nodes_remover: NodesRemover) -> anyhow::Result<()> {
-        let health_client = health::HealthClient::new(self.network.clone());
-        let (healths, nodes_with_proposals) = try_join(health_client.nodes(), self.registry.nodes_with_proposals()).await?;
+        let (healths, nodes_with_proposals) = try_join(self.health_client.nodes(), self.registry.nodes_with_proposals()).await?;
         let (mut node_removals, motivation) = nodes_remover.remove_nodes(healths, nodes_with_proposals);
         node_removals.sort_by_key(|nr| nr.reason.message());
 
@@ -513,7 +513,6 @@ impl Runner {
     }
 
     pub async fn network_heal(&self, forum_post_link: Option<String>) -> anyhow::Result<()> {
-        let health_client = health::HealthClient::new(self.network.clone());
         let mut errors = vec![];
 
         // Get the list of subnets, and the list of open proposal for each subnet, if any
@@ -530,7 +529,7 @@ impl Runner {
             .map(|(id, subnet)| (*id, subnet.clone()))
             .collect::<IndexMap<_, _>>();
         let (available_nodes, health_of_nodes) =
-            try_join(self.registry.available_nodes().map_err(anyhow::Error::from), health_client.nodes()).await?;
+            try_join(self.registry.available_nodes().map_err(anyhow::Error::from), self.health_client.nodes()).await?;
 
         let subnets_change_response = NetworkHealRequest::new(subnets_without_proposals)
             .heal_and_optimize(available_nodes, &health_of_nodes)

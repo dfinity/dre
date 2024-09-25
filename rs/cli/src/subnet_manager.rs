@@ -8,10 +8,9 @@ use decentralization::{
     network::{DecentralizedSubnet, Node as DecentralizedNode, SubnetQueryBy},
     SubnetChangeResponse,
 };
-use ic_management_backend::health::{self, HealthStatusQuerier};
+use ic_management_backend::health::HealthStatusQuerier;
 use ic_management_backend::lazy_registry::LazyRegistry;
 use ic_management_types::HealthStatus;
-use ic_management_types::Network;
 use ic_types::PrincipalId;
 use indexmap::IndexMap;
 use log::{info, warn};
@@ -42,16 +41,20 @@ pub struct SubnetManager {
     subnet_target: Option<SubnetTarget>,
     registry_instance: Arc<dyn LazyRegistry>,
     cordoned_features_fetcher: Arc<dyn CordonedFeatureFetcher>,
-    network: Network,
+    health_client: Arc<dyn HealthStatusQuerier>,
 }
 
 impl SubnetManager {
-    pub fn new(registry_instance: Arc<dyn LazyRegistry>, network: Network, cordoned_features_fetcher: Arc<dyn CordonedFeatureFetcher>) -> Self {
+    pub fn new(
+        registry_instance: Arc<dyn LazyRegistry>,
+        cordoned_features_fetcher: Arc<dyn CordonedFeatureFetcher>,
+        health_client: Arc<dyn HealthStatusQuerier>,
+    ) -> Self {
         Self {
             subnet_target: None,
             registry_instance,
-            network,
             cordoned_features_fetcher,
+            health_client,
         }
     }
 
@@ -69,8 +72,7 @@ impl SubnetManager {
     }
 
     async fn unhealthy_nodes(&self, subnet: DecentralizedSubnet) -> anyhow::Result<Vec<(DecentralizedNode, ic_management_types::HealthStatus)>> {
-        let health_client = health::HealthClient::new(self.network.clone());
-        let subnet_health = health_client.subnet(subnet.id).await?;
+        let subnet_health = self.health_client.subnet(subnet.id).await?;
 
         let unhealthy = subnet
             .nodes
@@ -158,8 +160,7 @@ impl SubnetManager {
             to_be_replaced.extend(subnet_unhealthy_without_included);
         }
 
-        let health_client = health::HealthClient::new(self.network.clone());
-        let health_of_nodes = health_client.nodes().await?;
+        let health_of_nodes = self.health_client.nodes().await?;
 
         let change = subnet_change_request.optimize(optimize.unwrap_or(0), &to_be_replaced, &health_of_nodes)?;
 

@@ -2,7 +2,7 @@ use indexmap::IndexMap;
 use std::sync::{Arc, RwLock};
 
 use futures::future::ok;
-use ic_management_backend::{lazy_git::MockLazyGit, lazy_registry::MockLazyRegistry, proposal::MockProposalAgent};
+use ic_management_backend::{health::MockHealthStatusQuerier, lazy_git::MockLazyGit, lazy_registry::MockLazyRegistry, proposal::MockProposalAgent};
 use ic_management_types::{Artifact, ArtifactReleases, Network};
 use itertools::Itertools;
 
@@ -71,6 +71,7 @@ async fn guest_os_elect_version_tests() {
         Arc::new(proposal_agent),
         Arc::new(artifact_downloader),
         Arc::new(MockCordonedFeatureFetcher::new()),
+        Arc::new(MockHealthStatusQuerier::new()),
     );
 
     for (name, expected_title, cmd) in [
