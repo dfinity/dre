@@ -215,7 +215,7 @@ impl DreContext {
     pub async fn subnet_manager(&self) -> SubnetManager {
         let registry = self.registry().await;
 
-        SubnetManager::new(registry, self.network().clone())
+        SubnetManager::new(registry, self.network().clone(), vec![])
     }
 
     pub fn proposals_agent(&self) -> Arc<dyn ProposalAgent> {
@@ -235,6 +235,7 @@ impl DreContext {
             self.verbose_runner,
             self.ic_repo.clone(),
             self.artifact_downloader.clone(),
+            vec![],
         ));
         *self.runner.borrow_mut() = Some(runner.clone());
         Ok(runner)

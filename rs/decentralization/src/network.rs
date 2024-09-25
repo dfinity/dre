@@ -837,6 +837,7 @@ pub trait TopologyManager: SubnetQuerier + AvailableNodesQuerier + Sync {
         exclude_nodes: Vec<String>,
         only_nodes: Vec<String>,
         health_of_nodes: &'a IndexMap<PrincipalId, HealthStatus>,
+        cordoned_features: Vec<NodeFeaturePair>,
     ) -> BoxFuture<'a, Result<SubnetChange, NetworkError>> {
         Box::pin(async move {
             SubnetChangeRequest {
@@ -846,6 +847,7 @@ pub trait TopologyManager: SubnetQuerier + AvailableNodesQuerier + Sync {
             .including_from_available(include_nodes.clone())
             .excluding_from_available(exclude_nodes.clone())
             .including_from_available(only_nodes.clone())
+            .with_cordoned_features(cordoned_features)
             .resize(size, 0, 0, health_of_nodes)
         })
     }
@@ -883,6 +885,12 @@ impl<T: Identifies<Node>> MatchAnyNode<T> for std::slice::Iter<'_, T> {
     }
 }
 
+#[derive(Debug, Clone)]
+pub struct NodeFeaturePair {
+    pub feature: NodeFeature,
+    pub value: String,
+}
+
 #[derive(Default, Clone, Debug)]
 pub struct SubnetChangeRequest {
     subnet: DecentralizedSubnet,
@@ -890,6 +898,7 @@ pub struct SubnetChangeRequest {
     include_nodes: Vec<Node>,
     nodes_to_remove: Vec<Node>,
     nodes_to_keep: Vec<Node>,
+    cordoned_features: Vec<NodeFeaturePair>,
 }
 
 impl SubnetChangeRequest {
@@ -899,6 +908,7 @@ impl SubnetChangeRequest {
         include_nodes: Vec<Node>,
         nodes_to_remove: Vec<Node>,
         nodes_to_keep: Vec<Node>,
+        cordoned_features: Vec<NodeFeaturePair>,
     ) -> Self {
         SubnetChangeRequest {
             subnet,
@@ -906,6 +916,7 @@ impl SubnetChangeRequest {
             include_nodes,
             nodes_to_remove,
             nodes_to_keep,
+            cordoned_features,
         }
     }
 
@@ -955,6 +966,10 @@ impl SubnetChangeRequest {
                 .collect_vec(),
             ..self
         }
+    }
+
+    pub fn with_cordoned_features(self, cordoned_features: Vec<NodeFeaturePair>) -> Self {
+        Self { cordoned_features, ..self }
     }
 
     pub fn subnet(&self) -> DecentralizedSubnet {
@@ -1023,7 +1038,7 @@ impl SubnetChangeRequest {
     ) -> Result<SubnetChange, NetworkError> {
         let old_nodes = self.subnet.nodes.clone();
 
-        let available_nodes = self
+        let all_healthy_nodes = self
             .available_nodes
             .clone()
             .into_iter()
@@ -1031,13 +1046,39 @@ impl SubnetChangeRequest {
             .filter(|n| health_of_nodes.get(&n.id).unwrap_or(&HealthStatus::Unknown) == &HealthStatus::Healthy)
             .collect::<Vec<_>>();
 
+        let all_healthy_nodes_count = all_healthy_nodes.len();
+        let available_nodes = all_healthy_nodes
+            .into_iter()
+            .filter(|n| {
+                for cordoned_feature in &self.cordoned_features {
+                    match n.features.get(&cordoned_feature.feature) {
+                        Some(node_feature) => {
+                            if PartialEq::eq(&node_feature, &cordoned_feature.value) {
+                                // Node contains cordoned feature
+                                // exclude it from available pool
+                                return false;
+                            }
+                        }
+                        None => {}
+                    }
+                }
+                // Node doesn't contain any cordoned features
+                // include it the available pool
+                true
+            })
+            .collect_vec();
+
         info!(
-            "Resizing subnet {} by removing {} (+{} unhealthy) nodes and adding {} nodes. Available {} healthy nodes.",
+            "Resizing subnet {} by removing {} (+{} unhealthy) nodes and adding {} nodes. Available {} healthy nodes{}.",
             self.subnet.id,
             how_many_nodes_to_add,
             how_many_nodes_to_remove,
             how_many_nodes_unhealthy,
-            available_nodes.len()
+            available_nodes.len(),
+            match all_healthy_nodes_count - available_nodes.len() {
+                0 => "".to_string(),
+                cordoned_nodes => format!(" (There are {} cordoned healthy nodes)", cordoned_nodes),
+            },
         );
 
         let resized_subnet = if how_many_nodes_to_remove > 0 {

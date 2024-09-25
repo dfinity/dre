@@ -784,7 +784,7 @@ mod tests {
                 .collect::<Vec<_>>()
         );
 
-        let subnet_change_req = SubnetChangeRequest::new(subnet_initial, nodes_available, Vec::new(), Vec::new(), Vec::new());
+        let subnet_change_req = SubnetChangeRequest::new(subnet_initial, nodes_available, Vec::new(), Vec::new(), Vec::new(), vec![]);
         let subnet_change = subnet_change_req.optimize(2, &[], &health_of_nodes).unwrap();
         for log in subnet_change.after().run_log.iter() {
             println!("{}", log);
@@ -841,7 +841,7 @@ mod tests {
                 .collect::<Vec<_>>()
         );
 
-        let subnet_change_req = SubnetChangeRequest::new(subnet_initial, nodes_available, Vec::new(), Vec::new(), Vec::new());
+        let subnet_change_req = SubnetChangeRequest::new(subnet_initial, nodes_available, Vec::new(), Vec::new(), Vec::new(), vec![]);
         let subnet_change = subnet_change_req.optimize(2, &[], &health_of_nodes).unwrap();
         println!("Replacement run log:");
         for line in subnet_change.after().run_log.iter() {
@@ -899,7 +899,7 @@ mod tests {
                 .collect::<Vec<_>>()
         );
 
-        let subnet_change_req = SubnetChangeRequest::new(subnet_initial, nodes_available, Vec::new(), Vec::new(), Vec::new());
+        let subnet_change_req = SubnetChangeRequest::new(subnet_initial, nodes_available, Vec::new(), Vec::new(), Vec::new(), vec![]);
         let subnet_change = subnet_change_req.optimize(2, &[], &health_of_nodes).unwrap();
 
         println!("Replacement run log:");
@@ -1126,7 +1126,7 @@ mod tests {
             .map(|n| (n.id, HealthStatus::Healthy))
             .collect::<IndexMap<_, _>>();
 
-        let change_initial = SubnetChangeRequest::new(subnet_initial.clone(), nodes_available, Vec::new(), Vec::new(), Vec::new());
+        let change_initial = SubnetChangeRequest::new(subnet_initial.clone(), nodes_available, Vec::new(), Vec::new(), Vec::new(), vec![]);
 
         let with_keeping_features = change_initial
             .clone()
