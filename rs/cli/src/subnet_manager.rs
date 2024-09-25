@@ -4,7 +4,6 @@ use std::sync::Arc;
 
 use anyhow::anyhow;
 use anyhow::Ok;
-use decentralization::network::NodeFeaturePair;
 use decentralization::{
     network::{DecentralizedSubnet, Node as DecentralizedNode, SubnetQueryBy},
     SubnetChangeResponse,
@@ -16,6 +15,8 @@ use ic_management_types::Network;
 use ic_types::PrincipalId;
 use indexmap::IndexMap;
 use log::{info, warn};
+
+use crate::cordoned_feature_fetcher::CordonedFeatureFetcher;
 
 #[derive(Clone)]
 pub enum SubnetTarget {
@@ -40,17 +41,17 @@ impl fmt::Display for SubnetManagerError {
 pub struct SubnetManager {
     subnet_target: Option<SubnetTarget>,
     registry_instance: Arc<dyn LazyRegistry>,
-    cordoned_features: Vec<NodeFeaturePair>,
+    cordoned_features_fetcher: Arc<dyn CordonedFeatureFetcher>,
     network: Network,
 }
 
 impl SubnetManager {
-    pub fn new(registry_instance: Arc<dyn LazyRegistry>, network: Network, cordoned_features: Vec<NodeFeaturePair>) -> Self {
+    pub fn new(registry_instance: Arc<dyn LazyRegistry>, network: Network, cordoned_features_fetcher: Arc<dyn CordonedFeatureFetcher>) -> Self {
         Self {
             subnet_target: None,
             registry_instance,
             network,
-            cordoned_features,
+            cordoned_features_fetcher,
         }
     }
 
@@ -138,7 +139,7 @@ impl SubnetManager {
             .excluding_from_available(exclude.clone().unwrap_or_default())
             .including_from_available(only.clone())
             .including_from_available(include.clone().unwrap_or_default())
-            .with_cordoned_features(self.cordoned_features.clone());
+            .with_cordoned_features(self.cordoned_features_fetcher.fetch().await?);
 
         let mut node_ids_unhealthy = HashSet::new();
         if heal {
@@ -200,7 +201,7 @@ impl SubnetManager {
             .excluding_from_available(request.exclude.clone().unwrap_or_default())
             .including_from_available(request.only.clone().unwrap_or_default())
             .including_from_available(request.include.clone().unwrap_or_default())
-            .with_cordoned_features(self.cordoned_features.clone())
+            .with_cordoned_features(self.cordoned_features_fetcher.fetch().await?)
             .resize(request.add, request.remove, 0, health_of_nodes)?;
 
         for (n, _) in change.removed().iter() {

@@ -124,3 +124,36 @@ impl CordonedFeatureFetcher for CordonedFeatureFetcherImpl {
         })
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn valid_parsing() {
+        let contents = br#"
+features:
+    - feature: data_center
+      value: mu1
+    - feature: node_provider
+      value: some-np
+    - feature: data_center_owner
+      value: some-dco
+    - feature: city
+      value: some-city
+    - feature: city
+      value: another-city
+    - feature: country
+      value: some-country
+    - feature: continent
+      value: some-continent"#;
+
+        let fetcher = CordonedFeatureFetcherImpl::new(true, None).unwrap();
+
+        let maybe_parsed = fetcher.parse(contents);
+        assert!(maybe_parsed.is_ok());
+        let parsed = maybe_parsed.unwrap();
+
+        assert_eq!(parsed.len(), 7)
+    }
+}

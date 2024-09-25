@@ -10,6 +10,7 @@ use crate::{
     artifact_downloader::MockArtifactDownloader,
     auth::Neuron,
     commands::ExecutableCommand,
+    cordoned_feature_fetcher::MockCordonedFeatureFetcher,
     ctx::tests::get_mocked_ctx,
     ic_admin::{MockIcAdmin, ProposeCommand, ProposeOptions},
     runner::{format_regular_version_upgrade_summary, format_security_hotfix},
@@ -69,6 +70,7 @@ async fn guest_os_elect_version_tests() {
         Arc::new(git),
         Arc::new(proposal_agent),
         Arc::new(artifact_downloader),
+        Arc::new(MockCordonedFeatureFetcher::new()),
     );
 
     for (name, expected_title, cmd) in [

@@ -3,7 +3,6 @@ use std::sync::Arc;
 
 use decentralization::network::DecentralizedSubnet;
 use decentralization::network::NetworkHealRequest;
-use decentralization::network::NodeFeaturePair;
 use decentralization::network::SubnetChange;
 use decentralization::network::SubnetQueryBy;
 use decentralization::network::{generate_added_node_description, generate_removed_nodes_description};
@@ -38,6 +37,7 @@ use tabled::builder::Builder;
 use tabled::settings::Style;
 
 use crate::artifact_downloader::ArtifactDownloader;
+use crate::cordoned_feature_fetcher::CordonedFeatureFetcher;
 use crate::ic_admin::{self, IcAdmin};
 use crate::ic_admin::{ProposeCommand, ProposeOptions};
 use crate::operations::hostos_rollout::HostosRollout;
@@ -52,7 +52,7 @@ pub struct Runner {
     proposal_agent: Arc<dyn ProposalAgent>,
     verbose: bool,
     artifact_downloader: Arc<dyn ArtifactDownloader>,
-    cordoned_features: Vec<NodeFeaturePair>,
+    cordoned_features_fetcher: Arc<dyn CordonedFeatureFetcher>,
 }
 
 impl Runner {
@@ -64,7 +64,7 @@ impl Runner {
         verbose: bool,
         ic_repo: RefCell<Option<Arc<dyn LazyGit>>>,
         artifact_downloader: Arc<dyn ArtifactDownloader>,
-        cordoned_features: Vec<NodeFeaturePair>,
+        cordoned_features_fetcher: Arc<dyn CordonedFeatureFetcher>,
     ) -> Self {
         Self {
             ic_admin,
@@ -74,7 +74,7 @@ impl Runner {
             proposal_agent: agent,
             verbose,
             artifact_downloader,
-            cordoned_features,
+            cordoned_features_fetcher,
         }
     }
 
@@ -153,7 +153,7 @@ impl Runner {
                 request.exclude.clone().unwrap_or_default(),
                 request.only.clone().unwrap_or_default(),
                 &health_of_nodes,
-                self.cordoned_features.clone(),
+                self.cordoned_features_fetcher.fetch().await?,
             )
             .await?;
         let subnet_creation_data = SubnetChangeResponse::from(&subnet_creation_data).with_health_of_nodes(health_of_nodes.clone());
@@ -605,7 +605,7 @@ impl Runner {
             .modify_subnet_nodes(SubnetQueryBy::SubnetId(*subnet))
             .await
             .map_err(|e| anyhow::anyhow!(e))?
-            .with_cordoned_features(self.cordoned_features.clone());
+            .with_cordoned_features(self.cordoned_features_fetcher.fetch().await?);
 
         let change_request = match keep_nodes {
             Some(n) => change_request.keeping_from_used(n),

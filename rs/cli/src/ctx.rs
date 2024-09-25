@@ -223,7 +223,7 @@ impl DreContext {
         Ok(SubnetManager::new(
             registry,
             self.network().clone(),
-            self.cordoned_features_fetcher.fetch().await?,
+            self.cordoned_features_fetcher.clone(),
         ))
     }
 
@@ -244,7 +244,7 @@ impl DreContext {
             self.verbose_runner,
             self.ic_repo.clone(),
             self.artifact_downloader.clone(),
-            self.cordoned_features_fetcher.fetch().await?,
+            self.cordoned_features_fetcher.clone(),
         ));
         *self.runner.borrow_mut() = Some(runner.clone());
         Ok(runner)
@@ -263,7 +263,7 @@ pub mod tests {
     use ic_management_backend::{lazy_git::LazyGit, lazy_registry::LazyRegistry, proposal::ProposalAgent};
     use ic_management_types::Network;
 
-    use crate::{artifact_downloader::ArtifactDownloader, auth::Neuron, ic_admin::IcAdmin};
+    use crate::{artifact_downloader::ArtifactDownloader, auth::Neuron, cordoned_feature_fetcher::CordonedFeatureFetcher, ic_admin::IcAdmin};
 
     use super::DreContext;
 
@@ -275,6 +275,7 @@ pub mod tests {
         git: Arc<dyn LazyGit>,
         proposal_agent: Arc<dyn ProposalAgent>,
         artifact_downloader: Arc<dyn ArtifactDownloader>,
+        cordoned_features_fetcher: Arc<dyn CordonedFeatureFetcher>,
     ) -> DreContext {
         DreContext {
             network,
@@ -291,6 +292,7 @@ pub mod tests {
             neuron,
             proceed_without_confirmation: true,
             version: crate::commands::IcAdminVersion::Strict("Shouldn't reach this because of mock".to_string()),
+            cordoned_features_fetcher,
         }
     }
 }
