@@ -149,7 +149,11 @@ Unhealthy or degraded nodes are prioritized for removal, and by default are auto
 
 #### **Business Rule Enforcement**:
 
-The code enforces strict business rules to ensure that no single entity or feature becomes overly dominant. This includes maintaining a minimum number of DFINITY-owned nodes in each subnet and ensuring geographic diversity.
+The code enforces strict business rules to prevent any single entity or feature from becoming overly dominant. This includes maintaining a minimum number of DFINITY-owned nodes in each subnet, ensuring geographic diversity, and adhering to the [Target Topology](https://dashboard.internetcomputer.org/proposal/132136).
+
+How does DRE tooling handle these business rule requirements? If [any business rule is not satisfied](https://github.com/dfinity/dre/blob/f985daa2285749f7959b521b2dcd66dc061e2206/rs/decentralization/src/network.rs#L338-L353), the code [adds a penalty](https://github.com/dfinity/dre/blob/f985daa2285749f7959b521b2dcd66dc061e2206/rs/decentralization/src/network.rs#L630) to the candidate node. Subsequently, when [comparing all candidate nodes](https://github.com/dfinity/dre/blob/f985daa2285749f7959b521b2dcd66dc061e2206/rs/decentralization/src/network.rs#L521-L527), the code prioritizes those with the lowest penalties and selects candidates that also improve on other dimensions.
+
+Thus, if any candidate nodes meet the business rule requirements, they will be selected. If no candidates improve the business rules, the code opts for solutions with the lowest penalties, meaning the code picks those that are closest to the Target IC Topology and other business requirements.
 
 #### **Network Healing and Resilience**:
 

@@ -5,9 +5,10 @@ import { Link, useParams } from 'react-router-dom';
 import { getDateRange } from '../utils/utils';
 import FilterBar, { PeriodFilter } from './FilterBar';
 import { NodeMetadata } from '../../../declarations/trustworthy-node-metrics/trustworthy-node-metrics.did';
-import { paperStyle } from '../Styles';
 import InfoFormatter from './NodeInfo';
 import { NodeProviderChart } from './NodeProviderChart';
+import { NodeProviderRewardsChart } from './NodeProviderRewards';
+import { paperStyle } from '../Styles';
 
 export interface NodeProviderPageProps {
     nodeMetadata: NodeMetadata[]
@@ -47,7 +48,7 @@ export const NodeProviderPage: React.FC<NodeProviderPageProps> = ({ nodeMetadata
                 <InfoFormatter name={"Provider ID"} value={provider ? provider : "Anonym"} />
                 <InfoFormatter name={"Provider Name"} value={providerName ? providerName : "Anonym"} />
                 </Grid>
-                <Grid item xs={12} md={6}>
+                <Grid item xs={12}>
                     <Typography gutterBottom variant="subtitle1" component="div">
                         Node Machines
                     </Typography>
@@ -57,9 +58,16 @@ export const NodeProviderPage: React.FC<NodeProviderPageProps> = ({ nodeMetadata
                             {map.node_id.toText()}
                         </Link>
                         </Typography>
-                    ))}
+                    ))} 
                     
                 </Grid>
+                <Grid item xs={12}>
+                    <Typography variant="h6" component="div" >
+                        Last Provider Rewards
+                    </Typography>
+                    <Divider/>
+                </Grid>
+                <NodeProviderRewardsChart provider={provider} />
                 <Grid item xs={12}>
                 <Typography variant="h6" component="div">
                     Daily Failure Rate

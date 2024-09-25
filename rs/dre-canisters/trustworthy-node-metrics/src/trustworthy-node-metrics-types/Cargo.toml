@@ -23,3 +23,4 @@ dfn_core = { workspace = true }
 ic-management-canister-types = { workspace = true }
 ic-stable-structures = { workspace = true }
 ic-protobuf = { workspace = true }
+ic-nns-governance-api = { workspace = true }

@@ -329,14 +329,6 @@ impl NodeFeature {
     }
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
-pub struct MinNakamotoCoefficients {
-    pub coefficients: BTreeMap<NodeFeature, f64>,
-    pub average: f64,
-}
-
-impl Eq for MinNakamotoCoefficients {}
-
 #[derive(Clone, Serialize, Debug, Deserialize)]
 pub struct TopologyProposal {
     pub id: u64,

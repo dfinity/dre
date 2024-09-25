@@ -145,7 +145,6 @@ impl Runner {
             .registry
             .create_subnet(
                 request.size,
-                request.min_nakamoto_coefficients.clone(),
                 request.include.clone().unwrap_or_default(),
                 request.exclude.clone().unwrap_or_default(),
                 request.only.clone().unwrap_or_default(),

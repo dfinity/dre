@@ -44,6 +44,9 @@ export const NodePage: React.FC<NodeProviderPageProps> = ({ nodeProvidersMapping
                     </Grid>
                     <Grid item xs={12} md={4}>
                         <InfoFormatter name={"Node ID"} value={node} />
+                        <InfoFormatter name={"Node Type"} value={mapping.node_metadata_stored.node_type} />
+                        <InfoFormatter name={"Datacenter ID"} value={mapping.node_metadata_stored.dc_id} />
+                        <InfoFormatter name={"Region"} value={mapping.node_metadata_stored.region} />
                         <Typography gutterBottom variant="subtitle1" component="div">
                             Node Provider ID
                         </Typography>
