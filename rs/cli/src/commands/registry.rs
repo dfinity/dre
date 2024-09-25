@@ -28,14 +28,16 @@ use crate::ctx::DreContext;
 use super::{AuthRequirement, ExecutableCommand};
 
 #[derive(Args, Debug)]
+#[clap(after_help = r#"EXAMPLES:
+    dre registry                                                         # Dump all contents to stdout
+    dre registry --filter rewards_correct!=true              # Entries for which rewardable_nodes != total_up_nodes
+    dre registry --filter "node_type=type1"                              # Entries where node_type == "type1"
+    dre registry -o registry.json --filter "subnet_id startswith tdb26"  # Write to file and filter by subnet_id
+    dre registry -o registry.json --filter "node_id contains h5zep"      # Write to file and filter by node_id"#)]
 pub struct Registry {
     /// Output file (default is stdout)
     #[clap(short = 'o', long)]
     pub output: Option<PathBuf>,
-
-    /// Output only information related to the node operator records with incorrect rewards
-    #[clap(long)]
-    pub incorrect_rewards: bool,
 
     /// Filters in `key=value` format
     #[clap(long, short, alias = "filter")]
@@ -81,26 +83,22 @@ impl ExecutableCommand for Registry {
     async fn execute(&self, ctx: DreContext) -> anyhow::Result<()> {
         let writer: Box<dyn std::io::Write> = match &self.output {
             Some(path) => {
-                let path = path.with_extension("json").canonicalize()?;
-                info!("Writing to file: {:?}", path);
-                Box::new(std::io::BufWriter::new(fs_err::File::create(path)?))
+                let path = path.with_extension("json");
+                let file = fs_err::File::create(path)?;
+                info!("Writing to file: {:?}", file.path().canonicalize()?);
+                Box::new(std::io::BufWriter::new(file))
             }
             None => Box::new(std::io::stdout()),
         };
 
         let registry = self.get_registry(ctx).await?;
 
-        if self.incorrect_rewards {
-            let node_operators = registry.node_operators.iter().filter(|rec| !rec.rewards_correct).collect_vec();
-            serde_json::to_writer_pretty(writer, &node_operators)?;
-        } else {
-            let mut serde_value = serde_json::to_value(registry)?;
-            self.filters.iter().for_each(|filter| {
-                filter_json_value(&mut serde_value, &filter.key, &filter.value, &filter.comparison);
-            });
+        let mut serde_value = serde_json::to_value(registry)?;
+        self.filters.iter().for_each(|filter| {
+            filter_json_value(&mut serde_value, &filter.key, &filter.value, &filter.comparison);
+        });
 
-            serde_json::to_writer_pretty(writer, &serde_value)?;
-        }
+        serde_json::to_writer_pretty(writer, &serde_value)?;
 
         Ok(())
     }
@@ -121,7 +119,7 @@ impl Registry {
 
         let (subnets, nodes) = get_subnets_and_nodes(&local_registry, &node_operators, ctx.network()).await?;
 
-        let unassigned_nodes_config = get_unassigned_nodes(&local_registry)?;
+        let unassigned_nodes_config = local_registry.get_unassigned_nodes()?;
 
         // Calculate number of rewardable nodes for node operators
         for node_operator in node_operators.values_mut() {
@@ -336,10 +334,6 @@ async fn _get_nodes(
         })
         .collect::<Vec<_>>();
     Ok(nodes)
-}
-
-fn get_unassigned_nodes(local_registry: &Arc<dyn LazyRegistry>) -> anyhow::Result<Option<UnassignedNodesConfigRecord>> {
-    local_registry.get_unassigned_nodes()
 }
 
 fn get_node_rewards_table(local_registry: &Arc<dyn LazyRegistry>, network: &Network) -> NodeRewardsTableFlattened {
