@@ -116,7 +116,7 @@ fn compute_reward_multiplier(daily_metrics: &[DailyNodeMetrics]) -> RewardMultip
 
     let (operations, rewards_reduction) = rewards_reduction_percent(&overall_failure_rate);
     computation_logger.add_executed(operations);
-    let rewards_percent = computation_logger.execute("Total Rewards", Operation::Subtract(dec!(1), rewards_reduction));
+    let rewards_percent = computation_logger.execute("Reward Multiplier", Operation::Subtract(dec!(1), rewards_reduction));
 
     RewardMultiplierResult {
         // Overflow impossible
