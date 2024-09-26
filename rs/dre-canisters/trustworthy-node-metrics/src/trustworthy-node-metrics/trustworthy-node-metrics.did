@@ -29,8 +29,10 @@ type DailyNodeMetrics = record {
   failure_rate: float64;
 };
 
-type RewardsStats = record {
-
+type OperationExecutorLog = record {
+    reason: text;
+    operation: text;
+    result: text;
 };
 
 type RewardMultiplierResult = record {
@@ -40,7 +42,7 @@ type RewardMultiplierResult = record {
   blocks_proposed: nat64;
   blocks_total: nat64;
   failure_rate: float64;
-  computation_log: text;
+  computation_log: vec OperationExecutorLog;
 };
 
 type NodeRewardRate = record {
