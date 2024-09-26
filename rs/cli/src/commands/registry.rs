@@ -96,9 +96,7 @@ impl ExecutableCommand for Registry {
         Ok(())
     }
 
-    fn validate(&self, _args: &crate::commands::Args, _cmd: &mut clap::Command) -> Result<(), clap::Error> {
-        Ok(())
-    }
+    fn validate(&self, _args: &crate::commands::Args, _cmd: &mut clap::Command) {}
 }
 
 impl Registry {

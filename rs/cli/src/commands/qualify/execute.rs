@@ -44,14 +44,13 @@ impl ExecutableCommand for Execute {
         crate::commands::AuthRequirement::Neuron
     }
 
-    fn validate(&self, _args: &crate::commands::Args, cmd: &mut clap::Command) -> Result<(), clap::Error> {
+    fn validate(&self, _args: &crate::commands::Args, cmd: &mut clap::Command) {
         if self.artifacts.is_some() && self.grafana_url.is_none() {
-            Err(cmd.error(
+            cmd.error(
                 clap::error::ErrorKind::InvalidValue,
                 "`grafana_url` is mandatory if `artifacts` are to be exported",
-            ))
-        } else {
-            Ok(())
+            )
+            .exit()
         }
     }
 

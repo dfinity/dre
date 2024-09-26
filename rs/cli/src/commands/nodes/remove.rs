@@ -44,11 +44,10 @@ impl ExecutableCommand for Remove {
             .await
     }
 
-    fn validate(&self, _args: &crate::commands::Args, cmd: &mut clap::Command) -> Result<(), clap::Error> {
+    fn validate(&self, _args: &crate::commands::Args, cmd: &mut clap::Command) {
         if self.motivation.is_none() && !self.extra_nodes_filter.is_empty() {
-            Err(cmd.error(ErrorKind::MissingRequiredArgument, "Required argument motivation not found"))
-        } else {
-            Ok(())
+            cmd.error(ErrorKind::MissingRequiredArgument, "Required argument motivation not found")
+                .exit()
         }
     }
 }

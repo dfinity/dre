@@ -22,7 +22,7 @@ impl ExecutableCommand for Neuron {
         self.subcommand.require_auth()
     }
 
-    fn validate(&self, args: &crate::commands::Args, cmd: &mut Command) -> Result<(), clap::Error> {
+    fn validate(&self, args: &crate::commands::Args, cmd: &mut Command) {
         self.subcommand.validate(args, cmd)
     }
 

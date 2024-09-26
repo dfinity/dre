@@ -22,7 +22,7 @@ impl ExecutableCommand for Version {
         self.subcommand.execute(ctx).await
     }
 
-    fn validate(&self, args: &crate::commands::Args, cmd: &mut clap::Command) -> Result<(), clap::Error> {
+    fn validate(&self, args: &crate::commands::Args, cmd: &mut clap::Command) {
         self.subcommand.validate(args, cmd)
     }
 }

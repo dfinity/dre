@@ -144,11 +144,10 @@ impl ExecutableCommand for NodeMetrics {
         Ok(())
     }
 
-    fn validate(&self, _args: &crate::commands::Args, cmd: &mut clap::Command) -> Result<(), clap::Error> {
+    fn validate(&self, _args: &crate::commands::Args, cmd: &mut clap::Command) {
         if self.trustworthy && self.wallet.is_none() {
-            Err(cmd.error(ErrorKind::MissingRequiredArgument, "Wallet is required for fetching trustworthy metrics."))
-        } else {
-            Ok(())
+            cmd.error(ErrorKind::MissingRequiredArgument, "Wallet is required for fetching trustworthy metrics.")
+                .exit();
         }
     }
 }

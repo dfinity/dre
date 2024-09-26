@@ -69,14 +69,13 @@ impl ExecutableCommand for Create {
             .await
     }
 
-    fn validate(&self, _args: &crate::commands::Args, cmd: &mut clap::Command) -> Result<(), clap::Error> {
+    fn validate(&self, _args: &crate::commands::Args, cmd: &mut clap::Command) {
         if self.motivation.is_none() && !self.help_other_args {
-            Err(cmd.error(
+            cmd.error(
                 ErrorKind::MissingRequiredArgument,
                 "Motivation is required if `--help-other-args` is not provided",
-            ))
-        } else {
-            Ok(())
+            )
+            .exit()
         }
     }
 }

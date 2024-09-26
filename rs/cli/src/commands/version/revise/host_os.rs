@@ -40,13 +40,13 @@ impl ExecutableCommand for HostOs {
             .await
     }
 
-    fn validate(&self, args: &crate::commands::Args, cmd: &mut clap::Command) -> Result<(), clap::Error> {
-        match args.forum_post_link {
-            Some(_) => Ok(()),
-            None => Err(cmd.error(
+    fn validate(&self, args: &crate::commands::Args, cmd: &mut clap::Command) {
+        if args.forum_post_link.is_none() {
+            cmd.error(
                 clap::error::ErrorKind::MissingRequiredArgument,
                 "Forum post link is required for this command",
-            )),
+            )
+            .exit()
         }
     }
 }
