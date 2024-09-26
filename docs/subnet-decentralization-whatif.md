@@ -53,13 +53,13 @@ Please note that the number of nodes in the subnet should typically stay unchang
 1.  **Adding and Removing Nodes from a Subnet**: To simulate the effect of adding nodes `node4` and `node5` and removing nodes `node6` and `node7` from subnet `subnet123`, use the following command:
 
     ```bash
-    subnet whatif-decentralization subnet123 --add-nodes node4 node5 --remove-nodes node6 node7
+    dre subnet whatif-decentralization subnet123 --add-nodes node4 node5 --remove-nodes node6 node7
     ```
 
 2.  **Specifying Initial Nodes**: If you want to override the current nodes in the subnet with a custom set for the analysis:
 
     ```bash
-    subnet whatif-decentralization subnet123 --subnet-nodes-initial node1 node2 node3 node4 node5 --add-nodes node6 --remove-nodes node2
+    dre subnet whatif-decentralization subnet123 --subnet-nodes-initial node1 node2 node3 node4 node5 --add-nodes node6 --remove-nodes node2
     ```
 
 #### How It Works
