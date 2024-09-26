@@ -219,7 +219,7 @@ pub struct RewardMultiplierResult {
     pub blocks_proposed: u64,
     pub blocks_total: u64,
     pub failure_rate: f64,
-    pub computation_log: String,
+    pub computation_log: Vec<OperationExecutorLog>,
 }
 
 #[derive(Debug, Deserialize, CandidType)]
@@ -250,4 +250,11 @@ pub struct NodeProviderMapping {
 pub struct NodeMetadata {
     pub node_id: Principal,
     pub node_metadata_stored: NodeMetadataStoredV2,
+}
+
+#[derive(Debug, Deserialize, CandidType)]
+pub struct OperationExecutorLog {
+    pub reason: String,
+    pub operation: String,
+    pub result: String,
 }

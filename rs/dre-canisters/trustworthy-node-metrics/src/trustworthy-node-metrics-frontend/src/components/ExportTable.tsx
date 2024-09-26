@@ -16,7 +16,7 @@ interface ExportCustomToolbarProps {
 
 export const ExportTable: React.FC<ExportCustomToolbarProps> = ({ colDef, rows }) => {
   return (
-    <div style={{ height: 1000, width: '100%' }}>
+    <div style={{ height: 500, width: '100%' }}>
       <DataGrid
         rows={rows} 
         columns={colDef} 
