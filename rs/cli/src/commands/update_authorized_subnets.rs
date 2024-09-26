@@ -37,14 +37,15 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
         super::AuthRequirement::Neuron
     }
 
-    fn validate(&self, cmd: &mut clap::Command) {
+    fn validate(&self, _args: &crate::commands::Args, cmd: &mut clap::Command) {
         if let Some(path) = &self.path {
             if !path.exists() {
-                cmd.error(ErrorKind::InvalidValue, format!("Path `{}` not found", path.display())).exit();
+                cmd.error(ErrorKind::InvalidValue, format!("Path `{}` not found", path.display())).exit()
             }
 
             if !path.is_file() {
-                cmd.error(ErrorKind::InvalidValue, format!("Path `{}` found, but is not a file", path.display()));
+                cmd.error(ErrorKind::InvalidValue, format!("Path `{}` found, but is not a file", path.display()))
+                    .exit()
             }
         }
     }

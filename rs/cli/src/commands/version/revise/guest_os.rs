@@ -34,11 +34,19 @@ impl ExecutableCommand for GuestOs {
                 &self.version,
                 &self.release_tag,
                 self.ignore_missing_urls,
-                ctx.forum_post_link().expect("Forum post link is required for this proposal"),
+                ctx.forum_post_link().unwrap(), // checked in validate()
                 self.security_fix,
             )
             .await
     }
 
-    fn validate(&self, _cmd: &mut clap::Command) {}
+    fn validate(&self, args: &crate::commands::Args, cmd: &mut clap::Command) {
+        if args.forum_post_link.is_none() {
+            cmd.error(
+                clap::error::ErrorKind::MissingRequiredArgument,
+                "Forum post link is required for this command",
+            )
+            .exit()
+        }
+    }
 }
