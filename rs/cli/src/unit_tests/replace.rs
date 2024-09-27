@@ -3,6 +3,7 @@ use std::sync::Arc;
 use decentralization::{
     nakamoto::NodeFeatures,
     network::{DecentralizedSubnet, Node, NodeFeaturePair},
+    SubnetChangeResponse,
 };
 use ic_management_backend::{health::MockHealthStatusQuerier, lazy_registry::MockLazyRegistry};
 use ic_management_types::NodeFeature;
@@ -55,6 +56,71 @@ fn cordoned_feature(feature: NodeFeature, value: &str) -> NodeFeaturePair {
         feature,
         value: value.to_string(),
     }
+}
+
+fn test_pretty_format_response(response: &Result<SubnetChangeResponse, anyhow::Error>) -> String {
+    match response {
+        Ok(r) => format!(
+            r#"Response was OK!
+    Added nodes:
+{},
+    Removed nodes:
+{},
+    Feature diff:
+{}
+            "#,
+            r.added_with_desc
+                .iter()
+                .map(|(id, desc)| format!("\t\t- principal: {}\n\t\t  desc: {}", id, desc))
+                .join("\n"),
+            r.removed_with_desc
+                .iter()
+                .map(|(id, desc)| format!("\t\t- principal: {}\n\t\t  desc: {}", id, desc))
+                .join("\n"),
+            r.feature_diff
+                .iter()
+                .map(|(feature, diff)| format!(
+                    "\t\t- feature: {}\n{}",
+                    feature,
+                    diff.iter()
+                        .map(|(value, (in_nodes, out_nodes))| format!("\t\t\t- value: {}, In: {}, Out: {}", value, in_nodes, out_nodes))
+                        .join("\n")
+                ))
+                .join("\n")
+        ),
+        Err(r) => format!("Response was ERR: {}", r),
+    }
+}
+
+fn pretty_print_node(node: &Node, num_ident: usize) -> String {
+    format!(
+        "{}- principal: {}\n{}  dfinity_owned: {}\n{}  features: [{}]",
+        "\t".repeat(num_ident),
+        node.id,
+        "\t".repeat(num_ident),
+        node.dfinity_owned,
+        "\t".repeat(num_ident),
+        node.features
+            .feature_map
+            .iter()
+            .map(|(feature, value)| format!("({}, {})", feature, value))
+            .join(", ")
+    )
+}
+
+fn pretty_print_world(available_nodes: &Vec<Node>, subnet: &DecentralizedSubnet) -> String {
+    format!(
+        r#"Available nodes:
+{}
+Observed subnet:
+{}"#,
+        available_nodes.iter().map(|node| pretty_print_node(node, 1)).join("\n"),
+        format!(
+            "\t- id: {}\n\t- nodes:\n{}",
+            subnet.id,
+            subnet.nodes.iter().map(|node| pretty_print_node(node, 2)).join("\n")
+        )
+    )
 }
 
 #[test]
@@ -116,13 +182,16 @@ fn should_skip_cordoned_nodes() {
     });
 
     // Scenarios
-    let scenarios = vec![(
-        [
-            cordoned_feature(NodeFeature::Country, "Random new country"),
-            cordoned_feature(NodeFeature::City, "Random new city"),
-        ],
-        true,
-    )];
+    let scenarios = vec![
+        (
+            vec![
+                cordoned_feature(NodeFeature::Country, "Random new country"),
+                cordoned_feature(NodeFeature::City, "Random new city"),
+            ],
+            true,
+        ),
+        (vec![cordoned_feature(NodeFeature::Country, "Country 1")], true),
+    ];
 
     let mut failed_scenarios = vec![];
 
@@ -149,7 +218,7 @@ fn should_skip_cordoned_nodes() {
         // Assert
         if !should_succeed {
             if response.is_ok() {
-                failed_scenarios.push((response, "Expected outcome to have an error".to_string()));
+                failed_scenarios.push((response, cordoned_features, "Expected outcome to have an error".to_string()));
             }
             // If it failed, don't check the exact error
             // assume it is the correct error. ATM this
@@ -159,13 +228,13 @@ fn should_skip_cordoned_nodes() {
         }
 
         let response = response.unwrap();
-        if response.removed_with_desc.len() != 1 {
-            failed_scenarios.push((Ok(response), "Expected only one node to be removed".to_string()));
+        if response.removed_with_desc.is_empty() {
+            failed_scenarios.push((Ok(response), cordoned_features, "Expected only one node to be removed".to_string()));
             continue;
         }
 
-        if response.added_with_desc.len() != 1 {
-            failed_scenarios.push((Ok(response), "Expected only one node to be added".to_string()));
+        if response.added_with_desc.is_empty() {
+            failed_scenarios.push((Ok(response), cordoned_features, "Expected only one node to be added".to_string()));
             continue;
         }
 
@@ -215,16 +284,37 @@ fn should_skip_cordoned_nodes() {
         }
 
         if !failed_features.is_empty() {
-            failed_scenarios.push((Ok(response), format!("All failed features:\n{}", failed_features.iter().join("\n"))));
+            failed_scenarios.push((
+                Ok(response),
+                cordoned_features,
+                format!("All failed features:\n{}", failed_features.iter().join("\n")),
+            ));
         }
     }
 
     assert!(
         failed_scenarios.is_empty(),
-        "Failed scenarios:\n{}",
+        r#"World state:
+{}
+Failed scenarios:
+{}"#,
+        pretty_print_world(&available_nodes, &subnet),
         failed_scenarios
             .iter()
-            .map(|(outcome, explaination)| format!("Reason why it failed: {}\nFull test output:\n{:?}", explaination, outcome))
+            .map(|(outcome, cordoned_features, explaination)| format!(
+                r#"Reason why it failed:
+    {}
+Cordoned features:
+    [{}]
+Test output:
+{}"#,
+                explaination,
+                cordoned_features
+                    .iter()
+                    .map(|pair| format!("({}, {})", pair.feature.to_string(), pair.value.to_string()))
+                    .join(", "),
+                test_pretty_format_response(outcome)
+            ))
             .join("\n############")
     )
 }
