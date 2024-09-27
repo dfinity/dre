@@ -184,13 +184,39 @@ fn should_skip_cordoned_nodes() {
     // Scenarios
     let scenarios = vec![
         (
+            // No available nodes contain cordoned features.
+            // All of them should be suitable for replacements.
             vec![
                 cordoned_feature(NodeFeature::Country, "Random new country"),
                 cordoned_feature(NodeFeature::City, "Random new city"),
             ],
             true,
         ),
-        (vec![cordoned_feature(NodeFeature::Country, "Country 1")], true),
+        (
+            // First two nodes from available pool must not
+            // be selected for replacement. Also node 5 could
+            // be replaced if it increases decentralization.
+            vec![cordoned_feature(NodeFeature::Country, "Country 1")],
+            true,
+        ),
+        (
+            // Second and third nodes from available pool must
+            // not be selected for replacement. Also node with
+            // id 6 could be replaced if it increases decentralization
+            vec![
+                cordoned_feature(NodeFeature::City, "City 2"),
+                cordoned_feature(NodeFeature::City, "City 3"),
+            ],
+            true,
+        ),
+        (
+            // All available nodes are unavailable
+            vec![
+                cordoned_feature(NodeFeature::Country, "Country 1"),
+                cordoned_feature(NodeFeature::Country, "Country 2"),
+            ],
+            false,
+        ),
     ];
 
     let mut failed_scenarios = vec![];
