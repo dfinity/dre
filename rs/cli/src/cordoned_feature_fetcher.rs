@@ -57,7 +57,8 @@ impl CordonedFeatureFetcherImpl {
         let valid_yaml = serde_yaml::from_slice::<serde_yaml::Value>(contents)?;
 
         let features = match valid_yaml.get("features") {
-            Some(serde_yaml::Value::Sequence(features)) => features,
+            Some(serde_yaml::Value::Sequence(features)) => features.clone(),
+            Some(serde_yaml::Value::Null) => vec![],
             n => anyhow::bail!(
                 "Failed to parse contents. Expected to have top-level key `features` with an array of node features. Got: \n{:?}",
                 n
@@ -155,5 +156,19 @@ features:
         let parsed = maybe_parsed.unwrap();
 
         assert_eq!(parsed.len(), 7)
+    }
+
+    #[test]
+    fn valid_empty_file() {
+        let contents = br#"
+features:"#;
+
+        let fetcher = CordonedFeatureFetcherImpl::new(true, None).unwrap();
+
+        let maybe_parsed = fetcher.parse(contents);
+        assert!(maybe_parsed.is_ok());
+        let parsed = maybe_parsed.unwrap();
+
+        assert_eq!(parsed.len(), 0)
     }
 }
