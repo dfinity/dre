@@ -411,7 +411,7 @@ impl RegistryState {
                             .expect("provider missing from operator record"),
                         allowance: or.node_allowance,
                         datacenter: data_center_records.get(&or.dc_id).map(|dc| {
-                            let (continent, country, city): (_, _, _) = dc.region.splitn(3, ',').map(|s| s.to_string()).collect_tuple().unwrap_or((
+                            let (continent, country, area): (_, _, _) = dc.region.splitn(3, ',').map(|s| s.to_string()).collect_tuple().unwrap_or((
                                 "Unknown".to_string(),
                                 "Unknown".to_string(),
                                 "Unknown".to_string(),
@@ -419,7 +419,7 @@ impl RegistryState {
 
                             Datacenter {
                                 name: dc.id.clone(),
-                                area: city,
+                                area,
                                 country,
                                 continent,
                                 owner: DatacenterOwner { name: dc.owner.clone() },
