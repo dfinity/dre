@@ -204,7 +204,7 @@ The argument is mandatory for testnets, and is optional for mainnet and staging"
 
     /// Path to file which contains cordoned features
     #[clap(long, global = true, visible_aliases = &["cf-file", "cfff"])]
-    pub cordone_feature_fallback_file: Option<PathBuf>,
+    pub cordon_feature_fallback_file: Option<PathBuf>,
 }
 
 // Do not use outside of DRE CLI.
